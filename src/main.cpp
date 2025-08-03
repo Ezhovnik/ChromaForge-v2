@@ -2,14 +2,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
-    // Когда пользователь нажимает ESC, приложение закроется
-    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GL_TRUE);
-    }
-}
-
 int main()
 {
     // Инициализация GLFW
@@ -64,4 +56,12 @@ int main()
 
     glfwTerminate(); // Очищаем ресурсы
     return 0;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+    // Когда пользователь нажимает ESC, приложение закроется
+    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, GL_TRUE);
+    }
 }
