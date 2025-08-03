@@ -2,6 +2,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+
+const GLuint WIDTH = 800, HEIGHT = 600;
+
 int main()
 {
     // Инициализация GLFW
@@ -19,7 +23,7 @@ int main()
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE); //Выключение возможности изменения размера окна
     
     // Создаём объект окна
-    GLFWwindow* window = glfwCreateWindow(800, 600, "ChromaForge", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "ChromaForge", nullptr, nullptr);
     if (window == nullptr)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
