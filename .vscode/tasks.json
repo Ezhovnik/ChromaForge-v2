@@ -12,6 +12,9 @@
                 "${workspaceFolder}/src/main.cpp",
                 "${workspaceFolder}/src/glad.c",
                 "-lglfw3dll",
+                "-lglew32",
+                "-lopengl32",
+                "-DGLEW_STATIC",
                 "-o",
                 "${workspaceFolder}/ChromaForge.exe"
             ],

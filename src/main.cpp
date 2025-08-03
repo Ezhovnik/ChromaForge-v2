@@ -1,51 +1,67 @@
 #include <iostream>
-#include <glad/glad.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-using namespace std; 
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-    glViewport(0, 0, width, height);
+    // Когда пользователь нажимает ESC, приложение закроется
+    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, GL_TRUE);
+    }
 }
 
 int main()
 {
+    // Инициализация GLFW
     if (!glfwInit())
     {
-        cout << "Failed to initialize GLFW" << endl;
+        std::cout << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
 
-    glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "ZMMR", NULL, NULL);
-    if (window == NULL)
+    // Задаётся минимальная требуемая версия OpenGL.
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // Номер мажорной версии
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // Номер минорной версии
+    
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Установка профайла для которого создается контекст
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE); //Выключение возможности изменения размера окна
+    
+    // Создаём объект окна
+    GLFWwindow* window = glfwCreateWindow(800, 600, "ChromaForge", nullptr, nullptr);
+    if (window == nullptr)
     {
-        cout << "Failed to open GLFW window" << endl;
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    glfwSetKeyCallback(window, key_callback); 
+
+    // Инициализируем GLEW
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK)
     {
-        cout << "Failed to initialize GLAD" << endl;
+        std::cout << "Failed to initialize GLEW" << std::endl;
         return -1;
     }
 
-    glViewport(0, 0, 800, 600);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // Указываем OpenGL размер окна
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);
 
+    // Создаём игровой цикл
     while(!glfwWindowShouldClose(window))
     {
+        glfwPollEvents();
+
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
         glfwSwapBuffers(window);
-        glfwPollEvents();    
     }
 
-    glfwTerminate();
+    glfwTerminate(); // Очищаем ресурсы
     return 0;
 }
