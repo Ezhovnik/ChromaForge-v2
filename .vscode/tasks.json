@@ -7,28 +7,29 @@
             "args": [
                 "-g",
                 "-std=c++17",
-                "-I${workspaceFolder}/include",
-                "-L${workspaceFolder}/lib",
-                "${workspaceFolder}/src/main.cpp",
-                "${workspaceFolder}/src/glad.c",
-                "-lglfw3dll",
-                "-lglew32",
+                "-I${workspaceFolder}/Header Files",  // Путь к заголовкам
+                "-I${workspaceFolder}/include",      // Доп. пути (если есть)
+                "-L${workspaceFolder}/lib",          // Библиотеки (если нужны)
+                "${workspaceFolder}/Source Files/main.cpp",
+                "${workspaceFolder}/Source Files/VAO.cpp",
+                "${workspaceFolder}/Source Files/VBO.cpp",
+                "${workspaceFolder}/Source Files/EBO.cpp",
+                "${workspaceFolder}/Source Files/shaderClass.cpp",
+                "${workspaceFolder}/Source Files/glad.c",
+                "-lglfw3dll", 
                 "-lopengl32",
-                "-DGLEW_STATIC",
                 "-o",
-                "${workspaceFolder}/ChromaForge.exe"
+                "${workspaceFolder}/build/ChromaForge.exe"
             ],
             "options": {
                 "cwd": "${fileDirname}"
             },
-            "problemMatcher": [
-                "$gcc"
-            ],
+            "problemMatcher": ["$gcc"],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Задача создана отладчиком."
+            "detail": "Сборка проекта с OpenGL"
         }
     ],
     "version": "2.0.0"
