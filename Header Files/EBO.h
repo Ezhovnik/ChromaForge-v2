@@ -5,7 +5,9 @@
 
 class EBO {
     public:
+        // Идентификатор Elements Buffer Object
         GLuint ID;
+        // Конструктор, который создаёт Elements Buffer Object и связывает его с индексами
         EBO(GLuint* indices, GLsizeiptr size);
 
         void Bind();

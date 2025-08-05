@@ -1,5 +1,6 @@
 #include "../Header Files/VBO.h"
 
+// Конструктор, который создаёт Vertex Buffer Object и связывает его с вершинами
 VBO::VBO(GLfloat* vertices, GLsizeiptr size) {
     glGenBuffers(1, &ID);
     glBindBuffer(GL_ARRAY_BUFFER, ID);

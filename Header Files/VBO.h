@@ -5,7 +5,9 @@
 
 class VBO {
     public:
+        // Идентификатор для Vertex Buffer Object
         GLuint ID;
+        // Конструктор, который создаёт Vertex Buffer Object и связывает его с вершинами
         VBO(GLfloat* vertices, GLsizeiptr size);
 
         void Bind();

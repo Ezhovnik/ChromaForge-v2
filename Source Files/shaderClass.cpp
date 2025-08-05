@@ -1,5 +1,6 @@
 #include "../Header Files/shaderClass.h"
 
+// Читает текстовый файл и выводит строку со всем содержимым текстового файла
 std::string get_file_contents(const char* filename) {
     std::ifstream in(filename, std::ios::binary);
     if (!in) {
@@ -16,10 +17,13 @@ std::string get_file_contents(const char* filename) {
     }
 }
 
+// Конструктор, создающий программу для шейдеров из двух разных шейдеров
 Shader::Shader(const char* vertexFile, const char* fragmentFile) {
+    // Считываем vertexFile и fragmentFile и сохраняем строки
     std::string vertexCode = get_file_contents(vertexFile);
     std::string fragmentCode = get_file_contents(fragmentFile);
 
+    // Преобразуем строки исходного кода шейдера в массивы символов
     const char* vertexSource = vertexCode.c_str();
     const char* fragmentSource = fragmentCode.c_str();
 
@@ -29,6 +33,8 @@ Shader::Shader(const char* vertexFile, const char* fragmentFile) {
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
     // Компилируем вершинный шейдер в машинный код
     glCompileShader(vertexShader);
+    // Проверяем, успешно ли скомпилирован шейдер
+    compileErrors(vertexShader, "VERTEX");
 
     // Создаём объект фрагментного шейдера
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -36,6 +42,8 @@ Shader::Shader(const char* vertexFile, const char* fragmentFile) {
     glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
     // Компилируем фрагментный шейдер в машинный код
     glCompileShader(fragmentShader);
+    // Проверяем, успешно ли скомпилирован шейдер
+    compileErrors(fragmentShader, "FRAGMENT");
 
     // Создаём объект программы шейдеров
     ID = glCreateProgram();
@@ -44,6 +52,8 @@ Shader::Shader(const char* vertexFile, const char* fragmentFile) {
     glAttachShader(ID, fragmentShader);
     // Объединяем все шейдеры в программу шейдеров
     glLinkProgram(ID);
+    // Проверяем, успешно ли связаны шейдеры
+    compileErrors(ID, "PROGRAM");
 
     // Удаляем уже ненужные объекты вершинного и фрагментного шейдеров 
     glDeleteShader(vertexShader);
@@ -56,4 +66,23 @@ void Shader::Activate() {
 
 void Shader::Delete() {
     glDeleteProgram(ID);
+}
+
+// Проверяет, правильно ли скомпилированы различные шейдеры
+void Shader::compileErrors(unsigned int shader, const char* type) {
+    GLint hasCompiled; // Переменная для сохранения статуса компиляции
+    char infoLog[1024]; // Массив символов для хранения сообщения об ошибке
+    if (type != "PROGRAM") {
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &hasCompiled);
+        if (hasCompiled == GL_FALSE) {
+            glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+            std::cout << "SHADER_COMPILATION_ERROR for: " << type << "\n" << std::endl;
+        }
+    } else {
+        glGetProgramiv(shader, GL_COMPILE_STATUS, &hasCompiled);
+        if (hasCompiled == GL_FALSE) {
+            glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+            std::cout << "SHADER_LINKING_ERROR for: " << type << "\n" << std::endl;
+        }
+    }
 }
