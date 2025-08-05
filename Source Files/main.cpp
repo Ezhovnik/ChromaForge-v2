@@ -3,30 +3,29 @@
 #include <../include/glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <filesystem>
+#include "../include/stb/stb_image.h"
 
 #include "../Header Files/shaderClass.h"
 #include "../Header Files/VAO.h"
 #include "../Header Files/VBO.h"
 #include "../Header Files/EBO.h"
 
-const GLuint WIDTH = 800, HEIGHT = 800;
+const GLuint WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 
 // Координаты вершин
 GLfloat vertices[] =
-{ //               КООРДИНАТЫ                  /        ЦВЕТА           //
-	-0.5f, -0.5f * float(sqrt(3)) * 1 / 3, 0.0f,     0.8f, 0.3f,  0.02f, // Нижний левый угол
-	 0.5f, -0.5f * float(sqrt(3)) * 1 / 3, 0.0f,     0.8f, 0.3f,  0.02f, // Нижний правый угол
-	 0.0f,  0.5f * float(sqrt(3)) * 2 / 3, 0.0f,     1.0f, 0.6f,  0.32f, // Верхний угол
-	-0.25f, 0.5f * float(sqrt(3)) * 1 / 6, 0.0f,     0.9f, 0.45f, 0.17f, // Левая средняя точка
-	 0.25f, 0.5f * float(sqrt(3)) * 1 / 6, 0.0f,     0.9f, 0.45f, 0.17f, // Правая средняя точка
-	 0.0f, -0.5f * float(sqrt(3)) * 1 / 3, 0.0f,     0.8f, 0.3f,  0.02f  // Нижняя средняя точка
+{ //     КООРДИНАТЫ      /        ЦВЕТА        /      ТЕКСТУРЫ     //
+    -0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,     0.0f, 0.0f, // Нижний левый угол
+    -0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,     0.0f, 1.0f, // Верхний левый угол
+     0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,     1.0f, 1.0f, // Верхний правый угол
+     0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,     1.0f, 0.0f  // Нижний правый угол
 };
 
 // Индексы для порядка вершин
 GLuint indices[] = {
-    0, 3, 5, // Маленький левый треугольник
-    3, 2, 4, // Маленький правый треугольник
-    5, 4, 1 // Маленький верхний треугольник
+    0, 2, 1,
+    0, 3, 2
+
 };
 
 int main()
@@ -49,7 +48,7 @@ int main()
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE); //Выключение возможности изменения размера окна
     
     // Создаём объект окна
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "ChromaForge", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "ChromaForge", nullptr, nullptr);
     if (window == nullptr)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -85,39 +84,61 @@ int main()
     EBO EBO1(indices, sizeof(indices));
 
     // Связываем VBO с VAO
-    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0);
-    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8 * sizeof(float), (void*)0); // Позиция
+    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Цвет
+    VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8 * sizeof(float), (void*)(6 * sizeof(float))); // Текстуры
     // Отменяем привязку всех элементов, чтобы случайно не изменить их
     VAO1.Unbind();
     VBO1.Unbind();
     EBO1.Unbind();
 
 
-
+    // Получает идентификатор формы под названием «scale»
     GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
+
+    // Текстуры
+
+    int widthImg, heightImg, numColCh;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* bytes = stbi_load("../Resource Files/Textures/grass_block_side.png", &widthImg, &heightImg, &numColCh, 0);
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // Установка параметров текстуры
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Проверяем формат текстуры
+    GLenum format = GL_RGB;
+    if (numColCh == 4) format = GL_RGBA;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, widthImg, heightImg, 0, format, GL_UNSIGNED_BYTE, bytes);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(bytes);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
+    shaderProgram.Activate();
+    glUniform1i(tex0Uni, 0);
 
     // Главный игровой цикл
     while(!glfwWindowShouldClose(window))
     {
-        // Указываем цвет фона
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        // Очищаем задний буфер и присваиваем ему новый цвет
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        // Сообщаем OpenGL, какую программу шейдеров мы хотим использовать
-        shaderProgram.Activate();
-        // Присваиваем значение униформе. 
-        // * NOTE: Это всегда нужно делать после активации программы шейдеров
-        glUniform1f(uniID, 0.5f);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Указываем цвет фона
+        glClear(GL_COLOR_BUFFER_BIT); // Очищаем задний буфер и присваиваем ему новый цвет
+        shaderProgram.Activate(); // Сообщаем OpenGL, какую программу шейдеров мы хотим использовать
+        glUniform1f(uniID, 0.0f); // Присваиваем значение униформе. NOTE: Это всегда нужно делать после активации программы шейдеров
+        glBindTexture(GL_TEXTURE_2D, texture);
         VAO1.Bind();
-
-        // Рисуем треугольник
-        glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
-
-        // Меняем местами задний и передний буферы, чтобы новый кадр появился на экране
-        glfwSwapBuffers(window);
-        // Обрабатываем все события GLFW
-        glfwPollEvents();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Рисуем треугольник
+        glfwSwapBuffers(window); // Меняем местами задний и передний буферы, чтобы новый кадр появился на экране
+        glfwPollEvents(); // Обрабатываем все события GLFW
     }
 
 
@@ -127,6 +148,7 @@ int main()
     VBO1.Delete();
     EBO1.Delete();
     shaderProgram.Delete();
+    glDeleteTextures(1, &texture);
 
     glfwDestroyWindow(window); // Удаляем окно перед окончание работы
     glfwTerminate(); // Очищаем ресурсы перед окончанием работы
