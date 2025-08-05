@@ -9,6 +9,7 @@
 #include "../Header Files/VAO.h"
 #include "../Header Files/VBO.h"
 #include "../Header Files/EBO.h"
+#include "../Header Files/Texture.h"
 
 const GLuint WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 
@@ -97,35 +98,8 @@ int main()
     GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 
     // Текстуры
-
-    int widthImg, heightImg, numColCh;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char* bytes = stbi_load("../Resource Files/Textures/grass_block_side.png", &widthImg, &heightImg, &numColCh, 0);
-
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    // Установка параметров текстуры
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    // Проверяем формат текстуры
-    GLenum format = GL_RGB;
-    if (numColCh == 4) format = GL_RGBA;
-
-    glTexImage2D(GL_TEXTURE_2D, 0, format, widthImg, heightImg, 0, format, GL_UNSIGNED_BYTE, bytes);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    stbi_image_free(bytes);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    GLuint tex0Uni = glGetUniformLocation(shaderProgram.ID, "tex0");
-    shaderProgram.Activate();
-    glUniform1i(tex0Uni, 0);
+    Texture grass_block_side("../Resource Files/Textures/grass_block_side.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
+	grass_block_side.texUnit(shaderProgram, "tex0", 0);
 
     // Главный игровой цикл
     while(!glfwWindowShouldClose(window))
@@ -134,7 +108,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT); // Очищаем задний буфер и присваиваем ему новый цвет
         shaderProgram.Activate(); // Сообщаем OpenGL, какую программу шейдеров мы хотим использовать
         glUniform1f(uniID, 0.0f); // Присваиваем значение униформе. NOTE: Это всегда нужно делать после активации программы шейдеров
-        glBindTexture(GL_TEXTURE_2D, texture);
+        grass_block_side.Bind();
         VAO1.Bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Рисуем треугольник
         glfwSwapBuffers(window); // Меняем местами задний и передний буферы, чтобы новый кадр появился на экране
@@ -148,7 +122,7 @@ int main()
     VBO1.Delete();
     EBO1.Delete();
     shaderProgram.Delete();
-    glDeleteTextures(1, &texture);
+    grass_block_side.Delete();
 
     glfwDestroyWindow(window); // Удаляем окно перед окончание работы
     glfwTerminate(); // Очищаем ресурсы перед окончанием работы
