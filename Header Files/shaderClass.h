@@ -12,16 +12,14 @@ std::string get_file_contents(const char* filename);
 
 class Shader {
     public:
-        // Идентификатор шейдерной программы
-        GLuint ID;
-        // Конструктор, создающий программу для шейдеров из двух разных шейдеров
-        Shader(const char* vertexFile, const char* fragmentFile);
+        GLuint ID; // Идентификатор шейдерной программы
+        Shader(const char* vertexFile, const char* fragmentFile); // Конструктор, создающий программу для шейдеров из двух разных шейдеров
 
         void Activate();
         void Delete();
 
     private:
-        void compileErrors(unsigned int shader, const char* type);
+        void compileErrors(unsigned int shader, const char* type); // Проверяем, правильно ли скомпилированы различные шейдеры
 };
 
 #endif
