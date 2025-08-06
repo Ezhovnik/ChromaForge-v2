@@ -17,6 +17,7 @@
                 "${workspaceFolder}/Source Files/shaderClass.cpp",
                 "${workspaceFolder}/Source Files/stb.cpp",
                 "${workspaceFolder}/Source Files/Texture.cpp",
+                "${workspaceFolder}/Source Files/Camera.cpp",
                 "${workspaceFolder}/Source Files/glad.c",
                 "-lglfw3dll", 
                 "-lopengl32",

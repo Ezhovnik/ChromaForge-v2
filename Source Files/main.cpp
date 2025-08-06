@@ -13,28 +13,76 @@
 #include "../Header Files/VBO.h"
 #include "../Header Files/EBO.h"
 #include "../Header Files/Texture.h"
+#include "../Header Files/Camera.h"
 
 const GLuint WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 
 // Vertices coordinates
 GLfloat vertices[] =
 { //     COORDINATES     /        COLORS      /   TexCoord  //
-	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
+    // Front face
+    -0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 0.0f, // 0
+     0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 0.0f, // 1
+     0.5f,  0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 0.0f, // 2
+    -0.5f,  0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 0.0f, // 3
+    
+    // Back face
+    -0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 0.0f, // 4
+     0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 0.0f, // 5
+     0.5f,  0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 0.0f, // 6
+    -0.5f,  0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 0.0f, // 7
+    
+    // Top face
+    -0.5f,  0.5f,  0.5f,     0.92f, 0.86f, 0.76f,    0.0f, 0.0f, 1.0f, // 8 
+     0.5f,  0.5f,  0.5f,     0.92f, 0.86f, 0.76f,    1.0f, 0.0f, 1.0f, // 9 
+     0.5f,  0.5f, -0.5f,     0.92f, 0.86f, 0.76f,    1.0f, 1.0f, 1.0f, // 10 
+    -0.5f,  0.5f, -0.5f,     0.92f, 0.86f, 0.76f,    0.0f, 1.0f, 1.0f, // 11
+    
+    // Bottom face
+    -0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 2.0f, // 12
+     0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 2.0f, // 13
+     0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 2.0f, // 14
+    -0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 2.0f, // 15
+    
+    // Right face
+     0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 0.0f, // 16 (same as 1)
+     0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 0.0f, // 17 (same as 5)
+     0.5f,  0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 0.0f, // 18 (same as 6)
+     0.5f,  0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 0.0f, // 19 (same as 2)
+    
+    // Left face
+    -0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 0.0f, // 20 (same as 0)
+    -0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 0.0f, // 21 (same as 4)
+    -0.5f,  0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 0.0f, // 22 (same as 7)
+    -0.5f,  0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 0.0f // 23 (same as 3)
 };
 
-// Indices for vertices order
+// Indices for vertices order (6 faces with 2 triangles each = 12 triangles)
 GLuint indices[] =
 {
-	0, 1, 2,
-	0, 2, 3,
-	0, 1, 4,
-	1, 2, 4,
-	2, 3, 4,
-	3, 0, 4
+    // Front face
+    0, 1, 2,
+    2, 3, 0,
+    
+    // Back face
+    5, 4, 7,
+    7, 6, 5,
+    
+    // Top face
+    8, 9, 10,
+    10, 11, 8,
+    
+    // Bottom face
+    14, 13, 12,
+    12, 15, 14,
+    
+    // Right face
+    16, 17, 18,
+    18, 19, 16,
+    
+    // Left face
+    21, 20, 23,
+    23, 22, 21
 };
 
 
@@ -94,28 +142,29 @@ int main()
     EBO EBO1(indices, sizeof(indices));
 
     // Связываем VBO с VAO
-    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8 * sizeof(float), (void*)0); // Позиция
-    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Цвет
-    VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8 * sizeof(float), (void*)(6 * sizeof(float))); // Текстуры
+    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 9 * sizeof(float), (void*)0); // Координаты
+    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 9 * sizeof(float), (void*)(3 * sizeof(float))); // Цвет
+    VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 9 * sizeof(float), (void*)(6 * sizeof(float))); // Текстурные координаты (s, t)
+    VAO1.LinkAttrib(VBO1, 3, 1, GL_FLOAT, 9 * sizeof(float), (void*)(8 * sizeof(float))); // texID
     // Отменяем привязку всех элементов, чтобы случайно не изменить их
     VAO1.Unbind();
     VBO1.Unbind();
     EBO1.Unbind();
 
 
-    // Получает идентификатор формы под названием «scale»
-    GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 
     // Текстуры
     Texture grass_block_side("../Resource Files/Textures/grass_block_side.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
-	grass_block_side.texUnit(shaderProgram, "tex0", 0);
+	Texture grass_block_top("../Resource Files/Textures/grass_block_top.png", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGB, GL_UNSIGNED_BYTE);
+    Texture grass_block_bottom("../Resource Files/Textures/dirt.png", GL_TEXTURE_2D, GL_TEXTURE2, GL_RGB, GL_UNSIGNED_BYTE);
+    grass_block_side.texUnit(shaderProgram, "tex0", 0);
+    grass_block_top.texUnit(shaderProgram, "tex1", 1);
+    grass_block_bottom.texUnit(shaderProgram, "tex2", 2);
 
-    // Переменные, которые помогут вращать пирамиду
-    float rotation = 0.0f;
-    double prevTime = glfwGetTime();
+    
+    glEnable(GL_DEPTH_TEST); // Включаем Depth Buffer
 
-    // Включаем Depth Buffer
-    glEnable(GL_DEPTH_TEST);
+    Camera camera(WINDOW_WIDTH, WINDOW_HEIGHT, glm::vec3(0.0f, 0.0f, 2.0f)); // Создаём объект камеры
 
     // Главный игровой цикл
     while(!glfwWindowShouldClose(window))
@@ -124,33 +173,16 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Очищаем задний буфер и присваиваем ему новый цвет
         shaderProgram.Activate(); // Сообщаем OpenGL, какую программу шейдеров мы хотим использовать
 
-        // Простой таймер
-        double currTime = glfwGetTime();
-        if(currTime - prevTime >= 0.0167) {
-            rotation += 0.5f;
-            prevTime = currTime;
-        }
-        
-        // Инициализируем матрицы, чтобы они не были нулевыми
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 proj = glm::mat4(1.0f);
+        camera.Inputs(window); // Управляет камерой
+        camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix"); // Обновляем и экспортируем матрицу камеры в вершинный шейдер
 
-        // Назначаем для каждой матрицы разные преобразования
-        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-        view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
-        proj = glm::perspective(glm::radians(45.0f), (float)(WINDOW_WIDTH/WINDOW_HEIGHT), 0.1f, 100.0f);
-        
-        // Выводим матрицы в вершинный шейдер
-        int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-
-        glUniform1f(uniID, 0.0f); // Присваиваем значение униформе. NOTE: Это всегда нужно делать после активации программы шейдеров
+        glActiveTexture(GL_TEXTURE0);
         grass_block_side.Bind();
+        glActiveTexture(GL_TEXTURE1);
+        grass_block_top.Bind(); 
+        glActiveTexture(GL_TEXTURE2);
+        grass_block_bottom.Bind(); 
+
         VAO1.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0); // Рисуем треугольник
         glfwSwapBuffers(window); // Меняем местами задний и передний буферы, чтобы новый кадр появился на экране
