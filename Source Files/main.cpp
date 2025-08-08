@@ -18,43 +18,42 @@
 const GLuint WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 
 // Vertices coordinates
-GLfloat vertices[] =
-{ //     COORDINATES     /        COLORS      /   TexCoord  //
-    // Front face
-    -0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 0.0f, // 0
-     0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 0.0f, // 1
-     0.5f,  0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 0.0f, // 2
-    -0.5f,  0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 0.0f, // 3
-    
-    // Back face
-    -0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 0.0f, // 4
-     0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 0.0f, // 5
-     0.5f,  0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 0.0f, // 6
-    -0.5f,  0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 0.0f, // 7
-    
-    // Top face
-    -0.5f,  0.5f,  0.5f,     0.92f, 0.86f, 0.76f,    0.0f, 0.0f, 1.0f, // 8 
-     0.5f,  0.5f,  0.5f,     0.92f, 0.86f, 0.76f,    1.0f, 0.0f, 1.0f, // 9 
-     0.5f,  0.5f, -0.5f,     0.92f, 0.86f, 0.76f,    1.0f, 1.0f, 1.0f, // 10 
-    -0.5f,  0.5f, -0.5f,     0.92f, 0.86f, 0.76f,    0.0f, 1.0f, 1.0f, // 11
-    
-    // Bottom face
-    -0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 2.0f, // 12
-     0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 2.0f, // 13
-     0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 2.0f, // 14
-    -0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 2.0f, // 15
-    
-    // Right face
-     0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 0.0f, // 16 (same as 1)
-     0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 0.0f, // 17 (same as 5)
-     0.5f,  0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 0.0f, // 18 (same as 6)
-     0.5f,  0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 0.0f, // 19 (same as 2)
-    
-    // Left face
-    -0.5f, -0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 0.0f, 0.0f, // 20 (same as 0)
-    -0.5f, -0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 0.0f, 0.0f, // 21 (same as 4)
-    -0.5f,  0.5f, -0.5f,     0.83f, 0.70f, 0.44f,    0.0f, 1.0f, 0.0f, // 22 (same as 7)
-    -0.5f,  0.5f,  0.5f,     0.83f, 0.70f, 0.44f,    1.0f, 1.0f, 0.0f // 23 (same as 3)
+GLfloat vertices[] = {
+    // Front face (0-3)
+    -0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // 0
+     0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // 1
+     0.5f,  0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // 2
+    -0.5f,  0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // 3
+
+    // Back face (4-7)
+    -0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f,  0.0f, 0.0f,-1.0f,  // 4
+     0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f,  0.0f, 0.0f,-1.0f,  // 5
+     0.5f,  0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f,  0.0f, 0.0f,-1.0f,  // 6
+    -0.5f,  0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f,  0.0f, 0.0f,-1.0f,  // 7
+
+    // Top face (8-11)
+    -0.5f,  0.5f,  0.5f,  0.92f,0.86f,0.76f, 0.0f,0.0f, 1.0f,  0.0f, 1.0f, 0.0f,  // 8
+     0.5f,  0.5f,  0.5f,  0.92f,0.86f,0.76f, 1.0f,0.0f, 1.0f,  0.0f, 1.0f, 0.0f,  // 9
+     0.5f,  0.5f, -0.5f,  0.92f,0.86f,0.76f, 1.0f,1.0f, 1.0f,  0.0f, 1.0f, 0.0f,  // 10
+    -0.5f,  0.5f, -0.5f,  0.92f,0.86f,0.76f, 0.0f,1.0f, 1.0f,  0.0f, 1.0f, 0.0f,  // 11
+
+    // Bottom face (12-15)
+    -0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 2.0f,  0.0f,-1.0f, 0.0f,  // 12
+     0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 2.0f,  0.0f,-1.0f, 0.0f,  // 13
+     0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 2.0f,  0.0f,-1.0f, 0.0f,  // 14
+    -0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 2.0f,  0.0f,-1.0f, 0.0f,  // 15
+
+    // Right face (16-19)
+     0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // 16
+     0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // 17
+     0.5f,  0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // 18
+     0.5f,  0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // 19
+
+    // Left face (20-23)
+    -0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f, -1.0f, 0.0f, 0.0f,  // 20
+    -0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f, -1.0f, 0.0f, 0.0f,  // 21
+    -0.5f,  0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f, -1.0f, 0.0f, 0.0f,  // 22
+    -0.5f,  0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f, -1.0f, 0.0f, 0.0f   // 23
 };
 
 // Indices for vertices order (6 faces with 2 triangles each = 12 triangles)
@@ -85,6 +84,33 @@ GLuint indices[] =
     23, 22, 21
 };
 
+GLfloat lightVertices[] =
+{ //     COORDINATES     //
+	-0.1f, -0.1f,  0.1f,
+	-0.1f, -0.1f, -0.1f,
+	 0.1f, -0.1f, -0.1f,
+	 0.1f, -0.1f,  0.1f,
+	-0.1f,  0.1f,  0.1f,
+	-0.1f,  0.1f, -0.1f,
+	 0.1f,  0.1f, -0.1f,
+	 0.1f,  0.1f,  0.1f
+};
+
+GLuint lightIndices[] =
+{
+	0, 1, 2,
+	0, 2, 3,
+	0, 4, 7,
+	0, 7, 3,
+	3, 7, 6,
+	3, 6, 2,
+	2, 6, 5,
+	2, 5, 1,
+	1, 5, 4,
+	1, 4, 0,
+	4, 5, 6,
+	4, 6, 7
+};
 
 int main()
 {
@@ -132,24 +158,66 @@ int main()
 
 
 
-    // Создаём Vertex Array Object и привязывает его
+    // Создаём Vertex Array Object и привязываем его
     VAO VAO1;
     VAO1.Bind();
 
-    // Создаём Vertex Buffer Object и связывает его с вершинами
+    // Создаём Vertex Buffer Object и связываем его с вершинами
     VBO VBO1(vertices, sizeof(vertices));
-    // Создаём Element Buffer Object и связывает его с индексами
+    // Создаём Element Buffer Object и связываем его с индексами
     EBO EBO1(indices, sizeof(indices));
 
     // Связываем VBO с VAO
-    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 9 * sizeof(float), (void*)0); // Координаты
-    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 9 * sizeof(float), (void*)(3 * sizeof(float))); // Цвет
-    VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 9 * sizeof(float), (void*)(6 * sizeof(float))); // Текстурные координаты (s, t)
-    VAO1.LinkAttrib(VBO1, 3, 1, GL_FLOAT, 9 * sizeof(float), (void*)(8 * sizeof(float))); // texID
+    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 12 * sizeof(float), (void*)0); // Координаты
+    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 12 * sizeof(float), (void*)(3 * sizeof(float))); // Цвет
+    VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 12 * sizeof(float), (void*)(6 * sizeof(float))); // Текстурные координаты (s, t)
+    VAO1.LinkAttrib(VBO1, 3, 1, GL_FLOAT, 12 * sizeof(float), (void*)(8 * sizeof(float))); // texID
+    VAO1.LinkAttrib(VBO1, 4, 3, GL_FLOAT, 12 * sizeof(float), (void*)(9 * sizeof(float))); // Нормали
     // Отменяем привязку всех элементов, чтобы случайно не изменить их
     VAO1.Unbind();
     VBO1.Unbind();
     EBO1.Unbind();
+
+
+
+    // Создаём шейдерную программу для источников света
+    Shader lightShader(
+        "..\\Resource Files\\Shaders\\light.vert", 
+        "..\\Resource Files\\Shaders\\light.frag"
+    );
+
+    VAO lightVAO;
+    lightVAO.Bind();
+
+    VBO lightVBO(lightVertices, sizeof(lightVertices));
+    EBO lightEBO(lightIndices, sizeof(lightIndices));
+
+    lightVAO.LinkAttrib(lightVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0);
+
+    lightVAO.Unbind();
+    lightVBO.Unbind();
+    lightEBO.Unbind();
+
+
+    // Настройка параметров освещения
+    glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+    glm::vec3 lightPos = glm::vec3(0.0f, 1.1f, 0.0f);
+    glm::mat4 lightModel = glm::mat4(1.0f);
+    lightModel = glm::translate(lightModel, lightPos);
+
+    glm::vec3 cubePos = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::mat4 cubeModel = glm::mat4(1.0f);
+    cubeModel = glm::translate(cubeModel, cubePos);
+
+    // Активация шейдеров и передача uniform-переменных
+    lightShader.Activate();
+    glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
+    glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+    shaderProgram.Activate();
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
+    glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 
 
@@ -160,7 +228,6 @@ int main()
     grass_block_side.texUnit(shaderProgram, "tex0", 0);
     grass_block_top.texUnit(shaderProgram, "tex1", 1);
     grass_block_bottom.texUnit(shaderProgram, "tex2", 2);
-
     
     glEnable(GL_DEPTH_TEST); // Включаем Depth Buffer
 
@@ -171,10 +238,13 @@ int main()
     {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Указываем цвет фона
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Очищаем задний буфер и присваиваем ему новый цвет
-        shaderProgram.Activate(); // Сообщаем OpenGL, какую программу шейдеров мы хотим использовать
 
         camera.Inputs(window); // Управляет камерой
-        camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix"); // Обновляем и экспортируем матрицу камеры в вершинный шейдер
+        camera.updateMatrix(45.0f, 0.1f, 100.0f, shaderProgram); // Обновляем и экспортируем матрицу камеры в вершинный шейдер
+        
+        shaderProgram.Activate(); // Сообщаем OpenGL, какую программу шейдеров мы хотим использовать
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+        camera.Matrix(shaderProgram, "camMatrix");
 
         glActiveTexture(GL_TEXTURE0);
         grass_block_side.Bind();
@@ -185,6 +255,12 @@ int main()
 
         VAO1.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0); // Рисуем треугольник
+        
+        lightShader.Activate();
+        camera.Matrix(lightShader, "camMatrix");
+        lightVAO.Bind();
+        glDrawElements(GL_TRIANGLES, sizeof(lightIndices)/sizeof(int), GL_UNSIGNED_INT, 0);
+        
         glfwSwapBuffers(window); // Меняем местами задний и передний буферы, чтобы новый кадр появился на экране
         glfwPollEvents(); // Обрабатываем все события GLFW
     }
@@ -195,7 +271,11 @@ int main()
     VAO1.Delete();
     VBO1.Delete();
     EBO1.Delete();
+    lightVAO.Delete();
+    lightVBO.Delete();
+    lightEBO.Delete();
     shaderProgram.Delete();
+    lightShader.Delete();
     grass_block_side.Delete();
 
     glfwDestroyWindow(window); // Удаляем окно перед окончание работы

@@ -19,6 +19,7 @@ class Camera {
         glm::vec3 Position;
         glm::vec3 Orientation = glm::vec3(0.0f, 0.0f, -1.0f);
         glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::mat4 cameraMatrix = glm::mat4(1.0f);
 
         bool firstClick = true; // Предотвращает скачкообразное перемещение камеры при первом щелчке левой кнопкой мыши
 
@@ -30,7 +31,8 @@ class Camera {
 
         Camera(int width, int height, glm::vec3 position); // Конструктор камеры для установки начальных значений
 
-        void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform); // Обновляем и экспортируем матрицу камеры в вершинный шейдер
+        void updateMatrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader); // Обновляем и экспортируем матрицу камеры в вершинный шейдер
+        void Matrix(Shader& shader, const char* uniform);
         void Inputs(GLFWwindow* window); // Управляем камерой
 };
 
