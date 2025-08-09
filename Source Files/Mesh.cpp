@@ -15,8 +15,7 @@ Mesh::Mesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, std::v
     VAO.LinkAttrib(VBO, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0); // Координаты
     VAO.LinkAttrib(VBO, 1, 3, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float))); // Цвет
     VAO.LinkAttrib(VBO, 2, 2, GL_FLOAT, sizeof(Vertex), (void*)(6 * sizeof(float))); // Текстурные координаты (s, t)
-    VAO.LinkAttrib(VBO, 3, 1, GL_FLOAT, sizeof(Vertex), (void*)(8 * sizeof(float))); // texID
-    VAO.LinkAttrib(VBO, 4, 3, GL_FLOAT, sizeof(Vertex), (void*)(9 * sizeof(float))); // Нормали
+    VAO.LinkAttrib(VBO, 4, 3, GL_FLOAT, sizeof(Vertex), (void*)(8 * sizeof(float))); // Нормали
     
     // Отвязываем буферы, чтобы случайно не изменить их
     VAO.Unbind();
