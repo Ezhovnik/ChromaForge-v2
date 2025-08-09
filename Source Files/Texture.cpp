@@ -1,6 +1,6 @@
 #include "../Header Files/Texture.h"
 
-Texture::Texture(const char* image, GLenum texType, GLenum slot, GLenum format, GLenum pixelType)
+Texture::Texture(const char* image, GLenum texType, GLuint slot, GLenum format, GLenum pixelType)
 {
 	// Назначает тип текстуры объекту texture
 	type = texType;
@@ -15,7 +15,8 @@ Texture::Texture(const char* image, GLenum texType, GLenum slot, GLenum format, 
 	// Создает текстурный объект OpenGL
 	glGenTextures(1, &ID);
 	// Привязываем текстуру текстурному элементу
-	glActiveTexture(slot);
+	glActiveTexture(GL_TEXTURE0 + slot);
+	unit = slot;
 	glBindTexture(texType, ID);
 
 	// Настраивает тип алгоритма, который используется для уменьшения или увеличения размера изображения
@@ -54,6 +55,7 @@ void Texture::texUnit(Shader& shader, const char* uniform, GLuint unit)
 
 void Texture::Bind()
 {
+	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(type, ID);
 }
 

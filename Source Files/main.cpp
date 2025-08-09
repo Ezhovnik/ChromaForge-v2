@@ -32,16 +32,16 @@ GLfloat vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f,  0.0f, 0.0f,-1.0f,  // 7
 
     // Top face (8-11)
-    -0.5f,  0.5f,  0.5f,  0.92f,0.86f,0.76f, 0.0f,0.0f, 1.0f,  0.0f, 1.0f, 0.0f,  // 8
-     0.5f,  0.5f,  0.5f,  0.92f,0.86f,0.76f, 1.0f,0.0f, 1.0f,  0.0f, 1.0f, 0.0f,  // 9
-     0.5f,  0.5f, -0.5f,  0.92f,0.86f,0.76f, 1.0f,1.0f, 1.0f,  0.0f, 1.0f, 0.0f,  // 10
-    -0.5f,  0.5f, -0.5f,  0.92f,0.86f,0.76f, 0.0f,1.0f, 1.0f,  0.0f, 1.0f, 0.0f,  // 11
+    -0.5f,  0.5f,  0.5f,  0.92f,0.86f,0.76f, 0.0f,0.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // 8
+     0.5f,  0.5f,  0.5f,  0.92f,0.86f,0.76f, 1.0f,0.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // 9
+     0.5f,  0.5f, -0.5f,  0.92f,0.86f,0.76f, 1.0f,1.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // 10
+    -0.5f,  0.5f, -0.5f,  0.92f,0.86f,0.76f, 0.0f,1.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // 11
 
     // Bottom face (12-15)
-    -0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 2.0f,  0.0f,-1.0f, 0.0f,  // 12
-     0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 2.0f,  0.0f,-1.0f, 0.0f,  // 13
-     0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 2.0f,  0.0f,-1.0f, 0.0f,  // 14
-    -0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 2.0f,  0.0f,-1.0f, 0.0f,  // 15
+    -0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f,  0.0f,-1.0f, 0.0f,  // 12
+     0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f,  0.0f,-1.0f, 0.0f,  // 13
+     0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f,  0.0f,-1.0f, 0.0f,  // 14
+    -0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f,  0.0f,-1.0f, 0.0f,  // 15
 
     // Right face (16-19)
      0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // 16
@@ -222,12 +222,16 @@ int main()
 
 
     // Текстуры
-    Texture grass_block_side("../Resource Files/Textures/grass_block_side.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
-	Texture grass_block_top("../Resource Files/Textures/grass_block_top.png", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGB, GL_UNSIGNED_BYTE);
-    Texture grass_block_bottom("../Resource Files/Textures/dirt.png", GL_TEXTURE_2D, GL_TEXTURE2, GL_RGB, GL_UNSIGNED_BYTE);
-    grass_block_side.texUnit(shaderProgram, "tex0", 0);
-    grass_block_top.texUnit(shaderProgram, "tex1", 1);
-    grass_block_bottom.texUnit(shaderProgram, "tex2", 2);
+    // Texture grass_block_side("../Resource Files/Textures/grass_block_side.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
+	// Texture grass_block_top("../Resource Files/Textures/grass_block_top.png", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGB, GL_UNSIGNED_BYTE);
+    // Texture grass_block_bottom("../Resource Files/Textures/dirt.png", GL_TEXTURE_2D, GL_TEXTURE2, GL_RGB, GL_UNSIGNED_BYTE);
+    Texture oak_planks("../Resource Files/Textures/oak_planks.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
+    // grass_block_side.texUnit(shaderProgram, "tex0", 0);
+    // grass_block_top.texUnit(shaderProgram, "tex1", 1);
+    // grass_block_bottom.texUnit(shaderProgram, "tex2", 2);
+    oak_planks.texUnit(shaderProgram, "tex0", 0);
+    Texture oak_planks_specular("../Resource Files/Textures/oak_planks_specular.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RED, GL_UNSIGNED_BYTE);
+    oak_planks_specular.texUnit(shaderProgram, "tex1", 1);
     
     glEnable(GL_DEPTH_TEST); // Включаем Depth Buffer
 
@@ -246,12 +250,17 @@ int main()
         glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
         camera.Matrix(shaderProgram, "camMatrix");
 
+        // glActiveTexture(GL_TEXTURE0);
+        // grass_block_side.Bind();
+        // glActiveTexture(GL_TEXTURE1);
+        // grass_block_top.Bind(); 
+        // glActiveTexture(GL_TEXTURE2);
+        // grass_block_bottom.Bind(); 
+
         glActiveTexture(GL_TEXTURE0);
-        grass_block_side.Bind();
+        oak_planks.Bind();
         glActiveTexture(GL_TEXTURE1);
-        grass_block_top.Bind(); 
-        glActiveTexture(GL_TEXTURE2);
-        grass_block_bottom.Bind(); 
+        oak_planks_specular.Bind();
 
         VAO1.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0); // Рисуем треугольник
@@ -276,7 +285,10 @@ int main()
     lightEBO.Delete();
     shaderProgram.Delete();
     lightShader.Delete();
-    grass_block_side.Delete();
+    // grass_block_side.Delete();
+    // grass_block_top.Delete();
+    // grass_block_bottom.Delete();
+    oak_planks.Delete();
 
     glfwDestroyWindow(window); // Удаляем окно перед окончание работы
     glfwTerminate(); // Очищаем ресурсы перед окончанием работы

@@ -13,7 +13,6 @@ in vec3 currPos; // Текущая позиция фрагмента в миро
 // Текстуры
 uniform sampler2D tex0;
 uniform sampler2D tex1;
-uniform sampler2D tex2;
 
 // Параметры освещения
 uniform vec4 lightColor; // Цвет света
@@ -33,14 +32,8 @@ void main()
 	float specularLight = 0.50f;
 	vec3 viewDirection = normalize(camPos - currPos);
 	vec3 reflectionDirection = reflect(-lightDirection, normal);
-	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 8);
+	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);
 	float specular = specAmount * specularLight;
 
-   if (texID == 2.0) {
-      FragColor = texture(tex2, texCoord) * lightColor * (diffuse + ambient + specular); 
-   } else if (texID == 1.0) {
-      FragColor = texture(tex1, texCoord) * lightColor * (diffuse + ambient + specular); 
-   } else {
-      FragColor = texture(tex0, texCoord) * lightColor * (diffuse + ambient + specular); 
-   }
+   FragColor = texture(tex0, texCoord) * lightColor * (diffuse + ambient) + texture(tex1, texCoord) * specular;
 }
