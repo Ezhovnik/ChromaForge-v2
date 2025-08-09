@@ -1,59 +1,44 @@
-#include <iostream>
-#include <cmath>
-#include <../include/glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <filesystem>
-#include "../include/stb/stb_image.h"
-#include <../include/glm/glm.hpp>
-#include <../include/glm/gtc/matrix_transform.hpp>
-#include <../include/glm/gtc/type_ptr.hpp>
-
-#include "../Header Files/shaderClass.h"
-#include "../Header Files/VAO.h"
-#include "../Header Files/VBO.h"
-#include "../Header Files/EBO.h"
-#include "../Header Files/Texture.h"
-#include "../Header Files/Camera.h"
+#include "../Header Files/Mesh.h"
 
 const GLuint WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 
 // Координаты вершин
-GLfloat vertices[] = {
-    // Передняя сторона (0-3)
-    -0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // 0
-     0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // 1
-     0.5f,  0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // 2
-    -0.5f,  0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // 3
+Vertex vertices[] = {
+    // Передняя сторона
+    Vertex{glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec3(0.0f, 0.0f, 1.0f)}, // 0
+    Vertex{glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 0.0f), 0.0f, glm::vec3(0.0f, 0.0f, 1.0f)}, // 1
+    Vertex{glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 1.0f), 0.0f, glm::vec3(0.0f, 0.0f, 1.0f)}, // 2
+    Vertex{glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 1.0f), 0.0f, glm::vec3(0.0f, 0.0f, 1.0f)}, // 3
 
-    // Задняя сторона (4-7)
-    -0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f,  0.0f, 0.0f,-1.0f,  // 4
-     0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f,  0.0f, 0.0f,-1.0f,  // 5
-     0.5f,  0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f,  0.0f, 0.0f,-1.0f,  // 6
-    -0.5f,  0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f,  0.0f, 0.0f,-1.0f,  // 7
+    // Задняя сторона
+    Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 0.0f), 0.0f, glm::vec3(0.0f, 0.0f, -1.0f)}, // 4
+    Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec3(0.0f, 0.0f, -1.0f)}, // 5
+    Vertex{glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 1.0f), 0.0f, glm::vec3(0.0f, 0.0f, -1.0f)}, // 6
+    Vertex{glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 1.0f), 0.0f, glm::vec3(0.0f, 0.0f, -1.0f)}, // 7
 
-    // Верхняя сторона (8-11)
-    -0.5f,  0.5f,  0.5f,  0.92f,0.86f,0.76f, 0.0f,0.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // 8
-     0.5f,  0.5f,  0.5f,  0.92f,0.86f,0.76f, 1.0f,0.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // 9
-     0.5f,  0.5f, -0.5f,  0.92f,0.86f,0.76f, 1.0f,1.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // 10
-    -0.5f,  0.5f, -0.5f,  0.92f,0.86f,0.76f, 0.0f,1.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // 11
+    // Верхняя сторона
+    Vertex{glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f)}, // 8
+    Vertex{glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 0.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f)}, // 9
+    Vertex{glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f)}, // 10
+    Vertex{glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f)}, // 11
 
-    // Нижняя сторона (12-15)
-    -0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f,  0.0f,-1.0f, 0.0f,  // 12
-     0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f,  0.0f,-1.0f, 0.0f,  // 13
-     0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f,  0.0f,-1.0f, 0.0f,  // 14
-    -0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f,  0.0f,-1.0f, 0.0f,  // 15
+    // Нижняя сторона
+    Vertex{glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 1.0f), 0.0f, glm::vec3(0.0f, -1.0f, 0.0f)}, // 12
+    Vertex{glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 1.0f), 0.0f, glm::vec3(0.0f, -1.0f, 0.0f)}, // 13
+    Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec3(0.0f, -1.0f, 0.0f)}, // 14
+    Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 0.0f), 0.0f, glm::vec3(0.0f, -1.0f, 0.0f)}, // 15
 
-    // Правая сторона (16-19)
-     0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // 16
-     0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // 17
-     0.5f,  0.5f, -0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // 18
-     0.5f,  0.5f,  0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // 19
+    // Правая сторона
+    Vertex{glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec3(1.0f, 0.0f, 0.0f)}, // 16
+    Vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 0.0f), 0.0f, glm::vec3(1.0f, 0.0f, 0.0f)}, // 17
+    Vertex{glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 1.0f), 0.0f, glm::vec3(1.0f, 0.0f, 0.0f)}, // 18
+    Vertex{glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 1.0f), 0.0f, glm::vec3(1.0f, 0.0f, 0.0f)}, // 19
 
-    // Левая сторона (20-23)
-    -0.5f, -0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,0.0f, 0.0f, -1.0f, 0.0f, 0.0f,  // 20
-    -0.5f, -0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,0.0f, 0.0f, -1.0f, 0.0f, 0.0f,  // 21
-    -0.5f,  0.5f, -0.5f,  0.83f,0.70f,0.44f, 0.0f,1.0f, 0.0f, -1.0f, 0.0f, 0.0f,  // 22
-    -0.5f,  0.5f,  0.5f,  0.83f,0.70f,0.44f, 1.0f,1.0f, 0.0f, -1.0f, 0.0f, 0.0f   // 23
+    // Правая сторона
+    Vertex{glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 0.0f), 0.0f, glm::vec3(-1.0f, 0.0f, 0.0f)}, // 20
+    Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 0.0f), 0.0f, glm::vec3(-1.0f, 0.0f, 0.0f)}, // 21
+    Vertex{glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(0.0f, 1.0f), 0.0f, glm::vec3(-1.0f, 0.0f, 0.0f)}, // 22
+    Vertex{glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.83f, 0.70f, 0.44f), glm::vec2(1.0f, 1.0f), 0.0f, glm::vec3(-1.0f, 0.0f, 0.0f)} // 23
 };
 
 GLuint indices[] =
@@ -84,16 +69,16 @@ GLuint indices[] =
 };
 
 // Координаты вершин светящегося куба
-GLfloat lightVertices[] =
+Vertex lightVertices[] =
 {
-	-0.1f, -0.1f,  0.1f,
-	-0.1f, -0.1f, -0.1f,
-	 0.1f, -0.1f, -0.1f,
-	 0.1f, -0.1f,  0.1f,
-	-0.1f,  0.1f,  0.1f,
-	-0.1f,  0.1f, -0.1f,
-	 0.1f,  0.1f, -0.1f,
-	 0.1f,  0.1f,  0.1f
+	Vertex{glm::vec3(-0.1f, -0.1f,  0.1f)},
+	Vertex{glm::vec3(-0.1f, -0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f, -0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f, -0.1f,  0.1f)},
+	Vertex{glm::vec3(-0.1f,  0.1f,  0.1f)},
+	Vertex{glm::vec3(-0.1f,  0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f,  0.1f, -0.1f)},
+	Vertex{glm::vec3(0.1f,  0.1f,  0.1f)}
 };
 
 GLuint lightIndices[] =
@@ -150,33 +135,20 @@ int main()
 
 
 
+    Texture textures[] {
+        Texture ("../Resource Files/Textures/oak_planks.png", "diffuse", 0, GL_RGB, GL_UNSIGNED_BYTE),
+        Texture ("../Resource Files/Textures/oak_planks_specular.png", "specular", 1, GL_RED, GL_UNSIGNED_BYTE)
+    };
+
     // Создаём объект шейдера с использованием шейдеров default.vert и default.frag
     Shader shaderProgram(
         "..\\Resource Files\\Shaders\\default.vert", 
         "..\\Resource Files\\Shaders\\default.frag"
     );
-
-
-
-    // Создаём Vertex Array Object и привязываем его
-    VAO VAO1;
-    VAO1.Bind();
-
-    // Создаём Vertex Buffer Object и связываем его с вершинами
-    VBO VBO1(vertices, sizeof(vertices));
-    // Создаём Element Buffer Object и связываем его с индексами
-    EBO EBO1(indices, sizeof(indices));
-
-    // Связываем VBO с VAO
-    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 12 * sizeof(float), (void*)0); // Координаты
-    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 12 * sizeof(float), (void*)(3 * sizeof(float))); // Цвет
-    VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 12 * sizeof(float), (void*)(6 * sizeof(float))); // Текстурные координаты (s, t)
-    VAO1.LinkAttrib(VBO1, 3, 1, GL_FLOAT, 12 * sizeof(float), (void*)(8 * sizeof(float))); // texID
-    VAO1.LinkAttrib(VBO1, 4, 3, GL_FLOAT, 12 * sizeof(float), (void*)(9 * sizeof(float))); // Нормали
-    // Отменяем привязку всех элементов, чтобы случайно не изменить их
-    VAO1.Unbind();
-    VBO1.Unbind();
-    EBO1.Unbind();
+    std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
+    std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
+    std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
+    Mesh planks(verts, ind, tex);
 
 
 
@@ -185,18 +157,10 @@ int main()
         "..\\Resource Files\\Shaders\\light.vert", 
         "..\\Resource Files\\Shaders\\light.frag"
     );
+    std::vector <Vertex> lightVerts(lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
+    std::vector <GLuint> lightInd(lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
+    Mesh light(lightVerts, lightInd, tex);
 
-    VAO lightVAO;
-    lightVAO.Bind();
-
-    VBO lightVBO(lightVertices, sizeof(lightVertices));
-    EBO lightEBO(lightIndices, sizeof(lightIndices));
-
-    lightVAO.LinkAttrib(lightVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0);
-
-    lightVAO.Unbind();
-    lightVBO.Unbind();
-    lightEBO.Unbind();
 
 
     // Настройка параметров освещения
@@ -221,21 +185,11 @@ int main()
 
 
 
-    // Текстуры
-    // Texture grass_block_side("../Resource Files/Textures/grass_block_side.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
-	// Texture grass_block_top("../Resource Files/Textures/grass_block_top.png", GL_TEXTURE_2D, GL_TEXTURE1, GL_RGB, GL_UNSIGNED_BYTE);
-    // Texture grass_block_bottom("../Resource Files/Textures/dirt.png", GL_TEXTURE_2D, GL_TEXTURE2, GL_RGB, GL_UNSIGNED_BYTE);
-    Texture oak_planks("../Resource Files/Textures/oak_planks.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGB, GL_UNSIGNED_BYTE);
-    // grass_block_side.texUnit(shaderProgram, "tex0", 0);
-    // grass_block_top.texUnit(shaderProgram, "tex1", 1);
-    // grass_block_bottom.texUnit(shaderProgram, "tex2", 2);
-    oak_planks.texUnit(shaderProgram, "tex0", 0);
-    Texture oak_planks_specular("../Resource Files/Textures/oak_planks_specular.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RED, GL_UNSIGNED_BYTE);
-    oak_planks_specular.texUnit(shaderProgram, "tex1", 1);
-    
     glEnable(GL_DEPTH_TEST); // Включаем Depth Buffer
 
     Camera camera(WINDOW_WIDTH, WINDOW_HEIGHT, glm::vec3(0.0f, 0.0f, 2.0f)); // Создаём объект камеры
+
+
 
     // Главный игровой цикл
     while(!glfwWindowShouldClose(window))
@@ -245,30 +199,9 @@ int main()
 
         camera.Inputs(window); // Управляет камерой
         camera.updateMatrix(45.0f, 0.1f, 100.0f, shaderProgram); // Обновляем и экспортируем матрицу камеры в вершинный шейдер
-        
-        shaderProgram.Activate(); // Сообщаем OpenGL, какую программу шейдеров мы хотим использовать
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
-        camera.Matrix(shaderProgram, "camMatrix");
 
-        // glActiveTexture(GL_TEXTURE0);
-        // grass_block_side.Bind();
-        // glActiveTexture(GL_TEXTURE1);
-        // grass_block_top.Bind(); 
-        // glActiveTexture(GL_TEXTURE2);
-        // grass_block_bottom.Bind(); 
-
-        glActiveTexture(GL_TEXTURE0);
-        oak_planks.Bind();
-        glActiveTexture(GL_TEXTURE1);
-        oak_planks_specular.Bind();
-
-        VAO1.Bind();
-        glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0); // Рисуем треугольник
-        
-        lightShader.Activate();
-        camera.Matrix(lightShader, "camMatrix");
-        lightVAO.Bind();
-        glDrawElements(GL_TRIANGLES, sizeof(lightIndices)/sizeof(int), GL_UNSIGNED_INT, 0);
+        planks.Draw(shaderProgram, camera);
+        light.Draw(lightShader, camera);
         
         glfwSwapBuffers(window); // Меняем местами задний и передний буферы, чтобы новый кадр появился на экране
         glfwPollEvents(); // Обрабатываем все события GLFW
@@ -277,18 +210,8 @@ int main()
 
 
     // Удаляем все объекты, которые мы создали, перед окончанием работы
-    VAO1.Delete();
-    VBO1.Delete();
-    EBO1.Delete();
-    lightVAO.Delete();
-    lightVBO.Delete();
-    lightEBO.Delete();
     shaderProgram.Delete();
     lightShader.Delete();
-    // grass_block_side.Delete();
-    // grass_block_top.Delete();
-    // grass_block_bottom.Delete();
-    oak_planks.Delete();
 
     glfwDestroyWindow(window); // Удаляем окно перед окончание работы
     glfwTerminate(); // Очищаем ресурсы перед окончанием работы

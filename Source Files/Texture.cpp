@@ -1,6 +1,6 @@
 #include "../Header Files/Texture.h"
 
-Texture::Texture(const char* image, GLenum texType, GLuint slot, GLenum format, GLenum pixelType)
+Texture::Texture(const char* image, const char* texType, GLuint slot, GLenum format, GLenum pixelType)
 {
 	// Назначает тип текстуры объекту texture
 	type = texType;
@@ -17,30 +17,30 @@ Texture::Texture(const char* image, GLenum texType, GLuint slot, GLenum format, 
 	// Привязываем текстуру текстурному элементу
 	glActiveTexture(GL_TEXTURE0 + slot);
 	unit = slot;
-	glBindTexture(texType, ID);
+	glBindTexture(GL_TEXTURE_2D, ID);
 
 	// Настраивает тип алгоритма, который используется для уменьшения или увеличения размера изображения
-	glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-	glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// Настраиваем способ повторения текстуры (если это вообще происходит)
-	glTexParameteri(texType, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(texType, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	// Дополнительные строки на случай, если решим использовать GL_CLAMP_TO_BORDER
 	// float flatColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
 	// glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, flatColor);
 
 	// Присваиваем изображение текстурному объекту OpenGL
-	glTexImage2D(texType, 0, format, widthImg, heightImg, 0, format, pixelType, bytes);
+	glTexImage2D(GL_TEXTURE_2D, 0, format, widthImg, heightImg, 0, format, pixelType, bytes);
 	// Генерируем MIP-карты
-	glGenerateMipmap(texType);
+	glGenerateMipmap(GL_TEXTURE_2D);
 
 	// Удаляем данные изображения в том виде, в каком они уже есть в объекте текстуры OpenGL
 	stbi_image_free(bytes);
 
 	// Отменяет привязку объекта текстуры OpenGL, чтобы его нельзя было случайно изменить
-	glBindTexture(texType, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Texture::texUnit(Shader& shader, const char* uniform, GLuint unit)
@@ -56,12 +56,12 @@ void Texture::texUnit(Shader& shader, const char* uniform, GLuint unit)
 void Texture::Bind()
 {
 	glActiveTexture(GL_TEXTURE0 + unit);
-	glBindTexture(type, ID);
+	glBindTexture(GL_TEXTURE_2D, ID);
 }
 
 void Texture::Unbind()
 {
-	glBindTexture(type, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Texture::Delete()

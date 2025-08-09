@@ -17,9 +17,10 @@ uniform mat4 model;
 void main()
 {
    currPos = vec3(model * vec4(aPos, 1.0f)); 
-   gl_Position = camMatrix * vec4(currPos, 1.0); // Выводит положение (координаты) всех вершин
    color = aColor;
    texCoord = aTex;
    texID = aTexID;
    Normal = aNormal;
+
+   gl_Position = camMatrix * vec4(currPos, 1.0); // Выводит положение (координаты) всех вершин
 }
