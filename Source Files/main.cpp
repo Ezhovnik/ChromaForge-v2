@@ -136,8 +136,8 @@ int main()
 
 
     Texture textures[] {
-        Texture ("../Resource Files/Textures/oak_planks.png", "diffuse", 0, GL_RGB, GL_UNSIGNED_BYTE),
-        Texture ("../Resource Files/Textures/oak_planks_specular.png", "specular", 1, GL_RED, GL_UNSIGNED_BYTE)
+        Texture ("../Resource Files/Textures/Blocks/oak_planks.png", "diffuse", 0),
+        Texture ("../Resource Files/Textures/Blocks/oak_planks_specular.png", "specular", 1)
     };
 
     // Создаём объект шейдера с использованием шейдеров default.vert и default.frag

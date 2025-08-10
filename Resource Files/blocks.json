@@ -1,0 +1,33 @@
+{
+    "blocks":{
+        "air":{
+            "name":"Air",
+            "textures":{
+                "all":""
+            }
+        },
+        "turf":{
+            "name":"Turf",
+            "textures":{
+                "top":"grass_block_top.png",
+                "sides":"grass_block_side.png",
+                "bottom":"dirt.png"
+            }
+        },
+        "dirt":{
+            "name":"Dirt",
+            "textures":{
+                "all":"dirt.png"
+            }
+        },
+        "oak_planks":{
+            "name":"Oak planks",
+            "textures":{
+                "all":"oak_planks.png"
+            },
+            "specular_textures":{
+                "all":"oak_planks_specular.png"
+            }
+        }
+    }
+}

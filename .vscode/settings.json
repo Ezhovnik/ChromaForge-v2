@@ -57,6 +57,9 @@
         "iomanip": "cpp",
         "sstream": "cpp",
         "filesystem": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "forward_list": "cpp",
+        "map": "cpp",
+        "valarray": "cpp"
     }
 }
