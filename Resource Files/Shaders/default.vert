@@ -2,7 +2,7 @@
 layout (location = 0) in vec3 aPos; // Получаем позицию (координаты)
 layout (location = 1) in vec3 aColor; // Получаем цвет
 layout (location = 2) in vec2 aTex; // Получаем координаты текстур
-layout (location = 4) in vec3 aNormal; // Получаем нормальный вектор
+layout (location = 3) in vec3 aNormal; // Получаем нормальный вектор
 
 out vec3 color; // Выводим цвет для фрагментного шейдера
 out vec2 texCoord; // Выводим координаты текстур для фрагментного шейдера

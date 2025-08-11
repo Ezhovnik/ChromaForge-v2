@@ -139,6 +139,10 @@ int main()
         Texture ("../Resource Files/Textures/Blocks/oak_planks.png", "diffuse", 0),
         Texture ("../Resource Files/Textures/Blocks/oak_planks_specular.png", "specular", 1)
     };
+    Texture textures2[] {
+        Texture ("../Resource Files/Textures/Blocks/dirt.png", "diffuse", 0),
+        Texture ("../Resource Files/Textures/Blocks/oak_planks_specular.png", "specular", 1)
+    };
 
     // Создаём объект шейдера с использованием шейдеров default.vert и default.frag
     Shader shaderProgram(
@@ -149,7 +153,8 @@ int main()
     std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
     std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
     Mesh planks(verts, ind, tex);
-
+    std::vector <Texture> tex2(textures2, textures2 + sizeof(textures2) / sizeof(Texture));
+    Mesh dirt(verts, ind, tex2);
 
 
     // Создаём шейдерную программу для источников света
@@ -170,26 +175,18 @@ int main()
     glm::mat4 lightModel = glm::mat4(1.0f);
     lightModel = glm::translate(lightModel, lightPos);
 
-    glm::vec3 cubePos = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::mat4 cubeModel = glm::mat4(1.0f);
-    cubeModel = glm::translate(cubeModel, cubePos);
+    glm::vec3 cubePos1 = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::mat4 cubeModel1 = glm::mat4(1.0f);
+    cubeModel1 = glm::translate(cubeModel1, cubePos1);
 
-    // Активация шейдеров и передача uniform-переменных
-    lightShader.Activate();
-    glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-    glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-    shaderProgram.Activate();
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
-    glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-
+    glm::vec3 cubePos2 = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::mat4 cubeModel2 = glm::mat4(1.0f);
+    cubeModel2 = glm::translate(cubeModel2, cubePos2);
 
 
     glEnable(GL_DEPTH_TEST); // Включаем Depth Buffer
 
     Camera camera(WINDOW_WIDTH, WINDOW_HEIGHT, glm::vec3(0.0f, 0.0f, 2.0f)); // Создаём объект камеры
-
-
 
     // Главный игровой цикл
     while(!glfwWindowShouldClose(window))
@@ -200,7 +197,24 @@ int main()
         camera.Inputs(window); // Управляет камерой
         camera.updateMatrix(45.0f, 0.1f, 100.0f, shaderProgram); // Обновляем и экспортируем матрицу камеры в вершинный шейдер
 
+        shaderProgram.Activate();
+
+        // Устанавливаем позицию света (это можно вынести из цикла, если свет не движется)
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+        glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+
+        // Рисуем первый куб
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel1));
         planks.Draw(shaderProgram, camera);
+        
+        // Рисуем второй куб
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel2));
+        dirt.Draw(shaderProgram, camera);
+
+        // Рисуем источник света
+        lightShader.Activate();
+        glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
+        glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
         light.Draw(lightShader, camera);
         
         glfwSwapBuffers(window); // Меняем местами задний и передний буферы, чтобы новый кадр появился на экране

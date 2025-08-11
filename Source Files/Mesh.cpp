@@ -25,7 +25,6 @@ Mesh::Mesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, std::v
 
 // Метод для отрисовки меша
 void Mesh::Draw(Shader& shader, Camera& camera) {
-    shader.Activate(); // Активируем шейдерную программу
     VAO.Bind(); // Привязываем VAO этого меша
 
     unsigned int numDiffuse = 0; // Счётчик для диффузных текстур
