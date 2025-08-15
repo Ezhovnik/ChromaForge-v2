@@ -13,9 +13,8 @@ Mesh::Mesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, std::v
 
     // Связываем VBO с VAO
     VAO.LinkAttrib(VBO, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0); // Координаты
-    VAO.LinkAttrib(VBO, 1, 3, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float))); // Цвет
-    VAO.LinkAttrib(VBO, 2, 2, GL_FLOAT, sizeof(Vertex), (void*)(6 * sizeof(float))); // Текстурные координаты (s, t)
-    VAO.LinkAttrib(VBO, 4, 3, GL_FLOAT, sizeof(Vertex), (void*)(8 * sizeof(float))); // Нормали
+    VAO.LinkAttrib(VBO, 1, 2, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float))); // Текстурные координаты (s, t)
+    VAO.LinkAttrib(VBO, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)(5 * sizeof(float))); // Нормали
     
     // Отвязываем буферы, чтобы случайно не изменить их
     VAO.Unbind();
@@ -25,7 +24,7 @@ Mesh::Mesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, std::v
 
 // Метод для отрисовки меша
 void Mesh::Draw(Shader& shader, Camera& camera) {
-    VAO.Bind(); // Привязываем VAO этого меша
+    VAO.Bind();
 
     unsigned int numDiffuse = 0; // Счётчик для диффузных текстур
     unsigned int numSpecular = 0; // Счётчик для зеркальных текстур

@@ -4,7 +4,6 @@
 out vec4 FragColor;
 
 // Входные переменные из вершинного шейдера
-in vec3 color; // Цвет вершины (не используется в этом шейдере)
 in vec2 texCoord; // Текстурные координаты
 in vec3 Normal; // Нормаль поверхности
 in vec3 currPos; // Текущая позиция фрагмента в мировых координатах
@@ -92,5 +91,5 @@ vec4 spotLight() {
 }
 
 void main(){
-	FragColor = spotLight();
+	FragColor = pointLight();
 }

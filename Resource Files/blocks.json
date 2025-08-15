@@ -1,5 +1,11 @@
 {
     "blocks":{
+        "unknown":{
+            "name":"Unknown block",
+            "textures":{
+                "all":"unknown.png"
+            }
+        },
         "air":{
             "name":"Air",
             "textures":{

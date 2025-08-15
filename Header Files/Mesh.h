@@ -1,7 +1,7 @@
 #ifndef MESH_CLASS_H
 #define MESH_CLASS_H
 
-#include<string>
+#include <string>
 
 #include "VAO.h"
 #include "VBO.h"

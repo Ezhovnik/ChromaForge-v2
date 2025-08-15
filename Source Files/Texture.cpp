@@ -40,7 +40,6 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, widthImg, heightImg, 0, GL_RED, GL_UNSIGNED_BYTE, bytes);
 	else
 		throw std::invalid_argument("Automatic Texture type recognition failed");
-		
 	// Генерируем MIP-карты
 	glGenerateMipmap(GL_TEXTURE_2D);
 
