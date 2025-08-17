@@ -26,6 +26,13 @@
                 "all":"dirt.png"
             }
         },
+        "oak_log":{
+            "name":"Oak log",
+            "textures":{
+                "foundations":"oak_log_foundation.png",
+                "sides":"oak_log.png"
+            }
+        },
         "oak_planks":{
             "name":"Oak planks",
             "textures":{

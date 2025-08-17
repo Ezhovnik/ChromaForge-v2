@@ -10,10 +10,6 @@ class Block {
     public:
         std::string blockKey;
         CubeTexture blockTexture;
-        CubeMesh mesh;
-
-        static const Vertex vertices[];
-        static const GLuint indices[];
 
         Block(
             std::string jsonKey, 
@@ -23,8 +19,10 @@ class Block {
 
         void Draw(Shader& shader, Camera& camera, glm::vec3 position);
     private:
+        CubeMesh mesh;
         std::string jsonFilePath;
         std::string texturesPath;
+
         json parseJsonFile();
         json getBlockData();
         std::vector<std::string> getBlockTextures();

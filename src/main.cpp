@@ -3,7 +3,7 @@
 
 const GLuint WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 
-// // Координаты вершин светящегося куба
+// Координаты вершин светящегося куба
 // Vertex lightVertices[] =
 // {
 // 	Vertex{glm::vec3(-0.1f, -0.1f,  0.1f)},
@@ -59,6 +59,12 @@ int main()
         glfwTerminate();
         return -1;
     }
+
+    GLFWimage icons[1];
+    icons[0].pixels = stbi_load("../Resource Files/icon/icon.png", &icons[0].width, &icons[0].height, 0, 4);
+    glfwSetWindowIcon(window, 1, icons);
+    stbi_image_free(icons[0].pixels);
+
     glfwMakeContextCurrent(window); 
 
     gladLoadGL();
@@ -79,11 +85,12 @@ int main()
         "..\\Resource Files\\Shaders\\cube.vert", 
         "..\\Resource Files\\Shaders\\cube.frag"
     );
+
     // std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
     // std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
     // std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
 
-    // // Создаём шейдерную программу для источников света
+    // Создаём шейдерную программу для источников света
     // Shader lightShader(
     //     "..\\Resource Files\\Shaders\\light.vert", 
     //     "..\\Resource Files\\Shaders\\light.frag"
@@ -92,25 +99,58 @@ int main()
     // std::vector <GLuint> lightInd(lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
     // Mesh light(lightVerts, lightInd, tex);
 
-    // // Настройка параметров освещения
+    // Настройка параметров освещения
     // glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
     // glm::vec3 lightPos = glm::vec3(0.0f, 1.1f, 0.0f);
     // glm::mat4 lightModel = glm::mat4(1.0f);
     // lightModel = glm::translate(lightModel, lightPos);
 
+    // Создаём объекты блоков
     Block turf("turf");
     Block dirt("dirt");
+    Block oakLog("oak_log");
+
+    // std::vector<std::string> dayFaces = {
+    //     "../Resource Files/Textures/Skybox/Day/right.png",
+    //     "../Resource Files/Textures/Skybox/Day/left.png",
+    //     "../Resource Files/Textures/Skybox/Day/top.png",
+    //     "../Resource Files/Textures/Skybox/Day/bottom.png",
+    //     "../Resource Files/Textures/Skybox/Day/front.png",
+    //     "../Resource Files/Textures/Skybox/Day/back.png",
+        
+    // };
+
+    // std::vector<std::string> nightFaces = {
+    //     "../Resource Files/Textures/Skybox/Night/right.png",
+    //     "../Resource Files/Textures/Skybox/Night/left.png",
+    //     "../Resource Files/Textures/Skybox/Night/top.png",
+    //     "../Resource Files/Textures/Skybox/Night/bottom.png",
+    //     "../Resource Files/Textures/Skybox/Night/front.png",
+    //     "../Resource Files/Textures/Skybox/Night/back.png",
+        
+    // };
 
     glEnable(GL_DEPTH_TEST); // Включаем Depth Buffer
 
+    // Включаем отсечение
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK); 
+
     Camera camera(WINDOW_WIDTH, WINDOW_HEIGHT, glm::vec3(0.0f, 0.0f, 2.0f)); // Создаём объект камеры
+
+
+
+    // "Искры" (или "спарки") - "системная" единица измерения времени
+    const int sparksInSecond = 20; // Количество спарков в секунде
+    const int dayDurationInSparks = 24000; // Количество спарков в игровых сутках
 
 
 
     // Главный игровой цикл
     while(!glfwWindowShouldClose(window))
     {
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Указываем цвет фона
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Очищаем задний буфер и присваиваем ему новый цвет
 
@@ -118,15 +158,15 @@ int main()
         camera.updateMatrix(45.0f, 0.1f, 100.0f, cubeShaderProgram); // Обновляем и экспортируем матрицу камеры в вершинный шейдер
 
         cubeShaderProgram.Activate();
-
         glUniform3f(glGetUniformLocation(cubeShaderProgram.ID, "viewPos"), camera.Position.x, camera.Position.y, camera.Position.z);
 
         // Устанавливаем позицию света (это можно вынести из цикла, если свет не движется)
         // glUniform3f(glGetUniformLocation(cubeShaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
         // glUniform4f(glGetUniformLocation(cubeShaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 
+        // Отрисовываем блоки
         turf.Draw(cubeShaderProgram, camera, glm::vec3(0.0f, 0.0f, 0.0f));
-        turf.Draw(cubeShaderProgram, camera, glm::vec3(-1.0f, -1.0f, -1.0f));
+        oakLog.Draw(cubeShaderProgram, camera, glm::vec3(-1.0f, 0.0f, 0.0f));
         dirt.Draw(cubeShaderProgram, camera, glm::vec3(1.0f, 1.0f, 1.0f));
 
         // Рисуем источник света

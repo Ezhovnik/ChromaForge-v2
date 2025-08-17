@@ -3,6 +3,7 @@
         {
             "type": "cppbuild",
             "label": "C/C++: g++.exe сборка активного файла",
+            "dependsOn": ["Compile Resources"],
             "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-g",
@@ -10,19 +11,21 @@
                 "-I${workspaceFolder}/Header Files",  // Путь к заголовкам
                 "-I${workspaceFolder}/include",      // Доп. пути (если есть)
                 "-L${workspaceFolder}/lib",          // Библиотеки (если нужны)
-                "${workspaceFolder}/Source Files/main.cpp",
-                "${workspaceFolder}/Source Files/VAO.cpp",
-                "${workspaceFolder}/Source Files/VBO.cpp",
-                "${workspaceFolder}/Source Files/EBO.cpp",
-                "${workspaceFolder}/Source Files/shaderClass.cpp",
-                "${workspaceFolder}/Source Files/stb.cpp",
-                "${workspaceFolder}/Source Files/Texture.cpp",
-                "${workspaceFolder}/Source Files/Camera.cpp",
-                "${workspaceFolder}/Source Files/Mesh.cpp",
-                "${workspaceFolder}/Source Files/CubeTexture.cpp",
-                "${workspaceFolder}/Source Files/CubeMesh.cpp",
-                "${workspaceFolder}/Source Files/Block.cpp",
-                "${workspaceFolder}/Source Files/glad.c",
+                "${workspaceFolder}/src/main.cpp",
+                "${workspaceFolder}/src/VAO.cpp",
+                "${workspaceFolder}/src/VBO.cpp",
+                "${workspaceFolder}/src/EBO.cpp",
+                "${workspaceFolder}/src/shaderClass.cpp",
+                "${workspaceFolder}/src/stb.cpp",
+                "${workspaceFolder}/src/Texture.cpp",
+                "${workspaceFolder}/src/Camera.cpp",
+                "${workspaceFolder}/src/Mesh.cpp",
+                "${workspaceFolder}/src/CubeTexture.cpp",
+                "${workspaceFolder}/src/CubeMesh.cpp",
+                "${workspaceFolder}/src/CubeParams.cpp",
+                "${workspaceFolder}/src/Block.cpp",
+                "${workspaceFolder}/src/glad.c",
+                "${workspaceFolder}/Resource Files/icon/app_icon.o",
                 "-lglfw3dll", 
                 "-lopengl32",
                 "-o",
@@ -37,6 +40,17 @@
                 "isDefault": true
             },
             "detail": "Сборка проекта с OpenGL"
+        },
+        {
+            "label": "Compile Resources",
+            "type": "shell",
+            "command": "windres",
+            "args": [
+                "${workspaceFolder}/Resource Files/icon/app_icon.rc",
+                "-o",
+                "${workspaceFolder}/Resource Files/icon/app_icon.o"
+            ],
+            "problemMatcher": []
         }
     ],
     "version": "2.0.0"
