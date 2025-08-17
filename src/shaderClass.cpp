@@ -60,6 +60,24 @@ Shader::Shader(const char* vertexFile, const char* fragmentFile) {
     glDeleteShader(fragmentShader);
 }
 
+void Shader::setMat4(const std::string &name, const glm::mat4 &mat) {
+    GLint loc = glGetUniformLocation(ID, name.c_str());
+    if (loc == -1) {
+        std::cerr << name << " not found in shader!" << std::endl;
+    } else {
+        glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mat));
+    }
+}
+
+void Shader::setFloat(const std::string &name, const float &num) {
+    GLint loc = glGetUniformLocation(ID, name.c_str());
+    if (loc == -1) {
+        std::cerr << name << " not found in shader!" << std::endl;
+    } else {
+        glUniform1f(loc, 0.7f);
+    }
+}
+
 void Shader::Activate() {
     glUseProgram(ID);
 }
@@ -80,7 +98,7 @@ void Shader::compileErrors(unsigned int shader, const char* type) {
             std::cout << infoLog << "\n" << std::endl;
         }
     } else {
-        glGetProgramiv(shader, GL_COMPILE_STATUS, &hasCompiled);
+        glGetProgramiv(shader, GL_LINK_STATUS, &hasCompiled);
         if (hasCompiled == GL_FALSE) {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
             std::cout << "SHADER_LINKING_ERROR for: " << type << std::endl;

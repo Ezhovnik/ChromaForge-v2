@@ -7,13 +7,10 @@ Camera::Camera(int width, int height, glm::vec3 position) {
 }
 
 void Camera::Matrix(Shader& shader, const char* uniform) {
-    glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
+    shader.setMat4(uniform, cameraMatrix);
 }
 
 void Camera::updateMatrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader) {
-    glm::mat4 view = glm::mat4(1.0f);
-    glm::mat4 projection = glm::mat4(1.0f);
-
     view = glm::lookAt(Position, Position + Orientation, Up);
     projection = glm::perspective(glm::radians(FOVdeg), (float)(width / height), nearPlane, farPlane);
 

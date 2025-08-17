@@ -127,6 +127,6 @@ void Block::Draw(Shader& shader, Camera& camera, glm::vec3 position) {
     glm::mat4 cubeModel = glm::mat4(1.0f);
     cubeModel = glm::translate(cubeModel, position);
 
-    glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(cubeModel));
+    shader.setMat4("model", cubeModel);
     mesh.Draw(shader, camera);
 }

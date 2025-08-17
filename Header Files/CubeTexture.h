@@ -14,7 +14,6 @@ class CubeTexture {
         GLuint unit;
 
         CubeTexture() = default;
-
         CubeTexture(std::vector<std::string> faces, const char* texType, GLuint slot);
 
         void texUnit(Shader& shader, const char* uniform, GLuint unit);

@@ -24,6 +24,7 @@
                 "${workspaceFolder}/src/CubeMesh.cpp",
                 "${workspaceFolder}/src/CubeParams.cpp",
                 "${workspaceFolder}/src/Block.cpp",
+                "${workspaceFolder}/src/SkyboxMesh.cpp",
                 "${workspaceFolder}/src/glad.c",
                 "${workspaceFolder}/Resource Files/icon/app_icon.o",
                 "-lglfw3dll", 
