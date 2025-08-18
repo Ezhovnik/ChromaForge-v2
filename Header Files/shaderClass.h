@@ -23,7 +23,8 @@ class Shader {
         Shader(const char* vertexFile, const char* fragmentFile); // Конструктор, создающий программу для шейдеров из двух разных шейдеров
 
         void setMat4(const std::string &name, const glm::mat4 &mat);
-        void setFloat(const std::string &name, const float &num);
+        void setVec3(const std::string &name, const glm::vec3 &value);
+        void setFloat(const std::string &name, const float &value);
 
         void Activate();
         void Delete();

@@ -11,6 +11,6 @@ uniform float timeFactor;
 void main() {
     vec4 dayColor = texture(skyboxDay, TexCoords);
     vec4 nightColor = texture(skyboxNight, TexCoords);
-
+    
     FragColor = mix(nightColor, dayColor, timeFactor);
 }

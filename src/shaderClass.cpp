@@ -69,12 +69,21 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &mat) {
     }
 }
 
-void Shader::setFloat(const std::string &name, const float &num) {
+void Shader::setVec3(const std::string &name, const glm::vec3 &value) {
     GLint loc = glGetUniformLocation(ID, name.c_str());
     if (loc == -1) {
         std::cerr << name << " not found in shader!" << std::endl;
     } else {
-        glUniform1f(loc, 0.7f);
+        glUniform3f(loc, value.x, value.y, value.z);
+    }
+}
+
+void Shader::setFloat(const std::string &name, const float &value) {
+    GLint loc = glGetUniformLocation(ID, name.c_str());
+    if (loc == -1) {
+        std::cerr << name << " not found in shader!" << std::endl;
+    } else {
+        glUniform1f(loc, value);
     }
 }
 

@@ -12,6 +12,7 @@ class Texture {
         const char* type;
         GLuint unit;
 
+        Texture() = default;
         Texture(const char* image, const char* texType, GLuint slot);
 
         void texUnit(Shader& shader, const char* uniform, GLuint unit);

@@ -1,4 +1,4 @@
-#include "../Header Files/SkyboxMesh.h"
+#include "../Header Files/Skybox.h"
 #include "../Header Files/Block.h"
 
 #define GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB 0x8242
@@ -56,34 +56,6 @@ const GLuint WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 // 	4, 5, 6,
 // 	4, 6, 7
 // };
-
-Vertex skyboxVertices[] =
-{
-	Vertex{glm::vec3(-1.0f, -1.0f,  1.0f)},
-	Vertex{glm::vec3(-1.0f, -1.0f, -1.0f)},
-	Vertex{glm::vec3(1.0f, -1.0f, -1.0f)},
-	Vertex{glm::vec3(1.0f, -1.0f,  1.0f)},
-	Vertex{glm::vec3(-1.0f,  1.0f,  1.0f)},
-	Vertex{glm::vec3(-1.0f,  1.0f, -1.0f)},
-	Vertex{glm::vec3(1.0f,  1.0f, -1.0f)},
-	Vertex{glm::vec3(1.0f,  1.0f,  1.0f)}
-};
-
-GLuint skyboxIndices[] =
-{
-	0, 2, 1,
-	0, 3, 2,
-	0, 4, 7,
-	0, 7, 3,
-	3, 7, 6,
-	3, 6, 2,
-	2, 6, 5,
-	2, 5, 1,
-	1, 5, 4,
-	1, 4, 0,
-	4, 5, 6,
-	4, 6, 7
-};
 
 void APIENTRY glDebugOutputARB(GLenum source, 
                             GLenum type, 
@@ -178,8 +150,8 @@ int main()
     //     "..\\Resource Files\\Shaders\\light.vert", 
     //     "..\\Resource Files\\Shaders\\light.frag"
     // );
-    std::vector <Vertex> verts(skyboxVertices, skyboxVertices + sizeof(skyboxVertices) / sizeof(Vertex));
-    std::vector <GLuint> ind(skyboxIndices, skyboxIndices + sizeof(skyboxIndices) / sizeof(GLuint));
+    // std::vector <Vertex> lightVerts(lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
+    // std::vector <GLuint> lightInd(lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
     // Mesh light(lightVerts, lightInd, tex);
 
     // Настройка параметров освещения
@@ -194,29 +166,7 @@ int main()
     Block dirt("dirt");
     Block oakLog("oak_log");
 
-    std::vector<std::string> dayFaces = {
-        "../Resource Files/Textures/Skybox/Day/right.png",
-        "../Resource Files/Textures/Skybox/Day/left.png",
-        "../Resource Files/Textures/Skybox/Day/top.png",
-        "../Resource Files/Textures/Skybox/Day/bottom.png",
-        "../Resource Files/Textures/Skybox/Day/front.png",
-        "../Resource Files/Textures/Skybox/Day/back.png",
-        
-    };
-
-    std::vector<std::string> nightFaces = {
-        "../Resource Files/Textures/Skybox/Night/right.png",
-        "../Resource Files/Textures/Skybox/Night/left.png",
-        "../Resource Files/Textures/Skybox/Night/top.png",
-        "../Resource Files/Textures/Skybox/Night/bottom.png",
-        "../Resource Files/Textures/Skybox/Night/front.png",
-        "../Resource Files/Textures/Skybox/Night/back.png",
-        
-    };
-
-    CubeTexture skyboxTextureDay(dayFaces, "cubeMap", 0);
-    CubeTexture skyboxTextureNight(nightFaces, "cubeMap", 1);
-    SkyboxMesh skybox(verts, ind, skyboxTextureDay, skyboxTextureNight);
+    Skybox skybox("../Resource Files/Textures/Skybox/");
 
     glEnable(GL_DEPTH_TEST); // Включаем Depth Buffer
 
@@ -232,10 +182,15 @@ int main()
     const int sparksInSecond = 20; // Количество спарков в секунде
     const int dayDurationInSparks = 24000; // Количество спарков в игровых сутках
 
-    float timesOfDayInSparks = 0.5f * dayDurationInSparks; // Момент суток в "спарках". Начинаем с полудня
+    skybox.setDayDuration(dayDurationInSparks);
+
+    float timesOfDayInSparks = 1.0f * dayDurationInSparks; // Момент суток в "спарках". Начинаем с полудня
+    bool isFstHalfOfDay = false;
 
     float lastFrame = glfwGetTime();
     float currFrame, deltaTime;
+
+
 
     // Главный игровой цикл
     while(!glfwWindowShouldClose(window))
@@ -267,15 +222,20 @@ int main()
         // glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
         // light.Draw(lightShader, camera);
 
-        timesOfDayInSparks += deltaTime * sparksInSecond;
         if (timesOfDayInSparks > dayDurationInSparks) {
-            timesOfDayInSparks -= dayDurationInSparks;
+            isFstHalfOfDay = false;
+        } else if (timesOfDayInSparks < 0.0f) {
+            isFstHalfOfDay = true;
+        }
+
+        if (isFstHalfOfDay) {
+            timesOfDayInSparks += deltaTime * sparksInSecond;
+        } else {
+            timesOfDayInSparks -= deltaTime * sparksInSecond;
         }
         
         skyboxShaderProgram.Activate();
-        glDepthFunc(GL_LEQUAL);
-        skybox.Draw(skyboxShaderProgram, camera, (float)(abs((float)(timesOfDayInSparks / dayDurationInSparks) - 1.0f)) / 0.5);
-        glDepthFunc(GL_LESS);
+        skybox.Draw(skyboxShaderProgram, camera, timesOfDayInSparks);
 
         glfwSwapBuffers(window); // Меняем местами задний и передний буферы, чтобы новый кадр появился на экране
         glfwPollEvents(); // Обрабатываем все события GLFW

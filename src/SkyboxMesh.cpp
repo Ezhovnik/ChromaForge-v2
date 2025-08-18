@@ -36,9 +36,4 @@ void SkyboxMesh::Draw(Shader& shader, Camera& camera, float timeFactor) {
     shader.setMat4("projection", projection);
     
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "OpenGL error in SkyboxMesh.Draw method: " << err << std::endl;
-    }
 }
