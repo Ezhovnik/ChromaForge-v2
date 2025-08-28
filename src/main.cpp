@@ -101,6 +101,7 @@ int main()
         return -1;
     }
 
+    // Инициализируем иконку приложения
     GLFWimage icons[1];
     icons[0].pixels = stbi_load("../Resource Files/icon/icon.png", &icons[0].width, &icons[0].height, 0, 4);
     glfwSetWindowIcon(window, 1, icons);
@@ -179,17 +180,15 @@ int main()
 
 
     // "Искры" (или "спарки") - "системная" единица измерения времени
-    const int sparksInSecond = 20; // Количество спарков в секунде
+    const int sparksInSecond = 100; // Количество спарков в секунде
     const int dayDurationInSparks = 24000; // Количество спарков в игровых сутках
 
     skybox.setDayDuration(dayDurationInSparks);
 
-    float timesOfDayInSparks = 1.0f * dayDurationInSparks; // Момент суток в "спарках". Начинаем с полудня
-    bool isFstHalfOfDay = false;
+    float timesOfDayInSparks = 0.5f * dayDurationInSparks; // Момент суток в "спарках". Начинаем с полудня
 
     float lastFrame = glfwGetTime();
     float currFrame, deltaTime;
-
 
 
     // Главный игровой цикл
@@ -222,18 +221,11 @@ int main()
         // glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
         // light.Draw(lightShader, camera);
 
-        if (timesOfDayInSparks > dayDurationInSparks) {
-            isFstHalfOfDay = false;
-        } else if (timesOfDayInSparks < 0.0f) {
-            isFstHalfOfDay = true;
+        timesOfDayInSparks += deltaTime * sparksInSecond;
+        if(timesOfDayInSparks > dayDurationInSparks) {
+            timesOfDayInSparks -= dayDurationInSparks;
         }
 
-        if (isFstHalfOfDay) {
-            timesOfDayInSparks += deltaTime * sparksInSecond;
-        } else {
-            timesOfDayInSparks -= deltaTime * sparksInSecond;
-        }
-        
         skyboxShaderProgram.Activate();
         skybox.Draw(skyboxShaderProgram, camera, timesOfDayInSparks);
 

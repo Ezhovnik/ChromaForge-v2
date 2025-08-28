@@ -21,14 +21,14 @@ SkyboxMesh::SkyboxMesh(std::vector <Vertex>& vertices, std::vector <GLuint>& ind
 }
 
 // Метод для отрисовки меша
-void SkyboxMesh::Draw(Shader& shader, Camera& camera, float timeFactor) {
+void SkyboxMesh::Draw(Shader& shader, Camera& camera, float timesOfDay) {
     VAO.Bind();
     skyboxTextureDay.texUnit(shader, "skyboxDay", 0);
     skyboxTextureDay.Bind();
     skyboxTextureNight.texUnit(shader, "skyboxNight", 1);
     skyboxTextureNight.Bind();
 
-    shader.setFloat("timeFactor", timeFactor);
+    shader.setFloat("timesOfDay", timesOfDay);
 
     glm::mat4 view = glm::mat4(glm::mat3(camera.view));
     glm::mat4 projection = camera.projection;

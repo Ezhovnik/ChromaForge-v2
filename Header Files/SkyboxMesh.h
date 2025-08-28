@@ -19,7 +19,7 @@ class SkyboxMesh {
         SkyboxMesh() = default;
         SkyboxMesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, CubeTexture& skyboxTextureDay, CubeTexture& skyboxTextureNight);
 
-        void Draw(Shader& shader, Camera& camera, float timeFactor);
+        void Draw(Shader& shader, Camera& camera, float timesOfDay);
 };
 
 #endif
