@@ -2,6 +2,9 @@
 #include "../Header Files/Block.h"
 #include "../Header Files/CubeParams.h"
 
+std::unordered_map<std::string, json> Block::jsonCache;
+std::mutex Block::cacheMutex;
+
 Block::Block(std::string jsonKey, std::string jsonPath, std::string texPath){
     // Сохраняем переданные данные в объекте класса
     Block::blockKey = jsonKey;
@@ -19,15 +22,40 @@ Block::Block(std::string jsonKey, std::string jsonPath, std::string texPath){
 
 // Читаем JSON файл
 json Block::parseJsonFile() {
-    std::ifstream file(jsonFilePath);
-    if (!file.is_open()) {
-        std::cerr << "WARNING::The file is on the path '" << jsonFilePath << "' was not found" << std::endl;
-        Block::texturesPath = "../Resource Files/Textures/Blocks/";
-        return (json){};
+    // Проверяем, есть ли файл уже в кеше
+    {
+        std::lock_guard<std::mutex> lock(cacheMutex);
+        auto it = jsonCache.find(jsonFilePath);
+        if (it != jsonCache.end()) {
+            // Файл найден в кеше - возвращаем кешированную версию
+            return it->second;
+        }
     }
 
-    json BlocksData = json::parse(file);
-    return BlocksData;
+    // Файла нет в кеше - читаем с диска
+    std::ifstream file(jsonFilePath);
+    if (!file.is_open()) {
+        std::cerr << "WARNING::The file on path '" << jsonFilePath << "' was not found" << std::endl;
+        Block::texturesPath = "../Resource Files/Textures/Blocks/";
+        return json{};
+    }
+    try {
+        json BlocksData = json::parse(file);
+        file.close();
+        
+        // Сохраняем кеш
+        {
+            std::lock_guard<std::mutex> lock(cacheMutex);
+            jsonCache[jsonFilePath] = BlocksData;
+        }
+        
+        return BlocksData;
+    } catch (const std::exception& err) {
+        std::cerr << "ERROR::Failed to parse JSON file '" << jsonFilePath << "': " << err.what() << std::endl;
+        file.close();
+        Block::texturesPath = "../Resource Files/Textures/Blocks/";
+        return json{};
+    }
 }
 
 // Читаем данные о блоке из JSON файла
@@ -129,4 +157,21 @@ void Block::Draw(Shader& shader, Camera& camera, glm::vec3 position) {
 
     shader.setMat4("model", cubeModel);
     mesh.Draw(shader, camera);
+}
+
+// Очистка всего кеша
+void Block::clearCache() {
+    std::lock_guard<std::mutex> lock(cacheMutex);
+    jsonCache.clear();
+    std::cout << "Block JSON cache cleared" << std::endl;
+}
+
+// Удаление конкретного файла из кеша
+void Block::removeFromCache(const std::string& filePath) {
+    std::lock_guard<std::mutex> lock(cacheMutex);
+    auto it = jsonCache.find(filePath);
+    if (it != jsonCache.end()) {
+        jsonCache.erase(it);
+        std::cout << "Removed '" << filePath << "' from Block JSON cache" << std::endl;
+    }
 }

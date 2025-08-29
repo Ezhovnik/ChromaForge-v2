@@ -238,6 +238,7 @@ int main()
     // Удаляем все объекты, которые мы создали, перед окончанием работы
     cubeShaderProgram.Delete();
     skyboxShaderProgram.Delete();
+    Block::clearCache();
     // lightShader.Delete();
 
     glfwDestroyWindow(window); // Удаляем окно перед окончание работы
