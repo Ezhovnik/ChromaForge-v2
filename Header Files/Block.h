@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 #include <mutex>
-#include "CubeMesh.h"
+#include "BlockMesh.h"
 #include "../include/json/json.h"
 
 using json = nlohmann::json;
@@ -24,7 +24,7 @@ class Block {
         static void clearCache(); // Очистка кеша
         static void removeFromCache(const std::string& filePath); // Очистка конкретного файла из кеша
     private:
-        CubeMesh mesh;
+        BlockMesh mesh;
         std::string jsonFilePath;
         std::string texturesPath;
 

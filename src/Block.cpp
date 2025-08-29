@@ -17,7 +17,7 @@ Block::Block(std::string jsonKey, std::string jsonPath, std::string texPath){
     std::vector <Vertex> verts(cubeVertices, cubeVertices + cubeVerticesCount);
     std::vector <GLuint> ind(cubeIndices, cubeIndices + cubeIndicesCount);
 
-    Block::mesh = CubeMesh(verts, ind, blockTexture);
+    Block::mesh = BlockMesh(verts, ind, blockTexture);
 }
 
 // Читаем JSON файл

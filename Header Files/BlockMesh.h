@@ -1,5 +1,5 @@
-#ifndef CUBEMESH_CLASS_H
-#define CUBEMESH_CLASS_H
+#ifndef BLOCKMESH_CLASS_H
+#define BLOCKMESH_CLASS_H
 
 #include "VAO.h"
 #include "VBO.h"
@@ -7,7 +7,7 @@
 #include "CubeTexture.h"
 #include "Camera.h"
 
-class CubeMesh {
+class BlockMesh {
     public:
         std::vector <Vertex> vertices;
         std::vector <GLuint> indices;
@@ -15,8 +15,8 @@ class CubeMesh {
 
         VAO VAO;
 
-        CubeMesh() = default;
-        CubeMesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, CubeTexture& cubeTexture);
+        BlockMesh() = default;
+        BlockMesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, CubeTexture& cubeTexture);
 
         void Draw(Shader& shader, Camera& camera);
 };

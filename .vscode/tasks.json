@@ -21,7 +21,7 @@
                 "${workspaceFolder}/src/Camera.cpp",
                 "${workspaceFolder}/src/Mesh.cpp",
                 "${workspaceFolder}/src/CubeTexture.cpp",
-                "${workspaceFolder}/src/CubeMesh.cpp",
+                "${workspaceFolder}/src/BlockMesh.cpp",
                 "${workspaceFolder}/src/CubeParams.cpp",
                 "${workspaceFolder}/src/Block.cpp",
                 "${workspaceFolder}/src/Skybox/SkyboxParams.cpp",

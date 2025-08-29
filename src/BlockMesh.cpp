@@ -1,10 +1,10 @@
-#include "../Header Files/CubeMesh.h"
+#include "../Header Files/BlockMesh.h"
 
-CubeMesh::CubeMesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, CubeTexture& cubeTexture) {
+BlockMesh::BlockMesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, CubeTexture& cubeTexture) {
     // Сохраняем переданные данные в объекте класса
-    CubeMesh::vertices = vertices;
-    CubeMesh::indices = indices;
-    CubeMesh::cubeTexture = cubeTexture;
+    BlockMesh::vertices = vertices;
+    BlockMesh::indices = indices;
+    BlockMesh::cubeTexture = cubeTexture;
 
     VAO.Bind(); // Привязываем Vertex Array Object (VAO) для хранения настроек атрибутов вершин
     VBO VBO(vertices); // Создаём Vertex Buffer Object и связываем его с вершинами
@@ -20,7 +20,7 @@ CubeMesh::CubeMesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices
 }
 
 // Метод для отрисовки меша
-void CubeMesh::Draw(Shader& shader, Camera& camera) {
+void BlockMesh::Draw(Shader& shader, Camera& camera) {
     VAO.Bind();
     cubeTexture.texUnit(shader, "cubeMap", 0);
     cubeTexture.Bind();
