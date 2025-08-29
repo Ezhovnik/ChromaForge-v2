@@ -28,6 +28,7 @@
                 "${workspaceFolder}/src/Skybox/SkyboxMesh.cpp",
                 "${workspaceFolder}/src/Skybox/Sun.cpp",
                 "${workspaceFolder}/src/Skybox/Skybox.cpp",
+                "${workspaceFolder}/src/Chunk/ChunkParams.cpp",
                 "${workspaceFolder}/src/glad.c",
                 "${workspaceFolder}/Resource Files/icon/app_icon.o",
                 "-lglfw3dll", 
