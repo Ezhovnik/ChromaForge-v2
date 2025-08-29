@@ -1,7 +1,7 @@
 #ifndef SKYBOX_PARAMS_H
 #define SKYBOX_PARAMS_H
 
-#include "VBO.h"
+#include "../VBO.h"
 
 extern const Vertex skyboxVertices[];
 extern const GLuint skyboxIndices[];

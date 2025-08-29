@@ -1,5 +1,5 @@
-#include "../Header Files/Skybox.h"
-#include "../Header Files/SkyboxParams.h"
+#include "../../Header Files/Skybox/Skybox.h"
+#include "../../Header Files/Skybox/SkyboxParams.h"
 
 Skybox::Skybox(std::string path) {
     std::string pathDayTexture = path + "Day/";
@@ -38,8 +38,10 @@ void Skybox::setDayDuration(int dayDurationInSparks) {
 }
 
 void Skybox::Draw(Shader& shader, Camera& camera, float timesOfDayInSparks) {
-    float timeFactor = 1.0f - abs(2.0f * (float)(timesOfDayInSparks / dayDurationInSparks) - 1.0f);
     float timesOfDay = timesOfDayInSparks / dayDurationInSparks;
+
+    sun.updatePosition(timesOfDay);
+    sun.setShaderUniforms(shader);
 
     glDepthFunc(GL_LEQUAL);
     mesh.Draw(shader, camera, timesOfDay);

@@ -1,11 +1,11 @@
 #ifndef SKYBOXMESH_CLASS_H
 #define SKYBOXMESH_CLASS_H
 
-#include "VAO.h"
-#include "VBO.h"
-#include "EBO.h"
-#include "CubeTexture.h"
-#include "Camera.h"
+#include "../VAO.h"
+#include "../VBO.h"
+#include "../EBO.h"
+#include "../CubeTexture.h"
+#include "../Camera.h"
 
 class SkyboxMesh {
     public:

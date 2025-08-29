@@ -1,4 +1,4 @@
-#include "../Header Files/SkyboxMesh.h"
+#include "../../Header Files/Skybox/SkyboxMesh.h"
 
 SkyboxMesh::SkyboxMesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, CubeTexture& skyboxTextureDay, CubeTexture& skyboxTextureNight) {
     // Сохраняем переданные данные в объекте класса

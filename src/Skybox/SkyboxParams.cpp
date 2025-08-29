@@ -1,4 +1,4 @@
-#include "../Header Files/SkyboxParams.h"
+#include "../../Header Files/Skybox/SkyboxParams.h"
 
 const Vertex skyboxVertices[] =
 {

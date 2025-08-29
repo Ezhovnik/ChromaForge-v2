@@ -1,4 +1,4 @@
-#include "../Header Files/Skybox.h"
+#include "../Header Files/Skybox/Skybox.h"
 #include "../Header Files/Block.h"
 
 #define GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB 0x8242

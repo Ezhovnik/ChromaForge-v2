@@ -2,12 +2,15 @@
 #define SKYBOX_CLASS_H
 
 #include "SkyboxMesh.h"
+#include "Sun.h"
 
 class Skybox {
     public:
         CubeTexture dayTexture;
         CubeTexture nightTexture;
         SkyboxMesh mesh;
+
+        Sun sun;
 
         Skybox(std::string path);
 
