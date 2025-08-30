@@ -1,5 +1,5 @@
 #include "../Header Files/Skybox/Skybox.h"
-#include "../Header Files/Block.h"
+#include "../Header Files/OldBlock.h"
 
 #define GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB 0x8242
 #define GL_DEBUG_NEXT_LOGGED_MESSAGE_LENGTH_ARB 0x8243
@@ -163,9 +163,9 @@ int main()
     // lightModel = glm::translate(lightModel, lightPos);
 
     // Создаём объекты блоков
-    Block turf("turf");
-    Block dirt("dirt");
-    Block oakLog("oak_log");
+    OldBlock turf("turf");
+    OldBlock dirt("dirt");
+    OldBlock oakLog("oak_log");
 
     Skybox skybox("../Resource Files/Textures/Skybox/");
 
@@ -238,7 +238,7 @@ int main()
     // Удаляем все объекты, которые мы создали, перед окончанием работы
     cubeShaderProgram.Delete();
     skyboxShaderProgram.Delete();
-    Block::clearCache();
+    OldBlock::clearCache();
     // lightShader.Delete();
 
     glfwDestroyWindow(window); // Удаляем окно перед окончание работы

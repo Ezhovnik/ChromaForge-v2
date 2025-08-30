@@ -1,8 +1,10 @@
+#include <iostream>
 #include <../Header Files/VAO.h>
 
 // Конструктор, генерирующий идентификатор VAO
 VAO::VAO() {
     glGenVertexArrays(1, &ID);
+    std::cout << "Created VAO with ID: " << ID << std::endl;
 }
 
 // Связывает VBO с VAO с использованием определённого макета
