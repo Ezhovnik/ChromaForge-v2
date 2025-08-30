@@ -37,11 +37,18 @@ void Skybox::setDayDuration(int dayDurationInSparks) {
     Skybox::dayDurationInSparks = dayDurationInSparks;
 }
 
+void Skybox::setLunation(float Lunation) {
+    Skybox::moon.setLunation(Lunation);
+}
+
 void Skybox::Draw(Shader& shader, Camera& camera, float timesOfDayInSparks) {
     float timesOfDay = timesOfDayInSparks / dayDurationInSparks;
 
     sun.updatePosition(timesOfDay);
     sun.setShaderUniforms(shader);
+
+    moon.updatePosition(timesOfDay);
+    moon.setShaderUniforms(shader);
 
     glDepthFunc(GL_LEQUAL);
     mesh.Draw(shader, camera, timesOfDay);

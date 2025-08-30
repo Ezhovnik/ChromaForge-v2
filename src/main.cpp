@@ -180,16 +180,18 @@ int main()
 
 
     // "Искры" (или "спарки") - "системная" единица измерения времени
-    const int sparksInSecond = 100; // Количество спарков в секунде
+    const int sparksInSecond = 500; // Количество спарков в секунде
     const int dayDurationInSparks = 24000; // Количество спарков в игровых сутках
+    const float Lunation = 29.53f;
 
     skybox.setDayDuration(dayDurationInSparks);
+    skybox.setLunation(Lunation);
 
     float timesOfDayInSparks = 0.5f * dayDurationInSparks; // Момент суток в "спарках". Начинаем с полудня
+    int currDay = 1;
 
     float lastFrame = glfwGetTime();
     float currFrame, deltaTime;
-
 
     // Главный игровой цикл
     while(!glfwWindowShouldClose(window))
@@ -224,6 +226,8 @@ int main()
         timesOfDayInSparks += deltaTime * sparksInSecond;
         if(timesOfDayInSparks > dayDurationInSparks) {
             timesOfDayInSparks -= dayDurationInSparks;
+            currDay++;
+            skybox.moon.updatePhase(currDay);
         }
 
         skyboxShaderProgram.Activate();

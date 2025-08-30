@@ -3,6 +3,7 @@
 
 #include "SkyboxMesh.h"
 #include "Sun.h"
+#include "Moon.h"
 
 class Skybox {
     public:
@@ -11,10 +12,13 @@ class Skybox {
         SkyboxMesh mesh;
 
         Sun sun;
+        Moon moon;
 
         Skybox(std::string path);
 
         void setDayDuration(int dayDurationInSparks);
+        void setLunation(float Lunation);
+
         void Draw(Shader& shader, Camera& camera, float timesOfDayInSparks);
     private:
         CubeTexture loadTexture (std::string path, int slot);

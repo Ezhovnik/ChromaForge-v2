@@ -33,7 +33,7 @@ class Block {
 
         json parseJsonFile();
         json getBlockData();
-        std::vector<std::string> getBlockTextures();
+        std::vector<std::string> getBlockTextures(json BlockData);
 };
 
 #endif

@@ -24,13 +24,21 @@ uniform float sunSize;
 uniform float sunGlowStrength;
 uniform float sunAlpha;
 
+// Параметры Луны
+uniform vec3 moonPosition;
+uniform vec3 moonDiskColor;
+uniform vec3 moonGlowColor;
+uniform float moonSize;
+uniform float moonGlowStrength;
+uniform float moonAlpha;
+
 // Параметры переходов
 uniform float dayStart = 0.2;
 uniform float dayEnd = 0.8;
-uniform float dawnStart = 0.15;
+uniform float dawnStart = 0.2;
 uniform float dawnEnd = 0.3;
 uniform float duskStart = 0.7;
-uniform float duskEnd = 0.85;
+uniform float duskEnd = 0.8;
 
 void main() {
     // Небо
@@ -52,16 +60,27 @@ void main() {
 
     skyFinal.rgb = mix(skyFinal.rgb, dawnDuskColor, dawnDuskFactor * horizonMask * horizonIntensity);
 
-    // Солнце
     vec3 viewDir = normalize(TexCoords);
+
+    // Солнце
     vec3 sunDir = normalize(sunPosition);
 
     float sunDot = dot(viewDir, sunDir);
     float sunDisk = smoothstep(sunSize - 0.002, sunSize, sunDot);
     float sunGlow = pow(max(0.0, sunDot), 64.0) * sunGlowStrength;
 
-    vec4 sunFinal = vec4(sunColor * (sunDisk + sunGlow), sunAlpha);
+    vec4 sunFinal = vec4(sunColor * (sunDisk + sunGlow) * dayNightFactor, sunAlpha);
+
+    // Луна
+    vec3 moonDir = normalize(moonPosition);
+
+    float moonDot = dot(viewDir, moonDir);
+    float moonDisk = smoothstep(moonSize - 0.002, moonSize, moonDot);
+    float moonGlow = pow(max(0.0, moonDot), 64.0) * moonGlowStrength;
+
+    vec3 moonColorFinal = moonDiskColor * moonDisk + moonGlowColor * moonGlow;
+    vec4 moonFinal = vec4(moonColorFinal * (1 - dayNightFactor), moonAlpha);
 
     // Итог
-    FragColor = skyFinal + sunFinal;
+    FragColor = skyFinal + sunFinal + moonFinal;
 }

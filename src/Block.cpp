@@ -11,7 +11,14 @@ Block::Block(std::string jsonKey, std::string jsonPath, std::string texPath){
     Block::jsonFilePath = jsonPath;
     Block::texturesPath = texPath;
 
-    std::vector<std::string> blockTexturesPath = getBlockTextures();
+    json BlockData = getBlockData();
+
+    if (BlockData.contains("isTransparent")) {
+        bool TransparentData = BlockData["isTransparent"];
+        Block::isTransparent = TransparentData;
+    }
+
+    std::vector<std::string> blockTexturesPath = getBlockTextures(BlockData);
     Block::blockTexture = CubeTexture(blockTexturesPath, "diffuse", 0);
 }
 
@@ -73,8 +80,7 @@ json Block::getBlockData() {
 }
 
 // Получаем вектор с путями текстур блока
-std::vector<std::string> Block::getBlockTextures() {
-    json BlockData = getBlockData();
+std::vector<std::string> Block::getBlockTextures(json BlockData) {
     json TexturesData;
     if (BlockData.contains("textures")) {
         TexturesData = BlockData["textures"];
