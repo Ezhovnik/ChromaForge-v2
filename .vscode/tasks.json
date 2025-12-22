@@ -14,6 +14,9 @@
                 "${workspaceFolder}/src/main.cpp",
                 "${workspaceFolder}/src/window/Window.cpp",
                 "${workspaceFolder}/src/window/Events.cpp",
+                "${workspaceFolder}/src/graphics/ShaderProgram.cpp",
+                "${workspaceFolder}/src/graphics/Texture.cpp",
+                "${workspaceFolder}/src/loaders/texture_loader.cpp",
                 "${workspaceFolder}/src/stb.cpp",
                 "${workspaceFolder}/src/glad.c",
                 "-lglfw3dll", 
@@ -30,7 +33,7 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Сборка проекта с OpenGL"
+            "detail": "Сборка исполняемого файла ChromaForge"
         }
     ],
     "version": "2.0.0"
