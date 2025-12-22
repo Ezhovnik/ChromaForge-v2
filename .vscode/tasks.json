@@ -17,6 +17,7 @@
                 "${workspaceFolder}/src/graphics/ShaderProgram.cpp",
                 "${workspaceFolder}/src/graphics/Texture.cpp",
                 "${workspaceFolder}/src/loaders/texture_loader.cpp",
+                "${workspaceFolder}/src/loaders/shader_loader.cpp",
                 "${workspaceFolder}/src/stb.cpp",
                 "${workspaceFolder}/src/glad.c",
                 "-lglfw3dll", 
