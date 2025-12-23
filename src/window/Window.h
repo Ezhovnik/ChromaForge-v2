@@ -1,8 +1,9 @@
 #ifndef WINDOW_WINDOW_H_
 #define WINDOW_WINDOW_H_
 
-class GLFWwindow;
+class GLFWwindow; // Предварительное объявление класса GLFWwindow
 
+// Обертка для работы с окном приложения через GLFW
 class Window {
 public:
     static GLFWwindow* window;
@@ -10,9 +11,9 @@ public:
     static int initialize(int width, int height, const char* title);
     static void terminate();
 
-    static bool isShouldClose();
-    static void setShouldClose(bool flag);
-    static void swapBuffers();
+    static bool isShouldClose(); // Установлен ли флаг закрытия окна
+    static void setShouldClose(bool flag); // Устанавливает или снимает флаг закрытия окна
+    static void swapBuffers(); // Обмен буферов
 };
 
-#endif
+#endif // WINDOW_WINDOW_H

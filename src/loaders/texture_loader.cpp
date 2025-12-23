@@ -1,8 +1,10 @@
+#include "texture_loader.h"
+
 #include <iostream>
+
 #include <GL/glew.h>
 #include "../include/stb/stb_image.h"
 
-#include "texture_loader.h"
 #include "../graphics/Texture.h"
 
 GLuint loadImage(const char* file, int* width, int* height) {

@@ -1,10 +1,11 @@
+#include "shader_loader.h"
+
 #include <iostream>
 #include <fstream>
-#include <iostream>
 #include <sstream>
+
 #include <GL/glew.h>
 
-#include "shader_loader.h"
 #include "../graphics/ShaderProgram.h"
 
 std::string loadFile(std::string filename) {
