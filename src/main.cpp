@@ -16,21 +16,14 @@
 #include "window/Camera.h"
 #include "loaders/texture_loader.h"
 #include "graphics/Texture.h"
+#include "graphics/Mesh.h"
+#include "voxels/voxel.h"
+#include "voxels/Chunk.h"
+#include "graphics/VoxelRenderer.h"
 
 // Размеры окна по умолчанию
 int WIDTH = 1280;
 int HEIGHT = 720;
-
-float vertices[] = {
-//    x     y     z     u     v
-    0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-
-    1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-    0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-};
 
 int main() {
     Window::initialize(WIDTH, HEIGHT, "ChromaForge"); // Инициализация окна
@@ -45,7 +38,7 @@ int main() {
     }
 
     // Загрузка текстуры
-    Texture* texture = loadTexture("../Resource Files/textures/grass_block_side.png");
+    Texture* texture = loadTexture("../Resource Files/textures/atlas.png");
     if (texture == nullptr) {
         std::cerr << "Failed to load texture" << std::endl;
         delete shader;
@@ -53,47 +46,40 @@ int main() {
         return -1;
     }
 
-    // Создание VAO и VBO
-    GLuint VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    // Настройка VAO и VBO
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // Устанавливаем атрибут позиции
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(0 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(0);
-
-    // Устанавливаем атрибут текстурных координат
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
+    // Создание чанка
+    VoxelRenderer renderer(1024 * 1024 * 8); // Инициализация воксельного рендерера
+    Chunk* chunk = new Chunk(); // Инициализация чанка
+    Mesh* mesh = renderer.render(chunk); // Рендеринг чанка в графический меш
 
     glClearColor(0, 0, 0, 1);
 
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST); // Включение теста глубины
 
-    Camera* camera = new Camera(glm::vec3(0, 0, 1), glm::radians(40.0f));
+    // Включение отсечения задних граней
+    glEnable(GL_CULL_FACE); 
+    glCullFace(GL_BACK);
+    
+    glEnable(GL_BLEND); // Включение смешивания цветов
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Режим смешивания для прозрачности
 
+    Camera* camera = new Camera(glm::vec3(0, 0, 1), glm::radians(70.0f)); // Создание камеры
+
+    // Матрица модели
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(0.5f, 0, 0));
 
+    // Переменные для отслеживания времени
     float lastTime = glfwGetTime();
     float deltaTime = 0.0f;
 
-    float speed = 5.0f;
-
-    float camX = 0.0f;
-    float camY = 0.0f;
+    // Параметры управления
+    float speed = 5.0f; // Скорость движения камеры
+    float camX = 0.0f; // Угол поворота камеры по горизонтали
+    float camY = 0.0f; // Угол поворота камеры по вертикали
 
     // Главный игровой цикл
     while (!Window::isShouldClose()) {
+        // Расчет времени между кадрами
         float currentTime = glfwGetTime();
         deltaTime = currentTime - lastTime;
         lastTime = currentTime;
@@ -103,61 +89,65 @@ int main() {
             Window::setShouldClose(true); // Закрытие окна после нажатия ESC
         }
         if (Events::justPressed(GLFW_KEY_TAB)) {
-            Events::toggleCursor();
+            Events::toggleCursor(); // Переключение режима курсора (заблокирован/разблокирован)
         }
         if (Events::justClicked(GLFW_MOUSE_BUTTON_1)) {
             glClearColor(1, 0, 0, 1); // Меняем цвет заливки после нажатия ПКМ
         }
 
+        // Управление движением камеры с помощью WASD
         if (Events::isPressed(GLFW_KEY_W)) {
-            camera->position += camera->front * deltaTime * speed;
+            camera->position += camera->front * deltaTime * speed; // Вперёд (W)
         }
         if (Events::isPressed(GLFW_KEY_S)) {
-            camera->position -= camera->front * deltaTime * speed;
+            camera->position -= camera->front * deltaTime * speed; // Назад (S)
         }
         if (Events::isPressed(GLFW_KEY_A)) {
-            camera->position -= camera->right * deltaTime * speed;
+            camera->position -= camera->right * deltaTime * speed; // Влево (A)
         }
         if (Events::isPressed(GLFW_KEY_D)) {
-            camera->position += camera->right * deltaTime * speed;
+            camera->position += camera->right * deltaTime * speed; // Вправо (D)
         }
 
+        // Управление поворотом камеры мышью (только в заблокированном режиме)
         if (Events::_cursor_locked) {
-            camY -= Events::deltaY / Window::width;
-            camX -= Events::deltaX / Window::height;
+            // Обновление углов поворота на основе движения мыши
+            camY -= Events::deltaY / Window::width; // Вертикальный поворот
+            camX -= Events::deltaX / Window::height; // Горизонтальный поворот
 
+            // Ограничение вертикального поворота
             if (camY < -glm::radians(89.0f)) {
                 camY = -glm::radians(89.0f);
             } else if (camY > glm::radians(89.0f)) {
                 camY = glm::radians(89.0f);
             }
 
+            // Применение поворота к камере
             camera->rotation = glm::mat4(1.0f);
             camera->rotate(camY, camX, 0);
         }
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Очистка буферов цвета и глубины
 
-        // Рендеринг
-        shader->use();
+        shader->use(); // Активация шейдерной программы
+
+        // Установка uniform-переменных для шейдера
         shader->uniformMatrix("model", model);
         shader->uniformMatrix("projview", camera->getProjection() * camera->getView());
-        texture->bind();
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+
+        texture->bind(); // Привязка текстурного атласа
+
+        mesh->draw(GL_TRIANGLES); // Отрисовка воксельного меша
 
         Window::swapBuffers(); // Обмен буферов
         Events::pollEvents(); // Обработка событий
     }
 
     // Очищаем ресурсы
-    delete shader;
+    delete chunk;
+    delete mesh;
     delete texture;
-
-    // Удаляем OpenGL объекты
-    glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &VAO);
+    delete shader;
 
     // Завершение работы
     Window::terminate();

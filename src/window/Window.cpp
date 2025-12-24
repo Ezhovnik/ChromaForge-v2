@@ -40,6 +40,7 @@ int Window::initialize(int width, int height, const char* title) {
      // Установка области отображения (viewport) - вся область окна
     glViewport(0, 0, width, height);
 
+    // Задаём размеры окна у объекта
     Window::width = width;
     Window::height = height;
 

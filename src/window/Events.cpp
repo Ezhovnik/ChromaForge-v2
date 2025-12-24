@@ -78,6 +78,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 // Callback-функция для обработки изменения размера окна
 void window_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height); // Обновляем область отображения при изменении размера окна
+    
+    // Обновляем размеры окна у объекта окна
     Window::width = width;
     Window::height = height;
 }
@@ -137,6 +139,7 @@ bool Events::justClicked(int button) {
     return _keys[index] && _frames[index] == _current;
 }
 
+// Переключает режим курсора между нормальным и заблокированным состоянием
 void Events::toggleCursor() {
     _cursor_locked = !_cursor_locked;
     Window::setCursorMode(_cursor_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);

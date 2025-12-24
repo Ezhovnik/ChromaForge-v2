@@ -3,23 +3,28 @@
 
 #include <glm/glm.hpp>
 
+// Виртуальная камера в 3D пространстве
 class Camera {
-    void updateVectors();
+    // Обновляет векторы направления камеры на основе текущей матрицы вращения
+    void updateVectors(); 
 public:
-    glm::vec3 position;
-    float fov;
+    glm::vec3 position; // Позиция камеры
+    float fov; // Угол обзора камеры в радианах
 
-    glm::vec3 front;
-    glm::vec3 up;
-    glm::vec3 right;
-    glm::mat4 rotation;
+    // Векторы направления
+    glm::vec3 front; // Указывает направление, в котором смотрит камера.
+    glm::vec3 up; // Определяет ориентацию камеры относительно вертикали.
+    glm::vec3 right; // Определяет горизонтальную ориентацию камеры.
 
-    Camera(glm::vec3 position, float fov);
+    // Матрица вращения камеры
+    glm::mat4 rotation; // Хранит текущую ориентацию камеры в пространстве.
 
-    void rotate(float x, float y, float z);
+    Camera(glm::vec3 position, float fov); // Конструктор
 
-    glm::mat4 getProjection();
-    glm::mat4 getView();
+    void rotate(float x, float y, float z); // Поворачивает камеру на заданные углы.
+
+    glm::mat4 getProjection(); // Возвращает матрицу проекции камеры.
+    glm::mat4 getView(); // Возвращает матрицу вида камеры.
 };
 
 #endif // WINDOW_CAMERA_H

@@ -31,7 +31,7 @@ public:
     static bool isClicked(int button); // Проверяет, нажата ли кнопка мыши в данный момент
     static bool justClicked(int button); // Проверяет, была ли кнопка мыши нажата именно в текущем кадре
 
-    static void toggleCursor();
+    static void toggleCursor(); // Переключает режим курсора между нормальным и заблокированным состоянием
 };
 
 #endif // WINDOW_EVENTS_H
