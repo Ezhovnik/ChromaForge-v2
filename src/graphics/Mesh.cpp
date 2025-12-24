@@ -48,6 +48,7 @@ Mesh::~Mesh() {
     glDeleteBuffers(1, &VBO);
 }
 
+// Отрисовывает меш с использованием указанного типа примитива.
 void Mesh::draw(uint primitive) {
     glBindVertexArray(VAO);
     glDrawArrays(primitive, 0, vertices);

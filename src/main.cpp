@@ -30,7 +30,7 @@ int main() {
     Events::initialize(); // Инициализация системы событий
 
     // Загрузка шейдерной программы
-    ShaderProgram* shader = loadShaderProgram("../Resource Files/main.vert", "../Resource Files/main.frag");
+    ShaderProgram* shader = loadShaderProgram("../res/main.vert", "../res/main.frag");
     if (shader == nullptr) {
         std::cerr << "Failed to load shader program" << std::endl;
         Window::terminate();
@@ -38,7 +38,7 @@ int main() {
     }
 
     // Загрузка текстуры
-    Texture* texture = loadTexture("../Resource Files/textures/atlas.png");
+    Texture* texture = loadTexture("../res/textures/atlas.png");
     if (texture == nullptr) {
         std::cerr << "Failed to load texture" << std::endl;
         delete shader;
