@@ -5,6 +5,8 @@
 #include <GLFW/glfw3.h>
 
 GLFWwindow* Window::window; // Статическая переменная-член класса - указатель на окно GLFW
+int Window::width = 0;
+int Window::height = 0;
 
 // Инициализация окна и OpenGL контекста
 int Window::initialize(int width, int height, const char* title) {
@@ -15,7 +17,7 @@ int Window::initialize(int width, int height, const char* title) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE); // Можно изменять размер окна
+    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE); // Разрешаем изменять размер окна
 
     // Создание окна GLFW
     window = glfwCreateWindow(width, height, title, nullptr, nullptr);
@@ -38,12 +40,19 @@ int Window::initialize(int width, int height, const char* title) {
      // Установка области отображения (viewport) - вся область окна
     glViewport(0, 0, width, height);
 
+    Window::width = width;
+    Window::height = height;
+
     return 0;
 }
 
 // Завершение работы окна и освобождение ресурсов GLFW
 void Window::terminate() {
     glfwTerminate();
+}
+
+void Window::setCursorMode(int mode) {
+    glfwSetInputMode(window, GLFW_CURSOR, mode);
 }
 
 // Проверка, должно ли окно закрыться

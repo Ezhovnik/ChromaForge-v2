@@ -8,52 +8,65 @@
 
 #include "../graphics/ShaderProgram.h"
 
+// Функция для загрузки текстового файла
 std::string loadFile(std::string filename) {
     std::string code;
     std::ifstream file;
 
-    file.exceptions(std::ifstream::badbit);
+    file.exceptions(std::ifstream::badbit); // Устанавливаем исключения для обработки ошибок чтения файла
+
     try {
-        file.open(filename);
-        std::stringstream stream;
+        file.open(filename); // Открываем файл
 
-        stream << file.rdbuf();
+        // Проверяем, успешно ли открылся файл
+        if (!file.is_open()) {
+            std::cerr << "ERROR::SHADER::FILE_NOT_FOUND: " << filename << std::endl;
+            return "";
+        }
 
-        file.close();
+        std::stringstream stream; // Создаем строковый поток
+        stream << file.rdbuf(); // Читаем весь файл в поток
 
-        code = stream.str();
+        file.close(); // Закрываем файл
+
+        code = stream.str(); // Получаем строку из потока
     } catch (std::ifstream::failure& e) {
-        std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
-        return nullptr;
+        // Обработка ошибок чтения файла
+        std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << std::endl;
+        std::cerr << "Exception: " << e.what() << std::endl;
+        return "";
     }
 
     return code;
 }
 
+// Основная функция для загрузки и компиляции шейдерной программы
 ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile) {
+    // Загрузка исходного кода шейдеров из файлов
     std::string vShaderString = loadFile(vertexFile);
     std::string fShaderString = loadFile(fragmentFile);
     
+    // Проверка успешности загрузки файлов
     if (vShaderString.empty() || fShaderString.empty()) {
         std::cerr << "Failed to load shader files" << std::endl;
         return nullptr;
     }
     
+    // Преобразование строк в C-строки для OpenGL
     const GLchar* vShaderCode = vShaderString.c_str();
     const GLchar* fShaderCode = fShaderString.c_str();
 
-    if (vShaderCode == nullptr || fShaderCode == nullptr) {
-        std::cerr << "Failed to load shader's file" << std::endl;
-        return nullptr;
-    }
+    // Переменные для работы с OpenGL
+    GLuint vertex, fragment; // Идентификаторы шейдеров
+    GLint success; // Статус успешности операции
+    GLchar infoLog[512]; // Буфер для сообщений об ошибке
 
-    GLuint vertex, fragment;
-    GLint success;
-    GLchar infoLog[512];
-
+    // Компиляция вершинного шейдера
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vShaderCode, nullptr);
     glCompileShader(vertex);
+
+    // Проверяем успешность компиляции
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(vertex, 512, nullptr, infoLog);
@@ -62,9 +75,12 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
         return nullptr;
     }
 
+    // Компиляция фрагментного шейдера
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fShaderCode, nullptr);
     glCompileShader(fragment);
+
+    // Проверяем успешность компиляции
     glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragment, 512, nullptr, infoLog);
@@ -73,11 +89,13 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
         return nullptr;
     }
 
+    // Создание и линковка шейдерной программы
     GLuint id = glCreateProgram();
     glAttachShader(id, vertex);
     glAttachShader(id, fragment);
     glLinkProgram(id);
 
+    // Проверяем успешность линковки
     glGetProgramiv(id, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(id, 512, nullptr, infoLog);
@@ -91,8 +109,9 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
         return nullptr;
     }
 
+    // После успешной линковки шейдеры можно удалить
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    return new ShaderProgram(id);
+    return new ShaderProgram(id); // Создаем и возвращаем объект шейдерной программы
 }

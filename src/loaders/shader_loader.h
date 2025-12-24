@@ -3,8 +3,8 @@
 
 #include <string>
 
-class ShaderProgram;
+class ShaderProgram; // Предварительное объвление класса ShaderProgram
 
-extern ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile);
+extern ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile); // Функция для загрузки и компиляции шейдерной программы из файлов
 
-#endif
+#endif // LOADERS_SHADER_LOADER_H_

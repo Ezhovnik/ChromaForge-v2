@@ -6,10 +6,15 @@ class GLFWwindow; // Предварительное объявление кла�
 // Обертка для работы с окном приложения через GLFW
 class Window {
 public:
+    static int width;
+    static int height;
+
     static GLFWwindow* window;
 
     static int initialize(int width, int height, const char* title);
     static void terminate();
+
+    static void setCursorMode(int mode);
 
     static bool isShouldClose(); // Установлен ли флаг закрытия окна
     static void setShouldClose(bool flag); // Устанавливает или снимает флаг закрытия окна

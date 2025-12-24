@@ -1,0 +1,25 @@
+#ifndef WINDOW_CAMERA_H_
+#define WINDOW_CAMERA_H_
+
+#include <glm/glm.hpp>
+
+class Camera {
+    void updateVectors();
+public:
+    glm::vec3 position;
+    float fov;
+
+    glm::vec3 front;
+    glm::vec3 up;
+    glm::vec3 right;
+    glm::mat4 rotation;
+
+    Camera(glm::vec3 position, float fov);
+
+    void rotate(float x, float y, float z);
+
+    glm::mat4 getProjection();
+    glm::mat4 getView();
+};
+
+#endif // WINDOW_CAMERA_H
