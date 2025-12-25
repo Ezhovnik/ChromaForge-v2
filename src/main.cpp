@@ -19,6 +19,7 @@
 #include "graphics/Mesh.h"
 #include "voxels/voxel.h"
 #include "voxels/Chunk.h"
+#include "voxels/Chunks.h"
 #include "graphics/VoxelRenderer.h"
 
 // Размеры окна по умолчанию
@@ -46,10 +47,34 @@ int main() {
         return -1;
     }
 
-    // Создание чанка
-    VoxelRenderer renderer(1024 * 1024 * 8); // Инициализация воксельного рендерера
-    Chunk* chunk = new Chunk(); // Инициализация чанка
-    Mesh* mesh = renderer.render(chunk); // Рендеринг чанка в графический меш
+    Chunks* chunks = new Chunks(4, 1, 4);
+    Mesh** meshes = new Mesh*[chunks->volume];
+    VoxelRenderer renderer(1024 * 1024 * 8);
+
+    Chunk* closes[27];
+    for (size_t i = 0; i < chunks->volume; ++i) {
+        Chunk* chunk = chunks->chunks[i];
+        for (int j = 0; j < 27; ++j) {
+            closes[j] = nullptr;
+        }
+
+        for (size_t j = 0; j < chunks->volume; ++j) {
+            Chunk* other = chunks->chunks[j];
+
+            int ox = other->chunk_x - chunk->chunk_x;
+            int oy = other->chunk_y - chunk->chunk_y;
+            int oz = other->chunk_z - chunk->chunk_z;
+
+            if (abs(ox) > 1 || abs(oy) > 1 || abs(oz) > 1) {
+                continue;
+            }
+
+            closes[((oy + 1) * 3 + oz + 1) * 3 + ox + 1] = other;
+        }
+
+        Mesh* mesh = renderer.render(chunk, (const Chunk**) closes);
+        meshes[i] = mesh;
+    }
 
     glClearColor(0, 0, 0, 1);
 
@@ -63,10 +88,6 @@ int main() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Режим смешивания для прозрачности
 
     Camera* camera = new Camera(glm::vec3(0, 0, 1), glm::radians(70.0f)); // Создание камеры
-
-    // Матрица модели
-    glm::mat4 model(1.0f);
-    model = glm::translate(model, glm::vec3(0.5f, 0, 0));
 
     // Переменные для отслеживания времени
     float lastTime = glfwGetTime();
@@ -109,6 +130,13 @@ int main() {
             camera->position += camera->right * deltaTime * speed; // Вправо (D)
         }
 
+        if (Events::isPressed(GLFW_KEY_SPACE)) {
+            camera->position += camera->up * deltaTime * speed;
+        }
+        if (Events::isPressed(GLFW_KEY_LEFT_SHIFT)) {
+            camera->position -= camera->up * deltaTime * speed;
+        }
+
         // Управление поворотом камеры мышью (только в заблокированном режиме)
         if (Events::_cursor_locked) {
             // Обновление углов поворота на основе движения мыши
@@ -132,20 +160,31 @@ int main() {
         shader->use(); // Активация шейдерной программы
 
         // Установка uniform-переменных для шейдера
-        shader->uniformMatrix("model", model);
         shader->uniformMatrix("projview", camera->getProjection() * camera->getView());
 
         texture->bind(); // Привязка текстурного атласа
-
-        mesh->draw(GL_TRIANGLES); // Отрисовка воксельного меша
+        glm::mat4 model;
+        for (size_t i = 0; i < chunks->volume; ++i) {
+            Chunk* chunk = chunks->chunks[i];
+            Mesh* mesh = meshes[i];
+            model = glm::translate(
+                glm::mat4(1.0f),
+                glm::vec3(
+                    chunk->chunk_x * CHUNK_WIDTH,
+                    chunk->chunk_y * CHUNK_HEIGHT,
+                    chunk->chunk_z * CHUNK_DEPTH
+                )
+            );
+            shader->uniformMatrix("model", model);
+            mesh->draw(GL_TRIANGLES);
+        }
 
         Window::swapBuffers(); // Обмен буферов
         Events::pollEvents(); // Обработка событий
     }
 
     // Очищаем ресурсы
-    delete chunk;
-    delete mesh;
+    delete chunks;
     delete texture;
     delete shader;
 

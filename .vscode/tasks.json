@@ -21,6 +21,7 @@
                 "${workspaceFolder}/src/graphics/VoxelRenderer.cpp",
                 "${workspaceFolder}/src/voxels/voxel.cpp",
                 "${workspaceFolder}/src/voxels/Chunk.cpp",
+                "${workspaceFolder}/src/voxels/Chunks.cpp",
                 "${workspaceFolder}/src/loaders/texture_loader.cpp",
                 "${workspaceFolder}/src/loaders/shader_loader.cpp",
                 "${workspaceFolder}/src/stb.cpp",

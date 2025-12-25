@@ -14,9 +14,10 @@ class voxel;
 // Чанк - часть воксельного мира
 class Chunk {
 public:
+    int chunk_x, chunk_y, chunk_z;
     voxel* voxels; // Массив вокселей, содержащихся в чанке
 
-    Chunk(); // Конструктор
+    Chunk(int chunk_x, int chunk_y, int chunk_z); // Конструктор
     ~Chunk(); // Деструктор
 };
 
