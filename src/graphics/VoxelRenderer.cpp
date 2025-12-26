@@ -5,217 +5,257 @@
 #include "../voxels/voxel.h"
 
 // Константы для формата вершины
-const int VERTEX_SIZE = (3 + 2 + 1); 
-const int CHUNK_ATTRS[] = {3, 2, 1, 0}; // Атрибуты: позиция(3), UV(2), освещение(1)
+constexpr int VERTEX_SIZE = (3 + 2 + 1); 
+constexpr int CHUNK_ATTRS[] = {3, 2, 1, 0}; // Атрибуты: позиция(3), UV(2), освещение(1)
 
-// Макросы для работы с координатами чанков и вокселей
-#define CDIV(X, A) (((X) < 0) ? ((X) / (A) - 1) : ((X) / (A)))  // Целочисленное деление с корректной обработкой отрицательных чисел
-#define LOCAL_NEG(X, SIZE) (((X) < 0) ? ((SIZE) + (X)) : (X)) // Корректировка отрицательных локальных координат
-#define LOCAL(X, SIZE) ((X) >= (SIZE) ? ((X) - (SIZE)) : LOCAL_NEG(X, SIZE)) // Получение локальной координаты в пределах чанка
+// Округляет деление в меньшую сторону
+inline int cdiv(int x, int a) {
+    return (x < 0) ? (x / a - 1) : (x / a);
+}
 
-// Макросы для доступа к чанкам и проверки блоков
-#define IS_CHUNK(X, Y, Z) (GET_CHUNK(X, Y, Z) != nullptr) // Проверка существования чанка
-#define GET_CHUNK(X, Y, Z) (closes[((CDIV(Y, CHUNK_HEIGHT) + 1) * 3 + CDIV(Z, CHUNK_DEPTH) + 1) * 3 + CDIV(X, CHUNK_WIDTH) + 1]) // Получение чанка из массива соседей
+// Преобразует отрицательные локальные координаты в положительные
+inline int local_neg(int x, int size) {
+    return (x < 0) ? (size + x) : x;
+}
 
-#define VOXEL(X, Y, Z) (GET_CHUNK(X, Y, Z)->voxels[(LOCAL(Y, CHUNK_HEIGHT) * CHUNK_DEPTH + LOCAL(Z, CHUNK_DEPTH)) * CHUNK_WIDTH + LOCAL(X, CHUNK_WIDTH)]) // Получение вокселя по мировым координатам
-#define IS_BLOCKED(X, Y, Z) ((!IS_CHUNK(X, Y, Z)) || VOXEL(X, Y, Z).id) // Проверка, заблокирована ли позиция (либо нет чанка, либо есть воксель)
+inline int local_coord(int x, int size) {
+    return (x >= size) ? (x - size) : local_neg(x, size);
+}
 
-#define VERTEX(INDEX, X, Y, Z, U, V, L) buffer[INDEX + 0] = (X);\
-								  buffer[INDEX + 1] = (Y);\
-								  buffer[INDEX + 2] = (Z);\
-								  buffer[INDEX + 3] = (U);\
-								  buffer[INDEX + 4] = (V);\
-								  buffer[INDEX + 5] = (L);\
-								  INDEX += VERTEX_SIZE;
+// Получает чанка из массива ближайших соседей по координатам чанка
+inline const Chunk* get_chunk(const Chunk* const* closes, int x, int y, int z) {
+    int chunk_x = cdiv(x, CHUNK_WIDTH);
+    int chunk_y = cdiv(y, CHUNK_HEIGHT);
+    int chunk_z = cdiv(z, CHUNK_DEPTH);
+    
+    int index = ((chunk_y + 1) * 3 + (chunk_z + 1)) * 3 + (chunk_x + 1);
+    return closes[index];
+}
+
+// Проверяет доступность чанка
+inline bool is_chunk_available(const Chunk* const* closes, int x, int y, int z) {
+    return get_chunk(closes, x, y, z) != nullptr;
+}
+
+// Получает воксель по мировым координатам
+inline const voxel& get_voxel(const Chunk* const* closes, int x, int y, int z) {
+    const Chunk* chunk = get_chunk(closes, x, y, z);
+    int local_x = local_coord(x, CHUNK_WIDTH);
+    int local_y = local_coord(y, CHUNK_HEIGHT);
+    int local_z = local_coord(z, CHUNK_DEPTH);
+    
+    return chunk->voxels[(local_y * CHUNK_DEPTH + local_z) * CHUNK_WIDTH + local_x];
+}
+
+// Проверяет, занята ли позиция вокселем
+inline bool is_blocked(const Chunk* const* closes, int x, int y, int z) {
+    return (!is_chunk_available(closes, x, y, z)) || get_voxel(closes, x, y, z).id;
+}
+
+// Функция для добавления вершины в буфер
+inline void add_vertex(float* buffer, size_t& index, float x, float y, float z, float u, float v, float l) {
+    buffer[index++] = x;
+    buffer[index++] = y;
+    buffer[index++] = z;
+    buffer[index++] = u;
+    buffer[index++] = v;
+    buffer[index++] = l;
+}
 
 // Конструктор
 VoxelRenderer::VoxelRenderer(size_t capacity) : capacity(capacity) {
-	buffer = new float[capacity * VERTEX_SIZE * 6];
+    buffer = new float[capacity * VERTEX_SIZE * 6];
 }
 
 // Деструктор
 VoxelRenderer::~VoxelRenderer(){
-	delete[] buffer;
+    delete[] buffer;
 }
 
 // Генерирует меш для рендеринга чанка
 Mesh* VoxelRenderer::render(Chunk* chunk, const Chunk** closes, bool useAmbientOcclusion){
-    float aoFactor = 0.15f;
-	size_t index = 0;
+    float aoFactor = 0.15f; // Коэффициент затемнения для Ambient Occlusion
+    size_t index = 0; // Текущий индекс в буфере вершин
 
-	for (int y = 0; y < CHUNK_HEIGHT; y++){
-		for (int z = 0; z < CHUNK_DEPTH; z++){
-			for (int x = 0; x < CHUNK_WIDTH; x++){
+    for (int y = 0; y < CHUNK_HEIGHT; y++){
+        for (int z = 0; z < CHUNK_DEPTH; z++){
+            for (int x = 0; x < CHUNK_WIDTH; x++){
                 // Получение текущего вокселя
-				voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
-				uint id = vox.id;
+                voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
+                uint id = vox.id;
 
                 // Пропускаем пустые воксели
-				if (!id){
-					continue;
-				}
+                if (!id){
+                    continue;
+                }
 
-				float light;
+                float light;
 
                 // Расчет UV координат для текстурного атласа
-				float uvsize = 1.0f / 16.0f;
-				float u1 = (id % 16) * uvsize;
-				float v1 = 1.0f - (1 + id / 16) * uvsize;
+                float uvsize = 1.0f / 16.0f;
+                float u1 = (id % 16) * uvsize;
+                float v1 = 1.0f - (1 + id / 16) * uvsize;
                 float u2 = u1 + uvsize;
                 float v2 = v1 + uvsize;
 
-                // AO values
+                // AO значения
                 float a, b, c, d, e, f, g, h;
-				a = b = c = d = e = f = g = h = 0.0f;
+                a = b = c = d = e = f = g = h = 0.0f;
 
                 // Верхняя грань (Y+)
-				if (!IS_BLOCKED(x, y + 1, z)){
-					light = 1.0f;
+                if (!is_blocked(closes, x, y + 1, z)){
+                    light = 1.0f;
 
+                    // Вычисляем AO значения для соседних вокселей
                     if (useAmbientOcclusion){
-						a = IS_BLOCKED(x + 1, y + 1, z) * aoFactor;
-						b = IS_BLOCKED(x, y + 1, z + 1) * aoFactor;
-						c = IS_BLOCKED(x - 1, y + 1, z) * aoFactor;
-						d = IS_BLOCKED(x, y + 1, z - 1) * aoFactor;
+                        a = is_blocked(closes, x + 1, y + 1, z) * aoFactor;
+                        b = is_blocked(closes, x, y + 1, z + 1) * aoFactor;
+                        c = is_blocked(closes, x - 1, y + 1, z) * aoFactor;
+                        d = is_blocked(closes, x, y + 1, z - 1) * aoFactor;
 
-						e = IS_BLOCKED(x - 1, y + 1, z - 1) * aoFactor;
-						f = IS_BLOCKED(x - 1, y + 1, z + 1) * aoFactor;
-						g = IS_BLOCKED(x + 1, y + 1, z + 1) * aoFactor;
-						h = IS_BLOCKED(x + 1, y + 1, z - 1) * aoFactor;
-					}
+                        e = is_blocked(closes, x - 1, y + 1, z - 1) * aoFactor;
+                        f = is_blocked(closes, x - 1, y + 1, z + 1) * aoFactor;
+                        g = is_blocked(closes, x + 1, y + 1, z + 1) * aoFactor;
+                        h = is_blocked(closes, x + 1, y + 1, z - 1) * aoFactor;
+                    }
 
-					VERTEX(index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, light * (1.0f-c-b-f));
-					VERTEX(index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, light * (1.0f-a-b-g));
+                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, light * (1.0f - c - b - f));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, light * (1.0f - a - b - g));
 
-					VERTEX(index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, light * (1.0f-a-b-g));
-					VERTEX(index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v1, light * (1.0f-a-d-h));
-				}
+                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, light * (1.0f - a - b - g));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v1, light * (1.0f - a - d - h));
+                }
                 // Нижняя грань (Y-)
-				if (!IS_BLOCKED(x, y - 1, z)){
-					light = 0.75f;
+                if (!is_blocked(closes, x, y - 1, z)){
+                    light = 0.75f;
 
+                    // Вычисляем AO значения для соседних вокселей
                     if (useAmbientOcclusion){
-						a = IS_BLOCKED(x+1,y-1,z)*aoFactor;
-						b = IS_BLOCKED(x,y-1,z+1)*aoFactor;
-						c = IS_BLOCKED(x-1,y-1,z)*aoFactor;
-						d = IS_BLOCKED(x,y-1,z-1)*aoFactor;
+                        a = is_blocked(closes, x + 1, y - 1, z) * aoFactor;
+                        b = is_blocked(closes, x, y - 1, z + 1) * aoFactor;
+                        c = is_blocked(closes, x - 1, y - 1, z) * aoFactor;
+                        d = is_blocked(closes, x, y - 1, z - 1) * aoFactor;
 
-						e = IS_BLOCKED(x-1,y-1,z-1)*aoFactor;
-						f = IS_BLOCKED(x-1,y-1,z+1)*aoFactor;
-						g = IS_BLOCKED(x+1,y-1,z+1)*aoFactor;
-						h = IS_BLOCKED(x+1,y-1,z-1)*aoFactor;
-					}
+                        e = is_blocked(closes, x - 1, y - 1, z - 1) * aoFactor;
+                        f = is_blocked(closes, x - 1, y - 1, z + 1) * aoFactor;
+                        g = is_blocked(closes, x + 1, y - 1, z + 1) * aoFactor;
+                        h = is_blocked(closes, x + 1, y - 1, z - 1) * aoFactor;
+                    }
 
-					VERTEX(index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v2, light * (1.0f-a-b-g));
-					VERTEX(index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v2, light * (1.0f-a-b-g));
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v2, light * (1.0f - a - b - g));
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v2, light * (1.0f - a - b - g));
 
-					VERTEX(index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f-a-d-h));
-					VERTEX(index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v2, light * (1.0f-a-b-g));
-				}
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f - c - d -e));
+                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f - a - d -h));
+                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v2, light * (1.0f - a - b -g));
+                }
 
                 // Правая грань (X+)
-				if (!IS_BLOCKED(x + 1, y, z)){
-					light = 0.95f;
+                if (!is_blocked(closes, x + 1, y, z)){
+                    light = 0.95f;
 
+                    // Вычисляем AO значения для соседних вокселей
                     if (useAmbientOcclusion){
-						a = IS_BLOCKED(x+1,y+1,z)*aoFactor;
-						b = IS_BLOCKED(x+1,y,z+1)*aoFactor;
-						c = IS_BLOCKED(x+1,y-1,z)*aoFactor;
-						d = IS_BLOCKED(x+1,y,z-1)*aoFactor;
+                        a = is_blocked(closes, x + 1, y + 1, z) * aoFactor;
+                        b = is_blocked(closes, x + 1, y, z + 1) * aoFactor;
+                        c = is_blocked(closes, x + 1, y - 1, z) * aoFactor;
+                        d = is_blocked(closes, x + 1, y, z - 1) * aoFactor;
 
-						e = IS_BLOCKED(x+1,y-1,z-1)*aoFactor;
-						f = IS_BLOCKED(x+1,y-1,z+1)*aoFactor;
-						g = IS_BLOCKED(x+1,y+1,z+1)*aoFactor;
-						h = IS_BLOCKED(x+1,y+1,z-1)*aoFactor;
-					}
+                        e = is_blocked(closes, x + 1, y - 1, z - 1) * aoFactor;
+                        f = is_blocked(closes, x + 1, y - 1, z + 1) * aoFactor;
+                        g = is_blocked(closes, x + 1, y + 1, z + 1) * aoFactor;
+                        h = is_blocked(closes, x + 1, y + 1, z - 1) * aoFactor;
+                    }
 
-					VERTEX(index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x + 0.5f, y + 0.5f, z - 0.5f, u2, v2, light * (1.0f-d-a-h));
-					VERTEX(index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, light * (1.0f-a-b-g));
+                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u2, v2, light * (1.0f - d - a - h));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, light * (1.0f - a - b - g));
 
-					VERTEX(index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, light * (1.0f-a-b-g));
-					VERTEX(index, x + 0.5f, y - 0.5f, z + 0.5f, u1, v1, light * (1.0f-b-c-f));
-				}
+                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, light * (1.0f - a - b - g));
+                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u1, v1, light * (1.0f - b - c - f));
+                }
                 // Левая грань (X-)
-				if (!IS_BLOCKED(x - 1, y, z)){
-					light = 0.85f;
+                if (!is_blocked(closes, x - 1, y, z)){
+                    light = 0.85f;
 
+                    // Вычисляем AO значения для соседних вокселей
                     if (useAmbientOcclusion){
-						a = IS_BLOCKED(x-1,y+1,z)*aoFactor;
-						b = IS_BLOCKED(x-1,y,z+1)*aoFactor;
-						c = IS_BLOCKED(x-1,y-1,z)*aoFactor;
-						d = IS_BLOCKED(x-1,y,z-1)*aoFactor;
+                        a = is_blocked(closes, x - 1, y + 1, z) * aoFactor;
+                        b = is_blocked(closes, x - 1, y, z + 1) * aoFactor;
+                        c = is_blocked(closes, x - 1, y - 1, z) * aoFactor;
+                        d = is_blocked(closes, x - 1, y, z - 1) * aoFactor;
 
-						e = IS_BLOCKED(x-1,y-1,z-1)*aoFactor;
-						f = IS_BLOCKED(x-1,y-1,z+1)*aoFactor;
-						g = IS_BLOCKED(x-1,y+1,z+1)*aoFactor;
-						h = IS_BLOCKED(x-1,y+1,z-1)*aoFactor;
-					}
+                        e = is_blocked(closes, x - 1, y - 1, z - 1) * aoFactor;
+                        f = is_blocked(closes, x - 1, y - 1, z + 1) * aoFactor;
+                        g = is_blocked(closes, x - 1, y + 1, z + 1) * aoFactor;
+                        h = is_blocked(closes, x - 1, y + 1, z - 1) * aoFactor;
+                    }
 
-					VERTEX(index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, light * (1.0f-a-b-g));
-					VERTEX(index, x - 0.5f, y + 0.5f, z - 0.5f, u1, v2, light * (1.0f-d-a-h));
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, light * (1.0f - a - b - g));
+                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u1, v2, light * (1.0f - d - a - h));
 
-					VERTEX(index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x - 0.5f, y - 0.5f, z + 0.5f, u2, v1, light * (1.0f-b-c-f));
-					VERTEX(index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, light * (1.0f-a-b-g));
-				}
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u2, v1, light * (1.0f - b - c - f));
+                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, light * (1.0f - a - b - g));
+                }
 
                 // Передняя грань (Z+)
-				if (!IS_BLOCKED(x, y, z + 1)){
-					light = 0.9f;
+                if (!is_blocked(closes, x, y, z + 1)){
+                    light = 0.9f;
 
+                    // Вычисляем AO значения для соседних вокселей
                     if (useAmbientOcclusion){
-						a = IS_BLOCKED(x,y+1,z+1)*aoFactor;
-						b = IS_BLOCKED(x+1,y,z+1)*aoFactor;
-						c = IS_BLOCKED(x,y-1,z+1)*aoFactor;
-						d = IS_BLOCKED(x-1,y,z+1)*aoFactor;
+                        a = is_blocked(closes, x, y + 1, z + 1) * aoFactor;
+                        b = is_blocked(closes, x + 1, y, z + 1) * aoFactor;
+                        c = is_blocked(closes, x, y - 1, z + 1) * aoFactor;
+                        d = is_blocked(closes, x - 1, y, z + 1) * aoFactor;
 
-						e = IS_BLOCKED(x-1,y-1,z+1)*aoFactor;
-						f = IS_BLOCKED(x+1,y-1,z+1)*aoFactor;
-						g = IS_BLOCKED(x+1,y+1,z+1)*aoFactor;
-						h = IS_BLOCKED(x-1,y+1,z+1)*aoFactor;
-					}
+                        e = is_blocked(closes, x - 1, y - 1, z + 1) * aoFactor;
+                        f = is_blocked(closes, x + 1, y - 1, z + 1) * aoFactor;
+                        g = is_blocked(closes, x + 1, y + 1, z + 1) * aoFactor;
+                        h = is_blocked(closes, x - 1, y + 1, z + 1) * aoFactor;
+                    }
 
-					VERTEX(index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v1, light *(1.0f-c-d-e));
-					VERTEX(index, x + 0.5f, y + 0.5f, z + 0.5f, u2, v2, light *(1.0f-a-b-g));
-					VERTEX(index, x - 0.5f, y + 0.5f, z + 0.5f, u1, v2, light *(1.0f-a-d-h));
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u2, v2, light * (1.0f - a - b - g));
+                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u1, v2, light * (1.0f - a - d - h));
 
-					VERTEX(index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v1, light *(1.0f-c-d-e));
-					VERTEX(index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v1, light *(1.0f-b-c-f));
-					VERTEX(index, x + 0.5f, y + 0.5f, z + 0.5f, u2, v2, light *(1.0f-a-b-g));
-				}
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v1, light * (1.0f - b - c - f));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u2, v2, light * (1.0f - a - b - g));
+                }
                 // Задняя грань (Z-)
-				if (!IS_BLOCKED(x, y, z - 1)){
-					light = 0.8f;
+                if (!is_blocked(closes, x, y, z - 1)){
+                    light = 0.8f;
 
+                    // Вычисляем AO значения для соседних вокселей
                     if (useAmbientOcclusion){
-						a = IS_BLOCKED(x,y+1,z-1)*aoFactor;
-						b = IS_BLOCKED(x+1,y,z-1)*aoFactor;
-						c = IS_BLOCKED(x,y-1,z-1)*aoFactor;
-						d = IS_BLOCKED(x-1,y,z-1)*aoFactor;
+                        a = is_blocked(closes, x, y + 1, z - 1) * aoFactor;
+                        b = is_blocked(closes, x + 1, y, z - 1) * aoFactor;
+                        c = is_blocked(closes, x, y - 1, z - 1) * aoFactor;
+                        d = is_blocked(closes, x - 1, y, z - 1) * aoFactor;
 
-						e = IS_BLOCKED(x-1,y-1,z-1)*aoFactor;
-						f = IS_BLOCKED(x+1,y-1,z-1)*aoFactor;
-						g = IS_BLOCKED(x+1,y+1,z-1)*aoFactor;
-						h = IS_BLOCKED(x-1,y+1,z-1)*aoFactor;
-					}
+                        e = is_blocked(closes, x - 1, y - 1, z - 1) * aoFactor;
+                        f = is_blocked(closes, x + 1, y - 1, z - 1) * aoFactor;
+                        g = is_blocked(closes, x + 1, y + 1, z - 1) * aoFactor;
+                        h = is_blocked(closes, x - 1, y + 1, z - 1) * aoFactor;
+                    }
 
-					VERTEX(index, x - 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v2, light * (1.0f-a-d-h));
-					VERTEX(index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v2, light * (1.0f-a-b-g));
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v2, light * (1.0f - a - d - h));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v2, light * (1.0f - a - b - g));
 
-					VERTEX(index, x - 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f-c-d-e));
-					VERTEX(index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v2, light * (1.0f-a-b-g));
-					VERTEX(index, x + 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f-b-c-f));
-				}
-			}
-		}
-	}
-	return new Mesh(buffer, index / VERTEX_SIZE, CHUNK_ATTRS);
+                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u2, v1, light * (1.0f - c - d - e));
+                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v2, light * (1.0f - a - b - g));
+                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u1, v1, light * (1.0f - b - c - f));
+                }
+            }
+        }
+    }
+    return new Mesh(buffer, index / VERTEX_SIZE, CHUNK_ATTRS);
 }

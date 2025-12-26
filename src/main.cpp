@@ -27,9 +27,9 @@ int WIDTH = 1280;
 int HEIGHT = 720;
 
 // Размеры набора чанков
-const int CHUNKS_X = 4;
-const int CHUNKS_Y = 1;
-const int CHUNKS_Z = 4;
+constexpr int CHUNKS_X = 4;
+constexpr int CHUNKS_Y = 1;
+constexpr int CHUNKS_Z = 4;
 
 // Вершины прицела-указателя
 float crosshair_vertices[] = {
