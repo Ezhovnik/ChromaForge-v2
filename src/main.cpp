@@ -26,66 +26,74 @@
 int WIDTH = 1280;
 int HEIGHT = 720;
 
+// Размеры набора чанков
+const int CHUNKS_X = 4;
+const int CHUNKS_Y = 1;
+const int CHUNKS_Z = 4;
+
+// Вершины прицела-указателя
+float crosshair_vertices[] = {
+    -0.01f, -0.01f,
+    0.01f, 0.01f,
+
+    -0.01f, 0.01f,
+    0.01f, -0.01f,
+};
+
+// Атрибуты вершин прицела-указателя
+int crosshair_attrs[] = {
+    2, 0
+};
+
 int main() {
     Window::initialize(WIDTH, HEIGHT, "ChromaForge"); // Инициализация окна
     Events::initialize(); // Инициализация системы событий
 
     // Загрузка шейдерной программы
-    ShaderProgram* shader = loadShaderProgram("../res/main.vert", "../res/main.frag");
+    ShaderProgram* shader = loadShaderProgram("../res/shaders/default.vert", "../res/shaders/default.frag");
     if (shader == nullptr) {
         std::cerr << "Failed to load shader program" << std::endl;
         Window::terminate();
         return -1;
     }
 
-    // Загрузка текстуры
+    // Загрузка шейдерной программы прицела-указателя
+    ShaderProgram* crosshair_shader = loadShaderProgram("../res/shaders/crosshair.vert", "../res/shaders/crosshair.frag");
+    if (crosshair_shader == nullptr) {
+        std::cerr << "Failed to load crosshair shader program" << std::endl;
+        Window::terminate();
+        return -1;
+    }
+
+    // Загрузка текстурного атласа
     Texture* texture = loadTexture("../res/textures/atlas.png");
     if (texture == nullptr) {
         std::cerr << "Failed to load texture" << std::endl;
+        delete crosshair_shader;
         delete shader;
         Window::terminate();
         return -1;
     }
 
-    Chunks* chunks = new Chunks(4, 1, 4);
-    Mesh** meshes = new Mesh*[chunks->volume];
-    VoxelRenderer renderer(1024 * 1024 * 8);
-
-    Chunk* closes[27];
+    Chunks* chunks = new Chunks(CHUNKS_X, CHUNKS_Y, CHUNKS_Z); // Создание и инициализация мира из чанков
+    Mesh** meshes = new Mesh*[chunks->volume]; // Массив мешей для каждого чанка
     for (size_t i = 0; i < chunks->volume; ++i) {
-        Chunk* chunk = chunks->chunks[i];
-        for (int j = 0; j < 27; ++j) {
-            closes[j] = nullptr;
-        }
-
-        for (size_t j = 0; j < chunks->volume; ++j) {
-            Chunk* other = chunks->chunks[j];
-
-            int ox = other->chunk_x - chunk->chunk_x;
-            int oy = other->chunk_y - chunk->chunk_y;
-            int oz = other->chunk_z - chunk->chunk_z;
-
-            if (abs(ox) > 1 || abs(oy) > 1 || abs(oz) > 1) {
-                continue;
-            }
-
-            closes[((oy + 1) * 3 + oz + 1) * 3 + ox + 1] = other;
-        }
-
-        Mesh* mesh = renderer.render(chunk, (const Chunk**) closes);
-        meshes[i] = mesh;
+        meshes[i] = nullptr;
     }
+    VoxelRenderer renderer(1024 * 1024 * 8); // Создание рендерера вокселей с заданной емкостью буфера
 
-    glClearColor(0, 0, 0, 1);
+    glClearColor(0, 0, 0, 1); // Черный цвет фона
 
     glEnable(GL_DEPTH_TEST); // Включение теста глубины
 
-    // Включение отсечения задних граней
+    // Включение отсечения задних граней для оптимизации
     glEnable(GL_CULL_FACE); 
     glCullFace(GL_BACK);
     
     glEnable(GL_BLEND); // Включение смешивания цветов
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Режим смешивания для прозрачности
+
+    Mesh* crosshair_mesh = new Mesh(crosshair_vertices, 4, crosshair_attrs); // Создание меша для прицела-указателя
 
     Camera* camera = new Camera(glm::vec3(0, 0, 1), glm::radians(70.0f)); // Создание камеры
 
@@ -112,9 +120,6 @@ int main() {
         if (Events::justPressed(GLFW_KEY_TAB)) {
             Events::toggleCursor(); // Переключение режима курсора (заблокирован/разблокирован)
         }
-        if (Events::justClicked(GLFW_MOUSE_BUTTON_1)) {
-            glClearColor(1, 0, 0, 1); // Меняем цвет заливки после нажатия ПКМ
-        }
 
         // Управление движением камеры с помощью WASD
         if (Events::isPressed(GLFW_KEY_W)) {
@@ -130,11 +135,12 @@ int main() {
             camera->position += camera->right * deltaTime * speed; // Вправо (D)
         }
 
+        // Вертикальное движение камеры
         if (Events::isPressed(GLFW_KEY_SPACE)) {
-            camera->position += camera->up * deltaTime * speed;
+            camera->position += camera->up * deltaTime * speed; // Вверх (пробел)
         }
         if (Events::isPressed(GLFW_KEY_LEFT_SHIFT)) {
-            camera->position -= camera->up * deltaTime * speed;
+            camera->position -= camera->up * deltaTime * speed; // Вниз (Shift)
         }
 
         // Управление поворотом камеры мышью (только в заблокированном режиме)
@@ -144,10 +150,11 @@ int main() {
             camX -= Events::deltaX / Window::height; // Горизонтальный поворот
 
             // Ограничение вертикального поворота
-            if (camY < -glm::radians(89.0f)) {
-                camY = -glm::radians(89.0f);
-            } else if (camY > glm::radians(89.0f)) {
-                camY = glm::radians(89.0f);
+            const float MAX_PITCH = glm::radians(89.0f);
+            if (camY < -MAX_PITCH) {
+                camY = -MAX_PITCH;
+            } else if (camY > MAX_PITCH) {
+                camY = MAX_PITCH;
             }
 
             // Применение поворота к камере
@@ -155,37 +162,122 @@ int main() {
             camera->rotate(camY, camX, 0);
         }
 
+        // Логика взаимодействия с вокселями (разрушение/установка блоков)
+        {
+            glm::vec3 hitPoint; // Точка попадания луча
+            glm::vec3 hitNormal; // Нормаль поверхности в точке попадания
+            glm::vec3 hitVoxelCoord; // Координаты вокселя в точке попадания
+            voxel* vox = chunks->rayCast(camera->position, camera->front, 10.0f, hitPoint, hitNormal, hitVoxelCoord);
+            if (vox != nullptr) {
+                // Ломаем блок на ЛКМ
+                if (Events::justClicked(GLFW_MOUSE_BUTTON_1)) {
+                    chunks->setVoxel((int)hitVoxelCoord.x, (int)hitVoxelCoord.y, (int)hitVoxelCoord.z, 0);
+                }
+                // Ставим землю (id = 2) на ПКМ
+                if (Events::justClicked(GLFW_MOUSE_BUTTON_2)) {
+                    chunks->setVoxel((int)hitVoxelCoord.x + (int)hitNormal.x, (int)hitVoxelCoord.y + (int)hitNormal.y, (int)hitVoxelCoord.z + (int)hitNormal.z, 2);
+                }
+            }
+        }
+
+        // Обновление мешей чанков, требующих перестроения
+        Chunk* neighborChunks[27];
+        for (size_t i = 0; i < chunks->volume; ++i) {
+            Chunk* chunk = chunks->chunks[i];
+
+            // Пропускаем чанки, не требующие обновления
+            if (!chunk->needsUpdate){
+                continue;
+            }
+            chunk->needsUpdate = false;
+
+            // Освобождаем старый меш, если он существует
+            if (meshes[i] != nullptr) {
+                delete meshes[i];
+                meshes[i] = nullptr;
+            }
+
+            // Собираем информацию о соседних чанках
+            for (int j = 0; j < 27; ++j) {
+                neighborChunks[j] = nullptr;
+            }
+
+            for (size_t j = 0; j < chunks->volume; ++j) {
+                Chunk* other = chunks->chunks[j];
+
+                // Вычисляем относительные координаты
+                int dx = other->chunk_x - chunk->chunk_x;
+                int dy = other->chunk_y - chunk->chunk_y;
+                int dz = other->chunk_z - chunk->chunk_z;
+
+                // Пропускаем чанки, которые не являются непосредственными соседями
+                if (abs(dx) > 1 || abs(dy) > 1 || abs(dz) > 1) {
+                    continue;
+                }
+
+                neighborChunks[((dy + 1) * 3 + dz + 1) * 3 + dx + 1] = other;
+            }
+
+            // Генерация нового меша для чанка
+            Mesh* mesh = renderer.render(chunk, (const Chunk**) neighborChunks, true);
+            meshes[i] = mesh;
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Очистка буферов цвета и глубины
 
-        shader->use(); // Активация шейдерной программы
+        // Активация шейдерной программы
+        shader->use();
 
         // Установка uniform-переменных для шейдера
         shader->uniformMatrix("projview", camera->getProjection() * camera->getView());
 
-        texture->bind(); // Привязка текстурного атласа
+        // Привязка текстурного атласа
+        texture->bind();
+
+        // Рендеринг всех чанков
         glm::mat4 model;
         for (size_t i = 0; i < chunks->volume; ++i) {
             Chunk* chunk = chunks->chunks[i];
             Mesh* mesh = meshes[i];
+
+            // Создание матрицы модели для текущего чанка
             model = glm::translate(
                 glm::mat4(1.0f),
                 glm::vec3(
-                    chunk->chunk_x * CHUNK_WIDTH,
-                    chunk->chunk_y * CHUNK_HEIGHT,
-                    chunk->chunk_z * CHUNK_DEPTH
+                    chunk->chunk_x * CHUNK_WIDTH + 0.5f,
+                    chunk->chunk_y * CHUNK_HEIGHT + 0.5f,
+                    chunk->chunk_z * CHUNK_DEPTH + 0.5f
                 )
             );
+
+            // Передача матрицы модели в шейдер
             shader->uniformMatrix("model", model);
+
+            // Отрисовка меша чанка
             mesh->draw(GL_TRIANGLES);
         }
+
+        // Рендеринг прицела-указателя
+        crosshair_shader->use();
+        crosshair_mesh->draw(GL_LINES);
 
         Window::swapBuffers(); // Обмен буферов
         Events::pollEvents(); // Обработка событий
     }
 
     // Очищаем ресурсы
+    delete crosshair_mesh;
+
+    for (size_t i = 0; i < chunks->volume; ++i) {
+        if (meshes[i] != nullptr) {
+            delete meshes[i];
+        }
+    }
+    delete[] meshes;
+
     delete chunks;
     delete texture;
+    delete crosshair_shader;
     delete shader;
 
     // Завершение работы

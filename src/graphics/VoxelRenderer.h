@@ -14,7 +14,7 @@ public:
     VoxelRenderer(size_t capacity); // Конструктор
     ~VoxelRenderer(); // Деструктор
 
-    Mesh* render(Chunk* chunk, const Chunk** closes); // Создает графический меш из воксельного чанка
+    Mesh* render(Chunk* chunk, const Chunk** closes, bool useAmbientOcclusion); // Создает графический меш из воксельного чанка
 };
 
 #endif // GRAPHICS_VOXELRENDERER_H_
