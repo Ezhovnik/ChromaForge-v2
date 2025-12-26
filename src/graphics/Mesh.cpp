@@ -5,9 +5,9 @@
 // Конструктор
 Mesh::Mesh(const float* buffer, size_t vertices, const int* attrs) : vertices(vertices) {
     // Вычисление размера вершины
-    int vertex_size = 0;
+    vertexSize = 0;
     for (int i = 0; attrs[i]; ++i) {
-        vertex_size += attrs[i];
+        vertexSize += attrs[i];
     }
 
     // Создание объектов OpenGL
@@ -18,7 +18,7 @@ Mesh::Mesh(const float* buffer, size_t vertices, const int* attrs) : vertices(ve
     glBindBuffer(GL_ARRAY_BUFFER, VBO); // Привязка VBO
     glBufferData(
         GL_ARRAY_BUFFER, 
-        sizeof(float) * vertex_size * vertices, // Общий размер данных
+        sizeof(float) * vertexSize * vertices, // Общий размер данных
         buffer, // Указатель на данные
         GL_STATIC_DRAW // GL_STATIC_DRAW указывает, что данные не будут изменяться часто
     ); // Загрузка вершин в буфер OpenGL
@@ -32,7 +32,7 @@ Mesh::Mesh(const float* buffer, size_t vertices, const int* attrs) : vertices(ve
             size, // Количество компонентов
             GL_FLOAT, // Тип данных
             GL_FALSE, 
-            vertex_size * sizeof(float), // Шаг между вершинами (в байтах)
+            vertexSize * sizeof(float), // Шаг между вершинами (в байтах)
             (void*)(offset * sizeof(float))
         ); // Указание формата атрибута
         glEnableVertexAttribArray(i); // Включение атрибута с индексом i
@@ -46,6 +46,15 @@ Mesh::Mesh(const float* buffer, size_t vertices, const int* attrs) : vertices(ve
 Mesh::~Mesh() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+}
+
+// Обновляет данные вершин меша
+void Mesh::reload(const float* buffer, size_t vertices) {
+    this->vertices = vertices;
+
+    glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexSize * vertices, buffer, GL_STATIC_DRAW);
 }
 
 // Отрисовывает меш с использованием указанного типа примитива.

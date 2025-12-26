@@ -33,6 +33,9 @@ public:
         glm::vec3& norm, // Нормаль поверхности в точке попадания
         glm::vec3& iend // Координаты вокселя в точке попадания
     );
+
+    void write(unsigned char* dest); // Записывает данные чанков в бинарный поток
+    void read(unsigned char* source); // Читает данные чанков из бинарного потока
 };
 
 #endif // VOXELS_CHUNKS_H_

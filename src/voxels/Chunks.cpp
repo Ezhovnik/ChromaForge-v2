@@ -212,3 +212,28 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 	norm.x = norm.y = norm.z = 0.0f;
 	return nullptr;
 }
+
+// Записывает данные чанков в бинарный поток
+void Chunks::write(unsigned char* dest) {
+    size_t index = 0;
+    for (size_t i = 0; i < volume; ++i) {
+        Chunk* chunk = chunks[i];
+        for (size_t j  = 0; j < CHUNK_VOLUME; ++j) {
+            dest[index] = chunk->voxels[j].id;
+            index++;
+        }
+    }
+}
+
+// Читает данные чанков из бинарного потока
+void Chunks::read(unsigned char* source) {
+    size_t index = 0;
+    for (size_t i = 0; i < volume; ++i) {
+        Chunk* chunk = chunks[i];
+        for (size_t j  = 0; j < CHUNK_VOLUME; ++j) {
+            chunk->voxels[j].id = source[index];
+            index++;
+        }
+        chunk->needsUpdate = true;
+    }
+}

@@ -21,18 +21,22 @@
 #include "voxels/Chunk.h"
 #include "voxels/Chunks.h"
 #include "graphics/VoxelRenderer.h"
+#include "graphics/LineBatch.h"
+#include "files/files.h"
 
 // Размеры окна по умолчанию
 int WIDTH = 1280;
 int HEIGHT = 720;
 
 // Размеры набора чанков
-constexpr int CHUNKS_X = 4;
-constexpr int CHUNKS_Y = 1;
-constexpr int CHUNKS_Z = 4;
+constexpr int CHUNKS_X = 16;
+constexpr int CHUNKS_Y = 8;
+constexpr int CHUNKS_Z = 16;
+
+constexpr float MAX_PITCH = glm::radians(89.0f); // Ограничесние вертикального поворота
 
 // Вершины прицела-указателя
-float crosshair_vertices[] = {
+const float crosshair_vertices[] = {
     -0.01f, -0.01f,
     0.01f, 0.01f,
 
@@ -41,7 +45,7 @@ float crosshair_vertices[] = {
 };
 
 // Атрибуты вершин прицела-указателя
-int crosshair_attrs[] = {
+const int crosshair_attrs[] = {
     2, 0
 };
 
@@ -61,6 +65,17 @@ int main() {
     ShaderProgram* crosshair_shader = loadShaderProgram("../res/shaders/crosshair.vert", "../res/shaders/crosshair.frag");
     if (crosshair_shader == nullptr) {
         std::cerr << "Failed to load crosshair shader program" << std::endl;
+        delete shader;
+        Window::terminate();
+        return -1;
+    }
+
+    // Загрузка шейдерной программы для отрисовки линий
+    ShaderProgram* lines_shader = loadShaderProgram("../res/shaders/lines.vert", "../res/shaders/lines.frag");
+    if (lines_shader == nullptr) {
+        std::cerr << "Failed to load lines shader program" << std::endl;
+        delete crosshair_shader;
+        delete shader;
         Window::terminate();
         return -1;
     }
@@ -69,6 +84,7 @@ int main() {
     Texture* texture = loadTexture("../res/textures/atlas.png");
     if (texture == nullptr) {
         std::cerr << "Failed to load texture" << std::endl;
+        delete lines_shader;
         delete crosshair_shader;
         delete shader;
         Window::terminate();
@@ -81,8 +97,9 @@ int main() {
         meshes[i] = nullptr;
     }
     VoxelRenderer renderer(1024 * 1024 * 8); // Создание рендерера вокселей с заданной емкостью буфера
+    LineBatch* lineBatch = new LineBatch(4096); // Буфер для пакетной отрисовки линий
 
-    glClearColor(0, 0, 0, 1); // Черный цвет фона
+    glClearColor(0.6f, 0.62f, 0.65f, 1.0f); // Серый цвет фона
 
     glEnable(GL_DEPTH_TEST); // Включение теста глубины
 
@@ -121,6 +138,31 @@ int main() {
             Events::toggleCursor(); // Переключение режима курсора (заблокирован/разблокирован)
         }
 
+        // Клавиши для сохранения и загрузки мира
+        if (Events::justPressed(GLFW_KEY_F1)) {
+            // Сохраняем мир (F1)
+            unsigned char* buffer = new unsigned char[chunks->volume * CHUNK_VOLUME];
+            chunks->write(buffer);
+            if (!write_binary_file("../saves/world.bin", (const char*)buffer, chunks->volume * CHUNK_VOLUME)) {
+                std::cerr << "Error: Failed to save world to file" << std::endl;
+            } else {
+                std::cout << "World saved in " << (chunks->volume * CHUNK_VOLUME) << " bytes" << std::endl;
+            }
+            delete[] buffer;
+        }
+        if (Events::justPressed(GLFW_KEY_F2)) {
+            // Загружаем мир (F2)
+            unsigned char* buffer = new unsigned char[chunks->volume * CHUNK_VOLUME];
+            if (!read_binary_file("../saves/world.bin", (char*)buffer, chunks->volume * CHUNK_VOLUME)) {
+                std::cerr << "Error: Failed to read world from file" << std::endl;
+            } else {
+                chunks->read(buffer);
+                std::cout << "World loaded successfully" << std::endl;
+            }
+            delete[] buffer;
+        }
+
+
         // Управление движением камеры с помощью WASD
         if (Events::isPressed(GLFW_KEY_W)) {
             camera->position += camera->front * deltaTime * speed; // Вперёд (W)
@@ -150,7 +192,6 @@ int main() {
             camX -= Events::deltaX / Window::height; // Горизонтальный поворот
 
             // Ограничение вертикального поворота
-            const float MAX_PITCH = glm::radians(89.0f);
             if (camY < -MAX_PITCH) {
                 camY = -MAX_PITCH;
             } else if (camY > MAX_PITCH) {
@@ -169,6 +210,13 @@ int main() {
             glm::vec3 hitVoxelCoord; // Координаты вокселя в точке попадания
             voxel* vox = chunks->rayCast(camera->position, camera->front, 10.0f, hitPoint, hitNormal, hitVoxelCoord);
             if (vox != nullptr) {
+                // Рисуем обводку для блока, на который смотрит камера
+                lineBatch->box(
+                    hitVoxelCoord.x + 0.5f, hitVoxelCoord.y + 0.5f, hitVoxelCoord.z + 0.5f,
+                    1.01f, 1.01f, 1.01f,
+                    0, 0, 0, 1
+                );
+
                 // Ломаем блок на ЛКМ
                 if (Events::justClicked(GLFW_MOUSE_BUTTON_1)) {
                     chunks->setVoxel((int)hitVoxelCoord.x, (int)hitVoxelCoord.y, (int)hitVoxelCoord.z, 0);
@@ -261,12 +309,19 @@ int main() {
         crosshair_shader->use();
         crosshair_mesh->draw(GL_LINES);
 
+        // Рендеринг обводки
+        lines_shader->use();
+        lines_shader->uniformMatrix("projview", camera->getProjection() * camera->getView());
+        glLineWidth(2.0f); // Толщина обводки
+        lineBatch->render();
+
         Window::swapBuffers(); // Обмен буферов
         Events::pollEvents(); // Обработка событий
     }
 
     // Очищаем ресурсы
     delete crosshair_mesh;
+    delete lineBatch;
 
     for (size_t i = 0; i < chunks->volume; ++i) {
         if (meshes[i] != nullptr) {
@@ -277,6 +332,8 @@ int main() {
 
     delete chunks;
     delete texture;
+
+    delete lines_shader;
     delete crosshair_shader;
     delete shader;
 

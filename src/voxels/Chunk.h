@@ -1,13 +1,11 @@
 #ifndef VOXELS_CHUNK_H_
 #define VOXELS_CHUNK_H_
 
-#include "voxel.h"
-
 // Размеры чанка
 constexpr int CHUNK_WIDTH = 16; // Ширина по X
 constexpr int CHUNK_HEIGHT = 16; // Высота по Y
 constexpr int CHUNK_DEPTH = 16; // Глубина по Z
-constexpr int CHUNK_VOL = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH; // Общее количество вокселей в чанке
+constexpr int CHUNK_VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH; // Общее количество вокселей в чанке
 
 class voxel;
 
