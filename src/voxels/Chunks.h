@@ -25,6 +25,10 @@ public:
     Chunk* getChunk(int chunk_x, int chunk_y, int chunk_z); // Возвращает чанк по координатам чанка
     voxel* getVoxel(int x, int y, int z); // Возвращает воксель по мировым координатам
     void setVoxel(int x, int y, int z, int id); // Устанавливает идентификатор вокселя по мировым координатам
+    Chunk* getChunkByVoxel(int x, int y, int z);
+
+    unsigned char getLight(int x, int y, int z, int channel);
+    
     voxel* rayCast( // Выполняет трассировку луча через воксельный мир.
         glm::vec3 start, // Начальная точка луча
         glm::vec3 dir, // Направление луча

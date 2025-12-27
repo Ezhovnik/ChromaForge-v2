@@ -8,6 +8,7 @@ constexpr int CHUNK_DEPTH = 16; // Глубина по Z
 constexpr int CHUNK_VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH; // Общее количество вокселей в чанке
 
 class voxel;
+class LightMap;
 
 // Чанк - часть воксельного мира
 class Chunk {
@@ -15,6 +16,7 @@ public:
     int chunk_x, chunk_y, chunk_z; // Координаты чанка
     voxel* voxels; // Массив вокселей, содержащихся в чанке
     bool needsUpdate = true; // Нужно ли обновить меш чанка
+    LightMap* light_map;
 
     Chunk(int chunk_x, int chunk_y, int chunk_z); // Конструктор
     ~Chunk(); // Деструктор

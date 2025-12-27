@@ -7,6 +7,7 @@
 
 #include "Chunk.h"
 #include "voxel.h"
+#include "../lighting/LightMap.h"
 
 // Преобразует мировые координаты в чанковые
 void worldToChunkCoords(int world_x, int world_y, int world_z, 
@@ -71,6 +72,26 @@ voxel* Chunks::getVoxel(int x, int y, int z) {
     int local_z = z - chunk_z * CHUNK_DEPTH;
 
     return &chunk->voxels[(local_y * CHUNK_DEPTH + local_z) * CHUNK_WIDTH + local_x];
+}
+
+unsigned char Chunks::getLight(int x, int y, int z, int channel){
+	int chunk_x, chunk_y, chunk_z;
+    worldToChunkCoords(x, y, z, chunk_x, chunk_y, chunk_z);
+	Chunk* chunk = getChunk(chunk_x, chunk_y, chunk_z);
+    if (chunk == nullptr) {
+        return 0;
+    }
+	int local_x = x - chunk_x * CHUNK_WIDTH;
+	int local_y = y - chunk_y * CHUNK_HEIGHT;
+	int local_z = z - chunk_z * CHUNK_DEPTH;
+	return chunk->light_map->get(local_x, local_y, local_z, channel);
+}
+
+Chunk* Chunks::getChunkByVoxel(int x, int y, int z){
+	int chunk_x, chunk_y, chunk_z;
+    worldToChunkCoords(x, y, z, chunk_x, chunk_y, chunk_z);
+    Chunk* chunk = getChunk(chunk_x, chunk_y, chunk_z);
+	return chunk;
 }
 
 // Устанавливает идентификатор вокселя по мировым координатам.

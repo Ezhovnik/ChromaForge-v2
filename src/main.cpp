@@ -23,6 +23,10 @@
 #include "graphics/VoxelRenderer.h"
 #include "graphics/LineBatch.h"
 #include "files/files.h"
+#include "lighting/LightSolver.h"
+#include "lighting/LightMap.h"
+#include "lighting/Lighting.h"
+#include "voxels/Block.h"
 
 // Размеры окна по умолчанию
 int WIDTH = 1280;
@@ -91,6 +95,37 @@ int main() {
         return -1;
     }
 
+    {
+        // Воздух
+        Block* block = new Block(0, 0);
+        block->drawGroup = 1;
+        block->lightPassing = true;
+        Block::blocks[block->id] = block;
+
+        // Дёрн
+        block = new Block(1, 4);
+        block->textureFaces[2] = 2;
+        block->textureFaces[3] = 1;
+        Block::blocks[block->id] = block;
+
+        // Земля
+        block = new Block(2, 2);
+        Block::blocks[block->id] = block;
+
+        // Светокамень
+        block = new Block(3, 3);
+        block->emission[0] = 14;
+        block->emission[1] = 12;
+        block->emission[2] = 3;
+        Block::blocks[block->id] = block;
+
+        // Стекло
+        block = new Block(4, 5);
+        block->drawGroup = 2;
+        block->lightPassing = true;
+        Block::blocks[block->id] = block;
+    }
+
     Chunks* chunks = new Chunks(CHUNKS_X, CHUNKS_Y, CHUNKS_Z); // Создание и инициализация мира из чанков
     Mesh** meshes = new Mesh*[chunks->volume]; // Массив мешей для каждого чанка
     for (size_t i = 0; i < chunks->volume; ++i) {
@@ -98,6 +133,8 @@ int main() {
     }
     VoxelRenderer renderer(1024 * 1024 * 8); // Создание рендерера вокселей с заданной емкостью буфера
     LineBatch* lineBatch = new LineBatch(4096); // Буфер для пакетной отрисовки линий
+
+    Lighting::initialize(chunks);
 
     glClearColor(0.6f, 0.62f, 0.65f, 1.0f); // Серый цвет фона
 
@@ -119,9 +156,14 @@ int main() {
     float deltaTime = 0.0f;
 
     // Параметры управления
-    float speed = 5.0f; // Скорость движения камеры
     float camX = 0.0f; // Угол поворота камеры по горизонтали
     float camY = 0.0f; // Угол поворота камеры по вертикали
+
+    float speed = 10.0f; // Скорость движения камеры
+
+    int choosenBlock = 1; // Идентификатор выбранного блока
+
+    Lighting::onWorldLoaded();
 
     // Главный игровой цикл
     while (!Window::isShouldClose()) {
@@ -160,8 +202,10 @@ int main() {
                 std::cout << "World loaded successfully" << std::endl;
             }
             delete[] buffer;
-        }
 
+            Lighting::clear();
+            Lighting::onWorldLoaded();
+        }
 
         // Управление движением камеры с помощью WASD
         if (Events::isPressed(GLFW_KEY_W)) {
@@ -184,6 +228,12 @@ int main() {
         if (Events::isPressed(GLFW_KEY_LEFT_SHIFT)) {
             camera->position -= camera->up * deltaTime * speed; // Вниз (Shift)
         }
+
+        for (int i = 1; i < 5; i++){
+			if (Events::justPressed(GLFW_KEY_0+i)){
+				choosenBlock = i;
+			}
+		}
 
         // Управление поворотом камеры мышью (только в заблокированном режиме)
         if (Events::_cursor_locked) {
@@ -213,18 +263,24 @@ int main() {
                 // Рисуем обводку для блока, на который смотрит камера
                 lineBatch->box(
                     hitVoxelCoord.x + 0.5f, hitVoxelCoord.y + 0.5f, hitVoxelCoord.z + 0.5f,
-                    1.01f, 1.01f, 1.01f,
+                    1.005f, 1.005f, 1.005f,
                     0, 0, 0, 1
                 );
 
-                // Ломаем блок на ЛКМ
-                if (Events::justClicked(GLFW_MOUSE_BUTTON_1)) {
-                    chunks->setVoxel((int)hitVoxelCoord.x, (int)hitVoxelCoord.y, (int)hitVoxelCoord.z, 0);
-                }
-                // Ставим землю (id = 2) на ПКМ
-                if (Events::justClicked(GLFW_MOUSE_BUTTON_2)) {
-                    chunks->setVoxel((int)hitVoxelCoord.x + (int)hitNormal.x, (int)hitVoxelCoord.y + (int)hitNormal.y, (int)hitVoxelCoord.z + (int)hitNormal.z, 2);
-                }
+                if (Events::justClicked(GLFW_MOUSE_BUTTON_1)){
+					int x = (int)hitVoxelCoord.x;
+					int y = (int)hitVoxelCoord.y;
+					int z = (int)hitVoxelCoord.z;
+					chunks->setVoxel(x, y, z, 0);
+                    Lighting::onBlockSet(x, y, z, 0);
+				}
+				if (Events::justClicked(GLFW_MOUSE_BUTTON_2)){
+					int x = (int)(hitVoxelCoord.x) + (int)(hitNormal.x);
+					int y = (int)(hitVoxelCoord.y) + (int)(hitNormal.y);
+					int z = (int)(hitVoxelCoord.z) + (int)(hitNormal.z);
+					chunks->setVoxel(x, y, z, choosenBlock);
+					Lighting::onBlockSet(x, y, z, choosenBlock);
+				}
             }
         }
 
@@ -267,7 +323,7 @@ int main() {
             }
 
             // Генерация нового меша для чанка
-            Mesh* mesh = renderer.render(chunk, (const Chunk**) neighborChunks, true);
+            Mesh* mesh = renderer.render(chunk, (const Chunk**) neighborChunks);
             meshes[i] = mesh;
         }
 
@@ -318,8 +374,9 @@ int main() {
         Window::swapBuffers(); // Обмен буферов
         Events::pollEvents(); // Обработка событий
     }
-
     // Очищаем ресурсы
+    Lighting::finalize();
+
     delete crosshair_mesh;
     delete lineBatch;
 
