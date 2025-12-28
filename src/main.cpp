@@ -53,7 +53,42 @@ const int crosshair_attrs[] = {
     2, 0
 };
 
+void setup_definitions() {
+    // Воздух
+        Block* block = new Block(0, 0);
+        block->drawGroup = 1;
+        block->lightPassing = true;
+        Block::blocks[block->id] = block;
+
+        // Мох
+        block = new Block(1, 1);
+        Block::blocks[block->id] = block;
+
+        // Земля
+        block = new Block(2, 2);
+        Block::blocks[block->id] = block;
+
+        // Светокамень
+        block = new Block(3, 3);
+        block->emission[0] = 14;
+        block->emission[1] = 12;
+        block->emission[2] = 3;
+        Block::blocks[block->id] = block;
+
+        // Стекло
+        block = new Block(4, 4);
+        block->drawGroup = 2;
+        block->lightPassing = true;
+        Block::blocks[block->id] = block;
+
+        // Доски
+        block = new Block(5, 5);
+        Block::blocks[block->id] = block;
+}
+
 int main() {
+    setup_definitions();
+
     Window::initialize(WIDTH, HEIGHT, "ChromaForge"); // Инициализация окна
     Events::initialize(); // Инициализация системы событий
 
@@ -93,37 +128,6 @@ int main() {
         delete shader;
         Window::terminate();
         return -1;
-    }
-
-    {
-        // Воздух
-        Block* block = new Block(0, 0);
-        block->drawGroup = 1;
-        block->lightPassing = true;
-        Block::blocks[block->id] = block;
-
-        // Дёрн
-        block = new Block(1, 4);
-        block->textureFaces[2] = 2;
-        block->textureFaces[3] = 1;
-        Block::blocks[block->id] = block;
-
-        // Земля
-        block = new Block(2, 2);
-        Block::blocks[block->id] = block;
-
-        // Светокамень
-        block = new Block(3, 3);
-        block->emission[0] = 14;
-        block->emission[1] = 12;
-        block->emission[2] = 3;
-        Block::blocks[block->id] = block;
-
-        // Стекло
-        block = new Block(4, 5);
-        block->drawGroup = 2;
-        block->lightPassing = true;
-        Block::blocks[block->id] = block;
     }
 
     Chunks* chunks = new Chunks(CHUNKS_X, CHUNKS_Y, CHUNKS_Z); // Создание и инициализация мира из чанков
@@ -229,7 +233,7 @@ int main() {
             camera->position -= camera->up * deltaTime * speed; // Вниз (Shift)
         }
 
-        for (int i = 1; i < 5; i++){
+        for (int i = 1; i < 6; i++){
 			if (Events::justPressed(GLFW_KEY_0+i)){
 				choosenBlock = i;
 			}

@@ -16,6 +16,11 @@ public:
 
     void use(); // Активирует шейдерную программу для использования в текущем контексте отрисовки
     void uniformMatrix(std::string name, glm::mat4 matrix); // Загружает матрицу 4x4 в uniform-переменную шейдера
+    void uniform1i(std::string name, int x);
+    void uniform1f(std::string name, float x);
+    void uniform2f(std::string name, float x, float y);
+    void uniform3f(std::string name, float x, float y, float z);
+
 };
 
 extern ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile); // Внешняя функция для загрузки и компиляции шейдерной программы

@@ -32,3 +32,39 @@ void ShaderProgram::uniformMatrix(std::string name, glm::mat4 matrix) {
 
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 }
+
+void ShaderProgram::uniform1i(std::string name, int x){
+	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
+    if (transformLoc == -1) {
+        std::cerr << "Failed to find uniform variable " << name << std::endl;
+        return;
+    }
+	glUniform1i(transformLoc, x);
+}
+
+void ShaderProgram::uniform1f(std::string name, float x){
+	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
+    if (transformLoc == -1) {
+        std::cerr << "Failed to find uniform variable " << name << std::endl;
+        return;
+    }
+	glUniform1f(transformLoc, x);
+}
+
+void ShaderProgram::uniform2f(std::string name, float x, float y){
+	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
+    if (transformLoc == -1) {
+        std::cerr << "Failed to find uniform variable " << name << std::endl;
+        return;
+    }
+	glUniform2f(transformLoc, x, y);
+}
+
+void ShaderProgram::uniform3f(std::string name, float x, float y, float z){
+	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
+    if (transformLoc == -1) {
+        std::cerr << "Failed to find uniform variable " << name << std::endl;
+        return;
+    }
+	glUniform3f(transformLoc, x,y,z);
+}

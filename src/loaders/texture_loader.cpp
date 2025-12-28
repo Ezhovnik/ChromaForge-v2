@@ -22,13 +22,6 @@ GLuint loadImage(const char* file, int* width, int* height) {
         return 0;
     }
 
-    // Валидация параметров изображения
-    if (*width <= 0 || *height <= 0 || numColCh <= 0) {
-        std::cerr << "Invalid image dimensions or channels: " << file << std::endl;
-        stbi_image_free(bytes);
-        return 0;
-    }
-
     glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
