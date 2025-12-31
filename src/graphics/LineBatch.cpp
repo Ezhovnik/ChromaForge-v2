@@ -23,9 +23,7 @@ LineBatch::~LineBatch() {
 
 // Добавляет линию в буфер для отрисовки
 void LineBatch::line(float start_x, float start_y, float start_z, float end_x, float end_y, float end_z, float red, float green, float blue, float alpha) {
-    if (index >= capacity * LB_VERTEX_SIZE * 2) {
-        return;
-    }
+    if (index >= capacity * LB_VERTEX_SIZE * 2) return;
 
     // Записываем данные начальной вершины
     buffer[index++] = start_x;
@@ -118,9 +116,8 @@ void LineBatch::box(float x, float y, float z, float width, float height, float 
 
 // Выполняет отрисовку всех накопленных линий
 void LineBatch::render() {
-    if (index == 0) {
-        return;
-    }
+    if (index == 0) return;
+
     mesh->reload(buffer, index / LB_VERTEX_SIZE);
     mesh->draw(GL_LINES);
     index = 0;

@@ -23,6 +23,7 @@ void ShaderProgram::use() {
     glUseProgram(id);
 }
 
+// Загружает матрицу 4x4 в uniform-переменную шейдера
 void ShaderProgram::uniformMatrix(std::string name, glm::mat4 matrix) {
     GLint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
@@ -33,6 +34,7 @@ void ShaderProgram::uniformMatrix(std::string name, glm::mat4 matrix) {
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
+// Загружает целое число в uniform-переменную шейдера
 void ShaderProgram::uniform1i(std::string name, int x){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
@@ -42,6 +44,7 @@ void ShaderProgram::uniform1i(std::string name, int x){
 	glUniform1i(transformLoc, x);
 }
 
+// Загружает вещественное число в uniform-переменную шейдера
 void ShaderProgram::uniform1f(std::string name, float x){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
@@ -51,6 +54,8 @@ void ShaderProgram::uniform1f(std::string name, float x){
 	glUniform1f(transformLoc, x);
 }
 
+
+// Загружает два вещественных числа в uniform-переменную шейдера
 void ShaderProgram::uniform2f(std::string name, float x, float y){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
@@ -60,6 +65,7 @@ void ShaderProgram::uniform2f(std::string name, float x, float y){
 	glUniform2f(transformLoc, x, y);
 }
 
+// Загружает три вещественных числа в uniform-переменную шейдера
 void ShaderProgram::uniform3f(std::string name, float x, float y, float z){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {

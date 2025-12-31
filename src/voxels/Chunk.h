@@ -3,7 +3,7 @@
 
 // Размеры чанка
 constexpr int CHUNK_WIDTH = 16; // Ширина по X
-constexpr int CHUNK_HEIGHT = 16; // Высота по Y
+constexpr int CHUNK_HEIGHT = 64; // Высота по Y
 constexpr int CHUNK_DEPTH = 16; // Глубина по Z
 constexpr int CHUNK_VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH; // Общее количество вокселей в чанке
 
@@ -20,6 +20,8 @@ public:
 
     Chunk(int chunk_x, int chunk_y, int chunk_z); // Конструктор
     ~Chunk(); // Деструктор
+
+    bool isEmpty();
 };
 
 #endif // VOXELS_CHUNK_H_

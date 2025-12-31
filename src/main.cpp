@@ -27,17 +27,25 @@
 #include "lighting/LightMap.h"
 #include "lighting/Lighting.h"
 #include "voxels/Block.h"
+#include "files/WorldFiles.h"
+#include "physics/Hitbox.h"
+#include "physics/PhysicsSolver.h"
+#include "voxels/WorldGenerator.h"
 
 // Размеры окна по умолчанию
-int WIDTH = 1280;
-int HEIGHT = 720;
-
-// Размеры набора чанков
-constexpr int CHUNKS_X = 16;
-constexpr int CHUNKS_Y = 8;
-constexpr int CHUNKS_Z = 16;
+int WINDOW_WIDTH = 1280;
+int WINDOW_HEIGHT = 720;
 
 constexpr float MAX_PITCH = glm::radians(89.0f); // Ограничесние вертикального поворота
+constexpr float GRAVITY = 16.0f;
+constexpr glm::vec3 SPAWNPOINT = glm::vec3(32, 32, 32);
+constexpr float CROUCH_SPEED_MUL = 0.25f;
+constexpr float RUN_SPEED_MUL = 1.5f;
+constexpr float DEFAULT_PLAYER_SPEED = 5.0f;
+constexpr float JUMP_FORCE = 6.0f;
+constexpr float CROUCH_SHIFT_Y = -0.2f;
+constexpr float CROUCH_ZOOM = 0.9f;
+constexpr float RUN_ZOOM = 1.1f;
 
 // Вершины прицела-указателя
 const float crosshair_vertices[] = {
@@ -53,11 +61,21 @@ const int crosshair_attrs[] = {
     2, 0
 };
 
+// Указатели на игровые объекты
+Mesh *crosshair_mesh; // Меш прицела
+ShaderProgram *shader, *crosshair_shader, *lines_shader; // Шейдерные програмы
+Texture *texture; // Текстурный атлас
+LineBatch *lineBatch; // Буфер для пакетной отрисовки линий
+Chunks* chunks; // Чанки
+WorldFiles* wfile; // Объект для управления загрузкой мира
+
+// Инициализирует блоки и их свойства
 void setup_definitions() {
-    // Воздух
+        // Воздух
         Block* block = new Block(0, 0);
         block->drawGroup = 1;
         block->lightPassing = true;
+        block->obstacle = false;
         Block::blocks[block->id] = block;
 
         // Мох
@@ -84,61 +102,139 @@ void setup_definitions() {
         // Доски
         block = new Block(5, 5);
         Block::blocks[block->id] = block;
+
+        // Бревно
+        block = new Block(6, 6);
+        block->textureFaces[2] = 7;
+        block->textureFaces[3] = 7;
+        Block::blocks[block->id] = block;
+
+        // Листва
+        block = new Block(7, 8);
+        block->drawGroup = 3;
+        block->lightPassing = true;
+        Block::blocks[block->id] = block;
 }
 
-int main() {
-    setup_definitions();
-
-    Window::initialize(WIDTH, HEIGHT, "ChromaForge"); // Инициализация окна
-    Events::initialize(); // Инициализация системы событий
-
+// Инициализирует графические ресурсы (шейдеры и текстурный атлас)
+bool initialize_assets() {
     // Загрузка шейдерной программы
-    ShaderProgram* shader = loadShaderProgram("../res/shaders/default.vert", "../res/shaders/default.frag");
+    shader = loadShaderProgram("../res/shaders/default.vert", "../res/shaders/default.frag");
     if (shader == nullptr) {
         std::cerr << "Failed to load shader program" << std::endl;
-        Window::terminate();
-        return -1;
+        return false;
     }
 
     // Загрузка шейдерной программы прицела-указателя
-    ShaderProgram* crosshair_shader = loadShaderProgram("../res/shaders/crosshair.vert", "../res/shaders/crosshair.frag");
+    crosshair_shader = loadShaderProgram("../res/shaders/crosshair.vert", "../res/shaders/crosshair.frag");
     if (crosshair_shader == nullptr) {
         std::cerr << "Failed to load crosshair shader program" << std::endl;
         delete shader;
-        Window::terminate();
-        return -1;
+        return false;
     }
 
     // Загрузка шейдерной программы для отрисовки линий
-    ShaderProgram* lines_shader = loadShaderProgram("../res/shaders/lines.vert", "../res/shaders/lines.frag");
+    lines_shader = loadShaderProgram("../res/shaders/lines.vert", "../res/shaders/lines.frag");
     if (lines_shader == nullptr) {
         std::cerr << "Failed to load lines shader program" << std::endl;
         delete crosshair_shader;
         delete shader;
-        Window::terminate();
-        return -1;
+        return false;
     }
 
     // Загрузка текстурного атласа
-    Texture* texture = loadTexture("../res/textures/atlas.png");
+    texture = loadTexture("../res/textures/atlas.png");
     if (texture == nullptr) {
         std::cerr << "Failed to load texture" << std::endl;
         delete lines_shader;
         delete crosshair_shader;
         delete shader;
+        return false;
+    }
+
+    return true;
+}
+
+// Отрисовывает игровой мир
+void draw_world(Camera* camera){
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	shader->use();
+	shader->uniformMatrix("u_projview", camera->getProjection() * camera->getView());
+	shader->uniform1f("u_gamma", 1.6f);
+	shader->uniform3f("u_skyLightColor", 0.1 * 2, 0.15 * 2, 0.2 * 2);
+	texture->bind();
+	glm::mat4 model;
+	for (size_t i = 0; i < chunks->volume; ++i){
+		Chunk* chunk = chunks->chunks[i];
+		if (chunk == nullptr) continue;
+		Mesh* mesh = chunks->meshes[i];
+		if (mesh == nullptr) continue;
+		model = glm::translate(glm::mat4(1.0f), glm::vec3(chunk->chunk_x * CHUNK_WIDTH + 0.5f, chunk->chunk_y * CHUNK_HEIGHT + 0.5f, chunk->chunk_z * CHUNK_DEPTH + 0.5f));
+		shader->uniformMatrix("u_model", model);
+		mesh->draw(GL_TRIANGLES);
+	}
+
+	crosshair_shader->use();
+	crosshair_mesh->draw(GL_LINES);
+
+	lines_shader->use();
+	lines_shader->uniformMatrix("u_projview", camera->getProjection() * camera->getView());
+	glLineWidth(2.0f);
+	lineBatch->render();
+}
+
+// Освобождает графические ресурсы
+void finalize_assets(){
+	delete shader;
+	delete texture;
+	delete crosshair_mesh;
+	delete crosshair_shader;
+	delete lines_shader;
+	delete lineBatch;
+}
+
+// Сохраняет мир в файл
+void write_world(){
+	for (uint i = 0; i < chunks->volume; ++i){
+		Chunk* chunk = chunks->chunks[i];
+		if (chunk == nullptr) continue;
+		wfile->put((const char*)chunk->voxels, chunk->chunk_x, chunk->chunk_z);
+	}
+
+	wfile->write();
+}
+
+// Освобождает ресурсы мира
+void close_world(){
+	delete chunks;
+	delete wfile;
+}
+
+int main() {
+    setup_definitions();
+
+    Window::initialize(WINDOW_WIDTH, WINDOW_HEIGHT, "ChromaForge"); // Инициализация окна
+    Events::initialize(); // Инициализация системы событий
+
+    if(!initialize_assets()) {
+        std::cerr << "Failed to load assets" << std::endl;
         Window::terminate();
         return -1;
     }
 
-    Chunks* chunks = new Chunks(CHUNKS_X, CHUNKS_Y, CHUNKS_Z); // Создание и инициализация мира из чанков
-    Mesh** meshes = new Mesh*[chunks->volume]; // Массив мешей для каждого чанка
-    for (size_t i = 0; i < chunks->volume; ++i) {
-        meshes[i] = nullptr;
-    }
-    VoxelRenderer renderer(1024 * 1024 * 8); // Создание рендерера вокселей с заданной емкостью буфера
-    LineBatch* lineBatch = new LineBatch(4096); // Буфер для пакетной отрисовки линий
+    // Создание игровых объектов
+    wfile = new WorldFiles("../saves/world/", REGION_VOLUME * (CHUNK_VOLUME * 2 + 8));
+	chunks = new Chunks(32,1,32, 0,0,0);
+	VoxelRenderer renderer(1024 * 1024);
+	lineBatch = new LineBatch(4096);
+	PhysicsSolver physics(glm::vec3(0, -GRAVITY, 0));
 
-    Lighting::initialize(chunks);
+	Lighting::initialize(chunks);
+
+	crosshair_mesh = new Mesh(crosshair_vertices, 4, crosshair_attrs);
+	Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
+	Hitbox* hitbox = new Hitbox(SPAWNPOINT, glm::vec3(0.2f,0.9f,0.2f));
 
     glClearColor(0.6f, 0.62f, 0.65f, 1.0f); // Серый цвет фона
 
@@ -151,10 +247,6 @@ int main() {
     glEnable(GL_BLEND); // Включение смешивания цветов
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Режим смешивания для прозрачности
 
-    Mesh* crosshair_mesh = new Mesh(crosshair_vertices, 4, crosshair_attrs); // Создание меша для прицела-указателя
-
-    Camera* camera = new Camera(glm::vec3(0, 0, 1), glm::radians(70.0f)); // Создание камеры
-
     // Переменные для отслеживания времени
     float lastTime = glfwGetTime();
     float deltaTime = 0.0f;
@@ -163,14 +255,18 @@ int main() {
     float camX = 0.0f; // Угол поворота камеры по горизонтали
     float camY = 0.0f; // Угол поворота камеры по вертикали
 
-    float speed = 10.0f; // Скорость движения камеры
+    float playerSpeed = DEFAULT_PLAYER_SPEED;
 
     int choosenBlock = 1; // Идентификатор выбранного блока
 
-    Lighting::onWorldLoaded();
+	long frame = 0;
+
+    glfwSwapInterval(1);
 
     // Главный игровой цикл
     while (!Window::isShouldClose()) {
+        frame++;
+
         // Расчет времени между кадрами
         float currentTime = glfwGetTime();
         deltaTime = currentTime - lastTime;
@@ -184,66 +280,84 @@ int main() {
             Events::toggleCursor(); // Переключение режима курсора (заблокирован/разблокирован)
         }
 
-        // Клавиши для сохранения и загрузки мира
-        if (Events::justPressed(GLFW_KEY_F1)) {
-            // Сохраняем мир (F1)
-            unsigned char* buffer = new unsigned char[chunks->volume * CHUNK_VOLUME];
-            chunks->write(buffer);
-            if (!write_binary_file("../saves/world.bin", (const char*)buffer, chunks->volume * CHUNK_VOLUME)) {
-                std::cerr << "Error: Failed to save world to file" << std::endl;
-            } else {
-                std::cout << "World saved in " << (chunks->volume * CHUNK_VOLUME) << " bytes" << std::endl;
-            }
-            delete[] buffer;
-        }
-        if (Events::justPressed(GLFW_KEY_F2)) {
-            // Загружаем мир (F2)
-            unsigned char* buffer = new unsigned char[chunks->volume * CHUNK_VOLUME];
-            if (!read_binary_file("../saves/world.bin", (char*)buffer, chunks->volume * CHUNK_VOLUME)) {
-                std::cerr << "Error: Failed to read world from file" << std::endl;
-            } else {
-                chunks->read(buffer);
-                std::cout << "World loaded successfully" << std::endl;
-            }
-            delete[] buffer;
-
-            Lighting::clear();
-            Lighting::onWorldLoaded();
-        }
-
-        // Управление движением камеры с помощью WASD
-        if (Events::isPressed(GLFW_KEY_W)) {
-            camera->position += camera->front * deltaTime * speed; // Вперёд (W)
-        }
-        if (Events::isPressed(GLFW_KEY_S)) {
-            camera->position -= camera->front * deltaTime * speed; // Назад (S)
-        }
-        if (Events::isPressed(GLFW_KEY_A)) {
-            camera->position -= camera->right * deltaTime * speed; // Влево (A)
-        }
-        if (Events::isPressed(GLFW_KEY_D)) {
-            camera->position += camera->right * deltaTime * speed; // Вправо (D)
-        }
-
-        // Вертикальное движение камеры
-        if (Events::isPressed(GLFW_KEY_SPACE)) {
-            camera->position += camera->up * deltaTime * speed; // Вверх (пробел)
-        }
-        if (Events::isPressed(GLFW_KEY_LEFT_SHIFT)) {
-            camera->position -= camera->up * deltaTime * speed; // Вниз (Shift)
-        }
-
-        for (int i = 1; i < 6; i++){
-			if (Events::justPressed(GLFW_KEY_0+i)){
+        // Выбор блока с клавиш
+        for (int i = 1; i < 8; i++){
+			if (Events::justPressed(GLFW_KEY_0 + i)){
 				choosenBlock = i;
 			}
 		}
 
+        // Обработка движения игрока
+        bool isSprinting = Events::isPressed(GLFW_KEY_LEFT_CONTROL);
+		bool isCrouching = Events::isPressed(GLFW_KEY_LEFT_SHIFT) && hitbox->grounded && !isSprinting;
+		float speed = playerSpeed;
+
+        // Расчет подшагов для физики
+		int substeps = (int)(deltaTime * 1000);
+		substeps = (substeps <= 0 ? 1 : (substeps > 100 ? 100 : substeps));
+
+        // Шаг физики
+		physics.step(chunks, hitbox, deltaTime, substeps, isCrouching);
+
+        // Обновление позиции камеры на основе хитбокса игрока
+		camera->position.x = hitbox->position.x;
+		camera->position.y = hitbox->position.y + 0.5f;
+		camera->position.z = hitbox->position.z;
+
+        // Плавное изменение зума при приседании/спринте
+		float interpolationFactor = glm::min(1.0f, deltaTime * 16);
+		if (isCrouching){
+			speed *= CROUCH_SPEED_MUL;
+			camera->position.y -= CROUCH_SHIFT_Y;
+			camera->zoom = CROUCH_ZOOM * interpolationFactor + camera->zoom * (1.0f - interpolationFactor);
+		} else if (isSprinting){
+			speed *= RUN_SPEED_MUL;
+			camera->zoom = RUN_ZOOM * interpolationFactor + camera->zoom * (1.0f - interpolationFactor);
+		} else {
+			camera->zoom = interpolationFactor + camera->zoom * (1.0f - interpolationFactor);
+		}
+
+        // Прыжок
+		if (Events::isPressed(GLFW_KEY_SPACE) && hitbox->grounded){
+			hitbox->velocity.y = JUMP_FORCE;
+		}
+
+        // Расчёт направления движения
+        glm::vec3 moveDirection(0.0f);
+		if (Events::isPressed(GLFW_KEY_W)){ // Вперед
+			moveDirection.x += camera->front.x;
+            moveDirection.z += camera->front.z;
+		}
+		if (Events::isPressed(GLFW_KEY_S)){ // Назад
+			moveDirection.x -= camera->front.x;
+            moveDirection.z -= camera->front.z;
+		}
+		if (Events::isPressed(GLFW_KEY_D)){ // Вправо
+			moveDirection.x += camera->right.x;
+			moveDirection.z += camera->right.z;
+		}
+		if (Events::isPressed(GLFW_KEY_A)){ // Влево
+			moveDirection.x -= camera->right.x;
+			moveDirection.z -= camera->right.z;
+		}
+
+		if (glm::length(moveDirection) > 0.0f){ // Нормализация направления
+            moveDirection = glm::normalize(moveDirection);
+        }
+        // Применение скорости к хитбоксу
+		hitbox->velocity.x = moveDirection.x * speed;
+		hitbox->velocity.z = moveDirection.z * speed;
+
+        // Обновление и рендеринг чанков
+        chunks->setCenter(wfile, camera->position.x, 0, camera->position.z);
+		chunks->_buildMeshes(&renderer);
+		chunks->loadVisible(wfile);
+
         // Управление поворотом камеры мышью (только в заблокированном режиме)
         if (Events::_cursor_locked) {
             // Обновление углов поворота на основе движения мыши
-            camY -= Events::deltaY / Window::width; // Вертикальный поворот
-            camX -= Events::deltaX / Window::height; // Горизонтальный поворот
+            camY -= Events::deltaY / Window::height * 2; // Вертикальный поворот
+            camX -= Events::deltaX / Window::height * 2; // Горизонтальный поворот
 
             // Ограничение вертикального поворота
             if (camY < -MAX_PITCH) {
@@ -271,14 +385,14 @@ int main() {
                     0, 0, 0, 1
                 );
 
-                if (Events::justClicked(GLFW_MOUSE_BUTTON_1)){
+                if (Events::justClicked(GLFW_MOUSE_BUTTON_1)){ // На ЛКМ разрушаем блок
 					int x = (int)hitVoxelCoord.x;
 					int y = (int)hitVoxelCoord.y;
 					int z = (int)hitVoxelCoord.z;
 					chunks->setVoxel(x, y, z, 0);
                     Lighting::onBlockSet(x, y, z, 0);
 				}
-				if (Events::justClicked(GLFW_MOUSE_BUTTON_2)){
+				if (Events::justClicked(GLFW_MOUSE_BUTTON_2)){ // На ПКМ ставим блок
 					int x = (int)(hitVoxelCoord.x) + (int)(hitNormal.x);
 					int y = (int)(hitVoxelCoord.y) + (int)(hitNormal.y);
 					int z = (int)(hitVoxelCoord.z) + (int)(hitNormal.z);
@@ -288,117 +402,22 @@ int main() {
             }
         }
 
-        // Обновление мешей чанков, требующих перестроения
-        Chunk* neighborChunks[27];
-        for (size_t i = 0; i < chunks->volume; ++i) {
-            Chunk* chunk = chunks->chunks[i];
 
-            // Пропускаем чанки, не требующие обновления
-            if (!chunk->needsUpdate){
-                continue;
-            }
-            chunk->needsUpdate = false;
-
-            // Освобождаем старый меш, если он существует
-            if (meshes[i] != nullptr) {
-                delete meshes[i];
-                meshes[i] = nullptr;
-            }
-
-            // Собираем информацию о соседних чанках
-            for (int j = 0; j < 27; ++j) {
-                neighborChunks[j] = nullptr;
-            }
-
-            for (size_t j = 0; j < chunks->volume; ++j) {
-                Chunk* other = chunks->chunks[j];
-
-                // Вычисляем относительные координаты
-                int dx = other->chunk_x - chunk->chunk_x;
-                int dy = other->chunk_y - chunk->chunk_y;
-                int dz = other->chunk_z - chunk->chunk_z;
-
-                // Пропускаем чанки, которые не являются непосредственными соседями
-                if (abs(dx) > 1 || abs(dy) > 1 || abs(dz) > 1) {
-                    continue;
-                }
-
-                neighborChunks[((dy + 1) * 3 + dz + 1) * 3 + dx + 1] = other;
-            }
-
-            // Генерация нового меша для чанка
-            Mesh* mesh = renderer.render(chunk, (const Chunk**) neighborChunks);
-            meshes[i] = mesh;
-        }
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Очистка буферов цвета и глубины
-
-        // Активация шейдерной программы
-        shader->use();
-
-        // Установка uniform-переменных для шейдера
-        shader->uniformMatrix("projview", camera->getProjection() * camera->getView());
-
-        // Привязка текстурного атласа
-        texture->bind();
-
-        // Рендеринг всех чанков
-        glm::mat4 model;
-        for (size_t i = 0; i < chunks->volume; ++i) {
-            Chunk* chunk = chunks->chunks[i];
-            Mesh* mesh = meshes[i];
-
-            // Создание матрицы модели для текущего чанка
-            model = glm::translate(
-                glm::mat4(1.0f),
-                glm::vec3(
-                    chunk->chunk_x * CHUNK_WIDTH + 0.5f,
-                    chunk->chunk_y * CHUNK_HEIGHT + 0.5f,
-                    chunk->chunk_z * CHUNK_DEPTH + 0.5f
-                )
-            );
-
-            // Передача матрицы модели в шейдер
-            shader->uniformMatrix("model", model);
-
-            // Отрисовка меша чанка
-            mesh->draw(GL_TRIANGLES);
-        }
-
-        // Рендеринг прицела-указателя
-        crosshair_shader->use();
-        crosshair_mesh->draw(GL_LINES);
-
-        // Рендеринг обводки
-        lines_shader->use();
-        lines_shader->uniformMatrix("projview", camera->getProjection() * camera->getView());
-        glLineWidth(2.0f); // Толщина обводки
-        lineBatch->render();
+        draw_world(camera); // Отрисовка кадра
 
         Window::swapBuffers(); // Обмен буферов
         Events::pollEvents(); // Обработка событий
     }
-    // Очищаем ресурсы
-    Lighting::finalize();
 
-    delete crosshair_mesh;
-    delete lineBatch;
-
-    for (size_t i = 0; i < chunks->volume; ++i) {
-        if (meshes[i] != nullptr) {
-            delete meshes[i];
-        }
-    }
-    delete[] meshes;
-
-    delete chunks;
-    delete texture;
-
-    delete lines_shader;
-    delete crosshair_shader;
-    delete shader;
+    // Сохранение мира
+    write_world();
+	close_world();
 
     // Завершение работы
-    Window::terminate();
+	Lighting::finalize();
+	finalize_assets();
+    Events::finalize();
+	Window::terminate();
+
     return 0;
 }

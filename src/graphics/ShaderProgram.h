@@ -15,11 +15,12 @@ public:
     ~ShaderProgram(); // Деструктор
 
     void use(); // Активирует шейдерную программу для использования в текущем контексте отрисовки
+
     void uniformMatrix(std::string name, glm::mat4 matrix); // Загружает матрицу 4x4 в uniform-переменную шейдера
-    void uniform1i(std::string name, int x);
-    void uniform1f(std::string name, float x);
-    void uniform2f(std::string name, float x, float y);
-    void uniform3f(std::string name, float x, float y, float z);
+    void uniform1i(std::string name, int x); // Загружает целое число в uniform-переменную шейдера
+    void uniform1f(std::string name, float x); // Загружает вещественное число в uniform-переменную шейдера
+    void uniform2f(std::string name, float x, float y); // Загружает два вещественных числа в uniform-переменную шейдера
+    void uniform3f(std::string name, float x, float y, float z); // Загружает три вещественных числа в uniform-переменную шейдера
 
 };
 

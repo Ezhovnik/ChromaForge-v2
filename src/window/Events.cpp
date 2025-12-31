@@ -105,6 +105,11 @@ int Events::initialize(){
     return 0;
 }
 
+void Events::finalize(){
+	delete[] _keys;
+	delete[] _frames;
+}
+
 // Проверяет, нажата ли клавиша в данный момент
 bool Events::isPressed(int keycode) {
     if (keycode < 0 || keycode  >= _MOUSE_BUTTONS) {

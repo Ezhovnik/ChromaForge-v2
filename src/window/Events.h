@@ -23,6 +23,7 @@ public:
 
     // Методы инициализации и обновления
     static int initialize(); // Инициализация системы событий
+    static void finalize();
     static void pollEvents(); // Обработка событий текущего кадра
 
     static bool isPressed(int keycode); // Проверяет, нажата ли клавиша в текущий момент

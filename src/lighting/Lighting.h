@@ -15,7 +15,8 @@ public:
     static void finalize();
 
     static void clear();
-    static void onWorldLoaded();
+    // static void onWorldLoaded();
+    static void onChunkLoaded(int chunk_x, int chunk_y, int chunk_z);
     static void onBlockSet(int x, int y, int z, int id);
 };
 

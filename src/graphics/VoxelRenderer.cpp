@@ -5,35 +5,44 @@
 #include "../voxels/Block.h"
 #include "../lighting/LightMap.h"
 
-constexpr int VERTEX_SIZE = (3 + 2 + 4);
+// Константы для формата вершин
+constexpr int VERTEX_SIZE = (3 + 2 + 4); // Формат: pos(3) + texcoord(2) + color(4)
 const int CHUNK_ATTRS[] = {3, 2, 4, 0};
-constexpr float UVSIZE = 1.0f / 16.0f;
+constexpr float UVSIZE = 1.0f / 16.0f; // Размер одной текстуры в атласе 16x16
 
+// Целочисленное деление с округлением вниз для отрицательных чисел
 inline int cdiv(int x, int a) {
     return (x < 0) ? (x / a - 1) : (x / a);
 }
 
+// Преобразует глобальную отрицательную координату в локальную внутри чанка
 inline int local_neg(int x, int size) {
     return (x < 0) ? (size + x) : x;
 }
 
+// Преобразует глобальную координату в локальную внутри чанка
 inline int local(int x, int size) {
     return (x >= size) ? (x - size) : local_neg(x, size);
 }
 
+// Получает указатель на чанк в окружающих чанках для заданных мировых координат 
 const Chunk* get_chunk(int x, int y, int z, const Chunk** closes) {
+    // Определяем, в каком из окружающих 27 чанков находится воксель
     int chunk_x = cdiv(x, CHUNK_WIDTH);
     int chunk_y = cdiv(y, CHUNK_HEIGHT);
     int chunk_z = cdiv(z, CHUNK_DEPTH);
     
+    // Индекс в массиве 3x3x3 (центр + окружающие)
     int index = ((chunk_y + 1) * 3 + (chunk_z + 1)) * 3 + (chunk_x + 1);
     return closes[index];
 }
 
+// Проверяет, существует ли чанк в окружающих для заданных координат
 bool is_chunk(int x, int y, int z, const Chunk** closes) {
     return get_chunk(x, y, z, closes) != nullptr;
 }
 
+// Получает значение освещенности для вокселя
 int get_light(int x, int y, int z, int channel, const Chunk** closes) {
     const Chunk* chunk = get_chunk(x, y, z, closes);
     if (!chunk) return 0;
@@ -44,6 +53,7 @@ int get_light(int x, int y, int z, int channel, const Chunk** closes) {
     return chunk->light_map->get(local_x, local_y, local_z, channel);
 }
 
+// Получает данные вокселя по мировым координатам
 voxel get_voxel(int x, int y, int z, const Chunk** closes) {
     const Chunk* chunk = get_chunk(x, y, z, closes);
     if (!chunk) {
@@ -58,6 +68,7 @@ voxel get_voxel(int x, int y, int z, const Chunk** closes) {
     return chunk->voxels[(ly * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 }
 
+// Проверяет, является ли соседний воксель блокирующим для отрисовки грани
 bool is_blocked(int x, int y, int z, const Chunk** closes, unsigned char group) {
     const Chunk* chunk = get_chunk(x, y, z, closes);
     if (!chunk) return true;
@@ -69,6 +80,7 @@ bool is_blocked(int x, int y, int z, const Chunk** closes, unsigned char group) 
     return Block::blocks[vox.id]->drawGroup == group;
 }
 
+// Настраивает текстурные координаты для грани блока
 void setup_uv(int texture_id, float& u1, float& v1, float& u2, float& v2) {
     u1 = (texture_id % 16) * UVSIZE;
     v1 = 1.0f - ((1 + texture_id / 16) * UVSIZE);
@@ -76,6 +88,7 @@ void setup_uv(int texture_id, float& u1, float& v1, float& u2, float& v2) {
     v2 = v1 + UVSIZE;
 }
 
+// Добавляет вершину в буфер
 void add_vertex(float* buffer, size_t& index, 
                 float x, float y, float z,
                 float u, float v,
@@ -93,32 +106,36 @@ void add_vertex(float* buffer, size_t& index,
     buffer[index++] = s;
 }
 
+// Конструктор
 VoxelRenderer::VoxelRenderer(size_t capacity) : capacity(capacity) {
     buffer = new float[capacity * VERTEX_SIZE * 6];
 }
 
+// Деструктор
 VoxelRenderer::~VoxelRenderer() {
     delete[] buffer;
 }
 
+// Генерирует меш для чанка
 Mesh* VoxelRenderer::render(Chunk* chunk, const Chunk** closes) {
     size_t index = 0;
-    
+
+    // Итерация по всем вокселям чанка
     for (int y = 0; y < CHUNK_HEIGHT; y++) {
         for (int z = 0; z < CHUNK_DEPTH; z++) {
             for (int x = 0; x < CHUNK_WIDTH; x++) {
                 voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
                 uint32_t voxel_id = vox.id;
-                
-                if (!voxel_id) {
-                    continue;
-                }
-                
+
+                // Пропускаем воздушные блоки (id = 0)
+                if (!voxel_id) continue;
+
                 float u1, v1, u2, v2;
 
                 Block* block = Block::blocks[voxel_id];
                 unsigned char group = block->drawGroup;
 
+                // Левая грань (-X)
                 if (!is_blocked(x - 1, y, z, closes, group)) {
                     setup_uv(block->textureFaces[0], u1, v1, u2, v2);
 
@@ -187,6 +204,7 @@ Mesh* VoxelRenderer::render(Chunk* chunk, const Chunk** closes) {
                     add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u2, v1, lr3, lg3, lb3, ls3);
                     add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
                 }
+                // Правая грань (+X)
                 if (!is_blocked(x + 1, y, z, closes, group)) {
                     setup_uv(block->textureFaces[1], u1, v1, u2, v2);
 
@@ -256,6 +274,7 @@ Mesh* VoxelRenderer::render(Chunk* chunk, const Chunk** closes) {
                     add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u1, v1, lr3, lg3, lb3, ls3);
                 }
                 
+                // Нижняя грань (-Y)
                 if (!is_blocked(x, y - 1, z, closes, group)) {
                     setup_uv(block->textureFaces[2], u1, v1, u2, v2);
 
@@ -324,6 +343,7 @@ Mesh* VoxelRenderer::render(Chunk* chunk, const Chunk** closes) {
                     add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr3, lg3, lb3, ls3);
                     add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
                 }
+                // Верхнаяя грань (+Y)
                 if (!is_blocked(x, y + 1, z, closes, group)) {
                     setup_uv(block->textureFaces[3], u1, v1, u2, v2);
 
@@ -393,6 +413,7 @@ Mesh* VoxelRenderer::render(Chunk* chunk, const Chunk** closes) {
                     add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v1, lr3, lg3, lb3, ls3);
                 }
 
+                // Задняя грань (-Z)
                 if (!is_blocked(x, y, z - 1, closes, group)) {
                     setup_uv(block->textureFaces[4], u1, v1, u2, v2);
 
@@ -461,6 +482,7 @@ Mesh* VoxelRenderer::render(Chunk* chunk, const Chunk** closes) {
                     add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v2, lr2, lg2, lb2, ls2);
                     add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr3, lg3, lb3, ls3);
                 }
+                // Передняя грань (+Z)
                 if (!is_blocked(x, y, z + 1, closes, group)) {
                     setup_uv(block->textureFaces[5], u1, v1, u2, v2);
 
