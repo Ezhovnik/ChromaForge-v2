@@ -33,12 +33,15 @@ public:
     Chunks(uint width, uint height, uint depth, int areaOffsetX, int areaOffsetY, int areaOffsetZ); // Конструктор
     ~Chunks(); // Деструктор
 
+    bool putChunk(Chunk* chunk);
+
     Chunk* getChunk(int chunk_x, int chunk_y, int chunk_z); // Возвращает чанк по координатам чанка
     Chunk* getChunkByVoxel(int x, int y, int z); // Получает чанк, содержащий воксель с заданными мировыми координатами
 
     voxel* getVoxel(int x, int y, int z); // Возвращает воксель по мировым координатам
     void setVoxel(int x, int y, int z, int id); // Устанавливает идентификатор вокселя по мировым координатам
 
+    unsigned char getLight(int x, int y, int z);
     unsigned char getLight(int x, int y, int z, int channel); // Получает уровень освещения вокселя
     
     voxel* rayCast( // Выполняет трассировку луча через воксельный мир.
@@ -52,11 +55,12 @@ public:
 
     bool isObstacle(int x, int y, int z);
 
+    void _setOffset(int x, int y, int z);
+
     void setCenter(WorldFiles* worldFiles, int x, int y, int z);
 	void translate(WorldFiles* worldFiles, int x, int y, int z);
 
-	bool loadVisible(WorldFiles* worldFiles);
-	bool _buildMeshes(VoxelRenderer* renderer);
+    void clear(bool freeMemory);
 };
 
 #endif // VOXELS_CHUNKS_H_

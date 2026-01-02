@@ -8,5 +8,11 @@ LightMap::LightMap(){
 }
 
 LightMap::~LightMap(){
-	delete[] map;
+	if (map != nullptr) delete[] map;
+}
+
+void LightMap::set(const LightMap* light_map) {
+	for (unsigned int i = 0; i < CHUNK_VOLUME; i++){
+		map[i] = light_map->map[i];
+	}
 }

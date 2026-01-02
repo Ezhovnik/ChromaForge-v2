@@ -106,6 +106,435 @@ void add_vertex(float* buffer, size_t& index,
     buffer[index++] = s;
 }
 
+void _renderBlock(float* buffer, int x, int y, int z, const Chunk** closes, voxel vox, size_t& index) {
+    uint32_t voxel_id = vox.id;
+    // Пропускаем воздушные блоки (id = 0)
+    if (!voxel_id) return;
+
+    float u1, v1, u2, v2;
+
+    Block* block = Block::blocks[voxel_id];
+    unsigned char group = block->drawGroup;
+
+    // Левая грань (-X)
+    if (!is_blocked(x - 1, y, z, closes, group)) {
+        setup_uv(block->textureFaces[0], u1, v1, u2, v2);
+
+        float lr = get_light(x - 1, y, z, 0, closes) / 15.0f;
+        float lg = get_light(x - 1, y, z, 1, closes) / 15.0f;
+        float lb = get_light(x - 1, y, z, 2, closes) / 15.0f;
+        float ls = get_light(x - 1, y, z, 3, closes) / 15.0f;
+        
+        float lr0 = (get_light(x - 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
+                    get_light(x - 1, y, z - 1, 0, closes) + 
+                    get_light(x - 1, y - 1, z, 0, closes)) / 75.0f;
+        float lr1 = (get_light(x - 1, y + 1, z + 1, 0, closes) + lr * 30.0f + 
+                    get_light(x - 1, y, z + 1, 0, closes) + 
+                    get_light(x - 1, y + 1, z, 0, closes)) / 75.0f;
+        float lr2 = (get_light(x - 1, y + 1, z - 1, 0, closes) + lr * 30.0f + 
+                    get_light(x - 1, y, z - 1, 0, closes) + 
+                    get_light(x - 1, y + 1, z, 0, closes)) / 75.0f;
+        float lr3 = (get_light(x - 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
+                    get_light(x - 1, y, z + 1, 0, closes) + 
+                    get_light(x - 1, y - 1, z, 0, closes)) / 75.0f;
+        
+        float lg0 = (get_light(x - 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
+                    get_light(x - 1, y, z - 1, 1, closes) + 
+                    get_light(x - 1, y - 1, z, 1, closes)) / 75.0f;
+        float lg1 = (get_light(x - 1, y + 1, z + 1, 1, closes) + lg * 30.0f + 
+                    get_light(x - 1, y, z + 1, 1, closes) + 
+                    get_light(x - 1, y + 1, z, 1, closes)) / 75.0f;
+        float lg2 = (get_light(x - 1, y + 1, z - 1, 1, closes) + lg * 30.0f + 
+                    get_light(x - 1, y, z - 1, 1, closes) + 
+                    get_light(x - 1, y + 1, z, 1, closes)) / 75.0f;
+        float lg3 = (get_light(x - 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
+                    get_light(x - 1, y, z + 1, 1, closes) + 
+                    get_light(x - 1, y - 1, z, 1, closes)) / 75.0f;
+        
+        float lb0 = (get_light(x - 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
+                    get_light(x - 1, y, z - 1, 2, closes) + 
+                    get_light(x - 1, y - 1, z, 2, closes)) / 75.0f;
+        float lb1 = (get_light(x - 1, y + 1, z + 1, 2, closes) + lb * 30.0f + 
+                    get_light(x - 1, y, z + 1, 2, closes) + 
+                    get_light(x - 1, y + 1, z, 2, closes)) / 75.0f;
+        float lb2 = (get_light(x - 1, y + 1, z - 1, 2, closes) + lb * 30.0f + 
+                    get_light(x - 1, y, z - 1, 2, closes) + 
+                    get_light(x - 1, y + 1, z, 2, closes)) / 75.0f;
+        float lb3 = (get_light(x - 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
+                    get_light(x - 1, y, z + 1, 2, closes) + 
+                    get_light(x - 1, y - 1, z, 2, closes)) / 75.0f;
+        
+        float ls0 = (get_light(x - 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
+                    get_light(x - 1, y, z - 1, 3, closes) + 
+                    get_light(x - 1, y - 1, z, 3, closes)) / 75.0f;
+        float ls1 = (get_light(x - 1, y + 1, z + 1, 3, closes) + ls * 30.0f + 
+                    get_light(x - 1, y, z + 1, 3, closes) + 
+                    get_light(x - 1, y + 1, z, 3, closes)) / 75.0f;
+        float ls2 = (get_light(x - 1, y + 1, z - 1, 3, closes) + ls * 30.0f + 
+                    get_light(x - 1, y, z - 1, 3, closes) + 
+                    get_light(x - 1, y + 1, z, 3, closes)) / 75.0f;
+        float ls3 = (get_light(x - 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
+                    get_light(x - 1, y, z + 1, 3, closes) + 
+                    get_light(x - 1, y - 1, z, 3, closes)) / 75.0f;
+
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
+        add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u1, v2, lr2, lg2, lb2, ls2);
+        
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u2, v1, lr3, lg3, lb3, ls3);
+        add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
+    }
+    // Правая грань (+X)
+    if (!is_blocked(x + 1, y, z, closes, group)) {
+        setup_uv(block->textureFaces[1], u1, v1, u2, v2);
+
+        float lr = get_light(x + 1, y, z, 0, closes) / 15.0f;
+        float lg = get_light(x + 1, y, z, 1, closes) / 15.0f;
+        float lb = get_light(x + 1, y, z, 2, closes) / 15.0f;
+        float ls = get_light(x + 1, y, z, 3, closes) / 15.0f;
+        
+        float lr0 = (get_light(x + 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
+                    get_light(x + 1, y, z - 1, 0, closes) + 
+                    get_light(x + 1, y - 1, z, 0, closes)) / 75.0f;
+        float lr1 = (get_light(x + 1, y + 1, z - 1, 0, closes) + lr * 30.0f + 
+                    get_light(x + 1, y, z - 1, 0, closes) + 
+                    get_light(x + 1, y + 1, z, 0, closes)) / 75.0f;
+        float lr2 = (get_light(x + 1, y + 1, z + 1, 0, closes) + lr * 30.0f + 
+                    get_light(x + 1, y, z + 1, 0, closes) + 
+                    get_light(x + 1, y + 1, z, 0, closes)) / 75.0f;
+        float lr3 = (get_light(x + 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
+                    get_light(x + 1, y, z + 1, 0, closes) + 
+                    get_light(x + 1, y - 1, z, 0, closes)) / 75.0f;
+        
+        float lg0 = (get_light(x + 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
+                    get_light(x + 1, y, z - 1, 1, closes) + 
+                    get_light(x + 1, y - 1, z, 1, closes)) / 75.0f;
+        float lg1 = (get_light(x + 1, y + 1, z - 1, 1, closes) + lg * 30.0f + 
+                    get_light(x + 1, y, z - 1, 1, closes) + 
+                    get_light(x + 1, y + 1, z, 1, closes)) / 75.0f;
+        float lg2 = (get_light(x + 1, y + 1, z + 1, 1, closes) + lg * 30.0f + 
+                    get_light(x + 1, y, z + 1, 1, closes) + 
+                    get_light(x + 1, y + 1, z, 1, closes)) / 75.0f;
+        float lg3 = (get_light(x + 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
+                    get_light(x + 1, y, z + 1, 1, closes) + 
+                    get_light(x + 1, y - 1, z, 1, closes)) / 75.0f;
+        
+        float lb0 = (get_light(x + 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
+                    get_light(x + 1, y, z - 1, 2, closes) + 
+                    get_light(x + 1, y - 1, z, 2, closes)) / 75.0f;
+        float lb1 = (get_light(x + 1, y + 1, z - 1, 2, closes) + lb * 30.0f + 
+                    get_light(x + 1, y, z - 1, 2, closes) + 
+                    get_light(x + 1, y + 1, z, 2, closes)) / 75.0f;
+        float lb2 = (get_light(x + 1, y + 1, z + 1, 2, closes) + lb * 30.0f + 
+                    get_light(x + 1, y, z + 1, 2, closes) + 
+                    get_light(x + 1, y + 1, z, 2, closes)) / 75.0f;
+        float lb3 = (get_light(x + 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
+                    get_light(x + 1, y, z + 1, 2, closes) + 
+                    get_light(x + 1, y - 1, z, 2, closes)) / 75.0f;
+        
+        float ls0 = (get_light(x + 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
+                    get_light(x + 1, y, z - 1, 3, closes) + 
+                    get_light(x + 1, y - 1, z, 3, closes)) / 75.0f;
+        float ls1 = (get_light(x + 1, y + 1, z - 1, 3, closes) + ls * 30.0f + 
+                    get_light(x + 1, y, z - 1, 3, closes) + 
+                    get_light(x + 1, y + 1, z, 3, closes)) / 75.0f;
+        float ls2 = (get_light(x + 1, y + 1, z + 1, 3, closes) + ls * 30.0f + 
+                    get_light(x + 1, y, z + 1, 3, closes) + 
+                    get_light(x + 1, y + 1, z, 3, closes)) / 75.0f;
+        float ls3 = (get_light(x + 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
+                    get_light(x + 1, y, z + 1, 3, closes) + 
+                    get_light(x + 1, y - 1, z, 3, closes)) / 75.0f;
+        
+        add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u2, v2, lr1, lg1, lb1, ls1);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
+        
+        add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
+        add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u1, v1, lr3, lg3, lb3, ls3);
+    }
+    
+    // Нижняя грань (-Y)
+    if (!is_blocked(x, y - 1, z, closes, group)) {
+        setup_uv(block->textureFaces[2], u1, v1, u2, v2);
+
+        float lr = get_light(x, y - 1, z, 0, closes) / 15.0f;
+        float lg = get_light(x, y - 1, z, 1, closes) / 15.0f;
+        float lb = get_light(x, y - 1, z, 2, closes) / 15.0f;
+        float ls = get_light(x, y - 1, z, 3, closes) / 15.0f;
+        
+        float lr0 = (get_light(x - 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
+                    get_light(x - 1, y - 1, z, 0, closes) + 
+                    get_light(x, y - 1, z - 1, 0, closes)) / 75.0f;
+        float lr1 = (get_light(x + 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
+                    get_light(x + 1, y - 1, z, 0, closes) + 
+                    get_light(x, y - 1, z + 1, 0, closes)) / 75.0f;
+        float lr2 = (get_light(x - 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
+                    get_light(x - 1, y - 1, z, 0, closes) + 
+                    get_light(x, y - 1, z + 1, 0, closes)) / 75.0f;
+        float lr3 = (get_light(x + 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
+                    get_light(x + 1, y - 1, z, 0, closes) + 
+                    get_light(x, y - 1, z - 1, 0, closes)) / 75.0f;
+        
+        float lg0 = (get_light(x - 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
+                    get_light(x - 1, y - 1, z, 1, closes) + 
+                    get_light(x, y - 1, z - 1, 1, closes)) / 75.0f;
+        float lg1 = (get_light(x + 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
+                    get_light(x + 1, y - 1, z, 1, closes) + 
+                    get_light(x, y - 1, z + 1, 1, closes)) / 75.0f;
+        float lg2 = (get_light(x - 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
+                    get_light(x - 1, y - 1, z, 1, closes) + 
+                    get_light(x, y - 1, z + 1, 1, closes)) / 75.0f;
+        float lg3 = (get_light(x + 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
+                    get_light(x + 1, y - 1, z, 1, closes) + 
+                    get_light(x, y - 1, z - 1, 1, closes)) / 75.0f;
+        
+        float lb0 = (get_light(x - 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
+                    get_light(x - 1, y - 1, z, 2, closes) + 
+                    get_light(x, y - 1, z - 1, 2, closes)) / 75.0f;
+        float lb1 = (get_light(x + 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
+                    get_light(x + 1, y - 1, z, 2, closes) + 
+                    get_light(x, y - 1, z + 1, 2, closes)) / 75.0f;
+        float lb2 = (get_light(x - 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
+                    get_light(x - 1, y - 1, z, 2, closes) + 
+                    get_light(x, y - 1, z + 1, 2, closes)) / 75.0f;
+        float lb3 = (get_light(x + 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
+                    get_light(x + 1, y - 1, z, 2, closes) + 
+                    get_light(x, y - 1, z - 1, 2, closes)) / 75.0f;
+        
+        float ls0 = (get_light(x - 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
+                    get_light(x - 1, y - 1, z, 3, closes) + 
+                    get_light(x, y - 1, z - 1, 3, closes)) / 75.0f;
+        float ls1 = (get_light(x + 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
+                    get_light(x + 1, y - 1, z, 3, closes) + 
+                    get_light(x, y - 1, z + 1, 3, closes)) / 75.0f;
+        float ls2 = (get_light(x - 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
+                    get_light(x - 1, y - 1, z, 3, closes) + 
+                    get_light(x, y - 1, z + 1, 3, closes)) / 75.0f;
+        float ls3 = (get_light(x + 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
+                    get_light(x + 1, y - 1, z, 3, closes) + 
+                    get_light(x, y - 1, z - 1, 3, closes)) / 75.0f;
+        
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
+        
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr3, lg3, lb3, ls3);
+        add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
+    }
+    // Верхнаяя грань (+Y)
+    if (!is_blocked(x, y + 1, z, closes, group)) {
+        setup_uv(block->textureFaces[3], u1, v1, u2, v2);
+
+        float lr = get_light(x, y + 1, z, 0, closes) / 15.0f;
+        float lg = get_light(x, y + 1, z, 1, closes) / 15.0f;
+        float lb = get_light(x, y + 1, z, 2, closes) / 15.0f;
+        float ls = get_light(x, y + 1, z, 3, closes) / 15.0f;
+        
+        float lr0 = (get_light(x - 1, y + 1, z, 0, closes) + lr * 30.0f + 
+                    get_light(x - 1, y + 1, z - 1, 0, closes) + 
+                    get_light(x, y + 1, z - 1, 0, closes)) / 75.0f;
+        float lr1 = (get_light(x - 1, y + 1, z, 0, closes) + lr * 30.0f + 
+                    get_light(x - 1, y + 1, z + 1, 0, closes) + 
+                    get_light(x, y + 1, z + 1, 0, closes)) / 75.0f;
+        float lr2 = (get_light(x + 1, y + 1, z, 0, closes) + lr * 30.0f + 
+                    get_light(x + 1, y + 1, z + 1, 0, closes) + 
+                    get_light(x, y + 1, z + 1, 0, closes)) / 75.0f;
+        float lr3 = (get_light(x + 1, y + 1, z, 0, closes) + lr * 30.0f + 
+                    get_light(x + 1, y + 1, z - 1, 0, closes) + 
+                    get_light(x, y + 1, z - 1, 0, closes)) / 75.0f;
+        
+        float lg0 = (get_light(x - 1, y + 1, z, 1, closes) + lg * 30.0f + 
+                    get_light(x - 1, y + 1, z - 1, 1, closes) + 
+                    get_light(x, y + 1, z - 1, 1, closes)) / 75.0f;
+        float lg1 = (get_light(x - 1, y + 1, z, 1, closes) + lg * 30.0f + 
+                    get_light(x - 1, y + 1, z + 1, 1, closes) + 
+                    get_light(x, y + 1, z + 1, 1, closes)) / 75.0f;
+        float lg2 = (get_light(x + 1, y + 1, z, 1, closes) + lg * 30.0f + 
+                    get_light(x + 1, y + 1, z + 1, 1, closes) + 
+                    get_light(x, y + 1, z + 1, 1, closes)) / 75.0f;
+        float lg3 = (get_light(x + 1, y + 1, z, 1, closes) + lg * 30.0f + 
+                    get_light(x + 1, y + 1, z - 1, 1, closes) + 
+                    get_light(x, y + 1, z - 1, 1, closes)) / 75.0f;
+        
+        float lb0 = (get_light(x - 1, y + 1, z, 2, closes) + lb * 30.0f + 
+                    get_light(x - 1, y + 1, z - 1, 2, closes) + 
+                    get_light(x, y + 1, z - 1, 2, closes)) / 75.0f;
+        float lb1 = (get_light(x - 1, y + 1, z, 2, closes) + lb * 30.0f + 
+                    get_light(x - 1, y + 1, z + 1, 2, closes) + 
+                    get_light(x, y + 1, z + 1, 2, closes)) / 75.0f;
+        float lb2 = (get_light(x + 1, y + 1, z, 2, closes) + lb * 30.0f + 
+                    get_light(x + 1, y + 1, z + 1, 2, closes) + 
+                    get_light(x, y + 1, z + 1, 2, closes)) / 75.0f;
+        float lb3 = (get_light(x + 1, y + 1, z, 2, closes) + lb * 30.0f + 
+                    get_light(x + 1, y + 1, z - 1, 2, closes) + 
+                    get_light(x, y + 1, z - 1, 2, closes)) / 75.0f;
+        
+        float ls0 = (get_light(x - 1, y + 1, z, 3, closes) + ls * 30.0f + 
+                    get_light(x - 1, y + 1, z - 1, 3, closes) + 
+                    get_light(x, y + 1, z - 1, 3, closes)) / 75.0f;
+        float ls1 = (get_light(x - 1, y + 1, z, 3, closes) + ls * 30.0f + 
+                    get_light(x - 1, y + 1, z + 1, 3, closes) + 
+                    get_light(x, y + 1, z + 1, 3, closes)) / 75.0f;
+        float ls2 = (get_light(x + 1, y + 1, z, 3, closes) + ls * 30.0f + 
+                    get_light(x + 1, y + 1, z + 1, 3, closes) + 
+                    get_light(x, y + 1, z + 1, 3, closes)) / 75.0f;
+        float ls3 = (get_light(x + 1, y + 1, z, 3, closes) + ls * 30.0f + 
+                    get_light(x + 1, y + 1, z - 1, 3, closes) + 
+                    get_light(x, y + 1, z - 1, 3, closes)) / 75.0f;
+        
+        add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
+        
+        add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v1, lr3, lg3, lb3, ls3);
+    }
+
+    // Задняя грань (-Z)
+    if (!is_blocked(x, y, z - 1, closes, group)) {
+        setup_uv(block->textureFaces[4], u1, v1, u2, v2);
+
+        float lr = get_light(x, y, z - 1, 0, closes) / 15.0f;
+        float lg = get_light(x, y, z - 1, 1, closes) / 15.0f;
+        float lb = get_light(x, y, z - 1, 2, closes) / 15.0f;
+        float ls = get_light(x, y, z - 1, 3, closes) / 15.0f;
+        
+        float lr0 = 0.8f * (get_light(x - 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
+                        get_light(x, y - 1, z - 1, 0, closes) + 
+                        get_light(x - 1, y, z - 1, 0, closes)) / 75.0f;
+        float lr1 = 0.8f * (get_light(x - 1, y + 1, z - 1, 0, closes) + lr * 30.0f + 
+                        get_light(x, y + 1, z - 1, 0, closes) + 
+                        get_light(x - 1, y, z - 1, 0, closes)) / 75.0f;
+        float lr2 = 0.8f * (get_light(x + 1, y + 1, z - 1, 0, closes) + lr * 30.0f + 
+                        get_light(x, y + 1, z - 1, 0, closes) + 
+                        get_light(x + 1, y, z - 1, 0, closes)) / 75.0f;
+        float lr3 = 0.8f * (get_light(x + 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
+                        get_light(x, y - 1, z - 1, 0, closes) + 
+                        get_light(x + 1, y, z - 1, 0, closes)) / 75.0f;
+        
+        float lg0 = 0.8f * (get_light(x - 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
+                        get_light(x, y - 1, z - 1, 1, closes) + 
+                        get_light(x - 1, y, z - 1, 1, closes)) / 75.0f;
+        float lg1 = 0.8f * (get_light(x - 1, y + 1, z - 1, 1, closes) + lg * 30.0f + 
+                        get_light(x, y + 1, z - 1, 1, closes) + 
+                        get_light(x - 1, y, z - 1, 1, closes)) / 75.0f;
+        float lg2 = 0.8f * (get_light(x + 1, y + 1, z - 1, 1, closes) + lg * 30.0f + 
+                        get_light(x, y + 1, z - 1, 1, closes) + 
+                        get_light(x + 1, y, z - 1, 1, closes)) / 75.0f;
+        float lg3 = 0.8f * (get_light(x + 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
+                        get_light(x, y - 1, z - 1, 1, closes) + 
+                        get_light(x + 1, y, z - 1, 1, closes)) / 75.0f;
+        
+        float lb0 = 0.8f * (get_light(x - 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
+                        get_light(x, y - 1, z - 1, 2, closes) + 
+                        get_light(x - 1, y, z - 1, 2, closes)) / 75.0f;
+        float lb1 = 0.8f * (get_light(x - 1, y + 1, z - 1, 2, closes) + lb * 30.0f + 
+                        get_light(x, y + 1, z - 1, 2, closes) + 
+                        get_light(x - 1, y, z - 1, 2, closes)) / 75.0f;
+        float lb2 = 0.8f * (get_light(x + 1, y + 1, z - 1, 2, closes) + lb * 30.0f + 
+                        get_light(x, y + 1, z - 1, 2, closes) + 
+                        get_light(x + 1, y, z - 1, 2, closes)) / 75.0f;
+        float lb3 = 0.8f * (get_light(x + 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
+                        get_light(x, y - 1, z - 1, 2, closes) + 
+                        get_light(x + 1, y, z - 1, 2, closes)) / 75.0f;
+        
+        float ls0 = 0.8f * (get_light(x - 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
+                        get_light(x, y - 1, z - 1, 3, closes) + 
+                        get_light(x - 1, y, z - 1, 3, closes)) / 75.0f;
+        float ls1 = 0.8f * (get_light(x - 1, y + 1, z - 1, 3, closes) + ls * 30.0f + 
+                        get_light(x, y + 1, z - 1, 3, closes) + 
+                        get_light(x - 1, y, z - 1, 3, closes)) / 75.0f;
+        float ls2 = 0.8f * (get_light(x + 1, y + 1, z - 1, 3, closes) + ls * 30.0f + 
+                        get_light(x, y + 1, z - 1, 3, closes) + 
+                        get_light(x + 1, y, z - 1, 3, closes)) / 75.0f;
+        float ls3 = 0.8f * (get_light(x + 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
+                        get_light(x, y - 1, z - 1, 3, closes) + 
+                        get_light(x + 1, y, z - 1, 3, closes)) / 75.0f;
+        
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v2, lr1, lg1, lb1, ls1);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v2, lr2, lg2, lb2, ls2);
+        
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v2, lr2, lg2, lb2, ls2);
+        add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr3, lg3, lb3, ls3);
+    }
+    // Передняя грань (+Z)
+    if (!is_blocked(x, y, z + 1, closes, group)) {
+        setup_uv(block->textureFaces[5], u1, v1, u2, v2);
+
+        float lr = get_light(x, y, z + 1, 0, closes) / 15.0f;
+        float lg = get_light(x, y, z + 1, 1, closes) / 15.0f;
+        float lb = get_light(x, y, z + 1, 2, closes) / 15.0f;
+        float ls = get_light(x, y, z + 1, 3, closes) / 15.0f;
+        
+        float lr0 = 0.9f * (get_light(x - 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
+                        get_light(x, y - 1, z + 1, 0, closes) + 
+                        get_light(x - 1, y, z + 1, 0, closes)) / 75.0f;
+        float lr1 = 0.9f * (get_light(x + 1, y + 1, z + 1, 0, closes) + lr * 30.0f + 
+                        get_light(x, y + 1, z + 1, 0, closes) + 
+                        get_light(x + 1, y, z + 1, 0, closes)) / 75.0f;
+        float lr2 = 0.9f * (get_light(x - 1, y + 1, z + 1, 0, closes) + lr * 30.0f + 
+                        get_light(x, y + 1, z + 1, 0, closes) + 
+                        get_light(x - 1, y, z + 1, 0, closes)) / 75.0f;
+        float lr3 = 0.9f * (get_light(x + 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
+                        get_light(x, y - 1, z + 1, 0, closes) + 
+                        get_light(x + 1, y, z + 1, 0, closes)) / 75.0f;
+        
+        float lg0 = 0.9f * (get_light(x - 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
+                        get_light(x, y - 1, z + 1, 1, closes) + 
+                        get_light(x - 1, y, z + 1, 1, closes)) / 75.0f;
+        float lg1 = 0.9f * (get_light(x + 1, y + 1, z + 1, 1, closes) + lg * 30.0f + 
+                        get_light(x, y + 1, z + 1, 1, closes) + 
+                        get_light(x + 1, y, z + 1, 1, closes)) / 75.0f;
+        float lg2 = 0.9f * (get_light(x - 1, y + 1, z + 1, 1, closes) + lg * 30.0f + 
+                        get_light(x, y + 1, z + 1, 1, closes) + 
+                        get_light(x - 1, y, z + 1, 1, closes)) / 75.0f;
+        float lg3 = 0.9f * (get_light(x + 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
+                        get_light(x, y - 1, z + 1, 1, closes) + 
+                        get_light(x + 1, y, z + 1, 1, closes)) / 75.0f;
+        
+        float lb0 = 0.9f * (get_light(x - 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
+                        get_light(x, y - 1, z + 1, 2, closes) + 
+                        get_light(x - 1, y, z + 1, 2, closes)) / 75.0f;
+        float lb1 = 0.9f * (get_light(x + 1, y + 1, z + 1, 2, closes) + lb * 30.0f + 
+                        get_light(x, y + 1, z + 1, 2, closes) + 
+                        get_light(x + 1, y, z + 1, 2, closes)) / 75.0f;
+        float lb2 = 0.9f * (get_light(x - 1, y + 1, z + 1, 2, closes) + lb * 30.0f + 
+                        get_light(x, y + 1, z + 1, 2, closes) + 
+                        get_light(x - 1, y, z + 1, 2, closes)) / 75.0f;
+        float lb3 = 0.9f * (get_light(x + 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
+                        get_light(x, y - 1, z + 1, 2, closes) + 
+                        get_light(x + 1, y, z + 1, 2, closes)) / 75.0f;
+        
+        float ls0 = 0.9f * (get_light(x - 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
+                        get_light(x, y - 1, z + 1, 3, closes) + 
+                        get_light(x - 1, y, z + 1, 3, closes)) / 75.0f;
+        float ls1 = 0.9f * (get_light(x + 1, y + 1, z + 1, 3, closes) + ls * 30.0f + 
+                        get_light(x, y + 1, z + 1, 3, closes) + 
+                        get_light(x + 1, y, z + 1, 3, closes)) / 75.0f;
+        float ls2 = 0.9f * (get_light(x - 1, y + 1, z + 1, 3, closes) + ls * 30.0f + 
+                        get_light(x, y + 1, z + 1, 3, closes) + 
+                        get_light(x - 1, y, z + 1, 3, closes)) / 75.0f;
+        float ls3 = 0.9f * (get_light(x + 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
+                        get_light(x, y - 1, z + 1, 3, closes) + 
+                        get_light(x + 1, y, z + 1, 3, closes)) / 75.0f;
+        
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
+        add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
+        
+
+        add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v1, lr0, lg0, lb0, ls0);
+        add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v1, lr3, lg3, lb3, ls3);
+        add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
+    }
+}
+
 // Конструктор
 VoxelRenderer::VoxelRenderer(size_t capacity) : capacity(capacity) {
     buffer = new float[capacity * VERTEX_SIZE * 6];
@@ -120,441 +549,38 @@ VoxelRenderer::~VoxelRenderer() {
 Mesh* VoxelRenderer::render(Chunk* chunk, const Chunk** closes) {
     size_t index = 0;
 
-    // Итерация по всем вокселям чанка
-    for (int y = 0; y < CHUNK_HEIGHT; y++) {
-        for (int z = 0; z < CHUNK_DEPTH; z++) {
-            for (int x = 0; x < CHUNK_WIDTH; x++) {
-                voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
-                uint32_t voxel_id = vox.id;
+    // Отрисовка непрозрачных блоков
+	for (int y = 0; y < CHUNK_HEIGHT; y++){
+		for (int z = 0; z < CHUNK_DEPTH; z++){
+			for (int x = 0; x < CHUNK_WIDTH; x++){
+				voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
+				if (vox.id == 9 || vox.id == 4) continue;
+				_renderBlock(buffer, x, y, z, closes, vox, index);
+			}
+		}
+	}
 
-                // Пропускаем воздушные блоки (id = 0)
-                if (!voxel_id) continue;
+    // Отрисовка воды (id = 9)
+	for (int y = 0; y < CHUNK_HEIGHT; y++){
+		for (int z = 0; z < CHUNK_DEPTH; z++){
+			for (int x = 0; x < CHUNK_WIDTH; x++){
+				voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
+				if (vox.id != 9) continue;
+				_renderBlock(buffer, x, y, z, closes, vox, index);
+			}
+		}
+	}
 
-                float u1, v1, u2, v2;
-
-                Block* block = Block::blocks[voxel_id];
-                unsigned char group = block->drawGroup;
-
-                // Левая грань (-X)
-                if (!is_blocked(x - 1, y, z, closes, group)) {
-                    setup_uv(block->textureFaces[0], u1, v1, u2, v2);
-
-                    float lr = get_light(x - 1, y, z, 0, closes) / 15.0f;
-                    float lg = get_light(x - 1, y, z, 1, closes) / 15.0f;
-                    float lb = get_light(x - 1, y, z, 2, closes) / 15.0f;
-                    float ls = get_light(x - 1, y, z, 3, closes) / 15.0f;
-                    
-                    float lr0 = (get_light(x - 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
-                                get_light(x - 1, y, z - 1, 0, closes) + 
-                                get_light(x - 1, y - 1, z, 0, closes)) / 75.0f;
-                    float lr1 = (get_light(x - 1, y + 1, z + 1, 0, closes) + lr * 30.0f + 
-                                get_light(x - 1, y, z + 1, 0, closes) + 
-                                get_light(x - 1, y + 1, z, 0, closes)) / 75.0f;
-                    float lr2 = (get_light(x - 1, y + 1, z - 1, 0, closes) + lr * 30.0f + 
-                                get_light(x - 1, y, z - 1, 0, closes) + 
-                                get_light(x - 1, y + 1, z, 0, closes)) / 75.0f;
-                    float lr3 = (get_light(x - 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
-                                get_light(x - 1, y, z + 1, 0, closes) + 
-                                get_light(x - 1, y - 1, z, 0, closes)) / 75.0f;
-                    
-                    float lg0 = (get_light(x - 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
-                                get_light(x - 1, y, z - 1, 1, closes) + 
-                                get_light(x - 1, y - 1, z, 1, closes)) / 75.0f;
-                    float lg1 = (get_light(x - 1, y + 1, z + 1, 1, closes) + lg * 30.0f + 
-                                get_light(x - 1, y, z + 1, 1, closes) + 
-                                get_light(x - 1, y + 1, z, 1, closes)) / 75.0f;
-                    float lg2 = (get_light(x - 1, y + 1, z - 1, 1, closes) + lg * 30.0f + 
-                                get_light(x - 1, y, z - 1, 1, closes) + 
-                                get_light(x - 1, y + 1, z, 1, closes)) / 75.0f;
-                    float lg3 = (get_light(x - 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
-                                get_light(x - 1, y, z + 1, 1, closes) + 
-                                get_light(x - 1, y - 1, z, 1, closes)) / 75.0f;
-                    
-                    float lb0 = (get_light(x - 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
-                                get_light(x - 1, y, z - 1, 2, closes) + 
-                                get_light(x - 1, y - 1, z, 2, closes)) / 75.0f;
-                    float lb1 = (get_light(x - 1, y + 1, z + 1, 2, closes) + lb * 30.0f + 
-                                get_light(x - 1, y, z + 1, 2, closes) + 
-                                get_light(x - 1, y + 1, z, 2, closes)) / 75.0f;
-                    float lb2 = (get_light(x - 1, y + 1, z - 1, 2, closes) + lb * 30.0f + 
-                                get_light(x - 1, y, z - 1, 2, closes) + 
-                                get_light(x - 1, y + 1, z, 2, closes)) / 75.0f;
-                    float lb3 = (get_light(x - 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
-                                get_light(x - 1, y, z + 1, 2, closes) + 
-                                get_light(x - 1, y - 1, z, 2, closes)) / 75.0f;
-                    
-                    float ls0 = (get_light(x - 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
-                                get_light(x - 1, y, z - 1, 3, closes) + 
-                                get_light(x - 1, y - 1, z, 3, closes)) / 75.0f;
-                    float ls1 = (get_light(x - 1, y + 1, z + 1, 3, closes) + ls * 30.0f + 
-                                get_light(x - 1, y, z + 1, 3, closes) + 
-                                get_light(x - 1, y + 1, z, 3, closes)) / 75.0f;
-                    float ls2 = (get_light(x - 1, y + 1, z - 1, 3, closes) + ls * 30.0f + 
-                                get_light(x - 1, y, z - 1, 3, closes) + 
-                                get_light(x - 1, y + 1, z, 3, closes)) / 75.0f;
-                    float ls3 = (get_light(x - 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
-                                get_light(x - 1, y, z + 1, 3, closes) + 
-                                get_light(x - 1, y - 1, z, 3, closes)) / 75.0f;
-
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
-                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u1, v2, lr2, lg2, lb2, ls2);
-                    
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u2, v1, lr3, lg3, lb3, ls3);
-                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
-                }
-                // Правая грань (+X)
-                if (!is_blocked(x + 1, y, z, closes, group)) {
-                    setup_uv(block->textureFaces[1], u1, v1, u2, v2);
-
-                    float lr = get_light(x + 1, y, z, 0, closes) / 15.0f;
-                    float lg = get_light(x + 1, y, z, 1, closes) / 15.0f;
-                    float lb = get_light(x + 1, y, z, 2, closes) / 15.0f;
-                    float ls = get_light(x + 1, y, z, 3, closes) / 15.0f;
-                    
-                    float lr0 = (get_light(x + 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
-                                get_light(x + 1, y, z - 1, 0, closes) + 
-                                get_light(x + 1, y - 1, z, 0, closes)) / 75.0f;
-                    float lr1 = (get_light(x + 1, y + 1, z - 1, 0, closes) + lr * 30.0f + 
-                                get_light(x + 1, y, z - 1, 0, closes) + 
-                                get_light(x + 1, y + 1, z, 0, closes)) / 75.0f;
-                    float lr2 = (get_light(x + 1, y + 1, z + 1, 0, closes) + lr * 30.0f + 
-                                get_light(x + 1, y, z + 1, 0, closes) + 
-                                get_light(x + 1, y + 1, z, 0, closes)) / 75.0f;
-                    float lr3 = (get_light(x + 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
-                                get_light(x + 1, y, z + 1, 0, closes) + 
-                                get_light(x + 1, y - 1, z, 0, closes)) / 75.0f;
-                    
-                    float lg0 = (get_light(x + 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
-                                get_light(x + 1, y, z - 1, 1, closes) + 
-                                get_light(x + 1, y - 1, z, 1, closes)) / 75.0f;
-                    float lg1 = (get_light(x + 1, y + 1, z - 1, 1, closes) + lg * 30.0f + 
-                                get_light(x + 1, y, z - 1, 1, closes) + 
-                                get_light(x + 1, y + 1, z, 1, closes)) / 75.0f;
-                    float lg2 = (get_light(x + 1, y + 1, z + 1, 1, closes) + lg * 30.0f + 
-                                get_light(x + 1, y, z + 1, 1, closes) + 
-                                get_light(x + 1, y + 1, z, 1, closes)) / 75.0f;
-                    float lg3 = (get_light(x + 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
-                                get_light(x + 1, y, z + 1, 1, closes) + 
-                                get_light(x + 1, y - 1, z, 1, closes)) / 75.0f;
-                    
-                    float lb0 = (get_light(x + 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
-                                get_light(x + 1, y, z - 1, 2, closes) + 
-                                get_light(x + 1, y - 1, z, 2, closes)) / 75.0f;
-                    float lb1 = (get_light(x + 1, y + 1, z - 1, 2, closes) + lb * 30.0f + 
-                                get_light(x + 1, y, z - 1, 2, closes) + 
-                                get_light(x + 1, y + 1, z, 2, closes)) / 75.0f;
-                    float lb2 = (get_light(x + 1, y + 1, z + 1, 2, closes) + lb * 30.0f + 
-                                get_light(x + 1, y, z + 1, 2, closes) + 
-                                get_light(x + 1, y + 1, z, 2, closes)) / 75.0f;
-                    float lb3 = (get_light(x + 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
-                                get_light(x + 1, y, z + 1, 2, closes) + 
-                                get_light(x + 1, y - 1, z, 2, closes)) / 75.0f;
-                    
-                    float ls0 = (get_light(x + 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
-                                get_light(x + 1, y, z - 1, 3, closes) + 
-                                get_light(x + 1, y - 1, z, 3, closes)) / 75.0f;
-                    float ls1 = (get_light(x + 1, y + 1, z - 1, 3, closes) + ls * 30.0f + 
-                                get_light(x + 1, y, z - 1, 3, closes) + 
-                                get_light(x + 1, y + 1, z, 3, closes)) / 75.0f;
-                    float ls2 = (get_light(x + 1, y + 1, z + 1, 3, closes) + ls * 30.0f + 
-                                get_light(x + 1, y, z + 1, 3, closes) + 
-                                get_light(x + 1, y + 1, z, 3, closes)) / 75.0f;
-                    float ls3 = (get_light(x + 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
-                                get_light(x + 1, y, z + 1, 3, closes) + 
-                                get_light(x + 1, y - 1, z, 3, closes)) / 75.0f;
-                    
-                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u2, v2, lr1, lg1, lb1, ls1);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
-                    
-                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
-                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u1, v1, lr3, lg3, lb3, ls3);
-                }
-                
-                // Нижняя грань (-Y)
-                if (!is_blocked(x, y - 1, z, closes, group)) {
-                    setup_uv(block->textureFaces[2], u1, v1, u2, v2);
-
-                    float lr = get_light(x, y - 1, z, 0, closes) / 15.0f;
-                    float lg = get_light(x, y - 1, z, 1, closes) / 15.0f;
-                    float lb = get_light(x, y - 1, z, 2, closes) / 15.0f;
-                    float ls = get_light(x, y - 1, z, 3, closes) / 15.0f;
-                    
-                    float lr0 = (get_light(x - 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
-                                get_light(x - 1, y - 1, z, 0, closes) + 
-                                get_light(x, y - 1, z - 1, 0, closes)) / 75.0f;
-                    float lr1 = (get_light(x + 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
-                                get_light(x + 1, y - 1, z, 0, closes) + 
-                                get_light(x, y - 1, z + 1, 0, closes)) / 75.0f;
-                    float lr2 = (get_light(x - 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
-                                get_light(x - 1, y - 1, z, 0, closes) + 
-                                get_light(x, y - 1, z + 1, 0, closes)) / 75.0f;
-                    float lr3 = (get_light(x + 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
-                                get_light(x + 1, y - 1, z, 0, closes) + 
-                                get_light(x, y - 1, z - 1, 0, closes)) / 75.0f;
-                    
-                    float lg0 = (get_light(x - 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
-                                get_light(x - 1, y - 1, z, 1, closes) + 
-                                get_light(x, y - 1, z - 1, 1, closes)) / 75.0f;
-                    float lg1 = (get_light(x + 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
-                                get_light(x + 1, y - 1, z, 1, closes) + 
-                                get_light(x, y - 1, z + 1, 1, closes)) / 75.0f;
-                    float lg2 = (get_light(x - 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
-                                get_light(x - 1, y - 1, z, 1, closes) + 
-                                get_light(x, y - 1, z + 1, 1, closes)) / 75.0f;
-                    float lg3 = (get_light(x + 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
-                                get_light(x + 1, y - 1, z, 1, closes) + 
-                                get_light(x, y - 1, z - 1, 1, closes)) / 75.0f;
-                    
-                    float lb0 = (get_light(x - 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
-                                get_light(x - 1, y - 1, z, 2, closes) + 
-                                get_light(x, y - 1, z - 1, 2, closes)) / 75.0f;
-                    float lb1 = (get_light(x + 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
-                                get_light(x + 1, y - 1, z, 2, closes) + 
-                                get_light(x, y - 1, z + 1, 2, closes)) / 75.0f;
-                    float lb2 = (get_light(x - 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
-                                get_light(x - 1, y - 1, z, 2, closes) + 
-                                get_light(x, y - 1, z + 1, 2, closes)) / 75.0f;
-                    float lb3 = (get_light(x + 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
-                                get_light(x + 1, y - 1, z, 2, closes) + 
-                                get_light(x, y - 1, z - 1, 2, closes)) / 75.0f;
-                    
-                    float ls0 = (get_light(x - 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
-                                get_light(x - 1, y - 1, z, 3, closes) + 
-                                get_light(x, y - 1, z - 1, 3, closes)) / 75.0f;
-                    float ls1 = (get_light(x + 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
-                                get_light(x + 1, y - 1, z, 3, closes) + 
-                                get_light(x, y - 1, z + 1, 3, closes)) / 75.0f;
-                    float ls2 = (get_light(x - 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
-                                get_light(x - 1, y - 1, z, 3, closes) + 
-                                get_light(x, y - 1, z + 1, 3, closes)) / 75.0f;
-                    float ls3 = (get_light(x + 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
-                                get_light(x + 1, y - 1, z, 3, closes) + 
-                                get_light(x, y - 1, z - 1, 3, closes)) / 75.0f;
-                    
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
-                    
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr3, lg3, lb3, ls3);
-                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
-                }
-                // Верхнаяя грань (+Y)
-                if (!is_blocked(x, y + 1, z, closes, group)) {
-                    setup_uv(block->textureFaces[3], u1, v1, u2, v2);
-
-                    float lr = get_light(x, y + 1, z, 0, closes) / 15.0f;
-                    float lg = get_light(x, y + 1, z, 1, closes) / 15.0f;
-                    float lb = get_light(x, y + 1, z, 2, closes) / 15.0f;
-                    float ls = get_light(x, y + 1, z, 3, closes) / 15.0f;
-                    
-                    float lr0 = (get_light(x - 1, y + 1, z, 0, closes) + lr * 30.0f + 
-                                get_light(x - 1, y + 1, z - 1, 0, closes) + 
-                                get_light(x, y + 1, z - 1, 0, closes)) / 75.0f;
-                    float lr1 = (get_light(x - 1, y + 1, z, 0, closes) + lr * 30.0f + 
-                                get_light(x - 1, y + 1, z + 1, 0, closes) + 
-                                get_light(x, y + 1, z + 1, 0, closes)) / 75.0f;
-                    float lr2 = (get_light(x + 1, y + 1, z, 0, closes) + lr * 30.0f + 
-                                get_light(x + 1, y + 1, z + 1, 0, closes) + 
-                                get_light(x, y + 1, z + 1, 0, closes)) / 75.0f;
-                    float lr3 = (get_light(x + 1, y + 1, z, 0, closes) + lr * 30.0f + 
-                                get_light(x + 1, y + 1, z - 1, 0, closes) + 
-                                get_light(x, y + 1, z - 1, 0, closes)) / 75.0f;
-                    
-                    float lg0 = (get_light(x - 1, y + 1, z, 1, closes) + lg * 30.0f + 
-                                get_light(x - 1, y + 1, z - 1, 1, closes) + 
-                                get_light(x, y + 1, z - 1, 1, closes)) / 75.0f;
-                    float lg1 = (get_light(x - 1, y + 1, z, 1, closes) + lg * 30.0f + 
-                                get_light(x - 1, y + 1, z + 1, 1, closes) + 
-                                get_light(x, y + 1, z + 1, 1, closes)) / 75.0f;
-                    float lg2 = (get_light(x + 1, y + 1, z, 1, closes) + lg * 30.0f + 
-                                get_light(x + 1, y + 1, z + 1, 1, closes) + 
-                                get_light(x, y + 1, z + 1, 1, closes)) / 75.0f;
-                    float lg3 = (get_light(x + 1, y + 1, z, 1, closes) + lg * 30.0f + 
-                                get_light(x + 1, y + 1, z - 1, 1, closes) + 
-                                get_light(x, y + 1, z - 1, 1, closes)) / 75.0f;
-                    
-                    float lb0 = (get_light(x - 1, y + 1, z, 2, closes) + lb * 30.0f + 
-                                get_light(x - 1, y + 1, z - 1, 2, closes) + 
-                                get_light(x, y + 1, z - 1, 2, closes)) / 75.0f;
-                    float lb1 = (get_light(x - 1, y + 1, z, 2, closes) + lb * 30.0f + 
-                                get_light(x - 1, y + 1, z + 1, 2, closes) + 
-                                get_light(x, y + 1, z + 1, 2, closes)) / 75.0f;
-                    float lb2 = (get_light(x + 1, y + 1, z, 2, closes) + lb * 30.0f + 
-                                get_light(x + 1, y + 1, z + 1, 2, closes) + 
-                                get_light(x, y + 1, z + 1, 2, closes)) / 75.0f;
-                    float lb3 = (get_light(x + 1, y + 1, z, 2, closes) + lb * 30.0f + 
-                                get_light(x + 1, y + 1, z - 1, 2, closes) + 
-                                get_light(x, y + 1, z - 1, 2, closes)) / 75.0f;
-                    
-                    float ls0 = (get_light(x - 1, y + 1, z, 3, closes) + ls * 30.0f + 
-                                get_light(x - 1, y + 1, z - 1, 3, closes) + 
-                                get_light(x, y + 1, z - 1, 3, closes)) / 75.0f;
-                    float ls1 = (get_light(x - 1, y + 1, z, 3, closes) + ls * 30.0f + 
-                                get_light(x - 1, y + 1, z + 1, 3, closes) + 
-                                get_light(x, y + 1, z + 1, 3, closes)) / 75.0f;
-                    float ls2 = (get_light(x + 1, y + 1, z, 3, closes) + ls * 30.0f + 
-                                get_light(x + 1, y + 1, z + 1, 3, closes) + 
-                                get_light(x, y + 1, z + 1, 3, closes)) / 75.0f;
-                    float ls3 = (get_light(x + 1, y + 1, z, 3, closes) + ls * 30.0f + 
-                                get_light(x + 1, y + 1, z - 1, 3, closes) + 
-                                get_light(x, y + 1, z - 1, 3, closes)) / 75.0f;
-                    
-                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
-                    
-                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v1, lr3, lg3, lb3, ls3);
-                }
-
-                // Задняя грань (-Z)
-                if (!is_blocked(x, y, z - 1, closes, group)) {
-                    setup_uv(block->textureFaces[4], u1, v1, u2, v2);
-
-                    float lr = get_light(x, y, z - 1, 0, closes) / 15.0f;
-                    float lg = get_light(x, y, z - 1, 1, closes) / 15.0f;
-                    float lb = get_light(x, y, z - 1, 2, closes) / 15.0f;
-                    float ls = get_light(x, y, z - 1, 3, closes) / 15.0f;
-                    
-                    float lr0 = 0.8f * (get_light(x - 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
-                                    get_light(x, y - 1, z - 1, 0, closes) + 
-                                    get_light(x - 1, y, z - 1, 0, closes)) / 75.0f;
-                    float lr1 = 0.8f * (get_light(x - 1, y + 1, z - 1, 0, closes) + lr * 30.0f + 
-                                    get_light(x, y + 1, z - 1, 0, closes) + 
-                                    get_light(x - 1, y, z - 1, 0, closes)) / 75.0f;
-                    float lr2 = 0.8f * (get_light(x + 1, y + 1, z - 1, 0, closes) + lr * 30.0f + 
-                                    get_light(x, y + 1, z - 1, 0, closes) + 
-                                    get_light(x + 1, y, z - 1, 0, closes)) / 75.0f;
-                    float lr3 = 0.8f * (get_light(x + 1, y - 1, z - 1, 0, closes) + lr * 30.0f + 
-                                    get_light(x, y - 1, z - 1, 0, closes) + 
-                                    get_light(x + 1, y, z - 1, 0, closes)) / 75.0f;
-                    
-                    float lg0 = 0.8f * (get_light(x - 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
-                                    get_light(x, y - 1, z - 1, 1, closes) + 
-                                    get_light(x - 1, y, z - 1, 1, closes)) / 75.0f;
-                    float lg1 = 0.8f * (get_light(x - 1, y + 1, z - 1, 1, closes) + lg * 30.0f + 
-                                    get_light(x, y + 1, z - 1, 1, closes) + 
-                                    get_light(x - 1, y, z - 1, 1, closes)) / 75.0f;
-                    float lg2 = 0.8f * (get_light(x + 1, y + 1, z - 1, 1, closes) + lg * 30.0f + 
-                                    get_light(x, y + 1, z - 1, 1, closes) + 
-                                    get_light(x + 1, y, z - 1, 1, closes)) / 75.0f;
-                    float lg3 = 0.8f * (get_light(x + 1, y - 1, z - 1, 1, closes) + lg * 30.0f + 
-                                    get_light(x, y - 1, z - 1, 1, closes) + 
-                                    get_light(x + 1, y, z - 1, 1, closes)) / 75.0f;
-                    
-                    float lb0 = 0.8f * (get_light(x - 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
-                                    get_light(x, y - 1, z - 1, 2, closes) + 
-                                    get_light(x - 1, y, z - 1, 2, closes)) / 75.0f;
-                    float lb1 = 0.8f * (get_light(x - 1, y + 1, z - 1, 2, closes) + lb * 30.0f + 
-                                    get_light(x, y + 1, z - 1, 2, closes) + 
-                                    get_light(x - 1, y, z - 1, 2, closes)) / 75.0f;
-                    float lb2 = 0.8f * (get_light(x + 1, y + 1, z - 1, 2, closes) + lb * 30.0f + 
-                                    get_light(x, y + 1, z - 1, 2, closes) + 
-                                    get_light(x + 1, y, z - 1, 2, closes)) / 75.0f;
-                    float lb3 = 0.8f * (get_light(x + 1, y - 1, z - 1, 2, closes) + lb * 30.0f + 
-                                    get_light(x, y - 1, z - 1, 2, closes) + 
-                                    get_light(x + 1, y, z - 1, 2, closes)) / 75.0f;
-                    
-                    float ls0 = 0.8f * (get_light(x - 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
-                                    get_light(x, y - 1, z - 1, 3, closes) + 
-                                    get_light(x - 1, y, z - 1, 3, closes)) / 75.0f;
-                    float ls1 = 0.8f * (get_light(x - 1, y + 1, z - 1, 3, closes) + ls * 30.0f + 
-                                    get_light(x, y + 1, z - 1, 3, closes) + 
-                                    get_light(x - 1, y, z - 1, 3, closes)) / 75.0f;
-                    float ls2 = 0.8f * (get_light(x + 1, y + 1, z - 1, 3, closes) + ls * 30.0f + 
-                                    get_light(x, y + 1, z - 1, 3, closes) + 
-                                    get_light(x + 1, y, z - 1, 3, closes)) / 75.0f;
-                    float ls3 = 0.8f * (get_light(x + 1, y - 1, z - 1, 3, closes) + ls * 30.0f + 
-                                    get_light(x, y - 1, z - 1, 3, closes) + 
-                                    get_light(x + 1, y, z - 1, 3, closes)) / 75.0f;
-                    
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z - 0.5f, u2, v2, lr1, lg1, lb1, ls1);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v2, lr2, lg2, lb2, ls2);
-                    
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z - 0.5f, u2, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z - 0.5f, u1, v2, lr2, lg2, lb2, ls2);
-                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z - 0.5f, u1, v1, lr3, lg3, lb3, ls3);
-                }
-                // Передняя грань (+Z)
-                if (!is_blocked(x, y, z + 1, closes, group)) {
-                    setup_uv(block->textureFaces[5], u1, v1, u2, v2);
-
-                    float lr = get_light(x, y, z + 1, 0, closes) / 15.0f;
-                    float lg = get_light(x, y, z + 1, 1, closes) / 15.0f;
-                    float lb = get_light(x, y, z + 1, 2, closes) / 15.0f;
-                    float ls = get_light(x, y, z + 1, 3, closes) / 15.0f;
-                    
-                    float lr0 = 0.9f * (get_light(x - 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
-                                    get_light(x, y - 1, z + 1, 0, closes) + 
-                                    get_light(x - 1, y, z + 1, 0, closes)) / 75.0f;
-                    float lr1 = 0.9f * (get_light(x + 1, y + 1, z + 1, 0, closes) + lr * 30.0f + 
-                                    get_light(x, y + 1, z + 1, 0, closes) + 
-                                    get_light(x + 1, y, z + 1, 0, closes)) / 75.0f;
-                    float lr2 = 0.9f * (get_light(x - 1, y + 1, z + 1, 0, closes) + lr * 30.0f + 
-                                    get_light(x, y + 1, z + 1, 0, closes) + 
-                                    get_light(x - 1, y, z + 1, 0, closes)) / 75.0f;
-                    float lr3 = 0.9f * (get_light(x + 1, y - 1, z + 1, 0, closes) + lr * 30.0f + 
-                                    get_light(x, y - 1, z + 1, 0, closes) + 
-                                    get_light(x + 1, y, z + 1, 0, closes)) / 75.0f;
-                    
-                    float lg0 = 0.9f * (get_light(x - 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
-                                    get_light(x, y - 1, z + 1, 1, closes) + 
-                                    get_light(x - 1, y, z + 1, 1, closes)) / 75.0f;
-                    float lg1 = 0.9f * (get_light(x + 1, y + 1, z + 1, 1, closes) + lg * 30.0f + 
-                                    get_light(x, y + 1, z + 1, 1, closes) + 
-                                    get_light(x + 1, y, z + 1, 1, closes)) / 75.0f;
-                    float lg2 = 0.9f * (get_light(x - 1, y + 1, z + 1, 1, closes) + lg * 30.0f + 
-                                    get_light(x, y + 1, z + 1, 1, closes) + 
-                                    get_light(x - 1, y, z + 1, 1, closes)) / 75.0f;
-                    float lg3 = 0.9f * (get_light(x + 1, y - 1, z + 1, 1, closes) + lg * 30.0f + 
-                                    get_light(x, y - 1, z + 1, 1, closes) + 
-                                    get_light(x + 1, y, z + 1, 1, closes)) / 75.0f;
-                    
-                    float lb0 = 0.9f * (get_light(x - 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
-                                    get_light(x, y - 1, z + 1, 2, closes) + 
-                                    get_light(x - 1, y, z + 1, 2, closes)) / 75.0f;
-                    float lb1 = 0.9f * (get_light(x + 1, y + 1, z + 1, 2, closes) + lb * 30.0f + 
-                                    get_light(x, y + 1, z + 1, 2, closes) + 
-                                    get_light(x + 1, y, z + 1, 2, closes)) / 75.0f;
-                    float lb2 = 0.9f * (get_light(x - 1, y + 1, z + 1, 2, closes) + lb * 30.0f + 
-                                    get_light(x, y + 1, z + 1, 2, closes) + 
-                                    get_light(x - 1, y, z + 1, 2, closes)) / 75.0f;
-                    float lb3 = 0.9f * (get_light(x + 1, y - 1, z + 1, 2, closes) + lb * 30.0f + 
-                                    get_light(x, y - 1, z + 1, 2, closes) + 
-                                    get_light(x + 1, y, z + 1, 2, closes)) / 75.0f;
-                    
-                    float ls0 = 0.9f * (get_light(x - 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
-                                    get_light(x, y - 1, z + 1, 3, closes) + 
-                                    get_light(x - 1, y, z + 1, 3, closes)) / 75.0f;
-                    float ls1 = 0.9f * (get_light(x + 1, y + 1, z + 1, 3, closes) + ls * 30.0f + 
-                                    get_light(x, y + 1, z + 1, 3, closes) + 
-                                    get_light(x + 1, y, z + 1, 3, closes)) / 75.0f;
-                    float ls2 = 0.9f * (get_light(x - 1, y + 1, z + 1, 3, closes) + ls * 30.0f + 
-                                    get_light(x, y + 1, z + 1, 3, closes) + 
-                                    get_light(x - 1, y, z + 1, 3, closes)) / 75.0f;
-                    float ls3 = 0.9f * (get_light(x + 1, y - 1, z + 1, 3, closes) + ls * 30.0f + 
-                                    get_light(x, y - 1, z + 1, 3, closes) + 
-                                    get_light(x + 1, y, z + 1, 3, closes)) / 75.0f;
-                    
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
-                    add_vertex(buffer, index, x - 0.5f, y + 0.5f, z + 0.5f, u1, v2, lr2, lg2, lb2, ls2);
-                    
-
-                    add_vertex(buffer, index, x - 0.5f, y - 0.5f, z + 0.5f, u1, v1, lr0, lg0, lb0, ls0);
-                    add_vertex(buffer, index, x + 0.5f, y - 0.5f, z + 0.5f, u2, v1, lr3, lg3, lb3, ls3);
-                    add_vertex(buffer, index, x + 0.5f, y + 0.5f, z + 0.5f, u2, v2, lr1, lg1, lb1, ls1);
-                }
-            }
-        }
-    }
+    // Отрисовка стекла (id = 4)
+	for (int y = 0; y < CHUNK_HEIGHT; y++){
+		for (int z = 0; z < CHUNK_DEPTH; z++){
+			for (int x = 0; x < CHUNK_WIDTH; x++){
+				voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
+				if (vox.id != 4) continue;
+				_renderBlock(buffer, x, y, z, closes, vox, index);
+			}
+		}
+	}
     
     return new Mesh(buffer, index / VERTEX_SIZE, CHUNK_ATTRS);
 }

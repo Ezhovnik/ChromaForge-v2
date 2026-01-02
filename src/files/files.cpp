@@ -7,8 +7,7 @@
 // Записывает данные в бинарный файл в указанную позицию
 bool write_binary_file_part(const std::string filename, const char* data, size_t offset, size_t size){
 	std::ofstream output(filename, std::ios::out | std::ios::binary | std::ios::in);
-	if (!output.is_open())
-		return false;
+	if (!output.is_open()) return false;
 
 	output.seekp(offset);
 	output.write(data, size);
@@ -19,8 +18,7 @@ bool write_binary_file_part(const std::string filename, const char* data, size_t
 // Записывает данные в бинарный файл (перезаписывает сущесвующий)
 bool write_binary_file(const std::string filename, const char* data, size_t size) {
 	std::ofstream output(filename, std::ios::binary);
-	if (!output.is_open())
-		return false;
+	if (!output.is_open()) return false;
 
 	output.write(data, size);
 	output.close();
@@ -31,8 +29,7 @@ bool write_binary_file(const std::string filename, const char* data, size_t size
 // Добавляет данные в конец бинарного файла
 uint append_binary_file(const std::string filename, const char* data, size_t size) {
 	std::ofstream output(filename, std::ios::binary | std::ios::app);
-	if (!output.is_open())
-		return 0;
+	if (!output.is_open()) return 0;
 
 	uint position = output.tellp();
 	output.write(data, size);
@@ -44,8 +41,7 @@ uint append_binary_file(const std::string filename, const char* data, size_t siz
 // Читает данные из бинарного файла с начала
 bool read_binary_file(const std::string filename, char* data, size_t size) {
 	std::ifstream input(filename, std::ios::binary);
-	if (!input.is_open())
-		return false;
+	if (!input.is_open()) return false;
 
 	input.read(data, size);
 	input.close();
@@ -56,14 +52,28 @@ bool read_binary_file(const std::string filename, char* data, size_t size) {
 // Читает данные из бинарного файла с указанной позиции
 bool read_binary_file(const std::string filename, char* data, size_t offset, size_t size) {
 	std::ifstream input(filename, std::ios::binary);
-	if (!input.is_open())
-		return false;
+	if (!input.is_open()) return false;
 
 	input.seekg(offset);
 	input.read(data, size);
 	input.close();
 
 	return true;
+}
+
+char* read_binary_file(std::string filename, size_t& length) {
+	std::ifstream input(filename, std::ios::binary);
+	if (!input.is_open()) return nullptr;
+
+	input.seekg(0, std::ios_base::end);
+	length = input.tellg();
+	input.seekg(0, std::ios_base::beg);
+
+	char* data = new char[length];
+	input.read(data, length);
+	input.close();
+
+	return data;
 }
 
 // Проверяет наличие директории. Если её нет, то создает
@@ -92,7 +102,7 @@ uint decompressRLE(const char* src, uint length, char* dst, uint targetLength){
 	for (uint i = 0; i < length;){
 		unsigned char counter = src[i++];
 		char c = src[i++];
-		for (uint j = 0; j <= counter; j++){
+		for (uint j = 0; j <= counter; ++j){
 			dst[offset++] = c;
 		}
 	}

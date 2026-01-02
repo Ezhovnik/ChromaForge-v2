@@ -7,13 +7,26 @@
 
 #include "files.h"
 #include "../voxels/Chunk.h"
+#include "../objects/Player.h"
+#include "../physics/Hitbox.h"
+#include "../window/Camera.h"
 
 union {
 	long _key;
-	int _coords[2];
+	int _coords[2]; // x z
 } _tempcoords;
 
+// Общий объём сжатых файлов
 unsigned long WorldFiles::totalCompressed = 0;
+
+// Константы для идентификации секций в файле игрока
+constexpr int SECTION_POSITION = 1; // Секция с позицией игрока
+constexpr int SECTION_ROTATION = 2; // Секция с поворотом камеры игрока
+
+// Статические проверки размеров типов данных
+static_assert(sizeof(uint32_t) == 4, "uint32_t must be 4 bytes");
+static_assert(sizeof(float) == 4, "float must be 4 bytes");
+static_assert(sizeof(char) == 1, "char must be 1 byte");
 
 // Конвертирует 4 байта в целое число
 int bytes2Int(const unsigned char* src, uint offset){
@@ -22,30 +35,53 @@ int bytes2Int(const unsigned char* src, uint offset){
 
 // Конвертирует целое число в 4 байта
 void int2Bytes(int value, char* dest, uint offset){
-	dest[offset] = (char)((value >> 24) & 0xFF);
-	dest[offset + 1] = (char)((value >> 16) & 0xFF);
-	dest[offset + 2] = (char)((value >> 8) & 0xFF);
-	dest[offset + 3] = (char)(value & 0xFF);
+	dest[offset] = (char) ((value >> 24) & 0xFF);
+	dest[offset + 1] = (char) ((value >> 16) & 0xFF);
+	dest[offset + 2] = (char) ((value >> 8) & 0xFF);
+	dest[offset + 3] = (char) ((value >> 0) & 0xFF);
+}
+
+void float2Bytes(float fvalue, char* dest, uint offset){
+	uint32_t value = *((uint32_t*)&fvalue);
+	dest[offset] = (char) ((value >> 24) & 0xFF);
+	dest[offset + 1] = (char) ((value >> 16) & 0xFF);
+	dest[offset + 2] = (char) ((value >> 8) & 0xFF);
+	dest[offset + 3] = (char) ((value >> 0) & 0xFF);
+}
+
+float bytes2Float(char* srcs, uint offset){
+	unsigned char* src = (unsigned char*) srcs;
+	uint32_t value = ((src[offset] << 24) |
+					(src[offset + 1] << 16) |
+					(src[offset + 2] << 8) |
+					(src[offset + 3]));
+	return *(float*)(&value);
 }
 
 // Конструктор
 WorldFiles::WorldFiles(const char* directory, size_t mainBufferCapacity) : directory(directory){
+    // Проверяем существование директории. Если её нет, то пытаемся создать
     if (!ensureDirectoryExists(directory)) {
+        // Найти или создать директорию не удалось.
+        std::cerr << "ERROR::Failed to load world directory" << std::endl;
         throw std::runtime_error("Failed to load world directory");
     }
 
+    // Инициализируем буферы
 	mainBufferIn = new char[CHUNK_VOLUME * 2];
 	mainBufferOut = new char[mainBufferCapacity];
 }
 
 // Деструктор 
 WorldFiles::~WorldFiles(){
+    // Освобождаем буферы
 	delete[] mainBufferIn;
 	delete[] mainBufferOut;
 
+    // Осовбождаем регионы из памяти
 	for (auto& [key, region] : regions){
         if (region == nullptr) continue;
-        for (uint i = 0; i < REGION_VOLUME; i++){
+        for (uint i = 0; i < REGION_VOLUME; ++i){
             delete[] region[i];
         }
         delete[] region;
@@ -90,13 +126,19 @@ void WorldFiles::put(const char* chunkData, int x, int z){
 	}
 
     // Копируем данные
-	for (uint i = 0; i < CHUNK_VOLUME; ++i)
+	for (uint i = 0; i < CHUNK_VOLUME; ++i) {
 		targetChunk[i] = chunkData[i];
+    }
 }
 
-// Формирует имя файла региона
+// Генерирует имя файла для региона с заданными координатами
 std::string WorldFiles::getRegionFile(int x, int z) {
 	return directory + std::to_string(x) + "_" + std::to_string(z) + ".bin";
+}
+
+// Генерирует имя файла, в котором записана информация об игроке
+std::string WorldFiles::getPlayerFile() {
+	return directory + "/player.bin";
 }
 
 // Получает данные чанка из кэша или файла
@@ -150,7 +192,6 @@ bool WorldFiles::readChunk(int x, int z, char* out){
 
 	std::ifstream input(filename, std::ios::binary);
 	if (!input.is_open()) return false;
-	
 
     // Читаем смещение чанка в файле
 	uint32_t offset;
@@ -160,7 +201,6 @@ bool WorldFiles::readChunk(int x, int z, char* out){
 	offset = bytes2Int((const unsigned char*)(&offset), 0); // Конвертируем
 
     // Проверяем валидность смещения
-	assert (offset < 1000000);
 	if (offset == 0){
 		input.close();
 		return false;
@@ -190,8 +230,58 @@ void WorldFiles::write(){
 		longToCoords(x, z, key);
 
 		uint size = writeRegion(mainBufferOut, x, z, region);
-		write_binary_file(getRegionFile(x,z), mainBufferOut, size);
+		write_binary_file(getRegionFile(x, z), mainBufferOut, size);
 	}
+}
+
+// Записываем данные об игроке на диск
+void WorldFiles::writePlayer(Player* player){
+	char dst[1 + 3 * sizeof(float) + 1 + 2 * sizeof(float)];
+
+	glm::vec3 position = player->hitbox->position;
+
+	size_t offset = 0;
+	dst[offset++] = SECTION_POSITION;
+	float2Bytes(position.x, dst, offset); offset += sizeof(float);
+	float2Bytes(position.y, dst, offset); offset += sizeof(float);
+	float2Bytes(position.z, dst, offset); offset += sizeof(float);
+
+	dst[offset++] = SECTION_ROTATION;
+	float2Bytes(player->camX, dst, offset); offset += sizeof(float);
+	float2Bytes(player->camY, dst, offset); offset += sizeof(float);
+
+	write_binary_file(getPlayerFile(), (const char*)dst, sizeof(dst));
+}
+
+// Читаем данные об игроке с диска
+bool WorldFiles::readPlayer(Player* player) {
+	size_t length = 0;
+	char* data = read_binary_file(getPlayerFile(), length);
+	if (data == nullptr){
+		std::cerr << "WARN::Could not to read player.bin" << std::endl;
+		return false;
+	}
+
+	glm::vec3 position = player->hitbox->position;
+	size_t offset = 0;
+	while (offset < length){
+		char section = data[offset++];
+		switch (section){
+		case SECTION_POSITION:
+			position.x = bytes2Float(data, offset); offset += sizeof(float);
+			position.y = bytes2Float(data, offset); offset += sizeof(float);
+			position.z = bytes2Float(data, offset); offset += sizeof(float);
+			break;
+		case SECTION_ROTATION:
+			player->camX = bytes2Float(data, offset); offset += sizeof(float);
+			player->camY = bytes2Float(data, offset); offset += sizeof(float);
+			break;
+		}
+	}
+	player->hitbox->position = position;
+	player->camera->position = position + glm::vec3(0, 1, 0);
+
+	return true;
 }
 
 // Формирует бинарное представление региона для записи

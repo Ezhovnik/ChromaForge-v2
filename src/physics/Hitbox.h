@@ -10,6 +10,7 @@ public:
 	glm::vec3 position; // Центр хитбокса в мировых координатах
 	glm::vec3 halfsize; // Половины размеров хитбокса по осям X, Y, Z
 	glm::vec3 velocity; // Текущая скорость хитбокса
+    float linear_damping;
 	bool grounded = false; // Флаг, указывающий, находится ли хитбокс на земле
 
 	Hitbox(glm::vec3 position, glm::vec3 halfsize); // Конструктор

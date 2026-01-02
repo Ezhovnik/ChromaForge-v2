@@ -16,12 +16,17 @@ Mesh::Mesh(const float* buffer, size_t vertices, const int* attrs) : vertices(ve
 
     glBindVertexArray(VAO); // Привязка VAO
     glBindBuffer(GL_ARRAY_BUFFER, VBO); // Привязка VBO
-    glBufferData(
-        GL_ARRAY_BUFFER, 
-        sizeof(float) * vertexSize * vertices, // Общий размер данных
-        buffer, // Указатель на данные
-        GL_STATIC_DRAW // GL_STATIC_DRAW указывает, что данные не будут изменяться часто
-    ); // Загрузка вершин в буфер OpenGL
+    if (buffer){
+		glBufferData(
+            GL_ARRAY_BUFFER, 
+            sizeof(float) * vertexSize * vertices, // Общий размер данных
+            buffer, // Указатель на данные
+            GL_STATIC_DRAW // GL_STATIC_DRAW указывает, что данные не будут изменяться часто
+        ); // Загрузка вершин в буфер OpenGL
+	} else {
+		glBufferData(GL_ARRAY_BUFFER, 0, {}, GL_STATIC_DRAW);
+	}
+    
 
     // Настройка вершинных атрибутов
     int offset = 0; // Смещение в байтах от начала вершины

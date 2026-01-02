@@ -11,6 +11,7 @@ extern bool write_binary_file(const std::string filename, const char* data, size
 extern uint append_binary_file(const std::string filename, const char* data, size_t size); // Добавляет данные в конец бинарного файла
 extern bool read_binary_file(const std::string filename, char* data, size_t size); // Читает данные из бинарного файла с начала
 extern bool read_binary_file(const std::string filename, char* data, size_t offset, size_t size); // Читает данные из бинарного файла с указанной позиции
+extern char* read_binary_file(std::string filename, size_t& length);
 
 extern bool ensureDirectoryExists(const std::string directory); // Проверяет наличие директории. Если её нет, то создает
 

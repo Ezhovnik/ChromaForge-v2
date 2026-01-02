@@ -12,18 +12,19 @@ PhysicsSolver::PhysicsSolver(glm::vec3 gravity) : gravity(gravity) {
 }
 
 // Выполняет один шаг физического моделирования для хитбокса
-void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned substeps, bool shifting) {
+void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned substeps, bool shifting, float gravityScale) {
 	// Разбиваем шаг на подшаги
     for (unsigned i = 0; i < substeps; ++i){
 		float subDelta = delta / (float)substeps;
+        float linear_damping = hitbox->linear_damping;
     
 		glm::vec3& pos = hitbox->position;
 		glm::vec3& half = hitbox->halfsize;
 		glm::vec3& vel = hitbox->velocity;
 
-		vel.x += gravity.x * subDelta;
-		vel.y += gravity.y * subDelta;
-		vel.z += gravity.z * subDelta;
+		vel.x += gravity.x * subDelta * gravityScale;
+		vel.y += gravity.y * subDelta * gravityScale;
+		vel.z += gravity.z * subDelta * gravityScale;
 
 		float prev_x = pos.x;
 		float prev_z = pos.z;
@@ -87,7 +88,8 @@ void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned s
         // Падение вниз (-Y)
 		if (vel.y < 0.0){
 			for (int x = floor(pos.x - half.x + EPS); x <= floor(pos.x + half.x - EPS); ++x){
-				for (int z = floor(pos.z - half.z + EPS); z <= floor(pos.z + half.z - EPS); ++z){
+				bool broken = false;
+                for (int z = floor(pos.z - half.z + EPS); z <= floor(pos.z + half.z - EPS); ++z){
 					int y = floor(pos.y - half.y - EPS);
 					if (chunks->isObstacle(x, y, z)){
 						vel.y *= 0.0;
@@ -96,9 +98,11 @@ void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned s
 						vel.x *= frictionFactor;
 						vel.z *= frictionFactor;
 						hitbox->grounded = true;
+                        broken = true;
 						break;
 					}
 				}
+                if (broken) break;
 			}
 		}
         // Прыжок/подъем вверх (+Y)
@@ -114,6 +118,9 @@ void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned s
 				}
 			}
 		}
+
+        vel.x *= glm::max(0.0, 1.0 - subDelta * linear_damping);
+		vel.z *= glm::max(0.0, 1.0 - subDelta * linear_damping);
 
         // Обновляем позицию на основе скорости
 		pos.x += vel.x * subDelta;

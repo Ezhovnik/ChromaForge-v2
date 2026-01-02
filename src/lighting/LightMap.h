@@ -10,6 +10,12 @@ public:
 	LightMap();
 	~LightMap();
 
+    void set(const LightMap* light_map);
+
+    inline unsigned short get(int x, int y, int z){
+		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x]);
+	}
+
 	inline unsigned char get(int x, int y, int z, int channel){
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] >> (channel << 2)) & 0xF;
 	}

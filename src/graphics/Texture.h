@@ -11,6 +11,7 @@ public:
     uint id; // Идентификатор текстуры (используется в OpenGL)
     int width, height; // Ширина и высота текстуры в пикселях
     Texture (uint id, int width, int height); // Конструктор
+    Texture(unsigned char* data, int width, int height);
     ~Texture(); // Деструктор
 
     void bind(); // Привязывает текстуру к текущему контексту OpenGL для использования

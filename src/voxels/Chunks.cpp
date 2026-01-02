@@ -32,13 +32,25 @@ Chunks::Chunks(uint width, uint height, uint depth, int areaOffsetX, int areaOff
 // Деструктор
 Chunks::~Chunks() {
     for (int i = 0; i < volume; ++i) {
-        delete chunks[i];
-        delete meshes[i];
+        if (chunks != nullptr && chunks[i] != nullptr) chunks[i]->decref();
+        if (meshes != nullptr && meshes[i] != nullptr)delete meshes[i];
     }
-    delete[] chunks;
-    delete[] meshes;
-    delete[] chunksSecond;
-    delete[] meshesSecond;
+    if (chunks != nullptr) delete[] chunks;
+    if (meshes != nullptr) delete[] meshes;
+    if (chunksSecond != nullptr)delete[] chunksSecond;
+    if (meshesSecond != nullptr) delete[] meshesSecond;
+}
+
+bool Chunks::putChunk(Chunk* chunk) {
+	int x = chunk->chunk_x;
+	int y = chunk->chunk_y;
+	int z = chunk->chunk_z;
+	x -= areaOffsetX;
+	y -= areaOffsetY;
+	z -= areaOffsetZ;
+	if (x < 0 || y < 0 || z < 0 || x >= width || y >= height || z >= depth) return false;
+	chunks[(y * depth + z) * width + x] = chunk;
+	return true;
 }
 
 // Получает чанк по координатам чанка
@@ -90,6 +102,26 @@ unsigned char Chunks::getLight(int x, int y, int z, int channel){
 	int lz = z - cz * CHUNK_DEPTH;
 	return chunk->light_map->get(lx,ly,lz, channel);
 }
+
+unsigned char Chunks::getLight(int x, int y, int z){
+	x -= areaOffsetX * CHUNK_WIDTH;
+	y -= areaOffsetY * CHUNK_HEIGHT;
+	z -= areaOffsetZ * CHUNK_DEPTH;
+	int cx = x / CHUNK_WIDTH;
+	int cy = y / CHUNK_HEIGHT;
+	int cz = z / CHUNK_DEPTH;
+	if (x < 0) cx--;
+	if (y < 0) cy--;
+	if (z < 0) cz--;
+	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= height || cz >= depth) return 0;
+	Chunk* chunk = chunks[(cy * depth + cz) * width + cx];
+	if (chunk == nullptr) return 0;
+	int lx = x - cx * CHUNK_WIDTH;
+	int ly = y - cy * CHUNK_HEIGHT;
+	int lz = z - cz * CHUNK_DEPTH;
+	return chunk->light_map->get(lx, ly, lz);
+}
+
 
 Chunk* Chunks::getChunkByVoxel(int x, int y, int z){
 	x -= areaOffsetX * CHUNK_WIDTH;
@@ -178,10 +210,10 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 
     // Основной цикл алгоритма DDA
 	while (t <= maxDist){
-		voxel* voxel = getVoxel(ix, iy, iz); // Получение текущего вокселя
+		voxel* vox = getVoxel(ix, iy, iz); // Получение текущего вокселя
 
-        // Проверка, является ли воксель непрозрачным (id != 0)
-		if (voxel == nullptr || voxel->id){
+        // Проверка, является ли воксель непрозрачным
+		if (vox == nullptr || Block::blocks[vox->id]->selectable){
             // Найден непрозрачный воксель или достигнута граница мира
 			end.x = px + t * dx;
 			end.y = py + t * dy;
@@ -197,7 +229,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 			if (steppedIndex == 1) norm.y = -stepy;
 			if (steppedIndex == 2) norm.z = -stepz;
 
-			return voxel;
+			return vox;
 		}
 
         // Определение следующей оси для шага
@@ -266,7 +298,7 @@ void Chunks::translate(WorldFiles* worldFiles, int dx, int dy, int dz){
 				Mesh* mesh = meshes[(y * depth + z) * width + x];
 				if (nx < 0 || ny < 0 || nz < 0 || nx >= width || ny >= height || nz >= depth){
 					worldFiles->put((const char*)chunk->voxels, chunk->chunk_x, chunk->chunk_z);
-					delete chunk;
+					chunk->decref();
 					delete mesh;
 					continue;
 				}
@@ -289,119 +321,34 @@ void Chunks::translate(WorldFiles* worldFiles, int dx, int dy, int dz){
 }
 
 void Chunks::setCenter(WorldFiles* worldFiles, int x, int y, int z) {
-	int cx = x / CHUNK_WIDTH;
-	int cy = y / CHUNK_HEIGHT;
-	int cz = z / CHUNK_DEPTH;
-	cx -= areaOffsetX;
-	cy -= areaOffsetY;
-	cz -= areaOffsetZ;
-	if (x < 0) cx--;
-	if (y < 0) cy--;
-	if (z < 0) cz--;
-	cx -= width / 2;
-	cy -= height / 2;
-	cz -= depth / 2;
-	if (cx != 0 || cy != 0 || cz != 0) translate(worldFiles, cx,cy,cz);
+	int chunk_x = x / CHUNK_WIDTH;
+	int chunk_y = y / CHUNK_HEIGHT;
+	int chunk_z = z / CHUNK_DEPTH;
+	chunk_x -= areaOffsetX;
+	chunk_y -= areaOffsetY;
+	chunk_z -= areaOffsetZ;
+	if (x < 0) chunk_x--;
+	if (y < 0) chunk_y--;
+	if (z < 0) chunk_z--;
+	chunk_x -= width / 2;
+	chunk_y -= height / 2;
+	chunk_z -= depth / 2;
+	if (chunk_x != 0 || chunk_y != 0 || chunk_z != 0) translate(worldFiles, chunk_x, chunk_y, chunk_z);
 }
 
-bool Chunks::loadVisible(WorldFiles* worldFiles){
-	int nearX = 0;
-	int nearY = 0;
-	int nearZ = 0;
-	int minDistance = INT_MAX;
-	for (uint y = 0; y < height; ++y){
-		for (uint z = 1; z < depth-1; ++z){
-			for (uint x = 1; x < width-1; ++x){
-				int index = (y * depth + z) * width + x;
-				Chunk* chunk = chunks[index];
-				if (chunk != nullptr) continue;
-				int lx = x - width / 2;
-				int ly = y - height / 2;
-				int lz = z - depth / 2;
-				int distance = (lx * lx + ly * ly + lz * lz);
-				if (distance < minDistance){
-					minDistance = distance;
-					nearX = x;
-					nearY = y;
-					nearZ = z;
-				}
-			}
-		}
-	}
-
-	int index = (nearY * depth + nearZ) * width + nearX;
-	Chunk* chunk = chunks[index];
-	if (chunk != nullptr) return false;
-	chunk = new Chunk(nearX+areaOffsetX,nearY+areaOffsetY,nearZ+areaOffsetZ);
-	if (!worldFiles->getChunk(chunk->chunk_x, chunk->chunk_z, (char*)chunk->voxels)){
-		WorldGenerator::generate(chunk->voxels, chunk->chunk_x, chunk->chunk_y, chunk->chunk_z);
-	}
-
-	chunks[index] = chunk;
-	Lighting::onChunkLoaded(areaOffsetX+nearX, areaOffsetY+nearY, areaOffsetZ+nearZ);
-	return true;
+void Chunks::_setOffset(int x, int y, int z){
+	areaOffsetX = x;
+	areaOffsetY = y;
+	areaOffsetZ = z;
 }
 
-bool Chunks::_buildMeshes(VoxelRenderer* renderer) {
-	int nearX = 0;
-	int nearY = 0;
-	int nearZ = 0;
-	int minDistance = INT_MAX;
-	for (uint y = 0; y < height; y++){
-		for (uint z = 1; z < depth - 1; z++){
-			for (uint x = 1; x < width - 1; x++){
-				int index = (y * depth + z) * width + x;
-				Chunk* chunk = chunks[index];
-				if (chunk == nullptr) continue;
-				Mesh* mesh = meshes[index];
-				if (mesh != nullptr && !chunk->needsUpdate) continue;
-				int lx = x - width / 2;
-				int ly = y - height / 2;
-				int lz = z - depth / 2;
-				int distance = (lx * lx + ly * ly + lz * lz);
-				if (distance < minDistance){
-					minDistance = distance;
-					nearX = x;
-					nearY = y;
-					nearZ = z;
-				}
-			}
+void Chunks::clear(bool freeMemory){
+	for (size_t i = 0; i < volume; ++i){
+		if (freeMemory){
+			chunks[i]->decref();
+			delete meshes[i];
 		}
+		chunks[i] = nullptr;
+		meshes[i] = nullptr;
 	}
-
-	int index = (nearY * depth + nearZ) * width + nearX;
-
-	Chunk* closes[27];
-
-	Chunk* chunk = chunks[index];
-	if (chunk == nullptr) return false;
-	Mesh* mesh = meshes[index];
-	if (mesh == nullptr || chunk->needsUpdate){
-		if (mesh != nullptr) delete mesh;
-		if (chunk->isEmpty()){
-			meshes[index] = nullptr;
-			return false;
-		}
-		chunk->needsUpdate = false;
-        std::fill_n(closes, 27, nullptr);
-		for (size_t j = 0; j < volume; j++){
-			Chunk* other = chunks[j];
-			if (other == nullptr) continue;
-
-			int delta_x = other->chunk_x - chunk->chunk_x;
-			int delta_y = other->chunk_y - chunk->chunk_y;
-			int delta_z = other->chunk_z - chunk->chunk_z;
-
-			if (abs(delta_x) > 1 || abs(delta_y) > 1 || abs(delta_z) > 1) continue;
-
-			delta_x += 1;
-			delta_y += 1;
-			delta_z += 1;
-			closes[(delta_y * 3 + delta_z) * 3 + delta_x] = other;
-		}
-		mesh = renderer->render(chunk, (const Chunk**)closes);
-		meshes[index] = mesh;
-		return true;
-	}
-	return false;
 }
