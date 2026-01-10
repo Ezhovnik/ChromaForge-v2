@@ -4,23 +4,31 @@
 #include <thread>
 #include <atomic>
 
-constexpr int CLOSES_CNT = 27;
+constexpr int SURROUNDINGS_CNT = 9;
+
+enum LoaderMode {
+	OFF, IDLE, LOAD, LIGHTS, RENDER,
+};
 
 class Chunk;
+class World;
 
 class ChunksLoader final {
 private:
 	std::thread loaderThread;
 	void _thread();
 	std::atomic<Chunk*> current {nullptr};
-	std::atomic<Chunk**> closes {nullptr};
-	std::atomic<bool> working {true};
+	std::atomic<Chunk**> surroundings {nullptr};
+	std::atomic<LoaderMode> state {IDLE};
+    World* world;
+
+    void perform(Chunk* chunk, Chunk** closes_passed, LoaderMode mode);
 public:
-	ChunksLoader() : loaderThread{} {
+	ChunksLoader(World* world) : loaderThread{}, world(world) {
 		loaderThread = std::thread{&ChunksLoader::_thread, this};
 	}
 	~ChunksLoader(){
-		working = false;
+		state = OFF;
 		loaderThread.join();
 	}
 
@@ -28,10 +36,12 @@ public:
 		return current != nullptr;
 	}
 
-	void perform(Chunk* chunk, Chunk** closes_passed);
+    void load(Chunk* chunk, Chunk** closes_passed);
+	void lights(Chunk* chunk, Chunk** closes_passed);
+	void render(Chunk* chunk, Chunk** closes_passed);
 
 	void stop(){
-		working = false;
+		state = OFF;
 	}
 };
 

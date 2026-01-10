@@ -6,6 +6,8 @@
 #include "../include/stb/stb_image.h"
 
 #include "../graphics/Texture.h"
+#include "../logger/Logger.h"
+#include "../typedefs.h"
 
 // Функция для загрузки изображения и создания OpenGL текстуры
 GLuint loadImage(const char* file, int* width, int* height) {
@@ -13,12 +15,11 @@ GLuint loadImage(const char* file, int* width, int* height) {
     GLuint texture;
 
     stbi_set_flip_vertically_on_load(true); // Инвертируем изображение по вертикали (OpenGL координаты начинаются снизу)
-    unsigned char* bytes = stbi_load(file, width, height, &numColCh, 0); // Загружка изображения из файла
+    ubyte* bytes = stbi_load(file, width, height, &numColCh, 0); // Загружка изображения из файла
 
     // Проверка успешности загрузки изображения
     if (bytes == nullptr) {
-        std::cerr << "Failed to load image: " << file << std::endl;
-        std::cerr << stbi_failure_reason() << std::endl;
+        LOG_ERROR("Failed to load image: '{}'\n{}", file, stbi_failure_reason());
         return 0;
     }
 
@@ -33,8 +34,7 @@ GLuint loadImage(const char* file, int* width, int* height) {
     } else if (numColCh == 1) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RED, GL_UNSIGNED_BYTE, bytes); // Одноканальный формат
     } else {
-		std::cerr << "Automatic Texture type recognition failed for: " << file << std::endl;
-        std::cerr << "Number of channels: " << numColCh << std::endl;
+        LOG_ERROR("Automatic Texture type recognition failed for: '{}'\nNumber of channels: {}", file, numColCh);
         stbi_image_free(bytes);
         glDeleteTextures(1, &texture);
         return 0;
@@ -60,7 +60,7 @@ Texture* loadTexture(std::string filename) {
 
     // Проверка успешности создания OpenGL текстуры
     if (texture == 0) {
-        std::cerr << "Could not load texture " << filename << std::endl;
+        LOG_CRITICAL("Could not load texture '{}'", filename);
         return nullptr;
     }
 

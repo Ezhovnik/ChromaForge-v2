@@ -18,6 +18,11 @@ public:
     glm::vec3 right; // Определяет горизонтальную ориентацию камеры.
     glm::vec3 dir;
 
+    float aspect = 0.0f;
+
+    bool flipped = false;
+    bool perspective = true;
+
     // Матрица вращения камеры
     glm::mat4 rotation; // Хранит текущую ориентацию камеры в пространстве.
 

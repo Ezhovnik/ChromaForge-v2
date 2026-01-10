@@ -15,8 +15,10 @@ public:
 	~Lighting();
 
     void clear();
-    void onChunkLoaded(int chunk_x, int chunk_y, int chunk_z, bool sky);
+    void preBuildSkyLight(int chunk_x, int chunk_z);
+    void buildSkyLight(int chunk_x, int chunk_z);
+    void onChunkLoaded(int chunk_x, int chunk_z);
     void onBlockSet(int x, int y, int z, int id);
 };
 
-#endif
+#endif // LIGHTING_LIGHTING_H_

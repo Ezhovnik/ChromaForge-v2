@@ -6,7 +6,7 @@
 Texture::Texture(uint id, int width, int height) : id(id), width(width), height(height){
 }
 
-Texture::Texture(unsigned char* data, int width, int height) : width(width), height(height) {
+Texture::Texture(ubyte* data, int width, int height) : width(width), height(height) {
 	glGenTextures(1, &id);
 	glBindTexture(GL_TEXTURE_2D, id);
 	
@@ -28,4 +28,10 @@ Texture::~Texture() {
 // Активирует и привязывает текстуру для использования в отрисовке
 void Texture::bind() {
     glBindTexture(GL_TEXTURE_2D, id);
+}
+
+void Texture::reload(ubyte* data){
+	glBindTexture(GL_TEXTURE_2D, id);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *) data);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

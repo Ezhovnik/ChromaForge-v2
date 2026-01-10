@@ -5,28 +5,33 @@
 #include <unordered_map>
 #include <string>
 
-typedef unsigned int uint;
+#include "../typedefs.h"
 
 // Константы для размера регионов
-constexpr int REGION_SIZE_BIT = 5; // Размер региона 
-constexpr int REGION_SIZE = 1 << REGION_SIZE_BIT; // Длина региона в чанках
-constexpr int REGION_VOLUME = REGION_SIZE * REGION_SIZE; // Количество чанков в регионе
+namespace Region_Consts {
+    constexpr int REGION_SIZE_BIT = 5; // Размер региона 
+    constexpr int REGION_SIZE = 1 << REGION_SIZE_BIT; // Длина региона в чанках
+    constexpr int REGION_VOLUME = REGION_SIZE * REGION_SIZE; // Количество чанков в регионе
+}
 
 class Player;
 
+struct WorldRegion {
+	char** chunksData;
+	bool unsaved;
+};
+
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
 // ! Высота мира должна состовлять один чанк (любых размеров)
-// FIXME: При движении вдоль оси Z мир зацикливается
-// FIXME: Мир не совсем корректно сохранятеся (или загружается?)
 class WorldFiles {
 public:
-    static unsigned long totalCompressed; // Статическая переменная для отслеживания общего объема сжатых данных
-    std::unordered_map<long, char**> regions; // Хранилище регионов в оперативной памяти.
+    static ulong totalCompressed; // Статическая переменная для отслеживания общего объема сжатых данных
+    std::unordered_map<long, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
     std::string directory; // Путь к директории с файлами мира
     char* mainBufferIn; // Входной буфер для чтения сжатых данных
     char* mainBufferOut; // Выходной буфер для записи регионов
 
-    WorldFiles(const char* directory, size_t mainBufferCapacity); // Конструктор
+    WorldFiles(std::string directory, size_t mainBufferCapacity); // Конструктор
     ~WorldFiles(); // Деструктор
 
     void put(const char* chunkData, int x, int z); // Сохраняет данные чанка в кэш памяти.

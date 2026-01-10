@@ -4,6 +4,8 @@
 
 #include "graphics/Texture.h"
 #include "graphics/ShaderProgram.h"
+#include "graphics/Font.h"
+#include "logger/Logger.h"
 
 // Деструктор
 Assets::~Assets() {
@@ -14,6 +16,11 @@ Assets::~Assets() {
 
     // Освобождаем память выделенную под текстуры
 	for (auto& iter : textures){
+		delete iter.second;
+	}
+
+    // Освобождаем память выделенную под шрифты
+    for (auto& iter : fonts){
 		delete iter.second;
 	}
 }
@@ -42,7 +49,7 @@ bool Assets::store(Texture* texture, std::string name){
     }
 
     // Если существует, то возращаем ошибку
-    std::cerr << "ERROR::Texture named '" << name << "' already exists" << std::endl;
+    LOG_WARN("Texture named '{}' already exists", name);
     return false;
 }
 
@@ -70,6 +77,34 @@ bool Assets::store(ShaderProgram* shader, std::string name){
     }
 
     // Если существует, то возращаем ошибку
-    std::cerr << "ERROR::Shader named '" << name << "' already exists" << std::endl;
+    LOG_WARN("Shader named '{}' already exists", name);
+    return false;
+}
+
+// Получает шрифт по имени
+Font* Assets::getFont(std::string name){
+    // Ищем шрифт в словаре
+    auto it = fonts.find(name);
+
+    // Если нашли, возвращаем указатель на шрифт
+    if (it != fonts.end()) return it->second;
+
+    // Шрифт не найден
+    return nullptr;
+}
+
+// Сохраняет шрифт в менеджере ресурсов.
+bool Assets::store(Font* font, std::string name){
+    // Проверяем, не существует ли уже шрифт с таким именем
+    auto it = fonts.find(name);
+
+    // Если не существует, то добавляем
+    if (it == fonts.end()) {
+        fonts[name] = font;
+        return true;
+    }
+
+    // Если существует, то возращаем ошибку
+    LOG_WARN("Font named '{}' already exists", name);
     return false;
 }

@@ -9,21 +9,23 @@
 #include "../lighting/LightMap.h"
 
 // Конструктор
-Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z) : chunk_x(chunk_x), chunk_y(chunk_y), chunk_z(chunk_z) {
+Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
     voxels = new voxel[CHUNK_VOLUME];
 
-    // Инициализируем воксели с id = 1 (земля)
+    // Инициализируем воксели
     for(size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        voxels[i].id = 1;
+        voxels[i].id = 0;
     }
 
 	light_map = new LightMap();
+    renderData.vertices = nullptr;
 }
 
 // Деструктор
 Chunk::~Chunk() {
     delete light_map;
     delete[] voxels;
+    delete[] renderData.vertices;
 }
 
 // Проверяет, является ли чанк пустым (однородным).
@@ -40,7 +42,7 @@ bool Chunk::isEmpty() {
 
 // Создает полную копию текущего чанка.
 Chunk* Chunk::clone() const {
-	Chunk* other = new Chunk(chunk_x, chunk_y, chunk_z);
+	Chunk* other = new Chunk(chunk_x, chunk_z);
 	for (int i = 0; i < CHUNK_VOLUME; ++i) {
 		other->voxels[i] = voxels[i];
     }
@@ -54,7 +56,7 @@ void Chunk::incref(){
 }
 
 // Уменьшает счётчик ссылок на чанк
-// ! После вызова этого метода указатель на чанк становится невалидным, если счетчик ссылок достиг нуля.
+// WARN: После вызова этого метода указатель на чанк становится невалидным, если счетчик ссылок достиг нуля.
 void Chunk::decref(){
     // Уменьшаем счетчик ссылок и проверяем результат
     // Удаляем чанк, если на него больше никто не ссылается

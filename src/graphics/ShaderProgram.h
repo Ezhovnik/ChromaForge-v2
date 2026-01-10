@@ -4,7 +4,7 @@
 #include <string>
 #include <glm/glm.hpp>
 
-typedef unsigned int uint;
+#include "../typedefs.h"
 
 // Класс-обертка для шейдероной программы OpenGL
 class ShaderProgram {

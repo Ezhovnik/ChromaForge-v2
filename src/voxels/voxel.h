@@ -6,6 +6,7 @@
 // Структура, представляющая один воксель
 struct voxel {
     uint8_t id;
+    uint8_t states;
 };
 
 #endif // VOXELS_VOXEL_H_

@@ -4,16 +4,19 @@
 
 #include <iostream>
 
-constexpr float EPS = 0.01; // Маленькое значение
-constexpr float GROUND_FRICTION = 18.0f; // Коэффициент трения о землю
+namespace PhysicsSolver_Consts {
+    inline constexpr float EPS = 0.03; // Маленькое значение
+    inline constexpr float GROUND_FRICTION = 18.0f; // Коэффициент трения о землю
+}
 
 // Конструктор
 PhysicsSolver::PhysicsSolver(glm::vec3 gravity) : gravity(gravity) {
 }
 
 // Выполняет один шаг физического моделирования для хитбокса
-void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned substeps, bool shifting, float gravityScale) {
-	// Разбиваем шаг на подшаги
+void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned substeps, bool shifting, float gravityScale, bool collisions) {
+	hitbox->grounded = false;
+    // Разбиваем шаг на подшаги
     for (unsigned i = 0; i < substeps; ++i){
 		float subDelta = delta / (float)substeps;
         float linear_damping = hitbox->linear_damping;
@@ -29,95 +32,9 @@ void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned s
 		float prev_x = pos.x;
 		float prev_z = pos.z;
 
-        // Обработка столкновений при движении влево (-X)
-		if (vel.x < 0.0){
-			for (int y = floor(pos.y - half.y + EPS); y <= floor(pos.y + half.y - EPS); ++y){
-				for (int z = floor(pos.z - half.z + EPS); z <= floor(pos.z + half.z - EPS); ++z){
-					int x = floor(pos.x - half.x - EPS);
-					if (chunks->isObstacle(x, y, z)){
-						vel.x *= 0.0;
-						pos.x = x + 1 + half.x + EPS;
-						break;
-					}
-				}
-			}
-		}
-        // Обработка столкновений при движении вправо (+X)
-		if (vel.x > 0.0){
-			for (int y = floor(pos.y - half.y + EPS); y <= floor(pos.y + half.y - EPS); ++y){
-				for (int z = floor(pos.z - half.z + EPS); z <= floor(pos.z + half.z - EPS); ++z){
-					int x = floor(pos.x + half.x + EPS);
-					if (chunks->isObstacle(x, y, z)){
-						vel.x *= 0.0;
-						pos.x = x - half.x - EPS;
-						break;
-					}
-				}
-			}
-		}
-
-        // Обработка столкновений при движении назад (-Z)
-		if (vel.z < 0.0){
-			for (int y = floor(pos.y - half.y + EPS); y <= floor(pos.y + half.y - EPS); ++y){
-				for (int x = floor(pos.x - half.x + EPS); x <= floor(pos.x + half.x - EPS); ++x){
-					int z = floor(pos.z - half.z - EPS);
-					if (chunks->isObstacle(x, y, z)){
-						vel.z *= 0.0;
-						pos.z = z + 1 + half.z + EPS;
-						break;
-					}
-				}
-			}
-		}
-        // Обработка столкновений при движении вперед (+Z)
-		if (vel.z > 0.0){
-			for (int y = floor(pos.y - half.y + EPS); y <= floor(pos.y + half.y - EPS); ++y){
-				for (int x = floor(pos.x - half.x + EPS); x <= floor(pos.x + half.x - EPS); ++x){
-					int z = floor(pos.z + half.z + EPS);
-					if (chunks->isObstacle(x, y, z)){
-						vel.z *= 0.0;
-						pos.z = z - half.z - EPS;
-						break;
-					}
-				}
-			}
-		}
-
-		hitbox->grounded = false;
-
-        // Падение вниз (-Y)
-		if (vel.y < 0.0){
-			for (int x = floor(pos.x - half.x + EPS); x <= floor(pos.x + half.x - EPS); ++x){
-				bool broken = false;
-                for (int z = floor(pos.z - half.z + EPS); z <= floor(pos.z + half.z - EPS); ++z){
-					int y = floor(pos.y - half.y - EPS);
-					if (chunks->isObstacle(x, y, z)){
-						vel.y *= 0.0;
-						pos.y = y + 1 + half.y;
-						float frictionFactor = glm::max(0.0f, 1.0f - subDelta * GROUND_FRICTION);
-						vel.x *= frictionFactor;
-						vel.z *= frictionFactor;
-						hitbox->grounded = true;
-                        broken = true;
-						break;
-					}
-				}
-                if (broken) break;
-			}
-		}
-        // Прыжок/подъем вверх (+Y)
-		if (vel.y > 0.0){
-			for (int x = floor(pos.x - half.x + EPS); x <= floor(pos.x + half.x - EPS); ++x){
-				for (int z = floor(pos.z - half.z + EPS); z <= floor(pos.z + half.z - EPS); ++z){
-					int y = floor(pos.y + half.y + EPS);
-					if (chunks->isObstacle(x, y, z)){
-						vel.y *= 0.0;
-						pos.y = y - half.y - EPS;
-						break;
-					}
-				}
-			}
-		}
+        if (collisions) {
+            colisionCalc(chunks, hitbox, &vel, &pos, half);
+        }
 
         vel.x *= glm::max(0.0, 1.0 - subDelta * linear_damping);
 		vel.z *= glm::max(0.0, 1.0 - subDelta * linear_damping);
@@ -129,11 +46,11 @@ void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned s
 
         // Проверка сдвига при движении по земле
 		if (shifting && hitbox->grounded){
-			int y = floor(pos.y - half.y - EPS);
+			int y = floor(pos.y - half.y - PhysicsSolver_Consts::EPS);
 
 			hitbox->grounded = false;
-			for (int x = floor(prev_x - half.x + EPS); x <= floor(prev_x + half.x - EPS); ++x){
-				for (int z = floor(pos.z - half.z + EPS); z <= floor(pos.z + half.z - EPS); ++z){
+			for (int x = floor(prev_x - half.x + PhysicsSolver_Consts::EPS); x <= floor(prev_x + half.x - PhysicsSolver_Consts::EPS); ++x){
+				for (int z = floor(pos.z - half.z + PhysicsSolver_Consts::EPS); z <= floor(pos.z + half.z - PhysicsSolver_Consts::EPS); ++z){
 					if (chunks->isObstacle(x, y, z)){
 						hitbox->grounded = true;
 						break;
@@ -144,8 +61,8 @@ void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned s
 
 			hitbox->grounded = false;
 
-			for (int x = floor(pos.x - half.x + EPS); x <= floor(pos.x + half.x - EPS); ++x){
-				for (int z = floor(prev_z - half.z + EPS); z <= floor(prev_z + half.z - EPS); ++z){
+			for (int x = floor(pos.x - half.x + PhysicsSolver_Consts::EPS); x <= floor(pos.x + half.x - PhysicsSolver_Consts::EPS); ++x){
+				for (int z = floor(prev_z - half.z + PhysicsSolver_Consts::EPS); z <= floor(prev_z + half.z - PhysicsSolver_Consts::EPS); ++z){
 					if (chunks->isObstacle(x, y, z)){
 						hitbox->grounded = true;
 						break;
@@ -155,6 +72,85 @@ void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, unsigned s
 			if (!hitbox->grounded) pos.x = prev_x;
 
 			hitbox->grounded = true;
+		}
+	}
+}
+
+void PhysicsSolver::colisionCalc(Chunks* chunks, Hitbox* hitbox, glm::vec3* vel, glm::vec3* pos, glm::vec3 half){
+	if (vel->x < 0.0){
+		for (int y = floor(pos->y-half.y+PhysicsSolver_Consts::EPS); y <= floor(pos->y+half.y-PhysicsSolver_Consts::EPS); ++y){
+			for (int z = floor(pos->z-half.z+PhysicsSolver_Consts::EPS); z <= floor(pos->z+half.z-PhysicsSolver_Consts::EPS); ++z){
+				int x = floor(pos->x-half.x-PhysicsSolver_Consts::EPS);
+				if (chunks->isObstacle(x, y, z)){
+					vel->x *= 0.0;
+					pos->x = x + 1 + half.x + PhysicsSolver_Consts::EPS;
+					break;
+				}
+			}
+		}
+	}
+	if (vel->x > 0.0){
+		for (int y = floor(pos->y-half.y+PhysicsSolver_Consts::EPS); y <= floor(pos->y+half.y-PhysicsSolver_Consts::EPS); y++){
+			for (int z = floor(pos->z-half.z+PhysicsSolver_Consts::EPS); z <= floor(pos->z+half.z-PhysicsSolver_Consts::EPS); z++){
+				int x = floor(pos->x+half.x+PhysicsSolver_Consts::EPS);
+				if (chunks->isObstacle(x,y,z)){
+					vel->x *= 0.0;
+					pos->x = x - half.x - PhysicsSolver_Consts::EPS;
+					break;
+				}
+			}
+		}
+	}
+
+	if (vel->z < 0.0){
+		for (int y = floor(pos->y-half.y+PhysicsSolver_Consts::EPS); y <= floor(pos->y+half.y-PhysicsSolver_Consts::EPS); y++){
+			for (int x = floor(pos->x-half.x+PhysicsSolver_Consts::EPS); x <= floor(pos->x+half.x-PhysicsSolver_Consts::EPS); x++){
+				int z = floor(pos->z-half.z-PhysicsSolver_Consts::EPS);
+				if (chunks->isObstacle(x,y,z)){
+					vel->z *= 0.0;
+					pos->z = z + 1 + half.z + PhysicsSolver_Consts::EPS;
+					break;
+				}
+			}
+		}
+	}
+
+	if (vel->z > 0.0){
+		for (int y = floor(pos->y-half.y+PhysicsSolver_Consts::EPS); y <= floor(pos->y+half.y-PhysicsSolver_Consts::EPS); y++){
+			for (int x = floor(pos->x-half.x+PhysicsSolver_Consts::EPS); x <= floor(pos->x+half.x-PhysicsSolver_Consts::EPS); x++){
+				int z = floor(pos->z+half.z+PhysicsSolver_Consts::EPS);
+				if (chunks->isObstacle(x,y,z)){
+					vel->z *= 0.0;
+					pos->z = z - half.z - PhysicsSolver_Consts::EPS;
+					break;
+				}
+			}
+		}
+	}
+
+	if (vel->y < 0.0){
+		for (int x = floor(pos->x-half.x+PhysicsSolver_Consts::EPS); x <= floor(pos->x+half.x-PhysicsSolver_Consts::EPS); x++){
+			for (int z = floor(pos->z-half.z+PhysicsSolver_Consts::EPS); z <= floor(pos->z+half.z-PhysicsSolver_Consts::EPS); z++){
+				int y = floor(pos->y-half.y-PhysicsSolver_Consts::EPS);
+				if (chunks->isObstacle(x,y,z)){
+					vel->y *= 0.0;
+					pos->y = y + 1 + half.y;
+					hitbox->grounded = true;
+					break;
+				}
+			}
+		}
+	}
+	if (vel->y > 0.0){
+		for (int x = floor(pos->x-half.x+PhysicsSolver_Consts::EPS); x <= floor(pos->x+half.x-PhysicsSolver_Consts::EPS); x++){
+			for (int z = floor(pos->z-half.z+PhysicsSolver_Consts::EPS); z <= floor(pos->z+half.z-PhysicsSolver_Consts::EPS); z++){
+				int y = floor(pos->y+half.y+PhysicsSolver_Consts::EPS);
+				if (chunks->isObstacle(x,y,z)){
+					vel->y *= 0.0;
+					pos->y = y - half.y - PhysicsSolver_Consts::EPS;
+					break;
+				}
+			}
 		}
 	}
 }

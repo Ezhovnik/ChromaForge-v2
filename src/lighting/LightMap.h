@@ -2,62 +2,64 @@
 #define LIGHTING_LIGHTMAP_H_
 
 #include "../voxels/Chunk.h"
+#include "../typedefs.h"
 
 class LightMap {
 public:
-	unsigned short* map;
+	ushort* map;
+    int highestPoint = 0;
 
 	LightMap();
 	~LightMap();
 
     void set(const LightMap* light_map);
 
-    inline unsigned short get(int x, int y, int z){
+    inline ushort get(int x, int y, int z){
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x]);
 	}
 
-	inline unsigned char get(int x, int y, int z, int channel){
+	inline ubyte get(int x, int y, int z, int channel){
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] >> (channel << 2)) & 0xF;
 	}
 
-	inline unsigned char getR(int x, int y, int z){
+	inline ubyte getR(int x, int y, int z){
 		return map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] & 0xF;
 	}
 
-	inline unsigned char getG(int x, int y, int z){
+	inline ubyte getG(int x, int y, int z){
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] >> 4) & 0xF;
 	}
 
-	inline unsigned char getB(int x, int y, int z){
+	inline ubyte getB(int x, int y, int z){
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] >> 8) & 0xF;
 	}
 
-	inline unsigned char getS(int x, int y, int z){
+	inline ubyte getS(int x, int y, int z){
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] >> 12) & 0xF;
 	}
 
 	inline void setR(int x, int y, int z, int value){
-		int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
+		const int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
 		map[index] = (map[index] & 0xFFF0) | value;
 	}
 
 	inline void setG(int x, int y, int z, int value){
-		int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
+		const int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
 		map[index] = (map[index] & 0xFF0F) | (value << 4);
 	}
 
 	inline void setB(int x, int y, int z, int value){
-		int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
+		const int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
 		map[index] = (map[index] & 0xF0FF) | (value << 8);
 	}
 
 	inline void setS(int x, int y, int z, int value){
-		int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
+		const int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
 		map[index] = (map[index] & 0x0FFF) | (value << 12);
 	}
 
 	inline void set(int x, int y, int z, int channel, int value){
-		int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
+		const int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
 		map[index] = (map[index] & (0xFFFF & (~(0xF << (channel*4))))) | (value << (channel << 2));
 	}
 };

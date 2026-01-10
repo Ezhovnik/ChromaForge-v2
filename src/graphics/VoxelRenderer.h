@@ -2,19 +2,30 @@
 #define GRAPHICS_VOXELRENDERER_H_
 
 #include <stdlib.h>
+#include <vector>
+
+#include "../typedefs.h"
 
 class Mesh;
 class Chunk;
 
+// Константы для формата вершин
+namespace VoxelRenderer_Conts {
+    constexpr int CHUNK_VERTEX_SIZE = (3 + 2 + 4); // Формат: pos(3) + texcoord(2) + color(4)
+    const int CHUNK_ATTRS[] = {3, 2, 4, 0};
+    constexpr float UVSIZE = 1.0f / 16.0f; // Размер одной текстуры в атласе 16x16
+}
+
 // Отвечает за преобразование воксельных данных в гравические меши
 class VoxelRenderer {
-    float* buffer; // Буфер для хранения вершинных данных перед созданием меша
-    size_t capacity; // Максимальная вместимость буфера в количестве float-значений
 public:
-    VoxelRenderer(size_t capacity); // Конструктор
-    ~VoxelRenderer(); // Деструктор
+    std::vector<float> buffer;
+    ubyte lights[27 * 4];
 
-    Mesh* render(Chunk* chunk, const Chunk** closes); // Создает графический меш из воксельного чанка
+    VoxelRenderer();
+    ~VoxelRenderer();
+
+    const float* render(Chunk* chunk, const Chunk** chunks, size_t& size);
 };
 
 #endif // GRAPHICS_VOXELRENDERER_H_

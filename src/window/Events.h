@@ -3,7 +3,7 @@
 
 #include "Window.h"
 
-typedef unsigned int uint;
+#include "../typedefs.h"
 
 // Система обработки событий ввода (клавиатура, мышь)
 class Events {

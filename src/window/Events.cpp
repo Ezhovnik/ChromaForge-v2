@@ -45,9 +45,7 @@ void cursor_position_callback(GLFWwindow* window, double x_pos, double y_pos) {
 
 // Callback-функция для обработки нажатий кнопок мыши
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mode) {
-    if (button < 0 || button >= _MAX_MOUSE_BUTTONS) {
-        return;
-    }
+    if (button < 0 || button >= _MAX_MOUSE_BUTTONS) return;
 
     int index = _MOUSE_BUTTONS + button;
 
@@ -62,9 +60,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mode)
 
 // Callback-функция для обработки нажатий клавиш клавиатуры
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
-    if (key < 0 || key >= _MOUSE_BUTTONS) {
-        return;
-    }
+    if (key < 0 || key >= _MOUSE_BUTTONS) return;
 
     if (action == GLFW_PRESS) {
         Events::_keys[key] = true;
@@ -96,7 +92,7 @@ int Events::initialize(){
     memset(_keys, false, 1032 * sizeof(bool));
     memset(_frames, 0, 1032 * sizeof(uint));
 
-     // Устанавливаем callback-функции GLFW
+    // Устанавливаем callback-функции GLFW
     glfwSetKeyCallback(window, key_callback); // Клавиатура
     glfwSetMouseButtonCallback(window, mouse_button_callback); // Нажатие кнопки мыши
     glfwSetCursorPosCallback(window, cursor_position_callback); // Движение мыши
@@ -120,26 +116,23 @@ bool Events::isPressed(int keycode) {
 
 // Проверяет, была ли клавиша нажата именно в текущем кадре 
 bool Events::justPressed(int keycode) {
-    if (keycode < 0 || keycode  >= _MOUSE_BUTTONS) {
-        return false;
-    }
+    if (keycode < 0 || keycode  >= _MOUSE_BUTTONS) return false;
+
     return _keys[keycode] && _frames[keycode] == _current;
 }
 
 // Проверяет, нажата ли кнопка мыши в данный момент
 bool Events::isClicked(int button) {
-    if (button < 0 || button >= _MAX_MOUSE_BUTTONS) {
-        return false;
-    }
+    if (button < 0 || button >= _MAX_MOUSE_BUTTONS) return false;
+
     int index = _MOUSE_BUTTONS + button;
     return _keys[index];
 }
 
 // Проверяет, была ли кнопка мыши нажата именно в текущем кадре
 bool Events::justClicked(int button) {
-    if (button < 0 || button >= _MAX_MOUSE_BUTTONS) {
-        return false;
-    }
+    if (button < 0 || button >= _MAX_MOUSE_BUTTONS) return false;
+
     int index = _MOUSE_BUTTONS + button;
     return _keys[index] && _frames[index] == _current;
 }

@@ -5,13 +5,15 @@
 #include "Mesh.h"
 
 // Константы для формата вершины
-constexpr int LB_VERTEX_SIZE = (3 + 4);
-const int LB_ATTRS[] = {3, 4, 0}; // Атрибуты: позиция(3), цвет(4)
+namespace LineBatch_Consts {
+    constexpr int VERTEX_SIZE = (3 + 4);
+    const int ATTRS[] = {3, 4, 0};
+}
 
 // Конструктор
 LineBatch::LineBatch(size_t capacity) : capacity(capacity) {
-    buffer = new float[capacity * LB_VERTEX_SIZE * 2];
-    mesh = new Mesh(buffer, 0, LB_ATTRS);
+    buffer = new float[capacity * LineBatch_Consts::VERTEX_SIZE * 2];
+    mesh = new Mesh(buffer, 0, LineBatch_Consts::ATTRS);
     index = 0;
 }
 
@@ -23,8 +25,6 @@ LineBatch::~LineBatch() {
 
 // Добавляет линию в буфер для отрисовки
 void LineBatch::line(float start_x, float start_y, float start_z, float end_x, float end_y, float end_z, float red, float green, float blue, float alpha) {
-    if (index >= capacity * LB_VERTEX_SIZE * 2) return;
-
     // Записываем данные начальной вершины
     buffer[index++] = start_x;
     buffer[index++] = start_y;
@@ -118,7 +118,7 @@ void LineBatch::box(float x, float y, float z, float width, float height, float 
 void LineBatch::render() {
     if (index == 0) return;
 
-    mesh->reload(buffer, index / LB_VERTEX_SIZE);
+    mesh->reload(buffer, index / LineBatch_Consts::VERTEX_SIZE);
     mesh->draw(GL_LINES);
     index = 0;
 }

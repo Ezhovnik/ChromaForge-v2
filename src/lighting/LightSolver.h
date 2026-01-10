@@ -3,13 +3,15 @@
 
 #include <queue>
 
+#include "../typedefs.h"
+
 class Chunks;
 
 struct lightentry {
 	int x;
 	int y;
 	int z;
-	unsigned char light;
+	ubyte light;
 };
 
 class LightSolver {

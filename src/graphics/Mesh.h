@@ -1,9 +1,7 @@
 #ifndef GRAPHICS_MESH_H_
 #define GRAPHICS_MESH_H_
 
-#include <stdlib.h>
-
-typedef unsigned int uint;
+#include "../typedefs.h"
 
 // Класс графической сетки (меша)
 class Mesh {

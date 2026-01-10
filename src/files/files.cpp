@@ -3,17 +3,9 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <memory>
 
-// Записывает данные в бинарный файл в указанную позицию
-bool write_binary_file_part(const std::string filename, const char* data, size_t offset, size_t size){
-	std::ofstream output(filename, std::ios::out | std::ios::binary | std::ios::in);
-	if (!output.is_open()) return false;
-
-	output.seekp(offset);
-	output.write(data, size);
-
-	return true;
-}
+#include "../logger/Logger.h"
 
 // Записывает данные в бинарный файл (перезаписывает сущесвующий)
 bool write_binary_file(const std::string filename, const char* data, size_t size) {
@@ -69,11 +61,11 @@ char* read_binary_file(std::string filename, size_t& length) {
 	length = input.tellg();
 	input.seekg(0, std::ios_base::beg);
 
-	char* data = new char[length];
-	input.read(data, length);
+	std::unique_ptr<char> data {new char[length]};
+	input.read(data.get(), length);
 	input.close();
 
-	return data;
+	return data.release();
 }
 
 // Проверяет наличие директории. Если её нет, то создает
@@ -82,14 +74,14 @@ bool ensureDirectoryExists(const std::string directory) {
 
     if (!std::filesystem::exists(dirPath)) {
         if (std::filesystem::create_directories(dirPath)) {
-            std::cout << "Directory '" << directory << "' created successfully." << std::endl;
+            LOG_INFO("Directory '{}' created successfully", directory);
             return true;
         } else {
-            std::cerr << "Failed to create directory '" << directory << "'" << std::endl;
+            LOG_ERROR("Failed to create directory '{}'", directory);
             return false;
         }
     } else if (!std::filesystem::is_directory(dirPath)) {
-        std::cerr << "Path '" << directory << "' exists but is not a directory!" << std::endl;
+        LOG_ERROR("Path '{}' exists but is not a directory!", directory);
         return false;
     }
 
@@ -97,11 +89,11 @@ bool ensureDirectoryExists(const std::string directory) {
 }
 
 // Декомпрессия данных, сжатых алгоритмом RLE (Run-Length Encoding)
-uint decompressRLE(const char* src, uint length, char* dst, uint targetLength){
-	uint offset = 0;
-	for (uint i = 0; i < length;){
-		unsigned char counter = src[i++];
-		char c = src[i++];
+size_t decompressRLE(const ubyte* src, size_t length, ubyte* dst, size_t targetLength){
+	size_t offset = 0;
+	for (size_t i = 0; i < length;){
+		ubyte counter = src[i++];
+		ubyte c = src[i++];
 		for (uint j = 0; j <= counter; ++j){
 			dst[offset++] = c;
 		}
@@ -110,39 +102,42 @@ uint decompressRLE(const char* src, uint length, char* dst, uint targetLength){
 }
 
 // Вычисляет размер данных после сжатия RLE
-uint calcRLE(const char* src, uint length) {
-	uint offset = 0;
-	uint counter = 1;
-	char c = src[0];
+size_t calcRLE(const ubyte* src, size_t length) {
+	size_t offset = 0;
+	size_t counter = 1;
+	ubyte c = src[0];
 
-	for (uint i = 0; i < length; ++i){
-		char cnext = src[i];
+	for (size_t i = 0; i < length; ++i){
+		ubyte cnext = src[i];
 		if (cnext != c || counter == 256){
 			offset += 2;
 			c = cnext;
 			counter = 0;
-		}
-		counter++;
+		} else {
+            counter++;
+        }
 	}
 	return offset + 2;
 }
 
 // Сжатие данных алгоритмом RLE (Run-Length Encoding)
-uint compressRLE(const char* src, uint length, char* dst) {
-	uint offset = 0;
+size_t compressRLE(const ubyte* src, size_t length, ubyte* dst) {
+    if (length == 0) return 0;
+	size_t offset = 0;
 	uint counter = 1;
-	char c = src[0];
-	for (uint i = 1; i < length; ++i){
-		char cnext = src[i];
+	ubyte c = src[0];
+	for (size_t i = 1; i < length; ++i){
+		ubyte cnext = src[i];
 		if (cnext != c || counter == 256){
-			dst[offset++] = counter - 1;
+			dst[offset++] = counter;
 			dst[offset++] = c;
 			c = cnext;
 			counter = 0;
-		}
-		counter++;
+		} else {
+            counter++;
+        }
 	}
-	dst[offset++] = counter - 1;
+	dst[offset++] = counter;
 	dst[offset++] = c;
 	return offset;
 }

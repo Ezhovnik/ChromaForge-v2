@@ -7,6 +7,7 @@
 #include <GL/glew.h>
 
 #include "../graphics/ShaderProgram.h"
+#include "../logger/Logger.h"
 
 // Функция для загрузки текстового файла
 std::string loadFile(std::string filename) {
@@ -20,7 +21,7 @@ std::string loadFile(std::string filename) {
 
         // Проверяем, успешно ли открылся файл
         if (!file.is_open()) {
-            std::cerr << "ERROR::SHADER::FILE_NOT_FOUND: " << filename << std::endl;
+            LOG_ERROR("File not found: '{}'", filename);
             return "";
         }
 
@@ -32,8 +33,7 @@ std::string loadFile(std::string filename) {
         code = stream.str(); // Получаем строку из потока
     } catch (std::ifstream::failure& e) {
         // Обработка ошибок чтения файла
-        std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << std::endl;
-        std::cerr << "Exception: " << e.what() << std::endl;
+        LOG_ERROR("File not succesfully read\n{}", e.what());
         return "";
     }
 
@@ -48,7 +48,7 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
     
     // Проверка успешности загрузки файлов
     if (vShaderString.empty() || fShaderString.empty()) {
-        std::cerr << "Failed to load shader files" << std::endl;
+        LOG_CRITICAL("Failed to load shader files");
         return nullptr;
     }
     
@@ -70,8 +70,7 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(vertex, 512, nullptr, infoLog);
-        std::cerr << "SHADER::VERTEX: compililation failed" << std::endl;
-        std::cerr << infoLog << std::endl;
+        LOG_CRITICAL("Vertex shader compililation failed\n{}", infoLog);
         return nullptr;
     }
 
@@ -84,8 +83,7 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
     glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragment, 512, nullptr, infoLog);
-        std::cerr << "SHADER::FRAGMENT: compililation failed" << std::endl;
-        std::cerr << infoLog << std::endl;
+        LOG_CRITICAL("Fragment shader compililation failed\n{}", infoLog);
         return nullptr;
     }
 
@@ -99,8 +97,7 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
     glGetProgramiv(id, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(id, 512, nullptr, infoLog);
-        std::cerr << "SHADER::PROGRAM: linking failed" << std::endl;
-        std::cerr << infoLog << std::endl;
+        LOG_CRITICAL("Shader Program linking failed\n{}", infoLog);
 
         glDeleteShader(vertex);
         glDeleteShader(fragment);

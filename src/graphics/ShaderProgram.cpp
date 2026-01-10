@@ -9,6 +9,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../logger/Logger.h"
+
 // Конструктор шейдерной программы
 ShaderProgram::ShaderProgram(uint id) : id(id) {
 }
@@ -27,7 +29,7 @@ void ShaderProgram::use() {
 void ShaderProgram::uniformMatrix(std::string name, glm::mat4 matrix) {
     GLint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
-        std::cerr << "Failed to find uniform variable " << name << std::endl;
+        LOG_ERROR("Failed to find uniform variable '{}'", name);
         return;
     }
 
@@ -38,7 +40,7 @@ void ShaderProgram::uniformMatrix(std::string name, glm::mat4 matrix) {
 void ShaderProgram::uniform1i(std::string name, int x){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
-        std::cerr << "Failed to find uniform variable " << name << std::endl;
+        LOG_ERROR("Failed to find uniform variable '{}'", name);
         return;
     }
 	glUniform1i(transformLoc, x);
@@ -48,7 +50,7 @@ void ShaderProgram::uniform1i(std::string name, int x){
 void ShaderProgram::uniform1f(std::string name, float x){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
-        std::cerr << "Failed to find uniform variable " << name << std::endl;
+        LOG_ERROR("Failed to find uniform variable '{}'", name);
         return;
     }
 	glUniform1f(transformLoc, x);
@@ -59,7 +61,7 @@ void ShaderProgram::uniform1f(std::string name, float x){
 void ShaderProgram::uniform2f(std::string name, float x, float y){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
-        std::cerr << "Failed to find uniform variable " << name << std::endl;
+        LOG_ERROR("Failed to find uniform variable '{}'", name);
         return;
     }
 	glUniform2f(transformLoc, x, y);
@@ -69,7 +71,7 @@ void ShaderProgram::uniform2f(std::string name, float x, float y){
 void ShaderProgram::uniform3f(std::string name, float x, float y, float z){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
-        std::cerr << "Failed to find uniform variable " << name << std::endl;
+        LOG_ERROR("Failed to find uniform variable '{}'", name);
         return;
     }
 	glUniform3f(transformLoc, x,y,z);
