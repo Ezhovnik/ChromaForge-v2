@@ -3,7 +3,7 @@
 
 #include <string>
 
-class Texture; // Предварительное объявление класса текстур
+class Texture;
 
 extern Texture* loadTexture(std::string filename); // Загружает текстуру из файла и создает объект Texture
 

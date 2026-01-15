@@ -6,7 +6,7 @@
 
 #include "../logger/Logger.h"
 
-GLFWwindow* Window::window; // Статическая переменная-член класса - указатель на окно GLFW
+GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW
 int Window::width = 0;
 int Window::height = 0;
 

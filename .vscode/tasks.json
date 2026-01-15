@@ -53,7 +53,6 @@
                 "${workspaceFolder}/src/AssetsLoader.cpp",
                 "${workspaceFolder}/src/logger/Logger.cpp",
                 "${workspaceFolder}/src/logger/OpenGL_Logger.cpp",
-                "${workspaceFolder}/src/stb.cpp",
                 "${workspaceFolder}/src/glad.c",
                 "-lglfw3dll", 
                 "-lopengl32",
