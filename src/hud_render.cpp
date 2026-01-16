@@ -1,7 +1,10 @@
 #include "hud_render.h"
 
+#include <sstream>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
 #include "Assets.h"
 #include "graphics/ShaderProgram.h"
 #include "graphics/Batch2D.h"
@@ -17,11 +20,7 @@
 #include "objects/Player.h"
 #include "logger/Logger.h"
 
-// inline constexpr float CROSSHAIR_SCALE_BASE = 1000.0f;
-
 HudRenderer::HudRenderer() {
-	// crosshair = new Mesh(Crosshair_Consts::VERTICES, 4, Crosshair_Consts::ATTRS);
-
 	batch = new Batch2D(1024);
 
 	uicamera = new Camera(glm::vec3(), Window::height / 1.0f);
@@ -61,6 +60,11 @@ void HudRenderer::drawDebug(Level* level, Assets* assets, int fps, bool occlusio
 	font->draw(batch, L"fps:", 16, 42, FONT_STYLES::OUTLINE);
 	font->draw(batch, std::to_wstring(fps), 44, 42, FONT_STYLES::OUTLINE);
 	font->draw(batch, L"occlusion: "+std::to_wstring(occlusion), 16, 54, FONT_STYLES::OUTLINE);
+
+    std::wstringstream stream;
+	stream << std::hex << player->selectedVoxel.states;
+	font->draw(batch, L"block-selected: "+std::to_wstring(player->selectedVoxel.id)+L" "+stream.str(), 16, 78, FONT_STYLES::OUTLINE);
+	font->draw(batch, L"meshes: " + std::to_wstring(Mesh::meshesCount), 16, 102, FONT_STYLES::OUTLINE);
 }
 
 void HudRenderer::draw(Level* level, Assets* assets){
@@ -202,15 +206,4 @@ void HudRenderer::draw(Level* level, Assets* assets){
 			}
 		}
 	}
-
-    // if (Events::_cursor_locked && !level->player->debug) {
-    //     ShaderProgram* crosshairShader = assets->getShader("crosshair");
-
-    //     crosshairShader->use();
-    //     crosshairShader->uniform1f("u_ar", (float)Window::height / (float)Window::width);
-    //     crosshairShader->uniform1f("u_scale", 1.0f / ((float)Window::height / CROSSHAIR_SCALE_BASE));
-
-    //     glLineWidth(2.0f);
-    //     crosshair->draw(GL_LINES);
-    // }
 }

@@ -7,7 +7,7 @@
 // Константы для формата вершины
 namespace LineBatch_Consts {
     constexpr int VERTEX_SIZE = (3 + 4);
-    const int ATTRS[] = {3, 4, 0};
+    const vattr ATTRS[] = {{3}, {4}, {0}};
 }
 
 // Конструктор

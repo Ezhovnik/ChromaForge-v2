@@ -323,7 +323,7 @@ void Chunks::translate(WorldFiles* worldFiles, int dx, int dz){
             int nz = z - dz;
             Mesh* mesh = meshes[z * width + x];
             if (nx < 0 || nz < 0 || nx >= width || nz >= depth){
-                worldFiles->put((const char*)chunk->voxels, chunk->chunk_x, chunk->chunk_z);
+                worldFiles->put((const ubyte*)chunk->voxels, chunk->chunk_x, chunk->chunk_z);
                 chunk->decref();
                 delete mesh;
                 chunksCount--;

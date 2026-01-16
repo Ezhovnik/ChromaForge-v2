@@ -8,7 +8,7 @@
 
 namespace Batch3D_Consts {
     constexpr int VERTEX_SIZE = 9;
-    const int ATTRS[] = {3, 2, 4, 0};
+    const vattr ATTRS[] = {{3}, {2}, {4}, {0}};
 }
 
 Batch3D::Batch3D(size_t capacity) : capacity(capacity), offset(0), color(1.0f, 1.0f, 1.0f, 0.0f){

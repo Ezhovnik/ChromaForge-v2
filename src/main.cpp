@@ -31,11 +31,6 @@
 #include "logger/Logger.h"
 #include "logger/OpenGL_Logger.h"
 
-// Глобальные параметры окна приложения
-int WINDOW_WIDTH = 1280; // Ширина окна в пикселях
-int WINDOW_HEIGHT = 720; // Высота окна в пикселях
-const char* TITLE = "ChromaForge"; // Заголовок окна
-
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
 inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
@@ -49,6 +44,7 @@ class initialize_error : public std::runtime_error {
 struct EngineSettings {
     int displayWidth; // Ширина окна
     int displayHeight; // Высота окна
+    int displaySamples;
     const char* title; // Заголовок окна
 };
 
@@ -76,7 +72,7 @@ Engine::Engine(const EngineSettings& settings) {
     Logger::getInstance().initialize();
 
     // Инициализация окна GLFW
-    if (!Window::initialize(settings.displayWidth, settings.displayHeight, settings.title)) {
+    if (!Window::initialize(settings.displayWidth, settings.displayHeight, settings.title, settings.displaySamples)) {
         LOG_CRITICAL("Failed to load Window");
         Window::terminate();
         throw std::runtime_error("Failed to load Window");
@@ -85,9 +81,6 @@ Engine::Engine(const EngineSettings& settings) {
     // Инициализация логгера OpenGL
     OpenGL_Logger::getInstance().initialize(LogLevel::DEBUG);
     GL_CHECK();
-
-    // Инициализация системы событий ввода
-    Events::initialize();
 
     // Загрузка ассетов
     assets = new Assets();
@@ -215,7 +208,7 @@ void Engine::mainloop() {
 int main() {
     setup_definitions();
     try {
-        Engine engine(EngineSettings{WINDOW_WIDTH, WINDOW_HEIGHT, TITLE});
+        Engine engine(EngineSettings{1280, 720, 1, "ChromaForge"});
         engine.mainloop(); // Запуск основного цикла
     }
     catch (const initialize_error& err) {

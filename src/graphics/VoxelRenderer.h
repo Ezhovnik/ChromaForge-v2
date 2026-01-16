@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <vector>
 
+#include "Mesh.h"
 #include "../typedefs.h"
 
 class Mesh;
@@ -12,7 +13,7 @@ class Chunk;
 // Константы для формата вершин
 namespace VoxelRenderer_Conts {
     constexpr int CHUNK_VERTEX_SIZE = (3 + 2 + 4); // Формат: pos(3) + texcoord(2) + color(4)
-    const int CHUNK_ATTRS[] = {3, 2, 4, 0};
+    const vattr CHUNK_ATTRS[] = {{3}, {2}, {4}, {0}};
     constexpr float UVSIZE = 1.0f / 16.0f; // Размер одной текстуры в атласе 16x16
 }
 

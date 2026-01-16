@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <memory>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -88,7 +89,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 	shader->uniformMatrix("u_model", model);
 
     glDisable(GL_MULTISAMPLE);
-	mesh->draw(GL_TRIANGLES);
+	mesh->draw();
     glEnable(GL_MULTISAMPLE);
 
     return true;

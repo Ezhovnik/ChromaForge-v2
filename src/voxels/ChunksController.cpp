@@ -89,7 +89,7 @@ bool ChunksController::loadVisible(WorldFiles* worldFiles){
     if (freeLoader == nullptr) return false;
 
 	chunk = new Chunk(nearX + areaOffsetX, nearZ + areaOffsetZ);
-	if (worldFiles->getChunk(chunk->chunk_x, chunk->chunk_z, (char*)chunk->voxels)) chunk->setLoaded(true);
+	if (worldFiles->getChunk(chunk->chunk_x, chunk->chunk_z, (ubyte*)chunk->voxels)) chunk->setLoaded(true);
 
 	chunks->putChunk(chunk);
 

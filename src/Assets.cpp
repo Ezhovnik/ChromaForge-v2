@@ -26,7 +26,7 @@ Assets::~Assets() {
 }
 
 // Получает текстуру по имени
-Texture* Assets::getTexture(std::string name){
+Texture* Assets::getTexture(std::string name) const{
     // Ищем текстуру в словаре
     auto it = textures.find(name);
 
@@ -54,7 +54,7 @@ bool Assets::store(Texture* texture, std::string name){
 }
 
 // Получает шейдер по имени
-ShaderProgram* Assets::getShader(std::string name){
+ShaderProgram* Assets::getShader(std::string name) const{
     // Ищем шейдер в словаре
     auto it = shaders.find(name);
 
@@ -82,7 +82,7 @@ bool Assets::store(ShaderProgram* shader, std::string name){
 }
 
 // Получает шрифт по имени
-Font* Assets::getFont(std::string name){
+Font* Assets::getFont(std::string name) const{
     // Ищем шрифт в словаре
     auto it = fonts.find(name);
 

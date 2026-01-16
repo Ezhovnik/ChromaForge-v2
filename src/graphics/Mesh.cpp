@@ -4,12 +4,16 @@
 
 #include "../logger/OpenGL_Logger.h"
 
+int Mesh::meshesCount = 0;
+
 // Конструктор
-Mesh::Mesh(const float* buffer, size_t vertices, const int* attrs) : vertices(vertices) {
+Mesh::Mesh(const float* buffer, size_t vertices, const vattr* attrs) : vertices(vertices) {
+    meshesCount++;
+
     // Вычисление размера вершины
     vertexSize = 0;
-    for (int i = 0; attrs[i]; ++i) {
-        vertexSize += attrs[i];
+    for (int i = 0; attrs[i].size; ++i) {
+        vertexSize += attrs[i].size;
     }
 
     // Создание объектов OpenGL
@@ -32,8 +36,8 @@ Mesh::Mesh(const float* buffer, size_t vertices, const int* attrs) : vertices(ve
 
     // Настройка вершинных атрибутов
     int offset = 0; // Смещение в байтах от начала вершины
-    for (int i = 0; attrs[i]; ++i) {
-        int size = attrs[i]; // Количество компонентов атрибута
+    for (int i = 0; attrs[i].size; ++i) {
+        int size = attrs[i].size; // Количество компонентов атрибута
         glVertexAttribPointer(
             i, // Индекс атрибута (location в шейдере)
             size, // Количество компонентов
@@ -53,6 +57,7 @@ Mesh::Mesh(const float* buffer, size_t vertices, const int* attrs) : vertices(ve
 
 // Деструктор
 Mesh::~Mesh() {
+    meshesCount--;
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 }
@@ -75,4 +80,8 @@ void Mesh::draw(uint primitive) {
     glBindVertexArray(0);
 
     GL_CHECK();
+}
+
+void Mesh::draw() {
+    draw(GL_TRIANGLES);
 }

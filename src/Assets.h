@@ -17,15 +17,15 @@ public:
 	~Assets(); // Конструктор
 
     // Методы для работы с текстурами
-	Texture* getTexture(std::string name); // Получает текстуру по имени
+	Texture* getTexture(std::string name) const; // Получает текстуру по имени
 	bool store(Texture* texture, std::string name); // Сохраняет текстуру в менеджере ресурсов.
 
     // Методы для работы с шейдерами
-	ShaderProgram* getShader(std::string name); // Получает шейдер по имени
+	ShaderProgram* getShader(std::string name) const; // Получает шейдер по имени
 	bool store(ShaderProgram* shader, std::string name); // Сохраняет шейдер в менеджере ресурсов.
 
     // Методы для работы с шрифтами
-	Font* getFont(std::string name); // Получает шрифт по имени
+	Font* getFont(std::string name) const; // Получает шрифт по имени
 	bool store(Font* shader, std::string name); // Сохраняет шрифт в менеджере ресурсов.
 };
 

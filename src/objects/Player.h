@@ -3,6 +3,8 @@
 
 #include <glm/glm.hpp>
 
+#include "../voxels/voxel.h"
+
 class Camera;
 class Hitbox;
 
@@ -17,13 +19,15 @@ public:
     bool noclip = false;
     bool debug = false;
 
-	int choosenBlock;
+    int choosenBlock;
 
 	float camX, camY;
 	float cameraShaking = 0.0f;
 	float cameraShakingTimer = 0.0f;
 
 	glm::vec3 interpVel {0.0f, 0.0f, 0.0f};
+
+    voxel selectedVoxel {0, 0};
 
 	Player(glm::vec3 position, float speed, Camera* camera);
 	~Player();

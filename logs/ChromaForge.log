@@ -1,21 +1,21 @@
-[2026-01-15 22:16:47.253] [info] [:] Logger initialized. File: ../logs/ChromaForge.log
-[2026-01-15 22:16:47.705] [info] [:] Window initialized successfully: 1280x720
-[2026-01-15 22:16:47.707] [info] [:] OpenGL Logger initialized with level: 1
-[2026-01-15 22:16:47.708] [debug] [:] OpenGL Version: 3.3.13587 Core Profile Context 19.40.46 26.20.14046.3
-[2026-01-15 22:16:47.708] [debug] [:] OpenGL Vendor: ATI Technologies Inc.
-[2026-01-15 22:16:47.708] [debug] [:] OpenGL Renderer: AMD Radeon(TM) Vega 8 Graphics 
-[2026-01-15 22:16:47.708] [debug] [:] GLSL Version: 4.60
-[2026-01-15 22:16:47.708] [debug] [:] OpenGL debug output is supported
-[2026-01-15 22:16:47.708] [debug] [:] OpenGL debug filters set for log level: 1
-[2026-01-15 22:16:47.708] [info] [:] OpenGL debug output enabled with level: 1
-[2026-01-15 22:16:47.709] [info] [:] Loading Assets
-[2026-01-15 22:16:47.710] [info] [:] Loading ../res/shaders/default as default
-[2026-01-15 22:16:47.713] [info] [:] Loading ../res/shaders/lines as lines
-[2026-01-15 22:16:47.714] [info] [:] Loading ../res/shaders/ui as ui
-[2026-01-15 22:16:47.716] [info] [:] Loading ../res/textures/atlas.png as blocks
-[2026-01-15 22:16:47.721] [info] [:] Loading ../res/textures/slot.png as slot
-[2026-01-15 22:16:47.725] [info] [:] Loading ../res/fonts/font as normal
-[2026-01-15 22:16:47.748] [info] [:] Assets loaded successfully
-[2026-01-15 22:16:47.748] [info] [:] Loading world
-[2026-01-15 22:16:47.751] [info] [:] Created 15 chunks loaders
-[2026-01-15 22:16:47.751] [warning] [:] Could not to read player.bin (ignored)
+[2026-01-16 10:37:55.859] [info] [:] Logger initialized. File: ../logs/ChromaForge.log
+[2026-01-16 10:38:00.092] [info] [:] Window initialized successfully: 1280x720
+[2026-01-16 10:38:00.094] [info] [:] OpenGL Logger initialized with level: 1
+[2026-01-16 10:38:00.094] [debug] [:] OpenGL Version: 3.3.13587 Core Profile Context 19.40.46 26.20.14046.3
+[2026-01-16 10:38:00.095] [debug] [:] OpenGL Vendor: ATI Technologies Inc.
+[2026-01-16 10:38:00.095] [debug] [:] OpenGL Renderer: AMD Radeon(TM) Vega 8 Graphics 
+[2026-01-16 10:38:00.095] [debug] [:] GLSL Version: 4.60
+[2026-01-16 10:38:00.095] [debug] [:] OpenGL debug output is supported
+[2026-01-16 10:38:00.095] [debug] [:] OpenGL debug filters set for log level: 1
+[2026-01-16 10:38:00.095] [info] [:] OpenGL debug output enabled with level: 1
+[2026-01-16 10:38:00.095] [info] [:] Loading Assets
+[2026-01-16 10:38:00.095] [info] [:] Loading ../res/shaders/default as default
+[2026-01-16 10:38:00.297] [info] [:] Loading ../res/shaders/lines as lines
+[2026-01-16 10:38:00.341] [info] [:] Loading ../res/shaders/ui as ui
+[2026-01-16 10:38:00.356] [info] [:] Loading ../res/textures/atlas.png as blocks
+[2026-01-16 10:38:00.533] [info] [:] Loading ../res/textures/slot.png as slot
+[2026-01-16 10:38:00.599] [info] [:] Loading ../res/fonts/font as normal
+[2026-01-16 10:38:00.801] [info] [:] Assets loaded successfully
+[2026-01-16 10:38:00.802] [info] [:] Loading world
+[2026-01-16 10:38:00.805] [info] [:] Created 15 chunks loaders
+[2026-01-16 10:38:00.805] [warning] [:] Could not to read player.bin (ignored)

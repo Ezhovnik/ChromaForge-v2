@@ -1,18 +1,19 @@
 #ifndef WINDOW_WINDOW_H_
 #define WINDOW_WINDOW_H_
 
+#include "../typedefs.h"
+
 class GLFWwindow; // Предварительное объявление класса GLFWwindow
 
 // Обертка для работы с окном приложения через GLFW
 class Window {
-public:
-    // TODO: Перенести GLFWwindow* window в приватную зону
+private:
     static GLFWwindow* window;
+public:
+    static uint width;
+    static uint height;
 
-    static int width;
-    static int height;
-
-    static bool initialize(int width, int height, const char* title);
+    static bool initialize(uint width, uint height, const char* title, int samples);
     static void terminate();
 
     static void setCursorMode(int mode);

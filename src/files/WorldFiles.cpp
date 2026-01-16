@@ -7,18 +7,17 @@
 
 #include "files.h"
 #include "../voxels/Chunk.h"
+#include "../voxels/voxel.h"
 #include "../objects/Player.h"
 #include "../physics/Hitbox.h"
 #include "../window/Camera.h"
+#include "../math/voxmaths.h"
 #include "../logger/Logger.h"
 
-union {
-	long _key;
-	int _coords[2]; // x z
-} _tempcoords;
-
 // Общий объём сжатых файлов
-ulong WorldFiles::totalCompressed = 0;
+int64_t WorldFiles::totalCompressed = 0;
+
+inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * sizeof(voxel);
 
 // Константы для идентификации секций в файлах
 namespace Sections {
@@ -38,19 +37,19 @@ static_assert(sizeof(float) == 4, "float must be 4 bytes");
 static_assert(sizeof(char) == 1, "char must be 1 byte");
 
 // Конвертирует 4 байта в целое число
-inline int bytes2Int(const ubyte* src, uint offset){
+inline int bytes2Int(const ubyte* src, size_t offset){
 	return (src[offset] << 24) | (src[offset + 1] << 16) | (src[offset + 2] << 8) | (src[offset + 3]);
 }
 
 // Конвертирует целое число в 4 байта
-inline void int2Bytes(int value, char* dest, uint offset){
+inline void int2Bytes(int value, ubyte* dest, size_t offset){
 	dest[offset] = (char) ((value >> 24) & 0xFF);
 	dest[offset + 1] = (char) ((value >> 16) & 0xFF);
 	dest[offset + 2] = (char) ((value >> 8) & 0xFF);
 	dest[offset + 3] = (char) ((value >> 0) & 0xFF);
 }
 
-inline void float2Bytes(float fvalue, char* dest, uint offset){
+inline void float2Bytes(float fvalue, ubyte* dest, size_t offset){
 	uint32_t value = *((uint32_t*)&fvalue);
 	dest[offset] = (char) ((value >> 24) & 0xFF);
 	dest[offset + 1] = (char) ((value >> 16) & 0xFF);
@@ -58,8 +57,7 @@ inline void float2Bytes(float fvalue, char* dest, uint offset){
 	dest[offset + 3] = (char) ((value >> 0) & 0xFF);
 }
 
-inline float bytes2Float(char* srcs, uint offset){
-	ubyte* src = (ubyte*) srcs;
+inline float bytes2Float(ubyte* src, uint offset){
 	uint32_t value = ((src[offset] << 24) |
 					(src[offset + 1] << 16) |
 					(src[offset + 2] << 8) |
@@ -77,8 +75,8 @@ WorldFiles::WorldFiles(std::string directory, size_t mainBufferCapacity) : direc
     }
 
     // Инициализируем буферы
-	mainBufferIn = new char[CHUNK_VOLUME * 2];
-	mainBufferOut = new char[mainBufferCapacity];
+	mainBufferIn = new ubyte[CHUNK_DATA_LEN];
+	mainBufferOut = new ubyte[mainBufferCapacity];
 }
 
 // Деструктор 
@@ -99,45 +97,44 @@ WorldFiles::~WorldFiles(){
 }
 
 // Помещает данные чанка в кэш памяти
-void WorldFiles::put(const char* chunkData, int x, int z){
+void WorldFiles::put(const ubyte* chunkData, int x, int z){
 	assert(chunkData != nullptr);
 
     // Вычисляем координаты региона
-	int regionX = x >> Region_Consts::REGION_SIZE_BIT;
-	int regionZ = z >> Region_Consts::REGION_SIZE_BIT;
+	int regionX = floordiv(x, Region_Consts::REGION_SIZE);
+    int regionZ = floordiv(z, Region_Consts::REGION_SIZE);
 
     // Локальные координаты внутри региона
-	int localX = x - (regionX << Region_Consts::REGION_SIZE_BIT);
-	int localZ = z - (regionZ << Region_Consts::REGION_SIZE_BIT);
+	int localX = x - (regionX * Region_Consts::REGION_SIZE);
+	int localZ = z - (regionZ * Region_Consts::REGION_SIZE);
 
-    // Создаем ключ для региона
-	_tempcoords._coords[0] = regionX;
-	_tempcoords._coords[1] = regionZ;
-    long regionKey = _tempcoords._key;
+    glm::ivec2 key(regionX, regionZ);
+
+    auto found = regions.find(key);
+    if (found == regions.end()) {
+        ubyte** chunksData = new ubyte*[Region_Consts::REGION_VOLUME];
+        for (uint i = 0; i < Region_Consts::REGION_VOLUME; ++i) {
+            chunksData[i] = nullptr;
+        }
+        regions[key] = {chunksData, true};
+    }
 
     // Получаем или создаем регион
-	WorldRegion& region = regions[regionKey];
+	WorldRegion& region = regions[key];
     region.unsaved = true;
-	if (region.chunksData == nullptr){
-		region.chunksData = new char*[Region_Consts::REGION_VOLUME];
-        for (uint i = 0; i < CHUNK_VOLUME; ++i) {
-            region.chunksData[i] = nullptr;
-        }
-	}
 
-    // Получаем указатель на чанк в регионе
     int target_index = localZ * Region_Consts::REGION_SIZE + localX;
-	char* targetChunk = region.chunksData[target_index];
+	ubyte* targetChunk = region.chunksData[target_index];
 
     // Если чанк не существует, создаем его
 	if (targetChunk == nullptr){
-		targetChunk = new char[CHUNK_VOLUME];
+		targetChunk = new ubyte[CHUNK_DATA_LEN];
 		region.chunksData[target_index] = targetChunk;
-		totalCompressed += CHUNK_VOLUME;
+		totalCompressed += CHUNK_DATA_LEN;
 	}
 
     // Копируем данные
-	for (uint i = 0; i < CHUNK_VOLUME; ++i) {
+	for (uint i = 0; i < CHUNK_DATA_LEN; ++i) {
 		targetChunk[i] = chunkData[i];
     }
 }
@@ -153,33 +150,34 @@ std::string WorldFiles::getPlayerFile() {
 }
 
 // Получает данные чанка из кэша или файла
-bool WorldFiles::getChunk(int x, int z, char* out){
+bool WorldFiles::getChunk(int x, int z, ubyte* out){
 	assert(out != nullptr);
 
-    // Вычисляем координаты региона и локальные координаты
-	int regionX = x >> Region_Consts::REGION_SIZE_BIT;
-	int regionZ = z >> Region_Consts::REGION_SIZE_BIT;
+	// Вычисляем координаты региона
+	int regionX = floordiv(x, Region_Consts::REGION_SIZE);
+    int regionZ = floordiv(z, Region_Consts::REGION_SIZE);
 
-	int localX = x - (regionX << Region_Consts::REGION_SIZE_BIT);
-	int localZ = z - (regionZ << Region_Consts::REGION_SIZE_BIT);
+    // Локальные координаты внутри региона
+	int localX = x - (regionX * Region_Consts::REGION_SIZE);
+	int localZ = z - (regionZ * Region_Consts::REGION_SIZE);
+
 	int chunk_index = localZ * Region_Consts::REGION_SIZE + localX;
 
 	assert(chunk_index >= 0 && chunk_index < Region_Consts::REGION_VOLUME);
 
     // Создаем ключ региона
-	_tempcoords._coords[0] = regionX;
-	_tempcoords._coords[1] = regionZ;
-    long region_key = _tempcoords._key;
+	glm::ivec2 key(regionX, regionZ);
+
+    auto found = regions.find(key);
+    if (found == regions.end()) return readChunk(x, z, out);
 
     // Пытаемся получить из кэша
-	WorldRegion& region = regions[region_key];
-	if (region.chunksData == nullptr) return readChunk(x, z, out);
-
-	char* chunk = region.chunksData[chunk_index];
+	WorldRegion& region = found->second;
+    ubyte* chunk = region.chunksData[chunk_index];
 	if (chunk == nullptr) return readChunk(x, z, out);
 
     // Копируем данные из кэша
-	for (uint i = 0; i < CHUNK_VOLUME; ++i) {
+	for (uint i = 0; i < CHUNK_DATA_LEN; ++i) {
 		out[i] = chunk[i];
     }
 
@@ -187,15 +185,17 @@ bool WorldFiles::getChunk(int x, int z, char* out){
 }
 
 // Читает чанк непосредственно из файла
-bool WorldFiles::readChunk(int x, int z, char* out){
+bool WorldFiles::readChunk(int x, int z, ubyte* out){
 	assert(out != nullptr);
 
-    // Вычисляем координаты региона и локальные координаты
-	int regionX = x >> Region_Consts::REGION_SIZE_BIT;
-	int regionZ = z >> Region_Consts::REGION_SIZE_BIT;
+    // Вычисляем координаты региона
+	int regionX = floordiv(x, Region_Consts::REGION_SIZE);
+    int regionZ = floordiv(z, Region_Consts::REGION_SIZE);
 
-	int localX = x - (regionX << Region_Consts::REGION_SIZE_BIT);
-	int localZ = z - (regionZ << Region_Consts::REGION_SIZE_BIT);
+    // Локальные координаты внутри региона
+	int localX = x - (regionX * Region_Consts::REGION_SIZE);
+	int localZ = z - (regionZ * Region_Consts::REGION_SIZE);
+
 	int chunk_index = localZ * Region_Consts::REGION_SIZE + localX;
 
     // Открываем файл
@@ -223,11 +223,11 @@ bool WorldFiles::readChunk(int x, int z, char* out){
 	size_t compressedSize = bytes2Int((const ubyte*)(&offset), 0);
 
     // Читаем сжатые данные
-	input.read(mainBufferIn, compressedSize);
+	input.read((char*)mainBufferIn, compressedSize);
 	input.close();
 
     // Распаковываем
-	decompressRLE((ubyte*)mainBufferIn, compressedSize, (ubyte*)out, CHUNK_VOLUME);
+	decompressRLE((ubyte*)mainBufferIn, compressedSize, (ubyte*)out, CHUNK_DATA_LEN);
 
 	return true;
 }
@@ -237,17 +237,14 @@ void WorldFiles::write(){
 	for (auto& [key, region] : regions){
 		if (region.chunksData == nullptr || !region.unsaved) continue;
 
-		int x, z;
-		longToCoords(x, z, key);
-
-		uint size = writeRegion(mainBufferOut, x, z, region.chunksData);
-		write_binary_file(getRegionFile(x, z), mainBufferOut, size);
+		uint size = writeRegion(mainBufferOut, key.x, key.y, region.chunksData);
+        write_binary_file(getRegionFile(key.x, key.y), (const char*)mainBufferOut, size);
 	}
 }
 
 // Записываем данные об игроке на диск
 void WorldFiles::writePlayer(Player* player){
-	char dst[1+3*sizeof(float) + 1+2*sizeof(float) + 1+1];
+	ubyte dst[1+3*sizeof(float) + 1+2*sizeof(float) + 1+1];
 
 	glm::vec3 position = player->hitbox->position;
 
@@ -270,7 +267,7 @@ void WorldFiles::writePlayer(Player* player){
 // Читаем данные об игроке с диска
 bool WorldFiles::readPlayer(Player* player) {
 	size_t length = 0;
-	char* data = read_binary_file(getPlayerFile(), length);
+	ubyte* data = (ubyte*)read_binary_file(getPlayerFile(), length);
 	if (data == nullptr){
         LOG_WARN("Could not to read player.bin (ignored)");
 		return false;
@@ -291,9 +288,12 @@ bool WorldFiles::readPlayer(Player* player) {
 			player->camY = bytes2Float(data, offset); offset += sizeof(float);
 			break;
         case Sections::FLAGS:
-            ubyte flags = data[offset++];
-			player->flight = flags & Player_Flags::FLIGHT;
-			player->noclip = flags & Player_Flags::NOCLIP;
+            {
+                ubyte flags = data[offset++];
+                player->flight = flags & Player_Flags::FLIGHT;
+                player->noclip = flags & Player_Flags::NOCLIP;
+            }
+            break;
 		}
 	}
 	player->hitbox->position = position;
@@ -303,25 +303,24 @@ bool WorldFiles::readPlayer(Player* player) {
 }
 
 // Формирует бинарное представление региона для записи
-uint WorldFiles::writeRegion(char* out, int x, int z, char** region){
+uint WorldFiles::writeRegion(ubyte* out, int x, int z, ubyte** region){
 	uint offset = Region_Consts::REGION_VOLUME * sizeof(uint32_t);
-	std::fill_n(out, offset, 0);
+	for (uint i = 0; i < offset; ++i) {
+        out[i] = 0;
+    }
 
-	char* compressed = new char[CHUNK_VOLUME * 2];  // Временный буфер для сжатия
+	ubyte* compressed = new ubyte[CHUNK_DATA_LEN];  // Временный буфер для сжатия
 
 	for (int i = 0; i < Region_Consts::REGION_VOLUME; ++i){
-		char* chunk = region[i];
+		ubyte* chunk = region[i];
 
         // Если чанк отсутствует в памяти, пытаемся загрузить из файла
 		if (chunk == nullptr){
-			chunk = new char[CHUNK_VOLUME];
-
-			assert((((i % Region_Consts::REGION_SIZE) + x * Region_Consts::REGION_SIZE) >> Region_Consts::REGION_SIZE_BIT) == x);
-			assert((((i / Region_Consts::REGION_SIZE) + z * Region_Consts::REGION_SIZE) >> Region_Consts::REGION_SIZE_BIT) == z);
+			chunk = new ubyte[CHUNK_DATA_LEN];
 			
             if (readChunk((i % Region_Consts::REGION_SIZE) + x * Region_Consts::REGION_SIZE, (i / Region_Consts::REGION_SIZE) + z * Region_Consts::REGION_SIZE, chunk)){
 				region[i] = chunk;
-				totalCompressed += CHUNK_VOLUME;
+				totalCompressed += CHUNK_DATA_LEN;
 			} else {
 				delete[] chunk;
 				chunk = nullptr;
@@ -336,7 +335,7 @@ uint WorldFiles::writeRegion(char* out, int x, int z, char** region){
 			int2Bytes(offset, out, i * sizeof(uint32_t));
 
             // Сжимаем данные чанка
-			uint compressedSize = compressRLE((ubyte*)chunk, CHUNK_VOLUME, (ubyte*)compressed);
+			uint compressedSize = compressRLE(chunk, CHUNK_DATA_LEN, compressed);
 
             // Записываем размер сжатых данных
 			int2Bytes(compressedSize, out, offset);
@@ -350,11 +349,4 @@ uint WorldFiles::writeRegion(char* out, int x, int z, char** region){
 	}
 	delete[] compressed;
 	return offset;
-}
-
-// Конвертирует ключ региона в координаты
-void longToCoords(int& x, int& z, long key) {
-	_tempcoords._key = key;
-	x = _tempcoords._coords[0];
-	z = _tempcoords._coords[1];
 }

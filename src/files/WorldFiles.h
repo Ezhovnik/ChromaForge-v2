@@ -5,6 +5,10 @@
 #include <unordered_map>
 #include <string>
 
+#include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/hash.hpp"
+
 #include "../typedefs.h"
 
 // Константы для размера регионов
@@ -17,7 +21,7 @@ namespace Region_Consts {
 class Player;
 
 struct WorldRegion {
-	char** chunksData;
+	ubyte** chunksData;
 	bool unsaved;
 };
 
@@ -25,22 +29,21 @@ struct WorldRegion {
 // ! Высота мира должна состовлять один чанк (любых размеров)
 class WorldFiles {
 public:
-    static ulong totalCompressed; // Статическая переменная для отслеживания общего объема сжатых данных
-    std::unordered_map<long, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
+    static int64_t totalCompressed; // Статическая переменная для отслеживания общего объема сжатых данных
+    std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
     std::string directory; // Путь к директории с файлами мира
-    char* mainBufferIn; // Входной буфер для чтения сжатых данных
-    char* mainBufferOut; // Выходной буфер для записи регионов
+    ubyte* mainBufferIn; // Входной буфер для чтения сжатых данных
+    ubyte* mainBufferOut; // Выходной буфер для записи регионов
 
     WorldFiles(std::string directory, size_t mainBufferCapacity); // Конструктор
     ~WorldFiles(); // Деструктор
 
-    void put(const char* chunkData, int x, int z); // Сохраняет данные чанка в кэш памяти.
+    void put(const ubyte* chunkData, int x, int z); // Сохраняет данные чанка в кэш памяти.
 
     bool readPlayer(Player* player); // Читает данные об игроке с диска
-    bool readChunk(int x, int z, char* out); // Читает данные чанка непосредственно из файла
-	bool getChunk(int x, int z, char* out); // Получает данные чанка из кэша или файла
-	void readRegion(char* fileContent); // Читает весь регион из файла в память.
-	uint writeRegion(char* out, int x, int z, char** region); // Формирует бинарное представление региона для записи в файл
+    bool readChunk(int x, int z, ubyte* out); // Читает данные чанка непосредственно из файла
+	bool getChunk(int x, int z, ubyte* out); // Получает данные чанка из кэша или файла
+	uint writeRegion(ubyte* out, int x, int z, ubyte** region); // Формирует бинарное представление региона для записи в файл
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
     void write(); // Записывает все измененные регионы из памяти на диск.
 
