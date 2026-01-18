@@ -1,17 +1,17 @@
-[2026-01-18 20:13:10.916] [info] [:] Logger initialized. File: ../logs/ChromaForge.log
-[2026-01-18 20:13:11.294] [info] [:] Window initialized successfully: 1280x720
-[2026-01-18 20:13:11.297] [info] [:] OpenGL Logger initialized with level: 1
-[2026-01-18 20:13:11.302] [debug] [:] OpenGL Version: 3.3.13587 Core Profile Context 19.40.46 26.20.14046.3
-[2026-01-18 20:13:11.302] [debug] [:] OpenGL Vendor: ATI Technologies Inc.
-[2026-01-18 20:13:11.302] [debug] [:] OpenGL Renderer: AMD Radeon(TM) Vega 8 Graphics 
-[2026-01-18 20:13:11.302] [debug] [:] GLSL Version: 4.60
-[2026-01-18 20:13:11.302] [debug] [:] OpenGL debug output is supported
-[2026-01-18 20:13:11.302] [debug] [:] OpenGL debug filters set for log level: 1
-[2026-01-18 20:13:11.302] [info] [:] OpenGL debug output enabled with level: 1
-[2026-01-18 20:13:11.302] [info] [:] Loading Assets
-[2026-01-18 20:13:11.303] [info] [:] Loading ../res/shaders/default as default
-[2026-01-18 20:13:11.305] [info] [:] Loading ../res/shaders/lines as lines
-[2026-01-18 20:13:11.306] [info] [:] Loading ../res/shaders/ui as ui
-[2026-01-18 20:13:11.307] [info] [:] Loading ../res/textures/atlas.png as blocks
-[2026-01-18 20:13:11.311] [info] [:] Loading ../res/textures/slot.png as slot
-[2026-01-18 20:13:11.316] [info] [:] Loading ../res/fonts/font as normal
+[2026-01-18 21:24:22.747] [info] [:] Logger initialized. File: ../logs/ChromaForge.log
+[2026-01-18 21:24:33.492] [info] [:] Window initialized successfully: 1280x720
+[2026-01-18 21:24:33.494] [info] [:] OpenGL Logger initialized with level: 1
+[2026-01-18 21:24:33.495] [debug] [:] OpenGL Version: 3.3.13587 Core Profile Context 19.40.46 26.20.14046.3
+[2026-01-18 21:24:33.499] [debug] [:] OpenGL Vendor: ATI Technologies Inc.
+[2026-01-18 21:24:33.499] [debug] [:] OpenGL Renderer: AMD Radeon(TM) Vega 8 Graphics 
+[2026-01-18 21:24:33.499] [debug] [:] GLSL Version: 4.60
+[2026-01-18 21:24:33.499] [debug] [:] OpenGL debug output is supported
+[2026-01-18 21:24:33.532] [debug] [:] OpenGL debug filters set for log level: 1
+[2026-01-18 21:24:33.532] [info] [:] OpenGL debug output enabled with level: 1
+[2026-01-18 21:24:33.533] [info] [:] Loading Assets
+[2026-01-18 21:24:33.563] [info] [:] Loading ../res/shaders/default as default
+[2026-01-18 21:24:33.896] [info] [:] Loading ../res/shaders/lines as lines
+[2026-01-18 21:24:33.999] [info] [:] Loading ../res/shaders/ui as ui
+[2026-01-18 21:24:34.064] [info] [:] Loading ../res/textures/atlas.png as blocks
+[2026-01-18 21:24:34.953] [info] [:] Loading ../res/textures/slot.png as slot
+[2026-01-18 21:24:37.592] [info] [:] Loading ../res/fonts/font as normal

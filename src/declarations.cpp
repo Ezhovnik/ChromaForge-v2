@@ -160,4 +160,25 @@ void setup_definitions() {
         block->model = Block_models::X;
         Block::blocks[block->id] = std::move(block);
     }
+
+    // Красный неоновый блок
+    {
+        auto block = std::make_unique<Block>(Blocks_id::RED_NEON, 18);
+        block->emission[0] = 15;
+        Block::blocks[block->id] = std::move(block);
+    }
+
+    // Зелёный неоновый блок
+    {
+        auto block = std::make_unique<Block>(Blocks_id::GREEN_NEON, 19);
+        block->emission[1] = 15;
+        Block::blocks[block->id] = std::move(block);
+    }
+
+    // Синий неоновый блок
+    {
+        auto block = std::make_unique<Block>(Blocks_id::BLUE_NEON, 20);
+        block->emission[2] = 15;
+        Block::blocks[block->id] = std::move(block);
+    }
 }
