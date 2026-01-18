@@ -36,11 +36,11 @@ public:
 	}
 
 	void setSeed(int number){
-		seed = ((ushort)number + 23729 xor (ushort)number + 16786);
+		seed = ((ushort)(number + 23729) ^ (ushort)(number + 16786));
 		rand();
 	}
-    void setSeed(int number1,int number2){
-		seed = (((unsigned short)(number1 * 23729) | (unsigned short)(number2 % 16786)) ^ (unsigned short)(number2 * number1));
+    void setSeed(int number1, int number2){
+		seed = (((ushort)(number1 * 23729) | (ushort)(number2 % 16786)) ^ (ushort)(number2 * number1));
 		rand();
 	}
 };
@@ -77,7 +77,7 @@ float calc_height_faster(fnl_state *noise, int real_x, int real_z){
 	return height;
 }
 
-int generate_tree(fnl_state *noise, PseudoRandom* random, const std::vector<float>& heights, int real_x, int real_y, int real_z, int tileSize){
+blockid_t generate_tree(fnl_state *noise, PseudoRandom* random, const std::vector<float>& heights, int real_x, int real_y, int real_z, int tileSize){
 	const int tileX = floor((double)real_x/(double)tileSize);
 	const int tileY = floor((double)real_z/(double)tileSize);
 	random->setSeed(tileX*4325261+tileY*12160951+tileSize*9431111);
@@ -110,9 +110,9 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
 	std::vector<float> heights(CHUNK_VOLUME);
 
 	for (int z = 0; z < CHUNK_DEPTH; z++){
+        int real_z = z + cz * CHUNK_DEPTH;
 		for (int x = 0; x < CHUNK_WIDTH; x++){
 			int real_x = x + cx * CHUNK_WIDTH;
-			int real_z = z + cz * CHUNK_DEPTH;
 			float height = calc_height(&noise, real_x, real_z);
 			heights[z * CHUNK_WIDTH + x] = height;
 		}
@@ -125,8 +125,8 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
             float height = heights[z * CHUNK_WIDTH + x];
             for (int y = 0; y < CHUNK_HEIGHT; y++){
                 int real_y = y;
-                int id = real_y < 55 ? Blocks_id::WATER : Blocks_id::AIR;
-                int states = 0;
+                blockid_t id = real_y < 55 ? Blocks_id::WATER : Blocks_id::AIR;
+                uint8_t states = 0;
                 
                 if ((real_y == (int)height) && (54 < real_y)) {
                     id = Blocks_id::MOSS;
@@ -136,7 +136,7 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
                     id = Blocks_id::DIRT;
                 } else {
                     int tree = generate_tree(&noise, &randomtree, heights, real_x, real_y, real_z, 23);
-                    if (tree) {
+                    if (tree != Blocks_id::AIR) {
                         id = tree;
                         states = 0x32;
                     }
@@ -146,9 +146,9 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
                 
                 if (real_y <= 2) id = Blocks_id::BEDROCK;
 
+                randomgrass.setSeed(real_x, real_z);
                 if ((id == Blocks_id::AIR) && (real_y > 55.5) && ((int)(height + 1) == real_y)) {
-                    randomgrass.setSeed(real_x, real_z);
-                    unsigned short grass_value = (unsigned short)randomgrass.rand();
+                    ushort grass_value = (ushort)randomgrass.rand();
                     
                     if (grass_value > 62000 || (real_y > 70 && grass_value > 61500)) {
                         id = Blocks_id::GRASS;
@@ -161,7 +161,7 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
                     }
                 }
                 
-                if ((height > 56) && ((int)(height + 1) == real_y) && ((unsigned short)randomgrass.rand() > 65533)){
+                if ((height > 56) && ((int)(height + 1) == real_y) && ((ushort)randomgrass.rand() > 65533)){
                     id = Blocks_id::LOG;
                     states = 0x32;
                 }

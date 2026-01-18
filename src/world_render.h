@@ -16,7 +16,7 @@ class Camera;
 class Assets;
 class LineBatch;
 class Batch3D;
-class VoxelRenderer;
+class ChunksRenderer;
 class ShaderProgram;
 class Texture;
 class Framebuffer;
@@ -27,8 +27,8 @@ class WorldRenderer {
 	Level* level;
 	bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool occlusion);
 public:
-	VoxelRenderer *renderer;
-	LineBatch *lineBatch;
+	ChunksRenderer* renderer;
+	LineBatch* lineBatch;
 
 	WorldRenderer(Level* level, Assets* assets);
 	~WorldRenderer();

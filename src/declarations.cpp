@@ -13,7 +13,6 @@
 // Инициализирует все графические ресурсы (шейдеры, текстуры, шрифты).
 void initialize_assets(AssetsLoader* loader) {
     loader->add(ASSETS_TYPE::SHADER, "../res/shaders/default", "default");
-    // loader->add(ASSETS_TYPE::SHADER, "../res/shaders/crosshair", "crosshair");
     loader->add(ASSETS_TYPE::SHADER, "../res/shaders/lines", "lines");
     loader->add(ASSETS_TYPE::SHADER, "../res/shaders/ui", "ui");
 

@@ -4,25 +4,18 @@
 class Chunks;
 class Lighting;
 class WorldFiles;
-class VoxelRenderer;
-class ChunksLoader;
-class World;
+class Level;
 
 class ChunksController {
 private:
 	Chunks* chunks;
 	Lighting* lighting;
-	ChunksLoader** loaders;
-	int loadersCount;
+	Level* level;
 public:
-	ChunksController(World* world, Chunks* chunks, Lighting* lighting);
+	ChunksController(Level* level, Chunks* chunks, Lighting* lighting);
 	~ChunksController();
 
-    ChunksLoader* getFreeLoader();
-	int countFreeLoaders();
 	bool loadVisible(WorldFiles* worldFiles);
-    void calculateLights();
-	bool _buildMeshes();
 };
 
 #endif // VOXELS_CHUNKSCONTROLLER_H_

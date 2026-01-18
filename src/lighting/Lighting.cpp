@@ -1,5 +1,7 @@
 #include "Lighting.h"
 
+#include <memory>
+
 #include "LightSolver.h"
 #include "LightMap.h"
 #include "../voxels/Chunks.h"
@@ -25,7 +27,7 @@ Lighting::~Lighting(){
 
 void Lighting::clear() {
     for (uint index = 0; index < chunks->volume; ++index) {
-        Chunk* chunk = chunks->chunks[index];
+        std::shared_ptr<Chunk> chunk = chunks->chunks[index];
         if (chunk == nullptr) continue;
         
         LightMap* light_map = chunk->light_map;
@@ -59,10 +61,10 @@ void Lighting::preBuildSkyLight(int cx, int cz){
 void Lighting::buildSkyLight(int cx, int cz){
 	Chunk* chunk = chunks->getChunk(cx, cz);
 	for (int z = 0; z < CHUNK_DEPTH; ++z){
+        int gz = z + cz * CHUNK_DEPTH;
 		for (int x = 0; x < CHUNK_WIDTH; ++x){
+            int gx = x + cx * CHUNK_WIDTH;
 			for (int y = chunk->light_map->highestPoint; y >= 0; y--){
-				int gx = x + cx * CHUNK_WIDTH;
-				int gz = z + cz * CHUNK_DEPTH;
 				while (y > 0 && !Block::blocks[chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].id].get()->lightPassing) {
 					y--;
 				}
@@ -86,11 +88,11 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z) {
 
 	for (uint y = 0; y < CHUNK_HEIGHT; ++y){
 		for (uint z = 0; z < CHUNK_DEPTH; ++z){
+            int gz = z + chunk_z * CHUNK_DEPTH;
 			for (uint x = 0; x < CHUNK_WIDTH; ++x){
 				voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
 				Block* block = Block::blocks[vox.id].get();
 				int gx = x + chunk_x * CHUNK_WIDTH;
-				int gz = z + chunk_z * CHUNK_DEPTH;
 				if (block->emission[0] || block->emission[1] || block->emission[2]){
 					solverR->add(gx,y,gz,block->emission[0]);
 					solverG->add(gx,y,gz,block->emission[1]);

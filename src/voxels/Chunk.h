@@ -4,12 +4,7 @@
 #include <stdlib.h>
 
 #include "../typedefs.h"
-
-// Размеры чанка
-inline constexpr int CHUNK_WIDTH = 16; // Ширина по X
-inline constexpr int CHUNK_HEIGHT = 256; // Высота по Y
-inline constexpr int CHUNK_DEPTH = 16; // Глубина по Z
-inline constexpr int CHUNK_VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH; // Общее количество вокселей в чанке
+#include "../constants.h"
 
 namespace Chunk_Flags {
     inline constexpr uint MODIFIED = 0x1;
@@ -19,7 +14,7 @@ namespace Chunk_Flags {
     inline constexpr uint UNSAVED = 0x10;
 }
 
-class voxel;
+struct voxel;
 class LightMap;
 
 struct RenderData {
@@ -40,7 +35,6 @@ public:
     voxel* voxels; // Массив вокселей, содержащихся в чанке
 
     int surrounding = 0; // Счётчик окружающих, загруженных чанков
-    int references = 1; // Счётчик ссылок
     int flags = 0;
 
     RenderData renderData;
@@ -53,9 +47,6 @@ public:
     bool isEmpty(); // Проверяет, является ли чанк пустым (однородным).
 
     Chunk* clone() const; // Создает полную копию текущего чанка.
-
-    void incref(); // Увеличивает счетчик ссылок на чанк.
-    void decref(); // Уменьшает счётчик ссылок на чанк
 
     inline bool isUnsaved() const {return flags & Chunk_Flags::UNSAVED;}
 	inline bool isModified() const {return flags & Chunk_Flags::MODIFIED;}

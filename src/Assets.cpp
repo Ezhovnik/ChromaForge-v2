@@ -11,18 +11,30 @@
 Assets::~Assets() {
     // Освобождаем память выделенную под шейдеры
 	for (auto& iter : shaders){
-		delete iter.second;
+		if (iter.second != nullptr) {
+            delete iter.second;
+            iter.second = nullptr;
+        }
 	}
+    shaders.clear();
 
     // Освобождаем память выделенную под текстуры
 	for (auto& iter : textures){
-		delete iter.second;
+		if (iter.second != nullptr) {
+            delete iter.second;
+            iter.second = nullptr;
+        }
 	}
+    textures.clear();
 
     // Освобождаем память выделенную под шрифты
     for (auto& iter : fonts){
-		delete iter.second;
+		if (iter.second != nullptr) {
+            delete iter.second;
+            iter.second = nullptr;
+        }
 	}
+    fonts.clear();
 }
 
 // Получает текстуру по имени

@@ -12,22 +12,18 @@
 #include "../files/WorldFiles.h"
 #include "../lighting/LightMap.h"
 #include "../lighting/Lighting.h"
-#include "../graphics/VoxelRenderer.h"
 #include "../graphics/Mesh.h"
+#include "../math/voxmaths.h"
 
 // Конструктор
 Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ) {
     volume = width * depth;
 
-    chunks = new Chunk*[volume];
-    chunksSecond = new Chunk*[volume];
-
-    meshes = new Mesh*[volume];
-    meshesSecond = new Mesh*[volume];
+    chunks = new std::shared_ptr<Chunk>[volume];
+    chunksSecond = new std::shared_ptr<Chunk>[volume];
 
     for (size_t i = 0; i < volume; ++i) {
         chunks[i] = nullptr;
-        meshes[i] = nullptr;
     }
 
     chunksCount = 0;
@@ -36,16 +32,14 @@ Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ) : width
 // Деструктор
 Chunks::~Chunks() {
     for (int i = 0; i < volume; ++i) {
-        if (chunks != nullptr && chunks[i] != nullptr) chunks[i]->decref();
-        if (meshes != nullptr && meshes[i] != nullptr)delete meshes[i];
+        chunks[i] = nullptr;
+        chunksSecond[i] = nullptr;
     }
-    if (chunks != nullptr) delete[] chunks;
-    if (meshes != nullptr) delete[] meshes;
-    if (chunksSecond != nullptr)delete[] chunksSecond;
-    if (meshesSecond != nullptr) delete[] meshesSecond;
+    delete[] chunks;
+    delete[] chunksSecond;
 }
 
-bool Chunks::putChunk(Chunk* chunk) {
+bool Chunks::putChunk(std::shared_ptr<Chunk> chunk) {
 	int x = chunk->chunk_x;
 	int z = chunk->chunk_z;
 
@@ -66,7 +60,7 @@ Chunk* Chunks::getChunk(int x, int z) {
 
     if (x < 0 || z < 0 || x >= width || z >= depth) return nullptr;
 
-    return chunks[z * width + x];
+    return chunks[z * width + x].get();
 }
 
 // Получает воксель по мировым коордианатам
@@ -84,7 +78,7 @@ voxel* Chunks::getVoxel(int x, int y, int z) {
 
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= 1 || cz >= depth) return nullptr;
 
-	Chunk* chunk = chunks[cz * width + cx];
+	std::shared_ptr<Chunk> chunk = chunks[cz * width + cx];
 	if (chunk == nullptr) return nullptr;
 
 	int lx = x - cx * CHUNK_WIDTH;
@@ -98,41 +92,33 @@ ubyte Chunks::getLight(int x, int y, int z, int channel){
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
 
-	int cx = x / CHUNK_WIDTH;
-	int cy = y / CHUNK_HEIGHT;
-	int cz = z / CHUNK_DEPTH;
-
-	if (x < 0) cx--;
-	if (y < 0) cy--;
-	if (z < 0) cz--;
+	int cx = floordiv(x, CHUNK_WIDTH);
+    int cy = floordiv(y, CHUNK_HEIGHT);
+    int cz = floordiv(z, CHUNK_DEPTH);
 
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= 1 || cz >= depth) return 0;
 
-	Chunk* chunk = chunks[cz * width + cx];
+	std::shared_ptr<Chunk> chunk = chunks[cz * width + cx];
 	if (chunk == nullptr) return 0;
 
 	int lx = x - cx * CHUNK_WIDTH;
 	int ly = y - cy * CHUNK_HEIGHT;
 	int lz = z - cz * CHUNK_DEPTH;
 
-	return chunk->light_map->get(lx,ly,lz, channel);
+	return chunk->light_map->get(lx, ly, lz, channel);
 }
 
-ubyte Chunks::getLight(int x, int y, int z){
+light_t Chunks::getLight(int x, int y, int z){
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
 
-	int cx = x / CHUNK_WIDTH;
-    int cy = y / CHUNK_HEIGHT;
-	int cz = z / CHUNK_DEPTH;
-
-	if (x < 0) cx--;
-    if (y < 0) cy--;
-	if (z < 0) cz--;
+	int cx = floordiv(x, CHUNK_WIDTH);
+    int cy = floordiv(y, CHUNK_HEIGHT);
+    int cz = floordiv(z, CHUNK_DEPTH);
 
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= 1 || cz >= depth) return 0;
 
-	Chunk* chunk = chunks[cz * width + cx];
+	std::shared_ptr<Chunk> chunk = chunks[cz * width + cx];
 	if (chunk == nullptr) return 0;
 
 	int lx = x - cx * CHUNK_WIDTH;
@@ -156,11 +142,11 @@ Chunk* Chunks::getChunkByVoxel(int x, int y, int z){
 
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= 1 || cz >= depth) return nullptr;
 
-	return chunks[cz * width + cx];
+	return chunks[cz * width + cx].get();
 }
 
 // Устанавливает идентификатор вокселя по мировым координатам.
-void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states) {
+void Chunks::setVoxel(int x, int y, int z, blockid_t id, uint8_t states) {
     if (y < 0 || y >= CHUNK_HEIGHT) return;
 
     x -= areaOffsetX * CHUNK_WIDTH;
@@ -174,7 +160,7 @@ void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states) {
 
 	if (cx < 0 || cz < 0 || cx >= width || cz >= depth) return;
 
-	Chunk* chunk = chunks[cz * width + cx];
+	Chunk* chunk = chunks[cz * width + cx].get();
 	if (chunk == nullptr) return;
 
 	int lx = x - cx * CHUNK_WIDTH;
@@ -221,7 +207,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 	float stepy = (dy > 0.0f) ? 1.0f : -1.0f;
 	float stepz = (dz > 0.0f) ? 1.0f : -1.0f;
 
-	float inf = std::numeric_limits<float>::infinity();
+	constexpr float inf = std::numeric_limits<float>::infinity();
 
     // Вычисление приращений параметра t при движении на один воксель
 	float txDelta = (dx == 0.0f) ? inf : abs(1.0f / dx);
@@ -312,35 +298,26 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 void Chunks::translate(WorldFiles* worldFiles, int dx, int dz){
     for (uint i = 0; i < volume; ++i){
 		chunksSecond[i] = nullptr;
-		meshesSecond[i] = nullptr;
 	}
 
     for (uint z = 0; z < depth; ++z){
         for (uint x = 0; x < width; ++x){
-            Chunk* chunk = chunks[z * width + x];
+            std::shared_ptr<Chunk> chunk = chunks[z * width + x];
             if (chunk == nullptr) continue;
             int nx = x - dx;
             int nz = z - dz;
-            Mesh* mesh = meshes[z * width + x];
             if (nx < 0 || nz < 0 || nx >= width || nz >= depth){
                 worldFiles->put((const ubyte*)chunk->voxels, chunk->chunk_x, chunk->chunk_z);
-                chunk->decref();
-                delete mesh;
                 chunksCount--;
                 continue;
             }
-            meshesSecond[nz * width + nx] = mesh;
             chunksSecond[nz * width + nx] = chunk;
         }
     }
 	
-	Chunk** chunks_temp = chunks;
+	std::shared_ptr<Chunk>* chunks_temp = chunks;
 	chunks = chunksSecond;
 	chunksSecond = chunks_temp;
-
-	Mesh** meshes_temp = meshes;
-	meshes = meshesSecond;
-	meshesSecond = meshes_temp;
 
 	areaOffsetX += dx;
 	areaOffsetZ += dz;
@@ -367,14 +344,9 @@ void Chunks::_setOffset(int x, int z){
 	areaOffsetZ = z;
 }
 
-void Chunks::clear(bool freeMemory){
+void Chunks::clear(){
 	for (size_t i = 0; i < volume; ++i){
-		if (freeMemory){
-			chunks[i]->decref();
-			delete meshes[i];
-		}
 		chunks[i] = nullptr;
-		meshes[i] = nullptr;
 	}
     chunksCount = 0;
 }

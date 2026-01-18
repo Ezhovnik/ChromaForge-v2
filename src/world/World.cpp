@@ -3,6 +3,7 @@
 #include "../files/WorldFiles.h"
 #include "../voxels/Chunk.h"
 #include "../voxels/Chunks.h"
+#include "../voxels/ChunksStorage.h"
 #include "Level.h"
 #include "../objects/Player.h"
 #include "../physics/PhysicsSolver.h"
@@ -25,7 +26,7 @@ void World::write(Level* level) {
 	Chunks* chunks = level->chunks;
 
 	for (uint i = 0; i < chunks->volume; ++i) {
-		Chunk* chunk = chunks->chunks[i];
+		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
 		if (chunk == nullptr || !chunk->isUnsaved()) continue;
 		wfile->put((const ubyte*)chunk->voxels, chunk->chunk_x, chunk->chunk_z);
 	}
@@ -35,7 +36,8 @@ void World::write(Level* level) {
 }
 
 Level* World::loadLevel(Player* player) {
-	Level* level = new Level(this, player, new Chunks(32, 32, 0, 0), new PhysicsSolver(glm::vec3(0, -GRAVITY, 0)));
+    ChunksStorage* storage = new ChunksStorage();
+	Level* level = new Level(this, player, new Chunks(16, 16, 0, 0), storage, new PhysicsSolver(glm::vec3(0, -GRAVITY, 0)));
 	wfile->readPlayer(player);
 
 	Camera* camera = player->camera;

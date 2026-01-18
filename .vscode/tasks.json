@@ -3,7 +3,6 @@
         {
             "type": "cppbuild",
             "label": "C/C++: g++.exe сборка активного файла",
-            "dependsOn": ["Compile Resources"],
             "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-g",
@@ -17,8 +16,9 @@
                 "${workspaceFolder}/src/window/Camera.cpp",
                 "${workspaceFolder}/src/graphics/ShaderProgram.cpp",
                 "${workspaceFolder}/src/graphics/Texture.cpp",
+                "${workspaceFolder}/src/graphics/BlocksRenderer.cpp",
+                "${workspaceFolder}/src/graphics/ChunksRenderer.cpp",
                 "${workspaceFolder}/src/graphics/Mesh.cpp",
-                "${workspaceFolder}/src/graphics/VoxelRenderer.cpp",
                 "${workspaceFolder}/src/graphics/LineBatch.cpp",
                 "${workspaceFolder}/src/voxels/voxel.cpp",
                 "${workspaceFolder}/src/voxels/Chunk.cpp",
@@ -37,7 +37,8 @@
                 "${workspaceFolder}/src/graphics/Batch2D.cpp",
                 "${workspaceFolder}/src/objects/Player.cpp",
                 "${workspaceFolder}/src/voxels/ChunksController.cpp",
-                "${workspaceFolder}/src/voxels/ChunksLoader.cpp",
+                "${workspaceFolder}/src/voxels/ChunksStorage.cpp",
+                "${workspaceFolder}/src/voxels/VoxelsVolume.cpp",
                 "${workspaceFolder}/src/Assets.cpp",
                 "${workspaceFolder}/src/declarations.cpp",
                 "${workspaceFolder}/src/world_render.cpp",

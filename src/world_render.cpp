@@ -25,7 +25,7 @@
 #include "Assets.h"
 #include "player_control.h"
 #include "logger/Logger.h"
-#include "graphics/VoxelRenderer.h"
+#include "graphics/ChunksRenderer.h"
 
 float _camera_cx;
 float _camera_cz;
@@ -42,8 +42,8 @@ inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
 // Компаратор для сортировки чанков по удаленности от камеры.
 bool chunks_comparator(size_t i, size_t j) {
-	Chunk* a = _chunks->chunks[i];
-	Chunk* b = _chunks->chunks[j];
+	std::shared_ptr<Chunk> a = _chunks->chunks[i];
+	std::shared_ptr<Chunk> b = _chunks->chunks[j];
 
     float distA = (a->chunk_x + 0.5f - _camera_cx) * (a->chunk_x + 0.5f - _camera_cx) + (a->chunk_z + 0.5f - _camera_cz) * (a->chunk_z + 0.5f - _camera_cz);
 	float distB = (b->chunk_x + 0.5f - _camera_cx) * (b->chunk_x + 0.5f - _camera_cx) + (b->chunk_z + 0.5f - _camera_cz) * (b->chunk_z + 0.5f - _camera_cz);
@@ -54,7 +54,7 @@ bool chunks_comparator(size_t i, size_t j) {
 WorldRenderer::WorldRenderer(Level* level, Assets* assets) : assets(assets), level(level) {
 	lineBatch = new LineBatch(4096);
 	batch3D = new Batch3D(1024);
-	renderer = new VoxelRenderer();
+	renderer = new ChunksRenderer(level);
 }
 
 WorldRenderer::~WorldRenderer() {
@@ -65,9 +65,11 @@ WorldRenderer::~WorldRenderer() {
 
 // Отрисовывает один чанк
 bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool occlusion){
-	Chunk* chunk = level->chunks->chunks[index];
-	Mesh* mesh = level->chunks->meshes[index];
-	if (mesh == nullptr) return true;
+	std::shared_ptr<Chunk> chunk = level->chunks->chunks[index];
+	if (!chunk->isLighted()) return false;
+
+    std::shared_ptr<Mesh> mesh = renderer->getOrRender(chunk.get());
+	if (mesh == nullptr) return false;
 
 	// Простой фрустум-каллинг (отсечение чанков позади камеры в 2D плоскости XZ)
 	if (occlusion){
@@ -75,15 +77,15 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 		if (y < 0.0f) y = 0.0f;
 		if (y > CHUNK_HEIGHT) y = CHUNK_HEIGHT;
 		glm::vec3 v = glm::vec3(chunk->chunk_x * CHUNK_WIDTH, y, chunk->chunk_z * CHUNK_DEPTH) - camera->position;
-		if (v.x * v.x + v.z * v.z > (CHUNK_WIDTH * 3) * (CHUNK_WIDTH * 3) && dot(camera->front, v) < 0.0f) return false;
+		if (v.x * v.x + v.z * v.z > (CHUNK_WIDTH * 3) * (CHUNK_WIDTH * 3) && dot(camera->front, v) < 0.0f) return true;
 	}
 
 	glm::mat4 model = glm::translate(
         glm::mat4(1.0f), 
         glm::vec3(
-            chunk->chunk_x * CHUNK_WIDTH + 0.5f, 
-            0.5f, 
-            chunk->chunk_z * CHUNK_DEPTH + 0.5f
+            chunk->chunk_x * CHUNK_WIDTH, 
+            0.0f, 
+            chunk->chunk_z * CHUNK_DEPTH + 1.0f
         ));
 
 	shader->uniformMatrix("u_model", model);
@@ -92,7 +94,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 	mesh->draw();
     glEnable(GL_MULTISAMPLE);
 
-    return true;
+    return false;
 }
 
 void WorldRenderer::draw(Camera* camera, bool occlusion){
@@ -143,15 +145,16 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
 			choosen_block->emission[1] / MAX_TORCH_LIGHT,
 			choosen_block->emission[2] / MAX_TORCH_LIGHT);
 	shader->uniform1f("u_torchlightDistance", TORCH_LIGHT_DIST);
+    shader->uniform1f("u_fogFactor", FOG_FACTOR);
 
 	texture->bind();
 
     // Собираем индексы чанков, которые нужно отрисовать
 	std::vector<size_t> indices;
 	for (size_t i = 0; i < chunks->volume; ++i){
-		Chunk* chunk = chunks->chunks[i];
+		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
 		if (chunk == nullptr) continue;
-		if (chunks->meshes[i] != nullptr) indices.push_back(i);
+		indices.push_back(i);
 	}
 
     // Вычисляем позицию камеры в координатах чанков (для сортировки)
@@ -168,7 +171,7 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
     // Отрисовываем все видимые чанки
     int occludedChunks = 0;
 	for (size_t i = 0; i < indices.size(); i++){
-		occludedChunks += !drawChunk(indices[i], camera, shader, occlusion);
+		occludedChunks += drawChunk(indices[i], camera, shader, occlusion);
 	}
 
     shader->uniformMatrix("u_model", glm::mat4(1.0f));

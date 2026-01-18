@@ -32,7 +32,6 @@ Mesh::Mesh(const float* buffer, size_t vertices, const vattr* attrs) : vertices(
 	} else {
 		glBufferData(GL_ARRAY_BUFFER, 0, {}, GL_STATIC_DRAW);
 	}
-    
 
     // Настройка вершинных атрибутов
     int offset = 0; // Смещение в байтах от начала вершины

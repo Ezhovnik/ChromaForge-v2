@@ -104,12 +104,12 @@ size_t decompressRLE(const ubyte* src, size_t length, ubyte* dst, size_t targetL
 // Вычисляет размер данных после сжатия RLE
 size_t calcRLE(const ubyte* src, size_t length) {
 	size_t offset = 0;
-	size_t counter = 1;
+	size_t counter = 0;
 	ubyte c = src[0];
 
 	for (size_t i = 0; i < length; ++i){
 		ubyte cnext = src[i];
-		if (cnext != c || counter == 256){
+		if (cnext != c || counter == 255){
 			offset += 2;
 			c = cnext;
 			counter = 0;
@@ -124,11 +124,11 @@ size_t calcRLE(const ubyte* src, size_t length) {
 size_t compressRLE(const ubyte* src, size_t length, ubyte* dst) {
     if (length == 0) return 0;
 	size_t offset = 0;
-	uint counter = 1;
+	uint counter = 0;
 	ubyte c = src[0];
 	for (size_t i = 1; i < length; ++i){
 		ubyte cnext = src[i];
-		if (cnext != c || counter == 256){
+		if (cnext != c || counter == 255){
 			dst[offset++] = counter;
 			dst[offset++] = c;
 			c = cnext;

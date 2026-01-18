@@ -26,7 +26,6 @@ Batch3D::~Batch3D(){
 	delete[] buffer;
 	delete mesh;
     if (_texture) delete _texture;
-    if (blank) delete blank;
 }
 
 void Batch3D::begin(){
