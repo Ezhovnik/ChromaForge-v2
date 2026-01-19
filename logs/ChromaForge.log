@@ -1,27 +1,27 @@
-[2026-01-19 23:32:21.739] [info] [:] Logger initialized. File: ../logs/ChromaForge.log
-[2026-01-19 23:32:22.077] [info] [:] Window initialized successfully: 1280x720
-[2026-01-19 23:32:22.079] [info] [:] OpenGL Logger initialized with level: 1
-[2026-01-19 23:32:22.079] [debug] [:] OpenGL Version: 3.3.13587 Core Profile Context 19.40.46 26.20.14046.3
-[2026-01-19 23:32:22.080] [debug] [:] OpenGL Vendor: ATI Technologies Inc.
-[2026-01-19 23:32:22.080] [debug] [:] OpenGL Renderer: AMD Radeon(TM) Vega 8 Graphics 
-[2026-01-19 23:32:22.080] [debug] [:] GLSL Version: 4.60
-[2026-01-19 23:32:22.080] [debug] [:] OpenGL debug output is supported
-[2026-01-19 23:32:22.080] [debug] [:] OpenGL debug filters set for log level: 1
-[2026-01-19 23:32:22.080] [info] [:] OpenGL debug output enabled with level: 1
-[2026-01-19 23:32:22.080] [info] [:] Loading Assets
-[2026-01-19 23:32:22.080] [info] [:] Loading ../res/shaders/default as default
-[2026-01-19 23:32:22.082] [info] [:] Loading ../res/shaders/lines as lines
-[2026-01-19 23:32:22.084] [info] [:] Loading ../res/shaders/ui as ui
-[2026-01-19 23:32:22.085] [info] [:] Loading ../res/textures/atlas.png as blocks
-[2026-01-19 23:32:22.092] [info] [:] Loading ../res/textures/slot.png as slot
-[2026-01-19 23:32:22.094] [info] [:] Loading ../res/fonts/font as normal
-[2026-01-19 23:32:22.112] [info] [:] Assets loaded successfully
-[2026-01-19 23:32:22.112] [info] [:] Loading world
-[2026-01-19 23:32:22.114] [info] [:] The world is loaded
-[2026-01-19 23:32:22.114] [info] [:] Initialization is finished
-[2026-01-19 23:32:22.114] [info] [:] Preparing systems
-[2026-01-19 23:32:22.115] [info] [:] Systems have been prepared
-[2026-01-19 23:33:35.847] [info] [:] World saving
-[2026-01-19 23:33:36.298] [info] [:] The world has been successfully saved
-[2026-01-19 23:33:36.298] [info] [:] Shutting down
-[2026-01-19 23:33:36.299] [info] [:] OpenGL Logger disabled
+[2026-01-20 00:00:40.004] [info] [:] Logger initialized. File: ../logs/ChromaForge.log
+[2026-01-20 00:00:44.933] [info] [:] Window initialized successfully: 1280x720
+[2026-01-20 00:00:44.934] [info] [:] OpenGL Logger initialized with level: 1
+[2026-01-20 00:00:44.935] [debug] [:] OpenGL Version: 3.3.13587 Core Profile Context 19.40.46 26.20.14046.3
+[2026-01-20 00:00:45.014] [debug] [:] OpenGL Vendor: ATI Technologies Inc.
+[2026-01-20 00:00:45.014] [debug] [:] OpenGL Renderer: AMD Radeon(TM) Vega 8 Graphics 
+[2026-01-20 00:00:45.014] [debug] [:] GLSL Version: 4.60
+[2026-01-20 00:00:45.014] [debug] [:] OpenGL debug output is supported
+[2026-01-20 00:00:45.945] [debug] [:] OpenGL debug filters set for log level: 1
+[2026-01-20 00:00:45.945] [info] [:] OpenGL debug output enabled with level: 1
+[2026-01-20 00:00:45.946] [info] [:] Loading Assets
+[2026-01-20 00:00:45.954] [info] [:] Loading ../res/shaders/default as default
+[2026-01-20 00:00:47.910] [info] [:] Loading ../res/shaders/lines as lines
+[2026-01-20 00:00:47.920] [info] [:] Loading ../res/shaders/ui as ui
+[2026-01-20 00:00:48.075] [info] [:] Loading ../res/textures/atlas.png as blocks
+[2026-01-20 00:00:50.654] [info] [:] Loading ../res/textures/slot.png as slot
+[2026-01-20 00:00:50.708] [info] [:] Loading ../res/fonts/font as normal
+[2026-01-20 00:00:51.523] [info] [:] Assets loaded successfully
+[2026-01-20 00:00:51.523] [info] [:] Loading world
+[2026-01-20 00:00:51.812] [info] [:] The world is loaded
+[2026-01-20 00:00:51.812] [info] [:] Initialization is finished
+[2026-01-20 00:00:51.813] [info] [:] Preparing systems
+[2026-01-20 00:00:52.565] [info] [:] Systems have been prepared
+[2026-01-20 00:01:17.901] [info] [:] World saving
+[2026-01-20 00:01:18.692] [info] [:] The world has been successfully saved
+[2026-01-20 00:01:18.692] [info] [:] Shutting down
+[2026-01-20 00:01:18.693] [info] [:] OpenGL Logger disabled

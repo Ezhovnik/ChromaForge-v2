@@ -3,10 +3,10 @@
 #include <iostream>
 
 #include "Assets.h"
-#include "graphics/ShaderProgram.h"
-#include "graphics/Texture.h"
-#include "graphics/Font.h"
-#include "logger/Logger.h"
+#include "../graphics/ShaderProgram.h"
+#include "../graphics/Texture.h"
+#include "../graphics/Font.h"
+#include "../logger/Logger.h"
 
 AssetsLoader::AssetsLoader(Assets* assets) : assets(assets) {
 }

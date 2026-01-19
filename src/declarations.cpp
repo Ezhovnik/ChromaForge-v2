@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "AssetsLoader.h"
+#include "assets/AssetsLoader.h"
 #include "graphics/ShaderProgram.h"
 #include "graphics/Texture.h"
 #include "graphics/Font.h"

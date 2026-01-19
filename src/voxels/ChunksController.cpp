@@ -53,7 +53,7 @@ bool ChunksController::loadVisible(WorldFiles* worldFiles){
                     lighting->buildSkyLight(chunk->chunk_x, chunk->chunk_z);
                     lighting->onChunkLoaded(chunk->chunk_x, chunk->chunk_z);
                     chunk->setLighted(true);
-                    return false;
+                    return true;
                 }
                 continue;
             }
