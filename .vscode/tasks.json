@@ -46,6 +46,7 @@
                 "${workspaceFolder}/src/player_control.cpp",
                 "${workspaceFolder}/src/hud_render.cpp",
                 "${workspaceFolder}/src/world/Level.cpp",
+                "${workspaceFolder}/src/world/LevelEvents.cpp",
                 "${workspaceFolder}/src/world/World.cpp",
                 "${workspaceFolder}/src/graphics/Batch3D.cpp",
                 "${workspaceFolder}/src/graphics/Font.cpp",

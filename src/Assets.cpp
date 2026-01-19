@@ -21,7 +21,6 @@ Assets::~Assets() {
     // Освобождаем память выделенную под текстуры
 	for (auto& iter : textures){
 		if (iter.second != nullptr) {
-            LOG_INFO("Delete {}...", iter.first);
             delete iter.second;
             iter.second = nullptr;
         }

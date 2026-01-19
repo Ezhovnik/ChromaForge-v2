@@ -14,6 +14,7 @@ class VoxelRenderer;
 class Chunk;
 class voxel;
 class WorldFiles;
+class LevelEvents;
 
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
@@ -29,7 +30,9 @@ public:
     int areaOffsetX; // Смещение области видимых чанков по X
     int areaOffsetZ; // Смещение области видимых чанков по Z
 
-    Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ); // Конструктор
+    LevelEvents* events;
+
+    Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, LevelEvents* events); // Конструктор
     ~Chunks(); // Деструктор
 
     bool putChunk(std::shared_ptr<Chunk> chunk);

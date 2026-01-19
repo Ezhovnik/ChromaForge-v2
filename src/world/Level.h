@@ -9,6 +9,7 @@ class PhysicsSolver;
 class ChunksController;
 class PlayerController;
 class ChunksStorage;
+class LevelEvents;
 
 class Level {
 public:
@@ -20,8 +21,9 @@ public:
 	ChunksController* chunksController;
     ChunksStorage* chunksStorage;
 	PlayerController* playerController;
+    LevelEvents* events;
 
-	Level(World* world, Player* player, Chunks* chunks, ChunksStorage* chunksStorage, PhysicsSolver* physics);
+	Level(World* world, Player* player, Chunks* chunks, ChunksStorage* chunksStorage, PhysicsSolver* physics, LevelEvents* events);
 	~Level();
 
     void update(float deltaTime, bool interactions);

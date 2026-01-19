@@ -88,8 +88,9 @@ bool ChunksController::loadVisible(WorldFiles* worldFiles){
     }
 
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        if (Block::blocks[chunk->voxels[i].id].get() == nullptr) {
-            LOG_WARN("Corruped block detected at {} of chunk {}x {}z", i, chunk->chunk_x, chunk->chunk_z);
+        blockid_t vox_id = chunk->voxels[i].id;
+        if (Block::blocks[vox_id].get() == nullptr) {
+            LOG_WARN("Corruped block detected at {} of chunk {}x {}z -> {}", i, chunk->chunk_x, chunk->chunk_z, vox_id);
             chunk->voxels[i].id = Blocks_id::BEDROCK;
         }
     }

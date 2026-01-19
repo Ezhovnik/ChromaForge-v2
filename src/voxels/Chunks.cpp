@@ -14,10 +14,11 @@
 #include "../lighting/Lighting.h"
 #include "../graphics/Mesh.h"
 #include "../math/voxmaths.h"
+#include "../world/LevelEvents.h"
 
 // Конструктор
-Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ) {
-    volume = width * depth;
+Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, LevelEvents* events) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events) {
+    volume = (size_t)width * (size_t)depth;
 
     chunks = new std::shared_ptr<Chunk>[volume];
     chunksSecond = new std::shared_ptr<Chunk>[volume];
@@ -307,6 +308,7 @@ void Chunks::translate(WorldFiles* worldFiles, int dx, int dz){
             int nx = x - dx;
             int nz = z - dz;
             if (nx < 0 || nz < 0 || nx >= width || nz >= depth){
+                events->trigger(CHUNK_HIDDEN, chunk.get());
                 worldFiles->put(chunk.get());
                 chunksCount--;
                 continue;
@@ -346,7 +348,11 @@ void Chunks::_setOffset(int x, int z){
 
 void Chunks::clear(){
 	for (size_t i = 0; i < volume; ++i){
-		chunks[i] = nullptr;
+		Chunk* chunk = chunks[i].get();
+        if (chunk) {
+            events->trigger(CHUNK_HIDDEN, chunk);
+        }
+        chunks[i] = nullptr;
 	}
     chunksCount = 0;
 }

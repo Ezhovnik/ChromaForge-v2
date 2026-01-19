@@ -5,6 +5,7 @@
 #include "../voxels/Chunks.h"
 #include "../voxels/ChunksStorage.h"
 #include "Level.h"
+#include "LevelEvents.h"
 #include "../objects/Player.h"
 #include "../physics/PhysicsSolver.h"
 #include "../window/Camera.h"
@@ -15,7 +16,7 @@ inline constexpr float GRAVITY = 19.6f;
 // FIXME: При дижении вдоль оси OZ чанки зацикливаются
 
 World::World(std::string name, std::string directory, int seed) : name(name), seed(seed) {
-	wfile = new WorldFiles(directory, Region_Consts::REGION_VOLUME * (CHUNK_VOLUME * 2 + 8));
+	wfile = new WorldFiles(directory, Region_Consts::REGION_VOLUME * (CHUNK_DATA_LEN * 2 + 8));
 }
 
 World::~World(){
@@ -25,7 +26,7 @@ World::~World(){
 void World::write(Level* level) {
 	Chunks* chunks = level->chunks;
 
-	for (uint i = 0; i < chunks->volume; ++i) {
+	for (size_t i = 0; i < chunks->volume; ++i) {
 		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
 		if (chunk == nullptr || !chunk->isUnsaved()) continue;
         wfile->put(chunk.get());
@@ -37,7 +38,8 @@ void World::write(Level* level) {
 
 Level* World::loadLevel(Player* player) {
     ChunksStorage* storage = new ChunksStorage();
-	Level* level = new Level(this, player, new Chunks(16, 16, 0, 0), storage, new PhysicsSolver(glm::vec3(0, -GRAVITY, 0)));
+    LevelEvents* events = new LevelEvents();
+	Level* level = new Level(this, player, new Chunks(16, 16, 0, 0, events), storage, new PhysicsSolver(glm::vec3(0, -GRAVITY, 0)), events);
 	wfile->readPlayer(player);
 
 	Camera* camera = player->camera;

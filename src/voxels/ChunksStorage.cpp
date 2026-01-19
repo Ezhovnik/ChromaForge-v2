@@ -23,6 +23,13 @@ std::shared_ptr<Chunk> ChunksStorage::get(int x, int z) const {
 	return found->second;
 }
 
+void ChunksStorage::remove(int x, int z) {
+	auto found = chunksMap.find(glm::ivec2(x, z));
+	if (found != chunksMap.end()) {
+		chunksMap.erase(found->first);
+	}
+}
+
 void ChunksStorage::getVoxels(VoxelsVolume* volume) const {
 	voxel* voxels = volume->getVoxels();
 	light_t* lights = volume->getLights();
