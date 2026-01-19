@@ -307,7 +307,7 @@ void Chunks::translate(WorldFiles* worldFiles, int dx, int dz){
             int nx = x - dx;
             int nz = z - dz;
             if (nx < 0 || nz < 0 || nx >= width || nz >= depth){
-                worldFiles->put((const ubyte*)chunk->voxels, chunk->chunk_x, chunk->chunk_z);
+                worldFiles->put(chunk.get());
                 chunksCount--;
                 continue;
             }

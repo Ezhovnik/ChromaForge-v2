@@ -11,6 +11,8 @@
 
 #include "../typedefs.h"
 
+#define REGION_FORMAT_VERSION 1
+
 // Константы для размера регионов
 namespace Region_Consts {
     constexpr int REGION_SIZE_BIT = 5; // Размер региона 
@@ -19,9 +21,11 @@ namespace Region_Consts {
 }
 
 class Player;
+class Chunk;
 
 struct WorldRegion {
 	ubyte** chunksData;
+    uint32_t* compressedSizes;
 	bool unsaved;
 };
 
@@ -29,21 +33,20 @@ struct WorldRegion {
 // FIXME: Загрузка или выгрузка из файла при перезапуске некорректна
 class WorldFiles {
 public:
-    static int64_t totalCompressed; // Статическая переменная для отслеживания общего объема сжатых данных
     std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
     std::string directory; // Путь к директории с файлами мира
     ubyte* mainBufferIn; // Входной буфер для чтения сжатых данных
-    ubyte* mainBufferOut; // Выходной буфер для записи регионов
+    ubyte* compressionBuffer;
 
     WorldFiles(std::string directory, size_t mainBufferCapacity); // Конструктор
     ~WorldFiles(); // Деструктор
 
-    void put(const ubyte* chunkData, int x, int z); // Сохраняет данные чанка в кэш памяти.
+    void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
 
     bool readPlayer(Player* player); // Читает данные об игроке с диска
-    bool readChunk(int x, int z, ubyte* out); // Читает данные чанка непосредственно из файла
-	bool getChunk(int x, int z, ubyte* out); // Получает данные чанка из кэша или файла
-	uint writeRegion(ubyte* out, int x, int z, ubyte** region); // Формирует бинарное представление региона для записи в файл
+    ubyte* readChunkData(int x, int z, uint32_t& length);
+	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
+	void writeRegion(int x, int z, WorldRegion& entry); // Формирует бинарное представление региона для записи в файл
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
     void write(); // Записывает все измененные регионы из памяти на диск.
 

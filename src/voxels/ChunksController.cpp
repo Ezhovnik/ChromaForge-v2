@@ -74,8 +74,12 @@ bool ChunksController::loadVisible(WorldFiles* worldFiles){
 
 	chunk = std::shared_ptr<Chunk>(new Chunk(nearX + areaOffsetX, nearZ + areaOffsetZ));
     level->chunksStorage->store(chunk);
-	if (worldFiles->getChunk(chunk->chunk_x, chunk->chunk_z, (ubyte*)chunk->voxels)) chunk->setLoaded(true);
-
+	ubyte* data = worldFiles->getChunk(chunk->chunk_x, chunk->chunk_z);
+	if (data) {
+		chunk->decode(data);
+		chunk->setLoaded(true);
+		delete[] data;
+	}
 	chunks->putChunk(chunk);
 
     if (!chunk->isLoaded()) {

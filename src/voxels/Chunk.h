@@ -14,6 +14,8 @@ namespace Chunk_Flags {
     inline constexpr uint UNSAVED = 0x10;
 }
 
+inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 2;
+
 struct voxel;
 class LightMap;
 
@@ -59,6 +61,9 @@ public:
 	inline void setLoaded(bool flag) {bitset(flags, Chunk_Flags::LOADED, flag);}
 	inline void setLighted(bool flag) {bitset(flags, Chunk_Flags::LIGHTED, flag);}
 	inline void setReady(bool flag) {bitset(flags, Chunk_Flags::READY, flag);}
+
+    ubyte* encode() const;
+	bool decode(ubyte* data);
 };
 
 #endif // VOXELS_CHUNK_H_

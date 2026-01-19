@@ -28,7 +28,7 @@ void World::write(Level* level) {
 	for (uint i = 0; i < chunks->volume; ++i) {
 		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
 		if (chunk == nullptr || !chunk->isUnsaved()) continue;
-		wfile->put((const ubyte*)chunk->voxels, chunk->chunk_x, chunk->chunk_z);
+        wfile->put(chunk.get());
 	}
 
 	wfile->write();

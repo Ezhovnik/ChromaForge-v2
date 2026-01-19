@@ -72,7 +72,7 @@ bool _load_font(Assets* assets, const std::string& filename, const std::string& 
 	}
 	Font* font = new Font(pages);
 
-	return assets->store(font, name);;
+	return assets->store(font, name);
 }
 
 void AssetsLoader::createDefaults(AssetsLoader& loader) {

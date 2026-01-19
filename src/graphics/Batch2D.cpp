@@ -26,7 +26,6 @@ Batch2D::~Batch2D(){
 	delete blank;
 	delete[] buffer;
 	delete mesh;
-    if (_texture) delete _texture;
 }
 
 void Batch2D::begin(){

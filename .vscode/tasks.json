@@ -30,6 +30,7 @@
                 "${workspaceFolder}/src/loaders/texture_loader.cpp",
                 "${workspaceFolder}/src/loaders/shader_loader.cpp",
                 "${workspaceFolder}/src/files/files.cpp",
+                "${workspaceFolder}/src/files/rle.cpp",
                 "${workspaceFolder}/src/files/WorldFiles.cpp",
                 "${workspaceFolder}/src/physics/Hitbox.cpp",
                 "${workspaceFolder}/src/physics/PhysicsSolver.cpp",
