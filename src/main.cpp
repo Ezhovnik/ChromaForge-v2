@@ -88,8 +88,8 @@ Engine::Engine(const EngineSettings& settings) {
     assets = new Assets();
     LOG_INFO("Loading Assets");
     AssetsLoader loader(assets);
-    AssetsLoader::createDefaults(loader); // Создание наборов ассетов по умолчанию
-    initialize_assets(&loader);
+    AssetsLoader::createDefaults(loader);
+    AssetsLoader::addDefaults(loader);
     while (loader.hasNext()) {
         if (!loader.loadNext()) {
             delete assets;

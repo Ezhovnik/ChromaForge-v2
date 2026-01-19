@@ -80,3 +80,14 @@ void AssetsLoader::createDefaults(AssetsLoader& loader) {
 	loader.addLoader(ASSETS_TYPE::TEXTURE, _load_texture);
 	loader.addLoader(ASSETS_TYPE::FONT, _load_font);
 }
+
+void AssetsLoader::addDefaults(AssetsLoader& loader) {
+    loader.add(ASSETS_TYPE::SHADER, "../res/shaders/default", "default");
+    loader.add(ASSETS_TYPE::SHADER, "../res/shaders/lines", "lines");
+    loader.add(ASSETS_TYPE::SHADER, "../res/shaders/ui", "ui");
+
+    loader.add(ASSETS_TYPE::TEXTURE, "../res/textures/atlas.png", "blocks");
+    loader.add(ASSETS_TYPE::TEXTURE, "../res/textures/slot.png", "slot");
+
+    loader.add(ASSETS_TYPE::FONT, "../res/fonts/font", "normal");
+}

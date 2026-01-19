@@ -27,9 +27,6 @@ namespace Blocks_id {
 
 }
 
-class AssetsLoader;
-
-void initialize_assets(AssetsLoader* loader);
 void setup_definitions();
 
 #endif // SRC_DECLARATIONS_H_

@@ -35,6 +35,7 @@ public:
 	bool loadNext();
 
 	static void createDefaults(AssetsLoader& loader);
+    static void addDefaults(AssetsLoader& loader);
 };
 
 #endif // SRC_ASSETS_LOADER_H
