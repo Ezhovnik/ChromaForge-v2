@@ -23,7 +23,7 @@
 #include "assets/Assets.h"
 #include "assets/AssetsLoader.h"
 #include "objects/Player.h"
-#include "declarations.h"
+#include "definitions.h"
 #include "world_render.h"
 #include "world/Level.h"
 #include "world/World.h"

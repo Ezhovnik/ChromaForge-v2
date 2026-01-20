@@ -10,7 +10,7 @@
 #include "../voxels/VoxelsVolume.h"
 #include "../voxels/ChunksStorage.h"
 #include "../lighting/Lightmap.h"
-#include "../declarations.h"
+#include "../definitions.h"
 
 namespace BlocksRenderer_Consts {
     inline constexpr int VERTEX_SIZE = 9;

@@ -2,7 +2,7 @@
 
 #include "voxel.h"
 #include "../lighting/LightMap.h"
-#include "../declarations.h"
+#include "../definitions.h"
 
 // Конструктор
 Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {

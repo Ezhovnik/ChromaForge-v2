@@ -15,7 +15,7 @@
 #include "../files/WorldFiles.h"
 #include "ChunksStorage.h"
 #include "../logger/Logger.h"
-#include "../declarations.h"
+#include "../definitions.h"
 
 constexpr int MIN_SURROUNDING = 9;
 

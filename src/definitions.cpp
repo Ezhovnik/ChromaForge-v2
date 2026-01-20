@@ -1,4 +1,4 @@
-#include "declarations.h"
+#include "definitions.h"
 
 #include <iostream>
 

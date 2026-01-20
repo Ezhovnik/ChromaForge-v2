@@ -14,7 +14,7 @@
 
 #include "voxel.h"
 #include "Chunk.h"
-#include "../declarations.h"
+#include "../definitions.h"
 #include "../typedefs.h"
 
 class PseudoRandom {

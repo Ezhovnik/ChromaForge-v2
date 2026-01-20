@@ -41,7 +41,7 @@
                 "${workspaceFolder}/src/voxels/ChunksStorage.cpp",
                 "${workspaceFolder}/src/voxels/VoxelsVolume.cpp",
                 "${workspaceFolder}/src/assets/Assets.cpp",
-                "${workspaceFolder}/src/declarations.cpp",
+                "${workspaceFolder}/src/definitions.cpp",
                 "${workspaceFolder}/src/world_render.cpp",
                 "${workspaceFolder}/src/player_control.cpp",
                 "${workspaceFolder}/src/hud_render.cpp",

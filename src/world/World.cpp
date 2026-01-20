@@ -13,8 +13,6 @@
 
 inline constexpr float GRAVITY = 19.6f;
 
-// FIXME: При дижении вдоль оси OZ чанки зацикливаются
-
 World::World(std::string name, std::string directory, int seed) : name(name), seed(seed) {
 	wfile = new WorldFiles(directory, Region_Consts::REGION_VOLUME * (CHUNK_DATA_LEN * 2 + 8));
 }
