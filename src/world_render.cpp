@@ -24,7 +24,7 @@
 #include "world/LevelEvents.h"
 #include "objects/Player.h"
 #include "assets/Assets.h"
-#include "player_control.h"
+#include "objects/player_control.h"
 #include "logger/Logger.h"
 #include "graphics/ChunksRenderer.h"
 

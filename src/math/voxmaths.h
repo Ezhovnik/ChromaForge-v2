@@ -13,11 +13,13 @@ inline int ceildiv(int a, int b) {
 	return a / b;
 }
 
-inline int max(int a, int b) {
+template<typename T>
+inline T max(T a, T b) {
 	return (a > b) ? a : b;
 }
 
-inline int min(int a, int b) {
+template<typename T>
+inline T min(T a, T b) {
 	return (a < b) ? a : b;
 }
 

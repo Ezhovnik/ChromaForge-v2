@@ -42,7 +42,7 @@
                 "${workspaceFolder}/src/assets/Assets.cpp",
                 "${workspaceFolder}/src/definitions.cpp",
                 "${workspaceFolder}/src/world_render.cpp",
-                "${workspaceFolder}/src/player_control.cpp",
+                "${workspaceFolder}/src/objects/player_control.cpp",
                 "${workspaceFolder}/src/hud_render.cpp",
                 "${workspaceFolder}/src/world/Level.cpp",
                 "${workspaceFolder}/src/world/LevelEvents.cpp",

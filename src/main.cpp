@@ -13,9 +13,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 // Пользовательские заголовочные файлы
-#include "window/Window.h"
 #include "window/Events.h"
 #include "window/Camera.h"
+#include "window/Window.h"
 #include "voxels/Chunk.h"
 #include "voxels/Chunks.h"
 #include "voxels/ChunksController.h"
@@ -47,6 +47,8 @@ struct EngineSettings {
     int displayHeight; // Высота окна
     int displaySamples;
     const char* title; // Заголовок окна
+
+    uint chunksLoadSpeed;
 };
 
 // Основной класс Engine, управляющий жизненным циклом приложения
@@ -54,6 +56,7 @@ class Engine {
 private:
     Assets* assets; // Менеджер ассетов (текстуры, шейдеры и т.д.)
     Level* level; // Текущий уровень (состояние мира и игрока)
+    EngineSettings settings;
 
     uint64_t frame = 0; // Номер текущего кадра
     float lastTime = 0.0f; // Время последнего кадра (для расчёта deltaTime)
@@ -70,6 +73,8 @@ public:
 
 // Реализация конструктора
 Engine::Engine(const EngineSettings& settings) {
+    this->settings = settings;
+
     // Инициализация логгера
     Logger::getInstance().initialize();
 
@@ -150,7 +155,7 @@ void Engine::updateHotkeys() {
 
     // Отметка всех чанков как изменённых (для перерисовки)
     if (Events::justPressed(GLFW_KEY_F5)) {
-        for (unsigned i = 0; i < level->chunks->volume; i++) {
+        for (uint i = 0; i < level->chunks->volume; ++i) {
             std::shared_ptr<Chunk> chunk = level->chunks->chunks[i];
             if (chunk != nullptr && chunk->isReady()) chunk->setModified(true);
         }
@@ -177,7 +182,7 @@ void Engine::mainloop() {
         // Обновление логики уровня (перемещение игрока, столкновения и т.д.)
         level->update(deltaTime, Events::_cursor_locked);
 
-        level->chunksController->loadVisible(world->wfile);
+        level->chunksController->update(settings.chunksLoadSpeed);
 
         // Рендеринг мира и HUD
         worldRenderer.draw(camera, occlusion);
@@ -197,7 +202,7 @@ int main() {
     std::unique_ptr<Engine> engine = nullptr;
 
     try {
-        engine = std::make_unique<Engine>(EngineSettings{1280, 720, 1, "ChromaForge"});
+        engine = std::make_unique<Engine>(EngineSettings{1280, 720, 1, "ChromaForge", 10});
         engine->mainloop(); // Запуск основного цикла
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred\n{}", err.what());

@@ -308,14 +308,14 @@ void WorldFiles::writeRegion(int x, int z, WorldRegion& entry){
 		if (region[i] == nullptr) region[i] = readChunkData(chunk_x, chunk_y, sizes[i]);
     }
 
-    char header[10] = ".VOXREG";
-    header[8] = REGION_FORMAT_VERSION;
-    header[9] = 0; // Флаги
+    char header[13] = ".CHROMAREG";
+    header[11] = REGION_FORMAT_VERSION;
+    header[12] = 0; // Флаги
 
     std::ofstream file(getRegionFile(x, z), std::ios::out | std::ios::binary);
-	file.write(header, 10);
+	file.write(header, 13);
 
-    size_t offset = 10;
+    size_t offset = 13;
 	char intbuf[4]{};
 	uint offsets[Region_Consts::REGION_VOLUME]{};
 

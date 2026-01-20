@@ -8,7 +8,7 @@
 #include "../voxels/Chunk.h"
 #include "../objects/Player.h"
 #include "../physics/Hitbox.h"
-#include "../player_control.h"
+#include "../objects/player_control.h"
 #include "World.h"
 #include "LevelEvents.h"
 

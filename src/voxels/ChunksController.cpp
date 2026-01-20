@@ -3,6 +3,7 @@
 #include <iostream>
 #include <climits>
 #include <memory>
+#include <chrono>
 
 #include "voxel.h"
 #include "Chunk.h"
@@ -16,13 +17,32 @@
 #include "ChunksStorage.h"
 #include "../logger/Logger.h"
 #include "../definitions.h"
+#include "../math/voxmaths.h"
 
 constexpr int MIN_SURROUNDING = 9;
+constexpr int MAX_WORK_PER_FRAME = 16;
 
 ChunksController::ChunksController(Level* level, Chunks* chunks, Lighting* lighting) : chunks(chunks), lighting(lighting), level(level){
 }
 
 ChunksController::~ChunksController(){
+}
+
+void ChunksController::update(int64_t maxDuration) {
+    int64_t mcstotal = 0;
+    for (uint i = 0; i < MAX_WORK_PER_FRAME; ++i) {
+        auto start = std::chrono::high_resolution_clock::now();
+        if (loadVisible(level->world->wfile)) {
+            auto elapsed = std::chrono::high_resolution_clock::now() - start;
+            int64_t mcs = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+            avgDurationMcs = mcs * 0.2 + avgDurationMcs * 0.8;
+            if (mcstotal + max(avgDurationMcs, mcs) * 2 < maxDuration * 1000) {
+                mcstotal += mcs;
+                continue;
+            }
+        }
+        break;
+    }
 }
 
 bool ChunksController::loadVisible(WorldFiles* worldFiles){
