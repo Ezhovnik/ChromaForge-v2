@@ -17,7 +17,7 @@
 #include "../world/LevelEvents.h"
 
 // Конструктор
-Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, LevelEvents* events) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events) {
+Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles) {
     volume = (size_t)width * (size_t)depth;
 
     chunks = new std::shared_ptr<Chunk>[volume];
@@ -296,14 +296,14 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 	return nullptr;
 }
 
-void Chunks::translate(WorldFiles* worldFiles, int dx, int dz){
+void Chunks::translate(int dx, int dz){
     for (uint i = 0; i < volume; ++i){
 		chunksSecond[i] = nullptr;
 	}
 
     for (uint z = 0; z < depth; ++z){
         for (uint x = 0; x < width; ++x){
-            std::shared_ptr<Chunk> chunk = chunks[z * width + x];
+            std::shared_ptr<Chunk> chunk = chunks[z * depth + x];
             if (chunk == nullptr) continue;
             int nx = x - dx;
             int nz = z - dz;
@@ -325,7 +325,7 @@ void Chunks::translate(WorldFiles* worldFiles, int dx, int dz){
 	areaOffsetZ += dz;
 }
 
-void Chunks::setCenter(WorldFiles* worldFiles, int x, int z) {
+void Chunks::setCenter(int x, int z) {
 	int chunk_x = x / CHUNK_WIDTH;
 	int chunk_z = z / CHUNK_DEPTH;
 
@@ -338,7 +338,39 @@ void Chunks::setCenter(WorldFiles* worldFiles, int x, int z) {
 	chunk_x -= width / 2;
 	chunk_z -= depth / 2;
 
-	if (chunk_x || chunk_z) translate(worldFiles, chunk_x, chunk_z);
+	if (chunk_x || chunk_z) translate(chunk_x, chunk_z);
+}
+
+void Chunks::resize(uint newWidth, uint newDepth) {
+    if (newWidth < width) {
+        int delta = width - newWidth;
+        translate(delta / 2, 0);
+        translate(-delta, 0);
+        translate(delta, 0);
+    }
+
+    if (newDepth < depth) {
+        int delta = depth - newDepth;
+        translate(0, delta / 2);
+        translate(0, -delta);
+        translate(0, delta);
+    }
+
+    const int newVolume = newWidth * newDepth;
+	std::shared_ptr<Chunk>* newChunks = new std::shared_ptr<Chunk>[newVolume] {};
+	std::shared_ptr<Chunk>* newChunksSecond = new std::shared_ptr<Chunk>[newVolume] {};
+	for (int z = 0; z < depth && z < newDepth; z++) {
+		for (int x = 0; x < width && x < newWidth; x++) {
+			newChunks[z * newWidth + x] = chunks[z * width + x];
+		}
+	}
+	delete[] chunks;
+	delete[] chunksSecond;
+	width = newWidth;
+	depth = newDepth;
+	volume = newVolume;
+	chunks = newChunks;
+	chunksSecond = newChunksSecond;
 }
 
 void Chunks::_setOffset(int x, int z){

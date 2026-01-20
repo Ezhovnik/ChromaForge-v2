@@ -12,15 +12,20 @@
 #include "World.h"
 #include "LevelEvents.h"
 
-Level::Level(World* world, Player* player, Chunks* chunks, ChunksStorage* chunksStorage, PhysicsSolver* physics, LevelEvents* events) :
+inline constexpr float GRAVITY = 19.6f;
+
+Level::Level(World* world, Player* player, ChunksStorage* chunksStorage, LevelEvents* events, uint loadDistance, uint chunksPadding) :
 	world(world),
 	player(player),
-	chunks(chunks),
     chunksStorage(chunksStorage),
-	physics(physics),
     events(events) {
+    physics = new PhysicsSolver(glm::vec3(0, -GRAVITY, 0));
+
+    uint matrixSize = (loadDistance + chunksPadding) * 2;
+    chunks = new Chunks(matrixSize, matrixSize, 0, 0, world->wfile, events);
+
 	lighting = new Lighting(chunks);
-	chunksController = new ChunksController(this, chunks, lighting);
+	chunksController = new ChunksController(this, chunks, lighting, chunksPadding);
 	playerController = new PlayerController(this);
     events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
 		this->chunksStorage->remove(chunk->chunk_x, chunk->chunk_z);
@@ -44,5 +49,5 @@ void Level::update(float deltaTime, bool interactions) {
 	else playerController->selectedBlockId = -1;
 
 	glm::vec3 position = player->hitbox->position;
-	chunks->setCenter(world->wfile, position.x, position.z);
+	chunks->setCenter(position.x, position.z);
 }

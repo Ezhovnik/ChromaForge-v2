@@ -24,10 +24,10 @@
 #include "assets/AssetsLoader.h"
 #include "objects/Player.h"
 #include "definitions.h"
-#include "world_render.h"
+#include "frontend/world_render.h"
 #include "world/Level.h"
 #include "world/World.h"
-#include "hud_render.h"
+#include "frontend/hud_render.h"
 #include "logger/Logger.h"
 #include "logger/OpenGL_Logger.h"
 
@@ -46,9 +46,11 @@ struct EngineSettings {
     int displayWidth; // Ширина окна
     int displayHeight; // Высота окна
     int displaySamples;
-    const char* title; // Заголовок окна
+    const char* displayTitle; // Заголовок окна
 
     uint chunksLoadSpeed;
+    uint chunksLoadDistance;
+    uint chunksPadding;
 };
 
 // Основной класс Engine, управляющий жизненным циклом приложения
@@ -79,7 +81,12 @@ Engine::Engine(const EngineSettings& settings) {
     Logger::getInstance().initialize();
 
     // Инициализация окна GLFW
-    if (!Window::initialize(settings.displayWidth, settings.displayHeight, settings.title, settings.displaySamples)) {
+    if (!Window::initialize(
+            settings.displayWidth, 
+            settings.displayHeight, 
+            settings.displayTitle, 
+            settings.displaySamples
+        )) {
         LOG_CRITICAL("Failed to load Window");
         Window::terminate();
         throw initialize_error("Failed to load Window");
@@ -110,7 +117,7 @@ Engine::Engine(const EngineSettings& settings) {
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
     World* world = new World("world-1", "../saves/world-1/", 42);
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
-    level = world->loadLevel(player);
+    level = world->loadLevel(player, settings.chunksLoadDistance, settings.chunksPadding);
     LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
 }
@@ -126,7 +133,6 @@ Engine::~Engine() {
 
     LOG_INFO("Shutting down");
     delete assets;
-    Events::finalize();
     OpenGL_Logger::getInstance().finalize();
     Window::terminate();
 }
@@ -153,6 +159,11 @@ void Engine::updateHotkeys() {
     // Переключение режима отладки игрока
     if (Events::justPressed(GLFW_KEY_F3)) level->player->debug = !level->player->debug;
 
+    if (Events::justPressed(GLFW_KEY_F8)) {
+        if (level->chunks->width >= 40) level->chunks->resize(level->chunks->width / 4, level->chunks->depth / 4);
+        else level->chunks->resize(level->chunks->width + 2, level->chunks->depth + 2);
+    }
+
     // Отметка всех чанков как изменённых (для перерисовки)
     if (Events::justPressed(GLFW_KEY_F5)) {
         for (uint i = 0; i < level->chunks->volume; ++i) {
@@ -167,12 +178,11 @@ void Engine::mainloop() {
     LOG_INFO("Preparing systems");
 
     Camera* camera = level->player->camera;
-    World* world = level->world;
     WorldRenderer worldRenderer(level, assets);
-    HudRenderer hud;
+    HudRenderer hud(assets);
 
-    lastTime = glfwGetTime();
-    Window::swapInterval(1); // Включаем VSync (синхронизация с частотой обновления экрана)
+    lastTime = glfwGetTime ();
+    Window::swapInterval(1);
     LOG_INFO("Systems have been prepared");
 
     while (!Window::isShouldClose()){
@@ -186,8 +196,8 @@ void Engine::mainloop() {
 
         // Рендеринг мира и HUD
         worldRenderer.draw(camera, occlusion);
-        hud.draw(level, assets);
-        if (level->player->debug) hud.drawDebug(level, assets, 1 / deltaTime, occlusion);
+        hud.draw(level);
+        if (level->player->debug) hud.drawDebug(level, 1 / deltaTime, occlusion);
 
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
@@ -202,7 +212,18 @@ int main() {
     std::unique_ptr<Engine> engine = nullptr;
 
     try {
-        engine = std::make_unique<Engine>(EngineSettings{1280, 720, 1, "ChromaForge", 10});
+        EngineSettings settings;
+
+        settings.displayWidth = 1280;
+        settings.displayHeight = 720;
+        settings.displaySamples = 4;
+        settings.displayTitle = "ChromaForge";
+
+        settings.chunksLoadSpeed = 10;
+        settings.chunksLoadDistance = 12;
+        settings.chunksPadding = 2;
+
+        engine = std::make_unique<Engine>(settings);
         engine->mainloop(); // Запуск основного цикла
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred\n{}", err.what());

@@ -30,9 +30,11 @@ public:
     int areaOffsetX; // Смещение области видимых чанков по X
     int areaOffsetZ; // Смещение области видимых чанков по Z
 
+    WorldFiles* worldFiles;
+
     LevelEvents* events;
 
-    Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, LevelEvents* events); // Конструктор
+    Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events); // Конструктор
     ~Chunks(); // Деструктор
 
     bool putChunk(std::shared_ptr<Chunk> chunk);
@@ -59,8 +61,9 @@ public:
 
     void _setOffset(int x, int z);
 
-    void setCenter(WorldFiles* worldFiles, int x, int z);
-	void translate(WorldFiles* worldFiles, int x, int z);
+    void setCenter(int x, int z);
+	void translate(int x, int z);
+    void resize(uint newWidth, uint newDepth);
 
     void clear();
 };

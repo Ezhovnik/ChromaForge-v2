@@ -247,7 +247,7 @@ bool BlocksRenderer::isOpen(int x, int y, int z, ubyte group) const {
 	blockid_t id = voxelsBuffer->pickBlockId(chunk->chunk_x * CHUNK_WIDTH + x, y, chunk->chunk_z * CHUNK_DEPTH + z);
 	if (id == BLOCK_VOID) return false;
 	const Block& block = *Block::blocks[id];
-	if (block.drawGroup != group) return true;
+	if (block.drawGroup != group && block.lightPassing) return true;
 	return id == Blocks_id::AIR;
 }
 

@@ -19,7 +19,6 @@ class Batch3D;
 class ChunksRenderer;
 class ShaderProgram;
 class Texture;
-class Framebuffer;
 
 class WorldRenderer {
 	Batch3D *batch3D;

@@ -46,6 +46,7 @@ public:
     void rect(float x, float y, float w, float h, float r0, float g0, float b0, float r1, float g1, float b1, float r2, float g2, float b2, float r3, float g3, float b3, float r4, float g4, float b4, int sh);
 
     void render(uint gl_primitive);
+    void render();
 };
 
 

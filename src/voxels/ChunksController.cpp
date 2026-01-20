@@ -22,7 +22,7 @@
 constexpr int MIN_SURROUNDING = 9;
 constexpr int MAX_WORK_PER_FRAME = 16;
 
-ChunksController::ChunksController(Level* level, Chunks* chunks, Lighting* lighting) : chunks(chunks), lighting(lighting), level(level){
+ChunksController::ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding) : chunks(chunks), lighting(lighting), level(level), chunksPadding(chunksPadding){
 }
 
 ChunksController::~ChunksController(){
@@ -54,10 +54,10 @@ bool ChunksController::loadVisible(WorldFiles* worldFiles){
 
 	int nearX = 0;
 	int nearZ = 0;
-	int minDistance = (width / 2) * (width / 2);
+	int minDistance = ((width - chunksPadding * 2) / 2) * ((width - chunksPadding * 2) / 2);
 
-    for (int z = 2; z < depth - 2; ++z){
-        for (int x = 2; x < width - 2; ++x){
+    for (int z = chunksPadding; z < depth - chunksPadding; ++z){
+        for (int x = chunksPadding; x < width - chunksPadding; ++x){
             int index = z * width + x;
             std::shared_ptr<Chunk> chunk = chunks->chunks[index];
             if (chunk != nullptr){

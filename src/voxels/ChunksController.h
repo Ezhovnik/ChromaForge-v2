@@ -15,8 +15,9 @@ private:
 	Level* level;
 
     int64_t avgDurationMcs = 1000;
+    uint chunksPadding;
 public:
-	ChunksController(Level* level, Chunks* chunks, Lighting* lighting);
+	ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding);
 	~ChunksController();
 
     void update(int64_t maxDuration);

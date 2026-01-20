@@ -9,9 +9,6 @@
 #include "../objects/Player.h"
 #include "../physics/PhysicsSolver.h"
 #include "../window/Camera.h"
-#include "../typedefs.h"
-
-inline constexpr float GRAVITY = 19.6f;
 
 World::World(std::string name, std::string directory, int seed) : name(name), seed(seed) {
 	wfile = new WorldFiles(directory, Region_Consts::REGION_VOLUME * (CHUNK_DATA_LEN * 2 + 8));
@@ -34,10 +31,10 @@ void World::write(Level* level) {
 	wfile->writePlayer(level->player);
 }
 
-Level* World::loadLevel(Player* player) {
+Level* World::loadLevel(Player* player, uint loadDistance, uint chunksPadding) {
     ChunksStorage* storage = new ChunksStorage();
     LevelEvents* events = new LevelEvents();
-	Level* level = new Level(this, player, new Chunks(16, 16, 0, 0, events), storage, new PhysicsSolver(glm::vec3(0, -GRAVITY, 0)), events);
+	Level* level = new Level(this, player, storage, events, loadDistance, chunksPadding);
 	wfile->readPlayer(player);
 
 	Camera* camera = player->camera;
