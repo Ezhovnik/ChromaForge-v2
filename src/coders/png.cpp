@@ -1,4 +1,4 @@
-#include "texture_loader.h"
+#include "png.h"
 
 #include <iostream>
 
@@ -56,7 +56,7 @@ GLuint loadImage(const char* file, int* width, int* height) {
 }
 
 // Функция загрузки текстуры
-Texture* loadTexture(std::string filename) {
+Texture* png::loadTexture(std::string filename) {
     int width, height;
     GLuint texture = loadImage(filename.c_str(), &width, &height);
 

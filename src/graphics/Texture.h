@@ -19,6 +19,4 @@ public:
     void reload(ubyte* data);
 };
 
-extern Texture* loadTexture(std::string filename); // Функция для загрузки текстуры из файла
-
 #endif // GRAPHICS_TEXTURE_H_
