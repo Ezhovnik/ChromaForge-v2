@@ -2,6 +2,7 @@
 #include <vector>
 #include <ctime>
 #include <exception>
+#include <filesystem>
 
 #define GLEW_STATIC  // Указывает компилятору, что будем использовать статическую версию GLEW
 #include <GL/glew.h>
@@ -13,6 +14,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 // Пользовательские заголовочные файлы
+#include "coders/json.h"
+#include "files/files.h"
 #include "window/Events.h"
 #include "window/Camera.h"
 #include "window/Window.h"
@@ -30,6 +33,8 @@
 #include "frontend/hud_render.h"
 #include "logger/Logger.h"
 #include "logger/OpenGL_Logger.h"
+
+#define SETTINGS_FILE "../build/settings.json"
 
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 128, 0}; // Точка, где игрок появляется в мире
@@ -76,9 +81,6 @@ public:
 // Реализация конструктора
 Engine::Engine(const EngineSettings& settings) {
     this->settings = settings;
-
-    // Инициализация логгера
-    Logger::getInstance().initialize();
 
     // Инициализация окна GLFW
     if (!Window::initialize(
@@ -159,11 +161,6 @@ void Engine::updateHotkeys() {
     // Переключение режима отладки игрока
     if (Events::justPressed(GLFW_KEY_F3)) level->player->debug = !level->player->debug;
 
-    if (Events::justPressed(GLFW_KEY_F8)) {
-        if (level->chunks->width >= 40) level->chunks->resize(level->chunks->width / 4, level->chunks->depth / 4);
-        else level->chunks->resize(level->chunks->width + 2, level->chunks->depth + 2);
-    }
-
     // Отметка всех чанков как изменённых (для перерисовки)
     if (Events::justPressed(GLFW_KEY_F5)) {
         for (uint i = 0; i < level->chunks->volume; ++i) {
@@ -205,8 +202,33 @@ void Engine::mainloop() {
     }
 }
 
+void load_settings(EngineSettings& settings, std::string filename) {
+	std::string source = files::read_string(filename);
+	std::unique_ptr<json::JObject> obj(json::parse(filename, source));
+	obj->num("display-width", settings.displayWidth);
+	obj->num("display-height", settings.displayHeight);
+	obj->num("display-samples", settings.displaySamples);
+	obj->num("chunks-load-distance", settings.chunksLoadDistance);
+	obj->num("chunks-load-speed", settings.chunksLoadSpeed);
+	obj->num("chunks-padding", settings.chunksPadding);
+}
+
+void save_settings(EngineSettings& settings, std::string filename) {
+	json::JObject obj;
+	obj.put("display-width", settings.displayWidth);
+	obj.put("display-height", settings.displayHeight);
+	obj.put("display-samples", settings.displaySamples);
+	obj.put("chunks-load-distance", settings.chunksLoadDistance);
+	obj.put("chunks-load-speed", settings.chunksLoadSpeed);
+	obj.put("chunks-padding", settings.chunksPadding);
+	files::write_string(filename, json::stringify(&obj, true, "  "));
+}
+
 // Точка входа в программу
 int main() {
+    // Инициализация логгера
+    Logger::getInstance().initialize();
+
     setup_definitions();
 
     std::unique_ptr<Engine> engine = nullptr;
@@ -222,6 +244,14 @@ int main() {
         settings.chunksLoadSpeed = 10;
         settings.chunksLoadDistance = 12;
         settings.chunksPadding = 2;
+
+        if (std::filesystem::is_regular_file(SETTINGS_FILE)) {
+			LOG_INFO("Reading engine settings from {}", SETTINGS_FILE);
+			load_settings(settings, SETTINGS_FILE);
+		} else {
+            LOG_INFO("Write engine settings to {}", SETTINGS_FILE);
+			save_settings(settings, SETTINGS_FILE);
+		}
 
         engine = std::make_unique<Engine>(settings);
         engine->mainloop(); // Запуск основного цикла

@@ -34,7 +34,6 @@ class WorldFiles {
 public:
     std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
     std::string directory; // Путь к директории с файлами мира
-    ubyte* mainBufferIn; // Входной буфер для чтения сжатых данных
     ubyte* compressionBuffer;
 
     WorldFiles(std::string directory, size_t mainBufferCapacity); // Конструктор

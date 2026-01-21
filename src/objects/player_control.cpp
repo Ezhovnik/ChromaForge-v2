@@ -152,12 +152,8 @@ void PlayerController::update_controls(float delta){
         player->camX += rotX;
         player->camY += rotY;
 
-		if (player->camY < -Player_Consts::MAX_PITCH){
-			player->camY = -Player_Consts::MAX_PITCH;
-		}
-		if (player->camY > Player_Consts::MAX_PITCH){
-			player->camY = Player_Consts::MAX_PITCH;
-		}
+		if (player->camY < -Player_Consts::MAX_PITCH) player->camY = -Player_Consts::MAX_PITCH;
+		if (player->camY > Player_Consts::MAX_PITCH) player->camY = Player_Consts::MAX_PITCH;
 
 		camera->rotation = glm::mat4(1.0f);
 		camera->rotate(player->camY, player->camX, 0);
@@ -204,15 +200,15 @@ void PlayerController::update_interaction(){
 		}
 		
 		Block* block = Block::blocks[vox->id].get();
-		if (Events::justClicked(GLFW_MOUSE_BUTTON_1) && block->breakable){
+		if (Events::justClicked(GLFW_MOUSE_BUTTON_1) && block->breakable && !player->noclip){
 			chunks->setVoxel(x, y, z, 0, 0);
 			lighting->onBlockSet(x, y ,z, 0);
 		}
-		if (Events::justClicked(GLFW_MOUSE_BUTTON_2)){
+		if (Events::justClicked(GLFW_MOUSE_BUTTON_2) && !player->noclip){
 			if (block->model != Block_models::X){
-				x = (int)(iend.x)+(int)(norm.x);
-                y = (int)(iend.y)+(int)(norm.y);
-                z = (int)(iend.z)+(int)(norm.z);
+				x = (int)(iend.x) + (int)(norm.x);
+                y = (int)(iend.y) + (int)(norm.y);
+                z = (int)(iend.z) + (int)(norm.z);
 			}
 			if (!level->physics->isBlockInside(x,y,z, player->hitbox)){
 				chunks->setVoxel(x, y, z, player->choosenBlock, states);

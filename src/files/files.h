@@ -2,15 +2,18 @@
 #define FILES_FILES_H_
 
 #include <string>
-#include <stdlib.h>
-
 #include "../typedefs.h"
 
-extern bool write_binary_file(const std::string filename, const char* data, size_t size); // Записывает данные в бинарный файл (перезаписывает сущесвующий)
-extern uint append_binary_file(const std::string filename, const char* data, size_t size); // Добавляет данные в конец бинарного файла
-extern bool read_binary_file(const std::string filename, char* data, size_t size); // Читает данные из бинарного файла с начала
-extern char* read_binary_file(std::string filename, size_t& length);
+namespace files {
+    extern bool write_bytes(std::string filename, const char* data, size_t size);
+    extern uint append_bytes(std::string filename, const char* data, size_t size);
+    extern bool read(std::string filename, char* data, size_t size);
+    extern char* read_bytes(std::string filename, size_t& length);
 
-extern bool ensureDirectoryExists(const std::string directory); // Проверяет наличие директории. Если её нет, то создает
+    extern std::string read_string(std::string filename);
+    extern bool write_string(std::string filename, const std::string content);
+
+    extern bool ensureDirectoryExists(const std::string directory);
+}
 
 #endif // FILES_FILES_H_

@@ -69,6 +69,8 @@ namespace json {
             return values.size();
         }
 
+        JArray& put(uint value);
+        JArray& put(int value);
         JArray& put(double value);
         JArray& put(std::string value);
         JArray& put(JObject* value);
@@ -81,12 +83,16 @@ namespace json {
         std::unordered_map<std::string, Value*> map;
         ~JObject();
 
-        std::string str(std::string key, std::string def) const;
-        double num(std::string key, double def) const;
+        void str(std::string key, std::string& dst) const;
+        void num(std::string key, int& dst) const;
+        void num(std::string key, uint& dst) const;
+        void num(std::string key, double& dst) const;
         JObject* obj(std::string key) const;
         JArray* arr(std::string key) const;
-        bool flag(std::string key, bool def) const;
+        void flag(std::string key, bool& dst) const;
 
+        JObject& put(std::string key, uint value);
+        JObject& put(std::string key, int value);
         JObject& put(std::string key, double value);
         JObject& put(std::string key, std::string value);
         JObject& put(std::string key, JObject* value);
@@ -123,6 +129,9 @@ namespace json {
         
         JObject* parse();
     };
+
+    extern JObject* parse(std::string filename, std::string source);
+    extern JObject* parse(std::string source);
 }
 
 #endif // CODERS_JSON_H_

@@ -183,7 +183,7 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
     // batch3D->render();
 
     // Рендеринг линий
-    if (level->playerController->selectedBlockId != -1){
+    if (level->playerController->selectedBlockId != -1 && !level->player->noclip){
 		Block* selectedBlock = Block::blocks[level->playerController->selectedBlockId].get();;
 		glm::vec3 pos = level->playerController->selectedBlockPosition;
 

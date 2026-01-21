@@ -65,21 +65,19 @@ inline float bytes2Float(ubyte* src, uint offset){
 // Конструктор
 WorldFiles::WorldFiles(std::string directory, size_t mainBufferCapacity) : directory(directory){
     // Проверяем существование директории. Если её нет, то пытаемся создать
-    if (!ensureDirectoryExists(directory)) {
+    if (!files::ensureDirectoryExists(directory)) {
         // Найти или создать директорию не удалось.
         LOG_CRITICAL("Failed to load world directory");
         throw std::runtime_error("Failed to load world directory");
     }
 
     // Инициализируем буферы
-	mainBufferIn = new ubyte[CHUNK_DATA_LEN * 2];
 	compressionBuffer = new ubyte[CHUNK_DATA_LEN * 2];
 }
 
 // Деструктор 
 WorldFiles::~WorldFiles(){
     // Освобождаем буферы
-	delete[] mainBufferIn;
 	delete[] compressionBuffer;
 
     // Осовбождаем регионы из памяти
@@ -256,13 +254,13 @@ void WorldFiles::writePlayer(Player* player){
     dst[offset++] = Sections::FLAGS;
 	dst[offset++] = player->flight * Player_Flags::FLIGHT | player->noclip * Player_Flags::NOCLIP;
 
-	write_binary_file(getPlayerFile(), (const char*)dst, sizeof(dst));
+	files::write_bytes(getPlayerFile(), (const char*)dst, sizeof(dst));
 }
 
 // Читаем данные об игроке с диска
 bool WorldFiles::readPlayer(Player* player) {
 	size_t length = 0;
-	ubyte* data = (ubyte*)read_binary_file(getPlayerFile(), length);
+	ubyte* data = (ubyte*)files::read_bytes(getPlayerFile(), length);
 	if (data == nullptr){
         LOG_WARN("Could not to read player.bin (ignored)");
 		return false;

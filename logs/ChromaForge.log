@@ -1,27 +1,28 @@
-[2026-01-21 12:21:28.702] [info] [Logger.cpp:44] [initialize] Logger initialized. File: ../logs/ChromaForge.log
-[2026-01-21 12:21:29.112] [info] [Window.cpp:123] [initialize] Window initialized successfully: 1280x720
-[2026-01-21 12:21:29.115] [info] [OpenGL_Logger.cpp:19] [initialize] OpenGL Logger initialized with level: 1
-[2026-01-21 12:21:29.117] [debug] [OpenGL_Logger.cpp:22] [initialize] OpenGL Version: 3.3.13587 Core Profile Context 19.40.46 26.20.14046.3
-[2026-01-21 12:21:29.117] [debug] [OpenGL_Logger.cpp:23] [initialize] OpenGL Vendor: ATI Technologies Inc.
-[2026-01-21 12:21:29.117] [debug] [OpenGL_Logger.cpp:24] [initialize] OpenGL Renderer: AMD Radeon(TM) Vega 8 Graphics 
-[2026-01-21 12:21:29.117] [debug] [OpenGL_Logger.cpp:25] [initialize] GLSL Version: 4.60
-[2026-01-21 12:21:29.117] [debug] [OpenGL_Logger.cpp:29] [initialize] OpenGL debug output is supported
-[2026-01-21 12:21:29.117] [debug] [OpenGL_Logger.cpp:91] [setDebugMessageFilters] OpenGL debug filters set for log level: 1
-[2026-01-21 12:21:29.117] [info] [OpenGL_Logger.cpp:108] [enableDebugOutput] OpenGL debug output enabled with level: 1
-[2026-01-21 12:21:29.117] [info] [main.cpp:101] [Engine] Loading Assets
-[2026-01-21 12:21:29.117] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/shaders/default as default
-[2026-01-21 12:21:29.120] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/shaders/lines as lines
-[2026-01-21 12:21:29.121] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/shaders/ui as ui
-[2026-01-21 12:21:29.122] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/textures/atlas.png as blocks
-[2026-01-21 12:21:29.126] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/textures/slot.png as slot
-[2026-01-21 12:21:29.130] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/fonts/font as normal
-[2026-01-21 12:21:29.147] [info] [main.cpp:113] [Engine] Assets loaded successfully
-[2026-01-21 12:21:29.147] [info] [main.cpp:114] [Engine] Loading world
-[2026-01-21 12:21:29.148] [info] [main.cpp:121] [Engine] The world is loaded
-[2026-01-21 12:21:29.149] [info] [main.cpp:122] [Engine] Initialization is finished
-[2026-01-21 12:21:29.149] [info] [main.cpp:178] [mainloop] Preparing systems
-[2026-01-21 12:21:29.150] [info] [main.cpp:186] [mainloop] Systems have been prepared
-[2026-01-21 12:23:20.040] [info] [main.cpp:127] [~Engine] World saving
-[2026-01-21 12:23:20.396] [info] [main.cpp:132] [~Engine] The world has been successfully saved
-[2026-01-21 12:23:20.396] [info] [main.cpp:134] [~Engine] Shutting down
-[2026-01-21 12:23:20.397] [info] [OpenGL_Logger.cpp:49] [finalize] OpenGL Logger disabled
+[2026-01-21 15:49:55.157] [info] [Logger.cpp:44] [initialize] Logger initialized. File: ../logs/ChromaForge.log
+[2026-01-21 15:49:55.157] [info] [main.cpp:249] [main] Reading engine settings from ../build/settings.json
+[2026-01-21 15:49:55.639] [info] [Window.cpp:123] [initialize] Window initialized successfully: 1280x720
+[2026-01-21 15:49:55.642] [info] [OpenGL_Logger.cpp:19] [initialize] OpenGL Logger initialized with level: 1
+[2026-01-21 15:49:55.643] [debug] [OpenGL_Logger.cpp:22] [initialize] OpenGL Version: 3.3.13587 Core Profile Context 19.40.46 26.20.14046.3
+[2026-01-21 15:49:55.643] [debug] [OpenGL_Logger.cpp:23] [initialize] OpenGL Vendor: ATI Technologies Inc.
+[2026-01-21 15:49:55.643] [debug] [OpenGL_Logger.cpp:24] [initialize] OpenGL Renderer: AMD Radeon(TM) Vega 8 Graphics 
+[2026-01-21 15:49:55.643] [debug] [OpenGL_Logger.cpp:25] [initialize] GLSL Version: 4.60
+[2026-01-21 15:49:55.643] [debug] [OpenGL_Logger.cpp:29] [initialize] OpenGL debug output is supported
+[2026-01-21 15:49:55.643] [debug] [OpenGL_Logger.cpp:91] [setDebugMessageFilters] OpenGL debug filters set for log level: 1
+[2026-01-21 15:49:55.643] [info] [OpenGL_Logger.cpp:108] [enableDebugOutput] OpenGL debug output enabled with level: 1
+[2026-01-21 15:49:55.643] [info] [main.cpp:103] [Engine] Loading Assets
+[2026-01-21 15:49:55.643] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/shaders/default as default
+[2026-01-21 15:49:55.645] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/shaders/lines as lines
+[2026-01-21 15:49:55.646] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/shaders/ui as ui
+[2026-01-21 15:49:55.647] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/textures/atlas.png as blocks
+[2026-01-21 15:49:55.666] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/textures/slot.png as slot
+[2026-01-21 15:49:55.670] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/fonts/font as normal
+[2026-01-21 15:49:55.687] [info] [main.cpp:115] [Engine] Assets loaded successfully
+[2026-01-21 15:49:55.687] [info] [main.cpp:116] [Engine] Loading world
+[2026-01-21 15:49:55.688] [info] [main.cpp:123] [Engine] The world is loaded
+[2026-01-21 15:49:55.688] [info] [main.cpp:124] [Engine] Initialization is finished
+[2026-01-21 15:49:55.689] [info] [main.cpp:175] [mainloop] Preparing systems
+[2026-01-21 15:49:55.690] [info] [main.cpp:183] [mainloop] Systems have been prepared
+[2026-01-21 15:50:27.639] [info] [main.cpp:129] [~Engine] World saving
+[2026-01-21 15:50:27.900] [info] [main.cpp:134] [~Engine] The world has been successfully saved
+[2026-01-21 15:50:27.901] [info] [main.cpp:136] [~Engine] Shutting down
+[2026-01-21 15:50:27.901] [info] [OpenGL_Logger.cpp:49] [finalize] OpenGL Logger disabled
