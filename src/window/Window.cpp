@@ -80,11 +80,14 @@ void character_callback(GLFWwindow*, uint codepoint) {
 }
 
 // Инициализация окна и OpenGL контекста
-bool Window::initialize(uint width, uint height, const char* title, int samples) {
+bool Window::initialize(DisplaySettings& settings) {
     if (!glfwInit()){ // Инициализация GLFW
         LOG_CRITICAL("GLFW initialization failed");
         return false;
     }
+
+    Window::width = settings.width;
+    Window::height = settings.height;
 
     // Установка версии OpenGL (3.3 Core Profile)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -92,10 +95,10 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE); // Разрешаем изменять размер окна
-    glfwWindowHint(GLFW_SAMPLES, samples);
+    glfwWindowHint(GLFW_SAMPLES, settings.samples);
 
     // Создание окна GLFW
-    window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+    window = glfwCreateWindow(width, height, settings.title, nullptr, nullptr);
     if (window == nullptr) {
         LOG_CRITICAL("Failed to create GLFW Window");
         glfwTerminate();
@@ -123,10 +126,6 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
     glDisable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Задаём размеры окна у объекта
-    Window::width = width;
-    Window::height = height;
-
     Events::initialize();
 
     // Устанавливаем callback-функции GLFW
@@ -135,6 +134,8 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
     glfwSetCursorPosCallback(window, cursor_position_callback); // Движение мыши
     glfwSetWindowSizeCallback(window, window_size_callback); // Изменение размера окна
     glfwSetCharCallback(window, character_callback);
+
+    glfwSwapInterval(settings.swapInterval);
 
     LOG_INFO("Window initialized successfully: {}x{}", width, height);
 

@@ -41,6 +41,12 @@ HudRenderer::HudRenderer(gui::GUI* gui, Level* level, Assets* assets) : level(le
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
+    gui->interval(1.0f, [this]() {
+		fpsString = std::to_wstring(fpsMax) + L" / " + std::to_wstring(fpsMin);
+		fpsMin = fps;
+		fpsMax = fps;
+	});
+
 	gui::Panel* panel = new gui::Panel(glm::vec2(200, 200), glm::vec4(5.0f), 1.0f);
 	panel->setCoord(glm::vec2(10, 10));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
@@ -74,7 +80,9 @@ HudRenderer::HudRenderer(gui::GUI* gui, Level* level, Assets* assets) : level(le
 		});
 		box->textConsumer([this, ax](std::wstring text) {
 			try {
-				this->level->player->hitbox->position[ax] = std::stoi(text);
+				glm::vec3 position = this->level->player->hitbox->position;
+				position[ax] = std::stoi(text);
+				this->level->player->teleport(position);
 			} catch (std::invalid_argument& _){
 			}
 		});
@@ -109,12 +117,7 @@ HudRenderer::~HudRenderer() {
 
 void HudRenderer::drawDebug(int fps, bool occlusion){
 	this->occlusion = occlusion;
-	if (fpsFrame % 60 == 0) {
-		fpsString = std::to_wstring(fpsMax) + L" / " + std::to_wstring(fpsMin);
-		fpsMin = fps;
-		fpsMax = fps;
-	}
-	fpsFrame++;
+	this->fps = fps;
 	fpsMin = glm::min(fps, fpsMin);
 	fpsMax = glm::max(fps, fpsMax);
 }
@@ -275,4 +278,12 @@ void HudRenderer::draw(){
 	if (inventoryOpen) drawInventory(player);
 
 	batch->render();
+}
+
+bool HudRenderer::isInventoryOpen() const {
+	return inventoryOpen;
+}
+
+bool HudRenderer::isPause() const {
+	return pause;
 }

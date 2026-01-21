@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 
 // Пользовательские заголовочные файлы
+#include "settings.h"
 #include "coders/json.h"
 #include "files/files.h"
 #include "window/Events.h"
@@ -39,16 +40,11 @@ inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная ско
 using gui::GUI;
 
 // Реализация конструктора
-Engine::Engine(const EngineSettings& settings) {
-    this->settings = settings;
+Engine::Engine(const EngineSettings& settings_) {
+    this->settings = settings_;
 
     // Инициализация окна GLFW
-    if (!Window::initialize(
-            settings.displayWidth, 
-            settings.displayHeight, 
-            settings.displayTitle, 
-            settings.displaySamples
-        )) {
+    if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
         Window::terminate();
         throw initialize_error("Failed to load Window");
@@ -79,7 +75,7 @@ Engine::Engine(const EngineSettings& settings) {
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
     World* world = new World("world-1", "../saves/world-1/", 42);
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
-    level = world->loadLevel(player, settings.chunksLoadDistance, settings.chunksPadding);
+    level = world->loadLevel(player, settings);
 
     gui = new GUI();
     LOG_INFO("The world is loaded");
@@ -136,61 +132,27 @@ void Engine::mainloop() {
     Batch2D batch(1024);
 
     lastTime = Window::time();
-    Window::swapInterval(settings.displaySwapInterval);
     LOG_INFO("Systems have been prepared");
 
     while (!Window::isShouldClose()){
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
 
-        // Обновление логики уровня (перемещение игрока, столкновения и т.д.)
-        level->update(deltaTime, Events::_cursor_locked, Events::_cursor_locked);
-
-        level->chunksController->update(settings.chunksLoadSpeed);
+        bool inputLocked = hud.isPause() || hud.isInventoryOpen() || gui->isFocusCaught();
+        level->updatePlayer(deltaTime, !inputLocked, hud.isPause(), !inputLocked);
+        level->update();
+        level->chunksController->update(settings.chunks.loadSpeed);
 
         // Рендеринг мира и HUD
-        worldRenderer.draw(camera, occlusion, 1.6 / (float)settings.chunksLoadDistance, settings.fogCurve);
+        worldRenderer.draw(camera, occlusion, 1.6 / (float)settings.chunks.loadDistance, settings.fogCurve);
         hud.draw();
         if (level->player->debug) hud.drawDebug(1 / deltaTime, occlusion);
 
-        gui->activate();
+        gui->activate(deltaTime);
         gui->draw(&batch, assets);
 
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
         GL_CHECK(); // Проверка ошибок OpenGL
     }
-}
-
-void read_settings(EngineSettings& settings, std::string filename) {
-	std::string source = files::read_string(filename);
-	std::unique_ptr<json::JObject> obj(json::parse(filename, source));
-
-	obj->num("display-width", settings.displayWidth);
-	obj->num("display-height", settings.displayHeight);
-	obj->num("display-samples", settings.displaySamples);
-    obj->num("display-swap-interval", settings.displaySwapInterval);
-
-	obj->num("chunks-load-distance", settings.chunksLoadDistance);
-	obj->num("chunks-load-speed", settings.chunksLoadSpeed);
-	obj->num("chunks-padding", settings.chunksPadding);
-
-    obj->num("fog-curve", settings.fogCurve);
-}
-
-void write_settings(EngineSettings& settings, std::string filename) {
-	json::JObject obj;
-
-	obj.put("display-width", settings.displayWidth);
-	obj.put("display-height", settings.displayHeight);
-	obj.put("display-samples", settings.displaySamples);
-    obj.put("display-swap-interval", settings.displaySwapInterval);
-
-	obj.put("chunks-load-distance", settings.chunksLoadDistance);
-	obj.put("chunks-load-speed", settings.chunksLoadSpeed);
-	obj.put("chunks-padding", settings.chunksPadding);
-
-    obj.put("fog-curve", settings.fogCurve);
-
-	files::write_string(filename, json::stringify(&obj, true, "  "));
 }

@@ -12,8 +12,6 @@ namespace files {
 
     extern std::string read_string(std::string filename);
     extern bool write_string(std::string filename, const std::string content);
-
-    extern bool ensureDirectoryExists(const std::string directory);
 }
 
 #endif // FILES_FILES_H_

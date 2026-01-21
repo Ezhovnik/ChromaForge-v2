@@ -1,6 +1,6 @@
 #include "platform.h"
 
-#define SETTINGS_FILE "settings.json"
+#define SETTINGS_FILE "../build/settings.json"
 
 std::string platform::get_settings_file() {
 	return SETTINGS_FILE;

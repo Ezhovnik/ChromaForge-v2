@@ -22,7 +22,6 @@ BlocksRenderer::BlocksRenderer(size_t capacity) : offset(0), capacity(capacity) 
 	voxelsBuffer = new VoxelsVolume(CHUNK_WIDTH + 2, CHUNK_HEIGHT, CHUNK_DEPTH + 2);
 }
 
-
 BlocksRenderer::~BlocksRenderer() {
 	delete voxelsBuffer;
 	delete[] buffer;
@@ -172,15 +171,15 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, glm::vec3 size, const 
 	}
 
 	if (block->rotatable) {
-		if (states == 0x31) {
+		if (states == BLOCK_DIR_X) {
 			rot = 1;
 			texfaces[0] = texfaces_[2];
 			texfaces[1] = texfaces_[3];
 			texfaces[2] = texfaces_[0];
 			texfaces[3] = texfaces_[1];
-		} else if (states == 0x32) {
+		} else if (states == BLOCK_DIR_Y) {
 			rot = 2;
-		} else if (states == 0x33) {
+		} else if (states == BLOCK_DIR_Z) {
 			rot = 3;
 			texfaces[2] = texfaces_[4];
 			texfaces[3] = texfaces_[5];

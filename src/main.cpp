@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <memory>
 
+#include "settings.h"
 #include "engine.h"
 #include "definitions.h"
 #include "util/platform.h"
@@ -21,18 +22,6 @@ int main() {
 
     try {
         EngineSettings settings;
-
-        settings.displayWidth = 1280;
-        settings.displayHeight = 720;
-        settings.displaySamples = 0;
-        settings.displaySwapInterval = 1;
-        settings.displayTitle = "ChromaForge";
-
-        settings.chunksLoadSpeed = 10;
-        settings.chunksLoadDistance = 12;
-        settings.chunksPadding = 2;
-
-        settings.fogCurve = 1.6f;
 
         std::string settings_file = platform::get_settings_file();
         if (std::filesystem::is_regular_file(settings_file)) {

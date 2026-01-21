@@ -57,22 +57,3 @@ bool files::write_string(std::string filename, const std::string content) {
 	file << content;
 	return true;
 }
-
-bool files::ensureDirectoryExists(const std::string directory) {
-    std::filesystem::path dirPath(directory);
-
-    if (!std::filesystem::exists(dirPath)) {
-        if (std::filesystem::create_directories(dirPath)) {
-            LOG_INFO("Directory '{}' created successfully", directory);
-            return true;
-        } else {
-            LOG_ERROR("Failed to create directory '{}'", directory);
-            return false;
-        }
-    } else if (!std::filesystem::is_directory(dirPath)) {
-        LOG_ERROR("Path '{}' exists but is not a directory!", directory);
-        return false;
-    }
-
-    return true;
-}

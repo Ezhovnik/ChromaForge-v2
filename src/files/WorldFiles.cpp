@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdint>
 #include <fstream>
+#include <filesystem>
 
 #include "files.h"
 #include "rle.h"
@@ -65,11 +66,9 @@ inline float bytes2Float(ubyte* src, uint offset){
 // Конструктор
 WorldFiles::WorldFiles(std::string directory, size_t mainBufferCapacity) : directory(directory){
     // Проверяем существование директории. Если её нет, то пытаемся создать
-    if (!files::ensureDirectoryExists(directory)) {
-        // Найти или создать директорию не удалось.
-        LOG_CRITICAL("Failed to load world directory");
-        throw std::runtime_error("Failed to load world directory");
-    }
+    if (!std::filesystem::is_directory(directory)) {
+		std::filesystem::create_directory(directory);
+	}
 
     // Инициализируем буферы
 	compressionBuffer = new ubyte[CHUNK_DATA_LEN * 2];

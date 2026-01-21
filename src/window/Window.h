@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "../typedefs.h"
+#include "../settings.h"
 
 class GLFWwindow; // Предварительное объявление класса GLFWwindow
 
@@ -21,7 +22,7 @@ public:
     static uint width;
     static uint height;
 
-    static bool initialize(uint width, uint height, const char* title, int samples);
+    static bool initialize(DisplaySettings& settings);
     static void terminate();
 
     static void setCursorMode(int mode);

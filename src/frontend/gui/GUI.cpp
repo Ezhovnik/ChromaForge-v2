@@ -19,7 +19,15 @@ GUI::~GUI() {
     delete container;
 }
 
-void GUI::activate() {
+void GUI::activate(float delta) {
+    for (IntervalEvent& event : intervalEvents) {
+        event.timer += delta;
+        if (event.timer > event.interval) {
+            event.callback();
+            event.timer = fmod(event.timer, event.interval);
+        }
+    }
+
     container->size(glm::vec2(Window::width, Window::height));
     int mx = Events::x;
     int my = Events::y;
@@ -76,4 +84,8 @@ bool GUI::isFocusCaught() const {
 
 void GUI::add(std::shared_ptr<UINode> panel) {
     container->add(panel);
+}
+
+void GUI::interval(float interval, std::function<void()> callback) {
+    intervalEvents.push_back({callback, interval, 0.0f});
 }

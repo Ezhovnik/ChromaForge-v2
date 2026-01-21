@@ -14,19 +14,19 @@
 
 inline constexpr float GRAVITY = 19.6f;
 
-Level::Level(World* world, Player* player, ChunksStorage* chunksStorage, LevelEvents* events, uint loadDistance, uint chunksPadding) :
+Level::Level(World* world, Player* player, ChunksStorage* chunksStorage, LevelEvents* events, EngineSettings& settings) :
 	world(world),
 	player(player),
     chunksStorage(chunksStorage),
     events(events) {
     physics = new PhysicsSolver(glm::vec3(0, -GRAVITY, 0));
 
-    uint matrixSize = (loadDistance + chunksPadding) * 2;
+    uint matrixSize = (settings.chunks.loadDistance + settings.chunks.padding) * 2;
     chunks = new Chunks(matrixSize, matrixSize, 0, 0, world->wfile, events);
 
 	lighting = new Lighting(chunks);
-	chunksController = new ChunksController(this, chunks, lighting, chunksPadding);
-	playerController = new PlayerController(this);
+	chunksController = new ChunksController(this, chunks, lighting, settings.chunks.padding);
+	playerController = new PlayerController(this, settings);
     events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
 		this->chunksStorage->remove(chunk->chunk_x, chunk->chunk_z);
 	});
@@ -43,11 +43,23 @@ Level::~Level(){
 	delete playerController;
 }
 
-void Level::update(float deltaTime, bool updatePlayer, bool interactions) {
-	playerController->update_controls(deltaTime, updatePlayer);
-	if (interactions) playerController->update_interaction();
-	else playerController->selectedBlockId = -1;
+void Level::updatePlayer(float delta, bool input, bool pause, bool interactions) {
+	if (!pause) {
+		if (input) {
+			playerController->updateKeyboard();
+			playerController->updateCameraControl();
+		} else {
+			playerController->resetKeyboard();
+		}
+		playerController->updateControls(delta);
 
+	}
+	playerController->refreshCamera();
+	if (interactions) playerController->updateInteraction();
+	else playerController->selectedBlockId = -1;
+}
+
+void Level::update() {
 	glm::vec3 position = player->hitbox->position;
 	chunks->setCenter(position.x, position.z);
 }
