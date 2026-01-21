@@ -28,6 +28,7 @@
                 "${workspaceFolder}/src/lighting/LightSolver.cpp",
                 "${workspaceFolder}/src/lighting/Lighting.cpp",
                 "${workspaceFolder}/src/coders/png.cpp",
+                "${workspaceFolder}/src/coders/json.cpp",
                 "${workspaceFolder}/src/files/files.cpp",
                 "${workspaceFolder}/src/files/rle.cpp",
                 "${workspaceFolder}/src/files/WorldFiles.cpp",
