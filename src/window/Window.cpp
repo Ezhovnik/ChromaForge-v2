@@ -1,6 +1,8 @@
 #include "Window.h"
 
 #include <iostream>
+
+#define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -10,6 +12,9 @@
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW
 uint Window::width = 0;
 uint Window::height = 0;
+
+std::stack<glm::vec4> Window::scissorStack;
+glm::vec4 Window::scissorArea;
 
 // Callback-функция для обработки движения мыши
 void cursor_position_callback(GLFWwindow*, double x_pos, double y_pos) {
@@ -48,9 +53,12 @@ void key_callback(GLFWwindow*, int key, int scancode, int action, int mode) {
     if (action == GLFW_PRESS) {
         Events::_keys[key] = true;
         Events::_frames[key] = Events::_current;
+        Events::pressedKeys.push_back(key);
     } else if (action == GLFW_RELEASE) {
         Events::_keys[key] = false;
         Events::_frames[key] = Events::_current;
+    } else if (action == GLFW_REPEAT) {
+        Events::pressedKeys.push_back(key);
     }
 }
 
@@ -63,6 +71,12 @@ void window_size_callback(GLFWwindow*, int width, int height) {
     // Обновляем размеры окна у объекта окна
     Window::width = width;
     Window::height = height;
+
+    Window::resetScissor();
+}
+
+void character_callback(GLFWwindow*, uint codepoint) {
+    Events::codepoints.push_back(codepoint);
 }
 
 // Инициализация окна и OpenGL контекста
@@ -105,7 +119,6 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
-    glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Задаём размеры окна у объекта
@@ -119,6 +132,7 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
     glfwSetMouseButtonCallback(window, mouse_button_callback); // Нажатие кнопки мыши
     glfwSetCursorPosCallback(window, cursor_position_callback); // Движение мыши
     glfwSetWindowSizeCallback(window, window_size_callback); // Изменение размера окна
+    glfwSetCharCallback(window, character_callback);
 
     LOG_INFO("Window initialized successfully: {}x{}", width, height);
 
@@ -129,6 +143,39 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
 void Window::terminate() {
     Events::finalize();
     glfwTerminate();
+}
+
+void Window::resetScissor() {
+	scissorArea = glm::vec4(0.0f, 0.0f, width, height);
+	scissorStack = std::stack<glm::vec4>();
+	glDisable(GL_SCISSOR_TEST);
+}
+
+void Window::pushScissor(glm::vec4 area) {
+	if (scissorStack.empty()) glEnable(GL_SCISSOR_TEST);
+
+	scissorStack.push(scissorArea);
+
+	area.x = fmax(area.x, scissorArea.x);
+	area.y = fmax(area.y, scissorArea.y);
+
+	area.z = fmin(area.z, scissorArea.z);
+	area.w = fmin(area.w, scissorArea.w);
+
+	glScissor(area.x, Window::height - area.y - area.w, area.z, area.w);
+	scissorArea = area;
+}
+
+void Window::popScissor() {
+	if (scissorStack.empty()) {
+        LOG_WARN("Extra Window::popScissor call");
+		return;
+	}
+	glm::vec4 area = scissorStack.top();
+	scissorStack.pop();
+	glScissor(area.x, Window::height-area.y-area.w, area.z, area.w);
+	if (scissorStack.empty()) glDisable(GL_SCISSOR_TEST);
+	scissorArea = area;
 }
 
 void Window::setCursorMode(int mode) {
@@ -156,4 +203,9 @@ void Window::swapInterval(int interval){
 // Обмен буферов
 void Window::swapBuffers() {
     glfwSwapBuffers(window);
+    Window::resetScissor();
+}
+
+double Window::time() {
+    return glfwGetTime();
 }

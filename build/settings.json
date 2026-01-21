@@ -1,7 +1,8 @@
 {
   "chunks-load-speed": 10,
   "chunks-load-distance": 12,
-  "display-samples": 4,
+  "display-swap-interval": 1,
+  "display-samples": 0,
   "chunks-padding": 2,
   "display-height": 720,
   "display-width": 1280

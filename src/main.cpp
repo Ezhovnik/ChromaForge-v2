@@ -19,6 +19,7 @@
 #include "window/Events.h"
 #include "window/Camera.h"
 #include "window/Window.h"
+#include "window/input.h"
 #include "voxels/Chunk.h"
 #include "voxels/Chunks.h"
 #include "voxels/ChunksController.h"
@@ -51,6 +52,7 @@ struct EngineSettings {
     int displayWidth; // Ширина окна
     int displayHeight; // Высота окна
     int displaySamples;
+    int displaySwapInterval;
     const char* displayTitle; // Заголовок окна
 
     uint chunksLoadSpeed;
@@ -66,8 +68,8 @@ private:
     EngineSettings settings;
 
     uint64_t frame = 0; // Номер текущего кадра
-    float lastTime = 0.0f; // Время последнего кадра (для расчёта deltaTime)
-    float deltaTime = 0.0f; // Разница во времени между кадрами
+    double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
+    double deltaTime = 0.0; // Разница во времени между кадрами
     bool occlusion = true; // Включаем/выключаем окклюзию (отбрасывание невидимых объектов)
 public:
     Engine(const EngineSettings& settings); // Конструктор
@@ -142,7 +144,7 @@ Engine::~Engine() {
 // Обновление таймеров
 void Engine::updateTimers() {
     frame++;
-    float currentTime = glfwGetTime(); // Текущее время от GLFW
+    double currentTime = Window::time(); // Текущее время от GLFW
     deltaTime = currentTime - lastTime; // Расчёт времени между кадрами
     lastTime = currentTime; // Обновление lastTime для следующего кадра
 }
@@ -150,19 +152,19 @@ void Engine::updateTimers() {
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
     // Закрытие окна и завершение работы
-    if (Events::justPressed(GLFW_KEY_ESCAPE)) Window::setShouldClose(true);
+    if (Events::justPressed(keycode::ESCAPE)) Window::setShouldClose(true);
 
     // Переключение курсора (включение/выключение захвата мыши)
-    if (Events::justPressed(GLFW_KEY_TAB) || Events::justPressed(GLFW_KEY_E)) Events::toggleCursor();
+    if (Events::justPressed(keycode::TAB) || Events::justPressed(GLFW_KEY_E)) Events::toggleCursor();
 
     // Переключение окклюзии (отбрасывание невидимых объектов)
-    if (Events::justPressed(GLFW_KEY_O)) occlusion = !occlusion;
+    if (Events::justPressed(keycode::O)) occlusion = !occlusion;
 
     // Переключение режима отладки игрока
-    if (Events::justPressed(GLFW_KEY_F3)) level->player->debug = !level->player->debug;
+    if (Events::justPressed(keycode::F3)) level->player->debug = !level->player->debug;
 
     // Отметка всех чанков как изменённых (для перерисовки)
-    if (Events::justPressed(GLFW_KEY_F5)) {
+    if (Events::justPressed(keycode::F5)) {
         for (uint i = 0; i < level->chunks->volume; ++i) {
             std::shared_ptr<Chunk> chunk = level->chunks->chunks[i];
             if (chunk != nullptr && chunk->isReady()) chunk->setModified(true);
@@ -178,8 +180,8 @@ void Engine::mainloop() {
     WorldRenderer worldRenderer(level, assets);
     HudRenderer hud(assets);
 
-    lastTime = glfwGetTime ();
-    Window::swapInterval(1);
+    lastTime = Window::time();
+    Window::swapInterval(settings.displaySwapInterval);
     LOG_INFO("Systems have been prepared");
 
     while (!Window::isShouldClose()){
@@ -202,22 +204,24 @@ void Engine::mainloop() {
     }
 }
 
-void load_settings(EngineSettings& settings, std::string filename) {
+void read_settings(EngineSettings& settings, std::string filename) {
 	std::string source = files::read_string(filename);
 	std::unique_ptr<json::JObject> obj(json::parse(filename, source));
 	obj->num("display-width", settings.displayWidth);
 	obj->num("display-height", settings.displayHeight);
 	obj->num("display-samples", settings.displaySamples);
+    obj->num("display-swap-interval", settings.displaySwapInterval);
 	obj->num("chunks-load-distance", settings.chunksLoadDistance);
 	obj->num("chunks-load-speed", settings.chunksLoadSpeed);
 	obj->num("chunks-padding", settings.chunksPadding);
 }
 
-void save_settings(EngineSettings& settings, std::string filename) {
+void write_settings(EngineSettings& settings, std::string filename) {
 	json::JObject obj;
 	obj.put("display-width", settings.displayWidth);
 	obj.put("display-height", settings.displayHeight);
 	obj.put("display-samples", settings.displaySamples);
+    obj.put("display-swap-interval", settings.displaySwapInterval);
 	obj.put("chunks-load-distance", settings.chunksLoadDistance);
 	obj.put("chunks-load-speed", settings.chunksLoadSpeed);
 	obj.put("chunks-padding", settings.chunksPadding);
@@ -238,7 +242,8 @@ int main() {
 
         settings.displayWidth = 1280;
         settings.displayHeight = 720;
-        settings.displaySamples = 4;
+        settings.displaySamples = 0;
+        settings.displaySwapInterval = 1;
         settings.displayTitle = "ChromaForge";
 
         settings.chunksLoadSpeed = 10;
@@ -247,10 +252,10 @@ int main() {
 
         if (std::filesystem::is_regular_file(SETTINGS_FILE)) {
 			LOG_INFO("Reading engine settings from {}", SETTINGS_FILE);
-			load_settings(settings, SETTINGS_FILE);
+			read_settings(settings, SETTINGS_FILE);
 		} else {
             LOG_INFO("Write engine settings to {}", SETTINGS_FILE);
-			save_settings(settings, SETTINGS_FILE);
+			write_settings(settings, SETTINGS_FILE);
 		}
 
         engine = std::make_unique<Engine>(settings);

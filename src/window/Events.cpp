@@ -20,6 +20,9 @@ float Events::y = 0.0f; // Текущее положение курсора по
 bool Events::_cursor_locked = false; // Режим захвата курсора
 bool Events::_cursor_started = false; // Начал ли пользователь движение мышью
 
+std::vector<uint> Events::codepoints;
+std::vector<int> Events::pressedKeys;
+
 // Инициализация системы событий
 int Events::initialize(){
     // Выделяем память: 1032 = 1024 клавиши + 8 кнопок мыши
@@ -80,5 +83,7 @@ void Events::pollEvents() {
     _current++;
     deltaX = 0.0f;
     deltaY = 0.0f;
+    codepoints.clear();
+	pressedKeys.clear();
     glfwPollEvents();
 }
