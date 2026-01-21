@@ -39,7 +39,7 @@ constexpr float MOUSE_SENSITIVITY = 1.0f;
 PlayerController::PlayerController(Level* level) : level(level) {
 }
 
-void PlayerController::update_controls(float delta){
+void PlayerController::update_controls(float delta, bool movement){
 	Player* player = level->player;
 
 	for (int i = 1; i < 10; ++i){
@@ -52,10 +52,10 @@ void PlayerController::update_controls(float delta){
 	Camera* camera = player->camera;
 	Hitbox* hitbox = player->hitbox;
 
-	bool sprint = Events::isPressed(keycode::LEFT_CONTROL);
-	bool shift = Events::isPressed(keycode::LEFT_SHIFT) && hitbox->grounded && !sprint;
-	bool zoom = Events::isPressed(keycode::C);
-	bool cheat = Events::isPressed(keycode::R);
+	bool sprint = Events::isPressed(keycode::LEFT_CONTROL) && movement;
+	bool shift = Events::isPressed(keycode::LEFT_SHIFT) && hitbox->grounded && !sprint && movement;
+	bool zoom = Events::isPressed(keycode::C) && movement;
+	bool cheat = Events::isPressed(keycode::R) && movement;
 
 	float speed = player->speed;
 	if (player->flight) speed *= Player_Consts::FLIGHT_SPEED_MUL;
@@ -63,7 +63,7 @@ void PlayerController::update_controls(float delta){
 	
 	int substeps = (int)(delta * 1000);
 	substeps = (substeps <= 0 ? 1 : (substeps > 100 ? 100 : substeps));
-	level->physics->step(level->chunks, hitbox, delta, substeps, shift, player->flight ? 0.0f : 1.0f, !player->noclip);
+	if (movement) level->physics->step(level->chunks, hitbox, delta, substeps, shift, player->flight ? 0.0f : 1.0f, !player->noclip);
 	camera->position.x = hitbox->position.x;
 	camera->position.y = hitbox->position.y + 0.7f;
 	camera->position.z = hitbox->position.z;
@@ -81,15 +81,15 @@ void PlayerController::update_controls(float delta){
 	camera->position += camera->up * glm::abs(glm::cos(shakeTimer)) * Player_Consts::CAMERA_SHAKING_OFFSET_Y * player->cameraShaking;
 	camera->position -= glm::min(player->interpVel * 0.05f, 1.0f);
 
-	if ((Events::justPressed(keycode::F) && !player->noclip) ||
-		(Events::justPressed(keycode::N) && player->flight == player->noclip)){
+	if ((Events::justPressed(keycode::F) && movement && !player->noclip) ||
+		(Events::justPressed(keycode::N) && movement && player->flight == player->noclip)){
 		player->flight = !player->flight;
 		if (player->flight){
 			hitbox->velocity.y += 1;
             hitbox->grounded = false;
 		}
 	}
-	if (Events::justPressed(keycode::N)) player->noclip = !player->noclip;
+	if (Events::justPressed(keycode::N) && movement) player->noclip = !player->noclip;
 
 	float dt = glm::min(1.0f, delta * Player_Consts::ZOOM_SPEED);
 	float zoomValue = 1.0f;
@@ -104,22 +104,22 @@ void PlayerController::update_controls(float delta){
 	if (zoom) zoomValue *= Player_Consts::C_ZOOM;
 	camera->zoom = zoomValue * dt + camera->zoom * (1.0f - dt);
 
-	if (Events::isPressed(keycode::SPACE) && hitbox->grounded) hitbox->velocity.y = Player_Consts::JUMP_FORCE;
+	if (Events::isPressed(keycode::SPACE) && hitbox->grounded && movement) hitbox->velocity.y = Player_Consts::JUMP_FORCE;
 
 	glm::vec3 dir(0,0,0);
-	if (Events::isPressed(keycode::W)){
+	if (Events::isPressed(keycode::W) && movement){
 		dir.x += camera->dir.x;
 		dir.z += camera->dir.z;
 	}
-	if (Events::isPressed(keycode::S)){
+	if (Events::isPressed(keycode::S) && movement){
 		dir.x -= camera->dir.x;
 		dir.z -= camera->dir.z;
 	}
-	if (Events::isPressed(keycode::D)){
+	if (Events::isPressed(keycode::D) && movement){
 		dir.x += camera->right.x;
 		dir.z += camera->right.z;
 	}
-	if (Events::isPressed(keycode::A)){
+	if (Events::isPressed(keycode::A) && movement){
 		dir.x -= camera->right.x;
 		dir.z -= camera->right.z;
 	}
@@ -128,9 +128,9 @@ void PlayerController::update_controls(float delta){
 	if (player->flight){
 		hitbox->linear_damping = Player_Consts::AIR_DAMPING;
 		hitbox->velocity.y *= 1.0f - delta * 9;
-		if (Events::isPressed(keycode::SPACE)) hitbox->velocity.y += speed * delta * 9;
+		if (Events::isPressed(keycode::SPACE) && movement) hitbox->velocity.y += speed * delta * 9;
 
-		if (Events::isPressed(keycode::LEFT_SHIFT)) hitbox->velocity.y -= speed * delta * 9;
+		if (Events::isPressed(keycode::LEFT_SHIFT) && movement) hitbox->velocity.y -= speed * delta * 9;
 	}
 
     if (!hitbox->grounded) hitbox->linear_damping = Player_Consts::AIR_DAMPING;
@@ -181,15 +181,6 @@ void PlayerController::update_interaction(){
 
 		uint8_t states = 0;
         if (Block::blocks[player->choosenBlock].get()->rotatable){
-			// states = states & 0b11111100;
-			// if (abs(norm.x) > abs(norm.z)){
-			// 	if (abs(norm.x) > abs(norm.y)) states = states | 0b00000001;
-			// 	if (abs(norm.x) < abs(norm.y)) states = states | 0b00000010;
-			// }
-			// if (abs(norm.x) < abs(norm.z)){
-			// 	if (abs(norm.z) > abs(norm.y)) states = states | 0b00000011;
-			// 	if (abs(norm.z) < abs(norm.y)) states = states | 0b00000010;
-			// }
 			if (abs(norm.x) > abs(norm.z)){
 				if (abs(norm.x) > abs(norm.y)) states = 0x31;
 				if (abs(norm.x) < abs(norm.y)) states = 0x32;
@@ -216,9 +207,7 @@ void PlayerController::update_interaction(){
 				lighting->onBlockSet(x,y,z, player->choosenBlock);
 			}
 		}
-		if (Events::justClicked(mousecode::BUTTON_3)){
-			player->choosenBlock = chunks->getVoxel(x,y,z)->id;
-		}
+		if (Events::justClicked(mousecode::BUTTON_3)) player->choosenBlock = chunks->getVoxel(x,y,z)->id;
 	} else {
 		selectedBlockId = -1;
 	}

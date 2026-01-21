@@ -36,6 +36,8 @@ public:
     static void popScissor();
     static void resetScissor();
 
+    static void clear();
+
     static double time();
 };
 

@@ -43,8 +43,8 @@ Level::~Level(){
 	delete playerController;
 }
 
-void Level::update(float deltaTime, bool interactions) {
-	playerController->update_controls(deltaTime);
+void Level::update(float deltaTime, bool updatePlayer, bool interactions) {
+	playerController->update_controls(deltaTime, updatePlayer);
 	if (interactions) playerController->update_interaction();
 	else playerController->selectedBlockId = -1;
 

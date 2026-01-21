@@ -26,14 +26,17 @@
 #include "frontend/world_render.h"
 #include "world/Level.h"
 #include "world/World.h"
-#include "frontend/hud_render.h"
-#include "util/platform.h"
+#include "frontend/hud.h"
+#include "frontend/gui/GUI.h"
+#include "graphics/Batch2D.h"
 #include "logger/Logger.h"
 #include "logger/OpenGL_Logger.h"
 
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 128, 0}; // Точка, где игрок появляется в мире
 inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
+
+using gui::GUI;
 
 // Реализация конструктора
 Engine::Engine(const EngineSettings& settings) {
@@ -77,6 +80,8 @@ Engine::Engine(const EngineSettings& settings) {
     World* world = new World("world-1", "../saves/world-1/", 42);
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
     level = world->loadLevel(player, settings.chunksLoadDistance, settings.chunksPadding);
+
+    gui = new GUI();
     LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
 }
@@ -106,12 +111,6 @@ void Engine::updateTimers() {
 
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
-    // Закрытие окна и завершение работы
-    if (Events::justPressed(keycode::ESCAPE)) Window::setShouldClose(true);
-
-    // Переключение курсора (включение/выключение захвата мыши)
-    if (Events::justPressed(keycode::TAB) || Events::justPressed(keycode::E)) Events::toggleCursor();
-
     // Переключение окклюзии (отбрасывание невидимых объектов)
     if (Events::justPressed(keycode::O)) occlusion = !occlusion;
 
@@ -133,7 +132,8 @@ void Engine::mainloop() {
 
     Camera* camera = level->player->camera;
     WorldRenderer worldRenderer(level, assets);
-    HudRenderer hud(assets);
+    HudRenderer hud(gui, level, assets);
+    Batch2D batch(1024);
 
     lastTime = Window::time();
     Window::swapInterval(settings.displaySwapInterval);
@@ -144,14 +144,17 @@ void Engine::mainloop() {
         updateHotkeys(); // Обрабатываем нажатия клавиш
 
         // Обновление логики уровня (перемещение игрока, столкновения и т.д.)
-        level->update(deltaTime, Events::_cursor_locked);
+        level->update(deltaTime, Events::_cursor_locked, Events::_cursor_locked);
 
         level->chunksController->update(settings.chunksLoadSpeed);
 
         // Рендеринг мира и HUD
         worldRenderer.draw(camera, occlusion, 1.6 / (float)settings.chunksLoadDistance, settings.fogCurve);
-        hud.draw(level);
-        if (level->player->debug) hud.drawDebug(level, 1 / deltaTime, occlusion);
+        hud.draw();
+        if (level->player->debug) hud.drawDebug(1 / deltaTime, occlusion);
+
+        gui->activate();
+        gui->draw(&batch, assets);
 
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода

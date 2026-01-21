@@ -10,6 +10,10 @@
 class Assets;
 class Level;
 
+namespace gui {
+    class GUI;
+}
+
 // Структура настроек движка, передающая параметры при создании Engine
 struct EngineSettings {
     int displayWidth; // Ширина окна
@@ -38,6 +42,7 @@ class Engine {
 private:
     Assets* assets; // Менеджер ассетов (текстуры, шейдеры и т.д.)
     Level* level; // Текущий уровень (состояние мира и игрока)
+    gui::GUI* gui;
     EngineSettings settings;
 
     uint64_t frame = 0; // Номер текущего кадра

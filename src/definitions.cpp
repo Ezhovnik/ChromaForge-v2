@@ -129,6 +129,7 @@ void setup_definitions() {
         block->drawGroup = 5;
         block->lightPassing = true;
         block->obstacle = false;
+        block->hitboxScale = 0.5f;
         block->model = Block_models::X;
         Block::blocks[block->id] = std::move(block);
     }

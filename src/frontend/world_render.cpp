@@ -78,9 +78,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 
 	shader->uniformMatrix("u_model", model);
 
-    glDisable(GL_MULTISAMPLE);
 	mesh->draw();
-    glEnable(GL_MULTISAMPLE);
 
     return false;
 }

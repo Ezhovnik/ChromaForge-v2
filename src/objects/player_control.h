@@ -16,7 +16,7 @@ public:
 
 	PlayerController(Level* level);
 
-	void update_controls(float delta);
+	void update_controls(float delta, bool movement);
 	void update_interaction();
 };
 

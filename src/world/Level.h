@@ -28,7 +28,7 @@ public:
 	Level(World* world, Player* player, ChunksStorage* storage, LevelEvents* events, uint loadDistance, uint chunksPadding);
 	~Level();
 
-    void update(float deltaTime, bool interactions);
+    void update(float deltaTime, bool updatePlayer, bool interactions);
 };
 
 #endif // WORLD_LEVEL_H_

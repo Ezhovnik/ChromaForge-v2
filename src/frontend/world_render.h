@@ -1,5 +1,5 @@
-#ifndef SRC_WORLD_RENDERER_H_
-#define SRC_WORLD_RENDERER_H_
+#ifndef FRONTEND_WORLD_RENDERER_H_
+#define FRONTEND_WORLD_RENDERER_H_
 
 #include <vector>
 #include <algorithm>
@@ -36,4 +36,4 @@ public:
 };
 
 
-#endif // SRC_WORLD_RENDERER_H_
+#endif // FRONTEND_WORLD_RENDERER_H_

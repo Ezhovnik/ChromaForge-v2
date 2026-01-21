@@ -38,7 +38,6 @@ public:
     bool rotatable = false;
 
     float hitboxScale = 1;
-	float hitboxY = 1;
 
     Block(uint id, int texture);
 };
