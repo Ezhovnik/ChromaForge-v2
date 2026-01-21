@@ -5,6 +5,8 @@
 
 #include "../typedefs.h"
 
+class ImageData;
+
 // Класс, представляющий текстуру в графической системе
 class Texture {
 public:
@@ -12,11 +14,13 @@ public:
     int width, height; // Ширина и высота текстуры в пикселях
 
     Texture (uint id, int width, int height); // Конструктор
-    Texture(ubyte* data, int width, int height);
+    Texture(ubyte* data, int width, int height, uint format);
     ~Texture(); // Деструктор
 
     void bind(); // Привязывает текстуру к текущему контексту OpenGL для использования
     void reload(ubyte* data);
+
+    static Texture* from(const ImageData* image);
 };
 
 #endif // GRAPHICS_TEXTURE_H_

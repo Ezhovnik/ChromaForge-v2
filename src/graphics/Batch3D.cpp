@@ -17,7 +17,7 @@ Batch3D::Batch3D(size_t capacity) : capacity(capacity), offset(0), color(1.0f, 1
 	index = 0;
 
 	ubyte pixels[] = {255, 255, 255, 255};
-	blank = new Texture(pixels, 1, 1);
+	blank = new Texture(pixels, 1, 1, GL_RGBA);
 	_texture = nullptr;
 }
 

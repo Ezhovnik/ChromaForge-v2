@@ -7,67 +7,55 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb/stb_image.h"
 
+#include "../graphics/ImageData.h"
 #include "../graphics/Texture.h"
 #include "../logger/Logger.h"
 #include "../typedefs.h"
 
-// Функция для загрузки изображения и создания OpenGL текстуры
-GLuint loadImage(const char* file, int* width, int* height) {
-    int numColCh;
-    GLuint texture;
+ImageData* png::loadImage(std::string filename) {
+    int channels, width, height;
 
-    stbi_set_flip_vertically_on_load(true); // Инвертируем изображение по вертикали (OpenGL координаты начинаются снизу)
-    ubyte* bytes = stbi_load(file, width, height, &numColCh, 0); // Загружка изображения из файла
-
-    // Проверка успешности загрузки изображения
-    if (bytes == nullptr) {
-        LOG_ERROR("Failed to load image: '{}'\n{}", file, stbi_failure_reason());
-        return 0;
+    stbi_set_flip_vertically_on_load(true);
+    ubyte* stb_data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
+    
+    if (!stb_data) {
+        LOG_ERROR("Failed to load image: '{}'\n{}", filename, stbi_failure_reason());
+        return nullptr;
+    }
+    
+    ImageFormat format;
+    switch (channels) {
+        case 4:
+            format = ImageFormat::rgba8888;
+            break;
+        case 3:
+            format = ImageFormat::rgb888;
+            break;
+        default:
+            LOG_ERROR("Unsupported number of channels: {}", channels);
+            stbi_image_free(stb_data);
+            return nullptr;
     }
 
-    glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    size_t data_size = width * height * channels;
+    ubyte* image_data = new ubyte[data_size];
+    memcpy(image_data, stb_data, data_size);
 
-    // Выбор формата текстуры в зависимости от количества каналов
-    if (numColCh == 4) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes); // RGBA формат
-    } else if (numColCh == 3) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGB, GL_UNSIGNED_BYTE, bytes); // RGB формат
-    } else if (numColCh == 1) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RED, GL_UNSIGNED_BYTE, bytes); // Одноканальный формат
-    } else {
-        LOG_ERROR("Automatic Texture type recognition failed for: '{}'\nNumber of channels: {}", file, numColCh);
-        stbi_image_free(bytes);
-        glDeleteTextures(1, &texture);
-        return 0;
-    }
+    stbi_image_free(stb_data);
 
-    // Настройка параметров фильтрации текстуры
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // Минификация
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Магнификация
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    ImageData* image = new ImageData(format, width, height, image_data);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    stbi_image_free(bytes);
-
-    return texture;
+    return image;
 }
 
 // Функция загрузки текстуры
 Texture* png::loadTexture(std::string filename) {
-    int width, height;
-    GLuint texture = loadImage(filename.c_str(), &width, &height);
+    ImageData* image = loadImage(filename);
 
-    // Проверка успешности создания OpenGL текстуры
-    if (texture == 0) {
+    if (image == nullptr) {
         LOG_CRITICAL("Could not load texture '{}'", filename);
         return nullptr;
     }
 
-    return new Texture(texture, width, height); // Создание объекта Texture
+    return Texture::from(image); // Создание объекта Texture
 }

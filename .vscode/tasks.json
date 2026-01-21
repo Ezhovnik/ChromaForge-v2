@@ -58,6 +58,7 @@
                 // "${workspaceFolder}/src/graphics/Framebuffer.cpp",
                 "${workspaceFolder}/src/graphics/Sprite.cpp",
                 "${workspaceFolder}/src/graphics/UVRegion.cpp",
+                "${workspaceFolder}/src/graphics/ImageData.cpp",
                 "${workspaceFolder}/src/assets/AssetsLoader.cpp",
                 "${workspaceFolder}/src/util/stringutil.cpp",
                 "${workspaceFolder}/src/util/platform.cpp",
