@@ -32,10 +32,9 @@
 #include "world/Level.h"
 #include "world/World.h"
 #include "frontend/hud_render.h"
+#include "util/platform.h"
 #include "logger/Logger.h"
 #include "logger/OpenGL_Logger.h"
-
-#define SETTINGS_FILE "../build/settings.json"
 
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 128, 0}; // Точка, где игрок появляется в мире
@@ -58,6 +57,8 @@ struct EngineSettings {
     uint chunksLoadSpeed;
     uint chunksLoadDistance;
     uint chunksPadding;
+
+    float fogCurve;
 };
 
 // Основной класс Engine, управляющий жизненным циклом приложения
@@ -194,7 +195,7 @@ void Engine::mainloop() {
         level->chunksController->update(settings.chunksLoadSpeed);
 
         // Рендеринг мира и HUD
-        worldRenderer.draw(camera, occlusion);
+        worldRenderer.draw(camera, occlusion, 1.6 / (float)settings.chunksLoadDistance, settings.fogCurve);
         hud.draw(level);
         if (level->player->debug) hud.drawDebug(level, 1 / deltaTime, occlusion);
 
@@ -207,29 +208,40 @@ void Engine::mainloop() {
 void read_settings(EngineSettings& settings, std::string filename) {
 	std::string source = files::read_string(filename);
 	std::unique_ptr<json::JObject> obj(json::parse(filename, source));
+
 	obj->num("display-width", settings.displayWidth);
 	obj->num("display-height", settings.displayHeight);
 	obj->num("display-samples", settings.displaySamples);
     obj->num("display-swap-interval", settings.displaySwapInterval);
+
 	obj->num("chunks-load-distance", settings.chunksLoadDistance);
 	obj->num("chunks-load-speed", settings.chunksLoadSpeed);
 	obj->num("chunks-padding", settings.chunksPadding);
+
+    obj->num("fog-curve", settings.fogCurve);
 }
 
 void write_settings(EngineSettings& settings, std::string filename) {
 	json::JObject obj;
+
 	obj.put("display-width", settings.displayWidth);
 	obj.put("display-height", settings.displayHeight);
 	obj.put("display-samples", settings.displaySamples);
     obj.put("display-swap-interval", settings.displaySwapInterval);
+
 	obj.put("chunks-load-distance", settings.chunksLoadDistance);
 	obj.put("chunks-load-speed", settings.chunksLoadSpeed);
 	obj.put("chunks-padding", settings.chunksPadding);
+
+    obj.put("fog-curve", settings.fogCurve);
+
 	files::write_string(filename, json::stringify(&obj, true, "  "));
 }
 
 // Точка входа в программу
 int main() {
+    platform::configure_encoding();
+
     // Инициализация логгера
     Logger::getInstance().initialize();
 
@@ -250,12 +262,15 @@ int main() {
         settings.chunksLoadDistance = 12;
         settings.chunksPadding = 2;
 
-        if (std::filesystem::is_regular_file(SETTINGS_FILE)) {
-			LOG_INFO("Reading engine settings from {}", SETTINGS_FILE);
-			read_settings(settings, SETTINGS_FILE);
+        settings.fogCurve = 1.6f;
+
+        std::string settings_file = platform::get_settings_file();
+        if (std::filesystem::is_regular_file(settings_file)) {
+			LOG_INFO("Reading engine settings from {}", settings_file);
+			read_settings(settings, settings_file);
 		} else {
-            LOG_INFO("Write engine settings to {}", SETTINGS_FILE);
-			write_settings(settings, SETTINGS_FILE);
+            LOG_INFO("Write engine settings to {}", settings_file);
+			write_settings(settings, settings_file);
 		}
 
         engine = std::make_unique<Engine>(settings);

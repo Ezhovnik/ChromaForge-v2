@@ -55,6 +55,8 @@
                 "${workspaceFolder}/src/graphics/Sprite.cpp",
                 "${workspaceFolder}/src/graphics/UVRegion.cpp",
                 "${workspaceFolder}/src/assets/AssetsLoader.cpp",
+                "${workspaceFolder}/src/util/stringutil.cpp",
+                "${workspaceFolder}/src/util/platform.cpp",
                 "${workspaceFolder}/src/logger/Logger.cpp",
                 "${workspaceFolder}/src/logger/OpenGL_Logger.cpp",
                 "${workspaceFolder}/src/glad.c",

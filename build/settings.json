@@ -1,5 +1,6 @@
 {
   "chunks-load-speed": 10,
+  "fog-curve": 1.6,
   "chunks-load-distance": 12,
   "display-swap-interval": 1,
   "display-samples": 0,

@@ -13,6 +13,11 @@ namespace keycode {
     extern int RIGHT_CONTROL;
     extern int RIGHT_SHIFT;
     extern int RIGHT_ALT;
+    extern int CAPS_LOCK;
+    extern int LEFT;
+    extern int RIGHT;
+    extern int DOWN;
+    extern int UP;
     extern int F1;
     extern int F2;
     extern int F3;

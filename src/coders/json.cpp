@@ -243,6 +243,13 @@ JArray& JArray::put(JArray* value) {
     return *this;
 }
 
+JArray& JArray::put(float value) {
+    valvalue val;
+    val.num = value;
+    values.push_back(new Value(valtype::number, val));
+    return *this;
+}
+
 JObject::~JObject() {
     for (auto entry : map) {
         delete entry.second;
@@ -265,6 +272,11 @@ void JObject::num(std::string key, int& dst) const {
 }
 
 void JObject::num(std::string key, uint& dst) const {
+    auto found = map.find(key);
+    if (found != map.end()) dst = found->second->value.num;
+}
+
+void JObject::num(std::string key, float& dst) const {
     auto found = map.find(key);
     if (found != map.end()) dst = found->second->value.num;
 }
@@ -336,6 +348,10 @@ JObject& JObject::put(std::string key, uint value) {
 }
 
 JObject& JObject::put(std::string key, int value) {
+    return put(key, (double)value);
+}
+
+JObject& JObject::put(std::string key, float value) {
     return put(key, (double)value);
 }
 
