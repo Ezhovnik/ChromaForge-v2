@@ -129,7 +129,7 @@ bool OpenGL_Logger::checkGLError(const char* context, const char* fileName, int 
 
 void OpenGL_Logger::logGLError(GLenum error, const char* context, const char* fileName, int lineNumber) {
     const char* errorStr = getGLErrorString(error);
-    LOG_ERROR_NC("OpenGL error in {} ({}:{}): {} (0x{:X})", context, fileName, lineNumber, errorStr, error);
+    LOG_ERROR("OpenGL error in {} ({}:{}): {} (0x{:X})", context, fileName, lineNumber, errorStr, error);
 }
 
 void OpenGL_Logger::setLevel(LogLevel level) {
@@ -207,23 +207,23 @@ void GLAPIENTRY OpenGL_Logger::debugMessageCallback(GLenum source, GLenum type, 
     
     switch (severity) {
         case GL_DEBUG_SEVERITY_HIGH:
-            LOG_ERROR_NC("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
+            LOG_ERROR("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
                       id, sourceStr, typeStr, severityStr, message);
             break;
         case GL_DEBUG_SEVERITY_MEDIUM:
-            LOG_WARN_NC("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
+            LOG_WARN("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
                      id, sourceStr, typeStr, severityStr, message);
             break;
         case GL_DEBUG_SEVERITY_LOW:
-            LOG_DEBUG_NC("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
+            LOG_DEBUG("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
                       id, sourceStr, typeStr, severityStr, message);
             break;
         case GL_DEBUG_SEVERITY_NOTIFICATION:
-            LOG_TRACE_NC("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
+            LOG_TRACE("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
                       id, sourceStr, typeStr, severityStr, message);
             break;
         default:
-            LOG_INFO_NC("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
+            LOG_INFO("OpenGL Debug [ID: {}] [Source: {}] [Type: {}] [Severity: {}]: {}", 
                      id, sourceStr, typeStr, severityStr, message);
             break;
     }

@@ -1,0 +1,18 @@
+[display]
+width = 1280
+height = 720
+samples = 0
+swap-interval = 1
+
+[chunks]
+load-distance = 22
+load-speed = 10
+padding = 2
+
+[camera]
+fov-effects = true
+shaking = true
+
+[graphics]
+fog-curve = 1.6
+

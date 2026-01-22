@@ -24,15 +24,15 @@ struct CameraSettings {
     bool shaking = true;
 };
 
+struct GraphicsSettings {
+    float fogCurve = 1.6f;
+};
+
 struct EngineSettings {
     DisplaySettings display;
 	ChunksSettings chunks;
 	CameraSettings camera;
-
-	float fogCurve = 1.6f;
+    GraphicsSettings graphics;
 };
-
-void read_settings(EngineSettings& settings, std::string filename);
-void write_settings(EngineSettings& settings, std::string filename);
 
 #endif // SRC_SETTINGS_H_

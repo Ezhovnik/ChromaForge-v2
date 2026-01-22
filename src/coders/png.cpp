@@ -15,8 +15,9 @@
 #include "../logger/Logger.h"
 #include "../typedefs.h"
 
+// Загружает изображение из PNG файла.
 ImageData* png::loadImage(std::string filename) {
-    int channels, width, height;
+    int channels = 0, width = 0, height = 0;
 
     stbi_set_flip_vertically_on_load(true);
     ubyte* stb_data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
@@ -25,7 +26,8 @@ ImageData* png::loadImage(std::string filename) {
         LOG_ERROR("Failed to load image: '{}'\n{}", filename, stbi_failure_reason());
         return nullptr;
     }
-    
+
+    // Определяем формат изображения на основе количества каналов
     ImageFormat format;
     switch (channels) {
         case 4:
@@ -40,25 +42,30 @@ ImageData* png::loadImage(std::string filename) {
             return nullptr;
     }
 
-    size_t data_size = width * height * channels;
-    ubyte* image_data = new ubyte[data_size];
-    memcpy(image_data, stb_data, data_size);
+    const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
+    const size_t dataSize = pixelCount * static_cast<size_t>(channels);
+
+    ubyte* image_data = new ubyte[dataSize];
+    memcpy(image_data, stb_data, dataSize);
 
     stbi_image_free(stb_data);
 
-    ImageData* image = new ImageData(format, width, height, (void*)image_data);
+    ImageData* image = new ImageData(format, width, height, static_cast<void*>(image_data));
+
+    LOG_DEBUG("Loaded PNG image: '{}' ({}x{}, {} channels)", filename, width, height, channels);
 
     return image;
 }
 
+// Сохраняет изображение в PNG файл.
 bool png::writeImage(std::string filename, const ImageData* image) {
     if (!image || !image->getData()) {
         LOG_ERROR("Invalid image data for writing to file: {}", filename);
         return false;
     }
 
-    int width = image->getWidth();
-    int height = image->getHeight();
+    const int width = image->getWidth();
+    const int height = image->getHeight();
     int channels = 0;
     
     // Определяем количество каналов в зависимости от формата
@@ -70,7 +77,7 @@ bool png::writeImage(std::string filename, const ImageData* image) {
             channels = 3;
             break;
         default:
-            LOG_ERROR("Unsupported image format for writing");
+            LOG_ERROR("Unsupported image format for PNG writing");
             return false;
     }
 
@@ -80,17 +87,18 @@ bool png::writeImage(std::string filename, const ImageData* image) {
 
     if (!success) {
         LOG_ERROR("Failed to write image to file: {}", filename);
+        return false;
     }
 
-    return success;
+    return true;
 }
 
-// Функция загрузки текстуры
+// Загружает текстуру из PNG файла
 Texture* png::loadTexture(std::string filename) {
     ImageData* image = loadImage(filename);
 
     if (image == nullptr) {
-        LOG_ERROR("Could not load image '{}'", filename);
+        LOG_ERROR("Failed to load texture from '{}'", filename);
         return nullptr;
     }
 

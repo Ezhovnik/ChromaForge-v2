@@ -6,10 +6,11 @@
 class Texture;
 class ImageData;
 
+// Пространство имен для операций загрузки и сохранения PNG изображений
 namespace png {
-    extern ImageData* loadImage(std::string filename);
-    extern bool writeImage(std::string filename, const ImageData* image);
-    extern Texture* loadTexture(std::string filename);
+    extern ImageData* loadImage(std::string filename); // Загружает изображение из PNG файла
+    extern bool writeImage(std::string filename, const ImageData* image); // Сохраняет изображение в PNG файл
+    extern Texture* loadTexture(std::string filename); // Загружает текстуру из PNG файла
 }
 
 #endif // CODERS_PNG_H_

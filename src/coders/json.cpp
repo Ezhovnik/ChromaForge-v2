@@ -8,83 +8,7 @@
 
 using namespace json;
 
-inline bool is_digit(int c) {
-    return (c >= '0' && c <= '9');
-}
-
-inline bool is_whitespace(int c) {
-    return c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\f';
-}
-
-inline bool is_identifier_start(int c) {
-    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' || c == '-' || c == '.';
-}
-
-inline bool is_identifier_part(int c) {
-    return is_identifier_start(c) || is_digit(c);
-}
-
-inline int is_box(int c) {
-    switch (c) {
-        case 'B':
-        case 'b':
-            return 2;
-        case 'O':
-        case 'o':
-            return 8;
-        case 'X':
-        case 'x':
-            return 16; 
-    }
-    return 10;
-}
-
-inline int char2int(int c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return 10 + c - 'a';
-    if (c >= 'A' && c <= 'F') return 10 + c - 'A';
-
-    return -1;
-}
-
-inline double power(double base, int64_t power) {
-    double result = 1.0;
-    double current = base;
-    while (power > 0) {
-        if (power & 1) {
-            result *= current;
-        }
-        current *= current;
-        power >>= 1;
-    }
-    return result;
-}
-
-std::string json::escape(std::string s) {
-    std::stringstream ss;
-    ss << '"';
-    for (char c : s) {
-        switch (c) {
-            case '\n': ss << "\\n"; break;
-            case '\r': ss << "\\r"; break;
-            case '\t': ss << "\\t"; break;
-            case '\f': ss << "\\f"; break;
-            case '\b': ss << "\\b"; break;
-            case '"': ss << "\\\""; break;
-            case '\\': ss << "\\\\"; break;
-            default:
-                if (c < ' ') {
-                    ss << "\\" << std::oct << (int)c;
-                    break;
-                }
-                ss << c;
-                break;
-        }
-    }
-    ss << '"';
-    return ss.str();
-}
-
+// Добавление отступов или пробела в зависимости от формата вывода
 inline void newline(std::stringstream& ss, bool nice, uint indent, const std::string indentstr) {
     if (nice) {
         ss << "\n";
@@ -96,9 +20,11 @@ inline void newline(std::stringstream& ss, bool nice, uint indent, const std::st
     }
 }
 
+// Предварительные объявления для рекурсивных вызовов
 void stringify(Value* value, std::stringstream& ss, int indent, std::string indentstr, bool nice);
 void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string indentstr, bool nice);
 
+// Преобразование значения JSON в строку
 void stringify(Value* value, std::stringstream& ss, int indent, std::string indentstr, bool nice) {
     if (value->type == valtype::object) stringifyObj(value->value.obj, ss, indent, indentstr, nice);
 
@@ -122,10 +48,11 @@ void stringify(Value* value, std::stringstream& ss, int indent, std::string inde
     } else if (value->type == valtype::number) {
         ss << value->value.num;
     } else if (value->type == valtype::string) {
-        ss << escape(*value->value.str);
+        ss << escape_string(*value->value.str);
     }
 }
 
+// Преобразование объекта JSON в строку
 void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string indentstr, bool nice) {
     if (obj->map.empty()) {
         ss << "{}";
@@ -138,7 +65,7 @@ void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string i
         if (index > 0 || nice) newline(ss, nice, indent, indentstr);
         
         Value* value = entry.second;
-        ss << escape(key) << ": ";
+        ss << escape_string(key) << ": ";
         stringify(value, ss, indent+1, indentstr, nice);
         index++;
         if (index < obj->map.size()) ss << ',';
@@ -147,46 +74,21 @@ void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string i
     ss << '}';
 }
 
+// Публичный интерфейс для преобразования объекта JSON в строку
 std::string json::stringify(JObject* obj, bool nice, std::string indent) {
     std::stringstream ss;
     stringifyObj(obj, ss, 1, indent, nice);
     return ss.str();
 }
 
-parsing_error::parsing_error(std::string message, 
-                std::string filename, 
-                std::string source, 
-                uint pos, 
-                uint line, 
-                uint linestart)
-    : std::runtime_error(message), filename(filename), source(source), pos(pos), line(line), linestart(linestart) {
-}
-
-std::string parsing_error::errorLog() const {
-    std::stringstream ss;
-    uint linepos = pos - linestart;
-    ss << "JSON parsing error in file '" << filename;
-    ss << "' at " << (line + 1) << ":" << linepos << ": " << this->what() << "\n";
-    size_t end = source.find("\n", linestart);
-    if (end == std::string::npos) end = source.length();
-    
-    ss << source.substr(linestart, end-linestart) << "\n";
-    for (uint i = 0; i < linepos; i++) {
-        ss << " ";
-    }
-    ss << "^";
-
-    std::string errorMessage = ss.str();
-    LOG_ERROR("{}", errorMessage);
-
-    return errorMessage;
-}
-
+// Деструктор массива JSON
 JArray::~JArray() {
     for (auto value : values) {
         delete value;
     }
 }
+
+// Методы доступа к элементам массива с проверкой типов
 
 std::string JArray::str(size_t index) const {
     return *values[index]->value.str;
@@ -207,6 +109,8 @@ JArray* JArray::arr(size_t index) const {
 bool JArray::flag(size_t index) const {
     return values[index]->value.boolean;
 }
+
+// Методы добавления элементов в массив
 
 JArray& JArray::put(std::string value) {
     valvalue val;
@@ -250,11 +154,14 @@ JArray& JArray::put(float value) {
     return *this;
 }
 
+// Деструктор объекта JSON
 JObject::~JObject() {
     for (auto entry : map) {
         delete entry.second;
     }
 }
+
+// Методы получения значений из объекта с проверкой существования
 
 void JObject::str(std::string key, std::string& dst) const {
     auto found = map.find(key);
@@ -297,6 +204,8 @@ void JObject::flag(std::string key, bool& dst) const {
     auto found = map.find(key);
     if (found != map.end()) dst = found->second->value.boolean;
 }
+
+// Методы добавления значений в объект с заменой существующих
 
 JObject& JObject::put(std::string key, double value) {
     auto found = map.find(key);
@@ -355,9 +264,11 @@ JObject& JObject::put(std::string key, float value) {
     return put(key, (double)value);
 }
 
+// Конструктор значения JSON
 Value::Value(valtype type, valvalue value) : type(type), value(value) {
 }
 
+// Деструктор значения JSON - освобождает память в зависимости от типа
 Value::~Value() {
     switch (type) {
         case valtype::object: delete value.obj; break;
@@ -368,198 +279,19 @@ Value::~Value() {
     }
 }
 
-Parser::Parser(std::string filename, std::string source) : filename(filename), source(source) {    
+// Конструктор парсера
+Parser::Parser(std::string filename, std::string source) : BasicParser(filename, source) {    
 }
 
+// Основной метод парсинга JSON
 JObject* Parser::parse() {
     char next = peek();
-    if (next != '{') {
-        LOG_CRITICAL("'{' expected");
-        throw error("'{' expected");
-    }
+    if (next != '{') throw error("'{' expected");
+
     return parseObject();
 }
 
-bool Parser::hasNext() {
-    return pos < source.length();
-}
-
-char Parser::nextChar() {
-    if (!hasNext()) {
-        LOG_CRITICAL("Unexpected end");
-        throw error("Unexpected end");
-    }
-    return source[pos++];
-}
-
-void Parser::expect(char expected) {
-    char c = peek();
-    if (c != expected) {
-        LOG_ERROR("'{}' expected", std::string({expected}));
-        throw error("'" + std::string({expected}) + "' expected");
-    }
-    pos++;
-}
-
-char Parser::peek() {
-    skipWhitespace();
-    if (pos >= source.length()) {
-        throw error("Unexpected end");
-    }
-    return source[pos];
-}
-
-parsing_error Parser::error(std::string message) {
-    return parsing_error(message, filename, source, pos, line, linestart);
-}
-
-void Parser::skipWhitespace() {
-    while (hasNext()) {
-        char next = source[pos];
-        if (next == '\n') {
-            line++;
-            linestart = ++pos;
-            continue;
-        }
-        if (is_whitespace(next)) {
-            pos++;
-        } else {
-            break;
-        }
-    }
-}
-
-std::string Parser::parseName() {
-    char c = peek();
-    if (!is_identifier_start(c)) {
-        if (c == '"') {
-            pos++;
-            return parseString(c);
-        }
-        throw error("Identifier expected");
-    }
-    int start = pos;
-    while (hasNext() && is_identifier_part(source[pos])) {
-        pos++;
-    }
-    return source.substr(start, pos-start);
-}
-
-int64_t Parser::parseSimpleInt(int base) {
-    char c = peek();
-    int index = char2int(c);
-    if (index == -1 || index >= base) {
-        throw error("Invalid number literal");
-    }
-    int64_t value = index;
-    pos++;
-    while (hasNext()) {
-        c = source[pos];
-        while (c == '_') {
-            c = source[++pos];
-        }
-        index = char2int(c);
-        if (index == -1 || index >= base) {
-            return value;
-        }
-        value *= base;
-        value += index;
-        pos++;
-    }
-    return value;
-}
-
-double Parser::parseNumber(int sign) {
-    char c = peek();
-    int base = 10;
-    if (c == '0' && pos + 1 < source.length() && (base = is_box(source[pos+1])) != 10) {
-        pos += 2;
-        return parseSimpleInt(base);
-    }
-    int64_t value = parseSimpleInt(base);
-    if (!hasNext()) return value * sign;
-    c = source[pos];
-    if (c == 'e' || c == 'E') {
-        pos++;
-        int s = 1;
-        if (peek() == '-') {
-            s = -1;
-            pos++;
-        } else if (peek() == '+'){
-            pos++;
-        }
-        return sign * value * power(10.0, s * parseSimpleInt(10));
-    }
-    if (c == '.') {
-        pos++;
-        int64_t expo = 1;
-        while (hasNext() && source[pos] == '0') {
-            expo *= 10;
-            pos++;
-        }
-        int64_t afterdot = 0;
-        if (hasNext() && is_digit(source[pos])) afterdot = parseSimpleInt(10);
-        expo *= power(10, fmax(0, log10(afterdot) + 1));
-        c = source[pos];
-
-        double dvalue = (value + (afterdot / (double)expo));
-        if (c == 'e' || c == 'E') {
-            pos++;
-            int s = 1;
-            if (peek() == '-') {
-                s = -1;
-                pos++;
-            } else if (peek() == '+'){
-                pos++;
-            }
-            return sign * dvalue * power(10.0, s * parseSimpleInt(10));
-        }
-        return dvalue;
-    }
-    return value;
-}
-
-std::string Parser::parseString(char quote) {
-    std::stringstream ss;
-    while (hasNext()) {
-        char c = source[pos];
-        if (c == quote) {
-            pos++;
-            return ss.str();
-        }
-        if (c == '\\') {
-            pos++;
-            c = nextChar();
-            if (c >= '0' && c <= '7') {
-                pos--;
-                ss << (char)parseSimpleInt(8);
-                continue;
-            }
-            switch (c) {
-                case 'n': ss << '\n'; break;
-                case 'r': ss << '\r'; break;
-                case 'b': ss << '\b'; break;
-                case 't': ss << '\t'; break;
-                case 'f': ss << '\f'; break;
-                case '\'': ss << '\\'; break;
-                case '"': ss << '"'; break;
-                case '\\': ss << '\\'; break;
-                case '/': ss << '/'; break;
-                case '\n': pos++; continue;
-                default:
-                    throw error("'\\" + std::string({c}) + "' is an illegal escape");
-            }
-            continue;
-        }
-        if (c == '\n') {
-            throw error("Non-closed string literal");
-        }
-        ss << c;
-        pos++;
-    }
-    throw error("Unexpected end");
-}
-
+// Парсинг JSON объекта
 JObject* Parser::parseObject() {
     expect('{');
     std::unique_ptr<JObject> obj(new JObject());
@@ -567,24 +299,20 @@ JObject* Parser::parseObject() {
     while (peek() != '}') {
         std::string key = parseName();
         char next = peek();
-        if (next != ':') {
-            throw error("':' expected");
-        }
+        if (next != ':') throw error("':' expected");
         pos++;
         map.insert(make_pair(key, parseValue()));
         next = peek();
-        if (next == ',') {
-            pos++;
-        } else if (next == '}') {
-            break;
-        } else {
-            throw error("',' expected");
-        }
+
+        if (next == ',') pos++;
+        else if (next == '}') break;
+        else throw error("',' expected");
     }
     pos++;
     return obj.release();
 }
 
+// Парсинг JSON массива
 JArray* Parser::parseArray() {
     expect('[');
     std::unique_ptr<JArray> arr(new JArray());
@@ -605,6 +333,7 @@ JArray* Parser::parseArray() {
     return arr.release();
 }
 
+// Парсинг любого значения JSON
 Value* Parser::parseValue() {
     char next = peek();
     valvalue val;
@@ -613,10 +342,15 @@ Value* Parser::parseValue() {
         if (literal == "true") {
             val.boolean = true;
             return new Value(valtype::boolean, val);
-        }
-        if (literal == "false") {
+        } else if (literal == "false") {
             val.boolean = false;
             return new Value(valtype::boolean, val);
+        } else if (literal == "inf") {
+            val.num = INFINITY;
+            return new Value(valtype::number, val);
+        } else if (literal == "nan") {
+            val.num = NAN;
+            return new Value(valtype::number, val);
         }
         throw error("Invalid literal");
     }
@@ -645,11 +379,13 @@ Value* Parser::parseValue() {
     throw error("Unexpected character '" + std::string({next}) + "'");
 }
 
+// Публичный интерфейс парсинга JSON из файла
 JObject* json::parse(std::string filename, std::string source) {
     Parser parser(filename, source);
     return parser.parse();
 }
 
+// Публичный интерфейс парсинга JSON из строки
 JObject* json::parse(std::string source) {
     return parse("<string>", source);
 }

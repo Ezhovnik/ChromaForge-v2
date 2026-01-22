@@ -7,7 +7,7 @@
 
 #include "../typedefs.h"
 
-#define SETTINGS_FILE "../build/settings.json"
+#define SETTINGS_FILE "../build/settings.toml"
 #define SCREENSHOTS_FOLDER "../build/screenshots"
 
 std::string platform::get_settings_file() {

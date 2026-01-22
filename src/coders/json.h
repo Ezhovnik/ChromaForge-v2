@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
+#include "commons.h"
 #include "../typedefs.h"
 
 namespace json {
@@ -14,25 +15,7 @@ namespace json {
     class JArray;
     class Value;
 
-    extern std::string escape(std::string s);
     extern std::string stringify(JObject* obj, bool nice, std::string indent);
-    class parsing_error : public std::runtime_error {
-    public:
-        std::string filename;
-        std::string source;
-        uint pos;
-        uint line;
-        uint linestart;
-
-        parsing_error(std::string message, 
-                      std::string filename, 
-                      std::string source, 
-                      uint pos, 
-                      uint line, 
-                      uint linestart);
-
-        std::string errorLog() const;
-    };
 
     enum class valtype {
         object, array, number, string, boolean
@@ -103,30 +86,10 @@ namespace json {
         JObject& put(std::string key, bool value);
     };
 
-    class Parser {
-        std::string filename;
-        std::string source;
-        uint pos = 0;
-        uint line = 0;
-        uint linestart = 0;
-
-        void skipWhitespace();
-        void expect(char expected);
-        char peek();
-        char nextChar();
-        bool hasNext();
-
-        std::string parseName();
-        int64_t parseSimpleInt(int base);
-        double parseNumber(int sign);
-        std::string parseString(char chr);
-
+    class Parser : public BasicParser {
         JArray* parseArray();
         JObject* parseObject();
         Value* parseValue();
-
-        parsing_error error(std::string message);
-
     public:
         Parser(std::string filename, std::string source);
         
