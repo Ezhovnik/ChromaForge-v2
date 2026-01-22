@@ -8,6 +8,7 @@ class ImageData;
 
 namespace png {
     extern ImageData* loadImage(std::string filename);
+    extern bool writeImage(std::string filename, const ImageData* image);
     extern Texture* loadTexture(std::string filename);
 }
 

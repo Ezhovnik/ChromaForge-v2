@@ -1,6 +1,8 @@
 #include "ImageData.h"
 
 #include <assert.h>
+#include <stdexcept>
+#include "../logger/Logger.h"
 
 template<typename T>
 inline T min(T a, T b) {
@@ -68,4 +70,52 @@ ImageData* add_atlas_margins(ImageData* image, int grid_size) {
     }
 
     return new ImageData(image->getFormat(), dstwidth, dstheight, dstdata);
+}
+
+void ImageData::flipX() {
+    uint size;
+    switch (format) {
+        case ImageFormat::rgb888:
+        case ImageFormat::rgba8888: {
+            size = (format == ImageFormat::rgba8888) ? 4 : 3;
+            ubyte* pixels = (ubyte*)data;
+            for (uint y = 0; y < height; y++) {
+                for (uint x = 0; x < width/2; x++) {
+                    for (uint c = 0; c < size; c++) {
+                        ubyte temp = pixels[(y * width + x) * size + c];
+                        pixels[(y * width + x) * size + c] = pixels[(y * width + (width - x - 1)) * size + c];
+                        pixels[(y * width + (width - x - 1)) * size + c] = temp;
+                    }
+                }
+            }
+            break;
+        }
+        default:
+            LOG_ERROR("Format is not supported");
+            throw std::runtime_error("Format is not supported");
+    }
+}
+
+void ImageData::flipY() {
+    uint size;
+    switch (format) {
+        case ImageFormat::rgb888:
+        case ImageFormat::rgba8888: {
+            size = (format == ImageFormat::rgba8888) ? 4 : 3;
+            ubyte* pixels = (ubyte*)data;
+            for (uint y = 0; y < height/2; y++) {
+                for (uint x = 0; x < width; x++) {
+                    for (uint c = 0; c < size; c++) {
+                        ubyte temp = pixels[(y * width + x) * size + c];
+                        pixels[(y * width + x) * size + c] = pixels[((height-y-1) * width + x) * size + c];
+                        pixels[((height-y-1) * width + x) * size + c] = temp;
+                    }
+                }
+            }
+            break;
+        }
+        default:
+            LOG_ERROR("Format is not supported");
+            throw std::runtime_error("Format is not supported");
+    }
 }

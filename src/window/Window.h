@@ -9,7 +9,8 @@
 #include "../typedefs.h"
 #include "../settings.h"
 
-class GLFWwindow; // Предварительное объявление класса GLFWwindow
+class GLFWwindow;
+class ImageData;
 
 // Обертка для работы с окном приложения через GLFW
 class Window {
@@ -40,6 +41,8 @@ public:
     static void clear();
 
     static double time();
+
+    static ImageData* takeScreenshot();
 };
 
 #endif // WINDOW_WINDOW_H

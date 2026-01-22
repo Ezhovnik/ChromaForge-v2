@@ -13,6 +13,9 @@
 // Пользовательские заголовочные файлы
 #include "settings.h"
 #include "coders/json.h"
+#include "graphics/ImageData.h"
+#include "util/platform.h"
+#include "coders/png.h"
 #include "files/files.h"
 #include "window/Events.h"
 #include "window/Camera.h"
@@ -111,6 +114,14 @@ void Engine::updateTimers() {
 void Engine::updateHotkeys() {
     // Переключение окклюзии (отбрасывание невидимых объектов)
     if (Events::justPressed(keycode::O)) occlusion = !occlusion;
+
+    if (Events::justPressed(keycode::F2)) {
+        ImageData* image = Window::takeScreenshot();
+		image->flipY();
+		std::string filename = platform::get_screenshot_file("png");
+		png::writeImage(filename, image);
+		delete image;
+    }
 
     // Переключение режима отладки игрока
     if (Events::justPressed(keycode::F3)) level->player->debug = !level->player->debug;

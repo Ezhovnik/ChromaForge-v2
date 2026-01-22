@@ -7,6 +7,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb/stb_image.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../include/stb/stb_image_write.h"
+
 #include "../graphics/ImageData.h"
 #include "../graphics/Texture.h"
 #include "../logger/Logger.h"
@@ -48,12 +51,46 @@ ImageData* png::loadImage(std::string filename) {
     return image;
 }
 
+bool png::writeImage(std::string filename, const ImageData* image) {
+    if (!image || !image->getData()) {
+        LOG_ERROR("Invalid image data for writing to file: {}", filename);
+        return false;
+    }
+
+    int width = image->getWidth();
+    int height = image->getHeight();
+    int channels = 0;
+    
+    // Определяем количество каналов в зависимости от формата
+    switch (image->getFormat()) {
+        case ImageFormat::rgba8888:
+            channels = 4;
+            break;
+        case ImageFormat::rgb888:
+            channels = 3;
+            break;
+        default:
+            LOG_ERROR("Unsupported image format for writing");
+            return false;
+    }
+
+    const ubyte* data = static_cast<const ubyte*>(image->getData());
+
+    int success = stbi_write_png(filename.c_str(), width, height, channels, data, width * channels);
+
+    if (!success) {
+        LOG_ERROR("Failed to write image to file: {}", filename);
+    }
+
+    return success;
+}
+
 // Функция загрузки текстуры
 Texture* png::loadTexture(std::string filename) {
     ImageData* image = loadImage(filename);
 
     if (image == nullptr) {
-        LOG_CRITICAL("Could not load image '{}'", filename);
+        LOG_ERROR("Could not load image '{}'", filename);
         return nullptr;
     }
 

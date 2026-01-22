@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Events.h"
+#include "../graphics/ImageData.h"
 #include "../logger/Logger.h"
 
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW
@@ -214,4 +215,10 @@ void Window::clear() {
 
 double Window::time() {
     return glfwGetTime();
+}
+
+ImageData* Window::takeScreenshot() {
+	ubyte* data = new ubyte[width * height * 4];
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	return new ImageData(ImageFormat::rgba8888, width, height, data);
 }
