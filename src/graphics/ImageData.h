@@ -16,12 +16,12 @@ class ImageData {
     uint width;
     uint height;
 
-    ubyte* data;
+    void* data;
 public:
-    ImageData(ImageFormat format, uint width, uint height, ubyte* data);
+    ImageData(ImageFormat format, uint width, uint height, void* data);
     ~ImageData();
 
-    ubyte* getData() const {
+    void* getData() const {
         return data;
     }
 
@@ -37,5 +37,7 @@ public:
         return height;
     }
 };
+
+extern ImageData* add_atlas_margins(ImageData* image, int grid_size);
 
 #endif // GRAPHICS_IMAGE_DATA_H_

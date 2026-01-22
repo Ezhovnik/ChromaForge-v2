@@ -43,7 +43,7 @@ ImageData* png::loadImage(std::string filename) {
 
     stbi_image_free(stb_data);
 
-    ImageData* image = new ImageData(format, width, height, image_data);
+    ImageData* image = new ImageData(format, width, height, (void*)image_data);
 
     return image;
 }
@@ -53,7 +53,7 @@ Texture* png::loadTexture(std::string filename) {
     ImageData* image = loadImage(filename);
 
     if (image == nullptr) {
-        LOG_CRITICAL("Could not load texture '{}'", filename);
+        LOG_CRITICAL("Could not load image '{}'", filename);
         return nullptr;
     }
 

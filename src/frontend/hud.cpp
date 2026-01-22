@@ -123,7 +123,7 @@ void HudRenderer::drawDebug(int fps, bool occlusion){
 }
 
 void HudRenderer::drawInventory(Player* player) {
-	Texture* blocks = assets->getTexture("blocks");
+	Texture* blocks = assets->getTexture("blocks_tex");
 
 	uint size = 48;
 	uint step = 64;
@@ -218,7 +218,7 @@ void HudRenderer::draw(){
 	uishader->uniformMatrix("u_projview", uicamera->getProjection() * uicamera->getView());
 
 	// Chosen block preview
-	Texture* blocks = assets->getTexture("blocks");
+	Texture* blocks = assets->getTexture("blocks_tex");
 
 	batch->texture(nullptr);
 	batch->color = glm::vec4(1.0f);

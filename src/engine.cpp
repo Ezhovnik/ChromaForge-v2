@@ -8,6 +8,8 @@
 
 #include <glm/glm.hpp>
 
+#define GLEW_STATIC
+
 // Пользовательские заголовочные файлы
 #include "settings.h"
 #include "coders/json.h"
@@ -144,7 +146,7 @@ void Engine::mainloop() {
         level->chunksController->update(settings.chunks.loadSpeed);
 
         // Рендеринг мира и HUD
-        worldRenderer.draw(camera, occlusion, 1.6 / (float)settings.chunks.loadDistance, settings.fogCurve);
+        worldRenderer.draw(camera, occlusion, 16.0f / (float)settings.chunks.loadDistance, settings.fogCurve);
         hud.draw();
         if (level->player->debug) hud.drawDebug(1 / deltaTime, occlusion);
 

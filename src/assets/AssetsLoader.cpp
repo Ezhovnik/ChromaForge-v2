@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "Assets.h"
+#include "../constants.h"
+#include "../graphics/ImageData.h"
 #include "../graphics/ShaderProgram.h"
 #include "../graphics/Texture.h"
 #include "../coders/png.h"
@@ -12,11 +14,11 @@
 AssetsLoader::AssetsLoader(Assets* assets) : assets(assets) {
 }
 
-void AssetsLoader::addLoader(int tag, aloader_func func) {
+void AssetsLoader::addLoader(AssetsType tag, aloader_func func) {
 	loaders[tag] = func;
 }
 
-void AssetsLoader::add(int tag, const std::string filename, const std::string alias) {
+void AssetsLoader::add(AssetsType tag, const std::string filename, const std::string alias) {
 	entries.push(aloader_entry{tag, filename, alias});
 }
 
@@ -30,7 +32,7 @@ bool AssetsLoader::loadNext() {
 	Logger::getInstance().flush();
 	auto found = loaders.find(entry.tag);
 	if (found == loaders.end()) {
-        LOG_ERROR("Unknown asset tag {}", entry.tag);
+        LOG_ERROR("Unknown asset tag {}", static_cast<int>(entry.tag));
 		return false;
 	}
 	aloader_func loader = found->second;
@@ -76,19 +78,39 @@ bool _load_font(Assets* assets, const std::string& filename, const std::string& 
 	return assets->store(font, name);
 }
 
+bool _load_atlas(Assets* assets, const std::string& filename, const std::string& name) {
+    ImageData* image = png::loadImage(filename);
+    if (image == nullptr) {
+        LOG_CRITICAL("Failed to load image '{}'", filename);
+        return false;
+    }
+
+    for (int i = 0; i < ATLAS_MARGIN_SIZE; ++i) {
+        ImageData* newImage = add_atlas_margins(image, 16);
+        delete image;
+        image = newImage;
+    }
+
+    Texture* texture = Texture::from(image);
+    return assets->store(texture, name);
+}
+
 void AssetsLoader::createDefaults(AssetsLoader& loader) {
-	loader.addLoader(ASSETS_TYPE::SHADER, _load_shader);
-	loader.addLoader(ASSETS_TYPE::TEXTURE, _load_texture);
-	loader.addLoader(ASSETS_TYPE::FONT, _load_font);
+	loader.addLoader(AssetsType::Shader, _load_shader);
+	loader.addLoader(AssetsType::Texture, _load_texture);
+	loader.addLoader(AssetsType::Font, _load_font);
+    loader.addLoader(AssetsType::Atlas, _load_atlas);
 }
 
 void AssetsLoader::addDefaults(AssetsLoader& loader) {
-    loader.add(ASSETS_TYPE::SHADER, "../res/shaders/default", "default");
-    loader.add(ASSETS_TYPE::SHADER, "../res/shaders/lines", "lines");
-    loader.add(ASSETS_TYPE::SHADER, "../res/shaders/ui", "ui");
+    loader.add(AssetsType::Shader, "../res/shaders/default", "default");
+    loader.add(AssetsType::Shader, "../res/shaders/lines", "lines");
+    loader.add(AssetsType::Shader, "../res/shaders/ui", "ui");
 
-    loader.add(ASSETS_TYPE::TEXTURE, "../res/textures/atlas.png", "blocks");
-    loader.add(ASSETS_TYPE::TEXTURE, "../res/textures/slot.png", "slot");
+    loader.add(AssetsType::Atlas, "../res/textures/atlas.png", "blocks");
+    loader.add(AssetsType::Texture, "../res/textures/atlas.png", "blocks_tex");
 
-    loader.add(ASSETS_TYPE::FONT, "../res/fonts/font", "normal");
+    loader.add(AssetsType::Texture, "../res/textures/slot.png", "slot");
+
+    loader.add(AssetsType::Font, "../res/fonts/font", "normal");
 }

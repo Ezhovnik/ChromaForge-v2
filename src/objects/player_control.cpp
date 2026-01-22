@@ -86,6 +86,9 @@ void PlayerController::updateControls(float delta){
 	if (player->flight) speed *= Player_Consts::FLIGHT_SPEED_MUL;
 	if (input.cheat) speed *= Player_Consts::CHEAT_SPEED_MUL;
 
+    if (crouch) speed *= Player_Consts::CROUCH_SPEED_MUL;
+    else if (input.sprint) speed *= Player_Consts::RUN_SPEED_MUL;
+
 	glm::vec3 dir(0,0,0);
 	if (input.moveForward){
 		dir.x += camera->dir.x;
@@ -146,11 +149,9 @@ void PlayerController::updateControls(float delta){
 		float dt = glm::min(1.0f, delta * Player_Consts::ZOOM_SPEED);
 		float zoomValue = 1.0f;
 		if (crouch) {
-			speed *= Player_Consts::CROUCH_SPEED_MUL;
 			cameraOffset += Player_Consts::CROUCH_SHIFT_Y;
 			zoomValue = Player_Consts::CROUCH_ZOOM;
 		} else if (input.sprint){
-			speed *= Player_Consts::RUN_SPEED_MUL;
 			zoomValue = Player_Consts::RUN_ZOOM;
 		}
 		if (input.zoom) zoomValue *= Player_Consts::C_ZOOM;

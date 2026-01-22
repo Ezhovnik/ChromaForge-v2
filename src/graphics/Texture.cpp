@@ -19,12 +19,12 @@ Texture::Texture(ubyte* data, int width, int height, uint format) : width(width)
 
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, (GLvoid *) data);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
     glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 2);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -47,13 +47,13 @@ void Texture::reload(ubyte* data){
 
 Texture* Texture::from(const ImageData* image) {
 	uint format;
-	const ubyte* data = image->getData();
-	switch (image->getFormat())	{
+    switch (image->getFormat())	{
 		case ImageFormat::rgb888: format = GL_RGB; break;
 		case ImageFormat::rgba8888: format = GL_RGBA; break;
 		default:
             LOG_CRITICAL("Unsupported image data format");
 			throw std::runtime_error("unsupported image data format");
 	}
+	const void* data = image->getData();
 	return new Texture((ubyte*)data, image->getWidth(), image->getHeight(), format);
 }
