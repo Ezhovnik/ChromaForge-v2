@@ -156,8 +156,9 @@ void Engine::mainloop() {
         level->update();
         level->chunksController->update(settings.chunks.loadSpeed);
 
-        // Рендеринг мира и HUD
-        worldRenderer.draw(camera, occlusion, 16.0f / (float)settings.chunks.loadDistance, settings.fogCurve);
+        float fogFactor = 18.0f / (float)settings.chunks.loadDistance;
+        worldRenderer.draw(camera, occlusion, fogFactor, settings.graphics.fogCurve);
+
         hud.draw();
         if (level->player->debug) hud.drawDebug(1 / deltaTime, occlusion);
 

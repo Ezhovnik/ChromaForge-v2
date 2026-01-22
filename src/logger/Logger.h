@@ -28,49 +28,15 @@ private:
     
     template<typename... Args>
     void logWithContext(spdlog::level::level_enum level, 
-                       const char* file, int line, const char* function,
-                       const char* fmt, const Args&... args) {
+                        const char* file, int line, const char* function,
+                        const char* fmt, const Args&... args) {
         logger_->log(spdlog::source_loc{file, line, function}, level, fmt, args...);
     }
     
 public:
     static Logger& getInstance();
 
-    void initialize(const std::string& name = "ChromaForge", 
-                   const std::string& logFile = "../logs/ChromaForge.log", 
-                   LogLevel consoleLevel = LogLevel::INFO, 
-                   LogLevel fileLevel = LogLevel::DEBUG);
-
-    // Методы для ручного вызова (без автоматического контекста)
-    template<typename... Args>
-    void trace(const char* fmt, const Args&... args) {
-        logger_->trace(fmt, args...);
-    }
-    
-    template<typename... Args>
-    void debug(const char* fmt, const Args&... args) {
-        logger_->debug(fmt, args...);
-    }
-    
-    template<typename... Args>
-    void info(const char* fmt, const Args&... args) {
-        logger_->info(fmt, args...);
-    }
-    
-    template<typename... Args>
-    void warn(const char* fmt, const Args&... args) {
-        logger_->warn(fmt, args...);
-    }
-    
-    template<typename... Args>
-    void error(const char* fmt, const Args&... args) {
-        logger_->error(fmt, args...);
-    }
-    
-    template<typename... Args>
-    void critical(const char* fmt, const Args&... args) {
-        logger_->critical(fmt, args...);
-    }
+    void initialize(const std::string& name = "ChromaForge", const std::string& logFile = "../logs/ChromaForge.log", LogLevel consoleLevel = LogLevel::INFO, LogLevel fileLevel = LogLevel::DEBUG);
     
     // Методы с контекстом (для использования внутри макросов)
     template<typename... Args>
@@ -106,13 +72,6 @@ public:
     void setLevel(LogLevel level);
     void flush() { logger_->flush(); }
 };
-
-#define LOG_TRACE_NC(...)    Logger::getInstance().trace(__VA_ARGS__)
-#define LOG_DEBUG_NC(...)    Logger::getInstance().debug(__VA_ARGS__)
-#define LOG_INFO_NC(...)     Logger::getInstance().info(__VA_ARGS__)
-#define LOG_WARN_NC(...)     Logger::getInstance().warn(__VA_ARGS__)
-#define LOG_ERROR_NC(...)    Logger::getInstance().error(__VA_ARGS__)
-#define LOG_CRITICAL_NC(...) Logger::getInstance().critical(__VA_ARGS__)
 
 // Макросы с автоматическим определением контекста
 #define LOG_TRACE(...)    Logger::getInstance().trace_context(__FILE__, __LINE__, __func__, __VA_ARGS__)

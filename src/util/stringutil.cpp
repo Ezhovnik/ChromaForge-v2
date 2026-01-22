@@ -4,23 +4,23 @@
 #include <locale>
 #include <sstream>
 
-std::wstring lfill(std::wstring s, int length, wchar_t c) {
+std::wstring lfill(std::wstring s, uint length, wchar_t c) {
     if (s.length() >= length) return s;
 
     std::wstringstream ss;
-    for (int i = 0; i < length-s.length(); i++) {
+    for (uint i = 0; i < length-s.length(); i++) {
         ss << c;
     }
     ss << s;
     return ss.str();
 }
 
-std::wstring rfill(std::wstring s, int length, wchar_t c) {
+std::wstring rfill(std::wstring s, uint length, wchar_t c) {
     if (s.length() >= length) return s;
     
     std::wstringstream ss;
     ss << s;
-    for (int i = 0; i < length-s.length(); i++) {
+    for (uint i = 0; i < length-s.length(); i++) {
         ss << c;
     }
     return ss.str();
