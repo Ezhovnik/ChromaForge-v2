@@ -227,7 +227,7 @@ void PlayerController::updateInteraction(){
 			lighting->onBlockSet(x, y ,z, 0);
 		}
 		if (Events::justClicked(mousecode::BUTTON_2) && !player->noclip){
-			if (block->model != Block_models::X){
+			if (block->model != BlockModel::X){
 				x = (int)(iend.x) + (int)(norm.x);
                 y = (int)(iend.y) + (int)(norm.y);
                 z = (int)(iend.z) + (int)(norm.z);

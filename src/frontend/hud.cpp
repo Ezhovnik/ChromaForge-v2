@@ -195,8 +195,8 @@ void HudRenderer::drawInventory(Player* player) {
 			tint = glm::vec4(1.0f);
 		}
 		
-		if (cblock->model == Block_models::CUBE) batch->blockSprite(x, y, size, size, 16, cblock->textureFaces, tint);
-		else if (cblock->model == Block_models::X) batch->sprite(x, y, size, size, 16, cblock->textureFaces[3], tint);
+		if (cblock->model == BlockModel::Cube) batch->blockSprite(x, y, size, size, 16, cblock->textureFaces, tint);
+		else if (cblock->model == BlockModel::X) batch->sprite(x, y, size, size, 16, cblock->textureFaces[3], tint);
 	}
 }
 
@@ -253,9 +253,9 @@ void HudRenderer::draw(){
 	Player* player = level->player;
 	{
 		Block* cblock = Block::blocks[player->choosenBlock].get();
-		if (cblock->model == Block_models::CUBE){
+		if (cblock->model == BlockModel::Cube){
 			batch->blockSprite(width / 2 - 24, uicamera->fov - 72, 48, 48, 16, cblock->textureFaces, glm::vec4(1.0f));
-		} else if (cblock->model == Block_models::X){
+		} else if (cblock->model == BlockModel::X){
 			batch->sprite(width / 2 - 24, uicamera->fov - 72, 48, 48, 16, cblock->textureFaces[3], glm::vec4(1.0f));
 		}
 	}

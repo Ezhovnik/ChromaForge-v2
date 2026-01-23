@@ -13,11 +13,9 @@
 #define FACE_MZ 4
 #define FACE_PZ 5
 
-namespace Block_models {
-    inline constexpr int AIR = 0;
-    inline constexpr int CUBE = 1;
-    inline constexpr int X = 2;
-}
+enum class BlockModel {
+    None, Cube, X
+};
 
 class Block {
 public:
@@ -28,7 +26,7 @@ public:
     int textureFaces[6]; // -x, +x, -y, +y, -z, +z
     ubyte emission[3];
     ubyte drawGroup = 0;
-    ubyte model = Block_models::CUBE;
+    BlockModel model = BlockModel::Cube;
 
     bool lightPassing = false;
     bool skyLightPassing = false;

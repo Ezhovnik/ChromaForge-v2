@@ -12,6 +12,7 @@
 
 toml::Wrapper create_wrapper(EngineSettings& settings) {
 	toml::Wrapper wrapper;
+
 	toml::Section& display = wrapper.add("display");
 	display.add("width", &settings.display.width);
 	display.add("height", &settings.display.height);
@@ -29,6 +30,10 @@ toml::Wrapper create_wrapper(EngineSettings& settings) {
 
 	toml::Section& graphics = wrapper.add("graphics");
 	graphics.add("fog-curve", &settings.graphics.fogCurve);
+
+    toml::Section& debug = wrapper.add("debug");
+    debug.add("generator-test-mode", &settings.debug.generatorTestMode);
+
 	return wrapper;
 }
 

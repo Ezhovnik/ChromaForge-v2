@@ -32,7 +32,7 @@ void ChunksController::update(int64_t maxDuration) {
     int64_t mcstotal = 0;
     for (uint i = 0; i < MAX_WORK_PER_FRAME; ++i) {
         auto start = std::chrono::high_resolution_clock::now();
-        if (loadVisible(level->world->wfile)) {
+        if (loadVisible()) {
             auto elapsed = std::chrono::high_resolution_clock::now() - start;
             int64_t mcs = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
             avgDurationMcs = mcs * 0.2 + avgDurationMcs * 0.8;
@@ -45,7 +45,7 @@ void ChunksController::update(int64_t maxDuration) {
     }
 }
 
-bool ChunksController::loadVisible(WorldFiles* worldFiles){
+bool ChunksController::loadVisible(){
 	const int width = chunks->width;
 	const int depth = chunks->depth;
 
@@ -94,7 +94,7 @@ bool ChunksController::loadVisible(WorldFiles* worldFiles){
 
 	chunk = std::shared_ptr<Chunk>(new Chunk(nearX + areaOffsetX, nearZ + areaOffsetZ));
     level->chunksStorage->store(chunk);
-	ubyte* data = worldFiles->getChunk(chunk->chunk_x, chunk->chunk_z);
+	ubyte* data = level->world->wfile->getChunk(chunk->chunk_x, chunk->chunk_z);
 	if (data) {
 		chunk->decode(data);
 		chunk->setLoaded(true);

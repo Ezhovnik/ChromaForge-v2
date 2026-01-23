@@ -28,11 +28,16 @@ struct GraphicsSettings {
     float fogCurve = 1.6f;
 };
 
+struct DebugSettings {
+    bool generatorTestMode = false; // Отключает сохранение/загрузку чанков
+};
+
 struct EngineSettings {
     DisplaySettings display;
 	ChunksSettings chunks;
 	CameraSettings camera;
     GraphicsSettings graphics;
+    DebugSettings debug;
 };
 
 #endif // SRC_SETTINGS_H_
