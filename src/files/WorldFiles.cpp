@@ -64,7 +64,7 @@ inline float bytes2Float(ubyte* src, uint offset){
 }
 
 // Конструктор
-WorldFiles::WorldFiles(std::string directory, size_t mainBufferCapacity) : directory(directory){
+WorldFiles::WorldFiles(std::string directory, size_t mainBufferCapacity, bool generatorTestMode) : directory(directory), generatorTestMode(generatorTestMode){
     // Проверяем существование директории. Если её нет, то пытаемся создать
     if (!std::filesystem::is_directory(directory)) {
 		std::filesystem::create_directory(directory);
@@ -188,6 +188,8 @@ ubyte* WorldFiles::getChunk(int x, int z){
 
 // Читает чанк непосредственно из файла
 ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
+    if (generatorTestMode) return nullptr;
+
 	int regionX = floordiv(x, Region_Consts::REGION_SIZE);
     int regionZ = floordiv(z, Region_Consts::REGION_SIZE);
 
@@ -227,6 +229,7 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
 
 // Записывает все измененные регионы на диск
 void WorldFiles::write(){
+    if (generatorTestMode) return;
 	for (auto& [key, region] : regions){
 		if (region.chunksData == nullptr || !region.unsaved) continue;
 

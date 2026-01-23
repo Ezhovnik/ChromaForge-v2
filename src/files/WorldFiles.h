@@ -36,7 +36,9 @@ public:
     std::string directory; // Путь к директории с файлами мира
     ubyte* compressionBuffer;
 
-    WorldFiles(std::string directory, size_t mainBufferCapacity); // Конструктор
+    bool generatorTestMode;
+
+    WorldFiles(std::string directory, size_t mainBufferCapacity, bool generatorTestMode); // Конструктор
     ~WorldFiles(); // Деструктор
 
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.

@@ -19,7 +19,7 @@ void setup_definitions() {
         block->skyLightPassing = true;
         block->obstacle = false;
         block->selectable = false;
-        block->model = Block_models::AIR;
+        block->model = BlockModel::None;
         Block::blocks[block->id] = std::move(block);
     }
 
@@ -109,7 +109,7 @@ void setup_definitions() {
         block->drawGroup = 5;
         block->lightPassing = true;
         block->obstacle = false;
-        block->model = Block_models::X;
+        block->model = BlockModel::X;
         Block::blocks[block->id] = std::move(block);
     }
 
@@ -119,7 +119,7 @@ void setup_definitions() {
         block->drawGroup = 5;
         block->lightPassing = true;
         block->obstacle = false;
-        block->model = Block_models::X;
+        block->model = BlockModel::X;
         Block::blocks[block->id] = std::move(block);
     }
 
@@ -130,7 +130,7 @@ void setup_definitions() {
         block->lightPassing = true;
         block->obstacle = false;
         block->hitboxScale = 0.5f;
-        block->model = Block_models::X;
+        block->model = BlockModel::X;
         Block::blocks[block->id] = std::move(block);
     }
 
@@ -146,7 +146,7 @@ void setup_definitions() {
         block->drawGroup = 5;
         block->lightPassing = true;
         block->obstacle = false;
-        block->model = Block_models::X;
+        block->model = BlockModel::X;
         Block::blocks[block->id] = std::move(block);
     }
 

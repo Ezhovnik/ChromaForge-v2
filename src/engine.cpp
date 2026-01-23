@@ -78,7 +78,7 @@ Engine::Engine(const EngineSettings& settings_) {
 
     // Создание камеры, мира и игрока
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
-    World* world = new World("world-1", "../saves/world-1/", 42);
+    World* world = new World("world-1", "../saves/world-1/", 42, settings);
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
     level = world->loadLevel(player, settings);
 
@@ -91,7 +91,7 @@ Engine::Engine(const EngineSettings& settings_) {
 Engine::~Engine() {
     LOG_INFO("World saving");
     World* world = level->world;
-    world->write(level); // Сохранение текущего состояния уровня в файл
+    world->write(level, !settings.debug.generatorTestMode); // Сохранение текущего состояния уровня в файл
     delete level;
     delete world;
     LOG_INFO("The world has been successfully saved");

@@ -309,7 +309,7 @@ void Chunks::translate(int dx, int dz){
             int nz = z - dz;
             if (nx < 0 || nz < 0 || nx >= width || nz >= depth){
                 events->trigger(CHUNK_HIDDEN, chunk.get());
-                worldFiles->put(chunk.get());
+                if (worldFiles) worldFiles->put(chunk.get());
                 chunksCount--;
                 continue;
             }
