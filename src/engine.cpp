@@ -1,5 +1,6 @@
 #include "engine.h"
 
+#include <assert.h>
 #include <iostream>
 #include <vector>
 #include <ctime>
@@ -35,6 +36,7 @@
 #include "frontend/hud.h"
 #include "frontend/gui/GUI.h"
 #include "graphics/Batch2D.h"
+#include "frontend/screens.h"
 #include "logger/Logger.h"
 #include "logger/OpenGL_Logger.h"
 
@@ -80,26 +82,31 @@ Engine::Engine(const EngineSettings& settings_) {
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
     World* world = new World("world-1", "../saves/world-1/", 42, settings);
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
-    level = world->loadLevel(player, settings);
 
     gui = new GUI();
+
+    setScreen(new LevelScreen(this, world->loadLevel(player, settings)));
     LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
+    Logger::getInstance().flush();
 }
 
 // Реализация деструктора
 Engine::~Engine() {
-    LOG_INFO("World saving");
-    World* world = level->world;
-    world->write(level, !settings.debug.generatorTestMode); // Сохранение текущего состояния уровня в файл
-    delete level;
-    delete world;
-    LOG_INFO("The world has been successfully saved");
-
     LOG_INFO("Shutting down");
-    delete assets;
+    if (screen != nullptr) {
+        delete screen;
+        screen = nullptr;
+    }
+
+    if (assets != nullptr) {
+        delete assets;
+        assets = nullptr;
+    }
     OpenGL_Logger::getInstance().finalize();
     Window::terminate();
+    LOG_INFO("Engine finished");
+    Logger::getInstance().flush();
 }
 
 // Обновление таймеров
@@ -112,9 +119,6 @@ void Engine::updateTimers() {
 
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
-    // Переключение окклюзии (отбрасывание невидимых объектов)
-    if (Events::justPressed(keycode::O)) occlusion = !occlusion;
-
     if (Events::justPressed(keycode::F2)) {
         ImageData* image = Window::takeScreenshot();
 		image->flipY();
@@ -122,51 +126,57 @@ void Engine::updateHotkeys() {
 		png::writeImage(filename, image);
 		delete image;
     }
-
-    // Переключение режима отладки игрока
-    if (Events::justPressed(keycode::F3)) level->player->debug = !level->player->debug;
-
-    // Отметка всех чанков как изменённых (для перерисовки)
-    if (Events::justPressed(keycode::F5)) {
-        for (uint i = 0; i < level->chunks->volume; ++i) {
-            std::shared_ptr<Chunk> chunk = level->chunks->chunks[i];
-            if (chunk != nullptr && chunk->isReady()) chunk->setModified(true);
-        }
-    }
 }
 
 // Основной цикл приложения
 void Engine::mainloop() {
     LOG_INFO("Preparing systems");
 
-    Camera* camera = level->player->camera;
-    WorldRenderer worldRenderer(level, assets);
-    HudRenderer hud(gui, level, assets);
     Batch2D batch(1024);
 
     lastTime = Window::time();
     LOG_INFO("Systems have been prepared");
 
     while (!Window::isShouldClose()){
+        if (screen == nullptr) {
+            LOG_CRITICAL("Screen is null");
+            throw std::runtime_error("Screen is null");
+        }
+
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
 
-        bool inputLocked = hud.isPause() || hud.isInventoryOpen() || gui->isFocusCaught();
-        level->updatePlayer(deltaTime, !inputLocked, hud.isPause(), !inputLocked);
-        level->update();
-        level->chunksController->update(settings.chunks.loadSpeed);
-
-        float fogFactor = 18.0f / (float)settings.chunks.loadDistance;
-        worldRenderer.draw(camera, occlusion, fogFactor, settings.graphics.fogCurve);
-
-        hud.draw();
-        if (level->player->debug) hud.drawDebug(1 / deltaTime, occlusion);
+        screen->update(deltaTime);
+        screen->draw(deltaTime);
 
         gui->activate(deltaTime);
         gui->draw(&batch, assets);
 
         Window::swapBuffers(); // Показать отрендеренный кадр
-        Events::pollEvents(); // Обработка событий ОС и ввода
+        Events::pollEvents(); // Обработка событий ввода
+
         GL_CHECK(); // Проверка ошибок OpenGL
     }
+    Logger::getInstance().flush();
+}
+
+GUI* Engine::getGUI() {
+	return gui;
+}
+
+EngineSettings& Engine::getSettings() {
+	return settings;
+}
+
+Assets* Engine::getAssets() {
+	return assets;
+}
+
+void Engine::setScreen(Screen* screen) {
+	if (this->screen != nullptr) {
+        delete this->screen;
+        this->screen = nullptr;
+    }
+
+	this->screen = screen;
 }

@@ -110,9 +110,18 @@ HudRenderer::HudRenderer(gui::GUI* gui, Level* level, Assets* assets) : level(le
 }
 
 HudRenderer::~HudRenderer() {
-	delete batch;
-	delete uicamera;
-	delete guiController;
+    if (batch != nullptr) {
+        delete batch;
+        batch = nullptr;
+    }
+    if (uicamera != nullptr) {
+        delete uicamera;
+        uicamera = nullptr;
+    }
+    if (guiController != nullptr) {
+        delete guiController;
+        guiController = nullptr;
+    }
 }
 
 void HudRenderer::drawDebug(int fps, bool occlusion){

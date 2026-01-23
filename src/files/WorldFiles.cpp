@@ -24,7 +24,7 @@ namespace Sections {
     constexpr int FLAGS = 3;
 }
 
-namespace Player_Flags {
+namespace PlayerFlags {
     constexpr int FLIGHT = 0x1;
     constexpr int NOCLIP = 0x2;
 }
@@ -230,6 +230,11 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
 // Записывает все измененные регионы на диск
 void WorldFiles::write(){
     if (generatorTestMode) return;
+
+    if (!std::filesystem::is_directory(directory)) {
+		std::filesystem::create_directory(directory);
+	}
+
 	for (auto& [key, region] : regions){
 		if (region.chunksData == nullptr || !region.unsaved) continue;
 
@@ -254,7 +259,7 @@ void WorldFiles::writePlayer(Player* player){
 	float2Bytes(player->camY, dst, offset); offset += sizeof(float);
 
     dst[offset++] = Sections::FLAGS;
-	dst[offset++] = player->flight * Player_Flags::FLIGHT | player->noclip * Player_Flags::NOCLIP;
+	dst[offset++] = player->flight * PlayerFlags::FLIGHT | player->noclip * PlayerFlags::NOCLIP;
 
 	files::write_bytes(getPlayerFile(), (const char*)dst, sizeof(dst));
 }
@@ -285,8 +290,8 @@ bool WorldFiles::readPlayer(Player* player) {
         case Sections::FLAGS:
             {
                 ubyte flags = data[offset++];
-                player->flight = flags & Player_Flags::FLIGHT;
-                player->noclip = flags & Player_Flags::NOCLIP;
+                player->flight = flags & PlayerFlags::FLIGHT;
+                player->noclip = flags & PlayerFlags::NOCLIP;
             }
             break;
 		}

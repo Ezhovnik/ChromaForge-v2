@@ -64,7 +64,7 @@ int main() {
 		}
 
         engine = std::make_unique<Engine>(settings);
-        engine->mainloop(); // Запуск основного цикла
+        engine->mainloop(); // Запуск основного цикла    
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred\n{}", err.what());
     }

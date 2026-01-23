@@ -10,6 +10,7 @@
 
 class Assets;
 class Level;
+class Screen;
 
 namespace gui {
     class GUI;
@@ -24,14 +25,13 @@ public:
 class Engine {
 private:
     Assets* assets; // Менеджер ассетов (текстуры, шейдеры и т.д.)
-    Level* level; // Текущий уровень (состояние мира и игрока)
     gui::GUI* gui;
+    Screen* screen = nullptr;
     EngineSettings settings;
 
     uint64_t frame = 0; // Номер текущего кадра
     double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
     double deltaTime = 0.0; // Разница во времени между кадрами
-    bool occlusion = true; // Включаем/выключаем окклюзию (отбрасывание невидимых объектов)
 public:
     Engine(const EngineSettings& settings_); // Конструктор
     ~Engine(); // Деструктор
@@ -39,6 +39,12 @@ public:
     void updateTimers(); // Обновление таймеров (frame, deltaTime)
     void updateHotkeys(); // Обработка горячих клавиш
     void mainloop(); // Основной цикл приложения
+
+    Assets* getAssets();
+	gui::GUI* getGUI();
+	EngineSettings& getSettings();
+
+    void setScreen(Screen* screen);
 };
 
 #endif // SRC_ENGINE_H_
