@@ -15,7 +15,44 @@
 #include "voxel.h"
 #include "Chunk.h"
 #include "../definitions.h"
+#include "../logger/Logger.h"
+#include "../math/voxmaths.h"
 #include "../typedefs.h"
+
+inline constexpr int SEA_LEVEL = 55;
+
+class Map2D {
+	int x, z;
+	int width, depth;
+	float* heights;
+public:
+	Map2D(int x, int z, int width, int depth) : x(x), z(z), width(width), depth(depth) {
+		heights = new float[width * depth];
+	}
+	~Map2D() {
+		delete[] heights;
+	}
+
+	inline float get(int x, int z) {
+		x -= this->x;
+		z -= this->z;
+		if (x < 0 || z < 0 || x >= width || z >= depth) {
+            LOG_ERROR("Out of heightmap");
+			throw std::runtime_error("out of heightmap");
+		}
+		return heights[z * width + x];
+	}
+
+	inline void set(int x, int z, float value) {
+		x -= this->x;
+		z -= this->z;
+		if (x < 0 || z < 0 || x >= width || z >= depth) {
+            LOG_ERROR("Out of heightmap");
+			throw std::runtime_error("out of heightmap");
+		}
+		heights[z * width + x] = value;
+	}
+};
 
 class PseudoRandom {
 	ushort seed;
@@ -46,75 +83,76 @@ public:
 };
 
 float calc_height(fnl_state *noise, int real_x, int real_z){
-	float height = fnlGetNoise3D(noise, real_x*0.0125f*8,real_z*0.0125f*8, 0.0f);
-	height += fnlGetNoise3D(noise, real_x*0.025f*8,real_z*0.025f*8, 0.0f)*0.5f;
-	height += fnlGetNoise3D(noise, real_x*0.05f*8,real_z*0.05f*8, 0.0f)*0.25f;
+	float height = 0;
+
+	height += fnlGetNoise3D(noise, real_x*0.0125f*8-125567,real_z*0.0125f*8+3546, 0.0f);
+	height += fnlGetNoise3D(noise, real_x*0.025f*8+4647,real_z*0.025f*8-3436, 0.0f)*0.5f;
+	height += fnlGetNoise3D(noise, real_x*0.05f*8-834176,real_z*0.05f*8+23678, 0.0f)*0.25f;
 	height += fnlGetNoise3D(noise,
-			real_x*0.2f*8 + fnlGetNoise3D(noise, real_x*0.1f*8,real_z*0.1f*8, 0.0f)*50,
-			real_z*0.2f*8 + fnlGetNoise3D(noise, real_x*0.1f*8+4363,real_z*0.1f*8, 0.0f)*50,
-			0.0f)*0.1f;
-	height += fnlGetNoise3D(noise, real_x*0.1f*8,real_z*0.1f*8, 0.0f)*0.125f;
-	height += fnlGetNoise3D(noise, real_x*0.4f*8,real_z*0.4f*8, 0.0f)*0.0625f;
-	// height += fnlGetNoise3D(noise, real_x*8,real_z*8, 0.0f)*0.03f*(fnlGetNoise3D(noise, -real_x*0.0125f*8-1000,real_z*0.0125f*8+2000, 0.0f)/2+0.5f);
-	height *= fnlGetNoise3D(noise, real_x*0.0125f*8+1000,real_z*0.0125f*8+1000, 0.0f)/2+0.5f;
+			real_x*0.2f*8 + fnlGetNoise3D(noise, real_x*0.1f*8-23557,real_z*0.1f*8-6568, 0.0f)*50,
+			real_z*0.2f*8 + fnlGetNoise3D(noise, real_x*0.1f*8+4363,real_z*0.1f*8+4456, 0.0f)*50,
+			0.0f) * fnlGetNoise3D(noise, real_x*0.01f-834176,real_z*0.01f+23678, 0.0f);
+	height += fnlGetNoise3D(noise, real_x*0.1f*8-3465,real_z*0.1f*8+4534, 0.0f)*0.125f;
+	//height += fnlGetNoise3D(noise, real_x*0.4f+4565,real_z*0.4f*18+46456, 0.0f)*0.0625f * 0.3f;
+	height *= fnlGetNoise3D(noise, real_x*0.1f+1000,real_z*0.1f+1000, 0.0f)*0.5f+0.5f;
 	height += 1.0f;
 	height *= 64.0f;
 	return height;
 }
 
-float calc_height_faster(fnl_state *noise, int real_x, int real_z){
-	float height = fnlGetNoise3D(noise, real_x*0.0125f*8,real_z*0.0125f*8, 0.0f);
-	height += fnlGetNoise3D(noise, real_x*0.025f*8,real_z*0.025f*8, 0.0f)*0.5f;
-	height += fnlGetNoise3D(noise, real_x*0.05f*8,real_z*0.05f*8, 0.0f)*0.25f;
-	height += fnlGetNoise3D(noise,
-			real_x*0.2f*8 + fnlGetNoise3D(noise, real_x*0.1f*8,real_z*0.1f*8, 0.0f)*50,
-			real_z*0.2f*8 + fnlGetNoise3D(noise, real_x*0.1f*8+4363,real_z*0.1f*8, 0.0f)*50,
-			0.0f)*0.1f;
-	height += fnlGetNoise3D(noise, real_x*0.1f*8,real_z*0.1f*8, 0.0f)*0.125f;
-	height *= fnlGetNoise3D(noise, real_x*0.0125f*8+1000,real_z*0.0125f*8+1000, 0.0f)/2+0.5f;
-	height += 1.0f;
-	height *= 64.0f;
-	return height;
-}
+blockid_t generate_tree(fnl_state *noise, PseudoRandom* random, Map2D& heights, Map2D& humidity, int real_x, int real_y, int real_z, int tileSize){
+	const int tileX = floordiv(real_x, tileSize);
+	const int tileZ = floordiv(real_z, tileSize);
 
-blockid_t generate_tree(fnl_state *noise, PseudoRandom* random, const std::vector<float>& heights, int real_x, int real_y, int real_z, int tileSize){
-	const int tileX = floor((double)real_x/(double)tileSize);
-	const int tileY = floor((double)real_z/(double)tileSize);
-	random->setSeed(tileX*4325261+tileY*12160951+tileSize*9431111);
+	random->setSeed(tileX * 4325261 + tileZ * 12160951 + tileSize * 9431111);
 
-	bool gentree = fnlGetNoise3D(noise, tileX*3.0f+633, 0.0, tileY*3.0f) > -0.1f && (random->rand() % 10) < 7;
+    int randomX = (random->rand() % (tileSize/2)) - tileSize/4;
+	int randomZ = (random->rand() % (tileSize/2)) - tileSize/4;
+
+	int centerX = tileX * tileSize + tileSize/2 + randomX;
+	int centerZ = tileZ * tileSize + tileSize/2 + randomZ;
+
+	bool gentree = (random->rand() % 10) < humidity.get(centerX, centerZ) * 13;
 	if (!gentree) return Blocks_id::AIR;
 
-	const int randomX = (random->rand() % (tileSize/2)) - tileSize/4;
-	const int randomZ = (random->rand() % (tileSize/2)) - tileSize/4;
-	int centerX = tileX * tileSize + tileSize/2 + randomX;
-	int centerY = tileY * tileSize + tileSize/2 + randomZ;
-	int height = (int)calc_height_faster(noise, centerX, centerY);
-	if ((height < 57) /*|| (fnlGetNoise3D(noise, real_x*0.025f,real_z*0.025f, 0.0f)*0.5f > 0.5)*/) return Blocks_id::AIR;
+	int height = (int)(heights.get(centerX, centerZ));
+	if (height < SEA_LEVEL + 1) return Blocks_id::AIR;
 	int lx = real_x - centerX;
 	int radius = random->rand() % 4 + 2;
 	int ly = real_y - height - 3 * radius;
-	int lz = real_z - centerY;
+	int lz = real_z - centerZ;
 	if (lx == 0 && lz == 0 && real_y - height < (3 * radius + radius / 2)) return Blocks_id::LOG;
-	if (lx*lx+ly*ly/2+lz*lz < radius*radius) return Blocks_id::LEAVES;
+	if (lx * lx + ly * ly / 2 + lz * lz < radius * radius) return Blocks_id::LEAVES;
 	return Blocks_id::AIR;
 }
 
-void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
+void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed) {
+    const int treesTile = 12;
 	fnl_state noise = fnlCreateState();
 	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
 	noise.seed = seed * 60617077 % 25896307;
 	PseudoRandom randomtree;
     PseudoRandom randomgrass;
 
-	std::vector<float> heights(CHUNK_VOLUME);
+	int padding = 8;
+	Map2D heights(cx * CHUNK_WIDTH - padding, cz * CHUNK_DEPTH - padding, CHUNK_WIDTH + padding * 2, CHUNK_DEPTH + padding * 2);
+	Map2D humidity(cx * CHUNK_WIDTH - padding, cz * CHUNK_DEPTH - padding, CHUNK_WIDTH + padding * 2, CHUNK_DEPTH + padding * 2);
 
-	for (int z = 0; z < CHUNK_DEPTH; z++){
+	for (int z = -padding; z < CHUNK_DEPTH + padding; z++){
         int real_z = z + cz * CHUNK_DEPTH;
-		for (int x = 0; x < CHUNK_WIDTH; x++){
+		for (int x = -padding; x < CHUNK_WIDTH + padding; x++){
 			int real_x = x + cx * CHUNK_WIDTH;
 			float height = calc_height(&noise, real_x, real_z);
-			heights[z * CHUNK_WIDTH + x] = height;
+            float hum = fnlGetNoise3D(&noise, real_x * 0.3 + 633, 0.0, real_z * 0.3);
+			if (height >= SEA_LEVEL) {
+				height = ((height - SEA_LEVEL) * 0.1) - 0.0;
+				height = powf(height, (1.0+hum - fmax(0.0, height) * 0.2));
+				height = height * 10 + SEA_LEVEL;
+			} else {
+				height *= 1.0f + (height-SEA_LEVEL) * 0.05f * hum;
+			}
+			heights.set(real_x, real_z, height);
+			humidity.set(real_x, real_z, hum);
 		}
 	}
 
@@ -122,32 +160,32 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
         int real_z = z + cz * CHUNK_DEPTH;
         for (int x = 0; x < CHUNK_WIDTH; x++){
             int real_x = x + cx * CHUNK_WIDTH;
-            float height = heights[z * CHUNK_WIDTH + x];
+            float height = heights.get(real_x, real_z);
             for (int y = 0; y < CHUNK_HEIGHT; y++){
                 int real_y = y;
-                blockid_t id = real_y < 55 ? Blocks_id::WATER : Blocks_id::AIR;
+                blockid_t id = real_y < SEA_LEVEL ? Blocks_id::WATER : Blocks_id::AIR;
                 uint8_t states = 0;
                 
-                if ((real_y == (int)height) && (54 < real_y)) {
+                if ((real_y == (int)height) && (SEA_LEVEL - 2 < real_y)) {
                     id = Blocks_id::MOSS;
                 } else if (real_y < (height - 6)){
                     id = Blocks_id::STONE;
                 } else if (real_y < height){
                     id = Blocks_id::DIRT;
                 } else {
-                    int tree = generate_tree(&noise, &randomtree, heights, real_x, real_y, real_z, 12);
+                    int tree = generate_tree(&noise, &randomtree, heights, humidity, real_x, real_y, real_z, treesTile);
                     if (tree != Blocks_id::AIR) {
                         id = tree;
                         states = BLOCK_DIR_Y;
                     }
                 }
                 
-                if (((height - (1.5 - 0.2 * pow(height - 54, 4))) < real_y) && (real_y < height)) id = Blocks_id::SAND;
+                if (((height - (1.5 - 0.2 * pow(height - 54, 4))) < real_y) && (real_y < height) && humidity.get(real_x, real_z) < 0.1) id = Blocks_id::SAND;
                 
                 if (real_y <= 2) id = Blocks_id::BEDROCK;
 
                 randomgrass.setSeed(real_x, real_z);
-                if ((id == Blocks_id::AIR) && (real_y > 55.5) && ((int)(height + 1) == real_y)) {
+                if ((id == Blocks_id::AIR) && (real_y > SEA_LEVEL + 0.5) && ((int)(height + 1) == real_y)) {
                     ushort grass_value = (ushort)randomgrass.rand();
                     
                     if (grass_value > 62000 || (real_y > 70 && grass_value > 61500)) {
@@ -161,7 +199,7 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
                     }
                 }
                 
-                if ((height > 56) && ((int)(height + 1) == real_y) && ((ushort)randomgrass.rand() > 65533)){
+                if ((height > SEA_LEVEL + 1) && ((int)(height + 1) == real_y) && ((ushort)randomgrass.rand() > 65533)){
                     id = Blocks_id::LOG;
                     states = BLOCK_DIR_Y;
                 }
