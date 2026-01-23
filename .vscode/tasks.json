@@ -64,6 +64,7 @@
                 "${workspaceFolder}/src/util/stringutil.cpp",
                 "${workspaceFolder}/src/frontend/screens.cpp",
                 "${workspaceFolder}/src/util/platform.cpp",
+                "${workspaceFolder}/src/files/engine_files.cpp",
                 "${workspaceFolder}/src/logger/Logger.cpp",
                 "${workspaceFolder}/src/logger/OpenGL_Logger.cpp",
                 "${workspaceFolder}/src/engine.cpp",

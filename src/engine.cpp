@@ -15,7 +15,7 @@
 #include "settings.h"
 #include "coders/json.h"
 #include "graphics/ImageData.h"
-#include "util/platform.h"
+#include "files/engine_files.h"
 #include "coders/png.h"
 #include "files/files.h"
 #include "window/Events.h"
@@ -80,7 +80,7 @@ Engine::Engine(const EngineSettings& settings_) {
 
     // Создание камеры, мира и игрока
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
-    World* world = new World("world-1", "../saves/world-1/", 42, settings);
+    World* world = new World("world-1", engine_fs::get_saves_folder() + "/world-1/", 42, settings);
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
 
     gui = new GUI();
@@ -122,7 +122,7 @@ void Engine::updateHotkeys() {
     if (Events::justPressed(keycode::F2)) {
         ImageData* image = Window::takeScreenshot();
 		image->flipY();
-		std::string filename = platform::get_screenshot_file("png");
+		std::string filename = engine_fs::get_screenshot_file("png");
 		png::writeImage(filename, image);
 		delete image;
     }
