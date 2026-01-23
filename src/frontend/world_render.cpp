@@ -86,9 +86,8 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float fogCurve){
     Chunks* chunks = level->chunks;
 
-	glClearColor(CLEAR_COLOR.r, CLEAR_COLOR.g, CLEAR_COLOR.b, CLEAR_COLOR.a); // Цвет фона (светло-серый с голубым оттенком)
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    Window::setBgColor(CLEAR_COLOR);
+    Window::clear();
     Window::viewport(0, 0, Window::width, Window::height);
 
     glEnable(GL_DEPTH_TEST);
