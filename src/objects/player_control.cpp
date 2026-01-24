@@ -123,7 +123,6 @@ void PlayerController::updateControls(float delta){
 
 	if (input.jump && hitbox->grounded) hitbox->velocity.y = Player_Consts::JUMP_FORCE;
 
-
 	cameraOffset = glm::vec3(0.0f, 0.7f, 0.0f);
 
 	if (camSettings.shaking) {
@@ -149,7 +148,7 @@ void PlayerController::updateControls(float delta){
 		float dt = glm::min(1.0f, delta * Player_Consts::ZOOM_SPEED);
 		float zoomValue = 1.0f;
 		if (crouch) {
-			cameraOffset += Player_Consts::CROUCH_SHIFT_Y;
+			cameraOffset += glm::vec3(0.0f, Player_Consts::CROUCH_SHIFT_Y, 0.0f);
 			zoomValue = Player_Consts::CROUCH_ZOOM;
 		} else if (input.sprint){
 			zoomValue = Player_Consts::RUN_ZOOM;

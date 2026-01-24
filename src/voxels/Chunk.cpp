@@ -8,6 +8,9 @@
 Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
     voxels = new voxel[CHUNK_VOLUME];
 
+    bottom = 0;
+    top = CHUNK_HEIGHT;
+
     // Инициализируем воксели
     for(size_t i = 0; i < CHUNK_VOLUME; ++i) {
         voxels[i].id = Blocks_id::MOSS;
@@ -37,6 +40,22 @@ bool Chunk::isEmpty() {
 	return true;
 }
 
+void Chunk::updateHeights() {
+    for (int i = 0; i < CHUNK_VOLUME; ++i) {
+        if (voxels[i].id != Blocks_id::AIR) {
+            bottom = i / (CHUNK_WIDTH * CHUNK_DEPTH);
+            break;
+        }
+    }
+
+    for (int i = CHUNK_VOLUME - 1; i >= 0; --i) {
+        if (voxels[i].id != Blocks_id::AIR) {
+            top = i / (CHUNK_DEPTH * CHUNK_WIDTH) + 1;
+            break;
+        }
+    }
+}
+
 // Создает полную копию текущего чанка.
 Chunk* Chunk::clone() const {
 	Chunk* other = new Chunk(chunk_x, chunk_z);
@@ -60,9 +79,6 @@ ubyte* Chunk::encode() const {
 	return buffer;
 }
 
-/*
-    @return true if all is fine
-*/
 bool Chunk::decode(ubyte* data) {
 	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
 		voxel& vox = voxels[i];
