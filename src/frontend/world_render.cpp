@@ -126,10 +126,11 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
     shader->uniform3f("u_cameraPos", camera->position.x, camera->position.y, camera->position.z);
 
     Block* choosen_block = Block::blocks[level->player->choosenBlock].get();
+    float multiplier = 0.8f;
 	shader->uniform3f("u_torchlightColor",
-			choosen_block->emission[0] / MAX_TORCH_LIGHT,
-			choosen_block->emission[1] / MAX_TORCH_LIGHT,
-			choosen_block->emission[2] / MAX_TORCH_LIGHT);
+			choosen_block->emission[0] / MAX_TORCH_LIGHT * multiplier,
+			choosen_block->emission[1] / MAX_TORCH_LIGHT * multiplier,
+			choosen_block->emission[2] / MAX_TORCH_LIGHT * multiplier);
 	shader->uniform1f("u_torchlightDistance", TORCH_LIGHT_DIST);
 
 	texture->bind();
@@ -154,9 +155,9 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
     });
 
     // Отрисовываем все видимые чанки
-    int occludedChunks = 0;
+    chunks->visibleCount = 0;
 	for (size_t i = 0; i < indices.size(); i++){
-		occludedChunks += drawChunk(indices[i], camera, shader, occlusion);
+		chunks->visibleCount += drawChunk(indices[i], camera, shader, occlusion);
 	}
 
     shader->uniformMatrix("u_model", glm::mat4(1.0f));
@@ -169,7 +170,7 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
 		glm::vec3 pos = level->playerController->selectedBlockPosition;
 
         linesShader->use();
-	    linesShader->uniformMatrix("u_projview", camera->getProjection() * camera->getView());
+	    linesShader->uniformMatrix("u_projview", camera->getProjView());
         glLineWidth(2.0f);
 
 		if (selectedBlock->model == BlockModel::Cube){
@@ -182,39 +183,27 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
 	}
 
     if (level->player->debug) {
-		linesShader->use();
-		linesShader->uniformMatrix("u_projview", camera->getProjection()*camera->getView());
+        float lenght = 40.0f;
 
-		glm::vec3 point = glm::vec3(camera->position.x+camera->front.x,
-						camera->position.y+camera->front.y,
-						camera->position.z+camera->front.z);
+		linesShader->use();
+		glm::mat4 model(1.0f);
+        model = glm::translate(model, glm::vec3(Window::width >> 1, -static_cast<int>(Window::height) >> 1, 0.0f));
+        linesShader->uniformMatrix("u_projview", glm::ortho(0.0f, static_cast<float>(Window::width), -static_cast<float>(Window::height), 0.0f, -lenght, lenght) * model * glm::inverse(camera->rotation));
 
 		glDisable(GL_DEPTH_TEST);
 
 		glLineWidth(4.0f);
-		lineBatch->line(point.x, point.y, point.z,
-						point.x+0.1f, point.y, point.z,
-						0, 0, 0, 1);
-		lineBatch->line(point.x, point.y, point.z,
-						point.x, point.y, point.z+0.1f,
-						0, 0, 0, 1);
-		lineBatch->line(point.x, point.y, point.z,
-						point.x, point.y+0.1f, point.z,
-						0, 0, 0, 1);
-		lineBatch->render();
+		lineBatch->line(0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 0.0f, 1.0f);
+        lineBatch->render();
+
+        glEnable(GL_DEPTH_TEST);
 
 		glLineWidth(2.0f);
-		lineBatch->line(point.x, point.y, point.z,
-						point.x+0.1f, point.y, point.z,
-						1, 0, 0, 1);
-		lineBatch->line(point.x, point.y, point.z,
-						point.x, point.y, point.z+0.1f,
-						0, 0, 1, 1);
-		lineBatch->line(point.x, point.y, point.z,
-						point.x, point.y+0.1f, point.z,
-						0, 1, 0, 1);
+		lineBatch->line(0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 1.0f, 1.0f);
 		lineBatch->render();
-
-		glEnable(GL_DEPTH_TEST);
 	}
 }

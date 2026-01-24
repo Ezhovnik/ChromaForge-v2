@@ -6,7 +6,6 @@
 
 class OpenGL_Logger {
 private:
-    static OpenGL_Logger* instance_;
     bool isInitialized_;
     LogLevel logLevel_;
 
@@ -39,15 +38,11 @@ public:
     
     bool checkGLError(const char* context, const char* fileName, int lineNumber);
     
-    void setLevel(LogLevel level);
-    LogLevel getLevel() const { return logLevel_; }
-    
     static void GLAPIENTRY debugMessageCallback(GLenum source, GLenum type, GLuint id, 
                                                 GLenum severity, GLsizei length, 
                                                 const GLchar* message, const void* userParam);
 };
 
-#define GL_CHECK() OpenGL_Logger::getInstance().checkGLError(__FUNCTION__, __FILE__, __LINE__)
-#define GL_CALL(x) do { x; OpenGL_Logger::getInstance().checkGLError(__FUNCTION__, __FILE__, __LINE__); } while(0)
+#define GL_CHECK() OpenGL_Logger::getInstance().checkGLError(__func__, __FILE__, __LINE__)
 
 #endif // LOGGER_OPENGL_LOGGER_H_

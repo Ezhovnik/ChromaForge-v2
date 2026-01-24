@@ -32,6 +32,7 @@ public:
 
     glm::mat4 getProjection(); // Возвращает матрицу проекции камеры.
     glm::mat4 getView(); // Возвращает матрицу вида камеры.
+    glm::mat4 getProjView();
 };
 
 #endif // WINDOW_CAMERA_H

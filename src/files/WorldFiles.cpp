@@ -64,10 +64,10 @@ inline float bytes2Float(ubyte* src, uint offset){
 }
 
 // Конструктор
-WorldFiles::WorldFiles(std::string directory, size_t mainBufferCapacity, bool generatorTestMode) : directory(directory), generatorTestMode(generatorTestMode){
+WorldFiles::WorldFiles(std::filesystem::path directory, size_t mainBufferCapacity, bool generatorTestMode) : directory(directory), generatorTestMode(generatorTestMode){
     // Проверяем существование директории. Если её нет, то пытаемся создать
     if (!std::filesystem::is_directory(directory)) {
-		std::filesystem::create_directory(directory);
+		std::filesystem::create_directories(directory);
 	}
 
     // Инициализируем буферы
@@ -135,13 +135,13 @@ void WorldFiles::put(Chunk* chunk){
 }
 
 // Генерирует имя файла для региона с заданными координатами
-std::string WorldFiles::getRegionFile(int x, int z) {
-	return directory + std::to_string(x) + "_" + std::to_string(z) + ".bin";
+std::filesystem::path WorldFiles::getRegionFile(int x, int z) {
+	return directory/std::filesystem::path(std::to_string(x) + "_" + std::to_string(z) + ".bin");
 }
 
 // Генерирует имя файла, в котором записана информация об игроке
-std::string WorldFiles::getPlayerFile() {
-	return directory + "/player.bin";
+std::filesystem::path WorldFiles::getPlayerFile() {
+	return directory/std::filesystem::path("player.bin");
 }
 
 // Получает данные чанка из кэша или файла
@@ -200,7 +200,7 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
 	int chunk_index = localZ * Region_Consts::REGION_SIZE + localX;
 
     // Открываем файл
-	std::string filename = getRegionFile(regionX, regionZ);
+	std::filesystem::path filename = getRegionFile(regionX, regionZ);
 
 	std::ifstream input(filename, std::ios::binary);
 	if (!input.is_open()) return nullptr;

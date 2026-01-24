@@ -26,7 +26,7 @@ class Engine {
 private:
     Assets* assets; // Менеджер ассетов (текстуры, шейдеры и т.д.)
     gui::GUI* gui;
-    Screen* screen = nullptr;
+    std::shared_ptr<Screen> screen = nullptr;
     EngineSettings settings;
 
     uint64_t frame = 0; // Номер текущего кадра
@@ -44,7 +44,7 @@ public:
 	gui::GUI* getGUI();
 	EngineSettings& getSettings();
 
-    void setScreen(Screen* screen);
+    void setScreen(std::shared_ptr<Screen> screen);
 };
 
 #endif // SRC_ENGINE_H_

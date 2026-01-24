@@ -1,5 +1,8 @@
 #include "World.h"
 
+#include <memory>
+#include <glm/glm.hpp>
+
 #include "../files/WorldFiles.h"
 #include "../voxels/Chunk.h"
 #include "../voxels/Chunks.h"
@@ -10,7 +13,11 @@
 #include "../physics/PhysicsSolver.h"
 #include "../window/Camera.h"
 
-World::World(std::string name, std::string directory, int seed, EngineSettings& settings) : name(name), seed(seed) {
+// Точка спавна игрока и начальная скорость
+inline constexpr glm::vec3 SPAWNPOINT = {0, 128, 0}; // Точка, где игрок появляется в мире
+inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
+
+World::World(std::string name, std::filesystem::path directory, int seed, EngineSettings& settings) : name(name), seed(seed) {
 	wfile = new WorldFiles(directory, Region_Consts::REGION_VOLUME * (CHUNK_DATA_LEN * 2 + 8), settings.debug.generatorTestMode);
 }
 
@@ -31,13 +38,15 @@ void World::write(Level* level, bool writeChunks) {
 	wfile->writePlayer(level->player);
 }
 
-Level* World::loadLevel(Player* player, EngineSettings& settings) {
+Level* World::loadLevel(EngineSettings& settings) {
     ChunksStorage* storage = new ChunksStorage();
     LevelEvents* events = new LevelEvents();
-	Level* level = new Level(this, player, storage, events, settings);
-	wfile->readPlayer(player);
 
-	Camera* camera = player->camera;
+    Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
+    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
+    Level* level = new Level(this, player, storage, events, settings);
+    wfile->readPlayer(player);
+
 	camera->rotation = glm::mat4(1.0f);
 	camera->rotate(player->camY, player->camX, 0);
 	return level;

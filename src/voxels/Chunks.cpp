@@ -28,6 +28,7 @@ Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFi
     }
 
     chunksCount = 0;
+    visibleCount = 0;
 }
 
 // Деструктор

@@ -113,9 +113,17 @@ bool Window::initialize(DisplaySettings& settings) {
     GLenum glewError = glewInit();
     if (glewError != GLEW_OK) {
         LOG_CRITICAL("Failed to initialize GLEW {}", reinterpret_cast<const char*>(glewGetErrorString(glewError)));
+        glfwTerminate();
         return false;
     }
-     // Установка области отображения (viewport) - вся область окна
+
+    if (!glGenTextures || !glBindTexture) {
+        LOG_CRITICAL("OpenGL functions is not loaded");
+        glfwTerminate();
+        return false;
+    }
+
+    // Установка области отображения (viewport) - вся область окна
     glViewport(0, 0, width, height);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1);

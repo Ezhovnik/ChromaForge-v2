@@ -1,0 +1,45 @@
+[2026-01-24 11:34:00.566] [info] [Logger.cpp:43] [initialize] Logger initialized. File: ../build/logs\ChromaForge.log
+[2026-01-24 11:34:00.628] [info] [main.cpp:58] [main] Reading engine settings from ../build/settings.toml
+[2026-01-24 11:34:02.329] [info] [Window.cpp:148] [initialize] Window initialized successfully: 1280x720
+[2026-01-24 11:34:02.329] [info] [OpenGL_Logger.cpp:13] [initialize] OpenGL Logger initialized with level: 0
+[2026-01-24 11:34:02.330] [debug] [OpenGL_Logger.cpp:15] [initialize] OpenGL Version: 3.3.13587 Core Profile Context 19.40.46 26.20.14046.3
+[2026-01-24 11:34:02.330] [debug] [OpenGL_Logger.cpp:16] [initialize] OpenGL Vendor: ATI Technologies Inc.
+[2026-01-24 11:34:02.330] [debug] [OpenGL_Logger.cpp:17] [initialize] OpenGL Renderer: AMD Radeon(TM) Vega 8 Graphics 
+[2026-01-24 11:34:02.330] [debug] [OpenGL_Logger.cpp:18] [initialize] GLSL Version: 4.60
+[2026-01-24 11:34:02.330] [debug] [OpenGL_Logger.cpp:21] [initialize] OpenGL debug output is supported
+[2026-01-24 11:34:02.330] [debug] [OpenGL_Logger.cpp:83] [setDebugMessageFilters] OpenGL debug filters set for log level: 0
+[2026-01-24 11:34:02.330] [info] [OpenGL_Logger.cpp:100] [enableDebugOutput] OpenGL debug output enabled with level: 0
+[2026-01-24 11:34:02.330] [info] [engine.cpp:66] [Engine] Loading Assets
+[2026-01-24 11:34:02.330] [debug] [AssetsLoader.cpp:124] [createDefaults] Created default asset loaders
+[2026-01-24 11:34:02.330] [debug] [AssetsLoader.cpp:140] [addDefaults] Added default assets to loading queue
+[2026-01-24 11:34:02.330] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/shaders/default as default
+[2026-01-24 11:34:02.333] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/shaders/lines as lines
+[2026-01-24 11:34:02.334] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/shaders/ui as ui
+[2026-01-24 11:34:02.336] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/textures/atlas.png as blocks
+[2026-01-24 11:34:02.339] [debug] [png.cpp:55] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
+[2026-01-24 11:34:02.347] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/textures/atlas.png as blocks_tex
+[2026-01-24 11:34:02.680] [debug] [png.cpp:55] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
+[2026-01-24 11:34:02.681] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/textures/slot.png as slot
+[2026-01-24 11:34:02.683] [debug] [png.cpp:55] [loadImage] Loaded PNG image: '../res/textures/slot.png' (256x256, 4 channels)
+[2026-01-24 11:34:02.684] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/fonts/font as normal
+[2026-01-24 11:34:02.687] [debug] [png.cpp:55] [loadImage] Loaded PNG image: '../res/fonts/font_0.png' (256x256, 4 channels)
+[2026-01-24 11:34:02.688] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 0 for 'normal'
+[2026-01-24 11:34:02.691] [debug] [png.cpp:55] [loadImage] Loaded PNG image: '../res/fonts/font_1.png' (256x256, 4 channels)
+[2026-01-24 11:34:02.691] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 1 for 'normal'
+[2026-01-24 11:34:02.695] [debug] [png.cpp:55] [loadImage] Loaded PNG image: '../res/fonts/font_2.png' (256x256, 4 channels)
+[2026-01-24 11:34:02.695] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 2 for 'normal'
+[2026-01-24 11:34:02.698] [debug] [png.cpp:55] [loadImage] Loaded PNG image: '../res/fonts/font_3.png' (256x256, 4 channels)
+[2026-01-24 11:34:02.698] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 3 for 'normal'
+[2026-01-24 11:34:02.701] [debug] [png.cpp:55] [loadImage] Loaded PNG image: '../res/fonts/font_4.png' (256x256, 4 channels)
+[2026-01-24 11:34:02.701] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 4 for 'normal'
+[2026-01-24 11:34:02.701] [info] [engine.cpp:78] [Engine] Assets loaded successfully
+[2026-01-24 11:34:02.702] [info] [engine.cpp:84] [Engine] The world is loaded
+[2026-01-24 11:34:02.702] [info] [engine.cpp:85] [Engine] Initialization is finished
+[2026-01-24 11:34:02.702] [info] [engine.cpp:125] [mainloop] Preparing systems
+[2026-01-24 11:34:02.703] [info] [engine.cpp:130] [mainloop] Systems have been prepared
+[2026-01-24 11:34:04.906] [info] [screens.cpp:34] [operator()] Loading world
+[2026-01-24 11:35:06.179] [info] [engine.cpp:91] [~Engine] Shutting down
+[2026-01-24 11:35:06.183] [info] [screens.cpp:96] [~LevelScreen] World saving
+[2026-01-24 11:35:07.257] [info] [screens.cpp:102] [~LevelScreen] The world has been successfully saved
+[2026-01-24 11:35:07.258] [info] [OpenGL_Logger.cpp:41] [finalize] OpenGL Logger disabled
+[2026-01-24 11:35:07.332] [info] [engine.cpp:101] [~Engine] Engine finished
