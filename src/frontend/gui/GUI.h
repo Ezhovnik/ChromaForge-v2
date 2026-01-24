@@ -5,6 +5,8 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <functional>
+#include <unordered_map>
+#include <string>
 
 class Batch2D;
 class Assets;
@@ -52,6 +54,8 @@ namespace gui {
         std::shared_ptr<UINode> pressed = nullptr;
         std::shared_ptr<UINode> focus = nullptr;
 
+        std::unordered_map<std::string, std::shared_ptr<UINode>> storage;
+
         Camera* uicamera;
     public:
         GUI();
@@ -61,10 +65,14 @@ namespace gui {
         bool isFocusCaught() const;
 
         void activate(float delta);
-        void draw(Batch2D* batch, Assets* assets);
-        void add(std::shared_ptr<UINode> panel);
 
+        void draw(Batch2D* batch, Assets* assets);
+
+        void add(std::shared_ptr<UINode> panel);
         void remove(std::shared_ptr<UINode> panel);
+        void store(std::string name, std::shared_ptr<UINode> node);
+        std::shared_ptr<UINode> get(std::string name);
+        void remove(std::string name);
     };
 }
 

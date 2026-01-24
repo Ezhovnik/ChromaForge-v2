@@ -57,7 +57,7 @@ Button::Button(std::wstring text, glm::vec4 padding) : Panel(glm::vec2(32, 32), 
 void Button::drawBackground(Batch2D* batch, Assets* assets) {
     glm::vec2 coord = calcCoord();
     batch->texture(nullptr);
-    batch->color = (ispressed() ? pressedColor : (hover_ ? hoverColor : color_));
+    batch->color = (isPressed() ? pressedColor : (hover_ ? hoverColor : color_));
     batch->rect(coord.x, coord.y, size_.x, size_.y);
 }
 
@@ -74,8 +74,9 @@ void Button::mouseRelease(GUI* gui, int x, int y) {
     }
 }
 
-void Button::listenAction(onaction action) {
+Button* Button::listenAction(onaction action) {
     actions.push_back(action);
+    return this;
 }
 
 TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0, false), input(L""), placeholder(placeholder) {
@@ -87,7 +88,7 @@ TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(
 void TextBox::drawBackground(Batch2D* batch, Assets* assets) {
     glm::vec2 coord = calcCoord();
     batch->texture(nullptr);
-    batch->color = (isfocused() ? focusedColor : (hover_ ? hoverColor : color_));
+    batch->color = (isFocused() ? focusedColor : (hover_ ? hoverColor : color_));
     batch->rect(coord.x, coord.y, size_.x, size_.y);
     if (!focused_ && supplier) input = supplier();
 

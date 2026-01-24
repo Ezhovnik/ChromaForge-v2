@@ -54,7 +54,7 @@ void UINode::mouseRelease(GUI*, int x, int y) {
     pressed_ = false;
 }
 
-bool UINode::ispressed() const {
+bool UINode::isPressed() const {
     return pressed_;
 }
 
@@ -62,7 +62,7 @@ void UINode::defocus() {
     focused_ = false;
 }
 
-bool UINode::isfocused() const {
+bool UINode::isFocused() const {
     return focused_;
 }
 

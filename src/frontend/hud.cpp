@@ -101,12 +101,12 @@ HudRenderer::HudRenderer(Engine* engine, Level* level) : level(level), assets(en
 	gui::Panel* pauseMenu = new gui::Panel(glm::vec2(350, 200));
 	pauseMenu->color(glm::vec4(0.0f));
 	{
-		gui::Button* button = new gui::Button(L"Continue", glm::vec4(12.0f, 10.0f, 12.0f, 12.0f));
+		gui::Button* button = new gui::Button(L"Continue", glm::vec4(10.0f));
 		button->listenAction([this](gui::GUI*){this->pause = false;});
 		pauseMenu->add(std::shared_ptr<gui::UINode>(button));
 	}
 	{
-		gui::Button* button = new gui::Button(L"Save and Quit to Menu", glm::vec4(12.0f, 10.0f, 12.0f, 12.0f));
+		gui::Button* button = new gui::Button(L"Save and Quit to Menu", glm::vec4(10.0f));
 		button->listenAction([this, engine](gui::GUI*){
 			this->pauseMenu->visible(false);
 			engine->setScreen(std::shared_ptr<Screen>(new MenuScreen(engine)));

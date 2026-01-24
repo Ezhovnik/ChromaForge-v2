@@ -52,14 +52,6 @@ inline void int2Bytes(int value, ubyte* dest, size_t offset){
 	dest[offset + 3] = (char) (value >> 0 & 0xFF);
 }
 
-// inline void float2Bytes(float fvalue, ubyte* dest, size_t offset){
-// 	uint32_t value = *((uint32_t*)&fvalue);
-// 	dest[offset] = (char) (value >> 24 & 0xFF);
-// 	dest[offset + 1] = (char) (value >> 16 & 0xFF);
-// 	dest[offset + 2] = (char) (value >> 8 & 0xFF);
-// 	dest[offset + 3] = (char) (value >> 0 & 0xFF);
-// }
-
 inline float bytes2Float(ubyte* src, uint offset){
 	uint32_t value = ((src[offset] << 24) |
 					(src[offset + 1] << 16) |
