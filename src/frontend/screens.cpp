@@ -1,5 +1,6 @@
 #include "screens.h"
 
+#include <filesystem>
 #include <memory>
 
 #include "../window/Camera.h"
@@ -15,14 +16,77 @@
 #include "world_render.h"
 #include "hud.h"
 #include "gui/GUI.h"
+#include "gui/panels.h"
+#include "gui/controls.h"
 #include "../engine.h"
+#include "../files/engine_files.h"
+#include "../util/stringutil.h"
 #include "../logger/Logger.h"
 
-using std::shared_ptr;
+MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
+    gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
+    panel->color(glm::vec4(0.0f));
+	panel->setCoord(glm::vec2(10, 10));
+
+    {
+        gui::Button* button = new gui::Button(L"Continue", glm::vec4(12.0f, 10.0f, 12.0f, 10.0f));
+        button->listenAction([this, panel](gui::GUI*) {
+            LOG_INFO("Loading world");
+            EngineSettings& settings = engine->getSettings();
+            std::filesystem::path worldFolder = engine_fs::get_saves_folder()/std::filesystem::path("world-1");
+            World* world = new World("world-1", worldFolder, 42, settings);
+
+            auto screen = new LevelScreen(engine, world->loadLevel(settings));
+            engine->setScreen(std::shared_ptr<Screen>(screen));
+        });
+        panel->add(std::shared_ptr<gui::UINode>(button));
+    }
+    /*Panel* worldsPanel = new Panel(glm::vec2(390, 200), glm::vec4(5.0f));
+    worldsPanel->color(vec4(0.1f));
+    for (auto const& entry : directory_iterator(engine_fs::get_save_folder())) {
+        std::string name = entry.path().filename();
+        gui::Button* button = new gui::Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
+        button->color(glm::vec4(0.5f));
+        button->listenAction([this, panel, name](gui::GUI*) {
+            EngineSettings& settings = engine->getSettings();
+            World* world = new World(name, engine_fs::get_save_folder() + "/" + name + "/", 42, settings);
+            Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
+            Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
+            engine->setScreen(new LevelScreen(engine, world->loadLevel(player, settings)));
+        });
+        worldsPanel->add(std::shared_ptr<UINode>(button));
+    }
+    panel->add(std::shared_ptr<UINode>(worldsPanel));*/
+    
+    {
+        gui::Button* button = new gui::Button(L"Quit", glm::vec4(12.0f, 10.0f, 12.0f, 10.0f));
+        button->listenAction([this](gui::GUI*) {
+            Window::setShouldClose(true);
+        });
+        panel->add(std::shared_ptr<gui::UINode>(button));
+    }
+
+    this->panel = std::shared_ptr<gui::UINode>(panel);
+    engine->getGUI()->add(this->panel);
+}
+
+MenuScreen::~MenuScreen() {
+    engine->getGUI()->remove(panel);
+}
+
+void MenuScreen::update(float delta) {
+}
+
+void MenuScreen::draw(float delta) {
+    panel->setCoord((Window::size() - panel->size()) / 2.0f);
+    
+    Window::clear();
+    Window::setBgColor(glm::vec3(0.2f, 0.2f, 0.2f));
+}
 
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
     worldRenderer = new WorldRenderer(level, engine->getAssets());
-    hud = new HudRenderer(engine->getGUI(), level, engine->getAssets());
+    hud = new HudRenderer(engine, level);
 }
 
 LevelScreen::~LevelScreen() {

@@ -5,6 +5,7 @@
 #include "settings.h"
 #include "engine.h"
 #include "files/files.h"
+#include "files/engine_files.h"
 #include "coders/toml.h"
 #include "definitions.h"
 #include "util/platform.h"
@@ -42,7 +43,7 @@ int main() {
     platform::configure_encoding();
 
     // Инициализация логгера
-    Logger::getInstance().initialize();
+    Logger::getInstance().initialize(engine_fs::get_logs_file().string(), LogLevel::INFO, LogLevel::TRACE);
 
     setup_definitions();
 

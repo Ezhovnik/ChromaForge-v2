@@ -3,39 +3,31 @@
 
 void OpenGL_Logger::initialize(LogLevel level) {
     if (isInitialized_) {
-        if (logLevel_ <= LogLevel::WARN) LOG_WARN("OpenGL Logger is already initialized");
+        LOG_WARN("OpenGL Logger is already initialized");
         return;
     }
     
-    logLevel_ = level;
     isInitialized_ = true;
+    logLevel_ = level;
     
-    // Check if GLEW is initialized
-    if (glewInit() != GLEW_OK) {
-        LOG_ERROR("Failed to initialize GLEW");
-        return;
-    }
+    LOG_INFO("OpenGL Logger initialized with level: {}", static_cast<int>(logLevel_));
     
-    if (logLevel_ <= LogLevel::INFO) LOG_INFO("OpenGL Logger initialized with level: {}", static_cast<int>(logLevel_));
-    
-    if (logLevel_ <= LogLevel::DEBUG) {
-        LOG_DEBUG("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
-        LOG_DEBUG("OpenGL Vendor: {}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
-        LOG_DEBUG("OpenGL Renderer: {}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
-        LOG_DEBUG("GLSL Version: {}", reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
-    }
-    
+    LOG_DEBUG("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+    LOG_DEBUG("OpenGL Vendor: {}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
+    LOG_DEBUG("OpenGL Renderer: {}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+    LOG_DEBUG("GLSL Version: {}", reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+
     if (GLEW_ARB_debug_output || GLEW_KHR_debug) {
-        if (logLevel_ <= LogLevel::DEBUG) LOG_DEBUG("OpenGL debug output is supported");
+        LOG_DEBUG("OpenGL debug output is supported");
         enableDebugOutput();
     } else {
-        if (logLevel_ <= LogLevel::WARN) LOG_WARN("OpenGL debug output is not supported");
+        LOG_WARN("OpenGL debug output is not supported");
     }
 }
 
 void OpenGL_Logger::finalize() {
     if (!isInitialized_) {
-        if (logLevel_ <= LogLevel::WARN) LOG_WARN("OpenGL Logger is already finalized");
+        LOG_WARN("OpenGL Logger is already finalized");
         return;
     }
     
@@ -46,11 +38,10 @@ void OpenGL_Logger::finalize() {
     
     isInitialized_ = false;
     
-    if (logLevel_ <= LogLevel::INFO) LOG_INFO("OpenGL Logger disabled");
+    LOG_INFO("OpenGL Logger disabled");
 }
 
 bool OpenGL_Logger::shouldLog(GLenum severity) const {
-    // Map OpenGL severity to our LogLevel
     switch (severity) {
         case GL_DEBUG_SEVERITY_HIGH:
             return logLevel_ <= LogLevel::ERR;
@@ -66,20 +57,21 @@ bool OpenGL_Logger::shouldLog(GLenum severity) const {
 }
 
 void OpenGL_Logger::setDebugMessageFilters() {
-    if (!(GLEW_ARB_debug_output || GLEW_KHR_debug)) {
-        return;
-    }
+    if (!(GLEW_ARB_debug_output || GLEW_KHR_debug)) return;
     
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_FALSE);
     
     switch (logLevel_) {
         case LogLevel::TRACE:
             glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_TRUE);
+            [[fallthrough]];
         case LogLevel::DEBUG:
             glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, 0, nullptr, GL_TRUE);
+            [[fallthrough]];
         case LogLevel::INFO:
         case LogLevel::WARN:
             glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, nullptr, GL_TRUE);
+            [[fallthrough]];
         case LogLevel::ERR:
         case LogLevel::CRITICAL:
             glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
@@ -88,12 +80,12 @@ void OpenGL_Logger::setDebugMessageFilters() {
             break;
     }
     
-    if (logLevel_ <= LogLevel::DEBUG) LOG_DEBUG("OpenGL debug filters set for log level: {}", static_cast<int>(logLevel_));
+    LOG_DEBUG("OpenGL debug filters set for log level: {}", static_cast<int>(logLevel_));
 }
 
 void OpenGL_Logger::enableDebugOutput() {
     if (!isInitialized_) {
-        if (logLevel_ <= LogLevel::WARN) LOG_WARN("OpenGL Logger not initialized. Call initialize() first.");
+        LOG_WARN("OpenGL Logger not initialized. Call initialize() first.");
         return;
     }
     
@@ -105,7 +97,7 @@ void OpenGL_Logger::enableDebugOutput() {
         
         setDebugMessageFilters();
         
-        if (logLevel_ <= LogLevel::INFO) LOG_INFO("OpenGL debug output enabled with level: {}", static_cast<int>(logLevel_));
+        LOG_INFO("OpenGL debug output enabled with level: {}", static_cast<int>(logLevel_));
     }
 }
 
@@ -114,13 +106,13 @@ void OpenGL_Logger::disableDebugOutput() {
         glDisable(GL_DEBUG_OUTPUT);
         glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         
-        if (logLevel_ <= LogLevel::INFO) LOG_INFO("OpenGL debug output disabled");
+        LOG_INFO("OpenGL debug output disabled");
     }
 }
 
 bool OpenGL_Logger::checkGLError(const char* context, const char* fileName, int lineNumber) {
     GLenum error = glGetError();
-    if (error != GL_NO_ERROR && logLevel_ <= LogLevel::ERR) {
+    if (error != GL_NO_ERROR) {
         logGLError(error, context, fileName, lineNumber);
         return false;
     }
@@ -130,15 +122,6 @@ bool OpenGL_Logger::checkGLError(const char* context, const char* fileName, int 
 void OpenGL_Logger::logGLError(GLenum error, const char* context, const char* fileName, int lineNumber) {
     const char* errorStr = getGLErrorString(error);
     LOG_ERROR("OpenGL error in {} ({}:{}): {} (0x{:X})", context, fileName, lineNumber, errorStr, error);
-}
-
-void OpenGL_Logger::setLevel(LogLevel level) {
-    logLevel_ = level;
-    
-    if (isInitialized_ && (GLEW_ARB_debug_output || GLEW_KHR_debug)) {
-        setDebugMessageFilters();
-        if (logLevel_ <= LogLevel::DEBUG) LOG_DEBUG("OpenGL Logger level changed to: {}", static_cast<int>(level));
-    }
 }
 
 const char* OpenGL_Logger::getGLErrorString(GLenum error) {

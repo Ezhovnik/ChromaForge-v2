@@ -4,12 +4,10 @@
 #include <string>
 #include <filesystem>
 
-#define SCREENSHOTS_FOLDER "../build/screenshots"
-#define SAVES_FOLDER "../build/saves"
-
 namespace engine_fs {
-    extern std::string get_screenshot_file(std::string ext);
-    extern std::string get_saves_folder();
+    extern std::filesystem::path get_screenshot_file(std::string ext);
+    extern std::filesystem::path get_saves_folder();
+    extern std::filesystem::path get_logs_file();
 }
 
 #endif // FILES_ENGINE_FILES_H_

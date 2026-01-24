@@ -58,7 +58,7 @@ Engine::Engine(const EngineSettings& settings_) {
     }
 
     // Инициализация логгера OpenGL
-    OpenGL_Logger::getInstance().initialize(LogLevel::DEBUG);
+    OpenGL_Logger::getInstance().initialize(LogLevel::TRACE);
     GL_CHECK();
 
     // Загрузка ассетов
@@ -76,16 +76,11 @@ Engine::Engine(const EngineSettings& settings_) {
         }
     }
     LOG_INFO("Assets loaded successfully");
-    LOG_INFO("Loading world");
-
-    // Создание камеры, мира и игрока
-    Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
-    World* world = new World("world-1", engine_fs::get_saves_folder() + "/world-1/", 42, settings);
-    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
 
     gui = new GUI();
 
-    setScreen(new LevelScreen(this, world->loadLevel(player, settings)));
+    setScreen(std::shared_ptr<Screen> (new MenuScreen(this)));
+
     LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -94,17 +89,15 @@ Engine::Engine(const EngineSettings& settings_) {
 // Реализация деструктора
 Engine::~Engine() {
     LOG_INFO("Shutting down");
-    if (screen != nullptr) {
-        delete screen;
-        screen = nullptr;
-    }
 
+    screen = nullptr;
     if (assets != nullptr) {
         delete assets;
         assets = nullptr;
     }
     OpenGL_Logger::getInstance().finalize();
     Window::terminate();
+
     LOG_INFO("Engine finished");
     Logger::getInstance().flush();
 }
@@ -120,11 +113,10 @@ void Engine::updateTimers() {
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
     if (Events::justPressed(keycode::F2)) {
-        ImageData* image = Window::takeScreenshot();
+        std::unique_ptr<ImageData> image(Window::takeScreenshot());
 		image->flipY();
-		std::string filename = engine_fs::get_screenshot_file("png");
-		png::writeImage(filename, image);
-		delete image;
+		std::filesystem::path filename = engine_fs::get_screenshot_file("png");
+		png::writeImage(filename.string(), image.get());
     }
 }
 
@@ -146,10 +138,11 @@ void Engine::mainloop() {
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
 
+        gui->activate(deltaTime);
+
         screen->update(deltaTime);
         screen->draw(deltaTime);
 
-        gui->activate(deltaTime);
         gui->draw(&batch, assets);
 
         Window::swapBuffers(); // Показать отрендеренный кадр
@@ -172,11 +165,6 @@ Assets* Engine::getAssets() {
 	return assets;
 }
 
-void Engine::setScreen(Screen* screen) {
-	if (this->screen != nullptr) {
-        delete this->screen;
-        this->screen = nullptr;
-    }
-
+void Engine::setScreen(std::shared_ptr<Screen> screen) {
 	this->screen = screen;
 }

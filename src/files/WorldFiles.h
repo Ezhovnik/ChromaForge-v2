@@ -4,6 +4,7 @@
 #include <map>
 #include <unordered_map>
 #include <string>
+#include <filesystem>
 
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -33,12 +34,12 @@ struct WorldRegion {
 class WorldFiles {
 public:
     std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
-    std::string directory; // Путь к директории с файлами мира
+    std::filesystem::path directory; // Путь к директории с файлами мира
     ubyte* compressionBuffer;
 
     bool generatorTestMode;
 
-    WorldFiles(std::string directory, size_t mainBufferCapacity, bool generatorTestMode); // Конструктор
+    WorldFiles(std::filesystem::path directory, size_t mainBufferCapacity, bool generatorTestMode); // Конструктор
     ~WorldFiles(); // Деструктор
 
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
@@ -50,8 +51,8 @@ public:
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
     void write(); // Записывает все измененные регионы из памяти на диск.
 
-	std::string getRegionFile(int x, int z); // Генерирует имя файла для региона с заданными координатами
-    std::string getPlayerFile(); // Генерирует имя файла, в котором записана информация об игроке
+	std::filesystem::path getRegionFile(int x, int z); // Генерирует имя файла для региона с заданными координатами
+    std::filesystem::path getPlayerFile(); // Генерирует имя файла, в котором записана информация об игроке
 };
 
 extern void longToCoords(int& x, int& z, long key); // Преобразует 64-битный ключ региона в координаты

@@ -1,5 +1,7 @@
 #include "panels.h"
 
+#include <algorithm>
+
 #include "../../window/Window.h"
 #include "../../assets/Assets.h"
 #include "../../graphics/Batch2D.h"
@@ -21,6 +23,19 @@ std::shared_ptr<UINode> Container::getAt(glm::vec2 pos, std::shared_ptr<UINode> 
     return UINode::getAt(pos, self);
 }
 
+void Container::activate(float delta) {
+    for (IntervalEvent& event : intervalEvents) {
+        event.timer += delta;
+        if (event.timer > event.interval) {
+            event.callback();
+            event.timer = fmod(event.timer, event.interval);
+        }
+    }
+    for (auto node : nodes) {
+        if (node->visible()) node->activate(delta);
+    }
+}
+
 void Container::draw(Batch2D* batch, Assets* assets) {
     glm::vec2 coord = calcCoord();
     glm::vec2 size = this->size();
@@ -39,6 +54,18 @@ void Container::add(std::shared_ptr<UINode> node) {
     nodes.push_back(node);
     node->setParent(this);
     refresh();
+}
+
+void Container::remove(std::shared_ptr<UINode> selected) {
+    selected->setParent(nullptr);
+    nodes.erase(std::remove_if(nodes.begin(), nodes.end(), [selected](const std::shared_ptr<UINode> node) {
+        return node == selected;
+    }), nodes.end());
+    refresh();
+}
+
+void Container::listenInterval(float interval, std::function<void()> callback) {
+    intervalEvents.push_back({callback, interval, 0.0f});
 }
 
 Panel::Panel(glm::vec2 size, glm::vec4 padding, float interval, bool resizing)
@@ -62,7 +89,7 @@ void Panel::refresh() {
     glm::vec2 size = this->size();
     if (orientation_ == Orientation::vertical) {
         float maxw = size.x;
-        for (auto node : nodes) {
+        for (auto& node : nodes) {
             glm::vec2 nodesize = node->size();
             const glm::vec4 margin = node->margin();
             y += margin.y;
@@ -81,23 +108,27 @@ void Panel::refresh() {
             }
             node->setCoord(glm::vec2(ex, y));
             y += nodesize.y + margin.w + interval;
-            node->size(glm::vec2(size.x - padding.x - padding.z - margin.x - margin.z, nodesize.y));
+
+            float width = size.x - padding.x - padding.z - margin.x - margin.z;
+            node->size(glm::vec2(width, nodesize.y));
             maxw = fmax(maxw, ex+node->size().x + margin.z + padding.z);
         }
-        if (resizing_) this->size(glm::vec2(maxw, y+padding.w));
+        if (resizing_) this->size(glm::vec2(size.x, y+padding.w));
     } else {
         float maxh = size.y;
-        for (auto node : nodes) {
+        for (auto& node : nodes) {
             glm::vec2 nodesize = node->size();
             const glm::vec4 margin = node->margin();
             x += margin.x;
             node->setCoord(glm::vec2(x, y+margin.y));
             x += nodesize.x + margin.z + interval;
-            node->size(glm::vec2(nodesize.x, size.y - padding.y - padding.w - margin.y - margin.w));
+
+            float height = size.y - padding.y - padding.w - margin.y - margin.w;
+            node->size(glm::vec2(nodesize.x, height));
             maxh = fmax(maxh, y + margin.y + node->size().y + margin.w + padding.w);
         }
         bool increased = maxh > size.y;
-        if (resizing_) this->size(glm::vec2(x+padding.z, maxh));
+        if (resizing_) this->size(glm::vec2(x+padding.z, size.y));
         if (increased) refresh();
     }
 }

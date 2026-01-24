@@ -8,6 +8,7 @@
 
 class Batch2D;
 class Assets;
+class Camera;
 
 /*
 Some info about padding and margin.
@@ -44,12 +45,6 @@ namespace gui {
     class UINode;
     class Container;
 
-    struct IntervalEvent {
-        std::function<void()> callback;
-        float interval;
-        float timer;
-    };
-
     class GUI {
         Container* container;
 
@@ -57,7 +52,7 @@ namespace gui {
         std::shared_ptr<UINode> pressed = nullptr;
         std::shared_ptr<UINode> focus = nullptr;
 
-        std::vector<IntervalEvent> intervalEvents;
+        Camera* uicamera;
     public:
         GUI();
         ~GUI();
@@ -69,7 +64,7 @@ namespace gui {
         void draw(Batch2D* batch, Assets* assets);
         void add(std::shared_ptr<UINode> panel);
 
-        void interval(float interval, std::function<void()> callback);
+        void remove(std::shared_ptr<UINode> panel);
     };
 }
 

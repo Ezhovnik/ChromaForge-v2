@@ -51,3 +51,7 @@ glm::mat4 Camera::getView() {
     if (perspective) return glm::lookAt(position, position + front, up);
 	else return glm::translate(glm::mat4(1.0f), position);
 }
+
+glm::mat4 Camera::getProjView() {
+    return getProjection() * getView();
+}

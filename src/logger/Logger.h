@@ -36,7 +36,7 @@ private:
 public:
     static Logger& getInstance();
 
-    void initialize(const std::string& name = "ChromaForge", const std::string& logFile = "../logs/ChromaForge.log", LogLevel consoleLevel = LogLevel::INFO, LogLevel fileLevel = LogLevel::DEBUG);
+    void initialize(const std::string& logFile, LogLevel consoleLevel, LogLevel fileLevel);
     
     // Методы с контекстом (для использования внутри макросов)
     template<typename... Args>
