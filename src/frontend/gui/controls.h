@@ -46,7 +46,7 @@ namespace gui {
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
 
         virtual void mouseRelease(GUI*, int x, int y) override;
-        virtual void listenAction(onaction action);
+        virtual Button* listenAction(onaction action);
     };
 
     class TextBox : public Panel {
@@ -68,7 +68,7 @@ namespace gui {
         virtual void keyPressed(int key) override;
         virtual void textSupplier(wstringsupplier supplier);
         virtual void textConsumer(wstringconsumer consumer);
-        virtual bool isfocuskeeper() const override {return true;}
+        virtual bool isFocusKeeper() const override {return true;}
         virtual std::wstring text() const;
     };
 }

@@ -57,12 +57,13 @@ namespace gui {
         glm::vec4 margin() const;
 
         virtual void click(GUI*, int x, int y);
+        virtual void mouseMove(GUI*, int x, int y) {};
         virtual void mouseRelease(GUI*, int x, int y);
 
-        bool ispressed() const;
+        bool isPressed() const;
         void defocus();
-        bool isfocused() const; 
-        virtual bool isfocuskeeper() const {return false;}
+        bool isFocused() const; 
+        virtual bool isFocusKeeper() const {return false;}
 
         virtual void typed(unsigned int codepoint) {};
         virtual void keyPressed(int key) {};

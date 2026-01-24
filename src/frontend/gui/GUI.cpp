@@ -40,11 +40,11 @@ void GUI::activate(float delta) {
     if (hover) hover->hover(true);
     this->hover = hover;
 
-    if (Events::isClicked(0)) {
+    if (Events::justClicked(0)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
             pressed->click(this, mx, my);
-            if (focus) focus->defocus();
+            if (focus && focus != pressed) focus->defocus();
             focus = pressed;
         }
         if (this->hover == nullptr && focus) {
@@ -56,7 +56,7 @@ void GUI::activate(float delta) {
         pressed = nullptr;
     }
     if (focus) {
-        if (!focus->isfocused()){
+        if (!focus->isFocused()){
             focus = nullptr;
         } else if (Events::justPressed(keycode::ESCAPE)) {
             focus->defocus();
@@ -67,6 +67,9 @@ void GUI::activate(float delta) {
             }
             for (auto key : Events::pressedKeys) {
                 focus->keyPressed(key);
+            }
+            if (Events::isClicked(mousecode::BUTTON_1)) {
+                focus->mouseMove(this, mx, my);
             }
         }
     }
@@ -87,7 +90,7 @@ std::shared_ptr<UINode> GUI::getFocused() const {
 }
 
 bool GUI::isFocusCaught() const {
-    return focus && focus->isfocuskeeper();
+    return focus && focus->isFocusKeeper();
 }
 
 void GUI::add(std::shared_ptr<UINode> panel) {
@@ -96,4 +99,20 @@ void GUI::add(std::shared_ptr<UINode> panel) {
 
 void GUI::remove(std::shared_ptr<UINode> panel) {
     container->remove(panel);
+}
+
+void GUI::store(std::string name, std::shared_ptr<UINode> node) {
+    storage[name] = node;
+}
+
+std::shared_ptr<UINode> GUI::get(std::string name) {
+    auto found = storage.find(name);
+    if (found == storage.end()) return nullptr;
+    return found->second;
+}
+
+void GUI::remove(std::string name) {
+    auto it = storage.find(name);
+    if (it == storage.end()) return;
+    storage.erase(name);
 }
