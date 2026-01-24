@@ -52,13 +52,16 @@ HudRenderer::HudRenderer(Engine* engine, Level* level) : level(level), assets(en
 
 	panel->setCoord(glm::vec2(10, 10));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
-		return L"chunks: " + std::to_wstring(this->level->chunks->chunksCount) + L" visible: " + std::to_wstring(this->level->chunks->visibleCount);
-	})));
-	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
 		return L"fps: "+this->fpsString;
+	})));
+    panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		return L"meshes: " + std::to_wstring(Mesh::meshesCount);
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
 		return L"occlusion: " + std::wstring(this->occlusion ? L"on" : L"off");
+	})));
+    panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		return L"chunks: " + std::to_wstring(this->level->chunks->chunksCount) + L" visible: " + std::to_wstring(this->level->chunks->visibleCount);
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
 		std::wstringstream stream;
@@ -66,7 +69,7 @@ HudRenderer::HudRenderer(Engine* engine, Level* level) : level(level), assets(en
 		return L"block-selected: " + std::to_wstring(this->level->player->selectedVoxel.id) + L" " + stream.str();
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
-		return L"meshes: " + std::to_wstring(Mesh::meshesCount);
+		return L"seed: " + std::to_wstring(this->level->world->seed);
 	})));
 	for (int ax = 0; ax < 3; ax++){
 		gui::Panel* sub = new gui::Panel(glm::vec2(10, 27), glm::vec4(0.0f));

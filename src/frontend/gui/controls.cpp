@@ -78,8 +78,8 @@ void Button::listenAction(onaction action) {
     actions.push_back(action);
 }
 
-TextBox::TextBox(std::wstring text, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0, false) {
-    label = new Label(text);
+TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0, false), input(L""), placeholder(placeholder) {
+    label = new Label(L"");
     label->align(Align::center);
     add(std::shared_ptr<UINode>(label));
 }
@@ -89,18 +89,25 @@ void TextBox::drawBackground(Batch2D* batch, Assets* assets) {
     batch->texture(nullptr);
     batch->color = (isfocused() ? focusedColor : (hover_ ? hoverColor : color_));
     batch->rect(coord.x, coord.y, size_.x, size_.y);
-    if (!focused_ && supplier) label->text(supplier());
+    if (!focused_ && supplier) input = supplier();
+
+    if (input.empty()) {
+        label->color(glm::vec4(0.5f));
+        label->text(placeholder);
+    } else {
+        label->color(glm::vec4(1.0f));
+        label->text(input);
+    }
 }
 
 void TextBox::typed(unsigned int codepoint) {
-    label->text(label->text() + std::wstring({(wchar_t)codepoint}));    
+    input += std::wstring({(wchar_t)codepoint});    
 }
 
 void TextBox::keyPressed(int key) {
-    std::wstring src = label->text();
     switch (key) {
         case KEY_BACKSPACE:
-            if (src.length()) label->text(src.substr(0, src.length()-1));
+            if (!input.empty()) label->text(input.substr(0, input.length() - 1));
             break;
         case KEY_ENTER:
             if (consumer) consumer(label->text());
@@ -119,4 +126,9 @@ void TextBox::textSupplier(wstringsupplier supplier) {
 
 void TextBox::textConsumer(wstringconsumer consumer) {
     this->consumer = consumer;
+}
+
+std::wstring TextBox::text() const {
+    if (input.empty()) return placeholder;
+    return input;
 }

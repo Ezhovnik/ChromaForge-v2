@@ -29,8 +29,17 @@ void Container::activate(float delta) {
         if (event.timer > event.interval) {
             event.callback();
             event.timer = fmod(event.timer, event.interval);
+            if (event.repeat > 0) event.repeat--;
         }
     }
+
+    intervalEvents.erase(std::remove_if(
+        intervalEvents.begin(), intervalEvents.end(),
+        [](const IntervalEvent& event) {
+            return event.repeat == 0;
+        }
+    ), intervalEvents.end());
+
     for (auto node : nodes) {
         if (node->visible()) node->activate(delta);
     }
@@ -58,14 +67,16 @@ void Container::add(std::shared_ptr<UINode> node) {
 
 void Container::remove(std::shared_ptr<UINode> selected) {
     selected->setParent(nullptr);
-    nodes.erase(std::remove_if(nodes.begin(), nodes.end(), [selected](const std::shared_ptr<UINode> node) {
-        return node == selected;
-    }), nodes.end());
+    nodes.erase(std::remove_if(nodes.begin(), nodes.end(), 
+        [selected](const std::shared_ptr<UINode> node) {
+            return node == selected;
+        }
+    ), nodes.end());
     refresh();
 }
 
-void Container::listenInterval(float interval, std::function<void()> callback) {
-    intervalEvents.push_back({callback, interval, 0.0f});
+void Container::listenInterval(float interval, std::function<void()> callback, int repeat) {
+    intervalEvents.push_back({callback, interval, 0.0f, repeat});
 }
 
 Panel::Panel(glm::vec2 size, glm::vec4 padding, float interval, bool resizing)
@@ -96,12 +107,13 @@ void Panel::refresh() {
             
             float ex;
 
+            float spacex = size.x - margin.z - padding.z;
             switch (node->align()) {
                 case Align::center:
-                    ex = x + fmax(0.0f, (size.x - margin.z - padding.z) - node->size().x) / 2.0f;
+                    ex = x + fmax(0.0f, spacex - node->size().x) / 2.0f;
                     break;
                 case Align::right:
-                    ex = x + size.x - margin.z - padding.z - node->size().x;
+                    ex = spacex - node->size().x;
                     break;
                 default:
                     ex = x + margin.x;

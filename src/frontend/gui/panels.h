@@ -14,6 +14,7 @@ namespace gui {
         std::function<void()> callback;
         float interval;
         float timer;
+        int repeat;
     };
 
     enum class Orientation {vertical, horizontal};
@@ -31,7 +32,7 @@ namespace gui {
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
         virtual void add(std::shared_ptr<UINode> node);
         virtual void remove(std::shared_ptr<UINode> node);
-        void listenInterval(float interval, std::function<void()> callback);
+        void listenInterval(float interval, std::function<void()> callback, int repeat = -1);
     };
 
     class Panel : public Container {

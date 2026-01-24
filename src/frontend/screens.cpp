@@ -26,60 +26,160 @@
 #include "../util/stringutil.h"
 #include "../logger/Logger.h"
 
-MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
+gui::Panel* create_main_menu_panel(Engine* engine, std::shared_ptr<gui::UINode>* newWorldPanel) {
     gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
     panel->color(glm::vec4(0.0f));
 	panel->setCoord(glm::vec2(10, 10));
 
     {
-        gui::Button* button = new gui::Button(L"New world", glm::vec4(12.0f, 10.0f, 12.0f, 10.0f));
-        button->listenAction([this, panel](gui::GUI*) {
-            LOG_INFO("Loading world");
+        auto button = new gui::Button(L"New World", glm::vec4(12.0f, 10.0f, 12.0f, 10.0f));
+        button->listenAction([engine, panel, newWorldPanel](gui::GUI*) {
+            panel->visible(false);
+            (*newWorldPanel)->visible(true);
+        });
+        panel->add(std::shared_ptr<gui::UINode>(button));
+    }
+    gui::Panel* worldsPanel = new gui::Panel(glm::vec2(390, 200), glm::vec4(5.0f));
+    worldsPanel->color(glm::vec4(0.1f));
+    for (auto const& entry : std::filesystem::directory_iterator(engine_fs::get_saves_folder())) {
+        std::filesystem::path name = entry.path().filename();
+        gui::Button* button = new gui::Button(util::str2wstr_utf8(name.string()), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
+        button->color(glm::vec4(0.5f));
+        button->listenAction([engine, panel, name](gui::GUI*) {
             EngineSettings& settings = engine->getSettings();
-            std::filesystem::path worldFolder = engine_fs::get_saves_folder()/std::filesystem::path("world-1");
-            World* world = new World("world-1", worldFolder, 42, settings);
 
+            auto folder = engine_fs::get_saves_folder()/name;
+            World* world = new World(name.string(), folder, 42, settings);
+            auto screen = new LevelScreen(engine, world->load(settings));
+            engine->setScreen(std::shared_ptr<Screen>(screen));
+        });
+        worldsPanel->add(std::shared_ptr<gui::UINode>(button));
+    }
+    panel->add(std::shared_ptr<gui::UINode>(worldsPanel));
+    
+    {
+        gui::Button* button = new gui::Button(L"Quit", glm::vec4(12.0f, 10.0f, 12.0f, 10.0f));
+        button->listenAction([](gui::GUI*) {
+            Window::setShouldClose(true);
+        });
+        panel->add(std::shared_ptr<gui::UINode>(button));
+    }
+    return panel;
+}
+
+gui::Panel* create_new_world_panel(Engine* engine, std::shared_ptr<gui::UINode>* mainPanel) {
+    gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
+    panel->color(glm::vec4(0.0f));
+	panel->setCoord(glm::vec2(10, 10));
+
+    gui::TextBox* worldNameInput;
+    {
+        gui::Label* label = new gui::Label(L"World Name");
+        panel->add(std::shared_ptr<gui::UINode>(label));
+
+        gui::TextBox* input = new gui::TextBox(L"New World", glm::vec4(6.0f));
+        panel->add(std::shared_ptr<gui::UINode>(input));
+        worldNameInput = input;
+    }
+
+    gui::TextBox* seedInput;
+    {
+        gui::Label* label = new gui::Label(L"Seed");
+        panel->add(std::shared_ptr<gui::UINode>(label));
+
+        uint64_t randseed = rand() ^ (rand() << 8) ^ 
+                        (rand() << 16) ^ (rand() << 24) ^
+                        ((uint64_t)rand() << 32) ^ ((uint64_t)rand() << 40) ^
+                        ((uint64_t)rand() << 56);
+
+        gui::TextBox* input = new gui::TextBox(std::to_wstring(randseed), glm::vec4(6.0f));
+        panel->add(std::shared_ptr<gui::UINode>(input));
+        seedInput = input;
+    }
+
+    {
+        gui::Button* button = new gui::Button(L"Create World", glm::vec4(10.0f));
+        button->margin(glm::vec4(0, 20, 0, 0));
+        glm::vec4 basecolor = worldNameInput->color();   
+        button->listenAction([=](gui::GUI*) {
+            std::wstring name = worldNameInput->text();
+            std::string nameutf8 = util::wstr2str_utf8(name);
+
+            // Basic validation
+            if (!util::is_valid_filename(name) || engine_fs::is_world_name_used(nameutf8)) {
+                // blink red two times
+                panel->listenInterval(0.1f, [worldNameInput, basecolor]() {
+                    static bool flag = true;
+                    if (flag) {
+                        worldNameInput->color(glm::vec4(0.3f, 0.0f, 0.0f, 0.5f));
+                    } else {
+                        worldNameInput->color(basecolor);
+                    }
+                    flag = !flag;
+                }, 4);
+                return;
+            }
+
+            std::wstring seedstr = seedInput->text();
+            uint64_t seed;
+            if (util::is_integer(seedstr)) {
+                try {
+                    seed = std::stoull(seedstr);
+                } catch (const std::out_of_range& err) {
+                    std::hash<std::wstring> hash;
+                    seed = hash(seedstr);
+                }
+            } else {
+                std::hash<std::wstring> hash;
+                seed = hash(seedstr);
+            }
+            LOG_TRACE("World seed: {}", seed);
+            
+            EngineSettings& settings = engine->getSettings();
+
+            auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(nameutf8);
+            std::filesystem::create_directories(folder);
+            World* world = new World(nameutf8, folder, seed, settings);
             auto screen = new LevelScreen(engine, world->load(settings));
             engine->setScreen(std::shared_ptr<Screen>(screen));
         });
         panel->add(std::shared_ptr<gui::UINode>(button));
     }
-    // gui::Panel* worldsPanel = new gui::Panel(glm::vec2(390, 200), glm::vec4(5.0f));
-    // worldsPanel->color(glm::vec4(0.1f));
-    // for (auto const& entry : std::filesystem::directory_iterator(engine_fs::get_saves_folder())) {
-    //     std::filesystem::path name = entry.path().filename();
-    //     gui::Button* button = new gui::Button(util::str2wstr_utf8(name.string()), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
-    //     button->color(glm::vec4(0.5f));
-    //     button->listenAction([this, panel, name](gui::GUI*) {
-    //         EngineSettings& settings = engine->getSettings();
-    //         World* world = new World(name.string(), engine_fs::get_saves_folder()/name, 42, settings);
-    //         engine->setScreen(std::shared_ptr<LevelScreen>(new LevelScreen(engine, world->load(settings))));
-    //     });
-    //     worldsPanel->add(std::shared_ptr<gui::UINode>(button));
-    // }
-    // panel->add(std::shared_ptr<gui::UINode>(worldsPanel));
-    
+
     {
-        gui::Button* button = new gui::Button(L"Quit", glm::vec4(12.0f, 10.0f, 12.0f, 10.0f));
-        button->listenAction([this](gui::GUI*) {
-            Window::setShouldClose(true);
+        gui::Button* button = new gui::Button(L"Back", glm::vec4(10.0f));
+        button->listenAction([panel, mainPanel](gui::GUI*) {
+            panel->visible(false);
+            (*mainPanel)->visible(true);
         });
         panel->add(std::shared_ptr<gui::UINode>(button));
     }
 
-    this->panel = std::shared_ptr<gui::UINode>(panel);
-    engine->getGUI()->add(this->panel);
+    return panel;
+}
 
-    // batch = new Batch2D(1024);
-    // uicamera = new Camera(glm::vec3(), Window::height);
-    // uicamera->perspective = false;
-    // uicamera->flipped = true;
+
+MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
+    gui::GUI* gui = engine->getGUI();
+    panel = std::shared_ptr<gui::UINode>(create_main_menu_panel(engine, &newWorldPanel));
+    newWorldPanel = std::shared_ptr<gui::UINode>(create_new_world_panel(engine, &panel));
+    newWorldPanel->visible(false);
+    gui->add(panel);
+    gui->add(newWorldPanel);
+
+    batch = new Batch2D(1024);
+    uicamera = new Camera(glm::vec3(), Window::height);
+	uicamera->perspective = false;
+	uicamera->flipped = true;
 }
 
 MenuScreen::~MenuScreen() {
-    engine->getGUI()->remove(panel);
-    // delete batch;
-    // delete uicamera;
+    gui::GUI* gui = engine->getGUI();
+    gui->remove(panel);
+    gui->remove(newWorldPanel);
+
+    delete batch;
+    delete uicamera;
 }
 
 void MenuScreen::update(float delta) {
@@ -87,22 +187,23 @@ void MenuScreen::update(float delta) {
 
 void MenuScreen::draw(float delta) {
     panel->setCoord((Window::size() - panel->size()) / 2.0f);
+    newWorldPanel->setCoord((Window::size() - newWorldPanel->size()) / 2.0f);
     
     Window::clear();
     Window::setBgColor(glm::vec3(0.2f, 0.2f, 0.2f));
 
-    // uicamera->fov = Window::height;
-	// ShaderProgram* uishader = engine->getAssets()->getShader("ui");
-	// uishader->use();
-	// uishader->uniformMatrix("u_projview", uicamera->getProjView());
+    uicamera->fov = Window::height;
+	ShaderProgram* uishader = engine->getAssets()->getShader("ui");
+	uishader->use();
+	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
-    // batch->begin();
-    // batch->texture(engine->getAssets()->getTexture("menubg"));
-    // batch->rect(0, 0, 
-    //             Window::width, Window::height, 0, 0, 0, 
-    //             UVRegion(0, 0, Window::width/64, Window::height/64), 
-    //             false, false, glm::vec4(1.0f));
-    // batch->render();
+    batch->begin();
+    batch->texture(engine->getAssets()->getTexture("menubg"));
+    batch->rect(0, 0, 
+                Window::width, Window::height, 0, 0, 0, 
+                UVRegion(0, 0, Window::width/64, Window::height/64), 
+                false, false, glm::vec4(1.0f));
+    batch->render();
 }
 
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
