@@ -9,6 +9,7 @@
 #include "voxel.h"
 #include "Block.h"
 #include "WorldGenerator.h"
+#include "../definitions.h"
 #include "../files/WorldFiles.h"
 #include "../lighting/LightMap.h"
 #include "../lighting/Lighting.h"
@@ -131,20 +132,17 @@ light_t Chunks::getLight(int x, int y, int z){
 }
 
 Chunk* Chunks::getChunkByVoxel(int x, int y, int z){
+    if (y < 0 || y >= CHUNK_HEIGHT) return nullptr;
+
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
 
-	int cx = x / CHUNK_WIDTH;
-	int cy = y / CHUNK_HEIGHT;
-	int cz = z / CHUNK_DEPTH;
+	int chunk_x = floordiv(x, CHUNK_WIDTH);
+    int chunk_z = floordiv(z, CHUNK_DEPTH);
 
-	if (x < 0) cx--;
-	if (y < 0) cy--;
-	if (z < 0) cz--;
+	if (chunk_x < 0 || chunk_z < 0 || chunk_x >= width || chunk_z >= depth) return nullptr;
 
-	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= 1 || cz >= depth) return nullptr;
-
-	return chunks[cz * width + cx].get();
+	return chunks[chunk_z * width + chunk_x].get();
 }
 
 // Устанавливает идентификатор вокселя по мировым координатам.
@@ -154,11 +152,8 @@ void Chunks::setVoxel(int x, int y, int z, blockid_t id, uint8_t states) {
     x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
 
-	int cx = x / CHUNK_WIDTH;
-	int cz = z / CHUNK_DEPTH;
-
-	if (x < 0) cx--;
-	if (z < 0) cz--;
+    int cx = floordiv(x, CHUNK_WIDTH);
+    int cz = floordiv(z, CHUNK_DEPTH);
 
 	if (cx < 0 || cz < 0 || cx >= width || cz >= depth) return;
 
@@ -172,6 +167,10 @@ void Chunks::setVoxel(int x, int y, int z, blockid_t id, uint8_t states) {
     chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx].states = states;
 	chunk->setModified(true);
     chunk->setUnsaved(true);
+
+    if (y < chunk->bottom) chunk->bottom = y;
+    else if (y + 1 > chunk->top) chunk->top = y + 1;
+    else if (id == Blocks_id::AIR) chunk->updateHeights();
 
 	if (lx == 0 && (chunk = getChunk(cx+areaOffsetX-1, cz+areaOffsetZ))) chunk->setModified(true);
 	if (lz == 0 && (chunk = getChunk(cx+areaOffsetX, cz+areaOffsetZ-1))) chunk->setModified(true);
@@ -327,17 +326,11 @@ void Chunks::translate(int dx, int dz){
 }
 
 void Chunks::setCenter(int x, int z) {
-	int chunk_x = x / CHUNK_WIDTH;
-	int chunk_z = z / CHUNK_DEPTH;
+	int chunk_x = floordiv(x, CHUNK_WIDTH);
+    int chunk_z = floordiv(z, CHUNK_DEPTH);
 
-	chunk_x -= areaOffsetX;
-	chunk_z -= areaOffsetZ;
-
-	if (x < 0) chunk_x--;
-	if (z < 0) chunk_z--;
-
-	chunk_x -= width / 2;
-	chunk_z -= depth / 2;
+	chunk_x -= areaOffsetX + width / 2;
+	chunk_z -= areaOffsetZ + depth / 2;
 
 	if (chunk_x || chunk_z) translate(chunk_x, chunk_z);
 }
@@ -358,8 +351,8 @@ void Chunks::resize(uint newWidth, uint newDepth) {
     }
 
     const int newVolume = newWidth * newDepth;
-	std::shared_ptr<Chunk>* newChunks = new std::shared_ptr<Chunk>[newVolume] {};
-	std::shared_ptr<Chunk>* newChunksSecond = new std::shared_ptr<Chunk>[newVolume] {};
+	auto newChunks = new std::shared_ptr<Chunk>[newVolume] {};
+	auto newChunksSecond = new std::shared_ptr<Chunk>[newVolume] {};
 	for (int z = 0; z < depth && z < newDepth; z++) {
 		for (int x = 0; x < width && x < newWidth; x++) {
 			newChunks[z * newWidth + x] = chunks[z * width + x];

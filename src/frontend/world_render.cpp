@@ -27,6 +27,7 @@
 #include "../objects/player_control.h"
 #include "../logger/Logger.h"
 #include "../graphics/ChunksRenderer.h"
+#include "../math/FrustumCulling.h"
 
 inline constexpr glm::vec4 CLEAR_COLOR = {0.7f, 0.71f, 0.73f, 1.0f};
 inline constexpr float GAMMA_VALUE = 1.6f;
@@ -40,6 +41,7 @@ WorldRenderer::WorldRenderer(Level* level, Assets* assets) : assets(assets), lev
 	lineBatch = new LineBatch(4096);
 	batch3D = new Batch3D(1024);
 	renderer = new ChunksRenderer(level);
+    frustumCulling = new Frustum();
     level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
 		renderer->unload(chunk);
 	});
@@ -49,6 +51,7 @@ WorldRenderer::~WorldRenderer() {
 	delete batch3D;
 	delete lineBatch;
 	delete renderer;
+    delete frustumCulling;
 }
 
 // Отрисовывает один чанк
@@ -61,11 +64,10 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 
 	// Простой фрустум-каллинг (отсечение чанков позади камеры в 2D плоскости XZ)
 	if (occlusion){
-		float y = camera->position.y + camera->front.y * CHUNK_HEIGHT * 0.5f;
-		if (y < 0.0f) y = 0.0f;
-		if (y > CHUNK_HEIGHT) y = CHUNK_HEIGHT;
-		glm::vec3 v = glm::vec3(chunk->chunk_x * CHUNK_WIDTH, y, chunk->chunk_z * CHUNK_DEPTH) - camera->position;
-		if (v.x * v.x + v.z * v.z > (CHUNK_WIDTH * 3) * (CHUNK_WIDTH * 3) && dot(camera->front, v) < 0.0f) return true;
+		glm::vec3 min_(chunk->chunk_x * CHUNK_WIDTH, chunk->bottom, chunk->chunk_z * CHUNK_DEPTH);
+        glm::vec3 max_(chunk->chunk_x * CHUNK_WIDTH + CHUNK_WIDTH, chunk->top, chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH);
+
+        if (!frustumCulling->isBoxVisible(min_, max_)) return false;
 	}
 
 	glm::mat4 model = glm::translate(
@@ -80,7 +82,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 
 	mesh->draw();
 
-    return false;
+    return true;
 }
 
 void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float fogCurve){
@@ -155,6 +157,7 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
     });
 
     // Отрисовываем все видимые чанки
+    if (occlusion) frustumCulling->update(camera->getProjView());
     chunks->visibleCount = 0;
 	for (size_t i = 0; i < indices.size(); i++){
 		chunks->visibleCount += drawChunk(indices[i], camera, shader, occlusion);
@@ -186,8 +189,7 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
         float lenght = 40.0f;
 
 		linesShader->use();
-		glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(Window::width >> 1, -static_cast<int>(Window::height) >> 1, 0.0f));
+		glm::mat4 model(glm::translate(glm::mat4(1.0f), glm::vec3(Window::width >> 1, -static_cast<int>(Window::height) >> 1, 0.0f)));
         linesShader->uniformMatrix("u_projview", glm::ortho(0.0f, static_cast<float>(Window::width), -static_cast<float>(Window::height), 0.0f, -lenght, lenght) * model * glm::inverse(camera->rotation));
 
 		glDisable(GL_DEPTH_TEST);

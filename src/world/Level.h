@@ -26,7 +26,7 @@ public:
 	PlayerController* playerController;
     LevelEvents* events;
 
-	Level(World* world, Player* player, ChunksStorage* storage, LevelEvents* events, EngineSettings& settings);
+	Level(World* world, Player* player, EngineSettings& settings);
 	~Level();
 
     void updatePlayer(float delta, bool input, bool pause, bool interactions);
