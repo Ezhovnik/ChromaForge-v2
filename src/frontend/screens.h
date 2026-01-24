@@ -30,8 +30,9 @@ public:
 
 class MenuScreen : public Screen {
     std::shared_ptr<gui::UINode> panel;
-    // Batch2D* batch;
-    // Camera* uicamera;
+    std::shared_ptr<gui::UINode> newWorldPanel;
+    Batch2D* batch;
+    Camera* uicamera;
 public:
     MenuScreen(Engine* engine);
     ~MenuScreen();

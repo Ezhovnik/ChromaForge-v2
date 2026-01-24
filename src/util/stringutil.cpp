@@ -127,3 +127,20 @@ bool util::is_integer(std::string text) {
     }
     return true;
 }
+
+bool util::is_integer(std::wstring text) {
+    for (wchar_t c : text) {
+        if (c < L'0' || c > L'9') return false;
+    }
+    return true;
+}
+
+bool util::is_valid_filename(std::wstring name) {
+    for (wchar_t c : name) {
+        if (c < 31 || c == '/' || c == '\\' || c == '<' || c == '>' ||
+            c == ':' || c == '"' || c == '|' || c == '?' || c == '*'){
+            return false;
+        }
+    }
+    return true;
+}
