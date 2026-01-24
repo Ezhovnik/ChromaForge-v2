@@ -57,6 +57,15 @@ Engine::Engine(const EngineSettings& settings_) {
         throw initialize_error("Failed to load Window");
     }
 
+    // // Устанавливаем иконку приложения
+    // std::filesystem::path iconPath = engine_fs::get_icon_file(1);
+    // std::unique_ptr<ImageData> icon(png::loadImage(iconPath.string(), false));
+    // if (icon->getFormat() != ImageFormat::rgba8888) icon->rgb2rgba();
+    // bool iconStatus = Window::setIcon(icon.get());
+    // if (!iconStatus) {
+    //     LOG_ERROR("Failed to set icon '{}'", iconPath.string());
+    // }
+
     // Инициализация логгера OpenGL
     OpenGL_Logger::getInstance().initialize(LogLevel::TRACE);
     GL_CHECK();

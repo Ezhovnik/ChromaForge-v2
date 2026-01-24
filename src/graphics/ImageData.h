@@ -24,6 +24,8 @@ public:
     void flipX();
     void flipY();
 
+    void rgb2rgba();
+
     void* getData() const {
         return data;
     }

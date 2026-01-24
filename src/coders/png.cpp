@@ -16,10 +16,10 @@
 #include "../typedefs.h"
 
 // Загружает изображение из PNG файла.
-ImageData* png::loadImage(std::string filename) {
+ImageData* png::loadImage(std::string filename, bool flipVertically) {
     int channels = 0, width = 0, height = 0;
 
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(flipVertically);
     ubyte* stb_data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
     
     if (!stb_data) {
