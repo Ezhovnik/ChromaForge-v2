@@ -132,6 +132,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader) {
 
     loader.add(AssetsType::Atlas, "../res/textures/atlas.png", "blocks");
     loader.add(AssetsType::Texture, "../res/textures/atlas.png", "blocks_tex");
+    loader.add(AssetsType::Texture, "../res/textures/menubg.png", "menubg");
 
     loader.add(AssetsType::Texture, "../res/textures/slot.png", "slot");
 

@@ -150,6 +150,16 @@ void setup_definitions() {
         Block::blocks[block->id] = std::move(block);
     }
 
+    // Бархатцы
+    {
+        auto block = std::make_unique<Block>(Blocks_id::MARIGOLD, 21);
+        block->drawGroup = 5;
+        block->lightPassing = true;
+        block->obstacle = false;
+        block->model = BlockModel::X;
+        Block::blocks[block->id] = std::move(block);
+    }
+
     // Красный неоновый блок
     {
         auto block = std::make_unique<Block>(Blocks_id::RED_NEON, 18);

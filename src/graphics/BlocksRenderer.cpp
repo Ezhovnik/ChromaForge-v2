@@ -79,8 +79,7 @@ void BlocksRenderer::face(glm::vec3 coord, float w, float h,
 		vertex(coord, region.u2, region.v1, lights[0] * tint);
 		vertex(coord + axisX * w + axisY * h, region.u1, region.v2, lights[2] * tint);
 		vertex(coord + axisY * h, region.u1, region.v1, lights[3] * tint);
-	}
-	else {
+	} else {
 		vertex(coord, region.u1, region.v1, lights[0] * tint);
 		vertex(coord + axisX * w, region.u2, region.v1, lights[1] * tint);
 		vertex(coord + axisX * w + axisY * h, region.u2, region.v2, lights[2] * tint);
@@ -120,7 +119,6 @@ void BlocksRenderer::blockCube(int x, int y, int z, glm::vec3 size, const UVRegi
 	if (isOpen(x, y + 1, z, group)) {
 		face(glm::vec3(x, y + size.y, z), size.x, size.z, glm::vec3(1, 0, 0), glm::vec3(0, 0, -1), texfaces[3], lights);
 	}
-
 	if (isOpen(x, y - 1, z, group)) {
 		face(glm::vec3(x, y, z - size.z), size.x, size.z, glm::vec3(1, 0, 0), glm::vec3(0, 0, 1), texfaces[2], lights, glm::vec4(1.0f));
 	}
@@ -138,14 +136,15 @@ void BlocksRenderer::blockXSprite(int x, int y, int z, glm::vec3 size, const UVR
 			pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 1, 0}),
 			pickSoftLight(x + 1, y + 1, z, {1, 0, 0}, {0, 1, 0}),
 			pickSoftLight(x + 1, y + 1, z, {1, 0, 0}, {0, 1, 0}),
-			pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 1, 0}) };
+			pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 1, 0})
+        };
 
 	int rand = ((x * z + y) ^ (z * y - x)) * (z + y);
 
 	float xs = ((float)(char)rand / 512) * spread;
 	float zs = ((float)(char)(rand >> 8) / 512) * spread;
 
-	const float w = size.x/1.41f;
+	const float w = size.x / 1.41f;
 	face(glm::vec3(x + xs + (1.0 - w) * 0.5f, y, 
 		      z + zs - 1 + (1.0 - w) * 0.5f), w, size.y, 
 		      glm::vec3(1.0f, 0, 1.0f), glm::vec3(0, 1, 0), texface1, lights, do_tint(0.8f));
@@ -301,12 +300,8 @@ void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
 												uvfor(def, 4, atlas_size), uvfor(def, 5, atlas_size) };
 					switch (def.model) {
 					case BlockModel::Cube:
-						if (*((light_t*)&def.emission)) {
-							blockCube(x, y, z, glm::vec3(1, 1, 1), texfaces, def.drawGroup);
-						}
-						else {
-							blockCubeShaded(x, y, z, glm::vec3(1, 1, 1), texfaces, &def, vox.states);
-						}
+						if (*((light_t*)&def.emission)) blockCube(x, y, z, glm::vec3(1, 1, 1), texfaces, def.drawGroup);
+                        else blockCubeShaded(x, y, z, glm::vec3(1, 1, 1), texfaces, &def, vox.states);
 						break;
 					case BlockModel::X: {
 						blockXSprite(x, y, z, glm::vec3(1, 1, 1), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);

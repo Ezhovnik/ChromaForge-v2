@@ -32,8 +32,8 @@ void ChunksRenderer::unload(Chunk* chunk) {
 
 std::shared_ptr<Mesh> ChunksRenderer::getOrRender(Chunk* chunk) {
 	auto found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
-	if (found != meshes.end() && !chunk->isModified())return found->second;
-	
+	if (found != meshes.end() && !chunk->isModified()) return found->second;
+
 	return render(chunk);
 }
 

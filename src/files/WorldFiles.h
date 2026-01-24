@@ -13,9 +13,13 @@
 #include "../typedefs.h"
 
 #define REGION_FORMAT_VERSION 1
+#define REGION_FORMAT_MAGIC ".CHROMAREG"
+
+#define WORLD_FORMAT_VERSION 1
+#define WORLD_FORMAT_MAGIC ".CHROMAWLD"
 
 // Константы для размера регионов
-namespace Region_Consts {
+namespace RegionConsts {
     constexpr int REGION_SIZE_BIT = 5; // Размер региона 
     constexpr int REGION_SIZE = 1 << REGION_SIZE_BIT; // Длина региона в чанках
     constexpr int REGION_VOLUME = REGION_SIZE * REGION_SIZE; // Количество чанков в регионе
@@ -30,8 +34,19 @@ struct WorldRegion {
 	bool unsaved;
 };
 
+struct WorldInfo {
+    std::string name;
+    std::filesystem::path directory;
+    uint64_t seed;
+};
+
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
 class WorldFiles {
+private:
+    void writeWorldInfo(const WorldInfo& info);
+	std::filesystem::path getRegionFile(int x, int y) const;
+	std::filesystem::path getPlayerFile() const;
+    std::filesystem::path getWorldFile() const;
 public:
     std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
     std::filesystem::path directory; // Путь к директории с файлами мира
@@ -39,22 +54,18 @@ public:
 
     bool generatorTestMode;
 
-    WorldFiles(std::filesystem::path directory, size_t mainBufferCapacity, bool generatorTestMode); // Конструктор
+    WorldFiles(std::filesystem::path directory, bool generatorTestMode); // Конструктор
     ~WorldFiles(); // Деструктор
 
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
 
+    bool readWorldInfo(WorldInfo& info);
     bool readPlayer(Player* player); // Читает данные об игроке с диска
     ubyte* readChunkData(int x, int z, uint32_t& length);
 	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
 	void writeRegion(int x, int z, WorldRegion& entry); // Формирует бинарное представление региона для записи в файл
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
-    void write(); // Записывает все измененные регионы из памяти на диск.
-
-	std::filesystem::path getRegionFile(int x, int z); // Генерирует имя файла для региона с заданными координатами
-    std::filesystem::path getPlayerFile(); // Генерирует имя файла, в котором записана информация об игроке
+    void write(const WorldInfo info);
 };
-
-extern void longToCoords(int& x, int& z, long key); // Преобразует 64-битный ключ региона в координаты
 
 #endif // FILES_WORLDFILES_H_

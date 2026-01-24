@@ -121,11 +121,11 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
 
 	shader->uniform1f("u_gamma", GAMMA_VALUE);
 
-	shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR.r, SKY_LIGHT_COLOR.g, SKY_LIGHT_COLOR.b);
-	shader->uniform3f("u_fogColor", FOG_COLOR.r, FOG_COLOR.g, FOG_COLOR.b);
+	shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR);
+	shader->uniform3f("u_fogColor", FOG_COLOR);
 	shader->uniform1f("u_fogFactor", fogFactor);
     shader->uniform1f("u_fogCurve", fogCurve);
-    shader->uniform3f("u_cameraPos", camera->position.x, camera->position.y, camera->position.z);
+    shader->uniform3f("u_cameraPos", camera->position);
 
     Block* choosen_block = Block::blocks[level->player->choosenBlock].get();
     float multiplier = 0.8f;
@@ -159,7 +159,7 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
     // Отрисовываем все видимые чанки
     if (occlusion) frustumCulling->update(camera->getProjView());
     chunks->visibleCount = 0;
-	for (size_t i = 0; i < indices.size(); i++){
+	for (size_t i = 0; i < indices.size(); ++i){
 		chunks->visibleCount += drawChunk(indices[i], camera, shader, occlusion);
 	}
 
@@ -173,7 +173,7 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
 		glm::vec3 pos = level->playerController->selectedBlockPosition;
 
         linesShader->use();
-	    linesShader->uniformMatrix("u_projview", camera->getProjView());
+        linesShader->uniformMatrix("u_projview", camera->getProjView());
         glLineWidth(2.0f);
 
 		if (selectedBlock->model == BlockModel::Cube){
@@ -186,26 +186,31 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
 	}
 
     if (level->player->debug) {
-        float lenght = 40.0f;
+        float length = 40.0f;
 
 		linesShader->use();
-		glm::mat4 model(glm::translate(glm::mat4(1.0f), glm::vec3(Window::width >> 1, -static_cast<int>(Window::height) >> 1, 0.0f)));
-        linesShader->uniformMatrix("u_projview", glm::ortho(0.0f, static_cast<float>(Window::width), -static_cast<float>(Window::height), 0.0f, -lenght, lenght) * model * glm::inverse(camera->rotation));
+		glm::vec3 tsl(Window::width / 2, -((int)Window::height) / 2, 0.0f);
+		glm::mat4 model(glm::translate(glm::mat4(1.0f), tsl));
+		linesShader->uniformMatrix("u_projview", glm::ortho(
+				0.0f, (float)Window::width, 
+				-(float)Window::height, 0.0f, 
+				-length, length) * model * glm::inverse(camera->rotation)
+            );
 
 		glDisable(GL_DEPTH_TEST);
 
 		glLineWidth(4.0f);
-		lineBatch->line(0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 0.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 1.0f);
         lineBatch->render();
 
         glEnable(GL_DEPTH_TEST);
 
 		glLineWidth(2.0f);
-		lineBatch->line(0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
-		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, lenght, 0.0f, 0.0f, 1.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
+		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 1.0f);
 		lineBatch->render();
 	}
 }

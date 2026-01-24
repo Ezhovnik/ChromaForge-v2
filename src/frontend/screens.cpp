@@ -13,6 +13,9 @@
 #include "../voxels/ChunksController.h"
 #include "../voxels/Chunks.h"
 #include "../voxels/Chunk.h"
+#include "../graphics/UVRegion.h"
+#include "../graphics/ShaderProgram.h"
+#include "../graphics/Batch2D.h"
 #include "world_render.h"
 #include "hud.h"
 #include "gui/GUI.h"
@@ -29,34 +32,32 @@ MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
 	panel->setCoord(glm::vec2(10, 10));
 
     {
-        gui::Button* button = new gui::Button(L"Continue", glm::vec4(12.0f, 10.0f, 12.0f, 10.0f));
+        gui::Button* button = new gui::Button(L"New world", glm::vec4(12.0f, 10.0f, 12.0f, 10.0f));
         button->listenAction([this, panel](gui::GUI*) {
             LOG_INFO("Loading world");
             EngineSettings& settings = engine->getSettings();
             std::filesystem::path worldFolder = engine_fs::get_saves_folder()/std::filesystem::path("world-1");
             World* world = new World("world-1", worldFolder, 42, settings);
 
-            auto screen = new LevelScreen(engine, world->loadLevel(settings));
+            auto screen = new LevelScreen(engine, world->load(settings));
             engine->setScreen(std::shared_ptr<Screen>(screen));
         });
         panel->add(std::shared_ptr<gui::UINode>(button));
     }
-    /*Panel* worldsPanel = new Panel(glm::vec2(390, 200), glm::vec4(5.0f));
-    worldsPanel->color(vec4(0.1f));
-    for (auto const& entry : directory_iterator(engine_fs::get_save_folder())) {
-        std::string name = entry.path().filename();
-        gui::Button* button = new gui::Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
-        button->color(glm::vec4(0.5f));
-        button->listenAction([this, panel, name](gui::GUI*) {
-            EngineSettings& settings = engine->getSettings();
-            World* world = new World(name, engine_fs::get_save_folder() + "/" + name + "/", 42, settings);
-            Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
-            Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
-            engine->setScreen(new LevelScreen(engine, world->loadLevel(player, settings)));
-        });
-        worldsPanel->add(std::shared_ptr<UINode>(button));
-    }
-    panel->add(std::shared_ptr<UINode>(worldsPanel));*/
+    // gui::Panel* worldsPanel = new gui::Panel(glm::vec2(390, 200), glm::vec4(5.0f));
+    // worldsPanel->color(glm::vec4(0.1f));
+    // for (auto const& entry : std::filesystem::directory_iterator(engine_fs::get_saves_folder())) {
+    //     std::filesystem::path name = entry.path().filename();
+    //     gui::Button* button = new gui::Button(util::str2wstr_utf8(name.string()), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
+    //     button->color(glm::vec4(0.5f));
+    //     button->listenAction([this, panel, name](gui::GUI*) {
+    //         EngineSettings& settings = engine->getSettings();
+    //         World* world = new World(name.string(), engine_fs::get_saves_folder()/name, 42, settings);
+    //         engine->setScreen(std::shared_ptr<LevelScreen>(new LevelScreen(engine, world->load(settings))));
+    //     });
+    //     worldsPanel->add(std::shared_ptr<gui::UINode>(button));
+    // }
+    // panel->add(std::shared_ptr<gui::UINode>(worldsPanel));
     
     {
         gui::Button* button = new gui::Button(L"Quit", glm::vec4(12.0f, 10.0f, 12.0f, 10.0f));
@@ -68,10 +69,17 @@ MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
 
     this->panel = std::shared_ptr<gui::UINode>(panel);
     engine->getGUI()->add(this->panel);
+
+    // batch = new Batch2D(1024);
+    // uicamera = new Camera(glm::vec3(), Window::height);
+    // uicamera->perspective = false;
+    // uicamera->flipped = true;
 }
 
 MenuScreen::~MenuScreen() {
     engine->getGUI()->remove(panel);
+    // delete batch;
+    // delete uicamera;
 }
 
 void MenuScreen::update(float delta) {
@@ -82,6 +90,19 @@ void MenuScreen::draw(float delta) {
     
     Window::clear();
     Window::setBgColor(glm::vec3(0.2f, 0.2f, 0.2f));
+
+    // uicamera->fov = Window::height;
+	// ShaderProgram* uishader = engine->getAssets()->getShader("ui");
+	// uishader->use();
+	// uishader->uniformMatrix("u_projview", uicamera->getProjView());
+
+    // batch->begin();
+    // batch->texture(engine->getAssets()->getTexture("menubg"));
+    // batch->rect(0, 0, 
+    //             Window::width, Window::height, 0, 0, 0, 
+    //             UVRegion(0, 0, Window::width/64, Window::height/64), 
+    //             false, false, glm::vec4(1.0f));
+    // batch->render();
 }
 
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {

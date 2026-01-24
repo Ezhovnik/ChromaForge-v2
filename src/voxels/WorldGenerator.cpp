@@ -184,18 +184,79 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed) {
                 
                 if (real_y <= 2) id = Blocks_id::BEDROCK;
 
-                randomgrass.setSeed(real_x, real_z);
+                randomgrass.setSeed(real_x * 12345 + real_z * 67890 + real_y * 13579);
+                ushort grass_value = (ushort)randomgrass.rand();
+                float humidity_val = humidity.get(real_x, real_z);
+                float height_factor = 1.0f - fmax(0.0f, fmin(1.0f, (height - SEA_LEVEL) / 40.0f)); // 0 на высоте SEA_LEVEL, уменьшается с высотой
+
                 if ((id == Blocks_id::AIR) && (real_y > SEA_LEVEL + 0.5) && ((int)(height + 1) == real_y)) {
-                    ushort grass_value = (ushort)randomgrass.rand();
+                    // Базовый шанс появления растения
+                    float plant_chance = 0.35f;
                     
-                    if (grass_value > 62000 || (real_y > 70 && grass_value > 61500)) {
-                        id = Blocks_id::GRASS;
-                    } else if (grass_value > 61000) {
-                        id = Blocks_id::DAISY;
-                    } else if (grass_value > 60000) {
-                        id = Blocks_id::POPPY;
-                    } else if (grass_value > 59000) {
-                        id = Blocks_id::DANDELION;
+                    // Учитываем влажность: растения лучше растут во влажных местах
+                    plant_chance *= (0.7f + 0.6f * (humidity_val + 1.0f) / 2.0f);
+                    
+                    // Учитываем высоту: на больших высотах меньше растений
+                    plant_chance *= (0.5f + 0.5f * height_factor);
+                    
+                    // Случайный фактор для разнообразия
+                    float random_factor = (grass_value % 1000) / 1000.0f;
+                    
+                    if (random_factor < plant_chance) {
+                        // Определяем тип растения на основе комбинации факторов
+                        ushort plant_type = (ushort)randomgrass.rand();
+                        float humidity_factor = (humidity_val + 1.0f) / 2.0f; // 0-1
+                        
+                        // Разные растения предпочитают разные условия:
+                        // - Одуванчики любят среднюю влажность и не очень высокие места
+                        // - Мак предпочитает более сухие места
+                        // - Ромашка любит влажность
+                        // - Маргаритка предпочитает средние условия
+                        // - Трава растет везде, но с разной вероятностью
+                        
+                        if (humidity_factor < 0.3f && plant_type % 7 == 0) {
+                            // В сухих местах иногда появляется мак
+                            id = Blocks_id::POPPY;
+                        } 
+                        else if (humidity_factor > 0.7f && plant_type % 5 == 0) {
+                            // Во влажных местах часто ромашка
+                            id = Blocks_id::DAISY;
+                        }
+                        else if (humidity_factor > 0.4f && humidity_factor < 0.7f && 
+                                height_factor > 0.3f && plant_type % 6 == 0) {
+                            // Маргаритки в средних условиях
+                            id = Blocks_id::MARIGOLD;
+                        }
+                        else if (humidity_factor > 0.3f && humidity_factor < 0.8f && 
+                                plant_type % 8 == 0) {
+                            // Одуванчики в средних условиях влажности
+                            id = Blocks_id::DANDELION;
+                        }
+                        else {
+                            // В остальных случаях - трава
+                            id = Blocks_id::GRASS;
+                            
+                            // Иногда делаем небольшие скопления травы
+                            if ((real_x + real_z) % 3 == 0 && plant_type % 4 == 0) {
+                                // Проверяем соседние блоки для создания скоплений
+                                int neighbor_check = (real_x * 17 + real_z * 23) % 8;
+                                if (neighbor_check < 3) {
+                                    // С некоторой вероятностью делаем группу из 2-4 травинок
+                                    id = Blocks_id::GRASS;
+                                }
+                            }
+                        }
+                        
+                        // Дополнительный фактор: на склонах растений меньше
+                        float slope_factor = 1.0f;
+                        if (height_factor < 0.2f) { // Крутые склоны
+                            slope_factor = 0.3f;
+                        }
+                        
+                        // Применяем slope_factor
+                        if ((plant_type % 100) / 100.0f > slope_factor) {
+                            id = Blocks_id::AIR;
+                        }
                     }
                 }
                 

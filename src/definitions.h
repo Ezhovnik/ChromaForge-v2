@@ -21,10 +21,10 @@ namespace Blocks_id {
     inline constexpr blockid_t POPPY = 14;
     inline constexpr blockid_t DANDELION = 15;
     inline constexpr blockid_t DAISY = 16;
-    inline constexpr blockid_t RED_NEON = 17;
-    inline constexpr blockid_t GREEN_NEON = 18;
-    inline constexpr blockid_t BLUE_NEON = 19;
-
+    inline constexpr blockid_t MARIGOLD = 17;
+    inline constexpr blockid_t RED_NEON = 18;
+    inline constexpr blockid_t GREEN_NEON = 19;
+    inline constexpr blockid_t BLUE_NEON = 20;
 }
 
 void setup_definitions();

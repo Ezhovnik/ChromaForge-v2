@@ -38,7 +38,6 @@
 #include "graphics/Batch2D.h"
 #include "frontend/screens.h"
 #include "logger/Logger.h"
-#include "logger/OpenGL_Logger.h"
 
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 128, 0}; // Точка, где игрок появляется в мире
@@ -65,10 +64,6 @@ Engine::Engine(const EngineSettings& settings_) {
     // if (!iconStatus) {
     //     LOG_ERROR("Failed to set icon '{}'", iconPath.string());
     // }
-
-    // Инициализация логгера OpenGL
-    OpenGL_Logger::getInstance().initialize(LogLevel::TRACE);
-    GL_CHECK();
 
     // Загрузка ассетов
     assets = new Assets();
@@ -104,7 +99,6 @@ Engine::~Engine() {
         delete assets;
         assets = nullptr;
     }
-    OpenGL_Logger::getInstance().finalize();
     Window::terminate();
 
     LOG_INFO("Engine finished");
@@ -156,8 +150,6 @@ void Engine::mainloop() {
 
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ввода
-
-        GL_CHECK(); // Проверка ошибок OpenGL
     }
     Logger::getInstance().flush();
 }

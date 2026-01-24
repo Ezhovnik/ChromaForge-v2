@@ -25,7 +25,6 @@ public:
 
 	std::shared_ptr<Mesh> getOrRender(Chunk* chunk);
 	std::shared_ptr<Mesh> get(Chunk* chunk);
-
 };
 
 #endif // SRC_GRAPHICS_CHUNKSRENDERER_H_

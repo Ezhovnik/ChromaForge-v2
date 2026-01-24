@@ -18,7 +18,7 @@ inline constexpr glm::vec3 SPAWNPOINT = {0, 128, 0}; // Точка, где иг�
 inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
 
 World::World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings) : name(name), seed(seed) {
-	wfile = new WorldFiles(directory, Region_Consts::REGION_VOLUME * (CHUNK_DATA_LEN * 2 + 8), settings.debug.generatorTestMode);
+	wfile = new WorldFiles(directory, settings.debug.generatorTestMode);
 }
 
 World::~World(){
@@ -34,11 +34,16 @@ void World::write(Level* level, bool writeChunks) {
         wfile->put(chunk.get());
 	}
 
-	wfile->write();
+	wfile->write(WorldInfo {name, wfile->directory, seed});
 	wfile->writePlayer(level->player);
 }
 
-Level* World::loadLevel(EngineSettings& settings) {
+Level* World::load(EngineSettings& settings) {
+    WorldInfo info{name, wfile->directory, seed};
+    wfile->readWorldInfo(info);
+    seed = info.seed;
+    name = info.name;
+
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
     Level* level = new Level(this, player, settings);

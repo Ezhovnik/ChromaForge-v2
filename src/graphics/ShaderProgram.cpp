@@ -67,6 +67,10 @@ void ShaderProgram::uniform2f(std::string name, float x, float y){
 	glUniform2f(transformLoc, x, y);
 }
 
+void ShaderProgram::uniform2f(std::string name, glm::vec2 xy) {
+    uniform2f(name, xy.x, xy.y);
+}
+
 // Загружает три вещественных числа в uniform-переменную шейдера
 void ShaderProgram::uniform3f(std::string name, float x, float y, float z){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
@@ -75,6 +79,10 @@ void ShaderProgram::uniform3f(std::string name, float x, float y, float z){
         return;
     }
 	glUniform3f(transformLoc, x,y,z);
+}
+
+void ShaderProgram::uniform3f(std::string name, glm::vec3 xyz) {
+    uniform3f(name, xyz.x, xyz.y, xyz.z);
 }
 
 // Функция для загрузки текстового файла
@@ -101,7 +109,7 @@ std::string loadShaderFile(std::string filename) {
         code = stream.str(); // Получаем строку из потока
     } catch (std::ifstream::failure& e) {
         // Обработка ошибок чтения файла
-        LOG_ERROR("File not succesfully read\n{}", e.what());
+        LOG_ERROR("File not succesfully read. Info: {}", e.what());
         return "";
     }
 
@@ -151,7 +159,7 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
     glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragment, 512, nullptr, infoLog);
-        LOG_CRITICAL("Fragment shader compililation failed\n{}", infoLog);
+        LOG_CRITICAL("Fragment shader compililation failed. Info: {}", infoLog);
         return nullptr;
     }
 
@@ -165,7 +173,7 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
     glGetProgramiv(id, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(id, 512, nullptr, infoLog);
-        LOG_CRITICAL("Shader Program linking failed\n{}", infoLog);
+        LOG_CRITICAL("Shader Program linking failed. Info: {}", infoLog);
 
         glDeleteShader(vertex);
         glDeleteShader(fragment);
