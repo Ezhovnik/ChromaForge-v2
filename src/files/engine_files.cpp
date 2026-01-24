@@ -8,6 +8,7 @@
 #define SCREENSHOTS_FOLDER "../build/screenshots"
 #define SAVES_FOLDER "../build/saves"
 #define LOGS_FOLDER "../build/logs"
+#define ICON_FOLDER "../res/icon"
 
 std::filesystem::path engine_fs::get_screenshot_file(std::string ext) {
 	std::filesystem::path folder = SCREENSHOTS_FOLDER;
@@ -41,4 +42,9 @@ std::filesystem::path engine_fs::get_logs_file() {
     std::filesystem::path folder = LOGS_FOLDER;
     if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
     return folder/std::filesystem::path("ChromaForge.log");
+}
+
+std::filesystem::path engine_fs::get_icon_file(int index) {
+    std::filesystem::path folder = ICON_FOLDER;
+    return folder/std::filesystem::path("icon" + std::to_string(index) + ".png");
 }

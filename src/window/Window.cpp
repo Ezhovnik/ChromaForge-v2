@@ -153,7 +153,30 @@ bool Window::initialize(DisplaySettings& settings) {
 // Завершение работы окна и освобождение ресурсов GLFW
 void Window::terminate() {
     Events::finalize();
+    glfwDestroyWindow(window);
     glfwTerminate();
+}
+
+bool Window::setIcon(ImageData* icon) {
+    if (icon == nullptr) {
+        LOG_ERROR("Icon is null");
+        return false;
+    }
+
+    if (icon->getFormat() != ImageFormat::rgba8888) {
+        LOG_ERROR("Invalid icon format");
+        return false;
+    }
+
+    GLFWimage glfwIcon;
+
+    glfwIcon.width = icon->getWidth();
+    glfwIcon.height = icon->getHeight();
+    glfwIcon.pixels = reinterpret_cast<unsigned char*>(icon->getData());
+
+    glfwSetWindowIcon(window, 1, &glfwIcon);
+
+    return true;
 }
 
 void Window::resetScissor() {
