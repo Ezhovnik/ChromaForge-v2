@@ -2,8 +2,6 @@
 
 #include <GL/glew.h>
 
-#include "../logger/OpenGL_Logger.h"
-
 int Mesh::meshesCount = 0;
 
 // Конструктор
@@ -50,8 +48,6 @@ Mesh::Mesh(const float* buffer, size_t vertices, const vattr* attrs) : vertices(
     }
 
     glBindVertexArray(0); // Отвязываем VAO
-
-    GL_CHECK();
 }
 
 // Деструктор
@@ -68,8 +64,6 @@ void Mesh::reload(const float* buffer, size_t vertices) {
     glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexSize * vertices, buffer, GL_STATIC_DRAW);
-
-    GL_CHECK();
 }
 
 // Отрисовывает меш с использованием указанного типа примитива.
@@ -77,8 +71,6 @@ void Mesh::draw(uint primitive) {
     glBindVertexArray(VAO);
     glDrawArrays(primitive, 0, vertices);
     glBindVertexArray(0);
-
-    GL_CHECK();
 }
 
 void Mesh::draw() {

@@ -23,7 +23,8 @@ ImageData* png::loadImage(std::string filename, bool flipVertically) {
     ubyte* stb_data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
     
     if (!stb_data) {
-        LOG_ERROR("Failed to load image: '{}'\n{}", filename, stbi_failure_reason());
+        const char* error_msg = stbi_failure_reason();
+        LOG_ERROR("Failed to load image: '{}'. Reason: {}", filename, error_msg ? error_msg : "Unknown error");
         return nullptr;
     }
 
@@ -60,14 +61,14 @@ ImageData* png::loadImage(std::string filename, bool flipVertically) {
 // Сохраняет изображение в PNG файл.
 bool png::writeImage(std::string filename, const ImageData* image) {
     if (!image || !image->getData()) {
-        LOG_ERROR("Invalid image data for writing to file: {}", filename);
+        LOG_ERROR("Invalid image data for writing to file: '{}'", filename);
         return false;
     }
 
     const int width = image->getWidth();
     const int height = image->getHeight();
     int channels = 0;
-    
+
     // Определяем количество каналов в зависимости от формата
     switch (image->getFormat()) {
         case ImageFormat::rgba8888:
@@ -86,7 +87,8 @@ bool png::writeImage(std::string filename, const ImageData* image) {
     int success = stbi_write_png(filename.c_str(), width, height, channels, data, width * channels);
 
     if (!success) {
-        LOG_ERROR("Failed to write image to file: {}", filename);
+        const char* error_msg = stbi_failure_reason();
+        LOG_ERROR("Failed to write image to file: '{}'. Reason: {}", filename, error_msg ? error_msg : "Unknown error");
         return false;
     }
 

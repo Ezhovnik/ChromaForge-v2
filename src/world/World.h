@@ -21,7 +21,7 @@ public:
 	~World();
 
     void write(Level* level, bool writeChunks);
-    Level* loadLevel(EngineSettings& settings);
+    Level* load(EngineSettings& settings);
 };
 
 #endif // WORLD_WORLD_H_

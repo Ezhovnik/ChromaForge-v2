@@ -23,7 +23,7 @@ std::filesystem::path engine_fs::get_screenshot_file(std::string ext) {
 	ss << std::put_time(&tm, format);
 	std::string datetimestr = ss.str();
 
-	std::filesystem::path filename = folder/std::filesystem::path("/screenshot-" + datetimestr + "." + ext);
+	std::filesystem::path filename = folder/std::filesystem::path("screenshot-" + datetimestr + "." + ext);
 	uint index = 0;
 	while (std::filesystem::exists(filename)) {
 		filename = folder/std::filesystem::path("screenshot-" + datetimestr + "-" + std::to_string(index) + "." + ext);
@@ -47,4 +47,8 @@ std::filesystem::path engine_fs::get_logs_file() {
 std::filesystem::path engine_fs::get_icon_file(int index) {
     std::filesystem::path folder = ICON_FOLDER;
     return folder/std::filesystem::path("icon" + std::to_string(index) + ".png");
+}
+
+bool engine_fs::is_world_name_used(std::string name) {
+    return std::filesystem::exists(engine_fs::get_saves_folder()/std::filesystem::u8path(name));
 }
