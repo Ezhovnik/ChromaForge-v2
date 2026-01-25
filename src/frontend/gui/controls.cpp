@@ -174,5 +174,35 @@ void TrackBar::mouseMove(GUI*, int x, int y) {
     value = (int)(value / step) * step;
 
     if (consumer_) consumer_(value);
+}
 
+CheckBox::CheckBox(bool checked) : UINode(glm::vec2(), glm::vec2(32.0f)), checked_(checked) {
+    color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+}
+
+void CheckBox::draw(Batch2D* batch, Assets* assets) {
+    if (supplier_) checked_ = supplier_();
+
+    glm::vec2 coord = calcCoord();
+    batch->texture(nullptr);
+    batch->color = checked_ ? checkColor : (hover_ ? hoverColor : color_);
+    batch->rect(coord.x, coord.y, size_.x, size_.y);
+}
+
+void CheckBox::mouseRelease(GUI*, int x, int y) {
+    checked_ = !checked_;
+    if (consumer_) consumer_(checked_);
+}
+
+void CheckBox::supplier(boolsupplier supplier) {
+    supplier_ = supplier;
+}
+
+void CheckBox::consumer(boolconsumer consumer) {
+    consumer_ = consumer;
+}
+
+CheckBox* CheckBox::checked(bool flag) {
+    checked_ = flag;
+    return this;
 }

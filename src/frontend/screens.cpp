@@ -40,19 +40,23 @@ std::shared_ptr<gui::UINode> create_main_menu_panel(Engine* engine) {
     
     gui::Panel* worldsPanel = new gui::Panel(glm::vec2(390, 200), glm::vec4(5.0f));
     worldsPanel->color(glm::vec4(0.1f));
-    for (auto const& entry : std::filesystem::directory_iterator(engine_fs::get_saves_folder())) {
-        std::string name = entry.path().filename().string();
-        gui::Button* button = new gui::Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
-        button->color(glm::vec4(0.5f));
-        button->listenAction([engine, panel, name](gui::GUI*) {
-            EngineSettings& settings = engine->getSettings();
 
-            auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(name);
-            World* world = new World(name, folder, 42, settings);
-            auto screen = new LevelScreen(engine, world->load(settings));
-            engine->setScreen(std::shared_ptr<Screen>(screen));
-        });
-        worldsPanel->add(button);
+    std::filesystem::path saves_folder = engine_fs::get_saves_folder();
+    if (std::filesystem::is_directory(saves_folder)) {
+        for (auto const& entry : std::filesystem::directory_iterator(saves_folder)) {
+            std::string name = entry.path().filename().string();
+            gui::Button* button = new gui::Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
+            button->color(glm::vec4(0.5f));
+            button->listenAction([engine, panel, name](gui::GUI*) {
+                EngineSettings& settings = engine->getSettings();
+
+                auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(name);
+                World* world = new World(name, folder, 42, settings);
+                auto screen = new LevelScreen(engine, world->load(settings));
+                engine->setScreen(std::shared_ptr<Screen>(screen));
+            });
+            worldsPanel->add(button);
+        }
     }
     panel->add(worldsPanel);
 
@@ -166,7 +170,7 @@ gui::Panel* create_settings_panel(Engine* engine) {
             return L"Load Distance: " + std::to_wstring(engine->getSettings().chunks.loadDistance);
         }));
 
-        gui::TrackBar* trackbar = new gui::TrackBar(3, 66, 10);
+        gui::TrackBar* trackbar = new gui::TrackBar(3, 66, 10, 1, 3);
         trackbar->supplier([=]() {
             return engine->getSettings().chunks.loadDistance;
         });
@@ -192,6 +196,25 @@ gui::Panel* create_settings_panel(Engine* engine) {
             engine->getSettings().graphics.fogCurve = value;
         });
         panel->add(trackbar);
+    }
+
+    {
+        gui::Panel* checkpanel = new gui::Panel(glm::vec2(400, 32), glm::vec4(5.0f), 1.0f);
+        checkpanel->color(glm::vec4(0.0f));
+        checkpanel->orientation(gui::Orientation::horizontal);
+
+        gui::CheckBox* checkbox = new gui::CheckBox();
+        checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
+        checkbox->supplier([=]() {
+            return engine->getSettings().display.swapInterval != 0;
+        });
+        checkbox->consumer([=](bool checked) {
+            engine->getSettings().display.swapInterval = checked;
+        });
+        checkpanel->add(checkbox);
+        checkpanel->add(new gui::Label(L"V-Sync"));
+
+        panel->add(checkpanel);
     }
 
     panel->add((new gui::Button(L"Back", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
@@ -267,7 +290,7 @@ void MenuScreen::draw(float delta) {
 }
 
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
-    worldRenderer = new WorldRenderer(level, engine->getAssets());
+    worldRenderer = new WorldRenderer(engine, level);
     hud = new HudRenderer(engine, level);
 }
 
@@ -313,8 +336,7 @@ void LevelScreen::draw(float deltaTime) {
     EngineSettings& settings = engine->getSettings();
     Camera* camera = level->player->camera;
 
-    float fogFactor = 18.0f / (float)settings.chunks.loadDistance;
-    worldRenderer->draw(camera, occlusion, fogFactor, settings.graphics.fogCurve);
+    worldRenderer->draw(camera, occlusion);
     hud->draw();
     if (level->player->debug) hud->drawDebug(1 / deltaTime, occlusion);
 }
