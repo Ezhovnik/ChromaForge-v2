@@ -55,17 +55,20 @@ int main() {
 
         std::string settings_file = platform::get_settings_file();
         if (std::filesystem::is_regular_file(settings_file)) {
-			LOG_INFO("Reading engine settings from {}", settings_file);
+			LOG_INFO("Reading engine settings from '{}'", settings_file);
 			std::string content = files::read_string(settings_file);
 			toml::Reader reader(&wrapper, settings_file, content);
 			reader.read();
 		} else {
-            LOG_INFO("Write engine settings to {}", settings_file);
+            LOG_INFO("Write default engine settings to '{}'", settings_file);
 			files::write_string(settings_file, wrapper.write());
 		}
 
         engine = std::make_unique<Engine>(settings);
-        engine->mainloop(); // Запуск основного цикла    
+        engine->mainloop(); // Запуск основного цикла 
+        
+        LOG_INFO("Write engine settings to '{}'", settings_file);
+		files::write_string(settings_file, wrapper.write());
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred\n{}", err.what());
     }

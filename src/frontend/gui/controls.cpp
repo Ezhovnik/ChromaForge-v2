@@ -40,8 +40,9 @@ void Label::draw(Batch2D* batch, Assets* assets) {
     font->draw(batch, text_, coord.x, coord.y);
 }
 
-void Label::textSupplier(wstringsupplier supplier) {
+Label* Label::textSupplier(wstringsupplier supplier) {
     this->supplier = supplier;
+    return this;
 }
 
 Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(32, 32), padding, 0) {
@@ -132,4 +133,46 @@ void TextBox::textConsumer(wstringconsumer consumer) {
 std::wstring TextBox::text() const {
     if (input.empty()) return placeholder;
     return input;
+}
+
+TrackBar::TrackBar(double min, double max, double value, double step, int trackWidth)
+    : UINode(glm::vec2(), glm::vec2(32)), min(min), max(max), value(value), step(step), trackWidth(trackWidth) {
+    color(glm::vec4(0.0f, 0.0f, 0.0f, 0.4f));
+}
+
+void TrackBar::draw(Batch2D* batch, Assets* assets) {
+    if (supplier_) value = supplier_();
+
+    glm::vec2 coord = calcCoord();
+    batch->texture(nullptr);
+    batch->color = (hover_ ? hoverColor : color_);
+    batch->rect(coord.x, coord.y, size_.x, size_.y);
+
+    float width = size_.x;
+    float t = (value - min) / (max-min+trackWidth * step);
+
+    batch->color = trackColor;
+    batch->rect(coord.x + width * t, coord.y, size_.x * (trackWidth / (max - min + trackWidth * step) * step), size_.y);
+}
+
+void TrackBar::supplier(doublesupplier supplier) {
+    this->supplier_ = supplier;
+}
+
+void TrackBar::consumer(doubleconsumer consumer) {
+    this->consumer_ = consumer;
+}
+
+void TrackBar::mouseMove(GUI*, int x, int y) {
+    glm::vec2 coord = calcCoord();
+    value = x;
+    value -= coord.x;
+    value = (value) / size_.x * (max - min + trackWidth * step);
+    value += min;
+    value = (value > max) ? max : value;
+    value = (value < min) ? min : value;
+    value = (int)(value / step) * step;
+
+    if (consumer_) consumer_(value);
+
 }

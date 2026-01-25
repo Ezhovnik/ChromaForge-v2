@@ -26,8 +26,9 @@
 #include "../util/stringutil.h"
 #include "../logger/Logger.h"
 
-gui::Panel* create_main_menu_panel(Engine* engine) {
+std::shared_ptr<gui::UINode> create_main_menu_panel(Engine* engine) {
     gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
+    std::shared_ptr<gui::UINode> panelptr(panel);
     panel->color(glm::vec4(0.0f));
 	panel->setCoord(glm::vec2(10, 10));
 
@@ -40,29 +41,36 @@ gui::Panel* create_main_menu_panel(Engine* engine) {
     gui::Panel* worldsPanel = new gui::Panel(glm::vec2(390, 200), glm::vec4(5.0f));
     worldsPanel->color(glm::vec4(0.1f));
     for (auto const& entry : std::filesystem::directory_iterator(engine_fs::get_saves_folder())) {
-        std::filesystem::path name = entry.path().filename();
-        gui::Button* button = new gui::Button(util::str2wstr_utf8(name.string()), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
+        std::string name = entry.path().filename().string();
+        gui::Button* button = new gui::Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
         button->color(glm::vec4(0.5f));
         button->listenAction([engine, panel, name](gui::GUI*) {
             EngineSettings& settings = engine->getSettings();
 
-            auto folder = engine_fs::get_saves_folder()/name;
-            World* world = new World(name.string(), folder, 42, settings);
+            auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(name);
+            World* world = new World(name, folder, 42, settings);
             auto screen = new LevelScreen(engine, world->load(settings));
             engine->setScreen(std::shared_ptr<Screen>(screen));
         });
         worldsPanel->add(button);
     }
     panel->add(worldsPanel);
+
+    panel->add((new gui::Button(L"Settings", glm::vec4(10.0f)))->listenAction([=](gui::GUI* gui) {
+        panel->visible(false);
+        gui->store("back", panelptr);
+        gui->get("settings")->visible(true);
+    }));
     
     panel->add((new gui::Button(L"Quit", glm::vec4(10.f)))->listenAction([](gui::GUI*) {
         Window::setShouldClose(true);
     }));
-    return panel;
+    return panelptr;
 }
 
-gui::Panel* create_new_world_panel(Engine* engine) {
+std::shared_ptr<gui::UINode> create_new_world_panel(Engine* engine) {
     gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
+    std::shared_ptr<gui::UINode> panelptr(panel);
     panel->color(glm::vec4(0.0f));
 	panel->setCoord(glm::vec2(10, 10));
 
@@ -145,21 +153,73 @@ gui::Panel* create_new_world_panel(Engine* engine) {
         gui->get("main-menu")->visible(true);
     }));
 
+    return panelptr;
+}
+
+gui::Panel* create_settings_panel(Engine* engine) {
+    gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
+    panel->color(glm::vec4(0.0f));
+	panel->setCoord(glm::vec2(10, 10));
+
+    {
+        panel->add((new gui::Label(L""))->textSupplier([=]() {
+            return L"Load Distance: " + std::to_wstring(engine->getSettings().chunks.loadDistance);
+        }));
+
+        gui::TrackBar* trackbar = new gui::TrackBar(3, 66, 10);
+        trackbar->supplier([=]() {
+            return engine->getSettings().chunks.loadDistance;
+        });
+        trackbar->consumer([=](double value) {
+            engine->getSettings().chunks.loadDistance = value;
+        });
+        panel->add(trackbar);
+    }
+
+    {
+        panel->add((new gui::Label(L""))->textSupplier([=]() {
+            std::wstringstream ss;
+            ss << std::fixed << std::setprecision(1);
+            ss << engine->getSettings().graphics.fogCurve;
+            return L"Fog Curve: " + ss.str();
+        }));
+
+        gui::TrackBar* trackbar = new gui::TrackBar(1.0, 6.0, 1.0, 0.1, 2);
+        trackbar->supplier([=]() {
+            return engine->getSettings().graphics.fogCurve;
+        });
+        trackbar->consumer([=](double value) {
+            engine->getSettings().graphics.fogCurve = value;
+        });
+        panel->add(trackbar);
+    }
+
+    panel->add((new gui::Button(L"Back", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
+        panel->visible(false);
+        gui->get("back")->visible(true);
+    }));
+
     return panel;
 }
 
-
 MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     gui::GUI* gui = engine->getGUI();
-    panel = std::shared_ptr<gui::UINode>(create_main_menu_panel(engine));
-    newWorldPanel = std::shared_ptr<gui::UINode>(create_new_world_panel(engine));
+
+    panel = create_main_menu_panel(engine);
+
+    newWorldPanel = create_new_world_panel(engine);
     newWorldPanel->visible(false);
+
+    auto settingsPanel = std::shared_ptr<gui::UINode>(create_settings_panel(engine));
+    settingsPanel->visible(false);
 
     gui->store("main-menu", panel);
     gui->store("new-world", newWorldPanel);
+    if (gui->get("settings") == nullptr) gui->store("settings", settingsPanel);
 
     gui->add(panel);
     gui->add(newWorldPanel);
+    gui->add(settingsPanel);
 
     batch = new Batch2D(1024);
     uicamera = new Camera(glm::vec3(), Window::height);
@@ -183,7 +243,11 @@ void MenuScreen::update(float delta) {
 
 void MenuScreen::draw(float delta) {
     panel->setCoord((Window::size() - panel->size()) / 2.0f);
+
     newWorldPanel->setCoord((Window::size() - newWorldPanel->size()) / 2.0f);
+
+    auto settingsPanel = engine->getGUI()->get("settings");
+    settingsPanel->setCoord((Window::size() - settingsPanel->size()) / 2.0f);
     
     Window::clear();
     Window::setBgColor(glm::vec3(0.2f, 0.2f, 0.2f));

@@ -46,9 +46,7 @@ inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная ско
 using gui::GUI;
 
 // Реализация конструктора
-Engine::Engine(const EngineSettings& settings_) {
-    this->settings = settings_;
-
+Engine::Engine(EngineSettings& settings) : settings(settings) {
     // Инициализация окна GLFW
     if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
