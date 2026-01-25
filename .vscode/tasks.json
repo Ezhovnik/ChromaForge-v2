@@ -60,6 +60,8 @@
                 "${workspaceFolder}/src/graphics/Sprite.cpp",
                 "${workspaceFolder}/src/graphics/UVRegion.cpp",
                 "${workspaceFolder}/src/graphics/ImageData.cpp",
+                "${workspaceFolder}/src/graphics/Viewport.cpp",
+                "${workspaceFolder}/src/graphics/GfxContext.cpp",
                 "${workspaceFolder}/src/assets/AssetsLoader.cpp",
                 "${workspaceFolder}/src/util/stringutil.cpp",
                 "${workspaceFolder}/src/frontend/screens.cpp",

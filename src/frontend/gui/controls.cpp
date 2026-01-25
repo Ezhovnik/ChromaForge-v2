@@ -109,7 +109,7 @@ void TextBox::typed(unsigned int codepoint) {
 void TextBox::keyPressed(int key) {
     switch (key) {
         case KEY_BACKSPACE:
-            if (!input.empty()) label->text(input.substr(0, input.length() - 1));
+            if (!input.empty()) input = input.substr(0, input.length() - 1);
             break;
         case KEY_ENTER:
             if (consumer) consumer(label->text());
