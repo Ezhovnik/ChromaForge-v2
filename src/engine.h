@@ -27,13 +27,13 @@ private:
     Assets* assets; // Менеджер ассетов (текстуры, шейдеры и т.д.)
     gui::GUI* gui;
     std::shared_ptr<Screen> screen = nullptr;
-    EngineSettings settings;
+    EngineSettings& settings;
 
     uint64_t frame = 0; // Номер текущего кадра
     double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
     double deltaTime = 0.0; // Разница во времени между кадрами
 public:
-    Engine(const EngineSettings& settings_); // Конструктор
+    Engine(EngineSettings& settings); // Конструктор
     ~Engine(); // Деструктор
 
     void updateTimers(); // Обновление таймеров (frame, deltaTime)

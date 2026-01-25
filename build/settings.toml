@@ -5,7 +5,7 @@ samples = 0
 swap-interval = 1
 
 [chunks]
-load-distance = 22
+load-distance = 14
 load-speed = 10
 padding = 2
 

@@ -25,6 +25,7 @@ public:
     ChunksStorage* chunksStorage;
 	PlayerController* playerController;
     LevelEvents* events;
+	const EngineSettings& settings;
 
 	Level(World* world, Player* player, EngineSettings& settings);
 	~Level();

@@ -180,4 +180,9 @@ void setup_definitions() {
         block->emission[2] = 15;
         Block::blocks[block->id] = std::move(block);
     }
+
+    {
+        auto block = std::make_unique<Block>(Blocks_id::COBBLESTONE, 22);
+        Block::blocks[block->id] = std::move(block);
+    }
 }
