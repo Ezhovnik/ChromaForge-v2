@@ -30,6 +30,7 @@
 #include "gui/UINode.h"
 #include "gui/GUI.h"
 #include "screens.h"
+#include "../logger/Logger.h"
 
 inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	gui::Label* label = new gui::Label(L"-");
@@ -39,7 +40,7 @@ inline gui::Label* create_label(gui::wstringsupplier supplier) {
 
 HudRenderer::HudRenderer(Engine* engine, Level* level) : level(level), assets(engine->getAssets()), guiController(engine->getGUI()) {
 	batch = new Batch2D(1024);
-	uicamera = new Camera(glm::vec3(), Window::height);
+	uicamera = new Camera(glm::vec3(), 1);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
@@ -152,7 +153,11 @@ void HudRenderer::drawDebug(int fps, bool occlusion){
 	fpsMax = glm::max(fps, fpsMax);
 }
 
-void HudRenderer::drawInventory(Player* player) {
+void HudRenderer::drawInventory(const GfxContext& ctx, Player* player) {
+    const Viewport& viewport = ctx.getViewport();
+	const uint width = viewport.getWidth();
+	const uint height = viewport.getHeight();
+
 	Texture* blocks = assets->getTexture("blocks_tex");
 
 	uint size = 48;
@@ -163,9 +168,6 @@ void HudRenderer::drawInventory(Player* player) {
 
 	uint inv_w = step*inv_cols + size;
 	uint inv_h = step*inv_rows + size;
-
-    const uint width = Window::width;
-	const uint height = Window::height;
 
 	int inv_x = (width - (inv_w)) / 2;
 	int inv_y = (height - (inv_h)) / 2;
@@ -230,32 +232,38 @@ void HudRenderer::drawInventory(Player* player) {
 	}
 }
 
-void HudRenderer::draw(){
-    const uint width = Window::width;
-	const uint height = Window::height;
+void HudRenderer::draw(const GfxContext& ctx){
+    const Viewport& viewport = ctx.getViewport();
+	const uint width = viewport.getWidth();
+	const uint height = viewport.getHeight();
 
 	debugPanel->visible(level->player->debug);
-	pauseMenu->setCoord((Window::size() - pauseMenu->size()) / 2.0f);
+	pauseMenu->setCoord((viewport.size() - pauseMenu->size()) / 2.0f);
 
     auto settingsPanel = guiController->get("settings");
-    settingsPanel->setCoord((Window::size() - settingsPanel->size()) / 2.0f);
-
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+    settingsPanel->setCoord((viewport.size() - settingsPanel->size()) / 2.0f);
 
 	uicamera->fov = height;
 
 	ShaderProgram* uishader = assets->getShader("ui");
+    if (uishader == nullptr) {
+        LOG_CRITICAL("The shader 'ui' could not be found in the assets");
+        throw std::runtime_error("The shader 'ui' could not be found in the assets");
+    }
+
 	uishader->use();
 	uishader->uniformMatrix("u_projview", uicamera->getProjection() * uicamera->getView());
 
-	// Chosen block preview
 	Texture* blocks = assets->getTexture("blocks_tex");
+    if (blocks == nullptr) {
+        LOG_CRITICAL("The texture 'blocks_tex' could not be found in the assets");
+        throw std::runtime_error("The texture 'blocks_tex' could not be found in the assets");
+    }
 
 	batch->texture(nullptr);
 	batch->color = glm::vec4(1.0f);
 	if (Events::_cursor_locked && !level->player->debug) {
-		glLineWidth(2);
+		batch->setLineWidth(2.0f);
 		batch->line(width / 2, height / 2 - 6, width / 2, height / 2 + 6, 0.2f, 0.2f, 0.2f, 1.0f);
 		batch->line(width / 2 + 6, height / 2, width / 2 - 6, height / 2, 0.2f, 0.2f, 0.2f, 1.0f);
 	}
@@ -314,7 +322,7 @@ void HudRenderer::draw(){
 		batch->rect(0, 0, width, height);
 	}
 
-	if (inventoryOpen) drawInventory(player);
+	if (inventoryOpen) drawInventory(ctx, player);
 
 	batch->render();
 }

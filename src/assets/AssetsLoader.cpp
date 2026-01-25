@@ -1,6 +1,6 @@
 #include "AssetsLoader.h"
 
-#include <iostream>
+#include <memory>
 
 #include "Assets.h"
 #include "../constants.h"
@@ -97,20 +97,18 @@ bool _load_font(Assets* assets, const std::string& filename, const std::string& 
 
 // Загружает и создает текстуру-атлас с добавлением отступов.
 bool _load_atlas(Assets* assets, const std::string& filename, const std::string& name) {
-    ImageData* image = png::loadImage(filename);
+    std::unique_ptr<ImageData> image(png::loadImage(filename));
     if (image == nullptr) {
         LOG_CRITICAL("Failed to load atlas image '{}'", filename);
         return false;
     }
 
     for (int i = 0; i < ATLAS_MARGIN_SIZE; ++i) {
-        ImageData* newImage = add_atlas_margins(image, 16);
-        delete image;
-        image = newImage;
+        ImageData* newImage = add_atlas_margins(image.get(), 16);
+        image.reset(newImage);
     }
 
-    Texture* texture = Texture::from(image);
-    delete image;
+    Texture* texture = Texture::from(image.get());
     return assets->store(texture, name);
 }
 

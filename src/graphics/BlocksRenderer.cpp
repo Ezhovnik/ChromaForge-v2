@@ -91,7 +91,7 @@ void BlocksRenderer::face(const glm::vec3& coord, float w, float h,
 }
 
 void BlocksRenderer::cube(const glm::vec3& coord, const glm::vec3& size, const UVRegion (&texfaces)[6]) {
-	glm::vec4 lights[]{glm::vec4(), glm::vec4(), glm::vec4(), glm::vec4()};
+	glm::vec4 lights[]{glm::vec4(0.0f), glm::vec4(0.0f), glm::vec4(0.0f), glm::vec4(0.0f)};
 
 	face(coord, size.x, size.y, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), texfaces[0], lights);
 	face(coord + glm::vec3(size.x, 0, -size.z), size.x, size.y, glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), texfaces[1], lights);

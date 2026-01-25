@@ -34,11 +34,6 @@ namespace WorldSections {
     constexpr int MAIN = 1;
 }
 
-// Статические проверки размеров типов данных
-static_assert(sizeof(uint32_t) == 4, "uint32_t must be 4 bytes");
-static_assert(sizeof(float) == 4, "float must be 4 bytes");
-static_assert(sizeof(char) == 1, "char must be 1 byte");
-
 // Конвертирует 4 байта в целое число
 inline int bytes2Int(const ubyte* src, size_t offset){
 	return (src[offset] << 24) | (src[offset + 1] << 16) | (src[offset + 2] << 8) | (src[offset + 3]);
@@ -50,14 +45,6 @@ inline void int2Bytes(int value, ubyte* dest, size_t offset){
 	dest[offset + 1] = (char) (value >> 16 & 0xFF);
 	dest[offset + 2] = (char) (value >> 8 & 0xFF);
 	dest[offset + 3] = (char) (value >> 0 & 0xFF);
-}
-
-inline float bytes2Float(ubyte* src, uint offset){
-	uint32_t value = ((src[offset] << 24) |
-					(src[offset + 1] << 16) |
-					(src[offset + 2] << 8) |
-					(src[offset + 3]));
-	return *(float*)(&value);
 }
 
 // Конструктор

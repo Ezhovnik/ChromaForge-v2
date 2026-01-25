@@ -16,6 +16,8 @@
 #include "../graphics/UVRegion.h"
 #include "../graphics/ShaderProgram.h"
 #include "../graphics/Batch2D.h"
+#include "../graphics/GfxContext.h"
+#include "../graphics/Viewport.h"
 #include "world_render.h"
 #include "hud.h"
 #include "gui/GUI.h"
@@ -139,8 +141,7 @@ std::shared_ptr<gui::UINode> create_new_world_panel(Engine* engine) {
                 std::hash<std::wstring> hash;
                 seed = hash(seedstr);
             }
-            LOG_TRACE("World seed: {}", seed);
-            
+
             EngineSettings& settings = engine->getSettings();
 
             auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(nameutf8);
@@ -336,7 +337,10 @@ void LevelScreen::draw(float deltaTime) {
     EngineSettings& settings = engine->getSettings();
     Camera* camera = level->player->camera;
 
-    worldRenderer->draw(camera, occlusion);
-    hud->draw();
+    Viewport viewport(Window::width, Window::height);
+    GfxContext ctx(nullptr, viewport, nullptr);
+
+    worldRenderer->draw(ctx, camera, occlusion);
+    hud->draw(ctx);
     if (level->player->debug) hud->drawDebug(1 / deltaTime, occlusion);
 }

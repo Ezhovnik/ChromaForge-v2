@@ -47,6 +47,8 @@ public:
 
     void render(uint gl_primitive);
     void render();
+
+    void setLineWidth(float width);
 };
 
 

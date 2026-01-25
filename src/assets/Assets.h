@@ -14,7 +14,7 @@ class Assets {
 	std::unordered_map<std::string, ShaderProgram*> shaders;
     std::unordered_map<std::string, Font*> fonts;
 public:
-	~Assets(); // Конструктор
+	~Assets(); // Деструктор
 
     // Методы для работы с текстурами
 	Texture* getTexture(std::string name) const; // Получает текстуру по имени
