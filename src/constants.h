@@ -17,4 +17,9 @@ inline uint vox_index(int x, int y, int z, int width, int depth) {
 	return (y * depth + z) * width + x;
 }
 
+#define RESOURCE_FOLDER "../res"
+#define TEXTURES_FOLDER "../res/textures"
+#define SHADERS_FOLDER "../res/shaders"
+#define FONTS_FOLDER "../res/fonts"
+
 #endif // SRC_CONSTANTS_H_

@@ -146,6 +146,7 @@ void Engine::mainloop() {
 
         gui->draw(&batch, assets);
 
+        Window::swapInterval(settings.display.swapInterval);
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ввода
     }

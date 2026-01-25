@@ -126,17 +126,17 @@ void AssetsLoader::createDefaults(AssetsLoader& loader) {
 
 // Добавляет стандартные ресурсы в очередь загрузки.
 void AssetsLoader::addDefaults(AssetsLoader& loader) {
-    loader.add(AssetsType::Shader, "../res/shaders/default", "default");
-    loader.add(AssetsType::Shader, "../res/shaders/lines", "lines");
-    loader.add(AssetsType::Shader, "../res/shaders/ui", "ui");
+    loader.add(AssetsType::Shader, SHADERS_FOLDER"/default", "default");
+    loader.add(AssetsType::Shader, SHADERS_FOLDER"/lines", "lines");
+    loader.add(AssetsType::Shader, SHADERS_FOLDER"/ui", "ui");
 
-    loader.add(AssetsType::Atlas, "../res/textures/atlas.png", "blocks");
-    loader.add(AssetsType::Texture, "../res/textures/atlas.png", "blocks_tex");
-    loader.add(AssetsType::Texture, "../res/textures/menubg.png", "menubg");
+    loader.add(AssetsType::Atlas, TEXTURES_FOLDER"/atlas.png", "blocks");
+    loader.add(AssetsType::Texture, TEXTURES_FOLDER"/atlas.png", "blocks_tex");
+    loader.add(AssetsType::Texture, TEXTURES_FOLDER"/menubg.png", "menubg");
 
-    loader.add(AssetsType::Texture, "../res/textures/slot.png", "slot");
+    loader.add(AssetsType::Texture, TEXTURES_FOLDER"/slot.png", "slot");
 
-    loader.add(AssetsType::Font, "../res/fonts/font", "normal");
+    loader.add(AssetsType::Font, FONTS_FOLDER"/font", "normal");
 
     LOG_DEBUG("Added default assets to loading queue");
 }

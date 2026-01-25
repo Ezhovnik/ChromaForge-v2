@@ -28,6 +28,7 @@
 #include "../logger/Logger.h"
 #include "../graphics/ChunksRenderer.h"
 #include "../math/FrustumCulling.h"
+#include "../engine.h"
 
 inline constexpr glm::vec4 CLEAR_COLOR = {0.7f, 0.71f, 0.73f, 1.0f};
 inline constexpr float GAMMA_VALUE = 1.6f;
@@ -37,9 +38,8 @@ inline constexpr float FOG_FACTOR = 0.025f;
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
-WorldRenderer::WorldRenderer(Level* level, Assets* assets) : assets(assets), level(level) {
+WorldRenderer::WorldRenderer(Engine* engine, Level* level) : engine(engine), level(level) {
 	lineBatch = new LineBatch(4096);
-	batch3D = new Batch3D(1024);
 	renderer = new ChunksRenderer(level);
     frustumCulling = new Frustum();
     level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
@@ -48,7 +48,6 @@ WorldRenderer::WorldRenderer(Level* level, Assets* assets) : assets(assets), lev
 }
 
 WorldRenderer::~WorldRenderer() {
-	delete batch3D;
 	delete lineBatch;
 	delete renderer;
     delete frustumCulling;
@@ -85,8 +84,10 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
     return true;
 }
 
-void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float fogCurve){
+void WorldRenderer::draw(Camera* camera, bool occlusion){
     Chunks* chunks = level->chunks;
+    EngineSettings& settings = engine->getSettings();
+    Assets* assets = engine->getAssets();
 
     Window::setBgColor(CLEAR_COLOR);
     Window::clear();
@@ -121,10 +122,12 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
 
 	shader->uniform1f("u_gamma", GAMMA_VALUE);
 
+    float fogFactor = 18.0f / (float)settings.chunks.loadDistance;
 	shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR);
 	shader->uniform3f("u_fogColor", FOG_COLOR);
 	shader->uniform1f("u_fogFactor", fogFactor);
-    shader->uniform1f("u_fogCurve", fogCurve);
+    shader->uniform1f("u_fogCurve", settings.graphics.fogCurve);
+
     shader->uniform3f("u_cameraPos", camera->position);
 
     Block* choosen_block = Block::blocks[level->player->choosenBlock].get();
@@ -164,8 +167,6 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
 	}
 
     shader->uniformMatrix("u_model", glm::mat4(1.0f));
-    // batch3D->begin();
-    // batch3D->render();
 
     // Рендеринг линий
     if (level->playerController->selectedBlockId != -1 && !level->player->noclip){
@@ -185,6 +186,8 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
         lineBatch->render();
 	}
 
+    glDisable(GL_DEPTH_TEST);
+
     if (level->player->debug) {
         float length = 40.0f;
 
@@ -197,17 +200,13 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
 				-length, length) * model * glm::inverse(camera->rotation)
             );
 
-		glDisable(GL_DEPTH_TEST);
-
-		glLineWidth(4.0f);
+		lineBatch->setLineWidth(4.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 1.0f);
         lineBatch->render();
 
-        glEnable(GL_DEPTH_TEST);
-
-		glLineWidth(2.0f);
+		lineBatch->setLineWidth(2.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 1.0f);

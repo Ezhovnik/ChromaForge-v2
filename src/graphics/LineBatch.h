@@ -28,6 +28,8 @@ public:
     );
 
     void render(); // Выполняет отрисовку всех накопленных линий
+
+    void setLineWidth(float width);
 };
 
 #endif // GRAPHICS_LINEBATCH_H_
