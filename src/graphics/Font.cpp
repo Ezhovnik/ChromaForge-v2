@@ -86,8 +86,7 @@ void Font::draw(Batch2D* batch, std::wstring text, int x, int y, int style) {
 					}
 
 					batch->sprite(x, y, Fonts_Consts::GLYPH_SIZE, Fonts_Consts::GLYPH_SIZE, 16, c, batch->color);
-				}
-				else if (charpage > page && charpage < next){
+				} else if (charpage > page && charpage < next){
 					next = charpage;
 				}
 			}

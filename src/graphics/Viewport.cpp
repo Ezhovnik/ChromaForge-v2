@@ -1,7 +1,6 @@
 #include "Viewport.h"
 
-Viewport::Viewport(uint width, uint height) 
-    : width(width), height(height) {
+Viewport::Viewport(uint width, uint height) : width(width), height(height) {
 }
 
 uint Viewport::getWidth() const {

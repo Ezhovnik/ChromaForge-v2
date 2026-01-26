@@ -6,14 +6,13 @@
 #include "Texture.h"
 #include "../typedefs.h"
 
-namespace Batch3D_Consts {
-    constexpr int VERTEX_SIZE = 9;
-    const vattr ATTRS[] = {{3}, {2}, {4}, {0}};
-}
+#define VERTEX_SIZE 9
 
 Batch3D::Batch3D(size_t capacity) : capacity(capacity), offset(0), color(1.0f, 1.0f, 1.0f, 0.0f){
-	buffer = new float[capacity * Batch3D_Consts::VERTEX_SIZE];
-	mesh = new Mesh(buffer, 0, Batch3D_Consts::ATTRS);
+	const vattr attrs[] = {{3}, {2}, {4}, {0}};
+    
+    buffer = new float[capacity * VERTEX_SIZE];
+	mesh = new Mesh(buffer, 0, attrs);
 	index = 0;
 
 	ubyte pixels[] = {255, 255, 255, 255};
@@ -72,7 +71,7 @@ void Batch3D::sprite(glm::vec3 pos, glm::vec3 up, glm::vec3 right, float w, floa
 	const float g = color.g;
 	const float b = color.b;
 	const float a = color.a;
-	if (index + 6 * Batch3D_Consts::VERTEX_SIZE >= capacity) render();
+	if (index + 6 * VERTEX_SIZE >= capacity) render();
 
 	vertex(pos.x - right.x * w - up.x * h,
 			pos.y - right.y * w - up.y * h,
@@ -154,7 +153,7 @@ void Batch3D::sprite(glm::vec3 pos, glm::vec3 up, glm::vec3 right, float w, floa
 }
 
 void Batch3D::render() {
-	mesh->reload(buffer, index / Batch3D_Consts::VERTEX_SIZE);
+	mesh->reload(buffer, index / VERTEX_SIZE);
 	mesh->draw(GL_TRIANGLES);
 	index = 0;
 }

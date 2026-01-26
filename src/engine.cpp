@@ -39,10 +39,6 @@
 #include "frontend/screens.h"
 #include "logger/Logger.h"
 
-// Точка спавна игрока и начальная скорость
-inline constexpr glm::vec3 SPAWNPOINT = {0, 128, 0}; // Точка, где игрок появляется в мире
-inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
-
 using gui::GUI;
 
 // Реализация конструктора
@@ -81,8 +77,6 @@ Engine::Engine(EngineSettings& settings) : settings(settings) {
 
     gui = new GUI();
 
-    setScreen(std::shared_ptr<Screen> (new MenuScreen(this)));
-
     LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -93,10 +87,9 @@ Engine::~Engine() {
     LOG_INFO("Shutting down");
 
     screen = nullptr;
-    if (assets != nullptr) {
-        delete assets;
-        assets = nullptr;
-    }
+    delete gui;
+    delete assets;
+
     Window::terminate();
 
     LOG_INFO("Engine finished");
@@ -125,9 +118,11 @@ void Engine::updateHotkeys() {
 void Engine::mainloop() {
     LOG_INFO("Preparing systems");
 
-    Batch2D batch(1024);
+    setScreen(std::shared_ptr<Screen> (new MenuScreen(this)));
 
+    Batch2D batch(1024);
     lastTime = Window::time();
+
     LOG_INFO("Systems have been prepared");
 
     while (!Window::isShouldClose()){

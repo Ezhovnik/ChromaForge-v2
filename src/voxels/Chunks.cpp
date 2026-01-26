@@ -182,7 +182,7 @@ void Chunks::setVoxel(int x, int y, int z, blockid_t id, uint8_t states) {
 bool Chunks::isObstacle(int x, int y, int z){
 	voxel* vox = getVoxel(x, y, z);
 	if (vox == nullptr) return true;
-	return Block::blocks[vox->id].get()->obstacle;
+	return Block::blocks[vox->id]->obstacle;
 }
 
 // Выполняет трассировку луча через воксельный мир.
@@ -232,7 +232,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 		voxel* vox = getVoxel(ix, iy, iz); // Получение текущего вокселя
 
         // Проверка, является ли воксель непрозрачным
-		if (vox == nullptr || Block::blocks[vox->id].get()->selectable){
+		if (vox == nullptr || Block::blocks[vox->id]->selectable){
             // Найден непрозрачный воксель или достигнута граница мира
 			end.x = px + t * dx;
 			end.y = py + t * dy;

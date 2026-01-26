@@ -11,7 +11,8 @@
 #include "../definitions.h"
 #include "../typedefs.h"
 
-Lighting::Lighting(Chunks* chunks) : chunks(chunks){
+Lighting::Lighting(Chunks* chunks) {
+    this->chunks = chunks;
 	solverR = new LightSolver(chunks, 0);
 	solverG = new LightSolver(chunks, 1);
 	solverB = new LightSolver(chunks, 2);
@@ -45,7 +46,7 @@ void Lighting::preBuildSkyLight(int cx, int cz){
 			for (int y = CHUNK_HEIGHT - 1;;y--){
 				if (y < 0) break;
 				voxel* vox = &(chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x]);
-				Block* block = Block::blocks[vox->id].get();
+				Block* block = Block::blocks[vox->id];
 				if (!block->skyLightPassing) {
 					if (highestPoint < y) highestPoint = y;
 					break;
@@ -65,7 +66,7 @@ void Lighting::buildSkyLight(int cx, int cz){
 		for (int x = 0; x < CHUNK_WIDTH; ++x){
             int gx = x + cx * CHUNK_WIDTH;
 			for (int y = chunk->light_map->highestPoint; y >= 0; y--){
-				while (y > 0 && !Block::blocks[chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].id].get()->lightPassing) {
+				while (y > 0 && !Block::blocks[chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].id]->lightPassing) {
 					y--;
 				}
 				if (chunk->light_map->getS(x, y, z) != 15) {
@@ -91,7 +92,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z) {
             int gz = z + chunk_z * CHUNK_DEPTH;
 			for (uint x = 0; x < CHUNK_WIDTH; ++x){
 				voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
-				Block* block = Block::blocks[vox.id].get();
+				Block* block = Block::blocks[vox.id];
 				int gx = x + chunk_x * CHUNK_WIDTH;
 				if (block->emission[0] || block->emission[1] || block->emission[2]){
 					solverR->add(gx,y,gz,block->emission[0]);
@@ -125,7 +126,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z) {
 }
 
 void Lighting::onBlockSet(int x, int y, int z, int id) {
-    Block* block = Block::blocks[id].get();
+    Block* block = Block::blocks[id];
     if (id == Blocks_id::AIR) {
         solverR->remove(x, y, z);
         solverG->remove(x, y, z);
@@ -138,7 +139,7 @@ void Lighting::onBlockSet(int x, int y, int z, int id) {
         if (chunks->getLight(x, y + 1, z, 3) == 0xF){
             for (int i = y; i >= 0; --i){
                 voxel* vox = chunks->getVoxel(x, i, z);
-                if ((vox == nullptr || vox->id != Blocks_id::AIR) && Block::blocks[id].get()->skyLightPassing) break;
+                if ((vox == nullptr || vox->id != Blocks_id::AIR) && Block::blocks[id]->skyLightPassing) break;
                 solverS->add(x, i, z, 0xF);
             }
         }

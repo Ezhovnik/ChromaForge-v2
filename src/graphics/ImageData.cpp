@@ -27,39 +27,39 @@ ImageData::~ImageData() {
     }
 }
 
-void ImageData::rgb2rgba() {
-    if (format == ImageFormat::rgba8888) return;
+// void ImageData::rgb2rgba() {
+//     if (format == ImageFormat::rgba8888) return;
 
-    if (format != ImageFormat::rgb888) {
-        LOG_ERROR("Cannot convert to RGBA: invalid format");
-        throw std::runtime_error("Invalid format for RGB to RGBA conversion");
-    }
+//     if (format != ImageFormat::rgb888) {
+//         LOG_ERROR("Cannot convert to RGBA: invalid format");
+//         throw std::runtime_error("Invalid format for RGB to RGBA conversion");
+//     }
     
-    // Размеры исходного и нового массивов данных
-    size_t srcPixelCount = width * height;
-    size_t srcDataSize = srcPixelCount * 3;  // 3 байта на пиксель для RGB888
-    size_t dstDataSize = srcPixelCount * 4;  // 4 байта на пиксель для RGBA8888
+//     // Размеры исходного и нового массивов данных
+//     size_t srcPixelCount = width * height;
+//     size_t srcDataSize = srcPixelCount * 3;  // 3 байта на пиксель для RGB888
+//     size_t dstDataSize = srcPixelCount * 4;  // 4 байта на пиксель для RGBA8888
     
-    // Выделяем память для новых данных
-    ubyte* newData = new ubyte[dstDataSize];
-    const ubyte* srcData = (const ubyte*)data;
+//     // Выделяем память для новых данных
+//     ubyte* newData = new ubyte[dstDataSize];
+//     const ubyte* srcData = (const ubyte*)data;
     
-    // Конвертируем RGB в RGBA
-    for (size_t i = 0; i < srcPixelCount; ++i) {
-        // Копируем RGB компоненты
-        newData[i * 4] = srcData[i * 3]; // R
-        newData[i * 4 + 1] = srcData[i * 3 + 1]; // G
-        newData[i * 4 + 2] = srcData[i * 3 + 2]; // B
-        newData[i * 4 + 3] = 255; // A (полностью непрозрачный)
-    }
+//     // Конвертируем RGB в RGBA
+//     for (size_t i = 0; i < srcPixelCount; ++i) {
+//         // Копируем RGB компоненты
+//         newData[i * 4] = srcData[i * 3]; // R
+//         newData[i * 4 + 1] = srcData[i * 3 + 1]; // G
+//         newData[i * 4 + 2] = srcData[i * 3 + 2]; // B
+//         newData[i * 4 + 3] = 255; // A (полностью непрозрачный)
+//     }
 
-    // Удаляем старые данные
-    delete[] (ubyte*)data;
+//     // Удаляем старые данные
+//     delete[] (ubyte*)data;
 
-    // Обновляем указатель на данные и формат
-    data = newData;
-    format = ImageFormat::rgba8888;
-}
+//     // Обновляем указатель на данные и формат
+//     data = newData;
+//     format = ImageFormat::rgba8888;
+// }
 
 ImageData* add_atlas_margins(ImageData* image, int grid_size) {
     assert(image->getFormat() == ImageFormat::rgba8888); // Поддерживается только RGBA

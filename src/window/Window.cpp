@@ -157,27 +157,27 @@ void Window::terminate() {
     glfwTerminate();
 }
 
-bool Window::setIcon(ImageData* icon) {
-    if (icon == nullptr) {
-        LOG_ERROR("Icon is null");
-        return false;
-    }
+// bool Window::setIcon(ImageData* icon) {
+//     if (icon == nullptr) {
+//         LOG_ERROR("Icon is null");
+//         return false;
+//     }
 
-    if (icon->getFormat() != ImageFormat::rgba8888) {
-        LOG_ERROR("Invalid icon format");
-        return false;
-    }
+//     if (icon->getFormat() != ImageFormat::rgba8888) {
+//         LOG_ERROR("Invalid icon format");
+//         return false;
+//     }
 
-    GLFWimage glfwIcon;
+//     GLFWimage glfwIcon;
 
-    glfwIcon.width = icon->getWidth();
-    glfwIcon.height = icon->getHeight();
-    glfwIcon.pixels = reinterpret_cast<unsigned char*>(icon->getData());
+//     glfwIcon.width = icon->getWidth();
+//     glfwIcon.height = icon->getHeight();
+//     glfwIcon.pixels = reinterpret_cast<unsigned char*>(icon->getData());
 
-    glfwSetWindowIcon(window, 1, &glfwIcon);
+//     glfwSetWindowIcon(window, 1, &glfwIcon);
 
-    return true;
-}
+//     return true;
+// }
 
 void Window::resetScissor() {
 	scissorArea = glm::vec4(0.0f, 0.0f, width, height);

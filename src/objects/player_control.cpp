@@ -217,7 +217,7 @@ void PlayerController::updateInteraction(){
 		int z = (int)iend.z;
 
 		uint8_t states = 0;
-        if (Block::blocks[player->choosenBlock].get()->rotatable){
+        if (Block::blocks[player->choosenBlock]->rotatable){
 			if (abs(norm.x) > abs(norm.z)){
 				if (abs(norm.x) > abs(norm.y)) states = BLOCK_DIR_X;
 				if (abs(norm.x) < abs(norm.y)) states = BLOCK_DIR_Y;
@@ -228,7 +228,7 @@ void PlayerController::updateInteraction(){
 			}
 		}
 		
-		Block* block = Block::blocks[vox->id].get();
+		Block* block = Block::blocks[vox->id];
 		if (leftClick && block->breakable && !player->noclip){
 			chunks->setVoxel(x, y, z, 0, 0);
 			lighting->onBlockSet(x, y ,z, 0);

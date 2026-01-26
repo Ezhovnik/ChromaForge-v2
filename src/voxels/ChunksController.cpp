@@ -104,7 +104,7 @@ bool ChunksController::loadVisible(){
 
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         blockid_t vox_id = chunk->voxels[i].id;
-        if (Block::blocks[vox_id].get() == nullptr) {
+        if (Block::blocks[vox_id] == nullptr) {
             LOG_WARN("Corruped block detected at {} of chunk {}x {}z -> {}", i, chunk->chunk_x, chunk->chunk_z, vox_id);
             chunk->voxels[i].id = Blocks_id::BEDROCK;
         }

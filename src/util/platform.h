@@ -2,10 +2,11 @@
 #define UTIL_PLATFORM_H_
 
 #include <string>
+#include <filesystem>
 
 namespace platform {
     extern void configure_encoding();
-    extern std::string get_settings_file();
+    extern std::filesystem::path get_settings_file();
 }
 
 #endif // UTIL_PLATFORM_H_

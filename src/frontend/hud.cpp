@@ -102,7 +102,6 @@ HudRenderer::HudRenderer(Engine* engine, Level* level) : level(level), assets(en
 	panel = new gui::Panel(glm::vec2(350, 200));
 	pauseMenu = std::shared_ptr<gui::UINode>(panel);
 	panel->color(glm::vec4(0.0f));
-	pauseMenu->color(glm::vec4(0.0f));
 	{
 		gui::Button* button = new gui::Button(L"Continue", glm::vec4(10.0f));
 		button->listenAction([this](gui::GUI*){
@@ -213,7 +212,7 @@ void HudRenderer::drawInventory(const GfxContext& ctx, Player* player) {
 	// front
 	batch->texture(blocks);
 	for (uint i = 0; i < count; i++) {
-		Block* cblock = Block::blocks[i+1].get();
+		Block* cblock = Block::blocks[i+1];
 		if (cblock == nullptr) break;
 		int x = xs + step * (i % inv_cols);
 		int y = ys + step * (i / inv_cols);
@@ -292,7 +291,7 @@ void HudRenderer::draw(const GfxContext& ctx){
 	batch->texture(blocks);
 	Player* player = level->player;
 	{
-		Block* cblock = Block::blocks[player->choosenBlock].get();
+		Block* cblock = Block::blocks[player->choosenBlock];
 		if (cblock->model == BlockModel::Cube){
 			batch->blockSprite(width / 2 - 24, uicamera->fov - 72, 48, 48, 16, cblock->textureFaces, glm::vec4(1.0f));
 		} else if (cblock->model == BlockModel::X){
