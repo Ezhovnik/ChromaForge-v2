@@ -19,7 +19,7 @@ enum class BlockModel {
 
 class Block {
 public:
-    static std::array<std::unique_ptr<Block>, 256> blocks;
+    static Block* blocks[256];
 
     const uint id;
 

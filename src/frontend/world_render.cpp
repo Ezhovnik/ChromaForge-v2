@@ -30,10 +30,9 @@
 #include "../math/FrustumCulling.h"
 #include "../engine.h"
 
-inline constexpr glm::vec4 CLEAR_COLOR = {0.7f, 0.71f, 0.73f, 1.0f};
+inline constexpr glm::vec3 SKY_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {1.8f, 1.8f, 1.8f};
-inline constexpr glm::vec3 FOG_COLOR = {0.7f, 0.71f, 0.73f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
@@ -84,7 +83,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 
 void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader, bool occlusion) {
     std::vector<size_t> indices;
-	for (size_t i = 0; i < chunks->volume; i++){
+	for (size_t i = 0; i < chunks->volume; ++i){
 		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
 		if (chunk == nullptr) continue;
 		indices.push_back(i);
@@ -107,8 +106,6 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 }
 
 void WorldRenderer::draw(const GfxContext& context, Camera* camera, bool occlusion){
-    Chunks* chunks = level->chunks;
-    EngineSettings& settings = engine->getSettings();
     Assets* assets = engine->getAssets();
 
     // Загрузка ресурсов с проверкой
@@ -140,7 +137,7 @@ void WorldRenderer::draw(const GfxContext& context, Camera* camera, bool occlusi
 
 		EngineSettings& settings = engine->getSettings();
 
-		Window::setBgColor(CLEAR_COLOR);
+		Window::setBgColor(SKY_COLOR);
 		Window::clear();
 		Window::viewport(0, 0, displayWidth, displayHeight);
 
@@ -153,13 +150,13 @@ void WorldRenderer::draw(const GfxContext& context, Camera* camera, bool occlusi
 		shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR);
     
         float fogFactor = 18.0f / (float)settings.chunks.loadDistance;
-		shader->uniform3f("u_fogColor", FOG_COLOR);
+		shader->uniform3f("u_fogColor", SKY_COLOR);
 		shader->uniform1f("u_fogFactor", fogFactor);
 		shader->uniform1f("u_fogCurve", settings.graphics.fogCurve);
 
 		shader->uniform3f("u_cameraPos", camera->position);
 
-		Block* choosen_block = Block::blocks[level->player->choosenBlock].get();
+		Block* choosen_block = Block::blocks[level->player->choosenBlock];
         float multiplier = 0.8f;
         shader->uniform3f("u_torchlightColor",
                 choosen_block->emission[0] / MAX_TORCH_LIGHT * multiplier,
@@ -167,13 +164,15 @@ void WorldRenderer::draw(const GfxContext& context, Camera* camera, bool occlusi
                 choosen_block->emission[2] / MAX_TORCH_LIGHT * multiplier);
         shader->uniform1f("u_torchlightDistance", TORCH_LIGHT_DIST);
 
+        texture->bind();
+
 		Chunks* chunks = level->chunks;
 		drawChunks(chunks, camera, shader, occlusion);
 
 		shader->uniformMatrix("u_model", glm::mat4(1.0f));
 
 		if (level->playerController->selectedBlockId != -1 && !level->player->noclip){
-            Block* selectedBlock = Block::blocks[level->playerController->selectedBlockId].get();;
+            Block* selectedBlock = Block::blocks[level->playerController->selectedBlockId];
             glm::vec3 pos = level->playerController->selectedBlockPosition;
 
             linesShader->use();

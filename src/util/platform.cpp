@@ -9,8 +9,8 @@
 
 #define SETTINGS_FILE "../build/settings.toml"
 
-std::string platform::get_settings_file() {
-	return SETTINGS_FILE;
+std::filesystem::path platform::get_settings_file() {
+	return std::filesystem::path(SETTINGS_FILE);
 }
 
 #ifdef WIN32

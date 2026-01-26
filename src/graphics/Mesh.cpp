@@ -5,7 +5,11 @@
 int Mesh::meshesCount = 0;
 
 // Конструктор
-Mesh::Mesh(const float* buffer, size_t vertices, const vattr* attrs) : vertices(vertices) {
+Mesh::Mesh(const float* vertexBuffer, size_t vertices, const int* indexBuffer, size_t indices, const vattr* attrs) :
+    vertices(vertices),
+    indices(indices),
+    IBO(0) 
+{
     meshesCount++;
 
     // Вычисление размера вершины
@@ -18,18 +22,7 @@ Mesh::Mesh(const float* buffer, size_t vertices, const vattr* attrs) : vertices(
     glGenVertexArrays(1, &VAO); // Создание VAO
     glGenBuffers(1, &VBO); // Создание VBO
 
-    glBindVertexArray(VAO); // Привязка VAO
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); // Привязка VBO
-    if (buffer){
-		glBufferData(
-            GL_ARRAY_BUFFER, 
-            sizeof(float) * vertexSize * vertices, // Общий размер данных
-            buffer, // Указатель на данные
-            GL_STATIC_DRAW // GL_STATIC_DRAW указывает, что данные не будут изменяться часто
-        ); // Загрузка вершин в буфер OpenGL
-	} else {
-		glBufferData(GL_ARRAY_BUFFER, 0, {}, GL_STATIC_DRAW);
-	}
+    reload(vertexBuffer, vertices, indexBuffer, indices);
 
     // Настройка вершинных атрибутов
     int offset = 0; // Смещение в байтах от начала вершины
@@ -41,7 +34,7 @@ Mesh::Mesh(const float* buffer, size_t vertices, const vattr* attrs) : vertices(
             GL_FLOAT, // Тип данных
             GL_FALSE, 
             vertexSize * sizeof(float), // Шаг между вершинами (в байтах)
-            (void*)(offset * sizeof(float))
+            (GLvoid*)(offset * sizeof(float))
         ); // Указание формата атрибута
         glEnableVertexAttribArray(i); // Включение атрибута с индексом i
         offset += size;
@@ -55,21 +48,40 @@ Mesh::~Mesh() {
     meshesCount--;
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    if (IBO != 0) glDeleteBuffers(1, &IBO);
 }
 
 // Обновляет данные вершин меша
-void Mesh::reload(const float* buffer, size_t vertices) {
-    this->vertices = vertices;
-
+void Mesh::reload(const float* vertexBuffer, size_t vertices, const int* indexBuffer, size_t indices) {
     glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexSize * vertices, buffer, GL_STATIC_DRAW);
+	
+    if (vertexBuffer != nullptr && vertices != 0) {
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexSize * vertices, vertexBuffer, GL_STATIC_DRAW);
+    } else {
+        glBufferData(GL_ARRAY_BUFFER, 0, {}, GL_STATIC_DRAW);
+    }
+
+    if (indexBuffer != nullptr && indices != 0) {
+        if (IBO == 0) glGenBuffers(1, &IBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices, indexBuffer, GL_STATIC_DRAW);
+    } else if (IBO != 0) {
+        glDeleteBuffers(1, &IBO);
+    }
+
+    this->vertices = vertices;
+    this->indices = indices;
 }
 
 // Отрисовывает меш с использованием указанного типа примитива.
 void Mesh::draw(uint primitive) {
     glBindVertexArray(VAO);
-    glDrawArrays(primitive, 0, vertices);
+    if (IBO != 0) {
+        glDrawElements(primitive, indices, GL_UNSIGNED_INT, 0);
+    } else {
+        glDrawArrays(primitive, 0, vertices);
+    }
     glBindVertexArray(0);
 }
 

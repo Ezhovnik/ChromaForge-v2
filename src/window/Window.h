@@ -26,7 +26,7 @@ public:
     static bool initialize(DisplaySettings& settings);
     static void terminate();
 
-    static bool setIcon(ImageData* icon);
+    // static bool setIcon(ImageData* icon);
 
     static void setCursorMode(int mode);
 

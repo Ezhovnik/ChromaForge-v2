@@ -9,7 +9,7 @@
 #include <glm/ext.hpp>
 
 ChunksRenderer::ChunksRenderer(Level* level) : level(level) {
-	const int MAX_FULL_CUBES = 3000;
+	constexpr int MAX_FULL_CUBES = 3000;
 	renderer = new BlocksRenderer(9 * 6 * 6 * MAX_FULL_CUBES);
 }
 

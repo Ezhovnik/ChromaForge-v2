@@ -8,7 +8,7 @@ LightMap::LightMap(){
 }
 
 LightMap::~LightMap(){
-	if (map != nullptr) delete[] map;
+	delete[] map;
 }
 
 void LightMap::set(const LightMap* light_map) {
