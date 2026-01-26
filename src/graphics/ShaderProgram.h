@@ -20,8 +20,9 @@ public:
     void uniform1i(std::string name, int x); // Загружает целое число в uniform-переменную шейдера
     void uniform1f(std::string name, float x); // Загружает вещественное число в uniform-переменную шейдера
     void uniform2f(std::string name, float x, float y); // Загружает два вещественных числа в uniform-переменную шейдера
+    void uniform2f(std::string name, glm::vec2 xy);
     void uniform3f(std::string name, float x, float y, float z); // Загружает три вещественных числа в uniform-переменную шейдера
-
+    void uniform3f(std::string name, glm::vec3 xyz);
 };
 
 extern ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile); // Внешняя функция для загрузки и компиляции шейдерной программы

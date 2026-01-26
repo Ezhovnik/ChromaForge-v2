@@ -11,49 +11,77 @@
                 "-I${workspaceFolder}/src",
                 "-I${workspaceFolder}/include",
                 "-L${workspaceFolder}/lib",
-                "${workspaceFolder}/src/main.cpp",
-                "${workspaceFolder}/src/window/Window.cpp",
-                "${workspaceFolder}/src/window/Events.cpp",
-                "${workspaceFolder}/src/window/Camera.cpp",
-                "${workspaceFolder}/src/graphics/ShaderProgram.cpp",
-                "${workspaceFolder}/src/graphics/Texture.cpp",
-                "${workspaceFolder}/src/graphics/Mesh.cpp",
-                "${workspaceFolder}/src/graphics/VoxelRenderer.cpp",
-                "${workspaceFolder}/src/graphics/LineBatch.cpp",
-                "${workspaceFolder}/src/voxels/voxel.cpp",
-                "${workspaceFolder}/src/voxels/Chunk.cpp",
-                "${workspaceFolder}/src/voxels/Chunks.cpp",
-                "${workspaceFolder}/src/voxels/Block.cpp",
-                "${workspaceFolder}/src/lighting/LightMap.cpp",
-                "${workspaceFolder}/src/lighting/LightSolver.cpp",
-                "${workspaceFolder}/src/lighting/Lighting.cpp",
-                "${workspaceFolder}/src/loaders/texture_loader.cpp",
-                "${workspaceFolder}/src/loaders/shader_loader.cpp",
+
+                //src/assets
+                "${workspaceFolder}/src/assets/Assets.cpp",
+                "${workspaceFolder}/src/assets/AssetsLoader.cpp",
+
+                //src/coders
+                "${workspaceFolder}/src/coders/commons.cpp",
+                "${workspaceFolder}/src/coders/json.cpp",
+                "${workspaceFolder}/src/coders/toml.cpp",
+                "${workspaceFolder}/src/coders/png.cpp",
+
+                //src/files
                 "${workspaceFolder}/src/files/files.cpp",
+                "${workspaceFolder}/src/files/rle.cpp",
                 "${workspaceFolder}/src/files/WorldFiles.cpp",
-                "${workspaceFolder}/src/physics/Hitbox.cpp",
-                "${workspaceFolder}/src/physics/PhysicsSolver.cpp",
-                "${workspaceFolder}/src/voxels/WorldGenerator.cpp",
+
+                //src/graphics
                 "${workspaceFolder}/src/graphics/Batch2D.cpp",
-                "${workspaceFolder}/src/objects/Player.cpp",
-                "${workspaceFolder}/src/voxels/ChunksController.cpp",
-                "${workspaceFolder}/src/voxels/ChunksLoader.cpp",
-                "${workspaceFolder}/src/Assets.cpp",
-                "${workspaceFolder}/src/declarations.cpp",
-                "${workspaceFolder}/src/world_render.cpp",
-                "${workspaceFolder}/src/player_control.cpp",
-                "${workspaceFolder}/src/hud_render.cpp",
-                "${workspaceFolder}/src/world/Level.cpp",
-                "${workspaceFolder}/src/world/World.cpp",
                 "${workspaceFolder}/src/graphics/Batch3D.cpp",
+                "${workspaceFolder}/src/graphics/BlocksRenderer.cpp",
+                "${workspaceFolder}/src/graphics/ChunksRenderer.cpp",
                 "${workspaceFolder}/src/graphics/Font.cpp",
                 // "${workspaceFolder}/src/graphics/Framebuffer.cpp",
+                "${workspaceFolder}/src/graphics/ImageData.cpp",
+                "${workspaceFolder}/src/graphics/LineBatch.cpp",
+                "${workspaceFolder}/src/graphics/Mesh.cpp",
+                "${workspaceFolder}/src/graphics/ShaderProgram.cpp",
                 "${workspaceFolder}/src/graphics/Sprite.cpp",
-                "${workspaceFolder}/src/graphics/UVRegion.cpp",
-                "${workspaceFolder}/src/AssetsLoader.cpp",
+                "${workspaceFolder}/src/graphics/Texture.cpp",
+
+                //src/lighting
+                "${workspaceFolder}/src/lighting/Lighting.cpp",
+                "${workspaceFolder}/src/lighting/LightMap.cpp",
+                "${workspaceFolder}/src/lighting/LightSolver.cpp",
+
+                //src/logger
                 "${workspaceFolder}/src/logger/Logger.cpp",
-                "${workspaceFolder}/src/logger/OpenGL_Logger.cpp",
-                "${workspaceFolder}/src/glad.c",
+
+                //src/objects
+                "${workspaceFolder}/src/objects/Player.cpp",
+
+                //src/physics
+                "${workspaceFolder}/src/physics/Hitbox.cpp",
+                "${workspaceFolder}/src/physics/PhysicsSolver.cpp",
+
+                //src/voxels
+                "${workspaceFolder}/src/voxels/Block.cpp",
+                "${workspaceFolder}/src/voxels/Chunk.cpp",
+                "${workspaceFolder}/src/voxels/Chunks.cpp",
+                "${workspaceFolder}/src/voxels/ChunksController.cpp",
+                "${workspaceFolder}/src/voxels/ChunksStorage.cpp",
+                "${workspaceFolder}/src/voxels/VoxelsVolume.cpp",
+                "${workspaceFolder}/src/voxels/WorldGenerator.cpp",
+
+                //src/window
+                "${workspaceFolder}/src/window/Camera.cpp",
+                "${workspaceFolder}/src/window/Events.cpp",
+                "${workspaceFolder}/src/window/Window.cpp",
+
+                //src/world
+                "${workspaceFolder}/src/world/Level.cpp",
+                "${workspaceFolder}/src/world/LevelEvents.cpp",
+                "${workspaceFolder}/src/world/World.cpp",
+
+                //src
+                "${workspaceFolder}/src/declarations.cpp",
+                "${workspaceFolder}/src/hud_render.cpp",
+                "${workspaceFolder}/src/main.cpp",
+                "${workspaceFolder}/src/player_control.cpp",
+                "${workspaceFolder}/src/world_render.cpp",
+                
                 "-lglfw3dll", 
                 "-lopengl32",
                 "-lglew32",

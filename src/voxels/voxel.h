@@ -2,10 +2,11 @@
 #define VOXELS_VOXEL_H_
 
 #include <stdint.h>
+#include "../typedefs.h"
 
 // Структура, представляющая один воксель
 struct voxel {
-    uint8_t id;
+    blockid_t id;
     uint8_t states;
 };
 

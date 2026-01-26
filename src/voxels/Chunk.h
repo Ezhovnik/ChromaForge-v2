@@ -4,14 +4,9 @@
 #include <stdlib.h>
 
 #include "../typedefs.h"
+#include "../constants.h"
 
-// Размеры чанка
-inline constexpr int CHUNK_WIDTH = 16; // Ширина по X
-inline constexpr int CHUNK_HEIGHT = 256; // Высота по Y
-inline constexpr int CHUNK_DEPTH = 16; // Глубина по Z
-inline constexpr int CHUNK_VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH; // Общее количество вокселей в чанке
-
-namespace Chunk_Flags {
+namespace ChunkFlags {
     inline constexpr uint MODIFIED = 0x1;
     inline constexpr uint READY = 0x2;
     inline constexpr uint LOADED = 0x4;
@@ -19,7 +14,9 @@ namespace Chunk_Flags {
     inline constexpr uint UNSAVED = 0x10;
 }
 
-class voxel;
+inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 2;
+
+struct voxel;
 class LightMap;
 
 struct RenderData {
@@ -40,7 +37,6 @@ public:
     voxel* voxels; // Массив вокселей, содержащихся в чанке
 
     int surrounding = 0; // Счётчик окружающих, загруженных чанков
-    int references = 1; // Счётчик ссылок
     int flags = 0;
 
     RenderData renderData;
@@ -54,20 +50,20 @@ public:
 
     Chunk* clone() const; // Создает полную копию текущего чанка.
 
-    void incref(); // Увеличивает счетчик ссылок на чанк.
-    void decref(); // Уменьшает счётчик ссылок на чанк
+    inline bool isUnsaved() const {return flags & ChunkFlags::UNSAVED;}
+	inline bool isModified() const {return flags & ChunkFlags::MODIFIED;}
+	inline bool isLighted() const {return flags & ChunkFlags::LIGHTED;}
+	inline bool isLoaded() const {return flags & ChunkFlags::LOADED;}
+	inline bool isReady() const {return flags & ChunkFlags::READY;}
 
-    inline bool isUnsaved() const {return flags & Chunk_Flags::UNSAVED;}
-	inline bool isModified() const {return flags & Chunk_Flags::MODIFIED;}
-	inline bool isLighted() const {return flags & Chunk_Flags::LIGHTED;}
-	inline bool isLoaded() const {return flags & Chunk_Flags::LOADED;}
-	inline bool isReady() const {return flags & Chunk_Flags::READY;}
+	inline void setUnsaved(bool flag) {bitset(flags, ChunkFlags::UNSAVED, flag);}
+	inline void setModified(bool flag) {bitset(flags, ChunkFlags::MODIFIED, flag);}
+	inline void setLoaded(bool flag) {bitset(flags, ChunkFlags::LOADED, flag);}
+	inline void setLighted(bool flag) {bitset(flags, ChunkFlags::LIGHTED, flag);}
+	inline void setReady(bool flag) {bitset(flags, ChunkFlags::READY, flag);}
 
-	inline void setUnsaved(bool flag) {bitset(flags, Chunk_Flags::UNSAVED, flag);}
-	inline void setModified(bool flag) {bitset(flags, Chunk_Flags::MODIFIED, flag);}
-	inline void setLoaded(bool flag) {bitset(flags, Chunk_Flags::LOADED, flag);}
-	inline void setLighted(bool flag) {bitset(flags, Chunk_Flags::LIGHTED, flag);}
-	inline void setReady(bool flag) {bitset(flags, Chunk_Flags::READY, flag);}
+    ubyte* encode() const;
+	bool decode(ubyte* data);
 };
 
 #endif // VOXELS_CHUNK_H_

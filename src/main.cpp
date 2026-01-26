@@ -2,6 +2,7 @@
 #include <vector>
 #include <ctime>
 #include <exception>
+#include <memory>
 
 #define GLEW_STATIC  // Указывает компилятору, что будем использовать статическую версию GLEW
 #include <GL/glew.h>
@@ -19,9 +20,8 @@
 #include "voxels/Chunk.h"
 #include "voxels/Chunks.h"
 #include "voxels/ChunksController.h"
-#include "voxels/ChunksLoader.h"
-#include "Assets.h"
-#include "AssetsLoader.h"
+#include "assets/Assets.h"
+#include "assets/AssetsLoader.h"
 #include "objects/Player.h"
 #include "declarations.h"
 #include "world_render.h"
@@ -29,7 +29,6 @@
 #include "world/World.h"
 #include "hud_render.h"
 #include "logger/Logger.h"
-#include "logger/OpenGL_Logger.h"
 
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
@@ -37,6 +36,7 @@ inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная ско
 
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
 class initialize_error : public std::runtime_error {
+public:
     initialize_error(const std::string& message) : std::runtime_error(message) {}
 };
 
@@ -75,12 +75,8 @@ Engine::Engine(const EngineSettings& settings) {
     if (!Window::initialize(settings.displayWidth, settings.displayHeight, settings.title, settings.displaySamples)) {
         LOG_CRITICAL("Failed to load Window");
         Window::terminate();
-        throw std::runtime_error("Failed to load Window");
+        throw initialize_error("Failed to load Window");
     }
-
-    // Инициализация логгера OpenGL
-    OpenGL_Logger::getInstance().initialize(LogLevel::DEBUG);
-    GL_CHECK();
 
     // Загрузка ассетов
     assets = new Assets();
@@ -101,11 +97,12 @@ Engine::Engine(const EngineSettings& settings) {
 
     // Создание камеры, мира и игрока
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
-    World* world = new World("world-1", "../saves/world-1/", 42);
+    World* world = new World("world-1", "../build/saves/world-1/", 42);
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
     level = world->loadLevel(player);
     LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
+    Logger::getInstance().flush();
 }
 
 // Реализация деструктора
@@ -116,12 +113,13 @@ Engine::~Engine() {
     delete level;
     delete world;
     LOG_INFO("The world has been successfully saved");
+    Logger::getInstance().flush();
 
     LOG_INFO("Shutting down");
     delete assets;
-    Events::finalize();
-    OpenGL_Logger::getInstance().finalize();
     Window::terminate();
+    LOG_INFO("Engine has finished successfuly");
+    Logger::getInstance().flush();
 }
 
 // Обновление таймеров
@@ -149,7 +147,7 @@ void Engine::updateHotkeys() {
     // Отметка всех чанков как изменённых (для перерисовки)
     if (Events::justPressed(GLFW_KEY_F5)) {
         for (unsigned i = 0; i < level->chunks->volume; i++) {
-            Chunk* chunk = level->chunks->chunks[i];
+            std::shared_ptr<Chunk> chunk = level->chunks->chunks[i];
             if (chunk != nullptr && chunk->isReady()) chunk->setModified(true);
         }
     }
@@ -168,30 +166,15 @@ void Engine::mainloop() {
     Window::swapInterval(1); // Включаем VSync (синхронизация с частотой обновления экрана)
     LOG_INFO("Systems have been prepared");
 
+    Logger::getInstance().flush();
+
     while (!Window::isShouldClose()){
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
 
         // Обновление логики уровня (перемещение игрока, столкновения и т.д.)
         level->update(deltaTime, Events::_cursor_locked);
-
-        // Построение мешей чанков (загрузка геометрии для видимых чанков)
-        int freeLoaders = level->chunksController->countFreeLoaders();
-        for (int i = 0; i < freeLoaders; i++) {
-            level->chunksController->_buildMeshes();
-        }
-
-        // Вычисление света для чанков (аппликация освещения)
-        freeLoaders = level->chunksController->countFreeLoaders();
-        for (int i = 0; i < freeLoaders; i++) {
-            level->chunksController->calculateLights();
-        }
-
-        // Загрузка видимых чанков (чтение данных из файлов/памяти)
-        freeLoaders = level->chunksController->countFreeLoaders();
-        for (int i = 0; i < freeLoaders; i++) {
-            level->chunksController->loadVisible(world->wfile);
-        }
+        level->chunksController->loadVisible(world->wfile);
 
         // Рендеринг мира и HUD
         worldRenderer.draw(camera, occlusion);
@@ -200,20 +183,23 @@ void Engine::mainloop() {
 
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
-        GL_CHECK(); // Проверка ошибок OpenGL
     }
 }
 
 // Точка входа в программу
 int main() {
     setup_definitions();
+
+    std::unique_ptr<Engine> engine = nullptr;
+
     try {
-        Engine engine(EngineSettings{1280, 720, 1, "ChromaForge"});
-        engine.mainloop(); // Запуск основного цикла
-    }
-    catch (const initialize_error& err) {
+        engine = std::make_unique<Engine>(EngineSettings{1280, 720, 1, "ChromaForge"});
+        engine->mainloop(); // Запуск основного цикла
+    } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred\n{}", err.what());
     }
+
+    Logger::getInstance().flush();
 
     return 0;
 }

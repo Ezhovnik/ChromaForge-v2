@@ -6,21 +6,26 @@
 
 #include "../typedefs.h"
 
-namespace Block_models {
-    inline constexpr int AIR = 0;
-    inline constexpr int CUBE = 1;
-    inline constexpr int X = 2;
-}
+enum class BlockModel {
+    None, Cube, X
+};
+
+#define FACE_MX 0
+#define FACE_PX 1
+#define FACE_MY 2
+#define FACE_PY 3
+#define FACE_MZ 4
+#define FACE_PZ 5
 
 class Block {
 public:
-    static std::array<std::unique_ptr<Block>, 256> blocks;
+    static Block* blocks[256];
 
     const uint id;
     int textureFaces[6]; // -x, +x, -y, +y, -z, +z
     ubyte emission[3];
     ubyte drawGroup = 0;
-    ubyte model = Block_models::CUBE;
+    BlockModel model = BlockModel::Cube;
 
     bool lightPassing = false;
     bool skyLightPassing = false;

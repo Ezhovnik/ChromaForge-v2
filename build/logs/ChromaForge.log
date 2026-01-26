@@ -1,0 +1,26 @@
+[2026-01-27 01:45:41.591] [info] [Logger.cpp:43] [initialize] Logger initialized. File: ../build/logs/ChromaForge.log
+[2026-01-27 01:45:41.911] [info] [Window.cpp:121] [initialize] Window initialized successfully: 1280x720
+[2026-01-27 01:45:41.911] [info] [main.cpp:83] [Engine] Loading Assets
+[2026-01-27 01:45:41.911] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/shaders/default as default
+[2026-01-27 01:45:41.913] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/shaders/lines as lines
+[2026-01-27 01:45:41.915] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/shaders/ui as ui
+[2026-01-27 01:45:41.916] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/textures/atlas.png as blocks
+[2026-01-27 01:45:41.918] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
+[2026-01-27 01:45:41.918] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/textures/slot.png as slot
+[2026-01-27 01:45:41.920] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/slot.png' (256x256, 4 channels)
+[2026-01-27 01:45:41.920] [info] [AssetsLoader.cpp:29] [loadNext] Loading ../res/fonts/font as normal
+[2026-01-27 01:45:41.923] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_0.png' (256x256, 4 channels)
+[2026-01-27 01:45:41.925] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_1.png' (256x256, 4 channels)
+[2026-01-27 01:45:41.928] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_2.png' (256x256, 4 channels)
+[2026-01-27 01:45:41.930] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_3.png' (256x256, 4 channels)
+[2026-01-27 01:45:41.933] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_4.png' (256x256, 4 channels)
+[2026-01-27 01:45:41.933] [info] [main.cpp:95] [Engine] Assets loaded successfully
+[2026-01-27 01:45:41.934] [info] [main.cpp:96] [Engine] Loading world
+[2026-01-27 01:45:41.934] [info] [main.cpp:103] [Engine] The world is loaded
+[2026-01-27 01:45:41.934] [info] [main.cpp:104] [Engine] Initialization is finished
+[2026-01-27 01:45:41.935] [info] [main.cpp:158] [mainloop] Preparing systems
+[2026-01-27 01:45:41.935] [info] [main.cpp:167] [mainloop] Systems have been prepared
+[2026-01-27 01:46:19.493] [info] [main.cpp:110] [~Engine] World saving
+[2026-01-27 01:46:19.818] [info] [main.cpp:115] [~Engine] The world has been successfully saved
+[2026-01-27 01:46:19.818] [info] [main.cpp:118] [~Engine] Shutting down
+[2026-01-27 01:46:19.864] [info] [main.cpp:121] [~Engine] Engine has finished successfuly

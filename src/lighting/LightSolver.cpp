@@ -69,6 +69,7 @@ void LightSolver::solve(){
 			int z = entry.z + LightSolver_Consts::coords[i * 3 + 2];
 			Chunk* chunk = chunks->getChunkByVoxel(x, y, z);
 			if (chunk) {
+                chunk->setModified(true);
 				int light = chunks->getLight(x,y,z, channel);
 				if (light != 0 && light == entry.light - 1){
 					lightentry nentry;
@@ -78,7 +79,6 @@ void LightSolver::solve(){
 					nentry.light = light;
 					rem_queue.push(nentry);
 					chunk->light_map->set(x - chunk->chunk_x * CHUNK_WIDTH, y, z - chunk->chunk_z * CHUNK_DEPTH, channel, 0);
-					chunk->setModified(true);
 				} else if (light >= entry.light){
 					lightentry nentry;
 					nentry.x = x;
@@ -103,12 +103,12 @@ void LightSolver::solve(){
 			int z = entry.z + LightSolver_Consts::coords[i * 3 + 2];
 			Chunk* chunk = chunks->getChunkByVoxel(x, y, z);
 			if (chunk) {
+                chunk->setModified(true);
 				int light = chunks->getLight(x,y,z, channel);
 				voxel* vox = chunks->getVoxel(x,y,z);
-                Block* block = Block::blocks[vox->id].get();
+                Block* block = Block::blocks[vox->id];
 				if (block->lightPassing && light + 2 <= entry.light){
 					chunk->light_map->set(x - chunk->chunk_x * CHUNK_WIDTH, y, z - chunk->chunk_z * CHUNK_DEPTH, channel, entry.light - 1);
-					chunk->setModified(true);
 					lightentry nentry;
 					nentry.x = x;
 					nentry.y = y;

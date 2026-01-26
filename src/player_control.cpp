@@ -182,16 +182,7 @@ void PlayerController::update_interaction(){
 		int z = (int)iend.z;
 
 		uint8_t states = 0;
-        if (Block::blocks[player->choosenBlock].get()->rotatable){
-			// states = states & 0b11111100;
-			// if (abs(norm.x) > abs(norm.z)){
-			// 	if (abs(norm.x) > abs(norm.y)) states = states | 0b00000001;
-			// 	if (abs(norm.x) < abs(norm.y)) states = states | 0b00000010;
-			// }
-			// if (abs(norm.x) < abs(norm.z)){
-			// 	if (abs(norm.z) > abs(norm.y)) states = states | 0b00000011;
-			// 	if (abs(norm.z) < abs(norm.y)) states = states | 0b00000010;
-			// }
+        if (Block::blocks[player->choosenBlock]->rotatable){
 			if (abs(norm.x) > abs(norm.z)){
 				if (abs(norm.x) > abs(norm.y)) states = 0x31;
 				if (abs(norm.x) < abs(norm.y)) states = 0x32;
@@ -202,13 +193,13 @@ void PlayerController::update_interaction(){
 			}
 		}
 		
-		Block* block = Block::blocks[vox->id].get();
+		Block* block = Block::blocks[vox->id];
 		if (Events::justClicked(GLFW_MOUSE_BUTTON_1) && block->breakable){
 			chunks->setVoxel(x, y, z, 0, 0);
 			lighting->onBlockSet(x, y ,z, 0);
 		}
 		if (Events::justClicked(GLFW_MOUSE_BUTTON_2)){
-			if (block->model != Block_models::X){
+			if (block->model != BlockModel::X){
 				x = (int)(iend.x)+(int)(norm.x);
                 y = (int)(iend.y)+(int)(norm.y);
                 z = (int)(iend.z)+(int)(norm.z);

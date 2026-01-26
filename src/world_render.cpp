@@ -22,10 +22,11 @@
 #include "world/World.h"
 #include "world/Level.h"
 #include "objects/Player.h"
-#include "Assets.h"
+#include "assets/Assets.h"
 #include "player_control.h"
 #include "logger/Logger.h"
-#include "graphics/VoxelRenderer.h"
+#include "graphics/ChunksRenderer.h"
+#include "world/LevelEvents.h"
 
 float _camera_cx;
 float _camera_cz;
@@ -42,8 +43,8 @@ inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
 // Компаратор для сортировки чанков по удаленности от камеры.
 bool chunks_comparator(size_t i, size_t j) {
-	Chunk* a = _chunks->chunks[i];
-	Chunk* b = _chunks->chunks[j];
+	std::shared_ptr<Chunk> a = _chunks->chunks[i];
+	std::shared_ptr<Chunk> b = _chunks->chunks[j];
 
     float distA = (a->chunk_x + 0.5f - _camera_cx) * (a->chunk_x + 0.5f - _camera_cx) + (a->chunk_z + 0.5f - _camera_cz) * (a->chunk_z + 0.5f - _camera_cz);
 	float distB = (b->chunk_x + 0.5f - _camera_cx) * (b->chunk_x + 0.5f - _camera_cx) + (b->chunk_z + 0.5f - _camera_cz) * (b->chunk_z + 0.5f - _camera_cz);
@@ -54,7 +55,11 @@ bool chunks_comparator(size_t i, size_t j) {
 WorldRenderer::WorldRenderer(Level* level, Assets* assets) : assets(assets), level(level) {
 	lineBatch = new LineBatch(4096);
 	batch3D = new Batch3D(1024);
-	renderer = new VoxelRenderer();
+	renderer = new ChunksRenderer(level);
+
+    level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
+		renderer->unload(chunk);
+	});
 }
 
 WorldRenderer::~WorldRenderer() {
@@ -65,8 +70,10 @@ WorldRenderer::~WorldRenderer() {
 
 // Отрисовывает один чанк
 bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool occlusion){
-	Chunk* chunk = level->chunks->chunks[index];
-	Mesh* mesh = level->chunks->meshes[index];
+	std::shared_ptr<Chunk> chunk = level->chunks->chunks[index];
+	if (!chunk->isLighted()) return false;
+
+	std::shared_ptr<Mesh> mesh = renderer->getOrRender(chunk.get());
 	if (mesh == nullptr) return true;
 
 	// Простой фрустум-каллинг (отсечение чанков позади камеры в 2D плоскости XZ)
@@ -78,13 +85,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 		if (v.x * v.x + v.z * v.z > (CHUNK_WIDTH * 3) * (CHUNK_WIDTH * 3) && dot(camera->front, v) < 0.0f) return false;
 	}
 
-	glm::mat4 model = glm::translate(
-        glm::mat4(1.0f), 
-        glm::vec3(
-            chunk->chunk_x * CHUNK_WIDTH + 0.5f, 
-            0.5f, 
-            chunk->chunk_z * CHUNK_DEPTH + 0.5f
-        ));
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunk->chunk_x*CHUNK_WIDTH, 0.0f, chunk->chunk_z*CHUNK_DEPTH+1));
 
 	shader->uniformMatrix("u_model", model);
 
@@ -132,12 +133,12 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
 
 	shader->uniform1f("u_gamma", GAMMA_VALUE);
 
-	shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR.r, SKY_LIGHT_COLOR.g, SKY_LIGHT_COLOR.b);
-	shader->uniform3f("u_fogColor", FOG_COLOR.r, FOG_COLOR.g, FOG_COLOR.b);
+	shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR);
+	shader->uniform3f("u_fogColor", FOG_COLOR);
 	shader->uniform1f("u_fogFactor", FOG_FACTOR);
-    shader->uniform3f("u_cameraPos", camera->position.x, camera->position.y, camera->position.z);
+    shader->uniform3f("u_cameraPos", camera->position);
 
-    Block* choosen_block = Block::blocks[level->player->choosenBlock].get();
+    Block* choosen_block = Block::blocks[level->player->choosenBlock];
 	shader->uniform3f("u_torchlightColor",
 			choosen_block->emission[0] / MAX_TORCH_LIGHT,
 			choosen_block->emission[1] / MAX_TORCH_LIGHT,
@@ -149,9 +150,9 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
     // Собираем индексы чанков, которые нужно отрисовать
 	std::vector<size_t> indices;
 	for (size_t i = 0; i < chunks->volume; ++i){
-		Chunk* chunk = chunks->chunks[i];
+		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
 		if (chunk == nullptr) continue;
-		if (chunks->meshes[i] != nullptr) indices.push_back(i);
+		indices.push_back(i);
 	}
 
     // Вычисляем позицию камеры в координатах чанков (для сортировки)
@@ -176,17 +177,17 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
     // batch3D->render();
 
     // Рендеринг линий
-    if (level->playerController->selectedBlockId != -1){
-		Block* selectedBlock = Block::blocks[level->playerController->selectedBlockId].get();;
+    if (level->playerController->selectedBlockId != -1 && !level->player->noclip){
+		Block* selectedBlock = Block::blocks[level->playerController->selectedBlockId];
 		glm::vec3 pos = level->playerController->selectedBlockPosition;
 
         linesShader->use();
-	    linesShader->uniformMatrix("u_projview", camera->getProjection() * camera->getView());
+        linesShader->uniformMatrix("u_projview", camera->getProjView());
         glLineWidth(2.0f);
 
-		if (selectedBlock->model == Block_models::CUBE){
+		if (selectedBlock->model == BlockModel::Cube){
 			lineBatch->box(pos.x+0.5f, pos.y+0.5f, pos.z+0.5f, 1.005f,1.005f,1.005f, 0,0,0,0.5f);
-		} else if (selectedBlock->model == Block_models::X){
+		} else if (selectedBlock->model == BlockModel::X){
 			lineBatch->box(pos.x+0.4f, pos.y+0.3f, pos.z+0.4f, 0.805f,0.805f,0.805f, 0,0,0,0.5f);
 		}
 
@@ -195,11 +196,11 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
 
     if (level->player->debug) {
 		linesShader->use();
-		linesShader->uniformMatrix("u_projview", camera->getProjection()*camera->getView());
+		linesShader->uniformMatrix("u_projview", camera->getProjView());
 
-		glm::vec3 point = glm::vec3(camera->position.x+camera->front.x/1,
-						camera->position.y+camera->front.y/1,
-						camera->position.z+camera->front.z/1);
+		glm::vec3 point = glm::vec3(camera->position.x+camera->front.x,
+						camera->position.y+camera->front.y,
+						camera->position.z+camera->front.z);
 
 		glDisable(GL_DEPTH_TEST);
 

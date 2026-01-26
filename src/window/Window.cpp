@@ -125,6 +125,8 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
 
 // Завершение работы окна и освобождение ресурсов GLFW
 void Window::terminate() {
+    Events::finalize();
+    glfwDestroyWindow(window);
     glfwTerminate();
 }
 

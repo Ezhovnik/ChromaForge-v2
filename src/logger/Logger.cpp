@@ -14,7 +14,7 @@ Logger& Logger::getInstance() {
     return instance;
 }
 
-void Logger::initialize(const std::string& name, const std::string& logFile, LogLevel consoleLevel, LogLevel fileLevel) {
+void Logger::initialize(const std::string& logFile, LogLevel consoleLevel, LogLevel fileLevel) {
     try {
         // Создаем сенки (выходы) для логов
         #ifdef _WIN32
@@ -25,15 +25,14 @@ void Logger::initialize(const std::string& name, const std::string& logFile, Log
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         #endif
         console_sink->set_level(toSpdlogLevel(consoleLevel));
-        console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%s:%#] %v");
+        console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%s:%#] [%!] %v");
         
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
         file_sink->set_level(toSpdlogLevel(fileLevel));
-        file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%s:%#] %v");
+        file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%s:%#] [%!] %v");
         
         // Создаем логгер с несколькими сенками
-        logger_ = std::make_shared<spdlog::logger>(name, 
-            spdlog::sinks_init_list{console_sink, file_sink});
+        logger_ = std::make_shared<spdlog::logger>("ChromaForge", spdlog::sinks_init_list{console_sink, file_sink});
         
         // Устанавливаем уровень логирования (берем минимальный из сенков)
         logger_->set_level(spdlog::level::trace);

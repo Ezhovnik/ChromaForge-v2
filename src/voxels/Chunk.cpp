@@ -15,6 +15,7 @@ Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
     // Инициализируем воксели
     for(size_t i = 0; i < CHUNK_VOLUME; ++i) {
         voxels[i].id = 0;
+        voxels[i].states = 0;
     }
 
 	light_map = new LightMap();
@@ -50,15 +51,21 @@ Chunk* Chunk::clone() const {
 	return other;
 }
 
-// Увеличивает счетчик ссылок на чанк.
-void Chunk::incref(){
-	references++;
+// Формат: [voxel_ids...][voxel_states...];
+ubyte* Chunk::encode() const {
+	ubyte* buffer = new ubyte[CHUNK_DATA_LEN];
+	for (size_t i = 0; i < CHUNK_VOLUME; i++) {
+		buffer[i] = voxels[i].id;
+		buffer[CHUNK_VOLUME + i] = voxels[i].states;
+	}
+	return buffer;
 }
 
-// Уменьшает счётчик ссылок на чанк
-// WARN: После вызова этого метода указатель на чанк становится невалидным, если счетчик ссылок достиг нуля.
-void Chunk::decref(){
-    // Уменьшаем счетчик ссылок и проверяем результат
-    // Удаляем чанк, если на него больше никто не ссылается
-	if (--references <= 0) delete this;
+bool Chunk::decode(ubyte* data) {
+	for (size_t i = 0; i < CHUNK_VOLUME; i++) {
+		voxel& vox = voxels[i];
+		vox.id = data[i];
+		vox.states = data[CHUNK_VOLUME + i];
+	}
+	return true;
 }

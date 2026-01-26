@@ -5,6 +5,7 @@
 #include "Assets.h"
 #include "graphics/ShaderProgram.h"
 #include "graphics/Texture.h"
+#include "coders/png.h"
 #include "graphics/Font.h"
 #include "logger/Logger.h"
 
@@ -51,7 +52,7 @@ bool _load_shader(Assets* assets, const std::string& filename, const std::string
 
 // Загружает и регистрирует текстуру в менеджере ресурсов.
 bool _load_texture(Assets* assets, const std::string& filename, const std::string& name){
-	Texture* texture = loadTexture(filename);
+	Texture* texture = png::loadTexture(filename);
 	if (texture == nullptr){
 		LOG_CRITICAL("Failed to load texture '{}'", name);
 		return false;
@@ -63,7 +64,7 @@ bool _load_texture(Assets* assets, const std::string& filename, const std::strin
 bool _load_font(Assets* assets, const std::string& filename, const std::string& name){
     std::vector<Texture*> pages;
 	for (size_t i = 0; i <= 4; ++i){
-		Texture* texture = loadTexture(filename + "_" + std::to_string(i)+  ".png");
+		Texture* texture = png::loadTexture(filename + "_" + std::to_string(i)+  ".png");
 		if (texture == nullptr){
             LOG_CRITICAL("Failed to load bitmap font '{}' (missing page {})", name, std::to_string(i));
 			return false;

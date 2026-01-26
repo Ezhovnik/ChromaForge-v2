@@ -5,7 +5,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "Assets.h"
+#include "assets/Assets.h"
 #include "graphics/ShaderProgram.h"
 #include "graphics/Batch2D.h"
 #include "graphics/Font.h"
@@ -49,7 +49,7 @@ void HudRenderer::drawDebug(Level* level, Assets* assets, int fps, bool occlusio
         throw std::runtime_error("The shader 'ui' could not be found in the assets");
     }
 	uishader->use();
-	uishader->uniformMatrix("u_projview", uicamera->getProjection() * uicamera->getView());
+	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 	batch->color = glm::vec4(1.0f);
 	batch->begin();
 
@@ -80,7 +80,7 @@ void HudRenderer::draw(Level* level, Assets* assets){
     }
 
 	uishader->use();
-	uishader->uniformMatrix("u_projview", uicamera->getProjection()*uicamera->getView());
+	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
 	// Chosen block preview
 	Texture* blocks = assets->getTexture("blocks");
@@ -124,10 +124,10 @@ void HudRenderer::draw(Level* level, Assets* assets){
 	batch->texture(blocks);
 	Player* player = level->player;
 	{
-		Block* choosen_block = Block::blocks[player->choosenBlock].get();
-		if (choosen_block->model == Block_models::CUBE){
+		Block* choosen_block = Block::blocks[player->choosenBlock];
+		if (choosen_block->model == BlockModel::Cube){
 			batch->blockSprite(Window::width/2-24, uicamera->fov - 72, 48, 48, 16, choosen_block->textureFaces, glm::vec4(1.0f));
-		} else if (choosen_block->model == Block_models::X){
+		} else if (choosen_block->model == BlockModel::X){
 			batch->sprite(Window::width/2-24, uicamera->fov - 72, 48, 48, 16, choosen_block->textureFaces[3], glm::vec4(1.0f));
 		}
 	}
@@ -186,7 +186,7 @@ void HudRenderer::draw(Level* level, Assets* assets){
 		//front
 		batch->texture(blocks);
 		for (uint i = 1; i < count; i++) {
-			Block* cblock = Block::blocks[i].get();
+			Block* cblock = Block::blocks[i];
 			if (cblock == nullptr) break;
 			x = xs + step * ((i-1) % (inv_w / step));
 			y = ys + step * ((i-1) / (inv_w / step));
@@ -199,9 +199,9 @@ void HudRenderer::draw(Level* level, Assets* assets){
 				tint = glm::vec4(1.0f);
 			}
 			
-			if (cblock->model == Block_models::CUBE){
+			if (cblock->model == BlockModel::Cube){
 				batch->blockSprite(x, y, size, size, 16, cblock->textureFaces, tint);
-			} else if (cblock->model == Block_models::X){
+			} else if (cblock->model == BlockModel::X){
 				batch->sprite(x, y, size, size, 16, cblock->textureFaces[3], tint);
 			}
 		}

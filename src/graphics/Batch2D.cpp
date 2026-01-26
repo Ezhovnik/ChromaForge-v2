@@ -18,7 +18,7 @@ Batch2D::Batch2D(size_t capacity) : capacity(capacity), offset(0), color(1.0f, 1
 	index = 0;
 
 	ubyte pixels[] = {255, 255, 255, 255};
-	blank = new Texture(pixels, 1, 1);
+	blank = new Texture(pixels, 1, 1, GL_RGBA);
 	_texture = nullptr;
 }
 
@@ -26,8 +26,6 @@ Batch2D::~Batch2D(){
 	delete blank;
 	delete[] buffer;
 	delete mesh;
-    if (_texture) delete _texture;
-    if (blank) delete blank;
 }
 
 void Batch2D::begin(){

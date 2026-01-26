@@ -3,10 +3,11 @@
 
 #include "../voxels/Chunk.h"
 #include "../typedefs.h"
+#include "../constants.h"
 
 class LightMap {
 public:
-	ushort* map;
+	light_t* map;
     int highestPoint = 0;
 
 	LightMap();
@@ -61,6 +62,18 @@ public:
 	inline void set(int x, int y, int z, int channel, int value){
 		const int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
 		map[index] = (map[index] & (0xFFFF & (~(0xF << (channel*4))))) | (value << (channel << 2));
+	}
+
+    inline const light_t* getLights() const {
+		return map;
+	}
+
+	inline light_t* getLightsWriteable() {
+		return map;
+	}
+
+	static inline light_t extract(light_t light, ubyte channel) {
+		return (light >> (channel << 2)) & 0xF;
 	}
 };
 
