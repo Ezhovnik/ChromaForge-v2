@@ -56,6 +56,8 @@ void key_callback(GLFWwindow*, int key, int scancode, int action, int mode) {
 
 // Callback-функция для обработки изменения размера окна
 void window_size_callback(GLFWwindow*, int width, int height) {
+    if (width <= 0 || height <= 0) return;
+
     glViewport(0, 0, width, height); // Обновляем область отображения при изменении размера окна
     
     // Обновляем размеры окна у объекта окна

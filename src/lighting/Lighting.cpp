@@ -8,7 +8,7 @@
 #include "../voxels/Chunk.h"
 #include "../voxels/voxel.h"
 #include "../voxels/Block.h"
-#include "../declarations.h"
+#include "../definitions.h"
 #include "../typedefs.h"
 
 Lighting::Lighting(Chunks* chunks) : chunks(chunks){

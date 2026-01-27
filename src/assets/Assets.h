@@ -1,5 +1,5 @@
-#ifndef SRC_ASSETS_H_
-#define SRC_ASSETS_H_
+#ifndef ASSETS_ASSETS_H_
+#define ASSETS_ASSETS_H_
 
 #include <string>
 #include <unordered_map>
@@ -29,4 +29,4 @@ public:
 	bool store(Font* shader, std::string name); // Сохраняет шрифт в менеджере ресурсов.
 };
 
-#endif // SRC_ASSETS_H_
+#endif // ASSETS_ASSETS_H_

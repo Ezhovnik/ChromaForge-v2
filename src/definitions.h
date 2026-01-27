@@ -28,9 +28,6 @@ namespace BlockID {
     inline constexpr blockid_t BLUE_NEON = 21;
 }
 
-class AssetsLoader;
-
-void initialize_assets(AssetsLoader* loader);
 void setup_definitions();
 
 #endif // SRC_DECLARATIONS_H_

@@ -23,11 +23,11 @@
 #include "assets/Assets.h"
 #include "assets/AssetsLoader.h"
 #include "objects/Player.h"
-#include "declarations.h"
-#include "world_render.h"
+#include "definitions.h"
+#include "frontend/world_render.h"
 #include "world/Level.h"
 #include "world/World.h"
-#include "hud_render.h"
+#include "frontend/hud_render.h"
 #include "logger/Logger.h"
 
 // Точка спавна игрока и начальная скорость
@@ -46,12 +46,17 @@ struct EngineSettings {
     int displayHeight; // Высота окна
     int displaySamples;
     const char* title; // Заголовок окна
+
+    uint chunksLoadSpeed;
+    uint chunksLoadDistance;
+    uint chunksPadding;
 };
 
 // Основной класс Engine, управляющий жизненным циклом приложения
 class Engine {
     Assets* assets; // Менеджер ассетов (текстуры, модели и т.д.)
     Level* level; // Текущий уровень (состояние мира и игрока)
+    EngineSettings settings;
 
     uint64_t frame = 0; // Номер текущего кадра
     float lastTime = 0.0f; // Время последнего кадра (для расчёта deltaTime)
@@ -68,6 +73,8 @@ public:
 
 // Реализация конструктора
 Engine::Engine(const EngineSettings& settings) {
+    this->settings = settings;
+
     // Инициализация логгера
     Logger::getInstance().initialize();
 
@@ -83,7 +90,7 @@ Engine::Engine(const EngineSettings& settings) {
     LOG_INFO("Loading Assets");
     AssetsLoader loader(assets);
     AssetsLoader::createDefaults(loader); // Создание наборов ассетов по умолчанию
-    initialize_assets(&loader);
+    AssetsLoader::addDefaults(loader);
     while (loader.hasNext()) {
         if (!loader.loadNext()) {
             delete assets;
@@ -99,7 +106,7 @@ Engine::Engine(const EngineSettings& settings) {
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
     World* world = new World("world-1", "../build/saves/world-1/", 42);
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
-    level = world->loadLevel(player);
+    level = world->loadLevel(player, settings.chunksLoadDistance, settings.chunksPadding);
     LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -146,7 +153,7 @@ void Engine::updateHotkeys() {
 
     // Отметка всех чанков как изменённых (для перерисовки)
     if (Events::justPressed(GLFW_KEY_F5)) {
-        for (unsigned i = 0; i < level->chunks->volume; i++) {
+        for (uint i = 0; i < level->chunks->volume; i++) {
             std::shared_ptr<Chunk> chunk = level->chunks->chunks[i];
             if (chunk != nullptr && chunk->isReady()) chunk->setModified(true);
         }
@@ -160,7 +167,7 @@ void Engine::mainloop() {
     Camera* camera = level->player->camera;
     World* world = level->world;
     WorldRenderer worldRenderer(level, assets);
-    HudRenderer hud;
+    HudRenderer hud(assets);
 
     lastTime = glfwGetTime();
     Window::swapInterval(1); // Включаем VSync (синхронизация с частотой обновления экрана)
@@ -174,12 +181,12 @@ void Engine::mainloop() {
 
         // Обновление логики уровня (перемещение игрока, столкновения и т.д.)
         level->update(deltaTime, Events::_cursor_locked);
-        level->chunksController->loadVisible(world->wfile);
+        level->chunksController->update(settings.chunksLoadSpeed);
 
         // Рендеринг мира и HUD
         worldRenderer.draw(camera, occlusion);
-        hud.draw(level, assets);
-        if (level->player->debug) hud.drawDebug(level, assets, 1 / deltaTime, occlusion);
+        hud.draw(level);
+        if (level->player->debug) hud.drawDebug(level, 1 / deltaTime, occlusion);
 
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
@@ -193,7 +200,7 @@ int main() {
     std::unique_ptr<Engine> engine = nullptr;
 
     try {
-        engine = std::make_unique<Engine>(EngineSettings{1280, 720, 1, "ChromaForge"});
+        engine = std::make_unique<Engine>(EngineSettings{1280, 720, 1, "ChromaForge", 15, 12, 2});
         engine->mainloop(); // Запуск основного цикла
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred\n{}", err.what());

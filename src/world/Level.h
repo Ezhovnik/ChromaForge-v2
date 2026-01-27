@@ -1,6 +1,8 @@
 #ifndef WORLD_LEVEL_H_
 #define WORLD_LEVEL_H_
 
+#include "../typedefs.h"
+
 class World;
 class Player;
 class Chunks;
@@ -23,7 +25,7 @@ public:
     ChunksStorage* chunksStorage;
     LevelEvents* events;
 
-	Level(World* world, Player* player, Chunks* chunks, ChunksStorage* chunksStorage, PhysicsSolver* physics, LevelEvents* events);
+	Level(World* world, Player* player, ChunksStorage* chunksStorage, LevelEvents* events, uint loadDistance, uint chunksPadding);
 	~Level();
 
     void update(float deltaTime, bool interactions);

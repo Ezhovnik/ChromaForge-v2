@@ -8,20 +8,23 @@
 #include "../physics/PhysicsSolver.h"
 #include "../physics/Hitbox.h"
 #include "../objects/Player.h"
-#include "../player_control.h"
+#include "../objects/player_control.h"
 #include "World.h"
 #include "LevelEvents.h"
 
-Level::Level(World* world, Player* player, Chunks* chunks, ChunksStorage* chunksStorage, PhysicsSolver* physics, LevelEvents* events) :
+inline constexpr float GRAVITY = 19.6f;
+
+Level::Level(World* world, Player* player, ChunksStorage* chunksStorage, LevelEvents* events, uint loadDistance, uint chunksPadding) :
 	world(world),
 	player(player),
-	chunks(chunks),
-	physics(physics),
     chunksStorage(chunksStorage),
     events(events) 
 {
+    physics = new PhysicsSolver(glm::vec3(0, -GRAVITY, 0));
+    uint matrixSize = (loadDistance+chunksPadding) * 2;
+    chunks = new Chunks(matrixSize, matrixSize, 0, 0, events);
 	lighting = new Lighting(chunks);
-	chunksController = new ChunksController(this, chunks, lighting);
+	chunksController = new ChunksController(this, chunks, lighting, chunksPadding);
 	playerController = new PlayerController(this);
     events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
 		this->chunksStorage->remove(chunk->chunk_x, chunk->chunk_z);

@@ -1,4 +1,4 @@
-#include "declarations.h"
+#include "definitions.h"
 
 #include <iostream>
 
@@ -9,19 +9,6 @@
 #include "window/Window.h"
 #include "voxels/Block.h"
 #include "logger/Logger.h"
-
-// Инициализирует все графические ресурсы (шейдеры, текстуры, шрифты).
-void initialize_assets(AssetsLoader* loader) {
-    loader->add(ASSETS_TYPE::SHADER, "../res/shaders/default", "default");
-    // loader->add(ASSETS_TYPE::SHADER, "../res/shaders/crosshair", "crosshair");
-    loader->add(ASSETS_TYPE::SHADER, "../res/shaders/lines", "lines");
-    loader->add(ASSETS_TYPE::SHADER, "../res/shaders/ui", "ui");
-
-    loader->add(ASSETS_TYPE::TEXTURE, "../res/textures/atlas.png", "blocks");
-    loader->add(ASSETS_TYPE::TEXTURE, "../res/textures/slot.png", "slot");
-
-    loader->add(ASSETS_TYPE::FONT, "../res/fonts/font", "normal");
-}
 
 void setup_definitions() {
     for (size_t i = 0; i < 256; i++) {

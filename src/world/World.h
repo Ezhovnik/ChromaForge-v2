@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "../typedefs.h"
+
 class WorldFiles;
 class Level;
 class Player;
@@ -17,7 +19,7 @@ public:
 	~World();
 
     void write(Level* level);
-    Level* loadLevel(Player* player);
+    Level* loadLevel(Player* player, uint loadDistance, uint chunksPadding);
 };
 
 #endif // WORLD_WORLD_H_

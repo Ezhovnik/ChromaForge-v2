@@ -12,11 +12,11 @@
 AssetsLoader::AssetsLoader(Assets* assets) : assets(assets) {
 }
 
-void AssetsLoader::addLoader(int tag, aloader_func func) {
+void AssetsLoader::addLoader(AssetType tag, aloader_func func) {
 	loaders[tag] = func;
 }
 
-void AssetsLoader::add(int tag, const std::string filename, const std::string alias) {
+void AssetsLoader::add(AssetType tag, const std::string filename, const std::string alias) {
 	entries.push(aloader_entry{tag, filename, alias});
 }
 
@@ -30,7 +30,7 @@ bool AssetsLoader::loadNext() {
 	Logger::getInstance().flush();
 	auto found = loaders.find(entry.tag);
 	if (found == loaders.end()) {
-        LOG_ERROR("Unknown asset tag {}", entry.tag);
+        LOG_ERROR("Unknown asset tag {}", (int)entry.tag);
 		return false;
 	}
 	aloader_func loader = found->second;
@@ -77,7 +77,18 @@ bool _load_font(Assets* assets, const std::string& filename, const std::string& 
 }
 
 void AssetsLoader::createDefaults(AssetsLoader& loader) {
-	loader.addLoader(ASSETS_TYPE::SHADER, _load_shader);
-	loader.addLoader(ASSETS_TYPE::TEXTURE, _load_texture);
-	loader.addLoader(ASSETS_TYPE::FONT, _load_font);
+	loader.addLoader(AssetType::Shader, _load_shader);
+	loader.addLoader(AssetType::Texture, _load_texture);
+	loader.addLoader(AssetType::Font, _load_font);
+}
+
+void AssetsLoader::addDefaults(AssetsLoader& loader) {
+	loader.add(AssetType::Shader, "../res/shaders/default", "default");
+	loader.add(AssetType::Shader, "../res/shaders/lines", "lines");
+	loader.add(AssetType::Shader, "../res/shaders/ui", "ui");
+
+	loader.add(AssetType::Texture, "../res/textures/atlas.png", "blocks");
+	loader.add(AssetType::Texture, "../res/textures/slot.png", "slot");
+
+	loader.add(AssetType::Font, "../res/fonts/font", "normal");
 }

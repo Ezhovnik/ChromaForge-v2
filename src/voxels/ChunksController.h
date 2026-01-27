@@ -1,6 +1,8 @@
 #ifndef VOXELS_CHUNKSCONTROLLER_H_
 #define VOXELS_CHUNKSCONTROLLER_H_
 
+#include "../typedefs.h"
+
 class Level;
 class Chunks;
 class Lighting;
@@ -13,10 +15,15 @@ private:
 	Level* level;
 	Chunks* chunks;
 	Lighting* lighting;
+
+    uint chunksPadding;
+
+    int64_t avgDurationMcs = 1000;
 public:
-	ChunksController(Level* level, Chunks* chunks, Lighting* lighting);
+	ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding);
 	~ChunksController();
 
+    void update(int64_t maxDuration);
 	bool loadVisible(WorldFiles* worldFiles);
 };
 

@@ -68,11 +68,15 @@ void Batch2D::texture(Texture* new_texture){
 }
 
 void Batch2D::point(float x, float y, float r, float g, float b, float a){
+    if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
+
 	vertex(x, y, 0, 0, r,g,b,a);
 	render(GL_POINTS);
 }
 
 void Batch2D::line(float x1, float y1, float x2, float y2, float r, float g, float b, float a){
+    if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
+
 	vertex(x1, y1, 0, 0, r,g,b,a);
 	vertex(x2, y2, 1, 1, r,g,b,a);
 	render(GL_LINES);
@@ -83,7 +87,7 @@ void Batch2D::rect(float x, float y, float w, float h){
 	const float g = color.g;
 	const float b = color.b;
 	const float a = color.a;
-	// if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render(GL_TRIANGLES);
+	if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
 
 	vertex(x, y, 0, 0, r,g,b,a);
 	vertex(x+w, y+h, 1, 1, r,g,b,a);
@@ -92,8 +96,6 @@ void Batch2D::rect(float x, float y, float w, float h){
 	vertex(x, y, 0, 0, r,g,b,a);
 	vertex(x+w, y, 1, 0, r,g,b,a);
 	vertex(x+w, y+h, 1, 1, r,g,b,a);
-
-    render(GL_TRIANGLES);
 }
 
 void Batch2D::rect(
@@ -105,7 +107,7 @@ void Batch2D::rect(
 		bool flippedX,
 		bool flippedY,
 		glm::vec4 tint) {
-	// if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render(GL_TRIANGLES);
+	if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
 
     float centerX = w*ox;
     float centerY = h*oy;
@@ -187,8 +189,6 @@ void Batch2D::rect(
     vertex(x1, y1, u1, v1, tint.r, tint.g, tint.b, tint.a);
     vertex(x3, y3, u3, v3, tint.r, tint.g, tint.b, tint.a);
     vertex(x4, y4, u4, v4, tint.r, tint.g, tint.b, tint.a);
-
-    render(GL_TRIANGLES);
 }
 
 void Batch2D::rect(float x, float y, float w, float h,
@@ -197,7 +197,8 @@ void Batch2D::rect(float x, float y, float w, float h,
 		float r2, float g2, float b2,
 		float r3, float g3, float b3,
 		float r4, float g4, float b4, int sh){
-	// if (index + 30*VERTEX_SIZE >= capacity) render(GL_TRIANGLES);
+	if (index + 30 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
+
 	glm::vec2 v0 = glm::vec2(x+h/2,y+h/2);
 	glm::vec2 v1 = glm::vec2(x+w-sh,y);
 	glm::vec2 v2 = glm::vec2(x+sh,y);
@@ -276,6 +277,21 @@ void Batch2D::sprite(float x, float y, float w, float h, int atlasRes, int index
 	rect(x, y, w, h, u, v, scale, scale, tint.r, tint.g, tint.b, tint.a);
 }
 
+void Batch2D::rect(float x, float y, float w, float h,
+					float u, float v, float tx, float ty,
+					float r, float g, float b, float a){
+
+	vertex(x, y, u, v+ty, r,g,b,a);
+	vertex(x+w, y+h, u+tx, v, r,g,b,a);
+	vertex(x, y+h, u, v, r,g,b,a);
+
+	vertex(x, y, u, v+ty, r,g,b,a);
+	vertex(x+w, y, u+tx, v+ty, r,g,b,a);
+	vertex(x+w, y+h, u+tx, v, r,g,b,a);
+
+    render(GL_TRIANGLES);
+}
+
 void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int index[6], glm::vec4 tint){
 	float scale = 1.0f / (float)atlasRes;
 	float uu = (index[3] % atlasRes) * scale;
@@ -327,30 +343,14 @@ void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int 
 	vertex(points[0], uvpoints[6], tint.r, tint.g, tint.b, tint.a);
 	vertex(points[6], uvpoints[4], tint.r, tint.g, tint.b, tint.a);
 	vertex(points[1], uvpoints[7], tint.r, tint.g, tint.b, tint.a);
-
-    glDisable(GL_MULTISAMPLE);
-	render(GL_TRIANGLES);
-	glEnable(GL_MULTISAMPLE);
-}
-
-void Batch2D::rect(float x, float y, float w, float h,
-					float u, float v, float tx, float ty,
-					float r, float g, float b, float a){
-	// if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render(GL_TRIANGLES);
-
-	vertex(x, y, u, v+ty, r,g,b,a);
-	vertex(x+w, y+h, u+tx, v, r,g,b,a);
-	vertex(x, y+h, u, v, r,g,b,a);
-
-	vertex(x, y, u, v+ty, r,g,b,a);
-	vertex(x+w, y, u+tx, v+ty, r,g,b,a);
-	vertex(x+w, y+h, u+tx, v, r,g,b,a);
-
-    render(GL_TRIANGLES);
 }
 
 void Batch2D::render(uint gl_primitive) {
 	mesh->reload(buffer, index / Batch2D_Consts::VERTEX_SIZE);
 	mesh->draw(gl_primitive);
 	index = 0;
+}
+
+void Batch2D::render() {
+    render(GL_TRIANGLES);
 }

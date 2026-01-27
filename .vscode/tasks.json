@@ -27,6 +27,10 @@
                 "${workspaceFolder}/src/files/rle.cpp",
                 "${workspaceFolder}/src/files/WorldFiles.cpp",
 
+                //src/frontend
+                "${workspaceFolder}/src/frontend/hud_render.cpp",
+                "${workspaceFolder}/src/frontend/world_render.cpp",
+
                 //src/graphics
                 "${workspaceFolder}/src/graphics/Batch2D.cpp",
                 "${workspaceFolder}/src/graphics/Batch3D.cpp",
@@ -50,6 +54,7 @@
                 "${workspaceFolder}/src/logger/Logger.cpp",
 
                 //src/objects
+                "${workspaceFolder}/src/objects/player_control.cpp",
                 "${workspaceFolder}/src/objects/Player.cpp",
 
                 //src/physics
@@ -76,11 +81,8 @@
                 "${workspaceFolder}/src/world/World.cpp",
 
                 //src
-                "${workspaceFolder}/src/declarations.cpp",
-                "${workspaceFolder}/src/hud_render.cpp",
+                "${workspaceFolder}/src/definitions.cpp",
                 "${workspaceFolder}/src/main.cpp",
-                "${workspaceFolder}/src/player_control.cpp",
-                "${workspaceFolder}/src/world_render.cpp",
                 
                 "-lglfw3dll", 
                 "-lopengl32",
