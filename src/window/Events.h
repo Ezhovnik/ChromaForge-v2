@@ -1,8 +1,9 @@
 #ifndef WINDOW_EVENTS_H_
 #define WINDOW_EVENTS_H_
 
-#include "Window.h"
+#include <vector>
 
+#include "Window.h"
 #include "../typedefs.h"
 
 // Константа для разделения индексов клавиш и кнопок мыши
@@ -28,6 +29,9 @@ public:
     static float y; // Текущее положение курсора по Y
     static bool _cursor_locked; // Режим захвата курсора
     static bool _cursor_started; // Начал ли пользователь движение мышью
+
+    static std::vector<uint> codepoints;
+    static std::vector<int> pressedKeys;
 
     // Методы инициализации и обновления
     static int initialize(); // Инициализация системы событий

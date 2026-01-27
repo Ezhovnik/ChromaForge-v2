@@ -1,4 +1,4 @@
-#include "hud_render.h"
+#include "hud.h"
 
 #include <sstream>
 
@@ -53,18 +53,18 @@ void HudRenderer::drawDebug(Level* level, int fps, bool occlusion){
 	batch->color = glm::vec4(1.0f);
 	batch->begin();
 
-	font->draw(batch, L"chunks: "+std::to_wstring(chunks->chunksCount), 16, 16, FONT_STYLES::OUTLINE);
-	font->draw(batch, std::to_wstring((int)player->camera->position.x), 10, 30, FONT_STYLES::OUTLINE);
-	font->draw(batch, std::to_wstring((int)player->camera->position.y), 50, 30, FONT_STYLES::OUTLINE);
-	font->draw(batch, std::to_wstring((int)player->camera->position.z), 90, 30, FONT_STYLES::OUTLINE);
-	font->draw(batch, L"fps:", 16, 42, FONT_STYLES::OUTLINE);
-	font->draw(batch, std::to_wstring(fps), 44, 42, FONT_STYLES::OUTLINE);
-	font->draw(batch, L"occlusion: "+std::to_wstring(occlusion), 16, 54, FONT_STYLES::OUTLINE);
+	font->draw(batch, L"chunks: "+std::to_wstring(chunks->chunksCount), 16, 16, FontStyle::Outline);
+	font->draw(batch, std::to_wstring((int)player->camera->position.x), 10, 30, FontStyle::Outline);
+	font->draw(batch, std::to_wstring((int)player->camera->position.y), 50, 30, FontStyle::Outline);
+	font->draw(batch, std::to_wstring((int)player->camera->position.z), 90, 30, FontStyle::Outline);
+	font->draw(batch, L"fps:", 16, 42, FontStyle::Outline);
+	font->draw(batch, std::to_wstring(fps), 44, 42, FontStyle::Outline);
+	font->draw(batch, L"occlusion: "+std::to_wstring(occlusion), 16, 54, FontStyle::Outline);
 
     std::wstringstream stream;
 	stream << std::hex << player->selectedVoxel.states;
-	font->draw(batch, L"block-selected: "+std::to_wstring(player->selectedVoxel.id)+L" "+stream.str(), 16, 78, FONT_STYLES::OUTLINE);
-	font->draw(batch, L"meshes: " + std::to_wstring(Mesh::meshesCount), 16, 102, FONT_STYLES::OUTLINE);
+	font->draw(batch, L"block-selected: "+std::to_wstring(player->selectedVoxel.id)+L" "+stream.str(), 16, 78, FontStyle::Outline);
+	font->draw(batch, L"meshes: " + std::to_wstring(Mesh::meshesCount), 16, 102, FontStyle::Outline);
 
     batch->render();
 }

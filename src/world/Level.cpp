@@ -22,7 +22,7 @@ Level::Level(World* world, Player* player, ChunksStorage* chunksStorage, LevelEv
 {
     physics = new PhysicsSolver(glm::vec3(0, -GRAVITY, 0));
     uint matrixSize = (loadDistance+chunksPadding) * 2;
-    chunks = new Chunks(matrixSize, matrixSize, 0, 0, events);
+    chunks = new Chunks(matrixSize, matrixSize, 0, 0, world->wfile, events);
 	lighting = new Lighting(chunks);
 	chunksController = new ChunksController(this, chunks, lighting, chunksPadding);
 	playerController = new PlayerController(this);
@@ -50,5 +50,5 @@ void Level::update(float deltaTime, bool interactions) {
 		playerController->selectedBlockId = -1;
 	}
 	glm::vec3 position = player->hitbox->position;
-	chunks->setCenter(world->wfile, position.x, position.z);
+	chunks->setCenter(position.x, position.z);
 }

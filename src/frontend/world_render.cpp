@@ -28,29 +28,14 @@
 #include "../graphics/ChunksRenderer.h"
 #include "../world/LevelEvents.h"
 
-float _camera_cx;
-float _camera_cz;
-
-Chunks* _chunks = nullptr;
-
 inline constexpr glm::vec4 CLEAR_COLOR = {0.7f, 0.71f, 0.73f, 1.0f};
 inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {1.8f, 1.8f, 1.8f};
 inline constexpr glm::vec3 FOG_COLOR = {0.7f, 0.71f, 0.73f};
 inline constexpr float FOG_FACTOR = 0.025f;
+inline constexpr float FOG_CURVE = 1.6f;
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
-
-// Компаратор для сортировки чанков по удаленности от камеры.
-bool chunks_comparator(size_t i, size_t j) {
-	std::shared_ptr<Chunk> a = _chunks->chunks[i];
-	std::shared_ptr<Chunk> b = _chunks->chunks[j];
-
-    float distA = (a->chunk_x + 0.5f - _camera_cx) * (a->chunk_x + 0.5f - _camera_cx) + (a->chunk_z + 0.5f - _camera_cz) * (a->chunk_z + 0.5f - _camera_cz);
-	float distB = (b->chunk_x + 0.5f - _camera_cx) * (b->chunk_x + 0.5f - _camera_cx) + (b->chunk_z + 0.5f - _camera_cz) * (b->chunk_z + 0.5f - _camera_cz);
-
-    return distA > distB;
-}
 
 WorldRenderer::WorldRenderer(Level* level, Assets* assets) : assets(assets), level(level) {
 	lineBatch = new LineBatch(4096);
@@ -100,7 +85,7 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
     Chunks* chunks = level->chunks;
 
 	glClearColor(CLEAR_COLOR.r, CLEAR_COLOR.g, CLEAR_COLOR.b, CLEAR_COLOR.a); // Цвет фона (светло-серый с голубым оттенком)
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	Window::clear();
 
     Window::viewport(0, 0, Window::width, Window::height);
 
@@ -136,6 +121,7 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
 	shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR);
 	shader->uniform3f("u_fogColor", FOG_COLOR);
 	shader->uniform1f("u_fogFactor", FOG_FACTOR);
+    shader->uniform1f("u_fogCurve", FOG_CURVE);
     shader->uniform3f("u_cameraPos", camera->position);
 
     Block* choosen_block = Block::blocks[level->player->choosenBlock];
@@ -159,12 +145,13 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
 	float px = camera->position.x / (float)CHUNK_WIDTH;
 	float pz = camera->position.z / (float)CHUNK_DEPTH;
 
-	_camera_cx = px;
-	_camera_cz = pz;
-    _chunks = chunks;
-
     // Сортируем чанки по удаленности от камеры (от дальних к ближним)
-	std::sort(indices.begin(), indices.end(), chunks_comparator);
+	std::sort(indices.begin(), indices.end(), [this, chunks, px, pz](size_t i, size_t j) {
+		std::shared_ptr<Chunk> a = chunks->chunks[i];
+		std::shared_ptr<Chunk> b = chunks->chunks[j];
+		return ((a->chunk_x + 0.5f - px)*(a->chunk_x + 0.5f - px) + (a->chunk_z + 0.5f - pz)*(a->chunk_z + 0.5f - pz) >
+				(b->chunk_x + 0.5f - px)*(b->chunk_x + 0.5f - px) + (b->chunk_z + 0.5f - pz)*(b->chunk_z + 0.5f - pz));
+	});
 
     // Отрисовываем все видимые чанки
     int occludedChunks = 0;

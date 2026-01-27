@@ -12,6 +12,7 @@
 #include "../voxels/Chunks.h"
 #include "../window/Camera.h"
 #include "../window/Events.h"
+#include "../window/input.h"
 
 namespace Player_Consts {
     constexpr float CROUCH_SPEED_MUL = 0.25f;
@@ -42,7 +43,7 @@ void PlayerController::update_controls(float delta){
 	Player* player = level->player;
 
 	for (int i = 1; i < 10; ++i){
-		if (Events::justPressed(GLFW_KEY_0 + i)){
+		if (Events::justPressed(keycode::NUM_0 + i)){
 			player->choosenBlock = i;
 		}
 	}
@@ -51,10 +52,10 @@ void PlayerController::update_controls(float delta){
 	Camera* camera = player->camera;
 	Hitbox* hitbox = player->hitbox;
 
-	bool sprint = Events::isPressed(GLFW_KEY_LEFT_CONTROL);
-	bool shift = Events::isPressed(GLFW_KEY_LEFT_SHIFT) && hitbox->grounded && !sprint;
-	bool zoom = Events::isPressed(GLFW_KEY_C);
-	bool cheat = Events::isPressed(GLFW_KEY_R);
+	bool sprint = Events::isPressed(keycode::LEFT_CONTROL);
+	bool shift = Events::isPressed(keycode::LEFT_SHIFT) && hitbox->grounded && !sprint;
+	bool zoom = Events::isPressed(keycode::C);
+	bool cheat = Events::isPressed(keycode::R);
 
 	float speed = player->speed;
 	if (player->flight) speed *= Player_Consts::FLIGHT_SPEED_MUL;
@@ -80,15 +81,15 @@ void PlayerController::update_controls(float delta){
 	camera->position += camera->up * glm::abs(glm::cos(shakeTimer)) * Player_Consts::CAMERA_SHAKING_OFFSET_Y * player->cameraShaking;
 	camera->position -= glm::min(player->interpVel * 0.05f, 1.0f);
 
-	if ((Events::justPressed(GLFW_KEY_F) && !player->noclip) ||
-		(Events::justPressed(GLFW_KEY_N) && player->flight == player->noclip)){
+	if ((Events::justPressed(keycode::F) && !player->noclip) ||
+		(Events::justPressed(keycode::N) && player->flight == player->noclip)){
 		player->flight = !player->flight;
 		if (player->flight){
 			hitbox->velocity.y += 1;
             hitbox->grounded = false;
 		}
 	}
-	if (Events::justPressed(GLFW_KEY_N)) player->noclip = !player->noclip;
+	if (Events::justPressed(keycode::N)) player->noclip = !player->noclip;
 
 	float dt = glm::min(1.0f, delta * Player_Consts::ZOOM_SPEED);
 	float zoomValue = 1.0f;
@@ -103,22 +104,22 @@ void PlayerController::update_controls(float delta){
 	if (zoom) zoomValue *= Player_Consts::C_ZOOM;
 	camera->zoom = zoomValue * dt + camera->zoom * (1.0f - dt);
 
-	if (Events::isPressed(GLFW_KEY_SPACE) && hitbox->grounded) hitbox->velocity.y = Player_Consts::JUMP_FORCE;
+	if (Events::isPressed(keycode::SPACE) && hitbox->grounded) hitbox->velocity.y = Player_Consts::JUMP_FORCE;
 
 	glm::vec3 dir(0,0,0);
-	if (Events::isPressed(GLFW_KEY_W)){
+	if (Events::isPressed(keycode::W)){
 		dir.x += camera->dir.x;
 		dir.z += camera->dir.z;
 	}
-	if (Events::isPressed(GLFW_KEY_S)){
+	if (Events::isPressed(keycode::S)){
 		dir.x -= camera->dir.x;
 		dir.z -= camera->dir.z;
 	}
-	if (Events::isPressed(GLFW_KEY_D)){
+	if (Events::isPressed(keycode::D)){
 		dir.x += camera->right.x;
 		dir.z += camera->right.z;
 	}
-	if (Events::isPressed(GLFW_KEY_A)){
+	if (Events::isPressed(keycode::A)){
 		dir.x -= camera->right.x;
 		dir.z -= camera->right.z;
 	}
@@ -127,9 +128,9 @@ void PlayerController::update_controls(float delta){
 	if (player->flight){
 		hitbox->linear_damping = Player_Consts::AIR_DAMPING;
 		hitbox->velocity.y *= 1.0f - delta * 9;
-		if (Events::isPressed(GLFW_KEY_SPACE)) hitbox->velocity.y += speed * delta * 9;
+		if (Events::isPressed(keycode::SPACE)) hitbox->velocity.y += speed * delta * 9;
 
-		if (Events::isPressed(GLFW_KEY_LEFT_SHIFT)) hitbox->velocity.y -= speed * delta * 9;
+		if (Events::isPressed(keycode::LEFT_SHIFT)) hitbox->velocity.y -= speed * delta * 9;
 	}
 
     if (!hitbox->grounded) hitbox->linear_damping = Player_Consts::AIR_DAMPING;
@@ -195,11 +196,11 @@ void PlayerController::update_interaction(){
 		}
 		
 		Block* block = Block::blocks[vox->id];
-		if (Events::justClicked(GLFW_MOUSE_BUTTON_1) && block->breakable){
+		if (Events::justClicked(mousecode::BUTTON_1) && block->breakable && !level->player->noclip){
 			chunks->setVoxel(x, y, z, 0, 0);
 			lighting->onBlockSet(x, y ,z, 0);
 		}
-		if (Events::justClicked(GLFW_MOUSE_BUTTON_2)){
+		if (Events::justClicked(mousecode::BUTTON_2) && !level->player->noclip){
 			if (block->model != BlockModel::X){
 				x = (int)(iend.x)+(int)(norm.x);
                 y = (int)(iend.y)+(int)(norm.y);
@@ -210,7 +211,7 @@ void PlayerController::update_interaction(){
 				lighting->onBlockSet(x,y,z, player->choosenBlock);
 			}
 		}
-		if (Events::justClicked(GLFW_MOUSE_BUTTON_3)){
+		if (Events::justClicked(mousecode::BUTTON_3)){
 			player->choosenBlock = chunks->getVoxel(x,y,z)->id;
 		}
 	} else {

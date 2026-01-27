@@ -28,7 +28,7 @@
                 "${workspaceFolder}/src/files/WorldFiles.cpp",
 
                 //src/frontend
-                "${workspaceFolder}/src/frontend/hud_render.cpp",
+                "${workspaceFolder}/src/frontend/hud.cpp",
                 "${workspaceFolder}/src/frontend/world_render.cpp",
 
                 //src/graphics
@@ -61,6 +61,10 @@
                 "${workspaceFolder}/src/physics/Hitbox.cpp",
                 "${workspaceFolder}/src/physics/PhysicsSolver.cpp",
 
+                //src/util
+                "${workspaceFolder}/src/util/platform.cpp",
+                "${workspaceFolder}/src/util/stringutil.cpp",
+
                 //src/voxels
                 "${workspaceFolder}/src/voxels/Block.cpp",
                 "${workspaceFolder}/src/voxels/Chunk.cpp",
@@ -73,6 +77,7 @@
                 //src/window
                 "${workspaceFolder}/src/window/Camera.cpp",
                 "${workspaceFolder}/src/window/Events.cpp",
+                "${workspaceFolder}/src/window/input.cpp",
                 "${workspaceFolder}/src/window/Window.cpp",
 
                 //src/world
@@ -82,6 +87,7 @@
 
                 //src
                 "${workspaceFolder}/src/definitions.cpp",
+                "${workspaceFolder}/src/engine.cpp",
                 "${workspaceFolder}/src/main.cpp",
                 
                 "-lglfw3dll", 

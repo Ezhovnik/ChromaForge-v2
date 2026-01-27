@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdint>
 #include <fstream>
+#include <filesystem>
 
 #include "files.h"
 #include "rle.h"
@@ -59,11 +60,9 @@ inline float bytes2Float(ubyte* src, uint offset){
 // Конструктор
 WorldFiles::WorldFiles(std::string directory) : directory(directory){
     // Проверяем существование директории. Если её нет, то пытаемся создать
-    if (!ensureDirectoryExists(directory)) {
-        // Найти или создать директорию не удалось.
-        LOG_CRITICAL("Failed to load world directory");
-        throw std::runtime_error("Failed to load world directory");
-    }
+    if (!std::filesystem::is_directory(directory)) {
+		std::filesystem::create_directory(directory);
+	}
 
     // Инициализируем буферы
 	compressionBuffer = new ubyte[CHUNK_DATA_LEN * 2];
@@ -226,6 +225,10 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
 
 // Записывает все измененные регионы на диск
 void WorldFiles::write(){
+    if (!std::filesystem::is_directory(directory)) {
+		std::filesystem::create_directory(directory);
+	}
+
 	for (auto& [key, region] : regions){
 		if (region.chunksData == nullptr || !region.unsaved) continue;
 
@@ -235,6 +238,10 @@ void WorldFiles::write(){
 
 // Записываем данные об игроке на диск
 void WorldFiles::writePlayer(Player* player){
+    if (!std::filesystem::is_directory(directory)) {
+		std::filesystem::create_directory(directory);
+	}
+
 	ubyte dst[1+3*sizeof(float) + 1+2*sizeof(float) + 1+1];
 
 	glm::vec3 position = player->hitbox->position;
@@ -252,13 +259,13 @@ void WorldFiles::writePlayer(Player* player){
     dst[offset++] = PlayerSections::FLAGS;
 	dst[offset++] = player->flight * PlayerFlags::FLIGHT | player->noclip * PlayerFlags::NOCLIP;
 
-	write_binary_file(getPlayerFile(), (const char*)dst, sizeof(dst));
+	files::write_bytes(getPlayerFile(), (const char*)dst, sizeof(dst));
 }
 
 // Читаем данные об игроке с диска
 bool WorldFiles::readPlayer(Player* player) {
 	size_t length = 0;
-	ubyte* data = (ubyte*)read_binary_file(getPlayerFile(), length);
+	ubyte* data = (ubyte*)files::read_bytes(getPlayerFile(), length);
 	if (data == nullptr){
         LOG_WARN("Could not to read player.bin (ignored)");
 		return false;
