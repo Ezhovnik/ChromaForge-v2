@@ -89,7 +89,7 @@ void PlayerController::updateControls(float delta){
     if (crouch) speed *= PlayerConsts::CROUCH_SPEED_MUL;
     else if (input.sprint) speed *= PlayerConsts::RUN_SPEED_MUL;
 
-	glm::vec3 dir(0,0,0);
+	glm::vec3 dir(0, 0, 0);
 	if (input.moveForward){
 		dir.x += camera->dir.x;
 		dir.z += camera->dir.z;

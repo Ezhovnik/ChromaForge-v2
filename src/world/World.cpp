@@ -11,12 +11,13 @@
 #include "../objects/Player.h"
 #include "../physics/PhysicsSolver.h"
 #include "../window/Camera.h"
+#include "../logger/Logger.h"
 
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
 inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
 
-World::World(std::string name, std::filesystem::path directory, int seed, EngineSettings& settings) : name(name), seed(seed) {
+World::World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings) : name(name), seed(seed) {
 	wfile = new WorldFiles(directory, settings.debug.generatorTestMode);
 }
 
@@ -33,20 +34,32 @@ void World::write(Level* level, bool writeChunks) {
 		wfile->put(chunk.get());
 	}
 
-	wfile->write();
+	wfile->write(WorldInfo {name, wfile->directory, seed});
 	wfile->writePlayer(level->player);
 }
 
-Level* World::loadLevel(EngineSettings& settings) {
+Level* World::load(EngineSettings& settings) {
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
 
-	ChunksStorage* storage = new ChunksStorage();
-	LevelEvents* events = new LevelEvents();
-	Level* level = new Level(this, player, storage, events, settings);
+    LOG_INFO("Reading info about the world");
+    WorldInfo info {name, wfile->directory, seed};
+	wfile->readWorldInfo(info);
+	seed = info.seed;
+	name = info.name;
+    LOG_INFO("Info about the world has been successfully read");
+
+    LOG_INFO("Creating a level");
+	Level* level = new Level(this, player, settings);
+
+    LOG_INFO("Reading player info");
 	wfile->readPlayer(player);
+    LOG_INFO("Player info successfully read");
 
 	camera->rotation = glm::mat4(1.0f);
 	camera->rotate(player->camY, player->camX, 0);
+
+    LOG_INFO("Level successfully created");
+    Logger::getInstance().flush();
 	return level;
 }

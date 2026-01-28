@@ -19,7 +19,11 @@ namespace RegionConsts {
     constexpr int VOLUME = SIZE * SIZE; // Количество чанков в регионе
 }
 
-#define REGION_FORMAT_VERSION 1;
+#define REGION_FORMAT_MAGIC ".CHROMAREG"
+#define REGION_FORMAT_VERSION 1
+
+#define WORLD_FORMAT_MAGIC ".CHROMAWLD"
+#define WORLD_FORMAT_VERSION 1
 
 class Player;
 class Chunk;
@@ -30,13 +34,21 @@ struct WorldRegion {
 	bool unsaved;
 };
 
+struct WorldInfo {
+    std::string name;
+    std::filesystem::path directory;
+    uint64_t seed;
+};
+
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
-// ! Высота мира должна состовлять один чанк (любых размеров)
 class WorldFiles {
 private:
     std::filesystem::path getRegionFile(int x, int z); // Генерирует имя файла для региона с заданными координатами
     std::filesystem::path getPlayerFile(); // Генерирует имя файла, в котором записана информация об игроке
-public:
+    std::filesystem::path getWorldFile(); // Генерирует имя файла, в котором записана общая информауия о мире
+
+    void writeWorldInfo(const WorldInfo& info);
+    public:
     std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
     std::filesystem::path directory; // Путь к директории с файлами мира
     ubyte* compressionBuffer; // Выходной буфер для записи регионов
@@ -48,12 +60,13 @@ public:
 
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
 
+    bool readWorldInfo(WorldInfo& info);
     bool readPlayer(Player* player); // Читает данные об игроке с диска
     ubyte* readChunkData(int x, int z, uint32_t& length); // Читает данные чанка непосредственно из файла
 	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
 	void writeRegion(int x, int y, WorldRegion& entry); // Формирует бинарное представление региона для записи в файл
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
-    void write(); // Записывает все измененные регионы из памяти на диск.
+    void write(const WorldInfo info); // Записывает все измененные регионы из памяти на диск.
 };
 
 extern void longToCoords(int& x, int& z, long key); // Преобразует 64-битный ключ региона в координаты

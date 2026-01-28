@@ -37,13 +37,13 @@ MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
             EngineSettings& settings = engine->getSettings();
             std::filesystem::path folder = engine_fs::get_saves_folder()/std::filesystem::path("world-1");
             World* world = new World("world-1", folder, 42, settings);
-            auto screen = new LevelScreen(engine, world->loadLevel(settings));
+            auto screen = new LevelScreen(engine, world->load(settings));
             engine->setScreen(std::shared_ptr<Screen>(screen));
             LOG_INFO("The world is loaded");
         });
         panel->add(std::shared_ptr<gui::UINode>(button));
     }
-    // ATTENTION: FUNCTIONALITY INCOMPLETE ZONE
+
     /*Panel* worldsPanel = new Panel(vec2(390, 200), vec4(5.0f));
     worldsPanel->color(vec4(0.1f));
     for (auto const& entry : directory_iterator(enginefs::get_worlds_folder())) {

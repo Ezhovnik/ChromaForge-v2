@@ -166,8 +166,6 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
 	}
 
     shader->uniformMatrix("u_model", glm::mat4(1.0f));
-    // batch3D->begin();
-    // batch3D->render();
 
     // Рендеринг линий
     if (level->playerController->selectedBlockId != -1 && !level->player->noclip){

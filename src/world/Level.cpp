@@ -14,11 +14,11 @@
 
 inline constexpr float GRAVITY = 19.6f;
 
-Level::Level(World* world, Player* player, ChunksStorage* chunksStorage, LevelEvents* events, EngineSettings& settings) :
+Level::Level(World* world, Player* player, EngineSettings& settings) :
 	world(world),
 	player(player),
-    chunksStorage(chunksStorage),
-    events(events) 
+    chunksStorage(new ChunksStorage(this)),
+    events(new LevelEvents()) 
 {
     physics = new PhysicsSolver(glm::vec3(0, -GRAVITY, 0));
     uint matrixSize = (settings.chunks.loadDistance + settings.chunks.padding) * 2;

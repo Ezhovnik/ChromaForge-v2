@@ -11,17 +11,21 @@
 
 class Chunk;
 class VoxelsVolume;
+class Level;
 
 class ChunksStorage {
+private:
+    Level* level;
 	std::unordered_map<glm::ivec2, std::shared_ptr<Chunk>> chunksMap;
 public:
-	ChunksStorage();
+	ChunksStorage(Level* level);
 	virtual ~ChunksStorage();
 
-	std::shared_ptr<Chunk> get(int x, int y) const;
+	std::shared_ptr<Chunk> get(int x, int z) const;
 	void store(std::shared_ptr<Chunk> chunk);
     void remove(int x, int z);
 	void getVoxels(VoxelsVolume* volume) const;
+    std::shared_ptr<Chunk> create(int x, int z);
 
 	light_t getLight(int x, int y, int z, ubyte channel) const;
 };
