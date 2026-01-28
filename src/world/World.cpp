@@ -12,6 +12,10 @@
 #include "../physics/PhysicsSolver.h"
 #include "../window/Camera.h"
 
+// Точка спавна игрока и начальная скорость
+inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
+inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
+
 World::World(std::string name, std::filesystem::path directory, int seed, EngineSettings& settings) : name(name), seed(seed) {
 	wfile = new WorldFiles(directory, settings.debug.generatorTestMode);
 }
@@ -33,13 +37,15 @@ void World::write(Level* level, bool writeChunks) {
 	wfile->writePlayer(level->player);
 }
 
-Level* World::loadLevel(Player* player, EngineSettings& settings) {
+Level* World::loadLevel(EngineSettings& settings) {
+    Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
+    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
+
 	ChunksStorage* storage = new ChunksStorage();
 	LevelEvents* events = new LevelEvents();
 	Level* level = new Level(this, player, storage, events, settings);
 	wfile->readPlayer(player);
 
-	Camera* camera = player->camera;
 	camera->rotation = glm::mat4(1.0f);
 	camera->rotate(player->camY, player->camX, 0);
 	return level;

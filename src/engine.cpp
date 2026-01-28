@@ -39,10 +39,6 @@
 #include "files/engine_files.h"
 #include "frontend/screens.h"
 
-// Точка спавна игрока и начальная скорость
-inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
-inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
-
 // Реализация конструктора
 Engine::Engine(const EngineSettings& settings_) {
     this->settings = settings_;
@@ -69,25 +65,18 @@ Engine::Engine(const EngineSettings& settings_) {
         }
     }
     LOG_INFO("Assets loaded successfully");
-    LOG_INFO("Loading world");
-
-    // Создание камеры, мира и игрока
-    Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
-    World* world = new World("world-1", engine_fs::get_saves_folder()/std::filesystem::path("world-1"), 42, settings);
-    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
 
     gui = new gui::GUI();
 
-    setScreen(new LevelScreen(this, world->loadLevel(player, settings)));
+    setScreen(std::shared_ptr<Screen>(new MenuScreen(this)));
 
-    LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
 }
 
 // Реализация деструктора
 Engine::~Engine() {
-    delete screen;
+    screen = nullptr;
     delete gui;
 
     LOG_INFO("Shutting down");
@@ -131,10 +120,11 @@ void Engine::mainloop() {
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
 
+        gui->activate(deltaTime);
+
         screen->update(deltaTime);
         screen->draw(deltaTime);
 
-        gui->activate(deltaTime);
         gui->draw(&batch, assets);
 
         Window::swapBuffers(); // Показать отрендеренный кадр
@@ -154,8 +144,6 @@ Assets* Engine::getAssets() {
 	return assets;
 }
 
-void Engine::setScreen(Screen* screen) {
-	if (this->screen != nullptr) delete this->screen;
-
+void Engine::setScreen(std::shared_ptr<Screen> screen) {
 	this->screen = screen;
 }

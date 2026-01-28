@@ -145,7 +145,7 @@ void PlayerController::updateControls(float delta){
 		float dt = glm::min(1.0f, delta * PlayerConsts::ZOOM_SPEED);
 		float zoomValue = 1.0f;
 		if (crouch){
-			cameraOffset += PlayerConsts::CROUCH_SHIFT_Y;
+			cameraOffset += glm::vec3(0.0f, PlayerConsts::CROUCH_SHIFT_Y, 0.0f);
 			zoomValue = PlayerConsts::CROUCH_ZOOM;
 		} else if (input.sprint){
 			zoomValue = PlayerConsts::RUN_ZOOM;

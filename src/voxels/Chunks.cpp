@@ -8,6 +8,7 @@
 #include "../graphics/Mesh.h"
 #include "../math/voxmaths.h"
 #include "../world/LevelEvents.h"
+#include "../definitions.h"
 
 #include <math.h>
 #include <limits.h>
@@ -124,6 +125,10 @@ void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states){
 	chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx].states = states;
 	chunk->setUnsaved(true);
 	chunk->setModified(true);
+
+    if (y < chunk->bottom) chunk->bottom = y;
+    else if (y + 1 > chunk->top) chunk->top = y + 1;
+    else if (id == BlockID::AIR) chunk->updateHeights();
 
 	if (lx == 0 && (chunk = getChunk(cx+areaOffsetX-1, cz+areaOffsetZ))) chunk->setModified(true);
 	if (lz == 0 && (chunk = getChunk(cx+areaOffsetX, cz+areaOffsetZ-1))) chunk->setModified(true);

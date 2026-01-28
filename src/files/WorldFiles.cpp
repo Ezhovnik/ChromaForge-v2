@@ -198,8 +198,7 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
 	int chunk_index = localZ * RegionConsts::SIZE + localX;
 
     // Открываем файл
-	std::string filename = getRegionFile(regionX, regionZ).string();
-
+	std::filesystem::path filename = getRegionFile(regionX, regionZ);
 	std::ifstream input(filename, std::ios::binary);
 	if (!input.is_open()) return nullptr;
 
@@ -263,13 +262,13 @@ void WorldFiles::writePlayer(Player* player){
     dst[offset++] = PlayerSections::FLAGS;
 	dst[offset++] = player->flight * PlayerFlags::FLIGHT | player->noclip * PlayerFlags::NOCLIP;
 
-	files::write_bytes(getPlayerFile().string(), (const char*)dst, sizeof(dst));
+	files::write_bytes(getPlayerFile(), (const char*)dst, sizeof(dst));
 }
 
 // Читаем данные об игроке с диска
 bool WorldFiles::readPlayer(Player* player) {
 	size_t length = 0;
-	ubyte* data = (ubyte*)files::read_bytes(getPlayerFile().string(), length);
+	ubyte* data = (ubyte*)files::read_bytes(getPlayerFile(), length);
 	if (data == nullptr){
         LOG_WARN("Could not to read player.bin (ignored)");
 		return false;
@@ -320,7 +319,7 @@ void WorldFiles::writeRegion(int x, int z, WorldRegion& entry){
     header[11] = REGION_FORMAT_VERSION;
     header[12] = 0;
 
-    std::ofstream file(getRegionFile(x, z).string(), std::ios::out | std::ios::binary);
+    std::ofstream file(getRegionFile(x, z), std::ios::out | std::ios::binary);
 	file.write(header, 10);
 
 	size_t offset = 10;
