@@ -4,6 +4,7 @@
 #include <map>
 #include <unordered_map>
 #include <string>
+#include <filesystem>
 
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -33,14 +34,16 @@ struct WorldRegion {
 // ! Высота мира должна состовлять один чанк (любых размеров)
 class WorldFiles {
 private:
-    std::string getRegionFile(int x, int z); // Генерирует имя файла для региона с заданными координатами
-    std::string getPlayerFile(); // Генерирует имя файла, в котором записана информация об игроке
+    std::filesystem::path getRegionFile(int x, int z); // Генерирует имя файла для региона с заданными координатами
+    std::filesystem::path getPlayerFile(); // Генерирует имя файла, в котором записана информация об игроке
 public:
     std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
-    std::string directory; // Путь к директории с файлами мира
+    std::filesystem::path directory; // Путь к директории с файлами мира
     ubyte* compressionBuffer; // Выходной буфер для записи регионов
 
-    WorldFiles(std::string directory); // Конструктор
+    bool generatorTestMode;
+
+    WorldFiles(std::filesystem::path directory, bool generatorTestMode); // Конструктор
     ~WorldFiles(); // Деструктор
 
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.

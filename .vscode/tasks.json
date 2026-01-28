@@ -23,12 +23,20 @@
                 "${workspaceFolder}/src/coders/png.cpp",
 
                 //src/files
+                "${workspaceFolder}/src/files/engine_files.cpp",
                 "${workspaceFolder}/src/files/files.cpp",
                 "${workspaceFolder}/src/files/rle.cpp",
                 "${workspaceFolder}/src/files/WorldFiles.cpp",
 
+                //src/frontend/gui
+                "${workspaceFolder}/src/frontend/gui/controls.cpp",
+                "${workspaceFolder}/src/frontend/gui/GUI.cpp",
+                "${workspaceFolder}/src/frontend/gui/panels.cpp",
+                "${workspaceFolder}/src/frontend/gui/UINode.cpp",
+
                 //src/frontend
                 "${workspaceFolder}/src/frontend/hud.cpp",
+                "${workspaceFolder}/src/frontend/screens.cpp",
                 "${workspaceFolder}/src/frontend/world_render.cpp",
 
                 //src/graphics

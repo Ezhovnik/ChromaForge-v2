@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include "../typedefs.h"
 
+#define BLOCK_DIR_X 0x1
+#define BLOCK_DIR_Y 0x2
+#define BLOCK_DIR_Z 0x3
+
 // Структура, представляющая один воксель
 struct voxel {
     blockid_t id;

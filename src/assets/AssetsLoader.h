@@ -7,7 +7,7 @@
 #include <queue>
 
 enum class AssetType {
-    Texture, Shader, Font
+    Texture, Shader, Font, Atlas
 };
 
 class Assets;

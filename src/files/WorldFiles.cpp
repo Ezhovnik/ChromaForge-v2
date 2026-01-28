@@ -58,7 +58,7 @@ inline float bytes2Float(ubyte* src, uint offset){
 }
 
 // Конструктор
-WorldFiles::WorldFiles(std::string directory) : directory(directory){
+WorldFiles::WorldFiles(std::filesystem::path directory, bool generatorTestMode) : directory(directory), generatorTestMode(generatorTestMode){
     // Проверяем существование директории. Если её нет, то пытаемся создать
     if (!std::filesystem::is_directory(directory)) {
 		std::filesystem::create_directory(directory);
@@ -130,13 +130,13 @@ void WorldFiles::put(Chunk* chunk){
 }
 
 // Генерирует имя файла для региона с заданными координатами
-std::string WorldFiles::getRegionFile(int x, int z) {
-	return directory + std::to_string(x) + "_" + std::to_string(z) + ".bin";
+std::filesystem::path WorldFiles::getRegionFile(int x, int z) {
+	return directory/std::filesystem::path(std::to_string(x) + "_" + std::to_string(z) + ".bin");
 }
 
 // Генерирует имя файла, в котором записана информация об игроке
-std::string WorldFiles::getPlayerFile() {
-	return directory + "/player.bin";
+std::filesystem::path WorldFiles::getPlayerFile() {
+	return directory/std::filesystem::path("player.bin");
 }
 
 // Получает данные чанка из кэша или файла
@@ -185,6 +185,8 @@ ubyte* WorldFiles::getChunk(int x, int z){
 
 // Читает чанк непосредственно из файла
 ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
+    if (generatorTestMode) return nullptr;
+
     // Вычисляем координаты региона
 	int regionX = floordiv(x, RegionConsts::SIZE);
     int regionZ = floordiv(z, RegionConsts::SIZE);
@@ -196,7 +198,7 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
 	int chunk_index = localZ * RegionConsts::SIZE + localX;
 
     // Открываем файл
-	std::string filename = getRegionFile(regionX, regionZ);
+	std::string filename = getRegionFile(regionX, regionZ).string();
 
 	std::ifstream input(filename, std::ios::binary);
 	if (!input.is_open()) return nullptr;
@@ -229,6 +231,8 @@ void WorldFiles::write(){
 		std::filesystem::create_directory(directory);
 	}
 
+    if (generatorTestMode) return;
+
 	for (auto& [key, region] : regions){
 		if (region.chunksData == nullptr || !region.unsaved) continue;
 
@@ -259,13 +263,13 @@ void WorldFiles::writePlayer(Player* player){
     dst[offset++] = PlayerSections::FLAGS;
 	dst[offset++] = player->flight * PlayerFlags::FLIGHT | player->noclip * PlayerFlags::NOCLIP;
 
-	files::write_bytes(getPlayerFile(), (const char*)dst, sizeof(dst));
+	files::write_bytes(getPlayerFile().string(), (const char*)dst, sizeof(dst));
 }
 
 // Читаем данные об игроке с диска
 bool WorldFiles::readPlayer(Player* player) {
 	size_t length = 0;
-	ubyte* data = (ubyte*)files::read_bytes(getPlayerFile(), length);
+	ubyte* data = (ubyte*)files::read_bytes(getPlayerFile().string(), length);
 	if (data == nullptr){
         LOG_WARN("Could not to read player.bin (ignored)");
 		return false;
@@ -316,7 +320,7 @@ void WorldFiles::writeRegion(int x, int z, WorldRegion& entry){
     header[11] = REGION_FORMAT_VERSION;
     header[12] = 0;
 
-    std::ofstream file(getRegionFile(x, z), std::ios::out | std::ios::binary);
+    std::ofstream file(getRegionFile(x, z).string(), std::ios::out | std::ios::binary);
 	file.write(header, 10);
 
 	size_t offset = 10;

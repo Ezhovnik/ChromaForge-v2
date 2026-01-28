@@ -2,12 +2,12 @@
 
 #include <iostream>
 
-#define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include "Events.h"
 #include "../logger/Logger.h"
+#include "../graphics/ImageData.h"
 
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW
 std::stack<glm::vec4> Window::scissorStack;
@@ -79,7 +79,7 @@ void character_callback(GLFWwindow*, uint codepoint){
 }
 
 // Инициализация окна и OpenGL контекста
-bool Window::initialize(uint width, uint height, const char* title, int samples) {
+bool Window::initialize(DisplaySettings& settings) {
     if (!glfwInit()){ // Инициализация GLFW
         LOG_CRITICAL("GLFW initialization failed");
         return false;
@@ -91,10 +91,10 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE); // Разрешаем изменять размер окна
-    glfwWindowHint(GLFW_SAMPLES, samples);
+    glfwWindowHint(GLFW_SAMPLES, settings.samples);
 
     // Создание окна GLFW
-    window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+    window = glfwCreateWindow(settings.width, settings.height, settings.title, nullptr, nullptr);
     if (window == nullptr) {
         LOG_CRITICAL("Failed to create GLFW Window");
         glfwTerminate();
@@ -112,7 +112,7 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
         return false;
     }
      // Установка области отображения (viewport) - вся область окна
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, settings.width, settings.height);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1);
 	glEnable(GL_DEPTH_TEST);
@@ -123,8 +123,8 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Задаём размеры окна у объекта
-    Window::width = width;
-    Window::height = height;
+    Window::width = settings.width;
+    Window::height = settings.height;
 
     Events::initialize();
 
@@ -135,7 +135,7 @@ bool Window::initialize(uint width, uint height, const char* title, int samples)
     glfwSetWindowSizeCallback(window, window_size_callback); // Изменение размера окна
     glfwSetCharCallback(window, character_callback);
 
-    LOG_INFO("Window initialized successfully: {}x{}", width, height);
+    LOG_INFO("Window initialized successfully: {}x{}", settings.width, settings.height);
 
     return true;
 }
@@ -214,4 +214,14 @@ double Window::time() {
 
 void Window::clear() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void Window::setBgColor(glm::vec3 color) {
+    glClearColor(color.r, color.g, color.b, 1.0f);
+}
+
+ImageData* Window::takeScreenshot() {
+	ubyte* data = new ubyte[width * height * 4];
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	return new ImageData(ImageFormat::rgba8888, width, height, data);
 }

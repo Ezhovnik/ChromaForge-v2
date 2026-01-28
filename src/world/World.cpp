@@ -12,15 +12,15 @@
 #include "../physics/PhysicsSolver.h"
 #include "../window/Camera.h"
 
-World::World(std::string name, std::string directory, int seed) : name(name), seed(seed) {
-	wfile = new WorldFiles(directory);
+World::World(std::string name, std::filesystem::path directory, int seed, EngineSettings& settings) : name(name), seed(seed) {
+	wfile = new WorldFiles(directory, settings.debug.generatorTestMode);
 }
 
 World::~World(){
 	delete wfile;
 }
 
-void World::write(Level* level) {
+void World::write(Level* level, bool writeChunks) {
 	Chunks* chunks = level->chunks;
 
 	for (size_t i = 0; i < chunks->volume; i++) {
@@ -33,10 +33,10 @@ void World::write(Level* level) {
 	wfile->writePlayer(level->player);
 }
 
-Level* World::loadLevel(Player* player, uint loadDistance, uint chunksPadding) {
+Level* World::loadLevel(Player* player, EngineSettings& settings) {
 	ChunksStorage* storage = new ChunksStorage();
 	LevelEvents* events = new LevelEvents();
-	Level* level = new Level(this, player, storage, events, loadDistance, chunksPadding);
+	Level* level = new Level(this, player, storage, events, settings);
 	wfile->readPlayer(player);
 
 	Camera* camera = player->camera;

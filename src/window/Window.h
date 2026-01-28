@@ -7,8 +7,10 @@
 #include <glm/glm.hpp>
 
 #include "../typedefs.h"
+#include "../settings.h"
 
 class GLFWwindow; // Предварительное объявление класса GLFWwindow
+class ImageData;
 
 // Обертка для работы с окном приложения через GLFW
 class Window {
@@ -21,7 +23,7 @@ public:
     static uint width;
     static uint height;
 
-    static bool initialize(uint width, uint height, const char* title, int samples);
+    static bool initialize(DisplaySettings& settings);
     static void terminate();
 
     static void setCursorMode(int mode);
@@ -39,6 +41,9 @@ public:
     static double time();
 
     static void clear();
+    static void setBgColor(glm::vec3 color);
+
+    static ImageData* takeScreenshot();
 };
 
 #endif // WINDOW_WINDOW_H

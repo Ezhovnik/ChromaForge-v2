@@ -28,12 +28,10 @@
 #include "../graphics/ChunksRenderer.h"
 #include "../world/LevelEvents.h"
 
-inline constexpr glm::vec4 CLEAR_COLOR = {0.7f, 0.71f, 0.73f, 1.0f};
+inline constexpr glm::vec3 CLEAR_COLOR = {0.7f, 0.71f, 0.73f};
 inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {1.8f, 1.8f, 1.8f};
 inline constexpr glm::vec3 FOG_COLOR = {0.7f, 0.71f, 0.73f};
-inline constexpr float FOG_FACTOR = 0.025f;
-inline constexpr float FOG_CURVE = 1.6f;
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
@@ -81,10 +79,10 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
     return true;
 }
 
-void WorldRenderer::draw(Camera* camera, bool occlusion){
+void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float fogCurve){
     Chunks* chunks = level->chunks;
 
-	glClearColor(CLEAR_COLOR.r, CLEAR_COLOR.g, CLEAR_COLOR.b, CLEAR_COLOR.a); // Цвет фона (светло-серый с голубым оттенком)
+    Window::setBgColor(CLEAR_COLOR); // Цвет фона (светло-серый с голубым оттенком)
 	Window::clear();
 
     Window::viewport(0, 0, Window::width, Window::height);
@@ -120,15 +118,19 @@ void WorldRenderer::draw(Camera* camera, bool occlusion){
 
 	shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR);
 	shader->uniform3f("u_fogColor", FOG_COLOR);
-	shader->uniform1f("u_fogFactor", FOG_FACTOR);
-    shader->uniform1f("u_fogCurve", FOG_CURVE);
+	shader->uniform1f("u_fogFactor", fogFactor);
+    shader->uniform1f("u_fogCurve", fogCurve);
     shader->uniform3f("u_cameraPos", camera->position);
 
     Block* choosen_block = Block::blocks[level->player->choosenBlock];
-	shader->uniform3f("u_torchlightColor",
-			choosen_block->emission[0] / MAX_TORCH_LIGHT,
-			choosen_block->emission[1] / MAX_TORCH_LIGHT,
-			choosen_block->emission[2] / MAX_TORCH_LIGHT);
+    if (!level->player->noclip) {
+        shader->uniform3f("u_torchlightColor",
+                choosen_block->emission[0] / MAX_TORCH_LIGHT,
+                choosen_block->emission[1] / MAX_TORCH_LIGHT,
+                choosen_block->emission[2] / MAX_TORCH_LIGHT);
+    } else {
+        shader->uniform3f("u_torchlightColor", 0, 0, 0);
+    }
 	shader->uniform1f("u_torchlightDistance", TORCH_LIGHT_DIST);
 
 	texture->bind();

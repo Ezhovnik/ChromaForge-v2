@@ -1,6 +1,7 @@
 #include "hud.h"
 
 #include <sstream>
+#include <memory>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -13,19 +14,103 @@
 #include "../window/Camera.h"
 #include "../window/Window.h"
 #include "../window/Events.h"
+#include "../window/input.h"
 #include "../voxels/Chunks.h"
 #include "../voxels/Block.h"
 #include "../world/World.h"
 #include "../world/Level.h"
 #include "../objects/Player.h"
+#include "../physics/Hitbox.h"
 #include "../logger/Logger.h"
+#include "gui/controls.h"
+#include "gui/panels.h"
+#include "gui/UINode.h"
+#include "gui/GUI.h"
 
-HudRenderer::HudRenderer(Assets* assets) : assets(assets) {
+inline gui::Label* create_label(gui::wstringsupplier supplier) {
+	gui::Label* label = new gui::Label(L"-");
+	label->textSupplier(supplier);
+	return label;
+}
+
+HudRenderer::HudRenderer(gui::GUI* gui, Level* level, Assets* assets) : assets(assets), level(level), guiController(gui) {
 	batch = new Batch2D(1024);
 
 	uicamera = new Camera(glm::vec3(), Window::height);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
+
+    gui->interval(1.0f, [this]() {
+		fpsString = std::to_wstring(fpsMax)+L" / "+std::to_wstring(fpsMin);
+		fpsMin = fps;
+		fpsMax = fps;
+	});
+
+    gui::Panel* panel = new gui::Panel(glm::vec2(200, 200), glm::vec4(5.0f), 1.0f);
+	panel->setCoord(glm::vec2(10, 10));
+	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		return L"chunks: " + std::to_wstring(this->level->chunks->chunksCount);
+	})));
+	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		return L"fps: " + this->fpsString;
+	})));
+	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		return L"occlusion: " + std::wstring(this->occlusion ? L"on" : L"off");
+	})));
+	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		std::wstringstream stream;
+		stream << std::hex << this->level->player->selectedVoxel.states;
+		return L"block-selected: "+std::to_wstring(this->level->player->selectedVoxel.id)+L" "+stream.str();
+	})));
+	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		return L"meshes: " + std::to_wstring(Mesh::meshesCount);
+	})));
+	for (int ax = 0; ax < 3; ax++){
+		gui::Panel* sub = new gui::Panel(glm::vec2(10, 27), glm::vec4(0.0f));
+		sub->orientation(gui::Orientation::horizontal);
+		gui::Label* label = new gui::Label(std::wstring({static_cast<wchar_t>(L'x' + ax)}) + L": ");
+		label->margin(glm::vec4(2, 3, 2, 3));
+		sub->add(std::shared_ptr<gui::UINode>(label));
+		sub->color(glm::vec4(0.0f));
+
+		gui::TextBox* box = new gui::TextBox(L"");
+		box->textSupplier([this, ax]() {
+			Hitbox* hitbox = this->level->player->hitbox;
+			return std::to_wstring((int)hitbox->position[ax]);
+		});
+		box->textConsumer([this, ax](std::wstring text) {
+			try {
+				glm::vec3 position = this->level->player->hitbox->position;
+				position[ax] = std::stoi(text);
+				this->level->player->teleport(position);
+			} catch (std::invalid_argument& _){
+			}
+		});
+
+		sub->add(std::shared_ptr<gui::UINode>(box));
+		panel->add(std::shared_ptr<gui::UINode>(sub));
+	}
+	panel->refresh();
+	debugPanel = panel;
+
+	pauseMenu = new gui::Panel(glm::vec2(350, 200));
+	pauseMenu->color(glm::vec4(0.0f));
+	{
+		gui::Button* button = new gui::Button(L"Continue", glm::vec4(12.0f, 10.0f, 12.0f, 12.0f));
+		button->listenAction([this](gui::GUI*){
+			this->pause = false;
+		});
+		pauseMenu->add(std::shared_ptr<gui::UINode>(button));
+	}
+	{
+		gui::Button* button = new gui::Button(L"Save and Quit", glm::vec4(12.0f, 10.0f, 12.0f, 12.0f));
+		button->listenAction([this](gui::GUI*){
+			Window::setShouldClose(true);
+		});
+		pauseMenu->add(std::shared_ptr<gui::UINode>(button));
+	}
+	guiController->add(std::shared_ptr<gui::UINode>(debugPanel));
+	guiController->add(std::shared_ptr<gui::UINode>(pauseMenu));
 }
 
 HudRenderer::~HudRenderer() {
@@ -33,47 +118,18 @@ HudRenderer::~HudRenderer() {
 	delete uicamera;
 }
 
-void HudRenderer::drawDebug(Level* level, int fps, bool occlusion){
-	Chunks* chunks = level->chunks;
-	Player* player = level->player;
-
-	Font* font = assets->getFont("normal");
-    if (font == nullptr) {
-        LOG_CRITICAL("The font 'normal' could not be found in the assets");
-        throw std::runtime_error("The font 'normal' could not be found in the assets");
-    }
-
-	ShaderProgram* uishader = assets->getShader("ui");
-    if (uishader == nullptr) {
-        LOG_CRITICAL("The shader 'ui' could not be found in the assets");
-        throw std::runtime_error("The shader 'ui' could not be found in the assets");
-    }
-	uishader->use();
-	uishader->uniformMatrix("u_projview", uicamera->getProjView());
-	batch->color = glm::vec4(1.0f);
-	batch->begin();
-
-	font->draw(batch, L"chunks: "+std::to_wstring(chunks->chunksCount), 16, 16, FontStyle::Outline);
-	font->draw(batch, std::to_wstring((int)player->camera->position.x), 10, 30, FontStyle::Outline);
-	font->draw(batch, std::to_wstring((int)player->camera->position.y), 50, 30, FontStyle::Outline);
-	font->draw(batch, std::to_wstring((int)player->camera->position.z), 90, 30, FontStyle::Outline);
-	font->draw(batch, L"fps:", 16, 42, FontStyle::Outline);
-	font->draw(batch, std::to_wstring(fps), 44, 42, FontStyle::Outline);
-	font->draw(batch, L"occlusion: "+std::to_wstring(occlusion), 16, 54, FontStyle::Outline);
-
-    std::wstringstream stream;
-	stream << std::hex << player->selectedVoxel.states;
-	font->draw(batch, L"block-selected: "+std::to_wstring(player->selectedVoxel.id)+L" "+stream.str(), 16, 78, FontStyle::Outline);
-	font->draw(batch, L"meshes: " + std::to_wstring(Mesh::meshesCount), 16, 102, FontStyle::Outline);
-
-    batch->render();
+void HudRenderer::drawDebug(int fps, bool occlusion){
+	this->occlusion = occlusion;
+	this->fps = fps;
+	fpsMin = glm::min(fps, fpsMin);
+	fpsMax = glm::max(fps, fpsMax);
 }
 
 void HudRenderer::drawInventory(Player* player) {
-	Texture* blocks = assets->getTexture("blocks");
+	Texture* blocks = assets->getTexture("blocks_tex");
     if (blocks == nullptr) {
-        LOG_CRITICAL("The texture 'bloks' could not be found in the assets");
-        throw std::runtime_error("The texture 'bloks' could not be found in the assets");
+        LOG_CRITICAL("The texture 'bloks_tex' could not be found in the assets");
+        throw std::runtime_error("The texture 'bloks_tex' could not be found in the assets");
     }
 
     const uint width = Window::width;
@@ -81,10 +137,10 @@ void HudRenderer::drawInventory(Player* player) {
 
 	uint size = 48;
 	uint step = 64;
-	uint inv_wm = step * 10;
-	uint inv_hm = step * 8;
-	uint inv_w = inv_wm - (step - size);
-	uint inv_h = inv_hm - (step - size);
+	uint inv_cols = 10;
+	uint inv_rows = 8;
+	uint inv_w = step * inv_cols + size;
+	uint inv_h = step * inv_rows + size;
 	int inv_x = (width - (inv_w)) / 2;
 	int inv_y = (height - (inv_h)) / 2;
 	int xs = (width - inv_w + step) / 2;
@@ -95,14 +151,11 @@ void HudRenderer::drawInventory(Player* player) {
 		xs = (width + inv_w + step) / 2;
 		ys = (height - inv_h + step) / 2;
 	}
-	int x = 0;
-	int y = 0;
 	glm::vec4 tint = glm::vec4(1.0f);
 	int mx = Events::x;
 	int my = Events::y;
-	uint count = (inv_w / step) * (inv_h / step) + 1;
+	uint count = inv_cols * inv_rows;
 
-	//back
 	batch->texture(nullptr);
 	batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.3f);
 	batch->rect(0, 0, width, height);
@@ -116,9 +169,9 @@ void HudRenderer::drawInventory(Player* player) {
 					0.75f, 0.75f, 0.75f, 0.75f, 0.75f, 0.75f, 4);
 
 	batch->color = glm::vec4(0.35f, 0.35f, 0.35f, 1.0f);
-	for (uint i = 1; i < count; ++i) {
-		x = xs + step * ((i-1) % (inv_w / step));
-		y = ys + step * ((i-1) / (inv_w / step));
+	for (uint i = 0; i < count; ++i) {
+		int x = xs + step * (i % (inv_cols));
+		int y = ys + step * (i / (inv_cols));
 		batch->rect(x-2, y-2, size+4, size+4,
 					0.45f, 0.45f, 0.45f, 0.55f, 0.55f, 0.55f,
 					0.7f, 0.7f, 0.7f,
@@ -129,18 +182,17 @@ void HudRenderer::drawInventory(Player* player) {
 					0.65f, 0.65f, 0.65f, 0.65f, 0.65f, 0.65f, 2);
 	}
 
-	//front
 	batch->texture(blocks);
-	for (uint i = 1; i < count; i++) {
-		Block* cblock = Block::blocks[i];
+	for (uint i = 0; i < count; i++) {
+		Block* cblock = Block::blocks[i + 1];
 		if (cblock == nullptr) break;
-		x = xs + step * ((i-1) % (inv_w / step));
-		y = ys + step * ((i-1) / (inv_w / step));
+		int x = xs + step * (i % inv_cols);
+		int y = ys + step * (i / inv_cols);
 		if (mx > x && mx < x + (int)size && my > y && my < y + (int)size) {
 			tint.r *= 1.2f;
 			tint.g *= 1.2f;
 			tint.b *= 1.2f;
-			if (Events::justClicked(GLFW_MOUSE_BUTTON_LEFT)) player->choosenBlock = i;
+			if (Events::justClicked(GLFW_MOUSE_BUTTON_LEFT)) player->choosenBlock = i + 1;
 			tint = glm::vec4(1.0f);
 		}
 		
@@ -152,16 +204,18 @@ void HudRenderer::drawInventory(Player* player) {
 	}
 }
 
-void HudRenderer::draw(Level* level){
-    glDisable(GL_MULTISAMPLE);
-
+void HudRenderer::draw() {
     const uint width = Window::width;
     const uint height = Window::height;
 
-	uicamera->fov = height;
+    debugPanel->visible(level->player->debug);
+	pauseMenu->visible(pause);
+	pauseMenu->setCoord(glm::vec2(width / 2.0f, height / 2.0f) - pauseMenu->size() / 2.0f);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
+
+    uicamera->fov = height;
 
 	ShaderProgram* uishader = assets->getShader("ui");
     if (uishader == nullptr) {
@@ -173,15 +227,10 @@ void HudRenderer::draw(Level* level){
 	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
 	// Chosen block preview
-	Texture* blocks = assets->getTexture("blocks");
+	Texture* blocks = assets->getTexture("blocks_tex");
     if (blocks == nullptr) {
-        LOG_CRITICAL("The texture 'bloks' could not be found in the assets");
-        throw std::runtime_error("The texture 'bloks' could not be found in the assets");
-    }
-	Texture* sprite = assets->getTexture("slot");
-    if (sprite == nullptr) {
-        LOG_CRITICAL("The texture 'slot' could not be found in the assets");
-        throw std::runtime_error("The texture 'slot' could not be found in the assets");
+        LOG_CRITICAL("The texture 'bloks_tex' could not be found in the assets");
+        throw std::runtime_error("The texture 'bloks_tex' could not be found in the assets");
     }
 
 	batch->texture(nullptr);
@@ -220,10 +269,33 @@ void HudRenderer::draw(Level* level){
 		}
 	}
 
-	if (!Events::_cursor_locked) {
-		drawInventory(player);
+	if (Events::justPressed(keycode::ESCAPE) && !guiController->isFocusCaught()) {
+		if (pause) pause = false;
+		else if (inventoryOpen) inventoryOpen = false;
+		else pause = true;
 	}
 
+	if (Events::justPressed(keycode::E) && !pause) {
+		inventoryOpen = !inventoryOpen;
+	}
+
+	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();
+
+	if (pause || inventoryOpen) {
+		batch->texture(nullptr);
+		batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
+		batch->rect(0, 0, Window::width, Window::height);
+	}
+
+	if (inventoryOpen) drawInventory(player);
+
     batch->render();
-    glEnable(GL_MULTISAMPLE);
+}
+
+bool HudRenderer::isInventoryOpen() const {
+	return inventoryOpen;
+}
+
+bool HudRenderer::isPause() const {
+	return pause;
 }

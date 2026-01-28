@@ -33,7 +33,7 @@ public:
 	WorldRenderer(Level* level, Assets* assets);
 	~WorldRenderer();
 
-	void draw(Camera* camera, bool occlusion);
+	void draw(Camera* camera, bool occlusion, float fogFactor, float fogCurve);
 };
 
 
