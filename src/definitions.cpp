@@ -112,7 +112,6 @@ void setup_definitions() {
     block = new Block(BlockID::BRICKS, 16);
     Block::blocks[block->id] = block;
 
-
     // Ромашка
     block = new Block(BlockID::DAISY, 17);
     block->drawGroup = 5;

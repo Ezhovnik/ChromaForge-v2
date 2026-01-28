@@ -2,8 +2,10 @@
 #define WORLD_WORLD_H_
 
 #include <string>
+#include <filesystem>
 
 #include "../typedefs.h"
+#include "../settings.h"
 
 class WorldFiles;
 class Level;
@@ -15,11 +17,11 @@ public:
 	WorldFiles* wfile;
 	int seed;
 
-	World(std::string name, std::string directory, int seed);
+	World(std::string name, std::filesystem::path directory, int seed, EngineSettings& settings);
 	~World();
 
-    void write(Level* level);
-    Level* loadLevel(Player* player, uint loadDistance, uint chunksPadding);
+    void write(Level* level, bool writeChunks);
+    Level* loadLevel(Player* player, EngineSettings& settings);
 };
 
 #endif // WORLD_WORLD_H_

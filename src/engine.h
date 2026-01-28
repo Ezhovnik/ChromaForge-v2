@@ -6,9 +6,14 @@
 #include <memory>
 
 #include "typedefs.h"
+#include "settings.h"
 
 class Assets;
-class Level;
+class Screen;
+
+namespace gui {
+    class GUI;
+}
 
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
 class initialize_error : public std::runtime_error {
@@ -16,29 +21,18 @@ public:
     initialize_error(const std::string& message) : std::runtime_error(message) {}
 };
 
-// Структура настроек движка, передающая параметры при создании Engine
-struct EngineSettings {
-    int displayWidth; // Ширина окна
-    int displayHeight; // Высота окна
-    int displaySamples;
-    int displaySwapInterval;
-    const char* title; // Заголовок окна
-
-    uint chunksLoadSpeed;
-    uint chunksLoadDistance;
-    uint chunksPadding;
-};
-
 // Основной класс Engine, управляющий жизненным циклом приложения
 class Engine {
+private:
     Assets* assets; // Менеджер ассетов (текстуры, модели и т.д.)
-    Level* level; // Текущий уровень (состояние мира и игрока)
+    Screen* screen = nullptr;
     EngineSettings settings;
+
+    gui::GUI* gui;
 
     uint64_t frame = 0; // Номер текущего кадра
     double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
     double deltaTime = 0.0; // Разница во времени между кадрами
-    bool occlusion = true; // Включаем/выключаем окклюзию (отбрасывание невидимых объектов)
 public:
     Engine(const EngineSettings& settings); // Конструктор
     ~Engine(); // Деструктор
@@ -46,6 +40,12 @@ public:
     void updateTimers(); // Обновление таймеров (frame, deltaTime)
     void updateHotkeys(); // Обработка горячих клавиш
     void mainloop(); // Основной цикл приложения
+
+    Assets* getAssets();
+	gui::GUI* getGUI();
+	EngineSettings& getSettings();
+
+	void setScreen(Screen* screen);
 };
 
 #endif // SRC_ENGINE_H_

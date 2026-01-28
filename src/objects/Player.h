@@ -31,6 +31,8 @@ public:
 
 	Player(glm::vec3 position, float speed, Camera* camera);
 	~Player();
+
+    void teleport(glm::vec3 position);
 };
 
 #endif // OBJECTS_PLAYER_H_

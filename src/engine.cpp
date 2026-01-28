@@ -4,15 +4,15 @@
 #include <ctime>
 #include <exception>
 #include <memory>
-
-#define GLEW_STATIC  // Указывает компилятору, что будем использовать статическую версию GLEW
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <assert.h>
+#include <filesystem>
 
 // GLM – библиотека для работы с матрицами и векторами в OpenGL
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#define GLEW_STATIC
 
 // Пользовательские заголовочные файлы
 #include "window/Window.h"
@@ -31,20 +31,24 @@
 #include "world/World.h"
 #include "frontend/hud.h"
 #include "logger/Logger.h"
+#include "settings.h"
+#include "frontend/gui/GUI.h"
+#include "graphics/Batch2D.h"
+#include "graphics/ImageData.h"
+#include "coders/png.h"
+#include "files/engine_files.h"
+#include "frontend/screens.h"
 
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
 inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
 
 // Реализация конструктора
-Engine::Engine(const EngineSettings& settings) {
-    this->settings = settings;
-
-    // Инициализация логгера
-    Logger::getInstance().initialize();
+Engine::Engine(const EngineSettings& settings_) {
+    this->settings = settings_;
 
     // Инициализация окна GLFW
-    if (!Window::initialize(settings.displayWidth, settings.displayHeight, settings.title, settings.displaySamples)) {
+    if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
         Window::terminate();
         throw initialize_error("Failed to load Window");
@@ -69,9 +73,13 @@ Engine::Engine(const EngineSettings& settings) {
 
     // Создание камеры, мира и игрока
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
-    World* world = new World("world-1", "../build/saves/world-1/", 42);
+    World* world = new World("world-1", engine_fs::get_saves_folder()/std::filesystem::path("world-1"), 42, settings);
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
-    level = world->loadLevel(player, settings.chunksLoadDistance, settings.chunksPadding);
+
+    gui = new gui::GUI();
+
+    setScreen(new LevelScreen(this, world->loadLevel(player, settings)));
+
     LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -79,13 +87,8 @@ Engine::Engine(const EngineSettings& settings) {
 
 // Реализация деструктора
 Engine::~Engine() {
-    LOG_INFO("World saving");
-    World* world = level->world;
-    world->write(level); // Сохранение текущего состояния уровня в файл
-    delete level;
-    delete world;
-    LOG_INFO("The world has been successfully saved");
-    Logger::getInstance().flush();
+    delete screen;
+    delete gui;
 
     LOG_INFO("Shutting down");
     delete assets;
@@ -104,56 +107,55 @@ void Engine::updateTimers() {
 
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
-    // Закрытие окна и завершение работы
-    if (Events::justPressed(keycode::ESCAPE)) Window::setShouldClose(true);
-
-    // Переключение курсора (включение/выключение захвата мыши)
-    if (Events::justPressed(keycode::E)) Events::toggleCursor();
-
-    // Переключение окклюзии (отбрасывание невидимых объектов)
-    if (Events::justPressed(keycode::O)) occlusion = !occlusion;
-
-    // Переключение режима отладки игрока
-    if (Events::justPressed(keycode::F3)) level->player->debug = !level->player->debug;
-
-    // Отметка всех чанков как изменённых (для перерисовки)
-    if (Events::justPressed(keycode::F5)) {
-        for (uint i = 0; i < level->chunks->volume; i++) {
-            std::shared_ptr<Chunk> chunk = level->chunks->chunks[i];
-            if (chunk != nullptr && chunk->isReady()) chunk->setModified(true);
-        }
+    if (Events::justPressed(keycode::F2)) {
+        std::unique_ptr<ImageData> image(Window::takeScreenshot());
+		image->flipY();
+		std::filesystem::path filename = engine_fs::get_screenshot_file("png");
+		png::writeImage(filename.string(), image.get());
     }
 }
 
 // Основной цикл приложения
 void Engine::mainloop() {
     LOG_INFO("Preparing systems");
-
-    Camera* camera = level->player->camera;
-    World* world = level->world;
-    WorldRenderer worldRenderer(level, assets);
-    HudRenderer hud(assets);
-
+    Batch2D batch(1024);
     lastTime = Window::time();
-    Window::swapInterval(settings.displaySwapInterval); // Включаем VSync (синхронизация с частотой обновления экрана)
+    Window::swapInterval(settings.display.swapInterval); // Включаем VSync (синхронизация с частотой обновления экрана)
     LOG_INFO("Systems have been prepared");
 
     Logger::getInstance().flush();
 
-    while (!Window::isShouldClose()){
+    while (!Window::isShouldClose()) {
+        assert(screen != nullptr);
+
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
 
-        // Обновление логики уровня (перемещение игрока, столкновения и т.д.)
-        level->update(deltaTime, Events::_cursor_locked);
-        level->chunksController->update(settings.chunksLoadSpeed);
+        screen->update(deltaTime);
+        screen->draw(deltaTime);
 
-        // Рендеринг мира и HUD
-        worldRenderer.draw(camera, occlusion);
-        hud.draw(level);
-        if (level->player->debug) hud.drawDebug(level, 1 / deltaTime, occlusion);
+        gui->activate(deltaTime);
+        gui->draw(&batch, assets);
 
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
     }
+}
+
+gui::GUI* Engine::getGUI() {
+	return gui;
+}
+
+EngineSettings& Engine::getSettings() {
+	return settings;
+}
+
+Assets* Engine::getAssets() {
+	return assets;
+}
+
+void Engine::setScreen(Screen* screen) {
+	if (this->screen != nullptr) delete this->screen;
+
+	this->screen = screen;
 }

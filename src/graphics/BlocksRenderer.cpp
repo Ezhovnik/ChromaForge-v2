@@ -109,8 +109,8 @@ void BlocksRenderer::cube(const glm::vec3& coord, const glm::vec3& size, const U
 	face(coord + glm::vec3(size.x, 0, 0), size.z, size.y, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), texfaces[5], lights);
 }
 
-constexpr glm::vec4 do_tint(float value) {
-	return glm::vec4(value, value, value, 1.0f);
+inline glm::vec4 do_tint(float value) {
+	return glm::vec4(value);
 }
 
 void BlocksRenderer::blockCube(int x, int y, int z, const glm::vec3& size, const UVRegion(&texfaces)[6], ubyte group) {
@@ -140,8 +140,8 @@ void BlocksRenderer::blockCube(int x, int y, int z, const glm::vec3& size, const
 
 void BlocksRenderer::blockXSprite(int x, int y, int z, const glm::vec3& size, const UVRegion& texface1, const UVRegion& texface2, float spread) {
 	glm::vec4 lights[]{
-			pickSoftLight(x, y, z, {1, 0, 0}, {0, 1, 0}),
-			pickSoftLight(x + 1, y, z, {1, 0, 0}, {0, 1, 0}),
+			pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 1, 0}),
+			pickSoftLight(x + 1, y + 1, z, {1, 0, 0}, {0, 1, 0}),
 			pickSoftLight(x + 1, y + 1, z, {1, 0, 0}, {0, 1, 0}),
 			pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 1, 0}) };
 
@@ -153,17 +153,17 @@ void BlocksRenderer::blockXSprite(int x, int y, int z, const glm::vec3& size, co
 	const float w = size.x/1.41f;
 	face(glm::vec3(x + xs + (1.0 - w) * 0.5f, y, 
 		      z + zs - 1 + (1.0 - w) * 0.5f), w, size.y, 
-		      glm::vec3(1.0f, 0, 1.0f), glm::vec3(0, 1, 0), texface1, lights, do_tint(0.9f));
+		      glm::vec3(1.0f, 0, 1.0f), glm::vec3(0, 1, 0), texface1, lights, do_tint(0.8f));
 	face(glm::vec3(x + xs - (1.0 - w) * 0.5f + 1, y, 
 		      z + zs - (1.0 - w) * 0.5f), w, size.y, 
-		      glm::vec3(-1.0f, 0, -1.0f), glm::vec3(0, 1, 0), texface1, lights, do_tint(0.9f));
+		      glm::vec3(-1.0f, 0, -1.0f), glm::vec3(0, 1, 0), texface1, lights, do_tint(0.8f));
 
 	face(glm::vec3(x + xs + (1.0 - w) * 0.5f, y, 
 		      z + zs - (1.0 - w) * 0.5f), w, size.y, 
-		      glm::vec3(1.0f, 0, -1.0f), glm::vec3(0, 1, 0), texface2, lights, do_tint(0.9f));
+		      glm::vec3(1.0f, 0, -1.0f), glm::vec3(0, 1, 0), texface2, lights, do_tint(0.8f));
 	face(glm::vec3(x + xs - (1.0 - w) * 0.5f + 1, y, 
 		      z + zs + (1.0 - w) * 0.5f - 1), w, size.y, 
-			  glm::vec3(-1.0f, 0, 1.0f), glm::vec3(0, 1, 0), texface2, lights, do_tint(0.9f));
+			  glm::vec3(-1.0f, 0, 1.0f), glm::vec3(0, 1, 0), texface2, lights, do_tint(0.8f));
 }
 
 void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size, const UVRegion(&texfaces_)[6], const Block* block, ubyte states) {
@@ -176,17 +176,17 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 	}
 
 	if (block->rotatable) {
-		if (states == 0x31) {
+		if (states == BLOCK_DIR_X) {
 			rot = 1;
 			texfaces[0] = texfaces_[2];
 			texfaces[1] = texfaces_[3];
 			texfaces[2] = texfaces_[0];
 			texfaces[3] = texfaces_[1];
 		}
-		else if (states == 0x32) {
+		else if (states == BLOCK_DIR_Y) {
 			rot = 2;
 		}
-		else if (states == 0x33) {
+		else if (states == BLOCK_DIR_Z) {
 			rot = 3;
 			texfaces[2] = texfaces_[4];
 			texfaces[3] = texfaces_[5];
@@ -287,10 +287,11 @@ glm::vec4 BlocksRenderer::pickSoftLight(int x, int y, int z, const glm::ivec3& r
 
 inline UVRegion uvfor(const Block& def, uint face, int atlas_size) {
 	float uvsize = 1.0f / (float)atlas_size;
+    float us = 1.0f / (float)atlas_size / (float)atlas_size * ATLAS_MARGIN_SIZE * 0.8f;
 	const uint id = def.textureFaces[face];
 	float u = (id % atlas_size) * uvsize;
 	float v = 1.0f - (id / atlas_size + 1) * uvsize;
-	return UVRegion(u, v, u + uvsize, v + uvsize);
+	return UVRegion(u + us, v + us, u + uvsize - us, v + uvsize - us);
 }
 
 void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
