@@ -23,6 +23,7 @@
                 "${workspaceFolder}/src/coders/png.cpp",
 
                 //src/files
+                "${workspaceFolder}/src/files/binary_io.cpp",
                 "${workspaceFolder}/src/files/engine_files.cpp",
                 "${workspaceFolder}/src/files/files.cpp",
                 "${workspaceFolder}/src/files/rle.cpp",

@@ -53,8 +53,8 @@ bool ChunksController::loadVisible(){
 	int nearX = 0;
 	int nearZ = 0;
 	int minDistance = ((width - chunksPadding * 2) / 2) * ((width - chunksPadding * 2) / 2);
-	for (int z = chunksPadding; z < depth - chunksPadding; z++){
-		for (int x = chunksPadding; x < width - chunksPadding; x++){
+	for (uint z = chunksPadding; z < depth - chunksPadding; z++){
+		for (uint x = chunksPadding; x < width - chunksPadding; x++){
 			int index = z * width + x;
 			std::shared_ptr<Chunk> chunk = chunks->chunks[index];
 			if (chunk != nullptr){
@@ -91,16 +91,7 @@ bool ChunksController::loadVisible(){
 		return false;
 	}
 
-	chunk = std::shared_ptr<Chunk>(new Chunk(nearX + areaOffsetX, nearZ + areaOffsetZ));
-	level->chunksStorage->store(chunk);
-	ubyte* data = level->world->wfile->getChunk(chunk->chunk_x, chunk->chunk_z);
-	if (data) {
-		chunk->decode(data);
-		chunk->setLoaded(true);
-
-        delete[] data;
-    }
-
+    chunk = level->chunksStorage->create(nearX + areaOffsetX, nearZ + areaOffsetZ);
 	chunks->putChunk(chunk);
 
 	if (!chunk->isLoaded()) {

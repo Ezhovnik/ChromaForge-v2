@@ -26,7 +26,7 @@ public:
     ChunksStorage* chunksStorage;
     LevelEvents* events;
 
-	Level(World* world, Player* player, ChunksStorage* chunksStorage, LevelEvents* events, EngineSettings& settings);
+	Level(World* world, Player* player, EngineSettings& settings);
 	~Level();
 
     void updatePlayer(float deltaTime, bool input, bool pause, bool interactions);

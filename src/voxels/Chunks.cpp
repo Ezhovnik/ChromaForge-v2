@@ -13,13 +13,10 @@
 #include <math.h>
 #include <limits.h>
 
-using glm::vec3;
-using std::shared_ptr;
-
 Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles){
 	volume = (size_t)width * (size_t)depth;
-	chunks = new shared_ptr<Chunk>[volume];
-	chunksSecond = new shared_ptr<Chunk>[volume];
+	chunks = new std::shared_ptr<Chunk>[volume];
+	chunksSecond = new std::shared_ptr<Chunk>[volume];
 
 	for (size_t i = 0; i < volume; i++){
 		chunks[i] = nullptr;
@@ -37,18 +34,20 @@ Chunks::~Chunks(){
 voxel* Chunks::getVoxel(int x, int y, int z){
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
-	int cx = x / CHUNK_WIDTH;
-	int cy = y / CHUNK_HEIGHT;
-	int cz = z / CHUNK_DEPTH;
-	if (x < 0) cx--;
-	if (y < 0) cy--;
-	if (z < 0) cz--;
+
+    int cx = floordiv(x, CHUNK_WIDTH);
+    int cy = floordiv(y, CHUNK_HEIGHT);
+    int cz = floordiv(z, CHUNK_DEPTH);
+	
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= 1 || cz >= depth) return nullptr;
-	shared_ptr<Chunk> chunk = chunks[(cy * depth + cz) * width + cx];
+
+	std::shared_ptr<Chunk> chunk = chunks[(cy * depth + cz) * width + cx];
 	if (chunk == nullptr) return nullptr;
+
 	int lx = x - cx * CHUNK_WIDTH;
 	int ly = y - cy * CHUNK_HEIGHT;
 	int lz = z - cz * CHUNK_DEPTH;
+
 	return &chunk->voxels[(ly * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 }
 
@@ -61,44 +60,54 @@ bool Chunks::isObstacle(int x, int y, int z){
 ubyte Chunks::getLight(int x, int y, int z, int channel){
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
+
 	int cx = floordiv(x, CHUNK_WIDTH);
 	int cy = floordiv(y, CHUNK_HEIGHT);
 	int cz = floordiv(z, CHUNK_DEPTH);
+
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= 1 || cz >= depth) return 0;
-	shared_ptr<Chunk> chunk = chunks[(cy * depth + cz) * width + cx];
+
+	std::shared_ptr<Chunk> chunk = chunks[(cy * depth + cz) * width + cx];
 	if (chunk == nullptr) return 0;
+
 	int lx = x - cx * CHUNK_WIDTH;
 	int ly = y - cy * CHUNK_HEIGHT;
 	int lz = z - cz * CHUNK_DEPTH;
+
 	return chunk->light_map->get(lx,ly,lz, channel);
 }
 
 light_t Chunks::getLight(int x, int y, int z){
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
+
 	int cx = floordiv(x, CHUNK_WIDTH);
 	int cy = floordiv(y, CHUNK_HEIGHT);
 	int cz = floordiv(z, CHUNK_DEPTH);
+
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= 1 || cz >= depth) return 0;
-	shared_ptr<Chunk> chunk = chunks[(cy * depth + cz) * width + cx];
+
+	std::shared_ptr<Chunk> chunk = chunks[(cy * depth + cz) * width + cx];
 	if (chunk == nullptr) return 0;
+
 	int lx = x - cx * CHUNK_WIDTH;
 	int ly = y - cy * CHUNK_HEIGHT;
 	int lz = z - cz * CHUNK_DEPTH;
+
 	return chunk->light_map->get(lx,ly,lz);
 }
 
 Chunk* Chunks::getChunkByVoxel(int x, int y, int z){
+    if (y < 0 || y >= CHUNK_HEIGHT) return nullptr;
+
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
-	int cx = x / CHUNK_WIDTH;
-	int cy = y / CHUNK_HEIGHT;
-	int cz = z / CHUNK_DEPTH;
-	if (x < 0) cx--;
-	if (y < 0) cy--;
-	if (z < 0) cz--;
-	if (cx < 0 || cy < 0 || cz < 0 || cx >= width || cy >= 1 || cz >= depth) return nullptr;
-	return chunks[(cy * depth + cz) * width + cx].get();
+
+    int cx = floordiv(x, CHUNK_WIDTH);
+	int cz = floordiv(z, CHUNK_DEPTH);
+	
+	if (cx < 0 || cz < 0 || cx >= width || cz >= depth) return nullptr;
+	return chunks[cz * width + cx].get();
 }
 
 Chunk* Chunks::getChunk(int x, int z){
@@ -109,20 +118,24 @@ Chunk* Chunks::getChunk(int x, int z){
 }
 
 void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states){
+    if (y < 0 || y >= CHUNK_HEIGHT) return;
+
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
-	int cx = x / CHUNK_WIDTH;
-	if (y < 0 || y >= CHUNK_HEIGHT) return;
-	int cz = z / CHUNK_DEPTH;
-	if (x < 0) cx--;
-	if (z < 0) cz--;
+
+    int cx = floordiv(x, CHUNK_WIDTH);
+    int cz = floordiv(z, CHUNK_DEPTH);
+	
 	if (cx < 0 || cz < 0 || cx >= width || cz >= depth) return;
+
 	Chunk* chunk = chunks[cz * width + cx].get();
 	if (chunk == nullptr) return;
+
 	int lx = x - cx * CHUNK_WIDTH;
 	int lz = z - cz * CHUNK_DEPTH;
 	chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx].id = id;
 	chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx].states = states;
+
 	chunk->setUnsaved(true);
 	chunk->setModified(true);
 
@@ -137,10 +150,10 @@ void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states){
 	if (lz == CHUNK_DEPTH-1 && (chunk = getChunk(cx+areaOffsetX, cz+areaOffsetZ+1))) chunk->setModified(true);
 }
 
-voxel* Chunks::rayCast(vec3 a, vec3 dir, float maxDist, vec3& end, vec3& norm, vec3& iend) {
-	float px = a.x;
-	float py = a.y;
-	float pz = a.z;
+voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3& end, glm::vec3& norm, glm::vec3& iend) {
+	float px = start.x;
+	float py = start.y;
+	float pz = start.z;
 
 	float dx = dir.x;
 	float dy = dir.y;
@@ -226,14 +239,12 @@ voxel* Chunks::rayCast(vec3 a, vec3 dir, float maxDist, vec3& end, vec3& norm, v
 }
 
 void Chunks::setCenter(int x, int z) {
-	int cx = x / CHUNK_WIDTH;
-	int cz = z / CHUNK_DEPTH;
-	cx -= areaOffsetX;
-	cz -= areaOffsetZ;
-	if (x < 0) cx--;
-	if (z < 0) cz--;
-	cx -= width/2;
-	cz -= depth/2;
+	int cx = floordiv(x, CHUNK_WIDTH);
+	int cz = floordiv(z, CHUNK_DEPTH);
+
+    cx -= areaOffsetX + width / 2;
+    cz -= areaOffsetZ + depth / 2;
+
 	if (cx | cz) translate(cx, cz);
 }
 
@@ -243,7 +254,7 @@ void Chunks::translate(int dx, int dz){
 	}
 	for (int z = 0; z < depth; z++){
 		for (int x = 0; x < width; x++){
-			shared_ptr<Chunk> chunk = chunks[z * depth + x];
+			std::shared_ptr<Chunk> chunk = chunks[z * depth + x];
 			int nx = x - dx;
 			int nz = z - dz;
 			if (chunk == nullptr) continue;
@@ -256,7 +267,7 @@ void Chunks::translate(int dx, int dz){
 			chunksSecond[nz * width + nx] = chunk;
 		}
 	}
-	shared_ptr<Chunk>* chunksTemp = chunks;
+	std::shared_ptr<Chunk>* chunksTemp = chunks;
 	chunks = chunksSecond;
 	chunksSecond = chunksTemp;
 
@@ -269,7 +280,7 @@ void Chunks::_setOffset(int x, int z){
 	areaOffsetZ = z;
 }
 
-bool Chunks::putChunk(shared_ptr<Chunk> chunk) {
+bool Chunks::putChunk(std::shared_ptr<Chunk> chunk) {
 	int x = chunk->chunk_x;
 	int z = chunk->chunk_z;
 	x -= areaOffsetX;
@@ -294,8 +305,8 @@ void Chunks::resize(uint newWidth, uint newDepth) {
 		translate(0, delta);
 	}
 	const size_t newVolume = (size_t)newWidth * (size_t)newDepth;
-	shared_ptr<Chunk>* newChunks = new shared_ptr<Chunk>[newVolume] {};
-	shared_ptr<Chunk>* newChunksSecond = new shared_ptr<Chunk>[newVolume] {};
+	auto newChunks = new std::shared_ptr<Chunk>[newVolume] {};
+	auto newChunksSecond = new std::shared_ptr<Chunk>[newVolume] {};
 	for (int z = 0; z < depth && z < newDepth; ++z) {
 		for (int x = 0; x < width && x < newWidth; ++x) {
 			newChunks[z * newWidth + x] = chunks[z * width + x];
@@ -313,9 +324,7 @@ void Chunks::resize(uint newWidth, uint newDepth) {
 void Chunks::clear(){
 	for (size_t i = 0; i < volume; i++){
 		Chunk* chunk = chunks[i].get();
-		if (chunk) {
-			events->trigger(CHUNK_HIDDEN, chunk);
-		}
+		if (chunk) events->trigger(CHUNK_HIDDEN, chunk);
 	}
 	chunksCount = 0;
 }
