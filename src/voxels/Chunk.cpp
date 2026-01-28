@@ -10,6 +10,8 @@
 
 // Конструктор
 Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
+    bottom = 0;
+	top = CHUNK_HEIGHT;
     voxels = new voxel[CHUNK_VOLUME];
 
     // Инициализируем воксели
@@ -39,6 +41,22 @@ bool Chunk::isEmpty() {
 		}
 	}
 	return true;
+}
+
+void Chunk::updateHeights() {
+	for (int i = 0; i < CHUNK_VOLUME; i++) {
+		if (voxels[i].id != 0) {
+			bottom = i / (CHUNK_DEPTH * CHUNK_WIDTH);
+			break;
+		}
+	}
+
+	for (int i = CHUNK_VOLUME - 1; i > -1; i--) {
+		if (voxels[i].id != 0) {
+			top = i / (CHUNK_DEPTH * CHUNK_WIDTH) + 1;
+			break;
+		}
+	}
 }
 
 // Создает полную копию текущего чанка.

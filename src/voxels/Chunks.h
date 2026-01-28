@@ -24,6 +24,7 @@ public:
 
     size_t volume;
     size_t chunksCount;
+    size_t visibleCount;
 
     uint width; // Количество чанков по X
     uint depth; // Количество чанков по Z

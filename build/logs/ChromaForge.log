@@ -1,30 +1,30 @@
-[2026-01-28 13:54:45.419] [info] [Logger.cpp:43] [initialize] Logger initialized. File: ../build/logs\ChromaForge.log
-[2026-01-28 13:54:45.420] [info] [main.cpp:57] [main] Reading engine settings from '../build/settings.toml'
-[2026-01-28 13:54:47.948] [info] [Window.cpp:138] [initialize] Window initialized successfully: 1280x720
-[2026-01-28 13:54:47.948] [info] [engine.cpp:59] [Engine] Loading Assets
-[2026-01-28 13:54:47.949] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/shaders/default as default
-[2026-01-28 13:54:47.953] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/shaders/lines as lines
-[2026-01-28 13:54:47.966] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/shaders/ui as ui
-[2026-01-28 13:54:47.970] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/textures/atlas.png as blocks
-[2026-01-28 13:54:47.974] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
-[2026-01-28 13:54:47.982] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/textures/atlas.png as blocks_tex
-[2026-01-28 13:54:47.984] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
-[2026-01-28 13:54:47.987] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/textures/slot.png as slot
-[2026-01-28 13:54:48.076] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/slot.png' (256x256, 4 channels)
-[2026-01-28 13:54:48.077] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/fonts/font as normal
-[2026-01-28 13:54:48.082] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_0.png' (256x256, 4 channels)
-[2026-01-28 13:54:48.147] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_1.png' (256x256, 4 channels)
-[2026-01-28 13:54:48.151] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_2.png' (256x256, 4 channels)
-[2026-01-28 13:54:48.156] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_3.png' (256x256, 4 channels)
-[2026-01-28 13:54:48.173] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_4.png' (256x256, 4 channels)
-[2026-01-28 13:54:48.174] [info] [engine.cpp:71] [Engine] Assets loaded successfully
-[2026-01-28 13:54:48.175] [info] [engine.cpp:72] [Engine] Loading world
-[2026-01-28 13:54:48.358] [info] [engine.cpp:83] [Engine] The world is loaded
-[2026-01-28 13:54:48.358] [info] [engine.cpp:84] [Engine] Initialization is finished
-[2026-01-28 13:54:48.359] [info] [engine.cpp:120] [mainloop] Preparing systems
-[2026-01-28 13:54:48.359] [info] [engine.cpp:124] [mainloop] Systems have been prepared
-[2026-01-28 13:58:23.026] [info] [main.cpp:69] [main] Write engine settings to '../build/settings.toml'
-[2026-01-28 13:58:23.040] [info] [screens.cpp:30] [~LevelScreen] World saving
-[2026-01-28 13:58:23.872] [info] [screens.cpp:36] [~LevelScreen] The world has been successfully saved
-[2026-01-28 13:58:23.873] [info] [engine.cpp:93] [~Engine] Shutting down
-[2026-01-28 13:58:23.983] [info] [engine.cpp:96] [~Engine] Engine has finished successfuly
+[2026-01-28 16:27:12.820] [info] [Logger.cpp:43] [initialize] Logger initialized. File: ../build/logs\ChromaForge.log
+[2026-01-28 16:27:12.821] [info] [main.cpp:57] [main] Reading engine settings from '../build/settings.toml'
+[2026-01-28 16:27:13.196] [info] [Window.cpp:138] [initialize] Window initialized successfully: 1280x720
+[2026-01-28 16:27:13.196] [info] [engine.cpp:55] [Engine] Loading Assets
+[2026-01-28 16:27:13.197] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/shaders/default as default
+[2026-01-28 16:27:13.199] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/shaders/lines as lines
+[2026-01-28 16:27:13.200] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/shaders/ui as ui
+[2026-01-28 16:27:13.202] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/textures/atlas.png as blocks
+[2026-01-28 16:27:13.203] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
+[2026-01-28 16:27:13.215] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/textures/atlas.png as blocks_tex
+[2026-01-28 16:27:13.218] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
+[2026-01-28 16:27:13.218] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/textures/slot.png as slot
+[2026-01-28 16:27:13.220] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/slot.png' (256x256, 4 channels)
+[2026-01-28 16:27:13.220] [info] [AssetsLoader.cpp:31] [loadNext] Loading ../res/fonts/font as normal
+[2026-01-28 16:27:13.223] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_0.png' (256x256, 4 channels)
+[2026-01-28 16:27:13.226] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_1.png' (256x256, 4 channels)
+[2026-01-28 16:27:13.229] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_2.png' (256x256, 4 channels)
+[2026-01-28 16:27:13.232] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_3.png' (256x256, 4 channels)
+[2026-01-28 16:27:13.235] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_4.png' (256x256, 4 channels)
+[2026-01-28 16:27:13.236] [info] [engine.cpp:67] [Engine] Assets loaded successfully
+[2026-01-28 16:27:13.237] [info] [engine.cpp:73] [Engine] Initialization is finished
+[2026-01-28 16:27:13.237] [info] [engine.cpp:109] [mainloop] Preparing systems
+[2026-01-28 16:27:13.237] [info] [engine.cpp:113] [mainloop] Systems have been prepared
+[2026-01-28 16:27:25.581] [info] [screens.cpp:36] [operator()] Loading world
+[2026-01-28 16:27:25.754] [info] [screens.cpp:42] [operator()] The world is loaded
+[2026-01-28 16:29:55.857] [info] [screens.cpp:100] [~LevelScreen] World saving
+[2026-01-28 16:29:57.135] [info] [screens.cpp:106] [~LevelScreen] The world has been successfully saved
+[2026-01-28 16:29:58.930] [info] [main.cpp:69] [main] Write engine settings to '../build/settings.toml'
+[2026-01-28 16:29:58.931] [info] [engine.cpp:82] [~Engine] Shutting down
+[2026-01-28 16:29:59.007] [info] [engine.cpp:85] [~Engine] Engine has finished successfuly

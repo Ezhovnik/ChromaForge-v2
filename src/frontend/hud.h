@@ -2,16 +2,18 @@
 #define SRC_HUD_RENDER_H_
 
 #include <string>
+#include <memory>
 
 class Batch2D;
 class Camera;
 class Level;
 class Assets;
 class Player;
+class Engine;
 
 namespace gui {
     class GUI;
-    class Panel;
+    class UINode;
 }
 
 class HudRenderer {
@@ -28,13 +30,13 @@ private:
 
     bool occlusion;
     bool inventoryOpen = false;
-    bool pause = true;
+    bool pause = false;
 
-    gui::Panel* debugPanel;
-	gui::Panel* pauseMenu;
+    std::shared_ptr<gui::UINode> debugPanel;
+	std::shared_ptr<gui::UINode> pauseMenu;
 	gui::GUI* guiController;
 public:
-	HudRenderer(gui::GUI* gui, Level* level, Assets* assets);
+	HudRenderer(Engine* engine, Level* level);
 	~HudRenderer();
 
 	void draw();

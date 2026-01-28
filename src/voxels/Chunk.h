@@ -34,6 +34,7 @@ inline void bitset(int& flags, int bit, bool state) {
 class Chunk {
 public:
     int chunk_x, chunk_z; // Координаты чанка
+    int bottom, top;
     voxel* voxels; // Массив вокселей, содержащихся в чанке
 
     int surrounding = 0; // Счётчик окружающих, загруженных чанков
@@ -47,6 +48,8 @@ public:
     ~Chunk(); // Деструктор
 
     bool isEmpty(); // Проверяет, является ли чанк пустым (однородным).
+
+    void updateHeights();
 
     Chunk* clone() const; // Создает полную копию текущего чанка.
 

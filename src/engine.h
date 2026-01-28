@@ -25,7 +25,7 @@ public:
 class Engine {
 private:
     Assets* assets; // Менеджер ассетов (текстуры, модели и т.д.)
-    Screen* screen = nullptr;
+    std::shared_ptr<Screen> screen = nullptr;
     EngineSettings settings;
 
     gui::GUI* gui;
@@ -45,7 +45,7 @@ public:
 	gui::GUI* getGUI();
 	EngineSettings& getSettings();
 
-	void setScreen(Screen* screen);
+	void setScreen(std::shared_ptr<Screen> screen);
 };
 
 #endif // SRC_ENGINE_H_
