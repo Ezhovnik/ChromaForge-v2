@@ -42,12 +42,16 @@ void GUI::activate(float deltaTime) {
 
     this->hover = hover;
 
+    auto prevfocus = focus;
     if (Events::justClicked(0)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
             pressed->click(this, mx, my);
-            if (focus) focus->defocus();
-            focus = pressed;
+            if (focus && focus != pressed) focus->defocus();
+            if (focus != pressed) {
+                focus = pressed;
+                focus->focus(this);
+            }
         }
         if (this->hover == nullptr && focus) {
             focus->defocus();
@@ -57,10 +61,8 @@ void GUI::activate(float deltaTime) {
         pressed->mouseRelease(this, mx, my);
         pressed = nullptr;
     }
-    if (focus && focus != pressed) {
-        if (!focus->isfocused()){
-            focus = nullptr;
-        } else if (Events::justPressed(keycode::ESCAPE)) {
+    if (focus) {
+        if (Events::justPressed(keycode::ESCAPE)) {
             focus->defocus();
             focus = nullptr;
         } else {
@@ -73,8 +75,14 @@ void GUI::activate(float deltaTime) {
             if (Events::isClicked(mousecode::BUTTON_1)) {
                 focus->mouseMove(this, mx, my);
             }
+            if (prevfocus == focus) {
+                for (int i = mousecode::BUTTON_1; i < mousecode::BUTTON_1 + 12; ++i) {
+                    if (Events::justClicked(i)) focus->clicked(this, i);
+                }
+            }
         }
     }
+    if (focus && !focus->isfocused()) focus = nullptr;
 }
 
 void GUI::draw(Batch2D* batch, Assets* assets) {

@@ -5,6 +5,7 @@
 #include "../../assets/Assets.h"
 #include "../../graphics/Batch2D.h"
 #include "../../graphics/Font.h"
+#include "../../util/stringutil.h"
 
 #define KEY_ESCAPE 256
 #define KEY_ENTER 257
@@ -29,7 +30,7 @@ void Label::draw(Batch2D* batch, Assets* assets) {
 
     batch->color = color_;
     Font* font = assets->getFont(fontName_);
-    glm::vec2 size = this->size();
+    glm::vec2 size = UINode::size();
     glm::vec2 newsize = glm::vec2(font->calcWidth(text_), font->lineHeight());
     if (newsize.x > size.x) {
         this->size(newsize);
@@ -42,6 +43,10 @@ void Label::draw(Batch2D* batch, Assets* assets) {
 Label* Label::textSupplier(wstringsupplier supplier) {
     this->supplier = supplier;
     return this;
+}
+
+void Label::size(glm::vec2 sizenew) {
+    UINode::size(glm::vec2(UINode::size().x, sizenew.y));
 }
 
 Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(32,32), padding, 0) {
@@ -132,6 +137,39 @@ void TextBox::textConsumer(wstringconsumer consumer) {
 std::wstring TextBox::text() const {
     if (input.empty()) return placeholder;
     return input;
+}
+
+InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) 
+    : Panel(glm::vec2(100,32), padding, 0, false), binding(binding) {
+    label = new Label(L"");
+    // label->align(Align::center);
+    add(std::shared_ptr<UINode>(label));
+}
+
+std::shared_ptr<UINode> InputBindBox::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
+    return UINode::getAt(pos, self);
+}
+
+void InputBindBox::drawBackground(Batch2D* batch, Assets* assets) {
+    glm::vec2 coord = calcCoord();
+    batch->texture(nullptr);
+    batch->color = (isfocused() ? focusedColor : (hover_ ? hoverColor : color_));
+    batch->rect(coord.x, coord.y, size_.x, size_.y);
+    label->text(util::str2wstr_utf8(binding.text()));
+}
+
+void InputBindBox::clicked(GUI*, int button) {
+    binding.type = inputType::mouse;
+    binding.code = button;
+    defocus();
+}
+
+void InputBindBox::keyPressed(int key) {
+    if (key != keycode::ESCAPE) {
+        binding.type = inputType::keyboard;
+        binding.code = key;
+    }
+    defocus();
 }
 
 TrackBar::TrackBar(double min, double max, double value, double step, int trackWidth)

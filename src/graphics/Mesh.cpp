@@ -6,9 +6,9 @@ int Mesh::meshesCount = 0;
 
 // Конструктор
 Mesh::Mesh(const float* vertexBuffer, size_t vertices, const int* indexBuffer, size_t indices, const vattr* attrs) : 
-	vertices(vertices),
-	indices(indices),
-	IBO(0)
+	IBO(0),
+    vertices(vertices),
+	indices(indices)
 {
     meshesCount++;
 

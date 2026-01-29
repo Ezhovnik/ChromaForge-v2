@@ -15,7 +15,7 @@ struct PlayerInput {
 	bool moveRight;
 	bool moveLeft;
 	bool sprint;
-	bool shift;
+	bool crouch;
 	bool cheat;
 	bool jump;
 	bool noclip;

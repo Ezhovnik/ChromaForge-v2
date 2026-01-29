@@ -5,6 +5,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "../logger/Logger.h"
+
 // Статические массивы для хранения состояние клавиш и кнопок мыши
 bool* Events::_keys; // Хранит текущее состояние (нажата / не нажата)
 uint* Events::_frames; // Храние номер кадра, в котором было последнее изменение состояния
@@ -22,6 +24,7 @@ bool Events::_cursor_started = false; // Начал ли пользовател�
 
 std::vector<uint> Events::codepoints;
 std::vector<int> Events::pressedKeys;
+std::unordered_map<std::string, Binding> Events::bindings;
 
 // Инициализация системы событий
 int Events::initialize(){
@@ -78,6 +81,28 @@ void Events::toggleCursor() {
     Window::setCursorMode(_cursor_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 }
 
+void Events::bind(std::string name, inputType type, int code) {
+	bindings[name] = {type, code, false, false};
+}
+
+bool Events::isActive(std::string name) {
+	const auto& found = bindings.find(name);
+	if (found == bindings.end()) {
+        LOG_WARN("Binding {} not found", name);
+		return false;
+	}
+	return found->second.isActive();
+}
+
+bool Events::justActive(std::string name) {
+	const auto& found = bindings.find(name);
+	if (found == bindings.end()) {
+        LOG_WARN("Binding {} not found", name);
+		return false;
+	}
+	return found->second.justActive();
+}
+
 // Обработка событий текущего кадра
 void Events::pollEvents() {
     _current++;
@@ -86,4 +111,26 @@ void Events::pollEvents() {
     codepoints.clear();
     pressedKeys.clear();
     glfwPollEvents();
+
+    for (auto& [name, binding] : bindings) {
+		binding.justChange = false;
+
+		bool newstate = false;
+		switch (binding.type) {
+			case inputType::keyboard: newstate = isPressed(binding.code); break;
+			case inputType::mouse: newstate = isClicked(binding.code); break;
+		}
+
+		if (newstate) {
+			if (!binding.state) {
+				binding.state = true;
+				binding.justChange = true;
+			}
+		} else {
+			if (binding.state) {
+				binding.state = false;
+				binding.justChange = true;
+			}
+		}
+	}
 }

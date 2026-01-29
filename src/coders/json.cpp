@@ -225,6 +225,10 @@ JObject& JObject::put(std::string key, std::string value){
     return *this;
 }
 
+JObject& JObject::put(std::string key, const char* value) {
+    return put(key, std::string(value));
+}
+
 JObject& JObject::put(std::string key, JObject* value){
     auto found = map.find(key);
     if (found != map.end()) delete found->second;
