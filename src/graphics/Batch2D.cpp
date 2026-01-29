@@ -354,3 +354,7 @@ void Batch2D::render(uint gl_primitive) {
 void Batch2D::render() {
     render(GL_TRIANGLES);
 }
+
+void Batch2D::setLineWidth(float width) {
+    glLineWidth(width);
+}

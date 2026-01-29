@@ -39,8 +39,9 @@ void Label::draw(Batch2D* batch, Assets* assets) {
     font->draw(batch, text_, coord.x, coord.y);
 }
 
-void Label::textSupplier(wstringsupplier supplier) {
+Label* Label::textSupplier(wstringsupplier supplier) {
     this->supplier = supplier;
+    return this;
 }
 
 Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(32,32), padding, 0) {
@@ -73,12 +74,13 @@ void Button::mouseRelease(GUI* gui, int x, int y) {
     }
 }
 
-void Button::listenAction(onaction action) {
+Button* Button::listenAction(onaction action) {
     actions.push_back(action);
+    return this;
 }
 
-TextBox::TextBox(std::wstring text, glm::vec4 padding) : Panel(glm::vec2(200,32), padding, 0, false) {
-    label = new Label(text);
+TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200,32), padding, 0, false), input(L""), placeholder(placeholder) {
+    label = new Label(L"");
     label->align(Align::center);
     add(std::shared_ptr<UINode>(label));
 }
@@ -88,18 +90,25 @@ void TextBox::drawBackground(Batch2D* batch, Assets* assets) {
     batch->texture(nullptr);
     batch->color = (isfocused() ? focusedColor : (hover_ ? hoverColor : color_));
     batch->rect(coord.x, coord.y, size_.x, size_.y);
-    if (!focused_ && supplier) label->text(supplier());
+    if (!focused_ && supplier) input = supplier();
+
+    if (input.empty()) {
+        label->color(glm::vec4(0.5f));
+        label->text(placeholder);
+    } else {
+        label->color(glm::vec4(1.0f));
+        label->text(input);
+    }
 }
 
 void TextBox::typed(unsigned int codepoint) {
-    label->text(label->text() + std::wstring({(wchar_t)codepoint}));    
+    input += std::wstring({(wchar_t)codepoint});    
 }
 
 void TextBox::keyPressed(int key) {
-    std::wstring src = label->text();
     switch (key) {
         case KEY_BACKSPACE:
-            if (src.length()) label->text(src.substr(0, src.length()-1));
+            if (!input.empty()) input = input.substr(0, input.length() - 1);
             break;
         case KEY_ENTER:
             if (consumer) consumer(label->text());
@@ -118,4 +127,81 @@ void TextBox::textSupplier(wstringsupplier supplier) {
 
 void TextBox::textConsumer(wstringconsumer consumer) {
     this->consumer = consumer;
+}
+
+std::wstring TextBox::text() const {
+    if (input.empty()) return placeholder;
+    return input;
+}
+
+TrackBar::TrackBar(double min, double max, double value, double step, int trackWidth)
+    : UINode(glm::vec2(), glm::vec2(32)), min(min), max(max), value(value), step(step), trackWidth(trackWidth) {
+    color(glm::vec4(0.f, 0.f, 0.f, 0.4f));
+}
+
+void TrackBar::draw(Batch2D* batch, Assets* assets) {
+    if (supplier_) value = supplier_();
+
+    glm::vec2 coord = calcCoord();
+    batch->texture(nullptr);
+    batch->color = (hover_ ? hoverColor : color_);
+    batch->rect(coord.x, coord.y, size_.x, size_.y);
+
+    float width = size_.x;
+    float t = (value - min) / (max - min + trackWidth * step);
+
+    batch->color = trackColor;
+    batch->rect(coord.x + width * t, coord.y, size_.x * (trackWidth / (max - min + trackWidth*step) * step), size_.y);
+}
+
+void TrackBar::supplier(doublesupplier supplier) {
+    this->supplier_ = supplier;
+}
+
+void TrackBar::consumer(doubleconsumer consumer) {
+    this->consumer_ = consumer;
+}
+
+void TrackBar::mouseMove(GUI*, int x, int y) {
+    glm::vec2 coord = calcCoord();
+    value = x;
+    value -= coord.x;
+    value = (value) / size_.x * (max - min + trackWidth*step);
+    value += min;
+    value = (value > max) ? max : value;
+    value = (value < min) ? min : value;
+    value = (int)(value / step) * step;
+    if (consumer_) consumer_(value);
+}
+
+CheckBox::CheckBox(bool checked) : UINode(glm::vec2(), glm::vec2(32.0f)), checked_(checked) {
+    color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+}
+
+void CheckBox::draw(Batch2D* batch, Assets* assets) {
+    if (supplier_) checked_ = supplier_();
+
+    glm::vec2 coord = calcCoord();
+    batch->texture(nullptr);
+    batch->color = checked_ ? checkColor : (hover_ ? hoverColor : color_);
+    batch->rect(coord.x, coord.y, size_.x, size_.y);
+}
+
+void CheckBox::mouseRelease(GUI*, int x, int y) {
+    checked_ = !checked_;
+    if (consumer_) consumer_(checked_);
+
+}
+
+void CheckBox::supplier(boolsupplier supplier) {
+    supplier_ = supplier;
+}
+
+void CheckBox::consumer(boolconsumer consumer) {
+    consumer_ = consumer;
+}
+
+CheckBox* CheckBox::checked(bool flag) {
+    checked_ = flag;
+    return this;
 }

@@ -32,7 +32,7 @@ toml::Wrapper create_wrapper(EngineSettings& settings) {
 	graphics.add("fog-curve", &settings.graphics.fogCurve);
 
     toml::Section& debug = wrapper.add("debug");
-	graphics.add("generator-test-mode", &settings.debug.generatorTestMode);
+	debug.add("generator-test-mode", &settings.debug.generatorTestMode);
 
 	return wrapper;
 }
@@ -59,7 +59,7 @@ int main() {
 			toml::Reader reader(&wrapper, settings_file.string(), content);
 			reader.read();
 		} else {
-            LOG_INFO("Creating settings file '{}'", settings_file.string());
+            LOG_INFO("Creating settings file '{}' and writing default engine settings", settings_file.string());
 			files::write_string(settings_file, wrapper.write());
 		}
 

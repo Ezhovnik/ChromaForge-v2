@@ -16,6 +16,12 @@ namespace gui {
     typedef std::function<std::wstring()> wstringsupplier;
     typedef std::function<void(std::wstring)> wstringconsumer;
 
+    typedef std::function<double()> doublesupplier;
+    typedef std::function<void(double)> doubleconsumer;
+
+    typedef std::function<bool()> boolsupplier;
+    typedef std::function<void(bool)> boolconsumer;
+
     class Label : public UINode {
     protected:
         std::wstring text_;
@@ -27,14 +33,14 @@ namespace gui {
         virtual Label& text(std::wstring text);
         std::wstring text() const;
 
-        virtual void draw(Batch2D* batch, Assets* assets);
+        virtual void draw(Batch2D* batch, Assets* assets) override;
 
-        virtual void textSupplier(wstringsupplier supplier);
+        virtual Label* textSupplier(wstringsupplier supplier);
     };
 
     class Button : public Panel {
     protected:
-        glm::vec4 hoverColor {0.05f, 0.1f, 0.2f, 0.75f};
+        glm::vec4 hoverColor {0.05f, 0.1f, 0.15f, 0.75f};
         glm::vec4 pressedColor {0.0f, 0.0f, 0.0f, 0.95f};
 
         std::vector<onaction> actions;
@@ -47,7 +53,7 @@ namespace gui {
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
 
         virtual void mouseRelease(GUI*, int x, int y) override;
-        virtual void listenAction(onaction action);
+        virtual Button* listenAction(onaction action);
     };
 
     class TextBox : public Panel {
@@ -57,10 +63,13 @@ namespace gui {
 
         Label* label;
 
+        std::wstring input;
+        std::wstring placeholder;
+
         wstringsupplier supplier = nullptr;
         wstringconsumer consumer = nullptr;
     public:
-        TextBox(std::wstring text, glm::vec4 padding = glm::vec4(2.0f));
+        TextBox(std::wstring placeholder, glm::vec4 padding = glm::vec4(2.0f));
 
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
 
@@ -70,6 +79,55 @@ namespace gui {
         virtual void textSupplier(wstringsupplier supplier);
         virtual void textConsumer(wstringconsumer consumer);
         virtual bool isfocuskeeper() const override {return true;}
+        virtual std::wstring text() const;
+    };
+
+    class TrackBar : public UINode {
+    protected:
+        glm::vec4 hoverColor {0.01f, 0.02f, 0.03f, 0.5f};
+        glm::vec4 trackColor {1.0f, 1.0f, 1.0f, 0.4f};
+        doublesupplier supplier_ = nullptr;
+        doubleconsumer consumer_ = nullptr;
+        double min;
+        double max;
+        double value;
+        double step;
+        int trackWidth;
+    public:
+        TrackBar(double min, double max, double value, double step = 1.0, int trackWidth = 1);
+        virtual void draw(Batch2D* batch, Assets* assets) override;
+
+        virtual void supplier(doublesupplier supplier);
+        virtual void consumer(doubleconsumer consumer);
+
+        virtual void mouseMove(GUI*, int x, int y) override;
+    };
+
+    class CheckBox : public UINode {
+    protected:
+        glm::vec4 hoverColor {0.05f, 0.1f, 0.2f, 0.75f};
+        glm::vec4 checkColor {1.0f, 1.0f, 1.0f, 0.4f};
+
+        boolsupplier supplier_ = nullptr;
+        boolconsumer consumer_ = nullptr;
+
+        bool checked_ = false;
+    public:
+        CheckBox(bool checked=false);
+
+        virtual void draw(Batch2D* batch, Assets* assets) override;
+
+        virtual void mouseRelease(GUI*, int x, int y) override;
+
+        virtual void supplier(boolsupplier supplier);
+        virtual void consumer(boolconsumer consumer);
+
+        virtual CheckBox* checked(bool flag);
+
+        virtual bool checked() const {
+            if (supplier_) return supplier_();
+            return checked_;
+        }
     };
 }
 

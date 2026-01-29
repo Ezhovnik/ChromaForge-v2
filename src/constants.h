@@ -18,4 +18,9 @@ inline uint vox_index(int x, int y, int z, int w, int d) {
 
 inline constexpr int ATLAS_MARGIN_SIZE = 2;
 
+#define RES_FOLDER "../res/"
+#define TEXTURES_FOLDER "../res/textures"
+#define SHADERS_FOLDER "../res/shaders"
+#define FONTS_FOLDER "../res/fonts"
+
 #endif // SRC_CONSTANTS_H_

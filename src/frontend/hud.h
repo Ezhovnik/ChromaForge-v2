@@ -4,6 +4,8 @@
 #include <string>
 #include <memory>
 
+#include "../graphics/GfxContext.h"
+
 class Batch2D;
 class Camera;
 class Level;
@@ -39,9 +41,9 @@ public:
 	HudRenderer(Engine* engine, Level* level);
 	~HudRenderer();
 
-	void draw();
+	void draw(const GfxContext& context);
 	void drawDebug(int fps, bool occlusion);
-    void drawInventory(Player* player);
+    void drawInventory(const GfxContext& context, Player* player);
 
     bool isInventoryOpen() const;
 	bool isPause() const;

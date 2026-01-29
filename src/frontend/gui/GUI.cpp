@@ -1,15 +1,17 @@
 #include "GUI.h"
-#include "UINode.h"
-#include "panels.h"
 
 #include <algorithm>
+#include <stdexcept>
 
+#include "UINode.h"
+#include "panels.h"
 #include "../../assets/Assets.h"
 #include "../../graphics/Batch2D.h"
 #include "../../window/Events.h"
 #include "../../window/input.h"
 #include "../../window/Camera.h"
 #include "../../graphics/ShaderProgram.h"
+#include "../../logger/Logger.h"
 
 using namespace gui;
 
@@ -40,7 +42,7 @@ void GUI::activate(float deltaTime) {
 
     this->hover = hover;
 
-    if (Events::isClicked(0)) {
+    if (Events::justClicked(0)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
             pressed->click(this, mx, my);
@@ -55,7 +57,7 @@ void GUI::activate(float deltaTime) {
         pressed->mouseRelease(this, mx, my);
         pressed = nullptr;
     }
-    if (focus) {
+    if (focus && focus != pressed) {
         if (!focus->isfocused()){
             focus = nullptr;
         } else if (Events::justPressed(keycode::ESCAPE)) {
@@ -68,6 +70,9 @@ void GUI::activate(float deltaTime) {
             for (auto key : Events::pressedKeys) {
                 focus->keyPressed(key);
             }
+            if (Events::isClicked(mousecode::BUTTON_1)) {
+                focus->mouseMove(this, mx, my);
+            }
         }
     }
 }
@@ -76,6 +81,10 @@ void GUI::draw(Batch2D* batch, Assets* assets) {
     uicamera->fov = Window::height;
 
 	ShaderProgram* uishader = assets->getShader("ui");
+    if (uishader == nullptr) {
+        LOG_CRITICAL("The shader 'ui' could not be found in the assets");
+        throw std::runtime_error("The shader 'ui' could not be found in the assets");
+    }
 	uishader->use();
 	uishader->uniformMatrix("u_projview", uicamera->getProjection()*uicamera->getView());
 
@@ -97,4 +106,18 @@ void GUI::add(std::shared_ptr<UINode> panel) {
 
 void GUI::remove(std::shared_ptr<UINode> panel) {
     container->remove(panel);
+}
+
+void GUI::store(std::string name, std::shared_ptr<UINode> node) {
+    storage[name] = node;
+}
+
+std::shared_ptr<UINode> GUI::get(std::string name) {
+    auto found = storage.find(name);
+    if (found == storage.end()) return nullptr;
+    return found->second;
+}
+
+void GUI::remove(std::string name) {
+    storage.erase(name);
 }
