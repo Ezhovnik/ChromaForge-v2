@@ -11,6 +11,7 @@ class WorldRenderer;
 class HudRenderer;
 class Engine;
 class Camera;
+class Batch2D;
 
 namespace gui {
     class UINode;
@@ -28,6 +29,10 @@ public:
 
 class MenuScreen : public Screen {
     std::shared_ptr<gui::UINode> panel;
+    std::shared_ptr<gui::UINode> newWorldPanel;
+
+    Batch2D* batch;
+    Camera* uicamera;
 public:
     MenuScreen(Engine* engine);
     ~MenuScreen();

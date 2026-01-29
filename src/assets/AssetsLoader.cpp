@@ -102,13 +102,14 @@ void AssetsLoader::createDefaults(AssetsLoader& loader) {
 }
 
 void AssetsLoader::addDefaults(AssetsLoader& loader) {
-	loader.add(AssetType::Shader, "../res/shaders/default", "default");
-	loader.add(AssetType::Shader, "../res/shaders/lines", "lines");
-	loader.add(AssetType::Shader, "../res/shaders/ui", "ui");
+	loader.add(AssetType::Shader, SHADERS_FOLDER"/default", "default");
+	loader.add(AssetType::Shader, SHADERS_FOLDER"/lines", "lines");
+	loader.add(AssetType::Shader, SHADERS_FOLDER"/ui", "ui");
 
-	loader.add(AssetType::Atlas, "../res/textures/atlas.png", "blocks");
-    loader.add(AssetType::Texture, "../res/textures/atlas.png", "blocks_tex");
-	loader.add(AssetType::Texture, "../res/textures/slot.png", "slot");
+	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/atlas.png", "blocks");
+    loader.add(AssetType::Texture, TEXTURES_FOLDER"/atlas.png", "blocks_tex");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER"/slot.png", "slot");
+    loader.add(AssetType::Texture, TEXTURES_FOLDER"/menubg.png", "menubg");
 
-	loader.add(AssetType::Font, "../res/fonts/font", "normal");
+	loader.add(AssetType::Font, FONTS_FOLDER"/font", "normal");
 }

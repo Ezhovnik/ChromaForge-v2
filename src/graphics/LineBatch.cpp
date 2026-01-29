@@ -122,3 +122,7 @@ void LineBatch::render() {
     mesh->draw(GL_LINES);
     index = 0;
 }
+
+void LineBatch::setLineWidth(float width) {
+    glLineWidth(width);
+}

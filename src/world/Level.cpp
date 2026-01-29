@@ -18,7 +18,8 @@ Level::Level(World* world, Player* player, EngineSettings& settings) :
 	world(world),
 	player(player),
     chunksStorage(new ChunksStorage(this)),
-    events(new LevelEvents()) 
+    events(new LevelEvents()) ,
+    settings(settings)
 {
     physics = new PhysicsSolver(glm::vec3(0, -GRAVITY, 0));
     uint matrixSize = (settings.chunks.loadDistance + settings.chunks.padding) * 2;
@@ -63,4 +64,9 @@ void Level::updatePlayer(float deltaTime, bool input, bool pause, bool interacti
 void Level::update() {
 	glm::vec3 position = player->hitbox->position;
 	chunks->setCenter(position.x, position.z);
+
+    int matrixSize = (settings.chunks.loadDistance + settings.chunks.padding) * 2;
+    if (chunks->width != matrixSize) {
+        chunks->resize(matrixSize, matrixSize);
+    }
 }

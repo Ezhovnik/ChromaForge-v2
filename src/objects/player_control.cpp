@@ -57,6 +57,10 @@ void PlayerController::updateKeyboard() {
 	input.noclip = Events::justPressed(keycode::N);
 	input.flight = Events::justPressed(keycode::F);
 
+    input.breakBlock = Events::justClicked(mousecode::BUTTON_1);
+    input.setBlock = Events::justClicked(mousecode::BUTTON_2);
+    input.selectBlock = Events::justClicked(mousecode::BUTTON_3);
+
 	for (int i = 1; i < 10; i++){
 		if (Events::justPressed(keycode::NUM_0 + i)) player->choosenBlock = i;
 	}
@@ -196,9 +200,11 @@ void PlayerController::updateInteraction(){
 	Player* player = level->player;
 	Lighting* lighting = level->lighting;
 	Camera* camera = player->camera;
+
 	glm::vec3 end;
 	glm::vec3 norm;
 	glm::vec3 iend;
+
 	voxel* vox = chunks->rayCast(camera->position, camera->front, 10.0f, end, norm, iend);
 	if (vox != nullptr){
         player->selectedVoxel = *vox;
@@ -222,11 +228,11 @@ void PlayerController::updateInteraction(){
 		}
 		
 		Block* block = Block::blocks[vox->id];
-		if (Events::justClicked(mousecode::BUTTON_1) && block->breakable && !level->player->noclip){
+		if (input.breakBlock && block->breakable && !level->player->noclip){
 			chunks->setVoxel(x, y, z, 0, 0);
 			lighting->onBlockSet(x, y ,z, 0);
 		}
-		if (Events::justClicked(mousecode::BUTTON_2) && !level->player->noclip){
+		if (input.setBlock && !level->player->noclip){
 			if (block->model != BlockModel::X){
 				x = (int)(iend.x)+(int)(norm.x);
                 y = (int)(iend.y)+(int)(norm.y);

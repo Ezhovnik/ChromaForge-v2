@@ -42,17 +42,19 @@
 
                 //src/graphics
                 "${workspaceFolder}/src/graphics/Batch2D.cpp",
-                "${workspaceFolder}/src/graphics/Batch3D.cpp",
+                // "${workspaceFolder}/src/graphics/Batch3D.cpp",
                 "${workspaceFolder}/src/graphics/BlocksRenderer.cpp",
                 "${workspaceFolder}/src/graphics/ChunksRenderer.cpp",
                 "${workspaceFolder}/src/graphics/Font.cpp",
                 // "${workspaceFolder}/src/graphics/Framebuffer.cpp",
+                "${workspaceFolder}/src/graphics/GfxContext.cpp",
                 "${workspaceFolder}/src/graphics/ImageData.cpp",
                 "${workspaceFolder}/src/graphics/LineBatch.cpp",
                 "${workspaceFolder}/src/graphics/Mesh.cpp",
                 "${workspaceFolder}/src/graphics/ShaderProgram.cpp",
                 "${workspaceFolder}/src/graphics/Sprite.cpp",
                 "${workspaceFolder}/src/graphics/Texture.cpp",
+                "${workspaceFolder}/src/graphics/Viewport.cpp",
 
                 //src/lighting
                 "${workspaceFolder}/src/lighting/Lighting.cpp",

@@ -20,6 +20,9 @@ struct PlayerInput {
 	bool jump;
 	bool noclip;
 	bool flight;
+    bool breakBlock;
+    bool setBlock;
+    bool selectBlock;
 };
 
 class PlayerController {

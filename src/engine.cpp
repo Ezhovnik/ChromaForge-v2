@@ -40,9 +40,7 @@
 #include "frontend/screens.h"
 
 // Реализация конструктора
-Engine::Engine(const EngineSettings& settings_) {
-    this->settings = settings_;
-
+Engine::Engine(EngineSettings& settings) : settings(settings){
     // Инициализация окна GLFW
     if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
@@ -54,7 +52,7 @@ Engine::Engine(const EngineSettings& settings_) {
     assets = new Assets();
     LOG_INFO("Loading Assets");
     AssetsLoader loader(assets);
-    AssetsLoader::createDefaults(loader); // Создание наборов ассетов по умолчанию
+    AssetsLoader::createDefaults(loader);
     AssetsLoader::addDefaults(loader);
     while (loader.hasNext()) {
         if (!loader.loadNext()) {
@@ -127,6 +125,7 @@ void Engine::mainloop() {
 
         gui->draw(&batch, assets);
 
+        Window::swapInterval(settings.display.swapInterval);
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
     }

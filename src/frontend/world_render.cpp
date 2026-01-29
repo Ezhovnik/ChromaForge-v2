@@ -15,7 +15,6 @@
 #include "../graphics/ShaderProgram.h"
 #include "../graphics/Texture.h"
 #include "../graphics/LineBatch.h"
-#include "../graphics/Batch3D.h"
 #include "../voxels/Chunks.h"
 #include "../voxels/Chunk.h"
 #include "../voxels/Block.h"
@@ -28,17 +27,17 @@
 #include "../graphics/ChunksRenderer.h"
 #include "../world/LevelEvents.h"
 #include "../math/FrustumCulling.h"
+#include "../engine.h"
+#include "../settings.h"
 
 inline constexpr glm::vec3 CLEAR_COLOR = {0.7f, 0.71f, 0.73f};
 inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {1.8f, 1.8f, 1.8f};
-inline constexpr glm::vec3 FOG_COLOR = {0.7f, 0.71f, 0.73f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
-WorldRenderer::WorldRenderer(Level* level, Assets* assets) : assets(assets), level(level) {
+WorldRenderer::WorldRenderer(Engine* engine, Level* level) : engine(engine), level(level) {
 	lineBatch = new LineBatch(4096);
-	batch3D = new Batch3D(1024);
 	renderer = new ChunksRenderer(level);
     frustumCulling = new Frustum();
 
@@ -48,7 +47,6 @@ WorldRenderer::WorldRenderer(Level* level, Assets* assets) : assets(assets), lev
 }
 
 WorldRenderer::~WorldRenderer() {
-	delete batch3D;
 	delete lineBatch;
 	delete renderer;
     delete frustumCulling;
@@ -74,23 +72,38 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 
 	shader->uniformMatrix("u_model", model);
 
-    glDisable(GL_MULTISAMPLE);
 	mesh->draw();
-    glEnable(GL_MULTISAMPLE);
 
     return true;
 }
 
-void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float fogCurve){
-    Chunks* chunks = level->chunks;
+void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader, bool occlusion) {
+	std::vector<size_t> indices;
+	for (size_t i = 0; i < chunks->volume; i++){
+		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
+		if (chunk == nullptr) continue;
+		indices.push_back(i);
+	}
 
-    Window::setBgColor(CLEAR_COLOR); // Цвет фона (светло-серый с голубым оттенком)
-	Window::clear();
+	float px = camera->position.x / (float)CHUNK_WIDTH;
+	float pz = camera->position.z / (float)CHUNK_DEPTH;
+	std::sort(indices.begin(), indices.end(), [this, chunks, px, pz](size_t i, size_t j) {
+		std::shared_ptr<Chunk> a = chunks->chunks[i];
+		std::shared_ptr<Chunk> b = chunks->chunks[j];
+		return ((a->chunk_x + 0.5f - px) * (a->chunk_x + 0.5f - px) + (a->chunk_z + 0.5f - pz) * (a->chunk_z + 0.5f - pz) >
+				(b->chunk_x + 0.5f - px) * (b->chunk_x + 0.5f - px) + (b->chunk_z + 0.5f - pz) * (b->chunk_z + 0.5f - pz));
+	});
 
-    Window::viewport(0, 0, Window::width, Window::height);
+	if (occlusion) frustumCulling->update(camera->getProjView());
+	chunks->visibleCount = 0;
+	for (size_t i = 0; i < indices.size(); i++){
+		chunks->visibleCount += drawChunk(indices[i], camera, shader, occlusion);
+	}
+}
 
-    glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool occlusion){
+    EngineSettings& settings = engine->getSettings();
+    Assets* assets = engine->getAssets();
 
     // Загрузка ресурсов с проверкой
 	Texture* texture = assets->getTexture("blocks");
@@ -110,100 +123,84 @@ void WorldRenderer::draw(Camera* camera, bool occlusion, float fogFactor, float 
         throw std::runtime_error("The shader 'lines' could not be found in the assets");
     }
 
-    // Рендеринг чанков
-	shader->use();
+    const Viewport& viewport = parent_context.getViewport();
+	const uint width = viewport.getWidth();
+	const uint height = viewport.getHeight();
 
-	shader->uniformMatrix("u_proj", camera->getProjection());
-	shader->uniformMatrix("u_view", camera->getView());
+    {
+		GfxContext context = parent_context.sub();
+		context.depthTest(true);
+		context.cullFace(true);
 
-	shader->uniform1f("u_gamma", GAMMA_VALUE);
+		Window::setBgColor(CLEAR_COLOR);
+		Window::clear();
+		Window::viewport(0, 0, width, height);
 
-	shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR);
-	shader->uniform3f("u_fogColor", FOG_COLOR);
-	shader->uniform1f("u_fogFactor", fogFactor);
-    shader->uniform1f("u_fogCurve", fogCurve);
-    shader->uniform3f("u_cameraPos", camera->position);
+		shader->use();
+		shader->uniformMatrix("u_proj", camera->getProjection());
+		shader->uniformMatrix("u_view", camera->getView());
+		shader->uniform1f("u_gamma", GAMMA_VALUE);
+		shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR);
 
-    Block* choosen_block = Block::blocks[level->player->choosenBlock];
-    if (!level->player->noclip) {
-        float multiplier = 0.6f;
-        shader->uniform3f("u_torchlightColor",
-                choosen_block->emission[0] / MAX_TORCH_LIGHT * multiplier,
-                choosen_block->emission[1] / MAX_TORCH_LIGHT * multiplier,
-                choosen_block->emission[2] / MAX_TORCH_LIGHT * multiplier);
-    } else {
-        shader->uniform3f("u_torchlightColor", 0, 0, 0);
-    }
-	shader->uniform1f("u_torchlightDistance", TORCH_LIGHT_DIST);
+        float fogFactor = 18.0f / (float)settings.chunks.loadDistance;
+		shader->uniform3f("u_fogColor", CLEAR_COLOR);
+		shader->uniform1f("u_fogFactor", fogFactor);
+		shader->uniform1f("u_fogCurve", settings.graphics.fogCurve);
 
-	texture->bind();
+		shader->uniform3f("u_cameraPos", camera->position);
 
-    // Собираем индексы чанков, которые нужно отрисовать
-	std::vector<size_t> indices;
-	for (size_t i = 0; i < chunks->volume; ++i){
-		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
-		if (chunk == nullptr) continue;
-		indices.push_back(i);
-	}
+		Block* choosen_block = Block::blocks[level->player->choosenBlock];
+        if (!level->player->noclip) {
+            float multiplier = 0.5f;
+            shader->uniform3f("u_torchlightColor",
+				choosen_block->emission[0] / 15.0f * multiplier,
+				choosen_block->emission[1] / 15.0f * multiplier,
+				choosen_block->emission[2] / 15.0f * multiplier
+            );
+        } else {
+            shader->uniform3f("u_torchlightColor", 0.0f, 0.0f, 0.0f);
+        }
+		
+		shader->uniform1f("u_torchlightDistance", 6.0f);
+		texture->bind();
 
-    // Вычисляем позицию камеры в координатах чанков (для сортировки)
-	float px = camera->position.x / (float)CHUNK_WIDTH;
-	float pz = camera->position.z / (float)CHUNK_DEPTH;
+		Chunks* chunks = level->chunks;
+		drawChunks(chunks, camera, shader, occlusion);
 
-    // Сортируем чанки по удаленности от камеры (от дальних к ближним)
-	std::sort(indices.begin(), indices.end(), [this, chunks, px, pz](size_t i, size_t j) {
-		std::shared_ptr<Chunk> a = chunks->chunks[i];
-		std::shared_ptr<Chunk> b = chunks->chunks[j];
-		return ((a->chunk_x + 0.5f - px)*(a->chunk_x + 0.5f - px) + (a->chunk_z + 0.5f - pz)*(a->chunk_z + 0.5f - pz) >
-				(b->chunk_x + 0.5f - px)*(b->chunk_x + 0.5f - px) + (b->chunk_z + 0.5f - pz)*(b->chunk_z + 0.5f - pz));
-	});
+		shader->uniformMatrix("u_model", glm::mat4(1.0f));
 
-    // Отрисовываем все видимые чанки
-    frustumCulling->update(camera->getProjView());
-    chunks->visibleCount = 0;
-	for (size_t i = 0; i < indices.size(); i++){
-		chunks->visibleCount += drawChunk(indices[i], camera, shader, occlusion);
-	}
-
-    shader->uniformMatrix("u_model", glm::mat4(1.0f));
-
-    // Рендеринг линий
-    if (level->playerController->selectedBlockId != -1 && !level->player->noclip){
-		Block* selectedBlock = Block::blocks[level->playerController->selectedBlockId];
-		glm::vec3 pos = level->playerController->selectedBlockPosition;
-
-        linesShader->use();
-        linesShader->uniformMatrix("u_projview", camera->getProjView());
-        glLineWidth(2.0f);
-
-		if (selectedBlock->model == BlockModel::Cube){
-			lineBatch->box(pos.x+0.5f, pos.y+0.5f, pos.z+0.5f, 1.005f,1.005f,1.005f, 0,0,0,0.5f);
-		} else if (selectedBlock->model == BlockModel::X){
-			lineBatch->box(pos.x+0.4f, pos.y+0.3f, pos.z+0.4f, 0.805f,0.805f,0.805f, 0,0,0,0.5f);
+		if (level->playerController->selectedBlockId != -1){
+			Block* block = Block::blocks[level->playerController->selectedBlockId];
+			glm::vec3 pos = level->playerController->selectedBlockPosition;
+			linesShader->use();
+			linesShader->uniformMatrix("u_projview", camera->getProjView());
+			lineBatch->setLineWidth(2.0f);
+			if (block->model == BlockModel::Cube){
+				lineBatch->box(pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f, 1.008f, 1.008f, 1.008f, 0, 0, 0, 0.5f);
+			} else if (block->model == BlockModel::X){
+				lineBatch->box(pos.x + 0.5f, pos.y + 0.35f, pos.z + 0.5f, 0.805f, 0.705f, 0.805f, 0, 0, 0, 0.5f);
+			}
+			lineBatch->render();
 		}
-
-        lineBatch->render();
 	}
+
 
     if (level->player->debug) {
         float length = 40.0f;
 
 		linesShader->use();
 		glm::mat4 model(1.0f);
-		model = glm::translate(model, glm::vec3(Window::width >> 1, -static_cast<int>(Window::height) >> 1, 0.f));
-		linesShader->uniformMatrix("u_projview", glm::ortho(0.0f, static_cast<float>(Window::width), -static_cast<float>(Window::height), 0.f, -length, length) * model * glm::inverse(camera->rotation));
+        glm::vec3 tsl = glm::vec3(width >> 1, -static_cast<int>(height) >> 1, 0.0f);
+		model = glm::translate(model, tsl);
+		linesShader->uniformMatrix("u_projview", glm::ortho(0.0f, static_cast<float>(width), -static_cast<float>(height), 0.0f, -length, length) * model * glm::inverse(camera->rotation));
 
-		glDisable(GL_DEPTH_TEST);
-
-		glLineWidth(4.0f);
+		lineBatch->setLineWidth(4.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->render();
 
-        glEnable(GL_DEPTH_TEST);
-
-		glLineWidth(2.0f);
+		lineBatch->setLineWidth(2.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 1.0f);

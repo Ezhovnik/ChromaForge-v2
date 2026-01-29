@@ -38,11 +38,12 @@ inline gui::Label* create_label(gui::wstringsupplier supplier) {
 HudRenderer::HudRenderer(Engine* engine, Level* level) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()) {
 	batch = new Batch2D(1024);
 
-	uicamera = new Camera(glm::vec3(), Window::height);
+	uicamera = new Camera(glm::vec3(), 1);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
     gui::Panel* panel = new gui::Panel(glm::vec2(250, 200), glm::vec4(5.0f), 1.0f);
+    debugPanel = std::shared_ptr<gui::UINode>(panel);
 	panel->listenInterval(1.0f, [this]() {
 		fpsString = std::to_wstring(fpsMax)+L" / "+std::to_wstring(fpsMin);
 		fpsMin = fps;
@@ -51,21 +52,25 @@ HudRenderer::HudRenderer(Engine* engine, Level* level) : assets(engine->getAsset
 
 	panel->setCoord(glm::vec2(10, 10));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
-		return L"chunks: " + std::to_wstring(this->level->chunks->chunksCount) + L" visible: " + std::to_wstring(this->level->chunks->visibleCount);
-	})));
-	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
 		return L"fps: " + this->fpsString;
+	})));
+    panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		return L"meshes: " + std::to_wstring(Mesh::meshesCount);
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
 		return L"occlusion: " + std::wstring(this->occlusion ? L"on" : L"off");
 	})));
-	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
-		std::wstringstream stream;
-		stream << std::hex << this->level->player->selectedVoxel.states;
-		return L"block-selected: "+std::to_wstring(this->level->player->selectedVoxel.id)+L" "+stream.str();
+    panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		return L"chunks: " + std::to_wstring(this->level->chunks->chunksCount) + L" visible: " + std::to_wstring(this->level->chunks->visibleCount);
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
-		return L"meshes: " + std::to_wstring(Mesh::meshesCount);
+		std::wstringstream stream;
+        auto player = this->level->player;
+		stream << std::hex << player->selectedVoxel.states;
+		return L"block-selected: " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
+	})));
+	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		return L"seed: " + std::to_wstring(this->level->world->seed);
 	})));
 	for (int ax = 0; ax < 3; ax++){
 		gui::Panel* sub = new gui::Panel(glm::vec2(10, 27), glm::vec4(0.0f));
@@ -93,26 +98,35 @@ HudRenderer::HudRenderer(Engine* engine, Level* level) : assets(engine->getAsset
 		panel->add(std::shared_ptr<gui::UINode>(sub));
 	}
 	panel->refresh();
-	debugPanel = std::shared_ptr<gui::UINode>(panel);
 
-	gui::Panel* pauseMenu = new gui::Panel(glm::vec2(350, 200));
-	pauseMenu->color(glm::vec4(0.0f));
+	panel = new gui::Panel(glm::vec2(350, 200));
+	pauseMenu = std::shared_ptr<gui::UINode>(panel);
+	panel->color(glm::vec4(0.0f));
 	{
-		gui::Button* button = new gui::Button(L"Continue", glm::vec4(12.0f, 10.0f, 12.0f, 12.0f));
+		gui::Button* button = new gui::Button(L"Continue", glm::vec4(10.0f));
 		button->listenAction([this](gui::GUI*){
 			this->pause = false;
+            pauseMenu->visible(false);
 		});
-		pauseMenu->add(std::shared_ptr<gui::UINode>(button));
+		panel->add(std::shared_ptr<gui::UINode>(button));
 	}
+
+    panel->add((new gui::Button(L"Settings", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
+        pauseMenu->visible(false);
+		gui->store("back", pauseMenu);
+        gui->get("settings")->visible(true);
+    }));
+
 	{
-		gui::Button* button = new gui::Button(L"Save and Quit to Menu", glm::vec4(12.0f, 10.0f, 12.0f, 12.0f));
+		gui::Button* button = new gui::Button(L"Save and Quit to Menu", glm::vec4(10.0f));
 		button->listenAction([this, engine](gui::GUI*){
 			this->pauseMenu->visible(false);
 			engine->setScreen(std::shared_ptr<Screen>(new MenuScreen(engine)));
         });
-		pauseMenu->add(std::shared_ptr<gui::UINode>(button));
+		panel->add(std::shared_ptr<gui::UINode>(button));
 	}
-	this->pauseMenu = std::shared_ptr<gui::UINode>(pauseMenu);
+
+	panel->visible(false);
 	guiController->add(this->debugPanel);
     guiController->add(this->pauseMenu);
 }
@@ -132,15 +146,16 @@ void HudRenderer::drawDebug(int fps, bool occlusion){
 	fpsMax = glm::max(fps, fpsMax);
 }
 
-void HudRenderer::drawInventory(Player* player) {
+void HudRenderer::drawInventory(const GfxContext& context, Player* player) {
 	Texture* blocks = assets->getTexture("blocks_tex");
     if (blocks == nullptr) {
         LOG_CRITICAL("The texture 'bloks_tex' could not be found in the assets");
         throw std::runtime_error("The texture 'bloks_tex' could not be found in the assets");
     }
 
-    const uint width = Window::width;
-    const uint height = Window::height;
+    const Viewport& viewport = context.getViewport();
+	const uint width = viewport.getWidth();
+	const uint height = viewport.getHeight();
 
 	uint size = 48;
 	uint step = 64;
@@ -211,16 +226,15 @@ void HudRenderer::drawInventory(Player* player) {
 	}
 }
 
-void HudRenderer::draw() {
-    const uint width = Window::width;
-    const uint height = Window::height;
+void HudRenderer::draw(const GfxContext& context) {
+    const Viewport& viewport = context.getViewport();
+	const uint width = viewport.getWidth();
+	const uint height = viewport.getHeight();
 
     debugPanel->visible(level->player->debug);
-	pauseMenu->visible(pause);
-	pauseMenu->setCoord((Window::size() - pauseMenu->size()) / 2.0f);
-
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+	pauseMenu->setCoord((viewport.size() - pauseMenu->size()) / 2.0f);
+    auto settingsPanel = guiController->get("settings");
+    settingsPanel->setCoord((viewport.size() - settingsPanel->size()) / 2.0f);
 
     uicamera->fov = height;
 
@@ -243,7 +257,7 @@ void HudRenderer::draw() {
 	batch->texture(nullptr);
 	batch->color = glm::vec4(1.0f);
 	if (Events::_cursor_locked && !level->player->debug) {
-		glLineWidth(2);
+		batch->setLineWidth(2.0f);
 		batch->line(width/2, height/2-6, width/2, height/2+6, 0.2f, 0.2f, 0.2f, 1.0f);
 		batch->line(width/2+6, height/2, width/2-6, height/2, 0.2f, 0.2f, 0.2f, 1.0f);
 	}
@@ -277,9 +291,16 @@ void HudRenderer::draw() {
 	}
 
 	if (Events::justPressed(keycode::ESCAPE) && !guiController->isFocusCaught()) {
-		if (pause) pause = false;
-		else if (inventoryOpen) inventoryOpen = false;
-		else pause = true;
+		if (pause) {
+            pause = false;
+            pauseMenu->visible(false);
+			settingsPanel->visible(false);
+        } else if (inventoryOpen) {
+            inventoryOpen = false;
+        } else {
+            pause = true;
+            pauseMenu->visible(true);
+        }
 	}
 
 	if (Events::justPressed(keycode::E) && !pause) {
@@ -294,7 +315,7 @@ void HudRenderer::draw() {
 		batch->rect(0, 0, Window::width, Window::height);
 	}
 
-	if (inventoryOpen) drawInventory(player);
+	if (inventoryOpen) drawInventory(context, player);
 
     batch->render();
 }
