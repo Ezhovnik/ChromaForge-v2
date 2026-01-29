@@ -30,16 +30,16 @@
 #include "../graphics/ShaderProgram.h"
 #include "../graphics/UVRegion.h"
 #include "../graphics/GfxContext.h"
+#include "../core_defs.h"
 
-std::shared_ptr<gui::UINode> create_main_menu_panel(Engine* engine) {
+std::shared_ptr<gui::UINode> create_main_menu_panel(Engine* engine, gui::PagesControl* pages) {
     gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
     std::shared_ptr<gui::UINode> panelptr(panel);
     panel->color(glm::vec4(0.0f));
 	panel->setCoord(glm::vec2(10, 10));
 
     panel->add((new gui::Button(L"New World", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        panel->visible(false);
-        gui->get("new-world")->visible(true);
+        pages->set("new-world");
     }));
     gui::Panel* worldsPanel = new gui::Panel(glm::vec2(390, 200), glm::vec4(5.0f));
     worldsPanel->color(glm::vec4(0.1f));
@@ -65,19 +65,19 @@ std::shared_ptr<gui::UINode> create_main_menu_panel(Engine* engine) {
     panel->add(worldsPanel);
 
     panel->add((new gui::Button(L"Settings", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        panel->visible(false);
-        gui->store("back", panelptr);
-        gui->get("settings")->visible(true);
+        pages->set("settings");
     }));
     
     panel->add((new gui::Button(L"Quit", glm::vec4(10.f)))->listenAction([](gui::GUI*) {
         Window::setShouldClose(true);
     }));
 
+    panel->refresh();
+
     return panelptr;
 }
 
-std::shared_ptr<gui::UINode> create_new_world_panel(Engine* engine) {
+std::shared_ptr<gui::UINode> create_new_world_panel(Engine* engine, gui::PagesControl* pages) {
     gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
     std::shared_ptr<gui::UINode> panelptr(panel);
     panel->color(glm::vec4(0.0f));
@@ -152,17 +152,45 @@ std::shared_ptr<gui::UINode> create_new_world_panel(Engine* engine) {
     }
 
     panel->add((new gui::Button(L"Back", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        panel->visible(false);
-        gui->get("main-menu")->visible(true);
+        pages->back();
     }));
+
+    panel->refresh();
 
     return panelptr;
 }
 
-gui::Panel* create_settings_panel(Engine* engine) {
+gui::Panel* create_controls_panel(Engine* engine, gui::PagesControl* pages) {
     gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
     panel->color(glm::vec4(0.0f));
-	panel->setCoord(glm::vec2(10, 10));
+
+    for (auto& entry : Events::bindings){
+        std::string bindname = entry.first;
+
+        gui::Panel* subpanel = new gui::Panel(glm::vec2(400, 45), glm::vec4(5.0f), 1.0f);
+        subpanel->color(glm::vec4(0.0f));
+        subpanel->orientation(gui::Orientation::horizontal);
+
+        gui::InputBindBox* bindbox = new gui::InputBindBox(entry.second);
+        subpanel->add(bindbox);
+        gui::Label* label = new gui::Label(util::str2wstr_utf8(bindname));
+        label->margin(glm::vec4(6.0f));
+        subpanel->add(label);
+        panel->add(subpanel);
+    }
+
+    panel->add((new gui::Button(L"Back", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
+        pages->back();
+    }));
+    panel->refresh();
+    return panel;
+}
+
+std::shared_ptr<gui::UINode> create_settings_panel(Engine* engine, gui::PagesControl* pages) {
+    gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
+    panel->color(glm::vec4(0.0f));
+	
+    std::shared_ptr<gui::UINode> panelptr(panel);
 
     {
         panel->add((new gui::Label(L""))->textSupplier([=]() {
@@ -216,31 +244,46 @@ gui::Panel* create_settings_panel(Engine* engine) {
         panel->add(checkpanel);
     }
 
-    panel->add((new gui::Button(L"Back", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        panel->visible(false);
-        gui->get("back")->visible(true);
+    panel->add((new gui::Button(L"Controls", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
+        pages->set("controls");
     }));
-    return panel;
+
+    panel->add((new gui::Button(L"Back", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
+        pages->back();
+    }));
+
+    panel->refresh();
+    return panelptr;
 }
 
 MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     gui::GUI* gui = engine->getGUI();
 
-    panel = create_main_menu_panel(engine);
-    newWorldPanel = create_new_world_panel(engine);
-    newWorldPanel->visible(false);
+    auto pagesptr = gui->get("pages");
+    gui::PagesControl* pages;
+    if (pagesptr == nullptr) {
+        pages = new gui::PagesControl();
+        auto newWorldPanel = create_new_world_panel(engine, pages);
 
-    auto settingsPanel = std::shared_ptr<gui::UINode>(create_settings_panel(engine));
-    settingsPanel->visible(false);
+        auto settingsPanel = std::shared_ptr<gui::UINode>(create_settings_panel(engine, pages));
+        auto controlsPanel = std::shared_ptr<gui::UINode>(create_controls_panel(engine, pages));
 
-    gui->store("main-menu", panel);
-    gui->store("new-world", newWorldPanel);
-    if (gui->get("settings") == nullptr) {
-        gui->store("settings", settingsPanel);
+        pages->add("new-world", newWorldPanel);
+        pages->add("settings", settingsPanel);
+        pages->add("controls", controlsPanel);
+
+        this->pages = std::shared_ptr<gui::UINode>(pages);
+        gui->add(this->pages);
+        gui->store("pages", this->pages);
+    } else {
+        this->pages = pagesptr;
+        pages = (gui::PagesControl*)(pagesptr.get());
+        pages->reset();
     }
-    gui->add(panel);
-    gui->add(newWorldPanel);
-    gui->add(settingsPanel);
+
+    auto mainMenuPanel = create_main_menu_panel(engine, pages);
+    pages->add("main", mainMenuPanel);
+    pages->set("main");
 
     batch = new Batch2D(1024);
     uicamera = new Camera(glm::vec3(), Window::height);
@@ -249,14 +292,6 @@ MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
 }
 
 MenuScreen::~MenuScreen() {
-    gui::GUI* gui = engine->getGUI();
-
-    gui->remove("main-menu");
-    gui->remove("new-world");
-
-    gui->remove(newWorldPanel);
-    gui->remove(panel);
-
     delete batch;
     delete uicamera;
 }
@@ -265,10 +300,7 @@ void MenuScreen::update(float delta) {
 }
 
 void MenuScreen::draw(float delta) {
-    panel->setCoord((Window::size() - panel->size()) / 2.0f);
-    newWorldPanel->setCoord((Window::size() - newWorldPanel->size()) / 2.0f);
-    auto settingsPanel = engine->getGUI()->get("settings");
-    settingsPanel->setCoord((Window::size() - settingsPanel->size()) / 2.0f);
+    pages->setCoord((Window::size() - pages->size()) / 2.0f);
     
     Window::clear();
     Window::setBgColor(glm::vec3(0.2f, 0.2f, 0.2f));
@@ -340,6 +372,7 @@ void LevelScreen::update(float delta) {
     level->updatePlayer(delta, !inputLocked, hud->isPause(), !inputLocked);
     level->update();
     level->chunksController->update(settings.chunks.loadSpeed);
+    hud->update();
 }
 
 void LevelScreen::draw(float deltaTime) {

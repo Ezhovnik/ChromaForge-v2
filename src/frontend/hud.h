@@ -35,12 +35,12 @@ private:
     bool pause = false;
 
     std::shared_ptr<gui::UINode> debugPanel;
-	std::shared_ptr<gui::UINode> pauseMenu;
 	gui::GUI* guiController;
 public:
 	HudRenderer(Engine* engine, Level* level);
 	~HudRenderer();
 
+    void update();
 	void draw(const GfxContext& context);
 	void drawDebug(int fps, bool occlusion);
     void drawInventory(const GfxContext& context, Player* player);

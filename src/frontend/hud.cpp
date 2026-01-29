@@ -28,6 +28,8 @@
 #include "gui/GUI.h"
 #include "../engine.h"
 #include "screens.h"
+#include "../core_defs.h"
+#include "../window/input.h"
 
 inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	gui::Label* label = new gui::Label(L"-");
@@ -41,6 +43,9 @@ HudRenderer::HudRenderer(Engine* engine, Level* level) : assets(engine->getAsset
 	uicamera = new Camera(glm::vec3(), 1);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
+
+    auto pagesptr = guiController->get("pages");
+	gui::PagesControl* pages = (gui::PagesControl*)(pagesptr.get());
 
     gui::Panel* panel = new gui::Panel(glm::vec2(250, 200), glm::vec4(5.0f), 1.0f);
     debugPanel = std::shared_ptr<gui::UINode>(panel);
@@ -100,40 +105,37 @@ HudRenderer::HudRenderer(Engine* engine, Level* level) : assets(engine->getAsset
 	panel->refresh();
 
 	panel = new gui::Panel(glm::vec2(350, 200));
-	pauseMenu = std::shared_ptr<gui::UINode>(panel);
+	auto pauseMenu = std::shared_ptr<gui::UINode>(panel);
 	panel->color(glm::vec4(0.0f));
 	{
 		gui::Button* button = new gui::Button(L"Continue", glm::vec4(10.0f));
-		button->listenAction([this](gui::GUI*){
-			this->pause = false;
-            pauseMenu->visible(false);
+		button->listenAction([=](gui::GUI*){
+			pages->reset();
+			pause = false;
 		});
 		panel->add(std::shared_ptr<gui::UINode>(button));
 	}
 
     panel->add((new gui::Button(L"Settings", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        pauseMenu->visible(false);
-		gui->store("back", pauseMenu);
-        gui->get("settings")->visible(true);
+        pages->set("settings");
     }));
 
 	{
 		gui::Button* button = new gui::Button(L"Save and Quit to Menu", glm::vec4(10.0f));
 		button->listenAction([this, engine](gui::GUI*){
-			this->pauseMenu->visible(false);
 			engine->setScreen(std::shared_ptr<Screen>(new MenuScreen(engine)));
         });
 		panel->add(std::shared_ptr<gui::UINode>(button));
 	}
 
-	panel->visible(false);
+    pages->reset();
+	pages->add("pause", pauseMenu);
 	guiController->add(this->debugPanel);
-    guiController->add(this->pauseMenu);
 }
 
 HudRenderer::~HudRenderer() {
     guiController->remove(debugPanel);
-	guiController->remove(pauseMenu);
+	//guiController->remove(gui->get("pages"));
 
 	delete batch;
 	delete uicamera;
@@ -214,9 +216,10 @@ void HudRenderer::drawInventory(const GfxContext& context, Player* player) {
 			tint.r *= 1.2f;
 			tint.g *= 1.2f;
 			tint.b *= 1.2f;
-			if (Events::justClicked(GLFW_MOUSE_BUTTON_LEFT)) player->choosenBlock = i + 1;
-			tint = glm::vec4(1.0f);
-		}
+			if (Events::justClicked(mousecode::BUTTON_1)) player->choosenBlock = i + 1;
+		} else {
+            tint = glm::vec4(1.0f);
+        }
 		
 		if (cblock->model == BlockModel::Cube){
 			batch->blockSprite(x, y, size, size, 16, cblock->textureFaces, tint);
@@ -226,15 +229,34 @@ void HudRenderer::drawInventory(const GfxContext& context, Player* player) {
 	}
 }
 
+void HudRenderer::update() {
+	gui::PagesControl* pages = (gui::PagesControl*)(guiController->get("pages").get());
+
+	if (Events::justPressed(keycode::ESCAPE) && !guiController->isFocusCaught()) {
+		if (pause) {
+			pause = false;
+			pages->reset();
+		} else if (inventoryOpen) {
+			inventoryOpen = false;
+		} else {
+			pause = true;
+			pages->set("pause");
+		}
+	}
+
+	if (Events::justActive(BIND_HUD_INVENTORY) && !pause) inventoryOpen = !inventoryOpen;
+
+	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();
+}
+
 void HudRenderer::draw(const GfxContext& context) {
     const Viewport& viewport = context.getViewport();
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
 
     debugPanel->visible(level->player->debug);
-	pauseMenu->setCoord((viewport.size() - pauseMenu->size()) / 2.0f);
-    auto settingsPanel = guiController->get("settings");
-    settingsPanel->setCoord((viewport.size() - settingsPanel->size()) / 2.0f);
+	auto pages = guiController->get("pages");
+    pages->setCoord((viewport.size() - pages->size()) / 2.0f);
 
     uicamera->fov = height;
 
@@ -289,25 +311,6 @@ void HudRenderer::draw(const GfxContext& context) {
 			batch->sprite(Window::width/2-24, uicamera->fov - 72, 48, 48, 16, choosen_block->textureFaces[3], glm::vec4(1.0f));
 		}
 	}
-
-	if (Events::justPressed(keycode::ESCAPE) && !guiController->isFocusCaught()) {
-		if (pause) {
-            pause = false;
-            pauseMenu->visible(false);
-			settingsPanel->visible(false);
-        } else if (inventoryOpen) {
-            inventoryOpen = false;
-        } else {
-            pause = true;
-            pauseMenu->visible(true);
-        }
-	}
-
-	if (Events::justPressed(keycode::E) && !pause) {
-		inventoryOpen = !inventoryOpen;
-	}
-
-	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();
 
 	if (pause || inventoryOpen) {
 		batch->texture(nullptr);

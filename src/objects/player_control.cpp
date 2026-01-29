@@ -13,6 +13,7 @@
 #include "../window/Camera.h"
 #include "../window/Events.h"
 #include "../window/input.h"
+#include "../core_defs.h"
 
 namespace PlayerConsts {
     constexpr float CROUCH_SPEED_MUL = 0.25f;
@@ -44,22 +45,22 @@ void PlayerController::refreshCamera() {
 }
 
 void PlayerController::updateKeyboard() {
-	input.zoom = Events::isPressed(keycode::C);
-	input.moveForward = Events::isPressed(keycode::W);
-	input.moveBack = Events::isPressed(keycode::S);
-	input.moveLeft = Events::isPressed(keycode::A);
-	input.moveRight = Events::isPressed(keycode::D);
-	input.sprint = Events::isPressed(keycode::LEFT_CONTROL);
-	input.shift = Events::isPressed(keycode::LEFT_SHIFT);
-	input.cheat = Events::isPressed(keycode::R);
-	input.jump = Events::isPressed(keycode::SPACE);
+	input.zoom = Events::isActive(BIND_CAM_ZOOM);
+	input.moveForward = Events::isActive(BIND_MOVE_FORWARD);
+	input.moveBack = Events::isActive(BIND_MOVE_BACK);
+	input.moveLeft = Events::isActive(BIND_MOVE_LEFT);
+	input.moveRight = Events::isActive(BIND_MOVE_RIGHT);
+	input.sprint = Events::isActive(BIND_MOVE_SPRINT);
+	input.crouch = Events::isActive(BIND_MOVE_CROUCH);
+	input.cheat = Events::isActive(BIND_MOVE_CHEAT);
+	input.jump = Events::isActive(BIND_MOVE_JUMP);
 
-	input.noclip = Events::justPressed(keycode::N);
-	input.flight = Events::justPressed(keycode::F);
+	input.noclip = Events::justActive(BIND_PLAYER_NOCLIP);
+	input.flight = Events::justActive(BIND_PLAYER_FLIGHT);
 
-    input.breakBlock = Events::justClicked(mousecode::BUTTON_1);
-    input.setBlock = Events::justClicked(mousecode::BUTTON_2);
-    input.selectBlock = Events::justClicked(mousecode::BUTTON_3);
+    input.breakBlock = Events::justActive(BIND_BLOCK_BREAK);
+    input.setBlock = Events::justActive(BIND_BLOCK_SET);
+    input.selectBlock = Events::justActive(BIND_BLOCK_SELECT);
 
 	for (int i = 1; i < 10; i++){
 		if (Events::justPressed(keycode::NUM_0 + i)) player->choosenBlock = i;
@@ -73,9 +74,12 @@ void PlayerController::resetKeyboard() {
 	input.moveLeft = false;
 	input.moveRight = false;
 	input.sprint = false;
-	input.shift = false;
+	input.crouch = false;
 	input.cheat = false;
 	input.jump = false;
+    input.breakBlock = false;
+    input.setBlock = false;
+    input.selectBlock = false;
 }
 
 void PlayerController::updateControls(float delta){
@@ -83,7 +87,7 @@ void PlayerController::updateControls(float delta){
 	Camera* camera = player->camera;
 	Hitbox* hitbox = player->hitbox;
 
-	bool crouch = input.shift && hitbox->grounded && !input.sprint;
+	bool crouch = input.crouch && hitbox->grounded && !input.sprint;
 	float speed = player->speed;
 
 	if (player->flight) speed *= PlayerConsts::FLIGHT_SPEED_MUL;
@@ -165,7 +169,7 @@ void PlayerController::updateControls(float delta){
 
 		if (input.jump) hitbox->velocity.y += speed * delta * 9;
 
-		if (input.shift) hitbox->velocity.y -= speed * delta * 9;
+		if (input.crouch) hitbox->velocity.y -= speed * delta * 9;
 	}
 	if (!hitbox->grounded) hitbox->linear_damping = PlayerConsts::AIR_DAMPING;
 
@@ -243,7 +247,7 @@ void PlayerController::updateInteraction(){
 				lighting->onBlockSet(x,y,z, player->choosenBlock);
 			}
 		}
-		if (Events::justClicked(mousecode::BUTTON_3)) player->choosenBlock = chunks->getVoxel(x,y,z)->id;
+		if (input.selectBlock) player->choosenBlock = chunks->getVoxel(x,y,z)->id;
 	} else {
 		selectedBlockId = -1;
 	}

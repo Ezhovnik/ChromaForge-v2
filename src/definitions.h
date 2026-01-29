@@ -29,5 +29,6 @@ namespace BlockID {
 }
 
 void setup_definitions();
+void setup_bindings();
 
 #endif // SRC_DECLARATIONS_H_

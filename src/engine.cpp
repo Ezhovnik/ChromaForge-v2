@@ -66,8 +66,6 @@ Engine::Engine(EngineSettings& settings) : settings(settings){
 
     gui = new gui::GUI();
 
-    setScreen(std::shared_ptr<Screen>(new MenuScreen(this)));
-
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
 }
@@ -104,6 +102,10 @@ void Engine::updateHotkeys() {
 
 // Основной цикл приложения
 void Engine::mainloop() {
+    LOG_INFO("Loading the menu screen");
+    setScreen(std::shared_ptr<Screen>(new MenuScreen(this)));
+    LOG_INFO("The menu screen has loaded successfully");
+
     LOG_INFO("Preparing systems");
     Batch2D batch(1024);
     lastTime = Window::time();

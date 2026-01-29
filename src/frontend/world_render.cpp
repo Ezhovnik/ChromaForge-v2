@@ -175,9 +175,9 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 			linesShader->use();
 			linesShader->uniformMatrix("u_projview", camera->getProjView());
 			lineBatch->setLineWidth(2.0f);
-			if (block->model == BlockModel::Cube){
+			if (block->model == BlockModel::Cube && !level->player->noclip){
 				lineBatch->box(pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f, 1.008f, 1.008f, 1.008f, 0, 0, 0, 0.5f);
-			} else if (block->model == BlockModel::X){
+			} else if (block->model == BlockModel::X && !level->player->noclip){
 				lineBatch->box(pos.x + 0.5f, pos.y + 0.35f, pos.z + 0.5f, 0.805f, 0.705f, 0.805f, 0, 0, 0, 0.5f);
 			}
 			lineBatch->render();
