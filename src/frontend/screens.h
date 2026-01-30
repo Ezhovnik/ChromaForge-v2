@@ -13,10 +13,6 @@ class Engine;
 class Camera;
 class Batch2D;
 
-namespace gui {
-    class UINode;
-}
-
 class Screen {
 protected:
     Engine* engine;
@@ -28,8 +24,6 @@ public:
 };
 
 class MenuScreen : public Screen {
-    std::shared_ptr<gui::UINode> pages;
-
     Batch2D* batch;
     Camera* uicamera;
 public:

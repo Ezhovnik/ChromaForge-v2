@@ -16,7 +16,7 @@ std::filesystem::path engine_fs::get_screenshot_file(std::string ext) {
 	auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
 
-	const char* format = "%d-%m-%Y_%H-%M-%S";
+	const char* format = "%Y-%m-%d_%H-%M-%S";
 
 	std::stringstream ss;
 	ss << std::put_time(&tm, format);

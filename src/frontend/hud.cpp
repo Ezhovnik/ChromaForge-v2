@@ -30,6 +30,7 @@
 #include "screens.h"
 #include "../core_defs.h"
 #include "../window/input.h"
+#include "menu.h"
 
 inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	gui::Label* label = new gui::Label(L"-");
@@ -38,14 +39,12 @@ inline gui::Label* create_label(gui::wstringsupplier supplier) {
 }
 
 HudRenderer::HudRenderer(Engine* engine, Level* level) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()) {
-	batch = new Batch2D(1024);
+	auto menu = guiController->getMenu();
+    batch = new Batch2D(1024);
 
 	uicamera = new Camera(glm::vec3(), 1);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
-
-    auto pagesptr = guiController->get("pages");
-	gui::PagesControl* pages = (gui::PagesControl*)(pagesptr.get());
 
     gui::Panel* panel = new gui::Panel(glm::vec2(250, 200), glm::vec4(5.0f), 1.0f);
     debugPanel = std::shared_ptr<gui::UINode>(panel);
@@ -104,32 +103,8 @@ HudRenderer::HudRenderer(Engine* engine, Level* level) : assets(engine->getAsset
 	}
 	panel->refresh();
 
-	panel = new gui::Panel(glm::vec2(350, 200));
-	auto pauseMenu = std::shared_ptr<gui::UINode>(panel);
-	panel->color(glm::vec4(0.0f));
-	{
-		gui::Button* button = new gui::Button(L"Continue", glm::vec4(10.0f));
-		button->listenAction([=](gui::GUI*){
-			pages->reset();
-			pause = false;
-		});
-		panel->add(std::shared_ptr<gui::UINode>(button));
-	}
-
-    panel->add((new gui::Button(L"Settings", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        pages->set("settings");
-    }));
-
-	{
-		gui::Button* button = new gui::Button(L"Save and Quit to Menu", glm::vec4(10.0f));
-		button->listenAction([this, engine](gui::GUI*){
-			engine->setScreen(std::shared_ptr<Screen>(new MenuScreen(engine)));
-        });
-		panel->add(std::shared_ptr<gui::UINode>(button));
-	}
-
-    pages->reset();
-	pages->add("pause", pauseMenu);
+    menu->reset();
+	
 	guiController->add(this->debugPanel);
 }
 
@@ -230,17 +205,18 @@ void HudRenderer::drawInventory(const GfxContext& context, Player* player) {
 }
 
 void HudRenderer::update() {
-	gui::PagesControl* pages = (gui::PagesControl*)(guiController->get("pages").get());
+	auto menu = guiController->getMenu();
+	if (pause && menu->current().panel == nullptr) pause = false;
 
 	if (Events::justPressed(keycode::ESCAPE) && !guiController->isFocusCaught()) {
 		if (pause) {
 			pause = false;
-			pages->reset();
+			menu->reset();
 		} else if (inventoryOpen) {
 			inventoryOpen = false;
 		} else {
 			pause = true;
-			pages->set("pause");
+			menu->set("pause");
 		}
 	}
 
@@ -255,8 +231,6 @@ void HudRenderer::draw(const GfxContext& context) {
 	const uint height = viewport.getHeight();
 
     debugPanel->visible(level->player->debug);
-	auto pages = guiController->get("pages");
-    pages->setCoord((viewport.size() - pages->size()) / 2.0f);
 
     uicamera->fov = height;
 

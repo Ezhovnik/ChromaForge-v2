@@ -45,6 +45,7 @@ Outer element
 namespace gui {
     class UINode;
     class Container;
+    class PagesControl;
 
     class GUI {
         Container* container;
@@ -56,9 +57,12 @@ namespace gui {
         std::unordered_map<std::string, std::shared_ptr<UINode>> storage;
 
         Camera* uicamera;
+        PagesControl* menu;
     public:
         GUI();
         ~GUI();
+
+        PagesControl* getMenu();
 
         std::shared_ptr<UINode> getFocused() const;
         bool isFocusCaught() const;
