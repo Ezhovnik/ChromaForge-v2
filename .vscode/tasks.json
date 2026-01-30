@@ -27,6 +27,7 @@
                 "${workspaceFolder}/src/files/engine_files.cpp",
                 "${workspaceFolder}/src/files/files.cpp",
                 "${workspaceFolder}/src/files/rle.cpp",
+                "${workspaceFolder}/src/files/settings_io.cpp",
                 "${workspaceFolder}/src/files/WorldFiles.cpp",
 
                 //src/frontend/gui
@@ -37,6 +38,7 @@
 
                 //src/frontend
                 "${workspaceFolder}/src/frontend/hud.cpp",
+                "${workspaceFolder}/src/frontend/menu.cpp",
                 "${workspaceFolder}/src/frontend/screens.cpp",
                 "${workspaceFolder}/src/frontend/world_render.cpp",
 

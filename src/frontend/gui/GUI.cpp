@@ -21,11 +21,18 @@ GUI::GUI() {
     uicamera = new Camera(glm::vec3(), Window::height);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
+
+    menu = new PagesControl();
+    container->add(menu);
 }
 
 GUI::~GUI() {
     delete uicamera;
     delete container;
+}
+
+PagesControl* GUI::getMenu() {
+    return menu;
 }
 
 void GUI::activate(float deltaTime) {
@@ -86,6 +93,7 @@ void GUI::activate(float deltaTime) {
 }
 
 void GUI::draw(Batch2D* batch, Assets* assets) {
+    menu->setCoord((Window::size() - menu->size()) / 2.0f);
     uicamera->fov = Window::height;
 
 	ShaderProgram* uishader = assets->getShader("ui");

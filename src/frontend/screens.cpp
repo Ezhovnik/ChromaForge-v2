@@ -21,269 +21,27 @@
 #include "hud.h"
 #include "gui/GUI.h"
 #include "gui/panels.h"
-#include "gui/controls.h"
 #include "../util/stringutil.h"
 #include "../engine.h"
 #include "../logger/Logger.h"
-#include "../files/engine_files.h"
 #include "../graphics/Batch2D.h"
 #include "../graphics/ShaderProgram.h"
 #include "../graphics/UVRegion.h"
 #include "../graphics/GfxContext.h"
 #include "../core_defs.h"
-
-std::shared_ptr<gui::UINode> create_main_menu_panel(Engine* engine, gui::PagesControl* pages) {
-    gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
-    std::shared_ptr<gui::UINode> panelptr(panel);
-    panel->color(glm::vec4(0.0f));
-	panel->setCoord(glm::vec2(10, 10));
-
-    panel->add((new gui::Button(L"New World", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        pages->set("new-world");
-    }));
-    gui::Panel* worldsPanel = new gui::Panel(glm::vec2(390, 200), glm::vec4(5.0f));
-    worldsPanel->color(glm::vec4(0.1f));
-
-    std::filesystem::path saves_folder = engine_fs::get_saves_folder();
-    if (std::filesystem::is_directory(saves_folder)) {
-        for (auto const& entry : std::filesystem::directory_iterator(saves_folder)) {
-            std::string name = entry.path().filename().string();
-            gui::Button* button = new gui::Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
-            button->color(glm::vec4(0.5f));
-            button->listenAction([engine, panel, name](gui::GUI*) {
-                LOG_INFO("Loading world");
-                EngineSettings& settings = engine->getSettings();
-                auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(name);
-                World* world = new World(name, folder, 42, settings);
-                auto screen = new LevelScreen(engine, world->load(settings));
-                engine->setScreen(std::shared_ptr<Screen>(screen));
-                LOG_INFO("The world is loaded");
-            });
-            worldsPanel->add(button);
-        }
-    }
-    panel->add(worldsPanel);
-
-    panel->add((new gui::Button(L"Settings", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        pages->set("settings");
-    }));
-    
-    panel->add((new gui::Button(L"Quit", glm::vec4(10.f)))->listenAction([](gui::GUI*) {
-        Window::setShouldClose(true);
-    }));
-
-    panel->refresh();
-
-    return panelptr;
-}
-
-std::shared_ptr<gui::UINode> create_new_world_panel(Engine* engine, gui::PagesControl* pages) {
-    gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
-    std::shared_ptr<gui::UINode> panelptr(panel);
-    panel->color(glm::vec4(0.0f));
-	panel->setCoord(glm::vec2(10, 10));
-
-    gui::TextBox* worldNameInput;
-    {
-        gui::Label* label = new gui::Label(L"World Name");
-        panel->add(label);
-
-        gui::TextBox* input = new gui::TextBox(L"New World", glm::vec4(6.0f));
-        panel->add(std::shared_ptr<gui::UINode>(input));
-        worldNameInput = input;
-    }
-
-    gui::TextBox* seedInput;
-    {
-        gui::Label* label = new gui::Label(L"Seed");
-        panel->add(label);
-
-        uint64_t randseed = rand() ^ (rand() << 8) ^ 
-                        (rand() << 16) ^ (rand() << 24) ^
-                        ((uint64_t)rand() << 32) ^ 
-                        ((uint64_t)rand() << 40) ^
-                        ((uint64_t)rand() << 56);
-
-        seedInput = new gui::TextBox(std::to_wstring(randseed), glm::vec4(6.0f));
-        panel->add(seedInput);
-    }
-
-    {
-        gui::Button* button = new gui::Button(L"Create World", glm::vec4(10.0f));
-        button->margin(glm::vec4(0, 20, 0, 0));
-        glm::vec4 basecolor = worldNameInput->color();   
-        button->listenAction([=](gui::GUI*) {
-            std::wstring name = worldNameInput->text();
-            std::string nameutf8 = util::wstr2str_utf8(name);
-
-            if (!util::is_valid_filename(name) || engine_fs::is_world_name_used(nameutf8)) {
-                panel->listenInterval(0.1f, [worldNameInput, basecolor]() {
-                    static bool flag = true;
-                    if (flag) worldNameInput->color(glm::vec4(0.3f, 0.0f, 0.0f, 0.5f));
-                    else worldNameInput->color(basecolor);
-                    flag = !flag;
-                }, 4);
-                return;
-            }
-
-            std::wstring seedstr = seedInput->text();
-            uint64_t seed;
-            if (util::is_integer(seedstr)) {
-                try {
-                    seed = std::stoull(seedstr);
-                } catch (const std::out_of_range& err) {
-                    std::hash<std::wstring> hash;
-                    seed = hash(seedstr);
-                }
-            } else {
-                std::hash<std::wstring> hash;
-                seed = hash(seedstr);
-            }
-            
-            EngineSettings& settings = engine->getSettings();
-
-            auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(nameutf8);
-            std::filesystem::create_directories(folder);
-            World* world = new World(nameutf8, folder, seed, settings);
-            auto screen = new LevelScreen(engine, world->load(settings));
-            engine->setScreen(std::shared_ptr<Screen>(screen));
-        });
-        panel->add(button);
-    }
-
-    panel->add((new gui::Button(L"Back", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        pages->back();
-    }));
-
-    panel->refresh();
-
-    return panelptr;
-}
-
-gui::Panel* create_controls_panel(Engine* engine, gui::PagesControl* pages) {
-    gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
-    panel->color(glm::vec4(0.0f));
-
-    for (auto& entry : Events::bindings){
-        std::string bindname = entry.first;
-
-        gui::Panel* subpanel = new gui::Panel(glm::vec2(400, 45), glm::vec4(5.0f), 1.0f);
-        subpanel->color(glm::vec4(0.0f));
-        subpanel->orientation(gui::Orientation::horizontal);
-
-        gui::InputBindBox* bindbox = new gui::InputBindBox(entry.second);
-        subpanel->add(bindbox);
-        gui::Label* label = new gui::Label(util::str2wstr_utf8(bindname));
-        label->margin(glm::vec4(6.0f));
-        subpanel->add(label);
-        panel->add(subpanel);
-    }
-
-    panel->add((new gui::Button(L"Back", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        pages->back();
-    }));
-    panel->refresh();
-    return panel;
-}
-
-std::shared_ptr<gui::UINode> create_settings_panel(Engine* engine, gui::PagesControl* pages) {
-    gui::Panel* panel = new gui::Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
-    panel->color(glm::vec4(0.0f));
-	
-    std::shared_ptr<gui::UINode> panelptr(panel);
-
-    {
-        panel->add((new gui::Label(L""))->textSupplier([=]() {
-            return L"Load Distance: " + std::to_wstring(engine->getSettings().chunks.loadDistance) + L" chunks";
-        }));
-
-        gui::TrackBar* trackbar = new gui::TrackBar(3, 66, 10, 1, 3);
-        trackbar->supplier([=]() {
-            return engine->getSettings().chunks.loadDistance;
-        });
-        trackbar->consumer([=](double value) {
-            engine->getSettings().chunks.loadDistance = value;
-        });
-        panel->add(trackbar);
-    }
-
-    {
-        panel->add((new gui::Label(L""))->textSupplier([=]() {
-            std::wstringstream ss;
-            ss << std::fixed << std::setprecision(1);
-            ss << engine->getSettings().graphics.fogCurve;
-            return L"Fog Curve: " + ss.str();
-        }));
-
-        gui::TrackBar* trackbar = new gui::TrackBar(1.0, 6.0, 1.0, 0.1, 2);
-        trackbar->supplier([=]() {
-            return engine->getSettings().graphics.fogCurve;
-        });
-        trackbar->consumer([=](double value) {
-            engine->getSettings().graphics.fogCurve = value;
-        });
-        panel->add(trackbar);
-    }
-
-    {
-        gui::Panel* checkpanel = new gui::Panel(glm::vec2(400, 32), glm::vec4(5.0f), 1.0f);
-        checkpanel->color(glm::vec4(0.0f));
-        checkpanel->orientation(gui::Orientation::horizontal);
-
-        gui::CheckBox* checkbox = new gui::CheckBox();
-        checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
-        checkbox->supplier([=]() {
-            return engine->getSettings().display.swapInterval != 0;
-        });
-        checkbox->consumer([=](bool checked) {
-            engine->getSettings().display.swapInterval = checked;
-        });
-        checkpanel->add(checkbox);
-        checkpanel->add(new gui::Label(L"V-Sync"));
-
-        panel->add(checkpanel);
-    }
-
-    panel->add((new gui::Button(L"Controls", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        pages->set("controls");
-    }));
-
-    panel->add((new gui::Button(L"Back", glm::vec4(10.f)))->listenAction([=](gui::GUI* gui) {
-        pages->back();
-    }));
-
-    panel->refresh();
-    return panelptr;
-}
+#include "menu.h"
 
 MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
-    gui::GUI* gui = engine->getGUI();
+    auto menu = engine->getGUI()->getMenu();
 
-    auto pagesptr = gui->get("pages");
-    gui::PagesControl* pages;
-    if (pagesptr == nullptr) {
-        pages = new gui::PagesControl();
-        auto newWorldPanel = create_new_world_panel(engine, pages);
+    if (!menu->has("new-world")) menu->add("new-world", create_new_world_panel(engine, menu));
+    if (!menu->has("settings")) menu->add("settings", create_settings_panel(engine, menu));
+    if (!menu->has("controls")) menu->add("controls", create_controls_panel(engine, menu));
+    if (!menu->has("pause")) menu->add("pause", create_pause_panel(engine, menu));
 
-        auto settingsPanel = std::shared_ptr<gui::UINode>(create_settings_panel(engine, pages));
-        auto controlsPanel = std::shared_ptr<gui::UINode>(create_controls_panel(engine, pages));
-
-        pages->add("new-world", newWorldPanel);
-        pages->add("settings", settingsPanel);
-        pages->add("controls", controlsPanel);
-
-        this->pages = std::shared_ptr<gui::UINode>(pages);
-        gui->add(this->pages);
-        gui->store("pages", this->pages);
-    } else {
-        this->pages = pagesptr;
-        pages = (gui::PagesControl*)(pagesptr.get());
-        pages->reset();
-    }
-
-    auto mainMenuPanel = create_main_menu_panel(engine, pages);
-    pages->add("main", mainMenuPanel);
-    pages->set("main");
+    menu->add("main", create_main_menu_panel(engine, menu));
+    menu->reset();
+    menu->set("main");
 
     batch = new Batch2D(1024);
     uicamera = new Camera(glm::vec3(), Window::height);
@@ -300,8 +58,6 @@ void MenuScreen::update(float delta) {
 }
 
 void MenuScreen::draw(float delta) {
-    pages->setCoord((Window::size() - pages->size()) / 2.0f);
-    
     Window::clear();
     Window::setBgColor(glm::vec3(0.2f, 0.2f, 0.2f));
 

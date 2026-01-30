@@ -1,6 +1,8 @@
 #ifndef WINDOW_INPUT_H_
 #define WINDOW_INPUT_H_
 
+#include <string>
+
 namespace keycode {
     extern int ENTER;
     extern int TAB;
@@ -81,7 +83,7 @@ namespace keycode {
     extern int LEFT_BRACKET;
     extern int RIGHT_BRACKET;
 
-    extern const char* name(int code);
+    extern const std::string name(int code);
 }
 
 namespace mousecode {
@@ -89,7 +91,7 @@ namespace mousecode {
     extern int BUTTON_2;
     extern int BUTTON_3;
 
-    extern const char* name(int code);
+    extern const std::string name(int code);
 }
 
 enum class inputType {
@@ -110,7 +112,7 @@ struct Binding {
         return state && justChange;
     }
 
-    const char* text() const {
+    const std::string text() const {
         switch (type) {
             case inputType::keyboard: return keycode::name(code);
             case inputType::mouse: return mousecode::name(code);
