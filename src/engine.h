@@ -10,6 +10,7 @@
 
 class Assets;
 class Screen;
+class Content;
 
 namespace gui {
     class GUI;
@@ -27,6 +28,7 @@ private:
     Assets* assets; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen = nullptr;
     EngineSettings settings;
+    Content* content;
 
     gui::GUI* gui;
 
@@ -34,7 +36,7 @@ private:
     double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
     double deltaTime = 0.0; // Разница во времени между кадрами
 public:
-    Engine(EngineSettings& settings); // Конструктор
+    Engine(EngineSettings& settings, Content* content); // Конструктор
     ~Engine(); // Деструктор
 
     void updateTimers(); // Обновление таймеров (frame, deltaTime)
@@ -44,6 +46,7 @@ public:
     Assets* getAssets();
 	gui::GUI* getGUI();
 	EngineSettings& getSettings();
+    const Content* getContent() const;
 
 	void setScreen(std::shared_ptr<Screen> screen);
 };

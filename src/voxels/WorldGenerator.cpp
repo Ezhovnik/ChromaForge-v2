@@ -16,6 +16,8 @@
 #include "../definitions.h"
 #include "../math/voxmaths.h"
 #include "../logger/Logger.h"
+#include "../content/Content.h"
+#include "../voxels/Block.h"
 
 inline constexpr int SEA_LEVEL = 55;
 
@@ -97,7 +99,7 @@ float calc_height(fnl_state *noise, int real_x, int real_z){
 	return height;
 }
 
-int generate_tree(fnl_state *noise, 
+blockid_t WorldGenerator::generate_tree(fnl_state *noise, 
 				  PseudoRandom* random, 
 				  Map2D& heights, 
 				  Map2D& humidity,
@@ -117,20 +119,37 @@ int generate_tree(fnl_state *noise,
 	int centerZ = tileZ * tileSize + tileSize / 2 + randomZ;
 
 	bool gentree = (random->rand() % 10) < humidity.get(centerX, centerZ) * 13;
-	if (!gentree) return BlockID::AIR;
+	if (!gentree) return idAir;
 
 	int height = (int)(heights.get(centerX, centerZ));
-	if (height < SEA_LEVEL + 1) return BlockID::AIR;
+	if (height < SEA_LEVEL + 1) return idAir;
 	int lx = real_x - centerX;
 	int radius = random->rand() % 4 + 2;
 	int ly = real_y - height - 3 * radius;
 	int lz = real_z - centerZ;
-	if (lx == 0 && lz == 0 && real_y - height < (3 * radius + radius/2)) return BlockID::LOG;
-	if (lx * lx + ly * ly / 2 + lz * lz < radius * radius) return BlockID::LEAVES;
+	if (lx == 0 && lz == 0 && real_y - height < (3 * radius + radius / 2)) return idLog;
+	if (lx * lx + ly * ly / 2 + lz * lz < radius * radius) return idLeaves;
 	return 0;
 }
 
-void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
+WorldGenerator::WorldGenerator(const Content* content)
+                : idAir(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("air"))->id),
+                idStone(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("stone"))->id),
+                idDirt(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("dirt"))->id),
+				idMoss(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("moss"))->id),
+				idSand(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("sand"))->id),
+				idWater(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("water"))->id),
+				idLog(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("log"))->id),
+				idLeaves(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("leaves"))->id),
+				idGrass(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("grass"))->id),
+				idPoppy(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("poppy"))->id),
+				idDandelion(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("dandelion"))->id),
+				idDaisy(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("daisy"))->id),
+				idMarigold(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("marigold"))->id),
+				idBedrock(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("bedrock"))->id) {;
+}
+
+void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){
 	const int treesTile = 12;
 	fnl_state noise = fnlCreateState();
 	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
@@ -171,46 +190,46 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed){
 
 			for (int y = 0; y < CHUNK_HEIGHT; y++){
 				int real_y = y;
-				int id = real_y < SEA_LEVEL ? BlockID::WATER : BlockID::AIR;
+				int id = real_y < SEA_LEVEL ? idWater : idAir;
 				int states = 0;
-				if ((real_y == (int)height) && (SEA_LEVEL-2 < real_y)) {
-					id = BlockID::MOSS;
+				if ((real_y == (int)height) && (SEA_LEVEL - 2 < real_y)) {
+					id = idMoss;
 				} else if (real_y < (height - 6)){
-					id = BlockID::STONE;
+					id = idStone;
 				} else if (real_y < height){
-					id = BlockID::DIRT;
+					id = idDirt;
 				} else {
-					int tree = generate_tree(&noise, &randomtree, heights, humidity, real_x, real_y, real_z, treesTile);
-					if (tree) {
+					blockid_t tree = generate_tree(&noise, &randomtree, heights, humidity, real_x, real_y, real_z, treesTile);
+					if (tree != idAir) {
 						id = tree;
 						states = BLOCK_DIR_Y;
 					}
 				}
 				if (((height - (1.5 - 0.2 * pow(height - 54, 4))) < real_y) && (real_y < height) && humidity.get(real_x, real_z) < 0.1){
-					id = BlockID::SAND;
+					id = idSand;
 				}
 
-				if (real_y <= 2) id = BlockID::BEDROCK;
+				if (real_y <= 2) id = idBedrock;
 
 				randomgrass.setSeed(real_x,real_z);
-                if ((id == BlockID::AIR) && (height > SEA_LEVEL+0.5) && ((int)(height + 1) == real_y) && ((unsigned short)randomgrass.rand() > 56000)){
+                if ((id == idAir) && (height > SEA_LEVEL + 0.5) && ((int)(height + 1) == real_y) && ((ushort)randomgrass.rand() > 56000)){
                     unsigned short flowerChance = randomgrass.rand();
                     if (flowerChance < 19660) {
                         int flowerType = randomgrass.rand() % 4;
                         switch (flowerType) {
-                            case 0: id = BlockID::POPPY; break;
-                            case 1: id = BlockID::DANDELION; break;
-                            case 2: id = BlockID::DAISY; break;
-                            case 3: id = BlockID::MARIGOLD; break;
-                            default: id = BlockID::GRASS; break;
+                            case 0: id = idPoppy; break;
+                            case 1: id = idDandelion; break;
+                            case 2: id = idDaisy; break;
+                            case 3: id = idMarigold; break;
+                            default: id = idGrass; break;
                         }
                     } else {
-                        id = BlockID::GRASS;
+                        id = idGrass;
                     }
                 }
 
-				if ((height > SEA_LEVEL+1) && ((int)(height + 1) == real_y) && ((unsigned short)randomgrass.rand() > 65533)){
-					id = BlockID::LOG;
+				if ((height > SEA_LEVEL + 1) && ((int)(height + 1) == real_y) && ((ushort)randomgrass.rand() > 65533)){
+					id = idLog;
 					states = BLOCK_DIR_Y;
 				}
 				voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].id = id;

@@ -43,7 +43,7 @@ public:
     void update();
 	void draw(const GfxContext& context);
 	void drawDebug(int fps, bool occlusion);
-    void drawInventory(const GfxContext& context, Player* player);
+    void drawContentAccess(const GfxContext& context, Player* player);
 
     bool isInventoryOpen() const;
 	bool isPause() const;

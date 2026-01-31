@@ -44,6 +44,8 @@ Panel* create_main_menu_panel(Engine* engine, PagesControl* menu) {
     std::filesystem::path saves_folder = engine_fs::get_saves_folder();
     if (std::filesystem::is_directory(saves_folder)) {
         for (auto const& entry : std::filesystem::directory_iterator(saves_folder)) {
+            if (!entry.is_directory()) continue;
+            
             std::string name = entry.path().filename().string();
             Button* button = new Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
             button->color(glm::vec4(0.5f));
@@ -52,7 +54,7 @@ Panel* create_main_menu_panel(Engine* engine, PagesControl* menu) {
 
                 auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(name);
                 World* world = new World(name, folder, 42, settings);
-                auto screen = new LevelScreen(engine, world->load(settings));
+                auto screen = new LevelScreen(engine, world->load(settings, engine->getContent()));
                 engine->setScreen(std::shared_ptr<Screen>(screen));
             });
             worldsPanel->add(button);
@@ -132,7 +134,7 @@ Panel* create_new_world_panel(Engine* engine, PagesControl* menu) {
             auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(nameutf8);
             std::filesystem::create_directories(folder);
             World* world = new World(nameutf8, folder, seed, settings);
-            auto screen = new LevelScreen(engine, world->load(settings));
+            auto screen = new LevelScreen(engine, world->load(settings, engine->getContent()));
             engine->setScreen(std::shared_ptr<Screen>(screen));
         });
         panel->add(button);

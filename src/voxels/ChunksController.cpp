@@ -18,14 +18,16 @@
 #include "../logger/Logger.h"
 #include "../definitions.h"
 #include "../math/voxmaths.h"
+#include "../content/Content.h"
 
 #define MAX_WORK_PER_FRAME 16
 #define MIN_SURROUNDING 9
 
-ChunksController::ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding) : level(level), chunks(chunks), lighting(lighting), chunksPadding(chunksPadding){
+ChunksController::ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding) : level(level), chunks(chunks), lighting(lighting), chunksPadding(chunksPadding), generator(new WorldGenerator(level->content)){
 }
 
 ChunksController::~ChunksController(){
+    delete generator;
 }
 
 void ChunksController::update(int64_t maxDuration) {
@@ -46,6 +48,8 @@ void ChunksController::update(int64_t maxDuration) {
 }
 
 bool ChunksController::loadVisible(){
+    const Content* content = level->content;
+
 	const int width = chunks->width;
 	const int depth = chunks->depth;
 	const int areaOffsetX = chunks->areaOffsetX;
@@ -95,17 +99,18 @@ bool ChunksController::loadVisible(){
 	chunks->putChunk(chunk);
 
 	if (!chunk->isLoaded()) {
-		WorldGenerator::generate(chunk->voxels, chunk->chunk_x, chunk->chunk_z, level->world->seed);
+		generator->generate(chunk->voxels, chunk->chunk_x, chunk->chunk_z, level->world->seed);
 		chunk->setUnsaved(true);
 	}
 
     chunk->updateHeights();
 
+    ContentIndices* indices = content->indices;
 	for (size_t i = 0; i < CHUNK_VOLUME; i++) {
         blockid_t id = chunk->voxels[i].id;
-		if (Block::blocks[id] == nullptr) {
+		if (indices->getBlockDef(id) == nullptr) {
             LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
-			chunk->voxels[i].id = BlockID::BEDROCK;
+			chunk->voxels[i].id = content->require(DEFAULT_BLOCK_NAMESPACE + std::string("bedrock"))->id;
 		}
 	}
 	lighting->preBuildSkyLight(chunk->chunk_x, chunk->chunk_z);

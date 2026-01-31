@@ -38,9 +38,10 @@
 #include "coders/png.h"
 #include "files/engine_files.h"
 #include "frontend/screens.h"
+#include "content/content.h"
 
 // Реализация конструктора
-Engine::Engine(EngineSettings& settings) : settings(settings){
+Engine::Engine(EngineSettings& settings, Content* content) : settings(settings), content(content){
     // Инициализация окна GLFW
     if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
@@ -143,6 +144,10 @@ EngineSettings& Engine::getSettings() {
 
 Assets* Engine::getAssets() {
 	return assets;
+}
+
+const Content* Engine::getContent() const {
+    return content;
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {

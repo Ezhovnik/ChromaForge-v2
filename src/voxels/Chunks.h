@@ -9,15 +9,18 @@
 #include "../typedefs.h"
 
 class Mesh;
-class VoxelRenderer;
-
 class Chunk;
 class voxel;
 class WorldFiles;
 class LevelEvents;
+class Content;
+class ContentIndices;
 
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
+private:
+    const Content* const content;
+	const ContentIndices* const contentIds;
 public:
     std::shared_ptr<Chunk>* chunks;
     std::shared_ptr<Chunk>* chunksSecond;
@@ -34,7 +37,7 @@ public:
     LevelEvents* events;
     WorldFiles* worldFiles;
 
-    Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events); // Конструктор
+    Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content); // Конструктор
     ~Chunks(); // Деструктор
 
     bool putChunk(std::shared_ptr<Chunk> chunk);

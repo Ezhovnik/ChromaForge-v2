@@ -12,6 +12,7 @@
 #include "../physics/PhysicsSolver.h"
 #include "../window/Camera.h"
 #include "../logger/Logger.h"
+#include "../content/Content.h"
 
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
@@ -38,7 +39,7 @@ void World::write(Level* level, bool writeChunks) {
 	wfile->writePlayer(level->player);
 }
 
-Level* World::load(EngineSettings& settings) {
+Level* World::load(EngineSettings& settings, const Content* content) {
     Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
 
@@ -50,7 +51,7 @@ Level* World::load(EngineSettings& settings) {
     LOG_INFO("Info about the world has been successfully read");
 
     LOG_INFO("Creating a level");
-	Level* level = new Level(this, player, settings);
+	Level* level = new Level(this, content, player, settings);
 
     LOG_INFO("Reading player info");
 	wfile->readPlayer(player);

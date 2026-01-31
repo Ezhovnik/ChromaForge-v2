@@ -14,6 +14,7 @@
 #include "../window/Events.h"
 #include "../window/input.h"
 #include "../core_defs.h"
+#include "../content/Content.h"
 
 namespace PlayerConsts {
     constexpr float CROUCH_SPEED_MUL = 0.25f;
@@ -200,6 +201,8 @@ void PlayerController::updateCameraControl() {
 }
 
 void PlayerController::updateInteraction(){
+    const ContentIndices* contentIds = level->contentIds;
+
 	Chunks* chunks = level->chunks;
 	Player* player = level->player;
 	Lighting* lighting = level->lighting;
@@ -220,7 +223,7 @@ void PlayerController::updateInteraction(){
 		int z = (int)iend.z;
 
 		uint8_t states = 0;
-        if (Block::blocks[player->choosenBlock]->rotatable){
+        if (contentIds->getBlockDef(player->choosenBlock)->rotatable){
 			if (abs(norm.x) > abs(norm.z)){
 				if (abs(norm.x) > abs(norm.y)) states = BLOCK_DIR_X;
 				if (abs(norm.x) < abs(norm.y)) states = BLOCK_DIR_Y;
@@ -231,7 +234,7 @@ void PlayerController::updateInteraction(){
 			}
 		}
 		
-		Block* block = Block::blocks[vox->id];
+		Block* block = contentIds->getBlockDef(vox->id);
 		if (input.breakBlock && block->breakable && !level->player->noclip){
 			chunks->setVoxel(x, y, z, 0, 0);
 			lighting->onBlockSet(x, y ,z, 0);

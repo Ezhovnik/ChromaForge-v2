@@ -13,6 +13,7 @@
 #include "window/Events.h"
 #include "window/input.h"
 #include "files/settings_io.h"
+#include "content/Content.h"
 
 // Точка входа в программу
 int main() {
@@ -21,7 +22,9 @@ int main() {
     // Инициализация логгера
     Logger::getInstance().initialize(engine_fs::get_logs_file().string());
 
-    setup_definitions();
+    ContentBuilder contentBuilder;
+	setup_definitions(&contentBuilder);
+    std::unique_ptr<Content> content(contentBuilder.build());
 
     std::unique_ptr<Engine> engine = nullptr;
 
@@ -37,7 +40,7 @@ int main() {
 			reader.read();
             LOG_INFO("Engine settings read succesfully");
 		}
-        engine = std::make_unique<Engine>(settings);
+        engine = std::make_unique<Engine>(settings, content.get());
 
         // Настройка назначения клавиш
         std::filesystem::path controls_file = platform::get_controls_file();

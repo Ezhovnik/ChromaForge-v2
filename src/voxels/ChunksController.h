@@ -9,12 +9,14 @@ class Lighting;
 class WorldFiles;
 class VoxelRenderer;
 class ChunksLoader;
+class WorldGenerator;
 
 class ChunksController {
 private:
 	Level* level;
 	Chunks* chunks;
 	Lighting* lighting;
+    WorldGenerator* generator;
 
     uint chunksPadding;
 
