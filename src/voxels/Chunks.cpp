@@ -1,4 +1,8 @@
 #include "Chunks.h"
+
+#include <math.h>
+#include <limits.h>
+
 #include "Chunk.h"
 #include "voxel.h"
 #include "Block.h"
@@ -9,11 +13,9 @@
 #include "../math/voxmaths.h"
 #include "../world/LevelEvents.h"
 #include "../definitions.h"
+#include "../content/Content.h"
 
-#include <math.h>
-#include <limits.h>
-
-Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles){
+Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles), content(content), contentIds(content->indices){
 	volume = (size_t)width * (size_t)depth;
 	chunks = new std::shared_ptr<Chunk>[volume];
 	chunksSecond = new std::shared_ptr<Chunk>[volume];
@@ -52,9 +54,9 @@ voxel* Chunks::getVoxel(int x, int y, int z){
 }
 
 bool Chunks::isObstacle(int x, int y, int z){
-	voxel* v = getVoxel(x,y,z);
-	if (v == nullptr) return true;
-	return Block::blocks[v->id]->obstacle;
+	voxel* vox = getVoxel(x, y, z);
+	if (vox == nullptr) return true;
+	return contentIds->getBlockDef(vox->id)->obstacle;
 }
 
 ubyte Chunks::getLight(int x, int y, int z, int channel){
@@ -141,7 +143,7 @@ void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states){
 
     if (y < chunk->bottom) chunk->bottom = y;
     else if (y + 1 > chunk->top) chunk->top = y + 1;
-    else if (id == BlockID::AIR) chunk->updateHeights();
+    else if (id == content->require(DEFAULT_BLOCK_NAMESPACE + std::string("air"))->id) chunk->updateHeights();
 
 	if (lx == 0 && (chunk = getChunk(cx+areaOffsetX-1, cz+areaOffsetZ))) chunk->setModified(true);
 	if (lz == 0 && (chunk = getChunk(cx+areaOffsetX, cz+areaOffsetZ-1))) chunk->setModified(true);
@@ -186,7 +188,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 
 	while (t <= maxDist){
 		voxel* voxel = getVoxel(ix, iy, iz);
-		if (voxel == nullptr || Block::blocks[voxel->id]->selectable){
+		if (voxel == nullptr || contentIds->getBlockDef(voxel->id)->selectable){
 			end.x = px + t * dx;
 			end.y = py + t * dy;
 			end.z = pz + t * dz;

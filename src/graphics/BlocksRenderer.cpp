@@ -10,13 +10,15 @@
 #include "../voxels/VoxelsVolume.h"
 #include "../voxels/ChunksStorage.h"
 #include "../lighting/LightMap.h"
+#include "../content/Content.h"
 
 #define VERTEX_SIZE 9
 
-BlocksRenderer::BlocksRenderer(size_t capacity) : vertexOffset(0), indexOffset(0), indexSize(0), capacity(capacity) {
+BlocksRenderer::BlocksRenderer(size_t capacity, const Content* content) : vertexOffset(0), indexOffset(0), indexSize(0), capacity(capacity), content(content) {
 	vertexBuffer = new float[capacity];
 	indexBuffer = new int[capacity];
 	voxelsBuffer = new VoxelsVolume(CHUNK_WIDTH + 2, CHUNK_HEIGHT, CHUNK_DEPTH + 2);
+    blockDefsCache = content->indices->getBlockDefs();
 }
 
 BlocksRenderer::~BlocksRenderer() {
@@ -252,7 +254,7 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 bool BlocksRenderer::isOpen(int x, int y, int z, ubyte group) const {
 	blockid_t id = voxelsBuffer->pickBlockId(chunk->chunk_x * CHUNK_WIDTH + x, y, chunk->chunk_z * CHUNK_DEPTH + z);
 	if (id == BLOCK_VOID) return false;
-	const Block& block = *Block::blocks[id];
+	const Block& block = *blockDefsCache[id];
 	if (block.drawGroup != group && block.lightPassing) return true;
 	return !id;
 }
@@ -260,7 +262,7 @@ bool BlocksRenderer::isOpen(int x, int y, int z, ubyte group) const {
 bool BlocksRenderer::isOpenForLight(int x, int y, int z) const {
 	blockid_t id = voxelsBuffer->pickBlockId(chunk->chunk_x * CHUNK_WIDTH + x, y, chunk->chunk_z * CHUNK_DEPTH + z);
 	if (id == BLOCK_VOID) return false;
-	const Block& block = *Block::blocks[id];
+	const Block& block = *blockDefsCache[id];
 	if (block.lightPassing) return true;
 	return !id;
 }
@@ -301,7 +303,7 @@ void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
 				for (uint x = 0; x < CHUNK_WIDTH; x++) {
 					const voxel& vox = voxels[((y * CHUNK_DEPTH) + z) * CHUNK_WIDTH + x];
 					blockid_t id = vox.id;
-					const Block& def = *Block::blocks[id];
+					const Block& def = *blockDefsCache[id];
 					if (!id || def.drawGroup != group) continue;
 					const UVRegion texfaces[6]{ uvfor(def, 0, atlas_size), uvfor(def, 1, atlas_size),
 												uvfor(def, 2, atlas_size), uvfor(def, 3, atlas_size),

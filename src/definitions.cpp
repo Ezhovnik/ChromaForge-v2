@@ -12,143 +12,140 @@
 #include "voxels/Block.h"
 #include "logger/Logger.h"
 #include "core_defs.h"
+#include "content/Content.h"
 
-void setup_definitions() {
-    for (size_t i = 0; i < 256; i++) {
-		Block::blocks[i] = nullptr;
-    }
-
+void setup_definitions(ContentBuilder* builder) {
     // Воздух
-    Block* block = new Block(BlockID::AIR, 0);
+    Block* block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("air"), 0);
     block->drawGroup = 1;
     block->lightPassing = true;
     block->skyLightPassing = true;
     block->obstacle = false;
     block->selectable = false;
     block->model = BlockModel::None;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Мох
-    block = new Block(BlockID::MOSS, 1);
-    Block::blocks[block->id] = block;
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("moss"), 1);
+    builder->add(block);
 
     // Земля
-    block = new Block(BlockID::DIRT, 2);
-    Block::blocks[block->id] = block;
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("dirt"), 2);
+    builder->add(block);
 
     // Светокамень
-    block = new Block(BlockID::GLOWSTONE, 3);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("glowstone"), 3);
     block->emission[0] = 14;
     block->emission[1] = 12;
     block->emission[2] = 3;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Стекло
-    block = new Block(BlockID::GLASS, 4);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("glass"), 4);
     block->drawGroup = 2;
     block->lightPassing = true;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Доски
-    block = new Block(BlockID::PLANKS, 5);
-    Block::blocks[block->id] = block;
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("planks"), 5);
+    builder->add(block);
 
     // Бревно
-    block = new Block(BlockID::LOG, 6);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("log"), 6);
     block->textureFaces[2] = 7;
     block->textureFaces[3] = 7;
     block->rotatable = true;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Листва
-    block = new Block(BlockID::LEAVES, 8);
-    Block::blocks[block->id] = block;
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("leaves"), 8);
+    builder->add(block);
 
     // Вода
-    block = new Block(BlockID::WATER, 9);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("water"), 9);
     block->drawGroup = 4;
     block->lightPassing = true;
     block->skyLightPassing = false;
     block->obstacle = false;
     block->selectable = false;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Камень
-    block = new Block(BlockID::STONE, 10);
-    Block::blocks[block->id] = block;
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("stone"), 10);
+    builder->add(block);
 
     // Песок
-    block = new Block(BlockID::SAND, 11);
-    Block::blocks[block->id] = block;
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("sand"), 11);
+    builder->add(block);
 
     // Коренная порода
-    block = new Block(BlockID::BEDROCK, 12);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("bedrock"), 12);
     block->breakable = false;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Мак
-    block = new Block(BlockID::POPPY, 13);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("poppy"), 13);
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
     block->model = BlockModel::X;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Одуванчик
-    block = new Block(BlockID::DANDELION, 14);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("dandelion"), 14);
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
     block->model = BlockModel::X;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Трава
-    block = new Block(BlockID::GRASS, 15);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("grass"), 15);
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
     block->hitboxScale = 0.5f;
     block->model = BlockModel::X;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Кирпичи
-    block = new Block(BlockID::BRICKS, 16);
-    Block::blocks[block->id] = block;
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("bricks"), 16);
+    builder->add(block);
 
     // Ромашка
-    block = new Block(BlockID::DAISY, 17);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("daisy"), 17);
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
     block->model = BlockModel::X;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Бархатцы
-    block = new Block(BlockID::MARIGOLD, 21);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("marigold"), 21);
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
     block->model = BlockModel::X;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Красный неоновый блок
-    block = new Block(BlockID::RED_NEON, 18);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("red_neon"), 18);
     block->emission[0] = 15;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Зелёный неоновый блок
-    block = new Block(BlockID::GREEN_NEON, 19);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("green_neon"), 19);
     block->emission[1] = 15;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Синий неоновый блок
-    block = new Block(BlockID::BLUE_NEON, 20);
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("blue_neon"), 20);
     block->emission[2] = 15;
-    Block::blocks[block->id] = block;
+    builder->add(block);
 
     // Булыжник
-    block = new Block(BlockID::COBBLESTONE, 22);
-    Block::blocks[block->id] = block;
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("cobblestone"), 22);
+    builder->add(block);
 }
 
 void setup_bindings() {

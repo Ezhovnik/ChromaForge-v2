@@ -5,6 +5,7 @@
 #include "../voxels/Chunk.h"
 #include "../voxels/voxel.h"
 #include "../voxels/Block.h"
+#include "../content/Content.h"
 
 namespace LightSolver_Consts {
     const int coords[] = {
@@ -18,7 +19,7 @@ namespace LightSolver_Consts {
 }
 
 
-LightSolver::LightSolver(Chunks* chunks, int channel) : chunks(chunks), channel(channel) {
+LightSolver::LightSolver(const ContentIndices* contentIds, Chunks* chunks, int channel) : chunks(chunks), channel(channel), contentIds(contentIds) {
 }
 
 void LightSolver::add(int x, int y, int z, int bright) {
@@ -91,6 +92,7 @@ void LightSolver::solve(){
 		}
 	}
 
+    const Block* const* blockDefs = contentIds->getBlockDefs();
 	while (!add_queue.empty()){
 		const lightentry entry = add_queue.front();
 		add_queue.pop();
@@ -106,7 +108,7 @@ void LightSolver::solve(){
                 chunk->setModified(true);
 				int light = chunks->getLight(x,y,z, channel);
 				voxel* vox = chunks->getVoxel(x,y,z);
-                Block* block = Block::blocks[vox->id];
+                const Block* block = blockDefs[vox->id];
 				if (block->lightPassing && light + 2 <= entry.light){
 					chunk->light_map->set(x - chunk->chunk_x * CHUNK_WIDTH, y, z - chunk->chunk_z * CHUNK_DEPTH, channel, entry.light - 1);
 					lightentry nentry;

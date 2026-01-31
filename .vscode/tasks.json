@@ -22,6 +22,9 @@
                 "${workspaceFolder}/src/coders/toml.cpp",
                 "${workspaceFolder}/src/coders/png.cpp",
 
+                //src/content
+                "${workspaceFolder}/src/content/Content.cpp",
+
                 //src/files
                 "${workspaceFolder}/src/files/binary_io.cpp",
                 "${workspaceFolder}/src/files/engine_files.cpp",

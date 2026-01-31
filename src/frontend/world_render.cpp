@@ -3,12 +3,14 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include <assert.h>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "../content/Content.h"
 #include "../window/Window.h"
 #include "../window/Camera.h"
 #include "../graphics/Mesh.h"
@@ -102,6 +104,9 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 }
 
 void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool occlusion){
+    const Content* content = level->content;
+	const ContentIndices* contentIds = content->indices;
+
     EngineSettings& settings = engine->getSettings();
     Assets* assets = engine->getAssets();
 
@@ -149,7 +154,8 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 
 		shader->uniform3f("u_cameraPos", camera->position);
 
-		Block* choosen_block = Block::blocks[level->player->choosenBlock];
+		Block* choosen_block = contentIds->getBlockDef(level->player->choosenBlock);
+		assert(choosen_block != nullptr);
         if (!level->player->noclip) {
             float multiplier = 0.5f;
             shader->uniform3f("u_torchlightColor",
@@ -169,15 +175,16 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 
 		shader->uniformMatrix("u_model", glm::mat4(1.0f));
 
-		if (level->playerController->selectedBlockId != -1){
-			Block* block = Block::blocks[level->playerController->selectedBlockId];
+		if (level->playerController->selectedBlockId != -1 && !level->player->noclip){
+			Block* block = contentIds->getBlockDef(level->playerController->selectedBlockId);
+			assert(block != nullptr);
 			glm::vec3 pos = level->playerController->selectedBlockPosition;
 			linesShader->use();
 			linesShader->uniformMatrix("u_projview", camera->getProjView());
 			lineBatch->setLineWidth(2.0f);
-			if (block->model == BlockModel::Cube && !level->player->noclip){
+			if (block->model == BlockModel::Cube){
 				lineBatch->box(pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f, 1.008f, 1.008f, 1.008f, 0, 0, 0, 0.5f);
-			} else if (block->model == BlockModel::X && !level->player->noclip){
+			} else if (block->model == BlockModel::X){
 				lineBatch->box(pos.x + 0.5f, pos.y + 0.35f, pos.z + 0.5f, 0.805f, 0.705f, 0.805f, 0, 0, 0, 0.5f);
 			}
 			lineBatch->render();
