@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <memory>
 #include <assert.h>
+#include <string>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -81,7 +82,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 
 void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader, bool occlusion) {
 	std::vector<size_t> indices;
-	for (size_t i = 0; i < chunks->volume; i++){
+	for (size_t i = 0; i < chunks->volume; ++i){
 		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
 		if (chunk == nullptr) continue;
 		indices.push_back(i);
@@ -98,7 +99,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 
 	if (occlusion) frustumCulling->update(camera->getProjView());
 	chunks->visibleCount = 0;
-	for (size_t i = 0; i < indices.size(); i++){
+	for (size_t i = 0; i < indices.size(); ++i){
 		chunks->visibleCount += drawChunk(indices[i], camera, shader, occlusion);
 	}
 }
@@ -113,8 +114,8 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
     // Загрузка ресурсов с проверкой
 	Texture* texture = assets->getTexture("blocks");
     if (texture == nullptr) {
-        LOG_CRITICAL("The texture 'bloks' could not be found in the assets");
-        throw std::runtime_error("The texture 'bloks' could not be found in the assets");
+        LOG_CRITICAL("The texture 'blocks' could not be found in the assets");
+        throw std::runtime_error("The texture 'blocks' could not be found in the assets");
     }
 
 	ShaderProgram* shader = assets->getShader("default");
@@ -168,6 +169,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
         }
 		
 		shader->uniform1f("u_torchlightDistance", 6.0f);
+
 		texture->bind();
 
 		Chunks* chunks = level->chunks;
@@ -190,7 +192,6 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 			lineBatch->render();
 		}
 	}
-
 
     if (level->player->debug) {
         float length = 40.0f;

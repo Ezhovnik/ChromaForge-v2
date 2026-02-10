@@ -146,6 +146,10 @@ void setup_definitions(ContentBuilder* builder) {
     // Булыжник
     block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("cobblestone"), 22);
     builder->add(block);
+
+    // Медный блок
+    block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("copper_block"), 23);
+    builder->add(block);
 }
 
 void setup_bindings() {

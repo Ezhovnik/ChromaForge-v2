@@ -26,7 +26,7 @@ public:
 
     // Методы для работы с шрифтами
 	Font* getFont(std::string name) const; // Получает шрифт по имени
-	bool store(Font* shader, std::string name); // Сохраняет шрифт в менеджере ресурсов.
+	bool store(Font* font, std::string name); // Сохраняет шрифт в менеджере ресурсов.
 };
 
 #endif // ASSETS_ASSETS_H_

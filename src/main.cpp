@@ -46,7 +46,7 @@ int main() {
         std::filesystem::path controls_file = platform::get_controls_file();
         setup_bindings();
 		if (std::filesystem::is_regular_file(controls_file)) {
-			LOG_INFO("Loading bindings from '{}'", controls_file.string());
+			LOG_INFO("Reading bindings from '{}'", controls_file.string());
 			std::string content = files::read_string(controls_file);
 			load_controls(controls_file.string(), content);
             LOG_INFO("Bindings read succesfully");

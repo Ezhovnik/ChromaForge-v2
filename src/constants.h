@@ -16,7 +16,7 @@ inline uint vox_index(int x, int y, int z, int w = CHUNK_WIDTH, int d = CHUNK_DE
 	return (y * d + z) * w + x;
 }
 
-inline constexpr int ATLAS_MARGIN_SIZE = 2;
+#define ATLAS_MARGIN_SIZE 2
 
 #define RES_FOLDER "../res/"
 #define TEXTURES_FOLDER "../res/textures"
