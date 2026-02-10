@@ -1,6 +1,7 @@
 #include "AssetsLoader.h"
 
-#include <iostream>
+#include <filesystem>
+#include <memory>
 
 #include "Assets.h"
 #include "../graphics/ShaderProgram.h"
@@ -33,6 +34,7 @@ bool AssetsLoader::loadNext() {
 	auto found = loaders.find(entry.tag);
 	if (found == loaders.end()) {
         LOG_ERROR("Unknown asset tag {}", (int)entry.tag);
+        Logger::getInstance().flush();
 		return false;
 	}
 	aloader_func loader = found->second;
@@ -46,6 +48,7 @@ bool _load_shader(Assets* assets, const std::string& filename, const std::string
 	ShaderProgram* shader = loadShaderProgram(filename + ".vert", filename + ".frag");
 	if (shader == nullptr){
         LOG_CRITICAL("Failed to load shader '{}'", name);
+        Logger::getInstance().flush();
 		return false;
 	}
 
@@ -57,6 +60,7 @@ bool _load_texture(Assets* assets, const std::string& filename, const std::strin
 	Texture* texture = png::loadTexture(filename);
 	if (texture == nullptr){
 		LOG_CRITICAL("Failed to load texture '{}'", name);
+        Logger::getInstance().flush();
 		return false;
 	}
 
@@ -69,6 +73,7 @@ bool _load_font(Assets* assets, const std::string& filename, const std::string& 
 		Texture* texture = png::loadTexture(filename + "_" + std::to_string(i)+  ".png");
 		if (texture == nullptr){
             LOG_CRITICAL("Failed to load bitmap font '{}' (missing page {})", name, std::to_string(i));
+            Logger::getInstance().flush();
 			return false;
 		}
 		pages.push_back(texture);
@@ -79,18 +84,17 @@ bool _load_font(Assets* assets, const std::string& filename, const std::string& 
 }
 
 bool _load_atlas(Assets* assets, const std::string& filename, const std::string& name) {
-	ImageData* image = png::loadImage(filename);
+	std::unique_ptr<ImageData> image (png::loadImage(filename));
 	if (image == nullptr) {
-        LOG_WARN("Failed to load image '{}'", name);
+		LOG_ERROR("Failed to load image '{}'", name);
 		return false;
 	}
 	for (int i = 0; i < ATLAS_MARGIN_SIZE; i++) {
-		ImageData* newimage = add_atlas_margins(image, 16);
-		delete image;
-		image = newimage;
+		ImageData* newimage = add_atlas_margins(image.get(), 16);
+		image.reset(newimage);
 	}
 
-	Texture* texture = Texture::from(image);
+	Texture* texture = Texture::from(image.get());
 	return assets->store(texture, name);
 }
 
@@ -107,7 +111,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader) {
 	loader.add(AssetType::Shader, SHADERS_FOLDER"/ui", "ui");
 
 	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/atlas.png", "blocks");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER"/atlas.png", "blocks_tex");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER"/atlas.png", "blocks_tex");
 	loader.add(AssetType::Texture, TEXTURES_FOLDER"/slot.png", "slot");
     loader.add(AssetType::Texture, TEXTURES_FOLDER"/menubg.png", "menubg");
 

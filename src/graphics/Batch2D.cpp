@@ -61,7 +61,7 @@ void Batch2D::vertex(glm::vec2 point, glm::vec2 uvpoint, float r, float g, float
 
 void Batch2D::texture(Texture* new_texture){
 	if (_texture == new_texture) return;
-	render(GL_TRIANGLES);
+	render();
 	_texture = new_texture;
 	if (new_texture == nullptr) blank->bind();
 	else new_texture->bind();
@@ -185,7 +185,6 @@ void Batch2D::rect(
     vertex(x2, y2, u2, v2, tint.r, tint.g, tint.b, tint.a);
     vertex(x3, y3, u3, v3, tint.r, tint.g, tint.b, tint.a);
 
-    /* Right down triangle */
     vertex(x1, y1, u1, v1, tint.r, tint.g, tint.b, tint.a);
     vertex(x3, y3, u3, v3, tint.r, tint.g, tint.b, tint.a);
     vertex(x4, y4, u4, v4, tint.r, tint.g, tint.b, tint.a);
@@ -250,7 +249,7 @@ void Batch2D::rect(float x, float y, float w, float h,
 	vertex(v9, glm::vec2(0, 0), r2,g2,b2,1.0f);
 	vertex(v1, glm::vec2(0, 0), r2,g2,b2,1.0f);
 
-	render(GL_TRIANGLES);
+	render();
 }
 
 
@@ -267,7 +266,8 @@ void Batch2D::sprite(Sprite* sprite) {
 		sprite->region,
 		sprite->flippedX,
 		sprite->flippedY,
-		sprite->color);
+		sprite->color
+    );
 }
 
 void Batch2D::sprite(float x, float y, float w, float h, int atlasRes, int index, glm::vec4 tint){
@@ -281,15 +281,15 @@ void Batch2D::rect(float x, float y, float w, float h,
 					float u, float v, float tx, float ty,
 					float r, float g, float b, float a){
 
-	vertex(x, y, u, v+ty, r,g,b,a);
-	vertex(x+w, y+h, u+tx, v, r,g,b,a);
-	vertex(x, y+h, u, v, r,g,b,a);
+	vertex(x, y, u, v + ty, r, g, b, a);
+	vertex(x + w, y + h, u + tx, v, r, g, b, a);
+	vertex(x, y + h, u, v, r, g, b, a);
 
-	vertex(x, y, u, v+ty, r,g,b,a);
-	vertex(x+w, y, u+tx, v+ty, r,g,b,a);
-	vertex(x+w, y+h, u+tx, v, r,g,b,a);
+	vertex(x, y, u, v + ty, r, g, b, a);
+	vertex(x + w, y, u + tx, v + ty, r, g, b, a);
+	vertex(x + w, y + h, u + tx, v, r, g, b, a);
 
-    render(GL_TRIANGLES);
+    render();
 }
 
 void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int index[6], glm::vec4 tint){
@@ -298,6 +298,7 @@ void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int 
 	float vu = 1.0f - ((index[3] / atlasRes) * scale) - scale;
 	float uf = (index[0] % atlasRes) * scale;
 	float vf = 1.0f - ((index[0] / atlasRes) * scale) - scale;
+
 	if (this->index + 18 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
 
 	float ar = 0.88f;
@@ -309,7 +310,8 @@ void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int 
 						glm::vec2(ox+sx,     y+(h*0.25f)),
 						glm::vec2(ox+sx,     y+(h*0.75f)),
 						glm::vec2(ox,        y+h),
-						glm::vec2(ox-sx,     y+(h*0.75f))};
+						glm::vec2(ox-sx,     y+(h*0.75f))
+					};
 
 	glm::vec2 uvpoints[8] = {glm::vec2(uu,        vu),
 						glm::vec2(uu+scale,  vu),
@@ -318,7 +320,8 @@ void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int 
 						glm::vec2(uf,        vf),
 						glm::vec2(uf+scale,  vf),
 						glm::vec2(uf+scale,  vf+scale),
-						glm::vec2(uf,        vf+scale)};
+						glm::vec2(uf,        vf+scale)
+					};
 	
 	vertex(points[0], uvpoints[3], tint.r, tint.g, tint.b, tint.a);
 	vertex(points[1], uvpoints[0], tint.r, tint.g, tint.b, tint.a);
@@ -328,6 +331,7 @@ void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int 
 	vertex(points[2], uvpoints[1], tint.r, tint.g, tint.b, tint.a);
 	vertex(points[3], uvpoints[2], tint.r, tint.g, tint.b, tint.a);
 
+	
 	vertex(points[0], uvpoints[7], tint.r, tint.g, tint.b, tint.a);
 	vertex(points[3], uvpoints[6], tint.r, tint.g, tint.b, tint.a);
 	vertex(points[4], uvpoints[5], tint.r, tint.g, tint.b, tint.a);
@@ -336,6 +340,7 @@ void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int 
 	vertex(points[4], uvpoints[5], tint.r, tint.g, tint.b, tint.a);
 	vertex(points[5], uvpoints[4], tint.r, tint.g, tint.b, tint.a);
 
+	
 	vertex(points[0], uvpoints[6], tint.r, tint.g, tint.b, tint.a);
 	vertex(points[5], uvpoints[5], tint.r, tint.g, tint.b, tint.a);
 	vertex(points[6], uvpoints[4], tint.r, tint.g, tint.b, tint.a);

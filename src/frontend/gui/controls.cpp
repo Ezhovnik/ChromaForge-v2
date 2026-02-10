@@ -139,11 +139,9 @@ std::wstring TextBox::text() const {
     return input;
 }
 
-InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) 
-    : Panel(glm::vec2(100,32), padding, 0, false), binding(binding) {
+InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec2(100,32), padding, 0, false), binding(binding) {
     label = new Label(L"");
-    // label->align(Align::center);
-    add(std::shared_ptr<UINode>(label));
+    add(label);
 }
 
 std::shared_ptr<UINode> InputBindBox::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {

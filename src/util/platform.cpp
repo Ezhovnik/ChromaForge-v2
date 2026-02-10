@@ -18,7 +18,7 @@ std::filesystem::path platform::get_controls_file() {
 	return std::filesystem::path(CONTROLS_FILE);
 }
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <Windows.h>
 #include <cstdio>
 
