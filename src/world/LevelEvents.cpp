@@ -12,4 +12,3 @@ void LevelEvents::trigger(lvl_event_type type, Chunk* chunk) {
 		func(type, chunk);
 	}
 }
-

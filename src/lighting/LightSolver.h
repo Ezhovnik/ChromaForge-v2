@@ -6,6 +6,7 @@
 #include "../typedefs.h"
 
 class Chunks;
+class ContentIndices;
 
 struct lightentry {
 	int x;
@@ -17,10 +18,11 @@ struct lightentry {
 class LightSolver {
 	std::queue<lightentry> add_queue;
 	std::queue<lightentry> rem_queue;
+    const ContentIndices* const contentIds;
 	Chunks* chunks;
 	int channel;
 public:
-	LightSolver(Chunks* chunks, int channel);
+	LightSolver(const ContentIndices* contentIds, Chunks* chunks, int channel);
 
 	void add(int x, int y, int z);
 	void add(int x, int y, int z, int bright);

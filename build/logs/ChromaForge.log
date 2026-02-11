@@ -1,38 +1,44 @@
-[2026-01-26 13:42:21.717] [info] [Logger.cpp:43] [initialize] Logger initialized. File: ../build/logs\ChromaForge.log
-[2026-01-26 13:42:21.717] [info] [main.cpp:58] [main] Reading engine settings from '../build/settings.toml'
-[2026-01-26 13:42:21.966] [info] [Window.cpp:148] [initialize] Window initialized successfully: 1280x720
-[2026-01-26 13:42:21.966] [info] [engine.cpp:64] [Engine] Loading Assets
-[2026-01-26 13:42:21.966] [debug] [AssetsLoader.cpp:122] [createDefaults] Created default asset loaders
-[2026-01-26 13:42:21.966] [debug] [AssetsLoader.cpp:139] [addDefaults] Added default assets to loading queue
-[2026-01-26 13:42:21.966] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/shaders/default as default
-[2026-01-26 13:42:21.968] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/shaders/lines as lines
-[2026-01-26 13:42:21.969] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/shaders/ui as ui
-[2026-01-26 13:42:21.970] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/textures/atlas.png as blocks
-[2026-01-26 13:42:21.972] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
-[2026-01-26 13:42:21.981] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/textures/atlas.png as blocks_tex
-[2026-01-26 13:42:21.982] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
-[2026-01-26 13:42:21.983] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/textures/menubg.png as menubg
-[2026-01-26 13:42:21.983] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/menubg.png' (16x16, 4 channels)
-[2026-01-26 13:42:21.984] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/textures/slot.png as slot
-[2026-01-26 13:42:21.985] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/slot.png' (256x256, 4 channels)
-[2026-01-26 13:42:21.985] [info] [AssetsLoader.cpp:39] [loadNext] Loading ../res/fonts/font as normal
-[2026-01-26 13:42:21.989] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_0.png' (256x256, 4 channels)
-[2026-01-26 13:42:21.989] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 0 for 'normal'
-[2026-01-26 13:42:21.991] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_1.png' (256x256, 4 channels)
-[2026-01-26 13:42:21.991] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 1 for 'normal'
-[2026-01-26 13:42:21.994] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_2.png' (256x256, 4 channels)
-[2026-01-26 13:42:21.995] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 2 for 'normal'
-[2026-01-26 13:42:21.997] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_3.png' (256x256, 4 channels)
-[2026-01-26 13:42:21.997] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 3 for 'normal'
-[2026-01-26 13:42:22.000] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_4.png' (256x256, 4 channels)
-[2026-01-26 13:42:22.000] [trace] [AssetsLoader.cpp:91] [_load_font] Loaded font page 4 for 'normal'
-[2026-01-26 13:42:22.000] [info] [engine.cpp:76] [Engine] Assets loaded successfully
-[2026-01-26 13:42:22.001] [info] [engine.cpp:80] [Engine] The world is loaded
-[2026-01-26 13:42:22.001] [info] [engine.cpp:81] [Engine] Initialization is finished
-[2026-01-26 13:42:22.001] [info] [engine.cpp:119] [mainloop] Preparing systems
-[2026-01-26 13:42:22.004] [info] [engine.cpp:126] [mainloop] Systems have been prepared
-[2026-01-26 13:42:25.760] [info] [screens.cpp:302] [~LevelScreen] World saving
-[2026-01-26 13:42:26.077] [info] [screens.cpp:308] [~LevelScreen] The world has been successfully saved
-[2026-01-26 13:42:27.155] [info] [main.cpp:70] [main] Write engine settings to '../build/settings.toml'
-[2026-01-26 13:42:27.157] [info] [engine.cpp:87] [~Engine] Shutting down
-[2026-01-26 13:42:27.198] [info] [engine.cpp:95] [~Engine] Engine finished
+[2026-02-10 23:46:47.446] [info] [Logger.cpp:43] [initialize] Logger initialized. File: ../build/logs\ChromaForge.log
+[2026-02-10 23:46:47.447] [info] [main.cpp:37] [main] Reading engine settings from '../build/settings.toml'
+[2026-02-10 23:46:47.447] [info] [main.cpp:41] [main] Engine settings read succesfully
+[2026-02-10 23:46:47.576] [info] [Window.cpp:138] [initialize] Window initialized successfully: 1280x720
+[2026-02-10 23:46:47.576] [info] [engine.cpp:54] [Engine] Loading Assets
+[2026-02-10 23:46:47.576] [info] [AssetsLoader.cpp:32] [loadNext] Loading ../res/shaders/default as default
+[2026-02-10 23:46:47.579] [info] [AssetsLoader.cpp:32] [loadNext] Loading ../res/shaders/lines as lines
+[2026-02-10 23:46:47.580] [info] [AssetsLoader.cpp:32] [loadNext] Loading ../res/shaders/ui as ui
+[2026-02-10 23:46:47.582] [info] [AssetsLoader.cpp:32] [loadNext] Loading ../res/textures/atlas.png as blocks
+[2026-02-10 23:46:47.584] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
+[2026-02-10 23:46:47.590] [info] [AssetsLoader.cpp:32] [loadNext] Loading ../res/textures/atlas.png as blocks_tex
+[2026-02-10 23:46:47.592] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/atlas.png' (256x256, 4 channels)
+[2026-02-10 23:46:47.601] [info] [AssetsLoader.cpp:32] [loadNext] Loading ../res/textures/slot.png as slot
+[2026-02-10 23:46:47.602] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/slot.png' (256x256, 4 channels)
+[2026-02-10 23:46:47.603] [info] [AssetsLoader.cpp:32] [loadNext] Loading ../res/textures/menubg.png as menubg
+[2026-02-10 23:46:47.603] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/textures/menubg.png' (16x16, 4 channels)
+[2026-02-10 23:46:47.604] [info] [AssetsLoader.cpp:32] [loadNext] Loading ../res/fonts/font as normal
+[2026-02-10 23:46:47.606] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_0.png' (256x256, 4 channels)
+[2026-02-10 23:46:47.607] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_1.png' (256x256, 4 channels)
+[2026-02-10 23:46:47.609] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_2.png' (256x256, 4 channels)
+[2026-02-10 23:46:47.610] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_3.png' (256x256, 4 channels)
+[2026-02-10 23:46:47.611] [debug] [png.cpp:56] [loadImage] Loaded PNG image: '../res/fonts/font_4.png' (256x256, 4 channels)
+[2026-02-10 23:46:47.612] [info] [engine.cpp:66] [Engine] Assets loaded successfully
+[2026-02-10 23:46:47.612] [info] [engine.cpp:70] [Engine] Initialization is finished
+[2026-02-10 23:46:47.613] [info] [main.cpp:49] [main] Reading bindings from '../build/controls.json'
+[2026-02-10 23:46:47.613] [info] [main.cpp:52] [main] Bindings read succesfully
+[2026-02-10 23:46:47.614] [info] [engine.cpp:106] [mainloop] Loading the menu screen
+[2026-02-10 23:46:47.614] [info] [engine.cpp:108] [mainloop] The menu screen has loaded successfully
+[2026-02-10 23:46:47.615] [info] [engine.cpp:110] [mainloop] Preparing systems
+[2026-02-10 23:46:47.615] [info] [engine.cpp:114] [mainloop] Systems have been prepared
+[2026-02-10 23:46:55.018] [info] [World.cpp:46] [load] Reading info about the world
+[2026-02-10 23:46:55.019] [info] [World.cpp:51] [load] Info about the world has been successfully read
+[2026-02-10 23:46:55.019] [info] [World.cpp:53] [load] Creating a level
+[2026-02-10 23:46:55.020] [info] [World.cpp:56] [load] Reading player info
+[2026-02-10 23:46:55.020] [info] [World.cpp:58] [load] Player info successfully read
+[2026-02-10 23:46:55.020] [info] [World.cpp:63] [load] Level successfully created
+[2026-02-10 23:47:47.859] [info] [screens.cpp:97] [~LevelScreen] World saving
+[2026-02-10 23:47:47.953] [info] [screens.cpp:103] [~LevelScreen] The world has been successfully saved
+[2026-02-10 23:47:49.448] [info] [main.cpp:58] [main] Write engine settings to '../build/settings.toml'
+[2026-02-10 23:47:49.449] [info] [main.cpp:60] [main] Engine settings are written
+[2026-02-10 23:47:49.449] [info] [main.cpp:63] [main] Write bindings to '../build/controls.json'
+[2026-02-10 23:47:49.450] [info] [main.cpp:65] [main] Bindings are written
+[2026-02-10 23:47:49.450] [info] [engine.cpp:79] [~Engine] Shutting down
+[2026-02-10 23:47:49.529] [info] [engine.cpp:82] [~Engine] Engine has finished successfuly

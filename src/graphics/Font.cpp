@@ -9,13 +9,21 @@ namespace Fonts_Consts {
     constexpr int GLYPH_SIZE = 16;
 }
 
-Font::Font(std::vector<Texture*> pages, int lineHeight) : lineHeight_(lineHeight), pages(pages) {
+Font::Font(std::vector<Texture*> pages, int lineHeight) : pages(pages), lineHeight_(lineHeight) {
 }
 
 Font::~Font(){
 	for (Texture* texture : pages) {
 		delete texture;
     }
+}
+
+int Font::lineHeight() const {
+	return lineHeight_;
+}
+
+int Font::calcWidth(std::wstring text) {
+	return text.length() * 8;
 }
 
 // int Font::getGlyphWidth(char c) {
@@ -34,10 +42,6 @@ Font::~Font(){
 // 	return 7;
 // }
 
-int Font::lineHeight() const {
-    return lineHeight_;
-}
-
 bool Font::isPrintableChar(int c) {
 	switch (c){
 	case ' ':
@@ -51,15 +55,11 @@ bool Font::isPrintableChar(int c) {
 	}
 }
 
-int Font::calcWidth(std::wstring text) {
-    return text.length() * 8;
-}
-
 void Font::draw(Batch2D* batch, std::wstring text, int x, int y) {
-	draw(batch, text, x, y, FONT_STYLES::NONE);
+	draw(batch, text, x, y, FontStyle::None);
 }
 
-void Font::draw(Batch2D* batch, std::wstring text, int x, int y, int style) {
+void Font::draw(Batch2D* batch, std::wstring text, int x, int y, FontStyle style) {
 	int page = 0;
 	int next = INT_MAX;
 	int init_x = x;
@@ -73,10 +73,10 @@ void Font::draw(Batch2D* batch, std::wstring text, int x, int y, int style) {
 					batch->texture(pages[charpage]);
 
 					switch (style){
-						case FONT_STYLES::SHADOW:
+						case FontStyle::Shadow:
 							batch->sprite(x+1, y+1, Fonts_Consts::GLYPH_SIZE, Fonts_Consts::GLYPH_SIZE, 16, c, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 							break;
-						case FONT_STYLES::OUTLINE:
+						case FontStyle::Outline:
 							for (int oy = -1; oy <= 1; oy++){
 								for (int ox = -1; ox <= 1; ox++){
 									if (ox || oy) batch->sprite(x+ox, y+oy, Fonts_Consts::GLYPH_SIZE, Fonts_Consts::GLYPH_SIZE, 16, c, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -86,7 +86,8 @@ void Font::draw(Batch2D* batch, std::wstring text, int x, int y, int style) {
 					}
 
 					batch->sprite(x, y, Fonts_Consts::GLYPH_SIZE, Fonts_Consts::GLYPH_SIZE, 16, c, batch->color);
-				} else if (charpage > page && charpage < next){
+				}
+				else if (charpage > page && charpage < next){
 					next = charpage;
 				}
 			}

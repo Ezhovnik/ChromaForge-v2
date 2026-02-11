@@ -1,77 +1,73 @@
-#include <iostream>
-#include <filesystem>
 #include <memory>
+#include <filesystem>
 
-#include "settings.h"
 #include "engine.h"
+#include "settings.h"
 #include "files/files.h"
-#include "files/engine_files.h"
-#include "coders/toml.h"
-#include "definitions.h"
 #include "util/platform.h"
+#include "coders/toml.h"
+#include "coders/json.h"
+#include "definitions.h"
 #include "logger/Logger.h"
-
-toml::Wrapper create_wrapper(EngineSettings& settings) {
-	toml::Wrapper wrapper;
-
-	toml::Section& display = wrapper.add("display");
-	display.add("width", &settings.display.width);
-	display.add("height", &settings.display.height);
-	display.add("samples", &settings.display.samples);
-	display.add("swap-interval", &settings.display.swapInterval);
-
-	toml::Section& chunks = wrapper.add("chunks");
-	chunks.add("load-distance", &settings.chunks.loadDistance);
-	chunks.add("load-speed", &settings.chunks.loadSpeed);
-	chunks.add("padding", &settings.chunks.padding);
-	
-	toml::Section& camera = wrapper.add("camera");
-	camera.add("fov-effects", &settings.camera.fovEvents);
-	camera.add("shaking", &settings.camera.shaking);
-
-	toml::Section& graphics = wrapper.add("graphics");
-	graphics.add("fog-curve", &settings.graphics.fogCurve);
-
-    toml::Section& debug = wrapper.add("debug");
-    debug.add("generator-test-mode", &settings.debug.generatorTestMode);
-
-	return wrapper;
-}
+#include "files/engine_files.h"
+#include "window/Events.h"
+#include "window/input.h"
+#include "files/settings_io.h"
+#include "content/Content.h"
 
 // Точка входа в программу
 int main() {
     platform::configure_encoding();
 
     // Инициализация логгера
-    Logger::getInstance().initialize(engine_fs::get_logs_file().string(), LogLevel::INFO, LogLevel::TRACE);
+    Logger::getInstance().initialize(engine_fs::get_logs_file().string());
 
-    setup_definitions();
+    ContentBuilder contentBuilder;
+	setup_definitions(&contentBuilder);
+    std::unique_ptr<Content> content(contentBuilder.build());
 
     std::unique_ptr<Engine> engine = nullptr;
 
     try {
+        // Чтение настроек движка
         EngineSettings settings;
         toml::Wrapper wrapper = create_wrapper(settings);
-
         std::filesystem::path settings_file = platform::get_settings_file();
         if (std::filesystem::is_regular_file(settings_file)) {
 			LOG_INFO("Reading engine settings from '{}'", settings_file.string());
 			std::string content = files::read_string(settings_file);
 			toml::Reader reader(&wrapper, settings_file.string(), content);
 			reader.read();
-		} else {
-            LOG_INFO("Creating settings file '{}'", settings_file.string());
-			files::write_string(settings_file, wrapper.write());
+            LOG_INFO("Engine settings read succesfully");
+		}
+        engine = std::make_unique<Engine>(settings, content.get());
+
+        // Настройка назначения клавиш
+        std::filesystem::path controls_file = platform::get_controls_file();
+        setup_bindings();
+		if (std::filesystem::is_regular_file(controls_file)) {
+			LOG_INFO("Reading bindings from '{}'", controls_file.string());
+			std::string content = files::read_string(controls_file);
+			load_controls(controls_file.string(), content);
+            LOG_INFO("Bindings read succesfully");
 		}
 
-        engine = std::make_unique<Engine>(settings);
-        engine->mainloop(); // Запуск основного цикла 
-        
+        engine->mainloop(); // Запуск основного цикла
+
+        // Запись настроек движка в файл
         LOG_INFO("Write engine settings to '{}'", settings_file.string());
 		files::write_string(settings_file, wrapper.write());
+        LOG_INFO("Engine settings are written");
+
+        // Запись назначения клавиш в файл
+        LOG_INFO("Write bindings to '{}'", controls_file.string());
+		files::write_string(controls_file, write_controls());
+        LOG_INFO("Bindings are written");
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred\n{}", err.what());
     }
+
+    Logger::getInstance().flush();
 
     return 0;
 }

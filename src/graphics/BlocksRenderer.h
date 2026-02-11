@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_BLOCKS_RENDERER_H_
-#define GRAPHICS_BLOCKS_RENDERER_H_
+#ifndef GRAPHICS_BLOCKS_RENDERER_H
+#define GRAPHICS_BLOCKS_RENDERER_H
 
 #include <stdlib.h>
 #include <glm/glm.hpp>
@@ -13,13 +13,17 @@ class Chunk;
 class Chunks;
 class VoxelsVolume;
 class ChunksStorage;
+class Content;
 
 class BlocksRenderer {
 	float* vertexBuffer;
-    int* indexBuffer;
+	int* indexBuffer;
 	size_t vertexOffset;
-    size_t indexOffset, indexSize;
-    size_t capacity;
+	size_t indexOffset, indexSize;
+	size_t capacity;
+
+    const Content* const content;
+    const Block* const* blockDefsCache;
 
 	bool overflow = false;
 
@@ -64,11 +68,11 @@ class BlocksRenderer {
 	glm::vec4 pickSoftLight(int x, int y, int z, const glm::ivec3& right, const glm::ivec3& up) const;
 	void render(const voxel* voxels, int atlas_size);
 public:
-	BlocksRenderer(size_t capacity);
+	BlocksRenderer(size_t capacity, const Content* content);
 	virtual ~BlocksRenderer();
 
 	Mesh* render(const Chunk* chunk, int atlas_size, const ChunksStorage* chunks);
 	VoxelsVolume* getVoxelsBuffer() const;
 };
 
-#endif // GRAPHICS_BLOCKS_RENDERER_H_
+#endif // GRAPHICS_BLOCKS_RENDERER_H

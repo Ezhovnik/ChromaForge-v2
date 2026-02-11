@@ -3,12 +3,11 @@
 
 #include <memory>
 #include <unordered_map>
-
 #include "voxel.h"
 #include "../typedefs.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/hash.hpp>
+#include "glm/gtx/hash.hpp"
 
 class Chunk;
 class VoxelsVolume;

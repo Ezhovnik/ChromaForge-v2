@@ -2,9 +2,8 @@
 
 #include <iostream>
 #include <time.h>
+#include <stdexcept>
 #include <math.h>
-#include <stdlib.h>
-#include <random>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/noise.hpp>
@@ -15,9 +14,10 @@
 #include "voxel.h"
 #include "Chunk.h"
 #include "../definitions.h"
-#include "../logger/Logger.h"
 #include "../math/voxmaths.h"
-#include "../typedefs.h"
+#include "../logger/Logger.h"
+#include "../content/Content.h"
+#include "../voxels/Block.h"
 
 inline constexpr int SEA_LEVEL = 55;
 
@@ -37,8 +37,8 @@ public:
 		x -= this->x;
 		z -= this->z;
 		if (x < 0 || z < 0 || x >= width || z >= depth) {
-            LOG_ERROR("Out of heightmap");
-			throw std::runtime_error("out of heightmap");
+            LOG_ERROR("x = {} z = {} outside of map", x, z);
+			throw std::runtime_error("Out of map");
 		}
 		return heights[z * width + x];
 	}
@@ -47,8 +47,8 @@ public:
 		x -= this->x;
 		z -= this->z;
 		if (x < 0 || z < 0 || x >= width || z >= depth) {
-            LOG_ERROR("Out of heightmap");
-			throw std::runtime_error("out of heightmap");
+            LOG_ERROR("x = {} z = {} outside of map", x, z);
+			throw std::runtime_error("Out of map");
 		}
 		heights[z * width + x] = value;
 	}
@@ -73,10 +73,10 @@ public:
 	}
 
 	void setSeed(int number){
-		seed = ((ushort)(number + 23729) ^ (ushort)(number + 16786));
+		seed = ((ushort)(number * 23729) ^ (ushort)(number + 16786));
 		rand();
 	}
-    void setSeed(int number1, int number2){
+	void setSeed(int number1,int number2){
 		seed = (((ushort)(number1 * 23729) | (ushort)(number2 % 16786)) ^ (ushort)(number2 * number1));
 		rand();
 	}
@@ -93,180 +93,148 @@ float calc_height(fnl_state *noise, int real_x, int real_z){
 			real_z*0.2f*8 + fnlGetNoise3D(noise, real_x*0.1f*8+4363,real_z*0.1f*8+4456, 0.0f)*50,
 			0.0f) * fnlGetNoise3D(noise, real_x*0.01f-834176,real_z*0.01f+23678, 0.0f);
 	height += fnlGetNoise3D(noise, real_x*0.1f*8-3465,real_z*0.1f*8+4534, 0.0f)*0.125f;
-	//height += fnlGetNoise3D(noise, real_x*0.4f+4565,real_z*0.4f*18+46456, 0.0f)*0.0625f * 0.3f;
 	height *= fnlGetNoise3D(noise, real_x*0.1f+1000,real_z*0.1f+1000, 0.0f)*0.5f+0.5f;
 	height += 1.0f;
 	height *= 64.0f;
 	return height;
 }
 
-blockid_t generate_tree(fnl_state *noise, PseudoRandom* random, Map2D& heights, Map2D& humidity, int real_x, int real_y, int real_z, int tileSize){
+blockid_t WorldGenerator::generate_tree(fnl_state *noise, 
+				  PseudoRandom* random, 
+				  Map2D& heights, 
+				  Map2D& humidity,
+				  int real_x, 
+				  int real_y, 
+				  int real_z, 
+				  int tileSize){
 	const int tileX = floordiv(real_x, tileSize);
 	const int tileZ = floordiv(real_z, tileSize);
 
 	random->setSeed(tileX * 4325261 + tileZ * 12160951 + tileSize * 9431111);
 
-    int randomX = (random->rand() % (tileSize/2)) - tileSize/4;
-	int randomZ = (random->rand() % (tileSize/2)) - tileSize/4;
+	int randomX = (random->rand() % (tileSize / 2)) - tileSize / 4;
+	int randomZ = (random->rand() % (tileSize / 2)) - tileSize / 4;
 
-	int centerX = tileX * tileSize + tileSize/2 + randomX;
-	int centerZ = tileZ * tileSize + tileSize/2 + randomZ;
+	int centerX = tileX * tileSize + tileSize / 2 + randomX;
+	int centerZ = tileZ * tileSize + tileSize / 2 + randomZ;
 
 	bool gentree = (random->rand() % 10) < humidity.get(centerX, centerZ) * 13;
-	if (!gentree) return Blocks_id::AIR;
+	if (!gentree) return idAir;
 
 	int height = (int)(heights.get(centerX, centerZ));
-	if (height < SEA_LEVEL + 1) return Blocks_id::AIR;
+	if (height < SEA_LEVEL + 1) return idAir;
 	int lx = real_x - centerX;
 	int radius = random->rand() % 4 + 2;
 	int ly = real_y - height - 3 * radius;
 	int lz = real_z - centerZ;
-	if (lx == 0 && lz == 0 && real_y - height < (3 * radius + radius / 2)) return Blocks_id::LOG;
-	if (lx * lx + ly * ly / 2 + lz * lz < radius * radius) return Blocks_id::LEAVES;
-	return Blocks_id::AIR;
+	if (lx == 0 && lz == 0 && real_y - height < (3 * radius + radius / 2)) return idLog;
+	if (lx * lx + ly * ly / 2 + lz * lz < radius * radius) return idLeaves;
+	return 0;
 }
 
-void WorldGenerator::generate(voxel* voxels, int cx, int cz, int seed) {
-    const int treesTile = 12;
+WorldGenerator::WorldGenerator(const Content* content)
+                : idAir(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("air"))->id),
+                idStone(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("stone"))->id),
+                idDirt(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("dirt"))->id),
+				idMoss(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("moss"))->id),
+				idSand(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("sand"))->id),
+				idWater(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("water"))->id),
+				idLog(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("log"))->id),
+				idLeaves(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("leaves"))->id),
+				idGrass(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("grass"))->id),
+				idPoppy(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("poppy"))->id),
+				idDandelion(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("dandelion"))->id),
+				idDaisy(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("daisy"))->id),
+				idMarigold(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("marigold"))->id),
+				idBedrock(content->require(DEFAULT_BLOCK_NAMESPACE + std::string("bedrock"))->id) {;
+}
+
+void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){
+	const int treesTile = 12;
 	fnl_state noise = fnlCreateState();
 	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
 	noise.seed = seed * 60617077 % 25896307;
 	PseudoRandom randomtree;
-    PseudoRandom randomgrass;
+	PseudoRandom randomgrass;
 
 	int padding = 8;
 	Map2D heights(cx * CHUNK_WIDTH - padding, cz * CHUNK_DEPTH - padding, CHUNK_WIDTH + padding * 2, CHUNK_DEPTH + padding * 2);
+
+	// Influences to trees and sand generation
 	Map2D humidity(cx * CHUNK_WIDTH - padding, cz * CHUNK_DEPTH - padding, CHUNK_WIDTH + padding * 2, CHUNK_DEPTH + padding * 2);
 
 	for (int z = -padding; z < CHUNK_DEPTH + padding; z++){
-        int real_z = z + cz * CHUNK_DEPTH;
 		for (int x = -padding; x < CHUNK_WIDTH + padding; x++){
 			int real_x = x + cx * CHUNK_WIDTH;
+			int real_z = z + cz * CHUNK_DEPTH;
 			float height = calc_height(&noise, real_x, real_z);
-            float hum = fnlGetNoise3D(&noise, real_x * 0.3 + 633, 0.0, real_z * 0.3);
+			float hum = fnlGetNoise3D(&noise, real_x * 0.3 + 633, 0.0, real_z * 0.3);
 			if (height >= SEA_LEVEL) {
 				height = ((height - SEA_LEVEL) * 0.1) - 0.0;
-				height = powf(height, (1.0+hum - fmax(0.0, height) * 0.2));
+				height = powf(height, (1.0 + hum - fmax(0.0, height) * 0.2));
 				height = height * 10 + SEA_LEVEL;
 			} else {
-				height *= 1.0f + (height-SEA_LEVEL) * 0.05f * hum;
+				height *= 1.0f + (height - SEA_LEVEL) * 0.05f * hum;
 			}
 			heights.set(real_x, real_z, height);
 			humidity.set(real_x, real_z, hum);
+		
 		}
 	}
 
 	for (int z = 0; z < CHUNK_DEPTH; z++){
-        int real_z = z + cz * CHUNK_DEPTH;
-        for (int x = 0; x < CHUNK_WIDTH; x++){
-            int real_x = x + cx * CHUNK_WIDTH;
-            float height = heights.get(real_x, real_z);
-            for (int y = 0; y < CHUNK_HEIGHT; y++){
-                int real_y = y;
-                blockid_t id = real_y < SEA_LEVEL ? Blocks_id::WATER : Blocks_id::AIR;
-                uint8_t states = 0;
-                
-                if ((real_y == (int)height) && (SEA_LEVEL - 2 < real_y)) {
-                    id = Blocks_id::MOSS;
-                } else if (real_y < (height - 6)){
-                    id = Blocks_id::STONE;
-                } else if (real_y < height){
-                    id = Blocks_id::DIRT;
-                } else {
-                    int tree = generate_tree(&noise, &randomtree, heights, humidity, real_x, real_y, real_z, treesTile);
-                    if (tree != Blocks_id::AIR) {
-                        id = tree;
-                        states = BLOCK_DIR_Y;
+		int real_z = z + cz * CHUNK_DEPTH;
+		for (int x = 0; x < CHUNK_WIDTH; x++){
+			int real_x = x + cx * CHUNK_WIDTH;
+			float height = heights.get(real_x, real_z);
+
+			for (int y = 0; y < CHUNK_HEIGHT; y++){
+				int real_y = y;
+				int id = real_y < SEA_LEVEL ? idWater : idAir;
+				int states = 0;
+				if ((real_y == (int)height) && (SEA_LEVEL - 2 < real_y)) {
+					id = idMoss;
+				} else if (real_y < (height - 6)){
+					id = idStone;
+				} else if (real_y < height){
+					id = idDirt;
+				} else {
+					blockid_t tree = generate_tree(&noise, &randomtree, heights, humidity, real_x, real_y, real_z, treesTile);
+					if (tree != idAir) {
+						id = tree;
+						states = BLOCK_DIR_Y;
+					}
+				}
+				if (((height - (1.5 - 0.2 * pow(height - 54, 4))) < real_y) && (real_y < height) && humidity.get(real_x, real_z) < 0.1){
+					id = idSand;
+				}
+
+				if (real_y <= 2) id = idBedrock;
+
+				randomgrass.setSeed(real_x,real_z);
+                if ((id == idAir) && (height > SEA_LEVEL + 0.5) && ((int)(height + 1) == real_y) && ((ushort)randomgrass.rand() > 56000)){
+                    unsigned short flowerChance = randomgrass.rand();
+                    if (flowerChance < 19660) {
+                        int flowerType = randomgrass.rand() % 4;
+                        switch (flowerType) {
+                            case 0: id = idPoppy; break;
+                            case 1: id = idDandelion; break;
+                            case 2: id = idDaisy; break;
+                            case 3: id = idMarigold; break;
+                            default: id = idGrass; break;
+                        }
+                    } else {
+                        id = idGrass;
                     }
                 }
-                
-                if (((height - (1.5 - 0.2 * pow(height - 54, 4))) < real_y) && (real_y < height) && humidity.get(real_x, real_z) < 0.1) id = Blocks_id::SAND;
-                
-                if (real_y <= 2) id = Blocks_id::BEDROCK;
 
-                randomgrass.setSeed(real_x * 12345 + real_z * 67890 + real_y * 13579);
-                ushort grass_value = (ushort)randomgrass.rand();
-                float humidity_val = humidity.get(real_x, real_z);
-                float height_factor = 1.0f - fmax(0.0f, fmin(1.0f, (height - SEA_LEVEL) / 40.0f)); // 0 на высоте SEA_LEVEL, уменьшается с высотой
-
-                if ((id == Blocks_id::AIR) && (real_y > SEA_LEVEL + 0.5) && ((int)(height + 1) == real_y)) {
-                    // Базовый шанс появления растения
-                    float plant_chance = 0.35f;
-                    
-                    // Учитываем влажность: растения лучше растут во влажных местах
-                    plant_chance *= (0.7f + 0.6f * (humidity_val + 1.0f) / 2.0f);
-                    
-                    // Учитываем высоту: на больших высотах меньше растений
-                    plant_chance *= (0.5f + 0.5f * height_factor);
-                    
-                    // Случайный фактор для разнообразия
-                    float random_factor = (grass_value % 1000) / 1000.0f;
-                    
-                    if (random_factor < plant_chance) {
-                        // Определяем тип растения на основе комбинации факторов
-                        ushort plant_type = (ushort)randomgrass.rand();
-                        float humidity_factor = (humidity_val + 1.0f) / 2.0f; // 0-1
-                        
-                        // Разные растения предпочитают разные условия:
-                        // - Одуванчики любят среднюю влажность и не очень высокие места
-                        // - Мак предпочитает более сухие места
-                        // - Ромашка любит влажность
-                        // - Маргаритка предпочитает средние условия
-                        // - Трава растет везде, но с разной вероятностью
-                        
-                        if (humidity_factor < 0.3f && plant_type % 7 == 0) {
-                            // В сухих местах иногда появляется мак
-                            id = Blocks_id::POPPY;
-                        } 
-                        else if (humidity_factor > 0.7f && plant_type % 5 == 0) {
-                            // Во влажных местах часто ромашка
-                            id = Blocks_id::DAISY;
-                        }
-                        else if (humidity_factor > 0.4f && humidity_factor < 0.7f && 
-                                height_factor > 0.3f && plant_type % 6 == 0) {
-                            // Маргаритки в средних условиях
-                            id = Blocks_id::MARIGOLD;
-                        }
-                        else if (humidity_factor > 0.3f && humidity_factor < 0.8f && 
-                                plant_type % 8 == 0) {
-                            // Одуванчики в средних условиях влажности
-                            id = Blocks_id::DANDELION;
-                        }
-                        else {
-                            // В остальных случаях - трава
-                            id = Blocks_id::GRASS;
-                            
-                            // Иногда делаем небольшие скопления травы
-                            if ((real_x + real_z) % 3 == 0 && plant_type % 4 == 0) {
-                                // Проверяем соседние блоки для создания скоплений
-                                int neighbor_check = (real_x * 17 + real_z * 23) % 8;
-                                if (neighbor_check < 3) {
-                                    // С некоторой вероятностью делаем группу из 2-4 травинок
-                                    id = Blocks_id::GRASS;
-                                }
-                            }
-                        }
-                        
-                        // Дополнительный фактор: на склонах растений меньше
-                        float slope_factor = 1.0f;
-                        if (height_factor < 0.2f) { // Крутые склоны
-                            slope_factor = 0.3f;
-                        }
-                        
-                        // Применяем slope_factor
-                        if ((plant_type % 100) / 100.0f > slope_factor) {
-                            id = Blocks_id::AIR;
-                        }
-                    }
-                }
-                
-                if ((height > SEA_LEVEL + 1) && ((int)(height + 1) == real_y) && ((ushort)randomgrass.rand() > 65533)){
-                    id = Blocks_id::LOG;
-                    states = BLOCK_DIR_Y;
-                }
-                voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].id = id;
-                voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].states = states;
-            }
-        }
-    }
+				if ((height > SEA_LEVEL + 1) && ((int)(height + 1) == real_y) && ((ushort)randomgrass.rand() > 65533)){
+					id = idLog;
+					states = BLOCK_DIR_Y;
+				}
+				voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].id = id;
+				voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].states = states;
+			}
+		}
+	}
 }

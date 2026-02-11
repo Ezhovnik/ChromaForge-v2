@@ -4,14 +4,18 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
+#include <stack>
+#include <string>
+
 #include "UINode.h"
 
 class Batch2D;
 class Assets;
 
 namespace gui {
+    typedef std::function<void()> ontimeout;
     struct IntervalEvent {
-        std::function<void()> callback;
+        ontimeout callback;
         float interval;
         float timer;
         int repeat;
@@ -26,14 +30,14 @@ namespace gui {
     public:
         Container(glm::vec2 coord, glm::vec2 size);
 
-        virtual void activate(float delta) override;
+        virtual void activate(float deltaTime) override;
         virtual void drawBackground(Batch2D* batch, Assets* assets) {};
         virtual void draw(Batch2D* batch, Assets* assets) override;
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
         virtual void add(std::shared_ptr<UINode> node);
         virtual void add(UINode* node);
         virtual void remove(std::shared_ptr<UINode> node);
-        void listenInterval(float interval, std::function<void()> callback, int repeat = -1);
+        void listenInterval(float interval, ontimeout callback, int repeat = -1);
     };
 
     class Panel : public Container {
@@ -53,6 +57,34 @@ namespace gui {
 
         virtual void refresh() override;
         virtual void lock() override;
+    };
+
+    struct Page {
+        std::shared_ptr<UINode> panel = nullptr;
+
+        ~Page() {
+            panel = nullptr;
+        }
+    };
+
+    class PagesControl : public Container {
+    protected:
+        std::unordered_map<std::string, Page> pages;
+        std::stack<std::string> pageStack;
+        Page current_;
+        std::string curname_ = "";
+    public:
+        PagesControl();
+
+        bool has(std::string name);
+        void set(std::string name, bool history=true);
+        void add(std::string name, std::shared_ptr<UINode> panel);
+        void add(std::string name, UINode* panel);
+        void back();
+        void clearHistory();
+        void reset();
+
+        Page current();
     };
 }
 #endif // FRONTEND_GUI_PANELS_H_

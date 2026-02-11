@@ -3,19 +3,24 @@
 
 #include "../typedefs.h"
 
+class Level;
 class Chunks;
 class Lighting;
 class WorldFiles;
-class Level;
+class VoxelRenderer;
+class ChunksLoader;
+class WorldGenerator;
 
 class ChunksController {
 private:
+	Level* level;
 	Chunks* chunks;
 	Lighting* lighting;
-	Level* level;
+    WorldGenerator* generator;
+
+    uint chunksPadding;
 
     int64_t avgDurationMcs = 1000;
-    uint chunksPadding;
 public:
 	ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding);
 	~ChunksController();
@@ -24,4 +29,4 @@ public:
 	bool loadVisible();
 };
 
-#endif // VOXELS_CHUNKSCONTROLLER_H_
+#endif /* VOXELS_CHUNKSCONTROLLER_H_ */

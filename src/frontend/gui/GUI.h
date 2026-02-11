@@ -3,25 +3,24 @@
 
 #include <memory>
 #include <vector>
-#include <glm/glm.hpp>
-#include <functional>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
+
+#include <glm/glm.hpp>
 
 class Batch2D;
 class Assets;
 class Camera;
 
 /*
-Some info about padding and margin.
-    Padding is element inner space, margin is outer
+Padding is element inner space, margin is outer
     glm::vec4 usage:
     x - left
     y - top
     z - right
     w - bottom
 
- Outer element
+Outer element
  +======================================================================+
  |            .           .                    .          .             |
  |            .padding.y  .                    .          .             |
@@ -46,6 +45,7 @@ Some info about padding and margin.
 namespace gui {
     class UINode;
     class Container;
+    class PagesControl;
 
     class GUI {
         Container* container;
@@ -57,19 +57,22 @@ namespace gui {
         std::unordered_map<std::string, std::shared_ptr<UINode>> storage;
 
         Camera* uicamera;
+        PagesControl* menu;
     public:
         GUI();
         ~GUI();
+
+        PagesControl* getMenu();
 
         std::shared_ptr<UINode> getFocused() const;
         bool isFocusCaught() const;
 
         void activate(float delta);
-
         void draw(Batch2D* batch, Assets* assets);
-
         void add(std::shared_ptr<UINode> panel);
+
         void remove(std::shared_ptr<UINode> panel);
+
         void store(std::string name, std::shared_ptr<UINode> node);
         std::shared_ptr<UINode> get(std::string name);
         void remove(std::string name);

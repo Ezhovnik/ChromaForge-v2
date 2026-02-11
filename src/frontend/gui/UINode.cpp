@@ -5,8 +5,6 @@
 using gui::UINode;
 using gui::Align;
 
-#include <iostream>
-
 UINode::UINode(glm::vec2 coord, glm::vec2 size) : coord(coord), size_(size) {
 }
 
@@ -47,14 +45,13 @@ UINode* UINode::getParent() const {
 
 void UINode::click(GUI*, int x, int y) {
     pressed_ = true;
-    focused_ = true;
 }
 
 void UINode::mouseRelease(GUI*, int x, int y) {
     pressed_ = false;
 }
 
-bool UINode::isPressed() const {
+bool UINode::ispressed() const {
     return pressed_;
 }
 
@@ -62,15 +59,14 @@ void UINode::defocus() {
     focused_ = false;
 }
 
-bool UINode::isFocused() const {
+bool UINode::isfocused() const {
     return focused_;
 }
 
 bool UINode::isInside(glm::vec2 pos) {
     glm::vec2 coord = calcCoord();
     glm::vec2 size = this->size();
-    return (pos.x >= coord.x && pos.y >= coord.y && 
-            pos.x < coord.x + size.x && pos.y < coord.y + size.y);
+    return (pos.x >= coord.x && pos.y >= coord.y && pos.x < coord.x + size.x && pos.y < coord.y + size.y);
 }
 
 std::shared_ptr<UINode> UINode::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
@@ -95,7 +91,7 @@ void UINode::size(glm::vec2 size) {
     this->size_ = size;
     if (parent) {
         sizelock = true;
-        parent->refresh();
+        // parent->refresh();
         sizelock = false;
     }
 }

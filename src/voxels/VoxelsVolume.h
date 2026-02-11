@@ -8,6 +8,7 @@
 class VoxelsVolume {
 	int x, y, z;
 	int width, height, depth;
+    int volume;
 	voxel* voxels;
 	light_t* lights;
 public:
@@ -50,12 +51,16 @@ public:
 	}
 
 	inline blockid_t pickBlockId(int bx, int by, int bz) const {
-		if (bx < x || by < y || bz < z || bx >= x + width || by >= y + height || bz >= z + depth) return BLOCK_VOID;
+		if (bx < x || by < y || bz < z || bx >= x + width || by >= y + height || bz >= z + depth) {
+			return BLOCK_VOID;
+		}
 		return voxels[vox_index(bx - x, by - y, bz - z, width, depth)].id;
 	}
 
 	inline light_t pickLight(int bx, int by, int bz) const {
-		if (bx < x || by < y || bz < z || bx >= x + width || by >= y + height || bz >= z + depth) return 0;
+		if (bx < x || by < y || bz < z || bx >= x + width || by >= y + height || bz >= z + depth) {
+			return 0;
+		}
 		return lights[vox_index(bx - x, by - y, bz - z, width, depth)];
 	}
 };

@@ -4,12 +4,11 @@
 
 #include "Batch2D.h"
 
-GfxContext::GfxContext(const GfxContext* parent, Viewport& viewport, Batch2D* g2d)
-    : parent(parent), viewport(viewport), g2d(g2d) {
+GfxContext::GfxContext(const GfxContext* parent, Viewport& viewport, Batch2D* g2d) : parent(parent), viewport(viewport), g2d(g2d) {
 }
 
 GfxContext::~GfxContext() {
-    if (parent == nullptr) return;
+    if (parent == nullptr)  return;
     if (depthTest_ != parent->depthTest_) {
         if (depthTest_) glDisable(GL_DEPTH_TEST);
         else glEnable(GL_DEPTH_TEST);
@@ -38,7 +37,6 @@ GfxContext GfxContext::sub() const {
 void GfxContext::depthTest(bool flag) {
     if (depthTest_ == flag) return;
     depthTest_ = flag;
-
     if (depthTest_) glEnable(GL_DEPTH_TEST);
     else glDisable(GL_DEPTH_TEST);
 }
@@ -46,7 +44,6 @@ void GfxContext::depthTest(bool flag) {
 void GfxContext::cullFace(bool flag) {
     if (cullFace_ == flag) return;
     cullFace_ = flag;
-
     if (cullFace_) glEnable(GL_CULL_FACE);
     else glDisable(GL_CULL_FACE);
 }

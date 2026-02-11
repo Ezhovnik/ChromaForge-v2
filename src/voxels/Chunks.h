@@ -1,23 +1,26 @@
 #ifndef VOXELS_CHUNKS_H_
 #define VOXELS_CHUNKS_H_
 
-#include <memory>
 #include <stdlib.h>
+#include <memory>
 
 #include <glm/glm.hpp>
 
 #include "../typedefs.h"
 
 class Mesh;
-class VoxelRenderer;
-
 class Chunk;
 class voxel;
 class WorldFiles;
 class LevelEvents;
+class Content;
+class ContentIndices;
 
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
+private:
+    const Content* const content;
+	const ContentIndices* const contentIds;
 public:
     std::shared_ptr<Chunk>* chunks;
     std::shared_ptr<Chunk>* chunksSecond;
@@ -31,11 +34,10 @@ public:
     int areaOffsetX; // Смещение области видимых чанков по X
     int areaOffsetZ; // Смещение области видимых чанков по Z
 
+    LevelEvents* events;
     WorldFiles* worldFiles;
 
-    LevelEvents* events;
-
-    Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events); // Конструктор
+    Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content); // Конструктор
     ~Chunks(); // Деструктор
 
     bool putChunk(std::shared_ptr<Chunk> chunk);
@@ -44,10 +46,10 @@ public:
     Chunk* getChunkByVoxel(int x, int y, int z); // Получает чанк, содержащий воксель с заданными мировыми координатами
 
     voxel* getVoxel(int x, int y, int z); // Возвращает воксель по мировым координатам
-    void setVoxel(int x, int y, int z, blockid_t id, uint8_t states); // Устанавливает идентификатор вокселя по мировым координатам
+    void setVoxel(int x, int y, int z, int id, uint8_t states); // Устанавливает идентификатор вокселя по мировым координатам
 
     light_t getLight(int x, int y, int z);
-    ubyte getLight(int x, int y, int z, int channel); // Получает уровень освещения вокселя
+	ubyte getLight(int x, int y, int z, int channel);
     
     voxel* rayCast( // Выполняет трассировку луча через воксельный мир.
         glm::vec3 start, // Начальная точка луча

@@ -1,7 +1,5 @@
 #include "BlocksRenderer.h"
 
-#include <iostream>
-
 #include <glm/glm.hpp>
 
 #include "Mesh.h"
@@ -11,15 +9,16 @@
 #include "../voxels/Chunk.h"
 #include "../voxels/VoxelsVolume.h"
 #include "../voxels/ChunksStorage.h"
-#include "../lighting/Lightmap.h"
-#include "../definitions.h"
+#include "../lighting/LightMap.h"
+#include "../content/Content.h"
 
 #define VERTEX_SIZE 9
 
-BlocksRenderer::BlocksRenderer(size_t capacity) : vertexOffset(0), indexOffset(0), indexSize(0), capacity(capacity) {
+BlocksRenderer::BlocksRenderer(size_t capacity, const Content* content) : vertexOffset(0), indexOffset(0), indexSize(0), capacity(capacity), content(content) {
 	vertexBuffer = new float[capacity];
-    indexBuffer = new int[capacity];
+	indexBuffer = new int[capacity];
 	voxelsBuffer = new VoxelsVolume(CHUNK_WIDTH + 2, CHUNK_HEIGHT, CHUNK_DEPTH + 2);
+    blockDefsCache = content->indices->getBlockDefs();
 }
 
 BlocksRenderer::~BlocksRenderer() {
@@ -43,7 +42,7 @@ void BlocksRenderer::vertex(const glm::vec3& coord, float u, float v, const glm:
 }
 
 void BlocksRenderer::index(int a, int b, int c, int d, int e, int f) {
-    indexBuffer[indexSize++] = indexOffset + a;
+	indexBuffer[indexSize++] = indexOffset + a;
 	indexBuffer[indexSize++] = indexOffset + b;
 	indexBuffer[indexSize++] = indexOffset + c;
 	indexBuffer[indexSize++] = indexOffset + d;
@@ -66,6 +65,7 @@ void BlocksRenderer::face(const glm::vec3& coord, float w, float h,
 	vertex(coord + axisX * w, region.u2, region.v1, lights[1] * tint);
 	vertex(coord + axisX * w + axisY * h, region.u2, region.v2, lights[2] * tint);
 	vertex(coord + axisY * h, region.u1, region.v2, lights[3] * tint);
+
     index(0, 1, 3, 1, 2, 3);
 }
 
@@ -85,18 +85,21 @@ void BlocksRenderer::face(const glm::vec3& coord, float w, float h,
 		vertex(coord + axisX * w, region.u2, region.v2, lights[1] * tint);
 		vertex(coord + axisX * w + axisY * h, region.u1, region.v2, lights[2] * tint);
 		vertex(coord + axisY * h, region.u1, region.v1, lights[3] * tint);
+
         index(0, 1, 2, 0, 2, 3);
-	} else {
+	}
+	else {
 		vertex(coord, region.u1, region.v1, lights[0] * tint);
 		vertex(coord + axisX * w, region.u2, region.v1, lights[1] * tint);
 		vertex(coord + axisX * w + axisY * h, region.u2, region.v2, lights[2] * tint);
 		vertex(coord + axisY * h, region.u1, region.v2, lights[3] * tint);
+
         index(0, 1, 2, 0, 2, 3);
 	}
 }
 
 void BlocksRenderer::cube(const glm::vec3& coord, const glm::vec3& size, const UVRegion(&texfaces)[6]) {
-	glm::vec4 lights[]{glm::vec4(0.0f), glm::vec4(0.0f), glm::vec4(0.0f), glm::vec4(0.0f)};
+	glm::vec4 lights[]{glm::vec4(), glm::vec4(), glm::vec4(), glm::vec4()};
 
 	face(coord, size.x, size.y, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), texfaces[0], lights);
 	face(coord + glm::vec3(size.x, 0, -size.z), size.x, size.y, glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), texfaces[1], lights);
@@ -113,7 +116,7 @@ inline glm::vec4 do_tint(float value) {
 }
 
 void BlocksRenderer::blockCube(int x, int y, int z, const glm::vec3& size, const UVRegion(&texfaces)[6], ubyte group) {
-	glm::vec4 lights[]{glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f)};
+	glm::vec4 lights[]{ glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) };
 	if (isOpen(x, y, z + 1, group)) {
 		face(glm::vec3(x, y, z), size.x, size.y, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), texfaces[5], lights, do_tint(0.9f));
 	}
@@ -124,6 +127,7 @@ void BlocksRenderer::blockCube(int x, int y, int z, const glm::vec3& size, const
 	if (isOpen(x, y + 1, z, group)) {
 		face(glm::vec3(x, y + size.y, z), size.x, size.z, glm::vec3(1, 0, 0), glm::vec3(0, 0, -1), texfaces[3], lights);
 	}
+
 	if (isOpen(x, y - 1, z, group)) {
 		face(glm::vec3(x, y, z - size.z), size.x, size.z, glm::vec3(1, 0, 0), glm::vec3(0, 0, 1), texfaces[2], lights, glm::vec4(1.0f));
 	}
@@ -141,28 +145,27 @@ void BlocksRenderer::blockXSprite(int x, int y, int z, const glm::vec3& size, co
 			pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 1, 0}),
 			pickSoftLight(x + 1, y + 1, z, {1, 0, 0}, {0, 1, 0}),
 			pickSoftLight(x + 1, y + 1, z, {1, 0, 0}, {0, 1, 0}),
-			pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 1, 0})
-        };
+			pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 1, 0}) };
 
 	int rand = ((x * z + y) ^ (z * y - x)) * (z + y);
 
 	float xs = ((float)(char)rand / 512) * spread;
 	float zs = ((float)(char)(rand >> 8) / 512) * spread;
 
-	const float w = size.x / 1.41f;
-	face(glm::vec3( x + xs + (1.0 - w) * 0.5f, y, 
-		            z + zs - 1 + (1.0 - w) * 0.5f), w, size.y, 
-                    glm::vec3(1.0f, 0, 1.0f), glm::vec3(0, 1, 0), texface1, lights, do_tint(0.8f));
-	face(glm::vec3( x + xs - (1.0 - w) * 0.5f + 1, y, 
-                    z + zs - (1.0 - w) * 0.5f), w, size.y, 
-                    glm::vec3(-1.0f, 0, -1.0f), glm::vec3(0, 1, 0), texface1, lights, do_tint(0.8f));
+	const float w = size.x/1.41f;
+	face(glm::vec3(x + xs + (1.0 - w) * 0.5f, y, 
+		      z + zs - 1 + (1.0 - w) * 0.5f), w, size.y, 
+		      glm::vec3(1.0f, 0, 1.0f), glm::vec3(0, 1, 0), texface1, lights, do_tint(0.8f));
+	face(glm::vec3(x + xs - (1.0 - w) * 0.5f + 1, y, 
+		      z + zs - (1.0 - w) * 0.5f), w, size.y, 
+		      glm::vec3(-1.0f, 0, -1.0f), glm::vec3(0, 1, 0), texface1, lights, do_tint(0.8f));
 
-	face(glm::vec3( x + xs + (1.0 - w) * 0.5f, y, 
-		            z + zs - (1.0 - w) * 0.5f), w, size.y, 
-                    glm::vec3(1.0f, 0, -1.0f), glm::vec3(0, 1, 0), texface2, lights, do_tint(0.8f));
-	face(glm::vec3( x + xs - (1.0 - w) * 0.5f + 1, y, 
-                    z + zs + (1.0 - w) * 0.5f - 1), w, size.y, 
-                    glm::vec3(-1.0f, 0, 1.0f), glm::vec3(0, 1, 0), texface2, lights, do_tint(0.8f));
+	face(glm::vec3(x + xs + (1.0 - w) * 0.5f, y, 
+		      z + zs - (1.0 - w) * 0.5f), w, size.y, 
+		      glm::vec3(1.0f, 0, -1.0f), glm::vec3(0, 1, 0), texface2, lights, do_tint(0.8f));
+	face(glm::vec3(x + xs - (1.0 - w) * 0.5f + 1, y, 
+		      z + zs + (1.0 - w) * 0.5f - 1), w, size.y, 
+			  glm::vec3(-1.0f, 0, 1.0f), glm::vec3(0, 1, 0), texface2, lights, do_tint(0.8f));
 }
 
 void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size, const UVRegion(&texfaces_)[6], const Block* block, ubyte states) {
@@ -170,7 +173,7 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 	UVRegion texfaces[6];
 	int rot = 0;
 
-	for (int i = 0; i < 6; ++i) {
+	for (int i = 0; i < 6; i++) {
 		texfaces[i] = texfaces_[i];
 	}
 
@@ -181,9 +184,11 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 			texfaces[1] = texfaces_[3];
 			texfaces[2] = texfaces_[0];
 			texfaces[3] = texfaces_[1];
-		} else if (states == BLOCK_DIR_Y) {
+		}
+		else if (states == BLOCK_DIR_Y) {
 			rot = 2;
-		} else if (states == BLOCK_DIR_Z) {
+		}
+		else if (states == BLOCK_DIR_Z) {
 			rot = 3;
 			texfaces[2] = texfaces_[4];
 			texfaces[3] = texfaces_[5];
@@ -196,8 +201,7 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 				pickSoftLight(x, y, z + 1, {1, 0, 0}, {0, 1, 0}),
 				pickSoftLight(x + 1, y, z + 1, {1, 0, 0}, {0, 1, 0}),
 				pickSoftLight(x + 1, y + 1, z + 1, {1, 0, 0}, {0, 1, 0}),
-				pickSoftLight(x, y + 1, z + 1, {1, 0, 0}, {0, 1, 0})
-            };
+				pickSoftLight(x, y + 1, z + 1, {1, 0, 0}, {0, 1, 0}) };
 		face(glm::vec3(x, y, z), size.x, size.y, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), texfaces[5], lights, do_tint(0.9f), rot == 1);
 	}
 	if (isOpen(x, y, z - 1, group)) {
@@ -205,8 +209,7 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 				pickSoftLight(x, y, z - 1, {-1, 0, 0}, {0, 1, 0}),
 				pickSoftLight(x - 1, y, z - 1, {-1, 0, 0}, {0, 1, 0}),
 				pickSoftLight(x - 1, y + 1, z - 1, {-1, 0, 0}, {0, 1, 0}),
-				pickSoftLight(x, y + 1, z - 1, {-1, 0, 0}, {0, 1, 0})
-            };
+				pickSoftLight(x, y + 1, z - 1, {-1, 0, 0}, {0, 1, 0}) };
 		face(glm::vec3(x + size.x, y, z - size.z), size.x, size.y, glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), texfaces[4], lights, do_tint(0.75f), rot == 1);
 	}
 
@@ -215,8 +218,7 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 				pickSoftLight(x, y + 1, z + 1, {1, 0, 0}, {0, 0, 1}),
 				pickSoftLight(x + 1, y + 1, z + 1, {1, 0, 0}, {0, 0, 1}),
 				pickSoftLight(x + 1, y + 1, z, {1, 0, 0}, {0, 0, 1}),
-				pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 0, 1})
-            };
+				pickSoftLight(x, y + 1, z, {1, 0, 0}, {0, 0, 1}) };
 
 		face(glm::vec3(x, y + size.y, z), size.x, size.z, glm::vec3(1, 0, 0), glm::vec3(0, 0, -1), texfaces[3], lights, glm::vec4(1.0f), rot == 1);
 	}
@@ -226,8 +228,7 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 				pickSoftLight(x, y - 1, z - 1, {1, 0, 0}, {0, 0, -1}),
 				pickSoftLight(x + 1, y - 1, z - 1, {1, 0, 0}, {0, 0,-1}),
 				pickSoftLight(x + 1, y - 1, z, {1, 0, 0}, {0, 0, -1}),
-				pickSoftLight(x, y - 1, z, {1, 0, 0}, {0, 0, -1})
-            };
+				pickSoftLight(x, y - 1, z, {1, 0, 0}, {0, 0, -1}) };
 		face(glm::vec3(x, y, z - size.z), size.x, size.z, glm::vec3(1, 0, 0), glm::vec3(0, 0, 1), texfaces[2], lights, do_tint(0.6f), rot == 1);
 	}
 
@@ -236,8 +237,7 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 				pickSoftLight(x - 1, y, z - 1, {0, 0, -1}, {0, 1, 0}),
 				pickSoftLight(x - 1, y, z, {0, 0, -1}, {0, 1, 0}),
 				pickSoftLight(x - 1, y + 1, z, {0, 0, -1}, {0, 1, 0}),
-				pickSoftLight(x - 1, y + 1, z - 1, {0, 0, -1}, {0, 1, 0})
-            };
+				pickSoftLight(x - 1, y + 1, z - 1, {0, 0, -1}, {0, 1, 0}) };
 		face(glm::vec3(x, y, z - size.z), size.z, size.y, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), texfaces[0], lights, do_tint(0.7f), rot == 3);
 	}
 	if (isOpen(x + 1, y, z, group)) {
@@ -245,16 +245,16 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 				pickSoftLight(x + 1, y, z, {0, 0, -1}, {0, 1, 0}),
 				pickSoftLight(x + 1, y, z - 1, {0, 0, -1}, {0, 1, 0}),
 				pickSoftLight(x + 1, y + 1, z - 1, {0, 0, -1}, {0, 1, 0}),
-				pickSoftLight(x + 1, y + 1, z, {0, 0, -1}, {0, 1, 0})
-            };
+				pickSoftLight(x + 1, y + 1, z, {0, 0, -1}, {0, 1, 0}) };
 		face(glm::vec3(x + size.x, y, z), size.z, size.y, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), texfaces[1], lights, do_tint(0.8f), rot == 3);
 	}
 }
 
+// Does block allow to see other blocks sides (is it transparent)
 bool BlocksRenderer::isOpen(int x, int y, int z, ubyte group) const {
 	blockid_t id = voxelsBuffer->pickBlockId(chunk->chunk_x * CHUNK_WIDTH + x, y, chunk->chunk_z * CHUNK_DEPTH + z);
 	if (id == BLOCK_VOID) return false;
-	const Block& block = *Block::blocks[id];
+	const Block& block = *blockDefsCache[id];
 	if (block.drawGroup != group && block.lightPassing) return true;
 	return !id;
 }
@@ -262,7 +262,7 @@ bool BlocksRenderer::isOpen(int x, int y, int z, ubyte group) const {
 bool BlocksRenderer::isOpenForLight(int x, int y, int z) const {
 	blockid_t id = voxelsBuffer->pickBlockId(chunk->chunk_x * CHUNK_WIDTH + x, y, chunk->chunk_z * CHUNK_DEPTH + z);
 	if (id == BLOCK_VOID) return false;
-	const Block& block = *Block::blocks[id];
+	const Block& block = *blockDefsCache[id];
 	if (block.lightPassing) return true;
 	return !id;
 }
@@ -274,7 +274,8 @@ glm::vec4 BlocksRenderer::pickLight(int x, int y, int z) const {
 			LightMap::extract(light, 1) / 15.0f,
 			LightMap::extract(light, 2) / 15.0f,
 			LightMap::extract(light, 3) / 15.0f);
-	} else {
+	}
+	else {
 		return glm::vec4(0.0f);
 	}
 }
@@ -296,39 +297,35 @@ inline UVRegion uvfor(const Block& def, uint face, int atlas_size) {
 }
 
 void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
-	int begin = chunk->bottom * (CHUNK_WIDTH * CHUNK_DEPTH);
-	int end = chunk->top * (CHUNK_WIDTH * CHUNK_DEPTH);
 	for (ubyte group = 0; group < 8; group++) {
-		for (int i = begin; i < end; i++) {
-			const voxel& vox = voxels[i];
-			blockid_t id = vox.id;
-			const Block& def = *Block::blocks[id];
-			if (!id || def.drawGroup != group)
-				continue;
-			const UVRegion texfaces[6]{ uvfor(def, 0, atlas_size), uvfor(def, 1, atlas_size),
-										uvfor(def, 2, atlas_size), uvfor(def, 3, atlas_size),
-										uvfor(def, 4, atlas_size), uvfor(def, 5, atlas_size) };
-			int x = i % CHUNK_WIDTH;
-			int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);
-			int z = (i / CHUNK_DEPTH) % CHUNK_WIDTH;
-			switch (def.model) {
-			case BlockModel::Cube:
-				if (*((light_t*)&def.emission)) {
-					blockCube(x, y, z, glm::vec3(1, 1, 1), texfaces, def.drawGroup);
+		for (uint y = 0; y < CHUNK_HEIGHT; y++) {
+			for (uint z = 0; z < CHUNK_DEPTH; z++) {
+				for (uint x = 0; x < CHUNK_WIDTH; x++) {
+					const voxel& vox = voxels[((y * CHUNK_DEPTH) + z) * CHUNK_WIDTH + x];
+					blockid_t id = vox.id;
+					const Block& def = *blockDefsCache[id];
+					if (!id || def.drawGroup != group) continue;
+					const UVRegion texfaces[6]{ uvfor(def, 0, atlas_size), uvfor(def, 1, atlas_size),
+												uvfor(def, 2, atlas_size), uvfor(def, 3, atlas_size),
+												uvfor(def, 4, atlas_size), uvfor(def, 5, atlas_size) };
+					switch (def.model) {
+					case BlockModel::Cube:
+						if (*((light_t*)&def.emission)) {
+							blockCube(x, y, z, glm::vec3(1, 1, 1), texfaces, def.drawGroup);
+						} else {
+							blockCubeShaded(x, y, z, glm::vec3(1, 1, 1), texfaces, &def, vox.states);
+						}
+						break;
+					case BlockModel::X: {
+						blockXSprite(x, y, z, glm::vec3(1, 1, 1), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
+						break;
+					}
+                    default:
+                        break;
+					}
+					if (overflow) return;
 				}
-				else {
-					blockCubeShaded(x, y, z, glm::vec3(1, 1, 1), texfaces, &def, vox.states);
-				}
-				break;
-			case BlockModel::X: {
-				blockXSprite(x, y, z, glm::vec3(1, 1, 1), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
-				break;
 			}
-			default:
-				break;
-			}
-			if (overflow)
-				return;
 		}
 	}
 }
@@ -339,11 +336,11 @@ Mesh* BlocksRenderer::render(const Chunk* chunk, int atlas_size, const ChunksSto
 	chunks->getVoxels(voxelsBuffer);
 	overflow = false;
 	vertexOffset = 0;
-    indexOffset = indexSize = 0;
+	indexOffset = indexSize = 0;
 	const voxel* voxels = chunk->voxels;
 	render(voxels, atlas_size);
 
-    const vattr attrs[]{{3}, {2}, {4}, {0}};
+	const vattr attrs[]{{3}, {2}, {4}, {0}};
 	Mesh* mesh = new Mesh(vertexBuffer, vertexOffset / VERTEX_SIZE, indexBuffer, indexSize, attrs);
 	return mesh;
 }

@@ -19,4 +19,4 @@ public:
     }
 };
 
-#endif
+#endif // GRAPHICS_VIEWPORT_H_

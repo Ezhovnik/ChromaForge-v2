@@ -12,18 +12,18 @@
 
 #include "../typedefs.h"
 
-#define REGION_FORMAT_VERSION 1
-#define REGION_FORMAT_MAGIC ".CHROMAREG"
-
-#define WORLD_FORMAT_VERSION 1
-#define WORLD_FORMAT_MAGIC ".CHROMAWLD"
-
 // Константы для размера регионов
 namespace RegionConsts {
-    constexpr int REGION_SIZE_BIT = 5; // Размер региона 
-    constexpr int REGION_SIZE = 1 << REGION_SIZE_BIT; // Длина региона в чанках
-    constexpr int REGION_VOLUME = REGION_SIZE * REGION_SIZE; // Количество чанков в регионе
+    constexpr int SIZE_BIT = 5; // Размер региона 
+    constexpr int SIZE = 1 << SIZE_BIT; // Длина региона в чанках
+    constexpr int VOLUME = SIZE * SIZE; // Количество чанков в регионе
 }
+
+#define REGION_FORMAT_MAGIC ".CHROMAREG"
+#define REGION_FORMAT_VERSION 1
+
+#define WORLD_FORMAT_MAGIC ".CHROMAWLD"
+#define WORLD_FORMAT_VERSION 1
 
 class Player;
 class Chunk;
@@ -43,14 +43,15 @@ struct WorldInfo {
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
 class WorldFiles {
 private:
+    std::filesystem::path getRegionFile(int x, int z); // Генерирует имя файла для региона с заданными координатами
+    std::filesystem::path getPlayerFile(); // Генерирует имя файла, в котором записана информация об игроке
+    std::filesystem::path getWorldFile(); // Генерирует имя файла, в котором записана общая информауия о мире
+
     void writeWorldInfo(const WorldInfo& info);
-	std::filesystem::path getRegionFile(int x, int y) const;
-	std::filesystem::path getPlayerFile() const;
-    std::filesystem::path getWorldFile() const;
-public:
+    public:
     std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
     std::filesystem::path directory; // Путь к директории с файлами мира
-    ubyte* compressionBuffer;
+    ubyte* compressionBuffer; // Выходной буфер для записи регионов
 
     bool generatorTestMode;
 
@@ -61,11 +62,13 @@ public:
 
     bool readWorldInfo(WorldInfo& info);
     bool readPlayer(Player* player); // Читает данные об игроке с диска
-    ubyte* readChunkData(int x, int z, uint32_t& length);
+    ubyte* readChunkData(int x, int z, uint32_t& length); // Читает данные чанка непосредственно из файла
 	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
-	void writeRegion(int x, int z, WorldRegion& entry); // Формирует бинарное представление региона для записи в файл
+	void writeRegion(int x, int y, WorldRegion& entry); // Формирует бинарное представление региона для записи в файл
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
-    void write(const WorldInfo info);
+    void write(const WorldInfo info); // Записывает все измененные регионы из памяти на диск.
 };
+
+extern void longToCoords(int& x, int& z, long key); // Преобразует 64-битный ключ региона в координаты
 
 #endif // FILES_WORLDFILES_H_

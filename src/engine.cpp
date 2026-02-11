@@ -1,31 +1,27 @@
 #include "engine.h"
 
-#include <assert.h>
-#include <iostream>
 #include <vector>
 #include <ctime>
 #include <exception>
+#include <memory>
+#include <assert.h>
 #include <filesystem>
 
+// GLM – библиотека для работы с матрицами и векторами в OpenGL
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #define GLEW_STATIC
 
 // Пользовательские заголовочные файлы
-#include "settings.h"
-#include "coders/json.h"
-#include "graphics/ImageData.h"
-#include "files/engine_files.h"
-#include "coders/png.h"
-#include "files/files.h"
+#include "window/Window.h"
 #include "window/Events.h"
 #include "window/Camera.h"
-#include "window/Window.h"
 #include "window/input.h"
 #include "voxels/Chunk.h"
 #include "voxels/Chunks.h"
 #include "voxels/ChunksController.h"
-#include "voxels/ChunksStorage.h"
 #include "assets/Assets.h"
 #include "assets/AssetsLoader.h"
 #include "objects/Player.h"
@@ -34,30 +30,24 @@
 #include "world/Level.h"
 #include "world/World.h"
 #include "frontend/hud.h"
+#include "logger/Logger.h"
+#include "settings.h"
 #include "frontend/gui/GUI.h"
 #include "graphics/Batch2D.h"
+#include "graphics/ImageData.h"
+#include "coders/png.h"
+#include "files/engine_files.h"
 #include "frontend/screens.h"
-#include "logger/Logger.h"
-
-using gui::GUI;
+#include "content/content.h"
 
 // Реализация конструктора
-Engine::Engine(EngineSettings& settings) : settings(settings) {
+Engine::Engine(EngineSettings& settings, Content* content) : settings(settings), content(content){
     // Инициализация окна GLFW
     if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
         Window::terminate();
         throw initialize_error("Failed to load Window");
     }
-
-    // // Устанавливаем иконку приложения
-    // std::filesystem::path iconPath = engine_fs::get_icon_file(1);
-    // std::unique_ptr<ImageData> icon(png::loadImage(iconPath.string(), false));
-    // if (icon->getFormat() != ImageFormat::rgba8888) icon->rgb2rgba();
-    // bool iconStatus = Window::setIcon(icon.get());
-    // if (!iconStatus) {
-    //     LOG_ERROR("Failed to set icon '{}'", iconPath.string());
-    // }
 
     // Загрузка ассетов
     assets = new Assets();
@@ -70,29 +60,26 @@ Engine::Engine(EngineSettings& settings) : settings(settings) {
             delete assets;
             Window::terminate();
             LOG_CRITICAL("Could not to initialize assets");
-            throw initialize_error("Could not to initialize assets");
+            throw std::runtime_error("Could not to initialize assets");
         }
     }
     LOG_INFO("Assets loaded successfully");
 
-    gui = new GUI();
+    gui = new gui::GUI();
 
-    LOG_INFO("The world is loaded");
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
 }
 
 // Реализация деструктора
 Engine::~Engine() {
-    LOG_INFO("Shutting down");
-
     screen = nullptr;
     delete gui;
+
+    LOG_INFO("Shutting down");
     delete assets;
-
     Window::terminate();
-
-    LOG_INFO("Engine finished");
+    LOG_INFO("Engine has finished successfuly");
     Logger::getInstance().flush();
 }
 
@@ -116,20 +103,20 @@ void Engine::updateHotkeys() {
 
 // Основной цикл приложения
 void Engine::mainloop() {
+    LOG_INFO("Loading the menu screen");
+    setScreen(std::shared_ptr<Screen>(new MenuScreen(this)));
+    LOG_INFO("The menu screen has loaded successfully");
+
     LOG_INFO("Preparing systems");
-
-    setScreen(std::shared_ptr<Screen> (new MenuScreen(this)));
-
     Batch2D batch(1024);
     lastTime = Window::time();
-
+    Window::swapInterval(settings.display.swapInterval); // Включаем VSync (синхронизация с частотой обновления экрана)
     LOG_INFO("Systems have been prepared");
 
-    while (!Window::isShouldClose()){
-        if (screen == nullptr) {
-            LOG_CRITICAL("Screen is null");
-            throw std::runtime_error("Screen is null");
-        }
+    Logger::getInstance().flush();
+
+    while (!Window::isShouldClose()) {
+        assert(screen != nullptr);
 
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
@@ -143,12 +130,11 @@ void Engine::mainloop() {
 
         Window::swapInterval(settings.display.swapInterval);
         Window::swapBuffers(); // Показать отрендеренный кадр
-        Events::pollEvents(); // Обработка событий ввода
+        Events::pollEvents(); // Обработка событий ОС и ввода
     }
-    Logger::getInstance().flush();
 }
 
-GUI* Engine::getGUI() {
+gui::GUI* Engine::getGUI() {
 	return gui;
 }
 
@@ -158,6 +144,10 @@ EngineSettings& Engine::getSettings() {
 
 Assets* Engine::getAssets() {
 	return assets;
+}
+
+const Content* Engine::getContent() const {
+    return content;
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {

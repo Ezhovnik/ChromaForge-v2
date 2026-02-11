@@ -1,5 +1,5 @@
-#ifndef SRC_ASSETS_H_
-#define SRC_ASSETS_H_
+#ifndef ASSETS_ASSETS_H_
+#define ASSETS_ASSETS_H_
 
 #include <string>
 #include <unordered_map>
@@ -26,7 +26,7 @@ public:
 
     // Методы для работы с шрифтами
 	Font* getFont(std::string name) const; // Получает шрифт по имени
-	bool store(Font* shader, std::string name); // Сохраняет шрифт в менеджере ресурсов.
+	bool store(Font* font, std::string name); // Сохраняет шрифт в менеджере ресурсов.
 };
 
-#endif // SRC_ASSETS_H_
+#endif // ASSETS_ASSETS_H_

@@ -13,24 +13,17 @@ class Engine;
 class Camera;
 class Batch2D;
 
-namespace gui {
-    class UINode;
-}
-
 class Screen {
 protected:
     Engine* engine;
 public:
     Screen(Engine* engine) : engine(engine) {};
     virtual ~Screen() {};
-
     virtual void update(float delta) = 0;
     virtual void draw(float delta) = 0;
 };
 
 class MenuScreen : public Screen {
-    std::shared_ptr<gui::UINode> panel;
-    std::shared_ptr<gui::UINode> newWorldPanel;
     Batch2D* batch;
     Camera* uicamera;
 public:
@@ -48,7 +41,7 @@ class LevelScreen : public Screen {
 
     bool occlusion = true;
 
-    void updateHotKeys();
+    void updateHotkeys();
 public:
     LevelScreen(Engine* engine, Level* level);
     ~LevelScreen();
