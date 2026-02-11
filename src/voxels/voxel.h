@@ -1,6 +1,7 @@
 #ifndef VOXELS_VOXEL_H_
 #define VOXELS_VOXEL_H_
 
+#include <stdint.h>
 #include "../typedefs.h"
 
 #define BLOCK_DIR_X 0x1

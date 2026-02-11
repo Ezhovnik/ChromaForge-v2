@@ -9,7 +9,6 @@
 #include "../files/WorldFiles.h"
 #include "../math/voxmaths.h"
 #include "../lighting/Lightmap.h"
-#include "../typedefs.h"
 
 ChunksStorage::ChunksStorage(Level* level) : level(level) {
 }
@@ -21,28 +20,27 @@ void ChunksStorage::store(std::shared_ptr<Chunk> chunk) {
 	chunksMap[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = chunk;
 }
 
-std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
-    auto chunk = std::shared_ptr<Chunk>(new Chunk(x, z));
-    store(chunk);
-    std::unique_ptr<ubyte> data(level->world->wfile->getChunk(chunk->chunk_x, chunk->chunk_z));
-    if (data) {
-        chunk->decode(data.get());
-        chunk->setLoaded(true);
-    }
-    return chunk;
+void ChunksStorage::remove(int x, int z) {
+	auto found = chunksMap.find(glm::ivec2(x, z));
+	if (found != chunksMap.end()) chunksMap.erase(found->first);
 }
 
 std::shared_ptr<Chunk> ChunksStorage::get(int x, int z) const {
 	auto found = chunksMap.find(glm::ivec2(x, z));
 	if (found == chunksMap.end()) return nullptr;
+
 	return found->second;
 }
 
-void ChunksStorage::remove(int x, int z) {
-	auto found = chunksMap.find(glm::ivec2(x, z));
-	if (found != chunksMap.end()) {
-		chunksMap.erase(found->first);
+std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
+	auto chunk = std::shared_ptr<Chunk>(new Chunk(x, z));
+	store(chunk);
+	std::unique_ptr<ubyte> data(level->world->wfile->getChunk(chunk->chunk_x, chunk->chunk_z));
+	if (data) {
+		chunk->decode(data.get());
+		chunk->setLoaded(true);
 	}
+	return chunk;
 }
 
 void ChunksStorage::getVoxels(VoxelsVolume* volume) const {
@@ -70,10 +68,14 @@ void ChunksStorage::getVoxels(VoxelsVolume* volume) const {
 			auto found = chunksMap.find(glm::ivec2(cx, cz));
 			if (found == chunksMap.end()) {
 				for (int ly = y; ly < y + h; ly++) {
-					for (int lz = max(z, cz * CHUNK_DEPTH); lz < min(z + d, (cz + 1) * CHUNK_DEPTH); lz++) {
-						for (int lx = max(x, cx * CHUNK_WIDTH); lx < min(x + w, (cx + 1) * CHUNK_WIDTH); lx++) {
-							uint idx = vox_index(lx - x, ly - y, lz - z, w, d);
-                            voxels[idx].id = BLOCK_VOID;
+					for (int lz = max(z, cz * CHUNK_DEPTH);
+						lz < min(z + d, (cz + 1) * CHUNK_DEPTH);
+						lz++) {
+						for (int lx = max(x, cx * CHUNK_WIDTH);
+							lx < min(x + w, (cx + 1) * CHUNK_WIDTH);
+							lx++) {
+                            uint idx = vox_index(lx - x, ly - y, lz - z, w, d);
+							voxels[idx].id = BLOCK_VOID;
 							lights[idx] = 0;
 						}
 					}
@@ -83,12 +85,15 @@ void ChunksStorage::getVoxels(VoxelsVolume* volume) const {
 				const voxel* cvoxels = chunk->voxels;
 				const light_t* clights = chunk->light_map->getLights();
 				for (int ly = y; ly < y + h; ly++) {
-					for (int lz = max(z, cz * CHUNK_DEPTH); lz < min(z + d, (cz + 1) * CHUNK_DEPTH); lz++) {
-						for (int lx = max(x, cx * CHUNK_WIDTH); lx < min(x + w, (cx + 1) * CHUNK_WIDTH); lx++) {
-							uint vidx = vox_index(lx - x, ly - y, lz - z, w, d);
+					for (int lz = max(z, cz * CHUNK_DEPTH);
+						lz < min(z + d, (cz + 1) * CHUNK_DEPTH);
+						lz++) {
+						for (int lx = max(x, cx * CHUNK_WIDTH);
+							lx < min(x + w, (cx + 1) * CHUNK_WIDTH);
+							lx++) {
+                            uint vidx = vox_index(lx - x, ly - y, lz - z, w, d);
                             uint cidx = vox_index(lx - cx * CHUNK_WIDTH, ly, lz - cz * CHUNK_DEPTH, CHUNK_WIDTH, CHUNK_DEPTH);
-                            
-                            voxels[vidx] = cvoxels[cidx];
+							voxels[vidx] = cvoxels[cidx];
 							lights[vidx] = clights[cidx];
 						}
 					}

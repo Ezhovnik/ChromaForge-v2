@@ -5,8 +5,21 @@
 #include "../voxels/Chunk.h"
 #include "../voxels/voxel.h"
 #include "../voxels/Block.h"
+#include "../content/Content.h"
 
-LightSolver::LightSolver(Chunks* chunks, int channel) : chunks(chunks), channel(channel) {
+namespace LightSolver_Consts {
+    const int coords[] = {
+        0, 0, 1,
+        0, 0,-1,
+        0, 1, 0,
+        0,-1, 0,
+        1, 0, 0,
+        -1, 0, 0
+    };
+}
+
+
+LightSolver::LightSolver(const ContentIndices* contentIds, Chunks* chunks, int channel) : chunks(chunks), channel(channel), contentIds(contentIds) {
 }
 
 void LightSolver::add(int x, int y, int z, int bright) {
@@ -25,7 +38,7 @@ void LightSolver::add(int x, int y, int z, int bright) {
 }
 
 void LightSolver::add(int x, int y, int z) {
-    assert(chunks != nullptr);
+    assert (chunks != nullptr);
 	add(x, y, z, chunks->getLight(x, y, z, channel));
 }
 
@@ -47,26 +60,18 @@ void LightSolver::remove(int x, int y, int z) {
 }
 
 void LightSolver::solve(){
-    const int coords[] = {
-        0, 0, 1,
-        0, 0,-1,
-        0, 1, 0,
-        0,-1, 0,
-        1, 0, 0,
-        -1, 0, 0
-    };
-
 	while (!rem_queue.empty()){
 		const lightentry entry = rem_queue.front();
 		rem_queue.pop();
 
 		for (size_t i = 0; i < 6; ++i) {
-			int x = entry.x + coords[i * 3 + 0];
-			int y = entry.y + coords[i * 3 + 1];
-			int z = entry.z + coords[i * 3 + 2];
+			int x = entry.x + LightSolver_Consts::coords[i * 3 + 0];
+			int y = entry.y + LightSolver_Consts::coords[i * 3 + 1];
+			int z = entry.z + LightSolver_Consts::coords[i * 3 + 2];
 			Chunk* chunk = chunks->getChunkByVoxel(x, y, z);
 			if (chunk) {
-				int light = chunks->getLight(x, y, z, channel);
+                chunk->setModified(true);
+				int light = chunks->getLight(x,y,z, channel);
 				if (light != 0 && light == entry.light - 1){
 					lightentry nentry;
 					nentry.x = x;
@@ -75,7 +80,6 @@ void LightSolver::solve(){
 					nentry.light = light;
 					rem_queue.push(nentry);
 					chunk->light_map->set(x - chunk->chunk_x * CHUNK_WIDTH, y, z - chunk->chunk_z * CHUNK_DEPTH, channel, 0);
-					chunk->setModified(true);
 				} else if (light >= entry.light){
 					lightentry nentry;
 					nentry.x = x;
@@ -88,6 +92,7 @@ void LightSolver::solve(){
 		}
 	}
 
+    const Block* const* blockDefs = contentIds->getBlockDefs();
 	while (!add_queue.empty()){
 		const lightentry entry = add_queue.front();
 		add_queue.pop();
@@ -95,17 +100,17 @@ void LightSolver::solve(){
 		if (entry.light <= 1) continue;
 
 		for (size_t i = 0; i < 6; i++) {
-			int x = entry.x + coords[i * 3 + 0];
-			int y = entry.y + coords[i * 3 + 1];
-			int z = entry.z + coords[i * 3 + 2];
+			int x = entry.x + LightSolver_Consts::coords[i * 3 + 0];
+			int y = entry.y + LightSolver_Consts::coords[i * 3 + 1];
+			int z = entry.z + LightSolver_Consts::coords[i * 3 + 2];
 			Chunk* chunk = chunks->getChunkByVoxel(x, y, z);
 			if (chunk) {
-				int light = chunks->getLight(x, y, z, channel);
-				voxel* vox = chunks->getVoxel(x, y, z);
-                Block* block = Block::blocks[vox->id];
+                chunk->setModified(true);
+				int light = chunks->getLight(x,y,z, channel);
+				voxel* vox = chunks->getVoxel(x,y,z);
+                const Block* block = blockDefs[vox->id];
 				if (block->lightPassing && light + 2 <= entry.light){
 					chunk->light_map->set(x - chunk->chunk_x * CHUNK_WIDTH, y, z - chunk->chunk_z * CHUNK_DEPTH, channel, entry.light - 1);
-					chunk->setModified(true);
 					lightentry nentry;
 					nentry.x = x;
 					nentry.y = y;

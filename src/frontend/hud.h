@@ -1,5 +1,5 @@
-#ifndef FRONTEND_HUD_H_
-#define FRONTEND_HUD_H_
+#ifndef SRC_HUD_RENDER_H_
+#define SRC_HUD_RENDER_H_
 
 #include <string>
 #include <memory>
@@ -11,42 +11,42 @@ class Camera;
 class Level;
 class Assets;
 class Player;
-class Level;
 class Engine;
 
 namespace gui {
-	class GUI;
-	class UINode;
+    class GUI;
+    class UINode;
 }
 
 class HudRenderer {
-	Level* level;
-    Assets* assets;
+private:
+    Level* level;
 	Batch2D* batch;
 	Camera* uicamera;
+    Assets* assets;
 
-	int fps = 60;
-	int fpsMin = 60;
-	int fpsMax = 60;
+    int fps = 0;
+    int fpsMin = 60;
+    int fpsMax = 60;
+    std::wstring fpsString;
 
-	std::wstring fpsString;
-	bool occlusion;
-	bool inventoryOpen = false;
-	bool pause = false;
+    bool occlusion;
+    bool inventoryOpen = false;
+    bool pause = false;
 
-	std::shared_ptr<gui::UINode> debugPanel;
-    std::shared_ptr<gui::UINode> pauseMenu;
+    std::shared_ptr<gui::UINode> debugPanel;
 	gui::GUI* guiController;
 public:
 	HudRenderer(Engine* engine, Level* level);
 	~HudRenderer();
 
-	void drawInventory(const GfxContext& ctx, Player* player);
+    void update();
 	void draw(const GfxContext& context);
 	void drawDebug(int fps, bool occlusion);
+    void drawContentAccess(const GfxContext& context, Player* player);
 
     bool isInventoryOpen() const;
 	bool isPause() const;
 };
 
-#endif // FRONTEND_HUD_H_
+#endif // SRC_HUD_RENDER_H_

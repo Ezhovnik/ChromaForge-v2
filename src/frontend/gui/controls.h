@@ -6,9 +6,9 @@
 #include <vector>
 #include <functional>
 #include <glm/glm.hpp>
-
 #include "UINode.h"
 #include "panels.h"
+#include "../../window/input.h"
 
 class Batch2D;
 class Assets;
@@ -37,16 +37,18 @@ namespace gui {
         virtual void draw(Batch2D* batch, Assets* assets) override;
 
         virtual Label* textSupplier(wstringsupplier supplier);
+        virtual void size(glm::vec2 size) override;
     };
 
     class Button : public Panel {
     protected:
         glm::vec4 hoverColor {0.05f, 0.1f, 0.15f, 0.75f};
         glm::vec4 pressedColor {0.0f, 0.0f, 0.0f, 0.95f};
+
         std::vector<onaction> actions;
     public:
-        Button(std::shared_ptr<UINode> content, glm::vec4 padding=glm::vec4(2.0f));
-        Button(std::wstring text, glm::vec4 padding=glm::vec4(2.0f));
+        Button(std::shared_ptr<UINode> content, glm::vec4 padding = glm::vec4(2.0f));
+        Button(std::wstring text, glm::vec4 padding = glm::vec4(2.0f));
 
         virtual void drawBackground(Batch2D* batch, Assets* assets);
 
@@ -56,17 +58,38 @@ namespace gui {
         virtual Button* listenAction(onaction action);
     };
 
+    class InputBindBox : public Panel {
+    protected:
+        glm::vec4 hoverColor {0.05f, 0.1f, 0.2f, 0.75f};
+        glm::vec4 focusedColor {0.0f, 0.0f, 0.0f, 1.0f};
+
+        Label* label;
+        Binding& binding;
+    public:
+        InputBindBox(Binding& binding, glm::vec4 padding = glm::vec4(6.0f));
+        virtual void drawBackground(Batch2D* batch, Assets* assets) override;
+        virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
+
+        virtual void clicked(GUI*, int button) override;
+        virtual void keyPressed(int key) override;
+        virtual bool isfocuskeeper() const override {return true;}
+    };
+
+
     class TextBox : public Panel {
     protected:
         glm::vec4 hoverColor {0.05f, 0.1f, 0.2f, 0.75f};
         glm::vec4 focusedColor {0.0f, 0.0f, 0.0f, 1.0f};
+
         Label* label;
+
         std::wstring input;
         std::wstring placeholder;
+
         wstringsupplier supplier = nullptr;
         wstringconsumer consumer = nullptr;
     public:
-        TextBox(std::wstring placeholder, glm::vec4 padding=glm::vec4(2.0f));
+        TextBox(std::wstring placeholder, glm::vec4 padding = glm::vec4(2.0f));
 
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
 
@@ -75,7 +98,7 @@ namespace gui {
         virtual void keyPressed(int key) override;
         virtual void textSupplier(wstringsupplier supplier);
         virtual void textConsumer(wstringconsumer consumer);
-        virtual bool isFocusKeeper() const override {return true;}
+        virtual bool isfocuskeeper() const override {return true;}
         virtual std::wstring text() const;
     };
 
@@ -83,10 +106,8 @@ namespace gui {
     protected:
         glm::vec4 hoverColor {0.01f, 0.02f, 0.03f, 0.5f};
         glm::vec4 trackColor {1.0f, 1.0f, 1.0f, 0.4f};
-
         doublesupplier supplier_ = nullptr;
         doubleconsumer consumer_ = nullptr;
-
         double min;
         double max;
         double value;

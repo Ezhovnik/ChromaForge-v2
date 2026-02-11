@@ -5,8 +5,7 @@ public:
 	Frustum() {};
 
 	void update(glm::mat4 projview);
-	bool isBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) const;
-
+	bool IsBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) const;
 private:
 	enum Planes {
 		Left = 0,
@@ -21,14 +20,14 @@ private:
 
 	template<Planes i, Planes j>
 	struct ij2k {
-		enum { k = i * (9 - i) / 2 + j - 1 };
+		enum {k = i * (9 - i) / 2 + j - 1};
 	};
 
 	template<Planes a, Planes b, Planes c>
 	glm::vec3 intersection(const glm::vec3* crosses) const;
 
-	glm::vec4   m_planes[Count];
-	glm::vec3   m_points[8];
+	glm::vec4 m_planes[Count];
+	glm::vec3 m_points[8];
 };
 
 inline void Frustum::update(glm::mat4 m) {
@@ -41,21 +40,21 @@ inline void Frustum::update(glm::mat4 m) {
 	m_planes[Far] = m[3] - m[2];
 
 	glm::vec3 crosses[Combinations] = {
-		glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Right])),
-		glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Bottom])),
-		glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Top])),
-		glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Near])),
-		glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Far])),
-		glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Bottom])),
-		glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Top])),
-		glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Near])),
-		glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Far])),
+		glm::cross(glm::vec3(m_planes[Left]), glm::vec3(m_planes[Right])),
+		glm::cross(glm::vec3(m_planes[Left]), glm::vec3(m_planes[Bottom])),
+		glm::cross(glm::vec3(m_planes[Left]), glm::vec3(m_planes[Top])),
+		glm::cross(glm::vec3(m_planes[Left]), glm::vec3(m_planes[Near])),
+		glm::cross(glm::vec3(m_planes[Left]), glm::vec3(m_planes[Far])),
+		glm::cross(glm::vec3(m_planes[Right]), glm::vec3(m_planes[Bottom])),
+		glm::cross(glm::vec3(m_planes[Right]), glm::vec3(m_planes[Top])),
+		glm::cross(glm::vec3(m_planes[Right]), glm::vec3(m_planes[Near])),
+		glm::cross(glm::vec3(m_planes[Right]), glm::vec3(m_planes[Far])),
 		glm::cross(glm::vec3(m_planes[Bottom]), glm::vec3(m_planes[Top])),
 		glm::cross(glm::vec3(m_planes[Bottom]), glm::vec3(m_planes[Near])),
 		glm::cross(glm::vec3(m_planes[Bottom]), glm::vec3(m_planes[Far])),
-		glm::cross(glm::vec3(m_planes[Top]),    glm::vec3(m_planes[Near])),
-		glm::cross(glm::vec3(m_planes[Top]),    glm::vec3(m_planes[Far])),
-		glm::cross(glm::vec3(m_planes[Near]),   glm::vec3(m_planes[Far]))
+		glm::cross(glm::vec3(m_planes[Top]), glm::vec3(m_planes[Near])),
+		glm::cross(glm::vec3(m_planes[Top]), glm::vec3(m_planes[Far])),
+		glm::cross(glm::vec3(m_planes[Near]), glm::vec3(m_planes[Far]))
 	};
 
 	m_points[0] = intersection<Left, Bottom, Near>(crosses);
@@ -69,8 +68,7 @@ inline void Frustum::update(glm::mat4 m) {
 
 }
 
-inline bool Frustum::isBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) const {
-	// check box outside/inside of frustum
+inline bool Frustum::IsBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) const {
 	for (int i = 0; i < Count; i++) {
 		if ((glm::dot(m_planes[i], glm::vec4(minp.x, minp.y, minp.z, 1.0f)) < 0.0) &&
 			(glm::dot(m_planes[i], glm::vec4(maxp.x, minp.y, minp.z, 1.0f)) < 0.0) &&
@@ -84,7 +82,6 @@ inline bool Frustum::isBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) 
 		}
 	}
 
-	// check frustum outside/inside box
 	int out;
 	out = 0; for (int i = 0; i < 8; i++) out += ((m_points[i].x > maxp.x) ? 1 : 0); if (out == 8) return false;
 	out = 0; for (int i = 0; i < 8; i++) out += ((m_points[i].x < minp.x) ? 1 : 0); if (out == 8) return false;

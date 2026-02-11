@@ -35,7 +35,7 @@ namespace gui {
         UINode(glm::vec2 coord, glm::vec2 size);
     public:
         virtual ~UINode();
-        virtual void activate(float delta) {};
+        virtual void activate(float deltaTime) {};
         virtual void draw(Batch2D* batch, Assets* assets) = 0;
 
         virtual void visible(bool flag);
@@ -56,14 +56,16 @@ namespace gui {
         virtual void margin(glm::vec4 margin);
         glm::vec4 margin() const;
 
+        virtual void focus(GUI*) {focused_ = true;}
         virtual void click(GUI*, int x, int y);
+        virtual void clicked(GUI*, int button) {}
         virtual void mouseMove(GUI*, int x, int y) {};
         virtual void mouseRelease(GUI*, int x, int y);
 
-        bool isPressed() const;
+        bool ispressed() const;
         void defocus();
-        bool isFocused() const; 
-        virtual bool isFocusKeeper() const {return false;}
+        bool isfocused() const; 
+        virtual bool isfocuskeeper() const {return false;}
 
         virtual void typed(unsigned int codepoint) {};
         virtual void keyPressed(int key) {};

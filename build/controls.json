@@ -1,0 +1,62 @@
+{
+  "block.break": {
+    "code": 0,
+    "type": "mouse"
+  },
+  "movement.right": {
+    "code": 68,
+    "type": "keyboard"
+  },
+  "block.set": {
+    "code": 1,
+    "type": "mouse"
+  },
+  "movement.forward": {
+    "code": 87,
+    "type": "keyboard"
+  },
+  "movement.back": {
+    "code": 83,
+    "type": "keyboard"
+  },
+  "movement.left": {
+    "code": 65,
+    "type": "keyboard"
+  },
+  "block.select": {
+    "code": 2,
+    "type": "mouse"
+  },
+  "movement.jump": {
+    "code": 32,
+    "type": "keyboard"
+  },
+  "movement.crouch": {
+    "code": 340,
+    "type": "keyboard"
+  },
+  "player.flight": {
+    "code": 70,
+    "type": "keyboard"
+  },
+  "movement.cheat": {
+    "code": 82,
+    "type": "keyboard"
+  },
+  "movement.sprint": {
+    "code": 341,
+    "type": "keyboard"
+  },
+  "hud.inventory": {
+    "code": 69,
+    "type": "keyboard"
+  },
+  "camera.zoom": {
+    "code": 67,
+    "type": "keyboard"
+  },
+  "player.noclip": {
+    "code": 78,
+    "type": "keyboard"
+  }
+}

@@ -1,21 +1,21 @@
 #include "panels.h"
 
 #include <algorithm>
+#include <memory>
+#include <stdexcept>
 
 #include "../../window/Window.h"
 #include "../../assets/Assets.h"
 #include "../../graphics/Batch2D.h"
+#include "../../logger/Logger.h"
 
-using gui::UINode;
-using gui::Container;
-using gui::Panel;
-using gui::Orientation;
+using namespace gui;
 
 Container::Container(glm::vec2 coord, glm::vec2 size) : UINode(coord, size) {
 }
 
 std::shared_ptr<UINode> Container::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
-    for (auto node : nodes) {
+    for (auto& node : nodes) {
         if (!node->visible()) continue;
         auto hover = node->getAt(pos, node);
         if (hover != nullptr) return hover;
@@ -23,9 +23,9 @@ std::shared_ptr<UINode> Container::getAt(glm::vec2 pos, std::shared_ptr<UINode> 
     return UINode::getAt(pos, self);
 }
 
-void Container::activate(float delta) {
+void Container::activate(float deltaTime) {
     for (IntervalEvent& event : intervalEvents) {
-        event.timer += delta;
+        event.timer += deltaTime;
         if (event.timer > event.interval) {
             event.callback();
             event.timer = fmod(event.timer, event.interval);
@@ -41,7 +41,7 @@ void Container::activate(float delta) {
     ), intervalEvents.end());
 
     for (auto node : nodes) {
-        if (node->visible()) node->activate(delta);
+        if (node->visible()) node->activate(deltaTime);
     }
 }
 
@@ -79,7 +79,7 @@ void Container::remove(std::shared_ptr<UINode> selected) {
     refresh();
 }
 
-void Container::listenInterval(float interval, std::function<void()> callback, int repeat) {
+void Container::listenInterval(float interval, ontimeout callback, int repeat) {
     intervalEvents.push_back({callback, interval, 0.0f, repeat});
 }
 
@@ -104,30 +104,29 @@ void Panel::refresh() {
     glm::vec2 size = this->size();
     if (orientation_ == Orientation::vertical) {
         float maxw = size.x;
-        for (auto& node : nodes) {
+        for (auto node : nodes) {
             glm::vec2 nodesize = node->size();
             const glm::vec4 margin = node->margin();
             y += margin.y;
             
             float ex;
-
             float spacex = size.x - margin.z - padding.z;
             switch (node->align()) {
                 case Align::center:
                     ex = x + fmax(0.0f, spacex - node->size().x) / 2.0f;
                     break;
                 case Align::right:
-                    ex = spacex - node->size().x;
+                    ex = x + spacex - node->size().x;
                     break;
                 default:
                     ex = x + margin.x;
             }
             node->setCoord(glm::vec2(ex, y));
             y += nodesize.y + margin.w + interval;
-
             float width = size.x - padding.x - padding.z - margin.x - margin.z;
             node->size(glm::vec2(width, nodesize.y));
-            maxw = fmax(maxw, ex+node->size().x + margin.z + padding.z);
+            node->refresh();
+            maxw = fmax(maxw, ex + node->size().x + margin.z+padding.z);
         }
         if (resizing_) this->size(glm::vec2(size.x, y+padding.w));
     } else {
@@ -138,10 +137,10 @@ void Panel::refresh() {
             x += margin.x;
             node->setCoord(glm::vec2(x, y+margin.y));
             x += nodesize.x + margin.z + interval;
-
             float height = size.y - padding.y - padding.w - margin.y - margin.w;
             node->size(glm::vec2(nodesize.x, height));
-            maxh = fmax(maxh, y + margin.y + node->size().y + margin.w + padding.w);
+            node->refresh();
+            maxh = fmax(maxh, y + margin.y + node->size().y + margin.w+padding.w);
         }
         bool increased = maxh > size.y;
         if (resizing_) this->size(glm::vec2(x+padding.z, size.y));
@@ -162,4 +161,59 @@ void Panel::lock(){
         node->lock();
     }
     resizing_ = false;
+}
+
+PagesControl::PagesControl() : Container(glm::vec2(), glm::vec2(1)){
+}
+
+bool PagesControl::has(std::string name) {
+    return pages.find(name) != pages.end();
+}
+
+void PagesControl::add(std::string name, std::shared_ptr<UINode> panel) {
+    pages[name] = Page{panel};
+}
+
+void PagesControl::add(std::string name, UINode* panel) {
+    add(name, std::shared_ptr<UINode>(panel));
+}
+
+void PagesControl::set(std::string name, bool history) {
+    auto found = pages.find(name);
+    if (found == pages.end()) {
+        LOG_ERROR("No page found");
+        throw std::runtime_error("no page found");
+    }
+    if (current_.panel) Container::remove(current_.panel);
+
+    if (history) pageStack.push(curname_);
+
+    curname_ = name;
+    current_ = found->second;
+    Container::add(current_.panel);
+    size(current_.panel->size());
+}
+
+void PagesControl::back() {
+    if (pageStack.empty()) return;
+    std::string name = pageStack.top();
+    pageStack.pop();
+    set(name, false);
+}
+
+Page PagesControl::current() {
+    return current_;
+}
+
+void PagesControl::clearHistory() {
+    pageStack = std::stack<std::string>();
+}
+
+void PagesControl::reset() {
+    clearHistory();
+    if (current_.panel) {
+        curname_ = "";
+        Container::remove(current_.panel);
+        current_ = Page{nullptr};
+    }
 }

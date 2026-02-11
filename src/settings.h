@@ -1,8 +1,6 @@
 #ifndef SRC_SETTINGS_H_
 #define SRC_SETTINGS_H_
 
-#include <string>
-
 #include "typedefs.h"
 
 struct DisplaySettings {
@@ -29,13 +27,13 @@ struct GraphicsSettings {
 };
 
 struct DebugSettings {
-    bool generatorTestMode = false; // Отключает сохранение/загрузку чанков
+    bool generatorTestMode = false;
 };
 
 struct EngineSettings {
     DisplaySettings display;
 	ChunksSettings chunks;
-	CameraSettings camera;
+    CameraSettings camera;
     GraphicsSettings graphics;
     DebugSettings debug;
 };

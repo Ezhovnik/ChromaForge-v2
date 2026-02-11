@@ -1,15 +1,15 @@
 #ifndef WINDOW_WINDOW_H_
 #define WINDOW_WINDOW_H_
 
-#include <stack>
 #include <vector>
+#include <stack>
 
 #include <glm/glm.hpp>
 
 #include "../typedefs.h"
 #include "../settings.h"
 
-class GLFWwindow;
+class GLFWwindow; // Предварительное объявление класса GLFWwindow
 class ImageData;
 
 // Обертка для работы с окном приложения через GLFW
@@ -18,15 +18,13 @@ private:
     static GLFWwindow* window;
 
     static std::stack<glm::vec4> scissorStack;
-    static glm::vec4 scissorArea;
+	static glm::vec4 scissorArea;
 public:
     static uint width;
     static uint height;
 
     static bool initialize(DisplaySettings& settings);
     static void terminate();
-
-    // static bool setIcon(ImageData* icon);
 
     static void setCursorMode(int mode);
 
@@ -37,13 +35,13 @@ public:
     static void swapInterval(int interval);
 
     static void pushScissor(glm::vec4 area);
-    static void popScissor();
-    static void resetScissor();
+	static void popScissor();
+	static void resetScissor();
+
+    static double time();
 
     static void clear();
     static void setBgColor(glm::vec3 color);
-
-    static double time();
 
     static glm::vec2 size() {
 		return glm::vec2(width, height);

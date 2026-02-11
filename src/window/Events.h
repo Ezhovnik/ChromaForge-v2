@@ -1,8 +1,13 @@
 #ifndef WINDOW_EVENTS_H_
 #define WINDOW_EVENTS_H_
 
-#include "Window.h"
+#include <vector>
+#include <string>
+#include <vector>
+#include <unordered_map>
 
+#include "Window.h"
+#include "input.h"
 #include "../typedefs.h"
 
 // Константа для разделения индексов клавиш и кнопок мыши
@@ -30,7 +35,8 @@ public:
     static bool _cursor_started; // Начал ли пользователь движение мышью
 
     static std::vector<uint> codepoints;
-	static std::vector<int> pressedKeys;
+    static std::vector<int> pressedKeys;
+    static std::unordered_map<std::string, Binding> bindings;
 
     // Методы инициализации и обновления
     static int initialize(); // Инициализация системы событий
@@ -42,6 +48,10 @@ public:
 
     static bool isClicked(int button); // Проверяет, нажата ли кнопка мыши в данный момент
     static bool justClicked(int button); // Проверяет, была ли кнопка мыши нажата именно в текущем кадре
+
+    static void bind(std::string name, inputType type, int code);
+	static bool isActive(std::string name);
+	static bool justActive(std::string name);
 
     static void toggleCursor(); // Переключает режим курсора между нормальным и заблокированным состоянием
 };

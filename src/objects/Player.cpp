@@ -15,5 +15,5 @@ Player::~Player(){
 }
 
 void Player::teleport(glm::vec3 position) {
-	hitbox->position = position;
+    hitbox->position = position;
 }

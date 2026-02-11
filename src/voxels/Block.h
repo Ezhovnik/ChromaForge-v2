@@ -1,10 +1,13 @@
 #ifndef VOXELS_BLOCK_H_
 #define VOXELS_BLOCK_H_
 
-#include <array>
-#include <memory>
+#include <string>
 
 #include "../typedefs.h"
+
+enum class BlockModel {
+    None, Cube, X
+};
 
 #define FACE_MX 0
 #define FACE_PX 1
@@ -13,16 +16,12 @@
 #define FACE_MZ 4
 #define FACE_PZ 5
 
-enum class BlockModel {
-    None, Cube, X
-};
-
 class Block {
 public:
     static Block* blocks[256];
 
-    const uint id;
-
+    std::string const name;
+	blockid_t id;
     int textureFaces[6]; // -x, +x, -y, +y, -z, +z
     ubyte emission[3];
     ubyte drawGroup = 0;
@@ -37,7 +36,7 @@ public:
 
     float hitboxScale = 1;
 
-    Block(uint id, int texture);
+    Block(std::string name, int texture);
 };
 
 #endif // VOXELS_BLOCK_H_

@@ -1,19 +1,22 @@
 #include "Chunk.h"
 
+#include <math.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/noise.hpp>
+
 #include "voxel.h"
 #include "../lighting/LightMap.h"
-#include "../definitions.h"
 
 // Конструктор
 Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
-    voxels = new voxel[CHUNK_VOLUME];
-
     bottom = 0;
-    top = CHUNK_HEIGHT;
+	top = CHUNK_HEIGHT;
+    voxels = new voxel[CHUNK_VOLUME];
 
     // Инициализируем воксели
     for(size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        voxels[i].id = Blocks_id::MOSS;
+        voxels[i].id = 0;
         voxels[i].states = 0;
     }
 
@@ -41,19 +44,19 @@ bool Chunk::isEmpty() {
 }
 
 void Chunk::updateHeights() {
-    for (int i = 0; i < CHUNK_VOLUME; ++i) {
-        if (voxels[i].id != Blocks_id::AIR) {
-            bottom = i / (CHUNK_WIDTH * CHUNK_DEPTH);
-            break;
-        }
-    }
+	for (int i = 0; i < CHUNK_VOLUME; i++) {
+		if (voxels[i].id != 0) {
+			bottom = i / (CHUNK_DEPTH * CHUNK_WIDTH);
+			break;
+		}
+	}
 
-    for (int i = CHUNK_VOLUME - 1; i >= 0; --i) {
-        if (voxels[i].id != Blocks_id::AIR) {
-            top = i / (CHUNK_DEPTH * CHUNK_WIDTH) + 1;
-            break;
-        }
-    }
+	for (int i = CHUNK_VOLUME - 1; i > -1; i--) {
+		if (voxels[i].id != 0) {
+			top = i / (CHUNK_DEPTH * CHUNK_WIDTH) + 1;
+			break;
+		}
+	}
 }
 
 // Создает полную копию текущего чанка.
@@ -66,13 +69,10 @@ Chunk* Chunk::clone() const {
 	return other;
 }
 
-/*
-    Current chunk format:
-	[voxel_ids...][voxel_states...];
-*/
+// Формат: [voxel_ids...][voxel_states...];
 ubyte* Chunk::encode() const {
 	ubyte* buffer = new ubyte[CHUNK_DATA_LEN];
-	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+	for (size_t i = 0; i < CHUNK_VOLUME; i++) {
 		buffer[i] = voxels[i].id;
 		buffer[CHUNK_VOLUME + i] = voxels[i].states;
 	}
@@ -80,7 +80,7 @@ ubyte* Chunk::encode() const {
 }
 
 bool Chunk::decode(ubyte* data) {
-	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+	for (size_t i = 0; i < CHUNK_VOLUME; i++) {
 		voxel& vox = voxels[i];
 		vox.id = data[i];
 		vox.states = data[CHUNK_VOLUME + i];

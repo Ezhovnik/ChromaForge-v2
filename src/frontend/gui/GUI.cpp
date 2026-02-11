@@ -1,16 +1,17 @@
 #include "GUI.h"
 
-#include <iostream>
 #include <algorithm>
+#include <stdexcept>
 
 #include "UINode.h"
 #include "panels.h"
 #include "../../assets/Assets.h"
 #include "../../graphics/Batch2D.h"
-#include "../../graphics/ShaderProgram.h"
 #include "../../window/Events.h"
 #include "../../window/input.h"
 #include "../../window/Camera.h"
+#include "../../graphics/ShaderProgram.h"
+#include "../../logger/Logger.h"
 
 using namespace gui;
 
@@ -18,8 +19,11 @@ GUI::GUI() {
     container = new Container(glm::vec2(0, 0), glm::vec2(Window::width, Window::height));
 
     uicamera = new Camera(glm::vec3(), Window::height);
-    uicamera->perspective = false;
-    uicamera->flipped = true;
+	uicamera->perspective = false;
+	uicamera->flipped = true;
+
+    menu = new PagesControl();
+    container->add(menu);
 }
 
 GUI::~GUI() {
@@ -27,25 +31,34 @@ GUI::~GUI() {
     delete container;
 }
 
-void GUI::activate(float delta) {
+PagesControl* GUI::getMenu() {
+    return menu;
+}
+
+void GUI::activate(float deltaTime) {
     container->size(glm::vec2(Window::width, Window::height));
-    container->activate(delta);
+    container->activate(deltaTime);
 
     int mx = Events::x;
     int my = Events::y;
 
     auto hover = container->getAt(glm::vec2(mx, my), nullptr);
     if (this->hover && this->hover != hover) this->hover->hover(false);
-    
+
     if (hover) hover->hover(true);
+
     this->hover = hover;
 
+    auto prevfocus = focus;
     if (Events::justClicked(0)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
             pressed->click(this, mx, my);
             if (focus && focus != pressed) focus->defocus();
-            focus = pressed;
+            if (focus != pressed) {
+                focus = pressed;
+                focus->focus(this);
+            }
         }
         if (this->hover == nullptr && focus) {
             focus->defocus();
@@ -56,9 +69,7 @@ void GUI::activate(float delta) {
         pressed = nullptr;
     }
     if (focus) {
-        if (!focus->isFocused()){
-            focus = nullptr;
-        } else if (Events::justPressed(keycode::ESCAPE)) {
+        if (Events::justPressed(keycode::ESCAPE)) {
             focus->defocus();
             focus = nullptr;
         } else {
@@ -71,17 +82,29 @@ void GUI::activate(float delta) {
             if (Events::isClicked(mousecode::BUTTON_1)) {
                 focus->mouseMove(this, mx, my);
             }
+            if (prevfocus == focus) {
+                for (int i = mousecode::BUTTON_1; i < mousecode::BUTTON_1 + 12; ++i) {
+                    if (Events::justClicked(i)) focus->clicked(this, i);
+                }
+            }
         }
     }
+    if (focus && !focus->isfocused()) focus = nullptr;
 }
 
 void GUI::draw(Batch2D* batch, Assets* assets) {
+    menu->setCoord((Window::size() - menu->size()) / 2.0f);
     uicamera->fov = Window::height;
 
-    ShaderProgram* uishader = assets->getShader("ui");
-    uishader->use();
-    uishader->uniformMatrix("u_projview", uicamera->getProjView());
+	ShaderProgram* uishader = assets->getShader("ui");
+    if (uishader == nullptr) {
+        LOG_CRITICAL("The shader 'ui' could not be found in the assets");
+        throw std::runtime_error("The shader 'ui' could not be found in the assets");
+    }
+	uishader->use();
+	uishader->uniformMatrix("u_projview", uicamera->getProjection()*uicamera->getView());
 
+    batch->begin();
     container->draw(batch, assets);
 }
 
@@ -90,7 +113,7 @@ std::shared_ptr<UINode> GUI::getFocused() const {
 }
 
 bool GUI::isFocusCaught() const {
-    return focus && focus->isFocusKeeper();
+    return focus && focus->isfocuskeeper();
 }
 
 void GUI::add(std::shared_ptr<UINode> panel) {
@@ -112,7 +135,5 @@ std::shared_ptr<UINode> GUI::get(std::string name) {
 }
 
 void GUI::remove(std::string name) {
-    auto it = storage.find(name);
-    if (it == storage.end()) return;
     storage.erase(name);
 }

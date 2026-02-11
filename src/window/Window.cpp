@@ -6,15 +6,14 @@
 #include <GLFW/glfw3.h>
 
 #include "Events.h"
-#include "../graphics/ImageData.h"
 #include "../logger/Logger.h"
+#include "../graphics/ImageData.h"
 
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW
-uint Window::width = 0;
-uint Window::height = 0;
-
 std::stack<glm::vec4> Window::scissorStack;
 glm::vec4 Window::scissorArea;
+uint Window::width = 0;
+uint Window::height = 0;
 
 // Callback-функция для обработки движения мыши
 void cursor_position_callback(GLFWwindow*, double x_pos, double y_pos) {
@@ -75,8 +74,8 @@ void window_size_callback(GLFWwindow*, int width, int height) {
     Window::resetScissor();
 }
 
-void character_callback(GLFWwindow*, uint codepoint) {
-    Events::codepoints.push_back(codepoint);
+void character_callback(GLFWwindow*, uint codepoint){
+	Events::codepoints.push_back(codepoint);
 }
 
 // Инициализация окна и OpenGL контекста
@@ -85,9 +84,6 @@ bool Window::initialize(DisplaySettings& settings) {
         LOG_CRITICAL("GLFW initialization failed");
         return false;
     }
-
-    Window::width = settings.width;
-    Window::height = settings.height;
 
     // Установка версии OpenGL (3.3 Core Profile)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -98,7 +94,7 @@ bool Window::initialize(DisplaySettings& settings) {
     glfwWindowHint(GLFW_SAMPLES, settings.samples);
 
     // Создание окна GLFW
-    window = glfwCreateWindow(width, height, settings.title, nullptr, nullptr);
+    window = glfwCreateWindow(settings.width, settings.height, settings.title, nullptr, nullptr);
     if (window == nullptr) {
         LOG_CRITICAL("Failed to create GLFW Window");
         glfwTerminate();
@@ -113,26 +109,22 @@ bool Window::initialize(DisplaySettings& settings) {
     GLenum glewError = glewInit();
     if (glewError != GLEW_OK) {
         LOG_CRITICAL("Failed to initialize GLEW {}", reinterpret_cast<const char*>(glewGetErrorString(glewError)));
-        glfwTerminate();
         return false;
     }
-
-    if (!glGenTextures || !glBindTexture) {
-        LOG_CRITICAL("OpenGL functions is not loaded");
-        glfwTerminate();
-        return false;
-    }
-
-    // Установка области отображения (viewport) - вся область окна
-    glViewport(0, 0, width, height);
+     // Установка области отображения (viewport) - вся область окна
+    glViewport(0, 0, settings.width, settings.height);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Задаём размеры окна у объекта
+    Window::width = settings.width;
+    Window::height = settings.height;
 
     Events::initialize();
 
@@ -143,9 +135,7 @@ bool Window::initialize(DisplaySettings& settings) {
     glfwSetWindowSizeCallback(window, window_size_callback); // Изменение размера окна
     glfwSetCharCallback(window, character_callback);
 
-    glfwSwapInterval(settings.swapInterval);
-
-    LOG_INFO("Window initialized successfully: {}x{}", width, height);
+    LOG_INFO("Window initialized successfully: {}x{}", settings.width, settings.height);
 
     return true;
 }
@@ -157,27 +147,9 @@ void Window::terminate() {
     glfwTerminate();
 }
 
-// bool Window::setIcon(ImageData* icon) {
-//     if (icon == nullptr) {
-//         LOG_ERROR("Icon is null");
-//         return false;
-//     }
-
-//     if (icon->getFormat() != ImageFormat::rgba8888) {
-//         LOG_ERROR("Invalid icon format");
-//         return false;
-//     }
-
-//     GLFWimage glfwIcon;
-
-//     glfwIcon.width = icon->getWidth();
-//     glfwIcon.height = icon->getHeight();
-//     glfwIcon.pixels = reinterpret_cast<unsigned char*>(icon->getData());
-
-//     glfwSetWindowIcon(window, 1, &glfwIcon);
-
-//     return true;
-// }
+void Window::setCursorMode(int mode) {
+    glfwSetInputMode(window, GLFW_CURSOR, mode);
+}
 
 void Window::resetScissor() {
 	scissorArea = glm::vec4(0.0f, 0.0f, width, height);
@@ -196,7 +168,7 @@ void Window::pushScissor(glm::vec4 area) {
 	area.z = fmin(area.z, scissorArea.z);
 	area.w = fmin(area.w, scissorArea.w);
 
-	glScissor(area.x, Window::height - area.y - area.w, area.z, area.w);
+	glScissor(area.x, Window::height-area.y-area.w, area.z, area.w);
 	scissorArea = area;
 }
 
@@ -210,10 +182,6 @@ void Window::popScissor() {
 	glScissor(area.x, Window::height-area.y-area.w, area.z, area.w);
 	if (scissorStack.empty()) glDisable(GL_SCISSOR_TEST);
 	scissorArea = area;
-}
-
-void Window::setCursorMode(int mode) {
-    glfwSetInputMode(window, GLFW_CURSOR, mode);
 }
 
 void Window::viewport(int x, int y, int width, int height){
@@ -240,16 +208,16 @@ void Window::swapBuffers() {
     Window::resetScissor();
 }
 
+double Window::time() {
+	return glfwGetTime();
+}
+
 void Window::clear() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Window::setBgColor(glm::vec3 color) {
-	glClearColor(color.r, color.g, color.b, 1.0f);
-}
-
-double Window::time() {
-    return glfwGetTime();
+    glClearColor(color.r, color.g, color.b, 1.0f);
 }
 
 ImageData* Window::takeScreenshot() {

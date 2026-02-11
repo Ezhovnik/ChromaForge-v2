@@ -2,33 +2,42 @@
 
 #include <fstream>
 #include <iostream>
-#include <memory>
 #include <filesystem>
+#include <memory>
 
 #include "../logger/Logger.h"
 
-bool files::write_bytes(std::filesystem::path filename, const char* data, size_t size) {
+// Записывает данные в бинарный файл (перезаписывает сущесвующий)
+bool files::write_bytes(const std::filesystem::path filename, const char* data, size_t size) {
 	std::ofstream output(filename, std::ios::binary);
 	if (!output.is_open()) return false;
+
 	output.write(data, size);
 	output.close();
+
 	return true;
 }
 
-uint files::append_bytes(std::filesystem::path filename, const char* data, size_t size) {
+// Добавляет данные в конец бинарного файла
+uint files::append_bytes(const std::filesystem::path filename, const char* data, size_t size) {
 	std::ofstream output(filename, std::ios::binary | std::ios::app);
 	if (!output.is_open()) return 0;
+
 	uint position = output.tellp();
 	output.write(data, size);
 	output.close();
+
 	return position;
 }
 
-bool files::read(std::filesystem::path filename, char* data, size_t size) {
-	std::ifstream output(filename, std::ios::binary);
-	if (!output.is_open()) return false;
-	output.read(data, size);
-	output.close();
+// Читает данные из бинарного файла с начала
+bool files::read(const std::filesystem::path filename, char* data, size_t size) {
+	std::ifstream input(filename, std::ios::binary);
+	if (!input.is_open()) return false;
+
+	input.read(data, size);
+	input.close();
+
 	return true;
 }
 
@@ -54,6 +63,7 @@ std::string files::read_string(std::filesystem::path filename) {
 bool files::write_string(std::filesystem::path filename, const std::string content) {
 	std::ofstream file(filename);
 	if (!file) return false;
+
 	file << content;
 	return true;
 }

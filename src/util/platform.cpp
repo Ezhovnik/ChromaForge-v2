@@ -8,12 +8,17 @@
 #include "../typedefs.h"
 
 #define SETTINGS_FILE "../build/settings.toml"
+#define CONTROLS_FILE "../build/controls.json"
 
 std::filesystem::path platform::get_settings_file() {
 	return std::filesystem::path(SETTINGS_FILE);
 }
 
-#ifdef WIN32
+std::filesystem::path platform::get_controls_file() {
+	return std::filesystem::path(CONTROLS_FILE);
+}
+
+#ifdef _WIN32
 #include <Windows.h>
 #include <cstdio>
 

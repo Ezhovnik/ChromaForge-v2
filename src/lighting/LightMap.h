@@ -3,6 +3,7 @@
 
 #include "../voxels/Chunk.h"
 #include "../typedefs.h"
+#include "../constants.h"
 
 class LightMap {
 public:
@@ -64,14 +65,14 @@ public:
 	}
 
     inline const light_t* getLights() const {
-        return map;
-    }
+		return map;
+	}
 
-    inline light_t* getLightsWritable() {
-        return map;
-    }
+	inline light_t* getLightsWriteable() {
+		return map;
+	}
 
-    static inline light_t extract(light_t light, ubyte channel) {
+	static inline light_t extract(light_t light, ubyte channel) {
 		return (light >> (channel << 2)) & 0xF;
 	}
 };

@@ -1,8 +1,8 @@
 #ifndef WORLD_WORLD_H_
 #define WORLD_WORLD_H_
 
-#include <filesystem>
 #include <string>
+#include <filesystem>
 
 #include "../typedefs.h"
 #include "../settings.h"
@@ -10,6 +10,7 @@
 class WorldFiles;
 class Level;
 class Player;
+class Content;
 
 class World {
 public:
@@ -21,7 +22,7 @@ public:
 	~World();
 
     void write(Level* level, bool writeChunks);
-    Level* load(EngineSettings& settings);
+    Level* load(EngineSettings& settings, const Content* content);
 };
 
 #endif // WORLD_WORLD_H_

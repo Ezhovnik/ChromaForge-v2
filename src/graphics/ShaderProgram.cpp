@@ -68,12 +68,7 @@ void ShaderProgram::uniform2f(std::string name, float x, float y){
 }
 
 void ShaderProgram::uniform2f(std::string name, glm::vec2 xy) {
-    GLuint transformLoc = glGetUniformLocation(id, name.c_str());
-    if (transformLoc == -1) {
-        LOG_ERROR("Failed to find uniform variable '{}'", name);
-        return;
-    }
-	glUniform2f(transformLoc, xy.x, xy.y);
+    uniform2f(name, xy.x, xy.y);
 }
 
 // Загружает три вещественных числа в uniform-переменную шейдера
@@ -83,16 +78,11 @@ void ShaderProgram::uniform3f(std::string name, float x, float y, float z){
         LOG_ERROR("Failed to find uniform variable '{}'", name);
         return;
     }
-	glUniform3f(transformLoc, x, y, z);
+	glUniform3f(transformLoc, x,y,z);
 }
 
 void ShaderProgram::uniform3f(std::string name, glm::vec3 xyz) {
-    GLuint transformLoc = glGetUniformLocation(id, name.c_str());
-    if (transformLoc == -1) {
-        LOG_ERROR("Failed to find uniform variable '{}'", name);
-        return;
-    }
-	glUniform3f(transformLoc, xyz.x, xyz.y, xyz.z);
+    uniform3f(name, xyz.x, xyz.y, xyz.z);
 }
 
 // Функция для загрузки текстового файла
