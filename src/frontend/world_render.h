@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 #ifndef FRONTEND_WORLD_RENDERER_H_
 #define FRONTEND_WORLD_RENDERER_H_
-=======
-#ifndef SRC_WORLD_RENDERER_H_
-#define SRC_WORLD_RENDERER_H_
->>>>>>> Content-release
 
 #include <vector>
 #include <algorithm>
@@ -28,7 +23,6 @@ class Engine;
 class Chunks;
 
 class WorldRenderer {
-<<<<<<< HEAD
     Engine* engine;
 	Level* level;
     Frustum* frustumCulling;
@@ -37,16 +31,6 @@ class WorldRenderer {
 
     bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool occlusion);
 	void drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader, bool occlusion);
-=======
-	Engine* engine;
-	Level* level;
-    Frustum* frustumCulling;
-    ChunksRenderer *renderer;
-	LineBatch *lineBatch;
-
-	bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool occlusion);
-    void drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader, bool occlusion);
->>>>>>> Content-release
 public:
 	WorldRenderer(Engine* engine, Level* level);
 	~WorldRenderer();
@@ -54,9 +38,4 @@ public:
 	void draw(const GfxContext& context, Camera* camera, bool occlusion);
 };
 
-
-<<<<<<< HEAD
 #endif // FRONTEND_WORLD_RENDERER_H_
-=======
-#endif // SRC_WORLD_RENDERER_H_
->>>>>>> Content-release
