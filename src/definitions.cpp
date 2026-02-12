@@ -166,7 +166,7 @@ void setup_bindings() {
 	Events::bind(BIND_PLAYER_FLIGHT, inputType::keyboard, keycode::F);
     Events::bind(BIND_HUD_INVENTORY, inputType::keyboard, keycode::E);
 
-    Events::bind(BIND_BLOCK_BREAK, inputType::mouse, mousecode::BUTTON_1);
-    Events::bind(BIND_BLOCK_SET, inputType::mouse, mousecode::BUTTON_2);
-    Events::bind(BIND_BLOCK_SELECT, inputType::mouse, mousecode::BUTTON_3);
+    Events::bind(BIND_PLAYER_ATTACK, inputType::mouse, mousecode::BUTTON_1);
+    Events::bind(BIND_PLAYER_BUILD, inputType::mouse, mousecode::BUTTON_2);
+    Events::bind(BIND_PLAYER_PICK, inputType::mouse, mousecode::BUTTON_3);
 }

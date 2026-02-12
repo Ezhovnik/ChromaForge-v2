@@ -59,9 +59,9 @@ void PlayerController::updateKeyboard() {
 	input.noclip = Events::justActive(BIND_PLAYER_NOCLIP);
 	input.flight = Events::justActive(BIND_PLAYER_FLIGHT);
 
-    input.breakBlock = Events::justActive(BIND_BLOCK_BREAK);
-    input.setBlock = Events::justActive(BIND_BLOCK_SET);
-    input.selectBlock = Events::justActive(BIND_BLOCK_SELECT);
+    input.breakBlock = Events::justActive(BIND_PLAYER_ATTACK);
+    input.setBlock = Events::justActive(BIND_PLAYER_BUILD);
+    input.pickBlock = Events::justActive(BIND_PLAYER_PICK);
 
 	for (int i = 1; i < 10; i++){
 		if (Events::justPressed(keycode::NUM_0 + i)) player->choosenBlock = i;
@@ -80,7 +80,7 @@ void PlayerController::resetKeyboard() {
 	input.jump = false;
     input.breakBlock = false;
     input.setBlock = false;
-    input.selectBlock = false;
+    input.pickBlock = false;
 }
 
 void PlayerController::updateControls(float delta){
@@ -88,12 +88,16 @@ void PlayerController::updateControls(float delta){
 	Camera* camera = player->camera;
 	Hitbox* hitbox = player->hitbox;
 
+	bool cameraShaking = camSettings.shaking;
 	bool crouch = input.crouch && hitbox->grounded && !input.sprint;
 	float speed = player->speed;
 
 	if (player->flight) speed *= PlayerConsts::FLIGHT_SPEED_MUL;
 
-	if (input.cheat) speed *= PlayerConsts::CHEAT_SPEED_MUL;
+	if (input.cheat) {
+		speed *= PlayerConsts::CHEAT_SPEED_MUL;
+		cameraShaking = false;
+	}
 
     if (crouch) speed *= PlayerConsts::CROUCH_SPEED_MUL;
     else if (input.sprint) speed *= PlayerConsts::RUN_SPEED_MUL;
@@ -130,7 +134,7 @@ void PlayerController::updateControls(float delta){
 
 	cameraOffset = glm::vec3(0.0f, 0.7f, 0.0f);
 
-	if (camSettings.shaking) {
+	if (cameraShaking) {
 		player->interpVel = player->interpVel * (1.0f - delta * 5) + hitbox->velocity * delta * 0.1f;
 		if (hitbox->grounded && player->interpVel.y < 0.0f) player->interpVel.y *= -30.0f;
 
@@ -250,7 +254,7 @@ void PlayerController::updateInteraction(){
 				lighting->onBlockSet(x,y,z, player->choosenBlock);
 			}
 		}
-		if (input.selectBlock) player->choosenBlock = chunks->getVoxel(x,y,z)->id;
+		if (input.pickBlock) player->choosenBlock = chunks->getVoxel(x,y,z)->id;
 	} else {
 		selectedBlockId = -1;
 	}

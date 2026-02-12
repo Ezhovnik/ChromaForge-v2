@@ -13,8 +13,8 @@
 #define BIND_PLAYER_NOCLIP "player.noclip"
 #define BIND_PLAYER_FLIGHT "player.flight"
 #define BIND_HUD_INVENTORY "hud.inventory"
-#define BIND_BLOCK_BREAK "block.break"
-#define BIND_BLOCK_SET "block.set"
-#define BIND_BLOCK_SELECT "block.select"
+#define BIND_PLAYER_ATTACK "player.attack"
+#define BIND_PLAYER_BUILD "player.build"
+#define BIND_PLAYER_PICK "player.pick"
 
 #endif // SRC_CORE_DEFS_H_
