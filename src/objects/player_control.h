@@ -22,7 +22,7 @@ struct PlayerInput {
 	bool flight;
     bool breakBlock;
     bool setBlock;
-    bool selectBlock;
+    bool pickBlock;
 };
 
 class PlayerController {

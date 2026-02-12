@@ -1,14 +1,14 @@
 {
-  "block.break": {
+  "player.attack": {
     "code": 0,
     "type": "mouse"
   },
-  "movement.right": {
-    "code": 68,
-    "type": "keyboard"
-  },
-  "block.set": {
+  "player.build": {
     "code": 1,
+    "type": "mouse"
+  },
+  "player.pick": {
+    "code": 2,
     "type": "mouse"
   },
   "movement.forward": {
@@ -23,9 +23,9 @@
     "code": 65,
     "type": "keyboard"
   },
-  "block.select": {
-    "code": 2,
-    "type": "mouse"
+  "movement.right": {
+    "code": 68,
+    "type": "keyboard"
   },
   "movement.jump": {
     "code": 32,
@@ -43,12 +43,12 @@
     "code": 82,
     "type": "keyboard"
   },
-  "movement.sprint": {
-    "code": 341,
-    "type": "keyboard"
-  },
   "hud.inventory": {
     "code": 69,
+    "type": "keyboard"
+  },
+  "movement.sprint": {
+    "code": 341,
     "type": "keyboard"
   },
   "camera.zoom": {

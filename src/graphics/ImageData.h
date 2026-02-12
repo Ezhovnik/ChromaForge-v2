@@ -25,10 +25,6 @@ public:
     void flipX();
     void flipY();
 
-    void blit(const ImageData* image, int x, int y);
-    void extrude(int x, int y, int w, int h);
-    void fixAlphaColor();
-
     void* getData() const {
         return data;
     }
