@@ -1,10 +1,9 @@
 #include "Assets.h"
 
-#include <iostream>
-
 #include "../graphics/Texture.h"
 #include "../graphics/ShaderProgram.h"
 #include "../graphics/Font.h"
+#include "../graphics/Atlas.h"
 #include "../logger/Logger.h"
 
 // Деструктор
@@ -35,6 +34,15 @@ Assets::~Assets() {
         }
 	}
     fonts.clear();
+
+    // Освобождаем память выделенную под атласы
+    for (auto& iter : atlases) {
+        if (iter.second != nullptr) {
+            delete iter.second;
+            iter.second = nullptr;
+        }
+    }
+    atlases.clear();
 }
 
 // Получает текстуру по имени
@@ -118,5 +126,33 @@ bool Assets::store(Font* font, std::string name){
 
     // Если существует, то возращаем ошибку
     LOG_WARN("Font named '{}' already exists", name);
+    return false;
+}
+
+// Получает атлас по имени
+Atlas* Assets::getAtlas(std::string name) const {
+	// Ищем атлас в словаре
+    auto it = atlases.find(name);
+
+    // Если нашли, возвращаем указатель на атлас
+    if (it != atlases.end()) return it->second;
+
+    // Атлас не найден
+    return nullptr;
+}
+
+// Сохраняет атлас в менеджере ресурсов
+bool Assets::store(Atlas* atlas, std::string name){
+	// Проверяем, не существует ли уже атлас с таким именем
+    auto it = atlases.find(name);
+
+    // Если не существует, то добавляем
+    if (it == atlases.end()) {
+        atlases[name] = atlas;
+        return true;
+    }
+
+    // Если существует, то возращаем ошибку
+    LOG_WARN("Atlas named '{}' already exists", name);
     return false;
 }

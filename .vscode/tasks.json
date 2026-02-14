@@ -40,13 +40,14 @@
                 "${workspaceFolder}/src/frontend/gui/UINode.cpp",
 
                 //src/frontend
+                "${workspaceFolder}/src/frontend/ContentGfxCache.cpp",
                 "${workspaceFolder}/src/frontend/hud.cpp",
                 "${workspaceFolder}/src/frontend/menu.cpp",
                 "${workspaceFolder}/src/frontend/screens.cpp",
                 "${workspaceFolder}/src/frontend/world_render.cpp",
 
                 //src/graphics
-                // "${workspaceFolder}/src/graphics/Atlas.cpp",
+                "${workspaceFolder}/src/graphics/Atlas.cpp",
                 "${workspaceFolder}/src/graphics/Batch2D.cpp",
                 // "${workspaceFolder}/src/graphics/Batch3D.cpp",
                 "${workspaceFolder}/src/graphics/BlocksRenderer.cpp",
@@ -71,7 +72,7 @@
                 "${workspaceFolder}/src/logger/Logger.cpp",
 
                 //src/math
-                // "${workspaceFolder}/src/math/LMPacker.cpp",
+                "${workspaceFolder}/src/math/LMPacker.cpp",
 
                 //src/objects
                 "${workspaceFolder}/src/objects/player_control.cpp",

@@ -2,12 +2,14 @@
 
 #include <filesystem>
 #include <memory>
+#include <iostream>
 
 #include "Assets.h"
 #include "../graphics/ShaderProgram.h"
 #include "../graphics/Texture.h"
 #include "../coders/png.h"
 #include "../graphics/Font.h"
+#include "../graphics/Atlas.h"
 #include "../logger/Logger.h"
 #include "../constants.h"
 #include "../graphics/ImageData.h"
@@ -83,19 +85,34 @@ bool _load_font(Assets* assets, const std::string& filename, const std::string& 
 	return assets->store(font, name);;
 }
 
-bool _load_atlas(Assets* assets, const std::string& filename, const std::string& name) {
-	std::unique_ptr<ImageData> image (png::loadImage(filename));
-	if (image == nullptr) {
-		LOG_ERROR("Failed to load image '{}'", name);
-		return false;
-	}
-	for (int i = 0; i < ATLAS_MARGIN_SIZE; i++) {
-		ImageData* newimage = add_atlas_margins(image.get(), 16);
-		image.reset(newimage);
+bool _load_atlas(Assets* assets, const std::string& directory, const std::string& name) {
+	if (!std::filesystem::exists(directory) || !std::filesystem::is_directory(directory)) {
+        LOG_ERROR("Directory named '{}' not found", directory);
+		Logger::getInstance().flush();
+        return false;
+    }
+
+	AtlasBuilder builder;
+	for (auto const& entry : std::filesystem::directory_iterator(directory)) {
+		std::filesystem::path file = entry.path();
+		if (file.extension() == ".png") {
+			std::string entry_name = file.stem().string();
+			std::shared_ptr<ImageData> image(png::loadImage(file.string()));
+			if (image == nullptr) {
+				LOG_ERROR("Failed to load atlas entry '{}'", entry_name);
+				Logger::getInstance().flush();
+				continue;
+			}
+
+			if (image->getFormat() != ImageFormat::rgba8888) image.reset(toRGBA(image.get()));
+
+			image->fixAlphaColor();
+			builder.add(entry_name, std::move(image));
+		}
 	}
 
-	Texture* texture = Texture::from(image.get());
-	return assets->store(texture, name);
+	Atlas* atlas = builder.build(2);
+	return assets->store(atlas, name);
 }
 
 void AssetsLoader::createDefaults(AssetsLoader& loader) {
@@ -110,9 +127,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader) {
 	loader.add(AssetType::Shader, SHADERS_FOLDER"/lines", "lines");
 	loader.add(AssetType::Shader, SHADERS_FOLDER"/ui", "ui");
 
-	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/atlas.png", "blocks");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER"/atlas.png", "blocks_tex");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER"/slot.png", "slot");
+	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/blocks", "blocks");
     loader.add(AssetType::Texture, TEXTURES_FOLDER"/menubg.png", "menubg");
 
 	loader.add(AssetType::Font, FONTS_FOLDER"/font", "normal");

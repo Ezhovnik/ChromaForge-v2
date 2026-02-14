@@ -12,6 +12,7 @@ class HudRenderer;
 class Engine;
 class Camera;
 class Batch2D;
+class ContentGfxCache;
 
 class Screen {
 protected:
@@ -38,6 +39,7 @@ class LevelScreen : public Screen {
     Level* level;
     WorldRenderer* worldRenderer;
     HudRenderer* hud;
+    ContentGfxCache* cache;
 
     bool occlusion = true;
 

@@ -270,6 +270,10 @@ void Batch2D::sprite(Sprite* sprite) {
     );
 }
 
+void Batch2D::sprite(float x, float y, float w, float h, const UVRegion& region, glm::vec4 tint){
+	rect(x, y, w, h, region.u1, region.v1, region.u2-region.u1, region.v2-region.v1, tint.r, tint.g, tint.b, tint.a);
+}
+
 void Batch2D::sprite(float x, float y, float w, float h, int atlasRes, int index, glm::vec4 tint){
 	float scale = 1.0f / (float)atlasRes;
 	float u = (index % atlasRes) * scale;
@@ -292,12 +296,15 @@ void Batch2D::rect(float x, float y, float w, float h,
     render();
 }
 
-void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int index[6], glm::vec4 tint){
-	float scale = 1.0f / (float)atlasRes;
-	float uu = (index[3] % atlasRes) * scale;
-	float vu = 1.0f - ((index[3] / atlasRes) * scale) - scale;
-	float uf = (index[0] % atlasRes) * scale;
-	float vf = 1.0f - ((index[0] / atlasRes) * scale) - scale;
+void Batch2D::blockSprite(float x, float y, float w, float h, const UVRegion regions[], glm::vec4 tint){
+	float uu = (regions[3].u1);
+	float vu = (regions[3].v1);
+
+	float uf = (regions[0].u1);
+	float vf = (regions[0].v1);
+
+	float scalex = regions[3].u2-regions[3].u1;
+	float scaley = regions[3].v2-regions[3].v1;
 
 	if (this->index + 18 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
 
@@ -314,13 +321,13 @@ void Batch2D::blockSprite(float x, float y, float w, float h, int atlasRes, int 
 					};
 
 	glm::vec2 uvpoints[8] = {glm::vec2(uu,        vu),
-						glm::vec2(uu+scale,  vu),
-						glm::vec2(uu+scale,  vu+scale),
-						glm::vec2(uu,        vu+scale),
+						glm::vec2(uu+scalex,  vu),
+						glm::vec2(uu+scalex,  vu+scalex),
+						glm::vec2(uu,        vu+scalex),
 						glm::vec2(uf,        vf),
-						glm::vec2(uf+scale,  vf),
-						glm::vec2(uf+scale,  vf+scale),
-						glm::vec2(uf,        vf+scale)
+						glm::vec2(uf+scaley,  vf),
+						glm::vec2(uf+scaley,  vf+scaley),
+						glm::vec2(uf,        vf+scaley)
 					};
 	
 	vertex(points[0], uvpoints[3], tint.r, tint.g, tint.b, tint.a);
