@@ -16,7 +16,7 @@
 
 void setup_definitions(ContentBuilder* builder) {
     // Воздух
-    Block* block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("air"), "air");
+    Block* block = new Block(DEFAULT_BLOCK_NAMESPACE + std::string("air"));
     block->drawGroup = 1;
     block->lightPassing = true;
     block->skyLightPassing = true;
