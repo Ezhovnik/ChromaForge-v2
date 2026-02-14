@@ -12,6 +12,7 @@
 #include "../graphics/Batch2D.h"
 #include "../graphics/Font.h"
 #include "../graphics/Mesh.h"
+#include "../graphics/Atlas.h"
 #include "../window/Camera.h"
 #include "../window/Window.h"
 #include "../window/Events.h"
@@ -34,6 +35,7 @@
 #include "menu.h"
 #include "../content/Content.h"
 #include "../math/voxmaths.h"
+#include "ContentGfxCache.h"
 
 inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	gui::Label* label = new gui::Label(L"-");
@@ -41,7 +43,7 @@ inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	return label;
 }
 
-HudRenderer::HudRenderer(Engine* engine, Level* level) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()) {
+HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()), cache(cache) {
 	auto menu = guiController->getMenu();
     batch = new Batch2D(1024);
 
@@ -133,6 +135,8 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 	const Viewport& viewport = context.getViewport();
 	const uint width = viewport.getWidth();
 
+	Atlas* atlas = assets->getAtlas("blocks");
+
 	uint count = contentIds->countBlockDefs();
 	uint icon_size = 48;
 	uint interval = 4;
@@ -155,7 +159,7 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 	batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
 	batch->rect(inv_x, inv_y, inv_w, inv_h);
 
-	batch->texture(assets->getTexture("blocks_tex"));
+	batch->texture(atlas->getTexture());
 	for (uint i = 0; i < count - 1; ++i) {
 		Block* choosen_block = contentIds->getBlockDef(i + 1);
 		if (choosen_block == nullptr) break;
@@ -171,9 +175,9 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 		}
 		
 		if (choosen_block->model == BlockModel::Cube){
-			batch->blockSprite(x, y, icon_size, icon_size, 16, choosen_block->textureFaces, tint);
+			batch->blockSprite(x, y, icon_size, icon_size, &cache->getRegion(choosen_block->id, 0), tint);
 		} else if (choosen_block->model == BlockModel::X){
-			batch->sprite(x, y, icon_size, icon_size, 16, choosen_block->textureFaces[3], tint);
+			batch->sprite(x, y, icon_size, icon_size, cache->getRegion(choosen_block->id, 3), tint);
 		}
 	}
 }
@@ -207,6 +211,8 @@ void HudRenderer::draw(const GfxContext& context) {
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
 
+	Atlas* atlas = assets->getAtlas("blocks");
+
     debugPanel->visible(level->player->debug);
 
     uicamera->fov = height;
@@ -220,13 +226,7 @@ void HudRenderer::draw(const GfxContext& context) {
 	uishader->use();
 	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
-	Texture* blocks = assets->getTexture("blocks_tex");
-	if (blocks == nullptr) {
-        LOG_CRITICAL("The texture 'blocks_tex' could not be found in the assets");
-        throw std::runtime_error("The texture 'blocks_tex' could not be found in the assets");
-    }
-
-	batch->texture(nullptr);
+	batch->begin();
 
 	batch->color = glm::vec4(1.0f);
 	if (Events::_cursor_locked && !level->player->debug) {
@@ -241,18 +241,18 @@ void HudRenderer::draw(const GfxContext& context) {
 	batch->rect(width - 68, height - 68, 68, 68);
 
 	batch->color = glm::vec4(1.0f);
-	batch->texture(blocks);
+	batch->texture(atlas->getTexture());
 	{
 		Block* choosen_block = contentIds->getBlockDef(player->choosenBlock);
 		assert(choosen_block != nullptr);
 		if (choosen_block->model == BlockModel::Cube){
-			batch->blockSprite(width-56, uicamera->fov - 56, 48, 48, 16, choosen_block->textureFaces, glm::vec4(1.0f));
+			batch->blockSprite(width-56, uicamera->fov - 56, 48, 48, &cache->getRegion(choosen_block->id, 0), glm::vec4(1.0f));
 		} else if (choosen_block->model == BlockModel::X){
-			batch->sprite(width-56, uicamera->fov - 56, 48, 48, 16, choosen_block->textureFaces[3], glm::vec4(1.0f));
+			batch->sprite(width-56, uicamera->fov - 56, 48, 48, cache->getRegion(choosen_block->id, 3), glm::vec4(1.0f));
 		}
 	}
 
-	if (pause || inventoryOpen) {
+	if (pause) {
 		batch->texture(nullptr);
 		batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
 		batch->rect(0, 0, width, height);

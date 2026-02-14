@@ -30,6 +30,7 @@
 #include "../graphics/GfxContext.h"
 #include "../core_defs.h"
 #include "menu.h"
+#include "ContentGfxCache.h"
 
 MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     auto menu = engine->getGUI()->getMenu();
@@ -86,13 +87,15 @@ void MenuScreen::draw(float delta) {
 }
 
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
-    worldRenderer = new WorldRenderer(engine, level);
-    hud = new HudRenderer(engine, level);
+    cache = new ContentGfxCache(level->content, engine->getAssets());
+    worldRenderer = new WorldRenderer(engine, level, cache);
+    hud = new HudRenderer(engine, level, cache);
 }
 
 LevelScreen::~LevelScreen() {
     delete hud;
     delete worldRenderer;
+    delete cache;
 
     LOG_INFO("World saving");
     World* world = level->world;

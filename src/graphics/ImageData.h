@@ -25,6 +25,10 @@ public:
     void flipX();
     void flipY();
 
+    void blit(const ImageData* image, int x, int y);
+    void extrude(int x, int y, int w, int h);
+    void fixAlphaColor();
+
     void* getData() const {
         return data;
     }
@@ -43,5 +47,6 @@ public:
 };
 
 extern ImageData* add_atlas_margins(ImageData* image, int grid_size);
+extern ImageData* toRGBA(ImageData* image);
 
 #endif // GRAPHICS_IMAGE_DATA_H_

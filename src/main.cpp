@@ -64,7 +64,7 @@ int main() {
 		files::write_string(controls_file, write_controls());
         LOG_INFO("Bindings are written");
     } catch (const initialize_error& err) {
-        LOG_CRITICAL("An initialization error occurred\n{}", err.what());
+        LOG_CRITICAL("An initialization error occurred. Reason: {}", err.what());
     }
 
     Logger::getInstance().flush();

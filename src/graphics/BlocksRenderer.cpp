@@ -11,10 +11,11 @@
 #include "../voxels/ChunksStorage.h"
 #include "../lighting/LightMap.h"
 #include "../content/Content.h"
+#include "../frontend/ContentGfxCache.h"
 
 #define VERTEX_SIZE 9
 
-BlocksRenderer::BlocksRenderer(size_t capacity, const Content* content) : vertexOffset(0), indexOffset(0), indexSize(0), capacity(capacity), content(content) {
+BlocksRenderer::BlocksRenderer(size_t capacity, const Content* content, const ContentGfxCache* cache) : vertexOffset(0), indexOffset(0), indexSize(0), capacity(capacity), content(content), cache(cache) {
 	vertexBuffer = new float[capacity];
 	indexBuffer = new int[capacity];
 	voxelsBuffer = new VoxelsVolume(CHUNK_WIDTH + 2, CHUNK_HEIGHT, CHUNK_DEPTH + 2);
@@ -287,15 +288,6 @@ glm::vec4 BlocksRenderer::pickSoftLight(int x, int y, int z, const glm::ivec3& r
 		pickLight(x - right.x, y - right.y, z - right.z)) * 0.25f;
 }
 
-inline UVRegion uvfor(const Block& def, uint face, int atlas_size) {
-	float uvsize = 1.0f / (float)atlas_size;
-	float us = 1.0f / (float)atlas_size / (float)atlas_size * ATLAS_MARGIN_SIZE * 0.8f;
-	const uint id = def.textureFaces[face];
-	float u = (id % atlas_size) * uvsize;
-	float v = 1.0f - (id / atlas_size + 1) * uvsize;
-	return UVRegion(u + us, v + us, u + uvsize - us, v + uvsize - us);
-}
-
 void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
 	for (ubyte group = 0; group < 8; group++) {
 		for (uint y = 0; y < CHUNK_HEIGHT; y++) {
@@ -305,9 +297,9 @@ void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
 					blockid_t id = vox.id;
 					const Block& def = *blockDefsCache[id];
 					if (!id || def.drawGroup != group) continue;
-					const UVRegion texfaces[6]{ uvfor(def, 0, atlas_size), uvfor(def, 1, atlas_size),
-												uvfor(def, 2, atlas_size), uvfor(def, 3, atlas_size),
-												uvfor(def, 4, atlas_size), uvfor(def, 5, atlas_size) };
+					const UVRegion texfaces[6]{ cache->getRegion(id, 0), cache->getRegion(id, 1),
+												cache->getRegion(id, 2), cache->getRegion(id, 3),
+												cache->getRegion(id, 4), cache->getRegion(id, 5)};
 					switch (def.model) {
 					case BlockModel::Cube:
 						if (*((light_t*)&def.emission)) {

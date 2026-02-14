@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdexcept>
+#include <cstring>
 #include "../logger/Logger.h"
 
 template<typename T>
@@ -126,5 +127,178 @@ void ImageData::flipY() {
         default:
             LOG_ERROR("Format is not supported");
             throw std::runtime_error("Format is not supported");
+    }
+}
+
+void ImageData::blit(const ImageData* image, int x, int y) {
+    if (format != image->format) {
+        throw std::runtime_error("mismatching format");
+    }
+    uint comps;
+    switch (format) {
+        case ImageFormat::rgb888: comps = 3; break;
+        case ImageFormat::rgba8888: comps = 4; break;
+        default:
+            throw std::runtime_error("only unsigned byte formats supported");    
+    }
+    ubyte* pixels = static_cast<ubyte*>(data);
+    ubyte* source = static_cast<ubyte*>(image->getData());
+    uint srcwidth = image->getWidth();
+    uint srcheight = image->getHeight();
+
+    for (uint srcy = max(0, -y); (int)srcy < min(srcheight, height-y); srcy++) {
+        for (uint srcx = max(0, -x); (int)srcx < min(srcwidth, width-x); srcx++) {
+            uint dstx = srcx + x;
+            uint dsty = srcy + y;
+            uint dstidx = (dsty * width + dstx) * comps;
+            uint srcidx = (srcy * srcwidth + srcx) * comps;
+            for (uint c = 0; c < comps; c++) {
+                pixels[dstidx + c] = source[srcidx + c];
+            }
+        }
+    }
+}
+
+/* Extrude rectangle zone border pixels out by 1 pixel.
+   Used to remove atlas texture border artifacts */
+void ImageData::extrude(int x, int y, int w, int h) {
+    uint comps;
+    switch (format) {
+        case ImageFormat::rgb888: comps = 3; break;
+        case ImageFormat::rgba8888: comps = 4; break;
+        default:
+            throw std::runtime_error("only unsigned byte formats supported");    
+    }
+    ubyte* pixels = static_cast<ubyte*>(data);
+
+    int rx = x + w - 1;
+    int ry = y + h - 1;
+
+    // top-left pixel
+    if (x > 0 && (uint)x < width && y > 0 && (uint)y < height) {
+        uint srcidx = (y * width + x) * comps;
+        uint dstidx = ((y - 1) * width + x - 1) * comps;
+        for (uint c = 0; c < comps; c++) {
+            pixels[dstidx + c] = pixels[srcidx + c];
+        }
+    }
+    
+    // top-right pixel
+    if (rx >= 0 && (uint)rx < width-1 && y > 0 && (uint)y < height) {
+        uint srcidx = (y * width + rx) * comps;
+        uint dstidx = ((y - 1) * width + rx + 1) * comps;
+        for (uint c = 0; c < comps; c++) {
+            pixels[dstidx + c] = pixels[srcidx + c];
+        }
+    }
+
+    // bottom-left pixel
+    if (x > 0 && (uint)x < width && ry >= 0 && (uint)ry < height-1) {
+        uint srcidx = (ry * width + x) * comps;
+        uint dstidx = ((ry + 1) * width + x - 1) * comps;
+        for (uint c = 0; c < comps; c++) {
+            pixels[dstidx + c] = pixels[srcidx + c];
+        }
+    }
+    
+    // bottom-right pixel
+    if (rx >= 0 && (uint)rx < width-1 && ry >= 0 && (uint)ry < height-1) {
+        uint srcidx = (ry * width + rx) * comps;
+        uint dstidx = ((ry + 1) * width + rx + 1) * comps;
+        for (uint c = 0; c < comps; c++) {
+            pixels[dstidx + c] = pixels[srcidx + c];
+        }
+    }
+
+    // left border
+    if (x > 0 && (uint)x < width) {
+        for (uint ey = max(y, 0); (int)ey < y + h; ey++) {
+            uint srcidx = (ey * width + x) * comps;
+            uint dstidx = (ey * width + x - 1) * comps;
+            for (uint c = 0; c < comps; c++) {
+                pixels[dstidx + c] = pixels[srcidx + c];
+            }
+        }
+    }
+
+    // top border
+    if (y > 0 && (uint)y < height) {
+        for (uint ex = max(x, 0); (int)ex < x + w; ex++) {
+            uint srcidx = (y * width + ex) * comps;
+            uint dstidx = ((y-1) * width + ex) * comps;
+            for (uint c = 0; c < comps; c++) {
+                pixels[dstidx + c] = pixels[srcidx + c];
+            }
+        }
+    }
+    
+    // right border
+    if (rx >= 0 && (uint)rx < width-1) {
+        for (uint ey = max(y, 0); (int)ey < y + h; ey++) {
+            uint srcidx = (ey * width + rx) * comps;
+            uint dstidx = (ey * width + rx + 1) * comps;
+            for (uint c = 0; c < comps; c++) {
+                pixels[dstidx + c] = pixels[srcidx + c];
+            }
+        }
+    }
+
+    // bottom border
+    if (ry >= 0 && (uint)ry < height-1) {
+        for (uint ex = max(x, 0); (int)ex < x + w; ex++) {
+            uint srcidx = (ry * width + ex) * comps;
+            uint dstidx = ((ry+1) * width + ex) * comps;
+            for (uint c = 0; c < comps; c++) {
+                pixels[dstidx + c] = pixels[srcidx + c];
+            }
+        }
+    }
+}
+
+void ImageData::fixAlphaColor() {
+    assert(format == ImageFormat::rgba8888);
+
+    ubyte* pixels = static_cast<ubyte*>(data); 
+
+    // Fixing black transparent pixels for Mip-Mapping
+    for (int ly = 0; ly < height-1; ly++) {
+        for (int lx = 0; lx < width-1; lx++) {
+            if (pixels[((ly) * width + lx) * 4 + 3]) {
+                for (int c = 0; c < 3; c++) {
+                    int val = pixels[((ly) + + lx) * 4 + c];
+                    if (pixels[((ly) * width + lx + 1) * 4 + 3] == 0)
+                        pixels[((ly) * width + lx + 1) * 4 + c] = val;
+                    if (pixels[((ly + 1) * width + lx) * 4 + 3] == 0)
+                        pixels[((ly + 1) * width + lx) * 4 + c] = val;
+                }
+            }
+        }
+    }
+}
+
+ImageData* toRGBA(ImageData* image){
+    uint width = image->getWidth();
+    uint height = image->getHeight();
+    ImageFormat format = image->getFormat();
+    void* data = image->getData();
+    if (format == ImageFormat::rgba8888) {
+        ubyte* newData = new ubyte[width * height * 4];
+        std::memcpy(newData, data, width * height * 4);
+        return new ImageData(ImageFormat::rgba8888, width, height, newData);
+    }
+    else if (format == ImageFormat::rgb888) {
+        const ubyte* src = static_cast<const ubyte*>(data);
+        ubyte* dst = new ubyte[width * height * 4];
+        for (size_t i = 0; i < width * height; ++i) {
+            dst[i * 4] = src[i * 3]; // R
+            dst[i * 4 + 1] = src[i * 3 + 1]; // G
+            dst[i * 4 + 2] = src[i * 3 + 2]; // B
+            dst[i * 4 + 3] = 255; // A
+        }
+        return new ImageData(ImageFormat::rgba8888, width, height, dst);
+    }
+    else {
+        LOG_ERROR("Unsupported number of channels");
+        return nullptr;
     }
 }

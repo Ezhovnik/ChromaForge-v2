@@ -4,6 +4,7 @@
 #include "BlocksRenderer.h"
 #include "../voxels/Chunk.h"
 #include "../world/Level.h"
+#include "../frontend/ContentGfxCache.h"
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -11,9 +12,9 @@
 using glm::ivec2;
 using std::shared_ptr;
 
-ChunksRenderer::ChunksRenderer(Level* level) : level(level) {
+ChunksRenderer::ChunksRenderer(Level* level, const ContentGfxCache* cache) : level(level) {
 	const int MAX_FULL_CUBES = 3000;
-	renderer = new BlocksRenderer(9 * 6 * 6 * MAX_FULL_CUBES, level->content);
+	renderer = new BlocksRenderer(9 * 6 * 6 * MAX_FULL_CUBES, level->content, cache);
 }
 
 ChunksRenderer::~ChunksRenderer() {

@@ -22,7 +22,7 @@ public:
 
     std::string const name;
 	blockid_t id;
-    int textureFaces[6]; // -x, +x, -y, +y, -z, +z
+    std::string textureFaces[6]; // -x, +x, -y, +y, -z, +z
     ubyte emission[3];
     ubyte drawGroup = 0;
     BlockModel model = BlockModel::Cube;
@@ -36,7 +36,7 @@ public:
 
     float hitboxScale = 1;
 
-    Block(std::string name, int texture);
+    Block(std::string name, std::string texture);
 };
 
 #endif // VOXELS_BLOCK_H_

@@ -7,12 +7,14 @@
 class Texture;
 class ShaderProgram;
 class Font;
+class Atlas;
 
 // Менеджер для управления ресурсами
 class Assets {
 	std::unordered_map<std::string, Texture*> textures;
 	std::unordered_map<std::string, ShaderProgram*> shaders;
     std::unordered_map<std::string, Font*> fonts;
+	std::unordered_map<std::string, Atlas*> atlases;
 public:
 	~Assets(); // Деструктор
 
@@ -27,6 +29,9 @@ public:
     // Методы для работы с шрифтами
 	Font* getFont(std::string name) const; // Получает шрифт по имени
 	bool store(Font* font, std::string name); // Сохраняет шрифт в менеджере ресурсов.
+
+	Atlas* getAtlas(std::string name) const;
+	bool store(Atlas* atlas, std::string name);
 };
 
 #endif // ASSETS_ASSETS_H_

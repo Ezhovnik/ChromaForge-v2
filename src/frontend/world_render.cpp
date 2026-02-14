@@ -17,6 +17,7 @@
 #include "../graphics/Mesh.h"
 #include "../graphics/ShaderProgram.h"
 #include "../graphics/Texture.h"
+#include "../graphics/Atlas.h"
 #include "../graphics/LineBatch.h"
 #include "../voxels/Chunks.h"
 #include "../voxels/Chunk.h"
@@ -32,6 +33,7 @@
 #include "../math/FrustumCulling.h"
 #include "../engine.h"
 #include "../settings.h"
+#include "ContentGfxCache.h"
 
 inline constexpr glm::vec3 CLEAR_COLOR = {0.7f, 0.71f, 0.73f};
 inline constexpr float GAMMA_VALUE = 1.6f;
@@ -39,9 +41,9 @@ inline constexpr glm::vec3 SKY_LIGHT_COLOR = {1.8f, 1.8f, 1.8f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
-WorldRenderer::WorldRenderer(Engine* engine, Level* level) : engine(engine), level(level) {
+WorldRenderer::WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : engine(engine), level(level) {
 	lineBatch = new LineBatch(4096);
-	renderer = new ChunksRenderer(level);
+	renderer = new ChunksRenderer(level, cache);
     frustumCulling = new Frustum();
 
     level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
@@ -112,11 +114,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
     Assets* assets = engine->getAssets();
 
     // Загрузка ресурсов с проверкой
-	Texture* texture = assets->getTexture("blocks");
-    if (texture == nullptr) {
-        LOG_CRITICAL("The texture 'blocks' could not be found in the assets");
-        throw std::runtime_error("The texture 'blocks' could not be found in the assets");
-    }
+	Atlas* atlas = assets->getAtlas("blocks");
 
 	ShaderProgram* shader = assets->getShader("default");
     if (shader == nullptr) {
@@ -170,7 +168,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 		
 		shader->uniform1f("u_torchlightDistance", 6.0f);
 
-		texture->bind();
+		atlas->getTexture()->bind();
 
 		Chunks* chunks = level->chunks;
 		drawChunks(chunks, camera, shader, occlusion);
