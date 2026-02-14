@@ -36,7 +36,7 @@ public:
 
     float hitboxScale = 1;
 
-    Block(std::string name, std::string texture);
+    Block(std::string name, std::string texture = "");
 };
 
 #endif // VOXELS_BLOCK_H_
