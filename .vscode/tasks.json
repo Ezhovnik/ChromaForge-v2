@@ -18,6 +18,7 @@
 
                 //src/coders
                 "${workspaceFolder}/src/coders/commons.cpp",
+                "${workspaceFolder}/src/coders/GLSLExtension.cpp",
                 "${workspaceFolder}/src/coders/json.cpp",
                 "${workspaceFolder}/src/coders/toml.cpp",
                 "${workspaceFolder}/src/coders/png.cpp",

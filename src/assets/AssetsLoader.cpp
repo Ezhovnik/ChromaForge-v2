@@ -45,7 +45,7 @@ bool AssetsLoader::loadNext() {
 
 // Загружает и регистрирует шейдерную программу в менеджере ресурсов.
 bool _load_shader(Assets* assets, const std::filesystem::path& filename, const std::string& name){
-	ShaderProgram* shader = loadShaderProgram(filename.string() + ".vert", filename.string() + ".frag");
+	ShaderProgram* shader = ShaderProgram::loadShaderProgram(filename.string() + ".vert", filename.string() + ".frag");
 	if (shader == nullptr){
         LOG_CRITICAL("Failed to load shader '{}'", name);
         Logger::getInstance().flush();

@@ -6,9 +6,14 @@
 
 #include "../typedefs.h"
 
+class GLSLExtension;
+
 // Класс-обертка для шейдероной программы OpenGL
 class ShaderProgram {
+private:
+    static std::string loadShaderFile(std::string filename);
 public:
+    static GLSLExtension* preprocessor;
     uint id; // Идентификатор шейдерной программы OpenGL
 
     ShaderProgram(uint id); // Конструктор
@@ -23,8 +28,8 @@ public:
     void uniform2f(std::string name, glm::vec2 xy);
     void uniform3f(std::string name, float x, float y, float z); // Загружает три вещественных числа в uniform-переменную шейдера
     void uniform3f(std::string name, glm::vec3 xyz);
-};
 
-extern ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile); // Внешняя функция для загрузки и компиляции шейдерной программы
+    static ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile);
+};
 
 #endif // GRAPHICS_SHADERPROGRAM_H_

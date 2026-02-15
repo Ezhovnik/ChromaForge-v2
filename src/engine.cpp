@@ -27,6 +27,8 @@
 #include "frontend/gui/GUI.h"
 #include "graphics/Batch2D.h"
 #include "graphics/ImageData.h"
+#include "graphics/ShaderProgram.h"
+#include "coders/GLSLExtension.h"
 #include "coders/png.h"
 #include "files/engine_paths.h"
 #include "frontend/screens.h"
@@ -40,6 +42,8 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths, Content* content) :
         Window::terminate();
         throw initialize_error("Failed to load Window");
     }
+
+    ShaderProgram::preprocessor->setLibFolder(paths->getResources()/std::filesystem::path("shaders/lib"));
 
     // Загрузка ассетов
     assets = new Assets();

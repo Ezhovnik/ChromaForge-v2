@@ -26,22 +26,9 @@ Framebuffer::Framebuffer(uint width, uint height) : width(width), height(height)
 }
 
 Framebuffer::~Framebuffer() {
-	cleanup();
-}
-
-void Framebuffer::cleanup() {
-    if (texture) {
-        delete texture;
-        texture = nullptr;
-    }
-    if (fbo) {
-        glDeleteFramebuffers(1, &fbo);
-        fbo = 0;
-    }
-    if (depth) {
-        glDeleteRenderbuffers(1, &depth);
-        depth = 0;
-    }
+	delete texture;
+	glDeleteFramebuffers(1, &fbo);
+    glDeleteRenderbuffers(1, &depth);
 }
 
 void Framebuffer::bind() {

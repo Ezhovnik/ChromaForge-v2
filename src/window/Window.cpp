@@ -1,6 +1,6 @@
 #include "Window.h"
 
-#include <iostream>
+#include <sstream>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -17,6 +17,33 @@ uint Window::width = 0;
 uint Window::height = 0;
 int Window::posX = 0;
 int Window::posY = 0;
+
+const char* glfwErrorName(int error) {
+	switch (error) {
+		case GLFW_NO_ERROR: return "no error";
+		case GLFW_NOT_INITIALIZED: return "not initialized";
+		case GLFW_NO_CURRENT_CONTEXT: return "no current context";
+		case GLFW_INVALID_ENUM: return "invalid enum";
+		case GLFW_INVALID_VALUE: return "invalid value";
+		case GLFW_OUT_OF_MEMORY: return "out of memory";
+		case GLFW_API_UNAVAILABLE: return "api unavailable";
+		case GLFW_VERSION_UNAVAILABLE: return "version unavailable";
+		case GLFW_PLATFORM_ERROR: return "platform error";
+		case GLFW_FORMAT_UNAVAILABLE: return "format unavailable";
+		case GLFW_NO_WINDOW_CONTEXT: return "no window context";
+		default: return "unknown error";
+	}
+}
+
+void error_callback(int error, const char* description) {
+    std::stringstream ss;
+    ss << "GLFW error [0x" << std::hex << error << "]: ";
+    ss << glfwErrorName(error);
+    if (description) ss << description;
+
+    LOG_ERROR("{}", ss.str());
+    Logger::getInstance().flush();
+}
 
 // Callback-функция для обработки движения мыши
 void cursor_position_callback(GLFWwindow*, double x_pos, double y_pos) {
@@ -101,10 +128,11 @@ bool Window::initialize(DisplaySettings& settings) {
         return false;
     }
 
-    // Установка версии OpenGL (3.3 Core Profile)
+    glfwSetErrorCallback(error_callback);
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE); // Разрешаем изменять размер окна
     glfwWindowHint(GLFW_SAMPLES, settings.samples);
@@ -131,11 +159,7 @@ bool Window::initialize(DisplaySettings& settings) {
     glViewport(0, 0, settings.width, settings.height);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Window::settings = &settings;
