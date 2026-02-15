@@ -4,6 +4,8 @@
 #include <memory>
 #include <iostream>
 #include <filesystem>
+#include <random>
+#include <chrono>
 
 #include <glm/glm.hpp>
 
@@ -90,11 +92,7 @@ Panel* create_new_world_panel(Engine* engine, PagesControl* menu) {
         Label* label = new Label(L"Seed");
         panel->add(std::shared_ptr<UINode>(label));
 
-        uint64_t randseed = rand() ^ (rand() << 8) ^ 
-                        (rand() << 16) ^ (rand() << 24) ^
-                        ((uint64_t)rand() << 32) ^ 
-                        ((uint64_t)rand() << 40) ^
-                        ((uint64_t)rand() << 56);
+        uint64_t randseed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
 
         seedInput = new TextBox(std::to_wstring(randseed), glm::vec4(6.0f));
         panel->add(seedInput);
@@ -132,6 +130,9 @@ Panel* create_new_world_panel(Engine* engine, PagesControl* menu) {
                 seed = hash(seedstr);
             }
             EngineSettings& settings = engine->getSettings();
+
+            worldNameInput->cleanInput();
+            seedInput->cleanInput();
 
             auto folder = engine_fs::get_saves_folder()/std::filesystem::u8path(nameutf8);
             std::filesystem::create_directories(folder);

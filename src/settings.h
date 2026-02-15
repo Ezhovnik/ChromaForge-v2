@@ -15,6 +15,8 @@ struct ChunksSettings {
 	uint loadSpeed = 10;
 	uint loadDistance = 22;
 	uint padding = 2;
+
+	bool occlusion = true;
 };
 
 struct CameraSettings {

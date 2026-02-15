@@ -31,6 +31,7 @@
 #include "../graphics/ChunksRenderer.h"
 #include "../world/LevelEvents.h"
 #include "../math/FrustumCulling.h"
+#include "../math/voxmaths.h"
 #include "../engine.h"
 #include "../settings.h"
 #include "ContentGfxCache.h"
@@ -64,7 +65,6 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 	std::shared_ptr<Mesh> mesh = renderer->getOrRender(chunk.get());
 	if (mesh == nullptr) return true;
 
-	// Простой фрустум-каллинг (отсечение чанков позади камеры в 2D плоскости XZ)
 	if (occlusion){
 		glm::vec3 min(chunk->chunk_x * CHUNK_WIDTH, chunk->bottom, chunk->chunk_z * CHUNK_DEPTH);
 		glm::vec3 max(chunk->chunk_x * CHUNK_WIDTH + CHUNK_WIDTH, chunk->top, chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH);
@@ -135,7 +135,6 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 		context.depthTest(true);
 		context.cullFace(true);
 
-		float skyLightMultiplier = level->skyLightMutliplier;
 		glm::vec3 skyColor = SKY_LIGHT_COLOR * skyLightMultiplier;
 
 		Window::setBgColor(skyColor);
@@ -194,20 +193,46 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 	}
 
     if (level->player->debug) {
-        float length = 40.0f;
+		GfxContext ctx = parent_context.sub();
+		ctx.depthTest(true);
 
 		linesShader->use();
-		glm::mat4 model(1.0f);
-        glm::vec3 tsl = glm::vec3(width >> 1, -static_cast<int>(height) >> 1, 0.0f);
-		model = glm::translate(model, tsl);
-		linesShader->uniformMatrix("u_projview", glm::ortho(0.0f, static_cast<float>(width), -static_cast<float>(height), 0.0f, -length, length) * model * glm::inverse(camera->rotation));
+		if (drawChunkBorders) {
+			linesShader->uniformMatrix("u_projview", camera->getProjView());
+			glm::vec3 coord = level->player->camera->position;
+			if (coord.x < 0) coord.x--;
+			if (coord.z < 0) coord.z--;
+			int cx = floordiv((int)coord.x, CHUNK_WIDTH);
+			int cz = floordiv((int)coord.z, CHUNK_DEPTH);
+			for (int i = 0; i < CHUNK_WIDTH; ++i) {
+				lineBatch->line(cx * CHUNK_WIDTH + i, 0, cz * CHUNK_DEPTH, 
+								cx * CHUNK_WIDTH + i, CHUNK_HEIGHT, cz * CHUNK_DEPTH, 0, 0, 1, 0.5f);
+				lineBatch->line(cx * CHUNK_WIDTH + i, 0, (cz + 1) * CHUNK_DEPTH, 
+								cx * CHUNK_WIDTH + i, CHUNK_HEIGHT, (cz + 1) * CHUNK_DEPTH, 0, 0, 1, 0.5f);
 
+				lineBatch->line(cx * CHUNK_WIDTH, 0, cz * CHUNK_DEPTH + i, 
+								cx * CHUNK_WIDTH, CHUNK_HEIGHT, cz * CHUNK_DEPTH + i, 1, 0, 0, 0.5f);
+				lineBatch->line((cx + 1) * CHUNK_WIDTH, 0, cz * CHUNK_DEPTH + i, 
+								(cx + 1) * CHUNK_WIDTH, CHUNK_HEIGHT, cz * CHUNK_DEPTH + i, 1, 0, 0, 0.5f);
+			}
+			lineBatch->render();
+		}
+
+        float length = 40.0f;
+
+		glm::mat4 model(1.0f);
+        glm::vec3 tsl = glm::vec3(width / 2, height / 2, 0.0f);
+		model = glm::translate(model, tsl);
+		linesShader->uniformMatrix("u_projview", glm::ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -length, length) * model * glm::inverse(camera->rotation));
+
+		ctx.depthTest(false);
 		lineBatch->setLineWidth(4.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->render();
 
+		ctx.depthTest(true);
 		lineBatch->setLineWidth(2.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 		lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);

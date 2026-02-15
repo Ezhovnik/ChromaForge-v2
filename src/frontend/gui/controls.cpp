@@ -88,7 +88,6 @@ Button* Button::listenAction(onaction action) {
 
 TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200,32), padding, 0, false), input(L""), placeholder(placeholder) {
     label = new Label(L"");
-    label->align(Align::center);
     add(std::shared_ptr<UINode>(label));
 }
 

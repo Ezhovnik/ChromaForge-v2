@@ -41,7 +41,7 @@ class LevelScreen : public Screen {
     HudRenderer* hud;
     ContentGfxCache* cache;
 
-    bool occlusion = true;
+    bool occlusion;
 
     void updateHotkeys();
 public:

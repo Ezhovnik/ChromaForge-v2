@@ -27,6 +27,8 @@ namespace RegionConsts {
 
 class Player;
 class Chunk;
+class Content;
+class ContentIndices;
 
 struct WorldRegion {
 	ubyte** chunksData;
@@ -43,12 +45,14 @@ struct WorldInfo {
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
 class WorldFiles {
 private:
-    std::filesystem::path getRegionFile(int x, int z); // Генерирует имя файла для региона с заданными координатами
-    std::filesystem::path getPlayerFile(); // Генерирует имя файла, в котором записана информация об игроке
-    std::filesystem::path getWorldFile(); // Генерирует имя файла, в котором записана общая информауия о мире
+    std::filesystem::path getRegionFile(int x, int z) const; // Генерирует имя файла для региона с заданными координатами
+    std::filesystem::path getPlayerFile() const; // Генерирует имя файла, в котором записана информация об игроке
+    std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информауия о мире
+    std::filesystem::path getRegionsFolder() const;
+    std::filesystem::path getBlockIndicesFile() const;
 
     void writeWorldInfo(const WorldInfo& info);
-    public:
+public:
     std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
     std::filesystem::path directory; // Путь к директории с файлами мира
     ubyte* compressionBuffer; // Выходной буфер для записи регионов
@@ -66,7 +70,8 @@ private:
 	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
 	void writeRegion(int x, int y, WorldRegion& entry); // Формирует бинарное представление региона для записи в файл
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
-    void write(const WorldInfo info); // Записывает все измененные регионы из памяти на диск.
+    void write(const WorldInfo info, const Content* content);
+    void writeIndices(const ContentIndices* indices);
 };
 
 extern void longToCoords(int& x, int& z, long key); // Преобразует 64-битный ключ региона в координаты

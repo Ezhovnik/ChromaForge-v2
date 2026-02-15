@@ -16,6 +16,8 @@
 #include "../window/Camera.h"
 #include "../math/voxmaths.h"
 #include "../logger/Logger.h"
+#include "../content/Content.h"
+#include "../voxels/Block.h"
 
 // Константы для идентификации секций в файлах
 namespace PlayerSections {
@@ -118,18 +120,26 @@ void WorldFiles::put(Chunk* chunk){
     region.compressedSizes[target_index] = compressedSize;
 }
 
+std::filesystem::path WorldFiles::getRegionsFolder() const {
+	return directory/std::filesystem::path("regions");
+}
+
 // Генерирует имя файла для региона с заданными координатами
-std::filesystem::path WorldFiles::getRegionFile(int x, int z) {
+std::filesystem::path WorldFiles::getRegionFile(int x, int z) const {
 	return directory/std::filesystem::path(std::to_string(x) + "_" + std::to_string(z) + ".bin");
 }
 
 // Генерирует имя файла, в котором записана информация об игроке
-std::filesystem::path WorldFiles::getPlayerFile() {
+std::filesystem::path WorldFiles::getPlayerFile() const {
 	return directory/std::filesystem::path("player.bin");
 }
 
-std::filesystem::path WorldFiles::getWorldFile() {
+std::filesystem::path WorldFiles::getWorldFile() const {
     return directory/std::filesystem::path("world.bin");
+}
+
+std::filesystem::path WorldFiles::getBlockIndicesFile() const {
+	return directory/std::filesystem::path("blocks.idx");
 }
 
 // Получает данные чанка из кэша или файла
@@ -218,14 +228,18 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
 }
 
 // Записывает все измененные регионы на диск
-void WorldFiles::write(const WorldInfo info){
-    if (!std::filesystem::is_directory(directory)) {
-		std::filesystem::create_directory(directory);
+void WorldFiles::write(const WorldInfo info, const Content* content){
+	std::filesystem::path regions_dir = getRegionsFolder();
+
+    if (!std::filesystem::is_directory(regions_dir)) {
+		std::filesystem::create_directory(regions_dir);
 	}
 
     writeWorldInfo(info);
 
     if (generatorTestMode) return;
+
+	writeIndices(content->indices);
 
 	for (auto& [key, region] : regions){
 		if (region.chunksData == nullptr || !region.unsaved) continue;
@@ -323,6 +337,19 @@ bool WorldFiles::readPlayer(Player* player) {
 	player->hitbox->position = position;
 	player->camera->position = position + glm::vec3(0, 1, 0);
 	return true;
+}
+
+void WorldFiles::writeIndices(const ContentIndices* indices) {
+	{
+		BinaryWriter out;
+		uint count = indices->countBlockDefs();
+		out.putInt16(count);
+		for (uint i = 0; i < count; i++) {
+			const Block* def = indices->getBlockDef(i);
+			out.putShortStr(def->name);
+		}
+		files::write_bytes(getBlockIndicesFile(), (const char*)out.data(), out.size());
+	}
 }
 
 // Формирует бинарное представление региона для записи

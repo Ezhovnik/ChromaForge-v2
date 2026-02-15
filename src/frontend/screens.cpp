@@ -90,8 +90,11 @@ static bool backlight;
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
     cache = new ContentGfxCache(level->content, engine->getAssets());
     worldRenderer = new WorldRenderer(engine, level, cache);
-    hud = new HudRenderer(engine, level, cache);
-    backlight = engine->getSettings().graphics.backlight;
+    hud = new HudRenderer(engine, level, cache, worldRenderer);
+
+    const EngineSettings& settings = engine->getSettings();
+    backlight = settings.graphics.backlight;
+    occlusion = settings.chunks.occlusion;
 }
 
 LevelScreen::~LevelScreen() {
@@ -109,8 +112,6 @@ LevelScreen::~LevelScreen() {
 }
 
 void LevelScreen::updateHotkeys() {
-    if (Events::justPressed(keycode::O)) occlusion = !occlusion;
-
     if (Events::justPressed(keycode::F3)) level->player->debug = !level->player->debug;
 
     if (Events::justPressed(keycode::F5)) {
@@ -121,6 +122,8 @@ void LevelScreen::updateHotkeys() {
 void LevelScreen::update(float delta) {
     gui::GUI* gui = engine->getGUI();
     EngineSettings& settings = engine->getSettings();
+
+    occlusion = settings.chunks.occlusion;
 
     bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();

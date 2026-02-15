@@ -36,6 +36,7 @@
 #include "../content/Content.h"
 #include "../math/voxmaths.h"
 #include "ContentGfxCache.h"
+#include "world_render.h"
 
 inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	gui::Label* label = new gui::Label(L"-");
@@ -43,7 +44,7 @@ inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	return label;
 }
 
-HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()), cache(cache) {
+HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache, WorldRenderer* renderer) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()), cache(cache), renderer(renderer) {
 	auto menu = guiController->getMenu();
     batch = new Batch2D(1024);
 
@@ -65,9 +66,6 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 	})));
     panel->add(std::shared_ptr<gui::Label>(create_label([this](){
 		return L"Meshes: " + std::to_wstring(Mesh::meshesCount);
-	})));
-	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
-		return L"Occlusion: " + std::wstring(this->occlusion ? L"ON" : L"OFF");
 	})));
     panel->add(std::shared_ptr<gui::Label>(create_label([this](){
 		return L"Chunks: " + std::to_wstring(this->level->chunks->chunksCount) + L" (visible: " + std::to_wstring(this->level->chunks->visibleCount) + L")";
@@ -109,12 +107,48 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 	{
 		gui::TrackBar* bar = new gui::TrackBar(0.0f, 1.0f, 1.0f, 0.02f, 2);
 		bar->supplier([=]() {
-			return level->skyLightMutliplier;
+			return renderer->skyLightMultiplier;
 		});
 		bar->consumer([=](double val) {
-			level->skyLightMutliplier = val;
+			renderer->skyLightMultiplier = val;
 		});
 		panel->add(bar);
+	}
+	{
+        gui::Panel* checkpanel = new gui::Panel(glm::vec2(400, 32), glm::vec4(5.0f), 1.0f);
+        checkpanel->color(glm::vec4(0.0f));
+        checkpanel->orientation(gui::Orientation::horizontal);
+
+        gui::CheckBox* checkbox = new gui::CheckBox();
+        checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
+        checkbox->supplier([=]() {
+            return engine->getSettings().chunks.occlusion;
+        });
+        checkbox->consumer([=](bool checked) {
+            engine->getSettings().chunks.occlusion = checked;
+        });
+        checkpanel->add(checkbox);
+        checkpanel->add(new gui::Label(L"Occlusion"));
+
+        panel->add(checkpanel);
+	}
+	{
+        gui::Panel* checkpanel = new gui::Panel(glm::vec2(400, 32), glm::vec4(5.0f), 1.0f);
+        checkpanel->color(glm::vec4(0.0f));
+        checkpanel->orientation(gui::Orientation::horizontal);
+
+        gui::CheckBox* checkbox = new gui::CheckBox();
+        checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
+        checkbox->supplier([=]() {
+            return renderer->isChunkBordersOn();
+        });
+        checkbox->consumer([=](bool checked) {
+            renderer->setChunkBorders(checked);
+        });
+        checkpanel->add(checkbox);
+        checkpanel->add(new gui::Label(L"Show Chunk Borders"));
+
+        panel->add(checkpanel);
 	}
 	panel->refresh();
 

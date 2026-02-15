@@ -31,8 +31,6 @@ public:
     const Content* const content;
 	const ContentIndices* const contentIds;
 
-	float skyLightMutliplier = 1.0f;
-
 	Level(World* world, const Content* content, Player* player, EngineSettings& settings);
 	~Level();
 
