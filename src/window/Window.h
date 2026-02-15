@@ -11,14 +11,19 @@
 
 class GLFWwindow; // Предварительное объявление класса GLFWwindow
 class ImageData;
+struct GLFWmonitor;
 
 // Обертка для работы с окном приложения через GLFW
 class Window {
 private:
     static GLFWwindow* window;
 
+    static DisplaySettings* settings;
+
     static std::stack<glm::vec4> scissorStack;
 	static glm::vec4 scissorArea;
+
+    static bool tryToMaximize(GLFWwindow* window, GLFWmonitor* monitor);
 public:
     static uint width;
     static uint height;
@@ -34,6 +39,9 @@ public:
     static void swapBuffers(); // Обмен буферов
     static void swapInterval(int interval);
 
+    static void toggleFullscreen();
+	static bool isFullscreen();
+
     static void pushScissor(glm::vec4 area);
 	static void popScissor();
 	static void resetScissor();
@@ -42,6 +50,8 @@ public:
 
     static void clear();
     static void setBgColor(glm::vec3 color);
+
+    static DisplaySettings* getDisplaySettings();
 
     static glm::vec2 size() {
 		return glm::vec2(width, height);

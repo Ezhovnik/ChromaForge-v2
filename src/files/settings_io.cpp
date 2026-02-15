@@ -13,6 +13,7 @@ toml::Wrapper create_wrapper(EngineSettings& settings) {
 	display.add("height", &settings.display.height);
 	display.add("samples", &settings.display.samples);
 	display.add("swap-interval", &settings.display.swapInterval);
+	display.add("fullscreen", &settings.display.fullscreen);
 
 	toml::Section& chunks = wrapper.add("chunks");
 	chunks.add("load-distance", &settings.chunks.loadDistance);

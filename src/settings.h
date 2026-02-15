@@ -9,6 +9,8 @@ struct DisplaySettings {
 	int samples = 0;
 	int swapInterval = 1;
 	const char* title = "ChromaForge";
+
+	bool fullscreen = false;
 };
 
 struct ChunksSettings {

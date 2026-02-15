@@ -91,6 +91,8 @@ void Engine::updateHotkeys() {
 		std::filesystem::path filename = engine_fs::get_screenshot_file("png");
 		png::writeImage(filename.string(), image.get());
     }
+
+    if (Events::justPressed(keycode::F11)) Window::toggleFullscreen();
 }
 
 // Основной цикл приложения
