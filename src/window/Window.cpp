@@ -78,6 +78,10 @@ void character_callback(GLFWwindow*, uint codepoint){
 	Events::codepoints.push_back(codepoint);
 }
 
+void scroll_callback(GLFWwindow*, double xoffset, double yoffset) {
+    Events::scroll += yoffset;
+}
+
 // Инициализация окна и OpenGL контекста
 bool Window::initialize(DisplaySettings& settings) {
     if (!glfwInit()){ // Инициализация GLFW
@@ -134,6 +138,7 @@ bool Window::initialize(DisplaySettings& settings) {
     glfwSetCursorPosCallback(window, cursor_position_callback); // Движение мыши
     glfwSetWindowSizeCallback(window, window_size_callback); // Изменение размера окна
     glfwSetCharCallback(window, character_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     LOG_INFO("Window initialized successfully: {}x{}", settings.width, settings.height);
 
@@ -162,13 +167,18 @@ void Window::pushScissor(glm::vec4 area) {
 
 	scissorStack.push(scissorArea);
 
+    area.z += area.x;
+    area.w += area.y;
+
 	area.x = fmax(area.x, scissorArea.x);
 	area.y = fmax(area.y, scissorArea.y);
 
 	area.z = fmin(area.z, scissorArea.z);
 	area.w = fmin(area.w, scissorArea.w);
 
-	glScissor(area.x, Window::height-area.y-area.w, area.z, area.w);
+	if (area.z < 0.0f || area.w < 0.0f) glScissor(0, 0, 0, 0);
+	else glScissor(area.x, Window::height - area.w, area.z - area.x, area.w - area.y);
+
 	scissorArea = area;
 }
 
@@ -179,7 +189,10 @@ void Window::popScissor() {
 	}
 	glm::vec4 area = scissorStack.top();
 	scissorStack.pop();
-	glScissor(area.x, Window::height-area.y-area.w, area.z, area.w);
+
+	if (area.z < 0.0f || area.w < 0.0f) glScissor(0, 0, 0, 0);
+	else glScissor(area.x, Window::height - area.w, area.z - area.x, area.w - area.y);
+
 	if (scissorStack.empty()) glDisable(GL_SCISSOR_TEST);
 	scissorArea = area;
 }

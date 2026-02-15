@@ -58,6 +58,8 @@ namespace gui {
 
         Camera* uicamera;
         PagesControl* menu;
+
+        void activateMouse(float delta);
     public:
         GUI();
         ~GUI();

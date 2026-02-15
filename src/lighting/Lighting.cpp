@@ -20,6 +20,8 @@ Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), con
 	solverG = new LightSolver(contentIds, chunks, 1);
 	solverB = new LightSolver(contentIds, chunks, 2);
 	solverS = new LightSolver(contentIds, chunks, 3);
+
+	airID = content->require(DEFAULT_BLOCK_NAMESPACE"air")->id;
 }
 
 Lighting::~Lighting(){
@@ -135,7 +137,6 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z) {
 
 void Lighting::onBlockSet(int x, int y, int z, int const id) {
     Block* block = content->indices->getBlockDef(id);
-    blockid_t airID = content->require(DEFAULT_BLOCK_NAMESPACE + std::string("air"))->id;
     if (id == airID) {
         solverR->remove(x, y, z);
         solverG->remove(x, y, z);

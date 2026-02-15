@@ -21,6 +21,8 @@ private:
     uint chunksPadding;
 
     int64_t avgDurationMcs = 1000;
+
+	blockid_t bedrockID = 0;
 public:
 	ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding);
 	~ChunksController();

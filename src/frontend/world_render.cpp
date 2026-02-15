@@ -35,15 +35,14 @@
 #include "../settings.h"
 #include "ContentGfxCache.h"
 
-inline constexpr glm::vec3 CLEAR_COLOR = {0.7f, 0.71f, 0.73f};
 inline constexpr float GAMMA_VALUE = 1.6f;
-inline constexpr glm::vec3 SKY_LIGHT_COLOR = {1.8f, 1.8f, 1.8f};
+inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
 WorldRenderer::WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : engine(engine), level(level) {
 	lineBatch = new LineBatch(4096);
-	renderer = new ChunksRenderer(level, cache);
+	renderer = new ChunksRenderer(level, cache, engine->getSettings());
     frustumCulling = new Frustum();
 
     level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
@@ -136,7 +135,10 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 		context.depthTest(true);
 		context.cullFace(true);
 
-		Window::setBgColor(CLEAR_COLOR);
+		float skyLightMultiplier = level->skyLightMutliplier;
+		glm::vec3 skyColor = SKY_LIGHT_COLOR * skyLightMultiplier;
+
+		Window::setBgColor(skyColor);
 		Window::clear();
 		Window::viewport(0, 0, width, height);
 
@@ -144,10 +146,10 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 		shader->uniformMatrix("u_proj", camera->getProjection());
 		shader->uniformMatrix("u_view", camera->getView());
 		shader->uniform1f("u_gamma", GAMMA_VALUE);
-		shader->uniform3f("u_skyLightColor", SKY_LIGHT_COLOR);
+		shader->uniform3f("u_skyLightColor", glm::vec3(1.1f) * skyLightMultiplier);
 
         float fogFactor = 18.0f / (float)settings.chunks.loadDistance;
-		shader->uniform3f("u_fogColor", CLEAR_COLOR);
+		shader->uniform3f("u_fogColor", skyColor);
 		shader->uniform1f("u_fogFactor", fogFactor);
 		shader->uniform1f("u_fogCurve", settings.graphics.fogCurve);
 

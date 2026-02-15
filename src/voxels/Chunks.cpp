@@ -24,6 +24,8 @@ Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFi
 		chunks[i] = nullptr;
 	}
 	chunksCount = 0;
+
+	airID = content->require(DEFAULT_BLOCK_NAMESPACE"air")->id;
 }
 
 Chunks::~Chunks(){
@@ -143,7 +145,7 @@ void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states){
 
     if (y < chunk->bottom) chunk->bottom = y;
     else if (y + 1 > chunk->top) chunk->top = y + 1;
-    else if (id == content->require(DEFAULT_BLOCK_NAMESPACE + std::string("air"))->id) chunk->updateHeights();
+    else if (id == airID) chunk->updateHeights();
 
 	if (lx == 0 && (chunk = getChunk(cx+areaOffsetX-1, cz+areaOffsetZ))) chunk->setModified(true);
 	if (lz == 0 && (chunk = getChunk(cx+areaOffsetX, cz+areaOffsetZ-1))) chunk->setModified(true);
@@ -323,10 +325,14 @@ void Chunks::resize(uint newWidth, uint newDepth) {
 	chunksSecond = newChunksSecond;
 }
 
-void Chunks::clear(){
-	for (size_t i = 0; i < volume; i++){
+void Chunks::saveAndClear(){
+	for (size_t i = 0; i < volume; ++i){
 		Chunk* chunk = chunks[i].get();
-		if (chunk) events->trigger(CHUNK_HIDDEN, chunk);
+		if (chunk) {
+			worldFiles->put(chunk);
+			events->trigger(CHUNK_HIDDEN, chunk);
+		}
+		chunks[i] = nullptr;
 	}
 	chunksCount = 0;
 }

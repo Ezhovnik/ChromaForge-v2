@@ -23,7 +23,7 @@ public:
     std::string const name;
 	blockid_t id;
     std::string textureFaces[6]; // -x, +x, -y, +y, -z, +z
-    ubyte emission[3];
+    ubyte emission[4];
     ubyte drawGroup = 0;
     BlockModel model = BlockModel::Cube;
 

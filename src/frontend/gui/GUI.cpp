@@ -35,21 +35,19 @@ PagesControl* GUI::getMenu() {
     return menu;
 }
 
-void GUI::activate(float deltaTime) {
-    container->size(glm::vec2(Window::width, Window::height));
-    container->activate(deltaTime);
-
+void GUI::activateMouse(float delta) {
     int mx = Events::x;
     int my = Events::y;
 
     auto hover = container->getAt(glm::vec2(mx, my), nullptr);
     if (this->hover && this->hover != hover) this->hover->hover(false);
-
-    if (hover) hover->hover(true);
-
+    
+    if (hover) {
+        hover->hover(true);
+        if (Events::scroll) hover->scrolled(Events::scroll);
+    }
     this->hover = hover;
 
-    auto prevfocus = focus;
     if (Events::justClicked(0)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
@@ -68,6 +66,15 @@ void GUI::activate(float deltaTime) {
         pressed->mouseRelease(this, mx, my);
         pressed = nullptr;
     }
+} 
+
+void GUI::activate(float delta) {
+    container->size(glm::vec2(Window::width, Window::height));
+    container->activate(delta);
+    auto prevfocus = focus;
+
+    if (!Events::_cursor_locked) activateMouse(delta);
+    
     if (focus) {
         if (Events::justPressed(keycode::ESCAPE)) {
             focus->defocus();
@@ -79,12 +86,16 @@ void GUI::activate(float deltaTime) {
             for (auto key : Events::pressedKeys) {
                 focus->keyPressed(key);
             }
-            if (Events::isClicked(mousecode::BUTTON_1)) {
-                focus->mouseMove(this, mx, my);
-            }
-            if (prevfocus == focus) {
-                for (int i = mousecode::BUTTON_1; i < mousecode::BUTTON_1 + 12; ++i) {
-                    if (Events::justClicked(i)) focus->clicked(this, i);
+            if (!Events::_cursor_locked) {
+                if (Events::isClicked(mousecode::BUTTON_1)) {
+                    int mx = Events::x;
+                    int my = Events::y;
+                    focus->mouseMove(this, mx, my);
+                }
+                if (prevfocus == focus){
+                    for (int i = mousecode::BUTTON_1; i < mousecode::BUTTON_1 + 12; ++i) {
+                        if (Events::justClicked(i)) focus->clicked(this, i);
+                    }
                 }
             }
         }

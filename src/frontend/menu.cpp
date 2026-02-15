@@ -41,6 +41,8 @@ Panel* create_main_menu_panel(Engine* engine, PagesControl* menu) {
 
     Panel* worldsPanel = new Panel(glm::vec2(390, 200), glm::vec4(5.0f));
     worldsPanel->color(glm::vec4(0.1f));
+    worldsPanel->maxLength(400);
+
     std::filesystem::path saves_folder = engine_fs::get_saves_folder();
     if (std::filesystem::is_directory(saves_folder)) {
         for (auto const& entry : std::filesystem::directory_iterator(saves_folder)) {
@@ -146,8 +148,12 @@ Panel* create_new_world_panel(Engine* engine, PagesControl* menu) {
 }
 
 Panel* create_controls_panel(Engine* engine, PagesControl* menu) {
-    Panel* panel = new Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
+    Panel* panel = new Panel(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
     panel->color(glm::vec4(0.0f));
+
+    Panel* scrollPanel = new Panel(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
+    scrollPanel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.3f));
+    scrollPanel->maxLength(500);
 
     for (auto& entry : Events::bindings){
         std::string bindname = entry.first;
@@ -161,8 +167,10 @@ Panel* create_controls_panel(Engine* engine, PagesControl* menu) {
         Label* label = new Label(util::str2wstr_utf8(bindname));
         label->margin(glm::vec4(6.0f));
         subpanel->add(label);
-        panel->add(subpanel);
+        scrollPanel->add(subpanel);
     }
+
+    panel->add(scrollPanel);
 
     panel->add(backButton(menu));
     panel->refresh();
@@ -184,6 +192,21 @@ Panel* create_settings_panel(Engine* engine, PagesControl* menu) {
         });
         trackbar->consumer([=](double value) {
             engine->getSettings().chunks.loadDistance = value;
+        });
+        panel->add(trackbar);
+    }
+
+    {
+        panel->add((new Label(L""))->textSupplier([=]() {
+            return L"Chunks load Speed: " + std::to_wstring(engine->getSettings().chunks.loadSpeed);
+        }));
+
+        TrackBar* trackbar = new TrackBar(1, 32, 10, 1, 1);
+        trackbar->supplier([=]() {
+            return engine->getSettings().chunks.loadSpeed;
+        });
+        trackbar->consumer([=](double value) {
+            engine->getSettings().chunks.loadSpeed = value;
         });
         panel->add(trackbar);
     }
@@ -221,6 +244,25 @@ Panel* create_settings_panel(Engine* engine, PagesControl* menu) {
         });
         checkpanel->add(checkbox);
         checkpanel->add(new Label(L"V-Sync"));
+
+        panel->add(checkpanel);
+    }
+
+    {
+        Panel* checkpanel = new Panel(glm::vec2(400, 32), glm::vec4(5.0f), 1.0f);
+        checkpanel->color(glm::vec4(0.0f));
+        checkpanel->orientation(Orientation::horizontal);
+
+        CheckBox* checkbox = new CheckBox();
+        checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
+        checkbox->supplier([=]() {
+            return engine->getSettings().graphics.backlight != 0;
+        });
+        checkbox->consumer([=](bool checked) {
+            engine->getSettings().graphics.backlight = checked;
+        });
+        checkpanel->add(checkbox);
+        checkpanel->add(new Label(L"Backlight"));
 
         panel->add(checkpanel);
     }

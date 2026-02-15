@@ -15,6 +15,7 @@ shaking = true
 
 [graphics]
 fog-curve = 1.6
+backlight = true
 
 [debug]
 generator-test-mode = false

@@ -61,7 +61,22 @@ void BinaryWriter::putInt64(int64_t val) {
 }
 
 void BinaryWriter::putFloat32(float val) {
-    putInt32(*((uint32_t*)&val));
+    union {
+        int32_t vali32;
+        float valfloat;
+    } value;
+    value.valfloat = val;
+    putInt32(value.vali32);
+}
+
+void BinaryWriter::putShortStr(const std::string& s) {
+    size_t len = s.length();
+    if (len > 255) {
+        LOG_ERROR("Length > 255");
+        throw std::domain_error("length > 255");
+    }
+    put(len);
+    put((const ubyte*)s.data(), len);
 }
 
 BinaryReader::BinaryReader(const ubyte* data, size_t size)
@@ -128,8 +143,12 @@ int64_t BinaryReader::getInt64() {
 }
 
 float BinaryReader::getFloat32() {
-    int32_t value = getInt32();
-    return *(float*)(&value);
+    union {
+        int32_t vali32;
+        float valfloat;
+    } value;
+    value.vali32 = getInt32();
+    return value.valfloat;
 }
 
 std::string BinaryReader::getString() {
@@ -140,6 +159,16 @@ std::string BinaryReader::getString() {
     }
     pos += length;
     return std::string((const char*)(data+pos-length), length);
+}
+
+std::string BinaryReader::getShortStr() {
+    ubyte length = get();
+    if (pos + length > size) {
+        LOG_ERROR("Unexpected end");
+        throw std::underflow_error("unexpected end");
+    }
+    pos += length;
+    return std::string((const char*)(data + pos - length), length);
 }
 
 bool BinaryReader::hasNext() const {
