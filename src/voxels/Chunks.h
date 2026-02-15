@@ -21,6 +21,8 @@ class Chunks{
 private:
     const Content* const content;
 	const ContentIndices* const contentIds;
+
+    blockid_t airID;
 public:
     std::shared_ptr<Chunk>* chunks;
     std::shared_ptr<Chunk>* chunksSecond;
@@ -68,7 +70,7 @@ public:
 	void translate(int x, int z);
     void resize(uint newWidth, uint newDepth);
 
-    void clear();
+    void saveAndClear();
 };
 
 #endif // VOXELS_CHUNKS_H_

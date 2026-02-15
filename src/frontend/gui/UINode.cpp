@@ -74,9 +74,14 @@ std::shared_ptr<UINode> UINode::getAt(glm::vec2 pos, std::shared_ptr<UINode> sel
 }
 
 glm::vec2 UINode::calcCoord() const {
-    if (parent) return coord + parent->calcCoord();
+    if (parent) return coord + parent->calcCoord() + parent->contentOffset();
     return coord;
 }
+
+void UINode::scrolled(int value) {
+    if (parent) parent->scrolled(value);
+}
+
 
 void UINode::setCoord(glm::vec2 coord) {
     this->coord = coord;
@@ -89,11 +94,6 @@ glm::vec2 UINode::size() const {
 void UINode::size(glm::vec2 size) {
     if (sizelock) return;
     this->size_ = size;
-    if (parent) {
-        sizelock = true;
-        // parent->refresh();
-        sizelock = false;
-    }
 }
 
 void UINode::_size(glm::vec2 size) {

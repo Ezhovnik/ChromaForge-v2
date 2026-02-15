@@ -12,9 +12,11 @@
 using namespace gui;
 
 Container::Container(glm::vec2 coord, glm::vec2 size) : UINode(coord, size) {
+    actualLength = size.y;
 }
 
 std::shared_ptr<UINode> Container::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
+    if (!isInside(pos)) return nullptr;
     for (auto& node : nodes) {
         if (!node->visible()) continue;
         auto hover = node->getAt(pos, node);
@@ -43,6 +45,21 @@ void Container::activate(float deltaTime) {
     for (auto node : nodes) {
         if (node->visible()) node->activate(deltaTime);
     }
+}
+
+void Container::scrolled(int value) {
+    int diff = (actualLength-size().y);
+    if (diff > 0 && scrollable_) {
+        scroll += value * 20;
+        if (scroll > 0) scroll = 0;
+        if (-scroll > diff) scroll = -diff;
+    } else if (parent) {
+        parent->scrolled(value);
+    }
+}
+
+void Container::scrollable(bool flag) {
+    scrollable_ = flag;
 }
 
 void Container::draw(Batch2D* batch, Assets* assets) {
@@ -98,6 +115,14 @@ void Panel::drawBackground(Batch2D* batch, Assets* assets) {
     batch->rect(coord.x, coord.y, size_.x, size_.y);
 }
 
+void Panel::maxLength(int value) {
+    maxLength_ = value;
+}
+
+int Panel::maxLength() const {
+    return maxLength_;
+}
+
 void Panel::refresh() {
     float x = padding.x;
     float y = padding.y;
@@ -128,7 +153,11 @@ void Panel::refresh() {
             node->refresh();
             maxw = fmax(maxw, ex + node->size().x + margin.z+padding.z);
         }
-        if (resizing_) this->size(glm::vec2(size.x, y+padding.w));
+        if (resizing_) {
+            if (maxLength_) this->size(glm::vec2(size.x, glm::min(maxLength_, (int)(y + padding.w))));
+            else this->size(glm::vec2(size.x, y + padding.w));
+        }
+        actualLength = y + padding.w;
     } else {
         float maxh = size.y;
         for (auto& node : nodes) {
@@ -143,8 +172,12 @@ void Panel::refresh() {
             maxh = fmax(maxh, y + margin.y + node->size().y + margin.w+padding.w);
         }
         bool increased = maxh > size.y;
-        if (resizing_) this->size(glm::vec2(x+padding.z, size.y));
+        if (resizing_) {
+            if (maxLength_) this->size(glm::vec2(glm::min(maxLength_, (int)(x + padding.z)), size.y));
+            else this->size(glm::vec2(x + padding.z, size.y));
+        }
         if (increased) refresh();
+        actualLength = size.y;
     }
 }
 

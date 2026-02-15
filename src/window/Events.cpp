@@ -22,6 +22,8 @@ float Events::y = 0.0f; // Текущее положение курсора по
 bool Events::_cursor_locked = false; // Режим захвата курсора
 bool Events::_cursor_started = false; // Начал ли пользователь движение мышью
 
+int Events::scroll = 0;
+
 std::vector<uint> Events::codepoints;
 std::vector<int> Events::pressedKeys;
 std::unordered_map<std::string, Binding> Events::bindings;
@@ -110,6 +112,8 @@ void Events::pollEvents() {
     deltaY = 0.0f;
     codepoints.clear();
     pressedKeys.clear();
+	scroll = 0;
+
     glfwPollEvents();
 
     for (auto& [name, binding] : bindings) {

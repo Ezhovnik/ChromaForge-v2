@@ -24,6 +24,7 @@ struct CameraSettings {
 
 struct GraphicsSettings {
     float fogCurve = 1.6f;
+	bool backlight = true;
 };
 
 struct DebugSettings {

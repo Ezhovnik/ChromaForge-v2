@@ -106,6 +106,16 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 		sub->add(box);
 		panel->add(sub);
 	}
+	{
+		gui::TrackBar* bar = new gui::TrackBar(0.0f, 1.0f, 1.0f, 0.02f, 2);
+		bar->supplier([=]() {
+			return level->skyLightMutliplier;
+		});
+		bar->consumer([=](double val) {
+			level->skyLightMutliplier = val;
+		});
+		panel->add(bar);
+	}
 	panel->refresh();
 
     menu->reset();

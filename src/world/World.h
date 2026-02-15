@@ -21,7 +21,7 @@ public:
 	World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings);
 	~World();
 
-    void write(Level* level, bool writeChunks);
+    void write(Level* level);
     Level* load(EngineSettings& settings, const Content* content);
 };
 

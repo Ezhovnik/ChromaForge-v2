@@ -18,6 +18,7 @@ public:
     void putFloat32(float val);
     void put(const std::string& s);
     void put(const ubyte* arr, size_t size);
+    void putShortStr(const std::string& s);
 
     inline size_t size() const {
         return buffer.size();
@@ -43,6 +44,7 @@ public:
     int64_t getInt64();
     float getFloat32();
     std::string getString();
+    std::string getShortStr();
 
     bool hasNext() const;
 };

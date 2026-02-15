@@ -13,9 +13,9 @@
 #include "../content/Content.h"
 #include "../frontend/ContentGfxCache.h"
 
-#define VERTEX_SIZE 9
+#define VERTEX_SIZE 6
 
-BlocksRenderer::BlocksRenderer(size_t capacity, const Content* content, const ContentGfxCache* cache) : vertexOffset(0), indexOffset(0), indexSize(0), capacity(capacity), content(content), cache(cache) {
+BlocksRenderer::BlocksRenderer(size_t capacity, const Content* content, const ContentGfxCache* cache, const EngineSettings& settings) : vertexOffset(0), indexOffset(0), indexSize(0), capacity(capacity), content(content), cache(cache), settings(settings) {
 	vertexBuffer = new float[capacity];
 	indexBuffer = new int[capacity];
 	voxelsBuffer = new VoxelsVolume(CHUNK_WIDTH + 2, CHUNK_HEIGHT, CHUNK_DEPTH + 2);
@@ -36,10 +36,17 @@ void BlocksRenderer::vertex(const glm::vec3& coord, float u, float v, const glm:
 	vertexBuffer[vertexOffset++] = u;
 	vertexBuffer[vertexOffset++] = v;
 
-	vertexBuffer[vertexOffset++] = light.r;
-	vertexBuffer[vertexOffset++] = light.g;
-	vertexBuffer[vertexOffset++] = light.b;
-	vertexBuffer[vertexOffset++] = light.a;
+	union {
+		float floating;
+		uint32_t integer;
+	} compressed;
+
+	compressed.integer = (uint32_t(light.r * 255) & 0xff) << 24;
+	compressed.integer |= (uint32_t(light.g * 255) & 0xff) << 16;
+	compressed.integer |= (uint32_t(light.b * 255) & 0xff) << 8;
+	compressed.integer |= (uint32_t(light.a * 255) & 0xff);
+
+	vertexBuffer[vertexOffset++] = compressed.floating;
 }
 
 void BlocksRenderer::index(int a, int b, int c, int d, int e, int f) {
@@ -58,7 +65,7 @@ void BlocksRenderer::face(const glm::vec3& coord, float w, float h,
 	const UVRegion& region,
 	const glm::vec4(&lights)[4],
 	const glm::vec4& tint) {
-	if (vertexOffset + VERTEX_SIZE * 6 > capacity) {
+	if (vertexOffset + VERTEX_SIZE * 4 > capacity) {
 		overflow = true;
 		return;
 	}
@@ -77,7 +84,7 @@ void BlocksRenderer::face(const glm::vec3& coord, float w, float h,
 	const glm::vec4(&lights)[4],
 	const glm::vec4& tint,
 	bool rotated) {
-	if (vertexOffset + VERTEX_SIZE * 6 > capacity) {
+	if (vertexOffset + VERTEX_SIZE * 4 > capacity) {
 		overflow = true;
 		return;
 	}
@@ -119,7 +126,7 @@ inline glm::vec4 do_tint(float value) {
 void BlocksRenderer::blockCube(int x, int y, int z, const glm::vec3& size, const UVRegion(&texfaces)[6], ubyte group) {
 	glm::vec4 lights[]{ glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f) };
 	if (isOpen(x, y, z + 1, group)) {
-		face(glm::vec3(x, y, z), size.x, size.y, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), texfaces[5], lights, do_tint(0.9f));
+		face(glm::vec3(x, y, z), size.x, size.y, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), texfaces[5], lights, do_tint(1.0f));
 	}
 	if (isOpen(x, y, z - 1, group)) {
 		face(glm::vec3(x + size.x, y, z - size.z), size.x, size.y, glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), texfaces[4], lights, glm::vec4(1.0f));
@@ -302,7 +309,7 @@ void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
 												cache->getRegion(id, 4), cache->getRegion(id, 5)};
 					switch (def.model) {
 					case BlockModel::Cube:
-						if (*((light_t*)&def.emission)) {
+						if (*((uint32_t*)&def.emission)) {
 							blockCube(x, y, z, glm::vec3(1, 1, 1), texfaces, def.drawGroup);
 						} else {
 							blockCubeShaded(x, y, z, glm::vec3(1, 1, 1), texfaces, &def, vox.states);
@@ -325,14 +332,14 @@ void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
 Mesh* BlocksRenderer::render(const Chunk* chunk, int atlas_size, const ChunksStorage* chunks) {
 	this->chunk = chunk;
 	voxelsBuffer->setPosition(chunk->chunk_x * CHUNK_WIDTH - 1, 0, chunk->chunk_z * CHUNK_DEPTH - 1);
-	chunks->getVoxels(voxelsBuffer);
+	chunks->getVoxels(voxelsBuffer, settings.graphics.backlight);
 	overflow = false;
 	vertexOffset = 0;
 	indexOffset = indexSize = 0;
 	const voxel* voxels = chunk->voxels;
 	render(voxels, atlas_size);
 
-	const vattr attrs[]{{3}, {2}, {4}, {0}};
+	const vattr attrs[]{{3}, {2}, {1}, {0}};
 	Mesh* mesh = new Mesh(vertexBuffer, vertexOffset / VERTEX_SIZE, indexBuffer, indexSize, attrs);
 	return mesh;
 }

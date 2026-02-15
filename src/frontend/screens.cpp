@@ -86,10 +86,12 @@ void MenuScreen::draw(float delta) {
     batch->render();
 }
 
+static bool backlight;
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
     cache = new ContentGfxCache(level->content, engine->getAssets());
     worldRenderer = new WorldRenderer(engine, level, cache);
     hud = new HudRenderer(engine, level, cache);
+    backlight = engine->getSettings().graphics.backlight;
 }
 
 LevelScreen::~LevelScreen() {
@@ -99,7 +101,7 @@ LevelScreen::~LevelScreen() {
 
     LOG_INFO("World saving");
     World* world = level->world;
-	world->write(level, !engine->getSettings().debug.generatorTestMode);
+	world->write(level);
 
 	delete world;
     delete level;
@@ -112,12 +114,7 @@ void LevelScreen::updateHotkeys() {
     if (Events::justPressed(keycode::F3)) level->player->debug = !level->player->debug;
 
     if (Events::justPressed(keycode::F5)) {
-        for (uint i = 0; i < level->chunks->volume; i++) {
-            std::shared_ptr<Chunk> chunk = level->chunks->chunks[i];
-            if (chunk != nullptr && chunk->isReady()) {
-                chunk->setModified(true);
-            }
-        }
+        level->chunks->saveAndClear();
     }
 }
 
@@ -126,7 +123,12 @@ void LevelScreen::update(float delta) {
     EngineSettings& settings = engine->getSettings();
 
     bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
-    if (!inputLocked) updateHotkeys();
+    if (!gui->isFocusCaught()) updateHotkeys();
+
+    if (settings.graphics.backlight != backlight) {
+        level->chunks->saveAndClear();
+        backlight = settings.graphics.backlight;
+    }
 
     level->updatePlayer(delta, !inputLocked, hud->isPause(), !inputLocked);
     level->update();

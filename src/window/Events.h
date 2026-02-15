@@ -34,6 +34,8 @@ public:
     static bool _cursor_locked; // Режим захвата курсора
     static bool _cursor_started; // Начал ли пользователь движение мышью
 
+    static int scroll;
+
     static std::vector<uint> codepoints;
     static std::vector<int> pressedKeys;
     static std::unordered_map<std::string, Binding> bindings;
