@@ -57,6 +57,10 @@ char* files::read_bytes(std::filesystem::path filename, size_t& length) {
 std::string files::read_string(std::filesystem::path filename) {
 	size_t size;
 	std::unique_ptr<char> chars (read_bytes(filename, size));
+	if (chars == nullptr) {
+		LOG_ERROR("Could not to load file '{}'", filename.string());
+		throw std::runtime_error("Could not to load file '" + filename.string() + "'");
+	}
 	return std::string(chars.get(), size);
 }
 
