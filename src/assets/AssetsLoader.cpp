@@ -126,6 +126,8 @@ void AssetsLoader::addDefaults(AssetsLoader& loader) {
 	loader.add(AssetType::Shader, SHADERS_FOLDER"/default", "default");
 	loader.add(AssetType::Shader, SHADERS_FOLDER"/lines", "lines");
 	loader.add(AssetType::Shader, SHADERS_FOLDER"/ui", "ui");
+	loader.add(AssetType::Shader, SHADERS_FOLDER"/skybox_gen", "skybox_gen");
+	loader.add(AssetType::Shader, SHADERS_FOLDER"/background", "background");
 
 	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/blocks", "blocks");
     loader.add(AssetType::Texture, TEXTURES_FOLDER"/menubg.png", "menubg");

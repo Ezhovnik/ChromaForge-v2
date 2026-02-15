@@ -31,7 +31,7 @@ public:
     void rotate(float x, float y, float z); // Поворачивает камеру на заданные углы.
 
     glm::mat4 getProjection(); // Возвращает матрицу проекции камеры.
-    glm::mat4 getView(); // Возвращает матрицу вида камеры.
+    glm::mat4 getView(bool position_flag = true); // Возвращает матрицу вида камеры.
     glm::mat4 getProjView();
 };
 

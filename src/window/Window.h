@@ -54,6 +54,7 @@ public:
     static double time();
 
     static void clear();
+    static void clearDepth();
     static void setBgColor(glm::vec3 color);
 
     static DisplaySettings* getDisplaySettings();

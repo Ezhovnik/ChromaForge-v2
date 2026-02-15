@@ -40,6 +40,8 @@ struct WorldInfo {
     std::string name;
     std::filesystem::path directory;
     uint64_t seed;
+    float daytime;
+	float daytimeSpeed;
 };
 
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.

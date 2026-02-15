@@ -133,6 +133,10 @@ void LevelScreen::update(float delta) {
         backlight = settings.graphics.backlight;
     }
 
+    if (!hud->isPause()) {
+        level->world->updateTimers(delta);
+    }
+
     level->updatePlayer(delta, !inputLocked, hud->isPause(), !inputLocked);
     level->update();
     level->chunksController->update(settings.chunks.loadSpeed);

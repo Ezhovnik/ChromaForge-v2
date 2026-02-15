@@ -35,6 +35,7 @@
 #include "../engine.h"
 #include "../settings.h"
 #include "ContentGfxCache.h"
+#include "graphics/Skybox.h"
 
 inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
@@ -42,9 +43,12 @@ inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
 WorldRenderer::WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : engine(engine), level(level) {
+	EngineSettings& settings = engine->getSettings();
+
 	lineBatch = new LineBatch(4096);
-	renderer = new ChunksRenderer(level, cache, engine->getSettings());
+	renderer = new ChunksRenderer(level, cache, settings);
     frustumCulling = new Frustum();
+	skybox = new Skybox(64, engine->getAssets()->getShader("skybox_gen"));
 
     level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
 		renderer->unload(chunk);
@@ -52,6 +56,7 @@ WorldRenderer::WorldRenderer(Engine* engine, Level* level, const ContentGfxCache
 }
 
 WorldRenderer::~WorldRenderer() {
+	delete skybox;
 	delete lineBatch;
 	delete renderer;
     delete frustumCulling;
@@ -105,11 +110,13 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 	}
 }
 
-void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool occlusion){
+void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool occlusion) {
+	EngineSettings& settings = engine->getSettings();
+	skybox->refresh(level->world->daytime, fmax(1.0f, 18.0f / settings.chunks.loadDistance), 4);
+
     const Content* content = level->content;
 	const ContentIndices* contentIds = content->indices;
 
-    EngineSettings& settings = engine->getSettings();
     Assets* assets = engine->getAssets();
 
     // Загрузка ресурсов с проверкой
@@ -130,29 +137,34 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
 
+	Window::clearDepth();
+	Window::viewport(0, 0, width, height);
+
+	ShaderProgram* backShader = assets->getShader("background");
+	backShader->use();
+	backShader->uniformMatrix("u_view", camera->getView(false));
+	backShader->uniform1f("u_zoom", camera->zoom);
+	backShader->uniform1f("u_ar", (float)Window::width/(float)Window::height);
+	skybox->draw(backShader);
+
     {
 		GfxContext context = parent_context.sub();
 		context.depthTest(true);
 		context.cullFace(true);
 
-		glm::vec3 skyColor = SKY_LIGHT_COLOR * skyLightMultiplier;
-
-		Window::setBgColor(skyColor);
-		Window::clear();
-		Window::viewport(0, 0, width, height);
-
 		shader->use();
+		skybox->bind();
 		shader->uniformMatrix("u_proj", camera->getProjection());
 		shader->uniformMatrix("u_view", camera->getView());
 		shader->uniform1f("u_gamma", GAMMA_VALUE);
-		shader->uniform3f("u_skyLightColor", glm::vec3(1.1f) * skyLightMultiplier);
 
         float fogFactor = 18.0f / (float)settings.chunks.loadDistance;
-		shader->uniform3f("u_fogColor", skyColor);
 		shader->uniform1f("u_fogFactor", fogFactor);
 		shader->uniform1f("u_fogCurve", settings.graphics.fogCurve);
 
 		shader->uniform3f("u_cameraPos", camera->position);
+
+		shader->uniform1i("u_cubemap", 1);
 
 		Block* choosen_block = contentIds->getBlockDef(level->player->choosenBlock);
 		assert(choosen_block != nullptr);
@@ -190,6 +202,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 			}
 			lineBatch->render();
 		}
+		skybox->unbind();
 	}
 
     if (level->player->debug) {

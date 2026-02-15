@@ -11,12 +11,12 @@ class Framebuffer {
 
     void cleanup();
 public:
-	int width;
-	int height;
+	uint width;
+	uint height;
 
 	Texture* texture;
 
-	Framebuffer(int width, int height);
+	Framebuffer(uint width, uint height);
 	~Framebuffer();
 
 	void bind();
