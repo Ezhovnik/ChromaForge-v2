@@ -1,6 +1,5 @@
 #include "ShaderProgram.h"
 
-#include <iostream>
 #include <exception>
 #include <fstream>
 #include <sstream>
@@ -9,7 +8,10 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../coders/GLSLExtension.h"
 #include "../logger/Logger.h"
+
+GLSLExtension* ShaderProgram::preprocessor = new GLSLExtension();
 
 // Конструктор шейдерной программы
 ShaderProgram::ShaderProgram(uint id) : id(id) {
@@ -86,7 +88,7 @@ void ShaderProgram::uniform3f(std::string name, glm::vec3 xyz) {
 }
 
 // Функция для загрузки текстового файла
-std::string loadShaderFile(std::string filename) {
+std::string ShaderProgram::loadShaderFile(std::string filename) {
     std::string code;
     std::ifstream file;
 
@@ -113,11 +115,13 @@ std::string loadShaderFile(std::string filename) {
         return "";
     }
 
+    code = preprocessor->process(std::filesystem::path(filename), code);
+
     return code;
 }
 
 // Основная функция для загрузки и компиляции шейдерной программы
-ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile) {
+ShaderProgram* ShaderProgram::loadShaderProgram(std::string vertexFile, std::string fragmentFile) {
     // Загрузка исходного кода шейдеров из файлов
     std::string vShaderString = loadShaderFile(vertexFile);
     std::string fShaderString = loadShaderFile(fragmentFile);
@@ -146,7 +150,7 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(vertex, 512, nullptr, infoLog);
-        LOG_CRITICAL("Vertex shader compililation failed\n{}", infoLog);
+        LOG_CRITICAL("Vertex shader '{}' compililation failed\n{}", vertexFile, infoLog);
         return nullptr;
     }
 
@@ -159,7 +163,7 @@ ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFil
     glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragment, 512, nullptr, infoLog);
-        LOG_CRITICAL("Fragment shader compililation failed. Info: {}", infoLog);
+        LOG_CRITICAL("Fragment shader '{}' compililation failed. Info: {}", fragmentFile, infoLog);
         return nullptr;
     }
 

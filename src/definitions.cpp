@@ -104,7 +104,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
-    block->hitboxScale = 0.5f;
+    block->hitboxScale = 0.7f;
     block->model = BlockModel::X;
     builder->add(block);
 

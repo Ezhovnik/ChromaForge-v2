@@ -8,8 +8,6 @@ class Texture;
 class Framebuffer {
 	uint fbo;
 	uint depth;
-
-    void cleanup();
 public:
 	uint width;
 	uint height;
