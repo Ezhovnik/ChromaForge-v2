@@ -100,7 +100,7 @@ Panel* create_new_world_panel(Engine* engine, PagesControl* menu) {
 
     {
         Button* button = new Button(L"Create World", glm::vec4(10.0f));
-        button->margin(glm::vec4(0, 20, 0, 0));
+        button->margin(glm::vec4(1, 20, 1, 1));
         glm::vec4 basecolor = worldNameInput->color();   
         button->listenAction([=](GUI*) {
             std::wstring name = worldNameInput->text();

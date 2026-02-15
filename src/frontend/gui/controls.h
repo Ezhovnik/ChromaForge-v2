@@ -46,6 +46,8 @@ namespace gui {
         glm::vec4 pressedColor {0.0f, 0.0f, 0.0f, 0.95f};
 
         std::vector<onaction> actions;
+
+        std::shared_ptr<UINode> label = nullptr;
     public:
         Button(std::shared_ptr<UINode> content, glm::vec4 padding = glm::vec4(2.0f));
         Button(std::wstring text, glm::vec4 padding = glm::vec4(2.0f));
@@ -56,6 +58,9 @@ namespace gui {
 
         virtual void mouseRelease(GUI*, int x, int y) override;
         virtual Button* listenAction(onaction action);
+
+        virtual void text(std::wstring text);
+        virtual std::wstring text() const;
     };
 
     class InputBindBox : public Panel {

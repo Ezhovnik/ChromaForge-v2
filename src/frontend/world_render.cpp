@@ -204,16 +204,26 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 			if (coord.z < 0) coord.z--;
 			int cx = floordiv((int)coord.x, CHUNK_WIDTH);
 			int cz = floordiv((int)coord.z, CHUNK_DEPTH);
-			for (int i = 0; i < CHUNK_WIDTH; ++i) {
-				lineBatch->line(cx * CHUNK_WIDTH + i, 0, cz * CHUNK_DEPTH, 
-								cx * CHUNK_WIDTH + i, CHUNK_HEIGHT, cz * CHUNK_DEPTH, 0, 0, 1, 0.5f);
-				lineBatch->line(cx * CHUNK_WIDTH + i, 0, (cz + 1) * CHUNK_DEPTH, 
-								cx * CHUNK_WIDTH + i, CHUNK_HEIGHT, (cz + 1) * CHUNK_DEPTH, 0, 0, 1, 0.5f);
+			{
+				lineBatch->line(cx * CHUNK_WIDTH, 0, cz * CHUNK_DEPTH, cx * CHUNK_WIDTH, CHUNK_HEIGHT, cz * CHUNK_DEPTH, 0.8f, 0, 0.8f, 1);
+				lineBatch->line(cx * CHUNK_WIDTH, 0, (cz + 1) * CHUNK_DEPTH, cx * CHUNK_WIDTH, CHUNK_HEIGHT, (cz + 1) * CHUNK_DEPTH, 0.8f, 0, 0.8f, 1);
+				lineBatch->line((cx + 1) * CHUNK_WIDTH, 0, cz * CHUNK_DEPTH, (cx + 1) * CHUNK_WIDTH, CHUNK_HEIGHT, cz * CHUNK_DEPTH, 0.8f, 0, 0.8f, 1);
+				lineBatch->line((cx + 1) * CHUNK_WIDTH, 0, (cz + 1) * CHUNK_DEPTH, (cx + 1) * CHUNK_WIDTH, CHUNK_HEIGHT, (cz + 1) * CHUNK_DEPTH, 0.8f, 0, 0.8f, 1);
+			}
+			for (int i = 2; i < CHUNK_WIDTH; i += 2) {
+				lineBatch->line(cx * CHUNK_WIDTH + i, 0, cz * CHUNK_DEPTH, cx * CHUNK_WIDTH + i, CHUNK_HEIGHT, cz * CHUNK_DEPTH, 0, 0, 0.8f, 1);
+				lineBatch->line(cx * CHUNK_WIDTH + i, 0, (cz + 1) * CHUNK_DEPTH, cx * CHUNK_WIDTH + i, CHUNK_HEIGHT, (cz + 1) * CHUNK_DEPTH,     0, 0, 0.8f, 1);
+			}
+			for (int i = 2; i < CHUNK_DEPTH; i += 2) {
+				lineBatch->line(cx * CHUNK_WIDTH, 0, cz * CHUNK_DEPTH + i, cx * CHUNK_WIDTH, CHUNK_HEIGHT, cz * CHUNK_DEPTH + i, 0.8f, 0, 0, 1);
+				lineBatch->line((cx + 1) * CHUNK_WIDTH, 0, cz * CHUNK_DEPTH + i, (cx + 1) * CHUNK_WIDTH, CHUNK_HEIGHT, cz * CHUNK_DEPTH + i, 0.8f, 0, 0, 1);
+			}
+			for (int i=0; i < CHUNK_HEIGHT; i += 2){
+				lineBatch->line(cx * CHUNK_WIDTH, i, cz * CHUNK_DEPTH, cx * CHUNK_WIDTH, i, (cz + 1) * CHUNK_DEPTH, 0, 0.8f, 0, 1);
+				lineBatch->line(cx * CHUNK_WIDTH, i, (cz + 1) * CHUNK_DEPTH, (cx + 1) * CHUNK_WIDTH, i, (cz + 1) * CHUNK_DEPTH, 0, 0.8f, 0, 1);
+				lineBatch->line((cx + 1) * CHUNK_WIDTH, i, (cz + 1) * CHUNK_DEPTH, (cx + 1) * CHUNK_WIDTH, i,  cz * CHUNK_DEPTH, 0, 0.8f, 0, 1);
+				lineBatch->line((cx + 1) * CHUNK_WIDTH, i, cz * CHUNK_DEPTH, cx * CHUNK_WIDTH, i, cz * CHUNK_DEPTH, 0, 0.8f, 0, 1);
 
-				lineBatch->line(cx * CHUNK_WIDTH, 0, cz * CHUNK_DEPTH + i, 
-								cx * CHUNK_WIDTH, CHUNK_HEIGHT, cz * CHUNK_DEPTH + i, 1, 0, 0, 0.5f);
-				lineBatch->line((cx + 1) * CHUNK_WIDTH, 0, cz * CHUNK_DEPTH + i, 
-								(cx + 1) * CHUNK_WIDTH, CHUNK_HEIGHT, cz * CHUNK_DEPTH + i, 1, 0, 0, 0.5f);
 			}
 			lineBatch->render();
 		}

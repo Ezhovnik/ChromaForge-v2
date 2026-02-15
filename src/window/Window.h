@@ -25,6 +25,9 @@ private:
 
     static bool tryToMaximize(GLFWwindow* window, GLFWmonitor* monitor);
 public:
+    static int posX;
+	static int posY;
+
     static uint width;
     static uint height;
 
@@ -41,6 +44,8 @@ public:
 
     static void toggleFullscreen();
 	static bool isFullscreen();
+
+    static bool isMaximized();
 
     static void pushScissor(glm::vec4 area);
 	static void popScissor();
