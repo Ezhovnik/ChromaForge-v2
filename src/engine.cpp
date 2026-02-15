@@ -28,12 +28,12 @@
 #include "graphics/Batch2D.h"
 #include "graphics/ImageData.h"
 #include "coders/png.h"
-#include "files/engine_files.h"
+#include "files/engine_paths.h"
 #include "frontend/screens.h"
 #include "content/content.h"
 
 // Реализация конструктора
-Engine::Engine(EngineSettings& settings, Content* content) : settings(settings), content(content){
+Engine::Engine(EngineSettings& settings, EnginePaths* paths, Content* content) : settings(settings), content(content), paths(paths){
     // Инициализация окна GLFW
     if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
@@ -44,7 +44,7 @@ Engine::Engine(EngineSettings& settings, Content* content) : settings(settings),
     // Загрузка ассетов
     assets = new Assets();
     LOG_INFO("Loading Assets");
-    AssetsLoader loader(assets);
+    AssetsLoader loader(assets, paths->getResources());
     AssetsLoader::createDefaults(loader);
     AssetsLoader::addDefaults(loader);
     while (loader.hasNext()) {
@@ -88,7 +88,7 @@ void Engine::updateHotkeys() {
     if (Events::justPressed(keycode::F2)) {
         std::unique_ptr<ImageData> image(Window::takeScreenshot());
 		image->flipY();
-		std::filesystem::path filename = engine_fs::get_screenshot_file("png");
+		std::filesystem::path filename = paths->getScreenshotFile("png");
 		png::writeImage(filename.string(), image.get());
     }
 
@@ -126,6 +126,10 @@ void Engine::mainloop() {
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
     }
+}
+
+EnginePaths* Engine::getPaths() {
+	return paths;
 }
 
 gui::GUI* Engine::getGUI() {

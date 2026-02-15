@@ -16,9 +16,8 @@ inline uint vox_index(int x, int y, int z, int w = CHUNK_WIDTH, int d = CHUNK_DE
 	return (y * d + z) * w + x;
 }
 
-#define RES_FOLDER "../res/"
-#define TEXTURES_FOLDER "../res/textures"
-#define SHADERS_FOLDER "../res/shaders"
-#define FONTS_FOLDER "../res/fonts"
+#define SHADERS_FOLDER "shaders"
+#define TEXTURES_FOLDER "textures"
+#define FONTS_FOLDER "fonts"
 
 #endif // SRC_CONSTANTS_H_

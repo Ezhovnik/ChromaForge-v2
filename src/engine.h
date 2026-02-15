@@ -11,6 +11,7 @@
 class Assets;
 class Screen;
 class Content;
+class EnginePaths;
 
 namespace gui {
     class GUI;
@@ -29,6 +30,7 @@ private:
     std::shared_ptr<Screen> screen = nullptr;
     EngineSettings settings;
     Content* content;
+    EnginePaths* paths;
 
     gui::GUI* gui;
 
@@ -36,13 +38,14 @@ private:
     double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
     double deltaTime = 0.0; // Разница во времени между кадрами
 public:
-    Engine(EngineSettings& settings, Content* content); // Конструктор
+    Engine(EngineSettings& settings, EnginePaths* paths, Content* content); // Конструктор
     ~Engine(); // Деструктор
 
     void updateTimers(); // Обновление таймеров (frame, deltaTime)
     void updateHotkeys(); // Обработка горячих клавиш
     void mainloop(); // Основной цикл приложения
 
+    EnginePaths* getPaths();
     Assets* getAssets();
 	gui::GUI* getGUI();
 	EngineSettings& getSettings();

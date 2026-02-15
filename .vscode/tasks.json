@@ -27,7 +27,7 @@
 
                 //src/files
                 "${workspaceFolder}/src/files/binary_io.cpp",
-                "${workspaceFolder}/src/files/engine_files.cpp",
+                "${workspaceFolder}/src/files/engine_paths.cpp",
                 "${workspaceFolder}/src/files/files.cpp",
                 "${workspaceFolder}/src/files/rle.cpp",
                 "${workspaceFolder}/src/files/settings_io.cpp",
@@ -86,6 +86,7 @@
                 "${workspaceFolder}/src/physics/PhysicsSolver.cpp",
 
                 //src/util
+                "${workspaceFolder}/src/util/command_line.cpp",
                 "${workspaceFolder}/src/util/platform.cpp",
                 "${workspaceFolder}/src/util/stringutil.cpp",
                 "${workspaceFolder}/src/util/timeutil.cpp",

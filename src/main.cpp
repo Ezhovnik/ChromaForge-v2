@@ -9,18 +9,22 @@
 #include "coders/json.h"
 #include "definitions.h"
 #include "logger/Logger.h"
-#include "files/engine_files.h"
+#include "util/command_line.h"
 #include "window/Events.h"
 #include "window/input.h"
 #include "files/settings_io.h"
 #include "content/Content.h"
+#include "files/engine_paths.h"
 
 // Точка входа в программу
-int main() {
+int main(int argc, char** argv) {
+    EnginePaths paths;
+	if (!parse_cmdline(argc, argv, paths)) return EXIT_SUCCESS;
+
     platform::configure_encoding();
 
     // Инициализация логгера
-    Logger::getInstance().initialize(engine_fs::get_logs_file().string());
+    Logger::getInstance().initialize(paths.getLogsFile().string());
 
     ContentBuilder contentBuilder;
 	setup_definitions(&contentBuilder);
@@ -40,7 +44,7 @@ int main() {
 			reader.read();
             LOG_INFO("Engine settings read succesfully");
 		}
-        engine = std::make_unique<Engine>(settings, content.get());
+        engine = std::make_unique<Engine>(settings, &paths, content.get());
 
         // Настройка назначения клавиш
         std::filesystem::path controls_file = platform::get_controls_file();
@@ -69,5 +73,5 @@ int main() {
 
     Logger::getInstance().flush();
 
-    return 0;
+    return EXIT_SUCCESS;
 }

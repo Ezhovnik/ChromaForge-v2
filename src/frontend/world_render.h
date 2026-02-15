@@ -41,7 +41,6 @@ public:
 	~WorldRenderer();
 
 	void draw(const GfxContext& context, Camera* camera, bool occlusion);
-	void drawDebug(const GfxContext& context, Camera* camera);
 
 	inline bool isChunkBordersOn() {return drawChunkBorders;}
 	inline void setChunkBorders(bool flag) {drawChunkBorders = flag;}
