@@ -98,8 +98,10 @@ namespace gui {
         virtual void keyPressed(int key) override;
         virtual void textSupplier(wstringsupplier supplier);
         virtual void textConsumer(wstringconsumer consumer);
-        virtual bool isfocuskeeper() const override {return true;}
+        virtual bool isfocuskeeper() const override {return true;};
         virtual std::wstring text() const;
+
+        virtual void cleanInput() {input = L"";};
     };
 
     class TrackBar : public UINode {

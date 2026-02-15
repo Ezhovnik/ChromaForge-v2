@@ -13,6 +13,7 @@ class Assets;
 class Player;
 class Engine;
 class ContentGfxCache;
+class WorldRenderer;
 
 namespace gui {
     class GUI;
@@ -38,8 +39,10 @@ private:
     std::shared_ptr<gui::UINode> debugPanel;
 	gui::GUI* guiController;
     const ContentGfxCache* const cache;
+
+    WorldRenderer* renderer;
 public:
-	HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache);
+	HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache, WorldRenderer* renderer);
 	~HudRenderer();
 
     void update();

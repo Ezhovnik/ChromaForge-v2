@@ -30,13 +30,21 @@ class WorldRenderer {
     ChunksRenderer* renderer;
 	LineBatch* lineBatch;
 
+	bool drawChunkBorders = false;
+
     bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool occlusion);
 	void drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader, bool occlusion);
 public:
+	float skyLightMultiplier = 1.0f;
+
 	WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache);
 	~WorldRenderer();
 
 	void draw(const GfxContext& context, Camera* camera, bool occlusion);
+	void drawDebug(const GfxContext& context, Camera* camera);
+
+	inline bool isChunkBordersOn() {return drawChunkBorders;}
+	inline void setChunkBorders(bool flag) {drawChunkBorders = flag;}
 };
 
 #endif // FRONTEND_WORLD_RENDERER_H_

@@ -8,6 +8,7 @@ swap-interval = 1
 load-distance = 22
 load-speed = 10
 padding = 2
+occlusion = true
 
 [camera]
 fov-events = true

@@ -18,6 +18,7 @@ toml::Wrapper create_wrapper(EngineSettings& settings) {
 	chunks.add("load-distance", &settings.chunks.loadDistance);
 	chunks.add("load-speed", &settings.chunks.loadSpeed);
 	chunks.add("padding", &settings.chunks.padding);
+	chunks.add("occlusion", &settings.chunks.occlusion);
 
     toml::Section& camera = wrapper.add("camera");
 	camera.add("fov-events", &settings.camera.fovEvents);
