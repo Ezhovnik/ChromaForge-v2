@@ -37,6 +37,8 @@
 #include "../math/voxmaths.h"
 #include "ContentGfxCache.h"
 #include "world_render.h"
+#include "../util/timeutil.h"
+#include "../util/stringutil.h"
 
 inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	gui::Label* label = new gui::Label(L"-");
@@ -104,13 +106,24 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 		sub->add(box);
 		panel->add(sub);
 	}
+
+	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		int hour, minute, second;
+		timeutil::from_value(this->level->world->daytime, hour, minute, second);
+
+		std::wstring timeString = 
+					util::lfill(std::to_wstring(hour), 2, L'0') + L":" +
+					util::lfill(std::to_wstring(minute), 2, L'0');
+		return L"Time: "+timeString;
+	})));
+
 	{
-		gui::TrackBar* bar = new gui::TrackBar(0.0f, 1.0f, 1.0f, 0.02f, 2);
+		gui::TrackBar* bar = new gui::TrackBar(0.0f, 1.0f, 1.0f, 0.005f, 8);
 		bar->supplier([=]() {
-			return renderer->skyLightMultiplier;
+			return level->world->daytime;
 		});
 		bar->consumer([=](double val) {
-			renderer->skyLightMultiplier = val;
+			level->world->daytime = val;
 		});
 		panel->add(bar);
 	}

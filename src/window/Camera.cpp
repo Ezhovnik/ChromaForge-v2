@@ -47,7 +47,10 @@ glm::mat4 Camera::getProjection() {
 
 // Возвращает матрицу вида камеры.
 // Матрица вида преобразует мировые координаты в координаты камеры.
-glm::mat4 Camera::getView() {
+glm::mat4 Camera::getView(bool position_flag) {
+	glm::vec3 position = this->position;
+	if (!position_flag) position = glm::vec3(0.0f);
+
     if (perspective) return glm::lookAt(position, position + front, up);
 	else return glm::translate(glm::mat4(1.0f), position);
 }

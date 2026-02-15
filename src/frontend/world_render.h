@@ -22,6 +22,7 @@ class Frustum;
 class Engine;
 class Chunks;
 class ContentGfxCache;
+class Skybox;
 
 class WorldRenderer {
     Engine* engine;
@@ -29,14 +30,13 @@ class WorldRenderer {
     Frustum* frustumCulling;
     ChunksRenderer* renderer;
 	LineBatch* lineBatch;
+	Skybox* skybox;
 
 	bool drawChunkBorders = false;
 
     bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool occlusion);
 	void drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader, bool occlusion);
 public:
-	float skyLightMultiplier = 1.0f;
-
 	WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache);
 	~WorldRenderer();
 

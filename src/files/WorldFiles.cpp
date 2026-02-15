@@ -33,6 +33,7 @@ namespace PlayerFlags {
 
 namespace WorldSections {
     constexpr int MAIN = 1;
+	constexpr int DAYNIGHT = 2;
 }
 
 // Конвертирует 4 байта в целое число
@@ -252,10 +253,14 @@ void WorldFiles::writeWorldInfo(const WorldInfo& info) {
 	BinaryWriter out;
 	out.putCStr(WORLD_FORMAT_MAGIC);
 	out.put(WORLD_FORMAT_VERSION);
-	out.put(WorldSections::MAIN);
 
+	out.put(WorldSections::MAIN);
 	out.putInt64(info.seed);
 	out.put(info.name);
+
+	out.put(WorldSections::DAYNIGHT);
+	out.putFloat32(info.daytime);
+	out.putFloat32(info.daytimeSpeed);
 
 	files::write_bytes(getWorldFile(), (const char*)out.data(), out.size());
 }
@@ -276,6 +281,10 @@ bool WorldFiles::readWorldInfo(WorldInfo& info) {
 		case WorldSections::MAIN:
 			info.seed = inp.getInt64();
 			info.name = inp.getString();
+			break;
+		case WorldSections::DAYNIGHT:
+			info.daytime = inp.getFloat32();
+			info.daytimeSpeed = inp.getFloat32();
 			break;
 		}
 	}

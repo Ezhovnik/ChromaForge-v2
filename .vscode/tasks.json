@@ -33,6 +33,9 @@
                 "${workspaceFolder}/src/files/settings_io.cpp",
                 "${workspaceFolder}/src/files/WorldFiles.cpp",
 
+                //src/frontend/graphics
+                "${workspaceFolder}/src/frontend/graphics/Skybox.cpp",
+
                 //src/frontend/gui
                 "${workspaceFolder}/src/frontend/gui/controls.cpp",
                 "${workspaceFolder}/src/frontend/gui/GUI.cpp",
@@ -85,6 +88,7 @@
                 //src/util
                 "${workspaceFolder}/src/util/platform.cpp",
                 "${workspaceFolder}/src/util/stringutil.cpp",
+                "${workspaceFolder}/src/util/timeutil.cpp",
 
                 //src/voxels
                 "${workspaceFolder}/src/voxels/Block.cpp",

@@ -158,9 +158,15 @@ bool Window::initialize(DisplaySettings& settings) {
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
     }
 
+    glfwSwapInterval(settings.swapInterval);
+
+    const GLubyte* vendor = glGetString(GL_VENDOR);
+	const GLubyte* renderer = glGetString(GL_RENDERER);
+    LOG_DEBUG("GL Vendor: {}", (char*)vendor);
+    LOG_DEBUG("GL Renderer: {}", (char*)renderer);
+
     LOG_INFO("Window initialized successfully: {}x{}", settings.width, settings.height);
 
-    glfwSwapInterval(settings.swapInterval);
     return true;
 }
 
@@ -248,6 +254,10 @@ void Window::clear() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void Window::clearDepth() {
+	glClear(GL_DEPTH_BUFFER_BIT);
+}
+
 void Window::setBgColor(glm::vec3 color) {
     glClearColor(color.r, color.g, color.b, 1.0f);
 }
@@ -285,6 +295,7 @@ DisplaySettings* Window::getDisplaySettings() {
 
 ImageData* Window::takeScreenshot() {
 	ubyte* data = new ubyte[width * height * 4];
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	return new ImageData(ImageFormat::rgba8888, width, height, data);
 }

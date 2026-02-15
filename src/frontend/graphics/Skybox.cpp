@@ -1,0 +1,111 @@
+#include "Skybox.h"
+
+#include <GL/glew.h>
+#include <glm/glm.hpp>
+
+#include "../../graphics/ShaderProgram.h"
+#include "../../graphics/Mesh.h"
+#include "../../window/Window.h"
+
+constexpr double PI = 3.14159265358979323846;
+
+Skybox::Skybox(uint size, ShaderProgram* shader) : size(size), shader(shader) {
+    glGenTextures(1, &cubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    for (uint face = 0; face < 6; ++face) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGB, size, size, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    }
+    glGenFramebuffers(1, &fbo);
+
+    float vertices[] {
+        -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f,  1.0f, 1.0f, 1.0f, -1.0f
+    };
+    vattr attrs[] {2, 0};
+    mesh = new Mesh(vertices, 6, attrs);
+}
+
+Skybox::~Skybox() {
+    glDeleteTextures(1, &cubemap);
+    glDeleteFramebuffers(1, &fbo);
+    delete mesh;
+}
+
+void Skybox::draw(ShaderProgram* shader) {
+    shader->uniform1i("u_cubemap", 1);
+    bind();
+    mesh->draw();
+    unbind();
+}
+
+void Skybox::refresh(float t, float mie, uint quality) {
+    ready = true;
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+    shader->use();
+    Window::viewport(0,0, size,size);
+    const glm::vec3 xaxs[] = {
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, 1.0f},
+        {-1.0f, 0.0f, 0.0f},
+
+        {-1.0f, 0.0f, 0.0f},
+        {-1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+    };
+    const glm::vec3 yaxs[] = {
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 0.0f, -1.0f},
+        
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+    };
+
+    const glm::vec3 zaxs[] = {
+        {1.0f, 0.0f, 0.0f},
+        {-1.0f, 0.0f, 0.0f},
+        {0.0f, -1.0f, 0.0f},
+        
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, 1.0f},
+    };
+    t *= PI * 2.0f;
+    
+    shader->uniform1i("u_quality", quality);
+    shader->uniform1f("u_mie", mie);
+    shader->uniform3f("u_lightDir", glm::normalize(glm::vec3(sin(t), -cos(t), 0.7f)));
+    for (uint face = 0; face < 6; face++) {
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, cubemap, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+        shader->uniform3f("u_xaxis", xaxs[face]);
+        shader->uniform3f("u_yaxis", yaxs[face]);
+        shader->uniform3f("u_zaxis", zaxs[face]);
+        mesh->draw(GL_TRIANGLES);
+    }
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    Window::viewport(0, 0, Window::width, Window::height);
+}
+
+void Skybox::bind() const {
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+    glActiveTexture(GL_TEXTURE0);
+}
+
+void Skybox::unbind() const {
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    glActiveTexture(GL_TEXTURE0);
+}
