@@ -29,19 +29,12 @@ class Player;
 class Chunk;
 class Content;
 class ContentIndices;
+class World;
 
 struct WorldRegion {
 	ubyte** chunksData;
     uint32_t* compressedSizes;
 	bool unsaved;
-};
-
-struct WorldInfo {
-    std::string name;
-    std::filesystem::path directory;
-    uint64_t seed;
-    float daytime;
-	float daytimeSpeed;
 };
 
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
@@ -53,7 +46,7 @@ private:
     std::filesystem::path getRegionsFolder() const;
     std::filesystem::path getBlockIndicesFile() const;
 
-    void writeWorldInfo(const WorldInfo& info);
+    void writeWorldInfo(const World* world);
 public:
     std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
     std::filesystem::path directory; // Путь к директории с файлами мира
@@ -66,13 +59,13 @@ public:
 
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
 
-    bool readWorldInfo(WorldInfo& info);
+    bool readWorldInfo(World* world);
     bool readPlayer(Player* player); // Читает данные об игроке с диска
     ubyte* readChunkData(int x, int z, uint32_t& length); // Читает данные чанка непосредственно из файла
 	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
 	void writeRegion(int x, int y, WorldRegion& entry); // Формирует бинарное представление региона для записи в файл
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
-    void write(const WorldInfo info, const Content* content);
+    void write(const World* world, const Content* content);
     void writeIndices(const ContentIndices* indices);
 };
 

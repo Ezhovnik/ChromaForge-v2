@@ -9,8 +9,6 @@ class Player;
 class Chunks;
 class Lighting;
 class PhysicsSolver;
-class ChunksController;
-class PlayerController;
 class ChunksStorage;
 class LevelEvents;
 class Content;
@@ -23,8 +21,6 @@ public:
 	Chunks* chunks;
 	PhysicsSolver* physics;
 	Lighting* lighting;
-	ChunksController* chunksController;
-	PlayerController* playerController;
     ChunksStorage* chunksStorage;
     LevelEvents* events;
     const EngineSettings& settings;
@@ -34,7 +30,6 @@ public:
 	Level(World* world, const Content* content, Player* player, EngineSettings& settings);
 	~Level();
 
-    void updatePlayer(float deltaTime, bool input, bool pause, bool interactions);
     void update();
 };
 

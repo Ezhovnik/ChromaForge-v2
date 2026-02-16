@@ -36,7 +36,7 @@
 #include "../content/Content.h"
 #include "../math/voxmaths.h"
 #include "ContentGfxCache.h"
-#include "world_render.h"
+#include "WorldRenderer.h"
 #include "../util/timeutil.h"
 #include "../util/stringutil.h"
 
@@ -135,13 +135,13 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
         gui::CheckBox* checkbox = new gui::CheckBox();
         checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
         checkbox->supplier([=]() {
-            return engine->getSettings().chunks.occlusion;
+            return engine->getSettings().graphics.frustumCulling;
         });
         checkbox->consumer([=](bool checked) {
-            engine->getSettings().chunks.occlusion = checked;
+            engine->getSettings().graphics.frustumCulling = checked;
         });
         checkpanel->add(checkbox);
-        checkpanel->add(new gui::Label(L"Occlusion"));
+        checkpanel->add(new gui::Label(L"Frustum-Culling"));
 
         panel->add(checkpanel);
 	}
@@ -178,8 +178,7 @@ HudRenderer::~HudRenderer() {
 	delete uicamera;
 }
 
-void HudRenderer::drawDebug(int fps, bool occlusion){
-	this->occlusion = occlusion;
+void HudRenderer::drawDebug(int fps){
 	this->fps = fps;
 	fpsMin = glm::min(fps, fpsMin);
 	fpsMax = glm::max(fps, fpsMax);

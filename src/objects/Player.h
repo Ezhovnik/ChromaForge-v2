@@ -1,5 +1,5 @@
 #ifndef OBJECTS_PLAYER_H_
-#define ODJECTS_PLAYER_H_
+#define OBJECTS_PLAYER_H_
 
 #include <glm/glm.hpp>
 
@@ -7,11 +7,29 @@
 
 class Camera;
 class Hitbox;
+class Level;
+
+struct PlayerInput {
+	bool zoom;
+	bool moveForward;
+	bool moveBack;
+	bool moveRight;
+	bool moveLeft;
+	bool sprint;
+	bool crouch;
+	bool cheat;
+	bool jump;
+	bool noclip;
+	bool flight;
+    bool attack;
+    bool build;
+    bool pickBlock;
+};
 
 class Player {
-public:
+private:
 	float speed;
-
+public:
 	Camera* camera;
 	Hitbox* hitbox;
 
@@ -21,11 +39,8 @@ public:
 
     int choosenBlock;
 
-	float camX, camY;
-	float cameraShaking = 0.0f;
-	float cameraShakingTimer = 0.0f;
-
-	glm::vec3 interpVel {0.0f, 0.0f, 0.0f};
+	float camX = 0.0f;
+	float camY = 0.0f;
 
     voxel selectedVoxel {0, 0};
 
@@ -33,6 +48,9 @@ public:
 	~Player();
 
     void teleport(glm::vec3 position);
+
+	float getSpeed() const;
+	void update(Level* level, PlayerInput& input, float delta);
 };
 
 #endif // OBJECTS_PLAYER_H_

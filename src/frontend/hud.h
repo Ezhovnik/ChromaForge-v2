@@ -32,7 +32,6 @@ private:
     int fpsMax = 60;
     std::wstring fpsString;
 
-    bool occlusion;
     bool inventoryOpen = false;
     bool pause = false;
 
@@ -47,7 +46,7 @@ public:
 
     void update();
 	void draw(const GfxContext& context);
-	void drawDebug(int fps, bool occlusion);
+	void drawDebug(int fps);
     void drawContentAccess(const GfxContext& context, Player* player);
 
     bool isInventoryOpen() const;

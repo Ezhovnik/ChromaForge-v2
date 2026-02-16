@@ -41,7 +41,7 @@ void World::write(Level* level) {
 		wfile->put(chunk.get());
 	}
 
-	wfile->write(WorldInfo {name, wfile->directory, seed, daytime, daytimeSpeed}, content);
+	wfile->write(this, content);
 	wfile->writePlayer(level->player);
 }
 
@@ -50,12 +50,7 @@ Level* World::load(EngineSettings& settings, const Content* content) {
     Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
 
     LOG_INFO("Reading info about the world");
-    WorldInfo info {name, wfile->directory, seed, daytime, daytimeSpeed};
-	wfile->readWorldInfo(info);
-	seed = info.seed;
-	name = info.name;
-	daytime = info.daytime;
-	daytimeSpeed = info.daytimeSpeed;
+	wfile->readWorldInfo(this);
     LOG_INFO("Info about the world has been successfully read");
 
     LOG_INFO("Creating a level");

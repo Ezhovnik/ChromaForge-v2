@@ -9,7 +9,6 @@ fullscreen = false
 load-distance = 22
 load-speed = 10
 padding = 2
-occlusion = true
 
 [camera]
 fov-events = true
@@ -18,6 +17,7 @@ shaking = true
 [graphics]
 fog-curve = 1.6
 backlight = true
+frustum-culling = true
 
 [debug]
 generator-test-mode = false

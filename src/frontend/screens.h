@@ -13,6 +13,7 @@ class Engine;
 class Camera;
 class Batch2D;
 class ContentGfxCache;
+class LevelController;
 
 class Screen {
 protected:
@@ -37,11 +38,10 @@ public:
 
 class LevelScreen : public Screen {
     Level* level;
+    LevelController* controller;
     WorldRenderer* worldRenderer;
     HudRenderer* hud;
     ContentGfxCache* cache;
-
-    bool occlusion;
 
     void updateHotkeys();
 public:

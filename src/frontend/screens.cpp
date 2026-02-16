@@ -14,10 +14,10 @@
 #include "../world/Level.h"
 #include "../world/World.h"
 #include "../objects/Player.h"
-#include "../voxels/ChunksController.h"
+#include "../logic/ChunksController.h"
 #include "../voxels/Chunks.h"
 #include "../voxels/Chunk.h"
-#include "world_render.h"
+#include "WorldRenderer.h"
 #include "hud.h"
 #include "gui/GUI.h"
 #include "gui/panels.h"
@@ -31,6 +31,7 @@
 #include "../core_defs.h"
 #include "menu.h"
 #include "ContentGfxCache.h"
+#include "../logic/LevelController.h"
 
 MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     auto menu = engine->getGUI()->getMenu();
@@ -60,7 +61,7 @@ void MenuScreen::update(float delta) {
 
 void MenuScreen::draw(float delta) {
     Window::clear();
-    Window::setBgColor(glm::vec3(0.2f, 0.2f, 0.2f));
+    Window::setBgColor(glm::vec3(0.2f));
 
     uicamera->fov = Window::height;
     ShaderProgram* uishader = engine->getAssets()->getShader("ui");
@@ -88,16 +89,18 @@ void MenuScreen::draw(float delta) {
 
 static bool backlight;
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
+    EngineSettings& settings = engine->getSettings();
+    controller = new LevelController(settings, level);
+
     cache = new ContentGfxCache(level->content, engine->getAssets());
     worldRenderer = new WorldRenderer(engine, level, cache);
     hud = new HudRenderer(engine, level, cache, worldRenderer);
 
-    const EngineSettings& settings = engine->getSettings();
     backlight = settings.graphics.backlight;
-    occlusion = settings.chunks.occlusion;
 }
 
 LevelScreen::~LevelScreen() {
+    delete controller;
     delete hud;
     delete worldRenderer;
     delete cache;
@@ -123,8 +126,6 @@ void LevelScreen::update(float delta) {
     gui::GUI* gui = engine->getGUI();
     EngineSettings& settings = engine->getSettings();
 
-    occlusion = settings.chunks.occlusion;
-
     bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();
 
@@ -137,9 +138,7 @@ void LevelScreen::update(float delta) {
         level->world->updateTimers(delta);
     }
 
-    level->updatePlayer(delta, !inputLocked, hud->isPause(), !inputLocked);
-    level->update();
-    level->chunksController->update(settings.chunks.loadSpeed);
+    controller->update(delta, !inputLocked, hud->isPause());
     hud->update();
 }
 
@@ -148,7 +147,7 @@ void LevelScreen::draw(float deltaTime) {
 
     Viewport viewport(Window::width, Window::height);
     GfxContext context(nullptr, viewport, nullptr);
-    worldRenderer->draw(context, camera, occlusion);
+    worldRenderer->draw(context, camera);
     hud->draw(context);
-    if (level->player->debug) hud->drawDebug(1 / deltaTime, occlusion);
+    if (level->player->debug) hud->drawDebug(1 / deltaTime);
 }
