@@ -4,11 +4,11 @@
 #include <memory>
 #include <chrono>
 
-#include "Block.h"
-#include "Chunk.h"
-#include "Chunks.h"
-#include "ChunksStorage.h"
-#include "WorldGenerator.h"
+#include "../voxels/Block.h"
+#include "../voxels/Chunk.h"
+#include "../voxels/Chunks.h"
+#include "../voxels/ChunksStorage.h"
+#include "../voxels/WorldGenerator.h"
 #include "../graphics/Mesh.h"
 #include "../lighting/Lighting.h"
 #include "../files/WorldFiles.h"

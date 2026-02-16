@@ -309,14 +309,14 @@ void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
 												cache->getRegion(id, 4), cache->getRegion(id, 5)};
 					switch (def.model) {
 					case BlockModel::Cube:
-						if (*((uint32_t*)&def.emission)) {
-							blockCube(x, y, z, glm::vec3(1, 1, 1), texfaces, def.drawGroup);
+						if (def.rt.emissive) {
+							blockCube(x, y, z, glm::vec3(1.0f), texfaces, def.drawGroup);
 						} else {
-							blockCubeShaded(x, y, z, glm::vec3(1, 1, 1), texfaces, &def, vox.states);
+							blockCubeShaded(x, y, z, glm::vec3(1.0f), texfaces, &def, vox.states);
 						}
 						break;
 					case BlockModel::X: {
-						blockXSprite(x, y, z, glm::vec3(1, 1, 1), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
+						blockXSprite(x, y, z, glm::vec3(1.0f), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
 						break;
 					}
                     default:

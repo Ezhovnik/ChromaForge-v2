@@ -18,6 +18,7 @@
 #include "../logger/Logger.h"
 #include "../content/Content.h"
 #include "../voxels/Block.h"
+#include "../world/World.h"
 
 // Константы для идентификации секций в файлах
 namespace PlayerSections {
@@ -229,14 +230,14 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length){
 }
 
 // Записывает все измененные регионы на диск
-void WorldFiles::write(const WorldInfo info, const Content* content){
+void WorldFiles::write(const World* world, const Content* content){
 	std::filesystem::path regions_dir = getRegionsFolder();
 
     if (!std::filesystem::is_directory(regions_dir)) {
 		std::filesystem::create_directory(regions_dir);
 	}
 
-    writeWorldInfo(info);
+    writeWorldInfo(world);
 
     if (generatorTestMode) return;
 
@@ -249,23 +250,23 @@ void WorldFiles::write(const WorldInfo info, const Content* content){
 	}
 }
 
-void WorldFiles::writeWorldInfo(const WorldInfo& info) {
+void WorldFiles::writeWorldInfo(const World* world) {
 	BinaryWriter out;
 	out.putCStr(WORLD_FORMAT_MAGIC);
 	out.put(WORLD_FORMAT_VERSION);
 
 	out.put(WorldSections::MAIN);
-	out.putInt64(info.seed);
-	out.put(info.name);
+	out.putInt64(world->seed);
+	out.put(world->name);
 
 	out.put(WorldSections::DAYNIGHT);
-	out.putFloat32(info.daytime);
-	out.putFloat32(info.daytimeSpeed);
+	out.putFloat32(world->daytime);
+	out.putFloat32(world->daytimeSpeed);
 
 	files::write_bytes(getWorldFile(), (const char*)out.data(), out.size());
 }
 
-bool WorldFiles::readWorldInfo(WorldInfo& info) {
+bool WorldFiles::readWorldInfo(World* world) {
 	size_t length = 0;
 	ubyte* data = (ubyte*)files::read_bytes(getWorldFile(), length);
 	if (data == nullptr){
@@ -279,12 +280,12 @@ bool WorldFiles::readWorldInfo(WorldInfo& info) {
 		ubyte section = inp.get();
 		switch (section) {
 		case WorldSections::MAIN:
-			info.seed = inp.getInt64();
-			info.name = inp.getString();
+			world->seed = inp.getInt64();
+			world->name = inp.getString();
 			break;
 		case WorldSections::DAYNIGHT:
-			info.daytime = inp.getFloat32();
-			info.daytimeSpeed = inp.getFloat32();
+			world->daytime = inp.getFloat32();
+			world->daytimeSpeed = inp.getFloat32();
 			break;
 		}
 	}

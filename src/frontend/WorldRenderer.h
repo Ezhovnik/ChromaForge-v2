@@ -34,13 +34,15 @@ class WorldRenderer {
 
 	bool drawChunkBorders = false;
 
-    bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool occlusion);
-	void drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader, bool occlusion);
+    bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool culling);
+	void drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader);
+
+	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);
 public:
 	WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache);
 	~WorldRenderer();
 
-	void draw(const GfxContext& context, Camera* camera, bool occlusion);
+	void draw(const GfxContext& context, Camera* camera);
 
 	inline bool isChunkBordersOn() {return drawChunkBorders;}
 	inline void setChunkBorders(bool flag) {drawChunkBorders = flag;}

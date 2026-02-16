@@ -19,7 +19,6 @@ toml::Wrapper create_wrapper(EngineSettings& settings) {
 	chunks.add("load-distance", &settings.chunks.loadDistance);
 	chunks.add("load-speed", &settings.chunks.loadSpeed);
 	chunks.add("padding", &settings.chunks.padding);
-	chunks.add("occlusion", &settings.chunks.occlusion);
 
     toml::Section& camera = wrapper.add("camera");
 	camera.add("fov-events", &settings.camera.fovEvents);
@@ -28,6 +27,7 @@ toml::Wrapper create_wrapper(EngineSettings& settings) {
 	toml::Section& graphics = wrapper.add("graphics");
 	graphics.add("fog-curve", &settings.graphics.fogCurve);
 	graphics.add("backlight", &settings.graphics.backlight);
+	graphics.add("frustum-culling", &settings.graphics.frustumCulling);
 
     toml::Section& debug = wrapper.add("debug");
 	debug.add("generator-test-mode", &settings.debug.generatorTestMode);

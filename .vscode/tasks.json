@@ -48,7 +48,7 @@
                 "${workspaceFolder}/src/frontend/hud.cpp",
                 "${workspaceFolder}/src/frontend/menu.cpp",
                 "${workspaceFolder}/src/frontend/screens.cpp",
-                "${workspaceFolder}/src/frontend/world_render.cpp",
+                "${workspaceFolder}/src/frontend/WorldRenderer.cpp",
 
                 //src/graphics
                 "${workspaceFolder}/src/graphics/Atlas.cpp",
@@ -75,11 +75,15 @@
                 //src/logger
                 "${workspaceFolder}/src/logger/Logger.cpp",
 
+                //src/logic
+                "${workspaceFolder}/src/logic/ChunksController.cpp",
+                "${workspaceFolder}/src/logic/LevelController.cpp",
+                "${workspaceFolder}/src/logic/PlayerController.cpp",
+
                 //src/math
                 "${workspaceFolder}/src/math/LMPacker.cpp",
 
                 //src/objects
-                "${workspaceFolder}/src/objects/player_control.cpp",
                 "${workspaceFolder}/src/objects/Player.cpp",
 
                 //src/physics
@@ -96,7 +100,6 @@
                 "${workspaceFolder}/src/voxels/Block.cpp",
                 "${workspaceFolder}/src/voxels/Chunk.cpp",
                 "${workspaceFolder}/src/voxels/Chunks.cpp",
-                "${workspaceFolder}/src/voxels/ChunksController.cpp",
                 "${workspaceFolder}/src/voxels/ChunksStorage.cpp",
                 "${workspaceFolder}/src/voxels/VoxelsVolume.cpp",
                 "${workspaceFolder}/src/voxels/WorldGenerator.cpp",

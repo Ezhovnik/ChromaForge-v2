@@ -15,7 +15,7 @@ class LineBatch {
 
     Mesh* mesh; // Указатель на Mesh объект для рендеринга
 public:
-    LineBatch(size_t capacity); // Конструктор
+    LineBatch(size_t capacity = 4096); // Конструктор
     ~LineBatch(); // Деструктор
 
     void line( // Добавляет линию в буфер для отрисовки

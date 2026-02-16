@@ -17,8 +17,6 @@ struct ChunksSettings {
 	uint loadSpeed = 10;
 	uint loadDistance = 22;
 	uint padding = 2;
-
-	bool occlusion = true;
 };
 
 struct CameraSettings {
@@ -29,6 +27,7 @@ struct CameraSettings {
 struct GraphicsSettings {
     float fogCurve = 1.6f;
 	bool backlight = true;
+	bool frustumCulling = true;
 };
 
 struct DebugSettings {
