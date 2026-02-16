@@ -14,6 +14,7 @@
 #include "../world/LevelEvents.h"
 #include "../definitions.h"
 #include "../content/Content.h"
+#include "../math/AABB.h"
 
 Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles), content(content), contentIds(content->indices){
 	volume = (size_t)width * (size_t)depth;
@@ -55,10 +56,20 @@ voxel* Chunks::getVoxel(int x, int y, int z){
 	return &chunk->voxels[(ly * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 }
 
-bool Chunks::isObstacle(int x, int y, int z){
-	voxel* vox = getVoxel(x, y, z);
-	if (vox == nullptr) return true;
-	return contentIds->getBlockDef(vox->id)->obstacle;
+const AABB* Chunks::isObstacle(float x, float y, float z) {
+	int ix = floor(x);
+	int iy = floor(y);
+	int iz = floor(z);
+	voxel* vox = getVoxel(ix, iy, iz);
+
+	if (vox == nullptr) return nullptr;
+
+	const Block* def = contentIds->getBlockDef(vox->id);
+	if (def->obstacle) {
+		if (def->rt.solid) return &def->hitbox;
+		else if (def->hitbox.inside({x - ix, y - iy, z - iz})) return &def->hitbox;
+	}
+	return nullptr;
 }
 
 ubyte Chunks::getLight(int x, int y, int z, int channel){
@@ -190,20 +201,40 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 
 	while (t <= maxDist){
 		voxel* voxel = getVoxel(ix, iy, iz);
-		if (voxel == nullptr || contentIds->getBlockDef(voxel->id)->selectable){
+		const Block* def = nullptr;
+		if (voxel == nullptr || (def = contentIds->getBlockDef(voxel->id))->selectable){
 			end.x = px + t * dx;
 			end.y = py + t * dy;
 			end.z = pz + t * dz;
 
-			iend.x = ix;
-			iend.y = iy;
-			iend.z = iz;
+			if (def && !def->rt.solid) {
+				const AABB& box = def->hitbox;
+				const int subs = BLOCK_AABB_GRID;
+				iend = glm::vec3(ix, iy, iz);
+				end -= iend;
+				for (int i = 0; i < subs; ++i) {
+					end.x += dx / float(subs);
+					end.y += dy / float(subs);
+					end.z += dz / float(subs);
+					if (box.inside(end)) {
+						norm.x = norm.y = norm.z = 0.0f;
+						if (steppedIndex == 0) norm.x = -stepx;
+						if (steppedIndex == 1) norm.y = -stepy;
+						if (steppedIndex == 2) norm.z = -stepz;
+						return voxel;
+					}
+				}
+			} else {
+				iend.x = ix;
+				iend.y = iy;
+				iend.z = iz;
 
-			norm.x = norm.y = norm.z = 0.0f;
-			if (steppedIndex == 0) norm.x = -stepx;
-			if (steppedIndex == 1) norm.y = -stepy;
-			if (steppedIndex == 2) norm.z = -stepz;
-			return voxel;
+				norm.x = norm.y = norm.z = 0.0f;
+				if (steppedIndex == 0) norm.x = -stepx;
+				if (steppedIndex == 1) norm.y = -stepy;
+				if (steppedIndex == 2) norm.z = -stepz;
+				return voxel;
+			}
 		}
 		if (txMax < tyMax) {
 			if (txMax < tzMax) {

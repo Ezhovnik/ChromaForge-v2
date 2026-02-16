@@ -1,6 +1,6 @@
 #include "definitions.h"
 
-#include <iostream>
+#include <glm/glm.hpp>
 
 #include "assets/AssetsLoader.h"
 #include "graphics/ShaderProgram.h"
@@ -88,6 +88,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
+    block->hitbox.scale(glm::vec3(0.7f));
     block->model = BlockModel::X;
     builder->add(block);
 
@@ -96,6 +97,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
+    block->hitbox.scale(glm::vec3(0.7f));
     block->model = BlockModel::X;
     builder->add(block);
 
@@ -104,7 +106,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
-    block->hitboxScale = 0.7f;
+    block->hitbox.scale(glm::vec3(0.7f), glm::vec3(0.5f, 0.0f, 0.5f));
     block->model = BlockModel::X;
     builder->add(block);
 
@@ -117,6 +119,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
+    block->hitbox.scale(glm::vec3(0.7f));
     block->model = BlockModel::X;
     builder->add(block);
 
@@ -125,6 +128,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
+    block->hitbox.scale(glm::vec3(0.7f));
     block->model = BlockModel::X;
     builder->add(block);
 

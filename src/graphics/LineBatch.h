@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include <glm/glm.hpp>
+
 class Mesh;
 
 // Буфер для пакетной отрисовки линий
@@ -26,6 +28,10 @@ public:
         float width, float height, float depth, 
         float red, float green, float blue, float alpha
     );
+
+    inline void box(glm::vec3 xyz, glm::vec3 whd, glm::vec4 rgba) {
+		box(xyz.x, xyz.y, xyz.z, whd.x, whd.y, whd.z, rgba.r, rgba.g, rgba.b, rgba.a);
+	}
 
     void render(); // Выполняет отрисовку всех накопленных линий
 

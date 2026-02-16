@@ -15,6 +15,7 @@ class WorldFiles;
 class LevelEvents;
 class Content;
 class ContentIndices;
+struct AABB;
 
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
@@ -62,7 +63,7 @@ public:
         glm::vec3& iend // Координаты вокселя в точке попадания
     );
 
-    bool isObstacle(int x, int y, int z);
+    const AABB* isObstacle(float x, float y, float z);
 
     void _setOffset(int x, int z);
 
