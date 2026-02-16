@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "../math/AABB.h"
 #include "../typedefs.h"
 
 enum class BlockModel {
@@ -15,6 +16,8 @@ enum class BlockModel {
 #define FACE_PY 3
 #define FACE_MZ 4
 #define FACE_PZ 5
+
+#define BLOCK_AABB_GRID 16
 
 class Block {
 public:
@@ -34,7 +37,13 @@ public:
     bool breakable = true;
     bool rotatable = false;
 
-    float hitboxScale = 1;
+    AABB hitbox;
+
+	struct {
+		bool solid = true;
+		bool emissive = false;
+		bool hitboxGrid[BLOCK_AABB_GRID][BLOCK_AABB_GRID][BLOCK_AABB_GRID];
+	} rt;
 
     Block(std::string name, std::string texture = "");
 };

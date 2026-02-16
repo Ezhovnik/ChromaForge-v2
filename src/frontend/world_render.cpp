@@ -194,8 +194,12 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 			glm::vec3 pos = level->playerController->selectedBlockPosition;
 			linesShader->use();
 			linesShader->uniformMatrix("u_projview", camera->getProjView());
-			float size = block->hitboxScale;
-			lineBatch->box(pos.x + 0.5f, pos.y + size * 0.5f, pos.z + 0.5f, size, size, size, 0, 0, 0, 0.5f);
+			lineBatch->setLineWidth(2.0f);
+
+			const AABB& hitbox = block->hitbox;
+			const glm::vec3 center = pos + hitbox.center();
+			const glm::vec3 size = hitbox.size();
+			lineBatch->box(center, size + glm::vec3(0.02), glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 			lineBatch->render();
 		}
 		skybox->unbind();

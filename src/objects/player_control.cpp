@@ -17,7 +17,7 @@
 #include "../content/Content.h"
 
 namespace PlayerConsts {
-    constexpr float CROUCH_SPEED_MUL = 0.25f;
+    constexpr float CROUCH_SPEED_MUL = 0.35f;
     constexpr float CROUCH_SHIFT_Y = -0.2f;
     constexpr float RUN_SPEED_MUL = 1.5f;
     constexpr float FLIGHT_SPEED_MUL = 5.0f;
