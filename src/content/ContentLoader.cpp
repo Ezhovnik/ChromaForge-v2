@@ -102,7 +102,7 @@ void ContentLoader::load(ContentBuilder* builder) {
         LOG_INFO("  Content blocks size: {}", blocksarr->size());
         for (uint i = 0; i < blocksarr->size(); ++i) {
             std::string name = blocksarr->str(i);
-            LOG_DEBUG(" Loading block {} : {}", id, name);
+            LOG_DEBUG(" Loading block {}:{}", id, name);
             std::filesystem::path blockfile = folder/std::filesystem::path("blocks/" + name + ".json");
             builder->add(loadBlock(id + ":" + name, blockfile));
         }
