@@ -16,13 +16,7 @@ ContentLoader::ContentLoader(std::filesystem::path folder) : folder(folder) {
 }
 
 Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
-    std::string source = files::read_string(file);
-    std::unique_ptr<json::JObject> root = nullptr;
-    try {
-        root.reset(json::parse(file.string(), source));
-    } catch (const parsing_error& error) {
-        LOG_ERROR("Could not load block '{}' definition. Reason: {}", name, error.errorLog());
-    }
+    std::unique_ptr<json::JObject> root(files::read_json(file));
     std::unique_ptr<Block> definition(new Block(name));
 
     if (root->has("texture")) {
@@ -57,6 +51,16 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
         aabb.b += aabb.a;
     }
 
+    std::string profile = "none";
+    root->str("rotation", profile);
+    definition->rotatable = profile != "none";
+    if (profile == "pipe") {
+        definition->rotations = BlockRotProfile::PIPE;
+    } else if (profile != "none") {
+        LOG_WARN("Unknown block {} rotation profile {}", name, profile);
+        definition->rotatable = false;
+    }
+
     json::JArray* emissionobj = root->arr("emission");
     if (emissionobj) {
         definition->emission[0] = emissionobj->num(0);
@@ -69,7 +73,6 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
     root->flag("light-passing", definition->lightPassing);
     root->flag("breakable", definition->breakable);
     root->flag("selectable", definition->selectable);
-    root->flag("rotatable", definition->rotatable);
     root->flag("sky-light-passing", definition->skyLightPassing);
     root->num("draw-group", definition->drawGroup);
 

@@ -7,14 +7,12 @@
 #include "Sprite.h"
 #include "../typedefs.h"
 
-namespace Batch2D_Consts {
-    constexpr int VERTEX_SIZE = 8;
-    const vattr ATTRS[] = {{2}, {2}, {4}, {0}};
-}
+inline constexpr int B2D_VERTEX_SIZE = 8;
 
 Batch2D::Batch2D(size_t capacity) : capacity(capacity), offset(0), color(1.0f, 1.0f, 1.0f, 1.0f){
-	buffer = new float[capacity * Batch2D_Consts::VERTEX_SIZE];
-	mesh = new Mesh(buffer, 0, Batch2D_Consts::ATTRS);
+	const vattr attrs[] = {{2}, {2}, {4}, {0}};
+	buffer = new float[capacity * B2D_VERTEX_SIZE];
+	mesh = new Mesh(buffer, 0, attrs);
 	index = 0;
 
 	ubyte pixels[] = {255, 255, 255, 255};
@@ -68,14 +66,14 @@ void Batch2D::texture(Texture* new_texture){
 }
 
 void Batch2D::point(float x, float y, float r, float g, float b, float a){
-    if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
+    if (index + 6 * B2D_VERTEX_SIZE >= capacity) render();
 
 	vertex(x, y, 0, 0, r,g,b,a);
 	render(GL_POINTS);
 }
 
 void Batch2D::line(float x1, float y1, float x2, float y2, float r, float g, float b, float a){
-    if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
+    if (index + 6 * B2D_VERTEX_SIZE >= capacity) render();
 
 	vertex(x1, y1, 0, 0, r,g,b,a);
 	vertex(x2, y2, 1, 1, r,g,b,a);
@@ -87,7 +85,7 @@ void Batch2D::rect(float x, float y, float w, float h){
 	const float g = color.g;
 	const float b = color.b;
 	const float a = color.a;
-	if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
+	if (index + 6 * B2D_VERTEX_SIZE >= capacity) render();
 
 	vertex(x, y, 0, 0, r,g,b,a);
 	vertex(x+w, y+h, 1, 1, r,g,b,a);
@@ -107,7 +105,7 @@ void Batch2D::rect(
 		bool flippedX,
 		bool flippedY,
 		glm::vec4 tint) {
-	if (index + 6 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
+	if (index + 6 * B2D_VERTEX_SIZE >= capacity) render();
 
     float centerX = w*ox;
     float centerY = h*oy;
@@ -196,18 +194,18 @@ void Batch2D::rect(float x, float y, float w, float h,
 		float r2, float g2, float b2,
 		float r3, float g3, float b3,
 		float r4, float g4, float b4, int sh){
-	if (index + 30 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
+	if (index + 30 * B2D_VERTEX_SIZE >= capacity) render();
 
-	glm::vec2 v0 = glm::vec2(x+h/2,y+h/2);
-	glm::vec2 v1 = glm::vec2(x+w-sh,y);
-	glm::vec2 v2 = glm::vec2(x+sh,y);
-	glm::vec2 v3 = glm::vec2(x,y+sh);
-	glm::vec2 v4 = glm::vec2(x,y+h-sh);
-	glm::vec2 v5 = glm::vec2(x+sh,y+h);
-	glm::vec2 v6 = glm::vec2(x+w-h/2,y+h/2);
-	glm::vec2 v7 = glm::vec2(x+w-sh,y+h);
-	glm::vec2 v8 = glm::vec2(x+w,y+h-sh);
-	glm::vec2 v9 = glm::vec2(x+w,y+sh);
+	glm::vec2 v0 = glm::vec2(x + h / 2, y + h / 2);
+	glm::vec2 v1 = glm::vec2(x + w - sh, y);
+	glm::vec2 v2 = glm::vec2(x + sh, y);
+	glm::vec2 v3 = glm::vec2(x, y + sh);
+	glm::vec2 v4 = glm::vec2(x, y + h - sh);
+	glm::vec2 v5 = glm::vec2(x + sh, y + h);
+	glm::vec2 v6 = glm::vec2(x + w - h / 2, y + h / 2);
+	glm::vec2 v7 = glm::vec2(x + w - sh, y + h);
+	glm::vec2 v8 = glm::vec2(x + w, y + h - sh);
+	glm::vec2 v9 = glm::vec2(x + w, y + sh);
 
 	vertex(v0, glm::vec2(0, 0), r1,g1,b1,1.0f);
 	vertex(v6, glm::vec2(0, 0), r1,g1,b1,1.0f);
@@ -306,7 +304,7 @@ void Batch2D::blockSprite(float x, float y, float w, float h, const UVRegion reg
 	float scalex = regions[3].u2-regions[3].u1;
 	float scaley = regions[3].v2-regions[3].v1;
 
-	if (this->index + 18 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
+	if (this->index + 18 * B2D_VERTEX_SIZE >= capacity) render();
 
 	float d = (w + h) * 0.5f;
 	float ar = 0.88f;
@@ -366,7 +364,7 @@ void Batch2D::blockSprite(float x, float y, float w, float h, const UVRegion reg
 }
 
 void Batch2D::render(uint gl_primitive) {
-	mesh->reload(buffer, index / Batch2D_Consts::VERTEX_SIZE);
+	mesh->reload(buffer, index / B2D_VERTEX_SIZE);
 	mesh->draw(gl_primitive);
 	index = 0;
 }

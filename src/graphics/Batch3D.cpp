@@ -6,12 +6,12 @@
 #include "Texture.h"
 #include "../typedefs.h"
 
-#define VERTEX_SIZE 9
+inline constexpr int B3D_VERTEX_SIZE = 9;
 
 Batch3D::Batch3D(size_t capacity) : capacity(capacity), offset(0) {
 	const vattr attrs[] = {{3}, {2}, {4}, {0}};
     
-    buffer = new float[capacity * VERTEX_SIZE];
+    buffer = new float[capacity * B3D_VERTEX_SIZE];
 	mesh = new Mesh(buffer, 0, attrs);
 	index = 0;
 
@@ -79,7 +79,7 @@ void Batch3D::face(const glm::vec3& coord, float w, float h,
 		const UVRegion& region,
 		const glm::vec4& tint
 	) {
-	if (index + VERTEX_SIZE * 6 > capacity) flush();
+	if (index + B3D_VERTEX_SIZE * 6 > capacity) flush();
 
 	vertex(coord, region.u1, region.v1, tint.r, tint.g, tint.b, tint.a);
 	vertex(coord + axisX * w, region.u2, region.v1, tint.r, tint.g, tint.b, tint.a);
@@ -103,7 +103,7 @@ void Batch3D::sprite(glm::vec3 pos, glm::vec3 up, glm::vec3 right, float w, floa
 	const float g = color.g;
 	const float b = color.b;
 	const float a = color.a;
-	if (index + 6 * VERTEX_SIZE >= capacity) flush();
+	if (index + 6 * B3D_VERTEX_SIZE >= capacity) flush();
 
 	vertex(pos.x - right.x * w - up.x * h,
 			pos.y - right.y * w - up.y * h,
@@ -168,7 +168,7 @@ void Batch3D::blockCube(const glm::vec3 size, const UVRegion(&texfaces)[6], cons
 }
 
 void Batch3D::flush() {
-	mesh->reload(buffer, index / VERTEX_SIZE);
+	mesh->reload(buffer, index / B3D_VERTEX_SIZE);
 	mesh->draw(GL_TRIANGLES);
 	index = 0;
 }
