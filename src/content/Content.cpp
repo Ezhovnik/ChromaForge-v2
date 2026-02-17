@@ -20,7 +20,7 @@ Content* ContentBuilder::build() {
     std::vector<Block*> blockDefsIndices;
     for (const std::string& name : blockIds) {
         Block* def = blockDefs[name];
-        def->id = blockDefsIndices.size();
+        def->rt.id = blockDefsIndices.size();
         def->rt.emissive = *((uint32_t*)def->emission);
 
         const AABB& hitbox = def->hitbox;

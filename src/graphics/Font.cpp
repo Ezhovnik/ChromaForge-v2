@@ -26,22 +26,6 @@ int Font::calcWidth(std::wstring text) {
 	return text.length() * 8;
 }
 
-// int Font::getGlyphWidth(char c) {
-// 	switch (c){
-// 		case 'l':
-// 		case 'i':
-// 		case 'j':
-// 		case '|':
-// 		case '.':
-// 		case ',':
-// 		case ':':
-// 		case ';': return 7;
-// 		case 't': return 8;
-// 		case ' ': return 7;
-// 	}
-// 	return 7;
-// }
-
 bool Font::isPrintableChar(int c) {
 	switch (c){
 	case ' ':

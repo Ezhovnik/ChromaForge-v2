@@ -44,6 +44,7 @@
                 "${workspaceFolder}/src/frontend/gui/UINode.cpp",
 
                 //src/frontend
+                "${workspaceFolder}/src/frontend/BlocksPreview.cpp",
                 "${workspaceFolder}/src/frontend/ContentGfxCache.cpp",
                 "${workspaceFolder}/src/frontend/hud.cpp",
                 "${workspaceFolder}/src/frontend/menu.cpp",
@@ -53,7 +54,7 @@
                 //src/graphics
                 "${workspaceFolder}/src/graphics/Atlas.cpp",
                 "${workspaceFolder}/src/graphics/Batch2D.cpp",
-                // "${workspaceFolder}/src/graphics/Batch3D.cpp",
+                "${workspaceFolder}/src/graphics/Batch3D.cpp",
                 "${workspaceFolder}/src/graphics/BlocksRenderer.cpp",
                 "${workspaceFolder}/src/graphics/ChunksRenderer.cpp",
                 "${workspaceFolder}/src/graphics/Font.cpp",

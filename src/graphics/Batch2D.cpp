@@ -296,7 +296,7 @@ void Batch2D::rect(float x, float y, float w, float h,
     render();
 }
 
-void Batch2D::blockSprite(float x, float y, float w, float h, const UVRegion regions[], glm::vec4 tint){
+void Batch2D::blockSprite(float x, float y, float w, float h, const UVRegion regions[], glm::vec4 tint, glm::vec3 size){
 	float uu = (regions[3].u1);
 	float vu = (regions[3].v1);
 
@@ -308,16 +308,24 @@ void Batch2D::blockSprite(float x, float y, float w, float h, const UVRegion reg
 
 	if (this->index + 18 * Batch2D_Consts::VERTEX_SIZE >= capacity) render();
 
+	float d = (w + h) * 0.5f;
 	float ar = 0.88f;
 	float ox = x + (w * 0.5f);
 	float sx = w * 0.5f * ar;
-	glm::vec2 points[7] =   {glm::vec2(ox,        y+(h*0.5f)),
-						glm::vec2(ox-sx,     y+(h*0.25f)),
-						glm::vec2(ox,        y),
-						glm::vec2(ox+sx,     y+(h*0.25f)),
-						glm::vec2(ox+sx,     y+(h*0.75f)),
-						glm::vec2(ox,        y+h),
-						glm::vec2(ox-sx,     y+(h*0.75f))
+	float hh = h * 0.25f;
+	float ww = w * 0.25f;
+	float dd = d * 0.25f;
+
+	glm::vec3 half = size * h * 0.25f;
+
+	y += hh * 2.0f;
+	glm::vec2 points[7] =   {glm::vec2(ox - ww + half.x + dd - half.z, y + hh - half.y),
+						glm::vec2(ox - sx + ww - half.x + dd - half.z, y - half.y + ww - half.x),
+						glm::vec2(ox + ww - half.x - dd + half.z, y - hh - half.y + ww - half.x + dd - half.z),
+						glm::vec2(ox + sx - ww + half.x - dd + half.z, y - half.y + dd - half.z),
+						glm::vec2(ox + sx - ww + half.x - dd + half.z, y + half.y + dd - half.z),
+						glm::vec2(ox - ww + half.x + dd - half.z, y + hh + half.y),
+						glm::vec2(ox - sx + ww - half.x + dd - half.z, y + half.y + ww - half.x)
 					};
 
 	glm::vec2 uvpoints[8] = {glm::vec2(uu,        vu),

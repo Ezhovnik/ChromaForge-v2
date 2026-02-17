@@ -23,12 +23,15 @@ public:
         float end_x, float end_y, float end_z,
         float red, float green, float blue, float alpha
     );
+    inline void line(const glm::vec3 a, const glm::vec3 b, const glm::vec4 color) {
+		line(a.x, a.y, a.z, b.x, b.y, b.z, color.r, color.g, color.b, color.a); 
+	}
+
     void box( // Добавляет прямоугольный параллелепипед (бокс) в буфер для отрисовки
         float x, float y, float z, 
         float width, float height, float depth, 
         float red, float green, float blue, float alpha
     );
-
     inline void box(glm::vec3 xyz, glm::vec3 whd, glm::vec4 rgba) {
 		box(xyz.x, xyz.y, xyz.z, whd.x, whd.y, whd.z, rgba.r, rgba.g, rgba.b, rgba.a);
 	}

@@ -39,6 +39,8 @@
 #include "WorldRenderer.h"
 #include "../util/timeutil.h"
 #include "../util/stringutil.h"
+#include "../graphics/Batch3D.h"
+#include "BlocksPreview.h"
 
 inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	gui::Label* label = new gui::Label(L"-");
@@ -46,15 +48,16 @@ inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	return label;
 }
 
-HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache, WorldRenderer* renderer) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()), cache(cache), renderer(renderer) {
+HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache, WorldRenderer* renderer) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()), cache(cache), renderer(renderer), batch(new Batch2D(1024)) {
 	auto menu = guiController->getMenu();
-    batch = new Batch2D(1024);
+
+	blocksPreview = new BlocksPreview(assets->getShader("ui3d"), assets->getAtlas("blocks"), cache);
 
 	uicamera = new Camera(glm::vec3(), 1);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
-    gui::Panel* panel = new gui::Panel(glm::vec2(250, 200), glm::vec4(5.0f), 1.0f);
+    gui::Panel* panel = new gui::Panel(glm::vec2(350, 200), glm::vec4(5.0f), 1.0f);
     debugPanel = std::shared_ptr<gui::UINode>(panel);
 	panel->listenInterval(1.0f, [this]() {
 		fpsString = std::to_wstring(fpsMax)+L" / "+std::to_wstring(fpsMin);
@@ -73,10 +76,15 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 		return L"Chunks: " + std::to_wstring(this->level->chunks->chunksCount) + L" (visible: " + std::to_wstring(this->level->chunks->visibleCount) + L")";
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		auto player = this->level->player;
+		auto indices = this->level->content->indices;
+		auto def = indices->getBlockDef(player->selectedVoxel.id);
+
 		std::wstringstream stream;
-        auto player = this->level->player;
 		stream << std::hex << player->selectedVoxel.states;
-		return L"Block-selected: " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
+		if (def) stream << L" (" << util::str2wstr_utf8(def->name) << L")";
+
+		return L"Selected-block " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
 		return L"Seed: " + std::to_wstring(this->level->world->seed);
@@ -172,8 +180,8 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 
 HudRenderer::~HudRenderer() {
     guiController->remove(debugPanel);
-	//guiController->remove(gui->get("pages"));
 
+	delete blocksPreview;
 	delete batch;
 	delete uicamera;
 }
@@ -191,7 +199,7 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 	const Viewport& viewport = context.getViewport();
 	const uint width = viewport.getWidth();
 
-	Atlas* atlas = assets->getAtlas("blocks");
+	ShaderProgram* uiShader = assets->getShader("ui");
 
 	uint count = contentIds->countBlockDefs();
 	uint icon_size = 48;
@@ -214,28 +222,31 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 	batch->texture(nullptr);
 	batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
 	batch->rect(inv_x, inv_y, inv_w, inv_h);
+	batch->render();
 
-	batch->texture(atlas->getTexture());
-	for (uint i = 0; i < count - 1; ++i) {
-		Block* choosen_block = contentIds->getBlockDef(i + 1);
-		if (choosen_block == nullptr) break;
-		int x = xs + (icon_size + interval) * (i % inv_cols);
-		int y = ys + (icon_size + interval) * (i / inv_cols);
-		if (mx > x && mx < x + (int)icon_size && my > y && my < y + (int)icon_size) {
-			tint.r *= 1.2f;
-			tint.g *= 1.2f;
-			tint.b *= 1.2f;
-			if (Events::justClicked(mousecode::BUTTON_1)) player->choosenBlock = i + 1;
-		} else {
-			tint = glm::vec4(1.0f);
-		}
-		
-		if (choosen_block->model == BlockModel::Cube){
-			batch->blockSprite(x, y, icon_size, icon_size, &cache->getRegion(choosen_block->id, 0), tint);
-		} else if (choosen_block->model == BlockModel::X){
-			batch->sprite(x, y, icon_size, icon_size, cache->getRegion(choosen_block->id, 3), tint);
+	blocksPreview->begin();
+	{
+		Window::clearDepth();
+		GfxContext subctx = context.sub();
+		subctx.depthTest(true);
+		subctx.cullFace(true);
+		for (uint i = 0; i < count - 1; ++i) {
+			Block* cblock = contentIds->getBlockDef(i + 1);
+			if (cblock == nullptr) break;
+			int x = xs + (icon_size+interval) * (i % inv_cols);
+			int y = ys + (icon_size+interval) * (i / inv_cols);
+			if (mx > x && mx < x + (int)icon_size && my > y && my < y + (int)icon_size) {
+				tint.r *= 1.2f;
+				tint.g *= 1.2f;
+				tint.b *= 1.2f;
+				if (Events::justClicked(mousecode::BUTTON_1)) player->choosenBlock = i + 1;
+			} else {
+				tint = glm::vec4(1.0f);
+			}
+			blocksPreview->draw(cblock, x, y, icon_size, tint);
 		}
 	}
+	uiShader->use();
 }
 
 void HudRenderer::update() {
@@ -267,20 +278,18 @@ void HudRenderer::draw(const GfxContext& context) {
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
 
-	Atlas* atlas = assets->getAtlas("blocks");
-
     debugPanel->visible(level->player->debug);
 
     uicamera->fov = height;
 
-	ShaderProgram* uishader = assets->getShader("ui");
-    if (uishader == nullptr) {
+	ShaderProgram* uiShader = assets->getShader("ui");
+    if (uiShader == nullptr) {
         LOG_CRITICAL("The shader 'ui' could not be found in the assets");
         throw std::runtime_error("The shader 'ui' could not be found in the assets");
     }
 
-	uishader->use();
-	uishader->uniformMatrix("u_projview", uicamera->getProjView());
+	uiShader->use();
+	uiShader->uniformMatrix("u_projview", uicamera->getProjView());
 
 	batch->begin();
 
@@ -293,20 +302,25 @@ void HudRenderer::draw(const GfxContext& context) {
 
     Player* player = level->player;
 
-	batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
+	batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.75f);
 	batch->rect(width - 68, height - 68, 68, 68);
 
 	batch->color = glm::vec4(1.0f);
-	batch->texture(atlas->getTexture());
+	batch->render();
+
+	blocksPreview->begin();
 	{
+		Window::clearDepth();
+		GfxContext subctx = context.sub();
+		subctx.depthTest(true);
+		subctx.cullFace(true);
+
 		Block* choosen_block = contentIds->getBlockDef(player->choosenBlock);
 		assert(choosen_block != nullptr);
-		if (choosen_block->model == BlockModel::Cube){
-			batch->blockSprite(width-56, uicamera->fov - 56, 48, 48, &cache->getRegion(choosen_block->id, 0), glm::vec4(1.0f));
-		} else if (choosen_block->model == BlockModel::X){
-			batch->sprite(width-56, uicamera->fov - 56, 48, 48, cache->getRegion(choosen_block->id, 3), glm::vec4(1.0f));
-		}
+		blocksPreview->draw(choosen_block, width - 56, uicamera->fov - 56, 48, glm::vec4(1.0f));
 	}
+	uiShader->use();
+	batch->begin();
 
 	if (pause) {
 		batch->texture(nullptr);
