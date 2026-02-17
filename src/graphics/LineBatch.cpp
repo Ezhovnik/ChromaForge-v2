@@ -4,16 +4,13 @@
 
 #include "Mesh.h"
 
-// Константы для формата вершины
-namespace LineBatch_Consts {
-    constexpr int VERTEX_SIZE = (3 + 4);
-    const vattr ATTRS[] = {{3}, {4}, {0}};
-}
+inline constexpr int LB_VERTEX_SIZE = 7;
 
 // Конструктор
 LineBatch::LineBatch(size_t capacity) : capacity(capacity) {
-    buffer = new float[capacity * LineBatch_Consts::VERTEX_SIZE * 2];
-    mesh = new Mesh(buffer, 0, LineBatch_Consts::ATTRS);
+    const vattr attrs[] = {{3}, {4}, {0}};
+    buffer = new float[capacity * LB_VERTEX_SIZE * 2];
+    mesh = new Mesh(buffer, 0, attrs);
     index = 0;
 }
 
@@ -118,7 +115,7 @@ void LineBatch::box(float x, float y, float z, float width, float height, float 
 void LineBatch::render() {
     if (index == 0) return;
 
-    mesh->reload(buffer, index / LineBatch_Consts::VERTEX_SIZE);
+    mesh->reload(buffer, index / LB_VERTEX_SIZE);
     mesh->draw(GL_LINES);
     index = 0;
 }

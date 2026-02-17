@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "../logger/Logger.h"
+#include "../coders/json.h"
 
 // Записывает данные в бинарный файл (перезаписывает сущесвующий)
 bool files::write_bytes(const std::filesystem::path filename, const char* data, size_t size) {
@@ -70,4 +71,14 @@ bool files::write_string(std::filesystem::path filename, const std::string conte
 
 	file << content;
 	return true;
+}
+
+json::JObject* files::read_json(std::filesystem::path file) {
+	std::string text = files::read_string(file);
+	try {
+		return json::parse(file.string(), text);
+	} catch (const parsing_error& error) {
+		LOG_ERROR("Could not ot parse {}. Reason: {}", file.string(), error.errorLog());
+        throw std::runtime_error("Could not to parse " + file.string());
+    }
 }

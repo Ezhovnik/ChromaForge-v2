@@ -22,6 +22,21 @@ constexpr int FACE_PZ = 5;
 
 constexpr int BLOCK_AABB_GRID = 16;
 
+struct CoordSystem {
+	glm::ivec3 axisX;
+	glm::ivec3 axisY;
+	glm::ivec3 axisZ;
+	glm::ivec3 fix;
+    glm::ivec3 fix2;
+
+	void transform(AABB& aabb);
+};
+
+struct BlockRotProfile {
+	CoordSystem variants[16];
+	static const BlockRotProfile PIPE;
+};
+
 class Block {
 public:
     static Block* blocks[256];
@@ -41,6 +56,8 @@ public:
     bool replaceable = false;
 
     AABB hitbox;
+
+    BlockRotProfile rotations;
 
 	struct {
         blockid_t id;

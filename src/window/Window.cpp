@@ -138,7 +138,7 @@ bool Window::initialize(DisplaySettings& settings) {
     glfwWindowHint(GLFW_SAMPLES, settings.samples);
 
     // Создание окна GLFW
-    window = glfwCreateWindow(settings.width, settings.height, settings.title, nullptr, nullptr);
+    window = glfwCreateWindow(settings.width, settings.height, settings.title.c_str(), nullptr, nullptr);
     if (window == nullptr) {
         LOG_CRITICAL("Failed to create GLFW Window");
         glfwTerminate();

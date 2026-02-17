@@ -103,6 +103,7 @@ glm::vec3 PlayerController::selectedBlockPosition;
 int PlayerController::selectedBlockId = -1;
 glm::vec3 PlayerController::selectedPointPosition;
 glm::vec3 PlayerController::selectedBlockNormal;
+int PlayerController::selectedBlockStates = 0;
 
 PlayerController::PlayerController(Level* level, const EngineSettings& settings) : level(level), player(level->player), camControl(level->player, settings.camera) {
 }
@@ -169,6 +170,7 @@ void PlayerController::updateInteraction(){
 	if (vox != nullptr){
 		player->selectedVoxel = *vox;
 		selectedBlockId = vox->id;
+		selectedBlockStates = vox->states;
 		selectedBlockPosition = iend;
 		selectedPointPosition = end;
 		selectedBlockNormal = norm;
@@ -209,6 +211,7 @@ void PlayerController::updateInteraction(){
 		}
 		if (input.pickBlock) player->choosenBlock = chunks->getVoxel(x, y, z)->id;
 	} else {
+		selectedBlockStates = 0;
 		selectedBlockId = -1;
 	}
 }
@@ -224,6 +227,10 @@ void PlayerController::update(float delta, bool input, bool pause) {
 	}
 	camControl.refresh();
 
-	if (input) updateInteraction();
-	else selectedBlockId = -1;
+	if (input) {
+		updateInteraction();
+	} else {
+		selectedBlockId = -1;
+		selectedBlockStates = 0;
+	}
 }

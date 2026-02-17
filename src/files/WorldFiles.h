@@ -22,9 +22,6 @@ namespace RegionConsts {
 #define REGION_FORMAT_MAGIC ".CHROMAREG"
 #define REGION_FORMAT_VERSION 1
 
-#define WORLD_FORMAT_MAGIC ".CHROMAWLD"
-#define WORLD_FORMAT_VERSION 1
-
 class Player;
 class Chunk;
 class Content;
@@ -44,7 +41,7 @@ private:
     std::filesystem::path getPlayerFile() const; // Генерирует имя файла, в котором записана информация об игроке
     std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информауия о мире
     std::filesystem::path getRegionsFolder() const;
-    std::filesystem::path getBlockIndicesFile() const;
+    std::filesystem::path getIndicesFile() const;
 
     void writeWorldInfo(const World* world);
 public:

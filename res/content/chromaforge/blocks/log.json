@@ -7,5 +7,5 @@
         "oak_log",
         "oak_log"
     ],
-    "rotatable": true
+    "rotation": "pipe"
 }

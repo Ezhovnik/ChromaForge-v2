@@ -1,10 +1,10 @@
 #include "WorldFiles.h"
 
 #include <cassert>
-#include <iostream>
 #include <cstdint>
 #include <fstream>
 #include <filesystem>
+#include <string>
 
 #include "files.h"
 #include "rle.h"
@@ -19,23 +19,8 @@
 #include "../content/Content.h"
 #include "../voxels/Block.h"
 #include "../world/World.h"
-
-// Константы для идентификации секций в файлах
-namespace PlayerSections {
-    constexpr int POSITION = 1; // Секция с позицией игрока
-    constexpr int ROTATION = 2; // Секция с поворотом камеры игрока
-    constexpr int FLAGS = 3;
-}
-
-namespace PlayerFlags {
-    constexpr int FLIGHT = 0x1;
-    constexpr int NOCLIP = 0x2;
-}
-
-namespace WorldSections {
-    constexpr int MAIN = 1;
-	constexpr int DAYNIGHT = 2;
-}
+#include "../coders/json.h"
+#include "../constants.h"
 
 // Конвертирует 4 байта в целое число
 inline int bytes2Int(const ubyte* src, size_t offset){
@@ -133,15 +118,15 @@ std::filesystem::path WorldFiles::getRegionFile(int x, int z) const {
 
 // Генерирует имя файла, в котором записана информация об игроке
 std::filesystem::path WorldFiles::getPlayerFile() const {
-	return directory/std::filesystem::path("player.bin");
+	return directory/std::filesystem::path("player.json");
 }
 
 std::filesystem::path WorldFiles::getWorldFile() const {
-    return directory/std::filesystem::path("world.bin");
+    return directory/std::filesystem::path("world.json");
 }
 
-std::filesystem::path WorldFiles::getBlockIndicesFile() const {
-	return directory/std::filesystem::path("blocks.idx");
+std::filesystem::path WorldFiles::getIndicesFile() const {
+	return directory/std::filesystem::path("indices.json");
 }
 
 // Получает данные чанка из кэша или файла
@@ -251,115 +236,104 @@ void WorldFiles::write(const World* world, const Content* content){
 }
 
 void WorldFiles::writeWorldInfo(const World* world) {
-	BinaryWriter out;
-	out.putCStr(WORLD_FORMAT_MAGIC);
-	out.put(WORLD_FORMAT_VERSION);
+	json::JObject root;
 
-	out.put(WorldSections::MAIN);
-	out.putInt64(world->seed);
-	out.put(world->name);
+	json::JObject& versionobj = root.putObj("version");
+	versionobj.put("major", ENGINE_VERSION_MAJOR);
+	versionobj.put("minor", ENGINE_VERSION_MINOR);
+	versionobj.put("maintenance", ENGINE_VERSION_MAINTENANCE);
 
-	out.put(WorldSections::DAYNIGHT);
-	out.putFloat32(world->daytime);
-	out.putFloat32(world->daytimeSpeed);
+	root.put("name", world->name);
+	root.put("seed", world->seed);
+	
+	json::JObject& timeobj = root.putObj("time");
+	timeobj.put("day-time", world->daytime);
+	timeobj.put("day-time-speed", world->daytimeSpeed);
 
-	files::write_bytes(getWorldFile(), (const char*)out.data(), out.size());
+	files::write_string(getWorldFile(), json::stringify(&root, true, "  "));
 }
 
 bool WorldFiles::readWorldInfo(World* world) {
-	size_t length = 0;
-	ubyte* data = (ubyte*)files::read_bytes(getWorldFile(), length);
-	if (data == nullptr){
-        LOG_WARN("Could not to read world.bin (ignored)");
+	std::filesystem::path file = getWorldFile();
+	if (!std::filesystem::is_regular_file(file)) {
+		LOG_WARN("World.json does not exists");
 		return false;
 	}
-	BinaryReader inp(data, length);
-	inp.checkMagic(WORLD_FORMAT_MAGIC, 11);
-	/*ubyte version = */inp.get();
-	while (inp.hasNext()) {
-		ubyte section = inp.get();
-		switch (section) {
-		case WorldSections::MAIN:
-			world->seed = inp.getInt64();
-			world->name = inp.getString();
-			break;
-		case WorldSections::DAYNIGHT:
-			world->daytime = inp.getFloat32();
-			world->daytimeSpeed = inp.getFloat32();
-			break;
-		}
+
+	std::unique_ptr<json::JObject> root(files::read_json(file));
+	root->num("seed", world->seed);
+
+	json::JObject* verobj = root->obj("version");
+	if (verobj) {
+		int major = 0, minor = -1, maintenance = -1;
+		verobj->num("major", major);
+		verobj->num("minor", minor);
+		verobj->num("maintenance", maintenance);
+		LOG_DEBUG("World version: {}.{}.{}", major, minor, maintenance);
 	}
-	return false;
+
+	json::JObject* timeobj = root->obj("time");
+	if (timeobj) {
+		timeobj->num("day-time", world->daytime);
+		timeobj->num("day-time-speed", world->daytimeSpeed);
+	}
+
+	return true;
 }
 
 // Записываем данные об игроке на диск
 void WorldFiles::writePlayer(Player* player){
 	glm::vec3 position = player->hitbox->position;
+	json::JObject root;
+	json::JArray& posarr = root.putArray("position");
+	posarr.put(position.x);
+	posarr.put(position.y);
+	posarr.put(position.z);
 
-	BinaryWriter out;
-	out.put(PlayerSections::POSITION);
-	out.putFloat32(position.x);
-	out.putFloat32(position.y);
-	out.putFloat32(position.z);
+	json::JArray& rotarr = root.putArray("rotation");
+	rotarr.put(player->camX);
+	rotarr.put(player->camY);
+	
+	root.put("flight", player->flight);
+	root.put("noclip", player->noclip);
 
-	out.put(PlayerSections::ROTATION);
-	out.putFloat32(player->camX);
-    out.putFloat32(player->camY);
-
-    out.put(PlayerSections::FLAGS);
-	out.put(player->flight * PlayerFlags::FLIGHT | player->noclip * PlayerFlags::NOCLIP);
-
-	files::write_bytes(getPlayerFile(), (const char*)out.data(), out.size());
+	files::write_string(getPlayerFile(), json::stringify(&root, true, "  "));
 }
 
 // Читаем данные об игроке с диска
 bool WorldFiles::readPlayer(Player* player) {
-	size_t length = 0;
-	ubyte* data = (ubyte*)files::read_bytes(getPlayerFile(), length);
-	if (data == nullptr){
-		LOG_WARN("Could not to read player.bin (ignored)");
+	std::filesystem::path file = getPlayerFile();
+	if (!std::filesystem::is_regular_file(file)) {
+		LOG_WARN("Player.json does not exists");
 		return false;
 	}
-	glm::vec3 position = player->hitbox->position;
-	BinaryReader inp(data, length);
-	while (inp.hasNext()) {
-		ubyte section = inp.get();
-		switch (section) {
-		case PlayerSections::POSITION:
-			position.x = inp.getFloat32();
-			position.y = inp.getFloat32();
-			position.z = inp.getFloat32();
-			break;
-		case PlayerSections::ROTATION:
-			player->camX = inp.getFloat32();
-			player->camY = inp.getFloat32();
-			break;
-		case PlayerSections::FLAGS: 
-			{
-				ubyte flags = inp.get();
-				player->flight = flags & PlayerFlags::FLIGHT;
-				player->noclip = flags & PlayerFlags::NOCLIP;
-			}
-			break;
-		}
-	}
 
-	player->hitbox->position = position;
-	player->camera->position = position + glm::vec3(0, 1, 0);
+	std::unique_ptr<json::JObject> root(files::read_json(file));
+	json::JArray* posarr = root->arr("position");
+	glm::vec3& position = player->hitbox->position;
+	position.x = posarr->num(0);
+	position.y = posarr->num(1);
+	position.z = posarr->num(2);
+	player->camera->position = position;
+
+	json::JArray* rotarr = root->arr("rotation");
+	player->camX = rotarr->num(0);
+	player->camY = rotarr->num(1);
+
+	root->flag("flight", player->flight);
+	root->flag("noclip", player->noclip);
 	return true;
 }
 
 void WorldFiles::writeIndices(const ContentIndices* indices) {
-	{
-		BinaryWriter out;
-		uint count = indices->countBlockDefs();
-		out.putInt16(count);
-		for (uint i = 0; i < count; i++) {
-			const Block* def = indices->getBlockDef(i);
-			out.putShortStr(def->name);
-		}
-		files::write_bytes(getBlockIndicesFile(), (const char*)out.data(), out.size());
+	json::JObject root;
+	json::JArray& blocks = root.putArray("blocks");
+	uint count = indices->countBlockDefs();
+	for (uint i = 0; i < count; ++i) {
+		const Block* def = indices->getBlockDef(i);
+		blocks.put(def->name);
 	}
+	files::write_string(getIndicesFile(), json::stringify(&root, true, "  "));
 }
 
 // Формирует бинарное представление региона для записи

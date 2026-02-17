@@ -5,6 +5,10 @@
 
 #include "typedefs.h"
 
+inline constexpr int ENGINE_VERSION_MAJOR = 0;
+inline constexpr int ENGINE_VERSION_MINOR = 1;
+inline constexpr int ENGINE_VERSION_MAINTENANCE = 0;
+
 inline constexpr int CHUNK_WIDTH = 16;
 inline constexpr int CHUNK_HEIGHT = 256;
 inline constexpr int CHUNK_DEPTH = 16;

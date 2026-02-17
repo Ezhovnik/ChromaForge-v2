@@ -44,7 +44,8 @@ inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
 WorldRenderer::WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : engine(engine), level(level), frustumCulling(new Frustum()), lineBatch(new LineBatch()), renderer(new ChunksRenderer(level, cache, engine->getSettings())) {
 	Assets* assets = engine->getAssets();
-	skybox = new Skybox(64, assets->getShader("skybox_gen"));
+	EngineSettings& settings = engine->getSettings();
+	skybox = new Skybox(settings.graphics.skyboxResolution, assets->getShader("skybox_gen"));
 
     level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
 		renderer->unload(chunk);
@@ -110,7 +111,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 
 void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 	EngineSettings& settings = engine->getSettings();
-	skybox->refresh(level->world->daytime, fmax(1.0f, 18.0f / settings.chunks.loadDistance), 4);
+	skybox->refresh(level->world->daytime, fmax(1.0f, 10.0f / (settings.chunks.loadDistance - 2)), 4);
 
     const Content* content = level->content;
 	const ContentIndices* contentIds = content->indices;
@@ -155,7 +156,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 		shader->uniformMatrix("u_view", camera->getView());
 		shader->uniform1f("u_gamma", GAMMA_VALUE);
 
-        float fogFactor = 18.0f / (float)settings.chunks.loadDistance;
+        float fogFactor = 15.0f / ((float)settings.chunks.loadDistance - 2);
 		shader->uniform1f("u_fogFactor", fogFactor);
 		shader->uniform1f("u_fogCurve", settings.graphics.fogCurve);
 
@@ -196,7 +197,12 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 			const glm::vec3 point = PlayerController::selectedPointPosition;
 			const glm::vec3 norm = PlayerController::selectedBlockNormal;
 
-			const AABB& hitbox = block->hitbox;
+			AABB hitbox = block->hitbox;
+			if (block->rotatable) {
+				auto states = PlayerController::selectedBlockStates;
+				block->rotations.variants[states].transform(hitbox);
+			}
+
 			const glm::vec3 center = pos + hitbox.center();
 			const glm::vec3 size = hitbox.size();
 			linesShader->use();

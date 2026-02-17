@@ -7,5 +7,5 @@
         "basalt",
         "basalt"
     ],
-    "rotatable": true
+    "rotation": "pipe"
 }
