@@ -352,42 +352,45 @@ glm::vec4 BlocksRenderer::pickSoftLight(float x, float y, float z, const glm::iv
 }
 
 void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
-	for (ubyte group = 0; group < 8; group++) {
-		for (uint y = 0; y < CHUNK_HEIGHT; y++) {
-			for (uint z = 0; z < CHUNK_DEPTH; z++) {
-				for (uint x = 0; x < CHUNK_WIDTH; x++) {
-					const voxel& vox = voxels[((y * CHUNK_DEPTH) + z) * CHUNK_WIDTH + x];
-					blockid_t id = vox.id;
-					const Block& def = *blockDefsCache[id];
-					if (!id || def.drawGroup != group) continue;
-					const UVRegion texfaces[6]{ cache->getRegion(id, 0), cache->getRegion(id, 1),
-												cache->getRegion(id, 2), cache->getRegion(id, 3),
-												cache->getRegion(id, 4), cache->getRegion(id, 5)};
-					switch (def.model) {
-					case BlockModel::Cube: {
-						if (def.rt.emissive) {
-							blockCube(x, y, z, glm::vec3(1.0f), texfaces, def.drawGroup);
-						} else {
-							blockCubeShaded(x, y, z, glm::vec3(1.0f), texfaces, &def, vox.states);
-						}
-						break;
-					} case BlockModel::X: {
-						blockXSprite(x, y, z, glm::vec3(1.0f), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
-						break;
-					} case BlockModel::AABB: {
-						glm::vec3 size = def.hitbox.size();
-						glm::vec3 off = def.hitbox.min();
-						off.z *= -1.0f;
-						off.z = -1.0f - off.z + size.z;
-						blockCubeShaded(off + glm::vec3(x,y,z), size, texfaces, &def, vox.states);
-						break;
-					}
-                    default:
-                        break;
-					}
-					if (overflow) return;
+	int begin = chunk->bottom * (CHUNK_WIDTH * CHUNK_DEPTH);
+	int end = chunk->top * (CHUNK_WIDTH * CHUNK_DEPTH);
+	for (const auto drawGroup : *content->drawGroups) {
+		for (int i = begin; i < end; ++i) {
+			const voxel& vox = voxels[i];
+			blockid_t id = vox.id;
+			const Block& def = *blockDefsCache[id];
+			if (!id || def.drawGroup != drawGroup) continue;
+			const UVRegion texfaces[6]{ cache->getRegion(id, 0), cache->getRegion(id, 1),
+										cache->getRegion(id, 2), cache->getRegion(id, 3),
+										cache->getRegion(id, 4), cache->getRegion(id, 5)};
+
+			int x = i % CHUNK_WIDTH;
+			int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);
+			int z = (i / CHUNK_DEPTH) % CHUNK_WIDTH;
+
+			switch (def.model) {
+			case BlockModel::Cube: {
+				if (def.rt.emissive) {
+					blockCube(x, y, z, glm::vec3(1.0f), texfaces, def.drawGroup);
+				} else {
+					blockCubeShaded(x, y, z, glm::vec3(1.0f), texfaces, &def, vox.states);
 				}
+				break;
+			} case BlockModel::X: {
+				blockXSprite(x, y, z, glm::vec3(1.0f), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
+				break;
+			} case BlockModel::AABB: {
+				glm::vec3 size = def.hitbox.size();
+				glm::vec3 off = def.hitbox.min();
+				off.z *= -1.0f;
+				off.z = -1.0f - off.z + size.z;
+				blockCubeShaded(off + glm::vec3(x, y, z), size, texfaces, &def, vox.states);
+				break;
 			}
+			default:
+				break;
+			}
+			if (overflow) return;
 		}
 	}
 }

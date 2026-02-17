@@ -13,6 +13,7 @@
                 "-L${workspaceFolder}/lib",
 
                 //src/assets
+                "${workspaceFolder}/src/assets/asset_loaders.cpp",
                 "${workspaceFolder}/src/assets/Assets.cpp",
                 "${workspaceFolder}/src/assets/AssetsLoader.cpp",
 
@@ -25,6 +26,7 @@
 
                 //src/content
                 "${workspaceFolder}/src/content/Content.cpp",
+                "${workspaceFolder}/src/content/ContentLoader.cpp",
 
                 //src/files
                 "${workspaceFolder}/src/files/binary_io.cpp",

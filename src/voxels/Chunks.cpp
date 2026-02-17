@@ -26,7 +26,7 @@ Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFi
 	}
 	chunksCount = 0;
 
-	airID = content->require(DEFAULT_BLOCK_NAMESPACE"air")->rt.id;
+	airID = content->require(DEFAULT_BLOCK_NAMESPACE":air")->rt.id;
 }
 
 Chunks::~Chunks(){

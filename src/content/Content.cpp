@@ -18,6 +18,7 @@ void ContentBuilder::add(Block* def) {
 
 Content* ContentBuilder::build() {
     std::vector<Block*> blockDefsIndices;
+    DrawGroups* groups = new DrawGroups;
     for (const std::string& name : blockIds) {
         Block* def = blockDefs[name];
         def->rt.id = blockDefsIndices.size();
@@ -38,15 +39,16 @@ Content* ContentBuilder::build() {
         }
 
         blockDefsIndices.push_back(def);
+        if (groups->find(def->drawGroup) == groups->end()) groups->insert(def->drawGroup);
     }
     ContentIndices* indices = new ContentIndices(blockDefsIndices);
-    return new Content(indices, blockDefs);
+    return new Content(indices, groups, blockDefs);
 }
 
 ContentIndices::ContentIndices(std::vector<Block*> blockDefs) : blockDefs(blockDefs) {
 }
 
-Content::Content(ContentIndices* indices, std::unordered_map<std::string, Block*> blockDefs) : blockDefs(blockDefs), indices(indices) {
+Content::Content(ContentIndices* indices, DrawGroups* drawGroups, std::unordered_map<std::string, Block*> blockDefs) : blockDefs(blockDefs), indices(indices), drawGroups(drawGroups) {
 }
 
 Content::~Content() {

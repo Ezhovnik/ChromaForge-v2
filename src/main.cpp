@@ -14,6 +14,7 @@
 #include "window/input.h"
 #include "files/settings_io.h"
 #include "content/Content.h"
+#include "content/ContentLoader.h"
 #include "files/engine_paths.h"
 
 // Точка входа в программу
@@ -28,6 +29,8 @@ int main(int argc, char** argv) {
 
     ContentBuilder contentBuilder;
 	setup_definitions(&contentBuilder);
+    ContentLoader loader(paths.getResources()/std::filesystem::path("content/" DEFAULT_BLOCK_NAMESPACE));
+	loader.load(&contentBuilder);
     std::unique_ptr<Content> content(contentBuilder.build());
 
     std::unique_ptr<Engine> engine = nullptr;

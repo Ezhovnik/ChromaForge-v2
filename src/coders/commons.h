@@ -3,11 +3,14 @@
 
 #include <string>
 #include <stdexcept>
-
 #include "../typedefs.h"
 
-// Определение системы счисления по префиксу (0x, 0b, 0o)
-inline int detect_base(char c) noexcept {
+union number_u {
+    double fval;
+    int64_t ival;
+};
+
+inline int detect_base(char c) {
     switch (c) {
         case 'B':
         case 'b':
@@ -22,23 +25,19 @@ inline int detect_base(char c) noexcept {
     return 10;
 }
 
-// Проверка, является ли символ цифрой
-inline bool is_digit(char c) noexcept {
+inline bool is_digit(char c) {
     return (c >= '0' && c <= '9');
 }
 
-// Проверка, является ли символ пробельным (пробел, перенос строки и т.д.)
-inline bool is_whitespace(char c) noexcept {
+inline bool is_whitespace(char c) {
     return c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\f';
 }
 
-// Проверка, может ли символ быть началом идентификатора
-inline bool is_identifier_start(char c) noexcept {
+inline bool is_identifier_start(char c) {
     return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' || c == '-' || c == '.';
 }
 
-// Проверка, может ли символ быть частью идентификатора
-inline bool is_identifier_part(char c) noexcept {
+inline bool is_identifier_part(char c) {
     return is_identifier_start(c) || is_digit(c);
 }
 
@@ -79,7 +78,7 @@ protected:
 
     std::string parseName();
     int64_t parseSimpleInt(int base);
-    double parseNumber(int sign);
+    bool parseNumber(int sign, number_u& out);
     std::string parseString(char chr);
 
     parsing_error error(std::string message);

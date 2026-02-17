@@ -64,7 +64,7 @@ void cursor_position_callback(GLFWwindow*, double x_pos, double y_pos) {
 void mouse_button_callback(GLFWwindow*, int button, int action, int mode) {
     if (button < 0 || button >= _MAX_MOUSE_BUTTONS) return;
 
-    int index = _MOUSE_BUTTONS + button;
+    int index = _MOUSE_KEYS_OFFSET + button;
 
     if (action == GLFW_PRESS) {
         Events::_keys[index] = true;
@@ -77,7 +77,7 @@ void mouse_button_callback(GLFWwindow*, int button, int action, int mode) {
 
 // Callback-функция для обработки нажатий клавиш клавиатуры
 void key_callback(GLFWwindow*, int key, int scancode, int action, int mode) {
-    if (key < 0 || key >= _MOUSE_BUTTONS) return;
+    if (key < 0 || key >= _MOUSE_KEYS_OFFSET) return;
 
     if (action == GLFW_PRESS) {
         Events::_keys[key] = true;

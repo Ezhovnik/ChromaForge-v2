@@ -3,11 +3,6 @@
 #include <sstream>
 #include <math.h>
 
-#include "../logger/Logger.h"
-
-using std::string;
-
-// Преобразование символа в числовое значение
 inline int char2int(char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return 10 + c - 'a';
@@ -16,50 +11,39 @@ inline int char2int(char c) {
     return -1;
 }
 
-// Преобразование символа в числовое значение
 inline double power(double base, int64_t power) {
     double result = 1.0;
-    double current = base;
-    while (power > 0) {
-        if (power & 1) {
-            result *= current;
-        }
-        current *= current;
-        power >>= 1;
+    for (int64_t i = 0; i < power; i++) {
+        result *= base;
     }
     return result;
 }
 
-parsing_error::parsing_error(string message, 
-                string filename, 
-                string source, 
+parsing_error::parsing_error(std::string message, 
+                std::string filename, 
+                std::string source, 
                 uint pos, 
                 uint line, 
                 uint linestart)
     : std::runtime_error(message), filename(filename), source(source), pos(pos), line(line), linestart(linestart) {
 }
 
-string parsing_error::errorLog() const {
+std::string parsing_error::errorLog() const {
     std::stringstream ss;
     uint linepos = pos - linestart;
     ss << "Parsing error in file '" << filename;
-    ss << "' at " << (line + 1) << ":" << linepos << ": " << this->what() << "\n";
+    ss << "' at " << (line+1) << ":" << linepos << ": " << this->what() << "\n";
     size_t end = source.find("\n", linestart);
-    if (end == string::npos) end = source.length();
+    if (end == std::string::npos) end = source.length();
     ss << source.substr(linestart, end-linestart) << "\n";
     for (uint i = 0; i < linepos; i++) {
         ss << " ";
     }
     ss << "^";
-
-    std::string errorMessage = ss.str();
-    LOG_ERROR("{}", errorMessage);
-
-    return errorMessage;
+    return ss.str();
 }
 
-// Экранирование специальных символов
-string escape_string(string s) {
+std::string escape_string(std::string s) {
     std::stringstream ss;
     ss << '"';
     for (char c : s) {
@@ -105,14 +89,17 @@ bool BasicParser::hasNext() {
 }
 
 char BasicParser::nextChar() {
-    if (!hasNext()) throw error("unexpected end");
-    
+    if (!hasNext()) {
+        throw error("unexpected end");
+    }
     return source[pos++];
 }
 
 void BasicParser::expect(char expected) {
     char c = peek();
-    if (c != expected) throw error("'"+string({expected})+"' expected");
+    if (c != expected) {
+        throw error("'"+std::string({expected})+"' expected");
+    }
     pos++;
 }
 
@@ -124,18 +111,23 @@ void BasicParser::expectNewLine() {
             linestart = ++pos;
             return;
         }
-        if (is_whitespace(next)) pos++;
-        else throw error("line separator expected");
+        if (is_whitespace(next)) {
+            pos++;
+        } else {
+            throw error("line separator expected");
+        }
     }
 }
 
 char BasicParser::peek() {
     skipWhitespace();
-    if (pos >= source.length()) throw error("unexpected end");
+    if (pos >= source.length()) {
+        throw error("unexpected end");
+    }
     return source[pos];
 }
 
-string BasicParser::parseName() {
+std::string BasicParser::parseName() {
     char c = peek();
     if (!is_identifier_start(c)) {
         if (c == '"') {
@@ -154,7 +146,9 @@ string BasicParser::parseName() {
 int64_t BasicParser::parseSimpleInt(int base) {
     char c = peek();
     int index = char2int(c);
-    if (index == -1 || index >= base) throw error("invalid number literal");
+    if (index == -1 || index >= base) {
+        throw error("invalid number literal");
+    }
     int64_t value = index;
     pos++;
     while (hasNext()) {
@@ -171,21 +165,27 @@ int64_t BasicParser::parseSimpleInt(int base) {
     return value;
 }
 
-double BasicParser::parseNumber(int sign) {
+bool BasicParser::parseNumber(int sign, number_u& out) {
     char c = peek();
     int base = 10;
     if (c == '0' && pos + 1 < source.length() && (base = detect_base(source[pos+1])) != 10) {
         pos += 2;
-        return parseSimpleInt(base);
+        out.ival = parseSimpleInt(base);
+        return true;
     } else if (c == 'i' && pos + 2 < source.length() && source[pos+1] == 'n' && source[pos+2] == 'f') {
         pos += 3;
-        return INFINITY * sign;
+        out.fval = INFINITY * sign;
+        return false;
     } else if (c == 'n' && pos + 2 < source.length() && source[pos+1] == 'a' && source[pos+2] == 'n') {
         pos += 3;
-        return NAN * sign;
+        out.fval = NAN * sign;
+        return false;
     }
     int64_t value = parseSimpleInt(base);
-    if (!hasNext()) return value * sign;
+    if (!hasNext()) {
+        out.ival = value * sign;
+        return true;
+    }
     c = source[pos];
     if (c == 'e' || c == 'E') {
         pos++;
@@ -196,7 +196,8 @@ double BasicParser::parseNumber(int sign) {
         } else if (peek() == '+'){
             pos++;
         }
-        return sign * value * power(10.0, s * parseSimpleInt(10));
+        out.fval = sign * value * power(10.0, s * parseSimpleInt(10));
+        return false;
     }
     if (c == '.') {
         pos++;
@@ -220,14 +221,17 @@ double BasicParser::parseNumber(int sign) {
             } else if (peek() == '+'){
                 pos++;
             }
-            return sign * dvalue * power(10.0, s * parseSimpleInt(10));
+            out.fval = sign * dvalue * power(10.0, s * parseSimpleInt(10));
+            return false;
         }
-        return dvalue;
+        out.fval = dvalue;
+        return false;
     }
-    return value;
+    out.ival = value;
+    return true;
 }
 
-string BasicParser::parseString(char quote) {
+std::string BasicParser::parseString(char quote) {
     std::stringstream ss;
     while (hasNext()) {
         char c = source[pos];
@@ -255,7 +259,7 @@ string BasicParser::parseString(char quote) {
                 case '/': ss << '/'; break;
                 case '\n': pos++; continue;
                 default:
-                    throw error("'\\" + string({c}) + "' is an illegal escape");
+                    throw error("'\\" + std::string({c}) + "' is an illegal escape");
             }
             continue;
         }

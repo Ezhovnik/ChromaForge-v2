@@ -14,9 +14,9 @@
 
 // Константы для размера регионов
 namespace RegionConsts {
-    constexpr int SIZE_BIT = 5; // Размер региона 
-    constexpr int SIZE = 1 << SIZE_BIT; // Длина региона в чанках
-    constexpr int VOLUME = SIZE * SIZE; // Количество чанков в регионе
+    constexpr uint SIZE_BIT = 5; // Размер региона 
+    constexpr uint SIZE = 1 << SIZE_BIT; // Длина региона в чанках
+    constexpr uint VOLUME = SIZE * SIZE; // Количество чанков в регионе
 }
 
 #define REGION_FORMAT_MAGIC ".CHROMAREG"

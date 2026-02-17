@@ -4,7 +4,11 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <set>
+
 #include "../typedefs.h"
+
+typedef std::set<ubyte> DrawGroups;
 
 class Block;
 class Content;
@@ -41,8 +45,9 @@ class Content {
     std::unordered_map<std::string, Block*> blockDefs;
 public:
     ContentIndices* const indices;
+    DrawGroups* const drawGroups;
     
-    Content(ContentIndices* indices, std::unordered_map<std::string, Block*> blockDefs);
+    Content(ContentIndices* indices, DrawGroups* drawGroups, std::unordered_map<std::string, Block*> blockDefs);
     ~Content();
     
     Block* require(std::string id) const;

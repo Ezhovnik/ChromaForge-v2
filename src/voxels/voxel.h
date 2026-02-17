@@ -4,9 +4,11 @@
 #include <stdint.h>
 #include "../typedefs.h"
 
-#define BLOCK_DIR_X 0x1
-#define BLOCK_DIR_Y 0x2
-#define BLOCK_DIR_Z 0x3
+constexpr int BLOCK_DIR_X = 0x1;
+constexpr int BLOCK_DIR_Y = 0x2;
+constexpr int BLOCK_DIR_Z = 0x3;
+
+constexpr int BLOCK_ROT_MASK = 0xF;
 
 // Структура, представляющая один воксель
 struct voxel {

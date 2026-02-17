@@ -79,7 +79,7 @@ void Batch3D::face(const glm::vec3& coord, float w, float h,
 		const UVRegion& region,
 		const glm::vec4& tint
 	) {
-	if (index + VERTEX_SIZE * 4 > capacity) flush();
+	if (index + VERTEX_SIZE * 6 > capacity) flush();
 
 	vertex(coord, region.u1, region.v1, tint.r, tint.g, tint.b, tint.a);
 	vertex(coord + axisX * w, region.u2, region.v1, tint.r, tint.g, tint.b, tint.a);
