@@ -1,0 +1,30 @@
+{
+    "id": "chromaforge",
+    "version": "v0.0-beta.2",
+    "description": "basic content package",
+    "blocks": [
+        "moss",
+        "dirt",
+        "cobblestone",
+        "glowstone",
+        "glass",
+        "planks",
+        "log",
+        "leaves",
+        "stone",
+        "water",
+        "sand",
+        "bedrock",
+        "basalt",
+        "grass",
+        "poppy",
+        "dandelion",
+        "daisy",
+        "marigold",
+        "bricks",
+        "red_neon",
+        "green_neon",
+        "blue_neon",
+        "copper_block"
+    ]
+}

@@ -2,11 +2,11 @@
 
 #include <math.h>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <assert.h>
 
 #include "commons.h"
-#include "../logger/Logger.h"
 
 using namespace toml;
 
@@ -14,8 +14,9 @@ Section::Section(std::string name) : name(name) {
 }
 
 void Section::add(std::string name, Field field) {
-    if (fields.find(name) != fields.end()) throw std::runtime_error("field duplication");
-
+    if (fields.find(name) != fields.end()) {
+        throw std::runtime_error("field duplication");
+    }
     fields[name] = field;
     keyOrder.push_back(name);
 }
@@ -47,7 +48,6 @@ std::string Section::getName() const {
 const Field* Section::field(std::string name) const {
     auto found = fields.find(name);
     if (found == fields.end()) return nullptr;
-
     return &found->second;
 }
 
@@ -56,14 +56,15 @@ const std::vector<std::string>& Section::keys() const {
 }
 
 Wrapper::~Wrapper() {
-    for (auto& entry : sections) {
-        if (entry.second) delete entry.second;
+    for (auto entry : sections) {
+        delete entry.second;
     }
 }
 
 Section& Wrapper::add(std::string name) {
-    if (sections.find(name) != sections.end()) throw std::runtime_error("section duplication");
-
+    if (sections.find(name) != sections.end()) {
+        throw std::runtime_error("section duplication");
+    }
     Section* section = new Section(name);
     sections[name] = section;
     keyOrder.push_back(name);
@@ -73,7 +74,6 @@ Section& Wrapper::add(std::string name) {
 Section* Wrapper::section(std::string name) {
     auto found = sections.find(name);
     if (found == sections.end()) return nullptr;
-
     return found->second;
 }
 
@@ -137,7 +137,7 @@ inline bool is_numeric_type(fieldtype type) {
 void Section::set(std::string name, double value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
-        LOG_WARN("Unknown key '{}'", name);
+        std::cerr << "warning: unknown key '" << name << "'" << std::endl;
     } else {
         switch (field->type) {
         case fieldtype::ftbool: *(bool*)(field->ptr) = fabs(value) > 0.0; break;
@@ -154,7 +154,7 @@ void Section::set(std::string name, double value) {
 void Section::set(std::string name, bool value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
-        LOG_WARN("Unknown key '{}", name);
+        std::cerr << "warning: unknown key '" << name << "'" << std::endl;
     } else {
         switch (field->type) {
         case fieldtype::ftbool: *(bool*)(field->ptr) = value; break;
@@ -163,7 +163,7 @@ void Section::set(std::string name, bool value) {
         case fieldtype::ftfloat: *(float*)(field->ptr) = (float)value; break;
         case fieldtype::ftstring: *(std::string*)(field->ptr) = value ? "true" : "false"; break;
         default:
-            LOG_ERROR("Type error for key '{}'", name);
+            std::cerr << "error: type error for key '" << name << "'" << std::endl;
         }
     }
 }
@@ -171,12 +171,12 @@ void Section::set(std::string name, bool value) {
 void Section::set(std::string name, std::string value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
-        LOG_WARN("Unknown key '{}'", name);
+        std::cerr << "warning: unknown key '" << name << "'" << std::endl;
     } else {
         switch (field->type) {
         case fieldtype::ftstring: *(std::string*)(field->ptr) = value; break;
         default:
-            LOG_ERROR("Type error for key '{}'", name);
+            std::cerr << "error: type error for key '" << name << "'" << std::endl;
         }
     }
 }
@@ -185,7 +185,6 @@ void Reader::readSection(Section* section /*nullable*/) {
     while (hasNext()) {
         skipWhitespace();
         if (!hasNext()) break;
-
         char c = nextChar();
         if (c == '[') {
             std::string name = parseName();
@@ -199,13 +198,15 @@ void Reader::readSection(Section* section /*nullable*/) {
         expect('=');
         c = peek();
         if (is_digit(c)) {
-            double number = parseNumber(1);
-            if (section) section->set(name, number);
+            number_u num;
+            if (parseNumber(1, num) && section) section->set(name, (double)num.ival);
+            else if (section) section->set(name, num.fval);
         } else if (c == '-' || c == '+') {
             int sign = c == '-' ? -1 : 1;
             pos++;
-            double number = parseNumber(sign);
-            if (section) section->set(name, number);
+            number_u num;
+            if (parseNumber(sign, num) && section) section->set(name, (double)num.ival);
+            else if (section) section->set(name, num.fval);
         } else if (is_identifier_start(c)) {
             std::string identifier = parseName();
             if (identifier == "true" || identifier == "false") {

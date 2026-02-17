@@ -87,54 +87,14 @@ void ShaderProgram::uniform3f(std::string name, glm::vec3 xyz) {
     uniform3f(name, xyz.x, xyz.y, xyz.z);
 }
 
-// Функция для загрузки текстового файла
-std::string ShaderProgram::loadShaderFile(std::string filename) {
-    std::string code;
-    std::ifstream file;
-
-    file.exceptions(std::ifstream::badbit); // Устанавливаем исключения для обработки ошибок чтения файла
-
-    try {
-        file.open(filename); // Открываем файл
-
-        // Проверяем, успешно ли открылся файл
-        if (!file.is_open()) {
-            LOG_ERROR("File not found: '{}'", filename);
-            return "";
-        }
-
-        std::stringstream stream; // Создаем строковый поток
-        stream << file.rdbuf(); // Читаем весь файл в поток
-
-        file.close(); // Закрываем файл
-
-        code = stream.str(); // Получаем строку из потока
-    } catch (std::ifstream::failure& e) {
-        // Обработка ошибок чтения файла
-        LOG_ERROR("File not succesfully read. Info: {}", e.what());
-        return "";
-    }
-
-    code = preprocessor->process(std::filesystem::path(filename), code);
-
-    return code;
-}
-
 // Основная функция для загрузки и компиляции шейдерной программы
-ShaderProgram* ShaderProgram::loadShaderProgram(std::string vertexFile, std::string fragmentFile) {
-    // Загрузка исходного кода шейдеров из файлов
-    std::string vShaderString = loadShaderFile(vertexFile);
-    std::string fShaderString = loadShaderFile(fragmentFile);
-    
-    // Проверка успешности загрузки файлов
-    if (vShaderString.empty() || fShaderString.empty()) {
-        LOG_CRITICAL("Failed to load shader files");
-        return nullptr;
-    }
+ShaderProgram* ShaderProgram::loadShaderProgram(std::string vertexFile, std::string fragmentFile, std::string vertexSource, std::string fragmentSource) {
+    vertexSource = preprocessor->process(std::filesystem::path(vertexFile), vertexSource);
+    fragmentSource = preprocessor->process(std::filesystem::path(fragmentFile), fragmentSource);
     
     // Преобразование строк в C-строки для OpenGL
-    const GLchar* vShaderCode = vShaderString.c_str();
-    const GLchar* fShaderCode = fShaderString.c_str();
+    const GLchar* vShaderCode = vertexSource.c_str();
+    const GLchar* fShaderCode = fragmentSource.c_str();
 
     // Переменные для работы с OpenGL
     GLuint vertex, fragment; // Идентификаторы шейдеров

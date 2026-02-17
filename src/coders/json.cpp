@@ -2,13 +2,13 @@
 
 #include <math.h>
 #include <sstream>
+#include <iomanip>
 #include <memory>
 
-#include "../logger/Logger.h"
+#include "commons.h"
 
 using namespace json;
 
-// Добавление отступов или пробела в зависимости от формата вывода
 inline void newline(std::stringstream& ss, bool nice, uint indent, const std::string indentstr) {
     if (nice) {
         ss << "\n";
@@ -20,14 +20,14 @@ inline void newline(std::stringstream& ss, bool nice, uint indent, const std::st
     }
 }
 
-// Предварительные объявления для рекурсивных вызовов
 void stringify(Value* value, std::stringstream& ss, int indent, std::string indentstr, bool nice);
+
 void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string indentstr, bool nice);
 
-// Преобразование значения JSON в строку
 void stringify(Value* value, std::stringstream& ss, int indent, std::string indentstr, bool nice) {
-    if (value->type == valtype::object) stringifyObj(value->value.obj, ss, indent, indentstr, nice);
-
+    if (value->type == valtype::object) {
+        stringifyObj(value->value.obj, ss, indent, indentstr, nice);
+    }
     else if (value->type == valtype::array) {
         std::vector<Value*>& list = value->value.arr->values;
         if (list.empty()) {
@@ -37,22 +37,31 @@ void stringify(Value* value, std::stringstream& ss, int indent, std::string inde
         ss << '[';
         for (uint i = 0; i < list.size(); i++) {
             Value* value = list[i];
-            if (i > 0 || nice) newline(ss, nice, indent, indentstr);
+            if (i > 0 || nice) {
+                newline(ss, nice, indent, indentstr);
+            }
             stringify(value, ss, indent+1, indentstr, nice);
-            if (i + 1 < list.size()) ss << ',';
+            if (i + 1 < list.size()) {
+                ss << ',';
+            }
         }
-        if (nice) newline(ss, true, indent - 1, indentstr);
+        if (nice) {
+            newline(ss, true, indent - 1, indentstr);
+        }
         ss << ']';
     } else if (value->type == valtype::boolean) {
         ss << (value->value.boolean ? "true" : "false");
     } else if (value->type == valtype::number) {
-        ss << value->value.num;
+        ss << std::fixed;
+        ss << std::setprecision(15);
+        ss << value->value.decimal;
+    } else if (value->type == valtype::integer) {
+        ss << value->value.integer;
     } else if (value->type == valtype::string) {
         ss << escape_string(*value->value.str);
     }
 }
 
-// Преобразование объекта JSON в строку
 void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string indentstr, bool nice) {
     if (obj->map.empty()) {
         ss << "{}";
@@ -62,40 +71,70 @@ void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string i
     uint index = 0;
     for (auto entry : obj->map) {
         const std::string& key = entry.first;
-        if (index > 0 || nice) newline(ss, nice, indent, indentstr);
-        
+        if (index > 0 || nice) {
+            newline(ss, nice, indent, indentstr);
+        }
         Value* value = entry.second;
         ss << escape_string(key) << ": ";
         stringify(value, ss, indent+1, indentstr, nice);
         index++;
-        if (index < obj->map.size()) ss << ',';
+        if (index < obj->map.size()) {
+            ss << ',';
+        }
     }
-    if (nice) newline(ss, true, indent-1, indentstr);
+    if (nice) {
+        newline(ss, true, indent-1, indentstr);
+    }
     ss << '}';
 }
 
-// Публичный интерфейс для преобразования объекта JSON в строку
 std::string json::stringify(JObject* obj, bool nice, std::string indent) {
     std::stringstream ss;
     stringifyObj(obj, ss, 1, indent, nice);
     return ss.str();
 }
 
-// Деструктор массива JSON
+
 JArray::~JArray() {
     for (auto value : values) {
         delete value;
     }
 }
 
-// Методы доступа к элементам массива с проверкой типов
-
 std::string JArray::str(size_t index) const {
-    return *values[index]->value.str;
+    const auto& val = values[index];
+    switch (val->type) {
+        case valtype::string: return *val->value.str;
+        case valtype::boolean: return val->value.boolean ? "true" : "false";
+        case valtype::number: return std::to_string(val->value.decimal);
+        case valtype::integer: return std::to_string(val->value.integer);
+        default:
+            throw std::runtime_error("type error");
+    }
 }
 
 double JArray::num(size_t index) const {
-    return values[index]->value.num;
+    const auto& val = values[index];
+    switch (val->type) {
+        case valtype::number: return val->value.decimal;
+        case valtype::integer: return val->value.integer;
+        case valtype::string: return std::stoll(*val->value.str);
+        case valtype::boolean: return val->value.boolean;
+        default:
+            throw std::runtime_error("type error");
+    }
+}
+
+int64_t JArray::integer(size_t index) const {
+    const auto& val = values[index];
+    switch (val->type) {
+        case valtype::number: return val->value.decimal;
+        case valtype::integer: return val->value.integer;
+        case valtype::string: return std::stoll(*val->value.str);
+        case valtype::boolean: return val->value.boolean;
+        default:
+            throw std::runtime_error("type error");
+    }
 }
 
 JObject* JArray::obj(size_t index) const {
@@ -110,8 +149,6 @@ bool JArray::flag(size_t index) const {
     return values[index]->value.boolean;
 }
 
-// Методы добавления элементов в массив
-
 JArray& JArray::put(std::string value) {
     valvalue val;
     val.str = new std::string(value);
@@ -119,11 +156,34 @@ JArray& JArray::put(std::string value) {
     return *this;
 }
 
+JArray& JArray::put(uint value) {
+    return put((int64_t)value);
+}
+
+JArray& JArray::put(int value) {
+    return put((int64_t)value);
+}
+
+JArray& JArray::put(int64_t value) {
+    valvalue val;
+    val.integer = value;
+    values.push_back(new Value(valtype::integer, val));
+    return *this;
+}
+
+JArray& JArray::put(uint64_t value) {
+    return put((int64_t)value);
+}
+
 JArray& JArray::put(double value) {
     valvalue val;
-    val.num = value;
+    val.decimal = value;
     values.push_back(new Value(valtype::number, val));
     return *this;
+}
+
+JArray& JArray::put(float value) {
+    return put((double)value);
 }
 
 JArray& JArray::put(bool value) {
@@ -147,72 +207,149 @@ JArray& JArray::put(JArray* value) {
     return *this;
 }
 
-JArray& JArray::put(float value) {
-    valvalue val;
-    val.num = value;
-    values.push_back(new Value(valtype::number, val));
-    return *this;
+JArray& JArray::putArray() {
+    JArray* arr = new JArray();
+    put(arr);
+    return *arr;
 }
 
-// Деструктор объекта JSON
+JObject& JArray::putObj() {
+    JObject* obj = new JObject();
+    put(obj);
+    return *obj;
+}
+
 JObject::~JObject() {
     for (auto entry : map) {
         delete entry.second;
     }
 }
 
-// Методы получения значений из объекта с проверкой существования
-
 void JObject::str(std::string key, std::string& dst) const {
+    dst = getStr(key, dst);
+}
+
+std::string JObject::getStr(std::string key, const std::string& def) const {
     auto found = map.find(key);
-    if (found != map.end()) dst = *found->second->value.str;
+    if (found == map.end())
+        return def;
+    auto& val = found->second;
+    switch (val->type) {
+        case valtype::string: return *val->value.str;
+        case valtype::boolean: return val->value.boolean ? "true" : "false";
+        case valtype::number: return std::to_string(val->value.decimal);
+        case valtype::integer: return std::to_string(val->value.integer);
+        default: throw std::runtime_error("type error");
+    } 
+}
+
+double JObject::getNum(std::string key, double def) const {
+    auto found = map.find(key);
+    if (found == map.end())
+        return def;
+    auto& val = found->second;
+    switch (val->type) {
+        case valtype::number: return val->value.decimal;
+        case valtype::integer: return val->value.integer;
+        case valtype::string: return std::stoull(*val->value.str);
+        case valtype::boolean: return val->value.boolean;
+        default: throw std::runtime_error("type error");
+    }
+}
+
+int64_t JObject::getInteger(std::string key, int64_t def) const {
+    auto found = map.find(key);
+    if (found == map.end())
+        return def;
+    auto& val = found->second;
+    switch (val->type) {
+        case valtype::number: return val->value.decimal;
+        case valtype::integer: return val->value.integer;
+        case valtype::string: return std::stoull(*val->value.str);
+        case valtype::boolean: return val->value.boolean;
+        default: throw std::runtime_error("type error");
+    }
 }
 
 void JObject::num(std::string key, double& dst) const {
-    auto found = map.find(key);
-    if (found != map.end()) dst = found->second->value.num;
-}
-
-void JObject::num(std::string key, int& dst) const {
-    auto found = map.find(key);
-    if (found != map.end()) dst = found->second->value.num;
-}
-
-void JObject::num(std::string key, uint& dst) const {
-    auto found = map.find(key);
-    if (found != map.end()) dst = found->second->value.num;
+    dst = getNum(key, dst);
 }
 
 void JObject::num(std::string key, float& dst) const {
-    auto found = map.find(key);
-    if (found != map.end()) dst = found->second->value.num;
+    dst = getNum(key, dst);
+}
+
+void JObject::num(std::string key, ubyte& dst) const {
+    dst = getInteger(key, dst);
+}
+
+void JObject::num(std::string key, int& dst) const {
+    dst = getInteger(key, dst);
+}
+
+void JObject::num(std::string key, int64_t& dst) const {
+    dst = getInteger(key, dst);
+}
+
+void JObject::num(std::string key, uint64_t& dst) const {
+    dst = getInteger(key, dst);
+}
+
+void JObject::num(std::string key, uint& dst) const {
+    dst = getInteger(key, dst);
 }
 
 JObject* JObject::obj(std::string key) const {
     auto found = map.find(key);
-    if (found != map.end()) return found->second->value.obj;
+    if (found != map.end())
+        return found->second->value.obj;
     return nullptr;
 }
 
 JArray* JObject::arr(std::string key) const {
     auto found = map.find(key);
-    if (found != map.end()) return found->second->value.arr;
+    if (found != map.end())
+        return found->second->value.arr;
     return nullptr;
 }
 
 void JObject::flag(std::string key, bool& dst) const {
     auto found = map.find(key);
-    if (found != map.end()) dst = found->second->value.boolean;
+    if (found != map.end())
+        dst = found->second->value.boolean;
 }
 
-// Методы добавления значений в объект с заменой существующих
+JObject& JObject::put(std::string key, uint value) {
+    return put(key, (int64_t)value);
+}
+
+JObject& JObject::put(std::string key, int value) {
+    return put(key, (int64_t)value);
+}
+
+JObject& JObject::put(std::string key, int64_t value) {
+    auto found = map.find(key);
+    if (found != map.end()) delete found->second;
+    valvalue val;
+    val.integer = value;
+    map.insert(std::make_pair(key, new Value(valtype::integer, val)));
+    return *this;
+}
+
+JObject& JObject::put(std::string key, uint64_t value) {
+    return put(key, (int64_t)value);
+}
+
+JObject& JObject::put(std::string key, float value) {
+    return put(key, (double)value);
+}
 
 JObject& JObject::put(std::string key, double value) {
     auto found = map.find(key);
     if (found != map.end()) delete found->second;
     valvalue val;
-    val.num = value;
-    map.insert(make_pair(key, new Value(valtype::number, val)));
+    val.decimal = value;
+    map.insert(std::make_pair(key, new Value(valtype::number, val)));
     return *this;
 }
 
@@ -221,7 +358,7 @@ JObject& JObject::put(std::string key, std::string value){
     if (found != map.end()) delete found->second;
     valvalue val;
     val.str = new std::string(value);
-    map.insert(make_pair(key, new Value(valtype::string, val)));
+    map.insert(std::make_pair(key, new Value(valtype::string, val)));
     return *this;
 }
 
@@ -234,7 +371,7 @@ JObject& JObject::put(std::string key, JObject* value){
     if (found != map.end()) delete found->second;
     valvalue val;
     val.obj = value;
-    map.insert(make_pair(key, new Value(valtype::object, val)));
+    map.insert(std::make_pair(key, new Value(valtype::object, val)));
     return *this;
 }
 
@@ -243,7 +380,7 @@ JObject& JObject::put(std::string key, JArray* value){
     if (found != map.end()) delete found->second;
     valvalue val;
     val.arr = value;
-    map.insert(make_pair(key, new Value(valtype::array, val)));
+    map.insert(std::make_pair(key, new Value(valtype::array, val)));
     return *this;
 }
 
@@ -252,27 +389,29 @@ JObject& JObject::put(std::string key, bool value){
     if (found != map.end()) delete found->second;
     valvalue val;
     val.boolean = value;
-    map.insert(make_pair(key, new Value(valtype::boolean, val)));
+    map.insert(std::make_pair(key, new Value(valtype::boolean, val)));
     return *this;
 }
 
-JObject& JObject::put(std::string key, uint value) {
-    return put(key, (double)value);
+JArray& JObject::putArray(std::string key) {
+    JArray* arr = new JArray();
+    put(key, arr);
+    return *arr;
 }
 
-JObject& JObject::put(std::string key, int value) {
-    return put(key, (double)value);
+JObject& JObject::putObj(std::string key) {
+    JObject* obj = new JObject();
+    put(key, obj);
+    return *obj;
 }
 
-JObject& JObject::put(std::string key, float value) {
-    return put(key, (double)value);
+bool JObject::has(std::string key) {
+    return map.find(key) != map.end();
 }
 
-// Конструктор значения JSON
 Value::Value(valtype type, valvalue value) : type(type), value(value) {
 }
 
-// Деструктор значения JSON - освобождает память в зависимости от типа
 Value::~Value() {
     switch (type) {
         case valtype::object: delete value.obj; break;
@@ -283,19 +422,17 @@ Value::~Value() {
     }
 }
 
-// Конструктор парсера
 Parser::Parser(std::string filename, std::string source) : BasicParser(filename, source) {    
 }
 
-// Основной метод парсинга JSON
 JObject* Parser::parse() {
     char next = peek();
-    if (next != '{') throw error("'{' expected");
-
+    if (next != '{') {
+        throw error("'{' expected");
+    }
     return parseObject();
 }
 
-// Парсинг JSON объекта
 JObject* Parser::parseObject() {
     expect('{');
     std::unique_ptr<JObject> obj(new JObject());
@@ -303,20 +440,24 @@ JObject* Parser::parseObject() {
     while (peek() != '}') {
         std::string key = parseName();
         char next = peek();
-        if (next != ':') throw error("':' expected");
+        if (next != ':') {
+            throw error("':' expected");
+        }
         pos++;
-        map.insert(make_pair(key, parseValue()));
+        map.insert(std::make_pair(key, parseValue()));
         next = peek();
-
-        if (next == ',') pos++;
-        else if (next == '}') break;
-        else throw error("',' expected");
+        if (next == ',') {
+            pos++;
+        } else if (next == '}') {
+            break;
+        } else {
+            throw error("',' expected");
+        }
     }
     pos++;
     return obj.release();
 }
 
-// Парсинг JSON массива
 JArray* Parser::parseArray() {
     expect('[');
     std::unique_ptr<JArray> arr(new JArray());
@@ -337,7 +478,6 @@ JArray* Parser::parseArray() {
     return arr.release();
 }
 
-// Парсинг любого значения JSON
 Value* Parser::parseValue() {
     char next = peek();
     valvalue val;
@@ -350,13 +490,13 @@ Value* Parser::parseValue() {
             val.boolean = false;
             return new Value(valtype::boolean, val);
         } else if (literal == "inf") {
-            val.num = INFINITY;
+            val.decimal = INFINITY;
             return new Value(valtype::number, val);
         } else if (literal == "nan") {
-            val.num = NAN;
+            val.decimal = NAN;
             return new Value(valtype::number, val);
         }
-        throw error("Invalid literal");
+        throw error("invalid literal");
     }
     if (next == '{') {
         val.obj = parseObject();
@@ -368,28 +508,42 @@ Value* Parser::parseValue() {
     }
     if (next == '-' || next == '+') {
         pos++;
-        val.num = parseNumber(next == '-' ? -1 : 1);
-        return new Value(valtype::number, val);
+        number_u num;
+        valtype type;
+        if (parseNumber(next == '-' ? -1 : 1, num)) {
+            val.integer = num.ival;
+            type = valtype::integer;
+        } else {
+            val.decimal = num.fval;
+            type = valtype::number;
+        }
+        return new Value(type, val);
     }
     if (is_digit(next)) {
-        val.num = parseNumber(1);
-        return new Value(valtype::number, val);  
+        number_u num;
+        valtype type;
+        if (parseNumber(1, num)) {
+            val.integer = num.ival;
+            type = valtype::integer;
+        } else {
+            val.decimal = num.fval;
+            type = valtype::number;
+        }
+        return new Value(type, val);  
     }
     if (next == '"' || next == '\'') {
         pos++;
         val.str = new std::string(parseString(next));
         return new Value(valtype::string, val);
     }
-    throw error("Unexpected character '" + std::string({next}) + "'");
+    throw error("unexpected character '" + std::string({next}) + "'");
 }
 
-// Публичный интерфейс парсинга JSON из файла
 JObject* json::parse(std::string filename, std::string source) {
     Parser parser(filename, source);
     return parser.parse();
 }
 
-// Публичный интерфейс парсинга JSON из строки
 JObject* json::parse(std::string source) {
     return parse("<string>", source);
 }

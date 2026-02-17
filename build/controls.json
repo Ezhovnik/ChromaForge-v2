@@ -36,7 +36,7 @@
     "type": "keyboard"
   },
   "player.flight": {
-    "code": 70,
+    "code": 84,
     "type": "keyboard"
   },
   "movement.cheat": {

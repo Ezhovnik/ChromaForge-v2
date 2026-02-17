@@ -49,7 +49,7 @@ void ChunksController::update(int64_t maxDuration) {
 
 bool ChunksController::loadVisible(){
     const Content* content = level->content;
-	if (bedrockID == 0) content->require(DEFAULT_BLOCK_NAMESPACE"bedrock")->rt.id;
+	if (bedrockID == 0) content->require(DEFAULT_BLOCK_NAMESPACE":bedrock")->rt.id;
 
 	const int width = chunks->width;
 	const int depth = chunks->depth;

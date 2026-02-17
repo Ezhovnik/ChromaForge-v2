@@ -29,7 +29,7 @@ public:
     void uniform3f(std::string name, float x, float y, float z); // Загружает три вещественных числа в uniform-переменную шейдера
     void uniform3f(std::string name, glm::vec3 xyz);
 
-    static ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile);
+    static ShaderProgram* loadShaderProgram(std::string vertexFile, std::string fragmentFile, std::string vertexSource, std::string fragmentSource);
 };
 
 #endif // GRAPHICS_SHADERPROGRAM_H_

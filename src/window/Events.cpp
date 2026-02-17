@@ -31,12 +31,12 @@ std::unordered_map<std::string, Binding> Events::bindings;
 // Инициализация системы событий
 int Events::initialize(){
     // Выделяем память: 1032 = 1024 клавиши + 8 кнопок мыши
-    _keys = new bool[1032];
-    _frames = new uint[1032];
+    _keys = new bool[KEYS_BUFFER_SIZE];
+    _frames = new uint[KEYS_BUFFER_SIZE];
 
     // Инициализируем массивы нулями
-    memset(_keys, false, 1032 * sizeof(bool));
-    memset(_frames, 0, 1032 * sizeof(uint));
+    memset(_keys, false, KEYS_BUFFER_SIZE * sizeof(bool));
+    memset(_frames, 0, KEYS_BUFFER_SIZE * sizeof(uint));
 
     return 0;
 }
@@ -48,33 +48,24 @@ void Events::finalize(){
 
 // Проверяет, нажата ли клавиша в данный момент
 bool Events::isPressed(int keycode) {
-    if (keycode < 0 || keycode  >= _MOUSE_BUTTONS) {
-        return false;
-    }
+    if (keycode < 0 || keycode  >= KEYS_BUFFER_SIZE) return false;
+    
     return _keys[keycode];
 }
 
 // Проверяет, была ли клавиша нажата именно в текущем кадре 
 bool Events::justPressed(int keycode) {
-    if (keycode < 0 || keycode  >= _MOUSE_BUTTONS) return false;
-
-    return _keys[keycode] && _frames[keycode] == _current;
+    return Events::isPressed(keycode) && _frames[keycode] == _current;
 }
 
 // Проверяет, нажата ли кнопка мыши в данный момент
 bool Events::isClicked(int button) {
-    if (button < 0 || button >= _MAX_MOUSE_BUTTONS) return false;
-
-    int index = _MOUSE_BUTTONS + button;
-    return _keys[index];
+    return Events::isPressed(_MOUSE_KEYS_OFFSET + button);
 }
 
 // Проверяет, была ли кнопка мыши нажата именно в текущем кадре
 bool Events::justClicked(int button) {
-    if (button < 0 || button >= _MAX_MOUSE_BUTTONS) return false;
-
-    int index = _MOUSE_BUTTONS + button;
-    return _keys[index] && _frames[index] == _current;
+    return Events::justPressed(_MOUSE_KEYS_OFFSET + button);
 }
 
 // Переключает режим курсора между нормальным и заблокированным состоянием

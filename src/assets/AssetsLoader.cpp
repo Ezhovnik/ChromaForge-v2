@@ -11,6 +11,7 @@
 #include "../logger/Logger.h"
 #include "../constants.h"
 #include "../graphics/ImageData.h"
+#include "asset_loaders.h"
 
 AssetsLoader::AssetsLoader(Assets* assets, std::filesystem::path resdir) : assets(assets), resdir(resdir) {
 }
@@ -29,7 +30,7 @@ bool AssetsLoader::hasNext() const {
 
 bool AssetsLoader::loadNext() {
 	const aloader_entry& entry = entries.front();
-    LOG_INFO("Loading {} as {}", entry.filename.string(), entry.alias);
+    LOG_DEBUG("Loading {} as {}", entry.filename.string(), entry.alias);
 	Logger::getInstance().flush();
 	auto found = loaders.find(entry.tag);
 	if (found == loaders.end()) {
@@ -43,81 +44,11 @@ bool AssetsLoader::loadNext() {
 	return status;
 }
 
-// Загружает и регистрирует шейдерную программу в менеджере ресурсов.
-bool _load_shader(Assets* assets, const std::filesystem::path& filename, const std::string& name){
-	ShaderProgram* shader = ShaderProgram::loadShaderProgram(filename.string() + ".vert", filename.string() + ".frag");
-	if (shader == nullptr){
-        LOG_CRITICAL("Failed to load shader '{}'", name);
-        Logger::getInstance().flush();
-		return false;
-	}
-
-	return assets->store(shader, name);
-}
-
-// Загружает и регистрирует текстуру в менеджере ресурсов.
-bool _load_texture(Assets* assets, const std::filesystem::path& filename, const std::string& name){
-	Texture* texture = png::loadTexture(filename.string());
-	if (texture == nullptr){
-		LOG_CRITICAL("Failed to load texture '{}'", name);
-        Logger::getInstance().flush();
-		return false;
-	}
-
-	return assets->store(texture, name);
-}
-
-bool _load_font(Assets* assets, const std::filesystem::path& filename, const std::string& name){
-    std::vector<Texture*> pages;
-	for (size_t i = 0; i <= 4; ++i){
-		Texture* texture = png::loadTexture(filename.string() + "_" + std::to_string(i)+  ".png");
-		if (texture == nullptr){
-            LOG_CRITICAL("Failed to load bitmap font '{}' (missing page {})", name, std::to_string(i));
-            Logger::getInstance().flush();
-			return false;
-		}
-		pages.push_back(texture);
-	}
-	Font* font = new Font(pages, pages[0]->height / 16);
-
-	return assets->store(font, name);;
-}
-
-bool _load_atlas(Assets* assets, const std::filesystem::path& directory, const std::string& name) {
-	if (!std::filesystem::exists(directory) || !std::filesystem::is_directory(directory)) {
-        LOG_ERROR("Directory named '{}' not found", directory.string());
-		Logger::getInstance().flush();
-        return false;
-    }
-
-	AtlasBuilder builder;
-	for (auto const& entry : std::filesystem::directory_iterator(directory)) {
-		std::filesystem::path file = entry.path();
-		if (file.extension() == ".png") {
-			std::string entry_name = file.stem().string();
-			std::shared_ptr<ImageData> image(png::loadImage(file.string()));
-			if (image == nullptr) {
-				LOG_ERROR("Failed to load atlas entry '{}'", entry_name);
-				Logger::getInstance().flush();
-				continue;
-			}
-
-			if (image->getFormat() != ImageFormat::rgba8888) image.reset(toRGBA(image.get()));
-
-			image->fixAlphaColor();
-			builder.add(entry_name, std::move(image));
-		}
-	}
-
-	Atlas* atlas = builder.build(2);
-	return assets->store(atlas, name);
-}
-
 void AssetsLoader::createDefaults(AssetsLoader& loader) {
-	loader.addLoader(AssetType::Shader, _load_shader);
-	loader.addLoader(AssetType::Texture, _load_texture);
-	loader.addLoader(AssetType::Font, _load_font);
-    loader.addLoader(AssetType::Atlas, _load_atlas);
+	loader.addLoader(AssetType::Shader, asset_loader::shader);
+	loader.addLoader(AssetType::Texture, asset_loader::texture);
+	loader.addLoader(AssetType::Font, asset_loader::font);
+    loader.addLoader(AssetType::Atlas, asset_loader::atlas);
 }
 
 void AssetsLoader::addDefaults(AssetsLoader& loader) {

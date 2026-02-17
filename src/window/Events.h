@@ -12,11 +12,13 @@
 
 // Константа для разделения индексов клавиш и кнопок мыши
 // Клавиши: 0-1023, кнопки мыши: 1024+
-const int _MOUSE_BUTTONS = 1024;
+constexpr int _MOUSE_KEYS_OFFSET = 1024;
 
 // Максимальное количество поддерживаемых кнопок мыши
 // GLFW поддерживает кнопки с GLFW_MOUSE_BUTTON_1 (0) до GLFW_MOUSE_BUTTON_8 (7)
-const int _MAX_MOUSE_BUTTONS = 8;
+constexpr int _MAX_MOUSE_BUTTONS = 8;
+
+constexpr short KEYS_BUFFER_SIZE = _MOUSE_KEYS_OFFSET + _MAX_MOUSE_BUTTONS;
 
 // Система обработки событий ввода (клавиатура, мышь)
 class Events {
@@ -58,4 +60,4 @@ public:
     static void toggleCursor(); // Переключает режим курсора между нормальным и заблокированным состоянием
 };
 
-#endif // WINDOW_EVENTS_H
+#endif // WINDOW_EVENTS_H_

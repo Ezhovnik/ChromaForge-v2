@@ -13,14 +13,14 @@ enum class BlockModel {
     AABB // Форма, повторяющая хитбокс
 };
 
-#define FACE_MX 0
-#define FACE_PX 1
-#define FACE_MY 2
-#define FACE_PY 3
-#define FACE_MZ 4
-#define FACE_PZ 5
+constexpr int FACE_MX = 0;
+constexpr int FACE_PX = 1;
+constexpr int FACE_MY = 2;
+constexpr int FACE_PY = 3;
+constexpr int FACE_MZ = 4;
+constexpr int FACE_PZ = 5;
 
-#define BLOCK_AABB_GRID 16
+constexpr int BLOCK_AABB_GRID = 16;
 
 class Block {
 public:
@@ -28,7 +28,7 @@ public:
 
     std::string const name;
     std::string textureFaces[6]; // -x, +x, -y, +y, -z, +z
-    ubyte emission[4];
+    ubyte emission[4] {0, 0, 0, 0};
     ubyte drawGroup = 0;
     BlockModel model = BlockModel::Cube;
 
@@ -49,7 +49,8 @@ public:
 		bool hitboxGrid[BLOCK_AABB_GRID][BLOCK_AABB_GRID][BLOCK_AABB_GRID];
 	} rt;
 
-    Block(std::string name, std::string texture = "");
+    Block(std::string name);
+    Block(std::string name, std::string texture);
 };
 
 #endif // VOXELS_BLOCK_H_
