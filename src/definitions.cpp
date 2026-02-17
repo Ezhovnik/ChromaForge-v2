@@ -22,6 +22,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->skyLightPassing = true;
     block->obstacle = false;
     block->selectable = false;
+    block->replaceable = true;
     block->model = BlockModel::None;
     builder->add(block);
 
@@ -88,6 +89,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
+    block->replaceable = true;
     block->hitbox.scale(glm::vec3(0.7f));
     block->model = BlockModel::X;
     builder->add(block);
@@ -97,6 +99,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
+    block->replaceable = true;
     block->hitbox.scale(glm::vec3(0.7f));
     block->model = BlockModel::X;
     builder->add(block);
@@ -106,6 +109,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
+    block->replaceable = true;
     block->hitbox.scale(glm::vec3(0.7f), glm::vec3(0.5f, 0.0f, 0.5f));
     block->model = BlockModel::X;
     builder->add(block);
@@ -119,6 +123,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
+    block->replaceable = true;
     block->hitbox.scale(glm::vec3(0.7f));
     block->model = BlockModel::X;
     builder->add(block);
@@ -128,6 +133,7 @@ void setup_definitions(ContentBuilder* builder) {
     block->drawGroup = 5;
     block->lightPassing = true;
     block->obstacle = false;
+    block->replaceable = true;
     block->hitbox.scale(glm::vec3(0.7f));
     block->model = BlockModel::X;
     builder->add(block);
@@ -153,6 +159,13 @@ void setup_definitions(ContentBuilder* builder) {
 
     // Медный блок
     block = new Block(DEFAULT_BLOCK_NAMESPACE"copper_block", "copper_block");
+    builder->add(block);
+
+    // Базальт
+    block = new Block(DEFAULT_BLOCK_NAMESPACE"basalt", "basalt");
+    block->textureFaces[2] = "basalt_top";
+    block->textureFaces[3] = "basalt_top";
+    block->rotatable = true;
     builder->add(block);
 }
 

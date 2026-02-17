@@ -258,12 +258,64 @@ void BlocksRenderer::blockCubeShaded(int x, int y, int z, const glm::vec3& size,
 	}
 }
 
+void BlocksRenderer::blockCubeShaded(const glm::vec3& pos, const glm::vec3& size, const UVRegion(&texfaces)[6], const Block* block, ubyte states) {
+	int rot = 0;
+	float x = pos.x;
+	float y = pos.y;
+	float z = pos.z;
+	{
+		glm::vec4 lights[]{
+				pickSoftLight(x, y, z + 1, {1, 0, 0}, {0, 1, 0}),
+				pickSoftLight(x + 1, y, z + 1, {1, 0, 0}, {0, 1, 0}),
+				pickSoftLight(x + 1, y + 1, z + 1, {1, 0, 0}, {0, 1, 0}),
+				pickSoftLight(x, y + 1, z + 1, {1, 0, 0}, {0, 1, 0}) };
+		face(glm::vec3(x, y, z), size.x, size.y, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), texfaces[5], lights, do_tint(0.9f), rot == 1);
+	} {
+		glm::vec4 lights[]{
+				pickSoftLight(pos.x, pos.y, pos.z - 1, {-1, 0, 0}, {0, 1, 0}),
+				pickSoftLight(pos.x - 1, pos.y, pos.z - 1, {-1, 0, 0}, {0, 1, 0}),
+				pickSoftLight(pos.x - 1, pos.y + 1, pos.z - 1, {-1, 0, 0}, {0, 1, 0}),
+				pickSoftLight(pos.x, pos.y + 1, pos.z - 1, {-1, 0, 0}, {0, 1, 0}) };
+		face(glm::vec3(x + size.x, y, z - size.z), size.x, size.y, glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), texfaces[4], lights, do_tint(0.75f), rot == 1);
+	} {
+		glm::vec4 lights[]{
+				pickSoftLight(x, pos.y + 1, pos.z + 1, {1, 0, 0}, {0, 0, 1}),
+				pickSoftLight(x + 1, pos.y + 1, pos.z + 1, {1, 0, 0}, {0, 0, 1}),
+				pickSoftLight(x + 1, pos.y + 1, pos.z, {1, 0, 0}, {0, 0, 1}),
+				pickSoftLight(x, pos.y + 1, pos.z, {1, 0, 0}, {0, 0, 1}) };
+
+		face(glm::vec3(x, y + size.y, z), size.x, size.z, glm::vec3(1, 0, 0), glm::vec3(0, 0, -1), texfaces[3], lights, glm::vec4(1.0f), rot == 1);
+	} {
+		glm::vec4 lights[]{
+				pickSoftLight(pos.x, pos.y - 1, pos.z - 1, {1, 0, 0}, {0, 0, -1}),
+				pickSoftLight(pos.x + 1, y - 1, pos.z - 1, {1, 0, 0}, {0, 0,-1}),
+				pickSoftLight(pos.x + 1, y - 1, pos.z, {1, 0, 0}, {0, 0, -1}),
+				pickSoftLight(x, y - 1, z, {1, 0, 0}, {0, 0, -1}) };
+		face(glm::vec3(x, y, z - size.z), size.x, size.z, glm::vec3(1, 0, 0), glm::vec3(0, 0, 1), texfaces[2], lights, do_tint(0.6f), rot == 1);
+	} {
+		glm::vec4 lights[]{
+				pickSoftLight(x - 1, y, z - 1, {0, 0, -1}, {0, 1, 0}),
+				pickSoftLight(x - 1, y, z, {0, 0, -1}, {0, 1, 0}),
+				pickSoftLight(x - 1, y + 1, z, {0, 0, -1}, {0, 1, 0}),
+				pickSoftLight(x - 1, y + 1, z - 1, {0, 0, -1}, {0, 1, 0}) };
+		face(glm::vec3(x, y, z - size.z), size.z, size.y, glm::vec3(0, 0, 1), glm::vec3(0, 1, 0), texfaces[0], lights, do_tint(0.7f), rot == 3);
+	} {
+		glm::vec4 lights[]{
+				pickSoftLight(x + 1, y, z, {0, 0, -1}, {0, 1, 0}),
+				pickSoftLight(x + 1, y, z - 1, {0, 0, -1}, {0, 1, 0}),
+				pickSoftLight(x + 1, y + 1, z - 1, {0, 0, -1}, {0, 1, 0}),
+				pickSoftLight(x + 1, y + 1, z, {0, 0, -1}, {0, 1, 0}) };
+		face(glm::vec3(x + size.x, y, z), size.z, size.y, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), texfaces[1], lights, do_tint(0.8f), rot == 3);
+	}
+}
+
+
 // Does block allow to see other blocks sides (is it transparent)
 bool BlocksRenderer::isOpen(int x, int y, int z, ubyte group) const {
 	blockid_t id = voxelsBuffer->pickBlockId(chunk->chunk_x * CHUNK_WIDTH + x, y, chunk->chunk_z * CHUNK_DEPTH + z);
 	if (id == BLOCK_VOID) return false;
 	const Block& block = *blockDefsCache[id];
-	if (block.drawGroup != group && block.lightPassing) return true;
+	if ((block.drawGroup != group && block.lightPassing) || !block.rt.solid) return true;
 	return !id;
 }
 
@@ -295,6 +347,10 @@ glm::vec4 BlocksRenderer::pickSoftLight(int x, int y, int z, const glm::ivec3& r
 		pickLight(x - right.x, y - right.y, z - right.z)) * 0.25f;
 }
 
+glm::vec4 BlocksRenderer::pickSoftLight(float x, float y, float z, const glm::ivec3& right, const glm::ivec3& up) const {
+	return pickSoftLight(int(round(x)), int(round(y)), int(round(z)), right, up);
+}
+
 void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
 	for (ubyte group = 0; group < 8; group++) {
 		for (uint y = 0; y < CHUNK_HEIGHT; y++) {
@@ -308,15 +364,22 @@ void BlocksRenderer::render(const voxel* voxels, int atlas_size) {
 												cache->getRegion(id, 2), cache->getRegion(id, 3),
 												cache->getRegion(id, 4), cache->getRegion(id, 5)};
 					switch (def.model) {
-					case BlockModel::Cube:
+					case BlockModel::Cube: {
 						if (def.rt.emissive) {
 							blockCube(x, y, z, glm::vec3(1.0f), texfaces, def.drawGroup);
 						} else {
 							blockCubeShaded(x, y, z, glm::vec3(1.0f), texfaces, &def, vox.states);
 						}
 						break;
-					case BlockModel::X: {
+					} case BlockModel::X: {
 						blockXSprite(x, y, z, glm::vec3(1.0f), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
+						break;
+					} case BlockModel::AABB: {
+						glm::vec3 size = def.hitbox.size();
+						glm::vec3 off = def.hitbox.min();
+						off.z *= -1.0f;
+						off.z = -1.0f - off.z + size.z;
+						blockCubeShaded(off + glm::vec3(x,y,z), size, texfaces, &def, vox.states);
 						break;
 					}
                     default:

@@ -128,6 +128,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader) {
 	loader.add(AssetType::Shader, resdir/std::filesystem::path(SHADERS_FOLDER"/ui"), "ui");
 	loader.add(AssetType::Shader, resdir/std::filesystem::path(SHADERS_FOLDER"/skybox_gen"), "skybox_gen");
 	loader.add(AssetType::Shader, resdir/std::filesystem::path(SHADERS_FOLDER"/background"), "background");
+	loader.add(AssetType::Shader, resdir/std::filesystem::path(SHADERS_FOLDER"/ui3d"), "ui3d");
 
 	loader.add(AssetType::Atlas, resdir/std::filesystem::path(TEXTURES_FOLDER"/blocks"), "blocks");
     loader.add(AssetType::Texture, resdir/std::filesystem::path(TEXTURES_FOLDER"/menubg.png"), "menubg");

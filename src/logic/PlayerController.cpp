@@ -101,6 +101,8 @@ void CameraControl::update(PlayerInput& input, float delta) {
 
 glm::vec3 PlayerController::selectedBlockPosition;
 int PlayerController::selectedBlockId = -1;
+glm::vec3 PlayerController::selectedPointPosition;
+glm::vec3 PlayerController::selectedBlockNormal;
 
 PlayerController::PlayerController(Level* level, const EngineSettings& settings) : level(level), player(level->player), camControl(level->player, settings.camera) {
 }
@@ -153,7 +155,7 @@ void PlayerController::updateControls(float delta){
 }
 
 void PlayerController::updateInteraction(){
-	const ContentIndices* contentIds = level->contentIds;
+	const ContentIndices* contentIds = level->content->indices;
 	Chunks* chunks = level->chunks;
 	Player* player = level->player;
 	Lighting* lighting = level->lighting;
@@ -168,6 +170,8 @@ void PlayerController::updateInteraction(){
 		player->selectedVoxel = *vox;
 		selectedBlockId = vox->id;
 		selectedBlockPosition = iend;
+		selectedPointPosition = end;
+		selectedBlockNormal = norm;
 		int x = (int)iend.x;
 		int y = (int)iend.y;
 		int z = (int)iend.z;
@@ -187,20 +191,23 @@ void PlayerController::updateInteraction(){
 		Block* block = contentIds->getBlockDef(vox->id);
 		if (input.attack && block->breakable){
 			chunks->setVoxel(x, y, z, 0, 0);
-			lighting->onBlockSet(x,y,z, 0);
+			lighting->onBlockSet(x, y, z, 0);
 		}
 		if (input.build){
 			if (block->model != BlockModel::X){
-				x = (int)(iend.x)+(int)(norm.x);
-				y = (int)(iend.y)+(int)(norm.y);
-				z = (int)(iend.z)+(int)(norm.z);
+				x = (int)(iend.x) + (int)(norm.x);
+				y = (int)(iend.y) + (int)(norm.y);
+				z = (int)(iend.z) + (int)(norm.z);
 			}
-			if (!level->physics->isBlockInside(x,y,z, player->hitbox)){
-				chunks->setVoxel(x, y, z, player->choosenBlock, states);
-				lighting->onBlockSet(x,y,z, player->choosenBlock);
+			vox = chunks->getVoxel(x, y, z);
+			if (vox && (block = contentIds->getBlockDef(vox->id))->replaceable) {
+				if (!level->physics->isBlockInside(x, y, z, player->hitbox)){
+					chunks->setVoxel(x, y, z, player->choosenBlock, states);
+					lighting->onBlockSet(x, y, z, player->choosenBlock);
+				}
 			}
 		}
-		if (input.pickBlock) player->choosenBlock = chunks->getVoxel(x,y,z)->id;
+		if (input.pickBlock) player->choosenBlock = chunks->getVoxel(x, y, z)->id;
 	} else {
 		selectedBlockId = -1;
 	}

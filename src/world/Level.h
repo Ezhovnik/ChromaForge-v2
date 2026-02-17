@@ -25,7 +25,6 @@ public:
     LevelEvents* events;
     const EngineSettings& settings;
     const Content* const content;
-	const ContentIndices* const contentIds;
 
 	Level(World* world, const Content* content, Player* player, EngineSettings& settings);
 	~Level();

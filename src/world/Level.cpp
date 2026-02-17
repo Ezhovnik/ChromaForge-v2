@@ -17,7 +17,6 @@ Level::Level(World* world, const Content* content, Player* player, EngineSetting
 	world(world),
 	player(player),
     content(content),
-	contentIds(content->indices),
     chunksStorage(new ChunksStorage(this)),
     events(new LevelEvents()) ,
     settings(settings)

@@ -7,7 +7,10 @@
 #include "../typedefs.h"
 
 enum class BlockModel {
-    None, Cube, X
+    None, // Невидимый блок
+    Cube, // Полноценный блок
+    X, // Крест-накрест (трава, растения)
+    AABB // Форма, повторяющая хитбокс
 };
 
 #define FACE_MX 0
@@ -24,7 +27,6 @@ public:
     static Block* blocks[256];
 
     std::string const name;
-	blockid_t id;
     std::string textureFaces[6]; // -x, +x, -y, +y, -z, +z
     ubyte emission[4];
     ubyte drawGroup = 0;
@@ -36,10 +38,12 @@ public:
     bool selectable = true;
     bool breakable = true;
     bool rotatable = false;
+    bool replaceable = false;
 
     AABB hitbox;
 
 	struct {
+        blockid_t id;
 		bool solid = true;
 		bool emissive = false;
 		bool hitboxGrid[BLOCK_AABB_GRID][BLOCK_AABB_GRID][BLOCK_AABB_GRID];

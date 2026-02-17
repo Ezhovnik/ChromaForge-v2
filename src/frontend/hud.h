@@ -4,6 +4,8 @@
 #include <string>
 #include <memory>
 
+#include <glm/glm.hpp>
+
 #include "../graphics/GfxContext.h"
 
 class Batch2D;
@@ -14,6 +16,8 @@ class Player;
 class Engine;
 class ContentGfxCache;
 class WorldRenderer;
+class Block;
+class BlocksPreview;
 
 namespace gui {
     class GUI;
@@ -26,6 +30,7 @@ private:
 	Batch2D* batch;
 	Camera* uicamera;
     Assets* assets;
+    BlocksPreview* blocksPreview;
 
     int fps = 0;
     int fpsMin = 60;
