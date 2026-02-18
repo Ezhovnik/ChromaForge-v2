@@ -32,8 +32,6 @@ class WorldRenderer {
 	LineBatch* lineBatch;
 	Skybox* skybox;
 
-	bool drawChunkBorders = false;
-
     bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool culling);
 	void drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader);
 
@@ -44,8 +42,8 @@ public:
 
 	void draw(const GfxContext& context, Camera* camera);
 
-	inline bool isChunkBordersOn() {return drawChunkBorders;}
-	inline void setChunkBorders(bool flag) {drawChunkBorders = flag;}
+	static float fog;
+	static bool drawChunkBorders;
 };
 
 #endif // FRONTEND_WORLD_RENDERER_H_

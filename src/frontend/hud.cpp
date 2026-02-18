@@ -48,7 +48,7 @@ inline gui::Label* create_label(gui::wstringsupplier supplier) {
 	return label;
 }
 
-HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache, WorldRenderer* renderer) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()), cache(cache), renderer(renderer), batch(new Batch2D(1024)) {
+HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()), cache(cache), batch(new Batch2D(1024)) {
 	auto menu = guiController->getMenu();
 
 	blocksPreview = new BlocksPreview(assets->getShader("ui3d"), assets->getAtlas("blocks"), cache);
@@ -115,6 +115,17 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 		panel->add(sub);
 	}
 
+	{
+		gui::TrackBar* bar = new gui::TrackBar(0.0f, 1.0f, 0.0f, 0.005f, 8);
+		bar->supplier([=]() {
+			return WorldRenderer::fog;
+		});
+		bar->consumer([=](double val) {
+			WorldRenderer::fog = val;
+		});
+		panel->add(bar);
+	}
+
 	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
 		int hour, minute, second;
 		timeutil::from_value(this->level->world->daytime, hour, minute, second);
@@ -161,10 +172,10 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
         gui::CheckBox* checkbox = new gui::CheckBox();
         checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
         checkbox->supplier([=]() {
-            return renderer->isChunkBordersOn();
+            return WorldRenderer::drawChunkBorders;
         });
         checkbox->consumer([=](bool checked) {
-            renderer->setChunkBorders(checked);
+            WorldRenderer::drawChunkBorders = checked;
         });
         checkpanel->add(checkbox);
         checkpanel->add(new gui::Label(L"Show Chunk Borders"));
