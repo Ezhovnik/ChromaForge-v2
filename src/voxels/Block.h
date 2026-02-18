@@ -33,7 +33,9 @@ struct CoordSystem {
 };
 
 struct BlockRotProfile {
-	CoordSystem variants[16];
+	static const int MAX_COUNT = 16;
+	CoordSystem variants[MAX_COUNT];
+
 	static const BlockRotProfile PIPE;
 };
 
@@ -63,7 +65,7 @@ public:
         blockid_t id;
 		bool solid = true;
 		bool emissive = false;
-		bool hitboxGrid[BLOCK_AABB_GRID][BLOCK_AABB_GRID][BLOCK_AABB_GRID];
+		AABB hitboxes[BlockRotProfile::MAX_COUNT];
 	} rt;
 
     Block(std::string name);

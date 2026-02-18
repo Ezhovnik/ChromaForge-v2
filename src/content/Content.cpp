@@ -24,17 +24,13 @@ Content* ContentBuilder::build() {
         def->rt.id = blockDefsIndices.size();
         def->rt.emissive = *((uint32_t*)def->emission);
 
-        const AABB& hitbox = def->hitbox;
-        for (uint gy = 0; gy < BLOCK_AABB_GRID; ++gy) {
-            for (uint gz = 0; gz < BLOCK_AABB_GRID; ++gz) {
-                for (uint gx = 0; gx < BLOCK_AABB_GRID; ++gx) {
-                    float x = gx / float(BLOCK_AABB_GRID);
-                    float y = gy / float(BLOCK_AABB_GRID);
-                    float z = gz / float(BLOCK_AABB_GRID);
-                    bool flag = hitbox.inside({x, y, z});
-                    if (!flag) def->rt.solid = false;
-                    def->rt.hitboxGrid[gy][gz][gx] = flag;
-                }
+        def->rt.solid = def->model == BlockModel::Cube;
+        if (def->rotatable) {
+            const AABB& hitbox = def->hitbox;
+            for (uint i = 0; i < BlockRotProfile::MAX_COUNT; ++i) {
+                AABB aabb = hitbox;
+                def->rotations.variants[i].transform(aabb);
+                def->rt.hitboxes[i] = aabb;
             }
         }
 

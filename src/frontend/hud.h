@@ -43,10 +43,8 @@ private:
     std::shared_ptr<gui::UINode> debugPanel;
 	gui::GUI* guiController;
     const ContentGfxCache* const cache;
-
-    WorldRenderer* renderer;
 public:
-	HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache, WorldRenderer* renderer);
+	HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache);
 	~HudRenderer();
 
     void update();

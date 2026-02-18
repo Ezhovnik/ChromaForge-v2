@@ -66,8 +66,9 @@ const AABB* Chunks::isObstacle(float x, float y, float z) {
 
 	const Block* def = contentIds->getBlockDef(vox->id);
 	if (def->obstacle) {
-		if (def->rt.solid) return &def->hitbox;
-		else if (def->hitbox.inside({x - ix, y - iy, z - iz})) return &def->hitbox;
+		const AABB& hitbox = def->rotatable ? def->rt.hitboxes[vox->states & BLOCK_ROT_MASK] : def->hitbox;
+		if (def->rt.solid) return &hitbox;
+		else if (hitbox.inside({x - ix, y - iy, z - iz})) return &hitbox;
 	}
 	return nullptr;
 }
@@ -209,7 +210,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 
 			if (def && !def->rt.solid) {
 				const int gridSize = BLOCK_AABB_GRID * 2;
-				const AABB& box = def->hitbox;
+				const AABB& box = def->rotatable ? def->rt.hitboxes[voxel->states & BLOCK_ROT_MASK] : def->hitbox;
 				const int subs = gridSize;
 				iend = glm::vec3(ix, iy, iz);
 				end -= iend;
