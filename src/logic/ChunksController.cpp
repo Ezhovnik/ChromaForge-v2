@@ -2,7 +2,6 @@
 
 #include <limits.h>
 #include <memory>
-#include <chrono>
 
 #include "../voxels/Block.h"
 #include "../voxels/Chunk.h"
@@ -19,9 +18,10 @@
 #include "../definitions.h"
 #include "../math/voxmaths.h"
 #include "../content/Content.h"
+#include "../util/timeutil.h"
 
-#define MAX_WORK_PER_FRAME 16
-#define MIN_SURROUNDING 9
+constexpr int MAX_WORK_PER_FRAME = 64;
+constexpr int MIN_SURROUNDING = 9;
 
 ChunksController::ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding) : level(level), chunks(chunks), lighting(lighting), chunksPadding(chunksPadding), generator(new WorldGenerator(level->content)){
 }
@@ -33,10 +33,9 @@ ChunksController::~ChunksController(){
 void ChunksController::update(int64_t maxDuration) {
     int64_t mcstotal = 0;
     for (uint i = 0; i < MAX_WORK_PER_FRAME; i++) {
-        auto start = std::chrono::high_resolution_clock::now();
+        timeutil::Timer timer;
         if (loadVisible()) {
-            auto elapsed = std::chrono::high_resolution_clock::now() - start;
-            int64_t mcs = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+            int64_t mcs = timer.stop();
             avgDurationMcs = mcs * 0.2 + avgDurationMcs * 0.8;
             if (mcstotal + max(avgDurationMcs, mcs) * 2 < maxDuration * 1000) {
                 mcstotal += mcs;

@@ -28,6 +28,8 @@ struct ChunksSettings {
 struct CameraSettings {
     bool fovEvents = true;
     bool shaking = true;
+	float fov = 90.0f;
+	float sensitivity = 2.0f;
 };
 
 struct GraphicsSettings {

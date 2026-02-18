@@ -156,9 +156,27 @@ Panel* create_controls_panel(Engine* engine, PagesControl* menu) {
     Panel* panel = new Panel(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
     panel->color(glm::vec4(0.0f));
 
+    {
+        panel->add((new Label(L""))->textSupplier([=]() {
+            std::wstringstream ss;
+            ss << std::fixed << std::setprecision(1);
+            ss << engine->getSettings().camera.sensitivity;
+            return L"Sensitivity: " + ss.str();
+        }));
+
+        TrackBar* trackbar = new TrackBar(0.1, 10.0, 2.0, 0.1, 4);
+        trackbar->supplier([=]() {
+            return engine->getSettings().camera.sensitivity;
+        });
+        trackbar->consumer([=](double value) {
+            engine->getSettings().camera.sensitivity = value;
+        });
+        panel->add(trackbar);
+    }
+
     Panel* scrollPanel = new Panel(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
     scrollPanel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.3f));
-    scrollPanel->maxLength(500);
+    scrollPanel->maxLength(400);
 
     for (auto& entry : Events::bindings){
         std::string bindname = entry.first;
@@ -230,6 +248,22 @@ Panel* create_settings_panel(Engine* engine, PagesControl* menu) {
         });
         trackbar->consumer([=](double value) {
             engine->getSettings().graphics.fogCurve = value;
+        });
+        panel->add(trackbar);
+    }
+
+    {
+        panel->add((new Label(L""))->textSupplier([=]() {
+            int fov = (int)engine->getSettings().camera.fov;
+            return L"FOV: " + std::to_wstring(fov) + L"°";
+        }));
+
+        TrackBar* trackbar = new TrackBar(30.0, 120.0, 90, 1, 4);
+        trackbar->supplier([=]() {
+            return engine->getSettings().camera.fov;
+        });
+        trackbar->consumer([=](double value) {
+            engine->getSettings().camera.fov = value;
         });
         panel->add(trackbar);
     }

@@ -17,7 +17,7 @@
 namespace CameraConsts {
 	constexpr float SHAKE_OFFSET = 0.025f;
 	constexpr float SHAKE_OFFSET_Y = 0.031f;
-	constexpr float SHAKE_SPEED = 1.6f;
+	constexpr float SHAKE_SPEED = 1.75f;
 	constexpr float SHAKE_DELTA_K = 10.0f;
 }
 
@@ -39,8 +39,10 @@ void CameraControl::refresh() {
 }
 
 void CameraControl::updateMouse(PlayerInput& input) {
-	float rotX = -Events::deltaX / Window::height * 2;
-	float rotY = -Events::deltaY / Window::height * 2;
+	float sensitivity = settings.sensitivity;
+
+	float rotX = -Events::deltaX / Window::height * sensitivity;
+	float rotY = -Events::deltaY / Window::height * sensitivity;
 
 	if (input.zoom){
 		rotX /= 4;
@@ -179,14 +181,26 @@ void PlayerController::updateInteraction(){
 		int z = (int)iend.z;
 		uint8_t states = 0;
 
-		if (contentIds->getBlockDef(player->choosenBlock)->rotatable){
-			if (abs(norm.x) > abs(norm.z)){
-				if (abs(norm.x) > abs(norm.y)) states = BLOCK_DIR_X;
-				if (abs(norm.x) < abs(norm.y)) states = BLOCK_DIR_Y;
-			}
-			if (abs(norm.x) < abs(norm.z)){
-				if (abs(norm.z) > abs(norm.y)) states = BLOCK_DIR_Z;
-				if (abs(norm.z) < abs(norm.y)) states = BLOCK_DIR_Y;
+		Block* def = contentIds->getBlockDef(player->choosenBlock);
+		if (def->rotatable){
+			const std::string& name = def->rotations.name;
+			if (name == "pipe") {
+				if (norm.x < 0.0f) states = BLOCK_DIR_WEST;
+				else if (norm.x > 0.0f) states = BLOCK_DIR_EAST;
+				else if (norm.y > 0.0f) states = BLOCK_DIR_UP;
+				else if (norm.y < 0.0f) states = BLOCK_DIR_DOWN;
+				else if (norm.z > 0.0f) states = BLOCK_DIR_NORTH;
+				else if (norm.z < 0.0f) states = BLOCK_DIR_SOUTH;
+			} else if (name == "pane") {
+				glm::vec3 vec = camera->dir;
+				if (abs(vec.x) > abs(vec.z)){
+					if (vec.x > 0.0f) states = BLOCK_DIR_EAST;
+					if (vec.x < 0.0f) states = BLOCK_DIR_WEST;
+				}
+				if (abs(vec.x) < abs(vec.z)){
+					if (vec.z > 0.0f) states = BLOCK_DIR_SOUTH;
+					if (vec.z < 0.0f) states = BLOCK_DIR_NORTH;
+				}
 			}
 		}
 		

@@ -6,8 +6,7 @@
 #include "../../graphics/ShaderProgram.h"
 #include "../../graphics/Mesh.h"
 #include "../../window/Window.h"
-
-constexpr double PI = 3.14159265358979323846;
+#include "../../constants.h"
 
 Skybox::Skybox(uint size, ShaderProgram* shader) : size(size), shader(shader) {
     glGenTextures(1, &cubemap);

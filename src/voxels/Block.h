@@ -34,9 +34,11 @@ struct CoordSystem {
 
 struct BlockRotProfile {
 	static const int MAX_COUNT = 16;
+    std::string name;
 	CoordSystem variants[MAX_COUNT];
 
 	static const BlockRotProfile PIPE;
+    static const BlockRotProfile PANE;
 };
 
 class Block {

@@ -6,6 +6,7 @@
 #include "../content/Content.h"
 #include "../graphics/Atlas.h"
 #include "../voxels/Block.h"
+#include "../core_defs.h"
 
 ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) {
     const ContentIndices* contentIds = content->indices;
@@ -17,7 +18,7 @@ ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) {
 		for (uint side = 0; side < 6; ++side) {
 			std::string tex = def->textureFaces[side];
 			if (atlas->has(tex)) sideregions[i * 6 + side] = atlas->get(tex);
-            else if (atlas->has("notfound")) sideregions[i * 6 + side] = atlas->get("notfound");
+            else if (atlas->has(TEXTURE_NOTFOUND)) sideregions[i * 6 + side] = atlas->get(TEXTURE_NOTFOUND);
 		}
     }
 }
