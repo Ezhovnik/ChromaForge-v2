@@ -10,7 +10,7 @@ namespace PlayerConsts {
     constexpr float CROUCH_SHIFT_Y = -0.2f;
     constexpr float RUN_SPEED_MUL = 1.5f;
     constexpr float FLIGHT_SPEED_MUL = 5.0f;
-    constexpr float JUMP_FORCE = 7.0f;
+    constexpr float JUMP_FORCE = 8.0f;
     constexpr float GROUND_DAMPING = 10.0f;
     constexpr float AIR_DAMPING = 7.0f;
     constexpr float CHEAT_SPEED_MUL = 5.0f;

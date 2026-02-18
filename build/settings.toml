@@ -13,6 +13,8 @@ padding = 2
 [camera]
 fov-events = true
 shaking = true
+fov = 90
+sensitivity = 2
 
 [graphics]
 fog-curve = 1.6

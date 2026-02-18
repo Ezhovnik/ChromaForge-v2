@@ -1,6 +1,8 @@
 #ifndef SRC_CORE_DEFS_H_
 #define SRC_CORE_DEFS_H_
 
+#define TEXTURE_NOTFOUND "notfound"
+
 #define BIND_MOVE_FORWARD "movement.forward"
 #define BIND_MOVE_BACK "movement.back"
 #define BIND_MOVE_LEFT "movement.left"

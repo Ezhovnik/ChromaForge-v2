@@ -36,6 +36,7 @@
 #include "../settings.h"
 #include "ContentGfxCache.h"
 #include "graphics/Skybox.h"
+#include "../constants.h"
 
 inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
@@ -145,7 +146,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 	ShaderProgram* backShader = assets->getShader("background");
 	backShader->use();
 	backShader->uniformMatrix("u_view", camera->getView(false));
-	backShader->uniform1f("u_zoom", camera->zoom);
+	backShader->uniform1f("u_zoom", camera->zoom * camera->getFov() / (PI * 0.5f));
 	backShader->uniform1f("u_ar", (float)Window::width/(float)Window::height);
 	skybox->draw(backShader);
 

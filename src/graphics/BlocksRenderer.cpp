@@ -132,9 +132,9 @@ void BlocksRenderer::face(const glm::ivec3& coord_,
 	const glm::vec3 Y(axisY);
 	const glm::vec3 Z(axisZ);
 
-	const glm::vec3 sunVector = glm::vec3(0.431934f, 0.863868f, 0.259161f);
+	const glm::vec3 sunVector = glm::vec3(0.411934f, 0.863868f, 0.279161f);
 	float d = glm::dot(Z, sunVector);
-	d = 0.75f + d * 0.25f;
+	d = 0.7f + d * 0.3f;
 
 	glm::vec4 tint(d);
 	glm::vec3 coord(glm::vec3(coord_) + offset);
@@ -220,7 +220,7 @@ void BlocksRenderer::blockCubeShaded(const glm::ivec3& icoord, const glm::vec3& 
 	face(coord + X, -X, -Z, -Y, -X - Y + loff, local, size.x, size.z, 0.0f, texfaces[2]);
 	
 	face(coord + X, -Z, Y, X, X - X + loff, local, size.z, size.y, 0.0f, texfaces[1]);
-	face(coord + Y, -Z, -Y, -X, -X - Y - Z + loff, local, size.z, size.y, 0.0f, texfaces[0]);
+	face(coord + Y, -Z, -Y, -X, -X - Y + loff, local, size.z, size.y, 0.0f, texfaces[0]);
 }
 
 void BlocksRenderer::blockCubeShaded(int x, int y, int z, const UVRegion(&texfaces)[6], const Block* block, ubyte states) {

@@ -291,7 +291,7 @@ void HudRenderer::draw(const GfxContext& context) {
 
     debugPanel->visible(level->player->debug);
 
-    uicamera->fov = height;
+    uicamera->setFov(height);
 
 	ShaderProgram* uiShader = assets->getShader("ui");
     if (uiShader == nullptr) {
@@ -328,7 +328,7 @@ void HudRenderer::draw(const GfxContext& context) {
 
 		Block* choosen_block = contentIds->getBlockDef(player->choosenBlock);
 		assert(choosen_block != nullptr);
-		blocksPreview->draw(choosen_block, width - 56, uicamera->fov - 56, 48, glm::vec4(1.0f));
+		blocksPreview->draw(choosen_block, width - 56, uicamera->getFov() - 56, 48, glm::vec4(1.0f));
 	}
 	uiShader->use();
 	batch->begin();

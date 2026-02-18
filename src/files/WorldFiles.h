@@ -28,10 +28,24 @@ class Content;
 class ContentIndices;
 class World;
 
-struct WorldRegion {
+class WorldRegion {
+private:
 	ubyte** chunksData;
-    uint32_t* compressedSizes;
-	bool unsaved;
+	uint32_t* sizes;
+	bool unsaved = true;
+public:
+	WorldRegion();
+	~WorldRegion();
+
+	void put(uint x, uint z, ubyte* data, uint32_t size);
+	ubyte* get(uint x, uint z);
+	uint getSize(uint x, uint z);
+
+    void setUnsaved(bool unsaved) {this->unsaved = unsaved;};
+	bool isUnsaved() const {return unsaved;};
+
+	ubyte** getChunks() const {return chunksData;};
+	uint32_t* getSizes() const {return sizes;};
 };
 
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
@@ -43,9 +57,14 @@ private:
     std::filesystem::path getRegionsFolder() const;
     std::filesystem::path getIndicesFile() const;
 
+    WorldRegion* getRegion(int x, int z);
+
+    ubyte* compress(ubyte* src, size_t srclen, size_t& len);
+    ubyte* decompress(ubyte* src, size_t srclen, size_t dstlen);
+
     void writeWorldInfo(const World* world);
 public:
-    std::unordered_map<glm::ivec2, WorldRegion> regions; // Хранилище регионов в оперативной памяти.
+    std::unordered_map<glm::ivec2, WorldRegion*> regions; // Хранилище регионов в оперативной памяти.
     std::filesystem::path directory; // Путь к директории с файлами мира
     ubyte* compressionBuffer; // Выходной буфер для записи регионов
 
@@ -58,14 +77,12 @@ public:
 
     bool readWorldInfo(World* world);
     bool readPlayer(Player* player); // Читает данные об игроке с диска
-    ubyte* readChunkData(int x, int z, uint32_t& length); // Читает данные чанка непосредственно из файла
+    ubyte* readChunkData(int x, int y, uint32_t& length, std::filesystem::path file);
+	void writeRegion(int x, int y, WorldRegion* entry, std::filesystem::path file);
 	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
-	void writeRegion(int x, int y, WorldRegion& entry); // Формирует бинарное представление региона для записи в файл
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
     void write(const World* world, const Content* content);
     void writeIndices(const ContentIndices* indices);
 };
-
-extern void longToCoords(int& x, int& z, long key); // Преобразует 64-битный ключ региона в координаты
 
 #endif // FILES_WORLDFILES_H_

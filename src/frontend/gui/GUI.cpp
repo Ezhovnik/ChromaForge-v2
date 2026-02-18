@@ -105,7 +105,7 @@ void GUI::activate(float delta) {
 
 void GUI::draw(Batch2D* batch, Assets* assets) {
     menu->setCoord((Window::size() - menu->size()) / 2.0f);
-    uicamera->fov = Window::height;
+    uicamera->setFov(Window::height);
 
 	ShaderProgram* uishader = assets->getShader("ui");
     if (uishader == nullptr) {

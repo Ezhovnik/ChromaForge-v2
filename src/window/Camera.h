@@ -5,11 +5,12 @@
 
 // Виртуальная камера в 3D пространстве
 class Camera {
+    float fov;
+
     // Обновляет векторы направления камеры на основе текущей матрицы вращения
     void updateVectors(); 
 public:
     glm::vec3 position; // Позиция камеры
-    float fov; // Угол обзора камеры в радианах
     float zoom;
 
     // Векторы направления
@@ -33,6 +34,9 @@ public:
     glm::mat4 getProjection(); // Возвращает матрицу проекции камеры.
     glm::mat4 getView(bool position_flag = true); // Возвращает матрицу вида камеры.
     glm::mat4 getProjView();
+
+    void setFov(float fov) {this->fov = fov;}
+    float getFov() const {return fov;}
 };
 
 #endif // WINDOW_CAMERA_H

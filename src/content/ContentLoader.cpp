@@ -56,6 +56,8 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
     definition->rotatable = profile != "none";
     if (profile == "pipe") {
         definition->rotations = BlockRotProfile::PIPE;
+    } else if (profile == "pane") {
+        definition->rotations = BlockRotProfile::PANE;
     } else if (profile != "none") {
         LOG_WARN("Unknown block {} rotation profile {}", name, profile);
         definition->rotatable = false;

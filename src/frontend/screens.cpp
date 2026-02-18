@@ -63,7 +63,7 @@ void MenuScreen::draw(float delta) {
     Window::clear();
     Window::setBgColor(glm::vec3(0.2f));
 
-    uicamera->fov = Window::height;
+    uicamera->setFov(Window::height);
     ShaderProgram* uishader = engine->getAssets()->getShader("ui");
     if (uishader == nullptr) {
         LOG_CRITICAL("The shader 'ui' could not be found in the assets");
@@ -128,6 +128,8 @@ void LevelScreen::update(float delta) {
 
     bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();
+
+    level->player->camera->setFov(glm::radians(settings.camera.fov));
 
     if (settings.graphics.backlight != backlight) {
         level->chunks->saveAndClear();

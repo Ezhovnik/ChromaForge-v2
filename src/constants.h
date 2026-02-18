@@ -16,6 +16,8 @@ inline constexpr int CHUNK_VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH;
 
 inline constexpr blockid_t BLOCK_VOID = std::numeric_limits<blockid_t>::max();
 
+constexpr double PI = 3.14159265358979323846;
+
 inline uint vox_index(int x, int y, int z, int w = CHUNK_WIDTH, int d = CHUNK_DEPTH) {
 	return (y * d + z) * w + x;
 }

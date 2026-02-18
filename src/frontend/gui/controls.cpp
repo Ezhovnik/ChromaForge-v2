@@ -207,7 +207,8 @@ void TrackBar::draw(Batch2D* batch, Assets* assets) {
     float t = (value - min) / (max - min + trackWidth * step);
 
     batch->color = trackColor;
-    batch->rect(coord.x + width * t, coord.y, size_.x * (trackWidth / (max - min + trackWidth*step) * step), size_.y);
+    int actualWidth = size_.x * (trackWidth / (max - min + trackWidth * step) * step);
+    batch->rect(coord.x + width * t, coord.y, actualWidth, size_.y);
 }
 
 void TrackBar::supplier(doublesupplier supplier) {

@@ -11,7 +11,7 @@
 #include "LevelEvents.h"
 #include "../content/Content.h"
 
-inline constexpr float GRAVITY = 19.6f;
+inline constexpr float GRAVITY = 22.6f;
 
 Level::Level(World* world, const Content* content, Player* player, EngineSettings& settings) :
 	world(world),
