@@ -7,6 +7,7 @@
 
 #include "voxel.h"
 #include "../lighting/LightMap.h"
+#include "../content/ContentLUT.h"
 
 // Конструктор
 Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
@@ -72,7 +73,7 @@ Chunk* Chunk::clone() const {
 // Формат: [voxel_ids...][voxel_states...];
 ubyte* Chunk::encode() const {
 	ubyte* buffer = new ubyte[CHUNK_DATA_LEN];
-	for (size_t i = 0; i < CHUNK_VOLUME; i++) {
+	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
 		buffer[i] = voxels[i].id;
 		buffer[CHUNK_VOLUME + i] = voxels[i].states;
 	}
@@ -80,10 +81,17 @@ ubyte* Chunk::encode() const {
 }
 
 bool Chunk::decode(ubyte* data) {
-	for (size_t i = 0; i < CHUNK_VOLUME; i++) {
+	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
 		voxel& vox = voxels[i];
 		vox.id = data[i];
 		vox.states = data[CHUNK_VOLUME + i];
 	}
 	return true;
+}
+
+void Chunk::convert(ubyte* data, const ContentLUT* lut) {
+    for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+        blockid_t id = data[i];
+		data[i] = lut->getBlockId(id);
+    }
 }

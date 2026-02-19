@@ -56,11 +56,10 @@ private:
 	std::filesystem::path getRegionFilename(int x, int z) const;
     std::filesystem::path getPlayerFile() const; // Генерирует имя файла, в котором записана информация об игроке
     std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информауия о мире
-    std::filesystem::path getRegionsFolder() const;
     std::filesystem::path getIndicesFile() const;
 
-    ubyte* compress(ubyte* src, size_t srclen, size_t& len);
-    ubyte* decompress(ubyte* src, size_t srclen, size_t dstlen);
+    ubyte* compress(const ubyte* src, size_t srclen, size_t& len);
+    ubyte* decompress(const ubyte* src, size_t srclen, size_t dstlen);
 
     void writeWorldInfo(const World* world);
     void writeRegions(std::unordered_map<glm::ivec2, WorldRegion*>& regions, const std::filesystem::path& folder);
@@ -82,7 +81,11 @@ public:
     WorldFiles(std::filesystem::path directory, const DebugSettings& settings); // Конструктор
     ~WorldFiles(); // Деструктор
 
+    static bool parseRegionFilename(const std::string& name, int& x, int& y);
+    std::filesystem::path getRegionsFolder() const;
+
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
+    void put(int x, int z, const ubyte* voxelData);
 
     bool readWorldInfo(World* world);
     bool readPlayer(Player* player); // Читает данные об игроке с диска

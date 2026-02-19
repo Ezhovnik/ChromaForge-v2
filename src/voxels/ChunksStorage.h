@@ -17,6 +17,8 @@ class ChunksStorage {
 private:
     Level* level;
 	std::unordered_map<glm::ivec2, std::shared_ptr<Chunk>> chunksMap;
+
+	blockid_t bedrockID = 0;
 public:
 	ChunksStorage(Level* level);
 	virtual ~ChunksStorage();

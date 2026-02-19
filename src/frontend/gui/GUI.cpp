@@ -148,3 +148,10 @@ std::shared_ptr<UINode> GUI::get(std::string name) {
 void GUI::remove(std::string name) {
     storage.erase(name);
 }
+
+void GUI::setFocus(std::shared_ptr<UINode> node) {
+    if (focus) focus->defocus();
+
+    focus = node;
+    if (focus) focus->focus(this);
+}

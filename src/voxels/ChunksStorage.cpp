@@ -11,6 +11,8 @@
 #include "../files/WorldFiles.h"
 #include "../math/voxmaths.h"
 #include "../lighting/Lightmap.h"
+#include "../logger/Logger.h"
+#include "../definitions.h"
 
 ChunksStorage::ChunksStorage(Level* level) : level(level) {
 }
@@ -44,6 +46,16 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	if (data) {
 		chunk->decode(data.get());
 		chunk->setLoaded(true);
+	}
+
+	ContentIndices* indices = level->content->indices;
+	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+        blockid_t id = chunk->voxels[i].id;
+		if (indices->getBlockDef(id) == nullptr) {
+            LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
+			if (bedrockID == 0) level->content->requireBlock(DEFAULT_BLOCK_NAMESPACE":bedrock")->rt.id;
+			chunk->voxels[i].id = bedrockID;
+		}
 	}
 
 	light_t* lights = world->wfile->getLights(chunk->chunk_x, chunk->chunk_z);

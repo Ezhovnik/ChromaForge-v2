@@ -13,12 +13,16 @@
 #include "../window/Camera.h"
 #include "../logger/Logger.h"
 #include "../content/Content.h"
+#include "../content/ContentLUT.h"
 
 // Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
 inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
 
-World::World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings) : name(name), seed(seed), settings(settings) {
+world_load_error::world_load_error(std::string message) : std::runtime_error(message) {
+}
+
+World::World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content) : name(name), seed(seed), settings(settings), content(content) {
 	wfile = new WorldFiles(directory, settings.debug);
 }
 
@@ -47,26 +51,46 @@ void World::write(Level* level) {
 	wfile->writePlayer(level->player);
 }
 
-Level* World::create(EngineSettings& settings, const Content* content) {
+Level* World::create(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content) {
+	LOG_INFO("Creating world");
+	World* world = new World(name, directory, seed, settings, content);
+	LOG_INFO("World successfully created");
+
+	LOG_INFO("Creating a level");
 	Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED);
-	return new Level(this, content, player, settings);
+	Level* level = new Level(world, content, player, settings);
+	LOG_INFO("Level successfully created");
+
+	Logger::getInstance().flush();
+
+	return level;
 }
 
-Level* World::load(EngineSettings& settings, const Content* content) {
-    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED);
+ContentLUT* World::checkIndices(const std::filesystem::path& directory, const Content* content) {
+	std::filesystem::path indicesFile = directory/std::filesystem::path("indices.json");
+	if (std::filesystem::is_regular_file(indicesFile)) return ContentLUT::create(indicesFile, content);
 
-    LOG_INFO("Reading info about the world");
-	wfile->readWorldInfo(this);
-    LOG_INFO("Info about the world has been successfully read");
+	return nullptr;
+}
 
-    LOG_INFO("Creating a level");
-	Level* level = new Level(this, content, player, settings);
+Level* World::load(std::filesystem::path directory, EngineSettings& settings, const Content* content) {
+	LOG_INFO("Loading world");
+	std::unique_ptr<World> world (new World(".", directory, 0, settings, content));
+	auto& wfile = world->wfile;
 
-    LOG_INFO("Reading player info");
+	if (!wfile->readWorldInfo(world.get())) {
+		LOG_ERROR("Could not to find world.json");
+		Logger::getInstance().flush();
+		throw world_load_error("Could not to find world.json");
+	}
+
+	LOG_INFO("Creating a level");
+	Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED);
 	wfile->readPlayer(player);
-    LOG_INFO("Player info successfully read");
+	Level* level = new Level(world.get(), content, player, settings);
+	LOG_INFO("Level successfully created");
 
-    LOG_INFO("Level successfully created");
-    Logger::getInstance().flush();
+	world.release();
+	LOG_INFO("World successfully created");
 	return level;
 }
