@@ -88,6 +88,7 @@
 
                 //src/math
                 "${workspaceFolder}/src/math/LMPacker.cpp",
+                "${workspaceFolder}/src/math/rays.cpp",
 
                 //src/objects
                 "${workspaceFolder}/src/objects/Player.cpp",
