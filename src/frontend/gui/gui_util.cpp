@@ -32,18 +32,18 @@ void guiutil::alert(GUI* gui, std::wstring text, gui::runnable on_hidden) {
     menu->set("<alert>");
 }
 
-void guiutil::confirm(GUI* gui, std::wstring text, gui::runnable on_confirm) {
+void guiutil::confirm(GUI* gui, std::wstring text, gui::runnable on_confirm, std::wstring yestext, std::wstring notext) {
     PagesControl* menu = gui->getMenu();
-    Panel* panel = new Panel(glm::vec2(500, 200), glm::vec4(8.0f), 8.0f);
+    Panel* panel = new Panel(glm::vec2(600, 200), glm::vec4(8.0f), 8.0f);
     panel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
     panel->add(new Label(text));
-    Panel* subpanel = new Panel(glm::vec2(500, 53));
+    Panel* subpanel = new Panel(glm::vec2(600, 53));
     subpanel->color(glm::vec4(0));
-    subpanel->add((new Button(L"Yes", glm::vec4(8.0f)))->listenAction([=](GUI*){
+    subpanel->add((new Button(yestext, glm::vec4(8.0f)))->listenAction([=](GUI*){
         if (on_confirm) on_confirm();
         menu->back();
     }));
-    subpanel->add((new Button(L"No", glm::vec4(8.0f)))->listenAction([=](GUI*){
+    subpanel->add((new Button(notext, glm::vec4(8.0f)))->listenAction([=](GUI*){
         menu->back();
     }));
     panel->add(subpanel);

@@ -160,18 +160,17 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){
 	int padding = 8;
 	Map2D heights(cx * CHUNK_WIDTH - padding, cz * CHUNK_DEPTH - padding, CHUNK_WIDTH + padding * 2, CHUNK_DEPTH + padding * 2);
 
-	// Influences to trees and sand generation
 	Map2D humidity(cx * CHUNK_WIDTH - padding, cz * CHUNK_DEPTH - padding, CHUNK_WIDTH + padding * 2, CHUNK_DEPTH + padding * 2);
 
-	for (int z = -padding; z < CHUNK_DEPTH + padding; z++){
-		for (int x = -padding; x < CHUNK_WIDTH + padding; x++){
+	for (int z = -padding; z < CHUNK_DEPTH + padding; ++z){
+		for (int x = -padding; x < CHUNK_WIDTH + padding; ++x){
 			int real_x = x + cx * CHUNK_WIDTH;
 			int real_z = z + cz * CHUNK_DEPTH;
 			float height = calc_height(&noise, real_x, real_z);
 			float hum = fnlGetNoise3D(&noise, real_x * 0.3 + 633, 0.0, real_z * 0.3);
 			if (height >= SEA_LEVEL) {
 				height = ((height - SEA_LEVEL) * 0.1) - 0.0;
-				height = powf(height, (1.0 + hum - fmax(0.0, height) * 0.2));
+				height = powf(height, (1.0 + hum - fmax(0.0, height) * 0.1));
 				height = height * 10 + SEA_LEVEL;
 			} else {
 				height *= 1.0f + (height - SEA_LEVEL) * 0.05f * hum;

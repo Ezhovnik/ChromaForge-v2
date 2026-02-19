@@ -2,7 +2,6 @@
 
 #include <string>
 #include <memory>
-#include <iostream>
 #include <filesystem>
 #include <random>
 #include <chrono>
@@ -21,8 +20,59 @@
 #include "../engine.h"
 #include "../settings.h"
 #include "gui/gui_util.h"
+#include "../content/Content.h"
+#include "../content/ContentLUT.h"
+#include "../files/WorldConverter.h"
+#include "../logger/Logger.h"
 
 using namespace gui;
+
+void show_content_missing(GUI* gui, const Content* content, ContentLUT* lut) {
+    PagesControl* menu = gui->getMenu();
+    Panel* panel = new Panel(glm::vec2(500, 200), glm::vec4(8.0f), 8.0f);
+    panel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+    panel->add(new Label(L"Content missing!"));
+
+    Panel* subpanel = new Panel(glm::vec2(500, 100));
+    subpanel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+
+    for (size_t i = 0; i < lut->countBlocks(); ++i) {
+        if (lut->getBlockId(i) == BLOCK_VOID) {
+            auto name = lut->getBlockName(i);
+            Panel* hpanel = new Panel(glm::vec2(500, 30));
+            hpanel->color(glm::vec4(0.0f));
+            hpanel->orientation(Orientation::horizontal);
+            
+            Label* namelabel = new Label(util::str2wstr_utf8(name));
+            namelabel->color(glm::vec4(1.0f, 0.2f, 0.2f, 0.5f));
+
+            Label* typelabel = new Label(L"[block]");
+            typelabel->color(glm::vec4(0.5f));
+            hpanel->add(typelabel);
+            hpanel->add(namelabel);
+            subpanel->add(hpanel);
+        }
+    }
+    subpanel->maxLength(400);
+    panel->add(subpanel);
+
+    panel->add((new Button(L"Back to Main Menu", glm::vec4(8.0f)))->listenAction([=](GUI*){menu->back();}));
+    panel->refresh();
+    menu->add("missing-content", panel);
+    menu->set("missing-content");
+}
+
+void show_convert_request(GUI* gui, const Content* content, ContentLUT* lut, std::filesystem::path folder) {
+    guiutil::confirm(gui, L"Content indices have changed! Convert " + util::str2wstr_utf8(folder.string()) + L"?", [=]() {
+        LOG_INFO("Convert the world: {}", folder.string());
+        auto converter = std::make_unique<WorldConverter>(folder, content, lut);
+        while (converter->hasNext()) {
+            converter->convertNext();
+        }
+        converter->write();
+        delete lut;
+    }, L"Yes", L"Cancel");
+}
 
 Panel* create_main_menu_panel(Engine* engine, PagesControl* menu) {
     EnginePaths* paths = engine->getPaths();
@@ -33,7 +83,7 @@ Panel* create_main_menu_panel(Engine* engine, PagesControl* menu) {
     panel->add(guiutil::gotoButton(L"New World", "new-world", menu));
 
     Panel* worldsPanel = new Panel(glm::vec2(390, 200), glm::vec4(5.0f));
-    worldsPanel->color(glm::vec4(0.1f));
+    worldsPanel->color(glm::vec4(1.0f, 1.0f, 1.0f, 0.07f));
     worldsPanel->maxLength(400);
 
     std::filesystem::path saves_folder = paths->getWorldsFolder();
@@ -43,14 +93,26 @@ Panel* create_main_menu_panel(Engine* engine, PagesControl* menu) {
             
             std::string name = entry.path().filename().string();
             Button* button = new Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
-            button->color(glm::vec4(0.5f));
-            button->listenAction([=](GUI*) {
+            button->color(glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
+            button->listenAction([=](GUI* gui) {
                 EngineSettings& settings = engine->getSettings();
+                const Content* content = engine->getContent();
 
                 auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
-                World* world = new World(name, folder, 42, settings);
-                auto screen = new LevelScreen(engine, world->load(settings, engine->getContent()));
-                engine->setScreen(std::shared_ptr<Screen>(screen));
+                std::filesystem::create_directories(folder);
+                ContentLUT* lut = World::checkIndices(folder, content);
+                if (lut) {
+                    if (lut->hasMissingContent()) {
+                        show_content_missing(gui, content, lut);
+                        delete lut;
+                    } else {
+                        show_convert_request(gui, content, lut, folder);
+                    }
+                } else {
+                    Level* level = World::load(folder, settings, content);
+                    auto screen = new LevelScreen(engine, level);
+                    engine->setScreen(std::shared_ptr<Screen>(screen));
+                }
             });
             worldsPanel->add(button);
         }
@@ -122,15 +184,13 @@ Panel* create_new_world_panel(Engine* engine, PagesControl* menu) {
                 std::hash<std::wstring> hash;
                 seed = hash(seedstr);
             }
-            EngineSettings& settings = engine->getSettings();
 
             worldNameInput->cleanInput();
             seedInput->cleanInput();
 
             auto folder = paths->getWorldsFolder()/std::filesystem::u8path(nameutf8);
-            std::filesystem::create_directories(folder);
-            World* world = new World(nameutf8, folder, seed, settings);
-            auto screen = new LevelScreen(engine, world->create(settings, engine->getContent()));
+            Level* level = World::create(nameutf8, folder, seed, engine->getSettings(), engine->getContent());
+            auto screen = new LevelScreen(engine, level);
             engine->setScreen(std::shared_ptr<Screen>(screen));
         });
         panel->add(button);

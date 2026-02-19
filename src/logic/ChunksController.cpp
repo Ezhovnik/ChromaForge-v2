@@ -48,7 +48,6 @@ void ChunksController::update(int64_t maxDuration) {
 
 bool ChunksController::loadVisible(){
     const Content* content = level->content;
-	if (bedrockID == 0) content->requireBlock(DEFAULT_BLOCK_NAMESPACE":bedrock")->rt.id;
 
 	const int width = chunks->width;
 	const int depth = chunks->depth;
@@ -105,14 +104,6 @@ bool ChunksController::loadVisible(){
 
     chunk->updateHeights();
 
-    ContentIndices* indices = content->indices;
-	for (size_t i = 0; i < CHUNK_VOLUME; i++) {
-        blockid_t id = chunk->voxels[i].id;
-		if (indices->getBlockDef(id) == nullptr) {
-            LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
-			chunk->voxels[i].id = bedrockID;
-		}
-	}
 	if (!chunk->isLoadedLights()) lighting->preBuildSkyLight(chunk->chunk_x, chunk->chunk_z);
 	return true;
 }
