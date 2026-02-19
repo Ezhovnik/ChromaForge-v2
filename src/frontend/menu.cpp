@@ -20,20 +20,9 @@
 #include "../window/Window.h"
 #include "../engine.h"
 #include "../settings.h"
+#include "gui/gui_util.h"
 
 using namespace gui;
-
-inline Button* gotoButton(std::wstring text, std::string page, PagesControl* menu) {
-    return (new Button(text, glm::vec4(10.f)))->listenAction([=](GUI* gui) {
-        menu->set(page);
-    });
-}
-
-inline Button* backButton(PagesControl* menu) {
-    return (new Button(L"Back", glm::vec4(10.f)))->listenAction([=](GUI* gui) {
-        menu->back();
-    });
-}
 
 Panel* create_main_menu_panel(Engine* engine, PagesControl* menu) {
     EnginePaths* paths = engine->getPaths();
@@ -41,7 +30,7 @@ Panel* create_main_menu_panel(Engine* engine, PagesControl* menu) {
     Panel* panel = new Panel(glm::vec2(400, 200), glm::vec4(5.0f), 1.0f);
     panel->color(glm::vec4(0.0f));
 
-    panel->add(gotoButton(L"New World", "new-world", menu));
+    panel->add(guiutil::gotoButton(L"New World", "new-world", menu));
 
     Panel* worldsPanel = new Panel(glm::vec2(390, 200), glm::vec4(5.0f));
     worldsPanel->color(glm::vec4(0.1f));
@@ -67,8 +56,8 @@ Panel* create_main_menu_panel(Engine* engine, PagesControl* menu) {
         }
     }
     panel->add(worldsPanel);
-    panel->add(gotoButton(L"Settings", "settings", menu));
-    panel->add((new Button(L"Quit", glm::vec4(10.f)))->listenAction([](GUI*) {
+    panel->add(guiutil::gotoButton(L"Settings", "settings", menu));
+    panel->add((new Button(L"Quit", glm::vec4(10.f)))->listenAction([](GUI* gui) {
         Window::setShouldClose(true);
     }));
     panel->refresh();
@@ -141,13 +130,13 @@ Panel* create_new_world_panel(Engine* engine, PagesControl* menu) {
             auto folder = paths->getWorldsFolder()/std::filesystem::u8path(nameutf8);
             std::filesystem::create_directories(folder);
             World* world = new World(nameutf8, folder, seed, settings);
-            auto screen = new LevelScreen(engine, world->load(settings, engine->getContent()));
+            auto screen = new LevelScreen(engine, world->create(settings, engine->getContent()));
             engine->setScreen(std::shared_ptr<Screen>(screen));
         });
         panel->add(button);
     }
 
-    panel->add(backButton(menu));
+    panel->add(guiutil::backButton(menu));
     panel->refresh();
     return panel;
 }
@@ -195,7 +184,7 @@ Panel* create_controls_panel(Engine* engine, PagesControl* menu) {
 
     panel->add(scrollPanel);
 
-    panel->add(backButton(menu));
+    panel->add(guiutil::backButton(menu));
     panel->refresh();
     return panel;
 }
@@ -306,8 +295,8 @@ Panel* create_settings_panel(Engine* engine, PagesControl* menu) {
         panel->add(checkpanel);
     }
 
-    panel->add(gotoButton(L"Controls", "controls", menu));
-    panel->add(backButton(menu));
+    panel->add(guiutil::gotoButton(L"Controls", "controls", menu));
+    panel->add(guiutil::backButton(menu));
     panel->refresh();
     return panel;
 }
@@ -322,7 +311,7 @@ Panel* create_pause_panel(Engine* engine, PagesControl* menu) {
 		});
 		panel->add(std::shared_ptr<UINode>(button));
 	}
-    panel->add(gotoButton(L"Settings", "settings", menu));
+    panel->add(guiutil::gotoButton(L"Settings", "settings", menu));
 	{
 		Button* button = new Button(L"Save and Quit to Menu", glm::vec4(10.f));
 		button->listenAction([engine](GUI*){

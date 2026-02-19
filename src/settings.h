@@ -41,6 +41,7 @@ struct GraphicsSettings {
 
 struct DebugSettings {
     bool generatorTestMode = false;
+	bool doWriteLights = true;
 };
 
 struct EngineSettings {

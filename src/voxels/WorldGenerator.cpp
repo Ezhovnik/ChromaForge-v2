@@ -133,20 +133,20 @@ blockid_t WorldGenerator::generate_tree(fnl_state *noise,
 }
 
 WorldGenerator::WorldGenerator(const Content* content)
-                : idAir(content->require(DEFAULT_BLOCK_NAMESPACE":air")->rt.id),
-                idStone(content->require(DEFAULT_BLOCK_NAMESPACE":stone")->rt.id),
-                idDirt(content->require(DEFAULT_BLOCK_NAMESPACE":dirt")->rt.id),
-				idMoss(content->require(DEFAULT_BLOCK_NAMESPACE":moss")->rt.id),
-				idSand(content->require(DEFAULT_BLOCK_NAMESPACE":sand")->rt.id),
-				idWater(content->require(DEFAULT_BLOCK_NAMESPACE":water")->rt.id),
-				idLog(content->require(DEFAULT_BLOCK_NAMESPACE":log")->rt.id),
-				idLeaves(content->require(DEFAULT_BLOCK_NAMESPACE":leaves")->rt.id),
-				idGrass(content->require(DEFAULT_BLOCK_NAMESPACE":grass")->rt.id),
-				idPoppy(content->require(DEFAULT_BLOCK_NAMESPACE":poppy")->rt.id),
-				idDandelion(content->require(DEFAULT_BLOCK_NAMESPACE":dandelion")->rt.id),
-				idDaisy(content->require(DEFAULT_BLOCK_NAMESPACE":daisy")->rt.id),
-				idMarigold(content->require(DEFAULT_BLOCK_NAMESPACE":marigold")->rt.id),
-				idBedrock(content->require(DEFAULT_BLOCK_NAMESPACE":bedrock")->rt.id) {;
+                : idAir(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":air")->rt.id),
+                idStone(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":stone")->rt.id),
+                idDirt(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":dirt")->rt.id),
+				idMoss(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":moss")->rt.id),
+				idSand(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":sand")->rt.id),
+				idWater(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":water")->rt.id),
+				idLog(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":log")->rt.id),
+				idLeaves(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":leaves")->rt.id),
+				idGrass(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":grass")->rt.id),
+				idPoppy(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":poppy")->rt.id),
+				idDandelion(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":dandelion")->rt.id),
+				idDaisy(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":daisy")->rt.id),
+				idMarigold(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":marigold")->rt.id),
+				idBedrock(content->requireBlock(DEFAULT_BLOCK_NAMESPACE":bedrock")->rt.id) {;
 }
 
 void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){

@@ -16,7 +16,7 @@
 using namespace gui;
 
 GUI::GUI() {
-    container = new Container(glm::vec2(0, 0), glm::vec2(Window::width, Window::height));
+    container = new Container(glm::vec2(0, 0), glm::vec2(1000));
 
     uicamera = new Camera(glm::vec3(), Window::height);
 	uicamera->perspective = false;

@@ -35,13 +35,23 @@ std::shared_ptr<Chunk> ChunksStorage::get(int x, int z) const {
 }
 
 std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
+	World* world = level->world;
+
 	auto chunk = std::shared_ptr<Chunk>(new Chunk(x, z));
 	store(chunk);
-	std::unique_ptr<ubyte> data(level->world->wfile->getChunk(chunk->chunk_x, chunk->chunk_z));
+
+	std::unique_ptr<ubyte> data(world->wfile->getChunk(chunk->chunk_x, chunk->chunk_z));
 	if (data) {
 		chunk->decode(data.get());
 		chunk->setLoaded(true);
 	}
+
+	light_t* lights = world->wfile->getLights(chunk->chunk_x, chunk->chunk_z);
+	if (lights) {
+		chunk->light_map->set(lights);
+		chunk->setLoadedLights(true);
+	}
+
 	return chunk;
 }
 

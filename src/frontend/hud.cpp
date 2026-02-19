@@ -235,7 +235,7 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 	batch->rect(inv_x, inv_y, inv_w, inv_h);
 	batch->render();
 
-	blocksPreview->begin();
+	blocksPreview->begin(&context.getViewport());
 	{
 		Window::clearDepth();
 		GfxContext subctx = context.sub();
@@ -319,7 +319,7 @@ void HudRenderer::draw(const GfxContext& context) {
 	batch->color = glm::vec4(1.0f);
 	batch->render();
 
-	blocksPreview->begin();
+	blocksPreview->begin(&context.getViewport());
 	{
 		Window::clearDepth();
 		GfxContext subctx = context.sub();

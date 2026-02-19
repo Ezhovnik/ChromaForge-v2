@@ -41,6 +41,7 @@
 
                 //src/frontend/gui
                 "${workspaceFolder}/src/frontend/gui/controls.cpp",
+                "${workspaceFolder}/src/frontend/gui/gui_util.cpp",
                 "${workspaceFolder}/src/frontend/gui/GUI.cpp",
                 "${workspaceFolder}/src/frontend/gui/panels.cpp",
                 "${workspaceFolder}/src/frontend/gui/UINode.cpp",

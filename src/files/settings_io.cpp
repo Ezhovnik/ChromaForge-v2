@@ -34,6 +34,7 @@ toml::Wrapper create_wrapper(EngineSettings& settings) {
 
     toml::Section& debug = wrapper.add("debug");
 	debug.add("generator-test-mode", &settings.debug.generatorTestMode);
+	debug.add("do-write-lights", &settings.debug.doWriteLights);
 
 	return wrapper;
 }

@@ -5,6 +5,8 @@
 #include "../typedefs.h"
 #include "../constants.h"
 
+constexpr int LIGHTMAP_DATA_LEN = CHUNK_VOLUME / 2;
+
 class LightMap {
 public:
 	light_t* map;
@@ -14,6 +16,7 @@ public:
 	~LightMap();
 
     void set(const LightMap* light_map);
+	void set(light_t* map);
 
     inline ushort get(int x, int y, int z){
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x]);
@@ -79,6 +82,9 @@ public:
 	static inline light_t combine(int r, int g, int b, int s) {
 		return r | (g << 4) | (b << 8) | (s << 12);
 	}
+
+	ubyte* encode() const;
+	static light_t* decode(ubyte* buffer);
 };
 
 #endif // LIGHTING_LIGHTMAP_H_

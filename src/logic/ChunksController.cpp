@@ -48,7 +48,7 @@ void ChunksController::update(int64_t maxDuration) {
 
 bool ChunksController::loadVisible(){
     const Content* content = level->content;
-	if (bedrockID == 0) content->require(DEFAULT_BLOCK_NAMESPACE":bedrock")->rt.id;
+	if (bedrockID == 0) content->requireBlock(DEFAULT_BLOCK_NAMESPACE":bedrock")->rt.id;
 
 	const int width = chunks->width;
 	const int depth = chunks->depth;
@@ -71,7 +71,7 @@ bool ChunksController::loadVisible(){
 				}
 				chunk->surrounding = surrounding;
 				if (surrounding == MIN_SURROUNDING && !chunk->isLighted()) {
-					lighting->buildSkyLight(chunk->chunk_x, chunk->chunk_z);
+					if (!chunk->isLoadedLights()) lighting->buildSkyLight(chunk->chunk_x, chunk->chunk_z);
 					lighting->onChunkLoaded(chunk->chunk_x, chunk->chunk_z);
 					chunk->setLighted(true);
 					return true;
@@ -113,6 +113,6 @@ bool ChunksController::loadVisible(){
 			chunk->voxels[i].id = bedrockID;
 		}
 	}
-	lighting->preBuildSkyLight(chunk->chunk_x, chunk->chunk_z);
+	if (!chunk->isLoadedLights()) lighting->preBuildSkyLight(chunk->chunk_x, chunk->chunk_z);
 	return true;
 }

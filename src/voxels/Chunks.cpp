@@ -26,7 +26,7 @@ Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFi
 	}
 	chunksCount = 0;
 
-	airID = content->require(DEFAULT_BLOCK_NAMESPACE":air")->rt.id;
+	airID = content->requireBlock(DEFAULT_BLOCK_NAMESPACE":air")->rt.id;
 }
 
 Chunks::~Chunks(){
@@ -66,7 +66,7 @@ const AABB* Chunks::isObstacle(float x, float y, float z) {
 
 	const Block* def = contentIds->getBlockDef(vox->id);
 	if (def->obstacle) {
-		const AABB& hitbox = def->rotatable ? def->rt.hitboxes[vox->states & BLOCK_ROT_MASK] : def->hitbox;
+		const AABB& hitbox = def->rotatable ? def->rt.hitboxes[vox->rotation()] : def->hitbox;
 		if (def->rt.solid) return &hitbox;
 		else if (hitbox.inside({x - ix, y - iy, z - iz})) return &hitbox;
 	}
@@ -210,7 +210,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 
 			if (def && !def->rt.solid) {
 				const int gridSize = BLOCK_AABB_GRID * 2;
-				const AABB& box = def->rotatable ? def->rt.hitboxes[voxel->states & BLOCK_ROT_MASK] : def->hitbox;
+				const AABB& box = def->rotatable ? def->rt.hitboxes[voxel->rotation()] : def->hitbox;
 				const int subs = gridSize;
 				iend = glm::vec3(ix, iy, iz);
 				end -= iend;

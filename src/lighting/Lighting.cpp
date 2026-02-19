@@ -21,7 +21,7 @@ Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), con
 	solverB = new LightSolver(contentIds, chunks, 2);
 	solverS = new LightSolver(contentIds, chunks, 3);
 
-	airID = content->require(DEFAULT_BLOCK_NAMESPACE":air")->rt.id;
+	airID = content->requireBlock(DEFAULT_BLOCK_NAMESPACE":air")->rt.id;
 }
 
 Lighting::~Lighting(){
