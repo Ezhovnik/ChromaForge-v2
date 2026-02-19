@@ -59,8 +59,8 @@ public:
         glm::vec3 dir, // Направление луча
         float maxDist, // Максимальная дистанция трассировки
         glm::vec3& end, // Точка попадания луча
-        glm::vec3& norm, // Нормаль поверхности в точке попадания
-        glm::vec3& iend // Координаты вокселя в точке попадания
+        glm::ivec3& norm, // Нормаль поверхности в точке попадания
+        glm::ivec3& iend // Координаты вокселя в точке попадания
     );
 
     const AABB* isObstacle(float x, float y, float z);

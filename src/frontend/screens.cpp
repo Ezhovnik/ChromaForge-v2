@@ -119,6 +119,8 @@ LevelScreen::~LevelScreen() {
 }
 
 void LevelScreen::updateHotkeys() {
+    if (Events::justPressed(keycode::F1)) hudVisible = !hudVisible;
+
     if (Events::justPressed(keycode::F3)) level->player->debug = !level->player->debug;
 
     if (Events::justPressed(keycode::F5)) {
@@ -140,12 +142,10 @@ void LevelScreen::update(float delta) {
         backlight = settings.graphics.backlight;
     }
 
-    if (!hud->isPause()) {
-        level->world->updateTimers(delta);
-    }
+    if (!hud->isPause()) level->world->updateTimers(delta);
 
     controller->update(delta, !inputLocked, hud->isPause());
-    hud->update();
+    if (hudVisible) hud->update();
 }
 
 void LevelScreen::draw(float deltaTime) {
@@ -154,6 +154,8 @@ void LevelScreen::draw(float deltaTime) {
     Viewport viewport(Window::width, Window::height);
     GfxContext context(nullptr, viewport, nullptr);
     worldRenderer->draw(context, camera);
-    hud->draw(context);
-    if (level->player->debug) hud->drawDebug(1 / deltaTime);
+    if (hudVisible) {
+        hud->draw(context);
+        if (level->player->debug) hud->drawDebug(1 / deltaTime);
+    }
 }

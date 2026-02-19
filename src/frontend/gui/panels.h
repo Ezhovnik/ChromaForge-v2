@@ -96,7 +96,7 @@ namespace gui {
         void clearHistory();
         void reset();
 
-        Page current();
+        Page& current();
     };
 }
 #endif // FRONTEND_GUI_PANELS_H_

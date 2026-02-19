@@ -189,6 +189,7 @@ Panel* create_new_world_panel(Engine* engine, PagesControl* menu) {
             seedInput->cleanInput();
 
             auto folder = paths->getWorldsFolder()/std::filesystem::u8path(nameutf8);
+            std::filesystem::create_directories(folder);
             Level* level = World::create(nameutf8, folder, seed, engine->getSettings(), engine->getContent());
             auto screen = new LevelScreen(engine, level);
             engine->setScreen(std::shared_ptr<Screen>(screen));

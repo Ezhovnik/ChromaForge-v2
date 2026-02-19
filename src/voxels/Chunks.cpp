@@ -15,6 +15,8 @@
 #include "../definitions.h"
 #include "../content/Content.h"
 #include "../math/AABB.h"
+#include "../math/rays.h"
+#include "../util/timeutil.h"
 
 Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles), content(content), contentIds(content->indices){
 	volume = (size_t)width * (size_t)depth;
@@ -159,14 +161,14 @@ void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states){
     else if (y + 1 > chunk->top) chunk->top = y + 1;
     else if (id == airID) chunk->updateHeights();
 
-	if (lx == 0 && (chunk = getChunk(cx+areaOffsetX-1, cz+areaOffsetZ))) chunk->setModified(true);
-	if (lz == 0 && (chunk = getChunk(cx+areaOffsetX, cz+areaOffsetZ-1))) chunk->setModified(true);
+	if (lx == 0 && (chunk = getChunk(cx + areaOffsetX - 1, cz + areaOffsetZ))) chunk->setModified(true);
+	if (lz == 0 && (chunk = getChunk(cx + areaOffsetX, cz + areaOffsetZ - 1))) chunk->setModified(true);
 
-	if (lx == CHUNK_WIDTH-1 && (chunk = getChunk(cx+areaOffsetX+1, cz+areaOffsetZ))) chunk->setModified(true);
-	if (lz == CHUNK_DEPTH-1 && (chunk = getChunk(cx+areaOffsetX, cz+areaOffsetZ+1))) chunk->setModified(true);
+	if (lx == CHUNK_WIDTH - 1 && (chunk = getChunk(cx + areaOffsetX + 1, cz + areaOffsetZ))) chunk->setModified(true);
+	if (lz == CHUNK_DEPTH - 1 && (chunk = getChunk(cx + areaOffsetX, cz + areaOffsetZ + 1))) chunk->setModified(true);
 }
 
-voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3& end, glm::vec3& norm, glm::vec3& iend) {
+voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3& end, glm::ivec3& norm, glm::ivec3& iend) {
 	float px = start.x;
 	float py = start.y;
 	float pz = start.z;
@@ -180,9 +182,9 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 	int iy = floor(py);
 	int iz = floor(pz);
 
-	float stepx = (dx > 0.0f) ? 1.0f : -1.0f;
-	float stepy = (dy > 0.0f) ? 1.0f : -1.0f;
-	float stepz = (dz > 0.0f) ? 1.0f : -1.0f;
+	int stepx = (dx > 0.0f) ? 1 : -1;
+	int stepy = (dy > 0.0f) ? 1 : -1;
+	int stepz = (dz > 0.0f) ? 1 : -1;
 
 	constexpr float infinity = std::numeric_limits<float>::infinity();
 
@@ -202,64 +204,32 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 
 	while (t <= maxDist){
 		voxel* voxel = getVoxel(ix, iy, iz);
-		const Block* def = nullptr;
-		if (voxel == nullptr || (def = contentIds->getBlockDef(voxel->id))->selectable){
+		if (!voxel) return nullptr;
+		const Block* def = contentIds->getBlockDef(voxel->id);
+		if (def->selectable) {
+			// timeutil::ScopeLogTimer lg((long long)def);
 			end.x = px + t * dx;
 			end.y = py + t * dy;
 			end.z = pz + t * dz;
 
-			if (def && !def->rt.solid) {
-				const int gridSize = BLOCK_AABB_GRID * 2;
+			iend.x = ix;
+			iend.y = iy;
+			iend.z = iz;
+
+			if (!def->rt.solid) {
 				const AABB& box = def->rotatable ? def->rt.hitboxes[voxel->rotation()] : def->hitbox;
-				const int subs = gridSize;
-				iend = glm::vec3(ix, iy, iz);
-				end -= iend;
-				int six = end.x * gridSize;
-				int siy = end.y * gridSize;
-				int siz = end.z * gridSize;
-				float stxMax = (txDelta < infinity) ? txDelta * xdist : infinity;
-				float styMax = (tyDelta < infinity) ? tyDelta * ydist : infinity;
-				float stzMax = (tzDelta < infinity) ? tzDelta * zdist : infinity;
-				for (int i = 0; i < subs * 2; ++i) {
-					end.x = six / float(gridSize);
-					end.y = siy / float(gridSize);
-					end.z = siz / float(gridSize);
-					if (box.inside(end)) {
-						end += iend;
-						norm.x = norm.y = norm.z = 0.0f;
-						if (steppedIndex == 0) norm.x = -stepx;
-						if (steppedIndex == 1) norm.y = -stepy;
-						if (steppedIndex == 2) norm.z = -stepz;
-						return voxel;
-					}
-					if (stxMax < styMax) {
-						if (stxMax < stzMax) {
-							six += stepx;
-							stxMax += txDelta;
-							steppedIndex = 0;
-						} else {
-							siz += stepz;
-							stzMax += tzDelta;
-							steppedIndex = 2;
-						}
-					} else {
-						if (styMax < stzMax) {
-							siy += stepy;
-							styMax += tyDelta;
-							steppedIndex = 1;
-						} else {
-							siz += stepz;
-							stzMax += tzDelta;
-							steppedIndex = 2;
-						}
-					}
+
+				scalar_t distance;
+				if (Rays::rayIntersectAABB(start, dir, iend, box, maxDist, norm, distance) > RayRelation::None){
+					end = start + (dir * glm::vec3(distance));
+					return voxel;
 				}
 			} else {
 				iend.x = ix;
 				iend.y = iy;
 				iend.z = iz;
 
-				norm.x = norm.y = norm.z = 0.0f;
+				norm.x = norm.y = norm.z = 0;
 				if (steppedIndex == 0) norm.x = -stepx;
 				if (steppedIndex == 1) norm.y = -stepy;
 				if (steppedIndex == 2) norm.z = -stepz;
@@ -299,7 +269,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 	end.x = px + t * dx;
 	end.y = py + t * dy;
 	end.z = pz + t * dz;
-	norm.x = norm.y = norm.z = 0.0f;
+	norm.x = norm.y = norm.z = 0;
 	return nullptr;
 }
 
@@ -314,12 +284,12 @@ void Chunks::setCenter(int x, int z) {
 }
 
 void Chunks::translate(int dx, int dz){
-	for (uint i = 0; i < volume; i++){
+	for (uint i = 0; i < volume; ++i){
 		chunksSecond[i] = nullptr;
 	}
-	for (int z = 0; z < depth; z++){
-		for (int x = 0; x < width; x++){
-			std::shared_ptr<Chunk> chunk = chunks[z * depth + x];
+	for (int z = 0; z < depth; ++z){
+		for (int x = 0; x < width; ++x){
+			std::shared_ptr<Chunk> chunk = chunks[z * width + x];
 			int nx = x - dx;
 			int nz = z - dz;
 			if (chunk == nullptr) continue;
@@ -332,9 +302,7 @@ void Chunks::translate(int dx, int dz){
 			chunksSecond[nz * width + nx] = chunk;
 		}
 	}
-	std::shared_ptr<Chunk>* chunksTemp = chunks;
-	chunks = chunksSecond;
-	chunksSecond = chunksTemp;
+	std::swap(chunks, chunksSecond);
 
 	areaOffsetX += dx;
 	areaOffsetZ += dz;
