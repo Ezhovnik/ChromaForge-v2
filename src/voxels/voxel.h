@@ -13,10 +13,15 @@ constexpr int BLOCK_DIR_DOWN = 0x5;
 
 constexpr int BLOCK_ROT_MASK = 0xF;
 
+constexpr int BLOCK_VARIANT_MASK = 0xF0;
+
 // Структура, представляющая один воксель
 struct voxel {
     blockid_t id;
     uint8_t states;
+
+    inline uint8_t rotation() const {return states & BLOCK_ROT_MASK;}
+	inline int8_t variant() const {return (states & BLOCK_VARIANT_MASK) >> 4;}
 };
 
 #endif // VOXELS_VOXEL_H_

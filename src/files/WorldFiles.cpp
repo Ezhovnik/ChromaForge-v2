@@ -1,39 +1,29 @@
 #include "WorldFiles.h"
 
 #include <cassert>
-#include <cstdint>
-#include <fstream>
-#include <filesystem>
 #include <string>
+#include <cstdint>
+#include <memory>
+#include <fstream>
 
 #include "files.h"
 #include "rle.h"
 #include "binary_io.h"
-#include "../voxels/Chunk.h"
-#include "../voxels/voxel.h"
+#include "../window/Camera.h"
+#include "../content/Content.h"
 #include "../objects/Player.h"
 #include "../physics/Hitbox.h"
-#include "../window/Camera.h"
-#include "../math/voxmaths.h"
-#include "../logger/Logger.h"
-#include "../content/Content.h"
+#include "../voxels/voxel.h"
 #include "../voxels/Block.h"
+#include "../voxels/Chunk.h"
+#include "../typedefs.h"
+#include "../math/voxmaths.h"
 #include "../world/World.h"
+#include "../lighting/LightMap.h"
+#include "../logger/Logger.h"
+#include "../util/data_io.h"
 #include "../coders/json.h"
 #include "../constants.h"
-
-// Конвертирует 4 байта в целое число
-inline int bytes2Int(const ubyte* src, size_t offset){
-	return (src[offset] << 24) | (src[offset + 1] << 16) | (src[offset + 2] << 8) | (src[offset + 3]);
-}
-
-// Конвертирует целое число в 4 байта
-inline void int2Bytes(int value, ubyte* dest, size_t offset){
-	dest[offset] = (char) ((value >> 24) & 0xFF);
-	dest[offset + 1] = (char) ((value >> 16) & 0xFF);
-	dest[offset + 2] = (char) ((value >> 8) & 0xFF);
-	dest[offset + 3] = (char) ((value >> 0) & 0xFF);
-}
 
 WorldRegion::WorldRegion() {
 	chunksData = new ubyte*[RegionConsts::VOLUME]{};
@@ -63,33 +53,31 @@ uint WorldRegion::getSize(uint x, uint z) {
 	return sizes[z * RegionConsts::SIZE + x];
 }
 
-// Конструктор
-WorldFiles::WorldFiles(std::filesystem::path directory, bool generatorTestMode) : directory(directory), generatorTestMode(generatorTestMode){
-    // Проверяем существование директории. Если её нет, то пытаемся создать
-    if (!std::filesystem::is_directory(directory)) {
-		std::filesystem::create_directory(directory);
-	}
-
-    // Инициализируем буферы
+WorldFiles::WorldFiles(std::filesystem::path directory, const DebugSettings& settings) : directory(directory), generatorTestMode(settings.generatorTestMode), doWriteLights(settings.doWriteLights) {
 	compressionBuffer = new ubyte[CHUNK_DATA_LEN * 2];
 }
 
-// Деструктор 
 WorldFiles::~WorldFiles(){
-    // Освобождаем буферы
 	delete[] compressionBuffer;
-
-    // Осовбождаем регионы из памяти
 	for (auto it : regions){
 		delete it.second;
 	}
 	regions.clear();
 }
 
-WorldRegion* WorldFiles::getRegion(int x, int z) {
+WorldRegion* WorldFiles::getRegion(std::unordered_map<glm::ivec2, WorldRegion*>& regions, int x, int z) {
 	auto found = regions.find(glm::ivec2(x, z));
 	if (found == regions.end()) return nullptr;
 	return found->second;
+}
+
+WorldRegion* WorldFiles::getOrCreateRegion(std::unordered_map<glm::ivec2, WorldRegion*>& regions, int x, int z) {
+	WorldRegion* region = getRegion(regions, x, z);
+	if (region == nullptr) {
+		region = new WorldRegion();
+		regions[glm::ivec2(x, z)] = region;
+	}
+	return region;
 }
 
 ubyte* WorldFiles::compress(ubyte* src, size_t srclen, size_t& len) {
@@ -107,63 +95,75 @@ ubyte* WorldFiles::decompress(ubyte* src, size_t srclen, size_t dstlen) {
 	return decompressed;
 }
 
-// Помещает данные чанка в кэш памяти
 void WorldFiles::put(Chunk* chunk){
 	assert(chunk != nullptr);
 
-    // Вычисляем координаты региона
 	int regionX = floordiv(chunk->chunk_x, RegionConsts::SIZE);
-    int regionZ = floordiv(chunk->chunk_z, RegionConsts::SIZE);
-
-    WorldRegion* region = getRegion(regionX, regionZ);
-	if (region == nullptr) {
-		region = new WorldRegion();
-		regions[glm::ivec2(regionX, regionZ)] = region;
-	}
-	region->setUnsaved(true);
-
+	int regionZ = floordiv(chunk->chunk_z, RegionConsts::SIZE);
 	int localX = chunk->chunk_x - (regionX * RegionConsts::SIZE);
 	int localZ = chunk->chunk_z - (regionZ * RegionConsts::SIZE);
 
-	std::unique_ptr<ubyte[]> chunk_data (chunk->encode());
-	size_t compressedSize;
-	ubyte* data = compress(chunk_data.get(), CHUNK_DATA_LEN, compressedSize);
-	region->put(localX, localZ, data, compressedSize);
+	{
+		WorldRegion* region = getOrCreateRegion(regions, regionX, regionZ);
+		region->setUnsaved(true);
+		std::unique_ptr<ubyte[]> chunk_data (chunk->encode());
+		size_t compressedSize;
+		ubyte* data = compress(chunk_data.get(), CHUNK_DATA_LEN, compressedSize);
+		region->put(localX, localZ, data, compressedSize);
+	}
+	if (doWriteLights && chunk->isLighted()) {
+		WorldRegion* region = getOrCreateRegion(lights, regionX, regionZ);
+		region->setUnsaved(true);
+		std::unique_ptr<ubyte[]> light_data (chunk->light_map->encode());
+		size_t compressedSize;
+		ubyte* data = compress(light_data.get(), LIGHTMAP_DATA_LEN, compressedSize);
+		region->put(localX, localZ, data, compressedSize);
+	}
 }
 
 std::filesystem::path WorldFiles::getRegionsFolder() const {
 	return directory/std::filesystem::path("regions");
 }
 
-// Генерирует имя файла для региона с заданными координатами
-std::filesystem::path WorldFiles::getRegionFile(int x, int z) const {
-	return directory/std::filesystem::path(std::to_string(x) + "_" + std::to_string(z) + ".bin");
+std::filesystem::path WorldFiles::getLightsFolder() const {
+	return directory/std::filesystem::path("lights");
 }
 
-// Генерирует имя файла, в котором записана информация об игроке
+std::filesystem::path WorldFiles::getRegionFilename(int x, int y) const {
+	std::string filename = std::to_string(x) + "_" + std::to_string(y) + ".bin";
+	return std::filesystem::path(filename);
+}
+
 std::filesystem::path WorldFiles::getPlayerFile() const {
 	return directory/std::filesystem::path("player.json");
 }
 
 std::filesystem::path WorldFiles::getWorldFile() const {
-    return directory/std::filesystem::path("world.json");
+	return directory/std::filesystem::path("world.json");
 }
 
 std::filesystem::path WorldFiles::getIndicesFile() const {
 	return directory/std::filesystem::path("indices.json");
 }
 
-// Получает данные чанка из кэша или файла
 ubyte* WorldFiles::getChunk(int x, int z){
-	// Вычисляем координаты региона
-	int regionX = floordiv(x, RegionConsts::SIZE);
-    int regionZ = floordiv(z, RegionConsts::SIZE);
+	return getData(regions, getRegionsFolder(), x, z);
+}
 
-    // Локальные координаты внутри региона
+light_t* WorldFiles::getLights(int x, int z) {
+	ubyte* data = getData(lights, getLightsFolder(), x, z);
+	if (data == nullptr) return nullptr;
+	return LightMap::decode(data);
+}
+
+ubyte* WorldFiles::getData(std::unordered_map<glm::ivec2, WorldRegion*>& regions, const std::filesystem::path& folder, int x, int z) {
+	int regionX = floordiv(x, RegionConsts::SIZE);
+	int regionZ = floordiv(z, RegionConsts::SIZE);
+
 	int localX = x - (regionX * RegionConsts::SIZE);
 	int localZ = z - (regionZ * RegionConsts::SIZE);
 
-	WorldRegion* region = getRegion(regionX, regionZ);
+	WorldRegion* region = getRegion(regions, regionX, regionZ);
 	if (region == nullptr) {
 		region = new WorldRegion();
 		regions[glm::ivec2(regionX, regionZ)] = region;
@@ -171,75 +171,128 @@ ubyte* WorldFiles::getChunk(int x, int z){
 
 	ubyte* data = region->get(localX, localZ);
 	if (data == nullptr) {
-        uint32_t size;
-		data = readChunkData(x, z, size, getRegionFile(regionX, regionZ));
-        if (data) region->put(localX, localZ, data, size);
-    }
+		uint32_t size;
+		data = readChunkData(x, z, size, folder/getRegionFilename(regionX, regionZ));
+		if (data) region->put(localX, localZ, data, size);
+	}
 
-    if (data) return decompress(data, region->getSize(localX, localZ), CHUNK_DATA_LEN);
+	if (data) return decompress(data, region->getSize(localX, localZ), CHUNK_DATA_LEN);
 
-    return nullptr;
+	return nullptr;
 }
 
-// Читает чанк непосредственно из файла
 ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length, std::filesystem::path filename){
-    if (generatorTestMode) return nullptr;
+	if (generatorTestMode) return nullptr;
 
-    // Вычисляем координаты региона
 	int regionX = floordiv(x, RegionConsts::SIZE);
-    int regionZ = floordiv(z, RegionConsts::SIZE);
+	int regionZ = floordiv(z, RegionConsts::SIZE);
 
-    // Локальные координаты внутри региона
 	int localX = x - (regionX * RegionConsts::SIZE);
 	int localZ = z - (regionZ * RegionConsts::SIZE);
 
-	int chunk_index = localZ * RegionConsts::SIZE + localX;
+	int chunkIndex = localZ * RegionConsts::SIZE + localX;
 
-    // Открываем файл
 	std::ifstream input(filename, std::ios::binary);
-	if (!input.is_open()) return nullptr;
+	if (!input.is_open())return nullptr;
 
 	input.seekg(0, std::ios::end);
 	size_t file_size = input.tellg();
-    size_t table_offset = file_size - RegionConsts::VOLUME * 4;
+	size_t table_offset = file_size - RegionConsts::VOLUME * 4;
 
 	uint32_t offset;
-	input.seekg(table_offset + chunk_index * 4);
+	input.seekg(table_offset + chunkIndex * 4);
 	input.read((char*)(&offset), 4);
-	offset = bytes2Int((const ubyte*)(&offset), 0);
+	offset = dataio::read_int32_big((const ubyte*)(&offset), 0);
 	if (offset == 0){
 		input.close();
 		return nullptr;
 	}
 	input.seekg(offset);
 	input.read((char*)(&offset), 4);
-	length = bytes2Int((const ubyte*)(&offset), 0);
+	length = dataio::read_int32_big((const ubyte*)(&offset), 0);
 	ubyte* data = new ubyte[length];
 	input.read((char*)data, length);
 	input.close();
-
 	return data;
 }
 
-// Записывает все измененные регионы на диск
-void WorldFiles::write(const World* world, const Content* content){
-	std::filesystem::path regions_dir = getRegionsFolder();
-
-    if (!std::filesystem::is_directory(regions_dir)) {
-		std::filesystem::create_directory(regions_dir);
+void WorldFiles::writeRegion(int x, int y, WorldRegion* entry, std::filesystem::path filename){
+	ubyte** region = entry->getChunks();
+	uint32_t* sizes = entry->getSizes();
+	for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
+		int chunk_x = (i % RegionConsts::SIZE) + x * RegionConsts::SIZE;
+		int chunk_z = (i / RegionConsts::SIZE) + y * RegionConsts::SIZE;
+		if (region[i] == nullptr) {
+			region[i] = readChunkData(chunk_x, chunk_z, sizes[i], filename);
+		}
 	}
 
-    writeWorldInfo(world);
+	char header[13] = REGION_FORMAT_MAGIC;
+    header[11] = REGION_FORMAT_VERSION;
+    header[12] = 0;
 
-    if (generatorTestMode) return;
+	std::ofstream file(filename, std::ios::out | std::ios::binary);
+	file.write(header, 10);
 
-	writeIndices(content->indices);
+	size_t offset = 10;
+	char intbuf[4]{};
+	uint offsets[RegionConsts::VOLUME]{};
 
-	for (auto& [key, region] : regions){
+	for (size_t i = 0; i < RegionConsts::VOLUME; i++) {
+		ubyte* chunk = region[i];
+		if (chunk == nullptr){
+			offsets[i] = 0;
+		} else {
+			offsets[i] = offset;
+
+			size_t compressedSize = sizes[i];
+			dataio::write_int32_big(compressedSize, (ubyte*)intbuf, 0);
+			offset += 4 + compressedSize;
+
+			file.write(intbuf, 4);
+			file.write((const char*)chunk, compressedSize);
+		}
+	}
+	for (size_t i = 0; i < RegionConsts::VOLUME; i++) {
+		dataio::write_int32_big(offsets[i], (ubyte*)intbuf, 0);
+		file.write(intbuf, 4);
+	}
+}
+
+void WorldFiles::writeRegions(std::unordered_map<glm::ivec2, WorldRegion*>& regions, const std::filesystem::path& folder) {
+	for (auto it : regions){
+		WorldRegion* region = it.second;
 		if (region->getChunks() == nullptr || !region->isUnsaved()) continue;
-
-		writeRegion(key.x, key.y, region, getRegionFile(key.x, key.y));
+		glm::ivec2 key = it.first;
+		writeRegion(key.x, key.y, region, folder/getRegionFilename(key.x, key.y));
 	}
+}
+
+void WorldFiles::write(const World* world, const Content* content) {
+	{
+		std::filesystem::path directory = getRegionsFolder();
+		if (!std::filesystem::is_directory(directory)) std::filesystem::create_directories(directory);
+	}
+	{
+		std::filesystem::path directory = getLightsFolder();
+		if (!std::filesystem::is_directory(directory)) std::filesystem::create_directories(directory);
+	}
+	writeWorldInfo(world);
+	if (generatorTestMode) return;
+	writeIndices(content->indices);
+	writeRegions(regions, getRegionsFolder());
+	writeRegions(lights, getLightsFolder());
+}
+
+void WorldFiles::writeIndices(const ContentIndices* indices) {
+	json::JObject root;
+	json::JArray& blocks = root.putArray("blocks");
+	uint count = indices->countBlockDefs();
+	for (uint i = 0; i < count; i++) {
+		const Block* def = indices->getBlockDef(i);
+		blocks.put(def->name);
+	}
+	files::write_string(getIndicesFile(), json::stringify(&root, true, "  "));
 }
 
 void WorldFiles::writeWorldInfo(const World* world) {
@@ -268,6 +321,7 @@ bool WorldFiles::readWorldInfo(World* world) {
 	}
 
 	std::unique_ptr<json::JObject> root(files::read_json(file));
+	root->str("name", world->name);
 	root->num("seed", world->seed);
 
 	json::JObject* verobj = root->obj("version");
@@ -288,7 +342,6 @@ bool WorldFiles::readWorldInfo(World* world) {
 	return true;
 }
 
-// Записываем данные об игроке на диск
 void WorldFiles::writePlayer(Player* player){
 	glm::vec3 position = player->hitbox->position;
 	json::JObject root;
@@ -307,7 +360,6 @@ void WorldFiles::writePlayer(Player* player){
 	files::write_string(getPlayerFile(), json::stringify(&root, true, "  "));
 }
 
-// Читаем данные об игроке с диска
 bool WorldFiles::readPlayer(Player* player) {
 	std::filesystem::path file = getPlayerFile();
 	if (!std::filesystem::is_regular_file(file)) {
@@ -330,58 +382,4 @@ bool WorldFiles::readPlayer(Player* player) {
 	root->flag("flight", player->flight);
 	root->flag("noclip", player->noclip);
 	return true;
-}
-
-void WorldFiles::writeIndices(const ContentIndices* indices) {
-	json::JObject root;
-	json::JArray& blocks = root.putArray("blocks");
-	uint count = indices->countBlockDefs();
-	for (uint i = 0; i < count; ++i) {
-		const Block* def = indices->getBlockDef(i);
-		blocks.put(def->name);
-	}
-	files::write_string(getIndicesFile(), json::stringify(&root, true, "  "));
-}
-
-void WorldFiles::writeRegion(int x, int y, WorldRegion* entry, std::filesystem::path filename){
-	ubyte** region = entry->getChunks();
-	uint32_t* sizes = entry->getSizes();
-	for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
-		int chunk_x = (i % RegionConsts::SIZE) + x * RegionConsts::SIZE;
-		int chunk_z = (i / RegionConsts::SIZE) + y * RegionConsts::SIZE;
-		if (region[i] == nullptr) {
-			region[i] = readChunkData(chunk_x, chunk_z, sizes[i], filename);
-		}
-	}
-
-	char header[13] = REGION_FORMAT_MAGIC;
-    header[11] = REGION_FORMAT_VERSION;
-    header[12] = 0;
-
-	std::ofstream file(filename, std::ios::out | std::ios::binary);
-	file.write(header, 10);
-
-	size_t offset = 10;
-	char intbuf[4]{};
-	uint offsets[RegionConsts::VOLUME]{};
-	
-	for (size_t i = 0; i < RegionConsts::VOLUME; i++) {
-		ubyte* chunk = region[i];
-		if (chunk == nullptr){
-			offsets[i] = 0;
-		} else {
-			offsets[i] = offset;
-
-			size_t compressedSize = sizes[i];
-			int2Bytes(compressedSize, (ubyte*)intbuf, 0);
-			offset += 4 + compressedSize;
-
-			file.write(intbuf, 4);
-			file.write((const char*)chunk, compressedSize);
-		}
-	}
-	for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
-		int2Bytes(offsets[i], (ubyte*)intbuf, 0);
-		file.write(intbuf, 4);
-	}
 }

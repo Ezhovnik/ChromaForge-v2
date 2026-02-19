@@ -24,4 +24,5 @@ skybox-resolution = 96
 
 [debug]
 generator-test-mode = false
+do-write-lights = true
 

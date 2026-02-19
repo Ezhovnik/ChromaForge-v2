@@ -78,10 +78,14 @@ void MenuScreen::draw(float delta) {
         LOG_CRITICAL("The texture 'menubg' could not be found in the assets");
         throw std::runtime_error("The texture 'menubg' could not be found in the assets");
     }
+
+    uint width = Window::width;
+    uint height = Window::height;
+
     batch->texture(menubg);
     batch->rect(0, 0, 
-                Window::width, Window::height, 0, 0, 0, 
-                UVRegion(0, 0, Window::width/64, Window::height/64), 
+                width, height, 0, 0, 0, 
+                UVRegion(0, 0, width / 64, height / 64), 
                 false, false, glm::vec4(1.0f)
             );
     batch->render();

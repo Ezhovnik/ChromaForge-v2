@@ -16,7 +16,8 @@ namespace PlayerConsts {
     constexpr float CHEAT_SPEED_MUL = 5.0f;
 }
 
-Player::Player(glm::vec3 position, float speed, Camera* camera) : speed(speed), camera(camera), choosenBlock(1) {
+Player::Player(glm::vec3 position, float speed) : speed(speed), choosenBlock(1) {
+	camera = new Camera(position, glm::radians(90.0f));
 	hitbox = new Hitbox(position, glm::vec3(0.2f, 0.9f, 0.2f));
 }
 

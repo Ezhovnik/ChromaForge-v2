@@ -44,7 +44,7 @@ public:
 
     voxel selectedVoxel {0, 0};
 
-	Player(glm::vec3 position, float speed, Camera* camera);
+	Player(glm::vec3 position, float speed);
 	~Player();
 
     void teleport(glm::vec3 position);

@@ -18,8 +18,8 @@
 inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
 inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
 
-World::World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings) : name(name), seed(seed) {
-	wfile = new WorldFiles(directory, settings.debug.generatorTestMode);
+World::World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings) : name(name), seed(seed), settings(settings) {
+	wfile = new WorldFiles(directory, settings.debug);
 }
 
 World::~World(){
@@ -35,9 +35,11 @@ void World::write(Level* level) {
 	const Content* content = level->content;
 	Chunks* chunks = level->chunks;
 
-	for (size_t i = 0; i < chunks->volume; i++) {
+	for (size_t i = 0; i < chunks->volume; ++i) {
 		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
-		if (chunk == nullptr || !chunk->isUnsaved()) continue;
+		if (chunk == nullptr || !chunk->isLighted()) continue;
+		bool lightsUnsaved = !chunk->isLoadedLights() && settings.debug.doWriteLights;
+		if (!chunk->isUnsaved() && !lightsUnsaved) continue;
 		wfile->put(chunk.get());
 	}
 
@@ -45,9 +47,13 @@ void World::write(Level* level) {
 	wfile->writePlayer(level->player);
 }
 
+Level* World::create(EngineSettings& settings, const Content* content) {
+	Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED);
+	return new Level(this, content, player, settings);
+}
+
 Level* World::load(EngineSettings& settings, const Content* content) {
-    Camera* camera = new Camera(SPAWNPOINT, glm::radians(90.0f));
-    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, camera);
+    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED);
 
     LOG_INFO("Reading info about the world");
 	wfile->readWorldInfo(this);
@@ -59,9 +65,6 @@ Level* World::load(EngineSettings& settings, const Content* content) {
     LOG_INFO("Reading player info");
 	wfile->readPlayer(player);
     LOG_INFO("Player info successfully read");
-
-	camera->rotation = glm::mat4(1.0f);
-	camera->rotate(player->camY, player->camX, 0);
 
     LOG_INFO("Level successfully created");
     Logger::getInstance().flush();

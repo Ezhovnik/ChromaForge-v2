@@ -12,6 +12,7 @@ namespace ChunkFlags {
     inline constexpr uint LOADED = 0x4;
     inline constexpr uint LIGHTED = 0x8;
     inline constexpr uint UNSAVED = 0x10;
+    inline constexpr uint LOADED_LIGHTS = 0x20;
 }
 
 inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 2;
@@ -58,12 +59,14 @@ public:
 	inline bool isLighted() const {return flags & ChunkFlags::LIGHTED;}
 	inline bool isLoaded() const {return flags & ChunkFlags::LOADED;}
 	inline bool isReady() const {return flags & ChunkFlags::READY;}
+    inline bool isLoadedLights() const {return flags & ChunkFlags::LOADED_LIGHTS;}
 
 	inline void setUnsaved(bool flag) {bitset(flags, ChunkFlags::UNSAVED, flag);}
 	inline void setModified(bool flag) {bitset(flags, ChunkFlags::MODIFIED, flag);}
 	inline void setLoaded(bool flag) {bitset(flags, ChunkFlags::LOADED, flag);}
 	inline void setLighted(bool flag) {bitset(flags, ChunkFlags::LIGHTED, flag);}
 	inline void setReady(bool flag) {bitset(flags, ChunkFlags::READY, flag);}
+    inline void setLoadedLights(bool flag) {bitset(flags, ChunkFlags::LOADED_LIGHTS, flag);}
 
     ubyte* encode() const;
 	bool decode(ubyte* data);
