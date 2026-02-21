@@ -75,11 +75,12 @@ protected:
     char nextChar();
     bool hasNext();
     void expectNewLine();
+    void skipLine();
 
     std::string parseName();
     int64_t parseSimpleInt(int base);
     bool parseNumber(int sign, number_u& out);
-    std::string parseString(char chr);
+    std::string parseString(char chr, bool closeRequired = true);
 
     parsing_error error(std::string message);
 

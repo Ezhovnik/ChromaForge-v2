@@ -3,6 +3,7 @@
 
 #include <string>
 #include <filesystem>
+#include <vector>
 
 class EnginePaths {
     std::filesystem::path userfiles {"."};
@@ -18,6 +19,16 @@ public:
 
     void setUserfiles(std::filesystem::path folder);
     void setResources(std::filesystem::path folder);
+};
+
+class ResPaths {
+    std::filesystem::path mainRoot;
+    std::vector<std::filesystem::path> roots;
+public:
+    ResPaths(std::filesystem::path mainRoot, std::vector<std::filesystem::path> roots);
+    
+    std::filesystem::path find(const std::string& filename) const;
+    std::vector<std::filesystem::path> listdir(const std::string& folder) const;
 };
 
 #endif // FILES_ENGINE_PATHS_H_

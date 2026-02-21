@@ -8,21 +8,19 @@
 #include "../typedefs.h"
 #include "../files/files.h"
 #include "../logger/Logger.h"
-
-std::filesystem::path GLSLExtension::getHeaderPath(std::string name) {
-    return libFolder/std::filesystem::path(name + ".glsl");
-}
-
-void GLSLExtension::setLibFolder(std::filesystem::path folder) {
-    this->libFolder = folder;
-}
+#include "../files/engine_paths.h"
+#include "../constants.h"
 
 void GLSLExtension::setVersion(std::string version) {
     this->version = version;
 }
 
+void GLSLExtension::setPaths(const ResPaths* paths) {
+    this->paths = paths;
+}
+
 void GLSLExtension::loadHeader(std::string name) {
-    std::filesystem::path file = getHeaderPath(name);
+    std::filesystem::path file = paths->find(SHADERS_FOLDER"/lib/" + name + ".glsl");
     std::string source = files::read_string(file);
     addHeader(name, source);
 }
@@ -105,7 +103,6 @@ const std::string GLSLExtension::process(const std::filesystem::path file, const
                 if (line[0] != '<' || line[line.length() - 1] != '>') parsing_error(file, linenum, "expected '#include <filename>' syntax");
 
                 std::string name = line.substr(1, line.length() - 2);
-                std::filesystem::path hfile = getHeaderPath(name);
                 if (!hasHeader(name)) loadHeader(name);
                 source_line(ss, 1);
                 ss << getHeader(name) << '\n';

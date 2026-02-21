@@ -1,42 +1,48 @@
 #include "settings_io.h"
 
+#include <memory>
+
 #include "../window/Events.h"
 #include "../window/input.h"
 #include "../coders/json.h"
+#include "../coders/toml.h"
 #include "../logger/Logger.h"
 
-toml::Wrapper create_wrapper(EngineSettings& settings) {
-	toml::Wrapper wrapper;
+toml::Wrapper* create_wrapper(EngineSettings& settings) {
+	std::unique_ptr<toml::Wrapper> wrapper (new toml::Wrapper());
 
-	toml::Section& display = wrapper.add("display");
+	toml::Section& display = wrapper->add("display");
 	display.add("width", &settings.display.width);
 	display.add("height", &settings.display.height);
 	display.add("samples", &settings.display.samples);
 	display.add("swap-interval", &settings.display.swapInterval);
 	display.add("fullscreen", &settings.display.fullscreen);
 
-	toml::Section& chunks = wrapper.add("chunks");
+	toml::Section& chunks = wrapper->add("chunks");
 	chunks.add("load-distance", &settings.chunks.loadDistance);
 	chunks.add("load-speed", &settings.chunks.loadSpeed);
 	chunks.add("padding", &settings.chunks.padding);
 
-    toml::Section& camera = wrapper.add("camera");
+    toml::Section& camera = wrapper->add("camera");
 	camera.add("fov-events", &settings.camera.fovEvents);
 	camera.add("shaking", &settings.camera.shaking);
 	camera.add("fov", &settings.camera.fov);
 	camera.add("sensitivity", &settings.camera.sensitivity);
 
-	toml::Section& graphics = wrapper.add("graphics");
+	toml::Section& graphics = wrapper->add("graphics");
 	graphics.add("fog-curve", &settings.graphics.fogCurve);
 	graphics.add("backlight", &settings.graphics.backlight);
 	graphics.add("frustum-culling", &settings.graphics.frustumCulling);
 	graphics.add("skybox-resolution", &settings.graphics.skyboxResolution);
 
-    toml::Section& debug = wrapper.add("debug");
+    toml::Section& debug = wrapper->add("debug");
 	debug.add("generator-test-mode", &settings.debug.generatorTestMode);
 	debug.add("do-write-lights", &settings.debug.doWriteLights);
 
-	return wrapper;
+	toml::Section& ui = wrapper->add("ui");
+    ui.add("language", &settings.ui.language);
+
+	return wrapper.release();
 }
 
 std::string write_controls() {

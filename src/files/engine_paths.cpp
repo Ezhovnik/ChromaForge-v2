@@ -61,3 +61,34 @@ void EnginePaths::setUserfiles(std::filesystem::path folder) {
 void EnginePaths::setResources(std::filesystem::path folder) {
 	this->resources = folder;
 }
+
+ResPaths::ResPaths(std::filesystem::path mainRoot, std::vector<std::filesystem::path> roots) : mainRoot(mainRoot), roots(roots) {
+}
+
+std::filesystem::path ResPaths::find(const std::string& filename) const {
+    for (auto& root : roots) {
+        std::filesystem::path file = root/std::filesystem::path(filename);
+        if (std::filesystem::exists(file)) return file;
+    }
+    return mainRoot/std::filesystem::path(filename);
+}
+
+std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderName) const {
+    std::vector<std::filesystem::path> entries;
+    for (auto& root : roots) {
+        std::filesystem::path folder = root/std::filesystem::path(folderName);
+        if (!std::filesystem::is_directory(folder)) continue;
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            entries.push_back(entry.path());
+        }
+    }
+
+    {
+        std::filesystem::path folder = mainRoot/std::filesystem::path(folderName);
+        if (!std::filesystem::is_directory(folder)) return entries;
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            entries.push_back(entry.path());
+        }
+    }
+    return entries;
+}

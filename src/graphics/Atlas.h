@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <set>
+
 #include "UVRegion.h"
 #include "../typedefs.h"
 
@@ -33,10 +35,12 @@ struct atlasentry {
 };
 
 class AtlasBuilder {
-    std::vector<atlasentry> entries;   
+    std::vector<atlasentry> entries;
+    std::set<std::string> names;
 public:
     AtlasBuilder() {}
     void add(std::string name, std::shared_ptr<ImageData> image);
+    bool has(std::string name) const;
 
     Atlas* build(uint extrusion, uint maxResolution = 8192);
 };
