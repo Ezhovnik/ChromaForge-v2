@@ -42,7 +42,7 @@ public:
 
 	void draw(const GfxContext& context, Camera* camera);
 
-	static float fog;
+	static float skyClearness;
 	static bool drawChunkBorders;
 };
 

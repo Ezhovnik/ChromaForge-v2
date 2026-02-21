@@ -29,8 +29,7 @@ private:
 
     blockid_t generate_tree(fnl_state *noise, 
 				  PseudoRandom* random, 
-				  Map2D& heights, 
-				  Map2D& humidity,
+				  Map2D& heights,
 				  int real_x, 
 				  int real_y, 
 				  int real_z, 
