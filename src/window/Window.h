@@ -44,6 +44,7 @@ public:
 
     static void toggleFullscreen();
 	static bool isFullscreen();
+    static bool isFocused();
 
     static bool isMaximized();
 

@@ -273,6 +273,88 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 	return nullptr;
 }
 
+glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDist) {
+	float px = start.x;
+	float py = start.y;
+	float pz = start.z;
+
+	float dx = dir.x;
+	float dy = dir.y;
+	float dz = dir.z;
+
+	float t = 0.0f;
+	int ix = floor(px);
+	int iy = floor(py);
+	int iz = floor(pz);
+
+	int stepx = (dx > 0.0f) ? 1 : -1;
+	int stepy = (dy > 0.0f) ? 1 : -1;
+	int stepz = (dz > 0.0f) ? 1 : -1;
+
+	constexpr float infinity = std::numeric_limits<float>::infinity();
+
+	float txDelta = (dx == 0.0f) ? infinity : abs(1.0f / dx);
+	float tyDelta = (dy == 0.0f) ? infinity : abs(1.0f / dy);
+	float tzDelta = (dz == 0.0f) ? infinity : abs(1.0f / dz);
+
+	float xdist = (stepx > 0) ? (ix + 1 - px) : (px - ix);
+	float ydist = (stepy > 0) ? (iy + 1 - py) : (py - iy);
+	float zdist = (stepz > 0) ? (iz + 1 - pz) : (pz - iz);
+
+	float txMax = (txDelta < infinity) ? txDelta * xdist : infinity;
+	float tyMax = (tyDelta < infinity) ? tyDelta * ydist : infinity;
+	float tzMax = (tzDelta < infinity) ? tzDelta * zdist : infinity;
+
+	int steppedIndex = -1;
+
+	while (t <= maxDist) {
+		voxel* voxel = getVoxel(ix, iy, iz);
+		if (!voxel) return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
+
+		const Block* def = contentIds->getBlockDef(voxel->id);
+		if (def->obstacle) {
+			if (!def->rt.solid) {
+				const AABB& box = def->rotatable ? def->rt.hitboxes[voxel->rotation()] : def->hitbox;
+				scalar_t distance;
+				glm::ivec3 norm;
+				if (Rays::rayIntersectAABB(start, dir, glm::ivec3(ix, iy, iz), box, maxDist, norm, distance) > RayRelation::None) {
+					return start + (dir * glm::vec3(distance));
+				}
+			} else {
+				return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
+			}
+		}
+		if (txMax < tyMax) {
+			if (txMax < tzMax) {
+				ix += stepx;
+				t = txMax;
+				txMax += txDelta;
+				steppedIndex = 0;
+			}
+			else {
+				iz += stepz;
+				t = tzMax;
+				tzMax += tzDelta;
+				steppedIndex = 2;
+			}
+		} else {
+			if (tyMax < tzMax) {
+				iy += stepy;
+				t = tyMax;
+				tyMax += tyDelta;
+				steppedIndex = 1;
+			}
+			else {
+				iz += stepz;
+				t = tzMax;
+				tzMax += tzDelta;
+				steppedIndex = 2;
+			}
+		}
+	}
+	return glm::vec3(px + maxDist * dx, py + maxDist * dy, pz + maxDist * dz);
+}
+
 void Chunks::setCenter(int x, int z) {
 	int cx = floordiv(x, CHUNK_WIDTH);
 	int cz = floordiv(z, CHUNK_DEPTH);

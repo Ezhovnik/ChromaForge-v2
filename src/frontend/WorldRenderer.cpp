@@ -43,7 +43,7 @@ inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
-float WorldRenderer::fog = 0.0f;
+float WorldRenderer::skyClearness = 0.0f;
 bool WorldRenderer::drawChunkBorders = false;
 
 WorldRenderer::WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : engine(engine), level(level), frustumCulling(new Frustum()), lineBatch(new LineBatch()), renderer(new ChunksRenderer(level, cache, engine->getSettings())) {
@@ -115,7 +115,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 
 void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 	EngineSettings& settings = engine->getSettings();
-	skybox->refresh(level->world->daytime, fmax(1.0f, 10.0f / (settings.chunks.loadDistance - 2)) + fog * 2.0f, 4);
+	skybox->refresh(level->world->daytime, fmax(1.0f, 10.0f / (settings.chunks.loadDistance - 2)) + skyClearness * 2.0f, 4);
 
     const Content* content = level->content;
 	const ContentIndices* contentIds = content->indices;
@@ -147,7 +147,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 	backShader->use();
 	backShader->uniformMatrix("u_view", camera->getView(false));
 	backShader->uniform1f("u_zoom", camera->zoom * camera->getFov() / (PI * 0.5f));
-	backShader->uniform1f("u_ar", (float)width/(float)height);
+	backShader->uniform1f("u_ar", (float)width / (float)height);
 	skybox->draw(backShader);
 
     {

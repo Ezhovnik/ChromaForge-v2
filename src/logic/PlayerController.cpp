@@ -31,7 +31,7 @@ namespace ZoomConsts {
 constexpr float MAX_PITCH = glm::radians(89.0f);
 constexpr float CROUCH_SHIFT_Y = -0.2f;
 
-CameraControl::CameraControl(Player* player, const CameraSettings& settings) : player(player), camera(player->camera), settings(settings), offset(0.0f, 0.7f, 0.0f) {
+CameraControl::CameraControl(Player* player, const CameraSettings& settings) : player(player), camera(player->camera), settings(settings), offset(0.0f, 0.7f, 0.0f), currentViewCamera(player->currentViewCamera) {
 }
 
 void CameraControl::refresh() {
@@ -61,7 +61,7 @@ void CameraControl::updateMouse(PlayerInput& input) {
 	camera->rotate(camY, camX, 0);
 }
 
-void CameraControl::update(PlayerInput& input, float delta) {
+void CameraControl::update(PlayerInput& input, float delta, Chunks* chunks) {
 	Hitbox* hitbox = player->hitbox;
 
 	offset = glm::vec3(0.0f, 0.7f, 0.0f);
@@ -99,6 +99,22 @@ void CameraControl::update(PlayerInput& input, float delta) {
 		if (input.zoom) zoomValue *= ZoomConsts::INPUT;
 		camera->zoom = zoomValue * dt + camera->zoom * (1.0f - dt);
 	}
+
+	if (input.cameraMode) {
+		if (player->currentViewCamera == camera) player->currentViewCamera = player->SPCamera;
+		else if (player->currentViewCamera == player->SPCamera) player->currentViewCamera = player->TPCamera;
+		else if (player->currentViewCamera == player->TPCamera) player->currentViewCamera = camera;
+	}
+
+	if (player->currentViewCamera == player->SPCamera) {
+		player->SPCamera->position = chunks->rayCastToObstacle(camera->position, camera->front, 3.0f);
+		player->SPCamera->dir = -camera->dir;
+		player->SPCamera->front = -camera->front;
+	} else if (player->currentViewCamera == player->TPCamera) {
+		player->TPCamera->position = chunks->rayCastToObstacle(camera->position, -camera->front, 3.0f);
+		player->TPCamera->dir = camera->dir;
+		player->TPCamera->front = camera->front;
+	}
 }
 
 glm::vec3 PlayerController::selectedBlockPosition;
@@ -123,6 +139,7 @@ void PlayerController::updateKeyboard() {
 
 	input.noclip = Events::justActive(BIND_PLAYER_NOCLIP);
 	input.flight = Events::justActive(BIND_PLAYER_FLIGHT);
+	input.cameraMode = Events::justActive(BIND_CAM_MODE);
 
 	input.attack = Events::justActive(BIND_PLAYER_ATTACK);
 	input.build = Events::justActive(BIND_PLAYER_BUILD);
@@ -135,7 +152,7 @@ void PlayerController::updateKeyboard() {
 
 void PlayerController::updateCamera(float delta, bool movement) {
 	if (movement) camControl.updateMouse(input);
-	camControl.update(input, delta);
+	camControl.update(input, delta, level->chunks);
 }
 
 void PlayerController::resetKeyboard() {
@@ -151,6 +168,7 @@ void PlayerController::resetKeyboard() {
 	input.attack = false;
 	input.build = false;
 	input.pickBlock = false;
+	input.cameraMode = false;
 }
 
 void PlayerController::updateControls(float delta){

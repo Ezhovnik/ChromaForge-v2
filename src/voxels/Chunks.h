@@ -62,6 +62,7 @@ public:
         glm::ivec3& norm, // Нормаль поверхности в точке попадания
         glm::ivec3& iend // Координаты вокселя в точке попадания
     );
+    glm::vec3 rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDist);
 
     const AABB* isObstacle(float x, float y, float z);
 

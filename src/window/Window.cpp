@@ -95,17 +95,21 @@ bool Window::isMaximized() {
 	return glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
 }
 
+bool Window::isFocused() {
+	return glfwGetWindowAttrib(window, GLFW_FOCUSED);
+}
+
 // Callback-функция для обработки изменения размера окна
 void window_size_callback(GLFWwindow*, int width, int height) {
-    if (width <= 0 || height <= 0) return;
+    if (Window::isFocused() && width && height) {
+        glViewport(0, 0, width, height); // Обновляем область отображения при изменении размера окна
+        
+        // Обновляем размеры окна у объекта окна
+        Window::width = width;
+        Window::height = height;
+    }
 
-    glViewport(0, 0, width, height); // Обновляем область отображения при изменении размера окна
-    
-    // Обновляем размеры окна у объекта окна
-    Window::width = width;
-    Window::height = height;
-
-    if (!Window::isFullscreen() && !Window::isMaximized()) {
+    if (!Window::isMaximized()) {
 		Window::getDisplaySettings()->width = width;
 		Window::getDisplaySettings()->height = height;
 	}
@@ -135,9 +139,14 @@ bool Window::initialize(DisplaySettings& settings) {
     #ifdef __APPLE__
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
     #else
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
     #endif
+
+    int major, minor, rev;
+    glfwGetVersion(&major, &minor, &rev);
+    LOG_DEBUG("GLFW version: {}.{}.{}", major, minor, rev);
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE); // Разрешаем изменять размер окна
     glfwWindowHint(GLFW_SAMPLES, settings.samples);
@@ -302,8 +311,7 @@ void Window::toggleFullscreen(){
 	if (settings->fullscreen) {
         glfwGetWindowPos(window, &posX, &posY);
 		glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
-	}
-	else {
+	} else {
 		glfwSetWindowMonitor(window, nullptr, posX, posY, settings->width, settings->height, GLFW_DONT_CARE);
 		glfwSetWindowAttrib(window, GLFW_MAXIMIZED, GLFW_FALSE);
 	}

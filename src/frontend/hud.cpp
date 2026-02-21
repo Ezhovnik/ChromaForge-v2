@@ -107,6 +107,7 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 				glm::vec3 position = this->level->player->hitbox->position;
 				position[ax] = std::stoi(text);
 				this->level->player->teleport(position);
+			} catch (std::out_of_range& _) {
 			} catch (std::invalid_argument& _){
 			}
 		});
@@ -115,13 +116,20 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 		panel->add(sub);
 	}
 
+	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+		std::wstringstream ss;
+        ss << std::fixed << std::setprecision(2);
+        ss << WorldRenderer::skyClearness;
+		return L"Sky clearness: " + ss.str();
+	})));
+
 	{
 		gui::TrackBar* bar = new gui::TrackBar(0.0f, 1.0f, 0.0f, 0.005f, 8);
 		bar->supplier([=]() {
-			return WorldRenderer::fog;
+			return WorldRenderer::skyClearness;
 		});
 		bar->consumer([=](double val) {
-			WorldRenderer::fog = val;
+			WorldRenderer::skyClearness = val;
 		});
 		panel->add(bar);
 	}

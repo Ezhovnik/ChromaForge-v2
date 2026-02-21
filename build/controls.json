@@ -1,14 +1,22 @@
 {
-  "player.attack": {
-    "code": 0,
+  "player.noclip": {
+    "code": 78,
+    "type": "keyboard"
+  },
+  "camera.zoom": {
+    "code": 67,
+    "type": "keyboard"
+  },
+  "player.pick": {
+    "code": 2,
     "type": "mouse"
   },
   "player.build": {
     "code": 1,
     "type": "mouse"
   },
-  "player.pick": {
-    "code": 2,
+  "player.attack": {
+    "code": 0,
     "type": "mouse"
   },
   "movement.forward": {
@@ -43,20 +51,16 @@
     "code": 82,
     "type": "keyboard"
   },
+  "camera.mode": {
+    "code": 293,
+    "type": "keyboard"
+  },
   "hud.inventory": {
     "code": 69,
     "type": "keyboard"
   },
   "movement.sprint": {
     "code": 341,
-    "type": "keyboard"
-  },
-  "camera.zoom": {
-    "code": 67,
-    "type": "keyboard"
-  },
-  "player.noclip": {
-    "code": 78,
     "type": "keyboard"
   }
 }

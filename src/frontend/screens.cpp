@@ -149,7 +149,7 @@ void LevelScreen::update(float delta) {
 }
 
 void LevelScreen::draw(float deltaTime) {
-    Camera* camera = level->player->camera;
+    Camera* camera = level->player->currentViewCamera;
 
     Viewport viewport(Window::width, Window::height);
     GfxContext context(nullptr, viewport, nullptr);

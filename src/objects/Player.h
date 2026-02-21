@@ -11,6 +11,7 @@ class Level;
 
 struct PlayerInput {
 	bool zoom;
+	bool cameraMode;
 	bool moveForward;
 	bool moveBack;
 	bool moveRight;
@@ -30,7 +31,7 @@ class Player {
 private:
 	float speed;
 public:
-	Camera* camera;
+	Camera* camera, *SPCamera, *TPCamera, *currentViewCamera;
 	Hitbox* hitbox;
 
 	bool flight = false;

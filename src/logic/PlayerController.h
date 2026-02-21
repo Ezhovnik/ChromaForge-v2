@@ -9,10 +9,11 @@
 class Camera;
 class Player;
 class Level;
+class Chunks;
 
 class CameraControl {
 	Player* player;
-	Camera* camera;
+	Camera* camera, *currentViewCamera;
 	const CameraSettings& settings;
 
 	glm::vec3 offset;
@@ -23,7 +24,7 @@ public:
 	CameraControl(Player* player, const CameraSettings& settings);
 
 	void updateMouse(PlayerInput& input);
-	void update(PlayerInput& input, float delta);
+	void update(PlayerInput& input, float delta, Chunks* chunks);
 	void refresh();
 };
 

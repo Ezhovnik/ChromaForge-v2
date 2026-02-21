@@ -85,12 +85,12 @@ void BlocksRenderer::face(const glm::vec3& coord, float w, float h,
 }
 
 void BlocksRenderer::vertex(const glm::ivec3& coord, float u, float v, const glm::vec4& tint, const glm::ivec3& axisX, const glm::ivec3& axisY, const glm::ivec3& axisZ) {
-	glm::vec4 light = pickSoftLight(coord+axisZ, axisX, axisY);
+	glm::vec4 light = pickSoftLight(coord + axisZ, axisX, axisY);
 	vertex(coord, u, v, light * tint);
 }
 
 void BlocksRenderer::vertex(const glm::vec3& coord, float u, float v, const glm::vec4& tint, const glm::ivec3& axisX, const glm::ivec3& axisY, const glm::ivec3& axisZ) {
-	glm::vec4 light = pickSoftLight(glm::ivec3(coord.x, coord.y, coord.z)+axisZ, axisX, axisY);
+	glm::vec4 light = pickSoftLight(glm::ivec3(coord.x, coord.y, coord.z) + axisZ, axisX, axisY);
 	vertex(coord, u, v, light * tint);
 }
 
@@ -100,9 +100,9 @@ void BlocksRenderer::face(const glm::ivec3& coord, const glm::ivec3& axisX, cons
 		return;
 	}
 
-	const glm::vec3 sunVector = glm::vec3(0.431934f, 0.863868f, 0.259161f);
+	const glm::vec3 sunVector = glm::vec3(0.411934f, 0.863868f, 0.279161f);
 	float d = glm::dot(glm::vec3(axisZ.x, axisZ.y, axisZ.z), sunVector);
-	d = 0.75f +  d*0.25f;
+	d = 0.7f +  d * 0.3f;
 
 	glm::vec4 tint(d);
 
@@ -138,7 +138,7 @@ void BlocksRenderer::face(const glm::ivec3& coord_,
     if (lights) {
         const glm::vec3 sunVector = glm::vec3(0.431934f, 0.863868f, 0.259161f);
         float d = glm::dot(Z, sunVector);
-        d = 0.75f +  d*0.25f;
+        d = 0.75f +  d * 0.25f;
         glm::vec4 tint(d);
 	
         vertex(coord + Z * depth, region.u1, region.v1, tint, axisX, axisY, laxisZ);
