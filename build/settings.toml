@@ -1,6 +1,6 @@
 [display]
-width = 1920
-height = 1175
+width = 1260
+height = 639
 samples = 0
 swap-interval = 1
 fullscreen = false
@@ -25,4 +25,7 @@ skybox-resolution = 96
 [debug]
 generator-test-mode = false
 do-write-lights = true
+
+[ui]
+language = "ru_RU"
 

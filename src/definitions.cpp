@@ -16,7 +16,7 @@
 
 void setup_definitions(ContentBuilder* builder) {
     // Воздух
-    Block* block = new Block(DEFAULT_BLOCK_NAMESPACE":air", "");
+    Block* block = new Block(DEFAULT_CONTENT_NAMESPACE":air", "");
     block->drawGroup = 1;
     block->lightPassing = true;
     block->skyLightPassing = true;

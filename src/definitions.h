@@ -3,7 +3,7 @@
 
 #include "typedefs.h"
 
-#define DEFAULT_BLOCK_NAMESPACE "chromaforge"
+#define DEFAULT_CONTENT_NAMESPACE "chromaforge"
 
 class ContentBuilder;
 

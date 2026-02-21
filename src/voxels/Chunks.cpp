@@ -16,7 +16,6 @@
 #include "../content/Content.h"
 #include "../math/AABB.h"
 #include "../math/rays.h"
-#include "../util/timeutil.h"
 
 Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles), content(content), contentIds(content->indices){
 	volume = (size_t)width * (size_t)depth;
@@ -28,7 +27,7 @@ Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFi
 	}
 	chunksCount = 0;
 
-	airID = content->requireBlock(DEFAULT_BLOCK_NAMESPACE":air")->rt.id;
+	airID = content->requireBlock(DEFAULT_CONTENT_NAMESPACE":air")->rt.id;
 }
 
 Chunks::~Chunks(){
@@ -207,7 +206,6 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 		if (!voxel) return nullptr;
 		const Block* def = contentIds->getBlockDef(voxel->id);
 		if (def->selectable) {
-			// timeutil::ScopeLogTimer lg((long long)def);
 			end.x = px + t * dx;
 			end.y = py + t * dy;
 			end.z = pz + t * dz;
@@ -305,8 +303,6 @@ glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDis
 	float tyMax = (tyDelta < infinity) ? tyDelta * ydist : infinity;
 	float tzMax = (tzDelta < infinity) ? tzDelta * zdist : infinity;
 
-	int steppedIndex = -1;
-
 	while (t <= maxDist) {
 		voxel* voxel = getVoxel(ix, iy, iz);
 		if (!voxel) return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
@@ -329,26 +325,22 @@ glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDis
 				ix += stepx;
 				t = txMax;
 				txMax += txDelta;
-				steppedIndex = 0;
 			}
 			else {
 				iz += stepz;
 				t = tzMax;
 				tzMax += tzDelta;
-				steppedIndex = 2;
 			}
 		} else {
 			if (tyMax < tzMax) {
 				iy += stepy;
 				t = tyMax;
 				tyMax += tyDelta;
-				steppedIndex = 1;
 			}
 			else {
 				iz += stepz;
 				t = tzMax;
 				tzMax += tzDelta;
-				steppedIndex = 2;
 			}
 		}
 	}

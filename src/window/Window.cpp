@@ -1,6 +1,7 @@
 #include "Window.h"
 
 #include <sstream>
+#include <iostream>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -109,7 +110,7 @@ void window_size_callback(GLFWwindow*, int width, int height) {
         Window::height = height;
     }
 
-    if (!Window::isMaximized()) {
+    if (!Window::isFullscreen() && !Window::isMaximized()) {
 		Window::getDisplaySettings()->width = width;
 		Window::getDisplaySettings()->height = height;
 	}

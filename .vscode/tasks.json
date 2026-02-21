@@ -48,6 +48,9 @@
                 "${workspaceFolder}/src/frontend/gui/panels.cpp",
                 "${workspaceFolder}/src/frontend/gui/UINode.cpp",
 
+                //src/frontentd/locale
+                "${workspaceFolder}/src/frontend/locale/langs.cpp",
+
                 //src/frontend
                 "${workspaceFolder}/src/frontend/BlocksPreview.cpp",
                 "${workspaceFolder}/src/frontend/ContentGfxCache.cpp",

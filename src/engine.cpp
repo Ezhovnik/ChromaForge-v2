@@ -19,7 +19,6 @@
 #include "window/Events.h"
 #include "window/Camera.h"
 #include "window/input.h"
-#include "assets/Assets.h"
 #include "assets/AssetsLoader.h"
 #include "definitions.h"
 #include "logger/Logger.h"
@@ -33,9 +32,14 @@
 #include "files/engine_paths.h"
 #include "frontend/screens.h"
 #include "content/content.h"
+#include "frontend/locale/langs.h"
+#include "util/platform.h"
+#include "frontend/menu.h"
+#include "content/Content.h"
+#include "content/ContentLoader.h"
 
 // Реализация конструктора
-Engine::Engine(EngineSettings& settings, EnginePaths* paths, Content* content) : settings(settings), content(content), paths(paths){
+Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths){
     // Инициализация окна GLFW
     if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
@@ -43,25 +47,17 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths, Content* content) :
         throw initialize_error("Failed to load Window");
     }
 
-    ShaderProgram::preprocessor->setLibFolder(paths->getResources()/std::filesystem::path("shaders/lib"));
+    auto resdir = paths->getResources();
+    contentPacks.push_back({DEFAULT_CONTENT_NAMESPACE, resdir/std::filesystem::path("content/" DEFAULT_CONTENT_NAMESPACE)});
 
-    // Загрузка ассетов
-    assets = new Assets();
-    LOG_INFO("Loading Assets");
-    AssetsLoader loader(assets, paths->getResources());
-    AssetsLoader::createDefaults(loader);
-    AssetsLoader::addDefaults(loader);
-    while (loader.hasNext()) {
-        if (!loader.loadNext()) {
-            delete assets;
-            Window::terminate();
-            LOG_CRITICAL("Could not to initialize assets");
-            throw std::runtime_error("Could not to initialize assets");
-        }
-    }
-    LOG_INFO("Assets loaded successfully");
+    LOG_INFO("Loading content");
+    loadContent();
+    LOG_INFO("Content loaded successfully");
 
     gui = new gui::GUI();
+
+    if (settings.ui.language == "auto") settings.ui.language = platform::detect_locale();
+    setLanguage(settings.ui.language);
 
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -73,7 +69,7 @@ Engine::~Engine() {
     delete gui;
 
     LOG_INFO("Shutting down");
-    delete assets;
+    assets.reset();
     Window::terminate();
     LOG_INFO("Engine has finished successfuly");
     Logger::getInstance().flush();
@@ -124,12 +120,44 @@ void Engine::mainloop() {
         screen->update(deltaTime);
         screen->draw(deltaTime);
 
-        gui->draw(&batch, assets);
+        gui->draw(&batch, assets.get());
 
         Window::swapInterval(settings.display.swapInterval);
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
     }
+}
+
+void Engine::loadContent() {
+    auto resdir = paths->getResources();
+    ContentBuilder contentBuilder;
+    setup_definitions(&contentBuilder);
+
+    std::vector<std::filesystem::path> resRoots;
+    for (auto& pack : contentPacks) {
+        ContentLoader loader(pack.folder);
+        loader.load(&contentBuilder);
+        resRoots.push_back(pack.folder);
+    }
+    content.reset(contentBuilder.build());
+    resPaths.reset(new ResPaths(resdir, resRoots));
+
+    ShaderProgram::preprocessor->setPaths(resPaths.get());
+
+	assets.reset(new Assets());
+	LOG_INFO("Loading Assets");
+	AssetsLoader loader(assets.get(), resPaths.get());
+	AssetsLoader::createDefaults(loader);
+	AssetsLoader::addDefaults(loader);
+	while (loader.hasNext()) {
+		if (!loader.loadNext()) {
+			assets.reset();
+			Window::terminate();
+            LOG_ERROR("Could not to initialize assets");
+			throw initialize_error("Could not to initialize assets");
+		}
+	}
+    LOG_INFO("Assets loaded successfully");
 }
 
 EnginePaths* Engine::getPaths() {
@@ -145,13 +173,23 @@ EngineSettings& Engine::getSettings() {
 }
 
 Assets* Engine::getAssets() {
-	return assets;
+	return assets.get();
 }
 
 const Content* Engine::getContent() const {
-    return content;
+    return content.get();
+}
+
+std::vector<ContentPack>& Engine::getContentPacks() {
+    return contentPacks;
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
 	this->screen = screen;
+}
+
+void Engine::setLanguage(std::string locale) {
+	settings.ui.language = locale;
+	langs::setup(paths->getResources(), locale, contentPacks);
+	menus::create_menus(this, gui->getMenu());
 }

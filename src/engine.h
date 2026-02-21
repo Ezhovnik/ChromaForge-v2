@@ -7,11 +7,12 @@
 
 #include "typedefs.h"
 #include "settings.h"
+#include "files/engine_paths.h"
+#include "content/ContentPack.h"
+#include "assets/Assets.h"
+#include "content/Content.h"
 
-class Assets;
 class Screen;
-class Content;
-class EnginePaths;
 
 namespace gui {
     class GUI;
@@ -26,11 +27,14 @@ public:
 // Основной класс Engine, управляющий жизненным циклом приложения
 class Engine {
 private:
-    Assets* assets; // Менеджер ассетов (текстуры, модели и т.д.)
+    std::unique_ptr<Assets> assets = nullptr; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen = nullptr;
+    std::vector<ContentPack> contentPacks;
     EngineSettings settings;
-    Content* content;
+    std::unique_ptr<Content> content = nullptr;
+
     EnginePaths* paths;
+    std::unique_ptr<ResPaths> resPaths = nullptr;
 
     gui::GUI* gui;
 
@@ -38,7 +42,7 @@ private:
     double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
     double deltaTime = 0.0; // Разница во времени между кадрами
 public:
-    Engine(EngineSettings& settings, EnginePaths* paths, Content* content); // Конструктор
+    Engine(EngineSettings& settings, EnginePaths* paths); // Конструктор
     ~Engine(); // Деструктор
 
     void updateTimers(); // Обновление таймеров (frame, deltaTime)
@@ -50,8 +54,11 @@ public:
 	gui::GUI* getGUI();
 	EngineSettings& getSettings();
     const Content* getContent() const;
+    std::vector<ContentPack>& getContentPacks();
 
 	void setScreen(std::shared_ptr<Screen> screen);
+    void setLanguage(std::string locale);
+    void loadContent();
 };
 
 #endif // SRC_ENGINE_H_

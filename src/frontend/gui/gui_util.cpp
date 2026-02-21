@@ -1,13 +1,15 @@
 #include "gui_util.h"
-#include "controls.h"
-#include "panels.h"
 
 #include <glm/glm.hpp>
+
+#include "controls.h"
+#include "panels.h"
+#include "../locale/langs.h"
 
 using namespace gui;
 
 Button* guiutil::backButton(PagesControl* menu) {
-    return (new Button(L"Back", glm::vec4(10.f)))->listenAction([=](GUI* gui) {
+    return (new Button(langs::get(L"Back"), glm::vec4(10.f)))->listenAction([=](GUI* gui) {
         menu->back();
     });
 }
@@ -23,7 +25,7 @@ void guiutil::alert(GUI* gui, std::wstring text, gui::runnable on_hidden) {
     Panel* panel = new Panel(glm::vec2(500, 200), glm::vec4(8.0f), 8.0f);
     panel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
     panel->add(new Label(text));
-    panel->add((new Button(L"Ok", glm::vec4(10.f)))->listenAction([=](GUI* gui) {
+    panel->add((new Button(langs::get(L"OK"), glm::vec4(10.f)))->listenAction([=](GUI* gui) {
         if (on_hidden) on_hidden();
         menu->back();
     }));
@@ -33,6 +35,9 @@ void guiutil::alert(GUI* gui, std::wstring text, gui::runnable on_hidden) {
 }
 
 void guiutil::confirm(GUI* gui, std::wstring text, gui::runnable on_confirm, std::wstring yestext, std::wstring notext) {
+    if (yestext.empty()) yestext = langs::get(L"Yes");
+    if (notext.empty()) notext = langs::get(L"No");    
+
     PagesControl* menu = gui->getMenu();
     Panel* panel = new Panel(glm::vec2(600, 200), glm::vec4(8.0f), 8.0f);
     panel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));

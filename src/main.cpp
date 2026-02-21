@@ -13,8 +13,6 @@
 #include "window/Events.h"
 #include "window/input.h"
 #include "files/settings_io.h"
-#include "content/Content.h"
-#include "content/ContentLoader.h"
 #include "files/engine_paths.h"
 
 // Точка входа в программу
@@ -27,35 +25,29 @@ int main(int argc, char** argv) {
     // Инициализация логгера
     Logger::getInstance().initialize(paths.getLogsFile().string());
 
-    ContentBuilder contentBuilder;
-	setup_definitions(&contentBuilder);
-    ContentLoader loader(paths.getResources()/std::filesystem::path("content/" DEFAULT_BLOCK_NAMESPACE));
-	loader.load(&contentBuilder);
-    std::unique_ptr<Content> content(contentBuilder.build());
-
     std::unique_ptr<Engine> engine = nullptr;
 
     try {
         // Чтение настроек движка
         EngineSettings settings;
-        toml::Wrapper wrapper = create_wrapper(settings);
+        std::unique_ptr<toml::Wrapper> wrapper (create_wrapper(settings));
         std::filesystem::path settings_file = platform::get_settings_file();
         if (std::filesystem::is_regular_file(settings_file)) {
 			LOG_INFO("Reading engine settings from '{}'", settings_file.string());
-			std::string content = files::read_string(settings_file);
-			toml::Reader reader(&wrapper, settings_file.string(), content);
+			std::string text = files::read_string(settings_file);
+			toml::Reader reader(wrapper.get(), settings_file.string(), text);
 			reader.read();
             LOG_INFO("Engine settings read succesfully");
 		}
-        engine = std::make_unique<Engine>(settings, &paths, content.get());
+        engine = std::make_unique<Engine>(settings, &paths);
 
         // Настройка назначения клавиш
         std::filesystem::path controls_file = platform::get_controls_file();
         setup_bindings();
 		if (std::filesystem::is_regular_file(controls_file)) {
 			LOG_INFO("Reading bindings from '{}'", controls_file.string());
-			std::string content = files::read_string(controls_file);
-			load_controls(controls_file.string(), content);
+			std::string text = files::read_string(controls_file);
+			load_controls(controls_file.string(), text);
             LOG_INFO("Bindings read succesfully");
 		}
 
@@ -63,7 +55,7 @@ int main(int argc, char** argv) {
 
         // Запись настроек движка в файл
         LOG_INFO("Write engine settings to '{}'", settings_file.string());
-		files::write_string(settings_file, wrapper.write());
+		files::write_string(settings_file, wrapper->write());
         LOG_INFO("Engine settings are written");
 
         // Запись назначения клавиш в файл
