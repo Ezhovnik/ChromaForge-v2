@@ -100,7 +100,7 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 		gui::TextBox* box = new gui::TextBox(L"");
 		box->textSupplier([this, ax]() {
 			Hitbox* hitbox = this->level->player->hitbox;
-			return std::to_wstring((int)hitbox->position[ax]);
+			return std::to_wstring(hitbox->position[ax]);
 		});
 		box->textConsumer([this, ax](std::wstring text) {
 			try {
@@ -258,7 +258,7 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 				tint.r *= 1.2f;
 				tint.g *= 1.2f;
 				tint.b *= 1.2f;
-				if (Events::justClicked(mousecode::BUTTON_1)) player->choosenBlock = i + 1;
+				if (Events::justClicked(mousecode::BUTTON_1)) player->chosenBlock = i + 1;
 			} else {
 				tint = glm::vec4(1.0f);
 			}
@@ -334,9 +334,9 @@ void HudRenderer::draw(const GfxContext& context) {
 		subctx.depthTest(true);
 		subctx.cullFace(true);
 
-		Block* choosen_block = contentIds->getBlockDef(player->choosenBlock);
-		assert(choosen_block != nullptr);
-		blocksPreview->draw(choosen_block, width - 56, uicamera->getFov() - 56, 48, glm::vec4(1.0f));
+		Block* chosen_block = contentIds->getBlockDef(player->chosenBlock);
+		assert(chosen_block != nullptr);
+		blocksPreview->draw(chosen_block, width - 56, uicamera->getFov() - 56, 48, glm::vec4(1.0f));
 	}
 	uiShader->use();
 	batch->begin();

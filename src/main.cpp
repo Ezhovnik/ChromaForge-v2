@@ -15,10 +15,14 @@
 #include "files/settings_io.h"
 #include "files/engine_paths.h"
 
+#define SETTINGS_FILE "settings.toml"
+#define CONTROLS_FILE "controls.json"
+
 // Точка входа в программу
 int main(int argc, char** argv) {
     EnginePaths paths;
 	if (!parse_cmdline(argc, argv, paths)) return EXIT_SUCCESS;
+    std::filesystem::path userfiles = paths.getUserfiles();
 
     platform::configure_encoding();
 
@@ -31,7 +35,7 @@ int main(int argc, char** argv) {
         // Чтение настроек движка
         EngineSettings settings;
         std::unique_ptr<toml::Wrapper> wrapper (create_wrapper(settings));
-        std::filesystem::path settings_file = platform::get_settings_file();
+        std::filesystem::path settings_file = userfiles/std::filesystem::path(SETTINGS_FILE);
         if (std::filesystem::is_regular_file(settings_file)) {
 			LOG_INFO("Reading engine settings from '{}'", settings_file.string());
 			std::string text = files::read_string(settings_file);
@@ -42,7 +46,7 @@ int main(int argc, char** argv) {
         engine = std::make_unique<Engine>(settings, &paths);
 
         // Настройка назначения клавиш
-        std::filesystem::path controls_file = platform::get_controls_file();
+        std::filesystem::path controls_file = userfiles/std::filesystem::path(CONTROLS_FILE);
         setup_bindings();
 		if (std::filesystem::is_regular_file(controls_file)) {
 			LOG_INFO("Reading bindings from '{}'", controls_file.string());

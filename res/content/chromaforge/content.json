@@ -1,0 +1,28 @@
+{
+    "blocks": [
+        "moss",
+        "dirt",
+        "cobblestone",
+        "glowstone",
+        "glass",
+        "oak_planks",
+        "oak_log",
+        "leaves",
+        "stone",
+        "water",
+        "sand",
+        "bedrock",
+        "basalt",
+        "grass",
+        "poppy",
+        "dandelion",
+        "daisy",
+        "marigold",
+        "bricks",
+        "red_neon",
+        "green_neon",
+        "blue_neon",
+        "copper_block",
+        "oak_pane"
+    ]
+}

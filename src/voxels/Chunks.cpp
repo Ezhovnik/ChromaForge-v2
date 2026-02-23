@@ -74,6 +74,12 @@ const AABB* Chunks::isObstacle(float x, float y, float z) {
 	return nullptr;
 }
 
+bool Chunks::isSolid(int x, int y, int z) {
+    voxel* vox = getVoxel(x, y, z);
+    if (vox == nullptr) return false;
+    return contentIds->getBlockDef(vox->id)->rt.solid;
+}
+
 ubyte Chunks::getLight(int x, int y, int z, int channel){
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
@@ -218,7 +224,8 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 				const AABB& box = def->rotatable ? def->rt.hitboxes[voxel->rotation()] : def->hitbox;
 
 				scalar_t distance;
-				if (Rays::rayIntersectAABB(start, dir, iend, box, maxDist, norm, distance) > RayRelation::None){
+				Ray ray(start, dir);
+				if (ray.intersectAABB(iend, box, maxDist, norm, distance) > RayRelation::None){
 					end = start + (dir * glm::vec3(distance));
 					return voxel;
 				}
@@ -313,7 +320,8 @@ glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDis
 				const AABB& box = def->rotatable ? def->rt.hitboxes[voxel->rotation()] : def->hitbox;
 				scalar_t distance;
 				glm::ivec3 norm;
-				if (Rays::rayIntersectAABB(start, dir, glm::ivec3(ix, iy, iz), box, maxDist, norm, distance) > RayRelation::None) {
+				Ray ray(start, dir);
+				if (ray.intersectAABB(glm::ivec3(ix, iy, iz), box, maxDist, norm, distance) > RayRelation::None) {
 					return start + (dir * glm::vec3(distance));
 				}
 			} else {

@@ -22,7 +22,7 @@ inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная ско
 world_load_error::world_load_error(std::string message) : std::runtime_error(message) {
 }
 
-World::World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content) : name(name), seed(seed), settings(settings), content(content) {
+World::World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content, const std::vector<ContentPack> packs) : name(name), seed(seed), settings(settings), content(content), packs(packs) {
 	wfile = new WorldFiles(directory, settings.debug);
 }
 
@@ -51,9 +51,9 @@ void World::write(Level* level) {
 	wfile->writePlayer(level->player);
 }
 
-Level* World::create(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content) {
+Level* World::create(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs) {
 	LOG_INFO("Creating world");
-	World* world = new World(name, directory, seed, settings, content);
+	World* world = new World(name, directory, seed, settings, content, packs);
 	LOG_INFO("World successfully created");
 
 	LOG_INFO("Creating a level");
@@ -73,9 +73,9 @@ ContentLUT* World::checkIndices(const std::filesystem::path& directory, const Co
 	return nullptr;
 }
 
-Level* World::load(std::filesystem::path directory, EngineSettings& settings, const Content* content) {
+Level* World::load(std::filesystem::path directory, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs) {
 	LOG_INFO("Loading world");
-	std::unique_ptr<World> world (new World(".", directory, 0, settings, content));
+	std::unique_ptr<World> world (new World(".", directory, 0, settings, content, packs));
 	auto& wfile = world->wfile;
 
 	if (!wfile->readWorldInfo(world.get())) {
@@ -93,4 +93,8 @@ Level* World::load(std::filesystem::path directory, EngineSettings& settings, co
 	world.release();
 	LOG_INFO("World successfully created");
 	return level;
+}
+
+const std::vector<ContentPack>& World::getPacks() const {
+	return packs;
 }

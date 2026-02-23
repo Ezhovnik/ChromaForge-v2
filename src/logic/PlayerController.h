@@ -7,7 +7,7 @@
 #include "../objects/Player.h"
 
 class Camera;
-class Player;
+class BlocksController;
 class Level;
 class Chunks;
 
@@ -34,6 +34,7 @@ private:
 	Player* player;
 	PlayerInput input;
 	CameraControl camControl;
+	BlocksController* blocksController;
 
 	void updateKeyboard();
 	void updateCamera(float delta, bool movement);
@@ -47,7 +48,7 @@ public:
 	static int selectedBlockStates;
 	static int selectedBlockId;
 
-	PlayerController(Level* level, const EngineSettings& settings);
+	PlayerController(Level* level, const EngineSettings& settings, BlocksController* blocksController);
 
 	void update(float delta, bool input, bool pause);
 };

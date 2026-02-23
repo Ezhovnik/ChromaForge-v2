@@ -36,7 +36,7 @@
 MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     auto menu = engine->getGUI()->getMenu();
 
-    menus::create_menus(engine, menu);
+    menus::refresh_menus(engine, menu);
     menu->reset();
     menu->set("main");
 
@@ -118,9 +118,7 @@ void LevelScreen::updateHotkeys() {
 
     if (Events::justPressed(keycode::F3)) level->player->debug = !level->player->debug;
 
-    if (Events::justPressed(keycode::F5)) {
-        level->chunks->saveAndClear();
-    }
+    if (Events::justPressed(keycode::F5)) level->chunks->saveAndClear();
 }
 
 void LevelScreen::update(float delta) {
@@ -148,7 +146,9 @@ void LevelScreen::draw(float deltaTime) {
 
     Viewport viewport(Window::width, Window::height);
     GfxContext context(nullptr, viewport, nullptr);
-    worldRenderer->draw(context, camera);
+
+    worldRenderer->draw(context, camera);\
+
     if (hudVisible) {
         hud->draw(context);
         if (level->player->debug) hud->drawDebug(1 / deltaTime);

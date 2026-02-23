@@ -1,6 +1,5 @@
 #include "GLSLExtension.h"
 
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -60,6 +59,7 @@ void GLSLExtension::undefine(std::string name) {
     if (hasDefine(name)) defines.erase(name);
 }
 
+// Вспомогательная функция: выбрасывает исключение с сообщением об ошибке парсинга
 inline void parsing_error(
         const std::filesystem::path& file, 
         uint linenum, 
@@ -68,6 +68,7 @@ inline void parsing_error(
     throw std::runtime_error("File " + file.string() + ": " + message + " at line " + std::to_string(linenum));
 }
 
+// Вспомогательная функция: выводит предупреждение о проблеме при парсинге
 inline void parsing_warning(
         const std::filesystem::path& file, 
         uint linenum, const 
@@ -75,33 +76,44 @@ inline void parsing_warning(
     LOG_WARN("File {}: {} at line {}", file.string(), message, std::to_string(linenum));
 }
 
+// Вставляет директиву #line с указанным номером строки для сохранения корректной информации о строках в сообщениях компилятора
 inline void source_line(std::stringstream& ss, uint linenum) {
     ss << "#line " << linenum << "\n";
 }
 
+// Основной метод обработки исходного кода шейдера
 const std::string GLSLExtension::process(const std::filesystem::path file, const std::string& source) {
     std::stringstream ss;
     size_t pos = 0;
-    uint linenum = 1;
+    uint linenum = 1; // текущая обрабатываемая строка исходного файла
+
+    // Вставляем версию GLSL в начало
     ss << "#version " << version << '\n';
+    // Вставляем все определённые макросы.
     for (auto& entry : defines) {
         ss << "#define " << entry.first << " " << entry.second << '\n';
     }
+    // Устанавливаем #line на начало исходного кода (после добавленных директив)
     source_line(ss, linenum);
+
     while (pos < source.length()) {
         size_t endline = source.find('\n', pos);
         if (endline == std::string::npos) endline = source.length();
 
+        // Если строка начинается с '#', проверяем директивы препроцессора.
         if (source[pos] == '#') {
             std::string line = source.substr(pos + 1, endline - pos);
             util::trim(line);
+
             if (line.find("include") != std::string::npos) {
+                // Обработка #include
                 line = line.substr(7);
                 util::trim(line);
                 if (line.length() < 3) parsing_error(file, linenum, "invalid 'include' syntax");
 
                 if (line[0] != '<' || line[line.length() - 1] != '>') parsing_error(file, linenum, "expected '#include <filename>' syntax");
 
+                // Извлекаем имя файла без угловых скобок.
                 std::string name = line.substr(1, line.length() - 2);
                 if (!hasHeader(name)) loadHeader(name);
                 source_line(ss, 1);
@@ -110,8 +122,8 @@ const std::string GLSLExtension::process(const std::filesystem::path file, const
                 linenum++;
                 source_line(ss, linenum);
                 continue;
-            } 
-            else if (line.find("version") != std::string::npos) {
+            } else if (line.find("version") != std::string::npos) {
+                // Обработка #version – удаляем её с предупреждением, так как версия уже задана программно
                 parsing_warning(file, linenum, "removed #version directive");
                 pos = endline + 1;
                 linenum++;
@@ -119,6 +131,7 @@ const std::string GLSLExtension::process(const std::filesystem::path file, const
                 continue;
             }
         }
+        // Обычная строка – копируем её в выходной поток.
         linenum++;
         ss << source.substr(pos, endline + 1 - pos);
         pos = endline + 1;

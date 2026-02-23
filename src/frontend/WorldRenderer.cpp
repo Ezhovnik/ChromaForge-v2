@@ -115,7 +115,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 
 void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 	EngineSettings& settings = engine->getSettings();
-	skybox->refresh(level->world->daytime, fmax(1.0f, 10.0f / (settings.chunks.loadDistance - 2)) + skyClearness * 2.0f, 4);
+	skybox->refresh(level->world->daytime, 1.0f + skyClearness * 2.0f, 4);
 
     const Content* content = level->content;
 	const ContentIndices* contentIds = content->indices;
@@ -169,15 +169,15 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 		shader->uniform1i("u_cubemap", 1);
 
 		{
-			blockid_t id = level->player->choosenBlock;
-			Block* choosen_block = contentIds->getBlockDef(id);
-			assert(choosen_block != nullptr);
+			blockid_t id = level->player->chosenBlock;
+			Block* chosen_block = contentIds->getBlockDef(id);
+			assert(chosen_block != nullptr);
 			if (!level->player->noclip) {
 				float multiplier = 0.5f;
 				shader->uniform3f("u_torchlightColor",
-					choosen_block->emission[0] / 15.0f * multiplier,
-					choosen_block->emission[1] / 15.0f * multiplier,
-					choosen_block->emission[2] / 15.0f * multiplier
+					chosen_block->emission[0] / 15.0f * multiplier,
+					chosen_block->emission[1] / 15.0f * multiplier,
+					chosen_block->emission[2] / 15.0f * multiplier
 				);
 			} else {
 				shader->uniform3f("u_torchlightColor", 0.0f, 0.0f, 0.0f);

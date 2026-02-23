@@ -16,7 +16,7 @@ namespace PlayerConsts {
     constexpr float CHEAT_SPEED_MUL = 5.0f;
 }
 
-Player::Player(glm::vec3 position, float speed) : speed(speed), choosenBlock(1) {
+Player::Player(glm::vec3 position, float speed) : speed(speed), chosenBlock(1) {
 	camera = new Camera(position, glm::radians(90.0f));
 	currentViewCamera = camera;
 	SPCamera = new Camera(position, glm::radians(90.0f));

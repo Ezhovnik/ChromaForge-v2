@@ -8,50 +8,15 @@
 
 // Деструктор
 Assets::~Assets() {
-    // Освобождаем память выделенную под шейдеры
-	for (auto& iter : shaders){
-		if (iter.second != nullptr) {
-            delete iter.second;
-            iter.second = nullptr;
-        }
-	}
-    shaders.clear();
-
-    // Освобождаем память выделенную под текстуры
-	for (auto& iter : textures){
-		if (iter.second != nullptr) {
-            delete iter.second;
-            iter.second = nullptr;
-        }
-	}
-    textures.clear();
-
-    // Освобождаем память выделенную под шрифты
-    for (auto& iter : fonts){
-		if (iter.second != nullptr) {
-            delete iter.second;
-            iter.second = nullptr;
-        }
-	}
-    fonts.clear();
-
-    // Освобождаем память выделенную под атласы
-    for (auto& iter : atlases) {
-        if (iter.second != nullptr) {
-            delete iter.second;
-            iter.second = nullptr;
-        }
-    }
-    atlases.clear();
 }
 
 // Получает текстуру по имени
-Texture* Assets::getTexture(std::string name) const{
+Texture* Assets::getTexture(std::string name) const {
     // Ищем текстуру в словаре
     auto it = textures.find(name);
 
     // Если нашли, возвращаем указатель на текстуру
-    if (it != textures.end()) return it->second;
+    if (it != textures.end()) return it->second.get();
 
     // Текстура не найдена
 	return nullptr;
@@ -64,7 +29,7 @@ bool Assets::store(Texture* texture, std::string name){
 
     // Если не существует, то добавляем
     if (it == textures.end()) {
-        textures[name] = texture;
+        textures[name].reset(texture);
         return true;
     }
 
@@ -79,7 +44,7 @@ ShaderProgram* Assets::getShader(std::string name) const{
     auto it = shaders.find(name);
 
     // Если нашли, возвращаем указатель на шейдер
-    if (it != shaders.end()) return it->second;
+    if (it != shaders.end()) return it->second.get();
 
     // Шейдер не найден
     return nullptr;
@@ -92,7 +57,7 @@ bool Assets::store(ShaderProgram* shader, std::string name){
 
     // Если не существует, то добавляем
     if (it == shaders.end()) {
-        shaders[name] = shader;
+        shaders[name].reset(shader);
         return true;
     }
 
@@ -107,7 +72,7 @@ Font* Assets::getFont(std::string name) const{
     auto it = fonts.find(name);
 
     // Если нашли, возвращаем указатель на шрифт
-    if (it != fonts.end()) return it->second;
+    if (it != fonts.end()) return it->second.get();
 
     // Шрифт не найден
     return nullptr;
@@ -120,7 +85,7 @@ bool Assets::store(Font* font, std::string name){
 
     // Если не существует, то добавляем
     if (it == fonts.end()) {
-        fonts[name] = font;
+        fonts[name].reset(font);
         return true;
     }
 
@@ -135,7 +100,7 @@ Atlas* Assets::getAtlas(std::string name) const {
     auto it = atlases.find(name);
 
     // Если нашли, возвращаем указатель на атлас
-    if (it != atlases.end()) return it->second;
+    if (it != atlases.end()) return it->second.get();
 
     // Атлас не найден
     return nullptr;
@@ -148,11 +113,26 @@ bool Assets::store(Atlas* atlas, std::string name){
 
     // Если не существует, то добавляем
     if (it == atlases.end()) {
-        atlases[name] = atlas;
+        atlases[name].reset(atlas);
         return true;
     }
 
     // Если существует, то возращаем ошибку
     LOG_WARN("Atlas named '{}' already exists", name);
     return false;
+}
+
+void Assets::extend(const Assets& assets) {
+    for (auto entry : assets.textures) {
+        textures[entry.first] = entry.second;
+    }
+    for (auto entry : assets.shaders) {
+        shaders[entry.first] = entry.second;
+    }
+    for (auto entry : assets.fonts) {
+        fonts[entry.first] = entry.second;
+    }
+    for (auto entry : assets.atlases) {
+        atlases[entry.first] = entry.second;
+    }
 }

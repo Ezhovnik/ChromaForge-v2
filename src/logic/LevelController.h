@@ -6,6 +6,7 @@
 class Level;
 class ChunksController;
 class PlayerController;
+class BlocksController;
 
 class LevelController {
     EngineSettings& settings;
@@ -14,6 +15,7 @@ class LevelController {
 
     ChunksController* chunks;
     PlayerController* player;
+    BlocksController* blocks;
 public:
     LevelController(EngineSettings& settings, Level* level);
     ~LevelController();

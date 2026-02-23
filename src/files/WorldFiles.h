@@ -3,7 +3,7 @@
 
 #include <map>
 #include <unordered_map>
-#include <string>
+#include <memory>
 #include <filesystem>
 
 #include <glm/glm.hpp>
@@ -12,12 +12,18 @@
 
 #include "../typedefs.h"
 #include "../settings.h"
+#include "../files/files.h"
 
 // Константы для размера регионов
 namespace RegionConsts {
     constexpr uint SIZE_BIT = 5; // Размер региона 
     constexpr uint SIZE = 1 << SIZE_BIT; // Длина региона в чанках
     constexpr uint VOLUME = SIZE * SIZE; // Количество чанков в регионе
+
+    constexpr uint LAYER_VOXELS = 0;
+    constexpr uint LAYER_LIGHTS = 1;
+
+    constexpr uint MAX_OPEN_FILES = 16;
 }
 
 #define REGION_FORMAT_MAGIC ".CHROMAREG"
@@ -39,8 +45,8 @@ public:
 	~WorldRegion();
 
 	void put(uint x, uint z, ubyte* data, uint32_t size);
-	ubyte* get(uint x, uint z);
-	uint getSize(uint x, uint z);
+	ubyte* getChunkData(uint x, uint z);
+	uint getChunkDataSize(uint x, uint z);
 
     void setUnsaved(bool unsaved) {this->unsaved = unsaved;};
 	bool isUnsaved() const {return unsaved;};
@@ -49,28 +55,37 @@ public:
 	uint32_t* getSizes() const {return sizes;};
 };
 
+typedef std::unordered_map<glm::ivec2, std::unique_ptr<WorldRegion>> regionsmap;
+
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
 class WorldFiles {
 private:
+    std::unordered_map<glm::ivec3, std::unique_ptr<files::rafile>> openRegFiles;
+
     std::filesystem::path getLightsFolder() const;
 	std::filesystem::path getRegionFilename(int x, int z) const;
     std::filesystem::path getPlayerFile() const; // Генерирует имя файла, в котором записана информация об игроке
     std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информауия о мире
     std::filesystem::path getIndicesFile() const;
+    std::filesystem::path getPacksFile() const;
 
     ubyte* compress(const ubyte* src, size_t srclen, size_t& len);
     ubyte* decompress(const ubyte* src, size_t srclen, size_t dstlen);
 
     void writeWorldInfo(const World* world);
-    void writeRegions(std::unordered_map<glm::ivec2, WorldRegion*>& regions, const std::filesystem::path& folder);
+    void writeRegions(regionsmap& regions, const std::filesystem::path& folder, int layer);
 
-    ubyte* readChunkData(int x, int y, uint32_t& length, std::filesystem::path file);
-    WorldRegion* getRegion(std::unordered_map<glm::ivec2, WorldRegion*>& regions, int x, int z);
-    WorldRegion* getOrCreateRegion(std::unordered_map<glm::ivec2, WorldRegion*>& regions, int x, int z);
-	ubyte* getData(std::unordered_map<glm::ivec2, WorldRegion*>& regions, const std::filesystem::path& folder, int x, int z);
+    void fetchChunks(WorldRegion* region, int x, int y, std::filesystem::path folder, int layer);
+
+    ubyte* readChunkData(int x, int y, uint32_t& length, std::filesystem::path folder, int layer);
+    WorldRegion* getRegion(regionsmap& regions, int x, int z);
+    WorldRegion* getOrCreateRegion(regionsmap& regions, int x, int z);
+	ubyte* getData(regionsmap& regions, const std::filesystem::path& folder, int x, int z, int layer);
+
+    files::rafile* getRegFile(glm::ivec3 coord, const std::filesystem::path& folder);
 public:
-    std::unordered_map<glm::ivec2, WorldRegion*> regions; // Хранилище регионов в оперативной памяти.
-    std::unordered_map<glm::ivec2, WorldRegion*> lights;
+    regionsmap regions; // Хранилище регионов в оперативной памяти.
+    regionsmap lights;
 
     std::filesystem::path directory; // Путь к директории с файлами мира
     ubyte* compressionBuffer; // Выходной буфер для записи регионов
@@ -81,7 +96,7 @@ public:
     WorldFiles(std::filesystem::path directory, const DebugSettings& settings); // Конструктор
     ~WorldFiles(); // Деструктор
 
-    static bool parseRegionFilename(const std::string& name, int& x, int& y);
+    static bool parseRegionFilename(const std::string& name, int& x, int& z);
     std::filesystem::path getRegionsFolder() const;
 
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
@@ -89,13 +104,14 @@ public:
 
     bool readWorldInfo(World* world);
     bool readPlayer(Player* player); // Читает данные об игроке с диска
-	void writeRegion(int x, int y, WorldRegion* entry, std::filesystem::path file);
+	void writeRegion(int x, int z, WorldRegion* entry, std::filesystem::path file, int layer);
 
 	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
     light_t* getLights(int x, int z);
 
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
     void write(const World* world, const Content* content);
+    void writePacks(const World* world);
     void writeIndices(const ContentIndices* indices);
 };
 

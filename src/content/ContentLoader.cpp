@@ -3,22 +3,25 @@
 #include <string>
 #include <memory>
 
+#include <glm/glm.hpp>
+
 #include "Content.h"
+#include "ContentPack.h"
 #include "../voxels/Block.h"
 #include "../files/files.h"
 #include "../coders/json.h"
 #include "../typedefs.h"
 #include "../logger/Logger.h"
+#include "../logic/scripting/scripting.h"
 
-#include <glm/glm.hpp>
-
-ContentLoader::ContentLoader(std::filesystem::path folder) : folder(folder) {
+ContentLoader::ContentLoader(ContentPack* pack) : pack(pack) {
 }
 
 Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
     std::unique_ptr<json::JObject> root(files::read_json(file));
     std::unique_ptr<Block> definition(new Block(name));
 
+    // Текстуры блока
     if (root->has("texture")) {
         std::string texture;
         root->str("texture", texture);
@@ -32,6 +35,7 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
         }
     }
 
+    // Модель блока
     std::string model = "cube";
     root->str("model", model);
     if (model == "cube") definition->model = BlockModel::Cube;
@@ -43,6 +47,7 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
         definition->model = BlockModel::None;
     }
     
+    // AABB хитбокс блока в формате [x, y, z, width, height, depth]
     json::JArray* hitboxobj = root->arr("hitbox");
     if (hitboxobj) {
         AABB& aabb = definition->hitbox;
@@ -51,6 +56,7 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
         aabb.b += aabb.a;
     }
 
+    // Профили поворота
     std::string profile = "none";
     root->str("rotation", profile);
     definition->rotatable = profile != "none";
@@ -63,6 +69,7 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
         definition->rotatable = false;
     }
 
+    // Освещение от блока в формате [r, g, b]
     json::JArray* emissionobj = root->arr("emission");
     if (emissionobj) {
         definition->emission[0] = emissionobj->num(0);
@@ -70,46 +77,38 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
         definition->emission[2] = emissionobj->num(2);
     }
 
+    // Другие свойства блока
     root->flag("obstacle", definition->obstacle);
     root->flag("replaceable", definition->replaceable);
     root->flag("light-passing", definition->lightPassing);
     root->flag("breakable", definition->breakable);
     root->flag("selectable", definition->selectable);
     root->flag("sky-light-passing", definition->skyLightPassing);
+    root->flag("grounded", definition->grounded);
     root->num("draw-group", definition->drawGroup);
 
     return definition.release();
 }
 
 void ContentLoader::load(ContentBuilder* builder) {
-    LOG_INFO("Loading content");
+    LOG_INFO("  Loading content pack [{}]", pack->id);
 
-    std::filesystem::path file = folder/std::filesystem::path("package.json");
-    std::string source = files::read_string(file);
-
-    std::unique_ptr<json::JObject> root = nullptr;
-    try {
-        root.reset(json::parse(file.filename().string(), source));
-    } catch (const parsing_error& error) {
-        LOG_ERROR("Could not load content package. Reason: {}", error.errorLog());
-    }
-
-    std::string id;
-    std::string version;
-    root->str("id", id);
-    root->str("version", version);
-
-    LOG_INFO("  Content id: {}", id);
-    LOG_INFO("  Content version: {}", version);
+    auto folder = pack->folder;
+    auto root = files::read_json(pack->getContentFile());
 
     json::JArray* blocksarr = root->arr("blocks");
     if (blocksarr) {
-        LOG_INFO("  Content blocks size: {}", blocksarr->size());
         for (uint i = 0; i < blocksarr->size(); ++i) {
             std::string name = blocksarr->str(i);
-            LOG_DEBUG(" Loading block {}:{}", id, name);
+            std::string prefix = pack->id + ":" + name;
             std::filesystem::path blockfile = folder/std::filesystem::path("blocks/" + name + ".json");
-            builder->add(loadBlock(id + ":" + name, blockfile));
+            Block* block = loadBlock(prefix, blockfile);
+            builder->add(block);
+
+            std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + name + ".lua");
+            if (std::filesystem::is_regular_file(scriptfile)) scripting::load_block_script(prefix, scriptfile, &block->rt.funcsset);
         }
     }
+    LOG_INFO("  Successfully loaded content pack [{}]", pack->id);
+    Logger::getInstance().flush();
 }

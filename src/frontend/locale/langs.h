@@ -42,7 +42,7 @@ namespace langs {
     extern const std::wstring& get(const std::wstring& key);
     extern const std::wstring& get(const std::wstring& key, const std::wstring& context);
 
-    extern void setup(const std::filesystem::path& resdir, const std::string& locale, const std::vector<ContentPack>& packs);
+    extern void setup(const std::filesystem::path& resdir, std::string locale, const std::vector<ContentPack>& packs);
 }
 
 #endif // FRONTEND_LOCALE_LANGS_H_

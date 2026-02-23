@@ -22,3 +22,7 @@ ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) {
 		}
     }
 }
+
+ContentGfxCache::~ContentGfxCache() {
+	delete[] sideregions;
+}

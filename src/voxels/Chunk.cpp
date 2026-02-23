@@ -15,12 +15,6 @@ Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
 	top = CHUNK_HEIGHT;
     voxels = new voxel[CHUNK_VOLUME];
 
-    // Инициализируем воксели
-    for(size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        voxels[i].id = 0;
-        voxels[i].states = 0;
-    }
-
 	light_map = new LightMap();
     renderData.vertices = nullptr;
 }

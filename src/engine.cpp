@@ -37,6 +37,7 @@
 #include "frontend/menu.h"
 #include "content/Content.h"
 #include "content/ContentLoader.h"
+#include "logic/scripting/scripting.h"
 
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths){
@@ -48,11 +49,29 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     }
 
     auto resdir = paths->getResources();
-    contentPacks.push_back({DEFAULT_CONTENT_NAMESPACE, resdir/std::filesystem::path("content/" DEFAULT_CONTENT_NAMESPACE)});
+    LOG_INFO("Initialization of the scripting system");
+    scripting::initialize(paths);
+    LOG_INFO("Scripting system initialization has been successfully finished");
 
-    LOG_INFO("Loading content");
-    loadContent();
-    LOG_INFO("Content loaded successfully");
+    LOG_INFO("Loading assets");
+    std::vector<std::filesystem::path> roots {resdir};
+    resPaths.reset(new ResPaths(resdir, roots));
+    assets.reset(new Assets());
+	AssetsLoader loader(assets.get(), resPaths.get());
+	AssetsLoader::createDefaults(loader);
+	AssetsLoader::addDefaults(loader, true);
+
+    ShaderProgram::preprocessor->setPaths(resPaths.get());
+
+	while (loader.hasNext()) {
+		if (!loader.loadNext()) {
+			assets.reset();
+			Window::terminate();
+            LOG_ERROR("Could not to initialize assets");
+            Logger::getInstance().flush();
+			throw initialize_error("Could not to initialize assets");
+		}
+	}
 
     gui = new gui::GUI();
 
@@ -65,6 +84,7 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
 
 // Реализация деструктора
 Engine::~Engine() {
+    scripting::close();
     screen = nullptr;
     delete gui;
 
@@ -98,13 +118,12 @@ void Engine::updateHotkeys() {
 // Основной цикл приложения
 void Engine::mainloop() {
     LOG_INFO("Loading the menu screen");
-    setScreen(std::shared_ptr<Screen>(new MenuScreen(this)));
+    setScreen(std::make_shared<MenuScreen>(this));
     LOG_INFO("The menu screen has loaded successfully");
 
     LOG_INFO("Preparing systems");
     Batch2D batch(1024);
     lastTime = Window::time();
-    Window::swapInterval(settings.display.swapInterval); // Включаем VSync (синхронизация с частотой обновления экрана)
     LOG_INFO("Systems have been prepared");
 
     Logger::getInstance().flush();
@@ -129,13 +148,14 @@ void Engine::mainloop() {
 }
 
 void Engine::loadContent() {
+    LOG_INFO("Loading content");
     auto resdir = paths->getResources();
     ContentBuilder contentBuilder;
     setup_definitions(&contentBuilder);
 
     std::vector<std::filesystem::path> resRoots;
     for (auto& pack : contentPacks) {
-        ContentLoader loader(pack.folder);
+        ContentLoader loader(&pack);
         loader.load(&contentBuilder);
         resRoots.push_back(pack.folder);
     }
@@ -144,20 +164,29 @@ void Engine::loadContent() {
 
     ShaderProgram::preprocessor->setPaths(resPaths.get());
 
-	assets.reset(new Assets());
-	LOG_INFO("Loading Assets");
-	AssetsLoader loader(assets.get(), resPaths.get());
+	std::unique_ptr<Assets> new_assets(new Assets());
+	LOG_INFO("Loading content Assets");
+	AssetsLoader loader(new_assets.get(), resPaths.get());
 	AssetsLoader::createDefaults(loader);
-	AssetsLoader::addDefaults(loader);
+	AssetsLoader::addDefaults(loader, false);
 	while (loader.hasNext()) {
 		if (!loader.loadNext()) {
-			assets.reset();
-			Window::terminate();
-            LOG_ERROR("Could not to initialize assets");
-			throw initialize_error("Could not to initialize assets");
+			new_assets.reset();
+            LOG_ERROR("Could not to initialize content assets");
+            Logger::getInstance().flush();
+			throw initialize_error("Could not to initialize content assets");
 		}
 	}
-    LOG_INFO("Assets loaded successfully");
+    assets->extend(*new_assets.get());
+    LOG_INFO("Content Assets loaded successfully");
+    LOG_INFO("Content loaded sucessfully");
+    Logger::getInstance().flush();
+}
+
+void Engine::loadAllPacks() {
+	auto resdir = paths->getResources();
+	contentPacks.clear();
+	ContentPack::scan(resdir/std::filesystem::path("content"), contentPacks);
 }
 
 EnginePaths* Engine::getPaths() {

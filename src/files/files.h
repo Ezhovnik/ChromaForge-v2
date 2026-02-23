@@ -4,6 +4,8 @@
 #include <string>
 #include <stdlib.h>
 #include <filesystem>
+#include <vector>
+#include <fstream>
 
 #include "../typedefs.h"
 
@@ -12,12 +14,24 @@ namespace json {
 }
 
 namespace files {
+    class rafile {
+        std::ifstream file;
+        size_t filelength;
+    public:
+        rafile(std::filesystem::path filename);
+
+        void seekg(std::streampos pos);
+        void read(char* buffer, std::streamsize size);
+        size_t length() const;
+    };
+
     extern bool write_bytes(std::filesystem::path filename, const char* data, size_t size);
     extern uint append_bytes(std::filesystem::path filename, const char* data, size_t size);
     extern bool read(std::filesystem::path filename, char* data, size_t size);
     extern char* read_bytes(std::filesystem::path filename, size_t& length);
     extern std::string read_string(std::filesystem::path filename);
     extern bool write_string(std::filesystem::path filename, const std::string content);
+    extern std::vector<std::string> read_list(std::filesystem::path file);
 
     extern json::JObject* read_json(std::filesystem::path file);
 }

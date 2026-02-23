@@ -23,7 +23,7 @@
 constexpr int MAX_WORK_PER_FRAME = 64;
 constexpr int MIN_SURROUNDING = 9;
 
-ChunksController::ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding) : level(level), chunks(chunks), lighting(lighting), chunksPadding(chunksPadding), generator(new WorldGenerator(level->content)){
+ChunksController::ChunksController(Level* level, uint chunksPadding) : level(level), chunks(level->chunks), lighting(level->lighting), chunksPadding(chunksPadding), generator(new WorldGenerator(level->content)){
 }
 
 ChunksController::~ChunksController(){
@@ -32,7 +32,7 @@ ChunksController::~ChunksController(){
 
 void ChunksController::update(int64_t maxDuration) {
     int64_t mcstotal = 0;
-    for (uint i = 0; i < MAX_WORK_PER_FRAME; i++) {
+    for (uint i = 0; i < MAX_WORK_PER_FRAME; ++i) {
         timeutil::Timer timer;
         if (loadVisible()) {
             int64_t mcs = timer.stop();
@@ -56,14 +56,14 @@ bool ChunksController::loadVisible(){
 	int nearX = 0;
 	int nearZ = 0;
 	int minDistance = ((width - chunksPadding * 2) / 2) * ((width - chunksPadding * 2) / 2);
-	for (uint z = chunksPadding; z < depth - chunksPadding; z++){
-		for (uint x = chunksPadding; x < width - chunksPadding; x++){
+	for (uint z = chunksPadding; z < depth - chunksPadding; ++z){
+		for (uint x = chunksPadding; x < width - chunksPadding; ++x){
 			int index = z * width + x;
 			std::shared_ptr<Chunk> chunk = chunks->chunks[index];
 			if (chunk != nullptr){
 				int surrounding = 0;
-				for (int dz = -1; dz <= 1; dz++){
-					for (int dx = -1; dx <= 1; dx++){
+				for (int dz = -1; dz <= 1; ++dz){
+					for (int dx = -1; dx <= 1; ++dx){
 						Chunk* other = chunks->getChunk(chunk->chunk_x + dx, chunk->chunk_z + dz);
 						if (other != nullptr) surrounding++;
 					}
@@ -90,9 +90,7 @@ bool ChunksController::loadVisible(){
 
 	int index = nearZ * width + nearX;
 	std::shared_ptr<Chunk> chunk = chunks->chunks[index];
-	if (chunk != nullptr) {
-		return false;
-	}
+	if (chunk != nullptr) return false;
 
     chunk = level->chunksStorage->create(nearX + areaOffsetX, nearZ + areaOffsetZ);
 	chunks->putChunk(chunk);

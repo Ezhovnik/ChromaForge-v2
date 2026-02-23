@@ -49,12 +49,13 @@ void Label::size(glm::vec2 sizenew) {
     UINode::size(glm::vec2(UINode::size().x, sizenew.y));
 }
 
-Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(32,32), padding, 0) {
+Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(32, 32), padding, 0) {
     add(content);
     scrollable(false);
 }
 
-Button::Button(std::wstring text, glm::vec4 padding) : Panel(glm::vec2(32,32), padding, 0) {
+Button::Button(std::wstring text, glm::vec4 padding, glm::vec4 margin) : Panel(glm::vec2(32, 32), padding, 0) {
+    this->margin(margin);
     Label* label = new Label(text);
     label->align(Align::center);
     this->label = std::shared_ptr<UINode>(label);

@@ -10,6 +10,7 @@
 void ContentBuilder::add(Block* def) {
     if (blockDefs.find(def->name) != blockDefs.end()) {
         LOG_ERROR("Block name duplicate: {}", def->name);
+        Logger::getInstance().flush();
         throw std::runtime_error("Block name duplicate: " + def->name);
     }
     blockDefs[def->name] = def;
@@ -21,10 +22,11 @@ Content* ContentBuilder::build() {
     DrawGroups* groups = new DrawGroups;
     for (const std::string& name : blockIds) {
         Block* def = blockDefs[name];
+
         def->rt.id = blockDefsIndices.size();
         def->rt.emissive = *((uint32_t*)def->emission);
-
         def->rt.solid = def->model == BlockModel::Cube;
+
         if (def->rotatable) {
             const AABB& hitbox = def->hitbox;
             for (uint i = 0; i < BlockRotProfile::MAX_COUNT; ++i) {
@@ -49,6 +51,7 @@ Content::Content(ContentIndices* indices, DrawGroups* drawGroups, std::unordered
 
 Content::~Content() {
     delete indices;
+    delete drawGroups;
 }
 
 Block* Content::findBlock(std::string id) const {
@@ -61,6 +64,7 @@ Block* Content::requireBlock(std::string id) const {
     auto found = blockDefs.find(id);
     if (found == blockDefs.end()) {
         LOG_ERROR("Missing block {}", id);
+        Logger::getInstance().flush();
         throw std::runtime_error("Missing block " + id);
     }
     return found->second;

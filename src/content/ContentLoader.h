@@ -6,12 +6,13 @@
 
 class Block;
 class ContentBuilder;
+class ContentPack;
 
 class ContentLoader {
 private:
-    std::filesystem::path folder;
+    const ContentPack* pack;
 public:
-    ContentLoader(std::filesystem::path folder);
+    ContentLoader(ContentPack* pack);
 
     Block* loadBlock(std::string name, std::filesystem::path file);
     void load(ContentBuilder* builder);
