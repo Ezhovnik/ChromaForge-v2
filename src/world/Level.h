@@ -12,7 +12,6 @@ class PhysicsSolver;
 class ChunksStorage;
 class LevelEvents;
 class Content;
-class ContentIndices;
 
 class Level {
 public:

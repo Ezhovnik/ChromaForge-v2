@@ -41,10 +41,10 @@ void WorldConverter::convertNext() {
     int x, y;
     std::string name = regfile.stem().string();
     if (!WorldFiles::parseRegionFilename(name, x, y)) {
-        LOG_ERROR("Could not parse name {}", name);
+        LOG_ERROR("Could not parse name '{}'", name);
         return;
     }
-    LOG_INFO("Converting region {}", name);
+    LOG_INFO("Converting region '{}'", name);
     for (uint cz = 0; cz < RegionConsts::SIZE; ++cz) {
         for (uint cx = 0; cx < RegionConsts::SIZE; ++cx) {
             int gx = cx + x * RegionConsts::SIZE;
@@ -55,7 +55,7 @@ void WorldConverter::convertNext() {
             wfile->put(gx, gz, data.get());
         }
     }
-    LOG_INFO("Region {} successfully converted", name);
+    LOG_INFO("Region '{}' successfully converted", name);
 }
 
 void WorldConverter::write() {

@@ -22,6 +22,14 @@ constexpr int FACE_PZ = 5;
 
 constexpr int BLOCK_AABB_GRID = 16;
 
+struct block_funcs_set {
+	bool init = false;
+	bool update = false;
+    bool onplaced = false;
+    bool onbroken = false;
+    bool randupdate = false;
+};
+
 struct CoordSystem {
 	glm::ivec3 axisX;
 	glm::ivec3 axisY;
@@ -29,7 +37,15 @@ struct CoordSystem {
 	glm::ivec3 fix;
     glm::ivec3 fix2;
 
+    CoordSystem() = default;
+	CoordSystem(glm::ivec3 axisX, glm::ivec3 axisY, glm::ivec3 axisZ, glm::ivec3 fix);
+
 	void transform(AABB& aabb);
+
+    static bool isVectorHasNegatives(glm::ivec3 vec) {
+		if (vec.x < 0 || vec.y < 0 || vec.z < 0) return true;
+		else return false;
+	}
 };
 
 struct BlockRotProfile {
@@ -43,8 +59,6 @@ struct BlockRotProfile {
 
 class Block {
 public:
-    static Block* blocks[256];
-
     std::string const name;
     std::string textureFaces[6]; // -x, +x, -y, +y, -z, +z
     ubyte emission[4] {0, 0, 0, 0};
@@ -58,6 +72,7 @@ public:
     bool breakable = true;
     bool rotatable = false;
     bool replaceable = false;
+    bool grounded = false;
 
     AABB hitbox;
 
@@ -68,6 +83,7 @@ public:
 		bool solid = true;
 		bool emissive = false;
 		AABB hitboxes[BlockRotProfile::MAX_COUNT];
+        block_funcs_set funcsset {};
 	} rt;
 
     Block(std::string name);

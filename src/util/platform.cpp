@@ -7,16 +7,10 @@
 #include <algorithm>
 
 #include "../typedefs.h"
+#include "../logger/Logger.h"
 
-#define SETTINGS_FILE "../build/settings.toml"
-#define CONTROLS_FILE "../build/controls.json"
-
-std::filesystem::path platform::get_settings_file() {
-	return std::filesystem::path(SETTINGS_FILE);
-}
-
-std::filesystem::path platform::get_controls_file() {
-	return std::filesystem::path(CONTROLS_FILE);
+namespace platform {
+    const std::string DEFAULT_LOCALE = "en_US";
 }
 
 #ifdef _WIN32
@@ -43,9 +37,11 @@ std::string platform::detect_locale() {
         WideCharToMultiByte(CP_UTF8, 0, localeName, -1, buffer, sizeof(buffer), nullptr, nullptr);
         std::string result(buffer);
 		std::replace(result.begin(), result.end(), '-', '_');
+        LOG_DEBUG("Detected environment language local: {}", result);
 		return result;
     } else {
-        return "en_US";
+        LOG_DEBUG("Detected environment language local: {}", platform::DEFAULT_LOCALE);
+        return platform::DEFAULT_LOCALE;
     }
 }
 #else
@@ -55,11 +51,12 @@ std::string platform::detect_locale() {
 std::string platform::detect_locale() {
 	const char* lang = getenv("LC_ALL");
     if (!lang || *lang == '\0') lang = getenv("LANG");
-    if (!lang || *lang == '\0') lang = "en_US";
+    if (!lang || *lang == '\0') lang = platform::DEFAULT_LOCALE;
 
     std::string result(lang);
     size_t dotPos = result.find('.');
     if (dotPos != std::string::npos) result = result.substr(0, dotPos);
+    LOG_DEBUG("Detected environment language local: {}", result);
     return result;
 }
 #endif

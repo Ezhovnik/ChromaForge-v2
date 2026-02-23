@@ -10,6 +10,7 @@
                 "-std=c++17",
                 "-I${workspaceFolder}/src",
                 "-I${workspaceFolder}/include",
+                "-IC:/msys64/ucrt64/include/luajit-2.1", // для LuaJIT
                 "-L${workspaceFolder}/lib",
 
                 //src/assets
@@ -28,6 +29,7 @@
                 "${workspaceFolder}/src/content/Content.cpp",
                 "${workspaceFolder}/src/content/ContentLoader.cpp",
                 "${workspaceFolder}/src/content/ContentLUT.cpp",
+                "${workspaceFolder}/src/content/ContentPack.cpp",
 
                 //src/files
                 "${workspaceFolder}/src/files/binary_io.cpp",
@@ -84,7 +86,12 @@
                 //src/logger
                 "${workspaceFolder}/src/logger/Logger.cpp",
 
+                //src/logic/scripting
+                "${workspaceFolder}/src/logic/scripting/api_lua.cpp",
+                "${workspaceFolder}/src/logic/scripting/scripting.cpp",
+
                 //src/logic
+                "${workspaceFolder}/src/logic/BlocksController.cpp",
                 "${workspaceFolder}/src/logic/ChunksController.cpp",
                 "${workspaceFolder}/src/logic/LevelController.cpp",
                 "${workspaceFolder}/src/logic/PlayerController.cpp",
@@ -133,6 +140,7 @@
                 "-lglfw3dll", 
                 "-lopengl32",
                 "-lglew32",
+                "-lluajit-5.1",
                 "-o",
                 "${workspaceFolder}/build/ChromaForge.exe"
             ],

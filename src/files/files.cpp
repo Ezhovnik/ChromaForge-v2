@@ -8,6 +8,28 @@
 #include "../logger/Logger.h"
 #include "../coders/json.h"
 
+files::rafile::rafile(std::filesystem::path filename) : file(filename, std::ios::binary | std::ios::ate) {
+    if (!file) {
+		LOG_ERROR("Could not to open file '{}'", filename.string());
+		Logger::getInstance().flush();
+        throw std::runtime_error("Could not to open file " + filename.string());
+    }
+    filelength = file.tellg();
+    file.seekg(0);
+}
+
+size_t files::rafile::length() const {
+    return filelength;
+}
+
+void files::rafile::seekg(std::streampos pos) {
+    file.seekg(pos);
+}
+
+void files::rafile::read(char* buffer, std::streamsize size) {
+    file.read(buffer, size);
+}
+
 // Записывает данные в бинарный файл (перезаписывает сущесвующий)
 bool files::write_bytes(const std::filesystem::path filename, const char* data, size_t size) {
 	std::ofstream output(filename, std::ios::binary);
@@ -49,7 +71,7 @@ char* files::read_bytes(std::filesystem::path filename, size_t& length) {
 	length = input.tellg();
 	input.seekg(0, std::ios_base::beg);
 
-	std::unique_ptr<char> data {new char[length]};
+	std::unique_ptr<char> data(new char[length]);
 	input.read(data.get(), length);
 	input.close();
 	return data.release();
@@ -81,4 +103,21 @@ json::JObject* files::read_json(std::filesystem::path file) {
 		LOG_ERROR("Could not ot parse {}. Reason: {}", file.string(), error.errorLog());
         throw std::runtime_error("Could not to parse " + file.string());
     }
+}
+
+std::vector<std::string> files::read_list(std::filesystem::path filename) {
+	std::ifstream file(filename);
+	if (!file) {
+		LOG_ERROR("Could not to open file {}", filename.u8string());
+		Logger::getInstance().flush();
+		throw std::runtime_error("Could not to open file " + filename.u8string());
+	}
+	std::vector<std::string> lines;
+	std::string line;
+	while (std::getline(file, line)) {
+		if (line.length() == 0) continue;
+		if (line[0] == '#') continue;
+		lines.push_back(line);
+	}
+	return lines;
 }

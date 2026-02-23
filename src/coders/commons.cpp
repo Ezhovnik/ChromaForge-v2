@@ -3,6 +3,8 @@
 #include <sstream>
 #include <math.h>
 
+#include "../logger/Logger.h"
+
 inline int char2int(char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'a' && c <= 'f') return 10 + c - 'a';
@@ -13,8 +15,11 @@ inline int char2int(char c) {
 
 inline double power(double base, int64_t power) {
     double result = 1.0;
-    for (int64_t i = 0; i < power; i++) {
-        result *= base;
+    int64_t exp = power;
+    while (exp > 0) {
+        if (exp & 1) result *= base;
+        base *= base;
+        exp >>= 1;
     }
     return result;
 }
@@ -36,7 +41,7 @@ std::string parsing_error::errorLog() const {
     size_t end = source.find("\n", linestart);
     if (end == std::string::npos) end = source.length();
     ss << source.substr(linestart, end-linestart) << "\n";
-    for (uint i = 0; i < linepos; i++) {
+    for (uint i = 0; i < linepos; ++i) {
         ss << " ";
     }
     ss << "^";
@@ -90,7 +95,8 @@ bool BasicParser::hasNext() {
 
 char BasicParser::nextChar() {
     if (!hasNext()) {
-        throw error("unexpected end");
+        LOG_ERROR("Unexpected end");
+        throw error("Unexpected end");
     }
     return source[pos++];
 }
@@ -98,7 +104,8 @@ char BasicParser::nextChar() {
 void BasicParser::expect(char expected) {
     char c = peek();
     if (c != expected) {
-        throw error("'"+std::string({expected})+"' expected");
+        LOG_ERROR("'{}' expected", std::string({expected}));
+        throw error("'" + std::string({expected}) + "' expected");
     }
     pos++;
 }
@@ -114,7 +121,8 @@ void BasicParser::expectNewLine() {
         if (is_whitespace(next)) {
             pos++;
         } else {
-            throw error("line separator expected");
+            LOG_ERROR("Line separator expected");
+            throw error("Line separator expected");
         }
     }
 }
@@ -134,7 +142,8 @@ void BasicParser::skipLine() {
 char BasicParser::peek() {
     skipWhitespace();
     if (pos >= source.length()) {
-        throw error("unexpected end");
+        LOG_ERROR("Unexpected end");
+        throw error("Unexpected end");
     }
     return source[pos];
 }
@@ -146,20 +155,22 @@ std::string BasicParser::parseName() {
             pos++;
             return parseString(c);
         }
-        throw error("identifier expected");
+        LOG_ERROR("Identifier expected");
+        throw error("Identifier expected");
     }
     int start = pos;
     while (hasNext() && is_identifier_part(source[pos])) {
         pos++;
     }
-    return source.substr(start, pos-start);
+    return source.substr(start, pos - start);
 }
 
 int64_t BasicParser::parseSimpleInt(int base) {
     char c = peek();
     int index = char2int(c);
     if (index == -1 || index >= base) {
-        throw error("invalid number literal");
+        LOG_ERROR("Invalid number literal");
+        throw error("Invalid number literal");
     }
     int64_t value = index;
     pos++;
@@ -180,15 +191,15 @@ int64_t BasicParser::parseSimpleInt(int base) {
 bool BasicParser::parseNumber(int sign, number_u& out) {
     char c = peek();
     int base = 10;
-    if (c == '0' && pos + 1 < source.length() && (base = detect_base(source[pos+1])) != 10) {
+    if (c == '0' && pos + 1 < source.length() && (base = detect_base(source[pos + 1])) != 10) {
         pos += 2;
         out.ival = parseSimpleInt(base);
         return true;
-    } else if (c == 'i' && pos + 2 < source.length() && source[pos+1] == 'n' && source[pos+2] == 'f') {
+    } else if (c == 'i' && pos + 2 < source.length() && source[pos + 1] == 'n' && source[pos + 2] == 'f') {
         pos += 3;
         out.fval = INFINITY * sign;
         return false;
-    } else if (c == 'n' && pos + 2 < source.length() && source[pos+1] == 'a' && source[pos+2] == 'n') {
+    } else if (c == 'n' && pos + 2 < source.length() && source[pos + 1] == 'a' && source[pos + 2] == 'n') {
         pos += 3;
         out.fval = NAN * sign;
         return false;
@@ -271,17 +282,24 @@ std::string BasicParser::parseString(char quote, bool closeRequired) {
                 case '/': ss << '/'; break;
                 case '\n': pos++; continue;
                 default:
+                    LOG_ERROR("'\\{}' is an illegal escape", std::string({c}));
                     throw error("'\\" + std::string({c}) + "' is an illegal escape");
             }
             continue;
         }
         if (c == '\n' && closeRequired) {
-            throw error("non-closed string literal");
+            LOG_ERROR("Non-closed string literal");
+            throw error("Non-closed string literal");
         }
         ss << c;
         pos++;
     }
-    if (closeRequired) throw error("unexpected end");
+
+    if (closeRequired) {
+        LOG_ERROR("Unexpected end");
+        throw error("unexpected end");
+    }
+
     return ss.str();
 }
 

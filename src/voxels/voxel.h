@@ -17,8 +17,8 @@ constexpr int BLOCK_VARIANT_MASK = 0xF0;
 
 // Структура, представляющая один воксель
 struct voxel {
-    blockid_t id;
-    uint8_t states;
+    blockid_t id = 0;
+    uint8_t states = 0;
 
     inline uint8_t rotation() const {return states & BLOCK_ROT_MASK;}
 	inline int8_t variant() const {return (states & BLOCK_VARIANT_MASK) >> 4;}

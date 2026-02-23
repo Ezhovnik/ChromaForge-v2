@@ -98,13 +98,14 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
 void langs::load(const std::filesystem::path& resdir, const std::string& locale, const std::string& fallback, const std::vector<ContentPack>& packs) {
     std::unique_ptr<Lang> lang (new Lang(locale));
     load(resdir, fallback, packs, *lang.get());
-    load(resdir, locale, packs, *lang.get());
+    if (locale != fallback) load(resdir, locale, packs, *lang.get());
     current.reset(lang.release());
 }
 
-void langs::setup(const std::filesystem::path& resdir, const std::string& locale, const std::vector<ContentPack>& packs) {
+void langs::setup(const std::filesystem::path& resdir, std::string locale, const std::vector<ContentPack>& packs) {
     std::string fallback = langs::FALLBACK_DEFAULT;
     langs::loadLocalesInfo(resdir, fallback);
+    if (langs::locales_info.find(locale) == langs::locales_info.end()) locale = fallback;
     langs::load(resdir, locale, fallback, packs);
 }
 

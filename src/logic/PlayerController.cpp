@@ -13,6 +13,8 @@
 #include "../window/Events.h"
 #include "../window/input.h"
 #include "../core_defs.h"
+#include "BlocksController.h"
+#include "scripting/scripting.h"
 
 namespace CameraConsts {
 	constexpr float SHAKE_OFFSET = 0.025f;
@@ -123,7 +125,7 @@ glm::vec3 PlayerController::selectedPointPosition;
 glm::ivec3 PlayerController::selectedBlockNormal;
 int PlayerController::selectedBlockStates = 0;
 
-PlayerController::PlayerController(Level* level, const EngineSettings& settings) : level(level), player(level->player), camControl(level->player, settings.camera) {
+PlayerController::PlayerController(Level* level, const EngineSettings& settings, BlocksController* blocksController) : level(level), player(level->player), camControl(level->player, settings.camera), blocksController(blocksController) {
 }
 
 void PlayerController::updateKeyboard() {
@@ -146,7 +148,7 @@ void PlayerController::updateKeyboard() {
 	input.pickBlock = Events::justActive(BIND_PLAYER_PICK);
 
 	for (int i = 1; i < 10; ++i){
-		if (Events::justPressed(keycode::NUM_0 + i)) player->choosenBlock = i;
+		if (Events::justPressed(keycode::NUM_0 + i)) player->chosenBlock = i;
 	}
 }
 
@@ -199,7 +201,7 @@ void PlayerController::updateInteraction(){
 		int z = iend.z;
 		uint8_t states = 0;
 
-		Block* def = contentIds->getBlockDef(player->choosenBlock);
+		Block* def = contentIds->getBlockDef(player->chosenBlock);
 		if (def->rotatable){
 			const std::string& name = def->rotations.name;
 			if (name == "pipe") {
@@ -223,10 +225,8 @@ void PlayerController::updateInteraction(){
 		}
 		
 		Block* block = contentIds->getBlockDef(vox->id);
-		if (input.attack && block->breakable){
-			chunks->setVoxel(x, y, z, 0, 0);
-			lighting->onBlockSet(x, y, z, 0);
-		}
+		if (input.attack && block->breakable) blocksController->breakBlock(player, block, x, y, z);
+
 		if (input.build){
 			if (block->model != BlockModel::X){
 				x = iend.x + norm.x;
@@ -234,14 +234,22 @@ void PlayerController::updateInteraction(){
 				z = iend.z + norm.z;
 			}
 			vox = chunks->getVoxel(x, y, z);
+			int chosenBlock = player->chosenBlock;
 			if (vox && (block = contentIds->getBlockDef(vox->id))->replaceable) {
 				if (!level->physics->isBlockInside(x, y, z, player->hitbox) || !def->obstacle){
-					chunks->setVoxel(x, y, z, player->choosenBlock, states);
-					lighting->onBlockSet(x, y, z, player->choosenBlock);
+					Block* def = contentIds->getBlockDef(chosenBlock);
+					if (def->grounded && !chunks->isSolid(x, y - 1, z)) chosenBlock = 0;
+					if (chosenBlock != vox->id) {
+						chunks->setVoxel(x, y, z, chosenBlock, states);
+						lighting->onBlockSet(x, y, z, chosenBlock);
+						if (def->rt.funcsset.onplaced) scripting::on_block_placed(player, def, x, y, z);
+						blocksController->updateSides(x, y, z);
+					}
 				}
 			}
 		}
-		if (input.pickBlock) player->choosenBlock = chunks->getVoxel(x, y, z)->id;
+
+		if (input.pickBlock) player->chosenBlock = chunks->getVoxel(x, y, z)->id;
 	} else {
 		selectedBlockStates = 0;
 		selectedBlockId = -1;

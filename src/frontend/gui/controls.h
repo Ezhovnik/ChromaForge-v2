@@ -50,7 +50,7 @@ namespace gui {
         std::shared_ptr<UINode> label = nullptr;
     public:
         Button(std::shared_ptr<UINode> content, glm::vec4 padding = glm::vec4(2.0f));
-        Button(std::wstring text, glm::vec4 padding = glm::vec4(2.0f));
+        Button(std::wstring text, glm::vec4 padding = glm::vec4(2.0f), glm::vec4 margin = glm::vec4(1.0f));
 
         virtual void drawBackground(Batch2D* batch, Assets* assets);
 

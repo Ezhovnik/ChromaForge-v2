@@ -43,6 +43,7 @@ bool asset_loader::texture(Assets* assets, const ResPaths* paths, const std::str
 	return assets->store(texture, name);
 }
 
+// Загружает и регистрирует шрифт в менеджере ресурсов
 bool asset_loader::font(Assets* assets, const ResPaths* paths, const std::string filename, const std::string name){
     std::vector<Texture*> pages;
 	for (size_t i = 0; i <= 4; ++i) {
@@ -61,24 +62,25 @@ bool asset_loader::font(Assets* assets, const ResPaths* paths, const std::string
 	return assets->store(font, name);;
 }
 
+// Загружает и регистрирует атлас в менеджере ресурсов
 bool asset_loader::atlas(Assets* assets, const ResPaths* paths, const std::string directory, const std::string name) {
 	AtlasBuilder builder;
 	for (auto const& file : paths->listdir(directory)) {
-		if (file.extension() == ".png") {
-			std::string entry_name = file.stem().string();
-			if (builder.has(entry_name)) continue;
-			std::shared_ptr<ImageData> image(png::loadImage(file.string()));
-			if (image == nullptr) {
-				LOG_ERROR("Failed to load atlas entry '{}'", entry_name);
-				Logger::getInstance().flush();
-				continue;
-			}
+		if (file.extension() != ".png") continue;
 
-			if (image->getFormat() != ImageFormat::rgba8888) image.reset(toRGBA(image.get()));
-
-			image->fixAlphaColor();
-			builder.add(entry_name, std::move(image));
+		std::string entry_name = file.stem().string();
+		if (builder.has(entry_name)) continue;
+		std::shared_ptr<ImageData> image(png::loadImage(file.string()));
+		if (image == nullptr) {
+			LOG_ERROR("Failed to load atlas entry '{}'", entry_name);
+			Logger::getInstance().flush();
+			continue;
 		}
+
+		if (image->getFormat() != ImageFormat::rgba8888) image.reset(toRGBA(image.get()));
+
+		image->fixAlphaColor();
+		builder.add(entry_name, std::move(image));
 	}
 
 	Atlas* atlas = builder.build(2);

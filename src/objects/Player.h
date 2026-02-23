@@ -38,7 +38,7 @@ public:
     bool noclip = false;
     bool debug = false;
 
-    int choosenBlock;
+    int chosenBlock;
 
 	float camX = 0.0f;
 	float camY = 0.0f;

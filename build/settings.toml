@@ -1,6 +1,6 @@
 [display]
-width = 1260
-height = 639
+width = 1280
+height = 720
 samples = 0
 swap-interval = 1
 fullscreen = false

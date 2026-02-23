@@ -24,7 +24,7 @@ private:
 
 	bool loadVisible();
 public:
-	ChunksController(Level* level, Chunks* chunks, Lighting* lighting, uint chunksPadding);
+	ChunksController(Level* level, uint chunksPadding);
 	~ChunksController();
 
     void update(int64_t maxDuration);

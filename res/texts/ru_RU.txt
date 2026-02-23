@@ -16,14 +16,16 @@ menu.Controls=Управление
 menu.Content=Контент
 menu.Back to Main Menu=Вернуться в Меню
 menu.Settings=Настройки
-world.Seed=Зерно
-world.Name=Название
-world.Create World=Создать Мир
+menu.Seed=Зерно
+menu.Name=Название
+menu.Create World=Создать Мир
 world.convert-request=Есть изменения в индексах! Конвертировать мир?
 
+error.pack-not-found=Не удалось найти пакет
+
 # Настройки
-settings.Load Distance=Дистанция Загрузки
-settings.Load Speed=Скорость Загрузки
+settings.Load Distance=Дистанция Прорисовки
+settings.Load Speed=Скорость Прорисовки
 settings.Fog Curve=Кривая Тумана
 settings.Backlight=Подсветка
 settings.V-Sync=Вертикальная Синхронизация
