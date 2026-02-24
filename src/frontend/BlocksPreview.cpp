@@ -58,6 +58,6 @@ void BlocksPreview::draw(const Block* def, int x, int y, int size, glm::vec4 tin
             break;
         }
     }
-    
+
     batch->flush();
 }

@@ -36,7 +36,7 @@
 MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     auto menu = engine->getGUI()->getMenu();
 
-    menus::refresh_menus(engine, menu);
+    menus::create_menus(engine, menu);
     menu->reset();
     menu->set("main");
 
@@ -147,7 +147,7 @@ void LevelScreen::draw(float deltaTime) {
     Viewport viewport(Window::width, Window::height);
     GfxContext context(nullptr, viewport, nullptr);
 
-    worldRenderer->draw(context, camera);\
+    worldRenderer->draw(context, camera);
 
     if (hudVisible) {
         hud->draw(context);

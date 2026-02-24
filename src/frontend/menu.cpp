@@ -155,9 +155,7 @@ Panel* create_worlds_panel(Engine* engine) {
             auto name = entry.path().filename().u8string();
             auto btn = new Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
             btn->color(glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
-            btn->listenAction([=](GUI*) {
-                open_world(name, engine);
-            });
+            btn->listenAction([=](GUI*) {open_world(name, engine);});
             panel->add(btn);
         }
     }
@@ -264,28 +262,29 @@ void create_controls_panel(Engine* engine, PagesControl* menu) {
         panel->add(trackbar);
     }
 
-    Panel* scrollPanel = new Panel(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
-    scrollPanel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.3f));
-    scrollPanel->maxLength(400);
+    {
+        Panel* scrollPanel = new Panel(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
+        scrollPanel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.3f));
+        scrollPanel->maxLength(400);
 
-    // FIXME: После запуска кнопки, отвечающие за binding-и не отображаются
-    for (auto& entry : Events::bindings){
-        std::string bindname = entry.first;
+        for (auto& entry : Events::bindings){
+            std::string bindname = entry.first;
 
-        Panel* subpanel = new Panel(glm::vec2(400, 40), glm::vec4(5.0f), 1.0f);
-        subpanel->color(glm::vec4(0.0f));
-        subpanel->orientation(Orientation::horizontal);
+            Panel* subpanel = new Panel(glm::vec2(400, 40), glm::vec4(5.0f), 1.0f);
+            subpanel->color(glm::vec4(0.0f));
+            subpanel->orientation(Orientation::horizontal);
 
-        InputBindBox* bindbox = new InputBindBox(entry.second);
-        subpanel->add(bindbox);
-        Label* label = new Label(langs::get(util::str2wstr_utf8(bindname)));
-        label->margin(glm::vec4(6.0f));
-        subpanel->add(label);
-        scrollPanel->add(subpanel);
+            InputBindBox* bindbox = new InputBindBox(entry.second);
+            subpanel->add(bindbox);
+            Label* label = new Label(langs::get(util::str2wstr_utf8(bindname)));
+            label->margin(glm::vec4(6.0f));
+            subpanel->add(label);
+            scrollPanel->add(subpanel);
+        }
+
+        panel->add(scrollPanel);
+        panel->add(guiutil::backButton(menu));
     }
-
-    panel->add(scrollPanel);
-    panel->add(guiutil::backButton(menu));
 }
 
 void create_settings_panel(Engine* engine, PagesControl* menu) {

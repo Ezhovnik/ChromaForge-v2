@@ -24,6 +24,7 @@ GUI::GUI() {
 
     menu = new PagesControl();
     container->add(menu);
+    container->scrollable(false);
 }
 
 GUI::~GUI() {
@@ -74,7 +75,7 @@ void GUI::activate(float delta) {
     auto prevfocus = focus;
 
     if (!Events::_cursor_locked) activateMouse(delta);
-    
+
     if (focus) {
         if (Events::justPressed(keycode::ESCAPE)) {
             focus->defocus();
@@ -86,6 +87,7 @@ void GUI::activate(float delta) {
             for (auto key : Events::pressedKeys) {
                 focus->keyPressed(key);
             }
+
             if (!Events::_cursor_locked) {
                 if (Events::isClicked(mousecode::BUTTON_1)) {
                     int mx = Events::x;
@@ -113,7 +115,7 @@ void GUI::draw(Batch2D* batch, Assets* assets) {
         throw std::runtime_error("The shader 'ui' could not be found in the assets");
     }
 	uishader->use();
-	uishader->uniformMatrix("u_projview", uicamera->getProjection()*uicamera->getView());
+	uishader->uniformMatrix("u_projview", uicamera->getProjection() * uicamera->getView());
 
     batch->begin();
     container->draw(batch, assets);
