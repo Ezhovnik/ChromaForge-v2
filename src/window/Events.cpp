@@ -8,19 +8,17 @@
 #include "../logger/Logger.h"
 
 // Статические массивы для хранения состояние клавиш и кнопок мыши
-bool* Events::_keys; // Хранит текущее состояние (нажата / не нажата)
-uint* Events::_frames; // Храние номер кадра, в котором было последнее изменение состояния
+bool Events::_keys[KEYS_BUFFER_SIZE] = {}; // Хранит текущее состояние (нажата / не нажата)
+uint Events::_frames[KEYS_BUFFER_SIZE] = {}; // Храние номер кадра, в котором было последнее изменение состояния
 uint Events::_current = 0; // Номер текущего кадра
 
 // Переменные для отслеживания позиции мыши
-float Events::deltaX = 0.0f; // Изменение положения курсора по X с последнего кадра
-float Events::deltaY = 0.0f; // Изменение положения курсора по Y с последнего кадра
-float Events::x = 0.0f; // Текущее положение курсора по X
-float Events::y = 0.0f; // Текущее положение курсора по Y
+glm::vec2 Events::delta = {};
+glm::vec2 Events::cursor = {};
 
 // Флаги для упраления состоянием курсора
 bool Events::_cursor_locked = false; // Режим захвата курсора
-bool Events::_cursor_started = false; // Начал ли пользователь движение мышью
+bool Events::cursor_drag = false; // Начал ли пользователь движение мышью
 
 int Events::scroll = 0;
 
@@ -28,28 +26,10 @@ std::vector<uint> Events::codepoints;
 std::vector<int> Events::pressedKeys;
 std::unordered_map<std::string, Binding> Events::bindings;
 
-// Инициализация системы событий
-int Events::initialize(){
-    // Выделяем память: 1032 = 1024 клавиши + 8 кнопок мыши
-    _keys = new bool[KEYS_BUFFER_SIZE];
-    _frames = new uint[KEYS_BUFFER_SIZE];
-
-    // Инициализируем массивы нулями
-    memset(_keys, false, KEYS_BUFFER_SIZE * sizeof(bool));
-    memset(_frames, 0, KEYS_BUFFER_SIZE * sizeof(uint));
-
-    return 0;
-}
-
-void Events::finalize(){
-	delete[] _keys;
-	delete[] _frames;
-}
-
 // Проверяет, нажата ли клавиша в данный момент
 bool Events::isPressed(int keycode) {
     if (keycode < 0 || keycode  >= KEYS_BUFFER_SIZE) return false;
-    
+
     return _keys[keycode];
 }
 
@@ -99,8 +79,8 @@ bool Events::justActive(std::string name) {
 // Обработка событий текущего кадра
 void Events::pollEvents() {
     _current++;
-    deltaX = 0.0f;
-    deltaY = 0.0f;
+    delta.x = 0.0f;
+    delta.y = 0.0f;
     codepoints.clear();
     pressedKeys.clear();
 	scroll = 0;
@@ -128,4 +108,25 @@ void Events::pollEvents() {
 			}
 		}
 	}
+}
+
+void Events::setKey(int key, bool b) {
+    Events::_keys[key] = b;
+    Events::_frames[key] = Events::_current;
+}
+
+void Events::setButton(int button, bool b) {
+    setKey(_MOUSE_KEYS_OFFSET + button, b);
+}
+
+void Events::setPosition(float xpos, float ypos) {
+    if (Events::cursor_drag) {
+        Events::delta.x += xpos - Events::cursor.x;
+        Events::delta.y += ypos - Events::cursor.y;
+    } else {
+        Events::cursor_drag = true;
+	}
+
+    Events::cursor.x = xpos;
+    Events::cursor.y = ypos;
 }

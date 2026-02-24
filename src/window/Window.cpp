@@ -48,32 +48,12 @@ void error_callback(int error, const char* description) {
 
 // Callback-функция для обработки движения мыши
 void cursor_position_callback(GLFWwindow*, double x_pos, double y_pos) {
-    if (Events::_cursor_locked) {
-        // В режиме захвата курсора накапливаем изменения позиции
-        Events::deltaX += x_pos - Events::x;
-        Events::deltaY += y_pos - Events::y;
-    } else {
-        // В обычном режиме просто отмечаем, что курсор начал движение
-        Events::_cursor_started = true;
-    }
-    // Обновляем текущие координаты
-    Events::x = x_pos;
-    Events::y = y_pos;
+    Events::setPosition(x_pos, y_pos);
 }
 
 // Callback-функция для обработки нажатий кнопок мыши
 void mouse_button_callback(GLFWwindow*, int button, int action, int mode) {
-    if (button < 0 || button >= _MAX_MOUSE_BUTTONS) return;
-
-    int index = _MOUSE_KEYS_OFFSET + button;
-
-    if (action == GLFW_PRESS) {
-        Events::_keys[index] = true;
-        Events::_frames[index] = Events::_current;
-    } else if (action == GLFW_RELEASE) {
-        Events::_keys[index] = false;
-        Events::_frames[index] = Events::_current;
-    }
+    Events::setButton(button, action == GLFW_PRESS);
 }
 
 // Callback-функция для обработки нажатий клавиш клавиатуры
@@ -81,12 +61,10 @@ void key_callback(GLFWwindow*, int key, int scancode, int action, int mode) {
     if (key < 0 || key >= _MOUSE_KEYS_OFFSET) return;
 
     if (action == GLFW_PRESS) {
-        Events::_keys[key] = true;
-        Events::_frames[key] = Events::_current;
+        Events::setKey(key, true);
         Events::pressedKeys.push_back(key);
     } else if (action == GLFW_RELEASE) {
-        Events::_keys[key] = false;
-        Events::_frames[key] = Events::_current;
+        Events::setKey(key, false);
     } else if (action == GLFW_REPEAT) {
         Events::pressedKeys.push_back(key);
     }
@@ -181,8 +159,6 @@ bool Window::initialize(DisplaySettings& settings) {
     Window::width = settings.width;
     Window::height = settings.height;
 
-    Events::initialize();
-
     // Устанавливаем callback-функции GLFW
     glfwSetKeyCallback(window, key_callback); // Клавиатура
     glfwSetMouseButtonCallback(window, mouse_button_callback); // Нажатие кнопки мыши
@@ -211,7 +187,6 @@ bool Window::initialize(DisplaySettings& settings) {
 
 // Завершение работы окна и освобождение ресурсов GLFW
 void Window::terminate() {
-    Events::finalize();
     glfwDestroyWindow(window);
     glfwTerminate();
 }
@@ -319,8 +294,7 @@ void Window::toggleFullscreen(){
 
 	double xPos, yPos;
 	glfwGetCursorPos(window, &xPos, &yPos);
-	Events::x = xPos;
-	Events::y = yPos;
+	Events::setPosition(xPos, yPos);
 }
 
 bool Window::isFullscreen() {

@@ -40,8 +40,7 @@ public:
 
     int chosenBlock;
 
-	float camX = 0.0f;
-	float camY = 0.0f;
+	glm::vec2 cam = {};
 
     voxel selectedVoxel {0, 0};
 

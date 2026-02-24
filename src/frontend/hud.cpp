@@ -235,8 +235,8 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 	int ys = inv_y + pad_y;
 
 	glm::vec4 tint = glm::vec4(1.0f);
-	int mx = Events::x;
-	int my = Events::y;
+	int mx = Events::cursor.x;
+	int my = Events::cursor.y;
 
 	batch->texture(nullptr);
 	batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);

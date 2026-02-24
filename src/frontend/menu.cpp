@@ -187,7 +187,7 @@ void create_new_world_panel(Engine* engine, PagesControl* menu) {
 
     TextBox* worldNameInput;
     {
-        Label* label = new Label(langs::get(L"Name", L"menu"));
+        Label* label = new Label(langs::get(L"Name", L"world"));
         panel->add(label);
 
         TextBox* input = new TextBox(L"New World", glm::vec4(6.0f));
@@ -197,7 +197,7 @@ void create_new_world_panel(Engine* engine, PagesControl* menu) {
 
     TextBox* seedInput;
     {
-        Label* label = new Label(langs::get(L"Seed", L"menu"));
+        Label* label = new Label(langs::get(L"Seed", L"world"));
         panel->add(std::shared_ptr<UINode>(label));
 
         uint64_t randseed = RandomGenerator::get<uint64_t>();
