@@ -5,6 +5,9 @@
         },
         "ru_RU": {
             "name": "Русский"
+        },
+        "be_BY": {
+            "name": "Беларускі"
         }
     },
     "fallback": "en_US"

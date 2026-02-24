@@ -10,31 +10,22 @@
 #include "input.h"
 #include "../typedefs.h"
 
-// Константа для разделения индексов клавиш и кнопок мыши
-// Клавиши: 0-1023, кнопки мыши: 1024+
-constexpr int _MOUSE_KEYS_OFFSET = 1024;
-
-// Максимальное количество поддерживаемых кнопок мыши
-// GLFW поддерживает кнопки с GLFW_MOUSE_BUTTON_1 (0) до GLFW_MOUSE_BUTTON_8 (7)
-constexpr int _MAX_MOUSE_BUTTONS = 8;
-
-constexpr short KEYS_BUFFER_SIZE = _MOUSE_KEYS_OFFSET + _MAX_MOUSE_BUTTONS;
+constexpr short _MOUSE_KEYS_OFFSET = 1024;
+constexpr short KEYS_BUFFER_SIZE = 1036;
 
 // Система обработки событий ввода (клавиатура, мышь)
 class Events {
 public:
     // Поля для хранения состояния ввода
-    static bool* _keys; // Состояние клавиш и кнопок мыши
-    static uint* _frames; // Хранит номер кадра, в котором клавиша/кнопка была нажата/отпущена
+    static bool _keys[KEYS_BUFFER_SIZE]; // Состояние клавиш и кнопок мыши
+    static uint _frames[KEYS_BUFFER_SIZE]; // Хранит номер кадра, в котором клавиша/кнопка была нажата/отпущена
     static uint _current; // Номер текущего кадра
 
     // Переменные для отсеживания состояния мыши
-    static float deltaX; // Изменение положения курсора по X с последнего кадра
-    static float deltaY; // Изменение положения курсора по Y с последнего кадра
-    static float x; // Текущее положение курсора по X
-    static float y; // Текущее положение курсора по Y
+    static glm::vec2 delta;
+    static glm::vec2 cursor;
+    static bool cursor_drag;
     static bool _cursor_locked; // Режим захвата курсора
-    static bool _cursor_started; // Начал ли пользователь движение мышью
 
     static int scroll;
 
@@ -42,9 +33,6 @@ public:
     static std::vector<int> pressedKeys;
     static std::unordered_map<std::string, Binding> bindings;
 
-    // Методы инициализации и обновления
-    static int initialize(); // Инициализация системы событий
-    static void finalize();
     static void pollEvents(); // Обработка событий текущего кадра
 
     static bool isPressed(int keycode); // Проверяет, нажата ли клавиша в текущий момент
@@ -58,6 +46,11 @@ public:
 	static bool justActive(std::string name);
 
     static void toggleCursor(); // Переключает режим курсора между нормальным и заблокированным состоянием
+
+    static void setKey(int key, bool b);
+    static void setButton(int button, bool b);
+
+    static void setPosition(float xpos, float ypos);
 };
 
 #endif // WINDOW_EVENTS_H_
