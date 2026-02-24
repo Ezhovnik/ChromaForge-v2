@@ -6,6 +6,8 @@
 #include <memory>
 #include <functional>
 
+#include ".../../typedefs.h"
+
 class Batch2D;
 class Assets;
 
@@ -68,7 +70,7 @@ namespace gui {
         bool isfocused() const; 
         virtual bool isfocuskeeper() const {return false;}
 
-        virtual void typed(unsigned int codepoint) {};
+        virtual void typed(uint codepoint) {};
         virtual void keyPressed(int key) {};
 
         virtual bool isInside(glm::vec2 pos);

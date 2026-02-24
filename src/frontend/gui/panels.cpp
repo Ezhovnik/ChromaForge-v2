@@ -133,7 +133,7 @@ void Panel::refresh() {
             glm::vec2 nodesize = node->size();
             const glm::vec4 margin = node->margin();
             y += margin.y;
-            
+
             float ex;
             float spacex = size.x - margin.z - padding.z;
             switch (node->align()) {
@@ -151,7 +151,7 @@ void Panel::refresh() {
             float width = size.x - padding.x - padding.z - margin.x - margin.z;
             node->size(glm::vec2(width, nodesize.y));
             node->refresh();
-            maxw = fmax(maxw, ex + node->size().x + margin.z+padding.z);
+            maxw = fmax(maxw, ex + node->size().x + margin.z + padding.z);
         }
         if (resizing_) {
             if (maxLength_) this->size(glm::vec2(size.x, glm::min(maxLength_, (int)(y + padding.w))));
@@ -164,12 +164,12 @@ void Panel::refresh() {
             glm::vec2 nodesize = node->size();
             const glm::vec4 margin = node->margin();
             x += margin.x;
-            node->setCoord(glm::vec2(x, y+margin.y));
+            node->setCoord(glm::vec2(x, y + margin.y));
             x += nodesize.x + margin.z + interval;
             float height = size.y - padding.y - padding.w - margin.y - margin.w;
             node->size(glm::vec2(nodesize.x, height));
             node->refresh();
-            maxh = fmax(maxh, y + margin.y + node->size().y + margin.w+padding.w);
+            maxh = fmax(maxh, y + margin.y + node->size().y + margin.w + padding.w);
         }
         bool increased = maxh > size.y;
         if (resizing_) {

@@ -82,7 +82,6 @@ void UINode::scrolled(int value) {
     if (parent) parent->scrolled(value);
 }
 
-
 void UINode::setCoord(glm::vec2 coord) {
     this->coord = coord;
 }

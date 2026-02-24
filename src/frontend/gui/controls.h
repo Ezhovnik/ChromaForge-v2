@@ -6,9 +6,11 @@
 #include <vector>
 #include <functional>
 #include <glm/glm.hpp>
+
 #include "UINode.h"
 #include "panels.h"
 #include "../../window/input.h"
+#include "../../typedefs.h"
 
 class Batch2D;
 class Assets;
@@ -103,7 +105,7 @@ namespace gui {
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
 
         virtual void drawBackground(Batch2D* batch, Assets* assets) override;
-        virtual void typed(unsigned int codepoint) override; 
+        virtual void typed(uint codepoint) override; 
         virtual void keyPressed(int key) override;
         virtual void textSupplier(wstringsupplier supplier);
         virtual void textConsumer(wstringconsumer consumer);

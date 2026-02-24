@@ -7,9 +7,9 @@
 #include "../../graphics/Font.h"
 #include "../../util/stringutil.h"
 
-#define KEY_ESCAPE 256
-#define KEY_ENTER 257
-#define KEY_BACKSPACE 259
+inline constexpr uint KEY_ESCAPE = 256;
+inline constexpr uint KEY_ENTER = 257;
+inline constexpr uint KEY_BACKSPACE = 259;
 
 using namespace gui;
 
@@ -119,7 +119,7 @@ void Button::textAlign(Align align) {
     }
 }
 
-TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200,32), padding, 0, false), input(L""), placeholder(placeholder) {
+TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0, false), input(L""), placeholder(placeholder) {
     label = new Label(L"");
     add(std::shared_ptr<UINode>(label));
 }
@@ -175,7 +175,7 @@ std::wstring TextBox::text() const {
     return input;
 }
 
-InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec2(100,32), padding, 0, false), binding(binding) {
+InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec2(100, 32), padding, 0, false), binding(binding) {
     label = new Label(L"");
     add(label);
     scrollable(false);
@@ -208,8 +208,8 @@ void InputBindBox::keyPressed(int key) {
 }
 
 TrackBar::TrackBar(double min, double max, double value, double step, int trackWidth)
-    : UINode(glm::vec2(), glm::vec2(32)), min(min), max(max), value(value), step(step), trackWidth(trackWidth) {
-    color(glm::vec4(0.f, 0.f, 0.f, 0.4f));
+    : UINode(glm::vec2(), glm::vec2(26)), min(min), max(max), value(value), step(step), trackWidth(trackWidth) {
+    color(glm::vec4(0.0f, 0.0f, 0.0f, 0.4f));
 }
 
 void TrackBar::draw(Batch2D* batch, Assets* assets) {
@@ -240,7 +240,7 @@ void TrackBar::mouseMove(GUI*, int x, int y) {
     glm::vec2 coord = calcCoord();
     value = x;
     value -= coord.x;
-    value = (value) / size_.x * (max - min + trackWidth*step);
+    value = (value) / size_.x * (max - min + trackWidth * step);
     value += min;
     value = (value > max) ? max : value;
     value = (value < min) ? min : value;
@@ -264,7 +264,6 @@ void CheckBox::draw(Batch2D* batch, Assets* assets) {
 void CheckBox::mouseRelease(GUI*, int x, int y) {
     checked_ = !checked_;
     if (consumer_) consumer_(checked_);
-
 }
 
 void CheckBox::supplier(boolsupplier supplier) {

@@ -74,9 +74,7 @@ namespace gui {
     struct Page {
         std::shared_ptr<UINode> panel = nullptr;
 
-        ~Page() {
-            panel = nullptr;
-        }
+        ~Page() {panel = nullptr;}
     };
 
     class PagesControl : public Container {

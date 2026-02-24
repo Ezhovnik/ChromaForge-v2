@@ -23,6 +23,7 @@
         "green_neon",
         "blue_neon",
         "copper_block",
-        "oak_pane"
+        "oak_pane",
+        "torch"
     ]
 }
