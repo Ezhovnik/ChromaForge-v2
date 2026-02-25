@@ -7,6 +7,7 @@
 
 #include "../logger/Logger.h"
 #include "../coders/json.h"
+#include "../util/stringutil.h"
 
 files::rafile::rafile(std::filesystem::path filename) : file(filename, std::ios::binary | std::ios::ate) {
     if (!file) {
@@ -115,6 +116,7 @@ std::vector<std::string> files::read_list(std::filesystem::path filename) {
 	std::vector<std::string> lines;
 	std::string line;
 	while (std::getline(file, line)) {
+		util::trim(line);
 		if (line.length() == 0) continue;
 		if (line[0] == '#') continue;
 		lines.push_back(line);

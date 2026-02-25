@@ -16,6 +16,8 @@ public:
 
     Block* loadBlock(std::string name, std::filesystem::path file);
     void load(ContentBuilder* builder);
+
+    void fixPackIndices();
 };
 
 #endif // CONTENT_CONTENT_LOADER_H_

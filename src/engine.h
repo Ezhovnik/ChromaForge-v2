@@ -36,7 +36,7 @@ private:
     EnginePaths* paths;
     std::unique_ptr<ResPaths> resPaths = nullptr;
 
-    gui::GUI* gui;
+    std::unique_ptr<gui::GUI> gui;
 
     uint64_t frame = 0; // Номер текущего кадра
     double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)

@@ -66,7 +66,8 @@ ResPaths::ResPaths(std::filesystem::path mainRoot, std::vector<std::filesystem::
 }
 
 std::filesystem::path ResPaths::find(const std::string& filename) const {
-    for (auto& root : roots) {
+    for (int i = roots.size() - 1; i >= 0; --i) {
+        auto& root = roots[i];
         std::filesystem::path file = root/std::filesystem::path(filename);
         if (std::filesystem::exists(file)) return file;
     }
@@ -75,7 +76,8 @@ std::filesystem::path ResPaths::find(const std::string& filename) const {
 
 std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderName) const {
     std::vector<std::filesystem::path> entries;
-    for (auto& root : roots) {
+    for (int i = roots.size() - 1; i >= 0; --i) {
+        auto& root = roots[i];
         std::filesystem::path folder = root/std::filesystem::path(folderName);
         if (!std::filesystem::is_directory(folder)) continue;
         for (const auto& entry : std::filesystem::directory_iterator(folder)) {

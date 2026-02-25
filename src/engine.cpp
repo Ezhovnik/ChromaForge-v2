@@ -73,7 +73,7 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
 		}
 	}
 
-    gui = new gui::GUI();
+    gui = std::make_unique<gui::GUI>();
 
     if (settings.ui.language == "auto") settings.ui.language = platform::detect_locale();
     setLanguage(settings.ui.language);
@@ -86,7 +86,6 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
 Engine::~Engine() {
     scripting::close();
     screen = nullptr;
-    delete gui;
 
     LOG_INFO("Shutting down");
     assets.reset();
@@ -198,7 +197,7 @@ EnginePaths* Engine::getPaths() {
 }
 
 gui::GUI* Engine::getGUI() {
-	return gui;
+	return gui.get();
 }
 
 EngineSettings& Engine::getSettings() {

@@ -249,11 +249,13 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 		GfxContext subctx = context.sub();
 		subctx.depthTest(true);
 		subctx.cullFace(true);
+		uint index = 0;
 		for (uint i = 0; i < count - 1; ++i) {
-			Block* cblock = contentIds->getBlockDef(i + 1);
-			if (cblock == nullptr) break;
-			int x = xs + (icon_size+interval) * (i % inv_cols);
-			int y = ys + (icon_size+interval) * (i / inv_cols);
+			Block* chosen_block = contentIds->getBlockDef(i + 1);
+			if (chosen_block == nullptr) break;
+			if (chosen_block->hidden) continue;
+			int x = xs + (icon_size + interval) * (index % inv_cols);
+			int y = ys + (icon_size + interval) * (index / inv_cols);
 			if (mx > x && mx < x + (int)icon_size && my > y && my < y + (int)icon_size) {
 				tint.r *= 1.2f;
 				tint.g *= 1.2f;
@@ -262,7 +264,8 @@ void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
 			} else {
 				tint = glm::vec4(1.0f);
 			}
-			blocksPreview->draw(cblock, x, y, icon_size, tint);
+			blocksPreview->draw(chosen_block, x, y, icon_size, tint);
+			++index;
 		}
 	}
 	uiShader->use();
