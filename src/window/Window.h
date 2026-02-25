@@ -43,10 +43,11 @@ public:
     static void swapInterval(int interval);
 
     static void toggleFullscreen();
+
 	static bool isFullscreen();
     static bool isFocused();
-
     static bool isMaximized();
+    static bool isIconified();
 
     static void pushScissor(glm::vec4 area);
 	static void popScissor();

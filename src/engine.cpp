@@ -137,11 +137,15 @@ void Engine::mainloop() {
         gui->activate(deltaTime);
 
         screen->update(deltaTime);
-        screen->draw(deltaTime);
+    
+        if (!Window::isIconified()) {
+            screen->draw(deltaTime);
+            gui->draw(&batch, assets.get());
+            Window::swapInterval(settings.display.swapInterval);
+        } else {
+            Window::swapInterval(1);
+        }
 
-        gui->draw(&batch, assets.get());
-
-        Window::swapInterval(settings.display.swapInterval);
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
     }
