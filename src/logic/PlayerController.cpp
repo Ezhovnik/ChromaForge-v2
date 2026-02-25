@@ -220,7 +220,11 @@ void PlayerController::updateInteraction(){
 		Block* block = contentIds->getBlockDef(vox->id);
 		if (input.attack && block->breakable) blocksController->breakBlock(player, block, x, y, z);
 
-		if (input.build){
+		if (input.build) {
+			if (block->rt.funcsset.oninteract && !input.crouch) {
+                scripting::on_block_interact(player, block, x, y, z);
+                return;
+            }
 			if (block->model != BlockModel::X){
 				x = iend.x + norm.x;
 				y = iend.y + norm.y;

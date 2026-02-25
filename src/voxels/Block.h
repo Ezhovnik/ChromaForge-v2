@@ -27,6 +27,7 @@ struct block_funcs_set {
 	bool update = false;
     bool onplaced = false;
     bool onbroken = false;
+    bool oninteract = false;
     bool randupdate = false;
 };
 
