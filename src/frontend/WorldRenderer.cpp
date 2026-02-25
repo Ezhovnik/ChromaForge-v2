@@ -78,7 +78,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 		if (!frustumCulling->IsBoxVisible(min, max)) return false;
 	}
 
-	glm::vec3 coord = glm::vec3(chunk->chunk_x * CHUNK_WIDTH, 0.0f, chunk->chunk_z * CHUNK_DEPTH + 1);
+	glm::vec3 coord = glm::vec3(chunk->chunk_x * CHUNK_WIDTH + 0.5f, 0.5f, chunk->chunk_z * CHUNK_DEPTH + 0.5f);
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), coord);
 
 	shader->uniformMatrix("u_model", model);

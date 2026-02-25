@@ -78,6 +78,10 @@ bool Window::isFocused() {
 	return glfwGetWindowAttrib(window, GLFW_FOCUSED);
 }
 
+bool Window::isIconified() {
+    return glfwGetWindowAttrib(window, GLFW_ICONIFIED);
+}
+
 // Callback-функция для обработки изменения размера окна
 void window_size_callback(GLFWwindow*, int width, int height) {
     if (Window::isFocused() && width && height) {

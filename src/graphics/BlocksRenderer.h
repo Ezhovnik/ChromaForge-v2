@@ -38,62 +38,33 @@ private:
 	void vertex(const glm::vec3& coord, float u, float v, const glm::vec4& light);
 	void index(int a, int b, int c, int d, int e, int f);
 
-	void vertex(const glm::ivec3& coord,
-				float u, float v, 
-				const glm::vec4& brightness,
-				const glm::ivec3& axisX,
-				const glm::ivec3& axisY,
-				const glm::ivec3& axisZ
-			);
-
 	void vertex(const glm::vec3& coord,
 				float u, float v, 
 				const glm::vec4& brightness,
-				const glm::ivec3& axisX,
-				const glm::ivec3& axisY,
-				const glm::ivec3& axisZ
+				const glm::vec3& axisX,
+				const glm::vec3& axisY,
+				const glm::vec3& axisZ
 			);
 
 	void face(const glm::vec3& coord,
-		float w, float h,
+		float w, float h, float d,
 		const glm::vec3& axisX,
 		const glm::vec3& axisY,
+		const glm::vec3& axisZ,
 		const UVRegion& region,
 		const glm::vec4(&lights)[4],
 		const glm::vec4& tint
 	);
-	
-	void face(const glm::ivec3& coord,
-		const glm::ivec3& axisX,
-		const glm::ivec3& axisY,
-		const glm::ivec3& axisZ,
-		const glm::ivec3& laxisZ,
-		const UVRegion& region
-	);
 
 	void face(const glm::vec3& coord,
-		const glm::ivec3& axisX,
-		const glm::ivec3& axisY,
-		const glm::ivec3& axisZ,
-		const glm::ivec3& laxisZ,
-		float width,
-		float height,
-		float depth,
+		const glm::vec3& axisX,
+		const glm::vec3& axisY,
+		const glm::vec3& axisZ,
 		const UVRegion& region,
         bool lights
 	);
 
-	void face(const glm::vec3& coord,
-		float w, float h,
-		const glm::vec3& axisX,
-		const glm::vec3& axisY,
-		const UVRegion& region,
-		const glm::vec4(&lights)[4]) {
-		face(coord, w, h, axisX, axisY, region, lights, glm::vec4(1.0f));
-	}
-
-	void blockCube(int x, int y, int z, const UVRegion(&faces)[6], ubyte group);
-	void blockCubeShaded(int x, int y, int z, const UVRegion(&faces)[6], const Block* block, ubyte states);
+	void blockCube(int x, int y, int z, const UVRegion(&faces)[6], const Block* block, ubyte states, bool lights);
 	void blockAABB(const glm::ivec3& coord, const UVRegion(&faces)[6], const Block* block, ubyte rotation, bool lights);
 	void blockXSprite(int x, int y, int z, const glm::vec3& size, const UVRegion& face1, const UVRegion& face2, float spread);
 
