@@ -38,6 +38,7 @@ private:
     std::wstring fpsString;
 
     bool inventoryOpen = false;
+    int inventoryScroll = 0;
     bool pause = false;
 
     std::shared_ptr<gui::UINode> debugPanel;
