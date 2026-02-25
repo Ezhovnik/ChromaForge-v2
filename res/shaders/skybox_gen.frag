@@ -257,7 +257,6 @@ void main() {
 
     // hide darkness at horizon
     camera_vector.y = max(0.01, camera_vector.y)*(1.0-u_mie*0.08) + 0.08*u_mie;  
-    camera_vector = normalize(camera_vector);
 
     // the color of this pixel
     vec3 col = vec3(0.0);//scene.xyz;
@@ -289,6 +288,7 @@ void main() {
     // apply exposure, removing this makes the brighter colors look ugly
     // you can play around with removing this
     col = 1.0 - exp(-col);
+    col = min(col, vec3(1.0));
     
     // Output to screen
     f_color = vec4(col, 1.0);

@@ -66,6 +66,7 @@ public:
 
     const AABB* isObstacle(float x, float y, float z);
     bool isSolid(int x, int y, int z);
+    bool isReplaceable(int x, int y, int z);
 
     void _setOffset(int x, int z);
 

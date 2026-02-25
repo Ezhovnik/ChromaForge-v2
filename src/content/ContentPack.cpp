@@ -10,6 +10,7 @@
 
 const std::string ContentPack::PACKAGE_FILENAME = "package.json";
 const std::string ContentPack::CONTENT_FILENAME = "content.json";
+const std::string ContentPack::BLOCKS_FOLDER = "blocks";
 
 contentpack_error::contentpack_error(std::string packId, std::filesystem::path folder, std::string message) : std::runtime_error(message), packId(packId), folder(folder) {
 }
@@ -66,19 +67,21 @@ std::vector<std::string> ContentPack::worldPacksList(std::filesystem::path folde
     return files::read_list(listfile);
 }
 
-std::filesystem::path ContentPack::findPack(const EnginePaths* paths, std::string name) {
-    auto folder = paths->getResources()/std::filesystem::path("content")/std::filesystem::path(name);
-    if (!std::filesystem::is_directory(folder)) {
-        LOG_ERROR("Could not to find pack '{}'", name);
-        Logger::getInstance().flush();
-        throw contentpack_error(name, folder, "Could not to find pack '"+name+"'");
-    }
-    return folder;
+std::filesystem::path ContentPack::findPack(const EnginePaths* paths, std::filesystem::path worldDir, std::string name) {
+    auto folder = worldDir/std::filesystem::path("content")/std::filesystem::path(name);
+    if (std::filesystem::is_directory(folder)) return folder;
+
+    folder = paths->getResources()/std::filesystem::path("content")/std::filesystem::path(name);
+    if (std::filesystem::is_directory(folder)) return folder;
+
+    LOG_ERROR("Could not to find pack '{}'", name);
+    Logger::getInstance().flush();
+    throw contentpack_error(name, folder, "Could not to find pack '" + name + "'");
 }
 
-void ContentPack::readPacks(const EnginePaths* paths, std::vector<ContentPack>& packs, const std::vector<std::string>& packnames) {
+void ContentPack::readPacks(const EnginePaths* paths, std::vector<ContentPack>& packs, const std::vector<std::string>& packnames, std::filesystem::path worldDir) {
     for (const auto& name : packnames) {
-        std::filesystem::path packfolder = ContentPack::findPack(paths, name);
+        std::filesystem::path packfolder = ContentPack::findPack(paths, worldDir, name);
         packs.push_back(ContentPack::read(packfolder));
     }
 }

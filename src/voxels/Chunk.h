@@ -15,7 +15,7 @@ namespace ChunkFlags {
     inline constexpr uint LOADED_LIGHTS = 0x20;
 }
 
-inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 2;
+inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
 
 struct voxel;
 class LightMap;
@@ -72,6 +72,7 @@ public:
     ubyte* encode() const;
 	bool decode(ubyte* data);
 
+    static void fromOld(ubyte* data);
     static void convert(ubyte* data, const ContentLUT* lut);
 };
 

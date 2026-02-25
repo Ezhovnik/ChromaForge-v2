@@ -73,6 +73,7 @@ public:
     bool rotatable = false;
     bool replaceable = false;
     bool grounded = false;
+    bool hidden = false;
 
     AABB hitbox;
 

@@ -38,9 +38,9 @@ void WorldConverter::convertNext() {
     std::filesystem::path regfile = regions.front();
     regions.pop();
     if (!std::filesystem::is_regular_file(regfile)) return;
-    int x, y;
+    int x, z;
     std::string name = regfile.stem().string();
-    if (!WorldFiles::parseRegionFilename(name, x, y)) {
+    if (!WorldFiles::parseRegionFilename(name, x, z)) {
         LOG_ERROR("Could not parse name '{}'", name);
         return;
     }
@@ -48,10 +48,13 @@ void WorldConverter::convertNext() {
     for (uint cz = 0; cz < RegionConsts::SIZE; ++cz) {
         for (uint cx = 0; cx < RegionConsts::SIZE; ++cx) {
             int gx = cx + x * RegionConsts::SIZE;
-            int gz = cz + y * RegionConsts::SIZE;
+            int gz = cz + z * RegionConsts::SIZE;
             std::unique_ptr<ubyte[]> data (wfile->getChunk(gx, gz));
             if (data == nullptr) continue;
-            Chunk::convert(data.get(), lut);
+
+            if (wfile->getVoxelRegionVersion(x, z) != REGION_FORMAT_VERSION) Chunk::fromOld(data.get());
+            if (lut) Chunk::convert(data.get(), lut);
+
             wfile->put(gx, gz, data.get());
         }
     }

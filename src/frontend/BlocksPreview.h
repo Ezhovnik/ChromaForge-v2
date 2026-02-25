@@ -1,8 +1,11 @@
 #ifndef FRONTEND_BLOCKS_PREVIEW_H_
 #define FRONTEND_BLOCKS_PREVIEW_H_
 
-#include "../typedefs.h"
+#include <memory>
+
 #include <glm/glm.hpp>
+
+#include "../typedefs.h"
 
 class ShaderProgram;
 class Atlas;
@@ -15,7 +18,7 @@ class BlocksPreview {
 private:
     ShaderProgram* shader;
     Atlas* atlas;
-    Batch3D* batch;
+    std::unique_ptr<Batch3D> batch;
     const ContentGfxCache* const cache;
     const Viewport* viewport;
 public:

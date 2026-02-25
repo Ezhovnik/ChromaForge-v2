@@ -1,6 +1,7 @@
 #include "Chunk.h"
 
 #include <math.h>
+#include <memory>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/noise.hpp>
@@ -29,7 +30,7 @@ Chunk::~Chunk() {
 // Проверяет, является ли чанк пустым (однородным).
 bool Chunk::isEmpty() {
     int id = -1;
-	for (int i = 0; i < CHUNK_VOLUME; ++i){
+	for (size_t i = 0; i < CHUNK_VOLUME; ++i){
 		if (voxels[i].id != id){
 			if (id != -1) return false;
 			else id = voxels[i].id;
@@ -39,14 +40,14 @@ bool Chunk::isEmpty() {
 }
 
 void Chunk::updateHeights() {
-	for (int i = 0; i < CHUNK_VOLUME; i++) {
+	for (size_t i = 0; i < CHUNK_VOLUME; i++) {
 		if (voxels[i].id != 0) {
 			bottom = i / (CHUNK_DEPTH * CHUNK_WIDTH);
 			break;
 		}
 	}
 
-	for (int i = CHUNK_VOLUME - 1; i > -1; i--) {
+	for (int i = CHUNK_VOLUME - 1; i >= 0; i--) {
 		if (voxels[i].id != 0) {
 			top = i / (CHUNK_DEPTH * CHUNK_WIDTH) + 1;
 			break;
@@ -57,7 +58,7 @@ void Chunk::updateHeights() {
 // Создает полную копию текущего чанка.
 Chunk* Chunk::clone() const {
 	Chunk* other = new Chunk(chunk_x, chunk_z);
-	for (int i = 0; i < CHUNK_VOLUME; ++i) {
+	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
 		other->voxels[i] = voxels[i];
     }
 	other->light_map->set(light_map);
@@ -68,8 +69,10 @@ Chunk* Chunk::clone() const {
 ubyte* Chunk::encode() const {
 	ubyte* buffer = new ubyte[CHUNK_DATA_LEN];
 	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-		buffer[i] = voxels[i].id;
-		buffer[CHUNK_VOLUME + i] = voxels[i].states;
+		buffer[i] = voxels[i].id >> 8;
+        buffer[CHUNK_VOLUME + i] = voxels[i].id & 0xFF;
+		buffer[CHUNK_VOLUME * 2 + i] = voxels[i].states >> 8;
+        buffer[CHUNK_VOLUME * 3 + i] = voxels[i].states & 0xFF;
 	}
 	return buffer;
 }
@@ -77,15 +80,33 @@ ubyte* Chunk::encode() const {
 bool Chunk::decode(ubyte* data) {
 	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
 		voxel& vox = voxels[i];
-		vox.id = data[i];
-		vox.states = data[CHUNK_VOLUME + i];
+
+		ubyte bid1 = data[i];
+        ubyte bid2 = data[CHUNK_VOLUME + i];
+        
+        ubyte bst1 = data[CHUNK_VOLUME * 2 + i];
+        ubyte bst2 = data[CHUNK_VOLUME * 3 + i];
+
+		vox.id = (blockid_t(bid1) << 8) | (blockid_t(bid2));
+        vox.states = (blockstate_t(bst1) << 8) | (blockstate_t(bst2));
 	}
 	return true;
 }
 
+void Chunk::fromOld(ubyte* data) {
+    for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+        data[i + CHUNK_VOLUME * 3] = data[i + CHUNK_VOLUME];
+        data[i + CHUNK_VOLUME] = data[i];
+        data[i + CHUNK_VOLUME * 2] = 0;
+        data[i] = 0;
+    }
+}
+
 void Chunk::convert(ubyte* data, const ContentLUT* lut) {
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        blockid_t id = data[i];
-		data[i] = lut->getBlockId(id);
+        blockid_t id = ((blockid_t(data[i]) << 8) | blockid_t(data[CHUNK_VOLUME + i]));
+        blockid_t replacement = lut->getBlockId(id);
+        data[i] = replacement >> 8;
+        data[CHUNK_VOLUME + i] = replacement & 0xFF;
     }
 }

@@ -80,6 +80,12 @@ bool Chunks::isSolid(int x, int y, int z) {
     return contentIds->getBlockDef(vox->id)->rt.solid;
 }
 
+bool Chunks::isReplaceable(int x, int y, int z) {
+    voxel* v = getVoxel(x, y, z);
+    if (v == nullptr) return false;
+    return contentIds->getBlockDef(v->id)->replaceable;
+}
+
 ubyte Chunks::getLight(int x, int y, int z, int channel){
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;

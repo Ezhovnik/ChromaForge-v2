@@ -27,13 +27,19 @@ namespace RegionConsts {
 }
 
 #define REGION_FORMAT_MAGIC ".CHROMAREG"
-#define REGION_FORMAT_VERSION 1
+constexpr int REGION_HEADER_SIZE = 13;
+constexpr int REGION_FORMAT_VERSION = 2;
 
 class Player;
 class Chunk;
 class Content;
 class ContentIndices;
 class World;
+
+class illegal_region_format : public std::runtime_error {
+public:
+    illegal_region_format(const std::string& message) : std::runtime_error(message) {}
+};
 
 class WorldRegion {
 private:
@@ -55,12 +61,19 @@ public:
 	uint32_t* getSizes() const {return sizes;};
 };
 
+struct regFile {
+    files::rafile file;
+    int version;
+
+    regFile(std::filesystem::path filename);
+};
+
 typedef std::unordered_map<glm::ivec2, std::unique_ptr<WorldRegion>> regionsmap;
 
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
 class WorldFiles {
 private:
-    std::unordered_map<glm::ivec3, std::unique_ptr<files::rafile>> openRegFiles;
+    std::unordered_map<glm::ivec3, std::unique_ptr<regFile>> openRegFiles;
 
     std::filesystem::path getLightsFolder() const;
 	std::filesystem::path getRegionFilename(int x, int z) const;
@@ -82,13 +95,13 @@ private:
     WorldRegion* getOrCreateRegion(regionsmap& regions, int x, int z);
 	ubyte* getData(regionsmap& regions, const std::filesystem::path& folder, int x, int z, int layer);
 
-    files::rafile* getRegFile(glm::ivec3 coord, const std::filesystem::path& folder);
+    regFile* getRegFile(glm::ivec3 coord, const std::filesystem::path& folder);
 public:
     regionsmap regions; // Хранилище регионов в оперативной памяти.
     regionsmap lights;
 
     std::filesystem::path directory; // Путь к директории с файлами мира
-    ubyte* compressionBuffer; // Выходной буфер для записи регионов
+    std::unique_ptr<ubyte[]> compressionBuffer; // Выходной буфер для записи регионов
 
     bool generatorTestMode;
     bool doWriteLights;
@@ -101,6 +114,9 @@ public:
 
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
     void put(int x, int z, const ubyte* voxelData);
+
+    int getVoxelRegionVersion(int x, int z);
+    int getVoxelRegionsVersion();
 
     bool readWorldInfo(World* world);
     bool readPlayer(Player* player); // Читает данные об игроке с диска

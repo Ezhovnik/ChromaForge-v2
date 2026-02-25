@@ -30,6 +30,8 @@
 #include "../engine.h"
 #include "../content/ContentLUT.h"
 #include "../math/rand.h"
+#include "../files/WorldFiles.h"
+#include "../world/Level.h"
 
 using namespace gui;
 
@@ -117,7 +119,7 @@ void open_world(std::string name, Engine* engine) {
     packs.clear();
     try {
         auto packNames = ContentPack::worldPacksList(folder);
-        ContentPack::readPacks(paths, packs, packNames);
+        ContentPack::readPacks(paths, packs, packNames, folder);
     } catch (contentpack_error& error) {
         guiutil::alert(engine->getGUI(), langs::get(L"error.pack-not-found") + L": " + util::str2wstr_utf8(error.getPackId()));
         return;
@@ -136,8 +138,17 @@ void open_world(std::string name, Engine* engine) {
             show_convert_request(engine, content, lut, folder);
         }
     } else {
-        Level* level = World::load(folder, settings, content, packs);
-        engine->setScreen(std::make_shared<LevelScreen>(engine, level));
+        int version;
+        {
+            WorldFiles wfile(folder, settings.debug);
+            version = wfile.getVoxelRegionsVersion();
+        }
+        if (version != REGION_FORMAT_VERSION) {
+            show_convert_request(engine, content, lut, folder);
+        } else {
+            Level* level = World::load(folder, settings, content, packs);
+            engine->setScreen(std::make_shared<LevelScreen>(engine, level));
+        }
     }
 }
 
