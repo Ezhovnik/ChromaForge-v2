@@ -115,6 +115,15 @@ void scripting::on_block_broken(Player* player, const Block* block, int x, int y
     call_func(L, 3, name);
 }
 
+void scripting::on_block_interact(Player* player, const Block* block, int x, int y, int z) {
+    std::string name = block->name + ".oninteract";
+    lua_getglobal(L, name.c_str());
+    lua_pushinteger(L, x);
+    lua_pushinteger(L, y);
+    lua_pushinteger(L, z);
+    call_func(L, 3, name);
+}
+
 void scripting::load_block_script(std::string prefix, std::filesystem::path file, block_funcs_set* funcsset) {
     std::string src = files::read_string(file);
     LOG_DEBUG("Loading script: {}", file.u8string());
@@ -129,6 +138,7 @@ void scripting::load_block_script(std::string prefix, std::filesystem::path file
     funcsset->randupdate = rename_global(L, "on_random_update", (prefix + ".randupdate").c_str());
     funcsset->onbroken = rename_global(L, "on_broken", (prefix + ".broken").c_str());
     funcsset->onplaced = rename_global(L, "on_placed", (prefix + ".placed").c_str());
+    funcsset->oninteract = rename_global(L, "on_interact", (prefix + ".oninteract").c_str());
 }
 
 void scripting::close() {
