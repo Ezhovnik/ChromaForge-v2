@@ -41,7 +41,7 @@ struct AABB {
     }
 
     // Проверяет, находится ли точка строго внутри параллелепипеда (включая левые и нижние грани, исключая правые и верхние).
-    inline bool inside(const glm::vec3 pos) const {
+    inline bool contains(const glm::vec3 pos) const {
         const glm::vec3 p = min();
         const glm::vec3 s = size();
         return !(pos.x < p.x || pos.y < p.y || pos.z < p.z || pos.x >= p.x + s.x || pos.y >= p.y + s.y || pos.z >= p.z + s.z);

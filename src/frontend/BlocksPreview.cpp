@@ -10,8 +10,9 @@
 #include "../voxels/Block.h"
 #include "../graphics/Viewport.h"
 #include "ContentGfxCache.h"
+#include "../assets/Assets.h"
 
-BlocksPreview::BlocksPreview(ShaderProgram* shader, Atlas* atlas, const ContentGfxCache* cache) : shader(shader), atlas(atlas), cache(cache) {
+BlocksPreview::BlocksPreview(Assets* assets, const ContentGfxCache* cache) : shader(assets->getShader("ui3d")), atlas(assets->getAtlas("blocks")), cache(cache) {
     batch = std::make_unique<Batch3D>(1024);
 }
 
@@ -35,6 +36,7 @@ void BlocksPreview::draw(const Block* def, int x, int y, int size, glm::vec4 tin
     y = height - y - 1;
     x += 2;
     y -= 35;
+
     shader->uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), glm::vec3(x / float(width) * 2, y / float(height) * 2, 0.0f)));
     blockid_t id = def->rt.id;
     const UVRegion texfaces[6]{ cache->getRegion(id, 0), cache->getRegion(id, 1),

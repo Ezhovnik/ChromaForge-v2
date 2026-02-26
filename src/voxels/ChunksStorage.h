@@ -12,6 +12,7 @@
 class Chunk;
 class VoxelsVolume;
 class Level;
+class ContentIndices;
 
 class ChunksStorage {
 private:
@@ -19,6 +20,8 @@ private:
 	std::unordered_map<glm::ivec2, std::shared_ptr<Chunk>> chunksMap;
 
 	blockid_t bedrockID = 0;
+
+	void verifyLoadedChunk(ContentIndices* indices, Chunk* chunk);
 public:
 	ChunksStorage(Level* level);
 	virtual ~ChunksStorage();

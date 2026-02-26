@@ -268,6 +268,10 @@ double Window::time() {
 	return glfwGetTime();
 }
 
+const char* Window::getClipboardText() {
+    return glfwGetClipboardString(window);
+}
+
 void Window::clear() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

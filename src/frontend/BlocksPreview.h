@@ -13,6 +13,7 @@ class Batch3D;
 class Block;
 class ContentGfxCache;
 class Viewport;
+class Assets;
 
 class BlocksPreview {
 private:
@@ -22,7 +23,7 @@ private:
     const ContentGfxCache* const cache;
     const Viewport* viewport;
 public:
-    BlocksPreview(ShaderProgram* shader, Atlas* atlas, const ContentGfxCache* cache);
+    BlocksPreview(Assets* assets, const ContentGfxCache* cache);
     ~BlocksPreview();
 
     void begin(const Viewport* viewport);

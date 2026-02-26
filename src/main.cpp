@@ -1,5 +1,6 @@
 #include <memory>
 #include <filesystem>
+#include <iostream>
 
 #include "engine.h"
 #include "settings.h"
@@ -34,7 +35,7 @@ int main(int argc, char** argv) {
     try {
         // Чтение настроек движка
         EngineSettings settings;
-        std::unique_ptr<toml::Wrapper> wrapper (create_wrapper(settings));
+        std::unique_ptr<toml::Wrapper> wrapper(create_wrapper(settings));
         std::filesystem::path settings_file = userfiles/std::filesystem::path(SETTINGS_FILE);
         if (std::filesystem::is_regular_file(settings_file)) {
 			LOG_INFO("Reading engine settings from '{}'", settings_file.string());
@@ -43,11 +44,12 @@ int main(int argc, char** argv) {
 			reader.read();
             LOG_INFO("Engine settings read succesfully");
 		}
+        setup_bindings();
+
         engine = std::make_unique<Engine>(settings, &paths);
 
         // Настройка назначения клавиш
         std::filesystem::path controls_file = userfiles/std::filesystem::path(CONTROLS_FILE);
-        setup_bindings();
 		if (std::filesystem::is_regular_file(controls_file)) {
 			LOG_INFO("Reading bindings from '{}'", controls_file.string());
 			std::string text = files::read_string(controls_file);

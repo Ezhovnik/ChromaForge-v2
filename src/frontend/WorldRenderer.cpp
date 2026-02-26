@@ -34,7 +34,7 @@
 #include "../math/voxmaths.h"
 #include "../engine.h"
 #include "../settings.h"
-#include "ContentGfxCache.h"
+#include "LevelFrontend.h"
 #include "graphics/Skybox.h"
 #include "../constants.h"
 
@@ -46,7 +46,7 @@ inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 float WorldRenderer::skyClearness = 0.0f;
 bool WorldRenderer::drawChunkBorders = false;
 
-WorldRenderer::WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : engine(engine), level(level), frustumCulling(new Frustum()), lineBatch(new LineBatch()), renderer(new ChunksRenderer(level, cache, engine->getSettings())) {
+WorldRenderer::WorldRenderer(Engine* engine, LevelFrontend* levelFrontend) : engine(engine), level(levelFrontend->getLevel()), frustumCulling(new Frustum()), lineBatch(new LineBatch()), renderer(new ChunksRenderer(level, levelFrontend->getContentGfxCache(), engine->getSettings())) {
 	Assets* assets = engine->getAssets();
 	EngineSettings& settings = engine->getSettings();
 	skybox = new Skybox(settings.graphics.skyboxResolution, assets->getShader("skybox_gen"));

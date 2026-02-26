@@ -8,16 +8,13 @@
 
 #include "../graphics/GfxContext.h"
 
-class Batch2D;
 class Camera;
-class Level;
 class Assets;
 class Player;
 class Engine;
-class ContentGfxCache;
-class WorldRenderer;
 class Block;
-class BlocksPreview;
+class InventoryView;
+class LevelFrontend;
 
 namespace gui {
     class GUI;
@@ -26,11 +23,9 @@ namespace gui {
 
 class HudRenderer {
 private:
-    Level* level;
-	Batch2D* batch;
 	Camera* uicamera;
     Assets* assets;
-    BlocksPreview* blocksPreview;
+    std::unique_ptr<InventoryView> contentAccess;
 
     int fps = 0;
     int fpsMin = 60;
@@ -38,20 +33,20 @@ private:
     std::wstring fpsString;
 
     bool inventoryOpen = false;
-    int inventoryScroll = 0;
     bool pause = false;
 
     std::shared_ptr<gui::UINode> debugPanel;
 	gui::GUI* guiController;
-    const ContentGfxCache* const cache;
+    LevelFrontend* levelFrontend;
+
+    void createDebugPanel(Engine* engine);
 public:
-	HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache);
+	HudRenderer(Engine* engine, LevelFrontend* levelFrontend);
 	~HudRenderer();
 
     void update();
 	void draw(const GfxContext& context);
 	void drawDebug(int fps);
-    void drawContentAccess(const GfxContext& context, Player* player);
 
     bool isInventoryOpen() const;
 	bool isPause() const;

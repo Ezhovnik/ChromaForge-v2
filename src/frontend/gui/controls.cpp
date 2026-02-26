@@ -1,11 +1,10 @@
 #include "controls.h"
 
-#include <iostream>
-
 #include "../../assets/Assets.h"
 #include "../../graphics/Batch2D.h"
 #include "../../graphics/Font.h"
 #include "../../util/stringutil.h"
+#include "../../window/Events.h"
 
 inline constexpr uint KEY_ESCAPE = 256;
 inline constexpr uint KEY_ENTER = 257;
@@ -155,6 +154,11 @@ void TextBox::keyPressed(int key) {
             if (consumer) consumer(label->text());
             defocus();
             break;
+    }
+
+    if (key == keycode::V && Events::isPressed(keycode::LEFT_CONTROL)) {
+        const char* text = Window::getClipboardText();
+        if (text) input += util::str2wstr_utf8(text);
     }
 }
 

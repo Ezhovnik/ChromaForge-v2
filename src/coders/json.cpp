@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "commons.h"
+#include "../logger/Logger.h"
 
 using namespace json;
 
@@ -108,7 +109,9 @@ std::string JArray::str(size_t index) const {
         case valtype::number: return std::to_string(val->value.decimal);
         case valtype::integer: return std::to_string(val->value.integer);
         default:
-            throw std::runtime_error("type error");
+            LOG_ERROR("Type error");
+            Logger::getInstance().flush();
+            throw std::runtime_error("Type error");
     }
 }
 
@@ -120,7 +123,9 @@ double JArray::num(size_t index) const {
         case valtype::string: return std::stoll(*val->value.str);
         case valtype::boolean: return val->value.boolean;
         default:
-            throw std::runtime_error("type error");
+            LOG_ERROR("Type error");
+            Logger::getInstance().flush();
+            throw std::runtime_error("Type error");
     }
 }
 
@@ -132,7 +137,9 @@ int64_t JArray::integer(size_t index) const {
         case valtype::string: return std::stoll(*val->value.str);
         case valtype::boolean: return val->value.boolean;
         default:
-            throw std::runtime_error("type error");
+            LOG_ERROR("Type error");
+            Logger::getInstance().flush();
+            throw std::runtime_error("Type error");
     }
 }
 
@@ -242,7 +249,10 @@ std::string JObject::getStr(std::string key, const std::string& def) const {
         case valtype::boolean: return val->value.boolean ? "true" : "false";
         case valtype::number: return std::to_string(val->value.decimal);
         case valtype::integer: return std::to_string(val->value.integer);
-        default: throw std::runtime_error("type error");
+        default:
+            LOG_ERROR("Type error");
+            Logger::getInstance().flush();
+            throw std::runtime_error("Type error");
     } 
 }
 
@@ -256,7 +266,10 @@ double JObject::getNum(std::string key, double def) const {
         case valtype::integer: return val->value.integer;
         case valtype::string: return std::stoull(*val->value.str);
         case valtype::boolean: return val->value.boolean;
-        default: throw std::runtime_error("type error");
+        default:
+            LOG_ERROR("Type error");
+            Logger::getInstance().flush();
+            throw std::runtime_error("Type error");
     }
 }
 
@@ -270,7 +283,10 @@ int64_t JObject::getInteger(std::string key, int64_t def) const {
         case valtype::integer: return val->value.integer;
         case valtype::string: return std::stoull(*val->value.str);
         case valtype::boolean: return val->value.boolean;
-        default: throw std::runtime_error("type error");
+        default:
+            LOG_ERROR("Type error");
+            Logger::getInstance().flush();
+            throw std::runtime_error("Type error");
     }
 }
 
@@ -434,6 +450,8 @@ Parser::Parser(std::string filename, std::string source) : BasicParser(filename,
 JObject* Parser::parse() {
     char next = peek();
     if (next != '{') {
+        LOG_ERROR("'{' expected");
+        Logger::getInstance().flush();
         throw error("'{' expected");
     }
     return parseObject();
@@ -444,9 +462,15 @@ JObject* Parser::parseObject() {
     std::unique_ptr<JObject> obj(new JObject());
     std::unordered_map<std::string, Value*>& map = obj->map;
     while (peek() != '}') {
+        if (peek() == '#') {
+            skipLine();
+            continue;
+        }
         std::string key = parseName();
         char next = peek();
         if (next != ':') {
+            LOG_ERROR("':' expected");
+            Logger::getInstance().flush();
             throw error("':' expected");
         }
         pos++;
@@ -457,6 +481,8 @@ JObject* Parser::parseObject() {
         } else if (next == '}') {
             break;
         } else {
+            LOG_ERROR("',' expected");
+            Logger::getInstance().flush();
             throw error("',' expected");
         }
     }
@@ -469,6 +495,10 @@ JArray* Parser::parseArray() {
     std::unique_ptr<JArray> arr(new JArray());
     std::vector<Value*>& values = arr->values;
     while (peek() != ']') {
+        if (peek() == '#') {
+            skipLine();
+            continue;
+        }
         values.push_back(parseValue());
 
         char next = peek();
@@ -477,6 +507,8 @@ JArray* Parser::parseArray() {
         } else if (next == ']') {
             break;
         } else {
+            LOG_ERROR("',' expected");
+            Logger::getInstance().flush();
             throw error("',' expected");
         }
     }
@@ -515,7 +547,9 @@ Value* Parser::parseValue() {
             val.decimal = NAN;
             return new Value(valtype::number, val);
         }
-        throw error("invalid literal");
+        LOG_ERROR("Invalid literal");
+        Logger::getInstance().flush();
+        throw error("Invalid literal");
     }
     if (next == '{') {
         val.obj = parseObject();
@@ -542,7 +576,9 @@ Value* Parser::parseValue() {
         val.str = new std::string(parseString(next));
         return new Value(valtype::string, val);
     }
-    throw error("unexpected character '" + std::string({next}) + "'");
+    LOG_ERROR("Unexpected character '{}'", next);
+    Logger::getInstance().flush();
+    throw error("Unexpected character '" + std::string({next}) + "'");
 }
 
 JObject* json::parse(std::string filename, std::string source) {

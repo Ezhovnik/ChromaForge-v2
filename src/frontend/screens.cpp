@@ -32,6 +32,13 @@
 #include "menu.h"
 #include "ContentGfxCache.h"
 #include "../logic/LevelController.h"
+#include "LevelFrontend.h"
+
+Screen::Screen(Engine* engine) : engine(engine), batch(new Batch2D(1024)) {
+}
+
+Screen::~Screen() {
+}
 
 MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     auto menu = engine->getGUI()->getMenu();
@@ -40,15 +47,12 @@ MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     menu->reset();
     menu->set("main");
 
-    batch = new Batch2D(1024);
-    uicamera = new Camera(glm::vec3(), Window::height);
+    uicamera.reset(new Camera(glm::vec3(), Window::height));
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 }
 
 MenuScreen::~MenuScreen() {
-    delete batch;
-    delete uicamera;
 }
 
 void MenuScreen::update(float delta) {
@@ -87,29 +91,23 @@ void MenuScreen::draw(float delta) {
 }
 
 static bool backlight;
-LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
+LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine),
+        level(level),
+        levelFrontend(std::make_unique<LevelFrontend>(level, engine->getAssets())),
+        hud(std::make_unique<HudRenderer>(engine, levelFrontend.get())),
+        worldRenderer(std::make_unique<WorldRenderer>(engine, levelFrontend.get())),
+        controller(std::make_unique<LevelController>(engine->getSettings(), level))
+    {
     EngineSettings& settings = engine->getSettings();
-    controller = new LevelController(settings, level);
-
-    cache = new ContentGfxCache(level->content, engine->getAssets());
-    worldRenderer = new WorldRenderer(engine, level, cache);
-    hud = new HudRenderer(engine, level, cache);
-
     backlight = settings.graphics.backlight;
 }
 
 LevelScreen::~LevelScreen() {
-    delete controller;
-    delete hud;
-    delete worldRenderer;
-    delete cache;
-
     LOG_INFO("World saving");
     World* world = level->world;
-	world->write(level);
+	world->write(level.get());
 
 	delete world;
-    delete level;
     LOG_INFO("The world has been successfully saved");
 }
 
@@ -145,7 +143,7 @@ void LevelScreen::draw(float deltaTime) {
     Camera* camera = level->player->currentViewCamera;
 
     Viewport viewport(Window::width, Window::height);
-    GfxContext context(nullptr, viewport, nullptr);
+    GfxContext context(nullptr, viewport, batch.get());
 
     worldRenderer->draw(context, camera);
 

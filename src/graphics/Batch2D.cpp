@@ -26,7 +26,7 @@ Batch2D::~Batch2D(){
 	delete mesh;
 }
 
-void Batch2D::begin(){
+void Batch2D::begin() {
 	_texture = nullptr;
 	blank->bind();
 }

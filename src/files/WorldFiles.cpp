@@ -68,7 +68,7 @@ regFile::regFile(std::filesystem::path filename) : file(filename) {
     }
 
     version = header[REGION_HEADER_SIZE - 2];
-    if (version > REGION_FORMAT_VERSION) {
+    if (uint(version) > REGION_FORMAT_VERSION) {
 		LOG_ERROR("Region format {} is not supported", version);
 		Logger::getInstance().flush();
         throw illegal_region_format("Region format " + std::to_string(version) + " is not supported");

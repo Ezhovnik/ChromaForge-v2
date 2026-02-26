@@ -132,11 +132,43 @@ void ImageData::flipY() {
 }
 
 void ImageData::blit(const ImageData* image, int x, int y) {
-    if (format != image->format) {
-        LOG_ERROR("Mismatching format");
-        Logger::getInstance().flush();
-        throw std::runtime_error("Mismatching format");
+    if (format == image->format) {
+        blitMatchingFormat(image, x, y);
+        return;
     }
+
+    if (format == ImageFormat::rgba8888 && image->format == ImageFormat::rgb888) {
+        blitRGB_on_RGBA(image, x, y);
+        return;
+    }
+
+    LOG_ERROR("Mismatching format");
+    Logger::getInstance().flush();
+    throw std::runtime_error("Mismatching format");
+}
+
+void ImageData::blitRGB_on_RGBA(const ImageData* image, int x, int y) {
+    ubyte* pixels = static_cast<ubyte*>(data);
+    ubyte* source = static_cast<ubyte*>(image->getData());
+    uint srcwidth = image->getWidth();
+    uint srcheight = image->getHeight();
+
+    for (uint srcy = max(0, -y); (int)srcy < min(srcheight, height - y); ++srcy) {
+        for (uint srcx = max(0, -x); (int)srcx < min(srcwidth, width - x); ++srcx) {
+            uint dstx = srcx + x;
+            uint dsty = srcy + y;
+            uint dstidx = (dsty * width + dstx) * 4;
+            uint srcidx = (srcy * srcwidth + srcx) * 3;
+            for (uint c = 0; c < 3; ++c) {
+                pixels[dstidx + c] = source[srcidx + c];
+            }
+            pixels[dstidx + 3] = 255;
+        }
+    }
+}
+
+
+void ImageData::blitMatchingFormat(const ImageData* image, int x, int y) {
     uint comps;
     switch (format) {
         case ImageFormat::rgb888: comps = 3; break;

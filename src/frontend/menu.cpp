@@ -303,7 +303,7 @@ void create_settings_panel(Engine* engine, PagesControl* menu) {
 
     {
         panel->add((new Label(L""))->textSupplier([=]() {
-            return langs::get(L"Load Distance", L"settings") + L": " + std::to_wstring(engine->getSettings().chunks.loadDistance) + L" chunks";
+            return langs::get(L"Load Distance", L"settings") + L": " + std::to_wstring(engine->getSettings().chunks.loadDistance);
         }));
 
         TrackBar* trackbar = new TrackBar(3, 66, 10, 1, 3);
@@ -406,7 +406,7 @@ void create_settings_panel(Engine* engine, PagesControl* menu) {
     {
         std::string langName = langs::locales_info.at(langs::current->getId()).name;
         panel->add(guiutil::gotoButton(
-            langs::get(L"Language", L"settings")+L": "+
+            langs::get(L"Language", L"settings") + L": " + 
             util::str2wstr_utf8(langName), 
             "languages", menu));
     }
@@ -459,9 +459,5 @@ void menus::create_menus(Engine* engine, PagesControl* menu) {
     create_pause_panel(engine, menu);
     create_languages_panel(engine, menu);
     create_content_panel(engine, menu);
-    create_main_menu_panel(engine, menu);
-}
-
-void menus::refresh_menus(Engine* engine, PagesControl* menu) {
     create_main_menu_panel(engine, menu);
 }

@@ -196,7 +196,7 @@ void BlocksRenderer::blockCube(int x, int y, int z, const UVRegion(&texfaces)[6]
 	glm::vec3 coord(x, y, z);
 	if (block->rotatable) {
 		auto& rotations = block->rotations;
-		auto& orient = rotations.variants[states & BLOCK_ROT_MASK];
+		auto& orient = rotations.variants[states & BLOCK_ROTATION_MASK];
 		X = orient.axisX;
 		Y = orient.axisY;
 		Z = orient.axisZ;

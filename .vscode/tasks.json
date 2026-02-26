@@ -57,6 +57,8 @@
                 "${workspaceFolder}/src/frontend/BlocksPreview.cpp",
                 "${workspaceFolder}/src/frontend/ContentGfxCache.cpp",
                 "${workspaceFolder}/src/frontend/hud.cpp",
+                "${workspaceFolder}/src/frontend/InventoryView.cpp",
+                "${workspaceFolder}/src/frontend/LevelFrontend.cpp",
                 "${workspaceFolder}/src/frontend/menu.cpp",
                 "${workspaceFolder}/src/frontend/screens.cpp",
                 "${workspaceFolder}/src/frontend/WorldRenderer.cpp",
