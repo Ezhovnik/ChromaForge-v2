@@ -62,7 +62,7 @@ void BlocksController::updateBlock(int x, int y, int z) {
     voxel* vox = chunks->getVoxel(x, y, z);
     if (vox == nullptr) return;
     const Block* def = level->content->indices->getBlockDef(vox->id);
-    if (def->grounded && !chunks->isSolid(x, y - 1, z)) {
+    if (def->grounded && !chunks->isSolidBlock(x, y - 1, z)) {
         breakBlock(nullptr, def, x, y, z);
         return;
     }

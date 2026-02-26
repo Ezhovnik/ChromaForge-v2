@@ -35,6 +35,7 @@ Chunks::~Chunks(){
 		chunks[i] = nullptr;
 	}
 	delete[] chunks;
+	delete[] chunksSecond;
 }
 
 voxel* Chunks::getVoxel(int x, int y, int z){
@@ -57,7 +58,7 @@ voxel* Chunks::getVoxel(int x, int y, int z){
 	return &chunk->voxels[(ly * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 }
 
-const AABB* Chunks::isObstacle(float x, float y, float z) {
+const AABB* Chunks::isObstacleAt(float x, float y, float z) {
 	int ix = floor(x);
 	int iy = floor(y);
 	int iz = floor(z);
@@ -69,21 +70,27 @@ const AABB* Chunks::isObstacle(float x, float y, float z) {
 	if (def->obstacle) {
 		const AABB& hitbox = def->rotatable ? def->rt.hitboxes[vox->rotation()] : def->hitbox;
 		if (def->rt.solid) return &hitbox;
-		else if (hitbox.inside({x - ix, y - iy, z - iz})) return &hitbox;
+		else if (hitbox.contains({x - ix, y - iy, z - iz})) return &hitbox;
 	}
 	return nullptr;
 }
 
-bool Chunks::isSolid(int x, int y, int z) {
+bool Chunks::isSolidBlock(int x, int y, int z) {
     voxel* vox = getVoxel(x, y, z);
     if (vox == nullptr) return false;
     return contentIds->getBlockDef(vox->id)->rt.solid;
 }
 
-bool Chunks::isReplaceable(int x, int y, int z) {
+bool Chunks::isReplaceableBlock(int x, int y, int z) {
     voxel* v = getVoxel(x, y, z);
     if (v == nullptr) return false;
     return contentIds->getBlockDef(v->id)->replaceable;
+}
+
+bool Chunks::isObstacleBlock(int x, int y, int z) {
+	voxel* v = getVoxel(x, y, z);
+	if (v == nullptr) return false;
+	return contentIds->getBlockDef(v->id)->obstacle;
 }
 
 ubyte Chunks::getLight(int x, int y, int z, int channel){
@@ -215,7 +222,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 
 	while (t <= maxDist){
 		voxel* voxel = getVoxel(ix, iy, iz);
-		if (!voxel) return nullptr;
+		if (voxel == nullptr) return nullptr;
 		const Block* def = contentIds->getBlockDef(voxel->id);
 		if (def->selectable) {
 			end.x = px + t * dx;
@@ -318,7 +325,7 @@ glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDis
 
 	while (t <= maxDist) {
 		voxel* voxel = getVoxel(ix, iy, iz);
-		if (!voxel) return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
+		if (voxel == nullptr) return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
 
 		const Block* def = contentIds->getBlockDef(voxel->id);
 		if (def->obstacle) {

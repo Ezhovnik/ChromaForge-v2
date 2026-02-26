@@ -12,22 +12,22 @@ class HudRenderer;
 class Engine;
 class Camera;
 class Batch2D;
-class ContentGfxCache;
+class LevelFrontend;
 class LevelController;
 
 class Screen {
 protected:
     Engine* engine;
+    std::unique_ptr<Batch2D> batch;
 public:
-    Screen(Engine* engine) : engine(engine) {};
-    virtual ~Screen() {};
+    Screen(Engine* engine);
+    virtual ~Screen();
     virtual void update(float delta) = 0;
     virtual void draw(float delta) = 0;
 };
 
 class MenuScreen : public Screen {
-    Batch2D* batch;
-    Camera* uicamera;
+    std::unique_ptr<Camera> uicamera;
 public:
     MenuScreen(Engine* engine);
     ~MenuScreen();
@@ -37,11 +37,11 @@ public:
 };
 
 class LevelScreen : public Screen {
-    Level* level;
-    LevelController* controller;
-    WorldRenderer* worldRenderer;
-    HudRenderer* hud;
-    ContentGfxCache* cache;
+    std::unique_ptr<Level> level;
+    std::unique_ptr<LevelFrontend> levelFrontend;
+    std::unique_ptr<HudRenderer> hud;
+    std::unique_ptr<WorldRenderer> worldRenderer;
+    std::unique_ptr<LevelController> controller;
 
     bool hudVisible = true;
 

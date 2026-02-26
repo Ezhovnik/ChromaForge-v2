@@ -14,6 +14,17 @@
 #include "../logger/Logger.h"
 #include "../definitions.h"
 
+void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
+    for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+        blockid_t id = chunk->voxels[i].id;
+        if (indices->getBlockDef(id) == nullptr) {
+            LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
+			if (bedrockID == 0) level->content->requireBlock(DEFAULT_CONTENT_NAMESPACE":bedrock")->rt.id;
+			chunk->voxels[i].id = bedrockID;
+        }
+    }
+}
+
 ChunksStorage::ChunksStorage(Level* level) : level(level) {
 }
 
@@ -39,24 +50,16 @@ std::shared_ptr<Chunk> ChunksStorage::get(int x, int z) const {
 std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	World* world = level->world;
 
-	auto chunk = std::shared_ptr<Chunk>(new Chunk(x, z));
+	auto chunk = std::make_shared<Chunk>(x, z);
 	store(chunk);
 
-	std::unique_ptr<ubyte> data(world->wfile->getChunk(chunk->chunk_x, chunk->chunk_z));
+	std::unique_ptr<ubyte[]> data(world->wfile->getChunk(chunk->chunk_x, chunk->chunk_z));
 	if (data) {
 		chunk->decode(data.get());
 		chunk->setLoaded(true);
 	}
 
-	ContentIndices* indices = level->content->indices;
-	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        blockid_t id = chunk->voxels[i].id;
-		if (indices->getBlockDef(id) == nullptr) {
-            LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
-			if (bedrockID == 0) level->content->requireBlock(DEFAULT_CONTENT_NAMESPACE":bedrock")->rt.id;
-			chunk->voxels[i].id = bedrockID;
-		}
-	}
+	verifyLoadedChunk(level->content->indices, chunk.get());
 
 	light_t* lights = world->wfile->getLights(chunk->chunk_x, chunk->chunk_z);
 	if (lights) {

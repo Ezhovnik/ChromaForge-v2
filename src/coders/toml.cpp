@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include "commons.h"
+#include "../logger/Logger.h"
 
 using namespace toml;
 
@@ -15,7 +16,9 @@ Section::Section(std::string name) : name(name) {
 
 void Section::add(std::string name, Field field) {
     if (fields.find(name) != fields.end()) {
-        throw std::runtime_error("field duplication");
+        LOG_ERROR("Field duplication");
+        Logger::getInstance().flush();
+        throw std::runtime_error("Field duplication");
     }
     fields[name] = field;
     keyOrder.push_back(name);
@@ -63,7 +66,9 @@ Wrapper::~Wrapper() {
 
 Section& Wrapper::add(std::string name) {
     if (sections.find(name) != sections.end()) {
-        throw std::runtime_error("section duplication");
+        LOG_ERROR("Section duplication");
+        Logger::getInstance().flush();
+        throw std::runtime_error("Section duplication");
     }
     Section* section = new Section(name);
     sections[name] = section;
@@ -128,7 +133,7 @@ inline bool is_numeric_type(fieldtype type) {
 void Section::set(std::string name, double value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
-        std::cerr << "warning: unknown key '" << name << "'" << std::endl;
+        LOG_WARN("Unknown key: '{}'", name);
     } else {
         switch (field->type) {
         case fieldtype::ftbool: *(bool*)(field->ptr) = fabs(value) > 0.0; break;
@@ -137,7 +142,8 @@ void Section::set(std::string name, double value) {
         case fieldtype::ftfloat: *(float*)(field->ptr) = value; break;
         case fieldtype::ftstring: *(std::string*)(field->ptr) = std::to_string(value); break;
         default:
-            std::cerr << "error: type error for key '" << name << "'" << std::endl;
+            LOG_ERROR("Type error for key '{}'", name);
+            Logger::getInstance().flush();
         }
     }
 }
@@ -145,7 +151,7 @@ void Section::set(std::string name, double value) {
 void Section::set(std::string name, bool value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
-        std::cerr << "warning: unknown key '" << name << "'" << std::endl;
+        LOG_WARN("Unknown key: '{}'", name);
     } else {
         switch (field->type) {
         case fieldtype::ftbool: *(bool*)(field->ptr) = value; break;
@@ -154,7 +160,8 @@ void Section::set(std::string name, bool value) {
         case fieldtype::ftfloat: *(float*)(field->ptr) = (float)value; break;
         case fieldtype::ftstring: *(std::string*)(field->ptr) = value ? "true" : "false"; break;
         default:
-            std::cerr << "error: type error for key '" << name << "'" << std::endl;
+            LOG_ERROR("Type error for key '{}'", name);
+            Logger::getInstance().flush();
         }
     }
 }
@@ -162,12 +169,13 @@ void Section::set(std::string name, bool value) {
 void Section::set(std::string name, std::string value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
-        std::cerr << "warning: unknown key '" << name << "'" << std::endl;
+        LOG_WARN("Unknown key: '{}'", name);
     } else {
         switch (field->type) {
         case fieldtype::ftstring: *(std::string*)(field->ptr) = value; break;
         default:
-            std::cerr << "error: type error for key '" << name << "'" << std::endl;
+            LOG_ERROR("Type error for key '{}'", name);
+            Logger::getInstance().flush();
         }
     }
 }
@@ -213,7 +221,9 @@ void Reader::readSection(Section* section /*nullable*/) {
             std::string str = parseString(c);
             if (section) section->set(name, str);
         } else {
-            throw error("feature is not supported");
+            LOG_ERROR("Feature is not supported", name);
+            Logger::getInstance().flush();
+            throw error("Feature is not supported");
         }
         expectNewLine();
     }

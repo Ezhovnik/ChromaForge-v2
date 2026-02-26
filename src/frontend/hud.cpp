@@ -41,43 +41,39 @@
 #include "../util/stringutil.h"
 #include "../graphics/Batch3D.h"
 #include "BlocksPreview.h"
+#include "InventoryView.h"
+#include "LevelFrontend.h"
 
-inline gui::Label* create_label(gui::wstringsupplier supplier) {
-	gui::Label* label = new gui::Label(L"-");
+inline std::shared_ptr<gui::Label> create_label(gui::wstringsupplier supplier) {
+	std::shared_ptr<gui::Label> label = std::make_shared<gui::Label>(L"-");
 	label->textSupplier(supplier);
 	return label;
 }
 
-HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* cache) : assets(engine->getAssets()), level(level), guiController(engine->getGUI()), cache(cache), batch(new Batch2D(1024)) {
-	auto menu = guiController->getMenu();
-
-	blocksPreview = new BlocksPreview(assets->getShader("ui3d"), assets->getAtlas("blocks"), cache);
-
-	uicamera = new Camera(glm::vec3(), 1);
-	uicamera->perspective = false;
-	uicamera->flipped = true;
+void HudRenderer::createDebugPanel(Engine* engine) {
+	auto level = levelFrontend->getLevel();
 
     gui::Panel* panel = new gui::Panel(glm::vec2(350, 200), glm::vec4(5.0f), 1.0f);
     debugPanel = std::shared_ptr<gui::UINode>(panel);
 	panel->listenInterval(1.0f, [this]() {
-		fpsString = std::to_wstring(fpsMax)+L" / "+std::to_wstring(fpsMin);
+		fpsString = std::to_wstring(fpsMax) + L" / "+std::to_wstring(fpsMin);
 		fpsMin = fps;
 		fpsMax = fps;
 	});
 
 	panel->setCoord(glm::vec2(10, 10));
-	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"FPS: " + this->fpsString;
 	})));
-    panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+    panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Meshes: " + std::to_wstring(Mesh::meshesCount);
 	})));
-    panel->add(std::shared_ptr<gui::Label>(create_label([this](){
-		return L"Chunks: " + std::to_wstring(this->level->chunks->chunksCount) + L" (visible: " + std::to_wstring(this->level->chunks->visibleCount) + L")";
+    panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		return L"Chunks: " + std::to_wstring(level->chunks->chunksCount) + L" (visible: " + std::to_wstring(level->chunks->visibleCount) + L")";
 	})));
-	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
-		auto player = this->level->player;
-		auto indices = this->level->content->indices;
+	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		auto player = level->player;
+		auto indices = level->content->indices;
 		auto def = indices->getBlockDef(player->selectedVoxel.id);
 
 		std::wstringstream stream;
@@ -86,8 +82,8 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 
 		return L"Selected-block " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
 	})));
-	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
-		return L"Seed: " + std::to_wstring(this->level->world->seed);
+	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		return L"Seed: " + std::to_wstring(level->world->seed);
 	})));
 	for (int ax = 0; ax < 3; ax++){
 		gui::Panel* sub = new gui::Panel(glm::vec2(10, 27), glm::vec4(0.0f));
@@ -98,15 +94,15 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 		sub->color(glm::vec4(0.0f));
 
 		gui::TextBox* box = new gui::TextBox(L"");
-		box->textSupplier([this, ax]() {
-			Hitbox* hitbox = this->level->player->hitbox;
+		box->textSupplier([=]() {
+			Hitbox* hitbox = level->player->hitbox;
 			return std::to_wstring(hitbox->position[ax]);
 		});
-		box->textConsumer([this, ax](std::wstring text) {
+		box->textConsumer([=](std::wstring text) {
 			try {
-				glm::vec3 position = this->level->player->hitbox->position;
+				glm::vec3 position = level->player->hitbox->position;
 				position[ax] = std::stoi(text);
-				this->level->player->teleport(position);
+				level->player->teleport(position);
 			} catch (std::out_of_range& _) {
 			} catch (std::invalid_argument& _){
 			}
@@ -134,9 +130,9 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
 		panel->add(bar);
 	}
 
-	panel->add(std::shared_ptr<gui::Label>(create_label([this](){
+	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		int hour, minute, second;
-		timeutil::from_value(this->level->world->daytime, hour, minute, second);
+		timeutil::from_value(level->world->daytime, hour, minute, second);
 
 		std::wstring timeString = 
 					util::lfill(std::to_wstring(hour), 2, L'0') + L":" +
@@ -191,17 +187,42 @@ HudRenderer::HudRenderer(Engine* engine, Level* level, const ContentGfxCache* ca
         panel->add(checkpanel);
 	}
 	panel->refresh();
+}
 
+HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(engine->getAssets()), guiController(engine->getGUI()), levelFrontend(levelFrontend) {
+	auto menu = guiController->getMenu();
+
+	auto level = levelFrontend->getLevel();
+	auto content = level->content;
+    auto indices = content->indices;
+    std::vector<blockid_t> blocks;
+    for (blockid_t id = 1; id < indices->countBlockDefs(); ++id) {
+        const Block* def = indices->getBlockDef(id);
+        if (def->hidden) continue;
+        blocks.push_back(id);
+    }
+    contentAccess.reset(new InventoryView(8, indices, blocks, levelFrontend));
+	contentAccess->setSlotConsumer([=](blockid_t id) {level->player->chosenBlock = id;});
+
+	uicamera = new Camera(glm::vec3(), 1);
+	uicamera->perspective = false;
+	uicamera->flipped = true;
+
+    gui::Panel* panel = new gui::Panel(glm::vec2(350, 200), glm::vec4(5.0f), 1.0f);
+    debugPanel = std::shared_ptr<gui::UINode>(panel);
+	panel->listenInterval(1.0f, [this]() {
+		fpsString = std::to_wstring(fpsMax)+L" / "+std::to_wstring(fpsMin);
+		fpsMin = fps;
+		fpsMax = fps;
+	});
+
+	createDebugPanel(engine);
     menu->reset();
-	
 	guiController->add(this->debugPanel);
 }
 
 HudRenderer::~HudRenderer() {
     guiController->remove(debugPanel);
-
-	delete blocksPreview;
-	delete batch;
 	delete uicamera;
 }
 
@@ -209,75 +230,6 @@ void HudRenderer::drawDebug(int fps){
 	this->fps = fps;
 	fpsMin = glm::min(fps, fpsMin);
 	fpsMax = glm::max(fps, fpsMax);
-}
-
-void HudRenderer::drawContentAccess(const GfxContext& context, Player* player) {
-	const Content* content = level->content;
-	const ContentIndices* contentIds = content->indices;
-
-	const Viewport& viewport = context.getViewport();
-	const uint width = viewport.getWidth();
-
-	ShaderProgram* uiShader = assets->getShader("ui");
-
-	uint count = contentIds->countBlockDefs();
-	uint icon_size = 48;
-	uint interval = 4;
-	uint inv_cols = 8;
-	uint inv_rows = ceildiv(count - 1, inv_cols);
-	int pad_x = interval;
-	int pad_y = interval;
-	uint inv_w = inv_cols * icon_size + (inv_cols - 1) * interval + pad_x * 2;
-	uint inv_h = inv_rows * icon_size + (inv_rows - 1) * interval + pad_x * 2;
-	int inv_x = width - inv_w;
-	int inv_y = 0;
-	int xs = inv_x + pad_x;
-	int ys = inv_y + pad_y;
-
-	glm::vec4 tint = glm::vec4(1.0f);
-	int mx = Events::cursor.x;
-	int my = Events::cursor.y;
-
-	batch->texture(nullptr);
-	batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
-	batch->rect(inv_x, inv_y, inv_w, inv_h);
-	batch->render();
-
-	if (Events::scroll) inventoryScroll -= Events::scroll * (icon_size + interval);
-
-    inventoryScroll = std::min(inventoryScroll, int(inv_h - viewport.getHeight()));
-    inventoryScroll = std::max(inventoryScroll, 0);
-
-	blocksPreview->begin(&context.getViewport());
-	{
-		Window::clearDepth();
-		GfxContext subctx = context.sub();
-		subctx.depthTest(true);
-		subctx.cullFace(true);
-		uint index = 0;
-		for (uint i = 0; i < count - 1; ++i) {
-			Block* chosen_block = contentIds->getBlockDef(i + 1);
-			if (chosen_block == nullptr) break;
-			if (chosen_block->hidden) continue;
-			int x = xs + (icon_size + interval) * (index % inv_cols);
-			int y = ys + (icon_size + interval) * (index / inv_cols) - inventoryScroll;
-			if (y < 0 || y >= int(viewport.getHeight())) {
-                index++;
-                continue;
-            }
-			if (mx > x && mx < x + (int)icon_size && my > y && my < y + (int)icon_size) {
-				tint.r *= 1.2f;
-				tint.g *= 1.2f;
-				tint.b *= 1.2f;
-				if (Events::justClicked(mousecode::BUTTON_1)) player->chosenBlock = i + 1;
-			} else {
-				tint = glm::vec4(1.0f);
-			}
-			blocksPreview->draw(chosen_block, x, y, icon_size, tint);
-			++index;
-		}
-	}
-	uiShader->use();
 }
 
 void HudRenderer::update() {
@@ -302,6 +254,7 @@ void HudRenderer::update() {
 }
 
 void HudRenderer::draw(const GfxContext& context) {
+	auto level = levelFrontend->getLevel();
     const Content* content = level->content;
 	const ContentIndices* contentIds = content->indices;
 
@@ -322,6 +275,7 @@ void HudRenderer::draw(const GfxContext& context) {
 	uiShader->use();
 	uiShader->uniformMatrix("u_projview", uicamera->getProjView());
 
+	Batch2D* batch = context.getBatch2D();
 	batch->begin();
 
 	batch->color = glm::vec4(1.0f);
@@ -339,6 +293,7 @@ void HudRenderer::draw(const GfxContext& context) {
 	batch->color = glm::vec4(1.0f);
 	batch->render();
 
+	auto blocksPreview = levelFrontend->getBlocksPreview();
 	blocksPreview->begin(&context.getViewport());
 	{
 		Window::clearDepth();
@@ -359,7 +314,10 @@ void HudRenderer::draw(const GfxContext& context) {
 		batch->rect(0, 0, width, height);
 	}
 
-	if (inventoryOpen) drawContentAccess(context, player);
+	if (inventoryOpen) {
+		contentAccess->setPosition(viewport.getWidth() - contentAccess->getWidth(), 0);
+        contentAccess->activateAndDraw(&context);
+	}
 
 	batch->render();
 }

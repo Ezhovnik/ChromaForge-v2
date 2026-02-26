@@ -1,9 +1,9 @@
 [display]
 width = 1280
-height = 732
+height = 720
 samples = 0
 swap-interval = 1
-fullscreen = false
+fullscreen = true
 
 [chunks]
 load-distance = 22

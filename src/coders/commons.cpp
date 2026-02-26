@@ -37,7 +37,7 @@ std::string parsing_error::errorLog() const {
     std::stringstream ss;
     uint linepos = pos - linestart;
     ss << "Parsing error in file '" << filename;
-    ss << "' at " << (line+1) << ":" << linepos << ": " << this->what() << "\n";
+    ss << "' at " << (line + 1) << ":" << linepos << ": " << this->what() << "\n";
     size_t end = source.find("\n", linestart);
     if (end == std::string::npos) end = source.length();
     ss << source.substr(linestart, end-linestart) << "\n";
@@ -96,6 +96,7 @@ bool BasicParser::hasNext() {
 char BasicParser::nextChar() {
     if (!hasNext()) {
         LOG_ERROR("Unexpected end");
+        Logger::getInstance().flush();
         throw error("Unexpected end");
     }
     return source[pos++];
@@ -105,6 +106,7 @@ void BasicParser::expect(char expected) {
     char c = peek();
     if (c != expected) {
         LOG_ERROR("'{}' expected", std::string({expected}));
+        Logger::getInstance().flush();
         throw error("'" + std::string({expected}) + "' expected");
     }
     pos++;
@@ -122,6 +124,7 @@ void BasicParser::expectNewLine() {
             pos++;
         } else {
             LOG_ERROR("Line separator expected");
+            Logger::getInstance().flush();
             throw error("Line separator expected");
         }
     }
@@ -143,6 +146,7 @@ char BasicParser::peek() {
     skipWhitespace();
     if (pos >= source.length()) {
         LOG_ERROR("Unexpected end");
+        Logger::getInstance().flush();
         throw error("Unexpected end");
     }
     return source[pos];
@@ -156,6 +160,7 @@ std::string BasicParser::parseName() {
             return parseString(c);
         }
         LOG_ERROR("Identifier expected");
+        Logger::getInstance().flush();
         throw error("Identifier expected");
     }
     int start = pos;
@@ -170,6 +175,7 @@ int64_t BasicParser::parseSimpleInt(int base) {
     int index = char2int(c);
     if (index == -1 || index >= base) {
         LOG_ERROR("Invalid number literal");
+        Logger::getInstance().flush();
         throw error("Invalid number literal");
     }
     int64_t value = index;
@@ -283,12 +289,14 @@ std::string BasicParser::parseString(char quote, bool closeRequired) {
                 case '\n': pos++; continue;
                 default:
                     LOG_ERROR("'\\{}' is an illegal escape", std::string({c}));
+                    Logger::getInstance().flush();
                     throw error("'\\" + std::string({c}) + "' is an illegal escape");
             }
             continue;
         }
         if (c == '\n' && closeRequired) {
             LOG_ERROR("Non-closed string literal");
+            Logger::getInstance().flush();
             throw error("Non-closed string literal");
         }
         ss << c;
@@ -297,6 +305,7 @@ std::string BasicParser::parseString(char quote, bool closeRequired) {
 
     if (closeRequired) {
         LOG_ERROR("Unexpected end");
+        Logger::getInstance().flush();
         throw error("unexpected end");
     }
 

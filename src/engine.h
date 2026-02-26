@@ -30,7 +30,7 @@ private:
     std::unique_ptr<Assets> assets = nullptr; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen = nullptr;
     std::vector<ContentPack> contentPacks;
-    EngineSettings settings;
+    EngineSettings& settings;
     std::unique_ptr<Content> content = nullptr;
 
     EnginePaths* paths;

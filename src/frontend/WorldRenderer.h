@@ -12,8 +12,8 @@
 
 #include "../graphics/GfxContext.h"
 
-class Level;
 class Camera;
+class Level;
 class LineBatch;
 class ChunksRenderer;
 class ShaderProgram;
@@ -21,7 +21,7 @@ class Texture;
 class Frustum;
 class Engine;
 class Chunks;
-class ContentGfxCache;
+class LevelFrontend;
 class Skybox;
 
 class WorldRenderer {
@@ -37,7 +37,7 @@ class WorldRenderer {
 
 	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);
 public:
-	WorldRenderer(Engine* engine, Level* level, const ContentGfxCache* cache);
+	WorldRenderer(Engine* engine, LevelFrontend* levelFrontend);
 	~WorldRenderer();
 
 	void draw(const GfxContext& context, Camera* camera);

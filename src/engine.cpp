@@ -6,6 +6,7 @@
 #include <memory>
 #include <assert.h>
 #include <filesystem>
+#include <iostream>
 
 // GLM – библиотека для работы с матрицами и векторами в OpenGL
 #include <glm/glm.hpp>

@@ -64,9 +64,10 @@ public:
     );
     glm::vec3 rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDist);
 
-    const AABB* isObstacle(float x, float y, float z);
-    bool isSolid(int x, int y, int z);
-    bool isReplaceable(int x, int y, int z);
+    const AABB* isObstacleAt(float x, float y, float z);
+    bool isSolidBlock(int x, int y, int z);
+    bool isReplaceableBlock(int x, int y, int z);
+	bool isObstacleBlock(int x, int y, int z);
 
     void _setOffset(int x, int z);
 

@@ -55,6 +55,8 @@ public:
 
     static double time();
 
+    static const char* getClipboardText();
+
     static void clear();
     static void clearDepth();
     static void setBgColor(glm::vec3 color);
