@@ -2,7 +2,10 @@
 #define GRAPHICS_BLOCKS_RENDERER_H_
 
 #include <stdlib.h>
+#include <vector>
+
 #include <glm/glm.hpp>
+
 #include "UVRegion.h"
 #include "../typedefs.h"
 #include "../voxels/voxel.h"
@@ -64,9 +67,20 @@ private:
         bool lights
 	);
 
+	void tetragonicFace(const glm::vec3& coord,
+		const glm::vec3& p1, const glm::vec3& p2,
+		const glm::vec3& p3, const glm::vec3& p4,
+		const glm::vec3& X,
+		const glm::vec3& Y,
+		const glm::vec3& Z,
+		const UVRegion& texreg,
+		const glm::vec4& tint
+	);
+
 	void blockCube(int x, int y, int z, const UVRegion(&faces)[6], const Block* block, ubyte states, bool lights);
 	void blockAABB(const glm::ivec3& coord, const UVRegion(&faces)[6], const Block* block, ubyte rotation, bool lights);
 	void blockXSprite(int x, int y, int z, const glm::vec3& size, const UVRegion& face1, const UVRegion& face2, float spread);
+	void blockCustomFaces(const glm::ivec3& icoord, const UVRegion(&texfaces)[6], const Block* block, ubyte rotation, bool lights);
 
 	bool isOpenForLight(int x, int y, int z) const;
 	bool isOpen(int x, int y, int z, ubyte group) const;

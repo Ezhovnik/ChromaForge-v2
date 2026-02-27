@@ -2,15 +2,18 @@
 #define VOXELS_BLOCK_H_
 
 #include <string>
+#include <vector>
 
 #include "../math/AABB.h"
 #include "../typedefs.h"
+#include "../graphics/UVRegion.h"
 
 enum class BlockModel {
     None, // Невидимый блок
     Cube, // Полноценный блок
     X, // Крест-накрест (трава, растения)
-    AABB // Форма, повторяющая хитбокс
+    AABB, // Форма, повторяющая хитбокс
+    CustomFaces // Наборы парных треугольников
 };
 
 constexpr int FACE_MX = 0;
@@ -60,7 +63,12 @@ struct BlockRotProfile {
 class Block {
 public:
     std::string const name;
+
     std::string textureFaces[6]; // -x, +x, -y, +y, -z, +z
+    std::vector<std::string> textureMoreFaces = {};
+	std::vector<glm::vec3> customfacesPoints = {};
+	std::vector<UVRegion> customfacesExtraUVs = {};
+
     ubyte emission[4] {0, 0, 0, 0};
     ubyte drawGroup = 0;
     BlockModel model = BlockModel::Cube;
