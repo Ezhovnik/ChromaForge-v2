@@ -83,6 +83,9 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
         for (uint i = 0; i < 6; ++i) {
             definition->textureFaces[i] = texarr->str(i);
         }
+        for (uint i = 6; i < texarr->values.size(); ++i) {
+            definition->textureMoreFaces.push_back(texarr->str(i));
+        }
     }
 
     // Модель блока
@@ -92,11 +95,18 @@ Block* ContentLoader::loadBlock(std::string name, std::filesystem::path file) {
     else if (model == "aabb") definition->model = BlockModel::AABB;
     else if (model == "X") definition->model = BlockModel::X;
     else if (model == "none") definition->model = BlockModel::None;
+    else if (model == "custom") { 
+        definition->model = BlockModel::CustomFaces;
+        json::JArray* pointarr = root->arr("faces-points");
+        for (uint i = 0; i < pointarr->values.size(); i += 3) {
+            definition->customfacesPoints.push_back(glm::vec3(pointarr->num(i), pointarr->num(i + 1), pointarr->num(i + 2)));
+        }
+    }
     else {
         LOG_WARN("Unknown block {} model {}", name, model);
         definition->model = BlockModel::None;
     }
-    
+
     // AABB хитбокс блока в формате [x, y, z, width, height, depth]
     json::JArray* hitboxobj = root->arr("hitbox");
     if (hitboxobj) {

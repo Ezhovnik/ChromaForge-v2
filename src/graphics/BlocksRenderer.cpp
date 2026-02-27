@@ -127,6 +127,14 @@ void BlocksRenderer::face(const glm::vec3& coord, const glm::vec3& X, const glm:
 	index(0, 1, 2, 0, 2, 3);
 }
 
+void BlocksRenderer::tetragonicFace(const glm::vec3& coord, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec3& p4, const glm::vec3& X, const glm::vec3& Y, const glm::vec3& Z, const UVRegion& texreg, const glm::vec4& tint) {
+	vertex(coord + (p1.x - 0.5f) * X + (p1.y - 0.5f) * Y + (p1.z - 0.5f) * Z, texreg.u1, texreg.v1, tint);
+	vertex(coord + (p2.x - 0.5f) * X + (p2.y - 0.5f) * Y + (p2.z - 0.5f) * Z, texreg.u2, texreg.v1, tint);
+	vertex(coord + (p3.x - 0.5f) * X + (p3.y - 0.5f) * Y + (p3.z - 0.5f) * Z, texreg.u2, texreg.v2, tint);
+	vertex(coord + (p4.x - 0.5f) * X + (p4.y - 0.5f) * Y + (p4.z - 0.5f) * Z, texreg.u1, texreg.v2, tint);
+	index(0, 1, 3, 1, 2, 3);
+}
+
 void BlocksRenderer::blockXSprite(int x, int y, int z, const glm::vec3& size, const UVRegion& texface1, const UVRegion& texface2, float spread) {
 	glm::vec4 lights[]{
 			pickSoftLight({x, y + 1, z}, {1, 0, 0}, {0, 1, 0}),
@@ -187,6 +195,39 @@ void BlocksRenderer::blockAABB(const glm::ivec3& icoord, const UVRegion(&texface
     face(coord,  Z * size.z,  Y * size.y, -X * size.x, texfaces[0], lights); // Восток
 }
 
+void BlocksRenderer::blockCustomFaces(const glm::ivec3& icoord, const UVRegion(&texfaces)[6], const Block* block, ubyte rotation, bool lights) {
+	const float tint = 1.0f;
+	glm::vec3 X(1, 0, 0);
+	glm::vec3 Y(0, 1, 0);
+	glm::vec3 Z(0, 0, 1);
+	glm::vec3 coord(icoord);
+	if (block->rotatable) {
+		auto& rotations = block->rotations;
+		auto& orient = rotations.variants[rotation];
+		X = orient.axisX;
+		Y = orient.axisY;
+		Z = orient.axisZ;
+	}
+	
+	for (uint i = 0; i < 6; ++i)
+	{
+		tetragonicFace(coord,
+			block->customfacesPoints[i * 4 + 0],
+			block->customfacesPoints[i * 4 + 1],
+			block->customfacesPoints[i * 4 + 2],
+			block->customfacesPoints[i * 4 + 3], X, Y, Z, texfaces[i], glm::vec4(tint)
+		);
+	}
+	for (uint i = 0; i < block->textureMoreFaces.size(); ++i) {
+		tetragonicFace(coord,
+			block->customfacesPoints[i * 4 + 24],
+			block->customfacesPoints[i * 4 + 25],
+			block->customfacesPoints[i * 4 + 26],
+			block->customfacesPoints[i * 4 + 27], X, Y, Z, block->customfacesExtraUVs[i], glm::vec4(tint)
+		);
+	}
+}
+
 void BlocksRenderer::blockCube(int x, int y, int z, const UVRegion(&texfaces)[6], const Block* block, ubyte states, bool lights) {
 	ubyte group = block->drawGroup;
 
@@ -208,7 +249,6 @@ void BlocksRenderer::blockCube(int x, int y, int z, const UVRegion(&texfaces)[6]
 	if (isOpen(x - Y.x, y - Y.y, z - Y.z, group)) face(coord, X, Z, -Y, texfaces[2], lights);
 	if (isOpen(x + X.x, y + X.y, z + X.z, group)) face(coord, -Z, Y, X, texfaces[1], lights);
 	if (isOpen(x - X.x, y - X.y, z - X.z, group)) face(coord, Z, Y, -X, texfaces[0], lights);
-
 }
 
 bool BlocksRenderer::isOpen(int x, int y, int z, ubyte group) const {
@@ -265,7 +305,7 @@ void BlocksRenderer::render(const voxel* voxels) {
 			const voxel& vox = voxels[i];
 			blockid_t id = vox.id;
 			const Block& def = *blockDefsCache[id];
-			if (!id || def.drawGroup != drawGroup) continue;
+			if (id == 0 || def.drawGroup != drawGroup) continue;
 			const UVRegion texfaces[6]{ cache->getRegion(id, 0), cache->getRegion(id, 1),
 										cache->getRegion(id, 2), cache->getRegion(id, 3),
 										cache->getRegion(id, 4), cache->getRegion(id, 5)
@@ -283,6 +323,10 @@ void BlocksRenderer::render(const voxel* voxels) {
 			}
 			case BlockModel::AABB: {
 				blockAABB(glm::ivec3(x, y, z), texfaces, &def, vox.rotation(), !def.rt.emissive);
+				break;
+			}
+			case BlockModel::CustomFaces: {
+				blockCustomFaces(glm::ivec3(x, y, z), texfaces, &def, vox.rotation(), !def.rt.emissive);
 				break;
 			}
 			default:
