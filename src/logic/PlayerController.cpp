@@ -15,6 +15,7 @@
 #include "../core_defs.h"
 #include "BlocksController.h"
 #include "scripting/scripting.h"
+#include "../items/Item.h"
 
 namespace CameraConsts {
 	constexpr float SHAKE_OFFSET = 0.025f;
@@ -33,7 +34,7 @@ namespace ZoomConsts {
 constexpr float MAX_PITCH = glm::radians(89.0f);
 constexpr float CROUCH_SHIFT_Y = -0.2f;
 
-CameraControl::CameraControl(Player* player, const CameraSettings& settings) : player(player), camera(player->camera), settings(settings), offset(0.0f, 0.7f, 0.0f), currentViewCamera(player->currentViewCamera) {
+CameraControl::CameraControl(Player* player, const CameraSettings& settings) : player(player), camera(player->camera), settings(settings), offset(0.0f, 0.7f, 0.0f), currentViewCamera(player->currentCamera) {
 }
 
 void CameraControl::refresh() {
@@ -57,7 +58,7 @@ void CameraControl::updateMouse(PlayerInput& input) {
 }
 
 void CameraControl::update(PlayerInput& input, float delta, Chunks* chunks) {
-	Hitbox* hitbox = player->hitbox;
+	Hitbox* hitbox = player->hitbox.get();
 
 	offset = glm::vec3(0.0f, 0.7f, 0.0f);
 
@@ -95,20 +96,23 @@ void CameraControl::update(PlayerInput& input, float delta, Chunks* chunks) {
 		camera->zoom = zoomValue * dt + camera->zoom * (1.0f - dt);
 	}
 
+	auto spCamera = player->spCamera;
+    auto tpCamera = player->tpCamera;
+
 	if (input.cameraMode) {
-		if (player->currentViewCamera == camera) player->currentViewCamera = player->SPCamera;
-		else if (player->currentViewCamera == player->SPCamera) player->currentViewCamera = player->TPCamera;
-		else if (player->currentViewCamera == player->TPCamera) player->currentViewCamera = camera;
+		if (player->currentCamera == camera) player->currentCamera = spCamera;
+		else if (player->currentCamera == player->spCamera) player->currentCamera = tpCamera;
+		else if (player->currentCamera == player->tpCamera) player->currentCamera = camera;
 	}
 
-	if (player->currentViewCamera == player->SPCamera) {
-		player->SPCamera->position = chunks->rayCastToObstacle(camera->position, camera->front, 3.0f) - 0.2f * (camera->front);
-		player->SPCamera->dir = -camera->dir;
-		player->SPCamera->front = -camera->front;
-	} else if (player->currentViewCamera == player->TPCamera) {
-		player->TPCamera->position = chunks->rayCastToObstacle(camera->position, -camera->front, 3.0f) + 0.2f * (camera->front);
-		player->TPCamera->dir = camera->dir;
-		player->TPCamera->front = camera->front;
+	if (player->currentCamera == spCamera) {
+		spCamera->position = chunks->rayCastToObstacle(camera->position, camera->front, 3.0f) - 0.2f * (camera->front);
+		spCamera->dir = -camera->dir;
+		spCamera->front = -camera->front;
+	} else if (player->currentCamera == tpCamera) {
+		tpCamera->position = chunks->rayCastToObstacle(camera->position, -camera->front, 3.0f) + 0.2f * (camera->front);
+		tpCamera->dir = camera->dir;
+		tpCamera->front = camera->front;
 	}
 }
 
@@ -139,10 +143,6 @@ void PlayerController::updateKeyboard() {
 	input.attack = Events::justActive(BIND_PLAYER_ATTACK);
 	input.build = Events::justActive(BIND_PLAYER_BUILD);
 	input.pickBlock = Events::justActive(BIND_PLAYER_PICK);
-
-	for (int i = 1; i < 10; ++i){
-		if (Events::justPressed(keycode::NUM_0 + i)) player->chosenBlock = i;
-	}
 }
 
 void PlayerController::updateCamera(float delta, bool movement) {
@@ -175,7 +175,7 @@ void PlayerController::updateInteraction(){
 	Chunks* chunks = level->chunks;
 	Player* player = level->player;
 	Lighting* lighting = level->lighting;
-	Camera* camera = player->camera;
+	Camera* camera = player->camera.get();
 
 	glm::vec3 end;
 	glm::ivec3 iend;
@@ -194,8 +194,9 @@ void PlayerController::updateInteraction(){
 		int z = iend.z;
 		uint8_t states = 0;
 
-		Block* def = contentIds->getBlockDef(player->chosenBlock);
-		if (def->rotatable){
+		Item* item = contentIds->getItemDef(player->getChosenItem());
+		Block* def = level->content->findBlock(item->placingBlock);
+		if (def && def->rotatable) {
 			const std::string& name = def->rotations.name;
 			if (name == "pipe") {
 				if (norm.x < 0.0f) states = BLOCK_DIR_WEST;
@@ -220,7 +221,7 @@ void PlayerController::updateInteraction(){
 		Block* block = contentIds->getBlockDef(vox->id);
 		if (input.attack && block->breakable) blocksController->breakBlock(player, block, x, y, z);
 
-		if (input.build) {
+		if (def && input.build) {
 			if (block->rt.funcsset.oninteract && !input.crouch) {
                 scripting::on_block_interact(player, block, x, y, z);
                 return;
@@ -231,9 +232,9 @@ void PlayerController::updateInteraction(){
 				z = iend.z + norm.z;
 			}
 			vox = chunks->getVoxel(x, y, z);
-			int chosenBlock = player->chosenBlock;
+			blockid_t chosenBlock = def->rt.id;
 			if (vox && (block = contentIds->getBlockDef(vox->id))->replaceable) {
-				if (!level->physics->isBlockInside(x, y, z, player->hitbox) || !def->obstacle){
+				if (!level->physics->isBlockInside(x, y, z, player->hitbox.get()) || !def->obstacle){
 					Block* def = contentIds->getBlockDef(chosenBlock);
 					if (def->grounded && !chunks->isSolidBlock(x, y - 1, z)) chosenBlock = 0;
 					if (chosenBlock != vox->id) {
@@ -246,7 +247,10 @@ void PlayerController::updateInteraction(){
 			}
 		}
 
-		if (input.pickBlock) player->chosenBlock = chunks->getVoxel(x, y, z)->id;
+		if (input.pickBlock) {
+			Block* block = contentIds->getBlockDef(chunks->getVoxel(x,y,z)->id);
+			player->setChosenItem(block->rt.pickingItem);
+		}
 	} else {
 		selectedBlockStates = 0;
 		selectedBlockId = -1;

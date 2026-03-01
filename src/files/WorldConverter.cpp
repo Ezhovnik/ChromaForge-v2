@@ -8,7 +8,7 @@
 #include "../content/ContentLUT.h"
 #include "../logger/Logger.h"
 
-WorldConverter::WorldConverter(std::filesystem::path folder, const Content* content, const ContentLUT* lut) : lut(lut), content(content) {
+WorldConverter::WorldConverter(std::filesystem::path folder, const Content* content, std::shared_ptr<ContentLUT> lut) : lut(lut), content(content) {
     DebugSettings settings;
     wfile = new WorldFiles(folder, settings);
 
@@ -53,7 +53,7 @@ void WorldConverter::convertNext() {
             if (data == nullptr) continue;
 
             if (wfile->getVoxelRegionVersion(x, z) != REGION_FORMAT_VERSION) Chunk::fromOld(data.get());
-            if (lut) Chunk::convert(data.get(), lut);
+            if (lut) Chunk::convert(data.get(), lut.get());
 
             wfile->put(gx, gz, data.get());
         }

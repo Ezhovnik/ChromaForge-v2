@@ -13,6 +13,7 @@
 #include "logger/Logger.h"
 #include "core_defs.h"
 #include "content/Content.h"
+#include "items/Item.h"
 
 void setup_definitions(ContentBuilder* builder) {
     // Воздух
@@ -24,7 +25,11 @@ void setup_definitions(ContentBuilder* builder) {
     block->selectable = false;
     block->replaceable = true;
     block->model = BlockModel::None;
+    block->pickingItem = DEFAULT_CONTENT_NAMESPACE":empty";
     builder->add(block);
+
+    Item* item = builder->createItem(DEFAULT_CONTENT_NAMESPACE":empty");
+    item->iconType = ItemIconType::None;
 }
 
 void setup_bindings() {

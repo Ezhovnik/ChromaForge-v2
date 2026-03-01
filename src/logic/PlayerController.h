@@ -1,6 +1,8 @@
 #ifndef LOGIC_PLAYERCONTROLLER_H_
 #define LOGIC_PLAYERCONTROLLER_H_
 
+#include <memory>
+
 #include <glm/glm.hpp>
 
 #include "../settings.h"
@@ -13,7 +15,7 @@ class Chunks;
 
 class CameraControl {
 	Player* player;
-	Camera* camera, *currentViewCamera;
+	std::shared_ptr<Camera> camera, currentViewCamera;
 	const CameraSettings& settings;
 
 	glm::vec3 offset;

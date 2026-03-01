@@ -25,7 +25,9 @@ class HudRenderer {
 private:
 	Camera* uicamera;
     Assets* assets;
+
     std::unique_ptr<InventoryView> contentAccess;
+    std::unique_ptr<InventoryView> hotbarView;
 
     int fps = 0;
     int fpsMin = 60;

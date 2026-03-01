@@ -8,12 +8,14 @@
 #include "../typedefs.h"
 #include "../graphics/UVRegion.h"
 
+#define BLOCK_ITEM_SUFFIX ".item"
+
 enum class BlockModel {
     None, // Невидимый блок
     Cube, // Полноценный блок
     X, // Крест-накрест (трава, растения)
     AABB, // Форма, повторяющая хитбокс
-    CustomFaces // Наборы парных треугольников
+    Custom
 };
 
 constexpr int FACE_MX = 0;
@@ -65,13 +67,15 @@ public:
     std::string const name;
 
     std::string textureFaces[6]; // -x, +x, -y, +y, -z, +z
-    std::vector<std::string> textureMoreFaces = {};
-	std::vector<glm::vec3> customfacesPoints = {};
-	std::vector<UVRegion> customfacesExtraUVs = {};
+    std::vector<std::string> modelTextures = {};
+	std::vector<AABB> modelBoxes = {};
+	std::vector<glm::vec3> modelExtraPoints = {};
+	std::vector<UVRegion> modelUVs = {};
 
     ubyte emission[4] {0, 0, 0, 0};
     ubyte drawGroup = 0;
     BlockModel model = BlockModel::Cube;
+    std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
 
     bool lightPassing = false;
     bool skyLightPassing = false;
@@ -93,6 +97,7 @@ public:
 		bool emissive = false;
 		AABB hitboxes[BlockRotProfile::MAX_COUNT];
         block_funcs_set funcsset {};
+        itemid_t pickingItem = 0;
 	} rt;
 
     Block(std::string name);

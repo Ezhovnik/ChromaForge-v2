@@ -43,6 +43,7 @@
 #include "BlocksPreview.h"
 #include "InventoryView.h"
 #include "LevelFrontend.h"
+#include "../items/Item.h"
 
 inline std::shared_ptr<gui::Label> create_label(gui::wstringsupplier supplier) {
 	std::shared_ptr<gui::Label> label = std::make_shared<gui::Label>(L"-");
@@ -95,7 +96,7 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 
 		gui::TextBox* box = new gui::TextBox(L"");
 		box->textSupplier([=]() {
-			Hitbox* hitbox = level->player->hitbox;
+			Hitbox* hitbox = level->player->hitbox.get();
 			return std::to_wstring(hitbox->position[ax]);
 		});
 		box->textConsumer([=](std::wstring text) {
@@ -151,11 +152,7 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 		panel->add(bar);
 	}
 	{
-        gui::Panel* checkpanel = new gui::Panel(glm::vec2(400, 32), glm::vec4(5.0f), 1.0f);
-        checkpanel->color(glm::vec4(0.0f));
-        checkpanel->orientation(gui::Orientation::horizontal);
-
-        gui::CheckBox* checkbox = new gui::CheckBox();
+        auto checkbox = new gui::FullCheckBox(L"Frustum-Culling", glm::vec2(400, 32));
         checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
         checkbox->supplier([=]() {
             return engine->getSettings().graphics.frustumCulling;
@@ -163,29 +160,19 @@ void HudRenderer::createDebugPanel(Engine* engine) {
         checkbox->consumer([=](bool checked) {
             engine->getSettings().graphics.frustumCulling = checked;
         });
-        checkpanel->add(checkbox);
-        checkpanel->add(new gui::Label(L"Frustum-Culling"));
-
-        panel->add(checkpanel);
+        panel->add(checkbox);
 	}
 	{
-        gui::Panel* checkpanel = new gui::Panel(glm::vec2(400, 32), glm::vec4(5.0f), 1.0f);
-        checkpanel->color(glm::vec4(0.0f));
-        checkpanel->orientation(gui::Orientation::horizontal);
-
-        gui::CheckBox* checkbox = new gui::CheckBox();
-        checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
+        auto checkbox = new gui::FullCheckBox(L"Show Chunk Borders", glm::vec2(400, 32));
         checkbox->supplier([=]() {
             return WorldRenderer::drawChunkBorders;
         });
         checkbox->consumer([=](bool checked) {
             WorldRenderer::drawChunkBorders = checked;
         });
-        checkpanel->add(checkbox);
-        checkpanel->add(new gui::Label(L"Show Chunk Borders"));
-
-        panel->add(checkpanel);
+		panel->add(checkbox);
 	}
+
 	panel->refresh();
 }
 
@@ -195,14 +182,14 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
 	auto level = levelFrontend->getLevel();
 	auto content = level->content;
     auto indices = content->indices;
-    std::vector<blockid_t> blocks;
-    for (blockid_t id = 1; id < indices->countBlockDefs(); ++id) {
-        const Block* def = indices->getBlockDef(id);
-        if (def->hidden) continue;
-        blocks.push_back(id);
+    std::vector<itemid_t> items;
+    for (itemid_t id = 1; id < indices->countItemDefs(); ++id) {
+        items.push_back(id);
     }
-    contentAccess.reset(new InventoryView(8, indices, blocks, levelFrontend));
-	contentAccess->setSlotConsumer([=](blockid_t id) {level->player->chosenBlock = id;});
+    contentAccess.reset(new InventoryView(8, content, items, levelFrontend));
+	contentAccess->setSlotConsumer([=](blockid_t id) {level->player->setChosenItem(id);});
+
+	hotbarView.reset(new InventoryView(1, content, std::vector<itemid_t> {0}, levelFrontend));
 
 	uicamera = new Camera(glm::vec3(), 1);
 	uicamera->perspective = false;
@@ -255,57 +242,37 @@ void HudRenderer::update() {
 
 void HudRenderer::draw(const GfxContext& context) {
 	auto level = levelFrontend->getLevel();
-    const Content* content = level->content;
-	const ContentIndices* contentIds = content->indices;
 
     const Viewport& viewport = context.getViewport();
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
 
-    debugPanel->visible(level->player->debug);
+    Player* player = level->player;
+	debugPanel->visible(player->debug);
 
     uicamera->setFov(height);
+
+	auto batch = context.getBatch2D();
+	batch->begin();
 
 	ShaderProgram* uiShader = assets->getShader("ui");
     if (uiShader == nullptr) {
         LOG_CRITICAL("The shader 'ui' could not be found in the assets");
         throw std::runtime_error("The shader 'ui' could not be found in the assets");
     }
-
 	uiShader->use();
 	uiShader->uniformMatrix("u_projview", uicamera->getProjView());
 
-	Batch2D* batch = context.getBatch2D();
-	batch->begin();
+	hotbarView->setPosition(width - 60, height - 60);
+    hotbarView->setItems({player->getChosenItem()});
+    hotbarView->activateAndDraw(&context);
 
-	batch->color = glm::vec4(1.0f);
+	batch->begin();
 	if (Events::_cursor_locked && !level->player->debug) {
 		batch->setLineWidth(2.0f);
 		batch->line(width / 2, height / 2 - 6, width / 2, height / 2 + 6, 0.2f, 0.2f, 0.2f, 1.0f);
 		batch->line(width / 2 + 6, height / 2, width / 2 - 6, height / 2, 0.2f, 0.2f, 0.2f, 1.0f);
 	}
-
-    Player* player = level->player;
-
-	batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.75f);
-	batch->rect(width - 68, height - 68, 68, 68);
-
-	batch->color = glm::vec4(1.0f);
-	batch->render();
-
-	auto blocksPreview = levelFrontend->getBlocksPreview();
-	blocksPreview->begin(&context.getViewport());
-	{
-		Window::clearDepth();
-		GfxContext subctx = context.sub();
-		subctx.depthTest(true);
-		subctx.cullFace(true);
-
-		Block* chosen_block = contentIds->getBlockDef(player->chosenBlock);
-		assert(chosen_block != nullptr);
-		blocksPreview->draw(chosen_block, width - 56, uicamera->getFov() - 56, 48, glm::vec4(1.0f));
-	}
-	uiShader->use();
 	batch->begin();
 
 	if (pause) {

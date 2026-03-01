@@ -12,6 +12,7 @@ namespace util {
     extern uint32_t decode_utf8(uint& size, const char* bytes);
     extern std::string wstr2str_utf8(const std::wstring ws);
     extern std::wstring str2wstr_utf8(const std::string s);
+    extern std::wstring double2wstr(double x, int precision);
     extern bool is_integer(std::string text);
     extern bool is_integer(std::wstring text);
     extern bool is_valid_filename(std::wstring name);

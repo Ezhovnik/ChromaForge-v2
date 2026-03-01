@@ -14,14 +14,14 @@ Button* guiutil::backButton(PagesControl* menu) {
     });
 }
 
-Button* guiutil::gotoButton(std::wstring text, std::string page, PagesControl* menu) {
+Button* guiutil::gotoButton(std::wstring text, const std::string& page, PagesControl* menu) {
     text = langs::get(text, L"menu");
     return (new Button(text, glm::vec4(10.f)))->listenAction([=](GUI* gui) {
         menu->set(page);
     });
 }
 
-void guiutil::alert(GUI* gui, std::wstring text, gui::runnable on_hidden) {
+void guiutil::alert(GUI* gui, const std::wstring& text, gui::runnable on_hidden) {
     PagesControl* menu = gui->getMenu();
     Panel* panel = new Panel(glm::vec2(500, 200), glm::vec4(8.0f), 8.0f);
     panel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
@@ -35,7 +35,7 @@ void guiutil::alert(GUI* gui, std::wstring text, gui::runnable on_hidden) {
     menu->set("<alert>");
 }
 
-void guiutil::confirm(GUI* gui, std::wstring text, gui::runnable on_confirm, std::wstring yestext, std::wstring notext) {
+void guiutil::confirm(GUI* gui, const std::wstring& text, gui::runnable on_confirm, std::wstring yestext, std::wstring notext) {
     if (yestext.empty()) yestext = langs::get(L"Yes");
     if (notext.empty()) notext = langs::get(L"No");    
 

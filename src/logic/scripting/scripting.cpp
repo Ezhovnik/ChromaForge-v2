@@ -10,6 +10,7 @@
 #include "../../voxels/Block.h"
 #include "api_lua.h"
 #include "../../logger/Logger.h"
+#include "../../items/Item.h"
 
 using namespace scripting;
 
@@ -139,6 +140,17 @@ void scripting::load_block_script(std::string prefix, std::filesystem::path file
     funcsset->onbroken = rename_global(L, "on_broken", (prefix + ".broken").c_str());
     funcsset->onplaced = rename_global(L, "on_placed", (prefix + ".placed").c_str());
     funcsset->oninteract = rename_global(L, "on_interact", (prefix + ".oninteract").c_str());
+}
+
+void scripting::load_item_script(std::string prefix, std::filesystem::path file, item_funcs_set* funcsset) {
+    std::string src = files::read_string(file);
+    LOG_DEBUG("Loading script {}", file.u8string());
+    if (luaL_loadbuffer(L, src.c_str(), src.size(), file.string().c_str())) {
+        LOG_ERROR("Lua error: {}", lua_tostring(L, -1));
+        return;
+    }
+    call_func(L, 0, "<script>");
+    funcsset->init=rename_global(L, "init", (prefix + ".init").c_str());
 }
 
 void scripting::close() {

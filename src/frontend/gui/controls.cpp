@@ -126,7 +126,15 @@ TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(
 void TextBox::drawBackground(Batch2D* batch, Assets* assets) {
     glm::vec2 coord = calcCoord();
     batch->texture(nullptr);
-    batch->color = (isfocused() ? focusedColor : (hover_ ? hoverColor : color_));
+
+    if (valid) {
+        if (isfocused()) batch->color = focusedColor;
+        else if (hover_) batch->color = hoverColor;
+        else batch->color = color_;
+    } else {
+        batch->color = invalidColor;
+    }
+
     batch->rect(coord.x, coord.y, size_.x, size_.y);
     if (!focused_ && supplier) input = supplier();
 
@@ -142,23 +150,45 @@ void TextBox::drawBackground(Batch2D* batch, Assets* assets) {
 }
 
 void TextBox::typed(unsigned int codepoint) {
-    input += std::wstring({(wchar_t)codepoint});    
+    input += std::wstring({(wchar_t)codepoint});
+    validate();
+}
+
+bool TextBox::validate() {
+    if (validator) valid = validator(input);
+    else valid = true;
+
+    return valid;
+}
+
+void TextBox::setValid(bool valid) {
+    this->valid = valid;
+}
+
+bool TextBox::isValid() const {
+    return valid;
 }
 
 void TextBox::keyPressed(int key) {
     switch (key) {
         case KEY_BACKSPACE:
-            if (!input.empty()) input = input.substr(0, input.length() - 1);
+            if (!input.empty()) {
+                input = input.substr(0, input.length() - 1);
+                validate();
+            }
             break;
         case KEY_ENTER:
-            if (consumer) consumer(label->text());
+            if (validate() && consumer) consumer(label->text());
             defocus();
             break;
     }
 
     if (key == keycode::V && Events::isPressed(keycode::LEFT_CONTROL)) {
         const char* text = Window::getClipboardText();
-        if (text) input += util::str2wstr_utf8(text);
+        if (text) {
+            input += util::str2wstr_utf8(text);
+            validate();
+        }
     }
 }
 
@@ -172,6 +202,10 @@ void TextBox::textSupplier(wstringsupplier supplier) {
 
 void TextBox::textConsumer(wstringconsumer consumer) {
     this->consumer = consumer;
+}
+
+void TextBox::textValidator(wstringchecker validator) {
+    this->validator = validator;
 }
 
 std::wstring TextBox::text() const {
@@ -281,4 +315,15 @@ void CheckBox::consumer(boolconsumer consumer) {
 CheckBox* CheckBox::checked(bool flag) {
     checked_ = flag;
     return this;
+}
+
+FullCheckBox::FullCheckBox(std::wstring text, glm::vec2 size, bool checked) : Panel(size), checkbox(std::make_shared<CheckBox>(checked)){
+    color(glm::vec4(0.0f));
+    orientation(Orientation::horizontal);
+
+    add(checkbox);
+
+    auto label = std::make_shared<Label>(text); 
+    label->margin(glm::vec4(5.0f, 5.0f, 0.0f, 0.0f));
+    add(label);
 }

@@ -25,6 +25,8 @@ namespace gui {
     typedef std::function<bool()> boolsupplier;
     typedef std::function<void(bool)> boolconsumer;
 
+    typedef std::function<bool(const std::wstring&)> wstringchecker;
+
     class Label : public UINode {
     protected:
         std::wstring text_;
@@ -91,6 +93,7 @@ namespace gui {
     protected:
         glm::vec4 hoverColor {0.05f, 0.1f, 0.2f, 0.75f};
         glm::vec4 focusedColor {0.0f, 0.0f, 0.0f, 1.0f};
+        glm::vec4 invalidColor {0.3f, 0.0f, 0.0f, 0.5f};
 
         Label* label;
 
@@ -99,6 +102,9 @@ namespace gui {
 
         wstringsupplier supplier = nullptr;
         wstringconsumer consumer = nullptr;
+
+        wstringchecker validator = nullptr;
+        bool valid = true;
     public:
         TextBox(std::wstring placeholder, glm::vec4 padding = glm::vec4(2.0f));
 
@@ -109,8 +115,13 @@ namespace gui {
         virtual void keyPressed(int key) override;
         virtual void textSupplier(wstringsupplier supplier);
         virtual void textConsumer(wstringconsumer consumer);
+        virtual void textValidator(wstringchecker validator);
         virtual bool isfocuskeeper() const override {return true;};
         virtual std::wstring text() const;
+
+        virtual bool validate();
+        virtual void setValid(bool valid);
+        virtual bool isValid() const;
 
         virtual void cleanInput() {input = L"";};
     };
@@ -160,6 +171,29 @@ namespace gui {
         virtual bool checked() const {
             if (supplier_) return supplier_();
             return checked_;
+        }
+    };
+
+    class FullCheckBox : public Panel {
+    protected:
+        std::shared_ptr<CheckBox> checkbox;
+    public:
+        FullCheckBox(std::wstring text, glm::vec2 size, bool checked=false);
+
+        virtual void supplier(boolsupplier supplier) {
+            checkbox->supplier(supplier);
+        }
+
+        virtual void consumer(boolconsumer consumer) {
+            checkbox->consumer(consumer);
+        }
+
+        virtual void checked(bool flag) {
+            checkbox->checked(flag);
+        }
+
+        virtual bool checked() const {
+            return checkbox->checked();
         }
     };
 }

@@ -29,6 +29,7 @@ Batch2D::~Batch2D(){
 void Batch2D::begin() {
 	_texture = nullptr;
 	blank->bind();
+	color = glm::vec4(1.0f);
 }
 
 void Batch2D::vertex(float x, float y, float u, float v, float r, float g, float b, float a) {

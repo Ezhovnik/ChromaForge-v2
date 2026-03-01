@@ -37,6 +37,7 @@
 #include "LevelFrontend.h"
 #include "graphics/Skybox.h"
 #include "../constants.h"
+#include "../items/Item.h"
 
 inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
@@ -169,20 +170,20 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 		shader->uniform1i("u_cubemap", 1);
 
 		{
-			blockid_t id = level->player->chosenBlock;
-			Block* chosen_block = contentIds->getBlockDef(id);
-			assert(chosen_block != nullptr);
+			itemid_t id = level->player->getChosenItem();
+			Item* chosen_item = contentIds->getItemDef(id);
+			assert(chosen_item != nullptr);
 			if (!level->player->noclip) {
 				float multiplier = 0.5f;
 				shader->uniform3f("u_torchlightColor",
-					chosen_block->emission[0] / 15.0f * multiplier,
-					chosen_block->emission[1] / 15.0f * multiplier,
-					chosen_block->emission[2] / 15.0f * multiplier
+					chosen_item->emission[0] / 15.0f * multiplier,
+					chosen_item->emission[1] / 15.0f * multiplier,
+					chosen_item->emission[2] / 15.0f * multiplier
 				);
 			} else {
 				shader->uniform3f("u_torchlightColor", 0.0f, 0.0f, 0.0f);
 			}
-			
+
 			shader->uniform1f("u_torchlightDistance", 6.0f);
 		}
 

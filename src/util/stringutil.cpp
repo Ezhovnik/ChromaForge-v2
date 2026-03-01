@@ -4,6 +4,7 @@
 #include <locale>
 #include <sstream>
 #include <stdexcept>
+#include <iomanip>
 #include <algorithm>
 
 #include "../logger/Logger.h"
@@ -161,4 +162,10 @@ void util::rtrim(std::string &s) {
 void util::trim(std::string &s) {
     rtrim(s);
     ltrim(s);
+}
+
+std::wstring util::double2wstr(double x, int precision) {
+    std::wstringstream ss;
+    ss << std::fixed << std::setprecision(precision) << x;
+    return ss.str();
 }
