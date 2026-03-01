@@ -3,6 +3,7 @@
 
 #include <queue>
 #include <filesystem>
+#include <memory>
 
 class Content;
 class ContentLUT;
@@ -10,11 +11,11 @@ class WorldFiles;
 
 class WorldConverter {
     WorldFiles* wfile;
-    const ContentLUT* const lut;
+    std::shared_ptr<ContentLUT> const lut;
     const Content* const content;
     std::queue<std::filesystem::path> regions;
 public:
-    WorldConverter(std::filesystem::path folder, const Content* content, const ContentLUT* lut);
+    WorldConverter(std::filesystem::path folder, const Content* content, std::shared_ptr<ContentLUT> const lut);
     ~WorldConverter();
 
     bool hasNext() const;

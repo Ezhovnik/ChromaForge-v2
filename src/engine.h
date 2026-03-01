@@ -4,6 +4,7 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
+#include <filesystem>
 
 #include "typedefs.h"
 #include "settings.h"
@@ -59,6 +60,7 @@ public:
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLanguage(std::string locale);
     void loadContent();
+    void loadWorldContent(const std::filesystem::path& folder);
     void loadAllPacks();
 };
 

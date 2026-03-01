@@ -16,16 +16,17 @@ namespace PlayerConsts {
     constexpr float CHEAT_SPEED_MUL = 5.0f;
 }
 
-Player::Player(glm::vec3 position, float speed) : speed(speed), chosenBlock(1) {
-	camera = new Camera(position, glm::radians(90.0f));
-	currentViewCamera = camera;
-	SPCamera = new Camera(position, glm::radians(90.0f));
-	TPCamera = new Camera(position, glm::radians(90.0f));
-	hitbox = new Hitbox(position, glm::vec3(0.2f, 0.9f, 0.2f));
+Player::Player(glm::vec3 position, float speed) : 
+	speed(speed),
+	chosenItem(0),
+	camera(new Camera(position, glm::radians(90.0f))),
+	spCamera(new Camera(position, glm::radians(90.0f))),
+	tpCamera(new Camera(position, glm::radians(90.0f))),
+	currentCamera(camera),
+	hitbox(new Hitbox(position, glm::vec3(0.3f, 0.9f, 0.3f))) {
 }
 
 Player::~Player(){
-	delete hitbox;
 }
 
 void Player::update(Level* level, PlayerInput& input, float delta) {
@@ -65,7 +66,7 @@ void Player::update(Level* level, PlayerInput& input, float delta) {
 	float vel = std::max(glm::length(hitbox->velocity * 0.25f), 1.0f);
 	int substeps = int(delta * vel * 1000);
 	substeps = std::min(100, std::max(1, substeps));
-	level->physics->step(level->chunks, hitbox, delta, substeps, crouch, flight ? 0.0f : 1.0f, !noclip);
+	level->physics->step(level->chunks, hitbox.get(), delta, substeps, crouch, flight ? 0.0f : 1.0f, !noclip);
 	if (flight && hitbox->grounded) flight = false;
 
 	if (input.jump && hitbox->grounded) hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
@@ -102,4 +103,12 @@ void Player::teleport(glm::vec3 position) {
 
 float Player::getSpeed() const {
 	return speed;
+}
+
+void Player::setChosenItem(itemid_t id) {
+    chosenItem = id;
+}
+
+itemid_t Player::getChosenItem() const {
+    return chosenItem;
 }

@@ -10,7 +10,8 @@
 
 const std::string ContentPack::PACKAGE_FILENAME = "package.json";
 const std::string ContentPack::CONTENT_FILENAME = "content.json";
-const std::string ContentPack::BLOCKS_FOLDER = "blocks";
+const std::filesystem::path ContentPack::BLOCKS_FOLDER = std::filesystem::path("blocks");
+const std::filesystem::path ContentPack::ITEMS_FOLDER = "items";
 
 contentpack_error::contentpack_error(std::string packId, std::filesystem::path folder, std::string message) : std::runtime_error(message), packId(packId), folder(folder) {
 }

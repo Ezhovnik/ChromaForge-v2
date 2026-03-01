@@ -13,13 +13,15 @@ class Assets;
 class GfxContext;
 class ContentIndices;
 class LevelFrontend;
+class Content;
 
-typedef std::function<void(blockid_t)> slotconsumer;
+typedef std::function<void(itemid_t)> slotconsumer;
 
 class InventoryView {
+    const Content* content;
     slotconsumer consumer = nullptr;
     const ContentIndices* indices;
-    std::vector<blockid_t> blocks;
+    std::vector<itemid_t> items;
     LevelFrontend* levelFrontend;
 
     int scroll = 0;
@@ -29,7 +31,7 @@ class InventoryView {
     glm::ivec2 padding {interval, interval};
     glm::ivec2 position {0, 0};
 public:
-    InventoryView(int columns, const ContentIndices* indices, std::vector<blockid_t> blocks, LevelFrontend* levelFrontend);
+    InventoryView(int columns, const Content* content, std::vector<itemid_t> items, LevelFrontend* levelFrontend);
     virtual ~InventoryView();
 
     virtual void activateAndDraw(const GfxContext* ctx);
@@ -38,6 +40,7 @@ public:
     int getWidth() const;
     int getHeight() const;
     void setSlotConsumer(slotconsumer consumer);
+    void setItems(std::vector<itemid_t> items);
 };
 
 #endif // FRONTEND_INVENTORY_VIEW_H_

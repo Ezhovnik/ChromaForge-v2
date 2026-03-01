@@ -187,6 +187,13 @@ void Engine::loadContent() {
     Logger::getInstance().flush();
 }
 
+void Engine::loadWorldContent(const std::filesystem::path& folder) {
+    contentPacks.clear();
+    auto packNames = ContentPack::worldPacksList(folder);
+    ContentPack::readPacks(paths, contentPacks, packNames, folder);
+    loadContent();
+}
+
 void Engine::loadAllPacks() {
 	auto resdir = paths->getResources();
 	contentPacks.clear();

@@ -1,6 +1,8 @@
 #ifndef OBJECTS_PLAYER_H_
 #define OBJECTS_PLAYER_H_
 
+#include <memory>
+
 #include <glm/glm.hpp>
 
 #include "../voxels/voxel.h"
@@ -30,15 +32,15 @@ struct PlayerInput {
 class Player {
 private:
 	float speed;
+	itemid_t chosenItem;
 public:
-	Camera* camera, *SPCamera, *TPCamera, *currentViewCamera;
-	Hitbox* hitbox;
+	std::shared_ptr<Camera> camera, spCamera, tpCamera;
+    std::shared_ptr<Camera> currentCamera;
+	std::unique_ptr<Hitbox> hitbox;
 
 	bool flight = false;
     bool noclip = false;
     bool debug = false;
-
-    int chosenBlock;
 
 	glm::vec2 cam = {};
 
@@ -50,6 +52,10 @@ public:
     void teleport(glm::vec3 position);
 
 	float getSpeed() const;
+
+	void setChosenItem(itemid_t id);
+	itemid_t getChosenItem() const;
+
 	void update(Level* level, PlayerInput& input, float delta);
 };
 

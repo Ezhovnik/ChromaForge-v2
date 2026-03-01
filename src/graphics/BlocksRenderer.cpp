@@ -127,11 +127,26 @@ void BlocksRenderer::face(const glm::vec3& coord, const glm::vec3& X, const glm:
 	index(0, 1, 2, 0, 2, 3);
 }
 
-void BlocksRenderer::tetragonicFace(const glm::vec3& coord, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec3& p4, const glm::vec3& X, const glm::vec3& Y, const glm::vec3& Z, const UVRegion& texreg, const glm::vec4& tint) {
-	vertex(coord + (p1.x - 0.5f) * X + (p1.y - 0.5f) * Y + (p1.z - 0.5f) * Z, texreg.u1, texreg.v1, tint);
-	vertex(coord + (p2.x - 0.5f) * X + (p2.y - 0.5f) * Y + (p2.z - 0.5f) * Z, texreg.u2, texreg.v1, tint);
-	vertex(coord + (p3.x - 0.5f) * X + (p3.y - 0.5f) * Y + (p3.z - 0.5f) * Z, texreg.u2, texreg.v2, tint);
-	vertex(coord + (p4.x - 0.5f) * X + (p4.y - 0.5f) * Y + (p4.z - 0.5f) * Z, texreg.u1, texreg.v2, tint);
+void BlocksRenderer::tetragonicFace(const glm::vec3& coord, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec3& p4, const glm::vec3& X, const glm::vec3& Y, const glm::vec3& Z, const UVRegion& texreg, bool lights) {
+	const glm::vec3 fp1 = (p1.x - 0.5f) * X + (p1.y - 0.5f) * Y + (p1.z - 0.5f) * Z;
+    const glm::vec3 fp2 = (p2.x - 0.5f) * X + (p2.y - 0.5f) * Y + (p2.z - 0.5f) * Z;
+    const glm::vec3 fp3 = (p3.x - 0.5f) * X + (p3.y - 0.5f) * Y + (p3.z - 0.5f) * Z;
+    const glm::vec3 fp4 = (p4.x - 0.5f) * X + (p4.y - 0.5f) * Y + (p4.z - 0.5f) * Z;
+
+    glm::vec4 tint(1.0f);
+    if (lights) {
+		glm::vec3 dir = glm::cross(fp2 - fp1, fp3 - fp1);
+		glm::vec3 normal = glm::normalize(dir);
+        float d = glm::dot(normal, SUN_VECTOR);
+        d = 0.7f + d * 0.3f;
+        tint *= d;
+        tint *= pickLight(coord);
+    }
+	vertex(coord + fp1, texreg.u1, texreg.v1, tint);
+	vertex(coord + fp2, texreg.u2, texreg.v1, tint);
+	vertex(coord + fp3, texreg.u2, texreg.v2, tint);
+	vertex(coord + fp4, texreg.u1, texreg.v2, tint);
+
 	index(0, 1, 3, 1, 2, 3);
 }
 
@@ -195,35 +210,43 @@ void BlocksRenderer::blockAABB(const glm::ivec3& icoord, const UVRegion(&texface
     face(coord,  Z * size.z,  Y * size.y, -X * size.x, texfaces[0], lights); // Восток
 }
 
-void BlocksRenderer::blockCustomFaces(const glm::ivec3& icoord, const UVRegion(&texfaces)[6], const Block* block, ubyte rotation, bool lights) {
-	const float tint = 1.0f;
+void BlocksRenderer::blockCustomModel(const glm::ivec3& icoord, const Block* block, ubyte rotation, bool lights) {
 	glm::vec3 X(1, 0, 0);
 	glm::vec3 Y(0, 1, 0);
 	glm::vec3 Z(0, 0, 1);
+	CoordSystem orient(X,Y,Z);
 	glm::vec3 coord(icoord);
 	if (block->rotatable) {
 		auto& rotations = block->rotations;
-		auto& orient = rotations.variants[rotation];
+		orient = rotations.variants[rotation];
 		X = orient.axisX;
 		Y = orient.axisY;
 		Z = orient.axisZ;
 	}
-	
-	for (uint i = 0; i < 6; ++i)
-	{
-		tetragonicFace(coord,
-			block->customfacesPoints[i * 4 + 0],
-			block->customfacesPoints[i * 4 + 1],
-			block->customfacesPoints[i * 4 + 2],
-			block->customfacesPoints[i * 4 + 3], X, Y, Z, texfaces[i], glm::vec4(tint)
-		);
+
+	for (size_t i = 0; i < block->modelBoxes.size(); ++i) {
+		AABB box = block->modelBoxes[i];
+		glm::vec3 size = box.size();
+		if (block->rotatable) orient.transform(box);
+		glm::vec3 center_coord = coord - glm::vec3(0.5f) + box.center();
+
+		face(center_coord, X * size.x, Y * size.y, Z * size.z, block->modelUVs[i * 6 + 5], lights); // Север
+		face(center_coord, -X * size.x, Y * size.y, -Z * size.z, block->modelUVs[i * 6 + 4], lights); // Юг
+		face(center_coord, X * size.x, -Z * size.z, Y * size.y, block->modelUVs[i * 6 + 3], lights); // Вверх
+		face(center_coord, -X * size.x, -Z * size.z, -Y * size.y, block->modelUVs[i * 6 + 2], lights); // Низ
+		face(center_coord, -Z * size.z, Y * size.y, X * size.x, block->modelUVs[i * 6 + 1], lights); // Запад
+		face(center_coord, Z * size.z, Y * size.y, -X * size.x, block->modelUVs[i * 6 + 0], lights); // Восток
 	}
-	for (uint i = 0; i < block->textureMoreFaces.size(); ++i) {
-		tetragonicFace(coord,
-			block->customfacesPoints[i * 4 + 24],
-			block->customfacesPoints[i * 4 + 25],
-			block->customfacesPoints[i * 4 + 26],
-			block->customfacesPoints[i * 4 + 27], X, Y, Z, block->customfacesExtraUVs[i], glm::vec4(tint)
+	for (size_t i = 0; i < block->modelExtraPoints.size() / 4; ++i) {
+		tetragonicFace(
+			coord,
+			block->modelExtraPoints[i * 4 + 0],
+			block->modelExtraPoints[i * 4 + 1],
+			block->modelExtraPoints[i * 4 + 2],
+			block->modelExtraPoints[i * 4 + 3],
+			X, Y, Z,
+			block->modelUVs[block->modelBoxes.size() * 6 + i],
+			lights
 		);
 	}
 }
@@ -325,8 +348,8 @@ void BlocksRenderer::render(const voxel* voxels) {
 				blockAABB(glm::ivec3(x, y, z), texfaces, &def, vox.rotation(), !def.rt.emissive);
 				break;
 			}
-			case BlockModel::CustomFaces: {
-				blockCustomFaces(glm::ivec3(x, y, z), texfaces, &def, vox.rotation(), !def.rt.emissive);
+			case BlockModel::Custom: {
+				blockCustomModel(glm::ivec3(x, y, z), &def, vox.rotation(), !def.rt.emissive);
 				break;
 			}
 			default:

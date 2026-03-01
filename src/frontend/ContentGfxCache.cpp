@@ -23,10 +23,10 @@ ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) {
             else if (hasNotFound) sideregions[i * 6 + side] = atlas->get(TEXTURE_NOTFOUND);
 		}
 
-		for (uint side = 0; side < def->textureMoreFaces.size(); ++side) {
-			std::string tex = def->textureMoreFaces[side];
-			if (atlas->has(tex)) def->customfacesExtraUVs.push_back(atlas->get(tex));
-			else if (hasNotFound) def->customfacesExtraUVs.push_back(atlas->get(TEXTURE_NOTFOUND));
+		for (uint side = 0; side < def->modelTextures.size(); ++side) {
+			std::string tex = def->modelTextures[side];
+			if (atlas->has(tex)) def->modelUVs.push_back(atlas->get(tex));
+			else if (hasNotFound) def->modelUVs.push_back(atlas->get(TEXTURE_NOTFOUND));
 		}
     }
 }

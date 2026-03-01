@@ -23,6 +23,7 @@
 #include "../util/data_io.h"
 #include "../coders/json.h"
 #include "../constants.h"
+#include "../items/Item.h"
 
 WorldRegion::WorldRegion() {
 	chunksData = new ubyte*[RegionConsts::VOLUME]{};
@@ -407,12 +408,22 @@ void WorldFiles::writePacks(const World* world) {
 
 void WorldFiles::writeIndices(const ContentIndices* indices) {
 	json::JObject root;
+	uint count;
+
 	json::JArray& blocks = root.putArray("blocks");
-	uint count = indices->countBlockDefs();
+	count = indices->countBlockDefs();
 	for (uint i = 0; i < count; ++i) {
 		const Block* def = indices->getBlockDef(i);
 		blocks.put(def->name);
 	}
+
+	json::JArray& items = root.putArray("items");
+	count = indices->countItemDefs();
+	for (uint i = 0; i < count; i++) {
+		const Item* def = indices->getItemDef(i);
+		items.put(def->name);
+	}
+
 	files::write_string(getIndicesFile(), json::stringify(&root, true, "  "));
 }
 

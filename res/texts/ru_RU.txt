@@ -20,6 +20,7 @@ world.Seed=Зерно
 world.Name=Название
 menu.Create World=Создать Мир
 world.convert-request=Есть изменения в индексах! Конвертировать мир?
+menu.Content Error=Ошибка контента
 
 error.pack-not-found=Не удалось найти пакет
 

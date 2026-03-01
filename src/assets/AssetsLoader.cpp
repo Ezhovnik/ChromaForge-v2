@@ -67,6 +67,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, bool allAssets) {
 	}
 
 	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/blocks", "blocks");
+	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/items", "items");
 }
 
 const ResPaths* AssetsLoader::getPaths() const {
