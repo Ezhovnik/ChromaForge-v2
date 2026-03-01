@@ -24,7 +24,7 @@
 inline constexpr int SEA_LEVEL = 55;
 
 enum class Map{
-	SEND,
+	SAND,
 	TREE,
 	CLIFF,
 	HEIGHT
@@ -180,8 +180,8 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){
 			int cur_z = z + cz * CHUNK_DEPTH;
 			float height = calc_height(&noise, cur_x, cur_z);
 			float hum = fnlGetNoise2D(&noise, cur_x * 0.3 + 633, cur_z * 0.3);
-			float send = fnlGetNoise2D(&noise, cur_x * 0.1 - 633, cur_z * 0.1 + 1000);
-				float cliff = pow((send + abs(send)) / 2, 2);
+			float sand = fnlGetNoise2D(&noise, cur_x * 0.1 - 633, cur_z * 0.1 + 1000);
+				float cliff = pow((sand + abs(sand)) / 2, 2);
 				float width = pow(fmax(-abs(height - SEA_LEVEL) + 4, 0) / 6, 2) * cliff;
 				float h1 = -abs(height - SEA_LEVEL - 0.03);
 				float h2 = abs(height - SEA_LEVEL + 0.04);
@@ -189,7 +189,7 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){
 				height += (h * width);
 			heights.set(Map::HEIGHT, cur_x, cur_z, height);
 			heights.set(Map::TREE, cur_x, cur_z, hum);
-			heights.set(Map::SEND, cur_x, cur_z, send);
+			heights.set(Map::SAND, cur_x, cur_z, sand);
 			heights.set(Map::CLIFF, cur_x, cur_z, cliff);
 		
 		}
@@ -217,14 +217,14 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){
 						states = BLOCK_DIR_UP;
 					}
 				}
-				float send = fmax(heights.get(Map::SEND, cur_x, cur_z), heights.get(Map::CLIFF, cur_x, cur_z));
-				if (((height -  (1.1 - 0.2 * pow(height - 54, 4)) + (5 * send)) < cur_y + (height - 0.01 - (int)height)) && (cur_y < height)){
+				float sand = fmax(heights.get(Map::SAND, cur_x, cur_z), heights.get(Map::CLIFF, cur_x, cur_z));
+				if (((height -  (1.1 - 0.2 * pow(height - 54, 4)) + (5 * sand)) < cur_y + (height - 0.01 - (int)height)) && (cur_y < height)){
 					id = idSand;
 				}
 				if (cur_y <= 2) id = idBedrock;
 
 				randomgrass.setSeed(cur_x, cur_z);
-                if ((id == 0) && ((height > SEA_LEVEL + 0.4) || (send > 0.1)) && ((int)(height + 1) == cur_y) && ((ushort)randomgrass.rand() > 56000)){
+                if ((id == 0) && ((height > SEA_LEVEL + 0.4) || (sand > 0.1)) && ((int)(height + 1) == cur_y) && ((ushort)randomgrass.rand() > 56000)){
 					id = idGrass;
 				}
 				if ((id == 0) && (height > SEA_LEVEL + 0.4) && ((int)(height + 1) == cur_y) && ((ushort)randomgrass.rand() > 65000)) {

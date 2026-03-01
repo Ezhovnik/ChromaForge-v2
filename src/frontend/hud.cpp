@@ -97,7 +97,7 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 		gui::TextBox* box = new gui::TextBox(L"");
 		box->textSupplier([=]() {
 			Hitbox* hitbox = level->player->hitbox.get();
-			return std::to_wstring(hitbox->position[ax]);
+			return util::double2wstr(hitbox->position[ax], 2);
 		});
 		box->textConsumer([=](std::wstring text) {
 			try {
@@ -107,6 +107,10 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 			} catch (std::out_of_range& _) {
 			} catch (std::invalid_argument& _){
 			}
+		});
+		box->setOnEditStart([=](){
+			Hitbox* hitbox = level->player->hitbox.get();
+			box->text(std::to_wstring(int(hitbox->position[ax])));
 		});
 
 		sub->add(box);
@@ -219,8 +223,9 @@ void HudRenderer::drawDebug(int fps){
 	fpsMax = glm::max(fps, fpsMax);
 }
 
-void HudRenderer::update() {
+void HudRenderer::update(bool hudVisible) {
 	auto menu = guiController->getMenu();
+	if (!hudVisible && inventoryOpen) inventoryOpen = false;
 	if (pause && menu->current().panel == nullptr) pause = false;
 
 	if (Events::justPressed(keycode::ESCAPE) && !guiController->isFocusCaught()) {
@@ -235,10 +240,30 @@ void HudRenderer::update() {
 		}
 	}
 
-	if (Events::justActive(BIND_HUD_INVENTORY) && !pause) inventoryOpen = !inventoryOpen;
+	if (hudVisible && Events::justActive(BIND_HUD_INVENTORY) && !pause) inventoryOpen = !inventoryOpen;
 
 	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();
 }
+
+void HudRenderer::drawOverlay(const GfxContext& ctx) {
+	if (pause) {
+		ShaderProgram* uishader = assets->getShader("ui");
+		uishader->use();
+		uishader->uniformMatrix("u_projview", uicamera->getProjView());
+
+        const Viewport& viewport = ctx.getViewport();
+        const uint width = viewport.getWidth();
+        const uint height = viewport.getHeight();
+        auto batch = ctx.getBatch2D();
+        batch->begin();
+
+		batch->texture(nullptr);
+		batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
+		batch->rect(0, 0, width, height);
+        batch->render();
+	}
+} 
+
 
 void HudRenderer::draw(const GfxContext& context) {
 	auto level = levelFrontend->getLevel();
@@ -268,17 +293,10 @@ void HudRenderer::draw(const GfxContext& context) {
     hotbarView->activateAndDraw(&context);
 
 	batch->begin();
-	if (Events::_cursor_locked && !level->player->debug) {
+	if (!pause && Events::_cursor_locked && !level->player->debug) {
 		batch->setLineWidth(2.0f);
 		batch->line(width / 2, height / 2 - 6, width / 2, height / 2 + 6, 0.2f, 0.2f, 0.2f, 1.0f);
 		batch->line(width / 2 + 6, height / 2, width / 2 - 6, height / 2, 0.2f, 0.2f, 0.2f, 1.0f);
-	}
-	batch->begin();
-
-	if (pause) {
-		batch->texture(nullptr);
-		batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
-		batch->rect(0, 0, width, height);
 	}
 
 	if (inventoryOpen) {

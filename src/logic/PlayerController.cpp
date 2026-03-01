@@ -217,16 +217,24 @@ void PlayerController::updateInteraction(){
 				}
 			}
 		}
+
+		if (input.attack && !input.crouch && item->rt.funcsset.on_block_break_by) {
+			if (scripting::on_item_break_block(player, item, x, y, z)) return;
+		}
 		
 		Block* block = contentIds->getBlockDef(vox->id);
 		if (input.attack && block->breakable) blocksController->breakBlock(player, block, x, y, z);
+
+		if (input.build && !input.crouch && item->rt.funcsset.on_use_on_block) {
+			if (scripting::on_item_use_on_block(player, item, x, y, z)) return;
+        }
 
 		if (def && input.build) {
 			if (block->rt.funcsset.oninteract && !input.crouch) {
                 scripting::on_block_interact(player, block, x, y, z);
                 return;
             }
-			if (block->model != BlockModel::X){
+			if (!block->replaceable){
 				x = iend.x + norm.x;
 				y = iend.y + norm.y;
 				z = iend.z + norm.z;

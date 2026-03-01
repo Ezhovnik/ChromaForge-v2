@@ -9,6 +9,8 @@
 
 struct item_funcs_set {
 	bool init: 1;
+    bool on_use_on_block: 1;
+    bool on_block_break_by: 1;
 };
 
 enum class ItemIconType {
@@ -26,7 +28,7 @@ public:
     ubyte emission[4] {0, 0, 0, 0};
 
     ItemIconType iconType = ItemIconType::Sprite;
-    std::string icon = "block:notfound";
+    std::string icon = "blocks:notfound";
 
     std::string placingBlock = "none";
 

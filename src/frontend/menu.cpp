@@ -219,11 +219,16 @@ void create_new_world_panel(Engine* engine, PagesControl* menu) {
         nameInput->cleanInput();
         seedInput->cleanInput();
 
+        try {
+            engine->loadAllPacks();
+            engine->loadContent();
+        } catch (const std::runtime_error& error) {
+            guiutil::alert(engine->getGUI(), langs::get(L"Content Error", L"menu") + L": " + util::str2wstr_utf8(error.what()));
+            return;
+        }
+
         auto folder = paths->getWorldsFolder()/std::filesystem::u8path(nameutf8);
         std::filesystem::create_directories(folder);
-
-        engine->loadAllPacks();
-        engine->loadContent();
 
         Level* level = World::create(nameutf8, folder, seed, engine->getSettings(), engine->getContent(), engine->getContentPacks());
         engine->setScreen(std::make_shared<LevelScreen>(engine, level));

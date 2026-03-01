@@ -136,7 +136,7 @@ void LevelScreen::update(float delta) {
     if (!hud->isPause()) level->world->updateTimers(delta);
 
     controller->update(delta, !inputLocked, hud->isPause());
-    if (hudVisible) hud->update();
+    hud->update(hudVisible);
 }
 
 void LevelScreen::draw(float deltaTime) {
@@ -145,8 +145,9 @@ void LevelScreen::draw(float deltaTime) {
     Viewport viewport(Window::width, Window::height);
     GfxContext context(nullptr, viewport, batch.get());
 
-    worldRenderer->draw(context, camera.get());
+    worldRenderer->draw(context, camera.get(), hudVisible);
 
+    hud->drawOverlay(context);
     if (hudVisible) {
         hud->draw(context);
         if (level->player->debug) hud->drawDebug(1 / deltaTime);
