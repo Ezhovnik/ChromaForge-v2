@@ -40,7 +40,7 @@ public:
 	WorldRenderer(Engine* engine, LevelFrontend* levelFrontend);
 	~WorldRenderer();
 
-	void draw(const GfxContext& context, Camera* camera);
+	void draw(const GfxContext& context, Camera* camera, bool hudVisible);
 
 	static float skyClearness;
 	static bool drawChunkBorders;

@@ -114,7 +114,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 	}
 }
 
-void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
+void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool hudVisible) {
 	EngineSettings& settings = engine->getSettings();
 	skybox->refresh(level->world->daytime, 1.0f + skyClearness * 2.0f, 4);
 
@@ -194,7 +194,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera) {
 
 		shader->uniformMatrix("u_model", glm::mat4(1.0f));
 
-		if (PlayerController::selectedBlockId != -1 && !level->player->noclip){
+		if (PlayerController::selectedBlockId != -1 && !level->player->noclip && hudVisible){
 			blockid_t id = PlayerController::selectedBlockId;
 			Block* block = contentIds->getBlockDef(id);
 			assert(block != nullptr);

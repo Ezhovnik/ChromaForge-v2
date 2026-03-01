@@ -11,6 +11,7 @@
 #include "panels.h"
 #include "../../window/input.h"
 #include "../../typedefs.h"
+#include "GUI.h"
 
 class Batch2D;
 class Assets;
@@ -95,6 +96,8 @@ namespace gui {
         glm::vec4 focusedColor {0.0f, 0.0f, 0.0f, 1.0f};
         glm::vec4 invalidColor {0.3f, 0.0f, 0.0f, 0.5f};
 
+        runnable onEditStart = nullptr;
+
         Label* label;
 
         std::wstring input;
@@ -118,6 +121,9 @@ namespace gui {
         virtual void textValidator(wstringchecker validator);
         virtual bool isfocuskeeper() const override {return true;};
         virtual std::wstring text() const;
+        virtual void text(std::wstring value);
+        virtual void setOnEditStart(runnable oneditstart);
+        virtual void focus(GUI*) override;
 
         virtual bool validate();
         virtual void setValid(bool valid);

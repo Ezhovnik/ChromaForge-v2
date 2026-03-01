@@ -11,14 +11,50 @@
 #include "../../voxels/Chunks.h"
 #include "../../voxels/voxel.h"
 #include "../../lighting/Lighting.h"
+#include "../../world/World.h"
+#include "../BlocksController.h"
 
-int l_block_name(lua_State* L) {
+inline void luaL_openlib(lua_State* L, const char* name, const luaL_Reg* libfuncs, int nup) {
+    lua_newtable(L);
+    luaL_setfuncs(L, libfuncs, nup);
+    lua_setglobal(L, name);
+}
+
+static int l_world_get_day_time(lua_State* L) {
+    lua_pushnumber(L, scripting::level->world->daytime);
+    return 1;
+}
+
+static int l_world_set_day_time(lua_State* L) {
+    double value = lua_tonumber(L, 1);
+    scripting::level->world->daytime = fmod(value, 1.0);
+    return 0;
+}
+
+static int l_world_get_seed(lua_State* L) {
+    lua_pushinteger(L, scripting::level->world->seed);
+    return 1;
+}
+
+static const luaL_Reg worldlib [] = {
+    {"get_day_time", l_world_get_day_time},
+    {"set_day_time", l_world_set_day_time},
+    {"get_seed", l_world_get_seed},
+    {NULL, NULL}
+};
+
+int luaopen_world(lua_State* L) {
+    luaL_openlib(L, "world", worldlib, 0);
+    return 1;
+}
+
+static int l_block_name(lua_State* L) {
     int id = lua_tointeger(L, 1);
     lua_pushstring(L, scripting::content->indices->getBlockDef(id)->name.c_str());
     return 1;
 }
 
-int l_is_solid_at(lua_State* L) {
+static int l_is_solid_at(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
@@ -27,29 +63,31 @@ int l_is_solid_at(lua_State* L) {
     return 1;
 }
 
-int l_blocks_count(lua_State* L) {
+static int l_blocks_count(lua_State* L) {
     lua_pushinteger(L, scripting::content->indices->countBlockDefs());
     return 1;
 }
 
-int l_block_index(lua_State* L) {
+static int l_block_index(lua_State* L) {
     auto name = lua_tostring(L, 1);
     lua_pushinteger(L, scripting::content->requireBlock(name)->rt.id);
     return 1;
 }
 
-int l_set_block(lua_State* L) {
+static int l_set_block(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
     int id = lua_tointeger(L, 4); 
     int states = lua_tointeger(L, 5);
+    bool noupdate = lua_toboolean(L, 6);
     scripting::level->chunks->setVoxel(x, y, z, id, states);
     scripting::level->lighting->onBlockSet(x, y, z, id);
+    if (!noupdate) scripting::blocks->updateSides(x, y, z);
     return 0;
 }
 
-int l_get_block(lua_State* L) {
+static int l_get_block(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
@@ -59,7 +97,9 @@ int l_get_block(lua_State* L) {
     return 1;
 }
 
-int l_get_player_pos(lua_State* L) {
+static int l_player_get_pos(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
     glm::vec3 pos = scripting::level->player->hitbox->position;
     lua_pushnumber(L, pos.x);
     lua_pushnumber(L, pos.y);
@@ -67,31 +107,50 @@ int l_get_player_pos(lua_State* L) {
     return 3;
 }
 
-int l_set_player_pos(lua_State* L) {
-    double x = lua_tonumber(L, 1);
-    double y = lua_tonumber(L, 2);
-    double z = lua_tonumber(L, 3);
-    scripting::level->player->hitbox->position = glm::vec3(x, y, z);
-    return 0;
-}
-
-int l_get_player_rot(lua_State* L) {
+static int l_player_get_rot(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
     glm::vec2 rot = scripting::level->player->cam;
     lua_pushnumber(L, rot.x);
     lua_pushnumber(L, rot.y);
     return 2;
 }
 
-int l_set_player_rot(lua_State* L) {
-    double x = lua_tonumber(L, 1);
-    double y = lua_tonumber(L, 2);
+static int l_player_set_rot(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
+    double x = lua_tonumber(L, 2);
+    double y = lua_tonumber(L, 3);
     glm::vec2& cam = scripting::level->player->cam;
     cam.x = x;
     cam.y = y;
     return 0;
 }
 
-int l_get_block_states(lua_State* L) {
+static int l_player_set_pos(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
+    double x = lua_tonumber(L, 2);
+    double y = lua_tonumber(L, 3);
+    double z = lua_tonumber(L, 4);
+    scripting::level->player->hitbox->position = glm::vec3(x, y, z);
+    return 0;
+}
+
+static const luaL_Reg playerlib [] = {
+    {"get_pos", l_player_get_pos},
+    {"set_pos", l_player_set_pos},
+    {"get_rot", l_player_get_rot},
+    {"set_rot", l_player_set_rot},
+    {NULL, NULL}
+};
+
+int luaopen_player(lua_State* L) {
+    luaL_openlib(L, "player", playerlib, 0);
+    return 1;
+}
+
+static int l_get_block_states(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
@@ -101,7 +160,7 @@ int l_get_block_states(lua_State* L) {
     return 1;
 }
 
-int l_is_replaceable_at(lua_State* L) {
+static int l_is_replaceable_at(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
@@ -117,7 +176,7 @@ inline int lua_pushivec3(lua_State* L, int x, int y, int z) {
     return 3;
 }
 
-int l_get_block_x(lua_State* L) {
+static int l_get_block_x(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
@@ -133,7 +192,7 @@ int l_get_block_x(lua_State* L) {
     }
 }
 
-int l_get_block_y(lua_State* L) {
+static int l_get_block_y(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
@@ -149,7 +208,7 @@ int l_get_block_y(lua_State* L) {
     }
 }
 
-int l_get_block_z(lua_State* L) {
+static int l_get_block_z(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
@@ -165,7 +224,7 @@ int l_get_block_z(lua_State* L) {
     }
 }
 
-int l_get_block_user_bits(lua_State* L) {
+static int l_get_block_user_bits(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
@@ -183,7 +242,7 @@ int l_get_block_user_bits(lua_State* L) {
     return 1;
 }
 
-int l_set_block_user_bits(lua_State* L) {
+static int l_set_block_user_bits(lua_State* L) {
     int x = lua_tointeger(L, 1);
     int y = lua_tointeger(L, 2);
     int z = lua_tointeger(L, 3);
@@ -206,6 +265,9 @@ void lua_addfunc(lua_State* L, lua_CFunction func, const char* name) {
 }
 
 void apilua::create_funcs(lua_State* L) {
+    luaopen_world(L);
+    luaopen_player(L);
+
     lua_addfunc(L, l_block_index, "block_index");
     lua_addfunc(L, l_block_name, "block_name");
     lua_addfunc(L, l_blocks_count, "blocks_count");
@@ -218,11 +280,6 @@ void apilua::create_funcs(lua_State* L) {
     lua_addfunc(L, l_get_block_x, "get_block_X");
     lua_addfunc(L, l_get_block_y, "get_block_Y");
     lua_addfunc(L, l_get_block_z, "get_block_Z");
-
-    lua_addfunc(L, l_get_player_pos, "get_player_pos");
-    lua_addfunc(L, l_set_player_pos, "set_player_pos");
-    lua_addfunc(L, l_get_player_rot, "get_player_rot");
-    lua_addfunc(L, l_set_player_rot, "set_player_rot");
 
     lua_addfunc(L, l_get_block_states, "get_block_states");
     lua_addfunc(L, l_get_block_user_bits, "get_block_user_bits");

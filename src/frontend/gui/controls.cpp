@@ -5,6 +5,7 @@
 #include "../../graphics/Font.h"
 #include "../../util/stringutil.h"
 #include "../../window/Events.h"
+#include "GUI.h"
 
 inline constexpr uint KEY_ESCAPE = 256;
 inline constexpr uint KEY_ENTER = 257;
@@ -192,6 +193,15 @@ void TextBox::keyPressed(int key) {
     }
 }
 
+void TextBox::setOnEditStart(gui::runnable oneditstart) {
+    onEditStart = oneditstart;
+}
+
+void TextBox::focus(GUI* gui) {
+    Panel::focus(gui);
+    if (onEditStart) onEditStart();
+}
+
 std::shared_ptr<UINode> TextBox::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
     return UINode::getAt(pos, self);
 }
@@ -211,6 +221,10 @@ void TextBox::textValidator(wstringchecker validator) {
 std::wstring TextBox::text() const {
     if (input.empty()) return placeholder;
     return input;
+}
+
+void TextBox::text(std::wstring value) {
+    this->input = value;
 }
 
 InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec2(100, 32), padding, 0, false), binding(binding) {

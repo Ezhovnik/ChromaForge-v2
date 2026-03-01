@@ -9,16 +9,19 @@ class Content;
 class Level;
 class Block;
 class Player;
+class Item;
+class BlocksController;
 struct block_funcs_set;
 struct item_funcs_set;
 
 namespace scripting {
     extern const Content* content;
     extern Level* level;
+    extern BlocksController* blocks;
 
     void initialize(EnginePaths* paths);
 
-    void on_world_load(Level* level);
+    void on_world_load(Level* level, BlocksController* blocks);
     void on_world_quit();
 
     void update_block(const Block* block, int x, int y, int z);
@@ -26,6 +29,9 @@ namespace scripting {
     void on_block_placed(Player* player, const Block* block, int x, int y, int z);
     void on_block_broken(Player* player, const Block* block, int x, int y, int z);
     void on_block_interact(Player* player, const Block* block, int x, int y, int z);
+
+    bool on_item_use_on_block(Player* player, const Item* item, int x, int y, int z);
+    bool on_item_break_block(Player* player, const Item* item, int x, int y, int z);
 
     void load_block_script(std::string prefix, std::filesystem::path file, block_funcs_set* funcsset);
     void load_item_script(std::string prefix, std::filesystem::path file, item_funcs_set* funcsset);
