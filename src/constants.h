@@ -18,6 +18,8 @@ inline constexpr uint VOXEL_USER_BITS = 8;
 inline constexpr uint VOXEL_USER_BITS_OFFSET = sizeof(blockstate_t) * 8 - VOXEL_USER_BITS;
 
 inline constexpr blockid_t BLOCK_VOID = std::numeric_limits<blockid_t>::max();
+inline constexpr blockid_t BLOCK_AIR = 0;
+inline constexpr itemid_t ITEM_EMPTY = 0;
 
 inline constexpr double PI = 3.14159265358979323846;
 

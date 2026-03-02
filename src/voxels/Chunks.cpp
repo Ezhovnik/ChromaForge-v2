@@ -26,8 +26,6 @@ Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFi
 		chunks[i] = nullptr;
 	}
 	chunksCount = 0;
-
-	airID = content->requireBlock(DEFAULT_CONTENT_NAMESPACE":air")->rt.id;
 }
 
 Chunks::~Chunks(){
@@ -177,7 +175,7 @@ void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states){
 
     if (y < chunk->bottom) chunk->bottom = y;
     else if (y + 1 > chunk->top) chunk->top = y + 1;
-    else if (id == airID) chunk->updateHeights();
+    else if (id == BLOCK_AIR) chunk->updateHeights();
 
 	if (lx == 0 && (chunk = getChunk(cx + areaOffsetX - 1, cz + areaOffsetZ))) chunk->setModified(true);
 	if (lz == 0 && (chunk = getChunk(cx + areaOffsetX, cz + areaOffsetZ - 1))) chunk->setModified(true);

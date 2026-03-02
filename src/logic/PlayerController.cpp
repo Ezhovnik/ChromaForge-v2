@@ -22,6 +22,7 @@ namespace CameraConsts {
 	constexpr float SHAKE_OFFSET_Y = 0.031f;
 	constexpr float SHAKE_SPEED = 1.75f;
 	constexpr float SHAKE_DELTA_K = 10.0f;
+	constexpr float MAX_PITCH = 89.9f;
 }
 
 namespace ZoomConsts {
@@ -31,7 +32,6 @@ namespace ZoomConsts {
 	constexpr float INPUT = 0.1f;
 }
 
-constexpr float MAX_PITCH = glm::radians(89.0f);
 constexpr float CROUCH_SHIFT_Y = -0.2f;
 
 CameraControl::CameraControl(Player* player, const CameraSettings& settings) : player(player), camera(player->camera), settings(settings), offset(0.0f, 0.7f, 0.0f), currentViewCamera(player->currentCamera) {
@@ -42,19 +42,18 @@ void CameraControl::refresh() {
 }
 
 void CameraControl::updateMouse(PlayerInput& input) {
-	float sensivity = settings.sensitivity;
+	float sensitivity = input.zoom ? settings.sensitivity / 4.f : settings.sensitivity;
 	glm::vec2 &cam = player->cam;
-    if (input.zoom) {
-        cam += -Events::delta / (float)Window::height * sensivity / 4.0f;
-    } else {
-        cam += -Events::delta / (float)Window::height * sensivity;
-    }
+    cam -= glm::degrees(Events::delta / (float)Window::height * sensitivity);
 
-	if (cam.y < -MAX_PITCH) cam.y = -MAX_PITCH;
-	else if (cam.y > MAX_PITCH) cam.y = MAX_PITCH;
+	if (cam.y < -CameraConsts::MAX_PITCH) cam.y = -CameraConsts::MAX_PITCH;
+	else if (cam.y > CameraConsts::MAX_PITCH) cam.y = CameraConsts::MAX_PITCH;
+
+	if (cam.x > 180.0f) cam.x -= 360.0f;
+	else if (cam.x < -180.0f) cam.x += 360.0f;
 
 	camera->rotation = glm::mat4(1.0f);
-	camera->rotate(cam.y, cam.x, 0);
+	camera->rotate(glm::radians(cam.y), glm::radians(cam.x), 0);
 }
 
 void CameraControl::update(PlayerInput& input, float delta, Chunks* chunks) {

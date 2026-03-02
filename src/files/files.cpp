@@ -96,13 +96,30 @@ bool files::write_string(std::filesystem::path filename, const std::string conte
 	return true;
 }
 
-json::JObject* files::read_json(std::filesystem::path file) {
-	std::string text = files::read_string(file);
+bool files::write_json(std::filesystem::path filename, const json::JObject* obj, bool nice) {
+    return files::write_string(filename, json::stringify(obj, nice, "  "));
+}
+
+bool files::write_binary_json(std::filesystem::path filename, const json::JObject* obj) {
+    std::vector<ubyte> bytes = json::to_binary(obj);
+    return files::write_bytes(filename, (const char*)bytes.data(), bytes.size());
+}
+
+json::JObject* files::read_binary_json(std::filesystem::path file) {
+    size_t size;
+    std::unique_ptr<char[]> bytes (files::read_bytes(file, size));
+    return json::from_binary((const ubyte*)bytes.get(), size);
+}
+
+json::JObject* files::read_json(std::filesystem::path filename) {
+	std::string text = files::read_string(filename);
 	try {
-		return json::parse(file.string(), text);
+		auto obj = json::parse(filename.string(), text);
+        return obj;
 	} catch (const parsing_error& error) {
-		LOG_ERROR("Could not ot parse {}. Reason: {}", file.string(), error.errorLog());
-        throw std::runtime_error("Could not to parse " + file.string());
+		LOG_ERROR("Could not to parse {}. What: {}", filename.string(), error.errorLog());
+		Logger::getInstance().flush();
+        throw std::runtime_error("Could not to parse " + filename.string());
     }
 }
 

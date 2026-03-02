@@ -50,7 +50,7 @@ Item* ContentBuilder::createItem(std::string id) {
 
 void ContentBuilder::checkIdentifier(std::string id) {
     ContentType result;
-    if ((checkContentType(id) != ContentType::None)) {
+    if ((result = checkContentType(id)) != ContentType::None) {
         LOG_ERROR("Identifier {} is already used", (int)result);
         Logger::getInstance().flush();
         throw namereuse_error("Identifier " + id + " is already used", result);

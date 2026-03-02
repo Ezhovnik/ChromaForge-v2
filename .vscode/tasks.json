@@ -19,6 +19,7 @@
                 "${workspaceFolder}/src/assets/AssetsLoader.cpp",
 
                 //src/coders
+                "${workspaceFolder}/src/coders/byte_utils.cpp",
                 "${workspaceFolder}/src/coders/commons.cpp",
                 "${workspaceFolder}/src/coders/GLSLExtension.cpp",
                 "${workspaceFolder}/src/coders/json.cpp",
@@ -32,7 +33,6 @@
                 "${workspaceFolder}/src/content/ContentPack.cpp",
 
                 //src/files
-                "${workspaceFolder}/src/files/binary_io.cpp",
                 "${workspaceFolder}/src/files/engine_paths.cpp",
                 "${workspaceFolder}/src/files/files.cpp",
                 "${workspaceFolder}/src/files/rle.cpp",

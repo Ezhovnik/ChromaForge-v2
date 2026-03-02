@@ -20,8 +20,6 @@ Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), con
 	solverG = new LightSolver(contentIds, chunks, 1);
 	solverB = new LightSolver(contentIds, chunks, 2);
 	solverS = new LightSolver(contentIds, chunks, 3);
-
-	airID = content->requireBlock(DEFAULT_CONTENT_NAMESPACE":air")->rt.id;
 }
 
 Lighting::~Lighting(){
@@ -72,7 +70,7 @@ void Lighting::buildSkyLight(int cx, int cz) {
 	Chunk* chunk = chunks->getChunk(cx, cz);
 	for (int z = 0; z < CHUNK_DEPTH; ++z){
 		for (int x = 0; x < CHUNK_WIDTH; ++x){
-			for (int y = chunk->light_map->highestPoint; y >= 0; y--){
+			for (int y = chunk->light_map->highestPoint; y >= 0; --y){
 				int gx = x + cx * CHUNK_WIDTH;
 				int gz = z + cz * CHUNK_DEPTH;
 				while (y > 0 && !blockDefs[chunk->voxels[vox_index(x, y, z)].id]->lightPassing) {
@@ -81,10 +79,10 @@ void Lighting::buildSkyLight(int cx, int cz) {
 				if (chunk->light_map->getS(x, y, z) != 15) {
 					solverS->add(gx, y + 1, gz);
 					for (; y >= 0; y--){
-						solverS->add(gx+1,y,gz);
-						solverS->add(gx-1,y,gz);
-						solverS->add(gx,y,gz+1);
-						solverS->add(gx,y,gz-1);
+						solverS->add(gx + 1, y, gz);
+						solverS->add(gx - 1, y, gz);
+						solverS->add(gx, y, gz + 1);
+						solverS->add(gx, y, gz - 1);
 					}
 				}
 			}
@@ -105,9 +103,9 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z) {
 				int gx = x + chunk_x * CHUNK_WIDTH;
 				int gz = z + chunk_z * CHUNK_DEPTH;
 				if (block->emission[0] || block->emission[1] || block->emission[2]){
-					solverR->add(gx,y,gz,block->emission[0]);
-					solverG->add(gx,y,gz,block->emission[1]);
-					solverB->add(gx,y,gz,block->emission[2]);
+					solverR->add(gx, y, gz, block->emission[0]);
+					solverG->add(gx, y, gz, block->emission[1]);
+					solverB->add(gx, y, gz, block->emission[2]);
 				}
 			}
 		}
@@ -137,7 +135,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z) {
 
 void Lighting::onBlockSet(int x, int y, int z, int const id) {
     Block* block = content->indices->getBlockDef(id);
-    if (id == airID) {
+    if (id == BLOCK_AIR) {
         solverR->remove(x, y, z);
         solverG->remove(x, y, z);
         solverB->remove(x, y, z);
@@ -149,7 +147,7 @@ void Lighting::onBlockSet(int x, int y, int z, int const id) {
         if (chunks->getLight(x, y + 1, z, 3) == 0xF){
             for (int i = y; i >= 0; --i){
                 voxel* vox = chunks->getVoxel(x, i, z);
-                if ((vox == nullptr || vox->id != airID) && block->skyLightPassing) break;
+                if ((vox == nullptr || vox->id != BLOCK_AIR) && block->skyLightPassing) break;
                 solverS->add(x, i, z, 0xF);
             }
         }
@@ -174,7 +172,7 @@ void Lighting::onBlockSet(int x, int y, int z, int const id) {
             solverS->remove(x, y, z);
             for (int i = y - 1; i >= 0; --i){
                 solverS->remove(x, i, z);
-                if (i == 0 || chunks->getVoxel(x, i - 1, z)->id != airID) break;
+                if (i == 0 || chunks->getVoxel(x, i - 1, z)->id != BLOCK_AIR) break;
             }
             solverS->solve();
         }

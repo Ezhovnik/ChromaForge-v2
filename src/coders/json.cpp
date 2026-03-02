@@ -7,13 +7,29 @@
 
 #include "commons.h"
 #include "../logger/Logger.h"
+#include "byte_utils.h"
 
 using namespace json;
 
-inline void newline(std::stringstream& ss, bool nice, uint indent, const std::string indentstr) {
+inline constexpr int BJSON_END = 0x0;
+inline constexpr int BJSON_TYPE_DOCUMENT = 0x1;
+inline constexpr int BJSON_TYPE_LIST = 0x2;
+inline constexpr int BJSON_TYPE_BYTE = 0x3;
+inline constexpr int BJSON_TYPE_INT16 = 0x4;
+inline constexpr int BJSON_TYPE_INT32 = 0x5;
+inline constexpr int BJSON_TYPE_INT64 = 0x6;
+inline constexpr int BJSON_TYPE_NUMBER = 0x7;
+inline constexpr int BJSON_TYPE_STRING = 0x8;
+inline constexpr int BJSON_TYPE_BYTES = 0x9;
+inline constexpr int BJSON_TYPE_FALSE = 0xA;
+inline constexpr int BJSON_TYPE_TRUE = 0xB;
+inline constexpr int BJSON_TYPE_NULL = 0xC;
+inline constexpr int BJSON_TYPE_CDOCUMENT = 0x1F;
+
+inline void newline(std::stringstream& ss, bool nice, uint indent, const std::string& indentstr) {
     if (nice) {
         ss << "\n";
-        for (uint i = 0; i < indent; i++) {
+        for (uint i = 0; i < indent; ++i) {
             ss << indentstr;
         }
     } else {
@@ -21,11 +37,11 @@ inline void newline(std::stringstream& ss, bool nice, uint indent, const std::st
     }
 }
 
-void stringify(Value* value, std::stringstream& ss, int indent, std::string indentstr, bool nice);
+void stringify(const Value* value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
 
-void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string indentstr, bool nice);
+void stringifyObj(const JObject* obj, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
 
-void stringify(Value* value, std::stringstream& ss, int indent, std::string indentstr, bool nice) {
+void stringify(const Value* value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice) {
     if (value->type == valtype::object) {
         stringifyObj(value->value.obj, ss, indent, indentstr, nice);
     }
@@ -36,19 +52,15 @@ void stringify(Value* value, std::stringstream& ss, int indent, std::string inde
             return;
         }
         ss << '[';
-        for (uint i = 0; i < list.size(); i++) {
+        for (uint i = 0; i < list.size(); ++i) {
             Value* value = list[i];
             if (i > 0 || nice) {
                 newline(ss, nice, indent, indentstr);
             }
-            stringify(value, ss, indent+1, indentstr, nice);
-            if (i + 1 < list.size()) {
-                ss << ',';
-            }
+            stringify(value, ss, indent + 1, indentstr, nice);
+            if (i + 1 < list.size()) ss << ',';
         }
-        if (nice) {
-            newline(ss, true, indent - 1, indentstr);
-        }
+        if (nice) newline(ss, true, indent - 1, indentstr);
         ss << ']';
     } else if (value->type == valtype::boolean) {
         ss << (value->value.boolean ? "true" : "false");
@@ -62,7 +74,7 @@ void stringify(Value* value, std::stringstream& ss, int indent, std::string inde
     }
 }
 
-void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string indentstr, bool nice) {
+void stringifyObj(const JObject* obj, std::stringstream& ss, int indent, const std::string& indentstr, bool nice) {
     if (obj->map.empty()) {
         ss << "{}";
         return;
@@ -71,29 +83,171 @@ void stringifyObj(JObject* obj, std::stringstream& ss, int indent, std::string i
     uint index = 0;
     for (auto entry : obj->map) {
         const std::string& key = entry.first;
-        if (index > 0 || nice) {
-            newline(ss, nice, indent, indentstr);
-        }
+        if (index > 0 || nice) newline(ss, nice, indent, indentstr);
         Value* value = entry.second;
         ss << escape_string(key) << ": ";
-        stringify(value, ss, indent+1, indentstr, nice);
+        stringify(value, ss, indent + 1, indentstr, nice);
         index++;
-        if (index < obj->map.size()) {
-            ss << ',';
-        }
+        if (index < obj->map.size()) ss << ',';
     }
-    if (nice) {
-        newline(ss, true, indent-1, indentstr);
-    }
+    if (nice) newline(ss, true, indent - 1, indentstr);
     ss << '}';
 }
 
-std::string json::stringify(JObject* obj, bool nice, std::string indent) {
+std::string json::stringify(const JObject* obj, bool nice, const std::string& indent) {
     std::stringstream ss;
     stringifyObj(obj, ss, 1, indent, nice);
     return ss.str();
 }
 
+static void to_binary(ByteBuilder& builder, const Value* value) {
+    switch (value->type) {
+        case valtype::object: {
+            std::vector<ubyte> bytes = to_binary(value->value.obj);
+            builder.put(bytes.data(), bytes.size());
+            break;
+        }
+        case valtype::array:
+            builder.put(BJSON_TYPE_LIST);
+            for (Value* element : value->value.arr->values) {
+                to_binary(builder, element);
+            }
+            builder.put(BJSON_END);
+            break;
+        case valtype::integer: {
+            int64_t val = value->value.integer;
+            if (val >= 0 && val <= 255) {
+                builder.put(BJSON_TYPE_BYTE);
+                builder.put(val);
+            } else if (val >= INT16_MIN && val <= INT16_MAX){
+                builder.put(BJSON_TYPE_INT16);
+                builder.putInt16(val);
+            } else if (val >= INT32_MIN && val <= INT32_MAX) {
+                builder.put(BJSON_TYPE_INT32);
+                builder.putInt32(val);
+            } else {
+                builder.put(BJSON_TYPE_INT64);
+                builder.putInt64(val);
+            }
+            break;
+        }
+        case valtype::number:
+            builder.put(BJSON_TYPE_NUMBER);
+            builder.putFloat64(value->value.decimal);
+            break;
+        case valtype::boolean:
+            builder.put(BJSON_TYPE_FALSE + value->value.boolean);
+            break;
+        case valtype::string:
+            builder.put(BJSON_TYPE_STRING);
+            builder.put(*value->value.str);
+            break;
+    }
+}
+
+static JArray* array_from_binary(ByteReader& reader);
+static JObject* object_from_binary(ByteReader& reader);
+
+std::vector<ubyte> json::to_binary(const JObject* obj) {
+    ByteBuilder builder;
+    builder.put(BJSON_TYPE_DOCUMENT);
+    builder.putInt32(0);
+
+    for (auto& entry : obj->map) {
+        builder.putCStr(entry.first.c_str());
+        to_binary(builder, entry.second);
+    }
+    builder.put(BJSON_END);
+
+    builder.setInt32(1, builder.size());
+    return builder.build();
+}
+
+static Value* value_from_binary(ByteReader& reader) {
+    ubyte typecode = reader.get();
+    valtype type;
+    valvalue val;
+    switch (typecode) {
+        case BJSON_TYPE_DOCUMENT:
+            type = valtype::object;
+            reader.getInt32();
+            val.obj = object_from_binary(reader);
+            break;
+        case BJSON_TYPE_LIST:
+            type = valtype::array;
+            val.arr = array_from_binary(reader);
+            break;
+        case BJSON_TYPE_BYTE:
+            type = valtype::integer;
+            val.integer = reader.get();
+            break;
+        case BJSON_TYPE_INT16:
+            type = valtype::integer;
+            val.integer = reader.getInt16();
+            break;
+        case BJSON_TYPE_INT32:
+            type = valtype::integer;
+            val.integer = reader.getInt32();
+            break;
+        case BJSON_TYPE_INT64:
+            type = valtype::integer;
+            val.integer = reader.getInt64();
+            break;
+        case BJSON_TYPE_NUMBER:
+            type = valtype::number;
+            val.decimal = reader.getFloat64();
+            break;
+        case BJSON_TYPE_FALSE:
+        case BJSON_TYPE_TRUE:
+            type = valtype::boolean;
+            val.boolean = typecode - BJSON_TYPE_FALSE;
+            break;
+        case BJSON_TYPE_STRING:
+            type = valtype::string;
+            val.str = new std::string(reader.getString());
+            break;
+        default:
+            LOG_ERROR("Type {} is not supported", typecode);
+            Logger::getInstance().flush();
+            throw std::runtime_error("Type " + std::to_string(typecode) + " is not supported");
+    }
+    return new Value(type, val);
+}
+
+static JArray* array_from_binary(ByteReader& reader) {
+    auto array = std::make_unique<JArray>();
+    auto& items = array->values;
+    while (reader.peek() != BJSON_END) {
+        items.push_back(value_from_binary(reader));
+    }
+    reader.get();
+    return array.release();
+}
+
+static JObject* object_from_binary(ByteReader& reader) {
+    auto obj = std::make_unique<JObject>();
+    auto& map = obj->map;
+    while (reader.peek() != BJSON_END) {
+        const char* key = reader.getCString();
+        Value* value = value_from_binary(reader);
+        map.insert(std::make_pair(key, value));
+    }
+    reader.get();
+    return obj.release();
+}
+
+JObject* json::from_binary(const ubyte* src, size_t size) {
+    ByteReader reader(src, size);
+    std::unique_ptr<Value> value (value_from_binary(reader));
+    if (value->type != valtype::object) {
+        LOG_ERROR("Root value is not an object");
+        Logger::getInstance().flush();
+        throw std::runtime_error("Root value is not an object");
+    }
+    JObject* obj = value->value.obj;
+    value->value.obj = nullptr;
+    return obj;
+}
 
 JArray::~JArray() {
     for (auto value : values) {
@@ -459,8 +613,8 @@ JObject* Parser::parse() {
 
 JObject* Parser::parseObject() {
     expect('{');
-    std::unique_ptr<JObject> obj(new JObject());
-    std::unordered_map<std::string, Value*>& map = obj->map;
+    auto obj = std::make_unique<JObject>();
+    auto& map = obj->map;
     while (peek() != '}') {
         if (peek() == '#') {
             skipLine();
@@ -492,8 +646,8 @@ JObject* Parser::parseObject() {
 
 JArray* Parser::parseArray() {
     expect('[');
-    std::unique_ptr<JArray> arr(new JArray());
-    std::vector<Value*>& values = arr->values;
+    auto arr = std::make_unique<JArray>();
+    auto& values = arr->values;
     while (peek() != ']') {
         if (peek() == '#') {
             skipLine();

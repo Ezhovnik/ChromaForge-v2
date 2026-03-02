@@ -94,8 +94,6 @@ public:
 	}
 };
 
-
-
 float calc_height(fnl_state *noise, int cur_x, int cur_z){
 	float height = 0;
 
@@ -114,8 +112,7 @@ float calc_height(fnl_state *noise, int cur_x, int cur_z){
 }
 
 WorldGenerator::WorldGenerator(const Content* content)
-                : idAir(content->requireBlock(DEFAULT_CONTENT_NAMESPACE":air")->rt.id),
-                idStone(content->requireBlock(DEFAULT_CONTENT_NAMESPACE":stone")->rt.id),
+                : idStone(content->requireBlock(DEFAULT_CONTENT_NAMESPACE":stone")->rt.id),
                 idDirt(content->requireBlock(DEFAULT_CONTENT_NAMESPACE":dirt")->rt.id),
 				idMoss(content->requireBlock(DEFAULT_CONTENT_NAMESPACE":moss")->rt.id),
 				idSand(content->requireBlock(DEFAULT_CONTENT_NAMESPACE":sand")->rt.id),
@@ -149,10 +146,10 @@ blockid_t WorldGenerator::generate_tree(fnl_state *noise,
 	int centerZ = tileZ * tileSize + tileSize / 2 + randomZ;
 
 	bool gentree = (random->rand() % 10) < heights.get(Map::TREE, centerX, centerZ) * 13;
-	if (!gentree) return 0;
+	if (!gentree) return BLOCK_AIR;
 
 	int height = (int)(heights.get(Map::HEIGHT, centerX, centerZ));
-	if (height < SEA_LEVEL + 1) return 0;
+	if (height < SEA_LEVEL + 1) return BLOCK_AIR;
 
 	int lx = cur_x - centerX;
 	int radius = random->rand() % 4 + 2;
@@ -160,7 +157,7 @@ blockid_t WorldGenerator::generate_tree(fnl_state *noise,
 	int lz = cur_z - centerZ;
 	if (lx == 0 && lz == 0 && cur_y - height < (3 * radius + radius / 2)) return idLog;
 	if (lx * lx + ly * ly / 2 + lz * lz < radius * radius) return idLeaves;
-	return 0;
+	return BLOCK_AIR;
 }
 
 void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){
@@ -202,7 +199,7 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){
 			float height = heights.get(Map::HEIGHT, cur_x, cur_z);
 
 			for (int cur_y = 0; cur_y < CHUNK_HEIGHT; ++cur_y){
-				int id = cur_y < SEA_LEVEL ? idWater : idAir;
+				blockid_t id = cur_y < SEA_LEVEL ? idWater : BLOCK_AIR;
 				int states = 0;
 				if ((cur_y == (int)height) && (SEA_LEVEL-2 < cur_y)) {
 					id = idMoss;
@@ -211,7 +208,7 @@ void WorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed){
 				} else if (cur_y < height){
 					id = idDirt;
 				} else {
-					int tree = generate_tree(&noise, &randomtree, heights, cur_x, cur_y, cur_z, treesTile);
+					blockid_t tree = generate_tree(&noise, &randomtree, heights, cur_x, cur_y, cur_z, treesTile);
 					if (tree) {
 						id = tree;
 						states = BLOCK_DIR_UP;
