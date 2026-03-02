@@ -22,8 +22,6 @@ class Chunks{
 private:
     const Content* const content;
 	const ContentIndices* const contentIds;
-
-    blockid_t airID;
 public:
     std::shared_ptr<Chunk>* chunks;
     std::shared_ptr<Chunk>* chunksSecond;

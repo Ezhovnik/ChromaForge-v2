@@ -7,7 +7,6 @@
 #include <cstring>
 
 #include "rle.h"
-#include "binary_io.h"
 #include "../window/Camera.h"
 #include "../content/Content.h"
 #include "../objects/Player.h"
@@ -424,7 +423,7 @@ void WorldFiles::writeIndices(const ContentIndices* indices) {
 		items.put(def->name);
 	}
 
-	files::write_string(getIndicesFile(), json::stringify(&root, true, "  "));
+	files::write_json(getIndicesFile(), &root);
 }
 
 void WorldFiles::writeWorldInfo(const World* world) {
@@ -442,7 +441,7 @@ void WorldFiles::writeWorldInfo(const World* world) {
 	timeobj.put("day-time", world->daytime);
 	timeobj.put("day-time-speed", world->daytimeSpeed);
 
-	files::write_string(getWorldFile(), json::stringify(&root, true, "  "));
+	files::write_json(getWorldFile(), &root);
 }
 
 bool WorldFiles::readWorldInfo(World* world) {
@@ -489,7 +488,7 @@ void WorldFiles::writePlayer(Player* player){
 	root.put("flight", player->flight);
 	root.put("noclip", player->noclip);
 
-	files::write_string(getPlayerFile(), json::stringify(&root, true, "  "));
+	files::write_json(getPlayerFile(), &root);
 }
 
 bool WorldFiles::readPlayer(Player* player) {

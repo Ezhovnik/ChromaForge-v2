@@ -12,7 +12,6 @@ class Content;
 // Класс для генерации воксельного мира
 class WorldGenerator {
 private:
-    blockid_t const idAir;
     blockid_t const idStone;
 	blockid_t const idDirt;
 	blockid_t const idMoss;

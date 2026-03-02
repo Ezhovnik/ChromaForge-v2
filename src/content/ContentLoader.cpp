@@ -73,7 +73,7 @@ void ContentLoader::fixPackIndices() {
     modified |= fixPackIndices(blocksFolder, root.get(), "blocks");
     modified |= fixPackIndices(itemsFolder, root.get(), "items");
 
-    if (modified) files::write_string(indexFile, json::stringify(root.get(), true, "  "));
+    if (modified) files::write_json(indexFile, root.get());
 }
 
 void ContentLoader::loadBlock(Block* definition, std::string name, std::filesystem::path file) {
