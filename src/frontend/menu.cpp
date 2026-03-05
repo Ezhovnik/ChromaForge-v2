@@ -158,10 +158,35 @@ Panel* create_worlds_panel(Engine* engine) {
         for (auto entry : std::filesystem::directory_iterator(worldsFolder)) {
             if (!entry.is_directory()) continue;
 
-            auto name = entry.path().filename().u8string();
-            auto btn = new Button(util::str2wstr_utf8(name), glm::vec4(10.0f, 8.0f, 10.0f, 8.0f));
+            auto folder = entry.path();
+            auto name = folder.filename().u8string();
+            auto namews = util::str2wstr_utf8(name);
+            auto btn = std::make_shared<RichButton>(glm::vec2(390, 46));
             btn->color(glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
+            btn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
+            auto label = std::make_shared<Label>(namews);
+            label->setInteractive(false);
+            btn->add(label, glm::vec2(8, 8));
             btn->listenAction([=](GUI*) {open_world(name, engine);});
+
+            auto delete_icon = std::make_shared<Image>("gui/delete_icon", glm::vec2(32, 32));
+            delete_icon->color(glm::vec4(1, 1, 1, 0.5f));
+
+            auto delbtn = std::make_shared<Button>(delete_icon, glm::vec4(2));
+            delbtn->color(glm::vec4(0.0f));
+            delbtn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
+            
+            btn->add(delbtn, glm::vec2(330, 3));
+
+            delbtn->listenAction([=](GUI* gui) {
+                guiutil::confirm(gui, langs::get(L"delete-confirm", L"world") + L" (" + util::str2wstr_utf8(folder.u8string()) + L")", [=]() 
+                {
+                    LOG_INFO("Deleting {}", folder.u8string());
+                    std::filesystem::remove_all(folder);
+                    menus::refresh_menus(engine, gui->getMenu());
+                });
+            });
+
             panel->add(btn);
         }
     }
@@ -422,5 +447,9 @@ void menus::create_menus(Engine* engine, PagesControl* menu) {
     create_pause_panel(engine, menu);
     create_languages_panel(engine, menu);
     create_content_panel(engine, menu);
+    create_main_menu_panel(engine, menu);
+}
+
+void menus::refresh_menus(Engine* engine, PagesControl* menu) {
     create_main_menu_panel(engine, menu);
 }

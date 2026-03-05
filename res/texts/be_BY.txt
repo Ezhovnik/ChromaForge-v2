@@ -21,6 +21,7 @@ world.Name=Назва
 menu.Create World=Стварыць Свет
 world.convert-request=Есть изменения в индексах! Конвертировать мир?
 menu.Content Error=Памылка Кантэнту
+world.delete-confirm=Выдаліць свет незваротна?
 
 error.pack-not-found=Не ўдалося знайсці пакет
 

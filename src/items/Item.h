@@ -33,6 +33,7 @@ public:
     std::string icon = "blocks:notfound";
 
     std::string placingBlock = "none";
+    std::string scriptName = name.substr(name.find(':') + 1);
 
     struct {
         itemid_t id;

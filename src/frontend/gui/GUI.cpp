@@ -46,7 +46,7 @@ void GUI::activateMouse(float delta) {
     }
     this->hover = hover;
 
-    if (Events::justClicked(0)) {
+    if (Events::justClicked(mousecode::BUTTON_1)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
             pressed->click(this, Events::cursor.x, Events::cursor.y);
@@ -63,6 +63,12 @@ void GUI::activateMouse(float delta) {
     } else if (pressed) {
         pressed->mouseRelease(this, Events::cursor.x, Events::cursor.y);
         pressed = nullptr;
+    }
+
+    if (hover) {
+        for (int i = mousecode::BUTTON_1; i < mousecode::BUTTON_1 + 12; ++i) {
+            if (Events::justClicked(i)) focus->clicked(this, i);
+        }
     }
 } 
 
@@ -87,11 +93,6 @@ void GUI::activate(float delta) {
 
             if (!Events::_cursor_locked) {
                 if (Events::isClicked(mousecode::BUTTON_1)) focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
-                if (prevfocus == focus){
-                    for (int i = mousecode::BUTTON_1; i < mousecode::BUTTON_1 + 12; ++i) {
-                        if (Events::justClicked(i)) focus->clicked(this, i);
-                    }
-                }
             }
         }
     }

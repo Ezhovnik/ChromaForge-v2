@@ -151,6 +151,7 @@ void ContentLoader::loadBlock(Block* definition, std::string name, std::filesyst
     root->num("draw-group", definition->drawGroup);
     root->flag("hidden", definition->hidden);
     root->str("picking-item", definition->pickingItem);
+    root->str("script-name", definition->scriptName);
 }
 
 void ContentLoader::loadCustomBlockModel(Block* def, dynamic::Map* primitives) {
@@ -209,6 +210,7 @@ void ContentLoader::loadItem(Item* definition, std::string name, std::filesystem
 
     root->str("icon", definition->icon);
     root->str("placing-block", definition->placingBlock);
+    root->str("script-name", definition->scriptName);
     root->num("stack-size", definition->stackSize);
 
     // Освещение от предмета в формате [r, g, b]
@@ -224,7 +226,7 @@ void ContentLoader::loadBlock(Block* definition, std::string full, std::string n
     auto folder = pack->folder;
 
     std::filesystem::path configFile = folder/std::filesystem::path("blocks/" + name + ".json");
-    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + name + ".lua");
+    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + definition->scriptName + ".lua");
     loadBlock(definition, full, configFile);
     if (std::filesystem::is_regular_file(scriptfile)) scripting::load_block_script(full, scriptfile, &definition->rt.funcsset);
 }
@@ -233,7 +235,7 @@ void ContentLoader::loadItem(Item* item, std::string full, std::string name) {
     auto folder = pack->folder;
 
     std::filesystem::path configFile = folder/std::filesystem::path("items/" + name + ".json");
-    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + name + ".lua");
+    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + item->scriptName + ".lua");
     loadItem(item, full, configFile);
     if (std::filesystem::is_regular_file(scriptfile)) scripting::load_item_script(full, scriptfile, &item->rt.funcsset);
 }

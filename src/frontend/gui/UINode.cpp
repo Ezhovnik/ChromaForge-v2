@@ -70,7 +70,16 @@ bool UINode::isInside(glm::vec2 pos) {
 }
 
 std::shared_ptr<UINode> UINode::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
+    if (!interactive) return nullptr;
     return isInside(pos) ? self : nullptr;
+}
+
+bool UINode::isInteractive() const {
+    return interactive;
+}
+
+void UINode::setInteractive(bool flag) {
+    interactive = flag;
 }
 
 glm::vec2 UINode::calcCoord() const {
