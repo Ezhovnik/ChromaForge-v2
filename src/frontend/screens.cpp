@@ -72,10 +72,10 @@ void MenuScreen::draw(float delta) {
 	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
     batch->begin();
-    Texture* menubg = engine->getAssets()->getTexture("menubg");
+    Texture* menubg = engine->getAssets()->getTexture("gui/menubg");
     if (menubg == nullptr) {
-        LOG_CRITICAL("The texture 'menubg' could not be found in the assets");
-        throw std::runtime_error("The texture 'menubg' could not be found in the assets");
+        LOG_CRITICAL("The texture 'gui/menubg' could not be found in the assets");
+        throw std::runtime_error("The texture 'gui/menubg' could not be found in the assets");
     }
 
     uint width = Window::width;

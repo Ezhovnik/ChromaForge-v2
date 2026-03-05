@@ -76,6 +76,7 @@ public:
     ubyte drawGroup = 0;
     BlockModel model = BlockModel::Cube;
     std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
+    std::string scriptName = name.substr(name.find(':') + 1);
 
     bool lightPassing = false;
     bool skyLightPassing = false;

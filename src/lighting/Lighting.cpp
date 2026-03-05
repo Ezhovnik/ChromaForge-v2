@@ -98,7 +98,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z) {
 	for (uint y = 0; y < CHUNK_HEIGHT; ++y){
 		for (uint z = 0; z < CHUNK_DEPTH; ++z){
 			for (uint x = 0; x < CHUNK_WIDTH; ++x){
-				voxel vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
+				voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
 				const Block* block = blockDefs[vox.id];
 				int gx = x + chunk_x * CHUNK_WIDTH;
 				int gz = z + chunk_z * CHUNK_DEPTH;

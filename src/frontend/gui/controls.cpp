@@ -6,6 +6,7 @@
 #include "../../util/stringutil.h"
 #include "../../window/Events.h"
 #include "GUI.h"
+#include "../../graphics/UVRegion.h"
 
 inline constexpr uint KEY_ESCAPE = 256;
 inline constexpr uint KEY_ENTER = 257;
@@ -49,7 +50,17 @@ void Label::size(glm::vec2 sizenew) {
     UINode::size(glm::vec2(UINode::size().x, sizenew.y));
 }
 
-Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(32, 32), padding, 0) {
+Image::Image(std::string texture, glm::vec2 size) : UINode(glm::vec2(), size), texture(texture) {
+}
+
+void Image::draw(Batch2D* batch, Assets* assets) {
+    glm::vec2 coord = calcCoord();
+    batch->texture(assets->getTexture(texture));
+    batch->color = color_;
+    batch->rect(coord.x, coord.y, size_.x, size_.y, 0, 0, 0, UVRegion(), false, true, color_);
+}
+
+Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(34, 32), padding, 0) {
     add(content);
     scrollable(false);
 }
@@ -86,6 +97,10 @@ Button* Button::textSupplier(wstringsupplier supplier) {
     return this;
 }
 
+void Button::setHoverColor(glm::vec4 color) {
+    hoverColor = color;
+}
+
 void Button::drawBackground(Batch2D* batch, Assets* assets) {
     glm::vec2 coord = calcCoord();
     batch->texture(nullptr);
@@ -117,6 +132,34 @@ void Button::textAlign(Align align) {
         label->align(align);
         refresh();
     }
+}
+
+RichButton::RichButton(glm::vec2 size) : Container(glm::vec2(), size) {
+}
+
+void RichButton::mouseRelease(GUI* gui, int x, int y) {
+    UINode::mouseRelease(gui, x, y);
+    if (isInside(glm::vec2(x, y))) {
+        for (auto callback : actions) {
+            callback(gui);
+        }
+    }
+}
+
+RichButton* RichButton::listenAction(onaction action) {
+    actions.push_back(action);
+    return this;
+}
+
+void RichButton::setHoverColor(glm::vec4 color) {
+    hoverColor = color;
+}
+
+void RichButton::drawBackground(Batch2D* batch, Assets* assets) {
+    glm::vec2 coord = calcCoord();
+    batch->texture(nullptr);
+    batch->color = (ispressed() ? pressedColor : (hover_ ? hoverColor : color_));
+    batch->rect(coord.x, coord.y, size_.x, size_.y);
 }
 
 TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0, false), input(L""), placeholder(placeholder) {

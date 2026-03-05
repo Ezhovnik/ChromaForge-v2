@@ -36,11 +36,11 @@ void ChunksController::update(int64_t maxDuration) {
         timeutil::Timer timer;
         if (loadVisible()) {
             int64_t mcs = timer.stop();
-            avgDurationMcs = mcs * 0.2 + avgDurationMcs * 0.8;
-            if (mcstotal + max(avgDurationMcs, mcs) * 2 < maxDuration * 1000) {
+            if (mcstotal + mcs * 2 < maxDuration * 1000) {
                 mcstotal += mcs;
                 continue;
             }
+			mcstotal += mcs;
         }
         break;
     }
