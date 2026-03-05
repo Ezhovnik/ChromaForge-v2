@@ -24,7 +24,7 @@ private:
 	void verifyLoadedChunk(ContentIndices* indices, Chunk* chunk);
 public:
 	ChunksStorage(Level* level);
-	virtual ~ChunksStorage();
+	~ChunksStorage() = default;
 
 	std::shared_ptr<Chunk> get(int x, int z) const;
 	void store(std::shared_ptr<Chunk> chunk);

@@ -17,23 +17,9 @@
 #include "../math/AABB.h"
 #include "../math/rays.h"
 
-Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles), content(content), contentIds(content->indices){
+Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles), content(content), contentIds(content->getIndices()), chunks(width * depth), chunksSecond(width * depth){
 	volume = (size_t)width * (size_t)depth;
-	chunks = new std::shared_ptr<Chunk>[volume];
-	chunksSecond = new std::shared_ptr<Chunk>[volume];
-
-	for (size_t i = 0; i < volume; i++){
-		chunks[i] = nullptr;
-	}
 	chunksCount = 0;
-}
-
-Chunks::~Chunks(){
-	for (size_t i = 0; i < volume; i++){
-		chunks[i] = nullptr;
-	}
-	delete[] chunks;
-	delete[] chunksSecond;
 }
 
 voxel* Chunks::getVoxel(int x, int y, int z){
@@ -431,20 +417,18 @@ void Chunks::resize(uint newWidth, uint newDepth) {
 		translate(0, delta);
 	}
 	const size_t newVolume = (size_t)newWidth * (size_t)newDepth;
-	auto newChunks = new std::shared_ptr<Chunk>[newVolume] {};
-	auto newChunksSecond = new std::shared_ptr<Chunk>[newVolume] {};
+	std::vector<std::shared_ptr<Chunk>> newChunks(newVolume);
+	std::vector<std::shared_ptr<Chunk>> newChunksSecond(newVolume);
 	for (int z = 0; z < depth && z < newDepth; ++z) {
 		for (int x = 0; x < width && x < newWidth; ++x) {
 			newChunks[z * newWidth + x] = chunks[z * width + x];
 		}
 	}
-	delete[] chunks;
-	delete[] chunksSecond;
 	width = newWidth;
 	depth = newDepth;
 	volume = newVolume;
-	chunks = newChunks;
-	chunksSecond = newChunksSecond;
+	chunks = std::move(newChunks);
+	chunksSecond = std::move(newChunksSecond);
 }
 
 void Chunks::saveAndClear(){

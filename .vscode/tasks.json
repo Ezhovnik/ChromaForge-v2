@@ -19,18 +19,23 @@
                 "${workspaceFolder}/src/assets/AssetsLoader.cpp",
 
                 //src/coders
+                "${workspaceFolder}/src/coders/binary_json.cpp",
                 "${workspaceFolder}/src/coders/byte_utils.cpp",
                 "${workspaceFolder}/src/coders/commons.cpp",
                 "${workspaceFolder}/src/coders/GLSLExtension.cpp",
                 "${workspaceFolder}/src/coders/json.cpp",
                 "${workspaceFolder}/src/coders/toml.cpp",
                 "${workspaceFolder}/src/coders/png.cpp",
+                "${workspaceFolder}/src/coders/zip.cpp",
 
                 //src/content
                 "${workspaceFolder}/src/content/Content.cpp",
                 "${workspaceFolder}/src/content/ContentLoader.cpp",
                 "${workspaceFolder}/src/content/ContentLUT.cpp",
                 "${workspaceFolder}/src/content/ContentPack.cpp",
+
+                //src/data
+                "${workspaceFolder}/src/data/dynamic.cpp",
 
                 //src/files
                 "${workspaceFolder}/src/files/engine_paths.cpp",
@@ -143,6 +148,7 @@
                 "-lopengl32",
                 "-lglew32",
                 "-lluajit-5.1",
+                "-lz",
                 "-o",
                 "${workspaceFolder}/build/ChromaForge.exe"
             ],

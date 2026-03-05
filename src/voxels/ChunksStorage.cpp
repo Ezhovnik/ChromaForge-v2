@@ -28,9 +28,6 @@ void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
 ChunksStorage::ChunksStorage(Level* level) : level(level) {
 }
 
-ChunksStorage::~ChunksStorage() {
-}
-
 void ChunksStorage::store(std::shared_ptr<Chunk> chunk) {
 	chunksMap[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = chunk;
 }
@@ -48,20 +45,21 @@ std::shared_ptr<Chunk> ChunksStorage::get(int x, int z) const {
 }
 
 std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
-	World* world = level->world;
+	World* world = level->getWorld();
+	WorldFiles* wfile = world->wfile;
 
 	auto chunk = std::make_shared<Chunk>(x, z);
 	store(chunk);
 
-	std::unique_ptr<ubyte[]> data(world->wfile->getChunk(chunk->chunk_x, chunk->chunk_z));
+	std::unique_ptr<ubyte[]> data(wfile->getChunk(chunk->chunk_x, chunk->chunk_z));
 	if (data) {
 		chunk->decode(data.get());
 		chunk->setLoaded(true);
 	}
 
-	verifyLoadedChunk(level->content->indices, chunk.get());
+	verifyLoadedChunk(level->content->getIndices(), chunk.get());
 
-	light_t* lights = world->wfile->getLights(chunk->chunk_x, chunk->chunk_z);
+	light_t* lights = wfile->getLights(chunk->chunk_x, chunk->chunk_z);
 	if (lights) {
 		chunk->light_map->set(lights);
 		chunk->setLoadedLights(true);
@@ -72,7 +70,7 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 
 void ChunksStorage::getVoxels(VoxelsVolume* volume, bool backlight) const {
 	const Content* content = level->content;
-	const ContentIndices* indices = content->indices;
+	const ContentIndices* indices = content->getIndices();
 
 	voxel* voxels = volume->getVoxels();
 	light_t* lights = volume->getLights();

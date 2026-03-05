@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <memory>
+#include <vector>
 
 #include <glm/glm.hpp>
 
@@ -23,8 +24,8 @@ private:
     const Content* const content;
 	const ContentIndices* const contentIds;
 public:
-    std::shared_ptr<Chunk>* chunks;
-    std::shared_ptr<Chunk>* chunksSecond;
+    std::vector<std::shared_ptr<Chunk>> chunks;
+    std::vector<std::shared_ptr<Chunk>> chunksSecond;
 
     size_t volume;
     size_t chunksCount;
@@ -39,7 +40,7 @@ public:
     WorldFiles* worldFiles;
 
     Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content); // Конструктор
-    ~Chunks(); // Деструктор
+    ~Chunks() = default; // Деструктор
 
     bool putChunk(std::shared_ptr<Chunk> chunk);
 

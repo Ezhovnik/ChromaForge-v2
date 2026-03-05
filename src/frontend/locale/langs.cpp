@@ -54,22 +54,19 @@ public:
 
 void langs::loadLocalesInfo(const std::filesystem::path& resdir, std::string& fallback) {
     std::filesystem::path file = resdir/std::filesystem::path(langs::TEXTS_FOLDER)/std::filesystem::path("langs.json");
-    std::unique_ptr<json::JObject> root (files::read_json(file));
+    auto root = files::read_json(file);
 
     langs::locales_info.clear();
     root->str("fallback", fallback);
 
-    auto langs = root->obj("langs");
+    auto langs = root->map("langs");
     if (langs) {
-        for (auto& entry : langs->map) {
-            auto langInfo = entry.second;
+        for (auto& entry : langs->values) {
+            auto langInfo = entry.second.get();
 
             std::string name;
-            if (langInfo->type == json::valtype::object) {
-                name = langInfo->value.obj->getStr("name", "none");
-            } else {
-                continue;
-            }
+            if (langInfo->type == dynamic::ValueType::map) name = langInfo->value.map->getStr("name", "none");
+            else continue;
 
             LOG_DEBUG("Locale {} ({}) added successfully", entry.first, name);
             langs::locales_info[entry.first] = LocaleInfo{entry.first, name};
@@ -96,7 +93,7 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
 }
 
 void langs::load(const std::filesystem::path& resdir, const std::string& locale, const std::string& fallback, const std::vector<ContentPack>& packs) {
-    std::unique_ptr<Lang> lang (new Lang(locale));
+    auto lang = std::make_unique<Lang>(locale);
     load(resdir, fallback, packs, *lang.get());
     if (locale != fallback) load(resdir, locale, packs, *lang.get());
     current.reset(lang.release());

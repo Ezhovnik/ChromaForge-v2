@@ -16,7 +16,7 @@
 #include "../items/Item.h"
 #include "../graphics/Atlas.h"
 
-InventoryView::InventoryView(int columns, const Content* content, std::vector<itemid_t> items, LevelFrontend *levelFrontend) : levelFrontend(levelFrontend), content(content), indices(content->indices), items(items), columns(columns) {
+InventoryView::InventoryView(int columns, const Content* content, std::vector<itemid_t> items, LevelFrontend *levelFrontend) : levelFrontend(levelFrontend), content(content), indices(content->getIndices()), items(items), columns(columns) {
 }
 
 InventoryView::~InventoryView() {

@@ -17,14 +17,12 @@ Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
     voxels = new voxel[CHUNK_VOLUME];
 
 	light_map = new LightMap();
-    renderData.vertices = nullptr;
 }
 
 // Деструктор
 Chunk::~Chunk() {
     delete light_map;
     delete[] voxels;
-    delete[] renderData.vertices;
 }
 
 // Проверяет, является ли чанк пустым (однородным).

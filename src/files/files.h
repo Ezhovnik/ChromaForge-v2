@@ -9,8 +9,8 @@
 
 #include "../typedefs.h"
 
-namespace json {
-    class JObject;
+namespace dynamic {
+    class Map;
 }
 
 namespace files {
@@ -28,14 +28,14 @@ namespace files {
     extern bool write_bytes(std::filesystem::path, const char* data, size_t size);
     extern uint append_bytes(std::filesystem::path, const char* data, size_t size);
     extern bool write_string(std::filesystem::path filename, const std::string content);
-    extern bool write_json(std::filesystem::path filename, const json::JObject* obj, bool nice=true);
-    extern bool write_binary_json(std::filesystem::path filename, const json::JObject* obj);
+    extern bool write_json(std::filesystem::path filename, const dynamic::Map* obj, bool nice=true);
+    extern bool write_binary_json(std::filesystem::path filename, const dynamic::Map* obj);
 
     extern bool read(std::filesystem::path, char* data, size_t size);
     extern char* read_bytes(std::filesystem::path, size_t& length);
     extern std::string read_string(std::filesystem::path filename);
-    extern json::JObject* read_json(std::filesystem::path file);
-    extern json::JObject* read_binary_json(std::filesystem::path file);
+    extern std::unique_ptr<dynamic::Map> read_json(std::filesystem::path file);
+    extern std::unique_ptr<dynamic::Map> read_binary_json(std::filesystem::path file);
     extern std::vector<std::string> read_list(std::filesystem::path file);
 }
 

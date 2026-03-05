@@ -16,11 +16,12 @@
 #include "../logic/scripting/scripting.h"
 #include "../util/listutil.h"
 #include "../items/Item.h"
+#include "../data/dynamic.h"
 
 ContentLoader::ContentLoader(ContentPack* pack) : pack(pack) {
 }
 
-bool ContentLoader::fixPackIndices(std::filesystem::path folder, json::JObject* indicesRoot, std::string contentSection) {
+bool ContentLoader::fixPackIndices(std::filesystem::path folder, dynamic::Map* indicesRoot, std::string contentSection) {
     std::vector<std::string> detected;
     std::vector<std::string> indexed;
     if (std::filesystem::is_directory(folder)) {
@@ -35,8 +36,8 @@ bool ContentLoader::fixPackIndices(std::filesystem::path folder, json::JObject* 
     }
 
     bool modified = false;
-    if (!indicesRoot->has(contentSection)) indicesRoot->putArray(contentSection);
-    json::JArray* arr = indicesRoot->arr(contentSection);
+    if (!indicesRoot->has(contentSection)) indicesRoot->putList(contentSection);
+    auto arr = indicesRoot->list(contentSection);
     if (arr) {
         for (uint i = 0; i < arr->size(); ++i) {
             std::string name = arr->str(i);
@@ -64,9 +65,9 @@ void ContentLoader::fixPackIndices() {
     auto blocksFolder = folder/ContentPack::BLOCKS_FOLDER;
     auto itemsFolder = folder/ContentPack::ITEMS_FOLDER;
 
-    std::unique_ptr<json::JObject> root;
-    if (std::filesystem::is_regular_file(indexFile)) root.reset(files::read_json(indexFile));
-    else root.reset(new json::JObject());
+    std::unique_ptr<dynamic::Map> root;
+    if (std::filesystem::is_regular_file(indexFile)) root = std::move(files::read_json(indexFile));
+    else root.reset(new dynamic::Map());
 
     bool modified = false;
 
@@ -77,7 +78,7 @@ void ContentLoader::fixPackIndices() {
 }
 
 void ContentLoader::loadBlock(Block* definition, std::string name, std::filesystem::path file) {
-    std::unique_ptr<json::JObject> root(files::read_json(file));
+    auto root = files::read_json(file);
 
     // Текстуры блока
     if (root->has("texture")) {
@@ -87,7 +88,7 @@ void ContentLoader::loadBlock(Block* definition, std::string name, std::filesyst
             definition->textureFaces[i] = texture;
         }
     } else if (root->has("texture-faces")) {
-        json::JArray* texarr = root->arr("texture-faces");
+        auto texarr = root->list("texture-faces");
         for (uint i = 0; i < 6; ++i) {
             definition->textureFaces[i] = texarr->str(i);
         }
@@ -102,7 +103,7 @@ void ContentLoader::loadBlock(Block* definition, std::string name, std::filesyst
     else if (model == "none") definition->model = BlockModel::None;
     else if (model == "custom") { 
         definition->model = BlockModel::Custom;
-        if (root->has("model-primitives")) loadCustomBlockModel(definition, root->obj("model-primitives"));
+        if (root->has("model-primitives")) loadCustomBlockModel(definition, root->map("model-primitives"));
         else LOG_ERROR("Error occured while block {} parsed: no \"model-primitives\" found", name);
     } else {
         LOG_WARN("Unknown block {} model {}", name, model);
@@ -110,7 +111,7 @@ void ContentLoader::loadBlock(Block* definition, std::string name, std::filesyst
     }
 
     // AABB хитбокс блока в формате [x, y, z, width, height, depth]
-    json::JArray* hitboxobj = root->arr("hitbox");
+    auto hitboxobj = root->list("hitbox");
     if (hitboxobj) {
         AABB& aabb = definition->hitbox;
         aabb.a = glm::vec3(hitboxobj->num(0), hitboxobj->num(1), hitboxobj->num(2));
@@ -132,7 +133,7 @@ void ContentLoader::loadBlock(Block* definition, std::string name, std::filesyst
     }
 
     // Освещение от блока в формате [r, g, b]
-    json::JArray* emissionobj = root->arr("emission");
+    auto emissionobj = root->list("emission");
     if (emissionobj) {
         definition->emission[0] = emissionobj->num(0);
         definition->emission[1] = emissionobj->num(1);
@@ -152,35 +153,36 @@ void ContentLoader::loadBlock(Block* definition, std::string name, std::filesyst
     root->str("picking-item", definition->pickingItem);
 }
 
-void ContentLoader::loadCustomBlockModel(Block* def, json::JObject* primitives) {
+void ContentLoader::loadCustomBlockModel(Block* def, dynamic::Map* primitives) {
     if (primitives->has("aabbs")) {
-        json::JArray* modelboxes = primitives->arr("aabbs");
+        auto modelboxes = primitives->list("aabbs");
         for (uint i = 0; i < modelboxes->size(); ++i) {
-            json::JArray* boxobj = modelboxes->arr(i);
+            auto boxobj = modelboxes->list(i);
             AABB modelbox;
             modelbox.a = glm::vec3(boxobj->num(0), boxobj->num(1), boxobj->num(2));
             modelbox.b = glm::vec3(boxobj->num(3), boxobj->num(4), boxobj->num(5));
             modelbox.b += modelbox.a;
             def->modelBoxes.push_back(modelbox);
 
-            if (boxobj->size() == 7)
+            if (boxobj->size() == 7) {
                 for (uint i = 6; i < 12; ++i) {
                     def->modelTextures.push_back(boxobj->str(6));
                 }
-            else if (boxobj->size() == 12)
+            } else if (boxobj->size() == 12) {
                 for (uint i = 6; i < 12; ++i) {
                     def->modelTextures.push_back(boxobj->str(i));
                 }
-            else
+            } else {
                 for (uint i = 6; i < 12; ++i) {
                     def->modelTextures.push_back("notfound");
                 }
+            }
         }
     }
     if (primitives->has("tetragons")) {
-        json::JArray* modeltetragons = primitives->arr("tetragons");
+        auto modeltetragons = primitives->list("tetragons");
         for (uint i = 0; i < modeltetragons->size(); ++i) {
-            json::JArray* tgonobj = modeltetragons->arr(i);
+            auto tgonobj = modeltetragons->list(i);
             glm::vec3 p1(tgonobj->num(0), tgonobj->num(1), tgonobj->num(2));
             glm::vec3 xw(tgonobj->num(3), tgonobj->num(4), tgonobj->num(5));
             glm::vec3 yh(tgonobj->num(6), tgonobj->num(7), tgonobj->num(8));
@@ -196,7 +198,7 @@ void ContentLoader::loadCustomBlockModel(Block* def, json::JObject* primitives) 
 }
 
 void ContentLoader::loadItem(Item* definition, std::string name, std::filesystem::path file) {
-    std::unique_ptr<json::JObject> root(files::read_json(file));
+    auto root = files::read_json(file);
 
     std::string iconTypeStr = "none";
     root->str("icon-type", iconTypeStr);
@@ -204,11 +206,13 @@ void ContentLoader::loadItem(Item* definition, std::string name, std::filesystem
     else if (iconTypeStr == "block") definition->iconType = ItemIconType::Block;
     else if (iconTypeStr == "sprite") definition->iconType = ItemIconType::Sprite;
     else LOG_WARN("Unknown icon type: {}", iconTypeStr);
+
     root->str("icon", definition->icon);
     root->str("placing-block", definition->placingBlock);
+    root->num("stack-size", definition->stackSize);
 
     // Освещение от предмета в формате [r, g, b]
-    json::JArray* emissionobj = root->arr("emission");
+    auto emissionobj = root->list("emission");
     if (emissionobj) {
         definition->emission[0] = emissionobj->num(0);
         definition->emission[1] = emissionobj->num(1);
@@ -240,10 +244,11 @@ void ContentLoader::load(ContentBuilder* builder) {
     fixPackIndices();
 
     auto folder = pack->folder;
-    if (!std::filesystem::is_regular_file(pack->getContentFile())) return;
-    std::unique_ptr<json::JObject> root(files::read_json(pack->getContentFile()));
+    if (!std::filesystem::is_regular_file(pack->getContentFile())) return;\
 
-    json::JArray* blocksarr = root->arr("blocks");
+    auto root = files::read_json(pack->getContentFile());
+    auto blocksarr = root->list("blocks");
+
     if (blocksarr) {
         for (uint i = 0; i < blocksarr->size(); ++i) {
             std::string name = blocksarr->str(i);
@@ -264,7 +269,7 @@ void ContentLoader::load(ContentBuilder* builder) {
         }
     }
 
-    json::JArray* itemsarr = root->arr("items");
+    auto itemsarr = root->list("items");
     if (itemsarr) {
         for (uint i = 0; i < itemsarr->size(); ++i) {
             std::string name = itemsarr->str(i);

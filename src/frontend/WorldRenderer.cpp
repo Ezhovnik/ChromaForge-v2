@@ -119,7 +119,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 	skybox->refresh(level->world->daytime, 1.0f + skyClearness * 2.0f, 4);
 
     const Content* content = level->content;
-	const ContentIndices* contentIds = content->indices;
+	const ContentIndices* contentIds = content->getIndices();
 
     Assets* assets = engine->getAssets();
 
