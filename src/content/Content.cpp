@@ -112,7 +112,6 @@ Content::Content(ContentIndices* indices, DrawGroups* drawGroups, std::unordered
 }
 
 Content::~Content() {
-    delete indices;
     delete drawGroups;
 }
 

@@ -13,5 +13,6 @@ typedef uint16_t blockid_t;
 typedef uint16_t light_t;
 typedef uint16_t blockstate_t;
 typedef uint8_t ubyte;
+typedef uint32_t itemcount_t;
 
 #endif // SRC_TYPEDEFS_H_

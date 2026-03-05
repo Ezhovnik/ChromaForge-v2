@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <set>
 #include <stdexcept>
+#include <memory>
 
 #include "../typedefs.h"
 
@@ -88,12 +89,17 @@ public:
 class Content {
     std::unordered_map<std::string, Block*> blockDefs;
     std::unordered_map<std::string, Item*> itemDefs;
+
+    std::unique_ptr<ContentIndices> indices;
 public:
-    ContentIndices* const indices;
     DrawGroups* const drawGroups;
 
     Content(ContentIndices* indices, DrawGroups* drawGroups, std::unordered_map<std::string, Block*> blockDefs, std::unordered_map<std::string, Item*> itemDefs);
     ~Content();
+
+    inline ContentIndices* getIndices() const {
+        return indices.get();
+    }
 
     Block* findBlock(std::string id) const;
     Block* requireBlock(std::string id) const;

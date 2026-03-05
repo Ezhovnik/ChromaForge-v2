@@ -13,6 +13,7 @@
 #include "../../lighting/Lighting.h"
 #include "../../world/World.h"
 #include "../BlocksController.h"
+#include "../../engine.h"
 
 inline int lua_pushivec3(lua_State* L, int x, int y, int z) {
     lua_pushinteger(L, x);
@@ -26,6 +27,23 @@ inline void luaL_openlib(lua_State* L, const char* name, const luaL_Reg* libfunc
     luaL_setfuncs(L, libfuncs, nup);
     lua_setglobal(L, name);
 }
+
+static int l_pack_get_folder(lua_State* L) {
+    std::string packName = lua_tostring(L, 1);
+    for (auto& pack : scripting::engine->getContentPacks()) {
+        if (pack.id == packName) {
+            lua_pushstring(L, (pack.folder.u8string() + "/").c_str());
+            return 1;
+        }
+    }
+    lua_pushstring(L, "");
+    return 1;
+}
+
+static const luaL_Reg packlib [] = {
+    {"get_folder", l_pack_get_folder},
+    {NULL, NULL}
+};
 
 static int l_world_get_day_time(lua_State* L) {
     lua_pushnumber(L, scripting::level->world->daytime);
@@ -52,7 +70,8 @@ static const luaL_Reg worldlib [] = {
 
 static int l_block_name(lua_State* L) {
     int id = lua_tointeger(L, 1);
-    lua_pushstring(L, scripting::content->indices->getBlockDef(id)->name.c_str());
+    auto def = scripting::content->getIndices()->getBlockDef(id);
+    lua_pushstring(L, def->name.c_str());
     return 1;
 }
 
@@ -66,7 +85,7 @@ static int l_is_solid_at(lua_State* L) {
 }
 
 static int l_blocks_count(lua_State* L) {
-    lua_pushinteger(L, scripting::content->indices->countBlockDefs());
+    lua_pushinteger(L, scripting::content->getIndices()->countBlockDefs());
     return 1;
 }
 
@@ -173,7 +192,7 @@ static int l_get_block_x(lua_State* L) {
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
     if (vox == nullptr) return lua_pushivec3(L, 1, 0, 0);
 
-    const Block* def = scripting::level->content->indices->getBlockDef(vox->id);
+    const Block* def = scripting::level->content->getIndices()->getBlockDef(vox->id);
     if (!def->rotatable) {
         return lua_pushivec3(L, 1, 0, 0);
     } else {
@@ -189,7 +208,7 @@ static int l_get_block_y(lua_State* L) {
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
     if (vox == nullptr) return lua_pushivec3(L, 0, 1, 0);
 
-    const Block* def = scripting::level->content->indices->getBlockDef(vox->id);
+    const Block* def = scripting::level->content->getIndices()->getBlockDef(vox->id);
     if (!def->rotatable) {
         return lua_pushivec3(L, 0, 1, 0);
     } else {
@@ -205,7 +224,7 @@ static int l_get_block_z(lua_State* L) {
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
     if (vox == nullptr) return lua_pushivec3(L, 0, 0, 1);
 
-    const Block* def = scripting::level->content->indices->getBlockDef(vox->id);
+    const Block* def = scripting::level->content->getIndices()->getBlockDef(vox->id);
     if (!def->rotatable) {
         return lua_pushivec3(L, 0, 0, 1);
     } else {
@@ -255,6 +274,7 @@ void lua_addfunc(lua_State* L, lua_CFunction func, const char* name) {
 }
 
 void apilua::create_funcs(lua_State* L) {
+    luaL_openlib(L, "pack", packlib, 0);
     luaL_openlib(L, "world", worldlib, 0);
     luaL_openlib(L, "player", playerlib, 0);
 

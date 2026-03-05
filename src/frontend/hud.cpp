@@ -74,7 +74,7 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		auto player = level->player;
-		auto indices = level->content->indices;
+		auto indices = level->content->getIndices();
 		auto def = indices->getBlockDef(player->selectedVoxel.id);
 
 		std::wstringstream stream;
@@ -185,7 +185,7 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
 
 	auto level = levelFrontend->getLevel();
 	auto content = level->content;
-    auto indices = content->indices;
+    auto indices = content->getIndices();
     std::vector<itemid_t> items;
     for (itemid_t id = 1; id < indices->countItemDefs(); ++id) {
         items.push_back(id);

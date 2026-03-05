@@ -23,6 +23,8 @@ class Item {
 public:
     std::string const name;
 
+    itemcount_t stackSize = 64;
+
     bool generated = false;
 
     ubyte emission[4] {0, 0, 0, 0};

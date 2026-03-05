@@ -8,8 +8,9 @@ class Block;
 class ContentBuilder;
 class ContentPack;
 class Item;
-namespace json {
-    class JObject;
+
+namespace dynamic {
+    class Map;
 }
 
 class ContentLoader {
@@ -17,13 +18,13 @@ private:
     const ContentPack* pack;
 
     void loadBlock(Block* block, std::string full, std::string name);
-    void loadCustomBlockModel(Block* block, json::JObject* primitives);
+    void loadCustomBlockModel(Block* block, dynamic::Map* primitives);
 
     void loadItem(Item* item, std::string full, std::string name);
 public:
     ContentLoader(ContentPack* pack);
 
-    bool fixPackIndices(std::filesystem::path folder, json::JObject* indicesRoot, std::string contentSection);
+    bool fixPackIndices(std::filesystem::path folder, dynamic::Map* indicesRoot, std::string contentSection);
     void fixPackIndices();
 
     void loadBlock(Block* block, std::string name, std::filesystem::path file);

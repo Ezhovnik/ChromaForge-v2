@@ -61,7 +61,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, bool allAssets) {
 		loader.add(AssetType::Shader, SHADERS_FOLDER"/background", "background");
 		loader.add(AssetType::Shader, SHADERS_FOLDER"/ui3d", "ui3d");
 
-		loader.add(AssetType::Texture, TEXTURES_FOLDER"/menubg.png", "menubg");
+		loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/menubg.png", "menubg");
 
 		loader.add(AssetType::Font, FONTS_FOLDER"/font", "normal");
 	}

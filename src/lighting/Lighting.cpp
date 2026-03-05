@@ -15,7 +15,7 @@
 #include "../content/Content.h"
 
 Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), content(content) {
-    const ContentIndices* contentIds = content->indices;
+    const ContentIndices* contentIds = content->getIndices();
 	solverR = new LightSolver(contentIds, chunks, 0);
 	solverG = new LightSolver(contentIds, chunks, 1);
 	solverB = new LightSolver(contentIds, chunks, 2);
@@ -42,7 +42,7 @@ void Lighting::clear() {
 }
 
 void Lighting::preBuildSkyLight(int cx, int cz){
-    const Block* const* blockDefs = content->indices->getBlockDefs();
+    const Block* const* blockDefs = content->getIndices()->getBlockDefs();
 
 	Chunk* chunk = chunks->getChunk(cx, cz);
 	int highestPoint = 0;
@@ -65,7 +65,7 @@ void Lighting::preBuildSkyLight(int cx, int cz){
 }
 
 void Lighting::buildSkyLight(int cx, int cz) {
-    const Block* const* blockDefs = content->indices->getBlockDefs();
+    const Block* const* blockDefs = content->getIndices()->getBlockDefs();
 
 	Chunk* chunk = chunks->getChunk(cx, cz);
 	for (int z = 0; z < CHUNK_DEPTH; ++z){
@@ -92,7 +92,7 @@ void Lighting::buildSkyLight(int cx, int cz) {
 }
 
 void Lighting::onChunkLoaded(int chunk_x, int chunk_z) {
-    const Block* const* blockDefs = content->indices->getBlockDefs();
+    const Block* const* blockDefs = content->getIndices()->getBlockDefs();
     const Chunk* chunk = chunks->getChunk(chunk_x, chunk_z);
 
 	for (uint y = 0; y < CHUNK_HEIGHT; ++y){
@@ -134,7 +134,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z) {
 }
 
 void Lighting::onBlockSet(int x, int y, int z, int const id) {
-    Block* block = content->indices->getBlockDef(id);
+    Block* block = content->getIndices()->getBlockDef(id);
     if (id == BLOCK_AIR) {
         solverR->remove(x, y, z);
         solverG->remove(x, y, z);

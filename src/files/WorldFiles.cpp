@@ -23,6 +23,7 @@
 #include "../coders/json.h"
 #include "../constants.h"
 #include "../items/Item.h"
+#include "../data/dynamic.h"
 
 WorldRegion::WorldRegion() {
 	chunksData = new ubyte*[RegionConsts::VOLUME]{};
@@ -390,7 +391,7 @@ void WorldFiles::write(const World* world, const Content* content) {
 
 	if (generatorTestMode) return;
 
-	writeIndices(content->indices);
+	writeIndices(content->getIndices());
 	writeRegions(regions, regionsFolder, RegionConsts::LAYER_VOXELS);
 	writeRegions(lights, lightsFolder, RegionConsts::LAYER_LIGHTS);
 }
@@ -406,17 +407,17 @@ void WorldFiles::writePacks(const World* world) {
 }
 
 void WorldFiles::writeIndices(const ContentIndices* indices) {
-	json::JObject root;
+	dynamic::Map root;
 	uint count;
 
-	json::JArray& blocks = root.putArray("blocks");
+	auto& blocks = root.putList("blocks");
 	count = indices->countBlockDefs();
 	for (uint i = 0; i < count; ++i) {
 		const Block* def = indices->getBlockDef(i);
 		blocks.put(def->name);
 	}
 
-	json::JArray& items = root.putArray("items");
+	auto& items = root.putList("items");
 	count = indices->countItemDefs();
 	for (uint i = 0; i < count; i++) {
 		const Item* def = indices->getItemDef(i);
@@ -427,9 +428,9 @@ void WorldFiles::writeIndices(const ContentIndices* indices) {
 }
 
 void WorldFiles::writeWorldInfo(const World* world) {
-	json::JObject root;
+	dynamic::Map root;
 
-	json::JObject& versionobj = root.putObj("version");
+	auto& versionobj = root.putMap("version");
 	versionobj.put("major", ENGINE_VERSION_MAJOR);
 	versionobj.put("minor", ENGINE_VERSION_MINOR);
 	versionobj.put("maintenance", ENGINE_VERSION_MAINTENANCE);
@@ -437,7 +438,7 @@ void WorldFiles::writeWorldInfo(const World* world) {
 	root.put("name", world->name);
 	root.put("seed", world->seed);
 	
-	json::JObject& timeobj = root.putObj("time");
+	auto& timeobj = root.putMap("time");
 	timeobj.put("day-time", world->daytime);
 	timeobj.put("day-time-speed", world->daytimeSpeed);
 
@@ -451,11 +452,11 @@ bool WorldFiles::readWorldInfo(World* world) {
 		return false;
 	}
 
-	std::unique_ptr<json::JObject> root(files::read_json(file));
+	auto root = files::read_json(file);
 	root->str("name", world->name);
 	root->num("seed", world->seed);
 
-	json::JObject* verobj = root->obj("version");
+	auto verobj = root->map("version");
 	if (verobj) {
 		int major = 0, minor = -1, maintenance = -1;
 		verobj->num("major", major);
@@ -464,7 +465,7 @@ bool WorldFiles::readWorldInfo(World* world) {
 		LOG_DEBUG("World version: {}.{}.{}", major, minor, maintenance);
 	}
 
-	json::JObject* timeobj = root->obj("time");
+	auto timeobj = root->map("time");
 	if (timeobj) {
 		timeobj->num("day-time", world->daytime);
 		timeobj->num("day-time-speed", world->daytimeSpeed);
@@ -475,13 +476,13 @@ bool WorldFiles::readWorldInfo(World* world) {
 
 void WorldFiles::writePlayer(Player* player){
 	glm::vec3 position = player->hitbox->position;
-	json::JObject root;
-	json::JArray& posarr = root.putArray("position");
+	dynamic::Map root;
+	auto& posarr = root.putList("position");
 	posarr.put(position.x);
 	posarr.put(position.y);
 	posarr.put(position.z);
 
-	json::JArray& rotarr = root.putArray("rotation");
+	auto& rotarr = root.putList("rotation");
 	rotarr.put(player->cam.x);
 	rotarr.put(player->cam.y);
 
@@ -498,15 +499,15 @@ bool WorldFiles::readPlayer(Player* player) {
 		return false;
 	}
 
-	std::unique_ptr<json::JObject> root(files::read_json(file));
-	json::JArray* posarr = root->arr("position");
+	auto root = files::read_json(file);
+	auto posarr = root->list("position");
 	glm::vec3& position = player->hitbox->position;
 	position.x = posarr->num(0);
 	position.y = posarr->num(1);
 	position.z = posarr->num(2);
 	player->camera->position = position;
 
-	json::JArray* rotarr = root->arr("rotation");
+	auto rotarr = root->list("rotation");
 	player->cam.x = rotarr->num(0);
 	player->cam.y = rotarr->num(1);
 

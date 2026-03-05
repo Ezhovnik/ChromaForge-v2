@@ -12,18 +12,18 @@
 #include "../../logger/Logger.h"
 #include "../../items/Item.h"
 #include "../../logic/BlocksController.h"
+#include "../../engine.h"
 
 using namespace scripting;
 
 namespace scripting {
     extern lua_State* L;
-    extern EnginePaths* paths;
 }
 
 lua_State* scripting::L = nullptr;
 Level* scripting::level = nullptr;
 const Content* scripting::content = nullptr;
-EnginePaths* scripting::paths = nullptr;
+Engine* scripting::engine = nullptr;
 BlocksController* scripting::blocks = nullptr;
 
 inline int lua_pushivec3(lua_State* L, int x, int y, int z) {
@@ -58,8 +58,8 @@ int call_func(lua_State* L, int argc, const std::string& name) {
     return 1;
 }
 
-void scripting::initialize(EnginePaths* paths) {
-    scripting::paths = paths;
+void scripting::initialize(Engine* engine) {
+    scripting::engine = engine;
 
     L = luaL_newstate();
     if (L == nullptr) {
@@ -84,6 +84,7 @@ void scripting::on_world_load(Level* level, BlocksController* blocks) {
     scripting::content = level->content;
     scripting::blocks = blocks;
 
+    auto paths = scripting::engine->getPaths();
     std::filesystem::path file = paths->getResources()/std::filesystem::path("scripts/world.lua");
     std::string src = files::read_string(file);
     luaL_loadbuffer(L, src.c_str(), src.length(), file.string().c_str());

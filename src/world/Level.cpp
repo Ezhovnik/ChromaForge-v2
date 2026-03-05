@@ -44,7 +44,9 @@ void Level::update() {
 	chunks->setCenter(position.x, position.z);
 
     int matrixSize = (settings.chunks.loadDistance + settings.chunks.padding) * 2;
-    if (chunks->width != matrixSize) {
-        chunks->resize(matrixSize, matrixSize);
-    }
+    if (chunks->width != matrixSize) chunks->resize(matrixSize, matrixSize);
+}
+
+World* Level::getWorld() {
+    return world.get();
 }

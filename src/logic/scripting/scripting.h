@@ -4,7 +4,7 @@
 #include <string>
 #include <filesystem>
 
-class EnginePaths;
+class Engine;
 class Content;
 class Level;
 class Block;
@@ -15,11 +15,12 @@ struct block_funcs_set;
 struct item_funcs_set;
 
 namespace scripting {
+    extern Engine* engine;
     extern const Content* content;
     extern Level* level;
     extern BlocksController* blocks;
 
-    void initialize(EnginePaths* paths);
+    void initialize(Engine* engine);
 
     void on_world_load(Level* level, BlocksController* blocks);
     void on_world_quit();

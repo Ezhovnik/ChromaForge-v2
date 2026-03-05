@@ -170,7 +170,7 @@ void PlayerController::updateControls(float delta){
 }
 
 void PlayerController::updateInteraction(){
-	const ContentIndices* contentIds = level->content->indices;
+	const ContentIndices* contentIds = level->content->getIndices();
 	Chunks* chunks = level->chunks;
 	Player* player = level->player;
 	Lighting* lighting = level->lighting;

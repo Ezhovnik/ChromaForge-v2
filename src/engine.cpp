@@ -51,7 +51,7 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
 
     auto resdir = paths->getResources();
     LOG_INFO("Initialization of the scripting system");
-    scripting::initialize(paths);
+    scripting::initialize(this);
     LOG_INFO("Scripting system initialization has been successfully finished");
 
     LOG_INFO("Loading assets");

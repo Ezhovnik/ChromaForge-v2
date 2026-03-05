@@ -104,10 +104,9 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine),
 
 LevelScreen::~LevelScreen() {
     LOG_INFO("World saving");
-    World* world = level->world;
+    World* world = level->getWorld();
 	world->write(level.get());
 
-	delete world;
     LOG_INFO("The world has been successfully saved");
 }
 

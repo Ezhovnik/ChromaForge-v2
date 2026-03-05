@@ -9,7 +9,7 @@
 #include "../core_defs.h"
 
 ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) {
-    const ContentIndices* contentIds = content->indices;
+    const ContentIndices* contentIds = content->getIndices();
     sideregions = new UVRegion[contentIds->countBlockDefs() * 6];
 	Atlas* atlas = assets->getAtlas("blocks");
 

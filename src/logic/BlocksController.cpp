@@ -61,7 +61,7 @@ void BlocksController::breakBlock(Player* player, const Block* def, int x, int y
 void BlocksController::updateBlock(int x, int y, int z) {
     voxel* vox = chunks->getVoxel(x, y, z);
     if (vox == nullptr) return;
-    const Block* def = level->content->indices->getBlockDef(vox->id);
+    const Block* def = level->content->getIndices()->getBlockDef(vox->id);
     if (def->grounded && !chunks->isSolidBlock(x, y - 1, z)) {
         breakBlock(nullptr, def, x, y, z);
         return;
@@ -76,20 +76,20 @@ void BlocksController::update(float delta) {
 void BlocksController::randomSpark(int sparkId, int parts) {
     const uint w = chunks->width;
     const uint d = chunks->depth;
-    auto indices = level->content->indices;
+    int segments = 4;
+    int segheight = CHUNK_HEIGHT / segments;
+    auto indices = level->content->getIndices();
     for (uint z = padding; z < d - padding; ++z){
         for (uint x = padding; x < w - padding; ++x){
             int index = z * w + x;
             if ((index + sparkId) % parts != 0) continue;
             std::shared_ptr<Chunk> chunk = chunks->chunks[index];
             if (chunk == nullptr || !chunk->isLighted()) continue;
-            int segments = 4;
-            int segheight = CHUNK_HEIGHT / segments;
             for (int s = 0; s < segments; ++s) {
-                for (int i = 0; i < 3; ++i) {
-                    int bx = abs(RandomGenerator::get<int>()) % CHUNK_WIDTH;
-                    int by = abs(RandomGenerator::get<int>()) % segheight + s * segheight;
-                    int bz = abs(RandomGenerator::get<int>()) % CHUNK_DEPTH;
+                for (int i = 0; i < 4; ++i) {
+                    int bx = FastRandom::rand() % CHUNK_WIDTH;
+                    int by = FastRandom::rand() % segheight + s * segheight;
+                    int bz = FastRandom::rand() % CHUNK_DEPTH;
                     const voxel& vox = chunk->voxels[(by * CHUNK_DEPTH + bz) * CHUNK_WIDTH + bx];
                     // std::cout << bx << " " << by << " " << bz << " " << vox.id << std::endl;
                     Block* block = indices->getBlockDef(vox.id);

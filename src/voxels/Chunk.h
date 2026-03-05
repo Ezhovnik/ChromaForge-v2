@@ -21,11 +21,6 @@ struct voxel;
 class LightMap;
 class ContentLUT;
 
-struct RenderData {
-    float* vertices;
-    size_t size;
-};
-
 inline void bit_on(int& flags, int bit) { flags |= bit; }
 inline void bit_off(int& flags, int bit) { flags &= ~bit; }
 inline void bitset(int& flags, int bit, bool state) {
@@ -41,8 +36,6 @@ public:
 
     int surrounding = 0; // Счётчик окружающих, загруженных чанков
     int flags = 0;
-
-    RenderData renderData;
 
     LightMap* light_map; // Карта освещения чанка
 

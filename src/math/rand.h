@@ -27,4 +27,17 @@ public:
     }
 };
 
-#endif
+namespace FastRandom {
+    static uint g_seed;
+
+    inline void srand(int seed) {
+        g_seed = seed;
+    }
+
+    inline int rand() {
+        g_seed = (214013 * g_seed + 2531011);
+        return (g_seed >> 16) & 0x7FFF;
+    }
+};
+
+#endif // MATH_RAND_H_
