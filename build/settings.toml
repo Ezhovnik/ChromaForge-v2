@@ -7,7 +7,7 @@ fullscreen = false
 
 [chunks]
 load-distance = 22
-load-speed = 10
+load-speed = 4
 padding = 2
 
 [camera]

@@ -33,6 +33,7 @@
 #include "ContentGfxCache.h"
 #include "../logic/LevelController.h"
 #include "LevelFrontend.h"
+#include "../graphics/TextureAnimation.h"
 
 Screen::Screen(Engine* engine) : engine(engine), batch(new Batch2D(1024)) {
 }
@@ -100,6 +101,9 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine),
     {
     EngineSettings& settings = engine->getSettings();
     backlight = settings.graphics.backlight;
+
+    animator.reset(new TextureAnimator());
+    animator->addAnimations(engine->getAssets()->getAnimations());
 }
 
 LevelScreen::~LevelScreen() {
@@ -132,7 +136,10 @@ void LevelScreen::update(float delta) {
         backlight = settings.graphics.backlight;
     }
 
-    if (!hud->isPause()) level->world->updateTimers(delta);
+    if (!hud->isPause()) {
+        level->world->updateTimers(delta);
+        animator->update(delta);
+    }
 
     controller->update(delta, !inputLocked, hud->isPause());
     hud->update(hudVisible);

@@ -39,7 +39,11 @@ int Clock::getPart() const {
     return sparkParts - sparkPartsUndone - 1;
 }
 
-BlocksController::BlocksController(Level* level, uint padding) : level(level), chunks(level->chunks), lighting(level->lighting), randSparkClock(20, 3), padding(padding) {
+int Clock::getSparkRate() const {
+    return sparkRate;
+}
+
+BlocksController::BlocksController(Level* level, uint padding) : level(level), chunks(level->chunks), lighting(level->lighting), randSparkClock(20, 3), padding(padding), blocksSparkClock(20, 1) {
 }
 
 void BlocksController::updateSides(int x, int y, int z) {
@@ -71,6 +75,18 @@ void BlocksController::updateBlock(int x, int y, int z) {
 
 void BlocksController::update(float delta) {
     if (randSparkClock.update(delta)) randomSpark(randSparkClock.getPart(), randSparkClock.getParts());
+    if (blocksSparkClock.update(delta)) onBlocksSpark(blocksSparkClock.getPart(), blocksSparkClock.getParts());
+}
+
+void BlocksController::onBlocksSpark(int sparkId, int parts) {
+    auto content = level->content;
+    auto indices = content->getIndices();
+    int tickRate = blocksSparkClock.getSparkRate();
+    for (size_t id = 0; id < indices->countBlockDefs(); ++id) {
+        if ((id + sparkId) % parts != 0) continue;
+        auto def = indices->getBlockDef(id);
+        if (def->rt.funcsset.onblockstick) scripting::on_blocks_tick(def, tickRate);
+    }
 }
 
 void BlocksController::randomSpark(int sparkId, int parts) {

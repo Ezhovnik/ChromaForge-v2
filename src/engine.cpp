@@ -182,6 +182,7 @@ void Engine::loadContent() {
 		}
 	}
     assets->extend(*new_assets.get());
+    paths->setContentPacks(&contentPacks);
     LOG_INFO("Content Assets loaded successfully");
     LOG_INFO("Content loaded sucessfully");
     Logger::getInstance().flush();

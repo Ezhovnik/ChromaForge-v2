@@ -34,6 +34,7 @@ struct block_funcs_set {
     bool onbroken = false;
     bool oninteract = false;
     bool randupdate = false;
+    bool onblockstick = false;
 };
 
 struct CoordSystem {

@@ -15,10 +15,13 @@ class Engine;
 class Block;
 class InventoryView;
 class LevelFrontend;
+class SlotView;
+class InventoryInteraction;
 
 namespace gui {
     class GUI;
     class UINode;
+    class Panel;
 }
 
 class HudRenderer {
@@ -26,8 +29,10 @@ private:
 	Camera* uicamera;
     Assets* assets;
 
-    std::unique_ptr<InventoryView> contentAccess;
-    std::unique_ptr<InventoryView> hotbarView;
+    std::shared_ptr<gui::Panel> contentAccessPanel;
+    std::shared_ptr<InventoryView> contentAccess;
+    std::shared_ptr<InventoryView> hotbarView;
+    std::shared_ptr<InventoryView> inventoryView;
 
     int fps = 0;
     int fpsMin = 60;
@@ -38,10 +43,17 @@ private:
     bool pause = false;
 
     std::shared_ptr<gui::UINode> debugPanel;
+    std::unique_ptr<InventoryInteraction> interaction;
+    std::shared_ptr<SlotView> grabbedItemView;
+
 	gui::GUI* guiController;
     LevelFrontend* levelFrontend;
 
     void createDebugPanel(Engine* engine);
+
+    std::shared_ptr<InventoryView> createContentAccess();
+    std::shared_ptr<InventoryView> createHotbar();
+    std::shared_ptr<InventoryView> createInventory();
 public:
 	HudRenderer(Engine* engine, LevelFrontend* levelFrontend);
 	~HudRenderer();

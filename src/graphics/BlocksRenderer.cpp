@@ -109,7 +109,7 @@ void BlocksRenderer::face(const glm::vec3& coord, const glm::vec3& X, const glm:
 	float s = 0.5f;
     if (lights) {
         float d = glm::dot(Z, SUN_VECTOR);
-        d = 0.7f + d * 0.3f;
+        d = 0.8f + d * 0.2f;
         glm::vec4 tint(d);
 
         vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint, X, Y, Z);
@@ -138,7 +138,7 @@ void BlocksRenderer::tetragonicFace(const glm::vec3& coord, const glm::vec3& p1,
 		glm::vec3 dir = glm::cross(fp2 - fp1, fp3 - fp1);
 		glm::vec3 normal = glm::normalize(dir);
         float d = glm::dot(normal, SUN_VECTOR);
-        d = 0.7f + d * 0.3f;
+        d = 0.8f + d * 0.2f;
         tint *= d;
         tint *= pickLight(coord);
     }

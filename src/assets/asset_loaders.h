@@ -5,6 +5,7 @@
 
 class ResPaths;
 class Assets;
+class Atlas;
 
 // Пространство имён, содержащее функции загрузки различных ресурсов
 namespace asset_loader {
@@ -19,6 +20,8 @@ namespace asset_loader {
 
     // Загружает шрифт из файлов filename_idx.png и сохраняет его в Assets под именем name
     bool font(Assets* assets, const ResPaths* paths, const std::string filename, const std::string name);
+
+    bool animation(Assets* assets, const ResPaths* paths, const std::string directory, const std::string name, Atlas* dstAtlas);
 }
 
 #endif // ASSETS_ASSET_LOADERS_H_

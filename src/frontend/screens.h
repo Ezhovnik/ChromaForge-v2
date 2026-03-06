@@ -14,6 +14,7 @@ class Camera;
 class Batch2D;
 class LevelFrontend;
 class LevelController;
+class TextureAnimator;
 
 class Screen {
 protected:
@@ -42,6 +43,7 @@ class LevelScreen : public Screen {
     std::unique_ptr<HudRenderer> hud;
     std::unique_ptr<WorldRenderer> worldRenderer;
     std::unique_ptr<LevelController> controller;
+    std::unique_ptr<TextureAnimator> animator;
 
     bool hudVisible = true;
 

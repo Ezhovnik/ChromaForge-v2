@@ -25,8 +25,23 @@ void guiutil::alert(GUI* gui, const std::wstring& text, gui::runnable on_hidden)
     PagesControl* menu = gui->getMenu();
     Panel* panel = new Panel(glm::vec2(500, 200), glm::vec4(8.0f), 8.0f);
     panel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
-    panel->add(new Label(text));
-    panel->add((new Button(langs::get(L"OK"), glm::vec4(10.f)))->listenAction([=](GUI* gui) {
+
+    const int wrap_length = 60;
+    if (text.length() > wrap_length) {
+        size_t offset = 0;
+        int extra;
+        while ((extra = text.length() - offset) > 0) {
+            size_t endline = text.find(L'\n', offset);
+            if (endline != std::string::npos) extra = std::min(extra, int(endline-offset)+1);
+            extra = std::min(extra, wrap_length);
+            std::wstring part = text.substr(offset, extra);
+            panel->add(new Label(part));
+            offset += extra;
+        }
+    } else {
+        panel->add(new Label(text));
+    }
+    panel->add((new Button(langs::get(L"Ok"), glm::vec4(10.f)))->listenAction([=](GUI* gui) {
         if (on_hidden) on_hidden();
         menu->back();
     }));

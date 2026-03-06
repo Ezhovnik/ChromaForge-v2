@@ -7,27 +7,30 @@
 
 #include "../typedefs.h"
 
-class ShaderProgram;
 class Atlas;
 class Batch3D;
 class Block;
 class ContentGfxCache;
-class Viewport;
 class Assets;
+class Content;
+class ImageData;
+class Framebuffer;
 
 class BlocksPreview {
-private:
-    ShaderProgram* shader;
-    Atlas* atlas;
-    std::unique_ptr<Batch3D> batch;
-    const ContentGfxCache* const cache;
-    const Viewport* viewport;
 public:
-    BlocksPreview(Assets* assets, const ContentGfxCache* cache);
-    ~BlocksPreview();
+    static ImageData* draw(
+        const ContentGfxCache* cache,
+        Framebuffer* framebuffer,
+        Batch3D* batch,
+        const Block* block, 
+        int size
+    );
 
-    void begin(const Viewport* viewport);
-    void draw(const Block* block, int x, int y, int size, glm::vec4 tint);
+    static std::unique_ptr<Atlas> build(
+        const ContentGfxCache* cache,
+        Assets* assets, 
+        const Content* content
+    );
 };
 
 #endif // FRONTEND_BLOCKS_PREVIEW_H_

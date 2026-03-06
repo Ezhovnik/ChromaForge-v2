@@ -201,12 +201,12 @@ void ContentLoader::loadCustomBlockModel(Block* def, dynamic::Map* primitives) {
 void ContentLoader::loadItem(Item* definition, std::string name, std::filesystem::path file) {
     auto root = files::read_json(file);
 
-    std::string iconTypeStr = "none";
+    std::string iconTypeStr = "";
     root->str("icon-type", iconTypeStr);
     if (iconTypeStr == "none") definition->iconType = ItemIconType::None;
     else if (iconTypeStr == "block") definition->iconType = ItemIconType::Block;
     else if (iconTypeStr == "sprite") definition->iconType = ItemIconType::Sprite;
-    else LOG_WARN("Unknown icon type: {}", iconTypeStr);
+    else if (iconTypeStr.length()) LOG_WARN("Unknown icon type: {}", iconTypeStr);
 
     root->str("icon", definition->icon);
     root->str("placing-block", definition->placingBlock);
@@ -226,8 +226,9 @@ void ContentLoader::loadBlock(Block* definition, std::string full, std::string n
     auto folder = pack->folder;
 
     std::filesystem::path configFile = folder/std::filesystem::path("blocks/" + name + ".json");
-    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + definition->scriptName + ".lua");
     loadBlock(definition, full, configFile);
+
+    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + definition->scriptName + ".lua");
     if (std::filesystem::is_regular_file(scriptfile)) scripting::load_block_script(full, scriptfile, &definition->rt.funcsset);
 }
 
@@ -235,8 +236,9 @@ void ContentLoader::loadItem(Item* item, std::string full, std::string name) {
     auto folder = pack->folder;
 
     std::filesystem::path configFile = folder/std::filesystem::path("items/" + name + ".json");
-    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + item->scriptName + ".lua");
     loadItem(item, full, configFile);
+
+    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + item->scriptName + ".lua");
     if (std::filesystem::is_regular_file(scriptfile)) scripting::load_item_script(full, scriptfile, &item->rt.funcsset);
 }
 

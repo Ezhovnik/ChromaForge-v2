@@ -20,7 +20,7 @@ struct DisplaySettings {
 };
 
 struct ChunksSettings {
-	uint loadSpeed = 10;
+	uint loadSpeed = 4;
 	uint loadDistance = 22;
 	uint padding = 2;
 };

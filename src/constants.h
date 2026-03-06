@@ -21,6 +21,8 @@ inline constexpr blockid_t BLOCK_VOID = std::numeric_limits<blockid_t>::max();
 inline constexpr blockid_t BLOCK_AIR = 0;
 inline constexpr itemid_t ITEM_EMPTY = 0;
 
+inline constexpr int ITEM_ICON_SIZE = 48;
+
 inline constexpr double PI = 3.14159265358979323846;
 
 inline uint vox_index(int x, int y, int z, int w = CHUNK_WIDTH, int d = CHUNK_DEPTH) {

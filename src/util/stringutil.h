@@ -2,6 +2,8 @@
 #define UTIL_STRINGUTIL_H_
 
 #include <string>
+#include <vector>
+
 #include "../typedefs.h"
 
 namespace util {
@@ -20,6 +22,10 @@ namespace util {
     extern void ltrim(std::string &s);
     extern void rtrim(std::string &s);
     extern void trim(std::string &s);
+
+    extern std::string base64_encode(const ubyte* data, size_t size);
+    extern std::vector<ubyte> base64_decode(const char* str, size_t size);
+    extern std::vector<ubyte> base64_decode(const std::string& str);
 }
 
 #endif // UTIL_STRINGUTIL_H_

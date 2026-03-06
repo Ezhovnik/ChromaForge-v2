@@ -75,7 +75,7 @@ std::shared_ptr<UINode> UINode::getAt(glm::vec2 pos, std::shared_ptr<UINode> sel
 }
 
 bool UINode::isInteractive() const {
-    return interactive;
+    return interactive && visible();
 }
 
 void UINode::setInteractive(bool flag) {

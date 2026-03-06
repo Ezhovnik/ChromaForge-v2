@@ -7,7 +7,7 @@
 #include "Sprite.h"
 #include "../typedefs.h"
 
-inline constexpr int B2D_VERTEX_SIZE = 8;
+inline constexpr uint B2D_VERTEX_SIZE = 8;
 
 Batch2D::Batch2D(size_t capacity) : capacity(capacity), offset(0), color(1.0f, 1.0f, 1.0f, 1.0f){
 	const vattr attrs[] = {{2}, {2}, {4}, {0}};
@@ -69,15 +69,15 @@ void Batch2D::texture(Texture* new_texture){
 void Batch2D::point(float x, float y, float r, float g, float b, float a){
     if (index + 6 * B2D_VERTEX_SIZE >= capacity) render();
 
-	vertex(x, y, 0, 0, r,g,b,a);
+	vertex(x, y, 0, 0, r, g, b, a);
 	render(GL_POINTS);
 }
 
 void Batch2D::line(float x1, float y1, float x2, float y2, float r, float g, float b, float a){
     if (index + 6 * B2D_VERTEX_SIZE >= capacity) render();
 
-	vertex(x1, y1, 0, 0, r,g,b,a);
-	vertex(x2, y2, 1, 1, r,g,b,a);
+	vertex(x1, y1, 0, 0, r, g, b, a);
+	vertex(x2, y2, 1, 1, r, g, b, a);
 	render(GL_LINES);
 }
 
@@ -247,10 +247,7 @@ void Batch2D::rect(float x, float y, float w, float h,
 	vertex(v6, glm::vec2(0, 0), r2,g2,b2,1.0f);
 	vertex(v9, glm::vec2(0, 0), r2,g2,b2,1.0f);
 	vertex(v1, glm::vec2(0, 0), r2,g2,b2,1.0f);
-
-	render();
 }
-
 
 void Batch2D::sprite(Sprite* sprite) {
 	glm::vec2 position = sprite->position;
@@ -291,8 +288,6 @@ void Batch2D::rect(float x, float y, float w, float h,
 	vertex(x, y, u, v + ty, r, g, b, a);
 	vertex(x + w, y, u + tx, v + ty, r, g, b, a);
 	vertex(x + w, y + h, u + tx, v, r, g, b, a);
-
-    render();
 }
 
 void Batch2D::render(uint gl_primitive) {

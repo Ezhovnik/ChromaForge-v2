@@ -33,6 +33,7 @@ World::~World(){
 void World::updateTimers(float delta) {
 	daytime += delta * daytimeSpeed;
 	daytime = fmod(daytime, 1.0f);
+	totalTime += delta;
 }
 
 void World::write(Level* level) {
@@ -75,7 +76,7 @@ ContentLUT* World::checkIndices(const std::filesystem::path& directory, const Co
 
 Level* World::load(std::filesystem::path directory, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs) {
 	LOG_INFO("Loading world");
-	std::unique_ptr<World> world (new World(".", directory, 0, settings, content, packs));
+	auto world = std::make_unique<World>(".", directory, 0, settings, content, packs);
 	auto& wfile = world->wfile;
 
 	if (!wfile->readWorldInfo(world.get())) {
@@ -97,4 +98,20 @@ Level* World::load(std::filesystem::path directory, EngineSettings& settings, co
 
 const std::vector<ContentPack>& World::getPacks() const {
 	return packs;
+}
+
+void World::setSeed(uint64_t seed) {
+    this->seed = seed;
+}
+
+uint64_t World::getSeed() const {
+	return seed;
+}
+
+void World::setName(const std::string& name) {
+	this->name = name;
+}
+
+std::string World::getName() const {
+    return name;
 }

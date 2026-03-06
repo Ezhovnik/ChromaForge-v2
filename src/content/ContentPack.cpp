@@ -1,6 +1,7 @@
 #include "ContentPack.h"
 
 #include <stdexcept>
+#include <algorithm>
 
 #include "../files/files.h"
 #include "../coders/json.h"
@@ -13,6 +14,7 @@ const std::string ContentPack::PACKAGE_FILENAME = "package.json";
 const std::string ContentPack::CONTENT_FILENAME = "content.json";
 const std::filesystem::path ContentPack::BLOCKS_FOLDER = std::filesystem::path("blocks");
 const std::filesystem::path ContentPack::ITEMS_FOLDER = "items";
+const std::vector<std::string> ContentPack::RESERVED_NAMES = {"res", "abs", "local", "core", "user", "world", "none", "null"};
 
 contentpack_error::contentpack_error(std::string packId, std::filesystem::path folder, std::string message) : std::runtime_error(message), packId(packId), folder(folder) {
 }
@@ -32,6 +34,34 @@ bool ContentPack::is_pack(std::filesystem::path folder) {
     return std::filesystem::is_regular_file(folder/std::filesystem::path(PACKAGE_FILENAME));
 }
 
+static void checkContentPackId(const std::string& id, const std::filesystem::path& folder) {
+    if (id.length() < 2 || id.length() > 24) {
+        LOG_ERROR("Content-pack id '{}' length is out of range [2, 24]", id);
+        Logger::getInstance().flush();
+        throw contentpack_error(id, folder, "Content-pack id length is out of range [2, 24]");
+    }
+
+    if (isdigit(id[0])) {
+        LOG_ERROR("Content-pack id '{}' must not start with a digit", id);
+        Logger::getInstance().flush();
+        throw contentpack_error(id, folder, "Content-pack id must not start with a digit");
+    }
+
+    for (char c : id) {
+        if (!isalnum(c) && c != '_') {
+            LOG_ERROR("Illegal character in content-pack id '{}'", id);
+            Logger::getInstance().flush();
+            throw contentpack_error(id, folder, "Illegal character in content-pack id");
+        }
+    }
+
+    if (std::find(ContentPack::RESERVED_NAMES.begin(), ContentPack::RESERVED_NAMES.end(), id) != ContentPack::RESERVED_NAMES.end()) {
+        LOG_ERROR("Content-pack id '{}' is reserved", id);
+        Logger::getInstance().flush();
+        throw contentpack_error(id, folder, "This content-pack id is reserved");
+    }
+}
+
 ContentPack ContentPack::read(std::filesystem::path folder) {
     auto root = files::read_json(folder/std::filesystem::path(PACKAGE_FILENAME));
     ContentPack pack;
@@ -42,10 +72,12 @@ ContentPack ContentPack::read(std::filesystem::path folder) {
     pack.folder = folder;
 
     if (pack.id == "none") {
-        LOG_ERROR("Content-pack id is none: {}", folder.u8string());
+        LOG_ERROR("Content-pack id is not specified: {}", folder.u8string());
         Logger::getInstance().flush();
-        throw contentpack_error(pack.id, folder, "Content-pack id is none");
+        throw contentpack_error(pack.id, folder, "Content-pack id is not specified");
     }
+    checkContentPackId(pack.id, folder);
+
     return pack;
 }
 

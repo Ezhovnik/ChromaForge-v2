@@ -14,6 +14,8 @@
 #include "../../world/World.h"
 #include "../BlocksController.h"
 #include "../../engine.h"
+#include "../../window/Window.h"
+#include "../../files/files.h"
 
 inline int lua_pushivec3(lua_State* L, int x, int y, int z) {
     lua_pushinteger(L, x);
@@ -22,14 +24,100 @@ inline int lua_pushivec3(lua_State* L, int x, int y, int z) {
     return 3;
 }
 
-inline void luaL_openlib(lua_State* L, const char* name, const luaL_Reg* libfuncs, int nup) {
+inline void openlib(lua_State* L, const char* name, const luaL_Reg* libfuncs, int nup) {
     lua_newtable(L);
     luaL_setfuncs(L, libfuncs, nup);
     lua_setglobal(L, name);
 }
 
+// File library
+static int l_file_resolve(lua_State* L) {
+    std::string path = lua_tostring(L, 1);
+    std::filesystem::path resolved = scripting::engine->getPaths()->resolve(path);
+    lua_pushstring(L, resolved.u8string().c_str());
+    return 1;
+}
+
+static int l_file_read(lua_State* L) {
+    auto paths = scripting::engine->getPaths();
+    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    if (std::filesystem::is_regular_file(path)) {
+        lua_pushstring(L, files::read_string(path).c_str());
+        return 1;
+    }
+    return luaL_error(L, "file does not exists '%s'", path.u8string().c_str());
+}
+
+static int l_file_write(lua_State* L) {
+    auto paths = scripting::engine->getPaths();
+    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    const char* text = lua_tostring(L, 2);
+    files::write_string(path, text);
+    return 1;    
+}
+
+static int l_file_exists(lua_State* L) {
+    auto paths = scripting::engine->getPaths();
+    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    lua_pushboolean(L, std::filesystem::exists(path));
+    return 1;
+}
+
+static int l_file_isfile(lua_State* L) {
+    auto paths = scripting::engine->getPaths();
+    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    lua_pushboolean(L, std::filesystem::is_regular_file(path));
+    return 1;
+}
+
+static int l_file_isdir(lua_State* L) {
+    auto paths = scripting::engine->getPaths();
+    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    lua_pushboolean(L, std::filesystem::is_directory(path));
+    return 1;
+}
+
+static int l_file_length(lua_State* L) {
+    auto paths = scripting::engine->getPaths();
+    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    if (std::filesystem::exists(path)) lua_pushinteger(L, std::filesystem::file_size(path));
+    else lua_pushinteger(L, -1);
+    return 1;
+}
+
+static const luaL_Reg filelib [] = {
+    {"resolve", l_file_resolve},
+    {"read", l_file_read},
+    {"write", l_file_write},
+    {"exists", l_file_exists},
+    {"isfile", l_file_isfile},
+    {"isdir", l_file_isdir},
+    {"length", l_file_length},
+    {NULL, NULL}
+};
+
+// Time library
+static int l_time_uptime(lua_State* L) {
+    lua_pushnumber(L, Window::time());
+    return 1;
+}
+
+static const luaL_Reg timelib [] = {
+    {"uptime", l_time_uptime},
+    {NULL, NULL}
+};
+
+
+// Pack library
 static int l_pack_get_folder(lua_State* L) {
     std::string packName = lua_tostring(L, 1);
+
+    if (packName == "chromaforge") {
+        auto folder = scripting::engine->getPaths()->getResources().u8string()+"/";
+        lua_pushstring(L, folder.c_str());
+        return 1;
+    }
+
     for (auto& pack : scripting::engine->getContentPacks()) {
         if (pack.id == packName) {
             lua_pushstring(L, (pack.folder.u8string() + "/").c_str());
@@ -45,6 +133,12 @@ static const luaL_Reg packlib [] = {
     {NULL, NULL}
 };
 
+// World library
+static int l_world_get_total_time(lua_State* L) {
+    lua_pushnumber(L, scripting::level->world->totalTime);
+    return 1;
+}
+
 static int l_world_get_day_time(lua_State* L) {
     lua_pushnumber(L, scripting::level->world->daytime);
     return 1;
@@ -57,14 +151,64 @@ static int l_world_set_day_time(lua_State* L) {
 }
 
 static int l_world_get_seed(lua_State* L) {
-    lua_pushinteger(L, scripting::level->world->seed);
+    lua_pushinteger(L, scripting::level->world->getSeed());
     return 1;
 }
 
 static const luaL_Reg worldlib [] = {
+    {"get_total_time", l_world_get_total_time},
     {"get_day_time", l_world_get_day_time},
     {"set_day_time", l_world_set_day_time},
     {"get_seed", l_world_get_seed},
+    {NULL, NULL}
+};
+
+// Player library
+static int l_player_get_pos(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
+    glm::vec3 pos = scripting::level->player->hitbox->position;
+    lua_pushnumber(L, pos.x);
+    lua_pushnumber(L, pos.y);
+    lua_pushnumber(L, pos.z);
+    return 3;
+}
+
+static int l_player_get_rot(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
+    glm::vec2 rot = scripting::level->player->cam;
+    lua_pushnumber(L, rot.x);
+    lua_pushnumber(L, rot.y);
+    return 2;
+}
+
+static int l_player_set_rot(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
+    double x = lua_tonumber(L, 2);
+    double y = lua_tonumber(L, 3);
+    glm::vec2& cam = scripting::level->player->cam;
+    cam.x = x;
+    cam.y = y;
+    return 0;
+}
+
+static int l_player_set_pos(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
+    double x = lua_tonumber(L, 2);
+    double y = lua_tonumber(L, 3);
+    double z = lua_tonumber(L, 4);
+    scripting::level->player->hitbox->position = glm::vec3(x, y, z);
+    return 0;
+}
+
+static const luaL_Reg playerlib [] = {
+    {"get_pos", l_player_get_pos},
+    {"set_pos", l_player_set_pos},
+    {"get_rot", l_player_get_rot},
+    {"set_rot", l_player_set_rot},
     {NULL, NULL}
 };
 
@@ -117,54 +261,6 @@ static int l_get_block(lua_State* L) {
     lua_pushinteger(L, id);
     return 1;
 }
-
-static int l_player_get_pos(lua_State* L) {
-    int playerid = lua_tointeger(L, 1);
-    if (playerid != 1) return 0;
-    glm::vec3 pos = scripting::level->player->hitbox->position;
-    lua_pushnumber(L, pos.x);
-    lua_pushnumber(L, pos.y);
-    lua_pushnumber(L, pos.z);
-    return 3;
-}
-
-static int l_player_get_rot(lua_State* L) {
-    int playerid = lua_tointeger(L, 1);
-    if (playerid != 1) return 0;
-    glm::vec2 rot = scripting::level->player->cam;
-    lua_pushnumber(L, rot.x);
-    lua_pushnumber(L, rot.y);
-    return 2;
-}
-
-static int l_player_set_rot(lua_State* L) {
-    int playerid = lua_tointeger(L, 1);
-    if (playerid != 1) return 0;
-    double x = lua_tonumber(L, 2);
-    double y = lua_tonumber(L, 3);
-    glm::vec2& cam = scripting::level->player->cam;
-    cam.x = x;
-    cam.y = y;
-    return 0;
-}
-
-static int l_player_set_pos(lua_State* L) {
-    int playerid = lua_tointeger(L, 1);
-    if (playerid != 1) return 0;
-    double x = lua_tonumber(L, 2);
-    double y = lua_tonumber(L, 3);
-    double z = lua_tonumber(L, 4);
-    scripting::level->player->hitbox->position = glm::vec3(x, y, z);
-    return 0;
-}
-
-static const luaL_Reg playerlib [] = {
-    {"get_pos", l_player_get_pos},
-    {"set_pos", l_player_set_pos},
-    {"get_rot", l_player_get_rot},
-    {"set_rot", l_player_set_rot},
-    {NULL, NULL}
-};
 
 static int l_get_block_states(lua_State* L) {
     int x = lua_tointeger(L, 1);
@@ -258,13 +354,13 @@ static int l_set_block_user_bits(lua_State* L) {
     int offset = lua_tointeger(L, 4) + VOXEL_USER_BITS_OFFSET;
     int bits = lua_tointeger(L, 5);
 
-    uint mask = (1 << bits) - 1;
-    int value = lua_tointeger(L, 6) & mask;
-    
+    uint mask = ((1 << bits) - 1) << offset;
+    int value = (lua_tointeger(L, 6) << offset) & mask;
+
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
     if (vox == nullptr) return 0;
 
-    vox->states = (vox->states & (~mask)) | (value << offset);
+    vox->states = (vox->states & (~mask)) | value;
     return 0;
 }
 
@@ -274,9 +370,10 @@ void lua_addfunc(lua_State* L, lua_CFunction func, const char* name) {
 }
 
 void apilua::create_funcs(lua_State* L) {
-    luaL_openlib(L, "pack", packlib, 0);
-    luaL_openlib(L, "world", worldlib, 0);
-    luaL_openlib(L, "player", playerlib, 0);
+    openlib(L, "pack", packlib, 0);
+    openlib(L, "world", worldlib, 0);
+    openlib(L, "player", playerlib, 0);
+    openlib(L, "time", timelib, 0);
 
     lua_addfunc(L, l_block_index, "block_index");
     lua_addfunc(L, l_block_name, "block_name");

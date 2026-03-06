@@ -4,6 +4,10 @@
 #include "../window/Camera.h"
 #include "../world/Level.h"
 #include "../physics/PhysicsSolver.h"
+#include "../items/Inventory.h"
+#include "../math/rand.h"
+#include "../voxels/Chunks.h"
+#include "../voxels/voxel.h"
 
 namespace PlayerConsts {
     constexpr float CROUCH_SPEED_MUL = 0.35f;
@@ -14,16 +18,19 @@ namespace PlayerConsts {
     constexpr float GROUND_DAMPING = 10.0f;
     constexpr float AIR_DAMPING = 7.0f;
     constexpr float CHEAT_SPEED_MUL = 5.0f;
+
+	constexpr int INVENTORY_SIZE = 40;
 }
 
 Player::Player(glm::vec3 position, float speed) : 
 	speed(speed),
-	chosenItem(0),
+	chosenSlot(0),
 	camera(new Camera(position, glm::radians(90.0f))),
 	spCamera(new Camera(position, glm::radians(90.0f))),
 	tpCamera(new Camera(position, glm::radians(90.0f))),
 	currentCamera(camera),
-	hitbox(new Hitbox(position, glm::vec3(0.3f, 0.9f, 0.3f))) {
+	hitbox(new Hitbox(position, glm::vec3(0.3f, 0.9f, 0.3f))),
+	inventory(new Inventory(PlayerConsts::INVENTORY_SIZE)) {
 }
 
 void Player::update(Level* level, PlayerInput& input, float delta) {
@@ -68,13 +75,10 @@ void Player::update(Level* level, PlayerInput& input, float delta) {
 
 	if (input.jump && hitbox->grounded) hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
 
-
 	if ((input.flight && !noclip) ||
 		(input.noclip && flight == noclip)){
 		flight = !flight;
-		if (flight){
-			hitbox->grounded = false;
-		}
+		if (flight) hitbox->grounded = false;
 	}
 	if (input.noclip) {
 		noclip = !noclip;
@@ -86,12 +90,29 @@ void Player::update(Level* level, PlayerInput& input, float delta) {
 		hitbox->velocity.y *= 1.0f - delta * 9;
 		if (input.jump) hitbox->velocity.y += speed * delta * 9;
 		if (input.crouch) hitbox->velocity.y -= speed * delta * 9;
-		
 	}
 	if (!hitbox->grounded) hitbox->linear_damping = PlayerConsts::AIR_DAMPING;
 
 	input.noclip = false;
 	input.flight = false;
+
+	if (spawnpoint.y <= 0.1) attemptToFindSpawnpoint(level);
+}
+
+void Player::attemptToFindSpawnpoint(Level* level) {
+	glm::vec3 ppos = hitbox->position;
+	glm::vec3 newpos {ppos.x + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), 
+					  RandomGenerator::get<int>(0, RAND_MAX) % 80 + 100, 
+					  ppos.z + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
+					 };
+	while (newpos.y > 0 && !level->chunks->isObstacleBlock(newpos.x, newpos.y-2, newpos.z)) {
+		newpos.y--;
+	}
+
+	voxel* headvox = level->chunks->getVoxel(newpos.x, newpos.y + 1, newpos.z);
+	if (level->chunks->isObstacleBlock(newpos.x, newpos.y, newpos.z) || headvox == nullptr || headvox->id != 0) return;
+	spawnpoint = newpos;
+	teleport(spawnpoint);
 }
 
 void Player::teleport(glm::vec3 position) {
@@ -102,10 +123,22 @@ float Player::getSpeed() const {
 	return speed;
 }
 
-void Player::setChosenItem(itemid_t id) {
-    chosenItem = id;
+void Player::setChosenSlot(int index) {
+    chosenSlot = index;
 }
 
-itemid_t Player::getChosenItem() const {
-    return chosenItem;
+itemid_t Player::getChosenSlot() const {
+    return chosenSlot;
+}
+
+std::shared_ptr<Inventory> Player::getInventory() const {
+    return inventory;
+}
+
+void Player::setSpawnPoint(glm::vec3 spawnpoint) {
+	this->spawnpoint = spawnpoint;
+}
+
+glm::vec3 Player::getSpawnPoint() const {
+	return spawnpoint;
 }

@@ -5,9 +5,12 @@
 #include <filesystem>
 #include <vector>
 
+#include "../content/ContentPack.h"
+
 class EnginePaths {
     std::filesystem::path userfiles {"."};
-    std::filesystem::path resources {"../res"}; 
+    std::filesystem::path resources {"../res"};
+    std::vector<ContentPack>* contentPacks = nullptr;
 public:
     std::filesystem::path getUserfiles() const;
     std::filesystem::path getResources() const;
@@ -19,6 +22,9 @@ public:
 
     void setUserfiles(std::filesystem::path folder);
     void setResources(std::filesystem::path folder);
+    void setContentPacks(std::vector<ContentPack>* contentPacks);
+
+    std::filesystem::path resolve(std::string path);
 };
 
 class ResPaths {

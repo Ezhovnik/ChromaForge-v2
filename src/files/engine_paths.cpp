@@ -62,6 +62,29 @@ void EnginePaths::setResources(std::filesystem::path folder) {
 	this->resources = folder;
 }
 
+void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
+    this->contentPacks = contentPacks;
+}
+
+std::filesystem::path EnginePaths::resolve(std::string path) {
+    size_t separator = path.find(':');
+    if (separator == std::string::npos) return std::filesystem::path(path);
+
+    std::string prefix = path.substr(0, separator);
+    std::string filename = path.substr(separator + 1);
+
+    if (prefix == "res" || prefix == "chromaforge") return resources/std::filesystem::path(filename);
+    if (prefix == "user") return userfiles/std::filesystem::path(filename);
+
+    if (contentPacks) {
+        for (auto& pack : *contentPacks) {
+            if (pack.id == prefix) return pack.folder/std::filesystem::path(filename);
+        }
+    }
+
+    return std::filesystem::path("./" + filename);
+}
+
 ResPaths::ResPaths(std::filesystem::path mainRoot, std::vector<std::filesystem::path> roots) : mainRoot(mainRoot), roots(roots) {
 }
 

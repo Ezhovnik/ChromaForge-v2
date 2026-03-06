@@ -38,6 +38,8 @@
 #include "graphics/Skybox.h"
 #include "../constants.h"
 #include "../items/Item.h"
+#include "../items/ItemStack.h"
+#include "../items/Inventory.h"
 
 inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
@@ -127,15 +129,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 	Atlas* atlas = assets->getAtlas("blocks");
 
 	ShaderProgram* shader = assets->getShader("default");
-    if (shader == nullptr) {
-        LOG_CRITICAL("The shader 'default' could not be found in the assets");
-        throw std::runtime_error("The shader 'default' could not be found in the assets");
-    }
 	ShaderProgram* linesShader = assets->getShader("lines");
-    if (linesShader == nullptr) {
-        LOG_CRITICAL("The shader 'lines' could not be found in the assets");
-        throw std::runtime_error("The shader 'lines' could not be found in the assets");
-    }
 
     const Viewport& viewport = parent_context.getViewport();
 	const uint width = viewport.getWidth();
@@ -170,8 +164,10 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 		shader->uniform1i("u_cubemap", 1);
 
 		{
-			itemid_t id = level->player->getChosenItem();
-			Item* chosen_item = contentIds->getItemDef(id);
+			auto player = level->player;
+            auto inventory = player->getInventory();
+            ItemStack& stack = inventory->getSlot(player->getChosenSlot());
+            Item* chosen_item = contentIds->getItemDef(stack.getItemId());
 			assert(chosen_item != nullptr);
 			if (!level->player->noclip) {
 				float multiplier = 0.5f;

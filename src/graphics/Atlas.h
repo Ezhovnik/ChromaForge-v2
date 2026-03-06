@@ -41,6 +41,7 @@ public:
     AtlasBuilder() {}
     void add(std::string name, std::shared_ptr<ImageData> image);
     bool has(std::string name) const;
+    const std::set<std::string>& getNames() {return names;};
 
     Atlas* build(uint extrusion, uint maxResolution = 8192);
 };

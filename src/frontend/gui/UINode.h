@@ -19,7 +19,9 @@ namespace gui {
     typedef std::function<void(GUI*, double)> onnumberchange;
 
     enum class Align {
-        left, center, right
+        left,
+        center,
+        right
     };
 
     class UINode {

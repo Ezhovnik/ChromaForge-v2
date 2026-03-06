@@ -24,6 +24,7 @@
 #include "../constants.h"
 #include "../items/Item.h"
 #include "../data/dynamic.h"
+#include "../items/Inventory.h"
 
 WorldRegion::WorldRegion() {
 	chunksData = new ubyte*[RegionConsts::VOLUME]{};
@@ -435,12 +436,13 @@ void WorldFiles::writeWorldInfo(const World* world) {
 	versionobj.put("minor", ENGINE_VERSION_MINOR);
 	versionobj.put("maintenance", ENGINE_VERSION_MAINTENANCE);
 
-	root.put("name", world->name);
-	root.put("seed", world->seed);
-	
+	root.put("name", world->getName());
+	root.put("seed", world->getSeed());
+
 	auto& timeobj = root.putMap("time");
 	timeobj.put("day-time", world->daytime);
 	timeobj.put("day-time-speed", world->daytimeSpeed);
+	timeobj.put("total-time", world->totalTime);
 
 	files::write_json(getWorldFile(), &root);
 }
@@ -453,8 +455,8 @@ bool WorldFiles::readWorldInfo(World* world) {
 	}
 
 	auto root = files::read_json(file);
-	root->str("name", world->name);
-	root->num("seed", world->seed);
+	world->setName(root->getStr("name", world->getName()));
+    world->setSeed(root->getInt("seed", world->getSeed()));
 
 	auto verobj = root->map("version");
 	if (verobj) {
@@ -469,6 +471,7 @@ bool WorldFiles::readWorldInfo(World* world) {
 	if (timeobj) {
 		timeobj->num("day-time", world->daytime);
 		timeobj->num("day-time-speed", world->daytimeSpeed);
+		timeobj->num("total-time", world->totalTime);
 	}
 
 	return true;
@@ -477,10 +480,17 @@ bool WorldFiles::readWorldInfo(World* world) {
 void WorldFiles::writePlayer(Player* player){
 	glm::vec3 position = player->hitbox->position;
 	dynamic::Map root;
+
 	auto& posarr = root.putList("position");
 	posarr.put(position.x);
 	posarr.put(position.y);
 	posarr.put(position.z);
+
+	auto& sparr = root.putList("spawnpoint");
+	glm::vec3 spawnpoint = player->getSpawnPoint();
+	sparr.put(spawnpoint.x);
+	sparr.put(spawnpoint.y);
+	sparr.put(spawnpoint.z);
 
 	auto& rotarr = root.putList("rotation");
 	rotarr.put(player->cam.x);
@@ -488,6 +498,9 @@ void WorldFiles::writePlayer(Player* player){
 
 	root.put("flight", player->flight);
 	root.put("noclip", player->noclip);
+
+	root.put("chosen-slot", player->getChosenSlot());
+    root.put("inventory", player->getInventory()->write().release());
 
 	files::write_json(getPlayerFile(), &root);
 }
@@ -501,11 +514,19 @@ bool WorldFiles::readPlayer(Player* player) {
 
 	auto root = files::read_json(file);
 	auto posarr = root->list("position");
+
 	glm::vec3& position = player->hitbox->position;
 	position.x = posarr->num(0);
 	position.y = posarr->num(1);
 	position.z = posarr->num(2);
 	player->camera->position = position;
+
+	if (root->has("spawnpoint")) {
+		auto sparr = root->list("spawnpoint");
+		player->setSpawnPoint(glm::vec3(sparr->num(0), sparr->num(1), sparr->num(2)));
+	} else {
+		player->setSpawnPoint(position);
+	}
 
 	auto rotarr = root->list("rotation");
 	player->cam.x = rotarr->num(0);
@@ -513,5 +534,10 @@ bool WorldFiles::readPlayer(Player* player) {
 
 	root->flag("flight", player->flight);
 	root->flag("noclip", player->noclip);
+
+	player->setChosenSlot(root->getInt("chosen-slot", player->getChosenSlot()));
+    auto inventory_map = root->map("inventory");
+    if (inventory_map) player->getInventory()->read(inventory_map);
+
 	return true;
 }
