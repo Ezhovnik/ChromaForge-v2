@@ -1,6 +1,7 @@
 #ifndef LOGIC_BLOCKS_CONTROLLER_H_
 #define LOGIC_BLOCKS_CONTROLLER_H_
 
+#include "../math/rand.h"
 #include "../typedefs.h"
 
 class Player;
@@ -33,6 +34,8 @@ class BlocksController {
     Clock randSparkClock;
     Clock blocksSparkClock;
     uint padding;
+
+    FastRandom random;
 public:
     BlocksController(Level* level, uint padding);
 

@@ -268,7 +268,7 @@ void main() {
         1e12f, 						    // max dist, essentially the scene depth
         vec3(0.0f),						// scene color, the color of the current pixel being rendered
         u_lightDir,						// light direction
-        vec3(40.0 * fog),						// light intensity, 40 looks nice
+        vec3(40.0 * fog),			    // light intensity, 40 looks nice
         PLANET_POS,						// position of the planet
         PLANET_RADIUS,                  // radius of the planet in meters
         ATMOS_RADIUS,                   // radius of the atmosphere in meters
@@ -276,9 +276,9 @@ void main() {
         MIE_BETA,                       // Mie scattering coefficient
         ABSORPTION_BETA,                // Absorbtion coefficient
         AMBIENT_BETA,					// ambient scattering, turned off for now. This causes the air to glow a bit when no light reaches it
-        G * fog,                          	// Mie preferred scattering direction
+        G * fog * 0.7,                  // Mie preferred scattering direction
         HEIGHT_RAY,                     // Rayleigh scale height
-        HEIGHT_MIE*u_mie*u_mie,                     // Mie scale height
+        HEIGHT_MIE*u_mie*u_mie,         // Mie scale height
         HEIGHT_ABSORPTION,				// the height at which the most absorption happens
         ABSORPTION_FALLOFF,				// how fast the absorption falls off from the absorption height 
         PRIMARY_STEPS*u_quality, 		// steps in the ray direction 

@@ -106,6 +106,8 @@ public:
     bool generatorTestMode;
     bool doWriteLights;
 
+    static const char* WORLD_FILE;
+
     WorldFiles(std::filesystem::path directory, const DebugSettings& settings); // Конструктор
     ~WorldFiles(); // Деструктор
 

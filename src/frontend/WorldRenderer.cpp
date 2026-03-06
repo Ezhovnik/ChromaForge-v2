@@ -40,6 +40,7 @@
 #include "../items/Item.h"
 #include "../items/ItemStack.h"
 #include "../items/Inventory.h"
+#include "../graphics/Batch3D.h"
 
 inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
@@ -49,7 +50,7 @@ inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 float WorldRenderer::skyClearness = 0.0f;
 bool WorldRenderer::drawChunkBorders = false;
 
-WorldRenderer::WorldRenderer(Engine* engine, LevelFrontend* levelFrontend) : engine(engine), level(levelFrontend->getLevel()), frustumCulling(new Frustum()), lineBatch(new LineBatch()), renderer(new ChunksRenderer(level, levelFrontend->getContentGfxCache(), engine->getSettings())) {
+WorldRenderer::WorldRenderer(Engine* engine, LevelFrontend* levelFrontend) : engine(engine), level(levelFrontend->getLevel()), frustumCulling(new Frustum()), lineBatch(new LineBatch()), renderer(new ChunksRenderer(level, levelFrontend->getContentGfxCache(), engine->getSettings())), batch3d(new Batch3D(4096)) {
 	Assets* assets = engine->getAssets();
 	EngineSettings& settings = engine->getSettings();
 	skybox = new Skybox(settings.graphics.skyboxResolution, assets->getShader("skybox_gen"));
@@ -117,8 +118,9 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 }
 
 void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool hudVisible) {
+	Window::clearDepth();
 	EngineSettings& settings = engine->getSettings();
-	skybox->refresh(level->world->daytime, 1.0f + skyClearness * 2.0f, 4);
+	skybox->refresh(parent_context, level->world->daytime, 1.0f + skyClearness * 2.0f, 4);
 
     const Content* content = level->content;
 	const ContentIndices* contentIds = content->getIndices();
@@ -129,22 +131,14 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 	Atlas* atlas = assets->getAtlas("blocks");
 
 	ShaderProgram* shader = assets->getShader("default");
-	ShaderProgram* linesShader = assets->getShader("lines");
 
     const Viewport& viewport = parent_context.getViewport();
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
 
-	Window::clearDepth();
-	Window::viewport(0, 0, width, height);
+	skybox->draw(parent_context, camera, assets, level->getWorld()->daytime, skyClearness);
 
-	ShaderProgram* backShader = assets->getShader("background");
-	backShader->use();
-	backShader->uniformMatrix("u_view", camera->getView(false));
-	backShader->uniform1f("u_zoom", camera->zoom * camera->getFov() / (PI * 0.5f));
-	backShader->uniform1f("u_ar", (float)width / (float)height);
-	skybox->draw(backShader);
-
+	ShaderProgram* linesShader = assets->getShader("lines");
     {
 		GfxContext context = parent_context.sub();
 		context.depthTest(true);

@@ -9,6 +9,8 @@ GfxContext::GfxContext(const GfxContext* parent, Viewport& viewport, Batch2D* g2
 
 GfxContext::~GfxContext() {
     if (parent == nullptr)  return;
+
+    if (depthMask_ != parent->depthMask_) glDepthMask(parent->depthMask_);
     if (depthTest_ != parent->depthTest_) {
         if (depthTest_) glDisable(GL_DEPTH_TEST);
         else glEnable(GL_DEPTH_TEST);
@@ -17,6 +19,7 @@ GfxContext::~GfxContext() {
         if (cullFace_) glDisable(GL_CULL_FACE);
         else glEnable(GL_CULL_FACE);
     }
+    if (blendMode_ != parent->blendMode_) Window::setBlendMode(parent->blendMode_);
 }
 
 const Viewport& GfxContext::getViewport() const {
@@ -34,16 +37,28 @@ GfxContext GfxContext::sub() const {
     return ctx;
 }
 
+void GfxContext::depthMask(bool flag) {
+    if (depthMask_ == flag) return;
+    depthMask_ = flag;
+    glDepthMask(GL_FALSE + flag);
+}
+
 void GfxContext::depthTest(bool flag) {
     if (depthTest_ == flag) return;
     depthTest_ = flag;
-    if (depthTest_) glEnable(GL_DEPTH_TEST);
+    if (flag) glEnable(GL_DEPTH_TEST);
     else glDisable(GL_DEPTH_TEST);
 }
 
 void GfxContext::cullFace(bool flag) {
     if (cullFace_ == flag) return;
     cullFace_ = flag;
-    if (cullFace_) glEnable(GL_CULL_FACE);
+    if (flag) glEnable(GL_CULL_FACE);
     else glDisable(GL_CULL_FACE);
+}
+
+void GfxContext::blendMode(BlendMode mode) {
+    if (blendMode_ == mode) return;
+    blendMode_ = mode;
+    Window::setBlendMode(mode);
 }

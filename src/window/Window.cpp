@@ -317,6 +317,17 @@ DisplaySettings* Window::getDisplaySettings() {
 	return settings;
 }
 
+void Window::setBlendMode(BlendMode mode) {
+    switch (mode) {
+        case BlendMode::Normal:
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+        case BlendMode::Addition:
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            break;
+    }
+}
+
 ImageData* Window::takeScreenshot() {
 	ubyte* data = new ubyte[width * height * 4];
     glPixelStorei(GL_PACK_ALIGNMENT, 1);

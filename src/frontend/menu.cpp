@@ -116,7 +116,7 @@ void open_world(std::string name, Engine* engine) {
 
     try {
         engine->loadWorldContent(folder);
-    } catch (contentpack_error& error) {
+    } catch (const contentpack_error& error) {
         guiutil::alert(engine->getGUI(), langs::get(L"error.pack-not-found") + L": " + util::str2wstr_utf8(error.getPackId()));
         return;
     } catch (const std::runtime_error& error) {
@@ -141,8 +141,15 @@ void open_world(std::string name, Engine* engine) {
         if (version != REGION_FORMAT_VERSION) {
             show_convert_request(engine, content, lut, folder);
         } else {
-            Level* level = World::load(folder, settings, content, packs);
-            engine->setScreen(std::make_shared<LevelScreen>(engine, level));
+            try {
+                Level* level = World::load(folder, settings, content, packs);
+                engine->setScreen(std::make_shared<LevelScreen>(engine, level));
+            } catch (const world_load_error& error) {
+                guiutil::alert(engine->getGUI(), 
+                            langs::get(L"Error") +
+                            L": " + util::str2wstr_utf8(error.what()));
+                return;
+        }
         }
     }
 }
@@ -153,42 +160,41 @@ Panel* create_worlds_panel(Engine* engine) {
     panel->maxLength(400);
 
     auto paths = engine->getPaths();
-    std::filesystem::path worldsFolder = paths->getWorldsFolder();
-    if (std::filesystem::is_directory(worldsFolder)) {
-        for (auto entry : std::filesystem::directory_iterator(worldsFolder)) {
-            if (!entry.is_directory()) continue;
+    for (auto folder : paths->scanForWorlds()) {
+        auto name = folder.filename().u8string();
+        auto namews = util::str2wstr_utf8(name);
 
-            auto folder = entry.path();
-            auto name = folder.filename().u8string();
-            auto namews = util::str2wstr_utf8(name);
-            auto btn = std::make_shared<RichButton>(glm::vec2(390, 46));
-            btn->color(glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
-            btn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
-            auto label = std::make_shared<Label>(namews);
-            label->setInteractive(false);
-            btn->add(label, glm::vec2(8, 8));
-            btn->listenAction([=](GUI*) {open_world(name, engine);});
+        auto btn = std::make_shared<RichButton>(glm::vec2(390, 46));
+        btn->color(glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
+        btn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
 
-            auto delete_icon = std::make_shared<Image>("gui/delete_icon", glm::vec2(32, 32));
-            delete_icon->color(glm::vec4(1, 1, 1, 0.5f));
+        auto label = std::make_shared<Label>(namews);
+        label->setInteractive(false);
+        btn->add(label, glm::vec2(8, 8));
+        btn->listenAction([=](GUI*) {
+            open_world(name, engine);
+        });
 
-            auto delbtn = std::make_shared<Button>(delete_icon, glm::vec4(2));
-            delbtn->color(glm::vec4(0.0f));
-            delbtn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
-            
-            btn->add(delbtn, glm::vec2(330, 3));
+        auto image = std::make_shared<Image>("gui/delete_icon", glm::vec2(32, 32));
+        image->color(glm::vec4(1, 1, 1, 0.5f));
 
-            delbtn->listenAction([=](GUI* gui) {
-                guiutil::confirm(gui, langs::get(L"delete-confirm", L"world") + L" (" + util::str2wstr_utf8(folder.u8string()) + L")", [=]() 
-                {
-                    LOG_INFO("Deleting {}", folder.u8string());
-                    std::filesystem::remove_all(folder);
-                    menus::refresh_menus(engine, gui->getMenu());
-                });
+        auto delbtn = std::make_shared<Button>(image, glm::vec4(2));
+        delbtn->color(glm::vec4(0.0f));
+        delbtn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
+
+        btn->add(delbtn, glm::vec2(330, 3));
+
+        delbtn->listenAction([=](GUI* gui) {
+            guiutil::confirm(gui, langs::get(L"delete-confirm", L"world") +
+            L" (" + util::str2wstr_utf8(folder.u8string()) + L")", [=]() 
+            {
+                LOG_INFO("Deleting {}", folder.u8string());
+                std::filesystem::remove_all(folder);
+                menus::refresh_menus(engine, gui->getMenu());
             });
+        });
 
-            panel->add(btn);
-        }
+        panel->add(btn);
     }
     return panel;
 }
@@ -261,7 +267,6 @@ void create_new_world_panel(Engine* engine, PagesControl* menu) {
         }
 
         auto folder = paths->getWorldsFolder()/std::filesystem::u8path(nameutf8);
-        std::filesystem::create_directories(folder);
 
         Level* level = World::create(nameutf8, folder, seed, engine->getSettings(), engine->getContent(), engine->getContentPacks());
         engine->setScreen(std::make_shared<LevelScreen>(engine, level));
@@ -420,7 +425,8 @@ void create_pause_panel(Engine* engine, PagesControl* menu) {
     }));
     panel->add(guiutil::gotoButton(L"Settings", "settings", menu));
 
-    panel->add(create_button(L"Save and Quit to Menu", glm::vec4(10.f), glm::vec4(1), [=](GUI*){
+    panel->add(create_button(L"Save and Quit to Menu", glm::vec4(10.f), glm::vec4(1), [=](GUI*) {
+        engine->setScreen(nullptr);
         engine->setScreen(std::make_shared<MenuScreen>(engine));
     }));
 }

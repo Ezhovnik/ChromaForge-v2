@@ -26,6 +26,8 @@
 #include "../data/dynamic.h"
 #include "../items/Inventory.h"
 
+const char* WorldFiles::WORLD_FILE = "world.json";
+
 WorldRegion::WorldRegion() {
 	chunksData = new ubyte*[RegionConsts::VOLUME]{};
 	sizes = new uint32_t[RegionConsts::VOLUME]{};
@@ -218,7 +220,7 @@ std::filesystem::path WorldFiles::getPlayerFile() const {
 }
 
 std::filesystem::path WorldFiles::getWorldFile() const {
-	return directory/std::filesystem::path("world.json");
+	return directory/std::filesystem::path(WORLD_FILE);
 }
 
 std::filesystem::path WorldFiles::getIndicesFile() const {

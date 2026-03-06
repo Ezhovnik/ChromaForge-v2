@@ -6,6 +6,8 @@
 #include <limits>
 #include <type_traits>
 
+#include "../typedefs.h"
+
 class RandomGenerator {
 private:
     static std::mt19937& getGenerator() {
@@ -27,16 +29,21 @@ public:
     }
 };
 
-namespace FastRandom {
-    static uint g_seed;
-
-    inline void srand(int seed) {
-        g_seed = seed;
+class FastRandom {
+private:
+    uint seed;
+public:
+    inline void setSeed(uint seed) {
+        this->seed = seed;
     }
 
     inline int rand() {
-        g_seed = (214013 * g_seed + 2531011);
-        return (g_seed >> 16) & 0x7FFF;
+        seed = (214013 * seed + 2531011);
+        return (seed >> 16) & 0x7FFF;   
+    }
+
+    inline float randFloat() {
+        return rand() / float(0x7FFF);
     }
 };
 

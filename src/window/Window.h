@@ -13,6 +13,11 @@ class GLFWwindow; // Предварительное объявление кла�
 class ImageData;
 struct GLFWmonitor;
 
+enum class BlendMode {
+    Normal,
+    Addition
+};
+
 // Обертка для работы с окном приложения через GLFW
 class Window {
 private:
@@ -63,6 +68,8 @@ public:
     static void setBgColor(glm::vec4 color);
 
     static DisplaySettings* getDisplaySettings();
+
+    static void setBlendMode(BlendMode mode);
 
     static glm::vec2 size() {
 		return glm::vec2(width, height);

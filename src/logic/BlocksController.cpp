@@ -103,9 +103,9 @@ void BlocksController::randomSpark(int sparkId, int parts) {
             if (chunk == nullptr || !chunk->isLighted()) continue;
             for (int s = 0; s < segments; ++s) {
                 for (int i = 0; i < 4; ++i) {
-                    int bx = FastRandom::rand() % CHUNK_WIDTH;
-                    int by = FastRandom::rand() % segheight + s * segheight;
-                    int bz = FastRandom::rand() % CHUNK_DEPTH;
+                    int bx = random.rand() % CHUNK_WIDTH;
+                    int by = random.rand() % segheight + s * segheight;
+                    int bz = random.rand() % CHUNK_DEPTH;
                     const voxel& vox = chunk->voxels[(by * CHUNK_DEPTH + bz) * CHUNK_WIDTH + bx];
                     // std::cout << bx << " " << by << " " << bz << " " << vox.id << std::endl;
                     Block* block = indices->getBlockDef(vox.id);

@@ -33,7 +33,7 @@ public:
 
     glm::mat4 getProjection(); // Возвращает матрицу проекции камеры.
     glm::mat4 getView(bool position_flag = true); // Возвращает матрицу вида камеры.
-    glm::mat4 getProjView();
+    glm::mat4 getProjView(bool position_flag = true);
 
     void setFov(float fov) {this->fov = fov;}
     float getFov() const {return fov;}
