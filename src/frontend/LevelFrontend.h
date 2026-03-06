@@ -5,21 +5,21 @@
 
 class Level;
 class Assets;
-class BlocksPreview;
 class ContentGfxCache;
+class Atlas;
 
 class LevelFrontend {
     Level* level;
     Assets* assets;
     std::unique_ptr<ContentGfxCache> contentCache;
-    std::unique_ptr<BlocksPreview> blocksPreview;
+    std::unique_ptr<Atlas> blocksAtlas;
 public:
     LevelFrontend(Level* level, Assets* assets);
     ~LevelFrontend();
 
     Level* getLevel() const;
     Assets* getAssets() const;
-    BlocksPreview* getBlocksPreview() const;
+    Atlas* getBlocksAtlas() const;
     ContentGfxCache* getContentGfxCache() const;
 };
 

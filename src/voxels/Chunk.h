@@ -34,7 +34,6 @@ public:
     int bottom, top;
     voxel* voxels; // Массив вокселей, содержащихся в чанке
 
-    int surrounding = 0; // Счётчик окружающих, загруженных чанков
     int flags = 0;
 
     LightMap* light_map; // Карта освещения чанка

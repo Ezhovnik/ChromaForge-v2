@@ -26,13 +26,15 @@ private:
 	EngineSettings& settings;
 	const Content* const content;
 	std::vector<ContentPack> packs;
-public:
-	std::string name;
-	WorldFiles* wfile;
+
 	uint64_t seed;
+	std::string name;
+public:
+	WorldFiles* wfile;
 
 	float daytime = timeutil::time_value(10, 00, 00);
-	float daytimeSpeed = 1.0f/60.0f/24.0f;
+	float daytimeSpeed = 1.0f / 60.0f / 24.0f;
+	double totalTime = 0.0;
 
 	World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content, std::vector<ContentPack> packs);
 	~World();
@@ -45,6 +47,12 @@ public:
 
 	static Level* create(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs);
     static Level* load(std::filesystem::path directory, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs);
+
+	void setName(const std::string& name);
+    void setSeed(uint64_t seed);
+
+    std::string getName() const;
+    uint64_t getSeed() const;
 
 	const std::vector<ContentPack>& getPacks() const;
 };

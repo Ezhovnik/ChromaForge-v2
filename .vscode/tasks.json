@@ -75,7 +75,7 @@
                 "${workspaceFolder}/src/graphics/BlocksRenderer.cpp",
                 "${workspaceFolder}/src/graphics/ChunksRenderer.cpp",
                 "${workspaceFolder}/src/graphics/Font.cpp",
-                // "${workspaceFolder}/src/graphics/Framebuffer.cpp",
+                "${workspaceFolder}/src/graphics/Framebuffer.cpp",
                 "${workspaceFolder}/src/graphics/GfxContext.cpp",
                 "${workspaceFolder}/src/graphics/ImageData.cpp",
                 "${workspaceFolder}/src/graphics/LineBatch.cpp",
@@ -83,7 +83,12 @@
                 "${workspaceFolder}/src/graphics/ShaderProgram.cpp",
                 "${workspaceFolder}/src/graphics/Sprite.cpp",
                 "${workspaceFolder}/src/graphics/Texture.cpp",
+                "${workspaceFolder}/src/graphics/TextureAnimation.cpp",
                 "${workspaceFolder}/src/graphics/Viewport.cpp",
+
+                //src/items
+                "${workspaceFolder}/src/items/Inventory.cpp",
+                "${workspaceFolder}/src/items/ItemStack.cpp",
 
                 //src/lighting
                 "${workspaceFolder}/src/lighting/Lighting.cpp",

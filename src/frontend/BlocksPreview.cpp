@@ -11,39 +11,15 @@
 #include "../graphics/Viewport.h"
 #include "ContentGfxCache.h"
 #include "../assets/Assets.h"
+#include "../graphics/Framebuffer.h"
+#include "../graphics/GfxContext.h"
+#include "../window/Window.h"
+#include "../content/Content.h"
+#include "../constants.h"
+#include "../graphics/ImageData.h"
 
-BlocksPreview::BlocksPreview(Assets* assets, const ContentGfxCache* cache) : shader(assets->getShader("ui3d")), atlas(assets->getAtlas("blocks")), cache(cache) {
-    batch = std::make_unique<Batch3D>(1024);
-}
-
-BlocksPreview::~BlocksPreview() {
-}
-
-void BlocksPreview::begin(const Viewport* viewport) {
-    this->viewport = viewport;
-    shader->use();
-    shader->uniformMatrix("u_projview", 
-        glm::ortho(0.0f, float(viewport->getWidth()), 0.0f, float(viewport->getHeight()), -100.0f, 100.0f) * 
-        glm::lookAt(glm::vec3(2, 2, 2), glm::vec3(0.0f), glm::vec3(0, 1, 0))
-    );
-    atlas->getTexture()->bind();
-}
-
-void BlocksPreview::draw(const Block* def, int x, int y, int size, glm::vec4 tint) {
-    uint width = viewport->getWidth();
-    uint height = viewport->getHeight();
-
-    y = height - y - 1;
-    x += 2;
-    y -= 35;
-
-    if (def->model == BlockModel::AABB) {
-        x += (1.0f - def->hitbox.size()).x * size * 0.5f;
-        y += (1.0f - def->hitbox.size()).y * size * 0.25f;
-    }
-
-    glm::vec3 offset (x / float(width) * 2, y / float(height) * 2, 0.0f);
-    shader->uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), offset));
+ImageData* BlocksPreview::draw(const ContentGfxCache* cache, Framebuffer* fbo, Batch3D* batch, const Block* def, int size) {
+    Window::clear();
     blockid_t id = def->rt.id;
     const UVRegion texfaces[6]{ cache->getRegion(id, 0), cache->getRegion(id, 1),
                                 cache->getRegion(id, 2), cache->getRegion(id, 3),
@@ -54,18 +30,65 @@ void BlocksPreview::draw(const Block* def, int x, int y, int size, glm::vec4 tin
         case BlockModel::None:
             break;
         case BlockModel::Cube:
-            batch->blockCube(glm::vec3(size * 0.63f), texfaces, tint, !def->rt.emissive);
+            batch->blockCube(glm::vec3(size * 0.63f), texfaces, glm::vec4(1.0f), !def->rt.emissive);
             break;
         case BlockModel::AABB:
-            batch->blockCube(def->hitbox.size() * glm::vec3(size * 0.63f), texfaces, tint, !def->rt.emissive);
+            batch->blockCube(def->hitbox.size() * glm::vec3(size * 0.63f), texfaces, glm::vec4(1.0f), !def->rt.emissive);
             break;
         case BlockModel::Custom:
         case BlockModel::X: {
-            glm::vec3 right = glm::normalize(glm::vec3(1.f, 0.f, -1.f));
-            batch->sprite(right * float(size) * 0.43f + glm::vec3(0, size * 0.4f, 0), glm::vec3(0.f, 1.f, 0.f), right, size * 0.5f, size * 0.6f, texfaces[0], tint);
+            glm::vec3 right = glm::normalize(glm::vec3(1.0f, 0.0f, -1.0f));
+            batch->sprite(right * float(size) * 0.43f + glm::vec3(0, size * 0.4f, 0), glm::vec3(0.0f, 1.0f, 0.0f), right, size * 0.5f, size * 0.6f, texfaces[0], glm::vec4(1.0f));
             break;
         }
     }
-
     batch->flush();
+    return fbo->texture->readData();
+}
+
+std::unique_ptr<Atlas> BlocksPreview::build(const ContentGfxCache* cache, Assets* assets, const Content* content) {
+    auto indices = content->getIndices();
+    size_t count = indices->countBlockDefs();
+    size_t iconSize = ITEM_ICON_SIZE;
+
+    ShaderProgram* shader = assets->getShader("ui3d");
+    Atlas* atlas = assets->getAtlas("blocks");
+
+    Viewport viewport(iconSize, iconSize);
+    GfxContext pctx(nullptr, viewport, nullptr);
+    GfxContext ctx = pctx.sub();
+    ctx.cullFace(true);
+    ctx.depthTest(true);
+
+    Framebuffer fbo(iconSize, iconSize, true);
+    Batch3D batch(1024);
+    batch.begin();
+
+    shader->use();
+    shader->uniformMatrix(
+        "u_projview",
+        glm::ortho(0.0f, float(iconSize), 0.0f, float(iconSize), -100.0f, 100.0f) * glm::lookAt(glm::vec3(2, 2, 2), glm::vec3(0.0f), glm::vec3(0, 1, 0))
+    );
+
+    AtlasBuilder builder;
+    Window::viewport(0, 0, iconSize, iconSize);
+    Window::setBgColor(glm::vec4(0.0f));
+    
+    fbo.bind();
+    for (size_t i = 0; i < count; i++) {
+        auto def = indices->getBlockDef(i);
+
+        glm::vec3 offset(0.1f, 0.5f, 0.1f);
+        if (def->model == BlockModel::AABB) offset.y += (1.0f - def->hitbox.size()).y * 0.5f;
+
+        atlas->getTexture()->bind();
+        shader->uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), offset));
+
+        ImageData* image = draw(cache, &fbo, &batch, def, iconSize);
+        builder.add(def->name, std::shared_ptr<ImageData>(image));
+    }
+    fbo.unbind();
+
+    Window::viewport(0, 0, Window::width, Window::height);
+    return std::unique_ptr<Atlas>(builder.build(2));
 }

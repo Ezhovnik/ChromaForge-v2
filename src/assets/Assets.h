@@ -4,6 +4,9 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <vector>
+
+#include "../graphics/TextureAnimation.h"
 
 class Texture;
 class ShaderProgram;
@@ -16,6 +19,7 @@ class Assets {
 	std::unordered_map<std::string, std::shared_ptr<ShaderProgram>> shaders;
     std::unordered_map<std::string, std::shared_ptr<Font>> fonts;
 	std::unordered_map<std::string, std::shared_ptr<Atlas>> atlases;
+	std::vector<TextureAnimation> animations;
 public:
 	~Assets(); // Деструктор
 
@@ -34,6 +38,9 @@ public:
 	// Методы для работы с атласами
 	Atlas* getAtlas(std::string name) const; // Получает атлас по имени
 	bool store(Atlas* atlas, std::string name); // Сохраняеь атлас в менеджере ресурсов
+
+	const std::vector<TextureAnimation>& getAnimations();
+	void store(const TextureAnimation& animation);
 
 	void extend(const Assets& assets);
 };

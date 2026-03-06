@@ -122,6 +122,14 @@ bool Assets::store(Atlas* atlas, std::string name){
     return false;
 }
 
+const std::vector<TextureAnimation>& Assets::getAnimations() {
+	return animations;
+}
+
+void Assets::store(const TextureAnimation& animation) {
+	animations.emplace_back(animation);
+}
+
 void Assets::extend(const Assets& assets) {
     for (auto entry : assets.textures) {
         textures[entry.first] = entry.second;
@@ -135,4 +143,9 @@ void Assets::extend(const Assets& assets) {
     for (auto entry : assets.atlases) {
         atlases[entry.first] = entry.second;
     }
+
+    animations.clear();
+    for (auto entry : assets.animations) {
+		animations.emplace_back(entry);
+	}
 }

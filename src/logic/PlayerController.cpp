@@ -16,6 +16,8 @@
 #include "BlocksController.h"
 #include "scripting/scripting.h"
 #include "../items/Item.h"
+#include "../items/ItemStack.h"
+#include "../items/Inventory.h"
 
 namespace CameraConsts {
 	constexpr float SHAKE_OFFSET = 0.025f;
@@ -193,7 +195,9 @@ void PlayerController::updateInteraction(){
 		int z = iend.z;
 		uint8_t states = 0;
 
-		Item* item = contentIds->getItemDef(player->getChosenItem());
+		auto inventory = player->getInventory();
+        ItemStack& stack = inventory->getSlot(player->getChosenSlot());
+        Item* item = contentIds->getItemDef(stack.getItemId());
 		Block* def = level->content->findBlock(item->placingBlock);
 		if (def && def->rotatable) {
 			const std::string& name = def->rotations.name;
@@ -256,7 +260,18 @@ void PlayerController::updateInteraction(){
 
 		if (input.pickBlock) {
 			Block* block = contentIds->getBlockDef(chunks->getVoxel(x,y,z)->id);
-			player->setChosenItem(block->rt.pickingItem);
+			itemid_t id = block->rt.pickingItem;
+			auto inventory = player->getInventory();
+			size_t slotid = inventory->findSlotByItem(id);
+			if (slotid == Inventory::npos) {
+				slotid = player->getChosenSlot();
+			} else {
+				player->setChosenSlot(slotid);
+			}
+			ItemStack& stack = inventory->getSlot(slotid);
+			if (stack.getItemId() != id) {
+				stack.set(ItemStack(id, 1));
+			}
 		}
 	} else {
 		selectedBlockStates = 0;

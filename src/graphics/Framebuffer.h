@@ -14,7 +14,7 @@ public:
 
 	Texture* texture;
 
-	Framebuffer(uint width, uint height);
+	Framebuffer(uint width, uint height, bool alpha=false);
 	~Framebuffer();
 
 	void bind();

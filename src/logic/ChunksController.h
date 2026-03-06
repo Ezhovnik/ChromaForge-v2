@@ -1,6 +1,8 @@
 #ifndef VOXELS_CHUNKSCONTROLLER_H_
 #define VOXELS_CHUNKSCONTROLLER_H_
 
+#include <memory>
+
 #include "../typedefs.h"
 
 class Level;
@@ -10,19 +12,22 @@ class WorldFiles;
 class VoxelRenderer;
 class ChunksLoader;
 class WorldGenerator;
+class Chunk;
 
 class ChunksController {
 private:
 	Level* level;
 	Chunks* chunks;
 	Lighting* lighting;
-    WorldGenerator* generator;
+	std::unique_ptr<WorldGenerator> generator;
 
     uint chunksPadding;
 
     int64_t avgDurationMcs = 1000;
 
 	bool loadVisible();
+	bool buildLights(std::shared_ptr<Chunk> chunk);
+    void createChunk(int x, int y);
 public:
 	ChunksController(Level* level, uint chunksPadding);
 	~ChunksController();

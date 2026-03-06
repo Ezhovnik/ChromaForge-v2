@@ -20,6 +20,8 @@ public:
     void bind(); // Привязывает текстуру к текущему контексту OpenGL для использования
     void reload(ubyte* data);
 
+    ImageData* readData();
+
     static Texture* from(const ImageData* image);
 };
 

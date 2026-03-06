@@ -247,6 +247,14 @@ void create_new_world_panel(Engine* engine, PagesControl* menu) {
         try {
             engine->loadAllPacks();
             engine->loadContent();
+        } catch (const contentpack_error& error) {
+            guiutil::alert(engine->getGUI(),
+                        langs::get(L"Content Error", L"menu") +
+                        L":\n" + util::str2wstr_utf8(std::string(error.what()) +
+                                "\npack '" + error.getPackId() + "' from " +
+                                error.getFolder().u8string())
+                        );
+            return;
         } catch (const std::runtime_error& error) {
             guiutil::alert(engine->getGUI(), langs::get(L"Content Error", L"menu") + L": " + util::str2wstr_utf8(error.what()));
             return;
@@ -452,4 +460,5 @@ void menus::create_menus(Engine* engine, PagesControl* menu) {
 
 void menus::refresh_menus(Engine* engine, PagesControl* menu) {
     create_main_menu_panel(engine, menu);
+    create_new_world_panel(engine, menu);
 }

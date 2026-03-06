@@ -153,8 +153,10 @@ void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states){
 
 	int lx = x - cx * CHUNK_WIDTH;
 	int lz = z - cz * CHUNK_DEPTH;
-	chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx].id = id;
-	chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx].states = states;
+
+	voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx]; 
+	vox.id = id;
+	vox.states = states;
 
 	chunk->setUnsaved(true);
 	chunk->setModified(true);
