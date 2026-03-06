@@ -323,9 +323,10 @@ void HudRenderer::update(bool hudVisible) {
     auto player = level->player;
 	auto menu = guiController->getMenu();
 
+	debugPanel->visible(player->debug && hudVisible);
 	menu->visible(pause);
 
-	if (!hudVisible && inventoryOpen) inventoryOpen = false;
+	if (!hudVisible && inventoryOpen) closeInventory();
 	if (pause && menu->current().panel == nullptr) pause = false;
 
 	if (Events::justPressed(keycode::ESCAPE) && !guiController->isFocusCaught()) {
@@ -333,14 +334,17 @@ void HudRenderer::update(bool hudVisible) {
 			pause = false;
 			menu->reset();
 		} else if (inventoryOpen) {
-			inventoryOpen = false;
+			closeInventory();
 		} else {
 			pause = true;
 			menu->set("pause");
 		}
 	}
 
-	if (hudVisible && Events::justActive(BIND_HUD_INVENTORY) && !pause) inventoryOpen = !inventoryOpen;
+	if (hudVisible && Events::justActive(BIND_HUD_INVENTORY) && !pause) {
+		if (inventoryOpen) closeInventory();
+		else inventoryOpen = true;
+	}
 
 	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();
 
@@ -389,7 +393,6 @@ void HudRenderer::draw(const GfxContext& context) {
 	const uint height = viewport.getHeight();
 
     Player* player = level->player;
-	debugPanel->visible(player->debug);
 
     uicamera->setFov(height);
 
@@ -426,6 +429,12 @@ void HudRenderer::draw(const GfxContext& context) {
 	}
 	grabbedItemView->setCoord(glm::vec2(Events::cursor));
 	batch->render();
+}
+
+void HudRenderer::closeInventory() {
+    inventoryOpen = false;
+    ItemStack& grabbed = interaction->getGrabbedItem();
+    grabbed.clear();
 }
 
 bool HudRenderer::isInventoryOpen() const {

@@ -21,7 +21,7 @@ ImageData* png::loadImage(std::string filename, bool flipVertically) {
 
     stbi_set_flip_vertically_on_load(flipVertically);
     ubyte* stb_data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
-    
+
     if (!stb_data) {
         const char* error_msg = stbi_failure_reason();
         LOG_ERROR("Failed to load image: '{}'. Reason: {}", filename, error_msg ? error_msg : "Unknown error");
@@ -107,5 +107,7 @@ Texture* png::loadTexture(std::string filename) {
         return nullptr;
     }
 
-    return Texture::from(image); // Создание объекта Texture
+    Texture* texture = Texture::from(image); // Создание объекта Texture
+    texture->setNearestFilter();
+    return texture;
 }

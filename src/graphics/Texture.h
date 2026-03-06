@@ -22,6 +22,8 @@ public:
 
     ImageData* readData();
 
+    void setNearestFilter();
+
     static Texture* from(const ImageData* image);
 };
 

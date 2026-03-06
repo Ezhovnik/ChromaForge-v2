@@ -119,9 +119,9 @@ void Batch3D::sprite(glm::vec3 pos, glm::vec3 up, glm::vec3 right, float w, floa
 			r, g, b, a
 		);
 
-	vertex(pos.x - right.x * w - up.x * h,
-			pos.y + right.y * w + up.y * h,
-			pos.z - right.z * w - up.z * h,
+	vertex(pos.x - right.x * w + up.x * h,
+			pos.y - right.y * w + up.y * h,
+			pos.z - right.z * w + up.z * h,
 			uv.u1, uv.v2,
 			r, g, b, a
 		);
@@ -133,9 +133,9 @@ void Batch3D::sprite(glm::vec3 pos, glm::vec3 up, glm::vec3 right, float w, floa
 			r, g, b, a
 		);
 
-	vertex(pos.x + right.x * w + up.x * h,
-			pos.y - right.y * w - up.y * h,
-			pos.z + right.z * w + up.z * h,
+	vertex(pos.x + right.x * w - up.x * h,
+			pos.y + right.y * w - up.y * h,
+			pos.z + right.z * w - up.z * h,
 			uv.u2, uv.v1,
 			r, g, b, a
 		);
@@ -167,8 +167,18 @@ void Batch3D::blockCube(const glm::vec3 size, const UVRegion(&texfaces)[6], cons
 	face(coord + glm::vec3(size.x, 0.0f, 0.0f), size.z, size.y, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), texfaces[1], (shading ? do_tint(0.9f) * tint : tint));
 }
 
+void Batch3D::point(glm::vec3 coord, glm::vec4 tint) {
+    vertex(coord, glm::vec2(), tint.r, tint.g, tint.b, tint.a);
+}
+
 void Batch3D::flush() {
 	mesh->reload(buffer, index / B3D_VERTEX_SIZE);
 	mesh->draw(GL_TRIANGLES);
+	index = 0;
+}
+
+void Batch3D::flushPoints() {
+    mesh->reload(buffer, index / B3D_VERTEX_SIZE);
+	mesh->draw(GL_POINTS);
 	index = 0;
 }

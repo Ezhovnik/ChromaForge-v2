@@ -55,6 +55,6 @@ glm::mat4 Camera::getView(bool position_flag) {
 	else return glm::translate(glm::mat4(1.0f), position);
 }
 
-glm::mat4 Camera::getProjView() {
-    return getProjection() * getView();
+glm::mat4 Camera::getProjView(bool position_flag) {
+    return getProjection() * getView(position_flag);
 }

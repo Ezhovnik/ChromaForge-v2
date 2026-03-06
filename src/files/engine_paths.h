@@ -24,6 +24,8 @@ public:
     void setResources(std::filesystem::path folder);
     void setContentPacks(std::vector<ContentPack>* contentPacks);
 
+    std::vector<std::filesystem::path> scanForWorlds();
+
     std::filesystem::path resolve(std::string path);
 };
 

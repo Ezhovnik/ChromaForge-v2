@@ -2,7 +2,9 @@
 
 #include <filesystem>
 #include <sstream>
+
 #include "../typedefs.h"
+#include "WorldFiles.h"
 
 #define BUILD_FOLDER "../build"
 #define SCREENSHOTS_FOLDER BUILD_FOLDER"/screenshots"
@@ -83,6 +85,23 @@ std::filesystem::path EnginePaths::resolve(std::string path) {
     }
 
     return std::filesystem::path("./" + filename);
+}
+
+std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {
+    std::vector<std::filesystem::path> folders;
+
+    std::filesystem::path folder = getWorldsFolder();
+    if (!std::filesystem::is_directory(folder)) return folders;
+    
+    for (auto entry : std::filesystem::directory_iterator(folder)) {
+        if (!entry.is_directory()) continue;
+
+        std::filesystem::path worldFolder = entry.path();
+        std::filesystem::path worldFile = worldFolder/std::filesystem::path(WorldFiles::WORLD_FILE);
+        if (!std::filesystem::is_regular_file(worldFile)) continue;
+        folders.push_back(worldFolder);
+    }
+    return folders;
 }
 
 ResPaths::ResPaths(std::filesystem::path mainRoot, std::vector<std::filesystem::path> roots) : mainRoot(mainRoot), roots(roots) {

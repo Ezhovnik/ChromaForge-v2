@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include <memory>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -23,6 +24,7 @@ class Engine;
 class Chunks;
 class LevelFrontend;
 class Skybox;
+class Batch3D;
 
 class WorldRenderer {
     Engine* engine;
@@ -31,6 +33,7 @@ class WorldRenderer {
     ChunksRenderer* renderer;
 	LineBatch* lineBatch;
 	Skybox* skybox;
+	std::unique_ptr<Batch3D> batch3d;
 
     bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool culling);
 	void drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader);
