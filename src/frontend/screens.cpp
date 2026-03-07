@@ -114,6 +114,7 @@ LevelScreen::~LevelScreen() {
     LOG_INFO("The world has been successfully saved");
 
     controller->onWorldQuit();
+    engine->getPaths()->setWorldFolder(std::filesystem::path());
 }
 
 void LevelScreen::updateHotkeys() {
@@ -159,4 +160,8 @@ void LevelScreen::draw(float deltaTime) {
         hud->draw(context);
         if (level->player->debug) hud->drawDebug(1 / deltaTime);
     }
+}
+
+Level* LevelScreen::getLevel() const {
+    return level.get();
 }

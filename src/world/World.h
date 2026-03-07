@@ -54,6 +54,7 @@ public:
     std::string getName() const;
     uint64_t getSeed() const;
 
+	bool hasPack(const std::string& id) const;
 	const std::vector<ContentPack>& getPacks() const;
 };
 

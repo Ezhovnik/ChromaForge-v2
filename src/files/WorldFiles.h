@@ -131,6 +131,8 @@ public:
     void write(const World* world, const Content* content);
     void writePacks(const World* world);
     void writeIndices(const ContentIndices* indices);
+
+    void addPack(const std::string& id);
 };
 
 #endif // FILES_WORLDFILES_H_

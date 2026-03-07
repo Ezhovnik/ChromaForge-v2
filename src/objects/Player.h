@@ -38,11 +38,11 @@ private:
 	itemid_t chosenSlot;
 
 	glm::vec3 spawnpoint {};
+	std::shared_ptr<Inventory> inventory;
 public:
 	std::shared_ptr<Camera> camera, spCamera, tpCamera;
     std::shared_ptr<Camera> currentCamera;
 	std::unique_ptr<Hitbox> hitbox;
-	std::shared_ptr<Inventory> inventory;
 
 	bool flight = false;
     bool noclip = false;

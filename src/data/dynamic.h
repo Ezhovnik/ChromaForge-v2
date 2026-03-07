@@ -23,7 +23,7 @@ namespace dynamic {
         std::string* str;
         double decimal;
         int64_t integer;
-        bool boolean;
+        uint64_t boolean;
     };
 
     class Value {

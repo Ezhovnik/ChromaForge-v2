@@ -56,6 +56,7 @@ public:
 	EngineSettings& getSettings();
     const Content* getContent() const;
     std::vector<ContentPack>& getContentPacks();
+    std::shared_ptr<Screen> getScreen();
 
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLanguage(std::string locale);

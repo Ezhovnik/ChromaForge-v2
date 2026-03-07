@@ -10,7 +10,7 @@
 class EnginePaths {
     std::filesystem::path userfiles {"."};
     std::filesystem::path resources {"../res"};
-    std::filesystem::path worldFolder {""};
+    std::filesystem::path worldFolder;
     std::vector<ContentPack>* contentPacks = nullptr;
 public:
     std::filesystem::path getUserfiles() const;
@@ -18,6 +18,7 @@ public:
     
     std::filesystem::path getScreenshotFile(std::string ext);
     std::filesystem::path getWorldsFolder();
+    std::filesystem::path getWorldFolder();
     std::filesystem::path getLogsFile();
     bool isWorldNameUsed(std::string name);
 

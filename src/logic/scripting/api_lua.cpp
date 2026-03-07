@@ -85,6 +85,13 @@ static int l_file_length(lua_State* L) {
     return 1;
 }
 
+static int l_file_mkdir(lua_State* L) {
+    auto paths = scripting::engine->getPaths();
+    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    lua_pushboolean(L, std::filesystem::create_directory(path));
+    return 1;    
+}
+
 static const luaL_Reg filelib [] = {
     {"resolve", l_file_resolve},
     {"read", l_file_read},
@@ -93,6 +100,7 @@ static const luaL_Reg filelib [] = {
     {"isfile", l_file_isfile},
     {"isdir", l_file_isdir},
     {"length", l_file_length},
+    {"mkdir", l_file_mkdir},
     {NULL, NULL}
 };
 

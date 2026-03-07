@@ -14,6 +14,9 @@ inline constexpr uint KEY_BACKSPACE = 259;
 
 using namespace gui;
 
+Label::Label(std::string text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text_(util::str2wstr_utf8(text)), fontName_(fontName) {
+}
+
 Label::Label(std::wstring text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text_(text), fontName_(fontName) {
 }
 
@@ -51,6 +54,7 @@ void Label::size(glm::vec2 sizenew) {
 }
 
 Image::Image(std::string texture, glm::vec2 size) : UINode(glm::vec2(), size), texture(texture) {
+    setInteractive(false);
 }
 
 void Image::draw(Batch2D* batch, Assets* assets) {

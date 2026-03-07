@@ -48,7 +48,7 @@ const AABB* Chunks::isObstacleAt(float x, float y, float z) {
 	int iz = floor(z);
 	voxel* vox = getVoxel(ix, iy, iz);
 
-	if (vox == nullptr) return nullptr;
+	if (vox == nullptr) return &contentIds->getBlockDef(BLOCK_AIR)->hitbox;
 
 	const Block* def = contentIds->getBlockDef(vox->id);
 	if (def->obstacle) {
