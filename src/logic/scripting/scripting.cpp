@@ -13,6 +13,7 @@
 #include "../../items/Item.h"
 #include "../../logic/BlocksController.h"
 #include "../../engine.h"
+#include "../../content/ContentPack.h"
 
 using namespace scripting;
 
@@ -105,9 +106,41 @@ void scripting::on_world_load(Level* level, BlocksController* blocks) {
     scripting::blocks = blocks;
 
     load_script(std::filesystem::path("world.lua"));
+
+    for (auto& pack : scripting::engine->getContentPacks()) {
+        std::string name = pack.id + ".worldopen";
+        lua_getglobal(L, name.c_str());
+        if (lua_isnil(L, lua_gettop(L))) {
+            lua_pop(L, lua_gettop(L));
+            continue;
+        }
+        call_func(L, 0, name);
+    }
+}
+
+void scripting::on_world_save() {
+    for (auto& pack : scripting::engine->getContentPacks()) {
+        std::string name = pack.id + ".worldsave";
+        lua_getglobal(L, name.c_str());
+        if (lua_isnil(L, lua_gettop(L))) {
+            lua_pop(L, lua_gettop(L));
+            continue;
+        }
+        call_func(L, 0, name);
+    }
 }
 
 void scripting::on_world_quit() {
+    for (auto& pack : scripting::engine->getContentPacks()) {
+        std::string name = pack.id + ".worldquit";
+        lua_getglobal(L, name.c_str());
+        if (lua_isnil(L, lua_gettop(L))) {
+            lua_pop(L, lua_gettop(L));
+            continue;
+        }
+        call_func(L, 0, name);
+    }
+
     scripting::level = nullptr;
     scripting::content = nullptr;
 }
@@ -191,6 +224,20 @@ void scripting::load_block_script(std::string prefix, std::filesystem::path file
     funcsset->onplaced = rename_global(L, "on_placed", (prefix + ".placed").c_str());
     funcsset->oninteract = rename_global(L, "on_interact", (prefix + ".oninteract").c_str());
     funcsset->onblockstick = rename_global(L, "on_blocks_tick", (prefix + ".blockstick").c_str());
+}
+
+void scripting::load_world_script(std::string prefix, std::filesystem::path file) {
+    std::string src = files::read_string(file);
+    LOG_DEBUG("Loading script: {}", file.u8string());
+    if (luaL_loadbuffer(L, src.c_str(), src.size(), file.string().c_str())) {
+        handleError(L);
+        return;
+    }
+    call_func(L, 0, "<script>");
+    rename_global(L, "init", (prefix + ".init").c_str());
+    rename_global(L, "on_world_open", (prefix + ".worldopen").c_str());
+    rename_global(L, "on_world_save", (prefix + ".worldsave").c_str());
+    rename_global(L, "on_world_quit", (prefix + ".worldquit").c_str());
 }
 
 void scripting::load_item_script(std::string prefix, std::filesystem::path file, item_funcs_set* funcsset) {

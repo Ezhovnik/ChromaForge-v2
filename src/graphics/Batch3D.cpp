@@ -10,7 +10,7 @@ inline constexpr int B3D_VERTEX_SIZE = 9;
 
 Batch3D::Batch3D(size_t capacity) : capacity(capacity), offset(0) {
 	const vattr attrs[] = {{3}, {2}, {4}, {0}};
-    
+
     buffer = new float[capacity * B3D_VERTEX_SIZE];
 	mesh = new Mesh(buffer, 0, attrs);
 	index = 0;
@@ -153,8 +153,8 @@ inline glm::vec4 do_tint(float value) {
 }
 
 void Batch3D::xSprite(float w, float h, const UVRegion& uv, const glm::vec4 tint, bool shading) {
-	face(glm::vec3(-w *0.25f, 0.0f, 0.0f - w *0.25f), w, h, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), uv, (shading ? do_tint(1.0f) * tint : tint));
-	face(glm::vec3(w * 0.25f, 0.0f, w * 0.5f - w *0.25f), w, h, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), uv, (shading ? do_tint(0.9f) * tint : tint));
+	face(glm::vec3(-w * 0.25f, 0.0f, 0.0f - w * 0.25f), w, h, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), uv, (shading ? do_tint(1.0f) * tint : tint));
+	face(glm::vec3(w * 0.25f, 0.0f, w * 0.5f - w * 0.25f), w, h, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), uv, (shading ? do_tint(0.9f) * tint : tint));
 }
 
 void Batch3D::blockCube(const glm::vec3 size, const UVRegion(&texfaces)[6], const glm::vec4 tint, bool shading) {

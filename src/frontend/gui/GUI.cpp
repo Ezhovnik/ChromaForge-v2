@@ -123,6 +123,10 @@ bool GUI::isFocusCaught() const {
     return focus && focus->isfocuskeeper();
 }
 
+void GUI::addBack(std::shared_ptr<UINode> panel) {
+    container->addBack(panel);
+}
+
 void GUI::add(std::shared_ptr<UINode> panel) {
     container->add(panel);
 }

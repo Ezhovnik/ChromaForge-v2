@@ -7,6 +7,9 @@
 #include "../voxels/Chunk.h"
 #include "../content/ContentLUT.h"
 #include "../logger/Logger.h"
+#include "../data/dynamic.h"
+#include "../files/files.h"
+#include "../objects/Player.h"
 
 WorldConverter::WorldConverter(std::filesystem::path folder, const Content* content, std::shared_ptr<ContentLUT> lut) : lut(lut), content(content) {
     DebugSettings settings;
@@ -17,8 +20,11 @@ WorldConverter::WorldConverter(std::filesystem::path folder, const Content* cont
         LOG_WARN("Nothing to convert");
         return;
     }
+
+    tasks.push(ConvertTask{ConvertTaskType::Player, wfile->getPlayerFile()});
+
     for (auto file : std::filesystem::directory_iterator(regionsFolder)) {
-        regions.push(file.path());
+        tasks.push(ConvertTask{ConvertTaskType::Region, file.path()});
     }
 }
 
@@ -27,23 +33,17 @@ WorldConverter::~WorldConverter() {
 }
 
 bool WorldConverter::hasNext() const {
-    return !regions.empty();
+    return !tasks.empty();
 }
 
-void WorldConverter::convertNext() {
-    if (!hasNext()) {
-        LOG_ERROR("No more regions to convert");
-        throw std::runtime_error("No more regions to convert");
-    }
-    std::filesystem::path regfile = regions.front();
-    regions.pop();
-    if (!std::filesystem::is_regular_file(regfile)) return;
+void WorldConverter::convertRegion(std::filesystem::path file) {
     int x, z;
-    std::string name = regfile.stem().string();
+    std::string name = file.stem().string();
     if (!WorldFiles::parseRegionFilename(name, x, z)) {
         LOG_ERROR("Could not parse name '{}'", name);
         return;
     }
+
     LOG_INFO("Converting region '{}'", name);
     for (uint cz = 0; cz < RegionConsts::SIZE; ++cz) {
         for (uint cx = 0; cx < RegionConsts::SIZE; ++cx) {
@@ -59,6 +59,35 @@ void WorldConverter::convertNext() {
         }
     }
     LOG_INFO("Region '{}' successfully converted", name);
+}
+
+void WorldConverter::convertPlayer(std::filesystem::path file) {
+    LOG_INFO("Converting player {}", file.u8string());
+    auto map = files::read_json(file);
+    Player::convert(map.get(), lut.get());
+    files::write_json(file, map.get());
+    LOG_INFO("Player {} successfully converted", file.u8string());
+}
+
+void WorldConverter::convertNext() {
+    if (!hasNext()) {
+        LOG_ERROR("No more tasks to convert");
+        Logger::getInstance().flush();
+        throw std::runtime_error("No more tasks to convert");
+    }
+    ConvertTask task = tasks.front();
+    tasks.pop();
+
+    if (!std::filesystem::is_regular_file(task.file)) return;
+
+    switch (task.type) {
+        case ConvertTaskType::Region:
+            convertRegion(task.file);
+            break;
+        case ConvertTaskType::Player:
+            convertPlayer(task.file);
+            break;
+    }
 }
 
 void WorldConverter::write() {

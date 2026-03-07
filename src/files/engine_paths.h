@@ -10,6 +10,7 @@
 class EnginePaths {
     std::filesystem::path userfiles {"."};
     std::filesystem::path resources {"../res"};
+    std::filesystem::path worldFolder {""};
     std::vector<ContentPack>* contentPacks = nullptr;
 public:
     std::filesystem::path getUserfiles() const;
@@ -23,6 +24,7 @@ public:
     void setUserfiles(std::filesystem::path folder);
     void setResources(std::filesystem::path folder);
     void setContentPacks(std::vector<ContentPack>* contentPacks);
+    void setWorldFolder(std::filesystem::path folder);
 
     std::vector<std::filesystem::path> scanForWorlds();
 

@@ -289,6 +289,9 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
     hotbarView = createHotbar();
     inventoryView = createInventory();
 
+	darkOverlay = std::make_unique<gui::Panel>(glm::vec2(4000.0f));
+    darkOverlay->color(glm::vec4(0, 0, 0, 0.5f));
+
 	uicamera = new Camera(glm::vec3(), 1);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
@@ -296,9 +299,10 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
     createDebugPanel(engine);
 	menu->reset();
 
+	guiController->addBack(darkOverlay);
+    guiController->addBack(hotbarView);
 	guiController->add(debugPanel);
     guiController->add(contentAccessPanel);
-    guiController->add(hotbarView);
     guiController->add(inventoryView);
     guiController->add(grabbedItemView);
 }
@@ -307,6 +311,7 @@ HudRenderer::~HudRenderer() {
     guiController->remove(grabbedItemView);
     guiController->remove(inventoryView);
     guiController->remove(hotbarView);
+	guiController->remove(darkOverlay);
     guiController->remove(contentAccessPanel);
 	guiController->remove(debugPanel);
 	delete uicamera;
@@ -364,26 +369,9 @@ void HudRenderer::update(bool hudVisible) {
         if (slot < 0) slot += 10;
         player->setChosenSlot(slot);
     }
+
+	darkOverlay->visible(pause);
 }
-
-void HudRenderer::drawOverlay(const GfxContext& ctx) {
-	if (pause) {
-		ShaderProgram* uishader = assets->getShader("ui");
-		uishader->use();
-		uishader->uniformMatrix("u_projview", uicamera->getProjView());
-
-        const Viewport& viewport = ctx.getViewport();
-        const uint width = viewport.getWidth();
-        const uint height = viewport.getHeight();
-        auto batch = ctx.getBatch2D();
-        batch->begin();
-
-		batch->texture(nullptr);
-		batch->color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
-		batch->rect(0, 0, width, height);
-        batch->render();
-	}
-} 
 
 void HudRenderer::draw(const GfxContext& context) {
 	auto level = levelFrontend->getLevel();

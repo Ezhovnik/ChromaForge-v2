@@ -9,6 +9,7 @@
 #include "../data/dynamic.h"
 
 class ContentIndices;
+class ContentLUT;
 
 class Inventory {
     std::vector<ItemStack> slots;
@@ -27,6 +28,8 @@ public:
 
     void read(const dynamic::Map* src);
     std::unique_ptr<dynamic::Map> write() const;
+
+    static void convert(dynamic::Map* data, const ContentLUT* lut);
 
     static const size_t npos;
 };

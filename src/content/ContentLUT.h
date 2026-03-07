@@ -22,13 +22,16 @@ class ContentLUT { // Content Look-UP Table
     // Имена блоков для каждого старого индекса (из indices.json)
     std::vector<std::string> blockNames;
 
+    std::vector<itemid_t> items;
+    std::vector<std::string> itemNames;
+
     // Флаг: изменился ли порядок блоков (индексы не совпадают)
     bool reorderContent = false;
     // Флаг: есть ли блоки, которые отсутствуют в текущем контенте
     bool missingContent = false;
 
 public:
-    ContentLUT(size_t blocksCount, const Content* content);
+    ContentLUT(const Content* content, size_t blocks, size_t items);
 
     // Возвращает имя блока для заданного старого индекса.
     inline const std::string& getBlockName(blockid_t index) const {return blockNames[index];}
@@ -47,6 +50,20 @@ public:
         }
     }
 
+    inline const std::string& getItemName(blockid_t index) const {return itemNames[index];}
+
+    inline itemid_t getItemId(itemid_t index) const {return items[index];}
+
+    inline void setItem(itemid_t index, std::string name, itemid_t id) {
+        items[index] = id;
+        itemNames[index] = name;
+        if (id == ITEM_VOID) {
+            missingContent = true;
+        } else if (index != id) {
+            reorderContent = true;
+        }
+    }
+
     // Статический метод для создания объекта ContentLUT из JSON-файла.
     // Читает файл indices.json, сопоставляет имена блоков с текущими определениями.
     static ContentLUT* create(const std::filesystem::path& filename, const Content* content);
@@ -59,6 +76,8 @@ public:
 
     // Возвращает количество блоков в таблице (размер старого списка)
     inline size_t countBlocks() const {return blocks.size();}
+
+    inline size_t countItems() const {return items.size();}
 };
 
 #endif // CONTENT_CONTENT_LUT_H_

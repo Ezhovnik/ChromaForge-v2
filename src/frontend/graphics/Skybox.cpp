@@ -125,7 +125,7 @@ void Skybox::draw(const GfxContext& pctx, Camera* camera, Assets* assets, float 
     drawStars(angle, opacity);
 }
 
-void Skybox::refresh(const GfxContext& parent_context,float t, float mie, uint quality) {
+void Skybox::refresh(const GfxContext& parent_context, float t, float mie, uint quality) {
     GfxContext context = parent_context.sub();
     context.depthMask(false);
     context.depthTest(false);
@@ -135,7 +135,7 @@ void Skybox::refresh(const GfxContext& parent_context,float t, float mie, uint q
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
     shader->use();
-    Window::viewport(0, 0, size,size);
+    Window::viewport(0, 0, size, size);
 
     const glm::vec3 xaxs[] = {
         {0.0f, 0.0f, -1.0f},
@@ -166,7 +166,7 @@ void Skybox::refresh(const GfxContext& parent_context,float t, float mie, uint q
         {0.0f, 0.0f, 1.0f},
     };
     t *= PI * 2.0f;
-    
+
     shader->uniform1i("u_quality", quality);
     shader->uniform1f("u_mie", mie);
     shader->uniform1f("u_fog", mie - 1.0f);

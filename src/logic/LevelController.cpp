@@ -15,7 +15,6 @@ LevelController::LevelController(EngineSettings& settings, Level* level) : setti
 }
 
 LevelController::~LevelController() {
-    scripting::on_world_quit();
 }
 
 void LevelController::update(float delta, bool input, bool pause) {
@@ -23,4 +22,12 @@ void LevelController::update(float delta, bool input, bool pause) {
     level->update();
     chunks->update(settings.chunks.loadSpeed);
     blocks->update(delta);
+}
+
+void LevelController::onWorldSave() {
+    scripting::on_world_save();
+}
+
+void LevelController::onWorldQuit() {
+    scripting::on_world_quit();
 }

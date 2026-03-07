@@ -77,7 +77,6 @@ private:
 
     std::filesystem::path getLightsFolder() const;
 	std::filesystem::path getRegionFilename(int x, int z) const;
-    std::filesystem::path getPlayerFile() const; // Генерирует имя файла, в котором записана информация об игроке
     std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информауия о мире
     std::filesystem::path getIndicesFile() const;
     std::filesystem::path getPacksFile() const;
@@ -113,6 +112,7 @@ public:
 
     static bool parseRegionFilename(const std::string& name, int& x, int& z);
     std::filesystem::path getRegionsFolder() const;
+    std::filesystem::path getPlayerFile() const; // Генерирует имя файла, в котором записана информация об игроке
 
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
     void put(int x, int z, const ubyte* voxelData);
