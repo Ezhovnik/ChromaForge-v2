@@ -85,8 +85,8 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
 
 // Реализация деструктора
 Engine::~Engine() {
-    scripting::close();
     screen = nullptr;
+    scripting::close();
 
     LOG_INFO("Shutting down");
     assets.reset();

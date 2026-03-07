@@ -108,10 +108,12 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine),
 
 LevelScreen::~LevelScreen() {
     LOG_INFO("World saving");
+    controller->onWorldSave();
     World* world = level->getWorld();
 	world->write(level.get());
-
     LOG_INFO("The world has been successfully saved");
+
+    controller->onWorldQuit();
 }
 
 void LevelScreen::updateHotkeys() {
@@ -153,7 +155,6 @@ void LevelScreen::draw(float deltaTime) {
 
     worldRenderer->draw(context, camera.get(), hudVisible);
 
-    hud->drawOverlay(context);
     if (hudVisible) {
         hud->draw(context);
         if (level->player->debug) hud->drawDebug(1 / deltaTime);

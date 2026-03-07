@@ -8,6 +8,7 @@
 #include "../math/rand.h"
 #include "../voxels/Chunks.h"
 #include "../voxels/voxel.h"
+#include "../content/ContentLUT.h"
 
 namespace PlayerConsts {
     constexpr float CROUCH_SPEED_MUL = 0.35f;
@@ -113,6 +114,36 @@ void Player::attemptToFindSpawnpoint(Level* level) {
 	if (level->chunks->isObstacleBlock(newpos.x, newpos.y, newpos.z) || headvox == nullptr || headvox->id != 0) return;
 	spawnpoint = newpos;
 	teleport(spawnpoint);
+}
+
+std::unique_ptr<dynamic::Map> Player::write() const {
+	glm::vec3 position = hitbox->position;
+	auto root = std::make_unique<dynamic::Map>();
+
+	auto& posarr = root->putList("position");
+	posarr.put(position.x);
+	posarr.put(position.y);
+	posarr.put(position.z);
+
+	auto& rotarr = root->putList("rotation");
+	rotarr.put(cam.x);
+	rotarr.put(cam.y);
+
+	auto& sparr = root->putList("spawnpoint");
+	sparr.put(spawnpoint.x);
+	sparr.put(spawnpoint.y);
+	sparr.put(spawnpoint.z);
+
+	root->put("flight", flight);
+	root->put("noclip", noclip);
+    root->put("chosen-slot", chosenSlot);
+    root->put("inventory", inventory->write().release());
+    return root;
+}
+
+void Player::convert(dynamic::Map* data, const ContentLUT* lut) {
+    auto inventory = data->map("inventory");
+    if (inventory) Inventory::convert(inventory, lut);
 }
 
 void Player::teleport(glm::vec3 position) {

@@ -68,6 +68,10 @@ void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
     this->contentPacks = contentPacks;
 }
 
+void EnginePaths::setWorldFolder(std::filesystem::path folder) {
+    this->worldFolder = folder;
+}
+
 std::filesystem::path EnginePaths::resolve(std::string path) {
     size_t separator = path.find(':');
     if (separator == std::string::npos) return std::filesystem::path(path);
@@ -77,6 +81,7 @@ std::filesystem::path EnginePaths::resolve(std::string path) {
 
     if (prefix == "res" || prefix == "chromaforge") return resources/std::filesystem::path(filename);
     if (prefix == "user") return userfiles/std::filesystem::path(filename);
+    if (prefix == "world") return worldFolder/std::filesystem::path(filename);
 
     if (contentPacks) {
         for (auto& pack : *contentPacks) {

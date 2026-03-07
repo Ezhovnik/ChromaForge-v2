@@ -23,6 +23,9 @@ public:
     ~LevelController();
 
     void update(float delta, bool input, bool pause);
+
+    void onWorldSave();
+    void onWorldQuit();
 };
 
 #endif // LOGIC_LEVEL_CONTROLLER_H_

@@ -123,6 +123,7 @@ void open_world(std::string name, Engine* engine) {
         guiutil::alert(engine->getGUI(), langs::get(L"Content Error", L"menu") + L": "+util::str2wstr_utf8(error.what()));
         return;
     }
+    paths->setWorldFolder(folder);
 
     auto& packs = engine->getContentPacks();
     auto* content = engine->getContent();
@@ -205,7 +206,6 @@ void create_main_menu_panel(Engine* engine, PagesControl* menu) {
     panel->add(guiutil::gotoButton(L"New World", "new-world", menu));
     panel->add(create_worlds_panel(engine));
     panel->add(guiutil::gotoButton(L"Settings", "settings", menu));
-    panel->add(guiutil::gotoButton(L"Content", "content", menu));
 
     panel->add((new Button(langs::get(L"Quit", L"menu"), glm::vec4(10.f)))
     ->listenAction([](GUI* gui) {
@@ -250,9 +250,12 @@ void create_new_world_panel(Engine* engine, PagesControl* menu) {
         nameInput->cleanInput();
         seedInput->cleanInput();
 
+        auto folder = paths->getWorldsFolder()/std::filesystem::u8path(nameutf8);
+
         try {
             engine->loadAllPacks();
             engine->loadContent();
+            paths->setWorldFolder(folder);
         } catch (const contentpack_error& error) {
             guiutil::alert(engine->getGUI(),
                         langs::get(L"Content Error", L"menu") +
@@ -265,8 +268,6 @@ void create_new_world_panel(Engine* engine, PagesControl* menu) {
             guiutil::alert(engine->getGUI(), langs::get(L"Content Error", L"menu") + L": " + util::str2wstr_utf8(error.what()));
             return;
         }
-
-        auto folder = paths->getWorldsFolder()/std::filesystem::u8path(nameutf8);
 
         Level* level = World::create(nameutf8, folder, seed, engine->getSettings(), engine->getContent(), engine->getContentPacks());
         engine->setScreen(std::make_shared<LevelScreen>(engine, level));
@@ -423,6 +424,7 @@ void create_pause_panel(Engine* engine, PagesControl* menu) {
     panel->add(create_button(L"Continue", glm::vec4(10.0f), glm::vec4(1), [=](GUI*){
         menu->reset();
     }));
+    panel->add(guiutil::gotoButton(L"Content", "content", menu));
     panel->add(guiutil::gotoButton(L"Settings", "settings", menu));
 
     panel->add(create_button(L"Save and Quit to Menu", glm::vec4(10.f), glm::vec4(1), [=](GUI*) {

@@ -45,6 +45,7 @@ private:
     std::shared_ptr<gui::UINode> debugPanel;
     std::unique_ptr<InventoryInteraction> interaction;
     std::shared_ptr<SlotView> grabbedItemView;
+    std::shared_ptr<gui::Panel> darkOverlay;
 
 	gui::GUI* guiController;
     LevelFrontend* levelFrontend;
@@ -59,7 +60,6 @@ public:
 	~HudRenderer();
 
     void update(bool hudVisible);
-    void drawOverlay(const GfxContext& context);
 	void draw(const GfxContext& context);
 	void drawDebug(int fps);
 

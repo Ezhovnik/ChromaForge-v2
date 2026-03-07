@@ -18,7 +18,8 @@ Container::Container(glm::vec2 coord, glm::vec2 size) : UINode(coord, size) {
 std::shared_ptr<UINode> Container::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
     if (!interactive) return nullptr;
     if (!isInside(pos)) return nullptr;
-    for (auto& node : nodes) {
+    for (int i = nodes.size() - 1; i >= 0; --i) {
+        auto& node = nodes[i];
         if (!node->visible()) continue;
         auto hover = node->getAt(pos, node);
         if (hover != nullptr) return hover;
@@ -75,6 +76,12 @@ void Container::draw(Batch2D* batch, Assets* assets) {
     }
     batch->render();
     Window::popScissor();
+}
+
+void Container::addBack(std::shared_ptr<UINode> node) {
+    nodes.insert(nodes.begin(), node);
+    node->setParent(this);
+    refresh();
 }
 
 void Container::add(std::shared_ptr<UINode> node) {

@@ -248,6 +248,10 @@ void ContentLoader::load(ContentBuilder* builder) {
     fixPackIndices();
 
     auto folder = pack->folder;
+
+    std::filesystem::path scriptFile = folder/std::filesystem::path("scripts/world.lua");
+    if (std::filesystem::is_regular_file(scriptFile)) scripting::load_world_script(pack->id, scriptFile);
+
     if (!std::filesystem::is_regular_file(pack->getContentFile())) return;\
 
     auto root = files::read_json(pack->getContentFile());

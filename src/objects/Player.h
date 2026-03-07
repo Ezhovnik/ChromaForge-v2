@@ -6,11 +6,13 @@
 #include <glm/glm.hpp>
 
 #include "../voxels/voxel.h"
+#include "../data/dynamic.h"
 
 class Camera;
 class Hitbox;
 class Level;
 class Inventory;
+class ContentLUT;
 
 struct PlayerInput {
 	bool zoom;
@@ -67,6 +69,9 @@ public:
     glm::vec3 getSpawnPoint() const;
 
 	void update(Level* level, PlayerInput& input, float delta);
+
+	std::unique_ptr<dynamic::Map> write() const;
+    static void convert(dynamic::Map* data, const ContentLUT* lut);
 };
 
 #endif // OBJECTS_PLAYER_H_

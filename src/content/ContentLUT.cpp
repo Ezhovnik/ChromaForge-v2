@@ -8,8 +8,9 @@
 #include "../coders/json.h"
 #include "../voxels/Block.h"
 #include "../data/dynamic.h"
+#include "../items/Item.h"
 
-ContentLUT::ContentLUT(size_t blocksCount, const Content* content) {
+ContentLUT::ContentLUT(const Content* content, size_t blocksCount, size_t itemsCount) {
     ContentIndices* indices = content->getIndices();
     for (size_t i = 0; i < blocksCount; ++i) {
         blocks.push_back(i);
@@ -22,6 +23,16 @@ ContentLUT::ContentLUT(size_t blocksCount, const Content* content) {
     for (size_t i = indices->countBlockDefs(); i < blocksCount; ++i) {
         blockNames.push_back("");
     }
+
+    for (size_t i = 0; i < itemsCount; ++i) {
+        items.push_back(i);
+    }
+    for (size_t i = 0; i < indices->countItemDefs(); ++i) {
+        itemNames.push_back(indices->getItemDef(i)->name);
+    }
+    for (size_t i = indices->countItemDefs(); i < itemsCount; ++i) {
+        itemNames.push_back("");
+    }
 }
 
 // Создаёт таблицу перекодировки из JSON-файла.
@@ -29,13 +40,15 @@ ContentLUT* ContentLUT::create(const std::filesystem::path& filename, const Cont
     // Чтение и разбор JSON-файла
     auto root = files::read_json(filename);
     auto blocklist = root->list("blocks");
+    auto itemlist = root->list("items");
 
     // Размер таблицы = максимум из длины массива и числа блоков в текущем контенте
     auto* indices = content->getIndices();
     size_t blocks_c = blocklist ? std::max(blocklist->size(), indices->countBlockDefs()) : indices->countBlockDefs();
+    size_t items_c = itemlist ? std::max(itemlist->size(), indices->countItemDefs()) : indices->countItemDefs();    
 
     // Создаём временный объект LUT с начальным заполнением
-    auto lut = std::make_unique<ContentLUT>(blocks_c, content);
+    auto lut = std::make_unique<ContentLUT>(content, blocks_c, items_c);
 
     // Если в JSON есть массив блоков, обрабатываем его
     if (blocklist) {
@@ -49,6 +62,16 @@ ContentLUT* ContentLUT::create(const std::filesystem::path& filename, const Cont
             else lut->setBlock(i, name, BLOCK_VOID);   
         }
     }
+
+    if (itemlist) {
+        for (size_t i = 0; i < itemlist->size(); ++i) {
+            std::string name = itemlist->str(i);
+            Item* def = content->findItem(name);
+            if (def) lut->setItem(i, name, def->rt.id);
+            else lut->setItem(i, name, ITEM_VOID);   
+        }
+    }
+
     if (lut->hasContentReorder() || lut->hasMissingContent()) return lut.release();
     else return nullptr;
 }

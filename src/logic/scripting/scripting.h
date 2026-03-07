@@ -24,6 +24,8 @@ namespace scripting {
 
     void on_world_load(Level* level, BlocksController* blocks);
     void on_world_quit();
+    void on_world_save();
+    void load_world_script(std::string prefix, std::filesystem::path file);
 
     void on_blocks_tick(const Block* block, int tps);
     void update_block(const Block* block, int x, int y, int z);
