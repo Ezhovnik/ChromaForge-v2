@@ -52,6 +52,10 @@ std::filesystem::path EnginePaths::getLogsFile() {
     return folder/std::filesystem::path("ChromaForge.log");
 }
 
+std::filesystem::path EnginePaths::getWorldFolder() {
+    return worldFolder;
+}
+
 bool EnginePaths::isWorldNameUsed(std::string name) {
 	return std::filesystem::exists(EnginePaths::getWorldsFolder()/std::filesystem::u8path(name));
 }

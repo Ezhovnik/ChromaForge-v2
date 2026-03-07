@@ -7,8 +7,12 @@
 
 #include "../typedefs.h"
 #include "../constants.h"
+#include "Content.h"
 
-class Content;
+struct ContentEntry {
+    ContentType type;
+    std::string name;
+};
 
 /*
 Класс для создания таблицы перекодировки индексов блоков.
@@ -78,6 +82,8 @@ public:
     inline size_t countBlocks() const {return blocks.size();}
 
     inline size_t countItems() const {return items.size();}
+
+    std::vector<ContentEntry> getMissingContent() const;
 };
 
 #endif // CONTENT_CONTENT_LUT_H_

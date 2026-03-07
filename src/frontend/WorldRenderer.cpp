@@ -95,8 +95,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader) {
 	std::vector<size_t> indices;
 	for (size_t i = 0; i < chunks->volume; ++i){
-		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
-		if (chunk == nullptr) continue;
+		if (chunks->chunks[i] == nullptr) continue;
 		indices.push_back(i);
 	}
 
@@ -210,7 +209,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 		skybox->unbind();
 	}
 
-    if (level->player->debug) {
+    if (hudVisible && level->player->debug) {
 		GfxContext ctx = parent_context.sub();
 		ctx.depthTest(true);
 
@@ -222,7 +221,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 			if (coord.z < 0) coord.z--;
 			int chunk_x = floordiv((int)coord.x, CHUNK_WIDTH);
 			int chunk_z = floordiv((int)coord.z, CHUNK_DEPTH);
-			
+
 			drawBorders(chunk_x * CHUNK_WIDTH, 0, chunk_z * CHUNK_DEPTH, (chunk_x + 1) * CHUNK_WIDTH, CHUNK_HEIGHT, (chunk_z + 1) * CHUNK_DEPTH);
 		}
 

@@ -75,3 +75,20 @@ ContentLUT* ContentLUT::create(const std::filesystem::path& filename, const Cont
     if (lut->hasContentReorder() || lut->hasMissingContent()) return lut.release();
     else return nullptr;
 }
+
+std::vector<ContentEntry> ContentLUT::getMissingContent() const {
+    std::vector<ContentEntry> entries;
+    for (size_t i = 0; i < blocks.size(); ++i) {
+        if (blocks[i] == BLOCK_VOID) {
+            auto& name = blockNames[i];
+            entries.push_back(ContentEntry{ContentType::Block, name});
+        }
+    }
+    for (size_t i = 0; i < items.size(); ++i) {
+        if (items[i] == ITEM_VOID) {
+            auto& name = itemNames[i];
+            entries.push_back(ContentEntry{ContentType::Item, name});
+        }
+    }
+    return entries;
+}

@@ -69,7 +69,16 @@ ContentPack ContentPack::read(std::filesystem::path folder) {
     root->str("id", pack.id);
     root->str("title", pack.title);
     root->str("version", pack.version);
+    root->str("creator", pack.creator);
+    root->str("description", pack.description);
     pack.folder = folder;
+
+    auto dependencies = root->list("dependencies");
+    if (dependencies) {
+        for (size_t i = 0; i < dependencies->size(); i++) {
+            pack.dependencies.push_back(dependencies->str(i));
+        }
+    }
 
     if (pack.id == "none") {
         LOG_ERROR("Content-pack id is not specified: {}", folder.u8string());
@@ -92,6 +101,11 @@ void ContentPack::scan(std::filesystem::path rootfolder, std::vector<ContentPack
     }
 }
 
+void ContentPack::scan(EnginePaths* paths, std::vector<ContentPack>& packs) {
+    scan(paths->getResources()/std::filesystem::path("content"), packs);
+    scan(paths->getWorldFolder()/std::filesystem::path("content"), packs);
+}
+
 std::vector<std::string> ContentPack::worldPacksList(std::filesystem::path folder) {
     std::filesystem::path listfile = folder/std::filesystem::path("packs.list");
     if (!std::filesystem::is_regular_file(listfile)) {
@@ -106,16 +120,17 @@ std::filesystem::path ContentPack::findPack(const EnginePaths* paths, std::files
     if (std::filesystem::is_directory(folder)) return folder;
 
     folder = paths->getResources()/std::filesystem::path("content")/std::filesystem::path(name);
-    if (std::filesystem::is_directory(folder)) return folder;
-
-    LOG_ERROR("Could not to find pack '{}'", name);
-    Logger::getInstance().flush();
-    throw contentpack_error(name, folder, "Could not to find pack '" + name + "'");
+    return folder;
 }
 
 void ContentPack::readPacks(const EnginePaths* paths, std::vector<ContentPack>& packs, const std::vector<std::string>& packnames, std::filesystem::path worldDir) {
     for (const auto& name : packnames) {
         std::filesystem::path packfolder = ContentPack::findPack(paths, worldDir, name);
+        if (!std::filesystem::is_directory(packfolder)) {
+            LOG_ERROR("Could not to find pack '{}'", name);
+            Logger::getInstance().flush();
+            throw contentpack_error(name, packfolder, "Could not to find pack '" + name + "'");
+        }
         packs.push_back(ContentPack::read(packfolder));
     }
 }

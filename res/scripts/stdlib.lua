@@ -8,16 +8,16 @@ function is_array(x)
     return true
 end
 
-local __cached_scripts = {}
-local __cached_results = {}
-
 function parse_path(path)
     local index = string.find(path, ':')
     if index == nil then
         error("invalid path syntax (':' missing)")
     end
-    return string.sub(path, 1, index-1), string.sub(path, index+1, -1)
+    return string.sub(path, 1, index - 1), string.sub(path, index + 1, -1)
 end
+
+local __cached_scripts = {}
+local __cached_results = {}
 
 function load_script(path, nocache)
     local packname, filename = parse_path(path)
@@ -43,4 +43,21 @@ function sleep(timesec)
     while time.uptime() - start < timesec do
         coroutine.yield()
     end
+end
+
+_dofile = dofile
+function dofile(path)
+    local index = string.find(path, "/content/")
+    if index then
+        local newpath = string.sub(path, index + 9)
+        index = string.find(newpath, "/")
+        if index then
+            local label = string.sub(newpath, 1, index - 1)
+            newpath = label..':'..string.sub(newpath, index + 1)
+            if file.isfile(newpath) then
+                return load_script(newpath, true)
+            end
+        end
+    end
+    return _dofile(path)
 end

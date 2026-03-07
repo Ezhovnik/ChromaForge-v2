@@ -63,6 +63,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, bool allAssets) {
 
 		loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/menubg.png", "gui/menubg");
 		loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/delete_icon.png", "gui/delete_icon");
+		loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/no_icon.png", "gui/no_icon");
 		loader.add(AssetType::Texture, TEXTURES_FOLDER"/misc/moon.png", "misc/moon");
         loader.add(AssetType::Texture, TEXTURES_FOLDER"/misc/sun.png", "misc/sun");
 

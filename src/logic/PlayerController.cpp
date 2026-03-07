@@ -234,14 +234,15 @@ void PlayerController::updateInteraction(){
 
 		if (def && input.build) {
 			if (block->rt.funcsset.oninteract && !input.crouch) {
-                scripting::on_block_interact(player, block, x, y, z);
-                return;
+                if (scripting::on_block_interact(player, block, x, y, z)) return;
             }
 			if (!block->replaceable){
 				x = iend.x + norm.x;
 				y = iend.y + norm.y;
 				z = iend.z + norm.z;
-			}
+			} else if (def->rotations.name == "pipe") {
+                states = BLOCK_DIR_UP;
+            }
 			vox = chunks->getVoxel(x, y, z);
 			blockid_t chosenBlock = def->rt.id;
 			if (vox && (block = contentIds->getBlockDef(vox->id))->replaceable) {
@@ -262,7 +263,7 @@ void PlayerController::updateInteraction(){
 			Block* block = contentIds->getBlockDef(chunks->getVoxel(x,y,z)->id);
 			itemid_t id = block->rt.pickingItem;
 			auto inventory = player->getInventory();
-			size_t slotid = inventory->findSlotByItem(id);
+			size_t slotid = inventory->findSlotByItem(id, 0, 10);
 			if (slotid == Inventory::npos) {
 				slotid = player->getChosenSlot();
 			} else {

@@ -96,6 +96,13 @@ Level* World::load(std::filesystem::path directory, EngineSettings& settings, co
 	return level;
 }
 
+bool World::hasPack(const std::string& id) const {
+    for (auto& pack : packs) {
+        if (pack.id == id) return true;
+    }
+    return false;
+}
+
 const std::vector<ContentPack>& World::getPacks() const {
 	return packs;
 }
