@@ -25,6 +25,7 @@
 #include "../items/Item.h"
 #include "../data/dynamic.h"
 #include "../items/Inventory.h"
+#include "../coders/byte_utils.h"
 
 const char* WorldFiles::WORLD_FILE = "world.json";
 
@@ -136,15 +137,39 @@ void WorldFiles::put(Chunk* chunk){
 		region->setUnsaved(true);
 		region->put(localX, localZ, data, compressedSize);
 	}
+
 	if (doWriteLights && chunk->isLighted()) {
 		size_t compressedSize;
-        std::unique_ptr<ubyte[]> light_data (chunk->light_map->encode());
+        std::unique_ptr<ubyte[]> light_data (chunk->light_map.encode());
 		ubyte* data = compress(light_data.get(), LIGHTMAP_DATA_LEN, compressedSize);
 
 		WorldRegion* region = getOrCreateRegion(lights, regionX, regionZ);
 		region->setUnsaved(true);
 		region->put(localX, localZ, data, compressedSize);
 	}
+
+	if (!chunk->inventories.empty()){
+        auto& inventories = chunk->inventories;
+        ByteBuilder builder;
+        builder.putInt32(inventories.size());
+        for (auto& entry : inventories) {
+            builder.putInt32(entry.first);
+            auto map = entry.second->serialize();
+            auto bytes = json::to_binary(map.get(), true);
+            builder.putInt32(bytes.size());
+            builder.put(bytes.data(), bytes.size());
+        }   
+        WorldRegion* region = getOrCreateRegion(storages, regionX, regionZ);
+        region->setUnsaved(true);
+
+        auto datavec = builder.data();
+        uint datasize = builder.size();
+        auto data = std::make_unique<ubyte[]>(builder.size());
+        for (uint i = 0; i < builder.size(); ++i) {
+            data[i] = datavec[i];
+        }
+        region->put(localX, localZ, data.release(), datasize);
+    }
 }
 
 void WorldFiles::put(int x, int z, const ubyte* voxelData) {
@@ -229,6 +254,10 @@ std::filesystem::path WorldFiles::getIndicesFile() const {
 
 std::filesystem::path WorldFiles::getPacksFile() const {
 	return directory/std::filesystem::path("packs.list");
+}
+
+std::filesystem::path WorldFiles::getInventoriesFolder() const {
+	return directory/std::filesystem::path("inventories");
 }
 
 ubyte* WorldFiles::getChunk(int x, int z){
@@ -387,6 +416,9 @@ void WorldFiles::write(const World* world, const Content* content) {
 	std::filesystem::path lightsFolder = getLightsFolder();
 	if (!std::filesystem::is_directory(lightsFolder)) std::filesystem::create_directories(lightsFolder);
 
+	std::filesystem::path inventoriesFolder = getInventoriesFolder();
+	if (!std::filesystem::is_directory(inventoriesFolder)) std::filesystem::create_directories(inventoriesFolder);
+
 	if (world) {
 		writeWorldInfo(world);
 		writePacks(world);
@@ -397,6 +429,7 @@ void WorldFiles::write(const World* world, const Content* content) {
 	writeIndices(content->getIndices());
 	writeRegions(regions, regionsFolder, RegionConsts::LAYER_VOXELS);
 	writeRegions(lights, lightsFolder, RegionConsts::LAYER_LIGHTS);
+	writeRegions(lights, lightsFolder, RegionConsts::LAYER_STORAGES);
 }
 
 void WorldFiles::writePacks(const World* world) {
@@ -434,22 +467,7 @@ void WorldFiles::writeIndices(const ContentIndices* indices) {
 }
 
 void WorldFiles::writeWorldInfo(const World* world) {
-	dynamic::Map root;
-
-	auto& versionobj = root.putMap("version");
-	versionobj.put("major", ENGINE_VERSION_MAJOR);
-	versionobj.put("minor", ENGINE_VERSION_MINOR);
-	versionobj.put("maintenance", ENGINE_VERSION_MAINTENANCE);
-
-	root.put("name", world->getName());
-	root.put("seed", world->getSeed());
-
-	auto& timeobj = root.putMap("time");
-	timeobj.put("day-time", world->daytime);
-	timeobj.put("day-time-speed", world->daytimeSpeed);
-	timeobj.put("total-time", world->totalTime);
-
-	files::write_json(getWorldFile(), &root);
+	files::write_json(getWorldFile(), world->serialize().get());
 }
 
 bool WorldFiles::readWorldInfo(World* world) {
@@ -460,24 +478,7 @@ bool WorldFiles::readWorldInfo(World* world) {
 	}
 
 	auto root = files::read_json(file);
-	world->setName(root->getStr("name", world->getName()));
-    world->setSeed(root->getInt("seed", world->getSeed()));
-
-	auto verobj = root->map("version");
-	if (verobj) {
-		int major = 0, minor = -1, maintenance = -1;
-		verobj->num("major", major);
-		verobj->num("minor", minor);
-		verobj->num("maintenance", maintenance);
-		LOG_DEBUG("World version: {}.{}.{}", major, minor, maintenance);
-	}
-
-	auto timeobj = root->map("time");
-	if (timeobj) {
-		timeobj->num("day-time", world->daytime);
-		timeobj->num("day-time-speed", world->daytimeSpeed);
-		timeobj->num("total-time", world->totalTime);
-	}
+	world->deserialize(root.get());
 
 	return true;
 }
@@ -498,8 +499,13 @@ bool WorldFiles::readPlayer(Player* player) {
 	return true;
 }
 
-void WorldFiles::addPack(const std::string& id) {
-    auto packs = files::read_list(getPacksFile());
+void WorldFiles::addPack(const World* world, const std::string& id) {
+    std::filesystem::path file = getPacksFile();
+    if (!std::filesystem::is_regular_file(file)) {
+        if (!std::filesystem::is_directory(directory)) std::filesystem::create_directories(directory);
+        writePacks(world);
+    }
+    auto packs = files::read_list(file);
     packs.push_back(id);
 
 	std::stringstream ss;
@@ -507,5 +513,5 @@ void WorldFiles::addPack(const std::string& id) {
 	for (const auto& pack : packs) {
 		ss << pack << "\n";
 	}
-	files::write_string(getPacksFile(), ss.str());
+	files::write_string(file, ss.str());
 }

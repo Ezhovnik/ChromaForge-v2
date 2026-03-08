@@ -29,7 +29,7 @@ namespace files {
     extern uint append_bytes(std::filesystem::path, const ubyte* data, size_t size);
     extern bool write_string(std::filesystem::path filename, const std::string content);
     extern bool write_json(std::filesystem::path filename, const dynamic::Map* obj, bool nice=true);
-    extern bool write_binary_json(std::filesystem::path filename, const dynamic::Map* obj, bool compressed=false);
+    extern bool write_binary_json(std::filesystem::path filename, const dynamic::Map* obj, bool compression=false);
 
     extern bool read(std::filesystem::path, char* data, size_t size);
     extern ubyte* read_bytes(std::filesystem::path, size_t& length);

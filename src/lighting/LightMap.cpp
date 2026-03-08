@@ -6,26 +6,14 @@
 
 static_assert(sizeof(light_t) == 2, "Replace the dataio calls with the new light_t value");
 
-LightMap::LightMap(){
-	map = new light_t[CHUNK_VOLUME];
-	for (uint i = 0; i < CHUNK_VOLUME; ++i){
-		map[i] = 0x0000;
-	}
-}
-
-LightMap::~LightMap(){
-	delete[] map;
-}
-
 void LightMap::set(const LightMap* light_map) {
-	for (uint i = 0; i < CHUNK_VOLUME; ++i){
-		map[i] = light_map->map[i];
-	}
+	set(light_map->map);
 }
 
-void LightMap::set(light_t* map) {
-	delete[] this->map;
-	this->map = map;
+void LightMap::set(const light_t* map) {
+	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+        this->map[i] = map[i];
+    }
 }
 
 ubyte* LightMap::encode() const {

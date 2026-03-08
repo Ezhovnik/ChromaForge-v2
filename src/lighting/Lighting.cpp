@@ -30,9 +30,9 @@ void Lighting::clear() {
         std::shared_ptr<Chunk> chunk = chunks->chunks[index];
         if (chunk == nullptr) continue;
         
-        LightMap* light_map = chunk->light_map;
+        LightMap& light_map = chunk->light_map;
         for (int i = 0; i < CHUNK_VOLUME; ++i) {
-            light_map->map[i] = 0;
+            light_map.map[i] = 0;
         }
     }
 }
@@ -50,12 +50,12 @@ void Lighting::preBuildSkyLight(Chunk* chunk, const ContentIndices* indices){
 					if (highestPoint < y) highestPoint = y;
 					break;
 				}
-				chunk->light_map->setS(x, y, z, 15);
+				chunk->light_map.setS(x, y, z, 15);
 			}
 		}
 	}
 	if (highestPoint < CHUNK_HEIGHT - 1) highestPoint++;
-	chunk->light_map->highestPoint = highestPoint;
+	chunk->light_map.highestPoint = highestPoint;
 }
 
 void Lighting::buildSkyLight(int cx, int cz) {
@@ -64,13 +64,13 @@ void Lighting::buildSkyLight(int cx, int cz) {
 	Chunk* chunk = chunks->getChunk(cx, cz);
 	for (int z = 0; z < CHUNK_DEPTH; ++z){
 		for (int x = 0; x < CHUNK_WIDTH; ++x){
-			for (int y = chunk->light_map->highestPoint; y >= 0; --y){
+			for (int y = chunk->light_map.highestPoint; y >= 0; --y){
 				int gx = x + cx * CHUNK_WIDTH;
 				int gz = z + cz * CHUNK_DEPTH;
 				while (y > 0 && !blockDefs[chunk->voxels[vox_index(x, y, z)].id]->lightPassing) {
 					y--;
 				}
-				if (chunk->light_map->getS(x, y, z) != 15) {
+				if (chunk->light_map.getS(x, y, z) != 15) {
 					solverS->add(gx, y + 1, gz);
 					for (; y >= 0; y--){
 						solverS->add(gx + 1, y, gz);
@@ -97,7 +97,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z, bool expand) {
 	for (uint y = 0; y < CHUNK_HEIGHT; ++y){
 		for (uint z = 0; z < CHUNK_DEPTH; ++z){
 			for (uint x = 0; x < CHUNK_WIDTH; ++x){
-				voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
+				const voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x];
 				const Block* block = blockDefs[vox.id];
 				int gx = x + chunk_x * CHUNK_WIDTH;
 				int gz = z + chunk_z * CHUNK_DEPTH;
@@ -117,7 +117,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z, bool expand) {
 				for (int z = 0; z < CHUNK_DEPTH; ++z) {
 					int gz = z + chunk_z * CHUNK_DEPTH;
 
-					int rgbs = chunk->light_map->get(x, y, z);
+					int rgbs = chunk->light_map.get(x, y, z);
 					if (rgbs){
 						solverR->add(gx, y, gz, LightMap::extract(rgbs, 0));
 						solverG->add(gx, y, gz, LightMap::extract(rgbs, 1));
@@ -133,7 +133,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z, bool expand) {
 			for (int y = 0; y < CHUNK_HEIGHT; ++y) {
 				for (int x = 0; x < CHUNK_WIDTH; ++x) {
 					int gx = x + chunk_x * CHUNK_WIDTH;
-					int rgbs = chunk->light_map->get(x, y, z);
+					int rgbs = chunk->light_map.get(x, y, z);
 					if (rgbs) {
 						solverR->add(gx, y, gz, LightMap::extract(rgbs, 0));
 						solverG->add(gx, y, gz, LightMap::extract(rgbs, 1));

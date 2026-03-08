@@ -1,7 +1,6 @@
 #ifndef LIGHTING_LIGHTMAP_H_
 #define LIGHTING_LIGHTMAP_H_
 
-#include "../voxels/Chunk.h"
 #include "../typedefs.h"
 #include "../constants.h"
 
@@ -9,36 +8,33 @@ constexpr int LIGHTMAP_DATA_LEN = CHUNK_VOLUME / 2;
 
 class LightMap {
 public:
-	light_t* map;
+	light_t map[CHUNK_VOLUME] {};
     int highestPoint = 0;
 
-	LightMap();
-	~LightMap();
-
     void set(const LightMap* light_map);
-	void set(light_t* map);
+	void set(const light_t* map);
 
-    inline ushort get(int x, int y, int z){
+    inline ushort get(int x, int y, int z) const {
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x]);
 	}
 
-	inline ubyte get(int x, int y, int z, int channel){
+	inline ubyte get(int x, int y, int z, int channel) const {
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] >> (channel << 2)) & 0xF;
 	}
 
-	inline ubyte getR(int x, int y, int z){
+	inline ubyte getR(int x, int y, int z) const {
 		return map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] & 0xF;
 	}
 
-	inline ubyte getG(int x, int y, int z){
+	inline ubyte getG(int x, int y, int z) const {
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] >> 4) & 0xF;
 	}
 
-	inline ubyte getB(int x, int y, int z){
+	inline ubyte getB(int x, int y, int z) const {
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] >> 8) & 0xF;
 	}
 
-	inline ubyte getS(int x, int y, int z){
+	inline ubyte getS(int x, int y, int z) const {
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x] >> 12) & 0xF;
 	}
 

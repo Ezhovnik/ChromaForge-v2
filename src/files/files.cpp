@@ -102,9 +102,8 @@ bool files::write_json(std::filesystem::path filename, const dynamic::Map* obj, 
     return files::write_string(filename, json::stringify(obj, nice, "  "));
 }
 
-bool files::write_binary_json(std::filesystem::path filename, const dynamic::Map* obj, bool compressed) {
-    std::vector<ubyte> bytes = json::to_binary(obj);
-	if (compressed) bytes = zip::compress(bytes.data(), bytes.size());
+bool files::write_binary_json(std::filesystem::path filename, const dynamic::Map* obj, bool compression) {
+    auto bytes = json::to_binary(obj, compression);
     return files::write_bytes(filename, bytes.data(), bytes.size());
 }
 
