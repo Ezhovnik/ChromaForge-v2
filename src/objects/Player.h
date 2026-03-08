@@ -7,6 +7,7 @@
 
 #include "../voxels/voxel.h"
 #include "../data/dynamic.h"
+#include "../interfaces/Serializable.h"
 
 class Camera;
 class Hitbox;
@@ -32,7 +33,7 @@ struct PlayerInput {
     bool pickBlock;
 };
 
-class Player {
+class Player : Serializable {
 private:
 	float speed;
 	itemid_t chosenSlot;
@@ -70,7 +71,8 @@ public:
 
 	void update(Level* level, PlayerInput& input, float delta);
 
-	std::unique_ptr<dynamic::Map> write() const;
+	std::unique_ptr<dynamic::Map> serialize() const override;
+    void deserialize(dynamic::Map *src) override;
     static void convert(dynamic::Map* data, const ContentLUT* lut);
 };
 

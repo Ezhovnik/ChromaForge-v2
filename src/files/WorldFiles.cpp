@@ -483,7 +483,7 @@ bool WorldFiles::readWorldInfo(World* world) {
 }
 
 void WorldFiles::writePlayer(Player* player){
-	files::write_json(getPlayerFile(), player->write().release());
+	files::write_json(getPlayerFile(), player->serialize().release());
 }
 
 bool WorldFiles::readPlayer(Player* player) {
@@ -493,32 +493,7 @@ bool WorldFiles::readPlayer(Player* player) {
 		return false;
 	}
 
-	auto root = files::read_json(file);
-	auto posarr = root->list("position");
-
-	glm::vec3& position = player->hitbox->position;
-	position.x = posarr->num(0);
-	position.y = posarr->num(1);
-	position.z = posarr->num(2);
-	player->camera->position = position;
-
-	if (root->has("spawnpoint")) {
-		auto sparr = root->list("spawnpoint");
-		player->setSpawnPoint(glm::vec3(sparr->num(0), sparr->num(1), sparr->num(2)));
-	} else {
-		player->setSpawnPoint(position);
-	}
-
-	auto rotarr = root->list("rotation");
-	player->cam.x = rotarr->num(0);
-	player->cam.y = rotarr->num(1);
-
-	root->flag("flight", player->flight);
-	root->flag("noclip", player->noclip);
-
-	player->setChosenSlot(root->getInt("chosen-slot", player->getChosenSlot()));
-    auto inventory_map = root->map("inventory");
-    if (inventory_map) player->getInventory()->read(inventory_map);
+	player->deserialize(files::read_json(file).get());
 
 	return true;
 }
