@@ -57,7 +57,11 @@ static void to_binary(ByteBuilder& builder, const Value* value) {
 static List* array_from_binary(ByteReader& reader);
 static Map* object_from_binary(ByteReader& reader);
 
-std::vector<ubyte> json::to_binary(const Map* obj) {
+std::vector<ubyte> json::to_binary(const Map* obj, bool compress) {
+    if (compress) {
+        auto bytes = to_binary(obj, false);
+        return zip::compress(bytes.data(), bytes.size());
+    }
     ByteBuilder builder;
     builder.put(BJSON_TYPE_DOCUMENT);
     builder.putInt32(0);

@@ -22,7 +22,7 @@ namespace json {
     constexpr int BJSON_TYPE_NULL = 0xC;
     constexpr int BJSON_TYPE_CDOCUMENT = 0x1F;
 
-    extern std::vector<ubyte> to_binary(const dynamic::Map* obj);
+    extern std::vector<ubyte> to_binary(const dynamic::Map* obj, bool compress=false);
     extern std::unique_ptr<dynamic::Map> from_binary(const ubyte* src, size_t size);
 }
 

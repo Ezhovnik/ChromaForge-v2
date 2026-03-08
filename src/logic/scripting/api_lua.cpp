@@ -1,5 +1,7 @@
 #include "api_lua.h"
 
+#include <iostream>
+
 #include <glm/glm.hpp>
 
 #include "../../physics/Hitbox.h"
@@ -372,6 +374,23 @@ static int l_set_block_user_bits(lua_State* L) {
     return 0;
 }
 
+static int l_print(lua_State* L) {
+    int n = lua_gettop(L);
+    lua_getglobal(L, "tostring");
+    for (int i = 1; i <= n; ++i) {
+        lua_pushvalue(L, -1);
+        lua_pushvalue(L, i);
+        lua_call(L, 1, 1);
+        const char* s = lua_tostring(L, -1);
+        if (s == NULL) return luaL_error(L, "'tostring' must return a string to 'print'");
+        if (i > 1) std::cout << "\t";
+        std::cout << s;
+        lua_pop(L, 1);
+    }
+    std::cout << std::endl;
+    return 0;
+}
+
 void lua_addfunc(lua_State* L, lua_CFunction func, const char* name) {
     lua_pushcfunction(L, func);
     lua_setglobal(L, name);
@@ -382,6 +401,8 @@ void apilua::create_funcs(lua_State* L) {
     openlib(L, "world", worldlib, 0);
     openlib(L, "player", playerlib, 0);
     openlib(L, "time", timelib, 0);
+
+    lua_addfunc(L, l_print, "print");
 
     lua_addfunc(L, l_block_index, "block_index");
     lua_addfunc(L, l_block_name, "block_name");

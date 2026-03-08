@@ -146,7 +146,6 @@ SlotView::SlotView(
     color(glm::vec4(0, 0, 0, 0.2f));
 }
 
-// performance disaster
 void SlotView::draw(Batch2D* batch, Assets* assets) {
     glm::vec2 coord = calcCoord();
 
@@ -168,7 +167,7 @@ void SlotView::draw(Batch2D* batch, Assets* assets) {
             batch->rect(coord.x, coord.y, slotSize, slotSize);
         }
     }
-    
+
     batch->color = glm::vec4(1.0f);
 
     auto previews = frontend->getBlocksAtlas();
@@ -238,11 +237,8 @@ void SlotView::clicked(gui::GUI* gui, int button) {
             stack.move(grabbed, content->getIndices());
         } else {
             if (layout.itemSource) {
-                if (grabbed.isEmpty()) {
-                    grabbed.set(stack);
-                } else {
-                    grabbed.clear();
-                }
+                if (grabbed.isEmpty()) grabbed.set(stack);
+                else grabbed.clear();
             } else {
                 std::swap(grabbed, stack);
             }
@@ -265,11 +261,15 @@ void SlotView::clicked(gui::GUI* gui, int button) {
                 stack.set(grabbed);
                 stack.setCount(1);
             } else {
-                stack.setCount(stack.getCount()+1);
+                stack.setCount(stack.getCount() + 1);
             }
-            grabbed.setCount(grabbed.getCount()-1);
+            grabbed.setCount(grabbed.getCount() - 1);
         }
     }
+}
+
+void SlotView::focus(gui::GUI* gui) {
+    clicked(gui, 0);
 }
 
 InventoryView::InventoryView(

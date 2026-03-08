@@ -7,11 +7,12 @@
 #include "ItemStack.h"
 #include "../typedefs.h"
 #include "../data/dynamic.h"
+#include "../interfaces/Serializable.h"
 
 class ContentIndices;
 class ContentLUT;
 
-class Inventory {
+class Inventory : Serializable {
     std::vector<ItemStack> slots;
 public:
     Inventory(size_t size);
@@ -26,8 +27,8 @@ public:
 
     void move(ItemStack& item, const ContentIndices* indices, size_t begin=0, size_t end=-1);
 
-    void read(const dynamic::Map* src);
-    std::unique_ptr<dynamic::Map> write() const;
+    void deserialize(dynamic::Map* src) override;
+    std::unique_ptr<dynamic::Map> serialize() const override;
 
     static void convert(dynamic::Map* data, const ContentLUT* lut);
 

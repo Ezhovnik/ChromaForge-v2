@@ -26,7 +26,7 @@ inline constexpr int ITEM_ICON_SIZE = 48;
 
 inline constexpr double PI = 3.14159265358979323846;
 
-inline uint vox_index(int x, int y, int z, int w = CHUNK_WIDTH, int d = CHUNK_DEPTH) {
+inline constexpr uint vox_index(uint x, uint y, uint z, uint w = CHUNK_WIDTH, uint d = CHUNK_DEPTH) {
 	return (y * d + z) * w + x;
 }
 
