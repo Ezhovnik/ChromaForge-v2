@@ -31,10 +31,10 @@ std::filesystem::path EnginePaths::getScreenshotFile(std::string ext) {
 	ss << std::put_time(&tm, format);
 	std::string datetimestr = ss.str();
 
-	std::filesystem::path filename = folder/std::filesystem::path("screenshot-" + datetimestr + "." + ext);
+	std::filesystem::path filename = folder/std::filesystem::u8path("screenshot-" + datetimestr + "." + ext);
 	uint index = 0;
 	while (std::filesystem::exists(filename)) {
-		filename = folder/std::filesystem::path("screenshot-" + datetimestr + "-" + std::to_string(index) + "." + ext);
+		filename = folder/std::filesystem::u8path("screenshot-" + datetimestr + "-" + std::to_string(index) + "." + ext);
 		index++;
 	}
 	return filename;
@@ -49,7 +49,7 @@ std::filesystem::path EnginePaths::getWorldsFolder() {
 std::filesystem::path EnginePaths::getLogsFile() {
     std::filesystem::path folder = std::filesystem::path(LOGS_FOLDER);
     if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
-    return folder/std::filesystem::path("ChromaForge.log");
+    return folder/std::filesystem::u8path("ChromaForge.log");
 }
 
 std::filesystem::path EnginePaths::getWorldFolder() {
@@ -78,22 +78,22 @@ void EnginePaths::setWorldFolder(std::filesystem::path folder) {
 
 std::filesystem::path EnginePaths::resolve(std::string path) {
     size_t separator = path.find(':');
-    if (separator == std::string::npos) return std::filesystem::path(path);
+    if (separator == std::string::npos) return std::filesystem::u8path(path);
 
     std::string prefix = path.substr(0, separator);
     std::string filename = path.substr(separator + 1);
 
-    if (prefix == "res" || prefix == "chromaforge") return resources/std::filesystem::path(filename);
-    if (prefix == "user") return userfiles/std::filesystem::path(filename);
-    if (prefix == "world") return worldFolder/std::filesystem::path(filename);
+    if (prefix == "res" || prefix == "chromaforge") return resources/std::filesystem::u8path(filename);
+    if (prefix == "user") return userfiles/std::filesystem::u8path(filename);
+    if (prefix == "world") return worldFolder/std::filesystem::u8path(filename);
 
     if (contentPacks) {
         for (auto& pack : *contentPacks) {
-            if (pack.id == prefix) return pack.folder/std::filesystem::path(filename);
+            if (pack.id == prefix) return pack.folder/std::filesystem::u8path(filename);
         }
     }
 
-    return std::filesystem::path("./" + filename);
+    return std::filesystem::u8path("./" + filename);
 }
 
 std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {
@@ -106,7 +106,7 @@ std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {
         if (!entry.is_directory()) continue;
 
         std::filesystem::path worldFolder = entry.path();
-        std::filesystem::path worldFile = worldFolder/std::filesystem::path(WorldFiles::WORLD_FILE);
+        std::filesystem::path worldFile = worldFolder/std::filesystem::u8path(WorldFiles::WORLD_FILE);
         if (!std::filesystem::is_regular_file(worldFile)) continue;
         folders.push_back(worldFolder);
     }
@@ -119,7 +119,7 @@ ResPaths::ResPaths(std::filesystem::path mainRoot, std::vector<std::filesystem::
 std::filesystem::path ResPaths::find(const std::string& filename) const {
     for (int i = roots.size() - 1; i >= 0; --i) {
         auto& root = roots[i];
-        std::filesystem::path file = root/std::filesystem::path(filename);
+        std::filesystem::path file = root/std::filesystem::u8path(filename);
         if (std::filesystem::exists(file)) return file;
     }
     return mainRoot/std::filesystem::path(filename);
@@ -129,7 +129,7 @@ std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderNa
     std::vector<std::filesystem::path> entries;
     for (int i = roots.size() - 1; i >= 0; --i) {
         auto& root = roots[i];
-        std::filesystem::path folder = root/std::filesystem::path(folderName);
+        std::filesystem::path folder = root/std::filesystem::u8path(folderName);
         if (!std::filesystem::is_directory(folder)) continue;
         for (const auto& entry : std::filesystem::directory_iterator(folder)) {
             entries.push_back(entry.path());
@@ -137,7 +137,7 @@ std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderNa
     }
 
     {
-        std::filesystem::path folder = mainRoot/std::filesystem::path(folderName);
+        std::filesystem::path folder = mainRoot/std::filesystem::u8path(folderName);
         if (!std::filesystem::is_directory(folder)) return entries;
         for (const auto& entry : std::filesystem::directory_iterator(folder)) {
             entries.push_back(entry.path());

@@ -17,6 +17,8 @@ class GfxContext {
     bool cullFace_ = false;
 
     BlendMode blendMode_ = BlendMode::Normal;
+
+    int scissorsCount = 0;
 public:
     GfxContext(const GfxContext* parent, Viewport& viewport, Batch2D* g2d);
     ~GfxContext();
@@ -30,6 +32,8 @@ public:
     void cullFace(bool flag);
 
     void blendMode(BlendMode mode);
+
+    void scissors(glm::vec4 area);
 };
 
 #endif // GRAPHICS_GFX_CONTEXT_H_

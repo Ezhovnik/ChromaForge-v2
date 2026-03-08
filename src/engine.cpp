@@ -39,6 +39,7 @@
 #include "content/Content.h"
 #include "content/ContentLoader.h"
 #include "logic/scripting/scripting.h"
+#include "graphics/GfxContext.h"
 
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths){
@@ -140,7 +141,11 @@ void Engine::mainloop() {
     
         if (!Window::isIconified()) {
             screen->draw(deltaTime);
-            gui->draw(&batch, assets.get());
+
+            Viewport viewport(Window::width, Window::height);
+            GfxContext context(nullptr, viewport, &batch);
+            gui->draw(&context, assets.get());
+
             Window::swapInterval(settings.display.swapInterval);
         } else {
             Window::swapInterval(1);
@@ -261,5 +266,5 @@ std::shared_ptr<Screen> Engine::getScreen() {
 void Engine::setLanguage(std::string locale) {
 	settings.ui.language = locale;
 	langs::setup(paths->getResources(), locale, contentPacks);
-	menus::create_menus(this, gui->getMenu());
+	menus::create_menus(this);
 }

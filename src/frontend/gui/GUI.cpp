@@ -12,6 +12,7 @@
 #include "../../window/Camera.h"
 #include "../../graphics/ShaderProgram.h"
 #include "../../logger/Logger.h"
+#include "../../graphics/GfxContext.h"
 
 using namespace gui;
 
@@ -22,7 +23,7 @@ GUI::GUI() {
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
-    menu = new PagesControl();
+    menu = std::make_shared<PagesControl>();
     container->add(menu);
     container->scrollable(false);
 }
@@ -32,16 +33,16 @@ GUI::~GUI() {
     delete container;
 }
 
-PagesControl* GUI::getMenu() {
+std::shared_ptr<PagesControl> GUI::getMenu() {
     return menu;
 }
 
 void GUI::activateMouse(float delta) {
     auto hover = container->getAt(Events::cursor, nullptr);
-    if (this->hover && this->hover != hover) this->hover->hover(false);
+    if (this->hover && this->hover != hover) this->hover->setHover(false);
     
     if (hover) {
-        hover->hover(true);
+        hover->setHover(true);
         if (Events::scroll) hover->scrolled(Events::scroll);
     }
     this->hover = hover;
@@ -74,7 +75,7 @@ void GUI::activateMouse(float delta) {
 } 
 
 void GUI::activate(float delta) {
-    container->size(glm::vec2(Window::width, Window::height));
+    container->setSize(glm::vec2(Window::width, Window::height));
     container->activate(delta);
     auto prevfocus = focus;
 
@@ -97,23 +98,22 @@ void GUI::activate(float delta) {
             }
         }
     }
-    if (focus && !focus->isfocused()) focus = nullptr;
+    if (focus && !focus->isFocused()) focus = nullptr;
 }
 
-void GUI::draw(Batch2D* batch, Assets* assets) {
-    menu->setCoord((Window::size() - menu->size()) / 2.0f);
-    uicamera->setFov(Window::height);
+void GUI::draw(const GfxContext* parent_context, Assets* assets) {
+    auto& viewport = parent_context->getViewport();
+    glm::vec2 wsize = viewport.size();
+
+    menu->setCoord((wsize - menu->getSize()) / 2.0f);
+    uicamera->setFov(wsize.y);
 
 	ShaderProgram* uishader = assets->getShader("ui");
-    if (uishader == nullptr) {
-        LOG_CRITICAL("The shader 'ui' could not be found in the assets");
-        throw std::runtime_error("The shader 'ui' could not be found in the assets");
-    }
 	uishader->use();
-	uishader->uniformMatrix("u_projview", uicamera->getProjection() * uicamera->getView());
+	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
-    batch->begin();
-    container->draw(batch, assets);
+    parent_context->getBatch2D()->begin();
+    container->draw(parent_context, assets);
 }
 
 std::shared_ptr<UINode> GUI::getFocused() const {
@@ -121,7 +121,7 @@ std::shared_ptr<UINode> GUI::getFocused() const {
 }
 
 bool GUI::isFocusCaught() const {
-    return focus && focus->isfocuskeeper();
+    return focus && focus->isFocuskeeper();
 }
 
 void GUI::addBack(std::shared_ptr<UINode> panel) {

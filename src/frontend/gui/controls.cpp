@@ -7,41 +7,40 @@
 #include "../../window/Events.h"
 #include "GUI.h"
 #include "../../graphics/UVRegion.h"
-
-inline constexpr uint KEY_ESCAPE = 256;
-inline constexpr uint KEY_ENTER = 257;
-inline constexpr uint KEY_BACKSPACE = 259;
+#include "../../graphics/GfxContext.h"
 
 using namespace gui;
 
-Label::Label(std::string text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text_(util::str2wstr_utf8(text)), fontName_(fontName) {
+Label::Label(std::string text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text(util::str2wstr_utf8(text)), fontName_(fontName) {
+    setInteractive(false);
 }
 
-Label::Label(std::wstring text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text_(text), fontName_(fontName) {
+Label::Label(std::wstring text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text(text), fontName_(fontName) {
+    setInteractive(false);
 }
 
-Label& Label::text(std::wstring text) {
-    this->text_ = text;
-    return *this;
+void Label::setText(std::wstring text) {
+    this->text = text;
 }
 
-std::wstring Label::text() const {
-    return text_;
+std::wstring Label::getText() const {
+    return text;
 }
 
-void Label::draw(Batch2D* batch, Assets* assets) {
-    if (supplier) text(supplier());
+void Label::draw(const GfxContext* parent_context, Assets* assets) {
+    if (supplier) setText(supplier());
 
-    batch->color = color_;
+    auto batch = parent_context->getBatch2D();
+    batch->color = getColor();
     Font* font = assets->getFont(fontName_);
-    glm::vec2 size = UINode::size();
-    glm::vec2 newsize = glm::vec2(font->calcWidth(text_), font->lineHeight());
+    glm::vec2 size = getSize();
+    glm::vec2 newsize = glm::vec2(font->calcWidth(text), font->lineHeight());
     if (newsize.x > size.x) {
-        this->size(newsize);
+        setSize(newsize);
         size = newsize;
     }
     glm::vec2 coord = calcCoord();
-    font->draw(batch, text_, coord.x, coord.y);
+    font->draw(batch, text, coord.x, coord.y);
 }
 
 Label* Label::textSupplier(wstringsupplier supplier) {
@@ -49,47 +48,46 @@ Label* Label::textSupplier(wstringsupplier supplier) {
     return this;
 }
 
-void Label::size(glm::vec2 sizenew) {
-    UINode::size(glm::vec2(UINode::size().x, sizenew.y));
+void Label::setSize(glm::vec2 sizenew) {
+    UINode::setSize(glm::vec2(UINode::getSize().x, sizenew.y));
 }
 
 Image::Image(std::string texture, glm::vec2 size) : UINode(glm::vec2(), size), texture(texture) {
     setInteractive(false);
 }
 
-void Image::draw(Batch2D* batch, Assets* assets) {
+void Image::draw(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
+    glm::vec4 color = getColor();
+    auto batch = parent_context->getBatch2D();
     batch->texture(assets->getTexture(texture));
-    batch->color = color_;
-    batch->rect(coord.x, coord.y, size_.x, size_.y, 0, 0, 0, UVRegion(), false, true, color_);
+    batch->color = color;
+    batch->rect(coord.x, coord.y, size.x, size.y, 0, 0, 0, UVRegion(), false, true, color);
 }
 
-Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(34, 32), padding, 0) {
+Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(), padding, 0) {
+    glm::vec4 margin = getMargin();
+    setSize(content->getSize() + glm::vec2(padding[0] + padding[2] + margin[0] + margin[2], padding[1] + padding[3] + margin[1] + margin[3]));
     add(content);
     scrollable(false);
 }
 
-Button::Button(std::wstring text, glm::vec4 padding, glm::vec4 margin) : Panel(glm::vec2(32, 32), padding, 0) {
-    this->margin(margin);
-    Label* label = new Label(text);
-    label->align(Align::center);
-    this->label = std::shared_ptr<UINode>(label);
-    add(this->label);
+Button::Button(std::wstring text, glm::vec4 padding, onaction action) : Panel(glm::vec2(32, 32), padding, 0) {
+    if (action) listenAction(action);
     scrollable(false);
+
+    label = std::make_shared<Label>(text);
+    label->setAlign(Align::center);
+    add(label);
 }
 
-void Button::text(std::wstring text) {
-    if (label) {
-        Label* label = (Label*)(this->label.get());
-        label->text(text);
-    }
+void Button::setText(std::wstring text) {
+    if (label) label->setText(text);
 }
 
-std::wstring Button::text() const {
-    if (label) {
-        Label* label = (Label*)(this->label.get());
-        return label->text();
-    }
+std::wstring Button::getText() const {
+    if (label) return label->getText();
+
     return L"";
 }
 
@@ -105,11 +103,12 @@ void Button::setHoverColor(glm::vec4 color) {
     hoverColor = color;
 }
 
-void Button::drawBackground(Batch2D* batch, Assets* assets) {
+void Button::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
+    auto batch = parent_context->getBatch2D();
     batch->texture(nullptr);
-    batch->color = (ispressed() ? pressedColor : (hover_ ? hoverColor : color_));
-    batch->rect(coord.x, coord.y, size_.x, size_.y);
+    batch->color = (isPressed() ? pressedColor : (hover ? hoverColor : color));
+    batch->rect(coord.x, coord.y, size.x, size.y);
 }
 
 std::shared_ptr<UINode> Button::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
@@ -132,8 +131,7 @@ Button* Button::listenAction(onaction action) {
 
 void Button::textAlign(Align align) {
     if (label) {
-        Label* label = (Label*)(this->label.get());
-        label->align(align);
+        label->setAlign(align);
         refresh();
     }
 }
@@ -159,39 +157,42 @@ void RichButton::setHoverColor(glm::vec4 color) {
     hoverColor = color;
 }
 
-void RichButton::drawBackground(Batch2D* batch, Assets* assets) {
+void RichButton::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
+    auto batch = parent_context->getBatch2D();
     batch->texture(nullptr);
-    batch->color = (ispressed() ? pressedColor : (hover_ ? hoverColor : color_));
-    batch->rect(coord.x, coord.y, size_.x, size_.y);
+    batch->color = (isPressed() ? pressedColor : (hover ? hoverColor : color));
+    batch->rect(coord.x, coord.y, size.x, size.y);
 }
 
 TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0, false), input(L""), placeholder(placeholder) {
-    label = new Label(L"");
-    add(std::shared_ptr<UINode>(label));
+    label = std::make_shared<Label>(L"");
+    add(label);
 }
 
-void TextBox::drawBackground(Batch2D* batch, Assets* assets) {
+void TextBox::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
+
+    auto batch = parent_context->getBatch2D();
     batch->texture(nullptr);
 
     if (valid) {
-        if (isfocused()) batch->color = focusedColor;
-        else if (hover_) batch->color = hoverColor;
-        else batch->color = color_;
+        if (isFocused()) batch->color = focusedColor;
+        else if (hover) batch->color = hoverColor;
+        else batch->color = color;
     } else {
         batch->color = invalidColor;
     }
 
-    batch->rect(coord.x, coord.y, size_.x, size_.y);
-    if (!focused_ && supplier) input = supplier();
+    batch->rect(coord.x, coord.y, size.x, size.y);
+    if (!isFocused() && supplier) input = supplier();
 
     if (input.empty()) {
-        label->color(glm::vec4(0.5f));
-        label->text(placeholder);
+        label->setColor(glm::vec4(0.5f));
+        label->setText(placeholder);
     } else {
-        label->color(glm::vec4(1.0f));
-        label->text(input);
+        label->setColor(glm::vec4(1.0f));
+        label->setText(input);
     }
 
     scrollable(false);
@@ -203,8 +204,15 @@ void TextBox::typed(unsigned int codepoint) {
 }
 
 bool TextBox::validate() {
-    if (validator) valid = validator(input);
-    else valid = true;
+    if (validator) {
+        if (!input.empty()) {
+            valid = validator(input);
+        } else {
+            valid = validator(placeholder);
+        }
+    } else {
+        valid = true;
+    }
 
     return valid;
 }
@@ -218,17 +226,14 @@ bool TextBox::isValid() const {
 }
 
 void TextBox::keyPressed(int key) {
-    switch (key) {
-        case KEY_BACKSPACE:
-            if (!input.empty()) {
-                input = input.substr(0, input.length() - 1);
-                validate();
-            }
-            break;
-        case KEY_ENTER:
-            if (validate() && consumer) consumer(label->text());
-            defocus();
-            break;
+    if (key == keycode::BACKSPACE) {
+        if (!input.empty()) {
+            input = input.substr(0, input.length() - 1);
+            validate();
+        }
+    } else if (key == keycode::ENTER) {
+        if (validate() && consumer) consumer(label->getText());
+        defocus();
     }
 
     if (key == keycode::V && Events::isPressed(keycode::LEFT_CONTROL)) {
@@ -275,21 +280,18 @@ void TextBox::text(std::wstring value) {
 }
 
 InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec2(100, 32), padding, 0, false), binding(binding) {
-    label = new Label(L"");
+    label = std::make_shared<Label>(L"");
     add(label);
     scrollable(false);
 }
 
-std::shared_ptr<UINode> InputBindBox::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
-    return UINode::getAt(pos, self);
-}
-
-void InputBindBox::drawBackground(Batch2D* batch, Assets* assets) {
+void InputBindBox::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
+    auto batch = parent_context->getBatch2D();
     batch->texture(nullptr);
-    batch->color = (isfocused() ? focusedColor : (hover_ ? hoverColor : color_));
-    batch->rect(coord.x, coord.y, size_.x, size_.y);
-    label->text(util::str2wstr_utf8(binding.text()));
+    batch->color = (isFocused() ? focusedColor : (hover ? hoverColor : color));
+    batch->rect(coord.x, coord.y, size.x, size.y);
+    label->setText(util::str2wstr_utf8(binding.text()));
 }
 
 void InputBindBox::clicked(GUI*, int button) {
@@ -308,23 +310,24 @@ void InputBindBox::keyPressed(int key) {
 
 TrackBar::TrackBar(double min, double max, double value, double step, int trackWidth)
     : UINode(glm::vec2(), glm::vec2(26)), min(min), max(max), value(value), step(step), trackWidth(trackWidth) {
-    color(glm::vec4(0.0f, 0.0f, 0.0f, 0.4f));
+    setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.4f));
 }
 
-void TrackBar::draw(Batch2D* batch, Assets* assets) {
+void TrackBar::draw(const GfxContext* parent_context, Assets* assets) {
     if (supplier_) value = supplier_();
 
     glm::vec2 coord = calcCoord();
+    auto batch = parent_context->getBatch2D();
     batch->texture(nullptr);
-    batch->color = (hover_ ? hoverColor : color_);
-    batch->rect(coord.x, coord.y, size_.x, size_.y);
+    batch->color = (hover ? hoverColor : color);
+    batch->rect(coord.x, coord.y, size.x, size.y);
 
-    float width = size_.x;
+    float width = size.x;
     float t = (value - min) / (max - min + trackWidth * step);
 
     batch->color = trackColor;
-    int actualWidth = size_.x * (trackWidth / (max - min + trackWidth * step) * step);
-    batch->rect(coord.x + width * t, coord.y, actualWidth, size_.y);
+    int actualWidth = size.x * (trackWidth / (max - min + trackWidth * step) * step);
+    batch->rect(coord.x + width * t, coord.y, actualWidth, size.y);
 }
 
 void TrackBar::supplier(doublesupplier supplier) {
@@ -339,7 +342,7 @@ void TrackBar::mouseMove(GUI*, int x, int y) {
     glm::vec2 coord = calcCoord();
     value = x;
     value -= coord.x;
-    value = (value) / size_.x * (max - min + trackWidth * step);
+    value = (value) / size.x * (max - min + trackWidth * step);
     value += min;
     value = (value > max) ? max : value;
     value = (value < min) ? min : value;
@@ -348,16 +351,17 @@ void TrackBar::mouseMove(GUI*, int x, int y) {
 }
 
 CheckBox::CheckBox(bool checked) : UINode(glm::vec2(), glm::vec2(32.0f)), checked_(checked) {
-    color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+    setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 }
 
-void CheckBox::draw(Batch2D* batch, Assets* assets) {
+void CheckBox::draw(const GfxContext* parent_context, Assets* assets) {
     if (supplier_) checked_ = supplier_();
 
     glm::vec2 coord = calcCoord();
+    auto batch = parent_context->getBatch2D();
     batch->texture(nullptr);
-    batch->color = checked_ ? checkColor : (hover_ ? hoverColor : color_);
-    batch->rect(coord.x, coord.y, size_.x, size_.y);
+    batch->color = checked_ ? checkColor : (hover ? hoverColor : color);
+    batch->rect(coord.x, coord.y, size.x, size.y);
 }
 
 void CheckBox::mouseRelease(GUI*, int x, int y) {
@@ -379,12 +383,12 @@ CheckBox* CheckBox::checked(bool flag) {
 }
 
 FullCheckBox::FullCheckBox(std::wstring text, glm::vec2 size, bool checked) : Panel(size), checkbox(std::make_shared<CheckBox>(checked)){
-    color(glm::vec4(0.0f));
+    setColor(glm::vec4(0.0f));
     orientation(Orientation::horizontal);
 
     add(checkbox);
 
     auto label = std::make_shared<Label>(text); 
-    label->margin(glm::vec4(5.0f, 5.0f, 0.0f, 0.0f));
+    label->setMargin(glm::vec4(5.0f, 5.0f, 0.0f, 0.0f));
     add(label);
 }
