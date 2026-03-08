@@ -8,7 +8,7 @@
 #include "util/platform.h"
 #include "coders/toml.h"
 #include "coders/json.h"
-#include "definitions.h"
+#include "core_defs.h"
 #include "logger/Logger.h"
 #include "util/command_line.h"
 #include "window/Events.h"
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 			reader.read();
             LOG_INFO("Engine settings read succesfully");
 		}
-        setup_bindings();
+        CoreContent::setup_bindings();
 
         engine = std::make_unique<Engine>(settings, &paths);
 

@@ -145,7 +145,7 @@
                 "${workspaceFolder}/src/world/World.cpp",
 
                 //src
-                "${workspaceFolder}/src/definitions.cpp",
+                "${workspaceFolder}/src/core_defs.cpp",
                 "${workspaceFolder}/src/engine.cpp",
                 "${workspaceFolder}/src/main.cpp",
                 

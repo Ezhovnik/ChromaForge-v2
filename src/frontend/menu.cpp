@@ -26,7 +26,7 @@
 #include "../logger/Logger.h"
 #include "locale/langs.h"
 #include "../content/ContentPack.h"
-#include "../definitions.h"
+#include "../core_defs.h"
 #include "../engine.h"
 #include "../content/ContentLUT.h"
 #include "../math/rand.h"

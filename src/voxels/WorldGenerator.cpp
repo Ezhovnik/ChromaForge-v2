@@ -15,7 +15,7 @@
 #define FNL_IMPL
 #include "../math/FastNoiseLite.h"
 
-#include "../definitions.h"
+#include "../core_defs.h"
 #include "../logger/Logger.h"
 #include "../content/Content.h"
 #include "../math/voxmaths.h"
