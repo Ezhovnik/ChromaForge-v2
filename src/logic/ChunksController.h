@@ -23,8 +23,6 @@ private:
 
     uint chunksPadding;
 
-    int64_t avgDurationMcs = 1000;
-
 	bool loadVisible();
 	bool buildLights(std::shared_ptr<Chunk> chunk);
     void createChunk(int x, int y);

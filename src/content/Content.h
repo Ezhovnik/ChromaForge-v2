@@ -10,7 +10,7 @@
 
 #include "../typedefs.h"
 
-typedef std::set<ubyte> DrawGroups;
+using DrawGroups = std::set<ubyte>;
 
 class Block;
 class Content;

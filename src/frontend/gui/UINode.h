@@ -15,8 +15,8 @@ namespace gui {
     class UINode;
     class GUI;
 
-    typedef std::function<void(GUI*)> onaction;
-    typedef std::function<void(GUI*, double)> onnumberchange;
+    using onaction = std::function<void(GUI*)>;
+    using onnumberchange = std::function<void(GUI*, double)>;
 
     enum class Align {
         left,
@@ -29,12 +29,14 @@ namespace gui {
         glm::vec2 coord;
         glm::vec2 size;
         glm::vec4 color {1.0f};
+        glm::vec4 hoverColor {1.0f};
         glm::vec4 margin {1.0f};
         bool visible = true;
         bool hover = false;
         bool pressed = false;
         bool focused = false;
         bool interactive = true;
+        bool resizing = true;
         Align align = Align::left;
         UINode* parent = nullptr;
         UINode(glm::vec2 coord, glm::vec2 size);
@@ -57,6 +59,12 @@ namespace gui {
 
         virtual void setColor(glm::vec4 newColor);
         glm::vec4 getColor() const;
+
+        virtual void setHoverColor(glm::vec4 newColor);
+        glm::vec4 getHoverColor() const;
+
+        virtual void setResizing(bool flag);
+        virtual bool isResizing() const;
 
         virtual void setMargin(glm::vec4 margin);
         glm::vec4 getMargin() const;

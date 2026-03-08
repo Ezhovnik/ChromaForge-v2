@@ -13,7 +13,6 @@ class Batch3D {
 private:
 	float* buffer;
 	size_t capacity;
-	size_t offset;
 	Mesh* mesh;
 	size_t index;
 

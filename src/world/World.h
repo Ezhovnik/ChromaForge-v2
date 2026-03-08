@@ -64,6 +64,10 @@ public:
 	std::unique_ptr<dynamic::Map> serialize() const override;
     void deserialize(dynamic::Map *src) override;
 
+	const Content* getContent() const {
+        return content;
+    }
+
     uint getNextInventoryId() {
         return nextInventoryId++;
     }

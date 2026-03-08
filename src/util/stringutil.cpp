@@ -13,7 +13,7 @@ std::wstring util::lfill(std::wstring s, uint length, wchar_t c) {
     if (s.length() >= length) return s;
 
     std::wstringstream ss;
-    for (uint i = 0; i < length-s.length(); i++) {
+    for (uint i = 0; i < length - s.length(); ++i) {
         ss << c;
     }
     ss << s;
@@ -25,7 +25,7 @@ std::wstring util::rfill(std::wstring s, uint length, wchar_t c) {
 
     std::wstringstream ss;
     ss << s;
-    for (uint i = 0; i < length-s.length(); i++) {
+    for (uint i = 0; i < length - s.length(); ++i) {
         ss << c;
     }
     return ss.str();
@@ -75,13 +75,12 @@ const utf_t utf[] = {
 inline uint utf8_len(ubyte cp) {
     uint len = 0;
 	for (const utf_t* u = utf; u->mask; ++u) {
-		if((cp >= u->beg) && (cp <= u->end)) {
-			break;
-		}
+		if((cp >= u->beg) && (cp <= u->end)) break;
 		++len;
 	}
 	if (len > 4) {
-        LOG_ERROR("UTF-8 decode erroe");
+        LOG_ERROR("UTF-8 decode error");
+        Logger::getInstance().flush();
 		throw std::runtime_error("UTF-8 decode error");
     }
 
@@ -242,4 +241,31 @@ std::vector<ubyte> util::base64_decode(const char* str, size_t size) {
 
 std::vector<ubyte> util::base64_decode(const std::string& str) {
     return base64_decode(str.c_str(), str.size());
+}
+
+int util::replaceAll(std::string& str, const std::string& from, const std::string& to) {
+    int count = 0;
+    size_t offset = 0;
+    while (true) {
+        size_t start_pos = str.find(from, offset);
+        if (start_pos == std::string::npos) break;
+        str.replace(start_pos, from.length(), to);
+        offset = start_pos + to.length();
+        count++;
+        break;
+    }
+    return count;
+}
+
+double util::parse_double(const std::string& str) {
+    std::istringstream ss(str);
+    ss.imbue(std::locale("C"));
+    double d;
+    ss >> d;
+    if (ss.fail()) {
+        LOG_ERROR("Invalid number format");
+        Logger::getInstance().flush();
+        throw std::runtime_error("Invalid number format");
+    }
+    return d;    
 }

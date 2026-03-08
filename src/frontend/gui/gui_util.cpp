@@ -5,6 +5,7 @@
 #include "controls.h"
 #include "panels.h"
 #include "../locale/langs.h"
+#include "../../delegates.h"
 
 using namespace gui;
 
@@ -19,13 +20,13 @@ std::shared_ptr<Button> guiutil::backButton(std::shared_ptr<PagesControl> menu) 
 std::shared_ptr<Button> guiutil::gotoButton(std::wstring text, const std::string& page, std::shared_ptr<PagesControl> menu) {
     text = langs::get(text, L"menu");
     return std::make_shared<Button>(text, glm::vec4(10.f), [=](GUI* gui) {
-        menu->set(page);
+        menu->setPage(page);
     });
 }
 
-void guiutil::alert(GUI* gui, const std::wstring& text, gui::runnable on_hidden) {
+void guiutil::alert(GUI* gui, const std::wstring& text, runnable on_hidden) {
     auto menu = gui->getMenu();
-    Panel* panel = new Panel(glm::vec2(500, 200), glm::vec4(8.0f), 8.0f);
+    auto panel = std::make_shared<Panel>(glm::vec2(500, 200), glm::vec4(8.0f), 8.0f);
     panel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 
     const int wrap_length = 60;
@@ -51,11 +52,11 @@ void guiutil::alert(GUI* gui, const std::wstring& text, gui::runnable on_hidden)
         }
     ));
     panel->refresh();
-    menu->add("<alert>", panel);
-    menu->set("<alert>");
+    menu->addPage("<alert>", panel);
+    menu->setPage("<alert>");
 }
 
-void guiutil::confirm(GUI* gui, const std::wstring& text, gui::runnable on_confirm, std::wstring yestext, std::wstring notext) {
+void guiutil::confirm(GUI* gui, const std::wstring& text, runnable on_confirm, std::wstring yestext, std::wstring notext) {
     if (yestext.empty()) yestext = langs::get(L"Yes");
     if (notext.empty()) notext = langs::get(L"No");    
 
@@ -78,6 +79,6 @@ void guiutil::confirm(GUI* gui, const std::wstring& text, gui::runnable on_confi
     panel->add(subpanel);
 
     panel->refresh();
-    menu->add("<confirm>", panel);
-    menu->set("<confirm>");
+    menu->addPage("<confirm>", panel);
+    menu->setPage("<confirm>");
 }

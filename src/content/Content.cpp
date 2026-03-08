@@ -70,7 +70,7 @@ Content* ContentBuilder::build() {
         Block* def = blockDefs[name];
 
         def->rt.id = blockDefsIndices.size();
-        def->rt.emissive = *((uint32_t*)def->emission);
+        def->rt.emissive = *reinterpret_cast<uint32_t*>(def->emission);
         def->rt.solid = def->model == BlockModel::Cube;
 
         if (def->rotatable) {
@@ -91,7 +91,7 @@ Content* ContentBuilder::build() {
         Item* def = itemDefs[name];
 
         def->rt.id = itemDefsIndices.size();
-        def->rt.emissive = *((uint32_t*)def->emission);
+        def->rt.emissive = *reinterpret_cast<uint32_t*>(def->emission);
         itemDefsIndices.push_back(def);
     }
 

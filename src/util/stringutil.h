@@ -19,6 +19,10 @@ namespace util {
     extern bool is_integer(std::wstring text);
     extern bool is_valid_filename(std::wstring name);
 
+    extern int replaceAll(std::string& str, const std::string& from, const std::string& to);
+
+    extern double parse_double(const std::string& str);
+
     extern void ltrim(std::string &s);
     extern void rtrim(std::string &s);
     extern void trim(std::string &s);

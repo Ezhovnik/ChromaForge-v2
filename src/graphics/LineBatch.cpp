@@ -10,18 +10,19 @@ inline constexpr int LB_VERTEX_SIZE = 7;
 LineBatch::LineBatch(size_t capacity) : capacity(capacity) {
     const vattr attrs[] = {{3}, {4}, {0}};
     buffer = new float[capacity * LB_VERTEX_SIZE * 2];
-    mesh = new Mesh(buffer, 0, attrs);
+    mesh = std::make_unique<Mesh>(buffer, 0, attrs);
     index = 0;
 }
 
 // Деструктор
 LineBatch::~LineBatch() {
     delete[] buffer;
-    delete mesh;
 }
 
 // Добавляет линию в буфер для отрисовки
 void LineBatch::line(float start_x, float start_y, float start_z, float end_x, float end_y, float end_z, float red, float green, float blue, float alpha) {
+    if (index + LB_VERTEX_SIZE * 2 >= capacity) render();
+
     // Записываем данные начальной вершины
     buffer[index++] = start_x;
     buffer[index++] = start_y;

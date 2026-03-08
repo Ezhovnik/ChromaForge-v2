@@ -6,7 +6,7 @@
 
 class Block;
 class ContentBuilder;
-class ContentPack;
+struct ContentPack;
 class Item;
 
 namespace dynamic {

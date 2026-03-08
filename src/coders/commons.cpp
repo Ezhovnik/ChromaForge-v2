@@ -5,14 +5,6 @@
 
 #include "../logger/Logger.h"
 
-inline int char2int(char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return 10 + c - 'a';
-    if (c >= 'A' && c <= 'F') return 10 + c - 'A';
-
-    return -1;
-}
-
 inline double power(double base, int64_t power) {
     double result = 1.0;
     int64_t exp = power;
@@ -76,6 +68,18 @@ std::string escape_string(std::string s) {
 BasicParser::BasicParser(std::string file, std::string source) : filename(file), source(source) {
 }
 
+void BasicParser::skip(size_t n) {
+    n = std::min(n, source.length() - pos);
+
+    for (size_t i = 0; i < n; ++i) {
+        char next = source[pos++];
+        if (next == '\n') {
+            line++;
+            linestart = pos;
+        }
+    }
+}
+
 void BasicParser::skipWhitespace() {
     while (hasNext()) {
         char next = source[pos];
@@ -89,8 +93,24 @@ void BasicParser::skipWhitespace() {
     }
 }
 
+bool BasicParser::skipTo(const std::string& substring) {
+    size_t idx = source.find(substring, pos);
+    if (idx == std::string::npos) {
+        skip(source.length() - pos);
+        return false;
+    } else {
+        skip(idx - pos);
+        return true;
+    }
+}
+
 bool BasicParser::hasNext() {
     return pos < source.length();
+}
+
+bool BasicParser::isNext(const std::string& substring) {
+    if (source.length() - pos < substring.length()) return false;
+    return source.substr(pos, substring.length()) == substring;
 }
 
 char BasicParser::nextChar() {
@@ -110,6 +130,19 @@ void BasicParser::expect(char expected) {
         throw error("'" + std::string({expected}) + "' expected");
     }
     pos++;
+}
+
+void BasicParser::expect(const std::string& substring) {
+    if (substring.empty()) return;
+    for (uint i = 0; i < substring.length(); ++i) {
+        if (source.length() <= pos + i || source[pos + i] != substring[i]) {
+            std::string errorLog = escape_string(substring) + " expected";
+            LOG_ERROR("{}", errorLog);
+            Logger::getInstance().flush();
+            throw error(errorLog);
+        }
+    }
+    pos += substring.length();
 }
 
 void BasicParser::expectNewLine() {
@@ -152,6 +185,10 @@ char BasicParser::peek() {
     return source[pos];
 }
 
+void BasicParser::goBack() {
+    if (pos) pos--;
+}
+
 std::string BasicParser::parseName() {
     char c = peek();
     if (!is_identifier_start(c)) {
@@ -172,7 +209,7 @@ std::string BasicParser::parseName() {
 
 int64_t BasicParser::parseSimpleInt(int base) {
     char c = peek();
-    int index = char2int(c);
+    int index = hexchar2int(c);
     if (index == -1 || index >= base) {
         LOG_ERROR("Invalid number literal");
         Logger::getInstance().flush();
@@ -185,7 +222,7 @@ int64_t BasicParser::parseSimpleInt(int base) {
         while (c == '_') {
             c = source[++pos];
         }
-        index = char2int(c);
+        index = hexchar2int(c);
         if (index == -1 || index >= base) return value;
         value *= base;
         value += index;

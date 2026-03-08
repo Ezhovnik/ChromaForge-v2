@@ -40,7 +40,6 @@ struct SlotLayout {
             );
 };
 
-// temporary unused
 struct InventoryPanel {
     glm::vec2 position;
     glm::vec2 size;
@@ -50,6 +49,7 @@ struct InventoryPanel {
 };
 
 class InventoryLayout {
+private:
     glm::vec2 size {};
     glm::vec2 origin {};
     std::vector<SlotLayout> slots;
@@ -70,6 +70,7 @@ public:
 };
 
 class InventoryBuilder {
+private:
     std::unique_ptr<InventoryLayout> layout;
 public:
     InventoryBuilder();
@@ -89,6 +90,7 @@ public:
 };
 
 class SlotView : public gui::UINode {
+private:
     LevelFrontend* frontend;
     InventoryInteraction* interaction;
     const Content* const content;
@@ -114,6 +116,7 @@ public:
 };
 
 class InventoryView : public gui::Container {
+private:
     const Content* content;
     const ContentIndices* indices;
     
@@ -123,8 +126,6 @@ class InventoryView : public gui::Container {
     InventoryInteraction* interaction;
 
     std::vector<SlotView*> slots;
-
-    int scroll = 0;
 public:
     InventoryView(
         const Content* content, 
@@ -153,6 +154,7 @@ public:
 };
 
 class InventoryInteraction {
+private:
     ItemStack grabbedItem;
 public:
     InventoryInteraction() = default;

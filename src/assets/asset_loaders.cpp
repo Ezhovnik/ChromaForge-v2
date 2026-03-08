@@ -35,33 +35,33 @@ bool asset_loader::shader(Assets* assets, const ResPaths* paths, const std::stri
 
 // Загружает и регистрирует текстуру в менеджере ресурсов.
 bool asset_loader::texture(Assets* assets, const ResPaths* paths, const std::string filename, const std::string name){
-	Texture* texture = png::loadTexture(paths->find(filename).string());
+	std::unique_ptr<Texture> texture(png::loadTexture(paths->find(filename).string()));
 	if (texture == nullptr){
 		LOG_CRITICAL("Failed to load texture '{}'", name);
         Logger::getInstance().flush();
 		return false;
 	}
 
-	return assets->store(texture, name);
+	return assets->store(texture.release(), name);
 }
 
 // Загружает и регистрирует шрифт в менеджере ресурсов
 bool asset_loader::font(Assets* assets, const ResPaths* paths, const std::string filename, const std::string name){
-    std::vector<Texture*> pages;
+    std::vector<std::unique_ptr<Texture>> pages;
 	for (size_t i = 0; i <= 4; ++i) {
 		std::string name = filename + "_" + std::to_string(i) + ".png"; 
         name = paths->find(name).string();
-		Texture* texture = png::loadTexture(name);
+		std::unique_ptr<Texture> texture(png::loadTexture(name));
 		if (texture == nullptr){
             LOG_CRITICAL("Failed to load bitmap font '{}' (missing page {})", name, std::to_string(i));
             Logger::getInstance().flush();
 			return false;
 		}
-		pages.push_back(texture);
+		pages.push_back(std::move(texture));
 	}
-	Font* font = new Font(pages, pages[0]->height / 16);
 
-	return assets->store(font, name);;
+	int res = pages[0]->height / 16;
+	return assets->store(new Font(std::move(pages), res, 4), name);
 }
 
 static bool appendAtlas(AtlasBuilder& atlas, const std::filesystem::path& file) {
@@ -121,7 +121,6 @@ bool asset_loader::animation(Assets* assets, const ResPaths* paths, const std::s
 
 			auto frameArr = root->list("frames");
 
-			Frame temp;
 			float frameDuration = DEFAULT_FRAME_DURATION;
 			std::string frameName;
 
@@ -150,7 +149,7 @@ bool asset_loader::animation(Assets* assets, const ResPaths* paths, const std::s
 			if (!appendAtlas(builder, file)) continue;
 		}
 
-		Atlas* srcAtlas = builder.build(2);
+		std::unique_ptr<Atlas> srcAtlas(builder.build(2));
 
 		Texture* srcTex = srcAtlas->getTexture();
 		Texture* dstTex = dstAtlas->getTexture();
@@ -181,7 +180,7 @@ bool asset_loader::animation(Assets* assets, const ResPaths* paths, const std::s
 			}
 		}
 
-		assets->store(srcAtlas, name + "_animation");
+		assets->store(srcAtlas.release(), name + "_animation");
 		assets->store(animation);
 
 		return true;

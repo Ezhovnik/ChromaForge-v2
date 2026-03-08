@@ -55,7 +55,7 @@ static std::shared_ptr<gui::Label> create_label(gui::wstringsupplier supplier) {
 std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
 	auto level = levelFrontend->getLevel();
 
-    auto panel = std::make_shared<gui::Panel>(glm::vec2(350, 200), glm::vec4(5.0f), 1.0f);
+    auto panel = std::make_shared<gui::Panel>(glm::vec2(350, 200), glm::vec4(5.0f), 2.0f);
     panel->listenInterval(0.5f, [this]() {
 		fpsString = std::to_wstring(fpsMax) + L" / "+std::to_wstring(fpsMin);
 		fpsMin = fps;
@@ -88,7 +88,7 @@ std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
 	})));
 	for (int ax = 0; ax < 3; ++ax){
 		auto sub = std::make_shared<gui::Panel>(glm::vec2(10, 27), glm::vec4(0.0f));
-		sub->orientation(gui::Orientation::horizontal);
+		sub->setOrientation(gui::Orientation::horizontal);
 		auto label = std::make_shared<gui::Label>(std::wstring({static_cast<wchar_t>(L'x' + ax)}) + L": ");
 		label->setMargin(glm::vec4(2, 3, 2, 3));
 		sub->add(label);
@@ -156,7 +156,7 @@ std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
 		panel->add(bar);
 	}
 	{
-        auto checkbox = std::make_shared<gui::FullCheckBox>(L"Frustum-Culling", glm::vec2(400, 32));
+        auto checkbox = std::make_shared<gui::FullCheckBox>(L"Frustum-Culling", glm::vec2(400, 24));
         checkbox->supplier([=]() {
             return engine->getSettings().graphics.frustumCulling;
         });
@@ -166,7 +166,7 @@ std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
         panel->add(checkbox);
 	}
 	{
-        auto checkbox = std::make_shared<gui::FullCheckBox>(L"Show Chunk Borders", glm::vec2(400, 32));
+        auto checkbox = std::make_shared<gui::FullCheckBox>(L"Show Chunk Borders", glm::vec2(400, 24));
         checkbox->supplier([=]() {
             return WorldRenderer::drawChunkBorders;
         });
@@ -283,7 +283,7 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
     contentAccessPanel = std::make_shared<gui::Panel>(contentAccess->getSize(), glm::vec4(0.0f), 0.0f);
     contentAccessPanel->setColor(glm::vec4());
     contentAccessPanel->add(contentAccess);
-    contentAccessPanel->scrollable(true);
+    contentAccessPanel->setScrollable(true);
 
     hotbarView = createHotbar();
     inventoryView = createInventory();
@@ -340,7 +340,7 @@ void HudRenderer::update(bool hudVisible) {
 			closeInventory();
 		} else {
 			pause = true;
-			menu->set("pause");
+			menu->setPage("pause");
 		}
 	}
 

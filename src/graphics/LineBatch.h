@@ -2,6 +2,7 @@
 #define GRAPHICS_LINEBATCH_H_
 
 #include <stdlib.h>
+#include <memory>
 
 #include <glm/glm.hpp>
 
@@ -13,7 +14,7 @@ class LineBatch {
     size_t index; // Текущая позиция в буфере (в вершинах)
     size_t capacity;  // Максимальная вместимость буфера (в вершинах)
 
-    Mesh* mesh; // Указатель на Mesh объект для рендеринга
+    std::unique_ptr<Mesh> mesh; // Указатель на Mesh объект для рендеринга
 public:
     LineBatch(size_t capacity = 4096); // Конструктор
     ~LineBatch(); // Деструктор

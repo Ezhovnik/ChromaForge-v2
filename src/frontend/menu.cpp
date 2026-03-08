@@ -65,7 +65,7 @@ static std::shared_ptr<Panel> create_page(Engine* engine, std::string name, int 
     auto panel = std::make_shared<Panel>(glm::vec2(width, 200), glm::vec4(8.0f), interval);
     panel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, opacity));
 
-    menu->add(name, panel);
+    menu->addPage(name, panel);
     return panel;
 }
 
@@ -86,11 +86,14 @@ static void show_content_missing(Engine* engine, const Content* content, std::sh
 
     auto subpanel = std::make_shared<Panel>(glm::vec2(500, 100));
     subpanel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+    subpanel->setScrollable(true);
+    subpanel->setMaxLength(400);
+    panel->add(subpanel);
 
     for (auto& entry : lut->getMissingContent()) {
         auto hpanel = std::make_shared<Panel>(glm::vec2(500, 30));
         hpanel->setColor(glm::vec4(0.0f));
-        hpanel->orientation(Orientation::horizontal);
+        hpanel->setOrientation(Orientation::horizontal);
 
         auto namelabel = std::make_shared<Label>(util::str2wstr_utf8(entry.name));
         namelabel->setColor(glm::vec4(1.0f, 0.2f, 0.2f, 0.5f));
@@ -103,16 +106,13 @@ static void show_content_missing(Engine* engine, const Content* content, std::sh
         subpanel->add(hpanel);
     }
 
-    subpanel->maxLength(400);
-    panel->add(subpanel);
-
     panel->add(std::make_shared<Button>(
         langs::get(L"Back to Main Menu", L"menu"), glm::vec4(8.0f), [=](GUI*){
             menu->back();
         }
     ));
 
-    menu->set("missing-content");
+    menu->setPage("missing-content");
 }
 
 void show_convert_request(Engine* engine, const Content* content, std::shared_ptr<ContentLUT> lut, std::filesystem::path folder) {
@@ -172,9 +172,9 @@ void open_world(std::string name, Engine* engine) {
 }
 
 std::shared_ptr<Panel> create_worlds_panel(Engine* engine) {
-    auto panel = std::make_shared<Panel>(glm::vec2(390, 200), glm::vec4(5.0f));
+    auto panel = std::make_shared<Panel>(glm::vec2(390, 0), glm::vec4(5.0f));
     panel->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.07f));
-    panel->maxLength(400);
+    panel->setMaxLength(400);
 
     auto paths = engine->getPaths();
     for (auto folder : paths->scanForWorlds()) {
@@ -235,8 +235,8 @@ std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs,
     auto assets = engine->getAssets();
     auto panel = std::make_shared<Panel>(glm::vec2(MenusConsts::PACKS_PANEL_WIDTH, 200), glm::vec4(5.0f));
     panel->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.07f));
-    panel->maxLength(400);
-    panel->scrollable(true);
+    panel->setMaxLength(400);
+    panel->setScrollable(true);
 
     for (auto& pack : packs) {
         auto packpanel = std::make_shared<RichButton>(glm::vec2(390, 80));
@@ -325,8 +325,8 @@ void create_content_panel(Engine* engine) {
             engine->setScreen(std::make_shared<MenuScreen>(engine));
             open_world(wname, engine);
         });
-        menu->add("content-packs", panel);
-        menu->set("content-packs");
+        menu->addPage("content-packs", panel);
+        menu->setPage("content-packs");
     }));
     mainPanel->add(guiutil::backButton(menu));
 }
@@ -411,14 +411,14 @@ void create_controls_panel(Engine* engine) {
     {
         auto scrollPanel = std::make_shared<Panel>(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
         scrollPanel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.3f));
-        scrollPanel->maxLength(400);
+        scrollPanel->setMaxLength(400);
 
         for (auto& entry : Events::bindings){
             std::string bindname = entry.first;
 
             auto subpanel = std::make_shared<Panel>(glm::vec2(400, 40), glm::vec4(5.0f), 1.0f);
             subpanel->setColor(glm::vec4(0.0f));
-            subpanel->orientation(Orientation::horizontal);
+            subpanel->setOrientation(Orientation::horizontal);
             subpanel->add(std::make_shared<InputBindBox>(entry.second));
 
             auto label = std::make_shared<Label>(langs::get(util::str2wstr_utf8(bindname)));
@@ -545,7 +545,7 @@ void create_pause_panel(Engine* engine) {
     }));
     panel->add(create_button(L"Content", glm::vec4(10.0f), glm::vec4(1), [=](GUI*) {
         create_content_panel(engine);
-        menu->set("content");
+        menu->setPage("content");
     }));
     panel->add(guiutil::gotoButton(L"Settings", "settings", menu));
 
@@ -558,7 +558,7 @@ void create_pause_panel(Engine* engine) {
 void create_languages_panel(Engine* engine) {
     auto menu = engine->getGUI()->getMenu();
     auto panel = create_page(engine, "languages", 400, 0.5f, 1);
-    panel->scrollable(true);
+    panel->setScrollable(true);
 
     std::vector<std::string> locales;
     for (auto& entry : langs::locales_info) {

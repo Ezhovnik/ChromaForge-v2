@@ -64,6 +64,16 @@ int call_func(lua_State* L, int argc, const std::string& name) {
     return 1;
 }
 
+runnable scripting::create_runnable(const std::string& filename, const std::string& src) {
+    return [=](){
+        if (luaL_loadbuffer(L, src.c_str(), src.length(), filename.c_str())) {
+            handleError(L);
+            return;
+        }
+        call_func(L, 0, filename);
+    };
+}
+
 void load_script(std::filesystem::path name) {
     auto paths = scripting::engine->getPaths();
     std::filesystem::path file = paths->getResources()/std::filesystem::path("scripts")/name;

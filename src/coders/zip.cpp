@@ -32,7 +32,7 @@ std::vector<ubyte> zip::compress(const ubyte* src, size_t size) {
 }
 
 std::vector<ubyte> zip::decompress(const ubyte* src, size_t size) {
-    size_t decompressed_size = *(uint32_t*)(src + size - 4);
+    size_t decompressed_size = *reinterpret_cast<const uint32_t*>(src + size - 4);
     std::vector<ubyte> buffer;
     buffer.resize(decompressed_size);
 

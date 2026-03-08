@@ -25,6 +25,14 @@ inline int detect_base(char c) {
     return 10;
 }
 
+inline int hexchar2int(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return 10 + c - 'a';
+    if (c >= 'A' && c <= 'F') return 10 + c - 'A';
+
+    return -1;
+}
+
 inline bool is_digit(char c) {
     return (c >= '0' && c <= '9');
 }
@@ -70,12 +78,18 @@ protected:
     uint linestart = 0;
 
     virtual void skipWhitespace();
+    void skip(size_t n);
+    bool skipTo(const std::string& substring);
+    void skipLine();
+
     void expect(char expected);
+    void expect(const std::string& substring);
     char peek();
     char nextChar();
     bool hasNext();
     void expectNewLine();
-    void skipLine();
+    bool isNext(const std::string& substring);
+    void goBack();
 
     std::string parseName();
     int64_t parseSimpleInt(int base);

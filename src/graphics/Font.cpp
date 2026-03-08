@@ -9,17 +9,18 @@ namespace Fonts_Consts {
     constexpr int GLYPH_SIZE = 16;
 }
 
-Font::Font(std::vector<Texture*> pages, int lineHeight) : pages(pages), lineHeight_(lineHeight) {
+Font::Font(std::vector<std::unique_ptr<Texture>> pages, int lineHeight, int yoffset) : pages(std::move(pages)), lineHeight(lineHeight), yoffset(yoffset) {
 }
 
 Font::~Font(){
-	for (Texture* texture : pages) {
-		delete texture;
-    }
 }
 
-int Font::lineHeight() const {
-	return lineHeight_;
+int Font::getYOffset() const {
+    return yoffset;
+}
+
+int Font::getLineHeight() const {
+	return lineHeight;
 }
 
 int Font::calcWidth(std::wstring text) {
@@ -52,9 +53,9 @@ void Font::draw(Batch2D* batch, std::wstring text, int x, int y, FontStyle style
 			if (isPrintableChar(c)){
 				int charpage = c >> 8;
 				if (charpage == page){
-                    Texture* texture = pages[charpage];
-                    if (texture == nullptr) texture = pages[0];
-					batch->texture(pages[charpage]);
+                    Texture* texture = pages[charpage].get();
+                    if (texture == nullptr) texture = pages[0].get();
+					batch->texture(texture);
 
 					switch (style){
 						case FontStyle::Shadow:
