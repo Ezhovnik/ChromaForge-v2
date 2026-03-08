@@ -8,7 +8,7 @@
 
 inline constexpr int B3D_VERTEX_SIZE = 9;
 
-Batch3D::Batch3D(size_t capacity) : capacity(capacity), offset(0) {
+Batch3D::Batch3D(size_t capacity) : capacity(capacity) {
 	const vattr attrs[] = {{3}, {2}, {4}, {0}};
 
     buffer = new float[capacity * B3D_VERTEX_SIZE];

@@ -46,7 +46,7 @@ MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
 
     menus::refresh_menus(engine);
     menu->reset();
-    menu->set("main");
+    menu->setPage("main");
 
     uicamera.reset(new Camera(glm::vec3(), Window::height));
 	uicamera->perspective = false;

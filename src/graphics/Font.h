@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 class Texture;
 class Batch2D;
@@ -13,16 +14,18 @@ enum class FontStyle {
 
 class Font {
 private:
-    int lineHeight_;
+    int lineHeight;
+	int yoffset;
 public:
-	std::vector<Texture*> pages;
+	std::vector<std::unique_ptr<Texture>> pages;
 
-	Font(std::vector<Texture*> pages, int lineHeight);
+	Font(std::vector<std::unique_ptr<Texture>> pages, int lineHeight, int yoffset);
 	~Font();
 
-    int lineHeight() const;
+    int getLineHeight() const;
+    int getYOffset() const;
 	int calcWidth(std::wstring text);
-	// int getGlyphWidth(char c);
+
 	bool isPrintableChar(int c);
 	void draw(Batch2D* batch, std::wstring text, int x, int y);
 	void draw(Batch2D* batch, std::wstring text, int x, int y, FontStyle style);

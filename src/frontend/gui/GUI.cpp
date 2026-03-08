@@ -17,20 +17,18 @@
 using namespace gui;
 
 GUI::GUI() {
-    container = new Container(glm::vec2(0, 0), glm::vec2(1000));
+    container = std::make_shared<Container>(glm::vec2(0, 0), glm::vec2(1000));
+    uicamera = std::make_unique<Camera>(glm::vec3(), Window::height);
 
-    uicamera = new Camera(glm::vec3(), Window::height);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
     menu = std::make_shared<PagesControl>();
     container->add(menu);
-    container->scrollable(false);
+    container->setScrollable(false);
 }
 
 GUI::~GUI() {
-    delete uicamera;
-    delete container;
 }
 
 std::shared_ptr<PagesControl> GUI::getMenu() {
@@ -40,7 +38,7 @@ std::shared_ptr<PagesControl> GUI::getMenu() {
 void GUI::activateMouse(float delta) {
     auto hover = container->getAt(Events::cursor, nullptr);
     if (this->hover && this->hover != hover) this->hover->setHover(false);
-    
+
     if (hover) {
         hover->setHover(true);
         if (Events::scroll) hover->scrolled(Events::scroll);

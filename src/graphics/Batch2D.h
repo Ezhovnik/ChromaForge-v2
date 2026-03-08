@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <glm/glm.hpp>
+#include <memory>
 
 #include "../typedefs.h"
 
@@ -14,8 +15,8 @@ class UVRegion;
 class Batch2D {
 	float* buffer;
 	size_t capacity;
-	size_t offset;
-	Mesh* mesh;
+
+	std::unique_ptr<Mesh> mesh;
 	size_t index;
 
 	Texture* blank;

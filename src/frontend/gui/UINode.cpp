@@ -105,6 +105,23 @@ void UINode::setSize(glm::vec2 size) {
 
 void UINode::setColor(glm::vec4 color) {
     this->color = color;
+    this->hoverColor = color;
+}
+
+void UINode::setHoverColor(glm::vec4 newColor) {
+    this->hoverColor = newColor;
+}
+
+glm::vec4 UINode::getHoverColor() const {
+    return hoverColor;
+}
+
+void UINode::setResizing(bool flag) {
+    resizing = flag;
+}
+
+bool UINode::isResizing() const {
+    return resizing;
 }
 
 glm::vec4 UINode::getColor() const {

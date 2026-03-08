@@ -3,7 +3,7 @@
 
 #include "../typedefs.h"
 
-class voxel;
+struct voxel;
 class PseudoRandom;
 class Map2D;
 class fnl_state;

@@ -97,7 +97,13 @@ void ContentPack::scan(std::filesystem::path rootfolder, std::vector<ContentPack
         std::filesystem::path folder = entry.path();
         if (!std::filesystem::is_directory(folder)) continue;
         if (!is_pack(folder)) continue;
-        packs.push_back(read(folder));
+        try {
+            packs.push_back(read(folder));
+        } catch (const contentpack_error& err) {
+            LOG_ERROR("package.json error at '{}': {}", err.getFolder().u8string(), err.what());
+        } catch (const std::runtime_error& err) {
+            LOG_ERROR("{}", err.what());
+        }
     }
 }
 

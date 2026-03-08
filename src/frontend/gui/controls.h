@@ -12,21 +12,21 @@
 #include "../../window/input.h"
 #include "../../typedefs.h"
 #include "GUI.h"
+#include "../../delegates.h"
 
 class Batch2D;
 class Assets;
 
 namespace gui {
-    typedef std::function<std::wstring()> wstringsupplier;
-    typedef std::function<void(std::wstring)> wstringconsumer;
+    using wstringsupplier = std::function<std::wstring()>;
+    using wstringconsumer = std::function<void(std::wstring)>;
+    using wstringchecker = std::function<bool(const std::wstring&)>;
 
-    typedef std::function<double()> doublesupplier;
-    typedef std::function<void(double)> doubleconsumer;
+    using doublesupplier = std::function<double()>;
+    using doubleconsumer = std::function<void(double)>;
 
-    typedef std::function<bool()> boolsupplier;
-    typedef std::function<void(bool)> boolconsumer;
-
-    typedef std::function<bool(const std::wstring&)> wstringchecker;
+    using boolsupplier = std::function<bool()>;
+    using boolconsumer = std::function<void(bool)>;
 
     class Label : public UINode {
     protected:
@@ -43,7 +43,6 @@ namespace gui {
         virtual void draw(const GfxContext* parent_context, Assets* assets) override;
 
         virtual Label* textSupplier(wstringsupplier supplier);
-        virtual void setSize(glm::vec2 size) override;
     };
 
     class Image : public UINode {
@@ -57,7 +56,6 @@ namespace gui {
 
     class Button : public Panel {
     protected:
-        glm::vec4 hoverColor {0.05f, 0.1f, 0.15f, 0.75f};
         glm::vec4 pressedColor {0.0f, 0.0f, 0.0f, 0.95f};
 
         std::vector<onaction> actions;
@@ -65,7 +63,7 @@ namespace gui {
         std::shared_ptr<Label> label = nullptr;
     public:
         Button(std::shared_ptr<UINode> content, glm::vec4 padding = glm::vec4(2.0f));
-        Button(std::wstring text, glm::vec4 padding, onaction action);
+        Button(std::wstring text, glm::vec4 padding, onaction action, glm::vec2 size=glm::vec2(-1));
 
         virtual void drawBackground(const GfxContext* parent_context, Assets* assets) override;
 
@@ -81,12 +79,11 @@ namespace gui {
 
         virtual Button* textSupplier(wstringsupplier supplier);
 
-        virtual void setHoverColor(glm::vec4 color);
+        virtual void refresh() override;
     };
 
     class RichButton : public Container {
     protected:
-        glm::vec4 hoverColor {0.05f, 0.1f, 0.15f, 0.75f};
         glm::vec4 pressedColor {0.0f, 0.0f, 0.0f, 0.95f};
         std::vector<onaction> actions;
     public:
@@ -96,8 +93,6 @@ namespace gui {
 
         virtual void mouseRelease(GUI*, int x, int y) override;
         virtual RichButton* listenAction(onaction action);
-
-        virtual void setHoverColor(glm::vec4 color);
     };
 
     class InputBindBox : public Panel {
@@ -119,7 +114,6 @@ namespace gui {
 
     class TextBox : public Panel {
     protected:
-        glm::vec4 hoverColor {0.05f, 0.1f, 0.2f, 0.75f};
         glm::vec4 focusedColor {0.0f, 0.0f, 0.0f, 1.0f};
         glm::vec4 invalidColor {0.3f, 0.0f, 0.0f, 0.5f};
 
@@ -136,7 +130,7 @@ namespace gui {
         wstringchecker validator = nullptr;
         bool valid = true;
     public:
-        TextBox(std::wstring placeholder, glm::vec4 padding = glm::vec4(2.0f));
+        TextBox(std::wstring placeholder, glm::vec4 padding = glm::vec4(4.0f));
 
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
 

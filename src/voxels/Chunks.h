@@ -11,7 +11,7 @@
 
 class Mesh;
 class Chunk;
-class voxel;
+struct voxel;
 class WorldFiles;
 class LevelEvents;
 class Content;

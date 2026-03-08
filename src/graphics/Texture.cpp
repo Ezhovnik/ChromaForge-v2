@@ -26,7 +26,7 @@ Texture::Texture(ubyte* data, int width, int height, uint format) : width(width)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 2);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 }

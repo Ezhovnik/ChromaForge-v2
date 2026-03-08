@@ -66,7 +66,7 @@ void ContentLoader::fixPackIndices() {
     auto itemsFolder = folder/ContentPack::ITEMS_FOLDER;
 
     std::unique_ptr<dynamic::Map> root;
-    if (std::filesystem::is_regular_file(indexFile)) root = std::move(files::read_json(indexFile));
+    if (std::filesystem::is_regular_file(indexFile)) root = files::read_json(indexFile);
     else root.reset(new dynamic::Map());
 
     bool modified = false;

@@ -101,7 +101,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 
 	float px = camera->position.x / (float)CHUNK_WIDTH;
 	float pz = camera->position.z / (float)CHUNK_DEPTH;
-	std::sort(indices.begin(), indices.end(), [this, chunks, px, pz](size_t i, size_t j) {
+	std::sort(indices.begin(), indices.end(), [chunks, px, pz](size_t i, size_t j) {
 		std::shared_ptr<Chunk> a = chunks->chunks[i];
 		std::shared_ptr<Chunk> b = chunks->chunks[j];
 		return ((a->chunk_x + 0.5f - px) * (a->chunk_x + 0.5f - px) + (a->chunk_z + 0.5f - pz) * (a->chunk_z + 0.5f - pz) >

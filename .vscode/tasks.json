@@ -26,6 +26,7 @@
                 "${workspaceFolder}/src/coders/json.cpp",
                 "${workspaceFolder}/src/coders/toml.cpp",
                 "${workspaceFolder}/src/coders/png.cpp",
+                "${workspaceFolder}/src/coders/xml.cpp",
                 "${workspaceFolder}/src/coders/zip.cpp",
 
                 //src/content

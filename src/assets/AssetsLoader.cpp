@@ -52,22 +52,24 @@ void AssetsLoader::createDefaults(AssetsLoader& loader) {
     loader.addLoader(AssetType::Atlas, asset_loader::atlas);
 }
 
-void AssetsLoader::addDefaults(AssetsLoader& loader, bool allAssets) {
-	if (allAssets) {
-		loader.add(AssetType::Shader, SHADERS_FOLDER"/default", "default");
-		loader.add(AssetType::Shader, SHADERS_FOLDER"/lines", "lines");
-		loader.add(AssetType::Shader, SHADERS_FOLDER"/ui", "ui");
+void AssetsLoader::addDefaults(AssetsLoader& loader, bool world) {
+	loader.add(AssetType::Font, FONTS_FOLDER"/font", "normal");
+
+	loader.add(AssetType::Shader, SHADERS_FOLDER"/default", "default");
+	loader.add(AssetType::Shader, SHADERS_FOLDER"/ui", "ui");
+	loader.add(AssetType::Shader, SHADERS_FOLDER"/lines", "lines");
+
+	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/menubg.png", "gui/menubg");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/delete_icon.png", "gui/delete_icon");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/no_icon.png", "gui/no_icon");
+
+	if (world) {
 		loader.add(AssetType::Shader, SHADERS_FOLDER"/skybox_gen", "skybox_gen");
 		loader.add(AssetType::Shader, SHADERS_FOLDER"/background", "background");
 		loader.add(AssetType::Shader, SHADERS_FOLDER"/ui3d", "ui3d");
 
-		loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/menubg.png", "gui/menubg");
-		loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/delete_icon.png", "gui/delete_icon");
-		loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/no_icon.png", "gui/no_icon");
 		loader.add(AssetType::Texture, TEXTURES_FOLDER"/misc/moon.png", "misc/moon");
         loader.add(AssetType::Texture, TEXTURES_FOLDER"/misc/sun.png", "misc/sun");
-
-		loader.add(AssetType::Font, FONTS_FOLDER"/font", "normal");
 	}
 
 	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/blocks", "blocks");
