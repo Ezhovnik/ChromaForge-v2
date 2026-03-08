@@ -5,34 +5,34 @@
 using gui::UINode;
 using gui::Align;
 
-UINode::UINode(glm::vec2 coord, glm::vec2 size) : coord(coord), size_(size) {
+UINode::UINode(glm::vec2 coord, glm::vec2 size) : coord(coord), size(size) {
 }
 
 UINode::~UINode() {
 }
 
-bool UINode::visible() const {
-    return isvisible;
+bool UINode::isVisible() const {
+    return visible;
 }
 
-void UINode::visible(bool flag) {
-    isvisible = flag;
+void UINode::setVisible(bool flag) {
+    visible = flag;
 }
 
-Align UINode::align() const {
-    return align_;
+Align UINode::getAlign() const {
+    return align;
 }
 
-void UINode::align(Align align) {
-    align_ = align;
+void UINode::setAlign(Align align_) {
+    align = align_;
 }
 
-void UINode::hover(bool flag) {
-    hover_ = flag;
+void UINode::setHover(bool flag) {
+    hover = flag;
 }
 
-bool UINode::hover() const {
-    return hover_;
+bool UINode::isHover() const {
+    return hover;
 }
 
 void UINode::setParent(UINode* node) {
@@ -44,28 +44,28 @@ UINode* UINode::getParent() const {
 }
 
 void UINode::click(GUI*, int x, int y) {
-    pressed_ = true;
+    pressed = true;
 }
 
 void UINode::mouseRelease(GUI*, int x, int y) {
-    pressed_ = false;
+    pressed = false;
 }
 
-bool UINode::ispressed() const {
-    return pressed_;
+bool UINode::isPressed() const {
+    return pressed;
 }
 
 void UINode::defocus() {
-    focused_ = false;
+    focused = false;
 }
 
-bool UINode::isfocused() const {
-    return focused_;
+bool UINode::isFocused() const {
+    return focused;
 }
 
 bool UINode::isInside(glm::vec2 pos) {
     glm::vec2 coord = calcCoord();
-    glm::vec2 size = this->size();
+    glm::vec2 size = getSize();
     return (pos.x >= coord.x && pos.y >= coord.y && pos.x < coord.x + size.x && pos.y < coord.y + size.y);
 }
 
@@ -75,7 +75,7 @@ std::shared_ptr<UINode> UINode::getAt(glm::vec2 pos, std::shared_ptr<UINode> sel
 }
 
 bool UINode::isInteractive() const {
-    return interactive && visible();
+    return interactive && isVisible();
 }
 
 void UINode::setInteractive(bool flag) {
@@ -95,34 +95,28 @@ void UINode::setCoord(glm::vec2 coord) {
     this->coord = coord;
 }
 
-glm::vec2 UINode::size() const {
-    return size_;
+glm::vec2 UINode::getSize() const {
+    return size;
 }
 
-void UINode::size(glm::vec2 size) {
-    if (sizelock) return;
-    this->size_ = size;
+void UINode::setSize(glm::vec2 size) {
+    this->size = size;
 }
 
-void UINode::_size(glm::vec2 size) {
-    if (sizelock) return;
-    this->size_ = size;
+void UINode::setColor(glm::vec4 color) {
+    this->color = color;
 }
 
-void UINode::color(glm::vec4 color) {
-    this->color_ = color;
+glm::vec4 UINode::getColor() const {
+    return color;
 }
 
-glm::vec4 UINode::color() const {
-    return color_;
+void UINode::setMargin(glm::vec4 margin) {
+    this->margin = margin;
 }
 
-void UINode::margin(glm::vec4 margin) {
-    this->margin_ = margin;
-}
-
-glm::vec4 UINode::margin() const {
-    return margin_;
+glm::vec4 UINode::getMargin() const {
+    return margin;
 }
 
 void UINode::lock() {

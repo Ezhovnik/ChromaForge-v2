@@ -44,7 +44,7 @@ Screen::~Screen() {
 MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     auto menu = engine->getGUI()->getMenu();
 
-    menus::create_menus(engine, menu);
+    menus::refresh_menus(engine);
     menu->reset();
     menu->set("main");
 

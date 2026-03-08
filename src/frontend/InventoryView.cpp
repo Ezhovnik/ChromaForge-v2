@@ -143,21 +143,22 @@ SlotView::SlotView(
       content(content),
       stack(stack),
       layout(layout) {
-    color(glm::vec4(0, 0, 0, 0.2f));
+    setColor(glm::vec4(0, 0, 0, 0.2f));
 }
 
-void SlotView::draw(Batch2D* batch, Assets* assets) {
+void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
 
     int slotSize = InventoryView::SLOT_SIZE;
 
     glm::vec4 tint(1.0f);
-    glm::vec4 color = color_;
-    if (hover_ || highlighted) {
+    glm::vec4 color = getColor();
+    if (hover || highlighted) {
         tint *= 1.333f;
         color = glm::vec4(1, 1, 1, 0.2f);
     }
 
+    auto batch = parent_context->getBatch2D();
     batch->color = color;
     if (color.a > 0.0) {
         batch->texture(nullptr);
@@ -285,8 +286,8 @@ InventoryView::InventoryView(
               layout(std::move(layout)),
               frontend(frontend),
               interaction(interaction) {
-    size(this->layout->getSize());
-    color(glm::vec4(0, 0, 0, 0));
+    setSize(this->layout->getSize());
+    setColor(glm::vec4(0, 0, 0, 0));
 }
 
 InventoryView::~InventoryView() {}
@@ -299,7 +300,7 @@ void InventoryView::build() {
         ItemStack& item = inventory->getSlot(index);
 
         auto view = std::make_shared<SlotView>(item, frontend, interaction, content, slot);
-        if (!slot.background) view->color(glm::vec4());
+        if (!slot.background) view->setColor(glm::vec4());
 
         slots.push_back(view.get());
         add(view, slot.position);
@@ -326,8 +327,10 @@ InventoryLayout* InventoryView::getLayout() const {
     return layout.get();
 }
 
-void InventoryView::drawBackground(Batch2D* batch, Assets* assets) {
+void InventoryView::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
+    auto batch = parent_context->getBatch2D();
+
     batch->texture(nullptr);
     for (auto& panel : layout->getPanels()) {
         glm::vec2 size = panel.size;

@@ -46,18 +46,17 @@
 #include "../items/Item.h"
 #include "../items/Inventory.h"
 
-inline std::shared_ptr<gui::Label> create_label(gui::wstringsupplier supplier) {
+static std::shared_ptr<gui::Label> create_label(gui::wstringsupplier supplier) {
 	std::shared_ptr<gui::Label> label = std::make_shared<gui::Label>(L"-");
 	label->textSupplier(supplier);
 	return label;
 }
 
-void HudRenderer::createDebugPanel(Engine* engine) {
+std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
 	auto level = levelFrontend->getLevel();
 
-    gui::Panel* panel = new gui::Panel(glm::vec2(350, 200), glm::vec4(5.0f), 1.0f);
-    debugPanel = std::shared_ptr<gui::UINode>(panel);
-	panel->listenInterval(1.0f, [this]() {
+    auto panel = std::make_shared<gui::Panel>(glm::vec2(350, 200), glm::vec4(5.0f), 1.0f);
+    panel->listenInterval(0.5f, [this]() {
 		fpsString = std::to_wstring(fpsMax) + L" / "+std::to_wstring(fpsMin);
 		fpsMin = fps;
 		fpsMax = fps;
@@ -87,15 +86,15 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Seed: " + std::to_wstring(level->world->getSeed());
 	})));
-	for (int ax = 0; ax < 3; ax++){
-		gui::Panel* sub = new gui::Panel(glm::vec2(10, 27), glm::vec4(0.0f));
+	for (int ax = 0; ax < 3; ++ax){
+		auto sub = std::make_shared<gui::Panel>(glm::vec2(10, 27), glm::vec4(0.0f));
 		sub->orientation(gui::Orientation::horizontal);
-		gui::Label* label = new gui::Label(std::wstring({static_cast<wchar_t>(L'x' + ax)}) + L": ");
-		label->margin(glm::vec4(2, 3, 2, 3));
+		auto label = std::make_shared<gui::Label>(std::wstring({static_cast<wchar_t>(L'x' + ax)}) + L": ");
+		label->setMargin(glm::vec4(2, 3, 2, 3));
 		sub->add(label);
-		sub->color(glm::vec4(0.0f));
+		sub->setColor(glm::vec4(0.0f));
 
-		gui::TextBox* box = new gui::TextBox(L"");
+		auto box = std::make_shared<gui::TextBox>(L"");
 		box->textSupplier([=]() {
 			Hitbox* hitbox = level->player->hitbox.get();
 			return util::double2wstr(hitbox->position[ax], 2);
@@ -126,7 +125,7 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 	})));
 
 	{
-		gui::TrackBar* bar = new gui::TrackBar(0.0f, 1.0f, 0.0f, 0.005f, 8);
+		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 0.0f, 0.005f, 8);
 		bar->supplier([=]() {
 			return WorldRenderer::skyClearness;
 		});
@@ -147,7 +146,7 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 	})));
 
 	{
-		gui::TrackBar* bar = new gui::TrackBar(0.0f, 1.0f, 1.0f, 0.005f, 8);
+		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 1.0f, 0.005f, 8);
 		bar->supplier([=]() {
 			return level->world->daytime;
 		});
@@ -157,8 +156,7 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 		panel->add(bar);
 	}
 	{
-        auto checkbox = new gui::FullCheckBox(L"Frustum-Culling", glm::vec2(400, 32));
-        checkbox->margin(glm::vec4(0.0f, 0.0f, 5.0f, 0.0f));
+        auto checkbox = std::make_shared<gui::FullCheckBox>(L"Frustum-Culling", glm::vec2(400, 32));
         checkbox->supplier([=]() {
             return engine->getSettings().graphics.frustumCulling;
         });
@@ -168,7 +166,7 @@ void HudRenderer::createDebugPanel(Engine* engine) {
         panel->add(checkbox);
 	}
 	{
-        auto checkbox = new gui::FullCheckBox(L"Show Chunk Borders", glm::vec2(400, 32));
+        auto checkbox = std::make_shared<gui::FullCheckBox>(L"Show Chunk Borders", glm::vec2(400, 32));
         checkbox->supplier([=]() {
             return WorldRenderer::drawChunkBorders;
         });
@@ -179,6 +177,7 @@ void HudRenderer::createDebugPanel(Engine* engine) {
 	}
 
 	panel->refresh();
+	return panel;
 }
 
 std::shared_ptr<InventoryView> HudRenderer::createContentAccess() {
@@ -277,12 +276,12 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
         levelFrontend->getLevel()->content,
         SlotLayout(glm::vec2(), false, false, nullptr, nullptr)
     );
-    grabbedItemView->color(glm::vec4());
+    grabbedItemView->setColor(glm::vec4());
     grabbedItemView->setInteractive(false);
 
     contentAccess = createContentAccess();
-    contentAccessPanel = std::make_shared<gui::Panel>(contentAccess->size(), glm::vec4(0.0f), 0.0f);
-    contentAccessPanel->color(glm::vec4());
+    contentAccessPanel = std::make_shared<gui::Panel>(contentAccess->getSize(), glm::vec4(0.0f), 0.0f);
+    contentAccessPanel->setColor(glm::vec4());
     contentAccessPanel->add(contentAccess);
     contentAccessPanel->scrollable(true);
 
@@ -290,13 +289,13 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
     inventoryView = createInventory();
 
 	darkOverlay = std::make_unique<gui::Panel>(glm::vec2(4000.0f));
-    darkOverlay->color(glm::vec4(0, 0, 0, 0.5f));
+    darkOverlay->setColor(glm::vec4(0, 0, 0, 0.5f));
 
-	uicamera = new Camera(glm::vec3(), 1);
+	uicamera = std::make_unique<Camera>(glm::vec3(), 1);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
-    createDebugPanel(engine);
+    debugPanel = createDebugPanel(engine);
 	menu->reset();
 
 	guiController->addBack(darkOverlay);
@@ -314,7 +313,6 @@ HudRenderer::~HudRenderer() {
 	guiController->remove(darkOverlay);
     guiController->remove(contentAccessPanel);
 	guiController->remove(debugPanel);
-	delete uicamera;
 }
 
 void HudRenderer::drawDebug(int fps){
@@ -328,8 +326,8 @@ void HudRenderer::update(bool hudVisible) {
     auto player = level->player;
 	auto menu = guiController->getMenu();
 
-	debugPanel->visible(player->debug && hudVisible);
-	menu->visible(pause);
+	debugPanel->setVisible(player->debug && hudVisible);
+	menu->setVisible(pause);
 
 	if (!hudVisible && inventoryOpen) closeInventory();
 	if (pause && menu->current().panel == nullptr) pause = false;
@@ -353,11 +351,11 @@ void HudRenderer::update(bool hudVisible) {
 
 	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();
 
-	glm::vec2 invSize = contentAccessPanel->size();
-    inventoryView->visible(inventoryOpen);
-    contentAccessPanel->visible(inventoryOpen);
-    contentAccessPanel->size(glm::vec2(invSize.x, Window::height));
-    hotbarView->visible(hudVisible);
+	glm::vec2 invSize = contentAccessPanel->getSize();
+    inventoryView->setVisible(inventoryOpen);
+    contentAccessPanel->setVisible(inventoryOpen);
+    contentAccessPanel->setSize(glm::vec2(invSize.x, Window::height));
+    hotbarView->setVisible(hudVisible);
 
     for (int i = keycode::NUM_1; i <= keycode::NUM_9; ++i) {
         if (Events::justPressed(i)) player->setChosenSlot(i - keycode::NUM_1);
@@ -370,7 +368,7 @@ void HudRenderer::update(bool hudVisible) {
         player->setChosenSlot(slot);
     }
 
-	darkOverlay->visible(pause);
+	darkOverlay->setVisible(pause);
 }
 
 void HudRenderer::draw(const GfxContext& context) {

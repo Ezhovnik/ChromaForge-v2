@@ -9,7 +9,7 @@
 
 #include <glm/glm.hpp>
 
-class Batch2D;
+class GfxContext;
 class Assets;
 class Camera;
 
@@ -62,20 +62,20 @@ namespace gui {
         std::unordered_map<std::string, std::shared_ptr<UINode>> storage;
 
         Camera* uicamera;
-        PagesControl* menu;
+        std::shared_ptr<PagesControl> menu;
 
         void activateMouse(float delta);
     public:
         GUI();
         ~GUI();
 
-        PagesControl* getMenu();
+        std::shared_ptr<PagesControl> getMenu();
 
         std::shared_ptr<UINode> getFocused() const;
         bool isFocusCaught() const;
 
         void activate(float delta);
-        void draw(Batch2D* batch, Assets* assets);
+        void draw(const GfxContext* parent_context, Assets* assets);
         void addBack(std::shared_ptr<UINode> panel);
         void add(std::shared_ptr<UINode> panel);
         void remove(std::shared_ptr<UINode> panel);

@@ -8,6 +8,7 @@
 #include "../../assets/Assets.h"
 #include "../../graphics/Batch2D.h"
 #include "../../logger/Logger.h"
+#include "../../graphics/GfxContext.h"
 
 using namespace gui;
 
@@ -20,7 +21,7 @@ std::shared_ptr<UINode> Container::getAt(glm::vec2 pos, std::shared_ptr<UINode> 
     if (!isInside(pos)) return nullptr;
     for (int i = nodes.size() - 1; i >= 0; --i) {
         auto& node = nodes[i];
-        if (!node->visible()) continue;
+        if (!node->isVisible()) continue;
         auto hover = node->getAt(pos, node);
         if (hover != nullptr) return hover;
     }
@@ -45,12 +46,12 @@ void Container::activate(float deltaTime) {
     ), intervalEvents.end());
 
     for (auto node : nodes) {
-        if (node->visible()) node->activate(deltaTime);
+        if (node->isVisible()) node->activate(deltaTime);
     }
 }
 
 void Container::scrolled(int value) {
-    int diff = (actualLength-size().y);
+    int diff = actualLength - getSize().y;
     if (diff > 0 && scrollable_) {
         scroll += value * 40;
         if (scroll > 0) scroll = 0;
@@ -64,18 +65,22 @@ void Container::scrollable(bool flag) {
     scrollable_ = flag;
 }
 
-void Container::draw(Batch2D* batch, Assets* assets) {
+void Container::draw(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
-    glm::vec2 size = this->size();
-    drawBackground(batch, assets);
+    glm::vec2 size = getSize();
+    drawBackground(parent_context, assets);
+
+    auto batch = parent_context->getBatch2D();
     batch->texture(nullptr);
     batch->render();
-    Window::pushScissor(glm::vec4(coord.x, coord.y, size.x, size.y));
-    for (auto node : nodes) {
-        if (node->visible()) node->draw(batch, assets);
+    {
+        GfxContext context = parent_context->sub();
+        context.scissors(glm::vec4(coord.x, coord.y, size.x, size.y));
+        for (auto node : nodes) {
+            if (node->isVisible()) node->draw(parent_context, assets);
+        }
+        batch->render();
     }
-    batch->render();
-    Window::popScissor();
 }
 
 void Container::addBack(std::shared_ptr<UINode> node) {
@@ -95,10 +100,6 @@ void Container::add(std::shared_ptr<UINode> node, glm::vec2 coord) {
     add(node);
 }
 
-void Container::add(UINode* node) {
-    add(std::shared_ptr<UINode>(node));
-}
-
 void Container::remove(std::shared_ptr<UINode> selected) {
     selected->setParent(nullptr);
     nodes.erase(std::remove_if(nodes.begin(), nodes.end(), 
@@ -115,17 +116,19 @@ void Container::listenInterval(float interval, ontimeout callback, int repeat) {
 
 Panel::Panel(glm::vec2 size, glm::vec4 padding, float interval, bool resizing)
     : Container(glm::vec2(), size), padding(padding), interval(interval), resizing_(resizing) {
-    color_ = glm::vec4(0.0f, 0.0f, 0.0f, 0.75f);
+    setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.75f));
 }
 
 Panel::~Panel() {
 }
 
-void Panel::drawBackground(Batch2D* batch, Assets* assets) {
+void Panel::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
+
+    auto batch = parent_context->getBatch2D();
     batch->texture(nullptr);
-    batch->color = color_;
-    batch->rect(coord.x, coord.y, size_.x, size_.y);
+    batch->color = color;
+    batch->rect(coord.x, coord.y, size.x, size.y);
 }
 
 void Panel::maxLength(int value) {
@@ -139,22 +142,22 @@ int Panel::maxLength() const {
 void Panel::refresh() {
     float x = padding.x;
     float y = padding.y;
-    glm::vec2 size = this->size();
+    glm::vec2 size = getSize();
     if (orientation_ == Orientation::vertical) {
         float maxw = size.x;
         for (auto node : nodes) {
-            glm::vec2 nodesize = node->size();
-            const glm::vec4 margin = node->margin();
+            glm::vec2 nodesize = node->getSize();
+            const glm::vec4 margin = node->getMargin();
             y += margin.y;
 
             float ex;
             float spacex = size.x - margin.z - padding.z;
-            switch (node->align()) {
+            switch (node->getAlign()) {
                 case Align::center:
-                    ex = x + fmax(0.0f, spacex - node->size().x) / 2.0f;
+                    ex = x + fmax(0.0f, spacex - nodesize.x) / 2.0f;
                     break;
                 case Align::right:
-                    ex = x + spacex - node->size().x;
+                    ex = x + spacex - nodesize.x;
                     break;
                 default:
                     ex = x + margin.x;
@@ -162,31 +165,31 @@ void Panel::refresh() {
             node->setCoord(glm::vec2(ex, y));
             y += nodesize.y + margin.w + interval;
             float width = size.x - padding.x - padding.z - margin.x - margin.z;
-            node->size(glm::vec2(width, nodesize.y));
+            node->setSize(glm::vec2(width, nodesize.y));
             node->refresh();
-            maxw = fmax(maxw, ex + node->size().x + margin.z + padding.z);
+            maxw = fmax(maxw, ex + node->getSize().x + margin.z + padding.z);
         }
         if (resizing_) {
-            if (maxLength_) this->size(glm::vec2(size.x, glm::min(maxLength_, (int)(y + padding.w))));
-            else this->size(glm::vec2(size.x, y + padding.w));
+            if (maxLength_) setSize(glm::vec2(size.x, glm::min(maxLength_, (int)(y + padding.w))));
+            else setSize(glm::vec2(size.x, y + padding.w));
         }
         actualLength = y + padding.w;
     } else {
         float maxh = size.y;
         for (auto& node : nodes) {
-            glm::vec2 nodesize = node->size();
-            const glm::vec4 margin = node->margin();
+            glm::vec2 nodesize = node->getSize();
+            const glm::vec4 margin = node->getMargin();
             x += margin.x;
             node->setCoord(glm::vec2(x, y + margin.y));
             x += nodesize.x + margin.z + interval;
             float height = size.y - padding.y - padding.w - margin.y - margin.w;
-            node->size(glm::vec2(nodesize.x, height));
+            node->setSize(glm::vec2(nodesize.x, height));
             node->refresh();
-            maxh = fmax(maxh, y + margin.y + node->size().y + margin.w + padding.w);
+            maxh = fmax(maxh, y + margin.y + node->getSize().y + margin.w + padding.w);
         }
         if (resizing_) {
-            if (maxLength_) this->size(glm::vec2(glm::min(maxLength_, (int)(x + padding.z)), size.y));
-            else this->size(glm::vec2(x + padding.z, size.y));
+            if (maxLength_) setSize(glm::vec2(glm::min(maxLength_, (int)(x + padding.z)), size.y));
+            else setSize(glm::vec2(x + padding.z, size.y));
         }
         actualLength = size.y;
     }
@@ -198,13 +201,6 @@ void Panel::orientation(Orientation orientation) {
 
 Orientation Panel::orientation() const {
     return orientation_;
-}
-
-void Panel::lock(){
-    for (auto node : nodes) {
-        node->lock();
-    }
-    resizing_ = false;
 }
 
 PagesControl::PagesControl() : Container(glm::vec2(), glm::vec2(1)){
@@ -235,7 +231,7 @@ void PagesControl::set(std::string name, bool history) {
     curname_ = name;
     current_ = found->second;
     Container::add(current_.panel);
-    size(current_.panel->size());
+    setSize(current_.panel->getSize());
 }
 
 void PagesControl::back() {

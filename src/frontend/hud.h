@@ -26,7 +26,7 @@ namespace gui {
 
 class HudRenderer {
 private:
-	Camera* uicamera;
+	std::unique_ptr<Camera> uicamera;
     Assets* assets;
 
     std::shared_ptr<gui::Panel> contentAccessPanel;
@@ -50,8 +50,7 @@ private:
 	gui::GUI* guiController;
     LevelFrontend* levelFrontend;
 
-    void createDebugPanel(Engine* engine);
-
+    std::shared_ptr<gui::UINode> createDebugPanel(Engine* engine);
     std::shared_ptr<InventoryView> createContentAccess();
     std::shared_ptr<InventoryView> createHotbar();
     std::shared_ptr<InventoryView> createInventory();

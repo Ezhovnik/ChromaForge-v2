@@ -54,43 +54,50 @@ inline uint64_t str2seed(std::wstring seedstr) {
     }
 }
 
-std::shared_ptr<Panel> create_page(Engine* engine, std::string name, int width, float opacity, int interval) {
-    PagesControl* menu = engine->getGUI()->getMenu();
-    Panel* panel = new Panel(glm::vec2(width, 200), glm::vec4(8.0f), interval);
-    panel->color(glm::vec4(0.0f, 0.0f, 0.0f, opacity));
-
-    std::shared_ptr<Panel> ptr(panel);
-    menu->add(name, ptr);
-    return ptr;
+static std::shared_ptr<Label> create_label(gui::wstringsupplier supplier) {
+    auto label = std::make_shared<Label>(L"-");
+    label->textSupplier(supplier);
+    return label;
 }
 
-Button* create_button(std::wstring text, glm::vec4 padding, glm::vec4 margin, onaction action) {
-    auto btn = new Button(langs::get(text, L"menu"), padding, margin);
-    btn->listenAction(action);
+static std::shared_ptr<Panel> create_page(Engine* engine, std::string name, int width, float opacity, int interval) {
+    auto menu = engine->getGUI()->getMenu();
+    auto panel = std::make_shared<Panel>(glm::vec2(width, 200), glm::vec4(8.0f), interval);
+    panel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, opacity));
+
+    menu->add(name, panel);
+    return panel;
+}
+
+static std::shared_ptr<Button> create_button(std::wstring text, glm::vec4 padding, glm::vec4 margin, onaction action) {
+    auto btn = std::make_shared<Button>(
+        langs::get(text, L"menu"), padding, action
+    );
+    btn->setMargin(margin);
     return btn;
 }
 
-void show_content_missing(Engine* engine, const Content* content, std::shared_ptr<ContentLUT> lut) {
+static void show_content_missing(Engine* engine, const Content* content, std::shared_ptr<ContentLUT> lut) {
     auto* gui = engine->getGUI();
-    auto* menu = gui->getMenu();
+    auto menu = gui->getMenu();
     auto panel = create_page(engine, "missing-content", 500, 0.5f, 8);
 
-    panel->add(new Label(langs::get(L"menu.missing-content")));
+    panel->add(std::make_shared<Label>(langs::get(L"menu.missing-content")));
 
-    Panel* subpanel = new Panel(glm::vec2(500, 100));
-    subpanel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+    auto subpanel = std::make_shared<Panel>(glm::vec2(500, 100));
+    subpanel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 
     for (auto& entry : lut->getMissingContent()) {
-        Panel* hpanel = new Panel(glm::vec2(500, 30));
-        hpanel->color(glm::vec4(0.0f));
+        auto hpanel = std::make_shared<Panel>(glm::vec2(500, 30));
+        hpanel->setColor(glm::vec4(0.0f));
         hpanel->orientation(Orientation::horizontal);
 
-        Label* namelabel = new Label(util::str2wstr_utf8(entry.name));
-        namelabel->color(glm::vec4(1.0f, 0.2f, 0.2f, 0.5f));
+        auto namelabel = std::make_shared<Label>(util::str2wstr_utf8(entry.name));
+        namelabel->setColor(glm::vec4(1.0f, 0.2f, 0.2f, 0.5f));
 
         auto contentname = util::str2wstr_utf8(contenttype_name(entry.type));
-        Label* typelabel = new Label(L"[" + contentname + L"]");
-        typelabel->color(glm::vec4(0.5f));
+        auto typelabel = std::make_shared<Label>(L"[" + contentname + L"]");
+        typelabel->setColor(glm::vec4(0.5f));
         hpanel->add(typelabel);
         hpanel->add(namelabel);
         subpanel->add(hpanel);
@@ -99,7 +106,12 @@ void show_content_missing(Engine* engine, const Content* content, std::shared_pt
     subpanel->maxLength(400);
     panel->add(subpanel);
 
-    panel->add((new Button(langs::get(L"Back to Main Menu", L"menu"), glm::vec4(8.0f)))->listenAction([=](GUI*){menu->back();}));
+    panel->add(std::make_shared<Button>(
+        langs::get(L"Back to Main Menu", L"menu"), glm::vec4(8.0f), [=](GUI*){
+            menu->back();
+        }
+    ));
+
     menu->set("missing-content");
 }
 
@@ -159,9 +171,9 @@ void open_world(std::string name, Engine* engine) {
     }
 }
 
-Panel* create_worlds_panel(Engine* engine) {
-    auto panel = new Panel(glm::vec2(390, 200), glm::vec4(5.0f));
-    panel->color(glm::vec4(1.0f, 1.0f, 1.0f, 0.07f));
+std::shared_ptr<Panel> create_worlds_panel(Engine* engine) {
+    auto panel = std::make_shared<Panel>(glm::vec2(390, 200), glm::vec4(5.0f));
+    panel->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.07f));
     panel->maxLength(400);
 
     auto paths = engine->getPaths();
@@ -170,24 +182,20 @@ Panel* create_worlds_panel(Engine* engine) {
         auto namews = util::str2wstr_utf8(name);
 
         auto btn = std::make_shared<RichButton>(glm::vec2(390, 46));
-        btn->color(glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
+        btn->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
         btn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
 
-        auto label = std::make_shared<Label>(namews);
-        label->setInteractive(false);
-        btn->add(label, glm::vec2(8, 8));
         btn->listenAction([=](GUI*) {
             open_world(name, engine);
         });
+        btn->add(std::make_shared<Label>(namews), glm::vec2(8, 8));
 
         auto image = std::make_shared<Image>("gui/delete_icon", glm::vec2(32, 32));
-        image->color(glm::vec4(1, 1, 1, 0.5f));
+        image->setColor(glm::vec4(1, 1, 1, 0.5f));
 
         auto delbtn = std::make_shared<Button>(image, glm::vec4(2));
-        delbtn->color(glm::vec4(0.0f));
+        delbtn->setColor(glm::vec4(0.0f));
         delbtn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
-
-        btn->add(delbtn, glm::vec2(330, 3));
 
         delbtn->listenAction([=](GUI* gui) {
             guiutil::confirm(gui, langs::get(L"delete-confirm", L"world") +
@@ -195,26 +203,30 @@ Panel* create_worlds_panel(Engine* engine) {
             {
                 LOG_INFO("Deleting {}", folder.u8string());
                 std::filesystem::remove_all(folder);
-                menus::refresh_menus(engine, gui->getMenu());
+                menus::refresh_menus(engine);
             });
         });
+
+        btn->add(delbtn, glm::vec2(330, 3));
 
         panel->add(btn);
     }
     return panel;
 }
 
-void create_main_menu_panel(Engine* engine, PagesControl* menu) {
+void create_main_menu_panel(Engine* engine) {
+    auto menu = engine->getGUI()->getMenu();
     auto panel = create_page(engine, "main", 400, 0.0f, 1);
 
     panel->add(guiutil::gotoButton(L"New World", "new-world", menu));
     panel->add(create_worlds_panel(engine));
     panel->add(guiutil::gotoButton(L"Settings", "settings", menu));
 
-    panel->add((new Button(langs::get(L"Quit", L"menu"), glm::vec4(10.f)))
-    ->listenAction([](GUI* gui) {
-        Window::setShouldClose(true);
-    }));
+    panel->add(std::make_shared<Button>(
+        langs::get(L"Quit", L"menu"), glm::vec4(10.0f), [](GUI*) {
+            Window::setShouldClose(true);
+        }
+    ));
 }
 
 typedef std::function<void(const ContentPack& pack)> packconsumer;
@@ -222,7 +234,7 @@ typedef std::function<void(const ContentPack& pack)> packconsumer;
 std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs, Engine* engine, bool backbutton, packconsumer callback) {
     auto assets = engine->getAssets();
     auto panel = std::make_shared<Panel>(glm::vec2(MenusConsts::PACKS_PANEL_WIDTH, 200), glm::vec4(5.0f));
-    panel->color(glm::vec4(1.0f, 1.0f, 1.0f, 0.07f));
+    panel->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.07f));
     panel->maxLength(400);
     panel->scrollable(true);
 
@@ -234,8 +246,8 @@ std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs,
             });
         }
         auto idlabel = std::make_shared<Label>("[" + pack.id + "]");
-        idlabel->color(glm::vec4(1, 1, 1, 0.5f));
-        packpanel->add(idlabel, glm::vec2(MenusConsts::PACKS_PANEL_WIDTH - 40 - idlabel->size().x, 2));
+        idlabel->setColor(glm::vec4(1, 1, 1, 0.5f));
+        packpanel->add(idlabel, glm::vec2(MenusConsts::PACKS_PANEL_WIDTH - 40 - idlabel->getSize().x, 2));
 
         auto titlelabel = std::make_shared<Label>(pack.title);
         packpanel->add(titlelabel, glm::vec2(78, 6));
@@ -252,17 +264,17 @@ std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs,
 
         if (!pack.creator.empty()) {
             auto creatorlabel = std::make_shared<Label>("@" + pack.creator);
-            creatorlabel->color(glm::vec4(0.8f, 1.0f, 0.9f, 0.7f));
-            packpanel->add(creatorlabel, glm::vec2(MenusConsts::PACKS_PANEL_WIDTH - 40 - creatorlabel->size().x, 60));
+            creatorlabel->setColor(glm::vec4(0.8f, 1.0f, 0.9f, 0.7f));
+            packpanel->add(creatorlabel, glm::vec2(MenusConsts::PACKS_PANEL_WIDTH - 40 - creatorlabel->getSize().x, 60));
         }
 
         auto descriptionlabel = std::make_shared<Label>(pack.description);
-        descriptionlabel->color(glm::vec4(1, 1, 1, 0.7f));
+        descriptionlabel->setColor(glm::vec4(1, 1, 1, 0.7f));
         packpanel->add(descriptionlabel, glm::vec2(80, 28));
 
         packpanel->add(std::make_shared<Image>(icon, glm::vec2(64)), glm::vec2(8));
 
-        packpanel->color(glm::vec4(0.06f, 0.12f, 0.18f, 0.7f));
+        packpanel->setColor(glm::vec4(0.06f, 0.12f, 0.18f, 0.7f));
         panel->add(packpanel);
     }
 
@@ -270,7 +282,8 @@ std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs,
     return panel;
 }
 
-void create_content_panel(Engine* engine, PagesControl* menu) {
+void create_content_panel(Engine* engine) {
+    auto menu = engine->getGUI()->getMenu();
     auto paths = engine->getPaths();
     auto mainPanel = create_page(engine, "content", MenusConsts::PACKS_PANEL_WIDTH, 0.0f, 5);
 
@@ -318,7 +331,7 @@ void create_content_panel(Engine* engine, PagesControl* menu) {
     mainPanel->add(guiutil::backButton(menu));
 }
 
-void create_new_world_panel(Engine* engine, PagesControl* menu) {
+void create_new_world_panel(Engine* engine) {
     auto panel = create_page(engine, "new-world", 400, 0.0f, 1);
 
     panel->add(std::make_shared<Label>(langs::get(L"Name", L"world")));
@@ -339,51 +352,53 @@ void create_new_world_panel(Engine* engine, PagesControl* menu) {
     [=](GUI*) {
         if (!nameInput->validate()) return;
 
-        std::wstring name = nameInput->text();
-        std::string nameutf8 = util::wstr2str_utf8(name);
+        std::string name = util::wstr2str_utf8(nameInput->text());
+        uint64_t seed = str2seed(seedInput->text());
+
         EnginePaths* paths = engine->getPaths();
-
-        std::wstring seedstr = seedInput->text();
-        uint64_t seed = str2seed(seedstr);
-
-        nameInput->cleanInput();
-        seedInput->cleanInput();
-
-        auto folder = paths->getWorldsFolder()/std::filesystem::u8path(nameutf8);
+        auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
 
         try {
             engine->loadAllPacks();
             engine->loadContent();
             paths->setWorldFolder(folder);
         } catch (const contentpack_error& error) {
-            guiutil::alert(engine->getGUI(),
-                        langs::get(L"Content Error", L"menu") +
-                        L":\n" + util::str2wstr_utf8(std::string(error.what()) +
-                                "\npack '" + error.getPackId() + "' from " +
-                                error.getFolder().u8string())
-                        );
+            guiutil::alert(
+                engine->getGUI(),
+                langs::get(L"Content Error", L"menu") + L":\n"+
+                util::str2wstr_utf8(
+                    std::string(error.what()) +
+                    "\npack '" + error.getPackId() + "' from " +
+                    error.getFolder().u8string()
+                )
+            );
             return;
         } catch (const std::runtime_error& error) {
-            guiutil::alert(engine->getGUI(), langs::get(L"Content Error", L"menu") + L": " + util::str2wstr_utf8(error.what()));
+            guiutil::alert(
+                engine->getGUI(),
+                langs::get(L"Content Error", L"menu") +
+                L": " + util::str2wstr_utf8(error.what())
+            );
             return;
         }
 
-        Level* level = World::create(nameutf8, folder, seed, engine->getSettings(), engine->getContent(), engine->getContentPacks());
+        Level* level = World::create(name, folder, seed, engine->getSettings(), engine->getContent(), engine->getContentPacks());
         engine->setScreen(std::make_shared<LevelScreen>(engine, level));
     }));
-    panel->add(guiutil::backButton(menu));
+    panel->add(guiutil::backButton(engine->getGUI()->getMenu()));
 }
 
-void create_controls_panel(Engine* engine, PagesControl* menu) {
+void create_controls_panel(Engine* engine) {
+    auto menu = engine->getGUI()->getMenu();
     auto panel = create_page(engine, "controls", 400, 0.0f, 1);
 
     {
-        panel->add((new Label(L""))->textSupplier([=]() {
+        panel->add(create_label([=]() {
             float sensitivity = engine->getSettings().camera.sensitivity;
             return langs::get(L"Mouse Sensitivity", L"settings") + L": " + util::double2wstr(sensitivity, 1);;
         }));
 
-        TrackBar* trackbar = new TrackBar(0.1, 10.0, 2.0, 0.1, 4);
+        auto trackbar = std::make_shared<TrackBar>(0.1, 10.0, 2.0, 0.1, 4);
         trackbar->supplier([=]() {
             return engine->getSettings().camera.sensitivity;
         });
@@ -394,21 +409,20 @@ void create_controls_panel(Engine* engine, PagesControl* menu) {
     }
 
     {
-        Panel* scrollPanel = new Panel(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
-        scrollPanel->color(glm::vec4(0.0f, 0.0f, 0.0f, 0.3f));
+        auto scrollPanel = std::make_shared<Panel>(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
+        scrollPanel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.3f));
         scrollPanel->maxLength(400);
 
         for (auto& entry : Events::bindings){
             std::string bindname = entry.first;
 
-            Panel* subpanel = new Panel(glm::vec2(400, 40), glm::vec4(5.0f), 1.0f);
-            subpanel->color(glm::vec4(0.0f));
+            auto subpanel = std::make_shared<Panel>(glm::vec2(400, 40), glm::vec4(5.0f), 1.0f);
+            subpanel->setColor(glm::vec4(0.0f));
             subpanel->orientation(Orientation::horizontal);
+            subpanel->add(std::make_shared<InputBindBox>(entry.second));
 
-            InputBindBox* bindbox = new InputBindBox(entry.second);
-            subpanel->add(bindbox);
-            Label* label = new Label(langs::get(util::str2wstr_utf8(bindname)));
-            label->margin(glm::vec4(6.0f));
+            auto label = std::make_shared<Label>(langs::get(util::str2wstr_utf8(bindname)));
+            label->setMargin(glm::vec4(6.0f));
             subpanel->add(label);
             scrollPanel->add(subpanel);
         }
@@ -418,15 +432,16 @@ void create_controls_panel(Engine* engine, PagesControl* menu) {
     }
 }
 
-void create_settings_panel(Engine* engine, PagesControl* menu) {
+void create_settings_panel(Engine* engine) {
+    auto menu = engine->getGUI()->getMenu();
     auto panel = create_page(engine, "settings", 400, 0.0f, 1);
 
     {
-        panel->add((new Label(L""))->textSupplier([=]() {
+        panel->add(create_label([=]() {
             return langs::get(L"Load Distance", L"settings") + L": " + std::to_wstring(engine->getSettings().chunks.loadDistance);
         }));
 
-        TrackBar* trackbar = new TrackBar(3, 66, 10, 1, 3);
+        auto trackbar = std::make_shared<TrackBar>(3, 66, 10, 1, 3);
         trackbar->supplier([=]() {
             return engine->getSettings().chunks.loadDistance;
         });
@@ -437,11 +452,11 @@ void create_settings_panel(Engine* engine, PagesControl* menu) {
     }
 
     {
-        panel->add((new Label(L""))->textSupplier([=]() {
+        panel->add(create_label([=]() {
             return langs::get(L"Load Speed", L"settings") + L": " + std::to_wstring(engine->getSettings().chunks.loadSpeed);
         }));
 
-        TrackBar* trackbar = new TrackBar(1, 32, 10, 1, 1);
+        auto trackbar = std::make_shared<TrackBar>(1, 32, 10, 1, 1);
         trackbar->supplier([=]() {
             return engine->getSettings().chunks.loadSpeed;
         });
@@ -452,12 +467,12 @@ void create_settings_panel(Engine* engine, PagesControl* menu) {
     }
 
     {
-        panel->add((new Label(L""))->textSupplier([=]() {
+        panel->add(create_label([=]() {
             float fogCurve = engine->getSettings().graphics.fogCurve;
             return langs::get(L"Fog Curve", L"settings") + L": " + util::double2wstr(fogCurve, 1);
         }));
 
-        TrackBar* trackbar = new TrackBar(1.0, 6.0, 1.0, 0.1, 2);
+        auto trackbar = std::make_shared<TrackBar>(1.0, 6.0, 1.0, 0.1, 2);
         trackbar->supplier([=]() {
             return engine->getSettings().graphics.fogCurve;
         });
@@ -468,12 +483,12 @@ void create_settings_panel(Engine* engine, PagesControl* menu) {
     }
 
     {
-        panel->add((new Label(L""))->textSupplier([=]() {
+        panel->add(create_label([=]() {
             int fov = (int)engine->getSettings().camera.fov;
             return langs::get(L"FOV", L"settings") + L": " + std::to_wstring(fov) + L"°";
         }));
 
-        TrackBar* trackbar = new TrackBar(30.0, 120.0, 90, 1, 4);
+        auto trackbar = std::make_shared<TrackBar>(30.0, 120.0, 90, 1, 4);
         trackbar->supplier([=]() {
             return engine->getSettings().camera.fov;
         });
@@ -484,7 +499,9 @@ void create_settings_panel(Engine* engine, PagesControl* menu) {
     }
 
     {
-        auto checkbox = new FullCheckBox(langs::get(L"V-Sync", L"settings"), glm::vec2(400, 32));
+        auto checkbox = std::make_shared<FullCheckBox>(
+            langs::get(L"V-Sync", L"settings"), glm::vec2(400, 32)
+        );
         checkbox->supplier([=]() {
             return engine->getSettings().display.swapInterval != 0;
         });
@@ -495,7 +512,9 @@ void create_settings_panel(Engine* engine, PagesControl* menu) {
     }
 
     {
-        auto checkbox = new FullCheckBox(langs::get(L"Backlight", L"settings"), glm::vec2(400, 32));
+        auto checkbox = std::make_shared<FullCheckBox>(
+            langs::get(L"Backlight", L"settings"), glm::vec2(400, 32)
+        );
         checkbox->supplier([=]() {
             return engine->getSettings().graphics.backlight != 0;
         });
@@ -517,14 +536,15 @@ void create_settings_panel(Engine* engine, PagesControl* menu) {
     panel->add(guiutil::backButton(menu));
 }
 
-void create_pause_panel(Engine* engine, PagesControl* menu) {
+void create_pause_panel(Engine* engine) {
+    auto menu = engine->getGUI()->getMenu();
     auto panel = create_page(engine, "pause", 400, 0.0f, 1);
 
     panel->add(create_button(L"Continue", glm::vec4(10.0f), glm::vec4(1), [=](GUI*){
         menu->reset();
     }));
     panel->add(create_button(L"Content", glm::vec4(10.0f), glm::vec4(1), [=](GUI*) {
-        create_content_panel(engine, menu);
+        create_content_panel(engine);
         menu->set("content");
     }));
     panel->add(guiutil::gotoButton(L"Settings", "settings", menu));
@@ -535,7 +555,8 @@ void create_pause_panel(Engine* engine, PagesControl* menu) {
     }));
 }
 
-void create_languages_panel(Engine* engine, PagesControl* menu) {
+void create_languages_panel(Engine* engine) {
+    auto menu = engine->getGUI()->getMenu();
     auto panel = create_page(engine, "languages", 400, 0.5f, 1);
     panel->scrollable(true);
 
@@ -548,26 +569,29 @@ void create_languages_panel(Engine* engine, PagesControl* menu) {
         auto& locale = langs::locales_info.at(name);
         std::string& fullName = locale.name;
 
-        Button* button = new Button(util::str2wstr_utf8(fullName), glm::vec4(10.f));
-        button->listenAction([=](GUI*) {
-            engine->setLanguage(name);
-            menu->back();
-        });
+        auto button = std::make_shared<Button>(
+            util::str2wstr_utf8(fullName), 
+            glm::vec4(10.0f),
+            [=](GUI*) {
+                engine->setLanguage(name);
+                menu->back();
+            }
+        );
         panel->add(button);
     }
     panel->add(guiutil::backButton(menu));
 }
 
-void menus::create_menus(Engine* engine, PagesControl* menu) {
-    create_new_world_panel(engine, menu);
-    create_settings_panel(engine, menu);
-    create_controls_panel(engine, menu);
-    create_pause_panel(engine, menu);
-    create_languages_panel(engine, menu);
-    create_main_menu_panel(engine, menu);
+void menus::create_menus(Engine* engine) {
+    create_new_world_panel(engine);
+    create_settings_panel(engine);
+    create_controls_panel(engine);
+    create_pause_panel(engine);
+    create_languages_panel(engine);
+    create_main_menu_panel(engine);
 }
 
-void menus::refresh_menus(Engine* engine, PagesControl* menu) {
-    create_main_menu_panel(engine, menu);
-    create_new_world_panel(engine, menu);
+void menus::refresh_menus(Engine* engine) {
+    create_main_menu_panel(engine);
+    create_new_world_panel(engine);
 }
