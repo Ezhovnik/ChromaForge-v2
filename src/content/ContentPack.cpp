@@ -7,7 +7,7 @@
 #include "../coders/json.h"
 #include "../logger/Logger.h"
 #include "../files/engine_paths.h"
-#include "../definitions.h"
+#include "../core_defs.h"
 #include "../data/dynamic.h"
 
 const std::string ContentPack::PACKAGE_FILENAME = "package.json";

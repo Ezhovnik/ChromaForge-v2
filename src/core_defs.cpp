@@ -1,4 +1,4 @@
-#include "definitions.h"
+#include "core_defs.h"
 
 #include <glm/glm.hpp>
 
@@ -15,7 +15,7 @@
 #include "content/Content.h"
 #include "items/Item.h"
 
-void setup_definitions(ContentBuilder* builder) {
+void CoreContent::setup(ContentBuilder* builder) {
     // Воздух
     Block* block = new Block(DEFAULT_CONTENT_NAMESPACE":air", "");
     block->drawGroup = 1;
@@ -28,11 +28,12 @@ void setup_definitions(ContentBuilder* builder) {
     block->pickingItem = DEFAULT_CONTENT_NAMESPACE":empty";
     builder->add(block);
 
+    // Пустота
     Item* item = builder->createItem(DEFAULT_CONTENT_NAMESPACE":empty");
     item->iconType = ItemIconType::None;
 }
 
-void setup_bindings() {
+void CoreContent::setup_bindings() {
 	Events::bind(BIND_MOVE_FORWARD, inputType::keyboard, keycode::W);
 	Events::bind(BIND_MOVE_BACK, inputType::keyboard, keycode::S);
 	Events::bind(BIND_MOVE_RIGHT, inputType::keyboard, keycode::D);

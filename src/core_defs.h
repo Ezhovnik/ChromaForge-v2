@@ -1,6 +1,8 @@
 #ifndef SRC_CORE_DEFS_H_
 #define SRC_CORE_DEFS_H_
 
+#define DEFAULT_CONTENT_NAMESPACE "chromaforge"
+
 #define TEXTURE_NOTFOUND "notfound"
 
 #define BIND_MOVE_FORWARD "movement.forward"
@@ -19,5 +21,12 @@
 #define BIND_PLAYER_ATTACK "player.attack"
 #define BIND_PLAYER_BUILD "player.build"
 #define BIND_PLAYER_PICK "player.pick"
+
+class ContentBuilder;
+
+namespace CoreContent {
+    extern void setup_bindings();
+    extern void setup(ContentBuilder* builder);
+}
 
 #endif // SRC_CORE_DEFS_H_

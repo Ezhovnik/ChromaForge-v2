@@ -21,7 +21,7 @@
 #include "window/Camera.h"
 #include "window/input.h"
 #include "assets/AssetsLoader.h"
-#include "definitions.h"
+#include "core_defs.h"
 #include "logger/Logger.h"
 #include "settings.h"
 #include "frontend/gui/GUI.h"
@@ -165,7 +165,7 @@ void Engine::loadContent() {
     LOG_INFO("Loading content");
     auto resdir = paths->getResources();
     ContentBuilder contentBuilder;
-    setup_definitions(&contentBuilder);
+    CoreContent::setup(&contentBuilder);
     paths->setContentPacks(&contentPacks);
 
     std::vector<std::filesystem::path> resRoots;

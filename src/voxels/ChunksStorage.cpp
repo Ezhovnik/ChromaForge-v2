@@ -12,7 +12,7 @@
 #include "../math/voxmaths.h"
 #include "../lighting/Lightmap.h"
 #include "../logger/Logger.h"
-#include "../definitions.h"
+#include "../core_defs.h"
 
 void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {

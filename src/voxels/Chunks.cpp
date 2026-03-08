@@ -12,7 +12,7 @@
 #include "../graphics/Mesh.h"
 #include "../math/voxmaths.h"
 #include "../world/LevelEvents.h"
-#include "../definitions.h"
+#include "../core_defs.h"
 #include "../content/Content.h"
 #include "../math/AABB.h"
 #include "../math/rays.h"

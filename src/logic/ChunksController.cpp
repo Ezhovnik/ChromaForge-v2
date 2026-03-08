@@ -15,7 +15,7 @@
 #include "../world/World.h"
 #include "../constants.h"
 #include "../logger/Logger.h"
-#include "../definitions.h"
+#include "../core_defs.h"
 #include "../math/voxmaths.h"
 #include "../content/Content.h"
 #include "../util/timeutil.h"
