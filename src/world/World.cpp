@@ -122,3 +122,46 @@ void World::setName(const std::string& name) {
 std::string World::getName() const {
     return name;
 }
+
+void World::deserialize(dynamic::Map* root) {
+    name = root->getStr("name", name);
+    seed = root->getInt("seed", seed);
+
+	auto verobj = root->map("version");
+	if (verobj) {
+		int major = 0, minor = -1, maintenance = -1;
+		verobj->num("major", major);
+		verobj->num("minor", minor);
+		verobj->num("maintenance", maintenance);
+		LOG_DEBUG("World version: {}.{}.{}", major, minor, maintenance);
+	}
+
+	auto timeobj = root->map("time");
+	if (timeobj) {
+		timeobj->num("day-time", daytime);
+		timeobj->num("day-time-speed", daytimeSpeed);
+        timeobj->num("total-time", totalTime);
+	}
+
+    nextInventoryId = root->getNum("next-inventory-id", 2);
+}
+
+std::unique_ptr<dynamic::Map> World::serialize() const {
+	auto root = std::make_unique<dynamic::Map>();
+
+	auto& versionobj = root->putMap("version");
+	versionobj.put("major", ENGINE_VERSION_MAJOR);
+	versionobj.put("minor", ENGINE_VERSION_MINOR);
+	versionobj.put("maintenance", ENGINE_VERSION_MAINTENANCE);
+
+	root->put("name", getName());
+	root->put("seed", getSeed());
+
+	auto& timeobj = root->putMap("time");
+	timeobj.put("day-time", daytime);
+	timeobj.put("day-time-speed", daytimeSpeed);
+	timeobj.put("total-time", totalTime);
+
+    root->put("next-inventory-id", nextInventoryId);
+    return root;
+}

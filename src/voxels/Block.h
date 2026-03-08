@@ -78,6 +78,7 @@ public:
     BlockModel model = BlockModel::Cube;
     std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
     std::string scriptName = name.substr(name.find(':') + 1);
+    uint inventorySize = 0;
 
     bool lightPassing = false;
     bool skyLightPassing = false;

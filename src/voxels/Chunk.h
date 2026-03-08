@@ -2,9 +2,13 @@
 #define VOXELS_CHUNK_H_
 
 #include <stdlib.h>
+#include <unordered_map>
+#include <memory>
 
 #include "../typedefs.h"
 #include "../constants.h"
+#include "voxel.h"
+#include "../lighting/LightMap.h"
 
 namespace ChunkFlags {
     inline constexpr uint MODIFIED = 0x1;
@@ -17,8 +21,7 @@ namespace ChunkFlags {
 
 inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
 
-struct voxel;
-class LightMap;
+class Inventory;
 class ContentLUT;
 
 inline void bit_on(int& flags, int bit) { flags |= bit; }
@@ -32,20 +35,24 @@ class Chunk {
 public:
     int chunk_x, chunk_z; // Координаты чанка
     int bottom, top;
-    voxel* voxels; // Массив вокселей, содержащихся в чанке
+    voxel voxels[CHUNK_VOLUME]; // Массив вокселей, содержащихся в чанке
 
     int flags = 0;
 
-    LightMap* light_map; // Карта освещения чанка
+    LightMap light_map; // Карта освещения чанка
+
+    std::unordered_map<uint, std::shared_ptr<Inventory>> inventories;
 
     Chunk(int chunk_x, int chunk_z); // Конструктор
-    ~Chunk(); // Деструктор
 
     bool isEmpty(); // Проверяет, является ли чанк пустым (однородным).
 
     void updateHeights();
 
-    Chunk* clone() const; // Создает полную копию текущего чанка.
+    std::unique_ptr<Chunk> clone() const; // Создает полную копию текущего чанка.
+
+    void addBlockInventory(std::shared_ptr<Inventory> inventory, uint x, uint y, uint z);
+    std::shared_ptr<Inventory> getBlockInventory(uint x, uint y, uint z) const;
 
     inline bool isUnsaved() const {return flags & ChunkFlags::UNSAVED;}
 	inline bool isModified() const {return flags & ChunkFlags::MODIFIED;}

@@ -22,6 +22,7 @@ namespace RegionConsts {
 
     constexpr uint LAYER_VOXELS = 0;
     constexpr uint LAYER_LIGHTS = 1;
+    constexpr uint LAYER_STORAGES = 2;
 
     constexpr uint MAX_OPEN_FILES = 16;
 }
@@ -76,8 +77,9 @@ private:
     std::unordered_map<glm::ivec3, std::unique_ptr<regFile>> openRegFiles;
 
     std::filesystem::path getLightsFolder() const;
+    std::filesystem::path getInventoriesFolder() const;
 	std::filesystem::path getRegionFilename(int x, int z) const;
-    std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информауия о мире
+    std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информация о мире
     std::filesystem::path getIndicesFile() const;
     std::filesystem::path getPacksFile() const;
 
@@ -98,6 +100,7 @@ private:
 public:
     regionsmap regions; // Хранилище регионов в оперативной памяти.
     regionsmap lights;
+    regionsmap storages;
 
     std::filesystem::path directory; // Путь к директории с файлами мира
     std::unique_ptr<ubyte[]> compressionBuffer; // Выходной буфер для записи регионов
@@ -132,7 +135,7 @@ public:
     void writePacks(const World* world);
     void writeIndices(const ContentIndices* indices);
 
-    void addPack(const std::string& id);
+    void addPack(const World* world, const std::string& id);
 };
 
 #endif // FILES_WORLDFILES_H_

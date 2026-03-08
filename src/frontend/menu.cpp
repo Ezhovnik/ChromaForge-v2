@@ -302,10 +302,10 @@ void create_content_panel(Engine* engine, PagesControl* menu) {
                     guiutil::alert(gui, langs::get(L"error.dependency-not-found") + L": " + util::str2wstr_utf8(dependency));
                     return;
                 }
-                if (!world->hasPack(dependency)) world->wfile->addPack(dependency);
+                if (!world->hasPack(dependency)) world->wfile->addPack(world, dependency);
             }
-            
-            world->wfile->addPack(pack.id);
+
+            world->wfile->addPack(world, pack.id);
 
             std::string wname = world->getName();
             engine->setScreen(nullptr);
