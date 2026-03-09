@@ -26,6 +26,7 @@ lua::LuaState* scripting::state = nullptr;
 Level* scripting::level = nullptr;
 const Content* scripting::content = nullptr;
 BlocksController* scripting::blocks = nullptr;
+const ContentIndices* scripting::indices = nullptr;
 
 void load_script(std::filesystem::path name) {
     auto paths = scripting::engine->getPaths();
@@ -70,6 +71,7 @@ wstringconsumer scripting::create_wstring_consumer(const std::string& src, const
 void scripting::on_world_load(Level* level, BlocksController* blocks) {
     scripting::level = level;
     scripting::content = level->content;
+    scripting::indices = level->content->getIndices();
     scripting::blocks = blocks;
     load_script("world.lua");
 
@@ -90,6 +92,7 @@ void scripting::on_world_quit() {
     }
     scripting::level = nullptr;
     scripting::content = nullptr;
+    scripting::indices = nullptr;
 }
 
 void scripting::on_blocks_tick(const Block* block, int tps) {

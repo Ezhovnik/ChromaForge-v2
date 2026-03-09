@@ -19,13 +19,10 @@ static Align align_from_string(const std::string& str, Align def) {
     return def;
 }
 
-static void readUINode(xml::xmlelement element, UINode& node) {
+static void _readUINode(xml::xmlelement element, UINode& node) {
     if (element->has("coord")) node.setCoord(element->attr("coord").asVec2());
-
     if (element->has("size")) node.setSize(element->attr("size").asVec2());
-
     if (element->has("color")) node.setColor(element->attr("color").asColor());
-
     if (element->has("margin")) node.setMargin(element->attr("margin").asVec4());
 
     std::string alignName = element->attr("align", "").getText();
@@ -33,7 +30,7 @@ static void readUINode(xml::xmlelement element, UINode& node) {
 }
 
 static void _readContainer(UiXmlReader& reader, xml::xmlelement element, Container& container) {
-    readUINode(element, container);
+    _readUINode(element, container);
 
     if (element->has("scrollable")) container.setScrollable(element->attr("scrollable").asBool());
 
@@ -43,13 +40,19 @@ static void _readContainer(UiXmlReader& reader, xml::xmlelement element, Contain
     }
 }
 
+void UiXmlReader::readUINode(UiXmlReader& reader, xml::xmlelement element, Container& container) {
+    _readContainer(reader, element, container);
+}
+
+void UiXmlReader::readUINode(UiXmlReader& reader, xml::xmlelement element, UINode& node) {
+    _readUINode(element, node);
+}
+
 static void _readPanel(UiXmlReader& reader, xml::xmlelement element, Panel& panel) {
-    readUINode(element, panel);
+    _readUINode(element, panel);
 
     if (element->has("padding")) panel.setPadding(element->attr("padding").asVec4());
-
     if (element->has("size")) panel.setResizing(false);
-
     if (element->has("max-length")) panel.setMaxLength(element->attr("max-length").asInt());
 
     for (auto& sub : element->getElements()) {
@@ -72,7 +75,7 @@ static std::wstring readAndProcessInnerText(xml::xmlelement element) {
 static std::shared_ptr<UINode> readLabel(UiXmlReader& reader, xml::xmlelement element) {
     std::wstring text = readAndProcessInnerText(element);
     auto label = std::make_shared<Label>(text);
-    readUINode(element, *label);
+    _readUINode(element, *label);
     return label;
 }
 
@@ -144,6 +147,11 @@ std::shared_ptr<UINode> UiXmlReader::readXML(const std::string& filename, const 
     this->filename = filename;
     auto document = xml::parse(filename, source);
     auto root = document->getRoot();
+    return readUINode(root);
+}
+
+std::shared_ptr<UINode> UiXmlReader::readXML(const std::string& filename, xml::xmlelement root) {
+    this->filename = filename;
     return readUINode(root);
 }
 

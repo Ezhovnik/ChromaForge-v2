@@ -193,7 +193,7 @@ std::shared_ptr<InventoryView> HudRenderer::createContentAccess() {
         accessInventory->getSlot(id - 1).set(ItemStack(id, 1));
     }
 
-    SlotLayout slotLayout(glm::vec2(), false, true, 
+    SlotLayout slotLayout(-1, glm::vec2(), false, true, 
     [=](ItemStack& item) {
         auto copy = ItemStack(item);
         inventory->move(copy, indices);
@@ -202,41 +202,25 @@ std::shared_ptr<InventoryView> HudRenderer::createContentAccess() {
         inventory->getSlot(player->getChosenSlot()).set(item);
     });
 
-    InventoryBuilder builder;
+    InventoryBuilder builder(levelFrontend, *interaction);
     builder.addGrid(8, itemsCount - 1, glm::vec2(), 8, true, slotLayout);
-    auto layout = builder.build();
-    auto contentAccess = std::make_shared<InventoryView>(
-        content, 
-		levelFrontend, 
-		interaction.get(), 
-		accessInventory, 
-		std::move(layout)
-    );
-    contentAccess->build();
-    return contentAccess;
+    auto view = builder.build();
+    view->bind(accessInventory);
+    return view;
 }
 
 std::shared_ptr<InventoryView> HudRenderer::createHotbar() {
     auto level = levelFrontend->getLevel();
     auto player = level->player;
     auto inventory = player->getInventory();
-    auto content = level->content;
 
-    SlotLayout slotLayout(glm::vec2(), false, false, nullptr, nullptr);
-    InventoryBuilder builder;
+    SlotLayout slotLayout(-1, glm::vec2(), false, false, nullptr, nullptr);
+    InventoryBuilder builder(levelFrontend, *interaction);
     builder.addGrid(10, 10, glm::vec2(), 4, true, slotLayout);
-    auto layout = builder.build();
-
-    layout->setOrigin(glm::vec2(layout->getSize().x / 2, 0));
-    auto view = std::make_shared<InventoryView>(
-        content, 
-		levelFrontend, 
-		interaction.get(), 
-		inventory, 
-		std::move(layout)
-    );
-    view->build();
-    view->setInteractive(false);
+    auto view = builder.build();
+    view->setOrigin(glm::vec2(view->getSize().x/2, 0));
+    view->bind(inventory);
+	view->setInteractive(false);
     return view;
 }
 
@@ -244,24 +228,15 @@ std::shared_ptr<InventoryView> HudRenderer::createInventory() {
     auto level = levelFrontend->getLevel();
     auto player = level->player;
     auto inventory = player->getInventory();
-    auto content = level->content;
 
-    SlotLayout slotLayout(glm::vec2(), true, false, [=](ItemStack& stack) {
+    SlotLayout slotLayout(-1, glm::vec2(), true, false, [=](ItemStack& stack) {
         stack.clear();
     }, nullptr);
 
-    InventoryBuilder builder;
+    InventoryBuilder builder(levelFrontend, *interaction);
     builder.addGrid(10, inventory->size(), glm::vec2(), 4, true, slotLayout);
-    auto layout = builder.build();
-
-    auto view = std::make_shared<InventoryView>(
-        content,
-        levelFrontend,
-        interaction.get(),
-        inventory,
-        std::move(layout)
-    );
-    view->build();
+    auto view = builder.build();
+    view->bind(inventory);
     return view;
 }
 
@@ -270,12 +245,11 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
 
     interaction = std::make_unique<InventoryInteraction>();
     grabbedItemView = std::make_shared<SlotView>(
-        interaction->getGrabbedItem(), 
         levelFrontend,
-		interaction.get(),
-        levelFrontend->getLevel()->content,
-        SlotLayout(glm::vec2(), false, false, nullptr, nullptr)
+		*interaction,
+        SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr)
     );
+	grabbedItemView->bind(interaction->getGrabbedItem());
     grabbedItemView->setColor(glm::vec4());
     grabbedItemView->setInteractive(false);
 
@@ -400,10 +374,8 @@ void HudRenderer::draw(const GfxContext& context) {
 	}
 
 	if (inventoryOpen) {
-		auto caLayout = contentAccess->getLayout();
-        auto invLayout = inventoryView->getLayout();
-        float caWidth = caLayout->getSize().x;
-        glm::vec2 invSize = invLayout->getSize();
+		float caWidth = contentAccess->getSize().x;
+        glm::vec2 invSize = inventoryView->getSize();
 
         float width = viewport.getWidth();
 
