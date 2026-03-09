@@ -16,12 +16,14 @@ class BlocksController;
 struct block_funcs_set;
 struct item_funcs_set;
 class LuaState;
+class ContentIndices;
 
 namespace scripting {
     extern Engine* engine;
     extern const Content* content;
     extern Level* level;
     extern BlocksController* blocks;
+    extern const ContentIndices* indices;
 
     void initialize(Engine* engine);
 
