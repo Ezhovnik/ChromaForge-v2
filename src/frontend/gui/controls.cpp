@@ -80,6 +80,7 @@ Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::
     add(content);
     setScrollable(false);
     setHoverColor(glm::vec4(0.05f, 0.1f, 0.15f, 0.75f));
+    content->setInteractive(false);
 }
 
 Button::Button(std::wstring text, glm::vec4 padding, onaction action, glm::vec2 size) : Panel(size, padding, 0) {
@@ -97,6 +98,7 @@ Button::Button(std::wstring text, glm::vec4 padding, onaction action, glm::vec2 
     label = std::make_shared<Label>(text);
     label->setAlign(Align::center);
     label->setSize(size - glm::vec2(padding.z + padding.x, padding.w + padding.y));
+    label->setInteractive(false);
     add(label);
 
     setHoverColor(glm::vec4(0.05f, 0.1f, 0.15f, 0.75f));
@@ -127,10 +129,6 @@ void Button::drawBackground(const GfxContext* parent_context, Assets* assets) {
     batch->rect(coord.x, coord.y, size.x, size.y);
 }
 
-std::shared_ptr<UINode> Button::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
-    return UINode::getAt(pos, self);
-}
-
 void Button::mouseRelease(GUI* gui, int x, int y) {
     UINode::mouseRelease(gui, x, y);
     if (isInside(glm::vec2(x, y))) {
@@ -145,11 +143,16 @@ Button* Button::listenAction(onaction action) {
     return this;
 }
 
-void Button::textAlign(Align align) {
+void Button::setTextAlign(Align align) {
     if (label) {
         label->setAlign(align);
         refresh();
     }
+}
+
+Align Button::getTextAlign() const {
+    if (label) return label->getAlign();
+    return Align::left;
 }
 
 void Button::refresh() {
@@ -185,6 +188,7 @@ void RichButton::drawBackground(const GfxContext* parent_context, Assets* assets
 
 TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0), input(L""), placeholder(placeholder) {
     label = std::make_shared<Label>(L"");
+    label->setSize(size - glm::vec2(padding.z + padding.x, padding.w + padding.y));
     add(label);
     setHoverColor(glm::vec4(0.05f, 0.1f, 0.2f, 0.75f));
 }
@@ -289,13 +293,18 @@ void TextBox::textValidator(wstringchecker validator) {
     this->validator = validator;
 }
 
-std::wstring TextBox::text() const {
+std::wstring TextBox::getText() const {
     if (input.empty()) return placeholder;
     return input;
 }
 
-void TextBox::text(std::wstring value) {
+void TextBox::setText(std::wstring value) {
     this->input = value;
+}
+
+void TextBox::refresh() {
+    Panel::refresh();
+    label->setSize(size - glm::vec2(padding.z + padding.x, padding.w + padding.y));
 }
 
 InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec2(100, 32), padding, 0), binding(binding) {

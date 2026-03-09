@@ -21,6 +21,7 @@ fog-curve = 1.6
 backlight = true
 frustum-culling = true
 skybox-resolution = 96
+gamma = 1
 
 [debug]
 generator-test-mode = false

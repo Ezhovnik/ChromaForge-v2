@@ -249,7 +249,7 @@ void PlayerController::updateInteraction(){
 				if (!level->physics->isBlockInside(x, y, z, player->hitbox.get()) || !def->obstacle){
 					Block* def = contentIds->getBlockDef(chosenBlock);
 					if (def->grounded && !chunks->isSolidBlock(x, y - 1, z)) chosenBlock = 0;
-					if (chosenBlock != vox->id) {
+					if (chosenBlock != vox->id && chosenBlock) {
 						chunks->setVoxel(x, y, z, chosenBlock, states);
 						lighting->onBlockSet(x, y, z, chosenBlock);
 						if (def->rt.funcsset.onplaced) scripting::on_block_placed(player, def, x, y, z);

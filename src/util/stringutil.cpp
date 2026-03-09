@@ -243,6 +243,13 @@ std::vector<ubyte> util::base64_decode(const std::string& str) {
     return base64_decode(str.c_str(), str.size());
 }
 
+std::string util::mangleid(uint64_t value) {
+    std::stringstream ss;
+    ss << std::hex << value;
+    std::string result(ss.str());
+    return ss.str();
+}
+
 int util::replaceAll(std::string& str, const std::string& from, const std::string& to) {
     int count = 0;
     size_t offset = 0;
@@ -268,4 +275,8 @@ double util::parse_double(const std::string& str) {
         throw std::runtime_error("Invalid number format");
     }
     return d;    
+}
+
+double util::parse_double(const std::string& str, size_t offset, size_t len) {
+    return parse_double(str.substr(offset, len));
 }

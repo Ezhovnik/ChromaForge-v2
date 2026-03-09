@@ -6,6 +6,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include <glm/glm.hpp>
+
 #include "commons.h"
 
 namespace xml {
@@ -31,6 +33,10 @@ namespace xml {
         int64_t asInt() const;
         double asFloat() const;
         bool asBool() const;
+        glm::vec2 asVec2() const;
+        glm::vec3 asVec3() const;
+        glm::vec4 asVec4() const;
+        glm::vec4 asColor() const;
     };
 
     class Node {
