@@ -61,6 +61,14 @@ std::shared_ptr<Inventory> Chunk::getBlockInventory(uint x, uint y, uint z) cons
     return found->second;
 }
 
+void Chunk::removeBlockInventory(uint x, uint y, uint z) {
+	if (inventories.erase(vox_index(x, y, z))) setUnsaved(true);
+}
+
+void Chunk::setBlockInventories(chunk_inventories_map map) {
+	inventories = map;
+}
+
 // Создает полную копию текущего чанка.
 std::unique_ptr<Chunk> Chunk::clone() const {
 	auto other = std::make_unique<Chunk>(chunk_x, chunk_z);

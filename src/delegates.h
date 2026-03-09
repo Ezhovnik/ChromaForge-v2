@@ -7,5 +7,6 @@
 using runnable = std::function<void()>;
 using stringconsumer = std::function<void(const std::string&)>;
 using wstringconsumer = std::function<void(const std::wstring&)>;
+using wstringsupplier = std::function<std::wstring()>;
 
 #endif // DELEGATES_H_

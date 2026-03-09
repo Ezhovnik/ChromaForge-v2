@@ -73,19 +73,30 @@ runnable scripting::create_runnable(int env, const std::string& src, const std::
 }
 
 wstringconsumer scripting::create_wstring_consumer(int env, const std::string& src, const std::string& file) {
-    try {
-        if (state->eval(env, src, file) == 0) return [](const std::wstring& _) {};
-    } catch (const lua::luaerror& err) {
-        LOG_ERROR("{}", err.what());
-        return [](const std::wstring& _) {};
-    }
-
-    auto funcName = state->storeAnonymous();
-    return [=](const std::wstring& x){
-        if (state->getglobal(funcName)) {
-            state->pushstring(util::wstr2str_utf8(x));
-            state->callNoThrow(1);
+    return [=](const std::wstring& x) {
+        try {
+            if (state->eval(env, src, file) == 0) return;
+        } catch (lua::luaerror err) {
+            LOG_ERROR("{}", err.what());
+            return;
         }
+        state->pushstring(util::wstr2str_utf8(x));
+        state->callNoThrow(1);
+    };
+}
+
+int_array_consumer scripting::create_int_array_consumer(int env, const std::string& src, const std::string& file) {
+    return [=](const int arr[], size_t len){
+        try {
+            if (state->eval(env, src, file) == 0) return;
+        } catch (lua::luaerror err) {
+            LOG_ERROR("{}", err.what());
+            return;
+        }
+        for (uint i = 0; i < len; ++i) {
+            state->pushinteger(arr[i]);
+        }
+        state->callNoThrow(len);
     };
 }
 
@@ -100,6 +111,18 @@ std::unique_ptr<Environment> scripting::create_pack_environment(const ContentPac
     state->setfield("PACK_ENV");
     state->pushstring(pack.id);
     state->setfield("PACK_ID");
+    state->pop();
+    return std::make_unique<Environment>(id);
+}
+
+std::unique_ptr<Environment> scripting::create_doc_environment(int parent, const std::string& name) {
+    int id = state->createEnvironment(parent);
+    state->pushenv(id);
+    state->pushvalue(-1);
+    state->setfield("DOC_ENV");
+    state->pushstring(name.c_str());
+    state->setfield("DOC_NAME");
+    state->pop();
     return std::make_unique<Environment>(id);
 }
 

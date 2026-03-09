@@ -10,6 +10,7 @@
 #include "World.h"
 #include "LevelEvents.h"
 #include "../content/Content.h"
+#include "../items/Inventories.h"
 
 inline constexpr float GRAVITY = 22.6f;
 
@@ -28,6 +29,7 @@ Level::Level(World* world, const Content* content, Player* player, EngineSetting
     events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
 		this->chunksStorage->remove(chunk->chunk_x, chunk->chunk_z);
 	});
+    inventories = std::make_unique<Inventories>(*this);
 }
 
 Level::~Level(){

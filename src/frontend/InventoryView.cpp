@@ -25,6 +25,7 @@
 #include "../logger/Logger.h"
 #include "../coders/xml.h"
 #include "gui/gui_xml.h"
+#include "../logic/scripting/scripting.h"
 
 SlotLayout::SlotLayout(
     int index,
@@ -192,7 +193,7 @@ void SlotView::clicked(gui::GUI* gui, int button) {
 
     if (button == mousecode::BUTTON_1) {
         if (Events::isPressed(keycode::LEFT_SHIFT)) {
-            if (layout.shareFunc) layout.shareFunc(stack);
+            if (layout.shareFunc) layout.shareFunc(layout.index, stack);
             return;
         }
         if (!layout.itemSource && stack.accepts(grabbed)) {
@@ -307,11 +308,23 @@ std::shared_ptr<Inventory> InventoryView::getInventory() const {
     return inventory;
 }
 
+static itemsharefunc readShareFunc(InventoryView* view, gui::UiXmlReader& reader, xml::xmlelement& element) {
+    auto consumer = scripting::create_int_array_consumer(
+        reader.getEnvironment().getId(), 
+        element->attr("sharefunc").getText()
+    );
+    return [=](uint slot, ItemStack& stack) {
+        int args[] {int(view->getInventory()->getId()), int(slot)};
+        consumer(args, 2);
+    };
+}
+
 static void readSlot(InventoryView* view, gui::UiXmlReader& reader, xml::xmlelement element) {
     int index = element->attr("index", "0").asInt();
     bool itemSource = element->attr("item-source", "false").asBool();
     SlotLayout layout(index, glm::vec2(), true, itemSource, nullptr, nullptr);
     if (element->has("coord")) layout.position = element->attr("coord").asVec2();
+    if (element->has("sharefunc")) layout.shareFunc = readShareFunc(view, reader, element);
     auto slot = view->addSlot(layout);
     reader.readUINode(reader, element, *slot);
     view->add(slot);
@@ -328,17 +341,14 @@ static void readSlotsGrid(InventoryView* view, gui::UiXmlReader& reader, xml::xm
     int padding = element->attr("padding", "-1").asInt();
     if (padding < 0) padding = interval;
 
-    if (rows == 0) {
-        rows = ceildiv(count, cols);
-    } else if (cols == 0) {
-        cols = ceildiv(count, rows);
-    } else if (count == 0) {
-        count = rows * cols;
-    }
+    if (rows == 0) rows = ceildiv(count, cols);
+    else if (cols == 0) cols = ceildiv(count, rows);
+    else if (count == 0) count = rows * cols;
 
     bool itemSource = element->attr("item-source", "false").asBool();
     SlotLayout layout(-1, glm::vec2(), true, itemSource, nullptr, nullptr);
     if (element->has("coord")) layout.position = element->attr("coord").asVec2();
+    if (element->has("sharefunc")) layout.shareFunc = readShareFunc(view, reader, element);
 
     layout.padding = padding;
 
@@ -354,7 +364,7 @@ static void readSlotsGrid(InventoryView* view, gui::UiXmlReader& reader, xml::xm
 
             SlotLayout slotLayout = layout;
             slotLayout.index = startIndex + idx;
-            slotLayout.position = glm::vec2(
+            slotLayout.position += glm::vec2(
                 padding + col * (slotSize + interval),
                 padding + row * (slotSize + interval)
             );
@@ -367,7 +377,8 @@ static void readSlotsGrid(InventoryView* view, gui::UiXmlReader& reader, xml::xm
 void InventoryView::createReaders(gui::UiXmlReader& reader) {
     reader.add("inventory", [=](gui::UiXmlReader& reader, xml::xmlelement element) {
         auto view = std::make_shared<InventoryView>();
-        reader.readUINode(reader, element, *view, true);
+        reader.addIgnore("slots-grid");
+        reader.readUINode(reader, element, *view);
 
         for (auto& sub : element->getElements()) {
             if (sub->getTag() == "slot") readSlot(view.get(), reader, sub);
@@ -375,21 +386,4 @@ void InventoryView::createReaders(gui::UiXmlReader& reader) {
         }
         return view;
     });
-}
-
-std::shared_ptr<InventoryView> InventoryView::readXML(const std::string& src, const std::string& file, const scripting::Environment& env) {
-    auto view = std::make_shared<InventoryView>();
-
-    gui::UiXmlReader reader(env);
-    createReaders(reader);
-
-    auto document = xml::parse(file, src);
-    auto root = document->getRoot();
-    if (root->getTag() != "inventory") {
-        LOG_ERROR("'inventory' element expected");
-        Logger::getInstance().flush();
-        throw std::runtime_error("'inventory' element expected");
-    }
-
-    return std::dynamic_pointer_cast<InventoryView>(reader.readXML(file, root));
 }

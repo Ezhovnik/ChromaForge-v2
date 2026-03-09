@@ -43,6 +43,14 @@ UINode* UINode::getParent() const {
     return parent;
 }
 
+void UINode::setZIndex(int zindex_) {
+    zindex = zindex_;
+}
+
+int UINode::getZIndex() const {
+    return zindex;
+}
+
 void UINode::click(GUI*, int x, int y) {
     pressed = true;
 }

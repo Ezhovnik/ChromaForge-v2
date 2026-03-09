@@ -24,6 +24,8 @@ inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
 class Inventory;
 class ContentLUT;
 
+using chunk_inventories_map = std::unordered_map<uint, std::shared_ptr<Inventory>>;
+
 inline void bit_on(int& flags, int bit) { flags |= bit; }
 inline void bit_off(int& flags, int bit) { flags &= ~bit; }
 inline void bitset(int& flags, int bit, bool state) {
@@ -41,7 +43,7 @@ public:
 
     LightMap light_map; // Карта освещения чанка
 
-    std::unordered_map<uint, std::shared_ptr<Inventory>> inventories;
+    chunk_inventories_map inventories;
 
     Chunk(int chunk_x, int chunk_z); // Конструктор
 
@@ -53,6 +55,8 @@ public:
 
     void addBlockInventory(std::shared_ptr<Inventory> inventory, uint x, uint y, uint z);
     std::shared_ptr<Inventory> getBlockInventory(uint x, uint y, uint z) const;
+    void removeBlockInventory(uint x, uint y, uint z);
+	void setBlockInventories(chunk_inventories_map map);
 
     inline bool isUnsaved() const {return flags & ChunkFlags::UNSAVED;}
 	inline bool isModified() const {return flags & ChunkFlags::MODIFIED;}

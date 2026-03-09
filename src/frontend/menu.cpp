@@ -33,6 +33,7 @@
 #include "../files/WorldFiles.h"
 #include "../world/Level.h"
 #include "../coders/png.h"
+#include "../delegates.h"
 
 using namespace gui;
 
@@ -50,7 +51,7 @@ inline uint64_t str2seed(std::wstring seedstr) {
     }
 }
 
-static std::shared_ptr<Label> create_label(gui::wstringsupplier supplier) {
+static std::shared_ptr<Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<Label>(L"-");
     label->textSupplier(supplier);
     return label;

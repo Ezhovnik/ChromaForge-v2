@@ -18,8 +18,6 @@ class Batch2D;
 class Assets;
 
 namespace gui {
-    using wstringsupplier = std::function<std::wstring()>;
-    using wstringconsumer = std::function<void(std::wstring)>;
     using wstringchecker = std::function<bool(const std::wstring&)>;
 
     using doublesupplier = std::function<double()>;
@@ -49,7 +47,7 @@ namespace gui {
     protected:
         std::string texture;
     public:
-        Image(std::string texture, glm::vec2 size);
+        Image(std::string texture, glm::vec2 size=glm::vec2(32,32));
 
         virtual void draw(const GfxContext* parent_context, Assets* assets) override;
     };

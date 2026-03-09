@@ -14,10 +14,11 @@
 #include "../logger/Logger.h"
 #include "../content/Content.h"
 #include "../content/ContentLUT.h"
+#include "../items/Inventories.h"
 
-// Точка спавна игрока и начальная скорость
 inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
 inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
+inline constexpr int DEFAULT_PLAYER_INVENTORY_SIZE = 40;
 
 world_load_error::world_load_error(std::string message) : std::runtime_error(message) {
 }
@@ -58,8 +59,10 @@ Level* World::create(std::string name, std::filesystem::path directory, uint64_t
 	LOG_INFO("World successfully created");
 
 	LOG_INFO("Creating a level");
-	Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED);
-	Level* level = new Level(world, content, player, settings);
+	auto inventory = std::make_shared<Inventory>(world->getNextInventoryId(), DEFAULT_PLAYER_INVENTORY_SIZE);
+    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, inventory);
+    Level* level = new Level(world, content, player, settings);
+    level->inventories->store(player->getInventory());
 	LOG_INFO("Level successfully created");
 
 	Logger::getInstance().flush();
@@ -86,9 +89,11 @@ Level* World::load(std::filesystem::path directory, EngineSettings& settings, co
 	}
 
 	LOG_INFO("Creating a level");
-	Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED);
+	auto inventory = std::make_shared<Inventory>(world->getNextInventoryId(), DEFAULT_PLAYER_INVENTORY_SIZE);
+    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, inventory);
 	wfile->readPlayer(player);
 	Level* level = new Level(world.get(), content, player, settings);
+	level->inventories->store(player->getInventory());
 	LOG_INFO("Level successfully created");
 
 	world.release();

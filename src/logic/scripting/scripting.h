@@ -20,9 +20,11 @@ class ContentIndices;
 struct uidocscript;
 class Inventory;
 class UIDocument;
-class ContentPack;
+struct ContentPack;
 
 namespace scripting {
+    using int_array_consumer = std::function<void(const int[], size_t)>;
+
     extern Engine* engine;
     extern const Content* content;
     extern Level* level;
@@ -43,9 +45,11 @@ namespace scripting {
 
     runnable create_runnable(int env, const std::string& src, const std::string& file="<string>");
     wstringconsumer create_wstring_consumer(int env, const std::string& src, const std::string& file="<string>");
+    int_array_consumer create_int_array_consumer(int env, const std::string& src, const std::string& file="<string>");
 
     std::unique_ptr<Environment> create_environment(int parent=0);
     std::unique_ptr<Environment> create_pack_environment(const ContentPack& pack);
+    std::unique_ptr<Environment> create_doc_environment(int parent, const std::string& name);
 
     void on_world_load(Level* level, BlocksController* blocks);
     void on_world_quit();

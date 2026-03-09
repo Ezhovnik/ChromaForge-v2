@@ -20,7 +20,7 @@ class ContentIndices;
 class LevelFrontend;
 class Inventory;
 
-using itemsharefunc = std::function<void(ItemStack&)>;
+using itemsharefunc = std::function<void(uint, ItemStack&)>;
 using slotcallback = std::function<void(ItemStack&, ItemStack&)>;
 
 namespace scripting {
@@ -122,12 +122,6 @@ public:
     );
 
     std::shared_ptr<SlotView> addSlot(SlotLayout layout);
-
-    static std::shared_ptr<InventoryView> readXML(
-        const std::string& src,
-        const std::string& file,
-        const scripting::Environment& env
-    );
 
     static void createReaders(gui::UiXmlReader& reader);
 
