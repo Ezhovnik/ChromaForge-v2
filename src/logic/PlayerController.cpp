@@ -198,7 +198,7 @@ void PlayerController::updateInteraction(){
 		auto inventory = player->getInventory();
         ItemStack& stack = inventory->getSlot(player->getChosenSlot());
         Item* item = contentIds->getItemDef(stack.getItemId());
-		Block* def = level->content->findBlock(item->placingBlock);
+		Block* def = contentIds->getBlockDef(item->rt.placingBlock);
 		if (def && def->rotatable) {
 			const std::string& name = def->rotations.name;
 			if (name == "pipe") {

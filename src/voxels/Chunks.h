@@ -21,7 +21,6 @@ struct AABB;
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
 private:
-    const Content* const content;
 	const ContentIndices* const contentIds;
 public:
     std::vector<std::shared_ptr<Chunk>> chunks;

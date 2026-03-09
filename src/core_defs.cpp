@@ -17,20 +17,19 @@
 
 void CoreContent::setup(ContentBuilder* builder) {
     // Воздух
-    Block* block = new Block(DEFAULT_CONTENT_NAMESPACE":air", "");
-    block->drawGroup = 1;
-    block->lightPassing = true;
-    block->skyLightPassing = true;
-    block->obstacle = false;
-    block->selectable = false;
-    block->replaceable = true;
-    block->model = BlockModel::None;
-    block->pickingItem = DEFAULT_CONTENT_NAMESPACE":empty";
-    builder->add(block);
+    Block& block = builder->createBlock(BUILTIN_CONTENT_NAMESPACE":air");
+    block.drawGroup = 1;
+    block.lightPassing = true;
+    block.skyLightPassing = true;
+    block.obstacle = false;
+    block.selectable = false;
+    block.replaceable = true;
+    block.model = BlockModel::None;
+    block.pickingItem = BUILTIN_CONTENT_NAMESPACE":empty";
 
     // Пустота
-    Item* item = builder->createItem(DEFAULT_CONTENT_NAMESPACE":empty");
-    item->iconType = ItemIconType::None;
+    Item& item = builder->createItem(BUILTIN_CONTENT_NAMESPACE":empty");
+    item.iconType = ItemIconType::None;
 }
 
 void CoreContent::setup_bindings() {

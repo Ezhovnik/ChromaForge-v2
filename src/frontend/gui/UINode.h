@@ -1,10 +1,12 @@
 #ifndef FRONTEND_GUI_UINODE_H_
 #define FRONTEND_GUI_UINODE_H_
 
-#include <glm/glm.hpp>
+#include <string>
 #include <vector>
 #include <memory>
 #include <functional>
+
+#include <glm/glm.hpp>
 
 #include ".../../typedefs.h"
 
@@ -25,6 +27,8 @@ namespace gui {
     };
 
     class UINode {
+    private:
+        std::string id = "";
     protected:
         glm::vec2 coord;
         glm::vec2 size;
@@ -97,6 +101,9 @@ namespace gui {
         virtual void setSize(glm::vec2 size);
         virtual void refresh() {};
         virtual void lock();
+
+        void setId(const std::string& id);
+        const std::string& getId() const;
     };
 }
 

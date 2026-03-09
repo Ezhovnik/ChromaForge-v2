@@ -33,5 +33,6 @@ inline constexpr uint vox_index(uint x, uint y, uint z, uint w = CHUNK_WIDTH, ui
 #define SHADERS_FOLDER "shaders"
 #define TEXTURES_FOLDER "textures"
 #define FONTS_FOLDER "fonts"
+#define LAYOUTS_FOLDER "layouts"
 
 #endif // SRC_CONSTANTS_H_

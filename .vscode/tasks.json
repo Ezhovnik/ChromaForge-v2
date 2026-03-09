@@ -68,6 +68,7 @@
                 "${workspaceFolder}/src/frontend/LevelFrontend.cpp",
                 "${workspaceFolder}/src/frontend/menu.cpp",
                 "${workspaceFolder}/src/frontend/screens.cpp",
+                "${workspaceFolder}/src/frontend/UIDocument.cpp",
                 "${workspaceFolder}/src/frontend/WorldRenderer.cpp",
 
                 //src/graphics

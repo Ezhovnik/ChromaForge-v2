@@ -83,7 +83,7 @@ ubyte* Chunk::encode() const {
 	return buffer;
 }
 
-bool Chunk::decode(ubyte* data) {
+bool Chunk::decode(const ubyte* data) {
 	for (uint i = 0; i < CHUNK_VOLUME; ++i) {
 		voxel& vox = voxels[i];
 

@@ -138,3 +138,11 @@ glm::vec4 UINode::getMargin() const {
 
 void UINode::lock() {
 }
+
+void UINode::setId(const std::string& id) {
+    this->id = id;
+}
+
+const std::string& UINode::getId() const {
+    return id;
+}

@@ -25,6 +25,7 @@ public:
     int getParts() const;
     int getPart() const;
     int getSparkRate() const;
+    int getSparkId() const;
 };
 
 class BlocksController {

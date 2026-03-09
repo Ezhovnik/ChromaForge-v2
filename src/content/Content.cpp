@@ -7,6 +7,8 @@
 #include "../voxels/Block.h"
 #include "../logger/Logger.h"
 #include "../items/Item.h"
+#include "ContentPack.h"
+#include "../logic/scripting/scripting.h"
 
 ContentBuilder::~ContentBuilder() {
 }
@@ -23,7 +25,11 @@ void ContentBuilder::add(Item* def) {
     itemIds.push_back(def->name);
 }
 
-Block* ContentBuilder::createBlock(std::string id) {
+void ContentBuilder::add(ContentPackRuntime* pack) {
+    packs.push_back(std::unique_ptr<ContentPackRuntime>(pack));
+}
+
+Block& ContentBuilder::createBlock(std::string id) {
     auto found = blockDefs.find(id);
     if (found != blockDefs.end()) {
         LOG_ERROR("Name {} is already used", id);
@@ -32,20 +38,20 @@ Block* ContentBuilder::createBlock(std::string id) {
     }
     Block* block = new Block(id);
     add(block);
-    return block;
+    return *block;
 }
 
-Item* ContentBuilder::createItem(std::string id) {
+Item& ContentBuilder::createItem(std::string id) {
     auto found = itemDefs.find(id);
     if (found != itemDefs.end()) {
-        if (found->second->generated) return found->second;
+        if (found->second->generated) return *found->second;
         LOG_ERROR("Name {} is already used", id);
         Logger::getInstance().flush();
         throw namereuse_error("Name " + id + " is already used", ContentType::Item);
     }
     Item* item = new Item(id);
     add(item);
-    return item;
+    return *item;
 }
 
 void ContentBuilder::checkIdentifier(std::string id) {
@@ -65,7 +71,7 @@ ContentType ContentBuilder::checkContentType(std::string id) {
 
 Content* ContentBuilder::build() {
     std::vector<Block*> blockDefsIndices;
-    DrawGroups* groups = new DrawGroups;
+    auto groups = std::make_unique<DrawGroups>();
     for (const std::string& name : blockIds) {
         Block* def = blockDefs[name];
 
@@ -96,10 +102,16 @@ Content* ContentBuilder::build() {
     }
 
     ContentIndices* indices = new ContentIndices(blockDefsIndices, itemDefsIndices);
-    std::unique_ptr<Content> content (new Content(indices, groups, blockDefs, itemDefs));
+    auto content = std::make_unique<Content>(
+        indices, std::move(groups), blockDefs, itemDefs, std::move(packs)
+    );
 
     for (Block* def : blockDefsIndices) {
-        def->rt.pickingItem = content->requireItem(def->pickingItem)->rt.id;
+        def->rt.pickingItem = content->requireItem(def->pickingItem).rt.id;
+    }
+
+    for (Item* def : itemDefsIndices) {
+        def->rt.placingBlock = content->requireBlock(def->placingBlock).rt.id;
     }
 
     return content.release();
@@ -108,11 +120,21 @@ Content* ContentBuilder::build() {
 ContentIndices::ContentIndices(std::vector<Block*> blockDefs, std::vector<Item*> itemDefs) : blockDefs(blockDefs), itemDefs(itemDefs) {
 }
 
-Content::Content(ContentIndices* indices, DrawGroups* drawGroups, std::unordered_map<std::string, Block*> blockDefs, std::unordered_map<std::string, Item*> itemDefs) : blockDefs(blockDefs), indices(indices), drawGroups(drawGroups), itemDefs(itemDefs) {
+Content::Content(
+    ContentIndices* indices, 
+    std::unique_ptr<DrawGroups> drawGroups, 
+    std::unordered_map<std::string, Block*> blockDefs, 
+    std::unordered_map<std::string, Item*> itemDefs,
+    std::vector<std::unique_ptr<ContentPackRuntime>> packs
+) : blockDefs(blockDefs), 
+    indices(indices), 
+    drawGroups(std::move(drawGroups)), 
+    itemDefs(itemDefs),
+    packs(std::move(packs))
+{
 }
 
 Content::~Content() {
-    delete drawGroups;
 }
 
 Block* Content::findBlock(std::string id) const {
@@ -121,14 +143,14 @@ Block* Content::findBlock(std::string id) const {
     return found->second;
 }
 
-Block* Content::requireBlock(std::string id) const {
+Block& Content::requireBlock(std::string id) const {
     auto found = blockDefs.find(id);
     if (found == blockDefs.end()) {
         LOG_ERROR("Missing block {}", id);
         Logger::getInstance().flush();
         throw std::runtime_error("Missing block " + id);
     }
-    return found->second;
+    return *found->second;
 }
 
 Item* Content::findItem(std::string id) const {
@@ -137,12 +159,17 @@ Item* Content::findItem(std::string id) const {
     return found->second;
 }
 
-Item* Content::requireItem(std::string id) const {
+Item& Content::requireItem(std::string id) const {
     auto found = itemDefs.find(id);
     if (found == itemDefs.end()) {
         LOG_ERROR("Missing item {}", id);
         Logger::getInstance().flush();
         throw std::runtime_error("Missing item " + id);
     }
-    return found->second;
+    return *found->second;
+}
+
+
+const std::vector<std::unique_ptr<ContentPackRuntime>>& Content::getPacks() const {
+    return packs;
 }

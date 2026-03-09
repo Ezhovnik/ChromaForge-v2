@@ -17,19 +17,21 @@ class ContentLoader {
 private:
     const ContentPack* pack;
 
-    void loadBlock(Block* block, std::string full, std::string name);
-    void loadCustomBlockModel(Block* block, dynamic::Map* primitives);
+    int env = 0;
 
-    void loadItem(Item* item, std::string full, std::string name);
+    void loadBlock(Block& block, std::string full, std::string name);
+    void loadCustomBlockModel(Block& block, dynamic::Map* primitives);
+
+    void loadItem(Item& item, std::string full, std::string name);
 public:
     ContentLoader(ContentPack* pack);
 
     bool fixPackIndices(std::filesystem::path folder, dynamic::Map* indicesRoot, std::string contentSection);
     void fixPackIndices();
 
-    void loadBlock(Block* block, std::string name, std::filesystem::path file);
-    void loadItem(Item* item, std::string name, std::filesystem::path file);
-    void load(ContentBuilder* builder);
+    void loadBlock(Block& block, std::string name, std::filesystem::path file);
+    void loadItem(Item& item, std::string name, std::filesystem::path file);
+    void load(ContentBuilder& builder);
 };
 
 #endif // CONTENT_CONTENT_LOADER_H_

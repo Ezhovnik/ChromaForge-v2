@@ -6,6 +6,7 @@
 
 #include "../graphics/UVRegion.h"
 #include "../typedefs.h"
+#include "../core_defs.h"
 
 struct item_funcs_set {
 	bool init: 1;
@@ -32,17 +33,18 @@ public:
     ItemIconType iconType = ItemIconType::Sprite;
     std::string icon = "blocks:notfound";
 
-    std::string placingBlock = "none";
+    std::string placingBlock = BUILTIN_CONTENT_NAMESPACE":air";
     std::string scriptName = name.substr(name.find(':') + 1);
 
     struct {
         itemid_t id;
         item_funcs_set funcsset {};
-        UVRegion iconRegion {0, 0, 1, 1};
+        blockid_t placingBlock;
         bool emissive = false;
     } rt;
 
     Item(std::string name) : name(name) {};
+    Item(const Item&) = delete;
 };
 
 #endif //CONTENT_ITEMS_ITEM_H_

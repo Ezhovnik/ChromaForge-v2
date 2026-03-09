@@ -6,6 +6,7 @@
 
 #include "../typedefs.h"
 #include "WorldFiles.h"
+#include "../core_defs.h"
 
 #define BUILD_FOLDER "../build"
 #define SCREENSHOTS_FOLDER BUILD_FOLDER"/screenshots"
@@ -84,7 +85,7 @@ std::filesystem::path EnginePaths::resolve(std::string path) {
     std::string prefix = path.substr(0, separator);
     std::string filename = path.substr(separator + 1);
 
-    if (prefix == "res" || prefix == "chromaforge") return resources/std::filesystem::u8path(filename);
+    if (prefix == "res" || prefix == BUILTIN_CONTENT_NAMESPACE) return resources/std::filesystem::u8path(filename);
     if (prefix == "user") return userfiles/std::filesystem::u8path(filename);
     if (prefix == "world") return worldFolder/std::filesystem::u8path(filename);
 
@@ -152,4 +153,8 @@ std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderNa
         }
     }
     return entries;
+}
+
+const std::filesystem::path& ResPaths::getMainRoot() const {
+    return mainRoot;
 }

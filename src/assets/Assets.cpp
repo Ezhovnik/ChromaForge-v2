@@ -5,6 +5,8 @@
 #include "../graphics/Font.h"
 #include "../graphics/Atlas.h"
 #include "../logger/Logger.h"
+#include "../frontend/UIDocument.h"
+#include "../logic/scripting/scripting.h"
 
 // Деструктор
 Assets::~Assets() {
@@ -130,19 +132,46 @@ void Assets::store(const TextureAnimation& animation) {
 	animations.emplace_back(animation);
 }
 
+UIDocument* Assets::getLayout(std::string name) const {
+    auto it = layouts.find(name);
+
+    if (it != layouts.end()) return it->second.get();
+
+    return nullptr;
+}
+
+bool Assets::store(UIDocument* layout, std::string name){
+    auto it = layouts.find(name);
+
+    if (it == layouts.end()) {
+        layouts[name].reset(layout);
+        return true;
+    }
+
+    LOG_WARN("Layout named '{}' already exists", name);
+    return false;
+}
+
 void Assets::extend(const Assets& assets) {
     for (auto entry : assets.textures) {
         textures[entry.first] = entry.second;
     }
+
     for (auto entry : assets.shaders) {
         shaders[entry.first] = entry.second;
     }
+
     for (auto entry : assets.fonts) {
         fonts[entry.first] = entry.second;
     }
+
     for (auto entry : assets.atlases) {
         atlases[entry.first] = entry.second;
     }
+
+    for (auto entry : assets.layouts) {
+		layouts[entry.first] = entry.second;
+	}
 
     animations.clear();
     for (auto entry : assets.animations) {
