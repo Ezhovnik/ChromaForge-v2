@@ -20,6 +20,7 @@ static Align align_from_string(const std::string& str, Align def) {
 }
 
 static void _readUINode(xml::xmlelement element, UINode& node) {
+    if (element->has("id")) node.setId(element->attr("id").getText());
     if (element->has("coord")) node.setCoord(element->attr("coord").asVec2());
     if (element->has("size")) node.setSize(element->attr("size").asVec2());
     if (element->has("color")) node.setColor(element->attr("color").asColor());
@@ -29,19 +30,20 @@ static void _readUINode(xml::xmlelement element, UINode& node) {
     node.setAlign(align_from_string(alignName, node.getAlign()));
 }
 
-static void _readContainer(UiXmlReader& reader, xml::xmlelement element, Container& container) {
+static void _readContainer(UiXmlReader& reader, xml::xmlelement element, Container& container, bool ignoreUnknown) {
     _readUINode(element, container);
 
     if (element->has("scrollable")) container.setScrollable(element->attr("scrollable").asBool());
 
     for (auto& sub : element->getElements()) {
         if (sub->isText()) continue;
+        if (ignoreUnknown && !reader.hasReader(sub->getTag())) continue;
         container.add(reader.readUINode(sub));
     }
 }
 
-void UiXmlReader::readUINode(UiXmlReader& reader, xml::xmlelement element, Container& container) {
-    _readContainer(reader, element, container);
+void UiXmlReader::readUINode(UiXmlReader& reader, xml::xmlelement element, Container& container, bool ignoreUnknown) {
+    _readContainer(reader, element, container, ignoreUnknown);
 }
 
 void UiXmlReader::readUINode(UiXmlReader& reader, xml::xmlelement element, UINode& node) {
@@ -51,7 +53,15 @@ void UiXmlReader::readUINode(UiXmlReader& reader, xml::xmlelement element, UINod
 static void _readPanel(UiXmlReader& reader, xml::xmlelement element, Panel& panel) {
     _readUINode(element, panel);
 
-    if (element->has("padding")) panel.setPadding(element->attr("padding").asVec4());
+    if (element->has("padding")) {
+        glm::vec4 padding = element->attr("padding").asVec4();
+        panel.setPadding(padding);
+        glm::vec2 size = panel.getSize();
+        panel.setSize(glm::vec2(
+            size.x + padding.x + padding.z,
+            size.y + padding.y + padding.w
+        ));
+    }
     if (element->has("size")) panel.setResizing(false);
     if (element->has("max-length")) panel.setMaxLength(element->attr("max-length").asInt());
 
@@ -81,7 +91,7 @@ static std::shared_ptr<UINode> readLabel(UiXmlReader& reader, xml::xmlelement el
 
 static std::shared_ptr<UINode> readContainer(UiXmlReader& reader, xml::xmlelement element) {
     auto container = std::make_shared<Container>(glm::vec2(), glm::vec2());
-    _readContainer(reader, element, *container);
+    _readContainer(reader, element, *container, false);
     return container;
 }
 
@@ -91,7 +101,11 @@ static std::shared_ptr<UINode> readButton(UiXmlReader& reader, xml::xmlelement e
     _readPanel(reader, element, *button);
 
     if (element->has("onclick")) {
-        auto callback = scripting::create_runnable("<onclick>", element->attr("onclick").getText());
+        auto callback = scripting::create_runnable(
+            reader.getEnvironment().getId(),
+            element->attr("onclick").getText(),
+            "<onclick>"
+        );
         button->listenAction([callback](GUI*) {callback();});
     }
 
@@ -111,6 +125,7 @@ static std::shared_ptr<UINode> readTextBox(UiXmlReader& reader, xml::xmlelement 
 
     if (element->has("consumer")) {
         auto consumer = scripting::create_wstring_consumer(
+            reader.getEnvironment().getId(),
             element->attr("consumer").getText(),
             reader.getFilename()
         );
@@ -120,7 +135,7 @@ static std::shared_ptr<UINode> readTextBox(UiXmlReader& reader, xml::xmlelement 
     return textbox;
 }
 
-UiXmlReader::UiXmlReader() {
+UiXmlReader::UiXmlReader(const scripting::Environment& env) : env(env) {
     add("label", readLabel);
     add("button", readButton);
     add("textbox", readTextBox);
@@ -129,6 +144,10 @@ UiXmlReader::UiXmlReader() {
 
 void UiXmlReader::add(const std::string& tag, uinode_reader reader) {
     readers[tag] = reader;
+}
+
+bool UiXmlReader::hasReader(const std::string& tag) const {
+    return readers.find(tag) != readers.end();
 }
 
 std::shared_ptr<UINode> UiXmlReader::readUINode(xml::xmlelement element) {
@@ -157,4 +176,8 @@ std::shared_ptr<UINode> UiXmlReader::readXML(const std::string& filename, xml::x
 
 const std::string& UiXmlReader::getFilename() const {
     return filename;
+}
+
+const scripting::Environment& UiXmlReader::getEnvironment() const {
+    return env;
 }

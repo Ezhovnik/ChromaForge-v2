@@ -57,21 +57,21 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
 
     LOG_INFO("Loading assets");
     std::vector<std::filesystem::path> roots {resdir};
-    resPaths.reset(new ResPaths(resdir, roots));
-    assets.reset(new Assets());
+    resPaths = std::make_unique<ResPaths>(resdir, roots);
+    assets = std::make_unique<Assets>();
 	AssetsLoader loader(assets.get(), resPaths.get());
-	AssetsLoader::createDefaults(loader);
-	AssetsLoader::addDefaults(loader, false);
+	AssetsLoader::addDefaults(loader, nullptr);
 
     ShaderProgram::preprocessor->setPaths(resPaths.get());
 
 	while (loader.hasNext()) {
 		if (!loader.loadNext()) {
 			assets.reset();
+            scripting::close();
 			Window::terminate();
-            LOG_ERROR("Could not to initialize assets");
+            LOG_ERROR("Could not to load assets");
             Logger::getInstance().flush();
-			throw initialize_error("Could not to initialize assets");
+			throw initialize_error("Could not to load assets");
 		}
 	}
 
@@ -86,11 +86,11 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
 
 // Реализация деструктора
 Engine::~Engine() {
-    screen = nullptr;
-    scripting::close();
-
     LOG_INFO("Shutting down");
+    screen.reset();
+    content.reset();
     assets.reset();
+    scripting::close();
     Window::terminate();
     LOG_INFO("Engine has finished successfuly");
     Logger::getInstance().flush();
@@ -190,7 +190,7 @@ void Engine::loadContent() {
 				resRoots.push_back(pack.folder);
 				contentPacks.push_back(pack);
 				ContentLoader loader(&pack);
-				loader.load(&contentBuilder);
+				loader.load(contentBuilder);
 			}
 		}
     }
@@ -202,8 +202,7 @@ void Engine::loadContent() {
 	std::unique_ptr<Assets> new_assets(new Assets());
 	LOG_INFO("Loading content Assets");
 	AssetsLoader loader(new_assets.get(), resPaths.get());
-	AssetsLoader::createDefaults(loader);
-	AssetsLoader::addDefaults(loader, true);
+	AssetsLoader::addDefaults(loader, content.get());
 	while (loader.hasNext()) {
 		if (!loader.loadNext()) {
 			new_assets.reset();

@@ -43,6 +43,10 @@ int Clock::getSparkRate() const {
     return sparkRate;
 }
 
+int Clock::getSparkId() const {
+    return sparkId;
+}
+
 BlocksController::BlocksController(Level* level, uint padding) : level(level), chunks(level->chunks), lighting(level->lighting), randSparkClock(20, 3), padding(padding), blocksSparkClock(20, 1) {
 }
 

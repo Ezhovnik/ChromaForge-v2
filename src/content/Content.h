@@ -15,6 +15,7 @@ using DrawGroups = std::set<ubyte>;
 class Block;
 class Content;
 class Item;
+class ContentPackRuntime;
 
 enum class ContentType {
     None,
@@ -48,14 +49,18 @@ class ContentBuilder {
 
     std::unordered_map<std::string, Item*> itemDefs;
     std::vector<std::string> itemIds;
+
+    std::vector<std::unique_ptr<ContentPackRuntime>> packs;
 public:
     ~ContentBuilder();
 
     void add(Block* def);
     void add(Item* def);
 
-    Block* createBlock(std::string id);
-    Item* createItem(std::string id);
+    void add(ContentPackRuntime* pack);
+
+    Block& createBlock(std::string id);
+    Item& createItem(std::string id);
 
     void checkIdentifier(std::string id);
     ContentType checkContentType(std::string id);
@@ -101,10 +106,18 @@ class Content {
     std::unordered_map<std::string, Item*> itemDefs;
 
     std::unique_ptr<ContentIndices> indices;
-public:
-    DrawGroups* const drawGroups;
 
-    Content(ContentIndices* indices, DrawGroups* drawGroups, std::unordered_map<std::string, Block*> blockDefs, std::unordered_map<std::string, Item*> itemDefs);
+    std::vector<std::unique_ptr<ContentPackRuntime>> packs;
+public:
+    std::unique_ptr<DrawGroups> const drawGroups;
+
+    Content(
+        ContentIndices* indices, 
+        std::unique_ptr<DrawGroups> drawGroups, 
+        std::unordered_map<std::string, Block*> blockDefs, 
+        std::unordered_map<std::string, Item*> itemDefs,
+        std::vector<std::unique_ptr<ContentPackRuntime>> packs
+    );
     ~Content();
 
     inline ContentIndices* getIndices() const {
@@ -112,10 +125,12 @@ public:
     }
 
     Block* findBlock(std::string id) const;
-    Block* requireBlock(std::string id) const;
+    Block& requireBlock(std::string id) const;
 
     Item* findItem(std::string id) const;
-    Item* requireItem(std::string id) const;
+    Item& requireItem(std::string id) const;
+
+    const std::vector<std::unique_ptr<ContentPackRuntime>>& getPacks() const;
 };
 
 #endif // CONTENT_CONTENT_H_

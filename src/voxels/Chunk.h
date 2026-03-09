@@ -69,7 +69,7 @@ public:
     inline void setLoadedLights(bool flag) {bitset(flags, ChunkFlags::LOADED_LIGHTS, flag);}
 
     ubyte* encode() const;
-	bool decode(ubyte* data);
+	bool decode(const ubyte* data);
 
     static void fromOld(ubyte* data);
     static void convert(ubyte* data, const ContentLUT* lut);

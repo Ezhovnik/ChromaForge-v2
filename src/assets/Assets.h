@@ -12,6 +12,13 @@ class Texture;
 class ShaderProgram;
 class Font;
 class Atlas;
+class UIDocument;
+
+struct LayoutConfig {
+	int env;
+
+	LayoutConfig(int env) : env(env) {}
+};
 
 // Менеджер для управления ресурсами
 class Assets {
@@ -19,6 +26,7 @@ class Assets {
 	std::unordered_map<std::string, std::shared_ptr<ShaderProgram>> shaders;
     std::unordered_map<std::string, std::shared_ptr<Font>> fonts;
 	std::unordered_map<std::string, std::shared_ptr<Atlas>> atlases;
+	std::unordered_map<std::string, std::shared_ptr<UIDocument>> layouts;
 	std::vector<TextureAnimation> animations;
 public:
 	~Assets(); // Деструктор
@@ -41,6 +49,9 @@ public:
 
 	const std::vector<TextureAnimation>& getAnimations();
 	void store(const TextureAnimation& animation);
+
+	UIDocument* getLayout(std::string name) const;
+	bool store(UIDocument* layout, std::string name);
 
 	void extend(const Assets& assets);
 };

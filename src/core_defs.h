@@ -1,7 +1,8 @@
 #ifndef SRC_CORE_DEFS_H_
 #define SRC_CORE_DEFS_H_
 
-#define DEFAULT_CONTENT_NAMESPACE "chromaforge"
+#define BUILTIN_CONTENT_NAMESPACE "builtin"
+#define CHROMAFORGE_CONTENT_NAMESPACE "chromaforge"
 
 #define TEXTURE_NOTFOUND "notfound"
 

@@ -17,7 +17,7 @@
 #include "../math/AABB.h"
 #include "../math/rays.h"
 
-Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles), content(content), contentIds(content->getIndices()), chunks(width * depth), chunksSecond(width * depth){
+Chunks::Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content) : width(width), depth(depth), areaOffsetX(areaOffsetX), areaOffsetZ(areaOffsetZ), events(events), worldFiles(worldFiles), contentIds(content->getIndices()), chunks(width * depth), chunksSecond(width * depth){
 	volume = (size_t)width * (size_t)depth;
 	chunksCount = 0;
 }
