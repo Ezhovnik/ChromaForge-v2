@@ -67,12 +67,11 @@ namespace gui {
 
         virtual void drawBackground(const GfxContext* parent_context, Assets* assets) override;
 
-        virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
-
         virtual void mouseRelease(GUI*, int x, int y) override;
         virtual Button* listenAction(onaction action);
 
-        virtual void textAlign(Align align);
+        virtual void setTextAlign(Align align);
+        virtual Align getTextAlign() const;
 
         virtual void setText(std::wstring text);
         virtual std::wstring getText() const;
@@ -141,10 +140,11 @@ namespace gui {
         virtual void textConsumer(wstringconsumer consumer);
         virtual void textValidator(wstringchecker validator);
         virtual bool isFocuskeeper() const override {return true;};
-        virtual std::wstring text() const;
-        virtual void text(std::wstring value);
+        virtual std::wstring getText() const;
+        virtual void setText(std::wstring value);
         virtual void setOnEditStart(runnable oneditstart);
         virtual void focus(GUI*) override;
+        virtual void refresh() override;
 
         virtual bool validate();
         virtual void setValid(bool valid);

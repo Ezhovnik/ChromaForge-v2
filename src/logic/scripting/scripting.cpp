@@ -1,273 +1,216 @@
 #include "scripting.h"
 
 #include <stdexcept>
-#include <lua.hpp>
 
 #include "../../files/engine_paths.h"
 #include "../../files/files.h"
 #include "../../util/timeutil.h"
 #include "../../world/Level.h"
 #include "../../voxels/Block.h"
-#include "api_lua.h"
 #include "../../logger/Logger.h"
 #include "../../items/Item.h"
 #include "../../logic/BlocksController.h"
 #include "../../engine.h"
 #include "../../content/ContentPack.h"
+#include "LuaState.h"
+#include "../../util/stringutil.h"
 
 using namespace scripting;
 
 namespace scripting {
-    extern lua_State* L;
+    extern lua::LuaState* state;
 }
 
-lua_State* scripting::L = nullptr;
+Engine* scripting::engine = nullptr;
+lua::LuaState* scripting::state = nullptr;
 Level* scripting::level = nullptr;
 const Content* scripting::content = nullptr;
-Engine* scripting::engine = nullptr;
 BlocksController* scripting::blocks = nullptr;
-
-static void handleError(lua_State* L) {
-    LOG_ERROR("Lua error: {}", lua_tostring(L, -1));
-    Logger::getInstance().flush();
-}
-
-inline int lua_pushivec3(lua_State* L, int x, int y, int z) {
-    lua_pushinteger(L, x);
-    lua_pushinteger(L, y);
-    lua_pushinteger(L, z);
-    return 3;
-}
-
-void delete_global(lua_State* L, const char* name) {
-    lua_pushnil(L);
-    lua_setglobal(L, name);
-}
-
-bool rename_global(lua_State* L, const char* src, const char* dst) {
-    lua_getglobal(L, src);
-    if (lua_isnil(L, lua_gettop(L))) {
-        lua_pop(L, lua_gettop(L));
-        return false;
-    }
-    lua_setglobal(L, dst);
-    delete_global(L, src);
-    return true;
-}
-
-int call_func(lua_State* L, int argc, const std::string& name) {
-    if (lua_pcall(L, argc, LUA_MULTRET, 0)) {
-        handleError(L);
-        return 0;
-    }
-
-    return 1;
-}
-
-runnable scripting::create_runnable(const std::string& filename, const std::string& src) {
-    return [=](){
-        if (luaL_loadbuffer(L, src.c_str(), src.length(), filename.c_str())) {
-            handleError(L);
-            return;
-        }
-        call_func(L, 0, filename);
-    };
-}
 
 void load_script(std::filesystem::path name) {
     auto paths = scripting::engine->getPaths();
     std::filesystem::path file = paths->getResources()/std::filesystem::path("scripts")/name;
 
     std::string src = files::read_string(file);
-    if (luaL_loadbuffer(L, src.c_str(), src.length(), file.u8string().c_str())) {
-        handleError(L);
-        return;
-    }
 
-    call_func(L, 0, file.u8string());
+    state->execute(src, file.u8string());
 }
 
 void scripting::initialize(Engine* engine) {
     scripting::engine = engine;
 
-    L = luaL_newstate();
-    if (L == nullptr) {
-        LOG_ERROR("Could not to initialize Lua");
-        Logger::getInstance().flush();
-        throw std::runtime_error("could not to initialize Lua");
-    }
-    luaopen_base(L);
-    luaopen_math(L);
-    
-    LOG_DEBUG("Lua version: {}", LUA_VERSION);
-    #ifdef LUAJIT_VERSION
-        luaopen_jit(L);
-        LOG_DEBUG("LuaJit version: {}", LUAJIT_VERSION);
-    #endif // LUAJIT_VERSION
-
-    apilua::create_funcs(L);
+    state = new lua::LuaState();
 
     load_script(std::filesystem::path("stdlib.lua"));
+}
+
+runnable scripting::create_runnable(const std::string& file, const std::string& src) {
+    return [=](){
+        state->execute(src, file);
+    };
+}
+
+wstringconsumer scripting::create_wstring_consumer(const std::string& src, const std::string& file) {
+    try {
+        if (state->eval(src, file) == 0) return [](const std::wstring& _) {};
+    } catch (const lua::luaerror& err) {
+        LOG_ERROR("{}", err.what());
+        return [](const std::wstring& _) {};
+    }
+
+    auto funcName = state->storeAnonymous();
+    return [=](const std::wstring& x){
+        if (state->getglobal(funcName)) {
+            state->pushstring(util::wstr2str_utf8(x));
+            state->callNoThrow(1);
+        }
+    };
 }
 
 void scripting::on_world_load(Level* level, BlocksController* blocks) {
     scripting::level = level;
     scripting::content = level->content;
     scripting::blocks = blocks;
-
-    load_script(std::filesystem::path("world.lua"));
+    load_script("world.lua");
 
     for (auto& pack : scripting::engine->getContentPacks()) {
-        std::string name = pack.id + ".worldopen";
-        lua_getglobal(L, name.c_str());
-        if (lua_isnil(L, lua_gettop(L))) {
-            lua_pop(L, lua_gettop(L));
-            continue;
-        }
-        call_func(L, 0, name);
+        if (state->getglobal(pack.id + ".worldopen")) state->callNoThrow(0);
     }
 }
 
 void scripting::on_world_save() {
     for (auto& pack : scripting::engine->getContentPacks()) {
-        std::string name = pack.id + ".worldsave";
-        lua_getglobal(L, name.c_str());
-        if (lua_isnil(L, lua_gettop(L))) {
-            lua_pop(L, lua_gettop(L));
-            continue;
-        }
-        call_func(L, 0, name);
+        if (state->getglobal(pack.id + ".worldsave")) state->callNoThrow(0);
     }
 }
 
 void scripting::on_world_quit() {
     for (auto& pack : scripting::engine->getContentPacks()) {
-        std::string name = pack.id + ".worldquit";
-        lua_getglobal(L, name.c_str());
-        if (lua_isnil(L, lua_gettop(L))) {
-            lua_pop(L, lua_gettop(L));
-            continue;
-        }
-        call_func(L, 0, name);
+        if (state->getglobal(pack.id + ".worldquit")) state->callNoThrow(0);
     }
-
     scripting::level = nullptr;
     scripting::content = nullptr;
 }
 
+void scripting::on_blocks_tick(const Block* block, int tps) {
+    std::string name = block->name + ".blockstick";
+    if (state->getglobal(name)) {
+        state->pushinteger(tps);
+        state->callNoThrow(1);
+    }
+}
+
 void scripting::update_block(const Block* block, int x, int y, int z) {
     std::string name = block->name + ".update";
-    lua_getglobal(L, name.c_str());
-    lua_pushivec3(L, x, y, z);
-    call_func(L, 3, name);
+    if (state->getglobal(name)) {
+        state->pushivec3(x, y, z);
+        state->callNoThrow(3);
+    }
 }
 
 void scripting::random_update_block(const Block* block, int x, int y, int z) {
     std::string name = block->name + ".randupdate";
-    lua_getglobal(L, name.c_str());
-    lua_pushivec3(L, x, y, z);
-    call_func(L, 3, name);
+    if (state->getglobal(name)) {
+        state->pushivec3(x, y, z);
+        state->callNoThrow(3);
+    }
 }
 
 void scripting::on_block_placed(Player* player, const Block* block, int x, int y, int z) {
     std::string name = block->name + ".placed";
-    lua_getglobal(L, name.c_str());
-    lua_pushivec3(L, x, y, z);
-    lua_pushinteger(L, 1);
-    call_func(L, 4, name);
+    if (state->getglobal(name)) {
+        state->pushivec3(x, y, z);
+        state->pushinteger(1);
+        state->callNoThrow(4);
+    }
 }
 
 void scripting::on_block_broken(Player* player, const Block* block, int x, int y, int z) {
     std::string name = block->name + ".broken";
-    lua_getglobal(L, name.c_str());
-    lua_pushivec3(L, x, y, z);
-    lua_pushinteger(L, 1);
-    call_func(L, 4, name);
+    if (state->getglobal(name)) {
+        state->pushivec3(x, y, z);
+        state->pushinteger(1);
+        state->callNoThrow(4);
+    }
 }
 
 bool scripting::on_block_interact(Player* player, const Block* block, int x, int y, int z) {
     std::string name = block->name + ".oninteract";
-    lua_getglobal(L, name.c_str());
-    lua_pushivec3(L, x, y, z);
-    lua_pushinteger(L, 1);
-    if (call_func(L, 4, name)) return lua_toboolean(L, -1);
+    if (state->getglobal(name)) {
+        state->pushivec3(x, y, z);
+        state->pushinteger(1);
+        if (state->callNoThrow(4)) return state->toboolean(-1);
+    }
     return false;
 }
 
 bool scripting::on_item_use_on_block(Player* player, const Item* item, int x, int y, int z) {
     std::string name = item->name + ".useon";
-    lua_getglobal(L, name.c_str());
-    lua_pushivec3(L, x, y, z);
-    lua_pushinteger(L, 1);
-    if (call_func(L, 4, name)) return lua_toboolean(L, -1);
+    if (state->getglobal(name)) {
+        state->pushivec3(x, y, z);
+        state->pushinteger(1);
+        if (state->callNoThrow(4)) return state->toboolean(-1);
+    }
     return false;
 }
 
 bool scripting::on_item_break_block(Player* player, const Item* item, int x, int y, int z) {
     std::string name = item->name + ".blockbreakby";
-    lua_getglobal(L, name.c_str());
-    lua_pushivec3(L, x, y, z);
-    lua_pushinteger(L, 1);
-    if (call_func(L, 4, name)) return lua_toboolean(L, -1);
+    if (state->getglobal(name)) {
+        state->pushivec3(x, y, z);
+        state->pushinteger(1);
+        if (state->callNoThrow(4)) return state->toboolean(-1);
+    }
     return false;
-}
-
-void scripting::on_blocks_tick(const Block* block, int tps) {
-    std::string name = block->name + ".blockstick";
-    lua_getglobal(L, name.c_str());
-    lua_pushinteger(L, tps);
-    call_func(L, 1, name);   
 }
 
 void scripting::load_block_script(std::string prefix, std::filesystem::path file, block_funcs_set* funcsset) {
     std::string src = files::read_string(file);
-    LOG_DEBUG("Loading script: {}", file.u8string());
-    if (luaL_loadbuffer(L, src.c_str(), src.size(), file.string().c_str())) {
-        handleError(L);
-        return;
-    }
-    call_func(L, 0, "<script>");
 
-    funcsset->init = rename_global(L, "init", (prefix + ".init").c_str());
-    funcsset->update = rename_global(L, "on_update", (prefix + ".update").c_str());
-    funcsset->randupdate = rename_global(L, "on_random_update", (prefix + ".randupdate").c_str());
-    funcsset->onbroken = rename_global(L, "on_broken", (prefix + ".broken").c_str());
-    funcsset->onplaced = rename_global(L, "on_placed", (prefix + ".placed").c_str());
-    funcsset->oninteract = rename_global(L, "on_interact", (prefix + ".oninteract").c_str());
-    funcsset->onblockstick = rename_global(L, "on_blocks_tick", (prefix + ".blockstick").c_str());
-}
+    LOG_DEBUG("Loading script {}", file.u8string());
 
-void scripting::load_world_script(std::string prefix, std::filesystem::path file) {
-    std::string src = files::read_string(file);
-    LOG_DEBUG("Loading script: {}", file.u8string());
-    if (luaL_loadbuffer(L, src.c_str(), src.size(), file.string().c_str())) {
-        handleError(L);
-        return;
-    }
-    call_func(L, 0, "<script>");
-    rename_global(L, "init", (prefix + ".init").c_str());
-    rename_global(L, "on_world_open", (prefix + ".worldopen").c_str());
-    rename_global(L, "on_world_save", (prefix + ".worldsave").c_str());
-    rename_global(L, "on_world_quit", (prefix + ".worldquit").c_str());
+    state->execute(src, file.u8string());
+
+    funcsset->init=state->rename("init", prefix + ".init");
+    funcsset->update=state->rename("on_update", prefix + ".update");
+    funcsset->randupdate=state->rename("on_random_update", prefix + ".randupdate");
+    funcsset->onbroken=state->rename("on_broken", prefix + ".broken");
+    funcsset->onplaced=state->rename("on_placed", prefix + ".placed");
+    funcsset->oninteract=state->rename("on_interact", prefix + ".oninteract");
+    funcsset->onblockstick=state->rename("on_blocks_tick", prefix + ".blockstick");
+
+    LOG_DEBUG("Script {} successfully loaded", file.u8string());
 }
 
 void scripting::load_item_script(std::string prefix, std::filesystem::path file, item_funcs_set* funcsset) {
     std::string src = files::read_string(file);
     LOG_DEBUG("Loading script {}", file.u8string());
-    if (luaL_loadbuffer(L, src.c_str(), src.size(), file.string().c_str())) {
-        handleError(L);
-        return;
-    }
-    call_func(L, 0, "<script>");
-    funcsset->init=rename_global(L, "init", (prefix + ".init").c_str());
-    funcsset->on_use_on_block=rename_global(L, "on_use_on_block", (prefix + ".useon").c_str());
-    funcsset->on_block_break_by=rename_global(L, "on_block_break_by", (prefix + ".blockbreakby").c_str());
+    state->execute(src, file.u8string());
+    funcsset->init=state->rename("init", prefix + ".init");
+    funcsset->on_use_on_block=state->rename("on_use_on_block", prefix + ".useon");
+    funcsset->on_block_break_by=state->rename("on_block_break_by", prefix + ".blockbreakby");
+    LOG_DEBUG("Script {} successfully loaded", file.u8string());
+}
+
+void scripting::load_world_script(std::string prefix, std::filesystem::path file) {
+    std::string src = files::read_string(file);
+    LOG_DEBUG("Loading script {}", file.u8string());
+
+    state->loadbuffer(src, file.u8string());
+    state->callNoThrow(0);
+
+    state->rename("init", prefix + ".init");
+    state->rename("on_world_open", prefix + ".worldopen");
+    state->rename("on_world_save", prefix + ".worldsave");
+    state->rename("on_world_quit", prefix + ".worldquit");
+
+    LOG_DEBUG("Script {} successfully loaded", file.u8string());
 }
 
 void scripting::close() {
-    lua_close(L);
+    delete state;
 
-    L = nullptr;
+    state = nullptr;
     content = nullptr;
     level = nullptr;
 }

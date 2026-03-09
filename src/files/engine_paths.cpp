@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <sstream>
+#include <algorithm>
 
 #include "../typedefs.h"
 #include "WorldFiles.h"
@@ -110,6 +111,13 @@ std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {
         if (!std::filesystem::is_regular_file(worldFile)) continue;
         folders.push_back(worldFolder);
     }
+
+    std::sort(folders.begin(), folders.end(), [](std::filesystem::path a, std::filesystem::path b) {
+        a = a/std::filesystem::u8path(WorldFiles::WORLD_FILE);
+        b = b/std::filesystem::u8path(WorldFiles::WORLD_FILE);
+        return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
+    });
+
     return folders;
 }
 

@@ -42,7 +42,6 @@
 #include "../items/Inventory.h"
 #include "../graphics/Batch3D.h"
 
-inline constexpr float GAMMA_VALUE = 1.6f;
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
@@ -146,7 +145,7 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 		shader->use();
 		shader->uniformMatrix("u_proj", camera->getProjection());
 		shader->uniformMatrix("u_view", camera->getView());
-		shader->uniform1f("u_gamma", GAMMA_VALUE);
+		shader->uniform1f("u_gamma", settings.graphics.gamma);
 
         float fogFactor = 15.0f / ((float)settings.chunks.loadDistance - 2);
 		shader->uniform1f("u_fogFactor", fogFactor);

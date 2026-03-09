@@ -15,6 +15,7 @@ class Item;
 class BlocksController;
 struct block_funcs_set;
 struct item_funcs_set;
+class LuaState;
 
 namespace scripting {
     extern Engine* engine;
@@ -25,6 +26,7 @@ namespace scripting {
     void initialize(Engine* engine);
 
     runnable create_runnable(const std::string& filename, const std::string& source);
+    wstringconsumer create_wstring_consumer(const std::string& src, const std::string& file="<string>");
 
     void on_world_load(Level* level, BlocksController* blocks);
     void on_world_quit();

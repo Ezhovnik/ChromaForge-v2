@@ -32,6 +32,92 @@ bool Attribute::asBool() const {
     return text == "true" || text == "1";
 }
 
+glm::vec2 Attribute::asVec2() const {
+    size_t pos = text.find(',');
+    if (pos == std::string::npos) {
+        std::string errorLog = "Invalid vec2 value " + escape_string(text);
+        LOG_ERROR("{}", errorLog);
+        Logger::getInstance().flush();
+        throw std::runtime_error(errorLog);
+    }
+    return glm::vec2(
+        util::parse_double(text, 0, pos),
+        util::parse_double(text, pos + 1, text.length() - pos - 1)
+    );
+}
+
+glm::vec3 Attribute::asVec3() const {
+    size_t pos1 = text.find(',');
+    if (pos1 == std::string::npos) {
+        std::string errorLog = "Invalid vec3 value " + escape_string(text);
+        LOG_ERROR("{}", errorLog);
+        Logger::getInstance().flush();
+        throw std::runtime_error(errorLog);
+    }
+    size_t pos2 = text.find(',', pos1 + 1);
+    if (pos2 == std::string::npos) {
+        std::string errorLog = "Invalid vec3 value " + escape_string(text);
+        LOG_ERROR("{}", errorLog);
+        Logger::getInstance().flush();
+        throw std::runtime_error(errorLog);
+    }
+    return glm::vec3(
+        util::parse_double(text, 0, pos1),
+        util::parse_double(text, pos1 + 1, pos2),
+        util::parse_double(text, pos2 + 1, text.length() - pos2 - 1)
+    );
+}
+
+glm::vec4 Attribute::asVec4() const {
+    size_t pos1 = text.find(',');
+    if (pos1 == std::string::npos) {
+        std::string errorLog = "Invalid vec4 value " + escape_string(text);
+        LOG_ERROR("{}", errorLog);
+        Logger::getInstance().flush();
+        throw std::runtime_error(errorLog);
+    }
+    size_t pos2 = text.find(',', pos1 + 1);
+    if (pos2 == std::string::npos) {
+        std::string errorLog = "Invalid vec4 value " + escape_string(text);
+        LOG_ERROR("{}", errorLog);
+        Logger::getInstance().flush();
+        throw std::runtime_error(errorLog);
+    }
+    size_t pos3 = text.find(',', pos2 + 1);
+    if (pos3 == std::string::npos) {
+        std::string errorLog = "Invalid vec4 value " + escape_string(text);
+        LOG_ERROR("{}", errorLog);
+        Logger::getInstance().flush();
+        throw std::runtime_error(errorLog);
+    }
+    return glm::vec4(
+        util::parse_double(text, 0, pos1),
+        util::parse_double(text, pos1 + 1, pos2 - pos1 - 1),
+        util::parse_double(text, pos2 + 1, pos3 - pos2 - 1),
+        util::parse_double(text, pos3 + 1, text.length() - pos3 - 1)
+    );
+}
+
+glm::vec4 Attribute::asColor() const {
+    if (text[0] == '#') {
+        if (text.length() != 7 && text.length() != 9) {
+            LOG_ERROR("#RRGGBB or #RRGGBBAA required");
+            Logger::getInstance().flush();
+            throw std::runtime_error("#RRGGBB or #RRGGBBAA required");
+        }
+        int a = 255;
+        int r = (hexchar2int(text[1]) << 4) | hexchar2int(text[2]);
+        int g = (hexchar2int(text[3]) << 4) | hexchar2int(text[4]);
+        int b = (hexchar2int(text[5]) << 4) | hexchar2int(text[6]);
+        if (text.length() == 9) a = (hexchar2int(text[7]) << 4) | hexchar2int(text[8]);
+        return glm::vec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
+    } else {
+        LOG_ERROR("Hex colors are only supported");
+        Logger::getInstance().flush();
+        throw std::runtime_error("Hex colors are only supported");
+    }
+}
+
 Node::Node(std::string tag) : tag(tag) {
 }
 

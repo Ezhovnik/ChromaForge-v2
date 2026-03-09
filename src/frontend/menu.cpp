@@ -36,10 +36,6 @@
 
 using namespace gui;
 
-namespace MenusConsts {
-    constexpr int PACKS_PANEL_WIDTH = 550;
-}
-
 inline uint64_t str2seed(std::wstring seedstr) {
     if (util::is_integer(seedstr)) {
         try {
@@ -182,8 +178,8 @@ std::shared_ptr<Panel> create_worlds_panel(Engine* engine) {
         auto namews = util::str2wstr_utf8(name);
 
         auto btn = std::make_shared<RichButton>(glm::vec2(390, 46));
-        btn->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
-        btn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
+        btn->setColor(glm::vec4(0.06f, 0.12f, 0.18f, 0.7f));
+        btn->setHoverColor(glm::vec4(0.09f, 0.17f, 0.2f, 0.6f));
 
         btn->listenAction([=](GUI*) {
             open_world(name, engine);
@@ -233,13 +229,14 @@ typedef std::function<void(const ContentPack& pack)> packconsumer;
 
 std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs, Engine* engine, bool backbutton, packconsumer callback) {
     auto assets = engine->getAssets();
-    auto panel = std::make_shared<Panel>(glm::vec2(MenusConsts::PACKS_PANEL_WIDTH, 200), glm::vec4(5.0f));
+    auto panel = std::make_shared<Panel>(glm::vec2(550, 200), glm::vec4(5.0f));
     panel->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.07f));
     panel->setMaxLength(400);
     panel->setScrollable(true);
 
     for (auto& pack : packs) {
-        auto packpanel = std::make_shared<RichButton>(glm::vec2(390, 80));
+        auto packpanel = std::make_shared<RichButton>(glm::vec2(540, 80));
+        packpanel->setColor(glm::vec4(0.06f, 0.12f, 0.18f, 0.7f));
         if (callback) {
             packpanel->listenAction([=](GUI*) {
                 callback(pack);
@@ -247,7 +244,9 @@ std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs,
         }
         auto idlabel = std::make_shared<Label>("[" + pack.id + "]");
         idlabel->setColor(glm::vec4(1, 1, 1, 0.5f));
-        packpanel->add(idlabel, glm::vec2(MenusConsts::PACKS_PANEL_WIDTH - 40 - idlabel->getSize().x, 2));
+        idlabel->setSize(glm::vec2(300, 25));
+        idlabel->setAlign(Align::right);
+        packpanel->add(idlabel, glm::vec2(215, 2));
 
         auto titlelabel = std::make_shared<Label>(pack.title);
         packpanel->add(titlelabel, glm::vec2(78, 6));
@@ -265,7 +264,9 @@ std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs,
         if (!pack.creator.empty()) {
             auto creatorlabel = std::make_shared<Label>("@" + pack.creator);
             creatorlabel->setColor(glm::vec4(0.8f, 1.0f, 0.9f, 0.7f));
-            packpanel->add(creatorlabel, glm::vec2(MenusConsts::PACKS_PANEL_WIDTH - 40 - creatorlabel->getSize().x, 60));
+            creatorlabel->setSize(glm::vec2(300, 20));
+            creatorlabel->setAlign(Align::right);
+            packpanel->add(creatorlabel, glm::vec2(215, 60));
         }
 
         auto descriptionlabel = std::make_shared<Label>(pack.description);
@@ -274,7 +275,6 @@ std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs,
 
         packpanel->add(std::make_shared<Image>(icon, glm::vec2(64)), glm::vec2(8));
 
-        packpanel->setColor(glm::vec4(0.06f, 0.12f, 0.18f, 0.7f));
         panel->add(packpanel);
     }
 
@@ -285,7 +285,7 @@ std::shared_ptr<Panel> create_packs_panel(const std::vector<ContentPack>& packs,
 void create_content_panel(Engine* engine) {
     auto menu = engine->getGUI()->getMenu();
     auto paths = engine->getPaths();
-    auto mainPanel = create_page(engine, "content", MenusConsts::PACKS_PANEL_WIDTH, 0.0f, 5);
+    auto mainPanel = create_page(engine, "content", 550, 0.0f, 5);
 
     std::vector<ContentPack> scanned;
     ContentPack::scan(engine->getPaths(), scanned);
@@ -352,8 +352,8 @@ void create_new_world_panel(Engine* engine) {
     [=](GUI*) {
         if (!nameInput->validate()) return;
 
-        std::string name = util::wstr2str_utf8(nameInput->text());
-        uint64_t seed = str2seed(seedInput->text());
+        std::string name = util::wstr2str_utf8(nameInput->getText());
+        uint64_t seed = str2seed(seedInput->getText());
 
         EnginePaths* paths = engine->getPaths();
         auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
