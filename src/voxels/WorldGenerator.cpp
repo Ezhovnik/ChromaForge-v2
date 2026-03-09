@@ -20,6 +20,7 @@
 #include "../content/Content.h"
 #include "../math/voxmaths.h"
 #include "../core_defs.h"
+#include "../math/rand.h"
 
 inline constexpr int SEA_LEVEL = 55;
 
@@ -65,32 +66,6 @@ public:
 			throw std::runtime_error("Out of map");
 		}
 		heights[(int)map][z * width + x] = value;
-	}
-};
-
-class PseudoRandom {
-	ushort seed;
-public:
-	PseudoRandom() {seed = (ushort)time(0);}
-
-	int rand(){
-		seed = (seed + 0x7ed5 + (seed << 6));
-		seed = (seed ^ 0xc23c ^ (seed >> 9));
-		seed = (seed + 0x1656 + (seed << 3));
-		seed = ((seed + 0xa264) ^ (seed << 4));
-		seed = (seed + 0xfd70 - (seed << 3));
-		seed = (seed ^ 0xba49 ^ (seed >> 8));
-
-		return (int)seed;
-	}
-
-	void setSeed(int number){
-		seed = ((ushort)(number * 3729) ^ (ushort)(number + 16786));
-		rand();
-	}
-	void setSeed(int number1, int number2){
-		seed = (((ushort)(number1 * 23729) | (ushort)(number2 % 16786)) ^ (ushort)(number2 * number1));
-		rand();
 	}
 };
 

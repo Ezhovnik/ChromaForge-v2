@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "Assets.h"
+#include "AssetsLoader.h"
 #include "../coders/png.h"
 #include "../files/files.h"
 #include "../graphics/ShaderProgram.h"
@@ -18,7 +19,14 @@
 #include "../logic/scripting/scripting.h"
 
 // Загружает и регистрирует шейдерную программу в менеджере ресурсов.
-bool asset_loader::shader(Assets* assets, const ResPaths* paths, const std::string filename, const std::string name, std::shared_ptr<void>){
+bool asset_loader::shader(
+	AssetsLoader&,
+	Assets* assets, 
+	const ResPaths* paths, 
+	const std::string filename, 
+	const std::string name, 
+	std::shared_ptr<void>)
+{
     std::filesystem::path vertexFile = paths->find(filename + ".vert");
     std::filesystem::path fragmentFile = paths->find(filename + ".frag");
 
@@ -36,7 +44,14 @@ bool asset_loader::shader(Assets* assets, const ResPaths* paths, const std::stri
 }
 
 // Загружает и регистрирует текстуру в менеджере ресурсов.
-bool asset_loader::texture(Assets* assets, const ResPaths* paths, const std::string filename, const std::string name, std::shared_ptr<void>){
+bool asset_loader::texture(
+	AssetsLoader&, 
+	Assets* assets, 
+	const ResPaths* paths, 
+	const std::string filename, 
+	const std::string name, 
+	std::shared_ptr<void>)
+{
 	std::unique_ptr<Texture> texture(png::loadTexture(paths->find(filename).string()));
 	if (texture == nullptr){
 		LOG_CRITICAL("Failed to load texture '{}'", name);
@@ -48,7 +63,14 @@ bool asset_loader::texture(Assets* assets, const ResPaths* paths, const std::str
 }
 
 // Загружает и регистрирует шрифт в менеджере ресурсов
-bool asset_loader::font(Assets* assets, const ResPaths* paths, const std::string filename, const std::string name, std::shared_ptr<void>){
+bool asset_loader::font(
+	AssetsLoader&,
+	Assets* assets, 
+	const ResPaths* paths, 
+	const std::string filename, 
+	const std::string name, 
+	std::shared_ptr<void>)
+{
     std::vector<std::unique_ptr<Texture>> pages;
 	for (size_t i = 0; i <= 4; ++i) {
 		std::string name = filename + "_" + std::to_string(i) + ".png"; 
@@ -86,7 +108,14 @@ static bool appendAtlas(AtlasBuilder& atlas, const std::filesystem::path& file) 
 }
 
 // Загружает и регистрирует атлас в менеджере ресурсов
-bool asset_loader::atlas(Assets* assets, const ResPaths* paths, const std::string directory, const std::string name, std::shared_ptr<void>) {
+bool asset_loader::atlas(
+	AssetsLoader&,
+	Assets* assets, 
+	const ResPaths* paths, 
+	const std::string directory, 
+	const std::string name, 
+	std::shared_ptr<void>)
+{
 	AtlasBuilder builder;
 	for (auto const& file : paths->listdir(directory)) {
 		if (!appendAtlas(builder, file)) continue;
@@ -102,7 +131,13 @@ bool asset_loader::atlas(Assets* assets, const ResPaths* paths, const std::strin
 	return true;
 }
 
-bool asset_loader::animation(Assets* assets, const ResPaths* paths, const std::string directory, const std::string name, Atlas* dstAtlas) {
+bool asset_loader::animation(
+	Assets* assets, 
+	const ResPaths* paths, 
+	const std::string directory, 
+	const std::string name, 
+	Atlas* dstAtlas)
+{
 	std::string animsDir = directory + "/animations";
 	std::string blocksDir = directory + "/blocks";
 
@@ -190,10 +225,17 @@ bool asset_loader::animation(Assets* assets, const ResPaths* paths, const std::s
 	return true;
 }
 
-bool asset_loader::layout(Assets* assets, const ResPaths* paths, const std::string file, const std::string name, std::shared_ptr<void> config) {
+bool asset_loader::layout(
+	AssetsLoader& loader,
+	Assets* assets, 
+	const ResPaths* paths, 
+	const std::string file, 
+	const std::string name, 
+	std::shared_ptr<void> config)
+{
     try {
         LayoutConfig* cfg = reinterpret_cast<LayoutConfig*>(config.get());
-        auto document = UIDocument::read(cfg->env, name, file);
+        auto document = UIDocument::read(loader, cfg->env, name, file);
         assets->store(document.release(), name);
         return true;
     } catch (const parsing_error& err) {

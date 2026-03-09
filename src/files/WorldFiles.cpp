@@ -29,6 +29,8 @@
 
 const char* WorldFiles::WORLD_FILE = "world.json";
 
+inline constexpr size_t BUFFER_SIZE_UNKNOWN = -1;
+
 WorldRegion::WorldRegion() {
 	chunksData = new ubyte*[RegionConsts::VOLUME]{};
 	sizes = new uint32_t[RegionConsts::VOLUME]{};
@@ -155,7 +157,7 @@ void WorldFiles::put(Chunk* chunk){
         for (auto& entry : inventories) {
             builder.putInt32(entry.first);
             auto map = entry.second->serialize();
-            auto bytes = json::to_binary(map.get(), true);
+            auto bytes = json::to_binary(map.get(), false);
             builder.putInt32(bytes.size());
             builder.put(bytes.data(), bytes.size());
         }   
@@ -164,8 +166,8 @@ void WorldFiles::put(Chunk* chunk){
 
         auto datavec = builder.data();
         uint datasize = builder.size();
-        auto data = std::make_unique<ubyte[]>(builder.size());
-        for (uint i = 0; i < builder.size(); ++i) {
+        auto data = std::make_unique<ubyte[]>(datasize);
+        for (uint i = 0; i < datasize; ++i) {
             data[i] = datavec[i];
         }
         region->put(localX, localZ, data.release(), datasize);
@@ -261,16 +263,34 @@ std::filesystem::path WorldFiles::getInventoriesFolder() const {
 }
 
 ubyte* WorldFiles::getChunk(int x, int z){
-	return getData(regions, getRegionsFolder(), x, z, RegionConsts::LAYER_VOXELS);
+	return getData(regions, getRegionsFolder(), x, z, RegionConsts::LAYER_VOXELS, true);
 }
 
 light_t* WorldFiles::getLights(int x, int z) {
-	std::unique_ptr<ubyte> data(getData(lights, getLightsFolder(), x, z, RegionConsts::LAYER_LIGHTS));
+	std::unique_ptr<ubyte> data(getData(lights, getLightsFolder(), x, z, RegionConsts::LAYER_LIGHTS, true));
 	if (data == nullptr) return nullptr;
 	return LightMap::decode(data.get());
 }
 
-ubyte* WorldFiles::getData(regionsmap& regions, const std::filesystem::path& folder, int x, int z, int layer) {
+chunk_inventories_map WorldFiles::fetchInventories(int x, int z) {
+	chunk_inventories_map inventories;
+	const ubyte* data = getData(storages, getInventoriesFolder(), x, z, RegionConsts::LAYER_INVENTORIES, false);
+	if (data == nullptr) return inventories;
+	ByteReader reader(data, BUFFER_SIZE_UNKNOWN);
+	int count = reader.getInt32();
+	for (int i = 0; i < count; i++) {
+		uint index = reader.getInt32();
+		uint size = reader.getInt32();
+		auto map = json::from_binary(reader.pointer(), size);
+		reader.skip(size);
+		auto inv = std::make_shared<Inventory>(0, 0);
+		inv->deserialize(map.get());
+		inventories[index] = inv;
+	}
+	return inventories;
+}
+
+ubyte* WorldFiles::getData(regionsmap& regions, const std::filesystem::path& folder, int x, int z, int layer, bool compression) {
 	int regionX = floordiv(x, RegionConsts::SIZE);
 	int regionZ = floordiv(z, RegionConsts::SIZE);
 
@@ -288,7 +308,8 @@ ubyte* WorldFiles::getData(regionsmap& regions, const std::filesystem::path& fol
 
 	if (data != nullptr) {
 		size_t size = region->getChunkDataSize(localX, localZ);
-		return decompress(data, size, CHUNK_DATA_LEN);
+		if (compression) return decompress(data, size, CHUNK_DATA_LEN);
+		return data;
 	}
 
 	return nullptr;
@@ -335,10 +356,8 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length, std::filesystem
 	file.seekg(offset);
 	file.read((char*)(&offset), 4);
 	length = dataio::read_int32_big((const ubyte*)(&offset), 0);
-	ubyte* data = new ubyte[length];
+	ubyte* data = new ubyte[length]{};
 	file.read((char*)data, length);
-
-	if (data == nullptr) LOG_ERROR("Faied to read chunk data of chunk {}x {}z", x, z);
 
 	return data;
 }
@@ -429,7 +448,7 @@ void WorldFiles::write(const World* world, const Content* content) {
 	writeIndices(content->getIndices());
 	writeRegions(regions, regionsFolder, RegionConsts::LAYER_VOXELS);
 	writeRegions(lights, lightsFolder, RegionConsts::LAYER_LIGHTS);
-	writeRegions(lights, lightsFolder, RegionConsts::LAYER_STORAGES);
+	writeRegions(lights, lightsFolder, RegionConsts::LAYER_INVENTORIES);
 }
 
 void WorldFiles::writePacks(const World* world) {

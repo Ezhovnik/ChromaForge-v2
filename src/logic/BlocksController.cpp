@@ -12,6 +12,7 @@
 #include "../util/timeutil.h"
 #include "scripting/scripting.h"
 #include "../math/rand.h"
+#include "../items/Inventories.h"
 
 Clock::Clock(int sparkRate, int sparkParts) : sparkRate(sparkRate), sparkParts(sparkParts) {
 }
@@ -124,4 +125,21 @@ void BlocksController::randomSpark(int sparkId, int parts) {
             }
         }
 	}
+}
+
+int64_t BlocksController::createBlockInventory(int x, int y, int z) {
+	auto chunk = chunks->getChunkByVoxel(x, y, z);
+	if (chunk == nullptr) return 0;
+	int lx = x - chunk->chunk_x * CHUNK_WIDTH;
+	int lz = z - chunk->chunk_z * CHUNK_DEPTH;
+	auto inv = chunk->getBlockInventory(lx, y, lz);
+	if (inv == nullptr) {
+        auto indices = level->content->getIndices();
+        auto def = indices->getBlockDef(chunk->voxels[vox_index(lx, y, lz)].id);
+        int invsize = def->inventorySize;
+        if (invsize == 0) return 0;
+		inv = level->inventories->create(invsize);
+        chunk->addBlockInventory(inv, lx, y, lz);
+	}
+    return inv->getId();
 }

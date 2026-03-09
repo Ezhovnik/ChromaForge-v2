@@ -54,10 +54,11 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	std::unique_ptr<ubyte[]> data(wfile->getChunk(chunk->chunk_x, chunk->chunk_z));
 	if (data) {
 		chunk->decode(data.get());
+		auto invs = wfile->fetchInventories(chunk->chunk_x, chunk->chunk_z);
+		chunk->setBlockInventories(std::move(invs));
 		chunk->setLoaded(true);
+		verifyLoadedChunk(level->content->getIndices(), chunk.get());
 	}
-
-	verifyLoadedChunk(level->content->getIndices(), chunk.get());
 
 	std::unique_ptr<light_t[]> lights (wfile->getLights(chunk->chunk_x, chunk->chunk_z));
 	if (lights) {

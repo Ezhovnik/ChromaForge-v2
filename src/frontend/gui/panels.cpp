@@ -134,6 +134,12 @@ const std::vector<std::shared_ptr<UINode>>& Container::getNodes() const {
     return nodes;
 }
 
+void Container::refresh() {
+    std::stable_sort(nodes.begin(), nodes.end(), [](const auto& a, const auto& b) {
+        return a->getZIndex() < b->getZIndex();
+    });
+}
+
 Panel::Panel(glm::vec2 size, glm::vec4 padding, float interval) : Container(glm::vec2(), size), padding(padding), interval(interval) {
     setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.75f));
 }
@@ -173,6 +179,7 @@ void Panel::add(std::shared_ptr<UINode> node) {
 }
 
 void Panel::refresh() {
+    UINode::refresh();
     float x = padding.x;
     float y = padding.y;
     glm::vec2 size = getSize();

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+#include <ctime>
 
 #include "../typedefs.h"
 
@@ -45,6 +46,47 @@ public:
     inline float randFloat() {
         return rand() / float(0x7FFF);
     }
+};
+
+class PseudoRandom {
+private:
+	ushort seed;
+public:
+	PseudoRandom() {seed = (ushort)time(0);}
+
+	int rand(){
+		seed = (seed + 0x7ed5 + (seed << 6));
+		seed = (seed ^ 0xc23c ^ (seed >> 9));
+		seed = (seed + 0x1656 + (seed << 3));
+		seed = ((seed + 0xa264) ^ (seed << 4));
+		seed = (seed + 0xfd70 - (seed << 3));
+		seed = (seed ^ 0xba49 ^ (seed >> 8));
+
+		return (int)seed;
+	}
+
+    int32_t rand32() {
+        return (rand() << 16) | rand();
+    }
+
+    uint32_t randU32() {
+        return (rand() << 16) | rand();
+    }
+
+    int64_t rand64() {
+        uint64_t x = randU32();
+        uint64_t y = randU32();
+        return (x << 32ULL) | y;
+    }
+
+	void setSeed(int number){
+		seed = ((ushort)(number * 3729) ^ (ushort)(number + 16786));
+		rand();
+	}
+	void setSeed(int number1, int number2){
+		seed = (((ushort)(number1 * 23729) | (ushort)(number2 % 16786)) ^ (ushort)(number2 * number1));
+		rand();
+	}
 };
 
 #endif // MATH_RAND_H_

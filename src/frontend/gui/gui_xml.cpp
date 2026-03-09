@@ -9,6 +9,7 @@
 #include "../../logic/scripting/scripting.h"
 #include "../../util/stringutil.h"
 #include "../../logger/Logger.h"
+#include "../../assets/AssetsLoader.h"
 
 using namespace gui;
 
@@ -25,25 +26,26 @@ static void _readUINode(xml::xmlelement element, UINode& node) {
     if (element->has("size")) node.setSize(element->attr("size").asVec2());
     if (element->has("color")) node.setColor(element->attr("color").asColor());
     if (element->has("margin")) node.setMargin(element->attr("margin").asVec4());
+    if (element->has("z-index")) node.setZIndex(element->attr("z-index").asInt());
 
     std::string alignName = element->attr("align", "").getText();
     node.setAlign(align_from_string(alignName, node.getAlign()));
 }
 
-static void _readContainer(UiXmlReader& reader, xml::xmlelement element, Container& container, bool ignoreUnknown) {
+static void _readContainer(UiXmlReader& reader, xml::xmlelement element, Container& container) {
     _readUINode(element, container);
 
     if (element->has("scrollable")) container.setScrollable(element->attr("scrollable").asBool());
 
     for (auto& sub : element->getElements()) {
         if (sub->isText()) continue;
-        if (ignoreUnknown && !reader.hasReader(sub->getTag())) continue;
-        container.add(reader.readUINode(sub));
+        auto subnode = reader.readUINode(sub);
+        if (subnode) container.add(subnode);
     }
 }
 
-void UiXmlReader::readUINode(UiXmlReader& reader, xml::xmlelement element, Container& container, bool ignoreUnknown) {
-    _readContainer(reader, element, container, ignoreUnknown);
+void UiXmlReader::readUINode(UiXmlReader& reader, xml::xmlelement element, Container& container) {
+    _readContainer(reader, element, container);
 }
 
 void UiXmlReader::readUINode(UiXmlReader& reader, xml::xmlelement element, UINode& node) {
@@ -67,7 +69,8 @@ static void _readPanel(UiXmlReader& reader, xml::xmlelement element, Panel& pane
 
     for (auto& sub : element->getElements()) {
         if (sub->isText()) continue;
-        panel.add(reader.readUINode(sub));
+        auto subnode = reader.readUINode(sub);
+        if (subnode) panel.add(subnode);
     }
 }
 
@@ -91,7 +94,7 @@ static std::shared_ptr<UINode> readLabel(UiXmlReader& reader, xml::xmlelement el
 
 static std::shared_ptr<UINode> readContainer(UiXmlReader& reader, xml::xmlelement element) {
     auto container = std::make_shared<Container>(glm::vec2(), glm::vec2());
-    _readContainer(reader, element, *container, false);
+    _readContainer(reader, element, *container);
     return container;
 }
 
@@ -104,7 +107,7 @@ static std::shared_ptr<UINode> readButton(UiXmlReader& reader, xml::xmlelement e
         auto callback = scripting::create_runnable(
             reader.getEnvironment().getId(),
             element->attr("onclick").getText(),
-            "<onclick>"
+            reader.getFilename() + ".lua"
         );
         button->listenAction([callback](GUI*) {callback();});
     }
@@ -127,7 +130,7 @@ static std::shared_ptr<UINode> readTextBox(UiXmlReader& reader, xml::xmlelement 
         auto consumer = scripting::create_wstring_consumer(
             reader.getEnvironment().getId(),
             element->attr("consumer").getText(),
-            reader.getFilename()
+            reader.getFilename() + "lua"
         );
         textbox->textConsumer(consumer);
     }
@@ -135,7 +138,16 @@ static std::shared_ptr<UINode> readTextBox(UiXmlReader& reader, xml::xmlelement 
     return textbox;
 }
 
-UiXmlReader::UiXmlReader(const scripting::Environment& env) : env(env) {
+static std::shared_ptr<UINode> readImage(UiXmlReader& reader, xml::xmlelement element) {
+    std::string src = element->attr("src", "").getText();
+    auto image = std::make_shared<Image>(src);
+    _readUINode(element, *image);
+    reader.getAssetsLoader().add(AssetType::Texture, "textures/" + src + ".png", src, nullptr);
+    return image;
+}
+
+UiXmlReader::UiXmlReader(const scripting::Environment& env, AssetsLoader& assetsLoader) : env(env), assetsLoader(assetsLoader) {
+    add("image", readImage);
     add("label", readLabel);
     add("button", readButton);
     add("textbox", readTextBox);
@@ -150,11 +162,16 @@ bool UiXmlReader::hasReader(const std::string& tag) const {
     return readers.find(tag) != readers.end();
 }
 
+void UiXmlReader::addIgnore(const std::string& tag) {
+    ignored.insert(tag);
+}
+
 std::shared_ptr<UINode> UiXmlReader::readUINode(xml::xmlelement element) {
     const std::string& tag = element->getTag();
 
     auto found = readers.find(tag);
     if (found == readers.end()) {
+        if (ignored.find(tag) != ignored.end()) return nullptr;
         LOG_ERROR("Unsupported element '{}'", tag);
         Logger::getInstance().flush();
         throw std::runtime_error("Unsupported element '" + tag + "'");
@@ -180,4 +197,8 @@ const std::string& UiXmlReader::getFilename() const {
 
 const scripting::Environment& UiXmlReader::getEnvironment() const {
     return env;
+}
+
+AssetsLoader& UiXmlReader::getAssetsLoader() {
+    return assetsLoader;
 }

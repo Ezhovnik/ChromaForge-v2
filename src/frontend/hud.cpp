@@ -47,8 +47,9 @@
 #include "../items/Inventory.h"
 #include "UIDocument.h"
 #include "../logic/scripting/scripting.h"
+#include "../delegates.h"
 
-static std::shared_ptr<gui::Label> create_label(gui::wstringsupplier supplier) {
+static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
 	std::shared_ptr<gui::Label> label = std::make_shared<gui::Label>(L"-");
 	label->textSupplier(supplier);
 	return label;
@@ -196,7 +197,7 @@ std::shared_ptr<InventoryView> HudRenderer::createContentAccess() {
     }
 
     SlotLayout slotLayout(-1, glm::vec2(), false, true, 
-    [=](ItemStack& item) {
+    [=](uint, ItemStack& item) {
         auto copy = ItemStack(item);
         inventory->move(copy, indices);
     }, 
@@ -234,6 +235,7 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
 	grabbedItemView->bind(interaction->getGrabbedItem(), levelFrontend, interaction.get());
     grabbedItemView->setColor(glm::vec4());
     grabbedItemView->setInteractive(false);
+	grabbedItemView->setZIndex(1);
 
     contentAccess = createContentAccess();
     contentAccessPanel = std::make_shared<gui::Panel>(contentAccess->getSize(), glm::vec4(0.0f), 0.0f);
@@ -245,6 +247,7 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
 
 	darkOverlay = std::make_unique<gui::Panel>(glm::vec2(4000.0f));
     darkOverlay->setColor(glm::vec4(0, 0, 0, 0.5f));
+	darkOverlay->setZIndex(-1);
 
 	uicamera = std::make_unique<Camera>(glm::vec3(), 1);
 	uicamera->perspective = false;
@@ -252,6 +255,8 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
 
     debugPanel = createDebugPanel(engine);
 	menu->reset();
+
+	debugPanel->setZIndex(2);
 
 	guiController->addBack(darkOverlay);
     guiController->addBack(hotbarView);
@@ -352,6 +357,20 @@ void HudRenderer::draw(const GfxContext& context) {
 		batch->line(width / 2 + 6, height / 2, width / 2 - 6, height / 2, 0.2f, 0.2f, 0.2f, 1.0f);
 	}
 
+	if (level->player->debug) {
+        const int dmwidth = 256;
+        const float dmscale = 4000.0f;
+        static float deltameter[dmwidth]{};
+        static int index = 0;
+        index = index + 1 % dmwidth;
+        deltameter[index%dmwidth] = glm::min(0.2f, 1.0f / fps) * dmscale;
+        batch->setLineWidth(1.0f);
+        for (int i = index + 1; i < index + dmwidth; ++i) {
+            int j = i % dmwidth;
+            batch->line(width - dmwidth + i - index, height - deltameter[j], width - dmwidth + i - index, height, 1.0f, 1.0f, 1.0f, 0.2f);
+        }
+    }
+
 	if (inventoryOpen) {
 		float caWidth = contentAccess->getSize().x;
         glm::vec2 invSize = inventoryView->getSize();
@@ -374,7 +393,6 @@ void HudRenderer::openInventory() {
     auto inventory = player->getInventory();
 
     inventoryOpen = true;
-    guiController->remove(grabbedItemView);
 
     inventoryDocument = assets->getLayout(BUILTIN_CONTENT_NAMESPACE":inventory");
     inventoryView = std::dynamic_pointer_cast<InventoryView>(inventoryDocument->getRoot());
@@ -382,7 +400,6 @@ void HudRenderer::openInventory() {
     scripting::on_ui_open(inventoryDocument, inventory.get());
 
     guiController->add(inventoryView);
-    guiController->add(grabbedItemView);
 }
 
 void HudRenderer::closeInventory() {

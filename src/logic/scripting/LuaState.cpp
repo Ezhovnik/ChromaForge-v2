@@ -101,6 +101,7 @@ void lua::LuaState::createFuncs() {
     openlib("time", timelib, 0);
     openlib("file", filelib, 0);
     openlib("item", itemlib, 0);
+    openlib("inventory", inventorylib, 0);
 
     addfunc("print", l_print);
 

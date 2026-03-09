@@ -14,6 +14,7 @@ class PhysicsSolver;
 class ChunksStorage;
 class LevelEvents;
 class Content;
+class Inventories;
 
 class Level {
 public:
@@ -26,6 +27,7 @@ public:
     LevelEvents* events;
     const EngineSettings& settings;
     const Content* const content;
+	std::unique_ptr<Inventories> inventories;
 
 	Level(World* world, const Content* content, Player* player, EngineSettings& settings);
 	~Level();

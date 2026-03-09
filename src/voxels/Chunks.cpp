@@ -154,7 +154,9 @@ void Chunks::setVoxel(int x, int y, int z, int id, uint8_t states){
 	int lx = x - cx * CHUNK_WIDTH;
 	int lz = z - cz * CHUNK_DEPTH;
 
-	voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx]; 
+	voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
+	auto def = contentIds->getBlockDef(vox.id);
+	if (def->inventorySize == 0) chunk->removeBlockInventory(lx, y, lz);
 	vox.id = id;
 	vox.states = states;
 

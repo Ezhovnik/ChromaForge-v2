@@ -35,6 +35,7 @@ namespace gui {
         glm::vec4 color {1.0f};
         glm::vec4 hoverColor {1.0f};
         glm::vec4 margin {1.0f};
+        int zindex = 0;
         bool visible = true;
         bool hover = false;
         bool pressed = false;
@@ -72,6 +73,9 @@ namespace gui {
 
         virtual void setMargin(glm::vec4 margin);
         glm::vec4 getMargin() const;
+
+        virtual void setZIndex(int idx);
+        int getZIndex() const;
 
         virtual void focus(GUI*) {focused = true;}
         virtual void click(GUI*, int x, int y);

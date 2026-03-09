@@ -13,6 +13,7 @@
 #include "../typedefs.h"
 #include "../settings.h"
 #include "../files/files.h"
+#include "../voxels/Chunk.h"
 
 // Константы для размера регионов
 namespace RegionConsts {
@@ -22,7 +23,7 @@ namespace RegionConsts {
 
     constexpr uint LAYER_VOXELS = 0;
     constexpr uint LAYER_LIGHTS = 1;
-    constexpr uint LAYER_STORAGES = 2;
+    constexpr uint LAYER_INVENTORIES = 2;
 
     constexpr uint MAX_OPEN_FILES = 16;
 }
@@ -32,7 +33,6 @@ constexpr int REGION_HEADER_SIZE = 13;
 constexpr int REGION_FORMAT_VERSION = 2;
 
 class Player;
-class Chunk;
 class Content;
 class ContentIndices;
 class World;
@@ -94,7 +94,7 @@ private:
     ubyte* readChunkData(int x, int y, uint32_t& length, std::filesystem::path folder, int layer);
     WorldRegion* getRegion(regionsmap& regions, int x, int z);
     WorldRegion* getOrCreateRegion(regionsmap& regions, int x, int z);
-	ubyte* getData(regionsmap& regions, const std::filesystem::path& folder, int x, int z, int layer);
+	ubyte* getData(regionsmap& regions, const std::filesystem::path& folder, int x, int z, int layer, bool compression);
 
     regFile* getRegFile(glm::ivec3 coord, const std::filesystem::path& folder);
 public:
@@ -129,6 +129,8 @@ public:
 
 	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
     light_t* getLights(int x, int z);
+
+    chunk_inventories_map fetchInventories(int x, int z);
 
 	void writePlayer(Player* player); // Записывает данные об игроке на диск
     void write(const World* world, const Content* content);

@@ -90,6 +90,7 @@
                 "${workspaceFolder}/src/graphics/Viewport.cpp",
 
                 //src/items
+                "${workspaceFolder}/src/items/Inventories.cpp",
                 "${workspaceFolder}/src/items/Inventory.cpp",
                 "${workspaceFolder}/src/items/ItemStack.cpp",
 

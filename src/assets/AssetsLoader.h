@@ -18,8 +18,9 @@ enum class AssetType {
 class Assets;
 class ResPaths;
 class Content;
+class AssetsLoader;
 
-using aloader_func = std::function<bool(Assets*, const ResPaths*, const std::string&, const std::string&, std::shared_ptr<void>)>;
+using aloader_func = std::function<bool(AssetsLoader&, Assets*, const ResPaths*, const std::string&, const std::string&, std::shared_ptr<void>)>;
 
 struct aloader_entry {
 	AssetType tag;

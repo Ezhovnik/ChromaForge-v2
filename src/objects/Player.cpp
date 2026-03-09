@@ -23,7 +23,7 @@ namespace PlayerConsts {
 	constexpr int INVENTORY_SIZE = 40;
 }
 
-Player::Player(glm::vec3 position, float speed) : 
+Player::Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inventory) : 
 	speed(speed),
 	chosenSlot(0),
 	camera(new Camera(position, glm::radians(90.0f))),
@@ -31,7 +31,7 @@ Player::Player(glm::vec3 position, float speed) :
 	tpCamera(new Camera(position, glm::radians(90.0f))),
 	currentCamera(camera),
 	hitbox(new Hitbox(position, glm::vec3(0.3f, 0.9f, 0.3f))),
-	inventory(new Inventory(0, PlayerConsts::INVENTORY_SIZE)) {
+	inventory(inventory) {
 }
 
 void Player::update(Level* level, PlayerInput& input, float delta) {
