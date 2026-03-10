@@ -9,7 +9,7 @@
 #include "../typedefs.h"
 #include "../settings.h"
 
-class GLFWwindow; // Предварительное объявление класса GLFWwindow
+struct GLFWwindow; // Предварительное объявление класса GLFWwindow
 class ImageData;
 struct GLFWmonitor;
 

@@ -91,10 +91,7 @@ void BlocksRenderer::face(const glm::vec3& coord,
 	index(0, 1, 3, 1, 2, 3);
 }
 
-void BlocksRenderer::vertex(const glm::vec3& coord, float u, float v, const glm::vec4& tint, const glm::vec3& X, const glm::vec3& Y, const glm::vec3& Z) {
-	glm::vec3 axisX = glm::normalize(X);
-    glm::vec3 axisY = glm::normalize(Y);
-    glm::vec3 axisZ = glm::normalize(Z);
+void BlocksRenderer::vertex(const glm::vec3& coord, float u, float v, const glm::vec4& tint, const glm::vec3& axisX, const glm::vec3& axisY, const glm::vec3& axisZ) {
     glm::vec3 pos = coord + axisZ * 0.5f + (axisX + axisY) * 0.5f;
 	glm::vec4 light = pickSoftLight(glm::ivec3(round(pos.x), round(pos.y), round(pos.z)), axisX, axisY);
 	vertex(coord, u, v, light * tint);
@@ -112,10 +109,14 @@ void BlocksRenderer::face(const glm::vec3& coord, const glm::vec3& X, const glm:
         d = 0.8f + d * 0.2f;
         glm::vec4 tint(d);
 
-        vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint, X, Y, Z);
-        vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, tint, X, Y, Z);
-        vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, tint, X, Y, Z);
-        vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, tint, X, Y, Z);
+		glm::vec3 axisX = glm::normalize(X);
+        glm::vec3 axisY = glm::normalize(Y);
+        glm::vec3 axisZ = glm::normalize(Z);
+
+        vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint, axisX, axisY, axisZ);
+        vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, tint, axisX, axisY, axisZ);
+        vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, tint, axisX, axisY, axisZ);
+        vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, tint, axisX, axisY, axisZ);
     } else {
         glm::vec4 tint(1.0f);
         vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint);

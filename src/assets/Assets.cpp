@@ -8,11 +8,9 @@
 #include "../frontend/UIDocument.h"
 #include "../logic/scripting/scripting.h"
 
-// Деструктор
 Assets::~Assets() {
 }
 
-// Получает текстуру по имени
 Texture* Assets::getTexture(std::string name) const {
     // Ищем текстуру в словаре
     auto it = textures.find(name);
@@ -24,7 +22,6 @@ Texture* Assets::getTexture(std::string name) const {
 	return nullptr;
 }
 
-// Сохраняет текстуру в менеджере ресурсов.
 bool Assets::store(Texture* texture, std::string name){
     // Проверяем, не существует ли уже текстура с таким именем
     auto it = textures.find(name);
@@ -35,12 +32,11 @@ bool Assets::store(Texture* texture, std::string name){
         return true;
     }
 
-    // Если существует, то возращаем ошибку
+    // Если существует, то возвращаем ошибку и не сохраняем новую
     LOG_WARN("Texture named '{}' already exists", name);
     return false;
 }
 
-// Получает шейдер по имени
 ShaderProgram* Assets::getShader(std::string name) const{
     // Ищем шейдер в словаре
     auto it = shaders.find(name);
@@ -63,12 +59,11 @@ bool Assets::store(ShaderProgram* shader, std::string name){
         return true;
     }
 
-    // Если существует, то возращаем ошибку
+    // Если существует, то возвращаем ошибку и не сохраняем новую
     LOG_WARN("Shader named '{}' already exists", name);
     return false;
 }
 
-// Получает шрифт по имени
 Font* Assets::getFont(std::string name) const{
     // Ищем шрифт в словаре
     auto it = fonts.find(name);
@@ -80,7 +75,6 @@ Font* Assets::getFont(std::string name) const{
     return nullptr;
 }
 
-// Сохраняет шрифт в менеджере ресурсов.
 bool Assets::store(Font* font, std::string name){
     // Проверяем, не существует ли уже шрифт с таким именем
     auto it = fonts.find(name);
@@ -91,12 +85,11 @@ bool Assets::store(Font* font, std::string name){
         return true;
     }
 
-    // Если существует, то возращаем ошибку
+    // Если существует, то возвращаем ошибку и не сохраняем новую
     LOG_WARN("Font named '{}' already exists", name);
     return false;
 }
 
-// Получает атлас по имени
 Atlas* Assets::getAtlas(std::string name) const {
 	// Ищем атлас в словаре
     auto it = atlases.find(name);
@@ -108,7 +101,6 @@ Atlas* Assets::getAtlas(std::string name) const {
     return nullptr;
 }
 
-// Сохраняет атлас в менеджере ресурсов
 bool Assets::store(Atlas* atlas, std::string name){
 	// Проверяем, не существует ли уже атлас с таким именем
     auto it = atlases.find(name);
@@ -119,7 +111,7 @@ bool Assets::store(Atlas* atlas, std::string name){
         return true;
     }
 
-    // Если существует, то возращаем ошибку
+    // Если существует, то возвращаем ошибку и не сохраняем новый
     LOG_WARN("Atlas named '{}' already exists", name);
     return false;
 }
@@ -133,46 +125,58 @@ void Assets::store(const TextureAnimation& animation) {
 }
 
 UIDocument* Assets::getLayout(std::string name) const {
+    // Ищем макет в словаре
     auto it = layouts.find(name);
 
+    // Если нашли, возвращаем указатель на макет
     if (it != layouts.end()) return it->second.get();
 
+    // Макет не найден
     return nullptr;
 }
 
 bool Assets::store(UIDocument* layout, std::string name){
+    // Проверяем, не существует ли уже макет с таким именем
     auto it = layouts.find(name);
 
+    // Если не существует, то добавляем
     if (it == layouts.end()) {
         layouts[name].reset(layout);
         return true;
     }
 
+    // Если существует, то возвращаем ошибку и не сохраняем новый
     LOG_WARN("Layout named '{}' already exists", name);
     return false;
 }
 
 void Assets::extend(const Assets& assets) {
+    // Копируем текстуры
     for (auto entry : assets.textures) {
         textures[entry.first] = entry.second;
     }
 
+    // Копируем шейдеры
     for (auto entry : assets.shaders) {
         shaders[entry.first] = entry.second;
     }
 
+    // Копируем шрифты
     for (auto entry : assets.fonts) {
         fonts[entry.first] = entry.second;
     }
 
+    // Копируем атласы
     for (auto entry : assets.atlases) {
         atlases[entry.first] = entry.second;
     }
 
+    // Копируем макеты
     for (auto entry : assets.layouts) {
 		layouts[entry.first] = entry.second;
 	}
 
+    // Перезаписываем анимации
     animations.clear();
     for (auto entry : assets.animations) {
 		animations.emplace_back(entry);

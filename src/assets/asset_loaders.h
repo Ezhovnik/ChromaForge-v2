@@ -11,7 +11,16 @@ class AssetsLoader;
 
 // Пространство имён, содержащее функции загрузки различных ресурсов
 namespace asset_loader {
-    // Загружает текстуру из файла filename и сохраняет её в Assets под именем name
+    /**
+     * @brief Загружает текстуру из файла и сохраняет её в менеджере ресурсов.
+     * @param loader Загрузчик ассетов (не используется).
+     * @param assets Указатель на менеджер ресурсов, в который будет сохранена текстура.
+     * @param paths Указатель на объект с путями для поиска файлов.
+     * @param filename Имя файла текстуры (с расширением .png).
+     * @param name Имя, под которым текстура будет сохранена в менеджере ресурсов.
+     * @param settings Дополнительные настройки (не используются).
+     * @return true, если текстура успешно загружена и сохранена, иначе false.
+     */
     bool texture(
         AssetsLoader&,
         Assets* assets, 
@@ -21,7 +30,16 @@ namespace asset_loader {
         std::shared_ptr<void> settings
     );
 
-    // Загружает шейдерную программу из файлов filename.vert и filename.frag и сохраняет его в Assets под именем name
+    /**
+     * @brief Загружает шейдерную программу из файлов .vert и .frag и сохраняет её в менеджере ресурсов.
+     * @param loader Загрузчик ассетов (не используется).
+     * @param assets Указатель на менеджер ресурсов.
+     * @param paths Указатель на объект с путями.
+     * @param filename Базовое имя файла шейдера (без расширения). К нему добавляются .vert и .frag.
+     * @param name Имя, под которым шейдер будет сохранён.
+     * @param settings Не используется.
+     * @return true при успехе, false при ошибке.
+     */
     bool shader(
         AssetsLoader&,
         Assets* assets, 
@@ -31,7 +49,16 @@ namespace asset_loader {
         std::shared_ptr<void> settings
     );
 
-    // Загружает атлас текстур из всех файлов в директории directory и сохраняет под именем name
+    /**
+     * @brief Загружает атлас текстур из всех PNG-файлов в указанной директории и сохраняет его в менеджере ресурсов.
+     * @param loader Загрузчик ассетов (не используется).
+     * @param assets Указатель на менеджер ресурсов.
+     * @param paths Указатель на объект с путями.
+     * @param directory Путь к директории, содержащей изображения для атласа.
+     * @param name Имя, под которым атлас будет сохранён.
+     * @param settings Не используется.
+     * @return true при успехе, false при ошибке.
+     */
     bool atlas(
         AssetsLoader&,
         Assets* assets, 
@@ -41,7 +68,16 @@ namespace asset_loader {
         std::shared_ptr<void> settings
     );
 
-    // Загружает шрифт из файлов filename_idx.png и сохраняет его в Assets под именем name
+    /**
+     * @brief Загружает растровый шрифт из файлов (например, filename_0.png ... filename_4.png) и сохраняет его в менеджере ресурсов.
+     * @param loader Загрузчик ассетов (не используется).
+     * @param assets Указатель на менеджер ресурсов.
+     * @param paths Указатель на объект с путями.
+     * @param filename Базовое имя файлов страниц шрифта (к нему добавляются "_0.png", "_1.png" и т.д.).
+     * @param name Имя, под которым шрифт будет сохранён.
+     * @param settings Не используется.
+     * @return true при успехе, false при ошибке.
+     */
     bool font(
         AssetsLoader&,
         Assets* assets, 
@@ -51,6 +87,15 @@ namespace asset_loader {
         std::shared_ptr<void> settings
     );
 
+    /**
+     * @brief Загружает анимацию для текстуры на основе файлов в папке анимаций.
+     * @param assets Указатель на менеджер ресурсов.
+     * @param paths Указатель на объект с путями.
+     * @param directory Базовая директория, содержащая подпапки "animations" и "blocks".
+     * @param name Имя анимации (соответствует имени текстуры).
+     * @param dstAtlas Указатель на атлас, в который будет добавлена анимация.
+     * @return true, если анимация успешно загружена (или если папка анимации отсутствует), иначе false.
+     */
     bool animation(
         Assets* assets, 
         const ResPaths* paths, 
@@ -59,6 +104,16 @@ namespace asset_loader {
         Atlas* dstAtlas
     );
 
+    /**
+     * @brief Загружает макет интерфейса из XML-файла и сохраняет его в менеджере ресурсов.
+     * @param loader Загрузчик ассетов (используется для загрузки вложенных ресурсов).
+     * @param assets Указатель на менеджер ресурсов.
+     * @param paths Указатель на объект с путями.
+     * @param file Имя файла макета (путь относительно ресурсов).
+     * @param name Имя, под которым макет будет сохранён.
+     * @param config Указатель на объект LayoutConfig с настройками окружения.
+     * @return true при успехе, false при ошибке парсинга.
+     */
     bool layout(
         AssetsLoader& loader,
         Assets* assets, 

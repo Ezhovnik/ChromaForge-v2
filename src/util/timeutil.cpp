@@ -5,6 +5,7 @@
 timeutil::Timer::Timer() {
     start = std::chrono::high_resolution_clock::now();
 }
+
 int64_t timeutil::Timer::stop() {
     return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count();
 }
@@ -17,6 +18,7 @@ timeutil::ScopeLogTimer::~ScopeLogTimer() {
 }
 
 float timeutil::time_value(float hour, float minute, float second) {
+    // Сначала переводим всё в часы: минуты и секунды преобразуются в доли часа.
     return (hour + (minute + second / 60.0f) / 60.0f) / 24.0f;
 }
 

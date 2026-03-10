@@ -50,6 +50,7 @@
 #include "../delegates.h"
 #include "../graphics/Texture.h"
 #include "../items/Inventories.h"
+#include "../voxels/Chunk.h"
 
 HudElement::HudElement(
     HudElementMode mode, 
@@ -480,11 +481,8 @@ void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inven
         throw std::runtime_error("Block UI root element must be 'inventory'");
     }
     openInventory();
-    if (blockinv == nullptr) {
-		Events::toggleCursor();
-        abort();
-		blockinv = level->inventories->createVirtual(blockUI->getSlotsCount());
-	}
+    if (blockinv == nullptr) blockinv = level->inventories->createVirtual(blockUI->getSlotsCount());
+    level->chunks->getChunkByVoxel(block.x, block.y, block.z)->setUnsaved(true);
     blockUI->bind(blockinv, levelFrontend, interaction.get());
 	currentblock = block;
 	currentblockid = level->chunks->getVoxel(block.x, block.y, block.z)->id;

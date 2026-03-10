@@ -133,12 +133,19 @@ namespace gui {
         virtual void drawBackground(const GfxContext* parent_context, Assets* assets) override;
         virtual void typed(uint codepoint) override; 
         virtual void keyPressed(int key) override;
+
         virtual void setTextSupplier(wstringsupplier supplier);
         virtual void setTextConsumer(wstringconsumer consumer);
         virtual void setTextValidator(wstringchecker validator);
+
         virtual bool isFocuskeeper() const override {return true;};
+
         virtual std::wstring getText() const;
         virtual void setText(std::wstring value);
+
+        virtual std::wstring getPlaceholder() const;
+        virtual void setPlaceholder(const std::wstring&);
+
         virtual void setOnEditStart(runnable oneditstart);
         virtual void focus(GUI*) override;
         virtual void refresh() override;
