@@ -22,19 +22,8 @@ Texture* Assets::getTexture(std::string name) const {
 	return nullptr;
 }
 
-bool Assets::store(Texture* texture, std::string name){
-    // Проверяем, не существует ли уже текстура с таким именем
-    auto it = textures.find(name);
-
-    // Если не существует, то добавляем
-    if (it == textures.end()) {
-        textures[name].reset(texture);
-        return true;
-    }
-
-    // Если существует, то возвращаем ошибку и не сохраняем новую
-    LOG_WARN("Texture named '{}' already exists", name);
-    return false;
+void Assets::store(Texture* texture, std::string name){
+    textures[name].reset(texture);
 }
 
 ShaderProgram* Assets::getShader(std::string name) const{
@@ -48,20 +37,8 @@ ShaderProgram* Assets::getShader(std::string name) const{
     return nullptr;
 }
 
-// Сохраняет шейдер в менеджере ресурсов.
-bool Assets::store(ShaderProgram* shader, std::string name){
-    // Проверяем, не существует ли уже шейдер с таким именем
-    auto it = shaders.find(name);
-
-    // Если не существует, то добавляем
-    if (it == shaders.end()) {
-        shaders[name].reset(shader);
-        return true;
-    }
-
-    // Если существует, то возвращаем ошибку и не сохраняем новую
-    LOG_WARN("Shader named '{}' already exists", name);
-    return false;
+void Assets::store(ShaderProgram* shader, std::string name){
+    shaders[name].reset(shader);
 }
 
 Font* Assets::getFont(std::string name) const{
@@ -75,19 +52,8 @@ Font* Assets::getFont(std::string name) const{
     return nullptr;
 }
 
-bool Assets::store(Font* font, std::string name){
-    // Проверяем, не существует ли уже шрифт с таким именем
-    auto it = fonts.find(name);
-
-    // Если не существует, то добавляем
-    if (it == fonts.end()) {
-        fonts[name].reset(font);
-        return true;
-    }
-
-    // Если существует, то возвращаем ошибку и не сохраняем новую
-    LOG_WARN("Font named '{}' already exists", name);
-    return false;
+void Assets::store(Font* font, std::string name){
+    fonts[name].reset(font);
 }
 
 Atlas* Assets::getAtlas(std::string name) const {
@@ -101,19 +67,8 @@ Atlas* Assets::getAtlas(std::string name) const {
     return nullptr;
 }
 
-bool Assets::store(Atlas* atlas, std::string name){
-	// Проверяем, не существует ли уже атлас с таким именем
-    auto it = atlases.find(name);
-
-    // Если не существует, то добавляем
-    if (it == atlases.end()) {
-        atlases[name].reset(atlas);
-        return true;
-    }
-
-    // Если существует, то возвращаем ошибку и не сохраняем новый
-    LOG_WARN("Atlas named '{}' already exists", name);
-    return false;
+void Assets::store(Atlas* atlas, std::string name){
+    atlases[name].reset(atlas);
 }
 
 const std::vector<TextureAnimation>& Assets::getAnimations() {
@@ -135,19 +90,8 @@ UIDocument* Assets::getLayout(std::string name) const {
     return nullptr;
 }
 
-bool Assets::store(UIDocument* layout, std::string name){
-    // Проверяем, не существует ли уже макет с таким именем
-    auto it = layouts.find(name);
-
-    // Если не существует, то добавляем
-    if (it == layouts.end()) {
-        layouts[name].reset(layout);
-        return true;
-    }
-
-    // Если существует, то возвращаем ошибку и не сохраняем новый
-    LOG_WARN("Layout named '{}' already exists", name);
-    return false;
+void Assets::store(UIDocument* layout, std::string name){
+    layouts[name].reset(layout);
 }
 
 void Assets::extend(const Assets& assets) {
