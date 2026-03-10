@@ -325,6 +325,9 @@ void Window::setBlendMode(BlendMode mode) {
         case BlendMode::Addition:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE);
             break;
+        case BlendMode::Inversion:
+            glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+            break;
     }
 }
 

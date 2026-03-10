@@ -35,6 +35,7 @@ settings.V-Sync=Вертикальная Синхронизация
 settings.FOV=Поле Зрения
 settings.Mouse Sensitivity=Чувствительность Мыши
 settings.Language=Язык
+settings.Camera Shaking=Тряска Камеры
 
 # Управление
 movement.forward=Вперёд

@@ -3,7 +3,9 @@
 #include <lua.h>
 #include <lua.hpp>
 
-#include "api_lua.h"
+#include "api/api_lua.h"
+#include "api/libgui.h"
+#include "lua_util.h"
 #include "../../logger/Logger.h"
 #include "../../util/stringutil.h"
 
@@ -22,12 +24,11 @@ lua::LuaState::LuaState() {
     luaopen_string(L);
     luaopen_table(L);
     luaopen_debug(L);
+    luaopen_jit(L);
+    luaopen_bit(L);
 
     LOG_DEBUG("Lua version: {}", LUA_VERSION);
-    #ifdef LUAJIT_VERSION
-        luaopen_jit(L);
-        LOG_DEBUG("LuaJIT version: {}", LUAJIT_VERSION);
-    #endif // LUAJIT_VERSION
+    LOG_DEBUG("LuaJIT version: {}", LUAJIT_VERSION);
 
     createFuncs();
 
@@ -102,6 +103,7 @@ void lua::LuaState::createFuncs() {
     openlib("file", filelib, 0);
     openlib("item", itemlib, 0);
     openlib("inventory", inventorylib, 0);
+    openlib("gui", guilib, 0);
 
     addfunc("print", l_print);
 

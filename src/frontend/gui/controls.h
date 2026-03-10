@@ -18,18 +18,10 @@ class Batch2D;
 class Assets;
 
 namespace gui {
-    using wstringchecker = std::function<bool(const std::wstring&)>;
-
-    using doublesupplier = std::function<double()>;
-    using doubleconsumer = std::function<void(double)>;
-
-    using boolsupplier = std::function<bool()>;
-    using boolconsumer = std::function<void(bool)>;
-
     class Label : public UINode {
     protected:
         std::wstring text;
-        std::string fontName_;
+        std::string fontName;
         wstringsupplier supplier = nullptr;
     public:
         Label(std::string text, std::string fontName="normal");
@@ -153,8 +145,8 @@ namespace gui {
     protected:
         glm::vec4 hoverColor {0.01f, 0.02f, 0.03f, 0.5f};
         glm::vec4 trackColor {1.0f, 1.0f, 1.0f, 0.4f};
-        doublesupplier supplier_ = nullptr;
-        doubleconsumer consumer_ = nullptr;
+        doublesupplier supplier = nullptr;
+        doubleconsumer consumer = nullptr;
         double min;
         double max;
         double value;
@@ -164,8 +156,8 @@ namespace gui {
         TrackBar(double min, double max, double value, double step = 1.0, int trackWidth = 1);
         virtual void draw(const GfxContext* parent_context, Assets* assets) override;
 
-        virtual void supplier(doublesupplier supplier);
-        virtual void consumer(doubleconsumer consumer);
+        virtual void setSupplier(doublesupplier supplier);
+        virtual void setConsumer(doubleconsumer consumer);
 
         virtual void mouseMove(GUI*, int x, int y) override;
     };
@@ -175,10 +167,10 @@ namespace gui {
         glm::vec4 hoverColor {0.05f, 0.1f, 0.2f, 0.75f};
         glm::vec4 checkColor {1.0f, 1.0f, 1.0f, 0.4f};
 
-        boolsupplier supplier_ = nullptr;
-        boolconsumer consumer_ = nullptr;
+        boolsupplier supplier = nullptr;
+        boolconsumer consumer = nullptr;
 
-        bool checked_ = false;
+        bool checked = false;
     public:
         CheckBox(bool checked=false);
 
@@ -186,14 +178,13 @@ namespace gui {
 
         virtual void mouseRelease(GUI*, int x, int y) override;
 
-        virtual void supplier(boolsupplier supplier);
-        virtual void consumer(boolconsumer consumer);
+        virtual void setSupplier(boolsupplier supplier);
+        virtual void setConsumer(boolconsumer consumer);
 
-        virtual CheckBox* checked(bool flag);
-
-        virtual bool checked() const {
-            if (supplier_) return supplier_();
-            return checked_;
+        virtual CheckBox* setChecked(bool flag);
+        virtual bool isChecked() const {
+            if (supplier) return supplier();
+            return checked;
         }
     };
 
@@ -203,20 +194,19 @@ namespace gui {
     public:
         FullCheckBox(std::wstring text, glm::vec2 size, bool checked=false);
 
-        virtual void supplier(boolsupplier supplier) {
-            checkbox->supplier(supplier);
+        virtual void setSupplier(boolsupplier supplier) {
+            checkbox->setSupplier(supplier);
         }
 
-        virtual void consumer(boolconsumer consumer) {
-            checkbox->consumer(consumer);
+        virtual void setConsumer(boolconsumer consumer) {
+            checkbox->setConsumer(consumer);
         }
 
-        virtual void checked(bool flag) {
-            checkbox->checked(flag);
+        virtual void setChecked(bool flag) {
+            checkbox->setChecked(flag);
         }
-
-        virtual bool checked() const {
-            return checkbox->checked();
+        virtual bool isChecked() const {
+            return checkbox->isChecked();
         }
     };
 }

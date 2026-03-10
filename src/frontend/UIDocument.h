@@ -44,6 +44,7 @@ public:
     const std::shared_ptr<gui::UINode> getRoot() const;
     const uidocscript& getScript() const;
     int getEnvironment() const;
+    const std::shared_ptr<gui::UINode> get(const std::string& id) const;
 
     static void collect(uinodes_map& map, std::shared_ptr<gui::UINode> node);
 
