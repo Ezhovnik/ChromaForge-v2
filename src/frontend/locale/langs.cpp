@@ -27,7 +27,17 @@ const std::string& langs::Lang::getId() const {
     return locale;
 }
 
+/**
+ * @brief Внутренний класс-парсер для файлов переводов.
+ *
+ * Формат файла: каждая строка содержит ключ и значение, разделённые знаком '='.
+ * Поддерживаются комментарии, начинающиеся с '#'.
+ * Пустые строки игнорируются.
+ */
 class Reader : public BasicParser {
+    /**
+     * @brief Переопределённый метод пропуска пробелов, пропускает комментарии.
+     */
     void skipWhitespace() override {
         BasicParser::skipWhitespace();
         if (hasNext() && source[pos] == '#') {
@@ -38,6 +48,11 @@ class Reader : public BasicParser {
 public:
     Reader(std::string file, std::string source) : BasicParser(file, source) {}
 
+    /**
+     * @brief Читает файл перевода и заполняет объект Lang.
+     * @param lang Целевой объект.
+     * @param prefix Префикс, добавляемый к каждому ключу (например, идентификатор мода).
+     */
     void read(langs::Lang& lang, std::string prefix) {
         skipWhitespace();
         while (hasNext()) {
@@ -65,23 +80,30 @@ void langs::loadLocalesInfo(const std::filesystem::path& resdir, std::string& fa
             auto langInfo = entry.second.get();
 
             std::string name;
-            if (langInfo->type == dynamic::ValueType::map) name = langInfo->value.map->getStr("name", "none");
-            else continue;
+            if (langInfo->type == dynamic::ValueType::map) {
+                name = langInfo->value.map->getStr("name", "none");
+            } else {
+                continue;
+            }
 
-            LOG_DEBUG("Locale {} ({}) added successfully", entry.first, name);
             langs::locales_info[entry.first] = LocaleInfo{entry.first, name};
+            LOG_DEBUG("Locale {} ({}) added successfully", entry.first, name);
         } 
     }
 }
 
 void langs::load(const std::filesystem::path& resdir, const std::string& locale, const std::vector<ContentPack>& packs, Lang& lang) {
     std::filesystem::path filename = std::filesystem::path(TEXTS_FOLDER)/std::filesystem::path(locale + LANG_FILE_EXT);
+
+    // Сначала загружаем из основных ресурсов
     std::filesystem::path core_file = resdir/filename;
     if (std::filesystem::is_regular_file(core_file)) {
         std::string text = files::read_string(core_file);
         Reader reader(core_file.string(), text);
-        reader.read(lang, "");
+        reader.read(lang, ""); // без префикса
     }
+
+    // Затем загружаем из каждого мода, добавляя префикс (идентификатор мода)
     for (auto pack : packs) {
         std::filesystem::path file = pack.folder/filename;
         if (std::filesystem::is_regular_file(file)) {
@@ -94,16 +116,18 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
 
 void langs::load(const std::filesystem::path& resdir, const std::string& locale, const std::string& fallback, const std::vector<ContentPack>& packs) {
     auto lang = std::make_unique<Lang>(locale);
+    // Сначала загружаем fallback-локаль (обычно английскую)
     load(resdir, fallback, packs, *lang.get());
+    // Если запрошенная локаль отличается от fallback, загружаем и её (переопределяя некоторые строки)
     if (locale != fallback) load(resdir, locale, packs, *lang.get());
     current.reset(lang.release());
 }
 
 void langs::setup(const std::filesystem::path& resdir, std::string locale, const std::vector<ContentPack>& packs) {
     std::string fallback = langs::FALLBACK_DEFAULT;
-    langs::loadLocalesInfo(resdir, fallback);
+    langs::loadLocalesInfo(resdir, fallback); // Загружаем информацию о доступных локалях из langs.json
     if (langs::locales_info.find(locale) == langs::locales_info.end()) locale = fallback;
-    langs::load(resdir, locale, fallback, packs);
+    langs::load(resdir, locale, fallback, packs); // Загружаем переводы
 }
 
 const std::wstring& langs::get(const std::wstring& key) {
