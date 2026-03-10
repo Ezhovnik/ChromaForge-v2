@@ -11,6 +11,8 @@
 
 using namespace toml;
 
+// ========== Section ==========
+
 Section::Section(std::string name) : name(name) {
 }
 
@@ -23,6 +25,8 @@ void Section::add(std::string name, Field field) {
     fields[name] = field;
     keyOrder.push_back(name);
 }
+
+// Публичные перегрузки add, каждая создаёт Field нужного типа.
 
 void Section::add(std::string name, bool* ptr) {
     add(name, {fieldtype::ftbool, ptr});
@@ -57,6 +61,8 @@ const Field* Section::field(std::string name) const {
 const std::vector<std::string>& Section::keys() const {
     return keyOrder;
 }
+
+// ========== Wrapper ==========
 
 Wrapper::~Wrapper() {
     for (auto entry : sections) {
@@ -109,10 +115,13 @@ std::string Wrapper::write() const {
     return ss.str();
 }
 
+// ========== Reader ==========
+
 Reader::Reader(Wrapper* wrapper, std::string file, std::string source) : BasicParser(file, source), wrapper(wrapper) {
 }
 
 void Reader::skipWhitespace() {
+    // Переопределяем skipWhitespace, чтобы пропускать также комментарии (# до конца строки).
     BasicParser::skipWhitespace();
     if (hasNext() && source[pos] == '#') {
         skipLine();
@@ -126,6 +135,7 @@ void Reader::read() {
     readSection(nullptr);
 }
 
+// Вспомогательная функция для проверки, является ли тип числовым.
 inline bool is_numeric_type(fieldtype type) {
     return type == fieldtype::ftint || type == fieldtype::ftfloat;
 }
@@ -186,27 +196,32 @@ void Reader::readSection(Section* section /*nullable*/) {
         if (!hasNext()) break;
         char c = nextChar();
         if (c == '[') {
+            // Начало новой секции: читаем имя, затем ожидаем закрывающую ']'
             std::string name = parseName();
             Section* section = wrapper->section(name);
             pos++;
             readSection(section);
             return;
         }
+        // Если не '[', то это ключ (или конец файла).
         pos--;
-        std::string name = parseName();
+        std::string name = parseName(); // читаем имя ключа
         expect('=');
         c = peek();
         if (is_digit(c)) {
+            // Число без знака
             number_u num;
             if (parseNumber(1, num) && section) section->set(name, (double)num.ival);
             else if (section) section->set(name, num.fval);
         } else if (c == '-' || c == '+') {
+            // Число со знаком
             int sign = c == '-' ? -1 : 1;
             pos++;
             number_u num;
             if (parseNumber(sign, num) && section) section->set(name, (double)num.ival);
             else if (section) section->set(name, num.fval);
         } else if (is_identifier_start(c)) {
+            // Идентификатор: возможно true/false/inf/nan
             std::string identifier = parseName();
             if (identifier == "true" || identifier == "false") {
                 bool flag = identifier == "true";
@@ -217,14 +232,15 @@ void Reader::readSection(Section* section /*nullable*/) {
                 if (section) section->set(name, NAN);
             }
         } else if (c == '"' || c == '\'') {
-            pos++;
-            std::string str = parseString(c);
+            // Строка
+            pos++; // пропускаем открывающую кавычку
+            std::string str = parseString(c); // читаем строку до закрывающей кавычки
             if (section) section->set(name, str);
         } else {
             LOG_ERROR("Feature is not supported", name);
             Logger::getInstance().flush();
             throw error("Feature is not supported");
         }
-        expectNewLine();
+        expectNewLine(); // после значения ожидается перевод строки или конец файла
     }
 }
