@@ -134,6 +134,7 @@ void scripting::on_world_quit() {
     for (auto& pack : scripting::engine->getContentPacks()) {
         if (state->getglobal(pack.id + ".worldquit")) state->callNoThrow(0);
     }
+    if (state->getglobal("__scripts_cleanup")) state->callNoThrow(0);
     scripting::level = nullptr;
     scripting::content = nullptr;
     scripting::indices = nullptr;

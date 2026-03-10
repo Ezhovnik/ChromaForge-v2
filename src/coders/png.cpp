@@ -15,11 +15,11 @@
 #include "../logger/Logger.h"
 #include "../typedefs.h"
 
-// Загружает изображение из PNG файла.
-ImageData* png::loadImage(std::string filename, bool flipVertically) {
+ImageData* png::loadImage(const std::string& filename, bool flipVertically) {
     int channels = 0, width = 0, height = 0;
 
-    stbi_set_flip_vertically_on_load(flipVertically);
+    stbi_set_flip_vertically_on_load(flipVertically); // Устанавливаем флаг вертикального переворота
+    // Загружаем изображение через stb_image (возвращает указатель на данные RGB/RGBA)
     ubyte* stb_data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
 
     if (!stb_data) {
@@ -29,7 +29,7 @@ ImageData* png::loadImage(std::string filename, bool flipVertically) {
         return nullptr;
     }
 
-    // Определяем формат изображения на основе количества каналов
+    // Определяем формат пикселей по количеству каналов
     ImageFormat format;
     switch (channels) {
         case 4:
@@ -44,23 +44,31 @@ ImageData* png::loadImage(std::string filename, bool flipVertically) {
             return nullptr;
     }
 
+    // Вычисляем размер данных и копируем их в новый буфер
     const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
     const size_t dataSize = pixelCount * static_cast<size_t>(channels);
 
     ubyte* image_data = new ubyte[dataSize];
     memcpy(image_data, stb_data, dataSize);
 
+    // Освобождаем память stb_image
     stbi_image_free(stb_data);
 
-    ImageData* image = new ImageData(format, width, height, static_cast<void*>(image_data));
+    // Создаём объект ImageData, который будет владеть скопированными данными
+    ImageData* image = new ImageData(
+        format, 
+        width, 
+        height, 
+        static_cast<void*>(image_data)
+    );
 
     LOG_DEBUG("Succesfully loaded PNG image: '{}' ({}x{}, {} channels)", filename, width, height, channels);
 
     return image;
 }
 
-// Сохраняет изображение в PNG файл.
-bool png::writeImage(std::string filename, const ImageData* image) {
+bool png::writeImage(const std::string& filename, const ImageData* image) {
+    // Проверяем корректность входных данных
     if (!image || !image->getData()) {
         LOG_ERROR("Invalid image {} data for writing to file", filename);
         Logger::getInstance().flush();
@@ -71,7 +79,7 @@ bool png::writeImage(std::string filename, const ImageData* image) {
     const int height = image->getHeight();
     int channels = 0;
 
-    // Определяем количество каналов в зависимости от формата
+    // Определяем количество каналов по формату
     switch (image->getFormat()) {
         case ImageFormat::rgba8888:
             channels = 4;
@@ -86,6 +94,7 @@ bool png::writeImage(std::string filename, const ImageData* image) {
 
     const ubyte* data = static_cast<const ubyte*>(image->getData());
 
+    // Записываем PNG-файл с помощью stb_image_write
     int success = stbi_write_png(filename.c_str(), width, height, channels, data, width * channels);
 
     if (!success) {
@@ -99,7 +108,8 @@ bool png::writeImage(std::string filename, const ImageData* image) {
 }
 
 // Загружает текстуру из PNG файла
-Texture* png::loadTexture(std::string filename) {
+Texture* png::loadTexture(const std::string& filename) {
+    // Сначала загружаем изображение как ImageData
     ImageData* image = loadImage(filename);
 
     if (image == nullptr) {
@@ -107,7 +117,8 @@ Texture* png::loadTexture(std::string filename) {
         return nullptr;
     }
 
-    Texture* texture = Texture::from(image); // Создание объекта Texture
-    texture->setNearestFilter();
+    // Создание объекта Texture
+    Texture* texture = Texture::from(image);
+    texture->setNearestFilter(); // Устанавливаем фильтрацию без сглаживания (для пиксельной графики)
     return texture;
 }
