@@ -12,7 +12,7 @@
 #include "../../logic/BlocksController.h"
 #include "../../engine.h"
 #include "../../content/ContentPack.h"
-#include "LuaState.h"
+#include "lua/LuaState.h"
 #include "../../util/stringutil.h"
 #include "../../frontend/UIDocument.h"
 #include "../../items/Inventory.h"
@@ -41,7 +41,7 @@ int Environment::getId() const {
     return env;
 }
 
-bool register_event(int env, const std::string& name, const std::string& id) {
+bool scripting::register_event(int env, const std::string& name, const std::string& id) {
     if (state->pushenv(env) == 0) state->pushglobals();
 
     if (state->getfield(name)) {
@@ -75,39 +75,6 @@ static bool processCallback(int env, const std::string& src, const std::string& 
         LOG_ERROR("{}", err.what());
         return false;
     }
-}
-
-runnable scripting::create_runnable(int env, const std::string& src, const std::string& file) {
-    return [=](){state->execute(env, src, file);};
-}
-
-wstringconsumer scripting::create_wstring_consumer(int env, const std::string& src, const std::string& file) {
-    return [=](const std::wstring& x) {
-        if (processCallback(env, src, file)) {
-            state->pushstring(util::wstr2str_utf8(x));
-            state->callNoThrow(1);
-        }
-    };
-}
-
-int_array_consumer scripting::create_int_array_consumer(int env, const std::string& src, const std::string& file) {
-    return [=](const int arr[], size_t len){
-        if (processCallback(env, src, file)) {
-            for (uint i = 0; i < len; i++) {
-                state->pushinteger(arr[i]);
-            }
-            state->callNoThrow(len);
-        }
-    };
-}
-
-doubleconsumer scripting::create_number_consumer(int env, const std::string& src, const std::string& file) {
-    return [=](double x){
-        if (processCallback(env, src, file)) {
-            state->pushnumber(x);
-            state->callNoThrow(1);
-        }
-    };
 }
 
 std::unique_ptr<Environment> scripting::create_environment(int parent) {
@@ -244,11 +211,12 @@ bool scripting::on_item_break_block(Player* player, const Item* item, int x, int
     return false;
 }
 
-void scripting::on_ui_open(UIDocument* layout, Inventory* inventory) {
+void scripting::on_ui_open(UIDocument* layout, Inventory* inventory, glm::ivec3 blockcoord) {
     std::string name = layout->getId() + ".open";
     if (state->getglobal(name)) {
-        state->pushinteger(inventory->getId());
-        state->callNoThrow(1);
+        state->pushinteger(inventory == nullptr ? 0 : inventory->getId());
+        state->pushivec3(blockcoord.x, blockcoord.y, blockcoord.z);
+        state->callNoThrow(4);
     }
 }
 

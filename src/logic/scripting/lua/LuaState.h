@@ -1,19 +1,16 @@
-#ifndef LOGIC_SCRIPTING_LUA_STATE_H_
-#define LOGIC_SCRIPTING_LUA_STATE_H_
+#ifndef LOGIC_SCRIPTING_LUA_LUASTATE_H_
+#define LOGIC_SCRIPTING_LUA_LUASTATE_H_
 
 #include <string>
 #include <stdexcept>
 
-#include <lua.hpp>
+#include "lua_commons.h"
 
 #ifndef LUAJIT_VERSION
 #error LuaJIT required
 #endif
 
 namespace lua {
-    using luaint = lua_Integer;
-    using luanumber = lua_Number;
-
     class luaerror : public std::runtime_error {
     public:
         luaerror(const std::string& message);
@@ -30,7 +27,7 @@ namespace lua {
         LuaState();
         ~LuaState();
 
-        const std::string envName(int env) const;
+        static const std::string envName(int env);
         void loadbuffer(int env, const std::string& src, const std::string& file);
         int gettop() const;
 
@@ -42,12 +39,15 @@ namespace lua {
         int pushvalue(int idx);
         int pushnil();
         int pushglobals();
+        int pushboolean(bool x);
         void pop(int n=1);
         bool getfield(const std::string& name);
         void setfield(const std::string& name, int idx=-2);
 
         bool toboolean(int index);
         luaint tointeger(int index);
+        luanumber tonumber(int index);
+        const char* tostring(int idx);
 
         int call(int argc);
         int callNoThrow(int argc);
@@ -71,4 +71,4 @@ namespace lua {
     };
 }
 
-#endif // LOGIC_SCRIPTING_LUA_STATE_H_
+#endif // LOGIC_SCRIPTING_LUA_LUASTATE_H_

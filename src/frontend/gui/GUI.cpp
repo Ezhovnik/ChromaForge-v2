@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 #include "UINode.h"
-#include "panels.h"
+#include "containers.h"
 #include "../../assets/Assets.h"
 #include "../../graphics/Batch2D.h"
 #include "../../window/Events.h"
@@ -122,15 +122,11 @@ bool GUI::isFocusCaught() const {
     return focus && focus->isFocuskeeper();
 }
 
-void GUI::addBack(std::shared_ptr<UINode> panel) {
-    container->addBack(panel);
+void GUI::add(std::shared_ptr<UINode> node) {
+    container->add(node);
 }
 
-void GUI::add(std::shared_ptr<UINode> panel) {
-    container->add(panel);
-}
-
-void GUI::remove(std::shared_ptr<UINode> panel) {
+void GUI::remove(std::shared_ptr<UINode> panel) noexcept {
     container->remove(panel);
 }
 
@@ -138,13 +134,13 @@ void GUI::store(std::string name, std::shared_ptr<UINode> node) {
     storage[name] = node;
 }
 
-std::shared_ptr<UINode> GUI::get(std::string name) {
+std::shared_ptr<UINode> GUI::get(std::string name) noexcept {
     auto found = storage.find(name);
     if (found == storage.end()) return nullptr;
     return found->second;
 }
 
-void GUI::remove(std::string name) {
+void GUI::remove(std::string name) noexcept {
     storage.erase(name);
 }
 
@@ -153,4 +149,8 @@ void GUI::setFocus(std::shared_ptr<UINode> node) {
 
     focus = node;
     if (focus) focus->focus(this);
+}
+
+std::shared_ptr<Container> GUI::getContainer() const {
+    return container;
 }

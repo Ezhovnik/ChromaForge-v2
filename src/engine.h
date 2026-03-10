@@ -42,12 +42,13 @@ private:
     uint64_t frame = 0; // Номер текущего кадра
     double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
     double deltaTime = 0.0; // Разница во времени между кадрами
+
+    void updateTimers(); // Обновление таймеров (frame, deltaTime)
+    void updateHotkeys(); // Обработка горячих клавиш
 public:
     Engine(EngineSettings& settings, EnginePaths* paths); // Конструктор
     ~Engine(); // Деструктор
 
-    void updateTimers(); // Обновление таймеров (frame, deltaTime)
-    void updateHotkeys(); // Обработка горячих клавиш
     void mainloop(); // Основной цикл приложения
 
     EnginePaths* getPaths();

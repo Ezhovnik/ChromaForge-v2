@@ -15,11 +15,11 @@ namespace scripting {
 class AssetsLoader;
 
 namespace gui {
-    class UiXmlReader;
+    class UIXmlReader;
 
-    using uinode_reader = std::function<std::shared_ptr<UINode>(UiXmlReader&, xml::xmlelement)>;
+    using uinode_reader = std::function<std::shared_ptr<UINode>(UIXmlReader&, xml::xmlelement)>;
 
-    class UiXmlReader {
+    class UIXmlReader {
     private:
         std::string filename;
         std::unordered_map<std::string, uinode_reader> readers;
@@ -28,7 +28,7 @@ namespace gui {
 
         AssetsLoader& assetsLoader;
     public:
-        UiXmlReader(const scripting::Environment& env, AssetsLoader& assetsLoader);
+        UIXmlReader(const scripting::Environment& env, AssetsLoader& assetsLoader);
 
         void add(const std::string& tag, uinode_reader reader);
 
@@ -37,8 +37,8 @@ namespace gui {
         void addIgnore(const std::string& tag);
 
         std::shared_ptr<UINode> readUINode(xml::xmlelement element);
-        void readUINode(UiXmlReader& reader, xml::xmlelement element, UINode& node );
-        void readUINode(UiXmlReader& reader, xml::xmlelement element, Container& container);
+        void readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& node );
+        void readUINode(UIXmlReader& reader, xml::xmlelement element, Container& container);
 
         std::shared_ptr<UINode> readXML(const std::string& filename, const std::string& source);
         std::shared_ptr<UINode> readXML(const std::string& filename, xml::xmlelement root);

@@ -183,6 +183,7 @@ bool Window::initialize(DisplaySettings& settings) {
 	const GLubyte* renderer = glGetString(GL_RENDERER);
     LOG_DEBUG("GL Vendor: {}", (char*)vendor);
     LOG_DEBUG("GL Renderer: {}", (char*)renderer);
+    LOG_DEBUG("GLFW version: {}", glfwGetVersionString());
 
     LOG_INFO("Window initialized successfully: {}x{}", settings.width, settings.height);
 

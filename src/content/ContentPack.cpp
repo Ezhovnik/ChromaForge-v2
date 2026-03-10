@@ -91,10 +91,10 @@ ContentPack ContentPack::read(std::filesystem::path folder) {
     return pack;
 }
 
-void ContentPack::scan(std::filesystem::path rootfolder, std::vector<ContentPack>& packs) {
-    if (!std::filesystem::is_directory(rootfolder)) return;
+void ContentPack::scanFolder(std::filesystem::path folder, std::vector<ContentPack>& packs) {
+    if (!std::filesystem::is_directory(folder)) return;
 
-    for (auto entry : std::filesystem::directory_iterator(rootfolder)) {
+    for (auto entry : std::filesystem::directory_iterator(folder)) {
         std::filesystem::path folder = entry.path();
         if (!std::filesystem::is_directory(folder)) continue;
         if (!is_pack(folder)) continue;
@@ -108,9 +108,14 @@ void ContentPack::scan(std::filesystem::path rootfolder, std::vector<ContentPack
     }
 }
 
+void ContentPack::scan(std::filesystem::path rootfolder, EnginePaths* paths, std::vector<ContentPack>& packs) {
+    scanFolder(paths->getResources()/std::filesystem::path("content"), packs);
+    scanFolder(paths->getUserfiles()/std::filesystem::path("content"), packs);
+    scanFolder(rootfolder, packs);
+}
+
 void ContentPack::scan(EnginePaths* paths, std::vector<ContentPack>& packs) {
-    scan(paths->getResources()/std::filesystem::path("content"), packs);
-    scan(paths->getWorldFolder()/std::filesystem::path("content"), packs);
+    scan(paths->getWorldFolder()/std::filesystem::path("content"), paths, packs);
 }
 
 std::vector<std::string> ContentPack::worldPacksList(std::filesystem::path folder) {
@@ -124,6 +129,9 @@ std::vector<std::string> ContentPack::worldPacksList(std::filesystem::path folde
 
 std::filesystem::path ContentPack::findPack(const EnginePaths* paths, std::filesystem::path worldDir, std::string name) {
     auto folder = worldDir/std::filesystem::path("content")/std::filesystem::path(name);
+    if (std::filesystem::is_directory(folder)) return folder;
+
+    folder = paths->getUserfiles()/std::filesystem::path("content")/std::filesystem::path(name);
     if (std::filesystem::is_directory(folder)) return folder;
 
     folder = paths->getResources()/std::filesystem::path("content")/std::filesystem::path(name);

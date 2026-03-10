@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 
 #include "UINode.h"
-#include "panels.h"
+#include "containers.h"
 #include "../../window/input.h"
 #include "../../typedefs.h"
 #include "GUI.h"
@@ -32,16 +32,20 @@ namespace gui {
 
         virtual void draw(const GfxContext* parent_context, Assets* assets) override;
 
-        virtual Label* textSupplier(wstringsupplier supplier);
+        virtual void textSupplier(wstringsupplier supplier);
     };
 
     class Image : public UINode {
     protected:
         std::string texture;
+        bool autoresize = false;
     public:
         Image(std::string texture, glm::vec2 size=glm::vec2(32,32));
 
         virtual void draw(const GfxContext* parent_context, Assets* assets) override;
+
+        virtual void setAutoResize(bool flag);
+        virtual bool isAutoResize() const;
     };
 
     class Button : public Panel {
@@ -65,6 +69,9 @@ namespace gui {
 
         virtual void setText(std::wstring text);
         virtual std::wstring getText() const;
+
+        virtual glm::vec4 getPressedColor() const;
+        virtual void setPressedColor(glm::vec4 color);
 
         virtual Button* textSupplier(wstringsupplier supplier);
 
@@ -126,9 +133,9 @@ namespace gui {
         virtual void drawBackground(const GfxContext* parent_context, Assets* assets) override;
         virtual void typed(uint codepoint) override; 
         virtual void keyPressed(int key) override;
-        virtual void textSupplier(wstringsupplier supplier);
-        virtual void textConsumer(wstringconsumer consumer);
-        virtual void textValidator(wstringchecker validator);
+        virtual void setTextSupplier(wstringsupplier supplier);
+        virtual void setTextConsumer(wstringconsumer consumer);
+        virtual void setTextValidator(wstringchecker validator);
         virtual bool isFocuskeeper() const override {return true;};
         virtual std::wstring getText() const;
         virtual void setText(std::wstring value);
@@ -143,7 +150,6 @@ namespace gui {
 
     class TrackBar : public UINode {
     protected:
-        glm::vec4 hoverColor {0.01f, 0.02f, 0.03f, 0.5f};
         glm::vec4 trackColor {1.0f, 1.0f, 1.0f, 0.4f};
         doublesupplier supplier = nullptr;
         doubleconsumer consumer = nullptr;
@@ -160,6 +166,24 @@ namespace gui {
         virtual void setConsumer(doubleconsumer consumer);
 
         virtual void mouseMove(GUI*, int x, int y) override;
+
+        virtual double getValue() const;
+        virtual void setValue(double value);
+
+        virtual double getMin() const;
+        virtual void setMin(double min);
+
+        virtual double getMax() const;
+        virtual void setMax(double max);
+
+        virtual double getStep() const;
+        virtual void setStep(double step);
+
+        virtual int getTrackWidth() const;
+        virtual void setTrackWidth(int trackWidth);
+
+        virtual glm::vec4 getTrackColor() const;
+        virtual void setTrackColor(glm::vec4 trackColor);
     };
 
     class CheckBox : public UINode {

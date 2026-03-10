@@ -13,6 +13,7 @@
 #include "scripting/scripting.h"
 #include "../math/rand.h"
 #include "../items/Inventories.h"
+#include "../logger/Logger.h"
 
 Clock::Clock(int sparkRate, int sparkParts) : sparkRate(sparkRate), sparkParts(sparkParts) {
 }
@@ -142,4 +143,33 @@ int64_t BlocksController::createBlockInventory(int x, int y, int z) {
         chunk->addBlockInventory(inv, lx, y, lz);
 	}
     return inv->getId();
+}
+
+void BlocksController::bindInventory(int64_t invId, int x, int y, int z) {
+    auto chunk = chunks->getChunkByVoxel(x, y, z);
+	if (chunk == nullptr) {
+        LOG_ERROR("Block does not exists");
+        Logger::getInstance().flush();
+		throw std::runtime_error("Block does not exists");
+	}
+    if (invId <= 0) {
+        LOG_ERROR("Unable to bind virtual inventory");
+        Logger::getInstance().flush();
+        throw std::runtime_error("Unable to bind virtual inventory");
+    }
+	int lx = x - chunk->chunk_x * CHUNK_WIDTH;
+	int lz = z - chunk->chunk_z * CHUNK_DEPTH;
+    chunk->addBlockInventory(level->inventories->get(invId), lx, y, lz);
+}
+
+void BlocksController::unbindInventory(int x, int y, int z) {
+    auto chunk = chunks->getChunkByVoxel(x, y, z);
+	if (chunk == nullptr) {
+        LOG_ERROR("Block does not exists");
+        Logger::getInstance().flush();
+		throw std::runtime_error("block does not exists");
+	}
+    int lx = x - chunk->chunk_x * CHUNK_WIDTH;
+	int lz = z - chunk->chunk_z * CHUNK_DEPTH;
+    chunk->removeBlockInventory(lx, y, lz);
 }

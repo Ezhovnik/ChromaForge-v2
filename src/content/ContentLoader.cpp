@@ -153,6 +153,7 @@ void ContentLoader::loadBlock(Block& definition, std::string name, std::filesyst
     root->str("picking-item", definition.pickingItem);
     root->str("script-name", definition.scriptName);
     root->num("inventory-size", definition.inventorySize);
+    root->str("ui-layout", definition.uiLayout);
 }
 
 void ContentLoader::loadCustomBlockModel(Block& definition, dynamic::Map* primitives) {

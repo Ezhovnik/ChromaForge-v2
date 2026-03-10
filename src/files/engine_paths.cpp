@@ -3,15 +3,40 @@
 #include <filesystem>
 #include <sstream>
 #include <algorithm>
+#include <stack>
 
 #include "../typedefs.h"
 #include "WorldFiles.h"
 #include "../core_defs.h"
+#include "../logger/Logger.h"
 
-#define BUILD_FOLDER "../build"
-#define SCREENSHOTS_FOLDER BUILD_FOLDER"/screenshots"
-#define LOGS_FOLDER BUILD_FOLDER"/logs"
-#define SAVES_FOLDER BUILD_FOLDER"/saves"
+const std::filesystem::path BUILD_FOLDER {"../build"};
+const std::filesystem::path SCREENSHOTS_FOLDER = BUILD_FOLDER/std::filesystem::path("screenshots");
+const std::filesystem::path LOGS_FOLDER = BUILD_FOLDER/std::filesystem::path("logs");
+const std::filesystem::path SAVES_FOLDER = BUILD_FOLDER/std::filesystem::path("saves");
+
+static std::filesystem::path toCanonic(std::filesystem::path path) {
+    std::stack<std::string> parts;
+    path = path.lexically_normal();
+    while (true) {
+        parts.push(path.filename().u8string());
+        path = path.parent_path();
+        if (path.empty()) break;
+    }
+    path = std::filesystem::u8path("");
+    while (!parts.empty()) {
+        const std::string part = parts.top();
+        parts.pop();
+        if (part == ".") continue;
+        if (part == "..") {
+            LOG_ERROR("Entry point reached");
+            Logger::getInstance().flush();
+            throw files_access_error("entry point reached");
+        }
+        path = path/std::filesystem::path(part);
+    }
+    return path;
+}
 
 std::filesystem::path EnginePaths::getUserfiles() const {
 	return userfiles;
@@ -80,10 +105,15 @@ void EnginePaths::setWorldFolder(std::filesystem::path folder) {
 
 std::filesystem::path EnginePaths::resolve(std::string path) {
     size_t separator = path.find(':');
-    if (separator == std::string::npos) return std::filesystem::u8path(path);
+    if (separator == std::string::npos) {
+        LOG_ERROR("No entry point specified");
+        Logger::getInstance().flush();
+        throw files_access_error("No entry point specified");
+    }
 
     std::string prefix = path.substr(0, separator);
     std::string filename = path.substr(separator + 1);
+    filename = toCanonic(std::filesystem::u8path(filename)).u8string();
 
     if (prefix == "res" || prefix == BUILTIN_CONTENT_NAMESPACE) return resources/std::filesystem::u8path(filename);
     if (prefix == "user") return userfiles/std::filesystem::u8path(filename);
@@ -95,7 +125,9 @@ std::filesystem::path EnginePaths::resolve(std::string path) {
         }
     }
 
-    return std::filesystem::u8path("./" + filename);
+    LOG_ERROR("Unknown entry point '{}'", prefix);
+    Logger::getInstance().flush();
+    throw files_access_error("Unknown entry point '" + prefix + "'");
 }
 
 std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {

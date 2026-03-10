@@ -13,6 +13,7 @@
 #include "../lighting/Lightmap.h"
 #include "../logger/Logger.h"
 #include "../core_defs.h"
+#include "../items/Inventories.h"
 
 void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
@@ -57,6 +58,9 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 		auto invs = wfile->fetchInventories(chunk->chunk_x, chunk->chunk_z);
 		chunk->setBlockInventories(std::move(invs));
 		chunk->setLoaded(true);
+		for(auto& entry : chunk->inventories) {
+			level->inventories->store(entry.second);
+		}
 		verifyLoadedChunk(level->content->getIndices(), chunk.get());
 	}
 

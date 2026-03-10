@@ -1,7 +1,7 @@
 #include "UIDocument.h"
 
 #include "gui/UINode.h"
-#include "gui/panels.h"
+#include "gui/containers.h"
 #include "InventoryView.h"
 #include "../logic/scripting/scripting.h"
 #include "../files/files.h"
@@ -54,9 +54,10 @@ std::unique_ptr<UIDocument> UIDocument::read(AssetsLoader& loader, int parent_en
     auto xmldoc = xml::parse(file.u8string(), text);
 
     auto env = scripting::create_doc_environment(parent_env, namesp);
-    gui::UiXmlReader reader(*env, loader);
+    gui::UIXmlReader reader(*env, loader);
     InventoryView::createReaders(reader);
     auto view = reader.readXML(file.u8string(), xmldoc->getRoot());
+    view->setId("root");
     uidocscript script {};
     auto scriptFile = std::filesystem::path(file.u8string() + ".lua");
     if (std::filesystem::is_regular_file(scriptFile)) scripting::load_layout_script(env->getId(), namesp, scriptFile, script);

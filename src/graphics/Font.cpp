@@ -59,12 +59,12 @@ void Font::draw(Batch2D* batch, std::wstring text, int x, int y, FontStyle style
 
 					switch (style){
 						case FontStyle::Shadow:
-							batch->sprite(x+1, y+1, Fonts_Consts::GLYPH_SIZE, Fonts_Consts::GLYPH_SIZE, 16, c, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+							batch->sprite(x + 1, y + 1, Fonts_Consts::GLYPH_SIZE, Fonts_Consts::GLYPH_SIZE, 16, c, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 							break;
 						case FontStyle::Outline:
 							for (int oy = -1; oy <= 1; oy++){
 								for (int ox = -1; ox <= 1; ox++){
-									if (ox || oy) batch->sprite(x+ox, y+oy, Fonts_Consts::GLYPH_SIZE, Fonts_Consts::GLYPH_SIZE, 16, c, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+									if (ox || oy) batch->sprite(x + ox, y + oy, Fonts_Consts::GLYPH_SIZE, Fonts_Consts::GLYPH_SIZE, 16, c, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 								}
 							}
 							break;

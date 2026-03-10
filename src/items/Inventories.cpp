@@ -33,10 +33,24 @@ void Inventories::store(std::shared_ptr<Inventory> inv) {
     map[inv->getId()] = inv;
 }
 
+void Inventories::remove(int64_t id) {
+    map.erase(id);
+}
+
 std::shared_ptr<Inventory> Inventories::get(int64_t id) {
     auto found = map.find(id);
     if (found == map.end()) return nullptr;
     return found->second;
+}
+
+std::shared_ptr<Inventory> Inventories::clone(int64_t id) {
+    auto original = get(id);
+    if (original == nullptr) return nullptr;
+    auto origptr = reinterpret_cast<const Inventory*>(original.get());
+    auto clone = std::make_shared<Inventory>(*origptr);
+    clone->setId(level.getWorld()->getNextInventoryId());
+    store(clone);
+    return clone;
 }
 
 const inventories_map& Inventories::getMap() const {

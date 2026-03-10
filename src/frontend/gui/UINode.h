@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 
 #include ".../../typedefs.h"
+#include "../../delegates.h"
 
 class GfxContext;
 class Assets;
@@ -32,6 +33,7 @@ namespace gui {
     protected:
         glm::vec2 coord;
         glm::vec2 size;
+        glm::vec2 minSize {1.0f};
         glm::vec4 color {1.0f};
         glm::vec4 hoverColor {1.0f};
         glm::vec4 margin {1.0f};
@@ -43,6 +45,7 @@ namespace gui {
         bool interactive = true;
         bool resizing = true;
         Align align = Align::left;
+        vec2supplier positionfunc = nullptr;
         UINode* parent = nullptr;
         UINode(glm::vec2 coord, glm::vec2 size);
     public:
@@ -102,16 +105,23 @@ namespace gui {
 
         virtual glm::vec2 calcCoord() const;
         virtual void setCoord(glm::vec2 coord);
-        glm::vec2 getCoord() const;
+        virtual glm::vec2 getCoord() const;
 
         virtual glm::vec2 getSize() const;
         virtual void setSize(glm::vec2 size);
+        virtual glm::vec2 getMinSize() const;
+        virtual void setMinSize(glm::vec2 size);
+
+        virtual vec2supplier getPositionFunc() const;
+        virtual void setPositionFunc(vec2supplier);
 
         virtual void refresh() {};
         virtual void lock();
 
         void setId(const std::string& id);
         const std::string& getId() const;
+
+        void reposition();
     };
 }
 

@@ -20,7 +20,7 @@
 #include "WorldRenderer.h"
 #include "hud.h"
 #include "gui/GUI.h"
-#include "gui/panels.h"
+#include "gui/containers.h"
 #include "../util/stringutil.h"
 #include "../engine.h"
 #include "../logger/Logger.h"
@@ -34,6 +34,8 @@
 #include "../logic/LevelController.h"
 #include "LevelFrontend.h"
 #include "../graphics/TextureAnimation.h"
+#include "../logic/scripting/scripting_frontend.h"
+#include "../logic/scripting/scripting.h"
 
 Screen::Screen(Engine* engine) : engine(engine), batch(new Batch2D(1024)) {
 }
@@ -65,19 +67,11 @@ void MenuScreen::draw(float delta) {
 
     uicamera->setFov(Window::height);
     ShaderProgram* uishader = engine->getAssets()->getShader("ui");
-    if (uishader == nullptr) {
-        LOG_CRITICAL("The shader 'ui' could not be found in the assets");
-        throw std::runtime_error("The shader 'ui' could not be found in the assets");
-    }
 	uishader->use();
 	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
     batch->begin();
     Texture* menubg = engine->getAssets()->getTexture("gui/menubg");
-    if (menubg == nullptr) {
-        LOG_CRITICAL("The texture 'gui/menubg' could not be found in the assets");
-        throw std::runtime_error("The texture 'gui/menubg' could not be found in the assets");
-    }
 
     uint width = Window::width;
     uint height = Window::height;
@@ -95,7 +89,7 @@ static bool backlight;
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine),
         level(level),
         levelFrontend(std::make_unique<LevelFrontend>(level, engine->getAssets())),
-        hud(std::make_unique<HudRenderer>(engine, levelFrontend.get())),
+        hud(std::make_unique<Hud>(engine, levelFrontend.get())),
         worldRenderer(std::make_unique<WorldRenderer>(engine, levelFrontend.get())),
         controller(std::make_unique<LevelController>(engine->getSettings(), level))
     {
@@ -104,10 +98,19 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine),
 
     animator.reset(new TextureAnimator());
     animator->addAnimations(engine->getAssets()->getAnimations());
+
+    auto content = level->content;
+    for (auto& pack : content->getPacks()) {
+        const ContentPack& info = pack->getInfo();
+        std::filesystem::path scriptFile = info.folder/std::filesystem::path("scripts/hud.lua");
+        if (std::filesystem::is_regular_file(scriptFile)) scripting::load_hud_script(pack->getEnvironment()->getId(), info.id, scriptFile);
+    }
+    scripting::on_frontend_init(hud.get());
 }
 
 LevelScreen::~LevelScreen() {
     LOG_INFO("World saving");
+    scripting::on_frontend_close();
     controller->onWorldSave();
     World* world = level->getWorld();
 	world->write(level.get());

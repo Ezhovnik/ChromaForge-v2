@@ -8,6 +8,7 @@
 #include "GUI.h"
 #include "../../graphics/UVRegion.h"
 #include "../../graphics/GfxContext.h"
+#include "../../graphics/Texture.h"
 
 using namespace gui;
 
@@ -56,9 +57,8 @@ void Label::draw(const GfxContext* parent_context, Assets* assets) {
     font->draw(batch, text, coord.x, coord.y);
 }
 
-Label* Label::textSupplier(wstringsupplier supplier) {
+void Label::textSupplier(wstringsupplier supplier) {
     this->supplier = supplier;
-    return this;
 }
 
 Image::Image(std::string texture, glm::vec2 size) : UINode(glm::vec2(), size), texture(texture) {
@@ -69,9 +69,20 @@ void Image::draw(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
     glm::vec4 color = getColor();
     auto batch = parent_context->getBatch2D();
-    batch->texture(assets->getTexture(texture));
+
+    auto texture = assets->getTexture(this->texture);
+    if (texture && autoresize) setSize(glm::vec2(texture->width, texture->height));
+    batch->texture(texture);
+
     batch->color = color;
     batch->rect(coord.x, coord.y, size.x, size.y, 0, 0, 0, UVRegion(), false, true, color);
+}
+
+void Image::setAutoResize(bool flag) {
+    autoresize = flag;
+}
+bool Image::isAutoResize() const {
+    return autoresize;
 }
 
 Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(), padding, 0) {
@@ -160,6 +171,14 @@ void Button::refresh() {
     if (label) label->setSize(size - glm::vec2(padding.z + padding.x, padding.w + padding.y));
 }
 
+glm::vec4 Button::getPressedColor() const {
+    return pressedColor;
+}
+
+void Button::setPressedColor(glm::vec4 color) {
+    pressedColor = color;
+}
+
 RichButton::RichButton(glm::vec2 size) : Container(glm::vec2(), size) {
     setHoverColor(glm::vec4(0.05f, 0.1f, 0.15f, 0.75f));
 }
@@ -228,11 +247,7 @@ void TextBox::typed(unsigned int codepoint) {
 
 bool TextBox::validate() {
     if (validator) {
-        if (!input.empty()) {
-            valid = validator(input);
-        } else {
-            valid = validator(placeholder);
-        }
+        valid = validator(getText());
     } else {
         valid = true;
     }
@@ -281,15 +296,15 @@ std::shared_ptr<UINode> TextBox::getAt(glm::vec2 pos, std::shared_ptr<UINode> se
     return UINode::getAt(pos, self);
 }
 
-void TextBox::textSupplier(wstringsupplier supplier) {
+void TextBox::setTextSupplier(wstringsupplier supplier) {
     this->supplier = supplier;
 }
 
-void TextBox::textConsumer(wstringconsumer consumer) {
+void TextBox::setTextConsumer(wstringconsumer consumer) {
     this->consumer = consumer;
 }
 
-void TextBox::textValidator(wstringchecker validator) {
+void TextBox::setTextValidator(wstringchecker validator) {
     this->validator = validator;
 }
 
@@ -339,6 +354,7 @@ void InputBindBox::keyPressed(int key) {
 TrackBar::TrackBar(double min, double max, double value, double step, int trackWidth)
     : UINode(glm::vec2(), glm::vec2(26)), min(min), max(max), value(value), step(step), trackWidth(trackWidth) {
     setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.4f));
+    setHoverColor(glm::vec4(0.01f, 0.02f, 0.03f, 0.5f));
 }
 
 void TrackBar::draw(const GfxContext* parent_context, Assets* assets) {
@@ -376,6 +392,54 @@ void TrackBar::mouseMove(GUI*, int x, int y) {
     value = (value < min) ? min : value;
     value = (int)(value / step) * step;
     if (consumer) consumer(value);
+}
+
+double TrackBar::getValue() const {
+    return value;
+}
+
+double TrackBar::getMin() const {
+    return min;
+}
+
+double TrackBar::getMax() const {
+    return max;
+}
+
+double TrackBar::getStep() const {
+    return step;
+}
+
+int TrackBar::getTrackWidth() const {
+    return trackWidth;
+}
+
+glm::vec4 TrackBar::getTrackColor() const {
+    return trackColor;
+}
+
+void TrackBar::setValue(double value_) {
+    value = value_;
+}
+
+void TrackBar::setMin(double min_) {
+    min = min_;
+}
+
+void TrackBar::setMax(double max_) {
+    max = max_;
+}
+
+void TrackBar::setStep(double step_) {
+    step = step_;
+}
+
+void TrackBar::setTrackWidth(int trackWidth_) {
+    trackWidth = trackWidth_;
+}
+
+void TrackBar::setTrackColor(glm::vec4 trackColor_) {
+    trackColor = trackColor_;
 }
 
 CheckBox::CheckBox(bool checked) : UINode(glm::vec2(), glm::vec2(32.0f)), checked(checked) {
