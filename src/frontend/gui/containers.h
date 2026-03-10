@@ -1,5 +1,5 @@
-#ifndef FRONTEND_GUI_PANELS_H_
-#define FRONTEND_GUI_PANELS_H_
+#ifndef FRONTEND_GUI_CONTAINERS_H_
+#define FRONTEND_GUI_CONTAINERS_H_
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -106,4 +106,4 @@ namespace gui {
         Page& getCurrent();
     };
 }
-#endif // FRONTEND_GUI_PANELS_H_
+#endif // FRONTEND_GUI_CONTAINERS_H_

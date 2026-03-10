@@ -20,7 +20,7 @@
 #include "../voxels/Block.h"
 #include "../frontend/gui/controls.h"
 #include "../util/stringutil.h"
-#include "../frontend/gui/panels.h"
+#include "../frontend/gui/containers.h"
 #include "../world/Level.h"
 #include "../logger/Logger.h"
 #include "../coders/xml.h"
@@ -32,7 +32,7 @@ SlotLayout::SlotLayout(
     glm::vec2 position,
     bool background,
     bool itemSource,
-    itemsharefunc shareFunc,
+    slotcallback shareFunc,
     slotcallback rightClick
 ) : index(index),
     position(position),
@@ -61,7 +61,7 @@ void InventoryBuilder::addGrid(int cols, int count, glm::vec2 coord, int padding
 
     if (addpanel) {
         auto panel = std::make_shared<gui::Container>(coord, glm::vec2(width, height));
-        view->setColor(glm::vec4(0, 0, 0, 0.5f));
+        view->setColor(glm::vec4(0.122f, 0.122f, 0.122f, 0.878f));
         view->add(panel);
     }
 
@@ -94,11 +94,7 @@ SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(), glm::vec2(InventoryV
 }
 
 void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
-    if (bound == nullptr) {
-        LOG_ERROR("Unbound slot");
-        Logger::getInstance().flush();
-        throw std::runtime_error("Unbound slot");
-    }
+    if (bound == nullptr) return;
     ItemStack& stack = *bound;
 
     glm::vec2 coord = calcCoord();
@@ -182,11 +178,7 @@ bool SlotView::isHighlighted() const {
 }
 
 void SlotView::clicked(gui::GUI* gui, int button) {
-    if (bound == nullptr) {
-        LOG_ERROR("Unbound slot");
-        Logger::getInstance().flush();
-        throw std::runtime_error("Unbound slot");
-    }
+    if (bound == nullptr) return;
 
     ItemStack& grabbed = interaction->getGrabbedItem();
     ItemStack& stack = *bound;
@@ -208,7 +200,7 @@ void SlotView::clicked(gui::GUI* gui, int button) {
         }
     } else if (button == mousecode::BUTTON_2) {
         if (layout.rightClick) {
-            layout.rightClick(stack, grabbed);
+            layout.rightClick(inventoryId, stack);
             return;
         }
         if (layout.itemSource) return;
@@ -236,7 +228,8 @@ void SlotView::focus(gui::GUI* gui) {
     clicked(gui, 0);
 }
 
-void SlotView::bind(ItemStack& stack, LevelFrontend* frontend, InventoryInteraction* interaction) {
+void SlotView::bind(int64_t inventoryId, ItemStack& stack, LevelFrontend* frontend, InventoryInteraction* interaction) {
+    this->inventoryId = inventoryId;
     bound = &stack;
     content = frontend->getLevel()->content;
     this->frontend = frontend;
@@ -277,7 +270,7 @@ void InventoryView::bind(std::shared_ptr<Inventory> inventory, LevelFrontend* fr
     content = frontend->getLevel()->content;
     indices = content->getIndices();
     for (auto slot : slots) {
-        slot->bind(inventory->getSlot(slot->getLayout().index), frontend, interaction);
+        slot->bind(inventory->getId(), inventory->getSlot(slot->getLayout().index), frontend, interaction);
     }
 }
 
@@ -308,10 +301,14 @@ std::shared_ptr<Inventory> InventoryView::getInventory() const {
     return inventory;
 }
 
-static itemsharefunc readShareFunc(InventoryView* view, gui::UiXmlReader& reader, xml::xmlelement& element) {
+size_t InventoryView::getSlotsCount() const {
+    return slots.size();
+}
+
+static slotcallback readSlotFunc(InventoryView* view, gui::UIXmlReader& reader, xml::xmlelement& element, const std::string& attr) {
     auto consumer = scripting::create_int_array_consumer(
         reader.getEnvironment().getId(), 
-        element->attr("sharefunc").getText()
+        element->attr(attr).getText()
     );
     return [=](uint slot, ItemStack& stack) {
         int args[] {int(view->getInventory()->getId()), int(slot)};
@@ -319,18 +316,19 @@ static itemsharefunc readShareFunc(InventoryView* view, gui::UiXmlReader& reader
     };
 }
 
-static void readSlot(InventoryView* view, gui::UiXmlReader& reader, xml::xmlelement element) {
+static void readSlot(InventoryView* view, gui::UIXmlReader& reader, xml::xmlelement element) {
     int index = element->attr("index", "0").asInt();
     bool itemSource = element->attr("item-source", "false").asBool();
     SlotLayout layout(index, glm::vec2(), true, itemSource, nullptr, nullptr);
     if (element->has("coord")) layout.position = element->attr("coord").asVec2();
-    if (element->has("sharefunc")) layout.shareFunc = readShareFunc(view, reader, element);
+    if (element->has("sharefunc")) layout.shareFunc = readSlotFunc(view, reader, element, "sharefunc");
+    if (element->has("onrightclick")) layout.rightClick = readSlotFunc(view, reader, element, "onrightclick");
     auto slot = view->addSlot(layout);
     reader.readUINode(reader, element, *slot);
     view->add(slot);
 }
 
-static void readSlotsGrid(InventoryView* view, gui::UiXmlReader& reader, xml::xmlelement element) {
+static void readSlotsGrid(InventoryView* view, gui::UIXmlReader& reader, xml::xmlelement element) {
     int startIndex = element->attr("start-index", "0").asInt();
     int rows = element->attr("rows", "0").asInt();
     int cols = element->attr("cols", "0").asInt();
@@ -347,15 +345,11 @@ static void readSlotsGrid(InventoryView* view, gui::UiXmlReader& reader, xml::xm
 
     bool itemSource = element->attr("item-source", "false").asBool();
     SlotLayout layout(-1, glm::vec2(), true, itemSource, nullptr, nullptr);
-    if (element->has("coord")) layout.position = element->attr("coord").asVec2();
-    if (element->has("sharefunc")) layout.shareFunc = readShareFunc(view, reader, element);
+    if (element->has("pos")) layout.position = element->attr("pos").asVec2();
+    if (element->has("sharefunc")) layout.shareFunc = readSlotFunc(view, reader, element, "sharefunc");
+    if (element->has("onrightclick")) layout.rightClick = readSlotFunc(view, reader, element, "onrightclick");
 
     layout.padding = padding;
-
-    glm::vec2 size (
-        cols * slotSize + (cols - 1) * interval + padding * 2,
-        rows * slotSize + (rows - 1) * interval + padding * 2
-    );
 
     int idx = 0;
     for (int row = 0; row < rows; ++row) {
@@ -366,7 +360,7 @@ static void readSlotsGrid(InventoryView* view, gui::UiXmlReader& reader, xml::xm
             slotLayout.index = startIndex + idx;
             slotLayout.position += glm::vec2(
                 padding + col * (slotSize + interval),
-                padding + row * (slotSize + interval)
+                padding + (rows - row - 1) * (slotSize + interval)
             );
             auto slot = view->addSlot(slotLayout);
             view->add(slot, slotLayout.position);
@@ -374,9 +368,10 @@ static void readSlotsGrid(InventoryView* view, gui::UiXmlReader& reader, xml::xm
     }
 }
 
-void InventoryView::createReaders(gui::UiXmlReader& reader) {
-    reader.add("inventory", [=](gui::UiXmlReader& reader, xml::xmlelement element) {
+void InventoryView::createReaders(gui::UIXmlReader& reader) {
+    reader.add("inventory", [=](gui::UIXmlReader& reader, xml::xmlelement element) {
         auto view = std::make_shared<InventoryView>();
+        view->setColor(glm::vec4(0.122f, 0.122f, 0.122f, 0.878f));
         reader.addIgnore("slots-grid");
         reader.readUINode(reader, element, *view);
 

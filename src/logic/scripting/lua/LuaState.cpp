@@ -3,11 +3,13 @@
 #include <lua.h>
 #include <lua.hpp>
 
-#include "api/api_lua.h"
-#include "api/libgui.h"
+#include "api_lua.h"
+#include "libgui.h"
 #include "lua_util.h"
-#include "../../logger/Logger.h"
-#include "../../util/stringutil.h"
+#include "../../../logger/Logger.h"
+#include "../../../util/stringutil.h"
+#include "libinventory.h"
+#include "libplayer.h"
 
 lua::luaerror::luaerror(const std::string& message) : std::runtime_error(message) {
 }
@@ -36,7 +38,7 @@ lua::LuaState::LuaState() {
     setglobal(envName(0));
 }
 
-const std::string lua::LuaState::envName(int env) const {
+const std::string lua::LuaState::envName(int env) {
     return "_ENV" + util::mangleid(env);
 }
 
@@ -105,21 +107,24 @@ void lua::LuaState::createFuncs() {
     openlib("inventory", inventorylib, 0);
     openlib("gui", guilib, 0);
 
-    addfunc("print", l_print);
+    addfunc("print", lua_wrap_errors<l_print>);
 
-    addfunc("block_index", l_block_index);
-    addfunc("block_name", l_block_name);
-    addfunc("blocks_count", l_blocks_count);
-    addfunc("is_solid_at", l_is_solid_at);
-    addfunc("is_replaceable_at", l_is_replaceable_at);
-    addfunc("set_block", l_set_block);
-    addfunc("get_block", l_get_block);
-    addfunc("get_block_X", l_get_block_x);
-    addfunc("get_block_Y", l_get_block_y);
-    addfunc("get_block_Z", l_get_block_z);
-    addfunc("get_block_states", l_get_block_states);
-    addfunc("get_block_user_bits", l_get_block_user_bits);
-    addfunc("set_block_user_bits", l_set_block_user_bits);
+    addfunc("block_index", lua_wrap_errors<l_block_index>);
+    addfunc("block_name", lua_wrap_errors<l_block_name>);
+    addfunc("blocks_count", lua_wrap_errors<l_blocks_count>);
+    addfunc("is_solid_at", lua_wrap_errors<l_is_solid_at>);
+    addfunc("is_replaceable_at", lua_wrap_errors<l_is_replaceable_at>);
+    addfunc("set_block", lua_wrap_errors<l_set_block>);
+    addfunc("get_block", lua_wrap_errors<l_get_block>);
+    addfunc("get_block_X", lua_wrap_errors<l_get_block_x>);
+    addfunc("get_block_Y", lua_wrap_errors<l_get_block_y>);
+    addfunc("get_block_Z", lua_wrap_errors<l_get_block_z>);
+    addfunc("get_block_states", lua_wrap_errors<l_get_block_states>);
+    addfunc("set_block_states", lua_wrap_errors<l_set_block_states>);
+    addfunc("get_block_rotation", lua_wrap_errors<l_get_block_rotation>);
+    addfunc("set_block_rotation", lua_wrap_errors<l_set_block_rotation>);
+    addfunc("get_block_user_bits", lua_wrap_errors<l_get_block_user_bits>);
+    addfunc("set_block_user_bits", lua_wrap_errors<l_set_block_user_bits>);
 }
 
 void lua::LuaState::loadbuffer(int env, const std::string& src, const std::string& file) {
@@ -202,6 +207,11 @@ int lua::LuaState::pushnil() {
     return 1;
 }
 
+int lua::LuaState::pushboolean(bool x) {
+    lua_pushboolean(L, x);
+    return 1;
+}
+
 bool lua::LuaState::getfield(const std::string& name) {
     lua_getfield(L, -1, name.c_str());
     if (lua_isnil(L, -1)) {
@@ -221,6 +231,14 @@ bool lua::LuaState::toboolean(int index) {
 
 lua::luaint lua::LuaState::tointeger(int index) {
     return lua_tointeger(L, index);
+}
+
+lua::luanumber lua::LuaState::tonumber(int index) {
+    return lua_tonumber(L, index);
+}
+
+const char* lua::LuaState::tostring(int idx) {
+    return lua_tostring(L, idx);
 }
 
 void lua::LuaState::openlib(const std::string& name, const luaL_Reg* libfuncs, int nup) {

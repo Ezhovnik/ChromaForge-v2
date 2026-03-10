@@ -32,7 +32,7 @@ private:
 	uint64_t seed;
 	std::string name;
 
-	uint nextInventoryId = 1;
+	int64_t nextInventoryId = 1;
 public:
 	WorldFiles* wfile;
 
@@ -68,7 +68,7 @@ public:
         return content;
     }
 
-    uint getNextInventoryId() {
+    int64_t getNextInventoryId() {
         return nextInventoryId++;
     }
 };

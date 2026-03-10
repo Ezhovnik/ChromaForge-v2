@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "controls.h"
-#include "panels.h"
+#include "containers.h"
 #include "../locale/langs.h"
 #include "../../delegates.h"
 

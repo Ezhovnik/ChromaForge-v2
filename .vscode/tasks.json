@@ -3,7 +3,6 @@
         {
             "type": "cppbuild",
             "label": "C/C++: g++.exe сборка активного файла",
-            "dependsOn": ["Compile Resources"],
             "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-g",
@@ -12,158 +11,14 @@
                 "-I${workspaceFolder}/include",
                 "-IC:/msys64/ucrt64/include/luajit-2.1", // для LuaJIT
                 "-L${workspaceFolder}/lib",
-
-                //src/assets
-                "${workspaceFolder}/src/assets/asset_loaders.cpp",
-                "${workspaceFolder}/src/assets/Assets.cpp",
-                "${workspaceFolder}/src/assets/AssetsLoader.cpp",
-
-                //src/coders
-                "${workspaceFolder}/src/coders/binary_json.cpp",
-                "${workspaceFolder}/src/coders/byte_utils.cpp",
-                "${workspaceFolder}/src/coders/commons.cpp",
-                "${workspaceFolder}/src/coders/GLSLExtension.cpp",
-                "${workspaceFolder}/src/coders/json.cpp",
-                "${workspaceFolder}/src/coders/toml.cpp",
-                "${workspaceFolder}/src/coders/png.cpp",
-                "${workspaceFolder}/src/coders/xml.cpp",
-                "${workspaceFolder}/src/coders/zip.cpp",
-
-                //src/content
-                "${workspaceFolder}/src/content/Content.cpp",
-                "${workspaceFolder}/src/content/ContentLoader.cpp",
-                "${workspaceFolder}/src/content/ContentLUT.cpp",
-                "${workspaceFolder}/src/content/ContentPack.cpp",
-
-                //src/data
-                "${workspaceFolder}/src/data/dynamic.cpp",
-
-                //src/files
-                "${workspaceFolder}/src/files/engine_paths.cpp",
-                "${workspaceFolder}/src/files/files.cpp",
-                "${workspaceFolder}/src/files/rle.cpp",
-                "${workspaceFolder}/src/files/settings_io.cpp",
-                "${workspaceFolder}/src/files/WorldConverter.cpp",
-                "${workspaceFolder}/src/files/WorldFiles.cpp",
-
-                //src/frontend/graphics
-                "${workspaceFolder}/src/frontend/graphics/Skybox.cpp",
-
-                //src/frontend/gui
-                "${workspaceFolder}/src/frontend/gui/controls.cpp",
-                "${workspaceFolder}/src/frontend/gui/gui_util.cpp",
-                "${workspaceFolder}/src/frontend/gui/gui_xml.cpp",
-                "${workspaceFolder}/src/frontend/gui/GUI.cpp",
-                "${workspaceFolder}/src/frontend/gui/panels.cpp",
-                "${workspaceFolder}/src/frontend/gui/UINode.cpp",
-
-                //src/frontentd/locale
-                "${workspaceFolder}/src/frontend/locale/langs.cpp",
-
-                //src/frontend
-                "${workspaceFolder}/src/frontend/BlocksPreview.cpp",
-                "${workspaceFolder}/src/frontend/ContentGfxCache.cpp",
-                "${workspaceFolder}/src/frontend/hud.cpp",
-                "${workspaceFolder}/src/frontend/InventoryView.cpp",
-                "${workspaceFolder}/src/frontend/LevelFrontend.cpp",
-                "${workspaceFolder}/src/frontend/menu.cpp",
-                "${workspaceFolder}/src/frontend/screens.cpp",
-                "${workspaceFolder}/src/frontend/UIDocument.cpp",
-                "${workspaceFolder}/src/frontend/WorldRenderer.cpp",
-
-                //src/graphics
-                "${workspaceFolder}/src/graphics/Atlas.cpp",
-                "${workspaceFolder}/src/graphics/Batch2D.cpp",
-                "${workspaceFolder}/src/graphics/Batch3D.cpp",
-                "${workspaceFolder}/src/graphics/BlocksRenderer.cpp",
-                "${workspaceFolder}/src/graphics/ChunksRenderer.cpp",
-                "${workspaceFolder}/src/graphics/Font.cpp",
-                "${workspaceFolder}/src/graphics/Framebuffer.cpp",
-                "${workspaceFolder}/src/graphics/GfxContext.cpp",
-                "${workspaceFolder}/src/graphics/ImageData.cpp",
-                "${workspaceFolder}/src/graphics/LineBatch.cpp",
-                "${workspaceFolder}/src/graphics/Mesh.cpp",
-                "${workspaceFolder}/src/graphics/ShaderProgram.cpp",
-                "${workspaceFolder}/src/graphics/Sprite.cpp",
-                "${workspaceFolder}/src/graphics/Texture.cpp",
-                "${workspaceFolder}/src/graphics/TextureAnimation.cpp",
-                "${workspaceFolder}/src/graphics/Viewport.cpp",
-
-                //src/items
-                "${workspaceFolder}/src/items/Inventories.cpp",
-                "${workspaceFolder}/src/items/Inventory.cpp",
-                "${workspaceFolder}/src/items/ItemStack.cpp",
-
-                //src/lighting
-                "${workspaceFolder}/src/lighting/Lighting.cpp",
-                "${workspaceFolder}/src/lighting/LightMap.cpp",
-                "${workspaceFolder}/src/lighting/LightSolver.cpp",
-
-                //src/logger
-                "${workspaceFolder}/src/logger/Logger.cpp",
-
-                //src/logic/scripting/api
-                "${workspaceFolder}/src/logic/scripting/api/api_lua.cpp",
-                "${workspaceFolder}/src/logic/scripting/api/libgui.cpp",
-
-                //src/logic/scripting
-                "${workspaceFolder}/src/logic/scripting/LuaState.cpp",
-                "${workspaceFolder}/src/logic/scripting/scripting.cpp",
-
-                //src/logic
-                "${workspaceFolder}/src/logic/BlocksController.cpp",
-                "${workspaceFolder}/src/logic/ChunksController.cpp",
-                "${workspaceFolder}/src/logic/LevelController.cpp",
-                "${workspaceFolder}/src/logic/PlayerController.cpp",
-
-                //src/math
-                "${workspaceFolder}/src/math/LMPacker.cpp",
-                "${workspaceFolder}/src/math/rays.cpp",
-
-                //src/objects
-                "${workspaceFolder}/src/objects/Player.cpp",
-
-                //src/physics
-                "${workspaceFolder}/src/physics/Hitbox.cpp",
-                "${workspaceFolder}/src/physics/PhysicsSolver.cpp",
-
-                //src/util
-                "${workspaceFolder}/src/util/command_line.cpp",
-                "${workspaceFolder}/src/util/platform.cpp",
-                "${workspaceFolder}/src/util/stringutil.cpp",
-                "${workspaceFolder}/src/util/timeutil.cpp",
-
-                //src/voxels
-                "${workspaceFolder}/src/voxels/Block.cpp",
-                "${workspaceFolder}/src/voxels/Chunk.cpp",
-                "${workspaceFolder}/src/voxels/Chunks.cpp",
-                "${workspaceFolder}/src/voxels/ChunksStorage.cpp",
-                "${workspaceFolder}/src/voxels/VoxelsVolume.cpp",
-                "${workspaceFolder}/src/voxels/WorldGenerator.cpp",
-
-                //src/window
-                "${workspaceFolder}/src/window/Camera.cpp",
-                "${workspaceFolder}/src/window/Events.cpp",
-                "${workspaceFolder}/src/window/input.cpp",
-                "${workspaceFolder}/src/window/Window.cpp",
-
-                //src/world
-                "${workspaceFolder}/src/world/Level.cpp",
-                "${workspaceFolder}/src/world/LevelEvents.cpp",
-                "${workspaceFolder}/src/world/World.cpp",
-
-                //src
-                "${workspaceFolder}/src/core_defs.cpp",
-                "${workspaceFolder}/src/engine.cpp",
-                "${workspaceFolder}/src/main.cpp",
-                
+                "@${workspaceFolder}/.vscode/sources.txt",
                 "-lglfw3dll", 
                 "-lopengl32",
                 "-lglew32",
                 "-lluajit-5.1",
                 "-lz",
                 "-o",
-                "${workspaceFolder}/build/ChromaForge.exe"
+                "${workspaceFolder}/build/ChromaForge.exe",
             ],
             "options": {
                 "cwd": "${fileDirname}"

@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "../scripting.h"
-#include "../lua_util.h"
+#include "lua_util.h"
 #include "../../../files/files.h"
 #include "../../../physics/Hitbox.h"
 #include "../../../objects/Player.h"
@@ -14,6 +14,7 @@
 #include "../../../content/Content.h"
 #include "../../../voxels/Block.h"
 #include "../../../voxels/Chunks.h"
+#include "../../../voxels/Chunk.h"
 #include "../../../voxels/voxel.h"
 #include "../../../items/Item.h"
 #include "../../../items/ItemStack.h"
@@ -25,17 +26,24 @@
 #include "../../../engine.h"
 #include "../../../core_defs.h"
 
+std::filesystem::path resolve_path(lua_State* L, const std::string& path) {
+    try {
+        return scripting::engine->getPaths()->resolve(path);
+    } catch (const files_access_error& err) {
+        luaL_error(L, err.what());
+        abort();
+    }
+}
+
 // File library
 int l_file_resolve(lua_State* L) {
-    std::string path = lua_tostring(L, 1);
-    std::filesystem::path resolved = scripting::engine->getPaths()->resolve(path);
-    lua_pushstring(L, resolved.u8string().c_str());
+    std::filesystem::path path = resolve_path(L, lua_tostring(L, 1));
+    lua_pushstring(L, path.u8string().c_str());
     return 1;
 }
 
 int l_file_read(lua_State* L) {
-    auto paths = scripting::engine->getPaths();
-    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    std::filesystem::path path = resolve_path(L, lua_tostring(L, 1));
     if (std::filesystem::is_regular_file(path)) {
         lua_pushstring(L, files::read_string(path).c_str());
         return 1;
@@ -44,37 +52,32 @@ int l_file_read(lua_State* L) {
 }
 
 int l_file_write(lua_State* L) {
-    auto paths = scripting::engine->getPaths();
-    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    std::filesystem::path path = resolve_path(L, lua_tostring(L, 1));
     const char* text = lua_tostring(L, 2);
     files::write_string(path, text);
     return 1;    
 }
 
 int l_file_exists(lua_State* L) {
-    auto paths = scripting::engine->getPaths();
-    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    std::filesystem::path path = resolve_path(L, lua_tostring(L, 1));
     lua_pushboolean(L, std::filesystem::exists(path));
     return 1;
 }
 
 int l_file_isfile(lua_State* L) {
-    auto paths = scripting::engine->getPaths();
-    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    std::filesystem::path path = resolve_path(L, lua_tostring(L, 1));
     lua_pushboolean(L, std::filesystem::is_regular_file(path));
     return 1;
 }
 
 int l_file_isdir(lua_State* L) {
-    auto paths = scripting::engine->getPaths();
-    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    std::filesystem::path path = resolve_path(L, lua_tostring(L, 1));
     lua_pushboolean(L, std::filesystem::is_directory(path));
     return 1;
 }
 
 int l_file_length(lua_State* L) {
-    auto paths = scripting::engine->getPaths();
-    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    std::filesystem::path path = resolve_path(L, lua_tostring(L, 1));
     if (std::filesystem::exists(path)){
         lua_pushinteger(L, std::filesystem::file_size(path));
     } else {
@@ -84,8 +87,7 @@ int l_file_length(lua_State* L) {
 }
 
 int l_file_mkdir(lua_State* L) {
-    auto paths = scripting::engine->getPaths();
-    std::filesystem::path path = paths->resolve(lua_tostring(L, 1));
+    std::filesystem::path path = resolve_path(L, lua_tostring(L, 1));
     lua_pushboolean(L, std::filesystem::create_directory(path));
     return 1;    
 }
@@ -138,119 +140,6 @@ int l_world_set_day_time(lua_State* L) {
 
 int l_world_get_seed(lua_State* L) {
     lua_pushinteger(L, scripting::level->world->getSeed());
-    return 1;
-}
-
-// Player library
-int l_player_get_pos(lua_State* L) {
-    int playerid = lua_tointeger(L, 1);
-    if (playerid != 1) return 0;
-    glm::vec3 pos = scripting::level->player->hitbox->position;
-    lua_pushnumber(L, pos.x);
-    lua_pushnumber(L, pos.y);
-    lua_pushnumber(L, pos.z);
-    return 3;
-}
-
-int l_player_get_rot(lua_State* L) {
-    int playerid = lua_tointeger(L, 1);
-    if (playerid != 1) return 0;
-    glm::vec2 rot = scripting::level->player->cam;
-    lua_pushnumber(L, rot.x);
-    lua_pushnumber(L, rot.y);
-    return 2;
-}
-
-int l_player_set_rot(lua_State* L) {
-    int playerid = lua_tointeger(L, 1);
-    if (playerid != 1) return 0;
-    lua::luanumber x = lua_tonumber(L, 2);
-    lua::luanumber y = lua_tonumber(L, 3);
-    glm::vec2& cam = scripting::level->player->cam;
-    cam.x = x;
-    cam.y = y;
-    return 0;
-}
-
-int l_player_set_pos(lua_State* L) {
-    int playerid = lua_tointeger(L, 1);
-    if (playerid != 1) return 0;
-    lua::luanumber x = lua_tonumber(L, 2);
-    lua::luanumber y = lua_tonumber(L, 3);
-    lua::luanumber z = lua_tonumber(L, 4);
-    scripting::level->player->hitbox->position = glm::vec3(x, y, z);
-    return 0;
-}
-
-int l_player_get_inv(lua_State* L) {
-    int playerid = lua_tointeger(L, 1);
-    if (playerid != 1) return 0;
-    Player* player = scripting::level->player;
-    lua_pushinteger(L, player->getInventory()->getId());
-    lua_pushinteger(L, player->getChosenSlot());
-    return 2;
-}
-
-static void validate_itemid(lua_State* L, itemid_t id) {
-    if (id >= scripting::indices->countItemDefs()) luaL_error(L, "Invalid item id");
-}
-
-// Inventory library
-int l_inventory_get(lua_State* L) {
-    lua::luaint invid = lua_tointeger(L, 1);
-    lua::luaint slotid = lua_tointeger(L, 2);
-    auto inv = scripting::level->inventories->get(invid);
-    if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
-    if (slotid < 0 || uint64_t(slotid) >= inv->size()) luaL_error(L, "Slot index is out of range [0, inventory.size(invid)]");
-    ItemStack& item = inv->getSlot(slotid);
-    lua_pushinteger(L, item.getItemId());
-    lua_pushinteger(L, item.getCount());
-    return 2;
-}
-
-int l_inventory_set(lua_State* L) {
-    lua::luaint invid = lua_tointeger(L, 1);
-    lua::luaint slotid = lua_tointeger(L, 2);
-    lua::luaint itemid = lua_tointeger(L, 3);
-    lua::luaint count = lua_tointeger(L, 4);
-    validate_itemid(L, itemid);
-
-    auto inv = scripting::level->inventories->get(invid);
-    if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
-    if (slotid < 0 || uint64_t(slotid) >= inv->size()) luaL_error(L, "Slot index is out of range [0, inventory.size(invid)]");
-    ItemStack& item = inv->getSlot(slotid);
-    item.set(ItemStack(itemid, count));
-    return 0;
-}
-
-int l_inventory_size(lua_State* L) {
-    lua::luaint invid = lua_tointeger(L, 1);
-    auto inv = scripting::level->inventories->get(invid);
-    if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
-    lua_pushinteger(L, inv->size());
-    return 1;
-}
-
-int l_inventory_add(lua_State* L) {
-    lua::luaint invid = lua_tointeger(L, 1);
-    lua::luaint itemid = lua_tointeger(L, 2);
-    lua::luaint count = lua_tointeger(L, 3);
-    validate_itemid(L, itemid);
-
-    auto inv = scripting::level->inventories->get(invid);
-    if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
-    ItemStack item(itemid, count);
-    inv->move(item, scripting::indices);
-    lua_pushinteger(L, item.getCount());
-    return 1;
-}
-
-int l_inventory_get_block(lua_State* L) {
-    lua::luaint x = lua_tointeger(L, 1);
-    lua::luaint y = lua_tointeger(L, 2);
-    lua::luaint z = lua_tointeger(L, 3);
-    int64_t id = scripting::blocks->createBlockInventory(x, y, z);
-    lua_pushinteger(L, id);
     return 1;
 }
 
@@ -397,6 +286,44 @@ int l_get_block_states(lua_State* L) {
     int states = vox == nullptr ? 0 : vox->states;
     lua_pushinteger(L, states);
     return 1;
+}
+
+int l_set_block_states(lua_State* L) {
+    lua::luaint x = lua_tointeger(L, 1);
+    lua::luaint y = lua_tointeger(L, 2);
+    lua::luaint z = lua_tointeger(L, 3);
+    lua::luaint states = lua_tointeger(L, 4);
+
+    Chunk* chunk = scripting::level->chunks->getChunkByVoxel(x, y, z);
+    if (chunk == nullptr) return 0;
+    voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
+    vox->states = states;
+    chunk->setModified(true);
+    return 0;
+}
+
+int l_get_block_rotation(lua_State* L) {
+    lua::luaint x = lua_tointeger(L, 1);
+    lua::luaint y = lua_tointeger(L, 2);
+    lua::luaint z = lua_tointeger(L, 3);
+    voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
+    int rotation = vox == nullptr ? 0 : vox->rotation();
+    lua_pushinteger(L, rotation);
+    return 1;
+}
+
+int l_set_block_rotation(lua_State* L) {
+    lua::luaint x = lua_tointeger(L, 1);
+    lua::luaint y = lua_tointeger(L, 2);
+    lua::luaint z = lua_tointeger(L, 3);
+
+    lua::luaint value = lua_tointeger(L, 4);
+
+    voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
+    if (vox == nullptr) return 0;
+    vox->setRotation(value);
+    scripting::level->chunks->getChunkByVoxel(x, y, z)->setModified(true);
+    return 0;
 }
 
 int l_get_block_user_bits(lua_State* L) {

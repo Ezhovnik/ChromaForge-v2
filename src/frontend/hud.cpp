@@ -25,7 +25,7 @@
 #include "../physics/Hitbox.h"
 #include "../logger/Logger.h"
 #include "gui/controls.h"
-#include "gui/panels.h"
+#include "gui/containers.h"
 #include "gui/UINode.h"
 #include "gui/GUI.h"
 #include "../engine.h"
@@ -48,6 +48,47 @@
 #include "UIDocument.h"
 #include "../logic/scripting/scripting.h"
 #include "../delegates.h"
+#include "../graphics/Texture.h"
+#include "../items/Inventories.h"
+
+HudElement::HudElement(
+    HudElementMode mode, 
+    UIDocument* document, 
+    std::shared_ptr<gui::UINode> node, 
+    bool debug
+) : mode(mode), 
+	document(document), 
+	node(node), 
+	debug(debug)
+{
+}
+
+void HudElement::update(bool pause, bool inventoryOpen, bool debugMode) {
+    if (debug && !debugMode) node->setVisible(false);
+
+    switch (mode) {
+        case HudElementMode::Permanent:
+            node->setVisible(true);
+            break;
+        case HudElementMode::InGame:
+            node->setVisible(!pause && !inventoryOpen);
+            break;
+        case HudElementMode::InventoryAny:
+            node->setVisible(inventoryOpen);
+            break;
+        case HudElementMode::InventoryBound:
+            removed = !inventoryOpen;
+            break;
+    }
+}
+
+UIDocument* HudElement::getDocument() const {
+    return document;
+}
+
+std::shared_ptr<gui::UINode> HudElement::getNode() const {
+    return node;
+}
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
 	std::shared_ptr<gui::Label> label = std::make_shared<gui::Label>(L"-");
@@ -55,7 +96,7 @@ static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
 	return label;
 }
 
-std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
+std::shared_ptr<gui::UINode> Hud::createDebugPanel(Engine* engine) {
 	auto level = levelFrontend->getLevel();
 
     auto panel = std::make_shared<gui::Panel>(glm::vec2(350, 200), glm::vec4(5.0f), 2.0f);
@@ -98,11 +139,11 @@ std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
 		sub->setColor(glm::vec4(0.0f));
 
 		auto box = std::make_shared<gui::TextBox>(L"");
-		box->textSupplier([=]() {
+		box->setTextSupplier([=]() {
 			Hitbox* hitbox = level->player->hitbox.get();
 			return util::double2wstr(hitbox->position[ax], 2);
 		});
-		box->textConsumer([=](std::wstring text) {
+		box->setTextConsumer([=](std::wstring text) {
 			try {
 				glm::vec3 position = level->player->hitbox->position;
 				position[ax] = std::stoi(text);
@@ -183,7 +224,7 @@ std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
 	return panel;
 }
 
-std::shared_ptr<InventoryView> HudRenderer::createContentAccess() {
+std::shared_ptr<InventoryView> Hud::createContentAccess() {
     auto level = levelFrontend->getLevel();
     auto content = level->content;
     auto indices = content->getIndices();
@@ -201,7 +242,7 @@ std::shared_ptr<InventoryView> HudRenderer::createContentAccess() {
         auto copy = ItemStack(item);
         inventory->move(copy, indices);
     }, 
-    [=](ItemStack& item, ItemStack& grabbed) {
+    [=](uint, ItemStack& item) {
         inventory->getSlot(player->getChosenSlot()).set(item);
     });
 
@@ -209,10 +250,11 @@ std::shared_ptr<InventoryView> HudRenderer::createContentAccess() {
     builder.addGrid(8, itemsCount - 1, glm::vec2(), 8, true, slotLayout);
     auto view = builder.build();
     view->bind(accessInventory, levelFrontend, interaction.get());
+	view->setMargin(glm::vec4());
     return view;
 }
 
-std::shared_ptr<InventoryView> HudRenderer::createHotbar() {
+std::shared_ptr<InventoryView> Hud::createHotbar() {
     auto level = levelFrontend->getLevel();
     auto player = level->player;
     auto inventory = player->getInventory();
@@ -227,12 +269,12 @@ std::shared_ptr<InventoryView> HudRenderer::createHotbar() {
     return view;
 }
 
-HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(engine->getAssets()), guiController(engine->getGUI()), levelFrontend(levelFrontend) {
+Hud::Hud(Engine* engine, LevelFrontend* levelFrontend) : assets(engine->getAssets()), guiController(engine->getGUI()), levelFrontend(levelFrontend) {
 	auto menu = guiController->getMenu();
 
     interaction = std::make_unique<InventoryInteraction>();
     grabbedItemView = std::make_shared<SlotView>(SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr));
-	grabbedItemView->bind(interaction->getGrabbedItem(), levelFrontend, interaction.get());
+	grabbedItemView->bind(0, interaction->getGrabbedItem(), levelFrontend, interaction.get());
     grabbedItemView->setColor(glm::vec4());
     grabbedItemView->setInteractive(false);
 	grabbedItemView->setZIndex(1);
@@ -259,29 +301,38 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
 
 	debugPanel->setZIndex(2);
 
-	guiController->addBack(darkOverlay);
-    guiController->addBack(hotbarView);
+	guiController->add(darkOverlay);
+    guiController->add(hotbarView);
 	guiController->add(debugPanel);
     guiController->add(contentAccessPanel);
     guiController->add(grabbedItemView);
 }
 
-HudRenderer::~HudRenderer() {
+Hud::~Hud() {
     guiController->remove(grabbedItemView);
-    if (inventoryView) guiController->remove(inventoryView);
+    for (auto& element : elements) {
+        remove(element);
+    }
     guiController->remove(hotbarView);
 	guiController->remove(darkOverlay);
     guiController->remove(contentAccessPanel);
 	guiController->remove(debugPanel);
 }
 
-void HudRenderer::drawDebug(int fps){
+void Hud::drawDebug(int fps){
 	this->fps = fps;
 	fpsMin = glm::min(fps, fpsMin);
 	fpsMax = glm::max(fps, fpsMax);
 }
 
-void HudRenderer::update(bool hudVisible) {
+void Hud::cleanup() {
+    auto it = std::remove_if(elements.begin(), elements.end(), [](const HudElement& e) {
+        return e.isRemoved();
+    });
+    elements.erase(it, elements.end());
+} 
+
+void Hud::update(bool hudVisible) {
 	auto level = levelFrontend->getLevel();
     auto player = level->player;
 	auto menu = guiController->getMenu();
@@ -308,10 +359,20 @@ void HudRenderer::update(bool hudVisible) {
 
 	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();
 
+	if (blockUI) {
+        voxel* vox = level->chunks->getVoxel(currentblock.x, currentblock.y, currentblock.z);
+        if (vox == nullptr || vox->id != currentblockid) closeInventory();
+    }
+
+	for (auto& element : elements) {
+        element.getNode()->setVisible(hudVisible);
+    }
+
 	glm::vec2 invSize = contentAccessPanel->getSize();
     contentAccessPanel->setVisible(inventoryOpen);
     contentAccessPanel->setSize(glm::vec2(invSize.x, Window::height));
-    hotbarView->setVisible(hudVisible);
+    contentAccess->setMinSize(glm::vec2(1, Window::height));
+	hotbarView->setVisible(hudVisible);
 
     for (int i = keycode::NUM_1; i <= keycode::NUM_9; ++i) {
         if (Events::justPressed(i)) player->setChosenSlot(i - keycode::NUM_1);
@@ -323,9 +384,17 @@ void HudRenderer::update(bool hudVisible) {
         if (slot < 0) slot += 10;
         player->setChosenSlot(slot);
     }
+
+	if (hudVisible) {
+        for (auto& element : elements) {
+            element.update(pause, inventoryOpen, player->debug);
+            if (element.isRemoved()) remove(element);
+        }
+    }
+    cleanup();
 }
 
-void HudRenderer::draw(const GfxContext& context) {
+void Hud::draw(const GfxContext& context) {
 	auto level = levelFrontend->getLevel();
 
     const Viewport& viewport = context.getViewport();
@@ -349,9 +418,11 @@ void HudRenderer::draw(const GfxContext& context) {
 	if (!pause && Events::_cursor_locked && !level->player->debug) {
 		GfxContext crosshair_context = context.sub();
         crosshair_context.blendMode(BlendMode::Inversion);
-        batch->texture(assets->getTexture("gui/crosshair"));
-        int chsize = 16;
-        batch->rect((width - chsize) / 2, (height - chsize) / 2, chsize, chsize, 0, 0, 1, 1, 1, 1, 1, 1);
+        auto texture = assets->getTexture("gui/crosshair");
+        batch->texture(texture);
+        int chsizex = texture != nullptr ? texture->width : 16;
+        int chsizey = texture != nullptr ? texture->height : 16;
+        batch->rect((width - chsizex) / 2, (height - chsizey) / 2, chsizex, chsizey, 0, 0, 1, 1, 1, 1, 1, 1);
         batch->render();
 	}
 
@@ -375,49 +446,102 @@ void HudRenderer::draw(const GfxContext& context) {
         contentAccessPanel->setCoord(glm::vec2(width-caWidth, 0));
 
 		glm::vec2 invSize = inventoryView->getSize();
-        inventoryView->setCoord(glm::vec2(
-            glm::min(width / 2 - invSize.x / 2, width - caWidth - 10 - invSize.x), 
-            height / 2 - invSize.y / 2
-        ));
+        if (blockUI == nullptr) {
+            inventoryView->setCoord(glm::vec2(
+                glm::min(width / 2 - invSize.x / 2, width - caWidth - 10 - invSize.x),
+                height / 2-invSize.y / 2
+            ));
+        } else {
+            glm::vec2 blockInvSize = blockUI->getSize();
+            int interval = 5;
+            float totalHeight = invSize.y + blockInvSize.y + interval;
+            inventoryView->setCoord(glm::vec2(
+                glm::min(width / 2 - invSize.x / 2, width - caWidth - 10 - invSize.x),
+                height / 2 + totalHeight / 2 - invSize.y
+            ));
+            blockUI->setCoord(glm::vec2(
+                glm::min(width / 2 - invSize.x / 2, width - caWidth - 10 - invSize.x),
+                height / 2 - totalHeight / 2
+            ));
+        }
 	}
 	grabbedItemView->setCoord(glm::vec2(Events::cursor));
 	batch->render();
 }
 
-void HudRenderer::openInventory() {
+void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inventory> blockinv) {
+	if (isInventoryOpen()) closeInventory();
+
+    auto level = levelFrontend->getLevel();
+    blockUI = std::dynamic_pointer_cast<InventoryView>(doc->getRoot());
+    if (blockUI == nullptr) {
+		LOG_ERROR("Block UI root element must be 'inventory'");
+		Logger::getInstance().flush();
+        throw std::runtime_error("Block UI root element must be 'inventory'");
+    }
+    openInventory();
+    if (blockinv == nullptr) {
+		Events::toggleCursor();
+        abort();
+		blockinv = level->inventories->createVirtual(blockUI->getSlotsCount());
+	}
+    blockUI->bind(blockinv, levelFrontend, interaction.get());
+	currentblock = block;
+	currentblockid = level->chunks->getVoxel(block.x, block.y, block.z)->id;
+    add(HudElement(HudElementMode::InventoryBound, doc, blockUI, false));
+}
+
+void Hud::openInventory() {
     auto level = levelFrontend->getLevel();
     auto player = level->player;
     auto inventory = player->getInventory();
 
     inventoryOpen = true;
 
-    inventoryDocument = assets->getLayout(BUILTIN_CONTENT_NAMESPACE":inventory");
+    auto inventoryDocument = assets->getLayout(BUILTIN_CONTENT_NAMESPACE":inventory");
     inventoryView = std::dynamic_pointer_cast<InventoryView>(inventoryDocument->getRoot());
     inventoryView->bind(inventory, levelFrontend, interaction.get());
-    scripting::on_ui_open(inventoryDocument, inventory.get());
-
-    guiController->add(inventoryView);
+    add(HudElement(HudElementMode::InventoryBound, inventoryDocument, inventoryView, false));
 }
 
-void HudRenderer::closeInventory() {
-	scripting::on_ui_close(inventoryDocument, inventoryView->getInventory().get());
+void Hud::closeInventory() {
+	auto level = levelFrontend->getLevel();
+
     inventoryOpen = false;
     ItemStack& grabbed = interaction->getGrabbedItem();
     grabbed.clear();
-	guiController->remove(inventoryView);
     inventoryView = nullptr;
-    inventoryDocument = nullptr;
+
+	if (blockUI) {
+        auto blockinv = blockUI->getInventory();
+        if (blockinv->isVirtual()) level->inventories->remove(blockinv->getId());   
+        blockUI = nullptr;
+    }
 }
 
-bool HudRenderer::isInventoryOpen() const {
+void Hud::openPermanent(UIDocument* doc) {
+    auto root = doc->getRoot();
+    remove(root);
+
+    auto invview = std::dynamic_pointer_cast<InventoryView>(root);
+    if (invview) {
+        auto level = levelFrontend->getLevel();
+        auto player = level->player;
+        auto inventory = player->getInventory();
+        invview->bind(inventory, levelFrontend, interaction.get());
+    }
+    add(HudElement(HudElementMode::Permanent, doc, doc->getRoot(), false));
+}
+
+bool Hud::isInventoryOpen() const {
 	return inventoryOpen;
 }
 
-bool HudRenderer::isPause() const {
+bool Hud::isPause() const {
 	return pause;
 }
 
-void HudRenderer::setPause(bool pause) {
+void Hud::setPause(bool pause) {
     if (this->pause == pause) return;
     this->pause = pause;
 
@@ -427,4 +551,44 @@ void HudRenderer::setPause(bool pause) {
 
     darkOverlay->setVisible(pause);
     menu->setVisible(pause);
+}
+
+void Hud::add(HudElement element) {
+    guiController->add(element.getNode());
+    auto invview = std::dynamic_pointer_cast<InventoryView>(element.getNode());
+    auto document = element.getDocument();
+    if (document) {
+        if (invview) {
+            auto inventory = invview->getInventory();
+            scripting::on_ui_open(element.getDocument(), inventory.get(), currentblock);
+        } else {
+            scripting::on_ui_open(element.getDocument(), nullptr, currentblock);
+        }
+    }
+    elements.push_back(element);
+}
+
+void Hud::remove(HudElement& element) {
+    auto document = element.getDocument();
+    if (document) {
+        Inventory* inventory = nullptr;
+        auto invview = std::dynamic_pointer_cast<InventoryView>(element.getNode());
+        if (invview) inventory = invview->getInventory().get();
+        scripting::on_ui_close(document, inventory);
+    }
+    guiController->remove(element.getNode());
+}
+
+void Hud::remove(std::shared_ptr<gui::UINode> node) {
+    for (auto& element : elements) {
+        if (element.getNode() == node) {
+            element.setRemoved();
+            remove(element);
+        }
+    }
+    cleanup();
+}
+
+Player* Hud::getPlayer() const {
+    return levelFrontend->getLevel()->player;
 }

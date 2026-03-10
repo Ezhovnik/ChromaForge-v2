@@ -69,16 +69,17 @@ namespace gui {
 
         std::shared_ptr<UINode> getFocused() const;
         bool isFocusCaught() const;
+        void setFocus(std::shared_ptr<UINode> node);
 
         void activate(float delta);
         void draw(const GfxContext* parent_context, Assets* assets);
-        void addBack(std::shared_ptr<UINode> panel);
         void add(std::shared_ptr<UINode> panel);
-        void remove(std::shared_ptr<UINode> panel);
+        void remove(std::shared_ptr<UINode> panel) noexcept;
         void store(std::string name, std::shared_ptr<UINode> node);
-        std::shared_ptr<UINode> get(std::string name);
-        void remove(std::string name);
-        void setFocus(std::shared_ptr<UINode> node);
+        std::shared_ptr<UINode> get(std::string name) noexcept;
+        void remove(std::string name) noexcept;
+
+        std::shared_ptr<Container> getContainer() const;
     };
 }
 

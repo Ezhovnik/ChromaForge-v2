@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "../frontend/gui/UINode.h"
-#include "../frontend/gui/panels.h"
+#include "../frontend/gui/containers.h"
 #include "../frontend/gui/controls.h"
 #include "../items/ItemStack.h"
 #include "../typedefs.h"
@@ -20,15 +20,14 @@ class ContentIndices;
 class LevelFrontend;
 class Inventory;
 
-using itemsharefunc = std::function<void(uint, ItemStack&)>;
-using slotcallback = std::function<void(ItemStack&, ItemStack&)>;
+using slotcallback = std::function<void(uint, ItemStack&)>;
 
 namespace scripting {
     class Environment;
 }
 
 namespace gui {
-    class UiXmlReader;
+    class UIXmlReader;
 }
 
 class InventoryInteraction {
@@ -48,7 +47,7 @@ struct SlotLayout {
     glm::vec2 position;
     bool background;
     bool itemSource;
-    itemsharefunc shareFunc;
+    slotcallback shareFunc;
     slotcallback rightClick;
 
     SlotLayout(
@@ -56,7 +55,7 @@ struct SlotLayout {
         glm::vec2 position, 
         bool background,
         bool itemSource,
-        itemsharefunc shareFunc,
+        slotcallback shareFunc,
         slotcallback rightClick
     );
 };
@@ -67,6 +66,8 @@ private:
     InventoryInteraction* interaction = nullptr;
     const Content* content;
     bool highlighted = false;
+
+    int64_t inventoryId = 0;
 
     SlotLayout layout;
     ItemStack* bound = nullptr;
@@ -82,6 +83,7 @@ public:
     virtual void focus(gui::GUI*) override;
 
     void bind(
+        int64_t inventoryId,
         ItemStack& stack,
         LevelFrontend* frontend, 
         InventoryInteraction* interaction
@@ -123,7 +125,9 @@ public:
 
     std::shared_ptr<SlotView> addSlot(SlotLayout layout);
 
-    static void createReaders(gui::UiXmlReader& reader);
+    size_t getSlotsCount() const;
+
+    static void createReaders(gui::UIXmlReader& reader);
 
     static const int SLOT_INTERVAL = 4;
     static const int SLOT_SIZE = ITEM_ICON_SIZE;

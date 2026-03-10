@@ -40,6 +40,8 @@ private:
 
 	glm::vec3 spawnpoint {};
 	std::shared_ptr<Inventory> inventory;
+
+	int playerId = 1;
 public:
 	std::shared_ptr<Camera> camera, spCamera, tpCamera;
     std::shared_ptr<Camera> currentCamera;
@@ -74,6 +76,10 @@ public:
 	std::unique_ptr<dynamic::Map> serialize() const override;
     void deserialize(dynamic::Map *src) override;
     static void convert(dynamic::Map* data, const ContentLUT* lut);
+
+	inline int getId() const {
+        return playerId;
+    }
 };
 
 #endif // OBJECTS_PLAYER_H_

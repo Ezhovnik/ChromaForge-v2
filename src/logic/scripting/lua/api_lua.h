@@ -1,7 +1,11 @@
-#ifndef LOGIC_SCRIPTING_API_LUA_H_
-#define LOGIC_SCRIPTING_API_LUA_H_
+#ifndef LOGIC_SCRIPTING_LUA_API_LUA_H_
+#define LOGIC_SCRIPTING_LUA_API_LUA_H_
+
+#include <exception>
 
 #include <lua.hpp>
+
+#include "lua_commons.h"
 
 // File library
 extern int l_file_resolve(lua_State* L);
@@ -14,14 +18,14 @@ extern int l_file_length(lua_State* L);
 extern int l_file_mkdir(lua_State* L);
 
 static const luaL_Reg filelib [] = {
-    {"resolve", l_file_resolve},
-    {"read", l_file_read},
-    {"write", l_file_write},
-    {"exists", l_file_exists},
-    {"isfile", l_file_isfile},
-    {"isdir", l_file_isdir},
-    {"length", l_file_length},
-    {"mkdir", l_file_mkdir},
+    {"resolve", lua_wrap_errors<l_file_resolve>},
+    {"read", lua_wrap_errors<l_file_read>},
+    {"write", lua_wrap_errors<l_file_write>},
+    {"exists", lua_wrap_errors<l_file_exists>},
+    {"isfile", lua_wrap_errors<l_file_isfile>},
+    {"isdir", lua_wrap_errors<l_file_isdir>},
+    {"length", lua_wrap_errors<l_file_length>},
+    {"mkdir", lua_wrap_errors<l_file_mkdir>},
     {NULL, NULL}
 };
 
@@ -30,8 +34,8 @@ extern int l_time_uptime(lua_State* L);
 extern int l_time_delta(lua_State* L);
 
 static const luaL_Reg timelib [] = {
-    {"uptime", l_time_uptime},
-    {"delta", l_time_delta},
+    {"uptime", lua_wrap_errors<l_time_uptime>},
+    {"delta", lua_wrap_errors<l_time_delta>},
     {NULL, NULL}
 };
 
@@ -39,53 +43,21 @@ static const luaL_Reg timelib [] = {
 extern int l_pack_get_folder(lua_State* L);
 
 static const luaL_Reg packlib [] = {
-    {"get_folder", l_pack_get_folder},
+    {"get_folder", lua_wrap_errors<l_pack_get_folder>},
     {NULL, NULL}
 };
 
-/* == world library == */
+// World library
 extern int l_world_get_total_time(lua_State* L);
 extern int l_world_get_day_time(lua_State* L);
 extern int l_world_set_day_time(lua_State* L);
 extern int l_world_get_seed(lua_State* L);
 
 static const luaL_Reg worldlib [] = {
-    {"get_total_time", l_world_get_total_time},
-    {"get_day_time", l_world_get_day_time},
-    {"set_day_time", l_world_set_day_time},
-    {"get_seed", l_world_get_seed},
-    {NULL, NULL}
-};
-
-// Player library
-extern int l_player_get_pos(lua_State* L);
-extern int l_player_get_rot(lua_State* L);
-extern int l_player_set_rot(lua_State* L);
-extern int l_player_set_pos(lua_State* L);
-extern int l_player_get_inv(lua_State* L);
-
-static const luaL_Reg playerlib [] = {
-    {"get_pos", l_player_get_pos},
-    {"set_pos", l_player_set_pos},
-    {"get_rot", l_player_get_rot},
-    {"set_rot", l_player_set_rot},
-    {"get_inventory", l_player_get_inv},
-    {NULL, NULL}
-};
-
-// Inventory library
-extern int l_inventory_get(lua_State* L);
-extern int l_inventory_set(lua_State* L);
-extern int l_inventory_size(lua_State* L);
-extern int l_inventory_add(lua_State* L);
-extern int l_inventory_get_block(lua_State* L);
-
-static const luaL_Reg inventorylib [] = {
-    {"get", l_inventory_get},
-    {"set", l_inventory_set},
-    {"size", l_inventory_size},
-    {"add", l_inventory_add},
-    {"get_block", l_inventory_get_block},
+    {"get_total_time", lua_wrap_errors<l_world_get_total_time>},
+    {"get_day_time", lua_wrap_errors<l_world_get_day_time>},
+    {"set_day_time", lua_wrap_errors<l_world_set_day_time>},
+    {"get_seed", lua_wrap_errors<l_world_get_seed>},
     {NULL, NULL}
 };
 
@@ -96,10 +68,10 @@ extern int l_item_stack_size(lua_State* L);
 extern int l_item_defs_count(lua_State* L);
 
 static const luaL_Reg itemlib [] = {
-    {"index", l_item_index},
-    {"name", l_item_name},
-    {"stack_size", l_item_stack_size},
-    {"defs_count", l_item_defs_count},
+    {"index", lua_wrap_errors<l_item_index>},
+    {"name", lua_wrap_errors<l_item_name>},
+    {"stack_size", lua_wrap_errors<l_item_stack_size>},
+    {"defs_count", lua_wrap_errors<l_item_defs_count>},
     {NULL, NULL}
 };
 
@@ -114,10 +86,13 @@ extern int l_get_block_x(lua_State* L);
 extern int l_get_block_y(lua_State* L);
 extern int l_get_block_z(lua_State* L);
 extern int l_get_block_states(lua_State* L);
+extern int l_set_block_states(lua_State* L);
+extern int l_get_block_rotation(lua_State* L);
+extern int l_set_block_rotation(lua_State* L);
 extern int l_get_block_user_bits(lua_State* L);
 extern int l_set_block_user_bits(lua_State* L);
 extern int l_is_replaceable_at(lua_State* L);
 
 extern int l_print(lua_State* L);
 
-#endif // LOGIC_SCRIPTING_API_LUA_H_
+#endif // LOGIC_SCRIPTING_LUA_API_LUA_H_

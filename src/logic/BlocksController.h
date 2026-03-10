@@ -48,7 +48,10 @@ public:
     void update(float delta);
     void randomSpark(int sparkId, int parts);
     void onBlocksSpark(int sparkId, int parts);
+
     int64_t createBlockInventory(int x, int y, int z);
+    void bindInventory(int64_t invId, int x, int y, int z);
+    void unbindInventory(int x, int y, int z);
 };
 
 #endif // LOGIC_BLOCKS_CONTROLLER_H_

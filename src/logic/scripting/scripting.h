@@ -4,7 +4,10 @@
 #include <string>
 #include <filesystem>
 
+#include <glm/glm.hpp>
+
 #include "../../delegates.h"
+#include "scripting_functional.h"
 
 class Engine;
 class Content;
@@ -15,7 +18,6 @@ class Item;
 class BlocksController;
 struct block_funcs_set;
 struct item_funcs_set;
-class LuaState;
 class ContentIndices;
 struct uidocscript;
 class Inventory;
@@ -23,8 +25,6 @@ class UIDocument;
 struct ContentPack;
 
 namespace scripting {
-    using int_array_consumer = std::function<void(const int[], size_t)>;
-
     extern Engine* engine;
     extern const Content* content;
     extern Level* level;
@@ -43,10 +43,7 @@ namespace scripting {
 
     void initialize(Engine* engine);
 
-    runnable create_runnable(int env, const std::string& src, const std::string& file="<string>");
-    wstringconsumer create_wstring_consumer(int env, const std::string& src, const std::string& file="<string>");
-    int_array_consumer create_int_array_consumer(int env, const std::string& src, const std::string& file="<string>");
-    doubleconsumer create_number_consumer(int env, const std::string& src, const std::string& file="<string>");
+    extern bool register_event(int env, const std::string& name, const std::string& id);
 
     std::unique_ptr<Environment> create_environment(int parent=0);
     std::unique_ptr<Environment> create_pack_environment(const ContentPack& pack);
@@ -70,7 +67,7 @@ namespace scripting {
     void load_block_script(int env, std::string prefix, std::filesystem::path file, block_funcs_set& funcsset);
     void load_item_script(int env, std::string prefix, std::filesystem::path file, item_funcs_set& funcsset);
 
-    void on_ui_open(UIDocument* layout, Inventory* inventory);
+    void on_ui_open(UIDocument* layout, Inventory* inventory, glm::ivec3 blockcoord);
     void on_ui_close(UIDocument* layout, Inventory* inventory);
 
     void load_layout_script(int env, std::string prefix, std::filesystem::path file, uidocscript& script);
