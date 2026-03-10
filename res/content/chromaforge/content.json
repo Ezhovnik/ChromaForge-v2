@@ -2,6 +2,7 @@
     "blocks": [
         "moss",
         "dirt",
+        "coarse_dirt",
         "cobblestone",
         "glowstone",
         "glass",
