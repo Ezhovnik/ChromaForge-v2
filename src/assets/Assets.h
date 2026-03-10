@@ -52,9 +52,8 @@ public:
      * @brief Сохраняет текстуру в менеджере.
      * @param texture Указатель на текстуру (менеджер забирает владение).
      * @param name Имя, под которым текстура будет сохранена.
-     * @return true, если сохранение выполнено успешно, false, если имя уже занято.
      */
-	bool store(Texture* texture, std::string name);
+	void store(Texture* texture, std::string name);
 
 		// --- Шейдеры ---
     /**
@@ -68,9 +67,8 @@ public:
      * @brief Сохраняет шейдер в менеджере.
      * @param shader Указатель на шейдер.
      * @param name Имя для сохранения.
-     * @return true при успехе, false если имя уже занято.
      */
-	bool store(ShaderProgram* shader, std::string name);
+	void store(ShaderProgram* shader, std::string name);
 
     	// --- Шрифты ---
 	/**
@@ -84,9 +82,8 @@ public:
      * @brief Сохраняет шрифт в менеджере.
      * @param font Указатель на шрифт.
      * @param name Имя для сохранения.
-     * @return true при успехе, false если имя уже занято.
      */
-	bool store(Font* font, std::string name);
+	void store(Font* font, std::string name);
 
 		// --- Атласы ---
 	/**
@@ -100,9 +97,8 @@ public:
      * @brief Сохраняет атлас в менеджере.
      * @param atlas Указатель на атлас.
      * @param name Имя для сохранения.
-     * @return true при успехе, false если имя уже занято.
      */
-	bool store(Atlas* atlas, std::string name);
+	void store(Atlas* atlas, std::string name);
 
 		// --- Анимации ---
 	/**
@@ -129,9 +125,8 @@ public:
      * @brief Сохраняет макет в менеджере.
      * @param layout Указатель на макет.
      * @param name Имя для сохранения.
-     * @return true при успехе, false если имя уже занято.
      */
-	bool store(UIDocument* layout, std::string name);
+	void store(UIDocument* layout, std::string name);
 
 	/**
      * @brief Расширяет текущий менеджер ресурсами из другого менеджера.

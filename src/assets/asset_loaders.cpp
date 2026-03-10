@@ -49,7 +49,8 @@ bool asset_loader::shader(
 	}
 
 	// Сохраняем шейдер в менеджере ресурсов под указанным именем
-	return assets->store(shader, name);
+	assets->store(shader, name);
+	return true;
 }
 
 bool asset_loader::texture(
@@ -69,7 +70,8 @@ bool asset_loader::texture(
 	}
 
 	// Передаём владение текстурой в менеджер ресурсов
-	return assets->store(texture.release(), name);
+	assets->store(texture.release(), name);
+	return true;
 }
 
 bool asset_loader::font(
@@ -98,7 +100,8 @@ bool asset_loader::font(
 	int res = pages[0]->height / 16; // Размер одного символа
 
 	// Создаём объект шрифта и сохраняем в менеджере
-	return assets->store(new Font(std::move(pages), res, 4), name);
+	assets->store(new Font(std::move(pages), res, 4), name);
+	return true;
 }
 
 /**

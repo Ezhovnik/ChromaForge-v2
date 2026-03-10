@@ -6,12 +6,14 @@
 
 #include "../logger/Logger.h"
 
+// ========== ByteBuilder ==========
+
 void ByteBuilder::put(ubyte b) {
     buffer.push_back(b);
 }
 
 void ByteBuilder::putCStr(const char* str) {
-    size_t size = strlen(str)+1;
+    size_t size = strlen(str) + 1; // включаем завершающий нуль
     buffer.reserve(buffer.size() + size);
     for (size_t i = 0; i < size; ++i) {
         buffer.push_back(str[i]);
@@ -19,6 +21,7 @@ void ByteBuilder::putCStr(const char* str) {
 }
 
 void ByteBuilder::put(const std::string& s) {
+    // Формат: длина (4 байта) + байты строки
     size_t len = s.length();
     putInt32(len);
     put(reinterpret_cast<const ubyte*>(s.data()), len);
@@ -26,7 +29,7 @@ void ByteBuilder::put(const std::string& s) {
 
 void ByteBuilder::put(const ubyte* arr, size_t size) {
     buffer.reserve(buffer.size() + size);
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; ++i) {
         buffer.push_back(arr[i]);
     }
 }
@@ -100,10 +103,13 @@ std::vector<ubyte> ByteBuilder::build() {
     return buffer;
 }
 
+// ========== ByteReader ==========
+
 ByteReader::ByteReader(const ubyte* data, size_t size) : data(data), size(size), pos(0) {
 }
 
 ByteReader::ByteReader(const ubyte* data) : data(data), size(4), pos(0) {
+    // Читаем первые 4 байта как длину остальных данных
     size = getInt32();
 }
 
@@ -113,7 +119,7 @@ void ByteReader::checkMagic(const char* data, size_t size) {
         Logger::getInstance().flush();
         throw std::runtime_error("Invalid magic number");
     }
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; ++i) {
         if (this->data[pos + i] != (ubyte)data[i]){
             LOG_ERROR("Invalid magic number");
             Logger::getInstance().flush();
@@ -148,7 +154,8 @@ int16_t ByteReader::getInt16() {
         throw std::runtime_error("Buffer underflow");
     }
     pos += 2;
-    return (static_cast<int16_t>(data[pos - 1]) << 8) | (static_cast<int16_t>(data[pos - 2]));
+    return (static_cast<int16_t>(data[pos - 1]) << 8) | 
+           (static_cast<int16_t>(data[pos - 2]));
 }
 
 int32_t ByteReader::getInt32() {
@@ -196,6 +203,7 @@ double ByteReader::getFloat64() {
 }
 
 const char* ByteReader::getCString() {
+    // Строка в буфере заканчивается нулём
     const char* cstr = reinterpret_cast<const char*>(data + pos);
     pos += strlen(cstr) + 1;
     return cstr;
