@@ -21,7 +21,7 @@ void LevelController::update(float delta, bool input, bool pause) {
     player->update(delta, input, pause);
     level->update();
     chunks->update(settings.chunks.loadSpeed);
-    blocks->update(delta);
+    if (!pause) blocks->update(delta);
 }
 
 void LevelController::onWorldSave() {

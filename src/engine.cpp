@@ -262,6 +262,10 @@ std::shared_ptr<Screen> Engine::getScreen() {
     return screen;
 }
 
+double Engine::getDeltaTime() const {
+    return deltaTime;
+}
+
 void Engine::setLanguage(std::string locale) {
 	settings.ui.language = locale;
 	langs::setup(paths->getResources(), locale, contentPacks);

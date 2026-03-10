@@ -46,6 +46,7 @@ namespace scripting {
     runnable create_runnable(int env, const std::string& src, const std::string& file="<string>");
     wstringconsumer create_wstring_consumer(int env, const std::string& src, const std::string& file="<string>");
     int_array_consumer create_int_array_consumer(int env, const std::string& src, const std::string& file="<string>");
+    doubleconsumer create_number_consumer(int env, const std::string& src, const std::string& file="<string>");
 
     std::unique_ptr<Environment> create_environment(int parent=0);
     std::unique_ptr<Environment> create_pack_environment(const ContentPack& pack);

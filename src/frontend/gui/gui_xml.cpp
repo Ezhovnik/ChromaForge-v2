@@ -74,6 +74,13 @@ static void _readPanel(UiXmlReader& reader, xml::xmlelement element, Panel& pane
     }
 }
 
+static std::shared_ptr<UINode> readPanel(UiXmlReader& reader, xml::xmlelement element) {
+    float interval = element->attr("interval", "2").asFloat();
+    auto panel = std::make_shared<Panel>(glm::vec2(), glm::vec4(), interval);
+    _readPanel(reader, element, *panel);
+    return panel;
+}
+
 static std::wstring readAndProcessInnerText(xml::xmlelement element) {
     std::wstring text = L"";
     if (element->size() == 1) {
@@ -130,12 +137,31 @@ static std::shared_ptr<UINode> readTextBox(UiXmlReader& reader, xml::xmlelement 
         auto consumer = scripting::create_wstring_consumer(
             reader.getEnvironment().getId(),
             element->attr("consumer").getText(),
-            reader.getFilename() + "lua"
+            reader.getFilename() + ".lua"
         );
         textbox->textConsumer(consumer);
     }
 
     return textbox;
+}
+
+static std::shared_ptr<UINode> readTrackBar(UiXmlReader& reader, xml::xmlelement element) {
+    float min = element->attr("min", "0.0").asFloat();
+    float max = element->attr("max", "1.0").asFloat();
+    float def = element->attr("value", "0.0").asFloat();
+    float step = element->attr("step", "1.0").asFloat();
+    int trackWidth = element->attr("track-width", "1.0").asInt();
+    auto bar = std::make_shared<TrackBar>(min, max, def, step, trackWidth);
+    _readUINode(element, *bar);
+    if (element->has("consumer")) {
+        auto consumer = scripting::create_number_consumer(
+            reader.getEnvironment().getId(),
+            element->attr("consumer").getText(),
+            reader.getFilename() + ".lua"
+        );
+        bar->setConsumer(consumer);
+    }
+    return bar;
 }
 
 static std::shared_ptr<UINode> readImage(UiXmlReader& reader, xml::xmlelement element) {
@@ -152,6 +178,8 @@ UiXmlReader::UiXmlReader(const scripting::Environment& env, AssetsLoader& assets
     add("button", readButton);
     add("textbox", readTextBox);
     add("container", readContainer);
+    add("trackbar", readTrackBar);
+    add("panel", readPanel);
 }
 
 void UiXmlReader::add(const std::string& tag, uinode_reader reader) {

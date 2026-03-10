@@ -11,11 +11,11 @@
 
 using namespace gui;
 
-Label::Label(std::string text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text(util::str2wstr_utf8(text)), fontName_(fontName) {
+Label::Label(std::string text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text(util::str2wstr_utf8(text)), fontName(fontName) {
     setInteractive(false);
 }
 
-Label::Label(std::wstring text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text(text), fontName_(fontName) {
+Label::Label(std::wstring text, std::string fontName) : UINode(glm::vec2(), glm::vec2(text.length() * 8, 15)), text(text), fontName(fontName) {
     setInteractive(false);
 }
 
@@ -32,7 +32,7 @@ void Label::draw(const GfxContext* parent_context, Assets* assets) {
 
     auto batch = parent_context->getBatch2D();
     batch->color = getColor();
-    Font* font = assets->getFont(fontName_);
+    Font* font = assets->getFont(fontName);
     glm::vec2 size = getSize();
     glm::vec2 newsize = glm::vec2(
         font->calcWidth(text), 
@@ -342,7 +342,7 @@ TrackBar::TrackBar(double min, double max, double value, double step, int trackW
 }
 
 void TrackBar::draw(const GfxContext* parent_context, Assets* assets) {
-    if (supplier_) value = supplier_();
+    if (supplier) value = supplier();
 
     glm::vec2 coord = calcCoord();
     auto batch = parent_context->getBatch2D();
@@ -358,12 +358,12 @@ void TrackBar::draw(const GfxContext* parent_context, Assets* assets) {
     batch->rect(coord.x + width * t, coord.y, actualWidth, size.y);
 }
 
-void TrackBar::supplier(doublesupplier supplier) {
-    this->supplier_ = supplier;
+void TrackBar::setSupplier(doublesupplier supplier_) {
+    supplier = supplier_;
 }
 
-void TrackBar::consumer(doubleconsumer consumer) {
-    this->consumer_ = consumer;
+void TrackBar::setConsumer(doubleconsumer consumer_) {
+    consumer = consumer_;
 }
 
 void TrackBar::mouseMove(GUI*, int x, int y) {
@@ -375,38 +375,38 @@ void TrackBar::mouseMove(GUI*, int x, int y) {
     value = (value > max) ? max : value;
     value = (value < min) ? min : value;
     value = (int)(value / step) * step;
-    if (consumer_) consumer_(value);
+    if (consumer) consumer(value);
 }
 
-CheckBox::CheckBox(bool checked) : UINode(glm::vec2(), glm::vec2(32.0f)), checked_(checked) {
+CheckBox::CheckBox(bool checked) : UINode(glm::vec2(), glm::vec2(32.0f)), checked(checked) {
     setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 }
 
 void CheckBox::draw(const GfxContext* parent_context, Assets* assets) {
-    if (supplier_) checked_ = supplier_();
+    if (supplier) checked = supplier();
 
     glm::vec2 coord = calcCoord();
     auto batch = parent_context->getBatch2D();
     batch->texture(nullptr);
-    batch->color = checked_ ? checkColor : (hover ? hoverColor : color);
+    batch->color = checked ? checkColor : (hover ? hoverColor : color);
     batch->rect(coord.x, coord.y, size.x, size.y);
 }
 
 void CheckBox::mouseRelease(GUI*, int x, int y) {
-    checked_ = !checked_;
-    if (consumer_) consumer_(checked_);
+    checked = !checked;
+    if (consumer) consumer(checked);
 }
 
-void CheckBox::supplier(boolsupplier supplier) {
-    supplier_ = supplier;
+void CheckBox::setSupplier(boolsupplier supplier_) {
+    supplier = supplier_;
 }
 
-void CheckBox::consumer(boolconsumer consumer) {
-    consumer_ = consumer;
+void CheckBox::setConsumer(boolconsumer consumer_) {
+    consumer = consumer_;
 }
 
-CheckBox* CheckBox::checked(bool flag) {
-    checked_ = flag;
+CheckBox* CheckBox::setChecked(bool flag) {
+    checked = flag;
     return this;
 }
 

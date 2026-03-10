@@ -32,6 +32,12 @@ int UIDocument::getEnvironment() const {
     return env->getId();
 }
 
+const std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const {
+    auto found = map.find(id);
+    if (found == map.end()) return nullptr;
+    return found->second;
+}
+
 void UIDocument::collect(uinodes_map& map, std::shared_ptr<gui::UINode> node) {
     const std::string& id = node->getId();
     if (!id.empty()) map[id] = node;

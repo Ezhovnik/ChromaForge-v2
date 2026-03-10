@@ -15,7 +15,8 @@ struct GLFWmonitor;
 
 enum class BlendMode {
     Normal,
-    Addition
+    Addition,
+    Inversion
 };
 
 // Обертка для работы с окном приложения через GLFW

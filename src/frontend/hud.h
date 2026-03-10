@@ -64,11 +64,12 @@ public:
 	void draw(const GfxContext& context);
 	void drawDebug(int fps);
 
-    bool isInventoryOpen() const;
 	bool isPause() const;
+    void setPause(bool pause);
 
     void openInventory();
     void closeInventory();
+    bool isInventoryOpen() const;
 };
 
 #endif // SRC_HUD_RENDER_H_

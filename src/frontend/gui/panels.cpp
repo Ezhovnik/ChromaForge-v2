@@ -237,16 +237,17 @@ void PagesControl::setPage(std::string name, bool history) {
     auto found = pages.find(name);
     if (found == pages.end()) {
         LOG_ERROR("No page found");
+        Logger::getInstance().flush();
         throw std::runtime_error("no page found");
     }
-    if (current_.panel) Container::remove(current_.panel);
+    if (current.panel) Container::remove(current.panel);
 
-    if (history) pageStack.push(curname_);
+    if (history) pageStack.push(curname);
 
-    curname_ = name;
-    current_ = found->second;
-    Container::add(current_.panel);
-    setSize(current_.panel->getSize());
+    curname = name;
+    current = found->second;
+    Container::add(current.panel);
+    setSize(current.panel->getSize());
 }
 
 void PagesControl::back() {
@@ -256,8 +257,8 @@ void PagesControl::back() {
     setPage(name, false);
 }
 
-Page& PagesControl::current() {
-    return current_;
+Page& PagesControl::getCurrent() {
+    return current;
 }
 
 void PagesControl::clearHistory() {
@@ -266,9 +267,9 @@ void PagesControl::clearHistory() {
 
 void PagesControl::reset() {
     clearHistory();
-    if (current_.panel) {
-        curname_ = "";
-        Container::remove(current_.panel);
-        current_ = Page{nullptr};
+    if (current.panel) {
+        curname = "";
+        Container::remove(current.panel);
+        current = Page{nullptr};
     }
 }

@@ -129,10 +129,10 @@ std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
 
 	{
 		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 0.0f, 0.005f, 8);
-		bar->supplier([=]() {
+		bar->setSupplier([=]() {
 			return WorldRenderer::skyClearness;
 		});
-		bar->consumer([=](double val) {
+		bar->setConsumer([=](double val) {
 			WorldRenderer::skyClearness = val;
 		});
 		panel->add(bar);
@@ -145,35 +145,35 @@ std::shared_ptr<gui::UINode> HudRenderer::createDebugPanel(Engine* engine) {
 		std::wstring timeString = 
 					util::lfill(std::to_wstring(hour), 2, L'0') + L":" +
 					util::lfill(std::to_wstring(minute), 2, L'0');
-		return L"Time: "+timeString;
+		return L"Time: " + timeString;
 	})));
 
 	{
 		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 1.0f, 0.005f, 8);
-		bar->supplier([=]() {
+		bar->setSupplier([=]() {
 			return level->world->daytime;
 		});
-		bar->consumer([=](double val) {
+		bar->setConsumer([=](double val) {
 			level->world->daytime = val;
 		});
 		panel->add(bar);
 	}
 	{
         auto checkbox = std::make_shared<gui::FullCheckBox>(L"Frustum-Culling", glm::vec2(400, 24));
-        checkbox->supplier([=]() {
+        checkbox->setSupplier([=]() {
             return engine->getSettings().graphics.frustumCulling;
         });
-        checkbox->consumer([=](bool checked) {
+        checkbox->setConsumer([=](bool checked) {
             engine->getSettings().graphics.frustumCulling = checked;
         });
         panel->add(checkbox);
 	}
 	{
         auto checkbox = std::make_shared<gui::FullCheckBox>(L"Show Chunk Borders", glm::vec2(400, 24));
-        checkbox->supplier([=]() {
+        checkbox->setSupplier([=]() {
             return WorldRenderer::drawChunkBorders;
         });
-        checkbox->consumer([=](bool checked) {
+        checkbox->setConsumer([=](bool checked) {
             WorldRenderer::drawChunkBorders = checked;
         });
 		panel->add(checkbox);
@@ -248,6 +248,7 @@ HudRenderer::HudRenderer(Engine* engine, LevelFrontend* levelFrontend) : assets(
 	darkOverlay = std::make_unique<gui::Panel>(glm::vec2(4000.0f));
     darkOverlay->setColor(glm::vec4(0, 0, 0, 0.5f));
 	darkOverlay->setZIndex(-1);
+	darkOverlay->setVisible(false);
 
 	uicamera = std::make_unique<Camera>(glm::vec3(), 1);
 	uicamera->perspective = false;
@@ -286,20 +287,17 @@ void HudRenderer::update(bool hudVisible) {
 	auto menu = guiController->getMenu();
 
 	debugPanel->setVisible(player->debug && hudVisible);
-	menu->setVisible(pause);
 
 	if (!hudVisible && inventoryOpen) closeInventory();
-	if (pause && menu->current().panel == nullptr) pause = false;
+	if (pause && menu->getCurrent().panel == nullptr) setPause(false);
 
 	if (Events::justPressed(keycode::ESCAPE) && !guiController->isFocusCaught()) {
 		if (pause) {
-			pause = false;
-			menu->reset();
+			setPause(false);
 		} else if (inventoryOpen) {
 			closeInventory();
 		} else {
-			pause = true;
-			menu->setPage("pause");
+			setPause(true);
 		}
 	}
 
@@ -325,8 +323,6 @@ void HudRenderer::update(bool hudVisible) {
         if (slot < 0) slot += 10;
         player->setChosenSlot(slot);
     }
-
-	darkOverlay->setVisible(pause);
 }
 
 void HudRenderer::draw(const GfxContext& context) {
@@ -350,20 +346,23 @@ void HudRenderer::draw(const GfxContext& context) {
 	hotbarView->setCoord(glm::vec2(width/2, height-65));
     hotbarView->setSelected(player->getChosenSlot());
 
-	batch->begin();
 	if (!pause && Events::_cursor_locked && !level->player->debug) {
-		batch->setLineWidth(2.0f);
-		batch->line(width / 2, height / 2 - 6, width / 2, height / 2 + 6, 0.2f, 0.2f, 0.2f, 1.0f);
-		batch->line(width / 2 + 6, height / 2, width / 2 - 6, height / 2, 0.2f, 0.2f, 0.2f, 1.0f);
+		GfxContext crosshair_context = context.sub();
+        crosshair_context.blendMode(BlendMode::Inversion);
+        batch->texture(assets->getTexture("gui/crosshair"));
+        int chsize = 16;
+        batch->rect((width - chsize) / 2, (height - chsize) / 2, chsize, chsize, 0, 0, 1, 1, 1, 1, 1, 1);
+        batch->render();
 	}
 
 	if (level->player->debug) {
+		batch->texture(nullptr);
         const int dmwidth = 256;
         const float dmscale = 4000.0f;
         static float deltameter[dmwidth]{};
         static int index = 0;
         index = index + 1 % dmwidth;
-        deltameter[index%dmwidth] = glm::min(0.2f, 1.0f / fps) * dmscale;
+        deltameter[index % dmwidth] = glm::min(0.2f, 1.0f / fps) * dmscale;
         batch->setLineWidth(1.0f);
         for (int i = index + 1; i < index + dmwidth; ++i) {
             int j = i % dmwidth;
@@ -373,15 +372,13 @@ void HudRenderer::draw(const GfxContext& context) {
 
 	if (inventoryOpen) {
 		float caWidth = contentAccess->getSize().x;
-        glm::vec2 invSize = inventoryView->getSize();
+        contentAccessPanel->setCoord(glm::vec2(width-caWidth, 0));
 
-        float width = viewport.getWidth();
-
+		glm::vec2 invSize = inventoryView->getSize();
         inventoryView->setCoord(glm::vec2(
             glm::min(width / 2 - invSize.x / 2, width - caWidth - 10 - invSize.x), 
             height / 2 - invSize.y / 2
         ));
-        contentAccessPanel->setCoord(glm::vec2(width-caWidth, 0));
 	}
 	grabbedItemView->setCoord(glm::vec2(Events::cursor));
 	batch->render();
@@ -418,4 +415,16 @@ bool HudRenderer::isInventoryOpen() const {
 
 bool HudRenderer::isPause() const {
 	return pause;
+}
+
+void HudRenderer::setPause(bool pause) {
+    if (this->pause == pause) return;
+    this->pause = pause;
+
+    auto menu = guiController->getMenu();
+    if (pause) menu->setPage("pause");
+    else menu->reset();
+
+    darkOverlay->setVisible(pause);
+    menu->setVisible(pause);
 }

@@ -76,6 +76,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/no_icon.png", "gui/no_icon");
 	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/warning.png", "gui/warning");
     loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/error.png", "gui/error");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/crosshair.png", "gui/crosshair");
 
 	if (content) {
 		loader.add(AssetType::Shader, SHADERS_FOLDER"/skybox_gen", "skybox_gen");

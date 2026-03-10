@@ -102,6 +102,10 @@
                 //src/logger
                 "${workspaceFolder}/src/logger/Logger.cpp",
 
+                //src/logic/scripting/api
+                "${workspaceFolder}/src/logic/scripting/api/api_lua.cpp",
+                "${workspaceFolder}/src/logic/scripting/api/libgui.cpp",
+
                 //src/logic/scripting
                 "${workspaceFolder}/src/logic/scripting/LuaState.cpp",
                 "${workspaceFolder}/src/logic/scripting/scripting.cpp",

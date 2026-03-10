@@ -68,35 +68,45 @@ void scripting::initialize(Engine* engine) {
     load_script(std::filesystem::path("stdlib.lua"));
 }
 
+static bool processCallback(int env, const std::string& src, const std::string& file) {
+    try {
+        return state->eval(env, src, file) != 0;
+    } catch (const lua::luaerror& err) {
+        LOG_ERROR("{}", err.what());
+        return false;
+    }
+}
+
 runnable scripting::create_runnable(int env, const std::string& src, const std::string& file) {
     return [=](){state->execute(env, src, file);};
 }
 
 wstringconsumer scripting::create_wstring_consumer(int env, const std::string& src, const std::string& file) {
     return [=](const std::wstring& x) {
-        try {
-            if (state->eval(env, src, file) == 0) return;
-        } catch (lua::luaerror err) {
-            LOG_ERROR("{}", err.what());
-            return;
+        if (processCallback(env, src, file)) {
+            state->pushstring(util::wstr2str_utf8(x));
+            state->callNoThrow(1);
         }
-        state->pushstring(util::wstr2str_utf8(x));
-        state->callNoThrow(1);
     };
 }
 
 int_array_consumer scripting::create_int_array_consumer(int env, const std::string& src, const std::string& file) {
     return [=](const int arr[], size_t len){
-        try {
-            if (state->eval(env, src, file) == 0) return;
-        } catch (lua::luaerror err) {
-            LOG_ERROR("{}", err.what());
-            return;
+        if (processCallback(env, src, file)) {
+            for (uint i = 0; i < len; i++) {
+                state->pushinteger(arr[i]);
+            }
+            state->callNoThrow(len);
         }
-        for (uint i = 0; i < len; ++i) {
-            state->pushinteger(arr[i]);
+    };
+}
+
+doubleconsumer scripting::create_number_consumer(int env, const std::string& src, const std::string& file) {
+    return [=](double x){
+        if (processCallback(env, src, file)) {
+            state->pushnumber(x);
+            state->callNoThrow(1);
         }
-        state->callNoThrow(len);
     };
 }
 
@@ -122,7 +132,16 @@ std::unique_ptr<Environment> scripting::create_doc_environment(int parent, const
     state->setfield("DOC_ENV");
     state->pushstring(name.c_str());
     state->setfield("DOC_NAME");
+
+    if (state->getglobal("Document")) {
+        if (state->getfield("new")) {
+            state->pushstring(name.c_str());
+            if (state->callNoThrow(1)) state->setfield("document", -3);
+        }
+        state->pop();
+    }
     state->pop();
+
     return std::make_unique<Environment>(id);
 }
 
