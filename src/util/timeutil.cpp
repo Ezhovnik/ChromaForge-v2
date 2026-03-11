@@ -17,11 +17,6 @@ timeutil::ScopeLogTimer::~ScopeLogTimer() {
     LOG_DEBUG("Scope {} finished in {} micros.", scopeid_, ScopeLogTimer::stop());
 }
 
-float timeutil::time_value(float hour, float minute, float second) {
-    // Сначала переводим всё в часы: минуты и секунды преобразуются в доли часа.
-    return (hour + (minute + second / 60.0f) / 60.0f) / 24.0f;
-}
-
 void timeutil::from_value(float value, int& hour, int& minute, int& second) {
     value *= 24;
     hour = value;

@@ -353,7 +353,7 @@ void Hud::update(bool hudVisible) {
 		}
 	}
 
-	if (hudVisible && Events::justActive(BIND_HUD_INVENTORY) && !pause) {
+	if (hudVisible && !guiController->isFocusCaught() && Events::justActive(BIND_HUD_INVENTORY) && !pause) {
 		if (inventoryOpen) closeInventory();
 		else openInventory();
 	}
@@ -425,11 +425,11 @@ void Hud::draw(const GfxContext& context) {
         int chsizex = texture != nullptr ? texture->width : 16;
         int chsizey = texture != nullptr ? texture->height : 16;
         batch->rect((width - chsizex) / 2, (height - chsizey) / 2, chsizex, chsizey, 0, 0, 1, 1, 1, 1, 1, 1);
-        batch->render();
+        batch->flush();
 	}
 
 	if (level->player->debug) {
-		batch->texture(nullptr);
+		batch->untexture();
         const int dmwidth = 256;
         const float dmscale = 4000.0f;
         static float deltameter[dmwidth]{};
@@ -471,7 +471,7 @@ void Hud::draw(const GfxContext& context) {
         }
 	}
 	grabbedItemView->setCoord(glm::vec2(Events::cursor));
-	batch->render();
+	batch->flush();
 }
 
 void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inventory> blockinv, bool playerInventory) {

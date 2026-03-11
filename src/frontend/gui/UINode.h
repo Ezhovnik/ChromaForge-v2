@@ -25,7 +25,9 @@ namespace gui {
     enum class Align {
         left,
         center,
-        right
+        right,
+        top = left,
+        bottom = right
     };
 
     class UINode {

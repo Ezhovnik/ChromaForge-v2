@@ -288,6 +288,7 @@ std::vector<std::string> util::split(const std::string& str, char delimiter) {
     while (std::getline(ss, tmp, delimiter)) {
         result.push_back(tmp);
     }
+    if (result.empty()) result.push_back("");
     return result;
 }
 
@@ -298,5 +299,6 @@ std::vector<std::wstring> util::split(const std::wstring& str, char delimiter) {
     while (std::getline(ss, tmp, static_cast<wchar_t>(delimiter))) {
         result.push_back(tmp);
     }
+    if (result.empty()) result.push_back(L"");
     return result;
 }

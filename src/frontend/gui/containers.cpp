@@ -53,8 +53,9 @@ void Container::activate(float deltaTime) {
 
 void Container::scrolled(int value) {
     int diff = actualLength - getSize().y;
+    if (scroll < 0 && diff <= 0) scroll = 0;
     if (diff > 0 && scrollable) {
-        scroll += value * 40;
+        scroll += value * scrollStep;
         if (scroll > 0) scroll = 0;
         if (-scroll > diff) scroll = -diff;
     } else if (parent) {
@@ -72,15 +73,15 @@ void Container::draw(const GfxContext* parent_context, Assets* assets) {
     drawBackground(parent_context, assets);
 
     auto batch = parent_context->getBatch2D();
-    batch->texture(nullptr);
-    batch->render();
+    batch->untexture();
+    batch->flush();
     {
         GfxContext context = parent_context->sub();
         context.scissors(glm::vec4(coord.x, coord.y, size.x, size.y));
         for (auto node : nodes) {
             if (node->isVisible()) node->draw(parent_context, assets);
         }
-        batch->render();
+        batch->flush();
     }
 }
 
@@ -89,8 +90,8 @@ void Container::drawBackground(const GfxContext* parent_context, Assets* assets)
     glm::vec2 coord = calcCoord();
 
     auto batch = parent_context->getBatch2D();
-    batch->texture(nullptr);
-    batch->color = color;
+    batch->untexture();
+    batch->setColor(color);
     batch->rect(coord.x, coord.y, size.x, size.y);
 }
 
