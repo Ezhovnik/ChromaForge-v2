@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <filesystem>
 #include <unordered_set>
+#include <functional>
 
 // GLM – библиотека для работы с матрицами и векторами в OpenGL
 #include <glm/glm.hpp>
@@ -40,6 +41,9 @@
 #include "content/ContentLoader.h"
 #include "logic/scripting/scripting.h"
 #include "graphics/GfxContext.h"
+#include "world/WorldGenerators.h"
+#include "voxels/DefaultWorldGenerator.h"
+#include "voxels/FlatWorldGenerator.h"
 
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths){
@@ -80,6 +84,8 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     if (settings.ui.language == "auto") settings.ui.language = platform::detect_locale();
     if (ENGINE_VERSION_INDEV) menus::create_version_label(this);
     setLanguage(settings.ui.language);
+
+    addDefaultWorldGenerators();
 
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -271,4 +277,9 @@ void Engine::setLanguage(std::string locale) {
 	settings.ui.language = locale;
 	langs::setup(paths->getResources(), locale, contentPacks);
 	menus::create_menus(this);
+}
+
+void Engine::addDefaultWorldGenerators() {
+	WorldGenerators::addGenerator<DefaultWorldGenerator>(BUILTIN_CONTENT_NAMESPACE":default");
+	WorldGenerators::addGenerator<FlatWorldGenerator>(BUILTIN_CONTENT_NAMESPACE":flat");
 }

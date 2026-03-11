@@ -91,6 +91,8 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/voxels/Chunk.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/voxels/Chunks.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/voxels/ChunksStorage.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/voxels/DefaultWorldGenerator.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/voxels/FlatWorldGenerator.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/voxels/VoxelsVolume.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/voxels/WorldGenerator.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/window/Camera.cpp"
@@ -100,3 +102,4 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/world/Level.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/world/LevelEvents.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/world/World.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/world/WorldGenerators.cpp"

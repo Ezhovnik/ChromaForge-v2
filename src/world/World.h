@@ -33,10 +33,12 @@ class ContentLUT;
  * Реализует интерфейс Serializable для сохранения и загрузки метаданных мира.
  * Также содержит ссылки на Content и настройки движка.
  */
-class World : public Serializable {
+class World : Serializable {
 private:
 	std::string name;  ///< Внутреннее имя мира
 	uint64_t seed; ///< Сид для генерации мира
+
+	std::string generator;
 
 	EngineSettings& settings;
 	const Content* const content;
@@ -61,6 +63,7 @@ public:
 	/**
      * @brief Конструктор.
      * @param name Внутреннее имя мира.
+	 * @param generator Идентификатор генератора мира (тип мира).
      * @param directory Корневая папка мира (используется для создания WorldFiles).
      * @param seed Сид генерации.
      * @param settings Ссылка на настройки.
@@ -69,6 +72,7 @@ public:
      */
 	World(
 		std::string name,
+		std::string generator,
 		std::filesystem::path directory,
 		uint64_t seed,
 		EngineSettings& settings,
@@ -101,6 +105,7 @@ public:
 	/**
      * Создаёт новый мир (генерация с нуля).
      * @param name Имя мира.
+	 * @param generator Идентификатор генератора мира (тип мира).
      * @param directory Папка для сохранения.
      * @param seed Сид.
      * @param settings Настройки.
@@ -109,7 +114,8 @@ public:
      * @return Указатель на новый Level, содержащий созданный World.
      */
 	static Level* create(
-		std::string name, 
+		std::string name,
+		std::string generator,
 		std::filesystem::path directory, 
 		uint64_t seed, 
 		EngineSettings& settings, 
@@ -146,12 +152,21 @@ public:
     void setSeed(uint64_t seed);
 
 	/**
+     * @brief Устанавливает идентификатор генератора мира (тип мира).
+	 * @param generator Идентификатор нового генератора.
+     */
+	void setGenerator(const std::string& generator);
+
+	/**
      * Возвращает внутреннее имя мира.
      */
     std::string getName() const;
 
 	/** Возвращает сид генерации мира. */
     uint64_t getSeed() const;
+
+	/** Возвращает идентификатор генератора мира. */
+	std::string getGenerator() const;
 
 	/** 
      * Проверяет, установлен ли в мире указанный контент-пак.
