@@ -15,11 +15,13 @@ class Assets;
 class Content;
 class ImageData;
 class Framebuffer;
+class ShaderProgram;
 
 class BlocksPreview {
 public:
     static ImageData* draw(
         const ContentGfxCache* cache,
+        ShaderProgram* shader,
         Framebuffer* framebuffer,
         Batch3D* batch,
         const Block* block, 

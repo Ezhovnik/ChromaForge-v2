@@ -157,8 +157,7 @@ void Batch3D::xSprite(float w, float h, const UVRegion& uv, const glm::vec4 tint
 	face(glm::vec3(w * 0.25f, 0.0f, w * 0.5f - w * 0.25f), w, h, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), uv, (shading ? do_tint(0.9f) * tint : tint));
 }
 
-void Batch3D::blockCube(const glm::vec3 size, const UVRegion(&texfaces)[6], const glm::vec4 tint, bool shading) {
-	glm::vec3 coord = (1.0f - size) * -0.5f;
+void Batch3D::cube(const glm::vec3 coord, const glm::vec3 size, const UVRegion(&texfaces)[6], const glm::vec4 tint, bool shading) {
 	face(coord + glm::vec3(0.0f, 0.0f, 0.0f), size.x, size.y, glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), texfaces[5], (shading ? do_tint(0.8) * tint : tint));
 	face(coord + glm::vec3(size.x, 0.0f, -size.z), size.x, size.y, glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0), texfaces[4], (shading ? do_tint(0.8f) * tint : tint));
 	face(coord + glm::vec3(0.0f, size.y, 0.0f), size.x, size.z, glm::vec3(1, 0, 0), glm::vec3(0, 0, -1), texfaces[3], (shading ? do_tint(1.0f) * tint : tint));
@@ -167,8 +166,16 @@ void Batch3D::blockCube(const glm::vec3 size, const UVRegion(&texfaces)[6], cons
 	face(coord + glm::vec3(size.x, 0.0f, 0.0f), size.z, size.y, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), texfaces[1], (shading ? do_tint(0.9f) * tint : tint));
 }
 
+void Batch3D::blockCube(const glm::vec3 size, const UVRegion(&texfaces)[6], const glm::vec4 tint, bool shading) {
+    cube((1.0f - size) * -0.5f, size, texfaces, tint, shading);
+}
+
+void Batch3D::point(glm::vec3 coord, glm::vec2 uv, glm::vec4 tint) {
+    vertex(coord, uv, tint.r, tint.g, tint.b, tint.a);
+}
+
 void Batch3D::point(glm::vec3 coord, glm::vec4 tint) {
-    vertex(coord, glm::vec2(), tint.r, tint.g, tint.b, tint.a);
+    point(coord, glm::vec2(), tint);
 }
 
 void Batch3D::flush() {

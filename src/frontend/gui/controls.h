@@ -31,7 +31,10 @@ namespace gui {
 
         bool multiline = false;
 
+        /// Смещение относительно оси Y
         int textYOffset = 0;
+
+        // Высота строки текста, умноженная на межстрочный интервал
         int totalLineHeight = 1;
     public:
         Label(std::string text, std::string fontName="normal");
@@ -43,14 +46,38 @@ namespace gui {
         virtual void setFontName(std::string name);
         virtual const std::string& getFontName() const;
 
+        /**
+         * @brief Устанавливает вертикальное выравнивание текста (по умолчанию — по центру)
+         * @param Выравнивание (Align::top / Align::center / Align::bottom).
+         */
         virtual void setVerticalAlign(Align align);
+
+        /**
+         * @brief Возвращает текущее вертикальное выравнивание текста.
+         * @return Текущее выравнивание текста.
+         */
         virtual Align getVerticalAlign() const;
 
+        /**
+         * @brief Возвращает коэффициент высоты строки для многострочных Label-ов
+         * 
+         * Значение по умолчанию: 1.5
+         */
         virtual float getLineInterval() const;
+
+        /**
+         * @brief Установит коэффициент высоты строки для многострочных Label-ов
+         */
         virtual void setLineInterval(float interval);
 
         virtual int getTextYOffset() const;
         virtual int getLineYOffset(uint line) const;
+
+        virtual size_t getTextLineOffset(uint line) const;
+
+        virtual uint getLineByYOffset(int offset) const;
+        virtual uint getLineByTextIndex(size_t index) const;
+        virtual uint getLinesNumber() const;
 
         virtual void setMultiline(bool multiline);
         virtual bool isMultiline() const;
@@ -157,6 +184,7 @@ namespace gui {
         double caretLastMove = 0.0;
         uint textOffset = 0;
         int textInitX;
+        uint maxLocalCaret = 0;
 
         size_t selectionStart = 0;
         size_t selectionEnd = 0;
@@ -166,7 +194,7 @@ namespace gui {
 
         size_t normalizeIndex(int index);
 
-        int calcIndexAt(int x) const;
+        int calcIndexAt(int x, int y) const;
         void paste(const std::wstring& text);
         void setTextOffset(uint x);
         void erase(size_t start, size_t length);
@@ -191,6 +219,8 @@ namespace gui {
 
         virtual uint getCaret() const;
         virtual void setCaret(uint position);
+
+        void resetMaxLocalCaret();
 
         virtual std::wstring getText() const;
         virtual void setText(std::wstring value);
@@ -220,6 +250,9 @@ namespace gui {
 
         virtual void click(GUI*, int, int) override;
         virtual void mouseMove(GUI*, int x, int y) override;
+
+        size_t getLineLength(uint line) const;
+        size_t getSelectionLength() const;
     };
 
     class TrackBar : public UINode {
