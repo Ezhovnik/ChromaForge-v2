@@ -142,7 +142,7 @@ std::shared_ptr<gui::UINode> Hud::createDebugPanel(Engine* engine) {
 		auto box = std::make_shared<gui::TextBox>(L"");
 		box->setTextSupplier([=]() {
 			Hitbox* hitbox = level->player->hitbox.get();
-			return util::double2wstr(hitbox->position[ax], 2);
+			return std::to_wstring(int(hitbox->position[ax]));
 		});
 		box->setTextConsumer([=](std::wstring text) {
 			try {
@@ -264,7 +264,7 @@ std::shared_ptr<InventoryView> Hud::createHotbar() {
     InventoryBuilder builder;
     builder.addGrid(10, 10, glm::vec2(), 4, true, slotLayout);
     auto view = builder.build();
-    view->setOrigin(glm::vec2(view->getSize().x/2, 0));
+    view->setOrigin(glm::vec2(view->getSize().x / 2, 0));
     view->bind(inventory, levelFrontend, interaction.get());
 	view->setInteractive(false);
     return view;
@@ -376,8 +376,8 @@ void Hud::update(bool hudVisible) {
 	hotbarView->setVisible(hudVisible);
 
     if (!guiController->isFocusCaught() && !pause) {
-        for (int i = keycode::NUM_1; i <= keycode::NUM_9; ++i) {
-            if (Events::justPressed(i)) player->setChosenSlot(i - keycode::NUM_1);
+        for (int i = static_cast<int>(keycode::NUM_1); i <= static_cast<int>(keycode::NUM_9); ++i) {
+            if (Events::justPressed(i)) player->setChosenSlot(i - static_cast<int>(keycode::NUM_1));
         }
         if (Events::justPressed(keycode::NUM_0)) player->setChosenSlot(9);
     }

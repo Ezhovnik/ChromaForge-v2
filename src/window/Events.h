@@ -30,18 +30,25 @@ public:
     static int scroll;
 
     static std::vector<uint> codepoints;
-    static std::vector<int> pressedKeys;
+    static std::vector<keycode> pressedKeys;
     static std::unordered_map<std::string, Binding> bindings;
 
     static void pollEvents(); // Обработка событий текущего кадра
 
+    static bool isPressed(keycode code);
     static bool isPressed(int keycode); // Проверяет, нажата ли клавиша в текущий момент
+    static bool justPressed(keycode code);
     static bool justPressed(int keycode); // Проверяет, была ли клавиша нажата именно в текущем кадре 
 
+    static bool isClicked(mousecode button);
     static bool isClicked(int button); // Проверяет, нажата ли кнопка мыши в данный момент
+    static bool justClicked(mousecode button);
     static bool justClicked(int button); // Проверяет, была ли кнопка мыши нажата именно в текущем кадре
 
+    static void bind(std::string name, inputType type, keycode code);
+	static void bind(std::string name, inputType type, mousecode code);
     static void bind(std::string name, inputType type, int code);
+
 	static bool isActive(std::string name);
 	static bool justActive(std::string name);
 
