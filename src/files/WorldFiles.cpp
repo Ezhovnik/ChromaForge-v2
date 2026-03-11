@@ -502,11 +502,11 @@ bool WorldFiles::readWorldInfo(World* world) {
 	return true;
 }
 
-void WorldFiles::writePlayer(Player* player){
+void WorldFiles::writePlayer(std::shared_ptr<Player> player){
 	files::write_json(getPlayerFile(), player->serialize().release());
 }
 
-bool WorldFiles::readPlayer(Player* player) {
+bool WorldFiles::readPlayer(std::shared_ptr<Player> player) {
 	std::filesystem::path file = getPlayerFile();
 	if (!std::filesystem::is_regular_file(file)) {
 		LOG_WARN("Player.json does not exists");

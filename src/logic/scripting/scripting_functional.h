@@ -26,6 +26,12 @@ namespace scripting {
         const std::string& file="<string>"
     );
 
+    wstringchecker create_wstring_validator(
+        int env,
+        const std::string& src,
+        const std::string& file="<string>"
+    );
+
     doubleconsumer create_number_consumer(
         int env,
         const std::string& src,

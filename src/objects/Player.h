@@ -8,6 +8,7 @@
 #include "../voxels/voxel.h"
 #include "../data/dynamic.h"
 #include "../interfaces/Serializable.h"
+#include "../interfaces/Object.h"
 
 class Camera;
 class Hitbox;
@@ -15,9 +16,12 @@ class Level;
 class Inventory;
 class ContentLUT;
 
+/**
+ * @brief Структура, содержащая текущее состояние ввода игрока.
+ */
 struct PlayerInput {
 	bool zoom;
-	bool cameraMode;
+	bool cameraMode; ///< Переключение режима камеры
 	bool moveForward;
 	bool moveBack;
 	bool moveRight;
@@ -33,46 +37,101 @@ struct PlayerInput {
     bool pickBlock;
 };
 
-class Player : Serializable {
+/**
+ * @brief Класс игрока, наследующий Object и Serializable.
+ *
+ * Управляет состоянием игрока: позицией, скоростью, инвентарём, камерами,
+ * режимами полёта и noclip. Также обрабатывает ввод и обновление физики.
+ */
+class Player : public Object, public Serializable {
 private:
 	float speed;
-	itemid_t chosenSlot;
+	int chosenSlot;
 
 	glm::vec3 spawnpoint {};
 	std::shared_ptr<Inventory> inventory;
 public:
-	std::shared_ptr<Camera> camera, spCamera, tpCamera;
-    std::shared_ptr<Camera> currentCamera;
+	std::shared_ptr<Camera> camera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
+    std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
 	std::unique_ptr<Hitbox> hitbox;
 
 	bool flight = false;
     bool noclip = false;
     bool debug = false;
 
-	glm::vec2 cam = {};
+	glm::vec2 cam = {}; ///< Углы поворота камеры
 
     voxel selectedVoxel {0, 0};
 
+	/**
+	 * @brief Конструктор игрока.
+	 * @param position Начальная позиция.
+	 * @param speed Базовая скорость.
+	 * @param inventory Инвентарь (shared_ptr).
+	 */
 	Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inventory);
 	~Player() = default;
 
+	/**
+     * @brief Телепортирует игрока в указанную точку.
+     * @param position Новая позиция.
+     */
     void teleport(glm::vec3 position);
 
+	/**
+     * @brief Возвращает скорость игрока.
+     */
 	float getSpeed() const;
 
+	/**
+     * @brief Пытается найти безопасную точку возрождения в мире.
+     * @param level Указатель на уровень.
+     */
 	void attemptToFindSpawnpoint(Level* level);
 
+	/**
+     * @brief Устанавливает выбранный слот инвентаря.
+     * @param index Индекс слота.
+     */
 	void setChosenSlot(int index);
-	itemid_t getChosenSlot() const;
+
+	/**
+     * @brief Возвращает текущий выбранный слот.
+     */
+	int getChosenSlot() const;
+
+	/**
+     * @brief Возвращает инвентарь игрока.
+     */
 	std::shared_ptr<Inventory> getInventory() const;
 
+	/**
+     * @brief Устанавливает точку возрождения.
+     * @param point Координаты точки.
+     */
 	void setSpawnPoint(glm::vec3 point);
+
+	/**
+     * @brief Возвращает точку возрождения.
+     */
     glm::vec3 getSpawnPoint() const;
 
-	void update(Level* level, PlayerInput& input, float delta);
+	/**
+     * @brief Обновляет состояние игрока (физика, ввод, камера).
+     * @param level Уровень.
+     * @param input Структура ввода.
+     * @param delta Время с предыдущего кадра.
+     */
+	void updateInput(Level* level, PlayerInput& input, float delta);
 
 	std::unique_ptr<dynamic::Map> serialize() const override;
     void deserialize(dynamic::Map *src) override;
+
+	/**
+     * @brief Конвертирует старые данные игрока при обновлении контента.
+     * @param data JSON-объект с данными игрока.
+     * @param lut Таблица соответствия старых и новых идентификаторов.
+     */
     static void convert(dynamic::Map* data, const ContentLUT* lut);
 
 	inline int getId() const {

@@ -33,7 +33,7 @@ struct LayoutConfig {
 class Assets {
 	std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
 	std::unordered_map<std::string, std::shared_ptr<ShaderProgram>> shaders;
-    std::unordered_map<std::string, std::shared_ptr<Font>> fonts;
+     std::unordered_map<std::string, std::shared_ptr<Font>> fonts;
 	std::unordered_map<std::string, std::shared_ptr<Atlas>> atlases;
 	std::unordered_map<std::string, std::shared_ptr<UIDocument>> layouts;
 	std::vector<TextureAnimation> animations; ///< Анимации, связанные с текстурами.
@@ -56,7 +56,7 @@ public:
 	void store(Texture* texture, std::string name);
 
 		// --- Шейдеры ---
-    /**
+     /**
      * @brief Получает шейдер по имени.
      * @param name Имя шейдера.
      * @return Указатель на шейдер или nullptr.

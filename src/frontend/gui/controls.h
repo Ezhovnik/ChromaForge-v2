@@ -16,6 +16,7 @@
 
 class Batch2D;
 class Assets;
+class Font;
 
 namespace gui {
     class Label : public UINode {
@@ -29,6 +30,9 @@ namespace gui {
 
         virtual void setText(std::wstring text);
         std::wstring getText() const;
+
+        virtual void setFontName(std::string name);
+        const std::string& getFontName() const;
 
         virtual void draw(const GfxContext* parent_context, Assets* assets) override;
 
@@ -120,23 +124,58 @@ namespace gui {
         std::wstring input;
         std::wstring placeholder;
 
+        Font* font = nullptr;
+
         wstringsupplier supplier = nullptr;
         wstringconsumer consumer = nullptr;
 
         wstringchecker validator = nullptr;
         bool valid = true;
+
+        uint caret = 0;
+        double caretLastMove = 0.0;
+        uint textOffset = 0;
+        int textInitX;
+
+        size_t selectionStart = 0;
+        size_t selectionEnd = 0;
+        size_t selectionOrigin = 0;
+
+        size_t normalizeIndex(int index);
+
+        int calcIndexAt(int x) const;
+        void paste(const std::wstring& text);
+        void setTextOffset(uint x);
+        void erase(size_t start, size_t length);
+        bool eraseSelected();
+        void resetSelection();
+        void extendSelection(int index);
     public:
         TextBox(std::wstring placeholder, glm::vec4 padding = glm::vec4(4.0f));
 
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
 
+        virtual void draw(const GfxContext* pctx, Assets* assets) override;
         virtual void drawBackground(const GfxContext* parent_context, Assets* assets) override;
+
         virtual void typed(uint codepoint) override; 
         virtual void keyPressed(int key) override;
 
         virtual void setTextSupplier(wstringsupplier supplier);
         virtual void setTextConsumer(wstringconsumer consumer);
         virtual void setTextValidator(wstringchecker validator);
+
+        virtual void setFocusedColor(glm::vec4 color);
+        virtual glm::vec4 getFocusedColor() const;
+
+        virtual void setErrorColor(glm::vec4 color);
+        virtual glm::vec4 getErrorColor() const;
+
+        virtual std::wstring getSelection() const;
+        virtual void select(int start, int end);
+
+        virtual uint getCaret() const;
+        virtual void setCaret(uint position);
 
         virtual bool isFocuskeeper() const override {return true;};
 
@@ -153,6 +192,9 @@ namespace gui {
         virtual bool validate();
         virtual void setValid(bool valid);
         virtual bool isValid() const;
+
+        virtual void click(GUI*, int, int) override;
+        virtual void mouseMove(GUI*, int x, int y) override;
     };
 
     class TrackBar : public UINode {

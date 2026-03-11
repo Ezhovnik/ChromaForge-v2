@@ -273,6 +273,10 @@ const char* Window::getClipboardText() {
     return glfwGetClipboardString(window);
 }
 
+void Window::setClipboardText(const char* text) {
+    glfwSetClipboardString(window, text);
+}
+
 void Window::clear() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

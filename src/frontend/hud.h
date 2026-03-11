@@ -108,7 +108,7 @@ public:
     void setPause(bool pause);
 
     void openInventory();
-    void openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inventory> blockInv);
+    void openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inventory> blockInv, bool playerInventory);
     void closeInventory();
     bool isInventoryOpen() const;
     void openPermanent(UIDocument* doc);
@@ -117,7 +117,7 @@ public:
 	void remove(HudElement& element);
     void remove(std::shared_ptr<gui::UINode> node);
 
-    Player* getPlayer() const;
+    std::shared_ptr<Player> getPlayer() const;
 };
 
 #endif // SRC_HUD_RENDER_H_

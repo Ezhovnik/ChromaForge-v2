@@ -23,8 +23,8 @@ int Font::getLineHeight() const {
 	return lineHeight;
 }
 
-int Font::calcWidth(std::wstring text) {
-	return text.length() * 8;
+int Font::calcWidth(std::wstring text, size_t length) {
+	return std::min(text.length(), length) * 8;
 }
 
 bool Font::isPrintableChar(int c) {

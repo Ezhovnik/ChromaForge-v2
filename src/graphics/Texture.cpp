@@ -7,49 +7,55 @@
 #include "ImageData.h"
 #include "../logger/Logger.h"
 
-// Конструктор класса Текстур
 Texture::Texture(uint id, int width, int height) : id(id), width(width), height(height){
 }
 
 Texture::Texture(ubyte* data, int width, int height, uint format) : width(width), height(height) {
+    // Генерируем уникальный идентификатор текстуры
 	glGenTextures(1, &id);
 	glBindTexture(GL_TEXTURE_2D, id);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+    // Загружаем данные в текстуру
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, (GLvoid *) data);
 
+    // Устанавливаем параметры фильтрации: при уменьшении используется мип-линейный, при увеличении — ближайший
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+    // Режим повторения текстуры за пределами [0,1]
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
+    // Генерируем мип-карты
     glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1); // Ограничиваем максимальный уровень мип-карт
 
+    // Отвязываем текстуру, чтобы избежать случайных изменений
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-// Деструктор класса Текстур
 Texture::~Texture() {
     glDeleteTextures(1, &id);
 }
 
-// Активирует и привязывает текстуру для использования в отрисовке
 void Texture::bind() {
     glBindTexture(GL_TEXTURE_2D, id);
 }
 
-void Texture::reload(ubyte* data){
+void Texture::reload(ubyte* data) {
+    // Привязываем и заменяем данные без изменения параметров
 	glBindTexture(GL_TEXTURE_2D, id);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *) data);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 ImageData* Texture::readData() {
+    // Выделяем буфер для пикселей (RGBA, 4 байта на пиксель)
     std::unique_ptr<ubyte[]> data (new ubyte[width * height * 4]);
     glBindTexture(GL_TEXTURE_2D, id);
+    // Читаем текущее содержимое текстуры в буфер
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.get());
     glBindTexture(GL_TEXTURE_2D, 0);
     return new ImageData(ImageFormat::rgba8888, width, height, data.release());
@@ -69,6 +75,7 @@ Texture* Texture::from(const ImageData* image) {
 		case ImageFormat::rgba8888: format = GL_RGBA; break;
 		default:
             LOG_CRITICAL("Unsupported image data format");
+            Logger::getInstance().flush();
 			throw std::runtime_error("unsupported image data format");
 	}
 	const void* data = image->getData();

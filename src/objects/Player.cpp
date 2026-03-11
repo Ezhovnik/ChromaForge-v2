@@ -11,16 +11,13 @@
 #include "../content/ContentLUT.h"
 
 namespace PlayerConsts {
-    constexpr float CROUCH_SPEED_MUL = 0.35f;
-    constexpr float CROUCH_SHIFT_Y = -0.2f;
-    constexpr float RUN_SPEED_MUL = 1.5f;
-    constexpr float FLIGHT_SPEED_MUL = 5.0f;
-    constexpr float JUMP_FORCE = 8.0f;
-    constexpr float GROUND_DAMPING = 10.0f;
-    constexpr float AIR_DAMPING = 7.0f;
-    constexpr float CHEAT_SPEED_MUL = 5.0f;
-
-	constexpr int INVENTORY_SIZE = 40;
+    constexpr float CROUCH_SPEED_MUL = 0.35f; ///< Множитель скорости при приседании
+    constexpr float RUN_SPEED_MUL = 1.5f; ///< Множитель скорости при беге
+    constexpr float FLIGHT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме полёта
+    constexpr float JUMP_FORCE = 8.0f; ///< Сила прыжка
+    constexpr float GROUND_DAMPING = 10.0f; ///< Затухание скорости на земле
+    constexpr float AIR_DAMPING = 7.0f; ///< Затухание скорости в воздухе
+    constexpr float CHEAT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме читов
 }
 
 Player::Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inventory) : 
@@ -34,18 +31,18 @@ Player::Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inven
 	inventory(inventory) {
 }
 
-void Player::update(Level* level, PlayerInput& input, float delta) {
+void Player::updateInput(Level* level, PlayerInput& input, float delta) {
 	bool crouch = input.crouch && hitbox->grounded && !input.sprint;
 	float speed = this->speed;
 
+	// Применяем модификаторы скорости
 	if (flight) speed *= PlayerConsts::FLIGHT_SPEED_MUL;
-
 	if (input.cheat) speed *= PlayerConsts::CHEAT_SPEED_MUL;
-
 	if (crouch) speed *= PlayerConsts::CROUCH_SPEED_MUL;
 	else if (input.sprint) speed *= PlayerConsts::RUN_SPEED_MUL;
 
-	glm::vec3 dir(0,0,0);
+	// Вычисляем направление движения на основе ввода и ориентации камеры
+	glm::vec3 dir(0, 0, 0);
 	if (input.moveForward){
 		dir.x += camera->dir.x;
 		dir.z += camera->dir.z;
@@ -62,29 +59,30 @@ void Player::update(Level* level, PlayerInput& input, float delta) {
 		dir.x -= camera->right.x;
 		dir.z -= camera->right.z;
 	}
-	if (length(dir) > 0.0f){
+	// Если есть движение, нормализуем и придаём импульс
+	if (length(dir) > 0.0f) {
 		dir = normalize(dir);
 		hitbox->velocity.x += dir.x * speed * delta * 9;
 		hitbox->velocity.z += dir.z * speed * delta * 9;
 	}
 
+	// Вычисляем количество подшагов физики для стабильности при высокой скорости
 	float vel = std::max(glm::length(hitbox->velocity * 0.25f), 1.0f);
 	int substeps = int(delta * vel * 1000);
 	substeps = std::min(100, std::max(1, substeps));
+
+	// Выполняем шаг физики
 	level->physics->step(level->chunks, hitbox.get(), delta, substeps, crouch, flight ? 0.0f : 1.0f, !noclip);
+
 	if (flight && hitbox->grounded) flight = false;
-
 	if (input.jump && hitbox->grounded) hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
-
-	if ((input.flight && !noclip) ||
-		(input.noclip && flight == noclip)){
+	if ((input.flight && !noclip) || (input.noclip && flight == noclip)){
 		flight = !flight;
 		if (flight) hitbox->grounded = false;
 	}
-	if (input.noclip) {
-		noclip = !noclip;
-	}
+	if (input.noclip) noclip = !noclip;
 
+	// Управление затуханием скорости
 	hitbox->linear_damping = PlayerConsts::GROUND_DAMPING;
 	if (flight){
 		hitbox->linear_damping = PlayerConsts::AIR_DAMPING;
@@ -97,21 +95,27 @@ void Player::update(Level* level, PlayerInput& input, float delta) {
 	input.noclip = false;
 	input.flight = false;
 
+	// Если точка возрождения не задана, пытаемся найти её
 	if (spawnpoint.y <= 0.1) attemptToFindSpawnpoint(level);
 }
 
 void Player::attemptToFindSpawnpoint(Level* level) {
 	glm::vec3 ppos = hitbox->position;
-	glm::vec3 newpos {ppos.x + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), 
-					  RandomGenerator::get<int>(0, RAND_MAX) % 80 + 100, 
-					  ppos.z + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
-					 };
-	while (newpos.y > 0 && !level->chunks->isObstacleBlock(newpos.x, newpos.y-2, newpos.z)) {
+	// Генерируем случайную позицию в окрестности текущей
+	glm::vec3 newpos {
+		ppos.x + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), 
+		RandomGenerator::get<int>(0, RAND_MAX) % 80 + 100, 
+		ppos.z + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
+	};
+
+	// Опускаемся вниз, пока не найдём твёрдый блок под ногами
+	while (newpos.y > 0 && !level->chunks->isObstacleBlock(newpos.x, newpos.y - 2, newpos.z)) {
 		newpos.y--;
 	}
 
+	// Проверяем, что в позиции игрока нет препятствий и над головой воздух
 	voxel* headvox = level->chunks->getVoxel(newpos.x, newpos.y + 1, newpos.z);
-	if (level->chunks->isObstacleBlock(newpos.x, newpos.y, newpos.z) || headvox == nullptr || headvox->id != 0) return;
+	if (level->chunks->isObstacleBlock(newpos.x, newpos.y, newpos.z) || headvox == nullptr || headvox->id != 0) return; // не удалось найти безопасное место
 	spawnpoint = newpos + glm::vec3(0.5f, 0.0f, 0.5f);
 	teleport(spawnpoint);
 }
@@ -189,7 +193,7 @@ void Player::setChosenSlot(int index) {
     chosenSlot = index;
 }
 
-itemid_t Player::getChosenSlot() const {
+int Player::getChosenSlot() const {
     return chosenSlot;
 }
 

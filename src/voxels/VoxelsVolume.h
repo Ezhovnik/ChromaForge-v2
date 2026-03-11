@@ -6,6 +6,7 @@
 #include "voxel.h"
 
 class VoxelsVolume {
+private:
 	int x, y, z;
 	int width, height, depth;
     int volume;
