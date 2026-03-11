@@ -183,7 +183,15 @@ void BlocksRenderer::blockXSprite(int x, int y, int z, const glm::vec3& size, co
 }
 
 void BlocksRenderer::blockAABB(const glm::ivec3& icoord, const UVRegion(&texfaces)[6], const Block* block, ubyte rotation, bool lights) {
-	AABB hitbox = block->hitbox;
+	if (block->hitboxes.empty()) {
+        return;
+    }
+
+	AABB hitbox = block->hitboxes[0];
+    for (const auto& box : block->hitboxes) {
+        hitbox.a = glm::min(hitbox.a, box.a);
+        hitbox.b = glm::max(hitbox.b, box.b);
+    }
 	glm::vec3 size = hitbox.size();
 
 	glm::vec3 X(1, 0, 0);

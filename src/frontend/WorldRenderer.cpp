@@ -190,19 +190,17 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 			const glm::vec3 point = PlayerController::selectedPointPosition;
 			const glm::vec3 norm = PlayerController::selectedBlockNormal;
 
-			AABB hitbox = block->hitbox;
-			if (block->rotatable) {
-				auto states = PlayerController::selectedBlockStates;
-				block->rotations.variants[states].transform(hitbox);
-			}
+			std::vector<AABB>& hitboxes = block->rotatable ? block->rt.hitboxes[PlayerController::selectedBlockStates] : block->hitboxes;
 
-			const glm::vec3 center = pos + hitbox.center();
-			const glm::vec3 size = hitbox.size();
 			linesShader->use();
-			linesShader->uniformMatrix("u_projview", camera->getProjView());
-			lineBatch->setLineWidth(2.0f);
-			lineBatch->box(center, size + glm::vec3(0.02), glm::vec4(0.f, 0.f, 0.f, 0.5f));
-			if (level->player->debug) lineBatch->line(point, point + norm * 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+            linesShader->uniformMatrix("u_projview", camera->getProjView());
+            lineBatch->setLineWidth(2.0f);
+            for (auto& hitbox: hitboxes) {
+                const glm::vec3 center = pos + hitbox.center();
+                const glm::vec3 size = hitbox.size();
+                lineBatch->box(center, size + glm::vec3(0.02), glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+                if (level->player->debug) lineBatch->line(point, point + norm * 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+            }
 			lineBatch->render();
 		}
 		skybox->unbind();

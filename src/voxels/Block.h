@@ -91,7 +91,7 @@ public:
     bool grounded = false;
     bool hidden = false;
 
-    AABB hitbox;
+    std::vector<AABB> hitboxes;
 
     BlockRotProfile rotations;
 
@@ -99,7 +99,7 @@ public:
         blockid_t id;
 		bool solid = true;
 		bool emissive = false;
-		AABB hitboxes[BlockRotProfile::MAX_COUNT];
+		std::vector<AABB> hitboxes[BlockRotProfile::MAX_COUNT];
         block_funcs_set funcsset {};
         itemid_t pickingItem = 0;
 	} rt;

@@ -111,12 +111,28 @@ void ContentLoader::loadBlock(Block& definition, std::string name, std::filesyst
     }
 
     // AABB хитбокс блока в формате [x, y, z, width, height, depth]
-    auto hitboxobj = root->list("hitbox");
-    if (hitboxobj) {
-        AABB& aabb = definition.hitbox;
-        aabb.a = glm::vec3(hitboxobj->num(0), hitboxobj->num(1), hitboxobj->num(2));
-        aabb.b = glm::vec3(hitboxobj->num(3), hitboxobj->num(4), hitboxobj->num(5));
-        aabb.b += aabb.a;
+    auto boxarr = root->list("hitboxes");
+    if (boxarr) {
+        definition.hitboxes.resize(boxarr->size());
+        for (uint i = 0; i < boxarr->size(); ++i) {
+            auto box = boxarr->list(i);
+            definition.hitboxes[i].a = glm::vec3(box->num(0), box->num(1), box->num(2));
+            definition.hitboxes[i].b = glm::vec3(box->num(3), box->num(4), box->num(5));
+            definition.hitboxes[i].b += definition.hitboxes[i].a;
+        }
+    } else {
+        boxarr = root->list("hitbox");
+        if (boxarr) {
+            AABB aabb;
+            aabb.a = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
+            aabb.b = glm::vec3(boxarr->num(3), boxarr->num(4), boxarr->num(5));
+            aabb.b += aabb.a;
+            definition.hitboxes = {aabb};
+        } else if (!definition.modelBoxes.empty()) {
+            definition.hitboxes = definition.modelBoxes;
+        } else {
+            definition.hitboxes = {AABB()};
+        }
     }
 
     // Профили поворота

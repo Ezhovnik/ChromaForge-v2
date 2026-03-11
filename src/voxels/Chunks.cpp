@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <limits.h>
+#include <vector>
 
 #include "Chunk.h"
 #include "voxel.h"
@@ -48,13 +49,17 @@ const AABB* Chunks::isObstacleAt(float x, float y, float z) {
 	int iz = floor(z);
 	voxel* vox = getVoxel(ix, iy, iz);
 
-	if (vox == nullptr) return &contentIds->getBlockDef(BLOCK_AIR)->hitbox;
+	if (vox == nullptr) {
+        static const AABB empty;
+		return &empty;
+    }
 
 	const Block* def = contentIds->getBlockDef(vox->id);
 	if (def->obstacle) {
-		const AABB& hitbox = def->rotatable ? def->rt.hitboxes[vox->rotation()] : def->hitbox;
-		if (def->rt.solid) return &hitbox;
-		else if (hitbox.contains({x - ix, y - iy, z - iz})) return &hitbox;
+		const auto& boxes = def->rotatable ? def->rt.hitboxes[vox->rotation()] : def->hitboxes;
+        for (const auto& hitbox : boxes) {
+			if (hitbox.contains({x - ix, y - iy, z - iz})) return &hitbox;
+		}
 	}
 	return nullptr;
 }
@@ -222,14 +227,25 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 			iend.z = iz;
 
 			if (!def->rt.solid) {
-				const AABB& box = def->rotatable ? def->rt.hitboxes[voxel->rotation()] : def->hitbox;
+				const std::vector<AABB>& hitboxes = def->rotatable ? def->rt.hitboxes[voxel->rotation()] : def->hitboxes;
 
-				scalar_t distance;
-				Ray ray(start, dir);
-				if (ray.intersectAABB(iend, box, maxDist, norm, distance) > RayRelation::None){
-					end = start + (dir * glm::vec3(distance));
-					return voxel;
-				}
+                scalar_t distance = maxDist;
+                Ray ray(start, dir);
+
+				bool hit = false;
+
+                for (const auto& box : hitboxes) {
+                    scalar_t boxDistance;
+					glm::ivec3 boxNorm;
+                    if (ray.intersectAABB(iend, box, maxDist, boxNorm, boxDistance) > RayRelation::None && boxDistance < distance) {
+                        hit = true;
+                        distance = boxDistance;
+                        norm = boxNorm;
+                        end = start + (dir * glm::vec3(distance));
+                    }
+                }
+
+				if (hit) return voxel;
 			} else {
 				iend.x = ix;
 				iend.y = iy;
@@ -318,13 +334,17 @@ glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDis
 		const Block* def = contentIds->getBlockDef(voxel->id);
 		if (def->obstacle) {
 			if (!def->rt.solid) {
-				const AABB& box = def->rotatable ? def->rt.hitboxes[voxel->rotation()] : def->hitbox;
-				scalar_t distance;
-				glm::ivec3 norm;
-				Ray ray(start, dir);
-				if (ray.intersectAABB(glm::ivec3(ix, iy, iz), box, maxDist, norm, distance) > RayRelation::None) {
-					return start + (dir * glm::vec3(distance));
-				}
+				const std::vector<AABB>& hitboxes = def->rotatable ? def->rt.hitboxes[voxel->rotation()] : def->modelBoxes;
+
+                scalar_t distance;
+                glm::ivec3 norm;
+                Ray ray(start, dir);
+
+                for (const auto& box : hitboxes) {
+                    if (ray.intersectAABB(glm::ivec3(ix, iy, iz), box, maxDist, norm, distance) > RayRelation::None) {
+                        return start + (dir * glm::vec3(distance));
+                    }
+                }
 			} else {
 				return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
 			}

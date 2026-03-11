@@ -21,10 +21,11 @@
 ImageData* BlocksPreview::draw(const ContentGfxCache* cache, Framebuffer* fbo, Batch3D* batch, const Block* def, int size) {
     Window::clear();
     blockid_t id = def->rt.id;
-    const UVRegion texfaces[6]{ cache->getRegion(id, 0), cache->getRegion(id, 1),
-                                cache->getRegion(id, 2), cache->getRegion(id, 3),
-                                cache->getRegion(id, 4), cache->getRegion(id, 5)
-                            };
+    const UVRegion texfaces[6]{
+        cache->getRegion(id, 0), cache->getRegion(id, 1),
+        cache->getRegion(id, 2), cache->getRegion(id, 3),
+        cache->getRegion(id, 4), cache->getRegion(id, 5)
+    };
 
     switch (def->model) {
         case BlockModel::None:
@@ -33,7 +34,13 @@ ImageData* BlocksPreview::draw(const ContentGfxCache* cache, Framebuffer* fbo, B
             batch->blockCube(glm::vec3(size * 0.63f), texfaces, glm::vec4(1.0f), !def->rt.emissive);
             break;
         case BlockModel::AABB:
-            batch->blockCube(def->hitbox.size() * glm::vec3(size * 0.63f), texfaces, glm::vec4(1.0f), !def->rt.emissive);
+            {
+                glm::vec3 hitbox = glm::vec3();
+                for (const auto& box : def->hitboxes) {
+                    hitbox = glm::max(hitbox, box.size());
+                }
+                batch->blockCube(hitbox * glm::vec3(size * 0.63f), texfaces, glm::vec4(1.0f), !def->rt.emissive);
+            }
             break;
         case BlockModel::Custom:
         case BlockModel::X: {
@@ -79,7 +86,13 @@ std::unique_ptr<Atlas> BlocksPreview::build(const ContentGfxCache* cache, Assets
         auto def = indices->getBlockDef(i);
 
         glm::vec3 offset(0.1f, 0.5f, 0.1f);
-        if (def->model == BlockModel::AABB) offset.y += (1.0f - def->hitbox.size()).y * 0.5f;
+        if (def->model == BlockModel::AABB) {
+            glm::vec3 size = glm::vec3(0, 0, 0);
+            for (const auto& box : def->hitboxes) {
+                size = glm::max(size, box.size());
+            }
+            offset.y += (1.0f - size).y * 0.5f;
+        }
 
         atlas->getTexture()->bind();
         shader->uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), offset));
