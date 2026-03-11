@@ -28,7 +28,7 @@
 #include "../assets/Assets.h"
 #include "../logic/PlayerController.h"
 #include "../logger/Logger.h"
-#include "../graphics/ChunksRenderer.h"
+#include "graphics/ChunksRenderer.h"
 #include "../world/LevelEvents.h"
 #include "../math/FrustumCulling.h"
 #include "../math/voxmaths.h"
@@ -71,7 +71,11 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 	std::shared_ptr<Chunk> chunk = level->chunks->chunks[index];
 	if (!chunk->isLighted()) return false;
 
-	std::shared_ptr<Mesh> mesh = renderer->getOrRender(chunk.get());
+	float distance = glm::distance(
+        camera->position,
+        glm::vec3((chunk->chunk_x + 0.5f) * CHUNK_WIDTH, camera->position.y, (chunk->chunk_z + 0.5f) * CHUNK_DEPTH)
+    );
+	auto mesh = renderer->getOrRender(chunk, distance < CHUNK_WIDTH * 1.5f);
 	if (mesh == nullptr) return true;
 
 	if (culling){
@@ -92,6 +96,7 @@ bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shade
 }
 
 void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader) {
+	renderer->update();
 	std::vector<size_t> indices;
 	for (size_t i = 0; i < chunks->volume; ++i){
 		if (chunks->chunks[i] == nullptr) continue;

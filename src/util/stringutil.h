@@ -33,6 +33,9 @@ namespace util {
     extern std::vector<ubyte> base64_decode(const std::string& str);
 
     extern std::string mangleid(uint64_t value);
+
+    extern std::vector<std::string> split(const std::string& str, char delimiter);
+    extern std::vector<std::wstring> split(const std::wstring& str, char delimiter);
 }
 
 #endif // UTIL_STRINGUTIL_H_

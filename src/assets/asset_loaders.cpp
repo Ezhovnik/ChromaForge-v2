@@ -35,7 +35,7 @@ bool asset_loader::shader(
     std::string fragmentSource = files::read_string(fragmentFile);
 
 	// Компилируем и линкуем шейдерную программу
-	ShaderProgram* shader = ShaderProgram::loadShaderProgram(
+	ShaderProgram* shader = ShaderProgram::create(
 		vertexFile.string(),
 		fragmentFile.string(),
 		vertexSource,

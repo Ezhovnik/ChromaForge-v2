@@ -7,8 +7,8 @@
 #include "../voxels/Block.h"
 #include "../content/Content.h"
 
-namespace LightSolver_Consts {
-    const int coords[] = {
+namespace LightSolverConsts {
+	const int coords[] = {
         0, 0, 1,
         0, 0,-1,
         0, 1, 0,
@@ -17,7 +17,6 @@ namespace LightSolver_Consts {
         -1, 0, 0
     };
 }
-
 
 LightSolver::LightSolver(const ContentIndices* contentIds, Chunks* chunks, int channel) : chunks(chunks), channel(channel), contentIds(contentIds) {
 }
@@ -48,15 +47,16 @@ void LightSolver::remove(int x, int y, int z) {
 	chunk->light_map.set(x - chunk->chunk_x * CHUNK_WIDTH, y, z - chunk->chunk_z * CHUNK_DEPTH, channel, 0);
 }
 
-void LightSolver::solve(){
-	while (!rem_queue.empty()){
+void LightSolver::solve() {
+	while (!rem_queue.empty()) {
 		const lightentry entry = rem_queue.front();
 		rem_queue.pop();
 
 		for (int i = 0; i < 6; ++i) {
-			int x = entry.x + LightSolver_Consts::coords[i * 3 + 0];
-			int y = entry.y + LightSolver_Consts::coords[i * 3 + 1];
-			int z = entry.z + LightSolver_Consts::coords[i * 3 + 2];
+			int imul3 = i*3;
+			int x = entry.x + LightSolverConsts::coords[imul3];
+			int y = entry.y + LightSolverConsts::coords[imul3 + 1];
+			int z = entry.z + LightSolverConsts::coords[imul3 + 2];
 			Chunk* chunk = chunks->getChunkByVoxel(x, y, z);
 			if (chunk) {
 				int local_x = x - chunk->chunk_x * CHUNK_WIDTH;
@@ -80,9 +80,10 @@ void LightSolver::solve(){
 		add_queue.pop();
 
 		for (int i = 0; i < 6; ++i) {
-			int x = entry.x + LightSolver_Consts::coords[i * 3 + 0];
-			int y = entry.y + LightSolver_Consts::coords[i * 3 + 1];
-			int z = entry.z + LightSolver_Consts::coords[i * 3 + 2];
+			int imul3 = i * 3;
+			int x = entry.x + LightSolverConsts::coords[imul3];
+			int y = entry.y + LightSolverConsts::coords[imul3 + 1];
+			int z = entry.z + LightSolverConsts::coords[imul3 + 2];
 			Chunk* chunk = chunks->getChunkByVoxel(x, y, z);
 			if (chunk) {
 				int local_x = x - chunk->chunk_x * CHUNK_WIDTH;
