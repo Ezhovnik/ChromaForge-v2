@@ -15,18 +15,21 @@
 #include "../content/Content.h"
 #include "../content/ContentLUT.h"
 #include "../items/Inventories.h"
+#include "WorldGenerators.h"
 
 world_load_error::world_load_error(std::string message) : std::runtime_error(message) {
 }
 
 World::World(
-	std::string name, 
+	std::string name,
+	std::string generator,
 	std::filesystem::path directory, 
 	uint64_t seed, 
 	EngineSettings& settings, 
 	const Content* content, 
 	const std::vector<ContentPack> packs
-) : name(name), 
+) : name(name),
+	generator(generator),
 	seed(seed), 
 	settings(settings), 
 	content(content), 
@@ -64,7 +67,8 @@ void World::write(Level* level) {
 }
 
 Level* World::create(
-	std::string name, 
+	std::string name,
+	std::string generator,
 	std::filesystem::path directory, 
 	uint64_t seed, 
 	EngineSettings& settings, 
@@ -72,7 +76,7 @@ Level* World::create(
 	const std::vector<ContentPack>& packs
 ) {
 	LOG_INFO("Creating world");
-	World* world = new World(name, directory, seed, settings, content, packs);
+	World* world = new World(name, generator, directory, seed, settings, content, packs);
 	LOG_INFO("World successfully created");
 
 	LOG_INFO("Creating a level");
@@ -97,7 +101,15 @@ ContentLUT* World::checkIndices(const std::filesystem::path& directory, const Co
 Level* World::load(std::filesystem::path directory, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs) {
 	LOG_INFO("Loading world");
 	// Временно создаём мир с заглушкой имени и сидом 0 — они будут перезаписаны при десериализации
-	auto world = std::make_unique<World>(".", directory, 0, settings, content, packs);
+	auto world = std::make_unique<World>(
+		".",
+		WorldGenerators::getDefaultGeneratorID(),
+		directory, 
+		0, 
+		settings, 
+		content, 
+		packs
+	);
 	auto& wfile = world->wfile;
 
 	// Читаем world.json; если не удаётся — исключение
@@ -145,9 +157,20 @@ std::string World::getName() const {
     return name;
 }
 
+void World::setGenerator(const std::string& generator) {
+    this->generator = generator;
+}
+
+std::string World::getGenerator() const {
+    return generator;
+}
+
 void World::deserialize(dynamic::Map* root) {
     name = root->getStr("name", name);
+	generator = root->getStr("generator", generator);
     seed = root->getInt("seed", seed);
+
+	if (generator == "") generator = WorldGenerators::getDefaultGeneratorID();
 
 	// Информация о версии движка
 	auto verobj = root->map("version");
@@ -181,6 +204,7 @@ std::unique_ptr<dynamic::Map> World::serialize() const {
 	versionobj.put("maintenance", ENGINE_VERSION_MAINTENANCE);
 
 	root->put("name", getName());
+	root->put("generator", generator);
 	root->put("seed", getSeed());
 
 	// Время

@@ -20,6 +20,9 @@ menu.Settings=Налаштування
 menu.Content=Контент
 world.Seed=Зерно
 world.Name=Назва
+world.World generator=Генератор світла
+world.generators.default=Звичайні
+world.generators.flat=Плоскі
 menu.Create World=Створити Світ
 
 world.convert-request=Є зміни в індексах! Конвертувати світ?

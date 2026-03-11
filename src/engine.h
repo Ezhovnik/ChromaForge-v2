@@ -45,6 +45,8 @@ private:
 
     void updateTimers(); // Обновление таймеров (frame, deltaTime)
     void updateHotkeys(); // Обработка горячих клавиш
+
+    void addDefaultWorldGenerators();
 public:
     Engine(EngineSettings& settings, EnginePaths* paths); // Конструктор
     ~Engine(); // Деструктор

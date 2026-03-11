@@ -1,6 +1,8 @@
 #ifndef VOXELS_WORLDGENERATOR_H_
 #define VOXELS_WORLDGENERATOR_H_
 
+#include <string>
+
 #include "../typedefs.h"
 
 struct voxel;
@@ -11,7 +13,7 @@ class Content;
 
 // Класс для генерации воксельного мира
 class WorldGenerator {
-private:
+protected:
     blockid_t const idStone;
 	blockid_t const idDirt;
 	blockid_t const idMoss;
@@ -25,20 +27,10 @@ private:
     blockid_t const idDaisy;
     blockid_t const idMarigold;
 	blockid_t const idBedrock;
-
-    blockid_t generate_tree(
-		fnl_state *noise, 
-		PseudoRandom* random, 
-		Map2D& heights,
-		int real_x, 
-		int real_y, 
-		int real_z, 
-		int tileSize
-	);
 public:
 	WorldGenerator(const Content* content);
 
-	void generate(voxel* voxels, int x, int z, uint64_t seed);
+	virtual void generate(voxel* voxels, int x, int z, uint64_t seed) = 0;
 };
 
 #endif // VOXELS_WORLDGENERATOR_H_

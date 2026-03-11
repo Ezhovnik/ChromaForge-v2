@@ -20,11 +20,19 @@
 #include "../content/Content.h"
 #include "../util/timeutil.h"
 #include "../content/Content.h"
+#include "../world/WorldGenerators.h"
 
 constexpr int MAX_WORK_PER_FRAME = 64;
 constexpr int MIN_SURROUNDING = 9;
 
-ChunksController::ChunksController(Level* level, uint chunksPadding) : level(level), chunks(level->chunks), lighting(level->lighting), chunksPadding(chunksPadding), generator(new WorldGenerator(level->content)){
+ChunksController::ChunksController(
+	Level* level, 
+	uint chunksPadding
+) : level(level), 
+	chunks(level->chunks), 
+	lighting(level->lighting), 
+	chunksPadding(chunksPadding), 
+	generator(WorldGenerators::createGenerator(level->getWorld()->getGenerator(), level->content)){
 }
 
 ChunksController::~ChunksController() {
