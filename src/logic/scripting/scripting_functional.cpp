@@ -49,6 +49,16 @@ wstringsupplier scripting::create_wstring_supplier(int env, const std::string& s
     };
 }
 
+wstringchecker scripting::create_wstring_validator(int env, const std::string& src, const std::string& file) {
+    return [=](const std::wstring& x){
+        if (processCallback(env, src, file)) {
+            state->pushstring(util::wstr2str_utf8(x));
+            if (state->callNoThrow(1)) return state->toboolean(-1);
+        }
+        return false;
+    };
+}
+
 doubleconsumer scripting::create_number_consumer(int env, const std::string& src, const std::string& file) {
     return [=](double x){
         if (processCallback(env, src, file)) {

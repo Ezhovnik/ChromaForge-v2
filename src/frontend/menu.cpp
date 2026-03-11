@@ -596,6 +596,22 @@ void create_languages_panel(Engine* engine) {
     panel->add(guiutil::backButton(menu));
 }
 
+void menus::create_version_label(Engine* engine) {
+    auto gui = engine->getGUI();
+    auto vlabel = std::make_shared<gui::Label>(
+        util::str2wstr_utf8(std::to_string(ENGINE_VERSION_MAJOR) + "." + 
+		std::to_string(ENGINE_VERSION_MINOR) + "." + 
+		std::to_string(ENGINE_VERSION_MAINTENANCE) + 
+        " development build "
+    ));
+    vlabel->setZIndex(1000);
+    vlabel->setColor(glm::vec4(1, 1, 1, 0.5f));
+    vlabel->setPositionFunc([=]() {
+        return glm::vec2(Window::width-vlabel->getSize().x, 2);
+    });
+    gui->add(vlabel);
+}
+
 void menus::create_menus(Engine* engine) {
     create_new_world_panel(engine);
     create_settings_panel(engine);

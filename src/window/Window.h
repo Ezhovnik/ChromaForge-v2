@@ -62,6 +62,7 @@ public:
     static double time();
 
     static const char* getClipboardText();
+    static void setClipboardText(const char* text);
 
     static void clear();
     static void clearDepth();

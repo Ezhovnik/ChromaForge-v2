@@ -23,6 +23,9 @@ namespace lua {
 
         void logError(const std::string& text);
         void initEnvironment();
+
+        void removeLibFuncs(const char* libname, const char* funcs[]);
+        void createLibs();
     public:
         LuaState();
         ~LuaState();
@@ -62,8 +65,7 @@ namespace lua {
 
         bool rename(const std::string& from, const std::string& to);
         void remove(const std::string& name);;
-        void createFuncs();
-    
+
         int createEnvironment(int parent);
         void removeEnvironment(int id);
 

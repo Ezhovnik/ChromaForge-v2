@@ -36,8 +36,14 @@ namespace ZoomConsts {
 
 constexpr float CROUCH_SHIFT_Y = -0.2f;
 
-CameraControl::CameraControl(Player* player, const CameraSettings& settings) : player(player), camera(player->camera), settings(settings), offset(0.0f, 0.7f, 0.0f), currentViewCamera(player->currentCamera) {
-}
+CameraControl::CameraControl(
+	std::shared_ptr<Player> player, 
+	const CameraSettings& settings
+) : player(player), 
+	camera(player->camera), 
+	settings(settings), 
+	offset(0.0f, 0.7f, 0.0f), 
+	currentViewCamera(player->currentCamera) {}
 
 void CameraControl::refresh() {
 	camera->position = player->hitbox->position + offset;
@@ -123,8 +129,14 @@ glm::vec3 PlayerController::selectedPointPosition;
 glm::ivec3 PlayerController::selectedBlockNormal;
 int PlayerController::selectedBlockStates = 0;
 
-PlayerController::PlayerController(Level* level, const EngineSettings& settings, BlocksController* blocksController) : level(level), player(level->player), camControl(level->player, settings.camera), blocksController(blocksController) {
-}
+PlayerController::PlayerController(
+	Level* level, 
+	const EngineSettings& settings, 
+	BlocksController* blocksController
+) : level(level), 
+	player(level->player), 
+	camControl(level->player, settings.camera), 
+	blocksController(blocksController) {}
 
 void PlayerController::updateKeyboard() {
 	input.moveForward = Events::isActive(BIND_MOVE_FORWARD);
@@ -168,13 +180,13 @@ void PlayerController::resetKeyboard() {
 }
 
 void PlayerController::updateControls(float delta){
-	player->update(level, input, delta);
+	player->updateInput(level, input, delta);
 }
 
 void PlayerController::updateInteraction(){
 	const ContentIndices* contentIds = level->content->getIndices();
 	Chunks* chunks = level->chunks;
-	Player* player = level->player;
+	Player* player = level->player.get();
 	Lighting* lighting = level->lighting;
 	Camera* camera = player->camera.get();
 

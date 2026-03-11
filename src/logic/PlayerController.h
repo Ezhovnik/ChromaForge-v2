@@ -7,6 +7,7 @@
 
 #include "../settings.h"
 #include "../objects/Player.h"
+#include "../interfaces/Object.h"
 
 class Camera;
 class BlocksController;
@@ -14,7 +15,7 @@ class Level;
 class Chunks;
 
 class CameraControl {
-	Player* player;
+	std::shared_ptr<Player> player;
 	std::shared_ptr<Camera> camera, currentViewCamera;
 	const CameraSettings& settings;
 
@@ -23,7 +24,7 @@ class CameraControl {
 	float shakeTimer = 0.0f;
 	glm::vec3 interpVel {0.0f};
 public:
-	CameraControl(Player* player, const CameraSettings& settings);
+	CameraControl(std::shared_ptr<Player> player, const CameraSettings& settings);
 
 	void updateMouse(PlayerInput& input);
 	void update(PlayerInput& input, float delta, Chunks* chunks);
@@ -33,7 +34,7 @@ public:
 class PlayerController {
 private:
 	Level* level;
-	Player* player;
+	std::shared_ptr<Player> player;
 	PlayerInput input;
 	CameraControl camControl;
 	BlocksController* blocksController;

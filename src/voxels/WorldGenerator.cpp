@@ -102,13 +102,15 @@ WorldGenerator::WorldGenerator(const Content* content)
 				idBedrock(content->requireBlock(CHROMAFORGE_CONTENT_NAMESPACE":bedrock").rt.id) {;
 }
 
-blockid_t WorldGenerator::generate_tree(fnl_state *noise, 
-				  PseudoRandom* random, 
-				  Map2D& heights, 
-				  int cur_x, 
-				  int cur_y, 
-				  int cur_z, 
-				  int tileSize){
+blockid_t WorldGenerator::generate_tree(
+	fnl_state *noise, 
+	PseudoRandom* random, 
+	Map2D& heights, 
+	int cur_x, 
+	int cur_y, 
+	int cur_z, 
+	int tileSize)
+{
 	const int tileX = floordiv(cur_x, tileSize);
 	const int tileZ = floordiv(cur_z, tileSize);
 

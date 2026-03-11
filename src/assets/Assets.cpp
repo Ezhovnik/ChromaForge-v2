@@ -12,13 +12,8 @@ Assets::~Assets() {
 }
 
 Texture* Assets::getTexture(std::string name) const {
-    // Ищем текстуру в словаре
     auto it = textures.find(name);
-
-    // Если нашли, возвращаем указатель на текстуру
     if (it != textures.end()) return it->second.get();
-
-    // Текстура не найдена
 	return nullptr;
 }
 
@@ -27,13 +22,8 @@ void Assets::store(Texture* texture, std::string name){
 }
 
 ShaderProgram* Assets::getShader(std::string name) const{
-    // Ищем шейдер в словаре
     auto it = shaders.find(name);
-
-    // Если нашли, возвращаем указатель на шейдер
     if (it != shaders.end()) return it->second.get();
-
-    // Шейдер не найден
     return nullptr;
 }
 
@@ -42,13 +32,8 @@ void Assets::store(ShaderProgram* shader, std::string name){
 }
 
 Font* Assets::getFont(std::string name) const{
-    // Ищем шрифт в словаре
     auto it = fonts.find(name);
-
-    // Если нашли, возвращаем указатель на шрифт
     if (it != fonts.end()) return it->second.get();
-
-    // Шрифт не найден
     return nullptr;
 }
 
@@ -57,13 +42,8 @@ void Assets::store(Font* font, std::string name){
 }
 
 Atlas* Assets::getAtlas(std::string name) const {
-	// Ищем атлас в словаре
     auto it = atlases.find(name);
-
-    // Если нашли, возвращаем указатель на атлас
     if (it != atlases.end()) return it->second.get();
-
-    // Атлас не найден
     return nullptr;
 }
 
@@ -80,13 +60,8 @@ void Assets::store(const TextureAnimation& animation) {
 }
 
 UIDocument* Assets::getLayout(std::string name) const {
-    // Ищем макет в словаре
     auto it = layouts.find(name);
-
-    // Если нашли, возвращаем указатель на макет
     if (it != layouts.end()) return it->second.get();
-
-    // Макет не найден
     return nullptr;
 }
 

@@ -26,15 +26,18 @@ private:
     blockid_t const idMarigold;
 	blockid_t const idBedrock;
 
-    blockid_t generate_tree(fnl_state *noise, 
-				  PseudoRandom* random, 
-				  Map2D& heights,
-				  int real_x, 
-				  int real_y, 
-				  int real_z, 
-				  int tileSize);
+    blockid_t generate_tree(
+		fnl_state *noise, 
+		PseudoRandom* random, 
+		Map2D& heights,
+		int real_x, 
+		int real_y, 
+		int real_z, 
+		int tileSize
+	);
 public:
 	WorldGenerator(const Content* content);
+
 	void generate(voxel* voxels, int x, int z, uint64_t seed);
 };
 

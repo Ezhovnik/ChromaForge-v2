@@ -3,6 +3,12 @@
 
 #include <string>
 
+/**
+ * @brief Содержит статические константы для кодов клавиш (на основе GLFW).
+ *
+ * Все значения соответствуют константам GLFW (например, GLFW_KEY_ENTER).
+ * Также предоставляет функцию для получения локализованного имени клавиши.
+ */
 struct keycode {
     static int ENTER;
     static int TAB;
@@ -83,35 +89,70 @@ struct keycode {
     static int LEFT_BRACKET;
     static int RIGHT_BRACKET;
 
+    /**
+     * @brief Возвращает локализованное имя клавиши по её коду.
+     * @param code Код клавиши (одна из констант keycode).
+     * @return Строка с именем клавиши (например, "Enter", "A").
+     */
     static const std::string name(int code);
 };
 
+/**
+ * @brief Содержит статические константы для кодов кнопок мыши.
+ *
+ * Значения соответствуют константам GLFW.
+ */
 struct mousecode {
     static int BUTTON_1;
     static int BUTTON_2;
     static int BUTTON_3;
 
+    /**
+     * @brief Возвращает имя кнопки мыши по её коду.
+     * @param code Код кнопки (одна из констант mousecode).
+     * @return Строка с именем ("LMB", "RMB", "MMB").
+     */
     static const std::string name(int code);
 };
 
+/**
+ * @brief Тип устройства ввода.
+ */
 enum class inputType {
     keyboard, mouse
 };
 
+/**
+ * @brief Представляет привязку действия к клавише или кнопке мыши.
+ *
+ * Хранит текущее состояние (нажата или нет) и флаг, было ли состояние изменено в текущем кадре.
+ */
 struct Binding {
     inputType type;
     int code;
     bool state = false;
     bool justChange = false;
 
+    /**
+     * @brief Проверяет, активно ли нажатие (кнопка удерживается).
+     * @return true, если кнопка нажата.
+     */
     bool isActive() {
         return state;
     }
 
+    /**
+     * @brief Проверяет, было ли только что совершено нажатие (в этом кадре).
+     * @return true, если кнопка нажата и состояние изменилось в этом кадре.
+     */
     bool justActive() {
         return state && justChange;
     }
 
+    /**
+     * @brief Возвращает текстовое представление привязки (имя клавиши/кнопки).
+     * @return Строка с именем.
+     */
     const std::string text() const {
         switch (type) {
             case inputType::keyboard: return keycode::name(code);

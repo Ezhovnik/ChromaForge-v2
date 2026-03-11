@@ -370,15 +370,18 @@ void Hud::update(bool hudVisible) {
     }
 
 	glm::vec2 invSize = contentAccessPanel->getSize();
-    contentAccessPanel->setVisible(inventoryOpen);
+    contentAccessPanel->setVisible(inventoryView != nullptr);
     contentAccessPanel->setSize(glm::vec2(invSize.x, Window::height));
     contentAccess->setMinSize(glm::vec2(1, Window::height));
 	hotbarView->setVisible(hudVisible);
 
-    for (int i = keycode::NUM_1; i <= keycode::NUM_9; ++i) {
-        if (Events::justPressed(i)) player->setChosenSlot(i - keycode::NUM_1);
+    if (!guiController->isFocusCaught() && !pause) {
+        for (int i = keycode::NUM_1; i <= keycode::NUM_9; ++i) {
+            if (Events::justPressed(i)) player->setChosenSlot(i - keycode::NUM_1);
+        }
+        if (Events::justPressed(keycode::NUM_0)) player->setChosenSlot(9);
     }
-    if (Events::justPressed(keycode::NUM_0)) player->setChosenSlot(9);
+
     if (!pause && !inventoryOpen && Events::scroll) {
         int slot = player->getChosenSlot();
         slot = (slot - Events::scroll) % 10;
@@ -402,8 +405,6 @@ void Hud::draw(const GfxContext& context) {
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
 
-    Player* player = level->player;
-
     uicamera->setFov(height);
 
 	auto batch = context.getBatch2D();
@@ -413,8 +414,8 @@ void Hud::draw(const GfxContext& context) {
 	uiShader->use();
 	uiShader->uniformMatrix("u_projview", uicamera->getProjView());
 
-	hotbarView->setCoord(glm::vec2(width/2, height-65));
-    hotbarView->setSelected(player->getChosenSlot());
+	hotbarView->setCoord(glm::vec2(width / 2, height - 65));
+    hotbarView->setSelected(level->player->getChosenSlot());
 
 	if (!pause && Events::_cursor_locked && !level->player->debug) {
 		GfxContext crosshair_context = context.sub();
@@ -443,25 +444,28 @@ void Hud::draw(const GfxContext& context) {
     }
 
 	if (inventoryOpen) {
-		float caWidth = contentAccess->getSize().x;
+		float caWidth = inventoryView ? contentAccess->getSize().x : 0.0f;
         contentAccessPanel->setCoord(glm::vec2(width-caWidth, 0));
 
-		glm::vec2 invSize = inventoryView->getSize();
-        if (blockUI == nullptr) {
+		glm::vec2 invSize = inventoryView ? inventoryView->getSize() : glm::vec2();
+        if (blockUI == nullptr && inventoryView) {
             inventoryView->setCoord(glm::vec2(
                 glm::min(width / 2 - invSize.x / 2, width - caWidth - 10 - invSize.x),
                 height / 2-invSize.y / 2
             ));
         } else {
             glm::vec2 blockInvSize = blockUI->getSize();
-            int interval = 5;
+            float invwidth = glm::max(invSize.x, blockInvSize.x);
+            int interval = invSize.y > 0.0 ? 5 : 0;
             float totalHeight = invSize.y + blockInvSize.y + interval;
-            inventoryView->setCoord(glm::vec2(
-                glm::min(width / 2 - invSize.x / 2, width - caWidth - 10 - invSize.x),
-                height / 2 + totalHeight / 2 - invSize.y
-            ));
+            if (inventoryView) {
+                inventoryView->setCoord(glm::vec2(
+                    glm::min(width / 2 - invwidth / 2, width - caWidth - 10 - invwidth),
+                    height / 2 + totalHeight / 2 - invSize.y
+                ));
+            }
             blockUI->setCoord(glm::vec2(
-                glm::min(width / 2 - invSize.x / 2, width - caWidth - 10 - invSize.x),
+                glm::min(width / 2 - invwidth / 2, width - caWidth - 10 - invwidth),
                 height / 2 - totalHeight / 2
             ));
         }
@@ -470,7 +474,7 @@ void Hud::draw(const GfxContext& context) {
 	batch->render();
 }
 
-void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inventory> blockinv) {
+void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inventory> blockinv, bool playerInventory) {
 	if (isInventoryOpen()) closeInventory();
 
     auto level = levelFrontend->getLevel();
@@ -480,7 +484,10 @@ void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inven
 		Logger::getInstance().flush();
         throw std::runtime_error("Block UI root element must be 'inventory'");
     }
-    openInventory();
+
+    if (playerInventory) openInventory();
+    else inventoryOpen = true;
+
     if (blockinv == nullptr) blockinv = level->inventories->createVirtual(blockUI->getSlotsCount());
     level->chunks->getChunkByVoxel(block.x, block.y, block.z)->setUnsaved(true);
     blockUI->bind(blockinv, levelFrontend, interaction.get());
@@ -587,6 +594,6 @@ void Hud::remove(std::shared_ptr<gui::UINode> node) {
     cleanup();
 }
 
-Player* Hud::getPlayer() const {
+std::shared_ptr<Player> Hud::getPlayer() const {
     return levelFrontend->getLevel()->player;
 }

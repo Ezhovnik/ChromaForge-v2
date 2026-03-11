@@ -5,6 +5,7 @@
 #include "ChunksController.h"
 #include "BlocksController.h"
 #include "scripting/scripting.h"
+#include "../interfaces/Object.h"
 
 LevelController::LevelController(EngineSettings& settings, Level* level) : settings(settings), level(level) {
     blocks = std::make_unique<BlocksController>(level, settings.chunks.padding);
@@ -21,7 +22,16 @@ void LevelController::update(float delta, bool input, bool pause) {
     player->update(delta, input, pause);
     level->update();
     chunks->update(settings.chunks.loadSpeed);
-    if (!pause) blocks->update(delta);
+
+    level->objects.remove_if([](auto obj) {return obj == nullptr;});
+
+    if (!pause) {
+        for(auto obj : level->objects) {
+            if(obj && obj->shouldUpdate) obj->update(delta);
+        }
+
+        blocks->update(delta);
+    }
 }
 
 void LevelController::onWorldSave() {

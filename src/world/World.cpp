@@ -16,14 +16,22 @@
 #include "../content/ContentLUT.h"
 #include "../items/Inventories.h"
 
-inline constexpr glm::vec3 SPAWNPOINT = {0, 256, 0}; // Точка, где игрок появляется в мире
-inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; // Начальная скорость перемещения игрока
-inline constexpr int DEFAULT_PLAYER_INVENTORY_SIZE = 40;
-
 world_load_error::world_load_error(std::string message) : std::runtime_error(message) {
 }
 
-World::World(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content, const std::vector<ContentPack> packs) : name(name), seed(seed), settings(settings), content(content), packs(packs) {
+World::World(
+	std::string name, 
+	std::filesystem::path directory, 
+	uint64_t seed, 
+	EngineSettings& settings, 
+	const Content* content, 
+	const std::vector<ContentPack> packs
+) : name(name), 
+	seed(seed), 
+	settings(settings), 
+	content(content), 
+	packs(packs) 
+{
 	wfile = new WorldFiles(directory, settings.debug);
 }
 
@@ -33,7 +41,7 @@ World::~World(){
 
 void World::updateTimers(float delta) {
 	daytime += delta * daytimeSpeed;
-	daytime = fmod(daytime, 1.0f);
+	daytime = fmod(daytime, 1.0f); // зацикливаем в [0,1)
 	totalTime += delta;
 }
 
@@ -41,6 +49,7 @@ void World::write(Level* level) {
 	const Content* content = level->content;
 	Chunks* chunks = level->chunks;
 
+	// Проходим по всем чанкам в хранилище
 	for (size_t i = 0; i < chunks->volume; ++i) {
 		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
 		if (chunk == nullptr || !chunk->isLighted()) continue;
@@ -49,20 +58,28 @@ void World::write(Level* level) {
 		wfile->put(chunk.get());
 	}
 
+	// Запись метаданных мира и игрока
 	wfile->write(this, content);
 	wfile->writePlayer(level->player);
 }
 
-Level* World::create(std::string name, std::filesystem::path directory, uint64_t seed, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs) {
+Level* World::create(
+	std::string name, 
+	std::filesystem::path directory, 
+	uint64_t seed, 
+	EngineSettings& settings, 
+	const Content* content, 
+	const std::vector<ContentPack>& packs
+) {
 	LOG_INFO("Creating world");
 	World* world = new World(name, directory, seed, settings, content, packs);
 	LOG_INFO("World successfully created");
 
 	LOG_INFO("Creating a level");
-	auto inventory = std::make_shared<Inventory>(world->getNextInventoryId(), DEFAULT_PLAYER_INVENTORY_SIZE);
-    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, inventory);
-    Level* level = new Level(world, content, player, settings);
-    level->inventories->store(player->getInventory());
+    Level* level = new Level(world, content, settings);
+	auto inventory = level->player->getInventory();
+    inventory->setId(world->getNextInventoryId());
+    level->inventories->store(inventory);
 	LOG_INFO("Level successfully created");
 
 	Logger::getInstance().flush();
@@ -79,9 +96,11 @@ ContentLUT* World::checkIndices(const std::filesystem::path& directory, const Co
 
 Level* World::load(std::filesystem::path directory, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs) {
 	LOG_INFO("Loading world");
+	// Временно создаём мир с заглушкой имени и сидом 0 — они будут перезаписаны при десериализации
 	auto world = std::make_unique<World>(".", directory, 0, settings, content, packs);
 	auto& wfile = world->wfile;
 
+	// Читаем world.json; если не удаётся — исключение
 	if (!wfile->readWorldInfo(world.get())) {
 		LOG_ERROR("Could not to find world.json");
 		Logger::getInstance().flush();
@@ -89,14 +108,12 @@ Level* World::load(std::filesystem::path directory, EngineSettings& settings, co
 	}
 
 	LOG_INFO("Creating a level");
-	auto inventory = std::make_shared<Inventory>(world->getNextInventoryId(), DEFAULT_PLAYER_INVENTORY_SIZE);
-    Player* player = new Player(SPAWNPOINT, DEFAULT_PLAYER_SPEED, inventory);
-	wfile->readPlayer(player);
-	Level* level = new Level(world.get(), content, player, settings);
-	level->inventories->store(player->getInventory());
+	Level* level = new Level(world.get(), content, settings);
+	wfile->readPlayer(level->player);
+	level->inventories->store(level->player->getInventory());
 	LOG_INFO("Level successfully created");
 
-	world.release();
+	world.release(); // передаём владение уровню
 	LOG_INFO("World successfully created");
 	return level;
 }
@@ -132,6 +149,7 @@ void World::deserialize(dynamic::Map* root) {
     name = root->getStr("name", name);
     seed = root->getInt("seed", seed);
 
+	// Информация о версии движка
 	auto verobj = root->map("version");
 	if (verobj) {
 		int major = 0, minor = -1, maintenance = -1;
@@ -141,6 +159,7 @@ void World::deserialize(dynamic::Map* root) {
 		LOG_DEBUG("World version: {}.{}.{}", major, minor, maintenance);
 	}
 
+	// Таймеры
 	auto timeobj = root->map("time");
 	if (timeobj) {
 		timeobj->num("day-time", daytime);
@@ -148,12 +167,14 @@ void World::deserialize(dynamic::Map* root) {
         timeobj->num("total-time", totalTime);
 	}
 
+	// Счётчик инвентарей (по умолчанию 2, т.к. 1 обычно зарезервирован)
     nextInventoryId = root->getNum("next-inventory-id", 2);
 }
 
 std::unique_ptr<dynamic::Map> World::serialize() const {
 	auto root = std::make_unique<dynamic::Map>();
 
+	// Информация о версии движка
 	auto& versionobj = root->putMap("version");
 	versionobj.put("major", ENGINE_VERSION_MAJOR);
 	versionobj.put("minor", ENGINE_VERSION_MINOR);
@@ -162,6 +183,7 @@ std::unique_ptr<dynamic::Map> World::serialize() const {
 	root->put("name", getName());
 	root->put("seed", getSeed());
 
+	// Время
 	auto& timeobj = root->putMap("time");
 	timeobj.put("day-time", daytime);
 	timeobj.put("day-time-speed", daytimeSpeed);

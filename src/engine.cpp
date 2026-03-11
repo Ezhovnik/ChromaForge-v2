@@ -78,6 +78,7 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     gui = std::make_unique<gui::GUI>();
 
     if (settings.ui.language == "auto") settings.ui.language = platform::detect_locale();
+    if (ENGINE_VERSION_INDEV) menus::create_version_label(this);
     setLanguage(settings.ui.language);
 
     LOG_INFO("Initialization is finished");

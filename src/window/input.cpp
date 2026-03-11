@@ -2,6 +2,8 @@
 
 #include <GLFW/glfw3.h>
 
+// ========== Инициализация статических констант keycode ==========
+
 int keycode::ENTER = GLFW_KEY_ENTER;
 int keycode::TAB = GLFW_KEY_TAB;
 int keycode::SPACE = GLFW_KEY_SPACE;
@@ -88,12 +90,15 @@ int keycode::RIGHT_BRACKET = GLFW_KEY_RIGHT_BRACKET;
 const std::string keycode::name(int code) {
 #ifdef _WIN32
     char name[64];
+    // На Windows используем GetKeyNameTextA для получения локализованного имени клавиши.
     int result = GetKeyNameTextA(glfwGetKeyScancode(code) << 16, name, 64);
     if (result == 0) return "Unknown";
     return std::string(name);
 #else
+    // На других платформах пытаемся получить имя через GLFW.
     const char* name = glfwGetKeyName(code, glfwGetKeyScancode(code));
     if (name == nullptr) {
+        // Если GLFW не дал имени, используем встроенный словарь для специальных клавиш.
         switch (code) {
             case GLFW_KEY_TAB: return "Tab";
             case GLFW_KEY_LEFT_CONTROL: return "Left Ctrl";
@@ -142,6 +147,8 @@ const std::string keycode::name(int code) {
     return std::string(name);
 #endif // _WIN32
 }
+
+// ========== Инициализация статических констант mousecode ==========
 
 int mousecode::BUTTON_1 = GLFW_MOUSE_BUTTON_1;
 int mousecode::BUTTON_2 = GLFW_MOUSE_BUTTON_2;
