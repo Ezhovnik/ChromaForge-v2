@@ -58,3 +58,23 @@ int l_player_get_inv(lua_State* L) {
     lua_pushinteger(L, player->getChosenSlot());
     return 2;
 }
+
+int l_player_get_vel(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
+    glm::vec3 vel = scripting::level->player->hitbox->velocity;
+    lua_pushnumber(L, vel.x);
+    lua_pushnumber(L, vel.y);
+    lua_pushnumber(L, vel.z);
+    return 3;
+}
+
+int l_player_set_vel(lua_State* L) {
+    int playerid = lua_tointeger(L, 1);
+    if (playerid != 1) return 0;
+    lua::luanumber x = lua_tonumber(L, 2);
+    lua::luanumber y = lua_tonumber(L, 3);
+    lua::luanumber z = lua_tonumber(L, 4);
+    scripting::level->player->hitbox->velocity = glm::vec3(x, y, z);
+    return 0;
+}
