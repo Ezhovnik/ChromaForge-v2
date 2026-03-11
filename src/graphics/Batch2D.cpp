@@ -7,14 +7,16 @@
 #include "Sprite.h"
 #include "../typedefs.h"
 
-inline constexpr uint B2D_VERTEX_SIZE = 8;
+inline constexpr uint B2D_VERTEX_SIZE = 8; ///< Размер одной вершины в количестве float-ов
 
 Batch2D::Batch2D(size_t capacity) : capacity(capacity), color(1.0f, 1.0f, 1.0f, 1.0f) {
+	// Формат вершин: позиция (2), текстурные координаты (2), цвет (4)
 	const vattr attrs[] = {{2}, {2}, {4}, {0}};
 	buffer = new float[capacity * B2D_VERTEX_SIZE];
 	mesh = std::make_unique<Mesh>(buffer, 0, attrs);
 	index = 0;
 
+	// Создаём белую текстуру 1x1 для отрисовки без текстуры (чистый цвет)
 	ubyte pixels[] = {0xFF, 0xFF, 0xFF, 0xFF};
 	blank = new Texture(pixels, 1, 1, GL_RGBA);
 	_texture = nullptr;

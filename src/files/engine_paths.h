@@ -15,7 +15,7 @@ public:
 
 class EnginePaths {
     std::filesystem::path userfiles {"."};
-    std::filesystem::path resources {"../res"};
+    std::filesystem::path resources {"res"};
     std::filesystem::path worldFolder;
     std::vector<ContentPack>* contentPacks = nullptr;
 public:
