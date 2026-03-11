@@ -10,10 +10,9 @@
 #include "../core_defs.h"
 #include "../logger/Logger.h"
 
-const std::filesystem::path BUILD_FOLDER {"../build"};
-const std::filesystem::path SCREENSHOTS_FOLDER = BUILD_FOLDER/std::filesystem::path("screenshots");
-const std::filesystem::path LOGS_FOLDER = BUILD_FOLDER/std::filesystem::path("logs");
-const std::filesystem::path SAVES_FOLDER = BUILD_FOLDER/std::filesystem::path("saves");
+const std::filesystem::path SCREENSHOTS_FOLDER = std::filesystem::path("screenshots");
+const std::filesystem::path LOGS_FOLDER = std::filesystem::path("logs");
+const std::filesystem::path SAVES_FOLDER = std::filesystem::path("saves");
 
 static std::filesystem::path toCanonic(std::filesystem::path path) {
     std::stack<std::string> parts;
