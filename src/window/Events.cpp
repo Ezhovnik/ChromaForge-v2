@@ -23,8 +23,12 @@ bool Events::cursor_drag = false; // Начал ли пользователь д
 int Events::scroll = 0;
 
 std::vector<uint> Events::codepoints;
-std::vector<int> Events::pressedKeys;
+std::vector<keycode> Events::pressedKeys;
 std::unordered_map<std::string, Binding> Events::bindings;
+
+bool Events::isPressed(keycode code) {
+	return isPressed(static_cast<int>(code));
+}
 
 // Проверяет, нажата ли клавиша в данный момент
 bool Events::isPressed(int keycode) {
@@ -33,14 +37,26 @@ bool Events::isPressed(int keycode) {
     return _keys[keycode];
 }
 
+bool Events::justPressed(keycode code) {
+	return justPressed(static_cast<int>(code));
+}
+
 // Проверяет, была ли клавиша нажата именно в текущем кадре 
 bool Events::justPressed(int keycode) {
     return Events::isPressed(keycode) && _frames[keycode] == _current;
 }
 
+bool Events::isClicked(mousecode button) {
+	return isClicked(static_cast<int>(button));
+}
+
 // Проверяет, нажата ли кнопка мыши в данный момент
 bool Events::isClicked(int button) {
     return Events::isPressed(_MOUSE_KEYS_OFFSET + button);
+}
+
+bool Events::justClicked(mousecode button) {
+	return justClicked(static_cast<int>(button));
 }
 
 // Проверяет, была ли кнопка мыши нажата именно в текущем кадре
@@ -52,6 +68,14 @@ bool Events::justClicked(int button) {
 void Events::toggleCursor() {
     _cursor_locked = !_cursor_locked;
     Window::setCursorMode(_cursor_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+}
+
+void Events::bind(std::string name, inputType type, keycode code) {
+	bind(name, type, static_cast<int>(code));
+}
+
+void Events::bind(std::string name, inputType type, mousecode code) {
+	bind(name, type, static_cast<int>(code));
 }
 
 void Events::bind(std::string name, inputType type, int code) {

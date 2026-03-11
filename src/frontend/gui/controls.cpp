@@ -294,7 +294,7 @@ void TextBox::erase(size_t start, size_t length) {
 
 bool TextBox::eraseSelected() {
     if (selectionStart == selectionEnd) return false;
-    erase(selectionStart, selectionEnd-selectionStart);
+    erase(selectionStart, selectionEnd - selectionStart);
     resetSelection();
     return true;
 }
@@ -362,7 +362,7 @@ int TextBox::calcIndexAt(int x) const {
     return offset;
 }
 
-void TextBox::keyPressed(int key) {
+void TextBox::keyPressed(keycode key) {
     bool shiftPressed = Events::isPressed(keycode::LEFT_SHIFT);
     uint previousCaret = caret;
     if (key == keycode::BACKSPACE) {
@@ -533,17 +533,13 @@ void InputBindBox::drawBackground(const GfxContext* parent_context, Assets* asse
     label->setText(util::str2wstr_utf8(binding.text()));
 }
 
-void InputBindBox::clicked(GUI*, int button) {
-    binding.type = inputType::mouse;
-    binding.code = button;
+void InputBindBox::clicked(GUI*, mousecode button) {
+    binding.reset(button);
     defocus();
 }
 
-void InputBindBox::keyPressed(int key) {
-    if (key != keycode::ESCAPE) {
-        binding.type = inputType::keyboard;
-        binding.code = key;
-    }
+void InputBindBox::keyPressed(keycode key) {
+    if (key != keycode::ESCAPE) binding.reset(key);
     defocus();
 }
 

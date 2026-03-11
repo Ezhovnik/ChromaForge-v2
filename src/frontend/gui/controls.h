@@ -106,8 +106,8 @@ namespace gui {
         InputBindBox(Binding& binding, glm::vec4 padding = glm::vec4(6.0f));
         virtual void drawBackground(const GfxContext* parent_context, Assets* assets) override;
 
-        virtual void clicked(GUI*, int button) override;
-        virtual void keyPressed(int key) override;
+        virtual void clicked(GUI*, mousecode button) override;
+        virtual void keyPressed(keycode key) override;
         virtual bool isFocuskeeper() const override {return true;}
     };
 
@@ -159,7 +159,7 @@ namespace gui {
         virtual void drawBackground(const GfxContext* parent_context, Assets* assets) override;
 
         virtual void typed(uint codepoint) override; 
-        virtual void keyPressed(int key) override;
+        virtual void keyPressed(keycode key) override;
 
         virtual void setTextSupplier(wstringsupplier supplier);
         virtual void setTextConsumer(wstringconsumer consumer);

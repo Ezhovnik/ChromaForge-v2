@@ -177,7 +177,7 @@ bool SlotView::isHighlighted() const {
     return highlighted;
 }
 
-void SlotView::clicked(gui::GUI* gui, int button) {
+void SlotView::clicked(gui::GUI* gui, mousecode button) {
     if (bound == nullptr) return;
 
     ItemStack& grabbed = interaction->getGrabbedItem();
@@ -225,7 +225,7 @@ void SlotView::clicked(gui::GUI* gui, int button) {
 }
 
 void SlotView::focus(gui::GUI* gui) {
-    clicked(gui, 0);
+    clicked(gui, mousecode::BUTTON_1);
 }
 
 void SlotView::bind(int64_t inventoryId, ItemStack& stack, LevelFrontend* frontend, InventoryInteraction* interaction) {

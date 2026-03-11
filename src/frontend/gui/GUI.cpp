@@ -66,8 +66,8 @@ void GUI::activateMouse(float delta) {
     }
 
     if (hover) {
-        for (int i = mousecode::BUTTON_1; i < mousecode::BUTTON_1 + 12; ++i) {
-            if (Events::justClicked(i)) focus->clicked(this, i);
+        for (int i = static_cast<int>(mousecode::BUTTON_1); i < static_cast<int>(mousecode::BUTTON_1) + 12; ++i) {
+            if (Events::justClicked(i)) hover->clicked(this, static_cast<mousecode>(i));
         }
     }
 } 

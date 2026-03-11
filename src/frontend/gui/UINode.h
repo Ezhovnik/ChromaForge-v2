@@ -10,6 +10,7 @@
 
 #include ".../../typedefs.h"
 #include "../../delegates.h"
+#include "../../window/input.h"
 
 class GfxContext;
 class Assets;
@@ -82,7 +83,7 @@ namespace gui {
 
         virtual void focus(GUI*) {focused = true;}
         virtual void click(GUI*, int x, int y);
-        virtual void clicked(GUI*, int button) {}
+        virtual void clicked(GUI*, mousecode button) {}
         virtual void mouseMove(GUI*, int x, int y) {};
         virtual void mouseRelease(GUI*, int x, int y);
         virtual void scrolled(int value);
@@ -93,7 +94,7 @@ namespace gui {
         virtual bool isFocuskeeper() const {return false;}
 
         virtual void typed(uint codepoint) {};
-        virtual void keyPressed(int key) {};
+        virtual void keyPressed(keycode key) {};
 
         virtual bool isInside(glm::vec2 pos);
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self);
