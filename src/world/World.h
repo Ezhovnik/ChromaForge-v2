@@ -4,6 +4,7 @@
 #include <string>
 #include <filesystem>
 #include <stdexcept>
+#include <memory>
 
 #include "../typedefs.h"
 #include "../settings.h"
@@ -46,7 +47,7 @@ private:
 
 	int64_t nextInventoryId = 1; ///< Счётчик для выдачи следующих идентификаторов инвентарей
 public:
-	WorldFiles* wfile; ///< Менеджер файлов мира
+	std::unique_ptr<WorldFiles> wfile; ///< Менеджер файлов мира
 
 	/** 
      * Таймер дня/ночи в диапазоне 0..1.

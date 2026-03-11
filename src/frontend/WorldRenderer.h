@@ -29,10 +29,10 @@ class Batch3D;
 class WorldRenderer {
     Engine* engine;
 	Level* level;
-    Frustum* frustumCulling;
-    ChunksRenderer* renderer;
-	LineBatch* lineBatch;
-	Skybox* skybox;
+    std::unique_ptr<Frustum> frustumCulling;
+    std::unique_ptr<ChunksRenderer> renderer;
+	std::unique_ptr<LineBatch> lineBatch;
+	std::unique_ptr<Skybox> skybox;
 	std::unique_ptr<Batch3D> batch3d;
 
     bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool culling);

@@ -1,5 +1,8 @@
 #include "controls.h"
 
+#include <queue>
+#include <sstream>
+
 #include "../../assets/Assets.h"
 #include "../../graphics/Batch2D.h"
 #include "../../graphics/Font.h"
@@ -22,22 +25,54 @@ Label::Label(std::wstring text, std::string fontName) : UINode(glm::vec2(), glm:
 
 void Label::setText(std::wstring text) {
     this->text = text;
+    lines = 1;
+    for (size_t i = 0; i < text.length(); ++i) {
+        if (text[i] == L'\n') lines++;
+    }
+    lines = std::max(lines, 1U);
 }
 
-std::wstring Label::getText() const {
+const std::wstring& Label::getText() const {
     return text;
+}
+
+void Label::setVerticalAlign(Align align) {
+    this->valign = align;
+}
+
+Align Label::getVerticalAlign() const {
+    return valign;
+}
+
+float Label::getLineInterval() const {
+    return lineInterval;
+}
+
+void Label::setLineInterval(float interval) {
+    lineInterval = interval;
+}
+
+int Label::getTextYOffset() const {
+    return textYOffset;
+}
+
+int Label::getLineYOffset(uint line) const {
+    return line * totalLineHeight + textYOffset;
 }
 
 void Label::draw(const GfxContext* parent_context, Assets* assets) {
     if (supplier) setText(supplier());
 
     auto batch = parent_context->getBatch2D();
-    batch->color = getColor();
     Font* font = assets->getFont(fontName);
+
+    batch->setColor(getColor());
+
+    uint lineHeight = font->getLineHeight();
     glm::vec2 size = getSize();
     glm::vec2 newsize = glm::vec2(
         font->calcWidth(text), 
-        font->getLineHeight()+font->getYOffset()
+        (lines == 1 ? lineHeight : lineHeight * lineInterval) * lines + font->getYOffset()
     );
 
     glm::vec2 coord = calcCoord();
@@ -53,8 +88,33 @@ void Label::draw(const GfxContext* parent_context, Assets* assets) {
             break;
     }
 
-    coord.y += (size.y - newsize.y) * 0.5f;
-    font->draw(batch, text, coord.x, coord.y);
+    switch (valign) {
+        case Align::top:
+            break;
+        case Align::center:
+            coord.y += (size.y - newsize.y) * 0.5f;
+            break;
+        case Align::bottom:
+            coord.y += size.y - newsize.y;
+            break;
+    }
+    textYOffset = coord.y;
+    totalLineHeight = lineHeight * lineInterval;
+
+    if (multiline) {
+        size_t offset = 0;
+        for (uint i = 0; i < lines; ++i) {
+            std::wstring_view view(text.c_str() + offset, text.length() - offset);
+            size_t end = view.find(L'\n');
+            if (end != std::wstring::npos) {
+                view = std::wstring_view(text.c_str() + offset, end);
+                offset += end + 1;
+            }
+            font->draw(batch, view, coord.x, coord.y + i * totalLineHeight, FontStyle::None);
+        }
+    } else {
+        font->draw(batch, text, coord.x, coord.y, FontStyle::None);
+    }
 }
 
 void Label::textSupplier(wstringsupplier supplier) {
@@ -67,6 +127,14 @@ void Label::setFontName(std::string name) {
 
 const std::string& Label::getFontName() const {
     return fontName;
+}
+
+void Label::setMultiline(bool multiline) {
+    this->multiline = multiline;
+}
+
+bool Label::isMultiline() const {
+    return multiline;
 }
 
 Image::Image(std::string texture, glm::vec2 size) : UINode(glm::vec2(), size), texture(texture) {
@@ -82,7 +150,7 @@ void Image::draw(const GfxContext* parent_context, Assets* assets) {
     if (texture && autoresize) setSize(glm::vec2(texture->width, texture->height));
     batch->texture(texture);
 
-    batch->color = color;
+    batch->setColor(color);
     batch->rect(coord.x, coord.y, size.x, size.y, 0, 0, 0, UVRegion(), false, true, color);
 }
 
@@ -143,8 +211,8 @@ Button* Button::textSupplier(wstringsupplier supplier) {
 void Button::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
     auto batch = parent_context->getBatch2D();
-    batch->texture(nullptr);
-    batch->color = (isPressed() ? pressedColor : (hover ? hoverColor : color));
+    batch->untexture();
+    batch->setColor(isPressed() ? pressedColor : (hover ? hoverColor : color));
     batch->rect(coord.x, coord.y, size.x, size.y);
 }
 
@@ -208,8 +276,8 @@ RichButton* RichButton::listenAction(onaction action) {
 void RichButton::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
     auto batch = parent_context->getBatch2D();
-    batch->texture(nullptr);
-    batch->color = (isPressed() ? pressedColor : (hover ? hoverColor : color));
+    batch->untexture();
+    batch->setColor(isPressed() ? pressedColor : (hover ? hoverColor : color));
     batch->rect(coord.x, coord.y, size.x, size.y);
 }
 
@@ -229,19 +297,19 @@ void TextBox::draw(const GfxContext* pctx, Assets* assets) {
 
     if (!isFocused()) return;
 
-    const int yoffset = 2;
+    const int yoffset = 0;
     const int lineHeight = font->getLineHeight();
     glm::vec2 lcoord = label->calcCoord();
     auto batch = pctx->getBatch2D();
-    batch->texture(nullptr);
+    batch->untexture();
     if (int((Window::time() - caretLastMove) * 2) % 2 == 0) {
-        batch->color = glm::vec4(1.0f);
+        batch->setColor(glm::vec4(1.0f));
 
         int width = font->calcWidth(input, caret);
         batch->rect(lcoord.x + width, lcoord.y + yoffset, 2, lineHeight);
     }
     if (selectionStart != selectionEnd) {
-        batch->color = glm::vec4(0.8f, 0.9f, 1.0f, 0.5f);
+        batch->setColor(glm::vec4(0.8f, 0.9f, 1.0f, 0.5f));
         int start = font->calcWidth(input, selectionStart);
         int end = font->calcWidth(input, selectionEnd);
         batch->rect(lcoord.x + start, lcoord.y + yoffset, end - start, lineHeight);
@@ -252,14 +320,14 @@ void TextBox::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
 
     auto batch = parent_context->getBatch2D();
-    batch->texture(nullptr);
+    batch->untexture();
 
     if (valid) {
-        if (isFocused()) batch->color = focusedColor;
-        else if (hover) batch->color = hoverColor;
-        else batch->color = color;
+        if (isFocused()) batch->setColor(focusedColor);
+        else if (hover) batch->setColor(hoverColor);
+        else batch->setColor(color);
     } else {
-        batch->color = invalidColor;
+        batch->setColor(invalidColor);
     }
 
     batch->rect(coord.x, coord.y, size.x, size.y);
@@ -518,6 +586,16 @@ void TextBox::setCaret(uint position) {
     }
 }
 
+void TextBox::setMultiline(bool multiline) {
+    this->multiline = multiline;
+    label->setMultiline(multiline);
+    label->setVerticalAlign(multiline ? Align::top : Align::center);
+}
+
+bool TextBox::isMultiline() const {
+    return multiline;
+}
+
 InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec2(100, 32), padding, 0), binding(binding) {
     label = std::make_shared<Label>(L"");
     add(label);
@@ -527,8 +605,8 @@ InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec
 void InputBindBox::drawBackground(const GfxContext* parent_context, Assets* assets) {
     glm::vec2 coord = calcCoord();
     auto batch = parent_context->getBatch2D();
-    batch->texture(nullptr);
-    batch->color = (isFocused() ? focusedColor : (hover ? hoverColor : color));
+    batch->untexture();
+    batch->setColor(isFocused() ? focusedColor : (hover ? hoverColor : color));
     batch->rect(coord.x, coord.y, size.x, size.y);
     label->setText(util::str2wstr_utf8(binding.text()));
 }
@@ -554,14 +632,14 @@ void TrackBar::draw(const GfxContext* parent_context, Assets* assets) {
 
     glm::vec2 coord = calcCoord();
     auto batch = parent_context->getBatch2D();
-    batch->texture(nullptr);
-    batch->color = (hover ? hoverColor : color);
+    batch->untexture();
+    batch->setColor(hover ? hoverColor : color);
     batch->rect(coord.x, coord.y, size.x, size.y);
 
     float width = size.x;
     float t = (value - min) / (max - min + trackWidth * step);
 
-    batch->color = trackColor;
+    batch->setColor(trackColor);
     int actualWidth = size.x * (trackWidth / (max - min + trackWidth * step) * step);
     batch->rect(coord.x + width * t, coord.y, actualWidth, size.y);
 }
@@ -643,8 +721,8 @@ void CheckBox::draw(const GfxContext* parent_context, Assets* assets) {
 
     glm::vec2 coord = calcCoord();
     auto batch = parent_context->getBatch2D();
-    batch->texture(nullptr);
-    batch->color = checked ? checkColor : (hover ? hoverColor : color);
+    batch->untexture();
+    batch->setColor(checked ? checkColor : (hover ? hoverColor : color));
     batch->rect(coord.x, coord.y, size.x, size.y);
 }
 

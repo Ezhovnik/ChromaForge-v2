@@ -18,14 +18,14 @@ enum class BlockModel {
     Custom
 };
 
-constexpr int FACE_MX = 0;
-constexpr int FACE_PX = 1;
-constexpr int FACE_MY = 2;
-constexpr int FACE_PY = 3;
-constexpr int FACE_MZ = 4;
-constexpr int FACE_PZ = 5;
+inline constexpr int FACE_MX = 0;
+inline constexpr int FACE_PX = 1;
+inline constexpr int FACE_MY = 2;
+inline constexpr int FACE_PY = 3;
+inline constexpr int FACE_MZ = 4;
+inline constexpr int FACE_PZ = 5;
 
-constexpr int BLOCK_AABB_GRID = 16;
+inline constexpr int BLOCK_AABB_GRID = 16;
 
 struct block_funcs_set {
 	bool init = false;

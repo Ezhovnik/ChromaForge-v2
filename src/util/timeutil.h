@@ -61,7 +61,9 @@ namespace timeutil {
      * @return Значение в диапазоне [0, 1), где 0 соответствует 00:00:00,
      *         0.5 — 12:00:00, и т.д.
      */
-    float time_value(float hour, float minute, float second);
+    inline constexpr float time_value(float hour, float minute, float second) {
+        return (hour + (minute + second / 60.0f) / 60.0f) / 24.0f;
+    }
 
     /**
      * @brief Преобразует долю дня обратно в часы, минуты, секунды.

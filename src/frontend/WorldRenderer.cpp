@@ -49,10 +49,27 @@ inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 float WorldRenderer::skyClearness = 0.0f;
 bool WorldRenderer::drawChunkBorders = false;
 
-WorldRenderer::WorldRenderer(Engine* engine, LevelFrontend* levelFrontend) : engine(engine), level(levelFrontend->getLevel()), frustumCulling(new Frustum()), lineBatch(new LineBatch()), renderer(new ChunksRenderer(level, levelFrontend->getContentGfxCache(), engine->getSettings())), batch3d(new Batch3D(4096)) {
-	Assets* assets = engine->getAssets();
-	EngineSettings& settings = engine->getSettings();
-	skybox = new Skybox(settings.graphics.skyboxResolution, assets->getShader("skybox_gen"));
+WorldRenderer::WorldRenderer(
+	Engine* engine,
+	LevelFrontend* levelFrontend
+) : engine(engine), 
+	level(levelFrontend->getLevel())
+{
+	frustumCulling = std::make_unique<Frustum>();
+    lineBatch = std::make_unique<LineBatch>();
+    renderer = std::make_unique<ChunksRenderer>(
+        level,
+        levelFrontend->getContentGfxCache(),
+        engine->getSettings()
+    );
+    batch3d = std::make_unique<Batch3D>(4096);
+
+	auto& settings = engine->getSettings();
+	auto assets = engine->getAssets();
+    skybox = std::make_unique<Skybox>(
+        settings.graphics.skyboxResolution, 
+        assets->getShader("skybox_gen")
+    );
 
     level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
 		renderer->unload(chunk);
@@ -60,38 +77,51 @@ WorldRenderer::WorldRenderer(Engine* engine, LevelFrontend* levelFrontend) : eng
 }
 
 WorldRenderer::~WorldRenderer() {
-	delete skybox;
-	delete lineBatch;
-	delete renderer;
-    delete frustumCulling;
 }
 
 // Отрисовывает один чанк
-bool WorldRenderer::drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool culling){
+bool WorldRenderer::drawChunk(
+	size_t index, 
+	Camera* camera, 
+	ShaderProgram* shader, 
+	bool culling)
+{
 	std::shared_ptr<Chunk> chunk = level->chunks->chunks[index];
 	if (!chunk->isLighted()) return false;
 
 	float distance = glm::distance(
         camera->position,
-        glm::vec3((chunk->chunk_x + 0.5f) * CHUNK_WIDTH, camera->position.y, (chunk->chunk_z + 0.5f) * CHUNK_DEPTH)
+        glm::vec3(
+			(chunk->chunk_x + 0.5f) * CHUNK_WIDTH, 
+			camera->position.y, 
+			(chunk->chunk_z + 0.5f) * CHUNK_DEPTH
+		)
     );
 	auto mesh = renderer->getOrRender(chunk, distance < CHUNK_WIDTH * 1.5f);
 	if (mesh == nullptr) return true;
 
 	if (culling){
-		glm::vec3 min(chunk->chunk_x * CHUNK_WIDTH, chunk->bottom, chunk->chunk_z * CHUNK_DEPTH);
-		glm::vec3 max(chunk->chunk_x * CHUNK_WIDTH + CHUNK_WIDTH, chunk->top, chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH);
+		glm::vec3 min(
+			chunk->chunk_x * CHUNK_WIDTH, 
+			chunk->bottom, 
+			chunk->chunk_z * CHUNK_DEPTH
+		);
+		glm::vec3 max(
+			chunk->chunk_x * CHUNK_WIDTH + CHUNK_WIDTH, 
+			chunk->top, 
+			chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH
+		);
 
 		if (!frustumCulling->IsBoxVisible(min, max)) return false;
 	}
-
-	glm::vec3 coord = glm::vec3(chunk->chunk_x * CHUNK_WIDTH + 0.5f, 0.5f, chunk->chunk_z * CHUNK_DEPTH + 0.5f);
+	glm::vec3 coord = glm::vec3(
+		chunk->chunk_x * CHUNK_WIDTH + 0.5f,
+		0.5f,
+		chunk->chunk_z * CHUNK_DEPTH + 0.5f
+	);
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), coord);
-
 	shader->uniformMatrix("u_model", model);
-
 	mesh->draw();
-
     return true;
 }
 

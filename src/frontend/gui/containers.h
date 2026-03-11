@@ -30,6 +30,7 @@ namespace gui {
         std::vector<IntervalEvent> intervalEvents;
 
         int scroll = 0;
+        int scrollStep = 40;
         int actualLength = 0;
         bool scrollable = true;
     public:

@@ -35,11 +35,10 @@ World::World(
 	content(content), 
 	packs(packs) 
 {
-	wfile = new WorldFiles(directory, settings.debug);
+	wfile = std::make_unique<WorldFiles>(directory, settings.debug);
 }
 
-World::~World(){
-	delete wfile;
+World::~World() {
 }
 
 void World::updateTimers(float delta) {

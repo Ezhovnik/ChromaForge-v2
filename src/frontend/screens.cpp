@@ -77,12 +77,16 @@ void MenuScreen::draw(float delta) {
     uint height = Window::height;
 
     batch->texture(menubg);
-    batch->rect(0, 0, 
-                width, height, 0, 0, 0, 
-                UVRegion(0, 0, width / 64, height / 64), 
-                false, false, glm::vec4(1.0f)
-            );
-    batch->render();
+    batch->rect(
+        0, 0, 
+        width, height, 
+        0, 0, 
+        0, 
+        UVRegion(0, 0, width / 64, height / 64), 
+        false, false, 
+        glm::vec4(1.0f)
+    );
+    batch->flush();
 }
 
 static bool backlight;

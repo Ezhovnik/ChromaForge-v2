@@ -109,9 +109,9 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
     }
 
     auto batch = parent_context->getBatch2D();
-    batch->color = color;
+    batch->setColor(color);
     if (color.a > 0.0) {
-        batch->texture(nullptr);
+        batch->untexture();
         if (highlighted) {
             batch->rect(coord.x - 4, coord.y - 4, slotSize + 8, slotSize + 8);
         } else {
@@ -119,7 +119,7 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
         }
     }
 
-    batch->color = glm::vec4(1.0f);
+    batch->setColor(glm::vec4(1.0f));
 
     auto previews = frontend->getBlocksAtlas();
     auto indices = content->getIndices();
@@ -159,12 +159,12 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
         auto font = assets->getFont("normal");
         std::wstring text = std::to_wstring(stack.getCount());
 
-        int x = coord.x+slotSize-text.length() * 8;
-        int y = coord.y+slotSize-16;
+        int x = coord.x + slotSize - text.length() * 8;
+        int y = coord.y + slotSize - 16;
 
-        batch->color = glm::vec4(0, 0, 0, 1.0f);
+        batch->setColor(glm::vec4(0, 0, 0, 1.0f));
         font->draw(batch, text, x + 1, y + 1);
-        batch->color = glm::vec4(1.0f);
+        batch->setColor(glm::vec4(1.0f));
         font->draw(batch, text, x, y);
     }
 }

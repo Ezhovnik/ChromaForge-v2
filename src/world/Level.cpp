@@ -34,7 +34,7 @@ Level::Level(World* world, const Content* content, EngineSettings& settings) :
 
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
     uint matrixSize = (settings.chunks.loadDistance + settings.chunks.padding) * 2;
-    chunks = new Chunks(matrixSize, matrixSize, 0, 0, world->wfile, events, content);
+    chunks = new Chunks(matrixSize, matrixSize, 0, 0, world->wfile.get(), events, content);
 
 	lighting = new Lighting(content, chunks);
 
