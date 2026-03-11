@@ -3,6 +3,7 @@
 #include <exception>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -13,21 +14,17 @@
 
 GLSLExtension* ShaderProgram::preprocessor = new GLSLExtension();
 
-// Конструктор шейдерной программы
 ShaderProgram::ShaderProgram(uint id) : id(id) {
 }
 
-// Деструктор шейдерной программы
 ShaderProgram::~ShaderProgram(){
     glDeleteProgram(id);
 }
 
-// Активация шейдерной программы для использования в текущем контексте отрисовки
 void ShaderProgram::use() {
     glUseProgram(id);
 }
 
-// Загружает матрицу 4x4 в uniform-переменную шейдера
 void ShaderProgram::uniformMatrix(std::string name, glm::mat4 matrix) {
     GLint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
@@ -38,7 +35,6 @@ void ShaderProgram::uniformMatrix(std::string name, glm::mat4 matrix) {
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
-// Загружает целое число в uniform-переменную шейдера
 void ShaderProgram::uniform1i(std::string name, int x){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
@@ -48,7 +44,6 @@ void ShaderProgram::uniform1i(std::string name, int x){
 	glUniform1i(transformLoc, x);
 }
 
-// Загружает вещественное число в uniform-переменную шейдера
 void ShaderProgram::uniform1f(std::string name, float x){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
@@ -58,8 +53,6 @@ void ShaderProgram::uniform1f(std::string name, float x){
 	glUniform1f(transformLoc, x);
 }
 
-
-// Загружает два вещественных числа в uniform-переменную шейдера
 void ShaderProgram::uniform2f(std::string name, float x, float y){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
@@ -73,7 +66,6 @@ void ShaderProgram::uniform2f(std::string name, glm::vec2 xy) {
     uniform2f(name, xy.x, xy.y);
 }
 
-// Загружает три вещественных числа в uniform-переменную шейдера
 void ShaderProgram::uniform3f(std::string name, float x, float y, float z){
 	GLuint transformLoc = glGetUniformLocation(id, name.c_str());
     if (transformLoc == -1) {
@@ -87,11 +79,16 @@ void ShaderProgram::uniform3f(std::string name, glm::vec3 xyz) {
     uniform3f(name, xyz.x, xyz.y, xyz.z);
 }
 
-// Основная функция для загрузки и компиляции шейдерной программы
-ShaderProgram* ShaderProgram::loadShaderProgram(std::string vertexFile, std::string fragmentFile, std::string vertexSource, std::string fragmentSource) {
+ShaderProgram* ShaderProgram::create(
+    std::string vertexFile, 
+    std::string fragmentFile, 
+    std::string vertexSource, 
+    std::string fragmentSource
+) {
+    // Обрабатываем исходники через препроцессор (поддержка #include и макросов)
     vertexSource = preprocessor->process(std::filesystem::path(vertexFile), vertexSource);
     fragmentSource = preprocessor->process(std::filesystem::path(fragmentFile), fragmentSource);
-    
+
     // Преобразование строк в C-строки для OpenGL
     const GLchar* vShaderCode = vertexSource.c_str();
     const GLchar* fShaderCode = fragmentSource.c_str();
@@ -150,5 +147,5 @@ ShaderProgram* ShaderProgram::loadShaderProgram(std::string vertexFile, std::str
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    return new ShaderProgram(id); // Создаем и возвращаем объект шейдерной программы
+    return new ShaderProgram(id);
 }
