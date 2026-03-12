@@ -122,28 +122,21 @@ int l_file_write_bytes(lua_State* L) {
     std::vector<ubyte> bytes;
     size_t len = lua_objlen(L, 2);
     int bytesIndex = -1;
+
     if (!lua_istable(L, bytesIndex)) return luaL_error(L, "Table expected");
 
     lua_pushnil(L);
     bytesIndex--;
-    int i = 1;
-    while (lua_next(L, bytesIndex) != 0) {
-        if (lua_isnumber(L, -1)) {
-            const int byte = lua_tointeger(L, -1);
-            if (byte < 0 || byte > 255) {
-                return luaL_error(
-                    L, 
-                    "Byte '%i' at index '%i' is less than 0 or greater than 255", 
-                    byte, 
-                    i
-                );
-            }
-            bytes.push_back(byte);
-            lua_pop(L, 1);
-            i++;
-        } else {
-            return luaL_error(L, "Number expected at index '%i'", i);
+    size_t i = 1;
+    while(lua_next(L, bytesIndex) != 0) {
+        if (i >= len) break;
+        const int byte = lua_tointeger(L, -1);
+        if (byte < 0 || byte > 255) {
+            return luaL_error(L, "byte '%i' at index '%i' is less than 0 or greater than 255", byte, i);
         }
+        bytes.push_back(byte);
+        lua_pop(L, 1);
+        i++;
     }
 
     lua_pushboolean(L, files::write_bytes(path, &bytes[0], len));

@@ -6,6 +6,7 @@ world.generators.default=Default
 world.generators.flat=Flat
 error.dependency-not-found=Dependency pack is not found
 error.pack-not-found=Could not to find pack
+pack.remove-confirm=Do you want to erase all pack content from the world forever?
 
 # Bindings
 movement.forward=Forward

@@ -36,7 +36,7 @@
 #include "content/content.h"
 #include "frontend/locale/langs.h"
 #include "util/platform.h"
-#include "frontend/menu.h"
+#include "frontend/menu/menu.h"
 #include "content/Content.h"
 #include "content/ContentLoader.h"
 #include "logic/scripting/scripting.h"

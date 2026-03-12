@@ -94,3 +94,7 @@ void WorldConverter::write() {
     wfile->write(nullptr, content);
     LOG_INFO("World successfully writed");
 }
+
+uint WorldConverter::getTotalTasks() const {
+    return tasks.size();
+}

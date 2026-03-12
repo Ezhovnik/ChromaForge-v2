@@ -32,7 +32,7 @@
 #include "screens.h"
 #include "../core_defs.h"
 #include "../window/input.h"
-#include "menu.h"
+#include "menu/menu.h"
 #include "../content/Content.h"
 #include "../math/voxmaths.h"
 #include "ContentGfxCache.h"

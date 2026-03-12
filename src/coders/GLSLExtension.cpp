@@ -32,7 +32,7 @@ void GLSLExtension::define(std::string name, std::string value) {
     defines[name] = value;
 }
 
-const std::string& GLSLExtension::getHeader(const std::string name) const {
+const std::string& GLSLExtension::getHeader(const std::string& name) const {
     auto found = headers.find(name);
     if (found == headers.end()) {
         LOG_ERROR("No header {} loaded", name);
@@ -41,17 +41,17 @@ const std::string& GLSLExtension::getHeader(const std::string name) const {
     return found->second;
 }
 
-const std::string GLSLExtension::getDefine(const std::string name) const {
+const std::string GLSLExtension::getDefine(const std::string& name) const {
     auto found = defines.find(name);
     if (found == defines.end()) return "";
     return found->second;
 }
 
-bool GLSLExtension::hasDefine(const std::string name) const {
+bool GLSLExtension::hasDefine(const std::string& name) const {
     return defines.find(name) != defines.end();
 }
 
-bool GLSLExtension::hasHeader(const std::string name) const {
+bool GLSLExtension::hasHeader(const std::string& name) const {
     return headers.find(name) != headers.end();
 }
 

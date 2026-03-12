@@ -620,6 +620,7 @@ void TextBox::focus(GUI* gui) {
     if (onEditStart) {
         setCaret(input.size());
         onEditStart();
+        resetSelection();
     }
 }
 

@@ -28,13 +28,13 @@ public:
     // Макросы
     void define(std::string name, std::string value); // Добавляем определение макроса
     void undefine(std::string name); // Удаляем определение макроса
-    const std::string getDefine(const std::string name) const; // Получаем значение макроса
-    bool hasDefine(const std::string name) const; // Проверяем наличие определения макроса
+    const std::string getDefine(const std::string& name) const; // Получаем значение макроса
+    bool hasDefine(const std::string& name) const; // Проверяем наличие определения макроса
 
     // Заголовки
     void addHeader(std::string name, std::string source); // Добавляем заголовок вручную (минуя файловую систему)
-    const std::string& getHeader(const std::string name) const; // Получаем код заголовка по имени
-    bool hasHeader(const std::string name) const; // Проверяем наличие заголовка
+    const std::string& getHeader(const std::string& name) const; // Получаем код заголовка по имени
+    bool hasHeader(const std::string& name) const; // Проверяем наличие заголовка
 
     // Основная функций обработки
     const std::string process(const std::filesystem::path file, const std::string& source);

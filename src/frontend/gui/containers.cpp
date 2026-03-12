@@ -30,6 +30,10 @@ std::shared_ptr<UINode> Container::getAt(glm::vec2 pos, std::shared_ptr<UINode> 
 }
 
 void Container::activate(float deltaTime) {
+    for (auto node : nodes) {
+        if (node->isVisible()) node->activate(deltaTime);
+    }
+
     for (IntervalEvent& event : intervalEvents) {
         event.timer += deltaTime;
         if (event.timer > event.interval) {
@@ -45,10 +49,6 @@ void Container::activate(float deltaTime) {
             return event.repeat == 0;
         }
     ), intervalEvents.end());
-
-    for (auto node : nodes) {
-        if (node->isVisible()) node->activate(deltaTime);
-    }
 }
 
 void Container::scrolled(int value) {
@@ -93,12 +93,6 @@ void Container::drawBackground(const GfxContext* parent_context, Assets* assets)
     batch->untexture();
     batch->setColor(color);
     batch->rect(coord.x, coord.y, size.x, size.y);
-}
-
-void Container::addBack(std::shared_ptr<UINode> node) {
-    nodes.insert(nodes.begin(), node);
-    node->setParent(this);
-    refresh();
 }
 
 void Container::add(std::shared_ptr<UINode> node) {

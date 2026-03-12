@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <memory>
 
+#include "../typedefs.h"
+
 class Content;
 class ContentLUT;
 class WorldFiles;
@@ -20,6 +22,7 @@ struct ConvertTask {
 };
 
 class WorldConverter {
+private:
     WorldFiles* wfile;
     std::shared_ptr<ContentLUT> const lut;
     const Content* const content;
@@ -35,6 +38,8 @@ public:
     void convertNext();
 
     void write();
+
+    uint getTotalTasks() const;
 };
 
 #endif // FILES_WORLD_CONVERTER_H_
