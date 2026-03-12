@@ -277,7 +277,6 @@ std::shared_ptr<UINode> UIXmlReader::readUINode(xml::xmlelement element) {
     if (found == readers.end()) {
         if (ignored.find(tag) != ignored.end()) return nullptr;
         LOG_ERROR("Unsupported element '{}'", tag);
-        Logger::getInstance().flush();
         throw std::runtime_error("Unsupported element '" + tag + "'");
     }
     return found->second(*this, element);

@@ -43,7 +43,6 @@ void error_callback(int error, const char* description) {
     if (description) ss << description;
 
     LOG_ERROR("{}", ss.str());
-    Logger::getInstance().flush();
 }
 
 // Callback-функция для обработки движения мыши

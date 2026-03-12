@@ -55,8 +55,7 @@ std::string write_controls() {
 			case inputType::keyboard: jentry.put("type", "keyboard"); break;
 			case inputType::mouse: jentry.put("type", "mouse"); break;
 			default:
-				LOG_ERROR("Unsupported control type {}", (int)binding.type);
-				Logger::getInstance().flush();
+				LOG_ERROR("Unsupported control type {}", (int)binding.type);			
 				throw std::runtime_error("Unsupported control type");
 		}
 		jentry.put("code", binding.code);

@@ -1,6 +1,7 @@
 #include "Logger.h"
 
 #include <iostream>
+#include <stdexcept>
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/wincolor_sink.h>
@@ -26,25 +27,21 @@ void Logger::initialize(const std::string& logFile, LogLevel consoleLevel, LogLe
         #endif
         console_sink->set_level(toSpdlogLevel(consoleLevel));
         console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%s:%#] [%!] %v");
-        
+
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
         file_sink->set_level(toSpdlogLevel(fileLevel));
         file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%s:%#] [%!] %v");
-        
+
         // Создаем логгер с несколькими сенками
         logger_ = std::make_shared<spdlog::logger>("ChromaForge", spdlog::sinks_init_list{console_sink, file_sink});
-        
-        // Устанавливаем уровень логирования (берем минимальный из сенков)
         logger_->set_level(spdlog::level::trace);
-        logger_->flush_on(spdlog::level::warn);
-        
+        logger_->flush_on(spdlog::level::err);
         spdlog::register_logger(logger_);
-        
+
         LOG_INFO("Logger initialized. File: {}", logFile);
-    }
-    catch (const spdlog::spdlog_ex& e) {
+    } catch (const spdlog::spdlog_ex& e) {
         std::cerr << "Logger initialization failed: " << e.what() << std::endl;
-        throw;
+        throw std::runtime_error("Logger initialization failed");
     }
 }
 

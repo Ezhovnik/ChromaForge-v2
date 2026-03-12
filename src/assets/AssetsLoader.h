@@ -11,17 +11,35 @@
  * @brief Типы ресурсов, которые могут быть загружены через AssetsLoader.
  */
 enum class AssetType {
-    Texture, ///< Текстура
+     Texture, ///< Текстура
 	Shader, ///< Шейдерная программа
 	Font, ///< Растровый шрифт
 	Atlas, ///< Атлас текстур
-	Layout ///< Макет интерфейса (XML)
+	Layout, ///< Макет интерфейса (XML)
+     Sound ///< Звук
 };
 
 class Assets;
 class ResPaths;
 class Content;
 class AssetsLoader;
+
+struct AssetsConfig {
+	virtual ~AssetsConfig() {}
+};
+
+/**
+ * @brief Структура для передачи конфигурации при загрузке макетов интерфейса.
+ */
+struct LayoutConfig : AssetsConfig {
+     int env; ///< Идентификатор окружения
+     LayoutConfig(int env) : env(env) {}
+};
+
+struct SoundConfig : AssetsConfig {
+	bool keepPCM;
+	SoundConfig(bool keepPCM) : keepPCM(keepPCM) {}
+};
 
 /**
  * @brief Тип функции-загрузчика конкретного ресурса.
@@ -34,7 +52,7 @@ class AssetsLoader;
  * @param config Дополнительная конфигурация (может быть специфичной для типа ресурса).
  * @return true при успешной загрузке, false при ошибке.
  */
-using aloader_func = std::function<bool(AssetsLoader&, Assets*, const ResPaths*, const std::string&, const std::string&, std::shared_ptr<void>)>;
+using aloader_func = std::function<bool(AssetsLoader&, Assets*, const ResPaths*, const std::string&, const std::string&, std::shared_ptr<AssetsConfig>)>;
 
 /**
  * @brief Элемент очереди загрузки.
@@ -43,7 +61,7 @@ struct aloader_entry {
 	AssetType tag; ///< Тип ресурса
 	const std::string filename; ///< Имя файла (или путь)
 	const std::string alias; ///< Псевдоним в менеджере ресурсов
-	std::shared_ptr<void> config; ///< Дополнительные настройки
+	std::shared_ptr<AssetsConfig> config; ///< Дополнительные настройки
 };
 
 /**
@@ -86,7 +104,7 @@ public:
 		AssetType tag, 
 		const std::string filename, 
 		const std::string alias,
-		std::shared_ptr<void> config=nullptr
+		std::shared_ptr<AssetsConfig> config=nullptr
 	);
 
 	/**

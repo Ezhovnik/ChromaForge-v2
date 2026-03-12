@@ -149,12 +149,10 @@ void BlocksController::bindInventory(int64_t invId, int x, int y, int z) {
     auto chunk = chunks->getChunkByVoxel(x, y, z);
 	if (chunk == nullptr) {
         LOG_ERROR("Block does not exists");
-        Logger::getInstance().flush();
 		throw std::runtime_error("Block does not exists");
 	}
     if (invId <= 0) {
         LOG_ERROR("Unable to bind virtual inventory");
-        Logger::getInstance().flush();
         throw std::runtime_error("Unable to bind virtual inventory");
     }
 	int lx = x - chunk->chunk_x * CHUNK_WIDTH;
@@ -166,7 +164,6 @@ void BlocksController::unbindInventory(int x, int y, int z) {
     auto chunk = chunks->getChunkByVoxel(x, y, z);
 	if (chunk == nullptr) {
         LOG_ERROR("Block does not exists");
-        Logger::getInstance().flush();
 		throw std::runtime_error("block does not exists");
 	}
     int lx = x - chunk->chunk_x * CHUNK_WIDTH;

@@ -72,7 +72,6 @@ void WorldConverter::convertPlayer(std::filesystem::path file) {
 void WorldConverter::convertNext() {
     if (!hasNext()) {
         LOG_ERROR("No more tasks to convert");
-        Logger::getInstance().flush();
         throw std::runtime_error("No more tasks to convert");
     }
     ConvertTask task = tasks.front();

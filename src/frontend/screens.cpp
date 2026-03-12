@@ -36,6 +36,8 @@
 #include "../graphics/TextureAnimation.h"
 #include "../logic/scripting/scripting_frontend.h"
 #include "../logic/scripting/scripting.h"
+#include "../audio/audio.h"
+#include "../physics/Hitbox.h"
 
 Screen::Screen(Engine* engine) : engine(engine), batch(new Batch2D(1024)) {
 }
@@ -139,7 +141,15 @@ void LevelScreen::update(float delta) {
     bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();
 
-    level->player->camera->setFov(glm::radians(settings.camera.fov));
+    auto camera = this->level->player->camera;
+    audio::setListener(
+        camera->position, 
+        this->level->player->hitbox->velocity,
+        camera->position+camera->dir, 
+        camera->up
+    );
+
+    camera->setFov(glm::radians(settings.camera.fov));
 
     if (settings.graphics.backlight != backlight) {
         level->chunks->saveAndClear();

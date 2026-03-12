@@ -80,7 +80,6 @@ inline uint utf8_len(ubyte cp) {
 	}
 	if (len > 4) {
         LOG_ERROR("UTF-8 decode error");
-        Logger::getInstance().flush();
 		throw std::runtime_error("UTF-8 decode error");
     }
 
@@ -271,7 +270,6 @@ double util::parse_double(const std::string& str) {
     ss >> d;
     if (ss.fail()) {
         LOG_ERROR("Invalid number format");
-        Logger::getInstance().flush();
         throw std::runtime_error("Invalid number format");
     }
     return d;    

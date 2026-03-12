@@ -14,14 +14,9 @@ class Font;
 class Atlas;
 class UIDocument;
 
-/**
- * @brief Структура для передачи конфигурации при загрузке макетов интерфейса.
- */
-struct LayoutConfig {
-	int env; ///< Идентификатор окружения
-
-	LayoutConfig(int env) : env(env) {}
-};
+namespace audio {
+	class Sound;
+}
 
 /**
  * @brief Менеджер ресурсов (ассетов).
@@ -36,6 +31,7 @@ class Assets {
      std::unordered_map<std::string, std::shared_ptr<Font>> fonts;
 	std::unordered_map<std::string, std::shared_ptr<Atlas>> atlases;
 	std::unordered_map<std::string, std::shared_ptr<UIDocument>> layouts;
+     std::unordered_map<std::string, std::shared_ptr<audio::Sound>> sounds;
 	std::vector<TextureAnimation> animations; ///< Анимации, связанные с текстурами.
 public:
 	~Assets();
@@ -127,6 +123,21 @@ public:
      * @param name Имя для сохранения.
      */
 	void store(UIDocument* layout, std::string name);
+
+          // --- Звуки ---
+     /**
+     * @brief Получает звук по имени.
+     * @param name Имя звука.
+     * @return Указатель на audio::Sound или nullptr.
+     */
+     audio::Sound* getSound(std::string name) const;
+
+     /**
+     * @brief Сохраняет звук в менеджере.
+     * @param sound Указатель на звук.
+     * @param name Имя для сохранения.
+     */
+	void store(audio::Sound* sound, std::string name);
 
 	/**
      * @brief Расширяет текущий менеджер ресурсами из другого менеджера.

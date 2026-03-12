@@ -246,7 +246,6 @@ void PagesControl::setPage(std::string name, bool history) {
     auto found = pages.find(name);
     if (found == pages.end()) {
         LOG_ERROR("No page found");
-        Logger::getInstance().flush();
         throw std::runtime_error("no page found");
     }
     if (current.panel) Container::remove(current.panel);

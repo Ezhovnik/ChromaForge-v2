@@ -19,7 +19,6 @@ Section::Section(std::string name) : name(name) {
 void Section::add(std::string name, Field field) {
     if (fields.find(name) != fields.end()) {
         LOG_ERROR("Field duplication");
-        Logger::getInstance().flush();
         throw std::runtime_error("Field duplication");
     }
     fields[name] = field;
@@ -73,7 +72,6 @@ Wrapper::~Wrapper() {
 Section& Wrapper::add(std::string name) {
     if (sections.find(name) != sections.end()) {
         LOG_ERROR("Section duplication");
-        Logger::getInstance().flush();
         throw std::runtime_error("Section duplication");
     }
     Section* section = new Section(name);
@@ -153,7 +151,6 @@ void Section::set(std::string name, double value) {
         case fieldtype::ftstring: *(std::string*)(field->ptr) = std::to_string(value); break;
         default:
             LOG_ERROR("Type error for key '{}'", name);
-            Logger::getInstance().flush();
         }
     }
 }
@@ -171,7 +168,6 @@ void Section::set(std::string name, bool value) {
         case fieldtype::ftstring: *(std::string*)(field->ptr) = value ? "true" : "false"; break;
         default:
             LOG_ERROR("Type error for key '{}'", name);
-            Logger::getInstance().flush();
         }
     }
 }
@@ -185,7 +181,6 @@ void Section::set(std::string name, std::string value) {
         case fieldtype::ftstring: *(std::string*)(field->ptr) = value; break;
         default:
             LOG_ERROR("Type error for key '{}'", name);
-            Logger::getInstance().flush();
         }
     }
 }
@@ -238,7 +233,6 @@ void Reader::readSection(Section* section /*nullable*/) {
             if (section) section->set(name, str);
         } else {
             LOG_ERROR("Feature is not supported", name);
-            Logger::getInstance().flush();
             throw error("Feature is not supported");
         }
         expectNewLine(); // после значения ожидается перевод строки или конец файла

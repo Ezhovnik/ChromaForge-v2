@@ -30,7 +30,7 @@ void AssetsLoader::addLoader(AssetType tag, aloader_func func) {
 	loaders[tag] = func;
 }
 
-void AssetsLoader::add(AssetType tag, const std::string filename, const std::string alias, std::shared_ptr<void> config) {
+void AssetsLoader::add(AssetType tag, const std::string filename, const std::string alias, std::shared_ptr<AssetsConfig> config) {
 	entries.push(aloader_entry{tag, filename, alias, config});
 }
 
@@ -48,7 +48,6 @@ bool AssetsLoader::loadNext() {
 	auto found = loaders.find(entry.tag);
 	if (found == loaders.end()) {
         LOG_ERROR("Unknown asset tag {}", (int)entry.tag);
-        Logger::getInstance().flush();
 		entries.pop();
 		return false;
 	}

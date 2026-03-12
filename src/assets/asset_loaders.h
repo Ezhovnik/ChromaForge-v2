@@ -8,6 +8,7 @@ class ResPaths;
 class Assets;
 class Atlas;
 class AssetsLoader;
+struct AssetsConfig;
 
 // Пространство имён, содержащее функции загрузки различных ресурсов
 namespace asset_loader {
@@ -27,7 +28,7 @@ namespace asset_loader {
         const ResPaths* paths, 
         const std::string filename, 
         const std::string name,
-        std::shared_ptr<void> settings
+        std::shared_ptr<AssetsConfig> settings
     );
 
     /**
@@ -37,7 +38,7 @@ namespace asset_loader {
      * @param paths Указатель на объект с путями.
      * @param filename Базовое имя файла шейдера (без расширения). К нему добавляются .vert и .frag.
      * @param name Имя, под которым шейдер будет сохранён.
-     * @param settings Не используется.
+     * @param settings Дополнительные настройки (не используются).
      * @return true при успехе, false при ошибке.
      */
     bool shader(
@@ -46,7 +47,7 @@ namespace asset_loader {
         const ResPaths* paths, 
         const std::string filename, 
         const std::string name,
-        std::shared_ptr<void> settings
+        std::shared_ptr<AssetsConfig> settings
     );
 
     /**
@@ -56,7 +57,7 @@ namespace asset_loader {
      * @param paths Указатель на объект с путями.
      * @param directory Путь к директории, содержащей изображения для атласа.
      * @param name Имя, под которым атлас будет сохранён.
-     * @param settings Не используется.
+     * @param settings Дополнительные настройки (не используются).
      * @return true при успехе, false при ошибке.
      */
     bool atlas(
@@ -65,7 +66,7 @@ namespace asset_loader {
         const ResPaths* paths, 
         const std::string directory, 
         const std::string name,
-        std::shared_ptr<void> settings
+        std::shared_ptr<AssetsConfig> settings
     );
 
     /**
@@ -75,7 +76,7 @@ namespace asset_loader {
      * @param paths Указатель на объект с путями.
      * @param filename Базовое имя файлов страниц шрифта (к нему добавляются "_0.png", "_1.png" и т.д.).
      * @param name Имя, под которым шрифт будет сохранён.
-     * @param settings Не используется.
+     * @param settings Дополнительные настройки (не используются).
      * @return true при успехе, false при ошибке.
      */
     bool font(
@@ -84,7 +85,7 @@ namespace asset_loader {
         const ResPaths* paths, 
         const std::string filename, 
         const std::string name,
-        std::shared_ptr<void> settings
+        std::shared_ptr<AssetsConfig> settings
     );
 
     /**
@@ -111,7 +112,7 @@ namespace asset_loader {
      * @param paths Указатель на объект с путями.
      * @param file Имя файла макета (путь относительно ресурсов).
      * @param name Имя, под которым макет будет сохранён.
-     * @param config Указатель на объект LayoutConfig с настройками окружения.
+     * @param config Дополнительные настройки окружения.
      * @return true при успехе, false при ошибке парсинга.
      */
     bool layout(
@@ -120,7 +121,26 @@ namespace asset_loader {
         const ResPaths* paths, 
         const std::string file, 
         const std::string name,
-        std::shared_ptr<void> settings
+        std::shared_ptr<AssetsConfig> settings
+    );
+
+    /**
+     * @brief Загружает звук из .wav файла.
+     * @param loader Загрузчик ассетов.
+     * @param assets Указатель на менеджер ресурсов.
+     * @param paths Указатель на объект с путями.
+     * @param file Имя файла звук (путь относительно ресурсов).
+     * @param name Имя, под которым звук будет сохранён.
+     * @param config Дополнительные настройки.
+     * @return true при успехе, false при ошибке.
+     */
+    bool sound(
+        AssetsLoader& loader,
+        Assets* assets,
+        const ResPaths* paths,
+        const std::string file,
+        const std::string name,
+        std::shared_ptr<AssetsConfig> settings
     );
 }
 

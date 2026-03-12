@@ -25,7 +25,6 @@ ImageData* png::loadImage(const std::string& filename, bool flipVertically) {
     if (!stb_data) {
         const char* error_msg = stbi_failure_reason();
         LOG_ERROR("Failed to load image: '{}'. Reason: {}", filename, error_msg ? error_msg : "Unknown error");
-        Logger::getInstance().flush();
         return nullptr;
     }
 
@@ -71,7 +70,6 @@ bool png::writeImage(const std::string& filename, const ImageData* image) {
     // Проверяем корректность входных данных
     if (!image || !image->getData()) {
         LOG_ERROR("Invalid image {} data for writing to file", filename);
-        Logger::getInstance().flush();
         return false;
     }
 
@@ -100,7 +98,6 @@ bool png::writeImage(const std::string& filename, const ImageData* image) {
     if (!success) {
         const char* error_msg = stbi_failure_reason();
         LOG_ERROR("Failed to write image to file: '{}'. Reason: {}", filename, error_msg ? error_msg : "Unknown error");
-        Logger::getInstance().flush();
         return false;
     }
 

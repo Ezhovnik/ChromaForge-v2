@@ -33,7 +33,6 @@ Block& ContentBuilder::createBlock(std::string id) {
     auto found = blockDefs.find(id);
     if (found != blockDefs.end()) {
         LOG_ERROR("Name {} is already used", id);
-        Logger::getInstance().flush();
         throw namereuse_error("Name " + id + " is already used", ContentType::Item);
     }
     Block* block = new Block(id);
@@ -46,7 +45,6 @@ Item& ContentBuilder::createItem(std::string id) {
     if (found != itemDefs.end()) {
         if (found->second->generated) return *found->second;
         LOG_ERROR("Name {} is already used", id);
-        Logger::getInstance().flush();
         throw namereuse_error("Name " + id + " is already used", ContentType::Item);
     }
     Item* item = new Item(id);
@@ -58,7 +56,6 @@ void ContentBuilder::checkIdentifier(std::string id) {
     ContentType result;
     if ((result = checkContentType(id)) != ContentType::None) {
         LOG_ERROR("Identifier {} is already used", (int)result);
-        Logger::getInstance().flush();
         throw namereuse_error("Identifier " + id + " is already used", result);
     }  
 }
@@ -148,7 +145,6 @@ Block& Content::requireBlock(std::string id) const {
     auto found = blockDefs.find(id);
     if (found == blockDefs.end()) {
         LOG_ERROR("Missing block {}", id);
-        Logger::getInstance().flush();
         throw std::runtime_error("Missing block " + id);
     }
     return *found->second;
@@ -164,7 +160,6 @@ Item& Content::requireItem(std::string id) const {
     auto found = itemDefs.find(id);
     if (found == itemDefs.end()) {
         LOG_ERROR("Missing item {}", id);
-        Logger::getInstance().flush();
         throw std::runtime_error("Missing item " + id);
     }
     return *found->second;
