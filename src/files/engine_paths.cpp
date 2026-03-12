@@ -29,7 +29,6 @@ static std::filesystem::path toCanonic(std::filesystem::path path) {
         if (part == ".") continue;
         if (part == "..") {
             LOG_ERROR("Entry point reached");
-            Logger::getInstance().flush();
             throw files_access_error("entry point reached");
         }
         path = path/std::filesystem::path(part);
@@ -106,7 +105,6 @@ std::filesystem::path EnginePaths::resolve(std::string path) {
     size_t separator = path.find(':');
     if (separator == std::string::npos) {
         LOG_ERROR("No entry point specified");
-        Logger::getInstance().flush();
         throw files_access_error("No entry point specified");
     }
 
@@ -125,7 +123,6 @@ std::filesystem::path EnginePaths::resolve(std::string path) {
     }
 
     LOG_ERROR("Unknown entry point '{}'", prefix);
-    Logger::getInstance().flush();
     throw files_access_error("Unknown entry point '" + prefix + "'");
 }
 

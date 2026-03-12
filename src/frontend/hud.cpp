@@ -481,7 +481,6 @@ void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inven
     blockUI = std::dynamic_pointer_cast<InventoryView>(doc->getRoot());
     if (blockUI == nullptr) {
 		LOG_ERROR("Block UI root element must be 'inventory'");
-		Logger::getInstance().flush();
         throw std::runtime_error("Block UI root element must be 'inventory'");
     }
 

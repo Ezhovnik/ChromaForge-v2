@@ -7,6 +7,7 @@
 #include "../logger/Logger.h"
 #include "../frontend/UIDocument.h"
 #include "../logic/scripting/scripting.h"
+#include "../audio/audio.h"
 
 Assets::~Assets() {
 }
@@ -18,7 +19,7 @@ Texture* Assets::getTexture(std::string name) const {
 }
 
 void Assets::store(Texture* texture, std::string name){
-    textures[name].reset(texture);
+    textures.emplace(name, texture);
 }
 
 ShaderProgram* Assets::getShader(std::string name) const{
@@ -28,7 +29,7 @@ ShaderProgram* Assets::getShader(std::string name) const{
 }
 
 void Assets::store(ShaderProgram* shader, std::string name){
-    shaders[name].reset(shader);
+    shaders.emplace(name, shader);
 }
 
 Font* Assets::getFont(std::string name) const{
@@ -38,7 +39,7 @@ Font* Assets::getFont(std::string name) const{
 }
 
 void Assets::store(Font* font, std::string name){
-    fonts[name].reset(font);
+    fonts.emplace(name, font);
 }
 
 Atlas* Assets::getAtlas(std::string name) const {
@@ -48,7 +49,7 @@ Atlas* Assets::getAtlas(std::string name) const {
 }
 
 void Assets::store(Atlas* atlas, std::string name){
-    atlases[name].reset(atlas);
+    atlases.emplace(name, atlas);
 }
 
 const std::vector<TextureAnimation>& Assets::getAnimations() {
@@ -66,7 +67,17 @@ UIDocument* Assets::getLayout(std::string name) const {
 }
 
 void Assets::store(UIDocument* layout, std::string name){
-    layouts[name].reset(layout);
+    layouts.emplace(name, layout);
+}
+
+audio::Sound* Assets::getSound(std::string name) const {
+	auto found = sounds.find(name);
+	if (found == sounds.end()) return nullptr;
+	return found->second.get();
+}
+
+void Assets::store(audio::Sound* sound, std::string name) {
+	sounds.emplace(name, sound);
 }
 
 void Assets::extend(const Assets& assets) {
@@ -93,6 +104,11 @@ void Assets::extend(const Assets& assets) {
     // Копируем макеты
     for (auto entry : assets.layouts) {
 		layouts[entry.first] = entry.second;
+	}
+
+    // Копируем звуки
+    for (auto entry : assets.sounds) {
+		sounds[entry.first] = entry.second;
 	}
 
     // Перезаписываем анимации

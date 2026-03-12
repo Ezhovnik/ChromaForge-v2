@@ -121,7 +121,6 @@ static Value* value_from_binary(ByteReader& reader) {
             break;
         default:
             LOG_ERROR("Type {} is not supported", typecode);
-            Logger::getInstance().flush();
             throw std::runtime_error("Type " + std::to_string(typecode) + " is not supported");
     }
     return new Value(type, val);
@@ -152,7 +151,6 @@ static Map* object_from_binary(ByteReader& reader) {
 std::unique_ptr<Map> json::from_binary(const ubyte* src, size_t size) {
     if (size < 2) {
         LOG_ERROR("Bytes length is less than 2");
-        Logger::getInstance().flush();
         throw std::runtime_error("Bytes length is less than 2");
     }
 
@@ -164,7 +162,6 @@ std::unique_ptr<Map> json::from_binary(const ubyte* src, size_t size) {
         std::unique_ptr<Value> value (value_from_binary(reader));
         if (value->type != ValueType::map) {
             LOG_ERROR("Root value is not an object");
-            Logger::getInstance().flush();
             throw std::runtime_error("Root value is not an object");
         }
         std::unique_ptr<Map> obj (value->value.map);

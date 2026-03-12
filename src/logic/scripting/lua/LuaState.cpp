@@ -30,7 +30,6 @@ lua::LuaState::LuaState() {
     L = luaL_newstate();
     if (L == nullptr) {
         LOG_ERROR("Could not to initialize Lua");
-        Logger::getInstance().flush();
         throw lua::luaerror("Could not to initialize Lua");
     }
     luaopen_base(L);
@@ -151,7 +150,6 @@ void lua::LuaState::createLibs() {
 void lua::LuaState::loadbuffer(int env, const std::string& src, const std::string& file) {
     if (luaL_loadbuffer(L, src.c_str(), src.length(), file.c_str())) {
         LOG_ERROR("{}", lua_tostring(L, -1));
-        Logger::getInstance().flush();
         throw lua::luaerror(lua_tostring(L, -1));
     }
     if (env && getglobal(envName(env))) lua_setfenv(L, -2);
@@ -160,7 +158,6 @@ void lua::LuaState::loadbuffer(int env, const std::string& src, const std::strin
 int lua::LuaState::call(int argc) {
     if (lua_pcall(L, argc, LUA_MULTRET, 0)) {
         LOG_ERROR("{}", lua_tostring(L, -1));
-        Logger::getInstance().flush();
         throw lua::luaerror(lua_tostring(L, -1));
     }
     return 1;

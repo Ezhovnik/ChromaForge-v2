@@ -143,7 +143,6 @@ void ImageData::blit(const ImageData* image, int x, int y) {
     }
 
     LOG_ERROR("Mismatching format");
-    Logger::getInstance().flush();
     throw std::runtime_error("Mismatching format");
 }
 
@@ -175,7 +174,6 @@ void ImageData::blitMatchingFormat(const ImageData* image, int x, int y) {
         case ImageFormat::rgba8888: comps = 4; break;
         default:
             LOG_ERROR("Only unsigned byte formats supported");
-            Logger::getInstance().flush();
             throw std::runtime_error("Only unsigned byte formats supported");    
     }
     ubyte* pixels = static_cast<ubyte*>(data);
@@ -204,7 +202,6 @@ void ImageData::extrude(int x, int y, int w, int h) {
         case ImageFormat::rgba8888: comps = 4; break;
         default:
             LOG_ERROR("Only unsigned byte formats supported");
-            Logger::getInstance().flush();
             throw std::runtime_error("Only unsigned byte formats supported");
     }
     ubyte* pixels = static_cast<ubyte*>(data);

@@ -15,11 +15,11 @@
 /** Основная версия (major). */
 inline constexpr int ENGINE_VERSION_MAJOR = 0;
 /** Минорная версия (minor). */
-inline constexpr int ENGINE_VERSION_MINOR = 2;
+inline constexpr int ENGINE_VERSION_MINOR = 3;
 /** Версия поддержки (maintenance). */
 inline constexpr int ENGINE_VERSION_MAINTENANCE = 0;
 /** Состояние разработки версии. */
-const bool ENGINE_VERSION_INDEV = false;
+const bool ENGINE_VERSION_INDEV = true;
 
 // ========== Размеры чанков ==========
 

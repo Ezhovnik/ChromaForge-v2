@@ -17,6 +17,7 @@
 #include "../graphics/TextureAnimation.h"
 #include "../frontend/UIDocument.h"
 #include "../logic/scripting/scripting.h"
+#include "../audio/audio.h"
 
 bool asset_loader::shader(
 	AssetsLoader&,
@@ -24,7 +25,7 @@ bool asset_loader::shader(
 	const ResPaths* paths, 
 	const std::string filename, 
 	const std::string name, 
-	std::shared_ptr<void>)
+	std::shared_ptr<AssetsConfig>)
 {
 	// Формируем пути к файлам вершинного и фрагментного шейдеров
     std::filesystem::path vertexFile = paths->find(filename + ".vert");
@@ -44,7 +45,6 @@ bool asset_loader::shader(
 
 	if (shader == nullptr) {
         LOG_CRITICAL("Failed to load shader '{}'", name);
-        Logger::getInstance().flush();
 		return false;
 	}
 
@@ -59,13 +59,12 @@ bool asset_loader::texture(
 	const ResPaths* paths, 
 	const std::string filename, 
 	const std::string name, 
-	std::shared_ptr<void>)
+	std::shared_ptr<AssetsConfig>)
 {
 	// Загружаем PNG-изображение как текстуру (путь ищется через ResPaths)
 	std::unique_ptr<Texture> texture(png::loadTexture(paths->find(filename).u8string()));
 	if (texture == nullptr){
 		LOG_CRITICAL("Failed to load texture '{}'", name);
-        Logger::getInstance().flush();
 		return false;
 	}
 
@@ -80,7 +79,7 @@ bool asset_loader::font(
 	const ResPaths* paths, 
 	const std::string filename, 
 	const std::string name, 
-	std::shared_ptr<void>)
+	std::shared_ptr<AssetsConfig>)
 {
 	// Вектор для хранения страниц шрифта (обычно 5 страниц: 0..4)
     std::vector<std::unique_ptr<Texture>> pages;
@@ -91,7 +90,6 @@ bool asset_loader::font(
 		std::unique_ptr<Texture> texture(png::loadTexture(page_name));
 		if (texture == nullptr){
             LOG_CRITICAL("Failed to load bitmap font '{}' (missing page {})", page_name, std::to_string(i));
-            Logger::getInstance().flush();
 			return false;
 		}
 		pages.push_back(std::move(texture));
@@ -119,7 +117,6 @@ static bool appendAtlas(AtlasBuilder& atlas, const std::filesystem::path& file) 
 	std::shared_ptr<ImageData> image(png::loadImage(file.string()));
 	if (image == nullptr) {
 		LOG_ERROR("Failed to load atlas entry '{}'", name);
-		Logger::getInstance().flush();
 		return false;
 	}
 
@@ -141,7 +138,7 @@ bool asset_loader::atlas(
 	const ResPaths* paths, 
 	const std::string directory, 
 	const std::string name, 
-	std::shared_ptr<void>)
+	std::shared_ptr<AssetsConfig>)
 {
 	AtlasBuilder builder;
 
@@ -280,7 +277,7 @@ bool asset_loader::layout(
 	const ResPaths* paths, 
 	const std::string file, 
 	const std::string name, 
-	std::shared_ptr<void> config)
+	std::shared_ptr<AssetsConfig> config)
 {
     try {
         LayoutConfig* cfg = reinterpret_cast<LayoutConfig*>(config.get());
@@ -291,4 +288,22 @@ bool asset_loader::layout(
 		LOG_ERROR("Failed to parse layout XML '{}'. Reason: {}", file, err.errorLog());
         return false;
     }
+}
+
+bool asset_loader::sound(
+    AssetsLoader& loader,
+    Assets* assets,
+    const ResPaths* paths,
+    const std::string file,
+    const std::string name,
+    std::shared_ptr<AssetsConfig> config)
+{
+    auto cfg = dynamic_cast<SoundConfig*>(config.get());
+    auto sound = audio::loadSound(paths->find(file), cfg->keepPCM);
+    if (sound == nullptr) {
+		LOG_ERROR("Failed to load sound '{}' from '{}'", name, file);
+        return false;
+    }
+    assets->store(sound, name);
+    return true;
 }

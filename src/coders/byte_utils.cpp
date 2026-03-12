@@ -116,13 +116,11 @@ ByteReader::ByteReader(const ubyte* data) : data(data), size(4), pos(0) {
 void ByteReader::checkMagic(const char* data, size_t size) {
     if (pos + size >= this->size) {
         LOG_ERROR("Invalid magic number");
-        Logger::getInstance().flush();
         throw std::runtime_error("Invalid magic number");
     }
     for (size_t i = 0; i < size; ++i) {
         if (this->data[pos + i] != (ubyte)data[i]){
             LOG_ERROR("Invalid magic number");
-            Logger::getInstance().flush();
             throw std::runtime_error("Invalid magic number");
         }
     }
@@ -132,7 +130,6 @@ void ByteReader::checkMagic(const char* data, size_t size) {
 ubyte ByteReader::get() {
     if (pos == size) {
         LOG_ERROR("Buffer underflow");
-        Logger::getInstance().flush();
         throw std::runtime_error("Buffer underflow");
     }
     return data[pos++];
@@ -141,7 +138,6 @@ ubyte ByteReader::get() {
 ubyte ByteReader::peek() {
     if (pos == size) {
         LOG_ERROR("Buffer underflow");
-        Logger::getInstance().flush();
         throw std::runtime_error("Buffer underflow");
     }
     return data[pos]; 
@@ -150,7 +146,6 @@ ubyte ByteReader::peek() {
 int16_t ByteReader::getInt16() {
     if (pos + 2 > size) {
         LOG_ERROR("Buffer underflow");
-        Logger::getInstance().flush();
         throw std::runtime_error("Buffer underflow");
     }
     pos += 2;
@@ -161,7 +156,6 @@ int16_t ByteReader::getInt16() {
 int32_t ByteReader::getInt32() {
     if (pos + 4 > size) {
         LOG_ERROR("Buffer underflow");
-        Logger::getInstance().flush();
         throw std::runtime_error("Buffer underflow");
     }
     pos += 4;
@@ -174,7 +168,6 @@ int32_t ByteReader::getInt32() {
 int64_t ByteReader::getInt64() {
     if (pos + 8 > size) {
         LOG_ERROR("Buffer underflow");
-        Logger::getInstance().flush();
         throw std::runtime_error("Buffer underflow");
     }
     pos += 8;
@@ -213,7 +206,6 @@ std::string ByteReader::getString() {
     uint32_t length = (uint32_t)getInt32();
     if (pos + length > size) {
         LOG_ERROR("Buffer underflow");
-        Logger::getInstance().flush();
         throw std::runtime_error("Buffer underflow");
     }
     pos += length;

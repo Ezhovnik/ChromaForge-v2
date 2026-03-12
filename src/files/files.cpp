@@ -14,7 +14,6 @@
 files::rafile::rafile(std::filesystem::path filename) : file(filename, std::ios::binary | std::ios::ate) {
     if (!file) {
 		LOG_ERROR("Could not to open file '{}'", filename.string());
-		Logger::getInstance().flush();
         throw std::runtime_error("Could not to open file " + filename.string());
     }
     filelength = file.tellg();
@@ -120,7 +119,6 @@ std::unique_ptr<dynamic::Map> files::read_json(std::filesystem::path filename) {
         return obj;
 	} catch (const parsing_error& error) {
 		LOG_ERROR("Could not to parse {}. What: {}", filename.string(), error.errorLog());
-		Logger::getInstance().flush();
         throw std::runtime_error("Could not to parse " + filename.string());
     }
 }
@@ -129,7 +127,6 @@ std::vector<std::string> files::read_list(std::filesystem::path filename) {
 	std::ifstream file(filename);
 	if (!file) {
 		LOG_ERROR("Could not to open file {}", filename.u8string());
-		Logger::getInstance().flush();
 		throw std::runtime_error("Could not to open file " + filename.u8string());
 	}
 	std::vector<std::string> lines;

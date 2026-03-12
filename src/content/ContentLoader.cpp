@@ -261,7 +261,7 @@ void ContentLoader::loadItem(Item& item, std::string full, std::string name) {
 }
 
 void ContentLoader::load(ContentBuilder& builder) {
-    LOG_INFO("  Loading content pack [{}]", pack->id);
+    LOG_INFO("---Loading content pack [{}]", pack->id);
 
     auto runtime = new ContentPackRuntime(*pack, scripting::create_pack_environment(*pack));
     builder.add(runtime);
@@ -308,6 +308,5 @@ void ContentLoader::load(ContentBuilder& builder) {
         }
     }
 
-    LOG_INFO("  Successfully loaded content pack [{}]", pack->id);
-    Logger::getInstance().flush();
+    LOG_INFO("---Successfully loaded content pack [{}]", pack->id);
 }

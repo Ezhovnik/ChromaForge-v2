@@ -28,7 +28,15 @@ int main(int argc, char** argv) {
     platform::configure_encoding();
 
     // Инициализация логгера
-    Logger::getInstance().initialize(paths.getLogsFile().string());
+	if (ENGINE_VERSION_INDEV) {
+		Logger::getInstance().initialize(paths.getLogsFile().string());
+	} else {
+		Logger::getInstance().initialize(
+			paths.getLogsFile().string(),
+			LogLevel::WARN,
+			LogLevel::INFO
+		);
+	}
 
     std::unique_ptr<Engine> engine = nullptr;
 

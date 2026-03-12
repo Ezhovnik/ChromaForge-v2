@@ -114,7 +114,6 @@ Level* World::load(std::filesystem::path directory, EngineSettings& settings, co
 	// Читаем world.json; если не удаётся — исключение
 	if (!wfile->readWorldInfo(world.get())) {
 		LOG_ERROR("Could not to find world.json");
-		Logger::getInstance().flush();
 		throw world_load_error("Could not to find world.json");
 	}
 

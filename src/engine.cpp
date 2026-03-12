@@ -44,6 +44,7 @@
 #include "world/WorldGenerators.h"
 #include "voxels/DefaultWorldGenerator.h"
 #include "voxels/FlatWorldGenerator.h"
+#include "audio/audio.h"
 
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths){
@@ -53,6 +54,8 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
         Window::terminate();
         throw initialize_error("Failed to load Window");
     }
+
+    audio::initialize(true);
 
     auto resdir = paths->getResources();
     LOG_INFO("Initialization of the scripting system");
@@ -74,7 +77,6 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
             scripting::close();
 			Window::terminate();
             LOG_ERROR("Could not to load assets");
-            Logger::getInstance().flush();
 			throw initialize_error("Could not to load assets");
 		}
 	}
@@ -96,6 +98,7 @@ Engine::~Engine() {
     LOG_INFO("Shutting down");
     screen.reset();
     content.reset();
+    audio::close();
     assets.reset();
     scripting::close();
     Window::terminate();
@@ -141,6 +144,8 @@ void Engine::mainloop() {
 
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
+
+        audio::update(deltaTime);
 
         gui->activate(deltaTime);
 
@@ -189,7 +194,6 @@ void Engine::loadContent() {
 			missingDependency = checkPacks(existingPacks, pack.dependencies);
 			if(!missingDependency.empty()) {
                 LOG_ERROR("Missing dependency '{}'", missingDependency);
-                Logger::getInstance().flush();
                 throw contentpack_error(pack.id, pack.folder, "missing dependency '" + missingDependency + "'");
             }
 			if(pack.dependencies.empty() || checkPacks(loadedPacks, pack.dependencies).empty()) {
@@ -214,7 +218,6 @@ void Engine::loadContent() {
 		if (!loader.loadNext()) {
 			new_assets.reset();
             LOG_ERROR("Could not to initialize content assets");
-            Logger::getInstance().flush();
 			throw initialize_error("Could not to initialize content assets");
 		}
 	}

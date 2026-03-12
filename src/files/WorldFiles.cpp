@@ -62,7 +62,6 @@ uint WorldRegion::getChunkDataSize(uint x, uint z) {
 regFile::regFile(std::filesystem::path filename) : file(filename) {
     if (file.length() < REGION_HEADER_SIZE) {
 		LOG_ERROR("Incomplete region file header");
-		Logger::getInstance().flush();
         throw std::runtime_error("Incomplete region file header");
 	}
 
@@ -70,14 +69,12 @@ regFile::regFile(std::filesystem::path filename) : file(filename) {
     file.read(header, REGION_HEADER_SIZE);
     if (std::string(header, strlen(REGION_FORMAT_MAGIC)) != REGION_FORMAT_MAGIC) {
 		LOG_ERROR("Invalid region file magic number");
-		Logger::getInstance().flush();
         throw std::runtime_error("Invalid region file magic number");
     }
 
     version = header[REGION_HEADER_SIZE - 2];
     if (uint(version) > REGION_FORMAT_VERSION) {
 		LOG_ERROR("Region format {} is not supported", version);
-		Logger::getInstance().flush();
         throw illegal_region_format("Region format " + std::to_string(version) + " is not supported");
     }
 }

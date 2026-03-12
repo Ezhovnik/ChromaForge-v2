@@ -75,7 +75,6 @@ Texture* Texture::from(const ImageData* image) {
 		case ImageFormat::rgba8888: format = GL_RGBA; break;
 		default:
             LOG_CRITICAL("Unsupported image data format");
-            Logger::getInstance().flush();
 			throw std::runtime_error("unsupported image data format");
 	}
 	const void* data = image->getData();

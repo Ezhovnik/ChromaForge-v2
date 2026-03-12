@@ -18,7 +18,6 @@ std::string List::str(size_t index) const {
         case ValueType::integer: return std::to_string(val->value.integer);
         default: {
             LOG_ERROR("Type error");
-            Logger::getInstance().flush();
             throw std::runtime_error("Type error");
         }
     }
@@ -33,7 +32,6 @@ double List::num(size_t index) const {
         case ValueType::boolean: return val->value.boolean;
         default: {
             LOG_ERROR("Type error");
-            Logger::getInstance().flush();
             throw std::runtime_error("Type error");
         }
     }
@@ -48,7 +46,6 @@ int64_t List::integer(size_t index) const {
         case ValueType::boolean: return val->value.boolean;
         default: {
             LOG_ERROR("Type error");
-            Logger::getInstance().flush();
             throw std::runtime_error("Type error");
         }
     }
@@ -57,7 +54,6 @@ int64_t List::integer(size_t index) const {
 Map* List::map(size_t index) const {
     if (values[index]->type != ValueType::map) {
         LOG_ERROR("Type error");
-        Logger::getInstance().flush();
         throw std::runtime_error("Type error");
     }
     return values[index]->value.map;
@@ -66,7 +62,6 @@ Map* List::map(size_t index) const {
 List* List::list(size_t index) const {
     if (values[index]->type != ValueType::list) {
         LOG_ERROR("Type error");
-        Logger::getInstance().flush();
         throw std::runtime_error("Type error");
     }
     return values[index]->value.list;
@@ -79,7 +74,6 @@ bool List::flag(size_t index) const {
         case ValueType::boolean: return val->value.boolean;
         default: {
             LOG_ERROR("Type error");
-            Logger::getInstance().flush();
             throw std::runtime_error("Type error");
         }
     }
@@ -177,7 +171,6 @@ std::string Map::getStr(std::string key, const std::string& def) const {
         case ValueType::integer: return std::to_string(val->value.integer);
         default: {
             LOG_ERROR("Type error");
-            Logger::getInstance().flush();
             throw std::runtime_error("Type error");
         }
     } 
@@ -194,7 +187,6 @@ double Map::getNum(std::string key, double def) const {
         case ValueType::boolean: return val->value.boolean;
         default: {
             LOG_ERROR("Type error");
-            Logger::getInstance().flush();
             throw std::runtime_error("Type error");
         }
     }
@@ -211,7 +203,6 @@ int64_t Map::getInt(std::string key, int64_t def) const {
         case ValueType::boolean: return val->value.boolean;
         default: {
             LOG_ERROR("Type error");
-            Logger::getInstance().flush();
             throw std::runtime_error("Type error");
         }
     }
@@ -226,7 +217,6 @@ bool Map::getBool(std::string key, bool def) const {
         case ValueType::boolean: return val->value.boolean;
         default: {
             LOG_ERROR("Type error");
-            Logger::getInstance().flush();
             throw std::runtime_error("Type error");
         }
     }

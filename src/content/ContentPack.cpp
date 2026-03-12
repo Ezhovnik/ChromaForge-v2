@@ -38,27 +38,23 @@ bool ContentPack::is_pack(std::filesystem::path folder) {
 static void checkContentPackId(const std::string& id, const std::filesystem::path& folder) {
     if (id.length() < 2 || id.length() > 24) {
         LOG_ERROR("Content-pack id '{}' length is out of range [2, 24]", id);
-        Logger::getInstance().flush();
         throw contentpack_error(id, folder, "Content-pack id length is out of range [2, 24]");
     }
 
     if (isdigit(id[0])) {
         LOG_ERROR("Content-pack id '{}' must not start with a digit", id);
-        Logger::getInstance().flush();
         throw contentpack_error(id, folder, "Content-pack id must not start with a digit");
     }
 
     for (char c : id) {
         if (!isalnum(c) && c != '_') {
             LOG_ERROR("Illegal character in content-pack id '{}'", id);
-            Logger::getInstance().flush();
             throw contentpack_error(id, folder, "Illegal character in content-pack id");
         }
     }
 
     if (std::find(ContentPack::RESERVED_NAMES.begin(), ContentPack::RESERVED_NAMES.end(), id) != ContentPack::RESERVED_NAMES.end()) {
         LOG_ERROR("Content-pack id '{}' is reserved", id);
-        Logger::getInstance().flush();
         throw contentpack_error(id, folder, "This content-pack id is reserved");
     }
 }
@@ -83,7 +79,6 @@ ContentPack ContentPack::read(std::filesystem::path folder) {
 
     if (pack.id == "none") {
         LOG_ERROR("Content-pack id is not specified: {}", folder.u8string());
-        Logger::getInstance().flush();
         throw contentpack_error(pack.id, folder, "Content-pack id is not specified");
     }
     checkContentPackId(pack.id, folder);
@@ -143,7 +138,6 @@ void ContentPack::readPacks(const EnginePaths* paths, std::vector<ContentPack>& 
         std::filesystem::path packfolder = ContentPack::findPack(paths, worldDir, name);
         if (!std::filesystem::is_directory(packfolder)) {
             LOG_ERROR("Could not to find pack '{}'", name);
-            Logger::getInstance().flush();
             throw contentpack_error(name, packfolder, "Could not to find pack '" + name + "'");
         }
         packs.push_back(ContentPack::read(packfolder));

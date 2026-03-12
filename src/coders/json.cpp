@@ -89,7 +89,6 @@ dynamic::Map* Parser::parse() {
     char next = peek();
     if (next != '{') {
         LOG_ERROR("'{' expected");
-        Logger::getInstance().flush();
         throw error("'{' expected");
     }
     return parseObject();
@@ -108,7 +107,6 @@ dynamic::Map* Parser::parseObject() {
         char next = peek();
         if (next != ':') {
             LOG_ERROR("':' expected");
-            Logger::getInstance().flush();
             throw error("':' expected");
         }
         pos++;
@@ -120,7 +118,6 @@ dynamic::Map* Parser::parseObject() {
             break;
         } else {
             LOG_ERROR("',' expected");
-            Logger::getInstance().flush();
             throw error("',' expected");
         }
     }
@@ -146,7 +143,6 @@ dynamic::List* Parser::parseList() {
             break;
         } else {
             LOG_ERROR("',' expected");
-            Logger::getInstance().flush();
             throw error("',' expected");
         }
     }
@@ -186,7 +182,6 @@ dynamic::Value* Parser::parseValue() {
             return new dynamic::Value(dynamic::ValueType::number, val);
         }
         LOG_ERROR("Invalid literal");
-        Logger::getInstance().flush();
         throw error("Invalid literal");
     }
     if (next == '{') {
@@ -215,7 +210,6 @@ dynamic::Value* Parser::parseValue() {
         return new dynamic::Value(dynamic::ValueType::string, val);
     }
     LOG_ERROR("Unexpected character '{}'", next);
-    Logger::getInstance().flush();
     throw error("Unexpected character '" + std::string({next}) + "'");
 }
 
