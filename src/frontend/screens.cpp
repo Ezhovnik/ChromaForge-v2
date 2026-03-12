@@ -29,7 +29,7 @@
 #include "../graphics/UVRegion.h"
 #include "../graphics/GfxContext.h"
 #include "../core_defs.h"
-#include "menu.h"
+#include "menu/menu.h"
 #include "ContentGfxCache.h"
 #include "../logic/LevelController.h"
 #include "LevelFrontend.h"
@@ -92,21 +92,24 @@ void MenuScreen::draw(float delta) {
 }
 
 static bool backlight;
-LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine),
-        level(level),
-        levelFrontend(std::make_unique<LevelFrontend>(level, engine->getAssets())),
-        hud(std::make_unique<Hud>(engine, levelFrontend.get())),
-        worldRenderer(std::make_unique<WorldRenderer>(engine, levelFrontend.get())),
-        controller(std::make_unique<LevelController>(engine->getSettings(), level))
-    {
+LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
+    menus::create_pause_panel(engine, level);
+
     EngineSettings& settings = engine->getSettings();
     backlight = settings.graphics.backlight;
+    auto assets = engine->getAssets();
 
-    animator.reset(new TextureAnimator());
-    animator->addAnimations(engine->getAssets()->getAnimations());
+    controller = std::make_unique<LevelController>(settings, level);
+    levelFrontend = std::make_unique<LevelFrontend>(level, assets);
+    worldRenderer = std::make_unique<WorldRenderer>(engine, levelFrontend.get());
+    hud = std::make_unique<Hud>(engine, levelFrontend.get());
+
+    animator = std::make_unique<TextureAnimator>();
+    animator->addAnimations(assets->getAnimations());
 
     auto content = level->content;
-    for (auto& pack : content->getPacks()) {
+    for (auto& entry : content->getPacks()) {
+        auto pack = entry.second.get();
         const ContentPack& info = pack->getInfo();
         std::filesystem::path scriptFile = info.folder/std::filesystem::path("scripts/hud.lua");
         if (std::filesystem::is_regular_file(scriptFile)) scripting::load_hud_script(pack->getEnvironment()->getId(), info.id, scriptFile);

@@ -6,6 +6,7 @@ Back=Назад
 Cancel=Отмена
 Continue=Продолжить
 Add=Добавить
+Converting world...=Выполняется конвертация мира...
 
 # Меню
 menu.New World=Новый Мир
@@ -28,6 +29,7 @@ world.delete-confirm=Удалить мир безвозвратно?
 menu.Content Error=Ошибка контента
 error.pack-not-found=Не удалось найти пакет
 error.dependency-not-found=Используемая зависимость не найдена
+pack.remove-confirm=Удалить весь поставляемый паком контент из мира (безвозвратно)?
 
 # Настройки
 settings.Load Distance=Дистанция Прорисовки

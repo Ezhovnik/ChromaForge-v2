@@ -138,6 +138,7 @@ public:
     void writeIndices(const ContentIndices* indices);
 
     void addPack(const World* world, const std::string& id);
+    void removePack(const World* world, const std::string& id);
 };
 
 #endif // FILES_WORLDFILES_H_

@@ -34,6 +34,7 @@ inline const char* contenttype_name(ContentType type) {
 }
 
 class namereuse_error: public std::runtime_error {
+private:
     ContentType type;
 public:
     namereuse_error(const std::string& msg, ContentType type) : std::runtime_error(msg), type(type) {}
@@ -44,13 +45,14 @@ public:
 };
 
 class ContentBuilder {
+private:
     std::unordered_map<std::string, Block*> blockDefs;
     std::vector<std::string> blockIds;
 
     std::unordered_map<std::string, Item*> itemDefs;
     std::vector<std::string> itemIds;
 
-    std::vector<std::unique_ptr<ContentPackRuntime>> packs;
+    std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs;
 public:
     ~ContentBuilder();
 
@@ -69,6 +71,7 @@ public:
 };
 
 class ContentIndices {
+private:
     std::vector<Block*> blockDefs;
     std::vector<Item*> itemDefs;
 public:
@@ -102,12 +105,13 @@ public:
 };
 
 class Content {
+private:
     std::unordered_map<std::string, Block*> blockDefs;
     std::unordered_map<std::string, Item*> itemDefs;
 
     std::unique_ptr<ContentIndices> indices;
 
-    std::vector<std::unique_ptr<ContentPackRuntime>> packs;
+    std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs;
 public:
     std::unique_ptr<DrawGroups> const drawGroups;
 
@@ -116,7 +120,7 @@ public:
         std::unique_ptr<DrawGroups> drawGroups, 
         std::unordered_map<std::string, Block*> blockDefs, 
         std::unordered_map<std::string, Item*> itemDefs,
-        std::vector<std::unique_ptr<ContentPackRuntime>> packs
+        std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs
     );
     ~Content();
 
@@ -130,7 +134,9 @@ public:
     Item* findItem(std::string id) const;
     Item& requireItem(std::string id) const;
 
-    const std::vector<std::unique_ptr<ContentPackRuntime>>& getPacks() const;
+    const ContentPackRuntime* getPackRuntime(std::string id) const;
+
+    const std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>>& getPacks() const;
 };
 
 #endif // CONTENT_CONTENT_H_

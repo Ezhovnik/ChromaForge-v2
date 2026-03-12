@@ -57,7 +57,7 @@ void mouse_button_callback(GLFWwindow*, int button, int action, int mode) {
 
 // Callback-функция для обработки нажатий клавиш клавиатуры
 void key_callback(GLFWwindow*, int key, int scancode, int action, int mode) {
-    if (key < 0 || key >= _MOUSE_KEYS_OFFSET) return;
+    if (key == GLFW_KEY_UNKNOWN) return;
 
     if (action == GLFW_PRESS) {
         Events::setKey(key, true);

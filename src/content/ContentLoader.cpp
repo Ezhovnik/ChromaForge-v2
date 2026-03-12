@@ -266,6 +266,7 @@ void ContentLoader::load(ContentBuilder& builder) {
     auto runtime = new ContentPackRuntime(*pack, scripting::create_pack_environment(*pack));
     builder.add(runtime);
     env = runtime->getEnvironment()->getId();
+    ContentPackStats& stats = runtime->getStatsWriteable();
 
     fixPackIndices();
 
@@ -285,6 +286,7 @@ void ContentLoader::load(ContentBuilder& builder) {
             std::string full = pack->id + ":" + name;
             auto& def = builder.createBlock(full);
             loadBlock(def, full, name);
+            stats.totalBlocks++;
             if (!def.hidden) {
                 auto& item = builder.createItem(full + BLOCK_ITEM_SUFFIX);
                 item.generated = true;
@@ -295,6 +297,7 @@ void ContentLoader::load(ContentBuilder& builder) {
                 for (uint j = 0; j < 4; ++j) {
                     item.emission[j] = def.emission[j];
                 }
+                stats.totalItems++;
             }
         }
     }
@@ -305,6 +308,7 @@ void ContentLoader::load(ContentBuilder& builder) {
             std::string name = itemsarr->str(i);
             std::string full = pack->id + ":" + name;
             loadItem(builder.createItem(full), full, name);
+            stats.totalItems++;
         }
     }
 

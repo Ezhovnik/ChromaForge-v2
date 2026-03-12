@@ -7,10 +7,12 @@
 
 #include "../logger/Logger.h"
 
+inline constexpr short _MOUSE_KEYS_OFFSET = 1024;
+
 // Статические массивы для хранения состояние клавиш и кнопок мыши
-bool Events::_keys[KEYS_BUFFER_SIZE] = {}; // Хранит текущее состояние (нажата / не нажата)
-uint Events::_frames[KEYS_BUFFER_SIZE] = {}; // Храние номер кадра, в котором было последнее изменение состояния
-uint Events::_current = 0; // Номер текущего кадра
+bool Events::keys[KEYS_BUFFER_SIZE] = {}; // Хранит текущее состояние (нажата / не нажата)
+uint Events::frames[KEYS_BUFFER_SIZE] = {}; // Храние номер кадра, в котором было последнее изменение состояния
+uint Events::currentFrame = 0; // Номер текущего кадра
 
 // Переменные для отслеживания позиции мыши
 glm::vec2 Events::delta = {};
@@ -34,7 +36,7 @@ bool Events::isPressed(keycode code) {
 bool Events::isPressed(int keycode) {
     if (keycode < 0 || keycode  >= KEYS_BUFFER_SIZE) return false;
 
-    return _keys[keycode];
+    return keys[keycode];
 }
 
 bool Events::justPressed(keycode code) {
@@ -43,7 +45,7 @@ bool Events::justPressed(keycode code) {
 
 // Проверяет, была ли клавиша нажата именно в текущем кадре 
 bool Events::justPressed(int keycode) {
-    return Events::isPressed(keycode) && _frames[keycode] == _current;
+    return Events::isPressed(keycode) && frames[keycode] == currentFrame;
 }
 
 bool Events::isClicked(mousecode button) {
@@ -102,7 +104,7 @@ bool Events::justActive(std::string name) {
 
 // Обработка событий текущего кадра
 void Events::pollEvents() {
-    _current++;
+    currentFrame++;
     delta.x = 0.0f;
     delta.y = 0.0f;
     codepoints.clear();
@@ -135,8 +137,8 @@ void Events::pollEvents() {
 }
 
 void Events::setKey(int key, bool b) {
-    Events::_keys[key] = b;
-    Events::_frames[key] = Events::_current;
+    Events::keys[key] = b;
+    Events::frames[key] = Events::currentFrame;
 }
 
 void Events::setButton(int button, bool b) {

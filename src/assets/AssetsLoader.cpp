@@ -95,6 +95,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/no_icon.png", "gui/no_icon");
 	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/warning.png", "gui/warning");
     loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/error.png", "gui/error");
+    loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/cross.png", "gui/cross");
 
 	if (content) {
 		// Дополнительные шейдеры
@@ -116,7 +117,8 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 		);
 
 		// Макеты из каждого установленного пака
-        for (auto& pack : content->getPacks()) {
+        for (auto& entry : content->getPacks()) {
+			auto pack = entry.second.get();
             auto& info = pack->getInfo();
             std::filesystem::path folder = info.folder/std::filesystem::path("layouts");
             addLayouts(pack->getEnvironment()->getId(), info.id, folder, loader);

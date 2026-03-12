@@ -6,8 +6,11 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <queue>
 
 #include <glm/glm.hpp>
+
+#include "../../delegates.h"
 
 class GfxContext;
 class Assets;
@@ -60,6 +63,8 @@ namespace gui {
         std::unique_ptr<Camera> uicamera;
         std::shared_ptr<PagesControl> menu;
 
+        std::queue<runnable> postRunnables;
+
         void activateMouse(float delta);
     public:
         GUI();
@@ -80,6 +85,8 @@ namespace gui {
         void remove(std::string name) noexcept;
 
         std::shared_ptr<Container> getContainer() const;
+
+        void postRunnable(runnable callback);
     };
 }
 
