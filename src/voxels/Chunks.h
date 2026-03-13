@@ -30,28 +30,36 @@ public:
     size_t chunksCount;
     size_t visibleCount;
 
-    uint width; // Количество чанков по X
-    uint depth; // Количество чанков по Z
-    int areaOffsetX; // Смещение области видимых чанков по X
-    int areaOffsetZ; // Смещение области видимых чанков по Z
+    uint32_t width; // Количество чанков по X
+    uint32_t depth; // Количество чанков по Z
+    int32_t areaOffsetX; // Смещение области видимых чанков по X
+    int32_t areaOffsetZ; // Смещение области видимых чанков по Z
 
     LevelEvents* events;
     WorldFiles* worldFiles;
 
-    Chunks(uint width, uint depth, int areaOffsetX, int areaOffsetZ, WorldFiles* worldFiles, LevelEvents* events, const Content* content); // Конструктор
-    ~Chunks() = default; // Деструктор
+    Chunks(
+        uint32_t width, 
+        uint32_t depth, 
+        int32_t areaOffsetX, 
+        int32_t areaOffsetZ, 
+        WorldFiles* worldFiles, 
+        LevelEvents* events, 
+        const Content* content
+    ); 
+    ~Chunks() = default;
 
     bool putChunk(std::shared_ptr<Chunk> chunk);
 
-    Chunk* getChunk(int chunk_x, int chunk_z); // Возвращает чанк по координатам чанка
-    Chunk* getChunkByVoxel(int x, int y, int z); // Получает чанк, содержащий воксель с заданными мировыми координатами
+    Chunk* getChunk(int32_t chunk_x, int32_t chunk_z); // Возвращает чанк по координатам чанка
+    Chunk* getChunkByVoxel(int32_t x, int32_t y, int32_t z); // Получает чанк, содержащий воксель с заданными мировыми координатами
 
-    voxel* getVoxel(int x, int y, int z); // Возвращает воксель по мировым координатам
-    void setVoxel(int x, int y, int z, int id, uint8_t states); // Устанавливает идентификатор вокселя по мировым координатам
+    voxel* getVoxel(int32_t x, int32_t y, int32_t z); // Возвращает воксель по мировым координатам
+    void setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, uint8_t states); // Устанавливает идентификатор вокселя по мировым координатам
 
-    light_t getLight(int x, int y, int z);
-	ubyte getLight(int x, int y, int z, int channel);
-    
+    light_t getLight(int32_t x, int32_t y, int32_t z);
+	ubyte getLight(int32_t x, int32_t y, int32_t z, int channel);
+
     voxel* rayCast( // Выполняет трассировку луча через воксельный мир.
         glm::vec3 start, // Начальная точка луча
         glm::vec3 dir, // Направление луча
@@ -63,15 +71,15 @@ public:
     glm::vec3 rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDist);
 
     const AABB* isObstacleAt(float x, float y, float z);
-    bool isSolidBlock(int x, int y, int z);
-    bool isReplaceableBlock(int x, int y, int z);
-	bool isObstacleBlock(int x, int y, int z);
+    bool isSolidBlock(int32_t x, int32_t y, int32_t z);
+    bool isReplaceableBlock(int32_t x, int32_t y, int32_t z);
+	bool isObstacleBlock(int32_t x, int32_t y, int32_t z);
 
-    void _setOffset(int x, int z);
+    void _setOffset(int32_t x, int32_t z);
 
-    void setCenter(int x, int z);
-	void translate(int x, int z);
-    void resize(uint newWidth, uint newDepth);
+    void setCenter(int32_t x, int32_t z);
+	void translate(int32_t x, int32_t z);
+    void resize(uint32_t newWidth, uint32_t newDepth);
 
     void saveAndClear();
 };
