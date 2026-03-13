@@ -4,6 +4,7 @@
 #include <cstring>
 #include <fstream>
 #include <stdexcept>
+#include <string>
 
 #include "../audio/audio.h"
 #include "../logger/Logger.h"

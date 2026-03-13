@@ -1,20 +1,19 @@
 #include <memory>
 #include <filesystem>
-#include <iostream>
+#include <cstdlib>
+#include <string>
 
 #include "engine.h"
 #include "settings.h"
 #include "files/files.h"
 #include "util/platform.h"
 #include "coders/toml.h"
-#include "coders/json.h"
 #include "core_defs.h"
 #include "logger/Logger.h"
 #include "util/command_line.h"
-#include "window/Events.h"
-#include "window/input.h"
 #include "files/settings_io.h"
 #include "files/engine_paths.h"
+#include "constants.h"
 
 #define SETTINGS_FILE "settings.toml"
 #define CONTROLS_FILE "controls.json"

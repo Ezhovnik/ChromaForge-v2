@@ -89,23 +89,6 @@ namespace asset_loader {
     );
 
     /**
-     * @brief Загружает анимацию для текстуры на основе файлов в папке анимаций.
-     * @param assets Указатель на менеджер ресурсов.
-     * @param paths Указатель на объект с путями.
-     * @param directory Базовая директория, содержащая подпапки "animations" и "blocks".
-     * @param name Имя анимации (соответствует имени текстуры).
-     * @param dstAtlas Указатель на атлас, в который будет добавлена анимация.
-     * @return true, если анимация успешно загружена (или если папка анимации отсутствует), иначе false.
-     */
-    bool animation(
-        Assets* assets, 
-        const ResPaths* paths, 
-        const std::string directory, 
-        const std::string name, 
-        Atlas* dstAtlas
-    );
-
-    /**
      * @brief Загружает макет интерфейса из XML-файла и сохраняет его в менеджере ресурсов.
      * @param loader Загрузчик ассетов (используется для загрузки вложенных ресурсов).
      * @param assets Указатель на менеджер ресурсов.

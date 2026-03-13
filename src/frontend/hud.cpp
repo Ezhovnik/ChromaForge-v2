@@ -348,9 +348,11 @@ void Hud::update(bool hudVisible) {
 		}
 	}
 
-	if (hudVisible && !guiController->isFocusCaught() && Events::justActive(BIND_HUD_INVENTORY) && !pause) {
-		if (inventoryOpen) closeInventory();
-		else openInventory();
+	if (hudVisible && !guiController->isFocusCaught() && !pause) {
+        if (Events::justActive(BIND_HUD_INVENTORY)) {
+            if (inventoryOpen) closeInventory();
+            else openInventory();
+        }
 	}
 
 	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();

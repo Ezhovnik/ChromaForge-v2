@@ -61,6 +61,7 @@ namespace scripting {
     void on_block_broken(Player* player, const Block* block, int x, int y, int z);
     bool on_block_interact(Player* player, const Block* block, int x, int y, int z);
 
+    bool on_item_use(Player* player, const Item* item);
     bool on_item_use_on_block(Player* player, const Item* item, int x, int y, int z);
     bool on_item_break_block(Player* player, const Item* item, int x, int y, int z);
 

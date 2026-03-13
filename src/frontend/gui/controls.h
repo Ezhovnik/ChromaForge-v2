@@ -191,6 +191,7 @@ namespace gui {
         size_t selectionOrigin = 0;
 
         bool multiline = false;
+        bool editable = true;
 
         size_t normalizeIndex(int index);
 
@@ -201,6 +202,8 @@ namespace gui {
         bool eraseSelected();
         void resetSelection();
         void extendSelection(int index);
+
+        void performEditingKeyboardEvents(keycode key);
     public:
         TextBox(std::wstring placeholder, glm::vec4 padding = glm::vec4(4.0f));
 
@@ -226,10 +229,13 @@ namespace gui {
         virtual void setText(std::wstring value);
 
         virtual std::wstring getPlaceholder() const;
-        virtual void setPlaceholder(const std::wstring&);
+        virtual void setPlaceholder(const std::wstring& text);
 
         virtual void setMultiline(bool multiline);
         virtual bool isMultiline() const;
+
+        virtual void setEditable(bool editable);
+        virtual bool isEditable() const;
 
         virtual void draw(const GfxContext* pctx, Assets* assets) override;
         virtual void drawBackground(const GfxContext* pctx, Assets* assets) override;

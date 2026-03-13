@@ -1,25 +1,15 @@
 #include "engine.h"
 
 #include <vector>
-#include <ctime>
-#include <exception>
 #include <memory>
 #include <assert.h>
 #include <filesystem>
 #include <unordered_set>
-#include <functional>
-
-// GLM – библиотека для работы с матрицами и векторами в OpenGL
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #define GLEW_STATIC
 
-// Пользовательские заголовочные файлы
 #include "window/Window.h"
 #include "window/Events.h"
-#include "window/Camera.h"
 #include "window/input.h"
 #include "assets/AssetsLoader.h"
 #include "core_defs.h"
@@ -27,8 +17,9 @@
 #include "settings.h"
 #include "frontend/gui/GUI.h"
 #include "graphics/Batch2D.h"
-#include "graphics/ImageData.h"
 #include "graphics/ShaderProgram.h"
+#include "graphics/Viewport.h"
+#include "graphics/ImageData.h"
 #include "coders/GLSLExtension.h"
 #include "coders/png.h"
 #include "files/engine_paths.h"
@@ -45,6 +36,7 @@
 #include "voxels/DefaultWorldGenerator.h"
 #include "voxels/FlatWorldGenerator.h"
 #include "audio/audio.h"
+#include "constants.h"
 
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths){
@@ -56,6 +48,10 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     }
 
     audio::initialize(true);
+    audio::create_channel("regular");
+    audio::create_channel("music");
+    audio::create_channel("ambient");
+    audio::create_channel("ui");
 
     auto resdir = paths->getResources();
     LOG_INFO("Initialization of the scripting system");
@@ -98,8 +94,8 @@ Engine::~Engine() {
     LOG_INFO("Shutting down");
     screen.reset();
     content.reset();
-    audio::close();
     assets.reset();
+    audio::close();
     scripting::close();
     Window::terminate();
     LOG_INFO("Engine has finished successfuly");
@@ -272,6 +268,8 @@ std::vector<ContentPack>& Engine::getContentPacks() {
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
+    audio::reset_channel(audio::get_channel_index("regular"));
+    audio::reset_channel(audio::get_channel_index("ambient"));
 	this->screen = screen;
 }
 
