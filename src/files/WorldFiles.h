@@ -17,20 +17,20 @@
 
 // Константы для размера регионов
 namespace RegionConsts {
-    constexpr uint SIZE_BIT = 5; // Размер региона 
-    constexpr uint SIZE = 1 << SIZE_BIT; // Длина региона в чанках
-    constexpr uint VOLUME = SIZE * SIZE; // Количество чанков в регионе
+    inline constexpr uint SIZE_BIT = 5; // Размер региона 
+    inline constexpr uint SIZE = 1 << SIZE_BIT; // Длина региона в чанках
+    inline constexpr uint VOLUME = SIZE * SIZE; // Количество чанков в регионе
 
-    constexpr uint LAYER_VOXELS = 0;
-    constexpr uint LAYER_LIGHTS = 1;
-    constexpr uint LAYER_INVENTORIES = 2;
+    inline constexpr uint LAYER_VOXELS = 0;
+    inline constexpr uint LAYER_LIGHTS = 1;
+    inline constexpr uint LAYER_INVENTORIES = 2;
 
-    constexpr uint MAX_OPEN_FILES = 16;
+    inline constexpr uint MAX_OPEN_FILES = 16;
 }
 
 #define REGION_FORMAT_MAGIC ".CHROMAREG"
-constexpr int REGION_HEADER_SIZE = 13;
-constexpr int REGION_FORMAT_VERSION = 2;
+inline constexpr int REGION_HEADER_SIZE = 13;
+inline constexpr int REGION_FORMAT_VERSION = 2;
 
 class Player;
 class Content;

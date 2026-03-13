@@ -343,7 +343,7 @@ void TextBox::draw(const GfxContext* pctx, Assets* assets) {
     lcoord.y -= 2;
     auto batch = pctx->getBatch2D();
     batch->untexture();
-    if (int((Window::time() - caretLastMove) * 2) % 2 == 0) {
+    if (editable && int((Window::time() - caretLastMove) * 2) % 2 == 0) {
         uint line = label->getLineByTextIndex(caret);
         uint lcaret = caret - label->getTextLineOffset(line);
         batch->setColor(glm::vec4(1.0f));
@@ -381,7 +381,7 @@ void TextBox::drawBackground(const GfxContext* parent_context, Assets* assets) {
     batch->untexture();
 
     if (valid) {
-        if (isFocused()) batch->setColor(focusedColor);
+        if (isFocused() && !multiline) batch->setColor(focusedColor);
         else if (hover && !multiline) batch->setColor(hoverColor);
         else batch->setColor(color);
     } else {
@@ -390,6 +390,17 @@ void TextBox::drawBackground(const GfxContext* parent_context, Assets* assets) {
 
     batch->rect(coord.x, coord.y, size.x, size.y);
     if (!isFocused() && supplier) input = supplier();
+
+    if (isFocused() && multiline) {
+        batch->setColor(glm::vec4(1, 1, 1, 0.1f));
+        glm::vec2 lcoord = label->calcCoord();
+        lcoord.y -= 2;
+        uint line = label->getLineByTextIndex(caret);
+        int lineY = label->getLineYOffset(line);
+        int lineHeight = font->getLineHeight() * label->getLineInterval();
+        batch->rect(lcoord.x, lcoord.y + lineY, label->getSize().x, 1);
+        batch->rect(lcoord.x, lcoord.y + lineY + lineHeight - 2, label->getSize().x, 1);
+    }
 
     label->setColor(glm::vec4(input.empty() ? 0.5f : 1.0f));
     label->setText(getText());
@@ -412,8 +423,8 @@ void TextBox::paste(const std::wstring& text) {
         auto left = input.substr(0, caret);
         auto right = input.substr(caret);
         input = left + text + right;
-        input.erase(std::remove(input.begin(), input.end(), '\r'), input.end());
     }
+    input.erase(std::remove(input.begin(), input.end(), '\r'), input.end());
     label->setText(input);
 
     setCaret(caret + text.length());
@@ -506,7 +517,7 @@ int TextBox::calcIndexAt(int x, int y) const {
     return std::min(offset + label->getTextLineOffset(line), input.length());
 }
 
-void TextBox::keyPressed(keycode key) {
+void TextBox::performEditingKeyboardEvents(keycode key) {
     bool shiftPressed = Events::isPressed(keycode::LEFT_SHIFT);
     bool breakSelection = getSelectionLength() != 0 && !shiftPressed;
     uint previousCaret = caret;
@@ -593,14 +604,18 @@ void TextBox::keyPressed(keycode key) {
             resetSelection();
         }
     }
+}
+
+void TextBox::keyPressed(keycode key) {
+    if (editable) performEditingKeyboardEvents(key);
 
     if (Events::isPressed(keycode::LEFT_CONTROL)) {
         if (key == keycode::C || key == keycode::X) {
             std::string text = util::wstr2str_utf8(getSelection());
             if (!text.empty()) Window::setClipboardText(text.c_str());
-            if (key == keycode::X) eraseSelected();
+            if (editable && key == keycode::X) eraseSelected();
         }
-        if (key == keycode::V) {
+        if (editable && key == keycode::V) {
             const char* text = Window::getClipboardText();
             if (text) paste(util::str2wstr_utf8(text));
         }
@@ -609,6 +624,14 @@ void TextBox::keyPressed(keycode key) {
             else resetSelection();
         }
     }
+}
+
+void TextBox::setEditable(bool editable) {
+    this->editable = editable;
+}
+
+bool TextBox::isEditable() const {
+    return editable;
 }
 
 void TextBox::setOnEditStart(runnable oneditstart) {

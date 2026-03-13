@@ -24,6 +24,7 @@ AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(asset
 	addLoader(AssetType::Font, asset_loader::font);
     addLoader(AssetType::Atlas, asset_loader::atlas);
 	addLoader(AssetType::Layout, asset_loader::layout);
+	addLoader(AssetType::Sound, asset_loader::sound);
 }
 
 void AssetsLoader::addLoader(AssetType tag, aloader_func func) {

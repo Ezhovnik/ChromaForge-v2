@@ -19,6 +19,14 @@
 #include "../logic/scripting/scripting.h"
 #include "../audio/audio.h"
 
+static bool animation(
+    Assets* assets, 
+    const ResPaths* paths, 
+    const std::string directory, 
+    const std::string name,
+    Atlas* dstAtlas
+);
+
 bool asset_loader::shader(
 	AssetsLoader&,
 	Assets* assets, 
@@ -153,13 +161,13 @@ bool asset_loader::atlas(
 
 	// Для каждой текстуры в атласе пытаемся загрузить соответствующую анимацию
 	for (const auto& file : builder.getNames()) {
-		asset_loader::animation(assets, paths, "textures", file, atlas);
+		animation(assets, paths, "textures", file, atlas);
 	}
 
 	return true;
 }
 
-bool asset_loader::animation(
+static bool animation(
 	Assets* assets, 
 	const ResPaths* paths, 
 	const std::string directory, 
@@ -299,11 +307,32 @@ bool asset_loader::sound(
     std::shared_ptr<AssetsConfig> config)
 {
     auto cfg = dynamic_cast<SoundConfig*>(config.get());
-    auto sound = audio::load_sound(paths->find(file), cfg->keepPCM);
-    if (sound == nullptr) {
-		LOG_ERROR("Failed to load sound '{}' from '{}'", name, file);
-        return false;
+
+    bool keepPCM = cfg ? cfg->keepPCM : false;
+
+    size_t lastindex = file.find_last_of("."); 
+    std::string extension = file.substr(lastindex);
+    std::string extensionless = file.substr(0, lastindex);
+    try {
+        std::unique_ptr<audio::Sound> baseSound = nullptr;
+
+		auto soundFile = paths->find(file);
+        if (std::filesystem::exists(soundFile)) {
+            baseSound.reset(audio::load_sound(soundFile, keepPCM));
+        }
+        auto variantFile = paths->find(extensionless+"_0"+extension);
+        if (std::filesystem::exists(variantFile)) {
+            baseSound.reset(audio::load_sound(variantFile, keepPCM));
+        }
+        for (uint i = 1; ; ++i) {
+            auto variantFile = paths->find(extensionless+"_"+std::to_string(i)+extension);
+            if (!std::filesystem::exists(variantFile)) break;
+            baseSound->variants.emplace_back(audio::load_sound(variantFile, keepPCM));
+        }
+        assets->store(baseSound.release(), name);
+    } catch (std::runtime_error& err) {
+		LOG_ERROR("{}", err.what());
+		return false;
     }
-    assets->store(sound, name);
     return true;
 }

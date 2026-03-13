@@ -154,6 +154,7 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
     textbox->setText(text);
 
     if (element->has("multiline")) textbox->setMultiline(element->attr("multiline").asBool());
+    if (element->has("editable")) textbox->setEditable(element->attr("editable").asBool());
     if (element->has("consumer")) {
         auto consumer = scripting::create_wstring_consumer(
             reader.getEnvironment().getId(),

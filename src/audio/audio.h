@@ -132,6 +132,8 @@ namespace audio {
      */
     class Sound {
     public:
+        std::vector<std::shared_ptr<Sound>> variants;
+
         virtual ~Sound() {}
 
         /**
@@ -368,7 +370,7 @@ namespace audio {
         int channel
     );
 
-    extern Speaker* get(speakerid_t id);
+    extern Speaker* get_speaker(speakerid_t id);
 
     extern int create_channel(const std::string& name);
 
@@ -380,7 +382,7 @@ namespace audio {
 
     extern void update(double delta);
 
-    extern void reset();
+    extern void reset_channel(int channel);
 
     /**
      * @brief Завершение работы аудиосистемы

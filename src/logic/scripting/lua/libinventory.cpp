@@ -1,5 +1,5 @@
-#include "libinventory.h"
-
+#include "lua_commons.h"
+#include "api_lua.h"
 #include "lua_util.h"
 #include "../scripting.h"
 #include "../../../content/Content.h"
@@ -13,7 +13,7 @@ static void validate_itemid(lua_State* L, itemid_t id) {
 }
 
 // Inventory library
-int l_inventory_get(lua_State* L) {
+static int l_inventory_get(lua_State* L) {
     lua::luaint invid = lua_tointeger(L, 1);
     lua::luaint slotid = lua_tointeger(L, 2);
     auto inv = scripting::level->inventories->get(invid);
@@ -25,7 +25,7 @@ int l_inventory_get(lua_State* L) {
     return 2;
 }
 
-int l_inventory_set(lua_State* L) {
+static int l_inventory_set(lua_State* L) {
     lua::luaint invid = lua_tointeger(L, 1);
     lua::luaint slotid = lua_tointeger(L, 2);
     lua::luaint itemid = lua_tointeger(L, 3);
@@ -40,7 +40,7 @@ int l_inventory_set(lua_State* L) {
     return 0;
 }
 
-int l_inventory_size(lua_State* L) {
+static int l_inventory_size(lua_State* L) {
     lua::luaint invid = lua_tointeger(L, 1);
     auto inv = scripting::level->inventories->get(invid);
     if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
@@ -48,7 +48,7 @@ int l_inventory_size(lua_State* L) {
     return 1;
 }
 
-int l_inventory_add(lua_State* L) {
+static int l_inventory_add(lua_State* L) {
     lua::luaint invid = lua_tointeger(L, 1);
     lua::luaint itemid = lua_tointeger(L, 2);
     lua::luaint count = lua_tointeger(L, 3);
@@ -62,7 +62,7 @@ int l_inventory_add(lua_State* L) {
     return 1;
 }
 
-int l_inventory_get_block(lua_State* L) {
+static int l_inventory_get_block(lua_State* L) {
     lua::luaint x = lua_tointeger(L, 1);
     lua::luaint y = lua_tointeger(L, 2);
     lua::luaint z = lua_tointeger(L, 3);
@@ -71,7 +71,7 @@ int l_inventory_get_block(lua_State* L) {
     return 1;
 }
 
-int l_inventory_bind_block(lua_State* L) {
+static int l_inventory_bind_block(lua_State* L) {
     lua::luaint id = lua_tointeger(L, 1);
     lua::luaint x = lua_tointeger(L, 2);
     lua::luaint y = lua_tointeger(L, 3);
@@ -80,7 +80,7 @@ int l_inventory_bind_block(lua_State* L) {
     return 0;
 }
 
-int l_inventory_unbind_block(lua_State* L) {
+static int l_inventory_unbind_block(lua_State* L) {
     lua::luaint x = lua_tointeger(L, 1);
     lua::luaint y = lua_tointeger(L, 2);
     lua::luaint z = lua_tointeger(L, 3);
@@ -88,7 +88,7 @@ int l_inventory_unbind_block(lua_State* L) {
     return 0;
 }
 
-int l_inventory_clone(lua_State* L) {
+static int l_inventory_clone(lua_State* L) {
     lua::luaint id = lua_tointeger(L, 1);
     auto clone = scripting::level->inventories->clone(id);
     if (clone == nullptr) {
@@ -98,3 +98,15 @@ int l_inventory_clone(lua_State* L) {
     lua_pushinteger(L, clone->getId());
     return 1;
 }
+
+const luaL_Reg inventorylib [] = {
+    {"get", lua_wrap_errors<l_inventory_get>},
+    {"set", lua_wrap_errors<l_inventory_set>},
+    {"size", lua_wrap_errors<l_inventory_size>},
+    {"add", lua_wrap_errors<l_inventory_add>},
+    {"get_block", lua_wrap_errors<l_inventory_get_block>},
+    {"bind_block", lua_wrap_errors<l_inventory_bind_block>},
+    {"unbind_block", lua_wrap_errors<l_inventory_unbind_block>},
+    {"clone", lua_wrap_errors<l_inventory_clone>},
+    {NULL, NULL}
+};

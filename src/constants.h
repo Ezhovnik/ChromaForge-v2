@@ -87,5 +87,7 @@ inline constexpr uint vox_index(uint x, uint y, uint z, uint w = CHUNK_WIDTH, ui
 #define FONTS_FOLDER "fonts"
 /** Папка с макетами интерфейса. */
 #define LAYOUTS_FOLDER "layouts"
+/** Папка со звуками. */
+#define SOUNDS_FOLDER "sounds"
 
 #endif // SRC_CONSTANTS_H_
