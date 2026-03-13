@@ -28,7 +28,7 @@ class Batch2D {
 
 	glm::vec4 color;
 
-	Texture* blank; ///< Белая текстура 1x1 для случаев, когда текстура не задана
+	std::unique_ptr<Texture> blank; ///< Белая текстура 1x1 для случаев, когда текстура не задана
 	Texture* _texture; ///< Текущая активная текстура
 
 	/**

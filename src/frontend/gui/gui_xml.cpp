@@ -22,9 +22,27 @@ static Align align_from_string(const std::string& str, Align def) {
     return def;
 }
 
+static Gravity gravity_from_string(const std::string& str) {
+    static const std::unordered_map<std::string, Gravity> gravity_names {
+        {"top-left", Gravity::top_left},
+        {"top-center", Gravity::top_center},
+        {"top-right", Gravity::top_right},
+        {"center-left", Gravity::center_left},
+        {"center-center", Gravity::center_center},
+        {"center-right", Gravity::center_right},
+        {"bottom-left", Gravity::bottom_left},
+        {"bottom-center", Gravity::bottom_center},
+        {"bottom-right", Gravity::bottom_right},
+    };
+    auto found = gravity_names.find(str);
+    if (found != gravity_names.end()) return found->second;
+
+    return Gravity::none;
+}
+
 static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& node) {
     if (element->has("id")) node.setId(element->attr("id").getText());
-    if (element->has("pos")) node.setCoord(element->attr("pos").asVec2());
+    if (element->has("pos")) node.setPos(element->attr("pos").asVec2());
     if (element->has("size")) node.setSize(element->attr("size").asVec2());
     if (element->has("color")) {
         glm::vec4 color = element->attr("color").asColor();
@@ -49,6 +67,12 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
 
     std::string alignName = element->attr("align", "").getText();
     node.setAlign(align_from_string(alignName, node.getAlign()));
+
+    if (element->has("gravity")) {
+        node.setGravity(gravity_from_string(
+            element->attr("gravity").getText()
+        ));
+    }
 }
 
 static void _readContainer(UIXmlReader& reader, xml::xmlelement element, Container& container) {
@@ -122,7 +146,7 @@ static std::shared_ptr<UINode> readLabel(UIXmlReader& reader, xml::xmlelement el
 }
 
 static std::shared_ptr<UINode> readContainer(UIXmlReader& reader, xml::xmlelement element) {
-    auto container = std::make_shared<Container>(glm::vec2(), glm::vec2());
+    auto container = std::make_shared<Container>(glm::vec2());
     _readContainer(reader, element, *container);
     return container;
 }

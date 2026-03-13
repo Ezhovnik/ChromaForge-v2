@@ -80,7 +80,7 @@ public:
     bool isHighlighted() const;
 
     virtual void clicked(gui::GUI*, mousecode) override;
-    virtual void focus(gui::GUI*) override;
+    virtual void onFocus(gui::GUI*) override;
 
     void bind(
         int64_t inventoryId,
@@ -110,7 +110,7 @@ public:
     void setInventory(std::shared_ptr<Inventory> inventory);
     std::shared_ptr<Inventory> getInventory() const;
 
-    virtual void setCoord(glm::vec2 coord) override;
+    virtual void setPos(glm::vec2 pos) override;
 
     void setOrigin(glm::vec2 origin);
     glm::vec2 getOrigin() const;
@@ -122,6 +122,8 @@ public:
         LevelFrontend* frontend, 
         InventoryInteraction* interaction
     );
+
+    void unbind();
 
     std::shared_ptr<SlotView> addSlot(SlotLayout layout);
 
@@ -140,8 +142,9 @@ public:
     InventoryBuilder();
 
     void addGrid(
-        int cols, int count, 
-        glm::vec2 coord, 
+        int cols, 
+        int count, 
+        glm::vec2 pos, 
         int padding,
         bool addpanel,
         SlotLayout slotLayout

@@ -71,13 +71,8 @@ private:
     std::shared_ptr<InventoryView> inventoryView = nullptr;
     std::shared_ptr<InventoryView> blockUI = nullptr;
 
-	glm::ivec3 currentblock {};
+	glm::ivec3 blockPos {};
     blockid_t currentblockid = 0;
-
-    int fps = 0;
-    int fpsMin = 60;
-    int fpsMax = 60;
-    std::wstring fpsString;
 
     bool inventoryOpen = false;
     bool pause = false;
@@ -86,6 +81,7 @@ private:
     std::unique_ptr<InventoryInteraction> interaction;
     std::shared_ptr<SlotView> grabbedItemView;
     std::shared_ptr<gui::Panel> darkOverlay;
+    std::shared_ptr<gui::UINode> secondUI = nullptr;
 
 	gui::GUI* guiController;
     LevelFrontend* levelFrontend;
@@ -94,10 +90,11 @@ private:
 
     std::vector<HudElement> elements;
 
-    std::shared_ptr<gui::UINode> createDebugPanel(Engine* engine);
     std::shared_ptr<InventoryView> createContentAccess();
     std::shared_ptr<InventoryView> createHotbar();
 
+    void processInput(bool visible);
+    void updateElementsPosition(const Viewport& viewport);
     void cleanup();
 public:
 	Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player);
@@ -105,7 +102,6 @@ public:
 
     void update(bool hudVisible);
 	void draw(const GfxContext& context);
-	void drawDebug(int fps);
 
 	bool isPause() const;
     void setPause(bool pause);
@@ -115,9 +111,10 @@ public:
     void closeInventory();
     bool isInventoryOpen() const;
     void openPermanent(UIDocument* doc);
+    void showOverlay(UIDocument* doc, bool playerInventory);
 
     void add(HudElement element);
-	void remove(HudElement& element);
+	void onRemove(HudElement& element);
     void remove(std::shared_ptr<gui::UINode> node);
 
     Player* getPlayer() const;

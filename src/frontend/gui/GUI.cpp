@@ -17,7 +17,7 @@
 using namespace gui;
 
 GUI::GUI() {
-    container = std::make_shared<Container>(glm::vec2(0, 0), glm::vec2(1000));
+    container = std::make_shared<Container>(glm::vec2(1000));
     uicamera = std::make_unique<Camera>(glm::vec3(), Window::height);
 
 	uicamera->perspective = false;
@@ -52,7 +52,7 @@ void GUI::activateMouse(float delta) {
             if (focus && focus != pressed) focus->defocus();
             if (focus != pressed) {
                 focus = pressed;
-                focus->focus(this);
+                focus->onFocus(this);
                 return;
             }
         }
@@ -98,7 +98,11 @@ void GUI::activate(float delta) {
             }
 
             if (!Events::_cursor_locked) {
-                if (Events::isClicked(mousecode::BUTTON_1)) focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
+                if (Events::isClicked(mousecode::BUTTON_1)) {
+                    if (Events::justClicked(mousecode::BUTTON_1) || Events::delta.x || Events::delta.y) {
+                        focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
+                    }
+                }
             }
         }
     }
@@ -109,7 +113,7 @@ void GUI::draw(const GfxContext* parent_context, Assets* assets) {
     auto& viewport = parent_context->getViewport();
     glm::vec2 wsize = viewport.size();
 
-    menu->setCoord((wsize - menu->getSize()) / 2.0f);
+    menu->setPos((wsize - menu->getSize()) / 2.0f);
     uicamera->setFov(wsize.y);
 
 	ShaderProgram* uishader = assets->getShader("ui");
@@ -154,7 +158,7 @@ void GUI::setFocus(std::shared_ptr<UINode> node) {
     if (focus) focus->defocus();
 
     focus = node;
-    if (focus) focus->focus(this);
+    if (focus) focus->onFocus(this);
 }
 
 std::shared_ptr<Container> GUI::getContainer() const {

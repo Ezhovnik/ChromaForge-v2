@@ -26,6 +26,7 @@
 #include "../coders/xml.h"
 #include "gui/gui_xml.h"
 #include "../logic/scripting/scripting.h"
+#include "../items/Inventories.h"
 
 SlotLayout::SlotLayout(
     int index,
@@ -45,7 +46,7 @@ InventoryBuilder::InventoryBuilder() {
     view = std::make_shared<InventoryView>();
 }
 
-void InventoryBuilder::addGrid(int cols, int count, glm::vec2 coord, int padding, bool addpanel, SlotLayout slotLayout) {
+void InventoryBuilder::addGrid(int cols, int count, glm::vec2 pos, int padding, bool addpanel, SlotLayout slotLayout) {
     const int slotSize = InventoryView::SLOT_SIZE;
     const int interval = InventoryView::SLOT_INTERVAL;
 
@@ -55,14 +56,14 @@ void InventoryBuilder::addGrid(int cols, int count, glm::vec2 coord, int padding
     uint height = rows * (slotSize + interval) - interval + padding * 2;
 
     glm::vec2 vsize = view->getSize();
-    if (coord.x + width > vsize.x) vsize.x = coord.x + width;
-    if (coord.y + height > vsize.y) vsize.y = coord.y + height;
+    if (pos.x + width > vsize.x) vsize.x = pos.x + width;
+    if (pos.y + height > vsize.y) vsize.y = pos.y + height;
     view->setSize(vsize);
 
     if (addpanel) {
-        auto panel = std::make_shared<gui::Container>(coord, glm::vec2(width, height));
+        auto panel = std::make_shared<gui::Container>(glm::vec2(width, height));
         view->setColor(glm::vec4(0.122f, 0.122f, 0.122f, 0.878f));
-        view->add(panel);
+        view->add(panel, pos);
     }
 
     for (int row = 0; row < rows; ++row) {
@@ -89,7 +90,7 @@ std::shared_ptr<InventoryView> InventoryBuilder::build() {
     return view;
 }
 
-SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(), glm::vec2(InventoryView::SLOT_SIZE)), layout(layout) {
+SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(InventoryView::SLOT_SIZE)), layout(layout) {
     setColor(glm::vec4(0, 0, 0, 0.2f));
 }
 
@@ -97,7 +98,7 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
     if (bound == nullptr) return;
     ItemStack& stack = *bound;
 
-    glm::vec2 coord = calcCoord();
+    glm::vec2 pos = calcPos();
 
     int slotSize = InventoryView::SLOT_SIZE;
 
@@ -113,9 +114,9 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
     if (color.a > 0.0) {
         batch->untexture();
         if (highlighted) {
-            batch->rect(coord.x - 4, coord.y - 4, slotSize + 8, slotSize + 8);
+            batch->rect(pos.x - 4, pos.y - 4, slotSize + 8, slotSize + 8);
         } else {
-            batch->rect(coord.x, coord.y, slotSize, slotSize);
+            batch->rect(pos.x, pos.y, slotSize, slotSize);
         }
     }
 
@@ -133,7 +134,7 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
             batch->texture(previews->getTexture());
 
             UVRegion region = previews->get(chosen_block.name);
-            batch->rect(coord.x, coord.y, slotSize, slotSize, 0, 0, 0, region, false, true, tint);
+            batch->rect(pos.x, pos.y, slotSize, slotSize, 0, 0, 0, region, false, true, tint);
             break;
         }
         case ItemIconType::Sprite: {
@@ -150,7 +151,7 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
                     batch->texture(atlas->getTexture());
                 }
             }
-            batch->rect(coord.x, coord.y, slotSize, slotSize, 0, 0, 0, region, false, true, tint);
+            batch->rect(pos.x, pos.y, slotSize, slotSize, 0, 0, 0, region, false, true, tint);
             break;
         }
     }
@@ -159,8 +160,8 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
         auto font = assets->getFont("normal");
         std::wstring text = std::to_wstring(stack.getCount());
 
-        int x = coord.x + slotSize - text.length() * 8;
-        int y = coord.y + slotSize - 16;
+        int x = pos.x + slotSize - text.length() * 8;
+        int y = pos.y + slotSize - 16;
 
         batch->setColor(glm::vec4(0, 0, 0, 1.0f));
         font->draw(batch, text, x + 1, y + 1);
@@ -224,7 +225,7 @@ void SlotView::clicked(gui::GUI* gui, mousecode button) {
     }
 }
 
-void SlotView::focus(gui::GUI* gui) {
+void SlotView::onFocus(gui::GUI* gui) {
     clicked(gui, mousecode::BUTTON_1);
 }
 
@@ -240,7 +241,7 @@ const SlotLayout& SlotView::getLayout() const {
     return layout;
 }
 
-InventoryView::InventoryView() : Container(glm::vec2(), glm::vec2()) {
+InventoryView::InventoryView() : Container(glm::vec2()) {
     setColor(glm::vec4(0, 0, 0, 0.0f));
 }
 
@@ -250,10 +251,10 @@ std::shared_ptr<SlotView> InventoryView::addSlot(SlotLayout layout) {
     uint width =  InventoryView::SLOT_SIZE + layout.padding;
     uint height = InventoryView::SLOT_SIZE + layout.padding;
 
-    auto coord = layout.position;
+    auto pos = layout.position;
     auto vsize = getSize();
-    if (coord.x + width > vsize.x) vsize.x = coord.x + width;
-    if (coord.y + height > vsize.y) vsize.y = coord.y + height;
+    if (pos.x + width > vsize.x) vsize.x = pos.x + width;
+    if (pos.y + height > vsize.y) vsize.y = pos.y + height;
     setSize(vsize);
 
     auto slot = std::make_shared<SlotView>(layout);
@@ -274,6 +275,12 @@ void InventoryView::bind(std::shared_ptr<Inventory> inventory, LevelFrontend* fr
     }
 }
 
+void InventoryView::unbind() {
+    if (inventory && inventory->isVirtual()) {
+        frontend->getLevel()->inventories->remove(inventory->getId());   
+    }
+}
+
 void InventoryView::setSelected(int index) {
     for (int i = 0; i < int(slots.size()); ++i) {
         auto slot = slots[i];
@@ -281,8 +288,8 @@ void InventoryView::setSelected(int index) {
     }
 }
 
-void InventoryView::setCoord(glm::vec2 coord) {
-    Container::setCoord(coord - origin);
+void InventoryView::setPos(glm::vec2 pos) {
+    Container::setPos(pos - origin);
 }
 
 void InventoryView::setOrigin(glm::vec2 origin) {
@@ -320,7 +327,7 @@ static void readSlot(InventoryView* view, gui::UIXmlReader& reader, xml::xmlelem
     int index = element->attr("index", "0").asInt();
     bool itemSource = element->attr("item-source", "false").asBool();
     SlotLayout layout(index, glm::vec2(), true, itemSource, nullptr, nullptr);
-    if (element->has("coord")) layout.position = element->attr("coord").asVec2();
+    if (element->has("pos")) layout.position = element->attr("pos").asVec2();
     if (element->has("sharefunc")) layout.shareFunc = readSlotFunc(view, reader, element, "sharefunc");
     if (element->has("onrightclick")) layout.rightClick = readSlotFunc(view, reader, element, "onrightclick");
     auto slot = view->addSlot(layout);

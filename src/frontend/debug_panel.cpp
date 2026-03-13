@@ -1,0 +1,160 @@
+#include <string>
+#include <memory>
+
+#include "gui/controls.h"
+#include "../graphics/Mesh.h"
+#include "../objects/Player.h"
+#include "../physics/Hitbox.h"
+#include "../world/Level.h"
+#include "../world/World.h"
+#include "../voxels/Chunks.h"
+#include "../voxels/Block.h"
+#include "../util/stringutil.h"
+#include "../delegates.h"
+#include "../engine.h"
+#include "WorldRenderer.h"
+
+static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
+    auto label = std::make_shared<gui::Label>(L"-");
+    label->textSupplier(supplier);
+    return label;
+}
+
+std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Player* player) {
+	auto panel = std::make_shared<gui::Panel>(glm::vec2(350, 200), glm::vec4(5.0f), 2.0f);
+    panel->setPos(glm::vec2(10, 10));
+
+    static int fps = 0;
+    static int fpsMin = fps;
+    static int fpsMax = fps;
+    static std::wstring fpsString = L"";
+
+    panel->listenInterval(0.016f, [engine]() {
+        fps = 1.0f / engine->getDeltaTime();
+        fpsMin = std::min(fps, fpsMin);
+        fpsMax = std::max(fps, fpsMax);
+    });
+
+    panel->listenInterval(0.5f, []() {
+        fpsString = std::to_wstring(fpsMax) + L" / " + std::to_wstring(fpsMin);
+        fpsMin = fps;
+        fpsMax = fps;
+    });
+	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		return L"FPS: " + fpsString;
+	})));
+    panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		return L"Meshes: " + std::to_wstring(Mesh::meshesCount);
+	})));
+    panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		return L"Chunks: " + std::to_wstring(level->chunks->chunksCount) + L" (visible: " + std::to_wstring(level->chunks->visibleCount) + L")";
+	})));
+	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		auto indices = level->content->getIndices();
+		auto def = indices->getBlockDef(player->selectedVoxel.id);
+
+		std::wstringstream stream;
+		stream << std::hex << player->selectedVoxel.states;
+		if (def) stream << L" (" << util::str2wstr_utf8(def->name) << L")";
+
+		return L"Selected-block " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
+	})));
+	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		return L"Seed: " + std::to_wstring(level->world->getSeed());
+	})));
+	for (int ax = 0; ax < 3; ++ax){
+		auto sub = std::make_shared<gui::Container>(glm::vec2(350, 27));
+
+        std::wstring str = L"x: ";
+        str[0] += ax;
+        auto label = std::make_shared<gui::Label>(str);
+        label->setMargin(glm::vec4(2, 3, 2, 3));
+        label->setSize(glm::vec2(20, 27));
+        sub->add(label);
+        sub->setColor(glm::vec4(0.0f));
+
+        auto box = std::make_shared<gui::TextBox>(L"");
+        box->setTextSupplier([=]() {
+            Hitbox* hitbox = player->hitbox.get();
+            return std::to_wstring(int(hitbox->position[ax]));
+        });
+        box->setTextConsumer([=](std::wstring text) {
+            try {
+                glm::vec3 position = player->hitbox->position;
+                position[ax] = std::stoi(text);
+                player->teleport(position);
+            } catch (std::invalid_argument& _){
+            }
+        });
+        box->setOnEditStart([=](){
+            Hitbox* hitbox = player->hitbox.get();
+            box->setText(std::to_wstring(int(hitbox->position[ax])));
+        });
+        box->setSize(glm::vec2(230, 27));
+
+        sub->add(box, glm::vec2(20, 0));
+        panel->add(sub);
+	}
+
+	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		std::wstringstream ss;
+        ss << std::fixed << std::setprecision(2);
+        ss << WorldRenderer::skyClearness;
+		return L"Sky clearness: " + ss.str();
+	})));
+
+	{
+		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 0.0f, 0.005f, 8);
+		bar->setSupplier([=]() {
+			return WorldRenderer::skyClearness;
+		});
+		bar->setConsumer([=](double val) {
+			WorldRenderer::skyClearness = val;
+		});
+		panel->add(bar);
+	}
+
+	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		int hour, minute, second;
+		timeutil::from_value(level->world->daytime, hour, minute, second);
+
+		std::wstring timeString = 
+					util::lfill(std::to_wstring(hour), 2, L'0') + L":" +
+					util::lfill(std::to_wstring(minute), 2, L'0');
+		return L"Time: " + timeString;
+	})));
+
+	{
+		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 1.0f, 0.005f, 8);
+		bar->setSupplier([=]() {
+			return level->world->daytime;
+		});
+		bar->setConsumer([=](double val) {
+			level->world->daytime = val;
+		});
+		panel->add(bar);
+	}
+	{
+        auto checkbox = std::make_shared<gui::FullCheckBox>(L"Frustum-Culling", glm::vec2(400, 24));
+        checkbox->setSupplier([=]() {
+            return engine->getSettings().graphics.frustumCulling;
+        });
+        checkbox->setConsumer([=](bool checked) {
+            engine->getSettings().graphics.frustumCulling = checked;
+        });
+        panel->add(checkbox);
+	}
+	{
+        auto checkbox = std::make_shared<gui::FullCheckBox>(L"Show Chunk Borders", glm::vec2(400, 24));
+        checkbox->setSupplier([=]() {
+            return WorldRenderer::drawChunkBorders;
+        });
+        checkbox->setConsumer([=](bool checked) {
+            WorldRenderer::drawChunkBorders = checked;
+        });
+		panel->add(checkbox);
+	}
+
+	panel->refresh();
+	return panel;
+}

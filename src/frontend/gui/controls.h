@@ -247,7 +247,7 @@ namespace gui {
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
 
         virtual void setOnEditStart(runnable oneditstart);
-        virtual void focus(GUI*) override;
+        virtual void onFocus(GUI*) override;
         virtual void refresh() override;
 
         virtual bool validate();

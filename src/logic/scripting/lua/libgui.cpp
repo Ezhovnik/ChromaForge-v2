@@ -159,7 +159,7 @@ static int l_gui_getattr(lua_State* L) {
     if (attr == "color") { 
         return lua::pushcolor_arr(L, node->getColor());
     } else if (attr == "pos") { 
-        return lua::pushvec2_arr(L, node->getCoord());
+        return lua::pushvec2_arr(L, node->getPos());
     } else if (attr == "size") { 
         return lua::pushvec2_arr(L, node->getSize());
     } else if (attr == "hoverColor") {
@@ -194,7 +194,7 @@ static int l_gui_setattr(lua_State* L) {
     auto node = getDocumentNode(L, docname, element);
 
     if (attr == "pos") {
-        node->setCoord(lua::tovec2(L, 4));
+        node->setPos(lua::tovec2(L, 4));
     } else if (attr == "size") {
         node->setSize(lua::tovec2(L, 4));
     } else if (attr == "color") {
