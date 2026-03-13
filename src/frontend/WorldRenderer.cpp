@@ -51,9 +51,11 @@ bool WorldRenderer::drawChunkBorders = false;
 
 WorldRenderer::WorldRenderer(
 	Engine* engine,
-	LevelFrontend* levelFrontend
+	LevelFrontend* levelFrontend,
+	Player* player
 ) : engine(engine), 
-	level(levelFrontend->getLevel())
+	level(levelFrontend->getLevel()),
+	player(player)
 {
 	frustumCulling = std::make_unique<Frustum>();
     lineBatch = std::make_unique<LineBatch>();
@@ -191,12 +193,11 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 		shader->uniform1i("u_cubemap", 1);
 
 		{
-			auto player = level->player;
             auto inventory = player->getInventory();
             ItemStack& stack = inventory->getSlot(player->getChosenSlot());
             Item* chosen_item = contentIds->getItemDef(stack.getItemId());
 			assert(chosen_item != nullptr);
-			if (!level->player->noclip) {
+			if (!player->noclip) {
 				float multiplier = 0.5f;
 				shader->uniform3f("u_torchlightColor",
 					chosen_item->emission[0] / 15.0f * multiplier,
@@ -213,11 +214,11 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
 		skybox->bind();
 		atlas->getTexture()->bind();
 
-		drawChunks(level->chunks, camera, shader);
+		drawChunks(level->chunks.get(), camera, shader);
 
 		shader->uniformMatrix("u_model", glm::mat4(1.0f));
 
-		if (PlayerController::selectedBlockId != -1 && !level->player->noclip && hudVisible){
+		if (PlayerController::selectedBlockId != -1 && !player->noclip && hudVisible){
 			blockid_t id = PlayerController::selectedBlockId;
 			Block* block = contentIds->getBlockDef(id);
 			assert(block != nullptr);
@@ -234,21 +235,21 @@ void WorldRenderer::draw(const GfxContext& parent_context, Camera* camera, bool 
                 const glm::vec3 center = pos + hitbox.center();
                 const glm::vec3 size = hitbox.size();
                 lineBatch->box(center, size + glm::vec3(0.02), glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
-                if (level->player->debug) lineBatch->line(point, point + norm * 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+                if (player->debug) lineBatch->line(point, point + norm * 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
             }
 			lineBatch->render();
 		}
 		skybox->unbind();
 	}
 
-    if (hudVisible && level->player->debug) {
+    if (hudVisible && player->debug) {
 		GfxContext ctx = parent_context.sub();
 		ctx.depthTest(true);
 
 		linesShader->use();
 		if (drawChunkBorders) {
 			linesShader->uniformMatrix("u_projview", camera->getProjView());
-			glm::vec3 coord = level->player->camera->position;
+			glm::vec3 coord = player->camera->position;
 			if (coord.x < 0) coord.x--;
 			if (coord.z < 0) coord.z--;
 			int chunk_x = floordiv((int)coord.x, CHUNK_WIDTH);

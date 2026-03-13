@@ -124,7 +124,6 @@ public:
     int getVoxelRegionsVersion();
 
     bool readWorldInfo(World* world);
-    bool readPlayer(std::shared_ptr<Player> player); // Читает данные об игроке с диска
 	void writeRegion(int x, int z, WorldRegion* entry, std::filesystem::path file, int layer);
 
 	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
@@ -132,7 +131,6 @@ public:
 
     chunk_inventories_map fetchInventories(int x, int z);
 
-	void writePlayer(std::shared_ptr<Player> player); // Записывает данные об игроке на диск
     void write(const World* world, const Content* content);
     void writePacks(const World* world);
     void writeIndices(const ContentIndices* indices);

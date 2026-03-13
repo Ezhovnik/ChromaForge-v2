@@ -70,7 +70,7 @@ public:
 	 * @param inventory Инвентарь (shared_ptr).
 	 */
 	Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inventory);
-	~Player() = default;
+	~Player();
 
 	/**
      * @brief Телепортирует игрока в указанную точку.
@@ -135,7 +135,7 @@ public:
     static void convert(dynamic::Map* data, const ContentLUT* lut);
 
 	inline int getId() const {
-        return 1;
+        return objectUID;
     }
 };
 

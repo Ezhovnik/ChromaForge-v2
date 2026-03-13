@@ -118,7 +118,6 @@ std::shared_ptr<gui::UINode> Hud::createDebugPanel(Engine* engine) {
 		return L"Chunks: " + std::to_wstring(level->chunks->chunksCount) + L" (visible: " + std::to_wstring(level->chunks->visibleCount) + L")";
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
-		auto player = level->player;
 		auto indices = level->content->getIndices();
 		auto def = indices->getBlockDef(player->selectedVoxel.id);
 
@@ -141,20 +140,20 @@ std::shared_ptr<gui::UINode> Hud::createDebugPanel(Engine* engine) {
 
 		auto box = std::make_shared<gui::TextBox>(L"");
 		box->setTextSupplier([=]() {
-			Hitbox* hitbox = level->player->hitbox.get();
+			Hitbox* hitbox = player->hitbox.get();
 			return std::to_wstring(int(hitbox->position[ax]));
 		});
 		box->setTextConsumer([=](std::wstring text) {
 			try {
-				glm::vec3 position = level->player->hitbox->position;
+				glm::vec3 position = player->hitbox->position;
 				position[ax] = std::stoi(text);
-				level->player->teleport(position);
+                player->teleport(position);
 			} catch (std::out_of_range& _) {
 			} catch (std::invalid_argument& _){
 			}
 		});
 		box->setOnEditStart([=](){
-			Hitbox* hitbox = level->player->hitbox.get();
+			Hitbox* hitbox = player->hitbox.get();
 			box->setText(std::to_wstring(int(hitbox->position[ax])));
 		});
 
@@ -229,7 +228,6 @@ std::shared_ptr<InventoryView> Hud::createContentAccess() {
     auto level = levelFrontend->getLevel();
     auto content = level->content;
     auto indices = content->getIndices();
-    auto player = level->player;
     auto inventory = player->getInventory();
 
     int itemsCount = indices->countItemDefs();
@@ -256,8 +254,6 @@ std::shared_ptr<InventoryView> Hud::createContentAccess() {
 }
 
 std::shared_ptr<InventoryView> Hud::createHotbar() {
-    auto level = levelFrontend->getLevel();
-    auto player = level->player;
     auto inventory = player->getInventory();
 
     SlotLayout slotLayout(-1, glm::vec2(), false, false, nullptr, nullptr);
@@ -270,7 +266,7 @@ std::shared_ptr<InventoryView> Hud::createHotbar() {
     return view;
 }
 
-Hud::Hud(Engine* engine, LevelFrontend* levelFrontend) : assets(engine->getAssets()), guiController(engine->getGUI()), levelFrontend(levelFrontend) {
+Hud::Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player) : engine(engine), assets(engine->getAssets()), guiController(engine->getGUI()), levelFrontend(levelFrontend), player(player) {
 	auto menu = guiController->getMenu();
 
     interaction = std::make_unique<InventoryInteraction>();
@@ -335,7 +331,6 @@ void Hud::cleanup() {
 
 void Hud::update(bool hudVisible) {
 	auto level = levelFrontend->getLevel();
-    auto player = level->player;
 	auto menu = guiController->getMenu();
 
 	debugPanel->setVisible(player->debug && hudVisible);
@@ -399,8 +394,6 @@ void Hud::update(bool hudVisible) {
 }
 
 void Hud::draw(const GfxContext& context) {
-	auto level = levelFrontend->getLevel();
-
     const Viewport& viewport = context.getViewport();
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
@@ -415,9 +408,9 @@ void Hud::draw(const GfxContext& context) {
 	uiShader->uniformMatrix("u_projview", uicamera->getProjView());
 
 	hotbarView->setCoord(glm::vec2(width / 2, height - 65));
-    hotbarView->setSelected(level->player->getChosenSlot());
+    hotbarView->setSelected(player->getChosenSlot());
 
-	if (!pause && Events::_cursor_locked && !level->player->debug) {
+	if (!pause && Events::_cursor_locked && !player->debug) {
 		GfxContext crosshair_context = context.sub();
         crosshair_context.blendMode(BlendMode::Inversion);
         auto texture = assets->getTexture("gui/crosshair");
@@ -428,7 +421,7 @@ void Hud::draw(const GfxContext& context) {
         batch->flush();
 	}
 
-	if (level->player->debug) {
+	if (player->debug) {
 		batch->untexture();
         const int dmwidth = 256;
         const float dmscale = 4000.0f;
@@ -496,8 +489,6 @@ void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inven
 }
 
 void Hud::openInventory() {
-    auto level = levelFrontend->getLevel();
-    auto player = level->player;
     auto inventory = player->getInventory();
 
     inventoryOpen = true;
@@ -529,8 +520,6 @@ void Hud::openPermanent(UIDocument* doc) {
 
     auto invview = std::dynamic_pointer_cast<InventoryView>(root);
     if (invview) {
-        auto level = levelFrontend->getLevel();
-        auto player = level->player;
         auto inventory = player->getInventory();
         invview->bind(inventory, levelFrontend, interaction.get());
     }
@@ -550,8 +539,12 @@ void Hud::setPause(bool pause) {
     this->pause = pause;
 
     auto menu = guiController->getMenu();
-    if (pause) menu->setPage("pause");
-    else menu->reset();
+    if (pause) {
+        menus::create_pause_panel(engine, levelFrontend->getLevel());
+        menu->setPage("pause");
+    } else {
+        menu->reset();
+    }
 
     darkOverlay->setVisible(pause);
     menu->setVisible(pause);
@@ -593,6 +586,6 @@ void Hud::remove(std::shared_ptr<gui::UINode> node) {
     cleanup();
 }
 
-std::shared_ptr<Player> Hud::getPlayer() const {
-    return levelFrontend->getLevel()->player;
+Player* Hud::getPlayer() const {
+    return player;
 }

@@ -92,17 +92,15 @@ void MenuScreen::draw(float delta) {
 }
 
 static bool backlight;
-LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine), level(level) {
-    menus::create_pause_panel(engine, level);
-
+LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine) {
     EngineSettings& settings = engine->getSettings();
     backlight = settings.graphics.backlight;
     auto assets = engine->getAssets();
 
     controller = std::make_unique<LevelController>(settings, level);
     levelFrontend = std::make_unique<LevelFrontend>(level, assets);
-    worldRenderer = std::make_unique<WorldRenderer>(engine, levelFrontend.get());
-    hud = std::make_unique<Hud>(engine, levelFrontend.get());
+    worldRenderer = std::make_unique<WorldRenderer>(engine, levelFrontend.get(), controller->getPlayer());
+    hud = std::make_unique<Hud>(engine, levelFrontend.get(), controller->getPlayer());
 
     animator = std::make_unique<TextureAnimator>();
     animator->addAnimations(assets->getAnimations());
@@ -121,8 +119,8 @@ LevelScreen::~LevelScreen() {
     LOG_INFO("World saving");
     scripting::on_frontend_close();
     controller->onWorldSave();
-    World* world = level->getWorld();
-	world->write(level.get());
+    auto world = controller->getLevel()->getWorld();
+    world->write(controller->getLevel());
     LOG_INFO("The world has been successfully saved");
 
     controller->onWorldQuit();
@@ -132,9 +130,9 @@ LevelScreen::~LevelScreen() {
 void LevelScreen::updateHotkeys() {
     if (Events::justPressed(keycode::F1)) hudVisible = !hudVisible;
 
-    if (Events::justPressed(keycode::F3)) level->player->debug = !level->player->debug;
+    if (Events::justPressed(keycode::F3)) controller->getPlayer()->debug = !controller->getPlayer()->debug;
 
-    if (Events::justPressed(keycode::F5)) level->chunks->saveAndClear();
+    if (Events::justPressed(keycode::F5)) controller->getLevel()->chunks->saveAndClear();
 }
 
 void LevelScreen::update(float delta) {
@@ -144,23 +142,24 @@ void LevelScreen::update(float delta) {
     bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();
 
-    auto camera = this->level->player->camera;
+    auto player = controller->getPlayer();
+    auto camera = player->camera;
     audio::setListener(
         camera->position, 
-        this->level->player->hitbox->velocity,
-        camera->position+camera->dir, 
+        player->hitbox->velocity,
+        camera->position + camera->dir, 
         camera->up
     );
 
-    camera->setFov(glm::radians(settings.camera.fov));
+    controller->getPlayer()->camera->setFov(glm::radians(settings.camera.fov));
 
     if (settings.graphics.backlight != backlight) {
-        level->chunks->saveAndClear();
+        controller->getLevel()->chunks->saveAndClear();
         backlight = settings.graphics.backlight;
     }
 
     if (!hud->isPause()) {
-        level->world->updateTimers(delta);
+        controller->getLevel()->world->updateTimers(delta);
         animator->update(delta);
     }
 
@@ -169,7 +168,7 @@ void LevelScreen::update(float delta) {
 }
 
 void LevelScreen::draw(float deltaTime) {
-    auto camera = level->player->currentCamera;
+    auto camera = controller->getPlayer()->currentCamera;
 
     Viewport viewport(Window::width, Window::height);
     GfxContext context(nullptr, viewport, batch.get());
@@ -178,10 +177,6 @@ void LevelScreen::draw(float deltaTime) {
 
     if (hudVisible) {
         hud->draw(context);
-        if (level->player->debug) hud->drawDebug(1 / deltaTime);
+        if (controller->getPlayer()->debug) hud->drawDebug(1 / deltaTime);
     }
-}
-
-Level* LevelScreen::getLevel() const {
-    return level.get();
 }

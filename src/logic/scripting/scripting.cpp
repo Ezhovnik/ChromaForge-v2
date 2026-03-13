@@ -16,6 +16,7 @@
 #include "../../util/stringutil.h"
 #include "../../frontend/UIDocument.h"
 #include "../../items/Inventory.h"
+#include "../../objects/Player.h"
 
 using namespace scripting;
 
@@ -168,7 +169,7 @@ void scripting::on_block_placed(Player* player, const Block* block, int x, int y
     std::string name = block->name + ".placed";
     if (state->getglobal(name)) {
         state->pushivec3(x, y, z);
-        state->pushinteger(1);
+        state->pushinteger(player->getId());
         state->callNoThrow(4);
     }
 }
@@ -177,7 +178,7 @@ void scripting::on_block_broken(Player* player, const Block* block, int x, int y
     std::string name = block->name + ".broken";
     if (state->getglobal(name)) {
         state->pushivec3(x, y, z);
-        state->pushinteger(1);
+        state->pushinteger(player->getId());
         state->callNoThrow(4);
     }
 }
@@ -186,7 +187,7 @@ bool scripting::on_block_interact(Player* player, const Block* block, int x, int
     std::string name = block->name + ".interact";
     if (state->getglobal(name)) {
         state->pushivec3(x, y, z);
-        state->pushinteger(1);
+        state->pushinteger(player->getId());
         if (state->callNoThrow(4)) return state->toboolean(-1);
     }
     return false;
@@ -196,7 +197,7 @@ bool scripting::on_item_use_on_block(Player* player, const Item* item, int x, in
     std::string name = item->name + ".useon";
     if (state->getglobal(name)) {
         state->pushivec3(x, y, z);
-        state->pushinteger(1);
+        state->pushinteger(player->getId());
         if (state->callNoThrow(4)) return state->toboolean(-1);
     }
     return false;
@@ -206,7 +207,7 @@ bool scripting::on_item_break_block(Player* player, const Item* item, int x, int
     std::string name = item->name + ".blockbreakby";
     if (state->getglobal(name)) {
         state->pushivec3(x, y, z);
-        state->pushinteger(1);
+        state->pushinteger(player->getId());
         if (state->callNoThrow(4)) return state->toboolean(-1);
     }
     return false;

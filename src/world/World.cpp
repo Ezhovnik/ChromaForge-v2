@@ -49,7 +49,7 @@ void World::updateTimers(float delta) {
 
 void World::write(Level* level) {
 	const Content* content = level->content;
-	Chunks* chunks = level->chunks;
+	Chunks* chunks = level->chunks.get();
 
 	// Проходим по всем чанкам в хранилище
 	for (size_t i = 0; i < chunks->volume; ++i) {
@@ -62,7 +62,16 @@ void World::write(Level* level) {
 
 	// Запись метаданных мира и игрока
 	wfile->write(this, content);
-	wfile->writePlayer(level->player);
+	auto playerFile = dynamic::Map();
+    {
+        auto& players = playerFile.putList("players");
+        for (auto object : level->objects) {
+            if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
+                players.put(player->serialize().release());
+            }
+        }
+    }
+    files::write_json(wfile->getPlayerFile(), &playerFile);
 }
 
 Level* World::create(
@@ -80,9 +89,6 @@ Level* World::create(
 
 	LOG_INFO("Creating a level");
     Level* level = new Level(world, content, settings);
-	auto inventory = level->player->getInventory();
-    inventory->setId(world->getNextInventoryId());
-    level->inventories->store(inventory);
 	LOG_INFO("Level successfully created");
 
 	Logger::getInstance().flush();
@@ -119,11 +125,30 @@ Level* World::load(std::filesystem::path directory, EngineSettings& settings, co
 
 	LOG_INFO("Creating a level");
 	Level* level = new Level(world.get(), content, settings);
-	wfile->readPlayer(level->player);
-	level->inventories->store(level->player->getInventory());
+	{
+        std::filesystem::path file = wfile->getPlayerFile();
+        if (!std::filesystem::is_regular_file(file)) {
+			LOG_WARN("'player.json' does not exists");
+        } else {
+            auto playerFile = files::read_json(file);
+            if (playerFile->has("players")) {
+                level->objects.clear();
+                auto players = playerFile->list("players");
+                for (size_t i = 0; i < players->size(); ++i) {
+                    auto player = level->spawnObject<Player>(DEFAULT_SPAWNPOINT, DEFAULT_PLAYER_SPEED, level->inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE));
+                    player->deserialize(players->map(i));
+                    level->inventories->store(player->getInventory());
+                }
+            } else {
+				auto player = level->getObject<Player>(0);
+                player->deserialize(playerFile.get());
+                level->inventories->store(player->getInventory());
+            }
+        }
+    }
 	LOG_INFO("Level successfully created");
 
-	world.release(); // передаём владение уровню
+	(void)world.release(); // передаём владение уровню
 	LOG_INFO("World successfully created");
 	return level;
 }

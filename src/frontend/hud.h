@@ -62,6 +62,7 @@ class Hud {
 private:
 	std::unique_ptr<Camera> uicamera;
     Assets* assets;
+    Engine* engine;
 
     std::shared_ptr<gui::Container> contentAccessPanel;
     std::shared_ptr<InventoryView> contentAccess;
@@ -89,6 +90,8 @@ private:
 	gui::GUI* guiController;
     LevelFrontend* levelFrontend;
 
+    Player* player;
+
     std::vector<HudElement> elements;
 
     std::shared_ptr<gui::UINode> createDebugPanel(Engine* engine);
@@ -97,7 +100,7 @@ private:
 
     void cleanup();
 public:
-	Hud(Engine* engine, LevelFrontend* levelFrontend);
+	Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player);
 	~Hud();
 
     void update(bool hudVisible);
@@ -117,7 +120,7 @@ public:
 	void remove(HudElement& element);
     void remove(std::shared_ptr<gui::UINode> node);
 
-    std::shared_ptr<Player> getPlayer() const;
+    Player* getPlayer() const;
 };
 
 #endif // SRC_HUD_RENDER_H_

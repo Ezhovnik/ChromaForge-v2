@@ -97,14 +97,14 @@ void ChunksRenderer::threadLoop(int index) {
 }
 
 void ChunksRenderer::process(std::shared_ptr<Chunk> chunk, BlocksRenderer& renderer) {
-    renderer.build(chunk.get(), level->chunksStorage);
+    renderer.build(chunk.get(), level->chunksStorage.get());
 }
 
 std::shared_ptr<Mesh> ChunksRenderer::render(std::shared_ptr<Chunk> chunk, bool important) {
 	chunk->setModified(false);
 
     if (important) {
-        Mesh* mesh = renderer->render(chunk.get(), level->chunksStorage);
+        Mesh* mesh = renderer->render(chunk.get(), level->chunksStorage.get());
         auto sptr = std::shared_ptr<Mesh>(mesh);
         meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = sptr;
         return sptr;

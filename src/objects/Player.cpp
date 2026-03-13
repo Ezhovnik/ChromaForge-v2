@@ -31,6 +31,9 @@ Player::Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inven
 	inventory(inventory) {
 }
 
+Player::~Player() {
+}
+
 void Player::updateInput(Level* level, PlayerInput& input, float delta) {
 	bool crouch = input.crouch && hitbox->grounded && !input.sprint;
 	float speed = this->speed;
@@ -72,7 +75,7 @@ void Player::updateInput(Level* level, PlayerInput& input, float delta) {
 	substeps = std::min(100, std::max(1, substeps));
 
 	// Выполняем шаг физики
-	level->physics->step(level->chunks, hitbox.get(), delta, substeps, crouch, flight ? 0.0f : 1.0f, !noclip);
+	level->physics->step(level->chunks.get(), hitbox.get(), delta, substeps, crouch, flight ? 0.0f : 1.0f, !noclip);
 
 	if (flight && hitbox->grounded) flight = false;
 	if (input.jump && hitbox->grounded) hitbox->velocity.y = PlayerConsts::JUMP_FORCE;

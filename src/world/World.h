@@ -45,7 +45,7 @@ private:
 	const Content* const content;
 	std::vector<ContentPack> packs; ///< Список контент-паков, установленных в мире
 
-	int64_t nextInventoryId = 1; ///< Счётчик для выдачи следующих идентификаторов инвентарей
+	int64_t nextInventoryId = 0; ///< Счётчик для выдачи следующих идентификаторов инвентарей
 public:
 	std::unique_ptr<WorldFiles> wfile; ///< Менеджер файлов мира
 
@@ -64,7 +64,7 @@ public:
 	/**
      * @brief Конструктор.
      * @param name Внутреннее имя мира.
-	 * @param generator Идентификатор генератора мира (тип мира).
+	* @param generator Идентификатор генератора мира (тип мира).
      * @param directory Корневая папка мира (используется для создания WorldFiles).
      * @param seed Сид генерации.
      * @param settings Ссылка на настройки.
@@ -92,7 +92,7 @@ public:
      * Сохраняет все несохранённые данные мира на диск.
      * @param level Уровень, содержащий чанки и игрока.
      */
-    void write(Level* level);
+     void write(Level* level);
 
 	/** 
      * Проверяет необходимость конвертации индексов блоков/предметов
@@ -133,7 +133,7 @@ public:
      * @return Указатель на Level, содержащий загруженный World.
      * @throws world_load_error Если world.json не найден или повреждён.
      */
-    static Level* load(
+     static Level* load(
 		std::filesystem::path directory, 
 		EngineSettings& settings, 
 		const Content* content, 
