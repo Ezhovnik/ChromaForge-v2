@@ -13,18 +13,46 @@ namespace audio {
     static Backend* backend;
     static std::unordered_map<speakerid_t, std::unique_ptr<Speaker>> speakers;
     static std::unordered_map<speakerid_t, std::shared_ptr<Stream>> streams;
+    static std::vector<std::unique_ptr<Channel>> channels;
 }
 
 using namespace audio;
 
+Channel::Channel(std::string name) : name(name) {
+}
+
+float Channel::getVolume() const {
+    return volume;
+}
+
+void Channel::setVolume(float volume) {
+    this->volume = std::max(0.0f, std::min(volume, 1.0f));
+}
+
+const std::string& Channel::getName() const {
+    return name;
+}
+
+void Channel::pause() {
+    paused = true;
+}
+
+void Channel::resume() {
+    paused = false;
+}
+
+bool Channel::isPaused() const {
+    return paused;
+}
+
 size_t PCMStream::readFully(char* buffer, size_t bufferSize, bool loop) {
     if (!isOpen()) return 0;
-    long bytes = 0;
     size_t size = 0;
     do {
+        size_t bytes = 0;
         do {
             bytes = read(buffer, bufferSize);
-            if (bytes < 0) return size;
+            if (bytes == PCMStream::ERR) return size;
             size += bytes;
             bufferSize -= bytes;
             buffer += bytes;
@@ -108,9 +136,15 @@ void audio::initialize(bool enabled) {
         LOG_ERROR("Could not to initialize audio");
         backend = NoAudio::create();
     }
+
+    create_channel("master");
+    create_channel("regular");
+    create_channel("music");
+    create_channel("ambient");
+    create_channel("ui");
 }
 
-PCM* audio::loadPCM(const std::filesystem::path& file, bool headerOnly) {
+PCM* audio::load_PCM(const std::filesystem::path& file, bool headerOnly) {
     if (!std::filesystem::exists(file)) {
         LOG_ERROR("File not found '{}'", file.u8string());
         throw std::runtime_error("File not found '" + file.u8string() + "'");
@@ -125,16 +159,16 @@ PCM* audio::loadPCM(const std::filesystem::path& file, bool headerOnly) {
     throw std::runtime_error("unsupported audio format");
 }
 
-Sound* audio::loadSound(const std::filesystem::path& file, bool keepPCM) {
-    std::shared_ptr<PCM> pcm(loadPCM(file, !keepPCM && backend->isDummy()));
-    return createSound(pcm, keepPCM);
+Sound* audio::load_sound(const std::filesystem::path& file, bool keepPCM) {
+    std::shared_ptr<PCM> pcm(load_PCM(file, !keepPCM && backend->isDummy()));
+    return create_sound(pcm, keepPCM);
 }
 
-Sound* audio::createSound(std::shared_ptr<PCM> pcm, bool keepPCM) {
+Sound* audio::create_sound(std::shared_ptr<PCM> pcm, bool keepPCM) {
     return backend->createSound(pcm, keepPCM);
 }
 
-PCMStream* audio::openPCMStream(const std::filesystem::path& file) {
+PCMStream* audio::open_PCM_stream(const std::filesystem::path& file) {
     std::string ext = file.extension().u8string();
     if (ext == ".wav" || ext == ".WAV") {
         return wav::create_stream(file);
@@ -145,29 +179,29 @@ PCMStream* audio::openPCMStream(const std::filesystem::path& file) {
     throw std::runtime_error("Unsupported audio stream format");
 }
 
-Stream* audio::openStream(const std::filesystem::path& file, bool keepSource) {
+Stream* audio::open_stream(const std::filesystem::path& file, bool keepSource) {
     if (!keepSource && backend->isDummy()) {
-        auto header = loadPCM(file, true);
-        return openStream(
+        auto header = load_PCM(file, true);
+        return open_stream(
             std::make_shared<PCMVoidSource>(header->totalSamples, header->sampleRate, header->seekable), 
             keepSource
         );
     }
-    return openStream(
-        std::shared_ptr<PCMStream>(openPCMStream(file)),
+    return open_stream(
+        std::shared_ptr<PCMStream>(open_PCM_stream(file)),
         keepSource
     );
 }
 
-Stream* audio::openStream(std::shared_ptr<PCMStream> stream, bool keepSource) {
+Stream* audio::open_stream(std::shared_ptr<PCMStream> stream, bool keepSource) {
     return backend->openStream(stream, keepSource);
 }
 
-void audio::setListener(
+void audio::set_listener(
     glm::vec3 position, 
     glm::vec3 velocity, 
     glm::vec3 lookAt, 
-    glm::vec3 up) 
+    glm::vec3 up)
 {
     backend->setListener(position, velocity, lookAt, up);
 }
@@ -198,12 +232,13 @@ speakerid_t audio::play(
     float volume,
     float pitch,
     bool loop,
-    Priority priority
-) {
-    Speaker* speaker = sound->newInstance(priority);
+    Priority priority,
+    int channel) 
+{
+    Speaker* speaker = sound->newInstance(priority, channel);
     if (speaker == nullptr) {
         remove_lower_priority_speaker(priority);
-        speaker = sound->newInstance(priority);
+        speaker = sound->newInstance(priority, channel);
     }
     if (speaker == nullptr) return 0;
     speakerid_t id = nextId++;
@@ -223,12 +258,13 @@ speakerid_t audio::play(
     bool relative,
     float volume,
     float pitch,
-    bool loop) 
+    bool loop,
+    int channel) 
 {
-    Speaker* speaker = stream->createSpeaker(loop);
+    Speaker* speaker = stream->createSpeaker(loop, channel);
     if (speaker == nullptr) {
         remove_lower_priority_speaker(Priority::High);
-        speaker = stream->createSpeaker(loop);
+        speaker = stream->createSpeaker(loop, channel);
     }
     if (speaker == nullptr) return 0;
     speakerid_t id = nextId++;
@@ -245,22 +281,48 @@ speakerid_t audio::play(
     return id;
 }
 
-speakerid_t audio::playStream(
+speakerid_t audio::play_stream(
     const std::filesystem::path& file,
     glm::vec3 position,
     bool relative,
     float volume,
     float pitch,
-    bool loop
-) {
-    std::shared_ptr<Stream> stream (openStream(file, false));
-    return play(stream, position, relative, volume, pitch, loop);
+    bool loop,
+    int channel)
+{
+    std::shared_ptr<Stream> stream (open_stream(file, false));
+    return play(stream, position, relative, volume, pitch, loop, channel);
 }
 
 Speaker* audio::get(speakerid_t id) {
     auto found = speakers.find(id);
     if (found == speakers.end()) return nullptr;
     return found->second.get();
+}
+
+int audio::create_channel(const std::string& name) {
+    int index = get_channel_index(name);
+    if (index != -1) return index;
+    channels.emplace_back(new Channel(name));
+    return channels.size()-1;
+}
+
+int audio::get_channel_index(const std::string& name) {
+    int index = 0;
+    for (auto& channel : channels) {
+        if (channel->getName() == name) return index; 
+        index++;
+    }
+    return -1;
+}
+
+Channel* audio::get_channel(int index) {
+    if (index < 0 || index >= int(channels.size())) return nullptr;
+    return channels.at(index).get();
+}
+
+size_t audio::count_speakers() {
+    return speakers.size();
 }
 
 void audio::update(double delta) {
@@ -270,14 +332,35 @@ void audio::update(double delta) {
         entry.second->update(delta);
     }
 
+    float masterVolume = channels.at(0)->getVolume();
     for (auto it = speakers.begin(); it != speakers.end();) {
-        if (it->second->isStoppedManually()) {
+        auto speaker = it->second.get();
+        int speakerChannel = speaker->getChannel();
+        auto channel = get_channel(speakerChannel);
+        if (channel != nullptr) {
+            speaker->update(channel, speakerChannel == 0 ? 1.0f : masterVolume);
+        }
+        if (speaker->isStopped()) {
             streams.erase(it->first);
             it = speakers.erase(it);
         } else {
             it++;
         }
     }
+}
+
+void audio::reset() {
+    for (auto& entry : speakers) {
+        entry.second->stop();
+    }
+    for (auto& entry : streams) {
+        entry.second->update(0.0f);
+    }
+    for (auto& channel : channels) {
+        if (channel->isPaused()) channel->resume();
+    }
+    streams.clear();
+    speakers.clear();
 }
 
 void audio::close() {

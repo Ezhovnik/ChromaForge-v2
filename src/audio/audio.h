@@ -29,6 +29,27 @@ namespace audio {
         Stopped
     };
 
+    class Channel {
+    private:
+        std::string name;
+        float volume = 1.0f;
+        bool paused = false;
+    public:
+        Channel(std::string name);
+
+        float getVolume() const;
+
+        void setVolume(float volume);
+
+        const std::string& getName() const;
+
+        void pause();
+
+        void resume();
+
+        bool isPaused() const;
+    };
+
     /**
      * @brief Структура, хранящая данные импульсно-кодовой модуляции (PCM).
      * 
@@ -59,16 +80,12 @@ namespace audio {
             sampleRate(sampleRate),
             seekable(seekable) {}
 
-        inline size_t countSamplesMono() const {
-            return totalSamples / channels;
-        }
-
         /**
          * @brief Вычисляет длительность звука в секундах.
          * @return Длительность, секунд.
          */
         inline duration_t getDuration() const {
-            return static_cast<duration_t>(countSamplesMono()) / static_cast<duration_t>(sampleRate);
+            return static_cast<duration_t>(totalSamples) / static_cast<duration_t>(sampleRate);
         }
     };
 
@@ -87,6 +104,8 @@ namespace audio {
         virtual uint getBitsPerSample() const=0;
         virtual bool isSeekable() const=0;
         virtual void seek(size_t position) = 0;
+
+        static const size_t ERR = -1;
     };
 
     class Stream {
@@ -95,7 +114,7 @@ namespace audio {
 
         virtual std::shared_ptr<PCMStream> getSource() const = 0;
 
-        virtual Speaker* createSpeaker(bool loop) = 0;
+        virtual Speaker* createSpeaker(bool loop, int channel) = 0;
 
         virtual void bindSpeaker(speakerid_t speaker) = 0;
 
@@ -134,7 +153,7 @@ namespace audio {
          * @return Указатель на динамик, с которым связан новый экземпляр,
          * или nullptr в случае неудачи
          */
-        virtual Speaker* newInstance(Priority priority) const = 0;
+        virtual Speaker* newInstance(Priority priority, int channel) const = 0;
     };
 
     /**
@@ -146,6 +165,10 @@ namespace audio {
     class Speaker {
     public:
         virtual ~Speaker() {}
+
+        virtual void update(const Channel* channel, float masterVolume) = 0;
+
+        virtual int getChannel() const = 0;
 
         /**
          * @brief Возвращает текущее состояние динамика.
@@ -195,8 +218,6 @@ namespace audio {
          * @brief Останавливает и уничтожает динамик.
          */
         virtual void stop() = 0;
-
-        virtual bool isStoppedManually() const = 0;
 
         /**
          * @brief Возвращает текущую позицию воспроизведения.
@@ -290,17 +311,17 @@ namespace audio {
      */
     extern void initialize(bool enabled);
 
-    extern PCM* loadPCM(const std::filesystem::path& file, bool headerOnly);
+    extern PCM* load_PCM(const std::filesystem::path& file, bool headerOnly);
 
-    extern Sound* loadSound(const std::filesystem::path& file, bool keepPCM);
+    extern Sound* load_sound(const std::filesystem::path& file, bool keepPCM);
 
-    extern Sound* createSound(std::shared_ptr<PCM> pcm, bool keepPCM);
+    extern Sound* create_sound(std::shared_ptr<PCM> pcm, bool keepPCM);
 
-    extern PCMStream* openPCMStream(const std::filesystem::path& file);
+    extern PCMStream* open_PCM_stream(const std::filesystem::path& file);
 
-    extern Stream* openStream(const std::filesystem::path& file, bool keepSource);
+    extern Stream* open_stream(const std::filesystem::path& file, bool keepSource);
 
-    extern Stream* openStream(std::shared_ptr<PCMStream> stream, bool keepSource);
+    extern Stream* open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
 
     /**
      * @brief Устанавливает параметры слушателя, используя текущий бэкенд.
@@ -309,7 +330,7 @@ namespace audio {
      * @param lookAt Направление взгляда.
      * @param up Вектор верха.
      */
-    extern void setListener(
+    extern void set_listener(
         glm::vec3 position, 
         glm::vec3 velocity, 
         glm::vec3 lookAt, 
@@ -323,7 +344,8 @@ namespace audio {
         float volume,
         float pitch,
         bool loop,
-        Priority priority
+        Priority priority,
+        int channel
     );
 
     extern speakerid_t play(
@@ -332,21 +354,33 @@ namespace audio {
         bool relative,
         float volume,
         float pitch,
-        bool loop
+        bool loop,
+        int channel
     );
 
-    extern speakerid_t playStream(
+    extern speakerid_t play_stream(
         const std::filesystem::path& file,
         glm::vec3 position,
         bool relative,
         float volume,
         float pitch,
-        bool loop
+        bool loop,
+        int channel
     );
 
     extern Speaker* get(speakerid_t id);
 
+    extern int create_channel(const std::string& name);
+
+    extern int get_channel_index(const std::string& name);
+
+    extern Channel* get_channel(int index);
+
+    extern size_t count_speakers();
+
     extern void update(double delta);
+
+    extern void reset();
 
     /**
      * @brief Завершение работы аудиосистемы

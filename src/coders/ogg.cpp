@@ -55,7 +55,7 @@ audio::PCM* ogg::load_pcm(const std::filesystem::path& file, bool headerOnly) {
                 data.insert(data.end(), std::begin(buffer), std::begin(buffer) + ret);
             }
         }
-        totalSamples = data.size();
+        totalSamples = data.size() / channels / 2;
     }
 
     ov_clear(&vf);
@@ -90,7 +90,7 @@ public:
         long bytes = ov_read(&vf, buffer, bufferSize, 0, 2, true, &bitstream);
         if (bytes < 0) {
             LOG_ERROR("{}", vorbis_error_message(bytes));
-            return 0;
+            return PCMStream::ERR;
         }
         return bytes;
     }
