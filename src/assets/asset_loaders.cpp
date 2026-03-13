@@ -299,7 +299,7 @@ bool asset_loader::sound(
     std::shared_ptr<AssetsConfig> config)
 {
     auto cfg = dynamic_cast<SoundConfig*>(config.get());
-    auto sound = audio::loadSound(paths->find(file), cfg->keepPCM);
+    auto sound = audio::load_sound(paths->find(file), cfg->keepPCM);
     if (sound == nullptr) {
 		LOG_ERROR("Failed to load sound '{}' from '{}'", name, file);
         return false;

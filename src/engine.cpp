@@ -168,8 +168,13 @@ void Engine::mainloop() {
     }
 }
 
-inline const std::string checkPacks(const std::unordered_set<std::string>& packs, const std::vector<std::string>& dependencies) {
-    for (const std::string& str : dependencies) if (packs.find(str) == packs.end()) return str;
+inline const std::string checkPacks(
+    const std::unordered_set<std::string>& packs, 
+    const std::vector<std::string>& dependencies) 
+{
+    for (const std::string& str : dependencies) {
+        if (packs.find(str) == packs.end()) return str;
+    }
     return "";
 }
 
@@ -186,17 +191,19 @@ void Engine::loadContent() {
 
     std::string missingDependency;
 	std::unordered_set<std::string> loadedPacks, existingPacks;
-	for (const auto& item : srcPacks) { existingPacks.insert(item.id); }
+	for (const auto& item : srcPacks) {
+        existingPacks.insert(item.id);
+    }
 
-	while(existingPacks.size() > loadedPacks.size()) {
+	while (existingPacks.size() > loadedPacks.size()) {
 		for (auto& pack : srcPacks) {
-			if(loadedPacks.find(pack.id) != loadedPacks.end()) continue;
+			if (loadedPacks.find(pack.id) != loadedPacks.end()) continue;
 			missingDependency = checkPacks(existingPacks, pack.dependencies);
-			if(!missingDependency.empty()) {
+			if (!missingDependency.empty()) {
                 LOG_ERROR("Missing dependency '{}'", missingDependency);
                 throw contentpack_error(pack.id, pack.folder, "missing dependency '" + missingDependency + "'");
             }
-			if(pack.dependencies.empty() || checkPacks(loadedPacks, pack.dependencies).empty()) {
+			if (pack.dependencies.empty() || checkPacks(loadedPacks, pack.dependencies).empty()) {
 				loadedPacks.insert(pack.id);
 				resRoots.push_back(pack.folder);
 				contentPacks.push_back(pack);
