@@ -25,9 +25,11 @@ class Chunks;
 class LevelFrontend;
 class Skybox;
 class Batch3D;
+class Player;
 
 class WorldRenderer {
     Engine* engine;
+	Player* player;
 	Level* level;
     std::unique_ptr<Frustum> frustumCulling;
     std::unique_ptr<ChunksRenderer> renderer;
@@ -40,7 +42,7 @@ class WorldRenderer {
 
 	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);
 public:
-	WorldRenderer(Engine* engine, LevelFrontend* levelFrontend);
+	WorldRenderer(Engine* engine, LevelFrontend* levelFrontend, Player* player);
 	~WorldRenderer();
 
 	void draw(const GfxContext& context, Camera* camera, bool hudVisible);

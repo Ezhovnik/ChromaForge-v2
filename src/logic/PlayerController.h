@@ -54,6 +54,8 @@ public:
 	PlayerController(Level* level, const EngineSettings& settings, BlocksController* blocksController);
 
 	void update(float delta, bool input, bool pause);
+
+	Player* getPlayer();
 };
 
 #endif // LOGIC_PLAYERCONTROLLER_H_

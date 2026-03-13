@@ -134,8 +134,8 @@ PlayerController::PlayerController(
 	const EngineSettings& settings, 
 	BlocksController* blocksController
 ) : level(level), 
-	player(level->player), 
-	camControl(level->player, settings.camera), 
+	player(level->getObject<Player>(0)), 
+	camControl(player, settings.camera), 
 	blocksController(blocksController) {}
 
 void PlayerController::updateKeyboard() {
@@ -160,7 +160,7 @@ void PlayerController::updateKeyboard() {
 
 void PlayerController::updateCamera(float delta, bool movement) {
 	if (movement) camControl.updateMouse(input);
-	camControl.update(input, delta, level->chunks);
+	camControl.update(input, delta, level->chunks.get());
 }
 
 void PlayerController::resetKeyboard() {
@@ -185,9 +185,8 @@ void PlayerController::updateControls(float delta){
 
 void PlayerController::updateInteraction(){
 	const ContentIndices* contentIds = level->content->getIndices();
-	Chunks* chunks = level->chunks;
-	Player* player = level->player.get();
-	Lighting* lighting = level->lighting;
+	Chunks* chunks = level->chunks.get();
+	Lighting* lighting = level->lighting.get();
 	Camera* camera = player->camera.get();
 
 	glm::vec3 end;
@@ -234,19 +233,19 @@ void PlayerController::updateInteraction(){
 		}
 
 		if (input.attack && !input.crouch && item->rt.funcsset.on_block_break_by) {
-			if (scripting::on_item_break_block(player, item, x, y, z)) return;
+			if (scripting::on_item_break_block(player.get(), item, x, y, z)) return;
 		}
 		
 		Block* block = contentIds->getBlockDef(vox->id);
-		if (input.attack && block->breakable) blocksController->breakBlock(player, block, x, y, z);
+		if (input.attack && block->breakable) blocksController->breakBlock(player.get(), block, x, y, z);
 
 		if (input.build && !input.crouch && item->rt.funcsset.on_use_on_block) {
-			if (scripting::on_item_use_on_block(player, item, x, y, z)) return;
+			if (scripting::on_item_use_on_block(player.get(), item, x, y, z)) return;
         }
 
 		if (def && input.build) {
 			if (block->rt.funcsset.oninteract && !input.crouch) {
-                if (scripting::on_block_interact(player, block, x, y, z)) return;
+                if (scripting::on_block_interact(player.get(), block, x, y, z)) return;
             }
 			if (!block->replaceable){
 				x = iend.x + norm.x;
@@ -264,7 +263,7 @@ void PlayerController::updateInteraction(){
 					if (chosenBlock != vox->id && chosenBlock) {
 						chunks->setVoxel(x, y, z, chosenBlock, states);
 						lighting->onBlockSet(x, y, z, chosenBlock);
-						if (def->rt.funcsset.onplaced) scripting::on_block_placed(player, def, x, y, z);
+						if (def->rt.funcsset.onplaced) scripting::on_block_placed(player.get(), def, x, y, z);
 						blocksController->updateSides(x, y, z);
 					}
 				}
@@ -299,7 +298,6 @@ void PlayerController::update(float delta, bool input, bool pause) {
 
         updateCamera(delta, input);
 		updateControls(delta);
-
 	}
 	camControl.refresh();
 
@@ -309,4 +307,8 @@ void PlayerController::update(float delta, bool input, bool pause) {
 		selectedBlockId = -1;
 		selectedBlockStates = 0;
 	}
+}
+
+Player* PlayerController::getPlayer() {
+    return player.get();
 }

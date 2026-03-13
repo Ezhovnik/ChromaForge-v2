@@ -1,6 +1,6 @@
 #include "BlocksController.h"
 
-#include <iostream>
+#include <cassert>
 
 #include "../voxels/voxel.h"
 #include "../voxels/Block.h"
@@ -49,7 +49,7 @@ int Clock::getSparkId() const {
     return sparkId;
 }
 
-BlocksController::BlocksController(Level* level, uint padding) : level(level), chunks(level->chunks), lighting(level->lighting), randSparkClock(20, 3), padding(padding), blocksSparkClock(20, 1) {
+BlocksController::BlocksController(Level* level, uint padding) : level(level), chunks(level->chunks.get()), lighting(level->lighting.get()), randSparkClock(20, 3), padding(padding), blocksSparkClock(20, 1) {
 }
 
 void BlocksController::updateSides(int x, int y, int z) {

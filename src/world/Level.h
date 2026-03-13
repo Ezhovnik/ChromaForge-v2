@@ -2,10 +2,17 @@
 #define WORLD_LEVEL_H_
 
 #include <memory>
-#include <list>
+#include <vector>
+
+#include <glm/glm.hpp>
 
 #include "../typedefs.h"
 #include "../settings.h"
+#include "../interfaces/Object.h"
+
+inline constexpr glm::vec3 DEFAULT_SPAWNPOINT = {0, 256, 0}; ///< Точка появления игрока
+inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; ///< Базовая скорость перемещения игрока
+inline constexpr int DEFAULT_PLAYER_INVENTORY_SIZE = 40; ///< Размер инвентаря игрока (количество слотов)
 
 class World;
 class Player;
@@ -16,7 +23,6 @@ class ChunksStorage;
 class LevelEvents;
 class Content;
 class Inventories;
-class Object;
 
 /**
  * @brief Основной класс уровня, объединяющий мир, игрока, чанки, физику и освещение.
@@ -26,19 +32,16 @@ class Object;
  * содержит инвентари.
  */
 class Level {
-private:
-	int objCounter; ///< Счётчик для присвоения уникальных идентификаторов объектам (UID).
 public:
 	std::unique_ptr<World> world;
-	std::list<std::shared_ptr<Object>> objects;
-	std::shared_ptr<Player> player; ///< Игрок (основная сущность)
-	Chunks* chunks; ///< Менеджер чанков
-	PhysicsSolver* physics; ///< Физический солвер (обработка движения, гравитации)
-	Lighting* lighting; ///< Освещение чанков
-    ChunksStorage* chunksStorage; ///< Хранилище чанков
-    LevelEvents* events; ///< Обработчик событий уровня
-    const EngineSettings& settings;
-    const Content* const content;
+	std::vector<std::shared_ptr<Object>> objects;
+	std::unique_ptr<Chunks> chunks; ///< Менеджер чанков
+	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
+	std::unique_ptr<Lighting> lighting; ///< Освещение чанков
+     std::unique_ptr<ChunksStorage> chunksStorage; ///< Хранилище чанков
+     std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
+     const EngineSettings& settings;
+     const Content* const content;
 	std::unique_ptr<Inventories> inventories; ///< Менеджер инвентарей (хранит все инвентари уровня)
 
 	/**
@@ -50,12 +53,7 @@ public:
 	Level(World* world, const Content* content, EngineSettings& settings);
 	~Level();
 
-	/**
-     * @brief Обновляет состояние уровня (вызывается каждый кадр).
-     * Обновляет позицию центра чанков относительно игрока,
-     * проверяет необходимость изменения размера сетки чанков и т.д.
-     */
-    void update();
+     void loadMatrix(int32_t x, int32_t z, uint32_t radius);
 
 	/**
      * @brief Возвращает указатель на мир.
@@ -68,12 +66,26 @@ public:
      * @tparam T Класс, производный от Object.
      * @param args Аргументы для конструктора T.
      * @return Умный указатель на созданный объект (shared_ptr<T>).
-     *
-     * @note Определение шаблона находится в файле реализации (.cpp), поэтому
-     *       его можно вызывать только из этого же translation unit (Level.cpp).
      */
 	template<class T, typename... Args>
-	std::shared_ptr<T> spawnObject(Args&&... args);
+     std::shared_ptr<T> spawnObject(Args&&... args) {
+          static_assert(std::is_base_of<Object, T>::value, "T must be a derived of Object class");
+          std::shared_ptr<T> tObj = std::make_shared<T>(args...);
+
+          std::shared_ptr<Object> obj = std::dynamic_pointer_cast<Object, T>(tObj);
+          obj->objectUID = objects.size();
+          objects.push_back(obj);
+          obj->spawned();
+          return tObj;
+     }
+
+     template<class T>
+     std::shared_ptr<T> getObject(uint64_t id) {
+          static_assert(std::is_base_of<Object, T>::value, "T must be a derived of Object class");
+          if (id >= objects.size()) return nullptr;
+          std::shared_ptr<T> object = std::dynamic_pointer_cast<T>(objects[id]);
+          return object; 
+     }
 };
 
 #endif // WORLD_LEVEL_H_
