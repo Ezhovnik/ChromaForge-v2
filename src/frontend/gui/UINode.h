@@ -30,11 +30,27 @@ namespace gui {
         bottom = right
     };
 
+    enum class Gravity {
+        none,
+
+        top_left,
+        top_center,
+        top_right,
+
+        center_left,
+        center_center,
+        center_right,
+
+        bottom_left,
+        bottom_center,
+        bottom_right
+    };
+
     class UINode {
     private:
         std::string id = "";
     protected:
-        glm::vec2 coord;
+        glm::vec2 pos {0.0f};
         glm::vec2 size;
         glm::vec2 minSize {1.0f};
         glm::vec4 color {1.0f};
@@ -50,7 +66,7 @@ namespace gui {
         Align align = Align::left;
         vec2supplier positionfunc = nullptr;
         UINode* parent = nullptr;
-        UINode(glm::vec2 coord, glm::vec2 size);
+        UINode(glm::vec2 size);
     public:
         virtual ~UINode();
         virtual void activate(float deltaTime) {};
@@ -83,7 +99,7 @@ namespace gui {
         virtual void setZIndex(int idx);
         int getZIndex() const;
 
-        virtual void focus(GUI*) {focused = true;}
+        virtual void onFocus(GUI*) {focused = true;}
         virtual void click(GUI*, int x, int y);
         virtual void clicked(GUI*, mousecode button) {}
         virtual void mouseMove(GUI*, int x, int y) {};
@@ -106,9 +122,9 @@ namespace gui {
 
         virtual glm::vec2 contentOffset() {return glm::vec2(0.0f);};
 
-        virtual glm::vec2 calcCoord() const;
-        virtual void setCoord(glm::vec2 coord);
-        virtual glm::vec2 getCoord() const;
+        virtual glm::vec2 calcPos() const;
+        virtual void setPos(glm::vec2 pos);
+        virtual glm::vec2 getPos() const;
 
         virtual glm::vec2 getSize() const;
         virtual void setSize(glm::vec2 size);
@@ -117,6 +133,7 @@ namespace gui {
 
         virtual vec2supplier getPositionFunc() const;
         virtual void setPositionFunc(vec2supplier);
+        virtual void setGravity(Gravity gravity);
 
         virtual void refresh() {};
         virtual void lock();

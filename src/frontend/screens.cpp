@@ -96,6 +96,8 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine) {
     EngineSettings& settings = engine->getSettings();
     backlight = settings.graphics.backlight;
     auto assets = engine->getAssets();
+    auto menu = engine->getGUI()->getMenu();
+    menu->reset();
 
     controller = std::make_unique<LevelController>(settings, level);
     levelFrontend = std::make_unique<LevelFrontend>(level, assets);
@@ -175,8 +177,5 @@ void LevelScreen::draw(float deltaTime) {
 
     worldRenderer->draw(context, camera.get(), hudVisible);
 
-    if (hudVisible) {
-        hud->draw(context);
-        if (controller->getPlayer()->debug) hud->drawDebug(1 / deltaTime);
-    }
+    if (hudVisible) hud->draw(context);
 }

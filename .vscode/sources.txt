@@ -33,6 +33,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/files/WorldFiles.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/BlocksPreview.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/ContentGfxCache.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/debug_panel.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/hud.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/InventoryView.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/LevelFrontend.cpp"
