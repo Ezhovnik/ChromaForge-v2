@@ -124,6 +124,7 @@ void lua::LuaState::createLibs() {
     openlib("inventory", inventorylib, 0);
     openlib("gui", guilib, 0);
     openlib("block", blocklib, 0);
+    openlib("audio", audiolib, 0);
 
     addfunc("print", lua_wrap_errors<l_print>);
 }

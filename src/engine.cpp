@@ -247,6 +247,10 @@ EnginePaths* Engine::getPaths() {
 	return paths;
 }
 
+ResPaths* Engine::getResPaths() {
+    return resPaths.get();
+}
+
 gui::GUI* Engine::getGUI() {
 	return gui.get();
 }
