@@ -54,6 +54,7 @@ public:
     void mainloop(); // Основной цикл приложения
 
     EnginePaths* getPaths();
+    ResPaths* getResPaths();
     Assets* getAssets();
 	gui::GUI* getGUI();
 	EngineSettings& getSettings();

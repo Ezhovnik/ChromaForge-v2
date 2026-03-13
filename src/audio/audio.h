@@ -122,6 +122,8 @@ namespace audio {
 
         virtual void update(double delta) = 0;
 
+        virtual duration_t getTime() const = 0;
+
         virtual void setTime(duration_t time) = 0;
     };
 
@@ -226,6 +228,8 @@ namespace audio {
          * @return Время в секундах.
          */
         virtual duration_t getTime() const = 0;
+
+        virtual duration_t getDuration() const = 0;
 
         /**
          * @brief Устанавливает позицию воспроизведения.
@@ -377,6 +381,8 @@ namespace audio {
     extern int get_channel_index(const std::string& name);
 
     extern Channel* get_channel(int index);
+
+    extern std::shared_ptr<Stream> get_associated_stream(speakerid_t id);
 
     extern size_t count_speakers();
 

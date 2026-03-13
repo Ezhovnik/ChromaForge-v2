@@ -131,7 +131,7 @@ public:
     }
 
     void seek(size_t position) override {
-        if (!closed && seekable) ov_raw_seek(&vf, position);
+        if (!closed && seekable) ov_pcm_seek(&vf, position);
     }
 };
 

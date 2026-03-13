@@ -379,6 +379,7 @@ void InventoryView::createReaders(gui::UIXmlReader& reader) {
     reader.add("inventory", [=](gui::UIXmlReader& reader, xml::xmlelement element) {
         auto view = std::make_shared<InventoryView>();
         view->setColor(glm::vec4(0.122f, 0.122f, 0.122f, 0.878f));
+        reader.addIgnore("slot");
         reader.addIgnore("slots-grid");
         reader.readUINode(reader, element, *view);
 
