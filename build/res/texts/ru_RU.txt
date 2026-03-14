@@ -16,6 +16,7 @@ menu.Save and Quit to Menu=Сохранить и Выйти
 menu.missing-content=Контент отсутствует!
 menu.Controls=Управление
 menu.Content=Контент
+menu.Audio=Звук
 menu.Back to Main Menu=Вернуться в Меню
 menu.Settings=Настройки
 world.Seed=Зерно
@@ -41,6 +42,11 @@ settings.FOV=Поле Зрения
 settings.Mouse Sensitivity=Чувствительность Мыши
 settings.Language=Язык
 settings.Camera Shaking=Тряска Камеры
+settings.Master Volume=Общая Громкость
+settings.Regular Sounds=Обычные Звуки
+settings.UI Sounds=Звуки Интерфейса
+settings.Ambient=Фон
+settings.Music=Музыка
 
 # Управление
 movement.forward=Вперёд

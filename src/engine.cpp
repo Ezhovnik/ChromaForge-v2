@@ -47,7 +47,7 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
         throw initialize_error("Failed to load Window");
     }
 
-    audio::initialize(true);
+    audio::initialize(settings.audio.enabled);
     audio::create_channel("regular");
     audio::create_channel("music");
     audio::create_channel("ambient");
@@ -123,6 +123,15 @@ void Engine::updateHotkeys() {
     if (Events::justPressed(keycode::F11)) Window::toggleFullscreen();
 }
 
+static void updateAudio(double delta, const AudioSettings& settings) {
+    audio::get_channel("master")->setVolume(settings.volumeMaster * settings.volumeMaster);
+    audio::get_channel("regular")->setVolume(settings.volumeRegular * settings.volumeRegular);
+    audio::get_channel("ui")->setVolume(settings.volumeUI * settings.volumeUI);
+    audio::get_channel("ambient")->setVolume(settings.volumeAmbient * settings.volumeAmbient);
+    audio::get_channel("music")->setVolume(settings.volumeMusic * settings.volumeMusic);
+    audio::update(delta);
+}
+
 // Основной цикл приложения
 void Engine::mainloop() {
     LOG_INFO("Loading the menu screen");
@@ -142,12 +151,12 @@ void Engine::mainloop() {
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
 
-        audio::update(deltaTime);
+        updateAudio(deltaTime, settings.audio);
 
         gui->activate(deltaTime);
 
         screen->update(deltaTime);
-    
+
         if (!Window::isIconified()) {
             screen->draw(deltaTime);
 

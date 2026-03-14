@@ -4,7 +4,7 @@
 #include "../typedefs.h"
 #include "../constants.h"
 
-constexpr int LIGHTMAP_DATA_LEN = CHUNK_VOLUME / 2;
+inline constexpr int LIGHTMAP_DATA_LEN = CHUNK_VOLUME / 2;
 
 class LightMap {
 public:

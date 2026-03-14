@@ -245,7 +245,7 @@ void Hud::processInput(bool visible) {
         }
     }
 
-    if (visible && Events::justActive(BIND_HUD_INVENTORY)) {
+    if (!pause && visible && Events::justActive(BIND_HUD_INVENTORY)) {
         if (inventoryOpen) {
             closeInventory();
         } else {

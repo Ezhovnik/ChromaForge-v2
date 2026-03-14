@@ -379,6 +379,9 @@ void TextBox::drawBackground(const GfxContext* parent_context, Assets* assets) {
     auto batch = parent_context->getBatch2D();
     batch->untexture();
 
+    auto sub_context = parent_context->sub();
+    sub_context.setScissors(glm::vec4(pos.x, pos.y, size.x, size.y));
+
     if (valid) {
         if (isFocused() && !multiline) batch->setColor(focusedColor);
         else if (hover && !multiline) batch->setColor(hoverColor);

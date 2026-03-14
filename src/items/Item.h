@@ -25,6 +25,8 @@ class Item {
 public:
     std::string const name;
 
+    std::string caption;
+
     itemcount_t stackSize = 64;
 
     bool generated = false;
@@ -44,7 +46,7 @@ public:
         bool emissive = false;
     } rt;
 
-    Item(std::string name) : name(name) {};
+    Item(std::string name);
     Item(const Item&) = delete;
 };
 

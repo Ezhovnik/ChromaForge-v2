@@ -49,8 +49,16 @@ int Clock::getSparkId() const {
     return sparkId;
 }
 
-BlocksController::BlocksController(Level* level, uint padding) : level(level), chunks(level->chunks.get()), lighting(level->lighting.get()), randSparkClock(20, 3), padding(padding), blocksSparkClock(20, 1) {
-}
+BlocksController::BlocksController(
+    Level* level, 
+    uint padding
+) : level(level), 
+    chunks(level->chunks.get()), 
+    lighting(level->lighting.get()), 
+    randSparkClock(20, 3), 
+    padding(padding), 
+    blocksSparkClock(20, 1),
+    worldSparkClock(20, 1) {}
 
 void BlocksController::updateSides(int x, int y, int z) {
     updateBlock(x - 1, y, z);
@@ -82,16 +90,17 @@ void BlocksController::updateBlock(int x, int y, int z) {
 void BlocksController::update(float delta) {
     if (randSparkClock.update(delta)) randomSpark(randSparkClock.getPart(), randSparkClock.getParts());
     if (blocksSparkClock.update(delta)) onBlocksSpark(blocksSparkClock.getPart(), blocksSparkClock.getParts());
+    if (worldSparkClock.update(delta)) scripting::on_world_spark();
 }
 
 void BlocksController::onBlocksSpark(int sparkId, int parts) {
     auto content = level->content;
     auto indices = content->getIndices();
-    int tickRate = blocksSparkClock.getSparkRate();
+    int sparkRate = blocksSparkClock.getSparkRate();
     for (size_t id = 0; id < indices->countBlockDefs(); ++id) {
         if ((id + sparkId) % parts != 0) continue;
         auto def = indices->getBlockDef(id);
-        if (def->rt.funcsset.onblockstick) scripting::on_blocks_tick(def, tickRate);
+        if (def->rt.funcsset.onblocksspark) scripting::on_blocks_spark(def, sparkRate);
     }
 }
 

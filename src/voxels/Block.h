@@ -37,7 +37,7 @@ struct block_funcs_set {
     bool onbroken = false;
     bool oninteract = false;
     bool randupdate = false;
-    bool onblockstick = false;
+    bool onblocksspark = false;
 };
 
 struct CoordSystem {
@@ -75,6 +75,8 @@ struct BlockMaterial {
 class Block {
 public:
     std::string const name;
+
+    std::string caption;
 
     std::string textureFaces[6]; // -x, +x, -y, +y, -z, +z
     std::vector<std::string> modelTextures = {};

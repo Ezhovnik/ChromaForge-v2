@@ -43,6 +43,15 @@ namespace audio {
 
         const std::string& getName() const;
 
+        inline void setPaused(bool flag) {
+            if (flag == paused) return;
+            if (flag) {
+                pause();
+            } else {
+                resume();
+            }
+        }
+
         void pause();
 
         void resume();
@@ -381,6 +390,8 @@ namespace audio {
     extern int get_channel_index(const std::string& name);
 
     extern Channel* get_channel(int index);
+
+    extern Channel* get_channel(const std::string& name);
 
     extern std::shared_ptr<Stream> get_associated_stream(speakerid_t id);
 

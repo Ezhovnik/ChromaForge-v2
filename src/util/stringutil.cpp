@@ -341,3 +341,21 @@ std::wstring util::pascal_case(const std::wstring& str) {
     }
     return result;
 }
+
+std::string util::id_to_caption(const std::string& id) {
+    std::string result = id;
+
+    size_t index = result.find(':');
+    if (index < result.length() - 1) {
+        result = result.substr(index + 1);
+    } else {
+        return "";
+    }
+    size_t offset = 0;
+    for (; offset < result.length() && result[offset] == '_'; offset++) {}
+
+    for (; offset < result.length(); offset++) {
+        if (result[offset] == '_') result[offset] = ' ';
+    }
+    return result;
+}

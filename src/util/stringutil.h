@@ -39,6 +39,8 @@ namespace util {
     extern std::wstring capitalized(const std::wstring& str);
     extern std::wstring pascal_case(const std::wstring& str);
 
+    extern std::string id_to_caption(const std::string& id);
+
     extern std::vector<std::string> split(const std::string& str, char delimiter);
     extern std::vector<std::wstring> split(const std::wstring& str, char delimiter);
 }

@@ -30,3 +30,11 @@ do-write-lights = true
 [ui]
 language = "ru_RU"
 
+[audio]
+enabled = true
+volume-master = 1
+volume-regular = 1
+volume-ui = 1
+volume-ambient = 1
+volume-music = 1
+
