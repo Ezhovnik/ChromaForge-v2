@@ -3,7 +3,9 @@
 
 #include <memory>
 #include <string>
+
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/sink.h>
 
 enum class LogLevel {
     TRACE = 0,
@@ -18,21 +20,20 @@ enum class LogLevel {
 class Logger {
 private:
     Logger();
-    
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
 
     std::shared_ptr<spdlog::logger> logger_;
 
     static spdlog::level::level_enum toSpdlogLevel(LogLevel level);
-    
+
+    std::shared_ptr<spdlog::sinks::sink> console_sink = nullptr;
+    std::shared_ptr<spdlog::sinks::sink> file_sink = nullptr;
+
     template<typename... Args>
     void logWithContext(spdlog::level::level_enum level, 
                         const char* file, int line, const char* function,
                         const char* fmt, const Args&... args) {
         logger_->log(spdlog::source_loc{file, line, function}, level, fmt, args...);
     }
-    
 public:
     static Logger& getInstance();
 
@@ -41,40 +42,43 @@ public:
         LogLevel consoleLevel = LogLevel::INFO, 
         LogLevel fileLevel = LogLevel::DEBUG
     );
-    
+
     // Методы с контекстом (для использования внутри макросов)
     template<typename... Args>
     void trace_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
         logWithContext(spdlog::level::trace, file, line, function, fmt, args...);
     }
-    
+
     template<typename... Args>
     void debug_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
         logWithContext(spdlog::level::debug, file, line, function, fmt, args...);
     }
-    
+
     template<typename... Args>
     void info_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
         logWithContext(spdlog::level::info, file, line, function, fmt, args...);
     }
-    
+
     template<typename... Args>
     void warn_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
         logWithContext(spdlog::level::warn, file, line, function, fmt, args...);
     }
-    
+
     template<typename... Args>
     void error_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
         logWithContext(spdlog::level::err, file, line, function, fmt, args...);
     }
-    
+
     template<typename... Args>
     void critical_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
         logWithContext(spdlog::level::critical, file, line, function, fmt, args...);
     }
-    
-    void setLevel(LogLevel level);
-    void flush() { logger_->flush(); }
+
+    void setConsoleLevel(LogLevel level);
+    void setFileLevel(LogLevel level);
+    void setLoggerLevel(LogLevel level);
+
+    void flush() {logger_->flush();}
 };
 
 // Макросы с автоматическим определением контекста

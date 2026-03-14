@@ -6,7 +6,7 @@
 #include <sstream>
 #include <cstring>
 
-#include "rle.h"
+#include "../coders/rle.h"
 #include "../window/Camera.h"
 #include "../content/Content.h"
 #include "../objects/Player.h"
