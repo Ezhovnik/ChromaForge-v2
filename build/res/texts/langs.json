@@ -17,6 +17,9 @@
         },
         "fi_FI": {
             "name": "Suomi"
+        },
+        "de_DE": {
+            "name": "Deutsch"
         }
     },
     "fallback": "en_US"

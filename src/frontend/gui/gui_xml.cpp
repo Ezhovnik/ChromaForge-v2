@@ -190,7 +190,7 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
     if (element->has("supplier")) {
         auto supplier = scripting::create_wstring_supplier(
             reader.getEnvironment().getId(),
-            element->attr("consumer").getText(),
+            element->attr("supplier").getText(),
             reader.getFilename()
         );
         textbox->setTextSupplier(supplier);

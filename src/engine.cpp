@@ -300,6 +300,9 @@ void Engine::setLanguage(std::string locale) {
 	settings.ui.language = locale;
 	langs::setup(paths->getResources(), locale, contentPacks);
 	menus::create_menus(this);
+    if (auto levelPtr = std::dynamic_pointer_cast<LevelScreen>(screen)) {
+        menus::create_pause_panel(this, levelPtr->getLevelController());
+    }
 }
 
 void Engine::addDefaultWorldGenerators() {
