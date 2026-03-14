@@ -24,6 +24,11 @@ class ResPaths;
 class Content;
 class AssetsLoader;
 
+namespace dynamic {
+	class Map;
+	class List;
+}
+
 struct AssetsConfig {
 	virtual ~AssetsConfig() {}
 };
@@ -79,6 +84,11 @@ private:
 	const ResPaths* paths; ///< Пути для поиска файлов
 
      void tryAddSound(std::string name);
+
+     void processPreload(AssetType tag, const std::string& name, dynamic::Map* map);
+	void processPreloadList(AssetType tag, dynamic::List* list);
+	void processPreloadConfig(std::filesystem::path file);
+	void processPreloadConfigs(const Content* content);
 public:
 	/**
      * @brief Конструктор: инициализирует указатели и регистрирует стандартные загрузчики.

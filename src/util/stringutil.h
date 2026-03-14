@@ -34,6 +34,11 @@ namespace util {
 
     extern std::string mangleid(uint64_t value);
 
+    extern std::wstring lower_case(const std::wstring& str);
+    extern std::wstring upper_case(const std::wstring& str);
+    extern std::wstring capitalized(const std::wstring& str);
+    extern std::wstring pascal_case(const std::wstring& str);
+
     extern std::vector<std::string> split(const std::string& str, char delimiter);
     extern std::vector<std::wstring> split(const std::wstring& str, char delimiter);
 }

@@ -455,7 +455,7 @@ void Hud::setPause(bool pause) {
 
     auto menu = guiController->getMenu();
     if (pause) {
-        menus::create_pause_panel(engine, levelFrontend->getLevel());
+        menus::create_pause_panel(engine, levelFrontend->getController());
         menu->setPage("pause");
     } else {
         menu->reset();

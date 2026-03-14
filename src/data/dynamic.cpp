@@ -137,6 +137,14 @@ List& List::put(List* value) {
     return *this;
 }
 
+Value* List::getValueWriteable(size_t index) const {
+    if (index > values.size()) {
+        LOG_ERROR("Index error");
+        throw std::runtime_error("Index error");
+    }
+    return values.at(index).get();
+}
+
 List& List::putList() {
     List* arr = new List();
     put(arr);
@@ -154,6 +162,38 @@ void List::remove(size_t index) {
 }
 
 Map::~Map() {
+}
+
+std::string Map::getStr(std::string key) const {
+    if (values.find(key) == values.end()) {
+        LOG_ERROR("Missing key '{}'", key);
+        throw std::runtime_error("Missing key '" + key + "'");
+    }
+    return getStr(key, "");
+}
+
+double Map::getNum(std::string key) const {
+    if (values.find(key) == values.end()) {
+        LOG_ERROR("Missing key '{}'", key);
+        throw std::runtime_error("Missing key '" + key + "'");
+    }
+    return getNum(key, 0);
+}
+
+int64_t Map::getInt(std::string key) const {
+    if (values.find(key) == values.end()) {
+        LOG_ERROR("Missing key '{}'", key);
+        throw std::runtime_error("Missing key '" + key + "'");
+    }
+    return getInt(key, 0);
+}
+
+bool Map::getBool(std::string key) const {
+    if (values.find(key) == values.end()) {
+        LOG_ERROR("Missing key '{}'", key);
+        throw std::runtime_error("Missing key '" + key + "'");
+    }
+    return getBool(key, false);
 }
 
 void Map::str(std::string key, std::string& dst) const {

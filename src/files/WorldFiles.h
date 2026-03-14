@@ -28,8 +28,6 @@ namespace RegionConsts {
     inline constexpr uint MAX_OPEN_FILES = 16;
 }
 
-#define REGION_FORMAT_MAGIC ".CHROMAREG"
-inline constexpr int REGION_HEADER_SIZE = 13;
 inline constexpr int REGION_FORMAT_VERSION = 2;
 
 class Player;
@@ -108,10 +106,12 @@ public:
     bool generatorTestMode;
     bool doWriteLights;
 
-    static const char* WORLD_FILE;
+    static const inline std::string WORLD_FILE = "world.json";
 
     WorldFiles(std::filesystem::path directory, const DebugSettings& settings); // Конструктор
     ~WorldFiles(); // Деструктор
+
+    void createDirectories();
 
     static bool parseRegionFilename(const std::string& name, int& x, int& z);
     std::filesystem::path getRegionsFolder() const;

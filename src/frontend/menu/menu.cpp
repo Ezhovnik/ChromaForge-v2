@@ -144,7 +144,7 @@ void show_convert_request(
     }, L"", langs::get(L"Cancel"));
 }
 
-void menus::open_world(std::string name, Engine* engine) {
+void menus::open_world(std::string name, Engine* engine, bool confirmConvert) {
     auto paths = engine->getPaths();
     auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
 
@@ -157,24 +157,29 @@ void menus::open_world(std::string name, Engine* engine) {
         guiutil::alert(engine->getGUI(), langs::get(L"Content Error", L"menu") + L": "+util::str2wstr_utf8(error.what()));
         return;
     }
-    paths->setWorldFolder(folder);
 
     auto& packs = engine->getContentPacks();
     auto* content = engine->getContent();
     auto& settings = engine->getSettings();
-    std::filesystem::create_directories(folder);
     std::shared_ptr<ContentLUT> lut (World::checkIndices(folder, content));
     if (lut) {
         if (lut->hasMissingContent()) {
             show_content_missing(engine, content, lut);
         } else {
-            show_convert_request(engine, content, lut, folder, [=](){
-                open_world(name, engine);
-            });
+            if (confirmConvert) {
+                show_process_panel(engine, std::make_shared<WorldConverter>(folder, content, lut), [=](){
+                    open_world(name, engine, false);
+                });
+            } else {
+                show_convert_request(engine, content, lut, folder, [=](){
+                    open_world(name, engine, false);
+                });
+            }
         }
     } else {
         try {
             Level* level = World::load(folder, settings, content, packs);
+            level->world->wfile->createDirectories();
             engine->setScreen(std::make_shared<LevelScreen>(engine, level));
         } catch (const world_load_error& error) {
             guiutil::alert(engine->getGUI(), 
@@ -200,7 +205,7 @@ std::shared_ptr<Panel> create_worlds_panel(Engine* engine) {
         btn->setHoverColor(glm::vec4(0.09f, 0.17f, 0.2f, 0.6f));
 
         btn->listenAction([=](GUI*) {
-            menus::open_world(name, engine);
+            menus::open_world(name, engine, false);
         });
         btn->add(std::make_shared<Label>(namews), glm::vec2(8, 8));
 
@@ -307,6 +312,7 @@ void create_new_world_panel(Engine* engine) {
             engine->getContent(), 
             engine->getContentPacks()
         );
+        level->world->wfile->createDirectories();
         menus::generatorID = WorldGenerators::getDefaultGeneratorID();
         engine->setScreen(std::make_shared<LevelScreen>(engine, level));
     }));
@@ -395,7 +401,7 @@ void menus::create_version_label(Engine* engine) {
     gui->add(vlabel);
 }
 
-std::string translate_generator_id(std::string& id) {
+static std::string translate_generator_id(std::string& id) {
     int delimiterPosition = id.find(":");
     std::string pack = id.substr(0, delimiterPosition);
     std::string generator = id.substr(delimiterPosition + 1);

@@ -268,7 +268,7 @@ static std::shared_ptr<UINode> readImage(UIXmlReader& reader, xml::xmlelement el
     std::string src = element->attr("src", "").getText();
     auto image = std::make_shared<Image>(src);
     _readUINode(reader, element, *image);
-    reader.getAssetsLoader().add(AssetType::Texture, "textures/" + src + ".png", src, nullptr);
+    reader.getAssetsLoader().add(AssetType::Texture, "textures/" + src, src, nullptr);
     return image;
 }
 
