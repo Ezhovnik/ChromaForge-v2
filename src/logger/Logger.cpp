@@ -20,15 +20,15 @@ void Logger::initialize(const std::string& logFile, LogLevel consoleLevel, LogLe
         // Создаем сенки (выходы) для логов
         #ifdef _WIN32
         // Используем wincolor_sink для Windows
-        auto console_sink = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>();
+        console_sink = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>();
         #else
         // Используем stdout_color_sink для других ОС
-        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         #endif
         console_sink->set_level(toSpdlogLevel(consoleLevel));
         console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%s:%#] [%!] %v");
 
-        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
+        file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
         file_sink->set_level(toSpdlogLevel(fileLevel));
         file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%s:%#] [%!] %v");
 
@@ -58,6 +58,14 @@ spdlog::level::level_enum Logger::toSpdlogLevel(LogLevel level) {
     }
 }
 
-void Logger::setLevel(LogLevel level) {
+void Logger::setConsoleLevel(LogLevel level) {
+    if (console_sink) console_sink->set_level(toSpdlogLevel(level));
+}
+
+void Logger::setFileLevel(LogLevel level) {
+    if (file_sink) file_sink->set_level(toSpdlogLevel(level));
+}
+
+void Logger::setLoggerLevel(LogLevel level) {
     logger_->set_level(toSpdlogLevel(level));
 }
