@@ -182,7 +182,7 @@ void Image::draw(const GfxContext* parent_context, Assets* assets) {
     auto batch = parent_context->getBatch2D();
 
     auto texture = assets->getTexture(this->texture);
-    if (texture && autoresize) setSize(glm::vec2(texture->width, texture->height));
+    if (texture && autoresize) setSize(glm::vec2(texture->getWidth(), texture->getHeight()));
     batch->texture(texture);
 
     batch->setColor(color);
@@ -336,7 +336,7 @@ void TextBox::draw(const GfxContext* pctx, Assets* assets) {
     glm::vec2 size = getSize();
 
     auto subctx = pctx->sub();
-    subctx.scissors(glm::vec4(pos.x, pos.y, size.x, size.y));
+    subctx.setScissors(glm::vec4(pos.x, pos.y, size.x, size.y));
 
     const int lineHeight = font->getLineHeight() * label->getLineInterval();
     glm::vec2 lcoord = label->calcPos();
@@ -364,14 +364,13 @@ void TextBox::draw(const GfxContext* pctx, Assets* assets) {
         if (startLine == endLine) {
             batch->rect(lcoord.x + start, lcoord.y + startY, end - start, lineHeight);
         } else {
-            batch->rect(lcoord.x + start, lcoord.y+endY, label->getSize().x - start - padding.z - padding.x - 2, lineHeight);
+            batch->rect(lcoord.x + start, lcoord.y + endY, label->getSize().x - start - padding.z - padding.x - 2, lineHeight);
             for (uint i = startLine + 1; i < endLine; ++i) {
                 batch->rect(lcoord.x, lcoord.y + label->getLineYOffset(i), label->getSize().x - padding.z - padding.x - 2, lineHeight);
             }
             batch->rect(lcoord.x, lcoord.y + label->getLineYOffset(endLine), end, lineHeight);
         }
     }
-    batch->flush();
 }
 
 void TextBox::drawBackground(const GfxContext* parent_context, Assets* assets) {

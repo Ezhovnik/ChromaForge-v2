@@ -6,6 +6,7 @@
 #include "../typedefs.h"
 
 class Viewport {
+private:
     uint width;
     uint height;
 public:
@@ -14,8 +15,8 @@ public:
     virtual uint getWidth() const;
     virtual uint getHeight() const;
 
-    glm::vec2 size() const {
-        return glm::vec2(width, height);
+    glm::ivec2 size() const {
+        return glm::ivec2(width, height);
     }
 };
 

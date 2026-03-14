@@ -14,6 +14,7 @@ class ShaderProgram;
 class Assets;
 class Camera;
 class Batch3D;
+class Framebuffer;
 
 struct skysprite {
     std::string texture;
@@ -23,8 +24,7 @@ struct skysprite {
 };
 
 class Skybox {
-    uint fbo;
-    uint cubemap;
+    std::unique_ptr<Framebuffer> fbo;
     uint size;
     ShaderProgram* shader;
     FastRandom random;

@@ -18,7 +18,7 @@ class Level;
 class LineBatch;
 class ChunksRenderer;
 class ShaderProgram;
-class Texture;
+class PostProcessing;
 class Frustum;
 class Engine;
 class Chunks;
@@ -28,17 +28,40 @@ class Batch3D;
 class Player;
 
 class WorldRenderer {
+private:
     Engine* engine;
 	Player* player;
 	Level* level;
+	std::unique_ptr<PostProcessing> postProcessing;
     std::unique_ptr<Frustum> frustumCulling;
     std::unique_ptr<ChunksRenderer> renderer;
 	std::unique_ptr<LineBatch> lineBatch;
 	std::unique_ptr<Skybox> skybox;
 	std::unique_ptr<Batch3D> batch3d;
 
-    bool drawChunk(size_t index, Camera* camera, ShaderProgram* shader, bool culling);
-	void drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader);
+    bool drawChunk(
+		size_t index, 
+		Camera* camera, 
+		ShaderProgram* shader, 
+		bool culling
+	);
+	void drawChunks(
+		Chunks* chunks, 
+		Camera* camera, 
+		ShaderProgram* shader
+	);
+	void renderLevel(
+        const GfxContext& context, 
+        Camera* camera, 
+        const EngineSettings& settings
+    );
+	void renderBlockSelection(Camera* camera, ShaderProgram* linesShader);
+	void renderDebugLines(
+        const GfxContext& context, 
+        Camera* camera, 
+        ShaderProgram* linesShader,
+        const EngineSettings& settings
+    );
 
 	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);
 public:

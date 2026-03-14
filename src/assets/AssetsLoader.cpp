@@ -103,6 +103,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 		loader.add(AssetType::Shader, SHADERS_FOLDER"/skybox_gen", "skybox_gen");
 		loader.add(AssetType::Shader, SHADERS_FOLDER"/background", "background");
 		loader.add(AssetType::Shader, SHADERS_FOLDER"/ui3d", "ui3d");
+		loader.add(AssetType::Shader, SHADERS_FOLDER"/screen", "screen");
 
 		// Дополнительные текстуры
 		loader.add(AssetType::Texture, TEXTURES_FOLDER"/misc/moon.png", "misc/moon");

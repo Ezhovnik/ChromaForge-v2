@@ -2,6 +2,9 @@
 #define GRAPHICS_SHADERPROGRAM_H_
 
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
+
 #include <glm/glm.hpp>
 
 #include "../typedefs.h"
@@ -15,12 +18,17 @@ class GLSLExtension;
  * Предоставляет методы для загрузки uniform-переменных различных типов.
  */
 class ShaderProgram {
+private:
+    /// Идентификатор шейдерной програмы OpenGL
+    uint id;
+
+    std::unordered_map<std::string, int> uniformLocationCache;
+    std::unordered_set<std::string> warnedUniforms;
+
+    int getUniformLocation(const std::string& name);
 public:
     /// Глобальный препроцессор для шейдеров (обрабатывает #include и директивы).
     static GLSLExtension* preprocessor;
-
-    /// Идентификатор шейдерной програмы OpenGL
-    uint id;
 
     /**
      * @brief Конструктор, создающий объект из существующего OpenGL-идентификатора.
@@ -71,6 +79,13 @@ public:
      * @param xy Два вещественных числа в виде вектора.
      */
     void uniform2f(std::string name, glm::vec2 xy);
+
+    /**
+     * @brief Загружает два целых числа в uniform-переменную (vec2).
+     * @param name Имя переменной.
+     * @param xy Два целых числа в виде вектора.
+     */
+    void uniform2i(std::string name, glm::ivec2 xy);
 
     /**
      * @brief Загружает три вещественных числа в uniform-переменную (vec3).
