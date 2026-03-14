@@ -47,6 +47,7 @@ struct SlotLayout {
     glm::vec2 position;
     bool background;
     bool itemSource;
+    slotcallback updateFunc;
     slotcallback shareFunc;
     slotcallback rightClick;
 
@@ -55,6 +56,7 @@ struct SlotLayout {
         glm::vec2 position, 
         bool background,
         bool itemSource,
+        slotcallback updateFunc,
         slotcallback shareFunc,
         slotcallback rightClick
     );

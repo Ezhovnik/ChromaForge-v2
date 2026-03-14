@@ -9,10 +9,10 @@
 #include <memory>
 
 #include "../typedefs.h"
+#include "../voxels/Block.h"
 
 using DrawGroups = std::set<ubyte>;
 
-class Block;
 class Content;
 class Item;
 class ContentPackRuntime;
@@ -48,6 +48,7 @@ class ContentBuilder {
 private:
     std::unordered_map<std::string, Block*> blockDefs;
     std::vector<std::string> blockIds;
+    std::unordered_map<std::string, BlockMaterial> blockMaterials;
 
     std::unordered_map<std::string, Item*> itemDefs;
     std::vector<std::string> itemIds;
@@ -58,8 +59,8 @@ public:
 
     void add(Block* def);
     void add(Item* def);
-
     void add(ContentPackRuntime* pack);
+    void add(BlockMaterial material);
 
     Block& createBlock(std::string id);
     Item& createItem(std::string id);
@@ -112,6 +113,8 @@ private:
     std::unique_ptr<ContentIndices> indices;
 
     std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs;
+
+    std::unordered_map<std::string, BlockMaterial> blockMaterials;
 public:
     std::unique_ptr<DrawGroups> const drawGroups;
 
@@ -120,7 +123,8 @@ public:
         std::unique_ptr<DrawGroups> drawGroups, 
         std::unordered_map<std::string, Block*> blockDefs, 
         std::unordered_map<std::string, Item*> itemDefs,
-        std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs
+        std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs,
+        std::unordered_map<std::string, BlockMaterial> blockMaterials
     );
     ~Content();
 
@@ -135,6 +139,9 @@ public:
     Item& requireItem(std::string id) const;
 
     const ContentPackRuntime* getPackRuntime(std::string id) const;
+
+    const BlockMaterial* findBlockMaterial(std::string id) const;
+    const std::unordered_map<std::string, BlockMaterial>& getBlockMaterials() const;
 
     const std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>>& getPacks() const;
 };

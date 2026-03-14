@@ -19,7 +19,7 @@ void GLSLExtension::setPaths(const ResPaths* paths) {
 }
 
 void GLSLExtension::loadHeader(std::string name) {
-    std::filesystem::path file = paths->find(SHADERS_FOLDER"/lib/" + name + ".glsl");
+    std::filesystem::path file = paths->find(SHADERS_FOLDER + "/lib/" + name + ".glsl");
     std::string source = files::read_string(file);
     addHeader(name, source);
 }

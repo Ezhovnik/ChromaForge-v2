@@ -7,5 +7,6 @@
         "oak_log",
         "oak_log"
     ],
-    "rotation": "pipe"
+    "rotation": "pipe",
+    "material": "chromaforge:wood"
 }

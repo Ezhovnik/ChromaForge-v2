@@ -11,6 +11,7 @@
 class Level;
 
 class LevelController {
+private:
     EngineSettings& settings;
 
     std::unique_ptr<Level> level;
@@ -28,6 +29,8 @@ public:
 
     Level* getLevel();
     Player* getPlayer();
+
+    PlayerController* getPlayerController();
 };
 
 #endif // LOGIC_LEVEL_CONTROLLER_H_

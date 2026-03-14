@@ -1,3 +1,4 @@
 {
-    "texture": "moss_block"
+    "texture": "moss_block",
+    "material": "chromaforge:moss"
 }

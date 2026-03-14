@@ -1,3 +1,4 @@
 {
-    "texture": "coarse_dirt"
+    "texture": "coarse_dirt",
+    "material": "chromaforge:ground"
 }

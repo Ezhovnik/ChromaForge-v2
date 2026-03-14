@@ -81,40 +81,53 @@ void addLayouts(int env, const std::string& prefix, const std::filesystem::path&
     }
 }
 
+void AssetsLoader::tryAddSound(std::string name) {
+    if (name.empty()) return;
+    std::string file = SOUNDS_FOLDER + "/" + name + ".ogg";
+    add(AssetType::Sound, file, name);
+}
+
 void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 	// Шрифт
-	loader.add(AssetType::Font, FONTS_FOLDER"/font", "normal");
+	loader.add(AssetType::Font, FONTS_FOLDER + "/font", "normal");
 
 	// Базовые шейдеры
-	loader.add(AssetType::Shader, SHADERS_FOLDER"/default", "default");
-	loader.add(AssetType::Shader, SHADERS_FOLDER"/ui", "ui");
-	loader.add(AssetType::Shader, SHADERS_FOLDER"/lines", "lines");
+	loader.add(AssetType::Shader, SHADERS_FOLDER + "/default", "default");
+	loader.add(AssetType::Shader, SHADERS_FOLDER + "/ui", "ui");
+	loader.add(AssetType::Shader, SHADERS_FOLDER + "/lines", "lines");
 
 	// Интерфейсные текстуры
-	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/menubg.png", "gui/menubg");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/delete_icon.png", "gui/delete_icon");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/no_icon.png", "gui/no_icon");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/warning.png", "gui/warning");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/error.png", "gui/error");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/cross.png", "gui/cross");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/menubg.png", "gui/menubg");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/delete_icon.png", "gui/delete_icon");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/no_icon.png", "gui/no_icon");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/warning.png", "gui/warning");
+    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/error.png", "gui/error");
+    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/cross.png", "gui/cross");
 
 	if (content) {
 		// Дополнительные шейдеры
-		loader.add(AssetType::Shader, SHADERS_FOLDER"/skybox_gen", "skybox_gen");
-		loader.add(AssetType::Shader, SHADERS_FOLDER"/background", "background");
-		loader.add(AssetType::Shader, SHADERS_FOLDER"/ui3d", "ui3d");
-		loader.add(AssetType::Shader, SHADERS_FOLDER"/screen", "screen");
+		loader.add(AssetType::Shader, SHADERS_FOLDER + "/skybox_gen", "skybox_gen");
+		loader.add(AssetType::Shader, SHADERS_FOLDER + "/background", "background");
+		loader.add(AssetType::Shader, SHADERS_FOLDER + "/ui3d", "ui3d");
+		loader.add(AssetType::Shader, SHADERS_FOLDER + "/screen", "screen");
 
 		// Дополнительные текстуры
-		loader.add(AssetType::Texture, TEXTURES_FOLDER"/misc/moon.png", "misc/moon");
-        loader.add(AssetType::Texture, TEXTURES_FOLDER"/misc/sun.png", "misc/sun");
-		loader.add(AssetType::Texture, TEXTURES_FOLDER"/gui/crosshair.png", "gui/crosshair");
+		loader.add(AssetType::Texture, TEXTURES_FOLDER + "/misc/moon.png", "misc/moon");
+        loader.add(AssetType::Texture, TEXTURES_FOLDER + "/misc/sun.png", "misc/sun");
+		loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/crosshair.png", "gui/crosshair");
+
+		for (auto& entry : content->getBlockMaterials()) {
+            auto& material = entry.second;
+            loader.tryAddSound(material.stepsSound);
+            loader.tryAddSound(material.placeSound);
+            loader.tryAddSound(material.breakSound);
+        }
 
 		// Макеты интерфейса из корневой папки "layouts" (встроенный контент)
 		addLayouts(
 			0, 
 			BUILTIN_CONTENT_NAMESPACE, 
-			loader.getPaths()->getMainRoot()/std::filesystem::path("layouts"), 
+			loader.getPaths()->getMainRoot()/std::filesystem::path(LAYOUTS_FOLDER), 
 			loader
 		);
 
@@ -122,14 +135,14 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
         for (auto& entry : content->getPacks()) {
 			auto pack = entry.second.get();
             auto& info = pack->getInfo();
-            std::filesystem::path folder = info.folder/std::filesystem::path("layouts");
+            std::filesystem::path folder = info.folder/std::filesystem::path(LAYOUTS_FOLDER);
             addLayouts(pack->getEnvironment()->getId(), info.id, folder, loader);
         }
 	}
 
 	// Атласы блоков и предметов
-	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/blocks", "blocks");
-	loader.add(AssetType::Atlas, TEXTURES_FOLDER"/items", "items");
+	loader.add(AssetType::Atlas, TEXTURES_FOLDER + "/blocks", "blocks");
+	loader.add(AssetType::Atlas, TEXTURES_FOLDER + "/items", "items");
 }
 
 const ResPaths* AssetsLoader::getPaths() const {

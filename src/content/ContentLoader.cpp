@@ -146,6 +146,8 @@ void ContentLoader::loadBlock(Block& definition, std::string name, std::filesyst
         }
     }
 
+    root->str("material", definition.material);
+
     // Профили поворота
     std::string profile = "none";
     root->str("rotation", profile);
@@ -271,6 +273,16 @@ void ContentLoader::loadItem(Item& item, std::string full, std::string name) {
     if (std::filesystem::is_regular_file(scriptfile)) scripting::load_item_script(env, full, scriptfile, item.rt.funcsset);
 }
 
+
+BlockMaterial ContentLoader::loadBlockMaterial(std::filesystem::path file, std::string full) {
+    auto root = files::read_json(file);
+    BlockMaterial material {full};
+    root->str("steps-sound", material.stepsSound);
+    root->str("place-sound", material.placeSound);
+    root->str("break-sound", material.breakSound);
+    return material;
+}
+
 void ContentLoader::load(ContentBuilder& builder) {
     LOG_INFO("---Loading content pack [{}]", pack->id);
 
@@ -327,6 +339,15 @@ void ContentLoader::load(ContentBuilder& builder) {
             if (colon != std::string::npos) def.scriptName = name.substr(0, colon) + '/' + def.scriptName;
             loadItem(def, full, name);
             stats.totalItems++;
+        }
+    }
+
+    std::filesystem::path materialsDir = folder / std::filesystem::u8path("block_materials");
+    if (std::filesystem::is_directory(materialsDir)) {
+        for (auto entry : std::filesystem::directory_iterator(materialsDir)) {
+            std::filesystem::path file = entry.path();
+            std::string name = pack->id + ":" + file.stem().u8string();
+            builder.add(loadBlockMaterial(file, name));
         }
     }
 

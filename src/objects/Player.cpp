@@ -23,11 +23,11 @@ namespace PlayerConsts {
 Player::Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inventory) : 
 	speed(speed),
 	chosenSlot(0),
-	camera(new Camera(position, glm::radians(90.0f))),
-	spCamera(new Camera(position, glm::radians(90.0f))),
-	tpCamera(new Camera(position, glm::radians(90.0f))),
+	camera(std::make_shared<Camera>(position, glm::radians(90.0f))),
+	spCamera(std::make_shared<Camera>(position, glm::radians(90.0f))),
+	tpCamera(std::make_shared<Camera>(position, glm::radians(90.0f))),
 	currentCamera(camera),
-	hitbox(new Hitbox(position, glm::vec3(0.3f, 0.9f, 0.3f))),
+	hitbox(std::make_unique<Hitbox>(position, glm::vec3(0.3f, 0.9f, 0.3f))),
 	inventory(inventory) {
 }
 

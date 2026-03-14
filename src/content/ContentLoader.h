@@ -4,7 +4,8 @@
 #include <string>
 #include <filesystem>
 
-class Block;
+#include "../voxels/Block.h"
+
 class ContentBuilder;
 struct ContentPack;
 class Item;
@@ -23,6 +24,7 @@ private:
     void loadCustomBlockModel(Block& block, dynamic::Map* primitives);
 
     void loadItem(Item& item, std::string full, std::string name);
+    BlockMaterial loadBlockMaterial(std::filesystem::path file, std::string full);
 public:
     ContentLoader(ContentPack* pack);
 
