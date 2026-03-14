@@ -11,13 +11,15 @@
 #include "../voxels/Block.h"
 #include "../audio/audio.h"
 
-LevelFrontend::LevelFrontend(Level* level, Assets* assets) : level(level), assets(assets), contentCache(std::make_unique<ContentGfxCache>(level->content, assets)), blocksAtlas(BlocksPreview::build(contentCache.get(), assets, level->content)) {
-}
-
-LevelFrontend::~LevelFrontend() {
-}
-
-void LevelFrontend::observe(LevelController* controller) {
+LevelFrontend::LevelFrontend(
+    LevelController* controller, 
+    Assets* assets
+) : controller(controller),
+    level(controller->getLevel()), 
+    assets(assets), 
+    contentCache(std::make_unique<ContentGfxCache>(level->content, assets)), 
+    blocksAtlas(BlocksPreview::build(contentCache.get(), assets, level->content))
+{
     controller->getPlayerController()->listenBlockInteraction(
         [=](Player*, glm::ivec3 pos, const Block* def, BlockInteraction type) {
             auto material = level->content->findBlockMaterial(def->material);
@@ -64,6 +66,9 @@ void LevelFrontend::observe(LevelController* controller) {
     );
 }
 
+LevelFrontend::~LevelFrontend() {
+}
+
 Level* LevelFrontend::getLevel() const {
     return level;
 }
@@ -78,4 +83,8 @@ Atlas* LevelFrontend::getBlocksAtlas() const {
 
 ContentGfxCache* LevelFrontend::getContentGfxCache() const {
     return contentCache.get();
+}
+
+LevelController* LevelFrontend::getController() const {
+    return controller;
 }

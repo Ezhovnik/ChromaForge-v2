@@ -6,6 +6,7 @@ Cancel=Скасаваць
 Back=Назад
 Continue=Працягнуть
 Add=Дадаць
+Converting world...=Выконваецца канвертацыя свету...
 
 # Меню
 menu.New World=Новы Свет
@@ -26,6 +27,7 @@ menu.Create World=Стварыць Свет
 world.convert-request=Есть изменения в индексах! Конвертировать мир?
 menu.Content Error=Памылка Кантэнту
 world.delete-confirm=Выдаліць свет незваротна?
+pack.remove-confirm=Выдаліць увесь кантэнт які пастаўляецца пакам са свету (беззваротна)?
 
 error.pack-not-found=Не ўдалося знайсці пакет
 error.dependency-not-found=Выкарыстоўваная залежнасць не знойдзена

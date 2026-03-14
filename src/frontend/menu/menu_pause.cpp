@@ -15,6 +15,8 @@
 #include "../../coders/png.h"
 #include "../../util/stringutil.h"
 #include "../../files/WorldFiles.h"
+#include "../../content/ContentLUT.h"
+#include "../../logic/LevelController.h"
 
 using namespace gui;
 
@@ -100,14 +102,14 @@ std::shared_ptr<Panel> create_packs_panel(
 }
 
 static void reopen_world(Engine* engine, World* world) {
-    std::string wname = world->getName();
+    std::string wname = world->wfile->directory.stem().u8string();
     engine->setScreen(nullptr);
     engine->setScreen(std::make_shared<MenuScreen>(engine));
-    menus::open_world(wname, engine);
+    menus::open_world(wname, engine, true);
 }
 
-// TODO: refactor
-void create_content_panel(Engine* engine, Level* level) {
+void create_content_panel(Engine* engine, LevelController* controller) {
+    auto level = controller->getLevel();
     auto menu = engine->getGUI()->getMenu();
     auto paths = engine->getPaths();
     auto mainPanel = menus::create_page(engine, "content", 550, 0.0f, 5);
@@ -126,14 +128,17 @@ void create_content_panel(Engine* engine, Level* level) {
     auto panel = create_packs_panel(
         engine->getContentPacks(), engine, false, nullptr, 
         [=](const ContentPack& pack) {
+            auto world = level->getWorld();
             auto runtime = engine->getContent()->getPackRuntime(pack.id);
             if (runtime->getStats().hasSavingContent()) {
                 guiutil::confirm(engine->getGUI(), langs::get(L"remove-confirm", L"pack")+
-                L" ("+util::str2wstr_utf8(pack.id)+L")", [=]() {
-                    // TODO: work in progress
+                L" (" + util::str2wstr_utf8(pack.id) + L")", [=]() {
+                    controller->saveWorld();
+                    world->wfile->removePack(world, pack.id);
+                    reopen_world(engine, world);
                 });
             } else {
-                auto world = level->getWorld();
+                controller->saveWorld();
                 world->wfile->removePack(world, pack.id);
 
                 reopen_world(engine, world);
@@ -159,6 +164,7 @@ void create_content_panel(Engine* engine, Level* level) {
                 }
             }
             world->wfile->addPack(world, pack.id);
+            controller->saveWorld();
             reopen_world(engine, world);
         }, nullptr);
         menu->addPage("content-packs", panel);
@@ -167,7 +173,7 @@ void create_content_panel(Engine* engine, Level* level) {
     mainPanel->add(guiutil::backButton(menu));
 }
 
-void menus::create_pause_panel(Engine* engine, Level* level) {
+void menus::create_pause_panel(Engine* engine, LevelController* controller) {
     auto menu = engine->getGUI()->getMenu();
     auto panel = create_page(engine, "pause", 400, 0.0f, 1);
 
@@ -175,12 +181,13 @@ void menus::create_pause_panel(Engine* engine, Level* level) {
         menu->reset();
     }));
     panel->add(create_button(L"Content", glm::vec4(10.0f), glm::vec4(1), [=](GUI*) {
-        create_content_panel(engine, level);
+        create_content_panel(engine, controller);
         menu->setPage("content");
     }));
     panel->add(guiutil::gotoButton(L"Settings", "settings", menu));
 
-    panel->add(create_button(L"Save and Quit to Menu", glm::vec4(10.f), glm::vec4(1), [=](GUI*){
+    panel->add(create_button(L"Save and Quit to Menu", glm::vec4(10.0f), glm::vec4(1), [=](GUI*) {
+        controller->saveWorld();
         engine->setScreen(nullptr);
         engine->setScreen(std::make_shared<MenuScreen>(engine));
     }));

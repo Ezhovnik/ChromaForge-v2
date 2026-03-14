@@ -70,7 +70,7 @@ bool asset_loader::texture(
 	std::shared_ptr<AssetsConfig>)
 {
 	// Загружаем PNG-изображение как текстуру (путь ищется через ResPaths)
-	std::unique_ptr<Texture> texture(png::loadTexture(paths->find(filename).u8string()));
+	std::unique_ptr<Texture> texture(png::loadTexture(paths->find(filename + ".png").u8string()));
 	if (texture == nullptr){
 		LOG_CRITICAL("Failed to load texture '{}'", name);
 		return false;
@@ -316,22 +316,20 @@ bool asset_loader::sound(
 
     bool keepPCM = cfg ? cfg->keepPCM : false;
 
-    size_t lastindex = file.find_last_of("."); 
-    std::string extension = file.substr(lastindex);
-    std::string extensionless = file.substr(0, lastindex);
+    std::string extension = ".ogg";
     try {
         std::unique_ptr<audio::Sound> baseSound = nullptr;
 
-		auto soundFile = paths->find(file);
+		auto soundFile = paths->find(file + extension);
         if (std::filesystem::exists(soundFile)) {
             baseSound.reset(audio::load_sound(soundFile, keepPCM));
         }
-        auto variantFile = paths->find(extensionless+"_0"+extension);
+        auto variantFile = paths->find(file + "_0" + extension);
         if (std::filesystem::exists(variantFile)) {
             baseSound.reset(audio::load_sound(variantFile, keepPCM));
         }
         for (uint i = 1; ; ++i) {
-            auto variantFile = paths->find(extensionless+"_"+std::to_string(i)+extension);
+            auto variantFile = paths->find(file + "_" + std::to_string(i) + extension);
             if (!std::filesystem::exists(variantFile)) break;
             baseSound->variants.emplace_back(audio::load_sound(variantFile, keepPCM));
         }

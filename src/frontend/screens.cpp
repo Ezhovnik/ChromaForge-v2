@@ -100,11 +100,9 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine) {
     menu->reset();
 
     controller = std::make_unique<LevelController>(settings, level);
-    levelFrontend = std::make_unique<LevelFrontend>(level, assets);
+    levelFrontend = std::make_unique<LevelFrontend>(controller.get(), assets);
     worldRenderer = std::make_unique<WorldRenderer>(engine, levelFrontend.get(), controller->getPlayer());
     hud = std::make_unique<Hud>(engine, levelFrontend.get(), controller->getPlayer());
-
-    levelFrontend->observe(controller.get());
 
     animator = std::make_unique<TextureAnimator>();
     animator->addAnimations(assets->getAnimations());
@@ -120,15 +118,14 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine) {
 }
 
 LevelScreen::~LevelScreen() {
-    LOG_INFO("World saving");
     scripting::on_frontend_close();
-    controller->onWorldSave();
-    auto world = controller->getLevel()->getWorld();
-    world->write(controller->getLevel());
-    LOG_INFO("The world has been successfully saved");
 
     controller->onWorldQuit();
     engine->getPaths()->setWorldFolder(std::filesystem::path());
+}
+
+void LevelScreen::onEngineShutdown() {
+    controller->saveWorld();
 }
 
 void LevelScreen::updateHotkeys() {
@@ -180,4 +177,8 @@ void LevelScreen::draw(float deltaTime) {
     worldRenderer->draw(context, camera.get(), hudVisible);
 
     if (hudVisible) hud->draw(context);
+}
+
+LevelController* LevelScreen::getLevelController() const {
+    return controller.get();
 }

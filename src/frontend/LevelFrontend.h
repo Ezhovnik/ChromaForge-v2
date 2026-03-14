@@ -12,19 +12,19 @@ class LevelController;
 class LevelFrontend {
 private:
     Level* level;
+    LevelController* controller;
     Assets* assets;
     std::unique_ptr<ContentGfxCache> contentCache;
     std::unique_ptr<Atlas> blocksAtlas;
 public:
-    LevelFrontend(Level* level, Assets* assets);
+    LevelFrontend(LevelController* controller, Assets* assets);
     ~LevelFrontend();
-
-    void observe(LevelController* controller);
 
     Level* getLevel() const;
     Assets* getAssets() const;
     Atlas* getBlocksAtlas() const;
     ContentGfxCache* getContentGfxCache() const;
+    LevelController* getController() const;
 };
 
 

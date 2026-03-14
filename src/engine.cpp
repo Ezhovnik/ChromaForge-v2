@@ -92,6 +92,7 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
 // Реализация деструктора
 Engine::~Engine() {
     LOG_INFO("Shutting down");
+    if (screen) screen->onEngineShutdown();
     screen.reset();
     content.reset();
     assets.reset();
@@ -234,6 +235,7 @@ void Engine::loadWorldContent(const std::filesystem::path& folder) {
     contentPacks.clear();
     auto packNames = ContentPack::worldPacksList(folder);
     ContentPack::readPacks(paths, contentPacks, packNames, folder);
+    paths->setWorldFolder(folder);
     loadContent();
 }
 

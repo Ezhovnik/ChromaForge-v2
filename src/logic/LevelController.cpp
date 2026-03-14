@@ -5,7 +5,9 @@
 #include "../world/Level.h"
 #include "../physics/Hitbox.h"
 #include "scripting/scripting.h"
+#include "../world/World.h"
 #include "../interfaces/Object.h"
+#include "../logger/Logger.h"
 
 LevelController::LevelController(EngineSettings& settings, Level* level_) : settings(settings), level(level_) {
     blocks = std::make_unique<BlocksController>(level.get(), settings.chunks.padding);
@@ -37,8 +39,11 @@ void LevelController::update(float delta, bool input, bool pause) {
     }
 }
 
-void LevelController::onWorldSave() {
+void LevelController::saveWorld() {
+    LOG_INFO("Saving world");
     scripting::on_world_save();
+    level->getWorld()->write(level.get());
+    LOG_INFO("The world has been successfully saved");
 }
 
 void LevelController::onWorldQuit() {

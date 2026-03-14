@@ -4,12 +4,12 @@
 #include <string>
 
 class Engine;
-class Level;
+class LevelController;
 
 namespace menus {
     extern void create_settings_panel(Engine* engine);
-    extern void create_pause_panel(Engine* engine, Level* level);
-    void open_world(std::string name, Engine* engine);
+    extern void create_pause_panel(Engine* engine, LevelController* level);
+    void open_world(std::string name, Engine* engine, bool confirmConvert);
     void create_version_label(Engine* engine);
     void create_menus(Engine* engine);
     void refresh_menus(Engine* engine);

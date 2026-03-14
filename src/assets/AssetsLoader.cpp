@@ -16,6 +16,8 @@
 #include "../core_defs.h"
 #include "../content/Content.h"
 #include "../logic/scripting/scripting.h"
+#include "../data/dynamic.h"
+#include "../files/files.h"
 
 AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(assets), paths(paths) {
 	// Регистрируем встроенные загрузчики из asset_loaders.h
@@ -48,7 +50,7 @@ bool AssetsLoader::loadNext() {
 	// Ищем загрузчик по типу ресурса
 	auto found = loaders.find(entry.tag);
 	if (found == loaders.end()) {
-        LOG_ERROR("Unknown asset tag {}", (int)entry.tag);
+        LOG_ERROR("Unknown asset tag {}", static_cast<int>(entry.tag));
 		entries.pop();
 		return false;
 	}
@@ -83,8 +85,87 @@ void addLayouts(int env, const std::string& prefix, const std::filesystem::path&
 
 void AssetsLoader::tryAddSound(std::string name) {
     if (name.empty()) return;
-    std::string file = SOUNDS_FOLDER + "/" + name + ".ogg";
+    std::string file = SOUNDS_FOLDER + "/" + name;
     add(AssetType::Sound, file, name);
+}
+
+static std::string assets_def_folder(AssetType tag) {
+    switch (tag) {
+        case AssetType::Font: return FONTS_FOLDER;
+        case AssetType::Shader: return SHADERS_FOLDER;
+        case AssetType::Texture: return TEXTURES_FOLDER;
+        case AssetType::Atlas: return TEXTURES_FOLDER;
+        case AssetType::Layout: return LAYOUTS_FOLDER;
+        case AssetType::Sound: return SOUNDS_FOLDER;
+    }
+    return "<unknown>";
+}
+
+void AssetsLoader::processPreload(
+    AssetType tag, 
+    const std::string& name, 
+    dynamic::Map* map
+) {
+    std::string defFolder = assets_def_folder(tag);
+    std::string path = defFolder + "/" + name;
+    if (map == nullptr) {
+        add(tag, path, name);
+        return;
+    }
+    map->str("path", path);
+    switch (tag) {
+        case AssetType::Sound:
+            add(tag, path, name, std::make_shared<SoundConfig>(
+                map->getBool("keep-pcm", false)
+            ));
+            break;
+        default:
+            add(tag, path, name);
+            break;
+    }
+}
+
+void AssetsLoader::processPreloadList(AssetType tag, dynamic::List* list) {
+    if (list == nullptr) return;
+    for (uint i = 0; i < list->size(); ++i) {
+        auto value = list->get(i);
+        switch (value->type) {
+            case dynamic::ValueType::string: {
+                processPreload(tag, *value->value.str, nullptr);
+                break;
+			} case dynamic::ValueType::map: {
+                auto name = value->value.map->getStr("name");
+                processPreload(tag, name, value->value.map);
+                break;
+            } default: {
+				LOG_ERROR("Invalid entry type");
+                throw std::runtime_error("invalid entry type");
+			}
+        }
+    }
+}
+
+void AssetsLoader::processPreloadConfig(std::filesystem::path file) {
+    auto root = files::read_json(file);
+    processPreloadList(AssetType::Font, root->list("fonts"));
+    processPreloadList(AssetType::Shader, root->list("shaders"));
+    processPreloadList(AssetType::Texture, root->list("textures"));
+    processPreloadList(AssetType::Sound, root->list("sounds"));
+    // Макеты загружаются автоматически
+}
+
+void AssetsLoader::processPreloadConfigs(const Content* content) {
+    for (auto& entry : content->getPacks()) {
+        const auto& pack = entry.second;
+        auto preloadFile = pack->getInfo().folder/std::filesystem::path("preload.json");
+        if (std::filesystem::exists(preloadFile)) {
+            processPreloadConfig(preloadFile);
+        }
+    }
+    auto preloadFile = paths->getMainRoot()/std::filesystem::path("preload.json");
+    if (std::filesystem::exists(preloadFile)) {
+        processPreloadConfig(preloadFile);
+    }
 }
 
 void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
@@ -97,24 +178,15 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 	loader.add(AssetType::Shader, SHADERS_FOLDER + "/lines", "lines");
 
 	// Интерфейсные текстуры
-	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/menubg.png", "gui/menubg");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/delete_icon.png", "gui/delete_icon");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/no_icon.png", "gui/no_icon");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/warning.png", "gui/warning");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/error.png", "gui/error");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/cross.png", "gui/cross");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/menubg", "gui/menubg");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/delete_icon", "gui/delete_icon");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/no_icon", "gui/no_icon");
+	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/warning", "gui/warning");
+    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/error", "gui/error");
+    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/cross", "gui/cross");
 
 	if (content) {
-		// Дополнительные шейдеры
-		loader.add(AssetType::Shader, SHADERS_FOLDER + "/skybox_gen", "skybox_gen");
-		loader.add(AssetType::Shader, SHADERS_FOLDER + "/background", "background");
-		loader.add(AssetType::Shader, SHADERS_FOLDER + "/ui3d", "ui3d");
-		loader.add(AssetType::Shader, SHADERS_FOLDER + "/screen", "screen");
-
-		// Дополнительные текстуры
-		loader.add(AssetType::Texture, TEXTURES_FOLDER + "/misc/moon.png", "misc/moon");
-        loader.add(AssetType::Texture, TEXTURES_FOLDER + "/misc/sun.png", "misc/sun");
-		loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/crosshair.png", "gui/crosshair");
+		loader.processPreloadConfigs(content);
 
 		for (auto& entry : content->getBlockMaterials()) {
             auto& material = entry.second;

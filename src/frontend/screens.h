@@ -25,6 +25,7 @@ public:
     virtual ~Screen();
     virtual void update(float delta) = 0;
     virtual void draw(float delta) = 0;
+    virtual void onEngineShutdown() {};
 };
 
 class MenuScreen : public Screen {
@@ -53,6 +54,10 @@ public:
 
     void update(float delta) override;
     void draw(float delta) override;
+
+    void onEngineShutdown() override;
+
+    LevelController* getLevelController() const;
 };
 
 #endif // FRONTEND_SCREENS_H_

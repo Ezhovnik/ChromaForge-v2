@@ -27,7 +27,8 @@
 #include "../items/Inventory.h"
 #include "../coders/byte_utils.h"
 
-const char* WorldFiles::WORLD_FILE = "world.json";
+#define REGION_FORMAT_MAGIC ".CHROMAREG"
+inline constexpr int REGION_HEADER_SIZE = 13;
 
 inline constexpr size_t BUFFER_SIZE_UNKNOWN = -1;
 
@@ -80,11 +81,16 @@ regFile::regFile(std::filesystem::path filename) : file(filename) {
 }
 
 WorldFiles::WorldFiles(std::filesystem::path directory, const DebugSettings& settings) : directory(directory), generatorTestMode(settings.generatorTestMode), doWriteLights(settings.doWriteLights) {
-	compressionBuffer.reset(new ubyte[CHUNK_DATA_LEN * 2]);
+	compressionBuffer = std::make_unique<ubyte[]>(CHUNK_DATA_LEN * 2);
 }
 
 WorldFiles::~WorldFiles(){
 	regions.clear();
+}
+
+void WorldFiles::createDirectories() {
+    std::filesystem::create_directories(directory/std::filesystem::path("data"));
+    std::filesystem::create_directories(directory/std::filesystem::path("content"));
 }
 
 WorldRegion* WorldFiles::getRegion(regionsmap& regions, int x, int z) {
@@ -534,4 +540,24 @@ void WorldFiles::removePack(const World* world, const std::string& id) {
         ss << pack << "\n";
     }
     files::write_string(file, ss.str());
+
+	auto prefix = id+":";
+    auto root = files::read_json(getIndicesFile());
+    auto blocks = root->list("blocks");
+    for (uint i = 0; i < blocks->size(); ++i) {
+        auto name = blocks->str(i);
+        if (name.find(prefix) != 0)
+            continue;
+        auto value = blocks->getValueWriteable(i);
+        *value->value.str = BUILTIN_CONTENT_NAMESPACE":air";
+    }
+
+    auto items = root->list("items");
+    for (uint i = 0; i < items->size(); ++i) {
+        auto name = items->str(i);
+        if (name.find(prefix) != 0) continue;
+        auto value = items->getValueWriteable(i);
+        *value->value.str = BUILTIN_CONTENT_NAMESPACE":empty";
+    }
+    files::write_json(getIndicesFile(), root.get());
 }

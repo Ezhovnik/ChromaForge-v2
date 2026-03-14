@@ -9,7 +9,6 @@
 
 class Mesh;
 class Texture;
-class Sprite;
 class UVRegion;
 
 /**
@@ -90,12 +89,6 @@ public:
 	void sprite(float x, float y, float w, float h, const UVRegion& region, glm::vec4 tint);
 
 	/**
-     * @brief Рисует спрайт (объект Sprite).
-     * @param sprite Указатель на спрайт.
-     */
-	void sprite(Sprite* sprite);
-
-	/**
      * @brief Рисует спрайт из атласа по индексу.
      * @param x,y Позиция.
      * @param w,h Размеры.
@@ -110,7 +103,7 @@ public:
      * @param x,y Координаты.
      * @param r,g,b,a Цвет.
      */
-    void point(float x, float y, float r, float g, float b, float a);
+     void point(float x, float y, float r, float g, float b, float a);
 
 	/**
      * @brief Рисует линию.
@@ -125,15 +118,15 @@ public:
      * @param color Цвет (RGBA).
      */
 	inline void setColor(glm::vec4 color) {
-        this->color = color;
-    }
+          this->color = color;
+     }
 
 	/**
      * @brief Возвращает текущий цвет по умолчанию.
      */
-    inline glm::vec4 getColor() const {
-        return color;
-    }
+     inline glm::vec4 getColor() const {
+          return color;
+     }
 
 	/**
      * @brief Рисует прямоугольник с текстурой, поворотом и отражением.
@@ -177,7 +170,7 @@ public:
 		float tx, float ty, 
 		float r, float g, float b, float a
 	);
-    void rect(
+     void rect(
 		float x, float y, 
 		float w, float h, 
 		float r0, float g0, float b0, 
@@ -192,18 +185,18 @@ public:
      * @brief Принудительно отправляет накопленные вершины в OpenGL с указанным типом примитива.
      * @param gl_primitive Тип примитива OpenGL (например, GL_TRIANGLES, GL_LINES).
      */
-    void flush(uint gl_primitive);
+     void flush(uint gl_primitive);
 
 	/**
      * @brief Отправляет накопленные вершины как треугольники (GL_TRIANGLES).
      */
-    void flush();
+     void flush();
 
 	/**
      * @brief Устанавливает толщину линии (через glLineWidth).
      * @param width Толщина в пикселях.
      */
-    void setLineWidth(float width);
+     void setLineWidth(float width);
 };
 
 
