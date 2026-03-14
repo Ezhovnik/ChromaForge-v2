@@ -71,11 +71,14 @@ struct aloader_entry {
  * добавлять задания в очередь и затем загружать их по одному.
  */
 class AssetsLoader {
+private:
 	Assets* assets; ///< Менеджер ресурсов, куда сохраняются загруженные объекты
 	std::map<AssetType, aloader_func> loaders; ///< Зарегистрированные загрузчики по типам
 	std::queue<aloader_entry> entries; ///< Очередь заданий на загрузку
 
 	const ResPaths* paths; ///< Пути для поиска файлов
+
+     void tryAddSound(std::string name);
 public:
 	/**
      * @brief Конструктор: инициализирует указатели и регистрирует стандартные загрузчики.

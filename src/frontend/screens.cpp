@@ -104,6 +104,8 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine) {
     worldRenderer = std::make_unique<WorldRenderer>(engine, levelFrontend.get(), controller->getPlayer());
     hud = std::make_unique<Hud>(engine, levelFrontend.get(), controller->getPlayer());
 
+    levelFrontend->observe(controller.get());
+
     animator = std::make_unique<TextureAnimator>();
     animator->addAnimations(assets->getAnimations());
 
@@ -147,9 +149,9 @@ void LevelScreen::update(float delta) {
     auto player = controller->getPlayer();
     auto camera = player->camera;
     audio::set_listener(
-        camera->position, 
+        camera->position - camera->dir, 
         player->hitbox->velocity,
-        camera->position + camera->dir, 
+        camera->dir, 
         camera->up
     );
 

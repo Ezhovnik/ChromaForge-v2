@@ -2,6 +2,7 @@
 #define SRC_CONSTANTS_H_
 
 #include <limits>
+#include <string>
 
 #include "typedefs.h"
 
@@ -18,6 +19,8 @@ inline constexpr int ENGINE_VERSION_MAJOR = 0;
 inline constexpr int ENGINE_VERSION_MINOR = 3;
 /** Версия поддержки (maintenance). */
 inline constexpr int ENGINE_VERSION_MAINTENANCE = 0;
+/** Текстовое название версии */
+inline const std::string ENGINE_VERSION_STRING = std::to_string(ENGINE_VERSION_MAJOR) + "." + std::to_string(ENGINE_VERSION_MINOR) + "." + std::to_string(ENGINE_VERSION_MAINTENANCE);
 /** Состояние разработки версии. */
 inline const bool ENGINE_VERSION_INDEV = true;
 
@@ -80,14 +83,14 @@ inline constexpr uint vox_index(uint x, uint y, uint z, uint w = CHUNK_WIDTH, ui
 // ========== Пути к ресурсам ==========
 
 /** Папка с шейдерами. */
-#define SHADERS_FOLDER "shaders"
+inline const std::string SHADERS_FOLDER = "shaders";
 /** Папка с текстурами. */
-#define TEXTURES_FOLDER "textures"
+inline const std::string TEXTURES_FOLDER = "textures";
 /** Папка со шрифтами. */
-#define FONTS_FOLDER "fonts"
+inline const std::string FONTS_FOLDER = "fonts";
 /** Папка с макетами интерфейса. */
-#define LAYOUTS_FOLDER "layouts"
+inline const std::string LAYOUTS_FOLDER = "layouts";
 /** Папка со звуками. */
-#define SOUNDS_FOLDER "sounds"
+inline const std::string SOUNDS_FOLDER = "sounds";
 
 #endif // SRC_CONSTANTS_H_

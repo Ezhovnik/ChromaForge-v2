@@ -1,4 +1,5 @@
 {
     "texture": "bedrock",
-    "breakable": false
+    "breakable": false,
+    "material": "chromaforge:stone"
 }

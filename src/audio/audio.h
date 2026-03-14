@@ -386,6 +386,8 @@ namespace audio {
 
     extern size_t count_speakers();
 
+    extern size_t count_streams();
+
     extern void update(double delta);
 
     extern void reset_channel(int channel);

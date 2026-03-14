@@ -7,8 +7,11 @@
 #include "../math/AABB.h"
 #include "../typedefs.h"
 #include "../graphics/UVRegion.h"
+#include "../core_defs.h"
 
 #define BLOCK_ITEM_SUFFIX ".item"
+
+inline std::string DEFAULT_MATERIAL = CHROMAFORGE_CONTENT_NAMESPACE":stone";
 
 enum class BlockModel {
     None, // Невидимый блок
@@ -49,8 +52,7 @@ struct CoordSystem {
 	void transform(AABB& aabb) const;
 
     static bool isVectorHasNegatives(glm::ivec3 vec) {
-		if (vec.x < 0 || vec.y < 0 || vec.z < 0) return true;
-		else return false;
+		return (vec.x < 0 || vec.y < 0 || vec.z < 0);
 	}
 };
 
@@ -63,6 +65,13 @@ struct BlockRotProfile {
     static const BlockRotProfile PANE;
 };
 
+struct BlockMaterial {
+	std::string name;
+	std::string stepsSound {""};
+	std::string placeSound {""};
+	std::string breakSound {""};
+};
+
 class Block {
 public:
     std::string const name;
@@ -72,6 +81,7 @@ public:
 	std::vector<AABB> modelBoxes = {};
 	std::vector<glm::vec3> modelExtraPoints = {};
 	std::vector<UVRegion> modelUVs = {};
+    std::string material = DEFAULT_MATERIAL;
 
     ubyte emission[4] {0, 0, 0, 0};
     ubyte drawGroup = 0;

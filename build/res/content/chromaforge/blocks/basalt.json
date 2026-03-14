@@ -7,5 +7,6 @@
         "basalt",
         "basalt"
     ],
-    "rotation": "pipe"
+    "rotation": "pipe",
+    "material": "chromaforge:stone"
 }

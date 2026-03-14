@@ -1,3 +1,4 @@
 {
-    "texture": "stone"
+    "texture": "stone",
+    "material": "chromaforge:stone"
 }

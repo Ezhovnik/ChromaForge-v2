@@ -11,10 +11,7 @@ struct DisplaySettings {
 	int height = 720;
 	int samples = 0;
 	int swapInterval = 1;
-	std::string title = "ChromaForge (v " + 
-		std::to_string(ENGINE_VERSION_MAJOR) + "." + 
-		std::to_string(ENGINE_VERSION_MINOR) + "." + 
-		std::to_string(ENGINE_VERSION_MAINTENANCE) + ")";
+	std::string title = "ChromaForge (v " + ENGINE_VERSION_STRING + ")";
 
 	bool fullscreen = false;
 };

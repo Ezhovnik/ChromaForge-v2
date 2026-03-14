@@ -7,8 +7,10 @@ class Level;
 class Assets;
 class ContentGfxCache;
 class Atlas;
+class LevelController;
 
 class LevelFrontend {
+private:
     Level* level;
     Assets* assets;
     std::unique_ptr<ContentGfxCache> contentCache;
@@ -16,6 +18,8 @@ class LevelFrontend {
 public:
     LevelFrontend(Level* level, Assets* assets);
     ~LevelFrontend();
+
+    void observe(LevelController* controller);
 
     Level* getLevel() const;
     Assets* getAssets() const;

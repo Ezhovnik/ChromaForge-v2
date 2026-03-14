@@ -386,12 +386,7 @@ void create_languages_panel(Engine* engine) {
 
 void menus::create_version_label(Engine* engine) {
     auto gui = engine->getGUI();
-    auto vlabel = std::make_shared<gui::Label>(
-        util::str2wstr_utf8(std::to_string(ENGINE_VERSION_MAJOR) + "." + 
-		std::to_string(ENGINE_VERSION_MINOR) + "." + 
-		std::to_string(ENGINE_VERSION_MAINTENANCE) + 
-        " development build "
-    ));
+    auto vlabel = std::make_shared<gui::Label>(util::str2wstr_utf8("v" + ENGINE_VERSION_STRING + " development build "));
     vlabel->setZIndex(1000);
     vlabel->setColor(glm::vec4(1, 1, 1, 0.5f));
     vlabel->setPositionFunc([=]() {
@@ -405,7 +400,7 @@ std::string translate_generator_id(std::string& id) {
     std::string pack = id.substr(0, delimiterPosition);
     std::string generator = id.substr(delimiterPosition + 1);
 
-    if(pack == BUILTIN_CONTENT_NAMESPACE) {
+    if (pack == BUILTIN_CONTENT_NAMESPACE) {
         return util::wstr2str_utf8(langs::get(util::str2wstr_utf8(generator), L"world.generators"));
     } else {
         return id;

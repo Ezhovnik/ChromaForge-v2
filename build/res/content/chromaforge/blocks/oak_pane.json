@@ -11,5 +11,6 @@
     "hitbox": [0.0, 0.0, 0.0, 1.0, 1.0, 0.5],
     "light-passing": true,
     "sky-light-passing": true,
-    "rotation": "pane"
+    "rotation": "pane",
+    "material": "chromaforge:wood"
 }

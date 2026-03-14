@@ -4,7 +4,6 @@
 
 #include <glm/glm.hpp>
 
-#include "../voxels/Block.h"
 #include "../logger/Logger.h"
 #include "../items/Item.h"
 #include "ContentPack.h"
@@ -27,6 +26,10 @@ void ContentBuilder::add(Item* def) {
 
 void ContentBuilder::add(ContentPackRuntime* pack) {
     packs.emplace(pack->getId(), pack);
+}
+
+void ContentBuilder::add(BlockMaterial material) {
+    blockMaterials.emplace(material.name, material);
 }
 
 Block& ContentBuilder::createBlock(std::string id) {
@@ -102,7 +105,12 @@ Content* ContentBuilder::build() {
 
     ContentIndices* indices = new ContentIndices(blockDefsIndices, itemDefsIndices);
     auto content = std::make_unique<Content>(
-        indices, std::move(groups), blockDefs, itemDefs, std::move(packs)
+        indices, 
+        std::move(groups), 
+        blockDefs, 
+        itemDefs, 
+        std::move(packs),
+        std::move(blockMaterials)
     );
 
     for (Block* def : blockDefsIndices) {
@@ -116,22 +124,25 @@ Content* ContentBuilder::build() {
     return content.release();
 }
 
-ContentIndices::ContentIndices(std::vector<Block*> blockDefs, std::vector<Item*> itemDefs) : blockDefs(blockDefs), itemDefs(itemDefs) {
-}
+ContentIndices::ContentIndices(
+    std::vector<Block*> blockDefs, 
+    std::vector<Item*> itemDefs
+) : blockDefs(blockDefs), 
+    itemDefs(itemDefs) {}
 
 Content::Content(
     ContentIndices* indices, 
     std::unique_ptr<DrawGroups> drawGroups, 
     std::unordered_map<std::string, Block*> blockDefs, 
     std::unordered_map<std::string, Item*> itemDefs,
-    std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs
+    std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs,
+    std::unordered_map<std::string, BlockMaterial> blockMaterials
 ) : blockDefs(blockDefs), 
     indices(indices), 
     drawGroups(std::move(drawGroups)), 
     itemDefs(itemDefs),
-    packs(std::move(packs))
-{
-}
+    packs(std::move(packs)),
+    blockMaterials(std::move(blockMaterials)) {}
 
 Content::~Content() {
 }
@@ -166,7 +177,6 @@ Item& Content::requireItem(std::string id) const {
     return *found->second;
 }
 
-
 const ContentPackRuntime* Content::getPackRuntime(std::string id) const {
     auto found = packs.find(id);
     if (found == packs.end()) return nullptr;
@@ -175,4 +185,14 @@ const ContentPackRuntime* Content::getPackRuntime(std::string id) const {
 
 const std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>>& Content::getPacks() const {
     return packs;
+}
+
+const BlockMaterial* Content::findBlockMaterial(std::string id) const {
+    auto found = blockMaterials.find(id);
+    if (found == blockMaterials.end()) return nullptr;
+    return &found->second;
+}
+
+const std::unordered_map<std::string, BlockMaterial>& Content::getBlockMaterials() const {
+    return blockMaterials;
 }

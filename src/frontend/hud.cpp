@@ -147,7 +147,7 @@ std::shared_ptr<InventoryView> Hud::createContentAccess() {
         accessInventory->getSlot(id - 1).set(ItemStack(id, 1));
     }
 
-    SlotLayout slotLayout(-1, glm::vec2(), false, true, 
+    SlotLayout slotLayout(-1, glm::vec2(), false, true, nullptr,
     [=](uint, ItemStack& item) {
         auto copy = ItemStack(item);
         inventory->move(copy, indices);
@@ -167,7 +167,7 @@ std::shared_ptr<InventoryView> Hud::createContentAccess() {
 std::shared_ptr<InventoryView> Hud::createHotbar() {
     auto inventory = player->getInventory();
 
-    SlotLayout slotLayout(-1, glm::vec2(), false, false, nullptr, nullptr);
+    SlotLayout slotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr);
     InventoryBuilder builder;
     builder.addGrid(10, 10, glm::vec2(), 4, true, slotLayout);
     auto view = builder.build();
@@ -179,7 +179,7 @@ std::shared_ptr<InventoryView> Hud::createHotbar() {
 
 Hud::Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player) : engine(engine), assets(engine->getAssets()), guiController(engine->getGUI()), levelFrontend(levelFrontend), player(player) {
     interaction = std::make_unique<InventoryInteraction>();
-    grabbedItemView = std::make_shared<SlotView>(SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr));
+    grabbedItemView = std::make_shared<SlotView>(SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr));
 	grabbedItemView->bind(0, interaction->getGrabbedItem(), levelFrontend, interaction.get());
     grabbedItemView->setColor(glm::vec4());
     grabbedItemView->setInteractive(false);
