@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 
+#include "lua/LuaState.h"
 #include "../../delegates.h"
 #include "scripting_functional.h"
 
@@ -44,6 +45,9 @@ namespace scripting {
     void initialize(Engine* engine);
 
     extern bool register_event(int env, const std::string& name, const std::string& id);
+
+    static inline int noargs(lua::LuaState *) {return 0;}
+    extern bool emit_event(const std::string& name, std::function<int(lua::LuaState* state)> args = noargs);
 
     std::unique_ptr<Environment> create_environment(int parent=0);
     std::unique_ptr<Environment> create_pack_environment(const ContentPack& pack);

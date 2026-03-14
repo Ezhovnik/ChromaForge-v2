@@ -31,6 +31,17 @@ bool ContentLoader::fixPackIndices(std::filesystem::path folder, dynamic::Map* i
                 std::string name = file.stem().string();
                 if (name[0] == '_') continue;
                 detected.push_back(name);
+            } else if (std::filesystem::is_directory(file)) {
+                std::string space = file.stem().string();
+                if (space[0] == '_') continue;
+                for (auto entry : std::filesystem::directory_iterator(file)) {
+                    std::filesystem::path file = entry.path();
+                    if (std::filesystem::is_regular_file(file) && file.extension() == ".json") {
+                        std::string name = file.stem().string();
+                        if (name[0] == '_') continue;
+                        detected.push_back(space + ':' + name);
+                    }
+                }
             }
         }
     }
@@ -244,7 +255,7 @@ void ContentLoader::loadBlock(Block& definition, std::string full, std::string n
     auto folder = pack->folder;
 
     std::filesystem::path configFile = folder/std::filesystem::path("blocks/" + name + ".json");
-    loadBlock(definition, full, configFile);
+    if (std::filesystem::exists(configFile)) loadBlock(definition, full, configFile);
 
     std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + definition.scriptName + ".lua");
     if (std::filesystem::is_regular_file(scriptfile)) scripting::load_block_script(env, full, scriptfile, definition.rt.funcsset);
@@ -254,7 +265,7 @@ void ContentLoader::loadItem(Item& item, std::string full, std::string name) {
     auto folder = pack->folder;
 
     std::filesystem::path configFile = folder/std::filesystem::path("items/" + name + ".json");
-    loadItem(item, full, configFile);
+    if (std::filesystem::exists(configFile)) loadItem(item, full, configFile);
 
     std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + item.scriptName + ".lua");
     if (std::filesystem::is_regular_file(scriptfile)) scripting::load_item_script(env, full, scriptfile, item.rt.funcsset);
@@ -283,8 +294,11 @@ void ContentLoader::load(ContentBuilder& builder) {
     if (blocksarr) {
         for (uint i = 0; i < blocksarr->size(); ++i) {
             std::string name = blocksarr->str(i);
-            std::string full = pack->id + ":" + name;
+            auto colon = name.find(':');
+            std::string full = colon == std::string::npos ? pack->id + ":" + name : name;
+            if (colon != std::string::npos) name[colon] = '/';
             auto& def = builder.createBlock(full);
+            if (colon != std::string::npos) def.scriptName = name.substr(0, colon) + '/' + def.scriptName;
             loadBlock(def, full, name);
             stats.totalBlocks++;
             if (!def.hidden) {
@@ -306,8 +320,12 @@ void ContentLoader::load(ContentBuilder& builder) {
     if (itemsarr) {
         for (uint i = 0; i < itemsarr->size(); ++i) {
             std::string name = itemsarr->str(i);
-            std::string full = pack->id + ":" + name;
-            loadItem(builder.createItem(full), full, name);
+            auto colon = name.find(':');
+            std::string full = colon == std::string::npos ? pack->id + ":" + name : name;
+            if (colon != std::string::npos) name[colon] = '/';
+            auto& def = builder.createItem(full);
+            if (colon != std::string::npos) def.scriptName = name.substr(0, colon) + '/' + def.scriptName;
+            loadItem(def, full, name);
             stats.totalItems++;
         }
     }

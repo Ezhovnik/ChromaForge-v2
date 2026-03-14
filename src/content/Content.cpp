@@ -32,8 +32,9 @@ void ContentBuilder::add(ContentPackRuntime* pack) {
 Block& ContentBuilder::createBlock(std::string id) {
     auto found = blockDefs.find(id);
     if (found != blockDefs.end()) {
-        LOG_ERROR("Name {} is already used", id);
-        throw namereuse_error("Name " + id + " is already used", ContentType::Item);
+        LOG_WARN("Name {} is already used", id);
+        return *found->second;
+        // throw namereuse_error("Name " + id + " is already used", ContentType::Item);
     }
     Block* block = new Block(id);
     add(block);
@@ -43,9 +44,9 @@ Block& ContentBuilder::createBlock(std::string id) {
 Item& ContentBuilder::createItem(std::string id) {
     auto found = itemDefs.find(id);
     if (found != itemDefs.end()) {
-        if (found->second->generated) return *found->second;
-        LOG_ERROR("Name {} is already used", id);
-        throw namereuse_error("Name " + id + " is already used", ContentType::Item);
+        LOG_WARN("Name {} is already used", id);
+        return *found->second;
+        // throw namereuse_error("Name " + id + " is already used", ContentType::Item);
     }
     Item* item = new Item(id);
     add(item);

@@ -46,14 +46,29 @@ bool scripting::register_event(int env, const std::string& name, const std::stri
     if (state->pushenv(env) == 0) state->pushglobals();
 
     if (state->getfield(name)) {
-        state->pushnil();
-        state->setfield(name, -3);
-
-        state->setglobal(id);
         state->pop();
+        state->getglobal("events");
+        state->getfield("on");
+        state->pushstring(id);
+        state->getfield(name, -4);
+        state->callNoThrow(2);
+        state->pop();
+
+        state->pushnil();
+        state->setfield(name);
         return true;
     }
     return false;
+}
+
+bool scripting::emit_event(const std::string &name, std::function<int(lua::LuaState *)> args) {
+    state->getglobal("events");
+    state->getfield("emit");
+    state->pushstring(name);
+    state->callNoThrow(args(state) + 1);
+    bool result = state->toboolean(-1);
+    state->pop(2);
+    return result;
 }
 
 void load_script(std::filesystem::path name) {
@@ -121,19 +136,19 @@ void scripting::on_world_load(Level* level, BlocksController* blocks) {
     load_script("world.lua");
 
     for (auto& pack : scripting::engine->getContentPacks()) {
-        if (state->getglobal(pack.id + ".worldopen")) state->callNoThrow(0);
+        emit_event(pack.id + ".worldopen");
     }
 }
 
 void scripting::on_world_save() {
     for (auto& pack : scripting::engine->getContentPacks()) {
-        if (state->getglobal(pack.id + ".worldsave")) state->callNoThrow(0);
+        emit_event(pack.id + ".worldsave");
     }
 }
 
 void scripting::on_world_quit() {
     for (auto& pack : scripting::engine->getContentPacks()) {
-        if (state->getglobal(pack.id + ".worldquit")) state->callNoThrow(0);
+        emit_event(pack.id + ".worldquit");
     }
     if (state->getglobal("__scripts_cleanup")) state->callNoThrow(0);
     scripting::level = nullptr;
@@ -143,100 +158,96 @@ void scripting::on_world_quit() {
 
 void scripting::on_blocks_tick(const Block* block, int tps) {
     std::string name = block->name + ".blockstick";
-    if (state->getglobal(name)) {
+    emit_event(name, [tps] (lua::LuaState* state) {
         state->pushinteger(tps);
-        state->callNoThrow(1);
-    }
+        return 1;
+    });
 }
 
 void scripting::update_block(const Block* block, int x, int y, int z) {
     std::string name = block->name + ".update";
-    if (state->getglobal(name)) {
+    emit_event(name, [x, y, z] (lua::LuaState* state) {
         state->pushivec3(x, y, z);
-        state->callNoThrow(3);
-    }
+        return 3; 
+    });
 }
 
 void scripting::random_update_block(const Block* block, int x, int y, int z) {
     std::string name = block->name + ".randupdate";
-    if (state->getglobal(name)) {
+    emit_event(name, [x, y, z] (lua::LuaState* state) {
         state->pushivec3(x, y, z);
-        state->callNoThrow(3);
-    }
+        return 3;
+    });
 }
 
 void scripting::on_block_placed(Player* player, const Block* block, int x, int y, int z) {
     std::string name = block->name + ".placed";
-    if (state->getglobal(name)) {
+    emit_event(name, [x, y, z, player] (lua::LuaState* state) {
         state->pushivec3(x, y, z);
         state->pushinteger(player->getId());
-        state->callNoThrow(4);
-    }
+        return 4; 
+    });
 }
 
 void scripting::on_block_broken(Player* player, const Block* block, int x, int y, int z) {
     std::string name = block->name + ".broken";
-    if (state->getglobal(name)) {
+    emit_event(name, [x, y, z, player] (lua::LuaState* state) {
         state->pushivec3(x, y, z);
         state->pushinteger(player->getId());
-        state->callNoThrow(4);
-    }
+        return 4;
+    });
 }
 
 bool scripting::on_block_interact(Player* player, const Block* block, int x, int y, int z) {
     std::string name = block->name + ".interact";
-    if (state->getglobal(name)) {
+    return emit_event(name, [x, y, z, player] (lua::LuaState* state) {
         state->pushivec3(x, y, z);
         state->pushinteger(player->getId());
-        if (state->callNoThrow(4)) return state->toboolean(-1);
-    }
-    return false;
+        return 4;
+    });
 }
 
 bool scripting::on_item_use(Player* player, const Item* item) {
     std::string name = item->name + ".use";
-    if (state->getglobal(name)) {
+    return emit_event(name, [player] (lua::LuaState* state) {
         state->pushinteger(player->getId());
-        if (state->callNoThrow(1)) return state->toboolean(-1);
-    }
-    return false;
+        return 1;
+    });
 }
 
 bool scripting::on_item_use_on_block(Player* player, const Item* item, int x, int y, int z) {
     std::string name = item->name + ".useon";
-    if (state->getglobal(name)) {
+    return emit_event(name, [x, y, z, player] (lua::LuaState* state) {
         state->pushivec3(x, y, z);
         state->pushinteger(player->getId());
-        if (state->callNoThrow(4)) return state->toboolean(-1);
-    }
-    return false;
+        return 4;
+    });
 }
 
 bool scripting::on_item_break_block(Player* player, const Item* item, int x, int y, int z) {
     std::string name = item->name + ".blockbreakby";
-    if (state->getglobal(name)) {
+    return emit_event(name, [x, y, z, player] (lua::LuaState* state) {
         state->pushivec3(x, y, z);
         state->pushinteger(player->getId());
-        if (state->callNoThrow(4)) return state->toboolean(-1);
-    }
-    return false;
+        return 4;
+    });
 }
 
 void scripting::on_ui_open(UIDocument* layout, Inventory* inventory, glm::ivec3 blockcoord) {
     std::string name = layout->getId() + ".open";
-    if (state->getglobal(name)) {
+    emit_event(name, [inventory, blockcoord] (lua::LuaState* state) {
         state->pushinteger(inventory == nullptr ? 0 : inventory->getId());
         state->pushivec3(blockcoord.x, blockcoord.y, blockcoord.z);
-        state->callNoThrow(4);
-    }
+        return 4;
+    });
 }
 
 void scripting::on_ui_close(UIDocument* layout, Inventory* inventory) {
     std::string name = layout->getId()+".close";
-    if (state->getglobal(name)) {
-        state->pushinteger(inventory->getId());
-        state->callNoThrow(1);
-    }
+    emit_event(name, [inventory] (lua::LuaState* state) {
+        state->pushinteger(inventory == nullptr ? 0 : inventory->getId());
+        return 1;
+    });
 }
 
 void scripting::load_block_script(int env, std::string prefix, std::filesystem::path file, block_funcs_set& funcsset) {
