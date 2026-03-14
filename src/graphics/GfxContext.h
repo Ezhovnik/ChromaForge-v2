@@ -6,34 +6,37 @@
 #include "../window/Window.h"
 
 class Batch2D;
+class Framebuffer;
 
 class GfxContext {
+private:
     const GfxContext* parent;
-    Viewport& viewport;
+    Viewport viewport;
     Batch2D* const g2d;
+    Framebuffer* fbo = nullptr;
 
-    bool depthMask_ = true;
-    bool depthTest_ = false;
-    bool cullFace_ = false;
+    bool depthMask = true;
+    bool depthTest = false;
+    bool cullFace = false;
 
-    BlendMode blendMode_ = BlendMode::Normal;
+    BlendMode blendMode = BlendMode::Normal;
 
     int scissorsCount = 0;
 public:
-    GfxContext(const GfxContext* parent, Viewport& viewport, Batch2D* g2d);
+    GfxContext(const GfxContext* parent, const Viewport& viewport, Batch2D* g2d);
     ~GfxContext();
 
     Batch2D* getBatch2D() const;
     const Viewport& getViewport() const;
     GfxContext sub() const;
 
-    void depthMask(bool flag);
-    void depthTest(bool flag);
-    void cullFace(bool flag);
-
-    void blendMode(BlendMode mode);
-
-    void scissors(glm::vec4 area);
+    void setViewport(const Viewport& viewport);
+    void setFramebuffer(Framebuffer* fbo);
+    void setDepthMask(bool flag);
+    void setDepthTest(bool flag);
+    void setCullFace(bool flag);
+    void setBlendMode(BlendMode mode);
+    void setScissors(glm::vec4 area);
 };
 
 #endif // GRAPHICS_GFX_CONTEXT_H_

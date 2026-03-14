@@ -4,8 +4,7 @@
 #include <string>
 
 #include "../typedefs.h"
-
-class ImageData;
+#include "ImageData.h"
 
 /**
  * @brief Класс, представляющий текстуру в графической системе (OpenGL).
@@ -14,10 +13,10 @@ class ImageData;
  * ресурсов текстуры. Поддерживает мип-карты, фильтрацию и чтение обратно в память.
  */
 class Texture {
-public:
+protected:
     uint id; ///< Идентификатор текстуры в OpenGL
-    int width, height; ///< Размеры текстуры в пикселях
-
+    uint width, height; ///< Размеры текстуры в пикселях
+public:
     /**
      * @brief Конструктор, создающий объект из уже существующего OpenGL-идентификатора.
      * @param id Идентификатор существующей текстуры.
@@ -26,28 +25,30 @@ public:
      *
      * Используется, если текстура уже была создана ранее.
      */
-    Texture (uint id, int width, int height);
+    Texture (uint id, uint width, uint height);
 
     /**
      * @brief Конструктор, создающий новую текстуру из переданных пиксельных данных.
      * @param data Указатель на пиксельные данные (формат RGBA или RGB).
      * @param width Ширина изображения.
      * @param height Высота изображения.
-     * @param format Формат данных OpenGL (например, GL_RGBA, GL_RGB).
+     * @param format Формат изображения (RGB или RGBA)
      *
      * Автоматически генерирует мип-карты и устанавливает параметры фильтрации по умолчанию.
      */
-    Texture(ubyte* data, int width, int height, uint format);
+    Texture(ubyte* data, uint width, uint height, ImageFormat format);
 
     /// Деструктор, удаляющий текстуру из памяти OpenGL.
-    ~Texture();
+    virtual ~Texture();
 
     /**
      * @brief Привязывает текстуру к текущему контексту для использования в рендеринге.
      *
      * Вызывает glBindTexture(GL_TEXTURE_2D, id).
      */
-    void bind();
+    virtual void bind();
+
+    virtual void unbind();
 
     /**
      * @brief Перезагружает пиксельные данные текстуры (без изменения параметров).
@@ -55,19 +56,24 @@ public:
      *
      * Используется для обновления содержимого существующей текстуры.
      */
-    void reload(ubyte* data);
+    virtual void reload(ubyte* data);
 
     /**
      * @brief Читает текущие пиксельные данные текстуры из видеопамяти.
      * @return Новый объект ImageData, содержащий копию пикселей в формате RGBA.
      *         Владелец должен удалить его.
      */
-    ImageData* readData();
+    virtual ImageData* readData();
 
     /**
      * @brief Устанавливает фильтрацию без сглаживания (GL_NEAREST) для магнификации и минификации.
      */
     void setNearestFilter();
+
+    virtual uint getWidth() const;
+    virtual uint getHeight() const;
+
+    virtual uint getId() const;
 
     /**
      * @brief Создаёт текстуру из объекта ImageData.

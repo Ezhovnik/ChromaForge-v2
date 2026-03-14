@@ -5,29 +5,47 @@
 #include "Texture.h"
 #include "../logger/Logger.h"
 
+Framebuffer::Framebuffer(
+    uint fbo, 
+    uint depth, 
+    std::unique_ptr<Texture> texture
+) : fbo(fbo), 
+    depth(depth), 
+    texture(std::move(texture)) 
+{
+    if (texture) {
+        width = texture->getWidth();
+        height = texture->getHeight();
+    } else {
+        width = 0;
+        height = 0;
+    }
+} 
+
 Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), height(height) {
 	glGenFramebuffers(1, &fbo);
-	bind();
-	GLuint tex;
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-	GLuint format = alpha ? GL_RGBA : GL_RGB;
-	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    GLuint tex;
+    format = alpha ? GL_RGBA : GL_RGB;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
-    texture = new Texture(tex, width, height);
+    texture = std::make_unique<Texture>(tex, width, height);
+    
     glGenRenderbuffers(1, &depth);
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
-    unbind();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 Framebuffer::~Framebuffer() {
-	delete texture;
 	glDeleteFramebuffers(1, &fbo);
     glDeleteRenderbuffers(1, &depth);
 }
@@ -38,4 +56,31 @@ void Framebuffer::bind() {
 
 void Framebuffer::unbind() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Framebuffer::resize(uint width, uint height) {
+    if (this->width == width && this->height == height) return;
+
+    this->width = width;
+    this->height = height;
+
+    glBindRenderbuffer(GL_RENDERBUFFER, depth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    texture->bind();
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+    texture->unbind(); 
+}
+
+Texture* Framebuffer::getTexture() const {
+    return texture.get();
+}
+
+uint Framebuffer::getWidth() const {
+    return width;
+}
+
+uint Framebuffer::getHeight() const {
+    return height;
 }

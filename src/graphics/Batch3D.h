@@ -2,6 +2,8 @@
 #define GRAPHICS_BATCH3D_H_
 
 #include <stdlib.h>
+#include <memory>
+
 #include <glm/glm.hpp>
 
 #include "UVRegion.h"
@@ -13,10 +15,10 @@ class Batch3D {
 private:
 	float* buffer;
 	size_t capacity;
-	Mesh* mesh;
+	std::unique_ptr<Mesh> mesh;
 	size_t index;
 
-	Texture* blank;
+	std::unique_ptr<Texture> blank;
 	Texture* _texture;
 
 	void vertex(float x, float y, float z, float u, float v, float r, float g, float b, float a);

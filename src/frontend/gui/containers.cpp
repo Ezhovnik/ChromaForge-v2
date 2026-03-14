@@ -77,11 +77,10 @@ void Container::draw(const GfxContext* parent_context, Assets* assets) {
     batch->flush();
     {
         GfxContext context = parent_context->sub();
-        context.scissors(glm::vec4(pos.x, pos.y, size.x, size.y));
+        context.setScissors(glm::vec4(pos.x, pos.y, size.x, size.y));
         for (auto node : nodes) {
             if (node->isVisible()) node->draw(parent_context, assets);
         }
-        batch->flush();
     }
 }
 
