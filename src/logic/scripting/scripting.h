@@ -55,10 +55,11 @@ namespace scripting {
 
     void on_world_load(Level* level, BlocksController* blocks);
     void on_world_quit();
+    void on_world_spark();
     void on_world_save();
     void load_world_script(int env, std::string prefix, std::filesystem::path file);
 
-    void on_blocks_tick(const Block* block, int tps);
+    void on_blocks_spark(const Block* block, int tps);
     void update_block(const Block* block, int x, int y, int z);
     void random_update_block(const Block* block, int x, int y, int z);
     void on_block_placed(Player* player, const Block* block, int x, int y, int z);

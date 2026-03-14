@@ -98,13 +98,12 @@ SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(InventoryView::SLOT_SIZ
 
 void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
     if (bound == nullptr) return;
+
+    const int slotSize = InventoryView::SLOT_SIZE;
+
     ItemStack& stack = *bound;
-
-    glm::vec2 pos = calcPos();
-
-    int slotSize = InventoryView::SLOT_SIZE;
-
     glm::vec4 tint(1.0f);
+    glm::vec2 pos = calcPos();
     glm::vec4 color = getColor();
     if (hover || highlighted) {
         tint *= 1.333f;

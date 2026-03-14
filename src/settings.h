@@ -46,7 +46,18 @@ struct UISettings {
 	std::string language = "auto";
 };
 
+struct AudioSettings {
+    bool enabled = true;
+
+    float volumeMaster = 1.0f;
+    float volumeRegular = 1.0f;
+    float volumeUI = 1.0f;
+    float volumeAmbient = 1.0f;
+    float volumeMusic = 1.0f;
+};
+
 struct EngineSettings {
+	AudioSettings audio;
     DisplaySettings display;
 	ChunksSettings chunks;
     CameraSettings camera;

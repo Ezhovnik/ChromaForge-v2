@@ -62,7 +62,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 		stream << std::hex << player->selectedVoxel.states;
 		if (def) stream << L" (" << util::str2wstr_utf8(def->name) << L")";
 
-		return L"Selected-block " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
+		return L"Selected-block: " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Seed: " + std::to_wstring(level->world->getSeed());
@@ -88,7 +88,8 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
                 glm::vec3 position = player->hitbox->position;
                 position[ax] = std::stoi(text);
                 player->teleport(position);
-            } catch (std::invalid_argument& _){
+            } catch (std::invalid_argument& _) {
+            } catch (std::out_of_range & _) {
             }
         });
         box->setOnEditStart([=](){

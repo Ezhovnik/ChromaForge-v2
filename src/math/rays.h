@@ -10,10 +10,9 @@
 #include "../typedefs.h"
 #include "AABB.h"
 
-typedef glm::highp_dvec3 rayvec3;
-typedef glm::highp_dvec2 rayvec2;
-
-typedef double scalar_t;
+using rayvec3 = glm::highp_dvec3;
+using rayvec2 = glm::highp_dvec2;
+using scalar_t = double;
 
 enum class RayRelation{
     Embed = 2,

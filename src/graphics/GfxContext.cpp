@@ -14,11 +14,11 @@ GfxContext::GfxContext(
     g2d(g2d) {}
 
 GfxContext::~GfxContext() {
+    if (g2d) g2d->flush();
     while (scissorsCount--) {
         Window::popScissor();
     }
     if (parent == nullptr)  return;
-    if (g2d) g2d->flush();
     if (fbo != parent->fbo) {
         if (fbo) fbo->unbind();
         if (parent->fbo) parent->fbo->bind();

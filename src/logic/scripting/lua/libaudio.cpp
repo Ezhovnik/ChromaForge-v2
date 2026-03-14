@@ -11,7 +11,9 @@ inline const char* DEFAULT_CHANNEL = "regular";
 inline int extract_channel_index(lua_State* L, int idx) {
     const char* channel = DEFAULT_CHANNEL;
     if (!lua_isnoneornil(L, idx)) channel = lua_tostring(L, idx);
-    return audio::get_channel_index(channel);
+    int index = audio::get_channel_index(channel);
+    if (index == 0) return -1;
+    return index;
 }
 
 inline audio::speakerid_t play_sound(
@@ -37,7 +39,7 @@ inline audio::speakerid_t play_sound(
             static_cast<float>(y), 
             static_cast<float>(z)
         ), 
-        false, 
+        relative, 
         volume, 
         pitch, 
         false, 

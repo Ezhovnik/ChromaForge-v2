@@ -129,8 +129,20 @@ events = {
 }
 
 function events.on(event, func)
-    events.handlers[event] = events.handlers[event] or {}
+    events.handlers[event] = {} -- events.handlers[event] or {}
     table.insert(events.handlers[event], func)
+end
+
+function events.remove_by_prefix(prefix)
+    for name, handlers in pairs(events.handlers) do
+        if name:sub(1, #prefix) == prefix then
+            events.handlers[name] = nil
+        end
+    end
+end
+
+function pack.unload(prefix)
+    events.remove_by_prefix(prefix)
 end
 
 function events.emit(event, ...)

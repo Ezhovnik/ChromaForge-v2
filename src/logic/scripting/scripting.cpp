@@ -140,6 +140,12 @@ void scripting::on_world_load(Level* level, BlocksController* blocks) {
     }
 }
 
+void scripting::on_world_spark() {
+    for (auto& pack : scripting::engine->getContentPacks()) {
+        emit_event(pack.id + ".worldspark");
+    }
+}
+
 void scripting::on_world_save() {
     for (auto& pack : scripting::engine->getContentPacks()) {
         emit_event(pack.id + ".worldsave");
@@ -150,14 +156,23 @@ void scripting::on_world_quit() {
     for (auto& pack : scripting::engine->getContentPacks()) {
         emit_event(pack.id + ".worldquit");
     }
+
+    state->getglobal("pack");
+    for (auto& pack : scripting::engine->getContentPacks()) {
+        state->getfield("unload");
+        state->pushstring(pack.id);
+        state->callNoThrow(1);   
+    }
+    state->pop();
+
     if (state->getglobal("__scripts_cleanup")) state->callNoThrow(0);
     scripting::level = nullptr;
     scripting::content = nullptr;
     scripting::indices = nullptr;
 }
 
-void scripting::on_blocks_tick(const Block* block, int tps) {
-    std::string name = block->name + ".blockstick";
+void scripting::on_blocks_spark(const Block* block, int tps) {
+    std::string name = block->name + ".blocksspark";
     emit_event(name, [tps] (lua::LuaState* state) {
         state->pushinteger(tps);
         return 1;
@@ -264,7 +279,7 @@ void scripting::load_block_script(int env, std::string prefix, std::filesystem::
     funcsset.onbroken = register_event(env, "on_broken", prefix + ".broken");
     funcsset.onplaced = register_event(env, "on_placed", prefix + ".placed");
     funcsset.oninteract = register_event(env, "on_interact", prefix + ".interact");
-    funcsset.onblockstick = register_event(env, "on_blocks_tick", prefix + ".blockstick");
+    funcsset.onblocksspark = register_event(env, "on_blocks_spark", prefix + ".blocksspark");
 
     LOG_DEBUG("Script {} successfully loaded", file.u8string());
 }
@@ -290,6 +305,7 @@ void scripting::load_world_script(int env, std::string prefix, std::filesystem::
     register_event(env, "init", prefix + ".init");
     register_event(env, "on_world_open", prefix + ".worldopen");
     register_event(env, "on_world_save", prefix + ".worldsave");
+    register_event(env, "on_world_spark", prefix + ".worldspark");
     register_event(env, "on_world_quit", prefix + ".worldquit");
 
     LOG_DEBUG("Script {} successfully loaded", file.u8string());

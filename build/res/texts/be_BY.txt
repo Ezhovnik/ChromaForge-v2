@@ -18,6 +18,7 @@ menu.Controls=Кіраванне
 menu.Back to Main Menu=Вярнуцца ў Меню
 menu.Settings=Налады
 menu.Content=Кантэнт
+menu.Audio=Гук
 world.Seed=Зерне
 world.Name=Назва
 world.World generator=Генератар свету
@@ -42,6 +43,11 @@ settings.FOV=Поле Зроку
 settings.Mouse Sensitivity=Адчувальнасць Мышы
 settings.Language=Мова
 settings.Camera Shaking=Труска Камеры
+settings.Master Volume=Агульная Гучнасць
+settings.Regular Sounds=Звычайныя Гукі
+settings.UI Sounds=Гукі Інтэрфейсу
+settings.Ambient=Фон
+settings.Music=Музыка
 
 # Управление
 movement.forward=Уперад
