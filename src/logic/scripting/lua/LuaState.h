@@ -43,9 +43,9 @@ namespace lua {
         int pushnil();
         int pushglobals();
         int pushboolean(bool x);
-        void pop(int n=1);
-        bool getfield(const std::string& name);
-        void setfield(const std::string& name, int idx=-2);
+        void pop(int n = 1);
+        bool getfield(const std::string& name, int idx = -1);
+        void setfield(const std::string& name, int idx = -2);
 
         bool toboolean(int index);
         luaint tointeger(int index);
@@ -70,6 +70,8 @@ namespace lua {
         void removeEnvironment(int id);
 
         const std::string storeAnonymous();
+
+        void dumpStack();
     };
 }
 
