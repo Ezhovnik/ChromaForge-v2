@@ -4,8 +4,8 @@
 #include <glm/glm.hpp>
 
 #include "../locale/langs.h"
-#include "../gui/GUI.h"
-#include "../gui/gui_util.h"
+#include "../../graphics/ui/GUI.h"
+#include "../../graphics/ui/gui_util.h"
 #include "../../engine.h"
 #include "../../util/stringutil.h"
 #include "../../window/Events.h"

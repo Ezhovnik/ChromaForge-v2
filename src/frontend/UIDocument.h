@@ -14,8 +14,6 @@ namespace scripting {
     class Environment;
 }
 
-class AssetsLoader;
-
 struct uidocscript {
     int environment;
     bool onopen : 1;
@@ -48,7 +46,7 @@ public:
 
     static void collect(uinodes_map& map, std::shared_ptr<gui::UINode> node);
 
-    static std::unique_ptr<UIDocument> read(AssetsLoader& loader, int parent_env, std::string namesp, std::filesystem::path file);
+    static std::unique_ptr<UIDocument> read(int parent_env, std::string namesp, std::filesystem::path file);
 };
 
 #endif // FRONTEND_UI_DOCUMENT_H_

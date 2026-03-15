@@ -10,7 +10,7 @@
 #include "WorldGenerator.h"
 #include "../lighting/Lightmap.h"
 #include "../files/WorldFiles.h"
-#include "../graphics/Mesh.h"
+#include "../graphics/core/Mesh.h"
 #include "../math/voxmaths.h"
 #include "../world/LevelEvents.h"
 #include "../core_defs.h"

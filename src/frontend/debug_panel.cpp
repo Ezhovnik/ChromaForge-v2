@@ -2,8 +2,8 @@
 #include <memory>
 #include <sstream>
 
-#include "gui/controls.h"
-#include "../graphics/Mesh.h"
+#include "../graphics/ui/elements/controls.h"
+#include "../graphics/core/Mesh.h"
 #include "../objects/Player.h"
 #include "../physics/Hitbox.h"
 #include "../world/Level.h"

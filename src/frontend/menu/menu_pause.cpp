@@ -6,7 +6,7 @@
 
 #include "menu_commons.h"
 #include "../locale/langs.h"
-#include "../gui/gui_util.h"
+#include "../../graphics/ui/gui_util.h"
 #include "../screens.h"
 #include "../../engine.h"
 #include "../../core_defs.h"

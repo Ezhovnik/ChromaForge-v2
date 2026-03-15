@@ -2,7 +2,7 @@
 
 #include "../world/Level.h"
 #include "../assets/Assets.h"
-#include "../graphics/Atlas.h"
+#include "../graphics/core/Atlas.h"
 #include "BlocksPreview.h"
 #include "ContentGfxCache.h"
 #include "../content/Content.h"

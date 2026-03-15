@@ -8,9 +8,9 @@
 
 #include <glm/glm.hpp>
 
-#include "../gui/GUI.h"
-#include "../gui/containers.h"
-#include "../gui/controls.h"
+#include "../../graphics/ui/GUI.h"
+#include "../../graphics/ui/elements/containers.h"
+#include "../../graphics/ui/elements/controls.h"
 #include "../screens.h"
 #include "../../util/stringutil.h"
 #include "../../files/engine_paths.h"
@@ -19,7 +19,7 @@
 #include "../../window/Window.h"
 #include "../../engine.h"
 #include "../../settings.h"
-#include "../gui/gui_util.h"
+#include "../../graphics/ui/gui_util.h"
 #include "../../content/Content.h"
 #include "../../content/ContentLUT.h"
 #include "../../files/WorldConverter.h"

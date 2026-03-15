@@ -1,14 +1,22 @@
 #include "UIDocument.h"
 
-#include "gui/UINode.h"
-#include "gui/containers.h"
+#include "../graphics/ui/elements/UINode.h"
+#include "../graphics/ui/elements/containers.h"
 #include "InventoryView.h"
 #include "../logic/scripting/scripting.h"
 #include "../files/files.h"
-#include "../frontend/gui/gui_xml.h"
-#include "../assets/AssetsLoader.h"
+#include "../graphics/ui/gui_xml.h"
 
-UIDocument::UIDocument(std::string id, uidocscript script, std::shared_ptr<gui::UINode> root, std::unique_ptr<scripting::Environment> env) : id(id), script(script), root(root), env(std::move(env)) {
+UIDocument::UIDocument(
+    std::string id, 
+    uidocscript script, 
+    std::shared_ptr<gui::UINode> root, 
+    std::unique_ptr<scripting::Environment> env
+) : id(id), 
+    script(script), 
+    root(root), 
+    env(std::move(env)) 
+{
     collect(map, root);
 }
 
@@ -49,12 +57,12 @@ void UIDocument::collect(uinodes_map& map, std::shared_ptr<gui::UINode> node) {
     }
 }
 
-std::unique_ptr<UIDocument> UIDocument::read(AssetsLoader& loader, int parent_env, std::string namesp, std::filesystem::path file) {
+std::unique_ptr<UIDocument> UIDocument::read(int parent_env, std::string namesp, std::filesystem::path file) {
     const std::string text = files::read_string(file);
     auto xmldoc = xml::parse(file.u8string(), text);
 
     auto env = scripting::create_doc_environment(parent_env, namesp);
-    gui::UIXmlReader reader(*env, loader);
+    gui::UIXmlReader reader(*env);
     InventoryView::createReaders(reader);
     auto view = reader.readXML(file.u8string(), xmldoc->getRoot());
     view->setId("root");

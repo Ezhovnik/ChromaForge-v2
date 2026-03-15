@@ -4,7 +4,7 @@
 
 #include "../assets/Assets.h"
 #include "../content/Content.h"
-#include "../graphics/Atlas.h"
+#include "../graphics/core/Atlas.h"
 #include "../voxels/Block.h"
 #include "../core_defs.h"
 #include "UIDocument.h"

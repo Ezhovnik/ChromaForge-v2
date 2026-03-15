@@ -1,8 +1,8 @@
 #include "menu.h"
 #include "menu_commons.h"
-#include "../gui/controls.h"
-#include "../gui/containers.h"
-#include "../gui/gui_util.h"
+#include "../../graphics/ui/elements/controls.h"
+#include "../../graphics/ui/elements/containers.h"
+#include "../../graphics/ui/gui_util.h"
 #include "../locale/langs.h"
 #include "../screens.h"
 #include "../../world/WorldGenerators.h"
@@ -20,6 +20,8 @@ using namespace gui;
 namespace menus {
     std::string generatorID;
 }
+
+std::shared_ptr<gui::Button> generatorTypeButton;
 
 inline uint64_t str2seed(std::wstring seedstr) {
     if (util::is_integer(seedstr)) {
@@ -68,6 +70,7 @@ void menus::create_world_generators_panel(Engine* engine) {
         button->listenAction(
             [=](GUI*) {
                 menus::generatorID = id;
+                generatorTypeButton->setText(langs::get(L"World generator", L"world") + (L": ") + util::str2wstr_utf8(translate_generator_id(menus::generatorID)));
                 menu->back();
             }
         );
@@ -93,7 +96,8 @@ void menus::create_new_world_panel(Engine* engine) {
     auto seedInput = std::make_shared<TextBox>(seedstr, glm::vec4(6.0f));
     panel->add(seedInput);
 
-    panel->add(guiutil::gotoButton(langs::get(L"World generator", L"world"), "world_generators", engine->getGUI()->getMenu()));
+    generatorTypeButton = guiutil::gotoButton(langs::get(L"World generator", L"world") + (L": ") + util::str2wstr_utf8(translate_generator_id(menus::generatorID)), "world_generators", engine->getGUI()->getMenu());
+    panel->add(generatorTypeButton);
 
     panel->add(menus::create_button(L"Create World", glm::vec4(10), glm::vec4(1, 20, 1, 1), 
     [=](GUI*) {

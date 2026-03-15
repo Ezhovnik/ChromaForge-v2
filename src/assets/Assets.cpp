@@ -1,9 +1,9 @@
 #include "Assets.h"
 
-#include "../graphics/Texture.h"
-#include "../graphics/ShaderProgram.h"
-#include "../graphics/Font.h"
-#include "../graphics/Atlas.h"
+#include "../graphics/core/Texture.h"
+#include "../graphics/core/ShaderProgram.h"
+#include "../graphics/core/Font.h"
+#include "../graphics/core/Atlas.h"
 #include "../logger/Logger.h"
 #include "../frontend/UIDocument.h"
 #include "../logic/scripting/scripting.h"

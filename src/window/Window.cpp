@@ -8,7 +8,7 @@
 
 #include "Events.h"
 #include "../logger/Logger.h"
-#include "../graphics/ImageData.h"
+#include "../graphics/core/ImageData.h"
 
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW
 DisplaySettings* Window::settings = nullptr;

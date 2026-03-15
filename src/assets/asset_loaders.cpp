@@ -6,15 +6,15 @@
 #include "AssetsLoader.h"
 #include "../coders/png.h"
 #include "../files/files.h"
-#include "../graphics/ShaderProgram.h"
-#include "../graphics/Texture.h"
-#include "../graphics/ImageData.h"
-#include "../graphics/Atlas.h"
-#include "../graphics/Font.h"
+#include "../graphics/core/ShaderProgram.h"
+#include "../graphics/core/Texture.h"
+#include "../graphics/core/ImageData.h"
+#include "../graphics/core/Atlas.h"
+#include "../graphics/core/Font.h"
 #include "../logger/Logger.h"
 #include "../files/engine_paths.h"
 #include "../coders/json.h"
-#include "../graphics/TextureAnimation.h"
+#include "../graphics/core/TextureAnimation.h"
 #include "../frontend/UIDocument.h"
 #include "../logic/scripting/scripting.h"
 #include "../audio/audio.h"
@@ -295,7 +295,7 @@ bool asset_loader::layout(
 {
     try {
         LayoutConfig* cfg = reinterpret_cast<LayoutConfig*>(config.get());
-        auto document = UIDocument::read(loader, cfg->env, name, file); // Читаем документ интерфейса из XML
+        auto document = UIDocument::read(cfg->env, name, file); // Читаем документ интерфейса из XML
         assets->store(document.release(), name);
         return true;
     } catch (const parsing_error& err) {
