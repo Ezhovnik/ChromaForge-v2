@@ -12,7 +12,7 @@
 #include "../math/voxmaths.h"
 #include "../lighting/Lightmap.h"
 #include "../logger/Logger.h"
-#include "../core_defs.h"
+#include "../core_content_defs.h"
 #include "../items/Inventories.h"
 
 void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
@@ -20,7 +20,7 @@ void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
         blockid_t id = chunk->voxels[i].id;
         if (indices->getBlockDef(id) == nullptr) {
             LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
-			if (bedrockID == 0) level->content->requireBlock(CHROMAFORGE_CONTENT_NAMESPACE":bedrock").rt.id;
+			if (bedrockID == 0) level->content->requireBlock(CHROMAFORGE_CONTENT_NAMESPACE + ":bedrock").rt.id;
 			chunk->voxels[i].id = bedrockID;
         }
     }

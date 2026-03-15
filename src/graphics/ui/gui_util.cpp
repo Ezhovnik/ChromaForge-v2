@@ -6,6 +6,8 @@
 #include "elements/containers.h"
 #include "../../frontend/locale/langs.h"
 #include "../../delegates.h"
+#include "gui_xml.h"
+#include "../../logic/scripting/scripting.h"
 
 using namespace gui;
 
@@ -20,7 +22,11 @@ std::shared_ptr<Button> guiutil::backButton(std::shared_ptr<PagesControl> menu) 
 std::shared_ptr<Button> guiutil::gotoButton(std::wstring text, const std::string& page, std::shared_ptr<PagesControl> menu) {
     text = langs::get(text, L"menu");
     return std::make_shared<Button>(text, glm::vec4(10.f), [=](GUI* gui) {
-        menu->setPage(page);
+        if (menu->has(page)) {
+            menu->setPage(page);
+        } else {
+            menu->setPage("404");
+        }
     });
 }
 
@@ -81,4 +87,10 @@ void guiutil::confirm(GUI* gui, const std::wstring& text, runnable on_confirm, s
     panel->refresh();
     menu->addPage("<confirm>", panel);
     menu->setPage("<confirm>");
+}
+
+std::shared_ptr<gui::UINode> guiutil::create(const std::string& source) {
+    scripting::Environment env(0);
+    UIXmlReader reader(env);
+    return reader.readXML("<string>", source);
 }

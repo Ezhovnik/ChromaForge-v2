@@ -8,7 +8,7 @@
 #include "../voxels/FlatWorldGenerator.h"
 #include "../content/Content.h"
 #include "../logger/Logger.h"
-#include "../core_defs.h"
+#include "../core_content_defs.h"
 
 std::vector<std::string> WorldGenerators::getGeneratorsIDs() {
     std::vector<std::string> ids;
@@ -20,7 +20,7 @@ std::vector<std::string> WorldGenerators::getGeneratorsIDs() {
 }
 
 std::string WorldGenerators::getDefaultGeneratorID() {
-    return BUILTIN_CONTENT_NAMESPACE":default";
+    return BUILTIN_CONTENT_NAMESPACE + ":default";
 }
 
 WorldGenerator* WorldGenerators::createGenerator(std::string id, const Content* content) {

@@ -27,7 +27,7 @@
 #include "../graphics/ui/GUI.h"
 #include "../engine.h"
 #include "screens.h"
-#include "../core_defs.h"
+#include "../input_bindings.h"
 #include "../window/input.h"
 #include "menu/menu.h"
 #include "../content/Content.h"
@@ -413,7 +413,7 @@ void Hud::openInventory() {
     inventoryOpen = true;
 
     auto inventory = player->getInventory();
-    auto inventoryDocument = assets->getLayout(BUILTIN_CONTENT_NAMESPACE":inventory");
+    auto inventoryDocument = assets->getLayout(BUILTIN_CONTENT_NAMESPACE + ":inventory");
     inventoryView = std::dynamic_pointer_cast<InventoryView>(inventoryDocument->getRoot());
     inventoryView->bind(inventory, levelFrontend, interaction.get());
     add(HudElement(HudElementMode::InventoryBound, inventoryDocument, inventoryView, false));

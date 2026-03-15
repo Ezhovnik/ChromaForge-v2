@@ -14,7 +14,7 @@
 #include "../window/Camera.h"
 #include "../window/Events.h"
 #include "../window/input.h"
-#include "../core_defs.h"
+#include "../input_bindings.h"
 #include "BlocksController.h"
 #include "scripting/scripting.h"
 #include "../items/Item.h"
@@ -361,7 +361,7 @@ void PlayerController::updateInteraction(){
 			vox = chunks->getVoxel(x, y, z);
 			blockid_t chosenBlock = def->rt.id;
 			if (vox && (target = contentIds->getBlockDef(vox->id))->replaceable) {
-				if (!level->physics->isBlockInside(x, y, z, player->hitbox.get()) || !def->obstacle) {
+				if (!level->physics->isBlockInside(x, y, z, def, states, player->hitbox.get()) || !def->obstacle) {
 					Block* def = contentIds->getBlockDef(chosenBlock);
 					if (def->grounded && !chunks->isSolidBlock(x, y - 1, z)) chosenBlock = 0;
 					if (chosenBlock != vox->id && chosenBlock) {

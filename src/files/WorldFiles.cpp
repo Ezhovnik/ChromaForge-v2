@@ -549,7 +549,7 @@ void WorldFiles::removePack(const World* world, const std::string& id) {
         if (name.find(prefix) != 0)
             continue;
         auto value = blocks->getValueWriteable(i);
-        *value->value.str = BUILTIN_CONTENT_NAMESPACE":air";
+        *value->value.str = BUILTIN_AIR;
     }
 
     auto items = root->list("items");
@@ -557,7 +557,7 @@ void WorldFiles::removePack(const World* world, const std::string& id) {
         auto name = items->str(i);
         if (name.find(prefix) != 0) continue;
         auto value = items->getValueWriteable(i);
-        *value->value.str = BUILTIN_CONTENT_NAMESPACE":empty";
+        *value->value.str = BUILTIN_EMPTY;
     }
     files::write_json(getIndicesFile(), root.get());
 }

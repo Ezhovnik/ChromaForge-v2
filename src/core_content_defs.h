@@ -1,0 +1,20 @@
+#ifndef SRC_CORE_CONTENT_DEFS_H_
+#define SRC_CORE_CONTENT_DEFS_H_
+
+#include <string>
+
+inline const std::string BUILTIN_CONTENT_NAMESPACE = "builtin";
+inline const std::string CHROMAFORGE_CONTENT_NAMESPACE = "chromaforge";
+
+inline const std::string BUILTIN_EMPTY = BUILTIN_CONTENT_NAMESPACE + ":empty";
+inline const std::string BUILTIN_AIR = BUILTIN_CONTENT_NAMESPACE + ":air";
+
+inline const std::string TEXTURE_NOTFOUND = "notfound";
+
+class ContentBuilder;
+
+namespace CoreContent {
+    extern void setup(ContentBuilder* builder);
+}
+
+#endif

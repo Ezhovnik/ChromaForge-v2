@@ -17,6 +17,7 @@
 #include "../util/listutil.h"
 #include "../items/Item.h"
 #include "../data/dynamic.h"
+#include "../core_content_defs.h"
 
 ContentLoader::ContentLoader(ContentPack* pack) : pack(pack) {
 }
@@ -185,6 +186,10 @@ void ContentLoader::loadBlock(Block& definition, std::string name, std::filesyst
     root->str("script-name", definition.scriptName);
     root->num("inventory-size", definition.inventorySize);
     root->str("ui-layout", definition.uiLayout);
+
+    if (definition.hidden && definition.pickingItem == definition.name + BLOCK_ITEM_SUFFIX) {
+        definition.pickingItem = BUILTIN_EMPTY;
+    }
 }
 
 void ContentLoader::loadCustomBlockModel(Block& definition, dynamic::Map* primitives) {

@@ -9,7 +9,7 @@
 #include "../voxels/Chunk.h"
 #include "../voxels/voxel.h"
 #include "../voxels/Block.h"
-#include "../core_defs.h"
+#include "../core_content_defs.h"
 #include "../typedefs.h"
 #include "../constants.h"
 #include "../content/Content.h"

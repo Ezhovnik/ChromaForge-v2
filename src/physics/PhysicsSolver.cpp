@@ -4,6 +4,7 @@
 #include "../voxels/Chunks.h"
 #include "../math/aabb.h"
 #include "../voxels/Block.h"
+#include "../voxels/voxel.h"
 
 namespace PhysicsSolver_Consts {
     inline constexpr double EPS = 0.03; // Маленькое значение
@@ -189,4 +190,22 @@ bool PhysicsSolver::isBlockInside(int x, int y, int z, Hitbox* hitbox) {
 	return x >= floor(pos.x - half.x) && x <= floor(pos.x + half.x) &&
 			z >= floor(pos.z - half.z) && z <= floor(pos.z + half.z) &&
 			y >= floor(pos.y - half.y) && y <= floor(pos.y + half.y);
+}
+
+bool PhysicsSolver::isBlockInside(int x, int y, int z, Block* def, blockstate_t states, Hitbox* hitbox) {
+	glm::vec3& pos = hitbox->position;
+	glm::vec3& half = hitbox->halfsize;
+	voxel vox;
+	vox.states = states;
+	const auto& boxes = def->rotatable ? def->rt.hitboxes[vox.rotation()] : def->hitboxes;
+	for (const auto& block_hitbox : boxes) {
+		glm::vec3 min = block_hitbox.min();
+		glm::vec3 max = block_hitbox.max();
+		// 0.00001 - inaccuracy
+		if (min.x < pos.x + half.x - x - 0.00001 && max.x > pos.x - half.x - x + 0.00001 &&
+			min.z < pos.z + half.z - z - 0.00001 && max.z > pos.z - half.z - z + 0.00001 &&
+			min.y < pos.y + half.y - y - 0.00001 && max.y > pos.y - half.y - y + 0.00001)
+			return true;
+	}
+	return false;
 }
