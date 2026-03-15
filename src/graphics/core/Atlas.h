@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <set>
 
-#include "UVRegion.h"
+#include "../../math/UVRegion.h"
 #include "../../typedefs.h"
 
 class ImageData;

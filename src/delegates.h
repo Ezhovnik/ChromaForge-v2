@@ -4,7 +4,10 @@
 #include <functional>
 #include <string>
 
+#include <glm/glm.hpp>
+
 using runnable = std::function<void()>;
+template<class T> using supplier = std::function<T()>;
 
 using wstringsupplier = std::function<std::wstring()>;
 using doublesupplier = std::function<double()>;

@@ -51,12 +51,22 @@ int UINode::getZIndex() const {
     return zindex;
 }
 
+UINode* UINode::listenAction(onaction action) {
+    actions.push_back(action);
+    return this;
+}
+
 void UINode::click(GUI*, int x, int y) {
     pressed = true;
 }
 
-void UINode::mouseRelease(GUI*, int x, int y) {
+void UINode::mouseRelease(GUI* gui, int x, int y) {
     pressed = false;
+    if (isInside(glm::vec2(x, y))) {
+        for (auto callback : actions) {
+            callback(gui);
+        }
+    }
 }
 
 bool UINode::isPressed() const {
@@ -179,6 +189,7 @@ void UINode::setGravity(Gravity gravity) {
 void UINode::setColor(glm::vec4 color) {
     this->color = color;
     this->hoverColor = color;
+    this->pressedColor = color;
 }
 
 void UINode::setHoverColor(glm::vec4 newColor) {
@@ -187,6 +198,14 @@ void UINode::setHoverColor(glm::vec4 newColor) {
 
 glm::vec4 UINode::getHoverColor() const {
     return hoverColor;
+}
+
+glm::vec4 UINode::getPressedColor() const {
+    return pressedColor;
+}
+
+void UINode::setPressedColor(glm::vec4 color) {
+    pressedColor = color;
 }
 
 void UINode::setResizing(bool flag) {
@@ -219,7 +238,6 @@ void UINode::setId(const std::string& id) {
 const std::string& UINode::getId() const {
     return id;
 }
-
 
 void UINode::reposition() {
     if (positionfunc) setPos(positionfunc());

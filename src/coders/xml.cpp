@@ -35,10 +35,7 @@ bool Attribute::asBool() const {
 glm::vec2 Attribute::asVec2() const {
     size_t pos = text.find(',');
     if (pos == std::string::npos) {
-        std::string errorLog = "Invalid vec2 value " + escape_string(text);
-        LOG_ERROR("{}", errorLog);
-        Logger::getInstance().flush();
-        throw std::runtime_error(errorLog);
+        return glm::vec2(util::parse_double(text, 0, text.length()));
     }
     return glm::vec2(
         util::parse_double(text, 0, pos),
@@ -49,16 +46,12 @@ glm::vec2 Attribute::asVec2() const {
 glm::vec3 Attribute::asVec3() const {
     size_t pos1 = text.find(',');
     if (pos1 == std::string::npos) {
-        std::string errorLog = "Invalid vec3 value " + escape_string(text);
-        LOG_ERROR("{}", errorLog);
-        Logger::getInstance().flush();
-        throw std::runtime_error(errorLog);
+        return glm::vec3(util::parse_double(text, 0, text.length()));
     }
     size_t pos2 = text.find(',', pos1 + 1);
     if (pos2 == std::string::npos) {
         std::string errorLog = "Invalid vec3 value " + escape_string(text);
         LOG_ERROR("{}", errorLog);
-        Logger::getInstance().flush();
         throw std::runtime_error(errorLog);
     }
     return glm::vec3(
@@ -71,23 +64,18 @@ glm::vec3 Attribute::asVec3() const {
 glm::vec4 Attribute::asVec4() const {
     size_t pos1 = text.find(',');
     if (pos1 == std::string::npos) {
-        std::string errorLog = "Invalid vec4 value " + escape_string(text);
-        LOG_ERROR("{}", errorLog);
-        Logger::getInstance().flush();
-        throw std::runtime_error(errorLog);
+        return glm::vec4(util::parse_double(text, 0, text.length()));
     }
     size_t pos2 = text.find(',', pos1 + 1);
     if (pos2 == std::string::npos) {
         std::string errorLog = "Invalid vec4 value " + escape_string(text);
         LOG_ERROR("{}", errorLog);
-        Logger::getInstance().flush();
         throw std::runtime_error(errorLog);
     }
     size_t pos3 = text.find(',', pos2 + 1);
     if (pos3 == std::string::npos) {
         std::string errorLog = "Invalid vec4 value " + escape_string(text);
         LOG_ERROR("{}", errorLog);
-        Logger::getInstance().flush();
         throw std::runtime_error(errorLog);
     }
     return glm::vec4(
@@ -102,7 +90,6 @@ glm::vec4 Attribute::asColor() const {
     if (text[0] == '#') {
         if (text.length() != 7 && text.length() != 9) {
             LOG_ERROR("#RRGGBB or #RRGGBBAA required");
-            Logger::getInstance().flush();
             throw std::runtime_error("#RRGGBB or #RRGGBBAA required");
         }
         int a = 255;
@@ -112,9 +99,7 @@ glm::vec4 Attribute::asColor() const {
         if (text.length() == 9) a = (hexchar2int(text[7]) << 4) | hexchar2int(text[8]);
         return glm::vec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
     } else {
-        LOG_ERROR("Hex colors are only supported");
-        Logger::getInstance().flush();
-        throw std::runtime_error("Hex colors are only supported");
+        return asVec4() / 255.0f;
     }
 }
 
@@ -137,7 +122,6 @@ const xmlattribute Node::attr(const std::string& name) const {
     auto found = attrs.find(name);
     if (found == attrs.end()) {
         LOG_ERROR("Element <{} ...> missing attribute {}", tag, name);
-        Logger::getInstance().flush();
         throw std::runtime_error("element <" + tag + " ...> missing attribute " + name);
     }
     return found->second;
@@ -231,14 +215,12 @@ void Parser::parseDeclaration() {
         expect("?>");
         if (node->getTag() != "xml") {
             LOG_ERROR("Invalid declaration");
-            Logger::getInstance().flush();
             throw error("Invalid declaration");
         }
         version = node->attr("version", version).getText();
         encoding = node->attr("encoding", encoding).getText();
         if (encoding != "utf-8" && encoding != "UTF-8") {
             LOG_ERROR("UTF-8 encoding is only supported");
-            Logger::getInstance().flush();
             throw error("UTF-8 encoding is only supported");
         }
     } else {
@@ -253,7 +235,6 @@ void Parser::parseComment() {
         skip(3);
     } else {
         LOG_ERROR("Comment close missing");
-        Logger::getInstance().flush();
         throw error("Comment close missing");
     }
 }
@@ -280,7 +261,6 @@ std::string Parser::parseXMLName() {
     char c = peek();
     if (!is_xml_identifier_start(c)) {
         LOG_ERROR("Identifier expected");
-        Logger::getInstance().flush();
         throw error("Identifier expected");
     }
     int start = pos;
@@ -307,7 +287,6 @@ xmlelement Parser::parseElement() {
     if (peek() == '!') {
         if (isNext("!DOCTYPE ")) {
             LOG_ERROR("XML DTD is not supported yet");
-            Logger::getInstance().flush();
             throw error("XML DTD is not supported yet");
         }
         parseComment();
@@ -331,7 +310,6 @@ xmlelement Parser::parseElement() {
         expect('>');
     } else {
         LOG_ERROR("Invalid syntax");
-        Logger::getInstance().flush();
         throw error("Invalid syntax");
     }
     return element;

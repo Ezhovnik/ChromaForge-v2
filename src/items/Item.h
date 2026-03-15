@@ -4,7 +4,7 @@
 #include <string>
 #include <glm/glm.hpp>
 
-#include "../graphics/core/UVRegion.h"
+#include "../math/UVRegion.h"
 #include "../typedefs.h"
 #include "../core_content_defs.h"
 

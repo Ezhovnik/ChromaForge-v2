@@ -49,7 +49,7 @@ const std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const 
 void UIDocument::collect(uinodes_map& map, std::shared_ptr<gui::UINode> node) {
     const std::string& id = node->getId();
     if (!id.empty()) map[id] = node;
-    auto container = dynamic_cast<gui::Container*>(node.get());
+    auto container = std::dynamic_pointer_cast<gui::Container>(node);
     if (container) {
         for (auto subnode : container->getNodes()) {
             collect(map, subnode);
@@ -57,17 +57,22 @@ void UIDocument::collect(uinodes_map& map, std::shared_ptr<gui::UINode> node) {
     }
 }
 
-std::unique_ptr<UIDocument> UIDocument::read(int parent_env, std::string namesp, std::filesystem::path file) {
+std::unique_ptr<UIDocument> UIDocument::read(int parent_env, std::string name, std::filesystem::path file) {
     const std::string text = files::read_string(file);
     auto xmldoc = xml::parse(file.u8string(), text);
 
-    auto env = scripting::create_doc_environment(parent_env, namesp);
+    auto env = parent_env == -1 ? std::make_unique<scripting::Environment>(0) : scripting::create_doc_environment(parent_env, name);
     gui::UIXmlReader reader(*env);
     InventoryView::createReaders(reader);
     auto view = reader.readXML(file.u8string(), xmldoc->getRoot());
     view->setId("root");
     uidocscript script {};
     auto scriptFile = std::filesystem::path(file.u8string() + ".lua");
-    if (std::filesystem::is_regular_file(scriptFile)) scripting::load_layout_script(env->getId(), namesp, scriptFile, script);
-    return std::make_unique<UIDocument>(namesp, script, view, std::move(env));
+    if (std::filesystem::is_regular_file(scriptFile)) scripting::load_layout_script(env->getId(), name, scriptFile, script);
+    return std::make_unique<UIDocument>(name, script, view, std::move(env));
+}
+
+std::shared_ptr<gui::UINode> UIDocument::readElement(std::filesystem::path file) {
+    auto document = read(-1, file.filename().u8string(), file);
+    return document->getRoot();
 }

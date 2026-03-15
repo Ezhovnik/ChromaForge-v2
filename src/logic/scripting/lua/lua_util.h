@@ -1,15 +1,16 @@
 #ifndef LOGIC_SCRIPTING_LUA_LUA_UTIL_H_
 #define LOGIC_SCRIPTING_LUA_LUA_UTIL_H_
 
+#ifdef __linux__ 
+#include <luajit-2.1/luaconf.h>
+#include <luajit-2.1/lua.hpp>
+#else
 #include <lua.hpp>
+#endif
 
 #include <glm/glm.hpp>
 
 #include "LuaState.h"
-
-#ifndef LUAJIT_VERSION
-#pragma message("Better use LuaJIT instead of plain Lua")
-#endif // LUAJIT_VERSION
 
 namespace lua {
     inline int pushivec3(lua_State* L, luaint x, luaint y, luaint z) {

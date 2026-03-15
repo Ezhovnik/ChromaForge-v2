@@ -5,9 +5,11 @@
 #include <stdexcept>
 #include <memory>
 #include <filesystem>
+#include <queue>
 
 #include "typedefs.h"
 #include "settings.h"
+#include "delegates.h"
 #include "files/engine_paths.h"
 #include "content/ContentPack.h"
 #include "assets/Assets.h"
@@ -37,6 +39,8 @@ private:
     EnginePaths* paths;
     std::unique_ptr<ResPaths> resPaths = nullptr;
 
+    std::queue<runnable> postRunnables;
+
     std::unique_ptr<gui::GUI> gui;
 
     uint64_t frame = 0; // Номер текущего кадра
@@ -53,6 +57,8 @@ public:
 
     void mainloop(); // Основной цикл приложения
 
+    void onAssetsLoaded();
+
     EnginePaths* getPaths();
     ResPaths* getResPaths();
     Assets* getAssets();
@@ -62,6 +68,8 @@ public:
     std::vector<ContentPack>& getContentPacks();
     std::shared_ptr<Screen> getScreen();
     double getDeltaTime() const;
+
+    void postRunnable(runnable callback);
 
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLanguage(std::string locale);

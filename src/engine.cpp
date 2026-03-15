@@ -37,6 +37,9 @@
 #include "voxels/FlatWorldGenerator.h"
 #include "audio/audio.h"
 #include "constants.h"
+#include "frontend/UIDocument.h"
+#include "graphics/ui/elements/UINode.h"
+#include "graphics/ui/elements/containers.h"
 
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths){
@@ -54,9 +57,6 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     audio::create_channel("ui");
 
     auto resdir = paths->getResources();
-    LOG_INFO("Initialization of the scripting system");
-    scripting::initialize(this);
-    LOG_INFO("Scripting system initialization has been successfully finished");
 
     LOG_INFO("Loading assets");
     std::vector<std::filesystem::path> roots {resdir};
@@ -84,6 +84,12 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     setLanguage(settings.ui.language);
 
     addDefaultWorldGenerators();
+
+    onAssetsLoaded();
+
+    LOG_INFO("Initialization of the scripting system");
+    scripting::initialize(this);
+    LOG_INFO("Scripting system initialization has been successfully finished");
 
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -132,6 +138,15 @@ static void updateAudio(double delta, const AudioSettings& settings) {
     audio::update(delta);
 }
 
+void Engine::onAssetsLoaded() {
+    assets->store(new UIDocument(
+        BUILTIN_CONTENT_NAMESPACE + ":root", 
+        uidocscript {}, 
+        std::dynamic_pointer_cast<gui::UINode>(gui->getContainer()), 
+        nullptr
+    ), BUILTIN_CONTENT_NAMESPACE + ":root");
+}
+
 // Основной цикл приложения
 void Engine::mainloop() {
     LOG_INFO("Loading the menu screen");
@@ -168,6 +183,12 @@ void Engine::mainloop() {
         } else {
             Window::swapInterval(1);
         }
+
+        while (!postRunnables.empty()) {
+            postRunnables.front()();
+            postRunnables.pop();
+        }
+        scripting::process_post_runnables();
 
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
@@ -308,4 +329,8 @@ void Engine::setLanguage(std::string locale) {
 void Engine::addDefaultWorldGenerators() {
 	WorldGenerators::addGenerator<DefaultWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":default");
 	WorldGenerators::addGenerator<FlatWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":flat");
+}
+
+void Engine::postRunnable(runnable callback) {
+    postRunnables.push(callback);
 }

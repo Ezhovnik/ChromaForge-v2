@@ -10,7 +10,7 @@
 #include "../../../util/stringutil.h"
 #include "../../../window/Events.h"
 #include "../GUI.h"
-#include "../../../graphics/core/UVRegion.h"
+#include "../../../math/UVRegion.h"
 #include "../../../graphics/core/GfxContext.h"
 #include "../../../graphics/core/Texture.h"
 
@@ -202,6 +202,7 @@ Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::
     add(content);
     setScrollable(false);
     setHoverColor(glm::vec4(0.05f, 0.1f, 0.15f, 0.75f));
+    setPressedColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.95f));
     content->setInteractive(false);
 }
 
@@ -224,6 +225,7 @@ Button::Button(std::wstring text, glm::vec4 padding, onaction action, glm::vec2 
     add(label);
 
     setHoverColor(glm::vec4(0.05f, 0.1f, 0.15f, 0.75f));
+    setPressedColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.95f));
 }
 
 void Button::setText(std::wstring text) {
@@ -251,20 +253,6 @@ void Button::drawBackground(const GfxContext* parent_context, Assets* assets) {
     batch->rect(pos.x, pos.y, size.x, size.y);
 }
 
-void Button::mouseRelease(GUI* gui, int x, int y) {
-    UINode::mouseRelease(gui, x, y);
-    if (isInside(glm::vec2(x, y))) {
-        for (auto callback : actions) {
-            callback(gui);
-        }
-    }
-}
-
-Button* Button::listenAction(onaction action) {
-    actions.push_back(action);
-    return this;
-}
-
 void Button::setTextAlign(Align align) {
     if (label) {
         label->setAlign(align);
@@ -280,40 +268,6 @@ Align Button::getTextAlign() const {
 void Button::refresh() {
     Panel::refresh();
     if (label) label->setSize(size - glm::vec2(padding.z + padding.x, padding.w + padding.y));
-}
-
-glm::vec4 Button::getPressedColor() const {
-    return pressedColor;
-}
-
-void Button::setPressedColor(glm::vec4 color) {
-    pressedColor = color;
-}
-
-RichButton::RichButton(glm::vec2 size) : Container(size) {
-    setHoverColor(glm::vec4(0.05f, 0.1f, 0.15f, 0.75f));
-}
-
-void RichButton::mouseRelease(GUI* gui, int x, int y) {
-    UINode::mouseRelease(gui, x, y);
-    if (isInside(glm::vec2(x, y))) {
-        for (auto callback : actions) {
-            callback(gui);
-        }
-    }
-}
-
-RichButton* RichButton::listenAction(onaction action) {
-    actions.push_back(action);
-    return this;
-}
-
-void RichButton::drawBackground(const GfxContext* parent_context, Assets* assets) {
-    glm::vec2 pos = calcPos();
-    auto batch = parent_context->getBatch2D();
-    batch->untexture();
-    batch->setColor(isPressed() ? pressedColor : (hover ? hoverColor : color));
-    batch->rect(pos.x, pos.y, size.x, size.y);
 }
 
 TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0), input(L""), placeholder(placeholder) {
