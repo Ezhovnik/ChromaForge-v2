@@ -1,13 +1,15 @@
 #ifndef GRAPHICS_UI_ELEMENTS_CONTAINERS_H_
 #define GRAPHICS_UI_ELEMENTS_CONTAINERS_H_
 
-#include <glm/glm.hpp>
 #include <vector>
 #include <memory>
 #include <stack>
 #include <string>
 
+#include <glm/glm.hpp>
+
 #include "UINode.h"
+#include "../../../delegates.h"
 
 class Batch2D;
 class Assets;
@@ -76,29 +78,33 @@ namespace gui {
         virtual void add(std::shared_ptr<UINode> node) override;
 
         virtual void refresh() override;
+        virtual void fullRefresh() override;
 
         virtual void setMaxLength(int value);
         int getMaxLength() const;
     };
 
     struct Page {
+        std::string name;
         std::shared_ptr<UINode> panel = nullptr;
 
         ~Page() {panel = nullptr;}
     };
 
-    class PagesControl : public Container {
+    class Menu : public Container {
     protected:
         std::unordered_map<std::string, Page> pages;
-        std::stack<std::string> pageStack;
+        std::stack<Page> pageStack;
         Page current;
-        std::string curname = "";
+        std::unordered_map<std::string, supplier<std::shared_ptr<UINode>>> pageSuppliers;
     public:
-        PagesControl();
+        Menu();
 
         bool has(const std::string& name);
         void setPage(std::string name, bool history=true);
+        void setPage(Page page, bool history=true);
         void addPage(std::string name, std::shared_ptr<UINode> panel);
+        void addSupplier(std::string name, supplier<std::shared_ptr<UINode>> pageSupplier);
         void back();
         void clearHistory();
         void reset();

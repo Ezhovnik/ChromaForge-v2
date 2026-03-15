@@ -14,6 +14,7 @@ extern const luaL_Reg inventorylib [];
 extern const luaL_Reg guilib [];
 extern const luaL_Reg hudlib [];
 extern const luaL_Reg audiolib [];
+extern const luaL_Reg builtinlib [];
 
 extern int l_print(lua_State* L);
 

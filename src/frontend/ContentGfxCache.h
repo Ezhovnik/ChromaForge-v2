@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "../graphics/core/UVRegion.h"
+#include "../math/UVRegion.h"
 #include "../typedefs.h"
 
 class Content;

@@ -56,7 +56,7 @@ function __scripts_cleanup()
     print("cleaning scripts cache")
     for k, v in pairs(__cached_scripts) do
         local packname, _ = parse_path(k)
-        if packname ~= "core" then
+        if packname ~= "builtin" then
             print("unloaded "..k)
             __cached_scripts[k] = nil
             package.loaded[k] = nil
@@ -176,6 +176,25 @@ function Document.new(docname)
             return Element.new(self.name, k)
         end
     })
+end
+
+_GUI_ROOT = Document.new("builtin:root")
+_MENU = _GUI_ROOT.menu
+menu = _MENU
+
+local __post_runnables = {}
+
+function __process_post_runnables()
+    if #__post_runnables then
+        for _, func in ipairs(__post_runnables) do
+            func()
+        end
+        __post_runnables = {}
+    end
+end
+
+function time.post_runnable(runnable)
+    table.insert(__post_runnables, runnable)
 end
 
 -- Deprecated functions

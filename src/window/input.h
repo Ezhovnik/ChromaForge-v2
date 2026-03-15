@@ -97,6 +97,12 @@ enum class mousecode : int {
 	BUTTON_3 = 2, ///< Средняя кнопка мыши (колёсико)
 };
 
+inline mousecode MOUSECODES_ALL[] {
+	mousecode::BUTTON_1,
+	mousecode::BUTTON_2,
+	mousecode::BUTTON_3
+};
+
 namespace input_util {
 	/**
      * @brief Возвращает название клавиши по её коду.

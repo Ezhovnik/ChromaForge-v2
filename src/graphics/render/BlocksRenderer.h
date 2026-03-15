@@ -5,7 +5,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "../../graphics/core/UVRegion.h"
+#include "../../math/UVRegion.h"
 #include "../../voxels/voxel.h"
 #include "../../typedefs.h"
 #include "../../settings.h"

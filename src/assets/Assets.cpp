@@ -67,7 +67,7 @@ UIDocument* Assets::getLayout(std::string name) const {
 }
 
 void Assets::store(UIDocument* layout, std::string name){
-    layouts.emplace(name, layout);
+    layouts[name] = std::shared_ptr<UIDocument>(layout);
 }
 
 audio::Sound* Assets::getSound(std::string name) const {

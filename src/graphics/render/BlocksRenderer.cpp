@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "../../graphics/core/Mesh.h"
-#include "../../graphics/core/UVRegion.h"
+#include "../../math/UVRegion.h"
 #include "../../constants.h"
 #include "../../content/Content.h"
 #include "../../voxels/Block.h"

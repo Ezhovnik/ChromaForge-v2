@@ -8,7 +8,7 @@
 
 #ifndef LUAJIT_VERSION
 #error LuaJIT required
-#endif
+#endif // LUAJIT_VERSION
 
 namespace lua {
     class luaerror : public std::runtime_error {

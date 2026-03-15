@@ -453,6 +453,8 @@ void Hud::setPause(bool pause) {
     if (this->pause == pause) return;
     this->pause = pause;
 
+    if (inventoryOpen) closeInventory();
+
     auto menu = guiController->getMenu();
     if (pause) {
         menus::create_pause_panel(engine, levelFrontend->getController());

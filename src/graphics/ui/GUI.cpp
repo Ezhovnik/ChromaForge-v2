@@ -23,7 +23,8 @@ GUI::GUI() {
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
-    menu = std::make_shared<PagesControl>();
+    menu = std::make_shared<Menu>();
+    menu->setId("menu");
     container->add(menu);
     container->setScrollable(false);
 }
@@ -31,7 +32,7 @@ GUI::GUI() {
 GUI::~GUI() {
 }
 
-std::shared_ptr<PagesControl> GUI::getMenu() {
+std::shared_ptr<Menu> GUI::getMenu() {
     return menu;
 }
 
@@ -66,11 +67,32 @@ void GUI::activateMouse(float delta) {
     }
 
     if (hover) {
-        for (int i = static_cast<int>(mousecode::BUTTON_1); i < static_cast<int>(mousecode::BUTTON_1) + 12; ++i) {
-            if (Events::justClicked(i)) hover->clicked(this, static_cast<mousecode>(i));
+        for (mousecode code : MOUSECODES_ALL) {
+            if (Events::justClicked(code)) hover->clicked(this, code);
         }
     }
 } 
+
+void GUI::activateFocused() {
+    if (Events::justPressed(keycode::ESCAPE)) {
+        focus->defocus();
+        focus = nullptr;
+        return;
+    }
+
+    for (auto codepoint : Events::codepoints) {
+        focus->typed(codepoint);
+    }
+    for (auto key : Events::pressedKeys) {
+        focus->keyPressed(key);
+    }
+
+    if (!Events::_cursor_locked) {
+        if (Events::isClicked(mousecode::BUTTON_1) && (Events::justClicked(mousecode::BUTTON_1) || Events::delta.x || Events::delta.y)) {
+            focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
+        }
+    }
+}
 
 void GUI::activate(float delta) {
     while (!postRunnables.empty()) {
@@ -85,27 +107,7 @@ void GUI::activate(float delta) {
 
     if (!Events::_cursor_locked) activateMouse(delta);
 
-    if (focus) {
-        if (Events::justPressed(keycode::ESCAPE)) {
-            focus->defocus();
-            focus = nullptr;
-        } else {
-            for (auto codepoint : Events::codepoints) {
-                focus->typed(codepoint);
-            }
-            for (auto key : Events::pressedKeys) {
-                focus->keyPressed(key);
-            }
-
-            if (!Events::_cursor_locked) {
-                if (Events::isClicked(mousecode::BUTTON_1)) {
-                    if (Events::justClicked(mousecode::BUTTON_1) || Events::delta.x || Events::delta.y) {
-                        focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
-                    }
-                }
-            }
-        }
-    }
+    if (focus) activateFocused();
     if (focus && !focus->isFocused()) focus = nullptr;
 }
 

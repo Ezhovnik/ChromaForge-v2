@@ -55,6 +55,7 @@ namespace gui {
         glm::vec2 minSize {1.0f};
         glm::vec4 color {1.0f};
         glm::vec4 hoverColor {1.0f};
+        glm::vec4 pressedColor {1.0f};
         glm::vec4 margin {1.0f};
         int zindex = 0;
         bool visible = true;
@@ -66,6 +67,8 @@ namespace gui {
         Align align = Align::left;
         vec2supplier positionfunc = nullptr;
         UINode* parent = nullptr;
+        std::vector<onaction> actions;
+
         UINode(glm::vec2 size);
     public:
         virtual ~UINode();
@@ -90,6 +93,9 @@ namespace gui {
         virtual void setHoverColor(glm::vec4 newColor);
         glm::vec4 getHoverColor() const;
 
+        virtual glm::vec4 getPressedColor() const;
+        virtual void setPressedColor(glm::vec4 color);
+
         virtual void setResizing(bool flag);
         virtual bool isResizing() const;
 
@@ -98,6 +104,8 @@ namespace gui {
 
         virtual void setZIndex(int idx);
         int getZIndex() const;
+
+        virtual UINode* listenAction(onaction action);
 
         virtual void onFocus(GUI*) {focused = true;}
         virtual void click(GUI*, int x, int y);
@@ -136,6 +144,9 @@ namespace gui {
         virtual void setGravity(Gravity gravity);
 
         virtual void refresh() {};
+        virtual void fullRefresh() {
+            if (parent) parent->fullRefresh();
+        };
         virtual void lock();
 
         void setId(const std::string& id);

@@ -46,9 +46,12 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
     if (element->has("color")) {
         glm::vec4 color = element->attr("color").asColor();
         glm::vec4 hoverColor = color;
+        glm::vec4 pressedColor = color;
         if (element->has("hover-color")) hoverColor = node.getHoverColor();
+        if (element->has("pressed-color")) pressedColor = node.getPressedColor();
         node.setColor(color);
         node.setHoverColor(hoverColor);
+        node.setPressedColor(pressedColor);
     }
     if (element->has("margin")) node.setMargin(element->attr("margin").asVec4());
     if (element->has("z-index")) node.setZIndex(element->attr("z-index").asInt());
@@ -63,6 +66,7 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
     if (element->has("interactive")) node.setInteractive(element->attr("interactive").asBool());
     if (element->has("visible")) node.setVisible(element->attr("visible").asBool());
     if (element->has("hover-color")) node.setHoverColor(element->attr("hover-color").asColor());
+    if (element->has("pressed-color")) node.setPressedColor(element->attr("pressed-color").asColor());
 
     std::string alignName = element->attr("align", "").getText();
     node.setAlign(align_from_string(alignName, node.getAlign()));
@@ -71,6 +75,17 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
         node.setGravity(gravity_from_string(
             element->attr("gravity").getText()
         ));
+    }
+
+    if (element->has("onclick")) {
+        auto callback = scripting::create_runnable(
+            reader.getEnvironment().getId(),
+            element->attr("onclick").getText(),
+            reader.getFilename()
+        );
+        node.listenAction([callback](GUI*) {
+            callback();
+        });
     }
 }
 
@@ -181,17 +196,7 @@ static std::shared_ptr<UINode> readButton(UIXmlReader& reader, xml::xmlelement e
         button = std::make_shared<Button>(text, glm::vec4(0.0f), nullptr);
         _readPanel(reader, element, *button, true);
     }
-
-    if (element->has("onclick")) {
-        auto callback = scripting::create_runnable(
-            reader.getEnvironment().getId(),
-            element->attr("onclick").getText(),
-            reader.getFilename()
-        );
-        button->listenAction([callback](GUI*) {callback();});
-    }
     if (element->has("text-align")) button->setTextAlign(align_from_string(element->attr("text-align").getText(), button->getTextAlign()));
-    if (element->has("pressed-color")) button->setPressedColor(element->attr("pressed-color").asColor());
 
     return button;
 }

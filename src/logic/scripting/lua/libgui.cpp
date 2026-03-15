@@ -8,6 +8,7 @@
 #include "../../../graphics/ui/elements/controls.h"
 #include "../../../frontend/UiDocument.h"
 #include "../../../util/stringutil.h"
+#include "../../../graphics/ui/gui_util.h"
 #include "LuaState.h"
 
 static gui::UINode* getDocumentNode(lua_State* L, const std::string& name, const std::string& nodeName) {
@@ -20,6 +21,34 @@ static gui::UINode* getDocumentNode(lua_State* L, const std::string& name, const
         luaL_error(L, "Document '%s' has no element with id '%s'", name.c_str(), nodeName.c_str());
     }
     return node.get();
+}
+
+static gui::UINode* getDocumentNode(lua_State* L) {
+    lua_getfield(L, 1, "docname");
+    lua_getfield(L, 1, "name");
+    auto docname = lua_tostring(L, -2);
+    auto name = lua_tostring(L, -1);
+    auto node = getDocumentNode(L, docname, name);
+    lua_pop(L, 2);
+    return node;
+}
+
+static int menu_back(lua_State* L) {
+    auto node = getDocumentNode(L);
+    auto menu = dynamic_cast<gui::Menu*>(node);
+    menu->back();
+    return 0;
+}
+
+static int container_add(lua_State* L) {
+    auto node = dynamic_cast<gui::Container*>(getDocumentNode(L));
+    auto xmlsrc = lua_tostring(L, 2);
+    try {
+        node->add(guiutil::create(xmlsrc));
+    } catch (const std::exception& err) {
+        luaL_error(L, err.what());
+    }
+    return 0;
 }
 
 static bool getattr(lua_State* L, gui::TrackBar* bar, const std::string& attr) {
@@ -59,6 +88,27 @@ static bool getattr(lua_State* L, gui::Button* button, const std::string& attr) 
         return true;
     } else if (attr == "pressedColor") {
         return lua::pushcolor_arr(L, button->getPressedColor());
+    }
+    return false;
+}
+
+static bool getattr(lua_State* L, gui::Menu* menu, const std::string& attr) {
+    if (menu == nullptr) return false;
+    if (attr == "page") {
+        lua_pushstring(L, menu->getCurrent().name.c_str());
+        return true;
+    } else if (attr == "back") {
+        lua_pushcfunction(L, menu_back);
+        return true;
+    }
+    return false;
+}
+
+static bool getattr(lua_State* L, gui::Container* container, const std::string& attr) {
+    if (container == nullptr) return false;
+    if (attr == "add") {
+        lua_pushcfunction(L, container_add);
+        return true;
     }
     return false;
 }
@@ -138,6 +188,20 @@ static bool setattr(lua_State* L, gui::Button* button, const std::string& attr) 
     return false;
 }
 
+static bool setattr(lua_State* L, gui::Menu* menu, const std::string& attr) {
+    if (menu == nullptr) return false;
+    if (attr == "page") {
+        auto page = lua_tostring(L, 4);
+        if (menu->has(page)) {
+            menu->setPage(page);
+        } else {
+            menu->setPage("404");
+        }
+        return true;
+    }
+    return false;
+}
+
 static bool setattr(lua_State* L, gui::TextBox* box, const std::string& attr) {
     if (box == nullptr) return false;
     if (attr == "text") {
@@ -172,11 +236,13 @@ static int l_gui_getattr(lua_State* L) {
         return 1;
     }
 
+    if (getattr(L, dynamic_cast<gui::Container*>(node), attr)) return 1;
     if (getattr(L, dynamic_cast<gui::Button*>(node), attr)) return 1;
     if (getattr(L, dynamic_cast<gui::Label*>(node), attr)) return 1;
     if (getattr(L, dynamic_cast<gui::TrackBar*>(node), attr)) return 1;
     if (getattr(L, dynamic_cast<gui::FullCheckBox*>(node), attr)) return 1;
     if (getattr(L, dynamic_cast<gui::TextBox*>(node), attr)) return 1;
+    if (getattr(L, dynamic_cast<gui::Menu*>(node), attr)) return 1;
 
     return 0;
 }
@@ -211,6 +277,7 @@ static int l_gui_setattr(lua_State* L) {
         if (setattr(L, dynamic_cast<gui::TrackBar*>(node), attr)) return 0;
         if (setattr(L, dynamic_cast<gui::FullCheckBox*>(node), attr)) return 0;
         if (setattr(L, dynamic_cast<gui::TextBox*>(node), attr)) return 0;
+        if (setattr(L, dynamic_cast<gui::Menu*>(node), attr)) return 0;
     }
 
     return 0;

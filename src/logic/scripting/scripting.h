@@ -59,6 +59,8 @@ namespace scripting {
     void on_world_save();
     void load_world_script(int env, std::string prefix, std::filesystem::path file);
 
+    void process_post_runnables();
+
     void on_blocks_spark(const Block* block, int tps);
     void update_block(const Block* block, int x, int y, int z);
     void random_update_block(const Block* block, int x, int y, int z);

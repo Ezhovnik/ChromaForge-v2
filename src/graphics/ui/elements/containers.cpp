@@ -85,7 +85,8 @@ void Container::draw(const GfxContext* parent_context, Assets* assets) {
 }
 
 void Container::drawBackground(const GfxContext* parent_context, Assets* assets) {
-    if (color.a <= 0.0f) return;
+    glm::vec4 color = isPressed() ? pressedColor : (hover ? hoverColor : this->color);
+    if (color.a <= 0.001f) return;
     glm::vec2 pos = calcPos();
 
     auto batch = parent_context->getBatch2D();
@@ -174,11 +175,15 @@ void Panel::cropToContent() {
     }
 }
 
-void Panel::add(std::shared_ptr<UINode> node) {
-    node->setResizing(true);
-    Container::add(node);
+void Panel::fullRefresh() {
     refresh();
     cropToContent();
+    Container::fullRefresh();
+}
+
+void Panel::add(std::shared_ptr<UINode> node) {
+    Container::add(node);
+    fullRefresh();
 }
 
 void Panel::refresh() {
@@ -225,53 +230,67 @@ Orientation Panel::getOrientation() const {
     return orientation;
 }
 
-PagesControl::PagesControl() : Container(glm::vec2(1)){
+Menu::Menu() : Container(glm::vec2(1)){
 }
 
-bool PagesControl::has(const std::string& name) {
-    return pages.find(name) != pages.end();
+bool Menu::has(const std::string& name) {
+    return pages.find(name) != pages.end() || pageSuppliers.find(name) != pageSuppliers.end();;
 }
 
-void PagesControl::addPage(std::string name, std::shared_ptr<UINode> panel) {
-    pages[name] = Page{panel};
+void Menu::addPage(std::string name, std::shared_ptr<UINode> panel) {
+    pages[name] = Page{name, panel};
 }
 
-void PagesControl::setPage(std::string name, bool history) {
+void Menu::addSupplier(std::string name, supplier<std::shared_ptr<UINode>> pageSupplier) {
+    pageSuppliers[name] = pageSupplier;
+}
+
+void Menu::setPage(std::string name, bool history) {
     auto found = pages.find(name);
+    Page page {name, nullptr};
     if (found == pages.end()) {
-        LOG_ERROR("No page found");
-        throw std::runtime_error("no page found");
+        auto supplier = pageSuppliers.find(name);
+        if (supplier == pageSuppliers.end()) {
+            LOG_ERROR("No page found");
+            throw std::runtime_error("No page found");
+        } else {
+            page.panel = supplier->second();
+        }
+    } else {
+        page = found->second;
     }
+    setPage(page, history);
+}
+
+void Menu::setPage(Page page, bool history) {
     if (current.panel) Container::remove(current.panel);
 
-    if (history) pageStack.push(curname);
+    if (history) pageStack.push(current);
 
-    curname = name;
-    current = found->second;
+    current = page;
     Container::add(current.panel);
     setSize(current.panel->getSize());
 }
 
-void PagesControl::back() {
+void Menu::back() {
     if (pageStack.empty()) return;
-    std::string name = pageStack.top();
+    Page page = pageStack.top();
     pageStack.pop();
-    setPage(name, false);
+    setPage(page, false);
 }
 
-Page& PagesControl::getCurrent() {
+Page& Menu::getCurrent() {
     return current;
 }
 
-void PagesControl::clearHistory() {
-    pageStack = std::stack<std::string>();
+void Menu::clearHistory() {
+    pageStack = std::stack<Page>();
 }
 
-void PagesControl::reset() {
+void Menu::reset() {
     clearHistory();
     if (current.panel) {
-        curname = "";
         Container::remove(current.panel);
-        current = Page{nullptr};
+        current = Page{"", nullptr};
     }
 }

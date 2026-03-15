@@ -46,7 +46,8 @@ public:
 
     static void collect(uinodes_map& map, std::shared_ptr<gui::UINode> node);
 
-    static std::unique_ptr<UIDocument> read(int parent_env, std::string namesp, std::filesystem::path file);
+    static std::unique_ptr<UIDocument> read(int parent_env, std::string name, std::filesystem::path file);
+    static std::shared_ptr<gui::UINode> readElement(std::filesystem::path file);
 };
 
 #endif // FRONTEND_UI_DOCUMENT_H_

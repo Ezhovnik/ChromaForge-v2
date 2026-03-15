@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_CORE_UVREGION_H_
-#define GRAPHICS_CORE_UVREGION_H_
+#ifndef MATH_UVREGION_H_
+#define MATH_UVREGION_H_
 
 /**
  * @brief Представляет прямоугольную область в UV-пространстве текстуры.
@@ -33,4 +33,4 @@ public:
 };
 
 
-#endif // GRAPHICS_CORE_UVREGION_H_
+#endif // MATH_UVREGION_H_
