@@ -31,6 +31,7 @@ public:
     Player* getPlayer();
 
     PlayerController* getPlayerController();
+    BlocksController* getBlocksController();
 };
 
 #endif // LOGIC_LEVEL_CONTROLLER_H_

@@ -1,4 +1,5 @@
 #include <vector>
+#include <memory>
 
 #include "lua_commons.h"
 #include "api_lua.h"
@@ -7,6 +8,8 @@
 #include "../scripting.h"
 #include "../../../frontend/menu/menu.h"
 #include "../../../window/Window.h"
+#include "../../../frontend/screens.h"
+#include "../../../logic/LevelController.h"
 
 static int l_get_worlds_list(lua_State* L) {
     auto paths = scripting::engine->getPaths();
@@ -32,9 +35,26 @@ static int l_quit(lua_State* L) {
     return 0;
 }
 
+static int l_delete_world(lua_State* L) {
+    auto name = lua_tostring(L, 1);
+    menus::delete_world(name, scripting::engine);
+    return 0;
+}
+
+static int l_close_world(lua_State* L) {
+    if (scripting::controller == nullptr) luaL_error(L, "No world open");
+    bool save_world = lua_toboolean(L, 1);
+    if (save_world) scripting::controller->saveWorld();
+    scripting::engine->setScreen(nullptr);
+    scripting::engine->setScreen(std::make_shared<MenuScreen>(scripting::engine));
+    return 0;
+}
+
 const luaL_Reg builtinlib [] = {
     {"get_worlds_list", lua_wrap_errors<l_get_worlds_list>},
     {"open_world", lua_wrap_errors<l_open_world>},
+    {"close_world", lua_wrap_errors<l_close_world>},
     {"quit", lua_wrap_errors<l_quit>},
+    {"delete_world", lua_wrap_errors<l_delete_world>},
     {NULL, NULL}
 };

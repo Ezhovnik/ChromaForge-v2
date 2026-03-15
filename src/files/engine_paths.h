@@ -25,6 +25,7 @@ public:
     std::filesystem::path getScreenshotFile(std::string ext);
     std::filesystem::path getWorldsFolder();
     std::filesystem::path getWorldFolder();
+    std::filesystem::path getWorldFolder(const std::string& name);
     std::filesystem::path getLogsFile();
     bool isWorldNameUsed(std::string name);
 

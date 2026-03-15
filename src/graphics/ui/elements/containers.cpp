@@ -245,19 +245,26 @@ void Menu::addSupplier(std::string name, supplier<std::shared_ptr<UINode>> pageS
     pageSuppliers[name] = pageSupplier;
 }
 
-void Menu::setPage(std::string name, bool history) {
+std::shared_ptr<UINode> Menu::fetchPage(std::string name) {
     auto found = pages.find(name);
-    Page page {name, nullptr};
     if (found == pages.end()) {
         auto supplier = pageSuppliers.find(name);
         if (supplier == pageSuppliers.end()) {
-            LOG_ERROR("No page found");
-            throw std::runtime_error("No page found");
+            return nullptr;
         } else {
-            page.panel = supplier->second();
+            return supplier->second();
         }
     } else {
-        page = found->second;
+        return found->second.panel;
+    }
+}
+
+
+void Menu::setPage(std::string name, bool history) {
+    Page page {name, fetchPage(name)};
+    if (page.panel == nullptr) {
+        LOG_ERROR("No page found");
+        throw std::runtime_error("No page found");
     }
     setPage(page, history);
 }
@@ -276,6 +283,10 @@ void Menu::back() {
     if (pageStack.empty()) return;
     Page page = pageStack.top();
     pageStack.pop();
+
+    auto updated = fetchPage(page.name);
+    if (updated) page.panel = updated;
+
     setPage(page, false);
 }
 

@@ -24,6 +24,7 @@ struct uidocscript;
 class Inventory;
 class UIDocument;
 struct ContentPack;
+class LevelController;
 
 namespace scripting {
     extern Engine* engine;
@@ -31,6 +32,7 @@ namespace scripting {
     extern Level* level;
     extern BlocksController* blocks;
     extern const ContentIndices* indices;
+    extern LevelController* controller;
 
     class Environment {
     private:
@@ -53,7 +55,7 @@ namespace scripting {
     std::unique_ptr<Environment> create_pack_environment(const ContentPack& pack);
     std::unique_ptr<Environment> create_doc_environment(int parent, const std::string& name);
 
-    void on_world_load(Level* level, BlocksController* blocks);
+    void on_world_load(LevelController* controller);
     void on_world_quit();
     void on_world_spark();
     void on_world_save();
