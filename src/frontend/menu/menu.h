@@ -30,6 +30,7 @@ namespace menus {
         packconsumer remover
     );
     void open_world(std::string name, Engine* engine, bool confirmConvert);
+    void delete_world(std::string name, Engine* engine);
     void create_version_label(Engine* engine);
 
     void create_menus(Engine* engine);

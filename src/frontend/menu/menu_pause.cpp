@@ -106,10 +106,27 @@ static void reopen_world(Engine* engine, World* world) {
     menus::open_world(wname, engine, true);
 }
 
+static bool try_add_dependency(Engine* engine, World* world, const ContentPack& pack, std::string& missing) {
+    auto paths = engine->getPaths();
+    for (const auto& dependency : pack.dependencies) {
+        std::filesystem::path folder = ContentPack::findPack(
+            paths, 
+            world->wfile->directory, 
+            dependency
+        );
+        if (!std::filesystem::is_directory(folder)) {
+            missing = dependency;
+            return false;
+        }
+        if (!world->hasPack(dependency)) world->wfile->addPack(world, dependency);
+    }
+    world->wfile->addPack(world, pack.id);
+    return true;
+}
+
 void create_content_panel(Engine* engine, LevelController* controller) {
     auto level = controller->getLevel();
     auto menu = engine->getGUI()->getMenu();
-    auto paths = engine->getPaths();
     auto mainPanel = menus::create_page(engine, "content", 550, 0.0f, 5);
 
     std::vector<ContentPack> scanned;
@@ -149,17 +166,13 @@ void create_content_panel(Engine* engine, LevelController* controller) {
         auto panel = menus::create_packs_panel(scanned, engine, true, 
         [=](const ContentPack& pack) {
             auto world = level->getWorld();
-            auto worldFolder = paths->getWorldFolder();
-            for (const auto& dependency : pack.dependencies) {
-                std::filesystem::path folder = ContentPack::findPack(paths, worldFolder, dependency);
-                if (!std::filesystem::is_directory(folder)) {
-                    guiutil::alert(gui, langs::get(L"error.dependency-not-found") +
-                                    L": " + util::str2wstr_utf8(dependency));
-                    return;
-                }
-                if (!world->hasPack(dependency)) {
-                    world->wfile->addPack(world, dependency);
-                }
+            std::string missing;
+            if (!try_add_dependency(engine, world, pack, missing)) {
+                guiutil::alert(
+                    gui, langs::get(L"error.dependency-not-found") +
+                    L": " + util::str2wstr_utf8(missing)
+                );
+                return;
             }
             world->wfile->addPack(world, pack.id);
             controller->saveWorld();

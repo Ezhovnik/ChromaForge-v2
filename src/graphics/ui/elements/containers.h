@@ -105,6 +105,7 @@ namespace gui {
         void setPage(Page page, bool history=true);
         void addPage(std::string name, std::shared_ptr<UINode> panel);
         void addSupplier(std::string name, supplier<std::shared_ptr<UINode>> pageSupplier);
+        std::shared_ptr<UINode> fetchPage(std::string name);
         void back();
         void clearHistory();
         void reset();

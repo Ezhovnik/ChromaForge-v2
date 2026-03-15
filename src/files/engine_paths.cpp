@@ -81,6 +81,10 @@ std::filesystem::path EnginePaths::getWorldFolder() {
     return worldFolder;
 }
 
+std::filesystem::path EnginePaths::getWorldFolder(const std::string& name) {
+    return getWorldsFolder()/std::filesystem::path(name);
+}
+
 bool EnginePaths::isWorldNameUsed(std::string name) {
 	return std::filesystem::exists(EnginePaths::getWorldsFolder()/std::filesystem::u8path(name));
 }

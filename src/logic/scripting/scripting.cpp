@@ -17,6 +17,7 @@
 #include "../../frontend/UIDocument.h"
 #include "../../items/Inventory.h"
 #include "../../objects/Player.h"
+#include "../../logic/LevelController.h"
 
 using namespace scripting;
 
@@ -29,6 +30,7 @@ lua::LuaState* scripting::state = nullptr;
 Level* scripting::level = nullptr;
 const Content* scripting::content = nullptr;
 BlocksController* scripting::blocks = nullptr;
+LevelController* scripting::controller = nullptr;
 const ContentIndices* scripting::indices = nullptr;
 
 Environment::Environment(int env) : env(env) {
@@ -132,11 +134,13 @@ void scripting::process_post_runnables() {
     if (state->getglobal("__process_post_runnables")) state->callNoThrow(0);
 }
 
-void scripting::on_world_load(Level* level, BlocksController* blocks) {
-    scripting::level = level;
+void scripting::on_world_load(LevelController* controller) {
+    scripting::level = controller->getLevel();
     scripting::content = level->content;
     scripting::indices = level->content->getIndices();
     scripting::blocks = blocks;
+    scripting::blocks = controller->getBlocksController();
+    scripting::controller = controller;
     load_script("world.lua");
 
     for (auto& pack : scripting::engine->getContentPacks()) {
@@ -173,6 +177,8 @@ void scripting::on_world_quit() {
     scripting::level = nullptr;
     scripting::content = nullptr;
     scripting::indices = nullptr;
+    scripting::blocks = nullptr;
+    scripting::controller = nullptr;
 }
 
 void scripting::on_blocks_spark(const Block* block, int tps) {
