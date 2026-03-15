@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../graphics/GfxContext.h"
+#include "../graphics/core/GfxContext.h"
 
 class Camera;
 class Assets;

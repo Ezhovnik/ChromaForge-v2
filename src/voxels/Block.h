@@ -6,7 +6,7 @@
 
 #include "../math/AABB.h"
 #include "../typedefs.h"
-#include "../graphics/UVRegion.h"
+#include "../graphics/core/UVRegion.h"
 #include "../core_defs.h"
 
 #define BLOCK_ITEM_SUFFIX ".item"

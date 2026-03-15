@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-#include "../graphics/TextureAnimation.h"
+#include "../graphics/core/TextureAnimation.h"
 
 class Texture;
 class ShaderProgram;

@@ -11,7 +11,7 @@
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "../graphics/GfxContext.h"
+#include "../graphics/core/GfxContext.h"
 
 class Camera;
 class Level;

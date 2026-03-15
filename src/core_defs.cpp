@@ -3,9 +3,9 @@
 #include <glm/glm.hpp>
 
 #include "assets/AssetsLoader.h"
-#include "graphics/ShaderProgram.h"
-#include "graphics/Texture.h"
-#include "graphics/Font.h"
+#include "graphics/core/ShaderProgram.h"
+#include "graphics/core/Texture.h"
+#include "graphics/core/Font.h"
 #include "window/Window.h"
 #include "window/Events.h"
 #include "window/input.h"

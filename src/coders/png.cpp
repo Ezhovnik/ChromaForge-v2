@@ -10,8 +10,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../include/stb/stb_image_write.h"
 
-#include "../graphics/ImageData.h"
-#include "../graphics/Texture.h"
+#include "../graphics/core/ImageData.h"
+#include "../graphics/core/Texture.h"
 #include "../logger/Logger.h"
 #include "../typedefs.h"
 
