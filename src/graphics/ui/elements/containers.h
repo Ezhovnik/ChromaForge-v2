@@ -96,7 +96,7 @@ namespace gui {
     public:
         PagesControl();
 
-        bool has(std::string name);
+        bool has(const std::string& name);
         void setPage(std::string name, bool history=true);
         void addPage(std::string name, std::shared_ptr<UINode> panel);
         void back();

@@ -1,7 +1,7 @@
-#include "core_defs.h"
-
 #include <glm/glm.hpp>
 
+#include "core_content_defs.h"
+#include "input_bindings.h"
 #include "assets/AssetsLoader.h"
 #include "graphics/core/ShaderProgram.h"
 #include "graphics/core/Texture.h"
@@ -11,13 +11,12 @@
 #include "window/input.h"
 #include "voxels/Block.h"
 #include "logger/Logger.h"
-#include "core_defs.h"
 #include "content/Content.h"
 #include "items/Item.h"
 
 void CoreContent::setup(ContentBuilder* builder) {
     // Воздух
-    Block& block = builder->createBlock(BUILTIN_CONTENT_NAMESPACE":air");
+    Block& block = builder->createBlock(BUILTIN_AIR);
     block.drawGroup = 1;
     block.lightPassing = true;
     block.skyLightPassing = true;
@@ -25,10 +24,10 @@ void CoreContent::setup(ContentBuilder* builder) {
     block.selectable = false;
     block.replaceable = true;
     block.model = BlockModel::None;
-    block.pickingItem = BUILTIN_CONTENT_NAMESPACE":empty";
+    block.pickingItem = BUILTIN_EMPTY;
 
     // Пустота
-    Item& item = builder->createItem(BUILTIN_CONTENT_NAMESPACE":empty");
+    Item& item = builder->createItem(BUILTIN_EMPTY);
     item.iconType = ItemIconType::None;
 }
 

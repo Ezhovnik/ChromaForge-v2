@@ -7,11 +7,11 @@
 #include "../math/AABB.h"
 #include "../typedefs.h"
 #include "../graphics/core/UVRegion.h"
-#include "../core_defs.h"
+#include "../core_content_defs.h"
 
 #define BLOCK_ITEM_SUFFIX ".item"
 
-inline std::string DEFAULT_MATERIAL = CHROMAFORGE_CONTENT_NAMESPACE":stone";
+inline std::string DEFAULT_MATERIAL = CHROMAFORGE_CONTENT_NAMESPACE + ":stone";
 
 enum class BlockModel {
     None, // Невидимый блок

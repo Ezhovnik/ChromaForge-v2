@@ -6,7 +6,7 @@
 
 #include "../graphics/core/UVRegion.h"
 #include "../typedefs.h"
-#include "../core_defs.h"
+#include "../core_content_defs.h"
 
 struct item_funcs_set {
 	bool init: 1;
@@ -36,7 +36,7 @@ public:
     ItemIconType iconType = ItemIconType::Sprite;
     std::string icon = "blocks:notfound";
 
-    std::string placingBlock = BUILTIN_CONTENT_NAMESPACE":air";
+    std::string placingBlock = BUILTIN_AIR;
     std::string scriptName = name.substr(name.find(':') + 1);
 
     struct {

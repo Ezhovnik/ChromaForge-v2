@@ -12,7 +12,7 @@
 #include "window/Events.h"
 #include "window/input.h"
 #include "assets/AssetsLoader.h"
-#include "core_defs.h"
+#include "core_content_defs.h"
 #include "logger/Logger.h"
 #include "settings.h"
 #include "graphics/ui/GUI.h"
@@ -306,6 +306,6 @@ void Engine::setLanguage(std::string locale) {
 }
 
 void Engine::addDefaultWorldGenerators() {
-	WorldGenerators::addGenerator<DefaultWorldGenerator>(BUILTIN_CONTENT_NAMESPACE":default");
-	WorldGenerators::addGenerator<FlatWorldGenerator>(BUILTIN_CONTENT_NAMESPACE":flat");
+	WorldGenerators::addGenerator<DefaultWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":default");
+	WorldGenerators::addGenerator<FlatWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":flat");
 }

@@ -6,7 +6,7 @@
 #include "../content/Content.h"
 #include "../graphics/core/Atlas.h"
 #include "../voxels/Block.h"
-#include "../core_defs.h"
+#include "../core_content_defs.h"
 #include "UIDocument.h"
 #include "../content/ContentPack.h"
 

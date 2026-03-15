@@ -1,6 +1,6 @@
 #include "Block.h"
 
-#include "../core_defs.h"
+#include "../core_content_defs.h"
 #include "../util/stringutil.h"
 
 CoordSystem::CoordSystem(glm::ivec3 axisX, glm::ivec3 axisY, glm::ivec3 axisZ) : axisX(axisX), axisY(axisY), axisZ(axisZ) {

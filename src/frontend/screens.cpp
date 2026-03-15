@@ -28,7 +28,7 @@
 #include "../graphics/core/ShaderProgram.h"
 #include "../graphics/core/UVRegion.h"
 #include "../graphics/core/GfxContext.h"
-#include "../core_defs.h"
+#include "../core_content_defs.h"
 #include "menu/menu.h"
 #include "ContentGfxCache.h"
 #include "../logic/LevelController.h"

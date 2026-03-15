@@ -13,7 +13,7 @@
 #include "../../engine.h"
 #include "../../logger/Logger.h"
 #include "../../math/rand.h"
-#include "../../core_defs.h"
+#include "../../core_content_defs.h"
 
 using namespace gui;
 

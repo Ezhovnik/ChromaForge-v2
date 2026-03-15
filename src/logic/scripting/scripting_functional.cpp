@@ -41,7 +41,7 @@ wstringconsumer scripting::create_wstring_consumer(int env, const std::string& s
 wstringsupplier scripting::create_wstring_supplier(int env, const std::string& src, const std::string& file) {
     return [=](){
         if (processCallback(env, src, file)) {
-            state->callNoThrow(0);
+            if (state->isfunction(-1)) state->callNoThrow(0);
             auto str = state->tostring(-1); state->pop();
             return util::str2wstr_utf8(str);
         }
@@ -71,7 +71,7 @@ doubleconsumer scripting::create_number_consumer(int env, const std::string& src
 doublesupplier scripting::create_number_supplier(int env, const std::string& src, const std::string& file) {
     return [=](){
         if (processCallback(env, src, file)) {
-            state->callNoThrow(0);
+            if (state->isfunction(-1)) state->callNoThrow(0);
             lua::luanumber x = state->tonumber(-1); state->pop();
             return x;
         }
@@ -93,7 +93,7 @@ int_array_consumer scripting::create_int_array_consumer(int env, const std::stri
 vec2supplier scripting::create_vec2_supplier(int env, const std::string& src, const std::string& file) {
     return [=](){
         if (processCallback(env, src, file)) {
-            state->callNoThrow(0);
+            if (state->isfunction(-1)) state->callNoThrow(0);
             lua::luanumber y = state->tonumber(-1); state->pop();
             lua::luanumber x = state->tonumber(-1); state->pop();
             return glm::vec2(x, y);
@@ -114,7 +114,7 @@ boolconsumer scripting::create_bool_consumer(int env, const std::string& src, co
 boolsupplier scripting::create_bool_supplier(int env, const std::string& src, const std::string& file) {
     return [=](){
         if (processCallback(env, src, file)) {
-            state->callNoThrow(0);
+            if (state->isfunction(-1)) state->callNoThrow(0);
             bool x = state->toboolean(-1); state->pop();
             return x;
         }

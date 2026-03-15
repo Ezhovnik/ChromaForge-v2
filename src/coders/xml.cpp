@@ -208,8 +208,13 @@ xmlelement Parser::parseOpenTag() {
         if (peek() == '=') {
             nextChar();
             skipWhitespace();
-            expect('"');
-            attrtext = parseString('"');
+            char quote = peek();
+            if (quote != '\'' && quote != '"') {
+                LOG_ERROR("String literal expected");
+                throw error("String literal expected");
+            }
+            skip(1);
+            attrtext = parseString(quote);
         }
         node->set(attrname, attrtext);
     }

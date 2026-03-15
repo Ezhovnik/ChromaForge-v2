@@ -6,7 +6,7 @@
 #include "../scripting.h"
 #include "../../../engine.h"
 #include "../../../files/engine_paths.h"
-#include "../../../core_defs.h"
+#include "../../../core_content_defs.h"
 
 static int l_pack_get_folder(lua_State* L) {
     std::string packName = lua_tostring(L, 1);

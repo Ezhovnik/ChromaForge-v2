@@ -13,7 +13,7 @@
 #include "../graphics/core/ImageData.h"
 #include "asset_loaders.h"
 #include "../files/engine_paths.h"
-#include "../core_defs.h"
+#include "../core_content_defs.h"
 #include "../content/Content.h"
 #include "../logic/scripting/scripting.h"
 #include "../data/dynamic.h"

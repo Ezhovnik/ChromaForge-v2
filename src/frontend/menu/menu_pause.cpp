@@ -9,7 +9,7 @@
 #include "../../graphics/ui/gui_util.h"
 #include "../screens.h"
 #include "../../engine.h"
-#include "../../core_defs.h"
+#include "../../core_content_defs.h"
 #include "../../world/Level.h"
 #include "../../world/World.h"
 #include "../../coders/png.h"
@@ -66,11 +66,11 @@ std::shared_ptr<Panel> menus::create_packs_panel(
         }
 
         if (!pack.creator.empty()) {
-            auto creatorlabel = std::make_shared<Label>("@" + pack.creator);
-            creatorlabel->setColor(glm::vec4(0.8f, 1.0f, 0.9f, 0.7f));
-            creatorlabel->setSize(glm::vec2(300, 20));
-            creatorlabel->setAlign(Align::right);
-            packpanel->add(creatorlabel, glm::vec2(215, 60));
+            packpanel->add(guiutil::create(
+                "<label color='#CCFFE5B2' size='300,20' align='right' pos='215,60'>" +
+                pack.creator +
+                "</label>"
+            ));
         }
 
         auto descriptionlabel = std::make_shared<Label>(pack.description);
@@ -80,11 +80,11 @@ std::shared_ptr<Panel> menus::create_packs_panel(
         packpanel->add(std::make_shared<Image>(icon, glm::vec2(64)), glm::vec2(8));
 
         if (remover && pack.id != CHROMAFORGE_CONTENT_NAMESPACE) {
-            auto remimg = std::make_shared<Image>("gui/cross", glm::vec2(32));
-            remimg->setColor(glm::vec4(1.f, 1.f, 1.f, 0.5f));
-            auto rembtn = std::make_shared<Button>(remimg, glm::vec4(2));
-            rembtn->setColor(glm::vec4(0.0f));
-            rembtn->setHoverColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.17f));
+            auto rembtn = std::dynamic_pointer_cast<Button>(guiutil::create(
+                "<button color='#00000000' hover-color='#FFFFFF2B'>"
+                "    <image src='gui/cross' size='32,32'/>"
+                "</button>"
+            ));
             rembtn->listenAction([=](GUI* gui) {
                 remover(pack);
             });

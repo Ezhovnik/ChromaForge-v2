@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <stack>
 
 #include "GUI.h"
 #include "../../coders/xml.h"
@@ -22,6 +23,7 @@ namespace gui {
         std::string filename;
         std::unordered_map<std::string, uinode_reader> readers;
         std::unordered_set<std::string> ignored;
+        std::stack<std::string> contextStack;
         const scripting::Environment& env;
     public:
         UIXmlReader(const scripting::Environment& env);
@@ -39,6 +41,7 @@ namespace gui {
         std::shared_ptr<UINode> readXML(const std::string& filename, const std::string& source);
         std::shared_ptr<UINode> readXML(const std::string& filename, xml::xmlelement root);
 
+        const std::string& getContext() const;
         const scripting::Environment& getEnvironment() const;
         const std::string& getFilename() const;
     };
