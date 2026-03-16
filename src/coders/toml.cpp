@@ -8,6 +8,7 @@
 
 #include "commons.h"
 #include "../debug/Logger.h"
+#include "../util/stringutil.h"
 
 using namespace toml;
 
@@ -51,11 +52,11 @@ void Section::add(std::string name, double* ptr) {
     add(name, {fieldtype::ftdouble, ptr});
 }
 
-std::string Section::getName() const {
+const std::string& Section::getName() const {
     return name;
 }
 
-const Field* Section::field(std::string name) const {
+const Field* Section::field(const std::string& name) const {
     auto found = fields.find(name);
     if (found == fields.end()) return nullptr;
     return &found->second;
@@ -92,7 +93,7 @@ Section* Wrapper::section(std::string name) {
 
 std::string Wrapper::write() const {
     std::stringstream ss;
-    for (std::string key : keyOrder) {
+    for (const std::string& key : keyOrder) {
         const Section* section = sections.at(key);
         ss << "[" << key << "]\n";
         for (const std::string& key : section->keys()) {
@@ -108,7 +109,7 @@ std::string Wrapper::write() const {
                 case fieldtype::ftfloat: ss << *((float*)field->ptr); break;
                 case fieldtype::ftdouble: ss << *((double*)field->ptr); break;
                 case fieldtype::ftstring: 
-                    ss << escape_string(*((const std::string*)field->ptr)); 
+                    ss << util::escape(*((const std::string*)field->ptr)); 
                     break;
             }
             ss << "\n";
@@ -138,7 +139,7 @@ void Reader::read() {
     readSection(nullptr);
 }
 
-void Section::set(std::string name, double value) {
+void Section::set(const std::string& name, double value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
         LOG_WARN("Unknown key: '{}'", name);
@@ -156,7 +157,7 @@ void Section::set(std::string name, double value) {
     }
 }
 
-void Section::set(std::string name, bool value) {
+void Section::set(const std::string& name, bool value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
         LOG_WARN("Unknown key: '{}'", name);
@@ -174,7 +175,7 @@ void Section::set(std::string name, bool value) {
     }
 }
 
-void Section::set(std::string name, std::string value) {
+void Section::set(const std::string& name, std::string value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
         LOG_WARN("Unknown key: '{}'", name);

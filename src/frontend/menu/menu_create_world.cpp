@@ -14,6 +14,7 @@
 #include "../../debug/Logger.h"
 #include "../../math/rand.h"
 #include "../../core_content_defs.h"
+#include "../../content/PacksManager.h"
 
 using namespace gui;
 

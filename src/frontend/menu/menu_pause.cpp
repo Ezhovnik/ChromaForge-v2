@@ -17,6 +17,7 @@
 #include "../../files/WorldFiles.h"
 #include "../../content/ContentLUT.h"
 #include "../../logic/LevelController.h"
+#include "../../content/PacksManager.h"
 
 using namespace gui;
 
@@ -178,8 +179,16 @@ void create_content_panel(Engine* engine, LevelController* controller) {
     auto menu = engine->getGUI()->getMenu();
     auto mainPanel = menus::create_page(engine, "content", 550, 0.0f, 5);
 
-    std::vector<ContentPack> scanned;
-    ContentPack::scan(engine->getPaths(), scanned);
+    auto paths = engine->getPaths();
+    PacksManager manager;
+    manager.setSources({
+        paths->getWorldFolder()/std::filesystem::path("content"),
+        paths->getUserfiles()/std::filesystem::path("content"),
+        paths->getResources()/std::filesystem::path("content")
+    });
+    manager.scan();
+
+    std::vector<ContentPack> scanned = manager.getAll(manager.getAllNames());
     for (const auto& pack : engine->getContentPacks()) {
         for (size_t i = 0; i < scanned.size(); ++i) {
             if (scanned[i].id == pack.id) {

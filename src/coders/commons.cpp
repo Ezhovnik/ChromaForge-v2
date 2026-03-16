@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "../debug/Logger.h"
+#include "../util/stringutil.h"
 
 inline double power(double base, int64_t power) {
     double result = 1.0;
@@ -37,31 +38,6 @@ std::string parsing_error::errorLog() const {
         ss << " ";
     }
     ss << "^";
-    return ss.str();
-}
-
-std::string escape_string(std::string s) {
-    std::stringstream ss;
-    ss << '"';
-    for (char c : s) {
-        switch (c) {
-            case '\n': ss << "\\n"; break;
-            case '\r': ss << "\\r"; break;
-            case '\t': ss << "\\t"; break;
-            case '\f': ss << "\\f"; break;
-            case '\b': ss << "\\b"; break;
-            case '"': ss << "\\\""; break;
-            case '\\': ss << "\\\\"; break;
-            default:
-                if (c < ' ') {
-                    ss << "\\" << std::oct << uint(ubyte(c));
-                    break;
-                }
-                ss << c;
-                break;
-        }
-    }
-    ss << '"';
     return ss.str();
 }
 
@@ -134,7 +110,7 @@ void BasicParser::expect(const std::string& substring) {
     if (substring.empty()) return;
     for (uint i = 0; i < substring.length(); ++i) {
         if (source.length() <= pos + i || source[pos + i] != substring[i]) {
-            std::string errorLog = escape_string(substring) + " expected";
+            std::string errorLog = util::quote(substring) + " expected";
             LOG_ERROR("{}", errorLog);
             throw error(errorLog);
         }

@@ -40,6 +40,8 @@
 #include "frontend/UIDocument.h"
 #include "graphics/ui/elements/UINode.h"
 #include "graphics/ui/elements/containers.h"
+#include "content/PacksManager.h"
+#include "util/listutil.h"
 
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths), settingsHandler(settings) {
@@ -225,6 +227,20 @@ void Engine::loadContent() {
     CoreContent::setup(&contentBuilder);
     paths->setContentPacks(&contentPacks);
 
+    std::vector<std::string> names;
+    for (auto& pack : contentPacks) {
+        names.push_back(pack.id);
+    }
+
+    PacksManager manager;
+    manager.setSources({
+        paths->getWorldFolder()/std::filesystem::path("content"),
+        paths->getUserfiles()/std::filesystem::path("content"),
+        paths->getResources()/std::filesystem::path("content")
+    });
+    manager.scan();
+    auto allnames = manager.getAllNames();
+
     std::vector<std::filesystem::path> resRoots;
     std::vector<ContentPack> srcPacks = contentPacks;
     contentPacks.clear();
@@ -278,15 +294,28 @@ void Engine::loadContent() {
 void Engine::loadWorldContent(const std::filesystem::path& folder) {
     contentPacks.clear();
     auto packNames = ContentPack::worldPacksList(folder);
-    ContentPack::readPacks(paths, contentPacks, packNames, folder);
+    PacksManager manager;
+    manager.setSources({
+        folder/std::filesystem::path("content"),
+        paths->getUserfiles()/std::filesystem::path("content"),
+        paths->getResources()/std::filesystem::path("content")
+    });
+    manager.scan();
+    contentPacks = manager.getAll(manager.assembly(packNames));
     paths->setWorldFolder(folder);
     loadContent();
 }
 
 void Engine::loadAllPacks() {
-	auto resdir = paths->getResources();
-	contentPacks.clear();
-	ContentPack::scan(paths, contentPacks);
+	PacksManager manager;
+    manager.setSources({
+        paths->getWorldFolder()/std::filesystem::path("content"),
+        paths->getUserfiles()/std::filesystem::path("content"),
+        paths->getResources()/std::filesystem::path("content")
+    });
+    manager.scan();
+    auto allnames = manager.getAllNames();
+    contentPacks = manager.getAll(manager.assembly(allnames));
 }
 
 EnginePaths* Engine::getPaths() {

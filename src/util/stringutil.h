@@ -7,6 +7,10 @@
 #include "../typedefs.h"
 
 namespace util {
+    extern std::string escape(const std::string& s);
+
+    extern std::string quote(const std::string& s);
+
     extern std::wstring lfill(std::wstring s, uint length, wchar_t c);
     extern std::wstring rfill(std::wstring s, uint length, wchar_t c);
 

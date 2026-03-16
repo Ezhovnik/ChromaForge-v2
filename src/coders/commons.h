@@ -44,8 +44,6 @@ inline bool is_identifier_part(char c) {
     return is_identifier_start(c) || is_digit(c);
 }
 
-extern std::string escape_string(std::string s);
-
 class parsing_error : public std::runtime_error {
 public:
     std::string filename;

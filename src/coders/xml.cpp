@@ -50,7 +50,7 @@ glm::vec3 Attribute::asVec3() const {
     }
     size_t pos2 = text.find(',', pos1 + 1);
     if (pos2 == std::string::npos) {
-        std::string errorLog = "Invalid vec3 value " + escape_string(text);
+        std::string errorLog = "Invalid vec3 value " + util::quote(text);
         LOG_ERROR("{}", errorLog);
         throw std::runtime_error(errorLog);
     }
@@ -68,13 +68,13 @@ glm::vec4 Attribute::asVec4() const {
     }
     size_t pos2 = text.find(',', pos1 + 1);
     if (pos2 == std::string::npos) {
-        std::string errorLog = "Invalid vec4 value " + escape_string(text);
+        std::string errorLog = "Invalid vec4 value " + util::quote(text);
         LOG_ERROR("{}", errorLog);
         throw std::runtime_error(errorLog);
     }
     size_t pos3 = text.find(',', pos2 + 1);
     if (pos3 == std::string::npos) {
-        std::string errorLog = "Invalid vec4 value " + escape_string(text);
+        std::string errorLog = "Invalid vec4 value " + util::quote(text);
         LOG_ERROR("{}", errorLog);
         throw std::runtime_error(errorLog);
     }
@@ -359,7 +359,7 @@ static void stringifyElement(std::stringstream& ss, const xmlelement element, bo
         for (auto& entry : attrs) {
             auto attr = entry.second;
             ss << attr.getName();
-            if (!attr.getText().empty()) ss << "=" << escape_string(attr.getText());
+            if (!attr.getText().empty()) ss << "=" << util::escape(attr.getText());
             if (count + 1 < int(attrs.size())) ss << " ";
             count++;
         }

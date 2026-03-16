@@ -107,34 +107,34 @@ namespace toml {
          * @param name Имя ключа.
          * @return Указатель на Field или nullptr, если ключ не найден.
          */
-        const Field* field(std::string name) const;
+        const Field* field(const std::string& name) const;
 
         /**
          * @brief Установить значение поля (для записи в TOML) из double.
          * @param name Имя ключа.
          * @param value Значение.
          */
-        void set(std::string name, double value);
+        void set(const std::string& name, double value);
 
         /**
          * @brief Установить значение поля из bool.
          * @param name Имя ключа.
          * @param value Значение.
          */
-        void set(std::string name, bool value);
+        void set(const std::string& name, bool value);
 
         /**
          * @brief Установить значение поля из строки.
          * @param name Имя ключа.
          * @param value Значение.
          */
-        void set(std::string name, std::string value);
+        void set(const std::string& name, std::string value);
 
         /**
          * @brief Получить имя секции.
          * @return Имя.
          */
-        std::string getName() const;
+        const std::string& getName() const;
 
         /**
          * @brief Получить список имён ключей в порядке добавления.
