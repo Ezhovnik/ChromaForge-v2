@@ -38,6 +38,7 @@
 #include "menu_commons.h"
 #include "../UIDocument.h"
 #include "../../logic/scripting/scripting.h"
+#include "../../interfaces/Task.h"
 
 using namespace gui;
 
@@ -102,41 +103,52 @@ static void show_content_missing(Engine* engine, const Content* content, std::sh
     menu->setPage("missing-content");
 }
 
-void show_process_panel(Engine* engine, std::shared_ptr<WorldConverter> converter, runnable postRunnable) {
+void show_process_panel(Engine* engine, std::shared_ptr<Task> task, std::wstring text=L"") {
     auto menu = engine->getGUI()->getMenu();
     auto panel = menus::create_page(engine, "process", 400, 0.5f, 1);
 
-    panel->add(std::make_shared<Label>(langs::get(L"Converting world...")));
+    if (!text.empty()) panel->add(std::make_shared<Label>(langs::get(text)));
 
     auto label = std::make_shared<Label>(L"0%");
     panel->add(label);
 
-    uint initialTasks = converter->getTotalTasks();
+    uint initialWork = task->getWorkRemaining();
 
     panel->listenInterval(0.01f, [=]() {
-        if (!converter->hasNext()) {
-            converter->write();
+        task->update();
 
-            menu->reset();
-            menu->setPage("main", false);
-            engine->getGUI()->postRunnable([=]() {
-                postRunnable();
-            });
-            return;
-        }
-        converter->convertNext();
-
-        uint tasksDone = initialTasks-converter->getTotalTasks();
-        float progress = tasksDone/static_cast<float>(initialTasks);
+        uint tasksDone = task->getWorkDone();
+        float progress = tasksDone / static_cast<float>(initialWork);
         label->setText(
-            std::to_wstring(tasksDone)+
-            L"/" + std::to_wstring(initialTasks) + L" (" +
+            std::to_wstring(tasksDone) +
+            L"/" + std::to_wstring(initialWork) + L" (" +
             std::to_wstring(int(progress * 100)) + L"%)"
         );
     });
 
     menu->reset();
     menu->setPage("process", false);
+}
+
+std::shared_ptr<WorldConverter> create_converter(
+    Engine* engine,
+    std::filesystem::path folder, 
+    const Content* content, 
+    std::shared_ptr<ContentLUT> lut, 
+    runnable postRunnable)
+{
+    auto converter = std::make_shared<WorldConverter>(folder, content, lut);
+    converter->setOnComplete([=](){
+        converter->write();
+
+        auto menu = engine->getGUI()->getMenu();
+        menu->reset();
+        menu->setPage("main", false);
+        engine->getGUI()->postRunnable([=]() {
+            postRunnable();
+        });
+    });
+    return converter;
 }
 
 void show_convert_request(
@@ -147,7 +159,8 @@ void show_convert_request(
     runnable postRunnable) 
 {
     guiutil::confirm(engine->getGUI(), langs::get(L"world.convert-request"), [=]() {
-        show_process_panel(engine, std::make_shared<WorldConverter>(folder, content, lut), postRunnable);
+        auto converter = create_converter(engine, folder, content, lut, postRunnable);
+        show_process_panel(engine, converter, L"Converting world...");
     }, L"", langs::get(L"Cancel"));
 }
 
@@ -174,9 +187,9 @@ void menus::open_world(std::string name, Engine* engine, bool confirmConvert) {
             show_content_missing(engine, content, lut);
         } else {
             if (confirmConvert) {
-                show_process_panel(engine, std::make_shared<WorldConverter>(folder, content, lut), [=](){
+                show_process_panel(engine, create_converter(engine, folder, content, lut, [=]() {
                     open_world(name, engine, false);
-                });
+                }), L"Converting world...");
             } else {
                 show_convert_request(engine, content, lut, folder, [=](){
                     open_world(name, engine, false);

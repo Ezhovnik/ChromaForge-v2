@@ -11,6 +11,17 @@ namespace scripting {
     class Environment;
 }
 
+enum class DependencyLevel {
+    Required,
+    Optional,
+    Weak,
+};
+
+struct DependencyPack {
+    DependencyLevel level;
+    std::string id;
+};
+
 class contentpack_error : public std::runtime_error {
     std::string packId;
     std::filesystem::path folder;
@@ -28,7 +39,7 @@ struct ContentPack {
     std::string creator = "";
     std::string description = "no description";
 
-    std::vector<std::string> dependencies;
+    std::vector<DependencyPack> dependencies;
 
     std::filesystem::path folder;
 

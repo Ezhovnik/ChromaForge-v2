@@ -123,13 +123,13 @@ static bool try_add_dependency(Engine* engine, World* world, const ContentPack& 
         std::filesystem::path folder = ContentPack::findPack(
             paths, 
             world->wfile->directory, 
-            dependency
+            dependency.id
         );
         if (!std::filesystem::is_directory(folder)) {
-            missing = dependency;
+            missing = dependency.id;
             return false;
         }
-        if (!world->hasPack(dependency)) world->wfile->addPack(world, dependency);
+        if (!world->hasPack(dependency.id)) world->wfile->addPack(world, dependency.id);
     }
     world->wfile->addPack(world, pack.id);
     return true;

@@ -208,10 +208,12 @@ void Engine::mainloop() {
 
 inline const std::string checkPacks(
     const std::unordered_set<std::string>& packs, 
-    const std::vector<std::string>& dependencies) 
+    const std::vector<DependencyPack>& dependencies) 
 {
-    for (const std::string& str : dependencies) {
-        if (packs.find(str) == packs.end()) return str;
+    for (const auto& dependency : dependencies) { 
+        if (packs.find(dependency.id) == packs.end()) {
+            return dependency.id;
+        }
     }
     return "";
 }
@@ -251,14 +253,13 @@ void Engine::loadContent() {
 		}
     }
     content.reset(contentBuilder.build());
-    resPaths.reset(new ResPaths(resdir, resRoots));
-
-    ShaderProgram::preprocessor->setPaths(resPaths.get());
+    resPaths = std::make_unique<ResPaths>(resdir, resRoots);
 
     langs::setup(resdir, langs::current->getId(), contentPacks);
 
-	std::unique_ptr<Assets> new_assets(new Assets());
 	LOG_INFO("Loading content Assets");
+    auto new_assets = std::make_unique<Assets>();
+    ShaderProgram::preprocessor->setPaths(resPaths.get());
 	AssetsLoader loader(new_assets.get(), resPaths.get());
 	AssetsLoader::addDefaults(loader, content.get());
 	while (loader.hasNext()) {
@@ -268,7 +269,7 @@ void Engine::loadContent() {
 			throw initialize_error("Could not to initialize content assets");
 		}
 	}
-    assets->extend(*new_assets.get());
+    assets->extend(*new_assets);
     LOG_INFO("Content Assets loaded successfully");
     LOG_INFO("Content loaded sucessfully");
     Logger::getInstance().flush();

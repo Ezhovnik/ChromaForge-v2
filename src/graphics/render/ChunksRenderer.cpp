@@ -9,147 +9,83 @@
 #include "../../world/Level.h"
 #include "../../debug/Logger.h"
 
+inline constexpr uint RENDERER_CAPACITY = 9 * 6 * 6 * 3000;
+
+class RendererWorker : public util::Worker<std::shared_ptr<Chunk>, RendererResult> {
+    Level* level;
+    BlocksRenderer renderer;
+public:
+    RendererWorker(
+        Level* level, 
+        const ContentGfxCache* cache, 
+        const EngineSettings& settings
+    ) : level(level), 
+        renderer(RENDERER_CAPACITY, level->content, cache, settings) {}
+
+    RendererResult operator()(const std::shared_ptr<Chunk>& chunk) override {
+        renderer.build(chunk.get(), level->chunksStorage.get());
+        return RendererResult{glm::ivec2(chunk->chunk_x, chunk->chunk_z), &renderer};
+    }
+};
+
 ChunksRenderer::ChunksRenderer(
     Level* level, 
     const ContentGfxCache* cache, 
     const EngineSettings& settings
-) : level(level), 
-    cache(cache), 
-    settings(settings) 
+) : level(level),
+    threadPool(
+        "chunks-render-pool",
+        [=](){return std::make_shared<RendererWorker>(level, cache, settings);}, 
+        [=](RendererResult& mesh){
+            meshes[mesh.key].reset(mesh.renderer->createMesh());
+            inwork.erase(mesh.key);
+        })
 {
-	const int MAX_FULL_CUBES = 3000;
-	renderer = std::make_unique<BlocksRenderer>(
-        9 * 6 * 6 * MAX_FULL_CUBES, 
-        level->content, 
-        cache,
-        settings
+    renderer = std::make_unique<BlocksRenderer>(
+        RENDERER_CAPACITY, level->content, cache, settings
     );
-
-    const uint num_threads = std::thread::hardware_concurrency();
-    for (uint i = 0; i < num_threads; i++) {
-        threads.emplace_back(&ChunksRenderer::threadLoop, this, i);
-        workersBlocked.emplace_back();
-    }
-
-    LOG_DEBUG("Created {} chunks rendering threads", num_threads);
 }
 
 ChunksRenderer::~ChunksRenderer() {
-    {
-        std::unique_lock<std::mutex> lock(jobsMutex);
-        working = false;
-    }
-
-    resultsMutex.lock();
-    while (!results.empty()) {
-        mesh_entry entry = results.front();
-        results.pop();
-        entry.locked = false;
-        entry.variable.notify_all();
-    }
-    resultsMutex.unlock();
-
-    jobsMutexCondition.notify_all();
-    for (auto& thread : threads) {
-        thread.join();
-    }
-}
-
-void ChunksRenderer::threadLoop(int index) {
-    const int MAX_FULL_CUBES = 3000;
-    BlocksRenderer renderer(
-        9 * 6 * 6 * MAX_FULL_CUBES, 
-        level->content, 
-        cache, 
-        settings
-    );
-
-    std::condition_variable variable;
-    std::mutex mutex;
-    bool locked = false;
-    while (working) {
-        std::shared_ptr<Chunk> chunk;
-        {
-            std::unique_lock<std::mutex> lock(jobsMutex);
-            jobsMutexCondition.wait(lock, [this] {return !jobs.empty() || !working;});
-            if (!working) break;
-            chunk = jobs.front();
-            jobs.pop();
-        }
-        process(chunk, renderer);
-        {
-            resultsMutex.lock();
-            results.push(mesh_entry{
-                renderer, 
-                variable, 
-                index, 
-                locked, 
-                glm::ivec2(chunk->chunk_x, chunk->chunk_z)
-            });
-            locked = true;
-            resultsMutex.unlock();
-        }
-        {
-            std::unique_lock<std::mutex> lock(mutex);
-            variable.wait(lock, [&] {return !working || !locked;});
-        }
-    }
-}
-
-void ChunksRenderer::process(std::shared_ptr<Chunk> chunk, BlocksRenderer& renderer) {
-    renderer.build(chunk.get(), level->chunksStorage.get());
 }
 
 std::shared_ptr<Mesh> ChunksRenderer::render(std::shared_ptr<Chunk> chunk, bool important) {
-	chunk->setModified(false);
+    chunk->setModified(false);
 
     if (important) {
-        Mesh* mesh = renderer->render(chunk.get(), level->chunksStorage.get());
-        auto sptr = std::shared_ptr<Mesh>(mesh);
-        meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = sptr;
-        return sptr;
+        std::shared_ptr<Mesh> mesh (renderer->render(chunk.get(), level->chunksStorage.get()));
+        meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = mesh;
+        return mesh;
     }
 
     glm::ivec2 key(chunk->chunk_x, chunk->chunk_z);
     if (inwork.find(key) != inwork.end()) return nullptr;
 
     inwork[key] = true;
-    jobsMutex.lock();
-    jobs.push(chunk);
-    jobsMutex.unlock();
-    jobsMutexCondition.notify_one();
+    threadPool.enqueueJob(chunk);
     return nullptr;
 }
 
-void ChunksRenderer::unload(Chunk* chunk) {
-	auto found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
-	if (found != meshes.end()) meshes.erase(found);
+void ChunksRenderer::unload(const Chunk* chunk) {
+    auto found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
+    if (found != meshes.end()) meshes.erase(found);
 }
 
 std::shared_ptr<Mesh> ChunksRenderer::getOrRender(std::shared_ptr<Chunk> chunk, bool important) {
-	auto found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
-	if (found != meshes.end()){
-        if (chunk->isModified()) render(chunk, important);
-		return found->second;
-	}
-	return render(chunk, important);
+    auto found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
+    if (found == meshes.end()) return render(chunk, important);
+
+    if (chunk->isModified()) render(chunk, important);
+
+    return found->second;
 }
 
 std::shared_ptr<Mesh> ChunksRenderer::get(Chunk* chunk) {
-	auto found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
-	if (found != meshes.end()) return found->second;
-	return nullptr;
+    auto found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
+    if (found != meshes.end()) return found->second;
+    return nullptr;
 }
 
 void ChunksRenderer::update() {
-    resultsMutex.lock();
-    while (!results.empty()) {
-        mesh_entry entry = results.front();
-        results.pop();
-        meshes[entry.key] = std::shared_ptr<Mesh>(entry.renderer.createMesh());
-        inwork.erase(entry.key);
-        entry.locked = false;
-        entry.variable.notify_all();
-    }
-    resultsMutex.unlock();
+    threadPool.update();
 }

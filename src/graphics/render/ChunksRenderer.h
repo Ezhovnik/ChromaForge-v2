@@ -14,6 +14,7 @@
 #include "../../voxels/Block.h"
 #include "../../voxels/ChunksStorage.h"
 #include "../../settings.h"
+#include "../../util/ThreadPool.h"
 
 class Mesh;
 class Chunk;
@@ -21,49 +22,31 @@ class Level;
 class BlocksRenderer;
 class ContentGfxCache;
 
-struct mesh_entry {
-    BlocksRenderer& renderer;
-    std::condition_variable& variable;
-    int workerIndex;
-    bool& locked;
+struct RendererResult {
     glm::ivec2 key;
+    BlocksRenderer* renderer;
 };
 
 class ChunksRenderer {
-private:
-	std::unique_ptr<BlocksRenderer> renderer;
-	Level* level;
-	std::unordered_map<glm::ivec2, std::shared_ptr<Mesh>> meshes;
+    Level* level;
+    std::unique_ptr<BlocksRenderer> renderer;
+    std::unordered_map<glm::ivec2, std::shared_ptr<Mesh>> meshes;
     std::unordered_map<glm::ivec2, bool> inwork;
-    std::vector<std::thread> threads;
 
-    std::queue<mesh_entry> results;
-    std::mutex resultsMutex;
-
-    std::queue<std::shared_ptr<Chunk>> jobs;
-    std::condition_variable jobsMutexCondition;
-    std::mutex jobsMutex;
-
-    bool working = true;
-    const ContentGfxCache* cache;
-    const EngineSettings& settings;
-    std::vector<std::unique_lock<std::mutex>> workersBlocked;
-
-    void threadLoop(int index);
-    void process(std::shared_ptr<Chunk> chunk, BlocksRenderer& renderer);
+    util::ThreadPool<std::shared_ptr<Chunk>, RendererResult> threadPool;
 public:
-	ChunksRenderer(
+    ChunksRenderer(
         Level* level, 
-		const ContentGfxCache* cache, 
-		const EngineSettings& settings
+        const ContentGfxCache* cache, 
+        const EngineSettings& settings
     );
-	virtual ~ChunksRenderer();
+    virtual ~ChunksRenderer();
 
-	std::shared_ptr<Mesh> render(std::shared_ptr<Chunk> chunk, bool important);
-	void unload(Chunk* chunk);
+    std::shared_ptr<Mesh> render(std::shared_ptr<Chunk> chunk, bool important);
+    void unload(const Chunk* chunk);
 
-	std::shared_ptr<Mesh> getOrRender(std::shared_ptr<Chunk> chunk, bool important);
-	std::shared_ptr<Mesh> get(Chunk* chunk);
+    std::shared_ptr<Mesh> getOrRender(std::shared_ptr<Chunk> chunk, bool important);
+    std::shared_ptr<Mesh> get(Chunk* chunk);
 
     void update();
 };

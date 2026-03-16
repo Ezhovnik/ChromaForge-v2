@@ -32,10 +32,6 @@ WorldConverter::~WorldConverter() {
     delete wfile;
 }
 
-bool WorldConverter::hasNext() const {
-    return !tasks.empty();
-}
-
 void WorldConverter::convertRegion(std::filesystem::path file) {
     int x, z;
     std::string name = file.stem().string();
@@ -70,12 +66,13 @@ void WorldConverter::convertPlayer(std::filesystem::path file) {
 }
 
 void WorldConverter::convertNext() {
-    if (!hasNext()) {
+    if (tasks.empty()) {
         LOG_ERROR("No more tasks to convert");
         throw std::runtime_error("No more tasks to convert");
     }
     ConvertTask task = tasks.front();
     tasks.pop();
+    tasksDone++;
 
     if (!std::filesystem::is_regular_file(task.file)) return;
 
@@ -95,6 +92,10 @@ void WorldConverter::write() {
     LOG_INFO("World successfully writed");
 }
 
-uint WorldConverter::getTotalTasks() const {
+uint WorldConverter::getWorkRemaining() const {
     return tasks.size();
+}
+
+uint WorldConverter::getWorkDone() const {
+    return tasksDone;
 }

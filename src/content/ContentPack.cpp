@@ -72,8 +72,10 @@ ContentPack ContentPack::read(std::filesystem::path folder) {
 
     auto dependencies = root->list("dependencies");
     if (dependencies) {
-        for (size_t i = 0; i < dependencies->size(); i++) {
-            pack.dependencies.push_back(dependencies->str(i));
+        for (size_t i = 0; i < dependencies->size(); ++i) {
+            pack.dependencies.push_back(
+                {DependencyLevel::Required, dependencies->str(i)}
+            );
         }
     }
 
