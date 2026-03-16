@@ -11,7 +11,7 @@
 #include "../graphics/core/ImageData.h"
 #include "../graphics/core/Atlas.h"
 #include "../graphics/core/Font.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../files/engine_paths.h"
 #include "../coders/json.h"
 #include "../graphics/core/TextureAnimation.h"

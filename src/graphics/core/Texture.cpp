@@ -4,7 +4,7 @@
 
 #include <GL/glew.h>
 
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 #include "gl_util.h"
 
 Texture::Texture(uint id, uint width, uint height) : id(id), width(width), height(height){

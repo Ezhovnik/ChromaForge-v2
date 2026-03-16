@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Events.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../graphics/core/ImageData.h"
 
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW

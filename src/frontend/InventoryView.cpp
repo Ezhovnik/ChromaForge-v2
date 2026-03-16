@@ -22,7 +22,7 @@
 #include "../util/stringutil.h"
 #include "../graphics/ui/elements/containers.h"
 #include "../world/Level.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../coders/xml.h"
 #include "../graphics/ui/gui_xml.h"
 #include "../logic/scripting/scripting.h"

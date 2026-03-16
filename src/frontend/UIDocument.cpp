@@ -17,10 +17,18 @@ UIDocument::UIDocument(
     root(root), 
     env(std::move(env)) 
 {
-    collect(map, root);
+    gui::UINode::getIndices(root, map);
+}
+
+void UIDocument::rebuildIndices() {
+    gui::UINode::getIndices(root, map);
 }
 
 const uinodes_map& UIDocument::getMap() const {
+    return map;
+}
+
+uinodes_map& UIDocument::getMapWriteable() {
     return map;
 }
 
@@ -44,17 +52,6 @@ const std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const 
     auto found = map.find(id);
     if (found == map.end()) return nullptr;
     return found->second;
-}
-
-void UIDocument::collect(uinodes_map& map, std::shared_ptr<gui::UINode> node) {
-    const std::string& id = node->getId();
-    if (!id.empty()) map[id] = node;
-    auto container = std::dynamic_pointer_cast<gui::Container>(node);
-    if (container) {
-        for (auto subnode : container->getNodes()) {
-            collect(map, subnode);
-        }
-    }
 }
 
 std::unique_ptr<UIDocument> UIDocument::read(int parent_env, std::string name, std::filesystem::path file) {

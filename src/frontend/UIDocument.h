@@ -37,14 +37,15 @@ public:
         std::unique_ptr<scripting::Environment> env
     );
 
+    void rebuildIndices();
+
     const uinodes_map& getMap() const;
+    uinodes_map& getMapWriteable();
     const std::string& getId() const;
     const std::shared_ptr<gui::UINode> getRoot() const;
     const uidocscript& getScript() const;
     int getEnvironment() const;
     const std::shared_ptr<gui::UINode> get(const std::string& id) const;
-
-    static void collect(uinodes_map& map, std::shared_ptr<gui::UINode> node);
 
     static std::unique_ptr<UIDocument> read(int parent_env, std::string name, std::filesystem::path file);
     static std::shared_ptr<gui::UINode> readElement(std::filesystem::path file);

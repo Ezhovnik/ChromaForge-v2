@@ -118,6 +118,8 @@ public:
     void remove(std::shared_ptr<gui::UINode> node);
 
     Player* getPlayer() const;
+
+    std::shared_ptr<Inventory> getBlockInventory();
 };
 
 #endif // SRC_HUD_RENDER_H_

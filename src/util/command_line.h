@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../files/engine_paths.h"
 
 /**

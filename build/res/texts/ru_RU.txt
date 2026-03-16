@@ -30,7 +30,7 @@ world.delete-confirm=Удалить мир безвозвратно?
 menu.Content Error=Ошибка контента
 error.pack-not-found=Не удалось найти пакет
 error.dependency-not-found=Используемая зависимость не найдена
-pack.remove-confirm=Удалить весь поставляемый паком контент из мира (безвозвратно)?
+pack.remove-confirm=Удалить весь поставляемый паком/паками контент из мира (безвозвратно)?
 menu.Page does not exists=Страница не существует
 
 # Настройки

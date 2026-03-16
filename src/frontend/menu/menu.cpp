@@ -23,7 +23,7 @@
 #include "../../content/Content.h"
 #include "../../content/ContentLUT.h"
 #include "../../files/WorldConverter.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 #include "../locale/langs.h"
 #include "../../content/ContentPack.h"
 #include "../../core_content_defs.h"
@@ -261,5 +261,6 @@ void menus::refresh_menus(Engine* engine) {
     create_world_generators_panel(engine);
 
     add_page_loader(engine, "main");
+    add_page_loader(engine, "settings-audio");
     load_page(engine, "404");
 }

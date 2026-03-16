@@ -13,7 +13,7 @@
 #include "window/input.h"
 #include "assets/AssetsLoader.h"
 #include "core_content_defs.h"
-#include "logger/Logger.h"
+#include "debug/Logger.h"
 #include "settings.h"
 #include "graphics/ui/GUI.h"
 #include "graphics/core/Batch2D.h"
@@ -42,7 +42,7 @@
 #include "graphics/ui/elements/containers.h"
 
 // Реализация конструктора
-Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths){
+Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths), settingsHandler(settings) {
     // Инициализация окна GLFW
     if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
@@ -55,6 +55,22 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     audio::create_channel("music");
     audio::create_channel("ambient");
     audio::create_channel("ui");
+
+    settings.audio.volumeMaster.observe([=](auto value) {
+        audio::get_channel("master")->setVolume(value * value);
+    });
+    settings.audio.volumeRegular.observe([=](auto value) {
+        audio::get_channel("regular")->setVolume(value * value);
+    });
+    settings.audio.volumeUI.observe([=](auto value) {
+        audio::get_channel("ui")->setVolume(value * value);
+    });
+    settings.audio.volumeAmbient.observe([=](auto value) {
+        audio::get_channel("ambient")->setVolume(value * value);
+    });
+    settings.audio.volumeMusic.observe([=](auto value) {
+        audio::get_channel("music")->setVolume(value * value);
+    });
 
     auto resdir = paths->getResources();
 
@@ -129,15 +145,6 @@ void Engine::updateHotkeys() {
     if (Events::justPressed(keycode::F11)) Window::toggleFullscreen();
 }
 
-static void updateAudio(double delta, const AudioSettings& settings) {
-    audio::get_channel("master")->setVolume(settings.volumeMaster * settings.volumeMaster);
-    audio::get_channel("regular")->setVolume(settings.volumeRegular * settings.volumeRegular);
-    audio::get_channel("ui")->setVolume(settings.volumeUI * settings.volumeUI);
-    audio::get_channel("ambient")->setVolume(settings.volumeAmbient * settings.volumeAmbient);
-    audio::get_channel("music")->setVolume(settings.volumeMusic * settings.volumeMusic);
-    audio::update(delta);
-}
-
 void Engine::onAssetsLoaded() {
     assets->store(new UIDocument(
         BUILTIN_CONTENT_NAMESPACE + ":root", 
@@ -145,6 +152,23 @@ void Engine::onAssetsLoaded() {
         std::dynamic_pointer_cast<gui::UINode>(gui->getContainer()), 
         nullptr
     ), BUILTIN_CONTENT_NAMESPACE + ":root");
+}
+
+void Engine::renderFrame(Batch2D& batch) {
+    screen->draw(deltaTime);
+
+    Viewport viewport(Window::width, Window::height);
+    GfxContext ctx(nullptr, viewport, &batch);
+    gui->draw(&ctx, assets.get());
+}
+
+void Engine::processPostRunnables() {
+    std::lock_guard<std::recursive_mutex> lock(postRunnablesMutex);
+    while (!postRunnables.empty()) {
+        postRunnables.front()();
+        postRunnables.pop();
+    }
+    scripting::process_post_runnables();
 }
 
 // Основной цикл приложения
@@ -166,29 +190,16 @@ void Engine::mainloop() {
         updateTimers(); // Обновляем время и deltaTime
         updateHotkeys(); // Обрабатываем нажатия клавиш
 
-        updateAudio(deltaTime, settings.audio);
+        audio::update(deltaTime);
 
         gui->activate(deltaTime);
 
         screen->update(deltaTime);
 
-        if (!Window::isIconified()) {
-            screen->draw(deltaTime);
+        if (!Window::isIconified()) renderFrame(batch);
+        Window::swapInterval(Window::isIconified() ? 1 : settings.display.swapInterval);
 
-            Viewport viewport(Window::width, Window::height);
-            GfxContext context(nullptr, viewport, &batch);
-            gui->draw(&context, assets.get());
-
-            Window::swapInterval(settings.display.swapInterval);
-        } else {
-            Window::swapInterval(1);
-        }
-
-        while (!postRunnables.empty()) {
-            postRunnables.front()();
-            postRunnables.pop();
-        }
-        scripting::process_post_runnables();
+        processPostRunnables();
 
         Window::swapBuffers(); // Показать отрендеренный кадр
         Events::pollEvents(); // Обработка событий ОС и ввода
@@ -243,6 +254,8 @@ void Engine::loadContent() {
     resPaths.reset(new ResPaths(resdir, resRoots));
 
     ShaderProgram::preprocessor->setPaths(resPaths.get());
+
+    langs::setup(resdir, langs::current->getId(), contentPacks);
 
 	std::unique_ptr<Assets> new_assets(new Assets());
 	LOG_INFO("Loading content Assets");
@@ -333,4 +346,8 @@ void Engine::addDefaultWorldGenerators() {
 
 void Engine::postRunnable(runnable callback) {
     postRunnables.push(callback);
+}
+
+SettingsHandler& Engine::getSettingsHandler() {
+    return settingsHandler;
 }

@@ -11,7 +11,7 @@
 #include "../objects/Player.h"
 #include "../physics/PhysicsSolver.h"
 #include "../window/Camera.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../content/Content.h"
 #include "../content/ContentLUT.h"
 #include "../items/Inventories.h"

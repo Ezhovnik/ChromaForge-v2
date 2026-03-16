@@ -6,7 +6,7 @@
 #include "ShaderProgram.h"
 #include "Texture.h"
 #include "Framebuffer.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 
 PostProcessing::PostProcessing() {
     float vertices[] {

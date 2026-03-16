@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <variant>
 
 #include "../typedefs.h"
 
@@ -14,17 +15,10 @@ namespace dynamic {
     class Value;
 
     enum class ValueType {
-        map, list, number, integer, string, boolean
+        None, Map, List, Number, Integer, String, Boolean
     };
 
-    union valvalue {
-        Map* map;
-        List* list;
-        std::string* str;
-        double decimal;
-        int64_t integer;
-        uint64_t boolean;
-    };
+    using valvalue = std::variant<Map*, List*, std::string, number_t, bool, integer_t>;
 
     class Value {
     public:
@@ -32,6 +26,10 @@ namespace dynamic {
         valvalue value;
         Value(ValueType type, valvalue value);
         ~Value();
+
+        static Value boolean(bool value);
+        static Value of(number_u value);
+        static Value of(const std::string& value);
     };
 
     class List {
@@ -40,8 +38,8 @@ namespace dynamic {
         ~List();
 
         std::string str(size_t index) const;
-        double num(size_t index) const;
-        int64_t integer(size_t index) const;
+        number_t num(size_t index) const;
+        integer_t integer(size_t index) const;
         Map* map(size_t index) const;
         List* list(size_t index) const;
         bool flag(size_t index) const;
@@ -79,13 +77,13 @@ namespace dynamic {
         ~Map();
 
         std::string getStr(std::string key) const;
-        double getNum(std::string key) const;
-        int64_t getInt(std::string key) const;
+        number_t getNum(std::string key) const;
+        integer_t getInt(std::string key) const;
         bool getBool(std::string key) const;
 
         std::string getStr(std::string key, const std::string& def) const;
-        double getNum(std::string key, double def) const;
-        int64_t getInt(std::string key, int64_t def) const;
+        number_t getNum(std::string key, double def) const;
+        integer_t getInt(std::string key, integer_t def) const;
         bool getBool(std::string key, bool def) const;
 
         void str(std::string key, std::string& dst) const;

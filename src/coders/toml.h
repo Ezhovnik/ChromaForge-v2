@@ -22,6 +22,7 @@ namespace toml {
         ftint, ///< Знаковое целое (int)
         ftuint, ///< Беззнаковое целое (uint)
         ftfloat, ///< Число с плавающей точкой (float)
+        ftdouble, ///< Число с плавающей точкой(double)
         ftstring, ///< Строка (std::string)
     };
 
@@ -86,6 +87,13 @@ namespace toml {
          * @param ptr Указатель на переменную float.
          */
         void add(std::string name, float* ptr);
+
+        /**
+         * @brief Привязать поле типа double.
+         * @param name Имя ключа.
+         * @param ptr Указатель на переменную double.
+         */
+        void add(std::string name, double* ptr);
 
         /**
          * @brief Привязать поле типа std::string.

@@ -1,6 +1,7 @@
 #include "UINode.h"
 
 #include "../../../graphics/core/Batch2D.h"
+#include "containers.h"
 
 using gui::UINode;
 using gui::Align;
@@ -241,4 +242,19 @@ const std::string& UINode::getId() const {
 
 void UINode::reposition() {
     if (positionfunc) setPos(positionfunc());
+}
+
+void UINode::getIndices(
+    std::shared_ptr<UINode> node,
+    std::unordered_map<std::string, std::shared_ptr<UINode>>& map)
+{
+    const std::string& id = node->getId();
+    if (!id.empty()) map[id] = node;
+
+    auto container = std::dynamic_pointer_cast<gui::Container>(node);
+    if (container) {
+        for (auto subnode : container->getNodes()) {
+            getIndices(subnode, map);
+        }
+    }
 }

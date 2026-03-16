@@ -27,7 +27,7 @@
 #include "../objects/Player.h"
 #include "../assets/Assets.h"
 #include "../logic/PlayerController.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../graphics/render/ChunksRenderer.h"
 #include "../world/LevelEvents.h"
 #include "../math/FrustumCulling.h"

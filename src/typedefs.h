@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <variant>
 
 /**
  * @file typedefs.h
@@ -36,5 +37,13 @@ using light_t = uint16_t;
 using blockstate_t = uint16_t;
 /** Тип количества предметов в стаке (32 бита). */
 using itemcount_t = uint32_t;
+
+// ========== Типы для динамических контейнеров ==========
+/** Целочисленный тип (64 битное знаковое целое число) */
+using integer_t = int64_t;
+/** Число с плавающей точкой (64 битное знаковое вещественное число) */
+using number_t = double;
+/** Объединение числовых типов */
+using number_u = std::variant<integer_t, number_t>;
 
 #endif // SRC_TYPEDEFS_H_

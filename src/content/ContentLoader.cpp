@@ -12,7 +12,7 @@
 #include "../files/files.h"
 #include "../coders/json.h"
 #include "../typedefs.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../logic/scripting/scripting.h"
 #include "../util/listutil.h"
 #include "../items/Item.h"

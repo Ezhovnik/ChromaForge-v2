@@ -4,7 +4,7 @@
 #include "lua/api_lua.h"
 #include "lua/LuaState.h"
 #include "../../engine.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 #include "../../files/files.h"
 #include "../../frontend/hud.h"
 #include "../../objects/Player.h"

@@ -2,12 +2,26 @@
 #define FILES_SETTINGS_IO_H_
 
 #include <string>
+#include <unordered_map>
 
 #include "../settings.h"
+#include "../data/dynamic.h"
 
 namespace toml {
     class Wrapper;
 }
+
+class SettingsHandler {
+private:
+    std::unordered_map<std::string, Setting*> map;
+public:
+    SettingsHandler(EngineSettings& settings);
+
+    dynamic::Value getValue(const std::string& name) const;
+    void setValue(const std::string& name, dynamic::Value value);
+
+    std::string toString(const std::string& name) const;
+};
 
 extern std::string write_controls();
 extern toml::Wrapper* create_wrapper(EngineSettings& settings);

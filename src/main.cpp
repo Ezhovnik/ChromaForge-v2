@@ -10,7 +10,7 @@
 #include "coders/toml.h"
 #include "input_bindings.h"
 #include "core_content_defs.h"
-#include "logger/Logger.h"
+#include "debug/Logger.h"
 #include "util/command_line.h"
 #include "files/settings_io.h"
 #include "files/engine_paths.h"

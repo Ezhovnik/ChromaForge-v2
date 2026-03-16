@@ -5,6 +5,7 @@
 
 #include "typedefs.h"
 #include "constants.h"
+#include "data/setting.h"
 
 struct DisplaySettings {
 	int width = 1280;
@@ -26,7 +27,7 @@ struct CameraSettings {
     bool fovEvents = true;
     bool shaking = true;
 	float fov = 90.0f;
-	float sensitivity = 2.0f;
+	NumberSetting sensitivity {2.0f, 0.1f, 10.0f};
 };
 
 struct GraphicsSettings {
@@ -49,11 +50,11 @@ struct UISettings {
 struct AudioSettings {
     bool enabled = true;
 
-    float volumeMaster = 1.0f;
-    float volumeRegular = 1.0f;
-    float volumeUI = 1.0f;
-    float volumeAmbient = 1.0f;
-    float volumeMusic = 1.0f;
+    NumberSetting volumeMaster {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
+    NumberSetting volumeRegular {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
+    NumberSetting volumeUI {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
+    NumberSetting volumeAmbient {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
+    NumberSetting volumeMusic {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
 };
 
 struct EngineSettings {

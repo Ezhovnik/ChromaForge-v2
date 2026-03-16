@@ -8,7 +8,7 @@
 #include "../coders/png.h"
 #include "../graphics/core/Font.h"
 #include "../graphics/core/Atlas.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../constants.h"
 #include "../graphics/core/ImageData.h"
 #include "asset_loaders.h"
@@ -130,12 +130,13 @@ void AssetsLoader::processPreloadList(AssetType tag, dynamic::List* list) {
     for (uint i = 0; i < list->size(); ++i) {
         auto value = list->get(i);
         switch (value->type) {
-            case dynamic::ValueType::string: {
-                processPreload(tag, *value->value.str, nullptr);
+            case dynamic::ValueType::String: {
+                processPreload(tag, std::get<std::string>(value->value), nullptr);
                 break;
-			} case dynamic::ValueType::map: {
-                auto name = value->value.map->getStr("name");
-                processPreload(tag, name, value->value.map);
+			} case dynamic::ValueType::Map: {
+                auto map = std::get<dynamic::Map*>(value->value);
+                auto name = map->getStr("name");
+                processPreload(tag, name, map);
                 break;
             } default: {
 				LOG_ERROR("Invalid entry type");

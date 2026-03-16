@@ -10,7 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../../coders/GLSLExtension.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 
 GLSLExtension* ShaderProgram::preprocessor = new GLSLExtension();
 

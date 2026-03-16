@@ -7,7 +7,7 @@
 #include <assert.h>
 
 #include "commons.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
 using namespace toml;
 
@@ -45,6 +45,10 @@ void Section::add(std::string name, float* ptr) {
 
 void Section::add(std::string name, std::string* ptr) {
     add(name, {fieldtype::ftstring, ptr});
+}
+
+void Section::add(std::string name, double* ptr) {
+    add(name, {fieldtype::ftdouble, ptr});
 }
 
 std::string Section::getName() const {
@@ -102,6 +106,7 @@ std::string Wrapper::write() const {
                 case fieldtype::ftint: ss << *((int*)field->ptr); break;
                 case fieldtype::ftuint: ss << *((uint*)field->ptr); break;
                 case fieldtype::ftfloat: ss << *((float*)field->ptr); break;
+                case fieldtype::ftdouble: ss << *((double*)field->ptr); break;
                 case fieldtype::ftstring: 
                     ss << escape_string(*((const std::string*)field->ptr)); 
                     break;
@@ -133,11 +138,6 @@ void Reader::read() {
     readSection(nullptr);
 }
 
-// Вспомогательная функция для проверки, является ли тип числовым.
-inline bool is_numeric_type(fieldtype type) {
-    return type == fieldtype::ftint || type == fieldtype::ftfloat;
-}
-
 void Section::set(std::string name, double value) {
     const Field* field = this->field(name);
     if (field == nullptr) {
@@ -148,6 +148,7 @@ void Section::set(std::string name, double value) {
         case fieldtype::ftint: *(int*)(field->ptr) = value; break;
         case fieldtype::ftuint: *(uint*)(field->ptr) = value; break;
         case fieldtype::ftfloat: *(float*)(field->ptr) = value; break;
+        case fieldtype::ftdouble: *(double*)(field->ptr) = value; break;
         case fieldtype::ftstring: *(std::string*)(field->ptr) = std::to_string(value); break;
         default:
             LOG_ERROR("Type error for key '{}'", name);
@@ -165,6 +166,7 @@ void Section::set(std::string name, bool value) {
         case fieldtype::ftint: *(int*)(field->ptr) = (int)value; break;
         case fieldtype::ftuint: *(uint*)(field->ptr) = (uint)value; break;
         case fieldtype::ftfloat: *(float*)(field->ptr) = (float)value; break;
+        case fieldtype::ftdouble: *(double*)(field->ptr) = (double)value; break;
         case fieldtype::ftstring: *(std::string*)(field->ptr) = value ? "true" : "false"; break;
         default:
             LOG_ERROR("Type error for key '{}'", name);
@@ -206,15 +208,15 @@ void Reader::readSection(Section* section /*nullable*/) {
         if (is_digit(c)) {
             // Число без знака
             number_u num;
-            if (parseNumber(1, num) && section) section->set(name, (double)num.ival);
-            else if (section) section->set(name, num.fval);
+            if (parseNumber(1, num) && section) section->set(name, (double)std::get<integer_t>(num));
+            else if (section) section->set(name, std::get<number_t>(num));
         } else if (c == '-' || c == '+') {
             // Число со знаком
             int sign = c == '-' ? -1 : 1;
             pos++;
             number_u num;
-            if (parseNumber(sign, num) && section) section->set(name, (double)num.ival);
-            else if (section) section->set(name, num.fval);
+            if (parseNumber(sign, num) && section) section->set(name, (double)std::get<integer_t>(num));
+            else if (section) section->set(name, std::get<number_t>(num));
         } else if (is_identifier_start(c)) {
             // Идентификатор: возможно true/false/inf/nan
             std::string identifier = parseName();

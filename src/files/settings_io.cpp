@@ -5,12 +5,71 @@
 #include "../window/Events.h"
 #include "../window/input.h"
 #include "../coders/json.h"
-#include "../data/dynamic.h"
 #include "../coders/toml.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
+
+SettingsHandler::SettingsHandler(EngineSettings& settings) {
+    map.emplace("audio.volume-master", &settings.audio.volumeMaster);
+    map.emplace("audio.volume-regular", &settings.audio.volumeRegular);
+    map.emplace("audio.volume-ui", &settings.audio.volumeUI);
+    map.emplace("audio.volume-ambient", &settings.audio.volumeAmbient);
+    map.emplace("audio.volume-music", &settings.audio.volumeMusic);
+
+    map.emplace("camera.sensitivity", &settings.camera.sensitivity);
+}
+
+dynamic::Value SettingsHandler::getValue(const std::string& name) const {
+    auto found = map.find(name);
+    if (found == map.end()) {
+		LOG_ERROR("Setting '{}' does not exist", name);
+        throw std::runtime_error("Setting '" + name + "' does not exist");
+    }
+    auto setting = found->second;
+    if (auto number = dynamic_cast<NumberSetting*>(setting)) {
+        return dynamic::Value::of((number_t)number->get());
+    } else {
+		LOG_ERROR("Type is not implemented for '{}'", name);
+        throw std::runtime_error("Type is not implemented for '" + name + "'");
+    }
+}
+
+void SettingsHandler::setValue(const std::string& name, dynamic::Value value) {
+    auto found = map.find(name);
+    if (found == map.end()) {
+		LOG_ERROR("Setting '{}' does not exist", name);
+        throw std::runtime_error("Setting '" + name + "' does not exist");
+    }
+    auto setting = found->second;
+    if (auto number = dynamic_cast<NumberSetting*>(setting)) {
+        switch (value.type) {
+            case dynamic::ValueType::Integer:
+                number->set(std::get<integer_t>(value.value));
+                break;
+            case dynamic::ValueType::Number:
+                number->set(std::get<number_t>(value.value));
+                break;
+            default:
+				LOG_ERROR("Type error, numeric value expected");
+                throw std::runtime_error("Type error, numeric value expected");
+        }
+    } else {
+		LOG_ERROR("Type is not implemented - setting '{}'", name);
+        throw std::runtime_error("Type is not implement - setting '" + name + "'");
+    }
+}
+
+std::string SettingsHandler::toString(const std::string& name) const {
+    auto found = map.find(name);
+    if (found == map.end()) {
+		LOG_ERROR("Setting '{}' does not exist", name);
+        throw std::runtime_error("Setting '" + name + "' does not exist");
+    }
+    auto setting = found->second;
+    return setting->toString();
+}
 
 toml::Wrapper* create_wrapper(EngineSettings& settings) {
-	std::unique_ptr<toml::Wrapper> wrapper (new toml::Wrapper());
+	auto wrapper = std::make_unique<toml::Wrapper>();
 
 	toml::Section& display = wrapper->add("display");
 	display.add("width", &settings.display.width);
@@ -28,7 +87,7 @@ toml::Wrapper* create_wrapper(EngineSettings& settings) {
 	camera.add("fov-events", &settings.camera.fovEvents);
 	camera.add("shaking", &settings.camera.shaking);
 	camera.add("fov", &settings.camera.fov);
-	camera.add("sensitivity", &settings.camera.sensitivity);
+	camera.add("sensitivity", &*settings.camera.sensitivity);
 
 	toml::Section& graphics = wrapper->add("graphics");
 	graphics.add("fog-curve", &settings.graphics.fogCurve);
@@ -46,11 +105,11 @@ toml::Wrapper* create_wrapper(EngineSettings& settings) {
 
 	toml::Section& audio = wrapper->add("audio");
     audio.add("enabled", &settings.audio.enabled);
-    audio.add("volume-master", &settings.audio.volumeMaster);
-    audio.add("volume-regular", &settings.audio.volumeRegular);
-    audio.add("volume-ui", &settings.audio.volumeUI);
-    audio.add("volume-ambient", &settings.audio.volumeAmbient);
-    audio.add("volume-music", &settings.audio.volumeMusic);
+    audio.add("volume-master", &*settings.audio.volumeMaster);
+    audio.add("volume-regular", &*settings.audio.volumeRegular);
+    audio.add("volume-ui", &*settings.audio.volumeUI);
+    audio.add("volume-ambient", &*settings.audio.volumeAmbient);
+    audio.add("volume-music", &*settings.audio.volumeMusic);
 
 	return wrapper.release();
 }

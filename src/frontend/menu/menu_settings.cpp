@@ -12,51 +12,19 @@
 
 using namespace gui;
 
-static void create_volume_trackbar(
-    std::shared_ptr<Panel> panel,
-    const std::wstring& name,
-    float* field
-) {
-    panel->add(menus::create_label([=]() {
-        return langs::get(name, L"settings") + L": " + std::to_wstring(int(*field * 100)) + L"%";
-    }));
-
-    auto trackbar = std::make_shared<TrackBar>(0.0, 1.0, 1.0, 0.01, 5);
-    trackbar->setSupplier([=]() {
-        return *field;
-    });
-    trackbar->setConsumer([=](double value) {
-        *field = value; 
-    });
-    panel->add(trackbar);
-}
-
-void create_audio_settings_panel(Engine* engine) {
-    auto menu = engine->getGUI()->getMenu();
-    auto panel = menus::create_page(engine, "settings-audio", 400, 0.0f, 1);
-
-    auto& settings = engine->getSettings().audio;
-    create_volume_trackbar(panel, L"Master Volume", &settings.volumeMaster);
-    create_volume_trackbar(panel, L"Regular Sounds", &settings.volumeRegular);
-    create_volume_trackbar(panel, L"UI Sounds", &settings.volumeUI);
-    create_volume_trackbar(panel, L"Ambient", &settings.volumeAmbient);
-    create_volume_trackbar(panel, L"Music", &settings.volumeMusic);
-    panel->add(guiutil::backButton(menu));
-}
-
 void create_controls_panel(Engine* engine) {
     auto menu = engine->getGUI()->getMenu();
     auto panel = menus::create_page(engine, "settings-controls", 400, 0.0f, 1);
 
     {
         panel->add(menus::create_label([=]() {
-            float sensitivity = engine->getSettings().camera.sensitivity;
+            float sensitivity = engine->getSettings().camera.sensitivity.get();
             return langs::get(L"Mouse Sensitivity", L"settings") + L": " + util::double2wstr(sensitivity, 1);;
         }));
 
         auto trackbar = std::make_shared<TrackBar>(0.1, 10.0, 2.0, 0.1, 4);
         trackbar->setSupplier([=]() {
-            return engine->getSettings().camera.sensitivity;
+            return engine->getSettings().camera.sensitivity.get();
         });
         trackbar->setConsumer([=](double value) {
             engine->getSettings().camera.sensitivity = value;
@@ -65,9 +33,10 @@ void create_controls_panel(Engine* engine) {
     }
 
     {
-        auto scrollPanel = std::make_shared<Panel>(glm::vec2(400, 200), glm::vec4(2.0f), 1.0f);
-        scrollPanel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.3f));
-        scrollPanel->setMaxLength(400);
+        auto scrollPanel = std::dynamic_pointer_cast<Panel>(guiutil::create(
+            "<panel size='400,200' padding='2' interval='1' max-length='400' color='#0000004C'>"
+            "</panel>"
+        ));
 
         for (auto& entry : Events::bindings){
             std::string bindname = entry.first;
@@ -89,7 +58,6 @@ void create_controls_panel(Engine* engine) {
 }
 
 void menus::create_settings_panel(Engine* engine) {
-    create_audio_settings_panel(engine);
     create_controls_panel(engine);
 
     auto menu = engine->getGUI()->getMenu();

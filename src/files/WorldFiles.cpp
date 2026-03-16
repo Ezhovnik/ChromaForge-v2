@@ -18,7 +18,7 @@
 #include "../math/voxmaths.h"
 #include "../world/World.h"
 #include "../lighting/LightMap.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../util/data_io.h"
 #include "../coders/json.h"
 #include "../constants.h"
@@ -549,7 +549,7 @@ void WorldFiles::removePack(const World* world, const std::string& id) {
         if (name.find(prefix) != 0)
             continue;
         auto value = blocks->getValueWriteable(i);
-        *value->value.str = BUILTIN_AIR;
+        value->value = BUILTIN_AIR;
     }
 
     auto items = root->list("items");
@@ -557,7 +557,7 @@ void WorldFiles::removePack(const World* world, const std::string& id) {
         auto name = items->str(i);
         if (name.find(prefix) != 0) continue;
         auto value = items->getValueWriteable(i);
-        *value->value.str = BUILTIN_EMPTY;
+        value->value = BUILTIN_EMPTY;
     }
     files::write_json(getIndicesFile(), root.get());
 }

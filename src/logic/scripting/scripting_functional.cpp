@@ -2,7 +2,7 @@
 
 #include "lua/LuaState.h"
 #include "../../util/stringutil.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 
 namespace scripting {
     extern lua::LuaState* state;

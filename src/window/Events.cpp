@@ -5,7 +5,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
 inline constexpr short _MOUSE_KEYS_OFFSET = 1024;
 

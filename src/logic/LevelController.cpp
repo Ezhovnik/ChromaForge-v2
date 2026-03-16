@@ -7,12 +7,15 @@
 #include "scripting/scripting.h"
 #include "../world/World.h"
 #include "../interfaces/Object.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
-LevelController::LevelController(EngineSettings& settings, Level* level_) : settings(settings), level(level_) {
-    blocks = std::make_unique<BlocksController>(level.get(), settings.chunks.padding);
-    chunks = std::make_unique<ChunksController>(level.get(), settings.chunks.padding);
-    player = std::make_unique<PlayerController>(level.get(), settings, blocks.get());
+LevelController::LevelController(EngineSettings& settings, Level* level) : 
+    settings(settings), 
+    level(level),
+    blocks(std::make_unique<BlocksController>(level, settings.chunks.padding)),
+    chunks(std::make_unique<ChunksController>(level, settings.chunks.padding)),
+    player(std::make_unique<PlayerController>(level, settings, blocks.get()))
+{
 
     scripting::on_world_load(this);
 }

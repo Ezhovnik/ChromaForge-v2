@@ -29,9 +29,18 @@ namespace menus {
         packconsumer callback,
         packconsumer remover
     );
-    void open_world(std::string name, Engine* engine, bool confirmConvert);
+    void open_world(
+        std::string name, 
+        Engine* engine, 
+        bool confirmConvert
+    );
     void delete_world(std::string name, Engine* engine);
     void create_version_label(Engine* engine);
+    void remove_packs(
+        Engine* engine, 
+        LevelController* controller, 
+        std::vector<std::string> packs
+    );
 
     void create_menus(Engine* engine);
     void refresh_menus(Engine* engine);

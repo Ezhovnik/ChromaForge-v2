@@ -42,6 +42,8 @@ namespace scripting {
         ~Environment();
 
         int getId() const;
+
+        void release();
     };
 
     void initialize(Engine* engine);

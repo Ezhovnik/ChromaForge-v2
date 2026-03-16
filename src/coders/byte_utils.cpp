@@ -4,7 +4,7 @@
 #include <limits>
 #include <stdexcept>
 
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
 // ========== ByteBuilder ==========
 

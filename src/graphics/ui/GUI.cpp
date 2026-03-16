@@ -11,7 +11,7 @@
 #include "../../window/input.h"
 #include "../../window/Camera.h"
 #include "../../graphics/core/ShaderProgram.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 #include "../../graphics/core/GfxContext.h"
 
 using namespace gui;

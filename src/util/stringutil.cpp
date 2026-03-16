@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <algorithm>
 
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
 std::wstring util::lfill(std::wstring s, uint length, wchar_t c) {
     if (s.length() >= length) return s;
@@ -160,6 +160,12 @@ void util::rtrim(std::string &s) {
 void util::trim(std::string &s) {
     rtrim(s);
     ltrim(s);
+}
+
+std::string util::double2str(double x) {
+    std::stringstream ss;
+    ss << x;
+    return ss.str(); 
 }
 
 std::wstring util::double2wstr(double x, int precision) {

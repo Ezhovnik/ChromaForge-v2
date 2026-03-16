@@ -5,7 +5,7 @@
 
 #include "../files/files.h"
 #include "../coders/json.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../files/engine_paths.h"
 #include "../core_content_defs.h"
 #include "../data/dynamic.h"

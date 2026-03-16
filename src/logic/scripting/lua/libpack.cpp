@@ -1,5 +1,6 @@
 #include <string>
 #include <filesystem>
+#include <algorithm>
 
 #include "api_lua.h"
 #include "lua_commons.h"
@@ -35,8 +36,42 @@ static int l_pack_get_installed(lua_State* L) {
     return 1;
 }
 
+static int l_pack_get_info(lua_State* L) {
+    auto packid = lua_tostring(L, 1);
+    
+    auto content = scripting::engine->getContent();
+    auto& packs = scripting::engine->getContentPacks();
+    auto found = std::find_if(packs.begin(), packs.end(), [packid](auto& pack) {
+        return pack.id == packid;
+    });
+    if (found == packs.end()) return 0;
+    const auto& pack = *found;
+
+    lua_createtable(L, 0, 5);
+
+    lua_pushstring(L, pack.title.c_str());
+    lua_setfield(L, -2, "title");
+
+    lua_pushstring(L, pack.creator.c_str());
+    lua_setfield(L, -2, "creator");
+
+    lua_pushstring(L, pack.description.c_str());
+    lua_setfield(L, -2, "description");
+
+    lua_pushstring(L, pack.version.c_str());
+    lua_setfield(L, -2, "version");
+
+    auto runtime = content ? content->getPackRuntime(pack.id) : nullptr;
+    if (runtime) {
+        lua_pushboolean(L, runtime->getStats().hasSavingContent());
+        lua_setfield(L, -2, "has_indices");
+    }
+    return 1;
+}
+
 const luaL_Reg packlib [] = {
     {"get_folder", lua_wrap_errors<l_pack_get_folder>},
     {"get_installed", lua_wrap_errors<l_pack_get_installed>},
+    {"get_info", lua_wrap_errors<l_pack_get_info>},
     {NULL, NULL}
 };

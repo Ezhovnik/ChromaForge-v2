@@ -12,7 +12,7 @@
 
 #include "../graphics/core/ImageData.h"
 #include "../graphics/core/Texture.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../typedefs.h"
 
 ImageData* png::loadImage(const std::string& filename, bool flipVertically) {

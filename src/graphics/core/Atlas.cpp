@@ -5,7 +5,7 @@
 #include "../../math/LMPacker.h"
 #include "Texture.h"
 #include "ImageData.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 
 Atlas::Atlas(
     ImageData* image, 

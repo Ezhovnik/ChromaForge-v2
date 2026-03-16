@@ -1,6 +1,6 @@
 #include "timeutil.h"
 
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
 timeutil::Timer::Timer() {
     start = std::chrono::high_resolution_clock::now();

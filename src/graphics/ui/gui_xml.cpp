@@ -8,7 +8,7 @@
 #include "../../frontend/locale/langs.h"
 #include "../../logic/scripting/scripting.h"
 #include "../../util/stringutil.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 
 using namespace gui;
 

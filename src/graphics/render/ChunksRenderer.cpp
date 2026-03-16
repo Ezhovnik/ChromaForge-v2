@@ -7,7 +7,7 @@
 #include "BlocksRenderer.h"
 #include "../../voxels/Chunk.h"
 #include "../../world/Level.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 
 ChunksRenderer::ChunksRenderer(
     Level* level, 

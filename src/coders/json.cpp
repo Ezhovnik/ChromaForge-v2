@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "commons.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../data/dynamic.h"
 
 using namespace json;
@@ -26,10 +26,11 @@ void stringify(const dynamic::Value* value, std::stringstream& ss, int indent, c
 void stringifyObj(const dynamic::Map* obj, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
 
 void stringify(const dynamic::Value* value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice) {
-    if (value->type == dynamic::ValueType::map) {
-        stringifyObj(value->value.map, ss, indent, indentstr, nice);
-    } else if (value->type == dynamic::ValueType::list) {
-        auto list = value->value.list;
+    if (value->type == dynamic::ValueType::Map) {
+        auto map = std::get<dynamic::Map*>(value->value);
+        stringifyObj(map, ss, indent, indentstr, nice);
+    } else if (value->type == dynamic::ValueType::List) {
+        auto list = std::get<dynamic::List*>(value->value);
         if (list->size() == 0) {
             ss << "[]";
             return;
@@ -43,15 +44,15 @@ void stringify(const dynamic::Value* value, std::stringstream& ss, int indent, c
         }
         if (nice) newline(ss, true, indent - 1, indentstr);
         ss << ']';
-    } else if (value->type == dynamic::ValueType::boolean) {
-        ss << (value->value.boolean ? "true" : "false");
-    } else if (value->type == dynamic::ValueType::number) {
+    } else if (value->type == dynamic::ValueType::Boolean) {
+        ss << (std::get<bool>(value->value) ? "true" : "false");
+    } else if (value->type == dynamic::ValueType::Number) {
         ss << std::setprecision(15);
-        ss << value->value.decimal;
-    } else if (value->type == dynamic::ValueType::integer) {
-        ss << value->value.integer;
-    } else if (value->type == dynamic::ValueType::string) {
-        ss << escape_string(*value->value.str);
+        ss << std::get<number_t>(value->value);
+    } else if (value->type == dynamic::ValueType::Integer) {
+        ss << std::get<integer_t>(value->value);
+    } else if (value->type == dynamic::ValueType::String) {
+        ss << escape_string(std::get<std::string>(value->value));
     }
 }
 
@@ -158,56 +159,56 @@ dynamic::Value* Parser::parseValue() {
         number_u num;
         dynamic::ValueType type;
         if (parseNumber(next == '-' ? -1 : 1, num)) {
-            val.integer = num.ival;
-            type = dynamic::ValueType::integer;
+            val = std::get<integer_t>(num);
+            type = dynamic::ValueType::Integer;
         } else {
-            val.decimal = num.fval;
-            type = dynamic::ValueType::number;
+            val = std::get<number_t>(num);
+            type = dynamic::ValueType::Number;
         }
         return new dynamic::Value(type, val);
     }
     if (is_identifier_start(next)) {
         std::string literal = parseName();
         if (literal == "true") {
-            val.boolean = true;
-            return new dynamic::Value(dynamic::ValueType::boolean, val);
+            val = true;
+            return new dynamic::Value(dynamic::ValueType::Boolean, val);
         } else if (literal == "false") {
-            val.boolean = false;
-            return new dynamic::Value(dynamic::ValueType::boolean, val);
+            val = false;
+            return new dynamic::Value(dynamic::ValueType::Boolean, val);
         } else if (literal == "inf") {
-            val.decimal = INFINITY;
-            return new dynamic::Value(dynamic::ValueType::number, val);
+            val = INFINITY;
+            return new dynamic::Value(dynamic::ValueType::Number, val);
         } else if (literal == "nan") {
-            val.decimal = NAN;
-            return new dynamic::Value(dynamic::ValueType::number, val);
+            val = NAN;
+            return new dynamic::Value(dynamic::ValueType::Number, val);
         }
         LOG_ERROR("Invalid literal");
         throw error("Invalid literal");
     }
     if (next == '{') {
-        val.map = parseObject();
-        return new dynamic::Value(dynamic::ValueType::map, val);
+        val = parseObject();
+        return new dynamic::Value(dynamic::ValueType::Map, val);
     }
     if (next == '[') {
-        val.list = parseList();
-        return new dynamic::Value(dynamic::ValueType::list, val);
+        val = parseList();
+        return new dynamic::Value(dynamic::ValueType::List, val);
     }
     if (is_digit(next)) {
         number_u num;
         dynamic::ValueType type;
         if (parseNumber(1, num)) {
-            val.integer = num.ival;
-            type = dynamic::ValueType::integer;
+            val = std::get<integer_t>(num);
+            type = dynamic::ValueType::Integer;
         } else {
-            val.decimal = num.fval;
-            type = dynamic::ValueType::number;
+            val = std::get<number_t>(num);
+            type = dynamic::ValueType::Number;
         }
         return new dynamic::Value(type, val);  
     }
     if (next == '"' || next == '\'') {
         pos++;
-        val.str = new std::string(parseString(next));
-        return new dynamic::Value(dynamic::ValueType::string, val);
+        val = parseString(next);
+        return new dynamic::Value(dynamic::ValueType::String, val);
     }
     LOG_ERROR("Unexpected character '{}'", next);
     throw error("Unexpected character '" + std::string({next}) + "'");

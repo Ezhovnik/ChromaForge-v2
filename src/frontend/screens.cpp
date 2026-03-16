@@ -23,7 +23,7 @@
 #include "../graphics/ui/elements/containers.h"
 #include "../util/stringutil.h"
 #include "../engine.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../graphics/core/Batch2D.h"
 #include "../graphics/core/ShaderProgram.h"
 #include "../math/UVRegion.h"

@@ -8,7 +8,7 @@
 
 #include "api_lua.h"
 #include "lua_util.h"
-#include "../../../logger/Logger.h"
+#include "../../../debug/Logger.h"
 #include "../../../util/stringutil.h"
 
 lua::luaerror::luaerror(const std::string& message) : std::runtime_error(message) {
@@ -197,6 +197,33 @@ int lua::LuaState::pushvalue(int idx) {
     return 1;
 }
 
+int lua::LuaState::pushvalue(const dynamic::Value& value) {
+    switch (value.type) {
+        case dynamic::ValueType::Boolean:
+            pushboolean(std::get<bool>(value.value));
+            break;
+        case dynamic::ValueType::Integer:
+            pushinteger(std::get<integer_t>(value.value));
+            break;
+        case dynamic::ValueType::Number:
+            pushnumber(std::get<number_t>(value.value));
+            break;
+        case dynamic::ValueType::String:
+            pushstring(std::get<std::string>(value.value).c_str());
+            break;
+        case dynamic::ValueType::None:
+            pushnil();
+            break;
+        case dynamic::ValueType::List:
+            LOG_ERROR("Type 'list' is not implemented");
+            throw std::runtime_error("Type 'list' is not implemented");
+        case dynamic::ValueType::Map:
+            LOG_ERROR("Type 'map' is not implemented");
+            throw std::runtime_error("Type 'map' is not implemented");
+    }
+    return 1;
+}
+
 int lua::LuaState::pushglobals() {
     lua_pushvalue(L, LUA_GLOBALSINDEX);
     return 1;
@@ -243,6 +270,31 @@ lua::luanumber lua::LuaState::tonumber(int index) {
 
 const char* lua::LuaState::tostring(int idx) {
     return lua_tostring(L, idx);
+}
+
+dynamic::Value lua::LuaState::tovalue(int idx) {
+    auto type = lua_type(L, idx);
+    switch (type) {
+        case LUA_TNIL:
+        case LUA_TNONE:
+            return dynamic::Value(dynamic::ValueType::None, (integer_t)0);
+        case LUA_TBOOLEAN:
+            return dynamic::Value::boolean(lua_toboolean(L, idx) == 1);
+        case LUA_TNUMBER: {
+            auto number = lua_tonumber(L, idx);
+            auto integer = lua_tointeger(L, idx);
+            if (number == (lua_Number)integer) {
+                return dynamic::Value::of(integer);
+            } else {
+                return dynamic::Value::of(number);
+            }
+        }
+        case LUA_TSTRING:
+            return dynamic::Value::of(lua_tostring(L, idx));
+        default:
+            LOG_ERROR("Lua type {} is not supported", type);
+            throw std::runtime_error("Lua type " + std::to_string(type) + " is not supported");
+    }
 }
 
 bool lua::LuaState::isstring(int idx) {

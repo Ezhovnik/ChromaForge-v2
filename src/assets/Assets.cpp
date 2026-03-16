@@ -4,7 +4,7 @@
 #include "../graphics/core/ShaderProgram.h"
 #include "../graphics/core/Font.h"
 #include "../graphics/core/Atlas.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../frontend/UIDocument.h"
 #include "../logic/scripting/scripting.h"
 #include "../audio/audio.h"

@@ -8,7 +8,7 @@
 #include "../typedefs.h"
 #include "WorldFiles.h"
 #include "../core_content_defs.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
 const std::filesystem::path SCREENSHOTS_FOLDER = std::filesystem::path("screenshots");
 const std::filesystem::path LOGS_FOLDER = std::filesystem::path("logs");

@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 #include "byte_utils.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "zip.h"
 
 using namespace json;
@@ -11,20 +11,22 @@ using namespace dynamic;
 
 static void to_binary(ByteBuilder& builder, const Value* value) {
     switch (value->type) {
-        case ValueType::map: {
-            std::vector<ubyte> bytes = to_binary(value->value.map);
+        case ValueType::None: {
+            LOG_ERROR("None value is not implemented");
+            throw std::runtime_error("none value is not implemented");
+        } case ValueType::Map: {
+            std::vector<ubyte> bytes = to_binary(std::get<Map*>(value->value));
             builder.put(bytes.data(), bytes.size());
             break;
-        }
-        case ValueType::list:
+        } case ValueType::List: {
             builder.put(BJSON_TYPE_LIST);
-            for (auto& element : value->value.list->values) {
+            for (auto& element : std::get<List*>(value->value)->values) {
                 to_binary(builder, element.get());
             }
             builder.put(BJSON_END);
             break;
-        case ValueType::integer: {
-            int64_t val = value->value.integer;
+        } case ValueType::Integer: {
+            auto val = std::get<integer_t>(value->value);
             if (val >= 0 && val <= 255) {
                 builder.put(BJSON_TYPE_BYTE);
                 builder.put(val);
@@ -40,16 +42,16 @@ static void to_binary(ByteBuilder& builder, const Value* value) {
             }
             break;
         }
-        case ValueType::number:
+        case ValueType::Number:
             builder.put(BJSON_TYPE_NUMBER);
-            builder.putFloat64(value->value.decimal);
+            builder.putFloat64(std::get<number_t>(value->value));
             break;
-        case ValueType::boolean:
-            builder.put(BJSON_TYPE_FALSE + value->value.boolean);
+        case ValueType::Boolean:
+            builder.put(BJSON_TYPE_FALSE + std::get<bool>(value->value));
             break;
-        case ValueType::string:
+        case ValueType::String:
             builder.put(BJSON_TYPE_STRING);
-            builder.put(*value->value.str);
+            builder.put(std::get<std::string>(value->value));
             break;
     }
 }
@@ -82,42 +84,42 @@ static Value* value_from_binary(ByteReader& reader) {
     valvalue val;
     switch (typecode) {
         case BJSON_TYPE_DOCUMENT:
-            type = ValueType::map;
+            type = ValueType::Map;
             reader.getInt32();
-            val.map = object_from_binary(reader);
+            val = object_from_binary(reader);
             break;
         case BJSON_TYPE_LIST:
-            type = ValueType::list;
-            val.list = array_from_binary(reader);
+            type = ValueType::List;
+            val = array_from_binary(reader);
             break;
         case BJSON_TYPE_BYTE:
-            type = ValueType::integer;
-            val.integer = reader.get();
+            type = ValueType::Integer;
+            val = static_cast<integer_t>(reader.get());
             break;
         case BJSON_TYPE_INT16:
-            type = ValueType::integer;
-            val.integer = reader.getInt16();
+            type = ValueType::Integer;
+            val = static_cast<integer_t>(reader.getInt16());
             break;
         case BJSON_TYPE_INT32:
-            type = ValueType::integer;
-            val.integer = reader.getInt32();
+            type = ValueType::Integer;
+            val = static_cast<integer_t>(reader.getInt32());
             break;
         case BJSON_TYPE_INT64:
-            type = ValueType::integer;
-            val.integer = reader.getInt64();
+            type = ValueType::Integer;
+            val = reader.getInt64();
             break;
         case BJSON_TYPE_NUMBER:
-            type = ValueType::number;
-            val.decimal = reader.getFloat64();
+            type = ValueType::Number;
+            val = reader.getFloat64();
             break;
         case BJSON_TYPE_FALSE:
         case BJSON_TYPE_TRUE:
-            type = ValueType::boolean;
-            val.boolean = typecode - BJSON_TYPE_FALSE;
+            type = ValueType::Boolean;
+            val = (typecode - BJSON_TYPE_FALSE) != 0;
             break;
         case BJSON_TYPE_STRING:
-            type = ValueType::string;
-            val.str = new std::string(reader.getString());
+            type = ValueType::String;
+            val = reader.getString();
             break;
         default:
             LOG_ERROR("Type {} is not supported", typecode);
@@ -160,12 +162,12 @@ std::unique_ptr<Map> json::from_binary(const ubyte* src, size_t size) {
     } else {
         ByteReader reader(src, size);
         std::unique_ptr<Value> value (value_from_binary(reader));
-        if (value->type != ValueType::map) {
+        if (value->type != ValueType::Map) {
             LOG_ERROR("Root value is not an object");
             throw std::runtime_error("Root value is not an object");
         }
-        std::unique_ptr<Map> obj (value->value.map);
-        value->value.map = nullptr;
+        std::unique_ptr<Map> obj (std::get<Map*>(value->value));
+        value->value = (Map*)nullptr;
         return obj;
     }
 }

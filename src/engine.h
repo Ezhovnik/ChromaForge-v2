@@ -6,6 +6,7 @@
 #include <memory>
 #include <filesystem>
 #include <queue>
+#include <mutex>
 
 #include "typedefs.h"
 #include "settings.h"
@@ -14,8 +15,10 @@
 #include "content/ContentPack.h"
 #include "assets/Assets.h"
 #include "content/Content.h"
+#include "files/settings_io.h"
 
 class Screen;
+class Batch2D;
 
 namespace gui {
     class GUI;
@@ -30,16 +33,19 @@ public:
 // Основной класс Engine, управляющий жизненным циклом приложения
 class Engine {
 private:
+    EngineSettings& settings;
+    SettingsHandler settingsHandler;
+    EnginePaths* paths;
+
     std::unique_ptr<Assets> assets = nullptr; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen = nullptr;
     std::vector<ContentPack> contentPacks;
-    EngineSettings& settings;
     std::unique_ptr<Content> content = nullptr;
 
-    EnginePaths* paths;
     std::unique_ptr<ResPaths> resPaths = nullptr;
 
     std::queue<runnable> postRunnables;
+    std::recursive_mutex postRunnablesMutex;
 
     std::unique_ptr<gui::GUI> gui;
 
@@ -49,6 +55,10 @@ private:
 
     void updateTimers(); // Обновление таймеров (frame, deltaTime)
     void updateHotkeys(); // Обработка горячих клавиш
+
+    void renderFrame(Batch2D& batch);
+
+    void processPostRunnables();
 
     void addDefaultWorldGenerators();
 public:
@@ -68,6 +78,7 @@ public:
     std::vector<ContentPack>& getContentPacks();
     std::shared_ptr<Screen> getScreen();
     double getDeltaTime() const;
+    SettingsHandler& getSettingsHandler();
 
     void postRunnable(runnable callback);
 

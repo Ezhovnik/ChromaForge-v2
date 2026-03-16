@@ -7,7 +7,7 @@
 #include "../../../window/Window.h"
 #include "../../../assets/Assets.h"
 #include "../../../graphics/core/Batch2D.h"
-#include "../../../logger/Logger.h"
+#include "../../../debug/Logger.h"
 #include "../../../graphics/core/GfxContext.h"
 
 using namespace gui;

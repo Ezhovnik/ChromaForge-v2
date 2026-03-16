@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <unordered_map>
 
 #include <glm/glm.hpp>
 
@@ -153,6 +154,11 @@ namespace gui {
         const std::string& getId() const;
 
         void reposition();
+
+        static void getIndices(
+            std::shared_ptr<UINode> node,
+            std::unordered_map<std::string, std::shared_ptr<UINode>>& map
+        );
     };
 }
 

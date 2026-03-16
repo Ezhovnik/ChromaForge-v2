@@ -16,9 +16,9 @@ private:
 
     std::unique_ptr<Level> level;
 
+    std::unique_ptr<BlocksController> blocks;
     std::unique_ptr<ChunksController> chunks;
     std::unique_ptr<PlayerController> player;
-    std::unique_ptr<BlocksController> blocks;
 public:
     LevelController(EngineSettings& settings, Level* level);
 

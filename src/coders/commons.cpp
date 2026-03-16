@@ -3,7 +3,7 @@
 #include <sstream>
 #include <math.h>
 
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
 inline double power(double base, int64_t power) {
     double result = 1.0;
@@ -229,20 +229,20 @@ bool BasicParser::parseNumber(int sign, number_u& out) {
     int base = 10;
     if (c == '0' && pos + 1 < source.length() && (base = detect_base(source[pos + 1])) != 10) {
         pos += 2;
-        out.ival = parseSimpleInt(base);
+        out = parseSimpleInt(base);
         return true;
     } else if (c == 'i' && pos + 2 < source.length() && source[pos + 1] == 'n' && source[pos + 2] == 'f') {
         pos += 3;
-        out.fval = INFINITY * sign;
+        out = INFINITY * sign;
         return false;
     } else if (c == 'n' && pos + 2 < source.length() && source[pos + 1] == 'a' && source[pos + 2] == 'n') {
         pos += 3;
-        out.fval = NAN * sign;
+        out = NAN * sign;
         return false;
     }
     int64_t value = parseSimpleInt(base);
     if (!hasNext()) {
-        out.ival = value * sign;
+        out = value * sign;
         return true;
     }
     c = source[pos];
@@ -255,7 +255,7 @@ bool BasicParser::parseNumber(int sign, number_u& out) {
         } else if (peek() == '+'){
             pos++;
         }
-        out.fval = sign * value * power(10.0, s * parseSimpleInt(10));
+        out = sign * value * power(10.0, s * parseSimpleInt(10));
         return false;
     }
     if (c == '.') {
@@ -280,13 +280,13 @@ bool BasicParser::parseNumber(int sign, number_u& out) {
             } else if (peek() == '+'){
                 pos++;
             }
-            out.fval = sign * dvalue * power(10.0, s * parseSimpleInt(10));
+            out = sign * dvalue * power(10.0, s * parseSimpleInt(10));
             return false;
         }
-        out.fval = sign * dvalue;
+        out = sign * dvalue;
         return false;
     }
-    out.ival = sign * value;
+    out = sign * value;
     return true;
 }
 

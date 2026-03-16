@@ -10,7 +10,7 @@
 #include "window/Events.h"
 #include "window/input.h"
 #include "voxels/Block.h"
-#include "logger/Logger.h"
+#include "debug/Logger.h"
 #include "content/Content.h"
 #include "items/Item.h"
 

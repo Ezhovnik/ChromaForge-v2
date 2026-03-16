@@ -11,7 +11,7 @@
 #include "../../world/Level.h"
 #include "../../util/stringutil.h"
 #include "../../engine.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 #include "../../math/rand.h"
 #include "../../core_content_defs.h"
 

@@ -20,7 +20,7 @@
 #include "../world/Level.h"
 #include "../objects/Player.h"
 #include "../physics/Hitbox.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../graphics/ui/elements/controls.h"
 #include "../graphics/ui/elements/containers.h"
 #include "../graphics/ui/elements/UINode.h"
@@ -506,4 +506,9 @@ void Hud::remove(std::shared_ptr<gui::UINode> node) {
 
 Player* Hud::getPlayer() const {
     return player;
+}
+
+std::shared_ptr<Inventory> Hud::getBlockInventory() {
+    if (blockUI == nullptr) return nullptr;
+    return blockUI->getInventory();
 }

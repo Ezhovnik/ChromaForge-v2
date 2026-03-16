@@ -13,7 +13,7 @@
 #include "scripting/scripting.h"
 #include "../math/rand.h"
 #include "../items/Inventories.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
 Clock::Clock(int sparkRate, int sparkParts) : sparkRate(sparkRate), sparkParts(sparkParts) {
 }

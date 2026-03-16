@@ -86,8 +86,10 @@ void guiutil::confirm(GUI* gui, const std::wstring& text, runnable on_confirm, s
     menu->setPage("<confirm>");
 }
 
-std::shared_ptr<gui::UINode> guiutil::create(const std::string& source) {
-    scripting::Environment env(0);
+std::shared_ptr<gui::UINode> guiutil::create(const std::string& source, int envID) {
+    scripting::Environment env(envID);
     UIXmlReader reader(env);
-    return reader.readXML("<string>", source);
+    auto node = reader.readXML("<string>", source);
+    env.release();
+    return node;
 }

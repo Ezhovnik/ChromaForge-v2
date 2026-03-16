@@ -7,7 +7,7 @@
 #include "../../util/timeutil.h"
 #include "../../world/Level.h"
 #include "../../voxels/Block.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 #include "../../items/Item.h"
 #include "../../logic/BlocksController.h"
 #include "../../engine.h"
@@ -42,6 +42,10 @@ Environment::~Environment() {
 
 int Environment::getId() const {
     return env;
+}
+
+void Environment::release() {
+    env = 0;
 }
 
 bool scripting::register_event(int env, const std::string& name, const std::string& id) {

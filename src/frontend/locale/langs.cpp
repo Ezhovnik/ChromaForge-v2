@@ -5,7 +5,7 @@
 #include "../../content/ContentPack.h"
 #include "../../files/files.h"
 #include "../../util/stringutil.h"
-#include "../../logger/Logger.h"
+#include "../../debug/Logger.h"
 
 std::unique_ptr<langs::Lang> langs::current;
 std::unordered_map<std::string, langs::LocaleInfo> langs::locales_info;
@@ -80,8 +80,8 @@ void langs::loadLocalesInfo(const std::filesystem::path& resdir, std::string& fa
             auto langInfo = entry.second.get();
 
             std::string name;
-            if (langInfo->type == dynamic::ValueType::map) {
-                name = langInfo->value.map->getStr("name", "none");
+            if (langInfo->type == dynamic::ValueType::Map) {
+                name = std::get<dynamic::Map*>(langInfo->value)->getStr("name", "none");
             } else {
                 continue;
             }
@@ -109,7 +109,7 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
         if (std::filesystem::is_regular_file(file)) {
             std::string text = files::read_string(file);
             Reader reader(file.string(), text);
-            reader.read(lang, pack.id + ":");
+            reader.read(lang, "");
         }
     }
 }

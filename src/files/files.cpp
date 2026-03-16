@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../coders/json.h"
 #include "../util/stringutil.h"
 #include "../data/dynamic.h"

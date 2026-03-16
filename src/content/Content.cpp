@@ -4,7 +4,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../items/Item.h"
 #include "ContentPack.h"
 #include "../logic/scripting/scripting.h"

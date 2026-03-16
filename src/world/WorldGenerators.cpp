@@ -7,7 +7,7 @@
 #include "../voxels/WorldGenerator.h"
 #include "../voxels/FlatWorldGenerator.h"
 #include "../content/Content.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../core_content_defs.h"
 
 std::vector<std::string> WorldGenerators::getGeneratorsIDs() {

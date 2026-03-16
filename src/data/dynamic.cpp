@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 
 using namespace dynamic;
 
@@ -12,10 +12,10 @@ List::~List() {
 std::string List::str(size_t index) const {
     const auto& val = values[index];
     switch (val->type) {
-        case ValueType::string: return *val->value.str;
-        case ValueType::boolean: return val->value.boolean ? "true" : "false";
-        case ValueType::number: return std::to_string(val->value.decimal);
-        case ValueType::integer: return std::to_string(val->value.integer);
+        case ValueType::String: return std::get<std::string>(val->value);
+        case ValueType::Boolean: return std::get<bool>(val->value) ? "true" : "false";
+        case ValueType::Number: return std::to_string(std::get<double>(val->value));
+        case ValueType::Integer: return std::to_string(std::get<int64_t>(val->value));
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -23,13 +23,13 @@ std::string List::str(size_t index) const {
     }
 }
 
-double List::num(size_t index) const {
+number_t List::num(size_t index) const {
     const auto& val = values[index];
     switch (val->type) {
-        case ValueType::number: return val->value.decimal;
-        case ValueType::integer: return val->value.integer;
-        case ValueType::string: return std::stoll(*val->value.str);
-        case ValueType::boolean: return val->value.boolean;
+        case ValueType::Number: return std::get<number_t>(val->value);
+        case ValueType::Integer: return std::get<integer_t>(val->value);
+        case ValueType::String: return std::stoll(std::get<std::string>(val->value));
+        case ValueType::Boolean: return std::get<bool>(val->value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -37,13 +37,13 @@ double List::num(size_t index) const {
     }
 }
 
-int64_t List::integer(size_t index) const {
+integer_t List::integer(size_t index) const {
     const auto& val = values[index];
     switch (val->type) {
-        case ValueType::number: return val->value.decimal;
-        case ValueType::integer: return val->value.integer;
-        case ValueType::string: return std::stoll(*val->value.str);
-        case ValueType::boolean: return val->value.boolean;
+        case ValueType::Number: return std::get<number_t>(val->value);
+        case ValueType::Integer: return std::get<integer_t>(val->value);
+        case ValueType::String: return std::stoll(std::get<std::string>(val->value));
+        case ValueType::Boolean: return std::get<bool>(val->value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -52,26 +52,26 @@ int64_t List::integer(size_t index) const {
 }
 
 Map* List::map(size_t index) const {
-    if (values[index]->type != ValueType::map) {
+    if (values[index]->type != ValueType::Map) {
         LOG_ERROR("Type error");
         throw std::runtime_error("Type error");
     }
-    return values[index]->value.map;
+    return std::get<Map*>(values[index]->value);
 }
 
 List* List::list(size_t index) const {
-    if (values[index]->type != ValueType::list) {
+    if (values[index]->type != ValueType::List) {
         LOG_ERROR("Type error");
         throw std::runtime_error("Type error");
     }
-    return values[index]->value.list;
+    return std::get<List*>(values[index]->value);
 }
 
 bool List::flag(size_t index) const {
     const auto& val = values[index];
     switch (val->type) {
-        case ValueType::integer: return val->value.integer;
-        case ValueType::boolean: return val->value.boolean;
+        case ValueType::Integer: return std::get<integer_t>(val->value);
+        case ValueType::Boolean: return std::get<bool>(val->value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -80,9 +80,7 @@ bool List::flag(size_t index) const {
 }
 
 List& List::put(std::string value) {
-    valvalue val;
-    val.str = new std::string(value);
-    values.push_back(std::make_unique<Value>(ValueType::string, val));
+    values.push_back(std::make_unique<Value>(ValueType::String, value));
     return *this;
 }
 
@@ -95,9 +93,7 @@ List& List::put(int value) {
 }
 
 List& List::put(int64_t value) {
-    valvalue val;
-    val.integer = value;
-    values.push_back(std::make_unique<Value>(ValueType::integer, val));
+    values.push_back(std::make_unique<Value>(ValueType::Integer, value));
     return *this;
 }
 
@@ -106,9 +102,7 @@ List& List::put(uint64_t value) {
 }
 
 List& List::put(double value) {
-    valvalue val;
-    val.decimal = value;
-    values.push_back(std::make_unique<Value>(ValueType::number, val));
+    values.push_back(std::make_unique<Value>(ValueType::Number, value));
     return *this;
 }
 
@@ -117,23 +111,17 @@ List& List::put(float value) {
 }
 
 List& List::put(bool value) {
-    valvalue val;
-    val.boolean = value;
-    values.push_back(std::make_unique<Value>(ValueType::boolean, val));
+    values.push_back(std::make_unique<Value>(ValueType::Boolean, value));
     return *this;
 }
 
 List& List::put(Map* value) {
-    valvalue val;
-    val.map = value;
-    values.push_back(std::make_unique<Value>(ValueType::map, val));
+    values.push_back(std::make_unique<Value>(ValueType::Map, value));
     return *this;
 }
 
 List& List::put(List* value) {
-    valvalue val;
-    val.list = value;
-    values.push_back(std::make_unique<Value>(ValueType::list, val));
+    values.push_back(std::make_unique<Value>(ValueType::List, value));
     return *this;
 }
 
@@ -205,10 +193,10 @@ std::string Map::getStr(std::string key, const std::string& def) const {
     if (found == values.end()) return def;
     auto& val = found->second;
     switch (val->type) {
-        case ValueType::string: return *val->value.str;
-        case ValueType::boolean: return val->value.boolean ? "true" : "false";
-        case ValueType::number: return std::to_string(val->value.decimal);
-        case ValueType::integer: return std::to_string(val->value.integer);
+        case ValueType::String: return std::get<std::string>(val->value);
+        case ValueType::Boolean: return std::get<bool>(val->value) ? "true" : "false";
+        case ValueType::Number: return std::to_string(std::get<number_t>(val->value));
+        case ValueType::Integer: return std::to_string(std::get<integer_t>(val->value));
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -216,15 +204,15 @@ std::string Map::getStr(std::string key, const std::string& def) const {
     } 
 }
 
-double Map::getNum(std::string key, double def) const {
+number_t Map::getNum(std::string key, double def) const {
     auto found = values.find(key);
     if (found == values.end()) return def;
     auto& val = found->second;
     switch (val->type) {
-        case ValueType::number: return val->value.decimal;
-        case ValueType::integer: return val->value.integer;
-        case ValueType::string: return std::stoull(*val->value.str);
-        case ValueType::boolean: return val->value.boolean;
+        case ValueType::Number: return std::get<number_t>(val->value);
+        case ValueType::Integer: return std::get<integer_t>(val->value);
+        case ValueType::String: return std::stoull(std::get<std::string>(val->value));
+        case ValueType::Boolean: return std::get<bool>(val->value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -232,15 +220,15 @@ double Map::getNum(std::string key, double def) const {
     }
 }
 
-int64_t Map::getInt(std::string key, int64_t def) const {
+integer_t Map::getInt(std::string key, integer_t def) const {
     auto found = values.find(key);
     if (found == values.end()) return def;
     auto& val = found->second;
     switch (val->type) {
-        case ValueType::number: return val->value.decimal;
-        case ValueType::integer: return val->value.integer;
-        case ValueType::string: return std::stoull(*val->value.str);
-        case ValueType::boolean: return val->value.boolean;
+        case ValueType::Number: return std::get<number_t>(val->value);
+        case ValueType::Integer: return std::get<integer_t>(val->value);
+        case ValueType::String: return std::stoull(std::get<std::string>(val->value));
+        case ValueType::Boolean: return std::get<bool>(val->value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -253,8 +241,8 @@ bool Map::getBool(std::string key, bool def) const {
     if (found == values.end()) return def;
     auto& val = found->second;
     switch (val->type) {
-        case ValueType::integer: return val->value.integer;
-        case ValueType::boolean: return val->value.boolean;
+        case ValueType::Integer: return std::get<integer_t>(val->value);
+        case ValueType::Boolean: return std::get<bool>(val->value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -294,15 +282,15 @@ Map* Map::map(std::string key) const {
     auto found = values.find(key);
     if (found != values.end()) {
         auto& val = found->second;
-        if (val->type != ValueType::map) return nullptr;
-        return val->value.map;
+        if (val->type != ValueType::Map) return nullptr;
+        return std::get<Map*>(val->value);
     }
     return nullptr;
 }
 
 List* Map::list(std::string key) const {
     auto found = values.find(key);
-    if (found != values.end()) return found->second->value.list;
+    if (found != values.end()) return std::get<List*>(found->second->value);
     return nullptr;
 }
 
@@ -319,9 +307,7 @@ Map& Map::put(std::string key, int value) {
 }
 
 Map& Map::put(std::string key, int64_t value) {
-    valvalue val;
-    val.integer = value;
-    values[key] = std::make_unique<Value>(ValueType::integer, val);
+    values[key] = std::make_unique<Value>(ValueType::Integer, value);
     return *this;
 }
 
@@ -334,16 +320,12 @@ Map& Map::put(std::string key, float value) {
 }
 
 Map& Map::put(std::string key, double value) {
-    valvalue val;
-    val.decimal = value;
-    values[key] = std::make_unique<Value>(ValueType::number, val);
+    values[key] = std::make_unique<Value>(ValueType::Number, value);
     return *this;
 }
 
 Map& Map::put(std::string key, std::string value){
-    valvalue val;
-    val.str = new std::string(value);
-    values[key] = std::make_unique<Value>(ValueType::string, val);
+    values[key] = std::make_unique<Value>(ValueType::String, value);
     return *this;
 }
 
@@ -352,23 +334,17 @@ Map& Map::put(std::string key, const char* value) {
 }
 
 Map& Map::put(std::string key, Map* value){
-    valvalue val;
-    val.map = value;
-    values[key] = std::make_unique<Value>(ValueType::map, val);
+    values[key] = std::make_unique<Value>(ValueType::Map, value);
     return *this;
 }
 
 Map& Map::put(std::string key, List* value){
-    valvalue val;
-    val.list = value;
-    values[key] = std::make_unique<Value>(ValueType::list, val);
+    values[key] = std::make_unique<Value>(ValueType::List, value);
     return *this;
 }
 
 Map& Map::put(std::string key, bool value){
-    valvalue val;
-    val.boolean = value;
-    values[key] = std::make_unique<Value>(ValueType::boolean, val);
+    values[key] = std::make_unique<Value>(ValueType::Boolean, value);
     return *this;
 }
 
@@ -393,10 +369,25 @@ Value::Value(ValueType type, valvalue value) : type(type), value(value) {
 
 Value::~Value() {
     switch (type) {
-        case ValueType::map: delete value.map; break;
-        case ValueType::list: delete value.list; break;
-        case ValueType::string: delete value.str; break;
+        case ValueType::Map: delete std::get<Map*>(value); break;
+        case ValueType::List: delete std::get<List*>(value); break;
         default:
             break;
     }
+}
+
+Value Value::boolean(bool value) {
+    return Value(ValueType::Boolean, value);
+}
+
+Value Value::of(number_u value) {
+    if (std::holds_alternative<integer_t>(value)) {
+        return Value(ValueType::Integer, std::get<integer_t>(value));
+    } else {
+        return Value(ValueType::Number, std::get<number_t>(value));
+    }
+}
+
+Value Value::of(const std::string& value) {
+    return Value(ValueType::String, value);
 }

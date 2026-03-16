@@ -4,7 +4,7 @@
 
 #include "AL/ALAudio.h"
 #include "NoAudio.h"
-#include "../logger/Logger.h"
+#include "../debug/Logger.h"
 #include "../coders/wav.h"
 #include "../coders/ogg.h"
 
