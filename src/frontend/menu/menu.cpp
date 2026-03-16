@@ -171,9 +171,11 @@ void menus::open_world(std::string name, Engine* engine, bool confirmConvert) {
     try {
         engine->loadWorldContent(folder);
     } catch (const contentpack_error& error) {
+        engine->setScreen(std::make_shared<MenuScreen>(engine));
         guiutil::alert(engine->getGUI(), langs::get(L"error.pack-not-found") + L": " + util::str2wstr_utf8(error.getPackId()));
         return;
     } catch (const std::runtime_error& error) {
+        engine->setScreen(std::make_shared<MenuScreen>(engine));
         guiutil::alert(engine->getGUI(), langs::get(L"Content Error", L"menu") + L": "+util::str2wstr_utf8(error.what()));
         return;
     }
@@ -199,7 +201,7 @@ void menus::open_world(std::string name, Engine* engine, bool confirmConvert) {
     } else {
         try {
             Level* level = World::load(folder, settings, content, packs);
-            level->world->wfile->createDirectories();
+            level->getWorld()->wfile->createDirectories();
             engine->setScreen(std::make_shared<LevelScreen>(engine, level));
         } catch (const world_load_error& error) {
             guiutil::alert(engine->getGUI(), 
@@ -208,33 +210,6 @@ void menus::open_world(std::string name, Engine* engine, bool confirmConvert) {
             return;
         }
     }
-}
-
-void create_languages_panel(Engine* engine) {
-    auto menu = engine->getGUI()->getMenu();
-    auto panel = menus::create_page(engine, "languages", 400, 0.5f, 1);
-    panel->setScrollable(true);
-
-    std::vector<std::string> locales;
-    for (auto& entry : langs::locales_info) {
-        locales.push_back(entry.first);
-    }
-    std::sort(locales.begin(), locales.end());
-    for (std::string& name : locales) {
-        auto& locale = langs::locales_info.at(name);
-        std::string& fullName = locale.name;
-
-        auto button = std::make_shared<Button>(
-            util::str2wstr_utf8(fullName), 
-            glm::vec4(10.0f),
-            [=](GUI*) {
-                engine->setLanguage(name);
-                menu->back();
-            }
-        );
-        panel->add(button);
-    }
-    panel->add(guiutil::backButton(menu));
 }
 
 void menus::create_version_label(Engine* engine) {
@@ -262,9 +237,9 @@ void menus::create_menus(Engine* engine) {
     menus::generatorID = WorldGenerators::getDefaultGeneratorID();
     create_new_world_panel(engine);
     create_settings_panel(engine);
-    create_languages_panel(engine);
     create_world_generators_panel(engine);
 
+    add_page_loader(engine, "languages");
     add_page_loader(engine, "main");
     load_page(engine, "404");
 }

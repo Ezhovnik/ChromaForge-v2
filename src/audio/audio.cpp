@@ -350,14 +350,11 @@ void audio::update(double delta) {
         entry.second->update(delta);
     }
 
-    float masterVolume = channels.at(0)->getVolume();
     for (auto it = speakers.begin(); it != speakers.end();) {
         auto speaker = it->second.get();
         int speakerChannel = speaker->getChannel();
         auto channel = get_channel(speakerChannel);
-        if (channel != nullptr) {
-            speaker->update(channel, speakerChannel == 0 ? 1.0f : masterVolume);
-        }
+        if (channel != nullptr) speaker->update(channel);
         if (speaker->isStopped()) {
             streams.erase(it->first);
             it = speakers.erase(it);

@@ -99,3 +99,9 @@ uint WorldConverter::getWorkRemaining() const {
 uint WorldConverter::getWorkDone() const {
     return tasksDone;
 }
+
+void WorldConverter::waitForEnd() {
+    while (isActive()) {
+        update();
+    }
+}

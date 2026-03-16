@@ -118,7 +118,7 @@ void ChunksController::createChunk(int x, int z) {
 	chunks->putChunk(chunk);
 
 	if (!chunk->isLoaded()) {
-		generator->generate(chunk->voxels, x, z, level->world->getSeed());
+		generator->generate(chunk->voxels, x, z, level->getWorld()->getSeed());
 		chunk->setUnsaved(true);
 	}
 	chunk->updateHeights();

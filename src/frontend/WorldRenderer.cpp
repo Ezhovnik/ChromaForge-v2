@@ -311,7 +311,7 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 
 void WorldRenderer::draw(const GfxContext& pctx, Camera* camera, bool hudVisible){
     EngineSettings& settings = engine->getSettings();
-    skybox->refresh(pctx, level->world->daytime, 1.0f + skyClearness * 2.0f, 4);
+    skybox->refresh(pctx, level->getWorld()->daytime, 1.0f + skyClearness * 2.0f, 4);
 
     Assets* assets = engine->getAssets();
     ShaderProgram* linesShader = assets->getShader("lines");
@@ -335,6 +335,6 @@ void WorldRenderer::draw(const GfxContext& pctx, Camera* camera, bool hudVisible
     auto screenShader = assets->getShader("screen");
     screenShader->use();
     screenShader->uniform1f("u_timer", Window::time());
-    screenShader->uniform1f("u_dayTime", level->world->daytime);
+    screenShader->uniform1f("u_dayTime", level->getWorld()->daytime);
     postProcessing->render(pctx, screenShader);
 }

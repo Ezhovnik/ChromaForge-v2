@@ -18,6 +18,7 @@
 #include "../../items/Inventory.h"
 #include "../../objects/Player.h"
 #include "../../logic/LevelController.h"
+#include "Environment.h"
 
 using namespace scripting;
 

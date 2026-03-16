@@ -20,7 +20,7 @@ namespace png {
      * @return Указатель на объект ImageData или nullptr в случае ошибки.
      *         Владельцем объекта становится вызывающий код, он должен быть удалён.
      */
-    extern ImageData* loadImage(const std::string& filename, bool flipVertically = true);
+    extern ImageData* loadImage(const std::string& filename, bool flipVertically);
 
     /**
      * @brief Сохраняет изображение в PNG-файл.

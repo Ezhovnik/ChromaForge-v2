@@ -94,7 +94,7 @@ namespace audio {
         ALSpeaker(ALAudio* al, uint source, Priority priority, int channel);
         ~ALSpeaker();
 
-        void update(const Channel* channel, float masterVolume) override;
+        void update(const Channel* channel) override;
         int getChannel() const override;
 
         State getState() const override;

@@ -8,13 +8,21 @@
 #include "../../debug/Logger.h"
 
 Atlas::Atlas(
-    ImageData* image, 
-    std::unordered_map<std::string, UVRegion> regions
-) : texture(Texture::from(image)), 
-    image(image), 
-    regions(regions) {}
+    std::unique_ptr<ImageData> image,
+    std::unordered_map<std::string, UVRegion> regions,
+    bool prepare
+) : texture(nullptr), 
+    image(std::move(image)), 
+    regions(regions) 
+{
+    if (prepare) this->prepare();
+}
 
 Atlas::~Atlas() {
+}
+
+void Atlas::prepare() {
+    texture.reset(Texture::from(image.get()));
 }
 
 bool Atlas::has(const std::string& name) const {
@@ -44,7 +52,9 @@ bool AtlasBuilder::has(const std::string& name) const {
     return names.find(name) != names.end();
 }
 
-Atlas* AtlasBuilder::build(uint extrusion, uint maxResolution) {
+Atlas* AtlasBuilder::build(uint extrusion, bool prepare, uint maxResolution) {
+    if (maxResolution == 0) maxResolution = Texture::MAX_RESOLUTION;
+
     auto sizes = std::make_unique<uint[]>(entries.size() * 2);
 
     uint idx = 0;
@@ -87,5 +97,5 @@ Atlas* AtlasBuilder::build(uint extrusion, uint maxResolution) {
         float unitY = 1.0f / height;
         regions[entry.name] = UVRegion(unitX * x, unitY * y, unitX * (x + w), unitY * (y + h));
     }
-    return new Atlas(canvas.release(), regions);
+    return new Atlas(std::move(canvas), regions, prepare);
 }

@@ -136,5 +136,6 @@ std::unique_ptr<Atlas> BlocksPreview::build(const ContentGfxCache* cache, Assets
     fbo.unbind();
 
     Window::viewport(0, 0, Window::width, Window::height);
-    return std::unique_ptr<Atlas>(builder.build(2));
+    auto newAtlas = std::unique_ptr<Atlas>(builder.build(2));
+    return newAtlas;
 }

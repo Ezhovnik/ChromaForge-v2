@@ -18,6 +18,8 @@
 #include "../logic/scripting/scripting.h"
 #include "../data/dynamic.h"
 #include "../files/files.h"
+#include "../logic/scripting/Environment.h"
+#include "../util/ThreadPool.h"
 
 AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(assets), paths(paths) {
 	// Регистрируем встроенные загрузчики из asset_loaders.h
@@ -41,6 +43,15 @@ bool AssetsLoader::hasNext() const {
 	return !entries.empty();
 }
 
+aloader_func AssetsLoader::getLoader(AssetType tag) {
+    auto found = loaders.find(tag);
+    if (found == loaders.end()) {
+        LOG_ERROR("Unknown asset tag {}", static_cast<int>(tag));
+        throw std::runtime_error("Unknown asset tag " + std::to_string(static_cast<int>(tag)));
+    }
+    return found->second;
+}
+
 bool AssetsLoader::loadNext() {
 	// Берём первый элемент очереди (не удаляя его пока)
 	const aloader_entry& entry = entries.front();
@@ -55,9 +66,17 @@ bool AssetsLoader::loadNext() {
 		return false;
 	}
 	aloader_func loader = found->second;
-	bool status = loader(*this, assets, paths, entry.filename, entry.alias, entry.config);
-	entries.pop();
-	return status;
+	try {
+        aloader_func loader = getLoader(entry.tag);
+        auto postfunc = loader(this, paths, entry.filename, entry.alias, entry.config);
+        postfunc(assets);
+        entries.pop();
+        return true;
+    } catch (std::runtime_error& err) {
+        LOG_ERROR("{}", err.what());
+        entries.pop();
+        return false;
+    }
 }
 
 /**
@@ -220,4 +239,36 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 
 const ResPaths* AssetsLoader::getPaths() const {
 	return paths;
+}
+
+class LoaderWorker : public util::Worker<std::shared_ptr<aloader_entry>, asset_loader::postfunc> {
+    AssetsLoader* loader;
+public:
+    LoaderWorker(AssetsLoader* loader) : loader(loader) {
+    }
+
+    asset_loader::postfunc operator()(const std::shared_ptr<aloader_entry>& entry) override {
+        aloader_func loadfunc = loader->getLoader(entry->tag);
+        return loadfunc(loader, loader->getPaths(), entry->filename, entry->alias, entry->config);
+    }
+};
+
+std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
+    auto pool = std::make_shared<
+        util::ThreadPool<std::shared_ptr<aloader_entry>, asset_loader::postfunc>
+    >(
+        "assets-loader-pool", 
+        [=](){return std::make_shared<LoaderWorker>(this);},
+        [=](asset_loader::postfunc& func) {
+            func(assets);
+        }
+    );
+    pool->setOnComplete(onDone);
+    while (!entries.empty()) {
+        const aloader_entry& entry = entries.front();
+        auto ptr = std::make_shared<aloader_entry>(entry);
+        pool->enqueueJob(ptr);
+        entries.pop();
+    }
+    return pool;
 }

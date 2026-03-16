@@ -7,6 +7,8 @@
 #include "../../debug/Logger.h"
 #include "gl_util.h"
 
+uint Texture::MAX_RESOLUTION = 1024; // Window::initialize перезапишет корректное значение
+
 Texture::Texture(uint id, uint width, uint height) : id(id), width(width), height(height){
 }
 

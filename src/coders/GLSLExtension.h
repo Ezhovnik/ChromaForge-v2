@@ -37,7 +37,7 @@ public:
     bool hasHeader(const std::string& name) const; // Проверяем наличие заголовка
 
     // Основная функций обработки
-    const std::string process(const std::filesystem::path file, const std::string& source);
+    const std::string process(const std::filesystem::path& file, const std::string& source);
 };
 
 #endif // CODERS_GLSL_EXTESION_H_

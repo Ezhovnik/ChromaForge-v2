@@ -179,7 +179,7 @@ namespace audio {
     public:
         virtual ~Speaker() {}
 
-        virtual void update(const Channel* channel, float masterVolume) = 0;
+        virtual void update(const Channel* channel) = 0;
 
         virtual int getChannel() const = 0;
 

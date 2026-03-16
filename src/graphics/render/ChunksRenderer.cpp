@@ -41,6 +41,8 @@ ChunksRenderer::ChunksRenderer(
             inwork.erase(mesh.key);
         })
 {
+    threadPool.setStandaloneResults(false);
+    threadPool.setStopOnFail(false);
     renderer = std::make_unique<BlocksRenderer>(
         RENDERER_CAPACITY, level->content, cache, settings
     );

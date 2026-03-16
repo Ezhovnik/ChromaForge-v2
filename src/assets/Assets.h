@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include <functional>
 
 #include "../graphics/core/TextureAnimation.h"
 
@@ -13,9 +14,14 @@ class ShaderProgram;
 class Font;
 class Atlas;
 class UIDocument;
+class Assets;
 
 namespace audio {
 	class Sound;
+}
+
+namespace asset_loader {
+     using postfunc = std::function<void(Assets*)>;
 }
 
 /**

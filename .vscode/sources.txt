@@ -12,6 +12,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/coders/byte_utils.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/coders/commons.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/coders/GLSLExtension.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/coders/imageio.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/coders/json.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/coders/ogg.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/coders/png.cpp"

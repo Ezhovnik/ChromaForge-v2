@@ -9,6 +9,7 @@
 #include "Events.h"
 #include "../debug/Logger.h"
 #include "../graphics/core/ImageData.h"
+#include "../graphics/core/Texture.h"
 
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW
 DisplaySettings* Window::settings = nullptr;
@@ -161,6 +162,13 @@ bool Window::initialize(DisplaySettings& settings) {
     Window::settings = &settings;
     Window::width = settings.width;
     Window::height = settings.height;
+
+    GLint maxTextureSize[1]{static_cast<GLint>(Texture::MAX_RESOLUTION)};
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, maxTextureSize);
+    if (maxTextureSize[0] > 0) {
+        Texture::MAX_RESOLUTION = maxTextureSize[0];
+        LOG_INFO("Max texture size is {}", Texture::MAX_RESOLUTION);
+    }
 
     // Устанавливаем callback-функции GLFW
     glfwSetKeyCallback(window, key_callback); // Клавиатура

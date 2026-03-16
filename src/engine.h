@@ -16,6 +16,7 @@
 #include "assets/Assets.h"
 #include "content/Content.h"
 #include "files/settings_io.h"
+#include "content/PacksManager.h"
 
 class Screen;
 class Batch2D;
@@ -61,6 +62,7 @@ private:
     void processPostRunnables();
 
     void addDefaultWorldGenerators();
+    void loadAssets();
 public:
     Engine(EngineSettings& settings, EnginePaths* paths); // Конструктор
     ~Engine(); // Деструктор
@@ -82,8 +84,13 @@ public:
 
     void postRunnable(runnable callback);
 
+    PacksManager createPacksManager(const std::filesystem::path& worldFolder);
+
+    void saveScreenshot();
+
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLanguage(std::string locale);
+
     void loadContent();
     void loadWorldContent(const std::filesystem::path& folder);
     void loadAllPacks();

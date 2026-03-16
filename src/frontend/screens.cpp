@@ -38,6 +38,7 @@
 #include "../logic/scripting/scripting.h"
 #include "../audio/audio.h"
 #include "../physics/Hitbox.h"
+#include "../logic/scripting/Environment.h"
 
 Screen::Screen(Engine* engine) : engine(engine), batch(new Batch2D(1024)) {
 }
@@ -164,7 +165,7 @@ void LevelScreen::update(float delta) {
     }
 
     if (!hud->isPause()) {
-        controller->getLevel()->world->updateTimers(delta);
+        controller->getLevel()->getWorld()->updateTimers(delta);
         animator->update(delta);
     }
 

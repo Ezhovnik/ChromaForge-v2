@@ -34,17 +34,7 @@ namespace scripting {
     extern const ContentIndices* indices;
     extern LevelController* controller;
 
-    class Environment {
-    private:
-        int env;
-    public:
-        Environment(int env);
-        ~Environment();
-
-        int getId() const;
-
-        void release();
-    };
+    class Environment;
 
     void initialize(Engine* engine);
 

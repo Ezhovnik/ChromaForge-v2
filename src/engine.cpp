@@ -21,7 +21,7 @@
 #include "graphics/core/Viewport.h"
 #include "graphics/core/ImageData.h"
 #include "coders/GLSLExtension.h"
-#include "coders/png.h"
+#include "coders/imageio.h"
 #include "files/engine_paths.h"
 #include "frontend/screens.h"
 #include "content/content.h"
@@ -43,6 +43,14 @@
 #include "content/PacksManager.h"
 #include "util/listutil.h"
 
+inline void create_channel(std::string name, NumberSetting& setting) {
+    if (name != "master") audio::create_channel(name);
+
+    setting.observe([=](auto value) {
+        audio::get_channel(name)->setVolume(value * value);
+    });
+}
+
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths), settingsHandler(settings) {
     // Инициализация окна GLFW
@@ -53,47 +61,28 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     }
 
     audio::initialize(settings.audio.enabled);
-    audio::create_channel("regular");
-    audio::create_channel("music");
-    audio::create_channel("ambient");
-    audio::create_channel("ui");
-
-    settings.audio.volumeMaster.observe([=](auto value) {
-        audio::get_channel("master")->setVolume(value * value);
-    });
-    settings.audio.volumeRegular.observe([=](auto value) {
-        audio::get_channel("regular")->setVolume(value * value);
-    });
-    settings.audio.volumeUI.observe([=](auto value) {
-        audio::get_channel("ui")->setVolume(value * value);
-    });
-    settings.audio.volumeAmbient.observe([=](auto value) {
-        audio::get_channel("ambient")->setVolume(value * value);
-    });
-    settings.audio.volumeMusic.observe([=](auto value) {
-        audio::get_channel("music")->setVolume(value * value);
-    });
+    create_channel("master", settings.audio.volumeMaster);
+    create_channel("regular", settings.audio.volumeRegular);
+    create_channel("music", settings.audio.volumeMusic);
+    create_channel("ambient", settings.audio.volumeAmbient);
+    create_channel("ui", settings.audio.volumeUI);
 
     auto resdir = paths->getResources();
 
     LOG_INFO("Loading assets");
     std::vector<std::filesystem::path> roots {resdir};
     resPaths = std::make_unique<ResPaths>(resdir, roots);
-    assets = std::make_unique<Assets>();
-	AssetsLoader loader(assets.get(), resPaths.get());
-	AssetsLoader::addDefaults(loader, nullptr);
+    try {
+        loadAssets();
+    } catch (std::runtime_error& err) {
+        LOG_ERROR("Fatal error occured while loading assets");
 
-    ShaderProgram::preprocessor->setPaths(resPaths.get());
-
-	while (loader.hasNext()) {
-		if (!loader.loadNext()) {
-			assets.reset();
-            scripting::close();
-			Window::terminate();
-            LOG_ERROR("Could not to load assets");
-			throw initialize_error("Could not to load assets");
-		}
-	}
+        assets.reset();
+        scripting::close();
+        audio::close();
+        Window::terminate();
+        throw initialize_error(err.what());
+    }
 
     gui = std::make_unique<gui::GUI>();
 
@@ -127,6 +116,45 @@ Engine::~Engine() {
     Logger::getInstance().flush();
 }
 
+PacksManager Engine::createPacksManager(const std::filesystem::path& worldFolder) {
+    PacksManager manager;
+    manager.setSources({
+        worldFolder/std::filesystem::path("content"),
+        paths->getUserfiles()/std::filesystem::path("content"),
+        paths->getResources()/std::filesystem::path("content")
+    });
+    return manager;
+}
+
+void Engine::loadAssets() {
+    LOG_INFO("Loading assets");
+    ShaderProgram::preprocessor->setPaths(resPaths.get());
+
+    auto new_assets = std::make_unique<Assets>();
+    AssetsLoader loader(new_assets.get(), resPaths.get());
+    AssetsLoader::addDefaults(loader, content.get());
+    bool threading = false;
+    if (threading) {
+        auto task = loader.startTask([=](){});
+        task->waitForEnd();
+    } else {
+        while (loader.hasNext()) {
+            if (!loader.loadNext()) {
+                new_assets.reset();
+                LOG_ERROR("Could not to load assets");
+                throw std::runtime_error("Could not to load assets");
+            }
+        }
+    }
+
+    if (assets) {
+        assets->extend(*new_assets);
+    } else {
+        assets.reset(new_assets.release());
+    }
+    LOG_INFO("Assets loaded successfully");
+}
+
 // Обновление таймеров
 void Engine::updateTimers() {
     frame++;
@@ -137,23 +165,21 @@ void Engine::updateTimers() {
 
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
-    if (Events::justPressed(keycode::F2)) {
-        std::unique_ptr<ImageData> image(Window::takeScreenshot());
-		image->flipY();
-		std::filesystem::path filename = paths->getScreenshotFile("png");
-		png::writeImage(filename.string(), image.get());
-    }
+    if (Events::justPressed(keycode::F2)) saveScreenshot();
 
     if (Events::justPressed(keycode::F11)) Window::toggleFullscreen();
 }
 
+void Engine::saveScreenshot() {
+    std::unique_ptr<ImageData> image(Window::takeScreenshot());
+    image->flipY();
+    std::filesystem::path filename = paths->getScreenshotFile("png");
+    imageio::write(filename.string(), image.get());
+    LOG_INFO("Save screenshot as '{}'", filename.u8string());
+}
+
 void Engine::onAssetsLoaded() {
-    assets->store(new UIDocument(
-        BUILTIN_CONTENT_NAMESPACE + ":root", 
-        uidocscript {}, 
-        std::dynamic_pointer_cast<gui::UINode>(gui->getContainer()), 
-        nullptr
-    ), BUILTIN_CONTENT_NAMESPACE + ":root");
+    gui->onAssetsLoad(assets.get());
 }
 
 void Engine::renderFrame(Batch2D& batch) {
@@ -208,18 +234,6 @@ void Engine::mainloop() {
     }
 }
 
-inline const std::string checkPacks(
-    const std::unordered_set<std::string>& packs, 
-    const std::vector<DependencyPack>& dependencies) 
-{
-    for (const auto& dependency : dependencies) { 
-        if (packs.find(dependency.id) == packs.end()) {
-            return dependency.id;
-        }
-    }
-    return "";
-}
-
 void Engine::loadContent() {
     LOG_INFO("Loading content");
     auto resdir = paths->getResources();
@@ -232,61 +246,25 @@ void Engine::loadContent() {
         names.push_back(pack.id);
     }
 
-    PacksManager manager;
-    manager.setSources({
-        paths->getWorldFolder()/std::filesystem::path("content"),
-        paths->getUserfiles()/std::filesystem::path("content"),
-        paths->getResources()/std::filesystem::path("content")
-    });
+    PacksManager manager = createPacksManager(paths->getWorldFolder());
     manager.scan();
-    auto allnames = manager.getAllNames();
+    names = manager.assembly(names);
+    contentPacks = manager.getAll(names);
 
     std::vector<std::filesystem::path> resRoots;
-    std::vector<ContentPack> srcPacks = contentPacks;
-    contentPacks.clear();
+    for (auto& pack : contentPacks) {
+        resRoots.push_back(pack.folder);
 
-    std::string missingDependency;
-	std::unordered_set<std::string> loadedPacks, existingPacks;
-	for (const auto& item : srcPacks) {
-        existingPacks.insert(item.id);
+        ContentLoader loader(&pack);
+        loader.load(contentBuilder);
     }
 
-	while (existingPacks.size() > loadedPacks.size()) {
-		for (auto& pack : srcPacks) {
-			if (loadedPacks.find(pack.id) != loadedPacks.end()) continue;
-			missingDependency = checkPacks(existingPacks, pack.dependencies);
-			if (!missingDependency.empty()) {
-                LOG_ERROR("Missing dependency '{}'", missingDependency);
-                throw contentpack_error(pack.id, pack.folder, "missing dependency '" + missingDependency + "'");
-            }
-			if (pack.dependencies.empty() || checkPacks(loadedPacks, pack.dependencies).empty()) {
-				loadedPacks.insert(pack.id);
-				resRoots.push_back(pack.folder);
-				contentPacks.push_back(pack);
-				ContentLoader loader(&pack);
-				loader.load(contentBuilder);
-			}
-		}
-    }
     content.reset(contentBuilder.build());
     resPaths = std::make_unique<ResPaths>(resdir, resRoots);
 
     langs::setup(resdir, langs::current->getId(), contentPacks);
 
-	LOG_INFO("Loading content Assets");
-    auto new_assets = std::make_unique<Assets>();
-    ShaderProgram::preprocessor->setPaths(resPaths.get());
-	AssetsLoader loader(new_assets.get(), resPaths.get());
-	AssetsLoader::addDefaults(loader, content.get());
-	while (loader.hasNext()) {
-		if (!loader.loadNext()) {
-			new_assets.reset();
-            LOG_ERROR("Could not to initialize content assets");
-			throw initialize_error("Could not to initialize content assets");
-		}
-	}
-    assets->extend(*new_assets);
-    LOG_INFO("Content Assets loaded successfully");
+	loadAssets();
     LOG_INFO("Content loaded sucessfully");
     Logger::getInstance().flush();
 }

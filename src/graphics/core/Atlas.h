@@ -19,8 +19,14 @@ private:
     std::unique_ptr<ImageData> image;
     std::unordered_map<std::string, UVRegion> regions;
 public:
-    Atlas(ImageData* image, std::unordered_map<std::string, UVRegion> regions);
+    Atlas(
+        std::unique_ptr<ImageData> image,
+        std::unordered_map<std::string, UVRegion> regions,
+        bool prepare
+    );
     ~Atlas();
+
+    void prepare();
 
     bool has(const std::string& name) const;
     const UVRegion& get(const std::string& name) const;
@@ -45,7 +51,7 @@ public:
     bool has(const std::string& name) const;
     const std::set<std::string>& getNames() {return names;};
 
-    Atlas* build(uint extrusion, uint maxResolution = 8192);
+    Atlas* build(uint extrusion, bool prepare=true, uint maxResolution=0);
 };
 
 #endif // GRAPHICS_CORE_ATLAS_H_

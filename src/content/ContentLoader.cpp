@@ -18,6 +18,7 @@
 #include "../items/Item.h"
 #include "../data/dynamic.h"
 #include "../core_content_defs.h"
+#include "../logic/scripting/Environment.h"
 
 ContentLoader::ContentLoader(ContentPack* pack) : pack(pack) {
 }

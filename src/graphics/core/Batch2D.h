@@ -9,7 +9,7 @@
 
 class Mesh;
 class Texture;
-class UVRegion;
+struct UVRegion;
 
 /**
  * @brief Класс для пакетной отрисовки 2D-примитивов (спрайтов, прямоугольников, линий).

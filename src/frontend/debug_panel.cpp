@@ -65,7 +65,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 		return L"Selected-block: " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
-		return L"Seed: " + std::to_wstring(level->world->getSeed());
+		return L"Seed: " + std::to_wstring(level->getWorld()->getSeed());
 	})));
 	for (int ax = 0; ax < 3; ++ax){
 		auto sub = std::make_shared<gui::Container>(glm::vec2(350, 27));
@@ -122,7 +122,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		int hour, minute, second;
-		timeutil::from_value(level->world->daytime, hour, minute, second);
+		timeutil::from_value(level->getWorld()->daytime, hour, minute, second);
 
 		std::wstring timeString = 
 					util::lfill(std::to_wstring(hour), 2, L'0') + L":" +
@@ -133,10 +133,10 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 	{
 		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 1.0f, 0.005f, 8);
 		bar->setSupplier([=]() {
-			return level->world->daytime;
+			return level->getWorld()->daytime;
 		});
 		bar->setConsumer([=](double val) {
-			level->world->daytime = val;
+			level->getWorld()->daytime = val;
 		});
 		panel->add(bar);
 	}

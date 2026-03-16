@@ -27,6 +27,7 @@
 #include "../graphics/ui/gui_xml.h"
 #include "../logic/scripting/scripting.h"
 #include "../items/Inventories.h"
+#include "../logic/scripting/Environment.h"
 
 SlotLayout::SlotLayout(
     int index,

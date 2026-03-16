@@ -9,6 +9,7 @@
 #include "../../logic/scripting/scripting.h"
 #include "../../util/stringutil.h"
 #include "../../debug/Logger.h"
+#include "../../logic/scripting/Environment.h"
 
 using namespace gui;
 

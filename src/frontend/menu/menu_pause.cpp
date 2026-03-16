@@ -12,12 +12,13 @@
 #include "../../core_content_defs.h"
 #include "../../world/Level.h"
 #include "../../world/World.h"
-#include "../../coders/png.h"
+#include "../../coders/imageio.h"
 #include "../../util/stringutil.h"
 #include "../../files/WorldFiles.h"
 #include "../../content/ContentLUT.h"
 #include "../../logic/LevelController.h"
 #include "../../content/PacksManager.h"
+#include "../../graphics/core/Texture.h"
 
 using namespace gui;
 
@@ -55,7 +56,8 @@ std::shared_ptr<Container> create_pack_panel(
     if (assets->getTexture(icon) == nullptr) {
         auto iconfile = pack.folder/std::filesystem::path("icon.png");
         if (std::filesystem::is_regular_file(iconfile)) {
-            assets->store(png::loadTexture(iconfile.string()), icon);
+            auto image = imageio::read(iconfile.string());
+            assets->store(Texture::from(image.get()), icon);
         } else {
             icon = "gui/no_icon";
         }
@@ -180,12 +182,7 @@ void create_content_panel(Engine* engine, LevelController* controller) {
     auto mainPanel = menus::create_page(engine, "content", 550, 0.0f, 5);
 
     auto paths = engine->getPaths();
-    PacksManager manager;
-    manager.setSources({
-        paths->getWorldFolder()/std::filesystem::path("content"),
-        paths->getUserfiles()/std::filesystem::path("content"),
-        paths->getResources()/std::filesystem::path("content")
-    });
+    PacksManager manager = engine->createPacksManager(paths->getWorldFolder());
     manager.scan();
 
     std::vector<ContentPack> scanned = manager.getAll(manager.getAllNames());

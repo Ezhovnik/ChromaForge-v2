@@ -99,7 +99,7 @@ static int l_file_read_bytes(lua_State* L) {
 }
 
 static int read_bytes_from_table(lua_State* L, int tableIndex, std::vector<ubyte>& bytes) {
-    if (!lua_istable(L, tableIndex)) return luaL_error(L, "table expected");
+    if (!lua_istable(L, tableIndex)) return luaL_error(L, "Table expected");
     lua_pushnil(L);
     while(lua_next(L, tableIndex - 1) != 0) {
         const int byte = lua_tointeger(L, -1);

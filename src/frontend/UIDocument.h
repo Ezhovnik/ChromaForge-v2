@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <unordered_map>
 
+#include "../logic/scripting/Environment.h"
+
 namespace gui {
     class UINode;
 }

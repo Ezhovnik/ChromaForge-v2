@@ -13,6 +13,8 @@
 #include "../../graphics/core/ShaderProgram.h"
 #include "../../debug/Logger.h"
 #include "../../graphics/core/GfxContext.h"
+#include "../../frontend/UIDocument.h"
+#include "../../core_content_defs.h"
 
 using namespace gui;
 
@@ -169,4 +171,13 @@ std::shared_ptr<Container> GUI::getContainer() const {
 
 void GUI::postRunnable(runnable callback) {
     postRunnables.push(callback);
+}
+
+void GUI::onAssetsLoad(Assets* assets) {
+    assets->store(new UIDocument(
+        BUILTIN_CONTENT_NAMESPACE + ":root", 
+        uidocscript {}, 
+        std::dynamic_pointer_cast<gui::UINode>(container), 
+        nullptr
+    ), BUILTIN_CONTENT_NAMESPACE + ":root");
 }

@@ -17,6 +17,8 @@ protected:
     uint id; ///< Идентификатор текстуры в OpenGL
     uint width, height; ///< Размеры текстуры в пикселях
 public:
+    static uint MAX_RESOLUTION;
+
     /**
      * @brief Конструктор, создающий объект из уже существующего OpenGL-идентификатора.
      * @param id Идентификатор существующей текстуры.

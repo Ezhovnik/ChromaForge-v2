@@ -32,8 +32,9 @@ class Inventories;
  * содержит инвентари.
  */
 class Level {
-public:
+private:
 	std::unique_ptr<World> world;
+public:
 	std::vector<std::shared_ptr<Object>> objects;
 	std::unique_ptr<Chunks> chunks; ///< Менеджер чанков
 	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)

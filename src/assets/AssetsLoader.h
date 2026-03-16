@@ -7,6 +7,10 @@
 #include <queue>
 #include <filesystem>
 
+#include "Assets.h"
+#include "../interfaces/Task.h"
+#include "../delegates.h"
+
 /**
  * @brief Типы ресурсов, которые могут быть загружены через AssetsLoader.
  */
@@ -19,7 +23,6 @@ enum class AssetType {
      Sound ///< Звук
 };
 
-class Assets;
 class ResPaths;
 class Content;
 class AssetsLoader;
@@ -46,18 +49,13 @@ struct SoundConfig : AssetsConfig {
 	SoundConfig(bool keepPCM) : keepPCM(keepPCM) {}
 };
 
-/**
- * @brief Тип функции-загрузчика конкретного ресурса.
- * 
- * @param loader Ссылка на загрузчик (может использоваться для загрузки вложенных ресурсов).
- * @param assets Указатель на менеджер ресурсов, куда сохранять результат.
- * @param paths Указатель на объект с путями для поиска файлов.
- * @param filename Имя файла или базовое имя (интерпретация зависит от конкретного загрузчика).
- * @param alias Имя, под которым ресурс будет сохранён в Assets.
- * @param config Дополнительная конфигурация (может быть специфичной для типа ресурса).
- * @return true при успешной загрузке, false при ошибке.
- */
-using aloader_func = std::function<bool(AssetsLoader&, Assets*, const ResPaths*, const std::string&, const std::string&, std::shared_ptr<AssetsConfig>)>;
+using aloader_func = std::function<asset_loader::postfunc(
+     AssetsLoader*,
+     const ResPaths*, 
+     const std::string&, 
+     const std::string&, 
+     std::shared_ptr<AssetsConfig>
+)>;
 
 /**
  * @brief Элемент очереди загрузки.
@@ -120,6 +118,8 @@ public:
 		std::shared_ptr<AssetsConfig> config=nullptr
 	);
 
+     std::shared_ptr<Task> startTask(runnable onDone);
+
 	/**
      * @brief Проверяет, есть ли ещё задания в очереди.
      * @return true, если очередь не пуста.
@@ -141,13 +141,15 @@ public:
      * @param loader Загрузчик, в который добавляются задания.
      * @param content Указатель на контент (может быть nullptr). Если передан, добавляются также ресурсы из контента.
      */
-    static void addDefaults(AssetsLoader& loader, const Content* content);
+     static void addDefaults(AssetsLoader& loader, const Content* content);
 
 	/**
      * @brief Возвращает объект с путями, используемый загрузчиком.
      * @return Указатель на ResPaths.
      */
 	const ResPaths* getPaths() const;
+
+     aloader_func getLoader(AssetType tag);
 };
 
 #endif // ASSETS_ASSETS_LOADER_H_

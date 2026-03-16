@@ -15,7 +15,7 @@
 #include "../debug/Logger.h"
 #include "../typedefs.h"
 
-ImageData* png::loadImage(const std::string& filename, bool flipVertically) {
+ImageData* _loadImage(const std::string& filename, bool flipVertically) {
     int channels = 0, width = 0, height = 0;
 
     stbi_set_flip_vertically_on_load(flipVertically); // Устанавливаем флаг вертикального переворота
@@ -66,6 +66,15 @@ ImageData* png::loadImage(const std::string& filename, bool flipVertically) {
     return image;
 }
 
+ImageData* png::loadImage(const std::string& filename, bool flipVertically) {
+    ImageData* image(_loadImage(filename, flipVertically));
+    if (image == nullptr) {
+        LOG_ERROR("Could not load image '{}'", filename);
+        throw std::runtime_error("Could not load image '" + filename + "'");
+    }
+    return image;
+}
+
 bool png::writeImage(const std::string& filename, const ImageData* image) {
     // Проверяем корректность входных данных
     if (!image || !image->getData()) {
@@ -106,16 +115,10 @@ bool png::writeImage(const std::string& filename, const ImageData* image) {
 
 // Загружает текстуру из PNG файла
 Texture* png::loadTexture(const std::string& filename) {
-    // Сначала загружаем изображение как ImageData
-    ImageData* image = loadImage(filename);
-
-    if (image == nullptr) {
-        LOG_ERROR("Failed to load texture from '{}'", filename);
-        return nullptr;
-    }
+    std::unique_ptr<ImageData> image(loadImage(filename, true));
 
     // Создание объекта Texture
-    Texture* texture = Texture::from(image);
+    Texture* texture = Texture::from(image.get());
     texture->setNearestFilter(); // Устанавливаем фильтрацию без сглаживания (для пиксельной графики)
     return texture;
 }
