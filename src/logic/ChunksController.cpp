@@ -22,8 +22,8 @@
 #include "../content/Content.h"
 #include "../world/WorldGenerators.h"
 
-constexpr int MAX_WORK_PER_FRAME = 64;
-constexpr int MIN_SURROUNDING = 9;
+inline constexpr int MAX_WORK_PER_FRAME = 64;
+inline constexpr int MIN_SURROUNDING = 9;
 
 ChunksController::ChunksController(
 	Level* level, 

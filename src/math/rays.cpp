@@ -1,12 +1,10 @@
 #include "rays.h"
 
-#include "glm/glm.hpp"\
-
 #include "AABB.h"
 
-constexpr rayvec3 X_AXIS = rayvec3(1, 0, 0);
-constexpr rayvec3 Y_AXIS = rayvec3(0, 1, 0);
-constexpr rayvec3 Z_AXIS = rayvec3(0, 0, 1);
+inline constexpr rayvec3 X_AXIS = rayvec3(1, 0, 0);
+inline constexpr rayvec3 Y_AXIS = rayvec3(0, 1, 0);
+inline constexpr rayvec3 Z_AXIS = rayvec3(0, 0, 1);
 
 Ray::Ray(const rayvec3& origin, const rayvec3& dir) : origin(origin), dir(dir) {}
 

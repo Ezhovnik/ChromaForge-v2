@@ -16,8 +16,8 @@
 #include "files/engine_paths.h"
 #include "constants.h"
 
-#define SETTINGS_FILE "settings.toml"
-#define CONTROLS_FILE "controls.json"
+inline const std::string SETTINGS_FILE = "settings.toml";
+inline const std::string CONTROLS_FILE = "controls.json";
 
 // Точка входа в программу
 int main(int argc, char** argv) {
