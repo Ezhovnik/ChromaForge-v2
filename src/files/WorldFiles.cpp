@@ -32,6 +32,13 @@ inline constexpr int REGION_HEADER_SIZE = 13;
 
 inline constexpr size_t BUFFER_SIZE_UNKNOWN = -1;
 
+inline void calc_reg_coords(int x, int z, int& regionX, int& regionZ, int& localX, int& localZ) {
+    regionX = floordiv(x, RegionConsts::SIZE);
+    regionZ = floordiv(z, RegionConsts::SIZE);
+    localX = x - (regionX * RegionConsts::SIZE);
+    localZ = z - (regionZ * RegionConsts::SIZE);
+}
+
 WorldRegion::WorldRegion() {
 	chunksData = new ubyte*[RegionConsts::VOLUME]{};
 	sizes = new uint32_t[RegionConsts::VOLUME]{};
@@ -127,11 +134,8 @@ ubyte* WorldFiles::decompress(const ubyte* src, size_t srclen, size_t dstlen) {
 void WorldFiles::put(Chunk* chunk){
 	assert(chunk != nullptr);
 
-	int regionX = floordiv(chunk->chunk_x, RegionConsts::SIZE);
-	int regionZ = floordiv(chunk->chunk_z, RegionConsts::SIZE);
-
-	int localX = chunk->chunk_x - (regionX * RegionConsts::SIZE);
-	int localZ = chunk->chunk_z - (regionZ * RegionConsts::SIZE);
+	int regionX, regionZ, localX, localZ;
+    calc_reg_coords(chunk->chunk_x, chunk->chunk_z, regionX, regionZ, localX, localZ);
 
 	{
 		size_t compressedSize;
@@ -178,11 +182,8 @@ void WorldFiles::put(Chunk* chunk){
 }
 
 void WorldFiles::put(int x, int z, const ubyte* voxelData) {
-    int regionX = floordiv(x, RegionConsts::SIZE);
-	int regionZ = floordiv(z, RegionConsts::SIZE);
-
-	int localX = x - (regionX * RegionConsts::SIZE);
-	int localZ = z - (regionZ * RegionConsts::SIZE);
+    int regionX, regionZ, localX, localZ;
+    calc_reg_coords(x, z, regionX, regionZ, localX, localZ);
 
 	{
 		WorldRegion* region = getOrCreateRegion(regions, regionX, regionZ);
@@ -191,28 +192,6 @@ void WorldFiles::put(int x, int z, const ubyte* voxelData) {
 		ubyte* data = compress(voxelData, CHUNK_DATA_LEN, compressedSize);
 		region->put(localX, localZ, data, compressedSize);
 	}
-}
-
-int WorldFiles::getVoxelRegionVersion(int x, int z) {
-    regFile* rf = getRegFile(glm::ivec3(x, z, RegionConsts::LAYER_VOXELS), getRegionsFolder());
-    if (rf == nullptr) return 0;
-
-    return rf->version;
-}
-
-int WorldFiles::getVoxelRegionsVersion() {
-    std::filesystem::path regionsFolder = getRegionsFolder();
-    if (!std::filesystem::is_directory(regionsFolder)) return REGION_FORMAT_VERSION;
-
-    for (auto file : std::filesystem::directory_iterator(regionsFolder)) {
-        int x, z;
-        if (!parseRegionFilename(file.path().stem().string(), x, z)) continue;
-
-        regFile* rf = getRegFile(glm::ivec3(x, z, RegionConsts::LAYER_VOXELS), regionsFolder);
-        return rf->version;
-    }
-
-    return REGION_FORMAT_VERSION;
 }
 
 std::filesystem::path WorldFiles::getRegionsFolder() const {
@@ -293,19 +272,24 @@ chunk_inventories_map WorldFiles::fetchInventories(int x, int z) {
 	return inventories;
 }
 
-ubyte* WorldFiles::getData(regionsmap& regions, const std::filesystem::path& folder, int x, int z, int layer, bool compression) {
-	int regionX = floordiv(x, RegionConsts::SIZE);
-	int regionZ = floordiv(z, RegionConsts::SIZE);
-
-	int localX = x - (regionX * RegionConsts::SIZE);
-	int localZ = z - (regionZ * RegionConsts::SIZE);
+ubyte* WorldFiles::getData(
+	regionsmap& regions, 
+	const std::filesystem::path& folder, 
+	int x, 
+	int z, 
+	int layer, 
+	bool compression)
+{
+	int regionX, regionZ, localX, localZ;
+    calc_reg_coords(x, z, regionX, regionZ, localX, localZ);
 
 	WorldRegion* region = getOrCreateRegion(regions, regionX, regionZ);
 
 	ubyte* data = region->getChunkData(localX, localZ);
 	if (data == nullptr) {
 		uint32_t size;
-		data = readChunkData(x, z, size, folder, layer);
+		auto regfile = getRegFile(glm::ivec3(regionX, regionZ, layer), folder);
+        if (regfile != nullptr) data = readChunkData(x, z, size, regfile.get());
 		if (data != nullptr) region->put(localX, localZ, data, size);
 	}
 
@@ -318,34 +302,74 @@ ubyte* WorldFiles::getData(regionsmap& regions, const std::filesystem::path& fol
 	return nullptr;
 }
 
-regFile* WorldFiles::getRegFile(glm::ivec3 coord, const std::filesystem::path& folder) {
-    const auto found = openRegFiles.find(coord);
-    if (found != openRegFiles.end()) return found->second.get();
-
-    if (openRegFiles.size() == RegionConsts::MAX_OPEN_FILES) {
-        auto iter = std::next(openRegFiles.begin(), rand() % openRegFiles.size());
-        openRegFiles.erase(iter);
-    }
-    std::filesystem::path filename = folder/getRegionFilename(coord.x, coord.y);
-    if (!std::filesystem::is_regular_file(filename)) return nullptr;
-    openRegFiles[coord] = std::make_unique<regFile>(filename);
-    return openRegFiles[coord].get();
+std::shared_ptr<regFile> WorldFiles::useRegFile(glm::ivec3 coord) {
+    return std::shared_ptr<regFile>(openRegFiles[coord].get(), [this](regFile* ptr) {
+        ptr->inUse = false;
+        regFilesCv.notify_one();
+    });
 }
 
-ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length, std::filesystem::path folder, int layer){
+void WorldFiles::closeRegFile(glm::ivec3 coord) {
+    openRegFiles.erase(coord);
+    regFilesCv.notify_one();
+}
+
+std::shared_ptr<regFile> WorldFiles::getRegFile(glm::ivec3 coord, const std::filesystem::path& folder) {
+    {
+        std::lock_guard lock(regFilesMutex);
+        const auto found = openRegFiles.find(coord);
+        if (found != openRegFiles.end()) {
+            if (found->second->inUse) {
+				LOG_ERROR("Regfile is currently in use");
+                throw std::runtime_error("Regfile is currently in use");
+            }
+            found->second->inUse = true;
+            return useRegFile(found->first);
+        }
+    }
+    return createRegFile(coord, folder);
+}
+
+std::shared_ptr<regFile> WorldFiles::createRegFile(glm::ivec3 coord, const std::filesystem::path& folder) {
+    std::filesystem::path file = folder / getRegionFilename(coord[0], coord[1]);
+    if (!std::filesystem::exists(file)) return nullptr;
+
+    if (openRegFiles.size() == RegionConsts::MAX_OPEN_FILES) {
+        std::unique_lock lock(regFilesMutex);
+        while (true) {
+            bool closed = false;
+            for (auto& entry : openRegFiles) {
+                if (!entry.second->inUse) {
+                    closeRegFile(entry.first);
+                    closed = true;
+                    break;
+                }
+            }
+            if (closed) break;
+            regFilesCv.wait(lock);
+        }
+        openRegFiles[coord] = std::make_unique<regFile>(file);
+        return useRegFile(coord);
+    } else {
+        std::lock_guard lock(regFilesMutex);
+        openRegFiles[coord] = std::make_unique<regFile>(file);
+        return useRegFile(coord);
+    }
+}
+
+ubyte* WorldFiles::readChunkData(
+	int x, 
+	int z, 
+	uint32_t& length, 
+	regFile* rfile)
+{
 	if (generatorTestMode) return nullptr;
 
-	int regionX = floordiv(x, RegionConsts::SIZE);
-	int regionZ = floordiv(z, RegionConsts::SIZE);
-
-	int localX = x - (regionX * RegionConsts::SIZE);
-	int localZ = z - (regionZ * RegionConsts::SIZE);
+	int regionX, regionZ, localX, localZ;
+    calc_reg_coords(x, z, regionX, regionZ, localX, localZ);
 
 	int chunkIndex = localZ * RegionConsts::SIZE + localX;
 
-	glm::ivec3 coord(regionX, regionZ, layer);
-    regFile* rfile = WorldFiles::getRegFile(coord, folder);
-    if (rfile == nullptr) return nullptr;
 	files::rafile& file = rfile->file;
 
 	size_t file_size = file.length();
@@ -365,7 +389,7 @@ ubyte* WorldFiles::readChunkData(int x, int z, uint32_t& length, std::filesystem
 	return data;
 }
 
-void WorldFiles::fetchChunks(WorldRegion* region, int x, int y, std::filesystem::path folder, int layer) {
+void WorldFiles::fetchChunks(WorldRegion* region, int x, int y, regFile* rfile) {
     ubyte** chunks = region->getChunks();
 	uint32_t* sizes = region->getSizes();
 
@@ -373,7 +397,7 @@ void WorldFiles::fetchChunks(WorldRegion* region, int x, int y, std::filesystem:
 		int chunk_x = (i % RegionConsts::SIZE) + x * RegionConsts::SIZE;
 		int chunk_z = (i / RegionConsts::SIZE) + y * RegionConsts::SIZE;
 		if (chunks[i] == nullptr) {
-			chunks[i] = readChunkData(chunk_x, chunk_z, sizes[i], folder, layer);
+			chunks[i] = readChunkData(chunk_x, chunk_z, sizes[i], rfile);
 		}
 	}
 }
@@ -382,9 +406,11 @@ void WorldFiles::writeRegion(int x, int z, WorldRegion* entry, std::filesystem::
 	std::filesystem::path filename = folder/getRegionFilename(x, z);
 
 	glm::ivec3 regcoord(x, z, layer);
-    if (getRegFile(regcoord, folder)) {
-        fetchChunks(entry, x, z, folder, layer);
-        openRegFiles.erase(regcoord);
+    if (auto regfile = getRegFile(regcoord, folder)) {
+        fetchChunks(entry, x, z, regfile.get());
+
+        std::lock_guard lock(regFilesMutex);
+        closeRegFile(regcoord);
     }
 
 	char header[REGION_HEADER_SIZE] = REGION_FORMAT_MAGIC;
@@ -443,7 +469,7 @@ void WorldFiles::write(const World* world, const Content* content) {
 
 	if (world) {
 		writeWorldInfo(world);
-		writePacks(world);
+		if (!std::filesystem::exists(getPacksFile())) writePacks(world->getPacks());
 	}
 
 	if (generatorTestMode) return;
@@ -454,11 +480,9 @@ void WorldFiles::write(const World* world, const Content* content) {
 	writeRegions(lights, lightsFolder, RegionConsts::LAYER_INVENTORIES);
 }
 
-void WorldFiles::writePacks(const World* world) {
+void WorldFiles::writePacks(const std::vector<ContentPack>& packs) {
 	auto packsFile = getPacksFile();
-    if (std::filesystem::is_regular_file(packsFile)) return;
 
-	const auto& packs = world->getPacks();
 	std::stringstream ss;
 	ss << "# autogenerated; do not modify\n";
 	for (const auto& pack : packs) {
@@ -505,49 +529,12 @@ bool WorldFiles::readWorldInfo(World* world) {
 	return true;
 }
 
-void WorldFiles::addPack(const World* world, const std::string& id) {
-    std::filesystem::path file = getPacksFile();
-    if (!std::filesystem::is_regular_file(file)) {
-        if (!std::filesystem::is_directory(directory)) std::filesystem::create_directories(directory);
-        writePacks(world);
-    }
-    auto packs = files::read_list(file);
-    packs.push_back(id);
-
-	std::stringstream ss;
-	ss << "# autogenerated; do not modify\n";
-	for (const auto& pack : packs) {
-		ss << pack << "\n";
-	}
-	files::write_string(file, ss.str());
-}
-
-void WorldFiles::removePack(const World* world, const std::string& id) {
-    std::filesystem::path file = getPacksFile();
-    if (!std::filesystem::is_regular_file(file)) {
-        if (!std::filesystem::is_directory(directory)) {
-            std::filesystem::create_directories(directory);
-        }
-        writePacks(world);
-    }
-    auto packs = files::read_list(file);
-    auto found = std::find(packs.begin(), packs.end(), id);
-    if (found != packs.end()) packs.erase(found);
-
-    std::stringstream ss;
-    ss << "# autogenerated; do not modify\n";
-    for (const auto& pack : packs) {
-        ss << pack << "\n";
-    }
-    files::write_string(file, ss.str());
-
-	auto prefix = id+":";
-    auto root = files::read_json(getIndicesFile());
+static void erase_pack_indices(dynamic::Map* root, const std::string& id) {
+	auto prefix = id + ":";
     auto blocks = root->list("blocks");
     for (uint i = 0; i < blocks->size(); ++i) {
         auto name = blocks->str(i);
-        if (name.find(prefix) != 0)
-            continue;
+        if (name.find(prefix) != 0) continue;
         auto value = blocks->getValueWriteable(i);
         value->value = BUILTIN_AIR;
     }
@@ -558,6 +545,13 @@ void WorldFiles::removePack(const World* world, const std::string& id) {
         if (name.find(prefix) != 0) continue;
         auto value = items->getValueWriteable(i);
         value->value = BUILTIN_EMPTY;
+    }
+}
+
+void WorldFiles::removeIndices(const std::vector<std::string>& packs) {
+    auto root = files::read_json(getIndicesFile());
+    for (const auto& id : packs) {
+        erase_pack_indices(root.get(), id);
     }
     files::write_json(getIndicesFile(), root.get());
 }

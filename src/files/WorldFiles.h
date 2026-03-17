@@ -5,6 +5,9 @@
 #include <unordered_map>
 #include <memory>
 #include <filesystem>
+#include <vector>
+#include <condition_variable>
+#include <mutex>
 
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -14,6 +17,7 @@
 #include "../settings.h"
 #include "../files/files.h"
 #include "../voxels/Chunk.h"
+#include "../content/ContentPack.h"
 
 // Константы для размера регионов
 namespace RegionConsts {
@@ -63,6 +67,7 @@ public:
 struct regFile {
     files::rafile file;
     int version;
+    bool inUse = false;
 
     regFile(std::filesystem::path filename);
 };
@@ -73,6 +78,8 @@ typedef std::unordered_map<glm::ivec2, std::unique_ptr<WorldRegion>> regionsmap;
 class WorldFiles {
 private:
     std::unordered_map<glm::ivec3, std::unique_ptr<regFile>> openRegFiles;
+    std::mutex regFilesMutex;
+    std::condition_variable regFilesCv;
 
     std::filesystem::path getLightsFolder() const;
     std::filesystem::path getInventoriesFolder() const;
@@ -87,14 +94,17 @@ private:
     void writeWorldInfo(const World* world);
     void writeRegions(regionsmap& regions, const std::filesystem::path& folder, int layer);
 
-    void fetchChunks(WorldRegion* region, int x, int y, std::filesystem::path folder, int layer);
+    void fetchChunks(WorldRegion* region, int x, int y, regFile* file);
 
-    ubyte* readChunkData(int x, int y, uint32_t& length, std::filesystem::path folder, int layer);
+    ubyte* readChunkData(int x, int y, uint32_t& length, regFile* file);
     WorldRegion* getRegion(regionsmap& regions, int x, int z);
     WorldRegion* getOrCreateRegion(regionsmap& regions, int x, int z);
 	ubyte* getData(regionsmap& regions, const std::filesystem::path& folder, int x, int z, int layer, bool compression);
 
-    regFile* getRegFile(glm::ivec3 coord, const std::filesystem::path& folder);
+    std::shared_ptr<regFile> getRegFile(glm::ivec3 coord, const std::filesystem::path& folder);
+    void closeRegFile(glm::ivec3 coord);
+    std::shared_ptr<regFile> useRegFile(glm::ivec3 coord);
+    std::shared_ptr<regFile> createRegFile(glm::ivec3 coord, const std::filesystem::path& folder);
 public:
     regionsmap regions; // Хранилище регионов в оперативной памяти.
     regionsmap lights;
@@ -120,9 +130,6 @@ public:
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
     void put(int x, int z, const ubyte* voxelData);
 
-    int getVoxelRegionVersion(int x, int z);
-    int getVoxelRegionsVersion();
-
     bool readWorldInfo(World* world);
 	void writeRegion(int x, int z, WorldRegion* entry, std::filesystem::path file, int layer);
 
@@ -132,11 +139,10 @@ public:
     chunk_inventories_map fetchInventories(int x, int z);
 
     void write(const World* world, const Content* content);
-    void writePacks(const World* world);
+    void writePacks(const std::vector<ContentPack>& packs);
     void writeIndices(const ContentIndices* indices);
 
-    void addPack(const World* world, const std::string& id);
-    void removePack(const World* world, const std::string& id);
+    void removeIndices(const std::vector<std::string>& packs);
 };
 
 #endif // FILES_WORLDFILES_H_

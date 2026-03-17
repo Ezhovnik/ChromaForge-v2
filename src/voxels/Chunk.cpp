@@ -107,15 +107,6 @@ bool Chunk::decode(const ubyte* data) {
 	return true;
 }
 
-void Chunk::fromOld(ubyte* data) {
-    for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        data[i + CHUNK_VOLUME * 3] = data[i + CHUNK_VOLUME];
-        data[i + CHUNK_VOLUME] = data[i];
-        data[i + CHUNK_VOLUME * 2] = 0;
-        data[i] = 0;
-    }
-}
-
 void Chunk::convert(ubyte* data, const ContentLUT* lut) {
     for (uint i = 0; i < CHUNK_VOLUME; ++i) {
         blockid_t id = ((blockid_t(data[i]) << 8) | blockid_t(data[CHUNK_VOLUME + i]));

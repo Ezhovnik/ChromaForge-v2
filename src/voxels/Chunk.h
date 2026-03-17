@@ -75,7 +75,6 @@ public:
     ubyte* encode() const;
 	bool decode(const ubyte* data);
 
-    static void fromOld(ubyte* data);
     static void convert(ubyte* data, const ContentLUT* lut);
 };
 
