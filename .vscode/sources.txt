@@ -35,6 +35,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/files/settings_io.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/files/WorldConverter.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/files/WorldFiles.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/files/WorldRegions.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/BlocksPreview.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/ContentGfxCache.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/debug_panel.cpp"

@@ -409,7 +409,8 @@ void Chunks::setCenter(int32_t x, int32_t z) {
 	if (cx | cz) translate(cx, cz);
 }
 
-void Chunks::translate(int32_t dx, int32_t dz){
+void Chunks::translate(int32_t dx, int32_t dz) {
+	auto& regions = worldFiles->getRegions();
 	for (uint i = 0; i < volume; ++i){
 		chunksSecond[i] = nullptr;
 	}
@@ -421,7 +422,7 @@ void Chunks::translate(int32_t dx, int32_t dz){
 			if (chunk == nullptr) continue;
 			if (nx < 0 || nz < 0 || nx >= int(width) || nz >= int(depth)) {
 				events->trigger(CHUNK_HIDDEN, chunk.get());
-				if (worldFiles) worldFiles->put(chunk.get());
+				if (worldFiles) regions.put(chunk.get());
 				chunksCount--;
 				continue;
 			}
@@ -478,11 +479,12 @@ void Chunks::resize(uint32_t newWidth, uint32_t newDepth) {
 	chunksSecond = std::move(newChunksSecond);
 }
 
-void Chunks::saveAndClear(){
+void Chunks::saveAndClear() {
+	auto& regions = worldFiles->getRegions();
 	for (size_t i = 0; i < volume; ++i){
 		Chunk* chunk = chunks[i].get();
 		if (chunk) {
-			worldFiles->put(chunk);
+			regions.put(chunk);
 			events->trigger(CHUNK_HIDDEN, chunk);
 		}
 		chunks[i] = nullptr;

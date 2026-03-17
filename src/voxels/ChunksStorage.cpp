@@ -47,15 +47,15 @@ std::shared_ptr<Chunk> ChunksStorage::get(int x, int z) const {
 
 std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	World* world = level->getWorld();
-	WorldFiles* wfile = world->wfile.get();
+	auto& regions = world->wfile.get()->getRegions();
 
 	auto chunk = std::make_shared<Chunk>(x, z);
 	store(chunk);
 
-	auto data = wfile->getChunk(chunk->chunk_x, chunk->chunk_z);
+	auto data = regions.getChunk(chunk->chunk_x, chunk->chunk_z);
 	if (data) {
 		chunk->decode(data.get());
-		auto invs = wfile->fetchInventories(chunk->chunk_x, chunk->chunk_z);
+		auto invs = regions.fetchInventories(chunk->chunk_x, chunk->chunk_z);
 		chunk->setBlockInventories(std::move(invs));
 		chunk->setLoaded(true);
 		for(auto& entry : chunk->inventories) {
@@ -64,7 +64,7 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 		verifyLoadedChunk(level->content->getIndices(), chunk.get());
 	}
 
-	auto lights = wfile->getLights(chunk->chunk_x, chunk->chunk_z);
+	auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z);
 	if (lights) {
 		chunk->light_map.set(lights.get());
 		chunk->setLoadedLights(true);

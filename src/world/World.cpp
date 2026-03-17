@@ -50,6 +50,7 @@ void World::updateTimers(float delta) {
 void World::write(Level* level) {
 	const Content* content = level->content;
 	Chunks* chunks = level->chunks.get();
+	auto& regions = wfile->getRegions();
 
 	// Проходим по всем чанкам в хранилище
 	for (size_t i = 0; i < chunks->volume; ++i) {
@@ -57,7 +58,7 @@ void World::write(Level* level) {
 		if (chunk == nullptr || !chunk->isLighted()) continue;
 		bool lightsUnsaved = !chunk->isLoadedLights() && settings.debug.doWriteLights;
 		if (!chunk->isUnsaved() && !lightsUnsaved) continue;
-		wfile->put(chunk.get());
+		regions.put(chunk.get());
 	}
 
 	// Запись метаданных мира и игрока

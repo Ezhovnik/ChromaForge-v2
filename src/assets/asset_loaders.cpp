@@ -82,7 +82,7 @@ asset_loader::postfunc asset_loader::font(
 		// Формируем имя файла страницы: filename_i.png
 		std::string page_name = filename + "_" + std::to_string(i) + ".png"; 
         page_name = paths->find(page_name).string(); // ищем полный путь
-		pages->push_back(std::move(imageio::read(page_name)));
+		pages->push_back(imageio::read(page_name));
 	}
 
 	return [=](auto assets) {

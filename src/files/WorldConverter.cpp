@@ -19,7 +19,7 @@ WorldConverter::WorldConverter(
     lut(lut), 
     content(content) 
 {
-    std::filesystem::path regionsFolder = wfile->getRegionsFolder(RegionConsts::LAYER_VOXELS);
+    std::filesystem::path regionsFolder = wfile->getRegions().getRegionsFolder(RegionConsts::LAYER_VOXELS);
     if (!std::filesystem::is_directory(regionsFolder)) {
         LOG_WARN("Nothing to convert");
         return;
@@ -38,13 +38,13 @@ WorldConverter::~WorldConverter() {
 void WorldConverter::convertRegion(std::filesystem::path file) {
     int x, z;
     std::string name = file.stem().string();
-    if (!WorldFiles::parseRegionFilename(name, x, z)) {
+    if (!WorldRegions::parseRegionFilename(name, x, z)) {
         LOG_ERROR("Could not parse name '{}'", name);
         return;
     }
 
     LOG_INFO("Converting region '{}'", name);
-    wfile->processRegionVoxels(x, z, [=](ubyte* data) {
+    wfile->getRegions().processRegionVoxels(x, z, [=](ubyte* data) {
         if (lut) {
             Chunk::convert(data, lut.get());
         }
