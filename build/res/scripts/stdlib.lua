@@ -197,6 +197,36 @@ function time.post_runnable(runnable)
     table.insert(__post_runnables, runnable)
 end
 
+function gui.template(name, params)
+    local text = file.read(file.find("layouts/templates/"..name..".xml"))
+    for k,v in pairs(params) do
+        local arg = tostring(v):gsub("'", "\\'"):gsub('"', '\\"')
+        text = text:gsub("(%%{"..k.."})", arg)
+    end
+    text = text:gsub("if%s*=%s*'%%{%w+}'", "if=''")
+    text = text:gsub("if%s*=%s*\"%%{%w+}\"", "if=\"\"")
+    text = text:gsub("%w+%s*=%s*'%%{%w+}'%s?", "")
+    text = text:gsub("%w+%s*=%s*\"%%{%w+}\"%s?", "")
+    return text
+end
+
+session = {
+    entries={}
+}
+
+function session.get_entry(name)
+    local entry = session.entries[name]
+    if entry == nil then
+        entry = {}
+        session.entries[name] = entry
+    end
+    return entry
+end
+
+function session.reset_entry(name)
+    session.entries[name] = nil
+end
+
 -- Deprecated functions
 block_index = block.index
 block_name = block.name

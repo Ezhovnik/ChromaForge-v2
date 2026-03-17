@@ -47,7 +47,6 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/WorldRenderer.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/locale/langs.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/menu/menu_commons.cpp"
-"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/menu/menu_create_world.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/menu/menu_pause.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/menu/menu_settings.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/frontend/menu/menu.cpp"

@@ -42,15 +42,12 @@
 
 using namespace gui;
 
-namespace menus {
-    extern std::string generatorID;
-}
-
-static void add_page_loader(Engine* engine, const std::string& name) {
+void menus::create_menus(Engine* engine) {
+    create_settings_panel(engine);
     auto menu = engine->getGUI()->getMenu();
-    auto file = engine->getResPaths()->find("layouts/pages/" + name + ".xml");
-    auto fullname = BUILTIN_CONTENT_NAMESPACE + ":pages/" + name;
-    menu->addSupplier(name, [=]() {
+    menu->setPageLoader([=](auto name) {
+        auto file = engine->getResPaths()->find("layouts/pages/" + name + ".xml");
+        auto fullname = BUILTIN_CONTENT_NAMESPACE + ":pages/" + name;
         auto document = UIDocument::read(0, fullname, file).release();
         engine->getAssets()->store(document, fullname);
         scripting::on_ui_open(document, nullptr, glm::ivec3());
@@ -218,22 +215,5 @@ void menus::delete_world(std::string name, Engine* engine) {
     });
 }
 
-void menus::create_menus(Engine* engine) {
-    menus::generatorID = WorldGenerators::getDefaultGeneratorID();
-    create_new_world_panel(engine);
-    create_settings_panel(engine);
-    create_world_generators_panel(engine);
-
-    add_page_loader(engine, "languages");
-    add_page_loader(engine, "main");
-    add_page_loader(engine, "404");
-}
-
 void menus::refresh_menus(Engine* engine) {
-    create_new_world_panel(engine);
-    create_world_generators_panel(engine);
-
-    add_page_loader(engine, "main");
-    add_page_loader(engine, "settings-audio");
-    add_page_loader(engine, "404");
 }

@@ -79,14 +79,17 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
     }
 
     if (element->has("onclick")) {
-        auto callback = scripting::create_runnable(
-            reader.getEnvironment().getId(),
-            element->attr("onclick").getText(),
-            reader.getFilename()
-        );
-        node.listenAction([callback](GUI*) {
-            callback();
-        });
+        std::string text = element->attr("onclick").getText();
+        if (!text.empty()) {
+            auto callback = scripting::create_runnable(
+                reader.getEnvironment().getId(),
+                text,
+                reader.getFilename()
+            );
+            node.listenAction([callback](GUI*) {
+                callback();
+            });
+        }
     }
 }
 
@@ -190,7 +193,12 @@ static std::shared_ptr<UINode> readButton(UIXmlReader& reader, xml::xmlelement e
     auto& elements = element->getElements();
     if (!elements.empty() && elements.at(0)->getTag() != "#") {
         glm::vec4 padding = element->attr("padding", "0,0,0,0").asVec4();
-        button = std::make_shared<Button>(reader.readUINode(element->getElements().at(0)), padding);
+        auto inner = reader.readUINode(element->getElements().at(0));
+        if (inner != nullptr) {
+            button = std::make_shared<Button>(inner, padding);
+        } else {
+            button = std::make_shared<Button>(L"", glm::vec4(0.0f), nullptr);
+        }
         _readPanel(reader, element, *button, false);
     } else {
         std::wstring text = readAndProcessInnerText(element, reader.getContext());
@@ -328,6 +336,11 @@ void UIXmlReader::addIgnore(const std::string& tag) {
 }
 
 std::shared_ptr<UINode> UIXmlReader::readUINode(xml::xmlelement element) {
+    if (element->has("if")) {
+        const auto& cond = element->attr("if").getText();
+        if (cond.empty() || cond == "false") return nullptr;
+    }
+
     const std::string& tag = element->getTag();
 
     auto found = readers.find(tag);

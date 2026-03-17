@@ -23,7 +23,7 @@ world.Name=Назва
 world.World generator=Генератор світу
 world.generators.default=Звичайні
 world.generators.flat=Плоскі
-menu.Create World=Створити Світ
+world.Create World=Створити Світ
 
 world.convert-request=Є зміни в індексах! Конвертувати світ?
 

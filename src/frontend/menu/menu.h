@@ -19,9 +19,6 @@ using packconsumer = std::function<void(const ContentPack& pack)>;
 
 namespace menus {
     extern void create_settings_panel(Engine* engine);
-    extern void create_new_world_panel(Engine* engine);
-    extern void create_pause_panel(Engine* engine, LevelController* level);
-    extern void create_world_generators_panel(Engine* engine);
     extern std::shared_ptr<gui::Panel> create_packs_panel(
         const std::vector<ContentPack>& packs, 
         Engine* engine, 
@@ -33,6 +30,12 @@ namespace menus {
         std::string name, 
         Engine* engine, 
         bool confirmConvert
+    );
+    void create_world(
+        Engine* engine, 
+        const std::string& name, 
+        const std::string& seedstr,
+        const std::string& generatorID
     );
     void delete_world(std::string name, Engine* engine);
     void create_version_label(Engine* engine);

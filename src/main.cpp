@@ -77,7 +77,10 @@ int main(int argc, char** argv) {
 		files::write_string(controls_file, write_controls());
         LOG_INFO("Bindings are written");
     } catch (const initialize_error& err) {
-        LOG_CRITICAL("An initialization error occurred. Reason: {}", err.what());
+        LOG_CRITICAL("An initialization error occurred: {}", err.what());
+    } catch (const std::exception& err) {
+        LOG_ERROR("Uncaught exception: {}", err.what());
+        throw;
     }
 
     Logger::getInstance().flush();

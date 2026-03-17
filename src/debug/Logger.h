@@ -4,8 +4,7 @@
 #include <memory>
 #include <string>
 
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/sink.h>
+#include <fmt/format.h>
 
 enum class LogLevel {
     TRACE = 0,
@@ -20,20 +19,12 @@ enum class LogLevel {
 class Logger {
 private:
     Logger();
+    ~Logger();
 
-    std::shared_ptr<spdlog::logger> logger_;
+    class Impl;
+    std::unique_ptr<Impl> pimpl_;
 
-    static spdlog::level::level_enum toSpdlogLevel(LogLevel level);
-
-    std::shared_ptr<spdlog::sinks::sink> console_sink = nullptr;
-    std::shared_ptr<spdlog::sinks::sink> file_sink = nullptr;
-
-    template<typename... Args>
-    void logWithContext(spdlog::level::level_enum level, 
-                        const char* file, int line, const char* function,
-                        const char* fmt, const Args&... args) {
-        logger_->log(spdlog::source_loc{file, line, function}, level, fmt, args...);
-    }
+    void log_impl(LogLevel level, const char* file, int line, const char* function, const std::string& message);
 public:
     static Logger& getInstance();
 
@@ -43,50 +34,31 @@ public:
         LogLevel fileLevel = LogLevel::DEBUG
     );
 
-    // Методы с контекстом (для использования внутри макросов)
-    template<typename... Args>
-    void trace_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
-        logWithContext(spdlog::level::trace, file, line, function, fmt, args...);
-    }
-
-    template<typename... Args>
-    void debug_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
-        logWithContext(spdlog::level::debug, file, line, function, fmt, args...);
-    }
-
-    template<typename... Args>
-    void info_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
-        logWithContext(spdlog::level::info, file, line, function, fmt, args...);
-    }
-
-    template<typename... Args>
-    void warn_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
-        logWithContext(spdlog::level::warn, file, line, function, fmt, args...);
-    }
-
-    template<typename... Args>
-    void error_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
-        logWithContext(spdlog::level::err, file, line, function, fmt, args...);
-    }
-
-    template<typename... Args>
-    void critical_context(const char* file, int line, const char* function, const char* fmt, const Args&... args) {
-        logWithContext(spdlog::level::critical, file, line, function, fmt, args...);
-    }
-
     void setConsoleLevel(LogLevel level);
     void setFileLevel(LogLevel level);
     void setLoggerLevel(LogLevel level);
 
-    void flush() {logger_->flush();}
+    template<typename... Args>
+    void log(
+        LogLevel level,
+        const char* file,
+        int line,
+        const char* function,
+        const char* fmt,
+        const Args&... args)
+    {
+        log_impl(level, file, line, function, fmt::format(fmt, args...));
+    }
+
+    void flush();
 };
 
 // Макросы с автоматическим определением контекста
-#define LOG_TRACE(...)    Logger::getInstance().trace_context(__FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_DEBUG(...)    Logger::getInstance().debug_context(__FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_INFO(...)     Logger::getInstance().info_context(__FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_WARN(...)     Logger::getInstance().warn_context(__FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_ERROR(...)    Logger::getInstance().error_context(__FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_CRITICAL(...) Logger::getInstance().critical_context(__FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_TRACE(...)    Logger::getInstance().log(LogLevel::TRACE, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_DEBUG(...)    Logger::getInstance().log(LogLevel::DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_INFO(...)     Logger::getInstance().log(LogLevel::INFO, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_WARN(...)     Logger::getInstance().log(LogLevel::WARN, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_ERROR(...)    Logger::getInstance().log(LogLevel::ERR, __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define LOG_CRITICAL(...) Logger::getInstance().log(LogLevel::CRITICAL, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
 #endif // LOGGER_LOGGER_H_

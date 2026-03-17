@@ -21,6 +21,8 @@
                 "-lvorbisfile",
                 "-lvorbisenc",
                 "-lz",
+                "-lfmt",
+                "-lspdlog",
                 "-o",
                 "${workspaceFolder}/build/ChromaForge.exe",
             ],

@@ -11,6 +11,7 @@
 #include "../../../frontend/screens.h"
 #include "../../../logic/LevelController.h"
 #include "../../../window/Events.h"
+#include "../../../world/WorldGenerators.h"
 
 namespace scripting {
     extern lua::LuaState* state;
@@ -104,6 +105,47 @@ static int l_remove_packs(lua_State* L) {
     return 0;
 }
 
+static int l_add_packs(lua_State* L) {
+    if (!lua_istable(L, 1)) {
+        luaL_error(L, "Strings array expected as an argument");
+    }
+    std::vector<std::string> packs;
+    int len = lua_objlen(L, 1);
+    for (int i = 0; i < len; ++i) {
+        lua_rawgeti(L, -1, i + 1);
+        packs.push_back(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    menus::add_packs(scripting::engine, scripting::controller, packs);
+    return 0;
+}
+
+static int l_new_world(lua_State* L) {
+    auto name = lua_tostring(L, 1);
+    auto seed = lua_tostring(L, 2);
+    auto generator = lua_tostring(L, 3);
+    menus::create_world(scripting::engine, name, seed, generator);
+    return 0;
+}
+
+static int l_get_default_generator(lua_State* L) {
+    lua_pushstring(L, WorldGenerators::getDefaultGeneratorID().c_str());
+    return 1;
+}
+
+static int l_get_generators(lua_State* L) {
+    const auto& generators = WorldGenerators::getGeneratorsIDs();
+    lua_createtable(L, generators.size(), 0);
+
+    int i = 0;
+    for (auto& id : generators) {
+        lua_pushstring(L, id.c_str());
+        lua_rawseti(L, -2, i + 1);
+        ++i;
+    }
+    return 1;
+}
+
 const luaL_Reg builtinlib [] = {
     {"get_worlds_list", lua_wrap_errors<l_get_worlds_list>},
     {"open_world", lua_wrap_errors<l_open_world>},
@@ -115,5 +157,9 @@ const luaL_Reg builtinlib [] = {
     {"get_setting", lua_wrap_errors<l_get_setting>},
     {"set_setting", lua_wrap_errors<l_set_setting>},
     {"str_setting", lua_wrap_errors<l_str_setting>},
+    {"add_packs", lua_wrap_errors<l_add_packs>},
+    {"new_world", lua_wrap_errors<l_new_world>},
+    {"get_default_generator", lua_wrap_errors<l_get_default_generator>},
+    {"get_generators", lua_wrap_errors<l_get_generators>},
     {NULL, NULL}
 };

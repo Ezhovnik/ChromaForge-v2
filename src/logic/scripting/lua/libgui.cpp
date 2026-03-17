@@ -149,6 +149,9 @@ static bool getattr(lua_State* L, gui::TextBox* box, const std::string& attr) {
     } else if (attr == "placeholder") {
         lua_pushstring(L, util::wstr2str_utf8(box->getPlaceholder()).c_str());
         return true;
+    } else if (attr == "valid") {
+        lua_pushboolean(L, box->validate());
+        return true;
     }
     return false;
 }
@@ -211,11 +214,7 @@ static bool setattr(lua_State* L, gui::Menu* menu, const std::string& attr) {
     if (menu == nullptr) return false;
     if (attr == "page") {
         auto page = lua_tostring(L, 4);
-        if (menu->has(page)) {
-            menu->setPage(page);
-        } else {
-            menu->setPage("404");
-        }
+        menu->setPage(page);
         return true;
     }
     return false;

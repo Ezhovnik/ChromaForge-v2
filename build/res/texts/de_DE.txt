@@ -29,7 +29,7 @@ world.Name=Name
 world.World generator=Weltgenerator
 world.generators.default=Normal
 world.generators.flat=Wohnung
-menu.Create World=Erschaffe eine Welt
+world.Create World=Erschaffe eine Welt
 world.convert-request=Es gibt Änderungen in den Indizes! Die Welt bekehren?
 world.delete-confirm=Die Welt dauerhaft löschen?
 

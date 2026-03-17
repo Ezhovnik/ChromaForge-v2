@@ -177,7 +177,7 @@ std::shared_ptr<InventoryView> Hud::createHotbar() {
     return view;
 }
 
-Hud::Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player) : engine(engine), assets(engine->getAssets()), guiController(engine->getGUI()), levelFrontend(levelFrontend), player(player) {
+Hud::Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player) : assets(engine->getAssets()), guiController(engine->getGUI()), levelFrontend(levelFrontend), player(player) {
     interaction = std::make_unique<InventoryInteraction>();
     grabbedItemView = std::make_shared<SlotView>(SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr));
 	grabbedItemView->bind(0, interaction->getGrabbedItem(), levelFrontend, interaction.get());
@@ -457,7 +457,6 @@ void Hud::setPause(bool pause) {
 
     auto menu = guiController->getMenu();
     if (pause) {
-        menus::create_pause_panel(engine, levelFrontend->getController());
         menu->setPage("pause");
     } else {
         menu->reset();

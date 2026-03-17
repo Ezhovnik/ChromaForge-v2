@@ -11,6 +11,8 @@
 #include "../../../files/WorldFiles.h"
 #include "../../../world/Level.h"
 #include "../../../world/World.h"
+#include "../../../coders/imageio.h"
+#include "../../../graphics/core/Texture.h"
 
 static int l_pack_get_folder(lua_State* L) {
     std::string packName = lua_tostring(L, 1);
@@ -72,6 +74,20 @@ static int l_pack_get_info(lua_State* L, const ContentPack& pack, const Content*
 
     lua_pushstring(L, pack.version.c_str());
     lua_setfield(L, -2, "version");
+
+    auto assets = scripting::engine->getAssets();
+    std::string icon = pack.id + ".icon";
+    if (assets->getTexture(icon) == nullptr) {
+        auto iconfile = pack.folder/std::filesystem::path("icon.png");
+        if (std::filesystem::is_regular_file(iconfile)) {
+            auto image = imageio::read(iconfile.string());
+            assets->store(Texture::from(image.get()), icon);
+        } else {
+            icon = "gui/no_icon";
+        }
+    }
+    lua_pushstring(L, icon.c_str());
+    lua_setfield(L, -2, "icon");
 
     auto runtime = content ? content->getPackRuntime(pack.id) : nullptr;
     if (runtime) {

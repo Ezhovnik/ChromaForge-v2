@@ -29,7 +29,7 @@ world.Name=Nimi
 world.World generator=Maailman generaattori
 world.generators.default=Tavallinen
 world.generators.flat=Tasainen
-menu.Create World=Luo Maailma
+world.Create World=Luo Maailma
 world.convert-request=Indeksit ovat muuttuneet! Luodaanko maailma uudeleen?
 world.delete-confirm=Poistetaanko maailma peruuttamattomasti?
 

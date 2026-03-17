@@ -91,21 +91,25 @@ namespace gui {
         ~Page() {panel = nullptr;}
     };
 
+    using page_loader_func = std::function<std::shared_ptr<UINode>(const std::string& name)>;
+
     class Menu : public Container {
     protected:
         std::unordered_map<std::string, Page> pages;
         std::stack<Page> pageStack;
         Page current;
         std::unordered_map<std::string, supplier<std::shared_ptr<UINode>>> pageSuppliers;
+        page_loader_func pagesLoader = nullptr;
     public:
         Menu();
 
         bool has(const std::string& name);
         void setPage(std::string name, bool history=true);
         void setPage(Page page, bool history=true);
+        void setPageLoader(page_loader_func loader);
         void addPage(std::string name, std::shared_ptr<UINode> panel);
         void addSupplier(std::string name, supplier<std::shared_ptr<UINode>> pageSupplier);
-        std::shared_ptr<UINode> fetchPage(std::string name);
+        std::shared_ptr<UINode> fetchPage(const std::string& name);
         void back();
         void clearHistory();
         void reset();
