@@ -18,6 +18,7 @@
 #include "../files/files.h"
 #include "../voxels/Chunk.h"
 #include "../content/ContentPack.h"
+#include "../util/BufferPool.h"
 
 // Константы для размера регионов
 namespace RegionConsts {
@@ -72,77 +73,88 @@ struct regFile {
     regFile(std::filesystem::path filename);
 };
 
-typedef std::unordered_map<glm::ivec2, std::unique_ptr<WorldRegion>> regionsmap;
+using regionsmap = std::unordered_map<glm::ivec2, std::unique_ptr<WorldRegion>>;
+using regionproc = std::function<bool(ubyte*)>;
+
+struct RegionsLayer {
+    int layer;
+    std::filesystem::path folder;
+    regionsmap regions;
+    std::mutex mutex;
+};
 
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
 class WorldFiles {
 private:
+    std::filesystem::path directory; // Путь к директории с файлами мира
     std::unordered_map<glm::ivec3, std::unique_ptr<regFile>> openRegFiles;
     std::mutex regFilesMutex;
     std::condition_variable regFilesCv;
 
-    std::filesystem::path getLightsFolder() const;
-    std::filesystem::path getInventoriesFolder() const;
+    RegionsLayer layers[3] {};
+
+    bool generatorTestMode = false;
+    bool doWriteLights = true;
+    util::BufferPool<ubyte> bufferPool {
+        std::max(CHUNK_DATA_LEN, LIGHTMAP_DATA_LEN) * 2
+    };
+
 	std::filesystem::path getRegionFilename(int x, int z) const;
     std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информация о мире
     std::filesystem::path getIndicesFile() const;
     std::filesystem::path getPacksFile() const;
 
-    ubyte* compress(const ubyte* src, size_t srclen, size_t& len);
-    ubyte* decompress(const ubyte* src, size_t srclen, size_t dstlen);
+    std::unique_ptr<ubyte[]> compress(const ubyte* src, size_t srclen, size_t& len);
+    std::unique_ptr<ubyte[]> decompress(const ubyte* src, size_t srclen, size_t dstlen);
 
     void writeWorldInfo(const World* world);
-    void writeRegions(regionsmap& regions, const std::filesystem::path& folder, int layer);
+    void writeRegions(int layer);
+    void writeIndices(const ContentIndices* indices);
 
     void fetchChunks(WorldRegion* region, int x, int y, regFile* file);
 
-    ubyte* readChunkData(int x, int y, uint32_t& length, regFile* file);
-    WorldRegion* getRegion(regionsmap& regions, int x, int z);
-    WorldRegion* getOrCreateRegion(regionsmap& regions, int x, int z);
-	ubyte* getData(regionsmap& regions, const std::filesystem::path& folder, int x, int z, int layer, bool compression);
+    std::unique_ptr<ubyte[]> readChunkData(int x, int y, uint32_t& length, regFile* file);
+    WorldRegion* getRegion(int x, int z, int layer);
+    WorldRegion* getOrCreateRegion(int x, int z, int layer);
+	ubyte* getData(int x, int z, int layer, uint32_t& size);
 
-    std::shared_ptr<regFile> getRegFile(glm::ivec3 coord, const std::filesystem::path& folder);
+    std::shared_ptr<regFile> getRegFile(glm::ivec3 coord);
     void closeRegFile(glm::ivec3 coord);
     std::shared_ptr<regFile> useRegFile(glm::ivec3 coord);
-    std::shared_ptr<regFile> createRegFile(glm::ivec3 coord, const std::filesystem::path& folder);
+    std::shared_ptr<regFile> createRegFile(glm::ivec3 coord);
 public:
-    regionsmap regions; // Хранилище регионов в оперативной памяти.
-    regionsmap lights;
-    regionsmap storages;
-
-    std::filesystem::path directory; // Путь к директории с файлами мира
-    std::unique_ptr<ubyte[]> compressionBuffer; // Выходной буфер для записи регионов
-
-    bool generatorTestMode;
-    bool doWriteLights;
-
     static const inline std::string WORLD_FILE = "world.json";
 
+    WorldFiles(std::filesystem::path directory);
     WorldFiles(std::filesystem::path directory, const DebugSettings& settings); // Конструктор
     ~WorldFiles(); // Деструктор
 
+    std::filesystem::path getPlayerFile() const;
+
     void createDirectories();
 
-    static bool parseRegionFilename(const std::string& name, int& x, int& z);
-    std::filesystem::path getRegionsFolder() const;
-    std::filesystem::path getPlayerFile() const; // Генерирует имя файла, в котором записана информация об игроке
-
     void put(Chunk* chunk); // Сохраняет данные чанка в кэш памяти.
-    void put(int x, int z, const ubyte* voxelData);
+    void put(int x, int z, int layer, std::unique_ptr<ubyte[]> data, size_t size, bool rle);
 
     bool readWorldInfo(World* world);
-	void writeRegion(int x, int z, WorldRegion* entry, std::filesystem::path file, int layer);
+	void writeRegion(int x, int y, int layer, WorldRegion* entry);
 
-	ubyte* getChunk(int x, int z); // Получает данные чанка из кэша или файла
-    light_t* getLights(int x, int z);
+	std::unique_ptr<ubyte[]> getChunk(int x, int z);
+    std::unique_ptr<light_t[]> getLights(int x, int z);
 
     chunk_inventories_map fetchInventories(int x, int z);
 
     void write(const World* world, const Content* content);
     void writePacks(const std::vector<ContentPack>& packs);
-    void writeIndices(const ContentIndices* indices);
 
     void removeIndices(const std::vector<std::string>& packs);
+
+    void processRegionVoxels(int x, int z, regionproc func);
+
+    std::filesystem::path getFolder() const;
+    std::filesystem::path getRegionsFolder(int layer) const;
+
+    static bool parseRegionFilename(const std::string& name, int& x, int& y);
 };
 
 #endif // FILES_WORLDFILES_H_

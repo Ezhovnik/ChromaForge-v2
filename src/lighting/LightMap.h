@@ -1,6 +1,8 @@
 #ifndef LIGHTING_LIGHTMAP_H_
 #define LIGHTING_LIGHTMAP_H_
 
+#include <memory>
+
 #include "../typedefs.h"
 #include "../constants.h"
 
@@ -79,8 +81,8 @@ public:
 		return r | (g << 4) | (b << 8) | (s << 12);
 	}
 
-	ubyte* encode() const;
-	static light_t* decode(ubyte* buffer);
+	std::unique_ptr<ubyte[]> encode() const;
+    static std::unique_ptr<light_t[]> decode(ubyte* buffer);
 };
 
 #endif // LIGHTING_LIGHTMAP_H_

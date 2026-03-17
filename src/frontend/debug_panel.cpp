@@ -9,6 +9,7 @@
 #include "../world/Level.h"
 #include "../world/World.h"
 #include "../voxels/Chunks.h"
+#include "../voxels/Chunk.h"
 #include "../voxels/Block.h"
 #include "../util/stringutil.h"
 #include "../delegates.h"

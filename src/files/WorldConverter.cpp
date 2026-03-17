@@ -11,11 +11,15 @@
 #include "../files/files.h"
 #include "../objects/Player.h"
 
-WorldConverter::WorldConverter(std::filesystem::path folder, const Content* content, std::shared_ptr<ContentLUT> lut) : lut(lut), content(content) {
-    DebugSettings settings;
-    wfile = new WorldFiles(folder, settings);
-
-    std::filesystem::path regionsFolder = wfile->getRegionsFolder();
+WorldConverter::WorldConverter(
+    std::filesystem::path folder, 
+    const Content* content, 
+    std::shared_ptr<ContentLUT> lut
+) : wfile(std::make_unique<WorldFiles>(folder, DebugSettings {})),
+    lut(lut), 
+    content(content) 
+{
+    std::filesystem::path regionsFolder = wfile->getRegionsFolder(RegionConsts::LAYER_VOXELS);
     if (!std::filesystem::is_directory(regionsFolder)) {
         LOG_WARN("Nothing to convert");
         return;
@@ -29,7 +33,6 @@ WorldConverter::WorldConverter(std::filesystem::path folder, const Content* cont
 }
 
 WorldConverter::~WorldConverter() {
-    delete wfile;
 }
 
 void WorldConverter::convertRegion(std::filesystem::path file) {
@@ -41,18 +44,12 @@ void WorldConverter::convertRegion(std::filesystem::path file) {
     }
 
     LOG_INFO("Converting region '{}'", name);
-    for (uint cz = 0; cz < RegionConsts::SIZE; ++cz) {
-        for (uint cx = 0; cx < RegionConsts::SIZE; ++cx) {
-            int gx = cx + x * RegionConsts::SIZE;
-            int gz = cz + z * RegionConsts::SIZE;
-            std::unique_ptr<ubyte[]> data (wfile->getChunk(gx, gz));
-            if (data == nullptr) continue;
-
-            if (lut) Chunk::convert(data.get(), lut.get());
-
-            wfile->put(gx, gz, data.get());
+    wfile->processRegionVoxels(x, z, [=](ubyte* data) {
+        if (lut) {
+            Chunk::convert(data, lut.get());
         }
-    }
+        return true;
+    });
     LOG_INFO("Region '{}' successfully converted", name);
 }
 

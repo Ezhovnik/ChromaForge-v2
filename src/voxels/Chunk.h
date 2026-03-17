@@ -72,7 +72,7 @@ public:
 	inline void setReady(bool flag) {bitset(flags, ChunkFlags::READY, flag);}
     inline void setLoadedLights(bool flag) {bitset(flags, ChunkFlags::LOADED_LIGHTS, flag);}
 
-    ubyte* encode() const;
+    std::unique_ptr<ubyte[]> encode() const;
 	bool decode(const ubyte* data);
 
     static void convert(ubyte* data, const ContentLUT* lut);

@@ -16,16 +16,16 @@ void LightMap::set(const light_t* map) {
     }
 }
 
-ubyte* LightMap::encode() const {
-	ubyte* buffer = new ubyte[LIGHTMAP_DATA_LEN];
+std::unique_ptr<ubyte[]> LightMap::encode() const {
+	auto buffer = std::make_unique<ubyte[]>(LIGHTMAP_DATA_LEN);
 	for (uint i = 0; i < CHUNK_VOLUME; i += 2) {
 		buffer[i / 2] = ((map[i] >> 12) & 0xF) | ((map[i + 1] >> 8) & 0xF0);
 	}
 	return buffer;
 }
 
-light_t* LightMap::decode(ubyte* buffer) {
-	light_t* lights = new light_t[CHUNK_VOLUME];
+std::unique_ptr<light_t[]> LightMap::decode(ubyte* buffer) {
+	auto lights = std::make_unique<light_t[]>(CHUNK_VOLUME);
 	for (uint i = 0; i < CHUNK_VOLUME; i += 2) {
 		ubyte b = buffer[i / 2];
 		lights[i] = ((b & 0xF) << 12);
