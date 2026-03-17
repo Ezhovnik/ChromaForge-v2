@@ -41,6 +41,11 @@ namespace menus {
         LevelController* controller, 
         std::vector<std::string> packs
     );
+    void add_packs(
+        Engine* engine,
+        LevelController* controller,
+        std::vector<std::string> packs
+    );
 
     void create_menus(Engine* engine);
     void refresh_menus(Engine* engine);

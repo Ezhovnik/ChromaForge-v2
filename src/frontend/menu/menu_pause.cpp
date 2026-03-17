@@ -50,8 +50,9 @@ std::shared_ptr<Container> create_pack_panel(
         "</label>"
     ));
 
-    auto titlelabel = std::make_shared<Label>(pack.title);
-    packpanel->add(titlelabel, glm::vec2(78, 6));
+    packpanel->add(guiutil::create(
+        "<label pos='78,6'>" + pack.title + "</label>"
+    ));
 
     std::string icon = pack.id+".icon";
     if (assets->getTexture(icon) == nullptr) {
@@ -66,15 +67,15 @@ std::shared_ptr<Container> create_pack_panel(
 
     if (!pack.creator.empty()) {
         packpanel->add(guiutil::create(
-            "<label color='#CCFFE5B2' size='300,20' align='right' pos='215,60'>" +
-            pack.creator +
+            "<label color='#CCFFE5B2' size='300,20' align='right' pos='215,60'>"
+                + pack.creator +
             "</label>"
         ));
     }
 
     packpanel->add(guiutil::create(
-        "<label pos='80,28' color='#FFFFFFB2'>" +
-            pack.description +
+        "<label pos='80,28' color='#FFFFFFB2'>" 
+            + pack.description +
         "</label>"
     ));
 
@@ -101,10 +102,10 @@ std::shared_ptr<Panel> menus::create_packs_panel(
     packconsumer callback,
     packconsumer remover
 ){
-    auto panel = std::make_shared<Panel>(glm::vec2(550, 200), glm::vec4(5.0f));
-    panel->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 0.07f));
-    panel->setMaxLength(400);
-    panel->setScrollable(true);
+    auto panel = std::dynamic_pointer_cast<Panel>(guiutil::create(
+        "<panel size='550,200' interval='5' color='#FFFFFF11' max-length='400' scrollable='true'>"
+        "</panel>"
+    ));
 
     for (auto& pack : packs) {
         panel->add(create_pack_panel(pack, engine, callback, remover));
@@ -166,13 +167,41 @@ void menus::remove_packs(
     }
 }
 
+void menus::add_packs(
+    Engine* engine,
+    LevelController* controller,
+    std::vector<std::string> packs
+) {
+    auto level = controller->getLevel();
+    auto gui = engine->getGUI();
+    auto world = level->getWorld();
+    auto new_packs = PacksManager::getNames(world->getPacks());
+    for (auto& id : packs) {
+        new_packs.push_back(id);
+    }
+
+    auto manager = engine->createPacksManager(world->wfile->getFolder());
+    manager.scan();
+    try {
+        new_packs = manager.assembly(new_packs);
+    } catch (const contentpack_error& err) {
+        guiutil::alert(
+            gui, langs::get(L"error.dependency-not-found") +
+            L": " + util::str2wstr_utf8(err.getPackId())
+        );
+        return;
+    }
+    world->wfile->writePacks(manager.getAll(new_packs));
+    controller->saveWorld();
+    reopen_world(engine, world);
+}
+
 void create_content_panel(Engine* engine, LevelController* controller) {
     auto level = controller->getLevel();
     auto menu = engine->getGUI()->getMenu();
     auto mainPanel = menus::create_page(engine, "content", 550, 0.0f, 5);
 
-    auto paths = engine->getPaths();
-    PacksManager manager = engine->createPacksManager(paths->getWorldFolder());
+    PacksManager manager = engine->createPacksManager(level->getWorld()->wfile->getFolder());
     manager.scan();
 
     std::vector<ContentPack> scanned = manager.getAll(manager.getAllNames());
@@ -197,24 +226,7 @@ void create_content_panel(Engine* engine, LevelController* controller) {
     langs::get(L"Add", L"content"), glm::vec4(10.0f), glm::vec4(1), [=](GUI* gui) {
         auto panel = menus::create_packs_panel(scanned, engine, true, 
         [=](const ContentPack& pack) {
-            auto world = level->getWorld();
-            auto new_packs = PacksManager::getNames(world->getPacks());
-            new_packs.push_back(pack.id);
-
-            auto manager = engine->createPacksManager(world->wfile->getFolder());
-            manager.scan();
-            try {
-                new_packs = manager.assembly(new_packs);
-            } catch (const contentpack_error& err) {
-                guiutil::alert(
-                    gui, langs::get(L"error.dependency-not-found") +
-                    L": " + util::str2wstr_utf8(err.getPackId())
-                );
-                return;
-            }
-            world->wfile->writePacks(manager.getAll(new_packs));
-            controller->saveWorld();
-            reopen_world(engine, world);
+            menus::add_packs(engine, controller, {pack.id});
         }, nullptr);
         menu->addPage("content-packs", panel);
         menu->setPage("content-packs");

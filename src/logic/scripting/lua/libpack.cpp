@@ -8,6 +8,9 @@
 #include "../../../engine.h"
 #include "../../../files/engine_paths.h"
 #include "../../../core_content_defs.h"
+#include "../../../files/WorldFiles.h"
+#include "../../../world/Level.h"
+#include "../../../world/World.h"
 
 static int l_pack_get_folder(lua_State* L) {
     std::string packName = lua_tostring(L, 1);
@@ -36,17 +39,26 @@ static int l_pack_get_installed(lua_State* L) {
     return 1;
 }
 
-static int l_pack_get_info(lua_State* L) {
-    auto packid = lua_tostring(L, 1);
-    
-    auto content = scripting::engine->getContent();
-    auto& packs = scripting::engine->getContentPacks();
-    auto found = std::find_if(packs.begin(), packs.end(), [packid](auto& pack) {
-        return pack.id == packid;
-    });
-    if (found == packs.end()) return 0;
-    const auto& pack = *found;
+static int l_pack_get_available(lua_State* L) {
+    auto worldFolder = scripting::level->getWorld()->wfile->getFolder();
+    auto manager = scripting::engine->createPacksManager(worldFolder);
+    manager.scan();
 
+    auto& installed = scripting::engine->getContentPacks();
+    for (auto& pack : installed) {
+        manager.exclude(pack.id);
+    }
+    auto names = manager.getAllNames();
+
+    lua_createtable(L, names.size(), 0);
+    for (size_t i = 0; i < names.size(); ++i) {
+        lua_pushstring(L, names[i].c_str());
+        lua_rawseti(L, -2, i + 1);
+    }
+    return 1;
+}
+
+static int l_pack_get_info(lua_State* L, const ContentPack& pack, const Content* content) {
     lua_createtable(L, 0, 5);
 
     lua_pushstring(L, pack.title.c_str());
@@ -69,9 +81,30 @@ static int l_pack_get_info(lua_State* L) {
     return 1;
 }
 
+static int l_pack_get_info(lua_State* L) {
+    auto packid = lua_tostring(L, 1);
+    
+    auto content = scripting::engine->getContent();
+    auto& packs = scripting::engine->getContentPacks();
+    auto found = std::find_if(packs.begin(), packs.end(), [packid](auto& pack) {
+        return pack.id == packid;
+    });
+    if (found == packs.end()) {
+        auto worldFolder = scripting::level->getWorld()->wfile->getFolder();
+        auto manager = scripting::engine->createPacksManager(worldFolder);
+        manager.scan();
+        auto vec = manager.getAll({packid});
+        if (!vec.empty()) return l_pack_get_info(L, vec.at(0), content);
+        return 0;
+    }
+    const auto& pack = *found;
+    return l_pack_get_info(L, pack, content);
+}
+
 const luaL_Reg packlib [] = {
     {"get_folder", lua_wrap_errors<l_pack_get_folder>},
     {"get_installed", lua_wrap_errors<l_pack_get_installed>},
+    {"get_available", lua_wrap_errors<l_pack_get_available>},
     {"get_info", lua_wrap_errors<l_pack_get_info>},
     {NULL, NULL}
 };

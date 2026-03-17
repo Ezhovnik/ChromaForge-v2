@@ -10,12 +10,24 @@
 #include "../data/dynamic.h"
 #include "../files/files.h"
 #include "../objects/Player.h"
+#include "../util/ThreadPool.h"
+
+class ConverterWorker : public util::Worker<ConvertTask, int> {
+    std::shared_ptr<WorldConverter> converter;
+public:
+    ConverterWorker(std::shared_ptr<WorldConverter> converter) : converter(converter) {}
+
+    int operator()(const std::shared_ptr<ConvertTask>& task) override {
+        converter->convert(*task);
+        return 0;
+    }
+};
 
 WorldConverter::WorldConverter(
     std::filesystem::path folder, 
     const Content* content, 
     std::shared_ptr<ContentLUT> lut
-) : wfile(std::make_unique<WorldFiles>(folder, DebugSettings {})),
+) : wfile(std::make_unique<WorldFiles>(folder)),
     lut(lut), 
     content(content) 
 {
@@ -35,7 +47,40 @@ WorldConverter::WorldConverter(
 WorldConverter::~WorldConverter() {
 }
 
-void WorldConverter::convertRegion(std::filesystem::path file) {
+std::shared_ptr<Task> WorldConverter::startTask(
+    std::filesystem::path folder, 
+    const Content* content, 
+    std::shared_ptr<ContentLUT> lut,
+    runnable onDone,
+    bool multithreading
+) {
+    auto converter = std::make_shared<WorldConverter>(folder, content, lut);
+    if (!multithreading) {
+        converter->setOnComplete([=]() {
+            converter->write();
+            onDone();
+        });
+        return converter;
+    }
+    auto pool = std::make_shared<util::ThreadPool<ConvertTask, int>>(
+        "converter-pool",
+        [=](){return std::make_shared<ConverterWorker>(converter);},
+        [=](int& _) {}
+    );
+    while (!converter->tasks.empty()) {
+        const ConvertTask& task = converter->tasks.front();
+        auto ptr = std::make_shared<ConvertTask>(task);
+        pool->enqueueJob(ptr);
+        converter->tasks.pop();
+    }
+    pool->setOnComplete([=]() {
+        converter->write();
+        onDone();
+    });
+    return pool;
+}
+
+void WorldConverter::convertRegion(std::filesystem::path file) const {
     int x, z;
     std::string name = file.stem().string();
     if (!WorldRegions::parseRegionFilename(name, x, z)) {
@@ -53,7 +98,7 @@ void WorldConverter::convertRegion(std::filesystem::path file) {
     LOG_INFO("Region '{}' successfully converted", name);
 }
 
-void WorldConverter::convertPlayer(std::filesystem::path file) {
+void WorldConverter::convertPlayer(std::filesystem::path file) const {
     LOG_INFO("Converting player {}", file.u8string());
     auto map = files::read_json(file);
     Player::convert(map.get(), lut.get());
@@ -61,15 +106,7 @@ void WorldConverter::convertPlayer(std::filesystem::path file) {
     LOG_INFO("Player {} successfully converted", file.u8string());
 }
 
-void WorldConverter::convertNext() {
-    if (tasks.empty()) {
-        LOG_ERROR("No more tasks to convert");
-        throw std::runtime_error("No more tasks to convert");
-    }
-    ConvertTask task = tasks.front();
-    tasks.pop();
-    tasksDone++;
-
+void WorldConverter::convert(ConvertTask task) const {
     if (!std::filesystem::is_regular_file(task.file)) return;
 
     switch (task.type) {
@@ -82,14 +119,43 @@ void WorldConverter::convertNext() {
     }
 }
 
+void WorldConverter::convertNext() {
+    if (tasks.empty()) {
+        LOG_ERROR("No more regions to convert");
+        throw std::runtime_error("no more regions to convert");
+    }
+    ConvertTask task = tasks.front();
+    tasks.pop();
+    tasksDone++;
+
+    convert(task);
+}
+
+void WorldConverter::setOnComplete(runnable callback) {
+    this->onComplete = callback;
+}
+
+void WorldConverter::update() {
+    convertNext();
+    if (onComplete && tasks.empty()) onComplete();
+}
+
+void WorldConverter::terminate() {
+    tasks = {};
+}
+
+bool WorldConverter::isActive() const {
+    return !tasks.empty();
+}
+
 void WorldConverter::write() {
     LOG_INFO("Writing world");
     wfile->write(nullptr, content);
     LOG_INFO("World successfully writed");
 }
 
-uint WorldConverter::getWorkRemaining() const {
-    return tasks.size();
+uint WorldConverter::getWorkTotal() const {
+    return tasks.size() + tasksDone;
 }
 
 uint WorldConverter::getWorkDone() const {

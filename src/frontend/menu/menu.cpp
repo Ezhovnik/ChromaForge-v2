@@ -46,13 +46,6 @@ namespace menus {
     extern std::string generatorID;
 }
 
-static void load_page(Engine* engine, const std::string& name) {
-    auto menu = engine->getGUI()->getMenu();
-    auto file = engine->getResPaths()->find("layouts/pages/" + name + ".xml");
-    auto node = UIDocument::readElement(file);
-    menu->addPage(name, node);
-}
-
 static void add_page_loader(Engine* engine, const std::string& name) {
     auto menu = engine->getGUI()->getMenu();
     auto file = engine->getResPaths()->find("layouts/pages/" + name + ".xml");
@@ -73,24 +66,19 @@ static void show_content_missing(Engine* engine, const Content* content, std::sh
     panel->add(std::make_shared<Label>(langs::get(L"menu.missing-content")));
 
     auto subpanel = std::dynamic_pointer_cast<Panel>(guiutil::create(
-        "<panel size='500,100' color='00000080' scrollable='true' max-length='400'>"
+        "<panel size='480,100' color='#00000080' scrollable='true' max-length='400'>"
         "</panel>"
     ));
     panel->add(subpanel);
 
     for (auto& entry : lut->getMissingContent()) {
-        auto hpanel = std::make_shared<Panel>(glm::vec2(500, 30));
-        hpanel->setColor(glm::vec4(0.0f));
-        hpanel->setOrientation(Orientation::horizontal);
-
-        auto namelabel = std::make_shared<Label>(util::str2wstr_utf8(entry.name));
-        namelabel->setColor(glm::vec4(1.0f, 0.2f, 0.2f, 0.5f));
-
-        auto contentname = util::str2wstr_utf8(contenttype_name(entry.type));
-        auto typelabel = std::make_shared<Label>(L"[" + contentname + L"]");
-        typelabel->setColor(glm::vec4(0.5f));
-        hpanel->add(typelabel);
-        hpanel->add(namelabel);
+        std::string contentname = contenttype_name(entry.type);
+        auto hpanel = std::dynamic_pointer_cast<Panel>(guiutil::create(
+            "<panel size='500,20' color='0' orientation='horizontal' padding='2'>"
+                "<label color='#80808080'>[" + contentname + "]</label>"
+                "<label color='#FF333380'>" + entry.name + "</label>"
+            "</panel>"
+        ));
         subpanel->add(hpanel);
     }
 
@@ -112,7 +100,7 @@ void show_process_panel(Engine* engine, std::shared_ptr<Task> task, std::wstring
     auto label = std::make_shared<Label>(L"0%");
     panel->add(label);
 
-    uint initialWork = task->getWorkRemaining();
+    uint initialWork = task->getWorkTotal();
 
     panel->listenInterval(0.01f, [=]() {
         task->update();
@@ -130,25 +118,21 @@ void show_process_panel(Engine* engine, std::shared_ptr<Task> task, std::wstring
     menu->setPage("process", false);
 }
 
-std::shared_ptr<WorldConverter> create_converter(
+std::shared_ptr<Task> create_converter(
     Engine* engine,
     std::filesystem::path folder, 
     const Content* content, 
     std::shared_ptr<ContentLUT> lut, 
     runnable postRunnable)
 {
-    auto converter = std::make_shared<WorldConverter>(folder, content, lut);
-    converter->setOnComplete([=](){
-        converter->write();
-
+    return WorldConverter::startTask(folder, content, lut, [=](){
         auto menu = engine->getGUI()->getMenu();
         menu->reset();
         menu->setPage("main", false);
         engine->getGUI()->postRunnable([=]() {
             postRunnable();
         });
-    });
-    return converter;
+    }, true);
 }
 
 void show_convert_request(
@@ -186,6 +170,7 @@ void menus::open_world(std::string name, Engine* engine, bool confirmConvert) {
     std::shared_ptr<ContentLUT> lut (World::checkIndices(folder, content));
     if (lut) {
         if (lut->hasMissingContent()) {
+            engine->setScreen(std::make_shared<MenuScreen>(engine));
             show_content_missing(engine, content, lut);
         } else {
             if (confirmConvert) {
@@ -241,7 +226,7 @@ void menus::create_menus(Engine* engine) {
 
     add_page_loader(engine, "languages");
     add_page_loader(engine, "main");
-    load_page(engine, "404");
+    add_page_loader(engine, "404");
 }
 
 void menus::refresh_menus(Engine* engine) {
@@ -250,5 +235,5 @@ void menus::refresh_menus(Engine* engine) {
 
     add_page_loader(engine, "main");
     add_page_loader(engine, "settings-audio");
-    load_page(engine, "404");
+    add_page_loader(engine, "404");
 }

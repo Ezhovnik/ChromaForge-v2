@@ -241,7 +241,7 @@ const ResPaths* AssetsLoader::getPaths() const {
 	return paths;
 }
 
-class LoaderWorker : public util::Worker<std::shared_ptr<aloader_entry>, asset_loader::postfunc> {
+class LoaderWorker : public util::Worker<aloader_entry, asset_loader::postfunc> {
     AssetsLoader* loader;
 public:
     LoaderWorker(AssetsLoader* loader) : loader(loader) {
@@ -255,7 +255,7 @@ public:
 
 std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
     auto pool = std::make_shared<
-        util::ThreadPool<std::shared_ptr<aloader_entry>, asset_loader::postfunc>
+        util::ThreadPool<aloader_entry, asset_loader::postfunc>
     >(
         "assets-loader-pool", 
         [=](){return std::make_shared<LoaderWorker>(this);},

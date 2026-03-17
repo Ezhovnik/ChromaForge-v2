@@ -34,7 +34,7 @@ void create_controls_panel(Engine* engine) {
 
     {
         auto scrollPanel = std::dynamic_pointer_cast<Panel>(guiutil::create(
-            "<panel size='400,200' padding='2' interval='1' max-length='400' color='#0000004C'>"
+            "<panel size='380,200' padding='2' interval='1' max-length='400' color='#0000004C'>"
             "</panel>"
         ));
 
