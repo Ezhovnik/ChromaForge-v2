@@ -178,7 +178,7 @@ std::string ResPaths::findRaw(const std::string& filename) const {
     }
     auto resDir = mainRoot;
     if (std::filesystem::exists(resDir/std::filesystem::path(filename))) {
-        return BUILTIN_CONTENT_NAMESPACE + filename;
+        return BUILTIN_CONTENT_NAMESPACE + ":" + filename;
     }
     LOG_ERROR("Could not to find file '{}'", filename);
     throw std::runtime_error("Could not to find file " + util::quote(filename));

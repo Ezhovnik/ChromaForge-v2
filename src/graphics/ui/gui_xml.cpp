@@ -10,6 +10,7 @@
 #include "../../util/stringutil.h"
 #include "../../debug/Logger.h"
 #include "../../logic/scripting/Environment.h"
+#include "../../window/Events.h"
 
 using namespace gui;
 
@@ -304,6 +305,20 @@ static std::shared_ptr<UINode> readTrackBar(UIXmlReader& reader, xml::xmlelement
     return bar;
 }
 
+static std::shared_ptr<UINode> readInputBindBox(UIXmlReader& reader, xml::xmlelement element) {
+    auto bindname = element->attr("binding").getText();
+    auto found = Events::bindings.find(bindname);
+    if (found == Events::bindings.end()) {
+        LOG_ERROR("Binding does not exists '{}'", bindname);
+        throw std::runtime_error("Binding does not exists " + util::quote(bindname));
+    }
+    glm::vec4 padding = element->attr("padding", "6").asVec4();
+    auto bindbox = std::make_shared<InputBindBox>(found->second, padding);
+    _readPanel(reader, element, *bindbox);
+
+    return bindbox;
+}
+
 static std::shared_ptr<UINode> readImage(UIXmlReader& reader, xml::xmlelement element) {
     std::string src = element->attr("src", "").getText();
     auto image = std::make_shared<Image>(src);
@@ -321,6 +336,7 @@ UIXmlReader::UIXmlReader(const scripting::Environment& env) : env(env) {
     add("trackbar", readTrackBar);
     add("panel", readPanel);
     add("checkbox", readCheckBox);
+    add("bindbox", readInputBindBox);
 }
 
 void UIXmlReader::add(const std::string& tag, uinode_reader reader) {
