@@ -9,6 +9,7 @@
 #include "WorldFiles.h"
 #include "../core_content_defs.h"
 #include "../debug/Logger.h"
+#include "../util/stringutil.h"
 
 const std::filesystem::path SCREENSHOTS_FOLDER = std::filesystem::path("screenshots");
 const std::filesystem::path LOGS_FOLDER = std::filesystem::path("logs");
@@ -154,23 +155,40 @@ std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {
     return folders;
 }
 
-ResPaths::ResPaths(std::filesystem::path mainRoot, std::vector<std::filesystem::path> roots) : mainRoot(mainRoot), roots(roots) {
-}
+ResPaths::ResPaths(
+    std::filesystem::path mainRoot, 
+    std::vector<std::pair<std::string, std::filesystem::path>> roots
+) : mainRoot(mainRoot), roots(roots) {}
 
 std::filesystem::path ResPaths::find(const std::string& filename) const {
     for (int i = roots.size() - 1; i >= 0; --i) {
         auto& root = roots[i];
-        std::filesystem::path file = root/std::filesystem::u8path(filename);
+        std::filesystem::path file = root.second/std::filesystem::u8path(filename);
         if (std::filesystem::exists(file)) return file;
     }
     return mainRoot/std::filesystem::path(filename);
+}
+
+std::string ResPaths::findRaw(const std::string& filename) const {
+    for (int i = roots.size() - 1; i >= 0; --i) {
+        auto& root = roots[i];
+        if (std::filesystem::exists(root.second/std::filesystem::path(filename))) {
+            return root.first + ":" + filename;
+        }
+    }
+    auto resDir = mainRoot;
+    if (std::filesystem::exists(resDir/std::filesystem::path(filename))) {
+        return BUILTIN_CONTENT_NAMESPACE + filename;
+    }
+    LOG_ERROR("Could not to find file '{}'", filename);
+    throw std::runtime_error("Could not to find file " + util::quote(filename));
 }
 
 std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderName) const {
     std::vector<std::filesystem::path> entries;
     for (int i = roots.size() - 1; i >= 0; --i) {
         auto& root = roots[i];
-        std::filesystem::path folder = root/std::filesystem::u8path(folderName);
+        std::filesystem::path folder = root.second/std::filesystem::u8path(folderName);
         if (!std::filesystem::is_directory(folder)) continue;
         for (const auto& entry : std::filesystem::directory_iterator(folder)) {
             entries.push_back(entry.path());

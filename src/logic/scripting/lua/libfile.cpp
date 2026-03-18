@@ -127,21 +127,8 @@ static int l_file_write_bytes(lua_State* L) {
 static int l_file_find(lua_State* L) {
     std::string path = lua_tostring(L, 1);
 
-    auto& packs = scripting::engine->getContentPacks();
-    for (int i = packs.size()-1; i >= 0; --i) {
-        auto& pack = packs[i];
-        if (std::filesystem::exists(pack.folder/std::filesystem::path(path))) {
-            lua_pushstring(L, (pack.id + ":" + path).c_str());
-            return 1;
-        }
-    }
-    auto resDir = scripting::engine->getResPaths()->getMainRoot();
-    if (std::filesystem::exists(resDir/std::filesystem::path(path))) {
-        lua_pushstring(L, (BUILTIN_CONTENT_NAMESPACE + ":" + path).c_str());
-        return 1;
-    }
-    luaL_error(L, "File not found %q", path.c_str());
-    return 0;
+    lua_pushstring(L, scripting::engine->getResPaths()->findRaw(path).c_str());
+    return 1;
 }
 
 const luaL_Reg filelib [] = {

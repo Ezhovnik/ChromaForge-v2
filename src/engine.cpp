@@ -70,7 +70,7 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     auto resdir = paths->getResources();
 
     LOG_INFO("Loading assets");
-    std::vector<std::filesystem::path> roots {resdir};
+    std::vector<std::pair<std::string, std::filesystem::path>> roots {};
     resPaths = std::make_unique<ResPaths>(resdir, roots);
     try {
         loadAssets();
@@ -253,9 +253,9 @@ void Engine::loadContent() {
     names = manager.assembly(names);
     contentPacks = manager.getAll(names);
 
-    std::vector<std::filesystem::path> resRoots;
+    std::vector<std::pair<std::string, std::filesystem::path>> resRoots;
     for (auto& pack : contentPacks) {
-        resRoots.push_back(pack.folder);
+        resRoots.push_back({pack.id, pack.folder});
 
         ContentLoader loader(&pack);
         loader.load(contentBuilder);
