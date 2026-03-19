@@ -20,7 +20,7 @@ Texture::Texture(ubyte* data, uint width, uint height, ImageFormat imageFormat) 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // Загружаем данные в текстуру
-    GLenum format = gl::to_gl_format(imageFormat);
+    GLenum format = gl::to_glenum(imageFormat);
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, (GLvoid *) data);
 
     // Устанавливаем параметры фильтрации: при уменьшении используется мип-линейный, при увеличении — ближайший

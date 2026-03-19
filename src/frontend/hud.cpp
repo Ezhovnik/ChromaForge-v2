@@ -48,50 +48,13 @@
 #include "../graphics/core/Texture.h"
 #include "../items/Inventories.h"
 #include "../voxels/Chunk.h"
+#include "../graphics/ui/elements/Plotter.h"
 
 extern std::shared_ptr<gui::UINode> create_debug_panel(
     Engine* engine, 
     Level* level, 
     Player* player
 );
-
-class DeltaGrapher : public gui::UINode {
-private:
-    std::unique_ptr<int[]> points;
-    float multiplier;
-    int index = 0;
-    int dmwidth;
-    int dmheight;
-public:
-    DeltaGrapher(uint width, uint height, float multiplier) : 
-        gui::UINode(glm::vec2(width, height)), 
-        multiplier(multiplier),
-        dmwidth(width),
-        dmheight(height)
-    {
-        points = std::make_unique<int[]>(width);
-    }
-
-    void activate(float delta) override {
-        index = index + 1 % dmwidth;
-        int value = static_cast<int>(delta * multiplier);
-        points[index % dmwidth] = std::min(value, dmheight);
-    }
-
-    void draw(const GfxContext* pctx, Assets* assets) override {
-        glm::vec2 pos = calcPos();
-        auto batch = pctx->getBatch2D();
-        batch->texture(nullptr);
-        batch->setLineWidth(1);
-        for (int i = index+1; i < index+dmwidth; i++) {
-            int j = i % dmwidth;
-            batch->line(
-                pos.x + i - index, pos.y + size.y - points[j], 
-                pos.x + i - index, pos.y + size.y, 1.0f, 1.0f, 1.0f, 0.2f
-            );
-        }
-    }
-};
 
 HudElement::HudElement(
     HudElementMode mode, 
@@ -211,9 +174,9 @@ Hud::Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player) : assets(
     guiController->add(contentAccessPanel);
     guiController->add(grabbedItemView);
 
-    auto dgrapher = std::make_shared<DeltaGrapher>(350, 250, 2000);
-    dgrapher->setGravity(gui::Gravity::bottom_right);
-    add(HudElement(HudElementMode::Permanent, nullptr, dgrapher, true));
+    auto dplotter = std::make_shared<gui::Plotter>(350, 250, 2000, 16);
+    dplotter->setGravity(gui::Gravity::bottom_right);
+    add(HudElement(HudElementMode::Permanent, nullptr, dplotter, true));
 }
 
 Hud::~Hud() {

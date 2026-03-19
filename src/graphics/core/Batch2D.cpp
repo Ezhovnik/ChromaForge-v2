@@ -6,6 +6,7 @@
 #include "Texture.h"
 #include "../../typedefs.h"
 #include "../../math/UVRegion.h"
+#include "gl_util.h"
 
 inline constexpr uint B2D_VERTEX_SIZE = 8; ///< Размер одной вершины в количестве float-ов
 
@@ -26,10 +27,18 @@ Batch2D::~Batch2D(){
 	delete[] buffer;
 }
 
+void Batch2D::setPrimitive(DrawPrimitive primitive) {
+    if (primitive == this->primitive) return;
+
+    flush();
+    this->primitive = primitive;
+}
+
 void Batch2D::begin() {
 	_texture = nullptr;
 	blank->bind();
 	color = glm::vec4(1.0f);
+	primitive = DrawPrimitive::Triangle;
 }
 
 void Batch2D::vertex(float x, float y, float u, float v, float r, float g, float b, float a) {
@@ -60,7 +69,7 @@ void Batch2D::vertex(glm::vec2 point, glm::vec2 uvpoint, float r, float g, float
 
 void Batch2D::texture(Texture* new_texture){
 	if (_texture == new_texture) return;
-	flush(GL_TRIANGLES);
+	flush();
 	_texture = new_texture;
 	if (new_texture == nullptr) blank->bind();
 	else new_texture->bind();
@@ -71,18 +80,18 @@ void Batch2D::untexture() {
 }
 
 void Batch2D::point(float x, float y, float r, float g, float b, float a){
-    if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush(GL_TRIANGLES);
+    if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush();
 
+	setPrimitive(DrawPrimitive::Point);
 	vertex(x, y, 0, 0, r, g, b, a);
-	flush(GL_POINTS);
 }
 
 void Batch2D::line(float x1, float y1, float x2, float y2, float r, float g, float b, float a){
-    if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush(GL_TRIANGLES);
+    if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush();
 
+	setPrimitive(DrawPrimitive::Line);
 	vertex(x1, y1, 0, 0, r, g, b, a);
 	vertex(x2, y2, 1, 1, r, g, b, a);
-	flush(GL_LINES);
 }
 
 void Batch2D::rect(float x, float y, float w, float h){
@@ -90,8 +99,9 @@ void Batch2D::rect(float x, float y, float w, float h){
 	const float g = color.g;
 	const float b = color.b;
 	const float a = color.a;
-	if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush(GL_TRIANGLES);
+	if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush();
 
+	setPrimitive(DrawPrimitive::Triangle);
 	vertex(x, y, 0, 0, r,g,b,a);
 	vertex(x + w, y + h, 1, 1, r,g,b,a);
 	vertex(x, y + h, 0, 1, r,g,b,a);
@@ -110,12 +120,13 @@ void Batch2D::rect(
 	bool flippedX, bool flippedY,
 	glm::vec4 tint) 
 {
-	if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush(GL_TRIANGLES);
+	if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush();
 
-    float centerX = w*ox;
-    float centerY = h*oy;
-    float acenterX = w-centerX;
-    float acenterY = h-centerY;
+	setPrimitive(DrawPrimitive::Triangle);
+    float centerX = w * ox;
+    float centerY = h * oy;
+    float acenterX = w - centerX;
+    float acenterY = h - centerY;
 
     float _x1 = -centerX;
     float _y1 = -centerY;
@@ -199,8 +210,9 @@ void Batch2D::rect(float x, float y, float w, float h,
 		float r2, float g2, float b2,
 		float r3, float g3, float b3,
 		float r4, float g4, float b4, int sh){
-	if (index + 30 * B2D_VERTEX_SIZE >= capacity) flush(GL_TRIANGLES);
+	if (index + 30 * B2D_VERTEX_SIZE >= capacity) flush();
 
+	setPrimitive(DrawPrimitive::Triangle);
 	glm::vec2 v0 = glm::vec2(x + h / 2, y + h / 2);
 	glm::vec2 v1 = glm::vec2(x + w - sh, y);
 	glm::vec2 v2 = glm::vec2(x + sh, y);
@@ -253,8 +265,22 @@ void Batch2D::rect(float x, float y, float w, float h,
 	vertex(v1, glm::vec2(0, 0), r2, g2, b2, 1.0f);
 }
 
+void Batch2D::lineRect(float x, float y, float w, float h) {
+    vertex(x, y, 0.0f, 0.0f, color.r, color.g, color.b, color.a);
+    vertex(x, y + h, 0.0f, 1.0f, color.r, color.g, color.b, color.a);
+    
+    vertex(x, y + h, 0.0f, 1.0f, color.r, color.g, color.b, color.a);
+    vertex(x + w, y+  h, 1.0f, 1.0f, color.r, color.g, color.b, color.a);
+
+    vertex(x + w, y + h, 1.0f, 1.0f, color.r, color.g, color.b, color.a);
+    vertex(x + w, y, 1.0f, 0.0f, color.r, color.g, color.b, color.a);
+
+    vertex(x + w, y, 1.0f, 0.0f, color.r, color.g, color.b, color.a);
+    vertex(x, y, 0.0f, 0.0f, color.r, color.g, color.b, color.a);
+}
+
 void Batch2D::sprite(float x, float y, float w, float h, const UVRegion& region, glm::vec4 tint){
-	rect(x, y, w, h, region.u1, region.v1, region.u2-region.u1, region.v2-region.v1, tint.r, tint.g, tint.b, tint.a);
+	rect(x, y, w, h, region.u1, region.v1, region.u2 - region.u1, region.v2 - region.v1, tint.r, tint.g, tint.b, tint.a);
 }
 
 void Batch2D::sprite(float x, float y, float w, float h, int atlasRes, int index, glm::vec4 tint){
@@ -271,7 +297,9 @@ void Batch2D::rect(
 	float tx, float ty,
 	float r, float g, float b, float a)
 {
+	if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush();
 
+    setPrimitive(DrawPrimitive::Triangle);
 	vertex(x, y, u, v + ty, r, g, b, a);
 	vertex(x + w, y + h, u + tx, v, r, g, b, a);
 	vertex(x, y + h, u, v, r, g, b, a);
@@ -281,15 +309,11 @@ void Batch2D::rect(
 	vertex(x + w, y + h, u + tx, v, r, g, b, a);
 }
 
-void Batch2D::flush(uint gl_primitive) {
+void Batch2D::flush() {
 	if (index == 0) return;
 	mesh->reload(buffer, index / B2D_VERTEX_SIZE);
-	mesh->draw(gl_primitive);
+	mesh->draw(gl::to_glenum(primitive));
 	index = 0;
-}
-
-void Batch2D::flush() {
-    flush(GL_TRIANGLES);
 }
 
 void Batch2D::setLineWidth(float width) {

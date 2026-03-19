@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+#include "commons.h"
 #include "../../typedefs.h"
 
 class Mesh;
@@ -29,6 +30,9 @@ class Batch2D {
 
 	std::unique_ptr<Texture> blank; ///< Белая текстура 1x1 для случаев, когда текстура не задана
 	Texture* _texture; ///< Текущая активная текстура
+     DrawPrimitive primitive = DrawPrimitive::Triangle;
+
+     void setPrimitive(DrawPrimitive primitive);
 
 	/**
      * @brief Добавляет одну вершину в буфер.
@@ -181,11 +185,7 @@ public:
 		int sh
 	);
 
-	/**
-     * @brief Принудительно отправляет накопленные вершины в OpenGL с указанным типом примитива.
-     * @param gl_primitive Тип примитива OpenGL (например, GL_TRIANGLES, GL_LINES).
-     */
-     void flush(uint gl_primitive);
+	void lineRect(float x, float y, float w, float h);
 
 	/**
      * @brief Отправляет накопленные вершины как треугольники (GL_TRIANGLES).
