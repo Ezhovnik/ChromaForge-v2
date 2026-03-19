@@ -146,6 +146,29 @@ static int l_get_generators(lua_State* L) {
     return 1;
 }
 
+static int l_get_setting_info(lua_State* L) {
+    auto name = lua_tostring(L, 1);
+    auto setting = scripting::engine->getSettingsHandler().getSetting(name);
+    lua_createtable(L, 0, 1);
+    if (auto number = dynamic_cast<NumberSetting*>(setting)) {
+        lua_pushnumber(L, number->getMin());
+        lua_setfield(L, -2, "min");
+        lua_pushnumber(L, number->getMax());
+        lua_setfield(L, -2, "max");
+        return 1;
+    }
+    if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
+        lua_pushinteger(L, integer->getMin());
+        lua_setfield(L, -2, "min");
+        lua_pushinteger(L, integer->getMax());
+        lua_setfield(L, -2, "max");
+        return 1;
+    }
+    lua_pop(L, 1);
+    luaL_error(L, "Unsupported setting type");
+    return 0;
+}
+
 const luaL_Reg builtinlib [] = {
     {"get_worlds_list", lua_wrap_errors<l_get_worlds_list>},
     {"open_world", lua_wrap_errors<l_open_world>},
@@ -157,6 +180,7 @@ const luaL_Reg builtinlib [] = {
     {"get_setting", lua_wrap_errors<l_get_setting>},
     {"set_setting", lua_wrap_errors<l_set_setting>},
     {"str_setting", lua_wrap_errors<l_str_setting>},
+    {"get_setting_info", lua_wrap_errors<l_get_setting_info>},
     {"add_packs", lua_wrap_errors<l_add_packs>},
     {"new_world", lua_wrap_errors<l_new_world>},
     {"get_default_generator", lua_wrap_errors<l_get_default_generator>},

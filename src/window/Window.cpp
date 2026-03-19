@@ -184,7 +184,7 @@ bool Window::initialize(DisplaySettings& settings) {
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
     }
 
-    glfwSwapInterval(settings.swapInterval);
+    glfwSwapInterval(settings.vsync.get());
 
     const GLubyte* vendor = glGetString(GL_VENDOR);
 	const GLubyte* renderer = glGetString(GL_RENDERER);

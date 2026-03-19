@@ -483,7 +483,7 @@ void BlocksRenderer::build(const Chunk* chunk, const ChunksStorage* chunks) {
         0, 
         chunk->chunk_z * CHUNK_DEPTH - 1
     );
-	chunks->getVoxels(voxelsBuffer, settings.graphics.backlight);
+	chunks->getVoxels(voxelsBuffer, settings.graphics.backlight.get());
 	overflow = false;
 	vertexOffset = 0;
 	indexOffset = indexSize = 0;

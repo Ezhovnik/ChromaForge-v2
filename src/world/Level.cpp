@@ -23,11 +23,18 @@ Level::Level(World* world, const Content* content, EngineSettings& settings) :
     events(std::make_unique<LevelEvents>()),
     settings(settings)
 {
-    auto inventory = std::make_shared<Inventory>(world->getNextInventoryId(), DEFAULT_PLAYER_INVENTORY_SIZE);
-    auto player = spawnObject<Player>(DEFAULT_SPAWNPOINT, DEFAULT_PLAYER_SPEED, inventory);
+    auto inventory = std::make_shared<Inventory>(
+        world->getNextInventoryId(), 
+        DEFAULT_PLAYER_INVENTORY_SIZE
+    );
+    auto player = spawnObject<Player>(
+        DEFAULT_SPAWNPOINT, 
+        DEFAULT_PLAYER_SPEED, 
+        inventory
+    );
 
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
-    uint matrixSize = (settings.chunks.loadDistance + settings.chunks.padding) * 2;
+    uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
     chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, world->wfile.get(), events.get(), content);
 	lighting = std::make_unique<Lighting>(content, chunks.get());
 
@@ -49,7 +56,10 @@ Level::~Level(){
 
 void Level::loadMatrix(int32_t x, int32_t z, uint32_t radius) {
 	chunks->setCenter(x, z);
-    uint32_t diameter = std::min(radius * 2, (settings.chunks.loadDistance + settings.chunks.padding) * 2);
+    uint32_t diameter = std::min(
+        radius * 2LL, 
+        (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2
+    );
 	if (chunks->width != diameter) chunks->resize(diameter, diameter);
 }
 

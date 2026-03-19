@@ -15,7 +15,17 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
     map.emplace("audio.volume-ambient", &settings.audio.volumeAmbient);
     map.emplace("audio.volume-music", &settings.audio.volumeMusic);
 
+	map.emplace("display.vsync", &settings.display.vsync);
+
     map.emplace("camera.sensitivity", &settings.camera.sensitivity);
+	map.emplace("camera.fov", &settings.camera.fov);
+	map.emplace("camera.shaking", &settings.camera.shaking);
+
+    map.emplace("chunks.load-distance", &settings.chunks.loadDistance);
+    map.emplace("chunks.load-speed", &settings.chunks.loadSpeed);
+
+    map.emplace("graphics.fog-curve", &settings.graphics.fogCurve);
+	map.emplace("graphics.backlight", &settings.graphics.backlight);
 }
 
 dynamic::Value SettingsHandler::getValue(const std::string& name) const {
@@ -27,10 +37,41 @@ dynamic::Value SettingsHandler::getValue(const std::string& name) const {
     auto setting = found->second;
     if (auto number = dynamic_cast<NumberSetting*>(setting)) {
         return dynamic::Value::of((number_t)number->get());
+	} else if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
+        return dynamic::Value::of((integer_t)integer->get());
+	} else if (auto flag = dynamic_cast<BoolSetting*>(setting)) {
+        return dynamic::Value::boolean(flag->get());
     } else {
 		LOG_ERROR("Type is not implemented for '{}'", name);
         throw std::runtime_error("Type is not implemented for '" + name + "'");
     }
+}
+
+template<class T>
+static void set_numeric_value(T* setting, dynamic::Value& value) {
+    switch (value.type) {
+        case dynamic::ValueType::Integer:
+            setting->set(std::get<integer_t>(value.value));
+            break;
+        case dynamic::ValueType::Number:
+            setting->set(std::get<number_t>(value.value));
+            break;
+        case dynamic::ValueType::Boolean:
+            setting->set(std::get<bool>(value.value));
+            break;
+        default:
+			LOG_ERROR("Type error, numeric value expected");
+            throw std::runtime_error("Type error, numeric value expected");
+    }
+}
+
+Setting* SettingsHandler::getSetting(const std::string& name) const {
+    auto found = map.find(name);
+    if (found == map.end()) {
+		LOG_ERROR("Setting '{}' does not exist", name);
+        throw std::runtime_error("setting '" + name + "' does not exist");
+    }
+    return found->second;
 }
 
 void SettingsHandler::setValue(const std::string& name, dynamic::Value value) {
@@ -41,17 +82,11 @@ void SettingsHandler::setValue(const std::string& name, dynamic::Value value) {
     }
     auto setting = found->second;
     if (auto number = dynamic_cast<NumberSetting*>(setting)) {
-        switch (value.type) {
-            case dynamic::ValueType::Integer:
-                number->set(std::get<integer_t>(value.value));
-                break;
-            case dynamic::ValueType::Number:
-                number->set(std::get<number_t>(value.value));
-                break;
-            default:
-				LOG_ERROR("Type error, numeric value expected");
-                throw std::runtime_error("Type error, numeric value expected");
-        }
+        set_numeric_value(number, value);
+	} else if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
+		set_numeric_value(integer, value);
+    } else if (auto flag = dynamic_cast<BoolSetting*>(setting)) {
+        set_numeric_value(flag, value);
     } else {
 		LOG_ERROR("Type is not implemented - setting '{}'", name);
         throw std::runtime_error("Type is not implement - setting '" + name + "'");
@@ -75,23 +110,23 @@ toml::Wrapper* create_wrapper(EngineSettings& settings) {
 	display.add("width", &settings.display.width);
 	display.add("height", &settings.display.height);
 	display.add("samples", &settings.display.samples);
-	display.add("swap-interval", &settings.display.swapInterval);
+	display.add("vsync", &*settings.display.vsync);
 	display.add("fullscreen", &settings.display.fullscreen);
 
 	toml::Section& chunks = wrapper->add("chunks");
-	chunks.add("load-distance", &settings.chunks.loadDistance);
-	chunks.add("load-speed", &settings.chunks.loadSpeed);
-	chunks.add("padding", &settings.chunks.padding);
+	chunks.add("load-distance", &*settings.chunks.loadDistance);
+	chunks.add("load-speed", &*settings.chunks.loadSpeed);
+	chunks.add("padding", &*settings.chunks.padding);
 
     toml::Section& camera = wrapper->add("camera");
 	camera.add("fov-events", &settings.camera.fovEvents);
-	camera.add("shaking", &settings.camera.shaking);
-	camera.add("fov", &settings.camera.fov);
+	camera.add("shaking", &*settings.camera.shaking);
+	camera.add("fov", &*settings.camera.fov);
 	camera.add("sensitivity", &*settings.camera.sensitivity);
 
 	toml::Section& graphics = wrapper->add("graphics");
-	graphics.add("fog-curve", &settings.graphics.fogCurve);
-	graphics.add("backlight", &settings.graphics.backlight);
+	graphics.add("fog-curve", &*settings.graphics.fogCurve);
+	graphics.add("backlight", &*settings.graphics.backlight);
 	graphics.add("frustum-culling", &settings.graphics.frustumCulling);
 	graphics.add("skybox-resolution", &settings.graphics.skyboxResolution);
 	graphics.add("gamma", &settings.graphics.gamma);

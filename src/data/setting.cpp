@@ -12,3 +12,23 @@ std::string NumberSetting::toString() const {
             return "Invalid format";
     }
 }
+
+std::string IntegerSetting::toString() const {
+    switch (getFormat()) {
+        case SettingFormat::Simple:
+            return std::to_string(value);
+        case SettingFormat::Percent:
+            return std::to_string(value) + "%";
+        default:
+            return "Invalid format";
+    }
+}
+
+std::string BoolSetting::toString() const {
+    switch (getFormat()) {
+        case SettingFormat::Simple:
+            return value ? "true" : "false";
+        default:
+            return "Invalid format";
+    }
+}

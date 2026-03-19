@@ -11,29 +11,29 @@ struct DisplaySettings {
 	int width = 1280;
 	int height = 720;
 	int samples = 0;
-	int swapInterval = 1;
+	BoolSetting vsync = {true};
 	std::string title = "ChromaForge (v " + ENGINE_VERSION_STRING + ")";
 
 	bool fullscreen = false;
 };
 
 struct ChunksSettings {
-	uint loadSpeed = 4;
-	uint loadDistance = 22;
-	uint padding = 2;
+	IntegerSetting loadSpeed = {4, 1, 32};
+	IntegerSetting loadDistance = {22, 3, 66};
+	IntegerSetting padding = {2, 1, 8};
 };
 
 struct CameraSettings {
     bool fovEvents = true;
-    bool shaking = true;
-	float fov = 90.0f;
+    BoolSetting shaking = {true};
+	NumberSetting fov {90.0f, 10, 120};
 	NumberSetting sensitivity {2.0f, 0.1f, 10.0f};
 };
 
 struct GraphicsSettings {
-    float fogCurve = 1.6f;
+    NumberSetting fogCurve {1.6f, 1.0f, 6.0f};
 	float gamma = 1.0f;
-	bool backlight = true;
+	BoolSetting backlight = {true};
 	bool frustumCulling = true;
 	int skyboxResolution = 64 + 32;
 };

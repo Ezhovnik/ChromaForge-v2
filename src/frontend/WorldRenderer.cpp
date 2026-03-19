@@ -168,13 +168,13 @@ void WorldRenderer::renderLevel(
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
 
-	float fogFactor = 15.0f / ((float)settings.chunks.loadDistance - 2);
+	float fogFactor = 15.0f / ((float)settings.chunks.loadDistance.get() - 2);
 	shader->use();
     shader->uniformMatrix("u_proj", camera->getProjection());
     shader->uniformMatrix("u_view", camera->getView());
     shader->uniform1f("u_gamma", settings.graphics.gamma);
     shader->uniform1f("u_fogFactor", fogFactor);
-    shader->uniform1f("u_fogCurve", settings.graphics.fogCurve);
+    shader->uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
     shader->uniform3f("u_cameraPos", camera->position);
     shader->uniform1i("u_cubemap", 1);
 

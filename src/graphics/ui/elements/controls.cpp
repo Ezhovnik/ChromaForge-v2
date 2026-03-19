@@ -782,7 +782,7 @@ void TrackBar::mouseMove(GUI*, int x, int y) {
     value += min;
     value = (value > max) ? max : value;
     value = (value < min) ? min : value;
-    value = (int)(value / step) * step;
+    value = (int64_t)round(value / step) * step;
     if (consumer) consumer(value);
 }
 

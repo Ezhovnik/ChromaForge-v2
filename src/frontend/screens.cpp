@@ -50,7 +50,6 @@ MenuScreen::MenuScreen(Engine* engine_) : Screen(engine_) {
     auto menu = engine->getGUI()->getMenu();
 
     menu->reset();
-    menus::refresh_menus(engine);
     menu->setPage("main");
 
     uicamera.reset(new Camera(glm::vec3(), Window::height));
@@ -95,7 +94,7 @@ void MenuScreen::draw(float delta) {
 static bool backlight;
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine) {
     EngineSettings& settings = engine->getSettings();
-    backlight = settings.graphics.backlight;
+    backlight = settings.graphics.backlight.get();
     auto assets = engine->getAssets();
     auto menu = engine->getGUI()->getMenu();
     menu->reset();
@@ -157,11 +156,11 @@ void LevelScreen::update(float delta) {
         camera->up
     );
 
-    controller->getPlayer()->camera->setFov(glm::radians(settings.camera.fov));
+    controller->getPlayer()->camera->setFov(glm::radians(settings.camera.fov.get()));
 
-    if (settings.graphics.backlight != backlight) {
+    if (settings.graphics.backlight.get() != backlight) {
         controller->getLevel()->chunks->saveAndClear();
-        backlight = settings.graphics.backlight;
+        backlight = settings.graphics.backlight.get();
     }
 
     if (!hud->isPause()) {

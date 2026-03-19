@@ -35,15 +35,29 @@
 #include "../../coders/png.h"
 #include "../../delegates.h"
 #include "../../world/WorldGenerators.h"
-#include "menu_commons.h"
 #include "../UIDocument.h"
 #include "../../logic/scripting/scripting.h"
 #include "../../interfaces/Task.h"
 
 using namespace gui;
 
+std::shared_ptr<Panel> create_page(
+    Engine* engine, 
+    std::string name, 
+    int width, 
+    float opacity, 
+    int interval
+) {
+    auto menu = engine->getGUI()->getMenu();
+    auto panel = std::make_shared<Panel>(
+        glm::vec2(width, 200), glm::vec4(8.0f), interval
+    );
+    panel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, opacity));
+    menu->addPage(name, panel);
+    return panel;
+}
+
 void menus::create_menus(Engine* engine) {
-    create_settings_panel(engine);
     auto menu = engine->getGUI()->getMenu();
     menu->setPageLoader([=](auto name) {
         auto file = engine->getResPaths()->find("layouts/pages/" + name + ".xml");
@@ -58,7 +72,7 @@ void menus::create_menus(Engine* engine) {
 static void show_content_missing(Engine* engine, const Content* content, std::shared_ptr<ContentLUT> lut) {
     auto* gui = engine->getGUI();
     auto menu = gui->getMenu();
-    auto panel = menus::create_page(engine, "missing-content", 500, 0.5f, 8);
+    auto panel = create_page(engine, "missing-content", 500, 0.5f, 8);
 
     panel->add(std::make_shared<Label>(langs::get(L"menu.missing-content")));
 
@@ -90,7 +104,7 @@ static void show_content_missing(Engine* engine, const Content* content, std::sh
 
 void show_process_panel(Engine* engine, std::shared_ptr<Task> task, std::wstring text=L"") {
     auto menu = engine->getGUI()->getMenu();
-    auto panel = menus::create_page(engine, "process", 400, 0.5f, 1);
+    auto panel = create_page(engine, "process", 400, 0.5f, 1);
 
     if (!text.empty()) panel->add(std::make_shared<Label>(langs::get(text)));
 
@@ -211,9 +225,5 @@ void menus::delete_world(std::string name, Engine* engine) {
     L" (" + util::str2wstr_utf8(folder.u8string()) + L")", [=]() {
         LOG_DEBUG("Deleting '{}'", folder.u8string());
         std::filesystem::remove_all(folder);
-        menus::refresh_menus(engine);
     });
-}
-
-void menus::refresh_menus(Engine* engine) {
 }

@@ -21,6 +21,7 @@ namespace toml {
         ftbool, ///< Логическое значение (bool)
         ftint, ///< Знаковое целое (int)
         ftuint, ///< Беззнаковое целое (uint)
+        ftint64, ///< Знаковое целое 64-битное (int64_t)
         ftfloat, ///< Число с плавающей точкой (float)
         ftdouble, ///< Число с плавающей точкой(double)
         ftstring, ///< Строка (std::string)
@@ -80,6 +81,13 @@ namespace toml {
          * @param ptr Указатель на переменную uint.
          */
         void add(std::string name, uint* ptr);
+
+        /**
+         * @brief Привязать поле типа int64_t.
+         * @param name Имя ключа.
+         * @param ptr Указатель на переменную int64_t.
+         */
+        void add(std::string name, int64_t* ptr);
 
         /**
          * @brief Привязать поле типа float.
