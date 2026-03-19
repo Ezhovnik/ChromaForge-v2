@@ -1,7 +1,6 @@
 #include "UIDocument.h"
 
 #include "../graphics/ui/elements/UINode.h"
-#include "../graphics/ui/elements/containers.h"
 #include "InventoryView.h"
 #include "../logic/scripting/scripting.h"
 #include "../files/files.h"

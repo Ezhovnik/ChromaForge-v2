@@ -5,12 +5,17 @@
 #include "../../../engine.h"
 #include "../../../assets/Assets.h"
 #include "../../../graphics/ui/elements/UINode.h"
-#include "../../../graphics/ui/elements/controls.h"
 #include "../../../frontend/UiDocument.h"
 #include "../../../util/stringutil.h"
 #include "../../../graphics/ui/gui_util.h"
 #include "LuaState.h"
 #include "../../../frontend/locale/langs.h"
+#include "../../../graphics/ui/elements/control/Button.h"
+#include "../../../graphics/ui/elements/control/CheckBox.h"
+#include "../../../graphics/ui/elements/control/TextBox.h"
+#include "../../../graphics/ui/elements/control/TrackBar.h"
+#include "../../../graphics/ui/elements/layout/Panel.h"
+#include "../../../graphics/ui/elements/layout/Menu.h"
 
 struct DocumentNode {
     UIDocument* document;

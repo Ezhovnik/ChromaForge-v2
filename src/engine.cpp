@@ -39,7 +39,6 @@
 #include "constants.h"
 #include "frontend/UIDocument.h"
 #include "graphics/ui/elements/UINode.h"
-#include "graphics/ui/elements/containers.h"
 #include "content/PacksManager.h"
 #include "util/listutil.h"
 

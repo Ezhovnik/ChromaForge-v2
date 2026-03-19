@@ -2,8 +2,9 @@
 
 #include <glm/glm.hpp>
 
-#include "elements/controls.h"
-#include "elements/containers.h"
+#include "elements/display/Label.h"
+#include "elements/layout/Menu.h"
+#include "elements/control/Button.h"
 #include "../../frontend/locale/langs.h"
 #include "../../delegates.h"
 #include "gui_xml.h"

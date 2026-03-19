@@ -7,8 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "../graphics/ui/elements/UINode.h"
-#include "../graphics/ui/elements/containers.h"
-#include "../graphics/ui/elements/controls.h"
+#include "../graphics/ui/elements/layout/Container.h"
 #include "../items/ItemStack.h"
 #include "../typedefs.h"
 #include "../constants.h"

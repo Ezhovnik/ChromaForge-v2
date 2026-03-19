@@ -1,11 +1,11 @@
-#ifndef GRAPHICS_UI_ELEMENTS_PLOTTER_H_
-#define GRAPHICS_UI_ELEMENTS_PLOTTER_H_
+#ifndef GRAPHICS_UI_ELEMENTS_DISPLAY_PLOTTER_H_
+#define GRAPHICS_UI_ELEMENTS_DISPLAY_PLOTTER_H_
 
 #include <memory>
 #include <glm/glm.hpp>
 
-#include "UINode.h"
-#include "../../../typedefs.h"
+#include "../UINode.h"
+#include "../../../../typedefs.h"
 
 class Assets;
 class GfxContext;
@@ -35,4 +35,4 @@ namespace gui {
     };
 }
 
-#endif // GRAPHICS_UI_ELEMENTS_PLOTTER_H_
+#endif // GRAPHICS_UI_ELEMENTS_DISPLAY_PLOTTER_H_

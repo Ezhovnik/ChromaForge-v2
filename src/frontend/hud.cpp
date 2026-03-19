@@ -21,8 +21,9 @@
 #include "../objects/Player.h"
 #include "../physics/Hitbox.h"
 #include "../debug/Logger.h"
-#include "../graphics/ui/elements/controls.h"
-#include "../graphics/ui/elements/containers.h"
+#include "../graphics/ui/elements/layout/Menu.h"
+#include "../graphics/ui/elements/layout/Panel.h"
+#include "../graphics/ui/elements/display/Plotter.h"
 #include "../graphics/ui/elements/UINode.h"
 #include "../graphics/ui/GUI.h"
 #include "../engine.h"
@@ -48,7 +49,6 @@
 #include "../graphics/core/Texture.h"
 #include "../items/Inventories.h"
 #include "../voxels/Chunk.h"
-#include "../graphics/ui/elements/Plotter.h"
 
 extern std::shared_ptr<gui::UINode> create_debug_panel(
     Engine* engine, 

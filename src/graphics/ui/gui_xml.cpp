@@ -3,8 +3,13 @@
 #include <charconv>
 #include <stdexcept>
 
-#include "elements/containers.h"
-#include "elements/controls.h"
+#include "elements/layout/Panel.h"
+#include "elements/display/Image.h"
+#include "elements/control/Button.h"
+#include "elements/control/CheckBox.h"
+#include "elements/control/TextBox.h"
+#include "elements/control/TrackBar.h"
+#include "elements/control/InputBindBox.h"
 #include "../../frontend/locale/langs.h"
 #include "../../logic/scripting/scripting.h"
 #include "../../util/stringutil.h"
@@ -130,7 +135,7 @@ static void _readPanel(UIXmlReader& reader, xml::xmlelement element, Panel& pane
     if (element->has("max-length")) panel.setMaxLength(element->attr("max-length").asInt());
     if (element->has("orientation")) {
         auto oname = element->attr("orientation").getText();
-        if (oname == "horizontal") panel.setOrientation(Orientation::horizontal);
+        if (oname == "horizontal") panel.setOrientation(Orientation::Horizontal);
     }
     if (subnodes) {
         for (auto& sub : element->getElements()) {

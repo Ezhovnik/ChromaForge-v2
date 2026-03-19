@@ -9,8 +9,9 @@
 #include <glm/glm.hpp>
 
 #include "../../graphics/ui/GUI.h"
-#include "../../graphics/ui/elements/containers.h"
-#include "../../graphics/ui/elements/controls.h"
+#include "../../graphics/ui/elements/layout/Menu.h"
+#include "../../graphics/ui/elements/display/Label.h"
+#include "../../graphics/ui/elements/control/Button.h"
 #include "../screens.h"
 #include "../../util/stringutil.h"
 #include "../../files/engine_paths.h"
