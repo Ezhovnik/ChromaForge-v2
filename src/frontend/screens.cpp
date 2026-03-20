@@ -29,7 +29,7 @@
 #include "../math/UVRegion.h"
 #include "../graphics/core/GfxContext.h"
 #include "../core_content_defs.h"
-#include "menu/menu.h"
+#include "menu.h"
 #include "ContentGfxCache.h"
 #include "../logic/LevelController.h"
 #include "LevelFrontend.h"

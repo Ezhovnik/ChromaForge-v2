@@ -6,12 +6,13 @@
 #include "../../../engine.h"
 #include "../../../files/engine_paths.h"
 #include "../scripting.h"
-#include "../../../frontend/menu/menu.h"
+#include "../../../frontend/menu.h"
 #include "../../../window/Window.h"
 #include "../../../frontend/screens.h"
 #include "../../../logic/LevelController.h"
 #include "../../../window/Events.h"
 #include "../../../world/WorldGenerators.h"
+#include "../../../logic/EngineController.h"
 
 namespace scripting {
     extern lua::LuaState* state;
@@ -32,7 +33,8 @@ static int l_get_worlds_list(lua_State* L) {
 static int l_open_world(lua_State* L) {
     auto name = lua_tostring(L, 1);
     scripting::engine->setScreen(nullptr);
-    menus::open_world(name, scripting::engine, false);
+    auto controller = scripting::engine->getController();
+    controller->openWorld(name, false);
     return 0;
 }
 
@@ -43,7 +45,8 @@ static int l_quit(lua_State* L) {
 
 static int l_delete_world(lua_State* L) {
     auto name = lua_tostring(L, 1);
-    menus::delete_world(name, scripting::engine);
+    auto controller = scripting::engine->getController();
+    controller->deleteWorld(name);
     return 0;
 }
 
@@ -101,7 +104,8 @@ static int l_remove_packs(lua_State* L) {
         lua_pop(L, 1);
     }
 
-    menus::remove_packs(scripting::engine, scripting::controller, packs);
+    auto controller = scripting::engine->getController();
+    controller->removePacks(scripting::controller, packs);
     return 0;
 }
 
@@ -116,7 +120,8 @@ static int l_add_packs(lua_State* L) {
         packs.push_back(lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    menus::add_packs(scripting::engine, scripting::controller, packs);
+    auto controller = scripting::engine->getController();
+    controller->addPacks(scripting::controller, packs);
     return 0;
 }
 
@@ -124,7 +129,8 @@ static int l_new_world(lua_State* L) {
     auto name = lua_tostring(L, 1);
     auto seed = lua_tostring(L, 2);
     auto generator = lua_tostring(L, 3);
-    menus::create_world(scripting::engine, name, seed, generator);
+    auto controller = scripting::engine->getController();
+    controller->createWorld(name, seed, generator);
     return 0;
 }
 

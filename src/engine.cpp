@@ -27,7 +27,7 @@
 #include "content/content.h"
 #include "frontend/locale/langs.h"
 #include "util/platform.h"
-#include "frontend/menu/menu.h"
+#include "frontend/menu.h"
 #include "content/Content.h"
 #include "content/ContentLoader.h"
 #include "logic/scripting/scripting.h"
@@ -41,6 +41,7 @@
 #include "graphics/ui/elements/UINode.h"
 #include "content/PacksManager.h"
 #include "util/listutil.h"
+#include "logic/EngineController.h"
 
 inline void create_channel(std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -52,6 +53,8 @@ inline void create_channel(std::string name, NumberSetting& setting) {
 
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths), settingsHandler(settings) {
+    controller = std::make_unique<EngineController>(this);
+
     // Инициализация окна GLFW
     if (!Window::initialize(settings.display)) {
         LOG_CRITICAL("Failed to load Window");
@@ -323,6 +326,10 @@ const Content* Engine::getContent() const {
 
 std::vector<ContentPack>& Engine::getContentPacks() {
     return contentPacks;
+}
+
+EngineController* Engine::getController() {
+    return controller.get();
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {

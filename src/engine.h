@@ -20,6 +20,7 @@
 
 class Screen;
 class Batch2D;
+class EngineController;
 
 namespace gui {
     class GUI;
@@ -40,6 +41,7 @@ private:
 
     std::unique_ptr<Assets> assets = nullptr; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen = nullptr;
+    std::unique_ptr<EngineController> controller;
     std::vector<ContentPack> contentPacks;
     std::unique_ptr<Content> content = nullptr;
 
@@ -81,6 +83,7 @@ public:
     std::shared_ptr<Screen> getScreen();
     double getDeltaTime() const;
     SettingsHandler& getSettingsHandler();
+    EngineController* getController();
 
     void postRunnable(runnable callback);
 

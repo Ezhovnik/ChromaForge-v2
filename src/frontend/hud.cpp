@@ -30,7 +30,7 @@
 #include "screens.h"
 #include "../input_bindings.h"
 #include "../window/input.h"
-#include "menu/menu.h"
+#include "menu.h"
 #include "../content/Content.h"
 #include "../math/voxmaths.h"
 #include "ContentGfxCache.h"
