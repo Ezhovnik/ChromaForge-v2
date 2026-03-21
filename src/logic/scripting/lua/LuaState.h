@@ -52,7 +52,7 @@ namespace lua {
         luaint tointeger(int index);
         luanumber tonumber(int index);
         const char* tostring(int index);
-        dynamic::Value tovalue(int index);
+        std::unique_ptr<dynamic::Value> tovalue(int index);
 
         bool isstring(int idx);
         bool isfunction(int idx);

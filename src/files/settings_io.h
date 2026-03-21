@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 #include "../settings.h"
 #include "../data/dynamic.h"
@@ -17,8 +18,8 @@ private:
 public:
     SettingsHandler(EngineSettings& settings);
 
-    dynamic::Value getValue(const std::string& name) const;
-    void setValue(const std::string& name, dynamic::Value value);
+    std::unique_ptr<dynamic::Value> getValue(const std::string& name) const;
+    void setValue(const std::string& name, const dynamic::Value& value);
 
     std::string toString(const std::string& name) const;
 

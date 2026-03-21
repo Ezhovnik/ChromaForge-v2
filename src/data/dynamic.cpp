@@ -125,6 +125,11 @@ List& List::put(List* value) {
     return *this;
 }
 
+List& List::put(std::unique_ptr<Value> value) {
+    values.emplace_back(std::move(value));
+    return *this;
+}
+
 Value* List::getValueWriteable(size_t index) const {
     if (index > values.size()) {
         LOG_ERROR("Index error");
@@ -348,6 +353,15 @@ Map& Map::put(std::string key, bool value){
     return *this;
 }
 
+Map& Map::put(std::string key, std::unique_ptr<Value> value) {
+    values.emplace(key, value.release());
+    return *this;
+}
+
+size_t Map::size() const {
+    return values.size();
+}
+
 List& Map::putList(std::string key) {
     List* arr = new List();
     put(key, arr);
@@ -376,18 +390,18 @@ Value::~Value() {
     }
 }
 
-Value Value::boolean(bool value) {
-    return Value(ValueType::Boolean, value);
+std::unique_ptr<Value> Value::boolean(bool value) {
+    return std::make_unique<Value>(ValueType::Boolean, value);
 }
 
-Value Value::of(number_u value) {
+std::unique_ptr<Value> Value::of(number_u value) {
     if (std::holds_alternative<integer_t>(value)) {
-        return Value(ValueType::Integer, std::get<integer_t>(value));
+        return std::make_unique<Value>(ValueType::Integer, std::get<integer_t>(value));
     } else {
-        return Value(ValueType::Number, std::get<number_t>(value));
+        return std::make_unique<Value>(ValueType::Number, std::get<number_t>(value));
     }
 }
 
-Value Value::of(const std::string& value) {
-    return Value(ValueType::String, value);
+std::unique_ptr<Value> Value::of(const std::string& value) {
+    return std::make_unique<Value>(ValueType::String, value);
 }

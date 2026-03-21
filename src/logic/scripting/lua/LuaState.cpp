@@ -129,6 +129,7 @@ void lua::LuaState::createLibs() {
     openlib("block", blocklib, 0);
     openlib("audio", audiolib, 0);
     openlib("builtin", builtinlib, 0);
+    openlib("json", jsonlib, 0);
 
     addfunc("print", lua_wrap_errors<l_print>);
 }
@@ -214,12 +215,24 @@ int lua::LuaState::pushvalue(const dynamic::Value& value) {
         case dynamic::ValueType::None:
             pushnil();
             break;
-        case dynamic::ValueType::List:
-            LOG_ERROR("Type 'list' is not implemented");
-            throw std::runtime_error("Type 'list' is not implemented");
-        case dynamic::ValueType::Map:
-            LOG_ERROR("Type 'map' is not implemented");
-            throw std::runtime_error("Type 'map' is not implemented");
+        case dynamic::ValueType::List: {
+            auto list = std::get<dynamic::List*>(value.value);
+            lua_createtable(L, list->size(), 0);
+            for (size_t i = 0; i < list->size(); ++i) {
+                pushvalue(*list->get(i));
+                lua_rawseti(L, -2, i + 1);
+            }
+            break;
+        }
+        case dynamic::ValueType::Map: {
+            auto map = std::get<dynamic::Map*>(value.value);
+            lua_createtable(L, 0, map->size());
+            for (auto& entry : map->values) {
+                pushvalue(*entry.second);
+                lua_setfield(L, -2, entry.first.c_str());
+            }
+            break;
+        }
     }
     return 1;
 }
@@ -272,12 +285,12 @@ const char* lua::LuaState::tostring(int idx) {
     return lua_tostring(L, idx);
 }
 
-dynamic::Value lua::LuaState::tovalue(int idx) {
+std::unique_ptr<dynamic::Value> lua::LuaState::tovalue(int idx) {
     auto type = lua_type(L, idx);
     switch (type) {
         case LUA_TNIL:
         case LUA_TNONE:
-            return dynamic::Value(dynamic::ValueType::None, (integer_t)0);
+            return std::make_unique<dynamic::Value>(dynamic::ValueType::None, (integer_t)0);
         case LUA_TBOOLEAN:
             return dynamic::Value::boolean(lua_toboolean(L, idx) == 1);
         case LUA_TNUMBER: {
@@ -291,6 +304,30 @@ dynamic::Value lua::LuaState::tovalue(int idx) {
         }
         case LUA_TSTRING:
             return dynamic::Value::of(lua_tostring(L, idx));
+        case LUA_TTABLE: {
+            int len = lua_objlen(L, idx);
+            if (len) {
+                auto list = std::make_unique<dynamic::List>();
+                for (int i = 1; i <= len; ++i) {
+                    lua_rawgeti(L, idx, i);
+                    list->put(tovalue(-1));
+                    lua_pop(L, 1);
+                }
+                return std::make_unique<dynamic::Value>(dynamic::ValueType::List, list.release());
+            } else {
+                auto map = std::make_unique<dynamic::Map>();
+                lua_pushvalue(L, idx);
+                lua_pushnil(L);
+                while (lua_next(L, -2)) {
+                    lua_pushvalue(L, -2);
+                    auto key = lua_tostring(L, -1);
+                    map->put(key, tovalue(-2));
+                    lua_pop(L, 2);
+                }
+                lua_pop(L, 1);
+                return std::make_unique<dynamic::Value>(dynamic::ValueType::Map, map.release());
+            }
+        }
         default:
             LOG_ERROR("Lua type {} is not supported", type);
             throw std::runtime_error("Lua type " + std::to_string(type) + " is not supported");

@@ -27,9 +27,9 @@ namespace dynamic {
         Value(ValueType type, valvalue value);
         ~Value();
 
-        static Value boolean(bool value);
-        static Value of(number_u value);
-        static Value of(const std::string& value);
+        static std::unique_ptr<Value> boolean(bool value);
+        static std::unique_ptr<Value> of(number_u value);
+        static std::unique_ptr<Value> of(const std::string& value);
     };
 
     class List {
@@ -62,6 +62,7 @@ namespace dynamic {
         List& put(Map* value);
         List& put(List* value);
         List& put(bool value);
+        List& put(std::unique_ptr<Value> value);
 
         Value* getValueWriteable(size_t index) const;
 
@@ -109,11 +110,13 @@ namespace dynamic {
         Map& put(std::string key, Map* value);
         Map& put(std::string key, List* value);
         Map& put(std::string key, bool value);
+        Map& put(std::string key, std::unique_ptr<Value> value);
 
         List& putList(std::string key);
         Map& putMap(std::string key);
 
         bool has(std::string key);
+        size_t size() const;
     };
 }
 

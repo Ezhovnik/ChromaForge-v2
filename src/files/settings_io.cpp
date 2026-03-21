@@ -28,7 +28,7 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
 	map.emplace("graphics.backlight", &settings.graphics.backlight);
 }
 
-dynamic::Value SettingsHandler::getValue(const std::string& name) const {
+std::unique_ptr<dynamic::Value> SettingsHandler::getValue(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
 		LOG_ERROR("Setting '{}' does not exist", name);
@@ -48,7 +48,7 @@ dynamic::Value SettingsHandler::getValue(const std::string& name) const {
 }
 
 template<class T>
-static void set_numeric_value(T* setting, dynamic::Value& value) {
+static void set_numeric_value(T* setting, const dynamic::Value& value) {
     switch (value.type) {
         case dynamic::ValueType::Integer:
             setting->set(std::get<integer_t>(value.value));
@@ -74,7 +74,7 @@ Setting* SettingsHandler::getSetting(const std::string& name) const {
     return found->second;
 }
 
-void SettingsHandler::setValue(const std::string& name, dynamic::Value value) {
+void SettingsHandler::setValue(const std::string& name, const dynamic::Value& value) {
     auto found = map.find(name);
     if (found == map.end()) {
 		LOG_ERROR("Setting '{}' does not exist", name);
