@@ -3,6 +3,8 @@
 
 #include <string>
 #include <filesystem>
+#include <vector>
+#include <memory>
 
 #include <glm/glm.hpp>
 
@@ -10,6 +12,7 @@
 #include "../../delegates.h"
 #include "scripting_functional.h"
 #include "../../typedefs.h"
+#include "../../data/dynamic.h"
 
 class Engine;
 class Content;
@@ -68,7 +71,10 @@ namespace scripting {
     void load_block_script(scriptenv env, std::string prefix, std::filesystem::path file, block_funcs_set& funcsset);
     void load_item_script(scriptenv env, std::string prefix, std::filesystem::path file, item_funcs_set& funcsset);
 
-    void on_ui_open(UIDocument* layout, Inventory* inventory, glm::ivec3 blockcoord);
+    void on_ui_open(
+        UIDocument* layout, 
+        std::vector<std::unique_ptr<dynamic::Value>> args
+    );
     void on_ui_close(UIDocument* layout, Inventory* inventory);
 
     void load_layout_script(scriptenv env, std::string prefix, std::filesystem::path file, uidocscript& script);

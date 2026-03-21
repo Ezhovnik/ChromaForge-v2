@@ -72,66 +72,67 @@ static void show_content_missing(
     const Content* content,
     std::shared_ptr<ContentLUT> lut
 ) {
-    auto* gui = engine->getGUI();
-    auto menu = gui->getMenu();
-    auto panel = std::dynamic_pointer_cast<gui::Panel>(guiutil::create(
-        "<panel size='500' color='#00000080' padding='8'>"
-            "<label>@menu.missing-content</label>"
-        "</panel>"
-    ));
-
-    auto subpanel = std::dynamic_pointer_cast<gui::Panel>(guiutil::create(
-        "<panel size='480,100' color='#00000080' scrollable='true' max-length='400'>"
-        "</panel>"
-    ));
-    panel->add(subpanel);
+    auto root = std::make_unique<dynamic::Map>();
+    auto& contentEntries = root->putList("content");
 
     for (auto& entry : lut->getMissingContent()) {
-        std::string contentname = contenttype_name(entry.type);
-        subpanel->add(guiutil::create(
-            "<panel size='500,20' color='0' orientation='horizontal' padding='2'>"
-                "<label color='#80808080'>["+contentname+"]</label>"
-                "<label color='#FF333380'>"+entry.name+"</label>"
-            "</panel>"
-        ));
+        std::string contentName = contenttype_name(entry.type);
+        auto& contentEntry = contentEntries.putMap();
+        contentEntry.put("type", contentName);
+        contentEntry.put("name", entry.name);
     }
 
-    panel->add(std::make_shared<gui::Button>(
-        langs::get(L"Back to Main Menu", L"menu"), glm::vec4(8.0f), [=](auto){
-            menu->back();
-        }
-    ));
-
-    menu->addPage("missing-content", panel);
-    menu->setPage("missing-content");
+    std::vector<std::unique_ptr<dynamic::Value>> args;
+    args.emplace_back(std::make_unique<dynamic::Value>(dynamic::ValueType::Map, root.release()));
+    menus::show(engine, "reports/missing_content", std::move(args));
 }
 
-void EngineController::openWorld(std::string name, bool confirmConvert) {
-    auto paths = engine->getPaths();
-    auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
+static bool loadWorldContent(Engine* engine, std::filesystem::path folder) {
     try {
         engine->loadWorldContent(folder);
+        return true;
     } catch (const contentpack_error& error) {
         engine->setScreen(std::make_shared<MenuScreen>(engine));
         guiutil::alert(
             engine->getGUI(), langs::get(L"error.pack-not-found") + L": " +
             util::str2wstr_utf8(error.getPackId())
         );
-        return;
+        return false;
     } catch (const std::runtime_error& error) {
         engine->setScreen(std::make_shared<MenuScreen>(engine));
         guiutil::alert(
             engine->getGUI(), langs::get(L"Content Error", L"menu") + L": " +
             util::str2wstr_utf8(error.what())
         );
+        return false;
+    }
+}
+
+static void loadWorld(Engine* engine, std::filesystem::path folder) {
+    try {
+        auto content = engine->getContent();
+        auto& packs = engine->getContentPacks();
+        auto& settings = engine->getSettings();
+
+        Level* level = World::load(folder, settings, content, packs);
+        engine->setScreen(std::make_shared<LevelScreen>(engine, level));
+    } catch (const world_load_error& error) {
+        guiutil::alert(
+            engine->getGUI(), langs::get(L"Error") + L": " +
+            util::str2wstr_utf8(error.what())
+        );
         return;
     }
+}
 
-    auto& packs = engine->getContentPacks();
+void EngineController::openWorld(std::string name, bool confirmConvert) {
+    auto paths = engine->getPaths();
+    auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
+    if (!loadWorldContent(engine, folder)) return;
+
     auto* content = engine->getContent();
-    auto& settings = engine->getSettings();
 
-    std::shared_ptr<ContentLUT> lut (World::checkIndices(folder, content));
+    std::shared_ptr<ContentLUT> lut(World::checkIndices(folder, content));
     if (lut) {
         if (lut->hasMissingContent()) {
             engine->setScreen(std::make_shared<MenuScreen>(engine));
@@ -148,16 +149,7 @@ void EngineController::openWorld(std::string name, bool confirmConvert) {
             }
         }
     } else {
-        try {
-            Level* level = World::load(folder, settings, content, packs);
-            engine->setScreen(std::make_shared<LevelScreen>(engine, level));
-        } catch (const world_load_error& error) {
-            guiutil::alert(
-                engine->getGUI(), langs::get(L"Error") + L": " +
-                util::str2wstr_utf8(error.what())
-            );
-            return;
-        }
+        loadWorld(engine, folder);
     }
 }
 

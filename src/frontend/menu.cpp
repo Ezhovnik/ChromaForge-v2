@@ -22,6 +22,7 @@
 #include "locale/langs.h"
 #include "../interfaces/Task.h"
 #include "../graphics/ui/elements/layout/Panel.h"
+#include "../data/dynamic.h"
 
 void menus::create_menus(Engine* engine) {
     auto menu = engine->getGUI()->getMenu();
@@ -30,7 +31,7 @@ void menus::create_menus(Engine* engine) {
         auto fullname = BUILTIN_CONTENT_NAMESPACE + ":pages/" + name;
         auto document = UIDocument::read(scripting::get_root_environment(), fullname, file).release();
         engine->getAssets()->store(document, fullname);
-        scripting::on_ui_open(document, nullptr, glm::ivec3());
+        scripting::on_ui_open(document, {});
         return document->getRoot();
     });
 }
@@ -44,6 +45,18 @@ void menus::create_version_label(Engine* engine) {
         return glm::vec2(Window::width - vlabel->getSize().x, 2);
     });
     gui->add(vlabel);
+}
+
+void menus::show(Engine* engine, const std::string& name, std::vector<std::unique_ptr<dynamic::Value>> args) {
+    auto menu = engine->getGUI()->getMenu();
+    auto file = engine->getResPaths()->find("layouts/" + name + ".xml");
+    auto fullname = BUILTIN_CONTENT_NAMESPACE + ":layouts/" + name;
+
+    auto document = UIDocument::read(scripting::get_root_environment(), fullname, file).release();
+    engine->getAssets()->store(document, fullname);
+    scripting::on_ui_open(document, std::move(args));
+    menu->addPage(name, document->getRoot());
+    menu->setPage(name);
 }
 
 void menus::show_process_panel(Engine* engine, std::shared_ptr<Task> task, std::wstring text) {

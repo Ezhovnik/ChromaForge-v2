@@ -172,7 +172,6 @@ void Engine::updateTimers() {
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
     if (Events::justPressed(keycode::F2)) saveScreenshot();
-
     if (Events::justPressed(keycode::F11)) Window::toggleFullscreen();
 }
 
@@ -271,6 +270,7 @@ void Engine::loadContent() {
     langs::setup(resdir, langs::current->getId(), contentPacks);
 
 	loadAssets();
+    onAssetsLoaded();
     LOG_INFO("Content loaded sucessfully");
     Logger::getInstance().flush();
 }
