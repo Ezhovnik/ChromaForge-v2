@@ -18,7 +18,6 @@
 #include "../logic/scripting/scripting.h"
 #include "../data/dynamic.h"
 #include "../files/files.h"
-#include "../logic/scripting/Environment.h"
 #include "../util/ThreadPool.h"
 
 AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(assets), paths(paths) {
@@ -89,7 +88,7 @@ bool AssetsLoader::loadNext() {
  * Функция проходит по всем файлам с расширением .xml в папке folder и добавляет их как Layout.
  * Имя формируется как "prefix:stem", где stem — имя файла без расширения.
  */
-void addLayouts(int env, const std::string& prefix, const std::filesystem::path& folder, AssetsLoader& loader) {
+void addLayouts(scriptenv env, const std::string& prefix, const std::filesystem::path& folder, AssetsLoader& loader) {
     if (!std::filesystem::is_directory(folder)) return;
 
     for (auto& entry : std::filesystem::directory_iterator(folder)) {
@@ -228,7 +227,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 			auto pack = entry.second.get();
             auto& info = pack->getInfo();
             std::filesystem::path folder = info.folder/std::filesystem::path(LAYOUTS_FOLDER);
-            addLayouts(pack->getEnvironment()->getId(), info.id, folder, loader);
+            addLayouts(pack->getEnvironment(), info.id, folder, loader);
         }
 	}
 

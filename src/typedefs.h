@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <variant>
+#include <memory>
 
 /**
  * @file typedefs.h
@@ -13,6 +14,8 @@
  * и единообразия. Для целочисленных типов фиксированного размера используются
  * стандартные определения из <stdint.h>.
  */
+
+using scriptenv = std::shared_ptr<int>;
 
 // ========== Базовые типы (сокращения) ==========
 

@@ -8,10 +8,7 @@
 
 #include "GUI.h"
 #include "../../coders/xml.h"
-
-namespace scripting {
-    class Environment;
-}
+#include "../../typedefs.h"
 
 namespace gui {
     class UIXmlReader;
@@ -24,9 +21,9 @@ namespace gui {
         std::unordered_map<std::string, uinode_reader> readers;
         std::unordered_set<std::string> ignored;
         std::stack<std::string> contextStack;
-        const scripting::Environment& env;
+        const scriptenv& env;
     public:
-        UIXmlReader(const scripting::Environment& env);
+        UIXmlReader(const scriptenv& env);
 
         void add(const std::string& tag, uinode_reader reader);
 
@@ -42,7 +39,7 @@ namespace gui {
         std::shared_ptr<UINode> readXML(const std::string& filename, xml::xmlelement root);
 
         const std::string& getContext() const;
-        const scripting::Environment& getEnvironment() const;
+        const scriptenv& getEnvironment() const;
         const std::string& getFilename() const;
     };
 }

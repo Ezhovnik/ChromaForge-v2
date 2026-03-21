@@ -18,7 +18,6 @@
 #include "../items/Item.h"
 #include "../data/dynamic.h"
 #include "../core_content_defs.h"
-#include "../logic/scripting/Environment.h"
 
 ContentLoader::ContentLoader(ContentPack* pack) : pack(pack) {
 }
@@ -298,7 +297,7 @@ void ContentLoader::load(ContentBuilder& builder) {
 
     auto runtime = new ContentPackRuntime(*pack, scripting::create_pack_environment(*pack));
     builder.add(runtime);
-    env = runtime->getEnvironment()->getId();
+    env = runtime->getEnvironment();
     ContentPackStats& stats = runtime->getStatsWriteable();
 
     fixPackIndices();

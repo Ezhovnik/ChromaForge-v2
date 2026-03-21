@@ -10,6 +10,7 @@
 #include "Assets.h"
 #include "../interfaces/Task.h"
 #include "../delegates.h"
+#include "../typedefs.h"
 
 /**
  * @brief Типы ресурсов, которые могут быть загружены через AssetsLoader.
@@ -40,8 +41,8 @@ struct AssetsConfig {
  * @brief Структура для передачи конфигурации при загрузке макетов интерфейса.
  */
 struct LayoutConfig : AssetsConfig {
-     int env; ///< Идентификатор окружения
-     LayoutConfig(int env) : env(env) {}
+     scriptenv env; ///< Идентификатор окружения
+     LayoutConfig(scriptenv env) : env(env) {}
 };
 
 struct SoundConfig : AssetsConfig {

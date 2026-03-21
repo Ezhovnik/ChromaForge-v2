@@ -8,7 +8,7 @@
 #include "../../frontend/locale/langs.h"
 #include "../../delegates.h"
 #include "gui_xml.h"
-#include "../../logic/scripting/Environment.h"
+#include "../../logic/scripting/scripting.h"
 #include "../../util/stringutil.h"
 
 using namespace gui;
@@ -87,10 +87,9 @@ void guiutil::confirm(GUI* gui, const std::wstring& text, runnable on_confirm, s
     menu->setPage("<confirm>");
 }
 
-std::shared_ptr<gui::UINode> guiutil::create(const std::string& source, int envID) {
-    scripting::Environment env(envID);
+std::shared_ptr<gui::UINode> guiutil::create(const std::string& source, scriptenv env) {
+    if (env == nullptr) env = scripting::get_root_environment();
+
     UIXmlReader reader(env);
-    auto node = reader.readXML("<string>", source);
-    env.release();
-    return node;
+    return reader.readXML("<string>", source);
 }

@@ -28,7 +28,7 @@ void menus::create_menus(Engine* engine) {
     menu->setPageLoader([=](auto name) {
         auto file = engine->getResPaths()->find("layouts/pages/" + name + ".xml");
         auto fullname = BUILTIN_CONTENT_NAMESPACE + ":pages/" + name;
-        auto document = UIDocument::read(0, fullname, file).release();
+        auto document = UIDocument::read(scripting::get_root_environment(), fullname, file).release();
         engine->getAssets()->store(document, fullname);
         scripting::on_ui_open(document, nullptr, glm::ivec3());
         return document->getRoot();

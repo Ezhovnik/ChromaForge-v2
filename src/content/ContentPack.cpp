@@ -9,7 +9,6 @@
 #include "../files/engine_paths.h"
 #include "../core_content_defs.h"
 #include "../data/dynamic.h"
-#include "../logic/scripting/Environment.h"
 
 const std::string ContentPack::PACKAGE_FILENAME = "package.json";
 const std::string ContentPack::CONTENT_FILENAME = "content.json";
@@ -127,7 +126,7 @@ std::filesystem::path ContentPack::findPack(const EnginePaths* paths, std::files
 
 ContentPackRuntime::ContentPackRuntime(
     ContentPack info, 
-    std::unique_ptr<scripting::Environment> env
+    scriptenv env
 ) : info(info), 
     env(std::move(env)) {}
 

@@ -38,7 +38,6 @@
 #include "../logic/scripting/scripting.h"
 #include "../audio/audio.h"
 #include "../physics/Hitbox.h"
-#include "../logic/scripting/Environment.h"
 
 Screen::Screen(Engine* engine) : engine(engine), batch(new Batch2D(1024)) {
 }
@@ -112,7 +111,7 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine) {
         auto pack = entry.second.get();
         const ContentPack& info = pack->getInfo();
         std::filesystem::path scriptFile = info.folder/std::filesystem::path("scripts/hud.lua");
-        if (std::filesystem::is_regular_file(scriptFile)) scripting::load_hud_script(pack->getEnvironment()->getId(), info.id, scriptFile);
+        if (std::filesystem::is_regular_file(scriptFile)) scripting::load_hud_script(pack->getEnvironment(), info.id, scriptFile);
     }
     scripting::on_frontend_init(hud.get());
 }

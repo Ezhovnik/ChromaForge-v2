@@ -9,6 +9,7 @@
 #include "lua/LuaState.h"
 #include "../../delegates.h"
 #include "scripting_functional.h"
+#include "../../typedefs.h"
 
 class Engine;
 class Content;
@@ -34,8 +35,6 @@ namespace scripting {
     extern const ContentIndices* indices;
     extern LevelController* controller;
 
-    class Environment;
-
     void initialize(Engine* engine);
 
     extern bool register_event(int env, const std::string& name, const std::string& id);
@@ -43,15 +42,15 @@ namespace scripting {
     static inline int noargs(lua::LuaState *) {return 0;}
     extern bool emit_event(const std::string& name, std::function<int(lua::LuaState* state)> args = noargs);
 
-    std::unique_ptr<Environment> create_environment(int parent=0);
-    std::unique_ptr<Environment> create_pack_environment(const ContentPack& pack);
-    std::unique_ptr<Environment> create_doc_environment(int parent, const std::string& name);
+    scriptenv get_root_environment();
+    scriptenv create_pack_environment(const ContentPack& pack);
+    scriptenv create_doc_environment(scriptenv parent, const std::string& name);
 
     void on_world_load(LevelController* controller);
     void on_world_quit();
     void on_world_spark();
     void on_world_save();
-    void load_world_script(int env, std::string prefix, std::filesystem::path file);
+    void load_world_script(scriptenv env, std::string prefix, std::filesystem::path file);
 
     void process_post_runnables();
 
@@ -66,13 +65,13 @@ namespace scripting {
     bool on_item_use_on_block(Player* player, const Item* item, int x, int y, int z);
     bool on_item_break_block(Player* player, const Item* item, int x, int y, int z);
 
-    void load_block_script(int env, std::string prefix, std::filesystem::path file, block_funcs_set& funcsset);
-    void load_item_script(int env, std::string prefix, std::filesystem::path file, item_funcs_set& funcsset);
+    void load_block_script(scriptenv env, std::string prefix, std::filesystem::path file, block_funcs_set& funcsset);
+    void load_item_script(scriptenv env, std::string prefix, std::filesystem::path file, item_funcs_set& funcsset);
 
     void on_ui_open(UIDocument* layout, Inventory* inventory, glm::ivec3 blockcoord);
     void on_ui_close(UIDocument* layout, Inventory* inventory);
 
-    void load_layout_script(int env, std::string prefix, std::filesystem::path file, uidocscript& script);
+    void load_layout_script(scriptenv env, std::string prefix, std::filesystem::path file, uidocscript& script);
 
     void close();
 }

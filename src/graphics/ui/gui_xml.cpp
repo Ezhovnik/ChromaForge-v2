@@ -14,7 +14,6 @@
 #include "../../logic/scripting/scripting.h"
 #include "../../util/stringutil.h"
 #include "../../debug/Logger.h"
-#include "../../logic/scripting/Environment.h"
 #include "../../window/Events.h"
 
 using namespace gui;
@@ -64,7 +63,7 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
     if (element->has("z-index")) node.setZIndex(element->attr("z-index").asInt());
     if (element->has("position-func")) {
         auto supplier = scripting::create_vec2_supplier(
-            reader.getEnvironment().getId(),
+            reader.getEnvironment(),
             element->attr("position-func").getText(),
             reader.getFilename() + ".lua"
         );
@@ -88,7 +87,7 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
         std::string text = element->attr("onclick").getText();
         if (!text.empty()) {
             auto callback = scripting::create_runnable(
-                reader.getEnvironment().getId(),
+                reader.getEnvironment(),
                 text,
                 reader.getFilename()
             );
@@ -179,7 +178,7 @@ static std::shared_ptr<UINode> readLabel(UIXmlReader& reader, xml::xmlelement el
     }
     if (element->has("supplier")) {
         auto supplier = scripting::create_wstring_supplier(
-            reader.getEnvironment().getId(),
+            reader.getEnvironment(),
             element->attr("supplier").getText(),
             reader.getFilename()
         );
@@ -227,7 +226,7 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
     if (element->has("editable")) textbox->setEditable(element->attr("editable").asBool());
     if (element->has("consumer")) {
         auto consumer = scripting::create_wstring_consumer(
-            reader.getEnvironment().getId(),
+            reader.getEnvironment(),
             element->attr("consumer").getText(),
             reader.getFilename()
         );
@@ -235,7 +234,7 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
     }
     if (element->has("supplier")) {
         auto supplier = scripting::create_wstring_supplier(
-            reader.getEnvironment().getId(),
+            reader.getEnvironment(),
             element->attr("supplier").getText(),
             reader.getFilename()
         );
@@ -245,7 +244,7 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
     if (element->has("error-color")) textbox->setErrorColor(element->attr("error-color").asColor());
     if (element->has("validator")) {
         auto validator  = scripting::create_wstring_validator(
-            reader.getEnvironment().getId(),
+            reader.getEnvironment(),
             element->attr("validator").getText(),
             reader.getFilename()
         );
@@ -263,7 +262,7 @@ static std::shared_ptr<UINode> readCheckBox(UIXmlReader& reader, xml::xmlelement
 
     if (element->has("consumer")) {
         auto consumer = scripting::create_bool_consumer(
-            reader.getEnvironment().getId(),
+            reader.getEnvironment(),
             element->attr("consumer").getText(),
             reader.getFilename()
         );
@@ -272,7 +271,7 @@ static std::shared_ptr<UINode> readCheckBox(UIXmlReader& reader, xml::xmlelement
 
     if (element->has("supplier")) {
         auto supplier = scripting::create_bool_supplier(
-            reader.getEnvironment().getId(),
+            reader.getEnvironment(),
             element->attr("supplier").getText(),
             reader.getFilename()
         );
@@ -291,7 +290,7 @@ static std::shared_ptr<UINode> readTrackBar(UIXmlReader& reader, xml::xmlelement
     _readUINode(reader, element, *bar);
     if (element->has("consumer")) {
         auto consumer = scripting::create_number_consumer(
-            reader.getEnvironment().getId(),
+            reader.getEnvironment(),
             element->attr("consumer").getText(),
             reader.getFilename()
         );
@@ -299,7 +298,7 @@ static std::shared_ptr<UINode> readTrackBar(UIXmlReader& reader, xml::xmlelement
     }
     if (element->has("supplier")) {
         auto supplier = scripting::create_number_supplier(
-            reader.getEnvironment().getId(),
+            reader.getEnvironment(),
             element->attr("supplier").getText(),
             reader.getFilename()
         );
@@ -331,7 +330,7 @@ static std::shared_ptr<UINode> readImage(UIXmlReader& reader, xml::xmlelement el
     return image;
 }
 
-UIXmlReader::UIXmlReader(const scripting::Environment& env) : env(env) {
+UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
     contextStack.push("");
     add("image", readImage);
     add("label", readLabel);
@@ -394,7 +393,7 @@ const std::string& UIXmlReader::getFilename() const {
     return filename;
 }
 
-const scripting::Environment& UIXmlReader::getEnvironment() const {
+const scriptenv& UIXmlReader::getEnvironment() const {
     return env;
 }
 

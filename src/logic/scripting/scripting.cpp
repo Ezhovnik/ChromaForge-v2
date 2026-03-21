@@ -18,7 +18,6 @@
 #include "../../items/Inventory.h"
 #include "../../objects/Player.h"
 #include "../../logic/LevelController.h"
-#include "Environment.h"
 
 using namespace scripting;
 
@@ -33,21 +32,6 @@ const Content* scripting::content = nullptr;
 BlocksController* scripting::blocks = nullptr;
 LevelController* scripting::controller = nullptr;
 const ContentIndices* scripting::indices = nullptr;
-
-Environment::Environment(int env) : env(env) {
-}
-
-Environment::~Environment() {
-    if (env) state->removeEnvironment(env);
-}
-
-int Environment::getId() const {
-    return env;
-}
-
-void Environment::release() {
-    env = 0;
-}
 
 bool scripting::register_event(int env, const std::string& name, const std::string& id) {
     if (state->pushenv(env) == 0) state->pushglobals();
@@ -100,11 +84,11 @@ static bool processCallback(int env, const std::string& src, const std::string& 
     }
 }
 
-std::unique_ptr<Environment> scripting::create_environment(int parent) {
-    return std::make_unique<Environment>(state->createEnvironment(parent));
+scriptenv scripting::get_root_environment() {
+    return std::make_shared<int>(0);
 }
 
-std::unique_ptr<Environment> scripting::create_pack_environment(const ContentPack& pack) {
+scriptenv scripting::create_pack_environment(const ContentPack& pack) {
     int id = state->createEnvironment(0);
     state->pushenv(id);
     state->pushvalue(-1);
@@ -112,11 +96,13 @@ std::unique_ptr<Environment> scripting::create_pack_environment(const ContentPac
     state->pushstring(pack.id);
     state->setfield("PACK_ID");
     state->pop();
-    return std::make_unique<Environment>(id);
+    return std::shared_ptr<int>(new int(id), [=](int* id) {
+        state->removeEnvironment(*id);
+    });
 }
 
-std::unique_ptr<Environment> scripting::create_doc_environment(int parent, const std::string& name) {
-    int id = state->createEnvironment(parent);
+scriptenv scripting::create_doc_environment(scriptenv parent, const std::string& name) {
+    int id = state->createEnvironment(*parent);
     state->pushenv(id);
     state->pushvalue(-1);
     state->setfield("DOC_ENV");
@@ -132,7 +118,9 @@ std::unique_ptr<Environment> scripting::create_doc_environment(int parent, const
     }
     state->pop();
 
-    return std::make_unique<Environment>(id);
+    return std::shared_ptr<int>(new int(id), [=](int* id) {
+        state->removeEnvironment(*id);
+    });
 }
 
 void scripting::process_post_runnables() {
@@ -280,7 +268,9 @@ void scripting::on_ui_close(UIDocument* layout, Inventory* inventory) {
     });
 }
 
-void scripting::load_block_script(int env, std::string prefix, std::filesystem::path file, block_funcs_set& funcsset) {
+void scripting::load_block_script(scriptenv senv, std::string prefix, std::filesystem::path file, block_funcs_set& funcsset) {
+    int env = *senv;
+
     std::string src = files::read_string(file);
 
     LOG_DEBUG("Loading script {}", file.u8string());
@@ -299,7 +289,9 @@ void scripting::load_block_script(int env, std::string prefix, std::filesystem::
     LOG_DEBUG("Script {} successfully loaded", file.u8string());
 }
 
-void scripting::load_item_script(int env, std::string prefix, std::filesystem::path file, item_funcs_set& funcsset) {
+void scripting::load_item_script(scriptenv senv, std::string prefix, std::filesystem::path file, item_funcs_set& funcsset) {
+    int env = *senv;
+
     std::string src = files::read_string(file);
     LOG_DEBUG("Loading script {}", file.u8string());
     state->execute(env, src, file.u8string());
@@ -310,7 +302,9 @@ void scripting::load_item_script(int env, std::string prefix, std::filesystem::p
     LOG_DEBUG("Script {} successfully loaded", file.u8string());
 }
 
-void scripting::load_world_script(int env, std::string prefix, std::filesystem::path file) {
+void scripting::load_world_script(scriptenv senv, std::string prefix, std::filesystem::path file) {
+    int env = *senv;
+
     std::string src = files::read_string(file);
     LOG_DEBUG("Loading script {}", file.u8string());
 
@@ -326,10 +320,11 @@ void scripting::load_world_script(int env, std::string prefix, std::filesystem::
     LOG_DEBUG("Script {} successfully loaded", file.u8string());
 }
 
-void scripting::load_layout_script(int env, std::string prefix, std::filesystem::path file, uidocscript& script) {
+void scripting::load_layout_script(scriptenv senv, std::string prefix, std::filesystem::path file, uidocscript& script) {
+    int env = *senv;    
+
     std::string src = files::read_string(file);
     LOG_DEBUG("Loading script {}", file.u8string());
-    script.environment = env;
     state->loadbuffer(env, src, file.u8string());
     state->callNoThrow(0);
     script.onopen = register_event(env, "on_open", prefix + ".open");

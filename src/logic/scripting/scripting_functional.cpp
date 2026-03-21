@@ -10,26 +10,26 @@ namespace scripting {
 
 using namespace scripting;
 
-runnable scripting::create_runnable(int env, const std::string& src, const std::string& file) {
+runnable scripting::create_runnable(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](){
         try {
-            state->execute(env, src, file);
+            state->execute(*env, src, file);
         } catch (const lua::luaerror& err) {
             LOG_ERROR("{}", err.what());
         }
     };
 }
 
-static bool processCallback(int env, const std::string& src, const std::string& file) {
+static bool processCallback(const scriptenv& env, const std::string& src, const std::string& file) {
     try {
-        return state->eval(env, src, file) != 0;
+        return state->eval(*env, src, file) != 0;
     } catch (lua::luaerror& err) {
         LOG_ERROR("{}", err.what());
         return false;
     }
 }
 
-wstringconsumer scripting::create_wstring_consumer(int env, const std::string& src, const std::string& file) {
+wstringconsumer scripting::create_wstring_consumer(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](const std::wstring& x){
         if (processCallback(env, src, file)) {
             state->pushstring(util::wstr2str_utf8(x));
@@ -38,7 +38,7 @@ wstringconsumer scripting::create_wstring_consumer(int env, const std::string& s
     };
 }
 
-wstringsupplier scripting::create_wstring_supplier(int env, const std::string& src, const std::string& file) {
+wstringsupplier scripting::create_wstring_supplier(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](){
         if (processCallback(env, src, file)) {
             if (state->isfunction(-1)) state->callNoThrow(0);
@@ -49,7 +49,7 @@ wstringsupplier scripting::create_wstring_supplier(int env, const std::string& s
     };
 }
 
-wstringchecker scripting::create_wstring_validator(int env, const std::string& src, const std::string& file) {
+wstringchecker scripting::create_wstring_validator(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](const std::wstring& x){
         if (processCallback(env, src, file)) {
             state->pushstring(util::wstr2str_utf8(x));
@@ -59,7 +59,7 @@ wstringchecker scripting::create_wstring_validator(int env, const std::string& s
     };
 }
 
-doubleconsumer scripting::create_number_consumer(int env, const std::string& src, const std::string& file) {
+doubleconsumer scripting::create_number_consumer(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](double x){
         if (processCallback(env, src, file)) {
             state->pushnumber(x);
@@ -68,7 +68,7 @@ doubleconsumer scripting::create_number_consumer(int env, const std::string& src
     };
 }
 
-doublesupplier scripting::create_number_supplier(int env, const std::string& src, const std::string& file) {
+doublesupplier scripting::create_number_supplier(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](){
         if (processCallback(env, src, file)) {
             if (state->isfunction(-1)) state->callNoThrow(0);
@@ -79,7 +79,7 @@ doublesupplier scripting::create_number_supplier(int env, const std::string& src
     };
 }
 
-int_array_consumer scripting::create_int_array_consumer(int env, const std::string& src, const std::string& file) {
+int_array_consumer scripting::create_int_array_consumer(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](const int arr[], size_t len){
         if (processCallback(env, src, file)) {
             for (uint i = 0; i < len; i++) {
@@ -90,7 +90,7 @@ int_array_consumer scripting::create_int_array_consumer(int env, const std::stri
     };
 }
 
-vec2supplier scripting::create_vec2_supplier(int env, const std::string& src, const std::string& file) {
+vec2supplier scripting::create_vec2_supplier(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](){
         if (processCallback(env, src, file)) {
             if (state->isfunction(-1)) state->callNoThrow(0);
@@ -102,7 +102,7 @@ vec2supplier scripting::create_vec2_supplier(int env, const std::string& src, co
     };
 }
 
-boolconsumer scripting::create_bool_consumer(int env, const std::string& src, const std::string& file) {
+boolconsumer scripting::create_bool_consumer(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](bool x){
         if (processCallback(env, src, file)) {
             state->pushboolean(x);
@@ -111,7 +111,7 @@ boolconsumer scripting::create_bool_consumer(int env, const std::string& src, co
     };
 }
 
-boolsupplier scripting::create_bool_supplier(int env, const std::string& src, const std::string& file) {
+boolsupplier scripting::create_bool_supplier(const scriptenv& env, const std::string& src, const std::string& file) {
     return [=](){
         if (processCallback(env, src, file)) {
             if (state->isfunction(-1)) state->callNoThrow(0);

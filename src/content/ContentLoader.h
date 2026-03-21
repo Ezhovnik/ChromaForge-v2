@@ -18,7 +18,7 @@ class ContentLoader {
 private:
     const ContentPack* pack;
 
-    int env = 0;
+    scriptenv env;
 
     void loadBlock(Block& block, std::string full, std::string name);
     void loadCustomBlockModel(Block& block, dynamic::Map* primitives);

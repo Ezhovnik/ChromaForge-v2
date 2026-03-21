@@ -5,11 +5,9 @@
 #include <filesystem>
 #include <vector>
 
-class EnginePaths;
+#include "../typedefs.h"
 
-namespace scripting {
-    class Environment;
-}
+class EnginePaths;
 
 enum class DependencyLevel {
     Required,
@@ -80,11 +78,11 @@ class ContentPackRuntime {
 private:
     ContentPack info;
     ContentPackStats stats {};
-    std::unique_ptr<scripting::Environment> env;
+    scriptenv env;
 public:
     ContentPackRuntime(
         ContentPack info,
-        std::unique_ptr<scripting::Environment> env
+        scriptenv env
     );
     ~ContentPackRuntime();
 
@@ -104,8 +102,8 @@ public:
         return info;
     }
 
-    inline scripting::Environment* getEnvironment() const {
-        return env.get();
+    inline scriptenv getEnvironment() const {
+        return env;
     }
 };
 

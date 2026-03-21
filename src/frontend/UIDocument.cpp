@@ -10,11 +10,11 @@ UIDocument::UIDocument(
     std::string id, 
     uidocscript script, 
     std::shared_ptr<gui::UINode> root, 
-    std::unique_ptr<scripting::Environment> env
+    scriptenv env
 ) : id(id), 
     script(script), 
     root(root), 
-    env(std::move(env)) 
+    env(env)
 {
     gui::UINode::getIndices(root, map);
 }
@@ -43,8 +43,8 @@ const uidocscript& UIDocument::getScript() const {
     return script;
 }
 
-int UIDocument::getEnvironment() const {
-    return env->getId();
+scriptenv UIDocument::getEnvironment() const {
+    return env;
 }
 
 const std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const {
@@ -53,22 +53,22 @@ const std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const 
     return found->second;
 }
 
-std::unique_ptr<UIDocument> UIDocument::read(int parent_env, std::string name, std::filesystem::path file) {
+std::unique_ptr<UIDocument> UIDocument::read(scriptenv parent_env, std::string name, std::filesystem::path file) {
     const std::string text = files::read_string(file);
     auto xmldoc = xml::parse(file.u8string(), text);
 
-    auto env = parent_env == -1 ? std::make_unique<scripting::Environment>(0) : scripting::create_doc_environment(parent_env, name);
-    gui::UIXmlReader reader(*env);
+    auto env = parent_env == nullptr ? scripting::get_root_environment() : scripting::create_doc_environment(parent_env, name);
+    gui::UIXmlReader reader(env);
     InventoryView::createReaders(reader);
     auto view = reader.readXML(file.u8string(), xmldoc->getRoot());
     view->setId("root");
     uidocscript script {};
     auto scriptFile = std::filesystem::path(file.u8string() + ".lua");
-    if (std::filesystem::is_regular_file(scriptFile)) scripting::load_layout_script(env->getId(), name, scriptFile, script);
-    return std::make_unique<UIDocument>(name, script, view, std::move(env));
+    if (std::filesystem::is_regular_file(scriptFile)) scripting::load_layout_script(env, name, scriptFile, script);
+    return std::make_unique<UIDocument>(name, script, view, env);
 }
 
 std::shared_ptr<gui::UINode> UIDocument::readElement(std::filesystem::path file) {
-    auto document = read(-1, file.filename().u8string(), file);
+    auto document = read(nullptr, file.filename().u8string(), file);
     return document->getRoot();
 }

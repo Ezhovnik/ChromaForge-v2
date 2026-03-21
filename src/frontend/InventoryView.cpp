@@ -25,7 +25,6 @@
 #include "../graphics/ui/gui_xml.h"
 #include "../logic/scripting/scripting.h"
 #include "../items/Inventories.h"
-#include "../logic/scripting/Environment.h"
 
 SlotLayout::SlotLayout(
     int index,
@@ -317,7 +316,7 @@ size_t InventoryView::getSlotsCount() const {
 
 static slotcallback readSlotFunc(InventoryView* view, gui::UIXmlReader& reader, xml::xmlelement& element, const std::string& attr) {
     auto consumer = scripting::create_int_array_consumer(
-        reader.getEnvironment().getId(), 
+        reader.getEnvironment(), 
         element->attr(attr).getText()
     );
     return [=](uint slot, ItemStack& stack) {

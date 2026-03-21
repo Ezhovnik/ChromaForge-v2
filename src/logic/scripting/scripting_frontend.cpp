@@ -37,7 +37,8 @@ void scripting::on_frontend_close() {
     scripting::hud = nullptr;
 }
 
-void scripting::load_hud_script(int env, std::string packid, std::filesystem::path file) {
+void scripting::load_hud_script(scriptenv senv, std::string packid, std::filesystem::path file) {
+    int env = *senv;
     std::string src = files::read_string(file);
     LOG_DEBUG("Loading script {}", file.u8string());
 

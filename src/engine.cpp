@@ -113,6 +113,7 @@ Engine::~Engine() {
     }
     content.reset();
     assets.reset();
+    gui.reset();
     audio::close();
     scripting::close();
     Window::terminate();
