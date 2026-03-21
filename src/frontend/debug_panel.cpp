@@ -17,7 +17,7 @@
 #include "../util/stringutil.h"
 #include "../delegates.h"
 #include "../engine.h"
-#include "WorldRenderer.h"
+#include "../graphics/render/WorldRenderer.h"
 #include "../audio/audio.h"
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {

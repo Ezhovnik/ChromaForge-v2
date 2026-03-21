@@ -8,7 +8,7 @@
 #include "../scripting.h"
 #include "../../../frontend/menu.h"
 #include "../../../window/Window.h"
-#include "../../../frontend/screens.h"
+#include "../../../frontend/screens/MenuScreen.h"
 #include "../../../logic/LevelController.h"
 #include "../../../window/Events.h"
 #include "../../../world/WorldGenerators.h"

@@ -1,4 +1,4 @@
-#include "scripting_frontend.h"
+#include "scripting_hud.h"
 
 #include "scripting.h"
 #include "lua/api_lua.h"

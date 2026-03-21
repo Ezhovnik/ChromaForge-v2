@@ -1,5 +1,5 @@
-#ifndef LOGIC_SCRIPTING_SCRIPTING_FRONTEND_H_
-#define LOGIC_SCRIPTING_SCRIPTING_FRONTEND_H_
+#ifndef LOGIC_SCRIPTING_SCRIPTING_HUD_H_
+#define LOGIC_SCRIPTING_SCRIPTING_HUD_H_
 
 #include <filesystem>
 #include <string>
@@ -17,4 +17,4 @@ namespace scripting {
     void load_hud_script(scriptenv env, std::string packid, std::filesystem::path file);
 }
 
-#endif // LOGIC_SCRIPTING_SCRIPTING_FRONTEND_H_
+#endif // LOGIC_SCRIPTING_SCRIPTING_HUD_H_

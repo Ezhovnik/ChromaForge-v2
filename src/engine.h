@@ -17,6 +17,7 @@
 #include "content/Content.h"
 #include "files/settings_io.h"
 #include "content/PacksManager.h"
+#include "util/ObjectsKeeper.h"
 
 class Screen;
 class Batch2D;
@@ -33,7 +34,7 @@ public:
 };
 
 // Основной класс Engine, управляющий жизненным циклом приложения
-class Engine {
+class Engine : public util::ObjectsKeeper {
 private:
     EngineSettings& settings;
     SettingsHandler settingsHandler;
