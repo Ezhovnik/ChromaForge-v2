@@ -1,9 +1,10 @@
 #include "files.h"
 
 #include <fstream>
-#include <iostream>
 #include <filesystem>
 #include <memory>
+#include <cerrno>
+#include <cstring>
 
 #include "../debug/Logger.h"
 #include "../coders/json.h"
@@ -91,7 +92,11 @@ std::string files::read_string(std::filesystem::path filename) {
 
 bool files::write_string(std::filesystem::path filename, const std::string content) {
 	std::ofstream file(filename);
-	if (!file) return false;
+	if (!file) {
+		int error = errno;
+		LOG_ERROR("Failed to open file '{}'. What: {}", std::filesystem::weakly_canonical(filename).u8string(), std::strerror(error));
+		return false;
+	}
 
 	file << content;
 	return true;

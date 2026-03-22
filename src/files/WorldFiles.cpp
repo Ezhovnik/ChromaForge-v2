@@ -95,7 +95,7 @@ void WorldFiles::writeIndices(const ContentIndices* indices) {
 
 	auto& items = root.putList("items");
 	count = indices->countItemDefs();
-	for (uint i = 0; i < count; i++) {
+	for (uint i = 0; i < count; ++i) {
 		const Item* def = indices->getItemDef(i);
 		items.put(def->name);
 	}
