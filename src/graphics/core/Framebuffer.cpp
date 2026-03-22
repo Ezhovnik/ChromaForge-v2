@@ -22,12 +22,8 @@ Framebuffer::Framebuffer(
     }
 } 
 
-Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), height(height) {
-	glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
+static std::unique_ptr<Texture> create_texture(int width, int height, int format) {
     GLuint tex;
-    format = alpha ? GL_RGBA : GL_RGB;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
@@ -36,8 +32,16 @@ Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), he
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
-    texture = std::make_unique<Texture>(tex, width, height);
-    
+    return std::make_unique<Texture>(tex, width, height);
+}
+
+Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), height(height) {
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    format = alpha ? GL_RGBA : GL_RGB;
+
+    texture = create_texture(width, height, format);
     glGenRenderbuffers(1, &depth);
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
@@ -66,11 +70,11 @@ void Framebuffer::resize(uint width, uint height) {
 
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    texture->bind();
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
-    texture->unbind(); 
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    texture = create_texture(width, height, format);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 Texture* Framebuffer::getTexture() const {

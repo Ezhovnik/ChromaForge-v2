@@ -79,7 +79,10 @@ static int l_pack_get_info(lua_State* L, const ContentPack& pack, const Content*
     std::string icon = pack.id + ".icon";
     if (assets->getTexture(icon) == nullptr) {
         auto iconfile = pack.folder/std::filesystem::path("icon.png");
-        if (std::filesystem::is_regular_file(iconfile)) {
+        if (!std::filesystem::exists(iconfile)) {
+            iconfile = pack.folder/std::filesystem::path("preview.png");
+        }
+        if (std::filesystem::exists(iconfile)) {
             auto image = imageio::read(iconfile.string());
             assets->store(Texture::from(image.get()), icon);
         } else {

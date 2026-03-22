@@ -42,3 +42,11 @@ void PostProcessing::render(const GfxContext& context, ShaderProgram* screenShad
     fbo->getTexture()->bind();
     quadMesh->draw();
 }
+
+std::unique_ptr<ImageData> PostProcessing::toImage() {
+    return fbo->getTexture()->readData();
+}
+
+Framebuffer* PostProcessing::getFramebuffer() const {
+    return fbo.get();
+}

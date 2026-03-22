@@ -203,6 +203,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/warning", "gui/warning");
     loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/error", "gui/error");
     loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/cross", "gui/cross");
+    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/no_world_icon", "gui/no_world_icon");
 
 	if (content) {
 		loader.processPreloadConfigs(content);

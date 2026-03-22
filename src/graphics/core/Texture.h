@@ -2,6 +2,7 @@
 #define GRAPHICS_CORE_TEXTURE_H_
 
 #include <string>
+#include <memory>
 
 #include "../../typedefs.h"
 #include "ImageData.h"
@@ -65,7 +66,7 @@ public:
      * @return Новый объект ImageData, содержащий копию пикселей в формате RGBA.
      *         Владелец должен удалить его.
      */
-    virtual ImageData* readData();
+    virtual std::unique_ptr<ImageData> readData();
 
     /**
      * @brief Устанавливает фильтрацию без сглаживания (GL_NEAREST) для магнификации и минификации.

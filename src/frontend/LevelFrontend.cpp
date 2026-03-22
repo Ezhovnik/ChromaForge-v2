@@ -3,7 +3,7 @@
 #include "../world/Level.h"
 #include "../assets/Assets.h"
 #include "../graphics/core/Atlas.h"
-#include "BlocksPreview.h"
+#include "../graphics/render/BlocksPreview.h"
 #include "ContentGfxCache.h"
 #include "../content/Content.h"
 #include "../logic/LevelController.h"

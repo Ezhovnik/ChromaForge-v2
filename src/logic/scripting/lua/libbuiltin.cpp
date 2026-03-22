@@ -18,18 +18,6 @@ namespace scripting {
     extern lua::LuaState* state;
 }
 
-static int l_get_worlds_list(lua_State* L) {
-    auto paths = scripting::engine->getPaths();
-    auto worlds = paths->scanForWorlds();
-
-    lua_createtable(L, worlds.size(), 0);
-    for (size_t i = 0; i < worlds.size(); ++i) {
-        lua_pushstring(L, worlds[i].filename().u8string().c_str());
-        lua_rawseti(L, -2, i + 1);
-    }
-    return 1;
-}
-
 static int l_open_world(lua_State* L) {
     auto name = lua_tostring(L, 1);
     scripting::engine->setScreen(nullptr);
@@ -176,7 +164,6 @@ static int l_get_setting_info(lua_State* L) {
 }
 
 const luaL_Reg builtinlib [] = {
-    {"get_worlds_list", lua_wrap_errors<l_get_worlds_list>},
     {"open_world", lua_wrap_errors<l_open_world>},
     {"close_world", lua_wrap_errors<l_close_world>},
     {"quit", lua_wrap_errors<l_quit>},

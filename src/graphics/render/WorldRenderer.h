@@ -32,7 +32,6 @@ private:
     Engine* engine;
 	Player* player;
 	Level* level;
-	std::unique_ptr<PostProcessing> postProcessing;
     std::unique_ptr<Frustum> frustumCulling;
     std::unique_ptr<ChunksRenderer> renderer;
 	std::unique_ptr<LineBatch> lineBatch;
@@ -50,11 +49,6 @@ private:
 		Camera* camera, 
 		ShaderProgram* shader
 	);
-	void renderLevel(
-        const GfxContext& context, 
-        Camera* camera, 
-        const EngineSettings& settings
-    );
 	void renderBlockSelection(Camera* camera, ShaderProgram* linesShader);
 	void renderDebugLines(
         const GfxContext& context, 
@@ -68,7 +62,18 @@ public:
 	WorldRenderer(Engine* engine, LevelFrontend* levelFrontend, Player* player);
 	~WorldRenderer();
 
-	void draw(const GfxContext& context, Camera* camera, bool hudVisible);
+	void draw(
+		const GfxContext& context, 
+		Camera* camera, 
+		bool hudVisible,
+		PostProcessing* postProcessing
+	);
+
+	void renderLevel(
+        const GfxContext& context, 
+        Camera* camera, 
+        const EngineSettings& settings
+    );
 
 	static float skyClearness;
 	static bool drawChunkBorders;

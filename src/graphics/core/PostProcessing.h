@@ -21,6 +21,10 @@ public:
     void use(GfxContext& context);
 
     void render(const GfxContext& context, ShaderProgram* screenShader);
+
+    std::unique_ptr<ImageData> toImage();
+
+    Framebuffer* getFramebuffer() const;
 };
 
 #endif // GRAPHICS_CORE_POST_PROCESSING_H_

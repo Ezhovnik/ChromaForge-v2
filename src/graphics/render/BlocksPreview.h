@@ -5,7 +5,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../typedefs.h"
+#include "../../typedefs.h"
 
 class Atlas;
 class Batch3D;
@@ -19,7 +19,7 @@ class ShaderProgram;
 
 class BlocksPreview {
 public:
-    static ImageData* draw(
+    static std::unique_ptr<ImageData> draw(
         const ContentGfxCache* cache,
         ShaderProgram* shader,
         Framebuffer* framebuffer,

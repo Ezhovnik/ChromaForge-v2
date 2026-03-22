@@ -58,7 +58,6 @@ WorldRenderer::WorldRenderer(
 	level(levelFrontend->getLevel()),
 	player(player)
 {
-	postProcessing = std::make_unique<PostProcessing>();
 	frustumCulling = std::make_unique<Frustum>();
     lineBatch = std::make_unique<LineBatch>();
     renderer = std::make_unique<ChunksRenderer>(
@@ -309,7 +308,10 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 	lineBatch->render();
 }
 
-void WorldRenderer::draw(const GfxContext& pctx, Camera* camera, bool hudVisible){
+void WorldRenderer::draw(const GfxContext& pctx, Camera* camera, bool hudVisible, PostProcessing* postProcessing) {
+    const Viewport& vp = pctx.getViewport();
+    camera->aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
+
     EngineSettings& settings = engine->getSettings();
     skybox->refresh(pctx, level->getWorld()->daytime, 1.0f + skyClearness * 2.0f, 4);
 

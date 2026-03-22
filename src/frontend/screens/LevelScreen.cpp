@@ -17,8 +17,14 @@
 #include "../../window/Camera.h"
 #include "../../window/Events.h"
 #include "../../engine.h"
+#include "../../coders/imageio.h"
+#include "../../graphics/core/PostProcessing.h"
+#include "../../graphics/core/ImageData.h"
+#include "../../debug/Logger.h"
 
 LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine) {
+    postProcessing = std::make_unique<PostProcessing>();
+
     auto& settings = engine->getSettings();
     auto assets = engine->getAssets();
     auto menu = engine->getGUI()->getMenu();
@@ -53,9 +59,31 @@ LevelScreen::LevelScreen(Engine* engine, Level* level) : Screen(engine) {
 }
 
 LevelScreen::~LevelScreen() {
+    saveWorldPreview();
     scripting::on_frontend_close();
     controller->onWorldQuit();
     engine->getPaths()->setWorldFolder(std::filesystem::path());
+}
+
+void LevelScreen::saveWorldPreview() {
+    try {
+        LOG_INFO("Saving world preview");
+        auto paths = engine->getPaths();
+        auto player = controller->getPlayer();
+        Camera camera = *player->camera;
+        camera.setFov(glm::radians(70.0f));
+        auto& settings = engine->getSettings();
+        int previewSize = settings.ui.worldPreviewSize.get();
+        Viewport viewport(previewSize * 1.5, previewSize);
+        GfxContext ctx(nullptr, viewport, batch.get());
+        worldRenderer->draw(ctx, &camera, false, postProcessing.get());
+        auto image = postProcessing->toImage();
+        image->flipY();
+        imageio::write(paths->resolve("world:preview.png").string(), image.get());
+        LOG_INFO("World preview successfully saved");
+    } catch (const std::exception& err) {
+        LOG_ERROR("Failed to save world preview: {}", err.what());
+    }
 }
 
 void LevelScreen::updateHotkeys() {
@@ -99,7 +127,7 @@ void LevelScreen::draw(float deltaTime) {
     Viewport viewport(Window::width, Window::height);
     GfxContext ctx(nullptr, viewport, batch.get());
 
-    worldRenderer->draw(ctx, camera.get(), hudVisible);
+    worldRenderer->draw(ctx, camera.get(), hudVisible, postProcessing.get());
 
     if (hudVisible) hud->draw(ctx);
 }

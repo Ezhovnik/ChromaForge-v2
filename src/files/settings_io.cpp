@@ -136,6 +136,7 @@ toml::Wrapper* create_wrapper(EngineSettings& settings) {
 	debug.add("do-write-lights", &settings.debug.doWriteLights);
 
 	toml::Section& ui = wrapper->add("ui");
+	ui.add("world-preview-size", &*settings.ui.worldPreviewSize);
     ui.add("language", &settings.ui.language);
 
 	toml::Section& audio = wrapper->add("audio");

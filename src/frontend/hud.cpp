@@ -37,7 +37,7 @@
 #include "../util/timeutil.h"
 #include "../util/stringutil.h"
 #include "../graphics/core/Batch3D.h"
-#include "BlocksPreview.h"
+#include "../graphics/render/BlocksPreview.h"
 #include "InventoryView.h"
 #include "LevelFrontend.h"
 #include "../items/Item.h"

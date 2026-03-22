@@ -38,13 +38,12 @@ void menus::create_menus(Engine* engine) {
 
 void menus::create_version_label(Engine* engine) {
     auto gui = engine->getGUI();
-    auto vlabel = std::make_shared<gui::Label>(util::str2wstr_utf8("v" + ENGINE_VERSION_STRING + " development build "));
-    vlabel->setZIndex(1000);
-    vlabel->setColor(glm::vec4(1, 1, 1, 0.5f));
-    vlabel->setPositionFunc([=]() {
-        return glm::vec2(Window::width - vlabel->getSize().x, 2);
-    });
-    gui->add(vlabel);
+    auto text = "v" + ENGINE_VERSION_STRING + " development build ";
+    gui->add(guiutil::create(
+        "<label z-index='1000' color='#FFFFFF80' gravity='top-right' margin='4'>"
+        + text +
+        "</label>"
+    ));
 }
 
 void menus::show(Engine* engine, const std::string& name, std::vector<std::unique_ptr<dynamic::Value>> args) {

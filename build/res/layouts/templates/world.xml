@@ -1,15 +1,17 @@
 <container 
-    size='380,46'
+    size='380,66'
     color='#0F1E2DB2'
     hover-color='#162B3399'
     onclick='builtin.open_world("%{name}")'
 >
-    <label pos='8,8'>%{name}</label>
-    <button pos='350,5'
+    <image pos='1' src='%{icon}' size='96,64'></image>
+    <label pos='104,8'>%{name}</label>
+    <button margin='4'
+            gravity='center-right'
             color='#00000000'
             hover-color='#FFFFFF2B'
             padding='0'
             onclick='builtin.delete_world("%{name}")'>
-        <image src='gui/delete_icon' size='32,32' color='#FFFFFF80'/>
+        <image src='gui/delete_icon' size='32,32' color='#FFFFFF50'/>
     </button>
 </container>

@@ -2,23 +2,23 @@
 
 #include <glm/ext.hpp>
 
-#include "../graphics/core/ShaderProgram.h"
-#include "../graphics/core/Texture.h"
-#include "../graphics/core/Atlas.h"
-#include "../graphics/core/Batch3D.h"
-#include "../window/Camera.h"
-#include "../voxels/Block.h"
-#include "../graphics/core/Viewport.h"
-#include "ContentGfxCache.h"
-#include "../assets/Assets.h"
-#include "../graphics/core/Framebuffer.h"
-#include "../graphics/core/GfxContext.h"
-#include "../window/Window.h"
-#include "../content/Content.h"
-#include "../constants.h"
-#include "../graphics/core/ImageData.h"
+#include "../../graphics/core/ShaderProgram.h"
+#include "../../graphics/core/Texture.h"
+#include "../../graphics/core/Atlas.h"
+#include "../../graphics/core/Batch3D.h"
+#include "../../window/Camera.h"
+#include "../../voxels/Block.h"
+#include "../../graphics/core/Viewport.h"
+#include "../../frontend/ContentGfxCache.h"
+#include "../../assets/Assets.h"
+#include "../../graphics/core/Framebuffer.h"
+#include "../../graphics/core/GfxContext.h"
+#include "../../window/Window.h"
+#include "../../content/Content.h"
+#include "../../constants.h"
+#include "../../graphics/core/ImageData.h"
 
-ImageData* BlocksPreview::draw(
+std::unique_ptr<ImageData> BlocksPreview::draw(
     const ContentGfxCache* cache, 
     ShaderProgram* shader,
     Framebuffer* fbo, 
@@ -130,8 +130,7 @@ std::unique_ptr<Atlas> BlocksPreview::build(const ContentGfxCache* cache, Assets
 
         atlas->getTexture()->bind();
 
-        ImageData* image = draw(cache, shader, &fbo, &batch, def, iconSize);
-        builder.add(def->name, std::shared_ptr<ImageData>(image));
+        builder.add(def->name, draw(cache, shader, &fbo, &batch, def, iconSize));
     }
     fbo.unbind();
 

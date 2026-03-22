@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "BlocksPreview.h"
+#include "../graphics/render/BlocksPreview.h"
 #include "LevelFrontend.h"
 #include "../window/Events.h"
 #include "../window/input.h"
