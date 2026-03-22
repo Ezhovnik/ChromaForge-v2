@@ -11,11 +11,16 @@ namespace dynamic {
 
 class Task;
 class Engine;
+class UIDocument;
 
 namespace menus {
     void create_version_label(Engine* engine);
     void create_menus(Engine* engine);
-    void show(Engine* engine, const std::string& name, std::vector<std::unique_ptr<dynamic::Value>> args);
+    UIDocument* show(
+        Engine* engine, 
+        const std::string& name,
+        std::vector<std::unique_ptr<dynamic::Value>> args
+    );
     void show_process_panel(Engine* engine, std::shared_ptr<Task> task, std::wstring text=L"");
 }
 

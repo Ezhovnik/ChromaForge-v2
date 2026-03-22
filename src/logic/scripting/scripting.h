@@ -76,6 +76,7 @@ namespace scripting {
         std::vector<std::unique_ptr<dynamic::Value>> args
     );
     void on_ui_close(UIDocument* layout, Inventory* inventory);
+    void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
 
     void load_layout_script(scriptenv env, std::string prefix, std::filesystem::path file, uidocscript& script);
 

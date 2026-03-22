@@ -70,23 +70,6 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     create_channel(this, "ambient", settings.audio.volumeAmbient);
     create_channel(this, "ui", settings.audio.volumeUI);
 
-    auto resdir = paths->getResources();
-
-    LOG_INFO("Loading assets");
-    std::vector<std::pair<std::string, std::filesystem::path>> roots {};
-    resPaths = std::make_unique<ResPaths>(resdir, roots);
-    try {
-        loadAssets();
-    } catch (std::runtime_error& err) {
-        LOG_ERROR("Fatal error occured while loading assets");
-
-        assets.reset();
-        scripting::close();
-        audio::close();
-        Window::terminate();
-        throw initialize_error(err.what());
-    }
-
     gui = std::make_unique<gui::GUI>();
 
     if (settings.ui.language == "auto") settings.ui.language = platform::detect_locale();
@@ -94,8 +77,6 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
     setLanguage(settings.ui.language);
 
     addDefaultWorldGenerators();
-
-    onAssetsLoaded();
 
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);
@@ -153,11 +134,7 @@ void Engine::loadAssets() {
         }
     }
 
-    if (assets) {
-        assets->extend(*new_assets);
-    } else {
-        assets.reset(new_assets.release());
-    }
+    assets.reset(new_assets.release());
     LOG_INFO("Assets loaded successfully");
 }
 

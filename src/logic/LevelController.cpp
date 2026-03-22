@@ -8,6 +8,7 @@
 #include "../world/World.h"
 #include "../interfaces/Object.h"
 #include "../debug/Logger.h"
+#include "../files/WorldFiles.h"
 
 LevelController::LevelController(EngineSettings& settings, Level* level) : 
     settings(settings), 
@@ -48,6 +49,7 @@ void LevelController::update(float delta, bool input, bool pause) {
 
 void LevelController::saveWorld() {
     LOG_INFO("Saving world");
+    level->getWorld()->wfile->createDirectories();
     scripting::on_world_save();
     level->getWorld()->write(level.get());
     LOG_INFO("The world has been successfully saved");

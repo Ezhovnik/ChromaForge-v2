@@ -151,6 +151,12 @@ public:
 	const ResPaths* getPaths() const;
 
      aloader_func getLoader(AssetType tag);
+
+     static bool loadExternalTexture(
+          Assets* assets,
+          const std::string& name,
+          std::vector<std::filesystem::path> alternatives
+     );
 };
 
 #endif // ASSETS_ASSETS_LOADER_H_

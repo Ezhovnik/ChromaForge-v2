@@ -62,7 +62,6 @@ void World::write(Level* level) {
 	}
 
 	// Запись метаданных мира и игрока
-	wfile->createDirectories();
 	wfile->write(this, content);
 	auto playerFile = dynamic::Map();
     {

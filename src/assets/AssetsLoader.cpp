@@ -5,7 +5,7 @@
 #include "Assets.h"
 #include "../graphics/core/ShaderProgram.h"
 #include "../graphics/core/Texture.h"
-#include "../coders/png.h"
+#include "../coders/imageio.h"
 #include "../graphics/core/Font.h"
 #include "../graphics/core/Atlas.h"
 #include "../debug/Logger.h"
@@ -235,6 +235,27 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 	// Атласы блоков и предметов
 	loader.add(AssetType::Atlas, TEXTURES_FOLDER + "/blocks", "blocks");
 	loader.add(AssetType::Atlas, TEXTURES_FOLDER + "/items", "items");
+}
+
+bool AssetsLoader::loadExternalTexture(
+    Assets* assets,
+    const std::string& name,
+    std::vector<std::filesystem::path> alternatives)
+{
+    if (assets->getTexture(name) != nullptr) return true;
+
+    for (auto& path : alternatives) {
+        if (std::filesystem::exists(path)) {
+            try {
+                auto image = imageio::read(path.string());
+                assets->store(Texture::from(image.get()), name);
+                return true;
+            } catch (const std::exception& err) {
+                LOG_ERROR("Error while loading external '{}': {}", path.u8string(), err.what());
+            }
+        }
+    }
+    return false;
 }
 
 const ResPaths* AssetsLoader::getPaths() const {

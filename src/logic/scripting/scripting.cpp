@@ -267,6 +267,15 @@ void scripting::on_ui_open(
     });
 }
 
+void scripting::on_ui_progress(UIDocument* layout, int workDone, int workTotal) {
+    std::string name = layout->getId() + ".progress";
+    emit_event(name, [=] (lua::LuaState* state) {
+        state->pushinteger(workDone);
+        state->pushinteger(workTotal);
+        return 2;
+    });
+}
+
 void scripting::on_ui_close(UIDocument* layout, Inventory* inventory) {
     std::string name = layout->getId()+".close";
     emit_event(name, [inventory] (lua::LuaState* state) {
@@ -335,6 +344,7 @@ void scripting::load_layout_script(scriptenv senv, std::string prefix, std::file
     state->loadbuffer(env, src, file.u8string());
     state->callNoThrow(0);
     script.onopen = register_event(env, "on_open", prefix + ".open");
+    script.onprogress = register_event(env, "on_progress", prefix + ".progress");
     script.onclose = register_event(env, "on_close", prefix + ".close");
     LOG_DEBUG("Script {} successfully loaded", file.u8string());
 }
