@@ -39,12 +39,6 @@ ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) : conte
 ContentGfxCache::~ContentGfxCache() {
 }
 
-std::shared_ptr<UIDocument> ContentGfxCache::getLayout(const std::string& id) {
-    auto found = layouts.find(id);
-    if (found == layouts.end()) return nullptr;
-    return found->second;
-}
-
 const Content* ContentGfxCache::getContent() const {
     return content;
 }

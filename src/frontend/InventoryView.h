@@ -8,7 +8,7 @@
 
 #include "../graphics/ui/elements/UINode.h"
 #include "../graphics/ui/elements/layout/Container.h"
-#include "../items/ItemStack.h"
+#include "../constants.h"
 #include "../typedefs.h"
 #include "../constants.h"
 
@@ -18,27 +18,13 @@ class Content;
 class ContentIndices;
 class LevelFrontend;
 class Inventory;
+class ItemStack;
 
 using slotcallback = std::function<void(uint, ItemStack&)>;
-
-namespace scripting {
-    class Environment;
-}
 
 namespace gui {
     class UIXmlReader;
 }
-
-class InventoryInteraction {
-private:
-    ItemStack grabbedItem;
-public:
-    InventoryInteraction() = default;
-
-    ItemStack& getGrabbedItem() {
-        return grabbedItem;
-    }
-};
 
 struct SlotLayout {
     int index;
@@ -63,8 +49,6 @@ struct SlotLayout {
 
 class SlotView : public gui::UINode {
 private:
-    LevelFrontend* frontend = nullptr;
-    InventoryInteraction* interaction = nullptr;
     const Content* content;
     bool highlighted = false;
 
@@ -86,21 +70,20 @@ public:
     void bind(
         int64_t inventoryId,
         ItemStack& stack,
-        LevelFrontend* frontend, 
-        InventoryInteraction* interaction
+        const Content* content
     );
 
+    ItemStack& getStack();
     const SlotLayout& getLayout() const;
+
+    static inline std::string EXCHANGE_SLOT_NAME = "exchange-slot";
 };
 
 class InventoryView : public gui::Container {
 private:
     const Content* content;
-    const ContentIndices* indices;
 
     std::shared_ptr<Inventory> inventory;
-    LevelFrontend* frontend = nullptr;
-    InventoryInteraction* interaction = nullptr;
 
     std::vector<SlotView*> slots;
     glm::vec2 origin {};
@@ -108,7 +91,6 @@ public:
     InventoryView();
     virtual ~InventoryView();
 
-    void setInventory(std::shared_ptr<Inventory> inventory);
     std::shared_ptr<Inventory> getInventory() const;
 
     virtual void setPos(glm::vec2 pos) override;
@@ -120,8 +102,7 @@ public:
 
     void bind(
         std::shared_ptr<Inventory> inventory,
-        LevelFrontend* frontend, 
-        InventoryInteraction* interaction
+        const Content* content
     );
 
     void unbind();

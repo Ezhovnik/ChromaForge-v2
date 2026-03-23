@@ -1,5 +1,5 @@
-#ifndef SRC_HUD_RENDER_H_
-#define SRC_HUD_RENDER_H_
+#ifndef FRONTEND_HUD_H_
+#define FRONTEND_HUD_H_
 
 #include <string>
 #include <memory>
@@ -16,7 +16,6 @@ class Block;
 class InventoryView;
 class LevelFrontend;
 class SlotView;
-class InventoryInteraction;
 class UIDocument;
 class Inventory;
 
@@ -77,9 +76,9 @@ private:
     bool pause = false;
 
     std::shared_ptr<gui::UINode> debugPanel;
-    std::unique_ptr<InventoryInteraction> interaction;
-    std::shared_ptr<SlotView> grabbedItemView;
-    std::shared_ptr<gui::Panel> darkOverlay;
+    std::shared_ptr<SlotView> exchangeSlot;
+    std::shared_ptr<Inventory> exchangeSlotInv = nullptr;
+    std::shared_ptr<gui::UINode> darkOverlay;
     std::shared_ptr<gui::UINode> secondUI = nullptr;
 
 	gui::GUI* guiController;
@@ -94,6 +93,7 @@ private:
 
     void processInput(bool visible);
     void updateElementsPosition(const Viewport& viewport);
+    void updateHotbarControl();
     void cleanup();
 public:
 	Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player);
@@ -121,4 +121,4 @@ public:
     std::shared_ptr<Inventory> getBlockInventory();
 };
 
-#endif // SRC_HUD_RENDER_H_
+#endif // FRONTEND_HUD_H_

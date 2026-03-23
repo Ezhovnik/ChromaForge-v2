@@ -81,7 +81,6 @@ namespace gui {
         void activate(float deltaTime, const Viewport& viewport);
         void draw(const GfxContext* parent_context, Assets* assets);
         void add(std::shared_ptr<UINode> panel);
-        void add(std::shared_ptr<UINode> node, glm::vec2 coord);
         void remove(std::shared_ptr<UINode> panel) noexcept;
         void store(std::string name, std::shared_ptr<UINode> node);
         std::shared_ptr<UINode> get(std::string name) noexcept;

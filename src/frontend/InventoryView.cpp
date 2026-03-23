@@ -25,6 +25,8 @@
 #include "../graphics/ui/gui_xml.h"
 #include "../logic/scripting/scripting.h"
 #include "../items/Inventories.h"
+#include "../graphics/ui/GUI.h"
+#include "../items/ItemStack.h"
 
 SlotLayout::SlotLayout(
     int index,
@@ -121,7 +123,7 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
 
     batch->setColor(glm::vec4(1.0f));
 
-    auto previews = frontend->getBlocksAtlas();
+    auto previews = assets->getAtlas("block-previews");
     auto indices = content->getIndices();
 
     Item* item = indices->getItemDef(stack.getItemId());    
@@ -162,7 +164,7 @@ void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
         int x = pos.x + slotSize - text.length() * 8;
         int y = pos.y + slotSize - 16;
 
-        batch->setColor(glm::vec4(0, 0, 0, 1.0f));
+        batch->setColor({0, 0, 0, 1.0f});
         font->draw(batch, text, x + 1, y + 1);
         batch->setColor(glm::vec4(1.0f));
         font->draw(batch, text, x, y);
@@ -180,7 +182,9 @@ bool SlotView::isHighlighted() const {
 void SlotView::clicked(gui::GUI* gui, mousecode button) {
     if (bound == nullptr) return;
 
-    ItemStack& grabbed = interaction->getGrabbedItem();
+    auto exchangeSlot = std::dynamic_pointer_cast<SlotView>(gui->get(EXCHANGE_SLOT_NAME));
+    if (exchangeSlot == nullptr) return;
+    ItemStack& grabbed = exchangeSlot->getStack();
     ItemStack& stack = *bound;
 
     if (button == mousecode::BUTTON_1) {
@@ -231,16 +235,18 @@ void SlotView::onFocus(gui::GUI* gui) {
     clicked(gui, mousecode::BUTTON_1);
 }
 
-void SlotView::bind(int64_t inventoryId, ItemStack& stack, LevelFrontend* frontend, InventoryInteraction* interaction) {
+void SlotView::bind(int64_t inventoryId, ItemStack& stack, const Content* content) {
     this->inventoryId = inventoryId;
     bound = &stack;
-    content = frontend->getLevel()->content;
-    this->frontend = frontend;
-    this->interaction = interaction;
+    this->content = content;
 }
 
 const SlotLayout& SlotView::getLayout() const {
     return layout;
+}
+
+ItemStack& SlotView::getStack() {
+    return *bound;
 }
 
 InventoryView::InventoryView() : Container(glm::vec2()) {
@@ -266,27 +272,21 @@ std::shared_ptr<SlotView> InventoryView::addSlot(SlotLayout layout) {
     return slot;
 }
 
-void InventoryView::bind(std::shared_ptr<Inventory> inventory, LevelFrontend* frontend, InventoryInteraction* interaction) {
-    this->frontend = frontend;
-    this->interaction = interaction;
+void InventoryView::bind(std::shared_ptr<Inventory> inventory, const Content* content) {
     this->inventory = inventory;
-    content = frontend->getLevel()->content;
-    indices = content->getIndices();
+    this->content = content;
     for (auto slot : slots) {
-        slot->bind(inventory->getId(), inventory->getSlot(slot->getLayout().index), frontend, interaction);
+        slot->bind(inventory->getId(), inventory->getSlot(slot->getLayout().index), content);
     }
 }
 
 void InventoryView::unbind() {
-    if (inventory && inventory->isVirtual()) {
-        frontend->getLevel()->inventories->remove(inventory->getId());   
-    }
+    inventory = nullptr;
 }
 
 void InventoryView::setSelected(int index) {
-    for (int i = 0; i < int(slots.size()); ++i) {
-        auto slot = slots[i];
-        slot->setHighlighted(i == index);
+    for (size_t i = 0; i < slots.size(); ++i) {
+        slots[i]->setHighlighted(static_cast<int>(i) == index);
     }
 }
 
@@ -300,10 +300,6 @@ void InventoryView::setOrigin(glm::vec2 origin) {
 
 glm::vec2 InventoryView::getOrigin() const {
     return origin;
-}
-
-void InventoryView::setInventory(std::shared_ptr<Inventory> inventory) {
-    this->inventory = inventory;
 }
 
 std::shared_ptr<Inventory> InventoryView::getInventory() const {

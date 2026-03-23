@@ -51,7 +51,7 @@ public:
     bool has(const std::string& name) const;
     const std::set<std::string>& getNames() {return names;};
 
-    Atlas* build(uint extrusion, bool prepare=true, uint maxResolution=0);
+    std::unique_ptr<Atlas> build(uint extrusion, bool prepare=true, uint maxResolution=0);
 };
 
 #endif // GRAPHICS_CORE_ATLAS_H_

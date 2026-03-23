@@ -11,7 +11,7 @@ class Camera {
     void updateVectors(); 
 public:
     glm::vec3 position; // Позиция камеры
-    float zoom;
+    float zoom = 1.0f;
 
     // Векторы направления
     glm::vec3 front; // Указывает направление, в котором смотрит камера.
@@ -25,7 +25,7 @@ public:
     bool perspective = true;
 
     // Матрица вращения камеры
-    glm::mat4 rotation; // Хранит текущую ориентацию камеры в пространстве.
+    glm::mat4 rotation {1.0f}; // Хранит текущую ориентацию камеры в пространстве.
 
     Camera(glm::vec3 position, float fov); // Конструктор
 

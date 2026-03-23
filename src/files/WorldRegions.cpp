@@ -367,7 +367,8 @@ void WorldRegions::put(Chunk* chunk){
     }
     if (!chunk->inventories.empty()){
         uint datasize;
-        put(chunk->chunk_x, chunk->chunk_z, RegionConsts::LAYER_INVENTORIES, write_inventories(chunk, datasize), datasize, false);
+        auto data = write_inventories(chunk, datasize);
+        put(chunk->chunk_x, chunk->chunk_z, RegionConsts::LAYER_INVENTORIES, std::move(data), datasize, false);
     }
 }
 
