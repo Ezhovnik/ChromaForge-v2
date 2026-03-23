@@ -96,18 +96,18 @@ void GUI::activateFocused() {
     }
 }
 
-void GUI::activate(float delta) {
+void GUI::activate(float deltaTime, const Viewport& vp) {
     while (!postRunnables.empty()) {
         runnable callback = postRunnables.back();
         postRunnables.pop();
         callback();
     }
 
-    container->setSize(glm::vec2(Window::width, Window::height));
-    container->activate(delta);
+    container->setSize(vp.size());
+    container->activate(deltaTime);
     auto prevfocus = focus;
 
-    if (!Events::_cursor_locked) activateMouse(delta);
+    if (!Events::_cursor_locked) activateMouse(deltaTime);
 
     if (focus) activateFocused();
     if (focus && !focus->isFocused()) focus = nullptr;

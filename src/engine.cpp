@@ -202,7 +202,7 @@ void Engine::mainloop() {
 
         audio::update(deltaTime);
 
-        gui->activate(deltaTime);
+        gui->activate(deltaTime, Viewport(Window::width, Window::height));
 
         screen->update(deltaTime);
 

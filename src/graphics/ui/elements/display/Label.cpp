@@ -8,12 +8,48 @@
 
 using namespace gui;
 
+void LabelCache::prepare(Font* font, size_t wrapWidth) {
+    if (font != this->font) {
+        resetFlag = true;
+        this->font = font;
+    }
+    if (wrapWidth != this->wrapWidth) {
+        resetFlag = true;
+        this->wrapWidth = wrapWidth;
+    }
+}
+
+void LabelCache::update(const std::wstring& text, bool multiline, bool wrap) {
+    resetFlag = false;
+    lines.clear();
+    lines.push_back(LineScheme{0, false});
+
+    if (font == nullptr) wrap = false;
+
+    size_t len = 0;
+    if (multiline) {
+        for (size_t i = 0; i < text.length(); ++i, ++len) {
+            if (text[i] == L'\n') {
+                lines.push_back(LineScheme{i + 1, false});
+                len = 0;
+            } else if (i > 0 && wrap && text[i + 1] != L'\n') {
+                size_t width = font->calcWidth(text, i - len - 1, i - (i - len) + 2);
+                if (width >= wrapWidth) {
+                    lines.push_back(LineScheme {i + 1, true});
+                    len = 0;
+                }
+            }
+        }
+    }
+}
+
 Label::Label(std::string text, std::string fontName) : 
     UINode(glm::vec2(text.length() * 8, 15)), 
     text(util::str2wstr_utf8(text)), 
     fontName(fontName) 
 {
     setInteractive(false);
+    cache.update(this->text, multiline, textWrap);
 }
 
 Label::Label(std::wstring text, std::string fontName) : 
@@ -22,15 +58,14 @@ Label::Label(std::wstring text, std::string fontName) :
     fontName(fontName) 
 {
     setInteractive(false);
+    cache.update(this->text, multiline, textWrap);
 }
 
 void Label::setText(std::wstring text) {
+    if (text == this->text && !cache.resetFlag) return;
+
     this->text = text;
-    lines = 1;
-    for (size_t i = 0; i < text.length(); ++i) {
-        if (text[i] == L'\n') ++lines;
-    }
-    lines = std::max(lines, 1U);
+    cache.update(this->text, multiline, textWrap);
 }
 
 const std::wstring& Label::getText() const {
@@ -65,16 +100,14 @@ int Label::getTextYOffset() const {
     return textYOffset;
 }
 
-size_t Label::getTextLineOffset(uint line) const {
-    size_t offset = 0;
-    size_t linesCount = 0;
-    while (linesCount < line && offset < text.length()) {
-        size_t endline = text.find(L'\n', offset);
-        if (endline == std::wstring::npos) break;
-        offset = endline + 1;
-        ++linesCount;
-    }
-    return offset;
+size_t Label::getTextLineOffset(size_t line) const {
+    line = std::min(cache.lines.size() - 1, line);
+    return cache.lines.at(line).offset;
+}
+
+bool Label::isFakeLine(size_t line) const {
+    line = std::min(cache.lines.size() - 1, line);
+    return cache.lines.at(line).fake;
 }
 
 int Label::getLineYOffset(uint line) const {
@@ -87,35 +120,33 @@ uint Label::getLineByYOffset(int offset) const {
 }
 
 uint Label::getLineByTextIndex(size_t index) const {
-    size_t offset = 0;
-    size_t linesCount = 0;
-    while (offset < index && offset < text.length()) {
-        size_t endline = text.find(L'\n', offset);
-        if (endline == std::wstring::npos) break;
-        if (endline + 1 > index) break;
-        offset = endline + 1;
-        ++linesCount;
+    for (size_t i = 0; i < cache.lines.size(); ++i) {
+        if (cache.lines.at(i).offset > index) return i - 1;
     }
-    return linesCount;
+    return cache.lines.size() - 1;
 }
 
 uint Label::getLinesNumber() const {
-    return lines;
+    return cache.lines.size();
 }
 
 void Label::draw(const GfxContext* pctx, Assets* assets) {
-    if (supplier) setText(supplier());
-
     auto batch = pctx->getBatch2D();
     auto font = assets->getFont(fontName);
+    cache.prepare(font, static_cast<size_t>(glm::abs(getSize().x)));
+
+    if (supplier) setText(supplier());
+
+    if (cache.resetFlag) cache.update(text, multiline, textWrap);
 
     batch->setColor(getColor());
 
     uint lineHeight = font->getLineHeight();
+    if (cache.lines.size() > 1) lineHeight *= lineInterval;
     glm::vec2 size = getSize();
     glm::vec2 newsize (
         font->calcWidth(text), 
-        (lines == 1 ? lineHeight : lineHeight * lineInterval) * lines + font->getYOffset()
+        lineHeight * cache.lines.size() + font->getYOffset()
     );
 
     glm::vec2 pos = calcPos();
@@ -140,16 +171,15 @@ void Label::draw(const GfxContext* pctx, Assets* assets) {
             break;
     }
     textYOffset = pos.y - calcPos().y;
-    totalLineHeight = lineHeight * lineInterval;
+    totalLineHeight = lineHeight;
 
     if (multiline) {
-        size_t offset = 0;
-        for (uint i = 0; i < lines; ++i) {
+        for (size_t i = 0; i < cache.lines.size(); ++i) {
+            auto& line = cache.lines.at(i);
+            size_t offset = line.offset;
             std::wstring_view view(text.c_str() + offset, text.length() - offset);
-            size_t end = view.find(L'\n');
-            if (end != std::wstring::npos) {
-                view = std::wstring_view(text.c_str() + offset, end);
-                offset += end + 1;
+            if (i < cache.lines.size() - 1) {
+                view = std::wstring_view(text.c_str()+offset, cache.lines.at(i + 1).offset-offset);
             }
             font->draw(batch, view, pos.x, pos.y + i * totalLineHeight, FontStyle::None);
         }
@@ -163,9 +193,21 @@ void Label::textSupplier(wstringsupplier supplier) {
 }
 
 void Label::setMultiline(bool multiline) {
-    this->multiline = multiline;
+    if (multiline != this->multiline) {
+        this->multiline = multiline;
+        cache.resetFlag = true;
+    }
 }
 
 bool Label::isMultiline() const {
     return multiline;
+}
+
+void Label::setTextWrapping(bool flag) {
+    this->textWrap = flag;
+    cache.resetFlag = true;
+}
+
+bool Label::isTextWrapping() const {
+    return textWrap;
 }

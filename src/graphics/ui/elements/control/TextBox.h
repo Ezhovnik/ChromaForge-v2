@@ -101,6 +101,9 @@ namespace gui {
 
         virtual void setOnEditStart(runnable oneditstart);
 
+        virtual void setTextWrapping(bool flag);
+        virtual bool isTextWrapping() const;
+
         virtual void onFocus(GUI*) override;
         virtual void refresh() override;
         virtual void click(GUI*, int, int) override;

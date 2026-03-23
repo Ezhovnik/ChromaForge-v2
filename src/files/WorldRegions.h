@@ -100,7 +100,7 @@ class WorldRegions {
 
     ubyte* getData(int x, int z, int layer, uint32_t& size);
 
-    std::shared_ptr<regFile> getRegFile(glm::ivec3 coord);
+    std::shared_ptr<regFile> getRegFile(glm::ivec3 coord, bool create=true);
     void closeRegFile(glm::ivec3 coord);
     std::shared_ptr<regFile> useRegFile(glm::ivec3 coord);
     std::shared_ptr<regFile> createRegFile(glm::ivec3 coord);

@@ -184,6 +184,8 @@ static std::shared_ptr<UINode> readLabel(UIXmlReader& reader, xml::xmlelement el
         );
         label->textSupplier(supplier);
     }
+    if (element->has("multiline")) label->setMultiline(element->attr("multiline").asBool());
+    if (element->has("text-wrap")) label->setTextWrapping(element->attr("text-wrap").asBool());
     return label;
 }
 
@@ -223,6 +225,7 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
     textbox->setText(text);
 
     if (element->has("multiline")) textbox->setMultiline(element->attr("multiline").asBool());
+    if (element->has("text-wrap")) textbox->setTextWrapping(element->attr("text-wrap").asBool());
     if (element->has("editable")) textbox->setEditable(element->attr("editable").asBool());
     if (element->has("consumer")) {
         auto consumer = scripting::create_wstring_consumer(

@@ -98,10 +98,17 @@ void TextBox::drawBackground(const GfxContext* pctx, Assets* assets) {
         glm::vec2 lcoord = label->calcPos();
         lcoord.y -= 2;
         uint line = label->getLineByTextIndex(caret);
-        int lineY = label->getLineYOffset(line);
-        int lineHeight = font->getLineHeight() * label->getLineInterval();
-        batch->rect(lcoord.x, lcoord.y + lineY, label->getSize().x, 1);
-        batch->rect(lcoord.x, lcoord.y + lineY + lineHeight - 2, label->getSize().x, 1);
+        while (label->isFakeLine(line)) {
+            line--;
+        }
+        batch->setColor(glm::vec4(1, 1, 1, 0.05f));
+        do {
+            int lineY = label->getLineYOffset(line);
+            int lineHeight = font->getLineHeight() * label->getLineInterval();
+
+            batch->rect(lcoord.x, lcoord.y + lineY, label->getSize().x, lineHeight);
+            ++line;
+        } while (line < label->getLinesNumber() && label->isFakeLine(line));
     }
 
     label->setColor(glm::vec4(input.empty() ? 0.5f : 1.0f));
@@ -490,4 +497,12 @@ void TextBox::setCaret(uint position) {
     } else if (realoffset < 0) {
         setTextOffset(std::max(textOffset + realoffset, 0U));
     }
+}
+
+void TextBox::setTextWrapping(bool flag) {
+    label->setTextWrapping(flag);
+}
+
+bool TextBox::isTextWrapping() const {
+    return label->isTextWrapping();
 }

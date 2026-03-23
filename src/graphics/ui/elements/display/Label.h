@@ -3,17 +3,37 @@
 
 #include "../UINode.h"
 
+class Font;
+
 namespace gui {
+    struct LineScheme {
+        size_t offset;
+        bool fake;
+    };
+
+    struct LabelCache {
+        Font* font = nullptr;
+        std::vector<LineScheme> lines;
+        bool resetFlag = true;
+        size_t wrapWidth = -1;
+
+        void prepare(Font* font, size_t wrapWidth);
+        void update(const std::wstring& text, bool multiline, bool wrap);
+    };
+
     class Label : public UINode {
+    private:
+        LabelCache cache;
     protected:
         std::wstring text;
         std::string fontName;
         wstringsupplier supplier = nullptr;
-        uint lines = 1;
         float lineInterval = 1.5f;
         Align valign = Align::center;
 
         bool multiline = false;
+
+        bool textWrap = true;
 
         int textYOffset = 0;
 
@@ -39,11 +59,13 @@ namespace gui {
 
         virtual int getLineYOffset(uint line) const;
 
-        virtual size_t getTextLineOffset(uint line) const;
+        virtual size_t getTextLineOffset(size_t line) const;
 
         virtual uint getLineByYOffset(int offset) const;
         virtual uint getLineByTextIndex(size_t index) const;
         virtual uint getLinesNumber() const;
+
+        virtual bool isFakeLine(size_t line) const;
 
         virtual void draw(const GfxContext* pctx, Assets* assets) override;
 
@@ -51,6 +73,9 @@ namespace gui {
 
         virtual void setMultiline(bool multiline);
         virtual bool isMultiline() const;
+
+        virtual void setTextWrapping(bool flag);
+        virtual bool isTextWrapping() const;
     };
 }
 

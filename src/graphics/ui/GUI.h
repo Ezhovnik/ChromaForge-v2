@@ -15,6 +15,7 @@
 class GfxContext;
 class Assets;
 class Camera;
+class Viewport;
 
 /*
 Padding is element inner space, margin is outer
@@ -77,7 +78,7 @@ namespace gui {
         bool isFocusCaught() const;
         void setFocus(std::shared_ptr<UINode> node);
 
-        void activate(float delta);
+        void activate(float deltaTime, const Viewport& viewport);
         void draw(const GfxContext* parent_context, Assets* assets);
         void add(std::shared_ptr<UINode> panel);
         void add(std::shared_ptr<UINode> node, glm::vec2 coord);

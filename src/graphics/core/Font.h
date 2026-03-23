@@ -53,13 +53,8 @@ public:
      */
      int getYOffset() const;
 
-	/**
-     * @brief Вычисляет ширину текста в пикселях.
-     * @param text Текст (широкая строка).
-     * @param length Максимальное количество символов для учёта (по умолчанию -1 — все).
-     * @return Ширина в пикселях.
-     */
-	int calcWidth(std::wstring text, size_t length=-1);
+	int calcWidth(const std::wstring& text, size_t length=-1);
+     int calcWidth(const std::wstring& text, size_t offset, size_t length);
 
 	/**
      * @brief Проверяет, является ли символ печатным (не пробельным).

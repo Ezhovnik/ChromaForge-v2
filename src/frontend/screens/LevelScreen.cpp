@@ -70,10 +70,11 @@ void LevelScreen::saveWorldPreview() {
         LOG_INFO("Saving world preview");
         auto paths = engine->getPaths();
         auto player = controller->getPlayer();
-        Camera camera = *player->camera;
-        camera.setFov(glm::radians(70.0f));
         auto& settings = engine->getSettings();
         int previewSize = settings.ui.worldPreviewSize.get();
+
+        Camera camera = *player->camera;
+        camera.setFov(glm::radians(70.0f));
         Viewport viewport(previewSize * 1.5, previewSize);
         GfxContext ctx(nullptr, viewport, batch.get());
         worldRenderer->draw(ctx, &camera, false, postProcessing.get());
