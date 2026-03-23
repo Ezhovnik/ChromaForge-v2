@@ -10,7 +10,6 @@ function create_setting(id, name, step, postfix)
         min=info.min,
         max=info.max,
         step=step,
-        track_width=12,
         postfix=postfix
     }))
 end
@@ -35,6 +34,7 @@ function on_open()
     create_setting("graphics.fog-curve", "Fog Curve", 0.1)
     create_setting("graphics.gamma", "Gamma", 0.05)
     create_setting("camera.fov", "FOV", 1, "°")
+    create_checkbox("display.fullscreen", "Fullscreen")
     create_checkbox("display.vsync", "V-Sync")
     create_checkbox("graphics.backlight", "Backlight")
     create_checkbox("camera.shaking", "Camera Shaking")

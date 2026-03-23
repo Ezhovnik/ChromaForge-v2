@@ -31,8 +31,8 @@ WorldFiles::WorldFiles(std::filesystem::path directory) : directory(directory), 
 }
 
 WorldFiles::WorldFiles(std::filesystem::path directory, const DebugSettings& settings) : WorldFiles(directory) {
-    generatorTestMode = settings.generatorTestMode;
-    doWriteLights = settings.doWriteLights;
+    generatorTestMode = settings.generatorTestMode.get();
+    doWriteLights = settings.doWriteLights.get();
 	regions.generatorTestMode = generatorTestMode;
     regions.doWriteLights = doWriteLights;
 }

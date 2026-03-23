@@ -147,10 +147,10 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 	{
         auto checkbox = std::make_shared<gui::FullCheckBox>(L"Frustum-Culling", glm::vec2(400, 24));
         checkbox->setSupplier([=]() {
-            return engine->getSettings().graphics.frustumCulling;
+            return engine->getSettings().graphics.frustumCulling.get();
         });
         checkbox->setConsumer([=](bool checked) {
-            engine->getSettings().graphics.frustumCulling = checked;
+            engine->getSettings().graphics.frustumCulling.set(checked);
         });
         panel->add(checkbox);
 	}

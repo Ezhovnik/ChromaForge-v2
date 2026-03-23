@@ -43,6 +43,7 @@
 #include "content/PacksManager.h"
 #include "util/listutil.h"
 #include "logic/EngineController.h"
+#include "files/settings_io.h"
 
 inline void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -53,17 +54,17 @@ inline void create_channel(Engine* engine, std::string name, NumberSetting& sett
 }
 
 // Реализация конструктора
-Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings), paths(paths), settingsHandler(settings) {
+Engine::Engine(EngineSettings& settings, SettingsHandler& settingsHandler, EnginePaths* paths) : settings(settings), paths(paths), settingsHandler(settingsHandler) {
     controller = std::make_unique<EngineController>(this);
 
     // Инициализация окна GLFW
-    if (!Window::initialize(settings.display)) {
+    if (!Window::initialize(&this->settings.display)) {
         LOG_CRITICAL("Failed to load Window");
         Window::terminate();
         throw initialize_error("Failed to load Window");
     }
 
-    audio::initialize(settings.audio.enabled);
+    audio::initialize(settings.audio.enabled.get());
     create_channel(this, "master", settings.audio.volumeMaster);
     create_channel(this, "regular", settings.audio.volumeRegular);
     create_channel(this, "music", settings.audio.volumeMusic);
@@ -72,9 +73,11 @@ Engine::Engine(EngineSettings& settings, EnginePaths* paths) : settings(settings
 
     gui = std::make_unique<gui::GUI>();
 
-    if (settings.ui.language == "auto") settings.ui.language = platform::detect_locale();
+    if (settings.ui.language.get() == "auto") settings.ui.language.set(platform::detect_locale());
     if (ENGINE_VERSION_INDEV) menus::create_version_label(this);
-    setLanguage(settings.ui.language);
+    keepAlive(settings.ui.language.observe([=](auto lang) {
+        setLanguage(lang);
+    }, true));
 
     addDefaultWorldGenerators();
 
@@ -149,11 +152,11 @@ void Engine::updateTimers() {
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
     if (Events::justPressed(keycode::F2)) saveScreenshot();
-    if (Events::justPressed(keycode::F11)) Window::toggleFullscreen();
+    if (Events::justPressed(keycode::F11)) settings.display.fullscreen.toggle();
 }
 
 void Engine::saveScreenshot() {
-    std::unique_ptr<ImageData> image(Window::takeScreenshot());
+    auto image = Window::takeScreenshot();
     image->flipY();
     std::filesystem::path filename = paths->getScreenshotFile("png");
     imageio::write(filename.string(), image.get());
@@ -326,7 +329,6 @@ double Engine::getDeltaTime() const {
 }
 
 void Engine::setLanguage(std::string locale) {
-	settings.ui.language = locale;
 	langs::setup(paths->getResources(), locale, contentPacks);
 	menus::create_menus(this);
 }

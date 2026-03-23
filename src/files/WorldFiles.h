@@ -59,6 +59,10 @@ public:
     WorldRegions& getRegions() {
         return regions;
     }
+
+    bool doesWriteLights() const {
+        return doWriteLights;
+    }
 };
 
 #endif // FILES_WORLDFILES_H_

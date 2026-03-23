@@ -13,6 +13,7 @@
 #include "../../../window/Events.h"
 #include "../../../world/WorldGenerators.h"
 #include "../../../logic/EngineController.h"
+#include "../../../files/settings_io.h"
 
 namespace scripting {
     extern lua::LuaState* state;

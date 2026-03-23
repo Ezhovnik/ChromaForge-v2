@@ -84,7 +84,7 @@ std::string json::stringify(const dynamic::Map* obj, bool nice, const std::strin
 }
 
 
-Parser::Parser(std::string filename, std::string source) : BasicParser(filename, source) {    
+Parser::Parser(const std::string& filename, const std::string& source) : BasicParser(filename, source) {    
 }
 
 dynamic::Map* Parser::parse() {
@@ -215,11 +215,11 @@ dynamic::Value* Parser::parseValue() {
     throw error("Unexpected character '" + std::string({next}) + "'");
 }
 
-std::unique_ptr<dynamic::Map> json::parse(std::string filename, std::string source) {
+std::unique_ptr<dynamic::Map> json::parse(const std::string& filename, const std::string& source) {
     Parser parser(filename, source);
     return std::unique_ptr<dynamic::Map>(parser.parse());
 }
 
-std::unique_ptr<dynamic::Map> json::parse(std::string source) {
+std::unique_ptr<dynamic::Map> json::parse(const std::string& source) {
     return parse("<string>", source);
 }

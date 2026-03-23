@@ -46,7 +46,7 @@ class Reader : public BasicParser {
         }
     }
 public:
-    Reader(std::string file, std::string source) : BasicParser(file, source) {}
+    Reader(const std::string& file, const std::string& source) : BasicParser(file, source) {}
 
     /**
      * @brief Читает файл перевода и заполняет объект Lang.

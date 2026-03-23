@@ -4,17 +4,22 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <vector>
 
-#include "../settings.h"
 #include "../data/dynamic.h"
 
-namespace toml {
-    class Wrapper;
-}
+class Setting;
+struct EngineSettings;
+
+struct Section {
+    std::string name;
+    std::vector<std::string> keys;
+};
 
 class SettingsHandler {
 private:
     std::unordered_map<std::string, Setting*> map;
+    std::vector<Section> sections;
 public:
     SettingsHandler(EngineSettings& settings);
 
@@ -24,10 +29,8 @@ public:
     std::string toString(const std::string& name) const;
 
     Setting* getSetting(const std::string& name) const;
-};
 
-extern std::string write_controls();
-extern toml::Wrapper* create_wrapper(EngineSettings& settings);
-extern void load_controls(std::string filename, std::string source);
+    std::vector<Section>& getSections();
+};
 
 #endif // FILES_SETTINGS_IO_H_

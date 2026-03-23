@@ -32,3 +32,7 @@ std::string BoolSetting::toString() const {
             return "Invalid format";
     }
 }
+
+std::string StringSetting::toString() const {
+    return value;
+}

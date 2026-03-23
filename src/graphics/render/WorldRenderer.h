@@ -26,6 +26,7 @@ class LevelFrontend;
 class Skybox;
 class Batch3D;
 class Player;
+struct EngineSettings;
 
 class WorldRenderer {
 private:

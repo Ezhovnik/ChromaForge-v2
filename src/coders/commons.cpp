@@ -41,7 +41,7 @@ std::string parsing_error::errorLog() const {
     return ss.str();
 }
 
-BasicParser::BasicParser(std::string file, std::string source) : filename(file), source(source) {
+BasicParser::BasicParser(const std::string& file, const std::string& source) : filename(file), source(source) {
 }
 
 void BasicParser::skip(size_t n) {

@@ -3,21 +3,16 @@
 
 #include <vector>
 #include <stack>
+#include <memory>
 
 #include <glm/glm.hpp>
 
 #include "../typedefs.h"
-#include "../settings.h"
 
 struct GLFWwindow; // Предварительное объявление класса GLFWwindow
 class ImageData;
 struct GLFWmonitor;
-
-enum class BlendMode {
-    Normal,
-    Addition,
-    Inversion
-};
+struct DisplaySettings;
 
 // Обертка для работы с окном приложения через GLFW
 class Window {
@@ -29,6 +24,8 @@ private:
     static std::stack<glm::vec4> scissorStack;
 	static glm::vec4 scissorArea;
 
+    static bool fullscreen;
+
     static bool tryToMaximize(GLFWwindow* window, GLFWmonitor* monitor);
 public:
     static int posX;
@@ -37,7 +34,7 @@ public:
     static uint width;
     static uint height;
 
-    static bool initialize(DisplaySettings& settings);
+    static bool initialize(DisplaySettings* settings);
     static void terminate();
 
     static void setCursorMode(int mode);
@@ -71,13 +68,11 @@ public:
 
     static DisplaySettings* getDisplaySettings();
 
-    static void setBlendMode(BlendMode mode);
-
     static glm::vec2 size() {
 		return glm::vec2(width, height);
 	}
 
-    static ImageData* takeScreenshot();
+    static std::unique_ptr<ImageData> takeScreenshot();
 };
 
 #endif // WINDOW_WINDOW_H

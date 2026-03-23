@@ -49,6 +49,7 @@ settings.UI Sounds=Звуки Интерфейса
 settings.Ambient=Фон
 settings.Music=Музыка
 settings.Gamma=Гамма
+settings.Fullscreen=Полноэкранный
 
 # Управление
 movement.forward=Вперёд

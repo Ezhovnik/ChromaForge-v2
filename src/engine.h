@@ -15,13 +15,13 @@
 #include "content/ContentPack.h"
 #include "assets/Assets.h"
 #include "content/Content.h"
-#include "files/settings_io.h"
 #include "content/PacksManager.h"
 #include "util/ObjectsKeeper.h"
 
 class Screen;
 class Batch2D;
 class EngineController;
+class SettingsHandler;
 
 namespace gui {
     class GUI;
@@ -37,7 +37,7 @@ public:
 class Engine : public util::ObjectsKeeper {
 private:
     EngineSettings& settings;
-    SettingsHandler settingsHandler;
+    SettingsHandler& settingsHandler;
     EnginePaths* paths;
 
     std::unique_ptr<Assets> assets = nullptr; // Менеджер ассетов (текстуры, модели и т.д.)
@@ -67,7 +67,7 @@ private:
     void addDefaultWorldGenerators();
     void loadAssets();
 public:
-    Engine(EngineSettings& settings, EnginePaths* paths); // Конструктор
+    Engine(EngineSettings& settings, SettingsHandler& settingsHandler, EnginePaths* paths); // Конструктор
     ~Engine(); // Деструктор
 
     void mainloop(); // Основной цикл приложения

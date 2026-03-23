@@ -193,6 +193,7 @@ void util::trim(std::string &s) {
 
 std::string util::double2str(double x) {
     std::stringstream ss;
+    ss << std::setprecision(6);
     ss << x;
     return ss.str(); 
 }
@@ -394,7 +395,6 @@ std::string util::id_to_caption(const std::string& id) {
     }
     return result;
 }
-
 
 std::string util::format_data_size(size_t size) {
     if (size < 1024) return std::to_string(size) + " B";

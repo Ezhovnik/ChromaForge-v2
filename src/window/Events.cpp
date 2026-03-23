@@ -6,6 +6,8 @@
 #include <GLFW/glfw3.h>
 
 #include "../debug/Logger.h"
+#include "../data/dynamic.h"
+#include "../coders/json.h"
 
 inline constexpr short _MOUSE_KEYS_OFFSET = 1024;
 
@@ -156,4 +158,46 @@ void Events::setPosition(float xpos, float ypos) {
 
     Events::cursor.x = xpos;
     Events::cursor.y = ypos;
+}
+
+std::string Events::writeBindings() {
+    dynamic::Map obj;
+    for (auto& entry : Events::bindings) {
+        const auto& binding = entry.second;
+
+        auto& jentry = obj.putMap(entry.first);
+        switch (binding.type) {
+            case inputType::keyboard: jentry.put("type", "keyboard"); break;
+            case inputType::mouse: jentry.put("type", "mouse"); break;
+            default:
+				LOG_ERROR("Unsupported control type");
+				throw std::runtime_error("Unsupported control type");
+        }
+        jentry.put("code", binding.code);
+    }
+    return json::stringify(&obj, true, "  ");
+}
+
+void Events::loadBindings(const std::string& filename, const std::string& source) {
+    auto obj = json::parse(filename, source);
+    for (auto& entry : Events::bindings) {
+        auto& binding = entry.second;
+
+        auto jentry = obj->map(entry.first);
+        if (jentry == nullptr) continue;
+        inputType type;
+        std::string typestr;
+        jentry->str("type", typestr);
+
+        if (typestr == "keyboard") {
+            type = inputType::keyboard;
+        } else if (typestr == "mouse") {
+            type = inputType::mouse;
+        } else {
+			LOG_ERROR("Unknown input type '{}'", typestr);
+            continue;
+        }
+        binding.type = type;
+        jentry->num("code", binding.code);
+    }
 }

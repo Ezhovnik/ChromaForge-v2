@@ -8,49 +8,48 @@
 #include "data/setting.h"
 
 struct DisplaySettings {
-	int width = 1280;
-	int height = 720;
-	int samples = 0;
-	BoolSetting vsync = {true};
-	std::string title = "ChromaForge (v " + ENGINE_VERSION_STRING + ")";
+	IntegerSetting width {1280};
+	IntegerSetting height {720};
+	IntegerSetting samples {0};
+	BoolSetting vsync {true};
 
-	bool fullscreen = false;
+	BoolSetting fullscreen {false};
 };
 
 struct ChunksSettings {
-	IntegerSetting loadSpeed = {4, 1, 32};
-	IntegerSetting loadDistance = {22, 3, 66};
-	IntegerSetting padding = {2, 1, 8};
+	IntegerSetting loadSpeed {4, 1, 32};
+	IntegerSetting loadDistance {22, 3, 66};
+	IntegerSetting padding {2, 1, 8};
 };
 
 struct CameraSettings {
-    bool fovEvents = true;
-    BoolSetting shaking = {true};
+    BoolSetting fovEffects {true};
+    BoolSetting shaking {true};
 	NumberSetting fov {90.0f, 10, 120};
 	NumberSetting sensitivity {2.0f, 0.1f, 10.0f};
 };
 
 struct GraphicsSettings {
     NumberSetting fogCurve {1.6f, 1.0f, 6.0f};
-	NumberSetting gamma = {1.0f, 0.5f, 2.0f};
-	BoolSetting backlight = {true};
-	bool frustumCulling = true;
-	int skyboxResolution = 64 + 32;
+	NumberSetting gamma {1.0f, 0.5f, 2.0f};
+	BoolSetting backlight {true};
+	BoolSetting frustumCulling {true};
+	IntegerSetting skyboxResolution {64 + 32, 64, 128};
 };
 
 struct DebugSettings {
-    bool generatorTestMode = false;
-	bool doWriteLights = true;
+    BoolSetting generatorTestMode {false};
+	BoolSetting doWriteLights {true};
 };
 
 struct UISettings {
-	std::string language = "auto";
+	StringSetting language {"auto"};
 
 	IntegerSetting worldPreviewSize {64, 1, 512};
 };
 
 struct AudioSettings {
-    bool enabled = true;
+    BoolSetting enabled {true};
 
     NumberSetting volumeMaster {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
     NumberSetting volumeRegular {1.0f, 0.0f, 1.0f, SettingFormat::Percent};

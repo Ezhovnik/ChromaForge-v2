@@ -15,6 +15,7 @@
 #include "files/settings_io.h"
 #include "files/engine_paths.h"
 #include "constants.h"
+#include "window/Events.h"
 
 inline const std::string SETTINGS_FILE = "settings.toml";
 inline const std::string CONTROLS_FILE = "controls.json";
@@ -43,25 +44,24 @@ int main(int argc, char** argv) {
     try {
         // Чтение настроек движка
         EngineSettings settings;
-        std::unique_ptr<toml::Wrapper> wrapper(create_wrapper(settings));
+        SettingsHandler handler(settings);
         std::filesystem::path settings_file = userfiles/std::filesystem::path(SETTINGS_FILE);
         if (std::filesystem::is_regular_file(settings_file)) {
 			LOG_INFO("Reading engine settings from '{}'", settings_file.string());
 			std::string text = files::read_string(settings_file);
-			toml::Reader reader(wrapper.get(), settings_file.string(), text);
-			reader.read();
+			toml::parse(handler, settings_file.string(), text);
             LOG_INFO("Engine settings read succesfully");
 		}
         CoreContent::setup_bindings();
 
-        engine = std::make_unique<Engine>(settings, &paths);
+        engine = std::make_unique<Engine>(settings, handler, &paths);
 
         // Настройка назначения клавиш
         std::filesystem::path controls_file = userfiles/std::filesystem::path(CONTROLS_FILE);
 		if (std::filesystem::is_regular_file(controls_file)) {
 			LOG_INFO("Reading bindings from '{}'", controls_file.string());
 			std::string text = files::read_string(controls_file);
-			load_controls(controls_file.string(), text);
+			Events::loadBindings(controls_file.string(), text);
             LOG_INFO("Bindings read succesfully");
 		}
 
@@ -69,12 +69,12 @@ int main(int argc, char** argv) {
 
         // Запись настроек движка в файл
         LOG_INFO("Write engine settings to '{}'", settings_file.string());
-		files::write_string(settings_file, wrapper->write());
+		files::write_string(settings_file, toml::stringify(handler));
         LOG_INFO("Engine settings are written");
 
         // Запись назначения клавиш в файл
         LOG_INFO("Write bindings to '{}'", controls_file.string());
-		files::write_string(controls_file, write_controls());
+		files::write_string(controls_file, Events::writeBindings());
         LOG_INFO("Bindings are written");
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred: {}", err.what());

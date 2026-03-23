@@ -7,26 +7,71 @@
 #include "../coders/json.h"
 #include "../coders/toml.h"
 #include "../debug/Logger.h"
+#include "../settings.h"
+
+struct SectionsBuilder {
+    std::unordered_map<std::string, Setting*>& map;
+    std::vector<Section>& sections;
+
+    SectionsBuilder(
+        std::unordered_map<std::string, Setting*>& map,
+        std::vector<Section>& sections
+    ) : map(map), sections(sections) {}
+
+    void section(std::string name) {
+        sections.push_back(Section {name, {}});
+    }
+
+    void add(std::string name, Setting* setting, bool writeable=true) {
+        Section& section = sections.at(sections.size() - 1);
+        map[section.name + "." + name] = setting;
+        section.keys.push_back(name);
+    }
+};
 
 SettingsHandler::SettingsHandler(EngineSettings& settings) {
-    map.emplace("audio.volume-master", &settings.audio.volumeMaster);
-    map.emplace("audio.volume-regular", &settings.audio.volumeRegular);
-    map.emplace("audio.volume-ui", &settings.audio.volumeUI);
-    map.emplace("audio.volume-ambient", &settings.audio.volumeAmbient);
-    map.emplace("audio.volume-music", &settings.audio.volumeMusic);
+    SectionsBuilder builder(map, sections);
 
-	map.emplace("display.vsync", &settings.display.vsync);
+    builder.section("audio");
+    builder.add("enabled", &settings.audio.enabled, false);
+    builder.add("volume-master", &settings.audio.volumeMaster);
+    builder.add("volume-regular", &settings.audio.volumeRegular);
+    builder.add("volume-ui", &settings.audio.volumeUI);
+    builder.add("volume-ambient", &settings.audio.volumeAmbient);
+    builder.add("volume-music", &settings.audio.volumeMusic);
 
-    map.emplace("camera.sensitivity", &settings.camera.sensitivity);
-	map.emplace("camera.fov", &settings.camera.fov);
-	map.emplace("camera.shaking", &settings.camera.shaking);
+    builder.section("display");
+    builder.add("width", &settings.display.width);
+    builder.add("height", &settings.display.height);
+    builder.add("samples", &settings.display.samples);
+    builder.add("vsync", &settings.display.vsync);
+    builder.add("fullscreen", &settings.display.fullscreen);
 
-    map.emplace("chunks.load-distance", &settings.chunks.loadDistance);
-    map.emplace("chunks.load-speed", &settings.chunks.loadSpeed);
+    builder.section("camera");
+    builder.add("sensitivity", &settings.camera.sensitivity);
+    builder.add("fov", &settings.camera.fov);
+    builder.add("fov-effects", &settings.camera.fovEffects);
+    builder.add("shaking", &settings.camera.shaking);
 
-    map.emplace("graphics.fog-curve", &settings.graphics.fogCurve);
-	map.emplace("graphics.backlight", &settings.graphics.backlight);
-	map.emplace("graphics.gamma", &settings.graphics.gamma);
+    builder.section("chunks");
+    builder.add("load-distance", &settings.chunks.loadDistance);
+    builder.add("load-speed", &settings.chunks.loadSpeed);
+    builder.add("padding", &settings.chunks.padding);
+
+    builder.section("graphics");
+    builder.add("fog-curve", &settings.graphics.fogCurve);
+    builder.add("backlight", &settings.graphics.backlight);
+    builder.add("gamma", &settings.graphics.gamma);
+    builder.add("frustum-culling", &settings.graphics.frustumCulling);
+    builder.add("skybox-resolution", &settings.graphics.skyboxResolution);
+
+    builder.section("ui");
+    builder.add("language", &settings.ui.language);
+    builder.add("world-preview-size", &settings.ui.worldPreviewSize);
+
+    builder.section("debug");
+    builder.add("generator-test-mode", &settings.debug.generatorTestMode);
+    builder.add("do-write-lights", &settings.debug.doWriteLights);
 }
 
 std::unique_ptr<dynamic::Value> SettingsHandler::getValue(const std::string& name) const {
@@ -38,14 +83,35 @@ std::unique_ptr<dynamic::Value> SettingsHandler::getValue(const std::string& nam
     auto setting = found->second;
     if (auto number = dynamic_cast<NumberSetting*>(setting)) {
         return dynamic::Value::of((number_t)number->get());
-	} else if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
+    } else if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
         return dynamic::Value::of((integer_t)integer->get());
-	} else if (auto flag = dynamic_cast<BoolSetting*>(setting)) {
+    } else if (auto flag = dynamic_cast<BoolSetting*>(setting)) {
         return dynamic::Value::boolean(flag->get());
+    } else if (auto string = dynamic_cast<StringSetting*>(setting)) {
+        return dynamic::Value::of(string->get());
     } else {
 		LOG_ERROR("Type is not implemented for '{}'", name);
         throw std::runtime_error("Type is not implemented for '" + name + "'");
     }
+}
+
+std::string SettingsHandler::toString(const std::string& name) const {
+    auto found = map.find(name);
+    if (found == map.end()) {
+		LOG_ERROR("Setting '{}' does not exist", name);
+        throw std::runtime_error("Setting '" + name + "' does not exist");
+    }
+    auto setting = found->second;
+    return setting->toString();
+}
+
+Setting* SettingsHandler::getSetting(const std::string& name) const {
+    auto found = map.find(name);
+    if (found == map.end()) {
+		LOG_ERROR("Setting '{}' does not exist", name);
+        throw std::runtime_error("Setting '" + name + "' does not exist");
+    }
+    return found->second;
 }
 
 template<class T>
@@ -66,15 +132,6 @@ static void set_numeric_value(T* setting, const dynamic::Value& value) {
     }
 }
 
-Setting* SettingsHandler::getSetting(const std::string& name) const {
-    auto found = map.find(name);
-    if (found == map.end()) {
-		LOG_ERROR("Setting '{}' does not exist", name);
-        throw std::runtime_error("setting '" + name + "' does not exist");
-    }
-    return found->second;
-}
-
 void SettingsHandler::setValue(const std::string& name, const dynamic::Value& value) {
     auto found = map.find(name);
     if (found == map.end()) {
@@ -84,107 +141,34 @@ void SettingsHandler::setValue(const std::string& name, const dynamic::Value& va
     auto setting = found->second;
     if (auto number = dynamic_cast<NumberSetting*>(setting)) {
         set_numeric_value(number, value);
-	} else if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
-		set_numeric_value(integer, value);
+    } else if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
+        set_numeric_value(integer, value);
     } else if (auto flag = dynamic_cast<BoolSetting*>(setting)) {
         set_numeric_value(flag, value);
+    } else if (auto string = dynamic_cast<StringSetting*>(setting)) {
+        switch (value.type) {
+            case dynamic::ValueType::String:
+                string->set(std::get<std::string>(value.value));
+                break;
+            case dynamic::ValueType::Integer:
+                string->set(std::to_string(std::get<integer_t>(value.value)));
+                break;
+            case dynamic::ValueType::Number:
+                string->set(std::to_string(std::get<number_t>(value.value)));
+                break;
+            case dynamic::ValueType::Boolean:
+                string->set(std::to_string(std::get<bool>(value.value)));
+                break;
+            default:
+				LOG_ERROR("Not implemented for type");
+                throw std::runtime_error("Not implemented for type");
+        }
     } else {
-		LOG_ERROR("Type is not implemented - setting '{}'", name);
+		LOG_ERROR("Type is not implement - setting '{}'", name);
         throw std::runtime_error("Type is not implement - setting '" + name + "'");
     }
 }
 
-std::string SettingsHandler::toString(const std::string& name) const {
-    auto found = map.find(name);
-    if (found == map.end()) {
-		LOG_ERROR("Setting '{}' does not exist", name);
-        throw std::runtime_error("Setting '" + name + "' does not exist");
-    }
-    auto setting = found->second;
-    return setting->toString();
-}
-
-toml::Wrapper* create_wrapper(EngineSettings& settings) {
-	auto wrapper = std::make_unique<toml::Wrapper>();
-
-	toml::Section& display = wrapper->add("display");
-	display.add("width", &settings.display.width);
-	display.add("height", &settings.display.height);
-	display.add("samples", &settings.display.samples);
-	display.add("vsync", &*settings.display.vsync);
-	display.add("fullscreen", &settings.display.fullscreen);
-
-	toml::Section& chunks = wrapper->add("chunks");
-	chunks.add("load-distance", &*settings.chunks.loadDistance);
-	chunks.add("load-speed", &*settings.chunks.loadSpeed);
-	chunks.add("padding", &*settings.chunks.padding);
-
-    toml::Section& camera = wrapper->add("camera");
-	camera.add("fov-events", &settings.camera.fovEvents);
-	camera.add("shaking", &*settings.camera.shaking);
-	camera.add("fov", &*settings.camera.fov);
-	camera.add("sensitivity", &*settings.camera.sensitivity);
-
-	toml::Section& graphics = wrapper->add("graphics");
-	graphics.add("fog-curve", &*settings.graphics.fogCurve);
-	graphics.add("backlight", &*settings.graphics.backlight);
-	graphics.add("frustum-culling", &settings.graphics.frustumCulling);
-	graphics.add("skybox-resolution", &settings.graphics.skyboxResolution);
-	graphics.add("gamma", &*settings.graphics.gamma);
-
-    toml::Section& debug = wrapper->add("debug");
-	debug.add("generator-test-mode", &settings.debug.generatorTestMode);
-	debug.add("do-write-lights", &settings.debug.doWriteLights);
-
-	toml::Section& ui = wrapper->add("ui");
-	ui.add("world-preview-size", &*settings.ui.worldPreviewSize);
-    ui.add("language", &settings.ui.language);
-
-	toml::Section& audio = wrapper->add("audio");
-    audio.add("enabled", &settings.audio.enabled);
-    audio.add("volume-master", &*settings.audio.volumeMaster);
-    audio.add("volume-regular", &*settings.audio.volumeRegular);
-    audio.add("volume-ui", &*settings.audio.volumeUI);
-    audio.add("volume-ambient", &*settings.audio.volumeAmbient);
-    audio.add("volume-music", &*settings.audio.volumeMusic);
-
-	return wrapper.release();
-}
-
-std::string write_controls() {
-	dynamic::Map obj;
-	for (auto& [name, binding] : Events::bindings) {
-		auto& jentry = obj.putMap(name);
-		switch (binding.type) {
-			case inputType::keyboard: jentry.put("type", "keyboard"); break;
-			case inputType::mouse: jentry.put("type", "mouse"); break;
-			default:
-				LOG_ERROR("Unsupported control type {}", (int)binding.type);			
-				throw std::runtime_error("Unsupported control type");
-		}
-		jentry.put("code", binding.code);
-	}
-	return json::stringify(&obj, true, "  ");
-}
-
-void load_controls(std::string filename, std::string source) {
-	auto obj = json::parse(filename, source);
-	for (auto& [name, binding] : Events::bindings) {
-		auto jentry = obj->map(name);
-		if (jentry == nullptr) continue;
-		inputType type;
-		std::string typestr;
-		jentry->str("type", typestr);
-
-		if (typestr == "keyboard") {
-			type = inputType::keyboard;
-		} else if (typestr == "mouse") {
-			type = inputType::mouse;
-		} else {
-            LOG_WARN("Unknown input type {}", typestr);
-			continue;
-		}
-		binding.type = type;
-		jentry->num("code", binding.code);
-	}
+std::vector<Section>& SettingsHandler::getSections() {
+    return sections;
 }

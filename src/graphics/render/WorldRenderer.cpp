@@ -70,7 +70,7 @@ WorldRenderer::WorldRenderer(
 	auto& settings = engine->getSettings();
 	auto assets = engine->getAssets();
     skybox = std::make_unique<Skybox>(
-        settings.graphics.skyboxResolution, 
+        settings.graphics.skyboxResolution.get(), 
         assets->getShader("skybox_gen")
     );
 
@@ -145,7 +145,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 				(b->chunk_x + 0.5f - px) * (b->chunk_x + 0.5f - px) + (b->chunk_z + 0.5f - pz) * (b->chunk_z + 0.5f - pz));
 	});
 
-	bool culling = engine->getSettings().graphics.frustumCulling;
+	bool culling = engine->getSettings().graphics.frustumCulling.get();
 	if (culling) frustumCulling->update(camera->getProjView());
 	chunks->visibleCount = 0;
 	for (size_t i = 0; i < indices.size(); ++i){

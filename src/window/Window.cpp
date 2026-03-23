@@ -10,6 +10,9 @@
 #include "../debug/Logger.h"
 #include "../graphics/core/ImageData.h"
 #include "../graphics/core/Texture.h"
+#include "../settings.h"
+#include "../util/ObjectsKeeper.h"
+#include "../constants.h"
 
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW
 DisplaySettings* Window::settings = nullptr;
@@ -19,6 +22,8 @@ uint Window::width = 0;
 uint Window::height = 0;
 int Window::posX = 0;
 int Window::posY = 0;
+bool Window::fullscreen = false;
+static util::ObjectsKeeper observers_keeper;
 
 const char* glfwErrorName(int error) {
 	switch (error) {
@@ -92,8 +97,8 @@ void window_size_callback(GLFWwindow*, int width, int height) {
 		}
 
 		if (!Window::isFullscreen() && !Window::isMaximized()) {
-			Window::getDisplaySettings()->width = width;
-			Window::getDisplaySettings()->height = height;
+			Window::getDisplaySettings()->width.set(width);
+			Window::getDisplaySettings()->height.set(height);
 		}
 	}
 
@@ -109,7 +114,11 @@ void scroll_callback(GLFWwindow*, double xoffset, double yoffset) {
 }
 
 // Инициализация окна и OpenGL контекста
-bool Window::initialize(DisplaySettings& settings) {
+bool Window::initialize(DisplaySettings* settings) {
+    Window::settings = settings;
+    Window::width = settings->width.get();
+    Window::height = settings->height.get();
+
     if (!glfwInit()){ // Инициализация GLFW
         LOG_CRITICAL("GLFW initialization failed");
         return false;
@@ -132,10 +141,18 @@ bool Window::initialize(DisplaySettings& settings) {
     LOG_DEBUG("GLFW version: {}.{}.{}", major, minor, rev);
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE); // Разрешаем изменять размер окна
-    glfwWindowHint(GLFW_SAMPLES, settings.samples);
+    glfwWindowHint(GLFW_SAMPLES, settings->samples.get());
+
+    std::string title = "ChromaForge (v " + ENGINE_VERSION_STRING + ")";
 
     // Создание окна GLFW
-    window = glfwCreateWindow(settings.width, settings.height, settings.title.c_str(), nullptr, nullptr);
+    window = glfwCreateWindow(
+        width, 
+        height, 
+        title.c_str(), 
+        nullptr, 
+        nullptr
+    );
     if (window == nullptr) {
         LOG_CRITICAL("Failed to create GLFW Window");
         glfwTerminate();
@@ -153,15 +170,11 @@ bool Window::initialize(DisplaySettings& settings) {
         return false;
     }
      // Установка области отображения (viewport) - вся область окна
-    glViewport(0, 0, settings.width, settings.height);
+    glViewport(0, 0, width, height);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    Window::settings = &settings;
-    Window::width = settings.width;
-    Window::height = settings.height;
 
     GLint maxTextureSize[1]{static_cast<GLint>(Texture::MAX_RESOLUTION)};
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, maxTextureSize);
@@ -178,13 +191,13 @@ bool Window::initialize(DisplaySettings& settings) {
     glfwSetCharCallback(window, character_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-	if (settings.fullscreen) {
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
-    }
-
-    glfwSwapInterval(settings.vsync.get());
+	observers_keeper = util::ObjectsKeeper();
+    observers_keeper.keepAlive(settings->fullscreen.observe([=](bool value) {
+        if (value != isFullscreen()) {
+            toggleFullscreen();
+        }
+    }, true));
+    glfwSwapInterval(settings->vsync.get());
 
     const GLubyte* vendor = glGetString(GL_VENDOR);
 	const GLubyte* renderer = glGetString(GL_RENDERER);
@@ -192,13 +205,14 @@ bool Window::initialize(DisplaySettings& settings) {
     LOG_DEBUG("GL Renderer: {}", (char*)renderer);
     LOG_DEBUG("GLFW version: {}", glfwGetVersionString());
 
-    LOG_INFO("Window initialized successfully: {}x{}", settings.width, settings.height);
+    LOG_INFO("Window initialized successfully: {}x{}", settings->width.get(), settings->height.get());
 
     return true;
 }
 
 // Завершение работы окна и освобождение ресурсов GLFW
 void Window::terminate() {
+    observers_keeper = util::ObjectsKeeper();
     glfwDestroyWindow(window);
     glfwTerminate();
 }
@@ -301,18 +315,18 @@ void Window::setBgColor(glm::vec4 color) {
 }
 
 void Window::toggleFullscreen(){
-	settings->fullscreen = !settings->fullscreen;
+	fullscreen = !fullscreen;
 
 	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
 	if (Events::_cursor_locked) Events::toggleCursor();
 
-	if (settings->fullscreen) {
+	if (fullscreen) {
         glfwGetWindowPos(window, &posX, &posY);
 		glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
 	} else {
-		glfwSetWindowMonitor(window, nullptr, posX, posY, settings->width, settings->height, GLFW_DONT_CARE);
+		glfwSetWindowMonitor(window, nullptr, posX, posY, settings->width.get(), settings->height.get(), GLFW_DONT_CARE);
 		glfwSetWindowAttrib(window, GLFW_MAXIMIZED, GLFW_FALSE);
 	}
 
@@ -322,32 +336,20 @@ void Window::toggleFullscreen(){
 }
 
 bool Window::isFullscreen() {
-	return settings->fullscreen;
+	return fullscreen;
 }
 
 DisplaySettings* Window::getDisplaySettings() {
 	return settings;
 }
 
-void Window::setBlendMode(BlendMode mode) {
-    switch (mode) {
-        case BlendMode::Normal:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            break;
-        case BlendMode::Addition:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            break;
-        case BlendMode::Inversion:
-            glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
-            break;
-    }
-}
-
-ImageData* Window::takeScreenshot() {
-	ubyte* data = new ubyte[width * height * 4];
+std::unique_ptr<ImageData> Window::takeScreenshot() {
+    auto data = std::make_unique<ubyte[]>(width * height * 4);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	return new ImageData(ImageFormat::rgba8888, width, height, data);
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data.get());
+	return std::make_unique<ImageData>(
+        ImageFormat::rgba8888, width, height, data.release()
+    );
 }
 
 bool Window::tryToMaximize(GLFWwindow* window, GLFWmonitor* monitor) {

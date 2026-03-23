@@ -4,6 +4,7 @@
 #include "../../typedefs.h"
 #include "Viewport.h"
 #include "../../window/Window.h"
+#include "commons.h"
 
 class Batch2D;
 class Framebuffer;
