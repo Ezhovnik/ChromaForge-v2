@@ -8,7 +8,6 @@
 #include "../../math/UVRegion.h"
 #include "../../voxels/voxel.h"
 #include "../../typedefs.h"
-#include "../../settings.h"
 
 class Content;
 class Mesh;
@@ -18,6 +17,7 @@ class Chunks;
 class VoxelsVolume;
 class ChunksStorage;
 class ContentGfxCache;
+struct EngineSettings;
 
 /**
  * @brief Класс для рендеринга блоков (вокселей) в чанках.
@@ -41,7 +41,7 @@ private:
 
 	const Block* const* blockDefsCache;
 	const ContentGfxCache* const cache;
-	const EngineSettings& settings;
+	const EngineSettings* settings;
 
     /**
      * @brief Добавляет вершину в буфер.
@@ -262,7 +262,7 @@ public:
         size_t capacity, 
         const Content* content, 
         const ContentGfxCache* cache, 
-        const EngineSettings& settings
+        const EngineSettings* settings
     );
 
 	virtual ~BlocksRenderer();

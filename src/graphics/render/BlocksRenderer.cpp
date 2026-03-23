@@ -12,6 +12,7 @@
 #include "../../voxels/ChunksStorage.h"
 #include "../../lighting/Lightmap.h"
 #include "../../frontend/ContentGfxCache.h"
+#include "../../settings.h"
 
 // Размер вершины в количестве float-ов
 inline constexpr int BR_VERTEX_SIZE = 6; 
@@ -23,7 +24,7 @@ BlocksRenderer::BlocksRenderer(
     size_t capacity,
 	const Content* content,
 	const ContentGfxCache* cache,
-	const EngineSettings& settings
+	const EngineSettings* settings
 ) : content(content),
 	vertexOffset(0),
 	indexOffset(0),
@@ -483,7 +484,7 @@ void BlocksRenderer::build(const Chunk* chunk, const ChunksStorage* chunks) {
         0, 
         chunk->chunk_z * CHUNK_DEPTH - 1
     );
-	chunks->getVoxels(voxelsBuffer, settings.graphics.backlight.get());
+	chunks->getVoxels(voxelsBuffer, settings->graphics.backlight.get());
 	overflow = false;
 	vertexOffset = 0;
 	indexOffset = indexSize = 0;

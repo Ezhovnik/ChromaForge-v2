@@ -48,6 +48,7 @@ settings.Regular Sounds=Обычные Звуки
 settings.UI Sounds=Звуки Интерфейса
 settings.Ambient=Фон
 settings.Music=Музыка
+settings.Gamma=Гамма
 
 # Управление
 movement.forward=Вперёд

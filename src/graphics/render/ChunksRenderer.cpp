@@ -8,6 +8,7 @@
 #include "../../voxels/Chunk.h"
 #include "../../world/Level.h"
 #include "../../debug/Logger.h"
+#include "../../settings.h"
 
 inline constexpr uint RENDERER_CAPACITY = 9 * 6 * 6 * 3000;
 
@@ -18,7 +19,7 @@ public:
     RendererWorker(
         Level* level, 
         const ContentGfxCache* cache, 
-        const EngineSettings& settings
+        const EngineSettings* settings
     ) : level(level), 
         renderer(RENDERER_CAPACITY, level->content, cache, settings) {}
 
@@ -31,7 +32,7 @@ public:
 ChunksRenderer::ChunksRenderer(
     Level* level, 
     const ContentGfxCache* cache, 
-    const EngineSettings& settings
+    const EngineSettings* settings
 ) : level(level),
     threadPool(
         "chunks-render-pool",

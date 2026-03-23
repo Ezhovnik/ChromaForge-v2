@@ -26,6 +26,7 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
 
     map.emplace("graphics.fog-curve", &settings.graphics.fogCurve);
 	map.emplace("graphics.backlight", &settings.graphics.backlight);
+	map.emplace("graphics.gamma", &settings.graphics.gamma);
 }
 
 std::unique_ptr<dynamic::Value> SettingsHandler::getValue(const std::string& name) const {
@@ -129,7 +130,7 @@ toml::Wrapper* create_wrapper(EngineSettings& settings) {
 	graphics.add("backlight", &*settings.graphics.backlight);
 	graphics.add("frustum-culling", &settings.graphics.frustumCulling);
 	graphics.add("skybox-resolution", &settings.graphics.skyboxResolution);
-	graphics.add("gamma", &settings.graphics.gamma);
+	graphics.add("gamma", &*settings.graphics.gamma);
 
     toml::Section& debug = wrapper->add("debug");
 	debug.add("generator-test-mode", &settings.debug.generatorTestMode);

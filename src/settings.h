@@ -32,7 +32,7 @@ struct CameraSettings {
 
 struct GraphicsSettings {
     NumberSetting fogCurve {1.6f, 1.0f, 6.0f};
-	float gamma = 1.0f;
+	NumberSetting gamma = {1.0f, 0.5f, 2.0f};
 	BoolSetting backlight = {true};
 	bool frustumCulling = true;
 	int skyboxResolution = 64 + 32;
