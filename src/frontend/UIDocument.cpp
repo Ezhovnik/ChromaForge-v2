@@ -1,7 +1,7 @@
 #include "UIDocument.h"
 
 #include "../graphics/ui/elements/UINode.h"
-#include "InventoryView.h"
+#include "../graphics/ui/elements/display/InventoryView.h"
 #include "../logic/scripting/scripting.h"
 #include "../files/files.h"
 #include "../graphics/ui/gui_xml.h"
@@ -59,7 +59,6 @@ std::unique_ptr<UIDocument> UIDocument::read(scriptenv parent_env, std::string n
 
     auto env = parent_env == nullptr ? scripting::get_root_environment() : scripting::create_doc_environment(parent_env, name);
     gui::UIXmlReader reader(env);
-    InventoryView::createReaders(reader);
     auto view = reader.readXML(file.u8string(), xmldoc->getRoot());
     view->setId("root");
     uidocscript script {};

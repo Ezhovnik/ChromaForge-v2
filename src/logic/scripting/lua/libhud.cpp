@@ -13,7 +13,7 @@
 #include "../../../engine.h"
 #include "LuaState.h"
 #include "../../../frontend/UIDocument.h"
-#include "../../../frontend/InventoryView.h"
+#include "../../../graphics/ui/elements/display/InventoryView.h"
 
 namespace scripting {
     extern Hud* hud;

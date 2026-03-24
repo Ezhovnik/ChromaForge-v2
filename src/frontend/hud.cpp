@@ -34,7 +34,7 @@
 #include "../graphics/render/WorldRenderer.h"
 #include "../util/stringutil.h"
 #include "../graphics/core/Batch3D.h"
-#include "InventoryView.h"
+#include "../graphics/ui/elements/display/InventoryView.h"
 #include "LevelFrontend.h"
 #include "../items/Item.h"
 #include "../items/Inventory.h"
@@ -94,7 +94,7 @@ std::shared_ptr<gui::UINode> HudElement::getNode() const {
     return node;
 }
 
-std::shared_ptr<InventoryView> Hud::createContentAccess() {
+std::shared_ptr<gui::InventoryView> Hud::createContentAccess() {
     auto level = levelFrontend->getLevel();
     auto content = level->content;
     auto indices = content->getIndices();
@@ -106,7 +106,7 @@ std::shared_ptr<InventoryView> Hud::createContentAccess() {
         accessInventory->getSlot(id - 1).set(ItemStack(id, 1));
     }
 
-    SlotLayout slotLayout(-1, glm::vec2(), false, true, nullptr,
+    gui::SlotLayout slotLayout(-1, glm::vec2(), false, true, nullptr,
     [=](uint, ItemStack& item) {
         auto copy = ItemStack(item);
         inventory->move(copy, indices);
@@ -115,7 +115,7 @@ std::shared_ptr<InventoryView> Hud::createContentAccess() {
         inventory->getSlot(player->getChosenSlot()).set(item);
     });
 
-    InventoryBuilder builder;
+    gui::InventoryBuilder builder;
     builder.addGrid(8, itemsCount - 1, glm::vec2(), 8, true, slotLayout);
     auto view = builder.build();
     view->bind(accessInventory, content);
@@ -123,12 +123,12 @@ std::shared_ptr<InventoryView> Hud::createContentAccess() {
     return view;
 }
 
-std::shared_ptr<InventoryView> Hud::createHotbar() {
+std::shared_ptr<gui::InventoryView> Hud::createHotbar() {
     auto inventory = player->getInventory();
     auto content = levelFrontend->getLevel()->content;
 
-    SlotLayout slotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr);
-    InventoryBuilder builder;
+    gui::SlotLayout slotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr);
+    gui::InventoryBuilder builder;
     builder.addGrid(10, 10, glm::vec2(), 4, true, slotLayout);
     auto view = builder.build();
     view->setOrigin(glm::vec2(view->getSize().x / 2, 0));
@@ -346,7 +346,7 @@ void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inven
 
     auto level = levelFrontend->getLevel();
     auto content = level->content;
-    blockUI = std::dynamic_pointer_cast<InventoryView>(doc->getRoot());
+    blockUI = std::dynamic_pointer_cast<gui::InventoryView>(doc->getRoot());
     if (blockUI == nullptr) {
 		LOG_ERROR("Block UI root element must be 'inventory'");
         throw std::runtime_error("Block UI root element must be 'inventory'");
@@ -369,27 +369,27 @@ void Hud::openInventory() {
     auto level = levelFrontend->getLevel();
     auto content = level->content;
     exchangeSlotInv = level->inventories->createVirtual(1);
-    exchangeSlot = std::make_shared<SlotView>(
-        SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr)
+    exchangeSlot = std::make_shared<gui::SlotView>(
+        gui::SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr)
     );
     exchangeSlot->bind(exchangeSlotInv->getId(), exchangeSlotInv->getSlot(0), content);
     exchangeSlot->setColor(glm::vec4());
     exchangeSlot->setInteractive(false);
     exchangeSlot->setZIndex(1);
-    guiController->store(SlotView::EXCHANGE_SLOT_NAME, exchangeSlot);
+    guiController->store(gui::SlotView::EXCHANGE_SLOT_NAME, exchangeSlot);
 
     inventoryOpen = true;
 
     auto inventory = player->getInventory();
     auto inventoryDocument = assets->getLayout(BUILTIN_CONTENT_NAMESPACE + ":inventory");
-    inventoryView = std::dynamic_pointer_cast<InventoryView>(inventoryDocument->getRoot());
+    inventoryView = std::dynamic_pointer_cast<gui::InventoryView>(inventoryDocument->getRoot());
     inventoryView->bind(inventory, content);
     add(HudElement(HudElementMode::InventoryBound, inventoryDocument, inventoryView, false));
     add(HudElement(HudElementMode::InventoryBound, nullptr, exchangeSlot, false));
 }
 
 void Hud::closeInventory() {
-    guiController->remove(SlotView::EXCHANGE_SLOT_NAME);
+    guiController->remove(gui::SlotView::EXCHANGE_SLOT_NAME);
     exchangeSlot = nullptr;
     exchangeSlotInv = nullptr;
     inventoryOpen = false;
@@ -402,7 +402,7 @@ void Hud::openPermanent(UIDocument* doc) {
     auto root = doc->getRoot();
     remove(root);
 
-    auto invview = std::dynamic_pointer_cast<InventoryView>(root);
+    auto invview = std::dynamic_pointer_cast<gui::InventoryView>(root);
     if (invview) invview->bind(player->getInventory(), levelFrontend->getLevel()->content);
     add(HudElement(HudElementMode::Permanent, doc, doc->getRoot(), false));
 }
@@ -434,7 +434,7 @@ void Hud::setPause(bool pause) {
 
 void Hud::add(HudElement element) {
     guiController->add(element.getNode());
-    auto invview = std::dynamic_pointer_cast<InventoryView>(element.getNode());
+    auto invview = std::dynamic_pointer_cast<gui::InventoryView>(element.getNode());
     auto document = element.getDocument();
     if (document) {
         auto inventory = invview ? invview->getInventory() : nullptr;
@@ -455,7 +455,7 @@ void Hud::onRemove(HudElement& element) {
     auto document = element.getDocument();
     if (document) {
         Inventory* inventory = nullptr;
-        auto invview = std::dynamic_pointer_cast<InventoryView>(element.getNode());
+        auto invview = std::dynamic_pointer_cast<gui::InventoryView>(element.getNode());
         if (invview) inventory = invview->getInventory().get();
         scripting::on_ui_close(document, inventory);
         if (invview) invview->unbind();

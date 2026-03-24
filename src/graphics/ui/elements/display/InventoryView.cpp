@@ -2,31 +2,31 @@
 
 #include <glm/glm.hpp>
 
-#include "../graphics/render/BlocksPreview.h"
-#include "LevelFrontend.h"
-#include "../window/Events.h"
-#include "../window/input.h"
-#include "../assets/Assets.h"
-#include "../graphics/core/Atlas.h"
-#include "../graphics/core/ShaderProgram.h"
-#include "../graphics/core/Batch2D.h"
-#include "../graphics/core/GfxContext.h"
-#include "../graphics/core/Font.h"
-#include "../content/Content.h"
-#include "../items/Item.h"
-#include "../items/Inventory.h"
-#include "../math/voxmaths.h"
-#include "../objects/Player.h"
-#include "../voxels/Block.h"
-#include "../util/stringutil.h"
-#include "../world/Level.h"
-#include "../debug/Logger.h"
-#include "../coders/xml.h"
-#include "../graphics/ui/gui_xml.h"
-#include "../logic/scripting/scripting.h"
-#include "../items/Inventories.h"
-#include "../graphics/ui/GUI.h"
-#include "../items/ItemStack.h"
+#include "../../../../graphics/render/BlocksPreview.h"
+#include "../../../../frontend/LevelFrontend.h"
+#include "../../../../window/Events.h"
+#include "../../../../window/input.h"
+#include "../../../../assets/Assets.h"
+#include "../../../../graphics/core/Atlas.h"
+#include "../../../../graphics/core/ShaderProgram.h"
+#include "../../../../graphics/core/Batch2D.h"
+#include "../../../../graphics/core/GfxContext.h"
+#include "../../../../graphics/core/Font.h"
+#include "../../../../content/Content.h"
+#include "../../../../items/Item.h"
+#include "../../../../items/Inventory.h"
+#include "../../../../math/voxmaths.h"
+#include "../../../../objects/Player.h"
+#include "../../../../voxels/Block.h"
+#include "../../../../util/stringutil.h"
+#include "../../../../world/Level.h"
+#include "../../../../debug/Logger.h"
+#include "../../../../logic/scripting/scripting.h"
+#include "../../../../items/Inventories.h"
+#include "../../../../graphics/ui/GUI.h"
+#include "../../../../items/ItemStack.h"
+
+using namespace gui;
 
 SlotLayout::SlotLayout(
     int index,
@@ -308,85 +308,4 @@ std::shared_ptr<Inventory> InventoryView::getInventory() const {
 
 size_t InventoryView::getSlotsCount() const {
     return slots.size();
-}
-
-static slotcallback readSlotFunc(InventoryView* view, gui::UIXmlReader& reader, xml::xmlelement& element, const std::string& attr) {
-    auto consumer = scripting::create_int_array_consumer(
-        reader.getEnvironment(), 
-        element->attr(attr).getText()
-    );
-    return [=](uint slot, ItemStack& stack) {
-        int args[] {int(view->getInventory()->getId()), int(slot)};
-        consumer(args, 2);
-    };
-}
-
-static void readSlot(InventoryView* view, gui::UIXmlReader& reader, xml::xmlelement element) {
-    int index = element->attr("index", "0").asInt();
-    bool itemSource = element->attr("item-source", "false").asBool();
-    SlotLayout layout(index, glm::vec2(), true, itemSource, nullptr, nullptr, nullptr);
-    if (element->has("pos")) layout.position = element->attr("pos").asVec2();
-    if (element->has("sharefunc")) layout.shareFunc = readSlotFunc(view, reader, element, "sharefunc");
-    if (element->has("updatefunc")) layout.updateFunc = readSlotFunc(view, reader, element, "updatefunc");
-    if (element->has("onrightclick")) layout.rightClick = readSlotFunc(view, reader, element, "onrightclick");
-    auto slot = view->addSlot(layout);
-    reader.readUINode(reader, element, *slot);
-    view->add(slot);
-}
-
-static void readSlotsGrid(InventoryView* view, gui::UIXmlReader& reader, xml::xmlelement element) {
-    int startIndex = element->attr("start-index", "0").asInt();
-    int rows = element->attr("rows", "0").asInt();
-    int cols = element->attr("cols", "0").asInt();
-    int count = element->attr("count", "0").asInt();
-    const int slotSize = InventoryView::SLOT_SIZE;
-    int interval = element->attr("interval", "-1").asInt();
-    if (interval < 0) interval = InventoryView::SLOT_INTERVAL;
-    int padding = element->attr("padding", "-1").asInt();
-    if (padding < 0) padding = interval;
-
-    if (rows == 0) rows = ceildiv(count, cols);
-    else if (cols == 0) cols = ceildiv(count, rows);
-    else if (count == 0) count = rows * cols;
-
-    bool itemSource = element->attr("item-source", "false").asBool();
-    SlotLayout layout(-1, glm::vec2(), true, itemSource, nullptr, nullptr, nullptr);
-    if (element->has("pos")) layout.position = element->attr("pos").asVec2();
-    if (element->has("sharefunc")) layout.shareFunc = readSlotFunc(view, reader, element, "sharefunc");
-    if (element->has("updatefunc")) layout.updateFunc = readSlotFunc(view, reader, element, "updatefunc");
-    if (element->has("onrightclick")) layout.rightClick = readSlotFunc(view, reader, element, "onrightclick");
-
-    layout.padding = padding;
-
-    int idx = 0;
-    for (int row = 0; row < rows; ++row) {
-        for (int col = 0; col < cols; ++col, ++idx) {
-            if (idx >= count) return;
-
-            SlotLayout slotLayout = layout;
-            slotLayout.index = startIndex + idx;
-            slotLayout.position += glm::vec2(
-                padding + col * (slotSize + interval),
-                padding + (rows - row - 1) * (slotSize + interval)
-            );
-            auto slot = view->addSlot(slotLayout);
-            view->add(slot, slotLayout.position);
-        }
-    }
-}
-
-void InventoryView::createReaders(gui::UIXmlReader& reader) {
-    reader.add("inventory", [=](gui::UIXmlReader& reader, xml::xmlelement element) {
-        auto view = std::make_shared<InventoryView>();
-        view->setColor(glm::vec4(0.122f, 0.122f, 0.122f, 0.878f));
-        reader.addIgnore("slot");
-        reader.addIgnore("slots-grid");
-        reader.readUINode(reader, element, *view);
-
-        for (auto& sub : element->getElements()) {
-            if (sub->getTag() == "slot") readSlot(view.get(), reader, sub);
-            else if (sub->getTag() == "slots-grid") readSlotsGrid(view.get(), reader, sub);
-        }
-        return view;
-    });
 }

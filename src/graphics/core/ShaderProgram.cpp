@@ -76,7 +76,9 @@ void ShaderProgram::uniform3f(const std::string& name, glm::vec3 xyz) {
 
 inline auto shader_deleter = [](GLuint* shader) {
     glDeleteShader(*shader);
+    delete shader;
 };
+
 inline constexpr uint GL_LOG_LEN = 512;
 using glshader = std::unique_ptr<GLuint, decltype(shader_deleter)>;
 

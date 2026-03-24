@@ -16,6 +16,9 @@
 #include "../../../graphics/ui/elements/control/TrackBar.h"
 #include "../../../graphics/ui/elements/layout/Panel.h"
 #include "../../../graphics/ui/elements/layout/Menu.h"
+#include "../../../items/Inventories.h"
+#include "../../../graphics/ui/elements/display/InventoryView.h"
+#include "../../../world/Level.h"
 
 struct DocumentNode {
     UIDocument* document;
@@ -161,11 +164,34 @@ static bool getattr(lua_State* L, gui::TextBox* box, const std::string& attr) {
     return false;
 }
 
+static bool getattr(lua_State* L, gui::InventoryView* inventory, const std::string& attr) {
+    if (inventory == nullptr) return false;
+    if (attr == "inventory") {
+        auto inv = inventory->getInventory();
+        lua_pushinteger(L, inv ? inv->getId() : 0);
+        return true;
+    }
+    return false;
+}
+
 static bool setattr(lua_State* L, gui::FullCheckBox* box, const std::string& attr) {
-    if (box == nullptr)
-        return false;
+    if (box == nullptr) return false;
     if (attr == "checked") {
         box->setChecked(lua_toboolean(L, 4));
+        return true;
+    }
+    return false;
+}
+
+static bool setattr(lua_State* L, gui::InventoryView* inventory, const std::string& attr) {
+    if (inventory == nullptr) return false;
+    if (attr == "inventory") {
+        auto inv = scripting::level->inventories->get(lua_tointeger(L, 4));
+        if (inv == nullptr) {
+            inventory->unbind();
+        } else {
+            inventory->bind(inv, scripting::content);
+        }
         return true;
     }
     return false;
@@ -267,6 +293,7 @@ static int l_gui_getattr(lua_State* L) {
     if (getattr(L, dynamic_cast<gui::FullCheckBox*>(node), attr)) return 1;
     if (getattr(L, dynamic_cast<gui::TextBox*>(node), attr)) return 1;
     if (getattr(L, dynamic_cast<gui::Menu*>(node), attr)) return 1;
+    if (getattr(L, dynamic_cast<gui::InventoryView*>(node), attr)) return 1;
 
     return 0;
 }
@@ -303,6 +330,7 @@ static int l_gui_setattr(lua_State* L) {
         if (setattr(L, dynamic_cast<gui::FullCheckBox*>(node), attr)) return 0;
         if (setattr(L, dynamic_cast<gui::TextBox*>(node), attr)) return 0;
         if (setattr(L, dynamic_cast<gui::Menu*>(node), attr)) return 0;
+        if (setattr(L, dynamic_cast<gui::InventoryView*>(node), attr)) return 0;
     }
 
     return 0;

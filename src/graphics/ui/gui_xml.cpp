@@ -1,6 +1,5 @@
 #include "gui_xml.h"
 
-#include <charconv>
 #include <stdexcept>
 
 #include "elements/layout/Panel.h"
@@ -10,11 +9,14 @@
 #include "elements/control/TextBox.h"
 #include "elements/control/TrackBar.h"
 #include "elements/control/InputBindBox.h"
+#include "elements/display/InventoryView.h"
 #include "../../frontend/locale/langs.h"
 #include "../../logic/scripting/scripting.h"
 #include "../../util/stringutil.h"
 #include "../../debug/Logger.h"
 #include "../../window/Events.h"
+#include "../../items/Inventory.h"
+#include "../../math/voxmaths.h"
 
 using namespace gui;
 
@@ -62,12 +64,11 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
     if (element->has("margin")) node.setMargin(element->attr("margin").asVec4());
     if (element->has("z-index")) node.setZIndex(element->attr("z-index").asInt());
     if (element->has("position-func")) {
-        auto supplier = scripting::create_vec2_supplier(
+        node.setPositionFunc(scripting::create_vec2_supplier(
             reader.getEnvironment(),
             element->attr("position-func").getText(),
             reader.getFilename() + ".lua"
-        );
-        node.setPositionFunc(supplier);
+        ));
     }
     if (element->has("interactive")) node.setInteractive(element->attr("interactive").asBool());
     if (element->has("visible")) node.setVisible(element->attr("visible").asBool());
@@ -177,12 +178,11 @@ static std::shared_ptr<UINode> readLabel(UIXmlReader& reader, xml::xmlelement el
         label->setVerticalAlign(align_from_string(element->attr("valign").getText(), label->getVerticalAlign()));
     }
     if (element->has("supplier")) {
-        auto supplier = scripting::create_wstring_supplier(
+        label->textSupplier(scripting::create_wstring_supplier(
             reader.getEnvironment(),
             element->attr("supplier").getText(),
             reader.getFilename()
-        );
-        label->textSupplier(supplier);
+        ));
     }
     if (element->has("multiline")) label->setMultiline(element->attr("multiline").asBool());
     if (element->has("text-wrap")) label->setTextWrapping(element->attr("text-wrap").asBool());
@@ -228,30 +228,27 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
     if (element->has("text-wrap")) textbox->setTextWrapping(element->attr("text-wrap").asBool());
     if (element->has("editable")) textbox->setEditable(element->attr("editable").asBool());
     if (element->has("consumer")) {
-        auto consumer = scripting::create_wstring_consumer(
+        textbox->setTextConsumer(scripting::create_wstring_consumer(
             reader.getEnvironment(),
             element->attr("consumer").getText(),
             reader.getFilename()
-        );
-        textbox->setTextConsumer(consumer);
+        ));
     }
     if (element->has("supplier")) {
-        auto supplier = scripting::create_wstring_supplier(
+        textbox->setTextSupplier(scripting::create_wstring_supplier(
             reader.getEnvironment(),
             element->attr("supplier").getText(),
             reader.getFilename()
-        );
-        textbox->setTextSupplier(supplier);
+        ));
     }
     if (element->has("focused-color")) textbox->setFocusedColor(element->attr("focused-color").asColor());
     if (element->has("error-color")) textbox->setErrorColor(element->attr("error-color").asColor());
     if (element->has("validator")) {
-        auto validator  = scripting::create_wstring_validator(
+        textbox->setTextValidator(scripting::create_wstring_validator(
             reader.getEnvironment(),
             element->attr("validator").getText(),
             reader.getFilename()
-        );
-        textbox->setTextValidator(validator);
+        ));
     }
 
     return textbox;
@@ -264,21 +261,19 @@ static std::shared_ptr<UINode> readCheckBox(UIXmlReader& reader, xml::xmlelement
     _readPanel(reader, element, *checkbox);
 
     if (element->has("consumer")) {
-        auto consumer = scripting::create_bool_consumer(
+        checkbox->setConsumer(scripting::create_bool_consumer(
             reader.getEnvironment(),
             element->attr("consumer").getText(),
             reader.getFilename()
-        );
-        checkbox->setConsumer(consumer);
+        ));
     }
 
     if (element->has("supplier")) {
-        auto supplier = scripting::create_bool_supplier(
+        checkbox->setSupplier(scripting::create_bool_supplier(
             reader.getEnvironment(),
             element->attr("supplier").getText(),
             reader.getFilename()
-        );
-        checkbox->setSupplier(supplier);
+        ));
     }
     return checkbox;
 }
@@ -288,24 +283,22 @@ static std::shared_ptr<UINode> readTrackBar(UIXmlReader& reader, xml::xmlelement
     float max = element->attr("max", "1.0").asFloat();
     float def = element->attr("value", "0.0").asFloat();
     float step = element->attr("step", "1.0").asFloat();
-    int trackWidth = element->attr("track-width", "12.0").asInt();
+    int trackWidth = element->attr("track-width", "12").asInt();
     auto bar = std::make_shared<TrackBar>(min, max, def, step, trackWidth);
     _readUINode(reader, element, *bar);
     if (element->has("consumer")) {
-        auto consumer = scripting::create_number_consumer(
+        bar->setConsumer(scripting::create_number_consumer(
             reader.getEnvironment(),
             element->attr("consumer").getText(),
             reader.getFilename()
-        );
-        bar->setConsumer(consumer);
+        ));
     }
     if (element->has("supplier")) {
-        auto supplier = scripting::create_number_supplier(
+        bar->setSupplier(scripting::create_number_supplier(
             reader.getEnvironment(),
             element->attr("supplier").getText(),
             reader.getFilename()
-        );
-        bar->setSupplier(supplier);
+        ));
     }
     if (element->has("track-color")) bar->setTrackColor(element->attr("track-color").asColor());
 
@@ -333,6 +326,90 @@ static std::shared_ptr<UINode> readImage(UIXmlReader& reader, xml::xmlelement el
     return image;
 }
 
+static slotcallback readSlotFunc(InventoryView* view, UIXmlReader& reader, xml::xmlelement& element, const std::string& attr) {
+    auto consumer = scripting::create_int_array_consumer(
+        reader.getEnvironment(), 
+        element->attr(attr).getText()
+    );
+    return [=](uint slot, ItemStack& stack) {
+        int args[] {int(view->getInventory()->getId()), int(slot)};
+        consumer(args, 2);
+    };
+}
+
+static void readSlot(InventoryView* view, UIXmlReader& reader, xml::xmlelement element) {
+    int index = element->attr("index", "0").asInt();
+    bool itemSource = element->attr("item-source", "false").asBool();
+    SlotLayout layout(index, glm::vec2(), true, itemSource, nullptr, nullptr, nullptr);
+    if (element->has("pos")) layout.position = element->attr("pos").asVec2();
+    if (element->has("updatefunc")) layout.updateFunc = readSlotFunc(view, reader, element, "updatefunc");
+    if (element->has("sharefunc")) layout.shareFunc = readSlotFunc(view, reader, element, "sharefunc");
+    if (element->has("onrightclick")) layout.rightClick = readSlotFunc(view, reader, element, "onrightclick");
+    auto slot = view->addSlot(layout);
+    reader.readUINode(reader, element, *slot);
+    view->add(slot);
+}
+
+static void readSlotsGrid(InventoryView* view, UIXmlReader& reader, xml::xmlelement element) {
+    int startIndex = element->attr("start-index", "0").asInt();
+    int rows = element->attr("rows", "0").asInt();
+    int cols = element->attr("cols", "0").asInt();
+    int count = element->attr("count", "0").asInt();
+    const int slotSize = InventoryView::SLOT_SIZE;
+    int interval = element->attr("interval", "-1").asInt();
+    if (interval < 0) interval = InventoryView::SLOT_INTERVAL;
+    int padding = element->attr("padding", "-1").asInt();
+    if (padding < 0) padding = interval;
+    if (rows == 0) {
+        rows = ceildiv(count, cols);
+    } else if (cols == 0) {
+        cols = ceildiv(count, rows);
+    } else if (count == 0) {
+        count = rows * cols;
+    }
+    bool itemSource = element->attr("item-source", "false").asBool();
+    SlotLayout layout(-1, glm::vec2(), true, itemSource, nullptr, nullptr, nullptr);
+    if (element->has("pos")) layout.position = element->attr("pos").asVec2();
+    if (element->has("updatefunc")) layout.updateFunc = readSlotFunc(view, reader, element, "updatefunc");
+    if (element->has("sharefunc")) layout.shareFunc = readSlotFunc(view, reader, element, "sharefunc");
+    if (element->has("onrightclick")) layout.rightClick = readSlotFunc(view, reader, element, "onrightclick");
+
+    layout.padding = padding;
+
+    int idx = 0;
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col, ++idx) {
+            if (idx >= count) return;
+
+            SlotLayout slotLayout = layout;
+            slotLayout.index = startIndex + idx;
+            slotLayout.position += glm::vec2(
+                padding + col * (slotSize + interval),
+                padding + (rows - row - 1) * (slotSize + interval)
+            );
+            auto slot = view->addSlot(slotLayout);
+            view->add(slot, slotLayout.position);
+        }
+    }
+}
+
+static std::shared_ptr<UINode> readInventory(UIXmlReader& reader, xml::xmlelement element) {
+    auto view = std::make_shared<InventoryView>();
+    view->setColor(glm::vec4(0.122f, 0.122f, 0.122f, 0.878f));
+    reader.addIgnore("slot");
+    reader.addIgnore("slots-grid");
+    reader.readUINode(reader, element, *view);
+
+    for (auto& sub : element->getElements()) {
+        if (sub->getTag() == "slot") {
+            readSlot(view.get(), reader, sub);
+        } else if (sub->getTag() == "slots-grid") {
+            readSlotsGrid(view.get(), reader, sub);
+        }
+    }
+    return view;
+} 
+
 UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
     contextStack.push("");
     add("image", readImage);
@@ -344,6 +421,7 @@ UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
     add("panel", readPanel);
     add("checkbox", readCheckBox);
     add("bindbox", readInputBindBox);
+    add("inventory", readInventory);
 }
 
 void UIXmlReader::add(const std::string& tag, uinode_reader reader) {

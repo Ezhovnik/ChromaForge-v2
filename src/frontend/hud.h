@@ -13,9 +13,7 @@ class Assets;
 class Player;
 class Engine;
 class Block;
-class InventoryView;
 class LevelFrontend;
-class SlotView;
 class UIDocument;
 class Inventory;
 
@@ -24,6 +22,8 @@ namespace gui {
     class UINode;
     class Panel;
     class Container;
+    class SlotView;
+    class InventoryView;
 }
 
 enum class HudElementMode {
@@ -63,11 +63,11 @@ private:
     Assets* assets;
 
     std::shared_ptr<gui::Container> contentAccessPanel;
-    std::shared_ptr<InventoryView> contentAccess;
-    std::shared_ptr<InventoryView> hotbarView;
+    std::shared_ptr<gui::InventoryView> contentAccess;
+    std::shared_ptr<gui::InventoryView> hotbarView;
 
-    std::shared_ptr<InventoryView> inventoryView = nullptr;
-    std::shared_ptr<InventoryView> blockUI = nullptr;
+    std::shared_ptr<gui::InventoryView> inventoryView = nullptr;
+    std::shared_ptr<gui::InventoryView> blockUI = nullptr;
 
 	glm::ivec3 blockPos {};
     blockid_t currentblockid = 0;
@@ -76,7 +76,7 @@ private:
     bool pause = false;
 
     std::shared_ptr<gui::UINode> debugPanel;
-    std::shared_ptr<SlotView> exchangeSlot;
+    std::shared_ptr<gui::SlotView> exchangeSlot;
     std::shared_ptr<Inventory> exchangeSlotInv = nullptr;
     std::shared_ptr<gui::UINode> darkOverlay;
     std::shared_ptr<gui::UINode> secondUI = nullptr;
@@ -88,8 +88,8 @@ private:
 
     std::vector<HudElement> elements;
 
-    std::shared_ptr<InventoryView> createContentAccess();
-    std::shared_ptr<InventoryView> createHotbar();
+    std::shared_ptr<gui::InventoryView> createContentAccess();
+    std::shared_ptr<gui::InventoryView> createHotbar();
 
     void processInput(bool visible);
     void updateElementsPosition(const Viewport& viewport);
