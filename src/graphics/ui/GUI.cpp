@@ -12,7 +12,7 @@
 #include "../../window/Camera.h"
 #include "../../graphics/core/ShaderProgram.h"
 #include "../../debug/Logger.h"
-#include "../../graphics/core/GfxContext.h"
+#include "../../graphics/core/DrawContext.h"
 #include "../../frontend/UIDocument.h"
 #include "../../core_content_defs.h"
 
@@ -113,7 +113,7 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
     if (focus && !focus->isFocused()) focus = nullptr;
 }
 
-void GUI::draw(const GfxContext* parent_context, Assets* assets) {
+void GUI::draw(const DrawContext* parent_context, Assets* assets) {
     auto& viewport = parent_context->getViewport();
     glm::vec2 wsize = viewport.size();
 

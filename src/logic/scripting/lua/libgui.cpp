@@ -183,14 +183,14 @@ static bool setattr(lua_State* L, gui::FullCheckBox* box, const std::string& att
     return false;
 }
 
-static bool setattr(lua_State* L, gui::InventoryView* inventory, const std::string& attr) {
-    if (inventory == nullptr) return false;
+static bool setattr(lua_State* L, gui::InventoryView* view, const std::string& attr) {
+    if (view == nullptr) return false;
     if (attr == "inventory") {
-        auto inv = scripting::level->inventories->get(lua_tointeger(L, 4));
-        if (inv == nullptr) {
-            inventory->unbind();
+        auto inventory = scripting::level->inventories->get(lua_tointeger(L, 4));
+        if (inventory == nullptr) {
+            view->unbind();
         } else {
-            inventory->bind(inv, scripting::content);
+            view->bind(inventory, scripting::content);
         }
         return true;
     }
@@ -244,8 +244,7 @@ static bool setattr(lua_State* L, gui::Button* button, const std::string& attr) 
 static bool setattr(lua_State* L, gui::Menu* menu, const std::string& attr) {
     if (menu == nullptr) return false;
     if (attr == "page") {
-        auto page = lua_tostring(L, 4);
-        menu->setPage(page);
+        menu->setPage(lua_tostring(L, 4));
         return true;
     }
     return false;

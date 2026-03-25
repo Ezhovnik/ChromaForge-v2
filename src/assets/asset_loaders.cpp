@@ -22,10 +22,11 @@
 
 static bool animation(
     Assets* assets, 
-    const ResPaths* paths, 
-    const std::string directory, 
-    const std::string name,
-    Atlas* dstAtlas
+	const ResPaths* paths,
+    const std::string& atlasName, 
+    const std::string& directory, 
+    const std::string& name, 
+	Atlas* dstAtlas
 );
 
 asset_loader::postfunc asset_loader::shader(
@@ -100,7 +101,7 @@ asset_loader::postfunc asset_loader::font(
  * Проверяет расширение .png, уникальность имени и загружает изображение.
  * При необходимости конвертирует в формат RGBA и исправляет альфа-канал.
  */
-static bool appendAtlas(AtlasBuilder& atlas, const std::filesystem::path& file) {
+static bool append_atlas(AtlasBuilder& atlas, const std::filesystem::path& file) {
 	std::string name = file.stem().string();
 	if (atlas.has(name)) return false;
 
@@ -135,7 +136,7 @@ asset_loader::postfunc asset_loader::atlas(
 	// Проходим по всем файлам в указанной директории и пытаемся добавить каждый PNG в атлас
 	for (auto const& file : paths->listdir(directory)) {
 		if (!imageio::is_read_supported(file.extension().u8string())) continue;
-		if (!appendAtlas(builder, file)) continue;
+		if (!append_atlas(builder, file)) continue;
 	}
 
 	std::set<std::string> names = builder.getNames();
@@ -145,121 +146,131 @@ asset_loader::postfunc asset_loader::atlas(
         assets->store(atlas, name);
 
         for (const auto& file : names) {
-            animation(assets, paths, "textures", file, atlas);
+            animation(assets, paths, name, directory, file, atlas);
         }
     };
 }
 
+static void read_anim_file(
+    const std::string& animFile,
+    std::vector<std::pair<std::string, int>>& frameList
+) {
+    auto root = files::read_json(animFile);
+    auto frameArr = root->list("frames");
+    float frameDuration = DEFAULT_FRAME_DURATION;
+    std::string frameName;
+
+    if (frameArr) {
+        for (size_t i = 0; i < frameArr->size(); i++) {
+            auto currentFrame = frameArr->list(i);
+
+            frameName = currentFrame->str(0);
+            if (currentFrame->size() > 1) {
+                frameDuration = currentFrame->integer(1);
+            }
+            frameList.emplace_back(frameName, frameDuration);
+        }
+    }
+}
+
+static TextureAnimation create_animation(
+    Atlas* srcAtlas,
+    Atlas* dstAtlas,
+    const std::string& name,
+    const std::set<std::string>& frameNames,
+    const std::vector<std::pair<std::string, int>>& frameList
+) {
+    Texture* srcTex = srcAtlas->getTexture();
+    Texture* dstTex = dstAtlas->getTexture();
+    UVRegion region = dstAtlas->get(name);
+
+    TextureAnimation animation(srcTex, dstTex);
+    Frame frame;
+
+    uint dstWidth = dstTex->getWidth();
+    uint dstHeight = dstTex->getHeight();
+
+    uint srcWidth = srcTex->getWidth();
+    uint srcHeight = srcTex->getHeight();
+
+    frame.dstPos = glm::ivec2(region.u1 * dstWidth, region.v1 * dstHeight);
+    frame.size = glm::ivec2(region.u2 * dstWidth, region.v2 * dstHeight) - frame.dstPos;
+
+    for (const auto& elem : frameList) {
+        if (!srcAtlas->has(elem.first)) {
+			LOG_ERROR("Unknown frame name: {}", elem.first);
+            continue;
+        }
+        region = srcAtlas->get(elem.first);
+        if (elem.second > 0) {
+            frame.duration = static_cast<float>(elem.second) / 1000.0f;
+        }
+        frame.srcPos = glm::ivec2(region.u1 * srcWidth, srcHeight - region.v2 * srcHeight);
+        animation.addFrame(frame);
+    }
+    return animation;
+}
+
+inline bool contains(
+    const std::vector<std::pair<std::string, int>>& frameList,
+    const std::string& frameName
+) {
+    for (const auto& elem : frameList) {
+        if (frameName == elem.first) return true;
+    }
+    return false;
+}
+
 static bool animation(
 	Assets* assets, 
-	const ResPaths* paths, 
-	const std::string directory, 
-	const std::string name, 
+	const ResPaths* paths,
+    const std::string& atlasName, 
+    const std::string& directory, 
+    const std::string& name, 
 	Atlas* dstAtlas)
 {
 	// Формируем пути к папкам с анимациями и блоками
-	std::string animsDir = directory + "/animations";
-	std::string blocksDir = directory + "/blocks";
+	std::string animsDir = directory + "/animation";
 
 	// Ищем подпапку в animsDir, имя которой совпадает с текстурой
 	for (const auto& folder : paths->listdir(animsDir)) {
 		if (!std::filesystem::is_directory(folder)) continue;
-		if (folder.filename().string() != name) continue;
+		if (folder.filename().u8string() != name) continue;
 		if (std::filesystem::is_empty(folder)) continue;
 
 		AtlasBuilder builder;
 		// Добавляем базовую текстуру из blocksDir (статичный кадр)
-		appendAtlas(builder, paths->find(blocksDir + "/" + name + ".png"));
-
-		std::string animFile = folder.string() + "/animation.json";
-
-		std::vector<std::pair<std::string, float>> frameList;
+		append_atlas(builder, paths->find(directory + "/" + name + ".png"));
 
 		// Если есть файл описания анимации, читаем его
-		if (std::filesystem::exists(animFile)) {
-			auto root = files::read_json(animFile);
-
-			auto frameArr = root->list("frames");
-
-			float frameDuration = DEFAULT_FRAME_DURATION;
-			std::string frameName;
-
-			if (frameArr) {
-				for (size_t i = 0; i < frameArr->size(); ++i) {
-					auto currentFrame = frameArr->list(i);
-
-					frameName = currentFrame->str(0);
-					if (currentFrame->size() > 1) {
-						frameDuration = static_cast<float>(currentFrame->integer(1)) / 1000;
-					}
-
-					frameList.emplace_back(frameName, frameDuration);
-				}
-			}
-		}
+		std::vector<std::pair<std::string, int>> frameList;
+        std::string animFile = folder.u8string() + "/animation.json";
+		if (std::filesystem::exists(animFile)) read_anim_file(animFile, frameList);
 
 		// Проходим по файлам в папке анимации
 		for (const auto& file : paths->listdir(animsDir + "/" + name)) {
 			// Если есть список кадров из JSON, добавляем только те, что в списке
-			if (!frameList.empty()) {
-				bool contains = false;
-				for (const auto& elem : frameList) {
-					if (file.stem() == elem.first) {
-						contains = true;
-						break;
-					}
-				}
-				if (!contains) continue;
+			if (!frameList.empty() && !contains(frameList, file.stem().u8string())) {
+                continue;
 			}
 			// Добавляем изображение в строитель атласа анимации
-			if (!appendAtlas(builder, file)) continue;
+			if (!append_atlas(builder, file)) continue;
 		}
 
 		// Строим исходный атлас анимации
-		auto srcAtlas = builder.build(2);
-		srcAtlas->prepare();
-
-		Texture* srcTex = srcAtlas->getTexture();
-		Texture* dstTex = dstAtlas->getTexture();
-
-		TextureAnimation animation(srcTex, dstTex);
-		Frame frame;
-		// Получаем регион целевой текстуры в общем атласе
-		UVRegion region = dstAtlas->get(name);
-
-		// Вычисляем позицию и размер в целевом атласе (в пикселях)
-		uint dstWidth = dstTex->getWidth();
-        uint dstHeight = dstTex->getHeight();
-
-        uint srcWidth = srcTex->getWidth();
-        uint srcHeight = srcTex->getHeight();
-
-        frame.dstPos = glm::ivec2(region.u1 * dstWidth, region.v1 * dstHeight);
-        frame.size = glm::ivec2(region.u2 * dstWidth, region.v2 * dstHeight) - frame.dstPos;
+		auto srcAtlas = builder.build(2, true);
 
 		if (frameList.empty()) {
 			// Если JSON с кадрами не задан, используем все имена из srcAtlas в порядке добавления
-			for (const auto& elem : builder.getNames()) {
-				region = srcAtlas->get(elem);
-				frame.srcPos = glm::ivec2(region.u1 * srcWidth, srcHeight - region.v2 * srcHeight);
-				animation.addFrame(frame);
-			}
-		} else {
-			// Иначе добавляем кадры в порядке, заданном в JSON
-			for (const auto& elem : frameList) {
-				if (!srcAtlas->has(elem.first)) {
-					LOG_ERROR("Unknown frame name: '{}'", elem.first);
-					continue;
-				}
-				region = srcAtlas->get(elem.first);
-				frame.duration = elem.second;
-				frame.srcPos = glm::ivec2(region.u1 * srcWidth, srcHeight - region.v2 * srcHeight);
-				animation.addFrame(frame);
+			for (const auto& frameName : builder.getNames()) {
+                frameList.emplace_back(frameName, 0);
 			}
 		}
 
-		// Сохраняем исходный атлас анимации и саму анимацию в менеджере ресурсов
-		assets->store(srcAtlas.release(), name + "_animation");
+		auto animation = create_animation(
+            srcAtlas.get(), dstAtlas, name, builder.getNames(), frameList
+        );
+        assets->store(srcAtlas.release(), atlasName + "/" + name + "_animation");
 		assets->store(animation);
 
 		return true;

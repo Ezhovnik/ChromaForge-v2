@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "../../../core/GfxContext.h"
+#include "../../../core/DrawContext.h"
 #include "../../../core/Batch2D.h"
 
 using namespace gui;
@@ -63,7 +63,7 @@ void Container::setScrollable(bool flag) {
     scrollable = flag;
 }
 
-void Container::draw(const GfxContext* pctx, Assets* assets) {
+void Container::draw(const DrawContext* pctx, Assets* assets) {
     glm::vec2 pos = calcPos();
     glm::vec2 size = getSize();
     drawBackground(pctx, assets);
@@ -72,7 +72,7 @@ void Container::draw(const GfxContext* pctx, Assets* assets) {
     batch->texture(nullptr);
     batch->flush();
     {
-        GfxContext ctx = pctx->sub();
+        DrawContext ctx = pctx->sub();
         ctx.setScissors(glm::vec4(pos.x, pos.y, size.x, size.y));
         for (auto node : nodes) {
             if (node->isVisible()) node->draw(pctx, assets);
@@ -80,7 +80,7 @@ void Container::draw(const GfxContext* pctx, Assets* assets) {
     }
 }
 
-void Container::drawBackground(const GfxContext* pctx, Assets* assets) {
+void Container::drawBackground(const DrawContext* pctx, Assets* assets) {
     glm::vec4 color = isPressed() ? pressedColor : (hover ? hoverColor : this->color);
     if (color.a <= 0.001f) return;
     glm::vec2 pos = calcPos();

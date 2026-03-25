@@ -67,7 +67,7 @@ namespace gui {
 
         virtual bool isFakeLine(size_t line) const;
 
-        virtual void draw(const GfxContext* pctx, Assets* assets) override;
+        virtual void draw(const DrawContext* pctx, Assets* assets) override;
 
         virtual void textSupplier(wstringsupplier supplier);
 

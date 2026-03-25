@@ -10,7 +10,7 @@
 #include "../../../../graphics/core/Atlas.h"
 #include "../../../../graphics/core/ShaderProgram.h"
 #include "../../../../graphics/core/Batch2D.h"
-#include "../../../../graphics/core/GfxContext.h"
+#include "../../../../graphics/core/DrawContext.h"
 #include "../../../../graphics/core/Font.h"
 #include "../../../../content/Content.h"
 #include "../../../../items/Item.h"
@@ -96,7 +96,7 @@ SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(InventoryView::SLOT_SIZ
     setColor(glm::vec4(0, 0, 0, 0.2f));
 }
 
-void SlotView::draw(const GfxContext* parent_context, Assets* assets) {
+void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
     if (bound == nullptr) return;
 
     const int slotSize = InventoryView::SLOT_SIZE;

@@ -1,6 +1,6 @@
 #include "Image.h"
 
-#include "../../../core/GfxContext.h"
+#include "../../../core/DrawContext.h"
 #include "../../../core/Batch2D.h"
 #include "../../../core/Texture.h"
 #include "../../../../assets/Assets.h"
@@ -12,7 +12,7 @@ Image::Image(std::string texture, glm::vec2 size) : UINode(size), texture(textur
     setInteractive(false);
 }
 
-void Image::draw(const GfxContext* pctx, Assets* assets) {
+void Image::draw(const DrawContext* pctx, Assets* assets) {
     glm::vec2 pos = calcPos();
     glm::vec4 color = getColor();
     auto batch = pctx->getBatch2D();

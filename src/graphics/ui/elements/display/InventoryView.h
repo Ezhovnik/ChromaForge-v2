@@ -12,7 +12,7 @@
 #include "../../../../typedefs.h"
 
 class Assets;
-class GfxContext;
+class DrawContext;
 class Content;
 class ItemStack;
 class ContentIndices;
@@ -58,7 +58,7 @@ namespace gui {
     public:
         SlotView(SlotLayout layout);
 
-        virtual void draw(const GfxContext* pctx, Assets* assets) override;
+        virtual void draw(const DrawContext* pctx, Assets* assets) override;
 
         void setHighlighted(bool flag);
         bool isHighlighted() const;

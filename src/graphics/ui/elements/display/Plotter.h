@@ -8,7 +8,7 @@
 #include "../../../../typedefs.h"
 
 class Assets;
-class GfxContext;
+class DrawContext;
 
 namespace gui {
     class Plotter : public gui::UINode {
@@ -31,7 +31,7 @@ namespace gui {
         }
 
         void activate(float delta) override;
-        void draw(const GfxContext* pctx, Assets* assets) override;
+        void draw(const DrawContext* pctx, Assets* assets) override;
     };
 }
 

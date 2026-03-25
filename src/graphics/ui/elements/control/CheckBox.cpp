@@ -1,6 +1,6 @@
 #include "CheckBox.h"
 
-#include "../../../core/GfxContext.h"
+#include "../../../core/DrawContext.h"
 #include "../../../core/Batch2D.h"
 #include "../display/Label.h"
 
@@ -10,7 +10,7 @@ CheckBox::CheckBox(bool checked) : UINode(glm::vec2(32.0f)), checked(checked) {
     setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 }
 
-void CheckBox::draw(const GfxContext* pctx, Assets* assets) {
+void CheckBox::draw(const DrawContext* pctx, Assets* assets) {
     if (supplier) checked = supplier();
 
     glm::vec2 pos = calcPos();

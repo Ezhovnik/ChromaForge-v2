@@ -154,7 +154,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 }
 
 void WorldRenderer::renderLevel(
-	const GfxContext& parent_context, 
+	const DrawContext& parent_context, 
 	Camera* camera, 
 	const EngineSettings& settings) 
 {
@@ -231,12 +231,12 @@ void WorldRenderer::renderBlockSelection(Camera* camera, ShaderProgram* linesSha
 }
 
 void WorldRenderer::renderDebugLines(
-    const GfxContext& pctx, 
+    const DrawContext& pctx, 
     Camera* camera,
     ShaderProgram* linesShader,
     const EngineSettings& settings
 ) {
-    GfxContext ctx = pctx.sub();
+    DrawContext ctx = pctx.sub();
     const auto& viewport = ctx.getViewport();
     uint displayWidth = viewport.getWidth();
     uint displayHeight = viewport.getHeight();
@@ -308,7 +308,7 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 	lineBatch->render();
 }
 
-void WorldRenderer::draw(const GfxContext& pctx, Camera* camera, bool hudVisible, PostProcessing* postProcessing) {
+void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisible, PostProcessing* postProcessing) {
     const Viewport& vp = pctx.getViewport();
     camera->aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
 
@@ -319,12 +319,12 @@ void WorldRenderer::draw(const GfxContext& pctx, Camera* camera, bool hudVisible
     ShaderProgram* linesShader = assets->getShader("lines");
 
     {
-        GfxContext wctx = pctx.sub();
+        DrawContext wctx = pctx.sub();
         postProcessing->use(wctx);
         Window::clearDepth();
         skybox->draw(pctx, camera, assets, level->getWorld()->daytime, skyClearness);
         {
-            GfxContext ctx = wctx.sub();
+            DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
             ctx.setCullFace(true);
             renderLevel(ctx, camera, settings);

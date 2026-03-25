@@ -13,7 +13,7 @@
 #include "../../../delegates.h"
 #include "../../../window/input.h"
 
-class GfxContext;
+class DrawContext;
 class Assets;
 
 namespace gui {
@@ -74,7 +74,7 @@ namespace gui {
     public:
         virtual ~UINode();
         virtual void activate(float deltaTime) {};
-        virtual void draw(const GfxContext* parent_context, Assets* assets) = 0;
+        virtual void draw(const DrawContext* parent_context, Assets* assets) = 0;
 
         virtual void setVisible(bool flag);
         bool isVisible() const;

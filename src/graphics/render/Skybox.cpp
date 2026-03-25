@@ -84,14 +84,14 @@ void Skybox::drawStars(float angle, float opacity) {
 }
 
 // FIXME: Спрайты Луны и Солнца рисуются лежащими на боку
-void Skybox::draw(const GfxContext& pctx, Camera* camera, Assets* assets, float daytime, float fog) {
+void Skybox::draw(const DrawContext& pctx, Camera* camera, Assets* assets, float daytime, float fog) {
     const Viewport& viewport = pctx.getViewport();
     int width = viewport.getWidth();
 	int height = viewport.getHeight();
 
     drawBackground(camera, assets, width, height);
 
-    GfxContext ctx = pctx.sub();
+    DrawContext ctx = pctx.sub();
     ctx.setBlendMode(BlendMode::Addition);
 
     ShaderProgram* shader = assets->getShader("ui3d");
@@ -120,8 +120,8 @@ void Skybox::draw(const GfxContext& pctx, Camera* camera, Assets* assets, float 
     drawStars(angle, opacity);
 }
 
-void Skybox::refresh(const GfxContext& parent_context, float t, float mie, uint quality) {
-    GfxContext context = parent_context.sub();
+void Skybox::refresh(const DrawContext& parent_context, float t, float mie, uint quality) {
+    DrawContext context = parent_context.sub();
     context.setDepthMask(false);
     context.setDepthTest(false);
     context.setFramebuffer(fbo.get());

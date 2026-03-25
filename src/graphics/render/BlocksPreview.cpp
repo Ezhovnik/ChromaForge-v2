@@ -12,7 +12,7 @@
 #include "../../frontend/ContentGfxCache.h"
 #include "../../assets/Assets.h"
 #include "../../graphics/core/Framebuffer.h"
-#include "../../graphics/core/GfxContext.h"
+#include "../../graphics/core/DrawContext.h"
 #include "../../window/Window.h"
 #include "../../content/Content.h"
 #include "../../constants.h"
@@ -121,8 +121,8 @@ std::unique_ptr<Atlas> BlocksPreview::build(const ContentGfxCache* cache, Assets
     Atlas* atlas = assets->getAtlas("blocks");
 
     Viewport viewport(iconSize, iconSize);
-    GfxContext pctx(nullptr, viewport, nullptr);
-    GfxContext ctx = pctx.sub();
+    DrawContext pctx(nullptr, viewport, nullptr);
+    DrawContext ctx = pctx.sub();
     ctx.setCullFace(true);
     ctx.setDepthTest(true);
 

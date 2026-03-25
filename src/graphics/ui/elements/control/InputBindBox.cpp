@@ -1,7 +1,7 @@
 #include "InputBindBox.h"
 
 #include "../display/Label.h"
-#include "../../../core/GfxContext.h"
+#include "../../../core/DrawContext.h"
 #include "../../../core/Batch2D.h"
 #include "../../../../util/stringutil.h"
 
@@ -13,7 +13,7 @@ InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec
     setScrollable(false);
 }
 
-void InputBindBox::drawBackground(const GfxContext* pctx, Assets* assets) {
+void InputBindBox::drawBackground(const DrawContext* pctx, Assets* assets) {
     glm::vec2 pos = calcPos();
     auto batch = pctx->getBatch2D();
     batch->texture(nullptr);

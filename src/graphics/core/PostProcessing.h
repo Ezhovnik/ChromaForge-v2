@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "Viewport.h"
-#include "GfxContext.h"
+#include "DrawContext.h"
 
 class Mesh;
 class ShaderProgram;
@@ -18,9 +18,9 @@ public:
     PostProcessing();
     ~PostProcessing();
 
-    void use(GfxContext& context);
+    void use(DrawContext& context);
 
-    void render(const GfxContext& context, ShaderProgram* screenShader);
+    void render(const DrawContext& context, ShaderProgram* screenShader);
 
     std::unique_ptr<ImageData> toImage();
 

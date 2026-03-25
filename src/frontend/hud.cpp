@@ -267,7 +267,7 @@ void Hud::update(bool hudVisible) {
     cleanup();
 }
 
-void Hud::draw(const GfxContext& context) {
+void Hud::draw(const DrawContext& context) {
     const Viewport& viewport = context.getViewport();
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
@@ -284,7 +284,7 @@ void Hud::draw(const GfxContext& context) {
 	uiShader->uniformMatrix("u_projview", uicamera->getProjView());
 
 	if (!pause && !inventoryOpen && !player->debug) {
-		GfxContext crosshair_context = context.sub();
+		DrawContext crosshair_context = context.sub();
         crosshair_context.setBlendMode(BlendMode::Inversion);
         auto texture = assets->getTexture("gui/crosshair");
         batch->texture(texture);

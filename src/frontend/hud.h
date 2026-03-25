@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../graphics/core/GfxContext.h"
+#include "../graphics/core/DrawContext.h"
 
 class Camera;
 class Assets;
@@ -100,7 +100,7 @@ public:
 	~Hud();
 
     void update(bool hudVisible);
-	void draw(const GfxContext& context);
+	void draw(const DrawContext& context);
 
 	bool isPause() const;
     void setPause(bool pause);

@@ -3,7 +3,7 @@
 #include "../hud.h"
 #include "../LevelFrontend.h"
 #include "../../audio/audio.h"
-#include "../../graphics/core/GfxContext.h"
+#include "../../graphics/core/DrawContext.h"
 #include "../../graphics/core/Viewport.h"
 #include "../../graphics/ui/GUI.h"
 #include "../../graphics/ui/elements/layout/Menu.h"
@@ -76,7 +76,7 @@ void LevelScreen::saveWorldPreview() {
         Camera camera = *player->camera;
         camera.setFov(glm::radians(70.0f));
         Viewport viewport(previewSize * 1.5, previewSize);
-        GfxContext ctx(nullptr, viewport, batch.get());
+        DrawContext ctx(nullptr, viewport, batch.get());
         worldRenderer->draw(ctx, &camera, false, postProcessing.get());
         auto image = postProcessing->toImage();
         image->flipY();
@@ -126,7 +126,7 @@ void LevelScreen::draw(float deltaTime) {
     auto camera = controller->getPlayer()->currentCamera;
 
     Viewport viewport(Window::width, Window::height);
-    GfxContext ctx(nullptr, viewport, batch.get());
+    DrawContext ctx(nullptr, viewport, batch.get());
 
     worldRenderer->draw(ctx, camera.get(), hudVisible, postProcessing.get());
 

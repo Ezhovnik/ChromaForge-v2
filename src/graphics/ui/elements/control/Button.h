@@ -13,7 +13,7 @@ namespace gui {
         Button(std::shared_ptr<UINode> content, glm::vec4 padding=glm::vec4(2.0f));
         Button(std::wstring text, glm::vec4 padding, onaction action, glm::vec2 size=glm::vec2(-1));
 
-        virtual void drawBackground(const GfxContext* pctx, Assets* assets) override;
+        virtual void drawBackground(const DrawContext* pctx, Assets* assets) override;
 
         virtual Align getTextAlign() const;
         virtual void setTextAlign(Align align);

@@ -12,8 +12,8 @@
 
 std::vector<std::string> WorldGenerators::getGeneratorsIDs() {
     std::vector<std::string> ids;
-    for(std::map<std::string, gen_constructor>::iterator it = generators.begin(); it != generators.end(); ++it) {
-        ids.push_back(it->first);
+    for (auto& entry : generators) {
+        ids.push_back(entry.first);
     }
 
     return ids;
@@ -23,11 +23,12 @@ std::string WorldGenerators::getDefaultGeneratorID() {
     return BUILTIN_CONTENT_NAMESPACE + ":default";
 }
 
-WorldGenerator* WorldGenerators::createGenerator(std::string id, const Content* content) {
-    for(std::map<std::string, gen_constructor>::iterator it = generators.begin(); it != generators.end(); ++it) {
-        if (id == it->first) return (WorldGenerator*) it->second(content);
+std::unique_ptr<WorldGenerator> WorldGenerators::createGenerator(std::string id, const Content* content) {
+    auto found = generators.find(id);
+    if (found == generators.end()) {
+        LOG_ERROR("Unknown generator ID: {}", id);
+        throw std::runtime_error("Unknown generator ID: " + id);
     }
 
-    LOG_ERROR("Unknown generator ID: {}", id);
-    return nullptr;
+    return std::unique_ptr<WorldGenerator>(found->second(content));
 }

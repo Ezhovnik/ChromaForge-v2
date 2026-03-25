@@ -7,7 +7,7 @@
 
 #include "../../typedefs.h"
 #include "../../math/rand.h"
-#include "../../graphics/core/GfxContext.h"
+#include "../../graphics/core/DrawContext.h"
 
 class Mesh;
 class ShaderProgram;
@@ -41,9 +41,9 @@ public:
     Skybox(uint size, ShaderProgram* shader);
     ~Skybox();
 
-    void draw(const GfxContext& pctx, Camera* camera, Assets* assets, float daytime, float fog);
+    void draw(const DrawContext& pctx, Camera* camera, Assets* assets, float daytime, float fog);
 
-    void refresh(const GfxContext& parent_context, float t, float mie, uint quality);
+    void refresh(const DrawContext& parent_context, float t, float mie, uint quality);
     void bind() const;
     void unbind() const;
     bool isReady() const {return ready;};

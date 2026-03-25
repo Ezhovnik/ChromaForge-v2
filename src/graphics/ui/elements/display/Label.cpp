@@ -1,6 +1,6 @@
 #include "Label.h"
 
-#include "../../../core/GfxContext.h"
+#include "../../../core/DrawContext.h"
 #include "../../../core/Batch2D.h"
 #include "../../../core/Font.h"
 #include "../../../../assets/Assets.h"
@@ -130,7 +130,7 @@ uint Label::getLinesNumber() const {
     return cache.lines.size();
 }
 
-void Label::draw(const GfxContext* pctx, Assets* assets) {
+void Label::draw(const DrawContext* pctx, Assets* assets) {
     auto batch = pctx->getBatch2D();
     auto font = assets->getFont(fontName);
     cache.prepare(font, static_cast<size_t>(glm::abs(getSize().x)));

@@ -32,7 +32,7 @@
 #include "content/Content.h"
 #include "content/ContentLoader.h"
 #include "logic/scripting/scripting.h"
-#include "graphics/core/GfxContext.h"
+#include "graphics/core/DrawContext.h"
 #include "world/WorldGenerators.h"
 #include "voxels/DefaultWorldGenerator.h"
 #include "voxels/FlatWorldGenerator.h"
@@ -171,7 +171,7 @@ void Engine::renderFrame(Batch2D& batch) {
     screen->draw(deltaTime);
 
     Viewport viewport(Window::width, Window::height);
-    GfxContext ctx(nullptr, viewport, &batch);
+    DrawContext ctx(nullptr, viewport, &batch);
     gui->draw(&ctx, assets.get());
 }
 

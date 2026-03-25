@@ -2,7 +2,7 @@
 
 #include "../../../core/Batch2D.h"
 #include "../../../core/Font.h"
-#include "../../../core/GfxContext.h"
+#include "../../../core/DrawContext.h"
 #include "../../../../assets/Assets.h"
 #include "../../../../util/stringutil.h"
 
@@ -14,7 +14,7 @@ void Plotter::activate(float delta) {
     points[index % dmwidth] = std::min(value, dmheight);
 }
 
-void Plotter::draw(const GfxContext* pctx, Assets* assets) {
+void Plotter::draw(const DrawContext* pctx, Assets* assets) {
     glm::vec2 pos = calcPos();
     auto batch = pctx->getBatch2D();
     batch->texture(nullptr);

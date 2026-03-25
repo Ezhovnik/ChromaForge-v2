@@ -11,7 +11,7 @@
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "../../graphics/core/GfxContext.h"
+#include "../../graphics/core/DrawContext.h"
 
 class Camera;
 class Level;
@@ -52,7 +52,7 @@ private:
 	);
 	void renderBlockSelection(Camera* camera, ShaderProgram* linesShader);
 	void renderDebugLines(
-        const GfxContext& context, 
+        const DrawContext& context, 
         Camera* camera, 
         ShaderProgram* linesShader,
         const EngineSettings& settings
@@ -64,14 +64,14 @@ public:
 	~WorldRenderer();
 
 	void draw(
-		const GfxContext& context, 
+		const DrawContext& context, 
 		Camera* camera, 
 		bool hudVisible,
 		PostProcessing* postProcessing
 	);
 
 	void renderLevel(
-        const GfxContext& context, 
+        const DrawContext& context, 
         Camera* camera, 
         const EngineSettings& settings
     );
