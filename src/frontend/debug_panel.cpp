@@ -83,6 +83,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         sub->setColor(glm::vec4(0.0f));
 
         auto box = std::make_shared<gui::TextBox>(L"");
+        auto boxRef = box.get();
         box->setTextSupplier([=]() {
             Hitbox* hitbox = player->hitbox.get();
             return std::to_wstring(int(hitbox->position[ax]));
@@ -98,7 +99,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         });
         box->setOnEditStart([=](){
             Hitbox* hitbox = player->hitbox.get();
-            box->setText(std::to_wstring(int(hitbox->position[ax])));
+            boxRef->setText(std::to_wstring(int(hitbox->position[ax])));
         });
         box->setSize(glm::vec2(230, 27));
 

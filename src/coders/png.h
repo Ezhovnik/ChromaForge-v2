@@ -2,6 +2,7 @@
 #define CODERS_PNG_H_
 
 #include <string>
+#include <memory>
 
 class Texture;
 class ImageData;
@@ -18,9 +19,8 @@ namespace png {
      * @param filename Путь к файлу.
      * @param flipVertically Если true, изображение будет перевёрнуто по вертикали.
      * @return Указатель на объект ImageData или nullptr в случае ошибки.
-     *         Владельцем объекта становится вызывающий код, он должен быть удалён.
      */
-    extern ImageData* loadImage(const std::string& filename, bool flipVertically);
+    extern std::unique_ptr<ImageData> loadImage(const std::string& filename, bool flipVertically);
 
     /**
      * @brief Сохраняет изображение в PNG-файл.
@@ -35,9 +35,8 @@ namespace png {
      * @param filename Путь к файлу.
      * @return Указатель на объект Texture или nullptr в случае ошибки.
      *         Текстура создаётся с флагом GL_NEAREST фильтрации.
-     *         Владельцем объекта становится вызывающий код.
      */
-    extern Texture* loadTexture(const std::string& filename);
+    extern std::unique_ptr<Texture> loadTexture(const std::string& filename);
 }
 
 #endif // CODERS_PNG_H_

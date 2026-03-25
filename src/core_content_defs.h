@@ -14,7 +14,7 @@ inline const std::string TEXTURE_NOTFOUND = "notfound";
 class ContentBuilder;
 
 namespace CoreContent {
-    extern void setup(ContentBuilder* builder);
+    void setup(ContentBuilder* builder);
 }
 
 #endif

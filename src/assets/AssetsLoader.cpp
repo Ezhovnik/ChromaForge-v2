@@ -248,7 +248,7 @@ bool AssetsLoader::loadExternalTexture(
         if (std::filesystem::exists(path)) {
             try {
                 auto image = imageio::read(path.string());
-                assets->store(Texture::from(image.get()), name);
+                assets->store(Texture::from(image.get()).release(), name);
                 return true;
             } catch (const std::exception& err) {
                 LOG_ERROR("Error while loading external '{}': {}", path.u8string(), err.what());

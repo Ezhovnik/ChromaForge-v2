@@ -324,19 +324,19 @@ namespace audio {
      * @brief Инициализация аудиосистемы
      * @param enabled Нужно ли пытаться инициализировать реальную аудиосистему
      */
-    extern void initialize(bool enabled);
+    void initialize(bool enabled);
 
-    extern PCM* load_PCM(const std::filesystem::path& file, bool headerOnly);
+    PCM* load_PCM(const std::filesystem::path& file, bool headerOnly);
 
-    extern Sound* load_sound(const std::filesystem::path& file, bool keepPCM);
+    Sound* load_sound(const std::filesystem::path& file, bool keepPCM);
 
-    extern Sound* create_sound(std::shared_ptr<PCM> pcm, bool keepPCM);
+    Sound* create_sound(std::shared_ptr<PCM> pcm, bool keepPCM);
 
-    extern PCMStream* open_PCM_stream(const std::filesystem::path& file);
+    PCMStream* open_PCM_stream(const std::filesystem::path& file);
 
-    extern Stream* open_stream(const std::filesystem::path& file, bool keepSource);
+    Stream* open_stream(const std::filesystem::path& file, bool keepSource);
 
-    extern Stream* open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
+    Stream* open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
 
     /**
      * @brief Устанавливает параметры слушателя, используя текущий бэкенд.
@@ -345,14 +345,14 @@ namespace audio {
      * @param lookAt Направление взгляда.
      * @param up Вектор верха.
      */
-    extern void set_listener(
+    void set_listener(
         glm::vec3 position, 
         glm::vec3 velocity, 
         glm::vec3 lookAt, 
         glm::vec3 up
     );
 
-    extern speakerid_t play(
+    speakerid_t play(
         Sound* sound,
         glm::vec3 position,
         bool relative,
@@ -363,7 +363,7 @@ namespace audio {
         int channel
     );
 
-    extern speakerid_t play(
+    speakerid_t play(
         std::shared_ptr<Stream> stream,
         glm::vec3 position,
         bool relative,
@@ -373,7 +373,7 @@ namespace audio {
         int channel
     );
 
-    extern speakerid_t play_stream(
+    speakerid_t play_stream(
         const std::filesystem::path& file,
         glm::vec3 position,
         bool relative,
@@ -383,30 +383,30 @@ namespace audio {
         int channel
     );
 
-    extern Speaker* get_speaker(speakerid_t id);
+    Speaker* get_speaker(speakerid_t id);
 
-    extern int create_channel(const std::string& name);
+    int create_channel(const std::string& name);
 
-    extern int get_channel_index(const std::string& name);
+    int get_channel_index(const std::string& name);
 
-    extern Channel* get_channel(int index);
+    Channel* get_channel(int index);
 
-    extern Channel* get_channel(const std::string& name);
+    Channel* get_channel(const std::string& name);
 
-    extern std::shared_ptr<Stream> get_associated_stream(speakerid_t id);
+    std::shared_ptr<Stream> get_associated_stream(speakerid_t id);
 
-    extern size_t count_speakers();
+    size_t count_speakers();
 
-    extern size_t count_streams();
+    size_t count_streams();
 
-    extern void update(double delta);
+    void update(double delta);
 
-    extern void reset_channel(int channel);
+    void reset_channel(int channel);
 
     /**
      * @brief Завершение работы аудиосистемы
      */
-    extern void close();
+    void close();
 };
 
 #endif // AUDIO_AUDIO_H_

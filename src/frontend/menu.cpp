@@ -24,23 +24,22 @@
 #include "../graphics/ui/elements/layout/Panel.h"
 #include "../data/dynamic.h"
 
-void menus::create_menus(Engine* engine) {
-    auto menu = engine->getGUI()->getMenu();
-    menu->setPageLoader([=](auto name) {
+gui::page_loader_func menus::create_page_loader(Engine* engine) {
+    return [=](auto name) {
         auto file = engine->getResPaths()->find("layouts/pages/" + name + ".xml");
         auto fullname = BUILTIN_CONTENT_NAMESPACE + ":pages/" + name;
         auto document = UIDocument::read(scripting::get_root_environment(), fullname, file).release();
         engine->getAssets()->store(document, fullname);
         scripting::on_ui_open(document, {});
         return document->getRoot();
-    });
+    };
 }
 
 void menus::create_version_label(Engine* engine) {
     auto gui = engine->getGUI();
     auto text = "v" + ENGINE_VERSION_STRING + " development build ";
     gui->add(guiutil::create(
-        "<label z-index='1000' color='#FFFFFF80' gravity='top-right' margin='4'>"
+        "<label z-index='1000' color='#FFFFFF80' gravity='bottom-left' margin='4'>"
         + text +
         "</label>"
     ));

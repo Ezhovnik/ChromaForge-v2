@@ -17,6 +17,8 @@
 #include "../../window/Events.h"
 #include "../../items/Inventory.h"
 #include "../../math/voxmaths.h"
+#include "elements/layout/Menu.h"
+#include "../../frontend/menu.h"
 
 using namespace gui;
 
@@ -408,7 +410,15 @@ static std::shared_ptr<UINode> readInventory(UIXmlReader& reader, xml::xmlelemen
         }
     }
     return view;
-} 
+}
+
+static std::shared_ptr<UINode> readPageBox(UIXmlReader& reader, xml::xmlelement element) {
+    auto menu = std::make_shared<Menu>();
+    menu->setPageLoader(menus::create_page_loader(scripting::engine));
+    _readContainer(reader, element, *menu);
+
+    return menu;
+}
 
 UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
     contextStack.push("");
@@ -422,6 +432,7 @@ UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
     add("checkbox", readCheckBox);
     add("bindbox", readInputBindBox);
     add("inventory", readInventory);
+    add("pagebox", readPageBox);
 }
 
 void UIXmlReader::add(const std::string& tag, uinode_reader reader) {

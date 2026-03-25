@@ -16,7 +16,7 @@ namespace platform {
      * На Windows устанавливает UTF-8 для консольного вывода и буферизацию stdout.
      * Для других платформ функция пустая.
      */
-    extern void configure_encoding();
+    void configure_encoding();
 
     /**
      * @brief Определяет текущую системную локаль (язык/регион).
@@ -27,7 +27,7 @@ namespace platform {
      * На Windows используется GetUserDefaultLocaleName, на Unix-подобных системах
      * анализируются переменные окружения LC_ALL и LANG.
      */
-    extern std::string detect_locale();
+    std::string detect_locale();
 }
 
 #endif // UTIL_PLATFORM_H_

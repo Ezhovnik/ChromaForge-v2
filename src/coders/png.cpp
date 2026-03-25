@@ -15,7 +15,7 @@
 #include "../debug/Logger.h"
 #include "../typedefs.h"
 
-ImageData* _loadImage(const std::string& filename, bool flipVertically) {
+std::unique_ptr<ImageData> _loadImage(const std::string& filename, bool flipVertically) {
     int channels = 0, width = 0, height = 0;
 
     stbi_set_flip_vertically_on_load(flipVertically); // Устанавливаем флаг вертикального переворота
@@ -54,7 +54,7 @@ ImageData* _loadImage(const std::string& filename, bool flipVertically) {
     stbi_image_free(stb_data);
 
     // Создаём объект ImageData, который будет владеть скопированными данными
-    ImageData* image = new ImageData(
+    auto image = std::make_unique<ImageData>(
         format, 
         width, 
         height, 
@@ -66,8 +66,8 @@ ImageData* _loadImage(const std::string& filename, bool flipVertically) {
     return image;
 }
 
-ImageData* png::loadImage(const std::string& filename, bool flipVertically) {
-    ImageData* image(_loadImage(filename, flipVertically));
+std::unique_ptr<ImageData> png::loadImage(const std::string& filename, bool flipVertically) {
+    auto image = _loadImage(filename, flipVertically);
     if (image == nullptr) {
         LOG_ERROR("Could not load image '{}'", filename);
         throw std::runtime_error("Could not load image '" + filename + "'");
@@ -114,11 +114,11 @@ bool png::writeImage(const std::string& filename, const ImageData* image) {
 }
 
 // Загружает текстуру из PNG файла
-Texture* png::loadTexture(const std::string& filename) {
+std::unique_ptr<Texture> png::loadTexture(const std::string& filename) {
     std::unique_ptr<ImageData> image(loadImage(filename, true));
 
     // Создание объекта Texture
-    Texture* texture = Texture::from(image.get());
+    auto texture = Texture::from(image.get());
     texture->setNearestFilter(); // Устанавливаем фильтрацию без сглаживания (для пиксельной графики)
     return texture;
 }

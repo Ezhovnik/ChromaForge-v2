@@ -67,7 +67,7 @@ asset_loader::postfunc asset_loader::texture(
 {
 	std::shared_ptr<ImageData> image(imageio::read(paths->find(filename + ".png").u8string()).release());
 	return [name, image](auto assets) {
-        assets->store(Texture::from(image.get()), name);
+        assets->store(Texture::from(image.get()).release(), name);
     };
 }
 

@@ -84,7 +84,7 @@ public:
      * @return Указатель на новый экземпляр Texture.
      * @throw std::runtime_error если формат изображения не поддерживается.
      */
-    static Texture* from(const ImageData* image);
+    static std::unique_ptr<Texture> from(const ImageData* image);
 };
 
 #endif // GRAPHICS_CORE_TEXTURE_H_

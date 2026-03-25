@@ -330,7 +330,7 @@ double Engine::getDeltaTime() const {
 
 void Engine::setLanguage(std::string locale) {
 	langs::setup(paths->getResources(), locale, contentPacks);
-	menus::create_menus(this);
+	gui->getMenu()->setPageLoader(menus::create_page_loader(this));
 }
 
 void Engine::addDefaultWorldGenerators() {

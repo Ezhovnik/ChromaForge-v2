@@ -67,17 +67,17 @@ bool files::read(const std::filesystem::path filename, char* data, size_t size) 
 	return true;
 }
 
-ubyte* files::read_bytes(std::filesystem::path filename, size_t& length) {
+std::unique_ptr<ubyte[]> files::read_bytes(std::filesystem::path filename, size_t& length) {
 	std::ifstream input(filename, std::ios::binary);
 	if (!input.is_open()) return nullptr;
 	input.seekg(0, std::ios_base::end);
 	length = input.tellg();
 	input.seekg(0, std::ios_base::beg);
 
-	std::unique_ptr<char> data(new char[length]);
-	input.read(data.get(), length);
+	auto data = std::make_unique<ubyte[]>(length);
+	input.read((char*)data.get(), length);
 	input.close();
-	return (ubyte*)data.release();
+	return data;
 }
 
 std::string files::read_string(std::filesystem::path filename) {

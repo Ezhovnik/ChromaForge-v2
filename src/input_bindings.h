@@ -21,7 +21,7 @@ inline const std::string BIND_PLAYER_BUILD = "player.build";
 inline const std::string BIND_PLAYER_PICK = "player.pick";
 
 namespace CoreContent {
-    extern void setup_bindings();
+    void setup_bindings();
 }
 
 #endif

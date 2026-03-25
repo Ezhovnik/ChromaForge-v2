@@ -76,9 +76,9 @@ void Texture::setNearestFilter() {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Texture* Texture::from(const ImageData* image) {
+std::unique_ptr<Texture> Texture::from(const ImageData* image) {
 	const void* data = image->getData();
-	return new Texture((ubyte*)data, image->getWidth(), image->getHeight(), image->getFormat());
+	return std::make_unique<Texture>((ubyte*)data, image->getWidth(), image->getHeight(), image->getFormat());
 }
 
 uint Texture::getWidth() const {

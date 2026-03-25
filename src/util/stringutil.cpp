@@ -115,7 +115,7 @@ inline uint utf8_len(ubyte cp) {
 	return len;
 }
 
-extern uint32_t util::decode_utf8(uint& size, const char* chr) {
+uint32_t util::decode_utf8(uint& size, const char* chr) {
 	size = utf8_len(*chr);
 	int shift = utf[0].bits_stored * (size - 1);
 	uint32_t code = (*chr++ & utf[size].mask) << shift;
