@@ -21,8 +21,13 @@ inline constexpr int ENGINE_VERSION_MINOR = 3;
 inline constexpr int ENGINE_VERSION_MAINTENANCE = 0;
 /** Текстовое название версии */
 inline const std::string ENGINE_VERSION_STRING = std::to_string(ENGINE_VERSION_MAJOR) + "." + std::to_string(ENGINE_VERSION_MINOR) + "." + std::to_string(ENGINE_VERSION_MAINTENANCE);
+
 /** Состояние разработки версии. */
-inline const bool ENGINE_VERSION_INDEV = true;
+#ifdef NDEBUG
+inline constexpr bool ENGINE_DEBUG_BUILD = false;
+#else
+inline constexpr bool ENGINE_DEBUG_BUILD = true;
+#endif // NDEBUG
 
 // ========== Размеры чанков ==========
 

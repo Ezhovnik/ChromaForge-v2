@@ -11,13 +11,13 @@ namespace scripting {
 using namespace scripting;
 
 runnable scripting::create_runnable(const scriptenv& env, const std::string& src, const std::string& file) {
-    return [=](){
-        try {
-            state->execute(*env, src, file);
-        } catch (const lua::luaerror& err) {
-            LOG_ERROR("{}", err.what());
-        }
-    };
+    try {
+        state->loadbuffer(*env, src, file);
+        return state->createLambda();
+    } catch (const lua::luaerror& err) {
+        LOG_ERROR("{}", err.what());
+        return [](){};
+    }
 }
 
 static bool processCallback(const scriptenv& env, const std::string& src, const std::string& file) {

@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     platform::configure_encoding();
 
     // Инициализация логгера
-	if (ENGINE_VERSION_INDEV) {
+	if (ENGINE_DEBUG_BUILD) {
 		Logger::getInstance().initialize(paths.getLogsFile().string());
 	} else {
 		Logger::getInstance().initialize(

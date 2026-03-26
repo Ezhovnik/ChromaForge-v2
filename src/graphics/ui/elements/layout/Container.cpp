@@ -13,7 +13,7 @@ Container::Container(glm::vec2 size) : UINode(size) {
 }
 
 std::shared_ptr<UINode> Container::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
-    if (!interactive || !enabled) return nullptr;
+    if (!interactive || !isEnabled()) return nullptr;
 
     if (!isInside(pos)) return nullptr;
 
@@ -81,7 +81,12 @@ void Container::draw(const DrawContext* pctx, Assets* assets) {
 }
 
 void Container::drawBackground(const DrawContext* pctx, Assets* assets) {
-    glm::vec4 color = isPressed() ? pressedColor : (hover ? hoverColor : this->color);
+    glm::vec4 color = this->color;
+    if (isEnabled()) {
+        color = (isPressed() ? pressedColor : (hover ? hoverColor : color));
+    } else {
+        color = glm::vec4(color.r, color.g, color.b, color.a * 0.5f);
+    }
     if (color.a <= 0.001f) return;
     glm::vec2 pos = calcPos();
 
@@ -133,6 +138,14 @@ void Container::refresh() {
     std::stable_sort(nodes.begin(), nodes.end(), [](const auto& a, const auto& b) {
         return a->getZIndex() < b->getZIndex();
     });
+}
+
+void Container::clear() {
+    for (auto node : nodes) {
+        node->setParent(nullptr);
+    }
+    nodes.clear();
+    refresh();
 }
 
 const std::vector<std::shared_ptr<UINode>>& Container::getNodes() const {

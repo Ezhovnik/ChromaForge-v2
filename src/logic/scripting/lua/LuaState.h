@@ -6,6 +6,7 @@
 
 #include "lua_commons.h"
 #include "../../../data/dynamic.h"
+#include "../../../delegates.h"
 
 #ifndef LUAJIT_VERSION
 #error LuaJIT required
@@ -73,6 +74,8 @@ namespace lua {
 
         int createEnvironment(int parent);
         void removeEnvironment(int id);
+
+        runnable createLambda();
 
         const std::string storeAnonymous();
 

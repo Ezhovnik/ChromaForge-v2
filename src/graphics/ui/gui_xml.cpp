@@ -451,7 +451,7 @@ void UIXmlReader::addIgnore(const std::string& tag) {
 std::shared_ptr<UINode> UIXmlReader::readUINode(xml::xmlelement element) {
     if (element->has("if")) {
         const auto& cond = element->attr("if").getText();
-        if (cond.empty() || cond == "false") return nullptr;
+        if (cond.empty() || cond == "false" || cond == "nil") return nullptr;
     }
 
     const std::string& tag = element->getTag();

@@ -23,8 +23,12 @@ void Image::draw(const DrawContext* pctx, Assets* assets) {
     }
 
     batch->texture(texture);
-    batch->setColor(color);
-    batch->rect(pos.x, pos.y, size.x, size.y, 0, 0, 0, UVRegion(), false, true, color);
+    if (isEnabled()) {
+        batch->setColor(isPressed() ? pressedColor : (hover ? hoverColor : color));
+    } else {
+        batch->setColor({color.r, color.g, color.b, color.a * 0.5f});
+    }
+    batch->rect(pos.x, pos.y, size.x, size.y, 0, 0, 0, UVRegion(), false, true, batch->getColor());
 }
 
 void Image::setAutoResize(bool flag) {

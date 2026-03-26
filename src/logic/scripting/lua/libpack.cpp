@@ -1,6 +1,7 @@
 #include <string>
 #include <filesystem>
 #include <algorithm>
+#include <stdexcept>
 
 #include "api_lua.h"
 #include "lua_commons.h"
@@ -41,7 +42,8 @@ static int l_pack_get_installed(lua_State* L) {
 }
 
 static int l_pack_get_available(lua_State* L) {
-    auto worldFolder = scripting::level->getWorld()->wfile->getFolder();
+    std::filesystem::path worldFolder("");
+    if (scripting::level) worldFolder = scripting::level->getWorld()->wfile->getFolder();
     auto manager = scripting::engine->createPacksManager(worldFolder);
     manager.scan();
 
@@ -61,6 +63,9 @@ static int l_pack_get_available(lua_State* L) {
 
 static int l_pack_get_info(lua_State* L, const ContentPack& pack, const Content* content) {
     lua_createtable(L, 0, 5);
+
+    lua_pushstring(L, pack.id.c_str());
+    lua_setfield(L, -2, "id");
 
     lua_pushstring(L, pack.title.c_str());
     lua_setfield(L, -2, "title");
@@ -84,6 +89,23 @@ static int l_pack_get_info(lua_State* L, const ContentPack& pack, const Content*
     lua_pushstring(L, icon.c_str());
     lua_setfield(L, -2, "icon");
 
+    if (!pack.dependencies.empty()) {
+        lua_createtable(L, pack.dependencies.size(), 0);
+        for (size_t i = 0; i < pack.dependencies.size(); ++i) {
+            auto& dpack = pack.dependencies.at(i);
+            std::string prefix;
+            switch (dpack.level) {
+                case DependencyLevel::Required: prefix = "!"; break;
+                case DependencyLevel::Optional: prefix = "?"; break;
+                case DependencyLevel::Weak: prefix = "~"; break;
+                default: throw std::runtime_error("");
+            }
+            lua_pushfstring(L, "%s%s", prefix.c_str(), dpack.id.c_str());
+            lua_rawseti(L, -2, i + 1);
+        }
+        lua_setfield(L, -2, "dependencies");
+    }
+
     auto runtime = content ? content->getPackRuntime(pack.id) : nullptr;
     if (runtime) {
         lua_pushboolean(L, runtime->getStats().hasSavingContent());
@@ -101,7 +123,8 @@ static int l_pack_get_info(lua_State* L) {
         return pack.id == packid;
     });
     if (found == packs.end()) {
-        auto worldFolder = scripting::level->getWorld()->wfile->getFolder();
+        std::filesystem::path worldFolder("");
+        if (scripting::level) worldFolder = scripting::level->getWorld()->wfile->getFolder();
         auto manager = scripting::engine->createPacksManager(worldFolder);
         manager.scan();
         auto vec = manager.getAll({packid});
@@ -112,10 +135,21 @@ static int l_pack_get_info(lua_State* L) {
     return l_pack_get_info(L, pack, content);
 }
 
+static int l_pack_get_base_packs(lua_State* L) {
+    auto& packs = scripting::engine->getBasePacks();
+    lua_createtable(L, packs.size(), 0);
+    for (size_t i = 0; i < packs.size(); ++i) {
+        lua_pushstring(L, packs[i].c_str());
+        lua_rawseti(L, -2, i + 1);
+    }
+    return 1;
+}
+
 const luaL_Reg packlib [] = {
     {"get_folder", lua_wrap_errors<l_pack_get_folder>},
     {"get_installed", lua_wrap_errors<l_pack_get_installed>},
     {"get_available", lua_wrap_errors<l_pack_get_available>},
     {"get_info", lua_wrap_errors<l_pack_get_info>},
+    {"get_base_packs", lua_wrap_errors<l_pack_get_base_packs>},
     {NULL, NULL}
 };

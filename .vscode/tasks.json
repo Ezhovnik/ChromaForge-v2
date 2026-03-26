@@ -5,6 +5,7 @@
             "label": "C/C++: g++.exe сборка активного файла",
             "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
+                // "-DNDEBUG",
                 "-g",
                 "-std=c++17",
                 "-I${workspaceFolder}/src",

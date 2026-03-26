@@ -19,6 +19,7 @@ class Assets;
 namespace gui {
     class UINode;
     class GUI;
+    class Container;
 
     using onaction = std::function<void(GUI*)>;
     using onnumberchange = std::function<void(GUI*, double)>;
@@ -50,6 +51,8 @@ namespace gui {
     class UINode {
     private:
         std::string id = "";
+
+        bool enabled = true;
     protected:
         glm::vec2 pos {0.0f};
         glm::vec2 size;
@@ -65,7 +68,6 @@ namespace gui {
         bool focused = false;
         bool interactive = true;
         bool resizing = true;
-        bool enabled = true;
         Align align = Align::left;
         vec2supplier positionfunc = nullptr;
         UINode* parent = nullptr;
@@ -152,7 +154,10 @@ namespace gui {
         virtual void fullRefresh() {
             if (parent) parent->fullRefresh();
         };
-        virtual void lock();
+        static void moveInto(
+            std::shared_ptr<UINode> node,
+            std::shared_ptr<Container> dest
+        );
 
         void setId(const std::string& id);
         const std::string& getId() const;

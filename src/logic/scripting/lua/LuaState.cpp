@@ -11,6 +11,8 @@
 #include "../../../debug/Logger.h"
 #include "../../../util/stringutil.h"
 
+inline const std::string LAMBDAS_TABLE = "$L";
+
 lua::luaerror::luaerror(const std::string& message) : std::runtime_error(message) {
 }
 
@@ -56,6 +58,9 @@ lua::LuaState::LuaState() {
 
     lua_pushvalue(L, LUA_GLOBALSINDEX);
     setglobal(envName(0));
+
+    lua_createtable(L, 0, 0);
+    setglobal(LAMBDAS_TABLE);
 }
 
 const std::string lua::LuaState::envName(int env) {
@@ -378,6 +383,28 @@ void lua::LuaState::removeEnvironment(int id) {
     if (id == 0) return;
     lua_pushnil(L);
     setglobal(envName(id));
+}
+
+runnable lua::LuaState::createLambda() {
+    auto ptr = reinterpret_cast<ptrdiff_t>(lua_topointer(L, -1));
+    auto name = util::mangleid(ptr);
+    lua_getglobal(L, LAMBDAS_TABLE.c_str());
+    lua_pushvalue(L, -2);
+    lua_setfield(L, -2, name.c_str());
+    lua_pop(L, 2);
+
+    std::shared_ptr<std::string> funcptr(new std::string(name), [=](auto* name) {
+        lua_getglobal(L, LAMBDAS_TABLE.c_str());
+        lua_pushnil(L);
+        lua_setfield(L, -2, name->c_str());
+        lua_pop(L, 1);
+        delete name;
+    });
+    return [=]() {
+        lua_getglobal(L, LAMBDAS_TABLE.c_str());
+        lua_getfield(L, -1, funcptr->c_str());
+        lua_call(L, 0, LUA_MULTRET);
+    };
 }
 
 void lua::LuaState::dumpStack() {

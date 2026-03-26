@@ -195,6 +195,8 @@ void Hud::processInput(bool visible) {
         }
     }
 
+    if (!Window::isFocused() && !pause && !isInventoryOpen()) setPause(true);
+
     if (!pause && visible && Events::justActive(BIND_HUD_INVENTORY)) {
         if (inventoryOpen) {
             closeInventory();

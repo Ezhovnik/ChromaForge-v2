@@ -74,7 +74,7 @@ Engine::Engine(EngineSettings& settings, SettingsHandler& settingsHandler, Engin
     gui = std::make_unique<gui::GUI>();
 
     if (settings.ui.language.get() == "auto") settings.ui.language.set(platform::detect_locale());
-    if (ENGINE_VERSION_INDEV) menus::create_version_label(this);
+    if (ENGINE_DEBUG_BUILD) menus::create_version_label(this);
     keepAlive(settings.ui.language.observe([=](auto lang) {
         setLanguage(lang);
     }, true));
@@ -255,6 +255,13 @@ void Engine::loadContent() {
     Logger::getInstance().flush();
 }
 
+void Engine::resetContent() {
+    auto manager = createPacksManager(std::filesystem::path());
+    manager.scan();
+    contentPacks = manager.getAll(basePacks);
+    loadContent();
+}
+
 void Engine::loadWorldContent(const std::filesystem::path& folder) {
     contentPacks.clear();
     auto packNames = ContentPack::worldPacksList(folder);
@@ -344,4 +351,8 @@ void Engine::postRunnable(runnable callback) {
 
 SettingsHandler& Engine::getSettingsHandler() {
     return settingsHandler;
+}
+
+std::vector<std::string>& Engine::getBasePacks() {
+    return basePacks;
 }

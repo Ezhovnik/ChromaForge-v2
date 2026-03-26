@@ -37,6 +37,7 @@ void UINode::setEnabled(bool flag) {
 }
 
 bool UINode::isEnabled() const {
+    if (enabled && parent) return parent->isEnabled();
     return enabled;
 }
 
@@ -241,7 +242,13 @@ glm::vec4 UINode::getMargin() const {
     return margin;
 }
 
-void UINode::lock() {
+void UINode::moveInto(std::shared_ptr<UINode> node, std::shared_ptr<Container> dest) {
+    auto parent = node->getParent();
+    if (auto container = dynamic_cast<Container*>(parent)) {
+        container->remove(node);
+    }
+    if (parent) parent->scrolled(0);
+    dest->add(node);
 }
 
 void UINode::setId(const std::string& id) {

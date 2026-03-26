@@ -17,6 +17,7 @@
 #include "content/Content.h"
 #include "content/PacksManager.h"
 #include "util/ObjectsKeeper.h"
+#include "core_content_defs.h"
 
 class Screen;
 class Batch2D;
@@ -50,6 +51,8 @@ private:
 
     std::queue<runnable> postRunnables;
     std::recursive_mutex postRunnablesMutex;
+
+    std::vector<std::string> basePacks {CHROMAFORGE_CONTENT_NAMESPACE};
 
     std::unique_ptr<gui::GUI> gui;
 
@@ -85,6 +88,7 @@ public:
     double getDeltaTime() const;
     SettingsHandler& getSettingsHandler();
     EngineController* getController();
+    std::vector<std::string>& getBasePacks();
 
     void postRunnable(runnable callback);
 
@@ -96,6 +100,7 @@ public:
     void setLanguage(std::string locale);
 
     void loadContent();
+    void resetContent();
     void loadWorldContent(const std::filesystem::path& folder);
     void loadAllPacks();
 };

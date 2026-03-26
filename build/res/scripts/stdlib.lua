@@ -26,7 +26,7 @@ local __cached_scripts = {}
 -- Load script with caching
 --
 -- path - script path `contentpack:filename`. 
---     Example `base:scripts/tests.lua`
+--     Example `chromaforge:scripts/tests.lua`
 --
 -- nocache - ignore cached script, load anyway
 function load_script(path, nocache)
@@ -37,7 +37,7 @@ function load_script(path, nocache)
         return package.loaded[path]
     end
     if not file.isfile(path) then
-        error("script '"..filename.."' not found in '"..packname.."'")
+        error("Script '"..filename.."' not found in '"..packname.."'")
     end
 
     local script, err = load(file.read(path), path)
@@ -53,7 +53,7 @@ function load_script(path, nocache)
 end
 
 function __scripts_cleanup()
-    print("cleaning scripts cache")
+    print("Cleaning scripts cache")
     for k, v in pairs(__cached_scripts) do
         local packname, _ = parse_path(k)
         if packname ~= "builtin" then
@@ -225,6 +225,48 @@ end
 
 function session.reset_entry(name)
     session.entries[name] = nil
+end
+
+function timeit(func, ...)
+    local tm = time.uptime()
+    func(...)
+    print("[time mcs]", (time.uptime() - tm) * 1000000)
+end
+
+function table.has(t, x)
+    for i,v in ipairs(t) do
+        if v == x then
+            return true
+        end
+    end
+    return false
+end
+
+function table.index(t, x)
+    for i,v in ipairs(t) do
+        if v == x then
+            return i
+        end
+    end
+    return -1
+end
+
+function table.remove_value(t, x)
+    local index = table.index(t, x)
+    if index ~= -1 then
+        table.remove(t, index)
+    end
+end
+
+function table.tostring(t)
+    local s = '['
+    for i,v in ipairs(t) do
+        s = s..tostring(v)
+        if i < #t then
+            s = s..', '
+        end
+    end
+    return s..']'
 end
 
 -- Deprecated functions
