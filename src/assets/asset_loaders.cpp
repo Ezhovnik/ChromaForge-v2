@@ -322,6 +322,11 @@ asset_loader::postfunc asset_loader::sound(
         baseSound.reset(audio::load_sound(variantFile, keepPCM));
     }
 
+    if (baseSound == nullptr) {
+        LOG_ERROR("Could not to find sound: {}", file);
+        throw std::runtime_error("Could not to find sound: " + file);
+    }
+
     for (uint i = 1; ; ++i) {
         auto variantFile = paths->find(file + "_" + std::to_string(i) + extension);
         if (!std::filesystem::exists(variantFile)) break;

@@ -32,6 +32,7 @@ namespace asset_loader {
  * но методы доступа возвращают сырые указатели.
  */
 class Assets {
+private:
 	std::unordered_map<std::string, std::shared_ptr<Texture>> textures;
 	std::unordered_map<std::string, std::shared_ptr<ShaderProgram>> shaders;
      std::unordered_map<std::string, std::shared_ptr<Font>> fonts;
@@ -40,6 +41,8 @@ class Assets {
      std::unordered_map<std::string, std::shared_ptr<audio::Sound>> sounds;
 	std::vector<TextureAnimation> animations; ///< Анимации, связанные с текстурами.
 public:
+     Assets() {}
+     Assets(const Assets&) = delete;
 	~Assets();
 
     	// --- Текстуры ---
@@ -144,15 +147,6 @@ public:
      * @param name Имя для сохранения.
      */
 	void store(audio::Sound* sound, std::string name);
-
-	/**
-     * @brief Расширяет текущий менеджер ресурсами из другого менеджера.
-     * @param assets Другой объект Assets, из которого копируются все ресурсы.
-     *
-     * При совпадении имён ресурсы перезаписываются (последний имеет приоритет).
-     * Анимации заменяются полностью (вектор очищается и заполняется копиями).
-     */
-	void extend(const Assets& assets);
 };
 
 #endif // ASSETS_ASSETS_H_

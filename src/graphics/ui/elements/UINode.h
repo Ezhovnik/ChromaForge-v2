@@ -65,6 +65,7 @@ namespace gui {
         bool focused = false;
         bool interactive = true;
         bool resizing = true;
+        bool enabled = true;
         Align align = Align::left;
         vec2supplier positionfunc = nullptr;
         UINode* parent = nullptr;
@@ -87,6 +88,9 @@ namespace gui {
 
         virtual void setParent(UINode* node);
         UINode* getParent() const;
+
+        virtual void setEnabled(bool flag);
+        bool isEnabled() const;
 
         virtual void setColor(glm::vec4 newColor);
         glm::vec4 getColor() const;

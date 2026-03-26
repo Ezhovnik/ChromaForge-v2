@@ -28,6 +28,18 @@ void UINode::setAlign(Align align_) {
     align = align_;
 }
 
+void UINode::setEnabled(bool flag) {
+    enabled = flag;
+    if (!flag) {
+        defocus();
+        hover = false;
+    }
+}
+
+bool UINode::isEnabled() const {
+    return enabled;
+}
+
 void UINode::setHover(bool flag) {
     hover = flag;
 }
@@ -89,7 +101,7 @@ bool UINode::isInside(glm::vec2 point) {
 }
 
 std::shared_ptr<UINode> UINode::getAt(glm::vec2 point, std::shared_ptr<UINode> self) {
-    if (!interactive) return nullptr;
+    if (!interactive || !enabled) return nullptr;
     return isInside(point) ? self : nullptr;
 }
 

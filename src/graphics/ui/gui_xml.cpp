@@ -73,6 +73,7 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
         ));
     }
     if (element->has("interactive")) node.setInteractive(element->attr("interactive").asBool());
+    if (element->has("enabled")) node.setEnabled(element->attr("enabled").asBool());
     if (element->has("visible")) node.setVisible(element->attr("visible").asBool());
     if (element->has("hover-color")) node.setHoverColor(element->attr("hover-color").asColor());
     if (element->has("pressed-color")) node.setPressedColor(element->attr("pressed-color").asColor());

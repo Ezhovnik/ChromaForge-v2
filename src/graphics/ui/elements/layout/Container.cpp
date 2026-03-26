@@ -13,7 +13,7 @@ Container::Container(glm::vec2 size) : UINode(size) {
 }
 
 std::shared_ptr<UINode> Container::getAt(glm::vec2 pos, std::shared_ptr<UINode> self) {
-    if (!interactive) return nullptr;
+    if (!interactive || !enabled) return nullptr;
 
     if (!isInside(pos)) return nullptr;
 
