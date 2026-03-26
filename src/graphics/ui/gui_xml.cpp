@@ -187,7 +187,10 @@ static std::shared_ptr<UINode> readLabel(UIXmlReader& reader, xml::xmlelement el
             reader.getFilename()
         ));
     }
-    if (element->has("multiline")) label->setMultiline(element->attr("multiline").asBool());
+    if (element->has("multiline")) {
+        label->setMultiline(element->attr("multiline").asBool());
+        if (!element->has("valign")) label->setVerticalAlign(Align::top);
+    }
     if (element->has("text-wrap")) label->setTextWrapping(element->attr("text-wrap").asBool());
     return label;
 }
@@ -452,6 +455,10 @@ std::shared_ptr<UINode> UIXmlReader::readUINode(xml::xmlelement element) {
     if (element->has("if")) {
         const auto& cond = element->attr("if").getText();
         if (cond.empty() || cond == "false" || cond == "nil") return nullptr;
+    }
+    if (element->has("ifnot")) {
+        const auto& cond = element->attr("ifnot").getText();
+        if (!(cond.empty() || cond == "false" || cond == "nil")) return nullptr;
     }
 
     const std::string& tag = element->getTag();

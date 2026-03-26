@@ -77,19 +77,21 @@ protected:
 
     void expect(char expected);
     void expect(const std::string& substring);
-    char peek();
-    char nextChar();
-    bool hasNext();
     void expectNewLine();
     bool isNext(const std::string& substring);
     void goBack();
 
-    std::string parseName();
     int64_t parseSimpleInt(int base);
     bool parseNumber(int sign, number_u& out);
     std::string parseString(char chr, bool closeRequired = true);
 
     parsing_error error(std::string message);
+public:
+    std::string readUntil(char c);
+    std::string parseName();
+    bool hasNext();
+    char peek();
+    char nextChar();
 
     BasicParser(const std::string& filename, const std::string& source);
 };

@@ -97,6 +97,14 @@ char BasicParser::nextChar() {
     return source[pos++];
 }
 
+std::string BasicParser::readUntil(char c) {
+    int start = pos;
+    while (hasNext() && source[pos] != c) {
+        pos++;
+    }
+    return source.substr(start, pos - start);
+}
+
 void BasicParser::expect(char expected) {
     char c = peek();
     if (c != expected) {

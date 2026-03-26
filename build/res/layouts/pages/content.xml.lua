@@ -1,4 +1,7 @@
-function on_open()
+function on_open(params)
+    if params then
+        mode = params.mode
+    end
     refresh()
 end
 
@@ -6,7 +9,8 @@ add_packs = {}
 rem_packs = {}
 
 function apply()
-    if not builtin.reconfig_packs(add_packs, rem_packs) then
+    builtin.reconfig_packs(add_packs, rem_packs)
+    if mode ~= "world" then
         menu:back()
     end
 end
@@ -60,7 +64,6 @@ function check_dependencies(packinfo)
         local depid = dep:sub(2, -1)
         if dep:sub(1, 1) == '!' then 
             if not table.has(packs_all, depid) then
-                packinfo.description = ""
                 return string.format(
                     "%s (%s)", gui.str("error.dependency-not-found"), depid
                 )

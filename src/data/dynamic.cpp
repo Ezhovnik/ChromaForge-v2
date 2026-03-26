@@ -409,3 +409,7 @@ std::unique_ptr<Value> Value::of(number_u value) {
 std::unique_ptr<Value> Value::of(const std::string& value) {
     return std::make_unique<Value>(ValueType::String, value);
 }
+
+std::unique_ptr<Value> Value::of(std::unique_ptr<Map> value) {
+    return std::make_unique<Value>(ValueType::Map, value.release());
+}

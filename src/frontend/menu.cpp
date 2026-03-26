@@ -23,14 +23,35 @@
 #include "../interfaces/Task.h"
 #include "../graphics/ui/elements/layout/Panel.h"
 #include "../data/dynamic.h"
+#include "../coders/commons.h"
 
 gui::page_loader_func menus::create_page_loader(Engine* engine) {
-    return [=](auto name) {
+    return [=](const std::string& query) {
+        std::vector<std::unique_ptr<dynamic::Value>> args;
+
+        std::string name;
+        size_t index = query.find('?');
+        if (index != std::string::npos) {
+            auto argstr = query.substr(index+1);
+            name = query.substr(0, index);
+
+            auto map = std::make_unique<dynamic::Map>();
+            BasicParser parser("Query for " + name, argstr);
+            while (parser.hasNext()) {
+                auto key = parser.readUntil('=');
+                parser.nextChar();
+                auto value = parser.readUntil('&');
+                map->put(key, value);
+            }
+            args.push_back(dynamic::Value::of(std::move(map)));
+        } else {
+            name = query;
+        }
         auto file = engine->getResPaths()->find("layouts/pages/" + name + ".xml");
         auto fullname = BUILTIN_CONTENT_NAMESPACE + ":pages/" + name;
         auto document = UIDocument::read(scripting::get_root_environment(), fullname, file).release();
         engine->getAssets()->store(document, fullname);
-        scripting::on_ui_open(document, {});
+        scripting::on_ui_open(document, std::move(args));
         return document->getRoot();
     };
 }
