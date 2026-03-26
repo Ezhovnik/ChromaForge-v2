@@ -172,3 +172,7 @@ void SettingsHandler::setValue(const std::string& name, const dynamic::Value& va
 std::vector<Section>& SettingsHandler::getSections() {
     return sections;
 }
+
+bool SettingsHandler::has(const std::string& name) const {
+    return map.find(name) != map.end();
+}

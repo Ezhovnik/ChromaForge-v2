@@ -44,6 +44,9 @@
 #include "util/listutil.h"
 #include "logic/EngineController.h"
 #include "files/settings_io.h"
+#include "coders/toml.h"
+#include "files/files.h"
+#include "input_bindings.h"
 
 inline void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -55,6 +58,9 @@ inline void create_channel(Engine* engine, std::string name, NumberSetting& sett
 
 // Реализация конструктора
 Engine::Engine(EngineSettings& settings, SettingsHandler& settingsHandler, EnginePaths* paths) : settings(settings), paths(paths), settingsHandler(settingsHandler) {
+    CoreContent::setup_bindings();
+    loadSettings();
+
     controller = std::make_unique<EngineController>(this);
 
     // Инициализация окна GLFW
@@ -92,6 +98,7 @@ Engine::Engine(EngineSettings& settings, SettingsHandler& settingsHandler, Engin
 // Реализация деструктора
 Engine::~Engine() {
     LOG_INFO("Shutting down");
+    saveSettings();
     if (screen) {
         screen->onEngineShutdown();
         screen.reset();
@@ -355,4 +362,22 @@ SettingsHandler& Engine::getSettingsHandler() {
 
 std::vector<std::string>& Engine::getBasePacks() {
     return basePacks;
+}
+
+void Engine::saveSettings() {
+    files::write_string(paths->getSettingsFile(), toml::stringify(settingsHandler));
+    files::write_string(paths->getControlsFile(), Events::writeBindings());
+}
+
+void Engine::loadSettings() {
+    std::filesystem::path settings_file = paths->getSettingsFile();
+    if (std::filesystem::is_regular_file(settings_file)) {
+        std::string text = files::read_string(settings_file);
+        toml::parse(settingsHandler, settings_file.string(), text);
+    }
+    std::filesystem::path controls_file = paths->getControlsFile();
+    if (std::filesystem::is_regular_file(controls_file)) {
+        std::string text = files::read_string(controls_file);
+        Events::loadBindings(controls_file.u8string(), text);
+    }
 }

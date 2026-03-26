@@ -103,6 +103,8 @@ namespace gui {
         virtual glm::vec4 getPressedColor() const;
         virtual void setPressedColor(glm::vec4 color);
 
+        virtual glm::vec4 calcColor() const;
+
         virtual void setResizing(bool flag);
         virtual bool isResizing() const;
 

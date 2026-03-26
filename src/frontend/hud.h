@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "../graphics/core/DrawContext.h"
+#include "../util/ObjectsKeeper.h"
 
 class Camera;
 class Assets;
@@ -57,7 +58,7 @@ public:
     }
 };
 
-class Hud {
+class Hud : public util::ObjectsKeeper {
 private:
 	std::unique_ptr<Camera> uicamera;
     Assets* assets;

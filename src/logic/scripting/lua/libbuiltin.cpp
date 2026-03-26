@@ -115,7 +115,8 @@ static int l_reconfig_packs(lua_State* L) {
     }
     auto controller = scripting::engine->getController();
     controller->reconfigPacks(scripting::controller, addPacks, remPacks);
-    return 0;
+    lua_pushboolean(L, scripting::controller != nullptr);
+    return 1;
 }
 
 static int l_new_world(lua_State* L) {

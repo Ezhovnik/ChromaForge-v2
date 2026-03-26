@@ -84,7 +84,7 @@ void Events::bind(std::string name, inputType type, mousecode code) {
 }
 
 void Events::bind(std::string name, inputType type, int code) {
-	bindings[name] = {type, code, false, false};
+	bindings[name] = Binding(type, code);
 }
 
 bool Events::isActive(std::string name) {
@@ -129,6 +129,7 @@ void Events::pollEvents() {
 			if (!binding.state) {
 				binding.state = true;
 				binding.justChange = true;
+                binding.onactived.notify();
 			}
 		} else {
 			if (binding.state) {

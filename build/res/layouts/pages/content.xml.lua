@@ -6,8 +6,9 @@ add_packs = {}
 rem_packs = {}
 
 function apply()
-    builtin.reconfig_packs(add_packs, rem_packs)
-    menu:back()
+    if not builtin.reconfig_packs(add_packs, rem_packs) then
+        menu:back()
+    end
 end
 
 function refresh_changes()

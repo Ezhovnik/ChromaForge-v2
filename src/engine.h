@@ -103,6 +103,9 @@ public:
     void resetContent();
     void loadWorldContent(const std::filesystem::path& folder);
     void loadAllPacks();
+
+    void loadSettings();
+    void saveSettings();
 };
 
 #endif // SRC_ENGINE_H_

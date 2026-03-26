@@ -31,6 +31,8 @@ public:
     Setting* getSetting(const std::string& name) const;
 
     std::vector<Section>& getSections();
+
+    bool has(const std::string& name) const;
 };
 
 #endif // FILES_SETTINGS_IO_H_

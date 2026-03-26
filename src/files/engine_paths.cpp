@@ -11,9 +11,11 @@
 #include "../debug/Logger.h"
 #include "../util/stringutil.h"
 
-const std::filesystem::path SCREENSHOTS_FOLDER = std::filesystem::path("screenshots");
-const std::filesystem::path LOGS_FOLDER = std::filesystem::path("logs");
-const std::filesystem::path SAVES_FOLDER = std::filesystem::path("saves");
+const std::filesystem::path SCREENSHOTS_FOLDER {"screenshots"};
+const std::filesystem::path LOGS_FOLDER {"logs"};
+const std::filesystem::path SAVES_FOLDER {"saves"};
+const std::filesystem::path CONTROLS_FILE {"controls.json"};
+const std::filesystem::path SETTINGS_FILE {"settings.toml"};
 
 static std::filesystem::path toCanonic(std::filesystem::path path) {
     std::stack<std::string> parts;
@@ -43,6 +45,14 @@ std::filesystem::path EnginePaths::getUserfiles() const {
 
 std::filesystem::path EnginePaths::getResources() const {
 	return resources;
+}
+
+std::filesystem::path EnginePaths::getControlsFile() {
+    return userfiles/std::filesystem::path(CONTROLS_FILE);
+}
+
+std::filesystem::path EnginePaths::getSettingsFile() {
+    return userfiles/std::filesystem::path(SETTINGS_FILE);
 }
 
 std::filesystem::path EnginePaths::getScreenshotFile(std::string ext) {

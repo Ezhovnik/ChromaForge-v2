@@ -27,6 +27,8 @@ public:
     std::filesystem::path getWorldFolder();
     std::filesystem::path getWorldFolder(const std::string& name);
     std::filesystem::path getLogsFile();
+    std::filesystem::path getControlsFile();
+    std::filesystem::path getSettingsFile();
     bool isWorldNameUsed(std::string name);
 
     void setUserfiles(std::filesystem::path folder);

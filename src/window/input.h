@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "../util/RunnablesList.h"
+
 /**
  * @brief Представляет собой значения кодов клавиш glfw3.
  */
@@ -134,10 +136,15 @@ enum class inputType {
  * Хранит текущее состояние (нажата или нет) и флаг, было ли состояние изменено в текущем кадре.
  */
 struct Binding {
+	util::RunnablesList onactived;
+
     inputType type;
     int code;
     bool state = false;
     bool justChange = false;
+
+	Binding(){}
+    Binding(inputType type, int code) : type(type), code(code) {}
 
     /**
      * @brief Проверяет, активно ли нажатие (кнопка удерживается).

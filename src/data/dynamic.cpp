@@ -255,6 +255,10 @@ bool Map::getBool(std::string key, bool def) const {
     }
 }
 
+void Map::remove(const std::string& key) {
+    values.erase(key);
+}
+
 void Map::num(std::string key, double& dst) const {
     dst = getNum(key, dst);
 }

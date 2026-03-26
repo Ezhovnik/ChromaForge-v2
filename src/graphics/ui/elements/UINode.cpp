@@ -222,6 +222,17 @@ void UINode::setPressedColor(glm::vec4 color) {
     pressedColor = color;
 }
 
+glm::vec4 UINode::calcColor() const {
+    glm::vec4 color = this->color;
+    if (isEnabled()) {
+        color = (isPressed() ? pressedColor : (hover ? hoverColor : color));
+    } else {
+        color = glm::vec4(color.r, color.g, color.b, color.a * 0.5f);
+    }
+    return color;
+}
+
+
 void UINode::setResizing(bool flag) {
     resizing = flag;
 }
