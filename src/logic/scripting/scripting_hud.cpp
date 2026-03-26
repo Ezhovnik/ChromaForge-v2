@@ -20,7 +20,7 @@ void scripting::on_frontend_init(Hud* hud) {
     scripting::state->openlib("hud", hudlib, 0);
 
     for (auto& pack : scripting::engine->getContentPacks()) {
-        emit_event(pack.id + ".hudopen", [&] (lua::LuaState* state) {
+        state->emit_event(pack.id + ".hudopen", [&] (lua::LuaState* state) {
             state->pushinteger(hud->getPlayer()->getId());
             return 1;            
         });
@@ -29,7 +29,7 @@ void scripting::on_frontend_init(Hud* hud) {
 
 void scripting::on_frontend_close() {
     for (auto& pack : scripting::engine->getContentPacks()) {
-        emit_event(pack.id + ".hudclose", [&] (lua::LuaState* state) {
+        state->emit_event(pack.id + ".hudclose", [&] (lua::LuaState* state) {
             state->pushinteger(hud->getPlayer()->getId());
             return 1;            
         });

@@ -205,6 +205,8 @@ bool Window::initialize(DisplaySettings* settings) {
     LOG_DEBUG("GL Renderer: {}", (char*)renderer);
     LOG_DEBUG("GLFW version: {}", glfwGetVersionString());
 
+    input_util::initialize();
+
     LOG_INFO("Window initialized successfully: {}x{}", settings->width.get(), settings->height.get());
 
     return true;

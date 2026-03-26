@@ -16,6 +16,7 @@ extern const luaL_Reg hudlib [];
 extern const luaL_Reg audiolib [];
 extern const luaL_Reg builtinlib [];
 extern const luaL_Reg jsonlib [];
+extern const luaL_Reg inputlib [];
 
 extern int l_print(lua_State* L);
 

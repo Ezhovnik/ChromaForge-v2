@@ -85,6 +85,7 @@ enum class keycode : int {
 	NUM_LOCK = 282,
 	LEFT_BRACKET = 91,
 	RIGHT_BRACKET = 93,
+	UNKNOWN = -1
 };
 
 /**
@@ -104,6 +105,9 @@ inline mousecode MOUSECODES_ALL[] {
 };
 
 namespace input_util {
+	void initialize();
+    keycode keycode_from(const std::string& name);
+
 	/**
      * @brief Возвращает название клавиши по её коду.
      * @param code Код клавиши.

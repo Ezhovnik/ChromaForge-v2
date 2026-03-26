@@ -103,6 +103,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libfile.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libgui.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libhud.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libinput.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libinventory.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libitem.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libjson.cpp"

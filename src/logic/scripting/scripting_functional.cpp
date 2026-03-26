@@ -13,7 +13,7 @@ using namespace scripting;
 runnable scripting::create_runnable(const scriptenv& env, const std::string& src, const std::string& file) {
     try {
         state->loadbuffer(*env, src, file);
-        return state->createLambda();
+        return state->createRunnable();
     } catch (const lua::luaerror& err) {
         LOG_ERROR("{}", err.what());
         return [](){};

@@ -135,6 +135,7 @@ void lua::LuaState::createLibs() {
     openlib("audio", audiolib, 0);
     openlib("builtin", builtinlib, 0);
     openlib("json", jsonlib, 0);
+    openlib("input", inputlib, 0);
 
     addfunc("print", lua_wrap_errors<l_print>);
 }
@@ -242,6 +243,11 @@ int lua::LuaState::pushvalue(const dynamic::Value& value) {
     return 1;
 }
 
+int lua::LuaState::pushcfunction(lua_CFunction function) {
+    lua_pushcfunction(L, function);
+    return 1;
+}
+
 int lua::LuaState::pushglobals() {
     lua_pushvalue(L, LUA_GLOBALSINDEX);
     return 1;
@@ -288,6 +294,14 @@ lua::luanumber lua::LuaState::tonumber(int index) {
 
 const char* lua::LuaState::tostring(int idx) {
     return lua_tostring(L, idx);
+}
+
+glm::vec2 lua::LuaState::tovec2(int idx) {
+    return lua::tovec2(L, idx);
+}
+
+glm::vec4 lua::LuaState::tocolor(int idx) {
+    return lua::tocolor(L, idx);
 }
 
 std::unique_ptr<dynamic::Value> lua::LuaState::tovalue(int idx) {
@@ -385,7 +399,7 @@ void lua::LuaState::removeEnvironment(int id) {
     setglobal(envName(id));
 }
 
-runnable lua::LuaState::createLambda() {
+runnable lua::LuaState::createRunnable() {
     auto ptr = reinterpret_cast<ptrdiff_t>(lua_topointer(L, -1));
     auto name = util::mangleid(ptr);
     lua_getglobal(L, LAMBDAS_TABLE.c_str());
@@ -405,6 +419,16 @@ runnable lua::LuaState::createLambda() {
         lua_getfield(L, -1, funcptr->c_str());
         lua_call(L, 0, LUA_MULTRET);
     };
+}
+
+bool lua::LuaState::emit_event(const std::string &name, std::function<int(lua::LuaState *)> args) {
+    getglobal("events");
+    getfield("emit");
+    pushstring(name);
+    callNoThrow(args(this) + 1);
+    bool result = toboolean(-1);
+    pop(2);
+    return result;
 }
 
 void lua::LuaState::dumpStack() {
@@ -430,4 +454,8 @@ void lua::LuaState::dumpStack() {
         }
         std::cout << std::endl;
     }
+}
+
+lua_State* lua::LuaState::getLua() const {
+    return L;
 }
