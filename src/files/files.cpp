@@ -111,13 +111,13 @@ bool files::write_binary_json(std::filesystem::path filename, const dynamic::Map
     return files::write_bytes(filename, bytes.data(), bytes.size());
 }
 
-std::unique_ptr<dynamic::Map> files::read_binary_json(std::filesystem::path file) {
+std::shared_ptr<dynamic::Map> files::read_binary_json(std::filesystem::path file) {
     size_t size;
     std::unique_ptr<ubyte[]> bytes (files::read_bytes(file, size));
-    return std::unique_ptr<dynamic::Map>(json::from_binary(bytes.get(), size));
+    return json::from_binary(bytes.get(), size);
 }
 
-std::unique_ptr<dynamic::Map> files::read_json(std::filesystem::path filename) {
+std::shared_ptr<dynamic::Map> files::read_json(std::filesystem::path filename) {
 	std::string text = files::read_string(filename);
 	try {
 		auto obj = json::parse(filename.string(), text);

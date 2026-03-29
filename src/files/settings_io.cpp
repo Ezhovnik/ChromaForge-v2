@@ -74,7 +74,7 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
     builder.add("do-write-lights", &settings.debug.doWriteLights);
 }
 
-std::unique_ptr<dynamic::Value> SettingsHandler::getValue(const std::string& name) const {
+dynamic::Value SettingsHandler::getValue(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
 		LOG_ERROR("Setting '{}' does not exist", name);
@@ -82,13 +82,13 @@ std::unique_ptr<dynamic::Value> SettingsHandler::getValue(const std::string& nam
     }
     auto setting = found->second;
     if (auto number = dynamic_cast<NumberSetting*>(setting)) {
-        return dynamic::Value::of((number_t)number->get());
+        return static_cast<number_t>(number->get());
     } else if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
-        return dynamic::Value::of((integer_t)integer->get());
+        return static_cast<integer_t>(integer->get());
     } else if (auto flag = dynamic_cast<BoolSetting*>(setting)) {
-        return dynamic::Value::boolean(flag->get());
+        return flag->get();
     } else if (auto string = dynamic_cast<StringSetting*>(setting)) {
-        return dynamic::Value::of(string->get());
+        return string->get();
     } else {
 		LOG_ERROR("Type is not implemented for '{}'", name);
         throw std::runtime_error("Type is not implemented for '" + name + "'");
@@ -116,19 +116,15 @@ Setting* SettingsHandler::getSetting(const std::string& name) const {
 
 template<class T>
 static void set_numeric_value(T* setting, const dynamic::Value& value) {
-    switch (value.type) {
-        case dynamic::ValueType::Integer:
-            setting->set(std::get<integer_t>(value.value));
-            break;
-        case dynamic::ValueType::Number:
-            setting->set(std::get<number_t>(value.value));
-            break;
-        case dynamic::ValueType::Boolean:
-            setting->set(std::get<bool>(value.value));
-            break;
-        default:
-			LOG_ERROR("Type error, numeric value expected");
-            throw std::runtime_error("Type error, numeric value expected");
+    if (auto num = std::get_if<integer_t>(&value)) {
+        setting->set(*num);
+    } else if (auto num = std::get_if<number_t>(&value)) {
+        setting->set(*num);
+    } else if (auto flag = std::get_if<bool>(&value)) {
+        setting->set(*flag);
+    } else {
+        LOG_ERROR("Type error, numeric value expected");
+        throw std::runtime_error("Type error, numeric value expected");
     }
 }
 
@@ -146,22 +142,17 @@ void SettingsHandler::setValue(const std::string& name, const dynamic::Value& va
     } else if (auto flag = dynamic_cast<BoolSetting*>(setting)) {
         set_numeric_value(flag, value);
     } else if (auto string = dynamic_cast<StringSetting*>(setting)) {
-        switch (value.type) {
-            case dynamic::ValueType::String:
-                string->set(std::get<std::string>(value.value));
-                break;
-            case dynamic::ValueType::Integer:
-                string->set(std::to_string(std::get<integer_t>(value.value)));
-                break;
-            case dynamic::ValueType::Number:
-                string->set(std::to_string(std::get<number_t>(value.value)));
-                break;
-            case dynamic::ValueType::Boolean:
-                string->set(std::to_string(std::get<bool>(value.value)));
-                break;
-            default:
-				LOG_ERROR("Not implemented for type");
-                throw std::runtime_error("Not implemented for type");
+        if (auto num = std::get_if<integer_t>(&value)) {
+            string->set(std::to_string(*num));
+        } else if (auto num = std::get_if<number_t>(&value)) {
+            string->set(std::to_string(*num));
+        } else if (auto flag = std::get_if<bool>(&value)) {
+            string->set(*flag ? "true" : "false");
+        } else if (auto str = std::get_if<std::string>(&value)) {
+            string->set(*str);
+        } else {
+            LOG_ERROR("Not implemented for type");
+            throw std::runtime_error("Not implemented for type");
         }
     } else {
 		LOG_ERROR("Type is not implement - setting '{}'", name);

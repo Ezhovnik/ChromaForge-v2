@@ -23,37 +23,35 @@ inline void newline(std::stringstream& ss, bool nice, uint indent, const std::st
     }
 }
 
-void stringify(const dynamic::Value* value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
+void stringify(const dynamic::Value& value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
 void stringifyObj(const dynamic::Map* obj, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
 
-void stringify(const dynamic::Value* value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice) {
-    if (value->type == dynamic::ValueType::Map) {
-        auto map = std::get<dynamic::Map*>(value->value);
-        stringifyObj(map, ss, indent, indentstr, nice);
-    } else if (value->type == dynamic::ValueType::List) {
-        auto list = std::get<dynamic::List*>(value->value);
+void stringify(const dynamic::Value& value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice) {
+    if (auto map = std::get_if<dynamic::Map_sptr>(&value)) {
+        stringifyObj(map->get(), ss, indent, indentstr, nice);
+    } else if (auto listptr = std::get_if<dynamic::List_sptr>(&value)) {
+        auto list = *listptr;
         if (list->size() == 0) {
             ss << "[]";
             return;
         }
         ss << '[';
         for (uint i = 0; i < list->size(); ++i) {
-            dynamic::Value* value = list->get(i);
+            dynamic::Value& value = list->get(i);
             if (i > 0 || nice) newline(ss, nice, indent, indentstr);
             stringify(value, ss, indent + 1, indentstr, nice);
             if (i + 1 < list->size()) ss << ',';
         }
         if (nice) newline(ss, true, indent - 1, indentstr);
         ss << ']';
-    } else if (value->type == dynamic::ValueType::Boolean) {
-        ss << (std::get<bool>(value->value) ? "true" : "false");
-    } else if (value->type == dynamic::ValueType::Number) {
-        ss << std::setprecision(15);
-        ss << std::get<number_t>(value->value);
-    } else if (value->type == dynamic::ValueType::Integer) {
-        ss << std::get<integer_t>(value->value);
-    } else if (value->type == dynamic::ValueType::String) {
-        ss << util::escape(std::get<std::string>(value->value));
+    } else if (auto flag = std::get_if<bool>(&value)) {
+        ss << (*flag ? "true" : "false");
+    } else if (auto num = std::get_if<number_t>(&value)) {
+        ss << std::setprecision(15) << *num;
+    } else if (auto num = std::get_if<integer_t>(&value)) {
+        ss << *num;
+    } else if (auto str = std::get_if<std::string>(&value)) {
+        ss << util::escape(*str);
     }
 }
 
@@ -67,7 +65,7 @@ void stringifyObj(const dynamic::Map* obj, std::stringstream& ss, int indent, co
     for (auto& entry : obj->values) {
         const std::string& key = entry.first;
         if (index > 0 || nice) newline(ss, nice, indent, indentstr);
-        dynamic::Value* value = entry.second.get();
+        const dynamic::Value& value = entry.second;
         ss << util::escape(key) << ": ";
         stringify(value, ss, indent + 1, indentstr, nice);
         index++;
@@ -87,7 +85,7 @@ std::string json::stringify(const dynamic::Map* obj, bool nice, const std::strin
 Parser::Parser(const std::string& filename, const std::string& source) : BasicParser(filename, source) {    
 }
 
-dynamic::Map* Parser::parse() {
+std::unique_ptr<dynamic::Map> Parser::parse() {
     char next = peek();
     if (next != '{') {
         LOG_ERROR("'{' expected");
@@ -96,7 +94,7 @@ dynamic::Map* Parser::parse() {
     return parseObject();
 }
 
-dynamic::Map* Parser::parseObject() {
+std::unique_ptr<dynamic::Map> Parser::parseObject() {
     expect('{');
     auto obj = std::make_unique<dynamic::Map>();
     auto& map = obj->values;
@@ -124,10 +122,10 @@ dynamic::Map* Parser::parseObject() {
         }
     }
     pos++;
-    return obj.release();
+    return obj;
 }
 
-dynamic::List* Parser::parseList() {
+std::unique_ptr<dynamic::List> Parser::parseList() {
     expect('[');
     auto arr = std::make_unique<dynamic::List>();
     auto& values = arr->values;
@@ -136,7 +134,7 @@ dynamic::List* Parser::parseList() {
             skipLine();
             continue;
         }
-        values.push_back(std::unique_ptr<dynamic::Value>(parseValue()));
+        values.push_back(parseValue());
 
         char next = peek();
         if (next == ',') {
@@ -149,67 +147,41 @@ dynamic::List* Parser::parseList() {
         }
     }
     pos++;
-    return arr.release();
+    return arr;
 }
 
-dynamic::Value* Parser::parseValue() {
+dynamic::Value Parser::parseValue() {
     char next = peek();
-    dynamic::valvalue val;
     if (next == '-' || next == '+') {
         pos++;
-        number_u num;
-        dynamic::ValueType type;
-        if (parseNumber(next == '-' ? -1 : 1, num)) {
-            val = std::get<integer_t>(num);
-            type = dynamic::ValueType::Integer;
-        } else {
-            val = std::get<number_t>(num);
-            type = dynamic::ValueType::Number;
-        }
-        return new dynamic::Value(type, val);
+        return parseNumber(next == '-' ? -1 : 1);
     }
     if (is_identifier_start(next)) {
         std::string literal = parseName();
         if (literal == "true") {
-            val = true;
-            return new dynamic::Value(dynamic::ValueType::Boolean, val);
+            return true;
         } else if (literal == "false") {
-            val = false;
-            return new dynamic::Value(dynamic::ValueType::Boolean, val);
+            return false;
         } else if (literal == "inf") {
-            val = INFINITY;
-            return new dynamic::Value(dynamic::ValueType::Number, val);
+            return INFINITY;
         } else if (literal == "nan") {
-            val = NAN;
-            return new dynamic::Value(dynamic::ValueType::Number, val);
+            return NAN;
         }
         LOG_ERROR("Invalid literal");
         throw error("Invalid literal");
     }
     if (next == '{') {
-        val = parseObject();
-        return new dynamic::Value(dynamic::ValueType::Map, val);
+        return dynamic::Map_sptr(parseObject().release());
     }
     if (next == '[') {
-        val = parseList();
-        return new dynamic::Value(dynamic::ValueType::List, val);
+        return dynamic::List_sptr(parseList().release());
     }
     if (is_digit(next)) {
-        number_u num;
-        dynamic::ValueType type;
-        if (parseNumber(1, num)) {
-            val = std::get<integer_t>(num);
-            type = dynamic::ValueType::Integer;
-        } else {
-            val = std::get<number_t>(num);
-            type = dynamic::ValueType::Number;
-        }
-        return new dynamic::Value(type, val);  
+        return parseNumber(1);
     }
     if (next == '"' || next == '\'') {
         pos++;
-        val = parseString(next);
-        return new dynamic::Value(dynamic::ValueType::String, val);
+        return parseString(next);
     }
     LOG_ERROR("Unexpected character '{}'", next);
     throw error("Unexpected character '" + std::string({next}) + "'");
@@ -217,7 +189,7 @@ dynamic::Value* Parser::parseValue() {
 
 std::unique_ptr<dynamic::Map> json::parse(const std::string& filename, const std::string& source) {
     Parser parser(filename, source);
-    return std::unique_ptr<dynamic::Map>(parser.parse());
+    return parser.parse();
 }
 
 std::unique_ptr<dynamic::Map> json::parse(const std::string& source) {

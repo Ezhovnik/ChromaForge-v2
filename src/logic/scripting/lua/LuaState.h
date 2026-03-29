@@ -54,7 +54,7 @@ namespace lua {
         luaint tointeger(int index);
         luanumber tonumber(int index);
         const char* tostring(int index);
-        std::unique_ptr<dynamic::Value> tovalue(int index);
+        dynamic::Value tovalue(int index);
         glm::vec2 tovec2(int index);
         glm::vec4 tocolor(int index);
 

@@ -68,7 +68,7 @@ void World::write(Level* level) {
         auto& players = playerFile.putList("players");
         for (auto object : level->objects) {
             if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
-                players.put(player->serialize().release());
+                players.put(player->serialize());
             }
         }
     }
@@ -190,9 +190,9 @@ std::string World::getGenerator() const {
 }
 
 void World::deserialize(dynamic::Map* root) {
-    name = root->getStr("name", name);
-	generator = root->getStr("generator", generator);
-    seed = root->getInt("seed", seed);
+    name = root->get("name", name);
+	generator = root->get("generator", generator);
+    seed = root->get("seed", seed);
 
 	if (generator == "") generator = WorldGenerators::getDefaultGeneratorID();
 
@@ -215,7 +215,7 @@ void World::deserialize(dynamic::Map* root) {
 	}
 
 	// Счётчик инвентарей (по умолчанию 2, т.к. 1 обычно зарезервирован)
-    nextInventoryId = root->getNum("next-inventory-id", 2);
+    nextInventoryId = root->get("next-inventory-id", 2);
 }
 
 std::unique_ptr<dynamic::Map> World::serialize() const {
@@ -229,7 +229,7 @@ std::unique_ptr<dynamic::Map> World::serialize() const {
 
 	root->put("name", getName());
 	root->put("generator", generator);
-	root->put("seed", getSeed());
+	root->put("seed", static_cast<integer_t>(seed));
 
 	// Время
 	auto& timeobj = root->putMap("time");

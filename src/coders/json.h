@@ -10,27 +10,22 @@
 #include "commons.h"
 #include "../typedefs.h"
 #include "binary_json.h"
-
-namespace dynamic {
-    class Map;
-    class List;
-    class Value;
-}
+#include "../data/dynamic.h"
 
 namespace json {
     class Parser : public BasicParser {
-        dynamic::List* parseList();
-        dynamic::Map* parseObject();
-        dynamic::Value* parseValue();
+        std::unique_ptr<dynamic::List> parseList();
+        std::unique_ptr<dynamic::Map> parseObject();
+        dynamic::Value parseValue();
     public:
         Parser(const std::string& filename, const std::string& source);
-        dynamic::Map* parse();
+        std::unique_ptr<dynamic::Map> parse();
     };
 
-    extern std::unique_ptr<dynamic::Map> parse(const std::string& filename, const std::string& source);
-    extern std::unique_ptr<dynamic::Map> parse(const std::string& source);
+    std::unique_ptr<dynamic::Map> parse(const std::string& filename, const std::string& source);
+    std::unique_ptr<dynamic::Map> parse(const std::string& source);
 
-    extern std::string stringify(const dynamic::Map* obj, bool nice, const std::string& indent);
+    std::string stringify(const dynamic::Map* obj, bool nice, const std::string& indent);
 }
 
 

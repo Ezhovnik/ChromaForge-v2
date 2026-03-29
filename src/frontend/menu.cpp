@@ -27,7 +27,7 @@
 
 gui::page_loader_func menus::create_page_loader(Engine* engine) {
     return [=](const std::string& query) {
-        std::vector<std::unique_ptr<dynamic::Value>> args;
+        std::vector<dynamic::Value> args;
 
         std::string name;
         size_t index = query.find('?');
@@ -35,7 +35,7 @@ gui::page_loader_func menus::create_page_loader(Engine* engine) {
             auto argstr = query.substr(index+1);
             name = query.substr(0, index);
 
-            auto map = std::make_unique<dynamic::Map>();
+            auto map = std::make_shared<dynamic::Map>();
             BasicParser parser("Query for " + name, argstr);
             while (parser.hasNext()) {
                 auto key = parser.readUntil('=');
@@ -43,7 +43,7 @@ gui::page_loader_func menus::create_page_loader(Engine* engine) {
                 auto value = parser.readUntil('&');
                 map->put(key, value);
             }
-            args.push_back(dynamic::Value::of(std::move(map)));
+            args.push_back(map);
         } else {
             name = query;
         }
@@ -66,7 +66,7 @@ void menus::create_version_label(Engine* engine) {
     ));
 }
 
-UIDocument* menus::show(Engine* engine, const std::string& name, std::vector<std::unique_ptr<dynamic::Value>> args) {
+UIDocument* menus::show(Engine* engine, const std::string& name, std::vector<dynamic::Value> args) {
     auto menu = engine->getGUI()->getMenu();
     auto file = engine->getResPaths()->find("layouts/" + name + ".xml");
     auto fullname = BUILTIN_CONTENT_NAMESPACE + ":layouts/" + name;
@@ -85,9 +85,9 @@ void menus::show_process_panel(Engine* engine, std::shared_ptr<Task> task, std::
 
     auto menu = engine->getGUI()->getMenu();
     menu->reset();
-    std::vector<std::unique_ptr<dynamic::Value>> args;
-    args.emplace_back(dynamic::Value::of(util::wstr2str_utf8(langs::get(text))));
-    auto doc = menus::show(engine, "process", std::move(args));
+    auto doc = menus::show(engine, "process", {
+        util::wstr2str_utf8(langs::get(text))
+    });
     std::dynamic_pointer_cast<gui::Container>(doc->getRoot())->listenInterval(0.01f, [=]() {
         task->update();
 

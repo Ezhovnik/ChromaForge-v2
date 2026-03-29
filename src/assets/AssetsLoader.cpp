@@ -134,7 +134,7 @@ void AssetsLoader::processPreload(
     switch (tag) {
         case AssetType::Sound:
             add(tag, path, name, std::make_shared<SoundConfig>(
-                map->getBool("keep-pcm", false)
+                map->get("keep-pcm", false)
             ));
             break;
         default:
@@ -147,14 +147,14 @@ void AssetsLoader::processPreloadList(AssetType tag, dynamic::List* list) {
     if (list == nullptr) return;
     for (uint i = 0; i < list->size(); ++i) {
         auto value = list->get(i);
-        switch (value->type) {
+        switch (static_cast<dynamic::ValueType>(value.index())) {
             case dynamic::ValueType::String: {
-                processPreload(tag, std::get<std::string>(value->value), nullptr);
+                processPreload(tag, std::get<std::string>(value), nullptr);
                 break;
 			} case dynamic::ValueType::Map: {
-                auto map = std::get<dynamic::Map*>(value->value);
-                auto name = map->getStr("name");
-                processPreload(tag, name, map);
+                auto map = std::get<dynamic::Map_sptr>(value);
+                auto name = map->get<std::string>("name");
+                processPreload(tag, name, map.get());
                 break;
             } default: {
 				LOG_ERROR("Invalid entry type");

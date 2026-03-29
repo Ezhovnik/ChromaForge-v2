@@ -365,19 +365,29 @@ std::vector<std::string>& Engine::getBasePacks() {
 }
 
 void Engine::saveSettings() {
+    LOG_INFO("Writing the settings to a file");
     files::write_string(paths->getSettingsFile(), toml::stringify(settingsHandler));
+    LOG_INFO("The settings were successfully written to the file");
+
+    LOG_INFO("Writing the settings to a file");
     files::write_string(paths->getControlsFile(), Events::writeBindings());
+    LOG_INFO("The controls were successfully written to the file");
 }
 
 void Engine::loadSettings() {
     std::filesystem::path settings_file = paths->getSettingsFile();
     if (std::filesystem::is_regular_file(settings_file)) {
+        LOG_INFO("Reading the settings file");
         std::string text = files::read_string(settings_file);
         toml::parse(settingsHandler, settings_file.string(), text);
+        LOG_INFO("The settings file has been successfully read");
     }
+
     std::filesystem::path controls_file = paths->getControlsFile();
     if (std::filesystem::is_regular_file(controls_file)) {
+        LOG_INFO("Reading the controls file");
         std::string text = files::read_string(controls_file);
         Events::loadBindings(controls_file.u8string(), text);
+        LOG_INFO("The controls file has been successfully read");
     }
 }

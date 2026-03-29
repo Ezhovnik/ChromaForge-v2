@@ -23,7 +23,7 @@ private:
 public:
     SettingsHandler(EngineSettings& settings);
 
-    std::unique_ptr<dynamic::Value> getValue(const std::string& name) const;
+    dynamic::Value getValue(const std::string& name) const;
     void setValue(const std::string& name, const dynamic::Value& value);
 
     std::string toString(const std::string& name) const;

@@ -69,7 +69,7 @@ namespace scripting {
 
     void on_ui_open(
         UIDocument* layout, 
-        std::vector<std::unique_ptr<dynamic::Value>> args
+        std::vector<dynamic::Value> args
     );
     void on_ui_close(UIDocument* layout, Inventory* inventory);
     void on_ui_progress(UIDocument* layout, int workDone, int totalWork);

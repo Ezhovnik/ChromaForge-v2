@@ -40,31 +40,29 @@ class Reader : public BasicParser {
             expect('=');
             c = peek();
             if (is_digit(c)) {
-                number_u num;
-                parseNumber(1, num);
-                if (handler.has(name)) handler.setValue(name, *dynamic::Value::of(num));
+                auto num = parseNumber(1);
+                if (handler.has(name)) handler.setValue(name, num);
             } else if (c == '-' || c == '+') {
                 int sign = c == '-' ? -1 : 1;
                 pos++;
-                number_u num;
-                parseNumber(sign, num);
-                if (handler.has(name)) handler.setValue(name, *dynamic::Value::of(num));
+                auto num = parseNumber(sign);
+                if (handler.has(name)) handler.setValue(name, num);
             } else if (is_identifier_start(c)) {
                 std::string identifier = parseName();
                 if (handler.has(name)) {
                     if (identifier == "true" || identifier == "false") {
                         bool flag = identifier == "true";
-                        handler.setValue(name, *dynamic::Value::boolean(flag));
+                        handler.setValue(name, flag);
                     } else if (identifier == "inf") {
-                        handler.setValue(name, *dynamic::Value::of(INFINITY));
+                        handler.setValue(name, INFINITY);
                     } else if (identifier == "nan") {
-                        handler.setValue(name, *dynamic::Value::of(NAN));
+                        handler.setValue(name, NAN);
                     }
                 }
             } else if (c == '"' || c == '\'') {
                 pos++;
                 std::string str = parseString(c);
-                if (handler.has(name)) handler.setValue(name, *dynamic::Value::of(str));
+                if (handler.has(name)) handler.setValue(name, str);
             } else {
                 LOG_ERROR("Feature is not supported");
                 throw error("Feature is not supported");

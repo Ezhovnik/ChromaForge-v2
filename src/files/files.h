@@ -34,8 +34,8 @@ namespace files {
     bool read(std::filesystem::path, char* data, size_t size);
     std::unique_ptr<ubyte[]> read_bytes(std::filesystem::path, size_t& length);
     std::string read_string(std::filesystem::path filename);
-    std::unique_ptr<dynamic::Map> read_json(std::filesystem::path file);
-    std::unique_ptr<dynamic::Map> read_binary_json(std::filesystem::path file);
+    std::shared_ptr<dynamic::Map> read_json(std::filesystem::path file);
+    std::shared_ptr<dynamic::Map> read_binary_json(std::filesystem::path file);
     std::vector<std::string> read_list(std::filesystem::path file);
 }
 

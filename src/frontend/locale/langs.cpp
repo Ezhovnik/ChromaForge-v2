@@ -7,6 +7,8 @@
 #include "../../util/stringutil.h"
 #include "../../debug/Logger.h"
 
+using namespace std::literals;
+
 std::unique_ptr<langs::Lang> langs::current;
 std::unordered_map<std::string, langs::LocaleInfo> langs::locales_info;
 
@@ -77,11 +79,11 @@ void langs::loadLocalesInfo(const std::filesystem::path& resdir, std::string& fa
     auto langs = root->map("langs");
     if (langs) {
         for (auto& entry : langs->values) {
-            auto langInfo = entry.second.get();
+            auto langInfo = entry.second;
 
             std::string name;
-            if (langInfo->type == dynamic::ValueType::Map) {
-                name = std::get<dynamic::Map*>(langInfo->value)->getStr("name", "none");
+            if (auto mapptr = std::get_if<dynamic::Map_sptr>(&langInfo)) {
+                name = (*mapptr)->get("name", "none"s);
             } else {
                 continue;
             }

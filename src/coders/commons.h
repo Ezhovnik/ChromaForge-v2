@@ -3,6 +3,8 @@
 
 #include <string>
 #include <stdexcept>
+
+#include "../data/dynamic.h"
 #include "../typedefs.h"
 
 inline int detect_base(char c) {
@@ -82,7 +84,7 @@ protected:
     void goBack();
 
     int64_t parseSimpleInt(int base);
-    bool parseNumber(int sign, number_u& out);
+    dynamic::Value parseNumber(int sign);
     std::string parseString(char chr, bool closeRequired = true);
 
     parsing_error error(std::string message);

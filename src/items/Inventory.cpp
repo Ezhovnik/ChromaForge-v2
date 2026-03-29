@@ -38,7 +38,7 @@ void Inventory::move(ItemStack& item, const ContentIndices* indices, size_t begi
 }
 
 void Inventory::deserialize(dynamic::Map* src) {
-    id = src->getNum("id", 1);
+    id = src->get("id", 1);
 
     auto slotsarr = src->list("slots");
     size_t slotscount = slotsarr->size();
@@ -47,8 +47,8 @@ void Inventory::deserialize(dynamic::Map* src) {
     }
     for (size_t i = 0; i < slotscount; ++i) {
         auto item = slotsarr->map(i);
-        itemid_t id = item->getInt("id", ITEM_EMPTY);
-        itemcount_t count = item->getInt("count", 0);
+        itemid_t id = item->get("id", ITEM_EMPTY);
+        itemcount_t count = item->get("count", 0);
         auto& slot = slots[i];
         slot.set(ItemStack(id, count)); 
     }
@@ -76,7 +76,7 @@ void Inventory::convert(dynamic::Map* data, const ContentLUT* lut) {
     auto slotsarr = data->list("slots");
     for (size_t i = 0; i < slotsarr->size(); ++i) {
         auto item = slotsarr->map(i);
-        itemid_t id = item->getInt("id", ITEM_EMPTY);
+        itemid_t id = item->get("id", ITEM_EMPTY);
         itemid_t replacement = lut->getItemId(id);
         item->put("id", replacement);
         if (replacement == 0 && item->has("count")) {

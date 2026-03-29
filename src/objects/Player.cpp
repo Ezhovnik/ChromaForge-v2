@@ -144,7 +144,7 @@ std::unique_ptr<dynamic::Map> Player::serialize() const {
 	root->put("flight", flight);
 	root->put("noclip", noclip);
     root->put("chosen-slot", chosenSlot);
-    root->put("inventory", inventory->serialize().release());
+    root->put("inventory", inventory->serialize());
     return root;
 }
 
@@ -173,7 +173,7 @@ void Player::deserialize(dynamic::Map *src) {
 
 	src->flag("flight", flight);
 	src->flag("noclip", noclip);
-    setChosenSlot(src->getInt("chosen-slot", getChosenSlot()));
+    setChosenSlot(src->get("chosen-slot", getChosenSlot()));
 
     auto invmap = src->map("inventory");
     if (invmap) getInventory()->deserialize(invmap);

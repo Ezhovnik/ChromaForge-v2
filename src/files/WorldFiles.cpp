@@ -127,7 +127,7 @@ static void erase_pack_indices(dynamic::Map* root, const std::string& id) {
         auto name = blocks->str(i);
         if (name.find(prefix) != 0) continue;
         auto value = blocks->getValueWriteable(i);
-        value->value = BUILTIN_AIR;
+        *value = BUILTIN_AIR;
     }
 
     auto items = root->list("items");
@@ -135,7 +135,7 @@ static void erase_pack_indices(dynamic::Map* root, const std::string& id) {
         auto name = items->str(i);
         if (name.find(prefix) != 0) continue;
         auto value = items->getValueWriteable(i);
-        value->value = BUILTIN_EMPTY;
+        *value = BUILTIN_EMPTY;
     }
 }
 

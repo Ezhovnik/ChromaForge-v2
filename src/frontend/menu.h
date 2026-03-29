@@ -5,11 +5,8 @@
 #include <memory>
 #include <vector>
 
+#include "../data/dynamic.h"
 #include "../graphics/ui/elements/layout/Menu.h"
-
-namespace dynamic {
-    class Value;
-}
 
 class Task;
 class Engine;
@@ -21,7 +18,7 @@ namespace menus {
     UIDocument* show(
         Engine* engine, 
         const std::string& name,
-        std::vector<std::unique_ptr<dynamic::Value>> args
+        std::vector<dynamic::Value> args
     );
     void show_process_panel(Engine* engine, std::shared_ptr<Task> task, std::wstring text=L"");
 }

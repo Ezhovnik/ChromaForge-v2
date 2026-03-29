@@ -47,7 +47,5 @@ using itemcount_t = uint32_t;
 using integer_t = int64_t;
 /** Число с плавающей точкой (64 битное знаковое вещественное число) */
 using number_t = double;
-/** Объединение числовых типов */
-using number_u = std::variant<integer_t, number_t>;
 
 #endif // SRC_TYPEDEFS_H_
