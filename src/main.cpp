@@ -36,13 +36,11 @@ int main(int argc, char** argv) {
 		);
 	}
 
-    std::unique_ptr<Engine> engine = nullptr;
-
     try {
         EngineSettings settings;
         SettingsHandler handler(settings);
-        engine = std::make_unique<Engine>(settings, handler, &paths);
-        engine->mainloop();
+        Engine engine(settings, handler, &paths);
+        engine.mainloop();
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred: {}", err.what());
     } catch (const std::exception& err) {
