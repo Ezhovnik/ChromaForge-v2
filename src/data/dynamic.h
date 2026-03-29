@@ -15,7 +15,7 @@ namespace dynamic {
     class Map;
     class List;
 
-    enum class ValueType {
+    enum class Type {
         None = 0,
         Map,
         List,

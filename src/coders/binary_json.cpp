@@ -10,22 +10,22 @@ using namespace json;
 using namespace dynamic;
 
 static void to_binary(ByteBuilder& builder, const Value& value) {
-    switch (static_cast<ValueType>(value.index())) {
-        case ValueType::None: {
+    switch (static_cast<Type>(value.index())) {
+        case Type::None: {
             LOG_ERROR("None value is not implemented");
             throw std::runtime_error("none value is not implemented");
-        } case ValueType::Map: {
+        } case Type::Map: {
             auto bytes = to_binary(std::get<Map_sptr>(value).get());
             builder.put(bytes.data(), bytes.size());
             break;
-        } case ValueType::List: {
+        } case Type::List: {
             builder.put(BJSON_TYPE_LIST);
             for (auto& element : std::get<List_sptr>(value)->values) {
                 to_binary(builder, element);
             }
             builder.put(BJSON_END);
             break;
-        } case ValueType::Integer: {
+        } case Type::Integer: {
             auto val = std::get<integer_t>(value);
             if (val >= 0 && val <= 255) {
                 builder.put(BJSON_TYPE_BYTE);
@@ -42,14 +42,14 @@ static void to_binary(ByteBuilder& builder, const Value& value) {
             }
             break;
         }
-        case ValueType::Number:
+        case Type::Number:
             builder.put(BJSON_TYPE_NUMBER);
             builder.putFloat64(std::get<number_t>(value));
             break;
-        case ValueType::Boolean:
+        case Type::Boolean:
             builder.put(BJSON_TYPE_FALSE + std::get<bool>(value));
             break;
-        case ValueType::String:
+        case Type::String:
             builder.put(BJSON_TYPE_STRING);
             builder.put(std::get<std::string>(value));
             break;

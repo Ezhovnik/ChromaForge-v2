@@ -4,11 +4,11 @@ using namespace dynamic;
 
 std::string List::str(size_t index) const {
     const auto& value = values[index];
-    switch (static_cast<ValueType>(value.index())) {
-        case ValueType::String: return std::get<std::string>(value);
-        case ValueType::Boolean: return std::get<bool>(value) ? "true" : "false";
-        case ValueType::Number: return std::to_string(std::get<double>(value));
-        case ValueType::Integer: return std::to_string(std::get<int64_t>(value));
+    switch (static_cast<Type>(value.index())) {
+        case Type::String: return std::get<std::string>(value);
+        case Type::Boolean: return std::get<bool>(value) ? "true" : "false";
+        case Type::Number: return std::to_string(std::get<double>(value));
+        case Type::Integer: return std::to_string(std::get<int64_t>(value));
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -18,11 +18,11 @@ std::string List::str(size_t index) const {
 
 number_t List::num(size_t index) const {
     const auto& value = values[index];
-    switch (static_cast<ValueType>(value.index())) {
-        case ValueType::Number: return std::get<number_t>(value);
-        case ValueType::Integer: return std::get<integer_t>(value);
-        case ValueType::String: return std::stoll(std::get<std::string>(value));
-        case ValueType::Boolean: return std::get<bool>(value);
+    switch (static_cast<Type>(value.index())) {
+        case Type::Number: return std::get<number_t>(value);
+        case Type::Integer: return std::get<integer_t>(value);
+        case Type::String: return std::stoll(std::get<std::string>(value));
+        case Type::Boolean: return std::get<bool>(value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -32,11 +32,11 @@ number_t List::num(size_t index) const {
 
 integer_t List::integer(size_t index) const {
     const auto& value = values[index];
-    switch (static_cast<ValueType>(value.index())) {
-        case ValueType::Number: return std::get<number_t>(value);
-        case ValueType::Integer: return std::get<integer_t>(value);
-        case ValueType::String: return std::stoll(std::get<std::string>(value));
-        case ValueType::Boolean: return std::get<bool>(value);
+    switch (static_cast<Type>(value.index())) {
+        case Type::Number: return std::get<number_t>(value);
+        case Type::Integer: return std::get<integer_t>(value);
+        case Type::String: return std::stoll(std::get<std::string>(value));
+        case Type::Boolean: return std::get<bool>(value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -62,9 +62,9 @@ List* List::list(size_t index) const {
 
 bool List::flag(size_t index) const {
     const auto& value = values[index];
-    switch (static_cast<ValueType>(value.index())) {
-        case ValueType::Integer: return std::get<integer_t>(value);
-        case ValueType::Boolean: return std::get<bool>(value);
+    switch (static_cast<Type>(value.index())) {
+        case Type::Integer: return std::get<integer_t>(value);
+        case Type::Boolean: return std::get<bool>(value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -109,11 +109,11 @@ std::string Map::get(const std::string& key, const std::string def) const {
     auto found = values.find(key);
     if (found == values.end()) return def;
     auto& value = found->second;
-    switch (static_cast<ValueType>(value.index())) {
-        case ValueType::String: return std::get<std::string>(value);
-        case ValueType::Boolean: return std::get<bool>(value) ? "true" : "false";
-        case ValueType::Number: return std::to_string(std::get<number_t>(value));
-        case ValueType::Integer: return std::to_string(std::get<integer_t>(value));
+    switch (static_cast<Type>(value.index())) {
+        case Type::String: return std::get<std::string>(value);
+        case Type::Boolean: return std::get<bool>(value) ? "true" : "false";
+        case Type::Number: return std::to_string(std::get<number_t>(value));
+        case Type::Integer: return std::to_string(std::get<integer_t>(value));
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -125,11 +125,11 @@ number_t Map::get(const std::string& key, double def) const {
     auto found = values.find(key);
     if (found == values.end()) return def;
     auto& value = found->second;
-    switch (static_cast<ValueType>(value.index())) {
-        case ValueType::Number: return std::get<number_t>(value);
-        case ValueType::Integer: return std::get<integer_t>(value);
-        case ValueType::String: return std::stoull(std::get<std::string>(value));
-        case ValueType::Boolean: return std::get<bool>(value);
+    switch (static_cast<Type>(value.index())) {
+        case Type::Number: return std::get<number_t>(value);
+        case Type::Integer: return std::get<integer_t>(value);
+        case Type::String: return std::stoull(std::get<std::string>(value));
+        case Type::Boolean: return std::get<bool>(value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -141,11 +141,11 @@ integer_t Map::get(const std::string& key, integer_t def) const {
     auto found = values.find(key);
     if (found == values.end()) return def;
     auto& value = found->second;
-    switch (static_cast<ValueType>(value.index())) {
-        case ValueType::Number: return std::get<number_t>(value);
-        case ValueType::Integer: return std::get<integer_t>(value);
-        case ValueType::String: return std::stoull(std::get<std::string>(value));
-        case ValueType::Boolean: return std::get<bool>(value);
+    switch (static_cast<Type>(value.index())) {
+        case Type::Number: return std::get<number_t>(value);
+        case Type::Integer: return std::get<integer_t>(value);
+        case Type::String: return std::stoull(std::get<std::string>(value));
+        case Type::Boolean: return std::get<bool>(value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -157,9 +157,9 @@ bool Map::get(const std::string& key, bool def) const {
     auto found = values.find(key);
     if (found == values.end()) return def;
     auto& value = found->second;
-    switch (static_cast<ValueType>(value.index())) {
-        case ValueType::Integer: return std::get<integer_t>(value);
-        case ValueType::Boolean: return std::get<bool>(value);
+    switch (static_cast<Type>(value.index())) {
+        case Type::Integer: return std::get<integer_t>(value);
+        case Type::Boolean: return std::get<bool>(value);
         default: {
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");

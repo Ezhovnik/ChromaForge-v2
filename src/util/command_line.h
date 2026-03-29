@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
+#include <cstring>
 
 #include "../debug/Logger.h"
 #include "../files/engine_paths.h"
@@ -32,19 +33,25 @@ public:
 	/**
      * @brief Пропускает текущий аргумент.
      */
-	void skip() {pos++;}
+	void skip() {
+		pos++;
+	}
 
 	/**
      * @brief Проверяет, есть ли ещё непрочитанные аргументы.
      * @return true, если позиция меньше argc, иначе false.
      */
-	bool hasNext() const {return pos < argc;}
+	bool hasNext() const {
+		return pos < argc && strlen(argv[pos]);
+	}
 
 	/**
      * @brief Проверяет, является ли последний прочитанный аргумент ключом (начинается с '-').
      * @return true, если первый символ last — '-', иначе false.
      */
-	bool isKeywordArg() const {return last[0] == '-';}
+	bool isKeywordArg() const {
+		return last[0] == '-';
+	}
 
 	/**
      * @brief Возвращает следующий аргумент и перемещает позицию.
