@@ -12,6 +12,17 @@
 
 using namespace json;
 
+class Parser : BasicParser {
+private:
+    std::unique_ptr<dynamic::List> parseList();
+    std::unique_ptr<dynamic::Map> parseObject();
+    dynamic::Value parseValue();
+public:
+    Parser(std::string_view filename, std::string_view source);
+
+    std::unique_ptr<dynamic::Map> parse();
+};
+
 inline void newline(std::stringstream& ss, bool nice, uint indent, const std::string& indentstr) {
     if (nice) {
         ss << "\n";
@@ -82,7 +93,10 @@ std::string json::stringify(const dynamic::Map* obj, bool nice, const std::strin
 }
 
 
-Parser::Parser(const std::string& filename, const std::string& source) : BasicParser(filename, source) {    
+Parser::Parser(
+    std::string_view filename, 
+    std::string_view source
+) : BasicParser(filename, source) {    
 }
 
 std::unique_ptr<dynamic::Map> Parser::parse() {

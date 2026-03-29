@@ -89,7 +89,7 @@ namespace xml {
         const std::string& getEncoding() const;
     };
 
-    class Parser : public BasicParser {
+    class Parser : BasicParser {
     private:
         xmldocument document;
 
@@ -100,7 +100,7 @@ namespace xml {
         std::string parseText();
         std::string parseXMLName();
     public:
-        Parser(const std::string& filename, const std::string& source);
+        Parser(std::string_view filename, std::string_view source);
 
         xmldocument parse();
     };

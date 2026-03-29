@@ -36,7 +36,7 @@ const std::string& langs::Lang::getId() const {
  * Поддерживаются комментарии, начинающиеся с '#'.
  * Пустые строки игнорируются.
  */
-class Reader : public BasicParser {
+class Reader : BasicParser {
     /**
      * @brief Переопределённый метод пропуска пробелов, пропускает комментарии.
      */
@@ -48,7 +48,10 @@ class Reader : public BasicParser {
         }
     }
 public:
-    Reader(const std::string& file, const std::string& source) : BasicParser(file, source) {}
+    Reader(
+        std::string_view file,
+        std::string_view source
+    ) : BasicParser(file, source) {}
 
     /**
      * @brief Читает файл перевода и заполняет объект Lang.

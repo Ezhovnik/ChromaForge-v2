@@ -54,20 +54,22 @@ public:
     uint line;
     uint linestart;
 
-    parsing_error(std::string message, 
-                    std::string filename, 
-                    std::string source, 
-                    uint pos, 
-                    uint line, 
-                    uint linestart);
+    parsing_error(
+        std::string message, 
+        std::string_view filename, 
+        std::string_view source, 
+        uint pos, 
+        uint line, 
+        uint linestart
+    );
 
     std::string errorLog() const;
 };
 
 class BasicParser {
 protected:
-    const std::string& filename;
-    const std::string& source;
+    std::string_view filename;
+    std::string_view source;
     uint pos = 0;
     uint line = 1;
     uint linestart = 0;
@@ -89,13 +91,13 @@ protected:
 
     parsing_error error(std::string message);
 public:
-    std::string readUntil(char c);
+    std::string_view readUntil(char c);
     std::string parseName();
     bool hasNext();
     char peek();
     char nextChar();
 
-    BasicParser(const std::string& filename, const std::string& source);
+    BasicParser(std::string_view file, std::string_view source);
 };
 
 #endif // CODERS_COMMONS_H_

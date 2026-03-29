@@ -173,7 +173,10 @@ const std::string& Document::getEncoding() const {
     return encoding;
 }
 
-Parser::Parser(const std::string& filename, const std::string& source) : BasicParser(filename, source) {
+Parser::Parser(
+    std::string_view filename,
+    std::string_view source
+) : BasicParser(filename, source) {
 }
 
 xmlelement Parser::parseOpenTag() {
@@ -245,7 +248,7 @@ std::string Parser::parseText() {
         if (c == '<') break;
         nextChar();
     }
-    return source.substr(start, pos-start);
+    return std::string(source.substr(start, pos - start));
 }
 
 inline bool is_xml_identifier_start(char c) {
@@ -266,7 +269,7 @@ std::string Parser::parseXMLName() {
     while (hasNext() && is_xml_identifier_part(source[pos])) {
         pos++;
     }
-    return source.substr(start, pos - start);
+    return std::string(source.substr(start, pos - start));
 }
 
 xmlelement Parser::parseElement() {
