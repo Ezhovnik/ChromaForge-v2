@@ -153,8 +153,8 @@ void lua::LuaState::loadbuffer(int env, const std::string& src, const std::strin
     if (env && getglobal(envName(env))) lua_setfenv(L, -2);
 }
 
-int lua::LuaState::call(int argc) {
-    if (lua_pcall(L, argc, LUA_MULTRET, 0)) {
+int lua::LuaState::call(int argc, int nresults) {
+    if (lua_pcall(L, argc, nresults, 0)) {
         LOG_ERROR("{}", lua_tostring(L, -1));
         throw lua::luaerror(lua_tostring(L, -1));
     }
@@ -170,7 +170,7 @@ int lua::LuaState::callNoThrow(int argc) {
 }
 
 int lua::LuaState::eval(int env, const std::string& src, const std::string& file) {
-    auto srcText = "return (" + src + ")";
+    auto srcText = "return " + src;
     loadbuffer(env, srcText, file);
     return call(0);
 }
@@ -428,7 +428,7 @@ scripting::common_func lua::LuaState::createLambda() {
         for (const auto& arg : args) {
             pushvalue(arg);
         }
-        if (call(args.size())) {
+        if (call(args.size(), 1)) {
             auto result = tovalue(-1);
             pop(1);
             return result;

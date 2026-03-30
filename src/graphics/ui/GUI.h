@@ -66,7 +66,11 @@ namespace gui {
 
         std::queue<runnable> postRunnables;
 
-        void activateMouse();
+        float doubleClickTimer = 0.0f;
+        float doubleClickDelay = 0.5f;
+        bool doubleClicked = false;
+
+        void activateMouse(float deltaTIme);
         void activateFocused();
     public:
         GUI();
@@ -91,6 +95,9 @@ namespace gui {
         void onAssetsLoad(Assets* assets);
 
         void postRunnable(runnable callback);
+
+        void setDoubleClickDelay(float delay);
+        float getDoubleClickDelay() const;
     };
 }
 

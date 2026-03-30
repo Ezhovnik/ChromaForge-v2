@@ -158,6 +158,28 @@ static int l_file_list(lua_State* L) {
     return 1;
 }
 
+static int l_file_remove(lua_State* L) {
+    std::string rawpath = lua_tostring(L, 1);
+    std::filesystem::path path = resolve_path(L, rawpath);
+    auto entryPoint = rawpath.substr(0, rawpath.find(':'));
+    if (entryPoint != "world") {
+        throw std::runtime_error("Access denied");
+    }
+    lua_pushboolean(L, std::filesystem::remove(path));
+    return 1;
+}
+
+static int l_file_remove_tree(lua_State* L) {
+    std::string rawpath = lua_tostring(L, 1);
+    std::filesystem::path path = resolve_path(L, rawpath);
+    auto entryPoint = rawpath.substr(0, rawpath.find(':'));
+    if (entryPoint != "world") {
+        throw std::runtime_error("Access denied");
+    }
+    lua_pushinteger(L, std::filesystem::remove_all(path));
+    return 1;
+}
+
 const luaL_Reg filelib [] = {
     {"resolve", lua_wrap_errors<l_file_resolve>},
     {"read", lua_wrap_errors<l_file_read>},
@@ -171,5 +193,7 @@ const luaL_Reg filelib [] = {
     {"read_bytes", lua_wrap_errors<l_file_read_bytes>},
     {"write_bytes", lua_wrap_errors<l_file_write_bytes>},
     {"find", lua_wrap_errors<l_file_find>},
+    {"remove", lua_wrap_errors<l_file_remove>},
+    {"remove_tree", lua_wrap_errors<l_file_remove_tree>},
     {NULL, NULL}
 };

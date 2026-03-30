@@ -9,6 +9,7 @@
 #include "../../../frontend/hud.h"
 #include "../../../util/stringutil.h"
 #include "lua_util.h"
+#include "../../../graphics/ui/GUI.h"
 
 namespace scripting {
     extern lua::LuaState* state;
@@ -28,7 +29,11 @@ static int l_add_callback(lua_State* L) {
         throw std::runtime_error("Unknown binding: " + util::quote(bindname));
     }
     scripting::state->pushvalue(2);
-    runnable callback = scripting::state->createRunnable();
+    runnable callback = [=]() {
+        if (!scripting::engine->getGUI()->isFocusCaught()) {
+            scripting::state->createRunnable();
+        }
+    };
     if (scripting::hud) {
         scripting::hud->keepAlive(bind->second.onactived.add(callback));
     } else {

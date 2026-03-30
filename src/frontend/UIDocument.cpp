@@ -57,7 +57,9 @@ std::unique_ptr<UIDocument> UIDocument::read(scriptenv parent_env, std::string n
     const std::string text = files::read_string(file);
     auto xmldoc = xml::parse(file.u8string(), text);
 
-    auto env = parent_env == nullptr ? scripting::get_root_environment() : scripting::create_doc_environment(parent_env, name);
+    auto env = parent_env == nullptr 
+        ? scripting::create_doc_environment(scripting::get_root_environment(), name)
+        : scripting::create_doc_environment(parent_env, name);
     gui::UIXmlReader reader(env);
     auto view = reader.readXML(file.u8string(), xmldoc->getRoot());
     view->setId("root");

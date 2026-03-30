@@ -24,6 +24,26 @@ namespace gui {
     using onaction = std::function<void(GUI*)>;
     using onnumberchange = std::function<void(GUI*, double)>;
 
+    class ActionsSet {
+    private:
+        std::unique_ptr<std::vector<onaction>> callbacks;
+    public:
+        void listen(onaction callback) {
+            if (callbacks == nullptr) {
+                callbacks = std::make_unique<std::vector<onaction>>();
+            }
+            callbacks->push_back(callback);
+        }
+
+        void notify(GUI* gui) {
+            if (callbacks) {
+                for (auto& callback : *callbacks) {
+                    callback(gui);
+                }
+            }
+        }
+    };
+
     enum class Align {
         left,
         center,
@@ -72,7 +92,8 @@ namespace gui {
         vec2supplier positionfunc = nullptr;
         vec2supplier sizefunc = nullptr;
         UINode* parent = nullptr;
-        std::vector<onaction> actions;
+        ActionsSet actions;
+        ActionsSet doubleClickCallbacks;
 
         UINode(glm::vec2 size);
     public:
@@ -116,9 +137,11 @@ namespace gui {
         int getZIndex() const;
 
         virtual UINode* listenAction(onaction action);
+        virtual UINode* listenDoubleClick(onaction action);
 
         virtual void onFocus(GUI*) {focused = true;}
         virtual void click(GUI*, int x, int y);
+        virtual void doubleClick(GUI*, int x, int y);
         virtual void clicked(GUI*, mousecode button) {}
         virtual void mouseMove(GUI*, int x, int y) {};
         virtual void mouseRelease(GUI*, int x, int y);

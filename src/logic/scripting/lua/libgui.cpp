@@ -92,6 +92,14 @@ static int l_uinode_move_into(lua_State* L) {
     return 0;
 }
 
+static int l_textbox_paste(lua_State* L) {
+    auto node = getDocumentNode(L);
+    auto box = dynamic_cast<gui::TextBox*>(node.node.get());
+    auto text = lua_tostring(L, 2);
+    box->paste(util::str2wstr_utf8(text));
+    return 0;
+}
+
 static int p_get_inventory(gui::UINode* node) {
     if (auto inventory = dynamic_cast<gui::InventoryView*>(node)) {
         auto inv = inventory->getInventory();
@@ -246,6 +254,17 @@ static int p_get_editable(gui::UINode* node) {
     return 0;
 }
 
+static int p_get_focused(gui::UINode* node) {
+    return scripting::state->pushboolean(node->isFocused());
+}
+
+static int p_get_paste(gui::UINode* node) {
+    if (dynamic_cast<gui::TextBox*>(node)) {
+        return scripting::state->pushcfunction(l_textbox_paste);
+    }
+    return 0;
+}
+
 static int l_gui_getattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -280,6 +299,8 @@ static int l_gui_getattr(lua_State* L) {
         {"back", p_get_back},
         {"reset", p_get_reset},
         {"inventory", p_get_inventory},
+        {"focused", p_get_focused},
+        {"paste", p_get_paste}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) return func->second(node.get());
@@ -383,6 +404,14 @@ static void p_set_editable(gui::UINode* node, int idx) {
     }
 }
 
+static void p_set_focused(std::shared_ptr<gui::UINode> node, int idx) {
+    if (scripting::state->toboolean(idx) && !node->isFocused()) {
+        scripting::engine->getGUI()->setFocus(node);
+    } else if (node->isFocused()){
+        node->defocus();
+    }
+}
+
 static int l_gui_setattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -415,6 +444,12 @@ static int l_gui_setattr(lua_State* L) {
     };
     auto func = setters.find(attr);
     if (func != setters.end()) func->second(node.get(), 4);
+
+    static const std::unordered_map<std::string_view, std::function<void(std::shared_ptr<gui::UINode>, int)>> setters2 {
+        {"focused", p_set_focused},
+    };
+    auto func2 = setters2.find(attr);
+    if (func2 != setters2.end()) func2->second(node, 4);
     return 0;
 }
 

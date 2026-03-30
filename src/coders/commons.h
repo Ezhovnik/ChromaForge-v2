@@ -39,11 +39,11 @@ inline bool is_whitespace(char c) {
 }
 
 inline bool is_identifier_start(char c) {
-    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' || c == '-' || c == '.';
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' || c == '.';
 }
 
 inline bool is_identifier_part(char c) {
-    return is_identifier_start(c) || is_digit(c);
+    return is_identifier_start(c) || is_digit(c) || c == '-';
 }
 
 class parsing_error : public std::runtime_error {

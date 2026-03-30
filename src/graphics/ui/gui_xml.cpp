@@ -49,6 +49,24 @@ static Gravity gravity_from_string(const std::string& str) {
     return Gravity::none;
 }
 
+static runnable create_runnable(UIXmlReader& reader, xml::xmlelement element, const std::string& name) {
+    if (element->has(name)) {
+        std::string text = element->attr(name).getText();
+        if (!text.empty()) {
+            return scripting::create_runnable(
+                reader.getEnvironment(), text, reader.getFilename()
+            );
+        }
+    }
+    return nullptr;
+}
+
+static onaction create_action(UIXmlReader& reader, xml::xmlelement element, const std::string& name) {
+    auto callback = create_runnable(reader, element, name);
+    if (callback == nullptr) return nullptr;
+    return [callback](GUI*) {callback();};
+}
+
 static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& node) {
     if (element->has("id")) node.setId(element->attr("id").getText());
     if (element->has("pos")) node.setPos(element->attr("pos").asVec2());
@@ -94,19 +112,8 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
         ));
     }
 
-    if (element->has("onclick")) {
-        std::string text = element->attr("onclick").getText();
-        if (!text.empty()) {
-            auto callback = scripting::create_runnable(
-                reader.getEnvironment(),
-                text,
-                reader.getFilename()
-            );
-            node.listenAction([callback](GUI*) {
-                callback();
-            });
-        }
-    }
+    if (auto onclick = create_action(reader, element, "onclick")) node.listenAction(onclick);
+    if (auto ondoubleclick = create_action(reader, element, "ondoubleclick")) node.listenDoubleClick(ondoubleclick);
 }
 
 static void _readContainer(UIXmlReader& reader, xml::xmlelement element, Container& container) {
@@ -240,6 +247,7 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
     if (element->has("multiline")) textbox->setMultiline(element->attr("multiline").asBool());
     if (element->has("text-wrap")) textbox->setTextWrapping(element->attr("text-wrap").asBool());
     if (element->has("editable")) textbox->setEditable(element->attr("editable").asBool());
+    if (element->has("autoresize")) textbox->setAutoResize(element->attr("autoresize").asBool());
     if (element->has("consumer")) {
         textbox->setTextConsumer(scripting::create_wstring_consumer(
             reader.getEnvironment(),
@@ -263,6 +271,8 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
             reader.getFilename()
         ));
     }
+    if (auto onUpPressed = create_runnable(reader, element, "onup")) textbox->setOnUpPressed(onUpPressed);
+    if (auto onDownPressed = create_runnable(reader, element, "ondown")) textbox->setOnDownPressed(onDownPressed);
 
     return textbox;
 }

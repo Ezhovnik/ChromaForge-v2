@@ -6,11 +6,11 @@
 using namespace cmd;
 
 inline bool is_cmd_identifier_part(char c, bool allowColon) {
-    return is_identifier_part(c) || c == '.' || c == '$' || (allowColon && c == ':');
+    return (is_identifier_part(c) || c == '.' || c == '$' || (allowColon && c == ':'));
 }
 
 inline bool is_cmd_identifier_start(char c) {
-    return is_identifier_start(c) || c == '.' || c == '$';
+    return (is_identifier_start(c) || c == '.' || c == '$');
 }
 
 class CommandParser : BasicParser {
@@ -72,8 +72,12 @@ public:
             nextChar();
             return parseString(c);
         }
-        if (c == '+' || c == '-' || is_digit(c)) {
+        if (c == '+' || c == '-') {
+            nextChar();
             return parseNumber(c == '-' ? -1 : 1);
+        }
+        if (is_digit(c)) {
+            return parseNumber(1);
         }
         throw error("Invalid character '" + std::string({c}) + "'");
     }
@@ -225,7 +229,10 @@ public:
             case ArgType::Integer:
                 return typeCheck<integer_t>(arg, value, "integer");
             case ArgType::String:
-                return typeCheck<std::string>(arg, value, "string");
+                if (!std::holds_alternative<std::string>(value)) {
+                    return !arg->optional;
+                }
+                break;
         }
         return true;
     }
@@ -305,6 +312,13 @@ public:
 
             if (hasNext() && peekNoJump() != ' ') {
                 value = parseValue();
+
+                if (auto string = std::get_if<std::string>(&value)) {
+                    if ((*string)[0] == '$') {
+                        value = (*interpreter)[string->substr(1)];
+                    }
+                }
+
                 if (!relative && hasNext() && peek() == '=') {
                     auto key = std::get<std::string>(value);
                     kwargs->put(key, performKeywordArg(interpreter, command, key));
@@ -316,7 +330,7 @@ public:
                 if (arg) {
                     if (auto string = std::get_if<std::string>(&arg->def)) {
                         if ((*string)[0] == '$') {
-                            args->put((*interpreter)[*string]);
+                            args->put((*interpreter)[string->substr(1)]);
                         } else {
                             args->put(arg->def);
                         }

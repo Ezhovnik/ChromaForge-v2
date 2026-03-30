@@ -39,7 +39,10 @@ std::shared_ptr<Menu> GUI::getMenu() {
     return menu;
 }
 
-void GUI::activateMouse() {
+void GUI::activateMouse(float deltaTime) {
+    doubleClicked = false;
+    doubleClickTimer += deltaTime + glm::length(Events::delta) * 0.1f;
+
     auto hover = container->getAt(Events::cursor, nullptr);
     if (this->hover && this->hover != hover) this->hover->setHover(false);
 
@@ -52,7 +55,13 @@ void GUI::activateMouse() {
     if (Events::justClicked(mousecode::BUTTON_1)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
-            pressed->click(this, Events::cursor.x, Events::cursor.y);
+            if (doubleClickTimer < doubleClickDelay) {
+                pressed->doubleClick(this, Events::cursor.x, Events::cursor.y);
+                doubleClicked = true;
+            } else {
+                pressed->click(this, Events::cursor.x, Events::cursor.y);
+            }
+            doubleClickTimer = 0.0f;
             if (focus && focus != pressed) focus->defocus();
             if (focus != pressed) {
                 focus = pressed;
@@ -92,7 +101,9 @@ void GUI::activateFocused() {
 
     if (!Events::_cursor_locked) {
         if (Events::isClicked(mousecode::BUTTON_1) && (Events::justClicked(mousecode::BUTTON_1) || Events::delta.x || Events::delta.y)) {
-            focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
+            if (!doubleClicked) {
+                focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
+            }
         }
     }
 }
@@ -108,7 +119,7 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
     container->activate(deltaTime);
     auto prevfocus = focus;
 
-    if (!Events::_cursor_locked) activateMouse();
+    if (!Events::_cursor_locked) activateMouse(deltaTime);
 
     if (focus) activateFocused();
     if (focus && !focus->isFocused()) focus = nullptr;
@@ -181,4 +192,12 @@ void GUI::onAssetsLoad(Assets* assets) {
         std::dynamic_pointer_cast<gui::UINode>(container), 
         nullptr
     ), BUILTIN_CONTENT_NAMESPACE + ":root");
+}
+
+void GUI::setDoubleClickDelay(float delay) {
+    doubleClickDelay = delay;
+}
+
+float GUI::getDoubleClickDelay() const {
+    return doubleClickDelay;
 }

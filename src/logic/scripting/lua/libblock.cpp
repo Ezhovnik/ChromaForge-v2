@@ -48,6 +48,7 @@ int l_set_block(lua_State* L) {
     lua::luaint states = lua_tointeger(L, 5);
     bool noupdate = lua_toboolean(L, 6);
     if (id < 0 || size_t(id) >= scripting::indices->countBlockDefs()) return 0;
+    if (!scripting::level->chunks->getVoxel(x, y, z)) return 0;
     scripting::level->chunks->setVoxel(x, y, z, id, states);
     scripting::level->lighting->onBlockSet(x,y,z, id);
     if (!noupdate) scripting::blocks->updateSides(x, y, z);

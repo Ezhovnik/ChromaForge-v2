@@ -96,6 +96,7 @@ namespace cmd {
         std::unordered_map<std::string, dynamic::Value> variables;
     public:
         CommandsInterpreter() : repository(std::make_unique<CommandsRepository>()) {}
+        CommandsInterpreter(const CommandsInterpreter&) = delete;
         CommandsInterpreter(std::unique_ptr<CommandsRepository> repository) : repository(std::move(repository)){}
 
         Prompt parse(std::string_view text);
