@@ -1,9 +1,7 @@
 #ifndef SRC_TYPEDEFS_H_
 #define SRC_TYPEDEFS_H_
 
-#include <stdlib.h>
 #include <stdint.h>
-#include <variant>
 #include <memory>
 
 /**

@@ -3,12 +3,11 @@
 
 #include <memory>
 
-#include "Viewport.h"
-#include "DrawContext.h"
-
 class Mesh;
 class ShaderProgram;
 class Framebuffer;
+class DrawContext;
+class ImageData;
 
 class PostProcessing {
 private:

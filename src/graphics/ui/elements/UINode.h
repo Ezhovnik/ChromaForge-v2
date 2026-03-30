@@ -70,6 +70,7 @@ namespace gui {
         bool resizing = true;
         Align align = Align::left;
         vec2supplier positionfunc = nullptr;
+        vec2supplier sizefunc = nullptr;
         UINode* parent = nullptr;
         std::vector<onaction> actions;
 
@@ -150,6 +151,10 @@ namespace gui {
 
         virtual vec2supplier getPositionFunc() const;
         virtual void setPositionFunc(vec2supplier);
+
+        virtual vec2supplier getSizeFunc() const;
+        virtual void setSizeFunc(vec2supplier);
+
         virtual void setGravity(Gravity gravity);
 
         virtual void refresh() {};

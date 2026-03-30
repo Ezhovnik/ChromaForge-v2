@@ -156,6 +156,14 @@ void UINode::setPositionFunc(vec2supplier func) {
     positionfunc = func;
 }
 
+vec2supplier UINode::getSizeFunc() const {
+    return sizefunc;
+}
+
+void UINode::setSizeFunc(vec2supplier func) {
+    sizefunc = func;
+}
+
 void UINode::setGravity(Gravity gravity) {
     if (gravity == Gravity::none) {
         setPositionFunc(nullptr);
@@ -272,6 +280,7 @@ const std::string& UINode::getId() const {
 
 void UINode::reposition() {
     if (positionfunc) setPos(positionfunc());
+    if (sizefunc) setSize(sizefunc());
 }
 
 void UINode::getIndices(

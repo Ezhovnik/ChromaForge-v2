@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <unordered_map>
 
-#include "../../content/ContentPack.h"
+struct ContentPack;
 
 /**
  * @brief Пространство имён для системы локализации (переводов).
@@ -31,6 +31,7 @@ namespace langs {
      * Хранит отображение «ключ(мод:контекст.ключ) → текст» для конкретной локали.
      */
     class Lang {
+    private:
         std::string locale; ///< Идентификатор локали (например, "ru_RU")
         std::unordered_map<std::wstring, std::wstring> map; ///< Словарь переводов (ключ -> текст)
     public:

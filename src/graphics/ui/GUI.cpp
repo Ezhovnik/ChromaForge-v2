@@ -10,6 +10,7 @@
 #include "../../window/Events.h"
 #include "../../window/input.h"
 #include "../../window/Camera.h"
+#include "../../window/Window.h"
 #include "../../graphics/core/ShaderProgram.h"
 #include "../../debug/Logger.h"
 #include "../../graphics/core/DrawContext.h"

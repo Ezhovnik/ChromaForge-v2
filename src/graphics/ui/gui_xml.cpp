@@ -69,7 +69,14 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
         node.setPositionFunc(scripting::create_vec2_supplier(
             reader.getEnvironment(),
             element->attr("position-func").getText(),
-            reader.getFilename() + ".lua"
+            reader.getFilename()
+        ));
+    }
+    if (element->has("size-func")) {
+        node.setSizeFunc(scripting::create_vec2_supplier(
+            reader.getEnvironment(),
+            element->attr("size-func").getText(),
+            reader.getFilename()
         ));
     }
     if (element->has("interactive")) node.setInteractive(element->attr("interactive").asBool());

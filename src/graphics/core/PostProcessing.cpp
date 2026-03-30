@@ -7,6 +7,8 @@
 #include "Texture.h"
 #include "Framebuffer.h"
 #include "../../debug/Logger.h"
+#include "Viewport.h"
+#include "DrawContext.h"
 
 PostProcessing::PostProcessing() {
     float vertices[] {

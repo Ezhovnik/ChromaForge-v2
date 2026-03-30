@@ -9,6 +9,7 @@
 #include "../../../../assets/Assets.h"
 #include "../../../../util/stringutil.h"
 #include "../../../../window/Events.h"
+#include "../../../../window/Window.h"
 
 using namespace gui;
 
