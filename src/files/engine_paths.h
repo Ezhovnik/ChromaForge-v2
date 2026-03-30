@@ -14,6 +14,7 @@ public:
 };
 
 class EnginePaths {
+private:
     std::filesystem::path userfiles {"."};
     std::filesystem::path resources {"res"};
     std::filesystem::path worldFolder;
@@ -41,18 +42,25 @@ public:
     std::filesystem::path resolve(std::string path);
 };
 
+struct PathsRoot {
+    std::string name;
+    std::filesystem::path path;
+};
+
 class ResPaths {
+private:
     std::filesystem::path mainRoot;
-    std::vector<std::pair<std::string, std::filesystem::path>> roots;
+    std::vector<PathsRoot> roots;
 public:
     ResPaths(
         std::filesystem::path mainRoot,
-        std::vector<std::pair<std::string, std::filesystem::path>> roots
+        std::vector<PathsRoot> roots
     );
 
     std::filesystem::path find(const std::string& filename) const;
     std::string findRaw(const std::string& filename) const;
     std::vector<std::filesystem::path> listdir(const std::string& folder) const;
+    std::vector<std::string> listdirRaw(const std::string& folder) const;
 
     const std::filesystem::path& getMainRoot() const;
 };

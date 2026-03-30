@@ -184,7 +184,7 @@ void TextBox::setTextOffset(uint x) {
 }
 
 void TextBox::typed(unsigned int codepoint) {
-    paste(std::wstring({(wchar_t)codepoint}));
+    if (editable) paste(std::wstring({(wchar_t)codepoint}));
 }
 
 bool TextBox::validate() {

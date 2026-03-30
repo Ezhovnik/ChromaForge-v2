@@ -278,6 +278,15 @@ console.add_command(
     end
 )
 
+function file.readlines(path)
+    local str = file.read(path)
+    local lines = {}
+    for s in str:gmatch("[^\r\n]+") do
+        table.insert(lines, s)
+    end
+    return lines
+end
+
 -- Deprecated functions
 block_index = block.index
 block_name = block.name

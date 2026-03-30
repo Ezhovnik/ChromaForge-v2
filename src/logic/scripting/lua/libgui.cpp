@@ -19,7 +19,6 @@
 #include "../../../items/Inventories.h"
 #include "../../../graphics/ui/elements/display/InventoryView.h"
 #include "../../../world/Level.h"
-#include "../../../debug/Logger.h"
 
 struct DocumentNode {
     UIDocument* document;
@@ -240,6 +239,13 @@ static int p_move_into(gui::UINode*) {
     return scripting::state->pushcfunction(l_uinode_move_into);
 }
 
+static int p_get_editable(gui::UINode* node) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return scripting::state->pushboolean(box->isEditable());
+    }
+    return 0;
+}
+
 static int l_gui_getattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -262,6 +268,7 @@ static int l_gui_getattr(lua_State* L) {
         {"placeholder", p_get_placeholder},
         {"valid", p_is_valid},
         {"text", p_get_text},
+        {"editable", p_get_editable},
         {"value", p_get_value},
         {"min", p_get_min},
         {"max", p_get_max},
@@ -370,6 +377,12 @@ static void p_set_inventory(gui::UINode* node, int idx) {
     }
 }
 
+static void p_set_editable(gui::UINode* node, int idx) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        box->setEditable(scripting::state->toboolean(idx));
+    }
+}
+
 static int l_gui_setattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -389,6 +402,7 @@ static int l_gui_setattr(lua_State* L) {
         {"enabled", p_set_enabled},
         {"placeholder", p_set_placeholder},
         {"text", p_set_text},
+        {"editable", p_set_editable},
         {"value", p_set_value},
         {"min", p_set_min},
         {"max", p_set_max},
@@ -447,13 +461,12 @@ static int l_gui_get_locales_info(lua_State* L) {
     return 1;
 }
 
-static int l_gui_getviewport(lua_State* L) {
-    lua::pushvec2_arr(L, scripting::engine->getGUI()->getContainer()->getSize());
-    return 1;
+static int l_gui_get_viewport(lua_State* L) {
+    return lua::pushvec2_arr(L, scripting::engine->getGUI()->getContainer()->getSize());;
 }
 
 const luaL_Reg guilib [] = {
-    {"get_viewport", lua_wrap_errors<l_gui_getviewport>},
+    {"get_viewport", lua_wrap_errors<l_gui_get_viewport>},
     {"getattr", lua_wrap_errors<l_gui_getattr>},
     {"setattr", lua_wrap_errors<l_gui_setattr>},
     {"get_env", lua_wrap_errors<l_gui_get_env>},

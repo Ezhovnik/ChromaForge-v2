@@ -127,6 +127,37 @@ static int l_file_find(lua_State* L) {
     return 1;
 }
 
+static int l_file_list_all_res(lua_State* L, const std::string& path) {
+    auto files = scripting::engine->getResPaths()->listdirRaw(path);
+    lua_createtable(L, files.size(), 0);
+    for (size_t i = 0; i < files.size(); ++i) {
+        lua_pushstring(L, files[i].c_str());
+        lua_rawseti(L, -2, i + 1);
+    }
+    return 1;
+}
+
+static int l_file_list(lua_State* L) {
+    std::string dirname = lua_tostring(L, 1);
+    if (dirname.find(':') == std::string::npos) {
+        return l_file_list_all_res(L, dirname);
+    }
+    std::filesystem::path path = resolve_path(L, dirname);
+    if (!std::filesystem::is_directory(path)) {
+        throw std::runtime_error(util::quote(path.u8string()) + " is not a directory");
+    }
+    lua_createtable(L, 0, 0);
+    size_t index = 1;
+    for (auto& entry : std::filesystem::directory_iterator(path)) {
+        auto name = entry.path().filename().u8string();
+        auto file = dirname + "/" + name;
+        lua_pushstring(L, file.c_str());
+        lua_rawseti(L, -2, index);
+        ++index;
+    }
+    return 1;
+}
+
 const luaL_Reg filelib [] = {
     {"resolve", lua_wrap_errors<l_file_resolve>},
     {"read", lua_wrap_errors<l_file_read>},
