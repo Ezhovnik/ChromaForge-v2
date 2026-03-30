@@ -24,7 +24,7 @@ std::unique_ptr<ubyte[]> LightMap::encode() const {
 	return buffer;
 }
 
-std::unique_ptr<light_t[]> LightMap::decode(ubyte* buffer) {
+std::unique_ptr<light_t[]> LightMap::decode(const ubyte* buffer) {
 	auto lights = std::make_unique<light_t[]>(CHUNK_VOLUME);
 	for (uint i = 0; i < CHUNK_VOLUME; i += 2) {
 		ubyte b = buffer[i / 2];

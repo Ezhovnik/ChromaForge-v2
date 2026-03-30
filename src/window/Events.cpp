@@ -75,19 +75,19 @@ void Events::toggleCursor() {
     Window::setCursorMode(_cursor_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 }
 
-void Events::bind(std::string name, inputType type, keycode code) {
+void Events::bind(const std::string& name, inputType type, keycode code) {
 	bind(name, type, static_cast<int>(code));
 }
 
-void Events::bind(std::string name, inputType type, mousecode code) {
+void Events::bind(const std::string& name, inputType type, mousecode code) {
 	bind(name, type, static_cast<int>(code));
 }
 
-void Events::bind(std::string name, inputType type, int code) {
+void Events::bind(const std::string& name, inputType type, int code) {
 	bindings[name] = Binding(type, code);
 }
 
-bool Events::isActive(std::string name) {
+bool Events::isActive(const std::string& name) {
 	const auto& found = bindings.find(name);
 	if (found == bindings.end()) {
         LOG_WARN("Binding {} not found", name);
@@ -96,7 +96,7 @@ bool Events::isActive(std::string name) {
 	return found->second.isActive();
 }
 
-bool Events::justActive(std::string name) {
+bool Events::justActive(const std::string& name) {
 	const auto& found = bindings.find(name);
 	if (found == bindings.end()) {
         LOG_WARN("Binding {} not found", name);

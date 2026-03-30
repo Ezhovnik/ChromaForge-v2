@@ -43,12 +43,12 @@ public:
     static bool justClicked(mousecode button);
     static bool justClicked(int button); // Проверяет, была ли кнопка мыши нажата именно в текущем кадре
 
-    static void bind(std::string name, inputType type, keycode code);
-	static void bind(std::string name, inputType type, mousecode code);
-    static void bind(std::string name, inputType type, int code);
+    static void bind(const std::string& name, inputType type, keycode code);
+	static void bind(const std::string& name, inputType type, mousecode code);
+    static void bind(const std::string& name, inputType type, int code);
 
-	static bool isActive(std::string name);
-	static bool justActive(std::string name);
+	static bool isActive(const std::string& name);
+	static bool justActive(const std::string& name);
 
     static void toggleCursor(); // Переключает режим курсора между нормальным и заблокированным состоянием
 

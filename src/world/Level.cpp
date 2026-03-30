@@ -39,7 +39,7 @@ Level::Level(World* world, const Content* content, EngineSettings& settings) :
 	lighting = std::make_unique<Lighting>(content, chunks.get());
 
     // Создаем событие скрытия чанка
-    events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
+    events->listen(CHUNK_HIDDEN, [this](lvl_event_type, Chunk* chunk) {
 		this->chunksStorage->remove(chunk->chunk_x, chunk->chunk_z);
 	});
 

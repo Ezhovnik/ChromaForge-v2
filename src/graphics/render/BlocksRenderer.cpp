@@ -222,11 +222,11 @@ void BlocksRenderer::blockXSprite(
 
     face(glm::vec3(x + xs, y, z + zs), 
 		w, size.y, 0, glm::vec3(1, 0, -1), glm::vec3(0, 1, 0), glm::vec3(), 
-		texface1, lights, glm::vec4(tint)
+		texface2, lights, glm::vec4(tint)
     );
     face(glm::vec3(x + xs, y, z + zs), 
 		w, size.y, 0, glm::vec3(-1, 0, 1), glm::vec3(0, 1, 0), glm::vec3(), 
-		texface1, lights, glm::vec4(tint)
+		texface2, lights, glm::vec4(tint)
     );
 }
 

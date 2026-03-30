@@ -231,7 +231,7 @@ static int p_is_visible(gui::UINode* node) {
 static int p_is_enabled(gui::UINode* node) {
     return scripting::state->pushboolean(node->isEnabled());
 }
-static int p_move_into(gui::UINode* node) {
+static int p_move_into(gui::UINode*) {
     return scripting::state->pushcfunction(l_uinode_move_into);
 }
 

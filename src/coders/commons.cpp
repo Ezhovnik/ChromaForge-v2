@@ -171,6 +171,14 @@ char BasicParser::peek() {
     return source[pos];
 }
 
+char BasicParser::peekNoJump() {
+    if (pos >= source.length()) {
+        LOG_ERROR("Unexpected end");
+        throw error("Unexpected end");
+    }
+    return source[pos];
+}
+
 void BasicParser::goBack(size_t count) {
     if (pos < count) {
         LOG_ERROR("Current pos < jump");

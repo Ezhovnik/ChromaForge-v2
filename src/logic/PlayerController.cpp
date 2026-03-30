@@ -300,7 +300,7 @@ void PlayerController::updateInteraction(){
 	Camera* camera = player->camera.get();
 
 	auto inventory = player->getInventory();
-    ItemStack& stack = inventory->getSlot(player->getChosenSlot());
+    const ItemStack& stack = inventory->getSlot(player->getChosenSlot());
     Item* item = contentIds->getItemDef(stack.getItemId());
 
 	glm::vec3 end;

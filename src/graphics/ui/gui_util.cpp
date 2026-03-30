@@ -13,21 +13,6 @@
 
 using namespace gui;
 
-std::shared_ptr<Button> guiutil::backButton(std::shared_ptr<Menu> menu) {
-    return std::dynamic_pointer_cast<Button>(create(
-        "<button padding='10' onclick='menu:back()'>@Back</button>"
-    ));
-}
-
-std::shared_ptr<Button> guiutil::gotoButton(std::wstring text, const std::string& page, std::shared_ptr<Menu> menu) {
-    text = langs::get(text, L"menu");
-    return std::dynamic_pointer_cast<Button>(create(
-        "<button onclick='menu.page=\"" + page + "\"' padding='10'>" +
-            util::wstr2str_utf8(text) +
-        "</button>"
-    ));
-}
-
 void guiutil::alert(GUI* gui, const std::wstring& text, runnable on_hidden) {
     auto menu = gui->getMenu();
     auto panel = std::make_shared<Panel>(glm::vec2(500, 300), glm::vec4(8.0f), 8.0f);
@@ -39,7 +24,7 @@ void guiutil::alert(GUI* gui, const std::wstring& text, runnable on_hidden) {
     panel->add(label);
     panel->add(std::make_shared<Button>(
         langs::get(L"Ok"), glm::vec4(10.f), 
-        [=](GUI* gui) {
+        [=](GUI*) {
             if (on_hidden) on_hidden();
             menu->back();
         }

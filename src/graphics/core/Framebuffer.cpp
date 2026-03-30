@@ -13,9 +13,9 @@ Framebuffer::Framebuffer(
     depth(depth), 
     texture(std::move(texture)) 
 {
-    if (texture) {
-        width = texture->getWidth();
-        height = texture->getHeight();
+    if (this->texture) {
+        width = this->texture->getWidth();
+        height = this->texture->getHeight();
     } else {
         width = 0;
         height = 0;

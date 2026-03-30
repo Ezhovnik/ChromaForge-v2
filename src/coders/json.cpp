@@ -34,8 +34,13 @@ inline void newline(std::stringstream& ss, bool nice, uint indent, const std::st
     }
 }
 
-void stringifyValue(const dynamic::Value& value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
-void stringifyObj(const dynamic::Map* obj, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
+void stringifyObj(
+    const dynamic::Map* obj,
+    std::stringstream& ss,
+    int indent,
+    const std::string& indentstr,
+    bool nice
+);
 
 void stringifyValue(const dynamic::Value& value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice) {
     if (auto map = std::get_if<dynamic::Map_sptr>(&value)) {
@@ -63,6 +68,8 @@ void stringifyValue(const dynamic::Value& value, std::stringstream& ss, int inde
         ss << *num;
     } else if (auto str = std::get_if<std::string>(&value)) {
         ss << util::escape(*str);
+    } else {
+        ss << "null";
     }
 }
 

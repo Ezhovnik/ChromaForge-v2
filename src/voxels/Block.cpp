@@ -36,12 +36,18 @@ const BlockRotProfile BlockRotProfile::PANE {"pane", {
 		{{ 0, 0, 1 }, { 0, 1, 0 }, {-1, 0, 0 }}, // West
 }};
 
-Block::Block(std::string name) : name(name), textureFaces{TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND} {
-    rotations = BlockRotProfile::PIPE;
-	caption = util::id_to_caption(name);
-}
+Block::Block(std::string name) : 
+	name(name), 
+	textureFaces{TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND},
+	rotations(BlockRotProfile::PIPE),
+	caption(util::id_to_caption(name))
+{}
 
-Block::Block(std::string name, std::string texture) : name(name), textureFaces{texture, texture, texture, texture, texture, texture}, emission{0, 0, 0}{
-    rotations = BlockRotProfile::PIPE;
-	caption = util::id_to_caption(name);
-}
+Block::Block(
+	std::string name, 
+	std::string texture
+) : name(name), 
+	textureFaces{texture, texture, texture, texture, texture, texture}, 
+	rotations(BlockRotProfile::PIPE),
+	caption(util::id_to_caption(name))
+{}

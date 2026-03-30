@@ -17,7 +17,15 @@ PhysicsSolver::PhysicsSolver(glm::vec3 gravity) : gravity(gravity) {
 }
 
 // Выполняет один шаг физического моделирования для хитбокса
-void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, uint substeps, bool shifting, float gravityScale, bool collisions) {
+void PhysicsSolver::step(
+	Chunks* chunks,
+	Hitbox* hitbox,
+	float delta,
+	uint substeps,
+	bool shifting,
+	float gravityScale,
+	bool collisions
+) {
 	float subDelta = delta / float(substeps);
 	float linear_damping = hitbox->linear_damping;
 	float step_size = 2.0f / BLOCK_AABB_GRID;
@@ -68,7 +76,14 @@ void PhysicsSolver::step(Chunks* chunks, Hitbox* hitbox, float delta, uint subst
 	}
 }
 
-void PhysicsSolver::colisionCalc(Chunks* chunks, Hitbox* hitbox, glm::vec3& vel, glm::vec3& pos, const glm::vec3& half, float stepHeight){
+void PhysicsSolver::colisionCalc(
+	Chunks* chunks,
+	Hitbox* hitbox,
+	glm::vec3& vel,
+	glm::vec3& pos,
+	const glm::vec3& half,
+	float stepHeight
+) {
 	float step_size = 2.0f / BLOCK_AABB_GRID;
 
 	if (stepHeight > 0.0f) {
@@ -185,17 +200,17 @@ void PhysicsSolver::colisionCalc(Chunks* chunks, Hitbox* hitbox, glm::vec3& vel,
 
 // Проверяет, находится ли блок внутри хитбокса
 bool PhysicsSolver::isBlockInside(int x, int y, int z, Hitbox* hitbox) {
-	glm::vec3& pos = hitbox->position;
-	glm::vec3& half = hitbox->halfsize;
+	const glm::vec3& pos = hitbox->position;
+	const glm::vec3& half = hitbox->halfsize;
 	return x >= floor(pos.x - half.x) && x <= floor(pos.x + half.x) &&
 			z >= floor(pos.z - half.z) && z <= floor(pos.z + half.z) &&
 			y >= floor(pos.y - half.y) && y <= floor(pos.y + half.y);
 }
 
 bool PhysicsSolver::isBlockInside(int x, int y, int z, Block* def, blockstate_t states, Hitbox* hitbox) {
-	glm::vec3& pos = hitbox->position;
-	glm::vec3& half = hitbox->halfsize;
-	voxel vox;
+	const glm::vec3& pos = hitbox->position;
+	const glm::vec3& half = hitbox->halfsize;
+	voxel vox {};
 	vox.states = states;
 	const auto& boxes = def->rotatable ? def->rt.hitboxes[vox.rotation()] : def->hitboxes;
 	for (const auto& block_hitbox : boxes) {

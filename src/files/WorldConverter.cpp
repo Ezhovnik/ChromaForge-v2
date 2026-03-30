@@ -13,6 +13,7 @@
 #include "../util/ThreadPool.h"
 
 class ConverterWorker : public util::Worker<ConvertTask, int> {
+private:
     std::shared_ptr<WorldConverter> converter;
 public:
     ConverterWorker(std::shared_ptr<WorldConverter> converter) : converter(converter) {}
@@ -65,7 +66,7 @@ std::shared_ptr<Task> WorldConverter::startTask(
     auto pool = std::make_shared<util::ThreadPool<ConvertTask, int>>(
         "converter-pool",
         [=](){return std::make_shared<ConverterWorker>(converter);},
-        [=](int& _) {}
+        [=](int&) {}
     );
     while (!converter->tasks.empty()) {
         const ConvertTask& task = converter->tasks.front();

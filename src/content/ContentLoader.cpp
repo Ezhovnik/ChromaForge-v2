@@ -207,15 +207,15 @@ void ContentLoader::loadCustomBlockModel(Block& definition, dynamic::Map* primit
             definition.modelBoxes.push_back(modelbox);
 
             if (boxobj->size() == 7) {
-                for (uint i = 6; i < 12; ++i) {
+                for (uint j = 6; j < 12; ++j) {
                     definition.modelTextures.push_back(boxobj->str(6));
                 }
             } else if (boxobj->size() == 12) {
-                for (uint i = 6; i < 12; ++i) {
-                    definition.modelTextures.push_back(boxobj->str(i));
+                for (uint j = 6; j < 12; ++j) {
+                    definition.modelTextures.push_back(boxobj->str(j));
                 }
             } else {
-                for (uint i = 6; i < 12; ++i) {
+                for (uint j = 6; j < 12; ++j) {
                     definition.modelTextures.push_back("notfound");
                 }
             }

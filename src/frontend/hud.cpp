@@ -472,7 +472,7 @@ void Hud::add(HudElement element) {
     elements.push_back(element);
 }
 
-void Hud::onRemove(HudElement& element) {
+void Hud::onRemove(const HudElement& element) {
     auto document = element.getDocument();
     if (document) {
         Inventory* inventory = nullptr;

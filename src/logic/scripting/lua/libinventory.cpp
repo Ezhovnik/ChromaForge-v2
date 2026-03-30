@@ -19,7 +19,7 @@ static int l_inventory_get(lua_State* L) {
     auto inv = scripting::level->inventories->get(invid);
     if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
     if (slotid < 0 || uint64_t(slotid) >= inv->size()) luaL_error(L, "Slot index is out of range [0, inventory.size(invid)]");
-    ItemStack& item = inv->getSlot(slotid);
+    const ItemStack& item = inv->getSlot(slotid);
     lua_pushinteger(L, item.getItemId());
     lua_pushinteger(L, item.getCount());
     return 2;

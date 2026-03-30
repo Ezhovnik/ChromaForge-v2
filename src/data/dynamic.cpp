@@ -95,10 +95,6 @@ List& List::put(const Value& value) {
 }
 
 Value* List::getValueWriteable(size_t index) {
-    if (index > values.size()) {
-        LOG_ERROR("Index error");
-        throw std::runtime_error("Index error");
-    }
     return &values.at(index);
 }
 
@@ -261,10 +257,40 @@ bool Map::has(const std::string& key) const {
     return values.find(key) != values.end();
 }
 
+static const std::string TYPE_NAMES[] {
+    "none",
+    "map",
+    "list",
+    "string",
+    "number",
+    "bool",
+    "integer",
+};
+
+const std::string& dynamic::type_name(const Value& value) {
+    return TYPE_NAMES[value.index()];
+}
+
 List_sptr dynamic::create_list(std::initializer_list<Value> values) {
     return std::make_shared<List>(values);
 }
 
 Map_sptr dynamic::create_map(std::initializer_list<std::pair<const std::string, Value>> entries) {
     return std::make_shared<Map>(entries);
+}
+
+number_t dynamic::get_number(const Value& value) {
+    if (auto num = std::get_if<number_t>(&value)) {
+        return *num;
+    } else if (auto num = std::get_if<integer_t>(&value)) {
+        return *num;
+    }
+    LOG_ERROR("Cannot cast {} to number", type_name(value));
+    throw std::runtime_error("Cannot cast " + type_name(value) + " to number");
+}
+
+integer_t dynamic::get_integer(const Value& value) {
+    if (auto num = std::get_if<integer_t>(&value)) return *num;
+    LOG_ERROR("Cannot cast {} to integer", type_name(value));
+    throw std::runtime_error("Cannot cast " + type_name(value) + " to integer");
 }

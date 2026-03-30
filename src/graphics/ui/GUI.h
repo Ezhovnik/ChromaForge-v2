@@ -66,7 +66,7 @@ namespace gui {
 
         std::queue<runnable> postRunnables;
 
-        void activateMouse(float delta);
+        void activateMouse();
         void activateFocused();
     public:
         GUI();

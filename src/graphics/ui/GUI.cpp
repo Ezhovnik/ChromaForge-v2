@@ -38,7 +38,7 @@ std::shared_ptr<Menu> GUI::getMenu() {
     return menu;
 }
 
-void GUI::activateMouse(float delta) {
+void GUI::activateMouse() {
     auto hover = container->getAt(Events::cursor, nullptr);
     if (this->hover && this->hover != hover) this->hover->setHover(false);
 
@@ -107,7 +107,7 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
     container->activate(deltaTime);
     auto prevfocus = focus;
 
-    if (!Events::_cursor_locked) activateMouse(deltaTime);
+    if (!Events::_cursor_locked) activateMouse();
 
     if (focus) activateFocused();
     if (focus && !focus->isFocused()) focus = nullptr;

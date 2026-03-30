@@ -281,7 +281,6 @@ std::vector<ubyte> util::base64_decode(const std::string& str) {
 std::string util::mangleid(uint64_t value) {
     std::stringstream ss;
     ss << std::hex << value;
-    std::string result(ss.str());
     return ss.str();
 }
 
@@ -403,7 +402,7 @@ std::string util::format_data_size(size_t size) {
         " B", " KiB", " MiB", " GiB", " TiB", " EiB", " PiB"
     };
     int group = 0;
-    size_t remainder;
+    size_t remainder = 0;
     while (size >= 1024) {
         ++group;
         remainder = size % 1024;

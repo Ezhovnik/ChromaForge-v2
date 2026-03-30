@@ -54,8 +54,7 @@ private:
 	void renderDebugLines(
         const DrawContext& context, 
         Camera* camera, 
-        ShaderProgram* linesShader,
-        const EngineSettings& settings
+        ShaderProgram* linesShader
     );
 
 	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);

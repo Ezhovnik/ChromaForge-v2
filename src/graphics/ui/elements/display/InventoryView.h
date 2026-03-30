@@ -49,7 +49,7 @@ namespace gui {
 
     class SlotView : public gui::UINode {
     private:
-        const Content* content;
+        const Content* content = nullptr;
         SlotLayout layout;
         bool highlighted = false;
 
@@ -80,8 +80,8 @@ namespace gui {
 
     class InventoryView : public gui::Container {
     private:
-        const Content* content;
-        
+        const Content* content = nullptr;
+
         std::shared_ptr<Inventory> inventory;
 
         std::vector<SlotView*> slots;

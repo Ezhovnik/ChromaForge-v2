@@ -61,7 +61,6 @@ size_t PCMStream::readFully(char* buffer, size_t bufferSize, bool loop) {
         if (bufferSize == 0) break;
 
         if (loop) seek(0);
-        if (bufferSize == 0) return size;
     } while (loop);
     return size;
 }
@@ -83,7 +82,7 @@ public:
         sampleRate(sampleRate),
         seekable(seekable) {}
 
-    size_t read(char* buffer, size_t bufferSize) override {
+    size_t read(char*, size_t bufferSize) override {
         if (closed) return 0;
         if (!seekable) return bufferSize;
         size_t n = std::min(bufferSize, totalSamples);

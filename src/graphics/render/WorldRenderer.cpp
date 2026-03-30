@@ -56,10 +56,10 @@ WorldRenderer::WorldRenderer(
 	Player* player
 ) : engine(engine), 
 	level(levelFrontend->getLevel()),
-	player(player)
+	player(player),
+    frustumCulling(std::make_unique<Frustum>()),
+    lineBatch(std::make_unique<LineBatch>())
 {
-	frustumCulling = std::make_unique<Frustum>();
-    lineBatch = std::make_unique<LineBatch>();
     renderer = std::make_unique<ChunksRenderer>(
         level,
         levelFrontend->getContentGfxCache(),
@@ -74,7 +74,7 @@ WorldRenderer::WorldRenderer(
         assets->getShader("skybox_gen")
     );
 
-    level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type type, Chunk* chunk) {
+    level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type, Chunk* chunk) {
 		renderer->unload(chunk);
 	});
 }
@@ -154,7 +154,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 }
 
 void WorldRenderer::renderLevel(
-	const DrawContext& parent_context, 
+	const DrawContext&, 
 	Camera* camera, 
 	const EngineSettings& settings) 
 {
@@ -162,10 +162,6 @@ void WorldRenderer::renderLevel(
     Atlas* atlas = assets->getAtlas("blocks");
     ShaderProgram* shader = assets->getShader("default");
     auto contentIds = level->content->getIndices();
-
-    const Viewport& viewport = parent_context.getViewport();
-	const uint width = viewport.getWidth();
-	const uint height = viewport.getHeight();
 
 	float fogFactor = 15.0f / ((float)settings.chunks.loadDistance.get() - 2);
 	shader->use();
@@ -212,7 +208,7 @@ void WorldRenderer::renderBlockSelection(Camera* camera, ShaderProgram* linesSha
     const glm::vec3 point = PlayerController::selectedPointPosition;
     const glm::vec3 norm = PlayerController::selectedBlockNormal;
 
-    std::vector<AABB>& hitboxes = block->rotatable
+    const std::vector<AABB>& hitboxes = block->rotatable
         ? block->rt.hitboxes[PlayerController::selectedBlockStates]
         : block->hitboxes;
 
@@ -233,8 +229,7 @@ void WorldRenderer::renderBlockSelection(Camera* camera, ShaderProgram* linesSha
 void WorldRenderer::renderDebugLines(
     const DrawContext& pctx, 
     Camera* camera,
-    ShaderProgram* linesShader,
-    const EngineSettings& settings
+    ShaderProgram* linesShader
 ) {
     DrawContext ctx = pctx.sub();
     const auto& viewport = ctx.getViewport();
@@ -312,7 +307,7 @@ void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisibl
     const Viewport& vp = pctx.getViewport();
     camera->aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
 
-    EngineSettings& settings = engine->getSettings();
+    const EngineSettings& settings = engine->getSettings();
     skybox->refresh(pctx, level->getWorld()->daytime, 1.0f + skyClearness * 2.0f, 4);
 
     Assets* assets = engine->getAssets();
@@ -331,7 +326,7 @@ void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisibl
             if (PlayerController::selectedBlockId != -1 && hudVisible) renderBlockSelection(camera, linesShader);
         }
 
-        if (hudVisible && player->debug) renderDebugLines(wctx, camera, linesShader, settings);
+        if (hudVisible && player->debug) renderDebugLines(wctx, camera, linesShader);
     }
 
     auto screenShader = assets->getShader("screen");

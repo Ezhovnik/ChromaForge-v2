@@ -13,7 +13,7 @@ InputBindBox::InputBindBox(Binding& binding, glm::vec4 padding) : Panel(glm::vec
     setScrollable(false);
 }
 
-void InputBindBox::drawBackground(const DrawContext* pctx, Assets* assets) {
+void InputBindBox::drawBackground(const DrawContext* pctx, Assets*) {
     glm::vec2 pos = calcPos();
     auto batch = pctx->getBatch2D();
     batch->texture(nullptr);
