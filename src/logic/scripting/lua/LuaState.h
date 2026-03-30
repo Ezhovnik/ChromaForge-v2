@@ -7,6 +7,7 @@
 #include "lua_commons.h"
 #include "../../../data/dynamic.h"
 #include "../../../delegates.h"
+#include "../scripting_functional.h"
 
 #ifndef LUAJIT_VERSION
 #error LuaJIT required
@@ -27,6 +28,8 @@ namespace lua {
 
         void removeLibFuncs(const char* libname, const char* funcs[]);
         void createLibs();
+
+        std::shared_ptr<std::string> createLambdaHandler();
     public:
         LuaState();
         ~LuaState();
@@ -65,7 +68,7 @@ namespace lua {
         int callNoThrow(int argc);
         int execute(int env, const std::string& src, const std::string& file="<string>");
         int eval(int env, const std::string& src, const std::string& file="<eval>");
-        void openlib(const std::string& name, const luaL_Reg* libfuncs, int nup);
+        void openlib(const std::string& name, const luaL_Reg* libfuncs);
         void addfunc(const std::string& name, lua_CFunction func);
 
         bool getglobal(const std::string& name);
@@ -81,6 +84,7 @@ namespace lua {
         bool emit_event(const std::string& name, std::function<int(lua::LuaState*)> args=[](auto*){return 0;});
 
         runnable createRunnable();
+        scripting::common_func createLambda();
 
         const std::string storeAnonymous();
 

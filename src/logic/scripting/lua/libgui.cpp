@@ -19,6 +19,7 @@
 #include "../../../items/Inventories.h"
 #include "../../../graphics/ui/elements/display/InventoryView.h"
 #include "../../../world/Level.h"
+#include "../../../debug/Logger.h"
 
 struct DocumentNode {
     UIDocument* document;
@@ -29,11 +30,15 @@ namespace scripting {
     extern lua::LuaState* state;
 }
 
-static DocumentNode getDocumentNode(lua_State* L, const std::string& name, const std::string& nodeName) {
+static DocumentNode getDocumentNode(lua_State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->getLayout(name);
-    if (doc == nullptr) luaL_error(L, "Document '%s' not found", name.c_str());
+    if (doc == nullptr) {
+        throw std::runtime_error("Document '" + name + "' not found");
+    }
     auto node = doc->get(nodeName);
-    if (node == nullptr) luaL_error(L, "Document '%s' has no element with id '%s'", name.c_str(), nodeName.c_str());
+    if (node == nullptr) {
+        throw std::runtime_error("Document '" + name + "' has no element with id '" + nodeName + "'");
+    }
     return {doc, node};
 }
 
@@ -70,7 +75,7 @@ static int l_container_add(lua_State* L) {
         node->add(subnode);
         gui::UINode::getIndices(subnode, docnode.document->getMapWriteable());
     } catch (const std::exception& err) {
-        luaL_error(L, err.what());
+        throw std::runtime_error(err.what());
     }
     return 0;
 }
@@ -402,7 +407,9 @@ static int l_gui_setattr(lua_State* L) {
 static int l_gui_get_env(lua_State* L) {
     auto name = lua_tostring(L, 1);
     auto doc = scripting::engine->getAssets()->getLayout(name);
-    if (doc == nullptr) luaL_error(L, "Document '%s' not found", name);
+    if (doc == nullptr) {
+        throw std::runtime_error("Document '" + std::string(name) + "' not found");
+    }
     lua_getglobal(L, lua::LuaState::envName(*doc->getEnvironment()).c_str());
     return 1;
 }
@@ -421,7 +428,9 @@ static int l_gui_str(lua_State* L) {
 static int l_gui_reindex(lua_State* L) {
     auto name = lua_tostring(L, 1);
     auto doc = scripting::engine->getAssets()->getLayout(name);
-    if (doc == nullptr) luaL_error(L, "Document '%s' not found", name);
+    if (doc == nullptr) {
+        throw std::runtime_error("Document '" + std::string(name) + "' not found");
+    }
     doc->rebuildIndices();
     return 0;
 }

@@ -14,6 +14,8 @@
 #include "LuaState.h"
 #include "../../../frontend/UIDocument.h"
 #include "../../../graphics/ui/elements/display/InventoryView.h"
+#include "../../../util/stringutil.h"
+#include "../../../debug/Logger.h"
 
 namespace scripting {
     extern Hud* hud;
@@ -37,13 +39,13 @@ static int l_hud_open_block(lua_State* L) {
 
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
     if (vox == nullptr) {
-        luaL_error(L, "Block does not exists at %d %d %d", x, y, z);
+        throw std::runtime_error("Block does not exists at " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z));
     }
     auto def = scripting::content->getIndices()->getBlockDef(vox->id);
     auto assets = scripting::engine->getAssets();
     auto layout = assets->getLayout(def->uiLayout);
     if (layout == nullptr) {
-        luaL_error(L, "Block '%s' has no ui layout", def->name.c_str());
+        throw std::runtime_error("Block '" + def->name+  "' has no ui layout");
     }
 
     auto id = scripting::blocks->createBlockInventory(x, y, z);
@@ -62,7 +64,7 @@ static int l_hud_show_overlay(lua_State* L) {
     auto assets = scripting::engine->getAssets();
     auto layout = assets->getLayout(name);
     if (layout == nullptr) {
-        luaL_error(L, "There is no ui layout '%s'", name);
+        throw std::runtime_error("There is no ui layout " + util::quote(name));
     }
     scripting::hud->showOverlay(layout, playerInventory);
     return 0;
@@ -71,7 +73,9 @@ static int l_hud_show_overlay(lua_State* L) {
 static UIDocument* require_layout(lua_State* L, const char* name) {
     auto assets = scripting::engine->getAssets();
     auto layout = assets->getLayout(name);
-    if (layout == nullptr) luaL_error(L, "Layout '%s' is not found", name);
+    if (layout == nullptr) {
+        throw std::runtime_error("Layout '" + std::string(name) + "' is not found");
+    }
     return layout;
 }
 

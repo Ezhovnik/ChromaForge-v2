@@ -1,6 +1,8 @@
 #ifndef LOGIC_SCRIPTING_LUA_LUA_UTIL_H_
 #define LOGIC_SCRIPTING_LUA_LUA_UTIL_H_
 
+#include <stdexcept>
+
 #ifdef __linux__ 
 #include <luajit-2.1/luaconf.h>
 #include <luajit-2.1/lua.hpp>
@@ -95,6 +97,9 @@ namespace lua {
 
     inline glm::vec2 tovec2(lua_State* L, int idx) {
         lua_pushvalue(L, idx);
+        if (!lua_istable(L, idx) || lua_objlen(L, idx) < 2) {
+            throw std::runtime_error("Value must be an array of two numbers");
+        }
         lua_rawgeti(L, -1, 1);
         lua::luanumber x = lua_tonumber(L, -1); lua_pop(L, 1);
         lua_rawgeti(L, -1, 2);
@@ -105,7 +110,9 @@ namespace lua {
 
     inline glm::vec4 tocolor(lua_State* L, int idx) {
         lua_pushvalue(L, idx);
-        if (!lua_istable(L, -1)) luaL_error(L, "RGBA array required");
+        if (!lua_istable(L, -1) || lua_objlen(L, idx) < 4) {
+            throw std::runtime_error("RGBA array required");
+        }
         lua_rawgeti(L, -1, 1);
         lua::luanumber r = lua_tonumber(L, -1); lua_pop(L, 1);
         lua_rawgeti(L, -1, 2);

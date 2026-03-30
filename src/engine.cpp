@@ -47,6 +47,7 @@
 #include "coders/toml.h"
 #include "files/files.h"
 #include "input_bindings.h"
+#include "logic/CommandsInterpreter.h"
 
 inline void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -57,7 +58,15 @@ inline void create_channel(Engine* engine, std::string name, NumberSetting& sett
 }
 
 // Реализация конструктора
-Engine::Engine(EngineSettings& settings, SettingsHandler& settingsHandler, EnginePaths* paths) : settings(settings), paths(paths), settingsHandler(settingsHandler) {
+Engine::Engine(
+    EngineSettings& settings,
+    SettingsHandler& settingsHandler,
+    EnginePaths* paths
+) : settings(settings),
+    paths(paths),
+    settingsHandler(settingsHandler),
+    interpreter(std::make_unique<cmd::CommandsInterpreter>())
+{
     CoreContent::setup_bindings();
     loadSettings();
 
@@ -105,6 +114,7 @@ Engine::~Engine() {
     }
     content.reset();
     assets.reset();
+    interpreter.reset();
     gui.reset();
     audio::close();
     scripting::close();
@@ -390,4 +400,8 @@ void Engine::loadSettings() {
         Events::loadBindings(controls_file.u8string(), text);
         LOG_INFO("The controls file has been successfully read");
     }
+}
+
+cmd::CommandsInterpreter* Engine::getCommandsInterpreter() {
+    return interpreter.get();
 }

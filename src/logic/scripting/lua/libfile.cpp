@@ -7,14 +7,10 @@
 #include "../../../engine.h"
 #include "../../../files/files.h"
 #include "../../../files/engine_paths.h"
+#include "../../../util/stringutil.h"
 
-static std::filesystem::path resolve_path(lua_State* L, const std::string& path) {
-    try {
-        return scripting::engine->getPaths()->resolve(path);
-    } catch (const files_access_error& err) {
-        luaL_error(L, err.what());
-        abort();
-    }
+static std::filesystem::path resolve_path(lua_State*, const std::string& path) {
+    return scripting::engine->getPaths()->resolve(path);
 }
 
 static int l_file_resolve(lua_State* L) {
@@ -29,7 +25,7 @@ static int l_file_read(lua_State* L) {
         lua_pushstring(L, files::read_string(path).c_str());
         return 1;
     }
-    return luaL_error(L, "File does not exists '%s'", path.u8string().c_str());
+    throw std::runtime_error("File does not exists " + util::quote(path.u8string()));
 }
 
 static int l_file_write(lua_State* L) {
@@ -95,15 +91,15 @@ static int l_file_read_bytes(lua_State* L) {
         }
         return 1;
     }
-    return luaL_error(L, "File does not exists '%s'", path.u8string().c_str());   
+    throw std::runtime_error("File does not exists " + util::quote(path.u8string()));
 }
 
 static int read_bytes_from_table(lua_State* L, int tableIndex, std::vector<ubyte>& bytes) {
-    if (!lua_istable(L, tableIndex)) return luaL_error(L, "Table expected");
+    if (!lua_istable(L, tableIndex)) throw std::runtime_error("Table expected");
     lua_pushnil(L);
     while(lua_next(L, tableIndex - 1) != 0) {
         const int byte = lua_tointeger(L, -1);
-        if (byte < 0 || byte > 255) return luaL_error(L, "Invalid byte '%i'", byte);
+        if (byte < 0 || byte > 255) throw std::runtime_error("Invalid byte '" + std::to_string(byte) + "'");
         bytes.push_back(byte);
         lua_pop(L, 1);
     }
@@ -112,7 +108,7 @@ static int read_bytes_from_table(lua_State* L, int tableIndex, std::vector<ubyte
 
 static int l_file_write_bytes(lua_State* L) {
     int pathIndex = 1;
-    if (!lua_isstring(L, pathIndex)) return luaL_error(L, "String expected");
+    if (!lua_isstring(L, pathIndex)) throw std::runtime_error("String expected");;
     std::filesystem::path path = resolve_path(L, lua_tostring(L, pathIndex));
     std::vector<ubyte> bytes;
     int result = read_bytes_from_table(L, -1, bytes);

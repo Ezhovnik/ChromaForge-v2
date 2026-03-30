@@ -7,8 +7,11 @@
 
 #include "../../delegates.h"
 #include "../../typedefs.h"
+#include "../../data/dynamic.h"
 
 namespace scripting {
+    using common_func = std::function<dynamic::Value(const std::vector<dynamic::Value>&)>;
+
     runnable create_runnable(
         const scriptenv& env,
         const std::string& src,

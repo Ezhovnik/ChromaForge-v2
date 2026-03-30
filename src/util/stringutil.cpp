@@ -150,14 +150,14 @@ std::wstring util::str2wstr_utf8(const std::string s) {
     return std::wstring(chars.data(), chars.size());
 }
 
-bool util::is_integer(std::string text) {
+bool util::is_integer(const std::string& text) {
     for (char c : text) {
         if (c < '0' || c > '9') return false;
     }
     return true;
 }
 
-bool util::is_integer(std::wstring text) {
+bool util::is_integer(const std::wstring& text) {
     for (wchar_t c : text) {
         if (c < L'0' || c > L'9') return false;
     }

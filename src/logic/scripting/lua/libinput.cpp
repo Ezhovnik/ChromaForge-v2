@@ -7,6 +7,8 @@
 #include "../../../engine.h"
 #include "LuaState.h"
 #include "../../../frontend/hud.h"
+#include "../../../util/stringutil.h"
+#include "../../../debug/Logger.h"
 
 namespace scripting {
     extern lua::LuaState* state;
@@ -22,7 +24,11 @@ static int l_keycode(lua_State* L) {
 static int l_add_callback(lua_State* L) {
     auto bindname = lua_tostring(L, 1);
     const auto& bind = Events::bindings.find(bindname);
-    if (bind == Events::bindings.end()) luaL_error(L, "Unknown binding %q", bindname);
+    if (bind == Events::bindings.end()) {
+        std::string errorLog = "Unknown binding: " + util::quote(bindname);
+        LOG_ERROR("{}", errorLog);
+        throw std::runtime_error(errorLog);
+    }
     scripting::state->pushvalue(2);
     runnable callback = scripting::state->createRunnable();
     if (scripting::hud) {

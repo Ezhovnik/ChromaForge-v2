@@ -3,6 +3,7 @@
 #include "LuaState.h"
 #include "../../../coders/json.h"
 #include "../../../data/dynamic.h"
+#include "../../../debug/Logger.h"
 
 namespace scripting {
     extern lua::LuaState* state;
@@ -16,8 +17,7 @@ static int l_json_stringify(lua_State* L) {
         lua_pushstring(L, string.c_str());
         return 1;
     } else {
-        luaL_error(L, "table expected");
-        return 0;
+        throw std::runtime_error("Table expected");
     }
 }
 

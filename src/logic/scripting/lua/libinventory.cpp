@@ -7,18 +7,42 @@
 #include "../../../items/ItemStack.h"
 #include "../../../items/Inventories.h"
 #include "../../../logic/BlocksController.h"
+#include "../../../debug/Logger.h"
 
-static void validate_itemid(lua_State* L, itemid_t id) {
-    if (id >= scripting::indices->countItemDefs()) luaL_error(L, "Invalid item id");
+static void validate_itemid(itemid_t id) {
+    if (id >= scripting::indices->countItemDefs()) {
+        throw std::runtime_error("Invalid item id");
+    }
 }
 
 // Inventory library
+static std::shared_ptr<Inventory> get_inventory(int64_t id) {
+    auto inv = scripting::level->inventories->get(id);
+    if (inv == nullptr) {
+        throw std::runtime_error("Inventory " + std::to_string(id) + " not found");
+    }
+    return inv;
+}
+
+static std::shared_ptr<Inventory> get_inventory(int64_t id, int arg) {
+    auto inv = scripting::level->inventories->get(id);
+    if (inv == nullptr) {
+        throw std::runtime_error("Inventory not found: " + std::to_string(id) + " argument " + std::to_string(arg));
+    }
+    return inv;
+}
+
+static void validate_slotid(int slotid, Inventory* inv) {
+    if (slotid < 0 || uint64_t(slotid) >= inv->size()) {
+        throw std::runtime_error("Slot index is out of range [0..inventory.size(invid)]");
+    }
+}
+
 static int l_inventory_get(lua_State* L) {
     lua::luaint invid = lua_tointeger(L, 1);
     lua::luaint slotid = lua_tointeger(L, 2);
-    auto inv = scripting::level->inventories->get(invid);
-    if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
-    if (slotid < 0 || uint64_t(slotid) >= inv->size()) luaL_error(L, "Slot index is out of range [0, inventory.size(invid)]");
+    auto inv = get_inventory(invid);
+    validate_slotid(slotid, inv.get());
     const ItemStack& item = inv->getSlot(slotid);
     lua_pushinteger(L, item.getItemId());
     lua_pushinteger(L, item.getCount());
@@ -30,11 +54,10 @@ static int l_inventory_set(lua_State* L) {
     lua::luaint slotid = lua_tointeger(L, 2);
     lua::luaint itemid = lua_tointeger(L, 3);
     lua::luaint count = lua_tointeger(L, 4);
-    validate_itemid(L, itemid);
+    validate_itemid(itemid);
 
-    auto inv = scripting::level->inventories->get(invid);
-    if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
-    if (slotid < 0 || uint64_t(slotid) >= inv->size()) luaL_error(L, "Slot index is out of range [0, inventory.size(invid)]");
+    auto inv = get_inventory(invid);
+    validate_slotid(slotid, inv.get());
     ItemStack& item = inv->getSlot(slotid);
     item.set(ItemStack(itemid, count));
     return 0;
@@ -42,8 +65,7 @@ static int l_inventory_set(lua_State* L) {
 
 static int l_inventory_size(lua_State* L) {
     lua::luaint invid = lua_tointeger(L, 1);
-    auto inv = scripting::level->inventories->get(invid);
-    if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
+    auto inv = get_inventory(invid);
     lua_pushinteger(L, inv->size());
     return 1;
 }
@@ -52,10 +74,9 @@ static int l_inventory_add(lua_State* L) {
     lua::luaint invid = lua_tointeger(L, 1);
     lua::luaint itemid = lua_tointeger(L, 2);
     lua::luaint count = lua_tointeger(L, 3);
-    validate_itemid(L, itemid);
+    validate_itemid(itemid);
 
-    auto inv = scripting::level->inventories->get(invid);
-    if (inv == nullptr) luaL_error(L, "Inventory does not exists in runtime: %d", invid);
+    auto inv = get_inventory(invid);
     ItemStack item(itemid, count);
     inv->move(item, scripting::indices);
     lua_pushinteger(L, item.getCount());
@@ -102,13 +123,13 @@ static int l_inventory_clone(lua_State* L) {
 static int l_inventory_move(lua_State* L) {
     lua::luaint invAid = lua_tointeger(L, 1);
     lua::luaint slotAid = lua_tointeger(L, 2);
-    auto invA = scripting::level->inventories->get(invAid);
-    if (invA == nullptr) luaL_error(L, "Inventory 'A' does not exists in runtime: %d", invAid);
+    auto invA = get_inventory(invAid, 1);
+    validate_slotid(slotAid, invA.get());
 
     lua::luaint invBid = lua_tointeger(L, 3);
     lua::luaint slotBid = lua_isnil(L, 4) ? -1 : lua_tointeger(L, 4);
-    auto invB = scripting::level->inventories->get(invBid);
-    if (invB == nullptr) luaL_error(L, "Inventory 'B' does not exists in runtime: %d", invBid);
+    auto invB = get_inventory(invBid, 3);
+    validate_slotid(slotBid, invB.get());
     auto& slot = invA->getSlot(slotAid);
     if (slotBid == -1) {
         invB->move(slot, scripting::content->getIndices());

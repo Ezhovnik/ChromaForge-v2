@@ -28,6 +28,10 @@ namespace gui {
     class GUI;
 }
 
+namespace cmd {
+    class CommandsInterpreter;
+}
+
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
 class initialize_error : public std::runtime_error {
 public:
@@ -51,6 +55,8 @@ private:
 
     std::queue<runnable> postRunnables;
     std::recursive_mutex postRunnablesMutex;
+
+    std::unique_ptr<cmd::CommandsInterpreter> interpreter;
 
     std::vector<std::string> basePacks {CHROMAFORGE_CONTENT_NAMESPACE};
 
@@ -89,6 +95,7 @@ public:
     SettingsHandler& getSettingsHandler();
     EngineController* getController();
     std::vector<std::string>& getBasePacks();
+    cmd::CommandsInterpreter* getCommandsInterpreter();
 
     void postRunnable(runnable callback);
 
