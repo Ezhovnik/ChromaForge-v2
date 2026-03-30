@@ -53,6 +53,10 @@ public:
 		return removed;
 	}
 
+    bool isInventoryBound() const {
+        return mode == HudElementMode::InventoryBound;
+    }
+
     void setRemoved() {
         removed = true;
     }
@@ -96,6 +100,8 @@ private:
     void updateElementsPosition(const Viewport& viewport);
     void updateHotbarControl();
     void cleanup();
+
+    void showExchangeSlot();
 public:
 	Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player);
 	~Hud();

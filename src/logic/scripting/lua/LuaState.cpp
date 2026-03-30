@@ -316,7 +316,7 @@ dynamic::Value lua::LuaState::tovalue(int idx) {
         case LUA_TTABLE: {
             int len = lua_objlen(L, idx);
             if (len) {
-                auto list = std::make_shared<dynamic::List>();
+                auto list = dynamic::create_list();
                 for (int i = 1; i <= len; ++i) {
                     lua_rawgeti(L, idx, i);
                     list->put(tovalue(-1));
@@ -324,7 +324,7 @@ dynamic::Value lua::LuaState::tovalue(int idx) {
                 }
                 return list;
             } else {
-                auto map = std::make_shared<dynamic::Map>();
+                auto map = dynamic::create_map();
                 lua_pushvalue(L, idx);
                 lua_pushnil(L);
                 while (lua_next(L, -2)) {

@@ -16,7 +16,16 @@ namespace json {
     std::unique_ptr<dynamic::Map> parse(const std::string& filename, const std::string& source);
     std::unique_ptr<dynamic::Map> parse(const std::string& source);
 
-    std::string stringify(const dynamic::Map* obj, bool nice, const std::string& indent);
+    std::string stringify(
+        const dynamic::Map* obj, 
+        bool nice, 
+        const std::string& indent
+    );
+    std::string stringify(
+        const dynamic::Value& value,
+        bool nice,
+        const std::string& indent
+    );
 }
 
 

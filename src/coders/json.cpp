@@ -34,10 +34,10 @@ inline void newline(std::stringstream& ss, bool nice, uint indent, const std::st
     }
 }
 
-void stringify(const dynamic::Value& value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
+void stringifyValue(const dynamic::Value& value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
 void stringifyObj(const dynamic::Map* obj, std::stringstream& ss, int indent, const std::string& indentstr, bool nice);
 
-void stringify(const dynamic::Value& value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice) {
+void stringifyValue(const dynamic::Value& value, std::stringstream& ss, int indent, const std::string& indentstr, bool nice) {
     if (auto map = std::get_if<dynamic::Map_sptr>(&value)) {
         stringifyObj(map->get(), ss, indent, indentstr, nice);
     } else if (auto listptr = std::get_if<dynamic::List_sptr>(&value)) {
@@ -50,7 +50,7 @@ void stringify(const dynamic::Value& value, std::stringstream& ss, int indent, c
         for (uint i = 0; i < list->size(); ++i) {
             dynamic::Value& value = list->get(i);
             if (i > 0 || nice) newline(ss, nice, indent, indentstr);
-            stringify(value, ss, indent + 1, indentstr, nice);
+            stringifyValue(value, ss, indent + 1, indentstr, nice);
             if (i + 1 < list->size()) ss << ',';
         }
         if (nice) newline(ss, true, indent - 1, indentstr);
@@ -78,8 +78,8 @@ void stringifyObj(const dynamic::Map* obj, std::stringstream& ss, int indent, co
         if (index > 0 || nice) newline(ss, nice, indent, indentstr);
         const dynamic::Value& value = entry.second;
         ss << util::escape(key) << ": ";
-        stringify(value, ss, indent + 1, indentstr, nice);
-        index++;
+        stringifyValue(value, ss, indent + 1, indentstr, nice);
+        ++index;
         if (index < obj->values.size()) ss << ',';
     }
     if (nice) newline(ss, true, indent - 1, indentstr);
@@ -92,12 +92,20 @@ std::string json::stringify(const dynamic::Map* obj, bool nice, const std::strin
     return ss.str();
 }
 
+std::string json::stringify(
+    const dynamic::Value& value, 
+    bool nice, 
+    const std::string& indent)
+{
+    std::stringstream ss;
+    stringifyValue(value, ss, 1, indent, nice);
+    return ss.str();
+}
 
 Parser::Parser(
     std::string_view filename, 
     std::string_view source
-) : BasicParser(filename, source) {    
-}
+) : BasicParser(filename, source) {}
 
 std::unique_ptr<dynamic::Map> Parser::parse() {
     char next = peek();

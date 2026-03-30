@@ -171,8 +171,12 @@ char BasicParser::peek() {
     return source[pos];
 }
 
-void BasicParser::goBack() {
-    if (pos) pos--;
+void BasicParser::goBack(size_t count) {
+    if (pos < count) {
+        LOG_ERROR("Current pos < jump");
+        throw std::runtime_error("Current pos < jump");
+    }
+    if (pos) pos -= count;
 }
 
 std::string BasicParser::parseName() {

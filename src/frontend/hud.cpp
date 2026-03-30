@@ -338,8 +338,12 @@ void Hud::showOverlay(UIDocument* doc, bool playerInventory) {
     if (isInventoryOpen()) closeInventory();
 
     secondUI = doc->getRoot();
-    if (playerInventory) openInventory();
-    else inventoryOpen = true;
+    if (playerInventory) {
+        openInventory();
+    } else {
+        showExchangeSlot();
+        inventoryOpen = true;
+    }
     add(HudElement(HudElementMode::InventoryBound, doc, secondUI, false));
 }
 
@@ -370,15 +374,7 @@ void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inven
 void Hud::openInventory() {
     auto level = levelFrontend->getLevel();
     auto content = level->content;
-    exchangeSlotInv = level->inventories->createVirtual(1);
-    exchangeSlot = std::make_shared<gui::SlotView>(
-        gui::SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr)
-    );
-    exchangeSlot->bind(exchangeSlotInv->getId(), exchangeSlotInv->getSlot(0), content);
-    exchangeSlot->setColor(glm::vec4());
-    exchangeSlot->setInteractive(false);
-    exchangeSlot->setZIndex(1);
-    guiController->store(gui::SlotView::EXCHANGE_SLOT_NAME, exchangeSlot);
+    showExchangeSlot();
 
     inventoryOpen = true;
 
@@ -390,6 +386,21 @@ void Hud::openInventory() {
     add(HudElement(HudElementMode::InventoryBound, nullptr, exchangeSlot, false));
 }
 
+void Hud::showExchangeSlot() {
+    auto level = levelFrontend->getLevel();
+    auto content = level->content;
+    exchangeSlotInv = level->inventories->createVirtual(1);
+    exchangeSlot = std::make_shared<gui::SlotView>(
+        gui::SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr)
+    );
+    exchangeSlot->bind(exchangeSlotInv->getId(), exchangeSlotInv->getSlot(0), content);
+    exchangeSlot->setColor(glm::vec4());
+    exchangeSlot->setInteractive(false);
+    exchangeSlot->setZIndex(1);
+    guiController->store(gui::SlotView::EXCHANGE_SLOT_NAME, exchangeSlot);
+
+}
+
 void Hud::closeInventory() {
     guiController->remove(gui::SlotView::EXCHANGE_SLOT_NAME);
     exchangeSlot = nullptr;
@@ -398,6 +409,14 @@ void Hud::closeInventory() {
     inventoryView = nullptr;
 	blockUI = nullptr;
     secondUI = nullptr;
+
+    for (auto& element : elements) {
+        if (element.isInventoryBound()) {
+            element.setRemoved();
+            onRemove(element);
+        }
+    }
+    cleanup();
 }
 
 void Hud::openPermanent(UIDocument* doc) {

@@ -83,7 +83,7 @@ protected:
     void expect(const std::string& substring);
     void expectNewLine();
     bool isNext(const std::string& substring);
-    void goBack();
+    void goBack(size_t count=1);
 
     int64_t parseSimpleInt(int base);
     dynamic::Value parseNumber(int sign);

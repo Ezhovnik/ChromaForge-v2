@@ -1,6 +1,23 @@
 #include "dynamic.h"
 
+#include "../coders/json.h"
+
 using namespace dynamic;
+
+std::ostream& operator<<(std::ostream& stream, const dynamic::Value& value) {
+    stream << json::stringify(value, false, " ");
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const dynamic::Map_sptr& value) {
+    stream << json::stringify(value, false, " ");
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const dynamic::List_sptr& value) {
+    stream << json::stringify(value, false, " ");
+    return stream;
+}
 
 std::string List::str(size_t index) const {
     const auto& value = values[index];
@@ -86,13 +103,13 @@ Value* List::getValueWriteable(size_t index) {
 }
 
 List& List::putList() {
-    auto arr = std::make_shared<List>();
+    auto arr = create_list();
     put(arr);
     return *arr;
 }
 
 Map& List::putMap() {
-    auto map = std::make_shared<Map>();
+    auto map = create_map();
     put(map);
     return *map;
 }
@@ -229,17 +246,25 @@ size_t Map::size() const {
 }
 
 List& Map::putList(std::string key) {
-    auto arr = std::make_shared<List>();
+    auto arr = create_list();
     put(key, arr);
     return *arr;
 }
 
 Map& Map::putMap(std::string key) {
-    auto obj = std::make_shared<Map>();
+    auto obj = create_map();
     put(key, obj);
     return *obj;
 }
 
 bool Map::has(const std::string& key) const {
     return values.find(key) != values.end();
+}
+
+List_sptr dynamic::create_list(std::initializer_list<Value> values) {
+    return std::make_shared<List>(values);
+}
+
+Map_sptr dynamic::create_map(std::initializer_list<std::pair<const std::string, Value>> entries) {
+    return std::make_shared<Map>(entries);
 }

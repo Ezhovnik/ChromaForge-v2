@@ -81,7 +81,7 @@ void ContentLoader::fixPackIndices() {
     if (std::filesystem::is_regular_file(indexFile)) {
         root = files::read_json(indexFile);
     } else {
-        root = std::make_shared<dynamic::Map>();
+        root = dynamic::create_map();
     }
 
     bool modified = false;

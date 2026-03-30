@@ -35,7 +35,7 @@ gui::page_loader_func menus::create_page_loader(Engine* engine) {
             auto argstr = query.substr(index+1);
             name = query.substr(0, index);
 
-            auto map = std::make_shared<dynamic::Map>();
+            auto map = dynamic::create_map();
             auto filename = "Query for " + name;
             BasicParser parser(filename, argstr);
             while (parser.hasNext()) {
