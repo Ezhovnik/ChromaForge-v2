@@ -29,7 +29,7 @@ parsing_error::parsing_error(
     if (end == std::string::npos) {
         end = source.length();
     }
-    source = source.substr(linestart, end - linestart);
+    this->source = source.substr(linestart, end - linestart);
 }
 
 std::string parsing_error::errorLog() const {
