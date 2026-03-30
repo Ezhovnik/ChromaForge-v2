@@ -15,8 +15,11 @@
 
 inline constexpr float GRAVITY = -22.6f;
 
-Level::Level(World* world, const Content* content, EngineSettings& settings) :
-	world(world),
+Level::Level(
+    std::unique_ptr<World> world,
+    const Content* content,
+    EngineSettings& settings
+) : world(std::move(world)),
     content(content),
     chunksStorage(std::make_unique<ChunksStorage>(this)),
 	physics(std::make_unique<PhysicsSolver>(glm::vec3(0, GRAVITY, 0))),
@@ -24,7 +27,7 @@ Level::Level(World* world, const Content* content, EngineSettings& settings) :
     settings(settings)
 {
     auto inventory = std::make_shared<Inventory>(
-        world->getNextInventoryId(), 
+        this->world->getNextInventoryId(), 
         DEFAULT_PLAYER_INVENTORY_SIZE
     );
     auto player = spawnObject<Player>(
@@ -35,7 +38,7 @@ Level::Level(World* world, const Content* content, EngineSettings& settings) :
 
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
     uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
-    chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, world->wfile.get(), events.get(), content);
+    chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, this->world->wfile.get(), events.get(), content);
 	lighting = std::make_unique<Lighting>(content, chunks.get());
 
     // Создаем событие скрытия чанка

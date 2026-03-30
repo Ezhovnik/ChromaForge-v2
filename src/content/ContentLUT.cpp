@@ -36,7 +36,7 @@ ContentLUT::ContentLUT(const Content* content, size_t blocksCount, size_t itemsC
 }
 
 // Создаёт таблицу перекодировки из JSON-файла.
-ContentLUT* ContentLUT::create(const std::filesystem::path& filename, const Content* content) {
+std::shared_ptr<ContentLUT> ContentLUT::create(const std::filesystem::path& filename, const Content* content) {
     // Чтение и разбор JSON-файла
     auto root = files::read_json(filename);
     auto blocklist = root->list("blocks");
@@ -48,7 +48,7 @@ ContentLUT* ContentLUT::create(const std::filesystem::path& filename, const Cont
     size_t items_c = itemlist ? std::max(itemlist->size(), indices->countItemDefs()) : indices->countItemDefs();    
 
     // Создаём временный объект LUT с начальным заполнением
-    auto lut = std::make_unique<ContentLUT>(content, blocks_c, items_c);
+    auto lut = std::make_shared<ContentLUT>(content, blocks_c, items_c);
 
     // Если в JSON есть массив блоков, обрабатываем его
     if (blocklist) {
@@ -72,8 +72,11 @@ ContentLUT* ContentLUT::create(const std::filesystem::path& filename, const Cont
         }
     }
 
-    if (lut->hasContentReorder() || lut->hasMissingContent()) return lut.release();
-    else return nullptr;
+    if (lut->hasContentReorder() || lut->hasMissingContent()) {
+        return lut;
+    } else {
+        return nullptr;
+    }
 }
 
 std::vector<ContentEntry> ContentLUT::getMissingContent() const {

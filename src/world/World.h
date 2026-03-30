@@ -3,7 +3,6 @@
 
 #include <string>
 #include <filesystem>
-#include <stdexcept>
 #include <memory>
 
 #include "../typedefs.h"
@@ -23,7 +22,6 @@ public:
 
 class WorldFiles;
 class Level;
-class Player;
 class Content;
 class ContentLUT;
 
@@ -101,7 +99,9 @@ public:
      * @param content Текущий контент.
      * @return Указатель на ContentLUT, если требуется конвертация, иначе nullptr.
      */
-	static ContentLUT* checkIndices(const std::filesystem::path& directory, const Content* content);
+	static std::shared_ptr<ContentLUT> checkIndices(
+          const std::filesystem::path& directory, const Content* content
+     );
 
 	/**
      * Создаёт новый мир (генерация с нуля).
@@ -114,7 +114,7 @@ public:
      * @param packs Список паков.
      * @return Указатель на новый Level, содержащий созданный World.
      */
-	static Level* create(
+	static std::unique_ptr<Level> create(
 		std::string name,
 		std::string generator,
 		std::filesystem::path directory, 
@@ -133,7 +133,7 @@ public:
      * @return Указатель на Level, содержащий загруженный World.
      * @throws world_load_error Если world.json не найден или повреждён.
      */
-     static Level* load(
+     static std::unique_ptr<Level> load(
 		std::filesystem::path directory, 
 		EngineSettings& settings, 
 		const Content* content, 
@@ -150,7 +150,7 @@ public:
      * @brief Устанавливает сид мира.
      * @param seed Новый сид.
      */
-    void setSeed(uint64_t seed);
+     void setSeed(uint64_t seed);
 
 	/**
      * @brief Устанавливает идентификатор генератора мира (тип мира).

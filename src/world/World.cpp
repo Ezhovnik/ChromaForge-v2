@@ -64,18 +64,17 @@ void World::write(Level* level) {
 	// Запись метаданных мира и игрока
 	wfile->write(this, content);
 	auto playerFile = dynamic::Map();
-    {
-        auto& players = playerFile.putList("players");
-        for (auto object : level->objects) {
-            if (std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(object)) {
-                players.put(player->serialize());
-            }
+
+    auto& players = playerFile.putList("players");
+    for (auto object : level->objects) {
+        if (auto player = std::dynamic_pointer_cast<Player>(object)) {
+            players.put(player->serialize());
         }
     }
     files::write_json(wfile->getPlayerFile(), &playerFile);
 }
 
-Level* World::create(
+std::unique_ptr<Level> World::create(
 	std::string name,
 	std::string generator,
 	std::filesystem::path directory, 
@@ -84,27 +83,20 @@ Level* World::create(
 	const Content* content, 
 	const std::vector<ContentPack>& packs
 ) {
-	LOG_INFO("Creating world");
-	World* world = new World(name, generator, directory, seed, settings, content, packs);
-	LOG_INFO("World successfully created");
-
-	LOG_INFO("Creating a level");
-    Level* level = new Level(world, content, settings);
-	LOG_INFO("Level successfully created");
-
-	Logger::getInstance().flush();
-
-	return level;
+	auto world = std::make_unique<World>(
+        name, generator, directory, seed, settings, content, packs
+    );
+	return std::make_unique<Level>(std::move(world), content, settings);
 }
 
-ContentLUT* World::checkIndices(const std::filesystem::path& directory, const Content* content) {
+std::shared_ptr<ContentLUT> World::checkIndices(const std::filesystem::path& directory, const Content* content) {
 	std::filesystem::path indicesFile = directory/std::filesystem::path("indices.json");
 	if (std::filesystem::is_regular_file(indicesFile)) return ContentLUT::create(indicesFile, content);
 
 	return nullptr;
 }
 
-Level* World::load(std::filesystem::path directory, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs) {
+std::unique_ptr<Level> World::load(std::filesystem::path directory, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs) {
 	LOG_INFO("Loading world");
 	// Временно создаём мир с заглушкой имени и сидом 0 — они будут перезаписаны при десериализации
 	auto world = std::make_unique<World>(
@@ -125,7 +117,7 @@ Level* World::load(std::filesystem::path directory, EngineSettings& settings, co
 	}
 
 	LOG_INFO("Creating a level");
-	Level* level = new Level(world.get(), content, settings);
+	auto level = std::make_unique<Level>(std::move(world), content, settings);
 	{
         std::filesystem::path file = wfile->getPlayerFile();
         if (!std::filesystem::is_regular_file(file)) {
@@ -136,7 +128,11 @@ Level* World::load(std::filesystem::path directory, EngineSettings& settings, co
                 level->objects.clear();
                 auto players = playerFile->list("players");
                 for (size_t i = 0; i < players->size(); ++i) {
-                    auto player = level->spawnObject<Player>(DEFAULT_SPAWNPOINT, DEFAULT_PLAYER_SPEED, level->inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE));
+                    auto player = level->spawnObject<Player>(
+						DEFAULT_SPAWNPOINT,
+						DEFAULT_PLAYER_SPEED,
+						level->inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE)
+					);
                     player->deserialize(players->map(i));
                     level->inventories->store(player->getInventory());
                 }

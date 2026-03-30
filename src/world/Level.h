@@ -47,11 +47,15 @@ public:
 
 	/**
      * @brief Конструктор уровня.
-     * @param world Указатель на объект World (передаёт владение Level).
+     * @param world Указатель на объект World.
      * @param content Указатель на контент.
      * @param settings Ссылка на настройки.
      */
-	Level(World* world, const Content* content, EngineSettings& settings);
+	Level(
+          std::unique_ptr<World> world, 
+          const Content* content, 
+          EngineSettings& settings
+     );
 	~Level();
 
      void loadMatrix(int32_t x, int32_t z, uint32_t radius);

@@ -20,7 +20,10 @@ private:
     std::unique_ptr<ChunksController> chunks;
     std::unique_ptr<PlayerController> player;
 public:
-    LevelController(EngineSettings& settings, Level* level);
+    LevelController(
+        EngineSettings& settings,
+        std::unique_ptr<Level> level
+    );
 
     void update(float delta, bool input, bool pause);
 

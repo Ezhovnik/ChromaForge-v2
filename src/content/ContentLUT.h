@@ -70,7 +70,7 @@ public:
 
     // Статический метод для создания объекта ContentLUT из JSON-файла.
     // Читает файл indices.json, сопоставляет имена блоков с текущими определениями.
-    static ContentLUT* create(const std::filesystem::path& filename, const Content* content);
+    static std::shared_ptr<ContentLUT> create(const std::filesystem::path& filename, const Content* content);
 
     // Проверяет, требуется ли переупорядочивание блоков
     inline bool hasContentReorder() const {return reorderContent;}

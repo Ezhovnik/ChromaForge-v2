@@ -30,7 +30,7 @@ private:
 
     void initializeContent();
 public:
-    LevelScreen(Engine* engine, Level* level);
+    LevelScreen(Engine* engine, std::unique_ptr<Level> level);
     ~LevelScreen();
 
     void update(float deltaTime) override;

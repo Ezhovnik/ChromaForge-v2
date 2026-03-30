@@ -125,7 +125,7 @@ void CameraControl::switchCamera() {
     }
 }
 
-void CameraControl::update(PlayerInput& input, float delta, Chunks* chunks) {
+void CameraControl::update(const PlayerInput& input, float delta, Chunks* chunks) {
 	offset = glm::vec3(0.0f, 0.7f, 0.0f);
 
     if (settings.shaking.get() && !input.cheat) offset += updateCameraShaking(delta);

@@ -36,7 +36,7 @@ public:
 	CameraControl(std::shared_ptr<Player> player, const CameraSettings& settings);
 
 	void updateMouse(PlayerInput& input);
-	void update(PlayerInput& input, float delta, Chunks* chunks);
+	void update(const PlayerInput& input, float delta, Chunks* chunks);
 	void refresh();
 };
 
@@ -52,7 +52,7 @@ class PlayerController {
 private:
 	Level* level;
 	std::shared_ptr<Player> player;
-	PlayerInput input;
+	PlayerInput input {};
 	CameraControl camControl;
 	BlocksController* blocksController;
 

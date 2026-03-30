@@ -10,12 +10,12 @@
 #include "../debug/Logger.h"
 #include "../files/WorldFiles.h"
 
-LevelController::LevelController(EngineSettings& settings, Level* level) : 
+LevelController::LevelController(EngineSettings& settings, std::unique_ptr<Level> level) : 
     settings(settings), 
-    level(level),
-    blocks(std::make_unique<BlocksController>(level, settings.chunks.padding.get())),
-    chunks(std::make_unique<ChunksController>(level, settings.chunks.padding.get())),
-    player(std::make_unique<PlayerController>(level, settings, blocks.get()))
+    level(std::move(level)),
+    blocks(std::make_unique<BlocksController>(this->level.get(), settings.chunks.padding.get())),
+    chunks(std::make_unique<ChunksController>(this->level.get(), settings.chunks.padding.get())),
+    player(std::make_unique<PlayerController>(this->level.get(), settings, blocks.get()))
 {
 
     scripting::on_world_load(this);

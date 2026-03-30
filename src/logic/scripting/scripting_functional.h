@@ -3,8 +3,6 @@
 
 #include <string>
 
-#include <glm/glm.hpp>
-
 #include "../../delegates.h"
 #include "../../typedefs.h"
 #include "../../data/dynamic.h"
