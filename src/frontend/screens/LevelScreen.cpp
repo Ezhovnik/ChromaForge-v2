@@ -21,6 +21,7 @@
 #include "../../graphics/core/PostProcessing.h"
 #include "../../graphics/core/ImageData.h"
 #include "../../debug/Logger.h"
+#include "../../settings.h"
 
 LevelScreen::LevelScreen(
     Engine* engine,
@@ -52,24 +53,27 @@ LevelScreen::LevelScreen(
     initializeContent();
 }
 
-void LevelScreen::initializeContent() {
-    auto content = controller->getLevel()->content;
-    for (auto& entry : content->getPacks()) {
-        auto pack = entry.second.get();
-        const ContentPack& info = pack->getInfo();
-        std::filesystem::path scriptFile = info.folder/std::filesystem::path("scripts/hud.lua");
-        if (std::filesystem::is_regular_file(scriptFile)) {
-            scripting::load_hud_script(pack->getEnvironment(), info.id, scriptFile);
-        }
-    }
-    scripting::on_frontend_init(hud.get());
-}
-
 LevelScreen::~LevelScreen() {
     saveWorldPreview();
     scripting::on_frontend_close();
     controller->onWorldQuit();
     engine->getPaths()->setWorldFolder(std::filesystem::path());
+}
+
+void LevelScreen::initializeContent() {
+    auto content = controller->getLevel()->content;
+    for (auto& entry : content->getPacks()) {
+        initializePack(entry.second.get());
+    }
+    scripting::on_frontend_init(hud.get());
+}
+
+void LevelScreen::initializePack(ContentPackRuntime* pack) {
+    const ContentPack& info = pack->getInfo();
+    std::filesystem::path scriptFile = info.folder/std::filesystem::path("scripts/hud.lua");
+    if (std::filesystem::is_regular_file(scriptFile)) {
+        scripting::load_hud_script(pack->getEnvironment(), info.id, scriptFile);
+    }
 }
 
 void LevelScreen::saveWorldPreview() {

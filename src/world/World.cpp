@@ -16,6 +16,7 @@
 #include "../content/ContentLUT.h"
 #include "../items/Inventories.h"
 #include "WorldGenerators.h"
+#include "../settings.h"
 
 world_load_error::world_load_error(std::string message) : std::runtime_error(message) {
 }

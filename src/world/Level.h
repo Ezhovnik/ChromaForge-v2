@@ -7,7 +7,6 @@
 #include <glm/glm.hpp>
 
 #include "../typedefs.h"
-#include "../settings.h"
 #include "../interfaces/Object.h"
 
 inline constexpr glm::vec3 DEFAULT_SPAWNPOINT = {0, 256, 0}; ///< Точка появления игрока
@@ -23,6 +22,7 @@ class ChunksStorage;
 class LevelEvents;
 class Content;
 class Inventories;
+struct EngineSettings;
 
 /**
  * @brief Основной класс уровня, объединяющий мир, игрока, чанки, физику и освещение.

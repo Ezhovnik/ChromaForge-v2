@@ -6,7 +6,6 @@
 #include <memory>
 
 #include "../typedefs.h"
-#include "../settings.h"
 #include "../util/timeutil.h"
 #include "../content/ContentPack.h"
 #include "../data/dynamic.h"
@@ -24,6 +23,7 @@ class WorldFiles;
 class Level;
 class Content;
 class ContentLUT;
+struct EngineSettings;
 
 /**
  * @brief Класс, представляющий мир: хранит имя, сид, список контент-паков,
@@ -161,10 +161,10 @@ public:
 	/**
      * Возвращает внутреннее имя мира.
      */
-    std::string getName() const;
+     std::string getName() const;
 
 	/** Возвращает сид генерации мира. */
-    uint64_t getSeed() const;
+     uint64_t getSeed() const;
 
 	/** Возвращает идентификатор генератора мира. */
 	std::string getGenerator() const;
@@ -188,16 +188,16 @@ public:
      * Возвращает указатель на контент, используемый миром.
      */
 	const Content* getContent() const {
-        return content;
-    }
+          return content;
+     }
 
 	/**
      * Генерирует и возвращает следующий идентификатор инвентаря.
      * @return Целое число >= 1.
      */
-    int64_t getNextInventoryId() {
-        return nextInventoryId++;
-    }
+     int64_t getNextInventoryId() {
+          return nextInventoryId++;
+     }
 };
 
 #endif // WORLD_WORLD_H_

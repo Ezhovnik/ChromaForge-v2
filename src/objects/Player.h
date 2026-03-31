@@ -20,21 +20,21 @@ class ContentLUT;
  * @brief Структура, содержащая текущее состояние ввода игрока.
  */
 struct PlayerInput {
-	bool zoom;
-	bool cameraMode; ///< Переключение режима камеры
-	bool moveForward;
-	bool moveBack;
-	bool moveRight;
-	bool moveLeft;
-	bool sprint;
-	bool crouch;
-	bool cheat;
-	bool jump;
-	bool noclip;
-	bool flight;
-    bool attack;
-    bool build;
-    bool pickBlock;
+	bool zoom : 1;
+	bool cameraMode : 1; ///< Переключение режима камеры
+	bool moveForward : 1;
+	bool moveBack : 1;
+	bool moveRight : 1;
+	bool moveLeft : 1;
+	bool sprint : 1;
+	bool crouch : 1;
+	bool cheat : 1;
+	bool jump : 1;
+	bool noclip : 1;
+	bool flight : 1;
+    bool attack : 1;
+    bool build : 1;
+    bool pickBlock : 1;
 };
 
 /**
@@ -59,7 +59,7 @@ public:
     bool noclip = false;
     bool debug = false;
 
-	glm::vec2 cam = {}; ///< Углы поворота камеры
+	glm::vec2 cam {}; ///< Углы поворота камеры
 
     voxel selectedVoxel {0, 0};
 

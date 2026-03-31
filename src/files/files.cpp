@@ -11,6 +11,8 @@
 #include "../util/stringutil.h"
 #include "../data/dynamic.h"
 #include "../coders/zip.h"
+#include "../coders/commons.h"
+#include "../coders/toml.h"
 
 files::rafile::rafile(std::filesystem::path filename) : file(filename, std::ios::binary | std::ios::ate) {
     if (!file) {
@@ -120,8 +122,7 @@ std::shared_ptr<dynamic::Map> files::read_binary_json(std::filesystem::path file
 std::shared_ptr<dynamic::Map> files::read_json(std::filesystem::path filename) {
 	std::string text = files::read_string(filename);
 	try {
-		auto obj = json::parse(filename.string(), text);
-        return obj;
+		return json::parse(filename.u8string(), text);
 	} catch (const parsing_error& error) {
 		LOG_ERROR("Could not to parse {}. What: {}", filename.string(), error.errorLog());
         throw std::runtime_error("Could not to parse " + filename.string());
@@ -143,4 +144,8 @@ std::vector<std::string> files::read_list(std::filesystem::path filename) {
 		lines.push_back(line);
 	}
 	return lines;
+}
+
+std::shared_ptr<dynamic::Map> files::read_toml(std::filesystem::path file) {
+    return toml::parse(file.u8string(), files::read_string(file));
 }

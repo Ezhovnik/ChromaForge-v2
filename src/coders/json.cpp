@@ -216,11 +216,11 @@ dynamic::Value Parser::parseValue() {
     throw error("Unexpected character '" + std::string({next}) + "'");
 }
 
-std::unique_ptr<dynamic::Map> json::parse(const std::string& filename, const std::string& source) {
+dynamic::Map_sptr json::parse(const std::string& filename, const std::string& source) {
     Parser parser(filename, source);
     return parser.parse();
 }
 
-std::unique_ptr<dynamic::Map> json::parse(const std::string& source) {
+dynamic::Map_sptr json::parse(const std::string& source) {
     return parse("<string>", source);
 }

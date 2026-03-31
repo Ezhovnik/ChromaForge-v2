@@ -16,6 +16,7 @@
 #include "../../../logic/EngineController.h"
 #include "../../../files/settings_io.h"
 #include "../../../world/Level.h"
+#include "../../../data/setting.h"
 
 namespace scripting {
     extern lua::LuaState* state;

@@ -68,7 +68,6 @@ Engine::Engine(
     settingsHandler(settingsHandler),
     interpreter(std::make_unique<cmd::CommandsInterpreter>())
 {
-    CoreContent::setup_bindings();
     loadSettings();
 
     controller = std::make_unique<EngineController>(this);
@@ -241,7 +240,7 @@ void Engine::loadContent() {
     LOG_INFO("Loading content");
     auto resdir = paths->getResources();
     ContentBuilder contentBuilder;
-    CoreContent::setup(&contentBuilder);
+    CoreContent::setup(paths, &contentBuilder);
     paths->setContentPacks(&contentPacks);
 
     std::vector<std::string> names;
@@ -260,6 +259,14 @@ void Engine::loadContent() {
 
         ContentLoader loader(&pack);
         loader.load(contentBuilder);
+
+        auto configFolder = pack.folder/std::filesystem::path("config");
+        auto bindsFile = paths->getBindingsFile(configFolder.u8string());
+        if (std::filesystem::is_regular_file(bindsFile)) {
+            Events::loadTomlBindings(
+                bindsFile.u8string(), files::read_string(bindsFile)
+            );
+        }
     }
 
     content = contentBuilder.build();

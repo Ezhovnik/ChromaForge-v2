@@ -13,6 +13,7 @@ class WorldRenderer;
 class TextureAnimator;
 class Level;
 class PostProcessing;
+class ContentPackRuntime;
 
 class LevelScreen : public Screen {
 private:
@@ -29,6 +30,7 @@ private:
     void updateHotkeys();
 
     void initializeContent();
+    void initializePack(ContentPackRuntime* pack);
 public:
     LevelScreen(Engine* engine, std::unique_ptr<Level> level);
     ~LevelScreen();

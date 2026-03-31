@@ -48,6 +48,7 @@ namespace util {
 
     std::vector<std::string> split(const std::string& str, char delimiter);
     std::vector<std::wstring> split(const std::wstring& str, char delimiter);
+    std::pair<std::string, std::string> split_at(std::string_view view, char c);
 
     std::string format_data_size(size_t size);
 }

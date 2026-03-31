@@ -7,7 +7,6 @@
 
 #include <glm/glm.hpp>
 
-#include "../settings.h"
 #include "../objects/Player.h"
 #include "../interfaces/Object.h"
 
@@ -16,6 +15,8 @@ class BlocksController;
 class Level;
 class Chunks;
 class Block;
+struct EngineSettings;
+struct CameraSettings;
 
 class CameraControl {
 private:

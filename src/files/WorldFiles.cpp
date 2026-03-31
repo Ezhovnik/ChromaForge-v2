@@ -26,6 +26,7 @@
 #include "../window/Camera.h"
 #include "../world/World.h"
 #include "../debug/Logger.h"
+#include "../settings.h"
 
 WorldFiles::WorldFiles(std::filesystem::path directory) : directory(directory), regions(directory) {
 }

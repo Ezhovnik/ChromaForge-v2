@@ -10,7 +10,6 @@
 #include "glm/gtx/hash.hpp"
 
 #include "../typedefs.h"
-#include "../settings.h"
 #include "../files/files.h"
 #include "../voxels/Chunk.h"
 #include "../content/ContentPack.h"
@@ -20,6 +19,7 @@ class Player;
 class Content;
 class ContentIndices;
 class World;
+struct DebugSettings;
 
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
 class WorldFiles {

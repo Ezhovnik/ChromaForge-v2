@@ -53,6 +53,8 @@ namespace lua {
         bool getfield(const std::string& name, int idx = -1);
         void setfield(const std::string& name, int idx = -2);
 
+        const char* requireString(int idx);
+
         bool toboolean(int index);
         luaint tointeger(int index);
         luanumber tonumber(int index);

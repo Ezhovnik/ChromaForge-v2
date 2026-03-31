@@ -8,6 +8,8 @@
 #include "../debug/Logger.h"
 #include "../data/dynamic.h"
 #include "../coders/json.h"
+#include "../util/stringutil.h"
+#include "../coders/toml.h"
 
 inline constexpr short _MOUSE_KEYS_OFFSET = 1024;
 
@@ -200,5 +202,29 @@ void Events::loadBindings(const std::string& filename, const std::string& source
         }
         binding.type = type;
         jentry->num("code", binding.code);
+    }
+}
+
+void Events::loadTomlBindings(const std::string& filename, const std::string& source) {
+    auto map = toml::parse(filename, source);
+    for (auto& entry : map->values) {
+        if (auto value = std::get_if<std::string>(&entry.second)) {
+            auto [prefix, codename] = util::split_at(*value, ':');
+            inputType type;
+            int code;
+            if (prefix == "key") {
+                type = inputType::keyboard;
+                code = static_cast<int>(input_util::keycode_from(codename));
+            } else if (prefix == "mouse") {
+                type = inputType::mouse;
+                code = static_cast<int>(input_util::mousecode_from(codename));
+            } else {
+                LOG_ERROR("Unknown input type: {} (binding {})", prefix, util::quote(entry.first));
+                continue;
+            }
+            Events::bind(entry.first, type, code);
+        } else {
+            LOG_ERROR("Invalid binding entry: {}", entry.first);
+        }
     }
 }

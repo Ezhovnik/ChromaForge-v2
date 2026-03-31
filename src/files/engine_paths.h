@@ -30,6 +30,7 @@ public:
     std::filesystem::path getLogsFile();
     std::filesystem::path getControlsFile();
     std::filesystem::path getSettingsFile();
+    std::filesystem::path getBindingsFile(const std::string& folder="");
     bool isWorldNameUsed(std::string name);
 
     void setUserfiles(std::filesystem::path folder);

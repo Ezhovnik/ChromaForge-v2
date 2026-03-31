@@ -14,8 +14,10 @@
 #include "content/Content.h"
 #include "items/Item.h"
 #include "content/ContentBuilder.h"
+#include "files/files.h"
+#include "files/engine_paths.h"
 
-void CoreContent::setup(ContentBuilder* builder) {
+void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
     // Воздух
     Block& block = builder->createBlock(BUILTIN_AIR);
     block.drawGroup = 1;
@@ -30,25 +32,11 @@ void CoreContent::setup(ContentBuilder* builder) {
     // Пустота
     Item& item = builder->createItem(BUILTIN_EMPTY);
     item.iconType = ItemIconType::None;
-}
 
-void CoreContent::setup_bindings() {
-    Events::bind(BIND_DEVTOOLS_CONSOLE, inputType::keyboard, keycode::GRAVE_ACCENT);
-	Events::bind(BIND_MOVE_FORWARD, inputType::keyboard, keycode::W);
-	Events::bind(BIND_MOVE_BACK, inputType::keyboard, keycode::S);
-	Events::bind(BIND_MOVE_RIGHT, inputType::keyboard, keycode::D);
-	Events::bind(BIND_MOVE_LEFT, inputType::keyboard, keycode::A);
-	Events::bind(BIND_MOVE_JUMP, inputType::keyboard, keycode::SPACE);
-	Events::bind(BIND_MOVE_SPRINT, inputType::keyboard, keycode::LEFT_CONTROL);
-	Events::bind(BIND_MOVE_CROUCH, inputType::keyboard, keycode::LEFT_SHIFT);
-	Events::bind(BIND_MOVE_CHEAT, inputType::keyboard, keycode::R);
-	Events::bind(BIND_CAM_ZOOM, inputType::keyboard, keycode::C);
-    Events::bind(BIND_CAM_MODE, inputType::keyboard, keycode::F4);
-	Events::bind(BIND_PLAYER_NOCLIP, inputType::keyboard, keycode::N);
-	Events::bind(BIND_PLAYER_FLIGHT, inputType::keyboard, keycode::F);
-    Events::bind(BIND_HUD_INVENTORY, inputType::keyboard, keycode::E);
-
-    Events::bind(BIND_PLAYER_ATTACK, inputType::mouse, mousecode::BUTTON_1);
-    Events::bind(BIND_PLAYER_BUILD, inputType::mouse, mousecode::BUTTON_2);
-    Events::bind(BIND_PLAYER_PICK, inputType::mouse, mousecode::BUTTON_3);
+    auto bindsFile = paths->getBindingsFile();
+    if (std::filesystem::is_regular_file(bindsFile)) {
+        Events::loadTomlBindings(
+            bindsFile.u8string(), files::read_string(bindsFile)
+        );
+    }
 }

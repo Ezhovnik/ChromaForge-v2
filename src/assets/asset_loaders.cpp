@@ -19,6 +19,7 @@
 #include "../frontend/UIDocument.h"
 #include "../audio/audio.h"
 #include "../coders/GLSLExtension.h"
+#include "../coders/commons.h"
 
 static bool animation(
     Assets* assets, 

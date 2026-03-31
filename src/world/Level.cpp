@@ -12,6 +12,7 @@
 #include "../content/Content.h"
 #include "../items/Inventories.h"
 #include "../interfaces/Object.h"
+#include "../settings.h"
 
 inline constexpr float GRAVITY = -22.6f;
 

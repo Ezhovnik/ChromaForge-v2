@@ -20,6 +20,7 @@
 #include "../items/Item.h"
 #include "../items/ItemStack.h"
 #include "../items/Inventory.h"
+#include "../settings.h"
 
 namespace CameraConsts {
 	inline constexpr float SHAKE_OFFSET = 0.025f;

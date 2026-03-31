@@ -336,6 +336,19 @@ std::vector<std::wstring> util::split(const std::wstring& str, char delimiter) {
     return result;
 }
 
+std::pair<std::string, std::string> util::split_at(std::string_view view, char c) {
+    size_t idx = view.find(c);
+    if (idx == std::string::npos) {
+        std::string errorLog = util::quote(std::string({c})) + " not found";
+        LOG_ERROR("{}", errorLog);
+        throw std::runtime_error(errorLog);
+    }
+    return std::make_pair(
+        std::string(view.substr(0, idx)), 
+        std::string(view.substr(idx + 1))
+    );
+}
+
 std::wstring util::lower_case(const std::wstring& str) {
     std::wstring result = str;
     static const std::locale loc("");

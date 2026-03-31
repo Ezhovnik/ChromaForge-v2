@@ -37,6 +37,7 @@ namespace files {
     std::shared_ptr<dynamic::Map> read_json(std::filesystem::path file);
     std::shared_ptr<dynamic::Map> read_binary_json(std::filesystem::path file);
     std::vector<std::string> read_list(std::filesystem::path file);
+    std::shared_ptr<dynamic::Map> read_toml(std::filesystem::path file);
 }
 
 #endif // FILES_FILES_H_

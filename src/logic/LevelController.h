@@ -6,9 +6,9 @@
 #include "PlayerController.h"
 #include "BlocksController.h"
 #include "ChunksController.h"
-#include "../settings.h"
 
 class Level;
+struct EngineSettings;
 
 class LevelController {
 private:

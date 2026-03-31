@@ -141,6 +141,7 @@ void lua::LuaState::createLibs() {
     openlib("json", jsonlib);
     openlib("input", inputlib);
     openlib("console", consolelib);
+    openlib("toml", tomllib);
 
     addfunc("print", lua_wrap_errors<l_print>);
 }
@@ -364,6 +365,13 @@ void lua::LuaState::openlib(const std::string& name, const luaL_Reg* libfuncs) {
 int lua::LuaState::execute(int env, const std::string& src, const std::string& file) {
     loadbuffer(env, src, file);
     return callNoThrow(0);
+}
+
+const char* lua::LuaState::requireString(int idx) {
+    if (!lua_isstring(L, idx)) {
+        throw luaerror("String expected at " + std::to_string(idx));
+    }
+    return lua_tostring(L, idx);
 }
 
 int lua::LuaState::createEnvironment(int parent) {

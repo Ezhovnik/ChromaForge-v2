@@ -12,9 +12,10 @@ inline const std::string BUILTIN_AIR = BUILTIN_CONTENT_NAMESPACE + ":air";
 inline const std::string TEXTURE_NOTFOUND = "notfound";
 
 class ContentBuilder;
+class EnginePaths;
 
 namespace CoreContent {
-    void setup(ContentBuilder* builder);
+    void setup(EnginePaths* paths, ContentBuilder* builder);
 }
 
 #endif

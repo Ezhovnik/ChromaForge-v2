@@ -9,6 +9,7 @@
 #include "../interfaces/Object.h"
 #include "../debug/Logger.h"
 #include "../files/WorldFiles.h"
+#include "../settings.h"
 
 LevelController::LevelController(EngineSettings& settings, std::unique_ptr<Level> level) : 
     settings(settings), 

@@ -21,8 +21,4 @@ inline const std::string BIND_PLAYER_BUILD = "player.build";
 inline const std::string BIND_PLAYER_PICK = "player.pick";
 inline const std::string BIND_DEVTOOLS_CONSOLE = "devtools.console";
 
-namespace CoreContent {
-    void setup_bindings();
-}
-
 #endif

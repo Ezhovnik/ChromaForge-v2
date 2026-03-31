@@ -19,6 +19,7 @@
 #include "../../../items/Inventories.h"
 #include "../../../graphics/ui/elements/display/InventoryView.h"
 #include "../../../world/Level.h"
+#include "../../../graphics/ui/elements/display/Image.h"
 
 struct DocumentNode {
     UIDocument* document;
@@ -272,6 +273,13 @@ static int p_get_caret(gui::UINode* node) {
     return 0;
 }
 
+static int p_get_src(gui::UINode* node) {
+    if (auto image = dynamic_cast<gui::Image*>(node)) {
+        return scripting::state->pushstring(image->getTexture());
+    }
+    return 0;
+}
+
 static int l_gui_getattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -308,7 +316,8 @@ static int l_gui_getattr(lua_State* L) {
         {"inventory", p_get_inventory},
         {"focused", p_get_focused},
         {"paste", p_get_paste},
-        {"caret", p_get_caret}
+        {"caret", p_get_caret},
+        {"src", p_get_src}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) return func->second(node.get());
@@ -426,6 +435,12 @@ static void p_set_caret(gui::UINode* node, int idx) {
     }
 }
 
+static void p_set_src(gui::UINode* node, int idx) {
+    if (auto image = dynamic_cast<gui::Image*>(node)) {
+        image->setTexture(scripting::state->requireString(idx));
+    }
+}
+
 static int l_gui_setattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -455,7 +470,8 @@ static int l_gui_setattr(lua_State* L) {
         {"checked", p_set_checked},
         {"page", p_set_page},
         {"inventory", p_set_inventory},
-        {"caret", p_set_caret}
+        {"caret", p_set_caret},
+        {"src", p_set_src}
     };
     auto func = setters.find(attr);
     if (func != setters.end()) func->second(node.get(), 4);

@@ -9,7 +9,6 @@
 #include <mutex>
 
 #include "typedefs.h"
-#include "settings.h"
 #include "delegates.h"
 #include "files/engine_paths.h"
 #include "content/ContentPack.h"
@@ -23,6 +22,7 @@ class Screen;
 class Batch2D;
 class EngineController;
 class SettingsHandler;
+struct EngineSettings;
 
 namespace gui {
     class GUI;
