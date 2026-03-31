@@ -8,6 +8,7 @@
 #include <lua.hpp>
 #endif
 #include <exception>
+#include <string>
 
 namespace lua {
     using luaint = lua_Integer;

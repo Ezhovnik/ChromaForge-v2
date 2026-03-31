@@ -62,7 +62,9 @@ void load_script(std::filesystem::path name) {
 void scripting::initialize(Engine* engine) {
     scripting::engine = engine;
     state = new lua::LuaState();
+
     load_script(std::filesystem::path("stdlib.lua"));
+    load_script(std::filesystem::path("stdcmd.lua"));
 }
 
 static bool processCallback(int env, const std::string& src, const std::string& file) {

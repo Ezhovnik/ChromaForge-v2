@@ -32,6 +32,7 @@ void CoreContent::setup(ContentBuilder* builder) {
 }
 
 void CoreContent::setup_bindings() {
+    Events::bind(BIND_DEVTOOLS_CONSOLE, inputType::keyboard, keycode::GRAVE_ACCENT);
 	Events::bind(BIND_MOVE_FORWARD, inputType::keyboard, keycode::W);
 	Events::bind(BIND_MOVE_BACK, inputType::keyboard, keycode::S);
 	Events::bind(BIND_MOVE_RIGHT, inputType::keyboard, keycode::D);

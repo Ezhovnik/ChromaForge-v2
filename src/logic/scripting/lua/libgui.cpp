@@ -265,6 +265,13 @@ static int p_get_paste(gui::UINode* node) {
     return 0;
 }
 
+static int p_get_caret(gui::UINode* node) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return scripting::state->pushinteger(static_cast<integer_t>(box->getCaret()));
+    }
+    return 0;
+}
+
 static int l_gui_getattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -300,7 +307,8 @@ static int l_gui_getattr(lua_State* L) {
         {"reset", p_get_reset},
         {"inventory", p_get_inventory},
         {"focused", p_get_focused},
-        {"paste", p_get_paste}
+        {"paste", p_get_paste},
+        {"caret", p_get_caret}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) return func->second(node.get());
@@ -412,6 +420,12 @@ static void p_set_focused(std::shared_ptr<gui::UINode> node, int idx) {
     }
 }
 
+static void p_set_caret(gui::UINode* node, int idx) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        box->setCaret(static_cast<ssize_t>(scripting::state->tointeger(idx)));
+    }
+}
+
 static int l_gui_setattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -441,6 +455,7 @@ static int l_gui_setattr(lua_State* L) {
         {"checked", p_set_checked},
         {"page", p_set_page},
         {"inventory", p_set_inventory},
+        {"caret", p_set_caret}
     };
     auto func = setters.find(attr);
     if (func != setters.end()) func->second(node.get(), 4);

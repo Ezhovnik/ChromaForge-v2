@@ -31,21 +31,6 @@ void TextBox::draw(const DrawContext* pctx, Assets* assets) {
 
     font = assets->getFont(label->getFontName());
 
-    if (autoresize && font) {
-        auto size = getSize();
-        int newy = glm::min(static_cast<int>(parent->getSize().y), 
-        static_cast<int>(
-            label->getLinesNumber() * 
-            label->getLineInterval() * 
-            font->getLineHeight())
-        );
-        if (newy != static_cast<int>(size.y)) {
-            size.y = newy;
-            setSize(size);
-            if (positionfunc) pos = positionfunc();
-        }
-    }
-
     if (!isFocused()) return;
 
     glm::vec2 pos = calcPos();
@@ -135,6 +120,22 @@ void TextBox::drawBackground(const DrawContext* pctx, Assets* assets) {
 void TextBox::refreshLabel() {
     label->setColor(glm::vec4(input.empty() ? 0.5f : 1.0f));
     label->setText(getText());
+
+    if (autoresize && font) {
+        auto size = getSize();
+        int newy = glm::min(static_cast<int>(parent->getSize().y), 
+        static_cast<int>(
+            label->getLinesNumber() * 
+            label->getLineInterval() * 
+            font->getLineHeight()) + 1
+        );
+        if (newy != static_cast<int>(size.y)) {
+            size.y = newy;
+            setSize(size);
+            if (positionfunc) pos = positionfunc();
+        }
+    }
+
     if (multiline && font) {
         setScrollable(true);
         uint height = label->getLinesNumber() * font->getLineHeight() * label->getLineInterval();
@@ -332,7 +333,7 @@ void TextBox::click(GUI*, int x, int y) {
 }
 
 void TextBox::mouseMove(GUI*, int x, int y) {
-    int index = calcIndexAt(x, y);
+    size_t index = calcIndexAt(x, y);
     setCaret(index);
     extendSelection(index);
     resetMaxLocalCaret();
@@ -344,7 +345,7 @@ void TextBox::resetMaxLocalCaret() {
 
 void TextBox::stepLeft(bool shiftPressed, bool breakSelection) {
     uint previousCaret = this->caret;
-    uint caret = breakSelection ? selectionStart : this->caret;
+    size_t caret = breakSelection ? selectionStart : this->caret;
     if (caret > 0) {
         if (caret > input.length()) {
             setCaret(input.length() - 1);
@@ -368,7 +369,7 @@ void TextBox::stepLeft(bool shiftPressed, bool breakSelection) {
 
 void TextBox::stepRight(bool shiftPressed, bool breakSelection) {
     uint previousCaret = this->caret;
-    uint caret = breakSelection ? selectionEnd : this->caret;
+    size_t caret = breakSelection ? selectionEnd : this->caret;
     if (caret < input.length()) {
         setCaret(caret + 1);
         caretLastMove = Window::time();
@@ -412,10 +413,10 @@ void TextBox::stepDefaultUp(bool shiftPressed, bool breakSelection) {
     uint caret = breakSelection ? selectionStart : this->caret;
     uint caretLine = label->getLineByTextIndex(caret);
     if (caretLine > 0) {
-        uint offset = std::min(size_t(maxLocalCaret), getLineLength(caretLine-1)-1);
+        uint offset = std::min(size_t(maxLocalCaret), getLineLength(caretLine - 1) - 1);
         setCaret(label->getTextLineOffset(caretLine - 1) + offset);
     } else {
-        setCaret(0);
+        setCaret(0ULL);
     }
     if (shiftPressed) {
         if (selectionStart == selectionEnd) {
@@ -559,11 +560,19 @@ std::wstring TextBox::getSelection() const {
     return input.substr(selectionStart, selectionEnd-selectionStart);
 }
 
-uint TextBox::getCaret() const {
+size_t TextBox::getCaret() const {
     return caret;
 }
 
-void TextBox::setCaret(uint position) {
+void TextBox::setCaret(ssize_t position) {
+    if (position < 0) {
+        setCaret(static_cast<size_t>(input.length() + position + 1));
+    } else {
+        setCaret(static_cast<size_t>(position));
+    }
+}
+
+void TextBox::setCaret(size_t position) {
     this->caret = std::min(static_cast<size_t>(position), input.length());
     caretLastMove = Window::time();
 
@@ -584,7 +593,7 @@ void TextBox::setCaret(uint position) {
     if (realoffset-width > 0) {
         setTextOffset(textOffset + realoffset - width);
     } else if (realoffset < 0) {
-        setTextOffset(std::max(textOffset + realoffset, 0U));
+        setTextOffset(std::max(textOffset + realoffset, 0ULL));
     }
 }
 

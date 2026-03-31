@@ -49,7 +49,11 @@ static Gravity gravity_from_string(const std::string& str) {
     return Gravity::none;
 }
 
-static runnable create_runnable(UIXmlReader& reader, xml::xmlelement element, const std::string& name) {
+static runnable create_runnable(
+    const UIXmlReader& reader,
+    xml::xmlelement element,
+    const std::string& name
+) {
     if (element->has(name)) {
         std::string text = element->attr(name).getText();
         if (!text.empty()) {

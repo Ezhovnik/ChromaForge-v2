@@ -266,9 +266,12 @@ dynamic::Value BasicParser::parseNumber(int sign) {
         int64_t afterdot = 0;
         if (hasNext() && is_digit(source[pos])) afterdot = parseSimpleInt(10);
         expo *= power(10, fmax(0, log10(afterdot) + 1));
-        c = source[pos];
 
         double dvalue = (value + (afterdot / (double)expo));
+
+        if (!hasNext()) return sign * dvalue;
+
+        c = source[pos];
         if (c == 'e' || c == 'E') {
             pos++;
             int s = 1;

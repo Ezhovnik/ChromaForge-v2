@@ -135,7 +135,7 @@ public:
         return Argument {name, type, optional, def, origin, enumname};
     }
 
-    Command parseScheme(executor_func executor) {
+    Command parseScheme(executor_func executor, std::string_view description) {
         std::string name = parseIdentifier(true);
         std::vector<Argument> args;
         std::unordered_map<std::string, Argument> kwargs;
@@ -152,7 +152,7 @@ public:
                 args.push_back(parseArgument());
             }
         }
-        return Command(name, std::move(args), std::move(kwargs), executor);
+        return Command(name, std::move(args), std::move(kwargs), std::string(description), executor);
     }
 
     inline parsing_error argumentError(
@@ -307,6 +307,7 @@ public:
             dynamic::Value value = dynamic::NONE;
             if (peek() == '~') {
                 relative = true;
+                value = 0L;
                 nextChar();
             }
 
@@ -348,18 +349,26 @@ public:
         }
 
         while (auto arg = command->getArgument(arg_index++)) {
-            if (!arg->optional) throw error("Missing argument " + util::quote(arg->name));
+            if (!arg->optional) {
+                throw error("Missing argument " + util::quote(arg->name));
+            } else {
+                args->put(arg->def);
+            }
         }
         return Prompt {command, args, kwargs};
     }
 };
 
-Command Command::create(std::string_view scheme, executor_func executor) {
-    return CommandParser("<string>", scheme).parseScheme(executor);
+Command Command::create(std::string_view scheme, std::string_view description, executor_func executor) {
+    return CommandParser("<string>", scheme).parseScheme(executor, description);
 }
 
-void CommandsRepository::add(std::string_view scheme, executor_func executor) {
-    Command command = Command::create(scheme, executor);
+void CommandsRepository::add(
+    std::string_view scheme, 
+    std::string_view description, 
+    executor_func executor
+) {
+    Command command = Command::create(scheme, description, executor);
     commands[command.getName()] = command;
 }
 

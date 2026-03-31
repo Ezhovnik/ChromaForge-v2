@@ -343,8 +343,7 @@ dynamic::Value lua::LuaState::tovalue(int idx) {
             }
         }
         default:
-            LOG_ERROR("Lua type {} is not supported", type);
-            throw std::runtime_error("Lua type " + std::to_string(type) + " is not supported");
+            throw std::runtime_error("Lua type " + std::string(luaL_typename(L, type)) + " is not supported");
     }
 }
 

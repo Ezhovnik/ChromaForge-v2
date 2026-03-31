@@ -23,9 +23,9 @@ namespace gui {
         runnable onUpPressed;
         runnable onDownPressed;
         bool valid = true;
-        uint caret = 0;
-        uint maxLocalCaret = 0;
-        uint textOffset = 0;
+        size_t caret = 0;
+        size_t maxLocalCaret = 0;
+        size_t textOffset = 0;
         int textInitX;
         double caretLastMove = 0.0;
         Font* font = nullptr;
@@ -87,8 +87,9 @@ namespace gui {
 
         virtual std::wstring getSelection() const;
 
-        virtual uint getCaret() const;
-        virtual void setCaret(uint position);
+        virtual size_t getCaret() const;
+        virtual void setCaret(size_t position);
+        virtual void setCaret(ssize_t position);
 
         virtual void select(int start, int end);
 

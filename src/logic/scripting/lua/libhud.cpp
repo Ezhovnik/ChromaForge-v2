@@ -16,6 +16,7 @@
 #include "../../../graphics/ui/elements/display/InventoryView.h"
 #include "../../../util/stringutil.h"
 #include "../../../debug/Logger.h"
+#include "../../../objects/Player.h"
 
 namespace scripting {
     extern Hud* hud;
@@ -111,6 +112,12 @@ static int l_hud_get_block_inventory(lua_State* L) {
     return 1;
 }
 
+static int l_hud_get_player(lua_State* L) {
+    auto player = scripting::hud->getPlayer();
+    lua_pushinteger(L, player->getId());
+    return 1;
+}
+
 const luaL_Reg hudlib [] = {
     {"open_inventory", lua_wrap_errors<l_hud_open_inventory>},
     {"close_inventory", lua_wrap_errors<l_hud_close_inventory>},
@@ -121,5 +128,6 @@ const luaL_Reg hudlib [] = {
     {"pause", lua_wrap_errors<l_hud_pause>},
     {"resume", lua_wrap_errors<l_hud_resume>},
     {"get_block_inventory", lua_wrap_errors<l_hud_get_block_inventory>},
+    {"get_player", lua_wrap_errors<l_hud_get_player>},
     {NULL, NULL}
 };

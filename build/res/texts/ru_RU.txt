@@ -71,3 +71,4 @@ player.build=Поставить Блок
 player.flight=Полёт
 camera.zoom=Приближение
 camera.mode=Сменить Режим Камеры
+devtools.console=Консоль
