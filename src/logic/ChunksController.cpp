@@ -22,7 +22,7 @@
 #include "../content/Content.h"
 #include "../world/WorldGenerators.h"
 
-inline constexpr int MAX_WORK_PER_FRAME = 64;
+inline constexpr int MAX_WORK_PER_FRAME = 128;
 inline constexpr int MIN_SURROUNDING = 9;
 
 ChunksController::ChunksController(
@@ -66,7 +66,7 @@ bool ChunksController::loadVisible(){
 	for (uint z = chunksPadding; z < depth - chunksPadding; ++z){
 		for (uint x = chunksPadding; x < width - chunksPadding; ++x){
 			int index = z * width + x;
-			std::shared_ptr<Chunk> chunk = chunks->chunks[index];
+			auto& chunk = chunks->chunks[index];
 			if (chunk != nullptr) {
 				if (chunk->isLoaded() && !chunk->isLighted()) {
 					if (buildLights(chunk)) {
@@ -87,7 +87,7 @@ bool ChunksController::loadVisible(){
 	}
 
 	int index = nearZ * width + nearX;
-	std::shared_ptr<Chunk> chunk = chunks->chunks[index];
+	const auto& chunk = chunks->chunks[index];
 	if (chunk != nullptr) return false;
 
 	createChunk(nearX + areaOffsetX, nearZ + areaOffsetZ);

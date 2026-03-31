@@ -22,6 +22,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/coders/xml.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/coders/zip.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/content/Content.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/content/ContentBuilder.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/content/ContentLoader.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/content/ContentLUT.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/content/ContentPack.cpp"

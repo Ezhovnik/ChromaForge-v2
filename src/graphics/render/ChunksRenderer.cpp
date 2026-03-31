@@ -38,7 +38,7 @@ ChunksRenderer::ChunksRenderer(
         "chunks-render-pool",
         [=](){return std::make_shared<RendererWorker>(level, cache, settings);}, 
         [=](RendererResult& mesh){
-            meshes[mesh.key].reset(mesh.renderer->createMesh());
+            meshes[mesh.key] = mesh.renderer->createMesh();
             inwork.erase(mesh.key);
         })
 {
@@ -56,7 +56,7 @@ std::shared_ptr<Mesh> ChunksRenderer::render(std::shared_ptr<Chunk> chunk, bool 
     chunk->setModified(false);
 
     if (important) {
-        std::shared_ptr<Mesh> mesh (renderer->render(chunk.get(), level->chunksStorage.get()));
+        auto mesh = renderer->render(chunk.get(), level->chunksStorage.get());
         meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = mesh;
         return mesh;
     }

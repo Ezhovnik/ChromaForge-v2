@@ -422,7 +422,7 @@ static void p_set_focused(std::shared_ptr<gui::UINode> node, int idx) {
 
 static void p_set_caret(gui::UINode* node, int idx) {
     if (auto box = dynamic_cast<gui::TextBox*>(node)) {
-        box->setCaret(static_cast<ssize_t>(scripting::state->tointeger(idx)));
+        box->setCaret(static_cast<ptrdiff_t>(scripting::state->tointeger(idx)));
     }
 }
 

@@ -19,6 +19,7 @@
 #include "../data/dynamic.h"
 #include "../files/files.h"
 #include "../util/ThreadPool.h"
+#include "../voxels/Block.h"
 
 AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(assets), paths(paths) {
 	// Регистрируем встроенные загрузчики из asset_loaders.h
@@ -211,7 +212,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 		loader.processPreloadConfigs(content);
 
 		for (auto& entry : content->getBlockMaterials()) {
-            auto& material = entry.second;
+            auto& material = *entry.second;
             loader.tryAddSound(material.stepsSound);
             loader.tryAddSound(material.placeSound);
             loader.tryAddSound(material.breakSound);

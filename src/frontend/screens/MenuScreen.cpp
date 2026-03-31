@@ -8,6 +8,7 @@
 #include "../../window/Camera.h"
 #include "../../engine.h"
 #include "../../graphics/core/Texture.h"
+#include "../../math/UVRegion.h"
 
 MenuScreen::MenuScreen(Engine* engine) : Screen(engine) {
     engine->resetContent();

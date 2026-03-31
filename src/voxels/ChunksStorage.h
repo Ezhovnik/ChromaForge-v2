@@ -19,8 +19,6 @@ private:
     Level* level;
 	std::unordered_map<glm::ivec2, std::shared_ptr<Chunk>> chunksMap;
 
-	blockid_t bedrockID = 0;
-
 	void verifyLoadedChunk(ContentIndices* indices, Chunk* chunk);
 public:
 	ChunksStorage(Level* level);

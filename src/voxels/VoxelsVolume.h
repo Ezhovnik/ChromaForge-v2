@@ -10,8 +10,8 @@ private:
 	int x, y, z;
 	int width, height, depth;
     int volume;
-	voxel* voxels;
-	light_t* lights;
+	std::unique_ptr<voxel[]> voxels;
+	std::unique_ptr<light_t[]> lights;
 public:
 	VoxelsVolume(int width, int height, int depth);
 	VoxelsVolume(int x, int y, int z, int width, int height, int depth);
@@ -44,11 +44,11 @@ public:
 	}
 
 	voxel* getVoxels() const {
-		return voxels;
+		return voxels.get();
 	}
 
 	light_t* getLights() const {
-		return lights;
+		return lights.get();
 	}
 
 	inline blockid_t pickBlockId(int bx, int by, int bz) const {

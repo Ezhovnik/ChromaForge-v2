@@ -314,12 +314,12 @@ asset_loader::postfunc asset_loader::sound(
 
     auto soundFile = paths->find(file + extension);
     if (std::filesystem::exists(soundFile)) {
-        baseSound.reset(audio::load_sound(soundFile, keepPCM));
+        baseSound = audio::load_sound(soundFile, keepPCM);
     }
 
     auto variantFile = paths->find(file + "_0" + extension);
     if (std::filesystem::exists(variantFile)) {
-        baseSound.reset(audio::load_sound(variantFile, keepPCM));
+        baseSound = audio::load_sound(variantFile, keepPCM);
     }
 
     if (baseSound == nullptr) {

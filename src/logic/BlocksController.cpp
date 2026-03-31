@@ -114,7 +114,7 @@ void BlocksController::randomSpark(int sparkId, int parts) {
         for (uint x = padding; x < w - padding; ++x){
             int index = z * w + x;
             if ((index + sparkId) % parts != 0) continue;
-            std::shared_ptr<Chunk> chunk = chunks->chunks[index];
+            auto& chunk = chunks->chunks[index];
             if (chunk == nullptr || !chunk->isLighted()) continue;
             for (int s = 0; s < segments; ++s) {
                 for (int i = 0; i < 4; ++i) {

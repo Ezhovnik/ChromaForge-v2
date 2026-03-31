@@ -86,8 +86,6 @@ namespace lua {
         runnable createRunnable();
         scripting::common_func createLambda();
 
-        const std::string storeAnonymous();
-
         void dumpStack();
 
         lua_State* getLua() const;

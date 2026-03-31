@@ -52,7 +52,7 @@ voxel* Chunks::getVoxel(int32_t x, int32_t y, int32_t z){
 	
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= int(width) || cy >= 1 || cz >= int(depth)) return nullptr;
 
-	std::shared_ptr<Chunk> chunk = chunks[(cy * depth + cz) * width + cx];
+	auto& chunk = chunks[(cy * depth + cz) * width + cx];
 	if (chunk == nullptr) return nullptr;
 
 	int lx = x - cx * CHUNK_WIDTH;
@@ -115,7 +115,7 @@ ubyte Chunks::getLight(int32_t x, int32_t y, int32_t z, int channel) {
 
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= int(width) || cy >= 1 || cz >= int(depth)) return 0;
 
-	std::shared_ptr<Chunk> chunk = chunks[(cy * depth + cz) * width + cx];
+	const auto& chunk = chunks[(cy * depth + cz) * width + cx];
 	if (chunk == nullptr) return 0;
 
 	int lx = x - cx * CHUNK_WIDTH;
@@ -135,7 +135,7 @@ light_t Chunks::getLight(int32_t x, int32_t y, int32_t z){
 
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= int(width) || cy >= 1 || cz >= int(depth)) return 0;
 
-	std::shared_ptr<Chunk> chunk = chunks[(cy * depth + cz) * width + cx];
+	const auto& chunk = chunks[(cy * depth + cz) * width + cx];
 	if (chunk == nullptr) return 0;
 
 	int lx = x - cx * CHUNK_WIDTH;

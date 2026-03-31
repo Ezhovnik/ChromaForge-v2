@@ -123,7 +123,7 @@ namespace audio {
 
         virtual std::shared_ptr<PCMStream> getSource() const = 0;
 
-        virtual Speaker* createSpeaker(bool loop, int channel) = 0;
+        virtual std::unique_ptr<Speaker> createSpeaker(bool loop, int channel) = 0;
 
         virtual void bindSpeaker(speakerid_t speaker) = 0;
 
@@ -166,7 +166,7 @@ namespace audio {
          * @return Указатель на динамик, с которым связан новый экземпляр,
          * или nullptr в случае неудачи
          */
-        virtual Speaker* newInstance(Priority priority, int channel) const = 0;
+        virtual std::unique_ptr<Speaker> newInstance(Priority priority, int channel) const = 0;
     };
 
     /**
@@ -297,9 +297,9 @@ namespace audio {
     public:
         virtual ~Backend() {};
 
-        virtual Sound* createSound(std::shared_ptr<PCM> pcm, bool keepPCM) = 0;
+        virtual std::unique_ptr<Sound> createSound(std::shared_ptr<PCM> pcm, bool keepPCM) = 0;
 
-        virtual Stream* openStream(std::shared_ptr<PCMStream> stream, bool keepSource) = 0;
+        virtual std::unique_ptr<Stream> openStream(std::shared_ptr<PCMStream> stream, bool keepSource) = 0;
 
         /**
          * @brief Устанавливает параметры слушателя (позиция, скорость, ориентация).
@@ -326,17 +326,17 @@ namespace audio {
      */
     void initialize(bool enabled);
 
-    PCM* load_PCM(const std::filesystem::path& file, bool headerOnly);
+    std::unique_ptr<PCM> load_PCM(const std::filesystem::path& file, bool headerOnly);
 
-    Sound* load_sound(const std::filesystem::path& file, bool keepPCM);
+    std::unique_ptr<Sound> load_sound(const std::filesystem::path& file, bool keepPCM);
 
-    Sound* create_sound(std::shared_ptr<PCM> pcm, bool keepPCM);
+    std::unique_ptr<Sound> create_sound(std::shared_ptr<PCM> pcm, bool keepPCM);
 
-    PCMStream* open_PCM_stream(const std::filesystem::path& file);
+    std::unique_ptr<PCMStream> open_PCM_stream(const std::filesystem::path& file);
 
-    Stream* open_stream(const std::filesystem::path& file, bool keepSource);
+    std::unique_ptr<Stream> open_stream(const std::filesystem::path& file, bool keepSource);
 
-    Stream* open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
+    std::unique_ptr<Stream> open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
 
     /**
      * @brief Устанавливает параметры слушателя, используя текущий бэкенд.

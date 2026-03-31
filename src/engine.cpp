@@ -48,6 +48,7 @@
 #include "files/files.h"
 #include "input_bindings.h"
 #include "logic/CommandsInterpreter.h"
+#include "content/ContentBuilder.h"
 
 inline void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -261,7 +262,7 @@ void Engine::loadContent() {
         loader.load(contentBuilder);
     }
 
-    content.reset(contentBuilder.build());
+    content = contentBuilder.build();
     resPaths = std::make_unique<ResPaths>(resdir, resRoots);
 
     langs::setup(resdir, langs::current->getId(), contentPacks);

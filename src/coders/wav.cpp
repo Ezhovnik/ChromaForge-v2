@@ -107,7 +107,7 @@ public:
     }
 };
 
-audio::PCMStream* wav::create_stream(const std::filesystem::path& file) {
+std::unique_ptr<audio::PCMStream> wav::create_stream(const std::filesystem::path& file) {
     std::ifstream in(file, std::ios::binary);
     if (!in.is_open()) {
         LOG_ERROR("Could not open file '{}'", file.u8string());
@@ -217,11 +217,13 @@ audio::PCMStream* wav::create_stream(const std::filesystem::path& file) {
         throw std::runtime_error("Fail state set on the file");
     }
 
-    return new WavStream(std::move(in), channels, bitsPerSample, sampleRate, size, initialOffset);
+    return std::make_unique<WavStream>(
+        std::move(in), channels, bitsPerSample, sampleRate, size, initialOffset
+    );
 }
 
-audio::PCM* wav::load_pcm(const std::filesystem::path& file, bool headerOnly) {
-    std::unique_ptr<audio::PCMStream> stream(wav::create_stream(file));
+std::unique_ptr<audio::PCM> wav::load_pcm(const std::filesystem::path& file, bool headerOnly) {
+    auto stream = wav::create_stream(file);
 
     size_t totalSamples = stream->getTotalSamples();
     uint channels = stream->getChannels();
@@ -234,5 +236,7 @@ audio::PCM* wav::load_pcm(const std::filesystem::path& file, bool headerOnly) {
         data.resize(size);
         stream->readFully(data.data(), size, false);
     }
-    return new audio::PCM(std::move(data), totalSamples, channels, bitsPerSample, sampleRate, true);
+    return std::make_unique<audio::PCM>(
+        std::move(data), totalSamples, channels, bitsPerSample, sampleRate, true
+    );
 }

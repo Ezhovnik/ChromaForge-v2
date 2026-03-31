@@ -13,6 +13,7 @@
 #include "debug/Logger.h"
 #include "content/Content.h"
 #include "items/Item.h"
+#include "content/ContentBuilder.h"
 
 void CoreContent::setup(ContentBuilder* builder) {
     // Воздух

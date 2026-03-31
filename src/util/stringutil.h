@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include <stdexcept>
 
 #include "../typedefs.h"
 

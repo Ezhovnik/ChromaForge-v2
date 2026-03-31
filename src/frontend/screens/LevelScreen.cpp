@@ -83,7 +83,8 @@ void LevelScreen::saveWorldPreview() {
         Camera camera = *player->camera;
         camera.setFov(glm::radians(70.0f));
         Viewport viewport(previewSize * 1.5, previewSize);
-        DrawContext ctx(nullptr, viewport, batch.get());
+        DrawContext parent_ctx(nullptr, {Window::width, Window::height}, batch.get());
+        DrawContext ctx(&parent_ctx, viewport, batch.get());
         worldRenderer->draw(ctx, &camera, false, postProcessing.get());
         auto image = postProcessing->toImage();
         image->flipY();

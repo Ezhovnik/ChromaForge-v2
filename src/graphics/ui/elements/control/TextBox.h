@@ -89,7 +89,7 @@ namespace gui {
 
         virtual size_t getCaret() const;
         virtual void setCaret(size_t position);
-        virtual void setCaret(ssize_t position);
+        virtual void setCaret(ptrdiff_t position);
 
         virtual void select(int start, int end);
 

@@ -7,6 +7,7 @@
 #include <memory>
 #include <variant>
 #include <stdexcept>
+#include <ostream>
 
 #include "../typedefs.h"
 #include "../debug/Logger.h"

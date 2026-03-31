@@ -70,9 +70,9 @@ void Player::updateInput(Level* level, PlayerInput& input, float delta) {
 	}
 
 	// Вычисляем количество подшагов физики для стабильности при высокой скорости
-	float vel = std::max(glm::length(hitbox->velocity * 0.25f), 1.0f);
-	int substeps = int(delta * vel * 1000);
-	substeps = std::min(100, std::max(1, substeps));
+	float vel = glm::length(hitbox->velocity);
+    int substeps = int(delta * vel * 20);
+    substeps = std::min(100, std::max(2, substeps));
 
 	// Выполняем шаг физики
 	level->physics->step(level->chunks.get(), hitbox.get(), delta, substeps, crouch, flight ? 0.0f : 1.0f, !noclip);

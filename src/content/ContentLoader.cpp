@@ -18,11 +18,16 @@
 #include "../items/Item.h"
 #include "../data/dynamic.h"
 #include "../core_content_defs.h"
+#include "ContentBuilder.h"
 
 ContentLoader::ContentLoader(ContentPack* pack) : pack(pack) {
 }
 
-bool ContentLoader::fixPackIndices(std::filesystem::path folder, dynamic::Map* indicesRoot, std::string contentSection) {
+bool ContentLoader::fixPackIndices(
+    std::filesystem::path folder,
+    dynamic::Map* indicesRoot,
+    std::string contentSection
+) {
     std::vector<std::string> detected;
     std::vector<std::string> indexed;
     if (std::filesystem::is_directory(folder)) {
@@ -286,22 +291,22 @@ void ContentLoader::loadItem(Item& item, std::string full, std::string name) {
 }
 
 
-BlockMaterial ContentLoader::loadBlockMaterial(std::filesystem::path file, std::string full) {
+void ContentLoader::loadBlockMaterial(BlockMaterial& def, std::filesystem::path file) {
     auto root = files::read_json(file);
-    BlockMaterial material {full};
-    root->str("steps-sound", material.stepsSound);
-    root->str("place-sound", material.placeSound);
-    root->str("break-sound", material.breakSound);
-    return material;
+    root->str("steps-sound", def.stepsSound);
+    root->str("place-sound", def.placeSound);
+    root->str("break-sound", def.breakSound);
 }
 
 void ContentLoader::load(ContentBuilder& builder) {
     LOG_INFO("---Loading content pack [{}]", pack->id);
 
-    auto runtime = new ContentPackRuntime(*pack, scripting::create_pack_environment(*pack));
-    builder.add(runtime);
+    auto runtime = std::make_unique<ContentPackRuntime>(
+        *pack, scripting::create_pack_environment(*pack)
+    );
     env = runtime->getEnvironment();
     ContentPackStats& stats = runtime->getStatsWriteable();
+    builder.add(std::move(runtime));
 
     fixPackIndices();
 
@@ -360,7 +365,7 @@ void ContentLoader::load(ContentBuilder& builder) {
         for (auto entry : std::filesystem::directory_iterator(materialsDir)) {
             std::filesystem::path file = entry.path();
             std::string name = pack->id + ":" + file.stem().u8string();
-            builder.add(loadBlockMaterial(file, name));
+            loadBlockMaterial(builder.createBlockMaterial(name), file);
         }
     }
 

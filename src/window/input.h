@@ -107,6 +107,7 @@ enum class mousecode : int {
 	BUTTON_1 = 0, ///< Левая кнопка мыши
 	BUTTON_2 = 1, ///< Правая кнопка мыши
 	BUTTON_3 = 2, ///< Средняя кнопка мыши (колёсико)
+    UNKNOWN = -1,
 };
 
 inline mousecode MOUSECODES_ALL[] {
@@ -117,7 +118,9 @@ inline mousecode MOUSECODES_ALL[] {
 
 namespace input_util {
 	void initialize();
+
     keycode keycode_from(const std::string& name);
+    mousecode mousecode_from(const std::string& name);
 
 	/**
      * @brief Возвращает название клавиши по её коду.

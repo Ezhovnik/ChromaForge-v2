@@ -9,13 +9,14 @@
 #include <memory>
 
 #include "../typedefs.h"
-#include "../voxels/Block.h"
 
 using DrawGroups = std::set<ubyte>;
 
 class Content;
 class Item;
 class ContentPackRuntime;
+class Block;
+struct BlockMaterial;
 
 enum class ContentType {
     None,
@@ -42,33 +43,6 @@ public:
     inline ContentType getType() const {
         return type;
     }
-};
-
-class ContentBuilder {
-private:
-    std::unordered_map<std::string, Block*> blockDefs;
-    std::vector<std::string> blockIds;
-    std::unordered_map<std::string, BlockMaterial> blockMaterials;
-
-    std::unordered_map<std::string, Item*> itemDefs;
-    std::vector<std::string> itemIds;
-
-    std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs;
-public:
-    ~ContentBuilder();
-
-    void add(Block* def);
-    void add(Item* def);
-    void add(ContentPackRuntime* pack);
-    void add(BlockMaterial material);
-
-    Block& createBlock(std::string id);
-    Item& createItem(std::string id);
-
-    void checkIdentifier(std::string id);
-    ContentType checkContentType(std::string id);
-
-    Content* build();
 };
 
 class ContentIndices {
@@ -107,24 +81,24 @@ public:
 
 class Content {
 private:
-    std::unordered_map<std::string, Block*> blockDefs;
-    std::unordered_map<std::string, Item*> itemDefs;
+    std::unordered_map<std::string, std::unique_ptr<Block>> blockDefs;
+    std::unordered_map<std::string, std::unique_ptr<Item>> itemDefs;
 
     std::unique_ptr<ContentIndices> indices;
 
     std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs;
 
-    std::unordered_map<std::string, BlockMaterial> blockMaterials;
+    std::unordered_map<std::string, std::unique_ptr<BlockMaterial>> blockMaterials;
 public:
     std::unique_ptr<DrawGroups> const drawGroups;
 
     Content(
-        ContentIndices* indices, 
+        std::unique_ptr<ContentIndices> indices,
         std::unique_ptr<DrawGroups> drawGroups, 
-        std::unordered_map<std::string, Block*> blockDefs, 
-        std::unordered_map<std::string, Item*> itemDefs,
+        std::unordered_map<std::string, std::unique_ptr<Block>> blockDefs,
+        std::unordered_map<std::string, std::unique_ptr<Item>> itemDefs,
         std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs,
-        std::unordered_map<std::string, BlockMaterial> blockMaterials
+        std::unordered_map<std::string, std::unique_ptr<BlockMaterial>> blockMaterials
     );
     ~Content();
 
@@ -141,7 +115,7 @@ public:
     const ContentPackRuntime* getPackRuntime(std::string id) const;
 
     const BlockMaterial* findBlockMaterial(std::string id) const;
-    const std::unordered_map<std::string, BlockMaterial>& getBlockMaterials() const;
+    const std::unordered_map<std::string, std::unique_ptr<BlockMaterial>>& getBlockMaterials() const;
 
     const std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>>& getPacks() const;
 };

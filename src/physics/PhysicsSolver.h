@@ -6,21 +6,42 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../typedefs.h"
-#include "../voxels/Block.h"
 
 class Hitbox;
 class Chunks;
+class Block;
 
 // Класс для решения физических взаимодействий объектов с воксельным миром.
 class PhysicsSolver {
+private:
 	glm::vec3 gravity; // Вектор гравитации, применяемой к объектам
 public:
 	PhysicsSolver(glm::vec3 gravity); // Конструтор
 
-	void step(Chunks* chunks, Hitbox* hitbox, float delta, uint substeps, bool shifting, float gravityScale, bool collisions); // Выполняет один шаг физического моделирования для указанного хитбокса.
-	void colisionCalc(Chunks* chunks, Hitbox* hitbox, glm::vec3& vel, glm::vec3& pos, const glm::vec3& half, float stepHeight);
+	void step(
+		Chunks* chunks,
+		Hitbox* hitbox,
+		float delta,
+		uint substeps,
+		bool shifting,
+		float gravityScale,
+		bool collisions
+	); // Выполняет один шаг физического моделирования для указанного хитбокса.
+	void colisionCalc(
+		Chunks* chunks,
+		Hitbox* hitbox,
+		glm::vec3& vel,
+		glm::vec3& pos,
+		const glm::vec3& half,
+		float stepHeight
+	);
     bool isBlockInside(int x, int y, int z, Hitbox* hitbox); // Проверяет, находится ли указанный блок внутри границ хитбокса.
-	bool isBlockInside(int x, int y, int z, Block* def, blockstate_t states, Hitbox* hitbox);
+	bool isBlockInside(
+		int x, int y, int z,
+		Block* def,
+		blockstate_t states,
+		Hitbox* hitbox
+	);
 };
 
 #endif // PHYSICS_PHYSICSSOLVER_H_

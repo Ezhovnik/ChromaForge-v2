@@ -20,8 +20,7 @@ void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
         blockid_t id = chunk->voxels[i].id;
         if (indices->getBlockDef(id) == nullptr) {
             LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
-			if (bedrockID == 0) level->content->requireBlock(CHROMAFORGE_CONTENT_NAMESPACE + ":bedrock").rt.id;
-			chunk->voxels[i].id = bedrockID;
+			chunk->voxels[i].id = BLOCK_AIR;
         }
     }
 }
@@ -96,9 +95,9 @@ void ChunksStorage::getVoxels(VoxelsVolume* volume, bool backlight) const {
 	int cw = ecx - scx + 1;
 	int ch = ecz - scz + 1;
 
-	for (int cz = scz; cz < scz + ch; cz++) {
-		for (int cx = scx; cx < scx + cw; cx++) {
-			auto found = chunksMap.find(glm::ivec2(cx, cz));
+	for (int cz = scz; cz < scz + ch; ++cz) {
+		for (int cx = scx; cx < scx + cw; ++cx) {
+			const auto& found = chunksMap.find(glm::ivec2(cx, cz));
 			if (found == chunksMap.end()) {
 				for (int ly = y; ly < y + h; ly++) {
 					for (int lz = max(z, cz * CHUNK_DEPTH);
@@ -117,7 +116,7 @@ void ChunksStorage::getVoxels(VoxelsVolume* volume, bool backlight) const {
 				const std::shared_ptr<Chunk>& chunk = found->second;
 				const voxel* cvoxels = chunk->voxels;
 				const light_t* clights = chunk->light_map.getLights();
-				for (int ly = y; ly < y + h; ly++) {
+				for (int ly = y; ly < y + h; ++ly) {
 					for (int lz = max(z, cz * CHUNK_DEPTH);
 						lz < min(z + d, (cz + 1) * CHUNK_DEPTH);
 						lz++) {

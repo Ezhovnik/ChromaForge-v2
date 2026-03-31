@@ -361,13 +361,6 @@ void lua::LuaState::openlib(const std::string& name, const luaL_Reg* libfuncs) {
     lua_setglobal(L, name.c_str());
 }
 
-const std::string lua::LuaState::storeAnonymous() {
-    auto funcId = uintptr_t(lua_topointer(L, lua_gettop(L)));
-    auto funcName = "F$" + util::mangleid(funcId);
-    lua_setglobal(L, funcName.c_str());
-    return funcName;
-}
-
 int lua::LuaState::execute(int env, const std::string& src, const std::string& file) {
     loadbuffer(env, src, file);
     return callNoThrow(0);

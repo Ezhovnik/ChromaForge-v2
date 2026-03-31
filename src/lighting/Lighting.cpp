@@ -62,13 +62,13 @@ void Lighting::buildSkyLight(int cx, int cz) {
     const Block* const* blockDefs = content->getIndices()->getBlockDefs();
 
 	Chunk* chunk = chunks->getChunk(cx, cz);
-	for (int z = 0; z < CHUNK_DEPTH; ++z){
-		for (int x = 0; x < CHUNK_WIDTH; ++x){
+	for (int z = 0; z < CHUNK_DEPTH; ++z) {
+		int gz = z + cz * CHUNK_DEPTH;
+		for (int x = 0; x < CHUNK_WIDTH; ++x) {
+			int gx = x + cx * CHUNK_WIDTH;
 			for (int y = chunk->light_map.highestPoint; y >= 0; --y){
-				int gx = x + cx * CHUNK_WIDTH;
-				int gz = z + cz * CHUNK_DEPTH;
 				while (y > 0 && !blockDefs[chunk->voxels[vox_index(x, y, z)].id]->lightPassing) {
-					y--;
+					--y;
 				}
 				if (chunk->light_map.getS(x, y, z) != 15) {
 					solverS->add(gx, y + 1, gz);

@@ -133,16 +133,19 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 	std::vector<size_t> indices;
 	for (size_t i = 0; i < chunks->volume; ++i){
 		if (chunks->chunks[i] == nullptr) continue;
-		indices.push_back(i);
+		indices.emplace_back(i);
 	}
 
-	float px = camera->position.x / (float)CHUNK_WIDTH;
-	float pz = camera->position.z / (float)CHUNK_DEPTH;
-	std::sort(indices.begin(), indices.end(), [chunks, px, pz](size_t i, size_t j) {
-		std::shared_ptr<Chunk> a = chunks->chunks[i];
-		std::shared_ptr<Chunk> b = chunks->chunks[j];
-		return ((a->chunk_x + 0.5f - px) * (a->chunk_x + 0.5f - px) + (a->chunk_z + 0.5f - pz) * (a->chunk_z + 0.5f - pz) >
-				(b->chunk_x + 0.5f - px) * (b->chunk_x + 0.5f - px) + (b->chunk_z + 0.5f - pz) * (b->chunk_z + 0.5f - pz));
+	float px = camera->position.x / (float)CHUNK_WIDTH - 0.5f;
+    float pz = camera->position.z / (float)CHUNK_DEPTH - 0.5f;
+    std::sort(indices.begin(), indices.end(), [chunks, px, pz](auto i, auto j) {
+        const auto a = chunks->chunks[i].get();
+        const auto b = chunks->chunks[j].get();
+        auto adx = (a->chunk_x - px);
+        auto adz = (a->chunk_z - pz);
+        auto bdx = (b->chunk_x - px);
+        auto bdz = (b->chunk_z - pz);
+        return (adx * adx + adz * adz > bdx * bdx + bdz * bdz);
 	});
 
 	bool culling = engine->getSettings().graphics.frustumCulling.get();

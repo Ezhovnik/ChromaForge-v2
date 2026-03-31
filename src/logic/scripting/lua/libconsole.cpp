@@ -65,9 +65,10 @@ static int l_get_command_info(lua_State* L) {
     auto interpreter = engine->getCommandsInterpreter();
     auto repo = interpreter->getRepository();
     auto command = repo->get(name);
+    if (command == nullptr) return 0;
     const auto& args = command->getArgs();
     const auto& kwargs = command->getKwArgs();
-    
+
     lua_createtable(L, 0, 4);
 
     lua_pushstring(L, name);

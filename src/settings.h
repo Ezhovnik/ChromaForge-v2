@@ -18,7 +18,7 @@ struct DisplaySettings {
 
 struct ChunksSettings {
 	IntegerSetting loadSpeed {4, 1, 32};
-	IntegerSetting loadDistance {22, 3, 66};
+	IntegerSetting loadDistance {22, 3, 80};
 	IntegerSetting padding {2, 1, 8};
 };
 

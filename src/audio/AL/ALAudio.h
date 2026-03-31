@@ -41,7 +41,7 @@ namespace audio {
             return pcm;
         }
 
-        Speaker* newInstance(Priority priority, int channel) const override;
+        std::unique_ptr<Speaker> newInstance(Priority priority, int channel) const override;
     };
 
     class ALStream : public Stream {
@@ -67,7 +67,7 @@ namespace audio {
 
         std::shared_ptr<PCMStream> getSource() const override;
         void bindSpeaker(speakerid_t speaker) override;
-        Speaker* createSpeaker(bool loop, int channel) override;
+        std::unique_ptr<Speaker> createSpeaker(bool loop, int channel) override;
         speakerid_t getSpeaker() const override;
         void update(double delta) override;
         duration_t getTime() const override;
@@ -140,9 +140,8 @@ namespace audio {
         std::vector<uint> freebuffers;
 
         uint maxSources = 256;
-
-        ALAudio(ALCdevice* device, ALCcontext* context);
     public:
+        ALAudio(ALCdevice* device, ALCcontext* context);
         ~ALAudio();
 
         uint getFreeSource();
@@ -152,8 +151,8 @@ namespace audio {
 
         std::vector<std::string> getAvailableDevices() const;
 
-        Sound* createSound(std::shared_ptr<PCM> pcm, bool keepPCM) override;
-        Stream* openStream(std::shared_ptr<PCMStream> stream, bool keepSource) override;
+        std::unique_ptr<Sound> createSound(std::shared_ptr<PCM> pcm, bool keepPCM) override;
+        std::unique_ptr<Stream> openStream(std::shared_ptr<PCMStream> stream, bool keepSource) override;
 
         void setListener(
             glm::vec3 position,
@@ -168,7 +167,7 @@ namespace audio {
             return false;
         }
 
-        static ALAudio* create();
+        static std::unique_ptr<ALAudio> create();
     };
 }
 

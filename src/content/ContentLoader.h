@@ -4,11 +4,13 @@
 #include <string>
 #include <filesystem>
 
-#include "../voxels/Block.h"
+#include "../typedefs.h"
 
 class ContentBuilder;
 struct ContentPack;
 class Item;
+class Block;
+struct BlockMaterial;
 
 namespace dynamic {
     class Map;
@@ -24,7 +26,7 @@ private:
     void loadCustomBlockModel(Block& block, dynamic::Map* primitives);
 
     void loadItem(Item& item, std::string full, std::string name);
-    BlockMaterial loadBlockMaterial(std::filesystem::path file, std::string full);
+    void loadBlockMaterial(BlockMaterial& def, std::filesystem::path file);
 public:
     ContentLoader(ContentPack* pack);
 

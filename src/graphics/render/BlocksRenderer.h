@@ -278,15 +278,15 @@ public:
      * @brief Рендерит чанк и возвращает Mesh.
      * @param chunk Чанк.
      * @param chunks Хранилище чанков.
-     * @return Указатель на новый Mesh (владелец должен удалить).
+     * @return Указатель на новый Mesh.
      */
-	Mesh* render(const Chunk* chunk, const ChunksStorage* chunks);
+	std::shared_ptr<Mesh> render(const Chunk* chunk, const ChunksStorage* chunks);
 
     /**
      * @brief Создаёт Mesh из текущих буферов.
      * @return Указатель на новый Mesh.
      */
-    Mesh* createMesh();
+    std::shared_ptr<Mesh> createMesh();
 
     /**
      * @brief Возвращает буфер вокселей.
