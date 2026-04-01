@@ -361,7 +361,7 @@ void WorldRegions::put(Chunk* chunk){
 
     put(chunk->chunk_x, chunk->chunk_z, RegionConsts::LAYER_VOXELS, chunk->encode(), CHUNK_DATA_LEN, true);
 
-    if (doWriteLights && chunk->isLighted()) {
+    if (doWriteLights && chunk->flags.lighted) {
         put(chunk->chunk_x, chunk->chunk_z, RegionConsts::LAYER_LIGHTS, 
             chunk->light_map.encode(), LIGHTMAP_DATA_LEN, true);
     }

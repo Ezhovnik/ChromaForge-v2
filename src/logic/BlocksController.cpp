@@ -14,6 +14,7 @@
 #include "../math/rand.h"
 #include "../items/Inventories.h"
 #include "../debug/Logger.h"
+#include "../constants.h"
 
 Clock::Clock(int sparkRate, int sparkParts) : sparkRate(sparkRate), sparkParts(sparkParts) {
 }
@@ -70,8 +71,8 @@ void BlocksController::updateSides(int x, int y, int z) {
 }
 
 void BlocksController::breakBlock(Player* player, const Block* def, int x, int y, int z) {
-    chunks->setVoxel(x, y, z, 0, 0);
-    lighting->onBlockSet(x, y, z, 0);
+    chunks->setVoxel(x, y, z, BLOCK_AIR, {});
+    lighting->onBlockSet(x, y, z, BLOCK_AIR);
     if (def->rt.funcsset.onbroken) scripting::on_block_broken(player, def, x, y, z);
     updateSides(x, y, z);
 }
@@ -115,7 +116,7 @@ void BlocksController::randomSpark(int sparkId, int parts) {
             int index = z * w + x;
             if ((index + sparkId) % parts != 0) continue;
             auto& chunk = chunks->chunks[index];
-            if (chunk == nullptr || !chunk->isLighted()) continue;
+            if (chunk == nullptr || !chunk->flags.lighted) continue;
             for (int s = 0; s < segments; ++s) {
                 for (int i = 0; i < 4; ++i) {
                     int bx = random.rand() % CHUNK_WIDTH;

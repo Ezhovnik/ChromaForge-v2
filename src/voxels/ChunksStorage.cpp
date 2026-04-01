@@ -56,7 +56,7 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 		chunk->decode(data.get());
 		auto invs = regions.fetchInventories(chunk->chunk_x, chunk->chunk_z);
 		chunk->setBlockInventories(std::move(invs));
-		chunk->setLoaded(true);
+		chunk->flags.loaded = true;
 		for(auto& entry : chunk->inventories) {
 			level->inventories->store(entry.second);
 		}
@@ -66,7 +66,7 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z);
 	if (lights) {
 		chunk->light_map.set(lights.get());
-		chunk->setLoadedLights(true);
+		chunk->flags.loadedLights = true;
 	}
 
 	return chunk;

@@ -1,6 +1,7 @@
 #include <string>
 #include <memory>
 #include <sstream>
+#include <bitset>
 
 #include "../graphics/ui/elements/control/CheckBox.h"
 #include "../graphics/ui/elements/control/TextBox.h"
@@ -61,18 +62,24 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
     }));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		auto* indices = level->content->getIndices();
-        auto def = indices->getBlockDef(player->selectedVoxel.id);
         std::wstringstream stream;
-        stream << std::hex << player->selectedVoxel.states;
-        if (def) {
-            stream << L" (" << util::str2wstr_utf8(def->name) << L")";
-        }
+        stream << "R:" << player->selectedVoxel.state.rotation << " S:"
+            << player->selectedVoxel.state.segment << " U:"
+            << std::bitset<8>(player->selectedVoxel.state.userbits);
         if (player->selectedVoxel.id == BLOCK_VOID) {
-            return std::wstring {L"Selected-block: none"};
+            return std::wstring {L"Block: -"};
         } else {
-            return L"Selected-block: " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
+            return L"Block: " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
         }
 	})));
+    panel->add(create_label([=](){
+        auto* indices = level->content->getIndices();
+        if (auto def = indices->getBlockDef(player->selectedVoxel.id)) {
+            return L"Name: " + util::str2wstr_utf8(def->name);
+        } else {
+            return std::wstring {L"Name: void"};
+        }
+    }));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Seed: " + std::to_wstring(level->getWorld()->getSeed());
 	})));

@@ -45,11 +45,11 @@ int l_set_block(lua_State* L) {
     lua_Integer y = lua_tointeger(L, 2);
     lua_Integer z = lua_tointeger(L, 3);
     lua_Integer id = lua_tointeger(L, 4);    
-    lua_Integer states = lua_tointeger(L, 5);
+    lua_Integer state = lua_tointeger(L, 5);
     bool noupdate = lua_toboolean(L, 6);
     if (id < 0 || size_t(id) >= scripting::indices->countBlockDefs()) return 0;
     if (!scripting::level->chunks->getVoxel(x, y, z)) return 0;
-    scripting::level->chunks->setVoxel(x, y, z, id, states);
+    scripting::level->chunks->setVoxel(x, y, z, id, int2blockstate(state));
     scripting::level->lighting->onBlockSet(x,y,z, id);
     if (!noupdate) scripting::blocks->updateSides(x, y, z);
     return 0;
@@ -76,7 +76,7 @@ int l_get_block_x(lua_State* L) {
     if (!def->rotatable) {
         return lua::pushivec3(L, 1, 0, 0);
     } else {
-        const CoordSystem& rot = def->rotations.variants[vox->rotation()];
+        const CoordSystem& rot = def->rotations.variants[vox->state.rotation];
         return lua::pushivec3(L, rot.axisX.x, rot.axisX.y, rot.axisX.z);
     }
 }
@@ -92,7 +92,7 @@ int l_get_block_y(lua_State* L) {
     if (!def->rotatable) {
         return lua::pushivec3(L, 0, 1, 0);
     } else {
-        const CoordSystem& rot = def->rotations.variants[vox->rotation()];
+        const CoordSystem& rot = def->rotations.variants[vox->state.rotation];
         return lua::pushivec3(L, rot.axisY.x, rot.axisY.y, rot.axisY.z);
     }
 }
@@ -107,7 +107,7 @@ int l_get_block_z(lua_State* L) {
     if (!def->rotatable) {
         return lua::pushivec3(L, 0, 0, 1);
     } else {
-        const CoordSystem& rot = def->rotations.variants[vox->rotation()];
+        const CoordSystem& rot = def->rotations.variants[vox->state.rotation];
         return lua::pushivec3(L, rot.axisZ.x, rot.axisZ.y, rot.axisZ.z);
     }
 }
@@ -117,7 +117,7 @@ int l_get_block_rotation(lua_State* L) {
     lua_Integer y = lua_tointeger(L, 2);
     lua_Integer z = lua_tointeger(L, 3);
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
-    int rotation = vox == nullptr ? 0 : vox->rotation();
+    int rotation = vox == nullptr ? 0 : vox->state.rotation;
     lua_pushinteger(L, rotation);
     return 1;
 }
@@ -129,8 +129,8 @@ int l_set_block_rotation(lua_State* L) {
     lua_Integer value = lua_tointeger(L, 4);
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
     if (vox == nullptr) return 0;
-    vox->setRotation(value);
-    scripting::level->chunks->getChunkByVoxel(x, y, z)->setModified(true);
+    vox->state.rotation = value;
+    scripting::level->chunks->getChunkByVoxel(x, y, z)->setModifiedAndUnsaved();
     return 0;
 }
 
@@ -139,7 +139,7 @@ int l_get_block_states(lua_State* L) {
     lua_Integer y = lua_tointeger(L, 2);
     lua_Integer z = lua_tointeger(L, 3);
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
-    int states = vox == nullptr ? 0 : vox->states;
+    int states = vox == nullptr ? 0 : blockstate2int(vox->state);
     lua_pushinteger(L, states);
     return 1;
 }
@@ -153,8 +153,8 @@ int l_set_block_states(lua_State* L) {
     Chunk* chunk = scripting::level->chunks->getChunkByVoxel(x, y, z);
     if (chunk == nullptr) return 0;
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
-    vox->states = states;
-    chunk->setModified(true);
+    vox->state = int2blockstate(states);
+    chunk->setModifiedAndUnsaved();
     return 0;
 }
 
@@ -171,7 +171,7 @@ int l_get_block_user_bits(lua_State* L) {
         return 1;
     }
     uint mask = ((1 << bits) - 1) << offset;
-    uint data = (vox->states & mask) >> offset;
+    uint data = (blockstate2int(vox->state) & mask) >> offset;
     lua_pushinteger(L, data);
     return 1;
 }
@@ -180,17 +180,20 @@ int l_set_block_user_bits(lua_State* L) {
     lua_Integer x = lua_tointeger(L, 1);
     lua_Integer y = lua_tointeger(L, 2);
     lua_Integer z = lua_tointeger(L, 3);
-    lua_Integer offset = lua_tointeger(L, 4) + VOXEL_USER_BITS_OFFSET;
+    lua_Integer offset = lua_tointeger(L, 4);
     lua_Integer bits = lua_tointeger(L, 5);
 
     size_t mask = ((1 << bits) - 1) << offset;
     lua_Integer value = (lua_tointeger(L, 6) << offset) & mask;
 
+    Chunk* chunk = scripting::level->chunks->getChunkByVoxel(x, y, z);
+    if (chunk == nullptr) return 0;
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
     if (vox == nullptr) return 0;
 
-    vox->states = (vox->states & (~mask)) | value;
-    return 0;
+    vox->state.userbits = (vox->state.userbits & (~mask)) | value;
+    chunk->setModifiedAndUnsaved();
+    return 0; 
 }
 
 int l_is_replaceable_at(lua_State* L) {

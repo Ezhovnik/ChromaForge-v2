@@ -208,12 +208,10 @@ bool PhysicsSolver::isBlockInside(int x, int y, int z, Hitbox* hitbox) {
 			y >= floor(pos.y - half.y) && y <= floor(pos.y + half.y);
 }
 
-bool PhysicsSolver::isBlockInside(int x, int y, int z, Block* def, blockstate_t states, Hitbox* hitbox) {
+bool PhysicsSolver::isBlockInside(int x, int y, int z, Block* def, blockstate state, Hitbox* hitbox) {
 	const glm::vec3& pos = hitbox->position;
 	const glm::vec3& half = hitbox->halfsize;
-	voxel vox {};
-	vox.states = states;
-	const auto& boxes = def->rotatable ? def->rt.hitboxes[vox.rotation()] : def->hitboxes;
+	const auto& boxes = def->rotatable ? def->rt.hitboxes[state.rotation] : def->hitboxes;
 	for (const auto& block_hitbox : boxes) {
 		glm::vec3 min = block_hitbox.min();
 		glm::vec3 max = block_hitbox.max();

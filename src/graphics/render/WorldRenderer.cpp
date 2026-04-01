@@ -89,7 +89,7 @@ bool WorldRenderer::drawChunk(
 	bool culling)
 {
 	std::shared_ptr<Chunk> chunk = level->chunks->chunks[index];
-	if (!chunk->isLighted()) return false;
+	if (!chunk->flags.lighted) return false;
 
 	float distance = glm::distance(
         camera->position,

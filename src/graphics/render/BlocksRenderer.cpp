@@ -323,7 +323,7 @@ void BlocksRenderer::blockCube(
     int x, int y, int z, 
 	const UVRegion(&texfaces)[6], 
 	const Block* block, 
-	ubyte states,
+	blockstate state,
     bool lights) 
 {
 	ubyte group = block->drawGroup;
@@ -334,7 +334,7 @@ void BlocksRenderer::blockCube(
 	glm::vec3 coord(x, y, z);
 	if (block->rotatable) {
 		auto& rotations = block->rotations;
-		auto& orient = rotations.variants[states & BLOCK_ROTATION_MASK];
+		auto& orient = rotations.variants[state.rotation];
 		X = orient.axisX;
 		Y = orient.axisY;
 		Z = orient.axisZ;
@@ -458,16 +458,16 @@ void BlocksRenderer::render(const voxel* voxels) {
 
 			switch (def.model) {
                 case BlockModel::Cube: {
-                    blockCube(x, y, z, texfaces, &def, vox.states, !def.rt.emissive);
+                    blockCube(x, y, z, texfaces, &def, vox.state, !def.rt.emissive);
                     break;
                 } case BlockModel::X: {
                     blockXSprite(x, y, z, glm::vec3(1.0f), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
                     break;
                 } case BlockModel::AABB: {
-                    blockAABB(glm::ivec3(x,y,z), texfaces, &def, vox.rotation(), !def.rt.emissive);
+                    blockAABB(glm::ivec3(x,y,z), texfaces, &def, vox.state.rotation, !def.rt.emissive);
                     break;
                 } case BlockModel::Custom: {
-                    blockCustomModel(glm::ivec3(x, y, z), &def, vox.rotation(), !def.rt.emissive);
+                    blockCustomModel(glm::ivec3(x, y, z), &def, vox.state.rotation, !def.rt.emissive);
                     break;
                 } default:
                     break;

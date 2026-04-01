@@ -14,11 +14,6 @@
 Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
     bottom = 0;
 	top = CHUNK_HEIGHT;
-
-	for (uint i = 0; i < CHUNK_VOLUME; ++i) {
-		voxels[i].id = BLOCK_AIR;
-		voxels[i].states = 0;
-	}
 }
 
 // Проверяет, является ли чанк пустым (однородным).
@@ -51,7 +46,7 @@ void Chunk::updateHeights() {
 
 void Chunk::addBlockInventory(std::shared_ptr<Inventory> inventory, uint x, uint y, uint z) {
     inventories[vox_index(x, y, z)] = inventory;
-    setUnsaved(true);
+    flags.unsaved = true;
 }
 
 std::shared_ptr<Inventory> Chunk::getBlockInventory(uint x, uint y, uint z) const {
@@ -62,7 +57,7 @@ std::shared_ptr<Inventory> Chunk::getBlockInventory(uint x, uint y, uint z) cons
 }
 
 void Chunk::removeBlockInventory(uint x, uint y, uint z) {
-	if (inventories.erase(vox_index(x, y, z))) setUnsaved(true);
+	if (inventories.erase(vox_index(x, y, z))) flags.unsaved = true;
 }
 
 void Chunk::setBlockInventories(chunk_inventories_map map) {
@@ -85,10 +80,11 @@ std::unique_ptr<ubyte[]> Chunk::encode() const {
 	for (uint i = 0; i < CHUNK_VOLUME; ++i) {
 		buffer[i] = voxels[i].id >> 8;
         buffer[CHUNK_VOLUME + i] = voxels[i].id & 0xFF;
-		buffer[CHUNK_VOLUME * 2 + i] = voxels[i].states >> 8;
-        buffer[CHUNK_VOLUME * 3 + i] = voxels[i].states & 0xFF;
-	}
-	return buffer;
+		blockstate_t state = blockstate2int(voxels[i].state);
+        buffer[CHUNK_VOLUME * 2 + i] = state >> 8;
+        buffer[CHUNK_VOLUME * 3 + i] = state & 0xFF;
+    }
+    return buffer;
 }
 
 bool Chunk::decode(const ubyte* data) {
@@ -102,7 +98,7 @@ bool Chunk::decode(const ubyte* data) {
         ubyte bst2 = data[CHUNK_VOLUME * 3 + i];
 
 		vox.id = (blockid_t(bid1) << 8) | (blockid_t(bid2));
-        vox.states = (blockstate_t(bst1) << 8) | (blockstate_t(bst2));
+        vox.state = int2blockstate((blockstate_t(bst1) << 8) | (blockstate_t(bst2)));
 	}
 	return true;
 }

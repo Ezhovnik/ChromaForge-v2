@@ -10,6 +10,7 @@
 class Hitbox;
 class Chunks;
 class Block;
+struct blockstate;
 
 // Класс для решения физических взаимодействий объектов с воксельным миром.
 class PhysicsSolver {
@@ -39,7 +40,7 @@ public:
 	bool isBlockInside(
 		int x, int y, int z,
 		Block* def,
-		blockstate_t states,
+		blockstate state,
 		Hitbox* hitbox
 	);
 };

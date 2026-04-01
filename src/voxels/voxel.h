@@ -17,36 +17,37 @@ inline constexpr int BLOCK_DIR_UP = 0x4;
 /** Направление вниз (вдоль отрицательной оси Y). */
 inline constexpr int BLOCK_DIR_DOWN = 0x5;
 
-/** Маска для извлечения битов поворота/направления из поля states. */
-inline constexpr int BLOCK_ROTATION_MASK = 0b0000'0111;
-/** Маска для зарезервированных битов (могут использоваться для других свойств). */
-inline constexpr int BLOCK_RESERVED_MASK = 0b1111'1000;
+struct blockstate {
+    uint8_t rotation : 3;
+    uint8_t segment : 2;
+    uint8_t reserved : 3;
+    uint8_t userbits : 8;
+};
+static_assert (sizeof(blockstate) == 2);
+
+inline constexpr blockstate_t blockstate2int(blockstate b) {
+    return static_cast<blockstate_t>(b.rotation) |
+        static_cast<blockstate_t>(b.segment) << 3 |
+        static_cast<blockstate_t>(b.reserved) << 5 |
+        static_cast<blockstate_t>(b.userbits) << 8;
+}
+
+inline constexpr blockstate int2blockstate(blockstate_t i) {
+    return {
+        static_cast<uint8_t>(i & 0b111),
+        static_cast<uint8_t>((i >> 3) & 0b11),
+        static_cast<uint8_t>((i >> 5) & 0b111),
+        static_cast<uint8_t>((i >> 8) & 0xFF)
+    };
+}
 
 /**
  * @brief Структура, представляющая один воксель в мире.
- *
- * Каждый воксель хранит идентификатор типа блока (id) и дополнительные
- * состояния (states), которые могут включать ориентацию, метаданные и т.п.
  */
 struct voxel {
-    blockid_t id = 0;
-    blockstate_t states = 0;
-
-    /**
-     * @brief Возвращает текущий поворот/направление блока.
-     * @return Значение, хранящееся в младших трёх битах states.
-     */
-    inline uint8_t rotation() const {
-        return states & BLOCK_ROTATION_MASK;
-    }
-
-    /**
-     * @brief Устанавливает поворот/направление блока.
-     * @param rotation Новое значение поворота (должно помещаться в 3 бита).
-     */
-    inline void setRotation(uint8_t rotation) {
-        states = (states & (~BLOCK_ROTATION_MASK)) | (rotation & BLOCK_ROTATION_MASK);
-    }
+    blockid_t id;
+    blockstate state;
 };
+static_assert(sizeof(voxel) == 4);
 
 #endif // VOXELS_VOXEL_H_

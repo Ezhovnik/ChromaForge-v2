@@ -27,7 +27,7 @@ void LightSolver::add(int x, int y, int z, int bright) {
 	add_queue.push(lightentry{x, y, z, (ubyte)bright});
 
 	Chunk* chunk = chunks->getChunkByVoxel(x, y, z);
-	chunk->setModified(true);
+	chunk->flags.modified = true;
 	chunk->light_map.set(x - chunk->chunk_x * CHUNK_WIDTH, y, z - chunk->chunk_z * CHUNK_DEPTH, channel, bright);
 }
 
@@ -62,7 +62,7 @@ void LightSolver::solve() {
 				int local_x = x - chunk->chunk_x * CHUNK_WIDTH;
 				int local_z = z - chunk->chunk_z * CHUNK_DEPTH;
 
-                chunk->setModified(true);
+                chunk->flags.modified = true;
 				ubyte light = chunk->light_map.get(local_x, y, local_z, channel);
 				if (light != 0 && light == entry.light - 1){
 					rem_queue.push(lightentry{x, y, z, light});
@@ -89,7 +89,7 @@ void LightSolver::solve() {
 				int local_x = x - chunk->chunk_x * CHUNK_WIDTH;
 				int local_z = z - chunk->chunk_z * CHUNK_DEPTH;
 
-                chunk->setModified(true);
+                chunk->flags.modified = true;
 				ubyte light = chunk->light_map.get(local_x, y, local_z, channel);
 				voxel& vox = chunk->voxels[vox_index(local_x, y, local_z)];
 				const Block* block = blockDefs[vox.id];

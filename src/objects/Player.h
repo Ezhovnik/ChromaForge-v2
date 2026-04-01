@@ -63,7 +63,7 @@ public:
 	glm::vec3 cam {}; ///< Углы поворота камеры
 	glm::ivec3 selectedBlockPosition {};
 
-    voxel selectedVoxel {0, 0};
+    voxel selectedVoxel {0, {}};
 
 	/**
 	 * @brief Конструктор игрока.

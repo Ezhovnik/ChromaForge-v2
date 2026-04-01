@@ -55,9 +55,9 @@ void World::write(Level* level) {
 	// Проходим по всем чанкам в хранилище
 	for (size_t i = 0; i < chunks->volume; ++i) {
 		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
-		if (chunk == nullptr || !chunk->isLighted()) continue;
-		bool lightsUnsaved = !chunk->isLoadedLights() && settings.debug.doWriteLights.get();
-		if (!chunk->isUnsaved() && !lightsUnsaved) continue;
+		if (chunk == nullptr || !chunk->flags.lighted) continue;
+		bool lightsUnsaved = !chunk->flags.loadedLights && settings.debug.doWriteLights.get();
+		if (!chunk->flags.unsaved && !lightsUnsaved) continue;
 		regions.put(chunk.get());
 	}
 

@@ -68,7 +68,7 @@ bool ChunksController::loadVisible(){
 			int index = z * width + x;
 			auto& chunk = chunks->chunks[index];
 			if (chunk != nullptr) {
-				if (chunk->isLoaded() && !chunk->isLighted()) {
+				if (chunk->flags.loaded && !chunk->flags.lighted) {
 					if (buildLights(chunk)) {
 						return true;
 					}
@@ -103,10 +103,10 @@ bool ChunksController::buildLights(std::shared_ptr<Chunk> chunk) {
     }
 
     if (surrounding == MIN_SURROUNDING) {
-        bool lightsCache = chunk->isLoadedLights();
+        bool lightsCache = chunk->flags.loadedLights;
         if (!lightsCache) lighting->buildSkyLight(chunk->chunk_x, chunk->chunk_z);
         lighting->onChunkLoaded(chunk->chunk_x, chunk->chunk_z, !lightsCache);
-        chunk->setLighted(true);
+        chunk->flags.lighted = true;
         return true;
     }
     return false;
@@ -116,14 +116,14 @@ void ChunksController::createChunk(int x, int z) {
     auto chunk = level->chunksStorage->create(x, z);
 	chunks->putChunk(chunk);
 
-	if (!chunk->isLoaded()) {
+	if (!chunk->flags.loaded) {
 		generator->generate(chunk->voxels, x, z, level->getWorld()->getSeed());
-		chunk->setUnsaved(true);
+		chunk->flags.unsaved = true;
 	}
 	chunk->updateHeights();
 
-	if (!chunk->isLoadedLights()) Lighting::preBuildSkyLight(chunk.get(), level->content->getIndices());
+	if (!chunk->flags.loadedLights) Lighting::preBuildSkyLight(chunk.get(), level->content->getIndices());
 
-    chunk->setLoaded(true);
-	chunk->setReady(true);
+    chunk->flags.loaded = true;
+	chunk->flags.ready = true;
 }

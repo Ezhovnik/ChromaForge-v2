@@ -136,14 +136,14 @@ private:
      * @param x,y,z Координаты блока в чанке.
      * @param faces Массив из 6 текстурных областей для каждой грани.
      * @param block Определение блока.
-     * @param states Состояние блока (поворот и др.).
+     * @param state Состояние блока.
      * @param lights Включить ли освещение.
      */
 	void blockCube(
         int x, int y, int z, 
         const UVRegion(&faces)[6], 
         const Block* block, 
-        ubyte states, 
+        blockstate state, 
         bool lights
     );
 

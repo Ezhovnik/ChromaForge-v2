@@ -10,7 +10,7 @@ void FlatWorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed) 
         for (int x = 0; x < CHUNK_WIDTH; ++x) {
             for (int cur_y = 0; cur_y < CHUNK_HEIGHT; ++cur_y){
                 int id = BLOCK_AIR;
-                int states = 0;
+                blockstate state {};
 
                 if(cur_y == 2) {
                     id = idBedrock;
@@ -21,7 +21,7 @@ void FlatWorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed) 
                 } 
 
                 voxels[(cur_y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].id = id;
-                voxels[(cur_y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].states = states;
+                voxels[(cur_y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].state = state;
             }
         }
     }

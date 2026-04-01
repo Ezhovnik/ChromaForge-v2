@@ -159,10 +159,9 @@ void DefaultWorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t see
 		for (int x = 0; x < CHUNK_WIDTH; ++x){
 			int cur_x = x + cx * CHUNK_WIDTH;
 			float height = heights.get(Map::HEIGHT, cur_x, cur_z);
-
 			for (int cur_y = 0; cur_y < CHUNK_HEIGHT; ++cur_y){
 				blockid_t id = cur_y < SEA_LEVEL ? idWater : BLOCK_AIR;
-				int states = 0;
+				blockstate state {};
 				if ((cur_y == (int)height) && (SEA_LEVEL-2 < cur_y)) {
 					id = idMoss;
 				} else if (cur_y < (height - 6)){
@@ -173,7 +172,7 @@ void DefaultWorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t see
 					blockid_t tree = generate_tree(&noise, &randomtree, heights, cur_x, cur_y, cur_z, treesTile);
 					if (tree) {
 						id = tree;
-						states = BLOCK_DIR_UP;
+						state.rotation = BLOCK_DIR_UP;
 					}
 				}
 				float sand = fmax(heights.get(Map::SAND, cur_x, cur_z), heights.get(Map::CLIFF, cur_x, cur_z));
@@ -197,10 +196,10 @@ void DefaultWorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t see
 				}
 				if ((height > SEA_LEVEL + 1) && ((int)(height + 1) == cur_y) && ((ushort)randomgrass.rand() > 65533)){
 					id = idLog;
-					states = BLOCK_DIR_UP;
+					state.rotation = BLOCK_DIR_UP;
 				}
 				voxels[(cur_y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].id = id;
-				voxels[(cur_y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].states = states;
+				voxels[(cur_y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x].state = state;
 			}
 		}
 	}

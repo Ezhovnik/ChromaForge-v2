@@ -314,7 +314,7 @@ void PlayerController::updateInteraction(){
 	if (vox != nullptr) {
 		player->selectedVoxel = *vox;
 		selectedBlockId = vox->id;
-		selectedBlockRotation = vox->rotation();
+		selectedBlockRotation = vox->state.rotation;
 		player->selectedBlockPosition = iend;
 		selectedPointPosition = end;
 		selectedBlockNormal = norm;
@@ -323,7 +323,8 @@ void PlayerController::updateInteraction(){
 		int z = iend.z;
 
 		Block* def = contentIds->getBlockDef(item->rt.placingBlock);
-		uint8_t states = determine_rotation(def, norm, camera->dir);
+		blockstate state {};
+        state.rotation = determine_rotation(def, norm, camera->dir);
 
 		if (input.attack && !input.crouch && item->rt.funcsset.on_block_break_by) {
 			if (scripting::on_item_break_block(player.get(), item, x, y, z)) return;
@@ -359,12 +360,12 @@ void PlayerController::updateInteraction(){
 				y = iend.y + norm.y;
 				z = iend.z + norm.z;
 			} else if (def->rotations.name == "pipe") {
-                states = BLOCK_DIR_UP;
+                state.rotation = BLOCK_DIR_UP;
             }
 			vox = chunks->getVoxel(x, y, z);
 			blockid_t chosenBlock = def->rt.id;
 			if (vox && (target = contentIds->getBlockDef(vox->id))->replaceable) {
-				if (!level->physics->isBlockInside(x, y, z, def, states, player->hitbox.get()) || !def->obstacle) {
+				if (!level->physics->isBlockInside(x, y, z, def, state, player->hitbox.get()) || !def->obstacle) {
 					Block* def = contentIds->getBlockDef(chosenBlock);
 					if (def->grounded && !chunks->isSolidBlock(x, y - 1, z)) chosenBlock = 0;
 					if (chosenBlock != vox->id && chosenBlock) {
@@ -372,7 +373,7 @@ void PlayerController::updateInteraction(){
                             glm::ivec3(x, y, z), def,
                             BlockInteraction::Placing
                         );
-						chunks->setVoxel(x, y, z, chosenBlock, states);
+						chunks->setVoxel(x, y, z, chosenBlock, state);
 						lighting->onBlockSet(x, y, z, chosenBlock);
 						if (def->rt.funcsset.onplaced) scripting::on_block_placed(player.get(), def, x, y, z);
 						blocksController->updateSides(x, y, z);

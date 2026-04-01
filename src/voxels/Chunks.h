@@ -8,10 +8,10 @@
 #include <glm/glm.hpp>
 
 #include "../typedefs.h"
+#include "voxel.h"
 
 class Mesh;
 class Chunk;
-struct voxel;
 class WorldFiles;
 class LevelEvents;
 class Content;
@@ -55,7 +55,7 @@ public:
     Chunk* getChunkByVoxel(int32_t x, int32_t y, int32_t z); // Получает чанк, содержащий воксель с заданными мировыми координатами
 
     voxel* getVoxel(int32_t x, int32_t y, int32_t z); // Возвращает воксель по мировым координатам
-    void setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, uint8_t states); // Устанавливает идентификатор вокселя по мировым координатам
+    void setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate state); // Устанавливает идентификатор вокселя по мировым координатам
 
     light_t getLight(int32_t x, int32_t y, int32_t z);
 	ubyte getLight(int32_t x, int32_t y, int32_t z, int channel);
