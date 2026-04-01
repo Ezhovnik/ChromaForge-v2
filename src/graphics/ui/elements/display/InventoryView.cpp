@@ -25,6 +25,7 @@
 #include "../../../../items/Inventories.h"
 #include "../../../../graphics/ui/GUI.h"
 #include "../../../../items/ItemStack.h"
+#include "../../../../frontend/locale/langs.h"
 
 using namespace gui;
 
@@ -94,6 +95,7 @@ std::shared_ptr<InventoryView> InventoryBuilder::build() {
 
 SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(InventoryView::SLOT_SIZE)), layout(layout) {
     setColor(glm::vec4(0, 0, 0, 0.2f));
+    setTooltipDelay(0.05f);
 }
 
 void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
@@ -177,6 +179,15 @@ void SlotView::setHighlighted(bool flag) {
 
 bool SlotView::isHighlighted() const {
     return highlighted;
+}
+
+const std::wstring SlotView::getTooltip() const {
+    const auto str = UINode::getTooltip();
+    if (!str.empty() || bound->isEmpty()) return str;
+    auto def = content->getIndices()->getItemDef(bound->getItemId());
+    return util::pascal_case(
+        langs::get(util::str2wstr_utf8(def->caption))
+    );
 }
 
 void SlotView::clicked(gui::GUI* gui, mousecode button) {

@@ -10,18 +10,16 @@ namespace scripting {
     extern lua::LuaState* state;
 }
 
-using namespace scripting;
-
 static int l_add_command(lua_State* L) {
-    if (!lua_isstring(L, 1) || !lua_isstring(L, 2) || !lua_isfunction(L, 3)) {
-        throw std::runtime_error("Invalid argument type");
+    if (!lua_isfunction(L, 3)) {
+        throw std::runtime_error("Invalid callback");
     }
-    auto scheme = lua_tostring(L, 1);
-    auto description = lua_tostring(L, 2);
+    auto scheme = scripting::state->requireString(1);
+    auto description = scripting::state->requireString(2);
     lua_pushvalue(L, 3);
-    auto func = state->createLambda();
+    auto func = scripting::state->createLambda();
     try {
-        engine->getCommandsInterpreter()->getRepository()->add(
+        scripting::engine->getCommandsInterpreter()->getRepository()->add(
             scheme, description, [func](auto, auto args, auto kwargs) {
                 return func({args, kwargs});
             }
@@ -32,22 +30,22 @@ static int l_add_command(lua_State* L) {
     return 0;
 }
 
-static int l_execute(lua_State* L) {
-    auto prompt = lua_tostring(L, 1);
-    auto result = engine->getCommandsInterpreter()->execute(prompt);
-    state->pushvalue(result);
+static int l_execute(lua_State*) {
+    auto prompt = scripting::state->requireString(1);
+    auto result = scripting::engine->getCommandsInterpreter()->execute(prompt);
+    scripting::state->pushvalue(result);
     return 1;
 }
 
-static int l_set(lua_State* L) {
-    auto name = lua_tostring(L, 1);
-    auto value = state->tovalue(2);
-    (*engine->getCommandsInterpreter())[name] = value;
+static int l_set(lua_State*) {
+    auto name = scripting::state->requireString(1);
+    auto value = scripting::state->tovalue(2);
+    (*scripting::engine->getCommandsInterpreter())[name] = value;
     return 0;
 }
 
 static int l_get_commands_list(lua_State* L) {
-    auto interpreter = engine->getCommandsInterpreter();
+    auto interpreter = scripting::engine->getCommandsInterpreter();
     auto repo = interpreter->getRepository();
     const auto& commands = repo->getCommands();
 
@@ -61,8 +59,8 @@ static int l_get_commands_list(lua_State* L) {
 }
 
 static int l_get_command_info(lua_State* L) {
-    auto name = lua_tostring(L, 1);
-    auto interpreter = engine->getCommandsInterpreter();
+    auto name = scripting::state->requireString(1);
+    auto interpreter = scripting::engine->getCommandsInterpreter();
     auto repo = interpreter->getRepository();
     auto command = repo->get(name);
     if (command == nullptr) return 0;

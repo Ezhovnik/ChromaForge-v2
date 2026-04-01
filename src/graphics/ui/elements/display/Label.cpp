@@ -61,11 +61,23 @@ Label::Label(std::wstring text, std::string fontName) :
     cache.update(this->text, multiline, textWrap);
 }
 
+glm::vec2 Label::calcSize() {
+    auto font = cache.font;
+    uint lineHeight = font->getLineHeight();
+    if (cache.lines.size() > 1) lineHeight *= lineInterval;
+    return glm::vec2 (
+        cache.font->calcWidth(text), 
+        lineHeight * cache.lines.size() + font->getYOffset()
+    );
+}
+
 void Label::setText(std::wstring text) {
     if (text == this->text && !cache.resetFlag) return;
 
     this->text = text;
     cache.update(this->text, multiline, textWrap);
+
+    if (cache.font) setSize(calcSize());
 }
 
 const std::wstring& Label::getText() const {
@@ -144,10 +156,8 @@ void Label::draw(const DrawContext* pctx, Assets* assets) {
     uint lineHeight = font->getLineHeight();
     if (cache.lines.size() > 1) lineHeight *= lineInterval;
     glm::vec2 size = getSize();
-    glm::vec2 newsize (
-        font->calcWidth(text), 
-        lineHeight * cache.lines.size() + font->getYOffset()
-    );
+    glm::vec2 newsize = calcSize();
+    if (autoresize) setSize(newsize);
 
     glm::vec2 pos = calcPos();
     switch (align) {
@@ -200,4 +210,12 @@ void Label::setTextWrapping(bool flag) {
 
 bool Label::isTextWrapping() const {
     return textWrap;
+}
+
+void Label::setAutoResize(bool flag) {
+    this->autoresize = flag;
+}
+
+bool Label::isAutoResize() const {
+    return autoresize;
 }

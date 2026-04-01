@@ -16,6 +16,9 @@
 #include "../../graphics/core/DrawContext.h"
 #include "../../frontend/UIDocument.h"
 #include "../../core_content_defs.h"
+#include "elements/display/Label.h"
+#include "../../frontend/locale/langs.h"
+#include "gui_util.h"
 
 using namespace gui;
 
@@ -30,6 +33,15 @@ GUI::GUI() {
     menu->setId("menu");
     container->add(menu);
     container->setScrollable(false);
+
+    tooltip = guiutil::create(
+        "<container color='#000000A0' interactive='false' z-index='999'>"
+            "<label id='tooltip.label' pos='2' autoresize='true'></label>"
+        "</container>"
+    );
+    store("tooltip", tooltip);
+    store("tooltip.label", UINode::find(tooltip, "tooltip.label"));
+    container->add(tooltip);
 }
 
 GUI::~GUI() {
@@ -39,9 +51,41 @@ std::shared_ptr<Menu> GUI::getMenu() {
     return menu;
 }
 
+void GUI::resetTooltip() {
+    tooltipTimer = 0.0f;
+    tooltip->setVisible(false);
+}
+
+void GUI::updateTooltip(float deltaTime) {
+    if (hover == nullptr || !hover->isInside(Events::cursor)) return resetTooltip();
+
+    float mouseDelta = glm::length(Events::delta);
+    if (mouseDelta < 1.0f || tooltipTimer >= hover->getTooltipDelay()) {
+        if (tooltipTimer + deltaTime >= hover->getTooltipDelay()) {
+            auto label = std::dynamic_pointer_cast<gui::Label>(get("tooltip.label"));
+            const auto& text = hover->getTooltip();
+            if (label && !text.empty()) {
+                tooltip->setVisible(true);
+                label->setText(langs::get(text));
+                auto size = label->getSize() + glm::vec2(4.0f);
+                auto pos = Events::cursor + glm::vec2(10.0f);
+                auto rootSize = container->getSize();
+                pos.x = glm::min(pos.x, rootSize.x - size.x);
+                pos.y = glm::min(pos.y, rootSize.y - size.y);
+                tooltip->setSize(size);
+                tooltip->setPos(pos);
+            }
+        }
+        tooltipTimer += deltaTime;
+    } else {
+        resetTooltip();
+    }
+}
+
 void GUI::activateMouse(float deltaTime) {
+    float mouseDelta = glm::length(Events::delta);
     doubleClicked = false;
-    doubleClickTimer += deltaTime + glm::length(Events::delta) * 0.1f;
+    doubleClickTimer += deltaTime + mouseDelta * 0.1f;
 
     auto hover = container->getAt(Events::cursor, nullptr);
     if (this->hover && this->hover != hover) this->hover->setHover(false);
@@ -119,7 +163,15 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
     container->activate(deltaTime);
     auto prevfocus = focus;
 
-    if (!Events::_cursor_locked) activateMouse(deltaTime);
+    updateTooltip(deltaTime);
+    if (!Events::_cursor_locked) {
+        activateMouse(deltaTime);
+    } else {
+        if (hover) {
+            hover->setHover(false);
+            hover = nullptr;
+        }
+    }
 
     if (focus) activateFocused();
     if (focus && !focus->isFocused()) focus = nullptr;

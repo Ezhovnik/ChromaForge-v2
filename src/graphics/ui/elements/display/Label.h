@@ -24,6 +24,8 @@ namespace gui {
     class Label : public UINode {
     private:
         LabelCache cache;
+
+        glm::vec2 calcSize();
     protected:
         std::wstring text;
         std::string fontName;
@@ -34,6 +36,8 @@ namespace gui {
         bool multiline = false;
 
         bool textWrap = true;
+
+        bool autoresize = false;
 
         int textYOffset = 0;
 
@@ -73,6 +77,9 @@ namespace gui {
 
         virtual void setMultiline(bool multiline);
         virtual bool isMultiline() const;
+
+        virtual void setAutoResize(bool flag);
+        virtual bool isAutoResize() const;
 
         virtual void setTextWrapping(bool flag);
         virtual bool isTextWrapping() const;

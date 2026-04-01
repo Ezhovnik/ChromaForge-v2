@@ -54,8 +54,11 @@ void CameraControl::refresh() {
 
 void CameraControl::updateMouse(PlayerInput& input) {
 	float sensitivity = input.zoom ? settings.sensitivity.get() / 4.0f : settings.sensitivity.get();
-	glm::vec2 &cam = player->cam;
-    cam -= glm::degrees(Events::delta / (float)Window::height * sensitivity);
+	glm::vec3& cam = player->cam;
+
+    auto cam_delta = glm::degrees(Events::delta / (float)Window::height * sensitivity);
+    cam.x -= cam_delta.x;
+    cam.y -= cam_delta.y;
 
 	if (cam.y < -CameraConsts::MAX_PITCH) cam.y = -CameraConsts::MAX_PITCH;
 	else if (cam.y > CameraConsts::MAX_PITCH) cam.y = CameraConsts::MAX_PITCH;
@@ -64,7 +67,7 @@ void CameraControl::updateMouse(PlayerInput& input) {
 	else if (cam.x < -180.0f) cam.x += 360.0f;
 
 	camera->rotation = glm::mat4(1.0f);
-	camera->rotate(glm::radians(cam.y), glm::radians(cam.x), 0);
+	camera->rotate(glm::radians(cam.y), glm::radians(cam.x), glm::radians(cam.z));
 }
 
 glm::vec3 CameraControl::updateCameraShaking(float delta) {

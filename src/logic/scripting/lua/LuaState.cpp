@@ -180,17 +180,17 @@ int lua::LuaState::gettop() const {
     return lua_gettop(L);
 }
 
-int lua::LuaState::pushinteger(luaint x) {
+int lua::LuaState::pushinteger(lua_Integer x) {
     lua_pushinteger(L, x);
     return 1;
 }
 
-int lua::LuaState::pushnumber(luanumber x) {
+int lua::LuaState::pushnumber(lua_Number x) {
     lua_pushnumber(L, x);
     return 1;
 }
 
-int lua::LuaState::pushivec3(luaint x, luaint y, luaint z) {
+int lua::LuaState::pushivec3(lua_Integer x, lua_Integer y, lua_Integer z) {
     lua::pushivec3(L, x, y, z);
     return 3;
 }
@@ -280,11 +280,11 @@ bool lua::LuaState::toboolean(int index) {
     return lua_toboolean(L, index);
 }
 
-lua::luaint lua::LuaState::tointeger(int index) {
+lua_Integer lua::LuaState::tointeger(int index) {
     return lua_tointeger(L, index);
 }
 
-lua::luanumber lua::LuaState::tonumber(int index) {
+lua_Number lua::LuaState::tonumber(int index) {
     return lua_tonumber(L, index);
 }
 

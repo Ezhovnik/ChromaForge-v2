@@ -9,10 +9,6 @@
 #include "../../../delegates.h"
 #include "../scripting_functional.h"
 
-#ifndef LUAJIT_VERSION
-#error LuaJIT required
-#endif // LUAJIT_VERSION
-
 namespace lua {
     class luaerror : public std::runtime_error {
     public:
@@ -38,9 +34,9 @@ namespace lua {
         void loadbuffer(int env, const std::string& src, const std::string& file);
         int gettop() const;
 
-        int pushivec3(luaint x, luaint y, luaint z);
-        int pushinteger(luaint x);
-        int pushnumber(luanumber x);
+        int pushivec3(lua_Integer x, lua_Integer y, lua_Integer z);
+        int pushinteger(lua_Integer x);
+        int pushnumber(lua_Number x);
         int pushstring(const std::string& str);
         int pushenv(int env);
         int pushvalue(int idx);
@@ -56,8 +52,8 @@ namespace lua {
         const char* requireString(int idx);
 
         bool toboolean(int index);
-        luaint tointeger(int index);
-        luanumber tonumber(int index);
+        lua_Integer tointeger(int index);
+        lua_Number tonumber(int index);
         const char* tostring(int index);
         dynamic::Value tovalue(int index);
         glm::vec2 tovec2(int index);

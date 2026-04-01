@@ -10,10 +10,9 @@
 #include <exception>
 #include <string>
 
-namespace lua {
-    using luaint = lua_Integer;
-    using luanumber = lua_Number;
-}
+#ifndef LUAJIT_VERSION
+#error LuaJIT required
+#endif
 
 template <lua_CFunction func> int lua_wrap_errors(lua_State *L) {
     int result = 0;

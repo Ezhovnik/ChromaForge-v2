@@ -116,6 +116,8 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
         ));
     }
 
+    if (element->has("tooltip")) node.setTooltip(util::str2wstr_utf8(element->attr("tooltip").getText()));
+    if (element->has("tooltip-delay")) node.setTooltipDelay(element->attr("tooltip-delay").asFloat());
     if (auto onclick = create_action(reader, element, "onclick")) node.listenAction(onclick);
     if (auto ondoubleclick = create_action(reader, element, "ondoubleclick")) node.listenDoubleClick(ondoubleclick);
 }
@@ -195,9 +197,8 @@ static std::shared_ptr<UINode> readLabel(UIXmlReader& reader, xml::xmlelement el
     std::wstring text = readAndProcessInnerText(element, reader.getContext());
     auto label = std::make_shared<Label>(text);
     _readUINode(reader, element, *label);
-    if (element->has("valign")) {
-        label->setVerticalAlign(align_from_string(element->attr("valign").getText(), label->getVerticalAlign()));
-    }
+    if (element->has("valign")) label->setVerticalAlign(align_from_string(element->attr("valign").getText(), label->getVerticalAlign()));
+    if (element->has("autoresize")) label->setAutoResize(element->attr("autoresize").asBool());
     if (element->has("supplier")) {
         label->textSupplier(scripting::create_wstring_supplier(
             reader.getEnvironment(),

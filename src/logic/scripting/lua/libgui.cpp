@@ -86,7 +86,7 @@ static int l_container_clear(lua_State* L) {
     return 0;
 }
 
-static int l_uinode_move_into(lua_State* L) {
+static int l_move_into(lua_State* L) {
     auto node = getDocumentNode(L, 1);
     auto dest = getDocumentNode(L, 2);
     gui::UINode::moveInto(node.node, std::dynamic_pointer_cast<gui::Container>(dest.node));
@@ -245,7 +245,11 @@ static int p_is_enabled(gui::UINode* node) {
     return scripting::state->pushboolean(node->isEnabled());
 }
 static int p_move_into(gui::UINode*) {
-    return scripting::state->pushcfunction(l_uinode_move_into);
+    return scripting::state->pushcfunction(l_move_into);
+}
+
+static int p_get_wpos(gui::UINode* node) {
+    return lua::pushvec2_arr(scripting::state->getLua(), node->calcPos());
 }
 
 static int p_get_editable(gui::UINode* node) {
@@ -280,6 +284,14 @@ static int p_get_src(gui::UINode* node) {
     return 0;
 }
 
+static int p_get_tooltip(gui::UINode* node) {
+    return scripting::state->pushstring(util::wstr2str_utf8(node->getTooltip()));
+}
+
+static int p_get_tooltip_delay(gui::UINode* node) {
+    return scripting::state->pushnumber(node->getTooltipDelay());
+}
+
 static int l_gui_getattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -292,6 +304,7 @@ static int l_gui_getattr(lua_State* L) {
         {"hoverColor", p_get_hover_color},
         {"pressedColor", p_get_pressed_color},
         {"pos", p_get_pos},
+        {"wpos", p_get_wpos},
         {"size", p_get_size},
         {"interactive", p_is_interactive},
         {"visible", p_is_visible},
@@ -317,7 +330,9 @@ static int l_gui_getattr(lua_State* L) {
         {"focused", p_get_focused},
         {"paste", p_get_paste},
         {"caret", p_get_caret},
-        {"src", p_get_src}
+        {"src", p_get_src},
+        {"tooltip", p_get_tooltip},
+        {"tooltipDelay", p_get_tooltip_delay}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) return func->second(node.get());
@@ -441,6 +456,18 @@ static void p_set_src(gui::UINode* node, int idx) {
     }
 }
 
+static void p_set_wpos(gui::UINode* node, int idx) {
+    node->setPos(scripting::state->tovec2(idx)-node->calcPos());
+}
+
+static void p_set_tooltip(gui::UINode* node, int idx) {
+    node->setTooltip(util::str2wstr_utf8(scripting::state->tostring(idx)));
+}
+
+static void p_set_tooltip_delay(gui::UINode* node, int idx) {
+    node->setTooltipDelay(scripting::state->tonumber(idx));
+}
+
 static int l_gui_setattr(lua_State* L) {
     auto docname = lua_tostring(L, 1);
     auto element = lua_tostring(L, 2);
@@ -453,7 +480,10 @@ static int l_gui_setattr(lua_State* L) {
         {"color", p_set_color},
         {"hoverColor", p_set_hover_color},
         {"pressedColor", p_set_pressed_color},
+        {"tooltip", p_set_tooltip},
+        {"tooltipDelay", p_set_tooltip_delay},
         {"pos", p_set_pos},
+        {"wpos", p_set_wpos},
         {"size", p_set_size},
         {"interactive", p_set_interactive},
         {"visible", p_set_visible},

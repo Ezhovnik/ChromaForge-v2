@@ -94,6 +94,8 @@ namespace gui {
         UINode* parent = nullptr;
         ActionsSet actions;
         ActionsSet doubleClickCallbacks;
+        std::wstring tooltip;
+        float tooltipDelay = 0.5f;
 
         UINode(glm::vec2 size);
     public:
@@ -109,6 +111,12 @@ namespace gui {
 
         virtual void setHover(bool flag);
         bool isHover() const;
+
+        virtual void setTooltip(const std::wstring& text);
+        virtual const std::wstring getTooltip() const;
+
+        virtual void setTooltipDelay(float delay);
+        virtual float getTooltipDelay() const;
 
         virtual void setParent(UINode* node);
         UINode* getParent() const;
@@ -180,6 +188,8 @@ namespace gui {
 
         virtual void setGravity(Gravity gravity);
 
+        bool isSubnodeOf(const UINode* node);
+
         virtual void refresh() {};
         virtual void fullRefresh() {
             if (parent) parent->fullRefresh();
@@ -195,8 +205,13 @@ namespace gui {
         void reposition();
 
         static void getIndices(
-            std::shared_ptr<UINode> node,
+            const std::shared_ptr<UINode> node,
             std::unordered_map<std::string, std::shared_ptr<UINode>>& map
+        );
+
+        static std::shared_ptr<UINode> find(
+            const std::shared_ptr<UINode> node,
+            const std::string& id
         );
     };
 }

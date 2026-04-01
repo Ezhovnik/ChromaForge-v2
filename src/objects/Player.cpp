@@ -135,6 +135,7 @@ std::unique_ptr<dynamic::Map> Player::serialize() const {
 	auto& rotarr = root->putList("rotation");
 	rotarr.put(cam.x);
 	rotarr.put(cam.y);
+	rotarr.put(cam.z);
 
 	auto& sparr = root->putList("spawnpoint");
 	sparr.put(spawnpoint.x);
@@ -159,6 +160,7 @@ void Player::deserialize(dynamic::Map *src) {
 	auto rotarr = src->list("rotation");
 	cam.x = rotarr->num(0);
 	cam.y = rotarr->num(1);
+	if (rotarr->size() > 2) cam.z = rotarr->num(2);
 
 	if (src->has("spawnpoint")) {
 		auto sparr = src->list("spawnpoint");
@@ -219,4 +221,20 @@ void Player::setSpawnPoint(glm::vec3 spawnpoint) {
 
 glm::vec3 Player::getSpawnPoint() const {
 	return spawnpoint;
+}
+
+bool Player::isFlight() const {
+    return flight;
+}
+
+void Player::setFlight(bool flag) {
+    this->flight = flag;
+}
+
+bool Player::isNoclip() const {
+    return noclip;
+}
+
+void Player::setNoclip(bool flag) {
+    this->noclip = flag;
 }

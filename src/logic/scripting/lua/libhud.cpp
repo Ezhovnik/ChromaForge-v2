@@ -33,9 +33,9 @@ static int l_hud_close_inventory(lua_State*) {
 }
 
 static int l_hud_open_block(lua_State* L) {
-    lua::luaint x = lua_tointeger(L, 1);
-    lua::luaint y = lua_tointeger(L, 2);
-    lua::luaint z = lua_tointeger(L, 3);
+    lua_Integer x = lua_tointeger(L, 1);
+    lua_Integer y = lua_tointeger(L, 2);
+    lua_Integer z = lua_tointeger(L, 3);
     bool playerInventory = !lua_toboolean(L, 4);
 
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);

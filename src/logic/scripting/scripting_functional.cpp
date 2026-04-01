@@ -72,7 +72,8 @@ doublesupplier scripting::create_number_supplier(const scriptenv& env, const std
     return [=](){
         if (processCallback(env, src, file)) {
             if (state->isfunction(-1)) state->callNoThrow(0);
-            lua::luanumber x = state->tonumber(-1); state->pop();
+            auto x = state->tonumber(-1); 
+            state->pop();
             return x;
         }
         return 0.0;
@@ -94,8 +95,10 @@ vec2supplier scripting::create_vec2_supplier(const scriptenv& env, const std::st
     return [=](){
         if (processCallback(env, src, file)) {
             if (state->isfunction(-1)) state->callNoThrow(0);
-            lua::luanumber y = state->tonumber(-1); state->pop();
-            lua::luanumber x = state->tonumber(-1); state->pop();
+            auto y = state->tonumber(-1);
+            state->pop();
+            auto x = state->tonumber(-1);
+            state->pop();
             return glm::vec2(x, y);
         }
         return glm::vec2(0, 0);

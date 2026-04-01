@@ -181,7 +181,7 @@ void WorldRenderer::renderLevel(
 		ItemStack& stack = inventory->getSlot(player->getChosenSlot());
 		Item* chosen_item = contentIds->getItemDef(stack.getItemId());
 		assert(chosen_item != nullptr);
-		if (!player->noclip) {
+		if (!player->isNoclip()) {
 			float multiplier = 0.8f;
 			shader->uniform3f("u_torchlightColor",
 				chosen_item->emission[0] / 15.0f * multiplier,

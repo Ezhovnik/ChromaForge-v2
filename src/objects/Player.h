@@ -50,16 +50,17 @@ private:
 
 	glm::vec3 spawnpoint {};
 	std::shared_ptr<Inventory> inventory;
+
+	bool flight = false;
+    bool noclip = false;
 public:
 	std::shared_ptr<Camera> camera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
     std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
 	std::unique_ptr<Hitbox> hitbox;
 
-	bool flight = false;
-    bool noclip = false;
     bool debug = false;
 
-	glm::vec2 cam {}; ///< Углы поворота камеры
+	glm::vec3 cam {}; ///< Углы поворота камеры
 
     voxel selectedVoxel {0, 0};
 
@@ -99,6 +100,12 @@ public:
      * @brief Возвращает текущий выбранный слот.
      */
 	int getChosenSlot() const;
+
+	bool isFlight() const;
+    void setFlight(bool flag);
+
+    bool isNoclip() const;
+    void setNoclip(bool flag);
 
 	/**
      * @brief Возвращает инвентарь игрока.
