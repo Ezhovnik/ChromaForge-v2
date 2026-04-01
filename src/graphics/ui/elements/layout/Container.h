@@ -25,6 +25,7 @@ namespace gui {
         virtual void add(std::shared_ptr<UINode> node);
         virtual void add(std::shared_ptr<UINode> node, glm::vec2 pos);
         virtual void remove(std::shared_ptr<UINode> node);
+        virtual void remove(const std::string& id);
         virtual void scrolled(int value) override;
         virtual void setScrollable(bool flag);
         void listenInterval(float interval, ontimeout callback, int repeat=-1);

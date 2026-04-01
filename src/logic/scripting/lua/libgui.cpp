@@ -86,6 +86,18 @@ static int l_container_clear(lua_State* L) {
     return 0;
 }
 
+static int l_node_destruct(lua_State* L) {
+    auto docnode = getDocumentNode(L);
+    auto node = std::dynamic_pointer_cast<gui::Container>(docnode.node);
+    scripting::engine->getGUI()->postRunnable([node]() {
+        auto parent = node->getParent();
+        if (auto container = dynamic_cast<gui::Container*>(parent)) {
+            container->remove(node);
+        }
+    });
+    return 0;
+}
+
 static int l_container_set_interval(lua_State* L) {
     auto node = getDocumentNode(L, 1);
     auto interval = scripting::state->tointeger(2) / 1000.0f;
@@ -122,14 +134,14 @@ static int p_get_inventory(gui::UINode* node) {
 
 static int p_get_reset(gui::UINode* node) {
     if (dynamic_cast<gui::Menu*>(node)) {
-        return scripting::state->pushcfunction(l_menu_reset);
+        return scripting::state->pushcfunction(lua_wrap_errors<l_menu_reset>);
     }
     return 0;
 }
 
 static int p_get_back(gui::UINode* node) {
     if (dynamic_cast<gui::Menu*>(node)) {
-        return scripting::state->pushcfunction(l_menu_back);
+        return scripting::state->pushcfunction(lua_wrap_errors<l_menu_back>);
     }
     return 0;
 }
@@ -219,14 +231,14 @@ static int p_get_text(gui::UINode* node) {
 
 static int p_get_add(gui::UINode* node) {
     if (dynamic_cast<gui::Container*>(node)) {
-        return scripting::state->pushcfunction(l_container_add);
+        return scripting::state->pushcfunction(lua_wrap_errors<l_container_add>);
     }
     return 0;
 }
 
 static int p_get_clear(gui::UINode* node) {
     if (dynamic_cast<gui::Container*>(node)) {
-        return scripting::state->pushcfunction(l_container_clear);
+        return scripting::state->pushcfunction(lua_wrap_errors<l_container_clear>);
     }
     return 0;
 }
@@ -256,7 +268,7 @@ static int p_is_enabled(gui::UINode* node) {
     return scripting::state->pushboolean(node->isEnabled());
 }
 static int p_move_into(gui::UINode*) {
-    return scripting::state->pushcfunction(l_move_into);
+    return scripting::state->pushcfunction(lua_wrap_errors<l_move_into>);
 }
 
 static int p_get_wpos(gui::UINode* node) {
@@ -276,7 +288,7 @@ static int p_get_focused(gui::UINode* node) {
 
 static int p_get_paste(gui::UINode* node) {
     if (dynamic_cast<gui::TextBox*>(node)) {
-        return scripting::state->pushcfunction(l_textbox_paste);
+        return scripting::state->pushcfunction(lua_wrap_errors<l_textbox_paste>);
     }
     return 0;
 }
@@ -286,6 +298,10 @@ static int p_get_caret(gui::UINode* node) {
         return scripting::state->pushinteger(static_cast<integer_t>(box->getCaret()));
     }
     return 0;
+}
+
+static int p_get_destruct(gui::UINode*) {
+    return scripting::state->pushcfunction(lua_wrap_errors<l_node_destruct>);
 }
 
 static int p_get_src(gui::UINode* node) {
@@ -305,7 +321,7 @@ static int p_get_tooltip_delay(gui::UINode* node) {
 
 static int p_set_interval(gui::UINode* node) {
     if (dynamic_cast<gui::Container*>(node)) {
-        return scripting::state->pushcfunction(l_container_set_interval);
+        return scripting::state->pushcfunction(lua_wrap_errors<l_container_set_interval>);
     }
     return 0;
 }
@@ -351,7 +367,8 @@ static int l_gui_getattr(lua_State* L) {
         {"src", p_get_src},
         {"tooltip", p_get_tooltip},
         {"tooltipDelay", p_get_tooltip_delay},
-        {"setInterval", p_set_interval}
+        {"setInterval", p_set_interval},
+        {"destruct", p_get_destruct}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) return func->second(node.get());

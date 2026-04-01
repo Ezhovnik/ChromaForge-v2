@@ -116,7 +116,7 @@ void EnginePaths::setWorldFolder(std::filesystem::path folder) {
     this->worldFolder = folder;
 }
 
-std::filesystem::path EnginePaths::resolve(std::string path) {
+std::filesystem::path EnginePaths::resolve(std::string path, bool throwErr) {
     size_t separator = path.find(':');
     if (separator == std::string::npos) {
         LOG_ERROR("No entry point specified");
@@ -138,7 +138,8 @@ std::filesystem::path EnginePaths::resolve(std::string path) {
     }
 
     LOG_ERROR("Unknown entry point '{}'", prefix);
-    throw files_access_error("Unknown entry point '" + prefix + "'");
+    if (throwErr) throw files_access_error("Unknown entry point '" + prefix + "'");
+    return std::filesystem::path(filename);
 }
 
 std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {

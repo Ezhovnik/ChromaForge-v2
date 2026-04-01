@@ -113,6 +113,12 @@ void Container::remove(std::shared_ptr<UINode> selected) {
     refresh();
 }
 
+void Container::remove(const std::string& id) {
+    for (auto& node : nodes) {
+        if (node->getId() == id) return remove(node);
+    }
+}
+
 void Container::listenInterval(float interval, ontimeout callback, int repeat) {
     intervalEvents.push_back({callback, interval, 0.0f, repeat});
 }
