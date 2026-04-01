@@ -2,3 +2,5 @@ build/ChromaForge.exe
 build/saves
 build/screenshots
 build/logs
+build/controls.toml
+build/settings.toml

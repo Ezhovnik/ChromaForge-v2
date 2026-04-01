@@ -8,6 +8,10 @@ error.dependency-not-found=Dependency pack is not found
 error.pack-not-found=Could not to find pack
 pack.remove-confirm=Do you want to erase all pack(s) content from the world forever?
 
+# Tooltips
+graphics.gamma.tooltip=Lighting brightness curve
+graphics.backlight.tooltip=Backlight to prevent total darkness
+
 # Bindings
 movement.forward=Forward
 movement.back=Back
