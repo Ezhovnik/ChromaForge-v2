@@ -101,7 +101,10 @@ void BlocksController::onBlocksSpark(int sparkId, int parts) {
     for (size_t id = 0; id < indices->countBlockDefs(); ++id) {
         if ((id + sparkId) % parts != 0) continue;
         auto def = indices->getBlockDef(id);
-        if (def->rt.funcsset.onblocksspark) scripting::on_blocks_spark(def, sparkRate);
+        auto interval = def->sparkInterval;
+        if (def->rt.funcsset.onblocksspark && sparkId / parts % interval == 0) {
+            scripting::on_blocks_spark(def, sparkRate / interval);
+        }
     }
 }
 

@@ -45,13 +45,18 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
             break;
         case BlockModel::AABB:
             {
-                glm::vec3 hitbox = glm::vec3();
+                glm::vec3 hitbox {};
                 for (const auto& box : def->hitboxes) {
                     hitbox = glm::max(hitbox, box.size());
                 }
-                offset.y += (1.0f - hitbox).y * 0.5f;
+                offset = glm::vec3(1, 1, 0.0f);
                 shader->uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), offset));
-                batch->blockCube(hitbox * glm::vec3(size * 0.63f), texfaces, glm::vec4(1.0f), !def->rt.emissive);
+                batch->cube(
+                    -hitbox * glm::vec3(size * 0.63f) * 0.5f * glm::vec3(1, 1, -1),
+                    hitbox * glm::vec3(size * 0.63f), 
+                    texfaces, glm::vec4(1.0f), 
+                    !def->rt.emissive
+                );
             }
             batch->flush();
             break;
@@ -133,7 +138,7 @@ std::unique_ptr<Atlas> BlocksPreview::build(const ContentGfxCache* cache, Assets
     shader->use();
     shader->uniformMatrix(
         "u_projview",
-        glm::ortho(0.0f, float(iconSize), 0.0f, float(iconSize), -100.0f, 100.0f) * glm::lookAt(glm::vec3(2, 2, 2), glm::vec3(0.0f), glm::vec3(0, 1, 0))
+        glm::ortho(0.0f, float(iconSize), 0.0f, float(iconSize), -100.0f, 100.0f) * glm::lookAt(glm::vec3(0.57735f), glm::vec3(0.0f), glm::vec3(0, 1, 0))
     );
 
     AtlasBuilder builder;

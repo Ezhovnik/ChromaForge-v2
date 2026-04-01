@@ -92,6 +92,7 @@ public:
     std::string scriptName = name.substr(name.find(':') + 1);
     uint inventorySize = 0;
     std::string uiLayout = name;
+    uint sparkInterval = 1;
 
     bool lightPassing = false;
     bool skyLightPassing = false;

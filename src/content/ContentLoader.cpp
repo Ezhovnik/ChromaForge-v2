@@ -97,50 +97,50 @@ void ContentLoader::fixPackIndices() {
     if (modified) files::write_json(indexFile, root.get());
 }
 
-void ContentLoader::loadBlock(Block& definition, std::string name, std::filesystem::path file) {
+void ContentLoader::loadBlock(Block& def, std::string name, std::filesystem::path file) {
     auto root = files::read_json(file);
 
-    root->str("caption", definition.caption);
+    root->str("caption", def.caption);
 
     // Текстуры блока
     if (root->has("texture")) {
         std::string texture;
         root->str("texture", texture);
         for (uint i = 0; i < 6; ++i) {
-            definition.textureFaces[i] = texture;
+            def.textureFaces[i] = texture;
         }
     } else if (root->has("texture-faces")) {
         auto texarr = root->list("texture-faces");
         for (uint i = 0; i < 6; ++i) {
-            definition.textureFaces[i] = texarr->str(i);
+            def.textureFaces[i] = texarr->str(i);
         }
     }
 
     // Модель блока
     std::string model = "cube";
     root->str("model", model);
-    if (model == "cube") definition.model = BlockModel::Cube;
-    else if (model == "aabb") definition.model = BlockModel::AABB;
-    else if (model == "X") definition.model = BlockModel::X;
-    else if (model == "none") definition.model = BlockModel::None;
+    if (model == "cube") def.model = BlockModel::Cube;
+    else if (model == "aabb") def.model = BlockModel::AABB;
+    else if (model == "X") def.model = BlockModel::X;
+    else if (model == "none") def.model = BlockModel::None;
     else if (model == "custom") { 
-        definition.model = BlockModel::Custom;
-        if (root->has("model-primitives")) loadCustomBlockModel(definition, root->map("model-primitives"));
+        def.model = BlockModel::Custom;
+        if (root->has("model-primitives")) loadCustomBlockModel(def, root->map("model-primitives"));
         else LOG_ERROR("Error occured while block {} parsed: no \"model-primitives\" found", name);
     } else {
         LOG_WARN("Unknown block {} model {}", name, model);
-        definition.model = BlockModel::None;
+        def.model = BlockModel::None;
     }
 
     // AABB хитбокс блока в формате [x, y, z, width, height, depth]
     auto boxarr = root->list("hitboxes");
     if (boxarr) {
-        definition.hitboxes.resize(boxarr->size());
+        def.hitboxes.resize(boxarr->size());
         for (uint i = 0; i < boxarr->size(); ++i) {
             auto box = boxarr->list(i);
-            definition.hitboxes[i].a = glm::vec3(box->num(0), box->num(1), box->num(2));
-            definition.hitboxes[i].b = glm::vec3(box->num(3), box->num(4), box->num(5));
-            definition.hitboxes[i].b += definition.hitboxes[i].a;
+            def.hitboxes[i].a = glm::vec3(box->num(0), box->num(1), box->num(2));
+            def.hitboxes[i].b = glm::vec3(box->num(3), box->num(4), box->num(5));
+            def.hitboxes[i].b += def.hitboxes[i].a;
         }
     } else {
         boxarr = root->list("hitbox");
@@ -149,58 +149,60 @@ void ContentLoader::loadBlock(Block& definition, std::string name, std::filesyst
             aabb.a = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
             aabb.b = glm::vec3(boxarr->num(3), boxarr->num(4), boxarr->num(5));
             aabb.b += aabb.a;
-            definition.hitboxes = {aabb};
-        } else if (!definition.modelBoxes.empty()) {
-            definition.hitboxes = definition.modelBoxes;
+            def.hitboxes = {aabb};
+        } else if (!def.modelBoxes.empty()) {
+            def.hitboxes = def.modelBoxes;
         } else {
-            definition.hitboxes = {AABB()};
+            def.hitboxes = {AABB()};
         }
     }
 
-    root->str("material", definition.material);
+    root->str("material", def.material);
 
     // Профили поворота
     std::string profile = "none";
     root->str("rotation", profile);
-    definition.rotatable = profile != "none";
+    def.rotatable = profile != "none";
     if (profile == "pipe") {
-        definition.rotations = BlockRotProfile::PIPE;
+        def.rotations = BlockRotProfile::PIPE;
     } else if (profile == "pane") {
-        definition.rotations = BlockRotProfile::PANE;
+        def.rotations = BlockRotProfile::PANE;
     } else if (profile != "none") {
         LOG_WARN("Unknown block {} rotation profile {}", name, profile);
-        definition.rotatable = false;
+        def.rotatable = false;
     }
 
     // Освещение от блока в формате [r, g, b]
     auto emissionobj = root->list("emission");
     if (emissionobj) {
-        definition.emission[0] = emissionobj->num(0);
-        definition.emission[1] = emissionobj->num(1);
-        definition.emission[2] = emissionobj->num(2);
+        def.emission[0] = emissionobj->num(0);
+        def.emission[1] = emissionobj->num(1);
+        def.emission[2] = emissionobj->num(2);
     }
 
     // Другие свойства блока
-    root->flag("obstacle", definition.obstacle);
-    root->flag("replaceable", definition.replaceable);
-    root->flag("light-passing", definition.lightPassing);
-    root->flag("breakable", definition.breakable);
-    root->flag("selectable", definition.selectable);
-    root->flag("sky-light-passing", definition.skyLightPassing);
-    root->flag("grounded", definition.grounded);
-    root->num("draw-group", definition.drawGroup);
-    root->flag("hidden", definition.hidden);
-    root->str("picking-item", definition.pickingItem);
-    root->str("script-name", definition.scriptName);
-    root->num("inventory-size", definition.inventorySize);
-    root->str("ui-layout", definition.uiLayout);
+    root->flag("obstacle", def.obstacle);
+    root->flag("replaceable", def.replaceable);
+    root->flag("light-passing", def.lightPassing);
+    root->flag("breakable", def.breakable);
+    root->flag("selectable", def.selectable);
+    root->flag("sky-light-passing", def.skyLightPassing);
+    root->flag("grounded", def.grounded);
+    root->num("draw-group", def.drawGroup);
+    root->flag("hidden", def.hidden);
+    root->str("picking-item", def.pickingItem);
+    root->str("script-name", def.scriptName);
+    root->num("inventory-size", def.inventorySize);
+    root->str("ui-layout", def.uiLayout);
+    root->num("spark-interval", def.sparkInterval);
+    if (def.sparkInterval == 0) def.sparkInterval = 1;
 
-    if (definition.hidden && definition.pickingItem == definition.name + BLOCK_ITEM_SUFFIX) {
-        definition.pickingItem = BUILTIN_EMPTY;
+    if (def.hidden && def.pickingItem == def.name + BLOCK_ITEM_SUFFIX) {
+        def.pickingItem = BUILTIN_EMPTY;
     }
 }
 
-void ContentLoader::loadCustomBlockModel(Block& definition, dynamic::Map* primitives) {
+void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
     if (primitives->has("aabbs")) {
         auto modelboxes = primitives->list("aabbs");
         for (uint i = 0; i < modelboxes->size(); ++i) {
@@ -209,19 +211,19 @@ void ContentLoader::loadCustomBlockModel(Block& definition, dynamic::Map* primit
             modelbox.a = glm::vec3(boxobj->num(0), boxobj->num(1), boxobj->num(2));
             modelbox.b = glm::vec3(boxobj->num(3), boxobj->num(4), boxobj->num(5));
             modelbox.b += modelbox.a;
-            definition.modelBoxes.push_back(modelbox);
+            def.modelBoxes.push_back(modelbox);
 
             if (boxobj->size() == 7) {
                 for (uint j = 6; j < 12; ++j) {
-                    definition.modelTextures.push_back(boxobj->str(6));
+                    def.modelTextures.push_back(boxobj->str(6));
                 }
             } else if (boxobj->size() == 12) {
                 for (uint j = 6; j < 12; ++j) {
-                    definition.modelTextures.push_back(boxobj->str(j));
+                    def.modelTextures.push_back(boxobj->str(j));
                 }
             } else {
                 for (uint j = 6; j < 12; ++j) {
-                    definition.modelTextures.push_back("notfound");
+                    def.modelTextures.push_back("notfound");
                 }
             }
         }
@@ -234,50 +236,50 @@ void ContentLoader::loadCustomBlockModel(Block& definition, dynamic::Map* primit
             glm::vec3 xw(tgonobj->num(3), tgonobj->num(4), tgonobj->num(5));
             glm::vec3 yh(tgonobj->num(6), tgonobj->num(7), tgonobj->num(8));
 
-            definition.modelExtraPoints.push_back(p1);
-            definition.modelExtraPoints.push_back(p1 + xw);
-            definition.modelExtraPoints.push_back(p1 + xw + yh);
-            definition.modelExtraPoints.push_back(p1 + yh);
+            def.modelExtraPoints.push_back(p1);
+            def.modelExtraPoints.push_back(p1 + xw);
+            def.modelExtraPoints.push_back(p1 + xw + yh);
+            def.modelExtraPoints.push_back(p1 + yh);
 
-            definition.modelTextures.push_back(tgonobj->str(9));
+            def.modelTextures.push_back(tgonobj->str(9));
         }
     }
 }
 
-void ContentLoader::loadItem(Item& definition, std::string name, std::filesystem::path file) {
+void ContentLoader::loadItem(Item& def, std::string name, std::filesystem::path file) {
     auto root = files::read_json(file);
 
-    root->str("caption", definition.caption);
+    root->str("caption", def.caption);
 
     std::string iconTypeStr = "";
     root->str("icon-type", iconTypeStr);
-    if (iconTypeStr == "none") definition.iconType = ItemIconType::None;
-    else if (iconTypeStr == "block") definition.iconType = ItemIconType::Block;
-    else if (iconTypeStr == "sprite") definition.iconType = ItemIconType::Sprite;
+    if (iconTypeStr == "none") def.iconType = ItemIconType::None;
+    else if (iconTypeStr == "block") def.iconType = ItemIconType::Block;
+    else if (iconTypeStr == "sprite") def.iconType = ItemIconType::Sprite;
     else if (iconTypeStr.length()) LOG_WARN("Unknown icon type: {}", iconTypeStr);
 
-    root->str("icon", definition.icon);
-    root->str("placing-block", definition.placingBlock);
-    root->str("script-name", definition.scriptName);
-    root->num("stack-size", definition.stackSize);
+    root->str("icon", def.icon);
+    root->str("placing-block", def.placingBlock);
+    root->str("script-name", def.scriptName);
+    root->num("stack-size", def.stackSize);
 
     // Освещение от предмета в формате [r, g, b]
     auto emissionobj = root->list("emission");
     if (emissionobj) {
-        definition.emission[0] = emissionobj->num(0);
-        definition.emission[1] = emissionobj->num(1);
-        definition.emission[2] = emissionobj->num(2);
+        def.emission[0] = emissionobj->num(0);
+        def.emission[1] = emissionobj->num(1);
+        def.emission[2] = emissionobj->num(2);
     }
 }
 
-void ContentLoader::loadBlock(Block& definition, std::string full, std::string name) {
+void ContentLoader::loadBlock(Block& def, std::string full, std::string name) {
     auto folder = pack->folder;
 
     std::filesystem::path configFile = folder/std::filesystem::path("blocks/" + name + ".json");
-    if (std::filesystem::exists(configFile)) loadBlock(definition, full, configFile);
+    if (std::filesystem::exists(configFile)) loadBlock(def, full, configFile);
 
-    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + definition.scriptName + ".lua");
-    if (std::filesystem::is_regular_file(scriptfile)) scripting::load_block_script(env, full, scriptfile, definition.rt.funcsset);
+    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + def.scriptName + ".lua");
+    if (std::filesystem::is_regular_file(scriptfile)) scripting::load_block_script(env, full, scriptfile, def.rt.funcsset);
 }
 
 void ContentLoader::loadItem(Item& item, std::string full, std::string name) {
