@@ -61,7 +61,6 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());
     }));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
-		auto* indices = level->content->getIndices();
         std::wstringstream stream;
         stream << "R:" << player->selectedVoxel.state.rotation << " S:"
             << player->selectedVoxel.state.segment << " U:"

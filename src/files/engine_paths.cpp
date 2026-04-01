@@ -14,9 +14,8 @@
 const std::filesystem::path SCREENSHOTS_FOLDER {"screenshots"};
 const std::filesystem::path LOGS_FOLDER {"logs"};
 const std::filesystem::path SAVES_FOLDER {"saves"};
-const std::filesystem::path CONTROLS_FILE {"controls.json"};
+const std::filesystem::path CONTROLS_FILE {"controls.toml"};
 const std::filesystem::path SETTINGS_FILE {"settings.toml"};
-const std::filesystem::path BINDINGS_FILE {"bindings.toml"};
 
 static std::filesystem::path toCanonic(std::filesystem::path path) {
     std::stack<std::string> parts;
@@ -91,11 +90,6 @@ std::filesystem::path EnginePaths::getLogsFile() {
 
 std::filesystem::path EnginePaths::getWorldFolder() {
     return worldFolder;
-}
-
-std::filesystem::path EnginePaths::getBindingsFile(const std::string& folder) {
-    if (folder.empty()) return this->getResources()/std::filesystem::path(BINDINGS_FILE);
-    return std::filesystem::path(folder)/std::filesystem::path(BINDINGS_FILE);
 }
 
 std::filesystem::path EnginePaths::getWorldFolder(const std::string& name) {

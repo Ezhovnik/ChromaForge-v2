@@ -133,6 +133,9 @@ namespace input_util {
      * @param code Код кнопки мыши.
      */
 	std::string to_string(mousecode code);
+
+    std::string get_name(keycode code);
+    std::string get_name(mousecode code);
 }
 
 /**

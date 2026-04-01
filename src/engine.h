@@ -58,7 +58,7 @@ private:
 
     std::unique_ptr<cmd::CommandsInterpreter> interpreter;
 
-    std::vector<std::string> basePacks {CHROMAFORGE_CONTENT_NAMESPACE};
+    std::vector<std::string> basePacks;
 
     std::unique_ptr<gui::GUI> gui;
 
@@ -75,6 +75,9 @@ private:
 
     void addDefaultWorldGenerators();
     void loadAssets();
+    void loadControls();
+    void loadSettings();
+    void saveSettings();
 public:
     Engine(EngineSettings& settings, SettingsHandler& settingsHandler, EnginePaths* paths); // Конструктор
     ~Engine(); // Деструктор
@@ -110,9 +113,6 @@ public:
     void resetContent();
     void loadWorldContent(const std::filesystem::path& folder);
     void loadAllPacks();
-
-    void loadSettings();
-    void saveSettings();
 };
 
 #endif // SRC_ENGINE_H_

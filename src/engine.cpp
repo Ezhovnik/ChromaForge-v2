@@ -79,6 +79,7 @@ Engine::Engine(
         throw initialize_error("Failed to load Window");
     }
 
+    loadControls();
     audio::initialize(settings.audio.enabled.get());
     create_channel(this, "master", settings.audio.volumeMaster);
     create_channel(this, "regular", settings.audio.volumeRegular);
@@ -99,6 +100,9 @@ Engine::Engine(
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);
     LOG_INFO("Scripting system initialization has been successfully finished");
+
+    auto resdir = paths->getResources();
+    basePacks = files::read_list(resdir/std::filesystem::path("config/builtins.list"));
 
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -236,6 +240,16 @@ void Engine::mainloop() {
     }
 }
 
+static void load_configs(const std::filesystem::path& root) {
+    auto configFolder = root/std::filesystem::path("config");
+    auto bindsFile = configFolder/std::filesystem::path("bindings.toml");
+    if (std::filesystem::is_regular_file(bindsFile)) {
+        Events::loadBindings(
+            bindsFile.u8string(), files::read_string(bindsFile)
+        );
+    }
+}
+
 void Engine::loadContent() {
     LOG_INFO("Loading content");
     auto resdir = paths->getResources();
@@ -260,14 +274,9 @@ void Engine::loadContent() {
         ContentLoader loader(&pack);
         loader.load(contentBuilder);
 
-        auto configFolder = pack.folder/std::filesystem::path("config");
-        auto bindsFile = paths->getBindingsFile(configFolder.u8string());
-        if (std::filesystem::is_regular_file(bindsFile)) {
-            Events::loadTomlBindings(
-                bindsFile.u8string(), files::read_string(bindsFile)
-            );
-        }
+        load_configs(pack.folder);
     }
+    load_configs(paths->getResources());
 
     content = contentBuilder.build();
     resPaths = std::make_unique<ResPaths>(resdir, resRoots);
@@ -300,6 +309,7 @@ void Engine::loadWorldContent(const std::filesystem::path& folder) {
     contentPacks = manager.getAll(manager.assembly(packNames));
     paths->setWorldFolder(folder);
     loadContent();
+    loadControls();
 }
 
 void Engine::loadAllPacks() {
@@ -400,7 +410,9 @@ void Engine::loadSettings() {
         toml::parse(settingsHandler, settings_file.string(), text);
         LOG_INFO("The settings file has been successfully read");
     }
+}
 
+void Engine::loadControls() {
     std::filesystem::path controls_file = paths->getControlsFile();
     if (std::filesystem::is_regular_file(controls_file)) {
         LOG_INFO("Reading the controls file");

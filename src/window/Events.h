@@ -46,6 +46,7 @@ public:
     static void bind(const std::string& name, inputType type, keycode code);
 	static void bind(const std::string& name, inputType type, mousecode code);
     static void bind(const std::string& name, inputType type, int code);
+    static void rebind(const std::string& name, inputType type, int code);
 
 	static bool isActive(const std::string& name);
 	static bool justActive(const std::string& name);
@@ -59,7 +60,6 @@ public:
 
     static std::string writeBindings();
     static void loadBindings(const std::string& filename, const std::string& source);
-    static void loadTomlBindings(const std::string& filename, const std::string& source);
 };
 
 #endif // WINDOW_EVENTS_H_

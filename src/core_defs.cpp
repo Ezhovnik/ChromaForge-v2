@@ -32,11 +32,4 @@ void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
     // Пустота
     Item& item = builder->createItem(BUILTIN_EMPTY);
     item.iconType = ItemIconType::None;
-
-    auto bindsFile = paths->getBindingsFile();
-    if (std::filesystem::is_regular_file(bindsFile)) {
-        Events::loadTomlBindings(
-            bindsFile.u8string(), files::read_string(bindsFile)
-        );
-    }
 }

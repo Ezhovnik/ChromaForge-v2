@@ -86,6 +86,17 @@ static int l_container_clear(lua_State* L) {
     return 0;
 }
 
+static int l_container_set_interval(lua_State* L) {
+    auto node = getDocumentNode(L, 1);
+    auto interval = scripting::state->tointeger(2) / 1000.0f;
+    if (auto container = std::dynamic_pointer_cast<gui::Container>(node.node)) {
+        scripting::state->pushvalue(3);
+        auto runnable = scripting::state->createRunnable();
+        container->listenInterval(interval, runnable);
+    }
+    return 0;
+}
+
 static int l_move_into(lua_State* L) {
     auto node = getDocumentNode(L, 1);
     auto dest = getDocumentNode(L, 2);
@@ -292,6 +303,13 @@ static int p_get_tooltip_delay(gui::UINode* node) {
     return scripting::state->pushnumber(node->getTooltipDelay());
 }
 
+static int p_set_interval(gui::UINode* node) {
+    if (dynamic_cast<gui::Container*>(node)) {
+        return scripting::state->pushcfunction(l_container_set_interval);
+    }
+    return 0;
+}
+
 static int l_gui_getattr(lua_State* L) {
     auto docname = scripting::state->requireString(1);
     auto element = scripting::state->requireString(2);
@@ -332,7 +350,8 @@ static int l_gui_getattr(lua_State* L) {
         {"caret", p_get_caret},
         {"src", p_get_src},
         {"tooltip", p_get_tooltip},
-        {"tooltipDelay", p_get_tooltip_delay}
+        {"tooltipDelay", p_get_tooltip_delay},
+        {"setInterval", p_set_interval}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) return func->second(node.get());

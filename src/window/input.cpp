@@ -42,6 +42,8 @@ static std::unordered_map<std::string, int> mousecodes {
     {"middle", GLFW_MOUSE_BUTTON_3},
 };
 
+static std::unordered_map<int, std::string> keynames {};
+
 void Binding::reset(inputType type, int code) {
     this->type = type;
     this->code = code;
@@ -64,6 +66,9 @@ void input_util::initialize() {
     }
     for (char i = 'a'; i <= 'z'; ++i) {
         keycodes[std::string({i})] = GLFW_KEY_A - 'a' + i;
+    }
+    for (const auto& entry : keycodes) {
+        keynames[entry.second] = entry.first;
     }
 }
 
@@ -145,4 +150,21 @@ std::string input_util::to_string(mousecode code) {
         case mousecode::BUTTON_3: return "MMB";
         default: return "Unknown button";
     }
+}
+
+std::string input_util::get_name(mousecode code) {
+    switch (code) {
+        case mousecode::BUTTON_1: return "left";
+        case mousecode::BUTTON_2: return "right";
+        case mousecode::BUTTON_3: return "middle";
+        default: return "unknown";
+    }
+}
+
+std::string input_util::get_name(keycode code) {
+    auto found = keynames.find(static_cast<int>(code));
+    if (found == keynames.end()) {
+        return "unknown";
+    }
+    return found->second;
 }
