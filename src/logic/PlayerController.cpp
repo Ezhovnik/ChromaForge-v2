@@ -152,11 +152,10 @@ void CameraControl::update(const PlayerInput& input, float delta, Chunks* chunks
     }
 }
 
-glm::vec3 PlayerController::selectedBlockPosition;
 int PlayerController::selectedBlockId = -1;
 glm::vec3 PlayerController::selectedPointPosition;
 glm::ivec3 PlayerController::selectedBlockNormal;
-int PlayerController::selectedBlockStates = 0;
+int PlayerController::selectedBlockRotation = 0;
 
 PlayerController::PlayerController(
 	Level* level, 
@@ -315,8 +314,8 @@ void PlayerController::updateInteraction(){
 	if (vox != nullptr) {
 		player->selectedVoxel = *vox;
 		selectedBlockId = vox->id;
-		selectedBlockStates = vox->states;
-		selectedBlockPosition = iend;
+		selectedBlockRotation = vox->rotation();
+		player->selectedBlockPosition = iend;
 		selectedPointPosition = end;
 		selectedBlockNormal = norm;
 		int x = iend.x;
@@ -384,8 +383,9 @@ void PlayerController::updateInteraction(){
 
 		if (input.pickBlock) pick_block(contentIds, chunks, player.get(), x, y, z);
 	} else {
-		selectedBlockStates = 0;
+		selectedBlockRotation = 0;
 		selectedBlockId = -1;
+        player->selectedVoxel.id = BLOCK_VOID;
 	}
 	if (input.build) {
         if (item->rt.funcsset.on_use) scripting::on_item_use(player.get(), item);
@@ -407,7 +407,7 @@ void PlayerController::update(float delta, bool input, bool pause) {
 		updateInteraction();
 	} else {
 		selectedBlockId = -1;
-		selectedBlockStates = 0;
+		selectedBlockRotation = 0;
 	}
 }
 

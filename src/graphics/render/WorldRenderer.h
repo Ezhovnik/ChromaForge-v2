@@ -8,8 +8,6 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #include "../../graphics/core/DrawContext.h"
 
@@ -75,7 +73,6 @@ public:
         const EngineSettings& settings
     );
 
-	static float skyClearness;
 	static bool drawChunkBorders;
 };
 

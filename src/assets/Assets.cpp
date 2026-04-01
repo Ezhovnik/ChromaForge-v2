@@ -18,8 +18,8 @@ Texture* Assets::getTexture(std::string name) const {
 	return nullptr;
 }
 
-void Assets::store(Texture* texture, std::string name){
-    textures.emplace(name, texture);
+void Assets::store(std::unique_ptr<Texture> texture, std::string name){
+    textures.emplace(name, std::move(texture));
 }
 
 ShaderProgram* Assets::getShader(std::string name) const{
@@ -28,8 +28,8 @@ ShaderProgram* Assets::getShader(std::string name) const{
     return nullptr;
 }
 
-void Assets::store(ShaderProgram* shader, std::string name){
-    shaders.emplace(name, shader);
+void Assets::store(std::unique_ptr<ShaderProgram> shader, std::string name){
+    shaders.emplace(name, std::move(shader));
 }
 
 Font* Assets::getFont(std::string name) const{
@@ -38,8 +38,8 @@ Font* Assets::getFont(std::string name) const{
     return nullptr;
 }
 
-void Assets::store(Font* font, std::string name){
-    fonts.emplace(name, font);
+void Assets::store(std::unique_ptr<Font> font, std::string name){
+    fonts.emplace(name, std::move(font));
 }
 
 Atlas* Assets::getAtlas(std::string name) const {
@@ -48,8 +48,8 @@ Atlas* Assets::getAtlas(std::string name) const {
     return nullptr;
 }
 
-void Assets::store(Atlas* atlas, std::string name){
-    atlases.emplace(name, atlas);
+void Assets::store(std::unique_ptr<Atlas> atlas, std::string name){
+    atlases.emplace(name, std::move(atlas));
 }
 
 const std::vector<TextureAnimation>& Assets::getAnimations() {
@@ -66,8 +66,8 @@ UIDocument* Assets::getLayout(std::string name) const {
     return nullptr;
 }
 
-void Assets::store(UIDocument* layout, std::string name){
-    layouts[name] = std::shared_ptr<UIDocument>(layout);
+void Assets::store(std::unique_ptr<UIDocument> layout, std::string name){
+    layouts[name] = std::shared_ptr<UIDocument>(std::move(layout));
 }
 
 audio::Sound* Assets::getSound(std::string name) const {
@@ -76,6 +76,6 @@ audio::Sound* Assets::getSound(std::string name) const {
 	return found->second.get();
 }
 
-void Assets::store(audio::Sound* sound, std::string name) {
-	sounds.emplace(name, sound);
+void Assets::store(std::unique_ptr<audio::Sound> sound, std::string name) {
+	sounds.emplace(name, std::move(sound));
 }

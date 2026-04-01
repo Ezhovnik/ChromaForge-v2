@@ -47,7 +47,6 @@ inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
-float WorldRenderer::skyClearness = 0.0f;
 bool WorldRenderer::drawChunkBorders = false;
 
 WorldRenderer::WorldRenderer(
@@ -175,6 +174,7 @@ void WorldRenderer::renderLevel(
     shader->uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
     shader->uniform3f("u_cameraPos", camera->position);
     shader->uniform1i("u_cubemap", 1);
+    //shader->uniform1f("u_timer", Window::time());
 
 	{
 		auto inventory = player->getInventory();
@@ -207,19 +207,19 @@ void WorldRenderer::renderBlockSelection(Camera* camera, ShaderProgram* linesSha
     auto indices = level->content->getIndices();
     blockid_t id = PlayerController::selectedBlockId;
     auto block = indices->getBlockDef(id);
-    const glm::vec3 pos = PlayerController::selectedBlockPosition;
+    const glm::ivec3 pos = player->selectedBlockPosition;
     const glm::vec3 point = PlayerController::selectedPointPosition;
     const glm::vec3 norm = PlayerController::selectedBlockNormal;
 
     const std::vector<AABB>& hitboxes = block->rotatable
-        ? block->rt.hitboxes[PlayerController::selectedBlockStates]
+        ? block->rt.hitboxes[PlayerController::selectedBlockRotation]
         : block->hitboxes;
 
     linesShader->use();
     linesShader->uniformMatrix("u_projview", camera->getProjView());
     lineBatch->setLineWidth(2.0f);
     for (auto& hitbox: hitboxes) {
-        const glm::vec3 center = pos + hitbox.center();
+        const glm::vec3 center = glm::vec3(pos) + hitbox.center();
         const glm::vec3 size = hitbox.size();
         lineBatch->box(center, size + glm::vec3(0.02), glm::vec4(0.f, 0.f, 0.f, 0.5f));
         if (player->debug) {
@@ -307,11 +307,12 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 }
 
 void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisible, PostProcessing* postProcessing) {
+    auto world = level->getWorld();
     const Viewport& vp = pctx.getViewport();
     camera->aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
 
     const EngineSettings& settings = engine->getSettings();
-    skybox->refresh(pctx, level->getWorld()->daytime, 1.0f + skyClearness * 2.0f, 4);
+    skybox->refresh(pctx, world->daytime, 1.0f + world->skyClearness * 2.0f, 4);
 
     Assets* assets = engine->getAssets();
     ShaderProgram* linesShader = assets->getShader("lines");
@@ -320,7 +321,7 @@ void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisibl
         DrawContext wctx = pctx.sub();
         postProcessing->use(wctx);
         Window::clearDepth();
-        skybox->draw(pctx, camera, assets, level->getWorld()->daytime, skyClearness);
+        skybox->draw(pctx, camera, assets, world->daytime, world->skyClearness);
         {
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);

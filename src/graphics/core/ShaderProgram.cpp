@@ -99,7 +99,7 @@ glshader compile_shader(GLenum type, const GLchar* source, const std::string& fi
     return glshader(new GLuint(shader), shader_deleter);
 }
 
-ShaderProgram* ShaderProgram::create(
+std::unique_ptr<ShaderProgram> ShaderProgram::create(
     const std::string& vertexFile, 
     const std::string& fragmentFile, 
     const std::string& vertexSource, 
@@ -137,5 +137,5 @@ ShaderProgram* ShaderProgram::create(
     glDeleteShader(*vertex);
     glDeleteShader(*fragment);
 
-    return new ShaderProgram(id);
+    return std::make_unique<ShaderProgram>(id);
 }

@@ -74,10 +74,9 @@ private:
     void onFootstep();
     void updateFootsteps(float delta);
 public:
-	static glm::vec3 selectedBlockPosition;
 	static glm::ivec3 selectedBlockNormal;
 	static glm::vec3 selectedPointPosition;
-	static int selectedBlockStates;
+	static int selectedBlockRotation;
 	static int selectedBlockId;
 
 	PlayerController(Level* level, const EngineSettings& settings, BlocksController* blocksController);

@@ -20,7 +20,7 @@ LevelFrontend::LevelFrontend(
     contentCache(std::make_unique<ContentGfxCache>(level->content, assets))
 {
     assets->store(
-        BlocksPreview::build(contentCache.get(), assets, level->content).release(),
+        BlocksPreview::build(contentCache.get(), assets, level->content),
         "block-previews"
     );
 

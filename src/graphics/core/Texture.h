@@ -1,7 +1,6 @@
 #ifndef GRAPHICS_CORE_TEXTURE_H_
 #define GRAPHICS_CORE_TEXTURE_H_
 
-#include <string>
 #include <memory>
 
 #include "../../typedefs.h"

@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <memory>
 
 #include <glm/glm.hpp>
 
@@ -111,7 +112,7 @@ public:
      *
      * Код предварительно обрабатывается препроцессором (GLSLExtension), затем компилируется и линкуется.
      */
-    static ShaderProgram* create(
+    static std::unique_ptr<ShaderProgram> create(
         const std::string& vertexFile, 
         const std::string& fragmentFile, 
         const std::string& vertexSource, 

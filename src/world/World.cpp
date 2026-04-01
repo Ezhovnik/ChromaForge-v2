@@ -10,7 +10,6 @@
 #include "../voxels/ChunksStorage.h"
 #include "../objects/Player.h"
 #include "../physics/PhysicsSolver.h"
-#include "../window/Camera.h"
 #include "../debug/Logger.h"
 #include "../content/Content.h"
 #include "../content/ContentLUT.h"
@@ -145,8 +144,6 @@ std::unique_ptr<Level> World::load(std::filesystem::path directory, EngineSettin
         }
     }
 	LOG_INFO("Level successfully created");
-
-	(void)world.release(); // передаём владение уровню
 	LOG_INFO("World successfully created");
 	return level;
 }
@@ -194,8 +191,7 @@ void World::deserialize(dynamic::Map* root) {
 	if (generator == "") generator = WorldGenerators::getDefaultGeneratorID();
 
 	// Информация о версии движка
-	auto verobj = root->map("version");
-	if (verobj) {
+	if (auto verobj = root->map("version")) {
 		int major = 0, minor = -1, maintenance = -1;
 		verobj->num("major", major);
 		verobj->num("minor", minor);
@@ -204,12 +200,15 @@ void World::deserialize(dynamic::Map* root) {
 	}
 
 	// Таймеры
-	auto timeobj = root->map("time");
-	if (timeobj) {
+	if (auto timeobj = root->map("time")) {
 		timeobj->num("day-time", daytime);
 		timeobj->num("day-time-speed", daytimeSpeed);
         timeobj->num("total-time", totalTime);
 	}
+
+	if (auto weatherobj = root->map("weather")) {
+        weatherobj->num("skyClearness", skyClearness);
+    }
 
 	// Счётчик инвентарей (по умолчанию 2, т.к. 1 обычно зарезервирован)
     nextInventoryId = root->get("next-inventory-id", 2);
@@ -233,6 +232,9 @@ std::unique_ptr<dynamic::Map> World::serialize() const {
 	timeobj.put("day-time", daytime);
 	timeobj.put("day-time-speed", daytimeSpeed);
 	timeobj.put("total-time", totalTime);
+
+	auto& weatherobj = root->putMap("weather");
+    weatherobj.put("skyClearness", skyClearness);
 
     root->put("next-inventory-id", nextInventoryId);
     return root;

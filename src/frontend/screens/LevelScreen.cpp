@@ -130,7 +130,7 @@ void LevelScreen::update(float deltaTime) {
         controller->getLevel()->getWorld()->updateTimers(deltaTime);
         animator->update(deltaTime);
     }
-    controller->update(deltaTime, !inputLocked, hud->isPause());
+    controller->update(glm::min(deltaTime, 0.2f), !inputLocked, hud->isPause());
     hud->update(hudVisible);
 }
 

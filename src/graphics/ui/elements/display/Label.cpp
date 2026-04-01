@@ -77,7 +77,7 @@ void Label::setText(std::wstring text) {
     this->text = text;
     cache.update(this->text, multiline, textWrap);
 
-    if (cache.font) setSize(calcSize());
+    if (cache.font && autoresize) setSize(calcSize());
 }
 
 const std::wstring& Label::getText() const {

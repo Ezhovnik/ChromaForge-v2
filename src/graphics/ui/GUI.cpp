@@ -238,7 +238,7 @@ void GUI::postRunnable(runnable callback) {
 }
 
 void GUI::onAssetsLoad(Assets* assets) {
-    assets->store(new UIDocument(
+    assets->store(std::make_unique<UIDocument>(
         BUILTIN_CONTENT_NAMESPACE + ":root", 
         uidocscript {}, 
         std::dynamic_pointer_cast<gui::UINode>(container), 

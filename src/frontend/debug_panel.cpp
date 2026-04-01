@@ -60,14 +60,18 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());
     }));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
-		auto indices = level->content->getIndices();
-		auto def = indices->getBlockDef(player->selectedVoxel.id);
-
-		std::wstringstream stream;
-		stream << std::hex << player->selectedVoxel.states;
-		if (def) stream << L" (" << util::str2wstr_utf8(def->name) << L")";
-
-		return L"Selected-block: " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
+		auto* indices = level->content->getIndices();
+        auto def = indices->getBlockDef(player->selectedVoxel.id);
+        std::wstringstream stream;
+        stream << std::hex << player->selectedVoxel.states;
+        if (def) {
+            stream << L" (" << util::str2wstr_utf8(def->name) << L")";
+        }
+        if (player->selectedVoxel.id == BLOCK_VOID) {
+            return std::wstring {L"Selected-block: none"};
+        } else {
+            return L"Selected-block: " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
+        }
 	})));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Seed: " + std::to_wstring(level->getWorld()->getSeed());
@@ -111,17 +115,17 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		std::wstringstream ss;
         ss << std::fixed << std::setprecision(2);
-        ss << WorldRenderer::skyClearness;
+        ss << level->getWorld()->skyClearness;
 		return L"Sky clearness: " + ss.str();
 	})));
 
 	{
 		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 0.0f, 0.005f, 8);
 		bar->setSupplier([=]() {
-			return WorldRenderer::skyClearness;
+			return level->getWorld()->skyClearness;
 		});
 		bar->setConsumer([=](double val) {
-			WorldRenderer::skyClearness = val;
+			level->getWorld()->skyClearness = val;
 		});
 		panel->add(bar);
 	}

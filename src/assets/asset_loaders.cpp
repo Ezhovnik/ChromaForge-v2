@@ -68,7 +68,7 @@ asset_loader::postfunc asset_loader::texture(
 {
 	std::shared_ptr<ImageData> image(imageio::read(paths->find(filename + ".png").u8string()).release());
 	return [name, image](auto assets) {
-        assets->store(Texture::from(image.get()).release(), name);
+        assets->store(Texture::from(image.get()), name);
     };
 }
 
@@ -93,7 +93,7 @@ asset_loader::postfunc asset_loader::font(
         for (auto& page : *pages) {
             textures.emplace_back(Texture::from(page.get()));
         }
-        assets->store(new Font(std::move(textures), res, 4), name);
+        assets->store(std::make_unique<Font>(std::move(textures), res, 4), name);
     };
 }
 
@@ -144,7 +144,7 @@ asset_loader::postfunc asset_loader::atlas(
 	Atlas* atlas = builder.build(2, false).release();
 	return [=](auto assets) {
         atlas->prepare();
-        assets->store(atlas, name);
+        assets->store(std::unique_ptr<Atlas>(atlas), name);
 
         for (const auto& file : names) {
             animation(assets, paths, name, directory, file, atlas);
@@ -271,7 +271,7 @@ static bool animation(
 		auto animation = create_animation(
             srcAtlas.get(), dstAtlas, name, builder.getNames(), frameList
         );
-        assets->store(srcAtlas.release(), atlasName + "/" + name + "_animation");
+        assets->store(std::move(srcAtlas), atlasName + "/" + name + "_animation");
 		assets->store(animation);
 
 		return true;
@@ -291,8 +291,7 @@ asset_loader::postfunc asset_loader::layout(
     return [=](auto assets) {
         try {
             auto cfg = std::dynamic_pointer_cast<LayoutConfig>(config);
-            auto document = UIDocument::read(cfg->env, name, file);
-            assets->store(document.release(), name);
+            assets->store(UIDocument::read(cfg->env, name, file), name);
         } catch (const parsing_error& err) {
 			LOG_ERROR("Failed to parse layout XML '{}'. What: {}", file, err.errorLog());
             throw std::runtime_error("failed to parse layout XML '" + file + "':\n" + err.errorLog());
@@ -336,6 +335,6 @@ asset_loader::postfunc asset_loader::sound(
 
     auto sound = baseSound.release();
     return [=](auto assets) {
-        assets->store(sound, name);
+        assets->store(std::unique_ptr<audio::Sound>(sound), name);
     };
 }

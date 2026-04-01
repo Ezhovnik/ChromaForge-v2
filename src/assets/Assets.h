@@ -58,7 +58,7 @@ public:
      * @param texture Указатель на текстуру (менеджер забирает владение).
      * @param name Имя, под которым текстура будет сохранена.
      */
-	void store(Texture* texture, std::string name);
+	void store(std::unique_ptr<Texture> texture, std::string name);
 
 		// --- Шейдеры ---
      /**
@@ -73,7 +73,7 @@ public:
      * @param shader Указатель на шейдер.
      * @param name Имя для сохранения.
      */
-	void store(ShaderProgram* shader, std::string name);
+	void store(std::unique_ptr<ShaderProgram> shader, std::string name);
 
     	// --- Шрифты ---
 	/**
@@ -88,7 +88,7 @@ public:
      * @param font Указатель на шрифт.
      * @param name Имя для сохранения.
      */
-	void store(Font* font, std::string name);
+	void store(std::unique_ptr<Font> font, std::string name);
 
 		// --- Атласы ---
 	/**
@@ -103,7 +103,7 @@ public:
      * @param atlas Указатель на атлас.
      * @param name Имя для сохранения.
      */
-	void store(Atlas* atlas, std::string name);
+	void store(std::unique_ptr<Atlas> atlas, std::string name);
 
 		// --- Анимации ---
 	/**
@@ -131,7 +131,7 @@ public:
      * @param layout Указатель на макет.
      * @param name Имя для сохранения.
      */
-	void store(UIDocument* layout, std::string name);
+	void store(std::unique_ptr<UIDocument> layout, std::string name);
 
           // --- Звуки ---
      /**
@@ -146,7 +146,7 @@ public:
      * @param sound Указатель на звук.
      * @param name Имя для сохранения.
      */
-	void store(audio::Sound* sound, std::string name);
+	void store(std::unique_ptr<audio::Sound> sound, std::string name);
 };
 
 #endif // ASSETS_ASSETS_H_

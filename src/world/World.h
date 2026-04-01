@@ -59,6 +59,8 @@ public:
 	/// Общее прошедшее время в секундах с момента создания мира
 	double totalTime = 0.0;
 
+     float skyClearness = 0.0f;
+
 	/**
      * @brief Конструктор.
      * @param name Внутреннее имя мира.
