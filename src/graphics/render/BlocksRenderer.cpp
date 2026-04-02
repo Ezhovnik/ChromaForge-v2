@@ -132,7 +132,7 @@ void BlocksRenderer::face(
     float s = 0.5f;
     if (lights) {
         // Вычисляем яркость грани по нормали (Z) относительно солнца
-        float d = glm::dot(Z, SUN_VECTOR);
+        float d = glm::dot(glm::normalize(Z), SUN_VECTOR);
         d = 0.8f + d * 0.2f; // базовая яркость + вклад солнца
 
         glm::vec3 axisX = glm::normalize(X);
@@ -438,8 +438,9 @@ void BlocksRenderer::render(const voxel* voxels) {
 		for (int i = begin; i < end; ++i) {
 			const voxel& vox = voxels[i];
 			blockid_t id = vox.id;
+			blockstate state = vox.state;
 			const Block& def = *blockDefsCache[id];
-			if (id == 0 || def.drawGroup != drawGroup) continue;
+			if (id == 0 || def.drawGroup != drawGroup || state.segment) continue;
 
             // Получаем текстурные регионы для всех шести граней
 			const UVRegion texfaces[6]{

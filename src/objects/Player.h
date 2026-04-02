@@ -62,6 +62,7 @@ public:
 
 	glm::vec3 cam {}; ///< Углы поворота камеры
 	glm::ivec3 selectedBlockPosition {};
+	glm::ivec3 actualSelectedBlockPosition {};
 
     voxel selectedVoxel {0, {}};
 

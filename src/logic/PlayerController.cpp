@@ -312,9 +312,16 @@ void PlayerController::updateInteraction(){
 
 	voxel* vox = chunks->rayCast(camera->position, camera->front, 10.0f, end, norm, iend);
 	if (vox != nullptr) {
+        blockstate selectedState = vox->state;
 		player->selectedVoxel = *vox;
 		selectedBlockId = vox->id;
 		selectedBlockRotation = vox->state.rotation;
+        player->actualSelectedBlockPosition = iend;
+        if (selectedState.segment) {
+            iend = chunks->seekOrigin(
+                iend, contentIds->getBlockDef(selectedBlockId), selectedState
+            );
+        } 
 		player->selectedBlockPosition = iend;
 		selectedPointPosition = end;
 		selectedBlockNormal = norm;
@@ -352,6 +359,7 @@ void PlayerController::updateInteraction(){
         }
 
 		if (def && input.build) {
+            iend = player->actualSelectedBlockPosition;
 			if (target->rt.funcsset.oninteract && !input.crouch) {
                 if (scripting::on_block_interact(player.get(), target, x, y, z)) return;
             }
@@ -361,6 +369,9 @@ void PlayerController::updateInteraction(){
 				z = iend.z + norm.z;
 			} else if (def->rotations.name == "pipe") {
                 state.rotation = BLOCK_DIR_UP;
+                x = iend.x;
+                y = iend.y;
+                z = iend.z;
             }
 			vox = chunks->getVoxel(x, y, z);
 			blockid_t chosenBlock = def->rt.id;

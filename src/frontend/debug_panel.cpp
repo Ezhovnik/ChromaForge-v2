@@ -23,6 +23,13 @@
 #include "../audio/audio.h"
 #include "../settings.h"
 
+template <size_t T>
+inline std::wstring to_string(std::bitset<T> bs) {
+    std::wstringstream ss;
+    ss << bs;
+    return ss.str();
+}
+
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
     label->textSupplier(std::move(supplier));
@@ -79,6 +86,18 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
             return L"Name: " + util::str2wstr_utf8(def->name);
         } else {
             return std::wstring {L"Name: void"};
+        }
+    }));
+    panel->add(create_label([=](){
+        auto* indices = level->content->getIndices();
+        if (auto def = indices->getBlockDef(player->selectedVoxel.id)) {
+            return L"Light: " + to_string(std::bitset<16>(level->chunks->getLight(
+                player->actualSelectedBlockPosition.x,
+                player->actualSelectedBlockPosition.y,
+                player->actualSelectedBlockPosition.z
+            )));
+        } else {
+            return std::wstring {L"No light: -"};
         }
     }));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){

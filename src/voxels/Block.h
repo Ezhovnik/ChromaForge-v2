@@ -86,6 +86,7 @@ public:
     std::string material = DEFAULT_MATERIAL;
 
     ubyte emission[4] {0, 0, 0, 0};
+    glm::i8vec3 size {1, 1, 1};
     ubyte drawGroup = 0;
     BlockModel model = BlockModel::Cube;
     std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
@@ -112,6 +113,7 @@ public:
         blockid_t id;
 		bool solid = true;
 		bool emissive = false;
+        bool extended = false;
 		std::vector<AABB> hitboxes[BlockRotProfile::MAX_COUNT];
         block_funcs_set funcsset {};
         itemid_t pickingItem = 0;

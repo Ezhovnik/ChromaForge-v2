@@ -8,6 +8,9 @@ struct AABB {
 	glm::vec3 a {0.0f}; // Первая точка параллелепипеда
     glm::vec3 b {1.0f}; // Вторая точка параллелепипеда
 
+    AABB() {}
+    AABB(glm::vec3 size) : a(0.0f), b(size) {}
+
     inline glm::vec3 min() const {return glm::min(a, b);} // Минимальная координата по каждой оси
     inline glm::vec3 max() const {return glm::max(a, b);} // Максимальная координата по каждой оси
 

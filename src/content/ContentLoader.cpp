@@ -146,19 +146,16 @@ void ContentLoader::loadBlock(
             def.hitboxes[i].b = glm::vec3(box->num(3), box->num(4), box->num(5));
             def.hitboxes[i].b += def.hitboxes[i].a;
         }
+    } else if (auto boxarr = root->list("hitbox")){
+        AABB aabb;
+        aabb.a = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
+        aabb.b = glm::vec3(boxarr->num(3), boxarr->num(4), boxarr->num(5));
+        aabb.b += aabb.a;
+        def.hitboxes = { aabb };
+    } else if (!def.modelBoxes.empty()) {
+        def.hitboxes = def.modelBoxes;
     } else {
-        boxarr = root->list("hitbox");
-        if (boxarr) {
-            AABB aabb;
-            aabb.a = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
-            aabb.b = glm::vec3(boxarr->num(3), boxarr->num(4), boxarr->num(5));
-            aabb.b += aabb.a;
-            def.hitboxes = {aabb};
-        } else if (!def.modelBoxes.empty()) {
-            def.hitboxes = def.modelBoxes;
-        } else {
-            def.hitboxes = {AABB()};
-        }
+        def.hitboxes = {AABB()};
     }
 
     root->str("material", def.material);
@@ -177,11 +174,20 @@ void ContentLoader::loadBlock(
     }
 
     // Освещение от блока в формате [r, g, b]
-    auto emissionobj = root->list("emission");
-    if (emissionobj) {
+    if (auto emissionobj = root->list("emission")) {
         def.emission[0] = emissionobj->num(0);
         def.emission[1] = emissionobj->num(1);
         def.emission[2] = emissionobj->num(2);
+    }
+
+    if (auto sizeobj = root->list("size")) {
+        def.size.x = sizeobj->num(0);
+        def.size.y = sizeobj->num(1);
+        def.size.z = sizeobj->num(2);
+        if (def.model == BlockModel::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
+            def.model = BlockModel::AABB;
+            def.hitboxes = {AABB(def.size)};
+        }
     }
 
     // Другие свойства блока

@@ -42,7 +42,7 @@ Chunks::Chunks(
 	chunksCount = 0;
 }
 
-voxel* Chunks::getVoxel(int32_t x, int32_t y, int32_t z){
+voxel* Chunks::getVoxel(int32_t x, int32_t y, int32_t z) const {
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
 
@@ -165,16 +165,74 @@ Chunk* Chunks::getChunk(int32_t x, int32_t z) {
 	return chunks[z * width + x].get();
 }
 
+glm::ivec3 Chunks::seekOrigin(glm::ivec3 pos, const Block* def, blockstate state) {
+    const auto& rotation = def->rotations.variants[state.rotation];
+    auto segment = state.segment;
+    while (true) {
+        if (!segment) return pos;
+
+        if (segment & 1) pos -= rotation.axisX;
+        if (segment & 2) pos -= rotation.axisY;
+        if (segment & 4) pos -= rotation.axisZ;
+
+        if (auto* voxel = getVoxel(pos.x, pos.y, pos.z)) {
+            segment = voxel->state.segment;
+        } else {
+            return pos;
+        }
+    }
+}
+
+void Chunks::eraseSegments(const Block* def, blockstate state, int x, int y, int z) {
+    const auto& rotation = def->rotations.variants[state.rotation];
+    for (int sy = 0; sy < def->size.y; ++sy) {
+        for (int sz = 0; sz < def->size.z; ++sz) {
+            for (int sx = 0; sx < def->size.x; ++sx) {
+                if ((sx | sy | sz) == 0) continue;
+                glm::ivec3 pos(x, y, z);
+                pos += rotation.axisX * sx;
+                pos += rotation.axisY * sy;
+                pos += rotation.axisZ * sz;
+                setVoxel(pos.x, pos.y, pos.z, 0, {});
+            }
+        }
+    }
+}
+
+void Chunks::repairSegments(const Block* def, blockstate state, int x, int y, int z) {
+    const auto& rotation = def->rotations.variants[state.rotation];
+    const auto id = def->rt.id;
+    const auto size = def->size;
+    for (int sy = 0; sy < size.y; ++sy) {
+        for (int sz = 0; sz < size.z; ++sz) {
+            for (int sx = 0; sx < size.x; ++sx) {
+                if ((sx | sy | sz) == 0) continue;
+
+                blockstate segState = state;
+                segState.segment = ((sx > 0) | ((sy > 0) << 1) | ((sz > 0) << 2));
+
+                glm::ivec3 pos(x, y, z);
+                pos += rotation.axisX * sx;
+                pos += rotation.axisY * sy;
+                pos += rotation.axisZ * sz;
+                setVoxel(pos.x, pos.y, pos.z, id, segState);
+            }
+        }
+    }
+}
+
 void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate state) {
     if (y < 0 || y >= CHUNK_HEIGHT) return;
 
+	int32_t gx = x;
+    int32_t gz = z;
 	x -= areaOffsetX * CHUNK_WIDTH;
 	z -= areaOffsetZ * CHUNK_DEPTH;
 
     int cx = floordiv(x, CHUNK_WIDTH);
     int cz = floordiv(z, CHUNK_DEPTH);
 
-	if (cx < 0 || cz < 0 || cx >= int(width) || cz >= int(depth)) return;
+	if (cx < 0 || cz < 0 || cx >= static_cast<int>(width) || cz >= static_cast<int>(depth)) return;
 
 	Chunk* chunk = chunks[cz * width + cx].get();
 	if (chunk == nullptr) return;
@@ -183,12 +241,21 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
 	int lz = z - cz * CHUNK_DEPTH;
 
 	voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
-	auto def = contentIds->getBlockDef(vox.id);
-	if (def->inventorySize == 0) chunk->removeBlockInventory(lx, y, lz);
+	auto prevdef = contentIds->getBlockDef(vox.id);
+    if (prevdef->inventorySize == 0) {
+		chunk->removeBlockInventory(lx, y, lz);
+	}
+	if (prevdef->rt.extended && !vox.state.segment) {
+        eraseSegments(prevdef, vox.state, gx, y, gz);
+    }
+
+	auto newdef = contentIds->getBlockDef(id);
 	vox.id = id;
 	vox.state = state;
-
 	chunk->setModifiedAndUnsaved();
+	if (!state.segment && newdef->rt.extended) {
+        repairSegments(newdef, state, gx, y, gz);
+    }
 
     if (y < chunk->bottom) chunk->bottom = y;
     else if (y + 1 > chunk->top) chunk->top = y + 1;
