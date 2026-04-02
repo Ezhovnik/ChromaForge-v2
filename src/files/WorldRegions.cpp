@@ -52,17 +52,12 @@ std::unique_ptr<ubyte[]> regFile::read(int index, uint32_t& length) {
     return data;
 }
 
-WorldRegion::WorldRegion() {
-    chunksData = new ubyte*[RegionConsts::VOLUME]{};
-    sizes = new uint32_t[RegionConsts::VOLUME]{};
-}
+WorldRegion::WorldRegion() :
+    chunksData(std::make_unique<std::unique_ptr<ubyte[]>[]>(RegionConsts::VOLUME)),
+    sizes(std::make_unique<uint32_t[]>(RegionConsts::VOLUME))
+{}
 
 WorldRegion::~WorldRegion() {
-    for (uint i = 0; i < RegionConsts::VOLUME; ++i) {
-        delete[] chunksData[i];
-    }
-    delete[] sizes;
-    delete[] chunksData;
 }
 
 void WorldRegion::setUnsaved(bool unsaved) {
@@ -72,23 +67,22 @@ bool WorldRegion::isUnsaved() const {
     return unsaved;
 }
 
-ubyte** WorldRegion::getChunks() const {
-    return chunksData;
+std::unique_ptr<ubyte[]>* WorldRegion::getChunks() const {
+    return chunksData.get();
 }
 
 uint32_t* WorldRegion::getSizes() const {
-    return sizes;
+    return sizes.get();
 }
 
 void WorldRegion::put(uint x, uint z, ubyte* data, uint32_t size) {
     size_t chunk_index = z * RegionConsts::SIZE + x;
-    delete[] chunksData[chunk_index];
-    chunksData[chunk_index] = data;
+    chunksData[chunk_index].reset(data);
     sizes[chunk_index] = size;
 }
 
 ubyte* WorldRegion::getChunkData(uint x, uint z) {
-    return chunksData[z * RegionConsts::SIZE + x];
+    return chunksData[z * RegionConsts::SIZE + x].get();
 }
 
 uint WorldRegion::getChunkDataSize(uint x, uint z) {
@@ -116,13 +110,14 @@ WorldRegion* WorldRegions::getRegion(int x, int z, int layer) {
 }
 
 WorldRegion* WorldRegions::getOrCreateRegion(int x, int z, int layer) {
-    WorldRegion* region = getRegion(x, z, layer);
-    if (region == nullptr) {
-        RegionsLayer& regions = layers[layer];
-        std::lock_guard lock(regions.mutex);
-        region = new WorldRegion();
-        regions.regions[glm::ivec2(x, z)].reset(region);
+    if (auto region = getRegion(x, z, layer)) {
+        return region;
     }
+    RegionsLayer& regions = layers[layer];
+    std::lock_guard lock(regions.mutex);
+    auto region_ptr = std::make_unique<WorldRegion>();
+    auto region = region_ptr.get();
+    regions.regions[{x, z}] = std::move(region_ptr);
     return region;
 }
 
@@ -165,14 +160,14 @@ std::unique_ptr<ubyte[]> WorldRegions::readChunkData(
 }
 
 void WorldRegions::fetchChunks(WorldRegion* region, int x, int z, regFile* file) {
-    ubyte** chunks = region->getChunks();
+    auto* chunks = region->getChunks();
     uint32_t* sizes = region->getSizes();
 
     for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
         int chunk_x = (i % RegionConsts::SIZE) + x * RegionConsts::SIZE;
         int chunk_z = (i / RegionConsts::SIZE) + z * RegionConsts::SIZE;
         if (chunks[i] == nullptr) {
-            chunks[i] = readChunkData(chunk_x, chunk_z, sizes[i], file).release();
+            chunks[i] = readChunkData(chunk_x, chunk_z, sizes[i], file);
         }
     }
 }
@@ -285,18 +280,18 @@ void WorldRegions::writeRegion(int x, int z, int layer, WorldRegion* entry){
     char intbuf[4]{};
     uint offsets[RegionConsts::VOLUME]{};
 
-    ubyte** region = entry->getChunks();
+    auto* region = entry->getChunks();
     uint32_t* sizes = entry->getSizes();
 
     for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
-        ubyte* chunk = region[i];
+        ubyte* chunk = region[i].get();
         if (chunk == nullptr){
             offsets[i] = 0;
         } else {
             offsets[i] = offset;
 
             size_t compressedSize = sizes[i];
-            dataio::write_int32_big(compressedSize, (ubyte*)intbuf, 0);
+            dataio::write_int32_big(compressedSize, reinterpret_cast<ubyte*>(intbuf), 0);
             offset += 4 + compressedSize;
 
             file.write(intbuf, 4);
@@ -304,7 +299,7 @@ void WorldRegions::writeRegion(int x, int z, int layer, WorldRegion* entry){
         }
     }
     for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
-        dataio::write_int32_big(offsets[i], (ubyte*)intbuf, 0);
+        dataio::write_int32_big(offsets[i], reinterpret_cast<ubyte*>(intbuf), 0);
         file.write(intbuf, 4);
     }
 }
@@ -347,9 +342,7 @@ static std::unique_ptr<ubyte[]> write_inventories(Chunk* chunk, uint& datasize) 
     auto datavec = builder.data();
     datasize = builder.size();
     auto data = std::make_unique<ubyte[]>(datasize);
-    for (uint i = 0; i < datasize; ++i) {
-        data[i] = datavec[i];
-    }
+    std::memcpy(data.get(), datavec, datasize);
     return data;
 }
 
