@@ -11,25 +11,28 @@ inline constexpr int B3D_VERTEX_SIZE = 9;
 Batch3D::Batch3D(size_t capacity) : capacity(capacity) {
 	const vattr attrs[] = {{3}, {2}, {4}, {0}};
 
-    buffer = new float[capacity * B3D_VERTEX_SIZE];
-	mesh = std::make_unique<Mesh>(buffer, 0, attrs);
+    buffer = std::make_unique<float[]>(capacity * B3D_VERTEX_SIZE);
+    mesh = std::make_unique<Mesh>(buffer.get(), 0, attrs);
 	index = 0;
 
 	ubyte pixels[] = {255, 255, 255, 255};
 	blank = std::make_unique<Texture>(pixels, 1, 1, ImageFormat::rgba8888);
-	_texture = nullptr;
+	currentTexture = nullptr;
 }
 
-Batch3D::~Batch3D(){
-	delete[] buffer;
+Batch3D::~Batch3D() {
 }
 
 void Batch3D::begin(){
-	_texture = nullptr;
+	currentTexture = nullptr;
 	blank->bind();
 }
 
-void Batch3D::vertex(float x, float y, float z, float u, float v, float r, float g, float b, float a) {
+void Batch3D::vertex(
+	float x, float y, float z,
+	float u, float v,
+	float r, float g, float b, float a
+) {
 	buffer[index++] = x;
 	buffer[index++] = y;
 	buffer[index++] = z;
@@ -43,7 +46,11 @@ void Batch3D::vertex(float x, float y, float z, float u, float v, float r, float
 	buffer[index++] = a;
 }
 
-void Batch3D::vertex(glm::vec3 point, glm::vec2 uvpoint, float r, float g, float b, float a) {
+void Batch3D::vertex(
+	glm::vec3 point,
+	glm::vec2 uvpoint,
+	float r, float g, float b, float a
+) {
 	buffer[index++] = point.x;
 	buffer[index++] = point.y;
 	buffer[index++] = point.z;
@@ -57,7 +64,11 @@ void Batch3D::vertex(glm::vec3 point, glm::vec2 uvpoint, float r, float g, float
 	buffer[index++] = a;
 }
 
-void Batch3D::vertex(glm::vec3 coord, float u, float v, float r, float g, float b, float a) {
+void Batch3D::vertex(
+	glm::vec3 coord,
+	float u, float v,
+	float r, float g, float b, float a
+) {
 	buffer[index++] = coord.x;
 	buffer[index++] = coord.y;
 	buffer[index++] = coord.z;
@@ -71,12 +82,14 @@ void Batch3D::vertex(glm::vec3 coord, float u, float v, float r, float g, float 
 	buffer[index++] = a;
 }
 
-void Batch3D::face(const glm::vec3& coord, float w, float h,
-		const glm::vec3& axisX,
-		const glm::vec3& axisY,
-		const UVRegion& region,
-		const glm::vec4& tint
-	) {
+void Batch3D::face(
+	const glm::vec3& coord,
+	float w, float h,
+	const glm::vec3& axisX,
+	const glm::vec3& axisY,
+	const UVRegion& region,
+	const glm::vec4& tint
+) {
 	if (index + B3D_VERTEX_SIZE * 6 > capacity) flush();
 
 	vertex(coord, region.u1, region.v1, tint.r, tint.g, tint.b, tint.a);
@@ -89,9 +102,9 @@ void Batch3D::face(const glm::vec3& coord, float w, float h,
 }
 
 void Batch3D::texture(Texture* new_texture){
-	if (_texture == new_texture) return;
+	if (currentTexture == new_texture) return;
 	flush();
-	_texture = new_texture;
+	currentTexture = new_texture;
 	if (new_texture == nullptr) blank->bind();
 	else new_texture->bind();
 }
@@ -177,13 +190,13 @@ void Batch3D::point(glm::vec3 coord, glm::vec4 tint) {
 }
 
 void Batch3D::flush() {
-	mesh->reload(buffer, index / B3D_VERTEX_SIZE);
+	mesh->reload(buffer.get(), index / B3D_VERTEX_SIZE);
 	mesh->draw(GL_TRIANGLES);
 	index = 0;
 }
 
 void Batch3D::flushPoints() {
-    mesh->reload(buffer, index / B3D_VERTEX_SIZE);
+    mesh->reload(buffer.get(), index / B3D_VERTEX_SIZE);
 	mesh->draw(GL_POINTS);
 	index = 0;
 }

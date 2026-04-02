@@ -13,18 +13,17 @@ inline constexpr uint B2D_VERTEX_SIZE = 8; ///< Размер одной верш
 Batch2D::Batch2D(size_t capacity) : capacity(capacity), color(1.0f, 1.0f, 1.0f, 1.0f) {
 	// Формат вершин: позиция (2), текстурные координаты (2), цвет (4)
 	const vattr attrs[] = {{2}, {2}, {4}, {0}};
-	buffer = new float[capacity * B2D_VERTEX_SIZE];
-	mesh = std::make_unique<Mesh>(buffer, 0, attrs);
+	buffer = std::make_unique<float[]>(capacity * B2D_VERTEX_SIZE);
+    mesh = std::make_unique<Mesh>(buffer.get(), 0, attrs);
 	index = 0;
 
 	// Создаём белую текстуру 1x1 для отрисовки без текстуры (чистый цвет)
 	ubyte pixels[] = {0xFF, 0xFF, 0xFF, 0xFF};
 	blank = std::make_unique<Texture>(pixels, 1, 1, ImageFormat::rgba8888);
-	_texture = nullptr;
+	currentTexture = nullptr;
 }
 
 Batch2D::~Batch2D(){
-	delete[] buffer;
 }
 
 void Batch2D::setPrimitive(DrawPrimitive primitive) {
@@ -35,13 +34,17 @@ void Batch2D::setPrimitive(DrawPrimitive primitive) {
 }
 
 void Batch2D::begin() {
-	_texture = nullptr;
+	currentTexture = nullptr;
 	blank->bind();
 	color = glm::vec4(1.0f);
 	primitive = DrawPrimitive::Triangle;
 }
 
-void Batch2D::vertex(float x, float y, float u, float v, float r, float g, float b, float a) {
+void Batch2D::vertex(
+	float x, float y,
+	float u, float v,
+	float r, float g, float b, float a
+) {
 	buffer[index++] = x;
 	buffer[index++] = y;
 
@@ -54,7 +57,11 @@ void Batch2D::vertex(float x, float y, float u, float v, float r, float g, float
 	buffer[index++] = a;
 }
 
-void Batch2D::vertex(glm::vec2 point, glm::vec2 uvpoint, float r, float g, float b, float a) {
+void Batch2D::vertex(
+	glm::vec2 point,
+	glm::vec2 uvpoint,
+	float r, float g, float b, float a
+) {
 	buffer[index++] = point.x;
 	buffer[index++] = point.y;
 
@@ -68,9 +75,9 @@ void Batch2D::vertex(glm::vec2 point, glm::vec2 uvpoint, float r, float g, float
 }
 
 void Batch2D::texture(Texture* new_texture){
-	if (_texture == new_texture) return;
+	if (currentTexture == new_texture) return;
 	flush();
-	_texture = new_texture;
+	currentTexture = new_texture;
 	if (new_texture == nullptr) blank->bind();
 	else new_texture->bind();
 }
@@ -79,14 +86,21 @@ void Batch2D::untexture() {
     texture(nullptr);
 }
 
-void Batch2D::point(float x, float y, float r, float g, float b, float a){
+void Batch2D::point(
+	float x, float y,
+	float r, float g, float b, float a
+) {
     if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush();
 
 	setPrimitive(DrawPrimitive::Point);
 	vertex(x, y, 0, 0, r, g, b, a);
 }
 
-void Batch2D::line(float x1, float y1, float x2, float y2, float r, float g, float b, float a){
+void Batch2D::line(
+	float x1, float y1,
+	float x2, float y2,
+	float r, float g, float b, float a
+) {
     if (index + 6 * B2D_VERTEX_SIZE >= capacity) flush();
 
 	setPrimitive(DrawPrimitive::Line);
@@ -204,12 +218,16 @@ void Batch2D::rect(
     vertex(x4, y4, u4, v4, tint.r, tint.g, tint.b, tint.a);
 }
 
-void Batch2D::rect(float x, float y, float w, float h,
-		float r0, float g0, float b0,
-		float r1, float g1, float b1,
-		float r2, float g2, float b2,
-		float r3, float g3, float b3,
-		float r4, float g4, float b4, int sh){
+void Batch2D::rect(
+	float x, float y,
+	float w, float h,
+	float r0, float g0, float b0,
+	float r1, float g1, float b1,
+	float r2, float g2, float b2,
+	float r3, float g3, float b3,
+	float r4, float g4, float b4,
+	int sh
+) {
 	if (index + 30 * B2D_VERTEX_SIZE >= capacity) flush();
 
 	setPrimitive(DrawPrimitive::Triangle);
@@ -311,7 +329,7 @@ void Batch2D::rect(
 
 void Batch2D::flush() {
 	if (index == 0) return;
-	mesh->reload(buffer, index / B2D_VERTEX_SIZE);
+	mesh->reload(buffer.get(), index / B2D_VERTEX_SIZE);
 	mesh->draw(gl::to_glenum(primitive));
 	index = 0;
 }

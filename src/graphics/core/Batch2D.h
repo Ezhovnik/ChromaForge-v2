@@ -20,7 +20,7 @@ struct UVRegion;
  * повороты, отражения и закруглённые прямоугольники.
  */
 class Batch2D {
-	float* buffer;
+	std::unique_ptr<float[]> buffer;
 	size_t capacity;
 
 	std::unique_ptr<Mesh> mesh;
@@ -29,7 +29,7 @@ class Batch2D {
 	glm::vec4 color;
 
 	std::unique_ptr<Texture> blank; ///< Белая текстура 1x1 для случаев, когда текстура не задана
-	Texture* _texture; ///< Текущая активная текстура
+	Texture* currentTexture; ///< Текущая активная текстура
      DrawPrimitive primitive = DrawPrimitive::Triangle;
 
      void setPrimitive(DrawPrimitive primitive);

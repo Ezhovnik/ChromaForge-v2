@@ -94,9 +94,9 @@ class WorldRegions {
 
     std::unique_ptr<ubyte[]> decompress(const ubyte* src, size_t srclen, size_t dstlen);
 
-    std::unique_ptr<ubyte[]> readChunkData(int x, int y, uint32_t& length, regFile* file);
+    std::unique_ptr<ubyte[]> readChunkData(int x, int z, uint32_t& length, regFile* file);
 
-    void fetchChunks(WorldRegion* region, int x, int y, regFile* file);
+    void fetchChunks(WorldRegion* region, int x, int z, regFile* file);
 
     ubyte* getData(int x, int z, int layer, uint32_t& size);
 
@@ -109,7 +109,7 @@ class WorldRegions {
 
     void writeRegions(int layer);
 
-    void writeRegion(int x, int y, int layer, WorldRegion* entry);
+    void writeRegion(int x, int z, int layer, WorldRegion* entry);
 public:
     bool generatorTestMode = false;
     bool doWriteLights = true;
@@ -132,7 +132,7 @@ public:
 
     void write();
 
-    static bool parseRegionFilename(const std::string& name, int& x, int& y);
+    static bool parseRegionFilename(const std::string& name, int& x, int& z);
 };
 
 #endif // FILES_WORLD_REGIONS_H_

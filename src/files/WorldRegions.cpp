@@ -96,7 +96,7 @@ uint WorldRegion::getChunkDataSize(uint x, uint z) {
 }
 
 WorldRegions::WorldRegions(std::filesystem::path directory) : directory(directory) {
-    for (uint i = 0; i < sizeof(layers)/sizeof(RegionsLayer); ++i) {
+    for (uint i = 0; i < sizeof(layers) / sizeof(RegionsLayer); ++i) {
         layers[i].layer = i;
     }
     layers[RegionConsts::LAYER_VOXELS].folder = directory/std::filesystem::path("regions");
@@ -156,7 +156,7 @@ std::unique_ptr<ubyte[]> WorldRegions::readChunkData(
     int z, 
     uint32_t& length, 
     regFile* rfile
-){
+) {
     int regionX, regionZ, localX, localZ;
     calc_reg_coords(x, z, regionX, regionZ, localX, localZ);
     int chunkIndex = localZ * RegionConsts::SIZE + localX;
@@ -417,9 +417,9 @@ void WorldRegions::processRegionVoxels(int x, int z, regionproc func) {
         throw std::runtime_error("Could not open region file");
     }
     for (uint cz = 0; cz < RegionConsts::SIZE; ++cz) {
+        int gz = cz + z * RegionConsts::SIZE;
         for (uint cx = 0; cx < RegionConsts::SIZE; ++cx) {
             int gx = cx + x * RegionConsts::SIZE;
-            int gz = cz + z * RegionConsts::SIZE;
             uint32_t length;
             auto data = readChunkData(gx, gz, length, regFile.get());
             if (data == nullptr) continue;
@@ -447,7 +447,7 @@ bool WorldRegions::parseRegionFilename(const std::string& name, int& x, int& z) 
     if (sep == std::string::npos || sep == 0 || sep == name.length() - 1) return false;
     try {
         x = std::stoi(name.substr(0, sep));
-        z = std::stoi(name.substr(sep+1));
+        z = std::stoi(name.substr(sep + 1));
     } catch (std::invalid_argument& err) {
         return false;
     } catch (std::out_of_range& err) {

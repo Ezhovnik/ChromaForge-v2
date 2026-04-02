@@ -13,19 +13,33 @@ class Texture;
 
 class Batch3D {
 private:
-	float* buffer;
+	std::unique_ptr<float[]> buffer;
 	size_t capacity;
 	std::unique_ptr<Mesh> mesh;
 	size_t index;
 
 	std::unique_ptr<Texture> blank;
-	Texture* _texture;
+	Texture* currentTexture;
 
-	void vertex(float x, float y, float z, float u, float v, float r, float g, float b, float a);
-	void vertex(glm::vec3 point, glm::vec2 uvpoint, float r, float g, float b, float a);
-	void vertex(glm::vec3 coord, float u, float v, float r, float g, float b, float a);
+	void vertex(
+		float x, float y, float z,
+		float u, float v,
+		float r, float g, float b, float a
+	);
+	void vertex(
+		glm::vec3 point,
+		glm::vec2 uvpoint,
+		float r, float g, float b, float a
+	);
+	void vertex(
+		glm::vec3 coord,
+		float u, float v,
+		float r, float g, float b, float a
+	);
 
-	void face(const glm::vec3& coord, float w, float h,
+	void face(
+		const glm::vec3& coord,
+		float w, float h,
 		const glm::vec3& axisX,
 		const glm::vec3& axisY,
 		const UVRegion& region,
