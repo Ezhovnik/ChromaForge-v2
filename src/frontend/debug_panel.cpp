@@ -31,6 +31,7 @@ static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
 
 std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Player* player) {
 	auto panel = std::make_shared<gui::Panel>(glm::vec2(350, 200), glm::vec4(5.0f), 2.0f);
+    panel->setId("hud.debug-panel");
     panel->setPos(glm::vec2(10, 10));
 
     static int fps = 0;

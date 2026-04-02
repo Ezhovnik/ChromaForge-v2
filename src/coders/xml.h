@@ -61,8 +61,8 @@ namespace xml {
             return attr("#").getText();
         }
 
-        const xmlattribute attr(const std::string& name) const;
-        const xmlattribute attr(const std::string& name, const std::string& def) const;
+        const xmlattribute& attr(const std::string& name) const;
+        xmlattribute attr(const std::string& name, const std::string& def) const;
 
         bool has(const std::string& name) const;
 

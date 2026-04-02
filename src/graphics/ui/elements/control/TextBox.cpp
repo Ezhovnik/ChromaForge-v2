@@ -576,6 +576,7 @@ void TextBox::setCaret(ptrdiff_t position) {
 
 void TextBox::setCaret(size_t position) {
     this->caret = std::min(static_cast<size_t>(position), input.length());
+    if (font == nullptr) return;
     caretLastMove = Window::time();
 
     int width = label->getSize().x;

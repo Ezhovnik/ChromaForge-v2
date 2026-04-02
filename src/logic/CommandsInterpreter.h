@@ -122,7 +122,7 @@ namespace cmd {
             executor_func
         );
         Command* get(const std::string& name);
-        const std::unordered_map<std::string, Command> getCommands() const {
+        const std::unordered_map<std::string, Command>& getCommands() const {
             return commands;
         }
     };

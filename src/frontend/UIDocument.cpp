@@ -37,7 +37,7 @@ const std::string& UIDocument::getId() const {
     return id;
 }
 
-const std::shared_ptr<gui::UINode> UIDocument::getRoot() const {
+std::shared_ptr<gui::UINode> UIDocument::getRoot() const {
     return root;
 }
 
@@ -49,7 +49,7 @@ scriptenv UIDocument::getEnvironment() const {
     return env;
 }
 
-const std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const {
+std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const {
     auto found = map.find(id);
     if (found == map.end()) return nullptr;
     return found->second;

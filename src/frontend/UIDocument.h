@@ -41,10 +41,10 @@ public:
     const uinodes_map& getMap() const;
     uinodes_map& getMapWriteable();
     const std::string& getId() const;
-    const std::shared_ptr<gui::UINode> getRoot() const;
+    std::shared_ptr<gui::UINode> getRoot() const;
     const uidocscript& getScript() const;
     scriptenv getEnvironment() const;
-    const std::shared_ptr<gui::UINode> get(const std::string& id) const;
+    std::shared_ptr<gui::UINode> get(const std::string& id) const;
 
     static std::unique_ptr<UIDocument> read(
         const scriptenv& parent_env,

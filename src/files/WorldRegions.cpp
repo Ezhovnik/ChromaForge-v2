@@ -350,6 +350,10 @@ static std::unique_ptr<ubyte[]> write_inventories(Chunk* chunk, uint& datasize) 
 void WorldRegions::put(Chunk* chunk){
     assert(chunk != nullptr);
 
+    if (!chunk->flags.lighted) return;
+    bool lightsUnsaved = !chunk->flags.loadedLights && doWriteLights;
+    if (!chunk->flags.unsaved && !lightsUnsaved) return;
+
     int regionX, regionZ, localX, localZ;
     calc_reg_coords(chunk->chunk_x, chunk->chunk_z, regionX, regionZ, localX, localZ);
 
@@ -382,10 +386,10 @@ std::unique_ptr<light_t[]> WorldRegions::getLights(int x, int z) {
 }
 
 chunk_inventories_map WorldRegions::fetchInventories(int x, int z) {
-    chunk_inventories_map inventories;
+    chunk_inventories_map meta;
     uint32_t bytesSize;
     const ubyte* data = getData(x, z, RegionConsts::LAYER_INVENTORIES, bytesSize);
-    if (data == nullptr) return inventories;
+    if (data == nullptr) return meta;
     ByteReader reader(data, bytesSize);
     int count = reader.getInt32();
     for (int i = 0; i < count; ++i) {
@@ -395,9 +399,9 @@ chunk_inventories_map WorldRegions::fetchInventories(int x, int z) {
         reader.skip(size);
         auto inv = std::make_shared<Inventory>(0, 0);
         inv->deserialize(map.get());
-        inventories[index] = inv;
+        meta[index] = inv;
     }
-    return inventories;
+    return meta;
 }
 
 void WorldRegions::processRegionVoxels(int x, int z, const regionproc& func) {

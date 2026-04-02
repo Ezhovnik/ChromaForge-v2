@@ -39,7 +39,6 @@ private:
 
 	std::string generator;
 
-	EngineSettings& settings;
 	const Content* const content;
 	std::vector<ContentPack> packs; ///< Список контент-паков, установленных в мире
 

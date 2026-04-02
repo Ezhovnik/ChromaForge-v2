@@ -32,12 +32,9 @@ World::World(
 ) : name(std::move(name)),
 	generator(std::move(generator)),
 	seed(seed), 
-	settings(settings), 
 	content(content), 
-	packs(packs) 
-{
-	wfile = std::make_unique<WorldFiles>(directory, settings.debug);
-}
+	packs(packs),
+	wfile(std::make_unique<WorldFiles>(directory, settings.debug)) {}
 
 World::~World() {
 }
@@ -55,11 +52,9 @@ void World::write(Level* level) {
 
 	// Проходим по всем чанкам в хранилище
 	for (size_t i = 0; i < chunks->volume; ++i) {
-		std::shared_ptr<Chunk> chunk = chunks->chunks[i];
-		if (chunk == nullptr || !chunk->flags.lighted) continue;
-		bool lightsUnsaved = !chunk->flags.loadedLights && settings.debug.doWriteLights.get();
-		if (!chunk->flags.unsaved && !lightsUnsaved) continue;
-		regions.put(chunk.get());
+		if (auto chunk = chunks->chunks[i]) {
+            regions.put(chunk.get());
+        }
 	}
 
 	// Запись метаданных мира и игрока

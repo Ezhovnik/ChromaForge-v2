@@ -185,7 +185,7 @@ struct Binding {
      * @brief Возвращает текстовое представление привязки (имя клавиши/кнопки).
      * @return Строка с именем.
      */
-    const std::string text() const {
+    inline std::string text() const {
         switch (type) {
             case inputType::keyboard: return input_util::to_string(static_cast<keycode>(code));
             case inputType::mouse: return input_util::to_string(static_cast<mousecode>(code));

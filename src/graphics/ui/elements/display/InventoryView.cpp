@@ -110,6 +110,19 @@ SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(InventoryView::SLOT_SIZ
 void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
     if (bound == nullptr) return;
 
+    itemid_t itemid = bound->getItemId();
+    if (itemid != prevItem) {
+        if (itemid) {
+            auto def = content->getIndices()->getItemDef(itemid);
+            tooltip = util::pascal_case(
+                langs::get(util::str2wstr_utf8(def->caption))
+            );
+        } else {
+            tooltip = L"";
+        }
+    }
+    prevItem = itemid;
+
     const int slotSize = InventoryView::SLOT_SIZE;
 
     const ItemStack& stack = *bound;
@@ -190,13 +203,10 @@ bool SlotView::isHighlighted() const {
     return highlighted;
 }
 
-const std::wstring SlotView::getTooltip() const {
-    const auto str = UINode::getTooltip();
-    if (!str.empty() || bound->isEmpty()) return str;
-    auto def = content->getIndices()->getItemDef(bound->getItemId());
-    return util::pascal_case(
-        langs::get(util::str2wstr_utf8(def->caption))
-    );
+const std::wstring& SlotView::getTooltip() const {
+    const auto& str = UINode::getTooltip();
+    if (!str.empty() || tooltip.empty()) return str;
+    return tooltip;
 }
 
 void SlotView::clicked(gui::GUI* gui, mousecode button) {

@@ -9,7 +9,7 @@
 #include "../math/UVRegion.h"
 #include "../core_content_defs.h"
 
-#define BLOCK_ITEM_SUFFIX ".item"
+inline const std::string BLOCK_ITEM_SUFFIX = ".item"; 
 
 inline std::string DEFAULT_MATERIAL = CHROMAFORGE_CONTENT_NAMESPACE + ":stone";
 

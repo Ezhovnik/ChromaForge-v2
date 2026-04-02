@@ -28,7 +28,7 @@ public:
     // Макросы
     void define(const std::string& name, std::string value); // Добавляем определение макроса
     void undefine(const std::string& name); // Удаляем определение макроса
-    const std::string getDefine(const std::string& name) const; // Получаем значение макроса
+    const std::string& getDefine(const std::string& name) const; // Получаем значение макроса
     bool hasDefine(const std::string& name) const; // Проверяем наличие определения макроса
 
     // Заголовки
@@ -37,7 +37,7 @@ public:
     bool hasHeader(const std::string& name) const; // Проверяем наличие заголовка
 
     // Основная функций обработки
-    const std::string process(const std::filesystem::path& file, const std::string& source);
+    std::string process(const std::filesystem::path& file, const std::string& source);
 };
 
 #endif // CODERS_GLSL_EXTESION_H_

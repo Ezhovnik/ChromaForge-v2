@@ -67,7 +67,7 @@ lua::LuaState::LuaState() {
     setglobal(LAMBDAS_TABLE);
 }
 
-const std::string lua::LuaState::envName(int env) {
+std::string lua::LuaState::envName(int env) {
     return "_ENV" + util::mangleid(env);
 }
 

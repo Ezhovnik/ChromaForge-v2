@@ -42,9 +42,12 @@ const std::string& GLSLExtension::getHeader(const std::string& name) const {
     return found->second;
 }
 
-const std::string GLSLExtension::getDefine(const std::string& name) const {
+const std::string& GLSLExtension::getDefine(const std::string& name) const {
     auto found = defines.find(name);
-    if (found == defines.end()) return "";
+    if (found == defines.end()) {
+        LOG_ERROR("Name '{}' is not defined");
+        throw std::runtime_error("Name '" + name + "' is not defined");
+    }
     return found->second;
 }
 
@@ -85,7 +88,7 @@ inline void source_line(std::stringstream& ss, uint linenum) {
 }
 
 // Основной метод обработки исходного кода шейдера
-const std::string GLSLExtension::process(const std::filesystem::path& file, const std::string& source) {
+std::string GLSLExtension::process(const std::filesystem::path& file, const std::string& source) {
     std::stringstream ss;
     size_t pos = 0;
     uint linenum = 1; // текущая обрабатываемая строка исходного файла

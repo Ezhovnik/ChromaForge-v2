@@ -113,7 +113,7 @@ namespace gui {
         bool isHover() const;
 
         virtual void setTooltip(const std::wstring& text);
-        virtual const std::wstring getTooltip() const;
+        virtual const std::wstring& getTooltip() const;
 
         virtual void setTooltipDelay(float delay);
         virtual float getTooltipDelay() const;
