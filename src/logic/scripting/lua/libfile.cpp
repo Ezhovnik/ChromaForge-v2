@@ -9,6 +9,7 @@
 #include "../../../files/files.h"
 #include "../../../files/engine_paths.h"
 #include "../../../util/stringutil.h"
+#include "../../../coders/zip.h"
 
 namespace scripting {
     extern lua::LuaState* state;
@@ -94,7 +95,7 @@ static int l_file_read_bytes(lua_State* L) {
         int newTable = lua_gettop(L);
 
         for(size_t i = 0; i < length; ++i) {
-            lua_pushnumber(L, bytes[i]);
+            lua_pushinteger(L, bytes[i]);
             lua_rawseti(L, newTable, i + 1);
         }
         return 1;
@@ -190,6 +191,32 @@ static int l_file_remove_tree(lua_State* L) {
     return scripting::state->pushinteger(std::filesystem::remove_all(path));
 }
 
+static int l_file_zip_compress(lua_State* L) { 
+    std::filesystem::path path = resolve_path(scripting::state->requireString(1)); 
+    if (std::filesystem::is_regular_file(path)) { 
+        size_t length = static_cast<size_t>(std::filesystem::file_size(path));
+
+        auto compressed_bytes = zip::compress(files::read_bytes(path, length).get(), length);
+
+        lua_pushboolean(L, files::write_bytes(path, compressed_bytes.data(), compressed_bytes.size()));
+        return 1;
+    } 
+    throw std::runtime_error("file does not exist " + util::quote(path.u8string())); 
+}
+
+static int l_file_zip_decompress(lua_State* L) { 
+    std::filesystem::path path = resolve_path(scripting::state->requireString(1)); 
+    if (std::filesystem::is_regular_file(path)) { 
+        size_t length = static_cast<size_t>(std::filesystem::file_size(path));
+
+        auto decompressed_bytes = zip::decompress(files::read_bytes(path, length).get(), length);
+
+        lua_pushboolean(L, files::write_bytes(path, decompressed_bytes.data(), decompressed_bytes.size()));
+        return 1;
+    }
+    throw std::runtime_error("File does not exist " + util::quote(path.u8string())); 
+}
+
 const luaL_Reg filelib [] = {
     {"resolve", lua_wrap_errors<l_file_resolve>},
     {"read", lua_wrap_errors<l_file_read>},
@@ -205,5 +232,7 @@ const luaL_Reg filelib [] = {
     {"find", lua_wrap_errors<l_file_find>},
     {"remove", lua_wrap_errors<l_file_remove>},
     {"remove_tree", lua_wrap_errors<l_file_remove_tree>},
+    {"zip_compress", lua_wrap_errors<l_file_zip_compress>},
+    {"zip_decompress", lua_wrap_errors<l_file_zip_decompress>},
     {NULL, NULL}
 };
