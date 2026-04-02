@@ -212,3 +212,12 @@ void Events::loadBindings(const std::string& filename, const std::string& source
         }
     }
 }
+
+Binding& Events::getBinding(const std::string& name) {
+    auto found = bindings.find(name);
+    if (found == bindings.end()) {
+        LOG_ERROR("Binding '{}' does not exists", name);
+        throw std::runtime_error("Binding '" + name + "' does not exists");
+    }
+    return found->second;
+}

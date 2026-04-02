@@ -43,6 +43,7 @@ public:
     static bool justClicked(mousecode button);
     static bool justClicked(int button); // Проверяет, была ли кнопка мыши нажата именно в текущем кадре
 
+    static Binding& getBinding(const std::string& name);
     static void bind(const std::string& name, inputType type, keycode code);
 	static void bind(const std::string& name, inputType type, mousecode code);
     static void bind(const std::string& name, inputType type, int code);

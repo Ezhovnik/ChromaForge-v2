@@ -8,6 +8,7 @@
 
 namespace PhysicsSolver_Consts {
     inline constexpr float EPS = 0.03f; // Маленькое значение
+	inline constexpr float OVERLAP_EPS = 0.00001f;
     inline constexpr float GROUND_FRICTION = 18.0f; // Коэффициент трения о землю
 	inline constexpr float MAX_FIX = 0.1f;
 }
@@ -39,6 +40,7 @@ void PhysicsSolver::step(
     // Разбиваем шаг на подшаги
     for (uint i = 0; i < substeps; ++i) {
 		float prev_x = pos.x;
+		float prev_y = pos.y;
 		float prev_z = pos.z;
 
 		vel += gravity * subDelta * gravityScale;
@@ -48,6 +50,7 @@ void PhysicsSolver::step(
 		vel.x *= glm::max(0.0f, 1.0f - subDelta * linear_damping);
 		vel.z *= glm::max(0.0f, 1.0f - subDelta * linear_damping);
 		pos += vel * subDelta + gravity * gravityScale * subDelta * subDelta * 0.5f;
+		if (hitbox->grounded) pos.y = prev_y;
 
 		if (shifting && hitbox->grounded){
 			float y = pos.y - half.y - PhysicsSolver_Consts::EPS;
@@ -215,10 +218,9 @@ bool PhysicsSolver::isBlockInside(int x, int y, int z, Block* def, blockstate st
 	for (const auto& block_hitbox : boxes) {
 		glm::vec3 min = block_hitbox.min();
 		glm::vec3 max = block_hitbox.max();
-		// 0.00001 - inaccuracy
-		if (min.x < pos.x + half.x - x - 0.00001f && max.x > pos.x - half.x - x + 0.00001f &&
-			min.z < pos.z + half.z - z - 0.00001f && max.z > pos.z - half.z - z + 0.00001f &&
-			min.y < pos.y + half.y - y - 0.00001f && max.y > pos.y - half.y - y + 0.00001f)
+		if (min.x < pos.x + half.x - x - PhysicsSolver_Consts::OVERLAP_EPS && max.x > pos.x - half.x - x + PhysicsSolver_Consts::OVERLAP_EPS &&
+			min.z < pos.z + half.z - z - PhysicsSolver_Consts::OVERLAP_EPS && max.z > pos.z - half.z - z + PhysicsSolver_Consts::OVERLAP_EPS &&
+			min.y < pos.y + half.y - y - PhysicsSolver_Consts::OVERLAP_EPS && max.y > pos.y - half.y - y + PhysicsSolver_Consts::OVERLAP_EPS)
 			return true;
 	}
 	return false;

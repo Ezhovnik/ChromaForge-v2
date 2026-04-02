@@ -22,6 +22,7 @@
 #include "../../graphics/core/ImageData.h"
 #include "../../debug/Logger.h"
 #include "../../settings.h"
+#include "../../input_bindings.h"
 
 LevelScreen::LevelScreen(
     Engine* engine,
@@ -45,6 +46,9 @@ LevelScreen::LevelScreen(
     }));
     keepAlive(settings.camera.fov.observe([=](double value) {
         controller->getPlayer()->camera->setFov(glm::radians(value));
+    }));
+    keepAlive(Events::getBinding(BIND_CHUNKS_RELOAD).onactived.add([=](){
+        controller->getLevel()->chunks->saveAndClear();
     }));
 
     animator = std::make_unique<TextureAnimator>();
@@ -104,7 +108,6 @@ void LevelScreen::updateHotkeys() {
 
     if (Events::justPressed(keycode::F1)) hudVisible = !hudVisible;
     if (Events::justPressed(keycode::F3)) controller->getPlayer()->debug = !controller->getPlayer()->debug;
-    if (Events::justPressed(keycode::F5)) controller->getLevel()->chunks->saveAndClear();
 }
 
 void LevelScreen::update(float deltaTime) {

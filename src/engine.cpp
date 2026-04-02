@@ -55,7 +55,7 @@ inline void create_channel(Engine* engine, std::string name, NumberSetting& sett
 
     engine->keepAlive(setting.observe([=](auto value) {
         audio::get_channel(name)->setVolume(value * value);
-    }));
+    }, true));
 }
 
 // Реализация конструктора

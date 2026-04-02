@@ -301,6 +301,7 @@ inline std::wstring get_alphabet(wchar_t c) {
 }
 
 void TextBox::tokenSelectAt(int index) {
+    if (input.empty()) return;
     int left = index;
     int right = index;
 

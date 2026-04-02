@@ -60,6 +60,7 @@ settings.UI Sounds=Звуки Интерфейса
 settings.V-Sync=Вертикальная Синхронизация
 
 # Управление
+chunks.reload=Перезагрузить Чанки
 movement.forward=Вперёд
 movement.back=Назад
 movement.left=Влево
