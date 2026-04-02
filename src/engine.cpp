@@ -69,6 +69,7 @@ Engine::Engine(
     settingsHandler(settingsHandler),
     interpreter(std::make_unique<cmd::CommandsInterpreter>())
 {
+    paths->prepare();
     loadSettings();
 
     controller = std::make_unique<EngineController>(this);

@@ -20,6 +20,8 @@ private:
     std::filesystem::path worldFolder;
     std::vector<ContentPack>* contentPacks = nullptr;
 public:
+    void prepare();
+
     std::filesystem::path getUserfiles() const;
     std::filesystem::path getResources() const;
 

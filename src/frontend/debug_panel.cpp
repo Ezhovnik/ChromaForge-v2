@@ -65,7 +65,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
         std::wstringstream stream;
         stream << "R:" << player->selectedVoxel.state.rotation << " S:"
-            << player->selectedVoxel.state.segment << " U:"
+            << std::bitset<3>(player->selectedVoxel.state.segment) << " U:"
             << std::bitset<8>(player->selectedVoxel.state.userbits);
         if (player->selectedVoxel.id == BLOCK_VOID) {
             return std::wstring {L"Block: -"};

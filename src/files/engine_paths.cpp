@@ -17,6 +17,7 @@ const std::filesystem::path LOGS_FOLDER {"logs"};
 const std::filesystem::path SAVES_FOLDER {"saves"};
 const std::filesystem::path CONTROLS_FILE {"controls.toml"};
 const std::filesystem::path SETTINGS_FILE {"settings.toml"};
+const std::filesystem::path CONTENT_FOLDER {"content"};
 
 static std::filesystem::path toCanonic(std::filesystem::path path) {
     std::stack<std::string> parts;
@@ -38,6 +39,13 @@ static std::filesystem::path toCanonic(std::filesystem::path path) {
         path = path/std::filesystem::path(part);
     }
     return path;
+}
+
+void EnginePaths::prepare() {
+    std::filesystem::path contentFolder = this->getResources()/std::filesystem::path(CONTENT_FOLDER);
+    if (!std::filesystem::is_directory(contentFolder)) {
+        std::filesystem::create_directories(contentFolder);
+    }
 }
 
 std::filesystem::path EnginePaths::getUserfiles() const {
