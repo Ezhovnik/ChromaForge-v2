@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <memory>
+#include <utility>
 
 #include "../assets/Assets.h"
 #include "../graphics/core/ShaderProgram.h"
@@ -57,9 +58,9 @@ HudElement::HudElement(
     UIDocument* document, 
     std::shared_ptr<gui::UINode> node, 
     bool debug
-) : mode(mode), 
-	document(document), 
-	node(node), 
+) : mode(mode),
+	document(document),
+	node(std::move(node)),
 	debug(debug)
 {
 }
@@ -457,16 +458,16 @@ void Hud::setPause(bool pause) {
     menu->setVisible(pause);
 }
 
-void Hud::add(HudElement element) {
+void Hud::add(const HudElement& element) {
     guiController->add(element.getNode());
     auto invview = std::dynamic_pointer_cast<gui::InventoryView>(element.getNode());
     auto document = element.getDocument();
     if (document) {
         auto inventory = invview ? invview->getInventory() : nullptr;
         std::vector<dynamic::Value> args;
-        args.push_back(inventory ? inventory.get()->getId() : 0);
+        args.emplace_back(inventory ? inventory.get()->getId() : 0);
         for (int i = 0; i < 3; ++i) {
-            args.push_back(static_cast<integer_t>(blockPos[i]));
+            args.emplace_back(static_cast<integer_t>(blockPos[i]));
         }
         scripting::on_ui_open(
             element.getDocument(), 
@@ -488,7 +489,7 @@ void Hud::onRemove(const HudElement& element) {
     guiController->remove(element.getNode());
 }
 
-void Hud::remove(std::shared_ptr<gui::UINode> node) {
+void Hud::remove(const std::shared_ptr<gui::UINode>& node) {
     for (auto& element : elements) {
         if (element.getNode() == node) {
             element.setRemoved();

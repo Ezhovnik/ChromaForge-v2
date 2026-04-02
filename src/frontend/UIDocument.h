@@ -21,6 +21,7 @@ struct uidocscript {
 using uinodes_map = std::unordered_map<std::string, std::shared_ptr<gui::UINode>>;
 
 class UIDocument {
+private:
     std::string id;
     uidocscript script;
     uinodes_map map;
@@ -31,7 +32,7 @@ public:
     UIDocument(
         std::string id, 
         uidocscript script, 
-        std::shared_ptr<gui::UINode> root, 
+        const std::shared_ptr<gui::UINode>& root, 
         scriptenv env
     );
 
@@ -45,8 +46,14 @@ public:
     scriptenv getEnvironment() const;
     const std::shared_ptr<gui::UINode> get(const std::string& id) const;
 
-    static std::unique_ptr<UIDocument> read(scriptenv parent_env, std::string name, std::filesystem::path file);
-    static std::shared_ptr<gui::UINode> readElement(std::filesystem::path file);
+    static std::unique_ptr<UIDocument> read(
+        const scriptenv& parent_env,
+        const std::string& name,
+        const std::filesystem::path& file
+    );
+    static std::shared_ptr<gui::UINode> readElement(
+        const std::filesystem::path& file
+    );
 };
 
 #endif // FRONTEND_UI_DOCUMENT_H_

@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <filesystem>
 #include <unordered_set>
+#include <utility>
 
 #define GLEW_STATIC
 
@@ -359,7 +360,7 @@ EngineController* Engine::getController() {
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
     audio::reset_channel(audio::get_channel_index("regular"));
     audio::reset_channel(audio::get_channel_index("ambient"));
-	this->screen = screen;
+	this->screen = std::move(screen);
 }
 
 std::shared_ptr<Screen> Engine::getScreen() {
@@ -371,7 +372,7 @@ double Engine::getDeltaTime() const {
 }
 
 void Engine::setLanguage(std::string locale) {
-	langs::setup(paths->getResources(), locale, contentPacks);
+	langs::setup(paths->getResources(), std::move(locale), contentPacks);
 	gui->getMenu()->setPageLoader(menus::create_page_loader(this));
 }
 
@@ -380,7 +381,8 @@ void Engine::addDefaultWorldGenerators() {
 	WorldGenerators::addGenerator<FlatWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":flat");
 }
 
-void Engine::postRunnable(runnable callback) {
+void Engine::postRunnable(const runnable& callback) {
+    std::lock_guard<std::recursive_mutex> lock(postRunnablesMutex);
     postRunnables.push(callback);
 }
 

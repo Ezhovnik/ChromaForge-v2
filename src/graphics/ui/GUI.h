@@ -91,15 +91,15 @@ namespace gui {
         void draw(const DrawContext* parent_context, Assets* assets);
         void add(std::shared_ptr<UINode> panel);
         void remove(std::shared_ptr<UINode> panel) noexcept;
-        void store(std::string name, std::shared_ptr<UINode> node);
-        std::shared_ptr<UINode> get(std::string name) noexcept;
-        void remove(std::string name) noexcept;
+        void store(const std::string& name, std::shared_ptr<UINode> node);
+        std::shared_ptr<UINode> get(const std::string& name) noexcept;
+        void remove(const std::string& name) noexcept;
 
         std::shared_ptr<Container> getContainer() const;
 
         void onAssetsLoad(Assets* assets);
 
-        void postRunnable(runnable callback);
+        void postRunnable(const runnable& callback);
 
         void setDoubleClickDelay(float delay);
         float getDoubleClickDelay() const;

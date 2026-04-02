@@ -28,7 +28,7 @@
 EngineController::EngineController(Engine* engine) : engine(engine) {
 }
 
-void EngineController::deleteWorld(std::string name) {
+void EngineController::deleteWorld(const std::string& name) {
     std::filesystem::path folder = engine->getPaths()->getWorldFolder(name);
     guiutil::confirm(engine->getGUI(), langs::get(L"delete-confirm", L"world") +
     L" (" + util::str2wstr_utf8(folder.u8string()) + L")", [=]() {
@@ -39,10 +39,10 @@ void EngineController::deleteWorld(std::string name) {
 
 std::shared_ptr<Task> create_converter(
     Engine* engine,
-    std::filesystem::path folder, 
+    const std::filesystem::path& folder, 
     const Content* content, 
-    std::shared_ptr<ContentLUT> lut, 
-    runnable postRunnable)
+    const std::shared_ptr<ContentLUT>& lut, 
+    const runnable& postRunnable)
 {
     return WorldConverter::startTask(folder, content, lut, [=](){
         auto menu = engine->getGUI()->getMenu();
@@ -57,9 +57,9 @@ std::shared_ptr<Task> create_converter(
 void show_convert_request(
     Engine* engine, 
     const Content* content, 
-    std::shared_ptr<ContentLUT> lut,
-    std::filesystem::path folder,
-    runnable postRunnable
+    const std::shared_ptr<ContentLUT>& lut,
+    const std::filesystem::path& folder,
+    const runnable& postRunnable
 ) {
     guiutil::confirm(engine->getGUI(), langs::get(L"world.convert-request"), [=]() {
         auto converter = create_converter(engine, folder, content, lut, postRunnable);
@@ -69,7 +69,7 @@ void show_convert_request(
 
 static void show_content_missing(
     Engine* engine,
-    std::shared_ptr<ContentLUT> lut
+    const std::shared_ptr<ContentLUT>& lut
 ) {
     auto root = dynamic::create_map();
     auto& contentEntries = root->putList("content");
@@ -84,7 +84,7 @@ static void show_content_missing(
     menus::show(engine, "reports/missing_content", {root});
 }
 
-static bool loadWorldContent(Engine* engine, std::filesystem::path folder) {
+static bool loadWorldContent(Engine* engine, const std::filesystem::path& folder) {
     try {
         engine->loadWorldContent(folder);
         return true;
@@ -105,7 +105,7 @@ static bool loadWorldContent(Engine* engine, std::filesystem::path folder) {
     }
 }
 
-static void loadWorld(Engine* engine, std::filesystem::path folder) {
+static void loadWorld(Engine* engine, const std::filesystem::path& folder) {
     try {
         auto content = engine->getContent();
         auto& packs = engine->getContentPacks();
@@ -122,7 +122,7 @@ static void loadWorld(Engine* engine, std::filesystem::path folder) {
     }
 }
 
-void EngineController::openWorld(std::string name, bool confirmConvert) {
+void EngineController::openWorld(const std::string& name, bool confirmConvert) {
     auto paths = engine->getPaths();
     auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
     if (!loadWorldContent(engine, folder)) return;
@@ -214,8 +214,8 @@ void EngineController::reopenWorld(World* world) {
 
 void EngineController::reconfigPacks(
     LevelController* controller,
-    std::vector<std::string> packsToAdd,
-    std::vector<std::string> packsToRemove)
+    const std::vector<std::string>& packsToAdd,
+    const std::vector<std::string>& packsToRemove)
 {
     auto content = engine->getContent();
     bool hasIndices = false;

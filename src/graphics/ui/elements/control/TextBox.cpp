@@ -1,6 +1,7 @@
 #include "TextBox.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "../display/Label.h"
 #include "../../../core/DrawContext.h"
@@ -13,7 +14,7 @@
 
 using namespace gui;
 
-TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0), input(L""), placeholder(placeholder) {
+TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Panel(glm::vec2(200, 32), padding, 0), input(L""), placeholder(std::move(placeholder)) {
     setOnUpPressed(nullptr);
     setOnDownPressed(nullptr);
 
@@ -512,15 +513,15 @@ std::shared_ptr<UINode> TextBox::getAt(glm::vec2 pos, std::shared_ptr<UINode> se
 }
 
 void TextBox::setTextSupplier(wstringsupplier supplier) {
-    this->supplier = supplier;
+    this->supplier = std::move(supplier);
 }
 
 void TextBox::setTextConsumer(wstringconsumer consumer) {
-    this->consumer = consumer;
+    this->consumer = std::move(consumer);
 }
 
 void TextBox::setTextValidator(wstringchecker validator) {
-    this->validator = validator;
+    this->validator = std::move(validator);
 }
 
 void TextBox::setFocusedColor(glm::vec4 color) {
@@ -544,7 +545,7 @@ std::wstring TextBox::getText() const {
     return input;
 }
 
-void TextBox::setText(const std::wstring value) {
+void TextBox::setText(const std::wstring& value) {
     this->input = value;
     input.erase(std::remove(input.begin(), input.end(), '\r'), input.end());
 }
@@ -606,7 +607,7 @@ bool TextBox::isTextWrapping() const {
     return label->isTextWrapping();
 }
 
-void TextBox::setOnUpPressed(runnable callback) {
+void TextBox::setOnUpPressed(const runnable& callback) {
     if (callback == nullptr) {
         onUpPressed = [this]() {
             bool shiftPressed = Events::isPressed(keycode::LEFT_SHIFT);
@@ -618,7 +619,7 @@ void TextBox::setOnUpPressed(runnable callback) {
     }
 }
 
-void TextBox::setOnDownPressed(runnable callback) {
+void TextBox::setOnDownPressed(const runnable& callback) {
     if (callback == nullptr) {
         onDownPressed = [this]() {
             bool shiftPressed = Events::isPressed(keycode::LEFT_SHIFT);

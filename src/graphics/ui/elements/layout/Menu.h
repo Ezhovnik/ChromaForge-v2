@@ -25,12 +25,18 @@ namespace gui {
 
         bool has(const std::string& name);
 
-        void setPage(std::string name, bool history=true);
+        void setPage(const std::string& name, bool history=true);
         void setPage(Page page, bool history=true);
-        void addPage(std::string name, std::shared_ptr<UINode> panel);
+        void addPage(
+            const std::string& name,
+            const std::shared_ptr<UINode>& panel
+        );
         std::shared_ptr<UINode> fetchPage(const std::string& name);
 
-        void addSupplier(std::string name, supplier<std::shared_ptr<UINode>> pageSupplier);
+        void addSupplier(
+            const std::string& name,
+            const supplier<std::shared_ptr<UINode>>& pageSupplier
+        );
 
         void setPageLoader(page_loader_func loader);
 

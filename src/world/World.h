@@ -16,7 +16,7 @@
  */
 class world_load_error : public std::runtime_error {
 public:
-	world_load_error(std::string message);
+	world_load_error(const std::string& message);
 };
 
 class WorldFiles;
@@ -74,11 +74,11 @@ public:
 	World(
 		std::string name,
 		std::string generator,
-		std::filesystem::path directory,
+		const std::filesystem::path& directory,
 		uint64_t seed,
 		EngineSettings& settings,
 		const Content* content, 
-		std::vector<ContentPack> packs
+		const std::vector<ContentPack>& packs
 	);
 	~World();
 
@@ -108,7 +108,7 @@ public:
 	/**
      * Создаёт новый мир (генерация с нуля).
      * @param name Имя мира.
-	 * @param generator Идентификатор генератора мира (тип мира).
+	* @param generator Идентификатор генератора мира (тип мира).
      * @param directory Папка для сохранения.
      * @param seed Сид.
      * @param settings Настройки.
@@ -117,9 +117,9 @@ public:
      * @return Указатель на новый Level, содержащий созданный World.
      */
 	static std::unique_ptr<Level> create(
-		std::string name,
-		std::string generator,
-		std::filesystem::path directory, 
+		const std::string& name,
+		const std::string& generator,
+		const std::filesystem::path& directory, 
 		uint64_t seed, 
 		EngineSettings& settings, 
 		const Content* content,
@@ -136,7 +136,7 @@ public:
      * @throws world_load_error Если world.json не найден или повреждён.
      */
      static std::unique_ptr<Level> load(
-		std::filesystem::path directory, 
+		const std::filesystem::path& directory, 
 		EngineSettings& settings, 
 		const Content* content, 
 		const std::vector<ContentPack>& packs

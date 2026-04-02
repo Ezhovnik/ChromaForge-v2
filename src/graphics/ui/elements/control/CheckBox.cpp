@@ -27,11 +27,11 @@ void CheckBox::mouseRelease(GUI*, int, int) {
 }
 
 void CheckBox::setSupplier(boolsupplier supplier) {
-    this->supplier = supplier;
+    this->supplier = std::move(supplier);
 }
 
 void CheckBox::setConsumer(boolconsumer consumer) {
-    this->consumer = consumer;
+    this->consumer = std::move(consumer);
 }
 
 CheckBox* CheckBox::setChecked(bool flag) {
@@ -40,7 +40,7 @@ CheckBox* CheckBox::setChecked(bool flag) {
 }
 
 FullCheckBox::FullCheckBox(
-    std::wstring text, 
+    const std::wstring& text, 
     glm::vec2 size, 
     bool checked
 ) : Panel(size), 

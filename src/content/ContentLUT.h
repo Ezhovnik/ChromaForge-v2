@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <utility>
 
 #include "../typedefs.h"
 #include "../constants.h"
@@ -46,7 +47,7 @@ public:
     // Устанавливает соответствие для одного старого индекса.
     inline void setBlock(blockid_t index, std::string name, blockid_t id) {
         blocks[index] = id;
-        blockNames[index] = name;
+        blockNames[index] = std::move(name);
         if (id == BLOCK_VOID) {
             missingContent = true;
         } else if (index != id) {
@@ -60,7 +61,7 @@ public:
 
     inline void setItem(itemid_t index, std::string name, itemid_t id) {
         items[index] = id;
-        itemNames[index] = name;
+        itemNames[index] = std::move(name);
         if (id == ITEM_VOID) {
             missingContent = true;
         } else if (index != id) {

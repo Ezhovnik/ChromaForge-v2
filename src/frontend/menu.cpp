@@ -44,7 +44,7 @@ gui::page_loader_func menus::create_page_loader(Engine* engine) {
                 auto value = std::string(parser.readUntil('&'));
                 map->put(key, value);
             }
-            args.push_back(map);
+            args.emplace_back(map);
         } else {
             name = query;
         }
@@ -87,7 +87,11 @@ UIDocument* menus::show(Engine* engine, const std::string& name, std::vector<dyn
     return document;
 }
 
-void menus::show_process_panel(Engine* engine, std::shared_ptr<Task> task, std::wstring text) {
+void menus::show_process_panel(
+    Engine* engine,
+    const std::shared_ptr<Task>& task,
+    const std::wstring& text
+) {
     uint initialWork = task->getWorkTotal();
 
     auto menu = engine->getGUI()->getMenu();

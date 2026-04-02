@@ -1,5 +1,7 @@
 #include "Image.h"
 
+#include <utility>
+
 #include "../../../core/DrawContext.h"
 #include "../../../core/Batch2D.h"
 #include "../../../core/Texture.h"
@@ -8,7 +10,7 @@
 
 using namespace gui;
 
-Image::Image(std::string texture, glm::vec2 size) : UINode(size), texture(texture) {
+Image::Image(std::string texture, glm::vec2 size) : UINode(size), texture(std::move(texture)) {
     setInteractive(false);
 }
 

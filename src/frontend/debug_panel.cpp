@@ -2,6 +2,7 @@
 #include <memory>
 #include <sstream>
 #include <bitset>
+#include <utility>
 
 #include "../graphics/ui/elements/control/CheckBox.h"
 #include "../graphics/ui/elements/control/TextBox.h"
@@ -24,7 +25,7 @@
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
-    label->textSupplier(supplier);
+    label->textSupplier(std::move(supplier));
     return label;
 }
 
@@ -99,7 +100,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
             Hitbox* hitbox = player->hitbox.get();
             return std::to_wstring(int(hitbox->position[ax]));
         });
-        box->setTextConsumer([=](std::wstring text) {
+        box->setTextConsumer([=](const std::wstring& text) {
             try {
                 glm::vec3 position = player->hitbox->position;
                 position[ax] = std::stoi(text);

@@ -49,7 +49,7 @@ public:
     ); 
     ~Chunks() = default;
 
-    bool putChunk(std::shared_ptr<Chunk> chunk);
+    bool putChunk(const std::shared_ptr<Chunk>& chunk);
 
     Chunk* getChunk(int32_t chunk_x, int32_t chunk_z); // Возвращает чанк по координатам чанка
     Chunk* getChunkByVoxel(int32_t x, int32_t y, int32_t z); // Получает чанк, содержащий воксель с заданными мировыми координатами

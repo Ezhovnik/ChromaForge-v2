@@ -80,7 +80,7 @@ namespace gui {
         virtual glm::vec4 getErrorColor() const;
 
         virtual std::wstring getText() const;
-        virtual void setText(std::wstring value);
+        virtual void setText(const std::wstring& value);
 
         virtual std::wstring getPlaceholder() const;
         virtual void setPlaceholder(const std::wstring& text);
@@ -112,8 +112,8 @@ namespace gui {
         virtual void setTextWrapping(bool flag);
         virtual bool isTextWrapping() const;
 
-        virtual void setOnUpPressed(runnable callback);
-        virtual void setOnDownPressed(runnable callback);
+        virtual void setOnUpPressed(const runnable& callback);
+        virtual void setOnDownPressed(const runnable& callback);
 
         virtual void onFocus(GUI*) override;
         virtual void refresh() override;

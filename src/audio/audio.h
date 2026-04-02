@@ -364,7 +364,7 @@ namespace audio {
     );
 
     speakerid_t play(
-        std::shared_ptr<Stream> stream,
+        const std::shared_ptr<Stream>& stream,
         glm::vec3 position,
         bool relative,
         float volume,

@@ -18,7 +18,7 @@ inline double power(double base, int64_t power) {
 }
 
 parsing_error::parsing_error(
-    std::string message, 
+    const std::string& message, 
     std::string_view filename, 
     std::string_view source, 
     uint pos, 
@@ -337,6 +337,6 @@ std::string BasicParser::parseString(char quote, bool closeRequired) {
     return ss.str();
 }
 
-parsing_error BasicParser::error(std::string message) {
+parsing_error BasicParser::error(const std::string& message) {
     return parsing_error(message, filename, source, pos, line, linestart);
 }

@@ -16,13 +16,13 @@ namespace util {
 
     uint encode_utf8(uint32_t c, ubyte* bytes);
     uint32_t decode_utf8(uint& size, const char* bytes);
-    std::string wstr2str_utf8(const std::wstring ws);
-    std::wstring str2wstr_utf8(const std::string s);
+    std::string wstr2str_utf8(const std::wstring &ws);
+    std::wstring str2wstr_utf8(const std::string &s);
     std::string double2str(double x);
     std::wstring double2wstr(double x, int precision);
     bool is_integer(const std::string& text);
     bool is_integer(const std::wstring& text);
-    bool is_valid_filename(std::wstring name);
+    bool is_valid_filename(const std::wstring& name);
 
     int replaceAll(std::string& str, const std::string& from, const std::string& to);
 

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 #include "WorldFiles.h"
 #include "../voxels/Chunk.h"
@@ -16,7 +17,7 @@ class ConverterWorker : public util::Worker<ConvertTask, int> {
 private:
     std::shared_ptr<WorldConverter> converter;
 public:
-    ConverterWorker(std::shared_ptr<WorldConverter> converter) : converter(converter) {}
+    ConverterWorker(std::shared_ptr<WorldConverter> converter) : converter(std::move(converter)) {}
 
     int operator()(const std::shared_ptr<ConvertTask>& task) override {
         converter->convert(*task);
@@ -25,11 +26,11 @@ public:
 };
 
 WorldConverter::WorldConverter(
-    std::filesystem::path folder, 
+    const std::filesystem::path& folder, 
     const Content* content, 
     std::shared_ptr<ContentLUT> lut
 ) : wfile(std::make_unique<WorldFiles>(folder)),
-    lut(lut), 
+    lut(std::move(lut)),
     content(content) 
 {
     std::filesystem::path regionsFolder = wfile->getRegions().getRegionsFolder(RegionConsts::LAYER_VOXELS);
@@ -40,7 +41,7 @@ WorldConverter::WorldConverter(
 
     tasks.push(ConvertTask{ConvertTaskType::Player, wfile->getPlayerFile()});
 
-    for (auto file : std::filesystem::directory_iterator(regionsFolder)) {
+    for (const auto& file : std::filesystem::directory_iterator(regionsFolder)) {
         tasks.push(ConvertTask{ConvertTaskType::Region, file.path()});
     }
 }
@@ -49,10 +50,10 @@ WorldConverter::~WorldConverter() {
 }
 
 std::shared_ptr<Task> WorldConverter::startTask(
-    std::filesystem::path folder, 
+    const std::filesystem::path& folder, 
     const Content* content, 
-    std::shared_ptr<ContentLUT> lut,
-    runnable onDone,
+    const std::shared_ptr<ContentLUT>& lut,
+    const runnable& onDone,
     bool multithreading
 ) {
     auto converter = std::make_shared<WorldConverter>(folder, content, lut);
@@ -81,7 +82,7 @@ std::shared_ptr<Task> WorldConverter::startTask(
     return pool;
 }
 
-void WorldConverter::convertRegion(std::filesystem::path file) const {
+void WorldConverter::convertRegion(const std::filesystem::path& file) const {
     int x, z;
     std::string name = file.stem().string();
     if (!WorldRegions::parseRegionFilename(name, x, z)) {
@@ -99,7 +100,7 @@ void WorldConverter::convertRegion(std::filesystem::path file) const {
     LOG_INFO("Region '{}' successfully converted", name);
 }
 
-void WorldConverter::convertPlayer(std::filesystem::path file) const {
+void WorldConverter::convertPlayer(const std::filesystem::path& file) const {
     LOG_INFO("Converting player {}", file.u8string());
     auto map = files::read_json(file);
     Player::convert(map.get(), lut.get());
@@ -107,7 +108,7 @@ void WorldConverter::convertPlayer(std::filesystem::path file) const {
     LOG_INFO("Player {} successfully converted", file.u8string());
 }
 
-void WorldConverter::convert(ConvertTask task) const {
+void WorldConverter::convert(const ConvertTask& task) const {
     if (!std::filesystem::is_regular_file(task.file)) return;
 
     switch (task.type) {
@@ -133,7 +134,7 @@ void WorldConverter::convertNext() {
 }
 
 void WorldConverter::setOnComplete(runnable callback) {
-    this->onComplete = callback;
+    this->onComplete = std::move(callback);
 }
 
 void WorldConverter::update() {

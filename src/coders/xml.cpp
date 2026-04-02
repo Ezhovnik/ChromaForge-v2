@@ -3,13 +3,14 @@
 #include <stdexcept>
 #include <sstream>
 #include <charconv>
+#include <utility>
 
 #include "../util/stringutil.h"
 #include "../debug/Logger.h"
 
 using namespace xml;
 
-Attribute::Attribute(std::string name, std::string text) : name(name), text(text) {
+Attribute::Attribute(std::string name, std::string text) : name(std::move(name)), text(std::move(text)) {
 }
 
 const std::string& Attribute::getName() const {
@@ -103,14 +104,14 @@ glm::vec4 Attribute::asColor() const {
     }
 }
 
-Node::Node(std::string tag) : tag(tag) {
+Node::Node(std::string tag) : tag(std::move(tag)) {
 }
 
-void Node::add(xmlelement element) {
+void Node::add(const xmlelement& element) {
     elements.push_back(element);
 }
 
-void Node::set(std::string name, std::string text) {
+void Node::set(const std::string& name, const std::string& text) {
     attrs[name] = Attribute(name, text);
 }
 
@@ -154,10 +155,10 @@ const xmlelements_map& Node::getAttributes() const {
     return attrs;
 }
 
-Document::Document(std::string version, std::string encoding) : version(version), encoding(encoding) {
+Document::Document(std::string version, std::string encoding) : version(std::move(version)), encoding(std::move(encoding)) {
 }
 
-void Document::setRoot(xmlelement element) {
+void Document::setRoot(const xmlelement& element) {
     this->root = element;
 }
 
@@ -327,7 +328,7 @@ xmldocument Parser::parse() {
     return document;
 }
 
-xmldocument xml::parse(std::string filename, std::string source) {
+xmldocument xml::parse(const std::string& filename, const std::string& source) {
     Parser parser(filename, source);
     return parser.parse();
 }
@@ -340,7 +341,7 @@ inline void newline(std::stringstream& ss, bool nice, const std::string& indentS
     }
 }
 
-static void stringifyElement(std::stringstream& ss, const xmlelement element, bool nice, const std::string& indentStr, int indent) {
+static void stringifyElement(std::stringstream& ss, const xmlelement& element, bool nice, const std::string& indentStr, int indent) {
     if (element->isText()) {
         std::string text = element->attr("#").getText();
         util::replaceAll(text, "&", "&amp;");
@@ -386,7 +387,7 @@ static void stringifyElement(std::stringstream& ss, const xmlelement element, bo
     }
 }
 
-std::string xml::stringify(const xmldocument document, bool nice, const std::string& indentStr) {
+std::string xml::stringify(const xmldocument& document, bool nice, const std::string& indentStr) {
     std::stringstream ss;
 
     ss << "<?xml version=\"" << document->getVersion();

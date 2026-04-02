@@ -1,5 +1,7 @@
 #include "UIDocument.h"
 
+#include <utility>
+
 #include "../graphics/ui/elements/UINode.h"
 #include "../graphics/ui/elements/display/InventoryView.h"
 #include "../logic/scripting/scripting.h"
@@ -9,12 +11,12 @@
 UIDocument::UIDocument(
     std::string id, 
     uidocscript script, 
-    std::shared_ptr<gui::UINode> root, 
+    const std::shared_ptr<gui::UINode>& root, 
     scriptenv env
-) : id(id), 
+) : id(std::move(id)), 
     script(script), 
     root(root), 
-    env(env)
+    env(std::move(env))
 {
     gui::UINode::getIndices(root, map);
 }
@@ -53,7 +55,11 @@ const std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const 
     return found->second;
 }
 
-std::unique_ptr<UIDocument> UIDocument::read(scriptenv parent_env, std::string name, std::filesystem::path file) {
+std::unique_ptr<UIDocument> UIDocument::read(
+    const scriptenv& parent_env,
+    const std::string& name,
+    const std::filesystem::path& file
+) {
     const std::string text = files::read_string(file);
     auto xmldoc = xml::parse(file.u8string(), text);
 
@@ -69,7 +75,9 @@ std::unique_ptr<UIDocument> UIDocument::read(scriptenv parent_env, std::string n
     return std::make_unique<UIDocument>(name, script, view, env);
 }
 
-std::shared_ptr<gui::UINode> UIDocument::readElement(std::filesystem::path file) {
+std::shared_ptr<gui::UINode> UIDocument::readElement(
+    const std::filesystem::path& file
+) {
     auto document = read(nullptr, file.filename().u8string(), file);
     return document->getRoot();
 }

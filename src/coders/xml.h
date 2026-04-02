@@ -47,9 +47,9 @@ namespace xml {
     public:
         Node(std::string tag);
 
-        void add(xmlelement element);
-        
-        void set(std::string name, std::string text);
+        void add(const xmlelement& element);
+
+        void set(const std::string& name, const std::string& text);
 
         const std::string& getTag() const;
 
@@ -82,7 +82,7 @@ namespace xml {
     public:
         Document(std::string version, std::string encoding);
 
-        void setRoot(xmlelement element);
+        void setRoot(const xmlelement& element);
         xmlelement getRoot() const;
 
         const std::string& getVersion() const;
@@ -106,12 +106,12 @@ namespace xml {
     };
 
     extern std::string stringify(
-        const xmldocument document,
+        const xmldocument& document,
         bool nice=true,
         const std::string& indentStr="    "
     );
 
-    extern xmldocument parse(std::string filename, std::string source);
+    extern xmldocument parse(const std::string& filename, const std::string& source);
 }
 
 #endif // CODERS_XML_H_

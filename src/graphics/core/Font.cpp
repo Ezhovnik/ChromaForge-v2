@@ -1,6 +1,7 @@
 #include "Font.h"
 
 #include <limits.h>
+#include <utility>
 
 #include "Texture.h"
 #include "Batch2D.h"
@@ -90,10 +91,10 @@ static inline void drawGlyph(Batch2D* batch, int x, int y, uint c, FontStyle sty
 }
 
 void Font::draw(Batch2D* batch, std::wstring text, int x, int y) {
-	draw(batch, text, x, y, FontStyle::None);
+	draw(batch, std::move(text), x, y, FontStyle::None);
 }
 
-void Font::draw(Batch2D* batch, std::wstring text, int x, int y, FontStyle style) {
+void Font::draw(Batch2D* batch, const std::wstring& text, int x, int y, FontStyle style) {
     draw(batch, std::wstring_view(text.c_str(), text.length()), x, y, style);
 }
 

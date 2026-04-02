@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 #include "../util/stringutil.h"
 #include "../typedefs.h"
@@ -11,25 +12,25 @@
 #include "../constants.h"
 
 void GLSLExtension::setVersion(std::string version) {
-    this->version = version;
+    this->version = std::move(version);
 }
 
 void GLSLExtension::setPaths(const ResPaths* paths) {
     this->paths = paths;
 }
 
-void GLSLExtension::loadHeader(std::string name) {
+void GLSLExtension::loadHeader(const std::string& name) {
     std::filesystem::path file = paths->find(SHADERS_FOLDER + "/lib/" + name + ".glsl");
     std::string source = files::read_string(file);
     addHeader(name, source);
 }
 
-void GLSLExtension::addHeader(std::string name, std::string source) {
-    headers[name] = source;
+void GLSLExtension::addHeader(const std::string& name, std::string source) {
+    headers[name] = std::move(source);
 }
 
-void GLSLExtension::define(std::string name, std::string value) {
-    defines[name] = value;
+void GLSLExtension::define(const std::string& name, std::string value) {
+    defines[name] = std::move(value);
 }
 
 const std::string& GLSLExtension::getHeader(const std::string& name) const {
@@ -55,24 +56,26 @@ bool GLSLExtension::hasHeader(const std::string& name) const {
     return headers.find(name) != headers.end();
 }
 
-void GLSLExtension::undefine(std::string name) {
+void GLSLExtension::undefine(const std::string& name) {
     if (hasDefine(name)) defines.erase(name);
 }
 
 // Вспомогательная функция: выбрасывает исключение с сообщением об ошибке парсинга
 inline void parsing_error(
-        const std::filesystem::path& file, 
-        uint linenum, 
-        const std::string message) {
+    const std::filesystem::path& file, 
+    uint linenum, 
+    const std::string& message
+) {
     LOG_ERROR("File {}: {} at line {}", file.string(), message, std::to_string(linenum));
     throw std::runtime_error("File " + file.string() + ": " + message + " at line " + std::to_string(linenum));
 }
 
 // Вспомогательная функция: выводит предупреждение о проблеме при парсинге
 inline void parsing_warning(
-        const std::filesystem::path& file, 
-        uint linenum, const 
-        std::string message) {
+    const std::filesystem::path& file, 
+    uint linenum, const 
+    std::string& message
+) {
     LOG_WARN("File {}: {} at line {}", file.string(), message, std::to_string(linenum));
 }
 

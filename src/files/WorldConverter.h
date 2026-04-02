@@ -32,17 +32,17 @@ private:
     runnable onComplete;
     uint tasksDone = 0;
 
-    void convertPlayer(std::filesystem::path file) const;
-    void convertRegion(std::filesystem::path file) const;
+    void convertPlayer(const std::filesystem::path& file) const;
+    void convertRegion(const std::filesystem::path& file) const;
 public:
     WorldConverter(
-        std::filesystem::path folder, 
+        const std::filesystem::path& folder, 
         const Content* content, 
         std::shared_ptr<ContentLUT> lut
     );
     ~WorldConverter();
 
-    void convert(ConvertTask task) const;
+    void convert(const ConvertTask& task) const;
     void convertNext();
     void setOnComplete(runnable callback);
     void write();
@@ -55,10 +55,10 @@ public:
     uint getWorkDone() const override;
 
     static std::shared_ptr<Task> startTask(
-        std::filesystem::path folder, 
+        const std::filesystem::path& folder, 
         const Content* content, 
-        std::shared_ptr<ContentLUT> lut,
-        runnable onDone,
+        const std::shared_ptr<ContentLUT>& lut,
+        const runnable& onDone,
         bool multithreading
     );
 };

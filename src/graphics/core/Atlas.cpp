@@ -41,7 +41,7 @@ ImageData* Atlas::getImage() const {
     return image.get();
 }
 
-void AtlasBuilder::add(std::string name, std::unique_ptr<ImageData> image) {
+void AtlasBuilder::add(const std::string& name, std::unique_ptr<ImageData> image) {
     if (image != nullptr) {
         entries.push_back(atlasentry{name, std::shared_ptr<ImageData>(image.release())});
         names.insert(name);

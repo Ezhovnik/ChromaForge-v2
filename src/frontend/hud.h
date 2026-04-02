@@ -119,9 +119,9 @@ public:
     void openPermanent(UIDocument* doc);
     void showOverlay(UIDocument* doc, bool playerInventory);
 
-    void add(HudElement element);
+    void add(const HudElement& element);
 	void onRemove(const HudElement& element);
-    void remove(std::shared_ptr<gui::UINode> node);
+    void remove(const std::shared_ptr<gui::UINode>& node);
 
     Player* getPlayer() const;
 

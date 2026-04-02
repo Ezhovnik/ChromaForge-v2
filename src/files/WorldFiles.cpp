@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstring>
+#include <utility>
 
 #include "../coders/byte_utils.h"
 #include "../coders/json.h"
@@ -28,10 +29,10 @@
 #include "../debug/Logger.h"
 #include "../settings.h"
 
-WorldFiles::WorldFiles(std::filesystem::path directory) : directory(directory), regions(directory) {
+WorldFiles::WorldFiles(const std::filesystem::path& directory) : directory(directory), regions(directory) {
 }
 
-WorldFiles::WorldFiles(std::filesystem::path directory, const DebugSettings& settings) : WorldFiles(directory) {
+WorldFiles::WorldFiles(const std::filesystem::path& directory, const DebugSettings& settings) : WorldFiles(directory) {
     generatorTestMode = settings.generatorTestMode.get();
     doWriteLights = settings.doWriteLights.get();
 	regions.generatorTestMode = generatorTestMode;

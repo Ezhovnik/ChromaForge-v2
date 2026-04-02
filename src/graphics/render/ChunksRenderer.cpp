@@ -52,7 +52,10 @@ ChunksRenderer::ChunksRenderer(
 ChunksRenderer::~ChunksRenderer() {
 }
 
-std::shared_ptr<Mesh> ChunksRenderer::render(std::shared_ptr<Chunk> chunk, bool important) {
+std::shared_ptr<Mesh> ChunksRenderer::render(
+    const std::shared_ptr<Chunk>& chunk,
+    bool important
+) {
     chunk->flags.modified = false;
 
     if (important) {
@@ -74,7 +77,10 @@ void ChunksRenderer::unload(const Chunk* chunk) {
     if (found != meshes.end()) meshes.erase(found);
 }
 
-std::shared_ptr<Mesh> ChunksRenderer::getOrRender(std::shared_ptr<Chunk> chunk, bool important) {
+std::shared_ptr<Mesh> ChunksRenderer::getOrRender(
+    const std::shared_ptr<Chunk>& chunk,
+    bool important
+) {
     auto found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
     if (found == meshes.end()) return render(chunk, important);
 

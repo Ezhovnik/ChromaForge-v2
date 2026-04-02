@@ -1,6 +1,7 @@
 #include "Chunk.h"
 
 #include <math.h>
+#include <utility>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/noise.hpp>
@@ -45,7 +46,7 @@ void Chunk::updateHeights() {
 }
 
 void Chunk::addBlockInventory(std::shared_ptr<Inventory> inventory, uint x, uint y, uint z) {
-    inventories[vox_index(x, y, z)] = inventory;
+    inventories[vox_index(x, y, z)] = std::move(inventory);
     flags.unsaved = true;
 }
 
@@ -61,7 +62,7 @@ void Chunk::removeBlockInventory(uint x, uint y, uint z) {
 }
 
 void Chunk::setBlockInventories(chunk_inventories_map map) {
-	inventories = map;
+	inventories = std::move(map);
 }
 
 // Создает полную копию текущего чанка.

@@ -24,15 +24,15 @@ ContentLoader::ContentLoader(ContentPack* pack) : pack(pack) {
 }
 
 bool ContentLoader::fixPackIndices(
-    std::filesystem::path folder,
+    const std::filesystem::path& folder,
     dynamic::Map* indicesRoot,
-    std::string contentSection
+    const std::string& contentSection
 ) {
     std::vector<std::string> detected;
     std::vector<std::string> indexed;
     if (std::filesystem::is_directory(folder)) {
-        for (auto entry : std::filesystem::directory_iterator(folder)) {
-            std::filesystem::path file = entry.path();
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            const std::filesystem::path& file = entry.path();
             if (std::filesystem::is_regular_file(file) && file.extension() == ".json") {
                 std::string name = file.stem().string();
                 if (name[0] == '_') continue;
@@ -40,8 +40,8 @@ bool ContentLoader::fixPackIndices(
             } else if (std::filesystem::is_directory(file)) {
                 std::string space = file.stem().string();
                 if (space[0] == '_') continue;
-                for (auto entry : std::filesystem::directory_iterator(file)) {
-                    std::filesystem::path file = entry.path();
+                for (const auto& entry : std::filesystem::directory_iterator(file)) {
+                    const std::filesystem::path& file = entry.path();
                     if (std::filesystem::is_regular_file(file) && file.extension() == ".json") {
                         std::string name = file.stem().string();
                         if (name[0] == '_') continue;
@@ -97,7 +97,11 @@ void ContentLoader::fixPackIndices() {
     if (modified) files::write_json(indexFile, root.get());
 }
 
-void ContentLoader::loadBlock(Block& def, std::string name, std::filesystem::path file) {
+void ContentLoader::loadBlock(
+    Block& def,
+    const std::string& name,
+    const std::filesystem::path& file
+) {
     auto root = files::read_json(file);
 
     root->str("caption", def.caption);
@@ -223,7 +227,7 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
                 }
             } else {
                 for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.push_back("notfound");
+                    def.modelTextures.emplace_back(TEXTURE_NOTFOUND);
                 }
             }
         }
@@ -246,7 +250,11 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
     }
 }
 
-void ContentLoader::loadItem(Item& def, std::string name, std::filesystem::path file) {
+void ContentLoader::loadItem(
+    Item& def,
+    const std::string& name,
+    const std::filesystem::path& file
+) {
     auto root = files::read_json(file);
 
     root->str("caption", def.caption);
@@ -272,7 +280,11 @@ void ContentLoader::loadItem(Item& def, std::string name, std::filesystem::path 
     }
 }
 
-void ContentLoader::loadBlock(Block& def, std::string full, std::string name) {
+void ContentLoader::loadBlock(
+    Block& def,
+    const std::string& full,
+    const std::string& name
+) {
     auto folder = pack->folder;
 
     std::filesystem::path configFile = folder/std::filesystem::path("blocks/" + name + ".json");
@@ -282,7 +294,11 @@ void ContentLoader::loadBlock(Block& def, std::string full, std::string name) {
     if (std::filesystem::is_regular_file(scriptfile)) scripting::load_block_script(env, full, scriptfile, def.rt.funcsset);
 }
 
-void ContentLoader::loadItem(Item& item, std::string full, std::string name) {
+void ContentLoader::loadItem(
+    Item& item,
+    const std::string& full,
+    const std::string& name
+) {
     auto folder = pack->folder;
 
     std::filesystem::path configFile = folder/std::filesystem::path("items/" + name + ".json");
@@ -293,7 +309,10 @@ void ContentLoader::loadItem(Item& item, std::string full, std::string name) {
 }
 
 
-void ContentLoader::loadBlockMaterial(BlockMaterial& def, std::filesystem::path file) {
+void ContentLoader::loadBlockMaterial(
+    BlockMaterial& def,
+    const std::filesystem::path& file
+) {
     auto root = files::read_json(file);
     root->str("steps-sound", def.stepsSound);
     root->str("place-sound", def.placeSound);
@@ -364,8 +383,8 @@ void ContentLoader::load(ContentBuilder& builder) {
 
     std::filesystem::path materialsDir = folder / std::filesystem::u8path("block_materials");
     if (std::filesystem::is_directory(materialsDir)) {
-        for (auto entry : std::filesystem::directory_iterator(materialsDir)) {
-            std::filesystem::path file = entry.path();
+        for (const auto& entry : std::filesystem::directory_iterator(materialsDir)) {
+            const std::filesystem::path& file = entry.path();
             std::string name = pack->id + ":" + file.stem().u8string();
             loadBlockMaterial(builder.createBlockMaterial(name), file);
         }

@@ -1,5 +1,7 @@
 #include "UINode.h"
 
+#include <utility>
+
 #include "../../../graphics/core/Batch2D.h"
 #include "layout/Container.h"
 
@@ -66,12 +68,12 @@ int UINode::getZIndex() const {
     return zindex;
 }
 
-UINode* UINode::listenAction(onaction action) {
+UINode* UINode::listenAction(const onaction& action) {
     actions.listen(action);
     return this;
 }
 
-UINode* UINode::listenDoubleClick(onaction action) {
+UINode* UINode::listenDoubleClick(const onaction& action) {
     doubleClickCallbacks.listen(action);
     return this;
 }
@@ -114,7 +116,7 @@ bool UINode::isInside(glm::vec2 point) {
 
 std::shared_ptr<UINode> UINode::getAt(glm::vec2 point, std::shared_ptr<UINode> self) {
     if (!isInteractive() || !enabled) return nullptr;
-    return isInside(point) ? self : nullptr;
+    return isInside(point) ? std::move(self) : nullptr;
 }
 
 bool UINode::isInteractive() const {
@@ -180,7 +182,7 @@ vec2supplier UINode::getPositionFunc() const {
 }
 
 void UINode::setPositionFunc(vec2supplier func) {
-    positionfunc = func;
+    positionfunc = std::move(func);
 }
 
 vec2supplier UINode::getSizeFunc() const {
@@ -188,7 +190,7 @@ vec2supplier UINode::getSizeFunc() const {
 }
 
 void UINode::setSizeFunc(vec2supplier func) {
-    sizefunc = func;
+    sizefunc = std::move(func);
 }
 
 bool UINode::isSubnodeOf(const UINode* node) {
@@ -293,7 +295,10 @@ glm::vec4 UINode::getMargin() const {
     return margin;
 }
 
-void UINode::moveInto(std::shared_ptr<UINode> node, std::shared_ptr<Container> dest) {
+void UINode::moveInto(
+    const std::shared_ptr<UINode>& node,
+    const std::shared_ptr<Container>& dest
+) {
     auto parent = node->getParent();
     if (auto container = dynamic_cast<Container*>(parent)) {
         container->remove(node);
@@ -316,7 +321,7 @@ void UINode::reposition() {
 }
 
 void UINode::getIndices(
-    const std::shared_ptr<UINode> node,
+    const std::shared_ptr<UINode>& node,
     std::unordered_map<std::string, std::shared_ptr<UINode>>& map)
 {
     const std::string& id = node->getId();
@@ -324,19 +329,19 @@ void UINode::getIndices(
 
     auto container = std::dynamic_pointer_cast<gui::Container>(node);
     if (container) {
-        for (auto subnode : container->getNodes()) {
+        for (const auto& subnode : container->getNodes()) {
             getIndices(subnode, map);
         }
     }
 }
 
 std::shared_ptr<UINode> UINode::find(
-    const std::shared_ptr<UINode> node,
+    const std::shared_ptr<UINode>& node,
     const std::string& id
 ) {
     if (node->getId() == id) return node;
     if (auto container = std::dynamic_pointer_cast<Container>(node)) {
-        for (auto subnode : container->getNodes()) {
+        for (const auto& subnode : container->getNodes()) {
             if (auto found = UINode::find(subnode, id)) {
                 return found;
             }

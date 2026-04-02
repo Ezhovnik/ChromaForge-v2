@@ -20,19 +20,19 @@ class GLSLExtension {
     const ResPaths* paths = nullptr;
 
     // Загружает заголовок name из файловой системы (через paths) и сохраняет в кэш
-    void loadHeader(std::string name);
+    void loadHeader(const std::string& name);
 public:
     void setPaths(const ResPaths* paths);
     void setVersion(std::string version);
 
     // Макросы
-    void define(std::string name, std::string value); // Добавляем определение макроса
-    void undefine(std::string name); // Удаляем определение макроса
+    void define(const std::string& name, std::string value); // Добавляем определение макроса
+    void undefine(const std::string& name); // Удаляем определение макроса
     const std::string getDefine(const std::string& name) const; // Получаем значение макроса
     bool hasDefine(const std::string& name) const; // Проверяем наличие определения макроса
 
     // Заголовки
-    void addHeader(std::string name, std::string source); // Добавляем заголовок вручную (минуя файловую систему)
+    void addHeader(const std::string& name, std::string source); // Добавляем заголовок вручную (минуя файловую систему)
     const std::string& getHeader(const std::string& name) const; // Получаем код заголовка по имени
     bool hasHeader(const std::string& name) const; // Проверяем наличие заголовка
 

@@ -1,6 +1,7 @@
 #include "World.h"
 
 #include <memory>
+#include <utility>
 
 #include "Level.h"
 #include "LevelEvents.h"
@@ -17,19 +18,19 @@
 #include "WorldGenerators.h"
 #include "../settings.h"
 
-world_load_error::world_load_error(std::string message) : std::runtime_error(message) {
+world_load_error::world_load_error(const std::string& message) : std::runtime_error(message) {
 }
 
 World::World(
 	std::string name,
 	std::string generator,
-	std::filesystem::path directory, 
+	const std::filesystem::path& directory, 
 	uint64_t seed, 
 	EngineSettings& settings, 
 	const Content* content, 
-	const std::vector<ContentPack> packs
-) : name(name),
-	generator(generator),
+	const std::vector<ContentPack>& packs
+) : name(std::move(name)),
+	generator(std::move(generator)),
 	seed(seed), 
 	settings(settings), 
 	content(content), 
@@ -66,7 +67,7 @@ void World::write(Level* level) {
 	auto playerFile = dynamic::Map();
 
     auto& players = playerFile.putList("players");
-    for (auto object : level->objects) {
+    for (const auto& object : level->objects) {
         if (auto player = std::dynamic_pointer_cast<Player>(object)) {
             players.put(player->serialize());
         }
@@ -75,9 +76,9 @@ void World::write(Level* level) {
 }
 
 std::unique_ptr<Level> World::create(
-	std::string name,
-	std::string generator,
-	std::filesystem::path directory, 
+	const std::string& name,
+	const std::string& generator,
+	const std::filesystem::path& directory, 
 	uint64_t seed, 
 	EngineSettings& settings, 
 	const Content* content, 
@@ -96,7 +97,12 @@ std::shared_ptr<ContentLUT> World::checkIndices(const std::filesystem::path& dir
 	return nullptr;
 }
 
-std::unique_ptr<Level> World::load(std::filesystem::path directory, EngineSettings& settings, const Content* content, const std::vector<ContentPack>& packs) {
+std::unique_ptr<Level> World::load(
+	const std::filesystem::path& directory,
+	EngineSettings& settings,
+	const Content* content,
+	const std::vector<ContentPack>& packs
+) {
 	LOG_INFO("Loading world");
 	// Временно создаём мир с заглушкой имени и сидом 0 — они будут перезаписаны при десериализации
 	auto world = std::make_unique<World>(

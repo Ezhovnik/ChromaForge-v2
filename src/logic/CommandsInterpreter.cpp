@@ -1,5 +1,7 @@
 #include "CommandsInterpreter.h"
 
+#include <utility>
+
 #include "../coders/commons.h"
 #include "../util/stringutil.h"
 
@@ -152,7 +154,13 @@ public:
                 args.push_back(parseArgument());
             }
         }
-        return Command(name, std::move(args), std::move(kwargs), std::string(description), executor);
+        return Command(
+            name,
+            std::move(args),
+            std::move(kwargs),
+            std::string(description),
+            std::move(executor)
+        );
     }
 
     inline parsing_error argumentError(
@@ -249,7 +257,7 @@ public:
     dynamic::Value applyRelative(
         Argument* arg, 
         dynamic::Value value,
-        dynamic::Value origin
+        const dynamic::Value& origin
     ) {
         if (origin.index() == 0) return value;
         try {
@@ -360,7 +368,7 @@ public:
 };
 
 Command Command::create(std::string_view scheme, std::string_view description, executor_func executor) {
-    return CommandParser("<string>", scheme).parseScheme(executor, description);
+    return CommandParser("<string>", scheme).parseScheme(std::move(executor), description);
 }
 
 void CommandsRepository::add(
@@ -368,7 +376,7 @@ void CommandsRepository::add(
     std::string_view description, 
     executor_func executor
 ) {
-    Command command = Command::create(scheme, description, executor);
+    Command command = Command::create(scheme, description, std::move(executor));
     commands[command.getName()] = command;
 }
 

@@ -1,6 +1,7 @@
 #include "Menu.h"
 
 #include <stdexcept>
+#include <utility>
 
 #include "../../../../debug/Logger.h"
 
@@ -12,11 +13,17 @@ bool Menu::has(const std::string& name) {
     return pages.find(name) != pages.end() || pageSuppliers.find(name) != pageSuppliers.end();
 }
 
-void Menu::addPage(std::string name, std::shared_ptr<UINode> panel) {
+void Menu::addPage(
+    const std::string& name,
+    const std::shared_ptr<UINode>& panel
+) {
     pages[name] = Page{name, panel};
 }
 
-void Menu::addSupplier(std::string name, supplier<std::shared_ptr<UINode>> pageSupplier) {
+void Menu::addSupplier(
+    const std::string& name,
+    const supplier<std::shared_ptr<UINode>>& pageSupplier
+) {
     pageSuppliers[name] = pageSupplier;
 }
 
@@ -35,7 +42,7 @@ std::shared_ptr<UINode> Menu::fetchPage(const std::string& name) {
     }
 }
 
-void Menu::setPage(std::string name, bool history) {
+void Menu::setPage(const std::string& name, bool history) {
     Page page {name, fetchPage(name)};
     if (page.panel == nullptr) {
         LOG_ERROR("No page found");
@@ -50,7 +57,7 @@ void Menu::setPage(Page page, bool history) {
         if (history) pageStack.push(current);
     }
 
-    current = page;
+    current = std::move(page);
     Container::add(current.panel);
     setSize(current.panel->getSize());
 }
@@ -67,7 +74,7 @@ void Menu::back() {
 }
 
 void Menu::setPageLoader(page_loader_func loader) {
-    pagesLoader = loader;
+    pagesLoader = std::move(loader);
 }
 
 Page& Menu::getCurrent() {

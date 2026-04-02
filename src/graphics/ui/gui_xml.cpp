@@ -1,6 +1,7 @@
 #include "gui_xml.h"
 
 #include <stdexcept>
+#include <utility>
 
 #include "elements/layout/Panel.h"
 #include "elements/display/Image.h"
@@ -51,7 +52,7 @@ static Gravity gravity_from_string(const std::string& str) {
 
 static runnable create_runnable(
     const UIXmlReader& reader,
-    xml::xmlelement element,
+    const xml::xmlelement& element,
     const std::string& name
 ) {
     if (element->has(name)) {
@@ -65,13 +66,21 @@ static runnable create_runnable(
     return nullptr;
 }
 
-static onaction create_action(UIXmlReader& reader, xml::xmlelement element, const std::string& name) {
+static onaction create_action(
+    UIXmlReader& reader,
+    const xml::xmlelement& element,
+    const std::string& name
+) {
     auto callback = create_runnable(reader, element, name);
     if (callback == nullptr) return nullptr;
     return [callback](GUI*) {callback();};
 }
 
-static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& node) {
+static void _readUINode(
+    UIXmlReader& reader,
+    const xml::xmlelement& element,
+    UINode& node
+) {
     if (element->has("id")) node.setId(element->attr("id").getText());
     if (element->has("pos")) node.setPos(element->attr("pos").asVec2());
     if (element->has("size")) node.setSize(element->attr("size").asVec2());
@@ -122,7 +131,11 @@ static void _readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& no
     if (auto ondoubleclick = create_action(reader, element, "ondoubleclick")) node.listenDoubleClick(ondoubleclick);
 }
 
-static void _readContainer(UIXmlReader& reader, xml::xmlelement element, Container& container) {
+static void _readContainer(
+    UIXmlReader& reader,
+    const xml::xmlelement& element,
+    Container& container
+) {
     _readUINode(reader, element, container);
 
     if (element->has("scrollable")) container.setScrollable(element->attr("scrollable").asBool());
@@ -134,15 +147,28 @@ static void _readContainer(UIXmlReader& reader, xml::xmlelement element, Contain
     }
 }
 
-void UIXmlReader::readUINode(UIXmlReader& reader, xml::xmlelement element, Container& container) {
+void UIXmlReader::readUINode(
+    UIXmlReader& reader,
+    const xml::xmlelement& element,
+    Container& container
+) {
     _readContainer(reader, element, container);
 }
 
-void UIXmlReader::readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& node) {
+void UIXmlReader::readUINode(
+    UIXmlReader& reader,
+    const xml::xmlelement& element,
+    UINode& node
+) {
     _readUINode(reader, element, node);
 }
 
-static void _readPanel(UIXmlReader& reader, xml::xmlelement element, Panel& panel, bool subnodes=true) {
+static void _readPanel(
+    UIXmlReader& reader,
+    const xml::xmlelement& element,
+    Panel& panel,
+    bool subnodes=true
+) {
     _readUINode(reader, element, panel);
 
     if (element->has("padding")) {
@@ -176,7 +202,10 @@ static std::shared_ptr<UINode> readPanel(UIXmlReader& reader, xml::xmlelement el
     return panel;
 }
 
-static std::wstring readAndProcessInnerText(xml::xmlelement element, const std::string& context) {
+static std::wstring readAndProcessInnerText(
+    const xml::xmlelement& element,
+    const std::string& context
+) {
     std::wstring text = L"";
     if (element->size() == 1) {
         std::string source = element->sub(0)->attr("#").getText();
@@ -193,7 +222,10 @@ static std::wstring readAndProcessInnerText(xml::xmlelement element, const std::
     return text;
 }
 
-static std::shared_ptr<UINode> readLabel(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readLabel(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     std::wstring text = readAndProcessInnerText(element, reader.getContext());
     auto label = std::make_shared<Label>(text);
     _readUINode(reader, element, *label);
@@ -214,13 +246,19 @@ static std::shared_ptr<UINode> readLabel(UIXmlReader& reader, xml::xmlelement el
     return label;
 }
 
-static std::shared_ptr<UINode> readContainer(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readContainer(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     auto container = std::make_shared<Container>(glm::vec2());
     _readContainer(reader, element, *container);
     return container;
 }
 
-static std::shared_ptr<UINode> readButton(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readButton(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     glm::vec4 padding = element->attr("padding", "10").asVec4();
     std::shared_ptr<Button> button;
     auto& elements = element->getElements();
@@ -242,7 +280,10 @@ static std::shared_ptr<UINode> readButton(UIXmlReader& reader, xml::xmlelement e
     return button;
 }
 
-static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readTextBox(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     auto placeholder = util::str2wstr_utf8(element->attr("placeholder", "").getText());
     auto text = readAndProcessInnerText(element, reader.getContext());
     auto textbox = std::make_shared<TextBox>(placeholder, glm::vec4(0.0f));
@@ -282,7 +323,10 @@ static std::shared_ptr<UINode> readTextBox(UIXmlReader& reader, xml::xmlelement 
     return textbox;
 }
 
-static std::shared_ptr<UINode> readCheckBox(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readCheckBox(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     auto text = readAndProcessInnerText(element, reader.getContext());
     bool checked = element->attr("checked", "false").asBool();
     auto checkbox = std::make_shared<FullCheckBox>(text, glm::vec2(32), checked);
@@ -306,7 +350,10 @@ static std::shared_ptr<UINode> readCheckBox(UIXmlReader& reader, xml::xmlelement
     return checkbox;
 }
 
-static std::shared_ptr<UINode> readTrackBar(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readTrackBar(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     float min = element->attr("min", "0.0").asFloat();
     float max = element->attr("max", "1.0").asFloat();
     float def = element->attr("value", "0.0").asFloat();
@@ -333,7 +380,10 @@ static std::shared_ptr<UINode> readTrackBar(UIXmlReader& reader, xml::xmlelement
     return bar;
 }
 
-static std::shared_ptr<UINode> readInputBindBox(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readInputBindBox(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     auto bindname = element->attr("binding").getText();
     auto found = Events::bindings.find(bindname);
     if (found == Events::bindings.end()) {
@@ -347,7 +397,10 @@ static std::shared_ptr<UINode> readInputBindBox(UIXmlReader& reader, xml::xmlele
     return bindbox;
 }
 
-static std::shared_ptr<UINode> readImage(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readImage(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     std::string src = element->attr("src", "").getText();
     auto image = std::make_shared<Image>(src);
     _readUINode(reader, element, *image);
@@ -421,7 +474,10 @@ static void readSlotsGrid(InventoryView* view, UIXmlReader& reader, xml::xmlelem
     }
 }
 
-static std::shared_ptr<UINode> readInventory(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readInventory(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     auto view = std::make_shared<InventoryView>();
     view->setColor(glm::vec4(0.122f, 0.122f, 0.122f, 0.878f));
     reader.addIgnore("slot");
@@ -438,7 +494,10 @@ static std::shared_ptr<UINode> readInventory(UIXmlReader& reader, xml::xmlelemen
     return view;
 }
 
-static std::shared_ptr<UINode> readPageBox(UIXmlReader& reader, xml::xmlelement element) {
+static std::shared_ptr<UINode> readPageBox(
+    UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
     auto menu = std::make_shared<Menu>();
     menu->setPageLoader(menus::create_page_loader(scripting::engine));
     _readContainer(reader, element, *menu);
@@ -447,7 +506,7 @@ static std::shared_ptr<UINode> readPageBox(UIXmlReader& reader, xml::xmlelement 
 }
 
 UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
-    contextStack.push("");
+    contextStack.emplace("");
     add("image", readImage);
     add("label", readLabel);
     add("button", readButton);
@@ -462,7 +521,7 @@ UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
 }
 
 void UIXmlReader::add(const std::string& tag, uinode_reader reader) {
-    readers[tag] = reader;
+    readers[tag] = std::move(reader);
 }
 
 bool UIXmlReader::hasReader(const std::string& tag) const {
@@ -473,7 +532,7 @@ void UIXmlReader::addIgnore(const std::string& tag) {
     ignored.insert(tag);
 }
 
-std::shared_ptr<UINode> UIXmlReader::readUINode(xml::xmlelement element) {
+std::shared_ptr<UINode> UIXmlReader::readUINode(const xml::xmlelement& element) {
     if (element->has("if")) {
         const auto& cond = element->attr("if").getText();
         if (cond.empty() || cond == "false" || cond == "nil") return nullptr;
@@ -506,7 +565,10 @@ std::shared_ptr<UINode> UIXmlReader::readXML(const std::string& filename, const 
     return readUINode(root);
 }
 
-std::shared_ptr<UINode> UIXmlReader::readXML(const std::string& filename, xml::xmlelement root) {
+std::shared_ptr<UINode> UIXmlReader::readXML(
+    const std::string& filename,
+    const xml::xmlelement& root
+) {
     this->filename = filename;
     return readUINode(root);
 }

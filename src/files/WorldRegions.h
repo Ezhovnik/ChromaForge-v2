@@ -115,7 +115,7 @@ public:
     bool generatorTestMode = false;
     bool doWriteLights = true;
 
-    WorldRegions(std::filesystem::path directory);
+    WorldRegions(const std::filesystem::path& directory);
     WorldRegions(const WorldRegions&) = delete;
     ~WorldRegions();
 
@@ -127,7 +127,7 @@ public:
     std::unique_ptr<light_t[]> getLights(int x, int z);
     chunk_inventories_map fetchInventories(int x, int z);
 
-    void processRegionVoxels(int x, int z, regionproc func);
+    void processRegionVoxels(int x, int z, const regionproc& func);
 
     std::filesystem::path getRegionsFolder(int layer) const;
 

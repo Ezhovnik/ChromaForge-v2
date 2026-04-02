@@ -28,7 +28,7 @@ namespace gui {
     private:
         std::unique_ptr<std::vector<onaction>> callbacks;
     public:
-        void listen(onaction callback) {
+        void listen(const onaction& callback) {
             if (callbacks == nullptr) {
                 callbacks = std::make_unique<std::vector<onaction>>();
             }
@@ -144,8 +144,8 @@ namespace gui {
         virtual void setZIndex(int idx);
         int getZIndex() const;
 
-        virtual UINode* listenAction(onaction action);
-        virtual UINode* listenDoubleClick(onaction action);
+        virtual UINode* listenAction(const onaction& action);
+        virtual UINode* listenDoubleClick(const onaction& action);
 
         virtual void onFocus(GUI*) {focused = true;}
         virtual void click(GUI*, int x, int y);
@@ -195,8 +195,8 @@ namespace gui {
             if (parent) parent->fullRefresh();
         };
         static void moveInto(
-            std::shared_ptr<UINode> node,
-            std::shared_ptr<Container> dest
+            const std::shared_ptr<UINode>& node,
+            const std::shared_ptr<Container>& dest
         );
 
         void setId(const std::string& id);
@@ -205,12 +205,12 @@ namespace gui {
         void reposition();
 
         static void getIndices(
-            const std::shared_ptr<UINode> node,
+            const std::shared_ptr<UINode>& node,
             std::unordered_map<std::string, std::shared_ptr<UINode>>& map
         );
 
         static std::shared_ptr<UINode> find(
-            const std::shared_ptr<UINode> node,
+            const std::shared_ptr<UINode>& node,
             const std::string& id
         );
     };

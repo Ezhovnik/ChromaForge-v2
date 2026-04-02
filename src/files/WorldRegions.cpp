@@ -1,6 +1,7 @@
 #include "WorldRegions.h"
 
 #include <cstring>
+#include <utility>
 
 #include "../coders/rle.h"
 #include "../util/data_io.h"
@@ -12,7 +13,7 @@
 #define REGION_FORMAT_MAGIC ".CHROMAREG"
 inline constexpr int REGION_HEADER_SIZE = 13;
 
-regFile::regFile(std::filesystem::path filename) : file(filename) {
+regFile::regFile(std::filesystem::path filename) : file(std::move(filename)) {
     if (file.length() < REGION_HEADER_SIZE) {
         LOG_ERROR("Incomplete region file header");
         throw std::runtime_error("Incomplete region file header");
@@ -89,7 +90,7 @@ uint WorldRegion::getChunkDataSize(uint x, uint z) {
     return sizes[z * RegionConsts::SIZE + x];
 }
 
-WorldRegions::WorldRegions(std::filesystem::path directory) : directory(directory) {
+WorldRegions::WorldRegions(const std::filesystem::path& directory) : directory(directory) {
     for (uint i = 0; i < sizeof(layers) / sizeof(RegionsLayer); ++i) {
         layers[i].layer = i;
     }
@@ -399,7 +400,7 @@ chunk_inventories_map WorldRegions::fetchInventories(int x, int z) {
     return inventories;
 }
 
-void WorldRegions::processRegionVoxels(int x, int z, regionproc func) {
+void WorldRegions::processRegionVoxels(int x, int z, const regionproc& func) {
     if (getRegion(x, z, RegionConsts::LAYER_VOXELS)) {
         LOG_ERROR("Not implemented for in-memory regions");
         throw std::runtime_error("Not implemented for in-memory regions");

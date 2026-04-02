@@ -472,7 +472,7 @@ static void p_set_editable(gui::UINode* node, int idx) {
     }
 }
 
-static void p_set_focused(std::shared_ptr<gui::UINode> node, int idx) {
+static void p_set_focused(const std::shared_ptr<gui::UINode>& node, int idx) {
     if (scripting::state->toboolean(idx) && !node->isFocused()) {
         scripting::engine->getGUI()->setFocus(node);
     } else if (node->isFocused()){

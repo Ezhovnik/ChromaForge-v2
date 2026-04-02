@@ -8,6 +8,7 @@
 #include <iostream>
 #include <functional>
 #include <condition_variable>
+#include <utility>
 
 #include "../delegates.h"
 #include "../debug/Logger.h"
@@ -101,7 +102,7 @@ namespace util {
             std::string name,
             supplier<std::shared_ptr<Worker<T, R>>> workersSupplier, 
             consumer<R&> resultConsumer
-        ) : name(name), resultConsumer(resultConsumer) {
+        ) : name(std::move(name)), resultConsumer(resultConsumer) {
             const uint num_threads = std::thread::hardware_concurrency();
             for (uint i = 0; i < num_threads; ++i) {
                 threads.emplace_back(&ThreadPool<T,R>::threadLoop, this, i, workersSupplier());

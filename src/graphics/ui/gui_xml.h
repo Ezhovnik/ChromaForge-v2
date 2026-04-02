@@ -31,12 +31,26 @@ namespace gui {
 
         void addIgnore(const std::string& tag);
 
-        std::shared_ptr<UINode> readUINode(xml::xmlelement element);
-        void readUINode(UIXmlReader& reader, xml::xmlelement element, UINode& node );
-        void readUINode(UIXmlReader& reader, xml::xmlelement element, Container& container);
+        std::shared_ptr<UINode> readUINode(const xml::xmlelement& element);
+        void readUINode(
+            UIXmlReader& reader,
+            const xml::xmlelement& element,
+            UINode& node
+        );
+        void readUINode(
+            UIXmlReader& reader,
+            const xml::xmlelement& element,
+            Container& container
+        );
 
-        std::shared_ptr<UINode> readXML(const std::string& filename, const std::string& source);
-        std::shared_ptr<UINode> readXML(const std::string& filename, xml::xmlelement root);
+        std::shared_ptr<UINode> readXML(
+            const std::string& filename,
+            const std::string& source
+        );
+        std::shared_ptr<UINode> readXML(
+            const std::string& filename, 
+            const xml::xmlelement& root
+        );
 
         const std::string& getContext() const;
         const scriptenv& getEnvironment() const;

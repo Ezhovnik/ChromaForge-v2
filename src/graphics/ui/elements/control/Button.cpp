@@ -6,7 +6,7 @@
 
 using namespace gui;
 
-Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::vec2(), padding, 0) {
+Button::Button(const std::shared_ptr<UINode>& content, glm::vec4 padding) : Panel(glm::vec2(), padding, 0) {
     glm::vec4 margin = getMargin();
     setSize(content->getSize() +
         glm::vec2(
@@ -22,9 +22,9 @@ Button::Button(std::shared_ptr<UINode> content, glm::vec4 padding) : Panel(glm::
 }
 
 Button::Button(
-    std::wstring text, 
+    const std::wstring& text, 
     glm::vec4 padding, 
-    onaction action,
+    const onaction& action,
     glm::vec2 size
 ) : Panel(size, padding, 0) 
 {
@@ -59,7 +59,7 @@ std::wstring Button::getText() const {
 }
 
 Button* Button::textSupplier(wstringsupplier supplier) {
-    if (label) label->textSupplier(supplier);
+    if (label) label->textSupplier(std::move(supplier));
     return this;
 }
 

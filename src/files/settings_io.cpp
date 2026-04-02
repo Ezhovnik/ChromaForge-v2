@@ -1,6 +1,7 @@
 #include "settings_io.h"
 
 #include <memory>
+#include <utility>
 
 #include "../window/Events.h"
 #include "../window/input.h"
@@ -19,10 +20,10 @@ struct SectionsBuilder {
     ) : map(map), sections(sections) {}
 
     void section(std::string name) {
-        sections.push_back(Section {name, {}});
+        sections.push_back(Section {std::move(name), {}});
     }
 
-    void add(std::string name, Setting* setting, bool writeable=true) {
+    void add(const std::string& name, Setting* setting, bool writeable=true) {
         Section& section = sections.at(sections.size() - 1);
         map[section.name + "." + name] = setting;
         section.keys.push_back(name);

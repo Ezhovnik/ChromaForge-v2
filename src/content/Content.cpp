@@ -1,6 +1,7 @@
 #include "Content.h"
 
 #include <stdexcept>
+#include <utility>
 
 #include <glm/glm.hpp>
 
@@ -13,8 +14,8 @@
 ContentIndices::ContentIndices(
     std::vector<Block*> blockDefs, 
     std::vector<Item*> itemDefs
-) : blockDefs(blockDefs), 
-    itemDefs(itemDefs) {}
+) : blockDefs(std::move(blockDefs)), 
+    itemDefs(std::move(itemDefs)) {}
 
 Content::Content(
     std::unique_ptr<ContentIndices> indices,
@@ -33,13 +34,13 @@ Content::Content(
 Content::~Content() {
 }
 
-Block* Content::findBlock(std::string id) const {
+Block* Content::findBlock(const std::string& id) const {
     auto found = blockDefs.find(id);
     if (found == blockDefs.end()) return nullptr;
     return found->second.get();
 }
 
-Block& Content::requireBlock(std::string id) const {
+Block& Content::requireBlock(const std::string& id) const {
     auto found = blockDefs.find(id);
     if (found == blockDefs.end()) {
         LOG_ERROR("Missing block {}", id);
@@ -48,13 +49,13 @@ Block& Content::requireBlock(std::string id) const {
     return *found->second;
 }
 
-Item* Content::findItem(std::string id) const {
+Item* Content::findItem(const std::string& id) const {
     auto found = itemDefs.find(id);
     if (found == itemDefs.end()) return nullptr;
     return found->second.get();
 }
 
-Item& Content::requireItem(std::string id) const {
+Item& Content::requireItem(const std::string& id) const {
     auto found = itemDefs.find(id);
     if (found == itemDefs.end()) {
         LOG_ERROR("Missing item {}", id);
@@ -63,7 +64,7 @@ Item& Content::requireItem(std::string id) const {
     return *found->second;
 }
 
-const ContentPackRuntime* Content::getPackRuntime(std::string id) const {
+const ContentPackRuntime* Content::getPackRuntime(const std::string& id) const {
     auto found = packs.find(id);
     if (found == packs.end()) return nullptr;
     return found->second.get();
@@ -73,7 +74,7 @@ const std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>>& Cont
     return packs;
 }
 
-const BlockMaterial* Content::findBlockMaterial(std::string id) const {
+const BlockMaterial* Content::findBlockMaterial(const std::string& id) const {
     auto found = blockMaterials.find(id);
     if (found == blockMaterials.end()) return nullptr;
     return found->second.get();

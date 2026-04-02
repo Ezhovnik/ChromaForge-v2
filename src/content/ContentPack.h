@@ -24,7 +24,11 @@ class contentpack_error : public std::runtime_error {
     std::string packId;
     std::filesystem::path folder;
 public:
-    contentpack_error(std::string packId, std::filesystem::path folder, std::string message);
+    contentpack_error(
+        std::string packId,
+        std::filesystem::path folder,
+        const std::string& message
+    );
 
     std::string getPackId() const;
     std::filesystem::path getFolder() const;
@@ -49,19 +53,21 @@ struct ContentPack {
     static const std::filesystem::path ITEMS_FOLDER;
     static const std::vector<std::string> RESERVED_NAMES;
 
-    static bool is_pack(std::filesystem::path folder);
-    static ContentPack read(std::filesystem::path folder);
+    static bool is_pack(const std::filesystem::path& folder);
+    static ContentPack read(const std::filesystem::path& folder);
 
     static void scanFolder(
-        std::filesystem::path folder,
+        const std::filesystem::path& folder,
         std::vector<ContentPack>& packs
     );
 
-    static std::vector<std::string> worldPacksList(std::filesystem::path folder);
+    static std::vector<std::string> worldPacksList(
+        const std::filesystem::path& folder
+    );
     static std::filesystem::path findPack(
         const EnginePaths* paths, 
-        std::filesystem::path worldDir, 
-        std::string name
+        const std::filesystem::path& worldDir, 
+        const std::string& name
     );
 };
 

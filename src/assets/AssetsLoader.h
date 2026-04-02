@@ -6,6 +6,7 @@
 #include <map>
 #include <queue>
 #include <filesystem>
+#include <utility>
 
 #include "Assets.h"
 #include "../interfaces/Task.h"
@@ -42,7 +43,7 @@ struct AssetsConfig {
  */
 struct LayoutConfig : AssetsConfig {
      scriptenv env; ///< Идентификатор окружения
-     LayoutConfig(scriptenv env) : env(env) {}
+     LayoutConfig(scriptenv env) : env(std::move(env)) {}
 };
 
 struct SoundConfig : AssetsConfig {
@@ -82,11 +83,11 @@ private:
 
 	const ResPaths* paths; ///< Пути для поиска файлов
 
-     void tryAddSound(std::string name);
+     void tryAddSound(const std::string& name);
 
      void processPreload(AssetType tag, const std::string& name, dynamic::Map* map);
 	void processPreloadList(AssetType tag, dynamic::List* list);
-	void processPreloadConfig(std::filesystem::path file);
+	void processPreloadConfig(const std::filesystem::path& file);
 	void processPreloadConfigs(const Content* content);
 public:
 	/**
@@ -114,8 +115,8 @@ public:
      */
 	void add(
 		AssetType tag, 
-		const std::string filename, 
-		const std::string alias,
+		const std::string& filename, 
+		const std::string& alias,
 		std::shared_ptr<AssetsConfig> config=nullptr
 	);
 
@@ -155,7 +156,7 @@ public:
      static bool loadExternalTexture(
           Assets* assets,
           const std::string& name,
-          std::vector<std::filesystem::path> alternatives
+          const std::vector<std::filesystem::path>& alternatives
      );
 };
 

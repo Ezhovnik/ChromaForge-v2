@@ -39,8 +39,8 @@ private:
 public:
     static const inline std::string WORLD_FILE = "world.json";
 
-    WorldFiles(std::filesystem::path directory);
-    WorldFiles(std::filesystem::path directory, const DebugSettings& settings); // Конструктор
+    WorldFiles(const std::filesystem::path& directory);
+    WorldFiles(const std::filesystem::path& directory, const DebugSettings& settings); // Конструктор
     ~WorldFiles(); // Деструктор
 
     std::filesystem::path getPlayerFile() const;

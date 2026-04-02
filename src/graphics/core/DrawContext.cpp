@@ -1,5 +1,7 @@
 #include "DrawContext.h"
 
+#include <utility>
+
 #include <GL/glew.h>
 
 #include "Batch2D.h"
@@ -22,10 +24,10 @@ static void set_blend_mode(BlendMode mode) {
 
 DrawContext::DrawContext(
     const DrawContext* parent, 
-    const Viewport& viewport, 
+    Viewport viewport, 
     Batch2D* g2d
 ) : parent(parent), 
-    viewport(viewport), 
+    viewport(std::move(viewport)), 
     g2d(g2d) {}
 
 DrawContext::~DrawContext() {

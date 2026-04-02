@@ -1,6 +1,7 @@
 #include "audio.h"
 
 #include <stdexcept>
+#include <utility>
 
 #include "AL/ALAudio.h"
 #include "NoAudio.h"
@@ -18,7 +19,7 @@ namespace audio {
 
 using namespace audio;
 
-Channel::Channel(std::string name) : name(name) {
+Channel::Channel(std::string name) : name(std::move(name)) {
 }
 
 float Channel::getVolume() const {
@@ -160,7 +161,7 @@ std::unique_ptr<Sound> audio::load_sound(const std::filesystem::path& file, bool
 }
 
 std::unique_ptr<Sound> audio::create_sound(std::shared_ptr<PCM> pcm, bool keepPCM) {
-    return backend->createSound(pcm, keepPCM);
+    return backend->createSound(std::move(pcm), keepPCM);
 }
 
 std::unique_ptr<PCMStream> audio::open_PCM_stream(const std::filesystem::path& file) {
@@ -189,7 +190,7 @@ std::unique_ptr<Stream> audio::open_stream(const std::filesystem::path& file, bo
 }
 
 std::unique_ptr<Stream> audio::open_stream(std::shared_ptr<PCMStream> stream, bool keepSource) {
-    return backend->openStream(stream, keepSource);
+    return backend->openStream(std::move(stream), keepSource);
 }
 
 void audio::set_listener(
@@ -257,7 +258,7 @@ speakerid_t audio::play(
 }
 
 speakerid_t audio::play(
-    std::shared_ptr<Stream> stream,
+    const std::shared_ptr<Stream>& stream,
     glm::vec3 position,
     bool relative,
     float volume,

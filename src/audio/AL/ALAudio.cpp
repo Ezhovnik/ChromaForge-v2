@@ -1,13 +1,14 @@
 #include "ALAudio.h"
 
 #include <string>
+#include <utility>
 
 #include "alutil.h"
 #include "../../debug/Logger.h"
 
 using namespace audio;
 
-ALSound::ALSound(ALAudio* al, uint buffer, std::shared_ptr<PCM> pcm, bool keepPCM) : al(al), buffer(buffer) {
+ALSound::ALSound(ALAudio* al, uint buffer, const std::shared_ptr<PCM>& pcm, bool keepPCM) : al(al), buffer(buffer) {
     duration = pcm->getDuration();
     if (keepPCM) this->pcm = pcm;
 }
@@ -26,7 +27,7 @@ std::unique_ptr<Speaker> ALSound::newInstance(Priority priority, int channel) co
     return speaker;
 }
 
-ALStream::ALStream(ALAudio* al, std::shared_ptr<PCMStream> source, bool keepSource) : al(al), source(source), keepSource(keepSource) {
+ALStream::ALStream(ALAudio* al, std::shared_ptr<PCMStream> source, bool keepSource) : al(al), source(std::move(source)), keepSource(keepSource) {
 }
 
 ALStream::~ALStream() {
@@ -423,7 +424,7 @@ std::vector<std::string> ALAudio::getAvailableDevices() const {
 
     const char* ptr = devices;
     do {
-        devicesVec.push_back(std::string(ptr));
+        devicesVec.emplace_back(ptr);
         ptr += devicesVec.back().size() + 1;
     } while (ptr[0]);
 

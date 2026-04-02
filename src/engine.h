@@ -100,7 +100,7 @@ public:
     std::vector<std::string>& getBasePacks();
     cmd::CommandsInterpreter* getCommandsInterpreter();
 
-    void postRunnable(runnable callback);
+    void postRunnable(const runnable& callback);
 
     PacksManager createPacksManager(const std::filesystem::path& worldFolder);
 

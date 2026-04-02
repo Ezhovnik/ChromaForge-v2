@@ -14,7 +14,11 @@ namespace scripting {
     void on_frontend_init(Hud* hud);
     void on_frontend_close();
 
-    void load_hud_script(scriptenv env, std::string packid, std::filesystem::path file);
+    void load_hud_script(
+        const scriptenv& env,
+        const std::string& packid,
+        const std::filesystem::path& file
+    );
 }
 
 #endif // LOGIC_SCRIPTING_SCRIPTING_HUD_H_

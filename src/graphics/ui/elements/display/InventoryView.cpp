@@ -1,5 +1,7 @@
 #include "InventoryView.h"
 
+#include <utility>
+
 #include <glm/glm.hpp>
 
 #include "../../../../graphics/render/BlocksPreview.h"
@@ -41,15 +43,22 @@ SlotLayout::SlotLayout(
     position(position),
     background(background),
     itemSource(itemSource),
-    updateFunc(updateFunc),
-    shareFunc(shareFunc),
-    rightClick(rightClick) {}
+    updateFunc(std::move(updateFunc)),
+    shareFunc(std::move(shareFunc)),
+    rightClick(std::move(rightClick)) {}
 
 InventoryBuilder::InventoryBuilder() {
     view = std::make_shared<InventoryView>();
 }
 
-void InventoryBuilder::addGrid(int cols, int count, glm::vec2 pos, int padding, bool addpanel, SlotLayout slotLayout) {
+void InventoryBuilder::addGrid(
+    int cols,
+    int count,
+    glm::vec2 pos,
+    int padding,
+    bool addpanel,
+    const SlotLayout& slotLayout
+) {
     const int slotSize = InventoryView::SLOT_SIZE;
     const int interval = InventoryView::SLOT_INTERVAL;
 
@@ -85,7 +94,7 @@ void InventoryBuilder::addGrid(int cols, int count, glm::vec2 pos, int padding, 
     }
 }
 
-void InventoryBuilder::add(SlotLayout layout) {
+void InventoryBuilder::add(const SlotLayout& layout) {
     view->add(view->addSlot(layout), layout.position);
 }
 
@@ -93,7 +102,7 @@ std::shared_ptr<InventoryView> InventoryBuilder::build() {
     return view;
 }
 
-SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(InventoryView::SLOT_SIZE)), layout(layout) {
+SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(InventoryView::SLOT_SIZE)), layout(std::move(layout)) {
     setColor(glm::vec4(0, 0, 0, 0.2f));
     setTooltipDelay(0.05f);
 }
@@ -267,7 +276,7 @@ InventoryView::InventoryView() : Container(glm::vec2()) {
 
 InventoryView::~InventoryView() {}
 
-std::shared_ptr<SlotView> InventoryView::addSlot(SlotLayout layout) {
+std::shared_ptr<SlotView> InventoryView::addSlot(const SlotLayout& layout) {
     uint width =  InventoryView::SLOT_SIZE + layout.padding;
     uint height = InventoryView::SLOT_SIZE + layout.padding;
 
@@ -284,7 +293,10 @@ std::shared_ptr<SlotView> InventoryView::addSlot(SlotLayout layout) {
     return slot;
 }
 
-void InventoryView::bind(std::shared_ptr<Inventory> inventory, const Content* content) {
+void InventoryView::bind(
+    const std::shared_ptr<Inventory>& inventory,
+    const Content* content
+) {
     this->inventory = inventory;
     this->content = content;
     for (auto slot : slots) {

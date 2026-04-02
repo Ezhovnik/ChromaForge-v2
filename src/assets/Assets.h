@@ -51,14 +51,14 @@ public:
      * @param name Имя текстуры.
      * @return Указатель на текстуру или nullptr, если не найдена.
      */
-	Texture* getTexture(std::string name) const;
+	Texture* getTexture(const std::string& name) const;
 	
 	/**
      * @brief Сохраняет текстуру в менеджере.
      * @param texture Указатель на текстуру (менеджер забирает владение).
      * @param name Имя, под которым текстура будет сохранена.
      */
-	void store(std::unique_ptr<Texture> texture, std::string name);
+	void store(std::unique_ptr<Texture> texture, const std::string& name);
 
 		// --- Шейдеры ---
      /**
@@ -66,14 +66,14 @@ public:
      * @param name Имя шейдера.
      * @return Указатель на шейдер или nullptr.
      */
-	ShaderProgram* getShader(std::string name) const;
+	ShaderProgram* getShader(const std::string& name) const;
 
 	/**
      * @brief Сохраняет шейдер в менеджере.
      * @param shader Указатель на шейдер.
      * @param name Имя для сохранения.
      */
-	void store(std::unique_ptr<ShaderProgram> shader, std::string name);
+	void store(std::unique_ptr<ShaderProgram> shader, const std::string& name);
 
     	// --- Шрифты ---
 	/**
@@ -81,14 +81,14 @@ public:
      * @param name Имя шрифта.
      * @return Указатель на шрифт или nullptr.
      */
-	Font* getFont(std::string name) const;
+	Font* getFont(const std::string& name) const;
 
 	/**
      * @brief Сохраняет шрифт в менеджере.
      * @param font Указатель на шрифт.
      * @param name Имя для сохранения.
      */
-	void store(std::unique_ptr<Font> font, std::string name);
+	void store(std::unique_ptr<Font> font, const std::string& name);
 
 		// --- Атласы ---
 	/**
@@ -96,14 +96,14 @@ public:
      * @param name Имя атласа.
      * @return Указатель на атлас или nullptr.
      */
-	Atlas* getAtlas(std::string name) const;
+	Atlas* getAtlas(const std::string& name) const;
 
 	/**
      * @brief Сохраняет атлас в менеджере.
      * @param atlas Указатель на атлас.
      * @param name Имя для сохранения.
      */
-	void store(std::unique_ptr<Atlas> atlas, std::string name);
+	void store(std::unique_ptr<Atlas> atlas, const std::string& name);
 
 		// --- Анимации ---
 	/**
@@ -124,14 +124,14 @@ public:
      * @param name Имя макета.
      * @return Указатель на UIDocument или nullptr.
      */
-	UIDocument* getLayout(std::string name) const;
+	UIDocument* getLayout(const std::string& name) const;
 
 	/**
      * @brief Сохраняет макет в менеджере.
      * @param layout Указатель на макет.
      * @param name Имя для сохранения.
      */
-	void store(std::unique_ptr<UIDocument> layout, std::string name);
+	void store(std::unique_ptr<UIDocument> layout, const std::string& name);
 
           // --- Звуки ---
      /**
@@ -139,14 +139,14 @@ public:
      * @param name Имя звука.
      * @return Указатель на audio::Sound или nullptr.
      */
-     audio::Sound* getSound(std::string name) const;
+     audio::Sound* getSound(const std::string& name) const;
 
      /**
      * @brief Сохраняет звук в менеджере.
      * @param sound Указатель на звук.
      * @param name Имя для сохранения.
      */
-	void store(std::unique_ptr<audio::Sound> sound, std::string name);
+	void store(std::unique_ptr<audio::Sound> sound, const std::string& name);
 };
 
 #endif // ASSETS_ASSETS_H_

@@ -34,7 +34,10 @@ private:
 
 	void switchCamera();
 public:
-	CameraControl(std::shared_ptr<Player> player, const CameraSettings& settings);
+	CameraControl(
+		const std::shared_ptr<Player>& player,
+		const CameraSettings& settings
+	);
 
 	void updateMouse(PlayerInput& input);
 	void update(const PlayerInput& input, float delta, Chunks* chunks);
@@ -85,7 +88,7 @@ public:
 
 	Player* getPlayer();
 
-	void listenBlockInteraction(on_block_interaction callback);
+	void listenBlockInteraction(const on_block_interaction& callback);
 };
 
 #endif // LOGIC_PLAYERCONTROLLER_H_

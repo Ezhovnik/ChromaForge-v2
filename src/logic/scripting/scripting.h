@@ -43,13 +43,17 @@ namespace scripting {
 
     scriptenv get_root_environment();
     scriptenv create_pack_environment(const ContentPack& pack);
-    scriptenv create_doc_environment(scriptenv parent, const std::string& name);
+    scriptenv create_doc_environment(const scriptenv& parent, const std::string& name);
 
     void on_world_load(LevelController* controller);
     void on_world_quit();
     void on_world_spark();
     void on_world_save();
-    void load_world_script(scriptenv env, std::string prefix, std::filesystem::path file);
+    void load_world_script(
+        const scriptenv& env,
+        const std::string& prefix,
+        const std::filesystem::path& file
+    );
 
     void process_post_runnables();
 
@@ -64,8 +68,18 @@ namespace scripting {
     bool on_item_use_on_block(Player* player, const Item* item, int x, int y, int z);
     bool on_item_break_block(Player* player, const Item* item, int x, int y, int z);
 
-    void load_block_script(scriptenv env, std::string prefix, std::filesystem::path file, block_funcs_set& funcsset);
-    void load_item_script(scriptenv env, std::string prefix, std::filesystem::path file, item_funcs_set& funcsset);
+    void load_block_script(
+        const scriptenv& env,
+        const std::string& prefix,
+        const std::filesystem::path& file,
+        block_funcs_set& funcsset
+    );
+    void load_item_script(
+        const scriptenv& env,
+        const std::string& prefix,
+        const std::filesystem::path& file,
+        item_funcs_set& funcsset
+    );
 
     void on_ui_open(
         UIDocument* layout, 
@@ -74,7 +88,12 @@ namespace scripting {
     void on_ui_close(UIDocument* layout, Inventory* inventory);
     void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
 
-    void load_layout_script(scriptenv env, std::string prefix, std::filesystem::path file, uidocscript& script);
+    void load_layout_script(
+        const scriptenv& env,
+        const std::string& prefix,
+        const std::filesystem::path& file,
+        uidocscript& script
+    );
 
     void close();
 }

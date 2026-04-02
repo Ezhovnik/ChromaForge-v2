@@ -99,13 +99,13 @@ namespace gui {
         void setSelected(int index);
 
         void bind(
-            std::shared_ptr<Inventory> inventory,
+            const std::shared_ptr<Inventory>& inventory,
             const Content* content
         );
         
         void unbind();
 
-        std::shared_ptr<SlotView> addSlot(SlotLayout layout);
+        std::shared_ptr<SlotView> addSlot(const SlotLayout& layout);
 
         std::shared_ptr<Inventory> getInventory() const;
 
@@ -126,10 +126,10 @@ namespace gui {
             glm::vec2 pos, 
             int padding,
             bool addpanel,
-            SlotLayout slotLayout
+            const SlotLayout& slotLayout
         );
         
-        void add(SlotLayout slotLayout);
+        void add(const SlotLayout& slotLayout);
         std::shared_ptr<InventoryView> build();
     };
 }

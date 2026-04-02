@@ -24,7 +24,7 @@ private:
     uint chunksPadding;
 
 	bool loadVisible();
-	bool buildLights(std::shared_ptr<Chunk> chunk);
+	bool buildLights(const std::shared_ptr<Chunk>& chunk);
     void createChunk(int x, int y);
 public:
 	ChunksController(Level* level, uint chunksPadding);

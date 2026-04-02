@@ -94,7 +94,7 @@ bool ChunksController::loadVisible(){
 	return true;
 }
 
-bool ChunksController::buildLights(std::shared_ptr<Chunk> chunk) {
+bool ChunksController::buildLights(const std::shared_ptr<Chunk>& chunk) {
     int surrounding = 0;
     for (int dz = -1; dz <= 1; ++dz) {
         for (int dx = -1; dx <= 1; ++dx) {

@@ -78,7 +78,7 @@ public:
      * @param x,y Позиция.
      * @param style Стиль.
      */
-     void draw(Batch2D* batch, std::wstring text, int x, int y, FontStyle style);
+     void draw(Batch2D* batch, const std::wstring& text, int x, int y, FontStyle style);
 
 	/**
      * @brief Рисует текст с указанным стилем (перегрузка для std::wstring_view).

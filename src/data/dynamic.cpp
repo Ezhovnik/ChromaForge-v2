@@ -118,7 +118,7 @@ void Map::str(const std::string& key, std::string& dst) const {
     dst = get(key, dst);
 }
 
-std::string Map::get(const std::string& key, const std::string def) const {
+std::string Map::get(const std::string& key, const std::string& def) const {
     auto found = values.find(key);
     if (found == values.end()) return def;
     auto& value = found->second;
@@ -232,7 +232,7 @@ void Map::flag(const std::string& key, bool& dst) const {
     dst = get(key, dst);
 }
 
-Map& Map::put(std::string key, const Value& value) {
+Map& Map::put(const std::string& key, const Value& value) {
     values[key] = value;
     return *this;
 }
@@ -241,13 +241,13 @@ size_t Map::size() const {
     return values.size();
 }
 
-List& Map::putList(std::string key) {
+List& Map::putList(const std::string& key) {
     auto arr = create_list();
     put(key, arr);
     return *arr;
 }
 
-Map& Map::putMap(std::string key) {
+Map& Map::putMap(const std::string& key) {
     auto obj = create_map();
     put(key, obj);
     return *obj;

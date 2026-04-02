@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <stack>
+#include <utility>
 
 #include "../typedefs.h"
 #include "WorldFiles.h"
@@ -55,7 +56,7 @@ std::filesystem::path EnginePaths::getSettingsFile() {
     return userfiles/std::filesystem::path(SETTINGS_FILE);
 }
 
-std::filesystem::path EnginePaths::getScreenshotFile(std::string ext) {
+std::filesystem::path EnginePaths::getScreenshotFile(const std::string& ext) {
 	std::filesystem::path folder = SCREENSHOTS_FOLDER;
 	if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
 
@@ -96,16 +97,16 @@ std::filesystem::path EnginePaths::getWorldFolder(const std::string& name) {
     return getWorldsFolder()/std::filesystem::path(name);
 }
 
-bool EnginePaths::isWorldNameUsed(std::string name) {
+bool EnginePaths::isWorldNameUsed(const std::string& name) {
 	return std::filesystem::exists(EnginePaths::getWorldsFolder()/std::filesystem::u8path(name));
 }
 
 void EnginePaths::setUserfiles(std::filesystem::path folder) {
-	this->userfiles = folder;
+	this->userfiles = std::move(folder);
 }
 
 void EnginePaths::setResources(std::filesystem::path folder) {
-	this->resources = folder;
+	this->resources = std::move(folder);
 }
 
 void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
@@ -113,10 +114,10 @@ void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
 }
 
 void EnginePaths::setWorldFolder(std::filesystem::path folder) {
-    this->worldFolder = folder;
+    this->worldFolder = std::move(folder);
 }
 
-std::filesystem::path EnginePaths::resolve(std::string path, bool throwErr) {
+std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwErr) {
     size_t separator = path.find(':');
     if (separator == std::string::npos) {
         LOG_ERROR("No entry point specified");
@@ -148,10 +149,10 @@ std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {
     std::filesystem::path folder = getWorldsFolder();
     if (!std::filesystem::is_directory(folder)) return folders;
     
-    for (auto entry : std::filesystem::directory_iterator(folder)) {
+    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
         if (!entry.is_directory()) continue;
 
-        std::filesystem::path worldFolder = entry.path();
+        const std::filesystem::path& worldFolder = entry.path();
         std::filesystem::path worldFile = worldFolder/std::filesystem::u8path(WorldFiles::WORLD_FILE);
         if (!std::filesystem::is_regular_file(worldFile)) continue;
         folders.push_back(worldFolder);
@@ -169,7 +170,7 @@ std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {
 ResPaths::ResPaths(
     std::filesystem::path mainRoot, 
     std::vector<PathsRoot> roots
-) : mainRoot(mainRoot), roots(roots) {}
+) : mainRoot(std::move(mainRoot)), roots(std::move(roots)) {}
 
 std::filesystem::path ResPaths::find(const std::string& filename) const {
     for (int i = roots.size() - 1; i >= 0; --i) {

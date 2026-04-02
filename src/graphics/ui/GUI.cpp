@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 
 #include "elements/UINode.h"
 #include "elements/layout/Menu.h"
@@ -198,31 +199,31 @@ bool GUI::isFocusCaught() const {
 }
 
 void GUI::add(std::shared_ptr<UINode> node) {
-    container->add(node);
+    container->add(std::move(node));
 }
 
 void GUI::remove(std::shared_ptr<UINode> panel) noexcept {
-    container->remove(panel);
+    container->remove(std::move(panel));
 }
 
-void GUI::store(std::string name, std::shared_ptr<UINode> node) {
-    storage[name] = node;
+void GUI::store(const std::string& name, std::shared_ptr<UINode> node) {
+    storage[name] = std::move(node);
 }
 
-std::shared_ptr<UINode> GUI::get(std::string name) noexcept {
+std::shared_ptr<UINode> GUI::get(const std::string& name) noexcept {
     auto found = storage.find(name);
     if (found == storage.end()) return nullptr;
     return found->second;
 }
 
-void GUI::remove(std::string name) noexcept {
+void GUI::remove(const std::string& name) noexcept {
     storage.erase(name);
 }
 
 void GUI::setFocus(std::shared_ptr<UINode> node) {
     if (focus) focus->defocus();
 
-    focus = node;
+    focus = std::move(node);
     if (focus) focus->onFocus(this);
 }
 
@@ -230,7 +231,7 @@ std::shared_ptr<Container> GUI::getContainer() const {
     return container;
 }
 
-void GUI::postRunnable(runnable callback) {
+void GUI::postRunnable(const runnable& callback) {
     postRunnables.push(callback);
 }
 

@@ -22,15 +22,15 @@ private:
 public:
     std::filesystem::path getUserfiles() const;
     std::filesystem::path getResources() const;
-    
-    std::filesystem::path getScreenshotFile(std::string ext);
+
+    std::filesystem::path getScreenshotFile(const std::string& ext);
     std::filesystem::path getWorldsFolder();
     std::filesystem::path getWorldFolder();
     std::filesystem::path getWorldFolder(const std::string& name);
     std::filesystem::path getLogsFile();
     std::filesystem::path getControlsFile();
     std::filesystem::path getSettingsFile();
-    bool isWorldNameUsed(std::string name);
+    bool isWorldNameUsed(const std::string& name);
 
     void setUserfiles(std::filesystem::path folder);
     void setResources(std::filesystem::path folder);
@@ -39,7 +39,7 @@ public:
 
     std::vector<std::filesystem::path> scanForWorlds();
 
-    std::filesystem::path resolve(std::string path, bool throwErr=true);
+    std::filesystem::path resolve(const std::string& path, bool throwErr=true);
 };
 
 struct PathsRoot {

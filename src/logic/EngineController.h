@@ -14,8 +14,8 @@ private:
 public:
     EngineController(Engine* engine);
 
-    void openWorld(std::string name, bool confirmConvert);
-    void deleteWorld(std::string name);
+    void openWorld(const std::string& name, bool confirmConvert);
+    void deleteWorld(const std::string& name);
     void createWorld(
         const std::string& name, 
         const std::string& seedstr,
@@ -25,8 +25,8 @@ public:
 
     void reconfigPacks(
         LevelController* controller,
-        std::vector<std::string> packsToAdd,
-        std::vector<std::string> packsToRemove
+        const std::vector<std::string>& packsToAdd,
+        const std::vector<std::string>& packsToRemove
     );
 };
 

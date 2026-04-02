@@ -1,5 +1,7 @@
 #include "Player.h"
 
+#include <utility>
+
 #include "../physics/Hitbox.h"
 #include "../window/Camera.h"
 #include "../world/Level.h"
@@ -28,7 +30,7 @@ Player::Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inven
 	tpCamera(std::make_shared<Camera>(position, glm::radians(90.0f))),
 	currentCamera(camera),
 	hitbox(std::make_unique<Hitbox>(position, glm::vec3(0.3f, 0.9f, 0.3f))),
-	inventory(inventory) {
+	inventory(std::move(inventory)) {
 }
 
 Player::~Player() {
