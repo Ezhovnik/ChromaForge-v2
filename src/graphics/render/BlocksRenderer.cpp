@@ -26,6 +26,8 @@ BlocksRenderer::BlocksRenderer(
 	const ContentGfxCache* cache,
 	const EngineSettings* settings
 ) : content(content),
+	vertexBuffer(std::make_unique<float[]>(capacity)),
+    indexBuffer(std::make_unique<int[]>(capacity)),
 	vertexOffset(0),
 	indexOffset(0),
 	indexSize(0),
@@ -33,16 +35,15 @@ BlocksRenderer::BlocksRenderer(
 	cache(cache),
 	settings(settings) 
 {
-	vertexBuffer = new float[capacity];
-	indexBuffer = new int[capacity];
-	voxelsBuffer = new VoxelsVolume(CHUNK_WIDTH + 2, CHUNK_HEIGHT, CHUNK_DEPTH + 2);
+	voxelsBuffer = std::make_unique<VoxelsVolume>(
+        CHUNK_WIDTH + voxelBufferPadding * 2, 
+        CHUNK_HEIGHT, 
+        CHUNK_DEPTH + voxelBufferPadding * 2
+	);
 	blockDefsCache = content->getIndices()->getBlockDefs();
 }
 
 BlocksRenderer::~BlocksRenderer() {
-	delete voxelsBuffer;
-	delete[] vertexBuffer;
-	delete[] indexBuffer;
 }
 
 void BlocksRenderer::vertex(const glm::vec3& coord, float u, float v, const glm::vec4& light) {
@@ -59,10 +60,10 @@ void BlocksRenderer::vertex(const glm::vec3& coord, float u, float v, const glm:
 		uint32_t integer;
 	} compressed;
 
-	compressed.integer = (uint32_t(light.r * 255) & 0xff) << 24;
-	compressed.integer |= (uint32_t(light.g * 255) & 0xff) << 16;
-	compressed.integer |= (uint32_t(light.b * 255) & 0xff) << 8;
-	compressed.integer |= (uint32_t(light.a * 255) & 0xff);
+	compressed.integer = (static_cast<uint32_t>(light.r * 255) & 0xff) << 24;
+	compressed.integer |= (static_cast<uint32_t>(light.g * 255) & 0xff) << 16;
+	compressed.integer |= (static_cast<uint32_t>(light.b * 255) & 0xff) << 8;
+	compressed.integer |= (static_cast<uint32_t>(light.a * 255) & 0xff);
 
 	vertexBuffer[vertexOffset++] = compressed.floating;
 }
@@ -189,12 +190,12 @@ void BlocksRenderer::tetragonicFace(
 }
 
 void BlocksRenderer::blockXSprite(
-    int x, int y, int z, 
-	const glm::vec3& size, 
-	const UVRegion& texface1, 
-	const UVRegion& texface2, 
-	float spread) 
-{
+    int x, int y, int z,
+	const glm::vec3& size,
+	const UVRegion& texface1,
+	const UVRegion& texface2,
+	float spread
+) {
 	glm::vec4 lights[] {
 		pickSoftLight({x, y + 1, z}, {1, 0, 0}, {0, 1, 0}),
 		pickSoftLight({x + 1, y + 1, z}, {1, 0, 0}, {0, 1, 0}),
@@ -426,7 +427,12 @@ glm::vec4 BlocksRenderer::pickSoftLight(
     const glm::ivec3& right, 
 	const glm::ivec3& up) const 
 {
-	return pickSoftLight({int(round(x)), int(round(y)), int(round(z))}, right, up);
+	return pickSoftLight({
+		static_cast<int>(round(x)),
+		static_cast<int>(round(y)),
+		static_cast<int>(round(z))}
+		, right, up
+	);
 }
 
 void BlocksRenderer::render(const voxel* voxels) {
@@ -465,7 +471,7 @@ void BlocksRenderer::render(const voxel* voxels) {
                     blockXSprite(x, y, z, glm::vec3(1.0f), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
                     break;
                 } case BlockModel::AABB: {
-                    blockAABB(glm::ivec3(x,y,z), texfaces, &def, vox.state.rotation, !def.rt.emissive);
+                    blockAABB(glm::ivec3(x, y, z), texfaces, &def, vox.state.rotation, !def.rt.emissive);
                     break;
                 } case BlockModel::Custom: {
                     blockCustomModel(glm::ivec3(x, y, z), &def, vox.state.rotation, !def.rt.emissive);
@@ -481,11 +487,11 @@ void BlocksRenderer::render(const voxel* voxels) {
 void BlocksRenderer::build(const Chunk* chunk, const ChunksStorage* chunks) {
 	this->chunk = chunk;
 	voxelsBuffer->setPosition(
-        chunk->chunk_x * CHUNK_WIDTH - 1, 
+        chunk->chunk_x * CHUNK_WIDTH - voxelBufferPadding, 
         0, 
-        chunk->chunk_z * CHUNK_DEPTH - 1
+        chunk->chunk_z * CHUNK_DEPTH - voxelBufferPadding
     );
-	chunks->getVoxels(voxelsBuffer, settings->graphics.backlight.get());
+	chunks->getVoxels(voxelsBuffer.get(), settings->graphics.backlight.get());
 	overflow = false;
 	vertexOffset = 0;
 	indexOffset = indexSize = 0;
@@ -496,7 +502,9 @@ void BlocksRenderer::build(const Chunk* chunk, const ChunksStorage* chunks) {
 std::shared_ptr<Mesh> BlocksRenderer::createMesh() {
 	const vattr attrs[]{ {3}, {2}, {1}, {0} };
 	size_t vcount = vertexOffset / BR_VERTEX_SIZE;
-	return std::make_shared<Mesh>(vertexBuffer, vcount, indexBuffer, indexSize, attrs);
+	return std::make_shared<Mesh>(
+		vertexBuffer.get(), vcount, indexBuffer.get(), indexSize, attrs
+	);
 }
 
 std::shared_ptr<Mesh> BlocksRenderer::render(const Chunk* chunk, const ChunksStorage* chunks) {
@@ -505,5 +513,5 @@ std::shared_ptr<Mesh> BlocksRenderer::render(const Chunk* chunk, const ChunksSto
 }
 
 VoxelsVolume* BlocksRenderer::getVoxelsBuffer() const {
-	return voxelsBuffer;
+	return voxelsBuffer.get();
 }

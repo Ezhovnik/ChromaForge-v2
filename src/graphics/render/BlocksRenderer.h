@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include <vector>
+#include <memory>
+
 #include <glm/glm.hpp>
 
 #include "../../math/UVRegion.h"
@@ -28,16 +30,17 @@ struct EngineSettings;
 class BlocksRenderer {
 private:
 	const Content* const content;
-	float* vertexBuffer;
-	int* indexBuffer;
+	std::unique_ptr<float[]> vertexBuffer;
+	std::unique_ptr<int[]> indexBuffer;
 	size_t vertexOffset;
 	size_t indexOffset, indexSize;
 	size_t capacity;
 
+    int voxelBufferPadding = 2;
 	bool overflow = false; ///< Флаг переполнения буфера
 
 	const Chunk* chunk = nullptr;
-	VoxelsVolume* voxelsBuffer;
+	std::unique_ptr<VoxelsVolume> voxelsBuffer;
 
 	const Block* const* blockDefsCache;
 	const ContentGfxCache* const cache;

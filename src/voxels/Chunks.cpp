@@ -323,7 +323,14 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 
 				bool hit = false;
 
-                for (const auto& box : hitboxes) {
+                glm::vec3 offset {};
+                if (voxel->state.segment) {
+                    offset = seekOrigin(iend, def, voxel->state) - iend;
+                }
+
+                for (auto box : hitboxes) {
+                    box.a += offset;
+                    box.b += offset;
                     scalar_t boxDistance;
 					glm::ivec3 boxNorm;
                     if (ray.intersectAABB(iend, box, maxDist, boxNorm, boxDistance) > RayRelation::None && boxDistance < distance) {
@@ -429,8 +436,13 @@ glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDis
                 glm::ivec3 norm;
                 Ray ray(start, dir);
 
+				glm::ivec3 offset {};
+                if (voxel->state.segment) {
+                    offset = seekOrigin({ix, iy, iz}, def, voxel->state) - glm::ivec3(ix, iy, iz);
+                }
+
                 for (const auto& box : hitboxes) {
-                    if (ray.intersectAABB(glm::ivec3(ix, iy, iz), box, maxDist, norm, distance) > RayRelation::None) {
+                    if (ray.intersectAABB(glm::ivec3(ix, iy, iz) + offset, box, maxDist, norm, distance) > RayRelation::None) {
                         return start + (dir * glm::vec3(distance));
                     }
                 }
