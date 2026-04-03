@@ -34,6 +34,18 @@ namespace scripting {
         const std::string& file="<string>"
     );
 
+    boolconsumer create_bool_consumer(
+        const scriptenv& env,
+        const std::string& src,
+        const std::string& file="<string>"
+    );
+
+    boolsupplier create_bool_supplier(
+        const scriptenv& env,
+        const std::string& src,
+        const std::string& file="<string>"
+    );
+
     doubleconsumer create_number_consumer(
         const scriptenv& env,
         const std::string& src,
@@ -55,18 +67,6 @@ namespace scripting {
     vec2supplier create_vec2_supplier(
         const scriptenv& env,
         const std::string& src, 
-        const std::string& file="<string>"
-    );
-
-    boolconsumer create_bool_consumer(
-        const scriptenv& env,
-        const std::string& src,
-        const std::string& file="<string>"
-    );
-
-    boolsupplier create_bool_supplier(
-        const scriptenv& env,
-        const std::string& src,
         const std::string& file="<string>"
     );
 }

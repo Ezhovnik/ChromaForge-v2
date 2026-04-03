@@ -14,16 +14,20 @@
 #error LuaJIT required
 #endif
 
-template <lua_CFunction func> int lua_wrap_errors(lua_State *L) {
-    int result = 0;
-    try {
-        result = func(L);
-    } catch (std::exception &e) {
-        luaL_error(L, e.what());
-    } catch (...) {
-        throw;
-    }
-    return result;
+#include "../../../delegates.h"
+#include "../scripting.h"
+
+namespace lua {
+    class luaerror : public std::runtime_error {
+    public:
+        luaerror(const std::string& message);
+    };
+
+    void log_error(const std::string& text);
+
+    using State = lua_State;
+    using Number = lua_Number;
+    using Integer = lua_Integer;
 }
 
 #endif // LOGIC_SCRIPTING_LUA_LUA_COMMONS_H_

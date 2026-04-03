@@ -22,6 +22,7 @@
 #include "../graphics/render/WorldRenderer.h"
 #include "../audio/audio.h"
 #include "../settings.h"
+#include "../logic/scripting/scripting.h"
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
@@ -61,6 +62,9 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 	})));
     panel->add(create_label([](){
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());
+    }));
+    panel->add(create_label([](){
+        return L"Lua stack: " + std::to_wstring(scripting::get_values_on_stack());
     }));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
         const auto& vox = player->selection.vox;

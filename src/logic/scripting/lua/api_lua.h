@@ -1,7 +1,7 @@
 #ifndef LOGIC_SCRIPTING_LUA_API_LUA_H_
 #define LOGIC_SCRIPTING_LUA_API_LUA_H_
 
-#include <lua.hpp>
+#include "lua_util.h"
 
 extern const luaL_Reg packlib [];
 extern const luaL_Reg timelib [];
@@ -20,6 +20,6 @@ extern const luaL_Reg inputlib [];
 extern const luaL_Reg consolelib [];
 extern const luaL_Reg tomllib [];
 
-extern int l_print(lua_State* L);
+extern int l_print(lua::State* L);
 
 #endif // LOGIC_SCRIPTING_LUA_API_LUA_H_

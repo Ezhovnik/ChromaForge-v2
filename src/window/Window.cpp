@@ -165,7 +165,9 @@ bool Window::initialize(DisplaySettings* settings) {
     // Инициализация GLEW
     glewExperimental = GL_TRUE;
     GLenum glewError = glewInit();
-    if (glewError != GLEW_OK) {
+    if (glewError == GLEW_ERROR_NO_GLX_DISPLAY) {
+        LOG_WARN("glewInit() returned GLEW_ERROR_NO_GLX_DISPLAY; ignored");
+    } else if (glewError != GLEW_OK) {
         LOG_CRITICAL("Failed to initialize GLEW {}", reinterpret_cast<const char*>(glewGetErrorString(glewError)));
         return false;
     }

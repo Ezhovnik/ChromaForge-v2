@@ -1,21 +1,17 @@
 #include "api_lua.h"
-#include "lua_commons.h"
-#include "../scripting.h"
 #include "../../../engine.h"
 #include "../../../window/Window.h"
 
-static int l_time_uptime(lua_State* L) {
-    lua_pushnumber(L, Window::time());
-    return 1;
+static int l_time_uptime(lua::State* L) {
+    return lua::pushnumber(L, Window::time());
 }
 
-static int l_time_delta(lua_State* L) {
-    lua_pushnumber(L, scripting::engine->getDeltaTime());
-    return 1;
+static int l_time_delta(lua::State* L) {
+    return lua::pushnumber(L, scripting::engine->getDeltaTime());
 }
 
 const luaL_Reg timelib [] = {
-    {"uptime", lua_wrap_errors<l_time_uptime>},
-    {"delta", lua_wrap_errors<l_time_delta>},
+    {"uptime", lua::wrap<l_time_uptime>},
+    {"delta", lua::wrap<l_time_delta>},
     {NULL, NULL}
 };

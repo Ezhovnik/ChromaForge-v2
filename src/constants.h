@@ -78,8 +78,6 @@ inline constexpr double PI = 3.14159265358979323846;
  * @param w Ширина (по умолчанию CHUNK_WIDTH).
  * @param d Глубина (по умолчанию CHUNK_DEPTH).
  * @return Индекс в плоском массиве.
- *
- * Формула: index = (y * d + z) * w + x.
  */
 inline constexpr uint vox_index(uint x, uint y, uint z, uint w = CHUNK_WIDTH, uint d = CHUNK_DEPTH) {
 	return (y * d + z) * w + x;

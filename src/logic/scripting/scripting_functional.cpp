@@ -1,126 +1,177 @@
 #include "scripting_functional.h"
 
-#include "lua/LuaState.h"
+#include "lua/lua_engine.h"
 #include "../../util/stringutil.h"
 #include "../../debug/Logger.h"
 
-namespace scripting {
-    extern lua::LuaState* state;
-}
-
 using namespace scripting;
 
-runnable scripting::create_runnable(const scriptenv& env, const std::string& src, const std::string& file) {
+runnable scripting::create_runnable(
+    const scriptenv& env,
+    const std::string& src,
+    const std::string& file
+) {
+    auto L = lua::get_main_thread();
     try {
-        state->loadbuffer(*env, src, file);
-        return state->createRunnable();
+        lua::loadbuffer(L, *env, src, file);
+        return lua::create_runnable(L);
     } catch (const lua::luaerror& err) {
         LOG_ERROR("{}", err.what());
         return [](){};
     }
 }
 
-static bool processCallback(const scriptenv& env, const std::string& src, const std::string& file) {
+static lua::State* process_callback(
+    const scriptenv& env,
+    const std::string& src,
+    const std::string& file
+) {
+    auto L = lua::get_main_thread();
     try {
-        return state->eval(*env, src, file) != 0;
+        if (lua::eval(L, *env, src, file) != 0) {
+            return L;
+        }
     } catch (lua::luaerror& err) {
         LOG_ERROR("{}", err.what());
-        return false;
     }
+    return nullptr;
 }
 
-wstringconsumer scripting::create_wstring_consumer(const scriptenv& env, const std::string& src, const std::string& file) {
+wstringconsumer scripting::create_wstring_consumer(
+    const scriptenv& env,
+    const std::string& src,
+    const std::string& file
+) {
     return [=](const std::wstring& x){
-        if (processCallback(env, src, file)) {
-            state->pushstring(util::wstr2str_utf8(x));
-            state->callNoThrow(1);
+        if (auto L = process_callback(env, src, file)) {
+            lua::pushwstring(L, x);
+            lua::call_nothrow(L, 1);
         }
     };
 }
 
-wstringsupplier scripting::create_wstring_supplier(const scriptenv& env, const std::string& src, const std::string& file) {
+wstringsupplier scripting::create_wstring_supplier(
+    const scriptenv& env,
+    const std::string& src,
+    const std::string& file
+) {
     return [=](){
-        if (processCallback(env, src, file)) {
-            if (state->isfunction(-1)) state->callNoThrow(0);
-            auto str = state->tostring(-1); state->pop();
-            return util::str2wstr_utf8(str);
+        if (auto L = process_callback(env, src, file)) {
+            if (lua::isfunction(L, -1)) {
+                lua::call_nothrow(L, 0);
+            }
+            auto str = lua::require_wstring(L, -1); lua::pop(L);
+            return str;
         }
         return std::wstring(L"");
     };
 }
 
-wstringchecker scripting::create_wstring_validator(const scriptenv& env, const std::string& src, const std::string& file) {
+wstringchecker scripting::create_wstring_validator(
+    const scriptenv& env,
+    const std::string& src,
+    const std::string& file
+) {
     return [=](const std::wstring& x){
-        if (processCallback(env, src, file)) {
-            state->pushstring(util::wstr2str_utf8(x));
-            if (state->callNoThrow(1)) return state->toboolean(-1);
+        if (auto L = process_callback(env, src, file)) {
+            lua::pushwstring(L, x);
+            if (lua::call_nothrow(L, 1))
+                return lua::toboolean(L, -1);
         }
         return false;
     };
 }
 
-doubleconsumer scripting::create_number_consumer(const scriptenv& env, const std::string& src, const std::string& file) {
-    return [=](double x){
-        if (processCallback(env, src, file)) {
-            state->pushnumber(x);
-            state->callNoThrow(1);
+boolconsumer scripting::create_bool_consumer(
+    const scriptenv& env,
+    const std::string& src,
+    const std::string& file
+) {
+    return [=](bool x){
+        if (auto L = process_callback(env, src, file)) {
+            lua::pushboolean(L, x);
+            lua::call_nothrow(L, 1);
         }
     };
 }
 
-doublesupplier scripting::create_number_supplier(const scriptenv& env, const std::string& src, const std::string& file) {
+boolsupplier scripting::create_bool_supplier(
+    const scriptenv& env,
+    const std::string& src,
+    const std::string& file
+) {
     return [=](){
-        if (processCallback(env, src, file)) {
-            if (state->isfunction(-1)) state->callNoThrow(0);
-            auto x = state->tonumber(-1); 
-            state->pop();
+        if (auto L = process_callback(env, src, file)) {
+            if (lua::isfunction(L, -1)) {
+                lua::call_nothrow(L, 0);
+            }
+            bool x = lua::toboolean(L,-1); lua::pop(L);
+            return x;
+        }
+        return false;
+    };
+}
+
+doubleconsumer scripting::create_number_consumer(
+    const scriptenv& env,
+    const std::string& src,
+    const std::string& file
+) {
+    return [=](double x){
+        if (auto L = process_callback(env, src, file)) {
+            lua::pushnumber(L, x);
+            lua::call_nothrow(L, 1);
+        }
+    };
+}
+
+doublesupplier scripting::create_number_supplier(
+    const scriptenv& env,
+    const std::string& src,
+    const std::string& file
+) {
+    return [=](){
+        if (auto L = process_callback(env, src, file)) {
+            if (lua::isfunction(L, -1)) {
+                lua::call_nothrow(L, 0);
+            }
+            auto x = lua_tonumber(L, -1); 
+            lua::pop(L);
             return x;
         }
         return 0.0;
     };
 }
 
-int_array_consumer scripting::create_int_array_consumer(const scriptenv& env, const std::string& src, const std::string& file) {
-    return [=](const int arr[], size_t len){
-        if (processCallback(env, src, file)) {
+int_array_consumer scripting::create_int_array_consumer(
+    const scriptenv& env,
+    const std::string& src, 
+    const std::string& file
+) {
+    return [=](const int arr[], size_t len) {
+        if (auto L = process_callback(env, src, file)) {
             for (uint i = 0; i < len; i++) {
-                state->pushinteger(arr[i]);
+                lua::pushinteger(L, arr[i]);
             }
-            state->callNoThrow(len);
+            lua::call_nothrow(L, len);
         }
     };
 }
 
-vec2supplier scripting::create_vec2_supplier(const scriptenv& env, const std::string& src, const std::string& file) {
-    return [=](){
-        if (processCallback(env, src, file)) {
-            if (state->isfunction(-1)) state->callNoThrow(0);
-            auto y = state->tonumber(-1);
-            state->pop();
-            auto x = state->tonumber(-1);
-            state->pop();
+vec2supplier scripting::create_vec2_supplier(
+    const scriptenv& env,
+    const std::string& src, 
+    const std::string& file
+) {
+    return [=]() {
+        if (auto L = process_callback(env, src, file)) {
+            if (lua::isfunction(L, -1)) {
+                lua::call_nothrow(L, 0);
+            }
+            auto y = lua::tonumber(L, -1); lua::pop(L);
+            auto x = lua::tonumber(L, -1); lua::pop(L);
             return glm::vec2(x, y);
         }
         return glm::vec2(0, 0);
-    };
-}
-
-boolconsumer scripting::create_bool_consumer(const scriptenv& env, const std::string& src, const std::string& file) {
-    return [=](bool x){
-        if (processCallback(env, src, file)) {
-            state->pushboolean(x);
-            state->callNoThrow(1);
-        }
-    };
-}
-
-boolsupplier scripting::create_bool_supplier(const scriptenv& env, const std::string& src, const std::string& file) {
-    return [=](){
-        if (processCallback(env, src, file)) {
-            if (state->isfunction(-1)) state->callNoThrow(0);
-            bool x = state->toboolean(-1); state->pop();
-            return x;
-        }
-        return false;
     };
 }

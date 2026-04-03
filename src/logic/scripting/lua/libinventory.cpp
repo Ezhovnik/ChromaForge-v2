@@ -1,13 +1,9 @@
-#include "lua_commons.h"
 #include "api_lua.h"
-#include "lua_util.h"
-#include "../scripting.h"
 #include "../../../content/Content.h"
 #include "../../../world/Level.h"
 #include "../../../items/ItemStack.h"
 #include "../../../items/Inventories.h"
 #include "../../../logic/BlocksController.h"
-#include "../../../debug/Logger.h"
 
 static void validate_itemid(itemid_t id) {
     if (id >= scripting::indices->countItemDefs()) {
@@ -38,22 +34,22 @@ static void validate_slotid(int slotid, Inventory* inv) {
     }
 }
 
-static int l_inventory_get(lua_State* L) {
-    lua_Integer invid = lua_tointeger(L, 1);
-    lua_Integer slotid = lua_tointeger(L, 2);
+static int l_inventory_get(lua::State* L) {
+    auto invid = lua::tointeger(L, 1);
+    auto slotid = lua::tointeger(L, 2);
     auto inv = get_inventory(invid);
     validate_slotid(slotid, inv.get());
     const ItemStack& item = inv->getSlot(slotid);
-    lua_pushinteger(L, item.getItemId());
-    lua_pushinteger(L, item.getCount());
+    lua::pushinteger(L, item.getItemId());
+    lua::pushinteger(L, item.getCount());
     return 2;
 }
 
-static int l_inventory_set(lua_State* L) {
-    lua_Integer invid = lua_tointeger(L, 1);
-    lua_Integer slotid = lua_tointeger(L, 2);
-    lua_Integer itemid = lua_tointeger(L, 3);
-    lua_Integer count = lua_tointeger(L, 4);
+static int l_inventory_set(lua::State* L) {
+    auto invid = lua::tointeger(L, 1);
+    auto slotid = lua::tointeger(L, 2);
+    auto itemid = lua::tointeger(L, 3);
+    auto count = lua::tointeger(L, 4);
     validate_itemid(itemid);
 
     auto inv = get_inventory(invid);
@@ -63,71 +59,66 @@ static int l_inventory_set(lua_State* L) {
     return 0;
 }
 
-static int l_inventory_size(lua_State* L) {
-    lua_Integer invid = lua_tointeger(L, 1);
+static int l_inventory_size(lua::State* L) {
+    auto invid = lua::tointeger(L, 1);
     auto inv = get_inventory(invid);
-    lua_pushinteger(L, inv->size());
-    return 1;
+    return lua::pushinteger(L, inv->size());
 }
 
-static int l_inventory_add(lua_State* L) {
-    lua_Integer invid = lua_tointeger(L, 1);
-    lua_Integer itemid = lua_tointeger(L, 2);
-    lua_Integer count = lua_tointeger(L, 3);
+static int l_inventory_add(lua::State* L) {
+    auto invid = lua::tointeger(L, 1);
+    auto itemid = lua::tointeger(L, 2);
+    auto count = lua::tointeger(L, 3);
     validate_itemid(itemid);
 
     auto inv = get_inventory(invid);
     ItemStack item(itemid, count);
     inv->move(item, scripting::indices);
-    lua_pushinteger(L, item.getCount());
-    return 1;
+    return lua::pushinteger(L, item.getCount());
 }
 
-static int l_inventory_get_block(lua_State* L) {
-    lua_Integer x = lua_tointeger(L, 1);
-    lua_Integer y = lua_tointeger(L, 2);
-    lua_Integer z = lua_tointeger(L, 3);
+static int l_inventory_get_block(lua::State* L) {
+    auto x = lua::tointeger(L, 1);
+    auto y = lua::tointeger(L, 2);
+    auto z = lua::tointeger(L, 3);
     int64_t id = scripting::blocks->createBlockInventory(x, y, z);
-    lua_pushinteger(L, id);
-    return 1;
+    return lua::pushinteger(L, id);
 }
 
-static int l_inventory_bind_block(lua_State* L) {
-    lua_Integer id = lua_tointeger(L, 1);
-    lua_Integer x = lua_tointeger(L, 2);
-    lua_Integer y = lua_tointeger(L, 3);
-    lua_Integer z = lua_tointeger(L, 4);
+static int l_inventory_bind_block(lua::State* L) {
+    auto id = lua::tointeger(L, 1);
+    auto x = lua::tointeger(L, 2);
+    auto y = lua::tointeger(L, 3);
+    auto z = lua::tointeger(L, 4);
     scripting::blocks->bindInventory(id, x, y, z);
     return 0;
 }
 
-static int l_inventory_unbind_block(lua_State* L) {
-    lua_Integer x = lua_tointeger(L, 1);
-    lua_Integer y = lua_tointeger(L, 2);
-    lua_Integer z = lua_tointeger(L, 3);
+static int l_inventory_unbind_block(lua::State* L) {
+    auto x = lua::tointeger(L, 1);
+    auto y = lua::tointeger(L, 2);
+    auto z = lua::tointeger(L, 3);
     scripting::blocks->unbindInventory(x, y, z);
     return 0;
 }
 
-static int l_inventory_clone(lua_State* L) {
-    lua_Integer id = lua_tointeger(L, 1);
+static int l_inventory_clone(lua::State* L) {
+    auto id = lua::tointeger(L, 1);
     auto clone = scripting::level->inventories->clone(id);
     if (clone == nullptr) {
-        lua_pushinteger(L, 0);
-        return 1;
+        return lua::pushinteger(L, 0);
     }
-    lua_pushinteger(L, clone->getId());
-    return 1;
+    return lua::pushinteger(L, clone->getId());
 }
 
-static int l_inventory_move(lua_State* L) {
-    lua_Integer invAid = lua_tointeger(L, 1);
-    lua_Integer slotAid = lua_tointeger(L, 2);
+static int l_inventory_move(lua::State* L) {
+    auto invAid = lua::tointeger(L, 1);
+    auto slotAid = lua::tointeger(L, 2);
     auto invA = get_inventory(invAid, 1);
     validate_slotid(slotAid, invA.get());
 
-    lua_Integer invBid = lua_tointeger(L, 3);
-    lua_Integer slotBid = lua_isnil(L, 4) ? -1 : lua_tointeger(L, 4);
+    auto invBid = lua::tointeger(L, 3);
+    auto slotBid = lua::isnil(L, 4) ? -1 : lua::tointeger(L, 4);
     auto invB = get_inventory(invBid, 3);
     validate_slotid(slotBid, invB.get());
     auto& slot = invA->getSlot(slotAid);
@@ -140,14 +131,14 @@ static int l_inventory_move(lua_State* L) {
 }
 
 const luaL_Reg inventorylib [] = {
-    {"get", lua_wrap_errors<l_inventory_get>},
-    {"set", lua_wrap_errors<l_inventory_set>},
-    {"size", lua_wrap_errors<l_inventory_size>},
-    {"add", lua_wrap_errors<l_inventory_add>},
-    {"move", lua_wrap_errors<l_inventory_move>},
-    {"get_block", lua_wrap_errors<l_inventory_get_block>},
-    {"bind_block", lua_wrap_errors<l_inventory_bind_block>},
-    {"unbind_block", lua_wrap_errors<l_inventory_unbind_block>},
-    {"clone", lua_wrap_errors<l_inventory_clone>},
+    {"get", lua::wrap<l_inventory_get>},
+    {"set", lua::wrap<l_inventory_set>},
+    {"size", lua::wrap<l_inventory_size>},
+    {"add", lua::wrap<l_inventory_add>},
+    {"move", lua::wrap<l_inventory_move>},
+    {"get_block", lua::wrap<l_inventory_get_block>},
+    {"bind_block", lua::wrap<l_inventory_bind_block>},
+    {"unbind_block", lua::wrap<l_inventory_unbind_block>},
+    {"clone", lua::wrap<l_inventory_clone>},
     {NULL, NULL}
 };

@@ -32,31 +32,26 @@ class LevelController;
 namespace scripting {
     extern Engine* engine;
     extern const Content* content;
+    extern const ContentIndices* indices;
     extern Level* level;
     extern BlocksController* blocks;
-    extern const ContentIndices* indices;
     extern LevelController* controller;
 
     void initialize(Engine* engine);
 
-    extern bool register_event(int env, const std::string& name, const std::string& id);
+    bool register_event(int env, const std::string& name, const std::string& id);
+    int get_values_on_stack();
 
     scriptenv get_root_environment();
     scriptenv create_pack_environment(const ContentPack& pack);
     scriptenv create_doc_environment(const scriptenv& parent, const std::string& name);
 
-    void on_world_load(LevelController* controller);
-    void on_world_quit();
-    void on_world_spark();
-    void on_world_save();
-    void load_world_script(
-        const scriptenv& env,
-        const std::string& prefix,
-        const std::filesystem::path& file
-    );
-
     void process_post_runnables();
 
+    void on_world_load(LevelController* controller);
+    void on_world_spark();
+    void on_world_save();
+    void on_world_quit();
     void on_blocks_spark(const Block* block, int tps);
     void update_block(const Block* block, int x, int y, int z);
     void random_update_block(const Block* block, int x, int y, int z);
@@ -67,6 +62,13 @@ namespace scripting {
     bool on_item_use(Player* player, const Item* item);
     bool on_item_use_on_block(Player* player, const Item* item, int x, int y, int z);
     bool on_item_break_block(Player* player, const Item* item, int x, int y, int z);
+
+    void on_ui_open(
+        UIDocument* layout, 
+        std::vector<dynamic::Value> args
+    );
+    void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
+    void on_ui_close(UIDocument* layout, Inventory* inventory);
 
     void load_block_script(
         const scriptenv& env,
@@ -80,13 +82,11 @@ namespace scripting {
         const std::filesystem::path& file,
         item_funcs_set& funcsset
     );
-
-    void on_ui_open(
-        UIDocument* layout, 
-        std::vector<dynamic::Value> args
+    void load_world_script(
+        const scriptenv& env,
+        const std::string& packid,
+        const std::filesystem::path& file
     );
-    void on_ui_close(UIDocument* layout, Inventory* inventory);
-    void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
 
     void load_layout_script(
         const scriptenv& env,
