@@ -87,3 +87,12 @@ console.add_command(
         return tostring(w * h * d).." blocks set"
     end
 )
+
+console.add_command(
+    "clear",
+    "Clears the console",
+    function ()
+        local document = Document.new("core:console")
+        document.log.text = ""
+    end
+)

@@ -7,5 +7,6 @@
     "light-passing": true,
     "sky-light-passing": true,
     "caption": "light bulb",
-    "material": "chromaforge:glass"
+    "material": "chromaforge:glass",
+    "shadeless": true
 }

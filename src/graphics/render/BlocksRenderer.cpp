@@ -465,16 +465,16 @@ void BlocksRenderer::render(const voxel* voxels) {
 
 			switch (def.model) {
                 case BlockModel::Cube: {
-                    blockCube(x, y, z, texfaces, &def, vox.state, !def.rt.emissive);
+                    blockCube(x, y, z, texfaces, &def, vox.state, !def.shadeless);
                     break;
                 } case BlockModel::X: {
                     blockXSprite(x, y, z, glm::vec3(1.0f), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
                     break;
                 } case BlockModel::AABB: {
-                    blockAABB(glm::ivec3(x, y, z), texfaces, &def, vox.state.rotation, !def.rt.emissive);
+                    blockAABB(glm::ivec3(x, y, z), texfaces, &def, vox.state.rotation, !def.shadeless);
                     break;
                 } case BlockModel::Custom: {
-                    blockCustomModel(glm::ivec3(x, y, z), &def, vox.state.rotation, !def.rt.emissive);
+                    blockCustomModel(glm::ivec3(x, y, z), &def, vox.state.rotation, !def.shadeless);
                     break;
                 } default:
                     break;

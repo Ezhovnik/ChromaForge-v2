@@ -7,6 +7,10 @@ Back=Назад
 Continue=Продолжить
 Add=Добавить
 Converting world...=Выполняется конвертация мира...
+Version=Версия
+Creator=Автор
+Dependencies=Зависимости
+Description=Описание
 
 error.pack-not-found=Не удалось найти пакет
 error.dependency-not-found=Используемая зависимость не найдена
@@ -27,6 +31,7 @@ menu.Page not found=Страница не найдена
 menu.Quit=Выход
 menu.Save and Quit to Menu=Сохранить и Выйти в Меню
 menu.Settings=Настройки
+menu.Contents Menu=Меню контентпаков
 
 # Подсказки
 graphics.gamma.tooltip=Кривая яркости освещения

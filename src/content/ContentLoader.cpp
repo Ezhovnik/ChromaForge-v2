@@ -196,6 +196,7 @@ void ContentLoader::loadBlock(
     root->flag("light-passing", def.lightPassing);
     root->flag("breakable", def.breakable);
     root->flag("selectable", def.selectable);
+    root->flag("shadeless", def.shadeless);
     root->flag("sky-light-passing", def.skyLightPassing);
     root->flag("grounded", def.grounded);
     root->num("draw-group", def.drawGroup);

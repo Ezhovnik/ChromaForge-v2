@@ -1,6 +1,7 @@
 {
     "id": "chromaforge",
     "title": "ChromaForge",
-    "version": "0.2.0",
-    "description": "Basic content package"
+    "version": "0.3.0",
+    "description": "Basic content package",
+    "creator": "ChromaForge"
 }

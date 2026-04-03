@@ -108,6 +108,7 @@ public:
     bool replaceable = false;
     bool grounded = false;
     bool hidden = false;
+    bool shadeless = false;
 
     std::vector<AABB> hitboxes;
 

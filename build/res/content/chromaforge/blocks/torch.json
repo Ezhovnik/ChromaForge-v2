@@ -12,5 +12,6 @@
     "hitbox": [0.4375, 0.0, 0.4375, 0.125, 0.6875, 0.125],
     "light-passing": true,
     "obstacle": false,
-    "rotation": "pipe"
+    "rotation": "pipe",
+    "shadeless": true
 }

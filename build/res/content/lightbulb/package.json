@@ -2,5 +2,6 @@
     "id": "lightbulb",
     "title": "Light bulb",
     "version": "0.1.0",
-    "description": "Add light bulb"
+    "description": "Add light bulb",
+    "creator": "ChromaForge"
 }

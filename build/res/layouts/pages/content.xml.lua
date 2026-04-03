@@ -22,19 +22,19 @@ end
 function move_pack(id)
     -- Cancel pack addition
     if table.has(add_packs, id) then
-        document["pack_"..id]:move_into(document.packs_add)
+        document["pack_"..id]:moveInto(document.packs_add)
         table.remove_value(add_packs, id)
     -- Cancel pack removal
     elseif table.has(rem_packs, id) then
-        document["pack_"..id]:move_into(document.packs_cur)
+        document["pack_"..id]:moveInto(document.packs_cur)
         table.remove_value(rem_packs, id)
     -- Add pack
     elseif table.has(packs_installed, id) then
-        document["pack_"..id]:move_into(document.packs_add)
+        document["pack_"..id]:moveInto(document.packs_add)
         table.insert(rem_packs, id)
     --Remove pack
     else
-        document["pack_"..id]:move_into(document.packs_cur)
+        document["pack_"..id]:moveInto(document.packs_cur)
         table.insert(add_packs, id)
     end
     refresh_changes()
@@ -124,12 +124,12 @@ end
 function apply_movements(packs_cur, packs_add)
     for i,id in ipairs(packs_installed) do
         if table.has(rem_packs, id) then
-            document["pack_"..id]:move_into(packs_add)
+            document["pack_"..id]:moveInto(packs_add)
         end
     end
     for i,id in ipairs(packs_available) do
         if table.has(add_packs, id) then
-            document["pack_"..id]:move_into(packs_cur)
+            document["pack_"..id]:moveInto(packs_cur)
         end
     end
 end
