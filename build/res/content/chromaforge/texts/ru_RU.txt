@@ -26,3 +26,4 @@ water=вода
 torch=факел
 iron block=железный блок
 oak door=дубовая дверь
+wool=шерсть

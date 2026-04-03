@@ -28,6 +28,7 @@
         "oak_pane",
         "torch",
         "iron_block",
-        "oak_door"
+        "oak_door",
+        "wool"
     ]
 }

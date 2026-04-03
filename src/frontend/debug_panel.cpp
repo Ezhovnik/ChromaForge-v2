@@ -111,8 +111,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
                 glm::vec3 position = player->hitbox->position;
                 position[ax] = std::stoi(text);
                 player->teleport(position);
-            } catch (std::invalid_argument& _) {
-            } catch (std::out_of_range & _) {
+            } catch (std::exception& _) {
             }
         });
         box->setOnEditStart([=](){

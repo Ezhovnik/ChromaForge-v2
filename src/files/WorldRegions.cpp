@@ -200,13 +200,10 @@ ubyte* WorldRegions::getData(
     return nullptr;
 }
 
-std::shared_ptr<regFile> WorldRegions::useRegFile(glm::ivec3 coord) {
+regFile_ptr WorldRegions::useRegFile(glm::ivec3 coord) {
     auto* file = openRegFiles[coord].get();
     file->inUse = true;
-    return std::shared_ptr<regFile>(file, [this](regFile* ptr) {
-        ptr->inUse = false;
-        regFilesCv.notify_one();
-    });
+    return regFile_ptr(file, &regFilesCv);
 }
 
 void WorldRegions::closeRegFile(glm::ivec3 coord) {
@@ -214,7 +211,7 @@ void WorldRegions::closeRegFile(glm::ivec3 coord) {
     regFilesCv.notify_one();
 }
 
-std::shared_ptr<regFile> WorldRegions::getRegFile(glm::ivec3 coord, bool create) {
+regFile_ptr WorldRegions::getRegFile(glm::ivec3 coord, bool create) {
     {
         std::lock_guard lock(regFilesMutex);
         const auto found = openRegFiles.find(coord);
@@ -230,7 +227,7 @@ std::shared_ptr<regFile> WorldRegions::getRegFile(glm::ivec3 coord, bool create)
     return nullptr;
 }
 
-std::shared_ptr<regFile> WorldRegions::createRegFile(glm::ivec3 coord) {
+regFile_ptr WorldRegions::createRegFile(glm::ivec3 coord) {
     std::filesystem::path file = layers[coord[2]].folder/getRegionFilename(coord[0], coord[1]);
     if (!std::filesystem::exists(file)) return nullptr;
 
@@ -268,6 +265,7 @@ void WorldRegions::writeRegion(int x, int z, int layer, WorldRegion* entry){
     if (auto regFile = getRegFile(regcoord, false)) {
         fetchChunks(entry, x, z, regFile.get());
         std::lock_guard lock(regFilesMutex);
+        regFile.reset();
         closeRegFile(regcoord);
     }
 
