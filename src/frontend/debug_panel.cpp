@@ -23,13 +23,6 @@
 #include "../audio/audio.h"
 #include "../settings.h"
 
-template <size_t T>
-inline std::wstring to_string(std::bitset<T> bs) {
-    std::wstringstream ss;
-    ss << bs;
-    return ss.str();
-}
-
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
     label->textSupplier(std::move(supplier));
@@ -70,34 +63,23 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());
     }));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+        const auto& vox = player->selection.vox;
         std::wstringstream stream;
-        stream << "R:" << player->selectedVoxel.state.rotation << " S:"
-            << std::bitset<3>(player->selectedVoxel.state.segment) << " U:"
-            << std::bitset<8>(player->selectedVoxel.state.userbits);
-        if (player->selectedVoxel.id == BLOCK_VOID) {
+        stream << "R:" << vox.state.rotation << " S:"
+            << std::bitset<3>(vox.state.segment) << " U:"
+            << std::bitset<8>(vox.state.userbits);
+        if (vox.id == BLOCK_VOID) {
             return std::wstring {L"Block: -"};
         } else {
-            return L"Block: " + std::to_wstring(player->selectedVoxel.id) + L" " + stream.str();
+            return L"Block: " + std::to_wstring(vox.id) + L" " + stream.str();
         }
 	})));
     panel->add(create_label([=](){
         auto* indices = level->content->getIndices();
-        if (auto def = indices->getBlockDef(player->selectedVoxel.id)) {
+        if (auto def = indices->getBlockDef(player->selection.vox.id)) {
             return L"Name: " + util::str2wstr_utf8(def->name);
         } else {
             return std::wstring {L"Name: void"};
-        }
-    }));
-    panel->add(create_label([=](){
-        auto* indices = level->content->getIndices();
-        if (auto def = indices->getBlockDef(player->selectedVoxel.id)) {
-            return L"Light: " + to_string(std::bitset<16>(level->chunks->getLight(
-                player->actualSelectedBlockPosition.x,
-                player->actualSelectedBlockPosition.y,
-                player->actualSelectedBlockPosition.z
-            )));
-        } else {
-            return std::wstring {L"No light: -"};
         }
     }));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){

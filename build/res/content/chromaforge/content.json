@@ -27,6 +27,7 @@
         "copper_block",
         "oak_pane",
         "torch",
-        "iron"
+        "iron",
+        "oak_door"
     ]
 }

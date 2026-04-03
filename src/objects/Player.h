@@ -37,6 +37,14 @@ struct PlayerInput {
     bool pickBlock : 1;
 };
 
+struct BlockSelection {
+    voxel vox {0, {}};
+    glm::ivec3 position {};
+    glm::ivec3 actualPosition {};
+    glm::ivec3 normal {};
+    glm::vec3 hitPosition;
+};
+
 /**
  * @brief Класс игрока, наследующий Object и Serializable.
  *
@@ -61,10 +69,8 @@ public:
     bool debug = false;
 
 	glm::vec3 cam {}; ///< Углы поворота камеры
-	glm::ivec3 selectedBlockPosition {};
-	glm::ivec3 actualSelectedBlockPosition {};
 
-    voxel selectedVoxel {0, {}};
+	BlockSelection selection {};
 
 	/**
 	 * @brief Конструктор игрока.

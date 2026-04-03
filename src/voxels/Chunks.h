@@ -26,6 +26,7 @@ private:
 
     void eraseSegments(const Block* def, blockstate state, int x, int y, int z);
     void repairSegments(const Block* def, blockstate state, int x, int y, int z);
+    void setRotationExtended(Block* def, blockstate state, glm::ivec3 origin, uint8_t rotation);
 public:
     std::vector<std::shared_ptr<Chunk>> chunks;
     std::vector<std::shared_ptr<Chunk>> chunksSecond;
@@ -53,6 +54,8 @@ public:
     ); 
     ~Chunks() = default;
 
+    bool checkReplaceability(const Block* def, blockstate state, glm::ivec3 coord, blockid_t ignore=0);
+
     bool putChunk(const std::shared_ptr<Chunk>& chunk);
 
     Chunk* getChunk(int32_t chunk_x, int32_t chunk_z); // Возвращает чанк по координатам чанка
@@ -68,6 +71,8 @@ public:
 	ubyte getLight(int32_t x, int32_t y, int32_t z, int channel);
 
     glm::ivec3 seekOrigin(glm::ivec3 pos, const Block* def, blockstate state);
+
+    void setRotation(int32_t x, int32_t y, int32_t z, uint8_t rotation);
 
     voxel* rayCast( // Выполняет трассировку луча через воксельный мир.
         glm::vec3 start, // Начальная точка луча

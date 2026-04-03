@@ -161,14 +161,14 @@ void ContentLoader::loadBlock(
     root->str("material", def.material);
 
     // Профили поворота
-    std::string profile = "none";
+    std::string profile = BlockRotProfile::NONE_NAME;
     root->str("rotation", profile);
-    def.rotatable = profile != "none";
-    if (profile == "pipe") {
+    def.rotatable = profile != BlockRotProfile::NONE_NAME;
+    if (profile == BlockRotProfile::PIPE_NAME) {
         def.rotations = BlockRotProfile::PIPE;
-    } else if (profile == "pane") {
+    } else if (profile == BlockRotProfile::PANE_NAME) {
         def.rotations = BlockRotProfile::PANE;
-    } else if (profile != "none") {
+    } else if (profile != BlockRotProfile::NONE_NAME) {
         LOG_WARN("Unknown block {} rotation profile {}", name, profile);
         def.rotatable = false;
     }

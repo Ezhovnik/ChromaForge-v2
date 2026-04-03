@@ -63,6 +63,10 @@ struct BlockRotProfile {
 
 	static const BlockRotProfile PIPE;
     static const BlockRotProfile PANE;
+
+    static inline const std::string NONE_NAME = "none";
+    static inline const std::string PIPE_NAME = "pipe";
+    static inline const std::string PANE_NAME = "pane";
 };
 
 struct BlockMaterial {
