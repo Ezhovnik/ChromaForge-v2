@@ -50,7 +50,7 @@ void PhysicsSolver::step(
 		vel.x *= glm::max(0.0f, 1.0f - subDelta * linear_damping);
 		vel.z *= glm::max(0.0f, 1.0f - subDelta * linear_damping);
 		pos += vel * subDelta + gravity * gravityScale * subDelta * subDelta * 0.5f;
-		if (hitbox->grounded) pos.y = prev_y;
+		if (hitbox->grounded && pos.y < prev_y) pos.y = prev_y;
 
 		if (shifting && hitbox->grounded){
 			float y = pos.y - half.y - PhysicsSolver_Consts::EPS;

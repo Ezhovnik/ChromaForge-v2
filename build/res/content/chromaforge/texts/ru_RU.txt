@@ -24,4 +24,5 @@ sand=песок
 stone=камень
 water=вода
 torch=факел
-iron=железо
+iron block=железный блок
+oak door=дубовая дверь

@@ -23,9 +23,10 @@
 #include "../settings.h"
 
 namespace CameraConsts {
-	inline constexpr float SHAKE_OFFSET = 0.025f;
+    inline constexpr float STEPS_SPEED = 2.2f;
+	inline constexpr float SHAKE_OFFSET = 0.0075f;
 	inline constexpr float SHAKE_OFFSET_Y = 0.031f;
-	inline constexpr float SHAKE_SPEED = 1.75f;
+	inline constexpr float SHAKE_SPEED = STEPS_SPEED;
 	inline constexpr float SHAKE_DELTA_K = 10.0f;
 	inline constexpr float MAX_PITCH = 89.9f;
 	inline constexpr float CROUCH_SHIFT_Y = -0.2f;
@@ -37,8 +38,6 @@ namespace ZoomConsts {
 	inline constexpr float RUN = 1.1f;
 	inline constexpr float INPUT = 0.1f;
 }
-
-inline constexpr float STEPS_SPEED = 1.75f;
 
 CameraControl::CameraControl(
 	const std::shared_ptr<Player>& player, 
@@ -74,17 +73,18 @@ glm::vec3 CameraControl::updateCameraShaking(float delta) {
     glm::vec3 offset {};
     auto hitbox = player->hitbox.get();
     const float k = CameraConsts::SHAKE_DELTA_K;
-    const float oh = CameraConsts::SHAKE_OFFSET;
     const float ov = CameraConsts::SHAKE_OFFSET_Y;
     const glm::vec3& vel = hitbox->velocity;
 
     interpVel = interpVel * (1.0f - delta * 5) + vel * delta * 0.1f;
     if (hitbox->grounded && interpVel.y < 0.0f) interpVel.y *= -30.0f;
     shake = shake * (1.0f - delta * k);
+    float oh = CameraConsts::SHAKE_OFFSET;
     if (hitbox->grounded) {
         float f = glm::length(glm::vec2(vel.x, vel.z));
         shakeTimer += delta * f * CameraConsts::SHAKE_SPEED;
         shake += f * delta * k;
+        oh *= glm::sqrt(f);
     }
     offset += camera->right * glm::sin(shakeTimer) * oh * shake;
     offset += camera->up * glm::abs(glm::cos(shakeTimer)) * ov * shake;
@@ -222,7 +222,7 @@ void PlayerController::updateFootsteps(float delta) {
     if (hitbox->grounded) {
         const glm::vec3& vel = hitbox->velocity;
         float f = glm::length(glm::vec2(vel.x, vel.z));
-        stepsTimer += delta * f * STEPS_SPEED;
+        stepsTimer += delta * f * CameraConsts::STEPS_SPEED;
         if (stepsTimer >= PI) {
             stepsTimer = fmod(stepsTimer, PI);
             onFootstep();

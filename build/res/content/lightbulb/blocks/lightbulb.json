@@ -6,5 +6,6 @@
     "rotation": "pipe",
     "light-passing": true,
     "sky-light-passing": true,
-    "caption": "light bulb"
+    "caption": "light bulb",
+    "material": "chromaforge:glass"
 }
