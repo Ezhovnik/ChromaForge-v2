@@ -19,6 +19,7 @@ extern const luaL_Reg jsonlib [];
 extern const luaL_Reg inputlib [];
 extern const luaL_Reg consolelib [];
 extern const luaL_Reg tomllib [];
+extern const luaL_Reg mat4lib [];
 
 extern int l_print(lua::State* L);
 
