@@ -5,6 +5,7 @@
 
 #include "api_lua.h"
 #include "lua_util.h"
+#include "lua_custom_types.h"
 #include "../../../debug/Logger.h"
 #include "../../../util/stringutil.h"
 
@@ -82,6 +83,8 @@ void lua::initialize() {
 
     createtable(L, 0, 0);
     setglobal(L, LAMBDAS_TABLE);
+
+    newusertype<Bytearray, Bytearray::createMetatable>(L, "bytearray");
 }
 
 void lua::finalize() {

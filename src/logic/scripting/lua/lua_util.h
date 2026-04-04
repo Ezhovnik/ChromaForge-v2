@@ -2,6 +2,9 @@
 #define LOGIC_SCRIPTING_LUA_LUA_UTIL_H_
 
 #include <stdexcept>
+#include <unordered_map>
+#include <typeindex>
+#include <typeinfo>
 
 #ifdef __linux__ 
 #include <luajit-2.1/luaconf.h>
@@ -13,9 +16,12 @@
 #include <glm/glm.hpp>
 
 #include "lua_commons.h"
+#include "lua_custom_types.h"
 
 namespace lua {
     inline std::string LAMBDAS_TABLE = "$L";
+    extern std::unordered_map<std::type_index, std::string> usertypeNames;
+    int userdata_destructor(lua::State* L);
 
     std::string env_name(int env);
 
@@ -55,6 +61,11 @@ namespace lua {
 
     inline const char* type_name(lua::State* L, int idx) {
         return lua_typename(L, idx);
+    }
+
+    inline int rawget(lua::State* L, int idx=-2) {
+        lua_rawget(L, idx);
+        return 1;
     }
 
     inline int rawgeti(lua::State* L, int n, int idx=-1) {
@@ -256,6 +267,14 @@ namespace lua {
         return lua_isfunction(L, idx);
     }
 
+    inline bool isuserdata(lua::State* L, int idx) {
+        return lua_isuserdata(L, idx);
+    }
+
+    inline void setfield(lua::State* L, const std::string& name, int idx=-2) {
+        lua_setfield(L, idx, name.c_str());
+    }
+
     inline bool toboolean(lua::State* L, int idx) {
         return lua_toboolean(L, idx);
     }
@@ -275,6 +294,43 @@ namespace lua {
     inline const void* topointer(lua::State* L, int idx) {
         return lua_topointer(L, idx);
     }
+
+    inline void setglobal(lua::State* L, const std::string& name) {
+        lua_setglobal(L, name.c_str());
+    }
+
+    template<class T>
+    inline T* touserdata(lua::State* L, int idx) {
+        if (void* rawptr = lua_touserdata(L, idx)) {
+            return static_cast<T*>(rawptr);
+        }
+        return nullptr;
+    }
+
+    template<class T, typename... Args>
+    inline int newuserdata(lua::State* L, Args&&... args) {
+        const auto& found = usertypeNames.find(typeid(T));
+        void* ptr = lua_newuserdata(L, sizeof(T));
+        new (ptr) T(args...);
+
+        if (found == usertypeNames.end()) {
+            log_error("Usertype is not registred: "+std::string(typeid(T).name()));
+        } else if (getglobal(L, found->second)) {
+            setmetatable(L);
+        }
+        return 1;
+    }
+
+    template<class T, lua_CFunction func>
+    inline void newusertype(lua::State* L, const std::string& name) {
+        usertypeNames[typeid(T)] = name;
+        func(L);
+
+        pushcfunction(L, userdata_destructor);
+        setfield(L, "__gc");
+
+        setglobal(L, name);
+    } 
 
     inline glm::vec2 tovec2(lua::State* L, int idx) {
         pushvalue(L, idx);
@@ -318,14 +374,6 @@ namespace lua {
             return false;
         }
         return true;
-    }
-
-    inline void setfield(lua::State* L, const std::string& name, int idx=-2) {
-        lua_setfield(L, idx, name.c_str());
-    }
-
-    inline void setglobal(lua::State* L, const std::string& name) {
-        lua_setglobal(L, name.c_str());
     }
 
     inline const char* require_string(lua::State* L, int idx) {
