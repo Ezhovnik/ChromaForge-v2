@@ -310,17 +310,22 @@ asset_loader::postfunc asset_loader::sound(
     auto cfg = std::dynamic_pointer_cast<SoundConfig>(config);
     bool keepPCM = cfg ? cfg->keepPCM : false;
 
-    std::string extension = ".ogg";
     std::unique_ptr<audio::Sound> baseSound = nullptr;
 
-    auto soundFile = paths->find(file + extension);
-    if (std::filesystem::exists(soundFile)) {
-        baseSound = audio::load_sound(soundFile, keepPCM);
-    }
-
-    auto variantFile = paths->find(file + "_0" + extension);
-    if (std::filesystem::exists(variantFile)) {
-        baseSound = audio::load_sound(variantFile, keepPCM);
+    static std::vector<std::string> extensions {".ogg", ".wav"};
+    std::string extension;
+    for (size_t i = 0; i < extensions.size(); ++i) {
+        extension = extensions[i];
+        auto soundFile = paths->find(file + extension);
+        if (std::filesystem::exists(soundFile)) {
+            baseSound = audio::load_sound(soundFile, keepPCM);
+            break;
+        }
+        auto variantFile = paths->find(file + "_0" + extension);
+        if (std::filesystem::exists(variantFile)) {
+            baseSound = audio::load_sound(variantFile, keepPCM);
+            break;
+        }
     }
 
     if (baseSound == nullptr) {

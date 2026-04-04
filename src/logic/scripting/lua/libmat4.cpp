@@ -136,6 +136,13 @@ static int l_transpose(lua::State* L) {
     return 0;
 }
 
+static int l_determinant(lua::State* L) {
+    if (lua::gettop(L) != 1) {
+        throw std::runtime_error("Invalid arguments number (1 expected)");
+    }
+    return lua::pushnumber(L, glm::determinant(lua::tomat4(L, 1)));
+}
+
 static int l_tostring(lua::State* L) {
     auto matrix = lua::tomat4(L, 1);
     bool multiline = lua::toboolean(L, 2);
@@ -172,6 +179,7 @@ const luaL_Reg mat4lib [] = {
     {"translate", lua::wrap<l_transform_func<glm::translate>>},
     {"inverse", lua::wrap<l_inverse>},
     {"transpose", lua::wrap<l_transpose>},
+    {"determinant", lua::wrap<l_determinant>},
     {"tostring", lua::wrap<l_tostring>},
     {NULL, NULL}
 };

@@ -274,11 +274,15 @@ int scripting::get_values_on_stack() {
     return lua::gettop(lua::get_main_thread());
 }
 
+static void load_script(int env, const std::string& type, const std::filesystem::path& file) {
+    std::string src = files::read_string(file);
+    LOG_INFO("Script ({}) {}", type, file.u8string());
+    lua::execute(lua::get_main_thread(), env, src, file.u8string());
+}
+
 void scripting::load_block_script(const scriptenv& senv, const std::string& prefix, const std::filesystem::path& file, block_funcs_set& funcsset) {
     int env = *senv;
-    std::string src = files::read_string(file);
-
-    lua::execute(lua::get_main_thread(), env, src, file.u8string());
+    load_script(env, "block", file);
     funcsset.init = register_event(env, "init", prefix + ".init");
     funcsset.update = register_event(env, "on_update", prefix + ".update");
     funcsset.randupdate = register_event(env, "on_random_update", prefix + ".randupdate");
@@ -290,10 +294,7 @@ void scripting::load_block_script(const scriptenv& senv, const std::string& pref
 
 void scripting::load_item_script(const scriptenv& senv, const std::string& prefix, const std::filesystem::path& file, item_funcs_set& funcsset) {
     int env = *senv;
-    std::string src = files::read_string(file);
-
-    lua::execute(lua::get_main_thread(), env, src, file.u8string());
-
+    load_script(env, "item", file);
     funcsset.init = register_event(env, "init", prefix + ".init");
     funcsset.on_use = register_event(env, "on_use", prefix + ".use");
     funcsset.on_use_on_block = register_event(env, "on_use_on_block", prefix + ".useon");
@@ -302,11 +303,7 @@ void scripting::load_item_script(const scriptenv& senv, const std::string& prefi
 
 void scripting::load_world_script(const scriptenv& senv, const std::string& prefix, const std::filesystem::path& file) {
     int env = *senv;
-
-    std::string src = files::read_string(file);
-
-    lua::execute(lua::get_main_thread(), env, src, file.u8string());
-
+    load_script(env, "world", file);
     register_event(env, "init", prefix + ".init");
     register_event(env, "on_world_open", prefix + ".worldopen");
     register_event(env, "on_world_tick", prefix + ".worldtick");
@@ -316,10 +313,7 @@ void scripting::load_world_script(const scriptenv& senv, const std::string& pref
 
 void scripting::load_layout_script(const scriptenv& senv, const std::string& prefix, const std::filesystem::path& file, uidocscript& script) {
     int env = *senv;
-
-    std::string src = files::read_string(file);
-
-    lua::execute(lua::get_main_thread(), env, src, file.u8string());
+    load_script(env, "layout", file);
     script.onopen = register_event(env, "on_open", prefix + ".open");
     script.onprogress = register_event(env, "on_progress", prefix + ".progress");
     script.onclose = register_event(env, "on_close", prefix + ".close");
