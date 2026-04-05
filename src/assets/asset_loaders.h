@@ -61,6 +61,14 @@ namespace asset_loader {
         const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings
     );
+
+    postfunc model(
+        AssetsLoader*,
+        const ResPaths* paths,
+        const std::string& file,
+        const std::string &name,
+        const std::shared_ptr<AssetsConfig>& settings
+    );
 }
 
 #endif // ASSETS_ASSET_LOADERS_H_

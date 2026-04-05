@@ -8,6 +8,7 @@
 #include <variant>
 #include <stdexcept>
 #include <ostream>
+#include <cmath>
 
 #include "../typedefs.h"
 #include "../debug/Logger.h"
@@ -50,6 +51,15 @@ namespace dynamic {
 
     inline bool is_numeric(const Value& value) {
         return std::holds_alternative<number_t>(value) || std::holds_alternative<integer_t>(value);
+    }
+
+    inline number_t as_number(const Value& value) {
+        if (auto num = std::get_if<number_t>(&value)) {
+            return *num;
+        } else if (auto num = std::get_if<integer_t>(&value)) {
+            return *num;
+        }
+        return NAN;
     }
 
     class List {

@@ -60,7 +60,7 @@ WorldRenderer::WorldRenderer(
 	player(player),
     frustumCulling(std::make_unique<Frustum>()),
     lineBatch(std::make_unique<LineBatch>()),
-    modelBatch(std::make_unique<ModelBatch>(1000, engine->getAssets(), level->chunks.get()))
+    modelBatch(std::make_unique<ModelBatch>(20'000, engine->getAssets(), level->chunks.get()))
 {
     renderer = std::make_unique<ChunksRenderer>(
         level,
@@ -73,7 +73,7 @@ WorldRenderer::WorldRenderer(
 	auto assets = engine->getAssets();
     skybox = std::make_unique<Skybox>(
         settings.graphics.skyboxResolution.get(), 
-        assets->getShader("skybox_gen")
+        assets->get<ShaderProgram>("skybox_gen")
     );
 
     level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type, Chunk* chunk) {
@@ -117,7 +117,7 @@ bool WorldRenderer::drawChunk(
 			chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH
 		);
 
-		if (!frustumCulling->IsBoxVisible(min, max)) return false;
+		if (!frustumCulling->isBoxVisible(min, max)) return false;
 	}
 	glm::vec3 coord = glm::vec3(
 		chunk->chunk_x * CHUNK_WIDTH + 0.5f,
@@ -164,8 +164,8 @@ void WorldRenderer::renderLevel(
 	const EngineSettings& settings) 
 {
 	Assets* assets = engine->getAssets();
-    Atlas* atlas = assets->getAtlas("blocks");
-    ShaderProgram* shader = assets->getShader("default");
+    Atlas* atlas = assets->get<Atlas>("blocks");
+    ShaderProgram* shader = assets->get<ShaderProgram>("default");
     auto contentIds = level->content->getIndices();
 
 	float fogFactor = 15.0f / ((float)settings.chunks.loadDistance.get() - 2);
@@ -203,25 +203,9 @@ void WorldRenderer::renderLevel(
 
 	drawChunks(level->chunks.get(), camera, shader);
 
-    model::Model model {};
-    auto& mesh = model.addMesh("gui/warning");
-    mesh.addBox({}, glm::vec3(0.3f));
-    mesh.addBox({}, glm::vec3(0.6f));
-
-    auto& mesh2 = model.addMesh("gui/error");
-    mesh2.addBox({}, glm::vec3(0.7f));
-    mesh2.addBox({}, glm::vec3(0.9f));
-
-    float timer = static_cast<float>(Window::time());
-    assets->getTexture("gui/menubg")->bind();
     shader->uniformMatrix("u_model", glm::mat4(1.0f));
-    modelBatch->translate({0, 86, 0});
-    modelBatch->scale(glm::vec3(glm::sin(timer * 6) + 1));
-    modelBatch->rotate(glm::vec3(1, 0, 0), timer);
-    modelBatch->draw(model);
-    modelBatch->popMatrix();
-    modelBatch->popMatrix();
-    modelBatch->popMatrix();
+    // TODO: draw entities here
+    modelBatch->render();
 
     skybox->unbind();
 }
@@ -339,7 +323,7 @@ void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisibl
     skybox->refresh(pctx, world->daytime, 1.0f + world->skyClearness * 2.0f, 4);
 
     Assets* assets = engine->getAssets();
-    ShaderProgram* linesShader = assets->getShader("lines");
+    ShaderProgram* linesShader = assets->get<ShaderProgram>("lines");
 
     {
         DrawContext wctx = pctx.sub();
@@ -357,7 +341,7 @@ void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisibl
         if (hudVisible && player->debug) renderDebugLines(wctx, camera, linesShader);
     }
 
-    auto screenShader = assets->getShader("screen");
+    auto screenShader = assets->get<ShaderProgram>("screen");
     screenShader->use();
     screenShader->uniform1f("u_timer", Window::time());
     screenShader->uniform1f("u_dayTime", level->getWorld()->daytime);

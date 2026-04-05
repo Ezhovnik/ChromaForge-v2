@@ -122,8 +122,8 @@ std::unique_ptr<Atlas> BlocksPreview::build(const ContentGfxCache* cache, Assets
     size_t count = indices->countBlockDefs();
     size_t iconSize = ITEM_ICON_SIZE;
 
-    ShaderProgram* shader = assets->getShader("ui3d");
-    Atlas* atlas = assets->getAtlas("blocks");
+    auto shader = assets->get<ShaderProgram>("ui3d");
+    auto atlas = assets->get<Atlas>("blocks");
 
     Viewport viewport(iconSize, iconSize);
     DrawContext pctx(nullptr, viewport, nullptr);

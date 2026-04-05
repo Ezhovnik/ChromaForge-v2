@@ -95,5 +95,7 @@ inline const std::string FONTS_FOLDER = "fonts";
 inline const std::string LAYOUTS_FOLDER = "layouts";
 /** Папка со звуками. */
 inline const std::string SOUNDS_FOLDER = "sounds";
+/** Папка с моделями */
+inline const std::string MODELS_FOLDER = "models";
 
 #endif // SRC_CONSTANTS_H_

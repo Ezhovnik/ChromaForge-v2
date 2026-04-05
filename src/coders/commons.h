@@ -84,9 +84,11 @@ protected:
     void expectNewLine();
     bool isNext(const std::string& substring);
     void goBack(size_t count=1);
+    void reset();
 
     int64_t parseSimpleInt(int base);
     dynamic::Value parseNumber(int sign);
+    dynamic::Value parseNumber();
     std::string parseString(char chr, bool closeRequired = true);
 
     parsing_error error(const std::string& message);
@@ -95,6 +97,7 @@ public:
     std::string parseName();
     bool hasNext();
     char peek();
+    char peekInLine();
     char peekNoJump();
     char nextChar();
 

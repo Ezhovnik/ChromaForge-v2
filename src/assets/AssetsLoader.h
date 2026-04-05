@@ -22,7 +22,8 @@ enum class AssetType {
 	Font, ///< Растровый шрифт
 	Atlas, ///< Атлас текстур
 	Layout, ///< Макет интерфейса (XML)
-     Sound ///< Звук
+     Sound, ///< Звук
+     Model
 };
 
 class ResPaths;

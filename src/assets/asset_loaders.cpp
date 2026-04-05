@@ -20,6 +20,9 @@
 #include "../audio/audio.h"
 #include "../coders/GLSLExtension.h"
 #include "../coders/commons.h"
+#include "../constants.h"
+#include "../graphics/core/Model.h"
+#include "../coders/obj.h"
 
 static bool animation(
     Assets* assets, 
@@ -343,4 +346,28 @@ asset_loader::postfunc asset_loader::sound(
     return [=](auto assets) {
         assets->store(std::unique_ptr<audio::Sound>(sound), name);
     };
+}
+
+asset_loader::postfunc asset_loader::model(
+    AssetsLoader* loader,
+    const ResPaths* paths,
+    const std::string& file,
+    const std::string& name,
+    const std::shared_ptr<AssetsConfig>&
+) {
+    auto path = paths->find(file + ".obj");
+    auto text = files::read_string(path);
+    try {
+        auto model = obj::parse(path.u8string(), text).release();
+        return [=](Assets* assets) {
+            for (auto& mesh : model->meshes) {
+                auto filename = TEXTURES_FOLDER + "/" + mesh.texture;
+                loader->add(AssetType::Texture, filename, mesh.texture, nullptr);
+            }
+            assets->store(std::unique_ptr<model::Model>(model), name);
+        };
+    } catch (const parsing_error& err) {
+        LOG_ERROR("Faile to loadn model '{}': {}", file, err.errorLog());
+        throw;
+    }
 }

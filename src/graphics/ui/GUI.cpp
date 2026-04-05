@@ -182,7 +182,7 @@ void GUI::draw(const DrawContext* parent_context, Assets* assets) {
     menu->setPos((wsize - menu->getSize()) / 2.0f);
     uicamera->setFov(wsize.y);
 
-	ShaderProgram* uishader = assets->getShader("ui");
+	ShaderProgram* uishader = assets->get<ShaderProgram>("ui");
 	uishader->use();
 	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 

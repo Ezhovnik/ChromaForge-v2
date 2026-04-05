@@ -26,7 +26,7 @@ inline audio::speakerid_t play_sound(
 ) {
     if (channel == -1) return 0;
     auto assets = scripting::engine->getAssets();
-    auto sound = assets->getSound(name);
+    auto sound = assets->get<audio::Sound>(name);
     if (sound == nullptr) return 0;
 
     return audio::play(

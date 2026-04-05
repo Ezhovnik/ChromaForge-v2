@@ -27,6 +27,10 @@ class Player;
 struct EngineSettings;
 class ModelBatch;
 
+namespace model {
+    struct Model;
+}
+
 class WorldRenderer {
 private:
     Engine* engine;

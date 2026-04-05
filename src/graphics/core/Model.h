@@ -28,6 +28,8 @@ namespace model {
             meshes.push_back({texture, {}});
             return meshes[meshes.size() - 1];
         }
+
+        void clean();
     };
 }
 

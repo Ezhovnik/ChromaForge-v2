@@ -23,7 +23,7 @@ struct DocumentNode {
 };
 
 static DocumentNode getDocumentNode(lua::State*, const std::string& name, const std::string& nodeName) {
-    auto doc = scripting::engine->getAssets()->getLayout(name);
+    auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
     if (doc == nullptr) {
         throw std::runtime_error("Document '" + name + "' not found");
     }
@@ -544,7 +544,7 @@ static int l_gui_setattr(lua::State* L) {
 
 static int l_gui_get_env(lua::State* L) {
     auto name = lua::require_string(L, 1);
-    auto doc = scripting::engine->getAssets()->getLayout(name);
+    auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
     if (doc == nullptr) {
         throw std::runtime_error("Document '" + std::string(name) + "' not found");
     }
@@ -565,7 +565,7 @@ static int l_gui_str(lua::State* L) {
 
 static int l_gui_reindex(lua::State* L) {
     auto name = lua::require_string(L, 1);
-    auto doc = scripting::engine->getAssets()->getLayout(name);
+    auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
     if (doc == nullptr) {
         throw std::runtime_error("Document '" + std::string(name) + "' not found");
     }

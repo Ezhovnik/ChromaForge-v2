@@ -86,6 +86,8 @@ public:
 
     /// Счётчик всех созданных экземпляров Mesh (для отладки).
     static int meshesCount;
+
+    static int drawCalls;
 };
 
 #endif // GRAPHICS_CORE_MESH_H_

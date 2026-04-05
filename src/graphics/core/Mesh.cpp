@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 
 int Mesh::meshesCount = 0;
+int Mesh::drawCalls = 0;
 
 Mesh::Mesh(const float* vertexBuffer, 
     size_t vertices, 
@@ -79,6 +80,7 @@ void Mesh::reload(const float* vertexBuffer, size_t vertices, const int* indexBu
 }
 
 void Mesh::draw(uint primitive) {
+    drawCalls++;
     glBindVertexArray(VAO);
     if (IBO != 0) {
         // Рисование с использованием индексного буфера.

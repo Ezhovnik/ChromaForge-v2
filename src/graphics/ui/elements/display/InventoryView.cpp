@@ -28,6 +28,7 @@
 #include "../../../../graphics/ui/GUI.h"
 #include "../../../../items/ItemStack.h"
 #include "../../../../frontend/locale/langs.h"
+#include "../../../../graphics/core/Texture.h"
 
 using namespace gui;
 
@@ -147,7 +148,7 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
 
     batch->setColor(glm::vec4(1.0f));
 
-    auto previews = assets->getAtlas("block-previews");
+    auto previews = assets->get<Atlas>("block-previews");
     auto indices = content->getIndices();
 
     Item* item = indices->getItemDef(stack.getItemId());    
@@ -167,10 +168,10 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
             std::string name = item->icon.substr(index + 1);
             UVRegion region(0.0f, 0.0, 1.0f, 1.0f);
             if (index == std::string::npos) {
-                batch->texture(assets->getTexture(name));
+                batch->texture(assets->get<Texture>(name));
             } else {
                 std::string atlasname = item->icon.substr(0, index);
-                Atlas* atlas = assets->getAtlas(atlasname);
+                Atlas* atlas = assets->get<Atlas>(atlasname);
                 if (atlas && atlas->has(name)) {
                     region = atlas->get(name);
                     batch->texture(atlas->getTexture());
@@ -182,7 +183,7 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
     }
 
     if (stack.getCount() > 1) {
-        auto font = assets->getFont("normal");
+        auto font = assets->get<Font>("normal");
         std::wstring text = std::to_wstring(stack.getCount());
 
         int x = pos.x + slotSize - text.length() * 8;

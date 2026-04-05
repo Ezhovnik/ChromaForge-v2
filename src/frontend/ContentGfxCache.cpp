@@ -13,7 +13,7 @@
 ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) : content(content) {
     const ContentIndices* contentIds = content->getIndices();
     sideregions = std::make_unique<UVRegion[]>(contentIds->countBlockDefs() * 6);
-    Atlas* atlas = assets->getAtlas("blocks");
+    Atlas* atlas = assets->get<Atlas>("blocks");
 
     for (uint i = 0; i < contentIds->countBlockDefs(); ++i) {
         Block* def = contentIds->getBlockDef(i);

@@ -162,6 +162,27 @@ void BasicParser::skipLine() {
     }
 }
 
+void BasicParser::reset() {
+    pos = 0;
+}
+
+char BasicParser::peekInLine() {
+    while (hasNext()) {
+        char next = source[pos];
+        if (next == '\n') return next;
+        if (is_whitespace(next)) {
+            pos++;
+        } else {
+            break;
+        }
+    }
+    if (pos >= source.length()) {
+        LOG_ERROR("Unexpected end");
+        throw error("Unexpected end");
+    }
+    return source[pos];
+}
+
 char BasicParser::peek() {
     skipWhitespace();
     if (pos >= source.length()) {
@@ -286,6 +307,19 @@ dynamic::Value BasicParser::parseNumber(int sign) {
         return sign * dvalue;
     }
     return sign * value;
+}
+
+dynamic::Value BasicParser::parseNumber() {
+    switch (peek()) {
+        case '-':
+            skip(1);
+            return parseNumber(-1);
+        case '+':
+            skip(1);
+            return parseNumber(1);
+        default:
+            return parseNumber(1);
+    }
 }
 
 std::string BasicParser::parseString(char quote, bool closeRequired) {
