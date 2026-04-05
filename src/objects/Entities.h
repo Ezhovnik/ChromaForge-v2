@@ -1,11 +1,14 @@
 #ifndef OBJECTS_ENTITIES_HPP_
 #define OBJECTS_ENTITIES_HPP_
 
-#include "../typedefs.h"
+#include <unordered_map>
+#include <optional>
 
 #include <glm/glm.hpp>
-#include <unordered_map>
 #include <entt/entity/registry.hpp>
+
+#include "../typedefs.h"
+#include "../physics/Hitbox.h"
 
 struct EntityId {
     entityid_t uid;
@@ -24,13 +27,14 @@ class Level;
 class Assets;
 class ModelBatch;
 class Frustum;
+class Rig;
 
 class Entity {
 private:
     entt::registry& registry;
-    entt::entity entity;
+    const entt::entity entity;
 public:
-    Entity(entt::registry& registry, entt::entity entity)
+    Entity(entt::registry& registry, const entt::entity entity)
     : registry(registry), entity(entity) {}
 
     bool isValid() const {
@@ -39,6 +43,10 @@ public:
 
     Transform& getTransform() const {
         return registry.get<Transform>(entity);
+    }
+
+    Hitbox& getHitbox() const {
+        return registry.get<Hitbox>(entity);
     }
 
     entityid_t getUID() const {
@@ -51,12 +59,21 @@ private:
     entt::registry registry;
     Level* level;
     std::unordered_map<entityid_t, entt::entity> entities;
+    entityid_t nextID = 1;
 public:
     Entities(Level* level);
     void updatePhysics(float delta);
     void render(Assets* assets, ModelBatch& batch, Frustum& frustum);
 
-    void drop(glm::vec3 pos, glm::vec3 vel);
+    entityid_t drop(glm::vec3 pos);
+
+    std::optional<Entity> get(entityid_t id) {
+        const auto& found = entities.find(id);
+        if (found != entities.end()) {
+            return Entity(registry, found->second);
+        }
+        return std::nullopt;
+    }
 };
 
 #endif // OBJECTS_ENTITIES_H_

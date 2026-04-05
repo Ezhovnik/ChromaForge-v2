@@ -106,6 +106,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libblock.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libbuiltin.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libconsole.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libentity.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libfile.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libgui.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libhud.cpp"

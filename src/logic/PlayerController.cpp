@@ -445,9 +445,6 @@ void PlayerController::update(float delta, bool input_flag, bool pause) {
 
 	if (input_flag) {
 		updateInteraction();
-        if (input.dropBlock) {
-            level->entities->drop(player->camera->position, player->camera->front * 10.0f + player->hitbox->velocity);
-        }
 	} else {
 		player->selection.vox.id = BLOCK_VOID;
         player->selection.vox.state.rotation = 0;

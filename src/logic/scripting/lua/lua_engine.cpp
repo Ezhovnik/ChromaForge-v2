@@ -29,8 +29,9 @@ static void remove_lib_funcs(lua::State* L, const char* libname, const char* fun
 static void create_libs(lua::State* L) {
     openlib(L, "audio", audiolib);
     openlib(L, "block", blocklib);
-    openlib(L, "console", consolelib);
     openlib(L, "builtin", builtinlib);
+    openlib(L, "console", consolelib);
+    openlib(L, "entity", entitylib);
     openlib(L, "file", filelib);
     openlib(L, "gui", guilib);
     openlib(L, "input", inputlib);
