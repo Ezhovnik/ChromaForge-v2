@@ -33,6 +33,8 @@ using ubyte = uint8_t;
 using itemid_t = uint32_t;
 /** Тип идентификатора блока. */
 using blockid_t = uint16_t;
+/** Тип идентификатора сущности. */
+using entityid_t = uint64_t;
 /** Тип для хранения уровня освещения (16 бит). */
 using light_t = uint16_t;
 /** Тип состояния блока (16 бит) */

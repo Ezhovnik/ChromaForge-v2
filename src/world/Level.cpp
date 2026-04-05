@@ -13,6 +13,7 @@
 #include "../items/Inventories.h"
 #include "../interfaces/Object.h"
 #include "../settings.h"
+#include "../objects/Entities.h"
 
 inline constexpr float GRAVITY = -22.6f;
 
@@ -25,6 +26,7 @@ Level::Level(
     chunksStorage(std::make_unique<ChunksStorage>(this)),
 	physics(std::make_unique<PhysicsSolver>(glm::vec3(0, GRAVITY, 0))),
     events(std::make_unique<LevelEvents>()),
+    entities(std::make_unique<Entities>(this)),
     settings(settings)
 {
     auto inventory = std::make_shared<Inventory>(

@@ -44,6 +44,7 @@
 #include "../../graphics/core/PostProcessing.h"
 #include "ModelBatch.h"
 #include "../core/Model.h"
+#include "../../objects/Entities.h"
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -204,7 +205,7 @@ void WorldRenderer::renderLevel(
 	drawChunks(level->chunks.get(), camera, shader);
 
     shader->uniformMatrix("u_model", glm::mat4(1.0f));
-    // TODO: draw entities here
+    level->entities->render(assets, *modelBatch, *frustumCulling);
     modelBatch->render();
 
     skybox->unbind();

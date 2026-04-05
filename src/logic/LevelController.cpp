@@ -10,6 +10,7 @@
 #include "../debug/Logger.h"
 #include "../files/WorldFiles.h"
 #include "../settings.h"
+#include "../objects/Entities.h"
 
 LevelController::LevelController(EngineSettings& settings, std::unique_ptr<Level> level) : 
     settings(settings), 
@@ -45,6 +46,7 @@ void LevelController::update(float delta, bool input, bool pause) {
         }
 
         blocks->update(delta);
+        level->entities->updatePhysics(delta);
     }
 }
 

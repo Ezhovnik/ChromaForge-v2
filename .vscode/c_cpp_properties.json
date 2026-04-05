@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "C:/msys64/ucrt64/include/luajit-2.1",
                 "C:/msys64/ucrt64/include/AL",
-                "C:/msys64/ucrt64/include/vorbis"
+                "C:/msys64/ucrt64/include/vorbis",
+                "C:/msys64/ucrt64/include/entt"
             ],
             "defines": [
                 "_DEBUG",

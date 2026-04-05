@@ -23,6 +23,7 @@ class LevelEvents;
 class Content;
 class Inventories;
 struct EngineSettings;
+class Entities;
 
 /**
  * @brief Основной класс уровня, объединяющий мир, игрока, чанки, физику и освещение.
@@ -41,6 +42,7 @@ public:
 	std::unique_ptr<Lighting> lighting; ///< Освещение чанков
      std::unique_ptr<ChunksStorage> chunksStorage; ///< Хранилище чанков
      std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
+     std::unique_ptr<Entities> entities;
      const EngineSettings& settings;
      const Content* const content;
 	std::unique_ptr<Inventories> inventories; ///< Менеджер инвентарей (хранит все инвентари уровня)

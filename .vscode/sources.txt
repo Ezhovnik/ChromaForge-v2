@@ -126,6 +126,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/lua_util.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/math/LMPacker.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/math/rays.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/objects/Entities.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/objects/Player.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/physics/Hitbox.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/physics/PhysicsSolver.cpp"
