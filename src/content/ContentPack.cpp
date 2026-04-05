@@ -11,10 +11,6 @@
 #include "../core_content_defs.h"
 #include "../data/dynamic.h"
 
-const std::string ContentPack::PACKAGE_FILENAME = "package.json";
-const std::string ContentPack::CONTENT_FILENAME = "content.json";
-const std::filesystem::path ContentPack::BLOCKS_FOLDER = std::filesystem::path("blocks");
-const std::filesystem::path ContentPack::ITEMS_FOLDER = "items";
 const std::vector<std::string> ContentPack::RESERVED_NAMES = {"res", "abs", "local", BUILTIN_CONTENT_NAMESPACE, "user", "world", "none", "null"};
 
 contentpack_error::contentpack_error(

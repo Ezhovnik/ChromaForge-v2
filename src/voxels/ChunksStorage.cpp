@@ -18,7 +18,7 @@
 void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         blockid_t id = chunk->voxels[i].id;
-        if (indices->getBlockDef(id) == nullptr) {
+        if (indices->blocks.get(id) == nullptr) {
             LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
 			chunk->voxels[i].id = BLOCK_AIR;
         }
@@ -128,7 +128,7 @@ void ChunksStorage::getVoxels(VoxelsVolume* volume, bool backlight) const {
 							voxels[vidx] = cvoxels[cidx];
 							light_t light = clights[cidx];
 							if (backlight) {
-								const Block* block = indices->getBlockDef(voxels[vidx].id);
+								auto block = indices->blocks.get(voxels[vidx].id);
 								if (block->lightPassing) {
 									light = LightMap::combine(
 										min(15, LightMap::extract(light, 0) + 1),

@@ -119,7 +119,7 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
 
 std::unique_ptr<Atlas> BlocksPreview::build(const ContentGfxCache* cache, Assets* assets, const Content* content) {
     auto indices = content->getIndices();
-    size_t count = indices->countBlockDefs();
+    size_t count = indices->blocks.count();
     size_t iconSize = ITEM_ICON_SIZE;
 
     auto shader = assets->get<ShaderProgram>("ui3d");
@@ -147,7 +147,7 @@ std::unique_ptr<Atlas> BlocksPreview::build(const ContentGfxCache* cache, Assets
     
     fbo.bind();
     for (size_t i = 0; i < count; ++i) {
-        auto def = indices->getBlockDef(i);
+        auto def = indices->blocks.get(i);
 
         atlas->getTexture()->bind();
 

@@ -1,5 +1,7 @@
 {
-    "items": [],
+    "entities": [
+        "drop"
+    ],
     "blocks": [
         "moss",
         "dirt",
@@ -30,5 +32,6 @@
         "iron_block",
         "oak_door",
         "wool"
-    ]
+    ],
+    "items": []
 }

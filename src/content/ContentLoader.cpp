@@ -20,7 +20,32 @@
 #include "../core_content_defs.h"
 #include "ContentBuilder.h"
 
-ContentLoader::ContentLoader(ContentPack* pack) : pack(pack) {
+ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder) : pack(pack), builder(builder) {
+    auto runtime = std::make_unique<ContentPackRuntime>(
+        *pack, scripting::create_pack_environment(*pack)
+    );
+    stats = &runtime->getStatsWriteable();
+    env = runtime->getEnvironment();
+    builder.add(std::move(runtime));
+}
+
+static void detect_defs(
+    const std::filesystem::path& folder,
+    const std::string& prefix,
+    std::vector<std::string>& detected
+) {
+    if (std::filesystem::is_directory(folder)) {
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            const std::filesystem::path& file = entry.path();
+            std::string name = file.stem().string();
+            if (name[0] == '_') continue;
+            if (std::filesystem::is_regular_file(file) && file.extension() == ".json") {
+                detected.push_back(prefix.empty() ? name : prefix + ":" + name);
+            } else if (std::filesystem::is_directory(file)) {
+                detect_defs(file, name, detected);
+            }
+        }
+    }
 }
 
 bool ContentLoader::fixPackIndices(
@@ -29,31 +54,13 @@ bool ContentLoader::fixPackIndices(
     const std::string& contentSection
 ) {
     std::vector<std::string> detected;
-    std::vector<std::string> indexed;
-    if (std::filesystem::is_directory(folder)) {
-        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-            const std::filesystem::path& file = entry.path();
-            if (std::filesystem::is_regular_file(file) && file.extension() == ".json") {
-                std::string name = file.stem().string();
-                if (name[0] == '_') continue;
-                detected.push_back(name);
-            } else if (std::filesystem::is_directory(file)) {
-                std::string space = file.stem().string();
-                if (space[0] == '_') continue;
-                for (const auto& entry : std::filesystem::directory_iterator(file)) {
-                    const std::filesystem::path& file = entry.path();
-                    if (std::filesystem::is_regular_file(file) && file.extension() == ".json") {
-                        std::string name = file.stem().string();
-                        if (name[0] == '_') continue;
-                        detected.push_back(space + ':' + name);
-                    }
-                }
-            }
-        }
-    }
+    detect_defs(folder, "", detected);
 
+    std::vector<std::string> indexed;
     bool modified = false;
-    if (!indicesRoot->has(contentSection)) indicesRoot->putList(contentSection);
+    if (!indicesRoot->has(contentSection)) {
+        indicesRoot->putList(contentSection);
+    }
     auto arr = indicesRoot->list(contentSection);
     if (arr) {
         for (uint i = 0; i < arr->size(); ++i) {
@@ -81,8 +88,9 @@ void ContentLoader::fixPackIndices() {
     auto indexFile = pack->getContentFile();
     auto blocksFolder = folder/ContentPack::BLOCKS_FOLDER;
     auto itemsFolder = folder/ContentPack::ITEMS_FOLDER;
+    auto entitiesFolder = folder/ContentPack::ENTITIES_FOLDER;
 
-    dynamic::Map_sptr root;;
+    dynamic::Map_sptr root;
     if (std::filesystem::is_regular_file(indexFile)) {
         root = files::read_json(indexFile);
     } else {
@@ -90,23 +98,18 @@ void ContentLoader::fixPackIndices() {
     }
 
     bool modified = false;
-
     modified |= fixPackIndices(blocksFolder, root.get(), "blocks");
     modified |= fixPackIndices(itemsFolder, root.get(), "items");
+    modified |= fixPackIndices(entitiesFolder, root.get(), "entities");
 
     if (modified) files::write_json(indexFile, root.get());
 }
 
-void ContentLoader::loadBlock(
-    Block& def,
-    const std::string& name,
-    const std::filesystem::path& file
-) {
+void ContentLoader::loadBlock(Block& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
 
     root->str("caption", def.caption);
 
-    // Текстуры блока
     if (root->has("texture")) {
         std::string texture;
         root->str("texture", texture);
@@ -120,47 +123,30 @@ void ContentLoader::loadBlock(
         }
     }
 
-    // Модель блока
-    std::string model = "cube";
+    std::string model = "block";
     root->str("model", model);
-    if (model == "cube") def.model = BlockModel::Cube;
-    else if (model == "aabb") def.model = BlockModel::AABB;
-    else if (model == "X") def.model = BlockModel::X;
-    else if (model == "none") def.model = BlockModel::None;
-    else if (model == "custom") { 
+    if (model == "block") {
+        def.model = BlockModel::Cube;
+    } else if (model == "aabb") {
+        def.model = BlockModel::AABB;
+    } else if (model == "custom") { 
         def.model = BlockModel::Custom;
-        if (root->has("model-primitives")) loadCustomBlockModel(def, root->map("model-primitives"));
-        else LOG_ERROR("Error occured while block {} parsed: no \"model-primitives\" found", name);
+        if (root->has("model-primitives")) {
+            loadCustomBlockModel(def, root->map("model-primitives"));
+        } else {
+            LOG_ERROR("Error occured while block {} parsed: no 'model-primitives' found", name);
+        }
+    } else if (model == "X") {
+        def.model = BlockModel::X;
+    } else if (model == "none") {
+        def.model = BlockModel::None;
     } else {
         LOG_WARN("Unknown block {} model {}", name, model);
         def.model = BlockModel::None;
     }
 
-    // AABB хитбокс блока в формате [x, y, z, width, height, depth]
-    auto boxarr = root->list("hitboxes");
-    if (boxarr) {
-        def.hitboxes.resize(boxarr->size());
-        for (uint i = 0; i < boxarr->size(); ++i) {
-            auto box = boxarr->list(i);
-            def.hitboxes[i].a = glm::vec3(box->num(0), box->num(1), box->num(2));
-            def.hitboxes[i].b = glm::vec3(box->num(3), box->num(4), box->num(5));
-            def.hitboxes[i].b += def.hitboxes[i].a;
-        }
-    } else if (auto boxarr = root->list("hitbox")){
-        AABB aabb;
-        aabb.a = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
-        aabb.b = glm::vec3(boxarr->num(3), boxarr->num(4), boxarr->num(5));
-        aabb.b += aabb.a;
-        def.hitboxes = { aabb };
-    } else if (!def.modelBoxes.empty()) {
-        def.hitboxes = def.modelBoxes;
-    } else {
-        def.hitboxes = {AABB()};
-    }
-
     root->str("material", def.material);
 
-    // Профили поворота
     std::string profile = BlockRotProfile::NONE_NAME;
     root->str("rotation", profile);
     def.rotatable = profile != BlockRotProfile::NONE_NAME;
@@ -173,40 +159,61 @@ void ContentLoader::loadBlock(
         def.rotatable = false;
     }
 
-    // Освещение от блока в формате [r, g, b]
-    if (auto emissionobj = root->list("emission")) {
-        def.emission[0] = emissionobj->num(0);
-        def.emission[1] = emissionobj->num(1);
-        def.emission[2] = emissionobj->num(2);
+    auto boxarr = root->list("hitboxes");
+    if (boxarr) {
+        def.hitboxes.resize(boxarr->size());
+        for (uint i = 0; i < boxarr->size(); ++i) {
+            auto box = boxarr->list(i);
+            def.hitboxes[i].a = glm::vec3(box->num(0), box->num(1), box->num(2));
+            def.hitboxes[i].b = glm::vec3(box->num(3), box->num(4), box->num(5));
+            def.hitboxes[i].b += def.hitboxes[i].a;
+        }
+    } else if ((boxarr = root->list("hitbox"))) {
+        AABB aabb;
+        aabb.a = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
+        aabb.b = glm::vec3(boxarr->num(3), boxarr->num(4), boxarr->num(5));
+        aabb.b += aabb.a;
+        def.hitboxes = { aabb };
+    } else if (!def.modelBoxes.empty()) {
+        def.hitboxes = def.modelBoxes;
+    } else {
+        def.hitboxes = { AABB() };
     }
 
-    if (auto sizeobj = root->list("size")) {
-        def.size.x = sizeobj->num(0);
-        def.size.y = sizeobj->num(1);
-        def.size.z = sizeobj->num(2);
+    if (auto emissionarr = root->list("emission")) {
+        def.emission[0] = emissionarr->num(0);
+        def.emission[1] = emissionarr->num(1);
+        def.emission[2] = emissionarr->num(2);
+    }
+
+    if (auto sizearr = root->list("size")) {
+        def.size.x = sizearr->num(0);
+        def.size.y = sizearr->num(1);
+        def.size.z = sizearr->num(2);
         if (def.model == BlockModel::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
             def.model = BlockModel::AABB;
             def.hitboxes = {AABB(def.size)};
         }
     }
 
-    // Другие свойства блока
     root->flag("obstacle", def.obstacle);
     root->flag("replaceable", def.replaceable);
     root->flag("light-passing", def.lightPassing);
+    root->flag("sky-light-passing", def.skyLightPassing);
+    root->flag("shadeless", def.shadeless);
     root->flag("breakable", def.breakable);
     root->flag("selectable", def.selectable);
-    root->flag("shadeless", def.shadeless);
-    root->flag("sky-light-passing", def.skyLightPassing);
     root->flag("grounded", def.grounded);
-    root->num("draw-group", def.drawGroup);
     root->flag("hidden", def.hidden);
+    root->num("draw-group", def.drawGroup);
     root->str("picking-item", def.pickingItem);
     root->str("script-name", def.scriptName);
-    root->num("inventory-size", def.inventorySize);
     root->str("ui-layout", def.uiLayout);
-    root->num("spark-interval", def.sparkInterval);
-    if (def.sparkInterval == 0) def.sparkInterval = 1;
+    root->num("inventory-size", def.inventorySize);
+    root->num("tick-interval", def.sparkInterval);
+    if (def.sparkInterval == 0) {
+        def.sparkInterval = 1;
+    }
 
     if (def.hidden && def.pickingItem == def.name + BLOCK_ITEM_SUFFIX) {
         def.pickingItem = BUILTIN_EMPTY;
@@ -217,20 +224,20 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
     if (primitives->has("aabbs")) {
         auto modelboxes = primitives->list("aabbs");
         for (uint i = 0; i < modelboxes->size(); ++i) {
-            auto boxobj = modelboxes->list(i);
+            auto boxarr = modelboxes->list(i);
             AABB modelbox;
-            modelbox.a = glm::vec3(boxobj->num(0), boxobj->num(1), boxobj->num(2));
-            modelbox.b = glm::vec3(boxobj->num(3), boxobj->num(4), boxobj->num(5));
+            modelbox.a = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
+            modelbox.b = glm::vec3(boxarr->num(3), boxarr->num(4), boxarr->num(5));
             modelbox.b += modelbox.a;
             def.modelBoxes.push_back(modelbox);
 
-            if (boxobj->size() == 7) {
+            if (boxarr->size() == 7) {
                 for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.push_back(boxobj->str(6));
+                    def.modelTextures.push_back(boxarr->str(6));
                 }
-            } else if (boxobj->size() == 12) {
+            } else if (boxarr->size() == 12) {
                 for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.push_back(boxobj->str(j));
+                    def.modelTextures.push_back(boxarr->str(j));
                 }
             } else {
                 for (uint j = 6; j < 12; ++j) {
@@ -239,6 +246,7 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
             }
         }
     }
+
     if (primitives->has("tetragons")) {
         auto modeltetragons = primitives->list("tetragons");
         for (uint i = 0; i < modeltetragons->size(); ++i) {
@@ -246,7 +254,6 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
             glm::vec3 p1(tgonobj->num(0), tgonobj->num(1), tgonobj->num(2));
             glm::vec3 xw(tgonobj->num(3), tgonobj->num(4), tgonobj->num(5));
             glm::vec3 yh(tgonobj->num(6), tgonobj->num(7), tgonobj->num(8));
-
             def.modelExtraPoints.push_back(p1);
             def.modelExtraPoints.push_back(p1 + xw);
             def.modelExtraPoints.push_back(p1 + xw + yh);
@@ -257,134 +264,159 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
     }
 }
 
-void ContentLoader::loadItem(
-    Item& def,
-    const std::string& name,
-    const std::filesystem::path& file
-) {
+void ContentLoader::loadItem(Item& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
-
     root->str("caption", def.caption);
 
     std::string iconTypeStr = "";
     root->str("icon-type", iconTypeStr);
-    if (iconTypeStr == "none") def.iconType = ItemIconType::None;
-    else if (iconTypeStr == "block") def.iconType = ItemIconType::Block;
-    else if (iconTypeStr == "sprite") def.iconType = ItemIconType::Sprite;
-    else if (iconTypeStr.length()) LOG_WARN("Unknown icon type: {}", iconTypeStr);
-
+    if (iconTypeStr == "none") {
+        def.iconType = ItemIconType::None;
+    } else if (iconTypeStr == "block") {
+        def.iconType = ItemIconType::Block;
+    } else if (iconTypeStr == "sprite") {
+        def.iconType = ItemIconType::Sprite;
+    } else if (iconTypeStr.length()){
+        LOG_WARN("Unknown icon type: {}", iconTypeStr);
+    }
     root->str("icon", def.icon);
     root->str("placing-block", def.placingBlock);
     root->str("script-name", def.scriptName);
     root->num("stack-size", def.stackSize);
 
-    // Освещение от предмета в формате [r, g, b]
-    auto emissionobj = root->list("emission");
-    if (emissionobj) {
-        def.emission[0] = emissionobj->num(0);
-        def.emission[1] = emissionobj->num(1);
-        def.emission[2] = emissionobj->num(2);
+    if (auto emissionarr = root->list("emission")) {
+        def.emission[0] = emissionarr->num(0);
+        def.emission[1] = emissionarr->num(1);
+        def.emission[2] = emissionarr->num(2);
     }
 }
 
-void ContentLoader::loadBlock(
-    Block& def,
-    const std::string& full,
-    const std::string& name
-) {
-    auto folder = pack->folder;
+void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file) {
+    auto root = files::read_json(file);
 
-    std::filesystem::path configFile = folder/std::filesystem::path("blocks/" + name + ".json");
+    root->str("script-name", def.scriptName);
+    if (auto boxarr = root->list("hitbox")) {
+        def.hitbox = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
+    }
+}
+
+void ContentLoader::loadEntity(Entity& def, const std::string& full, const std::string& name) {
+    auto folder = pack->folder;
+    auto configFile = folder/std::filesystem::path("entities/" + name + ".json");
+    if (std::filesystem::exists(configFile)) loadEntity(def, full, configFile);
+}
+
+void ContentLoader::loadBlock(Block& def, const std::string& full, const std::string& name) {
+    auto folder = pack->folder;
+    auto configFile = folder/std::filesystem::path("blocks/" + name + ".json");
     if (std::filesystem::exists(configFile)) loadBlock(def, full, configFile);
 
-    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + def.scriptName + ".lua");
-    if (std::filesystem::is_regular_file(scriptfile)) scripting::load_block_script(env, full, scriptfile, def.rt.funcsset);
+    auto scriptfile = folder/std::filesystem::path("scripts/" + def.scriptName + ".lua");
+    if (std::filesystem::is_regular_file(scriptfile)) {
+        scripting::load_block_script(env, full, scriptfile, def.rt.funcsset);
+    }
+    if (!def.hidden) {
+        auto& item = builder.items.create(full + BLOCK_ITEM_SUFFIX);
+        item.generated = true;
+        item.caption = def.caption;
+        item.iconType = ItemIconType::Block;
+        item.icon = full;
+        item.placingBlock = full;
+
+        for (uint j = 0; j < 4; j++) {
+            item.emission[j] = def.emission[j];
+        }
+        stats->totalItems++;
+    }
 }
 
-void ContentLoader::loadItem(
-    Item& item,
-    const std::string& full,
-    const std::string& name
-) {
+void ContentLoader::loadItem(Item& def, const std::string& full, const std::string& name) {
     auto folder = pack->folder;
+    auto configFile = folder/std::filesystem::path("items/" + name + ".json");
+    if (std::filesystem::exists(configFile)) loadItem(def, full, configFile);
 
-    std::filesystem::path configFile = folder/std::filesystem::path("items/" + name + ".json");
-    if (std::filesystem::exists(configFile)) loadItem(item, full, configFile);
-
-    std::filesystem::path scriptfile = folder/std::filesystem::path("scripts/" + item.scriptName + ".lua");
-    if (std::filesystem::is_regular_file(scriptfile)) scripting::load_item_script(env, full, scriptfile, item.rt.funcsset);
+    auto scriptfile = folder/std::filesystem::path("scripts/" + def.scriptName + ".lua");
+    if (std::filesystem::is_regular_file(scriptfile)) {
+        scripting::load_item_script(env, full, scriptfile, def.rt.funcsset);
+    }
 }
 
-
-void ContentLoader::loadBlockMaterial(
-    BlockMaterial& def,
-    const std::filesystem::path& file
-) {
+void ContentLoader::loadBlockMaterial(BlockMaterial& def, const std::filesystem::path& file) {
     auto root = files::read_json(file);
     root->str("steps-sound", def.stepsSound);
     root->str("place-sound", def.placeSound);
     root->str("break-sound", def.breakSound);
 }
 
-void ContentLoader::load(ContentBuilder& builder) {
-    LOG_INFO("---Loading content pack [{}]", pack->id);
+template<class T, void(ContentLoader::*loadfunc)(T&, const std::string&, const std::string&)>
+static void load_defs(ContentLoader* cl, dynamic::List* arr, const ContentPack* pack, ContentUnitBuilder<T>& builder, size_t& counter) {
+    if (arr == nullptr) return;
+    for (size_t i = 0; i < arr->size(); ++i) {
+        std::string name = arr->str(i);
+        auto colon = name.find(':');
+        std::string full = colon == std::string::npos ? pack->id + ":" + name : name;
+        if (colon != std::string::npos) name[colon] = '/';
+        auto& def = builder.create(full);
+        if (colon != std::string::npos) {
+            def.scriptName = name.substr(0, colon) + '/' + def.scriptName;
+        }
+        cl->*loadfunc(def, full, name);
+        counter++;
+    }
+}
 
-    auto runtime = std::make_unique<ContentPackRuntime>(
-        *pack, scripting::create_pack_environment(*pack)
-    );
-    env = runtime->getEnvironment();
-    ContentPackStats& stats = runtime->getStatsWriteable();
-    builder.add(std::move(runtime));
+void ContentLoader::load() {
+    LOG_INFO("Loading content pack [{}]", pack->id);
 
     fixPackIndices();
 
     auto folder = pack->folder;
 
     std::filesystem::path scriptFile = folder/std::filesystem::path("scripts/world.lua");
-    if (std::filesystem::is_regular_file(scriptFile)) scripting::load_world_script(env, pack->id, scriptFile);
+    if (std::filesystem::is_regular_file(scriptFile)) {
+        scripting::load_world_script(env, pack->id, scriptFile);
+    }
 
     if (!std::filesystem::is_regular_file(pack->getContentFile())) return;
 
     auto root = files::read_json(pack->getContentFile());
-    auto blocksarr = root->list("blocks");
 
-    if (blocksarr) {
-        for (uint i = 0; i < blocksarr->size(); ++i) {
+    if (auto blocksarr = root->list("blocks")) {
+        for (size_t i = 0; i < blocksarr->size(); ++i) {
             std::string name = blocksarr->str(i);
             auto colon = name.find(':');
             std::string full = colon == std::string::npos ? pack->id + ":" + name : name;
             if (colon != std::string::npos) name[colon] = '/';
-            auto& def = builder.createBlock(full);
+            auto& def = builder.blocks.create(full);
             if (colon != std::string::npos) def.scriptName = name.substr(0, colon) + '/' + def.scriptName;
             loadBlock(def, full, name);
-            stats.totalBlocks++;
-            if (!def.hidden) {
-                auto& item = builder.createItem(full + BLOCK_ITEM_SUFFIX);
-                item.generated = true;
-                item.iconType = ItemIconType::Block;
-                item.icon = full;
-                item.placingBlock = full;
-                item.caption = def.caption;
-
-                for (uint j = 0; j < 4; ++j) {
-                    item.emission[j] = def.emission[j];
-                }
-                stats.totalItems++;
-            }
+            stats->totalBlocks++;
         }
     }
 
-    auto itemsarr = root->list("items");
-    if (itemsarr) {
-        for (uint i = 0; i < itemsarr->size(); ++i) {
+    if (auto itemsarr = root->list("items")) {
+        for (size_t i = 0; i < itemsarr->size(); ++i) {
             std::string name = itemsarr->str(i);
             auto colon = name.find(':');
             std::string full = colon == std::string::npos ? pack->id + ":" + name : name;
             if (colon != std::string::npos) name[colon] = '/';
-            auto& def = builder.createItem(full);
+            auto& def = builder.items.create(full);
             if (colon != std::string::npos) def.scriptName = name.substr(0, colon) + '/' + def.scriptName;
             loadItem(def, full, name);
-            stats.totalItems++;
+            stats->totalItems++;
+        }
+    }
+
+    if (auto entitiesarr = root->list("entities")) {
+        for (size_t i = 0; i < entitiesarr->size(); ++i) {
+            std::string name = entitiesarr->str(i);
+            auto colon = name.find(':');
+            std::string full = colon == std::string::npos ? pack->id + ":" + name : name;
+            if (colon != std::string::npos) name[colon] = '/';
+            auto& def = builder.entities.create(full);
+            if (colon != std::string::npos) def.scriptName = name.substr(0, colon) + '/' + def.scriptName;
+            loadEntity(def, full, name);
+            stats->totalEntities++;
         }
     }
 
@@ -397,5 +429,5 @@ void ContentLoader::load(ContentBuilder& builder) {
         }
     }
 
-    LOG_INFO("---Successfully loaded content pack [{}]", pack->id);
+    LOG_INFO("Successfully loaded content pack [{}]", pack->id);
 }

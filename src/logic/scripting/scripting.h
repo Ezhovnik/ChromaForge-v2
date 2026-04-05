@@ -18,7 +18,7 @@ class Content;
 class Level;
 class Block;
 class Player;
-class Item;
+struct Item;
 class BlocksController;
 struct block_funcs_set;
 struct item_funcs_set;

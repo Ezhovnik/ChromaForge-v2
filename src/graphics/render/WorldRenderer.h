@@ -54,7 +54,7 @@ private:
 		Camera* camera, 
 		ShaderProgram* shader
 	);
-	void renderBlockSelection(Camera* camera, ShaderProgram* linesShader);
+	void renderBlockSelection();
 	void renderDebugLines(
         const DrawContext& context, 
         Camera* camera, 

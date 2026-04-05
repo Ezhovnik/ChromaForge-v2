@@ -101,9 +101,9 @@ std::shared_ptr<gui::InventoryView> Hud::createContentAccess() {
     auto indices = content->getIndices();
     auto inventory = player->getInventory();
 
-    int itemsCount = indices->countItemDefs();
+    int itemsCount = indices->items.count();
     auto accessInventory = std::make_shared<Inventory>(0, itemsCount);
-    for (int id = 1; id < itemsCount; ++id) {
+    for (size_t id = 1; id < itemsCount; ++id) {
         accessInventory->getSlot(id - 1).set(ItemStack(id, 1));
     }
 

@@ -28,6 +28,7 @@
 #include "../world/World.h"
 #include "../debug/Logger.h"
 #include "../settings.h"
+#include "../objects/Entity.h"
 
 WorldFiles::WorldFiles(const std::filesystem::path& directory) : directory(directory), regions(directory) {
 }
@@ -84,23 +85,19 @@ void WorldFiles::writePacks(const std::vector<ContentPack>& packs) {
 	files::write_string(packsFile, ss.str());
 }
 
+template<class T>
+static void write_indices(const ContentUnitIndices<T>& indices, dynamic::List& list) {
+    size_t count = indices.count();
+    for (size_t i = 0; i < count; ++i) {
+        list.put(indices.get(i)->name);
+	}
+}
 void WorldFiles::writeIndices(const ContentIndices* indices) {
-	dynamic::Map root;
-	uint count;
+    dynamic::Map root;
 
-	auto& blocks = root.putList("blocks");
-	count = indices->countBlockDefs();
-	for (uint i = 0; i < count; ++i) {
-		const Block* def = indices->getBlockDef(i);
-		blocks.put(def->name);
-	}
-
-	auto& items = root.putList("items");
-	count = indices->countItemDefs();
-	for (uint i = 0; i < count; ++i) {
-		const Item* def = indices->getItemDef(i);
-		items.put(def->name);
-	}
+    write_indices(indices->blocks, root.putList("blocks"));
+    write_indices(indices->items, root.putList("items"));
+    write_indices(indices->entities, root.putList("entities"));
 
 	files::write_json(getIndicesFile(), &root);
 }

@@ -7,30 +7,62 @@
 
 #include "../items/Item.h"
 #include "../voxels/Block.h"
+#include "../objects/Entity.h"
 #include "../content/Content.h"
 #include "../content/ContentPack.h"
 
-class ContentBuilder {
+template<class T>
+class ContentUnitBuilder {
 private:
-    std::unordered_map<std::string, std::unique_ptr<Block>> blockDefs;
-    std::vector<std::string> blockIds;
+    std::unordered_map<std::string, ContentType>& allNames;
+    ContentType type;
 
-    std::unordered_map<std::string, std::unique_ptr<Item>> itemDefs;
-    std::vector<std::string> itemIds;
+    void checkIdentifier(const std::string& id) {
+        const auto& found = allNames.find(id);
+        if (found != allNames.end()) {
+            throw namereuse_error("Name " + id + " is already used", found->second);
+        }
+    }
+public:
+    std::unordered_map<std::string, std::unique_ptr<T>> defs;
+    std::vector<std::string> names;
 
+    ContentUnitBuilder(
+        std::unordered_map<std::string, ContentType>& allNames,
+        ContentType type
+    ) : allNames(allNames), type(type) {}
+
+    T& create(const std::string& id) {
+        auto found = defs.find(id);
+        if (found != defs.end()) {
+            return *found->second;
+        }
+        checkIdentifier(id);
+        allNames[id] = type;
+        names.push_back(id);
+        defs[id] = std::make_unique<T>(id);
+        return *defs[id];
+    }
+
+    auto build() {
+        return std::move(defs);
+    }
+};
+
+class ContentBuilder {
     std::unordered_map<std::string, std::unique_ptr<BlockMaterial>> blockMaterials;
     std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs;
+    std::unordered_map<std::string, ContentType> allNames;
 public:
+    ContentUnitBuilder<Block> blocks {allNames, ContentType::Block};
+    ContentUnitBuilder<Item> items {allNames, ContentType::Item};
+    ContentUnitBuilder<Entity> entities {allNames, ContentType::Entity};
+
     ~ContentBuilder();
 
     void add(std::unique_ptr<ContentPackRuntime> pack);
 
-    Block& createBlock(const std::string& id);
-    Item& createItem(const std::string& id);
     BlockMaterial& createBlockMaterial(const std::string& id);
-
-    void checkIdentifier(const std::string& id);
-    ContentType checkContentType(const std::string& id);
 
     std::unique_ptr<Content> build();
 };

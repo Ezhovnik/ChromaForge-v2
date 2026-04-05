@@ -13,7 +13,8 @@
 using DrawGroups = std::set<ubyte>;
 
 class Content;
-class Item;
+struct Item;
+struct Entity;
 class ContentPackRuntime;
 class Block;
 struct BlockMaterial;
@@ -21,7 +22,8 @@ struct BlockMaterial;
 enum class ContentType {
     None,
     Block,
-    Item
+    Item,
+    Entity
 };
 
 inline const char* contenttype_name(ContentType type) {
@@ -29,6 +31,7 @@ inline const char* contenttype_name(ContentType type) {
         case ContentType::None: return "none";
         case ContentType::Block: return "block";
         case ContentType::Item: return "item";
+        case ContentType::Entity: return "entity";
         default:
             return "unknown";
     }
@@ -45,58 +48,83 @@ public:
     }
 };
 
-class ContentIndices {
+template<class T>
+class ContentUnitIndices {
 private:
-    std::vector<Block*> blockDefs;
-    std::vector<Item*> itemDefs;
+    std::vector<T*> defs;
 public:
-    ContentIndices(std::vector<Block*> blockDefs, std::vector<Item*> itemDefs);
+    ContentUnitIndices(std::vector<T*> defs) : defs(std::move(defs)) {}
 
-    inline Block* getBlockDef(blockid_t id) const {
-        if (id >= blockDefs.size()) return nullptr;
-        return blockDefs[id];
+    inline T* get(blockid_t id) const {
+        if (id >= defs.size()) {
+            return nullptr;
+        }
+        return defs[id];
     }
 
-    inline Item* getItemDef(itemid_t id) const {
-        if (id >= itemDefs.size()) return nullptr;
-        return itemDefs[id];
+    inline size_t count() const {
+        return defs.size();
     }
 
-    inline size_t countBlockDefs() const {
-        return blockDefs.size();
+    inline const T* const* getDefs() const {
+        return defs.data();
+    }
+};
+
+class ContentIndices {
+public:
+    ContentUnitIndices<Block> blocks;
+    ContentUnitIndices<Item> items;
+    ContentUnitIndices<Entity> entities;
+
+    ContentIndices(
+        ContentUnitIndices<Block> blocks,
+        ContentUnitIndices<Item> items,
+        ContentUnitIndices<Entity> entities
+    );
+};
+
+template<class T>
+class ContentUnitDefs {
+private:
+    std::unordered_map<std::string, std::unique_ptr<T>> defs;
+public:
+    ContentUnitDefs(std::unordered_map<std::string, std::unique_ptr<T>> defs) : defs(std::move(defs)) {}
+
+    T* find(const std::string& id) const {
+        const auto& found = defs.find(id);
+        if (found == defs.end()) {
+            return nullptr;
+        }
+        return found->second.get();
     }
 
-    inline size_t countItemDefs() const {
-        return itemDefs.size();
-    }
-
-    const Block* const* getBlockDefs() const {
-        return blockDefs.data();
-    }
-
-    const Item* const* getItemDefs() const {
-        return itemDefs.data();
+    T& require(const std::string& id) const {
+        const auto& found = defs.find(id);
+        if (found == defs.end()) {
+            throw std::runtime_error("Missing content unit " + id);
+        }
+        return *found->second;
     }
 };
 
 class Content {
 private:
-    std::unordered_map<std::string, std::unique_ptr<Block>> blockDefs;
-    std::unordered_map<std::string, std::unique_ptr<Item>> itemDefs;
-
     std::unique_ptr<ContentIndices> indices;
-
     std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs;
-
     std::unordered_map<std::string, std::unique_ptr<BlockMaterial>> blockMaterials;
 public:
+    ContentUnitDefs<Block> blocks;
+    ContentUnitDefs<Item> items;
+    ContentUnitDefs<Entity> entities;
     std::unique_ptr<DrawGroups> const drawGroups;
 
     Content(
-        std::unique_ptr<ContentIndices> indices,
-        std::unique_ptr<DrawGroups> drawGroups, 
-        std::unordered_map<std::string, std::unique_ptr<Block>> blockDefs,
-        std::unordered_map<std::string, std::unique_ptr<Item>> itemDefs,
+        std::unique_ptr<ContentIndices> indices, 
+        std::unique_ptr<DrawGroups> drawGroups,
+        ContentUnitDefs<Block> blocks,
+        ContentUnitDefs<Item> items,
+        ContentUnitDefs<Entity> entities,
         std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs,
         std::unordered_map<std::string, std::unique_ptr<BlockMaterial>> blockMaterials
     );
@@ -106,16 +134,10 @@ public:
         return indices.get();
     }
 
-    Block* findBlock(const std::string& id) const;
-    Block& requireBlock(const std::string& id) const;
-
-    Item* findItem(const std::string& id) const;
-    Item& requireItem(const std::string& id) const;
-
     const BlockMaterial* findBlockMaterial(const std::string& id) const;
-    const std::unordered_map<std::string, std::unique_ptr<BlockMaterial>>& getBlockMaterials() const;
-
     const ContentPackRuntime* getPackRuntime(const std::string& id) const;
+
+    const std::unordered_map<std::string, std::unique_ptr<BlockMaterial>>& getBlockMaterials() const;
     const std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>>& getPacks() const;
 };
 

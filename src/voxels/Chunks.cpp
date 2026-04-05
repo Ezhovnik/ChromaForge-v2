@@ -82,7 +82,7 @@ const AABB* Chunks::isObstacleAt(float x, float y, float z) {
 		}
     }
 
-	const Block* def = contentIds->getBlockDef(vox->id);
+	const auto def = contentIds->blocks.get(vox->id);
 	if (def->obstacle) {
 		glm::ivec3 offset {};
         if (vox->state.segment) {
@@ -156,7 +156,7 @@ void Chunks::setRotation(int32_t x, int32_t y, int32_t z, uint8_t index) {
     auto vox = getVoxel(x, y, z);
     if (vox == nullptr) return;
 
-    auto def = contentIds->getBlockDef(vox->id);
+    auto def = contentIds->blocks.get(vox->id);
     if (!def->rotatable || vox->state.rotation == index) {
         return;
     }
@@ -172,19 +172,19 @@ void Chunks::setRotation(int32_t x, int32_t y, int32_t z, uint8_t index) {
 bool Chunks::isSolidBlock(int32_t x, int32_t y, int32_t z) {
     voxel* vox = getVoxel(x, y, z);
     if (vox == nullptr) return false;
-    return contentIds->getBlockDef(vox->id)->rt.solid;
+    return contentIds->blocks.get(vox->id)->rt.solid;
 }
 
 bool Chunks::isReplaceableBlock(int32_t x, int32_t y, int32_t z) {
     voxel* v = getVoxel(x, y, z);
     if (v == nullptr) return false;
-    return contentIds->getBlockDef(v->id)->replaceable;
+    return contentIds->blocks.get(v->id)->replaceable;
 }
 
 bool Chunks::isObstacleBlock(int32_t x, int32_t y, int32_t z) {
 	voxel* v = getVoxel(x, y, z);
 	if (v == nullptr) return false;
-	return contentIds->getBlockDef(v->id)->obstacle;
+	return contentIds->blocks.get(v->id)->obstacle;
 }
 
 ubyte Chunks::getLight(int32_t x, int32_t y, int32_t z, int channel) {
@@ -323,7 +323,7 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
 	int lz = z - cz * CHUNK_DEPTH;
 
 	voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
-	auto prevdef = contentIds->getBlockDef(vox.id);
+	auto prevdef = contentIds->blocks.get(vox.id);
     if (prevdef->inventorySize == 0) {
 		chunk->removeBlockInventory(lx, y, lz);
 	}
@@ -331,7 +331,7 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
         eraseSegments(prevdef, vox.state, gx, y, gz);
     }
 
-	auto newdef = contentIds->getBlockDef(id);
+	auto newdef = contentIds->blocks.get(id);
 	vox.id = id;
 	vox.state = state;
 	chunk->setModifiedAndUnsaved();
@@ -387,7 +387,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 	while (t <= maxDist){
 		voxel* voxel = getVoxel(ix, iy, iz);
 		if (voxel == nullptr) return nullptr;
-		const Block* def = contentIds->getBlockDef(voxel->id);
+		const Block* def = contentIds->blocks.get(voxel->id);
 		if (def->selectable) {
 			end.x = px + t * dx;
 			end.y = py + t * dy;
@@ -509,7 +509,7 @@ glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDis
 		voxel* voxel = getVoxel(ix, iy, iz);
 		if (voxel == nullptr) return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
 
-		const Block* def = contentIds->getBlockDef(voxel->id);
+		const Block* def = contentIds->blocks.get(voxel->id);
 		if (def->obstacle) {
 			if (!def->rt.solid) {
 				const std::vector<AABB>& hitboxes = def->rotatable ? def->rt.hitboxes[voxel->state.rotation] : def->modelBoxes;
@@ -611,7 +611,7 @@ bool Chunks::checkReplaceability(const Block* def, blockstate state, glm::ivec3 
                 pos += rotation.axisY * sy;
                 pos += rotation.axisZ * sz;
                 if (auto vox = getVoxel(pos.x, pos.y, pos.z)) {
-                    auto target = contentIds->getBlockDef(vox->id);
+                    auto target = contentIds->blocks.get(vox->id);
                     if (!target->replaceable && vox->id != ignore) return false;
                 } else {
                     return false;

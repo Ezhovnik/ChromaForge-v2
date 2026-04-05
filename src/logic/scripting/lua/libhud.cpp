@@ -38,7 +38,7 @@ static int l_hud_open_block(lua::State* L) {
     if (vox == nullptr) {
         throw std::runtime_error("Block does not exists at " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z));
     }
-    auto def = scripting::content->getIndices()->getBlockDef(vox->id);
+    auto def = scripting::content->getIndices()->blocks.get(vox->id);
     auto assets = scripting::engine->getAssets();
     auto layout = assets->get<UIDocument>(def->uiLayout);
     if (layout == nullptr) {

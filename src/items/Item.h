@@ -21,8 +21,7 @@ enum class ItemIconType {
     Block
 };
 
-class Item {
-public:
+struct Item {
     std::string const name;
 
     std::string caption;

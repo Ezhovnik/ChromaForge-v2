@@ -47,10 +47,11 @@ struct ContentPack {
 
     std::filesystem::path getContentFile() const;
 
-    static const std::string PACKAGE_FILENAME;
-    static const std::string CONTENT_FILENAME;
-    static const std::filesystem::path BLOCKS_FOLDER;
-    static const std::filesystem::path ITEMS_FOLDER;
+    static inline const std::string PACKAGE_FILENAME = "package.json";
+    static inline const std::string CONTENT_FILENAME = "content.json";
+    static inline const std::filesystem::path BLOCKS_FOLDER = "blocks";
+    static inline const std::filesystem::path ITEMS_FOLDER = "items";
+    static inline const std::filesystem::path ENTITIES_FOLDER = "entities";
     static const std::vector<std::string> RESERVED_NAMES;
 
     static bool is_pack(const std::filesystem::path& folder);
@@ -74,9 +75,10 @@ struct ContentPack {
 struct ContentPackStats {
     size_t totalBlocks;
     size_t totalItems;
+    size_t totalEntities;
 
     inline bool hasSavingContent() const {
-        return totalBlocks + totalItems > 0;
+        return totalBlocks + totalItems + totalEntities > 0;
     }
 };
 

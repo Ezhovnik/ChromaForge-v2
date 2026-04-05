@@ -19,7 +19,7 @@
 
 void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
     // Воздух
-    Block& block = builder->createBlock(BUILTIN_AIR);
+    Block& block = builder->blocks.create(BUILTIN_AIR);
     block.drawGroup = 1;
     block.lightPassing = true;
     block.skyLightPassing = true;
@@ -30,6 +30,6 @@ void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
     block.pickingItem = BUILTIN_EMPTY;
 
     // Пустота
-    Item& item = builder->createItem(BUILTIN_EMPTY);
+    Item& item = builder->items.create(BUILTIN_EMPTY);
     item.iconType = ItemIconType::None;
 }

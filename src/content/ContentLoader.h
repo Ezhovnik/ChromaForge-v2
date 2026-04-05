@@ -3,14 +3,17 @@
 
 #include <string>
 #include <filesystem>
+#include <memory>
 
 #include "../typedefs.h"
 
 class ContentBuilder;
 struct ContentPack;
-class Item;
+struct Item;
+struct Entity;
 class Block;
 struct BlockMaterial;
+struct ContentPackStats;
 
 namespace dynamic {
     class Map;
@@ -19,34 +22,29 @@ namespace dynamic {
 class ContentLoader {
 private:
     const ContentPack* pack;
-
     scriptenv env;
+    ContentBuilder& builder;
+    ContentPackStats* stats;
 
-    void loadBlock(Block& block, const std::string& full, const std::string& name);
-    void loadCustomBlockModel(Block& block, dynamic::Map* primitives);
-    void loadItem(Item& item, const std::string& full, const std::string& name);
-    void loadBlockMaterial(BlockMaterial& def, const std::filesystem::path& file);
+    void loadBlock(Block& def, const std::string& full, const std::string& name);
+    void loadItem(Item& def, const std::string& full, const std::string& name);
+    void loadEntity(Entity& def, const std::string& full, const std::string& name);
+
+    static void loadCustomBlockModel(Block& def, dynamic::Map* primitives);
+    static void loadBlockMaterial(BlockMaterial& def, const std::filesystem::path& file);
+    static void loadBlock(Block& def, const std::string& name, const std::filesystem::path& file);
+    static void loadItem(Item& def, const std::string& name, const std::filesystem::path& file);
+    static void loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file);
 public:
-    ContentLoader(ContentPack* pack);
+    ContentLoader(ContentPack* pack, ContentBuilder& builder);
 
     bool fixPackIndices(
         const std::filesystem::path& folder,
-        dynamic::Map* indicesRoot, 
+        dynamic::Map* indicesRoot,
         const std::string& contentSection
     );
     void fixPackIndices();
-
-    void loadBlock(
-        Block& block,
-        const std::string& name,
-        const std::filesystem::path& file
-    );
-    void loadItem(
-        Item& item,
-        const std::string& name,
-        const std::filesystem::path& file
-    );
-    void load(ContentBuilder& builder);
+    void load();
 };
 
 #endif // CONTENT_CONTENT_LOADER_H_

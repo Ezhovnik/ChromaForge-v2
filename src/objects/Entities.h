@@ -29,13 +29,14 @@ class ModelBatch;
 class Frustum;
 class Rig;
 class LineBatch;
+struct Entity;
 
-class Entity {
+class Entt_Entity {
 private:
     entt::registry& registry;
     const entt::entity entity;
 public:
-    Entity(entt::registry& registry, const entt::entity entity)
+    Entt_Entity(entt::registry& registry, const entt::entity entity)
     : registry(registry), entity(entity) {}
 
     bool isValid() const {
@@ -67,12 +68,12 @@ public:
     void render(Assets* assets, ModelBatch& batch, Frustum& frustum);
     void renderDebug(LineBatch& batch);
 
-    entityid_t drop(glm::vec3 pos);
+    entityid_t spawn(Entity& def, glm::vec3 pos);
 
-    std::optional<Entity> get(entityid_t id) {
+    std::optional<Entt_Entity> get(entityid_t id) {
         const auto& found = entities.find(id);
         if (found != entities.end()) {
-            return Entity(registry, found->second);
+            return Entt_Entity(registry, found->second);
         }
         return std::nullopt;
     }

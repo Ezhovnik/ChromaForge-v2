@@ -12,11 +12,11 @@
 
 ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) : content(content) {
     const ContentIndices* contentIds = content->getIndices();
-    sideregions = std::make_unique<UVRegion[]>(contentIds->countBlockDefs() * 6);
+    sideregions = std::make_unique<UVRegion[]>(contentIds->blocks.count() * 6);
     Atlas* atlas = assets->get<Atlas>("blocks");
 
-    for (uint i = 0; i < contentIds->countBlockDefs(); ++i) {
-        Block* def = contentIds->getBlockDef(i);
+    for (uint i = 0; i < contentIds->blocks.count(); ++i) {
+        Block* def = contentIds->blocks.get(i);
         for (uint side = 0; side < 6; ++side) {
             const std::string& tex = def->textureFaces[side];
             if (atlas->has(tex)) {

@@ -20,7 +20,7 @@ bool ItemStack::accepts(const ItemStack& other) const {
 }
 
 void ItemStack::move(ItemStack& item, const ContentIndices* indices) {
-    auto def = indices->getItemDef(item.getItemId());
+    auto def = indices->items.get(item.getItemId());
     int count = std::min(item.count, def->stackSize-this->count);
     if (isEmpty()) {
         set(ItemStack(item.getItemId(), count));

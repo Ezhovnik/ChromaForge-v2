@@ -80,7 +80,7 @@ void BlocksController::breakBlock(Player* player, const Block* def, int x, int y
 void BlocksController::updateBlock(int x, int y, int z) {
     voxel* vox = chunks->getVoxel(x, y, z);
     if (vox == nullptr) return;
-    const Block* def = level->content->getIndices()->getBlockDef(vox->id);
+    auto def = level->content->getIndices()->blocks.get(vox->id);
     if (def->grounded && !chunks->isSolidBlock(x, y - 1, z)) {
         breakBlock(nullptr, def, x, y, z);
         return;
@@ -98,9 +98,9 @@ void BlocksController::onBlocksSpark(int sparkId, int parts) {
     auto content = level->content;
     auto indices = content->getIndices();
     int sparkRate = blocksSparkClock.getSparkRate();
-    for (size_t id = 0; id < indices->countBlockDefs(); ++id) {
+    for (size_t id = 0; id < indices->blocks.count(); ++id) {
         if ((id + sparkId) % parts != 0) continue;
-        auto def = indices->getBlockDef(id);
+        auto def = indices->blocks.get(id);
         auto interval = def->sparkInterval;
         if (def->rt.funcsset.onblocksspark && sparkId / parts % interval == 0) {
             scripting::on_blocks_spark(def, sparkRate / interval);
@@ -127,7 +127,7 @@ void BlocksController::randomSpark(int sparkId, int parts) {
                     int bz = random.rand() % CHUNK_DEPTH;
                     const voxel& vox = chunk->voxels[(by * CHUNK_DEPTH + bz) * CHUNK_WIDTH + bx];
                     // std::cout << bx << " " << by << " " << bz << " " << vox.id << std::endl;
-                    Block* block = indices->getBlockDef(vox.id);
+                    Block* block = indices->blocks.get(vox.id);
                     if (block != nullptr && block->rt.funcsset.randupdate) {
                         scripting::random_update_block(
                             block, 
@@ -149,7 +149,7 @@ int64_t BlocksController::createBlockInventory(int x, int y, int z) {
 	auto inv = chunk->getBlockInventory(lx, y, lz);
 	if (inv == nullptr) {
         auto indices = level->content->getIndices();
-        auto def = indices->getBlockDef(chunk->voxels[vox_index(lx, y, lz)].id);
+        auto def = indices->blocks.get(chunk->voxels[vox_index(lx, y, lz)].id);
         int invsize = def->inventorySize;
         if (invsize == 0) return 0;
 		inv = level->inventories->create(invsize);

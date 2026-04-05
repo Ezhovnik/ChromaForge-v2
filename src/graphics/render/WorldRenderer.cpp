@@ -184,7 +184,7 @@ void WorldRenderer::renderLevel(
 	{
 		auto inventory = player->getInventory();
 		ItemStack& stack = inventory->getSlot(player->getChosenSlot());
-		Item* chosen_item = contentIds->getItemDef(stack.getItemId());
+		Item* chosen_item = contentIds->items.get(stack.getItemId());
 		assert(chosen_item != nullptr);
 		if (!player->isNoclip()) {
 			float multiplier = 0.8f;
@@ -212,11 +212,11 @@ void WorldRenderer::renderLevel(
     skybox->unbind();
 }
 
-void WorldRenderer::renderBlockSelection(Camera* camera, ShaderProgram* linesShader) {
+void WorldRenderer::renderBlockSelection() {
     const auto& selection = player->selection;
     auto indices = level->content->getIndices();
     blockid_t id = selection.vox.id;
-    auto block = indices->getBlockDef(id);
+    auto block = indices->blocks.get(id);
     const glm::ivec3 pos = player->selection.position;
     const glm::vec3 point = selection.hitPosition;
     const glm::vec3 norm = selection.normal;
@@ -241,7 +241,7 @@ void WorldRenderer::renderLines(Camera* camera, ShaderProgram* linesShader) {
     linesShader->use();
     linesShader->uniformMatrix("u_projview", camera->getProjView());
     if (player->selection.vox.id != BLOCK_VOID) {
-        renderBlockSelection(camera, linesShader);
+        renderBlockSelection();
     }
     if (player->debug && drawEntityHitboxes) {
         level->entities->renderDebug(*lineBatch);

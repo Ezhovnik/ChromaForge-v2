@@ -6,7 +6,7 @@
 #include "../../../logic/BlocksController.h"
 
 static void validate_itemid(itemid_t id) {
-    if (id >= scripting::indices->countItemDefs()) {
+    if (id >= scripting::indices->items.count()) {
         throw std::runtime_error("Invalid item id");
     }
 }

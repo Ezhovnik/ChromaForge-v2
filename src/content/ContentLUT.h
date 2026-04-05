@@ -9,80 +9,107 @@
 #include "../typedefs.h"
 #include "../constants.h"
 #include "Content.h"
+#include "../data/dynamic.h"
 
 struct ContentEntry {
     ContentType type;
     std::string name;
 };
 
-/*
-Класс для создания таблицы перекодировки индексов блоков.
-Используется при загрузке мира, если набор блоков изменился
-(добавлены, удалены или переупорядочены блоки).
-Читает файл indices.json и строит отображение старых индексов на новые.
-*/
-class ContentLUT { // Content Look-UP Table
-    // Вектор новых идентификаторов блоков, соответствующих старым индексам
-    std::vector<blockid_t> blocks;
-    // Имена блоков для каждого старого индекса (из indices.json)
-    std::vector<std::string> blockNames;
-
-    std::vector<itemid_t> items;
-    std::vector<std::string> itemNames;
-
-    // Флаг: изменился ли порядок блоков (индексы не совпадают)
-    bool reorderContent = false;
-    // Флаг: есть ли блоки, которые отсутствуют в текущем контенте
+template<typename T, class U>
+class ContentUnitLUT {
+private:
+    std::vector<T> indices;
+    std::vector<std::string> names;
     bool missingContent = false;
-
+    bool reorderContent = false;
+    T missingValue;
+    ContentType type;
 public:
-    ContentLUT(const Content* content, size_t blocks, size_t items);
+    ContentUnitLUT(size_t count, const ContentUnitIndices<U>& unitIndices, T missingValue, ContentType type) : missingValue(missingValue), type(type) {
+        for (size_t i = 0; i < count; ++i) {
+            indices.push_back(i);
+        }
+        for (size_t i = 0; i < unitIndices.count(); ++i) {
+            names.push_back(unitIndices.get(i)->name);
+        }
+        for (size_t i = unitIndices.count(); i < count; ++i) {
+            names.emplace_back("");
+        }
+    }
 
-    // Возвращает имя блока для заданного старого индекса.
-    inline const std::string& getBlockName(blockid_t index) const {return blockNames[index];}
+    void setup(dynamic::List* list, const ContentUnitDefs<U>& defs) {
+        if (list) {
+            for (size_t i = 0; i < list->size(); ++i) {
+                std::string name = list->str(i);
+                if (auto def = defs.find(name)) {
+                    set(i, name, def->rt.id);
+                } else {
+                    set(i, name, missingValue);   
+                }
+            }
+        }
+    }
 
-    // Возвращает новый идентификатор блока для старого индекса.
-    inline blockid_t getBlockId(blockid_t index) const {return blocks[index];}
+    void getMissingContent(std::vector<ContentEntry>& entries) const {
+        for (size_t i = 0; i < count(); ++i) {
+            if (indices[i] == missingValue) {
+                auto& name = names[i];
+                entries.push_back(ContentEntry{type, name});
+            }
+        }
+    }
 
-    // Устанавливает соответствие для одного старого индекса.
-    inline void setBlock(blockid_t index, std::string name, blockid_t id) {
-        blocks[index] = id;
-        blockNames[index] = std::move(name);
-        if (id == BLOCK_VOID) {
+    inline const std::string& getName(T index) const {
+        return names[index];
+    }
+
+    inline T getId(T index) const {
+        return indices[index];
+    }
+
+    inline void set(T index, std::string name, T id) {
+        indices[index] = id;
+        names[index] = std::move(name);
+        if (id == missingValue) {
             missingContent = true;
         } else if (index != id) {
             reorderContent = true;
         }
     }
 
-    inline const std::string& getItemName(blockid_t index) const {return itemNames[index];}
-
-    inline itemid_t getItemId(itemid_t index) const {return items[index];}
-
-    inline void setItem(itemid_t index, std::string name, itemid_t id) {
-        items[index] = id;
-        itemNames[index] = std::move(name);
-        if (id == ITEM_VOID) {
-            missingContent = true;
-        } else if (index != id) {
-            reorderContent = true;
-        }
+    inline size_t count() const {
+        return indices.size();
     }
 
-    // Статический метод для создания объекта ContentLUT из JSON-файла.
-    // Читает файл indices.json, сопоставляет имена блоков с текущими определениями.
-    static std::shared_ptr<ContentLUT> create(const std::filesystem::path& filename, const Content* content);
+    inline bool hasContentReorder() const {
+        return reorderContent;
+    }
 
-    // Проверяет, требуется ли переупорядочивание блоков
-    inline bool hasContentReorder() const {return reorderContent;}
+    inline bool hasMissingContent() const {
+        return missingContent;
+    }
+};
 
-    // Проверяет, есть ли отсутствующие в текущем контенте блоки
-    inline bool hasMissingContent() const {return missingContent;}
+class ContentLUT {
+public:
+    ContentUnitLUT<blockid_t, Block> blocks;
+    ContentUnitLUT<itemid_t, Item> items;
 
-    // Возвращает количество блоков в таблице (размер старого списка)
-    inline size_t countBlocks() const {return blocks.size();}
+    ContentLUT(const ContentIndices* indices, size_t blocks, size_t items);
 
-    inline size_t countItems() const {return items.size();}
+    static std::shared_ptr<ContentLUT> create(
+        const std::filesystem::path& filename, 
+        const Content* content
+    );
+
+    inline bool hasContentReorder() const {
+        return blocks.hasContentReorder() || items.hasContentReorder();
+    }
+
+    inline bool hasMissingContent() const {
+        return blocks.hasMissingContent() || items.hasMissingContent();
+    }
 
     std::vector<ContentEntry> getMissingContent() const;
 };
