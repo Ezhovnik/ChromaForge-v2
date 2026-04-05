@@ -42,6 +42,8 @@
 #include "../../items/Inventory.h"
 #include "../../graphics/core/Batch3D.h"
 #include "../../graphics/core/PostProcessing.h"
+#include "ModelBatch.h"
+#include "../core/Model.h"
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -57,7 +59,8 @@ WorldRenderer::WorldRenderer(
 	level(levelFrontend->getLevel()),
 	player(player),
     frustumCulling(std::make_unique<Frustum>()),
-    lineBatch(std::make_unique<LineBatch>())
+    lineBatch(std::make_unique<LineBatch>()),
+    modelBatch(std::make_unique<ModelBatch>(1000, engine->getAssets(), level->chunks.get()))
 {
     renderer = std::make_unique<ChunksRenderer>(
         level,
@@ -174,7 +177,7 @@ void WorldRenderer::renderLevel(
     shader->uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
     shader->uniform3f("u_cameraPos", camera->position);
     shader->uniform1i("u_cubemap", 1);
-    //shader->uniform1f("u_timer", Window::time());
+    shader->uniform1f("u_timer", Window::time());
 
 	{
 		auto inventory = player->getInventory();
@@ -199,6 +202,26 @@ void WorldRenderer::renderLevel(
     atlas->getTexture()->bind();
 
 	drawChunks(level->chunks.get(), camera, shader);
+
+    model::Model model {};
+    auto& mesh = model.addMesh("gui/warning");
+    mesh.addBox({}, glm::vec3(0.3f));
+    mesh.addBox({}, glm::vec3(0.6f));
+
+    auto& mesh2 = model.addMesh("gui/error");
+    mesh2.addBox({}, glm::vec3(0.7f));
+    mesh2.addBox({}, glm::vec3(0.9f));
+
+    float timer = static_cast<float>(Window::time());
+    assets->getTexture("gui/menubg")->bind();
+    shader->uniformMatrix("u_model", glm::mat4(1.0f));
+    modelBatch->translate({0, 86, 0});
+    modelBatch->scale(glm::vec3(glm::sin(timer * 6) + 1));
+    modelBatch->rotate(glm::vec3(1, 0, 0), timer);
+    modelBatch->draw(model);
+    modelBatch->popMatrix();
+    modelBatch->popMatrix();
+    modelBatch->popMatrix();
 
     skybox->unbind();
 }

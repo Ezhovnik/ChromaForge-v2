@@ -13,6 +13,7 @@
 #include "../../graphics/core/Texture.h"
 #include "../../graphics/core/Cubemap.h"
 #include "../../graphics/core/Framebuffer.h"
+#include "../../math/UVRegion.h"
 
 namespace SkyboxConsts {
     inline constexpr int STARS_COUNT = 3000;

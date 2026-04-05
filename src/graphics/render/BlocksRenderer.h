@@ -7,7 +7,6 @@
 
 #include <glm/glm.hpp>
 
-#include "../../math/UVRegion.h"
 #include "../../voxels/voxel.h"
 #include "../../typedefs.h"
 
@@ -20,6 +19,7 @@ class VoxelsVolume;
 class ChunksStorage;
 class ContentGfxCache;
 struct EngineSettings;
+struct UVRegion;
 
 /**
  * @brief Класс для рендеринга блоков (вокселей) в чанках.

@@ -306,7 +306,7 @@ void scripting::load_world_script(const scriptenv& senv, const std::string& pref
     load_script(env, "world", file);
     register_event(env, "init", prefix + ".init");
     register_event(env, "on_world_open", prefix + ".worldopen");
-    register_event(env, "on_world_tick", prefix + ".worldtick");
+    register_event(env, "on_world_spark", prefix + ".worldspark");
     register_event(env, "on_world_save", prefix + ".worldsave");
     register_event(env, "on_world_quit", prefix + ".worldquit");
 }

@@ -5,10 +5,12 @@
 #include "Mesh.h"
 
 inline constexpr int LB_VERTEX_SIZE = 7;
+static const vattr attrs[] = {
+    {3}, {4}, {0}
+};
 
 // Конструктор
 LineBatch::LineBatch(size_t capacity) : capacity(capacity) {
-    const vattr attrs[] = {{3}, {4}, {0}};
     buffer = new float[capacity * LB_VERTEX_SIZE * 2];
     mesh = std::make_unique<Mesh>(buffer, 0, attrs);
     index = 0;

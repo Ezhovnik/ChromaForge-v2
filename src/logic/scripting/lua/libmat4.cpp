@@ -1,6 +1,9 @@
 #include <sstream>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include "api_lua.h"
 
@@ -143,6 +146,41 @@ static int l_determinant(lua::State* L) {
     return lua::pushnumber(L, glm::determinant(lua::tomat4(L, 1)));
 }
 
+static int l_decompose(lua::State* L) {
+    auto matrix = lua::tomat4(L, 1);
+    glm::vec3 scale;
+    glm::quat rotation;
+    glm::vec3 translation;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::decompose(
+        matrix,
+        scale,
+        rotation,
+        translation,
+        skew,
+        perspective
+    );
+
+    lua::createtable(L, 0, 5);
+    
+    lua::pushvec3_arr(L, scale);
+    lua::setfield(L, "scale");
+
+    lua::pushmat4(L, glm::toMat4(rotation));
+    lua::setfield(L, "rotation");
+
+    lua::pushvec3_arr(L, translation);
+    lua::setfield(L, "translation");
+
+    lua::pushvec3_arr(L, skew);
+    lua::setfield(L, "skew");
+
+    lua::pushvec4_arr(L, perspective);
+    lua::setfield(L, "perspective");
+    return 1;
+}
+
 static int l_tostring(lua::State* L) {
     auto matrix = lua::tomat4(L, 1);
     bool multiline = lua::toboolean(L, 2);
@@ -180,6 +218,7 @@ const luaL_Reg mat4lib [] = {
     {"inverse", lua::wrap<l_inverse>},
     {"transpose", lua::wrap<l_transpose>},
     {"determinant", lua::wrap<l_determinant>},
+    {"decompose", lua::wrap<l_decompose>},
     {"tostring", lua::wrap<l_tostring>},
     {NULL, NULL}
 };

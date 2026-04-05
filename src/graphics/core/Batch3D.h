@@ -6,10 +6,9 @@
 
 #include <glm/glm.hpp>
 
-#include "../../math/UVRegion.h"
-
 class Mesh;
 class Texture;
+struct UVRegion;
 
 class Batch3D {
 private:

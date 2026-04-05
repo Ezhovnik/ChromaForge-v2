@@ -9,10 +9,11 @@
 #include "gl_util.h"
 
 inline constexpr uint B2D_VERTEX_SIZE = 8; ///< Размер одной вершины в количестве float-ов
+static const vattr attrs[] = { ///< Формат вершин: позиция (2), текстурные координаты (2), цвет (4)
+	{2}, {2}, {4}, {0}
+};
 
 Batch2D::Batch2D(size_t capacity) : capacity(capacity), color(1.0f, 1.0f, 1.0f, 1.0f) {
-	// Формат вершин: позиция (2), текстурные координаты (2), цвет (4)
-	const vattr attrs[] = {{2}, {2}, {4}, {0}};
 	buffer = std::make_unique<float[]>(capacity * B2D_VERTEX_SIZE);
     mesh = std::make_unique<Mesh>(buffer.get(), 0, attrs);
 	index = 0;

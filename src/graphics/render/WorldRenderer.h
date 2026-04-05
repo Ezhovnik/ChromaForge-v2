@@ -25,6 +25,7 @@ class Skybox;
 class Batch3D;
 class Player;
 struct EngineSettings;
+class ModelBatch;
 
 class WorldRenderer {
 private:
@@ -36,6 +37,7 @@ private:
 	std::unique_ptr<LineBatch> lineBatch;
 	std::unique_ptr<Skybox> skybox;
 	std::unique_ptr<Batch3D> batch3d;
+	std::unique_ptr<ModelBatch> modelBatch;
 
     bool drawChunk(
 		size_t index, 

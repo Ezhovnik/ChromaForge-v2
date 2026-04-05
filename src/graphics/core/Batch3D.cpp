@@ -5,12 +5,14 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "../../typedefs.h"
+#include "../../math/UVRegion.h"
 
 inline constexpr int B3D_VERTEX_SIZE = 9;
+static const vattr attrs[] = {
+	{3}, {2}, {4}, {0}
+};
 
 Batch3D::Batch3D(size_t capacity) : capacity(capacity) {
-	const vattr attrs[] = {{3}, {2}, {4}, {0}};
-
     buffer = std::make_unique<float[]>(capacity * B3D_VERTEX_SIZE);
     mesh = std::make_unique<Mesh>(buffer.get(), 0, attrs);
 	index = 0;

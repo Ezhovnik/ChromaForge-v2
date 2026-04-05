@@ -13,6 +13,7 @@
 #include "../../lighting/Lightmap.h"
 #include "../../frontend/ContentGfxCache.h"
 #include "../../settings.h"
+#include "../../math/UVRegion.h"
 
 // Размер вершины в количестве float-ов
 inline constexpr int BR_VERTEX_SIZE = 6; 
