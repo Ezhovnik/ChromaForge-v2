@@ -119,6 +119,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libplayer.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libtime.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libtoml.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libvecn.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/libworld.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/lua_commons.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/lua_custom_types.cpp"

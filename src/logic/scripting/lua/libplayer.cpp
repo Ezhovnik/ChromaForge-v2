@@ -115,6 +115,13 @@ static int l_player_get_selected_block(lua::State* L) {
     return 0;
 }
 
+static int l_player_get_dir(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        return lua::pushvec3_arr(L, player->camera->front);
+    }
+    return 0;
+}
+
 const luaL_Reg playerlib [] = {
     {"get_pos", lua::wrap<l_player_get_pos>},
     {"set_pos", lua::wrap<l_player_set_pos>},
@@ -128,5 +135,6 @@ const luaL_Reg playerlib [] = {
     {"is_noclip", lua::wrap<l_player_is_noclip>},
     {"set_noclip", lua::wrap<l_player_set_noclip>},
     {"get_selected_block", lua::wrap<l_player_get_selected_block>},
+    {"get_dir", lua::wrap<l_player_get_dir>},
     {NULL, NULL}
 };

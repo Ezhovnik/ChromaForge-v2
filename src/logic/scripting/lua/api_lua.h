@@ -21,6 +21,9 @@ extern const luaL_Reg consolelib [];
 extern const luaL_Reg tomllib [];
 extern const luaL_Reg mat4lib [];
 extern const luaL_Reg entitylib [];
+extern const luaL_Reg vec2lib [];
+extern const luaL_Reg vec3lib [];
+extern const luaL_Reg vec4lib [];
 
 extern int l_print(lua::State* L);
 

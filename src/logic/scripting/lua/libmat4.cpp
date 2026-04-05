@@ -88,17 +88,17 @@ static int l_mul(lua::State* L) {
     switch (argc) {
         case 2: {
             if (len2 == 4) {
-               return lua::pushvec4(L, matrix1 * lua::tovec4(L, 2));
+                return lua::pushvec4(L, matrix1 * lua::tovec4(L, 2));
             } else if (len2 == 3) {
-               return lua::pushvec3(L, matrix1 * glm::vec4(lua::tovec3(L, 2), 1.0f));
+                return lua::pushvec3(L, matrix1 * glm::vec4(lua::tovec3(L, 2), 1.0f));
             }
             return lua::pushmat4(L, matrix1 * lua::tomat4(L, 2));
         }
         case 3: {
             if (len2 == 4) {
-               return lua::setvec4(L, 3, matrix1 * lua::tovec4(L, 2));
+                return lua::setvec(L, 3, matrix1 * lua::tovec4(L, 2));
             } else if (len2 == 3) {
-               return lua::setvec3(L, 3, matrix1 * glm::vec4(lua::tovec3(L, 2), 1.0f));
+                return lua::setvec(L, 3, matrix1 * glm::vec4(lua::tovec3(L, 2), 1.0f));
             }
             return lua::setmat4(L, 3, matrix1 * lua::tomat4(L, 2));
         }
