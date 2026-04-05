@@ -35,6 +35,7 @@ struct PlayerInput {
     bool attack : 1;
     bool build : 1;
     bool pickBlock : 1;
+    bool dropBlock : 1;
 };
 
 struct BlockSelection {

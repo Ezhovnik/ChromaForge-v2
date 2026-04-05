@@ -21,6 +21,7 @@
 #include "../items/ItemStack.h"
 #include "../items/Inventory.h"
 #include "../settings.h"
+#include "../objects/Entities.h"
 
 namespace CameraConsts {
     inline constexpr float STEPS_SPEED = 2.2f;
@@ -178,6 +179,7 @@ void PlayerController::updateKeyboard() {
 
 	input.attack = Events::justActive(BIND_PLAYER_ATTACK);
 	input.build = Events::justActive(BIND_PLAYER_BUILD);
+    input.dropBlock = Events::justActive(BIND_PLAYER_DROP);
 	input.pickBlock = Events::justActive(BIND_PLAYER_PICK);
 }
 
@@ -246,6 +248,7 @@ void PlayerController::resetKeyboard() {
 	input.build = false;
 	input.pickBlock = false;
 	input.cameraMode = false;
+    input.dropBlock = false;
 }
 
 void PlayerController::updateControls(float delta){
@@ -429,19 +432,22 @@ void PlayerController::updateInteraction() {
     }
 }
 
-void PlayerController::update(float delta, bool input, bool pause) {
+void PlayerController::update(float delta, bool input_flag, bool pause) {
 	if (!pause) {
-		if (input) updateKeyboard();
+		if (input_flag) updateKeyboard();
 		else resetKeyboard();
 
 		updateFootsteps(delta);
-        updateCamera(delta, input);
+        updateCamera(delta, input_flag);
 		updateControls(delta);
 	}
 	camControl.refresh();
 
-	if (input) {
+	if (input_flag) {
 		updateInteraction();
+        if (input.dropBlock) {
+            level->entities->drop(player->camera->position, player->camera->front * 10.0f + player->hitbox->velocity);
+        }
 	} else {
 		player->selection.vox.id = BLOCK_VOID;
         player->selection.vox.state.rotation = 0;

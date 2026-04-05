@@ -53,7 +53,7 @@ ModelBatch::~ModelBatch() {
 
 void ModelBatch::draw(const model::Mesh& mesh, const glm::mat4& matrix, const glm::mat3& rotation) {
     glm::vec3 gpos = matrix * glm::vec4(glm::vec3(), 1.0f);
-    light_t light = chunks->getLight(gpos.x, gpos.y, gpos.z);
+    light_t light = chunks->getLight(floor(gpos.x), floor(gpos.y), floor(gpos.z));
     glm::vec4 lights (
         LightMap::extract(light, 0) / 15.0f,
         LightMap::extract(light, 1) / 15.0f,

@@ -55,6 +55,8 @@ public:
     Entities(Level* level);
     void updatePhysics(float delta);
     void render(Assets* assets, ModelBatch& batch, Frustum& frustum);
+
+    void drop(glm::vec3 pos, glm::vec3 vel);
 };
 
 #endif // OBJECTS_ENTITIES_H_
