@@ -181,9 +181,8 @@ std::unique_ptr<dynamic::List> Parser::parseList() {
 
 dynamic::Value Parser::parseValue() {
     char next = peek();
-    if (next == '-' || next == '+') {
-        pos++;
-        return parseNumber(next == '-' ? -1 : 1);
+    if (next == '-' || next == '+' || is_digit(next)) {
+        return parseNumber();
     }
     if (is_identifier_start(next)) {
         std::string literal = parseName();
@@ -204,9 +203,6 @@ dynamic::Value Parser::parseValue() {
     }
     if (next == '[') {
         return dynamic::List_sptr(parseList().release());
-    }
-    if (is_digit(next)) {
-        return parseNumber(1);
     }
     if (next == '"' || next == '\'') {
         pos++;

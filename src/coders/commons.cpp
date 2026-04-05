@@ -290,7 +290,9 @@ dynamic::Value BasicParser::parseNumber(int sign) {
 
         double dvalue = (value + (afterdot / (double)expo));
 
-        if (!hasNext()) return sign * dvalue;
+        if (!hasNext()) {
+            return sign * dvalue;
+        }
 
         c = source[pos];
         if (c == 'e' || c == 'E') {
