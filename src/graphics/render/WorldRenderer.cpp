@@ -51,6 +51,7 @@ inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
 bool WorldRenderer::drawChunkBorders = false;
+bool WorldRenderer::drawEntityHitboxes = false;
 
 WorldRenderer::WorldRenderer(
 	Engine* engine,
@@ -224,8 +225,6 @@ void WorldRenderer::renderBlockSelection(Camera* camera, ShaderProgram* linesSha
         ? block->rt.hitboxes[selection.vox.state.rotation]
         : block->hitboxes;
 
-    linesShader->use();
-    linesShader->uniformMatrix("u_projview", camera->getProjView());
     lineBatch->setLineWidth(2.0f);
     for (auto& hitbox: hitboxes) {
         const glm::vec3 center = glm::vec3(pos) + hitbox.center();
@@ -234,6 +233,18 @@ void WorldRenderer::renderBlockSelection(Camera* camera, ShaderProgram* linesSha
         if (player->debug) {
             lineBatch->line(point, point + norm * 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
         }
+    }
+    lineBatch->render();
+}
+
+void WorldRenderer::renderLines(Camera* camera, ShaderProgram* linesShader) {
+    linesShader->use();
+    linesShader->uniformMatrix("u_projview", camera->getProjView());
+    if (player->selection.vox.id != BLOCK_VOID) {
+        renderBlockSelection(camera, linesShader);
+    }
+    if (player->debug && drawEntityHitboxes) {
+        level->entities->renderDebug(*lineBatch);
     }
     lineBatch->render();
 }
@@ -251,7 +262,7 @@ void WorldRenderer::renderDebugLines(
 
     linesShader->use();
 
-    if (drawChunkBorders){
+    if (drawChunkBorders) {
         linesShader->uniformMatrix("u_projview", camera->getProjView());
         glm::vec3 coord = player->camera->position;
         if (coord.x < 0) coord.x--;
@@ -336,7 +347,9 @@ void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisibl
             ctx.setDepthTest(true);
             ctx.setCullFace(true);
             renderLevel(ctx, camera, settings);
-            if (player->selection.vox.id != BLOCK_VOID && hudVisible) renderBlockSelection(camera, linesShader);
+            if (hudVisible) {
+                renderLines(camera, linesShader);
+            }
         }
 
         if (hudVisible && player->debug) renderDebugLines(wctx, camera, linesShader);

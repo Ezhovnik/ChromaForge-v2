@@ -60,6 +60,7 @@ private:
         Camera* camera, 
         ShaderProgram* linesShader
     );
+	void renderLines(Camera* camera, ShaderProgram* linesShader);
 
 	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);
 public:
@@ -80,6 +81,7 @@ public:
     );
 
 	static bool drawChunkBorders;
+	static bool drawEntityHitboxes;
 };
 
 #endif // FRONTEND_WORLD_RENDERER_H_

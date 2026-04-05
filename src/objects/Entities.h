@@ -28,6 +28,7 @@ class Assets;
 class ModelBatch;
 class Frustum;
 class Rig;
+class LineBatch;
 
 class Entity {
 private:
@@ -64,6 +65,7 @@ public:
     Entities(Level* level);
     void updatePhysics(float delta);
     void render(Assets* assets, ModelBatch& batch, Frustum& frustum);
+    void renderDebug(LineBatch& batch);
 
     entityid_t drop(glm::vec3 pos);
 

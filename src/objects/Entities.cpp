@@ -9,6 +9,7 @@
 #include "../graphics/render/ModelBatch.h"
 #include "../graphics/core/Model.h"
 #include "../math/FrustumCulling.h"
+#include "../graphics/core/LineBatch.h"
 
 void Transform::refresh() {
     combined = glm::mat4(1.0f);
@@ -30,6 +31,14 @@ entityid_t Entities::drop(glm::vec3 pos) {
 
     entities[id] = entity;
     return id;
+}
+
+void Entities::renderDebug(LineBatch& batch) {
+    batch.setLineWidth(1.0f);
+    auto view = registry.view<Transform, Hitbox>();
+    for (auto [entity, transform, hitbox] : view.each()) {
+        batch.box(hitbox.position, hitbox.halfsize * 2.0f, glm::vec4(1.0f));
+    }
 }
 
 void Entities::updatePhysics(float delta){

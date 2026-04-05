@@ -187,6 +187,16 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         });
 		panel->add(checkbox);
 	}
+    {
+        auto checkbox = std::make_shared<gui::FullCheckBox>(L"Show Hitboxes", glm::vec2(400, 24));
+        checkbox->setSupplier([=]() {
+            return WorldRenderer::drawEntityHitboxes;
+        });
+        checkbox->setConsumer([=](bool checked) {
+            WorldRenderer::drawEntityHitboxes = checked;
+        });
+		panel->add(checkbox);
+	}
 
 	panel->refresh();
 	return panel;
