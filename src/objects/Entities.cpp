@@ -28,7 +28,7 @@ entityid_t Entities::spawn(Entity& def, glm::vec3 pos) {
     auto id = nextID++;
     registry.emplace<EntityId>(entity, static_cast<entityid_t>(id));
     registry.emplace<Transform>(entity, pos, size / 4.0f, glm::mat3(1.0f));
-    registry.emplace<Hitbox>(entity, pos, def.hitbox);
+    registry.emplace<Rigidbody>(entity, true, Hitbox {pos, def.hitbox});
 
     entities[id] = entity;
     return id;
@@ -36,16 +36,19 @@ entityid_t Entities::spawn(Entity& def, glm::vec3 pos) {
 
 void Entities::renderDebug(LineBatch& batch) {
     batch.setLineWidth(1.0f);
-    auto view = registry.view<Transform, Hitbox>();
-    for (auto [entity, transform, hitbox] : view.each()) {
+    auto view = registry.view<Transform, Rigidbody>();
+    for (auto [entity, transform, rigidbody] : view.each()) {
+        auto& hitbox = rigidbody.hitbox;
         batch.box(hitbox.position, hitbox.halfsize * 2.0f, glm::vec4(1.0f));
     }
 }
 
 void Entities::updatePhysics(float delta){
-    auto view = registry.view<Transform, Hitbox>();
+    auto view = registry.view<Transform, Rigidbody>();
     auto physics = level->physics.get();
-    for (auto [entity, transform, hitbox] : view.each()) {
+    for (auto [entity, transform, rigidbody] : view.each()) {
+        if (!rigidbody.enabled) continue;
+        auto& hitbox = rigidbody.hitbox;
         physics->step(
             level->chunks.get(),
             &hitbox,
@@ -55,10 +58,20 @@ void Entities::updatePhysics(float delta){
             1.0f,
             true
         );
-        hitbox.linear_damping = hitbox.grounded * 5;
+        hitbox.linear_damping = hitbox.grounded * 12;
         transform.pos = hitbox.position;
-        transform.rot = glm::rotate(glm::mat4(transform.rot), delta, glm::vec3(0, 1, 0));
+        // transform.rot = glm::rotate(glm::mat4(transform.rot), delta, glm::vec3(0, 1, 0));
         // if (hitbox.grounded) hitbox.velocity.y = 10;
+    }
+}
+
+void Entities::clean() {
+    for (auto it = entities.begin(); it != entities.end();) {
+        if (registry.valid(it->second)) {
+            ++it;
+        } else {
+            it = entities.erase(it);
+        }
     }
 }
 

@@ -48,6 +48,9 @@ static void create_libs(lua::State* L) {
     openlib(L, "vec4", vec4lib);
     openlib(L, "world", worldlib);
 
+    openlib(L, "Rigidbody", rigidbodylib);
+    openlib(L, "Transform", transformlib);
+
     addfunc(L, "print", lua::wrap<l_print>);
 }
 

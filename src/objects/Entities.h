@@ -14,6 +14,11 @@ struct EntityId {
     entityid_t uid;
 };
 
+struct Rigidbody {
+    bool enabled = true;
+    Hitbox hitbox;
+};
+
 struct Transform {
     glm::vec3 pos;
     glm::vec3 size;
@@ -33,11 +38,16 @@ struct Entity;
 
 class Entt_Entity {
 private:
+    entityid_t id;
     entt::registry& registry;
     const entt::entity entity;
 public:
-    Entt_Entity(entt::registry& registry, const entt::entity entity)
-    : registry(registry), entity(entity) {}
+    Entt_Entity(entityid_t id, entt::registry& registry, const entt::entity entity)
+    : id(id), registry(registry), entity(entity) {}
+
+    entityid_t getID() const {
+        return id;
+    }
 
     bool isValid() const {
         return registry.valid(entity);
@@ -47,12 +57,16 @@ public:
         return registry.get<Transform>(entity);
     }
 
-    Hitbox& getHitbox() const {
-        return registry.get<Hitbox>(entity);
+    Rigidbody& getRigidbody() const {
+        return registry.get<Rigidbody>(entity);
     }
 
     entityid_t getUID() const {
         return registry.get<EntityId>(entity).uid;
+    }
+
+    void destroy() {
+        registry.destroy(entity);
     }
 };
 
@@ -64,18 +78,24 @@ private:
     entityid_t nextID = 1;
 public:
     Entities(Level* level);
+
     void updatePhysics(float delta);
     void render(Assets* assets, ModelBatch& batch, Frustum& frustum);
     void renderDebug(LineBatch& batch);
+    void clean();
 
     entityid_t spawn(Entity& def, glm::vec3 pos);
 
     std::optional<Entt_Entity> get(entityid_t id) {
         const auto& found = entities.find(id);
-        if (found != entities.end()) {
-            return Entt_Entity(registry, found->second);
+        if (found != entities.end() && registry.valid(found->second)) {
+            return Entt_Entity(id, registry, found->second);
         }
         return std::nullopt;
+    }
+
+    inline size_t size() const {
+        return entities.size();
     }
 };
 
