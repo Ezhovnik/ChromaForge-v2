@@ -11,7 +11,7 @@
 #include "../interfaces/Object.h"
 
 class Camera;
-class Hitbox;
+struct Hitbox;
 class Level;
 class Inventory;
 class ContentLUT;

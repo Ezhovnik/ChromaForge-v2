@@ -31,7 +31,8 @@ static int l_spawn(lua::State* L) {
     auto& def = scripting::content->entities.require(defname);
     auto pos = lua::tovec3(L, 2);
     auto id = level->entities->spawn(def, pos);
-    return lua::pushinteger(L, id);
+    level->entities->spawn(def, pos);
+    return 1;
 }
 
 static int l_despawn(lua::State* L) {

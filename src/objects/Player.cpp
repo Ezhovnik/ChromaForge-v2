@@ -88,14 +88,14 @@ void Player::updateInput(Level* level, PlayerInput& input, float delta) {
 	if (input.noclip) noclip = !noclip;
 
 	// Управление затуханием скорости
-	hitbox->linear_damping = PlayerConsts::GROUND_DAMPING;
-	if (flight){
-		hitbox->linear_damping = PlayerConsts::AIR_DAMPING;
+	hitbox->linearDamping = PlayerConsts::GROUND_DAMPING;
+	if (flight) {
+		hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
 		hitbox->velocity.y *= 1.0f - delta * 9;
 		if (input.jump) hitbox->velocity.y += speed * delta * 9;
 		if (input.crouch) hitbox->velocity.y -= speed * delta * 9;
 	}
-	if (!hitbox->grounded) hitbox->linear_damping = PlayerConsts::AIR_DAMPING;
+	if (!hitbox->grounded) hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
 
 	input.noclip = false;
 	input.flight = false;

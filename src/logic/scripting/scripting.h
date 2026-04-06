@@ -22,12 +22,15 @@ struct Item;
 class BlocksController;
 struct block_funcs_set;
 struct item_funcs_set;
+struct entity_funcs_set;
 class ContentIndices;
 struct uidocscript;
 class Inventory;
 class UIDocument;
 struct ContentPack;
 class LevelController;
+struct Entity;
+class Entt_Entity;
 
 namespace scripting {
     extern Engine* engine;
@@ -63,6 +66,11 @@ namespace scripting {
     bool on_item_use_on_block(Player* player, const Item* item, int x, int y, int z);
     bool on_item_break_block(Player* player, const Item* item, int x, int y, int z);
 
+    scriptenv on_entity_spawn(const Entity& def, entityid_t eid, entity_funcs_set&);
+    bool on_entity_despawn(const Entity& def, const Entt_Entity& entity);
+    bool on_entity_grounded(const Entity& def, const Entt_Entity& entity);
+    void on_entities_update();
+
     void on_ui_open(
         UIDocument* layout, 
         std::vector<dynamic::Value> args
@@ -87,12 +95,16 @@ namespace scripting {
         const std::string& packid,
         const std::filesystem::path& file
     );
-
     void load_layout_script(
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
         uidocscript& script
+    );
+    void load_entity_script(
+        const scriptenv& env,
+        const Entity& def,
+        const std::filesystem::path& file
     );
 
     void close();

@@ -48,8 +48,8 @@ static void create_libs(lua::State* L) {
     openlib(L, "vec4", vec4lib);
     openlib(L, "world", worldlib);
 
-    openlib(L, "Rigidbody", rigidbodylib);
-    openlib(L, "Transform", transformlib);
+    openlib(L, "__rigidbody", rigidbodylib);
+    openlib(L, "__transform", transformlib);
 
     addfunc(L, "print", lua::wrap<l_print>);
 }
@@ -91,6 +91,9 @@ void lua::initialize() {
 
     createtable(L, 0, 0);
     setglobal(L, LAMBDAS_TABLE);
+
+    createtable(L, 0, 0);
+    setglobal(L, CHUNKS_TABLE);
 
     newusertype<Bytearray, Bytearray::createMetatable>(L, "bytearray");
 }

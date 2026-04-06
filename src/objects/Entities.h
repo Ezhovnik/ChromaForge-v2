@@ -10,8 +10,17 @@
 #include "../typedefs.h"
 #include "../physics/Hitbox.h"
 
+struct entity_funcs_set {
+    bool init : 1;
+    bool on_despawn : 1;
+    bool on_grounded : 1;
+};
+
+struct Entity;
+
 struct EntityId {
     entityid_t uid;
+    const Entity& def;
 };
 
 struct Rigidbody {
@@ -28,22 +37,32 @@ struct Transform {
     void refresh();
 };
 
+struct Scripting {
+    entity_funcs_set funcsset;
+    scriptenv env;
+};
+
 class Level;
 class Assets;
 class ModelBatch;
 class Frustum;
 class Rig;
 class LineBatch;
-struct Entity;
+class Entities;
 
 class Entt_Entity {
 private:
+    Entities& entities;
     entityid_t id;
     entt::registry& registry;
     const entt::entity entity;
 public:
-    Entt_Entity(entityid_t id, entt::registry& registry, const entt::entity entity)
-    : id(id), registry(registry), entity(entity) {}
+    Entt_Entity(Entities& entities, entityid_t id, entt::registry& registry, const entt::entity entity)
+    : entities(entities), id(id), registry(registry), entity(entity) {}
+
+    Scripting& getScripting() const {
+        return registry.get<Scripting>(entity);
+    }
 
     entityid_t getID() const {
         return id;
@@ -51,6 +70,10 @@ public:
 
     bool isValid() const {
         return registry.valid(entity);
+    }
+
+    const Entity& getDef() const {
+        return registry.get<EntityId>(entity).def;
     }
 
     Transform& getTransform() const {
@@ -65,9 +88,11 @@ public:
         return registry.get<EntityId>(entity).uid;
     }
 
-    void destroy() {
-        registry.destroy(entity);
+    entt::entity getHandler() const {
+        return entity;
     }
+
+    void destroy();
 };
 
 class Entities {
@@ -80,16 +105,18 @@ public:
     Entities(Level* level);
 
     void updatePhysics(float delta);
+    void update();
     void render(Assets* assets, ModelBatch& batch, Frustum& frustum);
     void renderDebug(LineBatch& batch);
     void clean();
 
     entityid_t spawn(Entity& def, glm::vec3 pos);
+    void despawn(entityid_t id);
 
     std::optional<Entt_Entity> get(entityid_t id) {
         const auto& found = entities.find(id);
         if (found != entities.end() && registry.valid(found->second)) {
-            return Entt_Entity(id, registry, found->second);
+            return Entt_Entity(*this, id, registry, found->second);
         }
         return std::nullopt;
     }

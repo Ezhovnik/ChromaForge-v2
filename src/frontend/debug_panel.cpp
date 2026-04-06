@@ -23,6 +23,7 @@
 #include "../audio/audio.h"
 #include "../settings.h"
 #include "../logic/scripting/scripting.h"
+#include "../objects/Entities.h"
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
@@ -65,6 +66,9 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
     panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Chunks: " + std::to_wstring(level->chunks->chunksCount) + L" (visible: " + std::to_wstring(level->chunks->visibleCount) + L")";
 	})));
+    panel->add(create_label([=]() {
+        return L"Entities: " + std::to_wstring(level->entities->size());
+    }));
     panel->add(create_label([](){
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());
     }));

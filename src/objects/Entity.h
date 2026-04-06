@@ -15,7 +15,7 @@ struct Entity {
 
     struct {
         entityid_t id;
-    } rt;
+    } rt {};
 
     Entity(const std::string& name) : name(name) {};
     Entity(const Entity&) = delete;

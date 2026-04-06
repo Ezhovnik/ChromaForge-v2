@@ -298,6 +298,8 @@ function file.readlines(path)
     return lines
 end
 
+stdcomp = require "builtin:internal/stdcomp"
+
 -- Deprecated functions
 block_index = block.index
 block_name = block.name

@@ -7,7 +7,7 @@
 
 #include "../typedefs.h"
 
-class Hitbox;
+struct Hitbox;
 class Chunks;
 class Block;
 struct blockstate;
