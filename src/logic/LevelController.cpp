@@ -19,7 +19,6 @@ LevelController::LevelController(EngineSettings& settings, std::unique_ptr<Level
     chunks(std::make_unique<ChunksController>(this->level.get(), settings.chunks.padding.get())),
     player(std::make_unique<PlayerController>(this->level.get(), settings, blocks.get()))
 {
-
     scripting::on_world_load(this);
 }
 
@@ -31,14 +30,6 @@ void LevelController::update(float delta, bool input, bool pause) {
         settings.chunks.loadDistance.get() + settings.chunks.padding.get() * 2
     );
     chunks->update(settings.chunks.loadSpeed.get());
-    player->update(delta, input, pause);
-
-    level->objects.erase(
-        std::remove_if(
-            level->objects.begin(), level->objects.end(),
-            [](auto obj) { return obj == nullptr; }),
-        level->objects.end()
-    );
 
     level->entities->clean();
     if (!pause) {
@@ -50,6 +41,14 @@ void LevelController::update(float delta, bool input, bool pause) {
         level->entities->updatePhysics(delta);
         level->entities->update();
     }
+    player->update(delta, input, pause);
+
+    level->objects.erase(
+        std::remove_if(
+            level->objects.begin(), level->objects.end(),
+            [](auto obj) { return obj == nullptr; }),
+        level->objects.end()
+    );
 }
 
 void LevelController::saveWorld() {

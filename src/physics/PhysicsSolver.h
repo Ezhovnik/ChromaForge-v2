@@ -1,13 +1,15 @@
 #ifndef PHYSICS_PHYSICSSOLVER_H_
 #define PHYSICS_PHYSICSSOLVER_H_
 
+#include <vector>
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../typedefs.h"
+#include "Hitbox.h"
 
-struct Hitbox;
 class Chunks;
 class Block;
 struct blockstate;
@@ -16,6 +18,7 @@ struct blockstate;
 class PhysicsSolver {
 private:
 	glm::vec3 gravity; // Вектор гравитации, применяемой к объектам
+	std::vector<Trigger*> triggers;
 public:
 	PhysicsSolver(glm::vec3 gravity); // Конструтор
 
@@ -26,7 +29,8 @@ public:
 		uint substeps,
 		bool shifting,
 		float gravityScale,
-		bool collisions
+		bool collisions,
+        entityid_t entity
 	); // Выполняет один шаг физического моделирования для указанного хитбокса.
 	void colisionCalc(
 		Chunks* chunks,
@@ -43,6 +47,10 @@ public:
 		blockstate state,
 		Hitbox* hitbox
 	);
+
+	void setTriggers(std::vector<Trigger*> triggers) {
+        this->triggers = std::move(triggers);
+    }
 };
 
 #endif // PHYSICS_PHYSICSSOLVER_H_

@@ -77,7 +77,16 @@ void Player::updateInput(Level* level, PlayerInput& input, float delta) {
     substeps = std::min(100, std::max(2, substeps));
 
 	// Выполняем шаг физики
-	level->physics->step(level->chunks.get(), hitbox.get(), delta, substeps, crouch, flight ? 0.0f : 1.0f, !noclip);
+	level->physics->step(
+		level->chunks.get(),
+		hitbox.get(),
+		delta,
+		substeps,
+		crouch,
+		flight ? 0.0f : 1.0f,
+		!noclip,
+		0
+	);
 
 	if (flight && hitbox->grounded) flight = false;
 	if (input.jump && hitbox->grounded) hitbox->velocity.y = PlayerConsts::JUMP_FORCE;

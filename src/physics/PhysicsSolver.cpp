@@ -25,7 +25,8 @@ void PhysicsSolver::step(
 	uint substeps,
 	bool shifting,
 	float gravityScale,
-	bool collisions
+	bool collisions,
+    entityid_t entity
 ) {
 	float subDelta = delta / static_cast<float>(substeps);
 	float linearDamping = hitbox->linearDamping;
@@ -78,6 +79,20 @@ void PhysicsSolver::step(
 			hitbox->grounded = true;
 		}
 	}
+
+	AABB aabb;
+    aabb.a = hitbox->position - hitbox->halfsize;
+    aabb.b = hitbox->position + hitbox->halfsize;
+    for (size_t i = 0; i < triggers.size(); ++i) {
+        auto& trigger = triggers[i];
+        if (trigger->entity == entity) continue;
+        if (aabb.intersect(trigger->calculated)) {
+            if (trigger->prevEntered.find(entity) == trigger->prevEntered.end()) {
+                trigger->enterCallback(trigger->entity, i, entity);
+            }
+            trigger->nextEntered.insert(entity);
+        }
+    }
 }
 
 void PhysicsSolver::colisionCalc(

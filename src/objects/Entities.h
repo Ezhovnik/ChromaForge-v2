@@ -3,8 +3,11 @@
 
 #include <unordered_map>
 #include <optional>
+#include <vector>
 
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
 #include <entt/entity/registry.hpp>
 
 #include "../typedefs.h"
@@ -14,6 +17,9 @@ struct entity_funcs_set {
     bool init : 1;
     bool on_despawn : 1;
     bool on_grounded : 1;
+    bool on_fall : 1;
+    bool on_trigger_enter : 1;
+    bool on_trigger_exit : 1;
 };
 
 struct Entity;
@@ -21,11 +27,13 @@ struct Entity;
 struct EntityId {
     entityid_t uid;
     const Entity& def;
+    bool destroyFlag = false;
 };
 
 struct Rigidbody {
     bool enabled = true;
     Hitbox hitbox;
+    std::vector<Trigger> triggers;
 };
 
 struct Transform {
@@ -33,8 +41,19 @@ struct Transform {
     glm::vec3 size;
     glm::mat3 rot;
     glm::mat4 combined;
+    bool dirty = true;
 
     void refresh();
+
+    inline void setRot(glm::mat3 m) {
+        rot = m;
+        dirty = true;
+    }
+
+    inline void setPos(glm::vec3 v) {
+        if (glm::distance2(pos, v) >= 0.00001f) dirty = true;
+        pos = v;
+    }
 };
 
 struct Scripting {
@@ -64,8 +83,8 @@ public:
         return registry.get<Scripting>(entity);
     }
 
-    entityid_t getID() const {
-        return id;
+    EntityId& getID() const {
+        return registry.get<EntityId>(entity);
     }
 
     bool isValid() const {
@@ -101,13 +120,15 @@ private:
     Level* level;
     std::unordered_map<entityid_t, entt::entity> entities;
     entityid_t nextID = 1;
+
+    void preparePhysics();
 public:
     Entities(Level* level);
 
     void updatePhysics(float delta);
     void update();
-    void render(Assets* assets, ModelBatch& batch, Frustum& frustum);
-    void renderDebug(LineBatch& batch);
+    void render(Assets* assets, ModelBatch& batch, const Frustum& frustum);
+    void renderDebug(LineBatch& batch, const Frustum& frustum);
     void clean();
 
     entityid_t spawn(Entity& def, glm::vec3 pos);

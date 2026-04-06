@@ -68,8 +68,11 @@ namespace scripting {
 
     scriptenv on_entity_spawn(const Entity& def, entityid_t eid, entity_funcs_set&);
     bool on_entity_despawn(const Entity& def, const Entt_Entity& entity);
-    bool on_entity_grounded(const Entity& def, const Entt_Entity& entity);
+    bool on_entity_grounded(const Entt_Entity& entity, float force);
+    bool on_entity_fall(const Entt_Entity& entity);
     void on_entities_update();
+    void on_trigger_enter(const Entt_Entity& entity, size_t index, entityid_t oid);
+    void on_trigger_exit(const Entt_Entity& entity, size_t index, entityid_t oid);
 
     void on_ui_open(
         UIDocument* layout, 
@@ -101,7 +104,7 @@ namespace scripting {
         const std::filesystem::path& file,
         uidocscript& script
     );
-    void load_entity_script(
+    void load_entity_component(
         const scriptenv& env,
         const Entity& def,
         const std::filesystem::path& file

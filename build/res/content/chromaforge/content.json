@@ -33,5 +33,7 @@
         "oak_door",
         "wool"
     ],
-    "items": []
+    "items": [
+        "bedrock_breaker"
+    ]
 }

@@ -1,9 +1,26 @@
 #ifndef PHYSICS_HITBOX_H_
 #define PHYSICS_HITBOX_H_
 
+#include <set>
+#include <functional>
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "../math/AABB.h"
+#include "../typedefs.h"
+
+struct Trigger {
+    bool enabled = true;
+    entityid_t entity;
+    AABB aabb;
+    AABB calculated;
+    std::set<entityid_t> prevEntered;
+    std::set<entityid_t> nextEntered;
+    std::function<void(entityid_t, size_t, entityid_t)> enterCallback;
+    std::function<void(entityid_t, size_t, entityid_t)> exitCallback;
+};
 
 /**
  * @brief Класс, представляющий физический хитбокс объекта.

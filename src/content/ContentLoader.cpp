@@ -305,9 +305,9 @@ void ContentLoader::loadEntity(Entity& def, const std::string& full, const std::
     auto configFile = folder/std::filesystem::path("entities/" + name + ".json");
     if (std::filesystem::exists(configFile)) loadEntity(def, full, configFile);
 
-    auto scriptfile = folder/std::filesystem::path("scripts/" + def.scriptName + ".lua");
+    auto scriptfile = folder/std::filesystem::path("scripts/components/" + def.scriptName + ".lua");
     if (std::filesystem::is_regular_file(scriptfile)) {
-        scripting::load_entity_script(env, def, scriptfile);
+        scripting::load_entity_component(env, def, scriptfile);
     }
 }
 

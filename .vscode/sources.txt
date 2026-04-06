@@ -130,6 +130,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/math/rays.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/objects/Entities.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/objects/Player.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/objects/rigging.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/physics/Hitbox.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/physics/PhysicsSolver.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/util/command_line.cpp"

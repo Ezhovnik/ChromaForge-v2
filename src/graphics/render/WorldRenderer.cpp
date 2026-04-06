@@ -244,7 +244,7 @@ void WorldRenderer::renderLines(Camera* camera, ShaderProgram* linesShader) {
         renderBlockSelection();
     }
     if (player->debug && drawEntityHitboxes) {
-        level->entities->renderDebug(*lineBatch);
+        level->entities->renderDebug(*lineBatch, *frustumCulling);
     }
     lineBatch->render();
 }

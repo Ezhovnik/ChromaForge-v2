@@ -18,6 +18,7 @@ void Transform::refresh() {
     combined = glm::translate(combined, pos);
     combined = glm::scale(combined, size);
     combined = combined * glm::mat4(rot);
+    dirty = false;
 }
 
 void Entt_Entity::destroy() {
@@ -34,8 +35,23 @@ entityid_t Entities::spawn(Entity& def, glm::vec3 pos) {
     glm::vec3 size(1);
     auto id = nextID++;
     registry.emplace<EntityId>(entity, static_cast<entityid_t>(id), def);
-    registry.emplace<Transform>(entity, pos, size / 4.0f, glm::mat3(1.0f));
-    registry.emplace<Rigidbody>(entity, true, Hitbox {pos, def.hitbox});
+    registry.emplace<Transform>(entity, pos, size, glm::mat3(1.0f));
+    registry.emplace<Rigidbody>(entity, true, Hitbox {pos, def.hitbox}, std::vector<Trigger>{
+        {true, id, AABB {glm::vec3{-0.2f, -0.2f, -0.2f}, glm::vec3{0.2f, 0.2f, 0.2f}}, {}, {}, {},
+        [=](auto entityid, auto index, auto otherid) {
+            if (auto entity = get(entityid)) {
+                if (entity->isValid()) {
+                    scripting::on_trigger_enter(*entity, index, otherid);
+                }
+            }
+        }, [=](auto entityid, auto index, auto otherid) {
+            if (auto entity = get(entityid)) {
+                if (entity->isValid()) {
+                    scripting::on_trigger_exit(*entity, index, otherid);
+                }
+            }
+        }}
+    });
     auto& scripting = registry.emplace<Scripting>(entity, entity_funcs_set {}, nullptr);
 
     entities[id] = entity;
@@ -45,67 +61,120 @@ entityid_t Entities::spawn(Entity& def, glm::vec3 pos) {
 
 void Entities::despawn(entityid_t id) {
     if (auto entity = get(id)) {
-        scripting::on_entity_despawn(entity->getDef(), *entity);
-        registry.destroy(get(id)->getHandler());
+        auto& eid = entity->getID();
+        if (!eid.destroyFlag) {
+            eid.destroyFlag = true;
+            scripting::on_entity_despawn(entity->getDef(), *entity);
+        }
     }
 }
 
 void Entities::update() {
     scripting::on_entities_update();
+    auto view = registry.view<Transform>();
+    for (auto [entity, transform] : view.each()) {
+        if (transform.dirty) transform.refresh();
+    }
 }
 
-void Entities::renderDebug(LineBatch& batch) {
+void Entities::renderDebug(LineBatch& batch, const Frustum& frustum) {
     batch.setLineWidth(1.0f);
     auto view = registry.view<Transform, Rigidbody>();
     for (auto [entity, transform, rigidbody] : view.each()) {
         auto& hitbox = rigidbody.hitbox;
+        const auto& pos = transform.pos;
+        const auto& size = transform.size;
+        if (!frustum.isBoxVisible(pos - size, pos + size)) {
+            continue;
+        }
         batch.box(hitbox.position, hitbox.halfsize * 2.0f, glm::vec4(1.0f));
+
+        for (auto& trigger : rigidbody.triggers) {
+            batch.box(trigger.calculated.center(), trigger.calculated.size(), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+        }
     }
 }
 
-void Entities::updatePhysics(float delta){
+void Entities::preparePhysics() {
+    static uint64_t frameid = 0;
+    ++frameid;
+    auto view = registry.view<EntityId, Transform, Rigidbody>();
+    auto physics = level->physics.get();
+    std::vector<Trigger*> triggers;
+    for (auto [entity, eid, transform, rigidbody] : view.each()) {
+        if (!rigidbody.enabled) continue;
+        if ((eid.uid + frameid) % 3 != 0) continue;
+        for (size_t i = 0; i < rigidbody.triggers.size(); ++i) {
+            auto& trigger = rigidbody.triggers[i];
+            for (auto oid : trigger.prevEntered) {
+                if (trigger.nextEntered.find(oid) == trigger.nextEntered.end()) {
+                    trigger.exitCallback(trigger.entity, i, oid);
+                }
+            }
+            trigger.prevEntered = trigger.nextEntered;
+            trigger.nextEntered.clear();
+            trigger.calculated = trigger.aabb;
+            trigger.calculated.transform(transform.combined);
+            triggers.push_back(&trigger);
+        }
+    }
+    physics->setTriggers(std::move(triggers));
+}
+
+void Entities::updatePhysics(float delta) {
+    preparePhysics();
+
     auto view = registry.view<EntityId, Transform, Rigidbody>();
     auto physics = level->physics.get();
     for (auto [entity, eid, transform, rigidbody] : view.each()) {
         if (!rigidbody.enabled) continue;
         auto& hitbox = rigidbody.hitbox;
+        auto prevVel = hitbox.velocity;
         bool grounded = hitbox.grounded;
+
+        float vel = glm::length(prevVel);
+        int substeps = static_cast<int>(delta * vel * 20);
+        substeps = std::min(100, std::max(2, substeps));
         physics->step(
             level->chunks.get(),
             &hitbox,
             delta,
-            10,
+            substeps,
             false,
             1.0f,
-            true
+            true,
+            eid.uid
         );
-        hitbox.linearDamping = hitbox.grounded * 12;
-        transform.pos = hitbox.position;
-        // transform.rot = glm::rotate(glm::mat4(transform.rot), delta, glm::vec3(0, 1, 0));
+        hitbox.linearDamping = hitbox.grounded * 24;
+        transform.setPos(hitbox.position);
         if (hitbox.grounded && !grounded) {
-            scripting::on_entity_grounded(eid.def, *get(eid.uid));
+            scripting::on_entity_grounded(*get(eid.uid), glm::length(prevVel-hitbox.velocity));
+        }
+        if (!hitbox.grounded && grounded) {
+            scripting::on_entity_fall(*get(eid.uid));
         }
     }
 }
 
 void Entities::clean() {
     for (auto it = entities.begin(); it != entities.end();) {
-        if (registry.valid(it->second)) {
+        if (!registry.get<EntityId>(it->second).destroyFlag) {
             ++it;
         } else {
+            registry.destroy(it->second);
             it = entities.erase(it);
         }
     }
 }
 
-void Entities::render(Assets* assets, ModelBatch& batch, Frustum& frustum) {
+void Entities::render(Assets* assets, ModelBatch& batch, const Frustum& frustum) {
     auto view = registry.view<Transform>();
     auto model = assets->get<model::Model>("cube");
+    if (model == nullptr) return;
     for (auto [entity, transform] : view.each()) {
         const auto& pos = transform.pos;
         const auto& size = transform.size;
         if (frustum.isBoxVisible(pos - size, pos + size)) {
-            transform.refresh();
             batch.pushMatrix(transform.combined);
             batch.draw(model);
             batch.popMatrix();
