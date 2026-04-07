@@ -21,8 +21,18 @@ function new_Rigidbody(eid)
     return setmetatable({eid=eid}, Rigidbody)
 end
 
+local Modeltree = {__index={
+    get_model=function(self, i) return __modeltree.get_model(self.eid, i) end,
+    get_matrix=function(self, i) return __modeltree.get_matrix(self.eid, i) end,
+    set_matrix=function(self, i, m) return __modeltree.set_matrix(self.eid, i, m) end,
+}}
+
+function new_Modeltree(eid)
+    return setmetatable({eid=eid}, Modeltree)
+end
+
 local Entity = {__index={
-    despawn=function(self) return entity.despawn(self.eid) end,
+    despawn=function(self) return entities.despawn(self.eid) end,
 }}
 
 local entities = {}
@@ -32,8 +42,13 @@ return {
         local entity = setmetatable({eid=eid}, Entity)
         entity.transform = new_Transform(eid)
         entity.rigidbody = new_Rigidbody(eid)
+        entity.modeltree = new_Modeltree(eid)
+        entity.data = {}
         entities[eid] = entity;
         return entity
+    end,
+    get_Entity = function(eid)
+        return entities[eid]
     end,
     remove_Entity = function(eid)
         local entity = entities[eid]

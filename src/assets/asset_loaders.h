@@ -66,7 +66,15 @@ namespace asset_loader {
         AssetsLoader*,
         const ResPaths* paths,
         const std::string& file,
-        const std::string &name,
+        const std::string& name,
+        const std::shared_ptr<AssetsConfig>& settings
+    );
+
+    postfunc rig(
+        AssetsLoader*,
+        const ResPaths* paths,
+        const std::string& file,
+        const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings
     );
 }

@@ -250,7 +250,12 @@ bool scripting::on_item_break_block(Player* player, const Item* item, int x, int
     });
 }
 
-scriptenv scripting::on_entity_spawn(const Entity& def, entityid_t eid, entity_funcs_set& funcsset) {
+scriptenv scripting::on_entity_spawn(
+    const Entity& def,
+    entityid_t eid,
+    entity_funcs_set& funcsset,
+    dynamic::Value args
+) {
     auto L = lua::get_main_thread();
     lua::requireglobal(L, STDCOMP);
     if (lua::getfield(L, "new_Entity")) {
@@ -260,6 +265,8 @@ scriptenv scripting::on_entity_spawn(const Entity& def, entityid_t eid, entity_f
     auto entityenv = create_entity_environment(get_root_environment(), -1);
     lua::get_from(L, lua::CHUNKS_TABLE, def.scriptName, true);
     lua::pushenv(L, *entityenv);
+    lua::pushvalue(L, args);
+    lua::setfield(L, "ARGS");
     lua::setfenv(L);
     lua::call_nothrow(L, 0, 0);
 
@@ -437,7 +444,7 @@ void scripting::load_entity_component(const scriptenv& penv, const Entity& def, 
     auto L = lua::get_main_thread();
     std::string src = files::read_string(file);
     LOG_INFO("Script (entity component) {}", file.u8string());
-    lua::loadbuffer(L, 0, src, file.u8string());
+    lua::loadbuffer(L, *penv, src, file.u8string());
     lua::store_in(L, lua::CHUNKS_TABLE, def.scriptName);
 }
 

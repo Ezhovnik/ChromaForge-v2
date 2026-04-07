@@ -51,7 +51,7 @@ ImageData::ImageData(ImageFormat format, uint width, uint height, const ubyte* d
 ImageData::~ImageData() {
 }
 
-ImageData* add_atlas_margins(ImageData* image, int grid_size) {
+std::unique_ptr<ImageData> add_atlas_margins(ImageData* image, int grid_size) {
     assert(image->getFormat() == ImageFormat::rgba8888); // Поддерживается только RGBA
     assert(image->getWidth() == image->getHeight());
 
@@ -94,7 +94,9 @@ ImageData* add_atlas_margins(ImageData* image, int grid_size) {
         }
     }
 
-    return new ImageData(image->getFormat(), dstwidth, dstheight, std::move(dstdata));
+    return std::make_unique<ImageData>(
+        image->getFormat(), dstwidth, dstheight, std::move(dstdata)
+    );
 }
 
 void ImageData::flipX() {

@@ -12,6 +12,7 @@
 
 #include "../typedefs.h"
 #include "../physics/Hitbox.h"
+#include "../data/dynamic.h"
 
 struct entity_funcs_set {
     bool init : 1;
@@ -65,9 +66,12 @@ class Level;
 class Assets;
 class ModelBatch;
 class Frustum;
-class Rig;
 class LineBatch;
 class Entities;
+namespace rigging {
+    struct Rig;
+    class RigConfig;
+}
 
 class Entt_Entity {
 private:
@@ -76,8 +80,15 @@ private:
     entt::registry& registry;
     const entt::entity entity;
 public:
-    Entt_Entity(Entities& entities, entityid_t id, entt::registry& registry, const entt::entity entity)
-    : entities(entities), id(id), registry(registry), entity(entity) {}
+    Entt_Entity(
+        Entities& entities,
+        entityid_t id, 
+        entt::registry& registry, 
+        const entt::entity entity
+    ) : entities(entities),
+        id(id),
+        registry(registry),
+        entity(entity) {}
 
     Scripting& getScripting() const {
         return registry.get<Scripting>(entity);
@@ -102,6 +113,8 @@ public:
     Rigidbody& getRigidbody() const {
         return registry.get<Rigidbody>(entity);
     }
+
+    rigging::Rig& getModeltree() const;
 
     entityid_t getUID() const {
         return registry.get<EntityId>(entity).uid;
@@ -131,7 +144,12 @@ public:
     void renderDebug(LineBatch& batch, const Frustum& frustum);
     void clean();
 
-    entityid_t spawn(Entity& def, glm::vec3 pos);
+    entityid_t spawn(
+        Assets* assets,
+        Entity& def,
+        glm::vec3 pos,
+        dynamic::Value args=dynamic::NONE
+    );
     void despawn(entityid_t id);
 
     std::optional<Entt_Entity> get(entityid_t id) {

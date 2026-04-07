@@ -50,7 +50,7 @@ public:
     }
 };
 
-extern ImageData* add_atlas_margins(ImageData* image, int grid_size);
+std::unique_ptr<ImageData> add_atlas_margins(ImageData* image, int grid_size);
 extern ImageData* toRGBA(ImageData* image);
 
 #endif // GRAPHICS_IMAGE_DATA_H_

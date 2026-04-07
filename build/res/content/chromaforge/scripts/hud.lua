@@ -13,12 +13,8 @@ function on_hud_open()
                 (math.random() - 0.5) * 1,
                 (math.random() - 0.5) * 1
             }), DROP_FORCE)
-            local drop = entity.spawn("chromaforge:drop", ppos)
+            local drop = entities.spawn("chromaforge:drop", ppos)
             drop.rigidbody:set_vel(vec3.add(throw_force, vec3.add(pvel, DROP_INIT_VEL)))
-            drop.transform:set_rot(
-                mat4.rotate(mat4.rotate(mat4.rotate({0, 1, 0}, math.random() * 360),
-                {1, 0, 0}, math.random() * 360), {0, 0, 1}, math.random() * 360)
-            )
         end
     end)
 end

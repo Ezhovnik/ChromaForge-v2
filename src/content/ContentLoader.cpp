@@ -295,8 +295,20 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
     auto root = files::read_json(file);
 
     root->str("script-name", def.scriptName);
+
     if (auto boxarr = root->list("hitbox")) {
         def.hitbox = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
+    }
+
+    if (auto triggersarr = root->list("triggers")) {
+        for (size_t i = 0; i < triggersarr->size(); ++i) {
+            if (auto triggerarr = triggersarr->list(i)) {
+                def.triggers.push_back({
+                    {triggerarr->num(0), triggerarr->num(1), triggerarr->num(2)},
+                    {triggerarr->num(3), triggerarr->num(4), triggerarr->num(5)}
+                });
+            }
+        }
     }
 }
 
@@ -351,23 +363,6 @@ void ContentLoader::loadBlockMaterial(BlockMaterial& def, const std::filesystem:
     root->str("steps-sound", def.stepsSound);
     root->str("place-sound", def.placeSound);
     root->str("break-sound", def.breakSound);
-}
-
-template<class T, void(ContentLoader::*loadfunc)(T&, const std::string&, const std::string&)>
-static void load_defs(ContentLoader* cl, dynamic::List* arr, const ContentPack* pack, ContentUnitBuilder<T>& builder, size_t& counter) {
-    if (arr == nullptr) return;
-    for (size_t i = 0; i < arr->size(); ++i) {
-        std::string name = arr->str(i);
-        auto colon = name.find(':');
-        std::string full = colon == std::string::npos ? pack->id + ":" + name : name;
-        if (colon != std::string::npos) name[colon] = '/';
-        auto& def = builder.create(full);
-        if (colon != std::string::npos) {
-            def.scriptName = name.substr(0, colon) + '/' + def.scriptName;
-        }
-        cl->*loadfunc(def, full, name);
-        counter++;
-    }
 }
 
 void ContentLoader::load() {

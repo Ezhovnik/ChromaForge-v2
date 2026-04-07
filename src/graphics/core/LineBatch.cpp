@@ -11,14 +11,13 @@ static const vattr attrs[] = {
 
 // Конструктор
 LineBatch::LineBatch(size_t capacity) : capacity(capacity) {
-    buffer = new float[capacity * LB_VERTEX_SIZE * 2];
-    mesh = std::make_unique<Mesh>(buffer, 0, attrs);
+    buffer = std::make_unique<float[]>(capacity * LB_VERTEX_SIZE * 2);
+    mesh = std::make_unique<Mesh>(buffer.get(), 0, attrs);
     index = 0;
 }
 
 // Деструктор
 LineBatch::~LineBatch() {
-    delete[] buffer;
 }
 
 // Добавляет линию в буфер для отрисовки
@@ -118,7 +117,7 @@ void LineBatch::box(float x, float y, float z, float width, float height, float 
 void LineBatch::render() {
     if (index == 0) return;
 
-    mesh->reload(buffer, index / LB_VERTEX_SIZE);
+    mesh->reload(buffer.get(), index / LB_VERTEX_SIZE);
     mesh->draw(GL_LINES);
     index = 0;
 }

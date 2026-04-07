@@ -50,6 +50,7 @@
 #include "input_bindings.h"
 #include "logic/CommandsInterpreter.h"
 #include "content/ContentBuilder.h"
+#include "objects/rigging.h"
 
 inline void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -144,6 +145,7 @@ void Engine::loadAssets() {
     ShaderProgram::preprocessor->setPaths(resPaths.get());
 
     auto new_assets = std::make_unique<Assets>();
+    new_assets->addSetupFunc(asset_loader::assets_setup<rigging::RigConfig>);
     AssetsLoader loader(new_assets.get(), resPaths.get());
     AssetsLoader::addDefaults(loader, content.get());
     bool threading = false;
@@ -160,7 +162,7 @@ void Engine::loadAssets() {
         }
     }
 
-    assets.reset(new_assets.release());
+    assets = std::move(new_assets);
     LOG_INFO("Assets loaded successfully");
 }
 
@@ -187,6 +189,7 @@ void Engine::saveScreenshot() {
 }
 
 void Engine::onAssetsLoaded() {
+    assets->setup();
     gui->onAssetsLoad(assets.get());
 }
 

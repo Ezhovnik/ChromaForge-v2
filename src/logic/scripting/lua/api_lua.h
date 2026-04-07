@@ -24,6 +24,8 @@ extern const luaL_Reg entitylib [];
 extern const luaL_Reg vec2lib [];
 extern const luaL_Reg vec3lib [];
 extern const luaL_Reg vec4lib [];
+
+extern const luaL_Reg modeltreelib [];
 extern const luaL_Reg rigidbodylib [];
 extern const luaL_Reg transformlib [];
 

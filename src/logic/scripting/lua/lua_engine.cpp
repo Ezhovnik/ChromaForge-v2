@@ -22,8 +22,8 @@ static void remove_lib_funcs(lua::State* L, const char* libname, const char* fun
             pushnil(L);
             setfield(L, funcs[i], -2);
         }
+        pop(L);
     }
-    pop(L);
 }
 
 static void create_libs(lua::State* L) {
@@ -31,7 +31,7 @@ static void create_libs(lua::State* L) {
     openlib(L, "block", blocklib);
     openlib(L, "builtin", builtinlib);
     openlib(L, "console", consolelib);
-    openlib(L, "entity", entitylib);
+    openlib(L, "entities", entitylib);
     openlib(L, "file", filelib);
     openlib(L, "gui", guilib);
     openlib(L, "input", inputlib);
@@ -48,6 +48,7 @@ static void create_libs(lua::State* L) {
     openlib(L, "vec4", vec4lib);
     openlib(L, "world", worldlib);
 
+    openlib(L, "__modeltree", modeltreelib);
     openlib(L, "__rigidbody", rigidbodylib);
     openlib(L, "__transform", transformlib);
 

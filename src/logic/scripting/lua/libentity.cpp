@@ -10,6 +10,8 @@
 #include "../../../window/Camera.h"
 #include "../../../frontend/hud.h"
 #include "../../../content/Content.h"
+#include "../../../engine.h"
+#include "../../../objects/rigging.h"
 
 namespace scripting {
     extern Hud* hud;
@@ -30,8 +32,11 @@ static int l_spawn(lua::State* L) {
     auto defname = lua::tostring(L, 1);
     auto& def = scripting::content->entities.require(defname);
     auto pos = lua::tovec3(L, 2);
-    auto id = level->entities->spawn(def, pos);
-    level->entities->spawn(def, pos);
+    dynamic::Value args = dynamic::NONE;
+    if (lua::gettop(L) > 2) {
+        args = lua::tovalue(L, 3);
+    }
+    level->entities->spawn(scripting::engine->getAssets(), def, pos, args);
     return 1;
 }
 
@@ -105,10 +110,52 @@ static int l_get_size(lua::State* L) {
     return 0;
 }
 
+static int index_range_check(const rigging::Rig& rig, lua::Integer index) {
+    if (static_cast<size_t>(index) >= rig.pose.matrices.size()) {
+        throw std::runtime_error("Index out of range [0, " + std::to_string(rig.pose.matrices.size()) + "]");
+    }
+    return static_cast<int>(index);
+}
+
+static int l_modeltree_get_model(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        auto& rig = entity->getModeltree();
+        auto* rigConfig = rig.config;
+        auto index = index_range_check(rig, lua::tointeger(L, 2));
+        return lua::pushstring(L, rigConfig->getNodes()[index]->getModelName());
+    }
+    return 0;
+}
+
+static int l_modeltree_get_matrix(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        auto& rig = entity->getModeltree();
+        auto index = index_range_check(rig, lua::tointeger(L, 2));
+        return lua::pushmat4(L, rig.pose.matrices[index]);
+    }
+    return 0;
+}
+
+static int l_modeltree_set_matrix(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        auto& rig = entity->getModeltree();
+        auto index = index_range_check(rig, lua::tointeger(L, 2));
+        rig.pose.matrices[index] = lua::tomat4(L, 3);
+    }
+    return 0;
+}
+
 const luaL_Reg entitylib [] = {
     {"exists", lua::wrap<l_exists>},
     {"spawn", lua::wrap<l_spawn>},
     {"despawn", lua::wrap<l_despawn>},
+    {NULL, NULL}
+};
+
+const luaL_Reg modeltreelib [] = {
+    {"get_model", lua::wrap<l_modeltree_get_model>},
+    {"get_matrix", lua::wrap<l_modeltree_get_matrix>},
+    {"set_matrix", lua::wrap<l_modeltree_set_matrix>},
     {NULL, NULL}
 };
 

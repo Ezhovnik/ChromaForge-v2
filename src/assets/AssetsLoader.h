@@ -23,7 +23,8 @@ enum class AssetType {
 	Atlas, ///< Атлас текстур
 	Layout, ///< Макет интерфейса (XML)
      Sound, ///< Звук
-     Model
+     Model,
+     Rig
 };
 
 class ResPaths;

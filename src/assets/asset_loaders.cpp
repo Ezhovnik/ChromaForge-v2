@@ -23,6 +23,7 @@
 #include "../constants.h"
 #include "../graphics/core/Model.h"
 #include "../coders/obj.h"
+#include "../objects/rigging.h"
 
 static bool animation(
     Assets* assets, 
@@ -369,7 +370,27 @@ asset_loader::postfunc asset_loader::model(
             assets->store(std::unique_ptr<model::Model>(model), name);
         };
     } catch (const parsing_error& err) {
-        LOG_ERROR("Faile to loadn model '{}': {}", file, err.errorLog());
+        LOG_ERROR("Failed to load model '{}': {}", file, err.errorLog());
+        throw;
+    }
+}
+
+asset_loader::postfunc asset_loader::rig(
+    AssetsLoader* loader,
+    const ResPaths* paths,
+    const std::string& file,
+    const std::string& name,
+    const std::shared_ptr<AssetsConfig>&
+) {
+    auto path = paths->find(file + ".json");
+    auto text = files::read_string(path);
+    try {
+        auto rig = rigging::RigConfig::parse(text, path.u8string()).release();
+        return [=](Assets* assets) {
+            assets->store(std::unique_ptr<rigging::RigConfig>(rig), name);
+        };
+    } catch (const parsing_error& err) {
+        LOG_ERROR("Failed to load rig '{}' : {}", file, err.errorLog());
         throw;
     }
 }
