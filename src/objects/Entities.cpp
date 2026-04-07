@@ -33,6 +33,13 @@ rigging::Rig& Entt_Entity::getModeltree() const {
     return registry.get<rigging::Rig>(entity);
 }
 
+void Entt_Entity::setRig(rigging::RigConfig* rigConfig) {
+    auto& rig = registry.get<rigging::Rig>(entity);
+    rig.config = rigConfig;
+    rig.pose.matrices.resize(rigConfig->getNodes().size(), glm::mat4(1.0f));
+    rig.calculated.matrices.resize(rigConfig->getNodes().size(), glm::mat4(1.0f));
+}
+
 Entities::Entities(Level* level) : level(level) {
 }
 

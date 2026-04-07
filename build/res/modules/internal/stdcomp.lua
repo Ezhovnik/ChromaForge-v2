@@ -15,6 +15,7 @@ local Rigidbody = {__index={
     get_vel=function(self) return __rigidbody.get_vel(self.eid) end,
     set_vel=function(self, v) return __rigidbody.set_vel(self.eid, v) end,
     get_size=function(self) return __rigidbody.get_size(self.eid) end,
+    set_size=function(self, v) return __rigidbody.set_size(self.eid, v) end,
 }}
 
 function new_Rigidbody(eid)
@@ -34,6 +35,7 @@ end
 
 local Entity = {__index={
     despawn=function(self) return entities.despawn(self.eid) end,
+    set_rig=function(self, s) return entities.set_rig(self.eid, s) end,
 }}
 
 local entities = {}

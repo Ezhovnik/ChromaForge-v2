@@ -6,24 +6,51 @@ inair = true
 ready = false
 
 local dropitem = ARGS.item
+local scale = {1, 1, 1}
+local rotation = mat4.rotate({
+    math.random(), math.random(), math.random()
+}, 360)
 
-local rotation = mat4.rotate({0, 1, 0}, math.random() * 360)
-mat4.rotate(rotation, {1, 0, 0}, math.random() * 360, rotation)
-mat4.rotate(rotation, {0, 0, 1}, math.random() * 360, rotation)
-rig:set_matrix(0, rotation)
-local icon = item.icon(dropitem.id)
-if icon:find("^block%-previews%:") then
-    local bid = block.index(icon:sub(16))
-    local textures = block.get_textures(bid)
-    for i,t in ipairs(textures) do
-        rig:set_texture("$"..tostring(i-1), "blocks:"..textures[i])
+do
+    local matrix = mat4.idt()
+    local icon = item.icon(dropitem.id)
+    if icon:find("^block%-previews%:") then
+        local bid = block.index(icon:sub(16))
+        model = block.get_model(bid)
+        if model == "X" then
+            entity:set_rig("drop-item")
+            body:set_size(vec3.mul(body:get_size(), {1.0, 0.3, 1.0}))
+            rig:set_texture("$0", icon)
+        else
+            if model == "aabb" then
+                local rot = block.get_rotation_profile(bid) == "pipe" and 4 or 0
+                scale = block.get_hitbox(bid, rot)[2]
+                body:set_size(vec3.mul(body:get_size(), {1.0, 0.7, 1.0}))
+                vec3.mul(scale, 1.5, scale)
+            end
+            local textures = block.get_textures(bid)
+            for i,t in ipairs(textures) do
+                rig:set_texture("$"..tostring(i-1), "blocks:"..textures[i])
+            end
+        end
+    else
+        entity:set_rig("drop-item")
+        body:set_size(vec3.mul(body:get_size(), {1.0, 0.3, 1.0}))
+        rig:set_texture("$0", icon)
     end
-else
-    rig:set_texture("$0", icon)
+    mat4.mul(matrix, rotation, matrix)
+    mat4.scale(matrix, scale, matrix)
+    rig:set_matrix(0, matrix)
 end
 
 function on_grounded(force)
-    rig:set_matrix(0, mat4.rotate({0, 1, 0}, math.random() * 360))
+    local matrix = mat4.idt()
+    mat4.rotate(matrix, {0, 1, 0}, math.random() * 360, matrix)
+    if model == "aabb" then
+        mat4.rotate(matrix, {1, 0, 0}, 90, matrix)
+    end
+    mat4.scale(matrix, scale, matrix)
+    rig:set_matrix(0, matrix)
     inair = false
     ready = true
 end
@@ -43,9 +70,11 @@ end
 function on_update()
     if inair then
         local dt = time.delta();
-        local matrix = rig:get_matrix(0)
-        mat4.rotate(matrix, {0, 1, 0}, 240 * dt, matrix)
-        mat4.rotate(matrix, {0, 0, 1}, 240 * dt, matrix)
+        mat4.rotate(rotation, {0, 1, 0}, 240 * dt, rotation)
+        mat4.rotate(rotation, {0, 0, 1}, 240 * dt, rotation)
+        local matrix = mat4.idt()
+        mat4.mul(matrix, rotation, matrix)
+        mat4.scale(matrix, scale, matrix)
         rig:set_matrix(0, matrix)
     end
 end

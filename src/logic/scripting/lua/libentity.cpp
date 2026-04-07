@@ -75,6 +75,19 @@ static int l_set_rot(lua::State* L) {
     return 0;
 }
 
+static int l_set_rig(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        auto assets = scripting::engine->getAssets();
+        std::string rigName = lua::require_string(L, 2);
+        auto rigConfig = assets->get<rigging::RigConfig>(rigName);
+        if (rigConfig == nullptr) {
+            throw std::runtime_error("Rig '" + rigName + "' not found");
+        }
+        entity->setRig(rigConfig);
+    }
+    return 0;
+}
+
 static int l_get_pos(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {
         return lua::pushvec3_arr(L, entity->getTransform().pos);
@@ -105,7 +118,14 @@ static int l_set_enabled(lua::State* L) {
 
 static int l_get_size(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {
-        return lua::pushvec3(L, entity->getRigidbody().hitbox.halfsize * 2.0f);
+        return lua::pushvec3_arr(L, entity->getRigidbody().hitbox.halfsize * 2.0f);
+    }
+    return 0;
+}
+
+static int l_set_size(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        entity->getRigidbody().hitbox.halfsize = lua::tovec3(L, 2) * 0.5f;
     }
     return 0;
 }
@@ -157,6 +177,7 @@ const luaL_Reg entitylib [] = {
     {"exists", lua::wrap<l_exists>},
     {"spawn", lua::wrap<l_spawn>},
     {"despawn", lua::wrap<l_despawn>},
+    {"set_rig", lua::wrap<l_set_rig>},
     {NULL, NULL}
 };
 
@@ -182,5 +203,6 @@ const luaL_Reg rigidbodylib [] = {
     {"get_vel", lua::wrap<l_get_vel>},
     {"set_vel", lua::wrap<l_set_vel>},
     {"get_size", lua::wrap<l_get_size>},
+    {"set_size", lua::wrap<l_set_size>},
     {NULL, NULL}
 };

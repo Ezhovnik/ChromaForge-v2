@@ -116,6 +116,8 @@ public:
 
     rigging::Rig& getModeltree() const;
 
+    void setRig(rigging::RigConfig* rigConfig);
+
     entityid_t getUID() const {
         return registry.get<EntityId>(entity).uid;
     }
