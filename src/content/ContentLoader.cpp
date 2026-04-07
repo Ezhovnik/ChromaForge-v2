@@ -19,6 +19,7 @@
 #include "../data/dynamic.h"
 #include "../core_content_defs.h"
 #include "ContentBuilder.h"
+#include "../util/stringutil.h"
 
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder) : pack(pack), builder(builder) {
     auto runtime = std::make_unique<ContentPackRuntime>(
@@ -303,10 +304,15 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
     if (auto triggersarr = root->list("triggers")) {
         for (size_t i = 0; i < triggersarr->size(); ++i) {
             if (auto triggerarr = triggersarr->list(i)) {
-                def.triggers.push_back({
-                    {triggerarr->num(0), triggerarr->num(1), triggerarr->num(2)},
-                    {triggerarr->num(3), triggerarr->num(4), triggerarr->num(5)}
-                });
+                auto triggerType = triggerarr->str(0);
+                if (triggerType == "aabb") {
+                    def.boxTriggers.push_back({
+                        {triggerarr->num(1), triggerarr->num(2), triggerarr->num(3)},
+                        {triggerarr->num(4), triggerarr->num(5), triggerarr->num(6)}
+                    });
+                } else {
+                    LOG_WARN("Entity {}: trigger #{} - unknown type {}", name, i, util::quote(triggerType));
+                }
             }
         }
     }

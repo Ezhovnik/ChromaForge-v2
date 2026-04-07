@@ -19,7 +19,7 @@ struct Entity {
     std::string rigName = name.substr(name.find(":") + 1);
 
     glm::vec3 hitbox {0.5f};
-    std::vector<AABB> triggers {};
+    std::vector<AABB> boxTriggers {};
 
     struct {
         entityid_t id;

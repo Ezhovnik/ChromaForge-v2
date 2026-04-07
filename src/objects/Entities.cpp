@@ -55,7 +55,7 @@ entityid_t Entities::spawn(
     auto& body = registry.emplace<Rigidbody>(
         entity, true, Hitbox {pos, def.hitbox}, std::vector<Trigger>{}
     );
-    for (auto& box : def.triggers) {
+    for (auto& box : def.boxTriggers) {
         body.triggers.emplace_back(Trigger{
             true,
             id,

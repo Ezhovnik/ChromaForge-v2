@@ -75,7 +75,7 @@ void RigConfig::render(
         auto model = node->getModel();
         if (model == nullptr) continue;
         batch.pushMatrix(rig.calculated.matrices[i]);
-        batch.draw(model);
+        batch.draw(model, &rig.textures);
         batch.popMatrix();
     }
 }

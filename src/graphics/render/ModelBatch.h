@@ -3,8 +3,12 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
+#include <string>
 
 #include <glm/glm.hpp>
+
+#include "../../math/UVRegion.h"
 
 class Mesh;
 class Texture;
@@ -15,6 +19,8 @@ namespace model {
     struct Mesh;
     struct Model;
 }
+
+using texture_names_map = std::unordered_map<std::string, std::string>;
 
 class ModelBatch {
 private:
@@ -33,6 +39,7 @@ private:
     Assets* assets;
     Chunks* chunks;
     Texture* texture = nullptr;
+    UVRegion region {0.0f, 0.0f, 1.0f, 1.0f};
 
     static inline glm::vec3 SUN_VECTOR {0.411934f, 0.863868f, -0.279161f};
 
@@ -43,8 +50,9 @@ private:
         buffer[index++] = pos.x;
         buffer[index++] = pos.y;
         buffer[index++] = pos.z;
-        buffer[index++] = uv.x;
-        buffer[index++] = uv.y;
+
+        buffer[index++] = uv.x * region.getWidth() + region.u1;
+        buffer[index++] = uv.y * region.getHeight() + region.v1;
 
         union {
             float floating;
@@ -75,8 +83,17 @@ private:
         vertex(pos - right + up, {0, 1}, color);
     }
 
-    void draw(const model::Mesh& mesh, const glm::mat4& matrix, const glm::mat3& rotation);
+    void draw(
+        const model::Mesh& mesh,
+        const glm::mat4& matrix,
+        const glm::mat3& rotation,
+        const texture_names_map* varTextures
+    );
     void box(glm::vec3 pos, glm::vec3 size, glm::vec4 lights);
+    void setTexture(
+        const std::string& name,
+        const texture_names_map* varTextures
+    );
     void setTexture(Texture* texture);
     void flush();
 
@@ -84,6 +101,7 @@ private:
         glm::mat4 matrix;
         glm::mat3 rotation;
         const model::Mesh* mesh;
+        const texture_names_map* varTextures;
     };
     std::vector<DrawEntry> entries;
 public:
@@ -97,7 +115,10 @@ public:
     void pushMatrix(glm::mat4 matrix);
     void popMatrix();
 
-    void draw(const model::Model* model);
+    void draw(
+        const model::Model* model,
+        const texture_names_map* varTextures
+    );
 
     void render();
 };

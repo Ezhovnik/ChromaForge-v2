@@ -27,3 +27,4 @@ torch=факел
 iron block=железный блок
 oak door=дубовая дверь
 wool=шерсть
+bedrock breaker=разрушитель бедрока

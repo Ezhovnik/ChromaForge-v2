@@ -14,6 +14,7 @@
 #include "../../window/Window.h"
 #include "../../voxels/Chunks.h"
 #include "../../lighting/LightMap.h"
+#include "../core/Atlas.h"
 
 inline constexpr uint MB_VERTEX_SIZE = 6;
 
@@ -52,7 +53,12 @@ ModelBatch::ModelBatch(size_t capacity, Assets* assets, Chunks* chunks)
 ModelBatch::~ModelBatch() {
 }
 
-void ModelBatch::draw(const model::Mesh& mesh, const glm::mat4& matrix, const glm::mat3& rotation) {
+void ModelBatch::draw(
+    const model::Mesh& mesh,
+    const glm::mat4& matrix, 
+    const glm::mat3& rotation, 
+    const texture_names_map* varTextures
+) {
     glm::vec3 gpos = matrix * glm::vec4(glm::vec3(), 1.0f);
     light_t light = chunks->getLight(floor(gpos.x), floor(gpos.y), floor(gpos.z));
     glm::vec4 lights (
@@ -61,7 +67,7 @@ void ModelBatch::draw(const model::Mesh& mesh, const glm::mat4& matrix, const gl
         LightMap::extract(light, 2) / 15.0f,
         LightMap::extract(light, 3) / 15.0f
     );
-    setTexture(assets->get<Texture>(mesh.texture));
+    setTexture(mesh.texture, varTextures);
     size_t vcount = mesh.vertices.size();
     const auto& vertexData = mesh.vertices.data();
     for (size_t i = 0; i < vcount / 3; ++i) {
@@ -69,7 +75,7 @@ void ModelBatch::draw(const model::Mesh& mesh, const glm::mat4& matrix, const gl
             flush();
         }
         for (size_t j = 0; j < 3; ++j) {
-            const auto& vert = vertexData[i * 3 + j];
+            const auto vert = vertexData[i * 3 + j];
             auto norm = rotation * vert.normal;
             float d = glm::dot(norm, SUN_VECTOR);
             d = 0.8f + d * 0.2f;
@@ -80,9 +86,9 @@ void ModelBatch::draw(const model::Mesh& mesh, const glm::mat4& matrix, const gl
     }
 }
 
-void ModelBatch::draw(const model::Model* model) {
+void ModelBatch::draw(const model::Model* model, const texture_names_map* varTextures) {
     for (const auto& mesh : model->meshes) {
-        entries.push_back({combined, rotation, &mesh});
+        entries.push_back({combined, rotation, &mesh, varTextures});
     }
 }
 
@@ -93,7 +99,7 @@ void ModelBatch::render() {
         }
     );
     for (auto& entry : entries) {
-        draw(*entry.mesh, entry.matrix, entry.rotation);
+        draw(*entry.mesh, entry.matrix, entry.rotation, entry.varTextures);
     }
     flush();
     entries.clear();
@@ -112,10 +118,38 @@ void ModelBatch::box(glm::vec3 pos, glm::vec3 size, glm::vec4 lights) {
     plane(pos - X * size, Z * size, Y * size, -X, lights);
 }
 
+void ModelBatch::setTexture(const std::string& name, const texture_names_map* varTextures) {
+    if (name.at(0) == '$') {
+        const auto& found = varTextures->find(name);
+        if (found == varTextures->end()) {
+            return setTexture(nullptr);
+        } else {
+            return setTexture(found->second, varTextures);
+        }
+    }
+    size_t sep = name.find(':');
+    if (sep == std::string::npos) {
+        setTexture(assets->get<Texture>(name));
+    } else {
+        auto atlas = assets->get<Atlas>(name.substr(0, sep));
+        if (atlas == nullptr) {
+            setTexture(nullptr);
+        } else {
+            setTexture(atlas->getTexture());
+            if (auto reg = atlas->getIf(name.substr(sep + 1))) {
+                region = *reg;
+            } else {
+                setTexture("blocks:notfound", varTextures);
+            }
+        }
+    }
+}
+
 void ModelBatch::setTexture(Texture* texture) {
     if (texture == nullptr) texture = blank.get();
     if (texture != this->texture) flush();
     this->texture = texture;
+    region = UVRegion {0.0f, 0.0f, 1.0f, 1.0f};
 }
 
 void ModelBatch::flush() {
