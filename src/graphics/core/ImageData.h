@@ -2,6 +2,7 @@
 #define GRAPHICS_CORE_IMAGE_DATA_H_
 
 #include <cstdint>
+#include <memory>
 
 #include "../../typedefs.h"
 
@@ -16,10 +17,11 @@ class ImageData {
     uint width;
     uint height;
 
-    void* data;
+    std::unique_ptr<ubyte[]> data;
 public:
     ImageData(ImageFormat format, uint width, uint height);
-    ImageData(ImageFormat format, uint width, uint height, void* data);
+    ImageData(ImageFormat format, uint width, uint height, std::unique_ptr<ubyte[]> data);
+    ImageData(ImageFormat format, uint width, uint height, const ubyte* data);
     ~ImageData();
 
     void flipX();
@@ -31,8 +33,8 @@ public:
     void extrude(int x, int y, int w, int h);
     void fixAlphaColor();
 
-    void* getData() const {
-        return data;
+    ubyte* getData() const {
+        return data.get();
     }
 
     ImageFormat getFormat() const {

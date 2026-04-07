@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <set>
+#include <optional>
 
 #include "../../math/UVRegion.h"
 #include "../../typedefs.h"
@@ -30,6 +31,7 @@ public:
 
     bool has(const std::string& name) const;
     const UVRegion& get(const std::string& name) const;
+    std::optional<UVRegion> getIf(const std::string& name) const;
 
     Texture* getTexture() const;
     ImageData* getImage() const;

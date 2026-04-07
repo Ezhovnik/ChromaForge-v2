@@ -11,7 +11,7 @@
 #include "../include/stb/stb_image_write.h"
 
 #include "../graphics/core/ImageData.h"
-#include "../graphics/core/Texture.h"
+#include "../graphics/core/GLTexture.h"
 #include "../debug/Logger.h"
 #include "../typedefs.h"
 
@@ -47,8 +47,8 @@ std::unique_ptr<ImageData> _loadImage(const std::string& filename, bool flipVert
     const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
     const size_t dataSize = pixelCount * static_cast<size_t>(channels);
 
-    ubyte* image_data = new ubyte[dataSize];
-    memcpy(image_data, stb_data, dataSize);
+    auto image_data = std::make_unique<ubyte[]>(dataSize);
+    memcpy(image_data.get(), stb_data, dataSize);
 
     // Освобождаем память stb_image
     stbi_image_free(stb_data);
@@ -58,7 +58,7 @@ std::unique_ptr<ImageData> _loadImage(const std::string& filename, bool flipVert
         format, 
         width, 
         height, 
-        static_cast<void*>(image_data)
+        std::move(image_data)
     );
 
     LOG_DEBUG("Succesfully loaded PNG image: '{}' ({}x{}, {} channels)", filename, width, height, channels);
@@ -118,7 +118,7 @@ std::unique_ptr<Texture> png::loadTexture(const std::string& filename) {
     std::unique_ptr<ImageData> image(loadImage(filename, true));
 
     // Создание объекта Texture
-    auto texture = Texture::from(image.get());
+    auto texture = GLTexture::from(image.get());
     texture->setNearestFilter(); // Устанавливаем фильтрацию без сглаживания (для пиксельной графики)
     return texture;
 }

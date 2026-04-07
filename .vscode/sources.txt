@@ -54,6 +54,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/graphics/core/Cubemap.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/graphics/core/Font.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/graphics/core/Framebuffer.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/graphics/core/GLTexture.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/graphics/core/DrawContext.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/graphics/core/ImageData.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/graphics/core/LineBatch.cpp"

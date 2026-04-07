@@ -1,6 +1,8 @@
 #ifndef MATH_UVREGION_H_
 #define MATH_UVREGION_H_
 
+#include <cmath>
+
 /**
  * @brief Представляет прямоугольную область в UV-пространстве текстуры.
  *
@@ -29,6 +31,14 @@ struct UVRegion {
      * Инициализирует регион как (0, 0) – (1, 1).
      */
 	UVRegion() : u1(0.0f), v1(0.0f), u2(1.0f), v2(1.0f){}
+
+     inline float getWidth() const {
+          return fabs(u2 - u1);
+     }
+
+     inline float getHeight() const {
+          return fabs(v2 - v1);
+     }
 };
 
 

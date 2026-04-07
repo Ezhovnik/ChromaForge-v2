@@ -7,10 +7,10 @@
 
 #include "commons.h"
 #include "../../typedefs.h"
+#include "../../math/UVRegion.h"
 
 class Mesh;
 class Texture;
-struct UVRegion;
 
 /**
  * @brief Класс для пакетной отрисовки 2D-примитивов (спрайтов, прямоугольников, линий).
@@ -31,6 +31,7 @@ class Batch2D {
 	std::unique_ptr<Texture> blank; ///< Белая текстура 1x1 для случаев, когда текстура не задана
 	Texture* currentTexture; ///< Текущая активная текстура
      DrawPrimitive primitive = DrawPrimitive::Triangle;
+     UVRegion region {0.0f, 0.0f, 1.0f, 1.0f};
 
      void setPrimitive(DrawPrimitive primitive);
 
@@ -82,6 +83,8 @@ public:
      * @brief Сбрасывает текстуру в nullptr (биндит blank).
      */
 	void untexture();
+
+     void setRegion(UVRegion region);
 
 	/**
      * @brief Рисует прямоугольник с текстурной областью.

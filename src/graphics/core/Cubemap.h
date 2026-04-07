@@ -1,9 +1,9 @@
 #ifndef GRAPHICS_CORE_CUBEMAP_H_
 #define GRAPHICS_CORE_CUBEMAP_H_
 
-#include "Texture.h"
+#include "GLTexture.h"
 
-class Cubemap : public Texture {
+class Cubemap : public GLTexture {
 public:
     Cubemap(uint width, uint height, ImageFormat format);
 

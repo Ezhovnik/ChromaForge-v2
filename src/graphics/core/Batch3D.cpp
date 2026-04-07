@@ -17,8 +17,9 @@ Batch3D::Batch3D(size_t capacity) : capacity(capacity) {
     mesh = std::make_unique<Mesh>(buffer.get(), 0, attrs);
 	index = 0;
 
-	ubyte pixels[] = {255, 255, 255, 255};
-	blank = std::make_unique<Texture>(pixels, 1, 1, ImageFormat::rgba8888);
+	const ubyte pixels[] = {255, 255, 255, 255};
+	ImageData image(ImageFormat::rgba8888, 1, 1, pixels);
+    blank = Texture::from(&image);
 	currentTexture = nullptr;
 }
 

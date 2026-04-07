@@ -22,7 +22,7 @@ static int l_world_get_list(lua::State* L) {
         lua::setfield(L, "name");
 
         auto assets = scripting::engine->getAssets();
-        std::string icon = "world:" + name + ".icon";
+        std::string icon = "world#" + name + ".icon";
 
         if (!AssetsLoader::loadExternalTexture(assets, icon, {
             worlds[i]/std::filesystem::path("icon.png"),

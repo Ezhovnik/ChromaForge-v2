@@ -4,85 +4,35 @@
 #include <memory>
 
 #include "../../typedefs.h"
+#include "../../math/UVRegion.h"
 #include "ImageData.h"
 
-/**
- * @brief Класс, представляющий текстуру в графической системе (OpenGL).
- *
- * Управляет созданием, загрузкой данных, настройкой параметров и освобождением
- * ресурсов текстуры. Поддерживает мип-карты, фильтрацию и чтение обратно в память.
- */
 class Texture {
 protected:
-    uint id; ///< Идентификатор текстуры в OpenGL
     uint width, height; ///< Размеры текстуры в пикселях
+
+    Texture(uint width, uint height) : width(width), height(height) {}
 public:
     static uint MAX_RESOLUTION;
 
-    /**
-     * @brief Конструктор, создающий объект из уже существующего OpenGL-идентификатора.
-     * @param id Идентификатор существующей текстуры.
-     * @param width Ширина.
-     * @param height Высота.
-     *
-     * Используется, если текстура уже была создана ранее.
-     */
-    Texture (uint id, uint width, uint height);
+    virtual ~Texture() {}
 
-    /**
-     * @brief Конструктор, создающий новую текстуру из переданных пиксельных данных.
-     * @param data Указатель на пиксельные данные (формат RGBA или RGB).
-     * @param width Ширина изображения.
-     * @param height Высота изображения.
-     * @param format Формат изображения (RGB или RGBA)
-     *
-     * Автоматически генерирует мип-карты и устанавливает параметры фильтрации по умолчанию.
-     */
-    Texture(ubyte* data, uint width, uint height, ImageFormat format);
+    virtual void bind() = 0;
+    virtual void unbind() = 0;
 
-    /// Деструктор, удаляющий текстуру из памяти OpenGL.
-    virtual ~Texture();
+    virtual std::unique_ptr<ImageData> readData() = 0;
 
-    /**
-     * @brief Привязывает текстуру к текущему контексту для использования в рендеринге.
-     *
-     * Вызывает glBindTexture(GL_TEXTURE_2D, id).
-     */
-    virtual void bind();
+    virtual uint getWidth() const {
+        return width;
+    }
+    virtual uint getHeight() const {
+        return height;
+    }
 
-    virtual void unbind();
+    virtual UVRegion getUVRegion() const = 0;
 
-    /**
-     * @brief Перезагружает пиксельные данные текстуры (без изменения параметров).
-     * @param data Новые пиксельные данные (формат должен совпадать с исходным).
-     *
-     * Используется для обновления содержимого существующей текстуры.
-     */
-    virtual void reload(ubyte* data);
+    virtual uint getId() const = 0;
 
-    /**
-     * @brief Читает текущие пиксельные данные текстуры из видеопамяти.
-     * @return Новый объект ImageData, содержащий копию пикселей в формате RGBA.
-     *         Владелец должен удалить его.
-     */
-    virtual std::unique_ptr<ImageData> readData();
-
-    /**
-     * @brief Устанавливает фильтрацию без сглаживания (GL_NEAREST) для магнификации и минификации.
-     */
-    void setNearestFilter();
-
-    virtual uint getWidth() const;
-    virtual uint getHeight() const;
-
-    virtual uint getId() const;
-
-    /**
-     * @brief Создаёт текстуру из объекта ImageData.
-     * @param image Указатель на ImageData (поддерживаются форматы RGB и RGBA).
-     * @return Указатель на новый экземпляр Texture.
-     * @throw std::runtime_error если формат изображения не поддерживается.
-     */
     static std::unique_ptr<Texture> from(const ImageData* image);
 };
 
