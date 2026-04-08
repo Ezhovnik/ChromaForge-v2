@@ -8,7 +8,7 @@ struct AABB {
 	glm::vec3 a {0.0f}; // Первая точка параллелепипеда
     glm::vec3 b {1.0f, 1.0f, 1.0f}; // Вторая точка параллелепипеда
 
-    AABB() {}
+    AABB() = default;
     AABB(glm::vec3 size) : a(0.0f), b(size) {}
     AABB(glm::vec3 pos, glm::vec3 size) : a(pos), b(size) {}
 

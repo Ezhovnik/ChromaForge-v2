@@ -295,7 +295,11 @@ void ContentLoader::loadItem(Item& def, const std::string& name, const std::file
 void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
 
-    root->str("script-name", def.scriptName);
+    if (auto componentsarr = root->list("components")) {
+        for (size_t i = 0; i < componentsarr->size(); ++i) {
+            def.components.push_back(componentsarr->str(i));
+        }
+    }
 
     if (auto boxarr = root->list("hitbox")) {
         def.hitbox = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
@@ -306,10 +310,12 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
             if (auto triggerarr = triggersarr->list(i)) {
                 auto triggerType = triggerarr->str(0);
                 if (triggerType == "aabb") {
-                    def.boxTriggers.push_back({
+                    def.boxTriggers.push_back({i, {
                         {triggerarr->num(1), triggerarr->num(2), triggerarr->num(3)},
                         {triggerarr->num(4), triggerarr->num(5), triggerarr->num(6)}
-                    });
+                    }});
+                } else if (triggerType == "radius") {
+                    def.radialTriggers.push_back({i, triggerarr->num(1)});
                 } else {
                     LOG_WARN("Entity {}: trigger #{} - unknown type {}", name, i, util::quote(triggerType));
                 }
@@ -323,9 +329,11 @@ void ContentLoader::loadEntity(Entity& def, const std::string& full, const std::
     auto configFile = folder/std::filesystem::path("entities/" + name + ".json");
     if (std::filesystem::exists(configFile)) loadEntity(def, full, configFile);
 
-    auto scriptfile = folder/std::filesystem::path("scripts/components/" + def.scriptName + ".lua");
-    if (std::filesystem::is_regular_file(scriptfile)) {
-        scripting::load_entity_component(env, def, scriptfile);
+    for (auto& componentName : def.components) {
+        auto scriptfile = folder/std::filesystem::path("scripts/components/" + componentName + ".lua");
+        if (std::filesystem::is_regular_file(scriptfile)) {
+            scripting::load_entity_component(env, componentName, scriptfile);
+        }
     }
 }
 
@@ -420,7 +428,6 @@ void ContentLoader::load() {
             std::string full = colon == std::string::npos ? pack->id + ":" + name : name;
             if (colon != std::string::npos) name[colon] = '/';
             auto& def = builder.entities.create(full);
-            if (colon != std::string::npos) def.scriptName = name.substr(0, colon) + '/' + def.scriptName;
             loadEntity(def, full, name);
             stats->totalEntities++;
         }

@@ -15,11 +15,12 @@ namespace rigging {
 
 struct Entity {
     std::string const name;
-    std::string scriptName = name.substr(name.find(':') + 1);
+    std::vector<std::string> components;
     std::string rigName = name.substr(name.find(":") + 1);
 
     glm::vec3 hitbox {0.5f};
-    std::vector<AABB> boxTriggers {};
+    std::vector<std::pair<size_t, AABB>> boxTriggers {};
+    std::vector<std::pair<size_t, float>> radialTriggers {};
 
     struct {
         entityid_t id;

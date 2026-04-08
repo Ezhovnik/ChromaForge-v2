@@ -1,5 +1,8 @@
 #include "PhysicsSolver.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
+
 #include "Hitbox.h"
 #include "../voxels/Chunks.h"
 #include "../math/aabb.h"
@@ -46,7 +49,16 @@ void PhysicsSolver::step(
 
 		vel += gravity * subDelta * gravityScale;
 
-		if (collisions) colisionCalc(chunks, hitbox, vel, pos, half, (prevGrounded && gravityScale > 0.0f) ? 0.5f : 0.0f);
+		if (collisions) {
+			colisionCalc(
+				chunks,
+				hitbox,
+				vel,
+				pos,
+				half,
+				(prevGrounded && gravityScale > 0.0f) ? 0.5f : 0.0f
+			);
+		}
 
 		vel.x *= glm::max(0.0f, 1.0f - subDelta * linearDamping);
 		vel.z *= glm::max(0.0f, 1.0f - subDelta * linearDamping);
@@ -84,13 +96,24 @@ void PhysicsSolver::step(
     aabb.a = hitbox->position - hitbox->halfsize;
     aabb.b = hitbox->position + hitbox->halfsize;
     for (size_t i = 0; i < triggers.size(); ++i) {
-        auto& trigger = triggers[i];
-        if (trigger->entity == entity) continue;
-        if (aabb.intersect(trigger->calculated)) {
-            if (trigger->prevEntered.find(entity) == trigger->prevEntered.end()) {
-                trigger->enterCallback(trigger->entity, i, entity);
+        auto& trigger = *triggers[i];
+        if (trigger.entity == entity) continue;
+        bool triggered = false;
+        switch (trigger.type) {
+            case TriggerType::AABB:
+                triggered = aabb.intersect(trigger.calculated.aabb);
+                break;
+            case TriggerType::RADIUS:
+                triggered = glm::distance2(
+                    hitbox->position, glm::vec3(trigger.calculated.radial)
+				) < trigger.calculated.radial.w;
+                break;
+        }
+        if (triggered) {
+            if (trigger.prevEntered.find(entity) == trigger.prevEntered.end()) {
+                trigger.enterCallback(trigger.entity, trigger.index, entity);
             }
-            trigger->nextEntered.insert(entity);
+            trigger.nextEntered.insert(entity);
         }
     }
 }

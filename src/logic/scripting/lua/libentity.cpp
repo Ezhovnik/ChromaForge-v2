@@ -194,6 +194,8 @@ const luaL_Reg transformlib [] = {
     {"set_pos", lua::wrap<l_set_pos>},
     {"get_rot", lua::wrap<l_get_rot>},
     {"set_rot", lua::wrap<l_set_rot>},
+    {"get_size", lua::wrap<l_get_size>},
+    {"set_size", lua::wrap<l_set_size>},
     {NULL, NULL}
 };
 

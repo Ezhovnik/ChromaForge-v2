@@ -1,6 +1,8 @@
 local Transform = {__index={
     get_pos=function(self) return __transform.get_pos(self.eid) end,
     set_pos=function(self, v) return __transform.set_pos(self.eid, v) end,
+    get_size=function(self) return __transform.get_size(self.eid) end,
+    set_size=function(self, v) return __transform.set_size(self.eid, v) end,
     get_rot=function(self) return __transform.get_rot(self.eid) end,
     set_rot=function(self, m) return __transform.set_rot(self.eid, m) end,
 }}
@@ -46,7 +48,7 @@ return {
         entity.transform = new_Transform(eid)
         entity.rigidbody = new_Rigidbody(eid)
         entity.modeltree = new_Modeltree(eid)
-        entity.data = {}
+        entity.components = {}
         entities[eid] = entity;
         return entity
     end,
@@ -56,17 +58,19 @@ return {
     remove_Entity = function(eid)
         local entity = entities[eid]
         if entity then
-            entity.env = nil
+            entity.components = nil
             entities[eid] = nil;
         end
     end,
     update = function()
         for id,entity in pairs(entities) do
-            local callback = entity.env.on_update
-            if callback then
-                local result, err = pcall(callback)
-                if err then
-                    print(err)
+            for _, component in pairs(entity.components) do
+                local callback = component.on_update
+                if callback then
+                    local result, err = pcall(callback)
+                    if err then
+                        print(err)
+                    end
                 end
             end
         end

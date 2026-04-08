@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <optional>
 #include <vector>
+#include <memory>
 
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -51,15 +52,39 @@ struct Transform {
         dirty = true;
     }
 
+    inline void setSize(glm::vec3 v) {
+        if (glm::distance2(size, v) >= 0.0000001f) {
+            dirty = true;
+        }
+        size = v;
+    }
+
     inline void setPos(glm::vec3 v) {
         if (glm::distance2(pos, v) >= 0.00001f) dirty = true;
         pos = v;
     }
 };
 
-struct Scripting {
+struct UserComponent {
+    std::string name;
     entity_funcs_set funcsset;
     scriptenv env;
+
+    UserComponent(
+        const std::string& name,
+        entity_funcs_set funcsset,
+        scriptenv env
+    ) : name(name), funcsset(funcsset), env(env) {}
+};
+
+struct ScriptComponents {
+    std::vector<std::unique_ptr<UserComponent>> components;
+
+    ScriptComponents() = default;
+
+    ScriptComponents(ScriptComponents&& other)
+        : components(std::move(other.components)) {
+    }
 };
 
 class Level;
@@ -90,8 +115,8 @@ public:
         registry(registry),
         entity(entity) {}
 
-    Scripting& getScripting() const {
-        return registry.get<Scripting>(entity);
+    ScriptComponents& getScripting() const {
+        return registry.get<ScriptComponents>(entity);
     }
 
     EntityId& getID() const {

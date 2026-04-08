@@ -11,15 +11,32 @@
 #include "../math/AABB.h"
 #include "../typedefs.h"
 
+enum class TriggerType {
+    AABB,
+    RADIUS,
+};
+
+union TriggerParams {
+    AABB aabb;
+    glm::vec4 radial;
+
+    constexpr TriggerParams() : aabb() {
+    }
+};
+
+using triggercallback = std::function<void(entityid_t, size_t, entityid_t)>;
+
 struct Trigger {
     bool enabled = true;
+    TriggerType type;
+    size_t index;
     entityid_t entity;
-    AABB aabb;
-    AABB calculated;
+    TriggerParams params;
+    TriggerParams calculated;
     std::set<entityid_t> prevEntered;
     std::set<entityid_t> nextEntered;
-    std::function<void(entityid_t, size_t, entityid_t)> enterCallback;
-    std::function<void(entityid_t, size_t, entityid_t)> exitCallback;
+    triggercallback enterCallback;
+    triggercallback exitCallback;
 };
 
 /**
