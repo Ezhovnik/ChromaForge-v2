@@ -10,7 +10,7 @@ struct AABB {
 
     AABB() = default;
     AABB(glm::vec3 size) : a(0.0f), b(size) {}
-    AABB(glm::vec3 pos, glm::vec3 size) : a(pos), b(size) {}
+    AABB(glm::vec3 a, glm::vec3 b) : a(a), b(b) {}
 
     inline glm::vec3 min() const {return glm::min(a, b);} // Минимальная координата по каждой оси
     inline glm::vec3 max() const {return glm::max(a, b);} // Максимальная координата по каждой оси

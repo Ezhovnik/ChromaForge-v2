@@ -66,15 +66,19 @@ namespace scripting {
     bool on_item_use_on_block(Player* player, const Item* item, int x, int y, int z);
     bool on_item_break_block(Player* player, const Item* item, int x, int y, int z);
 
+    dynamic::Value get_component_value(const scriptenv& env, const std::string& name);
+
     void on_entity_spawn(
         const Entity& def,
         entityid_t eid,
         const std::vector<std::unique_ptr<UserComponent>>& components,
-        dynamic::Value args
+        dynamic::Value args,
+        dynamic::Map_sptr saved
     );
     bool on_entity_despawn(const Entity& def, const Entt_Entity& entity);
     bool on_entity_grounded(const Entt_Entity& entity, float force);
     bool on_entity_fall(const Entt_Entity& entity);
+    bool on_entity_save(const Entt_Entity& entity);
     void on_entities_update();
     void on_trigger_enter(const Entt_Entity& entity, size_t index, entityid_t oid);
     void on_trigger_exit(const Entt_Entity& entity, size_t index, entityid_t oid);

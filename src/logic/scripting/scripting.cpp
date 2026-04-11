@@ -259,11 +259,21 @@ bool scripting::on_item_break_block(Player* player, const Item* item, int x, int
     });
 }
 
+dynamic::Value scripting::get_component_value(const scriptenv& env, const std::string& name) {
+    auto L = lua::get_main_thread();
+    lua::pushenv(L, *env);
+    if (lua::getfield(L, name)) {
+        return lua::tovalue(L, -1);
+    }
+    return dynamic::NONE;
+}
+
 void scripting::on_entity_spawn(
     const Entity& def,
     entityid_t eid,
     const std::vector<std::unique_ptr<UserComponent>>& components,
-    dynamic::Value args
+    dynamic::Value args,
+    dynamic::Map_sptr saved
 ) {
     auto L = lua::get_main_thread();
     lua::requireglobal(L, STDCOMP);
@@ -284,6 +294,16 @@ void scripting::on_entity_spawn(
         lua::pushenv(L, *compenv);
         lua::pushvalue(L, args);
         lua::setfield(L, "ARGS");
+        if (saved == nullptr) {
+            lua::createtable(L, 0, 0);
+        } else {
+            if (auto datamap = saved->map(component->name)) {
+                lua::pushvalue(L, datamap);
+            } else {
+                lua::createtable(L, 0, 0);
+            }
+        }
+        lua::setfield(L, "SAVED_DATA");
         lua::setfenv(L);
         lua::call_nothrow(L, 0, 0);
 
@@ -292,6 +312,7 @@ void scripting::on_entity_spawn(
         funcsset.on_grounded = lua::hasfield(L, "on_grounded");
         funcsset.on_fall = lua::hasfield(L, "on_fall");
         funcsset.on_despawn = lua::hasfield(L, "on_despawn");
+        funcsset.on_save = lua::hasfield(L, "on_save");
         funcsset.on_trigger_enter = lua::hasfield(L, "on_trigger_enter");
         funcsset.on_trigger_exit = lua::hasfield(L, "on_trigger_exit");
         lua::pop(L, 2);
@@ -349,6 +370,16 @@ bool scripting::on_entity_fall(const Entt_Entity& entity) {
     for (auto& component : script.components) {
         if (component->funcsset.on_fall) {
             process_entity_callback(component->env, "on_fall", nullptr);
+        }
+    }
+    return true;
+}
+
+bool scripting::on_entity_save(const Entt_Entity& entity) {
+    const auto& script = entity.getScripting();
+    for (auto& component : script.components) {
+        if (component->funcsset.on_save) {
+            process_entity_callback(component->env, "on_save", nullptr);
         }
     }
     return true;

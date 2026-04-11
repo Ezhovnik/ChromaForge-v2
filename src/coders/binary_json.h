@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-#include "../data/dynamic.h"
+#include "../data/dynamic_fwd.h"
 
 namespace json {
     inline constexpr int BJSON_END = 0x0;
@@ -22,8 +22,9 @@ namespace json {
     inline constexpr int BJSON_TYPE_NULL = 0xC;
     inline constexpr int BJSON_TYPE_CDOCUMENT = 0x1F;
 
-    extern std::vector<ubyte> to_binary(const dynamic::Map* obj, bool compress=false);
-    extern std::shared_ptr<dynamic::Map> from_binary(const ubyte* src, size_t size);
+    std::vector<ubyte> to_binary(const dynamic::Map* obj, bool compress=false);
+    std::vector<ubyte> to_binary(const dynamic::Value& obj, bool compress=false);
+    std::shared_ptr<dynamic::Map> from_binary(const ubyte* src, size_t size);
 }
 
 #endif // CODERS_BINARY_JSON_H_

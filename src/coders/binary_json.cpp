@@ -5,6 +5,7 @@
 #include "byte_utils.h"
 #include "../debug/Logger.h"
 #include "zip.h"
+#include "../data/dynamic.h"
 
 using namespace json;
 using namespace dynamic;
@@ -76,6 +77,14 @@ std::vector<ubyte> json::to_binary(const Map* obj, bool compress) {
 
     builder.setInt32(1, builder.size());
     return builder.build();
+}
+
+std::vector<ubyte> json::to_binary(const Value& value, bool compress) {
+    if (auto map = std::get_if<Map_sptr>(&value)) {
+        return to_binary(map->get(), compress);
+    }
+    LOG_ERROR("Map is only supported as the root element");
+    throw std::runtime_error("Map is only supported as the root element");
 }
 
 static Value value_from_binary(ByteReader& reader) {

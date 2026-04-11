@@ -30,7 +30,13 @@ static void get_all_nodes(std::vector<RigNode*>& nodes, RigNode* node) {
     }
 }
 
-RigConfig::RigConfig(std::unique_ptr<RigNode> root, size_t nodesCount) : root(std::move(root)), nodes(nodesCount) {
+RigConfig::RigConfig(
+    const std::string& name,
+    std::unique_ptr<RigNode> root,
+    size_t nodesCount
+) : name(name),
+    root(std::move(root)),
+    nodes(nodesCount) {
     get_all_nodes(nodes, this->root.get());
 }
 
@@ -91,8 +97,8 @@ static std::tuple<size_t, std::unique_ptr<RigNode>> read_node(
     size_t count = 1;
     if (auto nodesList = root->list("nodes")) {
         for (size_t i = 0; i < nodesList->size(); ++i) {
-            if (auto map = nodesList->map(i)) {
-                auto [subcount, subNode] = read_node(map, index+count);
+            if (const auto& map = nodesList->map(i)) {
+                auto [subcount, subNode] = read_node(map.get(), index + count);
                 subcount += count;
                 subnodes.push_back(std::move(subNode));
             }
@@ -111,7 +117,8 @@ static std::tuple<size_t, std::unique_ptr<RigNode>> read_node(
 
 std::unique_ptr<RigConfig> RigConfig::parse(
     std::string_view src,
-    std::string_view file
+    std::string_view file,
+    std::string_view name
 ) {
     auto root = json::parse(file, src);
     auto rootNodeMap = root->map("root");
@@ -119,6 +126,6 @@ std::unique_ptr<RigConfig> RigConfig::parse(
         LOG_ERROR("Missing 'root' element");
         throw std::runtime_error("Missing 'root' element");
     }
-    auto [count, rootNode] = read_node(rootNodeMap, 0);
-    return std::make_unique<RigConfig>(std::move(rootNode), count);
+    auto [count, rootNode] = read_node(rootNodeMap.get(), 0);
+    return std::make_unique<RigConfig>(std::string(name), std::move(rootNode), count);
 }

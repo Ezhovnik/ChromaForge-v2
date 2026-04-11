@@ -122,7 +122,7 @@ public:
 		std::vector<AABB> hitboxes[BlockRotProfile::MAX_COUNT];
         block_funcs_set funcsset {};
         itemid_t pickingItem = 0;
-	} rt;
+	} rt {};
 
     Block(const std::string& name);
     Block(std::string name, const std::string& texture);

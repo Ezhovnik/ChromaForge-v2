@@ -29,6 +29,8 @@ Level::Level(
     entities(std::make_unique<Entities>(this)),
     settings(settings)
 {
+    entities->setNextID(this->world->nextEntityId);
+
     auto inventory = std::make_shared<Inventory>(
         this->world->getNextInventoryId(), 
         DEFAULT_PLAYER_INVENTORY_SIZE
@@ -41,7 +43,7 @@ Level::Level(
 
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
     uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
-    chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, this->world->wfile.get(), events.get(), content);
+    chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, this->world->wfile.get(), this);
 	lighting = std::make_unique<Lighting>(content, chunks.get());
 
     // Создаем событие скрытия чанка

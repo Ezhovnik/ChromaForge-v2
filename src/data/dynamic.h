@@ -5,18 +5,14 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
-#include <variant>
 #include <stdexcept>
 #include <ostream>
 #include <cmath>
 
-#include "../typedefs.h"
+#include "dynamic_fwd.h"
 #include "../debug/Logger.h"
 
 namespace dynamic {
-    class Map;
-    class List;
-
     enum class Type {
         None = 0,
         Map,
@@ -26,22 +22,6 @@ namespace dynamic {
         Boolean,
         Integer
     };
-
-    using Map_sptr = std::shared_ptr<Map>;
-    using List_sptr = std::shared_ptr<List>;
-
-    struct none {};
-    inline constexpr none NONE = {};
-
-    using Value = std::variant<
-        none,
-        Map_sptr,
-        List_sptr,
-        std::string,
-        number_t,
-        bool, 
-        integer_t
-    >;
 
     const std::string& type_name(const Value& value);
     List_sptr create_list(std::initializer_list<Value> values={});
@@ -72,7 +52,7 @@ namespace dynamic {
         std::string str(size_t index) const;
         number_t num(size_t index) const;
         integer_t integer(size_t index) const;
-        Map* map(size_t index) const;
+        const Map_sptr& map(size_t index) const;
         List* list(size_t index) const;
         bool flag(size_t index) const;
 
@@ -138,7 +118,7 @@ namespace dynamic {
         void num(const std::string& key, uint64_t& dst) const;
         void num(const std::string& key, ubyte& dst) const;
         void num(const std::string& key, double& dst) const;
-        Map* map(const std::string& key) const;
+        Map_sptr map(const std::string& key) const;
         List* list(const std::string& key) const;
         void flag(const std::string& key, bool& dst) const;
 
@@ -155,6 +135,9 @@ namespace dynamic {
             return put(key, Value(static_cast<integer_t>(value)));
         }
         Map& put(std::string key, int64_t value) {
+            return put(key, Value(static_cast<integer_t>(value)));
+        }
+        Map& put(std::string key, uint64_t value) {
             return put(key, Value(static_cast<integer_t>(value)));
         }
         Map& put(std::string key, float value) {

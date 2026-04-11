@@ -23,6 +23,14 @@ struct Entity {
     std::vector<std::pair<size_t, float>> radialTriggers {};
 
     struct {
+        bool enabled = true;
+        struct {
+            bool textures = false;
+            bool pose = false;
+        } rig;
+    } save {};
+
+    struct {
         entityid_t id;
         rigging::RigConfig* rig;
     } rt {};

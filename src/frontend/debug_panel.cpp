@@ -67,7 +67,8 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 		return L"Chunks: " + std::to_wstring(level->chunks->chunksCount) + L" (visible: " + std::to_wstring(level->chunks->visibleCount) + L")";
 	})));
     panel->add(create_label([=]() {
-        return L"Entities: " + std::to_wstring(level->entities->size());
+        return L"Entities: " + std::to_wstring(level->entities->size()) +
+        L" Next: " + std::to_wstring(level->entities->peekNextID());
     }));
     panel->add(create_label([](){
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());

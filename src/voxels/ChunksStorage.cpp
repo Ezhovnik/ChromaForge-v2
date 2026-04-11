@@ -14,6 +14,7 @@
 #include "../debug/Logger.h"
 #include "../core_content_defs.h"
 #include "../items/Inventories.h"
+#include "../objects/Entities.h"
 
 void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
@@ -54,8 +55,15 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	auto data = regions.getChunk(chunk->chunk_x, chunk->chunk_z);
 	if (data) {
 		chunk->decode(data.get());
+
 		auto invs = regions.fetchInventories(chunk->chunk_x, chunk->chunk_z);
 		chunk->setBlockInventories(std::move(invs));
+
+		if (auto map = regions.fetchEntities(chunk->chunk_x, chunk->chunk_z)) {
+            level->entities->loadEntities(std::move(map));
+			chunk->flags.entities = true;
+        }
+
 		chunk->flags.loaded = true;
 		for(auto& entry : chunk->inventories) {
 			level->inventories->store(entry.second);

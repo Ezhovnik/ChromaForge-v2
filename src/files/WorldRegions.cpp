@@ -41,15 +41,15 @@ std::unique_ptr<ubyte[]> regFile::read(int index, uint32_t& length) {
 
     uint32_t offset;
     file.seekg(table_offset + index * 4);
-    file.read((char*)(&offset), 4);
-    offset = dataio::read_int32_big((const ubyte*)(&offset), 0);
+    file.read(reinterpret_cast<char*>(&offset), 4);
+    offset = dataio::read_int32_big(reinterpret_cast<const ubyte*>(&offset), 0);
     if (offset == 0) return nullptr;
 
     file.seekg(offset);
-    file.read((char*)(&offset), 4);
-    length = dataio::read_int32_big((const ubyte*)(&offset), 0);
+    file.read(reinterpret_cast<char*>(&offset), 4);
+    length = dataio::read_int32_big(reinterpret_cast<const ubyte*>(&offset), 0);
     auto data = std::make_unique<ubyte[]>(length);
-    file.read((char*)data.get(), length);
+    file.read(reinterpret_cast<char*>(data.get()), length);
     return data;
 }
 
@@ -91,12 +91,13 @@ uint WorldRegion::getChunkDataSize(uint x, uint z) {
 }
 
 WorldRegions::WorldRegions(const std::filesystem::path& directory) : directory(directory) {
-    for (uint i = 0; i < sizeof(layers) / sizeof(RegionsLayer); ++i) {
+    for (size_t i = 0; i < sizeof(layers) / sizeof(RegionsLayer); ++i) {
         layers[i].layer = i;
     }
     layers[RegionConsts::LAYER_VOXELS].folder = directory/std::filesystem::path("regions");
     layers[RegionConsts::LAYER_LIGHTS].folder = directory/std::filesystem::path("lights");
     layers[RegionConsts::LAYER_INVENTORIES].folder = directory/std::filesystem::path("inventories");
+    layers[RegionConsts::LAYER_ENTITIES].folder = directory/std::filesystem::path("entities");
 }
 
 WorldRegions::~WorldRegions() {
@@ -124,7 +125,7 @@ WorldRegion* WorldRegions::getOrCreateRegion(int x, int z, int layer) {
 
 std::unique_ptr<ubyte[]> WorldRegions::compress(const ubyte* src, size_t srclen, size_t& len) {
     auto buffer = bufferPool.get();
-    ubyte* bytes = buffer.get();
+    auto bytes = buffer.get();
 
     len = extrle::encode(src, srclen, bytes);
     auto data = std::make_unique<ubyte[]>(len);
@@ -294,7 +295,7 @@ void WorldRegions::writeRegion(int x, int z, int layer, WorldRegion* entry){
             offset += 4 + compressedSize;
 
             file.write(intbuf, 4);
-            file.write((const char*)chunk, compressedSize);
+            file.write(reinterpret_cast<const char*>(chunk), compressedSize);
         }
     }
     for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
@@ -345,12 +346,12 @@ static std::unique_ptr<ubyte[]> write_inventories(Chunk* chunk, uint& datasize) 
     return data;
 }
 
-void WorldRegions::put(Chunk* chunk){
+void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
     assert(chunk != nullptr);
 
     if (!chunk->flags.lighted) return;
     bool lightsUnsaved = !chunk->flags.loadedLights && doWriteLights;
-    if (!chunk->flags.unsaved && !lightsUnsaved) return;
+    if (!chunk->flags.unsaved && !lightsUnsaved && !chunk->flags.entities) return;
 
     int regionX, regionZ, localX, localZ;
     calc_reg_coords(chunk->chunk_x, chunk->chunk_z, regionX, regionZ, localX, localZ);
@@ -358,13 +359,37 @@ void WorldRegions::put(Chunk* chunk){
     put(chunk->chunk_x, chunk->chunk_z, RegionConsts::LAYER_VOXELS, chunk->encode(), CHUNK_DATA_LEN, true);
 
     if (doWriteLights && chunk->flags.lighted) {
-        put(chunk->chunk_x, chunk->chunk_z, RegionConsts::LAYER_LIGHTS, 
-            chunk->light_map.encode(), LIGHTMAP_DATA_LEN, true);
+        put(
+            chunk->chunk_x, chunk->chunk_z,
+            RegionConsts::LAYER_LIGHTS, 
+            chunk->light_map.encode(),
+            LIGHTMAP_DATA_LEN,
+            true
+        );
     }
-    if (!chunk->inventories.empty()){
+    if (!chunk->inventories.empty()) {
         uint datasize;
         auto data = write_inventories(chunk, datasize);
-        put(chunk->chunk_x, chunk->chunk_z, RegionConsts::LAYER_INVENTORIES, std::move(data), datasize, false);
+        put(
+            chunk->chunk_x, chunk->chunk_z,
+            RegionConsts::LAYER_INVENTORIES,
+            std::move(data),
+            datasize,
+            false
+        );
+    }
+    if (!entitiesData.empty()) {
+        auto data = std::make_unique<ubyte[]>(entitiesData.size());
+        for (size_t i = 0; i < entitiesData.size(); ++i) {
+            data[i] = entitiesData[i];
+        }
+        put(
+            chunk->chunk_x, chunk->chunk_z,
+            RegionConsts::LAYER_ENTITIES,
+            std::move(data),
+            entitiesData.size(),
+            false
+        );
     }
 }
 
@@ -400,6 +425,15 @@ chunk_inventories_map WorldRegions::fetchInventories(int x, int z) {
         meta[index] = inv;
     }
     return meta;
+}
+
+dynamic::Map_sptr WorldRegions::fetchEntities(int x, int z) {
+    uint32_t bytesSize;
+    const ubyte* data = getData(x, z, RegionConsts::LAYER_ENTITIES, bytesSize);
+    if (data == nullptr) return nullptr;
+    auto map = json::from_binary(data, bytesSize);
+    if (map->size() == 0) return nullptr;
+    return map;
 }
 
 void WorldRegions::processRegionVoxels(int x, int z, const regionproc& func) {

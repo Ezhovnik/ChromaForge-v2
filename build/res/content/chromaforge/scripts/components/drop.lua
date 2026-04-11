@@ -6,11 +6,22 @@ inair = true
 ready = false
 target = -1
 
-local dropitem = ARGS.item
+ARGS = ARGS or {}
+local dropitem = ARGS.item or {}
+if SAVED_DATA.item then
+    dropitem.id = item.index(SAVED_DATA.item)
+    dropitem.count = SAVED_DATA.count
+end
+
 local scale = {1, 1, 1}
 local rotation = mat4.rotate({
     math.random(), math.random(), math.random()
 }, 360)
+
+function on_save()
+    SAVED_DATA.item = item.name(dropitem.id)
+    SAVED_DATA.count = dropitem.count
+end
 
 do
     local matrix = mat4.idt()

@@ -18,10 +18,12 @@ class Content;
 class ContentIndices;
 struct AABB;
 class Block;
+class Level;
 
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
 private:
+    Level* level;
 	const ContentIndices* const contentIds;
 
     void eraseSegments(const Block* def, blockstate state, int x, int y, int z);
@@ -40,7 +42,6 @@ public:
     int32_t areaOffsetX; // Смещение области видимых чанков по X
     int32_t areaOffsetZ; // Смещение области видимых чанков по Z
 
-    LevelEvents* events;
     WorldFiles* worldFiles;
 
     Chunks(
@@ -49,8 +50,7 @@ public:
         int32_t areaOffsetX, 
         int32_t areaOffsetZ, 
         WorldFiles* worldFiles, 
-        LevelEvents* events, 
-        const Content* content
+        Level* level
     ); 
     ~Chunks() = default;
 
@@ -96,6 +96,8 @@ public:
     void resize(uint32_t newWidth, uint32_t newDepth);
 
     void saveAndClear();
+    void save(Chunk* chunk);
+    void saveAll();
 };
 
 #endif // VOXELS_CHUNKS_H_

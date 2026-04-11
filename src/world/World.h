@@ -60,6 +60,8 @@ public:
 
      float skyClearness = 0.0f;
 
+     entityid_t nextEntityId = 0;
+
 	/**
      * @brief Конструктор.
      * @param name Внутреннее имя мира.

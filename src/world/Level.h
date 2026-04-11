@@ -14,7 +14,6 @@ inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; ///< Базовая скор
 inline constexpr int DEFAULT_PLAYER_INVENTORY_SIZE = 40; ///< Размер инвентаря игрока (количество слотов)
 
 class World;
-class Player;
 class Chunks;
 class Lighting;
 class PhysicsSolver;

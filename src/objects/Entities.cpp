@@ -14,6 +14,9 @@
 #include "../logic/scripting/scripting.h"
 #include "../objects/rigging.h"
 #include "../debug/Logger.h"
+#include "../data/dynamic_util.h"
+#include "../content/Content.h"
+#include "../engine.h"
 
 void Transform::refresh() {
     combined = glm::mat4(1.0f);
@@ -57,8 +60,10 @@ static triggercallback create_trigger_callback(Entities* entities) {
 entityid_t Entities::spawn(
     Assets* assets,
     Entity& def,
-    glm::vec3 pos,
-    dynamic::Value args
+    Transform transform,
+    dynamic::Value args,
+    dynamic::Map_sptr saved,
+    entityid_t uid
 ) {
     auto rig = assets->get<rigging::RigConfig>(def.rigName);
     if (rig == nullptr) {
@@ -66,12 +71,16 @@ entityid_t Entities::spawn(
         throw std::runtime_error("Rig " + def.rigName + " not found");
     }
     auto entity = registry.create();
-    glm::vec3 size(1);
-    auto id = nextID++;
+    entityid_t id;
+    if (uid == 0) {
+        id = nextID++;
+    } else {
+        id = uid;
+    }
     registry.emplace<EntityId>(entity, static_cast<entityid_t>(id), def);
-    registry.emplace<Transform>(entity, pos, size, glm::mat3(1.0f));
+    registry.emplace<Transform>(entity, transform);
     auto& body = registry.emplace<Rigidbody>(
-        entity, true, Hitbox {pos, def.hitbox}, std::vector<Trigger>{}
+        entity, true, Hitbox {transform.pos, def.hitbox}, std::vector<Trigger>{}
     );
     body.triggers.resize(def.radialTriggers.size() + def.boxTriggers.size());
     for (auto& [i, box] : def.boxTriggers) {
@@ -93,8 +102,8 @@ entityid_t Entities::spawn(
         };
     }
     auto& scripting = registry.emplace<ScriptComponents>(entity);
-
     entities[id] = entity;
+    uids[entity] = id;
     registry.emplace<rigging::Rig>(entity, rig->instance());
     for (auto& componentName : def.components) {
         auto component = std::make_unique<UserComponent>(
@@ -102,7 +111,13 @@ entityid_t Entities::spawn(
         );
         scripting.components.emplace_back(std::move(component));
     }
-    scripting::on_entity_spawn(def, id, scripting.components, std::move(args));
+    scripting::on_entity_spawn(
+        def,
+        id,
+        scripting.components,
+        std::move(args),
+        std::move(saved)
+    );
     return id;
 }
 
@@ -114,6 +129,42 @@ void Entities::despawn(entityid_t id) {
             scripting::on_entity_despawn(entity->getDef(), *entity);
         }
     }
+}
+
+void Entities::loadEntity(const dynamic::Map_sptr& map) {
+    entityid_t uid = 0;
+    std::string defname;
+    map->num("uid", uid);
+    map->str("def", defname);
+    if (uid == 0) {
+        LOG_ERROR("Could not read entity - invalid UID");
+        throw std::runtime_error("Could not read entity - invalid UID");
+    }
+    auto& def = level->content->entities.require(defname);
+    Transform transform {
+        glm::vec3(), glm::vec3(1.0f), glm::mat3(1.0f), {}, true
+    };
+    if (auto tsfmap = map->map("transform")) {
+        dynamic::get_vec(tsfmap, "pos", transform.pos);
+    }
+    dynamic::Map_sptr savedMap = map->map("comps");
+    auto assets = scripting::engine->getAssets();
+    spawn(assets, def, transform, dynamic::NONE, savedMap, uid);
+}
+
+void Entities::loadEntities(dynamic::Map_sptr root) {
+    auto list = root->list("data");
+    for (size_t i = 0; i < list->size(); i++) {
+        try {
+            loadEntity(list->map(i));
+        } catch (const std::runtime_error& err) {
+            LOG_ERROR("Could not read entity: {}", err.what());
+        }
+    }
+}
+
+void Entities::onSave(const Entt_Entity& entity) {
+    scripting::on_entity_save(entity);
 }
 
 void Entities::update() {
@@ -223,15 +274,88 @@ void Entities::updatePhysics(float delta) {
     }
 }
 
+dynamic::Value Entities::serialize(const Entt_Entity& entity) {
+    auto root = dynamic::create_map();
+    auto& eid = entity.getID();
+    auto& def = eid.def;
+    root->put("def", def.name);
+    root->put("uid", eid.uid);
+    {
+        auto& transform = entity.getTransform();
+        auto& tsfmap = root->putMap("transform");
+        tsfmap.put("pos", dynamic::to_value(transform.pos));
+        if (transform.size != glm::vec3(1.0f)) {
+            tsfmap.put("size", dynamic::to_value(transform.size));
+        }
+        if (transform.rot != glm::mat3(1.0f)) {
+            tsfmap.put("rot", dynamic::to_value(transform.rot));
+        }
+    }
+    {
+        auto& rigidbody = entity.getRigidbody();
+        auto& bodymap = root->putMap("rigidbody");
+        if (!rigidbody.enabled) {
+            bodymap.put("enabled", rigidbody.enabled);
+        }
+        bodymap.put("vel", dynamic::to_value(rigidbody.hitbox.velocity));
+        bodymap.put("damping", rigidbody.hitbox.linearDamping);
+    }
+    auto& rig = entity.getModeltree();
+    if (rig.config->getName() != def.rigName) {
+        root->put("rig", rig.config->getName());
+    }
+
+    if (def.save.rig.pose || def.save.rig.textures) {
+        auto& rigmap = root->putMap("rig");
+        if (def.save.rig.textures) {
+            auto& map = rigmap.putMap("textures");
+            for (auto& [slot, texture] : rig.textures) {
+                map.put(slot, texture);
+            }
+        }
+        if (def.save.rig.pose) {
+            auto& list = rigmap.putList("pose");
+            for (auto& mat : rig.pose.matrices) {
+                list.put(dynamic::to_value(mat));
+            }
+        }
+    }
+    auto& scripts = entity.getScripting();
+    if (!scripts.components.empty()) {
+        auto& compsMap = root->putMap("comps");
+        for (auto& comp : scripts.components) {
+            auto data = scripting::get_component_value(comp->env, "SAVED_DATA");
+            compsMap.put(comp->name, data);
+        }
+    }
+    return root;
+}
+
 void Entities::clean() {
     for (auto it = entities.begin(); it != entities.end();) {
         if (!registry.get<EntityId>(it->second).destroyFlag) {
             ++it;
         } else {
+            uids.erase(it->second);
             registry.destroy(it->second);
             it = entities.erase(it);
         }
     }
+}
+
+std::vector<Entt_Entity> Entities::getAllInside(AABB aabb) {
+    std::vector<Entt_Entity> collected;
+    auto view = registry.view<Transform>();
+    for (auto [entity, transform] : view.each()) {
+        if (aabb.contains(transform.pos)) {
+            const auto& found = uids.find(entity);
+            if (found == uids.end()) continue;
+            if (auto wrapper = get(found->second)) {
+                collected.push_back(*wrapper);
+            }
+        }
+    }
+    return collected;
 }
 
 void Entities::render(Assets* assets, ModelBatch& batch, const Frustum& frustum) {

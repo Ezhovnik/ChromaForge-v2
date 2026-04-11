@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <unordered_map>
 #include <condition_variable>
+#include <vector>
 
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -16,6 +17,7 @@
 #include "../typedefs.h"
 #include "../util/BufferPool.h"
 #include "../voxels/Chunk.h"
+#include "../data/dynamic_fwd.h"
 
 namespace RegionConsts {
     inline constexpr uint SIZE_BIT = 5; // Размер региона 
@@ -25,6 +27,7 @@ namespace RegionConsts {
     inline constexpr uint LAYER_VOXELS = 0;
     inline constexpr uint LAYER_LIGHTS = 1;
     inline constexpr uint LAYER_INVENTORIES = 2;
+    inline constexpr uint LAYER_ENTITIES = 3;
 
     inline constexpr uint MAX_OPEN_FILES = 16;
 
@@ -121,7 +124,7 @@ class WorldRegions {
     std::unordered_map<glm::ivec3, std::unique_ptr<regFile>> openRegFiles;
     std::mutex regFilesMutex;
     std::condition_variable regFilesCv;
-    RegionsLayer layers[3] {};
+    RegionsLayer layers[4] {};
     util::BufferPool<ubyte> bufferPool {
         std::max(CHUNK_DATA_LEN, LIGHTMAP_DATA_LEN) * 2
     };
@@ -157,13 +160,14 @@ public:
     WorldRegions(const WorldRegions&) = delete;
     ~WorldRegions();
 
-    void put(Chunk* chunk);
+    void put(Chunk* chunk, std::vector<ubyte> entitiesData);
 
     void put(int x, int z, int layer, std::unique_ptr<ubyte[]> data, size_t size, bool rle);
 
     std::unique_ptr<ubyte[]> getChunk(int x, int z);
     std::unique_ptr<light_t[]> getLights(int x, int z);
     chunk_inventories_map fetchInventories(int x, int z);
+    dynamic::Map_sptr fetchEntities(int x, int z);
 
     void processRegionVoxels(int x, int z, const regionproc& func);
 

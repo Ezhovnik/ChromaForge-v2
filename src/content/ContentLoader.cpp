@@ -133,7 +133,7 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
     } else if (model == "custom") { 
         def.model = BlockModel::Custom;
         if (root->has("model-primitives")) {
-            loadCustomBlockModel(def, root->map("model-primitives"));
+            loadCustomBlockModel(def, root->map("model-primitives").get());
         } else {
             LOG_ERROR("Error occured while block {} parsed: no 'model-primitives' found", name);
         }
@@ -322,6 +322,10 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
             }
         }
     }
+
+    root->flag("save", def.save.enabled);
+    root->flag("save-rig-pose", def.save.rig.pose);
+    root->flag("save-rig-textures", def.save.rig.textures);
 }
 
 void ContentLoader::loadEntity(Entity& def, const std::string& full, const std::string& name) {

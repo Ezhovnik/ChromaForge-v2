@@ -385,7 +385,7 @@ asset_loader::postfunc asset_loader::rig(
     auto path = paths->find(file + ".json");
     auto text = files::read_string(path);
     try {
-        auto rig = rigging::RigConfig::parse(text, path.u8string()).release();
+        auto rig = rigging::RigConfig::parse(text, path.u8string(), name).release();
         return [=](Assets* assets) {
             assets->store(std::unique_ptr<rigging::RigConfig>(rig), name);
         };

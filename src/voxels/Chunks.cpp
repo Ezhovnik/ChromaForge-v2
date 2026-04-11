@@ -18,6 +18,10 @@
 #include "../content/Content.h"
 #include "../math/AABB.h"
 #include "../math/rays.h"
+#include "../world/Level.h"
+#include "../objects/Entities.h"
+#include "../coders/byte_utils.h"
+#include "../coders/json.h"
 
 // TODO: Refactor this garbage
 
@@ -31,16 +35,15 @@ Chunks::Chunks(
 	int32_t areaOffsetX, 
 	int32_t areaOffsetZ, 
 	WorldFiles* worldFiles, 
-	LevelEvents* events, 
-	const Content* content
-) : width(width), 
-	depth(depth), 
-	areaOffsetX(areaOffsetX), 
-	areaOffsetZ(areaOffsetZ), 
-	events(events), 
-	worldFiles(worldFiles), 
-	contentIds(content->getIndices()), 
-	chunks(width * depth), 
+	Level* level
+) : level(level),
+	width(width),
+	depth(depth),
+	areaOffsetX(areaOffsetX),
+	areaOffsetZ(areaOffsetZ),
+	worldFiles(worldFiles),
+	contentIds(level->content->getIndices()),
+	chunks(width * depth),
 	chunksSecond(width * depth)
 {
 	volume = (size_t)width * (size_t)depth;
@@ -474,9 +477,9 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 }
 
 glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDist) {
-	float px = start.x;
-	float py = start.y;
-	float pz = start.z;
+	const float px = start.x;
+	const float py = start.y;
+	const float pz = start.z;
 
 	float dx = dir.x;
 	float dy = dir.y;
@@ -570,7 +573,6 @@ void Chunks::setCenter(int32_t x, int32_t z) {
 }
 
 void Chunks::translate(int32_t dx, int32_t dz) {
-	auto& regions = worldFiles->getRegions();
 	for (uint i = 0; i < volume; ++i){
 		chunksSecond[i] = nullptr;
 	}
@@ -580,9 +582,9 @@ void Chunks::translate(int32_t dx, int32_t dz) {
 			int nx = x - dx;
 			int nz = z - dz;
 			if (chunk == nullptr) continue;
-			if (nx < 0 || nz < 0 || nx >= int(width) || nz >= int(depth)) {
-				events->trigger(CHUNK_HIDDEN, chunk.get());
-				regions.put(chunk.get());
+			if (nx < 0 || nz < 0 || nx >= static_cast<int>(width) || nz >= static_cast<int>(depth)) {
+				level->events->trigger(CHUNK_HIDDEN, chunk.get());
+				save(chunk.get());
 				chunksCount--;
 				continue;
 			}
@@ -627,7 +629,7 @@ bool Chunks::putChunk(const std::shared_ptr<Chunk>& chunk) {
 	int z = chunk->chunk_z;
 	x -= areaOffsetX;
 	z -= areaOffsetZ;
-	if (x < 0 || z < 0 || x >= int(width) || z >= int(depth)) return false;
+	if (x < 0 || z < 0 || x >= static_cast<int>(width) || z >= static_cast<int>(depth)) return false;
 	chunks[z * width + x] = chunk;
 	chunksCount++;
 	return true;
@@ -649,8 +651,8 @@ void Chunks::resize(uint32_t newWidth, uint32_t newDepth) {
 	const size_t newVolume = (size_t)newWidth * (size_t)newDepth;
 	std::vector<std::shared_ptr<Chunk>> newChunks(newVolume);
 	std::vector<std::shared_ptr<Chunk>> newChunksSecond(newVolume);
-	for (int z = 0; z < int(depth) && z < int(newDepth); ++z) {
-		for (int x = 0; x < int(width) && x < int(newWidth); ++x) {
+	for (int z = 0; z < static_cast<int>(depth) && z < static_cast<int>(newDepth); ++z) {
+		for (int x = 0; x < static_cast<int>(width) && x < static_cast<int>(newWidth); ++x) {
 			newChunks[z * newWidth + x] = chunks[z * width + x];
 		}
 	}
@@ -662,13 +664,47 @@ void Chunks::resize(uint32_t newWidth, uint32_t newDepth) {
 }
 
 void Chunks::saveAndClear() {
-	auto& regions = worldFiles->getRegions();
 	for (size_t i = 0; i < volume; ++i){
-		Chunk* chunk = chunks[i].get();
+		auto chunk = chunks[i].get();
 		chunks[i] = nullptr;
-		if (chunk) {
-            regions.put(chunk);
-        }
+		save(chunk);
 	}
 	chunksCount = 0;
+}
+
+void Chunks::save(Chunk* chunk) {
+    if (chunk != nullptr) {
+        AABB aabb (
+            glm::vec3(
+				chunk->chunk_x * CHUNK_WIDTH,
+				-16,
+				chunk->chunk_z * CHUNK_DEPTH
+			),
+            glm::vec3(
+				(chunk->chunk_x + 1) * CHUNK_WIDTH,
+				CHUNK_HEIGHT + 32,
+				(chunk->chunk_z + 1) * CHUNK_DEPTH
+			)
+        );
+        auto entities = level->entities->getAllInside(aabb);
+        auto root = dynamic::create_map();
+        auto& list = root->putList("data");
+        for (auto& entity : entities) {
+			level->entities->onSave(entity);
+            list.put(level->entities->serialize(entity));
+			entity.destroy();
+        }
+        if (!entities.empty()) {
+            chunk->flags.entities = true;
+        }
+        worldFiles->getRegions().put(chunk, json::to_binary(root, true));
+    }
+}
+
+void Chunks::saveAll() {
+    for (size_t i = 0; i < volume; ++i) {
+        if (auto& chunk = chunks[i]) {
+            save(chunk.get());
+        }
+    }
 }

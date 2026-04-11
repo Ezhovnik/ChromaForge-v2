@@ -22,6 +22,7 @@ struct entity_funcs_set {
     bool on_fall : 1;
     bool on_trigger_enter : 1;
     bool on_trigger_exit : 1;
+    bool on_save : 1;
 };
 
 struct Entity;
@@ -159,6 +160,7 @@ private:
     entt::registry registry;
     Level* level;
     std::unordered_map<entityid_t, entt::entity> entities;
+    std::unordered_map<entt::entity, entityid_t> uids;
     entityid_t nextID = 1;
 
     void preparePhysics();
@@ -174,10 +176,27 @@ public:
     entityid_t spawn(
         Assets* assets,
         Entity& def,
-        glm::vec3 pos,
-        dynamic::Value args=dynamic::NONE
+        Transform transform,
+        dynamic::Value args=dynamic::NONE,
+        dynamic::Map_sptr saved=nullptr,
+        entityid_t uid=0
     );
     void despawn(entityid_t id);
+
+    void loadEntities(dynamic::Map_sptr map);
+    void loadEntity(const dynamic::Map_sptr& map);
+    void onSave(const Entt_Entity& entity);
+
+    std::vector<Entt_Entity> getAllInside(AABB aabb);
+
+    dynamic::Value serialize(const Entt_Entity& entity);
+
+    void setNextID(entityid_t id) {
+        nextID = id;
+    }
+    inline entityid_t peekNextID() const {
+        return nextID;
+    }
 
     std::optional<Entt_Entity> get(entityid_t id) {
         const auto& found = entities.find(id);

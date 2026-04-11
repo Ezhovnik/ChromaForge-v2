@@ -188,8 +188,9 @@ void Player::deserialize(dynamic::Map *src) {
 	src->flag("noclip", noclip);
     setChosenSlot(src->get("chosen-slot", getChosenSlot()));
 
-    auto invmap = src->map("inventory");
-    if (invmap) getInventory()->deserialize(invmap);
+    if (auto invmap = src->map("inventory")) {
+        getInventory()->deserialize(invmap.get());
+    }
 }
 
 void Player::convert(dynamic::Map* data, const ContentLUT* lut) {
@@ -197,12 +198,15 @@ void Player::convert(dynamic::Map* data, const ContentLUT* lut) {
     if (players) {
         for (uint i = 0; i < players->size(); ++i) {
             auto playerData = players->map(i);
-            auto inventory = playerData->map("inventory");
-            if (inventory) Inventory::convert(inventory, lut);
+            if (auto inventory = playerData->map("inventory")) {
+                Inventory::convert(inventory.get(), lut);
+			}
         }
     } else {
         auto inventory = data->map("inventory");
-        if (inventory) Inventory::convert(inventory, lut);
+        if (auto inventory = data->map("inventory")) {
+            Inventory::convert(inventory.get(), lut);
+		}
     }
 }
 

@@ -17,6 +17,7 @@
 #include "../items/Inventories.h"
 #include "WorldGenerators.h"
 #include "../settings.h"
+#include "../objects/Entities.h"
 
 world_load_error::world_load_error(const std::string& message) : std::runtime_error(message) {
 }
@@ -47,15 +48,10 @@ void World::updateTimers(float delta) {
 
 void World::write(Level* level) {
 	const Content* content = level->content;
-	Chunks* chunks = level->chunks.get();
-	auto& regions = wfile->getRegions();
 
-	// Проходим по всем чанкам в хранилище
-	for (size_t i = 0; i < chunks->volume; ++i) {
-		if (auto chunk = chunks->chunks[i]) {
-            regions.put(chunk.get());
-        }
-	}
+	level->chunks->saveAll();
+
+	nextEntityId = level->entities->peekNextID();
 
 	// Запись метаданных мира и игрока
 	wfile->write(this, content);
@@ -134,7 +130,7 @@ std::unique_ptr<Level> World::load(
 						DEFAULT_PLAYER_SPEED,
 						level->inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE)
 					);
-                    player->deserialize(players->map(i));
+                    player->deserialize(players->map(i).get());
                     level->inventories->store(player->getInventory());
                 }
             } else {
@@ -213,6 +209,8 @@ void World::deserialize(dynamic::Map* root) {
 
 	// Счётчик инвентарей (по умолчанию 2, т.к. 1 обычно зарезервирован)
     nextInventoryId = root->get("next-inventory-id", 2);
+
+	nextEntityId = root->get("next-entity-id", 1);
 }
 
 std::unique_ptr<dynamic::Map> World::serialize() const {
@@ -238,5 +236,6 @@ std::unique_ptr<dynamic::Map> World::serialize() const {
     weatherobj.put("skyClearness", skyClearness);
 
     root->put("next-inventory-id", nextInventoryId);
+	root->put("next-entity-id", nextEntityId);
     return root;
 }
