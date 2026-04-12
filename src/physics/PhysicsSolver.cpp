@@ -26,8 +26,6 @@ void PhysicsSolver::step(
 	Hitbox* hitbox,
 	float delta,
 	uint substeps,
-	bool shifting,
-	bool collisions,
     entityid_t entity
 ) {
 	float subDelta = delta / static_cast<float>(substeps);
@@ -49,7 +47,7 @@ void PhysicsSolver::step(
 
 		vel += gravity * subDelta * gravityScale;
 
-		if (collisions) {
+		if (hitbox->type == BodyType::Dynamic) {
 			colisionCalc(
 				chunks,
 				hitbox,
@@ -68,7 +66,7 @@ void PhysicsSolver::step(
 		pos += vel * subDelta + gravity * gravityScale * subDelta * subDelta * 0.5f;
 		if (hitbox->grounded && pos.y < prev_y) pos.y = prev_y;
 
-		if (shifting && hitbox->grounded){
+		if (hitbox->crouching && hitbox->grounded){
 			float y = pos.y - half.y - PhysicsSolver_Consts::EPS;
 			hitbox->grounded = false;
 			for (float x = prev_x - half.x + PhysicsSolver_Consts::EPS; x <= prev_x + half.x - PhysicsSolver_Consts::EPS; x += step_size) {
@@ -98,25 +96,25 @@ void PhysicsSolver::step(
 	AABB aabb;
     aabb.a = hitbox->position - hitbox->halfsize;
     aabb.b = hitbox->position + hitbox->halfsize;
-    for (size_t i = 0; i < triggers.size(); ++i) {
-        auto& trigger = *triggers[i];
-        if (trigger.entity == entity) continue;
-        bool triggered = false;
-        switch (trigger.type) {
-            case TriggerType::AABB:
-                triggered = aabb.intersect(trigger.calculated.aabb);
+    for (size_t i = 0; i < sensors.size(); ++i) {
+        auto& sensor = *sensors[i];
+        if (sensor.entity == entity) continue;
+        bool sensored = false;
+        switch (sensor.type) {
+            case SensorType::AABB:
+                sensored = aabb.intersect(sensor.calculated.aabb);
                 break;
-            case TriggerType::RADIUS:
-                triggered = glm::distance2(
-                    hitbox->position, glm::vec3(trigger.calculated.radial)
-				) < trigger.calculated.radial.w;
+            case SensorType::RADIUS:
+                sensored = glm::distance2(
+                    hitbox->position, glm::vec3(sensor.calculated.radial)
+				) < sensor.calculated.radial.w;
                 break;
         }
-        if (triggered) {
-            if (trigger.prevEntered.find(entity) == trigger.prevEntered.end()) {
-                trigger.enterCallback(trigger.entity, trigger.index, entity);
+        if (sensored) {
+            if (sensor.prevEntered.find(entity) == sensor.prevEntered.end()) {
+                sensor.enterCallback(sensor.entity, sensor.index, entity);
             }
-            trigger.nextEntered.insert(entity);
+            sensor.nextEntered.insert(entity);
         }
     }
 }

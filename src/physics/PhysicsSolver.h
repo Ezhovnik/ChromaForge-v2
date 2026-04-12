@@ -18,7 +18,7 @@ struct blockstate;
 class PhysicsSolver {
 private:
 	glm::vec3 gravity; // Вектор гравитации, применяемой к объектам
-	std::vector<Trigger*> triggers;
+	std::vector<Sensor*> sensors;
 public:
 	PhysicsSolver(glm::vec3 gravity); // Конструтор
 
@@ -27,10 +27,9 @@ public:
 		Hitbox* hitbox,
 		float delta,
 		uint substeps,
-		bool shifting,
-		bool collisions,
         entityid_t entity
 	); // Выполняет один шаг физического моделирования для указанного хитбокса.
+
 	void colisionCalc(
 		Chunks* chunks,
 		Hitbox* hitbox,
@@ -47,8 +46,8 @@ public:
 		Hitbox* hitbox
 	);
 
-	void setTriggers(std::vector<Trigger*> triggers) {
-        this->triggers = std::move(triggers);
+	void setSensors(std::vector<Sensor*> sensors) {
+        this->sensors = std::move(sensors);
     }
 };
 

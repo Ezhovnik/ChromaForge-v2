@@ -5,6 +5,32 @@
 #include "../core_content_defs.h"
 #include "../util/stringutil.h"
 
+std::string to_string(BlockModel model) {
+    switch (model) {
+        case BlockModel::None: return "none";
+        case BlockModel::Cube: return "cube";
+        case BlockModel::X: return "X";
+        case BlockModel::AABB: return "aabb";
+        case BlockModel::Custom: return "custom";
+    }
+	return "unknown";
+}
+
+std::optional<BlockModel> BlockModel_from(std::string_view str) {
+    if (str == "none") {
+        return BlockModel::None;
+    } else if (str == "cube") {
+        return BlockModel::Cube;
+    } else if (str == "X") {
+        return BlockModel::X;
+    } else if (str == "aabb") {
+        return BlockModel::AABB;
+    } else if (str == "custom") {
+        return BlockModel::Custom;
+    }
+    return std::nullopt;
+}
+
 CoordSystem::CoordSystem(glm::ivec3 axisX, glm::ivec3 axisY, glm::ivec3 axisZ) : axisX(axisX), axisY(axisY), axisZ(axisZ) {
 	fix = glm::ivec3(0);
 	if (isVectorHasNegatives(axisX)) fix -= axisX;

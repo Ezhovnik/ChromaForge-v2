@@ -8,6 +8,7 @@
 
 #include "../typedefs.h"
 #include "../math/AABB.h"
+#include "../physics/Hitbox.h"
 
 namespace rigging {
     class RigConfig;
@@ -18,9 +19,10 @@ struct Entity {
     std::vector<std::string> components;
     std::string rigName = name;
 
+    BodyType bodyType = BodyType::Dynamic;
     glm::vec3 hitbox {0.5f};
-    std::vector<std::pair<size_t, AABB>> boxTriggers {};
-    std::vector<std::pair<size_t, float>> radialTriggers {};
+    std::vector<std::pair<size_t, AABB>> boxSensors {};
+    std::vector<std::pair<size_t, float>> radialSensors {};
 
     struct {
         bool enabled = true;

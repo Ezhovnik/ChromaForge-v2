@@ -256,13 +256,7 @@ static int l_get_textures(lua::State* L) {
 
 static int l_get_model(lua::State* L) {
     if (auto def = require_block(L)) {
-        switch (def->model) {
-            case BlockModel::Cube: return lua::pushstring(L, "cube");
-            case BlockModel::AABB: return lua::pushstring(L, "aabb");
-            case BlockModel::X: return lua::pushstring(L, "X");
-            case BlockModel::Custom: return lua::pushstring(L, "custom");
-            case BlockModel::None: return lua::pushstring(L, "none");
-        }
+        return lua::pushstring(L, to_string(def->model));
     }
     return 0;
 }
@@ -285,6 +279,13 @@ static int l_get_hitbox(lua::State* L) {
 static int l_get_rotation_profile(lua::State* L) {
     if (auto def = require_block(L)) {
         return lua::pushstring(L, def->rotations.name);   
+    }
+    return 0;
+}
+
+static int l_get_picking_item(lua::State* L) {
+    if (auto def = require_block(L)) {
+        return lua::pushinteger(L, def->rt.pickingItem);   
     }
     return 0;
 }
@@ -316,5 +317,6 @@ const luaL_Reg blocklib [] = {
     {"get_model", lua::wrap<l_get_model>},
     {"get_hitbox", lua::wrap<l_get_hitbox>},
     {"get_rotation_profile", lua::wrap<l_get_rotation_profile>},
+    {"get_picking_item", lua::wrap<l_get_picking_item>},
     {NULL, NULL}
 };

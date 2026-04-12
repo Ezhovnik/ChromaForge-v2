@@ -583,7 +583,7 @@ void Chunks::translate(int32_t dx, int32_t dz) {
 			int nz = z - dz;
 			if (chunk == nullptr) continue;
 			if (nx < 0 || nz < 0 || nx >= static_cast<int>(width) || nz >= static_cast<int>(depth)) {
-				level->events->trigger(CHUNK_HIDDEN, chunk.get());
+				level->events->sensor(CHUNK_HIDDEN, chunk.get());
 				save(chunk.get());
 				chunksCount--;
 				continue;

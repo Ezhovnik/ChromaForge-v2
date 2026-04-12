@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 #include "../math/AABB.h"
 #include "../typedefs.h"
@@ -20,6 +21,9 @@ enum class BlockModel {
     AABB, // Форма, повторяющая хитбокс
     Custom
 };
+
+std::string to_string(BlockModel model);
+std::optional<BlockModel> BlockModel_from(std::string_view str);
 
 inline constexpr int FACE_MX = 0;
 inline constexpr int FACE_PX = 1;

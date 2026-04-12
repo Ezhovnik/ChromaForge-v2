@@ -125,25 +125,19 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         }
     }
 
-    std::string model = "block";
-    root->str("model", model);
-    if (model == "block") {
-        def.model = BlockModel::Cube;
-    } else if (model == "aabb") {
-        def.model = BlockModel::AABB;
-    } else if (model == "custom") { 
-        def.model = BlockModel::Custom;
-        if (root->has("model-primitives")) {
-            loadCustomBlockModel(def, root->map("model-primitives").get());
-        } else {
-            LOG_ERROR("Error occured while block {} parsed: no 'model-primitives' found", name);
+    std::string modelName;
+    root->str("model", modelName);
+    if (auto model = BlockModel_from(modelName)) {
+        if (*model == BlockModel::Custom) {
+            if (root->has("model-primitives")) {
+                loadCustomBlockModel(def, root->map("model-primitives").get());
+            } else {
+                LOG_ERROR("Error occured while block {} parsed: no 'model-primitives' found", name);
+            }
         }
-    } else if (model == "X") {
-        def.model = BlockModel::X;
-    } else if (model == "none") {
-        def.model = BlockModel::None;
-    } else {
-        LOG_WARN("Unknown block {} model {}", name, model);
+        def.model = *model;
+    } else if (!modelName.empty()) {
+        LOG_WARN("Unknown block {} model {}", name, modelName);
         def.model = BlockModel::None;
     }
 
@@ -306,19 +300,19 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
         def.hitbox = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
     }
 
-    if (auto triggersarr = root->list("triggers")) {
-        for (size_t i = 0; i < triggersarr->size(); ++i) {
-            if (auto triggerarr = triggersarr->list(i)) {
-                auto triggerType = triggerarr->str(0);
-                if (triggerType == "aabb") {
-                    def.boxTriggers.push_back({i, {
-                        {triggerarr->num(1), triggerarr->num(2), triggerarr->num(3)},
-                        {triggerarr->num(4), triggerarr->num(5), triggerarr->num(6)}
+    if (auto sensorsarr = root->list("sensors")) {
+        for (size_t i = 0; i < sensorsarr->size(); ++i) {
+            if (auto sensorarr = sensorsarr->list(i)) {
+                auto sensorType = sensorarr->str(0);
+                if (sensorType == "aabb") {
+                    def.boxSensors.push_back({i, {
+                        {sensorarr->num(1), sensorarr->num(2), sensorarr->num(3)},
+                        {sensorarr->num(4), sensorarr->num(5), sensorarr->num(6)}
                     }});
-                } else if (triggerType == "radius") {
-                    def.radialTriggers.push_back({i, triggerarr->num(1)});
+                } else if (sensorType == "radius") {
+                    def.radialSensors.push_back({i, sensorarr->num(1)});
                 } else {
-                    LOG_WARN("Entity {}: trigger #{} - unknown type {}", name, i, util::quote(triggerType));
+                    LOG_WARN("Entity {}: sensor #{} - unknown type {}", name, i, util::quote(sensorType));
                 }
             }
         }
@@ -327,6 +321,14 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
     root->flag("save", def.save.enabled);
     root->flag("save-rig-pose", def.save.rig.pose);
     root->flag("save-rig-textures", def.save.rig.textures);
+
+    std::string bodyTypeName;
+    root->str("body-type", bodyTypeName);
+    if (auto bodyType = BodyType_from(bodyTypeName)) {
+        def.bodyType = *bodyType;
+    }
+
+    root->str("rig-name", def.rigName);
 }
 
 void ContentLoader::loadEntity(Entity& def, const std::string& full, const std::string& name) {

@@ -71,10 +71,19 @@ void Player::updateInput(PlayerInput& input, float delta) {
 	float speed = this->speed;
 
 	// Применяем модификаторы скорости
-	if (flight) speed *= PlayerConsts::FLIGHT_SPEED_MUL;
-	if (input.cheat) speed *= PlayerConsts::CHEAT_SPEED_MUL;
-	if (crouch) speed *= PlayerConsts::CROUCH_SPEED_MUL;
-	else if (input.sprint) speed *= PlayerConsts::RUN_SPEED_MUL;
+	if (flight) {
+		speed *= PlayerConsts::FLIGHT_SPEED_MUL;
+	}
+	if (input.cheat) {
+		speed *= PlayerConsts::CHEAT_SPEED_MUL;
+	}
+
+	hitbox->crouching = crouch;
+	if (crouch) {
+		speed *= PlayerConsts::CROUCH_SPEED_MUL;
+	} else if (input.sprint) {
+		speed *= PlayerConsts::RUN_SPEED_MUL;
+	}
 
 	// Вычисляем направление движения на основе ввода и ориентации камеры
 	glm::vec3 dir(0, 0, 0);
