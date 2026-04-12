@@ -45,6 +45,7 @@
 #include "ModelBatch.h"
 #include "../core/Model.h"
 #include "../../objects/Entities.h"
+#include "../../logic/scripting/scripting_hud.h"
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -208,6 +209,9 @@ void WorldRenderer::renderLevel(
 
     shader->uniformMatrix("u_model", glm::mat4(1.0f));
     level->entities->render(assets, *modelBatch, *frustumCulling, pause);
+    if (!pause) {
+        scripting::on_frontend_render();
+    }
     modelBatch->render();
 
     skybox->unbind();

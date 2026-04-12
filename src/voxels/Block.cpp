@@ -48,6 +48,15 @@ void CoordSystem::transform(AABB& aabb) const {
 	aabb.b += fix;
 }
 
+const BlockRotProfile BlockRotProfile::NONE {"none", {
+        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, // North
+        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, // East
+        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, // South
+        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, // West
+        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, // Up
+        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, // Down
+}};
+
 const BlockRotProfile BlockRotProfile::PIPE {"pipe", {
 		{{ 1, 0, 0 }, { 0, 0, 1 }, { 0, -1, 0 }}, // North
 		{{ 0, 0, 1 }, {-1, 0, 0 }, { 0, -1, 0 }}, // East
@@ -67,7 +76,6 @@ const BlockRotProfile BlockRotProfile::PANE {"pane", {
 Block::Block(const std::string& name) : 
 	name(name), 
 	textureFaces{TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND},
-	rotations(BlockRotProfile::PIPE),
 	caption(util::id_to_caption(name))
 {}
 
@@ -76,6 +84,5 @@ Block::Block(
 	const std::string& texture
 ) : name(std::move(name)), 
 	textureFaces{texture, texture, texture, texture, texture, texture}, 
-	rotations(BlockRotProfile::PIPE),
 	caption(util::id_to_caption(name))
 {}

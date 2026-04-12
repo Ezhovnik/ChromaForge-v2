@@ -14,5 +14,6 @@
     "obstacle": false,
     "rotation": "pipe",
     "grounded": true,
-    "shadeless": true
+    "shadeless": true,
+    "material": "chromaforge:wood"
 }

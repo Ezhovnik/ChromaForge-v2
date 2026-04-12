@@ -32,6 +32,15 @@ void scripting::on_frontend_close() {
     scripting::hud = nullptr;
 }
 
+void scripting::on_frontend_render() {
+    for (auto& pack : engine->getContentPacks()) {
+        lua::emit_event(lua::get_main_thread(), pack.id + ".hudrender", 
+        [&] (lua::State* L) {
+            return 0;            
+        });
+    }
+}
+
 void scripting::load_hud_script(
     const scriptenv& senv,
     const std::string& packid,
@@ -45,6 +54,7 @@ void scripting::load_hud_script(
 
     register_event(env, "init", packid + ".init");
     register_event(env, "on_hud_open", packid + ".hudopen");
+    register_event(env, "on_hud_render", packid + ".hudrender");
     register_event(env, "on_hud_close", packid + ".hudclose");
 
     LOG_DEBUG("Script {} successfully loaded", file.u8string());

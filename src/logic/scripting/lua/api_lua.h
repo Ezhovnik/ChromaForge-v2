@@ -21,9 +21,10 @@ extern const luaL_Reg consolelib [];
 extern const luaL_Reg tomllib [];
 extern const luaL_Reg mat4lib [];
 extern const luaL_Reg entitylib [];
-extern const luaL_Reg vec2lib [];
-extern const luaL_Reg vec3lib [];
-extern const luaL_Reg vec4lib [];
+extern const luaL_Reg vec2lib []; // vecn.cpp
+extern const luaL_Reg vec3lib []; // vecn.cpp
+extern const luaL_Reg vec4lib []; // vecn.cpp
+extern const luaL_Reg cameralib [];
 
 extern const luaL_Reg skeletonlib [];
 extern const luaL_Reg rigidbodylib [];

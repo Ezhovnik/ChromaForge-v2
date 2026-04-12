@@ -20,6 +20,8 @@ local Rigidbody = {__index={
     set_size=function(self, v) return __rigidbody.set_size(self.eid, v) end,
     get_gravity_scale=function(self) return __rigidbody.get_gravity_scale(self.eid) end,
     set_gravity_scale=function(self, s) return __rigidbody.set_gravity_scale(self.eid, s) end,
+    get_linear_damping=function(self) return __rigidbody.get_linear_damping(self.eid) end,
+    set_linear_damping=function(self, f) return __rigidbody.set_linear_damping(self.eid, f) end,
     is_vdamping=function(self) return __rigidbody.is_vdamping(self.eid) end,
     set_vdamping=function(self, b) return __rigidbody.set_vdamping(self.eid, b) end,
     is_grounded=function(self) return __rigidbody.is_grounded(self.eid) end,
@@ -37,6 +39,7 @@ local Skeleton = {__index={
     get_model=function(self, i) return __skeleton.get_model(self.eid, i) end,
     get_matrix=function(self, i) return __skeleton.get_matrix(self.eid, i) end,
     set_matrix=function(self, i, m) return __skeleton.set_matrix(self.eid, i, m) end,
+    get_texture=function(self, s) return __skeleton.get_texture(self.eid, s) end,
     set_texture=function(self, s, s2) return __skeleton.set_texture(self.eid, s, s2) end,
 }}
 
@@ -46,7 +49,8 @@ end
 
 local Entity = {__index={
     despawn=function(self) return entities.despawn(self.eid) end,
-    set_rig=function(self, s) return entities.set_rig(self.eid, s) end,
+    get_skeleton=function(self) return entities.get_skeleton(self.eid) end,
+    set_skeleton=function(self, s) return entities.set_skeleton(self.eid, s) end,
     get_component=function(self, name) return self.components[name] end,
     has_component=function(self, name) return self.components[name] ~= nil end,
     get_uid=function(self) return self.eid end,

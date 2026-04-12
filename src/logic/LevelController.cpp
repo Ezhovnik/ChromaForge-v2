@@ -56,6 +56,7 @@ void LevelController::saveWorld() {
     LOG_INFO("Saving world");
     level->getWorld()->wfile->createDirectories();
     scripting::on_world_save();
+    level->onSave();
     level->getWorld()->write(level.get());
     LOG_INFO("The world has been successfully saved");
 }

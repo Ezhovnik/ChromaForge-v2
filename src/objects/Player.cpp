@@ -34,12 +34,16 @@ Player::Player(
 	speed(speed),
 	chosenSlot(0),
 	position(position),
-	camera(std::make_shared<Camera>(position, glm::radians(90.0f))),
-	spCamera(std::make_shared<Camera>(position, glm::radians(90.0f))),
-	tpCamera(std::make_shared<Camera>(position, glm::radians(90.0f))),
+	camera(level->getCamera(CHROMAFORGE_CONTENT_NAMESPACE + ":first-person")),
+    spCamera(level->getCamera(CHROMAFORGE_CONTENT_NAMESPACE + ":third-person-front")),
+    tpCamera(level->getCamera(CHROMAFORGE_CONTENT_NAMESPACE + ":third-person-back")),
 	currentCamera(camera),
 	inventory(std::move(inventory)),
-	eid(eid) {
+	eid(eid)
+{
+	camera->setFov(glm::radians(90.0f));
+    spCamera->setFov(glm::radians(90.0f));
+    tpCamera->setFov(glm::radians(90.0f));
 }
 
 Player::~Player() {

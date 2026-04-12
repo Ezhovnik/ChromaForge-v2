@@ -30,6 +30,7 @@ static void create_libs(lua::State* L) {
     openlib(L, "audio", audiolib);
     openlib(L, "block", blocklib);
     openlib(L, "builtin", builtinlib);
+    openlib(L, "cameras", cameralib);
     openlib(L, "console", consolelib);
     openlib(L, "entities", entitylib);
     openlib(L, "file", filelib);

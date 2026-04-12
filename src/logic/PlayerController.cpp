@@ -125,6 +125,8 @@ void CameraControl::switchCamera() {
     if (static_cast<size_t>(index) != playerCameras.size()) {
         index = (index + 1) % playerCameras.size();
         player->currentCamera = playerCameras.at(index);
+    } else {
+        player->currentCamera = camera;
     }
 }
 
@@ -155,7 +157,9 @@ void CameraControl::update(const PlayerInput& input, float delta, Chunks* chunks
         tpCamera->front = camera->front;
     }
 
-    player->currentCamera->setFov(glm::radians(settings.fov.get()));
+    if (player->currentCamera == spCamera || player->currentCamera == tpCamera || player->currentCamera == camera) {
+        player->currentCamera->setFov(glm::radians(settings.fov.get()));
+    }
 }
 
 PlayerController::PlayerController(

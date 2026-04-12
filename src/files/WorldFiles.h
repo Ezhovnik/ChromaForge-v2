@@ -44,10 +44,12 @@ public:
     ~WorldFiles(); // Деструктор
 
     std::filesystem::path getPlayerFile() const;
-
+    std::filesystem::path getResourcesFile() const;
     void createDirectories();
 
     bool readWorldInfo(World* world);
+
+    bool readResourcesData(const Content* content);
 
     void write(const World* world, const Content* content);
     void writePacks(const std::vector<ContentPack>& packs);

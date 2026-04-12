@@ -20,6 +20,7 @@
 #include "../../logic/LevelController.h"
 #include "../../objects/Entity.h"
 #include "../../objects/Entities.h"
+#include "../../content/Content.h"
 
 static inline const std::string STDCOMP = "stdcomp";
 

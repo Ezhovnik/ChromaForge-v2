@@ -14,6 +14,8 @@
 #include "../interfaces/Object.h"
 #include "../settings.h"
 #include "../objects/Entities.h"
+#include "../window/Camera.h"
+#include "../data/dynamic_util.h"
 
 inline constexpr float GRAVITY = -22.6f;
 
@@ -29,6 +31,23 @@ Level::Level(
     entities(std::make_unique<Entities>(this)),
     settings(settings)
 {
+    auto& cameraIndices = content->getIndices(ResourceType::Camera);
+    for (size_t i = 0; i < cameraIndices.size(); ++i) {
+        auto camera = std::make_shared<Camera>();
+        if (auto map = cameraIndices.getSavedData(i)) {
+            dynamic::get_vec(map, "pos", camera->position);
+            dynamic::get_mat(map, "rot", camera->rotation);
+            map->flag("perspective", camera->perspective);
+            map->flag("flipped", camera->flipped);
+            map->num("zoom", camera->zoom);
+            float fov = camera->getFov();
+            map->num("fov", fov);
+            camera->setFov(fov);
+        }
+        camera->updateVectors();
+        cameras.push_back(std::move(camera));
+    }
+
     if (world->nextEntityId) {
         entities->setNextID(world->nextEntityId);
     }
@@ -77,4 +96,25 @@ void Level::loadMatrix(int32_t x, int32_t z, uint32_t radius) {
 
 World* Level::getWorld() {
     return world.get();
+}
+
+void Level::onSave() {
+    auto& cameraIndices = content->getIndices(ResourceType::Camera);
+    for (size_t i = 0; i < cameraIndices.size(); ++i) {
+        auto& camera = *cameras.at(i);
+        auto map = dynamic::create_map();
+        map->put("pos", dynamic::to_value(camera.position));
+        map->put("rot", dynamic::to_value(camera.rotation));
+        map->put("perspective", camera.perspective);
+        map->put("flipped", camera.flipped);
+        map->put("zoom", camera.zoom);
+        map->put("fov", camera.getFov());
+        cameraIndices.saveData(i, std::move(map));
+    }
+}
+
+std::shared_ptr<Camera> Level::getCamera(const std::string& name) {
+    size_t index = content->getIndices(ResourceType::Camera).indexOf(name);
+    if (index == ResourceIndices::MISSING) return nullptr;
+    return cameras.at(index);
 }

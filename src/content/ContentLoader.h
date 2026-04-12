@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "../typedefs.h"
+#include "content_fwd.h"
 
 class ContentBuilder;
 struct ContentPack;
@@ -17,6 +17,7 @@ struct ContentPackStats;
 
 namespace dynamic {
     class Map;
+    class List;
 }
 
 class ContentLoader {
@@ -35,6 +36,7 @@ private:
     static void loadBlock(Block& def, const std::string& name, const std::filesystem::path& file);
     static void loadItem(Item& def, const std::string& name, const std::filesystem::path& file);
     static void loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file);
+    void loadResources(ResourceType type, dynamic::List* list);
 public:
     ContentLoader(ContentPack* pack, ContentBuilder& builder);
 

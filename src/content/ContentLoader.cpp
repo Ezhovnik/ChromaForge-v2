@@ -466,5 +466,25 @@ void ContentLoader::load() {
         }
     }
 
+    std::filesystem::path resourcesFile = folder/std::filesystem::u8path("resources.json");
+    if (std::filesystem::exists(resourcesFile)) {
+        auto resRoot = files::read_json(resourcesFile);
+        for (const auto& [key, _] : resRoot->values) {
+            if (auto resType = ResourceType_from(key)) {
+                if (auto arr = resRoot->list(key)) {
+                    loadResources(*resType, arr.get());
+                }
+            } else {
+                LOG_WARN("Unknown resource type: {}", key);
+            }
+        }
+    }
+
     LOG_INFO("Successfully loaded content pack [{}]", pack->id);
+}
+
+void ContentLoader::loadResources(ResourceType type, dynamic::List* list) {
+    for (size_t i = 0; i < list->size(); ++i) {
+        builder.resourceIndices[static_cast<size_t>(type)].add(pack->id + ":" + list->str(i), nullptr);
+    }
 }

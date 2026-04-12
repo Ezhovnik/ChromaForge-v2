@@ -23,6 +23,7 @@ class Content;
 class Inventories;
 struct EngineSettings;
 class Entities;
+class Camera;
 
 /**
  * @brief Основной класс уровня, объединяющий мир, игрока, чанки, физику и освещение.
@@ -42,6 +43,7 @@ public:
      std::unique_ptr<ChunksStorage> chunksStorage; ///< Хранилище чанков
      std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
      std::unique_ptr<Entities> entities;
+     std::vector<std::shared_ptr<Camera>> cameras;
      const EngineSettings& settings;
      const Content* const content;
 	std::unique_ptr<Inventories> inventories; ///< Менеджер инвентарей (хранит все инвентари уровня)
@@ -92,6 +94,10 @@ public:
           std::shared_ptr<T> object = std::dynamic_pointer_cast<T>(objects[id]);
           return object; 
      }
+
+     void onSave();
+
+     std::shared_ptr<Camera> getCamera(const std::string& name);
 };
 
 #endif // WORLD_LEVEL_H_

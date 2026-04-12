@@ -23,6 +23,7 @@
 #include "../../debug/Logger.h"
 #include "../../settings.h"
 #include "../../input_bindings.h"
+#include "../../content/Content.h"
 
 LevelScreen::LevelScreen(
     Engine* engine,

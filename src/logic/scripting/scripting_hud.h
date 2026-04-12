@@ -13,6 +13,7 @@ namespace scripting {
 
     void on_frontend_init(Hud* hud);
     void on_frontend_close();
+    void on_frontend_render();
 
     void load_hud_script(
         const scriptenv& env,

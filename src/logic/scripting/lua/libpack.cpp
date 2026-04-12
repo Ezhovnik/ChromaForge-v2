@@ -11,6 +11,7 @@
 #include "../../../world/Level.h"
 #include "../../../world/World.h"
 #include "../../../assets/AssetsLoader.h"
+#include "../../../content/Content.h"
 
 static int l_pack_get_folder(lua::State* L) {
     std::string packName = lua::tostring(L, 1);

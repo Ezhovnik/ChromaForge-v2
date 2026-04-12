@@ -64,6 +64,10 @@ std::filesystem::path WorldFiles::getPacksFile() const {
 	return directory/std::filesystem::path("packs.list");
 }
 
+std::filesystem::path WorldFiles::getResourcesFile() const {
+    return directory/std::filesystem::path("resources.json");
+}
+
 void WorldFiles::write(const World* world, const Content* content) {
 	if (world) {
 		writeWorldInfo(world);
@@ -92,6 +96,7 @@ static void write_indices(const ContentUnitIndices<T>& indices, dynamic::List& l
         list.put(indices.get(i)->name);
 	}
 }
+
 void WorldFiles::writeIndices(const ContentIndices* indices) {
     dynamic::Map root;
 
@@ -117,6 +122,44 @@ bool WorldFiles::readWorldInfo(World* world) {
 	world->deserialize(root.get());
 
 	return true;
+}
+
+static void read_resources_data(
+    const Content* content, 
+    const dynamic::List_sptr& list,
+    ResourceType type
+) {
+    const auto& indices = content->getIndices(type);
+    for (size_t i = 0; i < list->size(); ++i) {
+        auto map = list->map(i);
+        std::string name;
+        map->str("name", name);
+        size_t index = indices.indexOf(name);
+        if (index == ResourceIndices::MISSING) {
+            LOG_WARN("Discard {}", name);
+        } else {
+            indices.saveData(index, map->map("saved"));
+        }
+    }
+}
+
+bool WorldFiles::readResourcesData(const Content* content) {
+    std::filesystem::path file = getResourcesFile();
+    if (!std::filesystem::is_regular_file(file)) {
+        LOG_WARN("resources.json does not exists");
+        return false;
+    }
+    auto root = files::read_json(file);
+    for (const auto& [key, _] : root->values) {
+        if (auto resType = ResourceType_from(key)) {
+            if (auto arr = root->list(key)) {
+                read_resources_data(content, arr, *resType);
+            }
+        } else {
+            LOG_WARN("Unknown resource type: {}", key);
+        }
+    }
+    return true;
 }
 
 static void erase_pack_indices(dynamic::Map* root, const std::string& id) {

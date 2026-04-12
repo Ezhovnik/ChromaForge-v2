@@ -48,6 +48,23 @@ void World::updateTimers(float delta) {
 	totalTime += delta;
 }
 
+void World::writeResources(const Content* content) {
+    auto root = dynamic::Map();
+    for (size_t typeIndex = 0; typeIndex < RESOURCE_TYPES_COUNT; ++typeIndex) {
+        auto typeName = to_string(static_cast<ResourceType>(typeIndex));
+        auto& list = root.putList(typeName);
+        auto& indices = content->resourceIndices[typeIndex];
+        for (size_t i = 0; i < indices.size(); ++i) {
+            auto& map = list.putMap();
+            map.put("name", indices.getName(i));
+            if (auto data = indices.getSavedData(i)) {
+                map.put("saved", data);
+            }
+        }
+    }
+    files::write_json(wfile->getResourcesFile(), &root);
+}
+
 void World::write(Level* level) {
 	const Content* content = level->content;
 
@@ -66,6 +83,8 @@ void World::write(Level* level) {
         }
     }
     files::write_json(wfile->getPlayerFile(), &playerFile);
+
+	writeResources(content);
 }
 
 std::unique_ptr<Level> World::create(
@@ -114,6 +133,8 @@ std::unique_ptr<Level> World::load(
 		LOG_ERROR("Could not to find world.json");
 		throw world_load_error("Could not to find world.json");
 	}
+
+	wfile->readResourcesData(content);
 
 	LOG_INFO("Creating a level");
 	auto level = std::make_unique<Level>(std::move(world), content, settings);

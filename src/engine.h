@@ -13,7 +13,7 @@
 #include "files/engine_paths.h"
 #include "content/ContentPack.h"
 #include "assets/Assets.h"
-#include "content/Content.h"
+#include "content/content_fwd.h"
 #include "content/PacksManager.h"
 #include "util/ObjectsKeeper.h"
 #include "core_content_defs.h"
@@ -45,13 +45,13 @@ private:
     SettingsHandler& settingsHandler;
     EnginePaths* paths;
 
-    std::unique_ptr<Assets> assets = nullptr; // Менеджер ассетов (текстуры, модели и т.д.)
-    std::shared_ptr<Screen> screen = nullptr;
+    std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
+    std::shared_ptr<Screen> screen;
     std::unique_ptr<EngineController> controller;
     std::vector<ContentPack> contentPacks;
-    std::unique_ptr<Content> content = nullptr;
+    std::unique_ptr<Content> content;
 
-    std::unique_ptr<ResPaths> resPaths = nullptr;
+    std::unique_ptr<ResPaths> resPaths;
 
     std::queue<runnable> postRunnables;
     std::recursive_mutex postRunnablesMutex;

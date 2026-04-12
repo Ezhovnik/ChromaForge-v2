@@ -67,6 +67,7 @@ struct BlockRotProfile {
 
 	static const BlockRotProfile PIPE;
     static const BlockRotProfile PANE;
+    static const BlockRotProfile NONE;
 
     static inline const std::string NONE_NAME = "none";
     static inline const std::string PIPE_NAME = "pipe";
@@ -116,7 +117,7 @@ public:
 
     std::vector<AABB> hitboxes;
 
-    BlockRotProfile rotations;
+    BlockRotProfile rotations = BlockRotProfile::NONE;
 
 	struct {
         blockid_t id;
@@ -134,12 +135,7 @@ public:
 };
 
 inline glm::ivec3 get_ground_direction(const Block* def, int rotation) {
-    const auto& profileName = def->rotations.name;
-    if (profileName == BlockRotProfile::PIPE_NAME) {
-        return -def->rotations.variants[rotation].axisY;
-    } else {
-        return glm::ivec3(0, -1, 0);
-    }
+    return -def->rotations.variants[rotation].axisY;
 }
 
 #endif // VOXELS_BLOCK_H_

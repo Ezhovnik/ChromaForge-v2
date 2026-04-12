@@ -43,6 +43,8 @@ private:
 	std::vector<ContentPack> packs; ///< Список контент-паков, установленных в мире
 
 	int64_t nextInventoryId = 0; ///< Счётчик для выдачи следующих идентификаторов инвентарей
+
+     void writeResources(const Content* content);
 public:
 	std::unique_ptr<WorldFiles> wfile; ///< Менеджер файлов мира
 

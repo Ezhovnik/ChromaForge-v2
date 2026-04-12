@@ -7,31 +7,24 @@
 #include <set>
 #include <stdexcept>
 #include <memory>
+#include <optional>
 
-#include "../typedefs.h"
+#include "content_fwd.h"
+#include "../data/dynamic_fwd.h"
 
 using DrawGroups = std::set<ubyte>;
 template<class K, class V>
 using UptrsMap = std::unordered_map<K, std::unique_ptr<V>>;
 
-class Content;
 struct Item;
 struct Entity;
-class ContentPackRuntime;
 class Block;
 struct BlockMaterial;
 namespace rigging {
     class SkeletonConfig;
 }
 
-enum class ContentType {
-    None,
-    Block,
-    Item,
-    Entity
-};
-
-inline const char* contenttype_name(ContentType type) {
+constexpr const char* contenttype_name(ContentType type) {
     switch (type) {
         case ContentType::None: return "none";
         case ContentType::Block: return "block";
@@ -113,6 +106,64 @@ public:
     }
 };
 
+class ResourceIndices {
+private:
+    std::vector<std::string> names;
+    std::unordered_map<std::string, size_t> indices;
+    std::unique_ptr<std::vector<dynamic::Map_sptr>> savedData;
+public:
+    ResourceIndices() : savedData(std::make_unique<std::vector<dynamic::Map_sptr>>()){
+    }
+
+    static constexpr size_t MISSING = SIZE_MAX;
+
+    void add(std::string name, dynamic::Map_sptr map) {
+        indices[name] = names.size();
+        names.push_back(name);
+        savedData->push_back(map);
+    }
+
+    const std::string& getName(size_t index) const {
+        return names.at(index);
+    }
+
+    size_t indexOf(const std::string& name) const {
+        const auto& found = indices.find(name);
+        if (found != indices.end()) {
+            return found->second;
+        }
+        return MISSING;
+    }
+
+    dynamic::Map_sptr getSavedData(size_t index) const {
+        return savedData->at(index);
+    }
+
+    void saveData(size_t index, dynamic::Map_sptr map) const {
+        savedData->at(index) = map;
+    }
+
+    size_t size() const {
+        return names.size();
+    }
+};
+
+constexpr const char* to_string(ResourceType type) {
+    switch (type) {
+        case ResourceType::Camera: return "camera";
+        default: return "unknown";
+    }
+}
+
+inline std::optional<ResourceType> ResourceType_from(std::string_view str) {
+    if (str == "camera") {
+        return ResourceType::Camera;
+    }
+    return std::nullopt;
+}
+
+using ResourceIndicesSet = ResourceIndices[RESOURCE_TYPES_COUNT];
+
 class Content {
 private:
     std::unique_ptr<ContentIndices> indices;
@@ -124,6 +175,7 @@ public:
     ContentUnitDefs<Item> items;
     ContentUnitDefs<Entity> entities;
     std::unique_ptr<DrawGroups> const drawGroups;
+    ResourceIndicesSet resourceIndices {};
 
     Content(
         std::unique_ptr<ContentIndices> indices, 
@@ -133,12 +185,17 @@ public:
         ContentUnitDefs<Entity> entities,
         UptrsMap<std::string, ContentPackRuntime> packs,
         UptrsMap<std::string, BlockMaterial> blockMaterials,
-        UptrsMap<std::string, rigging::SkeletonConfig> skeletons
+        UptrsMap<std::string, rigging::SkeletonConfig> skeletons,
+        ResourceIndicesSet resourceIndices
     );
     ~Content();
 
     inline ContentIndices* getIndices() const {
         return indices.get();
+    }
+
+    inline const ResourceIndices& getIndices(ResourceType type) const {
+        return resourceIndices[static_cast<size_t>(type)];
     }
 
     const rigging::SkeletonConfig* getRig(const std::string& id) const;

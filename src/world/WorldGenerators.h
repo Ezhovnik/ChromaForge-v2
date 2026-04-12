@@ -6,7 +6,8 @@
 #include <string>
 
 #include "../voxels/WorldGenerator.h"
-#include "../content/Content.h"
+
+class Content;
 
 using gen_constructor = WorldGenerator* (*)(const Content*);
 
@@ -33,4 +34,4 @@ void WorldGenerators::addGenerator(std::string id) {
     };
 }
 
-#endif /* WORLD_WORLDGENERATORS_H_ */
+#endif // WORLD_WORLDGENERATORS_H_

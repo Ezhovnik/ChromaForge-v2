@@ -74,7 +74,8 @@ std::unique_ptr<Content> ContentBuilder::build() {
         entities.build(),
         std::move(packs),
         std::move(blockMaterials),
-        std::move(skeletons)
+        std::move(skeletons),
+        std::move(resourceIndices)
     );
 
     for (Block* def : blockDefsIndices) {
