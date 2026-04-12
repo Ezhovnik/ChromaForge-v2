@@ -187,6 +187,7 @@ public:
     void loadEntity(const dynamic::Map_sptr& map, Entt_Entity entity);
     void onSave(const Entt_Entity& entity);
 
+    bool hasBlockingInside(AABB aabb);
     std::vector<Entt_Entity> getAllInside(AABB aabb);
 
     dynamic::Value serialize(const Entt_Entity& entity);

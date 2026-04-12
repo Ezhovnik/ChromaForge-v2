@@ -509,11 +509,11 @@ void scripting::load_item_script(const scriptenv& senv, const std::string& prefi
     funcsset.on_block_break_by = register_event(env, "on_block_break_by", prefix + ".blockbreakby");
 }
 
-void scripting::load_entity_component(const scriptenv& penv, const std::string& name, const std::filesystem::path& file) {
+void scripting::load_entity_component(const std::string& name, const std::filesystem::path& file) {
     auto L = lua::get_main_thread();
     std::string src = files::read_string(file);
     LOG_INFO("Script (entity component) {}", file.u8string());
-    lua::loadbuffer(L, *penv, src, file.u8string());
+    lua::loadbuffer(L, 0, src, file.u8string());
     lua::store_in(L, lua::CHUNKS_TABLE, name);
 }
 

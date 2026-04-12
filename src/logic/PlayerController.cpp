@@ -359,8 +359,10 @@ void PlayerController::processRightClick(Block* def, Block* target) {
     }
     blockid_t chosenBlock = def->rt.id;
 
-    auto hitbox = player->getHitbox();
-    if (hitbox && def->obstacle && level->physics->isBlockInside(coord.x, coord.y, coord.z, def,state, hitbox)) {
+    AABB blockAABB(coord, coord + 1);
+    bool blocked = level->entities->hasBlockingInside(blockAABB);
+
+    if (def->obstacle && blocked) {
         return;
     }
     auto vox = chunks->getVoxel(coord);
@@ -368,8 +370,11 @@ void PlayerController::processRightClick(Block* def, Block* target) {
     if (!chunks->checkReplaceability(def, state, coord)) {
         return;
     }
-    if (def->grounded && !chunks->isSolidBlock(coord.x, coord.y-1, coord.z)) {
-        return;
+    if (def->grounded) {
+        const auto& vec = get_ground_direction(def, state.rotation);
+        if (!chunks->isSolidBlock(coord.x + vec.x, coord.y + vec.y, coord.z + vec.z)) {
+            return;
+        }
     }
     if (chosenBlock != vox->id && chosenBlock) {
         onBlockInteraction(coord, def, BlockInteraction::Placing);

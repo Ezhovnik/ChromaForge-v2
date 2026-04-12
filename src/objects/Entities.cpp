@@ -389,6 +389,16 @@ void Entities::clean() {
     }
 }
 
+bool Entities::hasBlockingInside(AABB aabb) {
+    auto view = registry.view<EntityId, Rigidbody>();
+    for (auto [entity, eid, body] : view.each()) {
+        if (eid.def.blocking && aabb.intersect(body.hitbox.getAABB())) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<Entt_Entity> Entities::getAllInside(AABB aabb) {
     std::vector<Entt_Entity> collected;
     auto view = registry.view<Transform>();

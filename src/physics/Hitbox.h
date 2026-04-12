@@ -74,6 +74,10 @@ struct Hitbox {
      * @param halfsize Половины размеров по осям.
 	 */
 	Hitbox(BodyType type, glm::vec3 position, glm::vec3 halfsize);
+
+    AABB getAABB() const {
+        return AABB(position - halfsize, position + halfsize);
+    }
 };
 
 #endif // PHYSICS_HITBOX_H_

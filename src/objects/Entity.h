@@ -18,6 +18,7 @@ struct Entity {
     std::string const name;
     std::vector<std::string> components;
     std::string skeletonName = name;
+    bool blocking = true;
 
     BodyType bodyType = BodyType::Dynamic;
     glm::vec3 hitbox {0.25f};

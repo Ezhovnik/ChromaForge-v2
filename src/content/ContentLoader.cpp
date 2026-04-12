@@ -331,19 +331,13 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
     }
 
     root->str("skeleton-name", def.skeletonName);
+    root->flag("blocking", def.blocking);
 }
 
 void ContentLoader::loadEntity(Entity& def, const std::string& full, const std::string& name) {
     auto folder = pack->folder;
     auto configFile = folder/std::filesystem::path("entities/" + name + ".json");
     if (std::filesystem::exists(configFile)) loadEntity(def, full, configFile);
-
-    for (auto& componentName : def.components) {
-        auto scriptfile = folder/std::filesystem::path("scripts/components/" + componentName + ".lua");
-        if (std::filesystem::is_regular_file(scriptfile)) {
-            scripting::load_entity_component(env, componentName, scriptfile);
-        }
-    }
 }
 
 void ContentLoader::loadBlock(Block& def, const std::string& full, const std::string& name) {
@@ -458,6 +452,17 @@ void ContentLoader::load() {
             std::string name = pack->id+":" + file.stem().u8string();
             std::string text = files::read_string(file);
             builder.add(rigging::SkeletonConfig::parse(text, file.u8string(), name));
+        }
+    }
+
+    std::filesystem::path componentsDir = folder/std::filesystem::u8path("scripts/components");
+    if (std::filesystem::is_directory(componentsDir)) {
+        for (const auto& entry : std::filesystem::directory_iterator(componentsDir)) {
+            std::filesystem::path scriptfile = entry.path();
+            if (std::filesystem::is_regular_file(scriptfile)) {
+                auto name = pack->id + ":" + scriptfile.stem().u8string();
+                scripting::load_entity_component(name, scriptfile);
+            }
         }
     }
 
