@@ -2,6 +2,7 @@
 #define OBJECTS_PLAYER_H_
 
 #include <memory>
+#include <optional>
 
 #include <glm/glm.hpp>
 
@@ -54,18 +55,23 @@ struct BlockSelection {
  */
 class Player : public Object, public Serializable {
 private:
+    Level* level;
+
 	float speed;
 	int chosenSlot;
+
+    glm::vec3 position;
 
 	glm::vec3 spawnpoint {};
 	std::shared_ptr<Inventory> inventory;
 
 	bool flight = false;
     bool noclip = false;
+
+    entityid_t eid;
 public:
 	std::shared_ptr<Camera> camera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
     std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
-	std::unique_ptr<Hitbox> hitbox;
 
     bool debug = false;
 
@@ -75,11 +81,19 @@ public:
 
 	/**
 	 * @brief Конструктор игрока.
+     * @param level Указатель на текущий уровень.
 	 * @param position Начальная позиция.
 	 * @param speed Базовая скорость.
 	 * @param inventory Инвентарь (shared_ptr).
+     * @param eid Идентификатор сущности.
 	 */
-	Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inventory);
+	Player(
+        Level* level,
+        glm::vec3 position,
+        float speed,
+        std::shared_ptr<Inventory> inventory,
+        entityid_t eid
+    );
 	~Player();
 
 	/**
@@ -88,6 +102,8 @@ public:
      */
     void teleport(glm::vec3 position);
 
+    void updateEntity();
+
 	/**
      * @brief Возвращает скорость игрока.
      */
@@ -95,9 +111,8 @@ public:
 
 	/**
      * @brief Пытается найти безопасную точку возрождения в мире.
-     * @param level Указатель на уровень.
      */
-	void attemptToFindSpawnpoint(Level* level);
+	void attemptToFindSpawnpoint();
 
 	/**
      * @brief Устанавливает выбранный слот инвентаря.
@@ -115,6 +130,15 @@ public:
 
     bool isNoclip() const;
     void setNoclip(bool flag);
+
+    entityid_t getEntity() const;
+    void setEntity(entityid_t eid);
+
+    glm::vec3 getPosition() const {
+        return position;
+    }
+
+    Hitbox* getHitbox();
 
 	/**
      * @brief Возвращает инвентарь игрока.
@@ -134,11 +158,12 @@ public:
 
 	/**
      * @brief Обновляет состояние игрока (физика, ввод, камера).
-     * @param level Уровень.
      * @param input Структура ввода.
      * @param delta Время с предыдущего кадра.
      */
-	void updateInput(Level* level, PlayerInput& input, float delta);
+	void updateInput(PlayerInput& input, float delta);
+
+    void postUpdate();
 
 	std::unique_ptr<dynamic::Map> serialize() const override;
     void deserialize(dynamic::Map *src) override;

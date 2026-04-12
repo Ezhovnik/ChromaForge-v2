@@ -74,6 +74,10 @@ void stringifyValue(const dynamic::Value& value, std::stringstream& ss, int inde
 }
 
 void stringifyObj(const dynamic::Map* obj, std::stringstream& ss, int indent, const std::string& indentstr, bool nice) {
+    if (obj == nullptr) {
+        ss << "nullptr";
+        return;
+    }
     if (obj->values.empty()) {
         ss << "{}";
         return;

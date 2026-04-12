@@ -142,7 +142,7 @@ public:
 
     rigging::Rig& getModeltree() const;
 
-    void setRig(rigging::RigConfig* rigConfig);
+    void setRig(const rigging::RigConfig* rigConfig);
 
     entityid_t getUID() const {
         return registry.get<EntityId>(entity).uid;
@@ -169,14 +169,13 @@ public:
 
     void updatePhysics(float delta);
     void update();
-    void render(Assets* assets, ModelBatch& batch, const Frustum& frustum);
+    void render(Assets* assets, ModelBatch& batch, const Frustum& frustum, bool pause);
     void renderDebug(LineBatch& batch, const Frustum& frustum);
     void clean();
 
     entityid_t spawn(
-        Assets* assets,
         Entity& def,
-        Transform transform,
+        glm::vec3 position,
         dynamic::Value args=dynamic::NONE,
         dynamic::Map_sptr saved=nullptr,
         entityid_t uid=0
@@ -185,6 +184,7 @@ public:
 
     void loadEntities(dynamic::Map_sptr map);
     void loadEntity(const dynamic::Map_sptr& map);
+    void loadEntity(const dynamic::Map_sptr& map, Entt_Entity entity);
     void onSave(const Entt_Entity& entity);
 
     std::vector<Entt_Entity> getAllInside(AABB aabb);

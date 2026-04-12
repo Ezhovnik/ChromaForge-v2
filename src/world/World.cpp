@@ -19,6 +19,8 @@
 #include "../settings.h"
 #include "../objects/Entities.h"
 
+static constexpr float DAYTIME_SPECIFIC_SPEED = 1.0f / (24.0f * 60.0f);
+
 world_load_error::world_load_error(const std::string& message) : std::runtime_error(message) {
 }
 
@@ -41,7 +43,7 @@ World::~World() {
 }
 
 void World::updateTimers(float delta) {
-	daytime += delta * daytimeSpeed;
+	daytime += delta * daytimeSpeed * DAYTIME_SPECIFIC_SPEED;
 	daytime = fmod(daytime, 1.0f); // зацикливаем в [0,1)
 	totalTime += delta;
 }
@@ -126,9 +128,11 @@ std::unique_ptr<Level> World::load(
                 auto players = playerFile->list("players");
                 for (size_t i = 0; i < players->size(); ++i) {
                     auto player = level->spawnObject<Player>(
+						level.get(),
 						DEFAULT_SPAWNPOINT,
 						DEFAULT_PLAYER_SPEED,
-						level->inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE)
+						level->inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE),
+						0
 					);
                     player->deserialize(players->map(i).get());
                     level->inventories->store(player->getInventory());

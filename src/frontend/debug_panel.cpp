@@ -113,20 +113,18 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         auto box = std::make_shared<gui::TextBox>(L"");
         auto boxRef = box.get();
         box->setTextSupplier([=]() {
-            Hitbox* hitbox = player->hitbox.get();
-            return std::to_wstring(int(hitbox->position[ax]));
+            return std::to_wstring(static_cast<int>(player->getPosition()[ax]));
         });
         box->setTextConsumer([=](const std::wstring& text) {
             try {
-                glm::vec3 position = player->hitbox->position;
+                glm::vec3 position = player->getPosition();
                 position[ax] = std::stoi(text);
                 player->teleport(position);
             } catch (std::exception& _) {
             }
         });
         box->setOnEditStart([=](){
-            Hitbox* hitbox = player->hitbox.get();
-            boxRef->setText(std::to_wstring(int(hitbox->position[ax])));
+            boxRef->setText(std::to_wstring(static_cast<int>(player->getPosition()[ax])));
         });
         box->setSize(glm::vec2(230, 27));
 

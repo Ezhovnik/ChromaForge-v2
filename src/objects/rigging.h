@@ -36,6 +36,7 @@ namespace rigging {
         std::string modelName;
         std::vector<std::unique_ptr<RigNode>> subnodes;
         model::Model* model = nullptr;
+        bool modelUpdated = true;
     public:
         RigNode(
             size_t index, 
@@ -44,7 +45,9 @@ namespace rigging {
             std::vector<std::unique_ptr<RigNode>> subnodes
         );
 
-        void setModel(const Assets* assets, const std::string& name);
+        void setModel(const std::string& name);
+
+        void refreshModel(const Assets* assets);
 
         const std::string& getModelName() const {
             return modelName;
@@ -64,7 +67,7 @@ namespace rigging {
     };
 
     struct Rig {
-        RigConfig* config;
+        const RigConfig* config;
         Pose pose;
         Pose calculated;
         std::unordered_map<std::string, std::string> textures;
@@ -87,7 +90,6 @@ namespace rigging {
         RigConfig(const std::string& name, std::unique_ptr<RigNode> root, size_t nodesCount);
 
         void update(Rig& rig, glm::mat4 matrix) const;
-        void setup(const Assets* assets, RigNode* node=nullptr) const;
         void render(
             Assets* assets,
             ModelBatch& batch,
@@ -95,7 +97,7 @@ namespace rigging {
             const glm::mat4& matrix
         ) const;
 
-        Rig instance() {
+        Rig instance() const {
             return Rig {
                 this, Pose(nodes.size()), Pose(nodes.size()), {}
             };

@@ -163,8 +163,9 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 void WorldRenderer::renderLevel(
 	const DrawContext&, 
 	Camera* camera, 
-	const EngineSettings& settings) 
-{
+	const EngineSettings& settings,
+    bool pause
+) {
 	Assets* assets = engine->getAssets();
     Atlas* atlas = assets->get<Atlas>("blocks");
     ShaderProgram* shader = assets->get<ShaderProgram>("default");
@@ -206,7 +207,7 @@ void WorldRenderer::renderLevel(
 	drawChunks(level->chunks.get(), camera, shader);
 
     shader->uniformMatrix("u_model", glm::mat4(1.0f));
-    level->entities->render(assets, *modelBatch, *frustumCulling);
+    level->entities->render(assets, *modelBatch, *frustumCulling, pause);
     modelBatch->render();
 
     skybox->unbind();
@@ -326,7 +327,7 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 	lineBatch->render();
 }
 
-void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisible, PostProcessing* postProcessing) {
+void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisible, bool pause, PostProcessing* postProcessing) {
     auto world = level->getWorld();
     const Viewport& vp = pctx.getViewport();
     camera->aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
@@ -346,7 +347,7 @@ void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisibl
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
             ctx.setCullFace(true);
-            renderLevel(ctx, camera, settings);
+            renderLevel(ctx, camera, settings, pause);
             if (hudVisible) {
                 renderLines(camera, linesShader);
             }

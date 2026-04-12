@@ -16,7 +16,7 @@ namespace rigging {
 struct Entity {
     std::string const name;
     std::vector<std::string> components;
-    std::string rigName = name.substr(name.find(":") + 1);
+    std::string rigName = name;
 
     glm::vec3 hitbox {0.5f};
     std::vector<std::pair<size_t, AABB>> boxTriggers {};

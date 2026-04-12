@@ -1,7 +1,6 @@
 #include <glm/glm.hpp>
 
-#include "api_lua.h"
-#include "../../../world/Level.h"
+#include "libentity.h"
 #include "../../../objects/Player.h"
 #include "../../../physics/Hitbox.h"
 #include "../../../window/Camera.h"
@@ -14,7 +13,7 @@ inline std::shared_ptr<Player> get_player(lua::State* L, int idx) {
 // Player library
 static int l_player_get_pos(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        return lua::pushvec3(L, player->hitbox->position);
+        return lua::pushvec3(L, player->getPosition());
     }
     return 0;
 }
@@ -25,7 +24,7 @@ static int l_player_set_pos(lua::State* L) {
     auto x = lua::tonumber(L, 2);
     auto y = lua::tonumber(L, 3);
     auto z = lua::tonumber(L, 4);
-    player->hitbox->position = glm::vec3(x, y, z);
+    player->teleport(glm::vec3(x, y, z));
     return 0;
 }
 
@@ -63,7 +62,9 @@ static int l_player_get_inv(lua::State* L) {
 
 static int l_player_get_vel(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        return lua::pushvec3(L, player->hitbox->velocity);
+        if (auto hitbox = player->getHitbox()) {
+            return lua::pushvec3(L, hitbox->velocity);
+        }
     }
     return 0;
 }
@@ -74,7 +75,9 @@ static int l_player_set_vel(lua::State* L) {
     auto x = lua::tonumber(L, 2);
     auto y = lua::tonumber(L, 3);
     auto z = lua::tonumber(L, 4);
-    player->hitbox->velocity = glm::vec3(x, y, z);
+    if (auto hitbox = player->getHitbox()) {
+        hitbox->velocity = glm::vec3(x, y, z);
+    }
     return 0;
 }
 
@@ -122,6 +125,43 @@ static int l_player_get_dir(lua::State* L) {
     return 0;
 }
 
+static int l_player_get_spawnpoint(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        return lua::pushvec3(L, player->getSpawnPoint());
+    }
+    return 0;
+}
+
+
+static int l_player_set_spawnpoint(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        auto x = lua::tonumber(L, 2);
+        auto y = lua::tonumber(L, 3);
+        auto z = lua::tonumber(L, 4);
+        player->setSpawnPoint(glm::vec3(x, y, z));
+    }
+    return 0;
+}
+
+static int l_player_get_entity(lua::State* L) {
+    auto player = get_player(L, 1);
+    if (player == nullptr) return 0;
+    if (lua::get_from(L, "entities", "get")) {
+        lua::pushinteger(L, player->getEntity());
+        return lua::call(L, 1);
+    }
+    return 0;
+}
+
+static int l_player_set_entity(lua::State* L) {
+    auto player = get_player(L, 1);
+    if (player == nullptr) return 0;
+    if (auto entity = get_entity(L, 2)) {
+        player->setEntity(entity->getUID());
+    }
+    return 0;
+}
+
 const luaL_Reg playerlib [] = {
     {"get_pos", lua::wrap<l_player_get_pos>},
     {"set_pos", lua::wrap<l_player_set_pos>},
@@ -136,5 +176,9 @@ const luaL_Reg playerlib [] = {
     {"set_noclip", lua::wrap<l_player_set_noclip>},
     {"get_selected_block", lua::wrap<l_player_get_selected_block>},
     {"get_dir", lua::wrap<l_player_get_dir>},
+    {"set_spawnpoint", lua::wrap<l_player_set_spawnpoint>},
+    {"get_spawnpoint", lua::wrap<l_player_get_spawnpoint>},
+    {"get_entity", lua::wrap<l_player_get_entity>},
+    {"set_entity", lua::wrap<l_player_set_entity>},
     {NULL, NULL}
 };

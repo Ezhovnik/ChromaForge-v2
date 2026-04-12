@@ -30,7 +30,6 @@ AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(asset
 	addLoader(AssetType::Layout, asset_loader::layout);
 	addLoader(AssetType::Sound, asset_loader::sound);
     addLoader(AssetType::Model, asset_loader::model);
-    addLoader(AssetType::Rig, asset_loader::rig);
 }
 
 void AssetsLoader::addLoader(AssetType tag, aloader_func func) {
@@ -129,7 +128,6 @@ static std::string assets_def_folder(AssetType tag) {
         case AssetType::Layout: return LAYOUTS_FOLDER;
         case AssetType::Sound: return SOUNDS_FOLDER;
         case AssetType::Model: return MODELS_FOLDER;
-        case AssetType::Rig: return RIGS_FOLDER;
     }
     return "<unknown>";
 }
@@ -186,7 +184,6 @@ void AssetsLoader::processPreloadConfig(const std::filesystem::path& file) {
     processPreloadList(AssetType::Texture, root->list("textures"));
     processPreloadList(AssetType::Sound, root->list("sounds"));
     processPreloadList(AssetType::Model, root->list("models"));
-    processPreloadList(AssetType::Rig, root->list("rigs"));
     // Макеты загружаются автоматически
 }
 

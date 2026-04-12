@@ -31,9 +31,9 @@ console.add_command(
         if command == nil then
             return string.format("command %q not found", name)
         end
-        local where = ""
+        local where = ":"
         local str = SEPARATOR.."\n"..command.description.."\n"..name.." "
-        for i,arg in ipairs(command.args) do
+        for _, arg in ipairs(command.args) do
             where = where.."\n  "..arg.name.." - "..arg.type
             if arg.optional then
                 str = str.."["..arg.name.."] "
@@ -42,7 +42,7 @@ console.add_command(
                 str = str.."<"..arg.name.."> "
             end
         end
-        if #command.args then
+        if #command.args > 0 then
             str = str.."\nwhere"..where
         end
         
@@ -94,5 +94,39 @@ console.add_command(
     function ()
         local document = Document.new("builtin:console")
         document.log.text = ""
+    end
+)
+
+console.add_command(
+    "time.uptime",
+    "Get time elapsed since the engine started",
+    function()
+
+        local uptime = time.uptime()
+        local years = math.floor(uptime / 31536000)
+        local days = math.floor((uptime % 31536000) / 86400) % 365
+        local hours = math.floor((uptime % 86400) / 3600) % 24
+        local minutes = math.floor((uptime % 3600) / 60) % 60
+        local seconds = math.floor(uptime % 60)
+
+        local formatted_uptime = ""
+
+        if years > 0 then
+            formatted_uptime = formatted_uptime .. years .. "y "
+        end
+        if days > 0 or years > 0 then
+            formatted_uptime = formatted_uptime .. days .. "d "
+        end
+        if hours > 0 or days > 0 or years > 0 then
+            formatted_uptime = formatted_uptime .. hours .. "h "
+        end
+        if minutes > 0 or hours > 0 or days > 0 or years > 0 then
+            formatted_uptime = formatted_uptime .. minutes .. "m "
+        end
+        if seconds > 0 or minutes > 0 or hours > 0 or days > 0 or years > 0 then
+            formatted_uptime = formatted_uptime .. seconds .. "s"
+        end
+
+        return uptime .. " (" .. formatted_uptime .. ")"
     end
 )

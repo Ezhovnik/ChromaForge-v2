@@ -53,7 +53,7 @@ public:
 	float daytime = timeutil::time_value(10, 00, 00);
 
 	/// Скорость течения времени
-	float daytimeSpeed = 1.0f / 60.0f / 24.0f;
+	float daytimeSpeed = 1.0f;
 
 	/// Общее прошедшее время в секундах с момента создания мира
 	double totalTime = 0.0;

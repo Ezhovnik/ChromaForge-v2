@@ -269,7 +269,7 @@ dynamic::Value scripting::get_component_value(const scriptenv& env, const std::s
 }
 
 void scripting::on_entity_spawn(
-    const Entity& def,
+    const Entity&,
     entityid_t eid,
     const std::vector<std::unique_ptr<UserComponent>>& components,
     dynamic::Value args,
@@ -282,8 +282,10 @@ void scripting::on_entity_spawn(
         lua::call(L, 1);
     }
 
-    for (size_t i = 0; i < components.size() - 1; ++i) {
-        lua::pushvalue(L, -1);
+    if (components.size() > 1) {
+        for (size_t i = 0; i < components.size() - 1; ++i) {
+            lua::pushvalue(L, -1);
+        }
     }
 
     for (auto& component : components) {
@@ -398,7 +400,6 @@ void scripting::on_trigger_enter(const Entt_Entity& entity, size_t index, entity
     }
 }
 
-
 void scripting::on_trigger_exit(const Entt_Entity& entity, size_t index, entityid_t oid) {
     const auto& script = entity.getScripting();
     for (auto& component : script.components) {
@@ -415,6 +416,13 @@ void scripting::on_trigger_exit(const Entt_Entity& entity, size_t index, entityi
 void scripting::on_entities_update() {
     auto L = lua::get_main_thread();
     lua::get_from(L, STDCOMP, "update", true);
+    lua::call_nothrow(L, 0, 0);
+    lua::pop(L);
+}
+
+void scripting::on_entities_render() {
+    auto L = lua::get_main_thread();
+    lua::get_from(L, STDCOMP, "render", true);
     lua::call_nothrow(L, 0, 0);
     lua::pop(L);
 }

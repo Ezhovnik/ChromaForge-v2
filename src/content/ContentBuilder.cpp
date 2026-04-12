@@ -1,11 +1,16 @@
 #include "ContentBuilder.h"
 
 #include "../debug/Logger.h"
+#include "../objects/rigging.h"
 
 ContentBuilder::~ContentBuilder() {}
 
 void ContentBuilder::add(std::unique_ptr<ContentPackRuntime> pack) {
     packs[pack->getId()] = std::move(pack);
+}
+
+void ContentBuilder::add(std::unique_ptr<rigging::RigConfig> rig) {
+    rigs[rig->getName()] = std::move(rig);
 }
 
 BlockMaterial& ContentBuilder::createBlockMaterial(const std::string& id) {
@@ -68,7 +73,8 @@ std::unique_ptr<Content> ContentBuilder::build() {
         items.build(),
         entities.build(),
         std::move(packs),
-        std::move(blockMaterials)
+        std::move(blockMaterials),
+        std::move(rigs)
     );
 
     for (Block* def : blockDefsIndices) {

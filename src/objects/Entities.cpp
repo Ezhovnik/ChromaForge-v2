@@ -18,6 +18,10 @@
 #include "../content/Content.h"
 #include "../engine.h"
 
+static inline std::string COMP_TRANSFORM = "transform";
+static inline std::string COMP_RIGIDBODY = "rigidbody";
+static inline std::string COMP_MODELTREE = "modeltree";
+
 void Transform::refresh() {
     combined = glm::mat4(1.0f);
     combined = glm::translate(combined, pos);
@@ -36,7 +40,7 @@ rigging::Rig& Entt_Entity::getModeltree() const {
     return registry.get<rigging::Rig>(entity);
 }
 
-void Entt_Entity::setRig(rigging::RigConfig* rigConfig) {
+void Entt_Entity::setRig(const rigging::RigConfig* rigConfig) {
     auto& rig = registry.get<rigging::Rig>(entity);
     rig.config = rigConfig;
     rig.pose.matrices.resize(rigConfig->getNodes().size(), glm::mat4(1.0f));
@@ -58,14 +62,13 @@ static triggercallback create_trigger_callback(Entities* entities) {
 }
 
 entityid_t Entities::spawn(
-    Assets* assets,
     Entity& def,
-    Transform transform,
+    glm::vec3 position,
     dynamic::Value args,
     dynamic::Map_sptr saved,
     entityid_t uid
 ) {
-    auto rig = assets->get<rigging::RigConfig>(def.rigName);
+    auto rig = level->content->getRig(def.rigName);
     if (rig == nullptr) {
         LOG_ERROR("Rig {} not found", def.rigName);
         throw std::runtime_error("Rig " + def.rigName + " not found");
@@ -78,9 +81,11 @@ entityid_t Entities::spawn(
         id = uid;
     }
     registry.emplace<EntityId>(entity, static_cast<entityid_t>(id), def);
-    registry.emplace<Transform>(entity, transform);
+    const auto& tsf = registry.emplace<Transform>(
+        entity, position, glm::vec3(1.0f), glm::mat3(1.0f), glm::mat4(1.0f), true
+    );
     auto& body = registry.emplace<Rigidbody>(
-        entity, true, Hitbox {transform.pos, def.hitbox}, std::vector<Trigger>{}
+        entity, true, Hitbox {position, def.hitbox}, std::vector<Trigger>{}
     );
     body.triggers.resize(def.radialTriggers.size() + def.boxTriggers.size());
     for (auto& [i, box] : def.boxTriggers) {
@@ -111,12 +116,18 @@ entityid_t Entities::spawn(
         );
         scripting.components.emplace_back(std::move(component));
     }
+    dynamic::Map_sptr componentsMap = nullptr;
+    if (saved) {
+        componentsMap = saved->map("comps");
+        loadEntity(saved, get(id).value());
+    }
+    body.hitbox.position = tsf.pos;
     scripting::on_entity_spawn(
         def,
         id,
         scripting.components,
         std::move(args),
-        std::move(saved)
+        std::move(componentsMap)
     );
     return id;
 }
@@ -141,15 +152,20 @@ void Entities::loadEntity(const dynamic::Map_sptr& map) {
         throw std::runtime_error("Could not read entity - invalid UID");
     }
     auto& def = level->content->entities.require(defname);
-    Transform transform {
-        glm::vec3(), glm::vec3(1.0f), glm::mat3(1.0f), {}, true
-    };
-    if (auto tsfmap = map->map("transform")) {
-        dynamic::get_vec(tsfmap, "pos", transform.pos);
+    spawn(def, {}, dynamic::NONE, map, uid);
+}
+
+void Entities::loadEntity(const dynamic::Map_sptr& map, Entt_Entity entity) {
+    auto& transform = entity.getTransform();
+    auto& body = entity.getRigidbody();
+
+    if (auto bodymap = map->map(COMP_RIGIDBODY)) {
+        dynamic::get_vec(bodymap, "vel", body.hitbox.velocity);
     }
-    dynamic::Map_sptr savedMap = map->map("comps");
-    auto assets = scripting::engine->getAssets();
-    spawn(assets, def, transform, dynamic::NONE, savedMap, uid);
+    if (auto tsfmap = map->map(COMP_TRANSFORM)) {
+        dynamic::get_vec(tsfmap, "pos", transform.pos);
+        dynamic::get_vec(tsfmap, "size", transform.size);
+    }
 }
 
 void Entities::loadEntities(dynamic::Map_sptr root) {
@@ -169,10 +185,6 @@ void Entities::onSave(const Entt_Entity& entity) {
 
 void Entities::update() {
     scripting::on_entities_update();
-    auto view = registry.view<Transform>();
-    for (auto [entity, transform] : view.each()) {
-        if (transform.dirty) transform.refresh();
-    }
 }
 
 void Entities::renderDebug(LineBatch& batch, const Frustum& frustum) {
@@ -256,7 +268,6 @@ void Entities::updatePhysics(float delta) {
             delta,
             substeps,
             false,
-            1.0f,
             true,
             eid.uid
         );
@@ -282,7 +293,7 @@ dynamic::Value Entities::serialize(const Entt_Entity& entity) {
     root->put("uid", eid.uid);
     {
         auto& transform = entity.getTransform();
-        auto& tsfmap = root->putMap("transform");
+        auto& tsfmap = root->putMap(COMP_TRANSFORM);
         tsfmap.put("pos", dynamic::to_value(transform.pos));
         if (transform.size != glm::vec3(1.0f)) {
             tsfmap.put("size", dynamic::to_value(transform.size));
@@ -293,7 +304,7 @@ dynamic::Value Entities::serialize(const Entt_Entity& entity) {
     }
     {
         auto& rigidbody = entity.getRigidbody();
-        auto& bodymap = root->putMap("rigidbody");
+        auto& bodymap = root->putMap(COMP_RIGIDBODY);
         if (!rigidbody.enabled) {
             bodymap.put("enabled", rigidbody.enabled);
         }
@@ -306,7 +317,7 @@ dynamic::Value Entities::serialize(const Entt_Entity& entity) {
     }
 
     if (def.save.rig.pose || def.save.rig.textures) {
-        auto& rigmap = root->putMap("rig");
+        auto& rigmap = root->putMap(COMP_MODELTREE);
         if (def.save.rig.textures) {
             auto& map = rigmap.putMap("textures");
             for (auto& [slot, texture] : rig.textures) {
@@ -358,9 +369,15 @@ std::vector<Entt_Entity> Entities::getAllInside(AABB aabb) {
     return collected;
 }
 
-void Entities::render(Assets* assets, ModelBatch& batch, const Frustum& frustum) {
+void Entities::render(Assets* assets, ModelBatch& batch, const Frustum& frustum, bool pause) {
+    if (!pause) {
+        scripting::on_entities_render();
+    }
+
     auto view = registry.view<Transform, rigging::Rig>();
     for (auto [entity, transform, rig] : view.each()) {
+        if (transform.dirty) transform.refresh();
+
         const auto& pos = transform.pos;
         const auto& size = transform.size;
         if (frustum.isBoxVisible(pos - size, pos + size)) {

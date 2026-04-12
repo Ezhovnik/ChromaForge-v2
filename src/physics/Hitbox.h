@@ -51,7 +51,9 @@ struct Hitbox {
 	glm::vec3 halfsize; ///< Половины размеров хитбокса по осям X, Y, Z
 	glm::vec3 velocity; ///< Текущая скорость хитбокса
     float linearDamping; ///< Коэффициент линейного затухания скорости
+    bool verticalDamping = false;
 	bool grounded = false; ///< Флаг, указывающий, находится ли хитбокс на земле
+    float gravityScale = 1.0f;
 
 	/**
      * @brief Конструктор хитбокса.

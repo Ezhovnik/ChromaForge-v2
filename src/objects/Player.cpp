@@ -11,6 +11,8 @@
 #include "../voxels/Chunks.h"
 #include "../voxels/voxel.h"
 #include "../content/ContentLUT.h"
+#include "Entities.h"
+#include "../core_content_defs.h"
 
 namespace PlayerConsts {
     constexpr float CROUCH_SPEED_MUL = 0.35f; ///< Множитель скорости при приседании
@@ -22,21 +24,49 @@ namespace PlayerConsts {
     constexpr float CHEAT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме читов
 }
 
-Player::Player(glm::vec3 position, float speed, std::shared_ptr<Inventory> inventory) : 
+Player::Player(
+	Level* level,
+	glm::vec3 position,
+	float speed,
+	std::shared_ptr<Inventory> inventory,
+	entityid_t eid
+) : level(level),
 	speed(speed),
 	chosenSlot(0),
+	position(position),
 	camera(std::make_shared<Camera>(position, glm::radians(90.0f))),
 	spCamera(std::make_shared<Camera>(position, glm::radians(90.0f))),
 	tpCamera(std::make_shared<Camera>(position, glm::radians(90.0f))),
 	currentCamera(camera),
-	hitbox(std::make_unique<Hitbox>(position, glm::vec3(0.3f, 0.9f, 0.3f))),
-	inventory(std::move(inventory)) {
+	inventory(std::move(inventory)),
+	eid(eid) {
 }
 
 Player::~Player() {
 }
 
-void Player::updateInput(Level* level, PlayerInput& input, float delta) {
+void Player::updateEntity() {
+    if (eid == 0) {
+        auto& def = level->content->entities.require(CHROMAFORGE_CONTENT_NAMESPACE + ":player");
+        eid = level->entities->spawn(def, getPosition());
+	} else if (auto entity = level->entities->get(eid)) {
+        position = entity->getTransform().pos;
+    } else {
+        // Check if chunk loaded
+    }
+}
+
+Hitbox* Player::getHitbox() {
+    if (auto entity = level->entities->get(eid)) {
+        return &entity->getRigidbody().hitbox;
+    }
+    return nullptr;
+}
+
+void Player::updateInput(PlayerInput& input, float delta) {
+    auto hitbox = getHitbox();
+    if (hitbox == nullptr) return;
+
 	bool crouch = input.crouch && hitbox->grounded && !input.sprint;
 	float speed = this->speed;
 
@@ -49,77 +79,71 @@ void Player::updateInput(Level* level, PlayerInput& input, float delta) {
 	// Вычисляем направление движения на основе ввода и ориентации камеры
 	glm::vec3 dir(0, 0, 0);
 	if (input.moveForward){
-		dir.x += camera->dir.x;
-		dir.z += camera->dir.z;
+		dir += camera->dir;
 	}
 	if (input.moveBack){
-		dir.x -= camera->dir.x;
-		dir.z -= camera->dir.z;
+		dir -= camera->dir;
 	}
 	if (input.moveRight){
-		dir.x += camera->right.x;
-		dir.z += camera->right.z;
+		dir += camera->right;
 	}
 	if (input.moveLeft){
-		dir.x -= camera->right.x;
-		dir.z -= camera->right.z;
+		dir -= camera->right;
 	}
 	// Если есть движение, нормализуем и придаём импульс
 	if (length(dir) > 0.0f) {
 		dir = normalize(dir);
-		hitbox->velocity.x += dir.x * speed * delta * 9;
-		hitbox->velocity.z += dir.z * speed * delta * 9;
+		hitbox->velocity += dir * speed * delta * 9.0f;
 	}
 
-	// Вычисляем количество подшагов физики для стабильности при высокой скорости
-	float vel = glm::length(hitbox->velocity);
-    int substeps = int(delta * vel * 20);
-    substeps = std::min(100, std::max(2, substeps));
-
-	// Выполняем шаг физики
-	level->physics->step(
-		level->chunks.get(),
-		hitbox.get(),
-		delta,
-		substeps,
-		crouch,
-		flight ? 0.0f : 1.0f,
-		!noclip,
-		0
-	);
-
-	if (flight && hitbox->grounded) flight = false;
-	if (input.jump && hitbox->grounded) hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
+	hitbox->linearDamping = PlayerConsts::GROUND_DAMPING;
+    hitbox->verticalDamping = flight;
+	hitbox->gravityScale = flight ? 0.0f : 1.0f;
+    if (flight) {
+        hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
+        if (input.jump) {
+            hitbox->velocity.y += speed * delta * 9;
+        }
+        if (input.crouch) {
+            hitbox->velocity.y -= speed * delta * 9;
+        }
+    }
+    if (!hitbox->grounded) {
+        hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
+	}
+	if (input.jump && hitbox->grounded) {
+		hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
+	}
 	if ((input.flight && !noclip) || (input.noclip && flight == noclip)){
 		flight = !flight;
-		if (flight) hitbox->grounded = false;
+		if (flight) hitbox->velocity.y += 1.0f;
 	}
 	if (input.noclip) noclip = !noclip;
 
-	// Управление затуханием скорости
-	hitbox->linearDamping = PlayerConsts::GROUND_DAMPING;
-	if (flight) {
-		hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
-		hitbox->velocity.y *= 1.0f - delta * 9;
-		if (input.jump) hitbox->velocity.y += speed * delta * 9;
-		if (input.crouch) hitbox->velocity.y -= speed * delta * 9;
-	}
-	if (!hitbox->grounded) hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
-
 	input.noclip = false;
 	input.flight = false;
-
-	// Если точка возрождения не задана, пытаемся найти её
-	if (spawnpoint.y <= 0.1) attemptToFindSpawnpoint(level);
 }
 
-void Player::attemptToFindSpawnpoint(Level* level) {
-	glm::vec3 ppos = hitbox->position;
+void Player::postUpdate() {
+    auto hitbox = getHitbox();
+    if (hitbox == nullptr) return;
+
+    position = hitbox->position;
+
+    if (flight && hitbox->grounded) {
+        flight = false;
+    }
+
+	// Если точка возрождения не задана, пытаемся найти её
+	if (spawnpoint.y <= 0.1) attemptToFindSpawnpoint();
+}
+
+void Player::attemptToFindSpawnpoint() {
 	// Генерируем случайную позицию в окрестности текущей
 	glm::vec3 newpos {
-		ppos.x + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), 
+		position.x + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), 
 		RandomGenerator::get<int>(0, RAND_MAX) % 80 + 100, 
-		ppos.z + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
+		position.z + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
 	};
 
 	// Опускаемся вниз, пока не найдём твёрдый блок под ногами
@@ -135,7 +159,6 @@ void Player::attemptToFindSpawnpoint(Level* level) {
 }
 
 std::unique_ptr<dynamic::Map> Player::serialize() const {
-	glm::vec3 position = hitbox->position;
 	auto root = std::make_unique<dynamic::Map>();
 
 	auto& posarr = root->putList("position");
@@ -156,13 +179,13 @@ std::unique_ptr<dynamic::Map> Player::serialize() const {
 	root->put("flight", flight);
 	root->put("noclip", noclip);
     root->put("chosen-slot", chosenSlot);
+	root->put("entity", eid);
     root->put("inventory", inventory->serialize());
     return root;
 }
 
 void Player::deserialize(dynamic::Map *src) {
 	auto posarr = src->list("position");
-	glm::vec3& position = hitbox->position;
 	position.x = posarr->num(0);
 	position.y = posarr->num(1);
 	position.z = posarr->num(2);
@@ -187,6 +210,7 @@ void Player::deserialize(dynamic::Map *src) {
 	src->flag("flight", flight);
 	src->flag("noclip", noclip);
     setChosenSlot(src->get("chosen-slot", getChosenSlot()));
+	src->num("entity", eid);
 
     if (auto invmap = src->map("inventory")) {
         getInventory()->deserialize(invmap.get());
@@ -211,7 +235,10 @@ void Player::convert(dynamic::Map* data, const ContentLUT* lut) {
 }
 
 void Player::teleport(glm::vec3 position) {
-    hitbox->position = position;
+    this->position = position;
+    if (auto hitbox = getHitbox()) {
+        hitbox->position = position;
+    }
 }
 
 float Player::getSpeed() const {
@@ -224,6 +251,14 @@ void Player::setChosenSlot(int index) {
 
 int Player::getChosenSlot() const {
     return chosenSlot;
+}
+
+entityid_t Player::getEntity() const {
+    return eid;
+}
+
+void Player::setEntity(entityid_t eid) {
+    this->eid = eid;
 }
 
 std::shared_ptr<Inventory> Player::getInventory() const {

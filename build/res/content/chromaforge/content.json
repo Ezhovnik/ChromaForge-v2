@@ -1,6 +1,6 @@
 {
-    "entities": [
-        "drop"
+    "items": [
+        "bedrock_breaker"
     ],
     "blocks": [
         "moss",
@@ -33,7 +33,8 @@
         "oak_door",
         "wool"
     ],
-    "items": [
-        "bedrock_breaker"
+    "entities": [
+        "drop",
+        "player"
     ]
 }

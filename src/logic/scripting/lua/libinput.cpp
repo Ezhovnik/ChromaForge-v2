@@ -59,11 +59,39 @@ static int l_get_bindings(lua::State* L) {
     return 1;
 }
 
+static int l_is_active(lua::State* L) {
+    auto bindname = lua::require_string(L, 1);
+    const auto& bind = Events::bindings.find(bindname);
+    if (bind == Events::bindings.end()) {
+        throw std::runtime_error("Unknown binding " + util::quote(bindname));
+    }
+    return lua::pushboolean(L, bind->second.isActive());
+}
+
+static int l_is_pressed(lua::State* L) {
+    std::string code = lua::require_string(L, 1);
+    size_t sep = code.find(':');
+    if (sep == std::string::npos) {
+        throw std::runtime_error("Expected 'input_type:key' format");
+    }
+    auto prefix = code.substr(0, sep);
+    auto name = code.substr(sep + 1);
+    if (prefix == "key") {
+        return lua::pushboolean(L, Events::isPressed(static_cast<int>(input_util::keycode_from(name))));
+    } else if (prefix == "mouse") {
+        return lua::pushboolean(L, Events::isClicked(static_cast<int>(input_util::mousecode_from(name))));
+    } else {
+        throw std::runtime_error("Unknown input type " + util::quote(code));
+    }
+}
+
 const luaL_Reg inputlib [] = {
     {"keycode", lua::wrap<l_keycode>},
     {"mousecode", lua::wrap<l_mousecode>},
     {"add_callback", lua::wrap<l_add_callback>},
     {"get_mouse_pos", lua::wrap<l_get_mouse_pos>},
     {"get_bindings", lua::wrap<l_get_bindings>},
+    {"is_active", lua::wrap<l_is_active>},
+    {"is_pressed", lua::wrap<l_is_pressed>},
     {NULL, NULL}
 };

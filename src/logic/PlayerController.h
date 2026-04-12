@@ -17,6 +17,7 @@ class Chunks;
 class Block;
 struct EngineSettings;
 struct CameraSettings;
+struct Hitbox;
 
 class CameraControl {
 private:
@@ -28,9 +29,9 @@ private:
     float shakeTimer = 0.0f;
     glm::vec3 interpVel {0.0f};
 
-	glm::vec3 updateCameraShaking(float delta);
+	glm::vec3 updateCameraShaking(const Hitbox& hitbox, float delta);
 
-	void updateFovEffects(const PlayerInput& input, float delta);
+	void updateFovEffects(const Hitbox& hitbox, const PlayerInput& input, float delta);
 
 	void switchCamera();
 public:
@@ -65,7 +66,7 @@ private:
 	void updateKeyboard();
 	void updateCamera(float delta, bool movement);
 	void resetKeyboard();
-	void updateControls(float delta);
+	void updatePlayer(float deltaTime);
 	void updateInteraction();
 	void onBlockInteraction(
         glm::ivec3 pos,
@@ -74,7 +75,7 @@ private:
     );
 
     float stepsTimer = 0.0f;
-    void onFootstep();
+    void onFootstep(const Hitbox& hitbox);
     void updateFootsteps(float delta);
 
 	void processRightClick(Block* def, Block* target);
@@ -85,6 +86,7 @@ public:
 	PlayerController(Level* level, const EngineSettings& settings, BlocksController* blocksController);
 
 	void update(float delta, bool input_flag, bool pause);
+	void postUpdate(float delta, bool input_flag, bool pause);
 
 	Player* getPlayer();
 

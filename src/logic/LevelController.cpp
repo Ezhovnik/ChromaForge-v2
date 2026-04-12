@@ -23,7 +23,7 @@ LevelController::LevelController(EngineSettings& settings, std::unique_ptr<Level
 }
 
 void LevelController::update(float delta, bool input, bool pause) {
-    glm::vec3 position = player->getPlayer()->hitbox->position;
+    glm::vec3 position = player->getPlayer()->getPosition();
     level->loadMatrix(
         position.x, 
         position.z, 
@@ -38,10 +38,11 @@ void LevelController::update(float delta, bool input, bool pause) {
         }
 
         blocks->update(delta);
+        player->update(delta, input, pause);
         level->entities->updatePhysics(delta);
         level->entities->update();
     }
-    player->update(delta, input, pause);
+    player->postUpdate(delta, input, pause);
 
     level->objects.erase(
         std::remove_if(

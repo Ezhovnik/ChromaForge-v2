@@ -24,7 +24,7 @@ private:
         }
     }
 public:
-    std::unordered_map<std::string, std::unique_ptr<T>> defs;
+    UptrsMap<std::string, T> defs;
     std::vector<std::string> names;
 
     ContentUnitBuilder(
@@ -50,8 +50,9 @@ public:
 };
 
 class ContentBuilder {
-    std::unordered_map<std::string, std::unique_ptr<BlockMaterial>> blockMaterials;
-    std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs;
+    UptrsMap<std::string, BlockMaterial> blockMaterials;
+    UptrsMap<std::string, rigging::RigConfig> rigs;
+    UptrsMap<std::string, ContentPackRuntime> packs;
     std::unordered_map<std::string, ContentType> allNames;
 public:
     ContentUnitBuilder<Block> blocks {allNames, ContentType::Block};
@@ -61,6 +62,7 @@ public:
     ~ContentBuilder();
 
     void add(std::unique_ptr<ContentPackRuntime> pack);
+    void add(std::unique_ptr<rigging::RigConfig> rig);
 
     BlockMaterial& createBlockMaterial(const std::string& id);
 

@@ -36,9 +36,11 @@ Level::Level(
         DEFAULT_PLAYER_INVENTORY_SIZE
     );
     auto player = spawnObject<Player>(
+        this,
         DEFAULT_SPAWNPOINT, 
         DEFAULT_PLAYER_SPEED, 
-        inventory
+        inventory,
+        0
     );
 
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса

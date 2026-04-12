@@ -11,6 +11,7 @@
 #include "../objects/Entity.h"
 #include "ContentPack.h"
 #include "../logic/scripting/scripting.h"
+#include "../objects/rigging.h"
 
 ContentIndices::ContentIndices(
     ContentUnitIndices<Block> blocks,
@@ -26,17 +27,25 @@ Content::Content(
     ContentUnitDefs<Block> blocks,
     ContentUnitDefs<Item> items,
     ContentUnitDefs<Entity> entities,
-    std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>> packs,
-    std::unordered_map<std::string, std::unique_ptr<BlockMaterial>> blockMaterials
+    UptrsMap<std::string, ContentPackRuntime> packs,
+    UptrsMap<std::string, BlockMaterial> blockMaterials,
+    UptrsMap<std::string, rigging::RigConfig> rigs
 ) : indices(std::move(indices)),
     drawGroups(std::move(drawGroups)),
     packs(std::move(packs)),
     blocks(std::move(blocks)),
     items(std::move(items)),
     entities(std::move(entities)),
-    blockMaterials(std::move(blockMaterials)) {}
+    blockMaterials(std::move(blockMaterials)),
+    rigs(std::move(rigs)) {}
 
 Content::~Content() {
+}
+
+const rigging::RigConfig* Content::getRig(const std::string& id) const {
+    auto found = rigs.find(id);
+    if (found == rigs.end()) return nullptr;
+    return found->second.get();
 }
 
 const ContentPackRuntime* Content::getPackRuntime(const std::string& id) const {
@@ -45,7 +54,7 @@ const ContentPackRuntime* Content::getPackRuntime(const std::string& id) const {
     return found->second.get();
 }
 
-const std::unordered_map<std::string, std::unique_ptr<ContentPackRuntime>>& Content::getPacks() const {
+const UptrsMap<std::string, ContentPackRuntime>& Content::getPacks() const {
     return packs;
 }
 
@@ -55,6 +64,6 @@ const BlockMaterial* Content::findBlockMaterial(const std::string& id) const {
     return found->second.get();
 }
 
-const std::unordered_map<std::string, std::unique_ptr<BlockMaterial>>& Content::getBlockMaterials() const {
+const UptrsMap<std::string, BlockMaterial>& Content::getBlockMaterials() const {
     return blockMaterials;
 }

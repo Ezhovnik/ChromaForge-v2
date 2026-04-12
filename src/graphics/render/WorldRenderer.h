@@ -68,16 +68,18 @@ public:
 	~WorldRenderer();
 
 	void draw(
-		const DrawContext& context, 
-		Camera* camera, 
+		const DrawContext& context,
+		Camera* camera,
 		bool hudVisible,
+		bool pause,
 		PostProcessing* postProcessing
 	);
 
 	void renderLevel(
-        const DrawContext& context, 
-        Camera* camera, 
-        const EngineSettings& settings
+        const DrawContext& context,
+        Camera* camera,
+        const EngineSettings& settings,
+		bool pause
     );
 
 	static bool drawChunkBorders;

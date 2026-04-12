@@ -93,7 +93,7 @@ void LevelScreen::saveWorldPreview() {
         Viewport viewport(previewSize * 1.5, previewSize);
         DrawContext parent_ctx(nullptr, {Window::width, Window::height}, batch.get());
         DrawContext ctx(&parent_ctx, viewport, batch.get());
-        worldRenderer->draw(ctx, &camera, false, postProcessing.get());
+        worldRenderer->draw(ctx, &camera, false, true, postProcessing.get());
         auto image = postProcessing->toImage();
         image->flipY();
         imageio::write(paths->resolve("world:preview.png").string(), image.get());
@@ -122,9 +122,13 @@ void LevelScreen::update(float deltaTime) {
     bool paused = hud->isPause();
     audio::get_channel("regular")->setPaused(paused);
     audio::get_channel("ambient")->setPaused(paused);
+    glm::vec3 velocity {};
+    if (auto hitbox = player->getHitbox())  {
+        velocity = hitbox->velocity;
+    }
     audio::set_listener(
         camera->position-camera->dir, 
-        player->hitbox->velocity,
+        velocity,
         camera->dir, 
         glm::vec3(0, 1, 0)
     );
@@ -143,7 +147,7 @@ void LevelScreen::draw(float) {
     Viewport viewport(Window::width, Window::height);
     DrawContext ctx(nullptr, viewport, batch.get());
 
-    worldRenderer->draw(ctx, camera.get(), hudVisible, postProcessing.get());
+    worldRenderer->draw(ctx, camera.get(), hudVisible, hud->isPause(), postProcessing.get());
 
     if (hudVisible) hud->draw(ctx);
 }

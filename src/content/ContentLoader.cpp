@@ -20,6 +20,7 @@
 #include "../core_content_defs.h"
 #include "ContentBuilder.h"
 #include "../util/stringutil.h"
+#include "../objects/rigging.h"
 
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder) : pack(pack), builder(builder) {
     auto runtime = std::make_unique<ContentPackRuntime>(
@@ -443,6 +444,16 @@ void ContentLoader::load() {
             const std::filesystem::path& file = entry.path();
             std::string name = pack->id + ":" + file.stem().u8string();
             loadBlockMaterial(builder.createBlockMaterial(name), file);
+        }
+    }
+
+    std::filesystem::path rigsDir = folder / std::filesystem::u8path("rigs");
+    if (std::filesystem::is_directory(rigsDir)) {
+        for (const auto& entry : std::filesystem::directory_iterator(rigsDir)) {
+            const std::filesystem::path& file = entry.path();
+            std::string name = pack->id+":" + file.stem().u8string();
+            std::string text = files::read_string(file);
+            builder.add(rigging::RigConfig::parse(text, file.u8string(), name));
         }
     }
 

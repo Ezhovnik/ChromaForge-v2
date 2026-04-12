@@ -93,7 +93,7 @@ template<class T>
 void asset_loader::assets_setup(const Assets* assets) {
      if (auto mapPtr = assets->getMap<T>()) {
           for (const auto& entry : **mapPtr) {
-               static_cast<T*>(entry.second.get())->setup(assets);
+               static_cast<T*>(entry.second.get())->setup();
           }
      }
 }

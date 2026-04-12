@@ -28,7 +28,6 @@ public:
 		float delta,
 		uint substeps,
 		bool shifting,
-		float gravityScale,
 		bool collisions,
         entityid_t entity
 	); // Выполняет один шаг физического моделирования для указанного хитбокса.

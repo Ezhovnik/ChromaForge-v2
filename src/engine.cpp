@@ -145,7 +145,6 @@ void Engine::loadAssets() {
     ShaderProgram::preprocessor->setPaths(resPaths.get());
 
     auto new_assets = std::make_unique<Assets>();
-    new_assets->addSetupFunc(asset_loader::assets_setup<rigging::RigConfig>);
     AssetsLoader loader(new_assets.get(), resPaths.get());
     AssetsLoader::addDefaults(loader, content.get());
     bool threading = false;
