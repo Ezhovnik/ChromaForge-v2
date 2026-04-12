@@ -34,12 +34,12 @@ static int l_entity_despawn(lua::State* L) {
 
 static int l_entity_set_rig(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {
-        std::string rigName = lua::require_string(L, 2);
-        auto rigConfig = scripting::content->getRig(rigName);
-        if (rigConfig == nullptr) {
-            throw std::runtime_error("Rig not found '" + rigName + "'");
+        std::string skeletonName = lua::require_string(L, 2);
+        auto skeletonConfig = scripting::content->getRig(skeletonName);
+        if (skeletonConfig == nullptr) {
+            throw std::runtime_error("Skeelton not found '" + skeletonName + "'");
         }
-        entity->setRig(rigConfig);
+        entity->setRig(skeletonConfig);
     }
     return 0;
 }

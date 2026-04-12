@@ -11,13 +11,13 @@
 #include "../physics/Hitbox.h"
 
 namespace rigging {
-    class RigConfig;
+    class SkeletonConfig;
 }
 
 struct Entity {
     std::string const name;
     std::vector<std::string> components;
-    std::string rigName = name;
+    std::string skeletonName = name;
 
     BodyType bodyType = BodyType::Dynamic;
     glm::vec3 hitbox {0.25f};
@@ -29,7 +29,7 @@ struct Entity {
         struct {
             bool textures = false;
             bool pose = false;
-        } rig;
+        } skeleton;
         struct {
             bool velocity = true;
             bool settings = false;
@@ -38,7 +38,7 @@ struct Entity {
 
     struct {
         entityid_t id;
-        rigging::RigConfig* rig;
+        rigging::SkeletonConfig* skeleton;
     } rt {};
 
     Entity(const std::string& name) : name(name) {};

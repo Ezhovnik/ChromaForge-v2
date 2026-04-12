@@ -48,7 +48,7 @@ static void create_libs(lua::State* L) {
     openlib(L, "vec4", vec4lib);
     openlib(L, "world", worldlib);
 
-    openlib(L, "__modeltree", modeltreelib);
+    openlib(L, "__skeleton", skeletonlib);
     openlib(L, "__rigidbody", rigidbodylib);
     openlib(L, "__transform", transformlib);
 

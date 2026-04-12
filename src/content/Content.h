@@ -21,7 +21,7 @@ class ContentPackRuntime;
 class Block;
 struct BlockMaterial;
 namespace rigging {
-    class RigConfig;
+    class SkeletonConfig;
 }
 
 enum class ContentType {
@@ -118,7 +118,7 @@ private:
     std::unique_ptr<ContentIndices> indices;
     UptrsMap<std::string, ContentPackRuntime> packs;
     UptrsMap<std::string, BlockMaterial> blockMaterials;
-    UptrsMap<std::string, rigging::RigConfig> rigs;
+    UptrsMap<std::string, rigging::SkeletonConfig> skeletons;
 public:
     ContentUnitDefs<Block> blocks;
     ContentUnitDefs<Item> items;
@@ -133,7 +133,7 @@ public:
         ContentUnitDefs<Entity> entities,
         UptrsMap<std::string, ContentPackRuntime> packs,
         UptrsMap<std::string, BlockMaterial> blockMaterials,
-        UptrsMap<std::string, rigging::RigConfig> rigs
+        UptrsMap<std::string, rigging::SkeletonConfig> skeletons
     );
     ~Content();
 
@@ -141,7 +141,7 @@ public:
         return indices.get();
     }
 
-    const rigging::RigConfig* getRig(const std::string& id) const;
+    const rigging::SkeletonConfig* getRig(const std::string& id) const;
     const BlockMaterial* findBlockMaterial(const std::string& id) const;
     const ContentPackRuntime* getPackRuntime(const std::string& id) const;
 

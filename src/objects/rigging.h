@@ -18,8 +18,8 @@ namespace model {
 }
 
 namespace rigging {
-    struct Rig;
-    class RigConfig;
+    struct Skeleton;
+    class SkeletonConfig;
 
     struct Pose {
         std::vector<glm::mat4> matrices;
@@ -29,20 +29,20 @@ namespace rigging {
         }
     };
 
-    class RigNode {
+    class Bone {
     private:
         size_t index;
         std::string name;
         std::string modelName;
-        std::vector<std::unique_ptr<RigNode>> subnodes;
+        std::vector<std::unique_ptr<Bone>> bones;
         model::Model* model = nullptr;
         bool modelUpdated = true;
     public:
-        RigNode(
+        Bone(
             size_t index, 
             std::string name,
             std::string model,
-            std::vector<std::unique_ptr<RigNode>> subnodes
+            std::vector<std::unique_ptr<Bone>> bones
         );
 
         void setModel(const std::string& name);
@@ -62,54 +62,58 @@ namespace rigging {
         }
 
         const auto& getSubnodes() const {
-            return subnodes;
+            return bones;
         }
     };
 
-    struct Rig {
-        const RigConfig* config;
+    struct Skeleton {
+        const SkeletonConfig* config;
         Pose pose;
         Pose calculated;
         std::unordered_map<std::string, std::string> textures;
     };
 
-    class RigConfig {
+    class SkeletonConfig {
     private:
         std::string name;
-        std::unique_ptr<RigNode> root;
+        std::unique_ptr<Bone> root;
         std::unordered_map<std::string, size_t> indices;
-        std::vector<RigNode*> nodes;
+        std::vector<Bone*> nodes;
 
         size_t update(
             size_t index,
-            Rig& rig,
-            RigNode* node,
+            Skeleton& skeleton,
+            Bone* node,
             glm::mat4 matrix
         ) const;
     public:
-        RigConfig(const std::string& name, std::unique_ptr<RigNode> root, size_t nodesCount);
+        SkeletonConfig(
+            const std::string& name,
+            std::unique_ptr<Bone> root,
+            size_t nodesCount
+        );
 
-        void update(Rig& rig, glm::mat4 matrix) const;
+        void update(Skeleton& skeleton, glm::mat4 matrix) const;
         void render(
             Assets* assets,
             ModelBatch& batch,
-            Rig& rig, 
+            Skeleton& skeleton, 
             const glm::mat4& matrix
         ) const;
 
-        Rig instance() const {
-            return Rig {
+        Skeleton instance() const {
+            return Skeleton {
                 this, Pose(nodes.size()), Pose(nodes.size()), {}
             };
         }
 
-        static std::unique_ptr<RigConfig> parse(
+        static std::unique_ptr<SkeletonConfig> parse(
             std::string_view src,
             std::string_view file,
             std::string_view name
         );
 
-        const std::vector<RigNode*>& getNodes() const {
+        const std::vector<Bone*>& getNodes() const {
             return nodes;
         }
 

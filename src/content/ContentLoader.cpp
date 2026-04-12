@@ -319,8 +319,8 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
     }
 
     root->flag("save", def.save.enabled);
-    root->flag("save-rig-pose", def.save.rig.pose);
-    root->flag("save-rig-textures", def.save.rig.textures);
+    root->flag("save-skeleton-pose", def.save.skeleton.pose);
+    root->flag("save-skeleton-textures", def.save.skeleton.textures);
     root->flag("save-body-velocity", def.save.body.velocity);
     root->flag("save-body-settings", def.save.body.settings);
 
@@ -330,7 +330,7 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
         def.bodyType = *bodyType;
     }
 
-    root->str("rig-name", def.rigName);
+    root->str("skeleton-name", def.skeletonName);
 }
 
 void ContentLoader::loadEntity(Entity& def, const std::string& full, const std::string& name) {
@@ -451,13 +451,13 @@ void ContentLoader::load() {
         }
     }
 
-    std::filesystem::path rigsDir = folder / std::filesystem::u8path("rigs");
-    if (std::filesystem::is_directory(rigsDir)) {
-        for (const auto& entry : std::filesystem::directory_iterator(rigsDir)) {
+    std::filesystem::path skeletonsDir = folder / std::filesystem::u8path("skeletons");
+    if (std::filesystem::is_directory(skeletonsDir)) {
+        for (const auto& entry : std::filesystem::directory_iterator(skeletonsDir)) {
             const std::filesystem::path& file = entry.path();
             std::string name = pack->id+":" + file.stem().u8string();
             std::string text = files::read_string(file);
-            builder.add(rigging::RigConfig::parse(text, file.u8string(), name));
+            builder.add(rigging::SkeletonConfig::parse(text, file.u8string(), name));
         }
     }
 

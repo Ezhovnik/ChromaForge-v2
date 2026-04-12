@@ -2,6 +2,6 @@
     "components": [
         "falling_block"
     ],
-    "rig-name": "chromaforge:block",
+    "skeleton-name": "chromaforge:block",
     "hitbox": [0.8, 0.8, 0.8]
 }
