@@ -301,6 +301,8 @@ end
 stdcomp = require "builtin:internal/stdcomp"
 entities.get = stdcomp.get_Entity
 
+math.randomseed(time.uptime() * 1536227939)
+
 -- Deprecated functions
 block_index = block.index
 block_name = block.name

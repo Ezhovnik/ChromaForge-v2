@@ -20,7 +20,7 @@ struct Entity {
     std::string rigName = name;
 
     BodyType bodyType = BodyType::Dynamic;
-    glm::vec3 hitbox {0.5f};
+    glm::vec3 hitbox {0.25f};
     std::vector<std::pair<size_t, AABB>> boxSensors {};
     std::vector<std::pair<size_t, float>> radialSensors {};
 
@@ -30,6 +30,10 @@ struct Entity {
             bool textures = false;
             bool pose = false;
         } rig;
+        struct {
+            bool velocity = true;
+            bool settings = false;
+        } body;
     } save {};
 
     struct {

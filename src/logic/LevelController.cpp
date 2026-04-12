@@ -31,7 +31,6 @@ void LevelController::update(float delta, bool input, bool pause) {
     );
     chunks->update(settings.chunks.loadSpeed.get());
 
-    level->entities->clean();
     if (!pause) {
         for(const auto& obj : level->objects) {
             if(obj && obj->shouldUpdate) obj->update(delta);
@@ -42,6 +41,7 @@ void LevelController::update(float delta, bool input, bool pause) {
         level->entities->updatePhysics(delta);
         level->entities->update();
     }
+    level->entities->clean();
     player->postUpdate(delta, input, pause);
 
     level->objects.erase(

@@ -1,0 +1,7 @@
+{
+    "components": [
+        "falling_block"
+    ],
+    "rig-name": "chromaforge:block",
+    "hitbox": [0.8, 0.8, 0.8]
+}

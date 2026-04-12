@@ -127,6 +127,8 @@ void Player::updateInput(PlayerInput& input, float delta) {
 		flight = !flight;
 		if (flight) hitbox->velocity.y += 1.0f;
 	}
+
+	hitbox->type = noclip ? BodyType::Kinematic : BodyType::Dynamic;
 	if (input.noclip) noclip = !noclip;
 
 	input.noclip = false;

@@ -321,6 +321,8 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
     root->flag("save", def.save.enabled);
     root->flag("save-rig-pose", def.save.rig.pose);
     root->flag("save-rig-textures", def.save.rig.textures);
+    root->flag("save-body-velocity", def.save.body.velocity);
+    root->flag("save-body-settings", def.save.body.settings);
 
     std::string bodyTypeName;
     root->str("body-type", bodyTypeName);

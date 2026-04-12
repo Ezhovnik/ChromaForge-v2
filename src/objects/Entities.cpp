@@ -85,7 +85,7 @@ entityid_t Entities::spawn(
         entity, position, glm::vec3(1.0f), glm::mat3(1.0f), glm::mat4(1.0f), true
     );
     auto& body = registry.emplace<Rigidbody>(
-        entity, true, Hitbox {def.bodyType, position, def.hitbox}, std::vector<Sensor>{}
+        entity, true, Hitbox {def.bodyType, position, def.hitbox * 0.5f}, std::vector<Sensor>{}
     );
     body.sensors.resize(def.radialSensors.size() + def.boxSensors.size());
     for (auto& [i, box] : def.boxSensors) {
@@ -158,13 +158,39 @@ void Entities::loadEntity(const dynamic::Map_sptr& map) {
 void Entities::loadEntity(const dynamic::Map_sptr& map, Entt_Entity entity) {
     auto& transform = entity.getTransform();
     auto& body = entity.getRigidbody();
+    auto& rig = entity.getModeltree();
 
     if (auto bodymap = map->map(COMP_RIGIDBODY)) {
         dynamic::get_vec(bodymap, "vel", body.hitbox.velocity);
+        std::string bodyTypeName;
+        bodymap->str("type", bodyTypeName);
+        if (auto bodyType = BodyType_from(bodyTypeName)) {
+            body.hitbox.type = *bodyType;
+        }
+        bodymap->flag("crouch", body.hitbox.crouching);
+        bodymap->num("damping", body.hitbox.linearDamping);
     }
     if (auto tsfmap = map->map(COMP_TRANSFORM)) {
         dynamic::get_vec(tsfmap, "pos", transform.pos);
         dynamic::get_vec(tsfmap, "size", transform.size);
+        dynamic::get_mat(tsfmap, "rot", transform.rot);
+    }
+    std::string rigName = rig.config->getName();
+    map->str("rig", rigName);
+    if (rigName != rig.config->getName()) {
+        rig.config = level->content->getRig(rigName);
+    }
+    if (auto rigmap = map->map(COMP_MODELTREE)) {
+        if (auto texturesmap = rigmap->map("textures")) {
+            for (auto& [slot, _] : texturesmap->values) {
+                texturesmap->str(slot, rig.textures[slot]);
+            }
+        }
+        if (auto posearr = rigmap->list("pose")) {
+            for (size_t i = 0; i < std::min(rig.pose.matrices.size(), posearr->size()); ++i) {
+                dynamic::get_mat(posearr, i, rig.pose.matrices[i]);
+            }
+        }
     }
 }
 
@@ -302,12 +328,23 @@ dynamic::Value Entities::serialize(const Entt_Entity& entity) {
     }
     {
         auto& rigidbody = entity.getRigidbody();
+        auto& hitbox = rigidbody.hitbox;
         auto& bodymap = root->putMap(COMP_RIGIDBODY);
         if (!rigidbody.enabled) {
             bodymap.put("enabled", rigidbody.enabled);
         }
-        bodymap.put("vel", dynamic::to_value(rigidbody.hitbox.velocity));
-        bodymap.put("damping", rigidbody.hitbox.linearDamping);
+        if (def.save.body.velocity) {
+            bodymap.put("vel", dynamic::to_value(rigidbody.hitbox.velocity));
+        }
+        if (def.save.body.settings) {
+            bodymap.put("damping", rigidbody.hitbox.linearDamping);
+            if (hitbox.type != def.bodyType) {
+                bodymap.put("type", to_string(hitbox.type));
+            }
+            if (hitbox.crouching) {
+                bodymap.put("crouch", hitbox.crouching);
+            }
+        }
     }
     auto& rig = entity.getModeltree();
     if (rig.config->getName() != def.rigName) {

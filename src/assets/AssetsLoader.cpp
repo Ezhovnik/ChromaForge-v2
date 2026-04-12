@@ -179,11 +179,11 @@ void AssetsLoader::processPreloadList(AssetType tag, dynamic::List* list) {
 
 void AssetsLoader::processPreloadConfig(const std::filesystem::path& file) {
     auto root = files::read_json(file);
-    processPreloadList(AssetType::Font, root->list("fonts"));
-    processPreloadList(AssetType::Shader, root->list("shaders"));
-    processPreloadList(AssetType::Texture, root->list("textures"));
-    processPreloadList(AssetType::Sound, root->list("sounds"));
-    processPreloadList(AssetType::Model, root->list("models"));
+    processPreloadList(AssetType::Font, root->list("fonts").get());
+    processPreloadList(AssetType::Shader, root->list("shaders").get());
+    processPreloadList(AssetType::Texture, root->list("textures").get());
+    processPreloadList(AssetType::Sound, root->list("sounds").get());
+    processPreloadList(AssetType::Model, root->list("models").get());
     // Макеты загружаются автоматически
 }
 

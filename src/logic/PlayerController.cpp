@@ -46,7 +46,7 @@ CameraControl::CameraControl(
 ) : player(player), 
 	camera(player->camera), 
 	settings(settings), 
-	offset(0.0f, 0.7f, 0.0f) {}
+	offset(0.0f, 0.0f, 0.0f) {}
 
 void CameraControl::refresh() {
 	camera->position = player->getPosition() + offset;
@@ -129,9 +129,10 @@ void CameraControl::switchCamera() {
 }
 
 void CameraControl::update(const PlayerInput& input, float delta, Chunks* chunks) {
-	offset = glm::vec3(0.0f, 0.7f, 0.0f);
+	offset = glm::vec3(0.0f, 0.0f, 0.0f);
 
     if (auto hitbox = player->getHitbox()) {
+        offset.y += hitbox->halfsize.y * (0.7f / 0.9f);
         if (settings.shaking.get() && !input.cheat) {
             offset += updateCameraShaking(*hitbox, delta);
         }
