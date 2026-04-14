@@ -7,6 +7,8 @@
     "models": [
         "block",
         "drop-block",
-        "drop-item"
+        "drop-item",
+        "player",
+        "player-head"
     ]
 }

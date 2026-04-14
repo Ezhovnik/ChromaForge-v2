@@ -25,6 +25,7 @@ struct ChunksSettings {
 struct CameraSettings {
     BoolSetting fovEffects {true};
     BoolSetting shaking {true};
+	BoolSetting inertia {true};
 	NumberSetting fov {90.0f, 10, 120};
 	NumberSetting sensitivity {2.0f, 0.1f, 10.0f};
 };

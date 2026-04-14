@@ -13,6 +13,7 @@
 #include "../content/ContentLUT.h"
 #include "Entities.h"
 #include "../core_content_defs.h"
+#include "../objects/rigging.h"
 
 namespace PlayerConsts {
     constexpr float CROUCH_SPEED_MUL = 0.35f; ///< Множитель скорости при приседании
@@ -56,7 +57,7 @@ void Player::updateEntity() {
 	} else if (auto entity = level->entities->get(eid)) {
         position = entity->getTransform().pos;
     } else {
-        // Check if chunk loaded
+        // TODO: Check if chunk loaded
     }
 }
 
@@ -140,17 +141,36 @@ void Player::updateInput(PlayerInput& input, float delta) {
 }
 
 void Player::postUpdate() {
-    auto hitbox = getHitbox();
-    if (hitbox == nullptr) return;
+    auto entity = level->entities->get(eid);
+    if (!entity.has_value()) return;
 
-    position = hitbox->position;
+    auto& hitbox = entity->getRigidbody().hitbox;
+    position = hitbox.position;
 
-    if (flight && hitbox->grounded) {
+    if (flight && hitbox.grounded) {
         flight = false;
     }
 
 	// Если точка возрождения не задана, пытаемся найти её
 	if (spawnpoint.y <= 0.1) attemptToFindSpawnpoint();
+
+	auto& skeleton = entity->getSkeleton();
+
+    skeleton.visible = currentCamera != camera;
+
+    size_t bodyIndex = skeleton.config->find("body")->getIndex();
+    size_t headIndex = skeleton.config->find("head")->getIndex();
+    
+    skeleton.pose.matrices[bodyIndex] = glm::rotate(glm::mat4(1.0f), glm::radians(cam.x-90), glm::vec3(0, 1, 0));
+    skeleton.pose.matrices[headIndex] = glm::rotate(
+		glm::rotate(
+			glm::translate(
+				glm::mat4(1.0f),
+				glm::vec3(0.0f, 0.4f, 0.0f)
+			), 
+			glm::radians(-cam.y), glm::vec3(0, 0, 1)
+		), glm::radians(90.0f), glm::vec3(0, 1, 0)
+	);
 }
 
 void Player::attemptToFindSpawnpoint() {

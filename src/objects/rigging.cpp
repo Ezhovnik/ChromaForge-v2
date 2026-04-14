@@ -8,6 +8,13 @@
 
 using namespace rigging;
 
+void ModelReference::refresh(const Assets* assets) {
+    if (updateFlag) {
+        model = assets->get<model::Model>(name);
+        updateFlag = false;
+    }
+}
+
 Bone::Bone(
     size_t index, 
     std::string name, 
@@ -15,19 +22,26 @@ Bone::Bone(
     std::vector<std::unique_ptr<Bone>> bones
 ) : index(index), 
     name(std::move(name)),
-    modelName(std::move(model)),
-    bones(std::move(bones)) {}
+    bones(std::move(bones)),
+    model({model, nullptr, true}) {}
 
 void Bone::setModel(const std::string& name) {
-    if (modelName == name) return;
-    modelName = name;
-    modelUpdated = true;
+    if (model.name == name) return;
+    model = {name, nullptr, true};
 }
 
-void Bone::refreshModel(const Assets* assets) {
-    if (modelUpdated) {
-        model = assets->get<model::Model>(modelName);
-        modelUpdated = false;
+Skeleton::Skeleton(
+    const SkeletonConfig* config
+) : config(config),
+    pose(config->getNodes().size()),
+    calculated(config->getNodes().size()),
+    flags(config->getNodes().size()),
+    textures(),
+    modelOverrides(config->getNodes().size()),
+    visible(true)
+{
+    for (size_t i = 0; i < config->getNodes().size(); ++i) {
+        flags[i].visible = true;
     }
 }
 
@@ -73,15 +87,31 @@ void SkeletonConfig::render(
     const glm::mat4& matrix) const
 {
     update(skeleton, matrix);
+    if (!skeleton.visible) return;
     for (size_t i = 0; i < nodes.size(); ++i) {
         auto* node = nodes[i];
-        node->refreshModel(assets);
-        if (auto model = node->getModel()) {
+        if (!skeleton.flags[i].visible) continue;
+        node->model.refresh(assets);
+        auto model = node->model.model;
+        auto& modelOverride = skeleton.modelOverrides.at(i);
+        if (!modelOverride.updateFlag) {
+            modelOverride.refresh(assets);
+        }
+        model = modelOverride.model ? modelOverride.model : model;
+        if (model) {
             batch.pushMatrix(skeleton.calculated.matrices[i]);
             batch.draw(model, &skeleton.textures);
             batch.popMatrix();
         }
     }
+}
+
+Bone* SkeletonConfig::find(std::string_view str) const {
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        auto* node = nodes[i];
+        if (node->getName() == str) return node;
+    }
+    return nullptr;
 }
 
 static std::tuple<size_t, std::unique_ptr<Bone>> read_node(
@@ -97,13 +127,13 @@ static std::tuple<size_t, std::unique_ptr<Bone>> read_node(
         for (size_t i = 0; i < nodesList->size(); ++i) {
             if (const auto& map = nodesList->map(i)) {
                 auto [subcount, subNode] = read_node(map.get(), index + count);
-                subcount += count;
+                count += subcount;
                 bones.push_back(std::move(subNode));
             }
         }
     }
     return {
-        index + count,
+        count,
         std::make_unique<Bone>(
             index,
             name,

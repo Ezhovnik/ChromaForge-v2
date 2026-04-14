@@ -88,7 +88,7 @@ glm::vec3 CameraControl::updateCameraShaking(const Hitbox& hitbox, float delta) 
     }
     offset += camera->right * glm::sin(shakeTimer) * oh * shake;
     offset += camera->up * glm::abs(glm::cos(shakeTimer)) * ov * shake;
-    offset -= glm::min(interpVel * 0.05f, 1.0f);
+    if (settings.inertia.get()) offset -= glm::min(interpVel * 0.05f, 1.0f);
     return offset;
 }
 
@@ -147,6 +147,8 @@ void CameraControl::update(const PlayerInput& input, float delta, Chunks* chunks
     auto spCamera = player->spCamera;
     auto tpCamera = player->tpCamera;
 
+    refresh();
+
     if (player->currentCamera == spCamera) {
         spCamera->position = chunks->rayCastToObstacle(camera->position, camera->front, 3.0f) - 0.2f * camera->front;
         spCamera->dir = -camera->dir;
@@ -192,17 +194,6 @@ void PlayerController::updateKeyboard() {
 	input.pickBlock = Events::justActive(BIND_PLAYER_PICK);
 }
 
-void PlayerController::updateCamera(float delta, bool movement) {
-	if (movement) camControl.updateMouse(input);
-	camControl.update(input, delta, level->chunks.get());
-}
-
-void PlayerController::onBlockInteraction(glm::ivec3 pos, const Block* def, BlockInteraction type) {
-    for (const auto& callback : blockInteractionCallbacks) {
-        callback(player.get(), pos, def, type);
-    }
-}
-
 void PlayerController::onFootstep(const Hitbox& hitbox) {
     glm::vec3 pos = hitbox.position;
     glm::vec3 half = hitbox.halfsize;
@@ -216,7 +207,8 @@ void PlayerController::onFootstep(const Hitbox& hitbox) {
             if (vox) {
                 auto def = level->content->getIndices()->blocks.get(vox->id);
                 if (!def->obstacle) continue;
-                onBlockInteraction(
+                blocksController->onBlockInteraction(
+                    player.get(),
                     glm::ivec3(x, y, z), def,
                     BlockInteraction::Step
                 );
@@ -362,7 +354,6 @@ void PlayerController::processRightClick(Block* def, Block* target) {
     const auto& selection = player->selection;
     auto chunks = level->chunks.get();
     auto camera = player->camera.get();
-    auto lighting = level->lighting.get();
 
     blockstate state {};
     state.rotation = determine_rotation(def, selection.normal, camera->dir);
@@ -398,13 +389,12 @@ void PlayerController::processRightClick(Block* def, Block* target) {
         }
     }
     if (chosenBlock != vox->id && chosenBlock) {
-        onBlockInteraction(coord, def, BlockInteraction::Placing);
-        chunks->setVoxel(coord.x, coord.y, coord.z, chosenBlock, state);
-        lighting->onBlockSet(coord.x, coord.y, coord.z, chosenBlock);
-        if (def->rt.funcsset.onplaced) {
-            scripting::on_block_placed(player.get(), def, coord.x, coord.y, coord.z);
-        }
-        blocksController->updateSides(coord.x, coord.y, coord.z);
+        blocksController->placeBlock(
+            player.get(),
+            def,
+            state,
+            coord.x, coord.y, coord.z
+        );
     }
 }
 
@@ -433,11 +423,11 @@ void PlayerController::updateInteraction() {
     }
     auto target = indices->blocks.get(vox->id);
     if (input.attack && target->breakable){
-        onBlockInteraction(
-            iend, target,
-            BlockInteraction::Destruction
+        blocksController->breakBlock(
+            player.get(),
+            target,
+            iend.x, iend.y, iend.z
         );
-        blocksController->breakBlock(player.get(), target, iend.x, iend.y, iend.z);
     }
     if (input.build && !input.crouch) {
         bool preventDefault = false;
@@ -475,24 +465,18 @@ void PlayerController::postUpdate(float delta, bool input_flag, bool pause) {
     if (!pause) {
         updateFootsteps(delta);
 	}
-    player->postUpdate();
-	camControl.refresh();
-    if (!pause) {
-        updateCamera(delta, input_flag);
+    if (!pause && input_flag) {
+        camControl.updateMouse(this->input);
     }
 	if (input_flag) {
 		updateInteraction();
 	} else {
 		player->selection = {};
 	}
+    player->postUpdate();
+    camControl.update(this->input, delta, level->chunks.get());
 }
 
 Player* PlayerController::getPlayer() {
     return player.get();
-}
-
-void PlayerController::listenBlockInteraction(
-    const on_block_interaction& callback
-) {
-    blockInteractionCallbacks.push_back(callback);
 }

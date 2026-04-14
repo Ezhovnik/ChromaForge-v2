@@ -13,7 +13,25 @@ static int l_get_model(lua::State* L) {
         auto& skeleton = entity->getSkeleton();
         auto* rigConfig = skeleton.config;
         auto index = index_range_check(skeleton, lua::tointeger(L, 2));
-        return lua::pushstring(L, rigConfig->getNodes()[index]->getModelName());
+        const auto& modelOverride = skeleton.modelOverrides[index];
+        if (!modelOverride.model) {
+            return lua::pushstring(L, modelOverride.name);
+        }
+        return lua::pushstring(L, rigConfig->getNodes()[index]->model.name);
+    }
+    return 0;
+}
+
+static int l_set_model(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        auto& skeleton = entity->getSkeleton();
+        auto index = index_range_check(skeleton, lua::tointeger(L, 2));
+        auto& modelOverride = skeleton.modelOverrides[index];
+        if (lua::isnoneornil(L, 3)) {
+            modelOverride = {"", nullptr, true};
+        } else {
+            modelOverride = {lua::require_string(L, 3), nullptr, true};
+        }
     }
     return 0;
 }
@@ -56,11 +74,50 @@ static int l_get_texture(lua::State* L) {
     return 0;
 }
 
+static int l_index(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        auto& skeleton = entity->getSkeleton();
+        if (auto bone = skeleton.config->find(lua::require_string(L, 2))) {
+            return lua::tointeger(L, bone->getIndex());
+        }
+    }
+    return 0;
+}
+
+static int l_is_visible(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        auto& skeleton = entity->getSkeleton();
+        if (!lua::isnoneornil(L, 2)) {
+            auto index = index_range_check(skeleton, lua::tointeger(L, 2));
+            return lua::pushboolean(L, skeleton.flags.at(index).visible);
+        }
+        return lua::pushboolean(L, skeleton.visible);
+    }
+    return 0;
+}
+
+static int l_set_visible(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        auto& skeleton = entity->getSkeleton();
+        if (!lua::isnoneornil(L, 3)) {
+            auto index = index_range_check(skeleton, lua::tointeger(L, 2));
+            skeleton.flags.at(index).visible = lua::toboolean(L, 3);
+        } else {
+            skeleton.visible = lua::toboolean(L, 2);
+        }
+    }
+    return 0;
+}
+
 const luaL_Reg skeletonlib [] = {
     {"get_model", lua::wrap<l_get_model>},
+    {"set_model", lua::wrap<l_set_model>},
     {"get_matrix", lua::wrap<l_get_matrix>},
     {"set_matrix", lua::wrap<l_set_matrix>},
     {"get_texture", lua::wrap<l_get_texture>},
     {"set_texture", lua::wrap<l_set_texture>},
+    {"index", lua::wrap<l_index>},
+    {"is_visible", lua::wrap<l_is_visible>},
+    {"set_visible", lua::wrap<l_set_visible>},
     {NULL, NULL}
 };
