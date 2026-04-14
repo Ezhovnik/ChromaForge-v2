@@ -48,7 +48,7 @@ Content::Content(
 Content::~Content() {
 }
 
-const rigging::SkeletonConfig* Content::getRig(const std::string& id) const {
+const rigging::SkeletonConfig* Content::getSkeleton(const std::string& id) const {
     auto found = skeletons.find(id);
     if (found == skeletons.end()) return nullptr;
     return found->second.get();
@@ -72,4 +72,8 @@ const BlockMaterial* Content::findBlockMaterial(const std::string& id) const {
 
 const UptrsMap<std::string, BlockMaterial>& Content::getBlockMaterials() const {
     return blockMaterials;
+}
+
+const UptrsMap<std::string, rigging::SkeletonConfig>& Content::getSkeletons() const {
+    return skeletons;
 }

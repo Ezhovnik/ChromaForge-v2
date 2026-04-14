@@ -312,6 +312,7 @@ voxel* PlayerController::updateSelection(float maxDistance) {
     if (vox) {
         maxDistance = glm::distance(camera->position, end);
     }
+    auto prevEntity = selection.entity;
     selection.entity = ENTITY_NONE;
     selection.actualPosition = iend;
     if (auto result = level->entities->rayCast(
@@ -326,6 +327,18 @@ voxel* PlayerController::updateSelection(float maxDistance) {
         selection.position = selection.hitPosition;
         selection.actualPosition = selection.position;
         selection.normal = result->normal;
+    }
+    if (selection.entity != prevEntity) {
+        if (prevEntity != ENTITY_NONE) {
+            if (auto pentity = level->entities->get(prevEntity)) {
+                scripting::on_aim_off(*pentity, player.get());
+            }
+        }
+        if (selection.entity != ENTITY_NONE) {
+            if (auto pentity = level->entities->get(selection.entity)) {
+                scripting::on_aim_on(*pentity, player.get());
+            }
+        }
     }
     if (vox == nullptr || selection.entity) {
         selection.vox = {BLOCK_VOID, {}};
@@ -398,6 +411,20 @@ void PlayerController::processRightClick(Block* def, Block* target) {
     }
 }
 
+void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool rclick) {
+    auto entityOpt = level->entities->get(eid);
+    if (!entityOpt.has_value()) {
+        return;
+    }
+    auto entity = entityOpt.value();
+    if (lclick) {
+        scripting::on_attacked(entity, player.get(), player->getEntity());
+    }
+    if (rclick) {
+        scripting::on_entity_used(entity, player.get());
+    }
+}
+
 void PlayerController::updateInteraction() {
     auto indices = level->content->getIndices();
     auto chunks = level->chunks.get();
@@ -411,6 +438,9 @@ void PlayerController::updateInteraction() {
     if (vox == nullptr) {
         if (input.build && item->rt.funcsset.on_use) {
             scripting::on_item_use(player.get(), item);
+        }
+        if (selection.entity) {
+            updateEntityInteraction(selection.entity, input.attack, input.build);
         }
         return;
     }
@@ -454,8 +484,12 @@ void PlayerController::updateInteraction() {
 
 void PlayerController::update(float delta, bool input_flag, bool pause) {
 	if (!pause) {
-		if (input_flag) updateKeyboard();
-		else resetKeyboard();
+		if (input_flag) {
+            updateKeyboard();
+            player->updateSelectedEntity();
+        } else {
+            resetKeyboard();
+        }
 
 		updatePlayer(delta);
     }

@@ -53,7 +53,8 @@ function load_script(path, nocache)
 end
 
 function __scripts_cleanup()
-    print("Cleaning scripts cache")
+    debug.info("Cleaning scripts cache")
+    --print("Cleaning scripts cache")
     for k, v in pairs(__cached_scripts) do
         local packname, _ = parse_path(k)
         if packname ~= "builtin" then

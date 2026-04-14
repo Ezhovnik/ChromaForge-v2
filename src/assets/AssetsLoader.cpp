@@ -20,6 +20,7 @@
 #include "../files/files.h"
 #include "../util/ThreadPool.h"
 #include "../voxels/Block.h"
+#include "../objects/rigging.h"
 
 AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(assets), paths(paths) {
 	// Регистрируем встроенные загрузчики из asset_loaders.h
@@ -245,6 +246,16 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
             auto& info = pack->getInfo();
             std::filesystem::path folder = info.folder/std::filesystem::path(LAYOUTS_FOLDER);
             addLayouts(pack->getEnvironment(), info.id, folder, loader);
+        }
+
+        for (auto& entry : content->getSkeletons()) {
+            auto& skeleton = *entry.second;
+            for (auto& bone : skeleton.getBones()) {
+                auto& model = bone->model.name;
+                if (!model.empty()) {
+                    loader.add(AssetType::Model, MODELS_FOLDER + "/" + model, model);
+                }
+            }
         }
 	}
 

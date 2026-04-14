@@ -99,10 +99,10 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         }
     }));
     panel->add(create_label([=]() {
-        const auto& selection = player->selection;
-        if (selection.entity == ENTITY_NONE) {
+        auto eid = player->getSelectedEntity();
+        if (eid == ENTITY_NONE) {
             return std::wstring {L"Entity: -"};
-        } else if (auto entity = level->entities->get(selection.entity)) {
+        } else if (auto entity = level->entities->get(eid)) {
             return L"Entity: " + util::str2wstr_utf8(entity->getDef().name) + L" (UID: "+std::to_wstring(entity->getUID()) + L")";
         } else {
             return std::wstring {L"Entity: error (invalid UID)"};

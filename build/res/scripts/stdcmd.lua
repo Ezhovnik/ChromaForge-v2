@@ -144,3 +144,16 @@ console.add_command(
         return "Spawned new player entity #"..tostring(eid)
     end
 )
+
+console.add_command(
+    "entity.despawn entity:sel=$entity.selected",
+    "Despawn entity",
+    function (args, kwargs)
+        local eid = args[1]
+        local entity = entities.get(eid)
+        if entity ~= nil then
+            entity:despawn()
+            return "despawned entity #"..tostring(eid)
+        end
+    end
+)

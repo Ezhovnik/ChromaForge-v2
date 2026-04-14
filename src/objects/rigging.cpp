@@ -33,14 +33,14 @@ void Bone::setModel(const std::string& name) {
 Skeleton::Skeleton(
     const SkeletonConfig* config
 ) : config(config),
-    pose(config->getNodes().size()),
-    calculated(config->getNodes().size()),
-    flags(config->getNodes().size()),
+    pose(config->getBones().size()),
+    calculated(config->getBones().size()),
+    flags(config->getBones().size()),
     textures(),
-    modelOverrides(config->getNodes().size()),
+    modelOverrides(config->getBones().size()),
     visible(true)
 {
-    for (size_t i = 0; i < config->getNodes().size(); ++i) {
+    for (size_t i = 0; i < config->getBones().size(); ++i) {
         flags[i].visible = true;
     }
 }
@@ -94,7 +94,7 @@ void SkeletonConfig::render(
         node->model.refresh(assets);
         auto model = node->model.model;
         auto& modelOverride = skeleton.modelOverrides.at(i);
-        if (!modelOverride.updateFlag) {
+        if (modelOverride.updateFlag) {
             modelOverride.refresh(assets);
         }
         model = modelOverride.model ? modelOverride.model : model;

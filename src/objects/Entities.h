@@ -16,13 +16,17 @@
 #include "../data/dynamic.h"
 
 struct entity_funcs_set {
-    bool init : 1;
-    bool on_despawn : 1;
-    bool on_grounded : 1;
-    bool on_fall : 1;
-    bool on_sensor_enter : 1;
-    bool on_sensor_exit : 1;
-    bool on_save : 1;
+    bool init;
+    bool on_despawn;
+    bool on_grounded;
+    bool on_fall;
+    bool on_sensor_enter;
+    bool on_sensor_exit;
+    bool on_save;
+    bool on_aim_on;
+    bool on_aim_off;
+    bool on_attacked;
+    bool on_used;
 };
 
 struct Entity;
@@ -182,7 +186,7 @@ public:
     entityid_t spawn(
         Entity& def,
         glm::vec3 position,
-        dynamic::Value args=dynamic::NONE,
+        dynamic::Map_sptr args=nullptr,
         dynamic::Map_sptr saved=nullptr,
         entityid_t uid=0
     );

@@ -32,4 +32,6 @@ extern const luaL_Reg transformlib [];
 
 extern int l_print(lua::State* L);
 
+void initialize_libs_extends(lua::State* L);
+
 #endif // LOGIC_SCRIPTING_LUA_API_LUA_H_

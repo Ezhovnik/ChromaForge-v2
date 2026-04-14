@@ -129,6 +129,7 @@
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/lua_commons.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/lua_custom_types.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/lua_engine.cpp"
+"C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/lua_extensions.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/lua_overrides.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/logic/scripting/lua/lua_util.cpp"
 "C:/Users/User/Documents/C++ Projects/ChromaForge v2/src/math/LMPacker.cpp"

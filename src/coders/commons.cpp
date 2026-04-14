@@ -112,6 +112,14 @@ std::string_view BasicParser::readUntil(char c) {
     return source.substr(start, pos - start);
 }
 
+std::string_view BasicParser::readUntilEOL() {
+    int start = pos;
+    while (hasNext() && source[pos] != '\r' && source[pos] != '\n') {
+        pos++;
+    }
+    return source.substr(start, pos-start);
+}
+
 void BasicParser::expect(char expected) {
     char c = peek();
     if (c != expected) {

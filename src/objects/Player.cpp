@@ -323,3 +323,11 @@ bool Player::isNoclip() const {
 void Player::setNoclip(bool flag) {
     this->noclip = flag;
 }
+
+void Player::updateSelectedEntity() {
+    selectedEid = selection.entity;
+}
+
+entityid_t Player::getSelectedEntity() const {
+    return selectedEid;
+}

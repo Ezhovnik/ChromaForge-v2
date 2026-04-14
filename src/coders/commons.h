@@ -94,6 +94,7 @@ protected:
     parsing_error error(const std::string& message);
 public:
     std::string_view readUntil(char c);
+    std::string_view readUntilEOL();
     std::string parseName();
     bool hasNext();
     char peek();

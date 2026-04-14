@@ -1,6 +1,7 @@
 #include "libentity.h"
 
 #include <optional>
+#include <algorithm>
 
 #include "../../../objects/Player.h"
 #include "../../../physics/Hitbox.h"
@@ -21,9 +22,12 @@ static int l_spawn(lua::State* L) {
     auto defname = lua::tostring(L, 1);
     auto& def = scripting::content->entities.require(defname);
     auto pos = lua::tovec3(L, 2);
-    dynamic::Value args = dynamic::NONE;
+    dynamic::Map_sptr args = nullptr;
     if (lua::gettop(L) > 2) {
-        args = lua::tovalue(L, 3);
+        auto value = lua::tovalue(L, 3);
+        if (auto map = std::get_if<dynamic::Map_sptr>(&value)) {
+            args = *map;
+        }
     }
     level->entities->spawn(def, pos, args);
     return 1;
@@ -46,7 +50,7 @@ static int l_get_skeleton(lua::State* L) {
 static int l_set_skeleton(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {
         std::string skeletonName = lua::require_string(L, 2);
-        auto skeletonConfig = scripting::content->getRig(skeletonName);
+        auto skeletonConfig = scripting::content->getSkeleton(skeletonName);
         if (skeletonConfig == nullptr) {
             throw std::runtime_error("Skeleton not found '" + skeletonName + "'");
         }

@@ -71,6 +71,8 @@ private:
     bool noclip = false;
 
     entityid_t eid;
+
+    entityid_t selectedEid;
 public:
 	std::shared_ptr<Camera> camera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
     std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
@@ -164,6 +166,9 @@ public:
      * @param delta Время с предыдущего кадра.
      */
 	void updateInput(PlayerInput& input, float delta);
+
+    void updateSelectedEntity();
+    entityid_t getSelectedEntity() const;
 
     void postUpdate();
 

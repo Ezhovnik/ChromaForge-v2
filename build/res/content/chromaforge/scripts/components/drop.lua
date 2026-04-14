@@ -7,7 +7,7 @@ ready = false
 target = -1
 
 ARGS = ARGS or {}
-local dropitem = ARGS.item or {}
+local dropitem = ARGS
 if SAVED_DATA.item then
     dropitem.id = item.index(SAVED_DATA.item)
     dropitem.count = SAVED_DATA.count
@@ -30,8 +30,8 @@ do
         local bid = block.index(icon:sub(16))
         model = block.get_model(bid)
         if model == "X" then
-            entity:set_skeleton("chromaforge:drop-item")
             body:set_size(vec3.mul(body:get_size(), {1.0, 0.3, 1.0}))
+            rig:set_model(0, "drop-item")
             rig:set_texture("$0", icon)
         else
             if model == "aabb" then
@@ -46,8 +46,8 @@ do
             end
         end
     else
-        entity:set_skeleton("chromaforge:drop-item")
         body:set_size(vec3.mul(body:get_size(), {1.0, 0.3, 1.0}))
+        rig:set_model(0, "drop-item")
         rig:set_texture("$0", icon)
     end
     mat4.mul(matrix, rotation, matrix)
@@ -110,4 +110,8 @@ function on_update()
         vec3.mul(dir, 10.0, dir)
         body:set_vel(dir)
     end
+end
+
+function on_attacked(attacker, pid)
+    body:set_vel({0, 10, 0})
 end

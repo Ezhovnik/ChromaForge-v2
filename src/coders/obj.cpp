@@ -85,7 +85,7 @@ public:
         while (hasNext()) {
             if (peek() != '#' && parseName() == "usemtl") {
                 skipWhitespace();
-                texture = readUntil('\n');
+                texture = readUntilEOL();
                 break;
             }
             skipLine();
@@ -100,7 +100,7 @@ public:
                 auto cmd = parseName();
                 if (cmd == "usemtl") {
                     skipWhitespace();
-                    texture = readUntil('\n');
+                    texture = readUntilEOL();
                     mesh = &model->addMesh(texture);
                     break;
                 } else if (cmd == "f") {

@@ -73,17 +73,21 @@ namespace scripting {
         const Entity& def,
         entityid_t eid,
         const std::vector<std::unique_ptr<UserComponent>>& components,
-        dynamic::Value args,
+        dynamic::Map_sptr args,
         dynamic::Map_sptr saved
     );
-    bool on_entity_despawn(const Entity& def, const Entt_Entity& entity);
-    bool on_entity_grounded(const Entt_Entity& entity, float force);
-    bool on_entity_fall(const Entt_Entity& entity);
-    bool on_entity_save(const Entt_Entity& entity);
+    void on_entity_despawn(const Entt_Entity& entity);
+    void on_entity_grounded(const Entt_Entity& entity, float force);
+    void on_entity_fall(const Entt_Entity& entity);
+    void on_entity_save(const Entt_Entity& entity);
     void on_entities_update();
     void on_entities_render();
     void on_sensor_enter(const Entt_Entity& entity, size_t index, entityid_t oid);
     void on_sensor_exit(const Entt_Entity& entity, size_t index, entityid_t oid);
+    void on_aim_on(const Entt_Entity& entity, Player* player);
+    void on_aim_off(const Entt_Entity& entity, Player* player);
+    void on_attacked(const Entt_Entity& entity, Player* player, entityid_t attacker);
+    void on_entity_used(const Entt_Entity& entity, Player* player);
 
     void on_ui_open(
         UIDocument* layout, 

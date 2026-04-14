@@ -47,8 +47,8 @@ rigging::Skeleton& Entt_Entity::getSkeleton() const {
 void Entt_Entity::setRig(const rigging::SkeletonConfig* skeletonConfig) {
     auto& skeleton = registry.get<rigging::Skeleton>(entity);
     skeleton.config = skeletonConfig;
-    skeleton.pose.matrices.resize(skeletonConfig->getNodes().size(), glm::mat4(1.0f));
-    skeleton.calculated.matrices.resize(skeletonConfig->getNodes().size(), glm::mat4(1.0f));
+    skeleton.pose.matrices.resize(skeletonConfig->getBones().size(), glm::mat4(1.0f));
+    skeleton.calculated.matrices.resize(skeletonConfig->getBones().size(), glm::mat4(1.0f));
 }
 
 Entities::Entities(Level* level) : level(level) {
@@ -92,11 +92,11 @@ static void initialize_body(
 entityid_t Entities::spawn(
     Entity& def,
     glm::vec3 position,
-    dynamic::Value args,
+    dynamic::Map_sptr args,
     dynamic::Map_sptr saved,
     entityid_t uid
 ) {
-    auto skeleton = level->content->getRig(def.skeletonName);
+    auto skeleton = level->content->getSkeleton(def.skeletonName);
     if (skeleton == nullptr) {
         LOG_ERROR("Skeleton {} not found", def.skeletonName);
         throw std::runtime_error("Skeleton " + def.skeletonName + " not found");
@@ -167,7 +167,7 @@ void Entities::despawn(entityid_t id) {
         auto& eid = entity->getID();
         if (!eid.destroyFlag) {
             eid.destroyFlag = true;
-            scripting::on_entity_despawn(entity->getDef(), *entity);
+            scripting::on_entity_despawn(*entity);
         }
     }
 }
@@ -182,7 +182,7 @@ void Entities::loadEntity(const dynamic::Map_sptr& map) {
         throw std::runtime_error("Could not read entity - invalid UID");
     }
     auto& def = level->content->entities.require(defname);
-    spawn(def, {}, dynamic::NONE, map, uid);
+    spawn(def, {}, nullptr, map, uid);
 }
 
 void Entities::loadEntity(const dynamic::Map_sptr& map, Entt_Entity entity) {
@@ -208,7 +208,7 @@ void Entities::loadEntity(const dynamic::Map_sptr& map, Entt_Entity entity) {
     std::string skeletonName = skeleton.config->getName();
     map->str("rig", skeletonName);
     if (skeletonName != skeleton.config->getName()) {
-        skeleton.config = level->content->getRig(skeletonName);
+        skeleton.config = level->content->getSkeleton(skeletonName);
     }
     if (auto skeletonmap = map->map(COMP_SKELETON)) {
         if (auto texturesmap = skeletonmap->map("textures")) {

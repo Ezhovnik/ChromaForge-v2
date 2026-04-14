@@ -12,8 +12,8 @@ std::string to_string(BlockModel model) {
         case BlockModel::X: return "X";
         case BlockModel::AABB: return "aabb";
         case BlockModel::Custom: return "custom";
+		default: return "unknown";
     }
-	return "unknown";
 }
 
 std::optional<BlockModel> BlockModel_from(std::string_view str) {

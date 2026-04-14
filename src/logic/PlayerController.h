@@ -55,6 +55,7 @@ private:
 	void updateKeyboard();
 	void resetKeyboard();
 	void updatePlayer(float deltaTime);
+	void updateEntityInteraction(entityid_t eid, bool lclick, bool rclick);
 	void updateInteraction();
 
     float stepsTimer = 0.0f;
