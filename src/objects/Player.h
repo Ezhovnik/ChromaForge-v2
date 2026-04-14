@@ -10,6 +10,7 @@
 #include "../data/dynamic.h"
 #include "../interfaces/Serializable.h"
 #include "../interfaces/Object.h"
+#include "../constants.h"
 
 class Camera;
 struct Hitbox;
@@ -39,12 +40,13 @@ struct PlayerInput {
     bool dropBlock : 1;
 };
 
-struct BlockSelection {
-    voxel vox {0, {}};
+struct CursorSelection {
+    voxel vox {BLOCK_VOID, {}};
     glm::ivec3 position {};
     glm::ivec3 actualPosition {};
     glm::ivec3 normal {};
     glm::vec3 hitPosition;
+    entityid_t entity = ENTITY_NONE;
 };
 
 /**
@@ -77,7 +79,7 @@ public:
 
 	glm::vec3 cam {}; ///< Углы поворота камеры
 
-	BlockSelection selection {};
+	CursorSelection selection {};
 
 	/**
 	 * @brief Конструктор игрока.

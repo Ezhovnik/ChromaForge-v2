@@ -25,6 +25,7 @@
 #include "../logic/scripting/scripting.h"
 #include "../objects/Entities.h"
 #include "../content/Content.h"
+#include "../objects/Entity.h"
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
@@ -95,6 +96,16 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
             return L"Name: " + util::str2wstr_utf8(def->name);
         } else {
             return std::wstring {L"Name: void"};
+        }
+    }));
+    panel->add(create_label([=]() {
+        const auto& selection = player->selection;
+        if (selection.entity == ENTITY_NONE) {
+            return std::wstring {L"Entity: -"};
+        } else if (auto entity = level->entities->get(selection.entity)) {
+            return L"Entity: " + util::str2wstr_utf8(entity->getDef().name) + L" (UID: "+std::to_wstring(entity->getUID()) + L")";
+        } else {
+            return std::wstring {L"Entity: error (invalid UID)"};
         }
     }));
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){

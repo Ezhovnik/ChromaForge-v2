@@ -14,6 +14,7 @@ struct Entity;
 class Block;
 struct BlockMaterial;
 struct ContentPackStats;
+class ContentPackRuntime;
 
 namespace dynamic {
     class Map;
@@ -23,6 +24,7 @@ namespace dynamic {
 class ContentLoader {
 private:
     const ContentPack* pack;
+    ContentPackRuntime* runtime;
     scriptenv env;
     ContentBuilder& builder;
     ContentPackStats* stats;

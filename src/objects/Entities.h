@@ -165,6 +165,12 @@ private:
 
     void preparePhysics();
 public:
+    struct RaycastResult {
+        entityid_t entity;
+        glm::ivec3 normal;
+        float distance;
+    };
+
     Entities(Level* level);
 
     void updatePhysics(float delta);
@@ -181,6 +187,13 @@ public:
         entityid_t uid=0
     );
     void despawn(entityid_t id);
+
+    std::optional<RaycastResult> rayCast(
+        glm::vec3 start,
+        glm::vec3 dir,
+        float maxDistance,
+        entityid_t ignore = -1
+    );
 
     void loadEntities(dynamic::Map_sptr map);
     void loadEntity(const dynamic::Map_sptr& map);

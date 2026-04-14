@@ -28,6 +28,7 @@ ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder) : pack(
     );
     stats = &runtime->getStatsWriteable();
     env = runtime->getEnvironment();
+    this->runtime = runtime.get();
     builder.add(std::move(runtime));
 }
 
@@ -391,7 +392,7 @@ void ContentLoader::load() {
 
     std::filesystem::path scriptFile = folder/std::filesystem::path("scripts/world.lua");
     if (std::filesystem::is_regular_file(scriptFile)) {
-        scripting::load_world_script(env, pack->id, scriptFile);
+        scripting::load_world_script(env, pack->id, scriptFile, runtime->worldfuncsset);
     }
 
     if (!std::filesystem::is_regular_file(pack->getContentFile())) return;

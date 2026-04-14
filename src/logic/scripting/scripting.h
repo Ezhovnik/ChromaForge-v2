@@ -22,6 +22,7 @@ struct Item;
 class BlocksController;
 struct block_funcs_set;
 struct item_funcs_set;
+struct world_funcs_set;
 struct UserComponent;
 class ContentIndices;
 struct uidocscript;
@@ -106,7 +107,8 @@ namespace scripting {
     void load_world_script(
         const scriptenv& env,
         const std::string& packid,
-        const std::filesystem::path& file
+        const std::filesystem::path& file,
+        world_funcs_set& funcsset
     );
     void load_layout_script(
         const scriptenv& env,

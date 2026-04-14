@@ -317,13 +317,30 @@ voxel* PlayerController::updateSelection(float maxDistance) {
         maxDistance, 
         end, norm, iend
     );
-    if (vox == nullptr) {
+    if (vox) {
+        maxDistance = glm::distance(camera->position, end);
+    }
+    selection.entity = ENTITY_NONE;
+    selection.actualPosition = iend;
+    if (auto result = level->entities->rayCast(
+            camera->position,
+            camera->front,
+            maxDistance,
+            player->getEntity()
+        )
+    ) {
+        selection.entity = result->entity;
+        selection.hitPosition = camera->position + camera->front * result->distance;
+        selection.position = selection.hitPosition;
+        selection.actualPosition = selection.position;
+        selection.normal = result->normal;
+    }
+    if (vox == nullptr || selection.entity) {
         selection.vox = {BLOCK_VOID, {}};
         return nullptr;
     }
     blockstate selectedState = vox->state;
     selection.vox = *vox;
-    selection.actualPosition = iend;
     if (selectedState.segment) {
         selection.position = chunks->seekOrigin(
             iend, indices->blocks.get(selection.vox.id), selectedState
@@ -466,8 +483,7 @@ void PlayerController::postUpdate(float delta, bool input_flag, bool pause) {
 	if (input_flag) {
 		updateInteraction();
 	} else {
-		player->selection.vox.id = BLOCK_VOID;
-        player->selection.vox.state.rotation = 0;
+		player->selection = {};
 	}
 }
 

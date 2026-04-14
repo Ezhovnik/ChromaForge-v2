@@ -1,5 +1,7 @@
 #include "Entities.h"
 
+#include <sstream>
+
 #include <glm/ext/matrix_transform.hpp>
 
 #include "../assets/Assets.h"
@@ -17,10 +19,12 @@
 #include "../data/dynamic_util.h"
 #include "../content/Content.h"
 #include "../engine.h"
+#include "../math/rays.h"
 
 static inline std::string COMP_TRANSFORM = "transform";
 static inline std::string COMP_RIGIDBODY = "rigidbody";
 static inline std::string COMP_SKELETON = "skeleton";
+static inline std::string SAVED_DATA_VARNAME = "SAVED_DATA";
 
 void Transform::refresh() {
     combined = glm::mat4(1.0f);
@@ -61,6 +65,30 @@ static sensorcallback create_sensor_callback(Entities* entities) {
     };
 }
 
+static void initialize_body(
+    Entity& def, Rigidbody& body, entityid_t id, Entities* entities
+) {
+    body.sensors.resize(def.radialSensors.size() + def.boxSensors.size());
+    for (auto& [i, box] : def.boxSensors) {
+        SensorParams params {};
+        params.aabb = box;
+        body.sensors[i] = Sensor{
+            true, SensorType::AABB, i, id, params, params, {}, {},
+            create_sensor_callback<scripting::on_sensor_enter>(entities),
+            create_sensor_callback<scripting::on_sensor_exit>(entities)
+        };
+    }
+    for (auto& [i, radius] : def.radialSensors) {
+        SensorParams params {};
+        params.radial = glm::vec4(radius);
+        body.sensors[i] = Sensor{
+            true, SensorType::RADIUS, i, id, params, params, {}, {},
+            create_sensor_callback<scripting::on_sensor_enter>(entities),
+            create_sensor_callback<scripting::on_sensor_exit>(entities)
+        };
+    }
+}
+
 entityid_t Entities::spawn(
     Entity& def,
     glm::vec3 position,
@@ -73,42 +101,44 @@ entityid_t Entities::spawn(
         LOG_ERROR("Skeleton {} not found", def.skeletonName);
         throw std::runtime_error("Skeleton " + def.skeletonName + " not found");
     }
-    auto entity = registry.create();
     entityid_t id;
     if (uid == 0) {
         id = nextID++;
     } else {
         id = uid;
+        if (auto found = get(uid)) {
+            std::stringstream ss;
+            ss << "UID #" << uid << " is already used by an entity ";
+            ss << found->getDef().name;
+            if (found->getID().destroyFlag) {
+                ss << " marked to destroy";
+            }
+            LOG_ERROR("{}", ss.str());
+            throw std::runtime_error(ss.str());
+        }
     }
-    registry.emplace<EntityId>(entity, static_cast<entityid_t>(id), def);
-    const auto& tsf = registry.emplace<Transform>(
-        entity, position, glm::vec3(1.0f), glm::mat3(1.0f), glm::mat4(1.0f), true
-    );
-    auto& body = registry.emplace<Rigidbody>(
-        entity, true, Hitbox {def.bodyType, position, def.hitbox * 0.5f}, std::vector<Sensor>{}
-    );
-    body.sensors.resize(def.radialSensors.size() + def.boxSensors.size());
-    for (auto& [i, box] : def.boxSensors) {
-        SensorParams params {};
-        params.aabb = box;
-        body.sensors[i] = Sensor {
-            true, SensorType::AABB, i, id, params, params, {}, {},
-            create_sensor_callback<scripting::on_sensor_enter>(this),
-            create_sensor_callback<scripting::on_sensor_exit>(this)
-        };
-    }
-    for (auto& [i, radius] : def.radialSensors) {
-        SensorParams params {};
-        params.radial = glm::vec4(radius);
-        body.sensors[i] = Sensor {
-            true, SensorType::RADIUS, i, id, params, params, {}, {},
-            create_sensor_callback<scripting::on_sensor_enter>(this),
-            create_sensor_callback<scripting::on_sensor_exit>(this)
-        };
-    }
-    auto& scripting = registry.emplace<ScriptComponents>(entity);
+    auto entity = registry.create();
     entities[id] = entity;
     uids[entity] = id;
+    registry.emplace<EntityId>(entity, static_cast<entityid_t>(id), def);
+    const auto& tsf = registry.emplace<Transform>(
+        entity,
+        position,
+        glm::vec3(1.0f),
+        glm::mat3(1.0f),
+        glm::mat4(1.0f),
+        true
+    );
+    auto& body = registry.emplace<Rigidbody>(
+        entity,
+        true,
+        Hitbox{def.bodyType, position, def.hitbox * 0.5f},
+        std::vector<Sensor>{}
+    );
+    initialize_body(def, body, id, this);
+    body.sensors.resize(def.radialSensors.size() + def.boxSensors.size());
+
+    auto& scripting = registry.emplace<ScriptComponents>(entity);
     registry.emplace<rigging::Skeleton>(entity, skeleton->instance());
     for (auto& componentName : def.components) {
         auto component = std::make_unique<UserComponent>(
@@ -195,6 +225,7 @@ void Entities::loadEntity(const dynamic::Map_sptr& map, Entt_Entity entity) {
 }
 
 void Entities::loadEntities(dynamic::Map_sptr root) {
+    clean();
     auto list = root->list("data");
     for (size_t i = 0; i < list->size(); i++) {
         try {
@@ -202,6 +233,43 @@ void Entities::loadEntities(dynamic::Map_sptr root) {
         } catch (const std::runtime_error& err) {
             LOG_ERROR("Could not read entity: {}", err.what());
         }
+    }
+}
+
+std::optional<Entities::RaycastResult> Entities::rayCast(
+    glm::vec3 start,
+    glm::vec3 dir,
+    float maxDistance,
+    entityid_t ignore
+) {
+    Ray ray(start, dir);
+    auto view = registry.view<EntityId, Transform, Rigidbody>();
+
+    entityid_t foundUID = 0;
+    glm::ivec3 foundNormal;
+
+    for (auto [entity, eid, transform, body] : view.each()) {
+        if (eid.uid == ignore) continue;
+        auto& hitbox = body.hitbox;
+        glm::ivec3 normal;
+        double distance;
+        if (ray.intersectAABB(
+                glm::vec3(),
+                hitbox.getAABB(),
+                maxDistance,
+                normal,
+                distance
+            ) > RayRelation::None
+        ) {
+            foundUID = eid.uid;
+            foundNormal = normal;
+            maxDistance = static_cast<float>(distance);
+        }
+    }
+    if (foundUID) {
+        return Entities::RaycastResult{foundUID, foundNormal, maxDistance};
+    } else {
+        return std::nullopt;
     }
 }
 
@@ -370,7 +438,7 @@ dynamic::Value Entities::serialize(const Entt_Entity& entity) {
     if (!scripts.components.empty()) {
         auto& compsMap = root->putMap("comps");
         for (auto& comp : scripts.components) {
-            auto data = scripting::get_component_value(comp->env, "SAVED_DATA");
+            auto data = scripting::get_component_value(comp->env, SAVED_DATA_VARNAME);
             compsMap.put(comp->name, data);
         }
     }

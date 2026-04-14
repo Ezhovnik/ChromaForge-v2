@@ -677,12 +677,12 @@ void Chunks::save(Chunk* chunk) {
         AABB aabb (
             glm::vec3(
 				chunk->chunk_x * CHUNK_WIDTH,
-				-16,
+				-INFINITY,
 				chunk->chunk_z * CHUNK_DEPTH
 			),
             glm::vec3(
 				(chunk->chunk_x + 1) * CHUNK_WIDTH,
-				CHUNK_HEIGHT + 32,
+				INFINITY,
 				(chunk->chunk_z + 1) * CHUNK_DEPTH
 			)
         );
