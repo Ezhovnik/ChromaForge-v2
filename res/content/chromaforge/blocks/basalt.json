@@ -1,0 +1,12 @@
+{
+    "texture-faces": [
+        "basalt",
+        "basalt",
+        "basalt_top",
+        "basalt_top",
+        "basalt",
+        "basalt"
+    ],
+    "rotation": "pipe",
+    "material": "chromaforge:stone"
+}
