@@ -5,9 +5,9 @@
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
 
-#include "../audio/audio.h"
-#include "../typedefs.h"
-#include "../debug/Logger.h"
+#include "audio/audio.h"
+#include "typedefs.h"
+#include "debug/Logger.h"
 
 using namespace audio;
 

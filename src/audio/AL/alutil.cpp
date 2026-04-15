@@ -13,7 +13,7 @@
 #include <AL/alc.h>
 #endif
 
-#include "../../debug/Logger.h"
+#include "debug/Logger.h"
 
 bool AL::check_errors(const std::string& filename, const std::uint_fast32_t line){
     ALenum error = alGetError();

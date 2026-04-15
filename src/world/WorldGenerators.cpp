@@ -4,11 +4,11 @@
 #include <map>
 #include <string>
 
-#include "../voxels/WorldGenerator.h"
-#include "../voxels/FlatWorldGenerator.h"
-#include "../content/Content.h"
-#include "../debug/Logger.h"
-#include "../core_content_defs.h"
+#include "voxels/WorldGenerator.h"
+#include "voxels/FlatWorldGenerator.h"
+#include "content/Content.h"
+#include "debug/Logger.h"
+#include "core_content_defs.h"
 
 std::vector<std::string> WorldGenerators::getGeneratorsIDs() {
     std::vector<std::string> ids;

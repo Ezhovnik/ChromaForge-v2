@@ -5,9 +5,9 @@
 
 #include <glm/glm.hpp>
 
-#include "../math/rand.h"
-#include "../typedefs.h"
-#include "../voxels/voxel.h"
+#include "math/rand.h"
+#include "typedefs.h"
+#include "voxels/voxel.h"
 
 class Player;
 class Block;

@@ -1,7 +1,7 @@
 #ifndef FILES_RLE_H_
 #define FILES_RLE_H_
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 /**
  * @brief Простое RLE-сжатие (длина серии кодируется одним байтом).

@@ -6,7 +6,7 @@
 
 #include "Batch2D.h"
 #include "Framebuffer.h"
-#include "../../window/Window.h"
+#include "window/Window.h"
 
 static void set_blend_mode(BlendMode mode) {
     switch (mode) {

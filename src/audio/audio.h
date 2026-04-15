@@ -7,7 +7,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 namespace audio {
     using speakerid_t = int64_t;

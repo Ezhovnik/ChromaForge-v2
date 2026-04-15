@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <ctime>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 /**
  * @brief Генератор случайных чисел на основе std::mt19937 (вихрь Мерсенна).

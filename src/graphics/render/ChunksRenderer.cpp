@@ -3,12 +3,12 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
-#include "../../graphics/core/Mesh.h"
+#include "graphics/core/Mesh.h"
 #include "BlocksRenderer.h"
-#include "../../voxels/Chunk.h"
-#include "../../world/Level.h"
-#include "../../debug/Logger.h"
-#include "../../settings.h"
+#include "voxels/Chunk.h"
+#include "world/Level.h"
+#include "debug/Logger.h"
+#include "settings.h"
 
 inline constexpr uint RENDERER_CAPACITY = 9 * 6 * 6 * 3000;
 

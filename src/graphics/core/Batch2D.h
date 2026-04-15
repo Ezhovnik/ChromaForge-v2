@@ -6,8 +6,8 @@
 #include <memory>
 
 #include "commons.h"
-#include "../../typedefs.h"
-#include "../../math/UVRegion.h"
+#include "typedefs.h"
+#include "math/UVRegion.h"
 
 class Mesh;
 class Texture;

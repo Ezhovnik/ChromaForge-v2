@@ -3,9 +3,9 @@
 #include <stdexcept>
 
 #include "byte_utils.h"
-#include "../debug/Logger.h"
+#include "debug/Logger.h"
 #include "zip.h"
-#include "../data/dynamic.h"
+#include "data/dynamic.h"
 
 using namespace json;
 using namespace dynamic;

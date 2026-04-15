@@ -3,9 +3,9 @@
 
 #include <string>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 #include "binary_json.h"
-#include "../data/dynamic.h"
+#include "data/dynamic.h"
 
 namespace json {
     dynamic::Map_sptr parse(std::string_view filename, std::string_view source);

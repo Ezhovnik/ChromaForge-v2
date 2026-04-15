@@ -3,9 +3,9 @@
 
 #include "lua_util.h"
 
-#include "../scripting_functional.h"
-#include "../../../data/dynamic.h"
-#include "../../../delegates.h"
+#include "logic/scripting/scripting_functional.h"
+#include "data/dynamic.h"
+#include "delegates.h"
 
 #include <string>
 #include <stdexcept>

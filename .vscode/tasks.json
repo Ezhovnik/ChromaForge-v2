@@ -1,42 +1,40 @@
 {
+    "version": "2.0.0",
     "tasks": [
         {
-            "type": "cppbuild",
-            "label": "C/C++: g++.exe сборка активного файла",
-            "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
+            "label": "CMake: Configure",
+            "type": "shell",
+            "command": "cmake",
             "args": [
-                // "-DNDEBUG",
-                "-g",
-                "-std=c++17",
-                "-I${workspaceFolder}/src",
-                "-I${workspaceFolder}/include",
-                "-IC:/msys64/ucrt64/include/luajit-2.1",
-                "-L${workspaceFolder}/lib",
-                "@${workspaceFolder}/.vscode/sources.txt",
-                "-lglfw3dll", 
-                "-lopengl32",
-                "-lglew32",
-                "-lluajit-5.1",
-                "-lopenal",
-                "-lvorbis",
-                "-lvorbisfile",
-                "-lvorbisenc",
-                "-lz",
-                "-lfmt",
-                "-lspdlog",
-                "-o",
-                "${workspaceFolder}/build/ChromaForge.exe",
+                "-B", "${workspaceFolder}/build",
+                "-S", "${workspaceFolder}",
+                "-G", "MinGW Makefiles",
+                "-DCMAKE_CXX_COMPILER:FILEPATH=C:/msys64/ucrt64/bin/g++.exe",
+                "-DCMAKE_C_COMPILER:FILEPATH=C:/msys64/ucrt64/bin/gcc.exe",
+                "-DCMAKE_PREFIX_PATH=C:/msys64/ucrt64"
             ],
             "options": {
-                "cwd": "${fileDirname}"
+                "cwd": "${workspaceFolder}"
             },
-            "problemMatcher": ["$gcc"],
+            "problemMatcher": [],
+            "group": "none"
+        },
+        {
+            "label": "CMake: Build",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "${workspaceFolder}/build",
+                "--config", "Debug",
+                "--target", "ChromaForge",
+                "-j", "8"
+            ],
+            "dependsOn": ["CMake: Configure"],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Сборка исполняемого файла ChromaForge"
+            "problemMatcher": ["$gcc"]
         }
-    ],
-    "version": "2.0.0"
+    ]
 }

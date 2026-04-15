@@ -14,8 +14,8 @@
 #error LuaJIT required
 #endif
 
-#include "../../../delegates.h"
-#include "../scripting.h"
+#include "delegates.h"
+#include "logic/scripting/scripting.h"
 
 namespace lua {
     class luaerror : public std::runtime_error {

@@ -7,8 +7,8 @@
 #include <stack>
 
 #include "GUI.h"
-#include "../../coders/xml.h"
-#include "../../typedefs.h"
+#include "coders/xml.h"
+#include "typedefs.h"
 
 namespace gui {
     class UIXmlReader;

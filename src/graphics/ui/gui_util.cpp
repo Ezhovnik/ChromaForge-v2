@@ -5,11 +5,11 @@
 #include "elements/display/Label.h"
 #include "elements/layout/Menu.h"
 #include "elements/control/Button.h"
-#include "../../frontend/locale/langs.h"
-#include "../../delegates.h"
+#include "frontend/locale/langs.h"
+#include "delegates.h"
 #include "gui_xml.h"
-#include "../../logic/scripting/scripting.h"
-#include "../../util/stringutil.h"
+#include "logic/scripting/scripting.h"
+#include "util/stringutil.h"
 
 using namespace gui;
 

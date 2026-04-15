@@ -14,10 +14,10 @@
 #include "glm/gtx/hash.hpp"
 
 #include "files.h"
-#include "../typedefs.h"
-#include "../util/BufferPool.h"
-#include "../voxels/Chunk.h"
-#include "../data/dynamic_fwd.h"
+#include "typedefs.h"
+#include "util/BufferPool.h"
+#include "voxels/Chunk.h"
+#include "data/dynamic_fwd.h"
 
 namespace RegionConsts {
     inline constexpr uint SIZE_BIT = 5; // Размер региона 

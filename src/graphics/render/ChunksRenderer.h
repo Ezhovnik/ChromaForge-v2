@@ -11,9 +11,9 @@
 
 #include <glm/glm.hpp>
 
-#include "../../voxels/Block.h"
-#include "../../voxels/ChunksStorage.h"
-#include "../../util/ThreadPool.h"
+#include "voxels/Block.h"
+#include "voxels/ChunksStorage.h"
+#include "util/ThreadPool.h"
 
 class Mesh;
 class Chunk;

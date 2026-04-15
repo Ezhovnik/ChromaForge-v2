@@ -1,6 +1,6 @@
 #include "api_lua.h"
-#include "../../../coders/json.h"
-#include "../../../data/dynamic.h"
+#include "coders/json.h"
+#include "data/dynamic.h"
 
 static int l_json_stringify(lua::State* L) {
     auto value = lua::tovalue(L, 1);

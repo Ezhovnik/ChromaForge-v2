@@ -7,7 +7,7 @@
 #include <vector>
 #include <fstream>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 namespace dynamic {
     class Map;

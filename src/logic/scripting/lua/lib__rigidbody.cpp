@@ -1,6 +1,6 @@
 #include "libentity.h"
 
-#include "../../../util/stringutil.h"
+#include "util/stringutil.h"
 
 static int l_get_vel(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {

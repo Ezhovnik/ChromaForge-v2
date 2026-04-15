@@ -1,7 +1,7 @@
 #include "api_lua.h"
-#include "../../CommandsInterpreter.h"
-#include "../../../engine.h"
-#include "../../../coders/commons.h"
+#include "logic/CommandsInterpreter.h"
+#include "engine.h"
+#include "coders/commons.h"
 
 using namespace scripting;
 

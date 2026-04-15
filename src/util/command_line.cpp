@@ -6,7 +6,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "../files/engine_paths.h"
+#include "files/engine_paths.h"
 
 /**
  * @brief Утилита для последовательного чтения аргументов командной строки.

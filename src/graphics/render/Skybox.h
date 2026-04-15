@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "../../typedefs.h"
-#include "../../math/rand.h"
-#include "../../graphics/core/DrawContext.h"
+#include "typedefs.h"
+#include "math/rand.h"
+#include "graphics/core/DrawContext.h"
 
 class Mesh;
 class ShaderProgram;

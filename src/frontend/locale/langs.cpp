@@ -2,12 +2,12 @@
 
 #include <utility>
 
-#include "../../coders/json.h"
-#include "../../coders/commons.h"
-#include "../../content/ContentPack.h"
-#include "../../files/files.h"
-#include "../../util/stringutil.h"
-#include "../../debug/Logger.h"
+#include "coders/json.h"
+#include "coders/commons.h"
+#include "content/ContentPack.h"
+#include "files/files.h"
+#include "util/stringutil.h"
+#include "debug/Logger.h"
 
 using namespace std::literals;
 

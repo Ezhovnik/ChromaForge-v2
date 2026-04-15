@@ -6,10 +6,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/noise.hpp>
 
-#include "../items/Inventory.h"
+#include "items/Inventory.h"
 #include "voxel.h"
-#include "../lighting/LightMap.h"
-#include "../content/ContentLUT.h"
+#include "lighting/LightMap.h"
+#include "content/ContentLUT.h"
 
 // Конструктор
 Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {

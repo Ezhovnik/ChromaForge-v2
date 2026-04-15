@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 
-#include "../../typedefs.h"
+#include "typedefs.h"
 
 class Texture;
 class Batch2D;

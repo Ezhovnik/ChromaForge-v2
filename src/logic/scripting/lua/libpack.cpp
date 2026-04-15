@@ -4,14 +4,14 @@
 #include <stdexcept>
 
 #include "api_lua.h"
-#include "../../../engine.h"
-#include "../../../files/engine_paths.h"
-#include "../../../core_content_defs.h"
-#include "../../../files/WorldFiles.h"
-#include "../../../world/Level.h"
-#include "../../../world/World.h"
-#include "../../../assets/AssetsLoader.h"
-#include "../../../content/Content.h"
+#include "engine.h"
+#include "files/engine_paths.h"
+#include "core_content_defs.h"
+#include "files/WorldFiles.h"
+#include "world/Level.h"
+#include "world/World.h"
+#include "assets/AssetsLoader.h"
+#include "content/Content.h"
 
 static int l_pack_get_folder(lua::State* L) {
     std::string packName = lua::tostring(L, 1);

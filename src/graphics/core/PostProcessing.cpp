@@ -6,7 +6,7 @@
 #include "ShaderProgram.h"
 #include "Texture.h"
 #include "Framebuffer.h"
-#include "../../debug/Logger.h"
+#include "debug/Logger.h"
 #include "Viewport.h"
 #include "DrawContext.h"
 

@@ -2,10 +2,10 @@
 
 #include <stdexcept>
 
-#include "../../math/LMPacker.h"
+#include "math/LMPacker.h"
 #include "Texture.h"
 #include "ImageData.h"
-#include "../../debug/Logger.h"
+#include "debug/Logger.h"
 
 Atlas::Atlas(
     std::unique_ptr<ImageData> image,

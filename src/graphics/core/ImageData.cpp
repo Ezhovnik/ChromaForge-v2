@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <cstring>
 
-#include "../../debug/Logger.h"
+#include "debug/Logger.h"
 
 template<typename T>
 inline T min(T a, T b) {

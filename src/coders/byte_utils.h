@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 /**
  * @brief Строитель бинарных данных в формате little-endian.

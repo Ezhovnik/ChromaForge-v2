@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include "../UINode.h"
-#include "../commons.h"
+#include "graphics/ui/elements/UINode.h"
+#include "graphics/ui/elements/commons.h"
 
 namespace gui {
     class Container : public UINode {

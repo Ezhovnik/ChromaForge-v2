@@ -2,12 +2,12 @@
 #include <filesystem>
 
 #include "api_lua.h"
-#include "../../../world/Level.h"
-#include "../../../world/World.h"
-#include "../../../engine.h"
-#include "../../../assets/Assets.h"
-#include "../../../assets/AssetsLoader.h"
-#include "../../../files/engine_paths.h"
+#include "world/Level.h"
+#include "world/World.h"
+#include "engine.h"
+#include "assets/Assets.h"
+#include "assets/AssetsLoader.h"
+#include "files/engine_paths.h"
 
 static int l_world_get_list(lua::State* L) {
     auto paths = scripting::engine->getPaths();

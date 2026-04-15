@@ -5,9 +5,9 @@
 
 #include "AL/ALAudio.h"
 #include "NoAudio.h"
-#include "../debug/Logger.h"
-#include "../coders/wav.h"
-#include "../coders/ogg.h"
+#include "debug/Logger.h"
+#include "coders/wav.h"
+#include "coders/ogg.h"
 
 namespace audio {
     static speakerid_t nextId = 1;

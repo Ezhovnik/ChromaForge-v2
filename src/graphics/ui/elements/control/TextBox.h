@@ -1,8 +1,8 @@
 #ifndef GRAPHICS_UI_ELEMENTS_CONTROL_TEXTBOX_H_
 #define GRAPHICS_UI_ELEMENTS_CONTROL_TEXTBOX_H_
 
-#include "../layout/Panel.h"
-#include "../display/Label.h"
+#include "graphics/ui/elements/layout/Panel.h"
+#include "graphics/ui/elements/display/Label.h"
 
 class Font;
 

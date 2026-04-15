@@ -4,3 +4,7 @@ build/screenshots
 build/logs
 build/controls.toml
 build/settings.toml
+build/CMakeFiles
+build/cmake_install.cmake
+build/CMakeCache.txt
+build/Makefile

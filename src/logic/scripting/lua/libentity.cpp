@@ -3,15 +3,15 @@
 #include <optional>
 #include <algorithm>
 
-#include "../../../objects/Player.h"
-#include "../../../physics/Hitbox.h"
-#include "../../../window/Camera.h"
-#include "../../../content/Content.h"
-#include "../../../engine.h"
-#include "../../../objects/rigging.h"
-#include "../../../objects/Entities.h"
-#include "../../../voxels/Chunks.h"
-#include "../../../constants.h"
+#include "objects/Player.h"
+#include "physics/Hitbox.h"
+#include "window/Camera.h"
+#include "content/Content.h"
+#include "engine.h"
+#include "objects/rigging.h"
+#include "objects/Entities.h"
+#include "voxels/Chunks.h"
+#include "constants.h"
 
 static int l_exists(lua::State* L) {
     return lua::pushboolean(L, get_entity(L, 1).has_value());

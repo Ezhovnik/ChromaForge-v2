@@ -6,7 +6,7 @@
 #include <vector>
 #include <stdexcept>
 
-#include "../content/ContentPack.h"
+#include "content/ContentPack.h"
 
 class files_access_error : public std::runtime_error {
 public:

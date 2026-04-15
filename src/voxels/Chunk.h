@@ -5,10 +5,10 @@
 #include <unordered_map>
 #include <memory>
 
-#include "../typedefs.h"
-#include "../constants.h"
+#include "typedefs.h"
+#include "constants.h"
 #include "voxel.h"
-#include "../lighting/LightMap.h"
+#include "lighting/LightMap.h"
 
 inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
 

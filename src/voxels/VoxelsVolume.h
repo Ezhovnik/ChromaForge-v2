@@ -1,8 +1,8 @@
 #ifndef VOXELS_VOXELSVOLUME_H_
 #define VOXELS_VOXELSVOLUME_H_
 
-#include "../typedefs.h"
-#include "../constants.h"
+#include "typedefs.h"
+#include "constants.h"
 #include "voxel.h"
 
 class VoxelsVolume {

@@ -3,12 +3,12 @@
 #include <memory>
 #include <utility>
 
-#include "../window/Events.h"
-#include "../window/input.h"
-#include "../coders/json.h"
-#include "../coders/toml.h"
-#include "../debug/Logger.h"
-#include "../settings.h"
+#include "window/Events.h"
+#include "window/input.h"
+#include "coders/json.h"
+#include "coders/toml.h"
+#include "debug/Logger.h"
+#include "settings.h"
 
 struct SectionsBuilder {
     std::unordered_map<std::string, Setting*>& map;

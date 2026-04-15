@@ -3,7 +3,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "../../../util/stringutil.h"
+#include "util/stringutil.h"
 
 using namespace lua;
 

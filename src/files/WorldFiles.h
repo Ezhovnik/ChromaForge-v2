@@ -9,10 +9,10 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
 
-#include "../typedefs.h"
-#include "../files/files.h"
-#include "../voxels/Chunk.h"
-#include "../content/ContentPack.h"
+#include "typedefs.h"
+#include "files/files.h"
+#include "voxels/Chunk.h"
+#include "content/ContentPack.h"
 #include "WorldRegions.h"
 
 class Player;

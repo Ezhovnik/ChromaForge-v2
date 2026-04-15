@@ -5,7 +5,7 @@
 #include <variant>
 #include <string>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 namespace dynamic {
     class Map;

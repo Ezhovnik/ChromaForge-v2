@@ -3,8 +3,8 @@
 #include <sstream>
 #include <math.h>
 
-#include "../debug/Logger.h"
-#include "../util/stringutil.h"
+#include "debug/Logger.h"
+#include "util/stringutil.h"
 
 inline double power(double base, int64_t power) {
     double result = 1.0;

@@ -6,10 +6,10 @@
 
 #include <glm/glm.hpp>
 
-#include "../UINode.h"
-#include "../layout/Container.h"
-#include "../../../../constants.h"
-#include "../../../../typedefs.h"
+#include "graphics/ui/elements/UINode.h"
+#include "graphics/ui/elements/layout/Container.h"
+#include "constants.h"
+#include "typedefs.h"
 
 class Assets;
 class DrawContext;

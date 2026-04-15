@@ -8,7 +8,7 @@
 
 #include "Window.h"
 #include "input.h"
-#include "../typedefs.h"
+#include "typedefs.h"
 
 inline constexpr short KEYS_BUFFER_SIZE = 1036;
 

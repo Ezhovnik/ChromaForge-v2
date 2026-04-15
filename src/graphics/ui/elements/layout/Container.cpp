@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <utility>
 
-#include "../../../core/DrawContext.h"
-#include "../../../core/Batch2D.h"
+#include "graphics/core/DrawContext.h"
+#include "graphics/core/Batch2D.h"
 
 using namespace gui;
 

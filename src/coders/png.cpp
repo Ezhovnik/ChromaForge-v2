@@ -5,15 +5,15 @@
 #include <GL/glew.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../include/stb/stb_image.h"
+#include <stb/stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../include/stb/stb_image_write.h"
+#include <stb/stb_image_write.h>
 
-#include "../graphics/core/ImageData.h"
-#include "../graphics/core/GLTexture.h"
-#include "../debug/Logger.h"
-#include "../typedefs.h"
+#include "graphics/core/ImageData.h"
+#include "graphics/core/GLTexture.h"
+#include "debug/Logger.h"
+#include "typedefs.h"
 
 std::unique_ptr<ImageData> _loadImage(const std::string& filename, bool flipVertically) {
     int channels = 0, width = 0, height = 0;

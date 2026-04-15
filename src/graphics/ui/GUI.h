@@ -10,7 +10,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../../delegates.h"
+#include "delegates.h"
 
 class DrawContext;
 class Assets;

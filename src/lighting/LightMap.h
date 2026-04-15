@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include "../typedefs.h"
-#include "../constants.h"
+#include "typedefs.h"
+#include "constants.h"
 
 inline constexpr int LIGHTMAP_DATA_LEN = CHUNK_VOLUME / 2;
 

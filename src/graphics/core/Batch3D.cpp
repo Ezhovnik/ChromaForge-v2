@@ -4,8 +4,8 @@
 
 #include "Mesh.h"
 #include "Texture.h"
-#include "../../typedefs.h"
-#include "../../math/UVRegion.h"
+#include "typedefs.h"
+#include "math/UVRegion.h"
 
 inline constexpr int B3D_VERTEX_SIZE = 9;
 static const vattr attrs[] = {

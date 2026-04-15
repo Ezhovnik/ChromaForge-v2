@@ -5,7 +5,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../../typedefs.h"
+#include "typedefs.h"
 
 class Atlas;
 class Batch3D;

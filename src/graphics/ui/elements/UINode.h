@@ -9,9 +9,9 @@
 
 #include <glm/glm.hpp>
 
-#include "../../../typedefs.h"
-#include "../../../delegates.h"
-#include "../../../window/input.h"
+#include "typedefs.h"
+#include "delegates.h"
+#include "window/input.h"
 
 class DrawContext;
 class Assets;

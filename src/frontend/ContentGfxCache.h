@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include "../math/UVRegion.h"
-#include "../typedefs.h"
+#include "math/UVRegion.h"
+#include "typedefs.h"
 
 class Content;
 class Assets;

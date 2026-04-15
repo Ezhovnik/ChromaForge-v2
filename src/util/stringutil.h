@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 namespace util {
     std::string escape(const std::string& s);

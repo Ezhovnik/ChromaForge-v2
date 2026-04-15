@@ -6,7 +6,7 @@
 #include <functional>
 #include <unordered_map>
 
-#include "../data/dynamic.h"
+#include "data/dynamic.h"
 
 namespace cmd {
     enum class ArgType {

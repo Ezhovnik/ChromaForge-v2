@@ -1,7 +1,7 @@
 #include "WorldGenerator.h"
 
-#include "../content/Content.h"
-#include "../core_content_defs.h"
+#include "content/Content.h"
+#include "core_content_defs.h"
 #include "Block.h"
 #include "voxel.h"
 

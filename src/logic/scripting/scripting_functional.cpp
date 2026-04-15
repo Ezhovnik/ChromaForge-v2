@@ -1,8 +1,8 @@
 #include "scripting_functional.h"
 
 #include "lua/lua_engine.h"
-#include "../../util/stringutil.h"
-#include "../../debug/Logger.h"
+#include "util/stringutil.h"
+#include "debug/Logger.h"
 
 using namespace scripting;
 

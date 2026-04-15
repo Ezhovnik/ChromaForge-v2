@@ -1,5 +1,5 @@
 #include "LevelEvents.h"
-#include "../voxels/Chunk.h"
+#include "voxels/Chunk.h"
 
 void LevelEvents::listen(lvl_event_type type, const chunk_event_func& func) {
 	auto& callbacks = chunk_callbacks[type];

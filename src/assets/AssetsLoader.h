@@ -9,9 +9,9 @@
 #include <utility>
 
 #include "Assets.h"
-#include "../interfaces/Task.h"
-#include "../delegates.h"
-#include "../typedefs.h"
+#include "interfaces/Task.h"
+#include "delegates.h"
+#include "typedefs.h"
 
 /**
  * @brief Типы ресурсов, которые могут быть загружены через AssetsLoader.

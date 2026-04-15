@@ -6,7 +6,7 @@
 #include <vector>
 #include <memory>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 namespace util {
     template<class T>

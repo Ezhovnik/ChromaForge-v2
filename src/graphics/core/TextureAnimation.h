@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-#include "../../typedefs.h"
+#include "typedefs.h"
 
 class Assets;
 class Texture;

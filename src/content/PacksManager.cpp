@@ -3,8 +3,8 @@
 #include <queue>
 #include <sstream>
 
-#include "../util/listutil.h"
-#include "../debug/Logger.h"
+#include "util/listutil.h"
+#include "debug/Logger.h"
 
 PacksManager::PacksManager() {
 }

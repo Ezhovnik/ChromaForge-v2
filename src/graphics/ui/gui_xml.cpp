@@ -11,15 +11,15 @@
 #include "elements/control/TrackBar.h"
 #include "elements/control/InputBindBox.h"
 #include "elements/display/InventoryView.h"
-#include "../../frontend/locale/langs.h"
-#include "../../logic/scripting/scripting.h"
-#include "../../util/stringutil.h"
-#include "../../debug/Logger.h"
-#include "../../window/Events.h"
-#include "../../items/Inventory.h"
-#include "../../math/voxmaths.h"
+#include "frontend/locale/langs.h"
+#include "logic/scripting/scripting.h"
+#include "util/stringutil.h"
+#include "debug/Logger.h"
+#include "window/Events.h"
+#include "items/Inventory.h"
+#include "math/voxmaths.h"
 #include "elements/layout/Menu.h"
-#include "../../frontend/menu.h"
+#include "frontend/menu.h"
 
 using namespace gui;
 

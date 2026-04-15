@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 class Content;
 class Chunks;

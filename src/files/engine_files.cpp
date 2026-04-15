@@ -3,7 +3,7 @@
 #include <string>
 #include <filesystem>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 #define SCREENSHOTS_FOLDER "../build/screenshots"
 #define SAVES_FOLDER "../build/saves"

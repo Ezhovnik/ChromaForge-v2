@@ -1,8 +1,8 @@
 #include "CheckBox.h"
 
-#include "../../../core/DrawContext.h"
-#include "../../../core/Batch2D.h"
-#include "../display/Label.h"
+#include "graphics/core/DrawContext.h"
+#include "graphics/core/Batch2D.h"
+#include "graphics/ui/elements/display/Label.h"
 
 using namespace gui;
 

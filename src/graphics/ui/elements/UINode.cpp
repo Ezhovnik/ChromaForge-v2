@@ -2,7 +2,7 @@
 
 #include <utility>
 
-#include "../../../graphics/core/Batch2D.h"
+#include "graphics/core/Batch2D.h"
 #include "layout/Container.h"
 
 using gui::UINode;

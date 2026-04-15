@@ -8,10 +8,10 @@
 
 #include <glm/glm.hpp>
 
-#include "../../delegates.h"
+#include "delegates.h"
 #include "scripting_functional.h"
-#include "../../typedefs.h"
-#include "../../data/dynamic.h"
+#include "typedefs.h"
+#include "data/dynamic.h"
 
 class Engine;
 class Content;

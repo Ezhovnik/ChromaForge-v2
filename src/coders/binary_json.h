@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-#include "../data/dynamic_fwd.h"
+#include "data/dynamic_fwd.h"
 
 namespace json {
     inline constexpr int BJSON_END = 0x0;

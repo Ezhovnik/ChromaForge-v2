@@ -1,9 +1,9 @@
 #include "api_lua.h"
-#include "../../../content/Content.h"
-#include "../../../world/Level.h"
-#include "../../../items/ItemStack.h"
-#include "../../../items/Inventories.h"
-#include "../../../logic/BlocksController.h"
+#include "content/Content.h"
+#include "world/Level.h"
+#include "items/ItemStack.h"
+#include "items/Inventories.h"
+#include "logic/BlocksController.h"
 
 static void validate_itemid(itemid_t id) {
     if (id >= scripting::indices->items.count()) {

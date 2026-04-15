@@ -2,18 +2,18 @@
 
 #include <utility>
 
-#include "../physics/Hitbox.h"
-#include "../window/Camera.h"
-#include "../world/Level.h"
-#include "../physics/PhysicsSolver.h"
-#include "../items/Inventory.h"
-#include "../math/rand.h"
-#include "../voxels/Chunks.h"
-#include "../voxels/voxel.h"
-#include "../content/ContentLUT.h"
+#include "physics/Hitbox.h"
+#include "window/Camera.h"
+#include "world/Level.h"
+#include "physics/PhysicsSolver.h"
+#include "items/Inventory.h"
+#include "math/rand.h"
+#include "voxels/Chunks.h"
+#include "voxels/voxel.h"
+#include "content/ContentLUT.h"
 #include "Entities.h"
-#include "../core_content_defs.h"
-#include "../objects/rigging.h"
+#include "core_content_defs.h"
+#include "objects/rigging.h"
 
 namespace PlayerConsts {
     constexpr float CROUCH_SPEED_MUL = 0.35f; ///< Множитель скорости при приседании

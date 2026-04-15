@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 /**
  * @brief Пространство имён для работы со сжатием в формате gzip.

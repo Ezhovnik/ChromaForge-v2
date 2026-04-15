@@ -1,10 +1,10 @@
 #include "rigging.h"
 
-#include "../assets/Assets.h"
-#include "../graphics/core/Model.h"
-#include "../coders/json.h"
-#include "../debug/Logger.h"
-#include "../graphics/render/ModelBatch.h"
+#include "assets/Assets.h"
+#include "graphics/core/Model.h"
+#include "coders/json.h"
+#include "debug/Logger.h"
+#include "graphics/render/ModelBatch.h"
 
 using namespace rigging;
 

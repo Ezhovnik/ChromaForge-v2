@@ -7,14 +7,14 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "../core/Mesh.h"
-#include "../core/Model.h"
-#include "../core/Texture.h"
-#include "../../assets/Assets.h"
-#include "../../window/Window.h"
-#include "../../voxels/Chunks.h"
-#include "../../lighting/LightMap.h"
-#include "../core/Atlas.h"
+#include "graphics/core/Mesh.h"
+#include "graphics/core/Model.h"
+#include "graphics/core/Texture.h"
+#include "assets/Assets.h"
+#include "window/Window.h"
+#include "voxels/Chunks.h"
+#include "lighting/LightMap.h"
+#include "graphics/core/Atlas.h"
 
 inline constexpr uint MB_VERTEX_SIZE = 6;
 

@@ -4,12 +4,12 @@
 #include <stdexcept>
 #include <utility>
 
-#include "../util/stringutil.h"
-#include "../typedefs.h"
-#include "../files/files.h"
-#include "../debug/Logger.h"
-#include "../files/engine_paths.h"
-#include "../constants.h"
+#include "util/stringutil.h"
+#include "typedefs.h"
+#include "files/files.h"
+#include "debug/Logger.h"
+#include "files/engine_paths.h"
+#include "constants.h"
 
 void GLSLExtension::setVersion(std::string version) {
     this->version = std::move(version);

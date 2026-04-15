@@ -58,7 +58,8 @@ function __scripts_cleanup()
     for k, v in pairs(__cached_scripts) do
         local packname, _ = parse_path(k)
         if packname ~= "builtin" then
-            print("unloaded "..k)
+            debug.info("Unloaded "..k)
+            --print("unloaded "..k)
             __cached_scripts[k] = nil
             package.loaded[k] = nil
         end

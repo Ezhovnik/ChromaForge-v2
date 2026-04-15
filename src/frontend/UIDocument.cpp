@@ -2,11 +2,11 @@
 
 #include <utility>
 
-#include "../graphics/ui/elements/UINode.h"
-#include "../graphics/ui/elements/display/InventoryView.h"
-#include "../logic/scripting/scripting.h"
-#include "../files/files.h"
-#include "../graphics/ui/gui_xml.h"
+#include "graphics/ui/elements/UINode.h"
+#include "graphics/ui/elements/display/InventoryView.h"
+#include "logic/scripting/scripting.h"
+#include "files/files.h"
+#include "graphics/ui/gui_xml.h"
 
 UIDocument::UIDocument(
     std::string id, 

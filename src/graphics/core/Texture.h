@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include "../../typedefs.h"
-#include "../../math/UVRegion.h"
+#include "typedefs.h"
+#include "math/UVRegion.h"
 #include "ImageData.h"
 
 class Texture {

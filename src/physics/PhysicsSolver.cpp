@@ -4,10 +4,10 @@
 #include <glm/gtx/norm.hpp>
 
 #include "Hitbox.h"
-#include "../voxels/Chunks.h"
-#include "../math/aabb.h"
-#include "../voxels/Block.h"
-#include "../voxels/voxel.h"
+#include "voxels/Chunks.h"
+#include "math/aabb.h"
+#include "voxels/Block.h"
+#include "voxels/voxel.h"
 
 namespace PhysicsSolver_Consts {
     inline constexpr float EPS = 0.03f; // Маленькое значение

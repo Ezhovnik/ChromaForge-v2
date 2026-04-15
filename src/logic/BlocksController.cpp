@@ -2,19 +2,19 @@
 
 #include <cassert>
 
-#include "../voxels/voxel.h"
-#include "../voxels/Block.h"
-#include "../voxels/Chunk.h"
-#include "../voxels/Chunks.h"
-#include "../world/Level.h"
-#include "../content/Content.h"
-#include "../lighting/Lighting.h"
-#include "../util/timeutil.h"
+#include "voxels/voxel.h"
+#include "voxels/Block.h"
+#include "voxels/Chunk.h"
+#include "voxels/Chunks.h"
+#include "world/Level.h"
+#include "content/Content.h"
+#include "lighting/Lighting.h"
+#include "util/timeutil.h"
 #include "scripting/scripting.h"
-#include "../math/rand.h"
-#include "../items/Inventories.h"
-#include "../debug/Logger.h"
-#include "../constants.h"
+#include "math/rand.h"
+#include "items/Inventories.h"
+#include "debug/Logger.h"
+#include "constants.h"
 
 Clock::Clock(int sparkRate, int sparkParts) : sparkRate(sparkRate), sparkParts(sparkParts) {
 }

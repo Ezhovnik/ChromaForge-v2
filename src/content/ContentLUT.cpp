@@ -3,12 +3,12 @@
 #include <memory>
 
 #include "Content.h"
-#include "../constants.h"
-#include "../files/files.h"
-#include "../coders/json.h"
-#include "../voxels/Block.h"
-#include "../data/dynamic.h"
-#include "../items/Item.h"
+#include "constants.h"
+#include "files/files.h"
+#include "coders/json.h"
+#include "voxels/Block.h"
+#include "data/dynamic.h"
+#include "items/Item.h"
 
 ContentLUT::ContentLUT(
     const ContentIndices* indices,

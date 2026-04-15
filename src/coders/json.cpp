@@ -6,9 +6,9 @@
 #include <memory>
 
 #include "commons.h"
-#include "../debug/Logger.h"
-#include "../data/dynamic.h"
-#include "../util/stringutil.h"
+#include "debug/Logger.h"
+#include "data/dynamic.h"
+#include "util/stringutil.h"
 
 using namespace json;
 

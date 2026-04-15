@@ -6,8 +6,8 @@
 #include "api_lua.h"
 #include "lua_util.h"
 #include "lua_custom_types.h"
-#include "../../../debug/Logger.h"
-#include "../../../util/stringutil.h"
+#include "debug/Logger.h"
+#include "util/stringutil.h"
 
 static lua::State* main_thread = nullptr;
 

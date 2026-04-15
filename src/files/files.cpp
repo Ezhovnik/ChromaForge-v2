@@ -6,13 +6,13 @@
 #include <cerrno>
 #include <cstring>
 
-#include "../debug/Logger.h"
-#include "../coders/json.h"
-#include "../util/stringutil.h"
-#include "../data/dynamic.h"
-#include "../coders/zip.h"
-#include "../coders/commons.h"
-#include "../coders/toml.h"
+#include "debug/Logger.h"
+#include "coders/json.h"
+#include "util/stringutil.h"
+#include "data/dynamic.h"
+#include "coders/zip.h"
+#include "coders/commons.h"
+#include "coders/toml.h"
 
 files::rafile::rafile(const std::filesystem::path& filename) : file(filename, std::ios::binary | std::ios::ate) {
     if (!file) {

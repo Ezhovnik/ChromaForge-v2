@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <vector>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 
 class EnginePaths;
 

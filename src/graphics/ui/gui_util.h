@@ -5,8 +5,8 @@
 #include <memory>
 
 #include "GUI.h"
-#include "../../delegates.h"
-#include "../../typedefs.h"
+#include "delegates.h"
+#include "typedefs.h"
 
 namespace guiutil {
     void alert(

@@ -8,7 +8,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../../typedefs.h"
+#include "typedefs.h"
 
 class GLSLExtension;
 

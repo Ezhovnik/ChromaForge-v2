@@ -4,12 +4,12 @@
 #include <algorithm>
 #include <utility>
 
-#include "../files/files.h"
-#include "../coders/json.h"
-#include "../debug/Logger.h"
-#include "../files/engine_paths.h"
-#include "../core_content_defs.h"
-#include "../data/dynamic.h"
+#include "files/files.h"
+#include "coders/json.h"
+#include "debug/Logger.h"
+#include "files/engine_paths.h"
+#include "core_content_defs.h"
+#include "data/dynamic.h"
 
 const std::vector<std::string> ContentPack::RESERVED_NAMES = {"res", "abs", "local", BUILTIN_CONTENT_NAMESPACE, "user", "world", "none", "null"};
 

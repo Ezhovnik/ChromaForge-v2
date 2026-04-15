@@ -9,8 +9,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "../../coders/GLSLExtension.h"
-#include "../../debug/Logger.h"
+#include "coders/GLSLExtension.h"
+#include "debug/Logger.h"
 
 GLSLExtension* ShaderProgram::preprocessor = new GLSLExtension();
 

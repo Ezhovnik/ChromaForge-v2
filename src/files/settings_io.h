@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-#include "../data/dynamic.h"
+#include "data/dynamic.h"
 
 class Setting;
 struct EngineSettings;

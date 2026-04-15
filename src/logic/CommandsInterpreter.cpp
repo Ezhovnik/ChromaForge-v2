@@ -2,8 +2,8 @@
 
 #include <utility>
 
-#include "../coders/commons.h"
-#include "../util/stringutil.h"
+#include "coders/commons.h"
+#include "util/stringutil.h"
 
 using namespace cmd;
 

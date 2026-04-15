@@ -1,8 +1,8 @@
 #ifndef ITEMS_ITEM_STACK_H_
 #define ITEMS_ITEM_STACK_H_
 
-#include "../typedefs.h"
-#include "../constants.h"
+#include "typedefs.h"
+#include "constants.h"
 
 class ContentIndices;
 

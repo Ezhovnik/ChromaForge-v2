@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_UI_ELEMENTS_CONTROL_BUTTON_H_
 #define GRAPHICS_UI_ELEMENTS_CONTROL_BUTTON_H_
 
-#include "../layout/Panel.h"
+#include "graphics/ui/elements/layout/Panel.h"
 
 namespace gui {
     class Label;

@@ -10,9 +10,9 @@
 #include <condition_variable>
 #include <utility>
 
-#include "../delegates.h"
-#include "../debug/Logger.h"
-#include "../interfaces/Task.h"
+#include "delegates.h"
+#include "debug/Logger.h"
+#include "interfaces/Task.h"
 
 namespace util {
     template<class J, class T>

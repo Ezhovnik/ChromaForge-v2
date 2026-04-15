@@ -7,7 +7,7 @@
 
 #include <glm/glm.hpp>
 
-#include "../typedefs.h"
+#include "typedefs.h"
 #include "voxel.h"
 
 class Mesh;
