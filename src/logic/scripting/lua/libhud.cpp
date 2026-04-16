@@ -55,7 +55,7 @@ static int l_hud_open_block(lua::State* L) {
 }
 
 static int l_hud_show_overlay(lua::State* L) {
-    auto name = lua::tostring(L, 1);
+    auto name = lua::require_string(L, 1);
     bool playerInventory = lua::toboolean(L, 2);
 
     auto assets = scripting::engine->getAssets();
@@ -77,13 +77,13 @@ static UIDocument* require_layout(const char* name) {
 }
 
 static int l_hud_open_permanent(lua::State* L) {
-    auto layout = require_layout(lua::tostring(L, 1));
+    auto layout = require_layout(lua::require_string(L, 1));
     scripting::hud->openPermanent(layout);
     return 0;
 }
 
 static int l_hud_close(lua::State* L) {
-    auto layout = require_layout(lua::tostring(L, 1));
+    auto layout = require_layout(lua::require_string(L, 1));
     scripting::hud->remove(layout->getRoot());
     return 0;
 }

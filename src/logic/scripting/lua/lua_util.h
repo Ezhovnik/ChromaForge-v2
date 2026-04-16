@@ -47,6 +47,14 @@ namespace lua {
         lua_pop(L, n);
     }
 
+    inline void insert(lua::State* L, int idx) {
+        lua_insert(L, idx);
+    }
+
+    inline void remove(lua::State* L, int idx) {
+        lua_remove(L, idx);
+    }
+
     inline int gettop(lua::State* L) {
         return lua_gettop(L);
     }

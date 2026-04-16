@@ -24,6 +24,7 @@
 #include "graphics/ui/elements/layout/Panel.h"
 #include "data/dynamic.h"
 #include "coders/commons.h"
+#include "frontend/screens/MenuScreen.h"
 
 gui::page_loader_func menus::create_page_loader(Engine* engine) {
     return [=](const std::string& query) {
@@ -105,4 +106,36 @@ void menus::show_process_panel(
         uint tasksDone = task->getWorkDone();
         scripting::on_ui_progress(doc, tasksDone, initialWork);
     });
+}
+
+bool menus::call(Engine* engine, runnable func) {
+    try {
+        func();
+        return true;
+    } catch (const contentpack_error& error) {
+        engine->setScreen(std::make_shared<MenuScreen>(engine));
+        guiutil::alert(
+            engine->getGUI(), langs::get(L"error.pack-not-found") + L": " +
+            util::str2wstr_utf8(error.getPackId())
+        );
+        return false;
+    } catch (const asset_loader::error& error) {
+        engine->setScreen(std::make_shared<MenuScreen>(engine));
+        guiutil::alert(
+            engine->getGUI(), langs::get(L"Assets Load Error", L"menu") + L":\n" +
+            util::str2wstr_utf8(error.what())
+        );
+        return false;
+    } catch (const parsing_error& error) {
+        engine->setScreen(std::make_shared<MenuScreen>(engine));
+        guiutil::alert(engine->getGUI(), util::str2wstr_utf8(error.errorLog()));
+        return false;
+    } catch (const std::runtime_error& error) {
+        engine->setScreen(std::make_shared<MenuScreen>(engine));
+        guiutil::alert(
+            engine->getGUI(), langs::get(L"Content Error", L"menu") + L":\n" +
+            util::str2wstr_utf8(error.what())
+        );
+        return false;
+    }
 }

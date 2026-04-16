@@ -135,12 +135,7 @@ std::shared_ptr<dynamic::Map> files::read_binary_json(const std::filesystem::pat
 
 std::shared_ptr<dynamic::Map> files::read_json(const std::filesystem::path& filename) {
 	std::string text = files::read_string(filename);
-	try {
-		return json::parse(filename.u8string(), text);
-	} catch (const parsing_error& error) {
-		LOG_ERROR("Could not to parse {}. What: {}", filename.string(), error.errorLog());
-        throw std::runtime_error("Could not to parse " + filename.string());
-    }
+	return json::parse(filename.u8string(), text);
 }
 
 std::vector<std::string> files::read_list(const std::filesystem::path& filename) {

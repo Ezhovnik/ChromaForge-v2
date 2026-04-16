@@ -14,17 +14,22 @@ class UIDocument;
 
 namespace menus {
     void create_version_label(Engine* engine);
+
     gui::page_loader_func create_page_loader(Engine* engine);
+
     UIDocument* show(
         Engine* engine, 
         const std::string& name,
         std::vector<dynamic::Value> args
     );
+
     void show_process_panel(
         Engine* engine,
         const std::shared_ptr<Task>& task,
         const std::wstring& text=L""
     );
+
+    bool call(Engine* engine, runnable func);
 }
 
 #endif // FRONTEND_MENU_MENU_H_
