@@ -20,6 +20,7 @@
 #include "content/Content.h"
 #include "engine.h"
 #include "math/rays.h"
+#include "graphics/core/DrawContext.h"
 
 static inline std::string COMP_TRANSFORM = "transform";
 static inline std::string COMP_RIGIDBODY = "rigidbody";
@@ -31,6 +32,8 @@ void Transform::refresh() {
     combined = glm::translate(combined, pos);
     combined = glm::scale(combined, size);
     combined = combined * glm::mat4(rot);
+    displayPos = pos;
+    displaySize = size;
     dirty = false;
 }
 
@@ -51,7 +54,7 @@ void Entt_Entity::setRig(const rigging::SkeletonConfig* skeletonConfig) {
     skeleton.calculated.matrices.resize(skeletonConfig->getBones().size(), glm::mat4(1.0f));
 }
 
-Entities::Entities(Level* level) : level(level) {
+Entities::Entities(Level* level) : level(level), sensorsSparkClock(20, 3) {
 }
 
 template<void(*callback)(const Entt_Entity&, size_t, entityid_t)>
@@ -281,69 +284,120 @@ void Entities::update() {
     scripting::on_entities_update();
 }
 
-void Entities::renderDebug(LineBatch& batch, const Frustum& frustum) {
-    batch.setLineWidth(1.0f);
-    auto view = registry.view<Transform, Rigidbody>();
-    for (auto [entity, transform, rigidbody] : view.each()) {
-        auto& hitbox = rigidbody.hitbox;
-        const auto& pos = transform.pos;
-        const auto& size = transform.size;
-        if (!frustum.isBoxVisible(pos - size, pos + size)) {
-            continue;
-        }
-        batch.box(hitbox.position, hitbox.halfsize * 2.0f, glm::vec4(1.0f));
+static void debug_render_skeleton(
+    LineBatch& batch, 
+    const rigging::Bone* bone, 
+    const rigging::Skeleton& skeleton
+) {
+    size_t pindex = bone->getIndex();
+    for (auto& sub : bone->getSubnodes()) {
+        size_t sindex = sub->getIndex();
+        batch.line(
+            glm::vec3(skeleton.calculated.matrices[pindex] * glm::vec4(0, 0, 0, 1)),
+            glm::vec3(skeleton.calculated.matrices[sindex] * glm::vec4(0, 0, 0, 1)),
+            glm::vec4(0, 0.5f, 0, 1)
+        );
+        debug_render_skeleton(batch, sub.get(), skeleton);
+    }
+}
 
-        for (auto& sensor : rigidbody.sensors) {
-            if (sensor.type != SensorType::AABB) continue;
+void Entities::renderDebug(
+    LineBatch& batch, const Frustum& frustum, const DrawContext& pctx
+) {
+    {
+        auto ctx = pctx.sub(&batch);
+        ctx.setLineWidth(1);
+        auto view = registry.view<Transform, Rigidbody>();
+        for (auto [entity, transform, rigidbody] : view.each()) {
+            const auto& hitbox = rigidbody.hitbox;
+            const auto& pos = transform.pos;
+            const auto& size = transform.size;
+            if (!frustum.isBoxVisible(pos - size, pos + size)) continue;
             batch.box(
-                sensor.calculated.aabb.center(),
-                sensor.calculated.aabb.size(),
-                glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)
+                hitbox.position,
+                hitbox.halfsize * 2.0f,
+                glm::vec4(1.0f)
             );
+
+            for (auto& sensor : rigidbody.sensors) {
+                if (sensor.type != SensorType::AABB) continue;
+                batch.box(
+                    sensor.calculated.aabb.center(), 
+                    sensor.calculated.aabb.size(), 
+                    glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)
+                );
+            }
+        }
+    }
+
+    {
+        auto view = registry.view<Transform, rigging::Skeleton>();
+        auto ctx = pctx.sub(&batch);
+        ctx.setDepthTest(false);
+        ctx.setDepthMask(false);
+        ctx.setLineWidth(2);
+        for (auto [entity, transform, skeleton] : view.each()) {
+            auto config = skeleton.config;
+            const auto& pos = transform.pos;
+            const auto& size = transform.size;
+            if (!frustum.isBoxVisible(pos - size, pos + size)) continue;
+            auto bone = config->getRoot();
+            debug_render_skeleton(batch, bone, skeleton);
         }
     }
 }
 
-void Entities::preparePhysics() {
-    static uint64_t frameid = 0;
-    ++frameid;
-    auto view = registry.view<EntityId, Transform, Rigidbody>();
-    auto physics = level->physics.get();
-    std::vector<Sensor*> sensors;
-    for (auto [entity, eid, transform, rigidbody] : view.each()) {
-        if (!rigidbody.enabled) continue;
-        if ((eid.uid + frameid) % 3 != 0) continue;
-        for (size_t i = 0; i < rigidbody.sensors.size(); ++i) {
-            auto& sensor = rigidbody.sensors[i];
-            for (auto oid : sensor.prevEntered) {
-                if (sensor.nextEntered.find(oid) == sensor.nextEntered.end()) {
-                    sensor.exitCallback(sensor.entity, i, oid);
-                }
+void Entities::updateSensors(
+    Rigidbody& body, const Transform& tsf, std::vector<Sensor*>& sensors
+) {
+    for (size_t i = 0; i < body.sensors.size(); ++i) {
+        auto& sensor = body.sensors[i];
+        for (auto oid : sensor.prevEntered) {
+            if (sensor.nextEntered.find(oid) == sensor.nextEntered.end()) {
+                sensor.exitCallback(sensor.entity, i, oid);
             }
-            sensor.prevEntered = sensor.nextEntered;
-            sensor.nextEntered.clear();
-            switch (sensor.type) {
-                case SensorType::AABB:
-                    sensor.calculated.aabb = sensor.params.aabb;
-                    sensor.calculated.aabb.transform(transform.combined);
-                    break;
-                case SensorType::RADIUS:
-                    sensor.calculated.radial = glm::vec4(
-                        rigidbody.hitbox.position.x,
-                        rigidbody.hitbox.position.y,
-                        rigidbody.hitbox.position.z,
-                        sensor.params.radial.w * sensor.params.radial.w
-                    );
-                    break;
-            }
-            sensors.push_back(&sensor);
         }
+        sensor.prevEntered = sensor.nextEntered;
+        sensor.nextEntered.clear();
+
+        switch (sensor.type) {
+            case SensorType::AABB:
+                sensor.calculated.aabb = sensor.params.aabb;
+                sensor.calculated.aabb.transform(tsf.combined);
+                break;
+            case SensorType::RADIUS:
+                sensor.calculated.radial = glm::vec4(
+                    body.hitbox.position.x,
+                    body.hitbox.position.y,
+                    body.hitbox.position.z,
+                    sensor.params.radial.w*
+                    sensor.params.radial.w
+                );
+                break;
+        }
+        sensors.push_back(&sensor);
     }
-    physics->setSensors(std::move(sensors));
+}
+
+void Entities::preparePhysics(float delta) {
+    if (sensorsSparkClock.update(delta)) {
+        auto part = sensorsSparkClock.getPart();
+        auto parts = sensorsSparkClock.getParts();
+
+        auto view = registry.view<EntityId, Transform, Rigidbody>();
+        auto physics = level->physics.get();
+        std::vector<Sensor*> sensors;
+        for (auto [entity, eid, transform, rigidbody] : view.each()) {
+            if (!rigidbody.enabled) continue;
+            if ((eid.uid + part) % parts != 0) continue;
+            updateSensors(rigidbody, transform, sensors);
+        }
+        physics->setSensors(std::move(sensors));
+    }
 }
 
 void Entities::updatePhysics(float delta) {
-    preparePhysics();
+    preparePhysics(delta);
 
     auto view = registry.view<EntityId, Transform, Rigidbody>();
     auto physics = level->physics.get();

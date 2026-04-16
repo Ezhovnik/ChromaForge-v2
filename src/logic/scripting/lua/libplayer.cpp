@@ -1,5 +1,7 @@
 #include <glm/glm.hpp>
 
+#include <algorithm>
+
 #include "libentity.h"
 #include "objects/Player.h"
 #include "physics/Hitbox.h"
@@ -158,6 +160,18 @@ static int l_set_entity(lua::State* L) {
     return 0;
 }
 
+static int l_get_camera(lua::State* L) {
+    auto player = get_player(L, 1);
+    if (player == nullptr) return 0;
+    auto found = std::find(
+        scripting::level->cameras.begin(),
+        scripting::level->cameras.end(),
+        player->currentCamera
+    );
+    if (found == scripting::level->cameras.end()) return 0;
+    return lua::pushinteger(L, found - scripting::level->cameras.begin());
+}
+
 static int l_set_camera(lua::State* L) {
     auto player = get_player(L, 1);
     if (player == nullptr) return 0;
@@ -194,6 +208,7 @@ const luaL_Reg playerlib [] = {
     {"get_spawnpoint", lua::wrap<l_get_spawnpoint>},
     {"get_entity", lua::wrap<l_get_entity>},
     {"set_entity", lua::wrap<l_set_entity>},
+    {"get_camera", lua::wrap<l_get_camera>},
     {"set_camera", lua::wrap<l_set_camera>},
     {NULL, NULL}
 };

@@ -13,4 +13,11 @@ enum class BlendMode {
     Inversion
 };
 
+class Flushable {
+public:
+    virtual ~Flushable() = default;
+
+    virtual void flush() = 0;
+};
+
 #endif // GRAPHICS_CORE_COMMONS_H_

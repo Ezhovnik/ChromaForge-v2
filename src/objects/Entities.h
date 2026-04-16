@@ -14,6 +14,7 @@
 #include "typedefs.h"
 #include "physics/Hitbox.h"
 #include "data/dynamic.h"
+#include "util/Clock.h"
 
 struct entity_funcs_set {
     bool init;
@@ -50,6 +51,9 @@ struct Transform {
     glm::mat4 combined;
     bool dirty = true;
 
+    glm::vec3 displayPos;
+    glm::vec3 displaySize;
+
     void refresh();
 
     inline void setRot(glm::mat3 m) {
@@ -58,14 +62,14 @@ struct Transform {
     }
 
     inline void setSize(glm::vec3 v) {
-        if (glm::distance2(size, v) >= 0.0000001f) {
+        if (glm::distance2(displaySize, v) >= 0.00001f) {
             dirty = true;
         }
         size = v;
     }
 
     inline void setPos(glm::vec3 v) {
-        if (glm::distance2(pos, v) >= 0.00001f) dirty = true;
+        if (glm::distance2(displayPos, v) >= 0.0001f) dirty = true;
         pos = v;
     }
 };
@@ -102,6 +106,7 @@ namespace rigging {
     struct Skeleton;
     class SkeletonConfig;
 }
+class DrawContext;
 
 class Entt_Entity {
 private:
@@ -166,8 +171,12 @@ private:
     std::unordered_map<entityid_t, entt::entity> entities;
     std::unordered_map<entt::entity, entityid_t> uids;
     entityid_t nextID = 1;
+    util::Clock sensorsSparkClock;
 
-    void preparePhysics();
+    void updateSensors(
+        Rigidbody& body, const Transform& tsf, std::vector<Sensor*>& sensors
+    );
+    void preparePhysics(float deltaTime);
 public:
     struct RaycastResult {
         entityid_t entity;
@@ -180,7 +189,7 @@ public:
     void updatePhysics(float delta);
     void update();
     void render(Assets* assets, ModelBatch& batch, const Frustum& frustum, bool pause);
-    void renderDebug(LineBatch& batch, const Frustum& frustum);
+    void renderDebug(LineBatch& batch, const Frustum& frustum, const DrawContext& ctx);
     void clean();
 
     entityid_t spawn(

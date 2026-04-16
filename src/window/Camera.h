@@ -1,6 +1,7 @@
 #ifndef WINDOW_CAMERA_H_
 #define WINDOW_CAMERA_H_
 
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
 // Виртуальная камера в 3D пространстве

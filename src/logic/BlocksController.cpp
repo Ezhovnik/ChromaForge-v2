@@ -16,40 +16,6 @@
 #include "debug/Logger.h"
 #include "constants.h"
 
-Clock::Clock(int sparkRate, int sparkParts) : sparkRate(sparkRate), sparkParts(sparkParts) {
-}
-
-bool Clock::update(float delta) {
-    sparkTimer += delta;
-    float delay = 1.0f / float(sparkRate);    
-    if (sparkTimer > delay || sparkPartsUndone) {
-        if (sparkPartsUndone) {
-            sparkPartsUndone--;
-        } else {
-            sparkTimer = fmod(sparkTimer, delay);
-            sparkPartsUndone = sparkParts - 1;
-        }
-        return true;
-    }
-    return false;
-}
-
-int Clock::getParts() const {
-    return sparkParts;
-}
-
-int Clock::getPart() const {
-    return sparkParts - sparkPartsUndone - 1;
-}
-
-int Clock::getSparkRate() const {
-    return sparkRate;
-}
-
-int Clock::getSparkId() const {
-    return sparkId;
-}
-
 BlocksController::BlocksController(
     Level* level, 
     uint padding
@@ -126,35 +92,42 @@ void BlocksController::onBlocksSpark(int sparkId, int parts) {
     }
 }
 
+void BlocksController::randomSpark(
+    const Chunk& chunk, int segments, const ContentIndices* indices
+) {
+    const int segheight = CHUNK_HEIGHT/segments;
+
+    for (int s = 0; s < segments; ++s) {
+        for (int i = 0; i < 4; ++i) {
+            int bx = random.rand() % CHUNK_WIDTH;
+            int by = random.rand() % segheight + s * segheight;
+            int bz = random.rand() % CHUNK_DEPTH;
+            const voxel& vox = chunk.voxels[(by * CHUNK_DEPTH + bz) * CHUNK_WIDTH + bx];
+            Block* block = indices->blocks.get(vox.id);
+            if (block->rt.funcsset.randupdate) {
+                scripting::random_update_block(
+                    block, 
+                    chunk.chunk_x * CHUNK_WIDTH + bx, by, 
+                    chunk.chunk_z * CHUNK_DEPTH + bz
+                );
+            }
+        }
+    }
+}
+
 void BlocksController::randomSpark(int sparkId, int parts) {
+    auto indices = level->content->getIndices();
     const uint w = chunks->width;
     const uint d = chunks->depth;
     int segments = 4;
-    int segheight = CHUNK_HEIGHT / segments;
-    auto indices = level->content->getIndices();
+
     for (uint z = padding; z < d - padding; ++z){
         for (uint x = padding; x < w - padding; ++x){
             int index = z * w + x;
             if ((index + sparkId) % parts != 0) continue;
             auto& chunk = chunks->chunks[index];
             if (chunk == nullptr || !chunk->flags.lighted) continue;
-            for (int s = 0; s < segments; ++s) {
-                for (int i = 0; i < 4; ++i) {
-                    int bx = random.rand() % CHUNK_WIDTH;
-                    int by = random.rand() % segheight + s * segheight;
-                    int bz = random.rand() % CHUNK_DEPTH;
-                    const voxel& vox = chunk->voxels[(by * CHUNK_DEPTH + bz) * CHUNK_WIDTH + bx];
-                    // std::cout << bx << " " << by << " " << bz << " " << vox.id << std::endl;
-                    Block* block = indices->blocks.get(vox.id);
-                    if (block != nullptr && block->rt.funcsset.randupdate) {
-                        scripting::random_update_block(
-                            block, 
-                            chunk->chunk_x * CHUNK_WIDTH + bx, by, 
-                            chunk->chunk_z * CHUNK_DEPTH + bz
-                        );
-                    }
-                }
-            }
+            randomSpark(*chunk, segments, indices);
         }
 	}
 }

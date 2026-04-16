@@ -210,6 +210,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 	loader.add(AssetType::Shader, SHADERS_FOLDER + "/default", "default");
 	loader.add(AssetType::Shader, SHADERS_FOLDER + "/ui", "ui");
 	loader.add(AssetType::Shader, SHADERS_FOLDER + "/lines", "lines");
+    loader.add(AssetType::Shader, SHADERS_FOLDER + "/entity", "entity");
 
 	// Интерфейсные текстуры
 	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/menubg", "gui/menubg");

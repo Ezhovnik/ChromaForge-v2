@@ -62,9 +62,16 @@ private:
         Camera* camera, 
         ShaderProgram* linesShader
     );
-	void renderLines(Camera* camera, ShaderProgram* linesShader);
+	void renderLines(Camera* camera, ShaderProgram* linesShader, const DrawContext& pctx);
 
 	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);
+
+	void setupWorldShader(
+        ShaderProgram* shader,
+        Camera* camera,
+        const EngineSettings& settings,
+        float fogFactor
+    );
 public:
 	WorldRenderer(Engine* engine, LevelFrontend* levelFrontend, Player* player);
 	~WorldRenderer();

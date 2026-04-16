@@ -28,10 +28,11 @@ DrawContext::DrawContext(
     Batch2D* g2d
 ) : parent(parent), 
     viewport(std::move(viewport)), 
-    g2d(g2d) {}
+    g2d(g2d),
+    flushable(g2d) {}
 
 DrawContext::~DrawContext() {
-    if (g2d) g2d->flush();
+    if (flushable) flushable->flush();
     while (scissorsCount--) {
         Window::popScissor();
     }
@@ -59,6 +60,9 @@ DrawContext::~DrawContext() {
     if (blendMode != parent->blendMode) {
         set_blend_mode(parent->blendMode);
     }
+    if (lineWidth != parent->lineWidth) {
+        glLineWidth(parent->lineWidth);
+    }
 }
 
 const Viewport& DrawContext::getViewport() const {
@@ -69,10 +73,10 @@ Batch2D* DrawContext::getBatch2D() const {
     return g2d;
 }
 
-DrawContext DrawContext::sub() const {
-    auto ctx = DrawContext(this, viewport, g2d);
-    ctx.depthTest = depthTest;
-    ctx.cullFace = cullFace;
+DrawContext DrawContext::sub(Flushable* flushable) const {
+    auto ctx = DrawContext(*this);
+    ctx.parent = this;
+    ctx.flushable = flushable;
     return ctx;
 }
 
@@ -120,4 +124,9 @@ void DrawContext::setBlendMode(BlendMode mode) {
 void DrawContext::setScissors(glm::vec4 area) {
     Window::pushScissor(area);
     scissorsCount++;
+}
+
+void DrawContext::setLineWidth(float width) {
+    lineWidth = width;
+    glLineWidth(width);
 }

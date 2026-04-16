@@ -161,17 +161,9 @@ void Player::postUpdate() {
 
     size_t bodyIndex = skeleton.config->find("body")->getIndex();
     size_t headIndex = skeleton.config->find("head")->getIndex();
-    
-    skeleton.pose.matrices[bodyIndex] = glm::rotate(glm::mat4(1.0f), glm::radians(cam.x-90), glm::vec3(0, 1, 0));
-    skeleton.pose.matrices[headIndex] = glm::rotate(
-		glm::rotate(
-			glm::translate(
-				glm::mat4(1.0f),
-				glm::vec3(0.0f, 0.4f, 0.0f)
-			), 
-			glm::radians(-cam.y), glm::vec3(0, 0, 1)
-		), glm::radians(90.0f), glm::vec3(0, 1, 0)
-	);
+
+    skeleton.pose.matrices[bodyIndex] = glm::rotate(glm::mat4(1.0f), glm::radians(cam.x), glm::vec3(0, 1, 0));
+    skeleton.pose.matrices[headIndex] = glm::rotate(glm::mat4(1.0f), glm::radians(cam.y), glm::vec3(1, 0, 0));
 }
 
 void Player::attemptToFindSpawnpoint() {

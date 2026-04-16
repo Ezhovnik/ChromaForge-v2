@@ -19,7 +19,7 @@ class Texture;
  * Поддерживает текстурирование, изменение цвета,
  * повороты, отражения и закруглённые прямоугольники.
  */
-class Batch2D {
+class Batch2D : public Flushable {
 	std::unique_ptr<float[]> buffer;
 	size_t capacity;
 
@@ -193,7 +193,7 @@ public:
 	/**
      * @brief Отправляет накопленные вершины как треугольники (GL_TRIANGLES).
      */
-     void flush();
+     void flush() override;
 
 	/**
      * @brief Устанавливает толщину линии (через glLineWidth).

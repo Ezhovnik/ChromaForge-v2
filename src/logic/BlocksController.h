@@ -8,12 +8,15 @@
 #include "math/rand.h"
 #include "typedefs.h"
 #include "voxels/voxel.h"
+#include "util/Clock.h"
 
 class Player;
 class Block;
 class Level;
 class Chunks;
 class Lighting;
+class Chunk;
+class ContentIndices;
 
 enum class BlockInteraction {
     Step,
@@ -25,32 +28,13 @@ using on_block_interaction = std::function<void(
     Player*, glm::ivec3, const Block*, BlockInteraction type
 )>;
 
-class Clock {
-private:
-    int sparkRate;
-    int sparkParts;
-
-    float sparkTimer = 0.0f;
-    int sparkId = 0;
-    int sparkPartsUndone = 0;
-public:
-    Clock(int sparkRate, int sparkParts);
-
-    bool update(float delta);
-
-    int getParts() const;
-    int getPart() const;
-    int getSparkRate() const;
-    int getSparkId() const;
-};
-
 class BlocksController {
     Level* level;
 	Chunks* chunks;
 	Lighting* lighting;
-    Clock randSparkClock;
-    Clock blocksSparkClock;
-    Clock worldSparkClock;
+    util::Clock randSparkClock;
+    util::Clock blocksSparkClock;
+    util::Clock worldSparkClock;
     uint padding;
 
     FastRandom random;
@@ -75,6 +59,11 @@ public:
     );
 
     void update(float delta);
+    void randomSpark(
+        const Chunk& chunk,
+        int segments,
+        const ContentIndices* indices
+    );
     void randomSpark(int sparkId, int parts);
     void onBlocksSpark(int sparkId, int parts);
 

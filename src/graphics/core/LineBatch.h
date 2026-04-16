@@ -6,10 +6,12 @@
 
 #include <glm/glm.hpp>
 
+#include "commons.h"
+
 class Mesh;
 
 // Буфер для пакетной отрисовки линий
-class LineBatch {
+class LineBatch : public Flushable {
 private:
     std::unique_ptr<float[]> buffer; // Указатель на буфер вершинных данных
     size_t index; // Текущая позиция в буфере (в вершинах)
@@ -38,7 +40,7 @@ public:
 		box(xyz.x, xyz.y, xyz.z, whd.x, whd.y, whd.z, rgba.r, rgba.g, rgba.b, rgba.a);
 	}
 
-    void render(); // Выполняет отрисовку всех накопленных линий
+    void flush() override;
 
     void setLineWidth(float width);
 };

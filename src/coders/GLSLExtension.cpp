@@ -22,7 +22,8 @@ void GLSLExtension::setPaths(const ResPaths* paths) {
 void GLSLExtension::loadHeader(const std::string& name) {
     std::filesystem::path file = paths->find(SHADERS_FOLDER + "/lib/" + name + ".glsl");
     std::string source = files::read_string(file);
-    addHeader(name, source);
+    addHeader(name, "");
+    addHeader(name, process(file, source, true));
 }
 
 void GLSLExtension::addHeader(const std::string& name, std::string source) {
@@ -88,13 +89,15 @@ inline void source_line(std::stringstream& ss, uint linenum) {
 }
 
 // Основной метод обработки исходного кода шейдера
-std::string GLSLExtension::process(const std::filesystem::path& file, const std::string& source) {
+std::string GLSLExtension::process(const std::filesystem::path& file, const std::string& source, bool header) {
     std::stringstream ss;
     size_t pos = 0;
     uint linenum = 1; // текущая обрабатываемая строка исходного файла
 
     // Вставляем версию GLSL в начало
-    ss << "#version " << version << '\n';
+    if (!header) {
+        ss << "#version " << version << '\n';
+    }
     // Вставляем все определённые макросы.
     for (auto& entry : defines) {
         ss << "#define " << entry.first << " " << entry.second << '\n';
