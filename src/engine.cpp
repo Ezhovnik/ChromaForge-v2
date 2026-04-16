@@ -152,12 +152,13 @@ void Engine::loadAssets() {
         auto task = loader.startTask([=](){});
         task->waitForEnd();
     } else {
-        while (loader.hasNext()) {
-            if (!loader.loadNext()) {
-                new_assets.reset();
-                LOG_ERROR("Could not to load assets");
-                throw std::runtime_error("Could not to load assets");
+        try {
+            while (loader.hasNext()) {
+                loader.loadNext();
             }
+        } catch (const asset_loader::error& err) {
+            new_assets.reset();
+            throw;
         }
     }
 

@@ -59,7 +59,7 @@ aloader_func AssetsLoader::getLoader(AssetType tag) {
     return found->second;
 }
 
-bool AssetsLoader::loadNext() {
+void AssetsLoader::loadNext() {
 	// Берём первый элемент очереди (не удаляя его пока)
 	const aloader_entry& entry = entries.front();
     LOG_DEBUG("Loading {} as {}", entry.filename, entry.alias);
@@ -70,7 +70,6 @@ bool AssetsLoader::loadNext() {
 	if (found == loaders.end()) {
         LOG_ERROR("Unknown asset tag {}", static_cast<int>(entry.tag));
 		entries.pop();
-		return false;
 	}
 	aloader_func loader = found->second;
 	try {
@@ -78,11 +77,13 @@ bool AssetsLoader::loadNext() {
         auto postfunc = loader(this, paths, entry.filename, entry.alias, entry.config);
         postfunc(assets);
         entries.pop();
-        return true;
     } catch (std::runtime_error& err) {
         LOG_ERROR("{}", err.what());
+        auto type = entry.tag;
+        std::string filename = entry.filename;
+        std::string reason = err.what();
         entries.pop();
-        return false;
+        throw asset_loader::error(type, std::move(filename), std::move(reason));
     }
 }
 
@@ -180,6 +181,7 @@ void AssetsLoader::processPreloadList(AssetType tag, dynamic::List* list) {
 
 void AssetsLoader::processPreloadConfig(const std::filesystem::path& file) {
     auto root = files::read_json(file);
+    processPreloadList(AssetType::Atlas, root->list("atlases").get());
     processPreloadList(AssetType::Font, root->list("fonts").get());
     processPreloadList(AssetType::Shader, root->list("shaders").get());
     processPreloadList(AssetType::Texture, root->list("textures").get());
@@ -189,6 +191,11 @@ void AssetsLoader::processPreloadConfig(const std::filesystem::path& file) {
 }
 
 void AssetsLoader::processPreloadConfigs(const Content* content) {
+    auto preloadFile = paths->getMainRoot()/std::filesystem::path("preload.json");
+    if (std::filesystem::exists(preloadFile)) {
+        processPreloadConfig(preloadFile);
+    }
+    if (content == nullptr) return;
     for (auto& entry : content->getPacks()) {
         const auto& pack = entry.second;
         auto preloadFile = pack->getInfo().folder/std::filesystem::path("preload.json");
@@ -196,36 +203,12 @@ void AssetsLoader::processPreloadConfigs(const Content* content) {
             processPreloadConfig(preloadFile);
         }
     }
-    auto preloadFile = paths->getMainRoot()/std::filesystem::path("preload.json");
-    if (std::filesystem::exists(preloadFile)) {
-        processPreloadConfig(preloadFile);
-    }
 }
 
 void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
-	// Шрифт
-	loader.add(AssetType::Font, FONTS_FOLDER + "/font", "normal");
-
-	// Базовые шейдеры
-	loader.add(AssetType::Shader, SHADERS_FOLDER + "/default", "default");
-	loader.add(AssetType::Shader, SHADERS_FOLDER + "/ui", "ui");
-	loader.add(AssetType::Shader, SHADERS_FOLDER + "/lines", "lines");
-    loader.add(AssetType::Shader, SHADERS_FOLDER + "/entity", "entity");
-
-	// Интерфейсные текстуры
-	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/menubg", "gui/menubg");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/delete_icon", "gui/delete_icon");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/no_icon", "gui/no_icon");
-	loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/warning", "gui/warning");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/error", "gui/error");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/cross", "gui/cross");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/no_world_icon", "gui/no_world_icon");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/refresh", "gui/refresh");
-    loader.add(AssetType::Texture, TEXTURES_FOLDER + "/gui/circle", "gui/circle");
+	loader.processPreloadConfigs(content);
 
 	if (content) {
-		loader.processPreloadConfigs(content);
-
 		for (auto& entry : content->getBlockMaterials()) {
             auto& material = *entry.second;
             loader.tryAddSound(material.stepsSound);
@@ -259,10 +242,6 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
             }
         }
 	}
-
-	// Атласы блоков и предметов
-	loader.add(AssetType::Atlas, TEXTURES_FOLDER + "/blocks", "blocks");
-	loader.add(AssetType::Atlas, TEXTURES_FOLDER + "/items", "items");
 }
 
 bool AssetsLoader::loadExternalTexture(

@@ -9,10 +9,24 @@
 #include <typeinfo>
 #include <typeindex>
 #include <optional>
+#include <stdexcept>
 
 #include "graphics/core/TextureAnimation.h"
 
 class Assets;
+
+/**
+ * @brief Типы ресурсов, которые могут быть загружены через AssetsLoader.
+ */
+enum class AssetType {
+     Texture, ///< Текстура
+	Shader, ///< Шейдерная программа
+	Font, ///< Растровый шрифт
+	Atlas, ///< Атлас текстур
+	Layout, ///< Макет интерфейса (XML)
+     Sound, ///< Звук
+     Model
+};
 
 namespace asset_loader {
      using postfunc = std::function<void(Assets*)>;
@@ -21,6 +35,33 @@ namespace asset_loader {
 
      template<class T>
      void assets_setup(const Assets*);
+
+     class error : public std::runtime_error {
+     private:
+          AssetType type;
+          std::string filename;
+          std::string reason;
+     public:
+          error(
+               AssetType type, std::string filename, std::string reason
+          ) : std::runtime_error(filename + ": " + reason),
+               type(type),
+               filename(std::move(filename)),
+               reason(std::move(reason)) {
+          }
+
+          AssetType getAssetType() const {
+               return type;
+          }
+
+          const std::string& getFilename() const {
+               return filename;
+          }
+
+          const std::string& getReason() const {
+               return reason;
+          }
+     };
 }
 
 /**
