@@ -1,6 +1,8 @@
 #ifndef LOGIC_SCRIPTING_LUA_API_LUA_H_
 #define LOGIC_SCRIPTING_LUA_API_LUA_H_
 
+#include <string>
+
 #include "lua_util.h"
 
 extern const luaL_Reg packlib [];
@@ -25,12 +27,36 @@ extern const luaL_Reg vec2lib []; // vecn.cpp
 extern const luaL_Reg vec3lib []; // vecn.cpp
 extern const luaL_Reg vec4lib []; // vecn.cpp
 extern const luaL_Reg cameralib [];
+extern const luaL_Reg quatlib [];
 
 extern const luaL_Reg skeletonlib [];
 extern const luaL_Reg rigidbodylib [];
 extern const luaL_Reg transformlib [];
 
 extern int l_print(lua::State* L);
+
+namespace lua {
+    inline uint check_argc(lua::State* L, int a) {
+        int argc = lua::gettop(L);
+        if (argc == a) {
+            return static_cast<uint>(argc);
+        } else {
+            log_error("Invalid number of arguments (" + std::to_string(a) + " expected)");
+            throw std::runtime_error("Invalid number of arguments (" + std::to_string(a) + " expected)");
+        }
+    }
+
+    inline uint check_argc(lua::State* L, int a, int b) {
+        int argc = lua::gettop(L);
+        if (argc == a || argc == b) {
+            return static_cast<uint>(argc);
+        } else {
+            log_error("Invalid number of arguments (" + std::to_string(a) + " or " + std::to_string(b) + " expected)");
+            throw std::runtime_error("Invalid number of arguments (" + std::to_string(a) + " or " + std::to_string(b) + " expected)");
+        }
+    }
+}
+
 
 void initialize_libs_extends(lua::State* L);
 
