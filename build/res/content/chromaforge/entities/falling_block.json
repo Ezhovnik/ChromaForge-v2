@@ -1,7 +1,0 @@
-{
-    "components": [
-        "chromaforge:falling_block"
-    ],
-    "skeleton-name": "chromaforge:block",
-    "hitbox": [0.8, 0.8, 0.8]
-}

@@ -1,4 +1,0 @@
-<button 
-    onclick='builtin.set_setting("ui.language", "%{id}") menu:back()'>
-    %{name}
-</button>

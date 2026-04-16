@@ -1,3 +1,0 @@
--- Use only for engine development/testing
--- Must be empty in the release version
--- Cannot be modified through content packs
