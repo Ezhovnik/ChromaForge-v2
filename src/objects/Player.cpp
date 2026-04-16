@@ -1,6 +1,7 @@
 #include "Player.h"
 
 #include <utility>
+#include <algorithm>
 
 #include "physics/Hitbox.h"
 #include "window/Camera.h"
@@ -216,6 +217,10 @@ std::unique_ptr<dynamic::Map> Player::serialize() const {
     root->put("chosen-slot", chosenSlot);
 	root->put("entity", eid);
     root->put("inventory", inventory->serialize());
+	auto found = std::find(level->cameras.begin(), level->cameras.end(), currentCamera);
+    if (found != level->cameras.end()) {
+        root->put("camera", level->content->getIndices(ResourceType::Camera).getName(found - level->cameras.begin()));
+    }
     return root;
 }
 
@@ -249,6 +254,14 @@ void Player::deserialize(dynamic::Map *src) {
 
     if (auto invmap = src->map("inventory")) {
         getInventory()->deserialize(invmap.get());
+    }
+
+	if (src->has("camera")) {
+        std::string name;
+        src->str("camera", name);
+        if (auto camera = level->getCamera(name)) {
+            currentCamera = camera;
+        }
     }
 }
 

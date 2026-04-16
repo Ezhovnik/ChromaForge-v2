@@ -88,9 +88,9 @@ static int l_mul(lua::State* L) {
     switch (argc) {
         case 2: {
             if (len2 == 4) {
-                return lua::pushvec4(L, matrix1 * lua::tovec4(L, 2));
+                return lua::pushvec4_stack(L, matrix1 * lua::tovec4(L, 2));
             } else if (len2 == 3) {
-                return lua::pushvec3(L, matrix1 * glm::vec4(lua::tovec3(L, 2), 1.0f));
+                return lua::pushvec3_stack(L, matrix1 * glm::vec4(lua::tovec3(L, 2), 1.0f));
             }
             return lua::pushmat4(L, matrix1 * lua::tomat4(L, 2));
         }
@@ -149,7 +149,7 @@ static int l_determinant(lua::State* L) {
 static int l_look_at(lua::State* L) {
     int argc = lua::gettop(L);
     if (argc != 3 && argc != 4) {
-        throw std::runtime_error("invalid arguments number (3 or 4 expected)");
+        throw std::runtime_error("Invalid arguments number (3 or 4 expected)");
     }
     auto eye = lua::tovec<3>(L, 1);
     auto center = lua::tovec<3>(L, 2);
@@ -178,23 +178,41 @@ static int l_decompose(lua::State* L) {
         perspective
     );
 
-    lua::createtable(L, 0, 5);
-    
-    lua::pushvec3_arr(L, scale);
+    lua::createtable(L, 0, 6);
+
+    lua::pushvec3(L, scale);
     lua::setfield(L, "scale");
 
     lua::pushmat4(L, glm::toMat4(rotation));
     lua::setfield(L, "rotation");
 
-    lua::pushvec3_arr(L, translation);
+    lua::pushquat(L, rotation);
+    lua::setfield(L, "quaternion");
+
+    lua::pushvec3(L, translation);
     lua::setfield(L, "translation");
 
-    lua::pushvec3_arr(L, skew);
+    lua::pushvec3(L, skew);
     lua::setfield(L, "skew");
 
-    lua::pushvec4_arr(L, perspective);
+    lua::pushvec4(L, perspective);
     lua::setfield(L, "perspective");
     return 1;
+}
+
+static int l_from_quat(lua::State* L) {
+    uint argc = lua::gettop(L);
+    if (argc != 1 && argc != 2) {
+        throw std::runtime_error("Invalid arguments number (1 or 2 expected)");
+    }
+    auto quat = lua::toquat(L, 1);
+    switch (argc) {
+        case 1:
+            return lua::pushmat4(L, glm::toMat4(quat));
+        case 2:
+            return lua::setmat4(L, 2, glm::toMat4(quat));
+    }
+    return 0;
 }
 
 static int l_tostring(lua::State* L) {
@@ -236,6 +254,7 @@ const luaL_Reg mat4lib [] = {
     {"determinant", lua::wrap<l_determinant>},
     {"decompose", lua::wrap<l_decompose>},
     {"look_at", lua::wrap<l_look_at>},
+    {"from_quat", lua::wrap<l_from_quat>},
     {"tostring", lua::wrap<l_tostring>},
     {NULL, NULL}
 };

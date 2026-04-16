@@ -13,7 +13,7 @@ inline std::shared_ptr<Player> get_player(lua::State* L, int idx) {
 // Player library
 static int l_get_pos(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        return lua::pushvec3(L, player->getPosition());
+        return lua::pushvec3_stack(L, player->getPosition());
     }
     return 0;
 }
@@ -30,7 +30,7 @@ static int l_set_pos(lua::State* L) {
 
 static int l_get_rot(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        return lua::pushvec3(L, player->cam);
+        return lua::pushvec3_stack(L, player->cam);
     }
     return 0;
 }
@@ -63,7 +63,7 @@ static int l_get_inv(lua::State* L) {
 static int l_get_vel(lua::State* L) {
     if (auto player = get_player(L, 1)) {
         if (auto hitbox = player->getHitbox()) {
-            return lua::pushvec3(L, hitbox->velocity);
+            return lua::pushvec3_stack(L, hitbox->velocity);
         }
     }
     return 0;
@@ -113,21 +113,21 @@ static int l_get_selected_block(lua::State* L) {
     if (auto player = get_player(L, 1)) {
         if (player->selection.vox.id == BLOCK_VOID) return 0;
 
-        return lua::pushivec3(L, player->selection.position);
+        return lua::pushivec3_stack(L, player->selection.position);
     }
     return 0;
 }
 
 static int l_get_dir(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        return lua::pushvec3_arr(L, player->camera->front);
+        return lua::pushvec3(L, player->camera->front);
     }
     return 0;
 }
 
 static int l_get_spawnpoint(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        return lua::pushvec3(L, player->getSpawnPoint());
+        return lua::pushvec3_stack(L, player->getSpawnPoint());
     }
     return 0;
 }

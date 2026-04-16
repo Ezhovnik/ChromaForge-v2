@@ -510,31 +510,34 @@ glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDis
 
 	while (t <= maxDist) {
 		voxel* voxel = getVoxel(ix, iy, iz);
-		if (voxel == nullptr) return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
+        if (voxel) {
+            const auto def = contentIds->blocks.get(voxel->id);
+            if (def->obstacle) {
+                if (!def->rt.solid) {
+                    const std::vector<AABB>& hitboxes = def->rotatable
+                        ? def->rt.hitboxes[voxel->state.rotation]
+                        : def->modelBoxes;
 
-		const Block* def = contentIds->blocks.get(voxel->id);
-		if (def->obstacle) {
-			if (!def->rt.solid) {
-				const std::vector<AABB>& hitboxes = def->rotatable ? def->rt.hitboxes[voxel->state.rotation] : def->modelBoxes;
+                    scalar_t distance;
+                    glm::ivec3 norm;
+                    Ray ray(start, dir);
 
-                scalar_t distance;
-                glm::ivec3 norm;
-                Ray ray(start, dir);
+                    glm::ivec3 offset {};
+                    if (voxel->state.segment) {
+                        offset = seekOrigin({ix, iy, iz}, def, voxel->state) - glm::ivec3(ix, iy, iz);
+                    }
 
-				glm::ivec3 offset {};
-                if (voxel->state.segment) {
-                    offset = seekOrigin({ix, iy, iz}, def, voxel->state) - glm::ivec3(ix, iy, iz);
-                }
-
-                for (const auto& box : hitboxes) {
-                    if (ray.intersectAABB(glm::ivec3(ix, iy, iz) + offset, box, maxDist, norm, distance) > RayRelation::None) {
-                        return start + (dir * glm::vec3(distance));
+                    for (const auto& box : hitboxes) {
+                        if (ray.intersectAABB(glm::ivec3(ix, iy, iz)+offset, box, maxDist, norm, distance) > RayRelation::None) {
+                            return start + (dir * glm::vec3(distance));
+                        }
                     }
                 }
-			} else {
-				return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
-			}
-		}
+                else {
+                    return glm::vec3(px + t * dx, py + t * dy, pz + t * dz);
+                }
+            }
+        }
 		if (txMax < tyMax) {
 			if (txMax < tzMax) {
 				ix += stepx;

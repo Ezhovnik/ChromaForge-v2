@@ -12,9 +12,41 @@
 #include "objects/Entities.h"
 #include "voxels/Chunks.h"
 #include "constants.h"
+#include "objects/Entity.h"
+
+static Entity* require_entity_def(lua::State* L) {
+    auto indices = scripting::content->getIndices();
+    auto id = lua::tointeger(L, 1);
+    if (static_cast<size_t>(id) >= indices->entities.count()) {
+        return nullptr;
+    }
+    return indices->entities.get(id);
+}
 
 static int l_exists(lua::State* L) {
     return lua::pushboolean(L, get_entity(L, 1).has_value());
+}
+
+static int l_def_index(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    return lua::pushinteger(L, scripting::content->entities.require(name).rt.id);
+}
+
+static int l_def_name(lua::State* L) {
+    if (auto def = require_entity_def(L)) {
+        return lua::pushstring(L, def->name);
+    }
+    return 0;
+}
+static int l_defs_count(lua::State* L) {
+    return lua::pushinteger(L, scripting::indices->entities.count());
+}
+
+static int l_get_def(lua::State* L) {
+    if (auto entity = get_entity(L, 1)) {
+        return lua::pushinteger(L, entity->getDef().rt.id);
+    }
+    return 0;
 }
 
 static int l_spawn(lua::State* L) {
@@ -81,16 +113,16 @@ static int l_raycast(lua::State* L) {
             lua::createtable(L, 0, 6);
         }
 
-        lua::pushvec3_arr(L, start + dir * ray->distance);
+        lua::pushvec3(L, start + dir * ray->distance);
         lua::setfield(L, "endpoint");
 
-        lua::pushvec3_arr(L, ray->normal);
+        lua::pushvec3(L, ray->normal);
         lua::setfield(L, "normal");
 
         lua::pushnumber(L, glm::distance(start, end));
         lua::setfield(L, "length");
 
-        lua::pushvec3_arr(L, iend);
+        lua::pushvec3(L, iend);
         lua::setfield(L, "iendpoint");
 
         lua::pushinteger(L, block);
@@ -105,16 +137,16 @@ static int l_raycast(lua::State* L) {
         } else {
             lua::createtable(L, 0, 5);
         }
-        lua::pushvec3_arr(L, end);
+        lua::pushvec3(L, end);
         lua::setfield(L, "endpoint");
 
-        lua::pushvec3_arr(L, normal);
+        lua::pushvec3(L, normal);
         lua::setfield(L, "normal");
 
         lua::pushnumber(L, glm::distance(start, end));
         lua::setfield(L, "length");
 
-        lua::pushvec3_arr(L, iend);
+        lua::pushvec3(L, iend);
         lua::setfield(L, "iendpoint");
 
         lua::pushinteger(L, block);
@@ -124,12 +156,44 @@ static int l_raycast(lua::State* L) {
     return 0;
 }
 
+static int l_get_all_in_box(lua::State* L) {
+    auto pos = lua::tovec<3>(L, 1);
+    auto size = lua::tovec<3>(L, 2);
+    auto found = scripting::level->entities->getAllInside(AABB(pos, pos + size));
+    lua::createtable(L, found.size(), 0);
+    for (size_t i = 0; i < found.size(); ++i) {
+        const auto& entity = found[i];
+        lua::pushinteger(L, entity.getUID());
+        lua::rawseti(L, i + 1);
+    }
+    return 1;
+}
+
+static int l_get_all_in_radius(lua::State* L) {
+    auto pos = lua::tovec<3>(L, 1);
+    auto radius = lua::tonumber(L, 2);
+    auto found = scripting::level->entities->getAllInRadius(pos, radius);
+    lua::createtable(L, found.size(), 0);
+    for (size_t i = 0; i < found.size(); ++i) {
+        const auto& entity = found[i];
+        lua::pushinteger(L, entity.getUID());
+        lua::rawseti(L, i + 1);
+    }
+    return 1;  
+}
+
 const luaL_Reg entitylib [] = {
     {"exists", lua::wrap<l_exists>},
+    {"def_index", lua::wrap<l_def_index>},
+    {"def_name", lua::wrap<l_def_name>},
+    {"get_def", lua::wrap<l_get_def>},
+    {"defs_count", lua::wrap<l_defs_count>},
     {"spawn", lua::wrap<l_spawn>},
     {"despawn", lua::wrap<l_despawn>},
     {"get_skeleton", lua::wrap<l_get_skeleton>},
     {"set_skeleton", lua::wrap<l_set_skeleton>},
+    {"get_all_in_box", lua::wrap<l_get_all_in_box>},
+    {"get_all_in_radius", lua::wrap<l_get_all_in_radius>},
     {"raycast", lua::wrap<l_raycast>},
     {NULL, NULL}
 };

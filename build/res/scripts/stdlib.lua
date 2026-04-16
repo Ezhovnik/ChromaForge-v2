@@ -105,26 +105,6 @@ function pack.data_file(packid, name)
     return "world:data/"..packid.."/"..name
 end
 
-vec2_mt = {}
-function vec2_mt.__tostring(self)
-    return "vec2("..self[1]..", "..self[2]..")"
-end
-
-vec3_mt = {}
-function vec3_mt.__tostring(self)
-    return "vec3("..self[1]..", "..self[2]..", "..self[3]..")"
-end
-
-vec4_mt = {}
-function vec4_mt.__tostring(self)
-    return "vec4("..self[1]..", "..self[2]..", "..self[3]..", "..self[4]..")"
-end
-
-color_mt = {}
-function color_mt.__tostring(self)
-    return "rgba("..self[1]..", "..self[2]..", "..self[3]..", "..self[4]..")"
-end
-
 -- events
 events = {
     handlers = {}
@@ -304,6 +284,17 @@ end
 
 stdcomp = require "builtin:internal/stdcomp"
 entities.get = stdcomp.get_Entity
+entities.get_all = function(uids)
+    if uids == nil then
+        local values = {}
+        for k,v in pairs(stdcomp.get_all()) do
+            values[k] = v
+        end
+        return values 
+    else
+        return stdcomp.get_all(uids)
+    end
+end
 
 math.randomseed(time.uptime() * 1536227939)
 

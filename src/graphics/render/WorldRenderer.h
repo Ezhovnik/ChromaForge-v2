@@ -43,6 +43,8 @@ private:
 	std::unique_ptr<Batch3D> batch3d;
 	std::unique_ptr<ModelBatch> modelBatch;
 
+	float timer = 0.0f;
+
     bool drawChunk(
 		size_t index, 
 		Camera* camera, 
@@ -72,6 +74,7 @@ public:
 		Camera* camera,
 		bool hudVisible,
 		bool pause,
+		float deltaTime,
 		PostProcessing* postProcessing
 	);
 

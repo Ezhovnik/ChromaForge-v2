@@ -191,7 +191,7 @@ static int p_get_track_width(gui::UINode* node, lua::State* L) {
 
 static int p_get_track_color(gui::UINode* node, lua::State* L) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
-        return lua::pushcolor_arr(L, bar->getTrackColor());
+        return lua::pushcolor(L, bar->getTrackColor());
     }
     return 0;
 }
@@ -236,19 +236,19 @@ static int p_get_clear(gui::UINode* node, lua::State* L) {
 }
 
 static int p_get_color(gui::UINode* node, lua::State* L) {
-    return lua::pushcolor_arr(L, node->getColor());
+    return lua::pushcolor(L, node->getColor());
 }
 static int p_get_hover_color(gui::UINode* node, lua::State* L) {
-    return lua::pushcolor_arr(L, node->getHoverColor());
+    return lua::pushcolor(L, node->getHoverColor());
 }
 static int p_get_pressed_color(gui::UINode* node, lua::State* L) {
-    return lua::pushcolor_arr(L, node->getPressedColor());
+    return lua::pushcolor(L, node->getPressedColor());
 }
 static int p_get_pos(gui::UINode* node, lua::State* L) {
-    return lua::pushvec2_arr(L, node->getPos());
+    return lua::pushvec2(L, node->getPos());
 }
 static int p_get_size(gui::UINode* node, lua::State* L) {
-    return lua::pushvec2_arr(L, node->getSize());
+    return lua::pushvec2(L, node->getSize());
 }
 static int p_is_interactive(gui::UINode* node, lua::State* L) {
     return lua::pushboolean(L, node->isInteractive());
@@ -264,7 +264,7 @@ static int p_move_into(gui::UINode*, lua::State* L) {
 }
 
 static int p_get_wpos(gui::UINode* node, lua::State* L) {
-    return lua::pushvec2_arr(L, node->calcPos());
+    return lua::pushvec2(L, node->calcPos());
 }
 
 static int p_get_editable(gui::UINode* node, lua::State* L) {
@@ -586,7 +586,7 @@ static int l_gui_get_locales_info(lua::State* L) {
 }
 
 static int l_gui_get_viewport(lua::State* L) {
-    return lua::pushvec2_arr(L, scripting::engine->getGUI()->getContainer()->getSize());;
+    return lua::pushvec2(L, scripting::engine->getGUI()->getContainer()->getSize());;
 }
 
 const luaL_Reg guilib [] = {

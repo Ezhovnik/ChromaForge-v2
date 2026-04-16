@@ -181,7 +181,7 @@ void WorldRenderer::renderLevel(
     shader->uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
     shader->uniform3f("u_cameraPos", camera->position);
     shader->uniform1i("u_cubemap", 1);
-    shader->uniform1f("u_timer", Window::time());
+    shader->uniform1f("u_timer", timer);
 
 	{
 		auto inventory = player->getInventory();
@@ -331,7 +331,9 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 	lineBatch->render();
 }
 
-void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisible, bool pause, PostProcessing* postProcessing) {
+void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisible, bool pause, float deltaTime, PostProcessing* postProcessing) {
+    timer += deltaTime * !pause;
+
     auto world = level->getWorld();
     const Viewport& vp = pctx.getViewport();
     camera->aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
@@ -362,7 +364,7 @@ void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisibl
 
     auto screenShader = assets->get<ShaderProgram>("screen");
     screenShader->use();
-    screenShader->uniform1f("u_timer", Window::time());
+    screenShader->uniform1f("u_timer", timer);
     screenShader->uniform1f("u_dayTime", level->getWorld()->daytime);
     postProcessing->render(pctx, screenShader);
 }

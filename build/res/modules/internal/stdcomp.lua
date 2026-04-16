@@ -58,6 +58,8 @@ local Entity = {__index={
     get_component=function(self, name) return self.components[name] end,
     has_component=function(self, name) return self.components[name] ~= nil end,
     get_uid=function(self) return self.eid end,
+    def_index=function(self) return entities.get_def(self.eid) end,
+    def_name=function(self) return entities.def_name(entities.get_def(self.eid)) end,
 }}
 
 local entities = {}
@@ -106,6 +108,17 @@ return {
                     end
                 end
             end
+        end
+    end,
+    get_all = function(uids)
+        if uids == nil then
+            return entities
+        else
+            local values = {}
+            for _, uid in ipairs(uids) do
+                values[uid] = entities[uid]
+            end
+            return values
         end
     end
 }

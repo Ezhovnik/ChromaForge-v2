@@ -482,6 +482,21 @@ std::vector<Entt_Entity> Entities::getAllInside(AABB aabb) {
     return collected;
 }
 
+std::vector<Entt_Entity> Entities::getAllInRadius(glm::vec3 center, float radius) {
+    std::vector<Entt_Entity> collected;
+    auto view = registry.view<Transform>();
+    for (auto [entity, transform] : view.each()) {
+        if (glm::distance2(transform.pos, center) <= radius * radius) {
+            const auto& found = uids.find(entity);
+            if (found == uids.end()) continue;
+            if (auto wrapper = get(found->second)) {
+                collected.push_back(*wrapper);
+            }
+        }
+    }
+    return collected;
+}
+
 void Entities::render(Assets* assets, ModelBatch& batch, const Frustum& frustum, bool pause) {
     if (!pause) {
         scripting::on_entities_render();

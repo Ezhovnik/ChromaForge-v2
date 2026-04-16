@@ -206,6 +206,7 @@ public:
 
     bool hasBlockingInside(AABB aabb);
     std::vector<Entt_Entity> getAllInside(AABB aabb);
+    std::vector<Entt_Entity> getAllInRadius(glm::vec3 center, float radius);
 
     dynamic::Value serialize(const Entt_Entity& entity);
 
