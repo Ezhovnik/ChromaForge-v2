@@ -105,7 +105,7 @@ void BlocksRenderer::face(
 	index(0, 1, 3, 1, 2, 3);
 }
 
-void BlocksRenderer::vertex(
+void BlocksRenderer::vertexAO(
     const glm::vec3& coord, 
 	float u, float v,
 	const glm::vec4& tint,
@@ -118,7 +118,7 @@ void BlocksRenderer::vertex(
 	vertex(coord, u, v, light * tint);
 }
 
-void BlocksRenderer::face(
+void BlocksRenderer::faceAO(
     const glm::vec3& coord,
 	const glm::vec3& X,
 	const glm::vec3& Y,
@@ -142,10 +142,10 @@ void BlocksRenderer::face(
         glm::vec3 axisZ = glm::normalize(Z);
 
         glm::vec4 tint(d);
-        vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint, axisX, axisY, axisZ);
-        vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, tint, axisX, axisY, axisZ);
-        vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, tint, axisX, axisY, axisZ);
-        vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, tint, axisX, axisY, axisZ);
+        vertexAO(coord + (-X - Y + Z) * s, region.u1, region.v1, tint, axisX, axisY, axisZ);
+        vertexAO(coord + ( X - Y + Z) * s, region.u2, region.v1, tint, axisX, axisY, axisZ);
+        vertexAO(coord + ( X + Y + Z) * s, region.u2, region.v2, tint, axisX, axisY, axisZ);
+        vertexAO(coord + (-X + Y + Z) * s, region.u1, region.v2, tint, axisX, axisY, axisZ);
     } else {
         glm::vec4 tint(1.0f);
         vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint);
@@ -153,6 +153,33 @@ void BlocksRenderer::face(
         vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, tint);
         vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, tint);
     }
+    index(0, 1, 2, 0, 2, 3);
+}
+
+void BlocksRenderer::face(
+    const glm::vec3& coord,
+    const glm::vec3& X,
+    const glm::vec3& Y,
+    const glm::vec3& Z,
+    const UVRegion& region,
+    glm::vec4 tint,
+    bool lights
+) {
+    if (vertexOffset + BR_VERTEX_SIZE * 4 > capacity) {
+        overflow = true;
+        return;
+    }
+
+    float s = 0.5f;
+    if (lights) {
+        float d = glm::dot(glm::normalize(Z), SUN_VECTOR);
+        d = 0.8f + d * 0.2f;
+        tint *= d;
+    }
+    vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint);
+    vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, tint);
+    vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, tint);
+    vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, tint);
     index(0, 1, 2, 0, 2, 3);
 }
 
@@ -237,8 +264,9 @@ void BlocksRenderer::blockAABB(
 	const UVRegion(&texfaces)[6], 
 	const Block* block, 
     ubyte rotation,
-    bool lights) 
-{
+    bool lights,
+	bool ao
+) {
     if (block->hitboxes.empty()) return;
 
     // Вычисляем общий AABB, объединяя все хитбоксы (для определения размера)
@@ -264,22 +292,35 @@ void BlocksRenderer::blockAABB(
 
     coord = glm::vec3(icoord) - glm::vec3(0.5f) + hitbox.center();
 
-    face(coord,  X * size.x,  Y * size.y,  Z * size.z, texfaces[5], lights); // Север
-    face(coord, -X * size.x,  Y * size.y, -Z * size.z, texfaces[4], lights); // Юг
+	if (ao) {
+		faceAO(coord,  X * size.x,  Y * size.y,  Z * size.z, texfaces[5], lights); // Север
+		faceAO(coord, -X * size.x,  Y * size.y, -Z * size.z, texfaces[4], lights); // Юг
 
-    face(coord,  X * size.x, -Z * size.z,  Y * size.y, texfaces[3], lights); // Вверх
-    face(coord, -X*  size.x, -Z * size.z, -Y * size.y, texfaces[2], lights); // Низ
+		faceAO(coord,  X * size.x, -Z * size.z,  Y * size.y, texfaces[3], lights); // Вверх
+		faceAO(coord, -X * size.x, -Z * size.z, -Y * size.y, texfaces[2], lights); // Низ
 
-    face(coord, -Z * size.z,  Y * size.y,  X * size.x, texfaces[1], lights); // Запад
-    face(coord,  Z * size.z,  Y * size.y, -X * size.x, texfaces[0], lights); // Восток
+		faceAO(coord, -Z * size.z,  Y * size.y,  X * size.x, texfaces[1], lights); // Запад
+		faceAO(coord,  Z * size.z,  Y * size.y, -X * size.x, texfaces[0], lights); // Восток
+	} else {
+        auto tint = pickLight(icoord);
+        face(coord,  X * size.x,  Y * size.y,  Z * size.z, texfaces[5], tint, lights); // Север
+        face(coord, -X * size.x,  Y * size.y, -Z * size.z, texfaces[4], tint, lights); // Юг
+
+        face(coord,  X * size.x, -Z * size.z,  Y * size.y, texfaces[3], tint, lights); // Вверх
+        face(coord, -X * size.x, -Z * size.z, -Y * size.y, texfaces[2], tint, lights); // Низ
+
+        face(coord, -Z * size.z,  Y * size.y,  X * size.x, texfaces[1], tint, lights); // Запад
+        face(coord,  Z * size.z,  Y * size.y, -X * size.x, texfaces[0], tint, lights); // Восток
+    }
 }
 
 void BlocksRenderer::blockCustomModel(
     const glm::ivec3& icoord,
 	const Block* block, 
     ubyte rotation, 
-    bool lights) 
-{
+    bool lights,
+	bool ao
+) {
 	glm::vec3 X(1, 0, 0);
 	glm::vec3 Y(0, 1, 0);
 	glm::vec3 Z(0, 0, 1);
@@ -299,12 +340,12 @@ void BlocksRenderer::blockCustomModel(
 		glm::vec3 size = box.size();
 		if (block->rotatable) orient.transform(box);
 		glm::vec3 center_coord = coord - glm::vec3(0.5f) + box.center();
-		face(center_coord, X * size.x, Y * size.y, Z * size.z, block->modelUVs[i * 6 + 5], lights); // Север
-		face(center_coord, -X * size.x, Y * size.y, -Z * size.z, block->modelUVs[i * 6 + 4], lights); // Юг
-		face(center_coord, X * size.x, -Z * size.z, Y * size.y, block->modelUVs[i * 6 + 3], lights); // Вверх
-		face(center_coord, -X * size.x, -Z * size.z, -Y * size.y, block->modelUVs[i * 6 + 2], lights); // Низ
-		face(center_coord, -Z * size.z, Y * size.y, X * size.x, block->modelUVs[i * 6 + 1], lights); // Восток
-		face(center_coord, Z * size.z, Y * size.y, -X * size.x, block->modelUVs[i * 6 + 0], lights); // Запад
+		faceAO(center_coord, X * size.x, Y * size.y, Z * size.z, block->modelUVs[i * 6 + 5], lights); // Север
+		faceAO(center_coord, -X * size.x, Y * size.y, -Z * size.z, block->modelUVs[i * 6 + 4], lights); // Юг
+		faceAO(center_coord, X * size.x, -Z * size.z, Y * size.y, block->modelUVs[i * 6 + 3], lights); // Вверх
+		faceAO(center_coord, -X * size.x, -Z * size.z, -Y * size.y, block->modelUVs[i * 6 + 2], lights); // Низ
+		faceAO(center_coord, -Z * size.z, Y * size.y, X * size.x, block->modelUVs[i * 6 + 1], lights); // Восток
+		faceAO(center_coord, Z * size.z, Y * size.y, -X * size.x, block->modelUVs[i * 6 + 0], lights); // Запад
 	}
 
     // Рендерим дополнительные четырёхугольные грани
@@ -326,8 +367,9 @@ void BlocksRenderer::blockCube(
 	const UVRegion(&texfaces)[6], 
 	const Block* block, 
 	blockstate state,
-    bool lights) 
-{
+    bool lights,
+	bool ao
+) {
 	ubyte group = block->drawGroup;
 
 	glm::vec3 X(1, 0, 0);
@@ -342,23 +384,44 @@ void BlocksRenderer::blockCube(
 		Z = orient.axisZ;
 	}
 
-	if (isOpen(x + Z.x, y + Z.y, z + Z.z, group)) {
-        face(coord, X, Y, Z, texfaces[5], lights); // Север
-	}
-	if (isOpen(x - Z.x, y - Z.y, z - Z.z, group)) {
-        face(coord, -X, Y, -Z, texfaces[4], lights); // Юг
-	}
-	if (isOpen(x + Y.x, y + Y.y, z + Y.z, group)) {
-		face(coord, X, -Z, Y, texfaces[3], lights); // Вверх
-	}
-	if (isOpen(x - Y.x, y - Y.y, z - Y.z, group)) {
-		face(coord, X, Z, -Y, texfaces[2], lights); // Низ
-	}
-	if (isOpen(x + X.x, y + X.y, z + X.z, group)) {
-		face(coord, -Z, Y, X, texfaces[1], lights); // Запад
-	}
-	if (isOpen(x - X.x, y - X.y, z - X.z, group)) {
-		face(coord, Z, Y, -X, texfaces[0], lights); // Восток
+	if (ao) {
+        if (isOpen(x + Z.x, y + Z.y, z + Z.z, group)) {
+            faceAO(coord, X, Y, Z, texfaces[5], lights);
+        }
+        if (isOpen(x - Z.x, y - Z.y, z - Z.z, group)) {
+            faceAO(coord, -X, Y, -Z, texfaces[4], lights);
+        }
+        if (isOpen(x + Y.x, y + Y.y, z + Y.z, group)) {
+            faceAO(coord, X, -Z, Y, texfaces[3], lights);
+        }
+        if (isOpen(x - Y.x, y - Y.y, z - Y.z, group)) {
+            faceAO(coord, X, Z, -Y, texfaces[2], lights);
+        }
+        if (isOpen(x + X.x, y + X.y, z + X.z, group)) {
+            faceAO(coord, -Z, Y, X, texfaces[1], lights);
+        }
+        if (isOpen(x - X.x, y - X.y, z - X.z, group)) {
+            faceAO(coord, Z, Y, -X, texfaces[0], lights);
+        }
+    } else {
+        if (isOpen(x + Z.x, y + Z.y, z + Z.z, group)) {
+            face(coord, X, Y, Z, texfaces[5], pickLight({x, y, z + 1}), lights);
+        }
+        if (isOpen(x - Z.x, y - Z.y, z - Z.z, group)) {
+            face(coord, -X, Y, -Z, texfaces[4], pickLight({x, y, z - 1}), lights);
+        }
+        if (isOpen(x + Y.x, y + Y.y, z + Y.z, group)) {
+            face(coord, X, -Z, Y, texfaces[3], pickLight({x, y + 1, z}), lights);
+        }
+        if (isOpen(x - Y.x, y - Y.y, z - Y.z, group)) {
+            face(coord, X, Z, -Y, texfaces[2], pickLight({x, y - 1, z}), lights);
+        }
+        if (isOpen(x + X.x, y + X.y, z + X.z, group)) {
+            face(coord, -Z, Y, X, texfaces[1], pickLight({x + 1, y, z}), lights);
+        }
+        if (isOpen(x - X.x, y - X.y, z - X.z, group)) {
+            face(coord, Z, Y, -X, texfaces[0], pickLight({x - 1, y, z}), lights);
+        }
 	}
 }
 
@@ -466,16 +529,42 @@ void BlocksRenderer::render(const voxel* voxels) {
 
 			switch (def.model) {
                 case BlockModel::Cube: {
-                    blockCube(x, y, z, texfaces, &def, vox.state, !def.shadeless);
+                    blockCube(
+						x, y, z,
+						texfaces,
+						&def,
+						vox.state,
+						!def.shadeless,
+						def.ambientOcclusion
+					);
                     break;
                 } case BlockModel::X: {
-                    blockXSprite(x, y, z, glm::vec3(1.0f), texfaces[FACE_MX], texfaces[FACE_MZ], 1.0f);
+                    blockXSprite(
+						x, y, z,
+						glm::vec3(1.0f),
+						texfaces[FACE_MX],
+						texfaces[FACE_MZ],
+						1.0f
+					);
                     break;
                 } case BlockModel::AABB: {
-                    blockAABB(glm::ivec3(x, y, z), texfaces, &def, vox.state.rotation, !def.shadeless);
+                    blockAABB(
+						glm::ivec3(x, y, z),
+						texfaces,
+						&def,
+						vox.state.rotation,
+						!def.shadeless, 
+						def.ambientOcclusion
+					);
                     break;
                 } case BlockModel::Custom: {
-                    blockCustomModel(glm::ivec3(x, y, z), &def, vox.state.rotation, !def.shadeless);
+                    blockCustomModel(
+						glm::ivec3(x, y, z),
+						&def,
+						vox.state.rotation,
+						!def.shadeless,
+						def.ambientOcclusion
+					);
                     break;
                 } default:
                     break;

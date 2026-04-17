@@ -2,6 +2,8 @@
 
 #include <sstream>
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -22,6 +24,8 @@ uint Window::width = 0;
 uint Window::height = 0;
 int Window::posX = 0;
 int Window::posY = 0;
+int Window::framerate = -1;
+double Window::prevSwap = 0.0;
 bool Window::fullscreen = false;
 static util::ObjectsKeeper observers_keeper;
 
@@ -199,7 +203,8 @@ bool Window::initialize(DisplaySettings* settings) {
             toggleFullscreen();
         }
     }, true));
-    glfwSwapInterval(settings->vsync.get());
+    glfwSwapInterval(1);
+    setFramerate(settings->framerate.get());
 
     const GLubyte* vendor = glGetString(GL_VENDOR);
 	const GLubyte* renderer = glGetString(GL_RENDERER);
@@ -280,14 +285,22 @@ void Window::setShouldClose(bool flag) {
     glfwSetWindowShouldClose(window, flag);
 }
 
-void Window::swapInterval(int interval){
-	glfwSwapInterval(interval);
+void Window::setFramerate(int framerate) {
+    if ((framerate != -1) != (Window::framerate != -1)) {
+        glfwSwapInterval(framerate == -1);
+    }
+    Window::framerate = framerate;
 }
 
 // Обмен буферов
 void Window::swapBuffers() {
     glfwSwapBuffers(window);
     Window::resetScissor();
+    double currentTime = time();
+    if (framerate > 0 && currentTime - prevSwap < (1.0 / framerate)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>((1.0 / framerate - (currentTime - prevSwap)) * 1000)));
+    }
+    prevSwap = time();
 }
 
 double Window::time() {
@@ -371,4 +384,13 @@ bool Window::tryToMaximize(GLFWwindow* window, GLFWmonitor* monitor) {
 	glfwSetWindowSize(window, Window::width, Window::height);
 	glfwSetWindowPos(window, workArea.x + (workArea.z - Window::width) / 2, workArea.y + (workArea.w - Window::height) / 2 + windowFrame.y / 2);
 	return false;
+}
+
+void Window::setIcon(const ImageData* image) {
+    GLFWimage icon {
+        static_cast<int>(image->getWidth()),
+        static_cast<int>(image->getHeight()),
+        image->getData()
+    };
+    glfwSetWindowIcon(window, 1, &icon);
 }

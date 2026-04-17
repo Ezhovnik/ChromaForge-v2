@@ -115,7 +115,7 @@ void GUI::activateMouse(float deltaTime) {
             focus->defocus();
             focus = nullptr;
         }
-    } else if (pressed) {
+    } else if (!Events::isClicked(mousecode::BUTTON_1) && pressed) {
         pressed->mouseRelease(this, Events::cursor.x, Events::cursor.y);
         pressed = nullptr;
     }

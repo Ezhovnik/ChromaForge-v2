@@ -4,6 +4,7 @@
 #include <memory>
 #include <variant>
 #include <string>
+#include <functional>
 
 #include "typedefs.h"
 
@@ -27,6 +28,8 @@ namespace dynamic {
         bool,
         integer_t
     >;
+
+    using to_string_func = std::function<std::string(const Value&)>;
 }
 
 #endif // DATA_DYNAMIC_FWD_H_

@@ -2,6 +2,7 @@
 #define GRAPHICS_UI_ELEMENTS_CONTROL_TRACKBAR_H_
 
 #include "graphics/ui/elements/UINode.h"
+#include "data/dynamic.h"
 
 namespace gui {
     class TrackBar : public UINode {
@@ -9,11 +10,13 @@ namespace gui {
         glm::vec4 trackColor {1.0f, 1.0f, 1.0f, 0.4f};
         doublesupplier supplier = nullptr;
         doubleconsumer consumer = nullptr;
+        doubleconsumer subconsumer = nullptr;
         double min;
         double max;
         double value;
         double step;
         int trackWidth;
+        bool changeOnRelease = false;
     public:
         TrackBar(
             double min, 
@@ -24,10 +27,12 @@ namespace gui {
         );
         virtual void draw(const DrawContext* pctx, Assets* assets) override;
 
-        virtual void setSupplier(doublesupplier supplier);
-        virtual void setConsumer(doubleconsumer consumer);
+        virtual void setSupplier(doublesupplier);
+        virtual void setConsumer(doubleconsumer);
+        virtual void setSubConsumer(doubleconsumer);
 
         virtual void mouseMove(GUI*, int x, int y) override;
+        virtual void mouseRelease(GUI*, int x, int y) override;
 
         virtual double getValue() const;
         virtual double getMin() const;
@@ -35,6 +40,7 @@ namespace gui {
         virtual double getStep() const;
         virtual int getTrackWidth() const;
         virtual glm::vec4 getTrackColor() const;
+        virtual bool isChangeOnRelease() const;
 
         virtual void setValue(double);
         virtual void setMin(double);
@@ -42,6 +48,7 @@ namespace gui {
         virtual void setStep(double);
         virtual void setTrackWidth(int);
         virtual void setTrackColor(glm::vec4);
+        virtual void setChangeOnRelease(bool);
     };
 }
 

@@ -1,7 +1,8 @@
-function create_setting(id, name, step, postfix, tooltip)
+function create_setting(id, name, step, postfix, tooltip, changeonrelease)
     local info = builtin.get_setting_info(id)
     postfix = postfix or ""
     tooltip = tooltip or ""
+    changeonrelease = changeonrelease or ""
     document.root:add(gui.template("track_setting", {
         id=id,
         name=gui.str(name, "settings"),
@@ -10,13 +11,13 @@ function create_setting(id, name, step, postfix, tooltip)
         max=info.max,
         step=step,
         postfix=postfix,
-        tooltip=tooltip
+        tooltip=tooltip,
+        changeonrelease=changeonrelease
     }))
     update_setting(builtin.get_setting(id), id, name, postfix)
 end
 
 function update_setting(x, id, name, postfix)
-    builtin.set_setting(id, x)
     document[id..".L"].text = string.format(
         "%s: %s%s", 
         gui.str(name, "settings"), 

@@ -198,6 +198,7 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
     root->flag("light-passing", def.lightPassing);
     root->flag("sky-light-passing", def.skyLightPassing);
     root->flag("shadeless", def.shadeless);
+    root->flag("ambient-occlusion", def.ambientOcclusion);
     root->flag("breakable", def.breakable);
     root->flag("selectable", def.selectable);
     root->flag("grounded", def.grounded);

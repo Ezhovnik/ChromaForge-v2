@@ -70,7 +70,7 @@ private:
      * @param tint Цветовой оттенок.
      * @param axisX,axisY,axisZ Оси, определяющие ориентацию (нормализованные).
      */
-	void vertex(
+	void vertexAO(
         const glm::vec3& coord, 
         float u, float v, 
         const glm::vec4& brightness,
@@ -79,15 +79,6 @@ private:
 		const glm::vec3& axisZ
     );
 
-    /**
-     * @brief Рисует грань с заданными размерами и осями (с освещением по углам).
-     * @param coord Центр грани.
-     * @param w,h,d Полуразмеры вдоль осей.
-     * @param axisX,axisY,axisZ Оси ориентации.
-     * @param region Текстурная область.
-     * @param lights Массив из четырёх цветов освещения для углов.
-     * @param tint Цветовой оттенок.
-     */
 	void face(
         const glm::vec3& coord, 
         float w, float h, float d,
@@ -107,6 +98,16 @@ private:
      * @param lights Если true, вычисляется освещение на основе направления к солнцу.
      */
 	void face(
+        const glm::vec3& coord,
+        const glm::vec3& X,
+        const glm::vec3& Y,
+        const glm::vec3& Z,
+        const UVRegion& region,
+        glm::vec4 tint,
+        bool lights
+    );
+
+    void faceAO(
         const glm::vec3& coord,
 		const glm::vec3& axisX,
 		const glm::vec3& axisY,
@@ -141,13 +142,15 @@ private:
      * @param block Определение блока.
      * @param state Состояние блока.
      * @param lights Включить ли освещение.
+     * @param ao
      */
 	void blockCube(
         int x, int y, int z, 
         const UVRegion(&faces)[6], 
         const Block* block, 
         blockstate state, 
-        bool lights
+        bool lights,
+        bool ao
     );
 
     /**
@@ -157,13 +160,15 @@ private:
      * @param block Определение блока.
      * @param rotation Поворот.
      * @param lights Включить освещение.
+     * @param ao
      */
 	void blockAABB(
         const glm::ivec3& coord,
         const UVRegion(&faces)[6], 
         const Block* block, 
         ubyte rotation,
-        bool lights
+        bool lights,
+        bool ao
     );
 
     /**
@@ -187,12 +192,14 @@ private:
      * @param block Определение блока.
      * @param rotation Поворот.
      * @param lights Включить освещение.
+     * @param ao
      */
 	void blockCustomModel(
         const glm::ivec3& icoord,
 		const Block* block, 
         ubyte rotation,
-		bool lights
+		bool lights,
+        bool ao
     );
 
     /**

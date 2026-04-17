@@ -168,6 +168,7 @@ Hud::Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player) : assets(
 
     auto dplotter = std::make_shared<gui::Plotter>(350, 250, 2000, 16);
     dplotter->setGravity(gui::Gravity::bottom_right);
+    dplotter->setInteractive(false);
     add(HudElement(HudElementMode::Permanent, nullptr, dplotter, true));
 }
 

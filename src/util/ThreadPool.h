@@ -191,7 +191,7 @@ namespace util {
             if (complete) terminate();
         }
 
-        void enqueueJob(std::shared_ptr<T> job) {
+        void enqueueJob(const std::shared_ptr<T>& job) {
             {
                 std::lock_guard<std::mutex> lock(jobsMutex);
                 jobs.push(job);
@@ -229,6 +229,10 @@ namespace util {
                 std::this_thread::sleep_for(2ms);
                 update();
             }
+        }
+
+        uint getWorkersCount() const {
+            return threads.size();
         }
     };
 

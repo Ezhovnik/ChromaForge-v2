@@ -114,6 +114,7 @@ public:
     bool grounded = false;
     bool hidden = false;
     bool shadeless = false;
+    bool ambientOcclusion = true;
 
     std::vector<AABB> hitboxes;
 

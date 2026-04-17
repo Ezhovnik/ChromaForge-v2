@@ -60,6 +60,18 @@ inline void create_channel(Engine* engine, std::string name, NumberSetting& sett
     }, true));
 }
 
+static std::unique_ptr<ImageData> load_icon(const std::filesystem::path& resdir) {
+    try {
+        auto file = resdir/std::filesystem::u8path("textures/misc/icon.png");
+        if (std::filesystem::exists(file)) {
+            return imageio::read(file.u8string());
+        }
+    } catch (const std::exception& err) {
+        LOG_ERROR("Could not load window icon: {}", err.what());
+    }
+    return nullptr;
+}
+
 // Реализация конструктора
 Engine::Engine(
     EngineSettings& settings,
@@ -73,6 +85,8 @@ Engine::Engine(
     paths->prepare();
     loadSettings();
 
+    auto resdir = paths->getResources();
+
     controller = std::make_unique<EngineController>(this);
 
     // Инициализация окна GLFW
@@ -81,7 +95,11 @@ Engine::Engine(
         Window::terminate();
         throw initialize_error("Failed to load Window");
     }
-
+    if (auto icon = load_icon(resdir)) {
+        icon->flipY();
+        if (icon->getFormat() != ImageFormat::rgba8888) icon.reset(toRGBA(icon.get()));
+        Window::setIcon(icon.get());
+    }
     loadControls();
     audio::initialize(settings.audio.enabled.get());
     create_channel(this, "master", settings.audio.volumeMaster);
@@ -104,7 +122,6 @@ Engine::Engine(
     scripting::initialize(this);
     LOG_INFO("Scripting system initialization has been successfully finished");
 
-    auto resdir = paths->getResources();
     basePacks = files::read_list(resdir/std::filesystem::path("config/builtins.list"));
 
     LOG_INFO("Initialization is finished");
@@ -236,7 +253,7 @@ void Engine::mainloop() {
         screen->update(deltaTime);
 
         if (!Window::isIconified()) renderFrame(batch);
-        Window::swapInterval(Window::isIconified() ? 1 : settings.display.vsync.get());
+        Window::setFramerate(Window::isIconified() ? 20 : settings.display.framerate.get());
 
         processPostRunnables();
 

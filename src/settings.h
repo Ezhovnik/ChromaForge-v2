@@ -11,7 +11,7 @@ struct DisplaySettings {
 	IntegerSetting width {1280};
 	IntegerSetting height {720};
 	IntegerSetting samples {0};
-	BoolSetting vsync {true};
+	IntegerSetting framerate{-1, -1, 120};
 
 	BoolSetting fullscreen {false};
 };

@@ -39,12 +39,19 @@ target_include_directories(ChromaForge PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-add_custom_command(TARGET ChromaForge POST_BUILD
+file(GLOB_RECURSE RESOURCE_FILES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/res/*")
+set(RESOURCE_STAMP "${CMAKE_CURRENT_BINARY_DIR}/res_copied.stamp")
+add_custom_command(
+    OUTPUT ${RESOURCE_STAMP}
+    DEPENDS ${RESOURCE_FILES}
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/res
-        $<TARGET_FILE_DIR:ChromaForge>/res
+        "${CMAKE_SOURCE_DIR}/res"
+        "$<TARGET_FILE_DIR:ChromaForge>/res"
+    COMMAND ${CMAKE_COMMAND} -E touch ${RESOURCE_STAMP}
     COMMENT "Copying resources to $<TARGET_FILE_DIR:ChromaForge>"
 )
+add_custom_target(copy_resources DEPENDS ${RESOURCE_STAMP})
+add_dependencies(ChromaForge copy_resources)
 
 add_custom_command(TARGET ChromaForge POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E $<IF:$<CONFIG:Release>,copy_if_different,echo>

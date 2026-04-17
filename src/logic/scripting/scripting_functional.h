@@ -69,6 +69,12 @@ namespace scripting {
         const std::string& src, 
         const std::string& file="<string>"
     );
+
+    dynamic::to_string_func create_tostring(
+        const scriptenv& env,
+        const std::string& src,
+        const std::string& file="<string>"
+    );
 }
 
 #endif // LOGIC_SCRIPTING_SCRIPTING_FUNCTIONAL_H_
