@@ -19,12 +19,21 @@ function parse_path(path)
 end
 
 package = {
-    loaded={}
+    loaded = {}
 }
 local __cached_scripts = {}
+local __warnings_hidden = {}
 
-function on_deprecated_call(name)
-    debug.warning("deprecated function called ("..name..")\n"..debug.traceback())
+function on_deprecated_call(name, alternatives)
+    if __warnings_hidden[name] then
+        return
+    end
+    __warnings_hidden[name] = true
+    if alternatives then
+        debug.warning("deprecated function called (" .. name .. "), use " .. alternatives .. " instead\n" .. debug.traceback())
+    else
+        debug.warning("deprecated function called (" .. name .. ")\n" .. debug.traceback())
+    end
 end
 
 -- Load script with caching
@@ -276,7 +285,7 @@ entities.get_all = function(uids)
         for k,v in pairs(stdcomp.get_all()) do
             values[k] = v
         end
-        return values 
+        return values
     else
         return stdcomp.get_all(uids)
     end
@@ -284,42 +293,186 @@ end
 
 math.randomseed(time.uptime() * 1536227939)
 
+----------------------------------------------
+
+function math.clamp(_in, low, high)
+    return math.min(math.max(_in, low), high)
+end
+
+function math.rand(low, high)
+    return low + (high - low) * math.random()
+end
+
+----------------------------------------------
+
+function table.copy(t)
+    local copied = {}
+
+    for k, v in pairs(t) do
+        copied[k] = v
+    end
+
+    return copied
+end
+
+function table.count_pairs(t)
+    local count = 0
+
+    for k, v in pairs(t) do
+        count = count + 1
+    end
+
+    return count
+end
+
+function table.random(t)
+    return t[math.random(1, #t)]
+end
+
+----------------------------------------------
+
+local pattern_escape_replacements = {
+    ["("] = "%(",
+    [")"] = "%)",
+    ["."] = "%.",
+    ["%"] = "%%",
+    ["+"] = "%+",
+    ["-"] = "%-",
+    ["*"] = "%*",
+    ["?"] = "%?",
+    ["["] = "%[",
+    ["]"] = "%]",
+    ["^"] = "%^",
+    ["$"] = "%$",
+    ["\0"] = "%z"
+}
+
+function string.pattern_safe(str)
+    return string.gsub(str, ".", pattern_escape_replacements)
+end
+
+--local totable = string.ToTable
+local string_sub = string.sub
+local string_find = string.find
+local string_len = string.len
+function string.explode(separator, str, withpattern)
+    --if (separator == "") then return totable(str) end
+    if (withpattern == nil) then withpattern = false end
+
+    local ret = {}
+    local current_pos = 1
+
+    for i = 1, string_len(str) do
+        local start_pos, end_pos = string_find(str, separator, current_pos, not withpattern)
+        if (not start_pos) then break end
+        ret[i] = string_sub(str, current_pos, start_pos - 1)
+        current_pos = end_pos + 1
+    end
+
+    ret[#ret + 1] = string_sub(str, current_pos)
+
+    return ret
+end
+
+function string.split(str, delimiter)
+    return string.explode(delimiter, str)
+end
+
+function string.formatted_time(seconds, format)
+    if (not seconds) then seconds = 0 end
+    local hours = math.floor(seconds / 3600)
+    local minutes = math.floor((seconds / 60) % 60)
+    local millisecs = (seconds - math.floor(seconds)) * 1000
+    seconds = math.floor(seconds % 60)
+
+    if (format) then
+        return string.format(format, minutes, seconds, millisecs)
+    else
+        return { h = hours, m = minutes, s = seconds, ms = millisecs }
+    end
+end
+
+function string.replace(str, tofind, toreplace)
+    local tbl = string.Explode(tofind, str)
+    if (tbl[1]) then return table.concat(tbl, toreplace) end
+    return str
+end
+
+function string.trim(s, char)
+    if char then char = string.pattern_safe(char) else char = "%s" end
+    return string.match(s, "^" .. char .. "*(.-)" .. char .. "*$") or s
+end
+
+function string.trim_right(s, char)
+    if char then char = string.pattern_safe(char) else char = "%s" end
+    return string.match(s, "^(.-)" .. char .. "*$") or s
+end
+
+function string.trim_left(s, char)
+    if char then char = string.pattern_safe(char) else char = "%s" end
+    return string.match(s, "^" .. char .. "*(.+)$") or s
+end
+
+local meta = getmetatable("")
+
+function meta:__index(key)
+    local val = string[key]
+    if (val ~= nil) then
+        return val
+    elseif (tonumber(key)) then
+        return string.sub(self, key, key)
+    end
+end
+
+function string.starts_with(str, start)
+    return string.sub(str, 1, string.len(start)) == start
+end
+
+function string.ends_with(str, endStr)
+    return endStr == "" or string.sub(str, -string.len(endStr)) == endStr
+end
+
 -- --------- Deprecated functions ------ --
-block_index = block.index
-block_name = block.name
-blocks_count = block.defs_count
-is_solid_at = block.is_solid_at
-is_replaceable_at = block.is_replaceable_at
-set_block = block.set
-get_block = block.get
-get_block_X = block.get_X
-get_block_Y = block.get_Y
-get_block_Z = block.get_Z
-get_block_states = block.get_states
-set_block_states = block.set_states
-get_block_rotation = block.get_rotation
-set_block_rotation = block.set_rotation
-get_block_user_bits = block.get_user_bits
-set_block_user_bits = block.set_user_bits
-toml.serialize = toml.tostring
-toml.deserialize = toml.parse
+local function wrap_deprecated(func, name, alternatives)
+    return function (...)
+        on_deprecated_call(name, alternatives)
+        return func(...)
+    end
+end
+
+block_index = wrap_deprecated(block.index, "block_index", "block.index")
+block_name = wrap_deprecated(block.name, "block_name", "block.name")
+blocks_count = wrap_deprecated(block.defs_count, "blocks_count", "block.defs_count")
+is_solid_at = wrap_deprecated(block.is_solid_at, "is_solid_at", "block.is_solid_at")
+is_replaceable_at = wrap_deprecated(block.is_replaceable_at, "is_replaceable_at", "block.is_replaceable_at")
+set_block = wrap_deprecated(block.set, "set_block", "block.set")
+get_block = wrap_deprecated(block.get, "get_block", "block.get")
+get_block_X = wrap_deprecated(block.get_X, "get_block_X", "block.get_X")
+get_block_Y = wrap_deprecated(block.get_Y, "get_block_Y", "block.get_Y")
+get_block_Z = wrap_deprecated(block.get_Z, "get_block_Z", "block.get_Z")
+get_block_states = wrap_deprecated(block.get_states, "get_block_states", "block.get_states")
+set_block_states = wrap_deprecated(block.set_states, "set_block_states", "block.set_states")
+get_block_rotation = wrap_deprecated(block.get_rotation, "get_block_rotation", "block.get_rotation")
+set_block_rotation = wrap_deprecated(block.set_rotation, "set_block_rotation", "block.set_rotation")
+get_block_user_bits = wrap_deprecated(block.get_user_bits, "get_block_user_bits", "block.get_user_bits")
+set_block_user_bits = wrap_deprecated(block.set_user_bits, "set_block_user_bits", "block.set_user_bits")
 
 function load_script(path, nocache)
-    on_deprecated_call("load_script")
+    on_deprecated_call("load_script", "require or loadstring")
     return __load_script(path, nocache)
 end
 
 _dofile = dofile
 -- Replaces dofile('*/content/packid/*') with load_script('packid:*') 
 function dofile(path)
-    on_deprecated_call("dofile")
+    on_deprecated_call("dofile", "require or loadstring")
     local index = string.find(path, "/content/")
     if index then
-        local newpath = string.sub(path, index+9)
+        local newpath = string.sub(path, index + 9)
         index = string.find(newpath, "/")
         if index then
-            local label = string.sub(newpath, 1, index-1)
-            newpath = label..':'..string.sub(newpath, index+1)
+            local label = string.sub(newpath, 1, index - 1)
+            newpath = label .. ':' .. string.sub(newpath, index + 1)
             if file.isfile(newpath) then
                 return __load_script(newpath, true)
             end

@@ -31,7 +31,7 @@ struct CameraSettings {
 };
 
 struct GraphicsSettings {
-    NumberSetting fogCurve {1.6f, 1.0f, 6.0f};
+    NumberSetting fogCurve {1.0f, 1.0f, 6.0f};
 	NumberSetting gamma {1.0f, 0.4f, 1.0f};
 	BoolSetting backlight {true};
 	BoolSetting frustumCulling {true};

@@ -105,21 +105,6 @@ console.add_command(
     end
 )
 
-local function FormattedTime(seconds, format ) -- from gmod
-    if not seconds then seconds = 0 end
-
-    local hours = math.floor(seconds / 3600)
-    local minutes = math.floor((seconds / 60) % 60)
-    local millisecs = (seconds - math.floor(seconds)) * 100
-    seconds = math.floor(seconds % 60)
-
-    if format then
-        return string.format(format, minutes, seconds, millisecs)
-    else
-        return {h = hours, m = minutes, s = seconds, ms = millisecs}
-    end
-end
-
 console.add_command(
     "time.uptime",
     "Get time elapsed since the engine started",
@@ -128,7 +113,7 @@ console.add_command(
 
         local formatted_uptime = ""
 
-        local t = FormattedTime(uptime)
+        local t = string.formatted_time(uptime)
         formatted_uptime = t.h .. "h " .. t.m .. "m " .. t.s .. "s"
         return formatted_uptime .. " (" .. uptime .. "s)"
     end

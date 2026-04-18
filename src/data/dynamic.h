@@ -46,7 +46,7 @@ namespace dynamic {
     public:
         std::vector<Value> values;
 
-        List() {}
+        List() = default;
         List(std::vector<Value> values) : values(std::move(values)) {}
 
         std::string str(size_t index) const;
@@ -84,7 +84,7 @@ namespace dynamic {
     public:
         std::unordered_map<std::string, Value> values;
 
-        Map() {}
+        Map() = default;
         Map(std::unordered_map<std::string, Value> values) : values(std::move(values)) {};
 
         template<typename T>

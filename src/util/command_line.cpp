@@ -17,17 +17,17 @@
  */
 class ArgsReader {
 private:
-	int argc; ///< Количество аргументов
-	char** argv; ///< Массив аргументов
-	int pos = 0;
 	const char* last = ""; ///< Последний прочитанный аргумент
+	char** argv; ///< Массив аргументов
+	int argc; ///< Количество аргументов
+	int pos = 0;
 public:
 	/**
      * @brief Конструктор.
      * @param argc Количество аргументов (из main).
      * @param argv Массив аргументов (из main).
      */
-	ArgsReader(int argc, char** argv) : argc(argc), argv(argv) {}
+	ArgsReader(int argc, char** argv) : argv(argv), argc(argc) {}
 
 	/**
      * @brief Пропускает текущий аргумент.

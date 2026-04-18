@@ -237,8 +237,8 @@ void scripting::on_block_placed(Player* player, const Block* block, int x, int y
 }
 
 void scripting::on_block_broken(Player* player, const Block* block, int x, int y, int z) {
-    std::string name = block->name + ".broken";
     if (block->rt.funcsset.onbroken) {
+        std::string name = block->name + ".broken";
         lua::emit_event(lua::get_main_thread(), name, [x, y, z, player] (auto L) {
             lua::pushivec3_stack(L, x, y, z);
             lua::pushinteger(L, player ? player->getId() : -1);
@@ -470,17 +470,21 @@ void scripting::on_entity_used(const Entt_Entity& entity, Player* player) {
     });
 }
 
-void scripting::on_entities_update() {
+void scripting::on_entities_update(int sps, int parts, int part) {
     auto L = lua::get_main_thread();
     lua::get_from(L, STDCOMP, "update", true);
-    lua::call_nothrow(L, 0, 0);
+    lua::pushinteger(L, sps);
+    lua::pushinteger(L, parts);
+    lua::pushinteger(L, part);
+    lua::call_nothrow(L, 3, 0);
     lua::pop(L);
 }
 
-void scripting::on_entities_render() {
+void scripting::on_entities_render(float deltaTime) {
     auto L = lua::get_main_thread();
     lua::get_from(L, STDCOMP, "render", true);
-    lua::call_nothrow(L, 0, 0);
+    lua::pushnumber(L, deltaTime);
+    lua::call_nothrow(L, 1, 0);
     lua::pop(L);
 }
 

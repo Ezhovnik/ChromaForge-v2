@@ -63,8 +63,7 @@ ModelBatch::ModelBatch(size_t capacity, Assets* assets, Chunks* chunks)
     blank = Texture::from(&image);
 }
 
-ModelBatch::~ModelBatch() {
-}
+ModelBatch::~ModelBatch() = default;
 
 void ModelBatch::draw(
     const model::Mesh& mesh,

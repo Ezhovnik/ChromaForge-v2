@@ -1,5 +1,7 @@
 #include "Batch2D.h"
 
+#include <cmath>
+
 #include <GL/glew.h>
 
 #include "Mesh.h"
@@ -168,9 +170,10 @@ void Batch2D::rect(
 
     float x1, y1, x2, y2, x3, y3, x4, y4;
 
-    if (angle != 0) {
-        float s = sin(angle);
-        float c = cos(angle);
+    constexpr float epsilon = 1e-6f;
+    if (std::fabs(angle) > epsilon) {
+        float s = std::sin(angle);
+        float c = std::cos(angle);
 
         x1 = c * _x1 - s * _y1;
         y1 = s * _x1 + c * _y1;

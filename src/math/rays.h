@@ -27,7 +27,7 @@ private:
 public:
 	std::array<std::pair<rayvec3, rayvec2>, AABBFACES_COUNT> faces;
 
-	AABBFaces(){};
+	AABBFaces() = default;
 	AABBFaces(const rayvec3& parentBoxPos, const AABB& parentBox);
 };
 

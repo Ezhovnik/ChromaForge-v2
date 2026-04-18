@@ -39,16 +39,17 @@ void LevelController::update(float delta, bool input, bool pause) {
         blocks->update(delta);
         player->update(delta, input, pause);
         level->entities->updatePhysics(delta);
-        level->entities->update();
+        level->entities->update(delta);
     }
     level->entities->clean();
     player->postUpdate(delta, input, pause);
 
-    level->objects.erase(
+    auto& objects = level->objects;
+    objects.erase(
         std::remove_if(
-            level->objects.begin(), level->objects.end(),
+            objects.begin(), objects.end(),
             [](auto obj) { return obj == nullptr; }),
-        level->objects.end()
+        objects.end()
     );
 }
 

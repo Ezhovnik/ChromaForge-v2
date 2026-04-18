@@ -236,7 +236,7 @@ speakerid_t audio::play(
     if (!sound->variants.empty()) {
         size_t index = rand() % (sound->variants.size() + 1);
         if (index < sound->variants.size()) {
-            sound = sound->variants.at(index).get();
+            sound = sound->variants[index].get();
         }
     }
     auto speaker_ptr = sound->newInstance(priority, channel);
@@ -247,7 +247,7 @@ speakerid_t audio::play(
     if (speaker_ptr == nullptr) return 0;
     auto speaker = speaker_ptr.get();
     speakerid_t id = nextId++;
-    speakers.emplace(id, std::move(speaker_ptr));
+    speakers.try_emplace(id, std::move(speaker_ptr));
     speaker->setPosition(position);
     speaker->setVolume(volume);
     speaker->setPitch(pitch);
@@ -274,8 +274,8 @@ speakerid_t audio::play(
     if (speaker_ptr == nullptr) return 0;
     auto speaker = speaker_ptr.get();
     speakerid_t id = nextId++;
-    streams.emplace(id, stream);
-    speakers.emplace(id, std::move(speaker_ptr));
+    streams.try_emplace(id, stream);
+    speakers.try_emplace(id, std::move(speaker_ptr));
     stream->bindSpeaker(id);
 
     speaker->setPosition(position);

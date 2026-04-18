@@ -212,7 +212,7 @@ std::vector<std::string> ResPaths::listdirRaw(const std::string& folderName) con
         if (!std::filesystem::is_directory(folder)) continue;
         for (const auto& entry : std::filesystem::directory_iterator(folder)) {
             auto name = entry.path().filename().u8string();
-            entries.push_back(root.name + ":" + folderName + "/" + name);
+            entries.emplace_back(root.name + ":" + folderName + "/" + name);
         }
     }
     {
@@ -220,7 +220,7 @@ std::vector<std::string> ResPaths::listdirRaw(const std::string& folderName) con
         if (!std::filesystem::is_directory(folder)) return entries;
         for (const auto& entry : std::filesystem::directory_iterator(folder)) {
             auto name = entry.path().filename().u8string();
-            entries.push_back("builtin:" + folderName + "/" + name);
+            entries.emplace_back(BUILTIN_CONTENT_NAMESPACE + ":" + folderName + "/" + name);
         }
     }
     return entries;

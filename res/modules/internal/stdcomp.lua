@@ -45,6 +45,8 @@ local Skeleton = {__index={
     index=function(self, s) return __skeleton.index(self.eid, s) end,
     is_visible=function(self, i) return __skeleton.is_visible(self.eid, i) end,
     set_visible=function(self, i, b) return __skeleton.set_visible(self.eid, i, b) end,
+    get_color=function(self) return __skeleton.get_color(self.eid) end,
+    set_color=function(self, color) return __skeleton.set_color(self.eid, color) end
 }}
 
 local function new_Skeleton(eid)
@@ -84,25 +86,29 @@ return {
             entities[eid] = nil;
         end
     end,
-    update = function()
-        for _, entity in pairs(entities) do
+    update = function(tps, parts, part)
+        for uid, entity in pairs(entities) do
+            if uid % parts ~= part then
+                goto continue
+            end
             for _, component in pairs(entity.components) do
                 local callback = component.on_update
                 if callback then
-                    local result, err = pcall(callback)
+                    local result, err = pcall(callback, tps)
                     if err then
                         debug.error(err)
                     end
                 end
             end
+            ::continue::
         end
     end,
-    render = function()
+    render = function(delta)
         for _,entity in pairs(entities) do
             for _, component in pairs(entity.components) do
                 local callback = component.on_render
                 if callback then
-                    local result, err = pcall(callback)
+                    local result, err = pcall(callback, delta)
                     if err then
                         debug.error(err)
                     end

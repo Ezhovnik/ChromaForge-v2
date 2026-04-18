@@ -72,16 +72,16 @@ public:
 float calc_height(fnl_state *noise, int cur_x, int cur_z){
 	float height = 0;
 
-	height += fnlGetNoise2D(noise, cur_x*0.0125f*8-125567,cur_z*0.0125f*8+3546);
-	height += fnlGetNoise2D(noise, cur_x*0.025f*8+4647,cur_z*0.025f*8-3436)*0.5f;
-	height += fnlGetNoise2D(noise, cur_x*0.05f*8-834176,cur_z*0.05f*8+23678)*0.25f;
+	height += fnlGetNoise2D(noise, cur_x * 0.0125f * 8-125567, cur_z * 0.0125f * 8 + 3546);
+	height += fnlGetNoise2D(noise, cur_x * 0.025f * 8 + 4647, cur_z * 0.025f * 8 - 3436) * 0.5f;
+	height += fnlGetNoise2D(noise, cur_x * 0.05f * 8 - 834176, cur_z * 0.05f * 8 + 23678) * 0.25f;
 	height += fnlGetNoise2D(
         noise,
-		cur_x*0.2f*8 + fnlGetNoise2D(noise, cur_x*0.1f*8-23557,cur_z*0.1f*8-6568)*50,
-		cur_z*0.2f*8 + fnlGetNoise2D(noise, cur_x*0.1f*8+4363,cur_z*0.1f*8+4456)*50
-	) * fnlGetNoise2D(noise, cur_x*0.01f-834176,cur_z*0.01f+23678) * 0.25;
-	height += fnlGetNoise2D(noise, cur_x*0.1f*8-3465,cur_z*0.1f*8+4534)*0.125f;
-	height *= fnlGetNoise2D(noise, cur_x*0.1f+1000,cur_z*0.1f+1000)*0.5f+0.5f;
+		cur_x * 0.2f * 8 + fnlGetNoise2D(noise, cur_x * 0.1f * 8 - 23557, cur_z * 0.1f * 8 - 6568) * 50,
+		cur_z * 0.2f * 8 + fnlGetNoise2D(noise, cur_x * 0.1f * 8 + 4363, cur_z * 0.1f * 8 + 4456) * 50
+	) * fnlGetNoise2D(noise, cur_x * 0.01f - 834176, cur_z * 0.01f + 23678) * 0.25;
+	height += fnlGetNoise2D(noise, cur_x * 0.1f * 8 - 3465, cur_z * 0.1f * 8 + 4534) * 0.125f;
+	height *= fnlGetNoise2D(noise, cur_x * 0.1f + 1000, cur_z * 0.1f + 1000) * 0.5f + 0.5f;
 	height += 1.0f;
 	height *= 64.0f;
 	return height;
@@ -131,7 +131,12 @@ void DefaultWorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t see
 	PseudoRandom randomgrass;
 
 	int padding = 8;
-	Map2D heights(cx * CHUNK_WIDTH - padding, cz * CHUNK_DEPTH - padding, CHUNK_WIDTH + padding * 2, CHUNK_DEPTH + padding * 2);
+	Map2D heights(
+		cx * CHUNK_WIDTH - padding,
+		cz * CHUNK_DEPTH - padding,
+		CHUNK_WIDTH + padding * 2,
+		CHUNK_DEPTH + padding * 2
+	);
 
 	for (int z = -padding; z < CHUNK_DEPTH + padding; ++z){
 		for (int x = -padding; x < CHUNK_WIDTH + padding; ++x){
@@ -140,12 +145,12 @@ void DefaultWorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t see
 			float height = calc_height(&noise, cur_x, cur_z);
 			float hum = fnlGetNoise2D(&noise, cur_x * 0.3 + 633, cur_z * 0.3);
 			float sand = fnlGetNoise2D(&noise, cur_x * 0.1 - 633, cur_z * 0.1 + 1000);
-				float cliff = pow((sand + abs(sand)) / 2, 2);
-				float width = pow(fmax(-abs(height - SEA_LEVEL) + 4, 0) / 6, 2) * cliff;
-				float h1 = -abs(height - SEA_LEVEL - 0.03);
-				float h2 = abs(height - SEA_LEVEL + 0.04);
-				float h = (h1 + h2) * 100;
-				height += (h * width);
+			float cliff = pow((sand + abs(sand)) / 2, 2);
+			float width = pow(fmax(-abs(height - SEA_LEVEL) + 4, 0) / 6, 2) * cliff;
+			float h1 = -abs(height - SEA_LEVEL - 0.03);
+			float h2 = abs(height - SEA_LEVEL + 0.04);
+			float h = (h1 + h2) * 100;
+			height += (h * width);
 			heights.set(Map::HEIGHT, cur_x, cur_z, height);
 			heights.set(Map::TREE, cur_x, cur_z, hum);
 			heights.set(Map::SAND, cur_x, cur_z, sand);

@@ -58,8 +58,7 @@ WorldRegion::WorldRegion() :
     sizes(std::make_unique<uint32_t[]>(RegionConsts::VOLUME))
 {}
 
-WorldRegion::~WorldRegion() {
-}
+WorldRegion::~WorldRegion() = default;
 
 void WorldRegion::setUnsaved(bool unsaved) {
     this->unsaved = unsaved;
@@ -100,8 +99,7 @@ WorldRegions::WorldRegions(const std::filesystem::path& directory) : directory(d
     layers[RegionConsts::LAYER_ENTITIES].folder = directory/std::filesystem::path("entities");
 }
 
-WorldRegions::~WorldRegions() {
-}
+WorldRegions::~WorldRegions() = default;
 
 WorldRegion* WorldRegions::getRegion(int x, int z, int layer) {
     RegionsLayer& regions = layers[layer];

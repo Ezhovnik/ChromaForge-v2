@@ -210,7 +210,7 @@ void World::deserialize(dynamic::Map* root) {
 	generator = root->get("generator", generator);
     seed = root->get("seed", seed);
 
-	if (generator == "") generator = WorldGenerators::getDefaultGeneratorID();
+	if (generator.empty()) generator = WorldGenerators::getDefaultGeneratorID();
 
 	// Информация о версии движка
 	if (auto verobj = root->map("version")) {

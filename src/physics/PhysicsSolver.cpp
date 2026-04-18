@@ -1,5 +1,7 @@
 #include "PhysicsSolver.h"
 
+#include <algorithm>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 
@@ -263,4 +265,8 @@ bool PhysicsSolver::isBlockInside(int x, int y, int z, Block* def, blockstate st
 			return true;
 	}
 	return false;
+}
+
+void PhysicsSolver::removeSensor(Sensor* sensor) {
+    sensors.erase(std::remove(sensors.begin(), sensors.end(), sensor), sensors.end());
 }

@@ -19,7 +19,7 @@ uint ShaderProgram::getUniformLocation(const std::string& name) {
     if (it != uniformLocationCache.end()) return it->second;
 
     uint loc = glGetUniformLocation(id, name.c_str());
-    uniformLocationCache.emplace(name, loc);
+    uniformLocationCache.try_emplace(name, loc);
 
     if (loc == -1) {
         if (warnedUniforms.find(name) == warnedUniforms.end()) {

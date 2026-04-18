@@ -360,7 +360,7 @@ static int l_destruct(lua::State* L) {
 }
 
 static int l_compose_state(lua::State* L) {
-    if (lua::istable(L, 1) || lua::objlen(L, 1) < 3) {
+    if (!lua::istable(L, 1) || lua::objlen(L, 1) < 3) {
         throw std::runtime_error("Expected array of 3 integers");
     }
 

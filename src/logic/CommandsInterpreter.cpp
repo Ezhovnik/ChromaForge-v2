@@ -255,7 +255,7 @@ public:
     }
 
     dynamic::Value applyRelative(
-        Argument* arg, 
+        Argument* arg,
         dynamic::Value value,
         const dynamic::Value& origin
     ) {

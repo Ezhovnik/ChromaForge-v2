@@ -60,7 +60,7 @@ namespace cmd {
         std::unordered_map<std::string, Argument> kwargs;
         executor_func executor;
     public:
-        Command() {}
+        Command() = default;
 
         Command(
             std::string name,

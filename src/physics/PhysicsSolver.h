@@ -49,6 +49,8 @@ public:
 	void setSensors(std::vector<Sensor*> sensors) {
         this->sensors = std::move(sensors);
     }
+
+	void removeSensor(Sensor* sensor);
 };
 
 #endif // PHYSICS_PHYSICSSOLVER_H_

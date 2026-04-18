@@ -56,22 +56,22 @@ bool ALStream::preloadBuffer(uint buffer, bool loop) {
 
 std::unique_ptr<Speaker> ALStream::createSpeaker(bool loop, int channel) {
     this->loop = loop;
-    uint source = al->getFreeSource();
-    if (source == 0) return nullptr;
+    uint free_source = al->getFreeSource();
+    if (free_source == 0) return nullptr;
 
     for (uint i = 0; i < ALStream::STREAM_BUFFERS; ++i) {
-        uint buffer = al->getFreeBuffer();
-        if (!preloadBuffer(buffer, loop)) break;
-        AL_CHECK(alSourceQueueBuffers(source, 1, &buffer));
+        uint free_buffer = al->getFreeBuffer();
+        if (!preloadBuffer(free_buffer, loop)) break;
+        AL_CHECK(alSourceQueueBuffers(free_source, 1, &free_buffer));
     }
-    return std::make_unique<ALSpeaker>(al, source, Priority::High, channel);
+    return std::make_unique<ALSpeaker>(al, free_source, Priority::High, channel);
 }
 
-void ALStream::bindSpeaker(speakerid_t speaker) {
+void ALStream::bindSpeaker(speakerid_t speakerID) {
     auto sp = audio::get_speaker(this->speaker);
     if (sp) sp->stop();
-    this->speaker = speaker;
-    sp = audio::get_speaker(speaker);
+    this->speaker = speakerID;
+    sp = audio::get_speaker(speakerID);
     if (sp) {
         auto alspeaker = dynamic_cast<ALSpeaker*>(sp);
         alspeaker->stream = this;

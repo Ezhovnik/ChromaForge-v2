@@ -86,7 +86,7 @@ void Events::bind(const std::string& name, inputType type, mousecode code) {
 }
 
 void Events::bind(const std::string& name, inputType type, int code) {
-	bindings.emplace(name, Binding(type, code));
+	bindings.try_emplace(name, Binding(type, code));
 }
 
 void Events::rebind(const std::string& name, inputType type, int code) {

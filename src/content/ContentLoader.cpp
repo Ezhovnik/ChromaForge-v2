@@ -77,7 +77,7 @@ bool ContentLoader::fixPackIndices(
             indexed.push_back(name);
         }
     }
-    for (auto name : detected) {
+    for (const auto &name : detected) {
         if (!util::contains(indexed, name)) {
             arr->put(name);
             modified = true;
@@ -161,9 +161,10 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         def.hitboxes.resize(boxarr->size());
         for (uint i = 0; i < boxarr->size(); ++i) {
             auto box = boxarr->list(i);
-            def.hitboxes[i].a = glm::vec3(box->num(0), box->num(1), box->num(2));
-            def.hitboxes[i].b = glm::vec3(box->num(3), box->num(4), box->num(5));
-            def.hitboxes[i].b += def.hitboxes[i].a;
+            auto& hitboxesIndex = def.hitboxes[i];
+            hitboxesIndex.a = glm::vec3(box->num(0), box->num(1), box->num(2));
+            hitboxesIndex.b = glm::vec3(box->num(3), box->num(4), box->num(5));
+            hitboxesIndex.b += hitboxesIndex.a;
         }
     } else if ((boxarr = root->list("hitbox"))) {
         AABB aabb;
@@ -231,11 +232,11 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
 
             if (boxarr->size() == 7) {
                 for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.push_back(boxarr->str(6));
+                    def.modelTextures.emplace_back(boxarr->str(6));
                 }
             } else if (boxarr->size() == 12) {
                 for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.push_back(boxarr->str(j));
+                    def.modelTextures.emplace_back(boxarr->str(j));
                 }
             } else {
                 for (uint j = 6; j < 12; ++j) {
@@ -257,7 +258,7 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
             def.modelExtraPoints.push_back(p1 + xw + yh);
             def.modelExtraPoints.push_back(p1 + yh);
 
-            def.modelTextures.push_back(tgonobj->str(9));
+            def.modelTextures.emplace_back(tgonobj->str(9));
         }
     }
 }
@@ -307,12 +308,12 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
             if (auto sensorarr = sensorsarr->list(i)) {
                 auto sensorType = sensorarr->str(0);
                 if (sensorType == "aabb") {
-                    def.boxSensors.push_back({i, {
+                    def.boxSensors.emplace_back(i, AABB{
                         {sensorarr->num(1), sensorarr->num(2), sensorarr->num(3)},
                         {sensorarr->num(4), sensorarr->num(5), sensorarr->num(6)}
-                    }});
+                    });
                 } else if (sensorType == "radius") {
-                    def.radialSensors.push_back({i, sensorarr->num(1)});
+                    def.radialSensors.emplace_back(i, sensorarr->num(1));
                 } else {
                     LOG_WARN("Entity {}: sensor #{} - unknown type {}", name, i, util::quote(sensorType));
                 }

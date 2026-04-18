@@ -22,8 +22,7 @@ Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), con
 	solverS = std::make_unique<LightSolver>(contentIds, chunks, 3);
 }
 
-Lighting::~Lighting(){
-}
+Lighting::~Lighting() = default;
 
 void Lighting::clear() {
     for (uint index = 0; index < chunks->volume; ++index) {

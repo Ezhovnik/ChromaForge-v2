@@ -54,7 +54,7 @@ void Entt_Entity::setRig(const rigging::SkeletonConfig* skeletonConfig) {
     skeleton.calculated.matrices.resize(skeletonConfig->getBones().size(), glm::mat4(1.0f));
 }
 
-Entities::Entities(Level* level) : level(level), sensorsSparkClock(20, 3) {
+Entities::Entities(Level* level) : level(level), sensorsSparkClock(20, 3), updateSparkClock(20, 3) {
 }
 
 template<void(*callback)(const Entt_Entity&, size_t, entityid_t)>
@@ -280,8 +280,14 @@ void Entities::onSave(const Entt_Entity& entity) {
     scripting::on_entity_save(entity);
 }
 
-void Entities::update() {
-    scripting::on_entities_update();
+void Entities::update(float delta) {
+    if (updateSparkClock.update(delta)) {
+        scripting::on_entities_update(
+            updateSparkClock.getSparkRate(),
+            updateSparkClock.getParts(),
+            updateSparkClock.getPart()
+        );
+    }
 }
 
 static void debug_render_skeleton(
@@ -302,7 +308,7 @@ static void debug_render_skeleton(
 }
 
 void Entities::renderDebug(
-    LineBatch& batch, const Frustum& frustum, const DrawContext& pctx
+    LineBatch& batch, const Frustum* frustum, const DrawContext& pctx
 ) {
     {
         auto ctx = pctx.sub(&batch);
@@ -312,7 +318,7 @@ void Entities::renderDebug(
             const auto& hitbox = rigidbody.hitbox;
             const auto& pos = transform.pos;
             const auto& size = transform.size;
-            if (!frustum.isBoxVisible(pos - size, pos + size)) continue;
+            if (frustum && !frustum->isBoxVisible(pos - size, pos + size)) continue;
             batch.box(
                 hitbox.position,
                 hitbox.halfsize * 2.0f,
@@ -340,7 +346,7 @@ void Entities::renderDebug(
             auto config = skeleton.config;
             const auto& pos = transform.pos;
             const auto& size = transform.size;
-            if (!frustum.isBoxVisible(pos - size, pos + size)) continue;
+            if (frustum and !frustum->isBoxVisible(pos - size, pos + size)) continue;
             auto bone = config->getRoot();
             debug_render_skeleton(batch, bone, skeleton);
         }
@@ -504,6 +510,11 @@ void Entities::clean() {
         if (!registry.get<EntityId>(it->second).destroyFlag) {
             ++it;
         } else {
+            auto& rigidbody = registry.get<Rigidbody>(it->second);
+            auto physics = level->physics.get();
+            for (auto& sensor : rigidbody.sensors) {
+                physics->removeSensor(&sensor);
+            }
             uids.erase(it->second);
             registry.destroy(it->second);
             it = entities.erase(it);
@@ -551,9 +562,9 @@ std::vector<Entt_Entity> Entities::getAllInRadius(glm::vec3 center, float radius
     return collected;
 }
 
-void Entities::render(Assets* assets, ModelBatch& batch, const Frustum& frustum, bool pause) {
+void Entities::render(Assets* assets, ModelBatch& batch, const Frustum* frustum, float deltaTime, bool pause) {
     if (!pause) {
-        scripting::on_entities_render();
+        scripting::on_entities_render(deltaTime);
     }
 
     auto view = registry.view<Transform, rigging::Skeleton>();
@@ -562,7 +573,7 @@ void Entities::render(Assets* assets, ModelBatch& batch, const Frustum& frustum,
 
         const auto& pos = transform.pos;
         const auto& size = transform.size;
-        if (frustum.isBoxVisible(pos - size, pos + size)) {
+        if (!frustum || frustum->isBoxVisible(pos - size, pos + size)) {
             const auto* skeletonConfig = skeleton.config;
             skeletonConfig->render(assets, batch, skeleton, transform.combined);
         }

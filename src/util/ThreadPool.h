@@ -27,8 +27,8 @@ namespace util {
     template<class T, class R>
     class Worker {
     public:
-        Worker() {}
-        virtual ~Worker() {}
+        Worker() = default;
+        virtual ~Worker() = default;
         virtual R operator()(const std::shared_ptr<T>&) = 0;
     };
 

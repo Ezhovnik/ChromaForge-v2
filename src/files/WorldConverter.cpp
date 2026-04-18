@@ -69,11 +69,12 @@ std::shared_ptr<Task> WorldConverter::startTask(
         [=](){return std::make_shared<ConverterWorker>(converter);},
         [=](int&) {}
     );
-    while (!converter->tasks.empty()) {
-        const ConvertTask& task = converter->tasks.front();
+    auto& converterTasks = converter->tasks;
+    while (!converterTasks.empty()) {
+        const ConvertTask& task = converterTasks.front();
         auto ptr = std::make_shared<ConvertTask>(task);
         pool->enqueueJob(ptr);
-        converter->tasks.pop();
+        converterTasks.pop();
     }
     pool->setOnComplete([=]() {
         converter->write();

@@ -172,6 +172,7 @@ private:
     std::unordered_map<entt::entity, entityid_t> uids;
     entityid_t nextID = 1;
     util::Clock sensorsSparkClock;
+    util::Clock updateSparkClock;
 
     void updateSensors(
         Rigidbody& body, const Transform& tsf, std::vector<Sensor*>& sensors
@@ -187,9 +188,9 @@ public:
     Entities(Level* level);
 
     void updatePhysics(float delta);
-    void update();
-    void render(Assets* assets, ModelBatch& batch, const Frustum& frustum, bool pause);
-    void renderDebug(LineBatch& batch, const Frustum& frustum, const DrawContext& ctx);
+    void update(float deltaTime);
+    void render(Assets* assets, ModelBatch& batch, const Frustum* frustum, float deltaTime, bool pause);
+    void renderDebug(LineBatch& batch, const Frustum* frustum, const DrawContext& ctx);
     void clean();
 
     entityid_t spawn(

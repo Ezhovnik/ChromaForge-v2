@@ -48,8 +48,7 @@ ImageData::ImageData(ImageFormat format, uint width, uint height, const ubyte* d
     std::memcpy(this->data.get(), data, width * height * pixsize);
 }
 
-ImageData::~ImageData() {
-}
+ImageData::~ImageData() = default;
 
 std::unique_ptr<ImageData> add_atlas_margins(ImageData* image, int grid_size) {
     assert(image->getFormat() == ImageFormat::rgba8888); // Поддерживается только RGBA

@@ -358,7 +358,12 @@ void Hud::showOverlay(UIDocument* doc, bool playerInventory) {
     add(HudElement(HudElementMode::InventoryBound, doc, secondUI, false));
 }
 
-void Hud::openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inventory> blockinv, bool playerInventory) {
+void Hud::openInventory(
+    glm::ivec3 block,
+    UIDocument* doc,
+    std::shared_ptr<Inventory> blockinv,
+    bool playerInventory
+) {
 	if (isInventoryOpen()) closeInventory();
 
     auto level = levelFrontend->getLevel();
@@ -466,9 +471,9 @@ void Hud::setPause(bool pause) {
 
 void Hud::add(const HudElement& element) {
     guiController->add(element.getNode());
-    auto invview = std::dynamic_pointer_cast<gui::InventoryView>(element.getNode());
     auto document = element.getDocument();
     if (document) {
+        auto invview = std::dynamic_pointer_cast<gui::InventoryView>(element.getNode());
         auto inventory = invview ? invview->getInventory() : nullptr;
         std::vector<dynamic::Value> args;
         args.emplace_back(inventory ? inventory.get()->getId() : 0);

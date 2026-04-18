@@ -84,8 +84,7 @@ WorldRenderer::WorldRenderer(
 	});
 }
 
-WorldRenderer::~WorldRenderer() {
-}
+WorldRenderer::~WorldRenderer() = default;
 
 // Отрисовывает один чанк
 bool WorldRenderer::drawChunk(
@@ -141,8 +140,8 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 		indices.emplace_back(i);
 	}
 
-	float px = camera->position.x / (float)CHUNK_WIDTH - 0.5f;
-    float pz = camera->position.z / (float)CHUNK_DEPTH - 0.5f;
+	float px = camera->position.x / static_cast<float>(CHUNK_WIDTH) - 0.5f;
+    float pz = camera->position.z / static_cast<float>(CHUNK_DEPTH) - 0.5f;
     std::sort(indices.begin(), indices.end(), [chunks, px, pz](auto i, auto j) {
         const auto a = chunks->chunks[i].get();
         const auto b = chunks->chunks[j].get();
@@ -203,10 +202,13 @@ void WorldRenderer::renderLevel(
     const DrawContext&,
     Camera* camera, 
     const EngineSettings& settings,
+    float deltaTime,
     bool pause
 ) {
     auto assets = engine->getAssets();
     auto atlas = assets->get<Atlas>("blocks");
+
+    bool culling = engine->getSettings().graphics.frustumCulling.get();
 
     float fogFactor = 15.0f / ((float)settings.chunks.loadDistance.get() - 2);
 
@@ -221,7 +223,9 @@ void WorldRenderer::renderLevel(
     auto entityShader = assets->get<ShaderProgram>("entity");
     setupWorldShader(entityShader, camera, settings, fogFactor);
 
-    level->entities->render(assets, *modelBatch, *frustumCulling, pause);
+    level->entities->render(
+        assets, *modelBatch, culling ? frustumCulling.get() : nullptr, deltaTime, pause
+    );
     if (!pause) {
         scripting::on_frontend_render();
     }
@@ -244,28 +248,34 @@ void WorldRenderer::renderBlockSelection() {
         : block->hitboxes;
 
     lineBatch->setLineWidth(2.0f);
+    constexpr auto boxOffset = glm::vec3(0.02);
+    constexpr auto boxColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
     for (auto& hitbox: hitboxes) {
         const glm::vec3 center = glm::vec3(pos) + hitbox.center();
         const glm::vec3 size = hitbox.size();
-        lineBatch->box(center, size + glm::vec3(0.02), glm::vec4(0.f, 0.f, 0.f, 0.5f));
+        lineBatch->box(center, size + boxOffset, boxColor);
         if (player->debug) {
             lineBatch->line(point, point + norm * 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
         }
     }
+    lineBatch->flush();
 }
 void WorldRenderer::renderLines(
     Camera* camera,
     ShaderProgram* linesShader,
     const DrawContext& pctx
 ) {
-    auto ctx = pctx.sub(lineBatch.get());
     linesShader->use();
     linesShader->uniformMatrix("u_projview", camera->getProjView());
     if (player->selection.vox.id != BLOCK_VOID && !player->isNoclip()) {
         renderBlockSelection();
     }
     if (player->debug && drawEntityHitboxes) {
-        level->entities->renderDebug(*lineBatch, *frustumCulling, ctx);
+        auto ctx = pctx.sub(lineBatch.get());
+        bool culling = engine->getSettings().graphics.frustumCulling.get();
+        level->entities->renderDebug(
+            *lineBatch, culling ? frustumCulling.get() : nullptr, ctx
+        );
     }
 }
 
@@ -345,7 +355,14 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 	lineBatch->flush();
 }
 
-void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisible, bool pause, float deltaTime, PostProcessing* postProcessing) {
+void WorldRenderer::draw(
+    const DrawContext& pctx,
+    Camera* camera,
+    bool hudVisible,
+    bool pause,
+    float deltaTime,
+    PostProcessing* postProcessing
+) {
     timer += deltaTime * !pause;
 
     auto world = level->getWorld();
@@ -367,7 +384,7 @@ void WorldRenderer::draw(const DrawContext& pctx, Camera* camera, bool hudVisibl
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
             ctx.setCullFace(true);
-            renderLevel(ctx, camera, settings, pause);
+            renderLevel(ctx, camera, settings, deltaTime, pause);
             if (hudVisible) {
                 renderLines(camera, linesShader, ctx);
             }

@@ -141,5 +141,4 @@ ContentPackRuntime::ContentPackRuntime(
 ) : info(std::move(info)), 
     env(std::move(env)) {}
 
-ContentPackRuntime::~ContentPackRuntime() {
-}
+ContentPackRuntime::~ContentPackRuntime() = default;

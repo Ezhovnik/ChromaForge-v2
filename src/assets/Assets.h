@@ -79,7 +79,7 @@ private:
      std::unordered_map<std::type_index, assets_map> assets;
      std::vector<asset_loader::setupfunc> setupFuncs;
 public:
-     Assets() {}
+     Assets() = default;
      Assets(const Assets&) = delete;
 	~Assets();
 

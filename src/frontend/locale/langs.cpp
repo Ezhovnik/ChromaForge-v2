@@ -127,7 +127,7 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
     load(resdir, fallback, packs, *lang.get());
     // Если запрошенная локаль отличается от fallback, загружаем и её (переопределяя некоторые строки)
     if (locale != fallback) load(resdir, locale, packs, *lang.get());
-    current.reset(lang.release());
+    current = std::move(lang);
 }
 
 void langs::setup(const std::filesystem::path& resdir, std::string locale, const std::vector<ContentPack>& packs) {

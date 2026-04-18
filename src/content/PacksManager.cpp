@@ -6,11 +6,10 @@
 #include "util/listutil.h"
 #include "debug/Logger.h"
 
-PacksManager::PacksManager() {
-}
+PacksManager::PacksManager() = default;
 
 void PacksManager::setSources(std::vector<std::filesystem::path> sources) {
-    this->sources = sources;
+    this->sources = std::move(sources);
 }
 
 void PacksManager::scan() {
@@ -20,7 +19,7 @@ void PacksManager::scan() {
     for (auto& folder : sources) {
         ContentPack::scanFolder(folder, packsList);
         for (auto& pack : packsList) {
-            packs.emplace(pack.id, pack);
+            packs.try_emplace(pack.id, pack);
         }
     }
 }

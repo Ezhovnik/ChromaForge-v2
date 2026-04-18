@@ -40,8 +40,7 @@ WorldFiles::WorldFiles(const std::filesystem::path& directory, const DebugSettin
     regions.doWriteLights = doWriteLights;
 }
 
-WorldFiles::~WorldFiles(){
-}
+WorldFiles::~WorldFiles() = default;
 
 void WorldFiles::createDirectories() {
     std::filesystem::create_directories(directory/std::filesystem::path("data"));

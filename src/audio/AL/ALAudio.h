@@ -66,7 +66,7 @@ namespace audio {
         ~ALStream();
 
         std::shared_ptr<PCMStream> getSource() const override;
-        void bindSpeaker(speakerid_t speaker) override;
+        void bindSpeaker(speakerid_t speakerID) override;
         std::unique_ptr<Speaker> createSpeaker(bool loop, int channel) override;
         speakerid_t getSpeaker() const override;
         void update(double delta) override;

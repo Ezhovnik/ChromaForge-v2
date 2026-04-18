@@ -77,7 +77,10 @@ public:
      */
 	template<class T, typename... Args>
      std::shared_ptr<T> spawnObject(Args&&... args) {
-          static_assert(std::is_base_of<Object, T>::value, "T must be a derived of Object class");
+          static_assert(
+               std::is_base_of<Object, T>::value,
+               "T must be a derived of Object class"
+          );
           std::shared_ptr<T> tObj = std::make_shared<T>(args...);
 
           std::shared_ptr<Object> obj = std::dynamic_pointer_cast<Object, T>(tObj);
@@ -89,7 +92,10 @@ public:
 
      template<class T>
      std::shared_ptr<T> getObject(uint64_t id) {
-          static_assert(std::is_base_of<Object, T>::value, "T must be a derived of Object class");
+          static_assert(
+               std::is_base_of<Object, T>::value,
+               "T must be a derived of Object class"
+          );
           if (id >= objects.size()) return nullptr;
           std::shared_ptr<T> object = std::dynamic_pointer_cast<T>(objects[id]);
           return object; 
