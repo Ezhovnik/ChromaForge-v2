@@ -1,0 +1,26 @@
+{
+    "langs": {
+        "en_US": {
+            "name": "English"
+        },
+        "ru_RU": {
+            "name": "Русский"
+        },
+        "be_BY": {
+            "name": "Беларуская"
+        },
+        "pl_PL": {
+            "name": "Polski"
+        },
+        "uk_UA": {
+            "name": "Українська"
+        },
+        "fi_FI": {
+            "name": "Suomi"
+        },
+        "de_DE": {
+            "name": "Deutsch"
+        }
+    },
+    "fallback": "en_US"
+}

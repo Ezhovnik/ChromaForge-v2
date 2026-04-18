@@ -1,0 +1,127 @@
+#include "LineBatch.h"
+
+#include <GL/glew.h>
+
+#include "Mesh.h"
+
+inline constexpr int LB_VERTEX_SIZE = 7;
+static const vattr attrs[] = {
+    {3}, {4}, {0}
+};
+
+// Конструктор
+LineBatch::LineBatch(size_t capacity) : capacity(capacity) {
+    buffer = std::make_unique<float[]>(capacity * LB_VERTEX_SIZE * 2);
+    mesh = std::make_unique<Mesh>(buffer.get(), 0, attrs);
+    index = 0;
+}
+
+// Деструктор
+LineBatch::~LineBatch() {
+}
+
+// Добавляет линию в буфер для отрисовки
+void LineBatch::line(float start_x, float start_y, float start_z, float end_x, float end_y, float end_z, float red, float green, float blue, float alpha) {
+    if (index + LB_VERTEX_SIZE * 2 >= capacity) render();
+
+    // Записываем данные начальной вершины
+    buffer[index++] = start_x;
+    buffer[index++] = start_y;
+    buffer[index++] = start_z;
+    buffer[index++] = red;
+    buffer[index++] = green;
+    buffer[index++] = blue;
+    buffer[index++] = alpha;
+
+    // Записываем данные конечной вершины
+    buffer[index++] = end_x;
+    buffer[index++] = end_y;
+    buffer[index++] = end_z;
+    buffer[index++] = red;
+    buffer[index++] = green;
+    buffer[index++] = blue;
+    buffer[index++] = alpha;
+}
+
+// Добавляет прямоугольный параллелепипед (бокс) в буфер для отрисовки
+void LineBatch::box(float x, float y, float z, float width, float height, float depth, float red, float green, float blue, float alpha) {
+    // Преобразуем полные размеры в половины размеров (радиусы)
+    width *= 0.5f;
+    height *= 0.5f;
+    depth *= 0.5f;
+
+    line(
+        x - width, y - height, z - depth, 
+        x + width, y - height, z - depth, 
+        red, green, blue, alpha
+    );
+	line(
+        x - width, y + height, z - depth, 
+        x + width, y + height, z - depth, 
+        red, green, blue, alpha
+    );
+	line(
+        x - width, y - height, z + depth, 
+        x + width, y - height, z + depth, 
+        red, green, blue, alpha
+    );
+	line(x - width, y + height, z + depth, 
+        x + width, y + height, z + depth, 
+        red, green, blue, alpha
+    );
+
+	line(
+        x - width, y - height, z - depth, 
+        x - width, y + height, z - depth, 
+        red, green, blue, alpha
+    );
+	line(
+        x + width, y - height, z - depth, 
+        x + width, y + height, z - depth, 
+        red, green, blue, alpha
+    );
+	line(
+        x - width, y - height, z + depth, 
+        x - width, y + height, z + depth, 
+        red, green, blue, alpha
+    );
+	line(
+        x + width, y - height, z + depth, 
+        x + width, y + height, z + depth, 
+        red, green, blue, alpha
+    );
+
+	line(
+        x - width, y - height, z - depth, 
+        x - width, y - height, z + depth, 
+        red, green, blue, alpha
+    );
+	line(
+        x + width, y - height, z - depth, 
+        x + width, y - height, z + depth, 
+        red, green, blue, alpha
+    );
+	line(
+        x - width, y + height, z - depth, 
+        x - width, y + height, z + depth, 
+        red, green, blue, alpha
+    );
+	line(
+        x + width, y + height, z - depth, 
+        x + width, y + height, z + depth, 
+        red, green, blue, alpha
+    );
+}
+
+// Выполняет отрисовку всех накопленных линий
+void LineBatch::render() {
+    if (index == 0) return;
+
+    mesh->reload(buffer.get(), index / LB_VERTEX_SIZE);
+    mesh->draw(GL_LINES);
+    index = 0;
+}
+
+void LineBatch::setLineWidth(float width) {
+    glLineWidth(width);
+}

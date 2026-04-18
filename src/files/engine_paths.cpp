@@ -1,0 +1,252 @@
+#include "engine_paths.h"
+
+#include <filesystem>
+#include <sstream>
+#include <algorithm>
+#include <stack>
+#include <utility>
+
+#include "typedefs.h"
+#include "WorldFiles.h"
+#include "core_content_defs.h"
+#include "debug/Logger.h"
+#include "util/stringutil.h"
+
+const std::filesystem::path SCREENSHOTS_FOLDER {"screenshots"};
+const std::filesystem::path LOGS_FOLDER {"logs"};
+const std::filesystem::path SAVES_FOLDER {"saves"};
+const std::filesystem::path CONTROLS_FILE {"controls.toml"};
+const std::filesystem::path SETTINGS_FILE {"settings.toml"};
+const std::filesystem::path CONTENT_FOLDER {"content"};
+
+static std::filesystem::path toCanonic(std::filesystem::path path) {
+    std::stack<std::string> parts;
+    path = path.lexically_normal();
+    while (true) {
+        parts.push(path.filename().u8string());
+        path = path.parent_path();
+        if (path.empty()) break;
+    }
+    path = std::filesystem::u8path("");
+    while (!parts.empty()) {
+        const std::string part = parts.top();
+        parts.pop();
+        if (part == ".") continue;
+        if (part == "..") {
+            LOG_ERROR("Entry point reached");
+            throw files_access_error("entry point reached");
+        }
+        path = path/std::filesystem::path(part);
+    }
+    return path;
+}
+
+void EnginePaths::prepare() {
+    std::filesystem::path contentFolder = this->getResources()/std::filesystem::path(CONTENT_FOLDER);
+    if (!std::filesystem::is_directory(contentFolder)) {
+        std::filesystem::create_directories(contentFolder);
+    }
+}
+
+std::filesystem::path EnginePaths::getUserfiles() const {
+	return userfiles;
+}
+
+std::filesystem::path EnginePaths::getResources() const {
+	return resources;
+}
+
+std::filesystem::path EnginePaths::getControlsFile() {
+    return userfiles/std::filesystem::path(CONTROLS_FILE);
+}
+
+std::filesystem::path EnginePaths::getSettingsFile() {
+    return userfiles/std::filesystem::path(SETTINGS_FILE);
+}
+
+std::filesystem::path EnginePaths::getScreenshotFile(const std::string& ext) {
+	std::filesystem::path folder = SCREENSHOTS_FOLDER;
+	if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
+
+	auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+
+	const char* format = "%Y-%m-%d_%H-%M-%S";
+	std::stringstream ss;
+	ss << std::put_time(&tm, format);
+	std::string datetimestr = ss.str();
+
+	std::filesystem::path filename = folder/std::filesystem::u8path("screenshot-" + datetimestr + "." + ext);
+	uint index = 0;
+	while (std::filesystem::exists(filename)) {
+		filename = folder/std::filesystem::u8path("screenshot-" + datetimestr + "-" + std::to_string(index) + "." + ext);
+		index++;
+	}
+	return filename;
+}
+
+std::filesystem::path EnginePaths::getWorldsFolder() {
+    std::filesystem::path folder = std::filesystem::path(SAVES_FOLDER);
+    if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
+    return folder;
+}
+
+std::filesystem::path EnginePaths::getLogsFile() {
+    std::filesystem::path folder = std::filesystem::path(LOGS_FOLDER);
+    if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
+    return folder/std::filesystem::u8path("ChromaForge.log");
+}
+
+std::filesystem::path EnginePaths::getWorldFolder() {
+    return worldFolder;
+}
+
+std::filesystem::path EnginePaths::getWorldFolder(const std::string& name) {
+    return getWorldsFolder()/std::filesystem::path(name);
+}
+
+bool EnginePaths::isWorldNameUsed(const std::string& name) {
+	return std::filesystem::exists(EnginePaths::getWorldsFolder()/std::filesystem::u8path(name));
+}
+
+void EnginePaths::setUserfiles(std::filesystem::path folder) {
+	this->userfiles = std::move(folder);
+}
+
+void EnginePaths::setResources(std::filesystem::path folder) {
+	this->resources = std::move(folder);
+}
+
+void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
+    this->contentPacks = contentPacks;
+}
+
+void EnginePaths::setWorldFolder(std::filesystem::path folder) {
+    this->worldFolder = std::move(folder);
+}
+
+std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwErr) {
+    size_t separator = path.find(':');
+    if (separator == std::string::npos) {
+        LOG_ERROR("No entry point specified");
+        throw files_access_error("No entry point specified");
+    }
+
+    std::string prefix = path.substr(0, separator);
+    std::string filename = path.substr(separator + 1);
+    filename = toCanonic(std::filesystem::u8path(filename)).u8string();
+
+    if (prefix == "res" || prefix == BUILTIN_CONTENT_NAMESPACE) return resources/std::filesystem::u8path(filename);
+    if (prefix == "user") return userfiles/std::filesystem::u8path(filename);
+    if (prefix == "world") return worldFolder/std::filesystem::u8path(filename);
+
+    if (contentPacks) {
+        for (auto& pack : *contentPacks) {
+            if (pack.id == prefix) return pack.folder/std::filesystem::u8path(filename);
+        }
+    }
+
+    LOG_ERROR("Unknown entry point '{}'", prefix);
+    if (throwErr) throw files_access_error("Unknown entry point '" + prefix + "'");
+    return std::filesystem::path(filename);
+}
+
+std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {
+    std::vector<std::filesystem::path> folders;
+
+    std::filesystem::path folder = getWorldsFolder();
+    if (!std::filesystem::is_directory(folder)) return folders;
+    
+    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+        if (!entry.is_directory()) continue;
+
+        const std::filesystem::path& worldFolder = entry.path();
+        std::filesystem::path worldFile = worldFolder/std::filesystem::u8path(WorldFiles::WORLD_FILE);
+        if (!std::filesystem::is_regular_file(worldFile)) continue;
+        folders.push_back(worldFolder);
+    }
+
+    std::sort(folders.begin(), folders.end(), [](std::filesystem::path a, std::filesystem::path b) {
+        a = a/std::filesystem::u8path(WorldFiles::WORLD_FILE);
+        b = b/std::filesystem::u8path(WorldFiles::WORLD_FILE);
+        return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
+    });
+
+    return folders;
+}
+
+ResPaths::ResPaths(
+    std::filesystem::path mainRoot, 
+    std::vector<PathsRoot> roots
+) : mainRoot(std::move(mainRoot)), roots(std::move(roots)) {}
+
+std::filesystem::path ResPaths::find(const std::string& filename) const {
+    for (int i = roots.size() - 1; i >= 0; --i) {
+        auto& root = roots[i];
+        std::filesystem::path file = root.path/std::filesystem::u8path(filename);
+        if (std::filesystem::exists(file)) return file;
+    }
+    return mainRoot/std::filesystem::path(filename);
+}
+
+std::string ResPaths::findRaw(const std::string& filename) const {
+    for (int i = roots.size() - 1; i >= 0; --i) {
+        auto& root = roots[i];
+        if (std::filesystem::exists(root.path/std::filesystem::path(filename))) {
+            return root.name + ":" + filename;
+        }
+    }
+    auto resDir = mainRoot;
+    if (std::filesystem::exists(resDir/std::filesystem::path(filename))) {
+        return BUILTIN_CONTENT_NAMESPACE + ":" + filename;
+    }
+    LOG_ERROR("Could not to find file '{}'", filename);
+    throw std::runtime_error("Could not to find file " + util::quote(filename));
+}
+
+std::vector<std::string> ResPaths::listdirRaw(const std::string& folderName) const {
+    std::vector<std::string> entries;
+    for (int i = roots.size() - 1; i >= 0; --i) {
+        auto& root = roots[i];
+        std::filesystem::path folder = root.path/std::filesystem::u8path(folderName);
+        if (!std::filesystem::is_directory(folder)) continue;
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            auto name = entry.path().filename().u8string();
+            entries.push_back(root.name + ":" + folderName + "/" + name);
+        }
+    }
+    {
+        std::filesystem::path folder = mainRoot/std::filesystem::u8path(folderName);
+        if (!std::filesystem::is_directory(folder)) return entries;
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            auto name = entry.path().filename().u8string();
+            entries.push_back("builtin:" + folderName + "/" + name);
+        }
+    }
+    return entries;
+}
+
+std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderName) const {
+    std::vector<std::filesystem::path> entries;
+    for (int i = roots.size() - 1; i >= 0; --i) {
+        auto& root = roots[i];
+        std::filesystem::path folder = root.path/std::filesystem::u8path(folderName);
+        if (!std::filesystem::is_directory(folder)) continue;
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            entries.push_back(entry.path());
+        }
+    }
+
+    {
+        std::filesystem::path folder = mainRoot/std::filesystem::u8path(folderName);
+        if (!std::filesystem::is_directory(folder)) return entries;
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            entries.push_back(entry.path());
+        }
+    }
+    return entries;
+}
+
+const std::filesystem::path& ResPaths::getMainRoot() const {
+    return mainRoot;
+}

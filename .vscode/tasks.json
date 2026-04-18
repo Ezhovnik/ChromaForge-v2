@@ -1,0 +1,40 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake: Configure",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-B", "${workspaceFolder}/build",
+                "-S", "${workspaceFolder}",
+                "-G", "MinGW Makefiles",
+                "-DCMAKE_CXX_COMPILER:FILEPATH=C:/msys64/mingw64/bin/g++.exe",
+                "-DCMAKE_PREFIX_PATH=C:/msys64/mingw64",
+                "-DCMAKE_BUILD_TYPE=Debug",
+                // "-DCMAKE_BUILD_TYPE=Release",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "group": "none"
+        },
+        {
+            "label": "CMake: Build",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "${workspaceFolder}/build",
+                "--target", "ChromaForge",
+                "-j", "8"
+            ],
+            "dependsOn": ["CMake: Configure"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"]
+        }
+    ]
+}

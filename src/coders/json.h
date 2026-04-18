@@ -1,0 +1,27 @@
+#ifndef CODERS_JSON_H_
+#define CODERS_JSON_H_
+
+#include <string>
+
+#include "typedefs.h"
+#include "binary_json.h"
+#include "data/dynamic.h"
+
+namespace json {
+    dynamic::Map_sptr parse(std::string_view filename, std::string_view source);
+    dynamic::Map_sptr parse(std::string_view source);
+
+    std::string stringify(
+        const dynamic::Map* obj,
+        bool nice,
+        const std::string& indent
+    );
+    std::string stringify(
+        const dynamic::Value& value,
+        bool nice,
+        const std::string& indent
+    );
+}
+
+
+#endif // CODERS_JSON_H_

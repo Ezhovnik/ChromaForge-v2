@@ -1,0 +1,7 @@
+{
+    "texture": "glass",
+    "draw-group": 2,
+    "light-passing": true,
+    "sky-light-passing": true,
+    "material": "chromaforge:glass"
+}

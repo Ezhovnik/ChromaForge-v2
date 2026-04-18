@@ -1,0 +1,26 @@
+#ifndef DELEGATES_H_
+#define DELEGATES_H_
+
+#include <functional>
+#include <string>
+
+#include <glm/glm.hpp>
+
+using runnable = std::function<void()>;
+template<class T> using supplier = std::function<T()>;
+template<class T> using consumer = std::function<void(T)>;
+
+using wstringsupplier = std::function<std::wstring()>;
+using doublesupplier = std::function<double()>;
+using boolsupplier = std::function<bool()>;
+using vec2supplier = std::function<glm::vec2()>;
+
+using stringconsumer = std::function<void(const std::string&)>;
+using wstringconsumer = std::function<void(const std::wstring&)>;
+using doubleconsumer = std::function<void(double)>;
+using boolconsumer = std::function<void(bool)>;
+using int_array_consumer = std::function<void(const int[], size_t)>;
+
+using wstringchecker = std::function<bool(const std::wstring&)>;
+
+#endif // DELEGATES_H_
