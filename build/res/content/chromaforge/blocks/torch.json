@@ -1,0 +1,19 @@
+{
+    "texture-faces": [
+        "torch_side",
+        "torch_side",
+        "torch_bottom",
+        "torch_top",
+        "torch_side",
+        "torch_side"
+    ],
+    "emission": [13, 13, 12],
+    "model": "aabb",
+    "hitbox": [0.4375, 0.0, 0.4375, 0.125, 0.6875, 0.125],
+    "light-passing": true,
+    "obstacle": false,
+    "rotation": "pipe",
+    "grounded": true,
+    "shadeless": true,
+    "material": "chromaforge:wood"
+}

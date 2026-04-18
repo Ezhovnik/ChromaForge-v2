@@ -1,0 +1,6 @@
+{
+    "texture": "red_neon",
+    "emission": [15, 0, 0],
+    "material": "chromaforge:glass",
+    "shadeless": true
+}
