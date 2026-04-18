@@ -21,7 +21,7 @@ static int l_pack_get_folder(lua::State* L) {
     }
     for (auto& pack : scripting::engine->getContentPacks()) {
         if (pack.id == packName) {
-            return lua::pushstring(L, pack.folder.u8string()+"/");
+            return lua::pushstring(L, pack.folder.u8string() + "/");
         }
     }
     return lua::pushstring(L, "");

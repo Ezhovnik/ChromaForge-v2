@@ -64,7 +64,7 @@ namespace scripting {
     bool on_block_interact(Player* player, const Block* block, glm::ivec3 pos);
 
     bool on_item_use(Player* player, const Item* item);
-    bool on_item_use_on_block(Player* player, const Item* item, int x, int y, int z);
+    bool on_item_use_on_block(Player* player, const Item* item, glm::ivec3 ipos, glm::ivec3 normal);
     bool on_item_break_block(Player* player, const Item* item, int x, int y, int z);
 
     dynamic::Value get_component_value(const scriptenv& env, const std::string& name);

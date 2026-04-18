@@ -52,7 +52,7 @@
 #include "content/ContentBuilder.h"
 #include "objects/rigging.h"
 
-inline void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
+static void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
 
     engine->keepAlive(setting.observe([=](auto value) {
@@ -70,6 +70,11 @@ static std::unique_ptr<ImageData> load_icon(const std::filesystem::path& resdir)
         LOG_ERROR("Could not load window icon: {}", err.what());
     }
     return nullptr;
+}
+
+static void add_default_world_generators() {
+	WorldGenerators::addGenerator<DefaultWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":default");
+	WorldGenerators::addGenerator<FlatWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":flat");
 }
 
 // Реализация конструктора
@@ -116,7 +121,7 @@ Engine::Engine(
         setLanguage(lang);
     }, true));
 
-    addDefaultWorldGenerators();
+    add_default_world_generators();
 
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);
@@ -400,11 +405,6 @@ double Engine::getDeltaTime() const {
 void Engine::setLanguage(std::string locale) {
 	langs::setup(paths->getResources(), std::move(locale), contentPacks);
 	gui->getMenu()->setPageLoader(menus::create_page_loader(this));
-}
-
-void Engine::addDefaultWorldGenerators() {
-	WorldGenerators::addGenerator<DefaultWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":default");
-	WorldGenerators::addGenerator<FlatWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":flat");
 }
 
 void Engine::postRunnable(const runnable& callback) {

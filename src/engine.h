@@ -73,7 +73,6 @@ private:
 
     void processPostRunnables();
 
-    void addDefaultWorldGenerators();
     void loadAssets();
     void loadControls();
     void loadSettings();
