@@ -46,6 +46,7 @@ namespace lua {
         }
     }
 
+    [[nodiscard]]
     inline uint check_argc(lua::State* L, int a, int b) {
         int argc = lua::gettop(L);
         if (argc == a || argc == b) {

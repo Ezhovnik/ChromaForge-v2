@@ -27,7 +27,7 @@ function on_history_up()
 end
 
 function on_history_down()
-    if history_pointer == #history-1 then
+    if history_pointer == #history - 1 then
         return
     end
     history_pointer = history_pointer + 1
@@ -44,8 +44,8 @@ function submit(text)
     add_to_history(text)
     setup_variables()
     document.log.caret = -1
-    local status, result = pcall(function() return console.execute(text) end)
-    if result ~= nil then
+    local status, result = pcall(console.execute, text)
+    if result then
         console.log(result)
     end
     document.prompt.text = ""

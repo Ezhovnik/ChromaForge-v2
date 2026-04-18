@@ -402,7 +402,7 @@ void Entities::updatePhysics(float delta) {
     auto view = registry.view<EntityId, Transform, Rigidbody>();
     auto physics = level->physics.get();
     for (auto [entity, eid, transform, rigidbody] : view.each()) {
-        if (!rigidbody.enabled) continue;
+        if (!rigidbody.enabled || rigidbody.hitbox.type == BodyType::Static) continue;
         auto& hitbox = rigidbody.hitbox;
         auto prevVel = hitbox.velocity;
         bool grounded = hitbox.grounded;

@@ -266,7 +266,7 @@ void Hud::update(bool hudVisible) {
     contentAccessPanel->setVisible(inventoryView != nullptr);
     contentAccessPanel->setSize(glm::vec2(invSize.x, Window::height));
     contentAccess->setMinSize(glm::vec2(1, Window::height));
-	hotbarView->setVisible(hudVisible);
+	hotbarView->setVisible(hudVisible && !(secondUI && !inventoryView));
 
 	if (hudVisible) {
         for (auto& element : elements) {
@@ -330,10 +330,12 @@ void Hud::updateElementsPosition(const Viewport& viewport) {
                     height / 2 + totalHeight / 2 - invSize.y
                 ));
             }
-            secondUI->setPos(glm::vec2(
-                glm::min(width / 2 - invwidth / 2, width - caWidth - (inventoryView ? 10 : 0) - invwidth),
-                height / 2 - totalHeight / 2
-            ));
+            if (secondUI->getPositionFunc() == nullptr) {
+                secondUI->setPos(glm::vec2(
+                    glm::min(width / 2 - invwidth / 2, width - caWidth - (inventoryView ? 10 : 0) - invwidth),
+                    height / 2 - totalHeight / 2
+                ));
+            }
         }
 	}
 

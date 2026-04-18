@@ -426,6 +426,7 @@ void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool
 }
 
 void PlayerController::updateInteraction() {
+    if (player->isNoclip()) return;
     auto indices = level->content->getIndices();
     auto chunks = level->chunks.get();
     const auto& selection = player->selection;
@@ -452,7 +453,7 @@ void PlayerController::updateInteraction() {
         }
     }
     auto target = indices->blocks.get(vox->id);
-    if (input.attack && target->breakable){
+    if (input.attack && target->breakable) {
         blocksController->breakBlock(
             player.get(),
             target,
@@ -468,9 +469,7 @@ void PlayerController::updateInteraction() {
         } else if (item->rt.funcsset.on_use) {
             preventDefault = scripting::on_item_use(player.get(), item);
         }
-        if (preventDefault) {
-            return;
-        }
+        if (preventDefault) return;
     }
     auto def = indices->blocks.get(item->rt.placingBlock);
     if (def && input.build) {

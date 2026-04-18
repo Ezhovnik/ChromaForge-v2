@@ -253,7 +253,6 @@ void WorldRenderer::renderBlockSelection() {
         }
     }
 }
-
 void WorldRenderer::renderLines(
     Camera* camera,
     ShaderProgram* linesShader,
@@ -262,7 +261,7 @@ void WorldRenderer::renderLines(
     auto ctx = pctx.sub(lineBatch.get());
     linesShader->use();
     linesShader->uniformMatrix("u_projview", camera->getProjView());
-    if (player->selection.vox.id != BLOCK_VOID) {
+    if (player->selection.vox.id != BLOCK_VOID && !player->isNoclip()) {
         renderBlockSelection();
     }
     if (player->debug && drawEntityHitboxes) {

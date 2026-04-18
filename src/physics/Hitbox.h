@@ -42,6 +42,7 @@ struct Sensor {
 };
 
 enum class BodyType {
+    Static,
     Kinematic,
     Dynamic
 };

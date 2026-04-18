@@ -37,7 +37,7 @@ LevelScreen::LevelScreen(
     menu->reset();
 
     controller = std::make_unique<LevelController>(settings, std::move(level));
-    frontend = std::make_unique<LevelFrontend>(controller.get(), assets);
+    frontend = std::make_unique<LevelFrontend>(controller->getPlayer(), controller.get(), assets);
 
     worldRenderer = std::make_unique<WorldRenderer>(engine, frontend.get(), controller->getPlayer());
     hud = std::make_unique<Hud>(engine, frontend.get(), controller->getPlayer());
@@ -118,7 +118,7 @@ void LevelScreen::update(float deltaTime) {
     if (!gui->isFocusCaught()) updateHotkeys();
 
     auto player = controller->getPlayer();
-    auto camera = player->camera;
+    auto camera = player->currentCamera;
 
     bool paused = hud->isPause();
     audio::get_channel("regular")->setPaused(paused);
@@ -128,7 +128,7 @@ void LevelScreen::update(float deltaTime) {
         velocity = hitbox->velocity;
     }
     audio::set_listener(
-        camera->position-camera->dir, 
+        camera->position, 
         velocity,
         camera->dir, 
         glm::vec3(0, 1, 0)
@@ -161,6 +161,9 @@ void LevelScreen::draw(float deltaTime) {
 }
 
 void LevelScreen::onEngineShutdown() {
+    if (hud->isInventoryOpen()) {
+        hud->closeInventory();
+    }
     controller->saveWorld();
 }
 

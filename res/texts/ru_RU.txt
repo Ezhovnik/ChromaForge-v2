@@ -11,6 +11,7 @@ Version=Версия
 Creator=Автор
 Dependencies=Зависимости
 Description=Описание
+Unlimited=Неограниченно
 
 error.pack-not-found=Не удалось найти пакет
 error.dependency-not-found=Используемая зависимость не найдена

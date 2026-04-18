@@ -155,35 +155,37 @@ static int l_decompose(lua::State* L) {
     glm::vec3 translation;
     glm::vec3 skew;
     glm::vec4 perspective;
-    glm::decompose(
+    if (glm::decompose(
         matrix,
         scale,
         rotation,
         translation,
         skew,
         perspective
-    );
+    )) {
+        lua::createtable(L, 0, 6);
+        
+        lua::pushvec3(L, scale);
+        lua::setfield(L, "scale");
 
-    lua::createtable(L, 0, 6);
+        lua::pushmat4(L, glm::toMat4(rotation));
+        lua::setfield(L, "rotation");
 
-    lua::pushvec3(L, scale);
-    lua::setfield(L, "scale");
+        lua::pushquat(L, rotation);
+        lua::setfield(L, "quaternion");
 
-    lua::pushmat4(L, glm::toMat4(rotation));
-    lua::setfield(L, "rotation");
+        lua::pushvec3(L, translation);
+        lua::setfield(L, "translation");
 
-    lua::pushquat(L, rotation);
-    lua::setfield(L, "quaternion");
+        lua::pushvec3(L, skew);
+        lua::setfield(L, "skew");
 
-    lua::pushvec3(L, translation);
-    lua::setfield(L, "translation");
+        lua::pushvec4(L, perspective);
+        lua::setfield(L, "perspective");
 
-    lua::pushvec3(L, skew);
-    lua::setfield(L, "skew");
-
-    lua::pushvec4(L, perspective);
-    lua::setfield(L, "perspective");
-    return 1;
+        return 1;
+    }
+    return 0;
 }
 
 static int l_from_quat(lua::State* L) {

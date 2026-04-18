@@ -10,8 +10,10 @@
 #include "logic/PlayerController.h"
 #include "voxels/Block.h"
 #include "audio/audio.h"
+#include "objects/Player.h"
 
 LevelFrontend::LevelFrontend(
+    Player* currentPlayer,
     LevelController* controller, 
     Assets* assets
 ) : controller(controller),
@@ -25,16 +27,25 @@ LevelFrontend::LevelFrontend(
     );
 
     controller->getBlocksController()->listenBlockInteraction(
-        [=](Player*, glm::ivec3 pos, const Block* def, BlockInteraction type) {
+        [=](Player* player, glm::ivec3 pos, const Block* def, BlockInteraction type) {
             auto material = level->content->findBlockMaterial(def->material);
             if (material == nullptr) return;
 
             if (type == BlockInteraction::Step) {
                 auto sound = assets->get<audio::Sound>(material->stepsSound);
+                glm::vec3 pos {};
+                auto soundsCamera = currentPlayer->currentCamera.get();
+                if (soundsCamera == currentPlayer->spCamera.get() || soundsCamera == currentPlayer->tpCamera.get()) {
+                    soundsCamera = currentPlayer->camera.get();
+                }
+                bool relative = player == currentPlayer && soundsCamera == currentPlayer->camera.get();
+                if (!relative) {
+                    pos = player->getPosition();
+                }
                 audio::play(
                     sound, 
-                    glm::vec3(), 
-                    true, 
+                    pos, 
+                    relative, 
                     0.333f, 
                     1.0f + (rand() % 6 - 3) * 0.05f, 
                     false,
@@ -50,7 +61,7 @@ LevelFrontend::LevelFrontend(
                     case BlockInteraction::Destruction:
                         sound = assets->get<audio::Sound>(material->breakSound);
                         break; 
-                    case BlockInteraction::Step:
+                    default:
                         break;   
                 }
                 audio::play(
