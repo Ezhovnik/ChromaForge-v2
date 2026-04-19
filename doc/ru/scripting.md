@@ -8,7 +8,7 @@
 - [Пользовательский ввод](scripting/user-input.md)
 - [Файловая система и сериализация](scripting/filesystem.md)
 - [Свойства и методы UI элементов](scripting/ui.md)
-- [Сущности и компоненты](scripting/ecs.md)
+- [Сущности и компоненты](scripting/entities-and-components.md)
 - Библиотеки
   - [block](scripting/builtins/libblock.md)
   - [entities](scripting/builtins/libentities.md)
@@ -280,7 +280,7 @@ inventory.move(invA: int, slotA: int, invB: int, slotB: int)
 invA и invB могут указывать на один инвентарь.
 slotB будет выбран автоматически, если не указывать явно.
 
-## Библиотека item
+## Библиотека *item*
 
 ```lua
 item.name(itemid: int) -> str
@@ -312,7 +312,7 @@ item.icon(itemid: int) -> str
 
 Возвращает имя иконки предмета для использования в свойстве 'src' элемента image
 
-## Библиотека hud
+## Библиотека *hud*
 
 ```lua
 hud.open_inventory()
@@ -391,7 +391,7 @@ hud.is_inventory_open() -> bool
 
 Возвращает true если открыт инвентарь или оверлей.
 
-## Библиотека time
+## Библиотека *time*
 
 ```lua
 time.uptime() -> float
