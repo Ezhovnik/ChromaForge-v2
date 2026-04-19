@@ -148,6 +148,7 @@ bool Window::initialize(DisplaySettings* settings) {
     glfwWindowHint(GLFW_SAMPLES, settings->samples.get());
 
     std::string title = "ChromaForge (v " + ENGINE_VERSION_STRING + ")";
+    if (ENGINE_DEBUG_BUILD) title += " [development build]";
 
     // Создание окна GLFW
     window = glfwCreateWindow(
