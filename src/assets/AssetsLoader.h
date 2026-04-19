@@ -10,8 +10,8 @@
 
 #include "Assets.h"
 #include "interfaces/Task.h"
-#include "delegates.h"
-#include "typedefs.h"
+#include <delegates.h>
+#include <typedefs.h>
 
 class ResPaths;
 class Content;

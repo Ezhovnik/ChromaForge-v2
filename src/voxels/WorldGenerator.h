@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 struct voxel;
 class PseudoRandom;

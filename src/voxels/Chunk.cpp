@@ -7,7 +7,7 @@
 #include <glm/gtc/noise.hpp>
 
 #include "items/Inventory.h"
-#include "voxel.h"
+#include <voxels/voxel.h>
 #include "lighting/LightMap.h"
 #include "content/ContentLUT.h"
 

@@ -7,15 +7,15 @@
 
 #include "graphics/core/ShaderProgram.h"
 #include "graphics/core/Mesh.h"
-#include "window/Window.h"
-#include "constants.h"
+#include <window/Window.h>
+#include <constants.h>
 #include "assets/Assets.h"
 #include "graphics/core/Batch3D.h"
-#include "window/Camera.h"
+#include <window/Camera.h>
 #include "graphics/core/Texture.h"
 #include "graphics/core/Cubemap.h"
 #include "graphics/core/Framebuffer.h"
-#include "math/UVRegion.h"
+#include <math/UVRegion.h>
 
 namespace SkyboxConsts {
     inline constexpr int STARS_COUNT = 3000;

@@ -3,17 +3,17 @@
 #include <glm/glm.hpp>
 
 #include "graphics/core/Mesh.h"
-#include "math/UVRegion.h"
-#include "constants.h"
+#include <math/UVRegion.h>
+#include <constants.h>
 #include "content/Content.h"
-#include "voxels/Block.h"
-#include "voxels/Chunk.h"
-#include "voxels/VoxelsVolume.h"
-#include "voxels/ChunksStorage.h"
+#include <voxels/Block.h>
+#include <voxels/Chunk.h>
+#include <voxels/VoxelsVolume.h>
+#include <voxels/ChunksStorage.h>
 #include "lighting/Lightmap.h"
 #include "frontend/ContentGfxCache.h"
-#include "settings.h"
-#include "math/UVRegion.h"
+#include <settings.h>
+#include <math/UVRegion.h>
 
 // Размер вершины в количестве float-ов
 inline constexpr int BR_VERTEX_SIZE = 6; 

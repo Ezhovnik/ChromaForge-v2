@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "typedefs.h"
-#include "WorldGenerator.h"
+#include <typedefs.h>
+#include <voxels/WorldGenerator.h>
 
 struct voxel;
 class Content;

@@ -3,19 +3,19 @@
 #include <cstdlib>
 #include <string>
 
-#include "engine.h"
-#include "settings.h"
+#include <engine.h>
+#include <settings.h>
 #include "files/files.h"
 #include "util/platform.h"
 #include "coders/toml.h"
-#include "input_bindings.h"
-#include "core_content_defs.h"
-#include "debug/Logger.h"
+#include <input_bindings.h>
+#include <core_content_defs.h>
+#include <debug/Logger.h>
 #include "util/command_line.h"
 #include "files/settings_io.h"
 #include "files/engine_paths.h"
-#include "constants.h"
-#include "window/Events.h"
+#include <constants.h>
+#include <window/Events.h>
 
 // Точка входа в программу
 int main(int argc, char** argv) {

@@ -7,7 +7,7 @@
 #include "content/ContentPack.h"
 #include "files/files.h"
 #include "util/stringutil.h"
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 
 using namespace std::literals;
 

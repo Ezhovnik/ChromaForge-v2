@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include "items/Item.h"
-#include "voxels/Block.h"
+#include <voxels/Block.h>
 #include "objects/Entity.h"
 #include "content/Content.h"
 #include "content/ContentPack.h"

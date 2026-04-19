@@ -6,10 +6,10 @@
 #include <stack>
 #include <utility>
 
-#include "typedefs.h"
+#include <typedefs.h>
 #include "WorldFiles.h"
-#include "core_content_defs.h"
-#include "debug/Logger.h"
+#include <core_content_defs.h>
+#include <debug/Logger.h>
 #include "util/stringutil.h"
 
 const std::filesystem::path SCREENSHOTS_FOLDER {"screenshots"};

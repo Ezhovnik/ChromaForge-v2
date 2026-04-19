@@ -4,9 +4,9 @@
 #include <string>
 #include <glm/glm.hpp>
 
-#include "math/UVRegion.h"
-#include "typedefs.h"
-#include "core_content_defs.h"
+#include <math/UVRegion.h>
+#include <typedefs.h>
+#include <core_content_defs.h>
 
 struct item_funcs_set {
 	bool init: 1;

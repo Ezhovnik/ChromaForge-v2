@@ -5,9 +5,9 @@
 #include <utility>
 
 #include "WorldFiles.h"
-#include "voxels/Chunk.h"
+#include <voxels/Chunk.h>
 #include "content/ContentLUT.h"
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 #include "data/dynamic.h"
 #include "files/files.h"
 #include "objects/Player.h"

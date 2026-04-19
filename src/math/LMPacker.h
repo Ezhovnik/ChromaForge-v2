@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <vector>
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 struct rectangle {
     uint idx;

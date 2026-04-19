@@ -7,7 +7,7 @@
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "typedefs.h"
+#include <typedefs.h>
 #include "Hitbox.h"
 
 class Chunks;

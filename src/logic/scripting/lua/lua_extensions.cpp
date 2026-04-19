@@ -1,5 +1,5 @@
 #include "api_lua.h"
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 
 static int l_debug_critical(lua::State* L) {
     auto text = lua::require_string(L, 1);

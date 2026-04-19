@@ -2,7 +2,7 @@
 
 #include "lua/lua_engine.h"
 #include "util/stringutil.h"
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 #include "coders/json.h"
 
 using namespace scripting;

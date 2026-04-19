@@ -1,10 +1,10 @@
 #include "LightSolver.h"
 
 #include "LightMap.h"
-#include "voxels/Chunks.h"
-#include "voxels/Chunk.h"
-#include "voxels/voxel.h"
-#include "voxels/Block.h"
+#include <voxels/Chunks.h>
+#include <voxels/Chunk.h>
+#include <voxels/voxel.h>
+#include <voxels/Block.h>
 #include "content/Content.h"
 
 namespace LightSolverConsts {

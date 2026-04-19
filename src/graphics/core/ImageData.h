@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 enum class ImageFormat {
     rgb888,

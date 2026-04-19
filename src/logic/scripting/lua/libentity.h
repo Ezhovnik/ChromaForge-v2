@@ -6,7 +6,7 @@
 #include "api_lua.h"
 #include "logic/LevelController.h"
 #include "frontend/hud.h"
-#include "world/Level.h"
+#include <world/Level.h>
 #include "objects/Entities.h"
 
 namespace scripting {

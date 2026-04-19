@@ -5,7 +5,7 @@
 #include "libentity.h"
 #include "objects/Player.h"
 #include "physics/Hitbox.h"
-#include "window/Camera.h"
+#include <window/Camera.h>
 #include "items/Inventory.h"
 
 inline std::shared_ptr<Player> get_player(lua::State* L, int idx) {

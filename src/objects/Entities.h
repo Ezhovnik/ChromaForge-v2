@@ -11,7 +11,7 @@
 #include <glm/gtx/norm.hpp>
 #include <entt/entity/registry.hpp>
 
-#include "typedefs.h"
+#include <typedefs.h>
 #include "physics/Hitbox.h"
 #include "data/dynamic.h"
 #include "util/Clock.h"

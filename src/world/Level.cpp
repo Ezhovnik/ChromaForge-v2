@@ -1,20 +1,20 @@
 #include "Level.h"
 
 #include "lighting/Lighting.h"
-#include "voxels/Chunks.h"
-#include "voxels/ChunksStorage.h"
-#include "voxels/Chunk.h"
+#include <voxels/Chunks.h>
+#include <voxels/ChunksStorage.h>
+#include <voxels/Chunk.h>
 #include "physics/PhysicsSolver.h"
 #include "physics/Hitbox.h"
 #include "objects/Player.h"
-#include "World.h"
-#include "LevelEvents.h"
+#include <world/World.h>
+#include <world/LevelEvents.h>
 #include "content/Content.h"
 #include "items/Inventories.h"
 #include "interfaces/Object.h"
-#include "settings.h"
+#include <settings.h>
 #include "objects/Entities.h"
-#include "window/Camera.h"
+#include <window/Camera.h>
 #include "data/dynamic_util.h"
 
 inline constexpr float GRAVITY = -22.6f;

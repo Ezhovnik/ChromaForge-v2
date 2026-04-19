@@ -12,8 +12,8 @@
 
 #include "graphics/core/ImageData.h"
 #include "graphics/core/GLTexture.h"
-#include "debug/Logger.h"
-#include "typedefs.h"
+#include <debug/Logger.h>
+#include <typedefs.h>
 
 std::unique_ptr<ImageData> _loadImage(const std::string& filename, bool flipVertically) {
     int channels = 0, width = 0, height = 0;

@@ -4,11 +4,11 @@
 #include "graphics/ui/elements/layout/Menu.h"
 #include "graphics/core/Batch2D.h"
 #include "graphics/core/ShaderProgram.h"
-#include "window/Window.h"
-#include "window/Camera.h"
-#include "engine.h"
+#include <window/Window.h>
+#include <window/Camera.h>
+#include <engine.h>
 #include "graphics/core/Texture.h"
-#include "math/UVRegion.h"
+#include <math/UVRegion.h>
 
 MenuScreen::MenuScreen(Engine* engine) : Screen(engine) {
     engine->resetContent();

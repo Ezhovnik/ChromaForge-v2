@@ -10,8 +10,8 @@
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "math/AABB.h"
-#include "typedefs.h"
+#include <math/AABB.h>
+#include <typedefs.h>
 
 enum class SensorType {
     AABB,

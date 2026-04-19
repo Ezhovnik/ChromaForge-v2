@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 #include "data/dynamic.h"
-#include "typedefs.h"
+#include <typedefs.h>
 
 inline int detect_base(char c) {
     switch (c) {

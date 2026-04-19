@@ -1,8 +1,8 @@
 #ifndef VOXELS_FLATWORLDGENERATOR_H_
 #define VOXELS_FLATWORLDGENERATOR_H_
 
-#include "typedefs.h"
-#include "voxels/WorldGenerator.h"
+#include <typedefs.h>
+#include <voxels/WorldGenerator.h>
 
 struct voxel;
 class Content;

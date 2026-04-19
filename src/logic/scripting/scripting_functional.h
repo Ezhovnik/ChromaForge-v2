@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "delegates.h"
-#include "typedefs.h"
+#include <delegates.h>
+#include <typedefs.h>
 #include "data/dynamic.h"
 
 namespace scripting {

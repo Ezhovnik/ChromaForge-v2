@@ -5,8 +5,8 @@
 
 #include <glm/glm.hpp>
 
-#include "debug/Logger.h"
-#include "voxels/Block.h"
+#include <debug/Logger.h>
+#include <voxels/Block.h>
 #include "items/Item.h"
 #include "objects/Entity.h"
 #include "ContentPack.h"

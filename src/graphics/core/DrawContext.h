@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_CORE_GFX_CONTEXT_H_
 #define GRAPHICS_CORE_GFX_CONTEXT_H_
 
-#include "typedefs.h"
+#include <typedefs.h>
 #include "Viewport.h"
 #include "commons.h"
 

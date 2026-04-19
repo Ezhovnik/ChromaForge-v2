@@ -6,11 +6,11 @@
 
 #include <glm/glm.hpp>
 
-#include "voxels/voxel.h"
+#include <voxels/voxel.h>
 #include "data/dynamic.h"
 #include "interfaces/Serializable.h"
 #include "interfaces/Object.h"
-#include "constants.h"
+#include <constants.h>
 
 class Camera;
 struct Hitbox;

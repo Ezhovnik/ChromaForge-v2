@@ -2,17 +2,17 @@
 #include <memory>
 
 #include "api_lua.h"
-#include "engine.h"
+#include <engine.h>
 #include "files/engine_paths.h"
 #include "frontend/menu.h"
-#include "window/Window.h"
+#include <window/Window.h>
 #include "frontend/screens/MenuScreen.h"
 #include "logic/LevelController.h"
-#include "window/Events.h"
-#include "world/WorldGenerators.h"
+#include <window/Events.h>
+#include <world/WorldGenerators.h>
 #include "logic/EngineController.h"
 #include "files/settings_io.h"
-#include "world/Level.h"
+#include <world/Level.h>
 #include "data/setting.h"
 
 static int l_open_world(lua::State* L) {

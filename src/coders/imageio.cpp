@@ -6,7 +6,7 @@
 
 #include "png.h"
 #include "graphics/core/ImageData.h"
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 
 using image_reader = std::function<std::unique_ptr<ImageData>(const std::string&, bool)>;
 using image_writer = std::function<void(const std::string&, const ImageData*)>;

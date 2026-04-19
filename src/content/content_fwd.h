@@ -1,7 +1,7 @@
 #ifndef CONTENT_CONTENT_FWD_H_
 #define CONTENT_CONTENT_FWD_H_
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 class Content;
 class ContentPackRuntime;

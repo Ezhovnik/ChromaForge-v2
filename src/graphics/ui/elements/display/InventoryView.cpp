@@ -6,8 +6,8 @@
 
 #include "graphics/render/BlocksPreview.h"
 #include "frontend/LevelFrontend.h"
-#include "window/Events.h"
-#include "window/input.h"
+#include <window/Events.h>
+#include <window/input.h>
 #include "assets/Assets.h"
 #include "graphics/core/Atlas.h"
 #include "graphics/core/ShaderProgram.h"
@@ -17,12 +17,12 @@
 #include "content/Content.h"
 #include "items/Item.h"
 #include "items/Inventory.h"
-#include "math/voxmaths.h"
+#include <math/voxmaths.h>
 #include "objects/Player.h"
-#include "voxels/Block.h"
+#include <voxels/Block.h>
 #include "util/stringutil.h"
-#include "world/Level.h"
-#include "debug/Logger.h"
+#include <world/Level.h>
+#include <debug/Logger.h>
 #include "logic/scripting/scripting.h"
 #include "items/Inventories.h"
 #include "graphics/ui/GUI.h"

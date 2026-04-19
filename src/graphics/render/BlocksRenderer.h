@@ -7,8 +7,8 @@
 
 #include <glm/glm.hpp>
 
-#include "voxels/voxel.h"
-#include "typedefs.h"
+#include <voxels/voxel.h>
+#include <typedefs.h>
 
 class Content;
 class Mesh;

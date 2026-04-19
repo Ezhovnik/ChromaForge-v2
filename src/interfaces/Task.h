@@ -1,7 +1,7 @@
 #ifndef INTERFACES_TASK_H_
 #define INTERFACES_TASK_H_
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 class Task {
 public:

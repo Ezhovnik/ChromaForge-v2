@@ -1,7 +1,7 @@
 #ifndef UTIL_DATA_IO_H_
 #define UTIL_DATA_IO_H_
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 /**
  * @brief Функции для чтения и записи целых чисел в формате big-endian (сетевой порядок байт).

@@ -1,9 +1,9 @@
 #include "api_lua.h"
-#include "world/Level.h"
-#include "voxels/Chunks.h"
-#include "voxels/Chunk.h"
-#include "voxels/Block.h"
-#include "voxels/voxel.h"
+#include <world/Level.h>
+#include <voxels/Chunks.h>
+#include <voxels/Chunk.h>
+#include <voxels/Block.h>
+#include <voxels/voxel.h>
 #include "lighting/Lighting.h"
 #include "content/Content.h"
 #include "logic/BlocksController.h"

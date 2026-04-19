@@ -1,7 +1,7 @@
 #ifndef MATH_VOXMATHS_H_
 #define MATH_VOXMATHS_H_
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 /**
  * @file voxmaths.h

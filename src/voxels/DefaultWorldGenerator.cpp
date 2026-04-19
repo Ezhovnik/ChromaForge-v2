@@ -9,17 +9,17 @@
 #include <glm/gtc/noise.hpp>
 
 #define FNL_IMPL
-#include "math/FastNoiseLite.h"
+#include <math/FastNoiseLite.h>
 
-#include "WorldGenerator.h"
-#include "core_content_defs.h"
-#include "debug/Logger.h"
+#include <voxels/WorldGenerator.h>
+#include <core_content_defs.h>
+#include <debug/Logger.h>
 #include "content/Content.h"
-#include "math/voxmaths.h"
-#include "math/rand.h"
-#include "voxel.h"
-#include "Chunk.h"
-#include "Block.h"
+#include <math/voxmaths.h>
+#include <math/rand.h>
+#include <voxels/voxel.h>
+#include <voxels/Chunk.h>
+#include <voxels/Block.h>
 
 inline constexpr int SEA_LEVEL = 55;
 

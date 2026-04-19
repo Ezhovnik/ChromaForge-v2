@@ -1,9 +1,9 @@
 #include "FlatWorldGenerator.h"
 
-#include "voxel.h"
-#include "Chunk.h"
+#include <voxels/voxel.h>
+#include <voxels/Chunk.h>
 #include "content/Content.h"
-#include "core_content_defs.h"
+#include <core_content_defs.h>
 
 void FlatWorldGenerator::generate(voxel* voxels, int cx, int cz, uint64_t seed) {
     for (int z = 0; z < CHUNK_DEPTH; ++z) {

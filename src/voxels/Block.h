@@ -5,10 +5,10 @@
 #include <vector>
 #include <optional>
 
-#include "math/AABB.h"
-#include "typedefs.h"
-#include "math/UVRegion.h"
-#include "core_content_defs.h"
+#include <math/AABB.h>
+#include <typedefs.h>
+#include <math/UVRegion.h>
+#include <core_content_defs.h>
 
 inline const std::string BLOCK_ITEM_SUFFIX = ".item"; 
 

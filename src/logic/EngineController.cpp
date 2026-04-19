@@ -5,8 +5,8 @@
 #include <algorithm>
 
 #include "content/ContentLUT.h"
-#include "debug/Logger.h"
-#include "engine.h"
+#include <debug/Logger.h>
+#include <engine.h>
 #include "files/WorldFiles.h"
 #include "files/WorldConverter.h"
 #include "frontend/locale/langs.h"
@@ -19,10 +19,10 @@
 #include "graphics/ui/gui_util.h"
 #include "interfaces/Task.h"
 #include "util/stringutil.h"
-#include "world/World.h"
-#include "world/Level.h"
+#include <world/World.h>
+#include <world/Level.h>
 #include "LevelController.h"
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 #include "frontend/menu.h"
 #include "coders/commons.h"
 

@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include "Inventory.h"
-#include "math/rand.h"
+#include <math/rand.h>
 
 class Level;
 

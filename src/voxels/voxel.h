@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 /** Направление на север (вдоль отрицательной оси Z). */
 inline constexpr int BLOCK_DIR_NORTH = 0x0;

@@ -10,7 +10,7 @@
 #include <cmath>
 
 #include "dynamic_fwd.h"
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 
 namespace dynamic {
     enum class Type {

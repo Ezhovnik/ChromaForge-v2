@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "typedefs.h"
+#include <typedefs.h>
 #include "util/timeutil.h"
 #include "content/ContentPack.h"
 #include "data/dynamic.h"

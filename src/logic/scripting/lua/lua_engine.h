@@ -5,7 +5,7 @@
 
 #include "logic/scripting/scripting_functional.h"
 #include "data/dynamic.h"
-#include "delegates.h"
+#include <delegates.h>
 
 #include <string>
 #include <stdexcept>

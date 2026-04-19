@@ -1,4 +1,4 @@
-#include "VoxelsVolume.h"
+#include <voxels/VoxelsVolume.h>
 
 VoxelsVolume::VoxelsVolume(
 	int x, int y, int z,

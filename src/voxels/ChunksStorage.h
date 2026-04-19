@@ -7,8 +7,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
-#include "voxel.h"
-#include "typedefs.h"
+#include <voxels/voxel.h>
+#include <typedefs.h>
 
 class Chunk;
 class VoxelsVolume;

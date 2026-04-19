@@ -9,8 +9,8 @@
 #include "graphics/core/Font.h"
 #include "assets/Assets.h"
 #include "util/stringutil.h"
-#include "window/Events.h"
-#include "window/Window.h"
+#include <window/Events.h>
+#include <window/Window.h>
 
 using namespace gui;
 

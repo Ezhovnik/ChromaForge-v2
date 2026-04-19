@@ -5,8 +5,8 @@
 #include <time.h>
 #include <algorithm>
 
-#include "typedefs.h"
-#include "debug/Logger.h"
+#include <typedefs.h>
+#include <debug/Logger.h>
 
 namespace platform {
     const std::string DEFAULT_LOCALE = "en_US"; // Локаль по умолчанию, используемая, если системную определить не удалось.

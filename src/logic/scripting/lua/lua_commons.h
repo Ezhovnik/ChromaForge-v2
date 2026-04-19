@@ -14,7 +14,7 @@
 #error LuaJIT required
 #endif
 
-#include "delegates.h"
+#include <delegates.h>
 #include "logic/scripting/scripting.h"
 
 namespace lua {

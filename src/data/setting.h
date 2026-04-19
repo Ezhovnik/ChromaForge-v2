@@ -6,8 +6,8 @@
 #include <vector>
 #include <unordered_set>
 
-#include "typedefs.h"
-#include "delegates.h"
+#include <typedefs.h>
+#include <delegates.h>
 
 enum class SettingFormat {
     Simple,

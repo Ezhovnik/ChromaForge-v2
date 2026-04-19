@@ -6,9 +6,9 @@
 #include <vector>
 #include <unordered_map>
 
-#include "Window.h"
-#include "input.h"
-#include "typedefs.h"
+#include <window/Window.h>
+#include <window/input.h>
+#include <typedefs.h>
 
 inline constexpr short KEYS_BUFFER_SIZE = 1036;
 

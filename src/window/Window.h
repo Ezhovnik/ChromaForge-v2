@@ -7,7 +7,7 @@
 
 #include <glm/glm.hpp>
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 struct GLFWwindow; // Предварительное объявление класса GLFWwindow
 class ImageData;

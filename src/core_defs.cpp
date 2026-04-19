@@ -1,16 +1,16 @@
 #include <glm/glm.hpp>
 
-#include "core_content_defs.h"
-#include "input_bindings.h"
+#include <core_content_defs.h>
+#include <input_bindings.h>
 #include "assets/AssetsLoader.h"
 #include "graphics/core/ShaderProgram.h"
 #include "graphics/core/Texture.h"
 #include "graphics/core/Font.h"
-#include "window/Window.h"
-#include "window/Events.h"
-#include "window/input.h"
-#include "voxels/Block.h"
-#include "debug/Logger.h"
+#include <window/Window.h>
+#include <window/Events.h>
+#include <window/input.h>
+#include <voxels/Block.h>
+#include <debug/Logger.h>
 #include "content/Content.h"
 #include "items/Item.h"
 #include "content/ContentBuilder.h"

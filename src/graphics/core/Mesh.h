@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_CORE_MESH_H_
 #define GRAPHICS_CORE_MESH_H_
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 /**
  * @brief Описание одного вершинного атрибута.

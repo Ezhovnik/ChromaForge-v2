@@ -2,8 +2,8 @@
 
 #include "lua/lua_engine.h"
 #include "lua/api_lua.h"
-#include "engine.h"
-#include "debug/Logger.h"
+#include <engine.h>
+#include <debug/Logger.h>
 #include "files/files.h"
 #include "frontend/hud.h"
 #include "objects/Player.h"

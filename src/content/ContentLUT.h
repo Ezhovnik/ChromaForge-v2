@@ -6,8 +6,8 @@
 #include <filesystem>
 #include <utility>
 
-#include "typedefs.h"
-#include "constants.h"
+#include <typedefs.h>
+#include <constants.h>
 #include "Content.h"
 #include "data/dynamic.h"
 

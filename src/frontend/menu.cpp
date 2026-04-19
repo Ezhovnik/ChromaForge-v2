@@ -6,19 +6,19 @@
 
 #include <glm/glm.hpp>
 
-#include "delegates.h"
-#include "engine.h"
+#include <delegates.h>
+#include <engine.h>
 #include "files/engine_paths.h"
 #include "graphics/ui/elements/display/Label.h"
 #include "graphics/ui/elements/layout/Menu.h"
 #include "graphics/ui/gui_util.h"
 #include "graphics/ui/GUI.h"
 #include "logic/scripting/scripting.h"
-#include "settings.h"
+#include <settings.h>
 #include "util/stringutil.h"
-#include "window/Window.h"
+#include <window/Window.h>
 #include "UIDocument.h"
-#include "core_content_defs.h"
+#include <core_content_defs.h>
 #include "locale/langs.h"
 #include "interfaces/Task.h"
 #include "graphics/ui/elements/layout/Panel.h"

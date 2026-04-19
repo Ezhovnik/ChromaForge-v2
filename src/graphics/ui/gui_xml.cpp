@@ -14,10 +14,10 @@
 #include "frontend/locale/langs.h"
 #include "logic/scripting/scripting.h"
 #include "util/stringutil.h"
-#include "debug/Logger.h"
-#include "window/Events.h"
+#include <debug/Logger.h>
+#include <window/Events.h>
 #include "items/Inventory.h"
-#include "math/voxmaths.h"
+#include <math/voxmaths.h>
 #include "elements/layout/Menu.h"
 #include "frontend/menu.h"
 

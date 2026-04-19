@@ -16,7 +16,7 @@
 #include <glm/glm.hpp>
 
 #include "audio/audio.h"
-#include "typedefs.h"
+#include <typedefs.h>
 
 namespace audio {
     struct ALBuffer;

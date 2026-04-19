@@ -11,8 +11,8 @@
 #include "graphics/core/Model.h"
 #include "graphics/core/Texture.h"
 #include "assets/Assets.h"
-#include "window/Window.h"
-#include "voxels/Chunks.h"
+#include <window/Window.h>
+#include <voxels/Chunks.h>
 #include "lighting/LightMap.h"
 #include "graphics/core/Atlas.h"
 

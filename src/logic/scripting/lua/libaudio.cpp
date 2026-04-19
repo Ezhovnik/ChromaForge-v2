@@ -1,7 +1,7 @@
 #include "api_lua.h"
 
 #include "audio/audio.h"
-#include "engine.h"
+#include <engine.h>
 
 inline const char* DEFAULT_CHANNEL = "regular";
 

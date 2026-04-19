@@ -8,8 +8,8 @@
 #include <set>
 #include <optional>
 
-#include "math/UVRegion.h"
-#include "typedefs.h"
+#include <math/UVRegion.h>
+#include <typedefs.h>
 
 class ImageData;
 class Texture;

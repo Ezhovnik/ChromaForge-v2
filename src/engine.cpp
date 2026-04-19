@@ -1,4 +1,4 @@
-#include "engine.h"
+#include <engine.h>
 
 #include <vector>
 #include <memory>
@@ -9,13 +9,13 @@
 
 #define GLEW_STATIC
 
-#include "window/Window.h"
-#include "window/Events.h"
-#include "window/input.h"
+#include <window/Window.h>
+#include <window/Events.h>
+#include <window/input.h>
 #include "assets/AssetsLoader.h"
-#include "core_content_defs.h"
-#include "debug/Logger.h"
-#include "settings.h"
+#include <core_content_defs.h>
+#include <debug/Logger.h>
+#include <settings.h>
 #include "graphics/ui/GUI.h"
 #include "graphics/core/Batch2D.h"
 #include "graphics/core/ShaderProgram.h"
@@ -34,11 +34,11 @@
 #include "content/ContentLoader.h"
 #include "logic/scripting/scripting.h"
 #include "graphics/core/DrawContext.h"
-#include "world/WorldGenerators.h"
-#include "voxels/DefaultWorldGenerator.h"
-#include "voxels/FlatWorldGenerator.h"
+#include <world/WorldGenerators.h>
+#include <voxels/DefaultWorldGenerator.h>
+#include <voxels/FlatWorldGenerator.h>
 #include "audio/audio.h"
-#include "constants.h"
+#include <constants.h>
 #include "frontend/UIDocument.h"
 #include "graphics/ui/elements/UINode.h"
 #include "content/PacksManager.h"
@@ -47,7 +47,7 @@
 #include "files/settings_io.h"
 #include "coders/toml.h"
 #include "files/files.h"
-#include "input_bindings.h"
+#include <input_bindings.h>
 #include "logic/CommandsInterpreter.h"
 #include "content/ContentBuilder.h"
 #include "objects/rigging.h"

@@ -9,7 +9,7 @@
 #include "data/dynamic.h"
 #include "util/stringutil.h"
 #include "files/settings_io.h"
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 #include "data/setting.h"
 
 using namespace toml;

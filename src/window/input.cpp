@@ -1,4 +1,4 @@
-#include "input.h"
+#include <window/input.h>
 
 #include <unordered_map>
 

@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <unordered_map>
 
-#include "typedefs.h"
+#include <typedefs.h>
 
 namespace gui {
     class UINode;

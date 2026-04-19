@@ -8,16 +8,16 @@
 
 #include "Content.h"
 #include "ContentPack.h"
-#include "voxels/Block.h"
+#include <voxels/Block.h>
 #include "files/files.h"
 #include "coders/json.h"
-#include "typedefs.h"
-#include "debug/Logger.h"
+#include <typedefs.h>
+#include <debug/Logger.h>
 #include "logic/scripting/scripting.h"
 #include "util/listutil.h"
 #include "items/Item.h"
 #include "data/dynamic.h"
-#include "core_content_defs.h"
+#include <core_content_defs.h>
 #include "ContentBuilder.h"
 #include "util/stringutil.h"
 #include "objects/rigging.h"

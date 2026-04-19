@@ -7,7 +7,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
 
-#include "typedefs.h"
+#include <typedefs.h>
 #include "AABB.h"
 
 using rayvec3 = glm::highp_dvec3;

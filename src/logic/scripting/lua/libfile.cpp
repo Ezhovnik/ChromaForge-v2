@@ -2,7 +2,7 @@
 #include <filesystem>
 
 #include "api_lua.h"
-#include "engine.h"
+#include <engine.h>
 #include "files/files.h"
 #include "files/engine_paths.h"
 #include "util/stringutil.h"

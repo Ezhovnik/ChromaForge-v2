@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "ItemStack.h"
-#include "typedefs.h"
+#include <typedefs.h>
 #include "data/dynamic.h"
 #include "interfaces/Serializable.h"
 

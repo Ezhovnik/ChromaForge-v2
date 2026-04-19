@@ -5,7 +5,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 #include "data/dynamic.h"
 #include "coders/json.h"
 #include "util/stringutil.h"

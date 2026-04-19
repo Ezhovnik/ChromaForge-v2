@@ -1,6 +1,6 @@
 #include "LevelFrontend.h"
 
-#include "world/Level.h"
+#include <world/Level.h>
 #include "assets/Assets.h"
 #include "graphics/core/Atlas.h"
 #include "graphics/render/BlocksPreview.h"
@@ -8,7 +8,7 @@
 #include "content/Content.h"
 #include "logic/LevelController.h"
 #include "logic/PlayerController.h"
-#include "voxels/Block.h"
+#include <voxels/Block.h>
 #include "audio/audio.h"
 #include "objects/Player.h"
 

@@ -1,6 +1,6 @@
 #include "ContentBuilder.h"
 
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 #include "objects/rigging.h"
 
 ContentBuilder::~ContentBuilder() = default;

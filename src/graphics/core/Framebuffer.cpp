@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 
 #include "GLTexture.h"
-#include "debug/Logger.h"
+#include <debug/Logger.h>
 
 Framebuffer::Framebuffer(
     uint fbo, 

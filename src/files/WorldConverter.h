@@ -5,8 +5,8 @@
 #include <filesystem>
 #include <memory>
 
-#include "typedefs.h"
-#include "delegates.h"
+#include <typedefs.h>
+#include <delegates.h>
 #include "interfaces/Task.h"
 
 class Content;

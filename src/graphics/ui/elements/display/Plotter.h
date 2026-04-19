@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "graphics/ui/elements/UINode.h"
-#include "typedefs.h"
+#include <typedefs.h>
 
 class Assets;
 class DrawContext;
