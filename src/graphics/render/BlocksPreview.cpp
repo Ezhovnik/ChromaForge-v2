@@ -10,7 +10,7 @@
 #include <voxels/Block.h>
 #include "graphics/core/Viewport.h"
 #include "frontend/ContentGfxCache.h"
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "graphics/core/Framebuffer.h"
 #include "graphics/core/DrawContext.h"
 #include <window/Window.h>

@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "util/RunnablesList.h"
+#include <util/RunnablesList.h>
 
 /**
  * @brief Представляет собой значения кодов клавиш glfw3.

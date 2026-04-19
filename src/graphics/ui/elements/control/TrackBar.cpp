@@ -4,7 +4,7 @@
 
 #include "graphics/core/DrawContext.h"
 #include "graphics/core/Batch2D.h"
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 
 using namespace gui;
 

@@ -13,7 +13,7 @@
 #include "graphics/core/ImageData.h"
 #include "graphics/core/Texture.h"
 #include <settings.h>
-#include "util/ObjectsKeeper.h"
+#include <util/ObjectsKeeper.h>
 #include <constants.h>
 
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW

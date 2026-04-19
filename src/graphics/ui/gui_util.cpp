@@ -9,7 +9,7 @@
 #include <delegates.h>
 #include "gui_xml.h"
 #include "logic/scripting/scripting.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 
 using namespace gui;
 

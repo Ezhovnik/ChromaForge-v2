@@ -1,10 +1,10 @@
-#include "asset_loaders.h"
+#include <assets/asset_loaders.h>
 
 #include <filesystem>
 #include <stdexcept>
 
-#include "Assets.h"
-#include "AssetsLoader.h"
+#include <assets/Assets.h>
+#include <assets/AssetsLoader.h>
 #include "coders/imageio.h"
 #include "files/files.h"
 #include "graphics/core/ShaderProgram.h"

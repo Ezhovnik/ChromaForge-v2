@@ -13,7 +13,7 @@
 #include "elements/display/InventoryView.h"
 #include "frontend/locale/langs.h"
 #include "logic/scripting/scripting.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include <debug/Logger.h>
 #include <window/Events.h>
 #include "items/Inventory.h"

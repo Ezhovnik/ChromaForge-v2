@@ -12,9 +12,9 @@
 #include <entt/entity/registry.hpp>
 
 #include <typedefs.h>
-#include "physics/Hitbox.h"
+#include <physics/Hitbox.h>
 #include "data/dynamic.h"
-#include "util/Clock.h"
+#include <util/Clock.h>
 
 struct entity_funcs_set {
     bool init;

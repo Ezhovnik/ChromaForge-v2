@@ -11,7 +11,7 @@
 #include "data/dynamic.h"
 #include "files/files.h"
 #include "objects/Player.h"
-#include "util/ThreadPool.h"
+#include <util/ThreadPool.h>
 
 class ConverterWorker : public util::Worker<ConvertTask, int> {
 private:

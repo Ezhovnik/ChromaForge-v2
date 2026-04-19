@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <utility>
 
-#include "Assets.h"
+#include <assets/Assets.h>
 #include "interfaces/Task.h"
 #include <delegates.h>
 #include <typedefs.h>

@@ -1,8 +1,8 @@
-#include "AssetsLoader.h"
+#include <assets/AssetsLoader.h>
 
 #include <memory>
 
-#include "Assets.h"
+#include <assets/Assets.h>
 #include "graphics/core/ShaderProgram.h"
 #include "graphics/core/Texture.h"
 #include "coders/imageio.h"
@@ -11,14 +11,14 @@
 #include <debug/Logger.h>
 #include <constants.h>
 #include "graphics/core/ImageData.h"
-#include "asset_loaders.h"
+#include <assets/asset_loaders.h>
 #include "files/engine_paths.h"
 #include <core_content_defs.h>
 #include "content/Content.h"
 #include "logic/scripting/scripting.h"
 #include "data/dynamic.h"
 #include "files/files.h"
-#include "util/ThreadPool.h"
+#include <util/ThreadPool.h>
 #include <voxels/Block.h>
 #include "objects/rigging.h"
 

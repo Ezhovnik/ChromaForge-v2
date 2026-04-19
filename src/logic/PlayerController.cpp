@@ -3,8 +3,8 @@
 #include <algorithm>
 
 #include "objects/Player.h"
-#include "physics/PhysicsSolver.h"
-#include "physics/Hitbox.h"
+#include <physics/PhysicsSolver.h>
+#include <physics/Hitbox.h>
 #include "lighting/Lighting.h"
 #include <world/Level.h>
 #include "content/Content.h"

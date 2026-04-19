@@ -25,7 +25,7 @@
 #include <world/World.h>
 #include <world/Level.h>
 #include "objects/Player.h"
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "logic/PlayerController.h"
 #include <debug/Logger.h>
 #include "graphics/render/ChunksRenderer.h"

@@ -3,7 +3,7 @@
 #include <utility>
 
 #include <core_content_defs.h>
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 
 std::string to_string(BlockModel model) {
     switch (model) {

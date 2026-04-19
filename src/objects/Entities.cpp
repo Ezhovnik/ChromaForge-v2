@@ -4,10 +4,10 @@
 
 #include <glm/ext/matrix_transform.hpp>
 
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include <world/Level.h>
-#include "physics/Hitbox.h"
-#include "physics/PhysicsSolver.h"
+#include <physics/Hitbox.h>
+#include <physics/PhysicsSolver.h>
 #include "graphics/render/ModelBatch.h"
 #include "graphics/core/Model.h"
 #include <math/FrustumCulling.h>

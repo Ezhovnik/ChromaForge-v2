@@ -18,9 +18,9 @@
 #include "lighting/Lightmap.h"
 #include <math/voxmaths.h>
 #include "objects/Player.h"
-#include "physics/Hitbox.h"
+#include <physics/Hitbox.h>
 #include <typedefs.h>
-#include "util/data_io.h"
+#include <util/data_io.h>
 #include <voxels/Block.h>
 #include <voxels/Chunk.h>
 #include <voxels/voxel.h>

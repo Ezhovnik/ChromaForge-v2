@@ -6,7 +6,7 @@
 
 #include "elements/UINode.h"
 #include "elements/layout/Menu.h"
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "graphics/core/Batch2D.h"
 #include <window/Events.h>
 #include <window/input.h>

@@ -10,7 +10,7 @@
 #include "graphics/render/WorldRenderer.h"
 #include "logic/LevelController.h"
 #include "logic/scripting/scripting_hud.h"
-#include "physics/Hitbox.h"
+#include <physics/Hitbox.h>
 #include <voxels/Chunks.h>
 #include <world/Level.h>
 #include <world/World.h>

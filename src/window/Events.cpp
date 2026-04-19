@@ -8,7 +8,7 @@
 #include <debug/Logger.h>
 #include "data/dynamic.h"
 #include "coders/json.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include "coders/toml.h"
 
 inline constexpr short _MOUSE_KEYS_OFFSET = 1024;

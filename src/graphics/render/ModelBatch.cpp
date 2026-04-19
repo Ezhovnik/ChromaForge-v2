@@ -10,7 +10,7 @@
 #include "graphics/core/Mesh.h"
 #include "graphics/core/Model.h"
 #include "graphics/core/Texture.h"
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include <window/Window.h>
 #include <voxels/Chunks.h>
 #include "lighting/LightMap.h"

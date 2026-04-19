@@ -1,13 +1,13 @@
-#include "PhysicsSolver.h"
+#include <physics/PhysicsSolver.h>
 
 #include <algorithm>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 
-#include "Hitbox.h"
+#include <physics/Hitbox.h>
 #include <voxels/Chunks.h>
-#include "math/aabb.h"
+#include <math/AABB.h>
 #include <voxels/Block.h>
 #include <voxels/voxel.h>
 

@@ -8,7 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <typedefs.h>
-#include "Hitbox.h"
+#include <physics/Hitbox.h>
 
 class Chunks;
 class Block;

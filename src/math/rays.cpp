@@ -1,6 +1,6 @@
-#include "rays.h"
+#include <math/rays.h>
 
-#include "AABB.h"
+#include <math/AABB.h>
 
 inline constexpr rayvec3 X_AXIS = rayvec3(1, 0, 0);
 inline constexpr rayvec3 Y_AXIS = rayvec3(0, 1, 0);

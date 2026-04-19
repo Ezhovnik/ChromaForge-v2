@@ -1,9 +1,9 @@
 #include "api_lua.h"
 #include <engine.h>
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "graphics/ui/elements/UINode.h"
 #include "frontend/UiDocument.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include "graphics/ui/gui_util.h"
 #include "frontend/locale/langs.h"
 #include "graphics/ui/elements/control/Button.h"

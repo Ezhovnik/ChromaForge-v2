@@ -10,7 +10,7 @@
 #include "WorldFiles.h"
 #include <core_content_defs.h>
 #include <debug/Logger.h>
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 
 const std::filesystem::path SCREENSHOTS_FOLDER {"screenshots"};
 const std::filesystem::path LOGS_FOLDER {"logs"};

@@ -18,7 +18,7 @@
 #include <core_content_defs.h>
 #include <math/voxmaths.h>
 #include "content/Content.h"
-#include "util/timeutil.h"
+#include <util/timeutil.h>
 #include "content/Content.h"
 #include <world/WorldGenerators.h>
 
@@ -52,13 +52,9 @@ void ChunksController::update(int64_t maxDuration) {
     }
 }
 
-bool ChunksController::loadVisible(){
-    const Content* content = level->content;
-
+bool ChunksController::loadVisible() {
 	const int width = chunks->width;
 	const int depth = chunks->depth;
-	const int areaOffsetX = chunks->areaOffsetX;
-	const int areaOffsetZ = chunks->areaOffsetZ;
 	int nearX = 0;
 	int nearZ = 0;
 	int minDistance = ((width - chunksPadding * 2) / 2) * ((width - chunksPadding * 2) / 2);
@@ -87,8 +83,12 @@ bool ChunksController::loadVisible(){
 
 	int index = nearZ * width + nearX;
 	const auto& chunk = chunks->chunks[index];
-	if (chunk != nullptr) return false;
+	if (chunk != nullptr) {
+		return false;
+	}
 
+	const int areaOffsetX = chunks->areaOffsetX;
+	const int areaOffsetZ = chunks->areaOffsetZ;
 	createChunk(nearX + areaOffsetX, nearZ + areaOffsetZ);
 	return true;
 }
@@ -118,7 +118,7 @@ void ChunksController::createChunk(int x, int z) {
 
 	if (!chunkFlags.loaded) {
 		generator->generate(chunk->voxels, x, z, level->getWorld()->getSeed());
-		chunk->flags.unsaved = true;
+		chunkFlags.unsaved = true;
 	}
 	chunk->updateHeights();
 

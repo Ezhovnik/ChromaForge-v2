@@ -4,7 +4,7 @@
 
 #include "files/engine_paths.h"
 #include "files/files.h"
-#include "util/timeutil.h"
+#include <util/timeutil.h>
 #include <world/Level.h>
 #include <voxels/Block.h>
 #include <debug/Logger.h>
@@ -13,7 +13,7 @@
 #include <engine.h>
 #include "content/ContentPack.h"
 #include "lua/lua_engine.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include "frontend/UIDocument.h"
 #include "items/Inventory.h"
 #include "objects/Player.h"

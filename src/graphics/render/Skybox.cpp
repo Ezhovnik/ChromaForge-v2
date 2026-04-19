@@ -9,7 +9,7 @@
 #include "graphics/core/Mesh.h"
 #include <window/Window.h>
 #include <constants.h>
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "graphics/core/Batch3D.h"
 #include <window/Camera.h>
 #include "graphics/core/Texture.h"

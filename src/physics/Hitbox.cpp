@@ -1,4 +1,4 @@
-#include "Hitbox.h"
+#include <physics/Hitbox.h>
 
 #include <stdexcept>
 

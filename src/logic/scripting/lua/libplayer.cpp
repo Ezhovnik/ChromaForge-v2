@@ -4,7 +4,7 @@
 
 #include "libentity.h"
 #include "objects/Player.h"
-#include "physics/Hitbox.h"
+#include <physics/Hitbox.h>
 #include <window/Camera.h>
 #include "items/Inventory.h"
 

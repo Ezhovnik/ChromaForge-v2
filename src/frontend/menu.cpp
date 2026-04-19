@@ -15,7 +15,7 @@
 #include "graphics/ui/GUI.h"
 #include "logic/scripting/scripting.h"
 #include <settings.h>
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include <window/Window.h>
 #include "UIDocument.h"
 #include <core_content_defs.h>

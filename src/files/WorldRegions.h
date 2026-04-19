@@ -11,11 +11,11 @@
 
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/hash.hpp"
+#include <glm/gtx/hash.hpp>
 
 #include "files.h"
 #include <typedefs.h>
-#include "util/BufferPool.h"
+#include <util/BufferPool.h>
 #include <voxels/Chunk.h>
 #include "data/dynamic_fwd.h"
 

@@ -7,7 +7,7 @@
 
 #include "commons.h"
 #include "data/dynamic.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include "files/settings_io.h"
 #include <debug/Logger.h>
 #include "data/setting.h"

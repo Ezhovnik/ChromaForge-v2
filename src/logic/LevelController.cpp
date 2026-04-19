@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include <world/Level.h>
-#include "physics/Hitbox.h"
+#include <physics/Hitbox.h>
 #include "scripting/scripting.h"
 #include <world/World.h>
 #include "interfaces/Object.h"

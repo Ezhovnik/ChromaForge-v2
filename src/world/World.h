@@ -6,7 +6,7 @@
 #include <memory>
 
 #include <typedefs.h>
-#include "util/timeutil.h"
+#include <util/timeutil.h>
 #include "content/ContentPack.h"
 #include "data/dynamic.h"
 #include "interfaces/Serializable.h"

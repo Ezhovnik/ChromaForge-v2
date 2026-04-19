@@ -4,7 +4,7 @@
 #include <memory>
 #include <utility>
 
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "graphics/core/ShaderProgram.h"
 #include "graphics/core/Batch2D.h"
 #include "graphics/core/Font.h"
@@ -19,7 +19,7 @@
 #include <world/World.h>
 #include <world/Level.h>
 #include "objects/Player.h"
-#include "physics/Hitbox.h"
+#include <physics/Hitbox.h>
 #include <debug/Logger.h>
 #include "graphics/ui/elements/layout/Menu.h"
 #include "graphics/ui/elements/layout/Panel.h"
@@ -33,7 +33,7 @@
 #include <math/voxmaths.h>
 #include "ContentGfxCache.h"
 #include "graphics/render/WorldRenderer.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include "graphics/core/Batch3D.h"
 #include "graphics/ui/elements/display/InventoryView.h"
 #include "LevelFrontend.h"

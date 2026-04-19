@@ -8,7 +8,7 @@
 #include "frontend/LevelFrontend.h"
 #include <window/Events.h>
 #include <window/input.h>
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "graphics/core/Atlas.h"
 #include "graphics/core/ShaderProgram.h"
 #include "graphics/core/Batch2D.h"
@@ -20,7 +20,7 @@
 #include <math/voxmaths.h>
 #include "objects/Player.h"
 #include <voxels/Block.h>
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include <world/Level.h>
 #include <debug/Logger.h>
 #include "logic/scripting/scripting.h"

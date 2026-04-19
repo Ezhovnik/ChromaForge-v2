@@ -8,7 +8,7 @@
 
 #include <typedefs.h>
 #include <math/AABB.h>
-#include "physics/Hitbox.h"
+#include <physics/Hitbox.h>
 
 namespace rigging {
     class SkeletonConfig;

@@ -4,8 +4,8 @@
 #include <voxels/Chunks.h>
 #include <voxels/ChunksStorage.h>
 #include <voxels/Chunk.h>
-#include "physics/PhysicsSolver.h"
-#include "physics/Hitbox.h"
+#include <physics/PhysicsSolver.h>
+#include <physics/Hitbox.h>
 #include "objects/Player.h"
 #include <world/World.h>
 #include <world/LevelEvents.h>

@@ -28,7 +28,7 @@
 #include "frontend/screens/MenuScreen.h"
 #include "content/content.h"
 #include "frontend/locale/langs.h"
-#include "util/platform.h"
+#include <util/platform.h>
 #include "frontend/menu.h"
 #include "content/Content.h"
 #include "content/ContentLoader.h"
@@ -42,7 +42,7 @@
 #include "frontend/UIDocument.h"
 #include "graphics/ui/elements/UINode.h"
 #include "content/PacksManager.h"
-#include "util/listutil.h"
+#include <util/listutil.h>
 #include "logic/EngineController.h"
 #include "files/settings_io.h"
 #include "coders/toml.h"

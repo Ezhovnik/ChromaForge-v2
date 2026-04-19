@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "content/Content.h"
 #include "graphics/core/Atlas.h"
 #include <voxels/Block.h>

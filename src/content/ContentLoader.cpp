@@ -14,12 +14,12 @@
 #include <typedefs.h>
 #include <debug/Logger.h>
 #include "logic/scripting/scripting.h"
-#include "util/listutil.h"
+#include <util/listutil.h>
 #include "items/Item.h"
 #include "data/dynamic.h"
 #include <core_content_defs.h>
 #include "ContentBuilder.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include "objects/rigging.h"
 
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder) : pack(pack), builder(builder) {

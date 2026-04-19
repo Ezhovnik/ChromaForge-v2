@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-#include "Assets.h"
+#include <assets/Assets.h>
 
 class ResPaths;
 class Assets;

@@ -3,10 +3,10 @@
 #include <utility>
 #include <algorithm>
 
-#include "physics/Hitbox.h"
+#include <physics/Hitbox.h>
 #include <window/Camera.h>
 #include <world/Level.h>
-#include "physics/PhysicsSolver.h"
+#include <physics/PhysicsSolver.h>
 #include "items/Inventory.h"
 #include <math/rand.h>
 #include <voxels/Chunks.h>

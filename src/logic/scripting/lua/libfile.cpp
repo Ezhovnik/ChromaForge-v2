@@ -5,7 +5,7 @@
 #include <engine.h>
 #include "files/files.h"
 #include "files/engine_paths.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include "coders/zip.h"
 
 static std::filesystem::path resolve_path(const std::string& path) {

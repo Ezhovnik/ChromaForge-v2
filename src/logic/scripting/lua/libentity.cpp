@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "objects/Player.h"
-#include "physics/Hitbox.h"
+#include <physics/Hitbox.h>
 #include <window/Camera.h>
 #include "content/Content.h"
 #include <engine.h>

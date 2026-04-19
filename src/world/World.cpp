@@ -10,7 +10,7 @@
 #include <voxels/Chunks.h>
 #include <voxels/ChunksStorage.h>
 #include "objects/Player.h"
-#include "physics/PhysicsSolver.h"
+#include <physics/PhysicsSolver.h>
 #include <debug/Logger.h>
 #include "content/Content.h"
 #include "content/ContentLUT.h"

@@ -1,5 +1,5 @@
 #include "api_lua.h"
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "frontend/hud.h"
 #include <world/Level.h>
 #include <voxels/Chunks.h>
@@ -11,7 +11,7 @@
 #include <engine.h>
 #include "frontend/UIDocument.h"
 #include "graphics/ui/elements/display/InventoryView.h"
-#include "util/stringutil.h"
+#include <util/stringutil.h>
 #include "objects/Player.h"
 
 namespace scripting {

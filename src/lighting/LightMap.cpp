@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#include "util/data_io.h"
+#include <util/data_io.h>
 
 static_assert(sizeof(light_t) == 2, "Replace the dataio calls with the new light_t value");
 

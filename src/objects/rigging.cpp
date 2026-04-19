@@ -4,7 +4,7 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
-#include "assets/Assets.h"
+#include <assets/Assets.h>
 #include "graphics/core/Model.h"
 #include "coders/json.h"
 #include <debug/Logger.h>
