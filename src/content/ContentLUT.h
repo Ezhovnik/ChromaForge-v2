@@ -30,8 +30,8 @@ public:
         for (size_t i = 0; i < count; ++i) {
             indices.push_back(i);
         }
-        for (size_t i = 0; i < unitIndices.count(); ++i) {
-            names.push_back(unitIndices.get(i)->name);
+        for (auto unit : unitIndices.getIterable()) {
+            names.push_back(unit->name);
         }
         for (size_t i = unitIndices.count(); i < count; ++i) {
             names.emplace_back("");

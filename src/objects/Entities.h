@@ -45,6 +45,8 @@ struct Rigidbody {
 };
 
 struct Transform {
+    static inline constexpr float EPS = 0.0000001f; 
+
     glm::vec3 pos;
     glm::vec3 size;
     glm::mat3 rot;
@@ -62,14 +64,16 @@ struct Transform {
     }
 
     inline void setSize(glm::vec3 v) {
-        if (glm::distance2(displaySize, v) >= 0.00001f) {
+        if (glm::distance2(displaySize, v) >= EPS) {
             dirty = true;
         }
         size = v;
     }
 
     inline void setPos(glm::vec3 v) {
-        if (glm::distance2(displayPos, v) >= 0.0001f) dirty = true;
+        if (glm::distance2(displayPos, v) >= EPS) {
+            dirty = true;
+        }
         pos = v;
     }
 };

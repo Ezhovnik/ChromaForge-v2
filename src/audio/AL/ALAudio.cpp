@@ -74,6 +74,7 @@ void ALStream::bindSpeaker(speakerid_t speakerID) {
     sp = audio::get_speaker(speakerID);
     if (sp) {
         auto alspeaker = dynamic_cast<ALSpeaker*>(sp);
+        assert(alspeaker != nullptr);
         alspeaker->stream = this;
         alspeaker->duration = source->getTotalDuration();
     }
@@ -119,14 +120,15 @@ uint ALStream::enqueueBuffers(uint alsource) {
 void ALStream::update(double delta) {
     if (this->speaker == 0) return;
 
-    auto speaker = audio::get_speaker(this->speaker);
-    if (speaker == nullptr) {
-        speaker = 0;
+    auto p_speaker = audio::get_speaker(this->speaker);
+    if (p_speaker == nullptr) {
+        this->speaker = 0;
         return;
     }
-    ALSpeaker* alspeaker = dynamic_cast<ALSpeaker*>(speaker);
+    ALSpeaker* alspeaker = dynamic_cast<ALSpeaker*>(p_speaker);
+    assert(alspeaker != nullptr);
     if (alspeaker->stopped) {
-        speaker = 0;
+        this->speaker = 0;
         return;
     }
     uint alsource = alspeaker->source;
@@ -134,11 +136,11 @@ void ALStream::update(double delta) {
     unqueueBuffers(alsource);
     uint preloaded = enqueueBuffers(alsource);
 
-    if (speaker->isStopped() && !alspeaker->stopped) {
+    if (p_speaker->isStopped() && !alspeaker->stopped) {
         if (preloaded) {
-            speaker->play();
+            p_speaker->play();
         } else {
-            speaker->stop();
+            p_speaker->stop();
         }
     }
 }

@@ -2,12 +2,9 @@
 #include "content/Content.h"
 #include "items/Item.h"
 
-static Item* get_item_def(lua::State* L, int idx) {
+static const Item* get_item_def(lua::State* L, int idx) {
     auto indices = scripting::content->getIndices();
     auto id = lua::tointeger(L, idx);
-    if (static_cast<size_t>(id) >= indices->items.count()) {
-        return nullptr;
-    }
     return indices->items.get(id);
 }
 

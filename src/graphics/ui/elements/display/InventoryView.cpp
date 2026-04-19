@@ -114,9 +114,9 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
     itemid_t itemid = bound->getItemId();
     if (itemid != prevItem) {
         if (itemid) {
-            auto def = content->getIndices()->items.get(itemid);
+            auto& def = content->getIndices()->items.require(itemid);
             tooltip = util::pascal_case(
-                langs::get(util::str2wstr_utf8(def->caption))
+                langs::get(util::str2wstr_utf8(def.caption))
             );
         } else {
             tooltip.clear();
@@ -151,12 +151,12 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
     auto previews = assets->get<Atlas>("block-previews");
     auto indices = content->getIndices();
 
-    Item* item = indices->items.get(stack.getItemId());    
-    switch (item->iconType) {
+    auto& item = indices->items.require(stack.getItemId());    
+    switch (item.iconType) {
         case ItemIconType::None:
             break;
         case ItemIconType::Block: {
-            const Block& chosen_block = content->blocks.require(item->icon);
+            const Block& chosen_block = content->blocks.require(item.icon);
             batch->texture(previews->getTexture());
 
             UVRegion region = previews->get(chosen_block.name);
@@ -164,13 +164,13 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
             break;
         }
         case ItemIconType::Sprite: {
-            size_t index = item->icon.find(':');
-            std::string name = item->icon.substr(index + 1);
+            size_t index = item.icon.find(':');
+            std::string name = item.icon.substr(index + 1);
             UVRegion region(0.0f, 0.0, 1.0f, 1.0f);
             if (index == std::string::npos) {
                 batch->texture(assets->get<Texture>(name));
             } else {
-                std::string atlasname = item->icon.substr(0, index);
+                std::string atlasname = item.icon.substr(0, index);
                 Atlas* atlas = assets->get<Atlas>(atlasname);
                 if (atlas && atlas->has(name)) {
                     region = atlas->get(name);
@@ -249,12 +249,12 @@ void SlotView::clicked(gui::GUI* gui, mousecode button) {
                 stack.setCount(halfremain);
             }
         } else {
-            auto stackDef = content->getIndices()->items.get(stack.getItemId());
+            auto& stackDef = content->getIndices()->items.require(stack.getItemId());
             if (stack.isEmpty()) {
                 stack.set(grabbed);
                 stack.setCount(1);
                 grabbed.setCount(grabbed.getCount() - 1);
-            } else if (stack.accepts(grabbed) && stack.getCount() < stackDef->stackSize) {
+            } else if (stack.accepts(grabbed) && stack.getCount() < stackDef.stackSize) {
                 stack.setCount(stack.getCount() + 1);
                 grabbed.setCount(grabbed.getCount() - 1);
             }

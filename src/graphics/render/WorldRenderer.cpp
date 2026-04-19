@@ -133,7 +133,12 @@ bool WorldRenderer::drawChunk(
 }
 
 void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader) {
-	renderer->update();
+	auto assets = engine->getAssets();
+    auto atlas = assets->get<Atlas>("blocks");
+
+    atlas->getTexture()->bind();
+
+    renderer->update();
 	std::vector<size_t> indices;
 	for (size_t i = 0; i < chunks->volume; ++i){
 		if (chunks->chunks[i] == nullptr) continue;
@@ -176,19 +181,19 @@ void WorldRenderer::setupWorldShader(
     shader->uniform3f("u_cameraPos", camera->position);
     shader->uniform1i("u_cubemap", 1);
     shader->uniform1f("u_timer", timer);
+    shader->uniform1f("u_dayTime", level->getWorld()->daytime);
 
     auto contentIds = level->content->getIndices();
 	{
 		auto inventory = player->getInventory();
 		ItemStack& stack = inventory->getSlot(player->getChosenSlot());
-		Item* chosen_item = contentIds->items.get(stack.getItemId());
-		assert(chosen_item != nullptr);
+		auto& choosen_item = contentIds->items.require(stack.getItemId());
 		if (!player->isNoclip()) {
 			float multiplier = 0.8f;
 			shader->uniform3f("u_torchlightColor",
-				chosen_item->emission[0] / 15.0f * multiplier,
-				chosen_item->emission[1] / 15.0f * multiplier,
-				chosen_item->emission[2] / 15.0f * multiplier
+				choosen_item.emission[0] / 15.0f * multiplier,
+				choosen_item.emission[1] / 15.0f * multiplier,
+				choosen_item.emission[2] / 15.0f * multiplier
 			);
 		} else {
 			shader->uniform3f("u_torchlightColor", 0.0f, 0.0f, 0.0f);
@@ -206,30 +211,33 @@ void WorldRenderer::renderLevel(
     bool pause
 ) {
     auto assets = engine->getAssets();
-    auto atlas = assets->get<Atlas>("blocks");
 
     bool culling = engine->getSettings().graphics.frustumCulling.get();
 
     float fogFactor = 15.0f / ((float)settings.chunks.loadDistance.get() - 2);
 
+    auto entityShader = assets->get<ShaderProgram>("entity");
+    setupWorldShader(entityShader, camera, settings, fogFactor);
+    skybox->bind();
+
+    level->entities->render(
+        assets,
+        *modelBatch,
+        culling ? frustumCulling.get() : nullptr,
+        deltaTime,
+        pause
+    );
+
+    modelBatch->render();
+
     auto shader = assets->get<ShaderProgram>("default");
     setupWorldShader(shader, camera, settings, fogFactor);
 
-	skybox->bind();
-    atlas->getTexture()->bind();
+    drawChunks(level->chunks.get(), camera, shader);
 
-	drawChunks(level->chunks.get(), camera, shader);
-
-    auto entityShader = assets->get<ShaderProgram>("entity");
-    setupWorldShader(entityShader, camera, settings, fogFactor);
-
-    level->entities->render(
-        assets, *modelBatch, culling ? frustumCulling.get() : nullptr, deltaTime, pause
-    );
     if (!pause) {
         scripting::on_frontend_render();
     }
-    modelBatch->render();
 
     skybox->unbind();
 }

@@ -130,6 +130,7 @@ void Skybox::refresh(const DrawContext& parent_context, float t, float mie, uint
     context.setViewport(Viewport(size, size));
 
     auto cubemap = dynamic_cast<Cubemap*>(fbo->getTexture());
+    assert(cubemap != nullptr);
 
     ready = true;
     glActiveTexture(GL_TEXTURE1);

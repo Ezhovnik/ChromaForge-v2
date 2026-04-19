@@ -18,16 +18,16 @@ class Framebuffer;
 class ShaderProgram;
 
 class BlocksPreview {
-public:
+private:
     static std::unique_ptr<ImageData> draw(
         const ContentGfxCache* cache,
         ShaderProgram* shader,
         Framebuffer* framebuffer,
         Batch3D* batch,
-        const Block* block, 
+        const Block& block, 
         int size
     );
-
+public:
     static std::unique_ptr<Atlas> build(
         const ContentGfxCache* cache,
         Assets* assets, 

@@ -36,7 +36,7 @@ void BlocksController::updateSides(int x, int y, int z) {
     updateBlock(x, y, z + 1);
 }
 
-void BlocksController::breakBlock(Player* player, const Block* def, int x, int y, int z) {
+void BlocksController::breakBlock(Player* player, const Block& def, int x, int y, int z) {
     onBlockInteraction(
         player, glm::ivec3(x, y, z), def, BlockInteraction::Destruction
     );
@@ -46,13 +46,13 @@ void BlocksController::breakBlock(Player* player, const Block* def, int x, int y
     updateSides(x, y, z);
 }
 
-void BlocksController::placeBlock(Player* player, const Block* def, blockstate state, int x, int y, int z) {
+void BlocksController::placeBlock(Player* player, const Block& def, blockstate state, int x, int y, int z) {
     onBlockInteraction(
         player, glm::ivec3(x, y, z), def, BlockInteraction::Placing
     );
-    chunks->setVoxel(x, y, z, def->rt.id, state);
-    lighting->onBlockSet(x, y, z, def->rt.id);
-    if (def->rt.funcsset.onplaced) {
+    chunks->setVoxel(x, y, z, def.rt.id, state);
+    lighting->onBlockSet(x, y, z, def.rt.id);
+    if (def.rt.funcsset.onplaced) {
         scripting::on_block_placed(player, def, x, y, z);
     }
     updateSides(x, y, z);
@@ -61,15 +61,15 @@ void BlocksController::placeBlock(Player* player, const Block* def, blockstate s
 void BlocksController::updateBlock(int x, int y, int z) {
     voxel* vox = chunks->getVoxel(x, y, z);
     if (vox == nullptr) return;
-    auto def = level->content->getIndices()->blocks.get(vox->id);
-    if (def->grounded) {
+    auto& def = level->content->getIndices()->blocks.require(vox->id);
+    if (def.grounded) {
         const auto& vec = get_ground_direction(def, vox->state.rotation);
         if (!chunks->isSolidBlock(x + vec.x, y + vec.y, z + vec.z)) {
             breakBlock(nullptr, def, x, y, z);
             return;
         }
     }
-    if (def->rt.funcsset.update) scripting::update_block(def, x, y, z);
+    if (def.rt.funcsset.update) scripting::update_block(def, x, y, z);
 }
 
 void BlocksController::update(float delta) {
@@ -84,9 +84,9 @@ void BlocksController::onBlocksSpark(int sparkId, int parts) {
     int sparkRate = blocksSparkClock.getSparkRate();
     for (size_t id = 0; id < indices->blocks.count(); ++id) {
         if ((id + sparkId) % parts != 0) continue;
-        auto def = indices->blocks.get(id);
-        auto interval = def->sparkInterval;
-        if (def->rt.funcsset.onblocksspark && sparkId / parts % interval == 0) {
+        auto& def = indices->blocks.require(id);
+        auto interval = def.sparkInterval;
+        if (def.rt.funcsset.onblocksspark && sparkId / parts % interval == 0) {
             scripting::on_blocks_spark(def, sparkRate / interval);
         }
     }
@@ -103,8 +103,8 @@ void BlocksController::randomSpark(
             int by = random.rand() % segheight + s * segheight;
             int bz = random.rand() % CHUNK_DEPTH;
             const voxel& vox = chunk.voxels[(by * CHUNK_DEPTH + bz) * CHUNK_WIDTH + bx];
-            Block* block = indices->blocks.get(vox.id);
-            if (block->rt.funcsset.randupdate) {
+            auto& block = indices->blocks.require(vox.id);
+            if (block.rt.funcsset.randupdate) {
                 scripting::random_update_block(
                     block, 
                     chunk.chunk_x * CHUNK_WIDTH + bx, by, 
@@ -140,8 +140,8 @@ int64_t BlocksController::createBlockInventory(int x, int y, int z) {
 	auto inv = chunk->getBlockInventory(lx, y, lz);
 	if (inv == nullptr) {
         auto indices = level->content->getIndices();
-        auto def = indices->blocks.get(chunk->voxels[vox_index(lx, y, lz)].id);
-        int invsize = def->inventorySize;
+        auto& def = indices->blocks.require(chunk->voxels[vox_index(lx, y, lz)].id);
+        int invsize = def.inventorySize;
         if (invsize == 0) return 0;
 		inv = level->inventories->create(invsize);
         chunk->addBlockInventory(inv, lx, y, lz);
@@ -178,7 +178,7 @@ void BlocksController::unbindInventory(int x, int y, int z) {
 void BlocksController::onBlockInteraction(
     Player* player,
     glm::ivec3 pos,
-    const Block* def,
+    const Block& def,
     BlockInteraction type
 ) {
     for (const auto& callback : blockInteractionCallbacks) {

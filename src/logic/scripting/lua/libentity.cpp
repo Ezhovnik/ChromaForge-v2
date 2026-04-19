@@ -14,12 +14,9 @@
 #include "constants.h"
 #include "objects/Entity.h"
 
-static Entity* require_entity_def(lua::State* L) {
+static const Entity* require_entity_def(lua::State* L) {
     auto indices = scripting::content->getIndices();
     auto id = lua::tointeger(L, 1);
-    if (static_cast<size_t>(id) >= indices->entities.count()) {
-        return nullptr;
-    }
     return indices->entities.get(id);
 }
 

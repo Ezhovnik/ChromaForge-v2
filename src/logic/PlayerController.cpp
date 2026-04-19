@@ -205,8 +205,8 @@ void PlayerController::onFootstep(const Hitbox& hitbox) {
             int z = std::floor(pos.z + half.z * offsetZ);
             auto vox = level->chunks->getVoxel(x, y, z);
             if (vox) {
-                auto def = level->content->getIndices()->blocks.get(vox->id);
-                if (!def->obstacle) continue;
+                auto& def = level->content->getIndices()->blocks.require(vox->id);
+                if (!def.obstacle) continue;
                 blocksController->onBlockInteraction(
                     player.get(),
                     glm::ivec3(x, y, z), def,
@@ -255,7 +255,7 @@ void PlayerController::updatePlayer(float deltaTime){
 	player->updateInput(input, deltaTime);
 }
 
-static int determine_rotation(Block* def, const glm::ivec3& norm, glm::vec3& camDir) {
+static int determine_rotation(const Block* def, const glm::ivec3& norm, glm::vec3& camDir) {
     if (def && def->rotatable){
         const std::string& name = def->rotations.name;
         if (name == "pipe") {
@@ -281,8 +281,8 @@ static int determine_rotation(Block* def, const glm::ivec3& norm, glm::vec3& cam
 }
 
 static void pick_block(const ContentIndices* indices, Chunks* chunks, Player* player, int x, int y, int z) {
-    auto block = indices->blocks.get(chunks->getVoxel(x, y, z)->id);
-    itemid_t id = block->rt.pickingItem;
+    auto& block = indices->blocks.require(chunks->getVoxel(x, y, z)->id);
+    itemid_t id = block.rt.pickingItem;
     auto inventory = player->getInventory();
     size_t slotid = inventory->findSlotByItem(id, 0, 10);
     if (slotid == Inventory::npos) {
@@ -348,7 +348,7 @@ voxel* PlayerController::updateSelection(float maxDistance) {
     selection.vox = *vox;
     if (selectedState.segment) {
         selection.position = chunks->seekOrigin(
-            iend, indices->blocks.get(selection.vox.id), selectedState
+            iend, indices->blocks.require(selection.vox.id), selectedState
         );
         auto origin = chunks->getVoxel(selection.position);
         if (origin && origin->id != vox->id) {
@@ -363,31 +363,31 @@ voxel* PlayerController::updateSelection(float maxDistance) {
     return vox;
 }
 
-void PlayerController::processRightClick(Block* def, Block* target) {
+void PlayerController::processRightClick(const Block& def, const Block& target) {
     const auto& selection = player->selection;
     auto chunks = level->chunks.get();
     auto camera = player->camera.get();
 
     blockstate state {};
-    state.rotation = determine_rotation(def, selection.normal, camera->dir);
+    state.rotation = determine_rotation(&def, selection.normal, camera->dir);
 
-    if (!input.crouch && target->rt.funcsset.oninteract) {
+    if (!input.crouch && target.rt.funcsset.oninteract) {
         if (scripting::on_block_interact(player.get(), target, selection.position)) {
             return;
         }
     }
     auto coord = selection.actualPosition;
-    if (!target->replaceable){
+    if (!target.replaceable){
         coord += selection.normal;
-    } else if (def->rotations.name == BlockRotProfile::PIPE_NAME) {
+    } else if (def.rotations.name == BlockRotProfile::PIPE_NAME) {
         state.rotation = BLOCK_DIR_UP;
     }
-    blockid_t chosenBlock = def->rt.id;
+    blockid_t chosenBlock = def.rt.id;
 
     AABB blockAABB(coord, coord + 1);
     bool blocked = level->entities->hasBlockingInside(blockAABB);
 
-    if (def->obstacle && blocked) {
+    if (def.obstacle && blocked) {
         return;
     }
     auto vox = chunks->getVoxel(coord);
@@ -395,7 +395,7 @@ void PlayerController::processRightClick(Block* def, Block* target) {
     if (!chunks->checkReplaceability(def, state, coord)) {
         return;
     }
-    if (def->grounded) {
+    if (def.grounded) {
         const auto& vec = get_ground_direction(def, state.rotation);
         if (!chunks->isSolidBlock(coord.x + vec.x, coord.y + vec.y, coord.z + vec.z)) {
             return;
@@ -433,11 +433,11 @@ void PlayerController::updateInteraction() {
 
     auto inventory = player->getInventory();
     const ItemStack& stack = inventory->getSlot(player->getChosenSlot());
-    Item* item = indices->items.get(stack.getItemId());
+    auto& item = indices->items.require(stack.getItemId());
 
     auto vox = updateSelection(10.0f);
     if (vox == nullptr) {
-        if (input.build && item->rt.funcsset.on_use) {
+        if (input.build && item.rt.funcsset.on_use) {
             scripting::on_item_use(player.get(), item);
         }
         if (selection.entity) {
@@ -447,13 +447,13 @@ void PlayerController::updateInteraction() {
     }
 
     auto iend = selection.position;
-    if (input.attack && !input.crouch && item->rt.funcsset.on_block_break_by) {
+    if (input.attack && !input.crouch && item.rt.funcsset.on_block_break_by) {
         if (scripting::on_item_break_block(player.get(), item, iend.x, iend.y, iend.z)) {
             return;
         }
     }
-    auto target = indices->blocks.get(vox->id);
-    if (input.attack && target->breakable) {
+    auto& target = indices->blocks.require(vox->id);
+    if (input.attack && target.breakable) {
         blocksController->breakBlock(
             player.get(),
             target,
@@ -462,18 +462,18 @@ void PlayerController::updateInteraction() {
     }
     if (input.build && !input.crouch) {
         bool preventDefault = false;
-        if (item->rt.funcsset.on_use_on_block) {
+        if (item.rt.funcsset.on_use_on_block) {
             preventDefault = scripting::on_item_use_on_block(
                 player.get(), item, iend, selection.normal
             );
-        } else if (item->rt.funcsset.on_use) {
+        } else if (item.rt.funcsset.on_use) {
             preventDefault = scripting::on_item_use(player.get(), item);
         }
         if (preventDefault) return;
     }
-    auto def = indices->blocks.get(item->rt.placingBlock);
+    auto def = indices->blocks.get(item.rt.placingBlock);
     if (def && input.build) {
-        processRightClick(def, target);
+        processRightClick(*def, target);
     }
     if (input.pickBlock) {
         auto coord = selection.actualPosition;
@@ -503,7 +503,7 @@ void PlayerController::postUpdate(float delta, bool input_flag, bool pause) {
     }
 
     player->postUpdate();
-    camControl.update(this->input, delta, level->chunks.get());
+    camControl.update(this->input, pause ? 0.0f : delta, level->chunks.get());
 	if (input_flag) {
 		updateInteraction();
 	} else {

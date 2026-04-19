@@ -38,11 +38,11 @@ static int l_hud_open_block(lua::State* L) {
     if (vox == nullptr) {
         throw std::runtime_error("Block does not exists at " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z));
     }
-    auto def = scripting::content->getIndices()->blocks.get(vox->id);
+    auto& def = scripting::content->getIndices()->blocks.require(vox->id);
     auto assets = scripting::engine->getAssets();
-    auto layout = assets->get<UIDocument>(def->uiLayout);
+    auto layout = assets->get<UIDocument>(def.uiLayout);
     if (layout == nullptr) {
-        throw std::runtime_error("Block '" + def->name+  "' has no ui layout");
+        throw std::runtime_error("Block '" + def.name+  "' has no ui layout");
     }
 
     auto id = scripting::blocks->createBlockInventory(x, y, z);
@@ -50,7 +50,7 @@ static int l_hud_open_block(lua::State* L) {
     scripting::hud->openInventory(glm::ivec3(x, y, z), layout, scripting::level->inventories->get(id), playerInventory);
 
     lua::pushinteger(L, id);
-    lua::pushstring(L, def->uiLayout);
+    lua::pushstring(L, def.uiLayout);
     return 2;
 }
 

@@ -9,10 +9,9 @@
 #include "logic/BlocksController.h"
 #include "logic/LevelController.h"
 
-static Block* require_block(lua::State* L) {
+static const Block* require_block(lua::State* L) {
     auto indices = scripting::content->getIndices();
     auto id = lua::tointeger(L, 1);
-    if (static_cast<size_t>(id) >= indices->blocks.count()) return nullptr;
     return indices->blocks.get(id);
 }
 
@@ -74,7 +73,7 @@ static int l_seek_origin(lua::State* L) {
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
     auto vox = scripting::level->chunks->getVoxel(x, y, z);
-    auto def = scripting::indices->blocks.get(vox->id);
+    auto& def = scripting::indices->blocks.require(vox->id);
     return lua::pushivec3_stack(L, scripting::level->chunks->seekOrigin({x, y, z}, def, vox->state));
 }
 
@@ -110,11 +109,11 @@ static int l_get_x(lua::State* L) {
     if (vox == nullptr) {
         return lua::pushivec3_stack(L, 1, 0, 0);
     }
-    auto def = scripting::level->content->getIndices()->blocks.get(vox->id);
-    if (!def->rotatable) {
+    auto& def = scripting::level->content->getIndices()->blocks.require(vox->id);
+    if (!def.rotatable) {
         return lua::pushivec3_stack(L, 1, 0, 0);
     } else {
-        const CoordSystem& rot = def->rotations.variants[vox->state.rotation];
+        const CoordSystem& rot = def.rotations.variants[vox->state.rotation];
         return lua::pushivec3_stack(L, rot.axisX.x, rot.axisX.y, rot.axisX.z);
     }
 }
@@ -127,11 +126,11 @@ static int l_get_y(lua::State* L) {
     if (vox == nullptr) {
         return lua::pushivec3_stack(L, 0, 1, 0);
     }
-    auto def = scripting::level->content->getIndices()->blocks.get(vox->id);
-    if (!def->rotatable) {
+    auto& def = scripting::level->content->getIndices()->blocks.require(vox->id);
+    if (!def.rotatable) {
         return lua::pushivec3_stack(L, 0, 1, 0);
     } else {
-        const CoordSystem& rot = def->rotations.variants[vox->state.rotation];
+        const CoordSystem& rot = def.rotations.variants[vox->state.rotation];
         return lua::pushivec3_stack(L, rot.axisY.x, rot.axisY.y, rot.axisY.z);
     }
 }
@@ -144,11 +143,11 @@ static int l_get_z(lua::State* L) {
     if (vox == nullptr) {
         return lua::pushivec3_stack(L, 0, 0, 1);
     }
-    auto def = scripting::level->content->getIndices()->blocks.get(vox->id);
-    if (!def->rotatable) {
+    auto& def = scripting::level->content->getIndices()->blocks.require(vox->id);
+    if (def.rotatable) {
         return lua::pushivec3_stack(L, 0, 0, 1);
     } else {
-        const CoordSystem& rot = def->rotations.variants[vox->state.rotation];
+        const CoordSystem& rot = def.rotations.variants[vox->state.rotation];
         return lua::pushivec3_stack(L, rot.axisZ.x, rot.axisZ.y, rot.axisZ.z);
     }
 }
@@ -339,10 +338,10 @@ static int l_place(lua::State* L) {
     }
     const auto def = scripting::level->content->getIndices()->blocks.get(id);
     if (def == nullptr) {
-        throw std::runtime_error("there is no block with index "+std::to_string(id));
+        throw std::runtime_error("There is no block with index " + std::to_string(id));
     }
     auto player = scripting::level->getObject<Player>(playerid);
-    scripting::controller->getBlocksController()->placeBlock(player ? player.get() : nullptr, def, int2blockstate(state), x, y, z);
+    scripting::controller->getBlocksController()->placeBlock(player ? player.get() : nullptr, *def, int2blockstate(state), x, y, z);
     return 0;
 }
 
@@ -353,7 +352,7 @@ static int l_destruct(lua::State* L) {
     auto playerid = lua::gettop(L) >= 4 ? lua::tointeger(L, 4) : -1;
     auto voxel = scripting::level->chunks->getVoxel(x, y, z);
     if (voxel == nullptr) return 0;
-    const auto def = scripting::level->content->getIndices()->blocks.get(voxel->id);
+    auto& def = scripting::level->content->getIndices()->blocks.require(voxel->id);
     auto player = scripting::level->getObject<Player>(playerid);
     scripting::controller->getBlocksController()->breakBlock(player ? player.get() : nullptr, def, x, y, z);
     return 0;

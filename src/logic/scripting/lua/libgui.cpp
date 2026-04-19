@@ -46,21 +46,26 @@ static DocumentNode getDocumentNode(lua::State* L, int idx=1) {
 
 static int l_menu_back(lua::State* L) {
     auto node = getDocumentNode(L);
-    auto menu = dynamic_cast<gui::Menu*>(node.node.get());
-    menu->back();
+    if (auto menu = dynamic_cast<gui::Menu*>(node.node.get())) {
+        menu->back();
+    }
     return 0;
 }
 
 static int l_menu_reset(lua::State* L) {
     auto node = getDocumentNode(L);
-    auto menu = dynamic_cast<gui::Menu*>(node.node.get());
-    menu->reset();
+    if (auto menu = dynamic_cast<gui::Menu*>(node.node.get())) {
+        menu->reset();
+    }
     return 0;
 }
 
 static int l_container_add(lua::State* L) {
     auto docnode = getDocumentNode(L);
     auto node = dynamic_cast<gui::Container*>(docnode.node.get());
+    if (node == nullptr) {
+        return 0;
+    }
     auto xmlsrc = lua::require_string(L, 2);
     try {
         auto subnode = guiutil::create(xmlsrc, docnode.document->getEnvironment());
@@ -110,9 +115,10 @@ static int l_move_into(lua::State* L) {
 
 static int l_textbox_paste(lua::State* L) {
     auto node = getDocumentNode(L);
-    auto box = dynamic_cast<gui::TextBox*>(node.node.get());
-    auto text = lua::require_string(L, 2);
-    box->paste(util::str2wstr_utf8(text));
+    if (auto box = dynamic_cast<gui::TextBox*>(node.node.get())) {
+        auto text = lua::require_string(L, 2);
+        box->paste(util::str2wstr_utf8(text));
+    }
     return 0;
 }
 

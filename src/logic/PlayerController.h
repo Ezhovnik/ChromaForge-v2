@@ -62,7 +62,7 @@ private:
     void onFootstep(const Hitbox& hitbox);
     void updateFootsteps(float delta);
 
-	void processRightClick(Block* def, Block* target);
+	void processRightClick(const Block& def, const Block& target);
 
 	voxel* updateSelection(float maxDistance);
 public:

@@ -25,7 +25,7 @@ enum class BlockInteraction {
 };
 
 using on_block_interaction = std::function<void(
-    Player*, glm::ivec3, const Block*, BlockInteraction type
+    Player*, glm::ivec3, const Block&, BlockInteraction type
 )>;
 
 class BlocksController {
@@ -48,12 +48,12 @@ public:
 
     void breakBlock(
         Player* player,
-        const Block* def,
+        const Block& def,
         int x, int y, int z
     );
     void placeBlock(
         Player* player,
-        const Block* def,
+        const Block& def,
         blockstate state,
         int x, int y, int z
     );
@@ -74,7 +74,7 @@ public:
     void onBlockInteraction(
         Player* player,
         glm::ivec3 pos,
-        const Block* def,
+        const Block& def,
         BlockInteraction type
     );
 

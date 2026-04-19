@@ -90,9 +90,8 @@ void WorldFiles::writePacks(const std::vector<ContentPack>& packs) {
 
 template<class T>
 static void write_indices(const ContentUnitIndices<T>& indices, dynamic::List& list) {
-    size_t count = indices.count();
-    for (size_t i = 0; i < count; ++i) {
-        list.put(indices.get(i)->name);
+    for (auto unit : indices.getIterable()) {
+        list.put(unit->name);
 	}
 }
 

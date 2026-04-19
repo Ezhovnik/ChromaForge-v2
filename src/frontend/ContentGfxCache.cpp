@@ -15,8 +15,9 @@ ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) : conte
     sideregions = std::make_unique<UVRegion[]>(contentIds->blocks.count() * 6);
     Atlas* atlas = assets->get<Atlas>("blocks");
 
-    for (uint i = 0; i < contentIds->blocks.count(); ++i) {
-        Block* def = contentIds->blocks.get(i);
+    const auto& blocks = contentIds->blocks.getIterable();
+    for (uint i = 0; i < blocks.size(); ++i) {
+        auto def = blocks[i];
         for (uint side = 0; side < 6; ++side) {
             const std::string& tex = def->textureFaces[side];
             if (atlas->has(tex)) {
