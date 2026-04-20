@@ -25,10 +25,10 @@ Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), con
 Lighting::~Lighting() = default;
 
 void Lighting::clear() {
-    for (uint index = 0; index < chunks->volume; ++index) {
-        std::shared_ptr<Chunk> chunk = chunks->chunks[index];
+    for (size_t index = 0; index < chunks->volume; ++index) {
+        auto chunk = chunks->chunks[index];
         if (chunk == nullptr) continue;
-        
+
         LightMap& light_map = chunk->light_map;
         for (int i = 0; i < CHUNK_VOLUME; ++i) {
             light_map.map[i] = 0;
@@ -194,7 +194,7 @@ void Lighting::onBlockSet(int x, int y, int z, blockid_t id) {
         solverG->solve();
         solverB->solve();
 
-		if (block.emission[0] || block.emission[1] || block.emission[2]){
+		if (block.emission[0] || block.emission[1] || block.emission[2]) {
 			solverR->add(x, y, z, block.emission[0]);
 			solverG->add(x, y, z, block.emission[1]);
 			solverB->add(x, y, z, block.emission[2]);

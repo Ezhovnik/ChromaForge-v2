@@ -162,7 +162,13 @@ public:
 
     void put(Chunk* chunk, std::vector<ubyte> entitiesData);
 
-    void put(int x, int z, int layer, std::unique_ptr<ubyte[]> data, size_t size, bool rle);
+    void put(
+        int x, int z,
+        int layer,
+        std::unique_ptr<ubyte[]> data,
+        size_t size,
+        bool rle
+    );
 
     std::unique_ptr<ubyte[]> getChunk(int x, int z);
     std::unique_ptr<light_t[]> getLights(int x, int z);

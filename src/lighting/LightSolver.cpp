@@ -53,7 +53,7 @@ void LightSolver::solve() {
 		rem_queue.pop();
 
 		for (int i = 0; i < 6; ++i) {
-			int imul3 = i*3;
+			int imul3 = i * 3;
 			int x = entry.x + LightSolverConsts::coords[imul3];
 			int y = entry.y + LightSolverConsts::coords[imul3 + 1];
 			int z = entry.z + LightSolverConsts::coords[imul3 + 2];
@@ -64,10 +64,10 @@ void LightSolver::solve() {
 
                 chunk->flags.modified = true;
 				ubyte light = chunk->light_map.get(local_x, y, local_z, channel);
-				if (light != 0 && light == entry.light - 1){
+				if (light != 0 && light == entry.light - 1) {
 					rem_queue.push(lightentry{x, y, z, light});
 					chunk->light_map.set(local_x, y, local_z, channel, 0);
-				} else if (light >= entry.light){
+				} else if (light >= entry.light) {
 					add_queue.push(lightentry{x, y, z, light});
 				}
 			}
@@ -95,7 +95,7 @@ void LightSolver::solve() {
 				const Block* block = blockDefs[vox.id];
 				if (block->lightPassing && light + 2 <= entry.light){
 					chunk->light_map.set(local_x, y, local_z, channel, entry.light - 1);
-					add_queue.push(lightentry{x, y, z, (ubyte)(entry.light - 1)});
+					add_queue.push(lightentry{x, y, z, ubyte(entry.light - 1)});
 				}
 			}
 		}

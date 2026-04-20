@@ -109,8 +109,6 @@ std::string files::read_string(const std::filesystem::path& filename) {
 bool files::write_string(const std::filesystem::path& filename, const std::string content) {
 	std::ofstream file(filename);
 	if (!file) {
-		int error = errno;
-		LOG_ERROR("Failed to open file '{}'. What: {}", std::filesystem::weakly_canonical(filename).u8string(), std::strerror(error));
 		return false;
 	}
 

@@ -7,7 +7,7 @@ void LevelEvents::listen(lvl_event_type type, const chunk_event_func& func) {
 	callbacks.push_back(func);
 }
 
-void LevelEvents::sensor(lvl_event_type type, Chunk* chunk) {
+void LevelEvents::trigger(lvl_event_type type, Chunk* chunk) {
 	const auto& callbacks = chunk_callbacks[type];
 	for (const chunk_event_func& func : callbacks) {
 		func(type, chunk);

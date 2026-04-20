@@ -10,7 +10,7 @@
 #include "interfaces/Object.h"
 
 inline constexpr glm::vec3 DEFAULT_SPAWNPOINT = {0, 256, 0}; ///< Точка появления игрока
-inline constexpr float DEFAULT_PLAYER_SPEED = 5.0f; ///< Базовая скорость перемещения игрока
+inline constexpr float DEFAULT_PLAYER_SPEED = 4.0f; ///< Базовая скорость перемещения игрока
 inline constexpr int DEFAULT_PLAYER_INVENTORY_SIZE = 40; ///< Размер инвентаря игрока (количество слотов)
 
 class World;

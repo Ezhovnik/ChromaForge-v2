@@ -59,7 +59,9 @@ namespace files {
         const std::filesystem::path& filename,
         size_t& length
     );
-    std::vector<ubyte> read_bytes(const std::filesystem::path& filename);
+    std::vector<ubyte> read_bytes(
+        const std::filesystem::path& filename
+    );
     std::string read_string(
         const std::filesystem::path& filename
     );

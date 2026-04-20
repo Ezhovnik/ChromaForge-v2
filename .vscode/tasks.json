@@ -12,6 +12,7 @@
                 "-DCMAKE_CXX_COMPILER:FILEPATH=C:/msys64/ucrt64/bin/g++.exe",
                 "-DCMAKE_PREFIX_PATH=C:/msys64/ucrt64",
                 "-DCMAKE_BUILD_TYPE=Debug",
+                "-DCMAKE_CXX_FLAGS_DEBUG=-Og -g",
                 // "-DCMAKE_BUILD_TYPE=Release",
             ],
             "options": {

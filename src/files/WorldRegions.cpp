@@ -354,7 +354,13 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
     int regionX, regionZ, localX, localZ;
     calc_reg_coords(chunk->chunk_x, chunk->chunk_z, regionX, regionZ, localX, localZ);
 
-    put(chunk->chunk_x, chunk->chunk_z, RegionConsts::LAYER_VOXELS, chunk->encode(), CHUNK_DATA_LEN, true);
+    put(
+        chunk->chunk_x, chunk->chunk_z,
+        RegionConsts::LAYER_VOXELS,
+        chunk->encode(),
+        CHUNK_DATA_LEN,
+        true
+    );
 
     if (doWriteLights && chunk->flags.lighted) {
         put(
@@ -412,7 +418,7 @@ chunk_inventories_map WorldRegions::fetchInventories(int x, int z) {
     const ubyte* data = getData(x, z, RegionConsts::LAYER_INVENTORIES, bytesSize);
     if (data == nullptr) return meta;
     ByteReader reader(data, bytesSize);
-    int count = reader.getInt32();
+    auto count = reader.getInt32();
     for (int i = 0; i < count; ++i) {
         uint index = reader.getInt32();
         uint size = reader.getInt32();
@@ -453,7 +459,13 @@ void WorldRegions::processRegionVoxels(int x, int z, const regionproc& func) {
             if (data == nullptr) continue;
             data = decompress(data.get(), length, CHUNK_DATA_LEN);
             if (func(data.get())) {
-                put(gx, gz, RegionConsts::LAYER_VOXELS, std::move(data), CHUNK_DATA_LEN, true);
+                put(
+                    gx, gz,
+                    RegionConsts::LAYER_VOXELS,
+                    std::move(data),
+                    CHUNK_DATA_LEN,
+                    true
+                );
             }
         }
     }

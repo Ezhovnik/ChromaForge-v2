@@ -583,12 +583,12 @@ void Chunks::translate(int32_t dx, int32_t dz) {
 	}
 	for (uint32_t z = 0; z < depth; ++z) {
 		for (uint32_t x = 0; x < width; ++x) {
-			std::shared_ptr<Chunk> chunk = chunks[z * width + x];
+			auto chunk = chunks[z * width + x];
 			int nx = x - dx;
 			int nz = z - dz;
 			if (chunk == nullptr) continue;
 			if (nx < 0 || nz < 0 || nx >= static_cast<int>(width) || nz >= static_cast<int>(depth)) {
-				level->events->sensor(CHUNK_HIDDEN, chunk.get());
+				level->events->trigger(CHUNK_HIDDEN, chunk.get());
 				save(chunk.get());
 				chunksCount--;
 				continue;
