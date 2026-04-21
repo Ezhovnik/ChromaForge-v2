@@ -1,4 +1,4 @@
-#include "DefaultWorldGenerator.h"
+#include <voxels/DefaultWorldGenerator.h>
 
 #include <vector>
 #include <time.h>
@@ -14,7 +14,7 @@
 #include <voxels/WorldGenerator.h>
 #include <core_content_defs.h>
 #include <debug/Logger.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <math/voxmaths.h>
 #include <math/rand.h>
 #include <voxels/voxel.h>

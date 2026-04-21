@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_UI_ELEMENTS_LABEL_H_
 #define GRAPHICS_UI_ELEMENTS_LABEL_H_
 
-#include "graphics/ui/elements/UINode.h"
+#include <graphics/ui/elements/UINode.h>
 
 class Font;
 

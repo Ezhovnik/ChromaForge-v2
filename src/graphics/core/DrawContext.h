@@ -2,8 +2,8 @@
 #define GRAPHICS_CORE_GFX_CONTEXT_H_
 
 #include <typedefs.h>
-#include "Viewport.h"
-#include "commons.h"
+#include <graphics/core/Viewport.h>
+#include <graphics/core/commons.h>
 
 class Batch2D;
 class Framebuffer;

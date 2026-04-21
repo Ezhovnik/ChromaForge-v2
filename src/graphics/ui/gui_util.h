@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-#include "GUI.h"
+#include <graphics/ui/GUI.h>
 #include <delegates.h>
 #include <typedefs.h>
 

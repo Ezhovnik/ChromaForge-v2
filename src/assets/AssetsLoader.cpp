@@ -3,24 +3,24 @@
 #include <memory>
 
 #include <assets/Assets.h>
-#include "graphics/core/ShaderProgram.h"
-#include "graphics/core/Texture.h"
-#include "coders/imageio.h"
-#include "graphics/core/Font.h"
-#include "graphics/core/Atlas.h"
+#include <graphics/core/ShaderProgram.h>
+#include <graphics/core/Texture.h>
+#include <coders/imageio.h>
+#include <graphics/core/Font.h>
+#include <graphics/core/Atlas.h>
 #include <debug/Logger.h>
 #include <constants.h>
-#include "graphics/core/ImageData.h"
+#include <graphics/core/ImageData.h>
 #include <assets/asset_loaders.h>
-#include "files/engine_paths.h"
+#include <files/engine_paths.h>
 #include <core_content_defs.h>
-#include "content/Content.h"
-#include "logic/scripting/scripting.h"
-#include "data/dynamic.h"
-#include "files/files.h"
+#include <content/Content.h>
+#include <logic/scripting/scripting.h>
+#include <data/dynamic.h>
+#include <files/files.h>
 #include <util/ThreadPool.h>
 #include <voxels/Block.h>
-#include "objects/rigging.h"
+#include <objects/rigging.h>
 
 AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(assets), paths(paths) {
 	// Регистрируем встроенные загрузчики из asset_loaders.h

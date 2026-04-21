@@ -1,11 +1,11 @@
-#include "lua_engine.h"
+#include <logic/scripting/lua/lua_engine.h>
 
 #include <iomanip>
 #include <iostream>
 
-#include "api_lua.h"
-#include "lua_util.h"
-#include "lua_custom_types.h"
+#include <logic/scripting/lua/api_lua.h>
+#include <logic/scripting/lua/lua_util.h>
+#include <logic/scripting/lua/lua_custom_types.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 

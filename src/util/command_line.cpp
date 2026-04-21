@@ -6,7 +6,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "files/engine_paths.h"
+#include <files/engine_paths.h>
 
 /**
  * @brief Утилита для последовательного чтения аргументов командной строки.
@@ -75,7 +75,7 @@ bool perform_keyword(ArgsReader& reader, const std::string& keyword, EnginePaths
 			std::cerr << token << " is not a directory" << std::endl;
 			throw std::runtime_error(token + " is not a directory");
 		}
-		paths.setResources(std::filesystem::path(token));
+		paths.setResourcesFolder(std::filesystem::path(token));
 		std::cout << "Resources folder: " << token << std::endl;
 	} else if (keyword == "--dir") {
 		// Читаем следующий аргумент как путь к папке пользовательских файлов
@@ -83,7 +83,7 @@ bool perform_keyword(ArgsReader& reader, const std::string& keyword, EnginePaths
 		if (!std::filesystem::is_directory(std::filesystem::path(token))) {
 			std::filesystem::create_directories(std::filesystem::path(token));
 		}
-		paths.setUserfiles(std::filesystem::path(token));
+		paths.setUserFilesFolder(std::filesystem::path(token));
 		std::cout << "Userfiles folder: " << token << std::endl;
 	} else if (keyword == "--help" || keyword == "-h") {
 		// Выводим справку и сообщаем, что запуск нужно прервать.

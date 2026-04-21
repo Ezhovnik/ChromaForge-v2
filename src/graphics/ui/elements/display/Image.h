@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_UI_ELEMENTS_DISPLAY_IMAGE_H_
 #define GRAPHICS_UI_ELEMENTS_DISPLAY_IMAGE_H_
 
-#include "graphics/ui/elements/UINode.h"
+#include <graphics/ui/elements/UINode.h>
 
 namespace gui {
     class Image : public UINode {

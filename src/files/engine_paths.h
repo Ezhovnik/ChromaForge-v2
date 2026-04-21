@@ -6,7 +6,7 @@
 #include <vector>
 #include <stdexcept>
 
-#include "content/ContentPack.h"
+#include <content/ContentPack.h>
 
 class files_access_error : public std::runtime_error {
 public:
@@ -15,33 +15,35 @@ public:
 
 class EnginePaths {
 private:
-    std::filesystem::path userfiles {"."};
-    std::filesystem::path resources {"res"};
-    std::filesystem::path worldFolder;
+    std::filesystem::path userFilesFolder {"."};
+    std::filesystem::path resourcesFolder {"res"};
+    std::filesystem::path currentWorldFolder;
     std::vector<ContentPack>* contentPacks = nullptr;
 public:
     void prepare();
 
-    std::filesystem::path getUserfiles() const;
-    std::filesystem::path getResources() const;
+    void setUserFilesFolder(std::filesystem::path folder);
+    std::filesystem::path getUserFilesFolder() const;
 
-    std::filesystem::path getScreenshotFile(const std::string& ext);
+    void setResourcesFolder(std::filesystem::path folder);
+    std::filesystem::path getResourcesFolder() const;
+
     std::filesystem::path getWorldsFolder();
-    std::filesystem::path getWorldFolder();
-    std::filesystem::path getWorldFolder(const std::string& name);
-    std::filesystem::path getLogsFile();
+    std::filesystem::path getWorldFolderByName(const std::string& name);
+
+    void setCurrentWorldFolder(std::filesystem::path folder);
+    std::filesystem::path getCurrentWorldFolder();
+
+    std::filesystem::path getNewScreenshotFile(const std::string& ext);
     std::filesystem::path getControlsFile();
     std::filesystem::path getSettingsFile();
-    bool isWorldNameUsed(const std::string& name);
+    std::filesystem::path getLogsFile();
 
-    void setUserfiles(std::filesystem::path folder);
-    void setResources(std::filesystem::path folder);
     void setContentPacks(std::vector<ContentPack>* contentPacks);
-    void setWorldFolder(std::filesystem::path folder);
 
     std::vector<std::filesystem::path> scanForWorlds();
 
-    std::filesystem::path resolve(const std::string& path, bool throwErr=true);
+    std::filesystem::path resolve(const std::string& path, bool throwErr = true);
 };
 
 struct PathsRoot {

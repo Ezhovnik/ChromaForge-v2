@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <unordered_map>
 
-#include "ContentPack.h"
+#include <content/ContentPack.h>
 
 class PacksManager {
 private:

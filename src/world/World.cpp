@@ -1,23 +1,23 @@
-#include "World.h"
+#include <world/World.h>
 
 #include <memory>
 #include <utility>
 
 #include <world/Level.h>
 #include <world/LevelEvents.h>
-#include "files/WorldFiles.h"
+#include <files/WorldFiles.h>
 #include <voxels/Chunk.h>
 #include <voxels/Chunks.h>
 #include <voxels/ChunksStorage.h>
-#include "objects/Player.h"
+#include <objects/Player.h>
 #include <physics/PhysicsSolver.h>
 #include <debug/Logger.h>
-#include "content/Content.h"
-#include "content/ContentLUT.h"
-#include "items/Inventories.h"
+#include <content/Content.h>
+#include <content/ContentLUT.h>
+#include <items/Inventories.h>
 #include <world/WorldGenerators.h>
 #include <settings.h>
-#include "objects/Entities.h"
+#include <objects/Entities.h>
 
 static constexpr float DAYTIME_SPECIFIC_SPEED = 1.0f / (24.0f * 60.0f);
 

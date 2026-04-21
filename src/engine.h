@@ -10,11 +10,11 @@
 
 #include <typedefs.h>
 #include <delegates.h>
-#include "files/engine_paths.h"
-#include "content/ContentPack.h"
+#include <files/engine_paths.h>
+#include <content/ContentPack.h>
 #include <assets/Assets.h>
-#include "content/content_fwd.h"
-#include "content/PacksManager.h"
+#include <content/content_fwd.h>
+#include <content/PacksManager.h>
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
 

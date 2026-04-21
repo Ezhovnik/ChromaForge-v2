@@ -1,25 +1,25 @@
-#include "GUI.h"
+#include <graphics/ui/GUI.h>
 
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
 
-#include "elements/UINode.h"
-#include "elements/layout/Menu.h"
+#include <graphics/ui/elements/UINode.h>
+#include <graphics/ui/elements/layout/Menu.h>
 #include <assets/Assets.h>
-#include "graphics/core/Batch2D.h"
+#include <graphics/core/Batch2D.h>
 #include <window/Events.h>
 #include <window/input.h>
 #include <window/Camera.h>
 #include <window/Window.h>
-#include "graphics/core/ShaderProgram.h"
+#include <graphics/core/ShaderProgram.h>
 #include <debug/Logger.h>
-#include "graphics/core/DrawContext.h"
-#include "frontend/UIDocument.h"
+#include <graphics/core/DrawContext.h>
+#include <frontend/UIDocument.h>
 #include <core_content_defs.h>
-#include "elements/display/Label.h"
-#include "frontend/locale/langs.h"
-#include "gui_util.h"
+#include <graphics/ui/elements/display/Label.h>
+#include <frontend/locale/langs.h>
+#include <graphics/ui/gui_util.h>
 
 using namespace gui;
 

@@ -8,8 +8,8 @@
 
 #include <typedefs.h>
 #include <constants.h>
-#include "Content.h"
-#include "data/dynamic.h"
+#include <content/Content.h>
+#include <data/dynamic.h>
 
 struct ContentEntry {
     ContentType type;

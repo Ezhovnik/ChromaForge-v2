@@ -4,10 +4,10 @@
 #include <vector>
 #include <memory>
 
-#include "ItemStack.h"
+#include <items/ItemStack.h>
 #include <typedefs.h>
-#include "data/dynamic.h"
-#include "interfaces/Serializable.h"
+#include <data/dynamic.h>
+#include <interfaces/Serializable.h>
 
 class ContentIndices;
 class ContentLUT;

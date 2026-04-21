@@ -3,20 +3,20 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "api_lua.h"
+#include <logic/scripting/lua/api_lua.h>
 #include <engine.h>
-#include "files/engine_paths.h"
+#include <files/engine_paths.h>
 #include <core_content_defs.h>
-#include "files/WorldFiles.h"
+#include <files/WorldFiles.h>
 #include <world/Level.h>
 #include <world/World.h>
-#include "assets/AssetsLoader.h"
-#include "content/Content.h"
+#include <assets/AssetsLoader.h>
+#include <content/Content.h>
 
 static int l_pack_get_folder(lua::State* L) {
     std::string packName = lua::tostring(L, 1);
     if (packName == BUILTIN_CONTENT_NAMESPACE) {
-        auto folder = scripting::engine->getPaths()->getResources().u8string() + "/";
+        auto folder = scripting::engine->getPaths()->getResourcesFolder().u8string() + "/";
         return lua::pushstring(L, folder);
     }
     for (auto& pack : scripting::engine->getContentPacks()) {

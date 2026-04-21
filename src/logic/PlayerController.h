@@ -6,8 +6,8 @@
 
 #include <glm/glm.hpp>
 
-#include "objects/Player.h"
-#include "interfaces/Object.h"
+#include <objects/Player.h>
+#include <interfaces/Object.h>
 
 class Camera;
 class BlocksController;

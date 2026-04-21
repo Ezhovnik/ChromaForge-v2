@@ -1,16 +1,16 @@
-#include "LevelController.h"
+#include <logic/LevelController.h>
 
 #include <algorithm>
 
 #include <world/Level.h>
 #include <physics/Hitbox.h>
-#include "scripting/scripting.h"
+#include <logic/scripting/scripting.h>
 #include <world/World.h>
-#include "interfaces/Object.h"
+#include <interfaces/Object.h>
 #include <debug/Logger.h>
-#include "files/WorldFiles.h"
+#include <files/WorldFiles.h>
 #include <settings.h>
-#include "objects/Entities.h"
+#include <objects/Entities.h>
 
 LevelController::LevelController(EngineSettings& settings, std::unique_ptr<Level> level) : 
     settings(settings), 

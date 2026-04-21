@@ -1,8 +1,8 @@
-#include "Plotter.h"
+#include <graphics/ui/elements/display/Plotter.h>
 
-#include "graphics/core/Batch2D.h"
-#include "graphics/core/Font.h"
-#include "graphics/core/DrawContext.h"
+#include <graphics/core/Batch2D.h>
+#include <graphics/core/Font.h>
+#include <graphics/core/DrawContext.h>
 #include <assets/Assets.h>
 #include <util/stringutil.h>
 

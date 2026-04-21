@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "coders/json.h"
+#include <coders/json.h>
 
 /**
  * @brief Абстрактный интерфейс для объектов, поддерживающих сериализацию в JSON.

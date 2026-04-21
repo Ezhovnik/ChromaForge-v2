@@ -1,14 +1,14 @@
-#include "Batch2D.h"
+#include <graphics/core/Batch2D.h>
 
 #include <cmath>
 
 #include <GL/glew.h>
 
-#include "Mesh.h"
-#include "Texture.h"
+#include <graphics/core/Mesh.h>
+#include <graphics/core/Texture.h>
 #include <typedefs.h>
 #include <math/UVRegion.h>
-#include "gl_util.h"
+#include <graphics/core/gl_util.h>
 
 inline constexpr uint B2D_VERTEX_SIZE = 8; ///< Размер одной вершины в количестве float-ов
 static const vattr attrs[] = { ///< Формат вершин: позиция (2), текстурные координаты (2), цвет (4)

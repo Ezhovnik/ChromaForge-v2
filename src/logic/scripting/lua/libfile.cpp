@@ -1,12 +1,12 @@
 #include <string>
 #include <filesystem>
 
-#include "api_lua.h"
+#include <logic/scripting/lua/api_lua.h>
 #include <engine.h>
-#include "files/files.h"
-#include "files/engine_paths.h"
+#include <files/files.h>
+#include <files/engine_paths.h>
 #include <util/stringutil.h>
-#include "coders/zip.h"
+#include <coders/zip.h>
 
 static std::filesystem::path resolve_path(const std::string& path) {
     return scripting::engine->getPaths()->resolve(path);

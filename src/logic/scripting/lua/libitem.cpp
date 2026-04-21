@@ -1,6 +1,6 @@
-#include "api_lua.h"
-#include "content/Content.h"
-#include "items/Item.h"
+#include <logic/scripting/lua/api_lua.h>
+#include <content/Content.h>
+#include <items/Item.h>
 
 static const Item* get_item_def(lua::State* L, int idx) {
     auto indices = scripting::content->getIndices();

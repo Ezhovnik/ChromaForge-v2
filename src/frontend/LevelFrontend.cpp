@@ -1,16 +1,16 @@
-#include "LevelFrontend.h"
+#include <frontend/LevelFrontend.h>
 
 #include <world/Level.h>
 #include <assets/Assets.h>
-#include "graphics/core/Atlas.h"
-#include "graphics/render/BlocksPreview.h"
-#include "ContentGfxCache.h"
-#include "content/Content.h"
-#include "logic/LevelController.h"
-#include "logic/PlayerController.h"
+#include <graphics/core/Atlas.h>
+#include <graphics/render/BlocksPreview.h>
+#include <frontend/ContentGfxCache.h>
+#include <content/Content.h>
+#include <logic/LevelController.h>
+#include <logic/PlayerController.h>
 #include <voxels/Block.h>
-#include "audio/audio.h"
-#include "objects/Player.h"
+#include <audio/audio.h>
+#include <objects/Player.h>
 
 LevelFrontend::LevelFrontend(
     Player* currentPlayer,

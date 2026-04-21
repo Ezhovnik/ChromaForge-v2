@@ -1,9 +1,9 @@
-#include "ALAudio.h"
+#include <audio/AL/ALAudio.h>
 
 #include <string>
 #include <utility>
 
-#include "alutil.h"
+#include <audio/AL/alutil.h>
 #include <debug/Logger.h>
 
 using namespace audio;

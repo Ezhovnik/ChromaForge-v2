@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "commons.h"
+#include <graphics/core/commons.h>
 
 class Mesh;
 

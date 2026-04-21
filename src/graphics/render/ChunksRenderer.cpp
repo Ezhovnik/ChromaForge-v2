@@ -1,10 +1,10 @@
-#include "ChunksRenderer.h"
+#include <graphics/render/ChunksRenderer.h>
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
-#include "graphics/core/Mesh.h"
-#include "BlocksRenderer.h"
+#include <graphics/core/Mesh.h>
+#include <graphics/render/BlocksRenderer.h>
 #include <voxels/Chunk.h>
 #include <world/Level.h>
 #include <debug/Logger.h>

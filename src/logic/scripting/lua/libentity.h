@@ -3,11 +3,11 @@
 
 #include <optional>
 
-#include "api_lua.h"
-#include "logic/LevelController.h"
-#include "frontend/hud.h"
+#include <logic/scripting/lua/api_lua.h>
+#include <logic/LevelController.h>
+#include <frontend/hud.h>
 #include <world/Level.h>
-#include "objects/Entities.h"
+#include <objects/Entities.h>
 
 namespace scripting {
     extern Hud* hud;

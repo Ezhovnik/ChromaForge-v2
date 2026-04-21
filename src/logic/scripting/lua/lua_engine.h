@@ -1,10 +1,10 @@
 #ifndef LOGIC_SCRIPTING_LUA_ENGINE_H_
 #define LOGIC_SCRIPTING_LUA_ENGINE_H_
 
-#include "lua_util.h"
+#include <logic/scripting/lua/lua_util.h>
 
-#include "logic/scripting/scripting_functional.h"
-#include "data/dynamic.h"
+#include <logic/scripting/scripting_functional.h>
+#include <data/dynamic.h>
 #include <delegates.h>
 
 #include <string>

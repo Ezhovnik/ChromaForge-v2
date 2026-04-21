@@ -1,4 +1,4 @@
-#include "WorldRenderer.h"
+#include <graphics/render/WorldRenderer.h>
 
 #include <vector>
 #include <algorithm>
@@ -11,41 +11,41 @@
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "content/Content.h"
+#include <content/Content.h>
 #include <window/Window.h>
 #include <window/Camera.h>
-#include "graphics/core/Mesh.h"
-#include "graphics/core/ShaderProgram.h"
-#include "graphics/core/Texture.h"
-#include "graphics/core/Atlas.h"
-#include "graphics/core/LineBatch.h"
+#include <graphics/core/Mesh.h>
+#include <graphics/core/ShaderProgram.h>
+#include <graphics/core/Texture.h>
+#include <graphics/core/Atlas.h>
+#include <graphics/core/LineBatch.h>
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>
 #include <voxels/Block.h>
 #include <world/World.h>
 #include <world/Level.h>
-#include "objects/Player.h"
+#include <objects/Player.h>
 #include <assets/Assets.h>
-#include "logic/PlayerController.h"
+#include <logic/PlayerController.h>
 #include <debug/Logger.h>
-#include "graphics/render/ChunksRenderer.h"
+#include <graphics/render/ChunksRenderer.h>
 #include <world/LevelEvents.h>
 #include <math/FrustumCulling.h>
 #include <math/voxmaths.h>
 #include <engine.h>
 #include <settings.h>
-#include "frontend/LevelFrontend.h"
-#include "graphics/render/Skybox.h"
+#include <frontend/LevelFrontend.h>
+#include <graphics/render/Skybox.h>
 #include <constants.h>
-#include "items/Item.h"
-#include "items/ItemStack.h"
-#include "items/Inventory.h"
-#include "graphics/core/Batch3D.h"
-#include "graphics/core/PostProcessing.h"
-#include "ModelBatch.h"
-#include "graphics/core/Model.h"
-#include "objects/Entities.h"
-#include "logic/scripting/scripting_hud.h"
+#include <items/Item.h>
+#include <items/ItemStack.h>
+#include <items/Inventory.h>
+#include <graphics/core/Batch3D.h>
+#include <graphics/core/PostProcessing.h>
+#include <graphics/render/ModelBatch.h>
+#include <graphics/core/Model.h>
+#include <objects/Entities.h>
+#include <logic/scripting/scripting_hud.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;

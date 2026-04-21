@@ -13,7 +13,7 @@
 
 #include <typedefs.h>
 #include <physics/Hitbox.h>
-#include "data/dynamic.h"
+#include <data/dynamic.h>
 #include <util/Clock.h>
 
 struct entity_funcs_set {
@@ -205,6 +205,7 @@ public:
         entityid_t uid=0
     );
     void despawn(entityid_t id);
+    void despawn(std::vector<Entt_Entity> entities);
 
     std::optional<RaycastResult> rayCast(
         glm::vec3 start,
@@ -223,6 +224,7 @@ public:
     std::vector<Entt_Entity> getAllInRadius(glm::vec3 center, float radius);
 
     dynamic::Value serialize(const Entt_Entity& entity);
+    dynamic::List_sptr serialize(const std::vector<Entt_Entity>& entities);
 
     void setNextID(entityid_t id) {
         nextID = id;

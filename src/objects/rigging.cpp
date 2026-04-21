@@ -1,15 +1,15 @@
-#include "rigging.h"
+#include <objects/rigging.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
 #include <assets/Assets.h>
-#include "graphics/core/Model.h"
-#include "coders/json.h"
+#include <graphics/core/Model.h>
+#include <coders/json.h>
 #include <debug/Logger.h>
-#include "graphics/render/ModelBatch.h"
-#include "data/dynamic_util.h"
+#include <graphics/render/ModelBatch.h>
+#include <data/dynamic_util.h>
 
 using namespace rigging;
 

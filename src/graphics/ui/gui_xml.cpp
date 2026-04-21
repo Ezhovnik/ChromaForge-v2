@@ -1,25 +1,25 @@
-#include "gui_xml.h"
+#include <graphics/ui/gui_xml.h>
 
 #include <stdexcept>
 #include <utility>
 
-#include "elements/layout/Panel.h"
-#include "elements/display/Image.h"
-#include "elements/control/Button.h"
-#include "elements/control/CheckBox.h"
-#include "elements/control/TextBox.h"
-#include "elements/control/TrackBar.h"
-#include "elements/control/InputBindBox.h"
-#include "elements/display/InventoryView.h"
-#include "frontend/locale/langs.h"
-#include "logic/scripting/scripting.h"
+#include <graphics/ui/elements/layout/Panel.h>
+#include <graphics/ui/elements/display/Image.h>
+#include <graphics/ui/elements/control/Button.h>
+#include <graphics/ui/elements/control/CheckBox.h>
+#include <graphics/ui/elements/control/TextBox.h>
+#include <graphics/ui/elements/control/TrackBar.h>
+#include <graphics/ui/elements/control/InputBindBox.h>
+#include <graphics/ui/elements/display/InventoryView.h>
+#include <frontend/locale/langs.h>
+#include <logic/scripting/scripting.h>
 #include <util/stringutil.h>
 #include <debug/Logger.h>
 #include <window/Events.h>
-#include "items/Inventory.h"
+#include <items/Inventory.h>
 #include <math/voxmaths.h>
-#include "elements/layout/Menu.h"
-#include "frontend/menu.h"
+#include <graphics/ui/elements/layout/Menu.h>
+#include <frontend/menu.h>
 
 using namespace gui;
 

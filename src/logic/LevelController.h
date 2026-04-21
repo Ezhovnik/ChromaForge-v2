@@ -3,9 +3,9 @@
 
 #include <memory>
 
-#include "PlayerController.h"
-#include "BlocksController.h"
-#include "ChunksController.h"
+#include <logic/PlayerController.h>
+#include <logic/BlocksController.h>
+#include <logic/ChunksController.h>
 
 class Level;
 struct EngineSettings;

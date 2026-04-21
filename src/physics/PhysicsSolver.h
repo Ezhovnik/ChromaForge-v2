@@ -35,7 +35,7 @@ public:
 		Hitbox* hitbox,
 		glm::vec3& vel,
 		glm::vec3& pos,
-		const glm::vec3& half,
+		const glm::vec3 half,
 		float stepHeight
 	);
     bool isBlockInside(int x, int y, int z, Hitbox* hitbox); // Проверяет, находится ли указанный блок внутри границ хитбокса.

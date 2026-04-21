@@ -1,16 +1,16 @@
-#include "WorldConverter.h"
+#include <files/WorldConverter.h>
 
 #include <memory>
 #include <stdexcept>
 #include <utility>
 
-#include "WorldFiles.h"
+#include <files/WorldFiles.h>
 #include <voxels/Chunk.h>
-#include "content/ContentLUT.h"
+#include <content/ContentLUT.h>
 #include <debug/Logger.h>
-#include "data/dynamic.h"
-#include "files/files.h"
-#include "objects/Player.h"
+#include <data/dynamic.h>
+#include <files/files.h>
+#include <objects/Player.h>
 #include <util/ThreadPool.h>
 
 class ConverterWorker : public util::Worker<ConvertTask, int> {

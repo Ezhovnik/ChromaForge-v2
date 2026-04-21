@@ -5,25 +5,25 @@
 
 #include <assets/Assets.h>
 #include <assets/AssetsLoader.h>
-#include "coders/imageio.h"
-#include "files/files.h"
-#include "graphics/core/ShaderProgram.h"
-#include "graphics/core/Texture.h"
-#include "graphics/core/ImageData.h"
-#include "graphics/core/Atlas.h"
-#include "graphics/core/Font.h"
+#include <coders/imageio.h>
+#include <files/files.h>
+#include <graphics/core/ShaderProgram.h>
+#include <graphics/core/Texture.h>
+#include <graphics/core/ImageData.h>
+#include <graphics/core/Atlas.h>
+#include <graphics/core/Font.h>
 #include <debug/Logger.h>
-#include "files/engine_paths.h"
-#include "coders/json.h"
-#include "graphics/core/TextureAnimation.h"
-#include "frontend/UIDocument.h"
-#include "audio/audio.h"
-#include "coders/GLSLExtension.h"
-#include "coders/commons.h"
+#include <files/engine_paths.h>
+#include <coders/json.h>
+#include <graphics/core/TextureAnimation.h>
+#include <frontend/UIDocument.h>
+#include <audio/audio.h>
+#include <coders/GLSLExtension.h>
+#include <coders/commons.h>
 #include <constants.h>
-#include "graphics/core/Model.h"
-#include "coders/obj.h"
-#include "objects/rigging.h"
+#include <graphics/core/Model.h>
+#include <coders/obj.h>
+#include <objects/rigging.h>
 
 static bool animation(
     Assets* assets, 

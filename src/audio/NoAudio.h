@@ -1,7 +1,7 @@
 #ifndef AUDIO_NOAUDIO_H_
 #define AUDIO_NOAUDIO_H_
 
-#include "audio.h"
+#include <audio/audio.h>
 
 namespace audio {
     class NoSound : public Sound {

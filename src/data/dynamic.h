@@ -9,7 +9,7 @@
 #include <ostream>
 #include <cmath>
 
-#include "dynamic_fwd.h"
+#include <data/dynamic_fwd.h>
 #include <debug/Logger.h>
 
 namespace dynamic {

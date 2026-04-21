@@ -1,4 +1,4 @@
-#include "ModelBatch.h"
+#include <graphics/render/ModelBatch.h>
 
 #include <algorithm>
 
@@ -7,14 +7,14 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "graphics/core/Mesh.h"
-#include "graphics/core/Model.h"
-#include "graphics/core/Texture.h"
+#include <graphics/core/Mesh.h>
+#include <graphics/core/Model.h>
+#include <graphics/core/Texture.h>
 #include <assets/Assets.h>
 #include <window/Window.h>
 #include <voxels/Chunks.h>
-#include "lighting/LightMap.h"
-#include "graphics/core/Atlas.h"
+#include <lighting/LightMap.h>
+#include <graphics/core/Atlas.h>
 
 inline constexpr uint MB_VERTEX_SIZE = 9;
 

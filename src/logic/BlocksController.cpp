@@ -1,4 +1,4 @@
-#include "BlocksController.h"
+#include <logic/BlocksController.h>
 
 #include <cassert>
 
@@ -7,12 +7,12 @@
 #include <voxels/Chunk.h>
 #include <voxels/Chunks.h>
 #include <world/Level.h>
-#include "content/Content.h"
-#include "lighting/Lighting.h"
+#include <content/Content.h>
+#include <lighting/Lighting.h>
 #include <util/timeutil.h>
-#include "scripting/scripting.h"
+#include <logic/scripting/scripting.h>
 #include <math/rand.h>
-#include "items/Inventories.h"
+#include <items/Inventories.h>
 #include <debug/Logger.h>
 #include <constants.h>
 

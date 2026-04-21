@@ -5,7 +5,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "data/dynamic.h"
+#include <data/dynamic.h>
 
 class SettingsHandler;
 

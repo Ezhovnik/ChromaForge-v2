@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "lua_util.h"
+#include <logic/scripting/lua/lua_util.h>
 
 extern const luaL_Reg packlib [];
 extern const luaL_Reg timelib [];

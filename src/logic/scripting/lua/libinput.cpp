@@ -1,11 +1,11 @@
-#include "api_lua.h"
+#include <logic/scripting/lua/api_lua.h>
 #include <window/input.h>
 #include <window/Events.h>
-#include "frontend/screens/Screen.h"
+#include <frontend/screens/Screen.h>
 #include <engine.h>
-#include "frontend/hud.h"
+#include <frontend/hud.h>
 #include <util/stringutil.h>
-#include "graphics/ui/GUI.h"
+#include <graphics/ui/GUI.h>
 
 namespace scripting {
     extern Hud* hud;
@@ -37,7 +37,7 @@ static int l_add_callback(lua::State* L) {
     if (scripting::hud) {
         scripting::hud->keepAlive(bind->second.onactived.add(callback));
     } else {
-        scripting::engine->keepAlive(bind->second.onactived.add(callback));
+        throw std::runtime_error("'on_hud_open' is not called yet");
     }
     return 0;
 }

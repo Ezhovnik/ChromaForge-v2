@@ -15,7 +15,7 @@
 #endif
 
 #include <delegates.h>
-#include "logic/scripting/scripting.h"
+#include <logic/scripting/scripting.h>
 
 namespace lua {
     class luaerror : public std::runtime_error {

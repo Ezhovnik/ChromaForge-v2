@@ -1,8 +1,8 @@
-#include "LineBatch.h"
+#include <graphics/core/LineBatch.h>
 
 #include <GL/glew.h>
 
-#include "Mesh.h"
+#include <graphics/core/Mesh.h>
 
 inline constexpr int LB_VERTEX_SIZE = 7;
 static const vattr attrs[] = {

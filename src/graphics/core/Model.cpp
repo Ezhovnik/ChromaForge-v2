@@ -1,4 +1,4 @@
-#include "Model.h"
+#include <graphics/core/Model.h>
 
 #include <algorithm>
 

@@ -1,10 +1,10 @@
-#include "Atlas.h"
+#include <graphics/core/Atlas.h>
 
 #include <stdexcept>
 
 #include <math/LMPacker.h>
-#include "Texture.h"
-#include "ImageData.h"
+#include <graphics/core/Texture.h>
+#include <graphics/core/ImageData.h>
 #include <debug/Logger.h>
 
 Atlas::Atlas(

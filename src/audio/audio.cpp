@@ -1,13 +1,13 @@
-#include "audio.h"
+#include <audio/audio.h>
 
 #include <stdexcept>
 #include <utility>
 
-#include "AL/ALAudio.h"
-#include "NoAudio.h"
+#include <audio/AL/ALAudio.h>
+#include <audio/NoAudio.h>
 #include <debug/Logger.h>
-#include "coders/wav.h"
-#include "coders/ogg.h"
+#include <coders/wav.h>
+#include <coders/ogg.h>
 
 namespace audio {
     static speakerid_t nextId = 1;

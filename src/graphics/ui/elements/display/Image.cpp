@@ -1,13 +1,13 @@
-#include "Image.h"
+#include <graphics/ui/elements/display/Image.h>
 
 #include <utility>
 
-#include "graphics/core/DrawContext.h"
-#include "graphics/core/Batch2D.h"
-#include "graphics/core/Texture.h"
+#include <graphics/core/DrawContext.h>
+#include <graphics/core/Batch2D.h>
+#include <graphics/core/Texture.h>
 #include <assets/Assets.h>
 #include <math/UVRegion.h>
-#include "graphics/core/Atlas.h"
+#include <graphics/core/Atlas.h>
 
 using namespace gui;
 

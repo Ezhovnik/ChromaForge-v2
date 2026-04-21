@@ -1,4 +1,4 @@
-#include "ChunksController.h"
+#include <logic/ChunksController.h>
 
 #include <limits.h>
 #include <memory>
@@ -8,18 +8,18 @@
 #include <voxels/Chunks.h>
 #include <voxels/ChunksStorage.h>
 #include <voxels/WorldGenerator.h>
-#include "graphics/core/Mesh.h"
-#include "lighting/Lighting.h"
-#include "files/WorldFiles.h"
+#include <graphics/core/Mesh.h>
+#include <lighting/Lighting.h>
+#include <files/WorldFiles.h>
 #include <world/Level.h>
 #include <world/World.h>
 #include <constants.h>
 #include <debug/Logger.h>
 #include <core_content_defs.h>
 #include <math/voxmaths.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <util/timeutil.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <world/WorldGenerators.h>
 
 inline constexpr int MAX_WORK_PER_FRAME = 128;

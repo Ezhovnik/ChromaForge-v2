@@ -1,4 +1,4 @@
-#include "Entities.h"
+#include <objects/Entities.h>
 
 #include <sstream>
 
@@ -8,19 +8,19 @@
 #include <world/Level.h>
 #include <physics/Hitbox.h>
 #include <physics/PhysicsSolver.h>
-#include "graphics/render/ModelBatch.h"
-#include "graphics/core/Model.h"
+#include <graphics/render/ModelBatch.h>
+#include <graphics/core/Model.h>
 #include <math/FrustumCulling.h>
-#include "graphics/core/LineBatch.h"
-#include "objects/Entity.h"
-#include "logic/scripting/scripting.h"
-#include "objects/rigging.h"
+#include <graphics/core/LineBatch.h>
+#include <objects/Entity.h>
+#include <logic/scripting/scripting.h>
+#include <objects/rigging.h>
 #include <debug/Logger.h>
-#include "data/dynamic_util.h"
-#include "content/Content.h"
+#include <data/dynamic_util.h>
+#include <content/Content.h>
 #include <engine.h>
 #include <math/rays.h>
-#include "graphics/core/DrawContext.h"
+#include <graphics/core/DrawContext.h>
 
 static inline std::string COMP_TRANSFORM = "transform";
 static inline std::string COMP_RIGIDBODY = "rigidbody";
@@ -503,6 +503,22 @@ dynamic::Value Entities::serialize(const Entt_Entity& entity) {
         }
     }
     return root;
+}
+
+dynamic::List_sptr Entities::serialize(const std::vector<Entt_Entity>& entities) {
+    auto list = dynamic::create_list();
+    for (auto& entity : entities) {
+        if (!entity.getDef().save.enabled) continue;
+        level->entities->onSave(entity);
+        list->put(level->entities->serialize(entity));
+    }
+    return list;
+}
+
+void Entities::despawn(std::vector<Entt_Entity> entities) {
+    for (auto& entity : entities) {
+        entity.destroy();
+    }
 }
 
 void Entities::clean() {

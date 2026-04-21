@@ -5,7 +5,7 @@
 
 #include <typedefs.h>
 #include <math/UVRegion.h>
-#include "ImageData.h"
+#include <graphics/core/ImageData.h>
 
 class Texture {
 protected:

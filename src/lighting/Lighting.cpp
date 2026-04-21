@@ -1,10 +1,10 @@
-#include "Lighting.h"
+#include <lighting/Lighting.h>
 
 #include <memory>
 #include <string>
 
-#include "LightSolver.h"
-#include "LightMap.h"
+#include <lighting/LightSolver.h>
+#include <lighting/LightMap.h>
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>
 #include <voxels/voxel.h>
@@ -12,7 +12,7 @@
 #include <core_content_defs.h>
 #include <typedefs.h>
 #include <constants.h>
-#include "content/Content.h"
+#include <content/Content.h>
 
 Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), content(content) {
     const ContentIndices* contentIds = content->getIndices();

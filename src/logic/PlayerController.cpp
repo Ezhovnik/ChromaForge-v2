@@ -1,13 +1,13 @@
-#include "PlayerController.h"
+#include <logic/PlayerController.h>
 
 #include <algorithm>
 
-#include "objects/Player.h"
+#include <objects/Player.h>
 #include <physics/PhysicsSolver.h>
 #include <physics/Hitbox.h>
-#include "lighting/Lighting.h"
+#include <lighting/Lighting.h>
 #include <world/Level.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <voxels/Block.h>
 #include <voxels/voxel.h>
 #include <voxels/Chunks.h>
@@ -15,13 +15,13 @@
 #include <window/Events.h>
 #include <window/input.h>
 #include <input_bindings.h>
-#include "BlocksController.h"
-#include "scripting/scripting.h"
-#include "items/Item.h"
-#include "items/ItemStack.h"
-#include "items/Inventory.h"
+#include <logic/BlocksController.h>
+#include <logic/scripting/scripting.h>
+#include <items/Item.h>
+#include <items/ItemStack.h>
+#include <items/Inventory.h>
 #include <settings.h>
-#include "objects/Entities.h"
+#include <objects/Entities.h>
 
 namespace CameraConsts {
     inline constexpr float STEPS_SPEED = 2.2f;

@@ -1,5 +1,5 @@
-#include "libentity.h"
-#include "objects/rigging.h"
+#include <logic/scripting/lua/libentity.h>
+#include <objects/rigging.h>
 
 static int index_range_check(const rigging::Skeleton& skeleton, lua::Integer index) {
     if (static_cast<size_t>(index) >= skeleton.pose.matrices.size()) {

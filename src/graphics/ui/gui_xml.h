@@ -6,8 +6,8 @@
 #include <unordered_set>
 #include <stack>
 
-#include "GUI.h"
-#include "coders/xml.h"
+#include <graphics/ui/GUI.h>
+#include <coders/xml.h>
 #include <typedefs.h>
 
 namespace gui {

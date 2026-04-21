@@ -1,18 +1,18 @@
-#include "api_lua.h"
+#include <logic/scripting/lua/api_lua.h>
 #include <assets/Assets.h>
-#include "frontend/hud.h"
+#include <frontend/hud.h>
 #include <world/Level.h>
 #include <voxels/Chunks.h>
 #include <voxels/voxel.h>
 #include <voxels/Block.h>
-#include "content/Content.h"
-#include "logic/BlocksController.h"
-#include "items/Inventories.h"
+#include <content/Content.h>
+#include <logic/BlocksController.h>
+#include <items/Inventories.h>
 #include <engine.h>
-#include "frontend/UIDocument.h"
-#include "graphics/ui/elements/display/InventoryView.h"
+#include <frontend/UIDocument.h>
+#include <graphics/ui/elements/display/InventoryView.h>
 #include <util/stringutil.h>
-#include "objects/Player.h"
+#include <objects/Player.h>
 
 namespace scripting {
     extern Hud* hud;

@@ -1,9 +1,9 @@
-#include "scripting_functional.h"
+#include <logic/scripting/scripting_functional.h>
 
-#include "lua/lua_engine.h"
+#include <logic/scripting/lua/lua_engine.h>
 #include <util/stringutil.h>
 #include <debug/Logger.h>
-#include "coders/json.h"
+#include <coders/json.h>
 
 using namespace scripting;
 

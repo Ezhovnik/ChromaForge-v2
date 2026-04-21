@@ -1,4 +1,4 @@
-#include "LightMap.h"
+#include <lighting/LightMap.h>
 
 #include <assert.h>
 

@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 
 #include <typedefs.h>
-#include "interfaces/Object.h"
+#include <interfaces/Object.h>
 
 inline constexpr glm::vec3 DEFAULT_SPAWNPOINT = {0, 256, 0}; ///< Точка появления игрока
 inline constexpr float DEFAULT_PLAYER_SPEED = 4.0f; ///< Базовая скорость перемещения игрока

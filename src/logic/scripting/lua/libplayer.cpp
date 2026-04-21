@@ -2,11 +2,11 @@
 
 #include <algorithm>
 
-#include "libentity.h"
-#include "objects/Player.h"
+#include <logic/scripting/lua/libentity.h>
+#include <objects/Player.h>
 #include <physics/Hitbox.h>
 #include <window/Camera.h>
-#include "items/Inventory.h"
+#include <items/Inventory.h>
 
 inline std::shared_ptr<Player> get_player(lua::State* L, int idx) {
     return scripting::level->getObject<Player>(lua::tointeger(L, idx));

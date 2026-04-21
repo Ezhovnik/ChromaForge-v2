@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 
-#include "dynamic.h"
+#include <data/dynamic.h>
 
 namespace dynamic {
     template<int n>

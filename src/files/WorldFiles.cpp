@@ -1,4 +1,4 @@
-#include "WorldFiles.h"
+#include <files/WorldFiles.h>
 
 #include <cassert>
 #include <cstdint>
@@ -7,17 +7,17 @@
 #include <cstring>
 #include <utility>
 
-#include "coders/byte_utils.h"
-#include "coders/json.h"
+#include <coders/byte_utils.h>
+#include <coders/json.h>
 #include <constants.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <core_content_defs.h>
-#include "data/dynamic.h"
-#include "items/Inventory.h"
-#include "items/Item.h"
-#include "lighting/Lightmap.h"
+#include <data/dynamic.h>
+#include <items/Inventory.h>
+#include <items/Item.h>
+#include <lighting/Lightmap.h>
 #include <math/voxmaths.h>
-#include "objects/Player.h"
+#include <objects/Player.h>
 #include <physics/Hitbox.h>
 #include <typedefs.h>
 #include <util/data_io.h>
@@ -28,7 +28,7 @@
 #include <world/World.h>
 #include <debug/Logger.h>
 #include <settings.h>
-#include "objects/Entity.h"
+#include <objects/Entity.h>
 
 WorldFiles::WorldFiles(const std::filesystem::path& directory) : directory(directory), regions(directory) {
 }

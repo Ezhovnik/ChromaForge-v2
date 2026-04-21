@@ -1,4 +1,4 @@
-#include "alutil.h"
+#include <audio/AL/alutil.h>
 
 #include <fstream>
 #include <cstring>

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "lua_commons.h"
+#include <logic/scripting/lua/lua_commons.h>
 
 namespace lua {
     class Userdata {

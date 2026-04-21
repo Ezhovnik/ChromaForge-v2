@@ -3,8 +3,8 @@
 
 #include <GL/glew.h>
 
-#include "ImageData.h"
-#include "commons.h"
+#include <graphics/core/ImageData.h>
+#include <graphics/core/commons.h>
 
 namespace gl {
     inline GLenum to_glenum(ImageFormat imageFormat) {

@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "graphics/core/DrawContext.h"
+#include <graphics/core/DrawContext.h>
 #include <util/ObjectsKeeper.h>
 
 class Camera;

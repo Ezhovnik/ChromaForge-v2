@@ -5,7 +5,7 @@
 
 #include <typedefs.h>
 #include <constants.h>
-#include "data/setting.h"
+#include <data/setting.h>
 
 struct DisplaySettings {
 	IntegerSetting width {1280};

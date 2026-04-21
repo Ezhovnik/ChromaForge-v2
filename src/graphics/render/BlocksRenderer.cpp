@@ -1,17 +1,17 @@
-#include "BlocksRenderer.h"
+#include <graphics/render/BlocksRenderer.h>
 
 #include <glm/glm.hpp>
 
-#include "graphics/core/Mesh.h"
+#include <graphics/core/Mesh.h>
 #include <math/UVRegion.h>
 #include <constants.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <voxels/Block.h>
 #include <voxels/Chunk.h>
 #include <voxels/VoxelsVolume.h>
 #include <voxels/ChunksStorage.h>
-#include "lighting/Lightmap.h"
-#include "frontend/ContentGfxCache.h"
+#include <lighting/Lightmap.h>
+#include <frontend/ContentGfxCache.h>
 #include <settings.h>
 #include <math/UVRegion.h>
 

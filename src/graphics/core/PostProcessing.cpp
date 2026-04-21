@@ -1,14 +1,14 @@
-#include "PostProcessing.h"
+#include <graphics/core/PostProcessing.h>
 
 #include <stdexcept>
 
-#include "Mesh.h"
-#include "ShaderProgram.h"
-#include "Texture.h"
-#include "Framebuffer.h"
+#include <graphics/core/Mesh.h>
+#include <graphics/core/ShaderProgram.h>
+#include <graphics/core/Texture.h>
+#include <graphics/core/Framebuffer.h>
 #include <debug/Logger.h>
-#include "Viewport.h"
-#include "DrawContext.h"
+#include <graphics/core/Viewport.h>
+#include <graphics/core/DrawContext.h>
 
 PostProcessing::PostProcessing() {
     float vertices[] {

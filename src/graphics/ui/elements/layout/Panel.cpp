@@ -1,4 +1,4 @@
-#include "Panel.h"
+#include <graphics/ui/elements/layout/Panel.h>
 
 #include <algorithm>
 

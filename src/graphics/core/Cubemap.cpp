@@ -1,8 +1,8 @@
-#include "Cubemap.h"
+#include <graphics/core/Cubemap.h>
 
 #include <GL/glew.h>
 
-#include "gl_util.h"
+#include <graphics/core/gl_util.h>
 
 Cubemap::Cubemap(uint width, uint height, ImageFormat imageFormat) : GLTexture(0, width, height) {
     glGenTextures(1, &id);

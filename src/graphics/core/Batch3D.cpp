@@ -1,9 +1,9 @@
-#include "Batch3D.h"
+#include <graphics/core/Batch3D.h>
 
 #include <GL/glew.h>
 
-#include "Mesh.h"
-#include "Texture.h"
+#include <graphics/core/Mesh.h>
+#include <graphics/core/Texture.h>
 #include <typedefs.h>
 #include <math/UVRegion.h>
 

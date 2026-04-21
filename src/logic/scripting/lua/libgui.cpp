@@ -1,21 +1,21 @@
-#include "api_lua.h"
+#include <logic/scripting/lua/api_lua.h>
 #include <engine.h>
 #include <assets/Assets.h>
-#include "graphics/ui/elements/UINode.h"
-#include "frontend/UiDocument.h"
+#include <graphics/ui/elements/UINode.h>
+#include <frontend/UiDocument.h>
 #include <util/stringutil.h>
-#include "graphics/ui/gui_util.h"
-#include "frontend/locale/langs.h"
-#include "graphics/ui/elements/control/Button.h"
-#include "graphics/ui/elements/control/CheckBox.h"
-#include "graphics/ui/elements/control/TextBox.h"
-#include "graphics/ui/elements/control/TrackBar.h"
-#include "graphics/ui/elements/layout/Panel.h"
-#include "graphics/ui/elements/layout/Menu.h"
-#include "items/Inventories.h"
-#include "graphics/ui/elements/display/InventoryView.h"
+#include <graphics/ui/gui_util.h>
+#include <frontend/locale/langs.h>
+#include <graphics/ui/elements/control/Button.h>
+#include <graphics/ui/elements/control/CheckBox.h>
+#include <graphics/ui/elements/control/TextBox.h>
+#include <graphics/ui/elements/control/TrackBar.h>
+#include <graphics/ui/elements/layout/Panel.h>
+#include <graphics/ui/elements/layout/Menu.h>
+#include <items/Inventories.h>
+#include <graphics/ui/elements/display/InventoryView.h>
 #include <world/Level.h>
-#include "graphics/ui/elements/display/Image.h"
+#include <graphics/ui/elements/display/Image.h>
 
 struct DocumentNode {
     UIDocument* document;

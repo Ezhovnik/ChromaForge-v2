@@ -1,18 +1,18 @@
-#include "libentity.h"
+#include <logic/scripting/lua/libentity.h>
 
 #include <optional>
 #include <algorithm>
 
-#include "objects/Player.h"
+#include <objects/Player.h>
 #include <physics/Hitbox.h>
 #include <window/Camera.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <engine.h>
-#include "objects/rigging.h"
-#include "objects/Entities.h"
+#include <objects/rigging.h>
+#include <objects/Entities.h>
 #include <voxels/Chunks.h>
 #include <constants.h>
-#include "objects/Entity.h"
+#include <objects/Entity.h>
 
 static const Entity* require_entity_def(lua::State* L) {
     auto indices = scripting::content->getIndices();

@@ -11,7 +11,7 @@
 #include <optional>
 #include <stdexcept>
 
-#include "graphics/core/TextureAnimation.h"
+#include <graphics/core/TextureAnimation.h>
 
 class Assets;
 

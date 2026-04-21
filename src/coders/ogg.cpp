@@ -1,11 +1,11 @@
-#include "ogg.h"
+#include <coders/ogg.h>
 
 #include <string>
 
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
 
-#include "audio/audio.h"
+#include <audio/audio.h>
 #include <typedefs.h>
 #include <debug/Logger.h>
 

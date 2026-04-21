@@ -1,36 +1,36 @@
-#include "EngineController.h"
+#include <logic/EngineController.h>
 
 #include <memory>
 #include <filesystem>
 #include <algorithm>
 
-#include "content/ContentLUT.h"
+#include <content/ContentLUT.h>
 #include <debug/Logger.h>
 #include <engine.h>
-#include "files/WorldFiles.h"
-#include "files/WorldConverter.h"
-#include "frontend/locale/langs.h"
-#include "frontend/screens/MenuScreen.h"
-#include "frontend/screens/LevelScreen.h"
-#include "graphics/ui/elements/display/Label.h"
-#include "graphics/ui/elements/control/Button.h"
-#include "graphics/ui/elements/layout/Panel.h"
-#include "graphics/ui/elements/layout/Menu.h"
-#include "graphics/ui/gui_util.h"
-#include "interfaces/Task.h"
+#include <files/WorldFiles.h>
+#include <files/WorldConverter.h>
+#include <frontend/locale/langs.h>
+#include <frontend/screens/MenuScreen.h>
+#include <frontend/screens/LevelScreen.h>
+#include <graphics/ui/elements/display/Label.h>
+#include <graphics/ui/elements/control/Button.h>
+#include <graphics/ui/elements/layout/Panel.h>
+#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/gui_util.h>
+#include <interfaces/Task.h>
 #include <util/stringutil.h>
 #include <world/World.h>
 #include <world/Level.h>
-#include "LevelController.h"
+#include <logic/LevelController.h>
 #include <debug/Logger.h>
-#include "frontend/menu.h"
-#include "coders/commons.h"
+#include <frontend/menu.h>
+#include <coders/commons.h>
 
 EngineController::EngineController(Engine* engine) : engine(engine) {
 }
 
 void EngineController::deleteWorld(const std::string& name) {
-    std::filesystem::path folder = engine->getPaths()->getWorldFolder(name);
+    std::filesystem::path folder = engine->getPaths()->getWorldFolderByName(name);
     guiutil::confirm(engine->getGUI(), langs::get(L"delete-confirm", L"world") +
     L" (" + util::str2wstr_utf8(folder.u8string()) + L")", [=]() {
         LOG_INFO("Deleting {}", folder.u8string());
@@ -161,7 +161,7 @@ void EngineController::createWorld(
     auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
     if (!menus::call(engine, [this, paths, folder]() {
         engine->loadContent();
-        paths->setWorldFolder(folder);
+        paths->setCurrentWorldFolder(folder);
     })) {
         return;
     }

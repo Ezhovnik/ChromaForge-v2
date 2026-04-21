@@ -1,6 +1,6 @@
-#include "WorldGenerator.h"
+#include <voxels/WorldGenerator.h>
 
-#include "content/Content.h"
+#include <content/Content.h>
 #include <core_content_defs.h>
 #include <voxels/Block.h>
 #include <voxels/voxel.h>

@@ -1,11 +1,11 @@
-#include "GLTexture.h"
+#include <graphics/core/GLTexture.h>
 
 #include <stdexcept>
 #include <memory>
 
 #include <GL/glew.h>
 
-#include "gl_util.h"
+#include <graphics/core/gl_util.h>
 
 uint Texture::MAX_RESOLUTION = 1024;
 

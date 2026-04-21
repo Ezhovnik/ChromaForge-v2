@@ -1,11 +1,11 @@
-#include "TextureAnimation.h"
+#include <graphics/core/TextureAnimation.h>
 
 #include <unordered_set>
 
 #include <GL/glew.h>
 
-#include "GLTexture.h"
-#include "Framebuffer.h"
+#include <graphics/core/GLTexture.h>
+#include <graphics/core/Framebuffer.h>
 
 TextureAnimator::TextureAnimator() {
     glGenFramebuffers(1, &fboR);

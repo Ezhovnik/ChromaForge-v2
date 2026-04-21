@@ -5,7 +5,7 @@
 
 #include <delegates.h>
 #include <typedefs.h>
-#include "data/dynamic.h"
+#include <data/dynamic.h>
 
 namespace scripting {
     using common_func = std::function<dynamic::Value(const std::vector<dynamic::Value>&)>;

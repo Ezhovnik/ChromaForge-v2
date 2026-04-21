@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 
-#include "commons.h"
+#include <graphics/core/commons.h>
 #include <typedefs.h>
 #include <math/UVRegion.h>
 

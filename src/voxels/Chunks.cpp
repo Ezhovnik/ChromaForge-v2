@@ -1,4 +1,4 @@
-#include "Chunks.h"
+#include <voxels/Chunks.h>
 
 #include <math.h>
 #include <limits.h>
@@ -9,19 +9,19 @@
 #include <voxels/voxel.h>
 #include <voxels/Block.h>
 #include <voxels/WorldGenerator.h>
-#include "lighting/Lightmap.h"
-#include "files/WorldFiles.h"
-#include "graphics/core/Mesh.h"
+#include <lighting/Lightmap.h>
+#include <files/WorldFiles.h>
+#include <graphics/core/Mesh.h>
 #include <math/voxmaths.h>
 #include <world/LevelEvents.h>
 #include <core_content_defs.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <math/AABB.h>
 #include <math/rays.h>
 #include <world/Level.h>
-#include "objects/Entities.h"
-#include "coders/byte_utils.h"
-#include "coders/json.h"
+#include <objects/Entities.h>
+#include <coders/byte_utils.h>
+#include <coders/json.h>
 
 // TODO: Refactor this garbage
 
@@ -692,17 +692,16 @@ void Chunks::save(Chunk* chunk) {
 			)
         );
         auto entities = level->entities->getAllInside(aabb);
-        auto root = dynamic::create_map();
-        auto& list = root->putList("data");
-        for (auto& entity : entities) {
-			level->entities->onSave(entity);
-            list.put(level->entities->serialize(entity));
-			entity.destroy();
-        }
+		dynamic::Map_sptr root = nullptr;
         if (!entities.empty()) {
+			root = dynamic::create_map();
+            root->put("data", level->entities->serialize(entities));
+            level->entities->despawn(std::move(entities));
             chunk->flags.entities = true;
         }
-        worldFiles->getRegions().put(chunk, json::to_binary(root, true));
+		worldFiles->getRegions().put(
+            chunk, root ? json::to_binary(root, true) : std::vector<ubyte>()
+        );
     }
 }
 

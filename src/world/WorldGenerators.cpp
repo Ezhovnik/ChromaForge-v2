@@ -1,4 +1,4 @@
-#include "WorldGenerators.h"
+#include <world/WorldGenerators.h>
 
 #include <vector>
 #include <map>
@@ -6,7 +6,7 @@
 
 #include <voxels/WorldGenerator.h>
 #include <voxels/FlatWorldGenerator.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <debug/Logger.h>
 #include <core_content_defs.h>
 

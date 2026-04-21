@@ -1,14 +1,14 @@
-#include "ContentGfxCache.h"
+#include <frontend/ContentGfxCache.h>
 
 #include <string>
 
 #include <assets/Assets.h>
-#include "content/Content.h"
-#include "graphics/core/Atlas.h"
+#include <content/Content.h>
+#include <graphics/core/Atlas.h>
 #include <voxels/Block.h>
 #include <core_content_defs.h>
-#include "UIDocument.h"
-#include "content/ContentPack.h"
+#include <frontend/UIDocument.h>
+#include <content/ContentPack.h>
 
 ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) : content(content) {
     const ContentIndices* contentIds = content->getIndices();

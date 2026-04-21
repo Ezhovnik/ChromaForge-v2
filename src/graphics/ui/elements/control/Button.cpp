@@ -1,8 +1,8 @@
-#include "Button.h"
+#include <graphics/ui/elements/control/Button.h>
 
-#include "graphics/ui/elements/display/Label.h"
-#include "graphics/core/DrawContext.h"
-#include "graphics/core/Batch2D.h"
+#include <graphics/ui/elements/display/Label.h>
+#include <graphics/core/DrawContext.h>
+#include <graphics/core/Batch2D.h>
 
 using namespace gui;
 

@@ -1,14 +1,14 @@
-#include "ContentLUT.h"
+#include <content/ContentLUT.h>
 
 #include <memory>
 
-#include "Content.h"
+#include <content/Content.h>
 #include <constants.h>
-#include "files/files.h"
-#include "coders/json.h"
+#include <files/files.h>
+#include <coders/json.h>
 #include <voxels/Block.h>
-#include "data/dynamic.h"
-#include "items/Item.h"
+#include <data/dynamic.h>
+#include <items/Item.h>
 
 ContentLUT::ContentLUT(
     const ContentIndices* indices,

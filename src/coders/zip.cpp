@@ -1,4 +1,4 @@
-#include "zip.h"
+#include <coders/zip.h>
 
 #include <math.h>
 #include <memory>
@@ -6,7 +6,7 @@
 #define ZLIB_CONST
 #include <zlib.h>
 
-#include "byte_utils.h"
+#include <coders/byte_utils.h>
 
 // Коэффициент для предварительного расчёта размера сжатого буфера.
 // Оценка: оригинальный размер + 1% + 23 байта

@@ -12,7 +12,7 @@
 
 #include <delegates.h>
 #include <debug/Logger.h>
-#include "interfaces/Task.h"
+#include <interfaces/Task.h>
 
 namespace util {
 

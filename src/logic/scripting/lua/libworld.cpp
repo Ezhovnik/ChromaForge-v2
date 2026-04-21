@@ -1,13 +1,13 @@
 #include <cmath>
 #include <filesystem>
 
-#include "api_lua.h"
+#include <logic/scripting/lua/api_lua.h>
 #include <world/Level.h>
 #include <world/World.h>
 #include <engine.h>
 #include <assets/Assets.h>
-#include "assets/AssetsLoader.h"
-#include "files/engine_paths.h"
+#include <assets/AssetsLoader.h>
+#include <files/engine_paths.h>
 
 static int l_world_get_list(lua::State* L) {
     auto paths = scripting::engine->getPaths();
@@ -68,7 +68,7 @@ static int l_world_get_seed(lua::State* L) {
 
 static int l_world_exists(lua::State* L) {
     auto name = lua::require_string(L, 1);
-    auto worldsDir = scripting::engine->getPaths()->getWorldFolder(name);
+    auto worldsDir = scripting::engine->getPaths()->getWorldFolderByName(name);
     return lua::pushboolean(L, std::filesystem::is_directory(worldsDir));
 }
 

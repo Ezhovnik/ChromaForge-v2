@@ -1,8 +1,8 @@
 #ifndef GRAPHICS_UI_ELEMENTS_LAYOUT_PANEL_H_
 #define GRAPHICS_UI_ELEMENTS_LAYOUT_PANEL_H_
 
-#include "graphics/ui/elements/commons.h"
-#include "Container.h"
+#include <graphics/ui/elements/commons.h>
+#include <graphics/ui/elements/layout/Container.h>
 
 namespace gui {
     class Panel : public Container {

@@ -9,8 +9,8 @@
 #include <memory>
 #include <optional>
 
-#include "content_fwd.h"
-#include "data/dynamic_fwd.h"
+#include <content/content_fwd.h>
+#include <data/dynamic_fwd.h>
 
 using DrawGroups = std::set<ubyte>;
 template<class K, class V>

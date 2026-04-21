@@ -17,8 +17,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
-#include "lua_commons.h"
-#include "lua_custom_types.h"
+#include <logic/scripting/lua/lua_commons.h>
+#include <logic/scripting/lua/lua_custom_types.h>
 
 namespace lua {
     inline std::string LAMBDAS_TABLE = "$L";

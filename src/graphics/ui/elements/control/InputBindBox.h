@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_UI_ELEMENTS_CONTROL_INPUTBINDBOX_H_
 #define GRAPHICS_UI_ELEMENTS_CONTROL_INPUTBINDBOX_H_
 
-#include "graphics/ui/elements/layout/Panel.h"
+#include <graphics/ui/elements/layout/Panel.h>
 
 namespace gui {
     class Label;

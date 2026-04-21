@@ -1,8 +1,8 @@
-#include "CommandsInterpreter.h"
+#include <logic/CommandsInterpreter.h>
 
 #include <utility>
 
-#include "coders/commons.h"
+#include <coders/commons.h>
 #include <util/stringutil.h>
 
 using namespace cmd;

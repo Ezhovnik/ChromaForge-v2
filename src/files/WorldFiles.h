@@ -10,10 +10,10 @@
 #include <glm/gtx/hash.hpp>
 
 #include <typedefs.h>
-#include "files/files.h"
+#include <files/files.h>
 #include <voxels/Chunk.h>
-#include "content/ContentPack.h"
-#include "WorldRegions.h"
+#include <content/ContentPack.h>
+#include <files/WorldRegions.h>
 
 class Player;
 class Content;

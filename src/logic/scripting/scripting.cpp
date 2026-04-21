@@ -1,26 +1,26 @@
-#include "scripting.h"
+#include <logic/scripting/scripting.h>
 
 #include <stdexcept>
 
-#include "files/engine_paths.h"
-#include "files/files.h"
+#include <files/engine_paths.h>
+#include <files/files.h>
 #include <util/timeutil.h>
 #include <world/Level.h>
 #include <voxels/Block.h>
 #include <debug/Logger.h>
-#include "items/Item.h"
-#include "logic/BlocksController.h"
+#include <items/Item.h>
+#include <logic/BlocksController.h>
 #include <engine.h>
-#include "content/ContentPack.h"
-#include "lua/lua_engine.h"
+#include <content/ContentPack.h>
+#include <logic/scripting/lua/lua_engine.h>
 #include <util/stringutil.h>
-#include "frontend/UIDocument.h"
-#include "items/Inventory.h"
-#include "objects/Player.h"
-#include "logic/LevelController.h"
-#include "objects/Entity.h"
-#include "objects/Entities.h"
-#include "content/Content.h"
+#include <frontend/UIDocument.h>
+#include <items/Inventory.h>
+#include <objects/Player.h>
+#include <logic/LevelController.h>
+#include <objects/Entity.h>
+#include <objects/Entities.h>
+#include <content/Content.h>
 
 static inline const std::string STDCOMP = "stdcomp";
 
@@ -33,7 +33,7 @@ const ContentIndices* scripting::indices = nullptr;
 
 static void load_script(const std::filesystem::path& name, bool throwable) {
     auto paths = scripting::engine->getPaths();
-    std::filesystem::path file = paths->getResources()/std::filesystem::path("scripts")/name;
+    std::filesystem::path file = paths->getResourcesFolder()/std::filesystem::path("scripts")/name;
 
     std::string src = files::read_string(file);
     auto L = lua::get_main_thread();

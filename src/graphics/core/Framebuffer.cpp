@@ -1,8 +1,8 @@
-#include "Framebuffer.h"
+#include <graphics/core/Framebuffer.h>
 
 #include <GL/glew.h>
 
-#include "GLTexture.h"
+#include <graphics/core/GLTexture.h>
 #include <debug/Logger.h>
 
 Framebuffer::Framebuffer(

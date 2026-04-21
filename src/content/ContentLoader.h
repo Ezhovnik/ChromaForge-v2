@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "content_fwd.h"
+#include <content/content_fwd.h>
 
 class ContentBuilder;
 struct ContentPack;

@@ -4,12 +4,12 @@
 #include <bitset>
 #include <utility>
 
-#include "graphics/ui/elements/control/CheckBox.h"
-#include "graphics/ui/elements/control/TextBox.h"
-#include "graphics/ui/elements/control/TrackBar.h"
-#include "graphics/ui/elements/control/InputBindBox.h"
-#include "graphics/core/Mesh.h"
-#include "objects/Player.h"
+#include <graphics/ui/elements/control/CheckBox.h>
+#include <graphics/ui/elements/control/TextBox.h>
+#include <graphics/ui/elements/control/TrackBar.h>
+#include <graphics/ui/elements/control/InputBindBox.h>
+#include <graphics/core/Mesh.h>
+#include <objects/Player.h>
 #include <physics/Hitbox.h>
 #include <world/Level.h>
 #include <world/World.h>
@@ -19,13 +19,13 @@
 #include <util/stringutil.h>
 #include <delegates.h>
 #include <engine.h>
-#include "graphics/render/WorldRenderer.h"
-#include "audio/audio.h"
+#include <graphics/render/WorldRenderer.h>
+#include <audio/audio.h>
 #include <settings.h>
-#include "logic/scripting/scripting.h"
-#include "objects/Entities.h"
-#include "content/Content.h"
-#include "objects/Entity.h"
+#include <logic/scripting/scripting.h>
+#include <objects/Entities.h>
+#include <content/Content.h>
+#include <objects/Entity.h>
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");

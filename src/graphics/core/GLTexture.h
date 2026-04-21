@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_CORE_GLTEXTURE_H_
 #define GRAPHICS_CORE_GLTEXTURE_H_
 
-#include "Texture.h"
+#include <graphics/core/Texture.h>
 
 class GLTexture : public Texture {
 protected:

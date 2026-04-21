@@ -1,20 +1,20 @@
-#include "ChunksStorage.h"
+#include <voxels/ChunksStorage.h>
 
 #include <assert.h>
 
-#include "VoxelsVolume.h"
+#include <voxels/VoxelsVolume.h>
 #include <voxels/Chunk.h>
 #include <voxels/Block.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <world/Level.h>
 #include <world/World.h>
-#include "files/WorldFiles.h"
+#include <files/WorldFiles.h>
 #include <math/voxmaths.h>
-#include "lighting/Lightmap.h"
+#include <lighting/Lightmap.h>
 #include <debug/Logger.h>
 #include <core_content_defs.h>
-#include "items/Inventories.h"
-#include "objects/Entities.h"
+#include <items/Inventories.h>
+#include <objects/Entities.h>
 
 void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {

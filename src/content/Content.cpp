@@ -1,4 +1,4 @@
-#include "Content.h"
+#include <content/Content.h>
 
 #include <stdexcept>
 #include <utility>
@@ -7,11 +7,11 @@
 
 #include <debug/Logger.h>
 #include <voxels/Block.h>
-#include "items/Item.h"
-#include "objects/Entity.h"
-#include "ContentPack.h"
-#include "logic/scripting/scripting.h"
-#include "objects/rigging.h"
+#include <items/Item.h>
+#include <objects/Entity.h>
+#include <content/ContentPack.h>
+#include <logic/scripting/scripting.h>
+#include <objects/rigging.h>
 
 ContentIndices::ContentIndices(
     ContentUnitIndices<Block> blocks,

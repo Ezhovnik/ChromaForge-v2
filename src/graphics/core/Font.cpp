@@ -1,10 +1,10 @@
-#include "Font.h"
+#include <graphics/core/Font.h>
 
 #include <limits.h>
 #include <utility>
 
-#include "Texture.h"
-#include "Batch2D.h"
+#include <graphics/core/Texture.h>
+#include <graphics/core/Batch2D.h>
 
 // Внутренние константы для работы со шрифтом
 namespace FontsConsts {

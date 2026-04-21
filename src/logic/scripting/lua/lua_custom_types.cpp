@@ -1,8 +1,8 @@
-#include "lua_custom_types.h"
+#include <logic/scripting/lua/lua_custom_types.h>
 
 #include <sstream>
 
-#include "lua_util.h"
+#include <logic/scripting/lua/lua_util.h>
 
 using namespace lua;
 

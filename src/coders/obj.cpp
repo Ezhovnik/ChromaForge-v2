@@ -1,7 +1,7 @@
-#include "obj.h"
+#include <coders/obj.h>
 
-#include "commons.h"
-#include "graphics/core/Model.h"
+#include <coders/commons.h>
+#include <graphics/core/Model.h>
 
 using namespace model;
 

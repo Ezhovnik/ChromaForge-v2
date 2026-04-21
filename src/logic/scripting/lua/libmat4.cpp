@@ -5,7 +5,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "api_lua.h"
+#include <logic/scripting/lua/api_lua.h>
 
 static int l_idt(lua::State* L) {
     uint argc = lua::check_argc(L, 0, 1);

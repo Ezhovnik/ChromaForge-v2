@@ -1,4 +1,4 @@
-#include "png.h"
+#include <coders/png.h>
 
 #include <iostream>
 
@@ -10,8 +10,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
-#include "graphics/core/ImageData.h"
-#include "graphics/core/GLTexture.h"
+#include <graphics/core/ImageData.h>
+#include <graphics/core/GLTexture.h>
 #include <debug/Logger.h>
 #include <typedefs.h>
 

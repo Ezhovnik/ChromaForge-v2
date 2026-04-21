@@ -10,8 +10,8 @@
 
 #include <window/Events.h>
 #include <debug/Logger.h>
-#include "graphics/core/ImageData.h"
-#include "graphics/core/Texture.h"
+#include <graphics/core/ImageData.h>
+#include <graphics/core/Texture.h>
 #include <settings.h>
 #include <util/ObjectsKeeper.h>
 #include <constants.h>

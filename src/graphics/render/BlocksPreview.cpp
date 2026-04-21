@@ -1,22 +1,22 @@
-#include "BlocksPreview.h"
+#include <graphics/render/BlocksPreview.h>
 
 #include <glm/ext.hpp>
 
-#include "graphics/core/ShaderProgram.h"
-#include "graphics/core/Texture.h"
-#include "graphics/core/Atlas.h"
-#include "graphics/core/Batch3D.h"
+#include <graphics/core/ShaderProgram.h>
+#include <graphics/core/Texture.h>
+#include <graphics/core/Atlas.h>
+#include <graphics/core/Batch3D.h>
 #include <window/Camera.h>
 #include <voxels/Block.h>
-#include "graphics/core/Viewport.h"
-#include "frontend/ContentGfxCache.h"
+#include <graphics/core/Viewport.h>
+#include <frontend/ContentGfxCache.h>
 #include <assets/Assets.h>
-#include "graphics/core/Framebuffer.h"
-#include "graphics/core/DrawContext.h"
+#include <graphics/core/Framebuffer.h>
+#include <graphics/core/DrawContext.h>
 #include <window/Window.h>
-#include "content/Content.h"
+#include <content/Content.h>
 #include <constants.h>
-#include "graphics/core/ImageData.h"
+#include <graphics/core/ImageData.h>
 
 std::unique_ptr<ImageData> BlocksPreview::draw(
     const ContentGfxCache* cache, 

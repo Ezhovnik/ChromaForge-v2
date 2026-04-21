@@ -1,9 +1,9 @@
-#include "TrackBar.h"
+#include <graphics/ui/elements/control/TrackBar.h>
 
 #include <utility>
 
-#include "graphics/core/DrawContext.h"
-#include "graphics/core/Batch2D.h"
+#include <graphics/core/DrawContext.h>
+#include <graphics/core/Batch2D.h>
 #include <assets/Assets.h>
 
 using namespace gui;

@@ -1,15 +1,15 @@
-#include "LevelScreen.h"
+#include <frontend/screens/LevelScreen.h>
 
-#include "frontend/hud.h"
-#include "frontend/LevelFrontend.h"
-#include "audio/audio.h"
-#include "graphics/core/DrawContext.h"
-#include "graphics/core/Viewport.h"
-#include "graphics/ui/GUI.h"
-#include "graphics/ui/elements/layout/Menu.h"
-#include "graphics/render/WorldRenderer.h"
-#include "logic/LevelController.h"
-#include "logic/scripting/scripting_hud.h"
+#include <frontend/hud.h>
+#include <frontend/LevelFrontend.h>
+#include <audio/audio.h>
+#include <graphics/core/DrawContext.h>
+#include <graphics/core/Viewport.h>
+#include <graphics/ui/GUI.h>
+#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/render/WorldRenderer.h>
+#include <logic/LevelController.h>
+#include <logic/scripting/scripting_hud.h>
 #include <physics/Hitbox.h>
 #include <voxels/Chunks.h>
 #include <world/Level.h>
@@ -17,13 +17,13 @@
 #include <window/Camera.h>
 #include <window/Events.h>
 #include <engine.h>
-#include "coders/imageio.h"
-#include "graphics/core/PostProcessing.h"
-#include "graphics/core/ImageData.h"
+#include <coders/imageio.h>
+#include <graphics/core/PostProcessing.h>
+#include <graphics/core/ImageData.h>
 #include <debug/Logger.h>
 #include <settings.h>
 #include <input_bindings.h>
-#include "content/Content.h"
+#include <content/Content.h>
 
 LevelScreen::LevelScreen(
     Engine* engine,
@@ -62,7 +62,7 @@ LevelScreen::~LevelScreen() {
     saveWorldPreview();
     scripting::on_frontend_close();
     controller->onWorldQuit();
-    engine->getPaths()->setWorldFolder(std::filesystem::path());
+    engine->getPaths()->setCurrentWorldFolder(std::filesystem::path());
 }
 
 void LevelScreen::initializeContent() {

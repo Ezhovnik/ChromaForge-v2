@@ -1,7 +1,7 @@
 #include <glm/ext.hpp>
 
-#include "api_lua.h"
-#include "content/Content.h"
+#include <logic/scripting/lua/api_lua.h>
+#include <content/Content.h>
 #include <world/Level.h>
 #include <window/Camera.h>
 

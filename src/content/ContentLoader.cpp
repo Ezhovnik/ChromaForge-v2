@@ -1,4 +1,4 @@
-#include "ContentLoader.h"
+#include <content/ContentLoader.h>
 
 #include <string>
 #include <memory>
@@ -6,21 +6,21 @@
 
 #include <glm/glm.hpp>
 
-#include "Content.h"
-#include "ContentPack.h"
+#include <content/Content.h>
+#include <content/ContentPack.h>
 #include <voxels/Block.h>
-#include "files/files.h"
-#include "coders/json.h"
+#include <files/files.h>
+#include <coders/json.h>
 #include <typedefs.h>
 #include <debug/Logger.h>
-#include "logic/scripting/scripting.h"
+#include <logic/scripting/scripting.h>
 #include <util/listutil.h>
-#include "items/Item.h"
-#include "data/dynamic.h"
+#include <items/Item.h>
+#include <data/dynamic.h>
 #include <core_content_defs.h>
-#include "ContentBuilder.h"
+#include <content/ContentBuilder.h>
 #include <util/stringutil.h>
-#include "objects/rigging.h"
+#include <objects/rigging.h>
 
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder) : pack(pack), builder(builder) {
     auto runtime = std::make_unique<ContentPackRuntime>(

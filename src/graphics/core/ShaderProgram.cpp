@@ -1,4 +1,4 @@
-#include "ShaderProgram.h"
+#include <graphics/core/ShaderProgram.h>
 
 #include <exception>
 #include <fstream>
@@ -9,7 +9,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "coders/GLSLExtension.h"
+#include <coders/GLSLExtension.h>
 #include <debug/Logger.h>
 
 GLSLExtension* ShaderProgram::preprocessor = new GLSLExtension();

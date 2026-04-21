@@ -1,9 +1,9 @@
-#include "UINode.h"
+#include <graphics/ui/elements/UINode.h>
 
 #include <utility>
 
-#include "graphics/core/Batch2D.h"
-#include "layout/Container.h"
+#include <graphics/core/Batch2D.h>
+#include <graphics/ui/elements/layout/Container.h>
 
 using gui::UINode;
 using gui::Align;

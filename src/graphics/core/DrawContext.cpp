@@ -1,11 +1,11 @@
-#include "DrawContext.h"
+#include <graphics/core/DrawContext.h>
 
 #include <utility>
 
 #include <GL/glew.h>
 
-#include "Batch2D.h"
-#include "Framebuffer.h"
+#include <graphics/core/Batch2D.h>
+#include <graphics/core/Framebuffer.h>
 #include <window/Window.h>
 
 static void set_blend_mode(BlendMode mode) {

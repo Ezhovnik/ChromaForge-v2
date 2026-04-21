@@ -1,6 +1,6 @@
-#include "api_lua.h"
-#include "coders/toml.h"
-#include "data/dynamic.h"
+#include <logic/scripting/lua/api_lua.h>
+#include <coders/toml.h>
+#include <data/dynamic.h>
 
 static int l_toml_stringify(lua::State* L) {
     auto value = lua::tovalue(L, 1);

@@ -1,4 +1,4 @@
-#include "wav.h"
+#include <coders/wav.h>
 
 #include <vector>
 #include <cstring>
@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "audio/audio.h"
+#include <audio/audio.h>
 #include <debug/Logger.h>
 
 bool is_big_endian() {

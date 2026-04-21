@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "Screen.h"
+#include <frontend/screens/Screen.h>
 
 class Camera;
 class Engine;

@@ -5,8 +5,8 @@
 #include <memory>
 #include <vector>
 
-#include "data/dynamic.h"
-#include "graphics/ui/elements/layout/Menu.h"
+#include <data/dynamic.h>
+#include <graphics/ui/elements/layout/Menu.h>
 
 class Task;
 class Engine;

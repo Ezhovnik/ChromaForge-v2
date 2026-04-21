@@ -7,9 +7,9 @@
 
 #include <typedefs.h>
 #include <util/timeutil.h>
-#include "content/ContentPack.h"
-#include "data/dynamic.h"
-#include "interfaces/Serializable.h"
+#include <content/ContentPack.h>
+#include <data/dynamic.h>
+#include <interfaces/Serializable.h>
 
 /**
  * @brief Исключение, выбрасываемое при ошибках загрузки мира.

@@ -1,4 +1,4 @@
-#include "lua_util.h"
+#include <logic/scripting/lua/lua_util.h>
 
 #include <iostream>
 #include <iomanip>

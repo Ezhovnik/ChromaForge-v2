@@ -1,15 +1,15 @@
-#include "ContentPack.h"
+#include <content/ContentPack.h>
 
 #include <stdexcept>
 #include <algorithm>
 #include <utility>
 
-#include "files/files.h"
-#include "coders/json.h"
+#include <files/files.h>
+#include <coders/json.h>
 #include <debug/Logger.h>
-#include "files/engine_paths.h"
+#include <files/engine_paths.h>
 #include <core_content_defs.h>
-#include "data/dynamic.h"
+#include <data/dynamic.h>
 
 const std::vector<std::string> ContentPack::RESERVED_NAMES = {"res", "abs", "local", BUILTIN_CONTENT_NAMESPACE, "user", "world", "none", "null"};
 
@@ -128,10 +128,10 @@ std::filesystem::path ContentPack::findPack(
     auto folder = worldDir/std::filesystem::path("content")/std::filesystem::path(name);
     if (std::filesystem::is_directory(folder)) return folder;
 
-    folder = paths->getUserfiles()/std::filesystem::path("content")/std::filesystem::path(name);
+    folder = paths->getUserFilesFolder()/std::filesystem::path("content")/std::filesystem::path(name);
     if (std::filesystem::is_directory(folder)) return folder;
 
-    folder = paths->getResources()/std::filesystem::path("content")/std::filesystem::path(name);
+    folder = paths->getResourcesFolder()/std::filesystem::path("content")/std::filesystem::path(name);
     return folder;
 }
 
