@@ -6,9 +6,6 @@
 #include <math/UVRegion.h>
 #include <constants.h>
 #include <content/Content.h>
-#include <voxels/Block.h>
-#include <voxels/Chunk.h>
-#include <voxels/VoxelsVolume.h>
 #include <voxels/ChunksStorage.h>
 #include <lighting/Lightmap.h>
 #include <frontend/ContentGfxCache.h>
@@ -94,9 +91,9 @@ void BlocksRenderer::face(
 		return;
 	}
 
-    glm::vec3 X = axisX * w;
-    glm::vec3 Y = axisY * h;
-    glm::vec3 Z = axisZ * d;
+    auto X = axisX * w;
+    auto Y = axisY * h;
+    auto Z = axisZ * d;
     float s = 0.5f;
 	vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, lights[0] * tint);
 	vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, lights[1] * tint);
@@ -113,8 +110,8 @@ void BlocksRenderer::vertexAO(
 	const glm::vec3& axisY,
 	const glm::vec3& axisZ) 
 {
-    glm::vec3 pos = coord + axisZ * 0.5f + (axisX + axisY) * 0.5f;
-	glm::vec4 light = pickSoftLight(glm::ivec3(round(pos.x), round(pos.y), round(pos.z)), axisX, axisY);
+    auto pos = coord + axisZ * 0.5f + (axisX + axisY) * 0.5f;
+	auto light = pickSoftLight(glm::ivec3(round(pos.x), round(pos.y), round(pos.z)), axisX, axisY);
 	vertex(coord, u, v, light * tint);
 }
 
@@ -137,9 +134,9 @@ void BlocksRenderer::faceAO(
         float d = glm::dot(glm::normalize(Z), SUN_VECTOR);
         d = 0.8f + d * 0.2f; // базовая яркость + вклад солнца
 
-        glm::vec3 axisX = glm::normalize(X);
-        glm::vec3 axisY = glm::normalize(Y);
-        glm::vec3 axisZ = glm::normalize(Z);
+        auto axisX = glm::normalize(X);
+        auto axisY = glm::normalize(Y);
+        auto axisZ = glm::normalize(Z);
 
         glm::vec4 tint(d);
         vertexAO(coord + (-X - Y + Z) * s, region.u1, region.v1, tint, axisX, axisY, axisZ);
@@ -194,16 +191,16 @@ void BlocksRenderer::tetragonicFace(
 	bool lights) 
 {
     // Преобразуем локальные координаты (0..1) в глобальное смещение относительно центра блока
-    const glm::vec3 fp1 = (p1.x - 0.5f) * X + (p1.y - 0.5f) * Y + (p1.z - 0.5f) * Z;
-    const glm::vec3 fp2 = (p2.x - 0.5f) * X + (p2.y - 0.5f) * Y + (p2.z - 0.5f) * Z;
-    const glm::vec3 fp3 = (p3.x - 0.5f) * X + (p3.y - 0.5f) * Y + (p3.z - 0.5f) * Z;
-    const glm::vec3 fp4 = (p4.x - 0.5f) * X + (p4.y - 0.5f) * Y + (p4.z - 0.5f) * Z;
+    const auto fp1 = (p1.x - 0.5f) * X + (p1.y - 0.5f) * Y + (p1.z - 0.5f) * Z;
+    const auto fp2 = (p2.x - 0.5f) * X + (p2.y - 0.5f) * Y + (p2.z - 0.5f) * Z;
+    const auto fp3 = (p3.x - 0.5f) * X + (p3.y - 0.5f) * Y + (p3.z - 0.5f) * Z;
+    const auto fp4 = (p4.x - 0.5f) * X + (p4.y - 0.5f) * Y + (p4.z - 0.5f) * Z;
 
     glm::vec4 tint(1.0f);
     if (lights) {
         // Вычисляем нормаль грани как векторное произведение двух рёбер
-        glm::vec3 dir = glm::cross(fp2 - fp1, fp3 - fp1);
-        glm::vec3 normal = glm::normalize(dir);
+        auto dir = glm::cross(fp2 - fp1, fp3 - fp1);
+        auto normal = glm::normalize(dir);
 
         float d = glm::dot(normal, SUN_VECTOR);
         d = 0.8f + d * 0.2f;
@@ -237,26 +234,18 @@ void BlocksRenderer::blockXSprite(
 	float zs = ((float)(char)(rand >> 8) / 512) * spread;
 
 	const float w = size.x / 1.41f; // ширина для диагональных плоскостей
-	const float tint = 0.8f;
+	const glm::vec4 tint (0.8f);
 
     // Рисуем две пересекающиеся плоскости (всего 4 грани)
-	face(glm::vec3(x + xs, y, z + zs), 
-		w, size.y, 0, glm::vec3(1, 0, 1), glm::vec3(0, 1, 0), glm::vec3(),
-		texface1, lights, glm::vec4(tint)
-    );
-    face(glm::vec3(x + xs, y, z + zs), 
-		w, size.y, 0, glm::vec3(-1, 0, -1), glm::vec3(0, 1, 0), glm::vec3(), 
-		texface1, lights, glm::vec4(tint)
-    );
+    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, 1}, {0, 1, 0}, glm::vec3(),
+        texface1, lights, tint);
+    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, -1}, {0, 1, 0}, glm::vec3(), 
+        texface1, lights, tint);
 
-    face(glm::vec3(x + xs, y, z + zs), 
-		w, size.y, 0, glm::vec3(1, 0, -1), glm::vec3(0, 1, 0), glm::vec3(), 
-		texface2, lights, glm::vec4(tint)
-    );
-    face(glm::vec3(x + xs, y, z + zs), 
-		w, size.y, 0, glm::vec3(-1, 0, 1), glm::vec3(0, 1, 0), glm::vec3(), 
-		texface2, lights, glm::vec4(tint)
-    );
+    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, -1}, {0, 1, 0}, glm::vec3(), 
+        texface2, lights, tint);
+    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, 1}, {0, 1, 0}, glm::vec3(), 
+        texface2, lights, tint);
 }
 
 void BlocksRenderer::blockAABB(
@@ -276,7 +265,7 @@ void BlocksRenderer::blockAABB(
         hitbox.b = glm::max(hitbox.b, box.b);
     }
 
-	glm::vec3 size = hitbox.size();
+	auto size = hitbox.size();
 	glm::vec3 X(1, 0, 0);
 	glm::vec3 Y(0, 1, 0);
 	glm::vec3 Z(0, 0, 1);
@@ -290,7 +279,7 @@ void BlocksRenderer::blockAABB(
         orient.transform(hitbox);
 	}
 
-    coord = glm::vec3(icoord) - glm::vec3(0.5f) + hitbox.center();
+    coord -= glm::vec3(0.5f) - hitbox.center();
 
 	if (ao) {
 		faceAO(coord,  X * size.x,  Y * size.y,  Z * size.z, texfaces[5], lights); // Север
@@ -337,7 +326,7 @@ void BlocksRenderer::blockCustomModel(
     // Рендерим каждый бокс модели
 	for (size_t i = 0; i < block->modelBoxes.size(); ++i) {
 		AABB box = block->modelBoxes[i];
-		glm::vec3 size = box.size();
+		auto size = box.size();
 		if (block->rotatable) orient.transform(box);
 		glm::vec3 center_coord = coord - glm::vec3(0.5f) + box.center();
 		faceAO(center_coord, X * size.x, Y * size.y, Z * size.z, block->modelUVs[i * 6 + 5], lights); // Север
@@ -363,21 +352,21 @@ void BlocksRenderer::blockCustomModel(
 
 /* Fastest solid shaded blocks render method */
 void BlocksRenderer::blockCube(
-    int x, int y, int z, 
+    const glm::ivec3& coord, 
 	const UVRegion(&texfaces)[6], 
-	const Block* block, 
+	const Block& block, 
 	blockstate state,
     bool lights,
 	bool ao
 ) {
-	ubyte group = block->drawGroup;
+	ubyte group = block.drawGroup;
 
-	glm::vec3 X(1, 0, 0);
-	glm::vec3 Y(0, 1, 0);
-	glm::vec3 Z(0, 0, 1);
-	glm::vec3 coord(x, y, z);
-	if (block->rotatable) {
-		auto& rotations = block->rotations;
+	glm::ivec3 X(1, 0, 0);
+	glm::ivec3 Y(0, 1, 0);
+	glm::ivec3 Z(0, 0, 1);
+
+	if (block.rotatable) {
+		auto& rotations = block.rotations;
 		auto& orient = rotations.variants[state.rotation];
 		X = orient.axisX;
 		Y = orient.axisY;
@@ -385,57 +374,44 @@ void BlocksRenderer::blockCube(
 	}
 
 	if (ao) {
-        if (isOpen(x + Z.x, y + Z.y, z + Z.z, group)) {
+        if (isOpen(coord + Z, group)) {
             faceAO(coord, X, Y, Z, texfaces[5], lights);
         }
-        if (isOpen(x - Z.x, y - Z.y, z - Z.z, group)) {
+        if (isOpen(coord - Z, group)) {
             faceAO(coord, -X, Y, -Z, texfaces[4], lights);
         }
-        if (isOpen(x + Y.x, y + Y.y, z + Y.z, group)) {
+        if (isOpen(coord + Y, group)) {
             faceAO(coord, X, -Z, Y, texfaces[3], lights);
         }
-        if (isOpen(x - Y.x, y - Y.y, z - Y.z, group)) {
+        if (isOpen(coord - Y, group)) {
             faceAO(coord, X, Z, -Y, texfaces[2], lights);
         }
-        if (isOpen(x + X.x, y + X.y, z + X.z, group)) {
+        if (isOpen(coord + X, group)) {
             faceAO(coord, -Z, Y, X, texfaces[1], lights);
         }
-        if (isOpen(x - X.x, y - X.y, z - X.z, group)) {
+        if (isOpen(coord - X, group)) {
             faceAO(coord, Z, Y, -X, texfaces[0], lights);
         }
     } else {
-        if (isOpen(x + Z.x, y + Z.y, z + Z.z, group)) {
-            face(coord, X, Y, Z, texfaces[5], pickLight({x, y, z + 1}), lights);
+        if (isOpen(coord + Z, group)) {
+            face(coord, X, Y, Z, texfaces[5], pickLight(coord + Z), lights);
         }
-        if (isOpen(x - Z.x, y - Z.y, z - Z.z, group)) {
-            face(coord, -X, Y, -Z, texfaces[4], pickLight({x, y, z - 1}), lights);
+        if (isOpen(coord - Z, group)) {
+            face(coord, -X, Y, -Z, texfaces[4], pickLight(coord - Z), lights);
         }
-        if (isOpen(x + Y.x, y + Y.y, z + Y.z, group)) {
-            face(coord, X, -Z, Y, texfaces[3], pickLight({x, y + 1, z}), lights);
+        if (isOpen(coord + Y, group)) {
+            face(coord, X, -Z, Y, texfaces[3], pickLight(coord + Y), lights);
         }
-        if (isOpen(x - Y.x, y - Y.y, z - Y.z, group)) {
-            face(coord, X, Z, -Y, texfaces[2], pickLight({x, y - 1, z}), lights);
+        if (isOpen(coord - Y, group)) {
+            face(coord, X, Z, -Y, texfaces[2], pickLight(coord - Y), lights);
         }
-        if (isOpen(x + X.x, y + X.y, z + X.z, group)) {
-            face(coord, -Z, Y, X, texfaces[1], pickLight({x + 1, y, z}), lights);
+        if (isOpen(coord + X, group)) {
+            face(coord, -Z, Y, X, texfaces[1], pickLight(coord + X), lights);
         }
-        if (isOpen(x - X.x, y - X.y, z - X.z, group)) {
-            face(coord, Z, Y, -X, texfaces[0], pickLight({x - 1, y, z}), lights);
+        if (isOpen(coord - X, group)) {
+            face(coord, Z, Y, -X, texfaces[0], pickLight(coord - X), lights);
         }
 	}
-}
-
-bool BlocksRenderer::isOpen(int x, int y, int z, ubyte group) const {
-	blockid_t id = voxelsBuffer->pickBlockId(
-        chunk->chunk_x * CHUNK_WIDTH + x, 
-		y, 
-		chunk->chunk_z * CHUNK_DEPTH + z
-    );
-
-	if (id == BLOCK_VOID) return false;
-	const Block& block = *blockDefsCache[id];
-	if ((block.drawGroup != group && block.lightPassing) || !block.rt.solid) return true;
-	return id == BLOCK_AIR;
 }
 
 bool BlocksRenderer::isOpenForLight(int x, int y, int z) const {
@@ -458,11 +434,11 @@ glm::vec4 BlocksRenderer::pickLight(int x, int y, int z) const {
 			chunk->chunk_z * CHUNK_DEPTH + z
         );
 		return glm::vec4(
-            LightMap::extract(light, 0) / 15.0f,
-			LightMap::extract(light, 1) / 15.0f,
-			LightMap::extract(light, 2) / 15.0f,
-			LightMap::extract(light, 3) / 15.0f
-        );
+            LightMap::extract(light, 0),
+			LightMap::extract(light, 1),
+			LightMap::extract(light, 2),
+			LightMap::extract(light, 3)
+        ) / 15.0f;
 	}
 	else {
 		return glm::vec4(0.0f);
@@ -492,9 +468,9 @@ glm::vec4 BlocksRenderer::pickSoftLight(
 	const glm::ivec3& up) const 
 {
 	return pickSoftLight({
-		static_cast<int>(round(x)),
-		static_cast<int>(round(y)),
-		static_cast<int>(round(z))}
+		static_cast<int>(std::round(x)),
+		static_cast<int>(std::round(y)),
+		static_cast<int>(std::round(z))}
 		, right, up
 	);
 }
@@ -509,7 +485,7 @@ void BlocksRenderer::render(const voxel* voxels) {
 			const voxel& vox = voxels[i];
 			blockid_t id = vox.id;
 			blockstate state = vox.state;
-			const Block& def = *blockDefsCache[id];
+			const auto& def = *blockDefsCache[id];
 			if (id == 0 || def.drawGroup != drawGroup || state.segment) continue;
 
             // Получаем текстурные регионы для всех шести граней
@@ -530,9 +506,9 @@ void BlocksRenderer::render(const voxel* voxels) {
 			switch (def.model) {
                 case BlockModel::Cube: {
                     blockCube(
-						x, y, z,
+						{x, y, z},
 						texfaces,
-						&def,
+						def,
 						vox.state,
 						!def.shadeless,
 						def.ambientOcclusion
@@ -549,7 +525,7 @@ void BlocksRenderer::render(const voxel* voxels) {
                     break;
                 } case BlockModel::AABB: {
                     blockAABB(
-						glm::ivec3(x, y, z),
+						{x, y, z},
 						texfaces,
 						&def,
 						vox.state.rotation,
@@ -559,7 +535,7 @@ void BlocksRenderer::render(const voxel* voxels) {
                     break;
                 } case BlockModel::Custom: {
                     blockCustomModel(
-						glm::ivec3(x, y, z),
+						{x, y, z},
 						&def,
 						vox.state.rotation,
 						!def.shadeless,

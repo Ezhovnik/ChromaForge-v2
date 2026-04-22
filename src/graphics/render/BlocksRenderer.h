@@ -8,6 +8,10 @@
 
 #include <voxels/voxel.h>
 #include <typedefs.h>
+#include <voxels/Block.h>
+#include <voxels/Chunk.h>
+#include <voxels/VoxelsVolume.h>
+#include <core_content_defs.h>
 
 class Content;
 class Mesh;
@@ -144,9 +148,9 @@ private:
      * @param ao
      */
 	void blockCube(
-        int x, int y, int z, 
+        const glm::ivec3& coord, 
         const UVRegion(&faces)[6], 
-        const Block* block, 
+        const Block& block, 
         blockstate state, 
         bool lights,
         bool ao
@@ -214,7 +218,21 @@ private:
      * @param group Группа отрисовки текущего блока.
      * @return true, если грань должна быть отрисована.
      */
-	bool isOpen(int x, int y, int z, ubyte group) const;
+	inline bool isOpen(const glm::ivec3& pos, ubyte group) const {
+        auto id = voxelsBuffer->pickBlockId(
+            chunk->chunk_x * CHUNK_WIDTH + pos.x,
+            pos.y,
+            chunk->chunk_z * CHUNK_DEPTH + pos.z
+        );
+        if (id == BLOCK_VOID) {
+            return false;
+        }
+        const auto& block = *blockDefsCache[id];
+        if ((block.drawGroup != group && block.lightPassing) || !block.rt.solid) {
+            return true;
+        }
+        return id == BLOCK_AIR;
+    }
 
     /**
      * @brief Возвращает цвет освещения в точке.

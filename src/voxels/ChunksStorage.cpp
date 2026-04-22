@@ -1,6 +1,7 @@
 #include <voxels/ChunksStorage.h>
 
 #include <assert.h>
+#include <algorithm>
 
 #include <voxels/VoxelsVolume.h>
 #include <voxels/Chunk.h>
@@ -108,12 +109,14 @@ void ChunksStorage::getVoxels(VoxelsVolume* volume, bool backlight) const {
 			const auto& found = chunksMap.find(glm::ivec2(cx, cz));
 			if (found == chunksMap.end()) {
 				for (int ly = y; ly < y + h; ly++) {
-					for (int lz = max(z, cz * CHUNK_DEPTH);
-						lz < min(z + d, (cz + 1) * CHUNK_DEPTH);
-						lz++) {
-						for (int lx = max(x, cx * CHUNK_WIDTH);
-							lx < min(x + w, (cx + 1) * CHUNK_WIDTH);
-							lx++) {
+					for (int lz = std::max(z, cz * CHUNK_DEPTH);
+							lz < std::min(z + d, (cz + 1) * CHUNK_DEPTH);
+							lz++
+						) {
+						for (int lx = std::max(x, cx * CHUNK_WIDTH);
+								lx < std::min(x + w, (cx + 1) * CHUNK_WIDTH);
+								lx++
+							) {
                             uint idx = vox_index(lx - x, ly - y, lz - z, w, d);
 							voxels[idx].id = BLOCK_VOID;
 							lights[idx] = 0;
@@ -125,24 +128,26 @@ void ChunksStorage::getVoxels(VoxelsVolume* volume, bool backlight) const {
 				const voxel* cvoxels = chunk->voxels;
 				const light_t* clights = chunk->light_map.getLights();
 				for (int ly = y; ly < y + h; ++ly) {
-					for (int lz = max(z, cz * CHUNK_DEPTH);
-						lz < min(z + d, (cz + 1) * CHUNK_DEPTH);
-						lz++) {
-						for (int lx = max(x, cx * CHUNK_WIDTH);
-							lx < min(x + w, (cx + 1) * CHUNK_WIDTH);
-							lx++) {
+					for (int lz = std::max(z, cz * CHUNK_DEPTH);
+							lz < std::min(z + d, (cz + 1) * CHUNK_DEPTH);
+							lz++
+						) {
+						for (int lx = std::max(x, cx * CHUNK_WIDTH);
+								lx < std::min(x + w, (cx + 1) * CHUNK_WIDTH);
+								lx++
+							) {
                             uint vidx = vox_index(lx - x, ly - y, lz - z, w, d);
                             uint cidx = vox_index(lx - cx * CHUNK_WIDTH, ly, lz - cz * CHUNK_DEPTH, CHUNK_WIDTH, CHUNK_DEPTH);
 							voxels[vidx] = cvoxels[cidx];
 							light_t light = clights[cidx];
 							if (backlight) {
-								const auto& block = indices->blocks.require(voxels[vidx].id);
-								if (block.lightPassing) {
+								const auto block = indices->blocks.get(voxels[vidx].id);
+								if (block && block->lightPassing) {
 									light = LightMap::combine(
-										min(15, LightMap::extract(light, 0) + 1),
-										min(15, LightMap::extract(light, 1) + 1),
-										min(15, LightMap::extract(light, 2) + 1),
-										min(15, static_cast<int>(LightMap::extract(light, 3)))
+										std::min(15, LightMap::extract(light, 0) + 1),
+										std::min(15, LightMap::extract(light, 1) + 1),
+										std::min(15, LightMap::extract(light, 2) + 1),
+										std::min(15, static_cast<int>(LightMap::extract(light, 3)))
 									);
 								}
 							}

@@ -583,7 +583,7 @@ void Chunks::translate(int32_t dx, int32_t dz) {
 	}
 	for (uint32_t z = 0; z < depth; ++z) {
 		for (uint32_t x = 0; x < width; ++x) {
-			auto chunk = chunks[z * width + x];
+			auto& chunk = chunks[z * width + x];
 			int nx = x - dx;
 			int nz = z - dz;
 			if (chunk == nullptr) continue;
