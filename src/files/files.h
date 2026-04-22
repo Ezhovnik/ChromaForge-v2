@@ -1,5 +1,4 @@
-#ifndef FILES_FILES_H_
-#define FILES_FILES_H_
+#pragma once
 
 #include <string>
 #include <stdlib.h>
@@ -78,5 +77,3 @@ namespace files {
         const std::filesystem::path& file
     );
 }
-
-#endif // FILES_FILES_H_

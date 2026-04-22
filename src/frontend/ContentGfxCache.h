@@ -1,5 +1,4 @@
-#ifndef FRONTEND_BLOCKS_GFX_CACHE_H_
-#define FRONTEND_BLOCKS_GFX_CACHE_H_
+#pragma once
 
 #include <memory>
 
@@ -24,5 +23,3 @@ public:
 
     const Content* getContent() const;
 };
-
-#endif // FRONTEND_BLOCKS_GFX_CACHE_H_

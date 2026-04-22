@@ -1,5 +1,4 @@
-#ifndef VOXELS_WORLDGENERATOR_H_
-#define VOXELS_WORLDGENERATOR_H_
+#pragma once
 
 #include <string>
 
@@ -32,5 +31,3 @@ public:
 
 	virtual void generate(voxel* voxels, int x, int z, uint64_t seed) = 0;
 };
-
-#endif // VOXELS_WORLDGENERATOR_H_

@@ -1,5 +1,4 @@
-#ifndef OBJECTS_RIGGING_H_
-#define OBJECTS_RIGGING_H_
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -143,5 +142,3 @@ namespace rigging {
         }
     };
 };
-
-#endif // OBJECTS_RIGGING_H_

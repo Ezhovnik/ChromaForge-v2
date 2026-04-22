@@ -1,5 +1,4 @@
-#ifndef CODERS_BYTE_UTILS_H_
-#define CODERS_BYTE_UTILS_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -238,5 +237,3 @@ public:
      */
     void skip(size_t n);
 };
-
-#endif // CODERS_BYTE_UTILS_H_

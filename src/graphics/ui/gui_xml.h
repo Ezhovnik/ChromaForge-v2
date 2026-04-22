@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_GUI_XML_H_
-#define GRAPHICS_UI_GUI_XML_H_
+#pragma once
 
 #include <memory>
 #include <unordered_map>
@@ -57,5 +56,3 @@ namespace gui {
         const std::string& getFilename() const;
     };
 }
-
-#endif // GRAPHICS_UI_GUI_XML_H_

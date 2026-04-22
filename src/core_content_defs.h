@@ -1,5 +1,4 @@
-#ifndef SRC_CORE_CONTENT_DEFS_H_
-#define SRC_CORE_CONTENT_DEFS_H_
+#pragma once
 
 #include <string>
 
@@ -17,5 +16,3 @@ class EnginePaths;
 namespace CoreContent {
     void setup(EnginePaths* paths, ContentBuilder* builder);
 }
-
-#endif

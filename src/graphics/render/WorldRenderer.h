@@ -1,5 +1,4 @@
-#ifndef FRONTEND_WORLD_RENDERER_H_
-#define FRONTEND_WORLD_RENDERER_H_
+#pragma once
 
 #include <vector>
 #include <algorithm>
@@ -96,5 +95,3 @@ public:
 	static bool drawChunkBorders;
 	static bool drawEntityHitboxes;
 };
-
-#endif // FRONTEND_WORLD_RENDERER_H_

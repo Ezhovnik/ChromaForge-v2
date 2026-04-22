@@ -1,5 +1,4 @@
-#ifndef UTIL_CLOCK_H_
-#define UTIL_CLOCK_H_
+#pragma once
 
 namespace util {
     class Clock {
@@ -21,5 +20,3 @@ namespace util {
         int getSparkId() const;
     };
 }
-
-#endif // UTIL_CLOCK_H_

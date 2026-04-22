@@ -1,5 +1,4 @@
-#ifndef LOGIC_COMMANDS_INTERPRETER_H_
-#define LOGIC_COMMANDS_INTERPRETER_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -155,5 +154,3 @@ namespace cmd {
         }
     };
 }
-
-#endif // LOGIC_COMMANDS_INTERPRETER_H_

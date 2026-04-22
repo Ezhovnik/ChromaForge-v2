@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_TEXTURE_H_
-#define GRAPHICS_CORE_TEXTURE_H_
+#pragma once
 
 #include <memory>
 
@@ -35,5 +34,3 @@ public:
 
     static std::unique_ptr<Texture> from(const ImageData* image);
 };
-
-#endif // GRAPHICS_CORE_TEXTURE_H_

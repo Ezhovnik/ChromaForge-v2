@@ -1,5 +1,4 @@
-#ifndef FILES_WORLDFILES_H_
-#define FILES_WORLDFILES_H_
+#pragma once
 
 #include <memory>
 #include <filesystem>
@@ -66,5 +65,3 @@ public:
         return doWriteLights;
     }
 };
-
-#endif // FILES_WORLDFILES_H_

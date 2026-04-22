@@ -1,5 +1,4 @@
-#ifndef PHYSICS_HITBOX_H_
-#define PHYSICS_HITBOX_H_
+#pragma once
 
 #include <set>
 #include <functional>
@@ -80,5 +79,3 @@ struct Hitbox {
         return AABB(position - halfsize, position + halfsize);
     }
 };
-
-#endif // PHYSICS_HITBOX_H_

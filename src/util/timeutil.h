@@ -1,5 +1,4 @@
-#ifndef UTIL_TIMEUTIL_H_
-#define UTIL_TIMEUTIL_H_
+#pragma once
 
 #include <chrono>
 
@@ -74,5 +73,3 @@ namespace timeutil {
      */
     void from_value(float value, int& hour, int& minute, int& second);
 }
-
-#endif // UTIL_TIMEUTIL_H_

@@ -1,5 +1,4 @@
-#ifndef CODERS_OBJ_H_
-#define CODERS_OBJ_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -13,5 +12,3 @@ namespace obj {
         const std::string_view file, const std::string_view src
     );
 }
-
-#endif // CODERS_OBJ_H_

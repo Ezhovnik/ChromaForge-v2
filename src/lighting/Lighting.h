@@ -1,5 +1,4 @@
-#ifndef LIGHTING_LIGHTING_H_
-#define LIGHTING_LIGHTING_H_
+#pragma once
 
 #include <memory>
 
@@ -29,5 +28,3 @@ public:
 
     static void preBuildSkyLight(Chunk* chunk, const ContentIndices* indices);
 };
-
-#endif // LIGHTING_LIGHTING_H_

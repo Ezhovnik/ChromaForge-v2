@@ -1,5 +1,4 @@
-#ifndef ITEMS_ITEM_STACK_H_
-#define ITEMS_ITEM_STACK_H_
+#pragma once
 
 #include <typedefs.h>
 #include <constants.h>
@@ -36,5 +35,3 @@ public:
         return count;
     }
 };
-
-#endif // ITEMS_ITEM_STACK_H_

@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_ELEMENTS_CONTROL_TEXTBOX_H_
-#define GRAPHICS_UI_ELEMENTS_CONTROL_TEXTBOX_H_
+#pragma once
 
 #include <graphics/ui/elements/layout/Panel.h>
 #include <graphics/ui/elements/display/Label.h>
@@ -129,5 +128,3 @@ namespace gui {
         virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
     };
 }
-
-#endif // GRAPHICS_UI_ELEMENTS_CONTROL_TEXTBOX_H_

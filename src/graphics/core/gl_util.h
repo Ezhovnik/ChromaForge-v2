@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_GL_UTIL_H_
-#define GRAPHICS_CORE_GL_UTIL_H_
+#pragma once
 
 #include <GL/glew.h>
 
@@ -25,5 +24,3 @@ namespace gl {
         return primitives[static_cast<int>(primitive)];
     }
 }
-
-#endif // GRAPHICS_CORE_GL_UTIL_H_

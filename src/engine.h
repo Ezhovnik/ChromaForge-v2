@@ -1,5 +1,4 @@
-#ifndef SRC_ENGINE_H_
-#define SRC_ENGINE_H_
+#pragma once
 
 #include <string>
 #include <stdexcept>
@@ -113,5 +112,3 @@ public:
     void loadWorldContent(const std::filesystem::path& folder);
     void loadAllPacks();
 };
-
-#endif // SRC_ENGINE_H_

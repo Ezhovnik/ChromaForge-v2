@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_BATCH3D_H_
-#define GRAPHICS_CORE_BATCH3D_H_
+#pragma once
 
 #include <stdlib.h>
 #include <memory>
@@ -61,5 +60,3 @@ public:
 	void flush() override;
 	void flushPoints();
 };
-
-#endif // GRAPHICS_CORE_BATCH3D_H_

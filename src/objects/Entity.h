@@ -1,5 +1,4 @@
-#ifndef OBJECTS_ENTITY_H_
-#define OBJECTS_ENTITY_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -45,5 +44,3 @@ struct Entity {
     Entity(const std::string& name) : name(name) {};
     Entity(const Entity&) = delete;
 };
-
-#endif // OBJECTS_ENTITY_H_

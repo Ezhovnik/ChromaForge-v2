@@ -1,5 +1,4 @@
-#ifndef MATH_RAND_H_
-#define MATH_RAND_H_
+#pragma once
 
 #include <random>
 #include <cstdint>
@@ -165,5 +164,3 @@ public:
 		rand(); // Прогон для улучшения распределения
 	}
 };
-
-#endif // MATH_RAND_H_

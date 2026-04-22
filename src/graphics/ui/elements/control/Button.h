@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_ELEMENTS_CONTROL_BUTTON_H_
-#define GRAPHICS_UI_ELEMENTS_CONTROL_BUTTON_H_
+#pragma once
 
 #include <graphics/ui/elements/layout/Panel.h>
 
@@ -26,5 +25,3 @@ namespace gui {
         virtual void refresh() override;
     };
 }
-
-#endif // GRAPHICS_UI_ELEMENTS_CONTROL_BUTTON_H_

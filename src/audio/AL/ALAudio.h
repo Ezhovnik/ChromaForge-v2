@@ -1,5 +1,4 @@
-#ifndef AUDIO_ALAUDIO_H_
-#define AUDIO_ALAUDIO_H_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -170,5 +169,3 @@ namespace audio {
         static std::unique_ptr<ALAudio> create();
     };
 }
-
-#endif // AUDIO_ALAUDIO_H_

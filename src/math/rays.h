@@ -1,5 +1,4 @@
-#ifndef MATHS_RAYS_H_
-#define MATHS_RAYS_H_
+#pragma once
 
 #include <array>
 
@@ -76,5 +75,3 @@ public:
         scalar_t& distance_ret
     );
 };
-
-#endif // MATH_RAYS_H_

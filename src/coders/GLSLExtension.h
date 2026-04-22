@@ -1,5 +1,4 @@
-#ifndef CODERS_GLSL_EXTESION_H_
-#define CODERS_GLSL_EXTESION_H_
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -39,5 +38,3 @@ public:
     // Основная функций обработки
     std::string process(const std::filesystem::path& file, const std::string& source, bool header=false);
 };
-
-#endif // CODERS_GLSL_EXTESION_H_

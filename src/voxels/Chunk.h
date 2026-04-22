@@ -1,5 +1,4 @@
-#ifndef VOXELS_CHUNK_H_
-#define VOXELS_CHUNK_H_
+#pragma once
 
 #include <stdlib.h>
 #include <unordered_map>
@@ -61,5 +60,3 @@ public:
 
     static void convert(ubyte* data, const ContentLUT* lut);
 };
-
-#endif // VOXELS_CHUNK_H_

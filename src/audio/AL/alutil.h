@@ -1,5 +1,4 @@
-#ifndef AUDIO_ALUTIL_H_
-#define AUDIO_ALUTIL_H_
+#pragma once
 
 #include <string>
 #include <type_traits>
@@ -60,5 +59,3 @@ namespace AL {
         }
     }
 }
-
-#endif // SRC_AUDIO_ALUTIL_H_

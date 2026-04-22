@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_LINEBATCH_H_
-#define GRAPHICS_CORE_LINEBATCH_H_
+#pragma once
 
 #include <stdlib.h>
 #include <memory>
@@ -44,5 +43,3 @@ public:
 
     void setLineWidth(float width);
 };
-
-#endif // GRAPHICS_CORE_LINEBATCH_H_

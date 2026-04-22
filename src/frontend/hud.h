@@ -1,5 +1,4 @@
-#ifndef FRONTEND_HUD_H_
-#define FRONTEND_HUD_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -127,5 +126,3 @@ public:
 
     std::shared_ptr<Inventory> getBlockInventory();
 };
-
-#endif // FRONTEND_HUD_H_

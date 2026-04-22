@@ -1,5 +1,4 @@
-#ifndef ASSETS_ASSETS_LOADER_H_
-#define ASSETS_ASSETS_LOADER_H_
+#pragma once
 
 #include <string>
 #include <functional>
@@ -144,5 +143,3 @@ public:
           const std::vector<std::filesystem::path>& alternatives
      );
 };
-
-#endif // ASSETS_ASSETS_LOADER_H_

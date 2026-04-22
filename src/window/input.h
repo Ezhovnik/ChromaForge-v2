@@ -1,5 +1,4 @@
-#ifndef WINDOW_INPUT_H_
-#define WINDOW_INPUT_H_
+#pragma once
 
 #include <string>
 
@@ -193,5 +192,3 @@ struct Binding {
         return "<unknown input type>";
     }
 };
-
-#endif // WINDOW_INPUT_H_

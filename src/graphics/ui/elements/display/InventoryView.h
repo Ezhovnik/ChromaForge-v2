@@ -1,5 +1,4 @@
-#ifndef FRONTEND_INVENTORY_VIEW_H_
-#define FRONTEND_INVENTORY_VIEW_H_
+#pragma once
 
 #include <vector>
 #include <functional>
@@ -136,5 +135,3 @@ namespace gui {
         std::shared_ptr<InventoryView> build();
     };
 }
-
-#endif // FRONTEND_INVENTORY_VIEW_H_

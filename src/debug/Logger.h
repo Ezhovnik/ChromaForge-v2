@@ -1,5 +1,4 @@
-#ifndef LOGGER_LOGGER_H_
-#define LOGGER_LOGGER_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -60,5 +59,3 @@ public:
 #define LOG_WARN(...)     Logger::getInstance().log(LogLevel::WARN, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_ERROR(...)    Logger::getInstance().log(LogLevel::ERR, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_CRITICAL(...) Logger::getInstance().log(LogLevel::CRITICAL, __FILE__, __LINE__, __func__, __VA_ARGS__)
-
-#endif // LOGGER_LOGGER_H_

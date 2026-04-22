@@ -1,5 +1,4 @@
-#ifndef SRC_SETTINGS_H_
-#define SRC_SETTINGS_H_
+#pragma once
 
 #include <string>
 
@@ -68,5 +67,3 @@ struct EngineSettings {
     DebugSettings debug;
 	UISettings ui;
 };
-
-#endif // SRC_SETTINGS_H_

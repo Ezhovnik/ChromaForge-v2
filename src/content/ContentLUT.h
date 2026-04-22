@@ -1,5 +1,4 @@
-#ifndef CONTENT_CONTENT_LUT_H_
-#define CONTENT_CONTENT_LUT_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -113,5 +112,3 @@ public:
 
     std::vector<ContentEntry> getMissingContent() const;
 };
-
-#endif // CONTENT_CONTENT_LUT_H_

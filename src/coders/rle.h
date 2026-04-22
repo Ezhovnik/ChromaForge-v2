@@ -1,5 +1,4 @@
-#ifndef FILES_RLE_H_
-#define FILES_RLE_H_
+#pragma once
 
 #include <typedefs.h>
 
@@ -63,5 +62,3 @@ namespace extrle {
      */
 	size_t decode(const ubyte* src, size_t length, ubyte* dst);
 }
-
-#endif // FILES_RLE_H_

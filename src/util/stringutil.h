@@ -1,5 +1,4 @@
-#ifndef UTIL_STRINGUTIL_H_
-#define UTIL_STRINGUTIL_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -52,5 +51,3 @@ namespace util {
 
     std::string format_data_size(size_t size);
 }
-
-#endif // UTIL_STRINGUTIL_H_

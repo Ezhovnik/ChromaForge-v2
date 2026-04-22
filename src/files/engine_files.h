@@ -1,5 +1,4 @@
-#ifndef FILES_ENGINE_FILES_H_
-#define FILES_ENGINE_FILES_H_
+#pragma once
 
 #include <string>
 #include <filesystem>
@@ -11,5 +10,3 @@ namespace engine_fs {
 
     extern bool is_world_name_used(std::string name);
 }
-
-#endif // FILES_ENGINE_FILES_H_

@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_IMAGE_DATA_H_
-#define GRAPHICS_CORE_IMAGE_DATA_H_
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -52,5 +51,3 @@ public:
 
 std::unique_ptr<ImageData> add_atlas_margins(ImageData* image, int grid_size);
 extern ImageData* toRGBA(ImageData* image);
-
-#endif // GRAPHICS_IMAGE_DATA_H_

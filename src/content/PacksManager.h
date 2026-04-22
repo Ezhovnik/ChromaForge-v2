@@ -1,5 +1,4 @@
-#ifndef CONTENT_PACKS_MANAGER_H_
-#define CONTENT_PACKS_MANAGER_H_
+#pragma once
 
 #include <vector>
 #include <filesystem>
@@ -28,5 +27,3 @@ public:
 
     static std::vector<std::string> getNames(const std::vector<ContentPack>& packs);
 };
-
-#endif // CONTENT_PACKS_MANAGER_H_

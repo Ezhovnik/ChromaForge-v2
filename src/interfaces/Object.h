@@ -1,5 +1,4 @@
-#ifndef INTERFACES_OBJECT_H_
-#define INTERFACES_OBJECT_H_
+#pragma once
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -36,5 +35,3 @@ public:
      */
     virtual void destroyed() {  }
 };
-
-#endif // INTERFACES_OBJECT_H_

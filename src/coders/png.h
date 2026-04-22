@@ -1,5 +1,4 @@
-#ifndef CODERS_PNG_H_
-#define CODERS_PNG_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -38,5 +37,3 @@ namespace png {
      */
     extern std::unique_ptr<Texture> loadTexture(const std::string& filename);
 }
-
-#endif // CODERS_PNG_H_

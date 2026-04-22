@@ -1,5 +1,4 @@
-#ifndef CONTENT_CONTENT_BUILDER_H_
-#define CONTENT_CONTENT_BUILDER_H_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -69,5 +68,3 @@ public:
 
     std::unique_ptr<Content> build();
 };
-
-#endif // CONTENT_CONTENT_BUILDER_H_

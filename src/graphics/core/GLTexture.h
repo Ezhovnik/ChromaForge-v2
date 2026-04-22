@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_GLTEXTURE_H_
-#define GRAPHICS_CORE_GLTEXTURE_H_
+#pragma once
 
 #include <graphics/core/Texture.h>
 
@@ -26,5 +25,3 @@ public:
 
     static std::unique_ptr<GLTexture> from(const ImageData* image);
 };
-
-#endif // GRAPHICS_CORE_GLTEXTURE_H_

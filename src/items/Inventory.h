@@ -1,5 +1,4 @@
-#ifndef ITEMS_INVENTORY_H_
-#define ITEMS_INVENTORY_H_
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -47,5 +46,3 @@ public:
 
     static const size_t npos;
 };
-
-#endif // ITEMS_INVENTORY_H_

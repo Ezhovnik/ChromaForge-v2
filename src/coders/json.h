@@ -1,5 +1,4 @@
-#ifndef CODERS_JSON_H_
-#define CODERS_JSON_H_
+#pragma once
 
 #include <string>
 
@@ -22,6 +21,3 @@ namespace json {
         const std::string& indent
     );
 }
-
-
-#endif // CODERS_JSON_H_

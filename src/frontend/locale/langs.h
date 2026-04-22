@@ -1,5 +1,4 @@
-#ifndef FRONTEND_LOCALE_LANGS_H
-#define FRONTEND_LOCALE_LANGS_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -145,5 +144,3 @@ namespace langs {
         const std::vector<ContentPack>& packs
     );
 }
-
-#endif // FRONTEND_LOCALE_LANGS_H_

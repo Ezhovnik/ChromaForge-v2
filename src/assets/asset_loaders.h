@@ -1,5 +1,4 @@
-#ifndef ASSETS_ASSET_LOADERS_H_
-#define ASSETS_ASSET_LOADERS_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -70,5 +69,3 @@ namespace asset_loader {
         const std::shared_ptr<AssetsConfig>& settings
     );
 }
-
-#endif // ASSETS_ASSET_LOADERS_H_

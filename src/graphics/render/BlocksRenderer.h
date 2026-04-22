@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_RENDER_BLOCKS_RENDERER_H_
-#define GRAPHICS_RENDER_BLOCKS_RENDERER_H_
+#pragma once
 
 #include <stdlib.h>
 #include <vector>
@@ -303,5 +302,3 @@ public:
      */
 	VoxelsVolume* getVoxelsBuffer() const;
 };
-
-#endif // GRAPHICS_RENDER_BLOCKS_RENDERER_H_

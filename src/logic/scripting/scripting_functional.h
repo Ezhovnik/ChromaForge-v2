@@ -1,5 +1,4 @@
-#ifndef LOGIC_SCRIPTING_SCRIPTING_FUNCTIONAL_H_
-#define LOGIC_SCRIPTING_SCRIPTING_FUNCTIONAL_H_
+#pragma once
 
 #include <string>
 
@@ -76,5 +75,3 @@ namespace scripting {
         const std::string& file="<string>"
     );
 }
-
-#endif // LOGIC_SCRIPTING_SCRIPTING_FUNCTIONAL_H_

@@ -1,5 +1,4 @@
-#ifndef WORLD_WORLD_H_
-#define WORLD_WORLD_H_
+#pragma once
 
 #include <string>
 #include <filesystem>
@@ -204,5 +203,3 @@ public:
           return nextInventoryId++;
      }
 };
-
-#endif // WORLD_WORLD_H_

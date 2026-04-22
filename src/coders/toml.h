@@ -1,5 +1,4 @@
-#ifndef CODERS_TOML_H_
-#define CODERS_TOML_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -20,5 +19,3 @@ namespace toml {
         std::string_view source
     );
 }
-
-#endif // CODERS_TOML_H_

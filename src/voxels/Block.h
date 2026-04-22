@@ -1,5 +1,4 @@
-#ifndef VOXELS_BLOCK_H_
-#define VOXELS_BLOCK_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -138,5 +137,3 @@ public:
 inline glm::ivec3 get_ground_direction(const Block& def, int rotation) {
     return -def.rotations.variants[rotation].axisY;
 }
-
-#endif // VOXELS_BLOCK_H_

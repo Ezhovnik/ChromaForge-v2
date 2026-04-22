@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_ELEMENTS_CONTROL_TRACKBAR_H_
-#define GRAPHICS_UI_ELEMENTS_CONTROL_TRACKBAR_H_
+#pragma once
 
 #include <graphics/ui/elements/UINode.h>
 #include <data/dynamic.h>
@@ -51,5 +50,3 @@ namespace gui {
         virtual void setChangeOnRelease(bool);
     };
 }
-
-#endif // GRAPHICS_UI_ELEMENTS_CONTROL_TRACKBAR_H_

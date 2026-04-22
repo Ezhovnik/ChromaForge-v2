@@ -1,5 +1,4 @@
-#ifndef FRONTEND_BLOCKS_PREVIEW_H_
-#define FRONTEND_BLOCKS_PREVIEW_H_
+#pragma once
 
 #include <memory>
 
@@ -34,5 +33,3 @@ public:
         const Content* content
     );
 };
-
-#endif // FRONTEND_BLOCKS_PREVIEW_H_

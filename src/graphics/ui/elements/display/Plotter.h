@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_ELEMENTS_DISPLAY_PLOTTER_H_
-#define GRAPHICS_UI_ELEMENTS_DISPLAY_PLOTTER_H_
+#pragma once
 
 #include <memory>
 #include <glm/glm.hpp>
@@ -34,5 +33,3 @@ namespace gui {
         void draw(const DrawContext* pctx, Assets* assets) override;
     };
 }
-
-#endif // GRAPHICS_UI_ELEMENTS_DISPLAY_PLOTTER_H_

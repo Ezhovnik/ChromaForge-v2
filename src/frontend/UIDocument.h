@@ -1,5 +1,4 @@
-#ifndef FRONTEND_UI_DOCUMENT_H_
-#define FRONTEND_UI_DOCUMENT_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -55,5 +54,3 @@ public:
         const std::filesystem::path& file
     );
 };
-
-#endif // FRONTEND_UI_DOCUMENT_H_

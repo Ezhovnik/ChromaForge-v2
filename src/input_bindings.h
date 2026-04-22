@@ -1,5 +1,4 @@
-#ifndef SRC_INPUT_BINDINGS_H_
-#define SRC_INPUT_BINDINGS_H_
+#pragma once
 
 #include <string>
 
@@ -22,5 +21,3 @@ inline const std::string BIND_PLAYER_PICK = "player.pick";
 inline const std::string BIND_PLAYER_DROP = "player.drop";
 inline const std::string BIND_DEVTOOLS_CONSOLE = "devtools.console";
 inline const std::string BIND_CHUNKS_RELOAD = "chunks.reload";
-
-#endif

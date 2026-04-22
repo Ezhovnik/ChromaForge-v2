@@ -1,5 +1,4 @@
-#ifndef UTIL_LISTUTIL_H_
-#define UTIL_LISTUTIL_H_
+#pragma once
 
 #include <vector>
 #include <queue>
@@ -21,5 +20,3 @@ namespace util {
 
     std::string to_string(const std::vector<std::string>& vec);
 }
-
-#endif // UTIL_LISTUTIL_H_

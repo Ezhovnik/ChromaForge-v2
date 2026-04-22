@@ -1,5 +1,4 @@
-#ifndef WINDOW_WINDOW_H_
-#define WINDOW_WINDOW_H_
+#pragma once
 
 #include <vector>
 #include <stack>
@@ -79,5 +78,3 @@ public:
 
     static std::unique_ptr<ImageData> takeScreenshot();
 };
-
-#endif // WINDOW_WINDOW_H

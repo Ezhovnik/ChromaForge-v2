@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_BATCH2D_H_
-#define GRAPHICS_CORE_BATCH2D_H_
+#pragma once
 
 #include <stdlib.h>
 #include <glm/glm.hpp>
@@ -201,6 +200,3 @@ public:
      */
      void setLineWidth(float width);
 };
-
-
-#endif // GRAPHICS_CORE_BATCH2D_H_

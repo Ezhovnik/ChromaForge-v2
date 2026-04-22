@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_ELEMENTS_LABEL_H_
-#define GRAPHICS_UI_ELEMENTS_LABEL_H_
+#pragma once
 
 #include <graphics/ui/elements/UINode.h>
 
@@ -85,5 +84,3 @@ namespace gui {
         virtual bool isTextWrapping() const;
     };
 }
-
-#endif // GRAPHICS_UI_ELEMENTS_LABEL_H_

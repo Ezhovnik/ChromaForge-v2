@@ -1,5 +1,4 @@
-#ifndef PHYSICS_PHYSICSSOLVER_H_
-#define PHYSICS_PHYSICSSOLVER_H_
+#pragma once
 
 #include <vector>
 
@@ -52,5 +51,3 @@ public:
 
 	void removeSensor(Sensor* sensor);
 };
-
-#endif // PHYSICS_PHYSICSSOLVER_H_

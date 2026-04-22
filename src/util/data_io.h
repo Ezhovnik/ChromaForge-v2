@@ -1,5 +1,4 @@
-#ifndef UTIL_DATA_IO_H_
-#define UTIL_DATA_IO_H_
+#pragma once
 
 #include <typedefs.h>
 
@@ -93,5 +92,3 @@ namespace dataio {
         dest[offset + 7] = (char)(value >> 0 & 255);
     }
 }
-
-#endif // UTIL_DATA_IO_H_

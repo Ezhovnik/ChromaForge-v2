@@ -1,5 +1,4 @@
-#ifndef WORLD_WORLDGENERATORS_H_
-#define WORLD_WORLDGENERATORS_H_
+#pragma once
 
 #include <map>
 #include <vector>
@@ -33,5 +32,3 @@ void WorldGenerators::addGenerator(std::string id) {
         return (WorldGenerator*) new T(content);
     };
 }
-
-#endif // WORLD_WORLDGENERATORS_H_

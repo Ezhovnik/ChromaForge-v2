@@ -1,5 +1,4 @@
-#ifndef LOGIC_PLAYERCONTROLLER_H_
-#define LOGIC_PLAYERCONTROLLER_H_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -74,5 +73,3 @@ public:
 
 	Player* getPlayer();
 };
-
-#endif // LOGIC_PLAYERCONTROLLER_H_

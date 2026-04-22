@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_TEXTURE_ANIMATION_H_
-#define GRAPHICS_CORE_TEXTURE_ANIMATION_H_
+#pragma once
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -48,5 +47,3 @@ private:
 
 	std::vector<TextureAnimation> animations;
 };
-
-#endif // GRAPHICS_CORE_TEXTURE_ANIMATION_H_

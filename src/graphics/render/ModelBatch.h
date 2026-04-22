@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_RENDER_MODEL_BATCH_H_
-#define GRAPHICS_RENDER_MODEL_BATCH_H_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -101,5 +100,3 @@ public:
 
     void render();
 };
-
-#endif // GRAPHICS_RENDER_MODEL_BATCH_H_

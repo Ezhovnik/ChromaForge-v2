@@ -1,5 +1,4 @@
-#ifndef CODERS_ZIP_H_
-#define CODERS_ZIP_H_
+#pragma once
 
 #include <vector>
 
@@ -42,5 +41,3 @@ namespace zip {
      */
     std::vector<ubyte> decompress(const ubyte* src, size_t size);
 }
-
-#endif // CODERS_ZIP_H_

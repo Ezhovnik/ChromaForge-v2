@@ -1,5 +1,4 @@
-#ifndef DATA_DYNAMIC_FWD_H_
-#define DATA_DYNAMIC_FWD_H_
+#pragma once
 
 #include <memory>
 #include <variant>
@@ -31,5 +30,3 @@ namespace dynamic {
 
     using to_string_func = std::function<std::string(const Value&)>;
 }
-
-#endif // DATA_DYNAMIC_FWD_H_

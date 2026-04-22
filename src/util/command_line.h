@@ -1,5 +1,4 @@
-#ifndef UTIL_COMMAND_LINE_H_
-#define UTIL_COMMAND_LINE_H_
+#pragma once
 
 class EnginePaths;
 
@@ -17,5 +16,3 @@ class EnginePaths;
  * - --help, -h   : выводит справку и завершает разбор.
  */
 bool parse_cmdline(int argc, char** argv, EnginePaths& paths);
-
-#endif // UTIL_COMMAND_LINE_H_

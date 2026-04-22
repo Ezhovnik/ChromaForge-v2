@@ -1,5 +1,4 @@
-#ifndef UTIL_THREAD_POOL_H_
-#define UTIL_THREAD_POOL_H_
+#pragma once
 
 #include <queue>
 #include <atomic>
@@ -355,5 +354,3 @@ namespace util {
     };
 
 } // namespace util
-
-#endif // UTIL_THREAD_POOL_H_

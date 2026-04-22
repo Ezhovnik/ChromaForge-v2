@@ -1,5 +1,4 @@
-#ifndef UTIL_RUNNABLES_LIST_H_
-#define UTIL_RUNNABLES_LIST_H_
+#pragma once
 
 #include <memory>
 #include <unordered_map>
@@ -30,5 +29,3 @@ namespace util {
         }
     };
 }
-
-#endif // UTIL_RUNNABLES_LIST_H_

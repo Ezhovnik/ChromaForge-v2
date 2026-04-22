@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_SHADERPROGRAM_H_
-#define GRAPHICS_CORE_SHADERPROGRAM_H_
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -119,5 +118,3 @@ public:
         const std::string& fragmentSource
     );
 };
-
-#endif // GRAPHICS_CORE_SHADERPROGRAM_H_

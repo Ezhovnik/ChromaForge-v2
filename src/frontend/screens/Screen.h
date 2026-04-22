@@ -1,5 +1,4 @@
-#ifndef FRONTEND_SCREENS_SCREEN_H_
-#define FRONTEND_SCREENS_SCREEN_H_
+#pragma once
 
 #include <util/ObjectsKeeper.h>
 
@@ -17,5 +16,3 @@ public:
     virtual void draw(float deltaTime) = 0;
     virtual void onEngineShutdown() {};
 };
-
-#endif // FRONTEND_SCREENS_SCREEN_H_

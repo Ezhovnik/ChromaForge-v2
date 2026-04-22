@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_MESH_H_
-#define GRAPHICS_CORE_MESH_H_
+#pragma once
 
 #include <typedefs.h>
 
@@ -89,5 +88,3 @@ public:
 
     static int drawCalls;
 };
-
-#endif // GRAPHICS_CORE_MESH_H_

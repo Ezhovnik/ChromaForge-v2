@@ -1,5 +1,4 @@
-#ifndef LOGIC_SCRIPTING_SCRIPTING_H_
-#define LOGIC_SCRIPTING_SCRIPTING_H_
+#pragma once
 
 #include <string>
 #include <filesystem>
@@ -127,5 +126,3 @@ namespace scripting {
 
     void close();
 }
-
-#endif // LOGIC_SCRIPTING_SCRIPTING_H_

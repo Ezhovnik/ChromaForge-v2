@@ -1,5 +1,4 @@
-#ifndef LOGIC_ENGINE_CONTROLLER_H_
-#define LOGIC_ENGINE_CONTROLLER_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -29,5 +28,3 @@ public:
         const std::vector<std::string>& packsToRemove
     );
 };
-
-#endif // LOGIC_ENGINE_CONTROLLER_H_

@@ -1,5 +1,4 @@
-#ifndef LOGIC_BLOCKS_CONTROLLER_H_
-#define LOGIC_BLOCKS_CONTROLLER_H_
+#pragma once
 
 #include <functional>
 
@@ -80,5 +79,3 @@ public:
 
     void listenBlockInteraction(const on_block_interaction& callback);
 };
-
-#endif // LOGIC_BLOCKS_CONTROLLER_H_

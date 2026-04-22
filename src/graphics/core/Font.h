@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_FONT_H_
-#define GRAPHICS_CORE_FONT_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -89,5 +88,3 @@ public:
      */
      void draw(Batch2D* batch, std::wstring_view text, int x, int y, FontStyle style);
 };
-
-#endif // GRAPHICS_CORE_FONT_H_

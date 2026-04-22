@@ -1,5 +1,4 @@
-#ifndef VOXELS_FLATWORLDGENERATOR_H_
-#define VOXELS_FLATWORLDGENERATOR_H_
+#pragma once
 
 #include <typedefs.h>
 #include <voxels/WorldGenerator.h>
@@ -13,5 +12,3 @@ public:
 
 	void generate(voxel* voxels, int x, int z, uint64_t seed) override;
 };
-
-#endif // VOXELS_FLATWORLDGENERATOR_H_

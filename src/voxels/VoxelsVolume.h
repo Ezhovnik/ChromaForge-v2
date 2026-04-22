@@ -1,5 +1,4 @@
-#ifndef VOXELS_VOXELSVOLUME_H_
-#define VOXELS_VOXELSVOLUME_H_
+#pragma once
 
 #include <typedefs.h>
 #include <constants.h>
@@ -65,5 +64,3 @@ public:
 		return lights[vox_index(bx - x, by - y, bz - z, width, depth)];
 	}
 };
-
-#endif // VOXELS_VOXELSVOLUME_H_

@@ -1,5 +1,4 @@
-#ifndef CONTENT_CONTENT_LOADER_H_
-#define CONTENT_CONTENT_LOADER_H_
+#pragma once
 
 #include <string>
 #include <filesystem>
@@ -50,5 +49,3 @@ public:
     void fixPackIndices();
     void load();
 };
-
-#endif // CONTENT_CONTENT_LOADER_H_

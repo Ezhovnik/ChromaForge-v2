@@ -1,5 +1,4 @@
-#ifndef INTERFACES_TASK_H_
-#define INTERFACES_TASK_H_
+#pragma once
 
 #include <typedefs.h>
 
@@ -14,5 +13,3 @@ public:
     virtual void waitForEnd() = 0;
     virtual void terminate() = 0;
 };
-
-#endif // INTERFACES_TASK_H_

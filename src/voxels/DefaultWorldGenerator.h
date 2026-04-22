@@ -1,5 +1,4 @@
-#ifndef VOXELS_DEFAULTWORLDGENERATOR_H_
-#define VOXELS_DEFAULTWORLDGENERATOR_H_
+#pragma once
 
 #include <string>
 
@@ -25,5 +24,3 @@ public:
 
 	void generate(voxel* voxels, int x, int z, uint64_t seed) override;
 };
-
-#endif // VOXELS_DEFAULTWORLDGENERATOR_H_

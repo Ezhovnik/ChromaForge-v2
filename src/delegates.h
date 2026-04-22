@@ -1,5 +1,4 @@
-#ifndef DELEGATES_H_
-#define DELEGATES_H_
+#pragma once
 
 #include <functional>
 #include <string>
@@ -22,5 +21,3 @@ using boolconsumer = std::function<void(bool)>;
 using int_array_consumer = std::function<void(const int[], size_t)>;
 
 using wstringchecker = std::function<bool(const std::wstring&)>;
-
-#endif // DELEGATES_H_

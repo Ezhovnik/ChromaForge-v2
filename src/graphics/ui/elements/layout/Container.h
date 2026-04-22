@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_ELEMENTS_LAYOUT_CONTAINER_H_
-#define GRAPHICS_UI_ELEMENTS_LAYOUT_CONTAINER_H_
+#pragma once
 
 #include <vector>
 
@@ -38,5 +37,3 @@ namespace gui {
         const std::vector<std::shared_ptr<UINode>>& getNodes() const;
     };
 }
-
-#endif // GRAPHICS_UI_ELEMENTS_LAYOUT_CONTAINER_H_

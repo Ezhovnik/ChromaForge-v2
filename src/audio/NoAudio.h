@@ -1,5 +1,4 @@
-#ifndef AUDIO_NOAUDIO_H_
-#define AUDIO_NOAUDIO_H_
+#pragma once
 
 #include <audio/audio.h>
 
@@ -80,5 +79,3 @@ namespace audio {
         static std::unique_ptr<NoAudio> create();
     };
 }
-
-#endif // AUDIO_NOAUDIO_H_

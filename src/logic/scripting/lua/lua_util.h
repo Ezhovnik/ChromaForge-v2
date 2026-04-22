@@ -1,5 +1,4 @@
-#ifndef LOGIC_SCRIPTING_LUA_LUA_UTIL_H_
-#define LOGIC_SCRIPTING_LUA_LUA_UTIL_H_
+#pragma once
 
 #include <stdexcept>
 #include <unordered_map>
@@ -642,5 +641,3 @@ namespace lua {
         setglobal(L, name);
     }
 }
-
-#endif // LOGIC_SCRIPTING_LUA_LUA_UTIL_H_

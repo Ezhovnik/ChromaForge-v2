@@ -1,5 +1,4 @@
-#ifndef FRONTEND_SCREENS_LEVEL_SCREEN_H_
-#define FRONTEND_SCREENS_LEVEL_SCREEN_H_
+#pragma once
 
 #include <memory>
 
@@ -42,5 +41,3 @@ public:
 
     LevelController* getLevelController() const;
 };
-
-#endif // FRONTEND_SCREENS_LEVEL_SCREEN_H_

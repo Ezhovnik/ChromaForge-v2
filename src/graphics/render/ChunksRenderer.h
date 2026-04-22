@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_RENDER_CHUNKS_RENDERER_H_
-#define GRAPHICS_RENDER_CHUNKS_RENDERER_H_
+#pragma once
 
 #include <queue>
 #include <mutex>
@@ -56,5 +55,3 @@ public:
 
     void update();
 };
-
-#endif // GRAPHICS_RENDER_CHUNKS_RENDERER_H_

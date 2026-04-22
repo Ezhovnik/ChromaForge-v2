@@ -1,5 +1,4 @@
-#ifndef VOXELS_CHUNKSCONTROLLER_H_
-#define VOXELS_CHUNKSCONTROLLER_H_
+#pragma once
 
 #include <memory>
 
@@ -32,5 +31,3 @@ public:
 
     void update(int64_t maxDuration);
 };
-
-#endif /* VOXELS_CHUNKSCONTROLLER_H_ */

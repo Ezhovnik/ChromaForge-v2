@@ -1,5 +1,4 @@
-#ifndef FRONTEND_SCREENS_MENU_SCREEN_H_
-#define FRONTEND_SCREENS_MENU_SCREEN_H_
+#pragma once
 
 #include <memory>
 
@@ -18,6 +17,3 @@ public:
     void update(float deltaTime) override;
     void draw(float deltaTime) override;
 };
-
-
-#endif // FRONTEND_SCREENS_MENU_SCREEN_H_

@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_ELEMENTS_CONTROL_CHECKBOX_H_
-#define GRAPHICS_UI_ELEMENTS_CONTROL_CHECKBOX_H_
+#pragma once
 
 #include <utility>
 
@@ -58,5 +57,3 @@ namespace gui {
         }
     };
 }
-
-#endif // GRAPHICS_UI_ELEMENTS_CONTROL_CHECKBOX_H_

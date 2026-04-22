@@ -1,5 +1,4 @@
-#ifndef OBJECTS_PLAYER_H_
-#define OBJECTS_PLAYER_H_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -186,5 +185,3 @@ public:
         return objectUID;
     }
 };
-
-#endif // OBJECTS_PLAYER_H_

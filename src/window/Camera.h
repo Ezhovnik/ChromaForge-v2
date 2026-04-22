@@ -1,5 +1,4 @@
-#ifndef WINDOW_CAMERA_H_
-#define WINDOW_CAMERA_H_
+#pragma once
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -41,5 +40,3 @@ public:
     void setFov(float fov) {this->fov = fov;}
     float getFov() const {return fov;}
 };
-
-#endif // WINDOW_CAMERA_H

@@ -1,5 +1,4 @@
-#ifndef MATH_LMPACKER_H_
-#define MATH_LMPACKER_H_
+#pragma once
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -51,5 +50,3 @@ public:
         return rects;
     }
 };
-
-#endif // MATH_LMPACKER_H_

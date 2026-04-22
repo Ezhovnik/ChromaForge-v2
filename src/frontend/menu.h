@@ -1,5 +1,4 @@
-#ifndef FRONTEND_MENU_MENU_H_
-#define FRONTEND_MENU_MENU_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -31,5 +30,3 @@ namespace menus {
 
     bool call(Engine* engine, runnable func);
 }
-
-#endif // FRONTEND_MENU_MENU_H_

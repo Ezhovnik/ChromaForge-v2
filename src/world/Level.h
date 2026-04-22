@@ -1,5 +1,4 @@
-#ifndef WORLD_LEVEL_H_
-#define WORLD_LEVEL_H_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -105,5 +104,3 @@ public:
 
      std::shared_ptr<Camera> getCamera(const std::string& name);
 };
-
-#endif // WORLD_LEVEL_H_

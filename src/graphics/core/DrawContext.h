@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_GFX_CONTEXT_H_
-#define GRAPHICS_CORE_GFX_CONTEXT_H_
+#pragma once
 
 #include <typedefs.h>
 #include <graphics/core/Viewport.h>
@@ -41,5 +40,3 @@ public:
     void setScissors(glm::vec4 area);
     void setLineWidth(float width);
 };
-
-#endif // GRAPHICS_CORE_GFX_CONTEXT_H_

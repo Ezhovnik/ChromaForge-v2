@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_GUI_H_
-#define GRAPHICS_UI_GUI_H_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -105,5 +104,3 @@ namespace gui {
         float getDoubleClickDelay() const;
     };
 }
-
-#endif // GRAPHICS_UI_GUI_H_

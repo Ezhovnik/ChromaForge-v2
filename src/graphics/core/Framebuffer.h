@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_FRAMEBUFFER_H_
-#define GRAPHICS_CORE_FRAMEBUFFER_H_
+#pragma once
 
 #include <memory>
 
@@ -30,5 +29,3 @@ public:
 
 	uint getHeight() const;
 };
-
-#endif // GRAPHICS_CORE_FRAMEBUFFER_H_

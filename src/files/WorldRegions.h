@@ -1,5 +1,4 @@
-#ifndef FILES_WORLD_REGIONS_H_
-#define FILES_WORLD_REGIONS_H_
+#pragma once
 
 #include <mutex>
 #include <memory>
@@ -183,5 +182,3 @@ public:
 
     static bool parseRegionFilename(const std::string& name, int& x, int& z);
 };
-
-#endif // FILES_WORLD_REGIONS_H_

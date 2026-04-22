@@ -1,5 +1,4 @@
-#ifndef WINDOW_EVENTS_H_
-#define WINDOW_EVENTS_H_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -62,5 +61,3 @@ public:
     static std::string writeBindings();
     static void loadBindings(const std::string& filename, const std::string& source);
 };
-
-#endif // WINDOW_EVENTS_H_

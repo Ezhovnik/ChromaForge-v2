@@ -1,5 +1,4 @@
-#ifndef ASSETS_ASSETS_H_
-#define ASSETS_ASSETS_H_
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -138,5 +137,3 @@ void asset_loader::assets_setup(const Assets* assets) {
           }
      }
 }
-
-#endif // ASSETS_ASSETS_H_

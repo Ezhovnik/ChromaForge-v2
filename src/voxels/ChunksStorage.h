@@ -1,5 +1,4 @@
-#ifndef VOXELS_CHUNKSSTORAGE_H_
-#define VOXELS_CHUNKSSTORAGE_H_
+#pragma once
 
 #include <memory>
 #include <unordered_map>
@@ -33,6 +32,3 @@ public:
 
 	light_t getLight(int x, int y, int z, ubyte channel) const;
 };
-
-
-#endif // VOXELS_CHUNKSSTORAGE_H_

@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_RENDER_SKYBOX_H_
-#define GRAPHICS_RENDER_SKYBOX_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -48,5 +47,3 @@ public:
     void unbind() const;
     bool isReady() const {return ready;};
 };
-
-#endif // GRAPHICS_RENDER_SKYBOX_H_

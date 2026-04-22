@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_GUI_UTIL_H_
-#define GRAPHICS_UI_GUI_UTIL_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -26,5 +25,3 @@ namespace guiutil {
         scriptenv env=0
     );
 }
-
-#endif // GRAPHICS_UI_GUI_UTIL_H_

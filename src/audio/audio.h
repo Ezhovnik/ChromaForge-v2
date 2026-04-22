@@ -1,5 +1,4 @@
-#ifndef AUDIO_AUDIO_H_
-#define AUDIO_AUDIO_H_
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -408,5 +407,3 @@ namespace audio {
      */
     void close();
 };
-
-#endif // AUDIO_AUDIO_H_

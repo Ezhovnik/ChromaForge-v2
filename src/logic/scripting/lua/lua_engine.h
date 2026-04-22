@@ -1,5 +1,4 @@
-#ifndef LOGIC_SCRIPTING_LUA_ENGINE_H_
-#define LOGIC_SCRIPTING_LUA_ENGINE_H_
+#pragma once
 
 #include <logic/scripting/lua/lua_util.h>
 
@@ -17,5 +16,3 @@ namespace lua {
     bool emit_event(lua::State*, const std::string& name, std::function<int(lua::State*)> args=[](auto*){return 0;});
     lua::State* get_main_thread();
 }
-
-#endif // LOGIC_SCRIPTING_LUA_ENGINE_H_

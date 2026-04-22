@@ -1,5 +1,4 @@
-#ifndef OBJECTS_ENTITIES_HPP_
-#define OBJECTS_ENTITIES_HPP_
+#pragma once
 
 #include <unordered_map>
 #include <optional>
@@ -245,5 +244,3 @@ public:
         return entities.size();
     }
 };
-
-#endif // OBJECTS_ENTITIES_H_

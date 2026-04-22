@@ -1,5 +1,4 @@
-#ifndef FILES_ENGINE_PATHS_H_
-#define FILES_ENGINE_PATHS_H_
+#pragma once
 
 #include <string>
 #include <filesystem>
@@ -68,5 +67,3 @@ public:
 
     const std::filesystem::path& getMainRoot() const;
 };
-
-#endif // FILES_ENGINE_PATHS_H_

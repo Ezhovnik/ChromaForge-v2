@@ -1,5 +1,4 @@
-#ifndef SRC_CONSTANTS_H_
-#define SRC_CONSTANTS_H_
+#pragma once
 
 #include <limits>
 #include <string>
@@ -99,5 +98,3 @@ inline const std::string LAYOUTS_FOLDER = "layouts";
 inline const std::string SOUNDS_FOLDER = "sounds";
 /** Папка с моделями */
 inline const std::string MODELS_FOLDER = "models";
-
-#endif // SRC_CONSTANTS_H_

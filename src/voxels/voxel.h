@@ -1,5 +1,4 @@
-#ifndef VOXELS_VOXEL_H_
-#define VOXELS_VOXEL_H_
+#pragma once
 
 #include <stdint.h>
 
@@ -50,5 +49,3 @@ struct voxel {
     blockstate state;
 };
 static_assert(sizeof(voxel) == 4);
-
-#endif // VOXELS_VOXEL_H_

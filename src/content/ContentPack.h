@@ -1,5 +1,4 @@
-#ifndef CONTENT_CONTENT_PACK_H_
-#define CONTENT_CONTENT_PACK_H_
+#pragma once
 
 #include <string>
 #include <filesystem>
@@ -121,5 +120,3 @@ public:
         return env;
     }
 };
-
-#endif // CONTENT_CONTENT_PACK_H_

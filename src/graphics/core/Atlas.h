@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_CORE_ATLAS_H_
-#define GRAPHICS_CORE_ATLAS_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -55,5 +54,3 @@ public:
 
     std::unique_ptr<Atlas> build(uint extrusion, bool prepare=true, uint maxResolution=0);
 };
-
-#endif // GRAPHICS_CORE_ATLAS_H_

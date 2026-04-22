@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_UI_ELEMENTS_UINODE_H_
-#define GRAPHICS_UI_ELEMENTS_UINODE_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -215,5 +214,3 @@ namespace gui {
         );
     };
 }
-
-#endif // GRAPHICS_UI_ELEMENTS_UINODE_H_

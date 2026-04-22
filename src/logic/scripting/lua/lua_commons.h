@@ -1,5 +1,4 @@
-#ifndef LOGIC_SCRIPTING_LUA_LUA_COMMONS_H_
-#define LOGIC_SCRIPTING_LUA_LUA_COMMONS_H_
+#pragma once
 
 #ifdef __linux__ 
 #include <luajit-2.1/luaconf.h>
@@ -29,5 +28,3 @@ namespace lua {
     using Number = lua_Number;
     using Integer = lua_Integer;
 }
-
-#endif // LOGIC_SCRIPTING_LUA_LUA_COMMONS_H_

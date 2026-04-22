@@ -1,5 +1,4 @@
-#ifndef CODERS_BINARY_JSON_H_
-#define CODERS_BINARY_JSON_H_
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -26,5 +25,3 @@ namespace json {
     std::vector<ubyte> to_binary(const dynamic::Value& obj, bool compress=false);
     std::shared_ptr<dynamic::Map> from_binary(const ubyte* src, size_t size);
 }
-
-#endif // CODERS_BINARY_JSON_H_

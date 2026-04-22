@@ -1,5 +1,4 @@
-#ifndef ITEMS_INVENTORIES_H_
-#define ITEMS_INVENTORIES_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -34,5 +33,3 @@ public:
 
     const inventories_map& getMap() const;
 };
-
-#endif // ITEMS_INVENTORIES_H_

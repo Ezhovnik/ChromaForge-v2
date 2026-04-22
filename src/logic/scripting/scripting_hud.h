@@ -1,5 +1,4 @@
-#ifndef LOGIC_SCRIPTING_SCRIPTING_HUD_H_
-#define LOGIC_SCRIPTING_SCRIPTING_HUD_H_
+#pragma once
 
 #include <filesystem>
 #include <string>
@@ -21,5 +20,3 @@ namespace scripting {
         const std::filesystem::path& file
     );
 }
-
-#endif // LOGIC_SCRIPTING_SCRIPTING_HUD_H_

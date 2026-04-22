@@ -1,5 +1,4 @@
-#ifndef LIGHTING_LIGHTMAP_H_
-#define LIGHTING_LIGHTMAP_H_
+#pragma once
 
 #include <memory>
 
@@ -84,5 +83,3 @@ public:
 	std::unique_ptr<ubyte[]> encode() const;
     static std::unique_ptr<light_t[]> decode(const ubyte* buffer);
 };
-
-#endif // LIGHTING_LIGHTMAP_H_

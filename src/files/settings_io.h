@@ -1,5 +1,4 @@
-#ifndef FILES_SETTINGS_IO_H_
-#define FILES_SETTINGS_IO_H_
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -34,5 +33,3 @@ public:
 
     bool has(const std::string& name) const;
 };
-
-#endif // FILES_SETTINGS_IO_H_

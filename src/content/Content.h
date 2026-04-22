@@ -1,5 +1,4 @@
-#ifndef CONTENT_CONTENT_H_
-#define CONTENT_CONTENT_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -220,5 +219,3 @@ public:
     const UptrsMap<std::string, ContentPackRuntime>& getPacks() const;
     const UptrsMap<std::string, rigging::SkeletonConfig>& getSkeletons() const;
 };
-
-#endif // CONTENT_CONTENT_H_

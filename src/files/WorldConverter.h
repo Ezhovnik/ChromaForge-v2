@@ -1,5 +1,4 @@
-#ifndef FILES_WORLD_CONVERTER_H_
-#define FILES_WORLD_CONVERTER_H_
+#pragma once
 
 #include <queue>
 #include <filesystem>
@@ -62,5 +61,3 @@ public:
         bool multithreading
     );
 };
-
-#endif // FILES_WORLD_CONVERTER_H_

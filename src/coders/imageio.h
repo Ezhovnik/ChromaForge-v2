@@ -1,5 +1,4 @@
-#ifndef CODERS_IMAGEIO_H_
-#define CODERS_IMAGEIO_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -15,5 +14,3 @@ namespace imageio {
     std::unique_ptr<ImageData> read(const std::string& filename, bool flipVertically = true);
     void write(const std::string& filename, const ImageData* image);
 }
-
-#endif // CODERS_IMAGEIO_H_
