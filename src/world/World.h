@@ -24,28 +24,13 @@ class Content;
 class ContentLUT;
 struct EngineSettings;
 
-/**
- * @brief Класс, представляющий мир: хранит имя, сид, список контент-паков,
- *        таймеры дня/ночи, а также управляет файловым вводом/выводом.
- *
- * Реализует интерфейс Serializable для сохранения и загрузки метаданных мира.
- * Также содержит ссылки на Content и настройки движка.
- */
-class World : Serializable {
-private:
+struct WorldInfo : public Serializable {
 	std::string name;  ///< Внутреннее имя мира
 	uint64_t seed; ///< Сид для генерации мира
 
 	std::string generator;
 
-	const Content* const content;
-	std::vector<ContentPack> packs; ///< Список контент-паков, установленных в мире
-
 	int64_t nextInventoryId = 0; ///< Счётчик для выдачи следующих идентификаторов инвентарей
-
-     void writeResources(const Content* content);
-public:
-	std::unique_ptr<WorldFiles> wfile; ///< Менеджер файлов мира
 
 	/** 
      * Таймер дня/ночи в диапазоне 0..1.
@@ -63,22 +48,27 @@ public:
 
      entityid_t nextEntityId = 0;
 
-	/**
-     * @brief Конструктор.
-     * @param name Внутреннее имя мира.
-	* @param generator Идентификатор генератора мира (тип мира).
-     * @param directory Корневая папка мира (используется для создания WorldFiles).
-     * @param seed Сид генерации.
-     * @param settings Ссылка на настройки.
-     * @param content Контент.
-     * @param packs Список контент-паков мира.
-     */
+     int major = 0, minor = -1, maintenance = -1;
+
+     std::unique_ptr<dynamic::Map> serialize() const override;
+     void deserialize(dynamic::Map* src) override;
+};
+
+class World {
+     WorldInfo info {};
+
+     const Content* const content;
+     std::vector<ContentPack> packs;
+
+     // int64_t nextInventoryId = 0;
+
+     void writeResources(const Content* content);
+public:
+     std::shared_ptr<WorldFiles> wfile;
+
 	World(
-		std::string name,
-		std::string generator,
-		const std::filesystem::path& directory,
-		uint64_t seed,
-		EngineSettings& settings,
+		WorldInfo info,
+          const std::shared_ptr<WorldFiles>& worldFiles,
 		const Content* content, 
 		const std::vector<ContentPack>& packs
 	);
@@ -104,7 +94,7 @@ public:
      * @return Указатель на ContentLUT, если требуется конвертация, иначе nullptr.
      */
 	static std::shared_ptr<ContentLUT> checkIndices(
-          const std::filesystem::path& directory, const Content* content
+          const std::shared_ptr<WorldFiles>& worldFiles, const Content* content
      );
 
 	/**
@@ -130,7 +120,7 @@ public:
 
 	/**
      * Загружает существующий мир из папки.
-     * @param directory Папка мира.
+     * @param worldFiles Файловый менеджер мира.
      * @param settings Настройки.
      * @param content Контент (должен соответствовать сохранённому).
      * @param packs Список паков (будет сверен с сохранённым).
@@ -138,7 +128,7 @@ public:
      * @throws world_load_error Если world.json не найден или повреждён.
      */
      static std::unique_ptr<Level> load(
-		const std::filesystem::path& directory, 
+		const std::shared_ptr<WorldFiles>& worldFiles, 
 		EngineSettings& settings, 
 		const Content* content, 
 		const std::vector<ContentPack>& packs
@@ -173,6 +163,14 @@ public:
 	/** Возвращает идентификатор генератора мира. */
 	std::string getGenerator() const;
 
+     WorldInfo& getInfo() {
+          return info;
+     }
+
+     const WorldInfo& getInfo() const {
+          return info;
+     }
+
 	/** 
      * Проверяет, установлен ли в мире указанный контент-пак.
      * @param id Идентификатор пака.
@@ -184,9 +182,6 @@ public:
      * Возвращает список контент-паков мира.
      */
 	const std::vector<ContentPack>& getPacks() const;
-
-	std::unique_ptr<dynamic::Map> serialize() const override;
-    void deserialize(dynamic::Map *src) override;
 
 	/**
      * Возвращает указатель на контент, используемый миром.
@@ -200,6 +195,6 @@ public:
      * @return Целое число >= 1.
      */
      int64_t getNextInventoryId() {
-          return nextInventoryId++;
+          return info.nextInventoryId++;
      }
 };

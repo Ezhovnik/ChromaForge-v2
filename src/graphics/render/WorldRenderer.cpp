@@ -181,7 +181,7 @@ void WorldRenderer::setupWorldShader(
     shader->uniform3f("u_cameraPos", camera->position);
     shader->uniform1i("u_cubemap", 1);
     shader->uniform1f("u_timer", timer);
-    shader->uniform1f("u_dayTime", level->getWorld()->daytime);
+    shader->uniform1f("u_dayTime", level->getWorld()->getInfo().daytime);
 
     auto contentIds = level->content->getIndices();
 	{
@@ -377,8 +377,9 @@ void WorldRenderer::draw(
     const Viewport& vp = pctx.getViewport();
     camera->aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
 
-    const EngineSettings& settings = engine->getSettings();
-    skybox->refresh(pctx, world->daytime, 1.0f + world->skyClearness * 2.0f, 4);
+    const auto& settings = engine->getSettings();
+    const auto& worldInfo = world->getInfo();
+    skybox->refresh(pctx, worldInfo.daytime, 1.0f + worldInfo.skyClearness * 2.0f, 4);
 
     Assets* assets = engine->getAssets();
     ShaderProgram* linesShader = assets->get<ShaderProgram>("lines");
@@ -387,7 +388,7 @@ void WorldRenderer::draw(
         DrawContext wctx = pctx.sub();
         postProcessing->use(wctx);
         Window::clearDepth();
-        skybox->draw(pctx, camera, assets, world->daytime, world->skyClearness);
+        skybox->draw(pctx, camera, assets, worldInfo.daytime, worldInfo.skyClearness);
         {
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
@@ -404,6 +405,6 @@ void WorldRenderer::draw(
     auto screenShader = assets->get<ShaderProgram>("screen");
     screenShader->use();
     screenShader->uniform1f("u_timer", timer);
-    screenShader->uniform1f("u_dayTime", level->getWorld()->daytime);
+    screenShader->uniform1f("u_dayTime", worldInfo.daytime);
     postProcessing->render(pctx, screenShader);
 }

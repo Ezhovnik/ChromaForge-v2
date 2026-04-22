@@ -9,6 +9,8 @@
 #include <voxels/Block.h>
 #include <data/dynamic.h>
 #include <items/Item.h>
+#include <world/World.h>
+#include <files/WorldFiles.h>
 
 ContentLUT::ContentLUT(
     const ContentIndices* indices,
@@ -24,9 +26,15 @@ template<class T> static constexpr size_t get_entries_count(
 }
 
 std::shared_ptr<ContentLUT> ContentLUT::create(
+    const std::shared_ptr<WorldFiles>& worldFiles,
     const std::filesystem::path& filename, 
     const Content* content
 ) {
+    auto worldInfo = worldFiles->readWorldInfo();
+    if (!worldInfo.has_value()) {
+        return nullptr;
+    }
+
     auto root = files::read_json(filename);
     auto blocklist = root->list("blocks");
     auto itemlist = root->list("items");

@@ -15,6 +15,8 @@ struct ContentEntry {
     std::string name;
 };
 
+class WorldFiles;
+
 template<typename T, class U>
 class ContentUnitLUT {
 private:
@@ -98,7 +100,8 @@ public:
     ContentLUT(const ContentIndices* indices, size_t blocks, size_t items);
 
     static std::shared_ptr<ContentLUT> create(
-        const std::filesystem::path& filename, 
+        const std::shared_ptr<WorldFiles>& worldFiles,
+        const std::filesystem::path& filename,
         const Content* content
     );
 

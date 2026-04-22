@@ -3,6 +3,7 @@
 #include <memory>
 #include <filesystem>
 #include <vector>
+#include <optional>
 
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -18,6 +19,7 @@ class Player;
 class Content;
 class ContentIndices;
 class World;
+struct WorldInfo;
 struct DebugSettings;
 
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
@@ -30,10 +32,9 @@ private:
     bool doWriteLights = true;
 
     std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информация о мире
-    std::filesystem::path getIndicesFile() const;
     std::filesystem::path getPacksFile() const;
 
-    void writeWorldInfo(const World* world);
+    void writeWorldInfo(const WorldInfo& info);
     void writeIndices(const ContentIndices* indices);
 public:
     static const inline std::string WORLD_FILE = "world.json";
@@ -44,9 +45,10 @@ public:
 
     std::filesystem::path getPlayerFile() const;
     std::filesystem::path getResourcesFile() const;
+    std::filesystem::path getIndicesFile() const;
     void createDirectories();
 
-    bool readWorldInfo(World* world);
+    std::optional<WorldInfo> readWorldInfo();
 
     bool readResourcesData(const Content* content);
 

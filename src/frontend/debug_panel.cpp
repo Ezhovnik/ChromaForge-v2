@@ -144,27 +144,29 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         panel->add(sub);
 	}
 
-	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+    auto& worldInfo = level->getWorld()->getInfo();
+
+	panel->add(std::shared_ptr<gui::Label>(create_label([&](){
 		std::wstringstream ss;
         ss << std::fixed << std::setprecision(2);
-        ss << level->getWorld()->skyClearness;
+        ss << worldInfo.skyClearness;
 		return L"Sky clearness: " + ss.str();
 	})));
 
 	{
 		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 0.0f, 0.005f, 8);
-		bar->setSupplier([=]() {
-			return level->getWorld()->skyClearness;
+		bar->setSupplier([&]() {
+			return worldInfo.skyClearness;
 		});
-		bar->setConsumer([=](double val) {
-			level->getWorld()->skyClearness = val;
+		bar->setConsumer([&](double val) {
+			worldInfo.skyClearness = val;
 		});
 		panel->add(bar);
 	}
 
-	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+	panel->add(std::shared_ptr<gui::Label>(create_label([&](){
 		int hour, minute, second;
-		timeutil::from_value(level->getWorld()->daytime, hour, minute, second);
+		timeutil::from_value(worldInfo.daytime, hour, minute, second);
 
 		std::wstring timeString = 
 					util::lfill(std::to_wstring(hour), 2, L'0') + L":" +
@@ -174,11 +176,11 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 
 	{
 		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 1.0f, 0.005f, 8);
-		bar->setSupplier([=]() {
-			return level->getWorld()->daytime;
+		bar->setSupplier([&]() {
+			return worldInfo.daytime;
 		});
-		bar->setConsumer([=](double val) {
-			level->getWorld()->daytime = val;
+		bar->setConsumer([&](double val) {
+			worldInfo.daytime = val;
 		});
 		panel->add(bar);
 	}

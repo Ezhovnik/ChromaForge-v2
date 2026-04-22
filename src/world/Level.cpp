@@ -31,6 +31,7 @@ Level::Level(
     entities(std::make_unique<Entities>(this)),
     settings(settings)
 {
+    auto& worldInfo = world->getInfo();
     auto& cameraIndices = content->getIndices(ResourceType::Camera);
     for (size_t i = 0; i < cameraIndices.size(); ++i) {
         auto camera = std::make_shared<Camera>();
@@ -48,8 +49,8 @@ Level::Level(
         cameras.push_back(std::move(camera));
     }
 
-    if (world->nextEntityId) {
-        entities->setNextID(world->nextEntityId);
+    if (worldInfo.nextEntityId) {
+        entities->setNextID(worldInfo.nextEntityId);
     }
 
     auto inventory = std::make_shared<Inventory>(

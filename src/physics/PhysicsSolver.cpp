@@ -160,7 +160,7 @@ static bool calc_collision_neg(
     if (vel[nx] >= 0.0f) return false;
 
 	glm::vec3 offset(0.0f, stepHeight, 0.0f);
-    for (int iy = 0; iy <= (half[ny] - PhysicsSolver_Consts::EPS) * 2 / step_size; ++iy) {
+    for (int iy = 0; iy <= ((half - offset)[ny] - PhysicsSolver_Consts::EPS) * 2 / step_size; ++iy) {
         glm::vec3 coord;
         coord[ny] = ((pos + offset)[ny] - half[ny] + PhysicsSolver_Consts::EPS) + iy * step_size;
         for (int iz = 0; iz <= (half[nz] - PhysicsSolver_Consts::EPS) * 2 / step_size; ++iz){
@@ -192,7 +192,7 @@ static void calc_collision_pos(
     if (vel[nx] <= 0.0f) return;
 
     glm::vec3 offset(0.0f, stepHeight, 0.0f);
-    for (int iy = 0; iy <= (half[ny] - PhysicsSolver_Consts::EPS) * 2 / step_size; ++iy) {
+    for (int iy = 0; iy <= ((half - offset)[ny] - PhysicsSolver_Consts::EPS) * 2 / step_size; ++iy) {
         glm::vec3 coord;
         coord[ny] = ((pos + offset)[ny] - half[ny] + PhysicsSolver_Consts::EPS) + iy * step_size;
         for (int iz = 0; iz <= (half[nz] - PhysicsSolver_Consts::EPS) * 2 / step_size; ++iz) {

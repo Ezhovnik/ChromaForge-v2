@@ -69,7 +69,7 @@ std::filesystem::path WorldFiles::getResourcesFile() const {
 
 void WorldFiles::write(const World* world, const Content* content) {
 	if (world) {
-		writeWorldInfo(world);
+		writeWorldInfo(world->getInfo());
 		if (!std::filesystem::exists(getPacksFile())) writePacks(world->getPacks());
 	}
 	if (generatorTestMode) return;
@@ -105,21 +105,21 @@ void WorldFiles::writeIndices(const ContentIndices* indices) {
 	files::write_json(getIndicesFile(), &root);
 }
 
-void WorldFiles::writeWorldInfo(const World* world) {
-	files::write_json(getWorldFile(), world->serialize().get());
+void WorldFiles::writeWorldInfo(const WorldInfo& info) {
+	files::write_json(getWorldFile(), info.serialize().get());
 }
 
-bool WorldFiles::readWorldInfo(World* world) {
+std::optional<WorldInfo> WorldFiles::readWorldInfo() {
 	std::filesystem::path file = getWorldFile();
 	if (!std::filesystem::is_regular_file(file)) {
 		LOG_WARN("World.json does not exists");
-		return false;
+		return std::nullopt;
 	}
 
-	auto root = files::read_json(file);
-	world->deserialize(root.get());
-
-	return true;
+    auto root = files::read_json(file);
+	WorldInfo info {};
+    info.deserialize(root.get());
+    return info;
 }
 
 static void read_resources_data(
