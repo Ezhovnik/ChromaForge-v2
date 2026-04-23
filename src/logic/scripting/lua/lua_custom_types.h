@@ -32,4 +32,37 @@ namespace lua {
 
         inline static std::string TYPENAME = "bytearray";
     };
+
+    class Heightmap : public Userdata {
+    private:
+        std::vector<float> buffer;
+        uint width, height;
+    public:
+        Heightmap(uint width, uint height);
+        virtual ~Heightmap();
+
+        uint getWidth() const {
+            return width;
+        }
+
+        uint getHeight() const {
+            return height;
+        }
+
+        const std::string& getTypeName() const override {
+            return TYPENAME;
+        }
+
+        float* getValues() {
+            return buffer.data();
+        }
+
+        const float* getValues() const {
+            return buffer.data();
+        }
+
+        static int createMetatable(lua::State*);
+
+        inline static std::string TYPENAME = "heightmap";
+    };
 }
