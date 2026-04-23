@@ -14,6 +14,7 @@ class Block;
 struct BlockMaterial;
 struct ContentPackStats;
 class ContentPackRuntime;
+struct Generator;
 
 namespace dynamic {
     class Map;
@@ -31,6 +32,7 @@ private:
     void loadBlock(Block& def, const std::string& full, const std::string& name);
     void loadItem(Item& def, const std::string& full, const std::string& name);
     void loadEntity(Entity& def, const std::string& full, const std::string& name);
+    void loadGenerator(Generator& def, const std::string& full, const std::string& name);
 
     static void loadCustomBlockModel(Block& def, dynamic::Map* primitives);
     static void loadBlockMaterial(BlockMaterial& def, const std::filesystem::path& file);

@@ -9,11 +9,12 @@
 #include <frontend/screens/MenuScreen.h>
 #include <logic/LevelController.h>
 #include <window/Events.h>
-#include <world/WorldGenerators.h>
 #include <logic/EngineController.h>
 #include <files/settings_io.h>
 #include <world/Level.h>
 #include <data/setting.h>
+#include <content/Content.h>
+#include <world/generator/WorldGenerator.h>
 
 static int l_open_world(lua::State* L) {
     auto name = lua::require_string(L, 1);
@@ -113,16 +114,16 @@ static int l_new_world(lua::State* L) {
 }
 
 static int l_get_default_generator(lua::State* L) {
-    return lua::pushstring(L, WorldGenerators::getDefaultGeneratorID());
+    return lua::pushstring(L, WorldGenerator::DEFAULT);
 }
 
 static int l_get_generators(lua::State* L) {
-    const auto& generators = WorldGenerators::getGeneratorsIDs();
+    const auto& generators = scripting::content->generators.getDefs();
     lua::createtable(L, generators.size(), 0);
 
     int i = 0;
-    for (auto& id : generators) {
-        lua::pushstring(L, id);
+    for (auto& [name, _] : generators) {
+        lua::pushstring(L, name);
         lua::rawseti(L, i + 1);
         ++i;
     }

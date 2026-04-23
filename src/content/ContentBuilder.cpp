@@ -87,5 +87,9 @@ std::unique_ptr<Content> ContentBuilder::build() {
         def->rt.placingBlock = content->blocks.require(def->placingBlock).rt.id;
     }
 
+    for (auto& [name, def] : content->generators.getDefs()) {
+        def->script->prepare(content.get());
+    }
+
     return content;
 }

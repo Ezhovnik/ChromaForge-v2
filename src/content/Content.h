@@ -113,6 +113,10 @@ public:
         }
         return *found->second;
     }
+
+    const auto& getDefs() const {
+        return defs;
+    }
 };
 
 class ResourceIndices {

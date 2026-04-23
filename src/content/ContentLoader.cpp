@@ -108,6 +108,15 @@ void ContentLoader::fixPackIndices() {
     if (modified) files::write_json(indexFile, root.get());
 }
 
+void ContentLoader::loadGenerator(Generator& def, const std::string& full, const std::string& name) {
+    auto folder = pack->folder;
+    auto generatorFile = folder/std::filesystem::path("generators/" + name + ".lua");
+    if (!std::filesystem::exists(generatorFile)) {
+        return;
+    }
+    def.script = scripting::load_generator(generatorFile);
+}
+
 void ContentLoader::loadBlock(Block& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
 
@@ -407,6 +416,25 @@ void ContentLoader::load() {
     std::filesystem::path scriptFile = folder/std::filesystem::path("scripts/world.lua");
     if (std::filesystem::is_regular_file(scriptFile)) {
         scripting::load_world_script(env, pack->id, scriptFile, runtime->worldfuncsset);
+    }
+
+    std::filesystem::path generatorsDir = folder/std::filesystem::u8path("generators");
+    if (std::filesystem::is_directory(generatorsDir)) {
+        for (const auto& entry : std::filesystem::directory_iterator(generatorsDir)) {
+            const auto& file = entry.path();
+
+            std::string name = file.stem().u8string();
+            auto [packid, full, filename] = create_unit_id(pack->id, file.stem().u8string());
+
+            auto& def = builder.generators.create(full);
+
+            try {
+                loadGenerator(def, full, name);
+            } catch (const std::runtime_error& err) {
+                LOG_ERROR("Generator '{}': {}", full, err.what());
+                throw std::runtime_error("Generator '" + full + "': " + err.what());
+            }
+        }
     }
 
     if (!std::filesystem::is_regular_file(pack->getContentFile())) return;

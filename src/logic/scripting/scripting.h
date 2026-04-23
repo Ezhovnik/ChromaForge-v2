@@ -31,6 +31,7 @@ struct ContentPack;
 class LevelController;
 struct Entity;
 class Entt_Entity;
+class GeneratorScript;
 
 namespace scripting {
     extern Engine* engine;
@@ -47,6 +48,7 @@ namespace scripting {
 
     scriptenv get_root_environment();
     scriptenv create_pack_environment(const ContentPack& pack);
+    scriptenv create_environment();
     scriptenv create_doc_environment(const scriptenv& parent, const std::string& name);
 
     void process_post_runnables();
@@ -121,6 +123,9 @@ namespace scripting {
     );
     void load_entity_component(
         const std::string& name,
+        const std::filesystem::path& file
+    );
+    std::unique_ptr<GeneratorScript> load_generator(
         const std::filesystem::path& file
     );
 

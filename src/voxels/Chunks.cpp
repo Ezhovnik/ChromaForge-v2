@@ -8,7 +8,6 @@
 #include <voxels/Chunk.h>
 #include <voxels/voxel.h>
 #include <voxels/Block.h>
-#include <voxels/WorldGenerator.h>
 #include <lighting/Lightmap.h>
 #include <files/WorldFiles.h>
 #include <graphics/core/Mesh.h>

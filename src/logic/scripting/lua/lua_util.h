@@ -160,6 +160,14 @@ namespace lua {
         return 1;
     }
 
+    template<int n>
+    inline int pushivec_stack(lua::State* L, glm::vec<n, int> vec) {
+        for (int i = 0; i < n; ++i) {
+            pushinteger(L, vec[i]);
+        }
+        return n;
+    }
+
     inline int pushivec3_stack(lua::State* L, lua::Integer x, lua::Integer y, lua::Integer z) {
         pushinteger(L, x);
         pushinteger(L, y);
@@ -515,15 +523,25 @@ namespace lua {
     }
 
     int pushvalue(lua::State*, const dynamic::Value& value);
+
+    [[nodiscard]]
     dynamic::Value tovalue(lua::State*, int idx);
 
     inline bool getfield(lua::State* L, const std::string& name, int idx=-1) {
         lua_getfield(L, idx, name.c_str());
-        if (isnil(L, -1)) {
+        if (isnil(L, idx)) {
             pop(L);
             return false;
         }
         return true;
+    }
+
+    inline int requirefield(lua::State* L, const std::string& name, int idx = -1) {
+        if (getfield(L, name, idx)) {
+            return 1;
+        }
+        log_error("Object has no member '" + name + "'");
+        throw std::runtime_error("Object has no member '" + name + "'");
     }
 
     inline bool hasfield(lua::State* L, const std::string& name, int idx=-1) {

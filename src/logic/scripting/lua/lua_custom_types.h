@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <logic/scripting/lua/lua_commons.h>
+#include <math/Heightmap.h>
 
 namespace lua {
     class Userdata {
@@ -30,39 +31,43 @@ namespace lua {
 
         static int createMetatable(lua::State*);
 
-        inline static std::string TYPENAME = "bytearray";
+        inline static std::string TYPENAME = "Bytearray";
     };
 
-    class Heightmap : public Userdata {
+    class LuaHeightmap : public Userdata {
     private:
-        std::vector<float> buffer;
-        uint width, height;
+        std::shared_ptr<Heightmap> map;
     public:
-        Heightmap(uint width, uint height);
-        virtual ~Heightmap();
+        LuaHeightmap(uint width, uint height) : map(std::make_shared<Heightmap>(width, height)) {}
+
+        virtual ~LuaHeightmap();
 
         uint getWidth() const {
-            return width;
+            return map->getWidth();
         }
 
         uint getHeight() const {
-            return height;
+            return map->getHeight();
+        }
+
+        float* getValues() {
+            return map->getValues();
+        }
+
+        const float* getValues() const {
+            return map->getValues();
         }
 
         const std::string& getTypeName() const override {
             return TYPENAME;
         }
 
-        float* getValues() {
-            return buffer.data();
-        }
-
-        const float* getValues() const {
-            return buffer.data();
+        std::shared_ptr<Heightmap> getHeightmap() const {
+            return map;
         }
 
         static int createMetatable(lua::State*);
 
-        inline static std::string TYPENAME = "heightmap";
+        inline static std::string TYPENAME = "Heightmap";
     };
 }

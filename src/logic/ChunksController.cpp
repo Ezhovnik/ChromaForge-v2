@@ -7,7 +7,7 @@
 #include <voxels/Chunk.h>
 #include <voxels/Chunks.h>
 #include <voxels/ChunksStorage.h>
-#include <voxels/WorldGenerator.h>
+#include <world/generator/WorldGenerator.h>
 #include <graphics/core/Mesh.h>
 #include <lighting/Lighting.h>
 #include <files/WorldFiles.h>
@@ -20,7 +20,6 @@
 #include <content/Content.h>
 #include <util/timeutil.h>
 #include <content/Content.h>
-#include <world/WorldGenerators.h>
 
 inline constexpr int MAX_WORK_PER_FRAME = 128;
 inline constexpr int MIN_SURROUNDING = 9;
@@ -32,8 +31,10 @@ ChunksController::ChunksController(
 	chunks(level->chunks.get()), 
 	lighting(level->lighting.get()), 
 	chunksPadding(chunksPadding), 
-	generator(WorldGenerators::createGenerator(level->getWorld()->getGenerator(), level->content)){
-}
+	generator(std::make_unique<WorldGenerator>(
+        level->content->generators.require(level->getWorld()->getGenerator()),
+        level->content
+    )) {}
 
 ChunksController::~ChunksController() = default;
 

@@ -13,6 +13,8 @@
 #include <engine.h>
 #include <content/ContentPack.h>
 #include <logic/scripting/lua/lua_engine.h>
+#include <logic/scripting/lua/lua_custom_types.h>
+#include <math/Heightmap.h>
 #include <util/stringutil.h>
 #include <frontend/UIDocument.h>
 #include <items/Inventory.h>
@@ -21,6 +23,7 @@
 #include <objects/Entity.h>
 #include <objects/Entities.h>
 #include <content/Content.h>
+#include <world/generator/Generator.h>
 
 static inline const std::string STDCOMP = "stdcomp";
 
@@ -58,6 +61,15 @@ void scripting::initialize(Engine* engine) {
 [[nodiscard]]
 scriptenv scripting::get_root_environment() {
     return std::make_shared<int>(0);
+}
+
+[[nodiscard]] scriptenv scripting::create_environment() {
+    auto L = lua::get_main_thread();
+    int id = lua::create_environment(L, 0);
+    return std::shared_ptr<int>(new int(id), [=](int* id) {
+        lua::removeEnvironment(L, *id);
+        delete id;
+    });
 }
 
 [[nodiscard]]
@@ -577,6 +589,95 @@ void scripting::load_entity_component(const std::string& name, const std::filesy
     lua::loadbuffer(L, 0, src, "C!" + name);
     lua::store_in(L, lua::CHUNKS_TABLE, name);
 }
+
+class LuaGeneratorScript : public GeneratorScript {
+private:
+    scriptenv env;
+    std::vector<BlocksLayer> layers;
+    uint lastLayersHeight;
+public:
+    LuaGeneratorScript(scriptenv env, std::vector<BlocksLayer> layers, uint lastLayersHeight) : env(std::move(env)), layers(std::move(layers)), lastLayersHeight(lastLayersHeight) {}
+
+    std::shared_ptr<Heightmap> generateHeightmap(
+        const glm::ivec2& offset, const glm::ivec2& size
+    ) override {
+        auto L = lua::get_main_thread();
+        lua::pushenv(L, *env);
+        if (lua::getfield(L, "generate_heightmap")) {
+            lua::pushivec_stack(L, offset);
+            lua::pushivec_stack(L, size);
+            if (lua::call_nothrow(L, 4)) {
+                auto map = lua::touserdata<lua::LuaHeightmap>(L, -1)->getHeightmap();
+                lua::pop(L, 2);
+                return map;
+            }
+        }
+        lua::pop(L);
+        return std::make_shared<Heightmap>(size.x, size.y);
+    }
+
+    void prepare(const Content* content) override {
+        for (auto& layer : layers) {
+            layer.rt.id = content->blocks.require(layer.block).rt.id;
+        }
+    }
+
+    const std::vector<BlocksLayer>& getLayers() const override {
+        return layers;
+    }
+
+    uint getLastLayersHeight() const override {
+        return lastLayersHeight;
+    }
+};
+
+std::unique_ptr<GeneratorScript> scripting::load_generator(
+    const std::filesystem::path& file
+) {
+    auto env = create_environment();
+    load_script(*env, "generator", file);
+    auto L = lua::get_main_thread();
+    lua::pushenv(L, *env);
+
+    uint lastLayersHeight = 0;
+    bool hasResizeableLayer = false;
+
+    std::vector<BlocksLayer> layers;
+    if (lua::getfield(L, "layers")) {
+        int len = lua::objlen(L, -1);
+        for (int i = 1; i <= len; i++) {
+            try {
+                lua::rawgeti(L, i);
+                lua::requirefield(L, "block");
+                auto name = lua::require_string(L, -1);
+                lua::pop(L);
+                lua::requirefield(L, "height");
+                int height = lua::tointeger(L, -1);
+                lua::pop(L, 2);
+
+                if (hasResizeableLayer) {
+                    lastLayersHeight += height;
+                }
+                if (height == -1) {
+                    if (hasResizeableLayer) {
+                        LOG_ERROR("Only one resizeable layer allowed");
+                        throw std::runtime_error("Only one resizeable layer allowed");
+                    }
+                    hasResizeableLayer = true;
+                }
+                layers.push_back(BlocksLayer {name, height, {}});
+            } catch (const std::runtime_error& err) {
+                lua::pop(L, 2);
+                LOG_ERROR("Layer №{}: {}", std::to_string(i), err.what());
+                throw std::runtime_error("Layer №" + std::to_string(i) + ": " + err.what());
+            }
+        }
+        lua::pop(L);
+    }
+    lua::pop(L);
+    return std::make_unique<LuaGeneratorScript>(std::move(env), std::move(layers), lastLayersHeight);
+}
+
 
 void scripting::load_world_script(
     const scriptenv& senv,

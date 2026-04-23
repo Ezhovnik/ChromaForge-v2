@@ -15,7 +15,8 @@
 #include <content/Content.h>
 #include <content/ContentLUT.h>
 #include <items/Inventories.h>
-#include <world/WorldGenerators.h>
+#include <world/generator/WorldGenerator.h>
+#include <world/generator/Generator.h>
 #include <settings.h>
 #include <objects/Entities.h>
 
@@ -212,7 +213,7 @@ void WorldInfo::deserialize(dynamic::Map* root) {
 	generator = root->get("generator", generator);
     seed = root->get("seed", seed);
 
-	if (generator.empty()) generator = WorldGenerators::getDefaultGeneratorID();
+	if (generator.empty()) generator = WorldGenerator::DEFAULT;
 
 	// Информация о версии движка
 	if (auto verobj = root->map("version")) {

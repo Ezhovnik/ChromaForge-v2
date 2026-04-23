@@ -34,9 +34,6 @@
 #include <content/ContentLoader.h>
 #include <logic/scripting/scripting.h>
 #include <graphics/core/DrawContext.h>
-#include <world/WorldGenerators.h>
-#include <voxels/DefaultWorldGenerator.h>
-#include <voxels/FlatWorldGenerator.h>
 #include <audio/audio.h>
 #include <constants.h>
 #include <frontend/UIDocument.h>
@@ -70,11 +67,6 @@ static std::unique_ptr<ImageData> load_icon(const std::filesystem::path& resdir)
         LOG_ERROR("Could not load window icon: {}", err.what());
     }
     return nullptr;
-}
-
-static void add_default_world_generators() {
-	WorldGenerators::addGenerator<DefaultWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":default");
-	WorldGenerators::addGenerator<FlatWorldGenerator>(BUILTIN_CONTENT_NAMESPACE + ":flat");
 }
 
 // Реализация конструктора
@@ -120,8 +112,6 @@ Engine::Engine(
     keepAlive(settings.ui.language.observe([=](auto lang) {
         setLanguage(lang);
     }, true));
-
-    add_default_world_generators();
 
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);

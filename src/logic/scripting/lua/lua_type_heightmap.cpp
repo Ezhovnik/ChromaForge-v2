@@ -6,25 +6,25 @@
 #include <filesystem>
 
 #include <logic/scripting/lua/lua_util.h>
+#define FNL_IMPL
 #include <math/FastNoiseLite.h>
 #include <coders/png.h>
 #include <graphics/core/ImageData.h>
 #include <util/functional_util.h>
+#include <files/util.h>
 
 using namespace lua;
 
 static fnl_state noise = fnlCreateState();
 
-Heightmap::Heightmap(uint width, uint height) : width(width), height(height) {
-    buffer.resize(width*height);
-}
-
-Heightmap::~Heightmap() {
-}
+LuaHeightmap::~LuaHeightmap() {}
 
 static int l_dump(lua::State* L) {
-    if (auto heightmap = touserdata<Heightmap>(L, 1)) {
+    if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
         auto filename = tostring(L, 2);
+        if (!files::is_valid_name(filename)) {
+            throw std::runtime_error("Invalid file name");
+        }
         uint w = heightmap->getWidth();
         uint h = heightmap->getHeight();
         ImageData image(ImageFormat::rgb888, w, h);
@@ -46,7 +46,7 @@ static int l_dump(lua::State* L) {
 }
 
 static int l_noise(lua::State* L) {
-    if (auto heightmap = touserdata<Heightmap>(L, 1)) {
+    if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
         uint w = heightmap->getWidth();
         uint h = heightmap->getHeight();
         auto heights = heightmap->getValues();
@@ -62,13 +62,13 @@ static int l_noise(lua::State* L) {
         if (gettop(L) > 4) {
             multiplier = tonumber(L, 5);
         }
-        const Heightmap* shiftMapX = nullptr;
-        const Heightmap* shiftMapY = nullptr;
+        const LuaHeightmap* shiftMapX = nullptr;
+        const LuaHeightmap* shiftMapY = nullptr;
         if (gettop(L) > 5) {
-            shiftMapX = touserdata<Heightmap>(L, 6);
+            shiftMapX = touserdata<LuaHeightmap>(L, 6);
         }
         if (gettop(L) > 6) {
-            shiftMapY = touserdata<Heightmap>(L, 7);
+            shiftMapY = touserdata<LuaHeightmap>(L, 7);
         }
         for (uint y = 0; y < h; ++y) {
             for (uint x = 0; x < w; ++x) {
@@ -97,7 +97,7 @@ static int l_noise(lua::State* L) {
 template<template<class> class Op>
 static int l_binop_func(lua::State* L) {
     Op<float> op;
-    if (auto heightmap = touserdata<Heightmap>(L, 1)) {
+    if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
         uint w = heightmap->getWidth();
         uint h = heightmap->getHeight();
         auto heights = heightmap->getValues();
@@ -111,7 +111,7 @@ static int l_binop_func(lua::State* L) {
                 }
             }
         } else {
-            auto map = touserdata<Heightmap>(L, 2);
+            auto map = touserdata<LuaHeightmap>(L, 2);
             for (uint y = 0; y < h; ++y) {
                 for (uint x = 0; x < w; ++x) {
                     uint i = y * w + x;
@@ -126,11 +126,10 @@ static int l_binop_func(lua::State* L) {
 template<template<class> class Op>
 static int l_unaryop_func(lua::State* L) {
     Op<float> op;
-    if (auto heightmap = touserdata<Heightmap>(L, 1)) {
+    if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
         uint w = heightmap->getWidth();
         uint h = heightmap->getHeight();
         auto heights = heightmap->getValues();
-        float power = tonumber(L, 2);
         for (uint y = 0; y < h; ++y) {
             for (uint x = 0; x < w; ++x) {
                 uint i = y * w + x;
@@ -158,13 +157,13 @@ static int l_meta_meta_call(lua::State* L) {
     if (width <= 0 || height <= 0) {
         throw std::runtime_error("Width and height must be greather than 0");
     }
-    return newuserdata<Heightmap>(
+    return newuserdata<LuaHeightmap>(
         L, static_cast<uint>(width), static_cast<uint>(height)
     );
 }
 
 static int l_meta_index(lua::State* L) {
-    auto map = touserdata<Heightmap>(L, 1);
+    auto map = touserdata<LuaHeightmap>(L, 1);
     if (map == nullptr) {
         return 0;
     }
@@ -185,7 +184,7 @@ static int l_meta_index(lua::State* L) {
 }
 
 static int l_meta_tostring(lua::State* L) {
-    auto map = touserdata<Heightmap>(L, 1);
+    auto map = touserdata<LuaHeightmap>(L, 1);
     if (map == nullptr) {
         return 0;
     }
@@ -199,7 +198,7 @@ static int l_meta_tostring(lua::State* L) {
     );
 }
 
-int Heightmap::createMetatable(lua::State* L) {
+int LuaHeightmap::createMetatable(lua::State* L) {
     createtable(L, 0, 2);
     pushcfunction(L, lua::wrap<l_meta_tostring>);
     setfield(L, "__tostring");
