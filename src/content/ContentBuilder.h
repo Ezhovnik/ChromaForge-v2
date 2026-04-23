@@ -9,6 +9,7 @@
 #include <objects/Entity.h>
 #include <content/Content.h>
 #include <content/ContentPack.h>
+#include <world/generator/Generator.h>
 
 template<class T>
 class ContentUnitBuilder {
@@ -57,6 +58,7 @@ public:
     ContentUnitBuilder<Block> blocks {allNames, ContentType::Block};
     ContentUnitBuilder<Item> items {allNames, ContentType::Item};
     ContentUnitBuilder<Entity> entities {allNames, ContentType::Entity};
+    ContentUnitBuilder<Generator> generators {allNames, ContentType::Generator};
     ResourceIndicesSet resourceIndices {};
 
     ~ContentBuilder();

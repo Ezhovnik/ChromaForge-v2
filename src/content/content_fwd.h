@@ -9,7 +9,8 @@ enum class ContentType {
     None,
     Block,
     Item,
-    Entity
+    Entity,
+    Generator
 };
 
 enum class ResourceType : size_t {

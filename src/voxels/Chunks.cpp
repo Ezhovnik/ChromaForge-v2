@@ -699,7 +699,8 @@ void Chunks::save(Chunk* chunk) {
             chunk->flags.entities = true;
         }
 		worldFiles->getRegions().put(
-            chunk, json::to_binary(root, true)
+            chunk,
+            chunk->flags.entities ? json::to_binary(root, true) : std::vector<ubyte>()
         );
     }
 }

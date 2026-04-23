@@ -12,6 +12,7 @@
 #include <content/ContentPack.h>
 #include <logic/scripting/scripting.h>
 #include <objects/rigging.h>
+#include <world/generator/Generator.h>
 
 ContentIndices::ContentIndices(
     ContentUnitIndices<Block> blocks,
@@ -27,6 +28,7 @@ Content::Content(
     ContentUnitDefs<Block> blocks,
     ContentUnitDefs<Item> items,
     ContentUnitDefs<Entity> entities,
+    ContentUnitDefs<Generator> generators,
     UptrsMap<std::string, ContentPackRuntime> packs,
     UptrsMap<std::string, BlockMaterial> blockMaterials,
     UptrsMap<std::string, rigging::SkeletonConfig> skeletons,
@@ -37,6 +39,7 @@ Content::Content(
     blocks(std::move(blocks)),
     items(std::move(items)),
     entities(std::move(entities)),
+    generators(std::move(generators)),
     blockMaterials(std::move(blockMaterials)),
     skeletons(std::move(skeletons))
 {
