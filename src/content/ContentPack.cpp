@@ -10,6 +10,14 @@
 #include <files/engine_paths.h>
 #include <core_content_defs.h>
 #include <data/dynamic.h>
+#include <constants.h>
+#include <core_content_defs.h>
+
+ContentPack ContentPack::createBuiltin(const EnginePaths* paths) {
+    return ContentPack {
+        BUILTIN_CONTENT_NAMESPACE, "ChromaForge Builtin", ENGINE_VERSION_STRING, "ChromaForge", "", {}, paths->getResourcesFolder()
+    };
+}
 
 const std::vector<std::string> ContentPack::RESERVED_NAMES = {"res", "abs", "local", BUILTIN_CONTENT_NAMESPACE, "user", "world", "none", "null"};
 

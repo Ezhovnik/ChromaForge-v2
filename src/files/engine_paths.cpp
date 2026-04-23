@@ -201,10 +201,7 @@ std::string ResPaths::findRaw(const std::string& filename) const {
             return root.name + ":" + filename;
         }
     }
-    auto resDir = mainRoot;
-    if (std::filesystem::exists(resDir/std::filesystem::path(filename))) {
-        return BUILTIN_CONTENT_NAMESPACE + ":" + filename;
-    }
+
     LOG_ERROR("Could not to find file '{}'", filename);
     throw std::runtime_error("Could not to find file " + util::quote(filename));
 }
@@ -220,14 +217,6 @@ std::vector<std::string> ResPaths::listdirRaw(const std::string& folderName) con
             entries.emplace_back(root.name + ":" + folderName + "/" + name);
         }
     }
-    {
-        auto folder = mainRoot/std::filesystem::u8path(folderName);
-        if (!std::filesystem::is_directory(folder)) return entries;
-        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-            auto name = entry.path().filename().u8string();
-            entries.emplace_back(BUILTIN_CONTENT_NAMESPACE + ":" + folderName + "/" + name);
-        }
-    }
     return entries;
 }
 
@@ -237,14 +226,6 @@ std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderNa
         auto& root = roots[i];
         auto folder = root.path/std::filesystem::u8path(folderName);
         if (!std::filesystem::is_directory(folder)) continue;
-        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-            entries.push_back(entry.path());
-        }
-    }
-
-    {
-        auto folder = mainRoot/std::filesystem::u8path(folderName);
-        if (!std::filesystem::is_directory(folder)) return entries;
         for (const auto& entry : std::filesystem::directory_iterator(folder)) {
             entries.push_back(entry.path());
         }
