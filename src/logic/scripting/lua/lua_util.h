@@ -341,6 +341,15 @@ namespace lua {
         return lua_tointeger(L, idx);
     }
 
+    inline uint64_t touinteger(lua::State* L, int idx) {
+        auto val = lua_tointeger(L, idx);
+        if (val < 0) {
+            log_error("Negative value");
+            throw std::runtime_error("Negative value");
+        }
+        return static_cast<uint64_t>(val);
+    }
+
     inline lua::Number tonumber(lua::State* L, int idx) {
         return lua_tonumber(L, idx);
     }

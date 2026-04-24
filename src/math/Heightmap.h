@@ -5,6 +5,12 @@
 
 #include <typedefs.h>
 
+enum class InterpolationType {
+    Nearest,
+    Linear,
+    Cubic
+};
+
 class Heightmap {
 private:
     std::vector<float> buffer;
@@ -13,8 +19,13 @@ public:
     Heightmap(uint width, uint height) : width(width), height(height) {
         buffer.resize(width*height);
     }
+    Heightmap(uint width, uint height, std::vector<float> buffer) : width(width), height(height), buffer(std::move(buffer)) {}
 
     ~Heightmap() = default;
+
+    void resize(uint width, uint height, InterpolationType interpolation);
+
+    void crop(uint srcX, uint srcY, uint dstWidth, uint dstHeight);
 
     uint getWidth() const {
         return width;

@@ -15,34 +15,59 @@ WorldGenerator::WorldGenerator(
     const Content* content
 ) : def(def), content(content) {}
 
-void WorldGenerator::generate(voxel* voxels, int chunkX, int chunkZ, int seed) {
-    auto heightmap = def.script->generateHeightmap(
-        {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}
-    );
+static inline void generate_pole(
+    const BlocksLayers& layers,
+    int height,
+    int bottom,
+    int seaLevel,
+    voxel* voxels,
+    int x,
+    int z
+) {
+    uint y = height;
+    uint layerExtension = 0;
+    for (const auto& layer : layers.layers) {
+        if (y < seaLevel && !layer.below_sea_level) {
+            layerExtension = std::max(0, layer.height);
+            continue;
+        }
+
+        int layerHeight = layer.height;
+        if (layerHeight == -1) {
+            layerHeight = y - layers.lastLayersHeight - bottom + 1;
+        } else {
+            layerHeight += layerExtension;
+        }
+        layerHeight = std::min(static_cast<uint>(layerHeight), y);
+
+        for (uint i = 0; i < layerHeight; ++i, --y) {
+            voxels[vox_index(x, y, z)].id = layer.rt.id;
+        }
+        layerExtension = 0;
+    }
+}
+
+void WorldGenerator::generate(
+    voxel* voxels, int chunkX, int chunkZ, uint64_t seed
+) {
     timeutil::ScopeLogTimer log(555);
+    auto heightmap = def.script->generateHeightmap(
+        {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
+    );
     auto values = heightmap->getValues();
-    const auto& layers = def.script->getLayers();
-    uint lastLayersHeight = def.script->getLastLayersHeight();
-    auto baseWater = content->blocks.require(CHROMAFORGE_CONTENT_NAMESPACE + ":water").rt.id;
+    const auto& groundLayers = def.script->getGroundLayers();
+    const auto& seaLayers = def.script->getSeaLayers();
+
+    uint seaLevel = def.script->getSeaLevel();
 
     std::memset(voxels, 0, sizeof(voxel) * CHUNK_VOLUME);
     for (uint z = 0; z < CHUNK_DEPTH; ++z) {
         for (uint x = 0; x < CHUNK_WIDTH; ++x) {
-            int height = values[z * CHUNK_WIDTH + x] * 255 + 10;
-            for (uint y = height + 1; y < 64; ++y) {
-                voxels[vox_index(x, y, z)].id = baseWater;
-            }
+            int height = values[z * CHUNK_WIDTH + x] * CHUNK_HEIGHT;
+            height = std::max(0, height);
 
-            uint y = height;
-            for (const auto& layer : layers) {
-                uint layerHeight = layer.height;
-                if (layerHeight == -1) {
-                    layerHeight = y - lastLayersHeight + 1;
-                }
-                for (uint i = 0; i < layerHeight; ++i, --y) {
-                    voxels[vox_index(x, y, z)].id = layer.rt.id;
-                }
-            }
+            generate_pole(seaLayers, seaLevel, height, seaLevel, voxels, x, z);
+            generate_pole(groundLayers, height, 0, seaLevel, voxels, x, z);
         }
     }
 }

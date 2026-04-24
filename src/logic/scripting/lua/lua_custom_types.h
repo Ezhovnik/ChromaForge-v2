@@ -6,6 +6,8 @@
 #include <logic/scripting/lua/lua_commons.h>
 #include <math/Heightmap.h>
 
+struct fnl_state;
+
 namespace lua {
     class Userdata {
     public:
@@ -37,8 +39,9 @@ namespace lua {
     class LuaHeightmap : public Userdata {
     private:
         std::shared_ptr<Heightmap> map;
+        std::unique_ptr<fnl_state> noise;
     public:
-        LuaHeightmap(uint width, uint height) : map(std::make_shared<Heightmap>(width, height)) {}
+        LuaHeightmap(uint width, uint height);
 
         virtual ~LuaHeightmap();
 
@@ -65,6 +68,12 @@ namespace lua {
         std::shared_ptr<Heightmap> getHeightmap() const {
             return map;
         }
+
+        fnl_state* getNoise() {
+            return noise.get();
+        }
+
+        void setSeed(uint64_t seed);
 
         static int createMetatable(lua::State*);
 

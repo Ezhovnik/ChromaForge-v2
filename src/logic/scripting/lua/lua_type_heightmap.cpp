@@ -15,9 +15,16 @@
 
 using namespace lua;
 
-static fnl_state noise = fnlCreateState();
+LuaHeightmap::LuaHeightmap(
+    uint width, uint height
+) : map(std::make_shared<Heightmap>(width, height)),
+    noise(std::make_unique<fnl_state>(fnlCreateState())) {}
 
 LuaHeightmap::~LuaHeightmap() {}
+
+void LuaHeightmap::setSeed(uint64_t seed) {
+    noise->seed = static_cast<int>(seed);
+}
 
 static int l_dump(lua::State* L) {
     if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
@@ -45,11 +52,13 @@ static int l_dump(lua::State* L) {
     return 0;
 }
 
+template<fnl_noise_type noise_type>
 static int l_noise(lua::State* L) {
     if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
         uint w = heightmap->getWidth();
         uint h = heightmap->getHeight();
         auto heights = heightmap->getValues();
+        auto noise = heightmap->getNoise();
 
         auto offset = tovec<2>(L, 2);
 
@@ -70,6 +79,7 @@ static int l_noise(lua::State* L) {
         if (gettop(L) > 6) {
             shiftMapY = touserdata<LuaHeightmap>(L, 7);
         }
+        noise->noise_type = noise_type;
         for (uint y = 0; y < h; ++y) {
             for (uint x = 0; x < w; ++x) {
                 uint i = y * w + x;
@@ -85,7 +95,7 @@ static int l_noise(lua::State* L) {
                         v += shiftMapY->getValues()[i];
                     }
 
-                    value += fnlGetNoise2D(&noise, u, v) / static_cast<float>(1 << c) * multiplier;
+                    value += fnlGetNoise2D(noise, u, v) / static_cast<float>(1 << c) * multiplier;
                     heights[i] = value;
                 }
             }
@@ -140,15 +150,45 @@ static int l_unaryop_func(lua::State* L) {
     return 0;
 }
 
+static int l_resize(lua::State* L) {
+    if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
+        uint width = touinteger(L, 2);
+        uint height = touinteger(L, 3);
+        auto interpName = tostring(L, 4);
+        auto interpolation = InterpolationType::Nearest;
+        if (!std::strcmp(interpName, "linear")) {
+            interpolation = InterpolationType::Linear;
+        }
+        heightmap->getHeightmap()->resize(width, height, interpolation);
+    }
+    return 0;
+}
+
+static int l_crop(lua::State* L) {
+    if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
+        uint srcX = touinteger(L, 2);
+        uint srcY = touinteger(L, 3);
+
+        uint dstWidth = touinteger(L, 4);
+        uint dstHeight = touinteger(L, 5);
+
+        heightmap->getHeightmap()->crop(srcX, srcY, dstWidth, dstHeight);
+    }
+    return 0;
+}
+
 static std::unordered_map<std::string, lua_CFunction> methods {
     {"dump", lua::wrap<l_dump>},
-    {"noise", lua::wrap<l_noise>},
+    {"noise", lua::wrap<l_noise<FNL_NOISE_OPENSIMPLEX2>>},
+    {"cellnoise", lua::wrap<l_noise<FNL_NOISE_CELLULAR>>},
     {"pow", lua::wrap<l_binop_func<util::pow>>},
     {"add", lua::wrap<l_binop_func<std::plus>>},
     {"mul", lua::wrap<l_binop_func<std::multiplies>>},
     {"min", lua::wrap<l_binop_func<util::min>>},
     {"max", lua::wrap<l_binop_func<util::max>>},
     {"abs", lua::wrap<l_unaryop_func<util::abs>>},
+    {"resize", lua::wrap<l_resize>},
+    {"crop", lua::wrap<l_crop>},
 };
 
 static int l_meta_meta_call(lua::State* L) {
@@ -183,6 +223,20 @@ static int l_meta_index(lua::State* L) {
     return 0;
 }
 
+static int l_meta_newindex(lua::State* L) {
+    auto map = touserdata<LuaHeightmap>(L, 1);
+    if (map == nullptr) {
+        return 0;
+    }
+    if (isstring(L, 2)) {
+        auto fieldname = tostring(L, 2);
+        if (!std::strcmp(fieldname, "noiseSeed")) {
+            map->setSeed(tointeger(L, 3));
+        }
+    }
+    return 0;
+}
+
 static int l_meta_tostring(lua::State* L) {
     auto map = touserdata<LuaHeightmap>(L, 1);
     if (map == nullptr) {
@@ -199,11 +253,13 @@ static int l_meta_tostring(lua::State* L) {
 }
 
 int LuaHeightmap::createMetatable(lua::State* L) {
-    createtable(L, 0, 2);
+    createtable(L, 0, 3);
     pushcfunction(L, lua::wrap<l_meta_tostring>);
     setfield(L, "__tostring");
     pushcfunction(L, lua::wrap<l_meta_index>);
     setfield(L, "__index");
+    pushcfunction(L, lua::wrap<l_meta_newindex>);
+    setfield(L, "__newindex");
 
     createtable(L, 0, 1);
     pushcfunction(L, lua::wrap<l_meta_meta_call>);
