@@ -17,14 +17,14 @@ WorldGenerator::WorldGenerator(
 
 static inline void generate_pole(
     const BlocksLayers& layers,
-    int height,
+    int top,
     int bottom,
     int seaLevel,
     voxel* voxels,
     int x,
     int z
 ) {
-    uint y = height;
+    uint y = top;
     uint layerExtension = 0;
     for (const auto& layer : layers.layers) {
         if (y < seaLevel && !layer.below_sea_level) {
@@ -55,8 +55,9 @@ void WorldGenerator::generate(
         {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
     );
     auto values = heightmap->getValues();
-    const auto& groundLayers = def.script->getGroundLayers();
-    const auto& seaLayers = def.script->getSeaLayers();
+    const auto& biome = def.script->getBiome();
+    const auto& groundLayers = biome.groundLayers;
+    const auto& seaLayers = biome.seaLayers;
 
     uint seaLevel = def.script->getSeaLevel();
 

@@ -22,9 +22,23 @@ namespace lua {
         luaerror(const std::string& message);
     };
 
-    void log_error(const std::string& text);
-
     using State = lua_State;
     using Number = lua_Number;
     using Integer = lua_Integer;
+
+    class stackguard {
+    private:
+        int top;
+        State* state;
+    public:
+        stackguard(State* state) : state(state) {
+            top = lua_gettop(state);
+        }
+
+        ~stackguard() {
+            lua_settop(state, top);
+        }
+    };
+
+    void log_error(const std::string& text);
 }

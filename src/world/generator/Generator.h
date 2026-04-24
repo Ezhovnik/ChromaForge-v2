@@ -24,6 +24,12 @@ struct BlocksLayers {
     uint lastLayersHeight;
 };
 
+struct Biome {
+    std::string name;
+    BlocksLayers groundLayers;
+    BlocksLayers seaLayers;
+};
+
 class GeneratorScript {
 public:
     virtual ~GeneratorScript() = default;
@@ -32,8 +38,7 @@ public:
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed
     ) = 0;
 
-    virtual const BlocksLayers& getGroundLayers() const = 0;
-    virtual const BlocksLayers& getSeaLayers() const = 0;
+    virtual const Biome& getBiome() const = 0;
 
     virtual uint getSeaLevel() const = 0;
 
