@@ -46,4 +46,6 @@ struct Item {
 
     Item(const std::string& name);
     Item(const Item&) = delete;
+
+    void cloneTo(Item& dst);
 };

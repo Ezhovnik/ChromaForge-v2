@@ -12,6 +12,7 @@
 #include <voxels/Chunk.h>
 #include <world/generator/Generator.h>
 #include <debug/Logger.h>
+#include <data/dynamic.h>
 
 class LuaGeneratorScript : public GeneratorScript {
     scriptenv env;
@@ -104,11 +105,11 @@ public:
 };
 
 static BlocksLayer load_layer(
-    lua::State* L, int idx, uint& lastLayersHeight, bool& hasResizeableLayer
+    const dynamic::Map_sptr& map, uint& lastLayersHeight, bool& hasResizeableLayer
 ) {
-    auto name = lua::require_string_field(L, "block");
-    int height = lua::require_integer_field(L, "height");
-    bool belowSeaLevel = lua::get_boolean_field(L, "below_sea_level", true);
+    auto name = map->get<std::string>("block");
+    int height = map->get<integer_t>("height");
+    bool belowSeaLevel = map->get("below_sea_level", true);
 
     if (hasResizeableLayer) {
         lastLayersHeight += height;
@@ -124,87 +125,80 @@ static BlocksLayer load_layer(
 }
 
 static inline BlocksLayers load_layers(
-    lua::State* L, const std::string& fieldname
+    const dynamic::List_sptr& layersArr, const std::string& fieldname
 ) {
     uint lastLayersHeight = 0;
     bool hasResizeableLayer = false;
     std::vector<BlocksLayer> layers;
 
-    if (lua::getfield(L, fieldname)) {
-        int len = lua::objlen(L, -1);
-        for (int i = 1; i <= len; ++i) {
-            lua::rawgeti(L, i);
-            try {
-                layers.push_back(
-                    load_layer(L, -1, lastLayersHeight, hasResizeableLayer)
-                );
-            } catch (const std::runtime_error& err) {
-                LOG_ERROR("{} №{}: {}", fieldname, std::to_string(i), err.what());
-                throw std::runtime_error(
-                    fieldname + " №" + std::to_string(i) + ": " + err.what()
-                );
-            }
-            lua::pop(L);
+    for (int i = 0; i < layersArr->size(); i++) {
+        const auto& layerMap = layersArr->map(i);
+        try {
+            layers.push_back(
+                load_layer(layerMap, lastLayersHeight, hasResizeableLayer));
+        } catch (const std::runtime_error& err) {
+            LOG_ERROR("{} №{}: {}", fieldname, std::to_string(i), err.what());
+            throw std::runtime_error(
+                fieldname + " №" + std::to_string(i) + ": " + err.what()
+            );
         }
-        lua::pop(L);
     }
     return BlocksLayers {std::move(layers), lastLayersHeight};
 }
 
-static inline Biome load_biome(
-    lua::State* L, const std::string& name, uint parametersCount, int idx
+static inline BiomePlants load_plants(
+    const dynamic::Map_sptr& biomeMap
 ) {
-    lua::pushvalue(L, idx);
-
-    std::vector<BiomeParameter> parameters;
-    lua::requirefield(L, "parameters");
-    if (lua::objlen(L, -1) < parametersCount) {
-        std::string errorLog = std::to_string(parametersCount) + " parameters expected";
-        LOG_ERROR("{}", errorLog);
-        throw std::runtime_error(errorLog);
-    }
-    for (uint i = 1; i <= parametersCount; i++) {
-        lua::rawgeti(L, i);
-        float value = lua::require_number_field(L, "value");
-        float weight = lua::require_number_field(L, "weight");
-        parameters.push_back(BiomeParameter {value, weight});
-        lua::pop(L);
-    }
-    lua::pop(L);
-
-    float plantChance = lua::get_number_field(L, "plant_chance", 0.0);
+    float plantChance = biomeMap->get("plant_chance", 0.0);
     float plantsWeightSum = 0.0f;
     std::vector<PlantEntry> plants;
-    if (lua::getfield(L, "plants")) {
-        if (!lua::istable(L, -1)) {
-            LOG_ERROR("'plants' must be a table");
-            throw std::runtime_error("'plants' must be a table");
-        }
-        int plantsCount = lua::objlen(L, -1);
-        for (int i = 1; i <= plantsCount; ++i) {
-            lua::rawgeti(L, i);
-            if (!lua::istable(L, -1)) {
-                LOG_ERROR("Plant must be a table");
-                throw std::runtime_error("Plant must be a table");
+    if (biomeMap->has("plants")) {
+        auto plantsArr = biomeMap->list("plants");
+        for (size_t i = 0; i < plantsArr->size(); ++i) {
+            auto entry = plantsArr->map(i);
+            auto block = entry->get<std::string>("block");
+            float weight = entry->get<number_t>("weight");
+            if (weight <= 0.0f) {
+                throw std::runtime_error("weight must be positive");
             }
-            auto block = lua::require_string_field(L, "block");
-            float weight = lua::require_number_field(L, "weight");
-            // TODO: range check (positive)
             plantsWeightSum += weight;
             plants.push_back(PlantEntry {block, weight, {}});
-            lua::pop(L);
         }
-        lua::pop(L);
     }
     std::sort(plants.begin(), plants.end(), std::greater<PlantEntry>());
+    return BiomePlants {
+        std::move(plants), plantsWeightSum, plantChance};
+}
 
-    BlocksLayers groundLayers = load_layers(L, "layers");
-    BlocksLayers seaLayers = load_layers(L, "sea_layers");
-    lua::pop(L);
+static inline Biome load_biome(
+    const dynamic::Map_sptr& biomeMap,
+    const std::string& name,
+    uint parametersCount,
+    int idx
+) {
+    std::vector<BiomeParameter> parameters;
+    const auto& paramsArr = biomeMap->list("parameters");
+    if (paramsArr->size() < parametersCount) {
+        LOG_ERROR("{} parameters expected", parametersCount);
+        throw std::runtime_error(
+            std::to_string(parametersCount) + " parameters expected"
+        );
+    }
+    for (size_t i = 0; i < parametersCount; ++i) {
+        const auto& paramMap = paramsArr->map(i);
+        float value = paramMap->get<number_t>("value");
+        float weight = paramMap->get<number_t>("weight");
+        parameters.push_back(BiomeParameter {value, weight});
+    }
+
+    BiomePlants plants = load_plants(biomeMap);
+    BlocksLayers groundLayers = load_layers(biomeMap->list("layers"), "layers");
+    BlocksLayers seaLayers = load_layers(biomeMap->list("sea_layers"), "sea_layers");
+
     return Biome {
         name,
         std::move(parameters),
-        BiomePlants {plants, plantsWeightSum, plantChance},
+        std::move(plants),
         std::move(groundLayers),
         std::move(seaLayers)
     };
@@ -220,31 +214,26 @@ std::unique_ptr<GeneratorScript> scripting::load_generator(
     lua::pop(L, load_script(*env, "generator", file));
 
     lua::pushenv(L, *env);
+    auto val = lua::tovalue(L, -1);
+    lua::pop(L);
 
-    uint biomeParameters = lua::get_integer_field(L, "biome_parameters", 0, 0, 16);
-    uint seaLevel = lua::get_integer_field(L, "sea_level", 0, 0, CHUNK_HEIGHT);
+    auto root = std::get<dynamic::Map_sptr>(val);
+
+    uint biomeParameters = root->get<integer_t>("biome_parameters");
+    uint seaLevel = root->get<integer_t>("sea_level");
 
     std::vector<Biome> biomes;
-    lua::requirefield(L, "biomes");
-    if (!lua::istable(L, -1)) {
-        throw std::runtime_error("'biomes' must be a table");
-    }
-    lua::pushnil(L);
-    while (lua::next(L, -2)) {
-        lua::pushvalue(L, -2);
-        std::string biomeName = lua::tostring(L, -1);
+    const auto& biomesMap = root->map("biomes");
+    for (const auto& [biomeName, value] : biomesMap->values) {
+        const auto& biomeMap = std::get<dynamic::Map_sptr>(value);
         try {
-            biomes.push_back(load_biome(L, biomeName, biomeParameters, -2));
+            biomes.push_back(load_biome(biomeMap, biomeName, biomeParameters, -2));
         } catch (const std::runtime_error& err) {
             LOG_ERROR("Biome {}: {}", biomeName, err.what());
             throw std::runtime_error("Biome " + biomeName + ": " + err.what());
         }
-        lua::pop(L, 2);
     }
 
-    lua::pop(L);
-
-    lua::pop(L);
     return std::make_unique<LuaGeneratorScript>(
         std::move(env), 
         std::move(biomes), 

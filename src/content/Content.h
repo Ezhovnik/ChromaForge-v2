@@ -98,7 +98,7 @@ private:
 public:
     ContentUnitDefs(std::unordered_map<std::string, std::unique_ptr<T>> defs) : defs(std::move(defs)) {}
 
-    T* find(const std::string& id) const {
+    const T* find(const std::string& id) const {
         const auto& found = defs.find(id);
         if (found == defs.end()) {
             return nullptr;
@@ -106,7 +106,7 @@ public:
         return found->second.get();
     }
 
-    T& require(const std::string& id) const {
+    const T& require(const std::string& id) const {
         const auto& found = defs.find(id);
         if (found == defs.end()) {
             throw std::runtime_error("Missing content unit " + id);

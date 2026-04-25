@@ -43,4 +43,6 @@ struct Entity {
 
     Entity(const std::string& name) : name(name) {};
     Entity(const Entity&) = delete;
+
+    void cloneTo(Entity& dst);
 };

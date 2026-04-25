@@ -36,9 +36,9 @@ private:
 
     static void loadCustomBlockModel(Block& def, dynamic::Map* primitives);
     static void loadBlockMaterial(BlockMaterial& def, const std::filesystem::path& file);
-    static void loadBlock(Block& def, const std::string& name, const std::filesystem::path& file);
-    static void loadItem(Item& def, const std::string& name, const std::filesystem::path& file);
-    static void loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file);
+    void loadBlock(Block& def, const std::string& name, const std::filesystem::path& file);
+    void loadItem(Item& def, const std::string& name, const std::filesystem::path& file);
+    void loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file);
     void loadResources(ResourceType type, dynamic::List* list);
 public:
     ContentLoader(ContentPack* pack, ContentBuilder& builder);

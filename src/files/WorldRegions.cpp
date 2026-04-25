@@ -9,6 +9,7 @@
 #include <math/voxmaths.h>
 #include <items/Inventory.h>
 #include <debug/Logger.h>
+#include <coders/json.h>
 
 #define REGION_FORMAT_MAGIC ".CHROMAREG"
 inline constexpr int REGION_HEADER_SIZE = 13;

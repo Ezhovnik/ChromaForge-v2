@@ -44,6 +44,14 @@ public:
         return *defs[id];
     }
 
+    T* get(const std::string& id) {
+        auto found = defs.find(id);
+        if (found != defs.end()) {
+            return &*found->second;
+        }
+        return nullptr;
+    }
+
     auto build() {
         return std::move(defs);
     }

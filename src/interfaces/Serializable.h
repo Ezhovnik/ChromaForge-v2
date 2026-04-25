@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include <coders/json.h>
+#include <data/dynamic_fwd.h>
 
 /**
  * @brief Абстрактный интерфейс для объектов, поддерживающих сериализацию в JSON.

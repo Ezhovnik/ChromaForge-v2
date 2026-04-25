@@ -197,7 +197,7 @@ public:
     void clean();
 
     entityid_t spawn(
-        Entity& def,
+        const Entity& def,
         glm::vec3 position,
         dynamic::Map_sptr args=nullptr,
         dynamic::Map_sptr saved=nullptr,

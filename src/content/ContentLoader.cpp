@@ -120,6 +120,19 @@ void ContentLoader::loadGenerator(Generator& def, const std::string& full, const
 void ContentLoader::loadBlock(Block& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
 
+    if (root->has("parent")) {
+        std::string parentName;
+        root->str("parent", parentName);
+        auto parentDef = this->builder.blocks.get(parentName);
+        if (parentDef == nullptr) {
+            LOG_ERROR("Failed to find parent ({}) for {}", parentName, name);
+            throw std::runtime_error(
+                "Failed to find parent (" + parentName + ") for " + name
+            );
+        }
+        parentDef->cloneTo(def);
+    }
+
     root->str("caption", def.caption);
 
     if (root->has("texture")) {
@@ -274,6 +287,20 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
 
 void ContentLoader::loadItem(Item& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
+
+    if (root->has("parent")) {
+        std::string parentName;
+        root->str("parent", parentName);
+        auto parentDef = this->builder.items.get(parentName);
+        if (parentDef == nullptr) {
+            LOG_ERROR("Failed to find parent ({}) for {}", parentName, name);
+            throw std::runtime_error(
+                "Failed to find parent (" + parentName + ") for " + name
+            );
+        }
+        parentDef->cloneTo(def);
+    }
+
     root->str("caption", def.caption);
 
     std::string iconTypeStr = "";
@@ -301,6 +328,19 @@ void ContentLoader::loadItem(Item& def, const std::string& name, const std::file
 
 void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
+
+    if (root->has("parent")) {
+        std::string parentName;
+        root->str("parent", parentName);
+        auto parentDef = this->builder.entities.get(parentName);
+        if (parentDef == nullptr) {
+            LOG_ERROR("Failed to find parent ({}) for {}", parentName, name);
+            throw std::runtime_error(
+                "Failed to find parent (" + parentName + ") for " + name
+            );
+        }
+        parentDef->cloneTo(def);
+    }
 
     if (auto componentsarr = root->list("components")) {
         for (size_t i = 0; i < componentsarr->size(); ++i) {
@@ -441,39 +481,151 @@ void ContentLoader::load() {
 
     auto root = files::read_json(pack->getContentFile());
 
+    std::vector<std::pair<std::string, std::string>> pendingDefs;
+    auto getJsonParent = [this](const std::string& prefix, const std::string& name) {
+            auto configFile = pack->folder/std::filesystem::path(prefix + "/" + name + ".json");
+            std::string parent;
+            if (std::filesystem::exists(configFile)) {
+                auto root = files::read_json(configFile);
+                if (root->has("parent")) root->str("parent", parent);
+            }
+            return parent;
+        };
+    auto processName = [this](const std::string& name) {
+        auto colon = name.find(':');
+        auto new_name = name;
+        std::string full = colon == std::string::npos ? pack->id + ":" + name : name;
+        if (colon != std::string::npos) new_name[colon] = '/';
+
+        return std::make_pair(full, new_name);
+    };
+
     if (auto blocksarr = root->list("blocks")) {
         for (size_t i = 0; i < blocksarr->size(); ++i) {
-            std::string name = blocksarr->str(i);
-            auto [packid, full, filename] = create_unit_id(pack->id, name);
-            auto& def = builder.blocks.create(full);
-            if (filename != name) {
-                def.scriptName = packid + "/" + def.scriptName;
+            auto [full, name] = processName(blocksarr->str(i));
+            auto parent = getJsonParent("blocks", name);
+            if (parent.empty() || builder.blocks.get(parent)) {
+                // Нет зависимости или зависимость уже загружена/существует в другом пакете контента
+                auto& def = builder.blocks.create(full);
+                loadBlock(def, full, name);
+                stats->totalBlocks++;
+            } else {
+                // Зависимость ещё не загружена, добавляем в ожидающие
+                pendingDefs.emplace_back(full, name);
             }
-            loadBlock(def, full, filename);
-            stats->totalBlocks++;
+        }
+
+        // Разрешить зависимости для ожидающих элементов
+        bool progressMade = true;
+        while (!pendingDefs.empty() && progressMade) {
+            progressMade = false;
+
+            for (auto it = pendingDefs.begin(); it != pendingDefs.end();) {
+                auto parent = getJsonParent("blocks", it->second);
+                if (builder.blocks.get(parent)) {
+                    // Зависимость разрешена или родитель существует в другом пакете, загружаем элемент
+                    auto& def = builder.blocks.create(it->first);
+                    loadBlock(def, it->first, it->second);
+                    stats->totalBlocks++;
+                    it = pendingDefs.erase(it);  // Удалить разрешённый элемент
+                    progressMade = true;
+                } else {
+                    ++it;
+                }
+            }
+        }
+
+        if (!pendingDefs.empty()) {
+            // Обработка циклических зависимостей или отсутствующих зависимостей
+            // Здесь можно записать ошибку в лог или выбросить исключение при необходимости
+            LOG_ERROR("Unresolved block dependencies detected");
+            throw std::runtime_error("Unresolved block dependencies detected");
         }
     }
 
     if (auto itemsarr = root->list("items")) {
         for (size_t i = 0; i < itemsarr->size(); ++i) {
-            std::string name = itemsarr->str(i);
-            auto [packid, full, filename] = create_unit_id(pack->id, name);
-            auto& def = builder.items.create(full);
-            if (filename != name) {
-                def.scriptName = packid + "/" + def.scriptName;
+            auto [full, name] = processName(itemsarr->str(i));
+            auto parent = getJsonParent("items", name);
+            if (parent.empty() || builder.items.get(parent)) {
+                // Нет зависимости или зависимость уже загружена/существует в другом пакете контента
+                auto& def = builder.items.create(full);
+                loadItem(def, full, name);
+                stats->totalItems++;
+            } else {
+                // Зависимость ещё не загружена, добавляем в ожидающие
+                pendingDefs.emplace_back(full, name);
             }
-            loadItem(def, full, filename);
-            stats->totalItems++;
+        }
+
+        // Разрешить зависимости для ожидающих элементов
+        bool progressMade = true;
+        while (!pendingDefs.empty() && progressMade) {
+            progressMade = false;
+
+            for (auto it = pendingDefs.begin(); it != pendingDefs.end();) {
+                auto parent = getJsonParent("items", it->second);
+                if (builder.items.get(parent)) {
+                    // Зависимость разрешена или родитель существует в другом пакете, загружаем элемент
+                    auto& def = builder.items.create(it->first);
+                    loadItem(def, it->first, it->second);
+                    stats->totalItems++;
+                    it = pendingDefs.erase(it);  // Удалить разрешённый элемент
+                    progressMade = true;
+                } else {
+                    ++it;
+                }
+            }
+        }
+
+        if (!pendingDefs.empty()) {
+            // Обработка циклических зависимостей или отсутствующих зависимостей
+            // Здесь можно записать ошибку в лог или выбросить исключение при необходимости
+            LOG_ERROR("Unresolved item dependencies detected");
+            throw std::runtime_error("Unresolved item dependencies detected");
         }
     }
 
     if (auto entitiesarr = root->list("entities")) {
         for (size_t i = 0; i < entitiesarr->size(); ++i) {
-            std::string name = entitiesarr->str(i);
-            auto [packid, full, filename] = create_unit_id(pack->id, name);
-            auto& def = builder.entities.create(full);
-            loadEntity(def, full, name);
-            stats->totalEntities++;
+            auto [full, name] = processName(entitiesarr->str(i));
+            auto parent = getJsonParent("entities", name);
+            if (parent.empty() || builder.entities.get(parent)) {
+                // Нет зависимости или зависимость уже загружена/существует в другом пакете контента
+                auto& def = builder.entities.create(full);
+                loadEntity(def, full, name);
+                stats->totalEntities++;
+            } else {
+                // Зависимость ещё не загружена, добавляем в ожидающие
+                pendingDefs.emplace_back(full, name);
+            }
+        }
+
+        // Разрешить зависимости для ожидающих элементов
+        bool progressMade = true;
+        while (!pendingDefs.empty() && progressMade) {
+            progressMade = false;
+
+            for (auto it = pendingDefs.begin(); it != pendingDefs.end();) {
+                auto parent = getJsonParent("entities", it->second);
+                if (builder.entities.get(parent)) {
+                    // Зависимость разрешена или родитель существует в другом пакете, загружаем элемент
+                    auto& def = builder.entities.create(it->first);
+                    loadEntity(def, it->first, it->second);
+                    stats->totalEntities++;
+                    it = pendingDefs.erase(it);  // Удалить разрешённый элемент
+                    progressMade = true;
+                } else {
+                    ++it;
+                }
+            }
+        }
+
+        if (!pendingDefs.empty()) {
+            // Обработка циклических зависимостей или отсутствующих зависимостей
+            // Здесь можно записать ошибку в лог или выбросить исключение при необходимости
+            LOG_ERROR("Unresolved entities dependencies detected");
+            throw std::runtime_error("Unresolved entities dependencies detected");
         }
     }
 
