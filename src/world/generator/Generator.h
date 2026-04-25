@@ -12,7 +12,7 @@ class Content;
 struct BlocksLayer {
     std::string block;
     int height;
-    bool below_sea_level;
+    bool belowSeaLevel;
 
     struct {
         blockid_t id;
@@ -24,8 +24,14 @@ struct BlocksLayers {
     uint lastLayersHeight;
 };
 
+struct BiomeParameter {
+    float origin;
+    float weight;
+};
+
 struct Biome {
     std::string name;
+    std::vector<BiomeParameter> parameters;
     BlocksLayers groundLayers;
     BlocksLayers seaLayers;
 };
@@ -38,7 +44,12 @@ public:
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed
     ) = 0;
 
-    virtual const Biome& getBiome() const = 0;
+    virtual std::vector<std::shared_ptr<Heightmap>> generateParameterMaps(
+        const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed
+    ) = 0;
+
+    virtual const std::vector<Biome>& getBiomes() const = 0;
+    virtual uint getBiomeParameters() const = 0;
 
     virtual uint getSeaLevel() const = 0;
 

@@ -1,15 +1,55 @@
 sea_level = 64
 
-sea_layers = {
-    {block="chromaforge:water", height=-1},
+-- 1 - temperature
+-- 2 - humidity
+biome_parameters = 2
+
+biomes = {
+    plains = {
+        parameters = {
+            {value=0.5, weight=1.0},
+            {value=0.5, weight=0.3},
+        },
+        sea_layers = {
+            {block="chromaforge:water", height=-1},
+        },
+        layers = {
+            {block="chromaforge:moss", height=1, below_sea_level=false},
+            {block="chromaforge:dirt", height=5, below_sea_level=false},
+            {block="chromaforge:stone", height=-1},
+            {block="chromaforge:bedrock", height=1},
+        }
+    },
+    desert = {
+        parameters = {
+            {value=0.0, weight=0.36},
+            {value=0.0, weight=0.4},
+        },
+        sea_layers = {
+            {block="chromaforge:water", height=-1},
+        },
+        layers = {
+            {block="chromaforge:sand", height=6},
+            {block="chromaforge:stone", height=-1},
+            {block="chromaforge:bedrock", height=1},
+        }
+    },
+    mountains = {
+        parameters = {
+            {value=1.0, weight=1.0},
+            {value=0.2, weight=0.5},
+        },
+        sea_layers = {
+            {block="chromaforge:water", height=-1},
+        },
+        layers = {
+            {block="chromaforge:stone", height=6},
+            {block="chromaforge:stone", height=-1},
+            {block="chromaforge:bedrock", height=1},
+        }
+    }
 }
 
-layers = {
-    {block="chromaforge:moss", height=1, below_sea_level=false},
-    {block="chromaforge:dirt", height=5, below_sea_level=false},
-    {block="chromaforge:stone", height=-1},
-    {block="chromaforge:bedrock", height=1},
-}
 
 local function _generate_heightmap(x, y, w, h, seed, s)
     local umap = Heightmap(w, h)
@@ -53,4 +93,14 @@ function generate_heightmap(x, y, w, h, seed)
     map:resize(w + bpd, h + bpd, 'linear')
     map:crop(0, 0, w, h)
     return map
+end
+
+function generate_biome_parameters(x, y, w, h, seed)
+    local tempmap = Heightmap(w, h)
+    tempmap.noiseSeed = seed + 5324
+    tempmap:noise({x, y}, 0.8, 3)
+    local hummap = Heightmap(w, h)
+    hummap.noiseSeed = seed + 953
+    hummap:noise({x, y}, 0.2, 2)
+    return tempmap, hummap
 end

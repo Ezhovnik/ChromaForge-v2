@@ -568,7 +568,7 @@ namespace lua {
     ) {
         requirefield(L, name, idx);
         auto value = require_string(L, -1);
-        lua::pop(L);
+        pop(L);
         return value;
     }
 
@@ -577,7 +577,16 @@ namespace lua {
     ) {
         requirefield(L, name, idx);
         auto value = tointeger(L, -1);
-        lua::pop(L);
+        pop(L);
+        return value;
+    }
+
+    inline Number require_number_field(
+        lua::State* L, const std::string& name, int idx=-1
+    ) {
+        requirefield(L, name, idx);
+        auto value = tonumber(L, -1);
+        pop(L);
         return value;
     }
 
@@ -586,6 +595,33 @@ namespace lua {
     ) {
         if (getfield(L, name, idx)) {
             bool value = toboolean(L, -1);
+            pop(L);
+            return value;
+        }
+        return def;
+    }
+
+    inline Integer get_integer_field(
+        lua::State* L, const std::string& name, Integer def, int idx=-1
+    ) {
+        if (getfield(L, name, idx)) {
+            auto value = tointeger(L, -1);
+            pop(L);
+            return value;
+        }
+        return def;
+    }
+
+    inline Integer get_integer_field(
+        lua::State* L, const std::string& name, 
+        Integer def, Integer min, Integer max, int idx=-1
+    ) {
+        if (getfield(L, name, idx)) {
+            auto value = tointeger(L, -1);
+            if (value < min || value > max) {
+                log_error("Value is out of range [" + std::to_string(min) + ", " + std::to_string(max) + "]");
+                throw std::runtime_error("Value is out of range [" + std::to_string(min) + ", " + std::to_string(max) + "]");
+            }
             pop(L);
             return value;
         }

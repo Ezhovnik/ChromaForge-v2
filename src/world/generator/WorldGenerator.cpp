@@ -10,6 +10,8 @@
 #include <util/timeutil.h>
 #include <constants.h>
 
+static inline constexpr uint MAX_PARAMETERS = 16;
+
 WorldGenerator::WorldGenerator(
     const Generator& def,
     const Content* content
@@ -27,7 +29,7 @@ static inline void generate_pole(
     uint y = top;
     uint layerExtension = 0;
     for (const auto& layer : layers.layers) {
-        if (y < seaLevel && !layer.below_sea_level) {
+        if (y < seaLevel && !layer.belowSeaLevel) {
             layerExtension = std::max(0, layer.height);
             continue;
         }
@@ -47,6 +49,31 @@ static inline void generate_pole(
     }
 }
 
+static inline const Biome* choose_biome(
+    const std::vector<Biome>& biomes,
+    const std::vector<std::shared_ptr<Heightmap>>& maps,
+    uint x, uint z
+) {
+    uint paramsCount = maps.size();
+    float params[MAX_PARAMETERS];
+    for (uint i = 0; i < paramsCount; ++i) {
+        params[i] = maps[i]->getUnchecked(x, z);
+    }
+    const Biome* chosenBiome = nullptr;
+    float chosenScore = std::numeric_limits<float>::infinity();
+    for (const auto& biome : biomes) {
+        float score = 0.0f;
+        for (uint i = 0; i < paramsCount; ++i) {
+            score += glm::abs((params[i] - biome.parameters[i].origin) / biome.parameters[i].weight);
+        }
+        if (score < chosenScore) {
+            chosenScore = score;
+            chosenBiome = &biome;
+        }
+    }
+    return chosenBiome;
+}
+
 void WorldGenerator::generate(
     voxel* voxels, int chunkX, int chunkZ, uint64_t seed
 ) {
@@ -54,18 +81,24 @@ void WorldGenerator::generate(
     auto heightmap = def.script->generateHeightmap(
         {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
     );
+    auto biomeParams = def.script->generateParameterMaps(
+        {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
+    );
     auto values = heightmap->getValues();
-    const auto& biome = def.script->getBiome();
-    const auto& groundLayers = biome.groundLayers;
-    const auto& seaLayers = biome.seaLayers;
+    const auto& biomes = def.script->getBiomes();
 
     uint seaLevel = def.script->getSeaLevel();
 
     std::memset(voxels, 0, sizeof(voxel) * CHUNK_VOLUME);
     for (uint z = 0; z < CHUNK_DEPTH; ++z) {
         for (uint x = 0; x < CHUNK_WIDTH; ++x) {
+            const Biome* biome = choose_biome(biomes, biomeParams, x, z);
+
             int height = values[z * CHUNK_WIDTH + x] * CHUNK_HEIGHT;
             height = std::max(0, height);
+
+            const auto& groundLayers = biome->groundLayers;
+            const auto& seaLayers = biome->seaLayers;
 
             generate_pole(seaLayers, seaLevel, height, seaLevel, voxels, x, z);
             generate_pole(groundLayers, height, 0, seaLevel, voxels, x, z);
