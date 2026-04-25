@@ -354,7 +354,15 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
 	if (lz == CHUNK_DEPTH - 1 && (chunk = getChunk(cx + areaOffsetX, cz + areaOffsetZ + 1))) chunk->flags.modified = true;
 }
 
-voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3& end, glm::ivec3& norm, glm::ivec3& iend) {
+voxel* Chunks::rayCast(
+	glm::vec3 start,
+	glm::vec3 dir,
+	float maxDist,
+	glm::vec3& end,
+	glm::ivec3& norm,
+	glm::ivec3& iend,
+	std::set <blockid_t> filter
+) {
 	float px = start.x;
 	float py = start.y;
 	float pz = start.z;
@@ -392,7 +400,7 @@ voxel* Chunks::rayCast(glm::vec3 start, glm::vec3 dir, float maxDist, glm::vec3&
 		voxel* voxel = getVoxel(ix, iy, iz);
 		if (voxel == nullptr) return nullptr;
 		const auto& def = contentIds->blocks.require(voxel->id);
-		if (def.selectable) {
+		if ((filter.empty() && def.selectable) || (!filter.empty() && filter.find(def.rt.id) == filter.end())) {
 			end.x = px + t * dx;
 			end.y = py + t * dy;
 			end.z = pz + t * dz;

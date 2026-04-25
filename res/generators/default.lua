@@ -18,6 +18,14 @@ biomes = {
             {block="chromaforge:dirt", height=5, below_sea_level=false},
             {block="chromaforge:stone", height=-1},
             {block="chromaforge:bedrock", height=1},
+        },
+        plant_chance = 0.5,
+        plants = {
+            {block="chromaforge:grass", weight=1},
+            {block="chromaforge:dandelion", weight=0.08},
+            {block="chromaforge:poppy", weight=0.05},
+            {block="chromaforge:daisy", weight=0.04},
+            {block="chromaforge:marigold", weight=0.03},
         }
     },
     desert = {

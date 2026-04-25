@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <memory>
 #include <vector>
+#include <set>
 
 #include <glm/glm.hpp>
 
@@ -79,7 +80,8 @@ public:
         float maxDist, // Максимальная дистанция трассировки
         glm::vec3& end, // Точка попадания луча
         glm::ivec3& norm, // Нормаль поверхности в точке попадания
-        glm::ivec3& iend // Координаты вокселя в точке попадания
+        glm::ivec3& iend, // Координаты вокселя в точке попадания
+        std::set<blockid_t> filter = {}
     );
     glm::vec3 rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDist);
 

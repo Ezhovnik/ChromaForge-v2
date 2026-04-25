@@ -9,6 +9,7 @@
 #include <world/generator/Generator.h>
 #include <util/timeutil.h>
 #include <constants.h>
+#include <math/rand.h>
 
 static inline constexpr uint MAX_PARAMETERS = 16;
 
@@ -64,7 +65,7 @@ static inline const Biome* choose_biome(
     for (const auto& biome : biomes) {
         float score = 0.0f;
         for (uint i = 0; i < paramsCount; ++i) {
-            score += glm::abs((params[i] - biome.parameters[i].origin) / biome.parameters[i].weight);
+            score += glm::abs((params[i] - biome.parameters[i].value) / biome.parameters[i].weight);
         }
         if (score < chosenScore) {
             chosenScore = score;
@@ -90,6 +91,10 @@ void WorldGenerator::generate(
     uint seaLevel = def.script->getSeaLevel();
 
     std::memset(voxels, 0, sizeof(voxel) * CHUNK_VOLUME);
+
+    PseudoRandom plantsRand;
+    plantsRand.setSeed(chunkX, chunkZ);
+
     for (uint z = 0; z < CHUNK_DEPTH; ++z) {
         for (uint x = 0; x < CHUNK_WIDTH; ++x) {
             const Biome* biome = choose_biome(biomes, biomeParams, x, z);
@@ -102,6 +107,15 @@ void WorldGenerator::generate(
 
             generate_pole(seaLayers, seaLevel, height, seaLevel, voxels, x, z);
             generate_pole(groundLayers, height, 0, seaLevel, voxels, x, z);
+        
+            if (height + 1 > seaLevel) {
+                // TODO: add underwater plants support
+                float rand = (plantsRand.randU32() % RAND_MAX) / static_cast<float>(RAND_MAX);
+                blockid_t plant = biome->plants.choose(rand);
+                if (plant) {
+                    voxels[vox_index(x, height + 1, z)].id = plant;
+                }
+            }
         }
     }
 }
