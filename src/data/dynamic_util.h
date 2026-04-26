@@ -5,11 +5,20 @@
 #include <data/dynamic.h>
 
 namespace dynamic {
-    template<int n, typename T>
-    inline dynamic::List_sptr to_value(glm::vec<n, T> vec) {
+    template <int n>
+    inline dynamic::List_sptr to_value(glm::vec<n, float> vec) {
         auto list = dynamic::create_list();
         for (size_t i = 0; i < n; ++i) {
             list->put(vec[i]);
+        }
+        return list;
+    }
+
+    template <int n>
+    inline dynamic::List_sptr to_value(glm::vec<n, int> vec) {
+        auto list = dynamic::create_list();
+        for (size_t i = 0; i < n; ++i) {
+            list->put(static_cast<integer_t>(vec[i]));
         }
         return list;
     }
@@ -34,11 +43,37 @@ namespace dynamic {
         }
     }
 
+    template <int n>
+    void get_vec(
+        const dynamic::Map* root,
+        const std::string& name,
+        glm::vec<n, int>& vec
+    ) {
+        if (const auto& list = root->list(name)) {
+            for (size_t i = 0; i < n; ++i) {
+                vec[i] = list->integer(i);
+            }
+        }
+    }
+
     template<int n>
     void get_vec(const dynamic::List_sptr& root, size_t index, glm::vec<n, float>& vec) {
         if (const auto& list = root->list(index)) {
             for (size_t i = 0; i < n; ++i) {
                 vec[i] = list->num(i);
+            }
+        }
+    }
+
+    template <int n>
+    void get_vec(
+        const dynamic::List_sptr& root,
+        size_t index,
+        glm::vec<n, int>& vec
+    ) {
+        if (const auto& list = root->list(index)) {
+            for (size_t i = 0; i < n; ++i) {
+                vec[i] = list->integer(i);
             }
         }
     }

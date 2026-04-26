@@ -19,7 +19,7 @@ biomes = {
             {block="chromaforge:stone", height=-1},
             {block="chromaforge:bedrock", height=1},
         },
-        plant_chance = 0.5,
+        plant_chance = 0.3,
         plants = {
             {block="chromaforge:grass", weight=1},
             {block="chromaforge:dandelion", weight=0.08},
@@ -106,9 +106,11 @@ end
 function generate_biome_parameters(x, y, w, h, seed)
     local tempmap = Heightmap(w, h)
     tempmap.noiseSeed = seed + 5324
-    tempmap:noise({x, y}, 0.8, 3)
+    tempmap:noise({x, y}, 0.4, 4)
     local hummap = Heightmap(w, h)
     hummap.noiseSeed = seed + 953
-    hummap:noise({x, y}, 0.2, 2)
+    hummap:noise({x, y}, 0.16, 4)
+    tempmap:pow(2)
+    hummap:pow(2)
     return tempmap, hummap
 end

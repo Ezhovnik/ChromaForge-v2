@@ -10,6 +10,45 @@
  * Смещение (offset) задаётся в байтах.
  */
 namespace dataio {
+    template <typename T>
+    T swap(T value) {
+        union{
+            T value;
+            ubyte bytes[sizeof(T)];
+        } source, dest;
+
+        source.value = value;
+
+        for (size_t i = 0; i < sizeof(T); ++i) {
+            dest.bytes[i] = source.bytes[sizeof(T) - i - 1];
+        }
+        return dest.value;
+    }
+
+    inline bool is_big_endian() {
+        uint16_t num = 1;
+        auto bytes = reinterpret_cast<uint8_t*>(&num);
+        return bytes[1] == 1;
+    }
+
+    template <typename T>
+    T be2h(T value){
+        if (is_big_endian()) {
+            return value;
+        } else {
+            return swap(value);
+        }
+    }
+
+    template <typename T>
+    T le2h(T value){
+        if (is_big_endian()) {
+            return swap(value);
+        } else {
+            return value;
+        }
+    }
+
     /**
      * @brief Читает 16-битное знаковое целое из буфера (big-endian).
      * @param src Указатель на буфер с данными.

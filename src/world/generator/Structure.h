@@ -1,0 +1,34 @@
+#pragma once
+
+#include <vector>
+#include <glm/glm.hpp>
+
+#include <interfaces/Serializable.h>
+#include <voxels/voxel.h>
+
+inline constexpr int STRUCTURE_FORMAT_VERSION = 1;
+
+class Level;
+class Content;
+
+struct Structure : public Serializable {
+    glm::ivec3 size;
+    std::vector<voxel> voxels;
+    std::vector<std::string> blockNames;
+
+    Structure() : size() {}
+    Structure(
+        glm::ivec3 size,
+        std::vector<voxel> voxels,
+        std::vector<std::string> blockNames
+    ) : size(size),
+        voxels(std::move(voxels)),
+        blockNames(std::move(blockNames)) {}
+
+    std::unique_ptr<dynamic::Map> serialize() const override;
+    void deserialize(dynamic::Map* src) override;
+
+    static std::unique_ptr<Structure> create(
+        Level* level, const glm::ivec3& a, const glm::ivec3& b, bool entities
+    );
+};

@@ -5,7 +5,7 @@
 #include <content/Content.h>
 #include <core_content_defs.h>
 #include <voxels/Block.h>
-#include <voxels/voxel.h>
+#include <util/timeutil.h>
 #include <world/generator/Generator.h>
 #include <util/timeutil.h>
 #include <constants.h>
@@ -15,17 +15,18 @@ static inline constexpr uint MAX_PARAMETERS = 16;
 
 WorldGenerator::WorldGenerator(
     const Generator& def,
-    const Content* content
-) : def(def), content(content) {}
+    const Content* content,
+    uint64_t seed
+) : def(def),
+    content(content),
+    seed(seed) {}
 
 static inline void generate_pole(
     const BlocksLayers& layers,
-    int top,
-    int bottom,
+    int top, int bottom,
     int seaLevel,
     voxel* voxels,
-    int x,
-    int z
+    int x, int z
 ) {
     uint y = top;
     uint layerExtension = 0;
@@ -34,14 +35,13 @@ static inline void generate_pole(
             layerExtension = std::max(0, layer.height);
             continue;
         }
-
         int layerHeight = layer.height;
         if (layerHeight == -1) {
             layerHeight = y - layers.lastLayersHeight - bottom + 1;
         } else {
             layerHeight += layerExtension;
         }
-        layerHeight = std::min(static_cast<uint>(layerHeight), y);
+        layerHeight = std::min(static_cast<uint>(layerHeight), y + 1);
 
         for (uint i = 0; i < layerHeight; ++i, --y) {
             voxels[vox_index(x, y, z)].id = layer.rt.id;
@@ -75,18 +75,41 @@ static inline const Biome* choose_biome(
     return chosenBiome;
 }
 
-void WorldGenerator::generate(
-    voxel* voxels, int chunkX, int chunkZ, uint64_t seed
+std::unique_ptr<ChunkPrototype> WorldGenerator::generatePrototype(
+    int chunkX, int chunkZ
 ) {
-    timeutil::ScopeLogTimer log(555);
-    auto heightmap = def.script->generateHeightmap(
-        {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
-    );
     auto biomeParams = def.script->generateParameterMaps(
         {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
     );
-    auto values = heightmap->getValues();
     const auto& biomes = def.script->getBiomes();
+
+    std::vector<const Biome*> chunkBiomes(CHUNK_WIDTH * CHUNK_DEPTH);
+    for (uint z = 0; z < CHUNK_DEPTH; ++z) {
+        for (uint x = 0; x < CHUNK_WIDTH; ++x) {
+            chunkBiomes[z * CHUNK_WIDTH + x] = choose_biome(biomes, biomeParams, x, z);
+        }
+    }
+    return std::make_unique<ChunkPrototype>(
+        ChunkPrototypeLevel::Biomes,
+        nullptr, 
+        std::move(chunkBiomes)
+    );
+}
+
+void WorldGenerator::generateHeightmap(
+    ChunkPrototype* prototype, int chunkX, int chunkZ
+) {
+    prototype->heightmap = def.script->generateHeightmap(
+        {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
+    );
+    prototype->level = ChunkPrototypeLevel::Heightmap;
+}
+
+void WorldGenerator::generate(voxel* voxels, int chunkX, int chunkZ) {
+    auto prototype = generatePrototype(chunkX, chunkZ);
+    generateHeightmap(prototype.get(), chunkX, chunkZ);
+
+    const auto values = prototype->heightmap->getValues();
 
     uint seaLevel = def.script->getSeaLevel();
 
@@ -97,7 +120,7 @@ void WorldGenerator::generate(
 
     for (uint z = 0; z < CHUNK_DEPTH; ++z) {
         for (uint x = 0; x < CHUNK_WIDTH; ++x) {
-            const Biome* biome = choose_biome(biomes, biomeParams, x, z);
+            const Biome* biome = prototype->biomes[z * CHUNK_WIDTH + x];
 
             int height = values[z * CHUNK_WIDTH + x] * CHUNK_HEIGHT;
             height = std::max(0, height);
@@ -107,9 +130,8 @@ void WorldGenerator::generate(
 
             generate_pole(seaLayers, seaLevel, height, seaLevel, voxels, x, z);
             generate_pole(groundLayers, height, 0, seaLevel, voxels, x, z);
-        
+            
             if (height + 1 > seaLevel) {
-                // TODO: add underwater plants support
                 float rand = (plantsRand.randU32() % RAND_MAX) / static_cast<float>(RAND_MAX);
                 blockid_t plant = biome->plants.choose(rand);
                 if (plant) {

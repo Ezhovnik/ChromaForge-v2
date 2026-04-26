@@ -197,6 +197,7 @@ void AssetsLoader::processPreloadConfigs(const Content* content) {
     }
     if (content == nullptr) return;
     for (auto& entry : content->getPacks()) {
+        if (entry.first == BUILTIN_CONTENT_NAMESPACE) continue;
         const auto& pack = entry.second;
         auto preloadFile = pack->getInfo().folder/std::filesystem::path("preload.json");
         if (std::filesystem::exists(preloadFile)) {
