@@ -33,7 +33,7 @@ WorldConverter::WorldConverter(
     lut(std::move(lut)),
     content(content) 
 {
-    std::filesystem::path regionsFolder = wfile->getRegions().getRegionsFolder(RegionConsts::LAYER_VOXELS);
+    std::filesystem::path regionsFolder = wfile->getRegions().getRegionsFolder(REGION_LAYER_VOXELS);
     if (!std::filesystem::is_directory(regionsFolder)) {
         LOG_WARN("Nothing to convert");
         return;

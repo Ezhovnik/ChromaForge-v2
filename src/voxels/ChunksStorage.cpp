@@ -53,8 +53,7 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	auto chunk = std::make_shared<Chunk>(x, z);
 	store(chunk);
 
-	auto data = regions.getChunk(chunk->chunk_x, chunk->chunk_z);
-	if (data) {
+	if (auto data = regions.getVoxels(chunk->chunk_x, chunk->chunk_z)) {
 		chunk->decode(data.get());
 
 		auto invs = regions.fetchInventories(chunk->chunk_x, chunk->chunk_z);
@@ -72,8 +71,7 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 		verifyLoadedChunk(level->content->getIndices(), chunk.get());
 	}
 
-	auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z);
-	if (lights) {
+	if (auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z)) {
 		chunk->light_map.set(lights.get());
 		chunk->flags.loadedLights = true;
 	}
