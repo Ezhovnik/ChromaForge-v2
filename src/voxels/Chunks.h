@@ -9,6 +9,7 @@
 
 #include <typedefs.h>
 #include <voxels/voxel.h>
+#include <util/AreaMap2D.h>
 
 class Mesh;
 class Chunk;
@@ -29,24 +30,16 @@ private:
     void eraseSegments(const Block& def, blockstate state, int x, int y, int z);
     void repairSegments(const Block& def, blockstate state, int x, int y, int z);
     void setRotationExtended(const Block& def, blockstate state, glm::ivec3 origin, uint8_t rotation);
+
+    util::AreaMap2D<std::shared_ptr<Chunk>, int32_t> areaMap;
 public:
-    std::vector<std::shared_ptr<Chunk>> chunks;
-    std::vector<std::shared_ptr<Chunk>> chunksSecond;
-
-    size_t volume;
-    size_t chunksCount;
     size_t visibleCount = 0;
-
-    uint32_t width; // Количество чанков по X
-    uint32_t depth; // Количество чанков по Z
-    int32_t areaOffsetX; // Смещение области видимых чанков по X
-    int32_t areaOffsetZ; // Смещение области видимых чанков по Z
 
     WorldFiles* worldFiles;
 
     Chunks(
-        uint32_t width, 
-        uint32_t depth, 
+        int32_t width, 
+        int32_t depth, 
         int32_t areaOffsetX, 
         int32_t areaOffsetZ, 
         WorldFiles* worldFiles, 
@@ -90,13 +83,38 @@ public:
     bool isReplaceableBlock(int32_t x, int32_t y, int32_t z);
 	bool isObstacleBlock(int32_t x, int32_t y, int32_t z);
 
-    void _setOffset(int32_t x, int32_t z);
-
     void setCenter(int32_t x, int32_t z);
-	void translate(int32_t x, int32_t z);
     void resize(uint32_t newWidth, uint32_t newDepth);
 
     void saveAndClear();
     void save(Chunk* chunk);
     void saveAll();
+
+    const std::vector<std::shared_ptr<Chunk>>& getChunks() const {
+        return areaMap.getBuffer();
+    }
+
+    int32_t getWidth() const {
+        return areaMap.getWidth();
+    }
+
+    int32_t getDepth() const {
+        return areaMap.getDepth();
+    }
+
+    int32_t getOffsetX() const {
+        return areaMap.getOffsetX();
+    }
+
+    int32_t getOffsetZ() const {
+        return areaMap.getOffsetZ();
+    }
+
+    size_t getChunksCount() const {
+        return areaMap.count();
+    }
+
+    size_t getVolume() const {
+        return areaMap.area();
+    }
 };

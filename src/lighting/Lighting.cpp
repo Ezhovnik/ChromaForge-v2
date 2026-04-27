@@ -25,8 +25,9 @@ Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), con
 Lighting::~Lighting() = default;
 
 void Lighting::clear() {
-    for (size_t index = 0; index < chunks->volume; ++index) {
-        auto chunk = chunks->chunks[index];
+	const auto& chunks = this->chunks->getChunks();
+    for (size_t index = 0; index < chunks.size(); ++index) {
+        auto chunk = chunks[index];
         if (chunk == nullptr) continue;
 
         LightMap& light_map = chunk->light_map;

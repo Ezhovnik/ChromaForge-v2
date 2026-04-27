@@ -55,15 +55,16 @@ void ChunksController::update(int64_t maxDuration) {
 }
 
 bool ChunksController::loadVisible() {
-	const int width = chunks->width;
-	const int depth = chunks->depth;
+	int sizeX = chunks->getWidth();
+    int sizeY = chunks->getDepth();
+
 	int nearX = 0;
 	int nearZ = 0;
-	int minDistance = ((width - chunksPadding * 2) / 2) * ((width - chunksPadding * 2) / 2);
-	for (uint z = chunksPadding; z < depth - chunksPadding; ++z){
-		for (uint x = chunksPadding; x < width - chunksPadding; ++x){
-			int index = z * width + x;
-			auto& chunk = chunks->chunks[index];
+	int minDistance = ((sizeX - chunksPadding * 2) / 2) * ((sizeY - chunksPadding * 2) / 2);
+	for (uint z = chunksPadding; z < sizeY - chunksPadding; ++z){
+		for (uint x = chunksPadding; x < sizeX - chunksPadding; ++x){
+			int index = z * sizeX + x;
+			auto& chunk = chunks->getChunks()[index];
 			if (chunk != nullptr) {
 				if (chunk->flags.loaded && !chunk->flags.lighted) {
 					if (buildLights(chunk)) {
@@ -72,8 +73,8 @@ bool ChunksController::loadVisible() {
 				}
 				continue;
 			}
-			int lx = x - width / 2;
-			int lz = z - depth / 2;
+			int lx = x - sizeX / 2;
+			int lz = z - sizeY / 2;
 			int distance = (lx * lx + lz * lz);
 			if (distance < minDistance){
 				minDistance = distance;
@@ -83,15 +84,14 @@ bool ChunksController::loadVisible() {
 		}
 	}
 
-	int index = nearZ * width + nearX;
-	const auto& chunk = chunks->chunks[index];
+	const auto& chunk = chunks->getChunks()[nearZ * sizeX + nearX];
 	if (chunk != nullptr) {
 		return false;
 	}
 
-	const int areaOffsetX = chunks->areaOffsetX;
-	const int areaOffsetZ = chunks->areaOffsetZ;
-	createChunk(nearX + areaOffsetX, nearZ + areaOffsetZ);
+	int offsetX = chunks->getOffsetX();
+    int offsetZ = chunks->getOffsetZ();
+    createChunk(nearX + offsetX, nearZ + offsetZ);
 	return true;
 }
 

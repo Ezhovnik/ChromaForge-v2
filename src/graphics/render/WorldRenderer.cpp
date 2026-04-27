@@ -93,7 +93,7 @@ bool WorldRenderer::drawChunk(
 	ShaderProgram* shader, 
 	bool culling)
 {
-	std::shared_ptr<Chunk> chunk = level->chunks->chunks[index];
+	auto chunk = level->chunks->getChunks()[index];
 	if (!chunk->flags.lighted) return false;
 
 	float distance = glm::distance(
@@ -140,16 +140,17 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 
     renderer->update();
 	std::vector<size_t> indices;
-	for (size_t i = 0; i < chunks->volume; ++i){
-		if (chunks->chunks[i] == nullptr) continue;
+	for (size_t i = 0; i < chunks->getVolume(); ++i){
+		if (chunks->getChunks()[i] == nullptr) continue;
 		indices.emplace_back(i);
 	}
 
 	float px = camera->position.x / static_cast<float>(CHUNK_WIDTH) - 0.5f;
     float pz = camera->position.z / static_cast<float>(CHUNK_DEPTH) - 0.5f;
     std::sort(indices.begin(), indices.end(), [chunks, px, pz](auto i, auto j) {
-        const auto a = chunks->chunks[i].get();
-        const auto b = chunks->chunks[j].get();
+        const auto& chunksBuffer = chunks->getChunks();
+        const auto a = chunksBuffer[i].get();
+        const auto b = chunksBuffer[j].get();
         auto adx = (a->chunk_x - px);
         auto adz = (a->chunk_z - pz);
         auto bdx = (b->chunk_x - px);

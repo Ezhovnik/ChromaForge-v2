@@ -117,15 +117,15 @@ void BlocksController::randomSpark(
 
 void BlocksController::randomSpark(int sparkId, int parts) {
     auto indices = level->content->getIndices();
-    const uint w = chunks->width;
-    const uint d = chunks->depth;
+    int width = chunks->getWidth();
+    int depth = chunks->getDepth();
     int segments = 4;
 
-    for (uint z = padding; z < d - padding; ++z){
-        for (uint x = padding; x < w - padding; ++x){
-            int index = z * w + x;
+    for (uint z = padding; z < depth - padding; ++z){
+        for (uint x = padding; x < width - padding; ++x){
+            int index = z * width + x;
             if ((index + sparkId) % parts != 0) continue;
-            auto& chunk = chunks->chunks[index];
+            auto& chunk = chunks->getChunks()[index];
             if (chunk == nullptr || !chunk->flags.lighted) continue;
             randomSpark(*chunk, segments, indices);
         }
