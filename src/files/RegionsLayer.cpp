@@ -14,13 +14,13 @@ static std::filesystem::path get_region_filename(int x, int z) {
 
 static void fetch_chunks(WorldRegion* region, int x, int z, regFile* file) {
     auto* chunks = region->getChunks();
-    uint32_t* sizes = region->getSizes();
+    auto sizes = region->getSizes();
 
     for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
         int chunk_x = (i % RegionConsts::SIZE) + x * RegionConsts::SIZE;
         int chunk_z = (i / RegionConsts::SIZE) + z * RegionConsts::SIZE;
         if (chunks[i] == nullptr) {
-            chunks[i] = RegionsLayer::readChunkData(chunk_x, chunk_z, sizes[i], file);
+            chunks[i] = RegionsLayer::readChunkData(chunk_x, chunk_z, sizes[i][0], sizes[i][1], file);
         }
     }
 }
@@ -46,23 +46,26 @@ regFile::regFile(std::filesystem::path filename) : file(std::move(filename)) {
     }
 }
 
-std::unique_ptr<ubyte[]> regFile::read(int index, uint32_t& length) {
+std::unique_ptr<ubyte[]> regFile::read(int index, uint32_t& size, uint32_t& srcSize) {
     size_t file_size = file.length();
     size_t table_offset = file_size - RegionConsts::VOLUME * 4;
 
-    uint32_t offset;
+    uint32_t buff32;
     file.seekg(table_offset + index * 4);
-    file.read(reinterpret_cast<char*>(&offset), 4);
-    offset = dataio::read_int32_big(reinterpret_cast<const ubyte*>(&offset), 0);
+    file.read(reinterpret_cast<char*>(&buff32), 4);
+    uint32_t offset = dataio::le2h(buff32);
     if (offset == 0) {
         return nullptr;
     }
 
     file.seekg(offset);
-    file.read(reinterpret_cast<char*>(&offset), 4);
-    length = dataio::read_int32_big(reinterpret_cast<const ubyte*>(&offset), 0);
-    auto data = std::make_unique<ubyte[]>(length);
-    file.read(reinterpret_cast<char*>(data.get()), length);
+    file.read(reinterpret_cast<char*>(&buff32), 4);
+    size = dataio::le2h(buff32);
+    file.read(reinterpret_cast<char*>(&buff32), 4);
+    srcSize = dataio::le2h(buff32);
+
+    auto data = std::make_unique<ubyte[]>(size);
+    file.read(reinterpret_cast<char*>(data.get()), size);
     return data;
 }
 
@@ -136,6 +139,10 @@ WorldRegion* RegionsLayer::getRegion(int x, int z) {
     return found->second.get();
 }
 
+std::filesystem::path RegionsLayer::getRegionFilePath(int x, int z) const {
+    return folder/get_region_filename(x, z);
+}
+
 WorldRegion* RegionsLayer::getOrCreateRegion(int x, int z) {
     if (auto region = getRegion(x, z)) {
         return region;
@@ -147,7 +154,7 @@ WorldRegion* RegionsLayer::getOrCreateRegion(int x, int z) {
     return region;
 }
 
-ubyte* RegionsLayer::getData(int x, int z, uint32_t& size) {
+ubyte* RegionsLayer::getData(int x, int z, uint32_t& size, uint32_t& srcSize) {
     int regionX, regionZ, localX, localZ;
     calc_reg_coords(x, z, regionX, regionZ, localX, localZ);
 
@@ -156,15 +163,17 @@ ubyte* RegionsLayer::getData(int x, int z, uint32_t& size) {
     if (data == nullptr) {
         auto regFile = getRegFile({regionX, regionZ});
         if (regFile != nullptr) {
-            auto dataptr = readChunkData(x, z, size, regFile.get());
+            auto dataptr = readChunkData(x, z, size, srcSize, regFile.get());
             if (dataptr) {
                 data = dataptr.get();
-                region->put(localX, localZ, std::move(dataptr), size);
+                region->put(localX, localZ, std::move(dataptr), size, srcSize);
             }
         }
     }
     if (data != nullptr) {
-        size = region->getChunkDataSize(localX, localZ);
+        auto sizevec = region->getChunkDataSize(localX, localZ);
+        size = sizevec[0];
+        srcSize = sizevec[1];
         return data;
     }
     return nullptr;
@@ -184,47 +193,50 @@ void RegionsLayer::writeRegion(int x, int z, WorldRegion* entry) {
 
     char header[REGION_HEADER_SIZE] = REGION_FORMAT_MAGIC;
     header[REGION_HEADER_SIZE - 2] = REGION_FORMAT_VERSION;
-    header[REGION_HEADER_SIZE - 1] = 0;
+    header[REGION_HEADER_SIZE - 1] = static_cast<ubyte>(compression);
     std::ofstream file(filename, std::ios::out | std::ios::binary);
     file.write(header, REGION_HEADER_SIZE);
 
     size_t offset = REGION_HEADER_SIZE;
-    char intbuf[4]{};
+    uint32_t intbuf;
     uint offsets[RegionConsts::VOLUME]{};
 
-    auto* region = entry->getChunks();
-    uint32_t* sizes = entry->getSizes();
+    auto region = entry->getChunks();
+    auto sizes = entry->getSizes();
 
     for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
         ubyte* chunk = region[i].get();
         if (chunk == nullptr) {
-            offsets[i] = 0;
-        } else {
-            offsets[i] = offset;
-
-            size_t compressedSize = sizes[i];
-            dataio::write_int32_big(
-                compressedSize, reinterpret_cast<ubyte*>(intbuf), 0
-            );
-            offset += 4 + compressedSize;
-
-            file.write(intbuf, 4);
-            file.write(reinterpret_cast<const char*>(chunk), compressedSize);
+            continue;
         }
+        offsets[i] = offset;
+
+        auto sizevec = sizes[i];
+        uint32_t compressedSize = sizevec[0];
+        uint32_t srcSize = sizevec[1];
+        
+        intbuf = dataio::h2le(compressedSize);
+        file.write(reinterpret_cast<const char*>(&intbuf), 4);
+        offset += 4;
+
+        intbuf = dataio::h2le(srcSize);
+        file.write(reinterpret_cast<const char*>(&intbuf), 4);
+        offset += 4;
+
+        file.write(reinterpret_cast<const char*>(chunk), compressedSize);
+        offset += compressedSize;
     }
     for (size_t i = 0; i < RegionConsts::VOLUME; ++i) {
-        dataio::write_int32_big(
-            offsets[i], reinterpret_cast<ubyte*>(intbuf), 0
-        );
-        file.write(intbuf, 4);
+        intbuf = dataio::h2le(offsets[i]);
+        file.write(reinterpret_cast<const char*>(&intbuf), 4);
     }
 }
 
 std::unique_ptr<ubyte[]> RegionsLayer::readChunkData(
-    int x, int z, uint32_t& length, regFile* rfile
+    int x, int z, uint32_t& size, uint32_t& srcSize, regFile* rfile
 ) {
     int regionX, regionZ, localX, localZ;
     calc_reg_coords(x, z, regionX, regionZ, localX, localZ);
     int chunkIndex = localZ * RegionConsts::SIZE + localX;
-    return rfile->read(chunkIndex, length);
+    return rfile->read(chunkIndex, size, srcSize);
 }

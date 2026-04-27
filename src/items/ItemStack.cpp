@@ -15,6 +15,9 @@ void ItemStack::set(const ItemStack& item) {
     if (count == 0) {
         this->item = 0;
     }
+    if (this->item == ITEM_EMPTY) {
+        this->count = 0;
+    }
 }
 
 bool ItemStack::accepts(const ItemStack& other) const {

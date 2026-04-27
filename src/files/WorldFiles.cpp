@@ -73,8 +73,8 @@ void WorldFiles::write(const World* world, const Content* content) {
 		if (!std::filesystem::exists(getPacksFile())) writePacks(world->getPacks());
 	}
 	if (generatorTestMode) return;
-	writeIndices(content->getIndices());
-	regions.write();
+	if (content) writeIndices(content->getIndices());
+	regions.writeAll();
 }
 
 void WorldFiles::writePacks(const std::vector<ContentPack>& packs) {
@@ -160,6 +160,17 @@ bool WorldFiles::readResourcesData(const Content* content) {
         }
     }
     return true;
+}
+
+void WorldFiles::patchIndicesVersion(const std::string& field, uint version) {
+    std::filesystem::path file = getIndicesFile();
+    if (!std::filesystem::is_regular_file(file)) {
+        LOG_ERROR("{} does not exists", file.filename().u8string());
+        return;
+    }
+    auto root = files::read_json(file);
+    root->put(field, version);
+    files::write_json(file, root.get(), true);
 }
 
 static void erase_pack_indices(dynamic::Map* root, const std::string& id) {

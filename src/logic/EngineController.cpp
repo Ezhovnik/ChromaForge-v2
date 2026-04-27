@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <algorithm>
 
-#include <content/ContentLUT.h>
+#include <content/ContentReport.h>
 #include <debug/Logger.h>
 #include <engine.h>
 #include <files/WorldFiles.h>
@@ -43,40 +43,43 @@ std::shared_ptr<Task> create_converter(
     Engine* engine,
     const std::shared_ptr<WorldFiles>& worldFiles, 
     const Content* content, 
-    const std::shared_ptr<ContentLUT>& lut, 
+    const std::shared_ptr<ContentReport>& report, 
     const runnable& postRunnable)
 {
-    return WorldConverter::startTask(worldFiles, content, lut, [=](){
-        auto menu = engine->getGUI()->getMenu();
-        menu->reset();
-        menu->setPage("main", false);
-        engine->getGUI()->postRunnable([=]() {
-            postRunnable();
-        });
-    }, true);
+    return WorldConverter::startTask(worldFiles, content, report, [=](){
+            auto menu = engine->getGUI()->getMenu();
+            menu->reset();
+            menu->setPage("main", false);
+            engine->getGUI()->postRunnable([=]() {
+                postRunnable();
+            });
+        },
+        report->isUpgradeRequired(),
+        true
+    );
 }
 
 void show_convert_request(
     Engine* engine, 
     const Content* content, 
-    const std::shared_ptr<ContentLUT>& lut,
+    const std::shared_ptr<ContentReport>& report,
     const std::shared_ptr<WorldFiles>& worldFiles,
     const runnable& postRunnable
 ) {
-    guiutil::confirm(engine->getGUI(), langs::get(L"world.convert-request"), [=]() {
-        auto converter = create_converter(engine, worldFiles, content, lut, postRunnable);
+    guiutil::confirm(engine->getGUI(), langs::get(report->isUpgradeRequired() ? L"world.upgrade-request" : L"world.convert-request"), [=]() {
+        auto converter = create_converter(engine, worldFiles, content, report, postRunnable);
         menus::show_process_panel(engine, converter, L"Converting world...");
     }, L"", langs::get(L"Cancel"));
 }
 
 static void show_content_missing(
     Engine* engine,
-    const std::shared_ptr<ContentLUT>& lut
+    const std::shared_ptr<ContentReport>& report
 ) {
     auto root = dynamic::create_map();
     auto& contentEntries = root->putList("content");
 
-    for (auto& entry : lut->getMissingContent()) {
+    for (auto& entry : report->getMissingContent()) {
         std::string contentName = contenttype_name(entry.type);
         auto& contentEntry = contentEntries.putMap();
         contentEntry.put("type", contentName);
@@ -119,17 +122,17 @@ void EngineController::openWorld(const std::string& name, bool confirmConvert) {
     auto worldFiles = std::make_shared<WorldFiles>(
         folder, engine->getSettings().debug
     );
-    if (auto lut = World::checkIndices(worldFiles, content)) {
-        if (lut->hasMissingContent()) {
+    if (auto report = World::checkIndices(worldFiles, content)) {
+        if (report->hasMissingContent()) {
             engine->setScreen(std::make_shared<MenuScreen>(engine));
-            show_content_missing(engine, lut);
+            show_content_missing(engine, report);
         } else {
             if (confirmConvert) {
-                menus::show_process_panel(engine, create_converter(engine, worldFiles, content, lut, [=]() {
+                menus::show_process_panel(engine, create_converter(engine, worldFiles, content, report, [=]() {
                     openWorld(name, false);
                 }), L"Converting world...");
             } else {
-                show_convert_request(engine, content, lut, std::move(worldFiles), [=](){
+                show_convert_request(engine, content, report, std::move(worldFiles), [=](){
                     openWorld(name, false);
                 });
             }

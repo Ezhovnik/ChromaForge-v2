@@ -32,12 +32,17 @@ namespace dataio {
     }
 
     template <typename T>
-    T be2h(T value){
+    inline T be2h(T value){
         if (is_big_endian()) {
             return value;
         } else {
             return swap(value);
         }
+    }
+
+    template <typename T>
+    T h2be(T value){
+        return be2h(value);
     }
 
     template <typename T>
@@ -47,6 +52,11 @@ namespace dataio {
         } else {
             return value;
         }
+    }
+
+    template <typename T>
+    T h2le(T value){
+        return le2h(value);
     }
 
     /**

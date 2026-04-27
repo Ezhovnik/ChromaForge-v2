@@ -21,7 +21,7 @@ public:
 class WorldFiles;
 class Level;
 class Content;
-class ContentLUT;
+class ContentReport;
 struct EngineSettings;
 
 struct WorldInfo : public Serializable {
@@ -88,12 +88,12 @@ public:
 
 	/** 
      * Проверяет необходимость конвертации индексов блоков/предметов
-     * при несовпадении контента. Если требуется, создаёт ContentLUT.
+     * при несовпадении контента. Если требуется, создаёт ContentReport.
      * @param directory Папка мира.
      * @param content Текущий контент.
-     * @return Указатель на ContentLUT, если требуется конвертация, иначе nullptr.
+     * @return Указатель на ContentReport, если требуется конвертация, иначе nullptr.
      */
-	static std::shared_ptr<ContentLUT> checkIndices(
+	static std::shared_ptr<ContentReport> checkIndices(
           const std::shared_ptr<WorldFiles>& worldFiles, const Content* content
      );
 

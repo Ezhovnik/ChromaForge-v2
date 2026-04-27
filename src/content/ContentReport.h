@@ -9,6 +9,21 @@
 #include <constants.h>
 #include <content/Content.h>
 #include <data/dynamic.h>
+#include <files/world_regions_fwd.h>
+
+enum class ContentIssueType {
+    Reorder,
+    Missing,
+    RegionFormatUpdate
+};
+
+struct ContentIssue {
+    ContentIssueType issueType;
+    union {
+        ContentType contentType;
+        RegionLayerIndex regionLayer;
+    };
+};
 
 struct ContentEntry {
     ContentType type;
@@ -79,6 +94,10 @@ public:
         }
     }
 
+    inline ContentType getContentType() const {
+        return type;
+    }
+
     inline size_t count() const {
         return indices.size();
     }
@@ -92,14 +111,22 @@ public:
     }
 };
 
-class ContentLUT {
+class ContentReport {
 public:
     ContentUnitLUT<blockid_t, Block> blocks;
     ContentUnitLUT<itemid_t, Item> items;
+    uint regionsVersion;
 
-    ContentLUT(const ContentIndices* indices, size_t blocks, size_t items);
+    std::vector<ContentIssue> issues;
 
-    static std::shared_ptr<ContentLUT> create(
+    ContentReport(
+        const ContentIndices* indices, 
+        size_t blocks, 
+        size_t items,
+        uint regionsVersion
+    );
+
+    static std::shared_ptr<ContentReport> create(
         const std::shared_ptr<WorldFiles>& worldFiles,
         const std::filesystem::path& filename,
         const Content* content
@@ -113,5 +140,12 @@ public:
         return blocks.hasMissingContent() || items.hasMissingContent();
     }
 
+    inline bool isUpgradeRequired() const {
+        return regionsVersion < REGION_FORMAT_VERSION;
+    }
+
+    void buildIssues();
+
+    const std::vector<ContentIssue>& getIssues() const;
     std::vector<ContentEntry> getMissingContent() const;
 };

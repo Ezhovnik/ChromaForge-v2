@@ -15,7 +15,7 @@ class Camera;
 struct Hitbox;
 class Level;
 class Inventory;
-class ContentLUT;
+class ContentReport;
 
 /**
  * @brief Структура, содержащая текущее состояние ввода игрока.
@@ -177,9 +177,9 @@ public:
 	/**
      * @brief Конвертирует старые данные игрока при обновлении контента.
      * @param data JSON-объект с данными игрока.
-     * @param lut Таблица соответствия старых и новых идентификаторов.
+     * @param report Таблица соответствия старых и новых идентификаторов.
      */
-    static void convert(dynamic::Map* data, const ContentLUT* lut);
+    static void convert(dynamic::Map* data, const ContentReport* report);
 
 	inline int getId() const {
         return objectUID;

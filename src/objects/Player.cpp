@@ -11,7 +11,7 @@
 #include <math/rand.h>
 #include <voxels/Chunks.h>
 #include <voxels/voxel.h>
-#include <content/ContentLUT.h>
+#include <content/ContentReport.h>
 #include <objects/Entities.h>
 #include <core_content_defs.h>
 #include <objects/rigging.h>
@@ -265,19 +265,19 @@ void Player::deserialize(dynamic::Map *src) {
     }
 }
 
-void Player::convert(dynamic::Map* data, const ContentLUT* lut) {
+void Player::convert(dynamic::Map* data, const ContentReport* report) {
     auto players = data->list("players");
     if (players) {
         for (uint i = 0; i < players->size(); ++i) {
             auto playerData = players->map(i);
             if (auto inventory = playerData->map("inventory")) {
-                Inventory::convert(inventory.get(), lut);
+                Inventory::convert(inventory.get(), report);
 			}
         }
     } else {
         auto inventory = data->map("inventory");
         if (auto inventory = data->map("inventory")) {
-            Inventory::convert(inventory.get(), lut);
+            Inventory::convert(inventory.get(), report);
 		}
     }
 }

@@ -8,6 +8,7 @@ namespace compression {
     enum class Method {
         None,
         Extrle8,
+        Extrle16,
         Zip
     };
 

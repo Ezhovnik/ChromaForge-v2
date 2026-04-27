@@ -18,7 +18,6 @@
 
 static int l_open_world(lua::State* L) {
     auto name = lua::require_string(L, 1);
-    scripting::engine->setScreen(nullptr);
     auto controller = scripting::engine->getController();
     controller->openWorld(name, false);
     return 0;

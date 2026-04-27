@@ -9,7 +9,7 @@
 #include <interfaces/Serializable.h>
 
 class ContentIndices;
-class ContentLUT;
+class ContentReport;
 
 class Inventory : Serializable {
     int64_t id;
@@ -31,7 +31,8 @@ public:
     void deserialize(dynamic::Map* src) override;
     std::unique_ptr<dynamic::Map> serialize() const override;
 
-    static void convert(dynamic::Map* data, const ContentLUT* lut);
+    void convert(const ContentReport* report);
+    static void convert(dynamic::Map* data, const ContentReport* report);
 
     inline int64_t getId() const {
         return id;

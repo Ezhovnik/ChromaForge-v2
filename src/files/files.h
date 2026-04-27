@@ -7,6 +7,7 @@
 #include <fstream>
 
 #include <typedefs.h>
+#include <util/Buffer.h>
 
 namespace dynamic {
     class Map;
@@ -53,6 +54,9 @@ namespace files {
         const std::filesystem::path& filename,
         char* data,
         size_t size
+    );
+    util::Buffer<ubyte> read_bytes_buffer(
+        const std::filesystem::path&
     );
     std::unique_ptr<ubyte[]> read_bytes(
         const std::filesystem::path& filename,

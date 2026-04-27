@@ -1,10 +1,7 @@
 #include <coders/rle.h>
 
-/**
- * Декодирует данные, сжатые простым RLE.
- * Формат: последовательность пар (len, byte), где len — количество повторений минус 1.
- * Для каждой пары повторяем байт len+1 раз.
- */
+#include <util/data_io.h>
+
 size_t rle::decode(const ubyte* src, size_t srclen, ubyte* dst) {
 	size_t offset = 0; // текущая позиция в выходном буфере
 	for (size_t i = 0; i < srclen;) {
@@ -18,12 +15,6 @@ size_t rle::decode(const ubyte* src, size_t srclen, ubyte* dst) {
 	return offset; // общее количество распакованных байт
 }
 
-/**
- * Кодирует данные простым RLE.
- * Проходит по входным данным, подсчитывая длину последовательности одинаковых байт.
- * Когда встречается другой байт или счётчик достигает максимума (255), записывается пара (counter, текущий байт).
- * counter = длина серии минус 1.
- */
 size_t rle::encode(const ubyte* src, size_t srclen, ubyte* dst) {
 	if (srclen == 0) return 0;
 
@@ -51,18 +42,50 @@ size_t rle::encode(const ubyte* src, size_t srclen, ubyte* dst) {
 	return offset;
 }
 
-/**
- * Декодирует данные, сжатые расширенным RLE.
- * Читает длину серии: если первый байт имеет старший бит 0x80, то длина занимает два байта,
- * иначе один. Затем читается байт символа и повторяется len+1 раз.
- */
+size_t rle::decode16(const ubyte* src, size_t srclen, ubyte* dst) {
+    auto src16 = reinterpret_cast<const uint16_t*>(src);
+    auto dst16 = reinterpret_cast<uint16_t*>(dst);
+    size_t offset = 0;
+    for (size_t i = 0; i < srclen / 2;) {
+        uint16_t len = dataio::le2h(src16[i++]);
+        uint16_t c = dataio::le2h(src16[i++]);
+        for (size_t j = 0; j <= len; ++j) {
+            dst16[offset++] = c;
+        }
+    }
+    return offset * 2;
+}
+
+size_t rle::encode16(const ubyte* src, size_t srclen, ubyte* dst) {
+    if (srclen == 0) return 0;
+    auto src16 = reinterpret_cast<const uint16_t*>(src);
+    auto dst16 = reinterpret_cast<uint16_t*>(dst);
+    size_t offset = 0;
+    uint16_t counter = 0;
+    uint16_t c = src16[0];
+    for (size_t i = 1; i < srclen / 2; ++i) {
+        uint16_t cnext = src16[i];
+        if (cnext != c || counter == 0xFFFF) {
+            dst16[offset++] = dataio::h2le(counter);
+            dst16[offset++] = dataio::h2le(c);
+            c = cnext;
+            counter = 0;
+        } else {
+            counter++;
+        }
+    }
+    dst16[offset++] = dataio::h2le(counter);
+    dst16[offset++] = dataio::h2le(c);
+    return offset * 2;
+}
+
 size_t extrle::decode(const ubyte* src, size_t srclen, ubyte* dst) {
 	size_t offset = 0;
 	for (size_t i = 0; i < srclen;) {
 		uint len = src[i++]; // первый байт длины
 		if (len & 0x80) { // если установлен старший бит — длина двухбайтовая
 			len &= 0x7F;
-			len |= ((uint)src[i++]) << 7; // добавляем второй байт (сдвиг на 7 бит)
+			len |= (static_cast<uint>(src[i++])) << 7; // добавляем второй байт (сдвиг на 7 бит)
 		}
 		ubyte c = src[i++]; // символ
 		for (size_t j = 0; j <= len; ++j) {
@@ -72,11 +95,6 @@ size_t extrle::decode(const ubyte* src, size_t srclen, ubyte* dst) {
 	return offset;
 }
 
-/**
- * Кодирует данные расширенным RLE.
- * Работает аналогично простому RLE, но позволяет накапливать серии до max_sequence (0x7FFF).
- * При записи серии проверяет, помещается ли длина в один байт (len < 0x80) или требует двух.
- */
 size_t extrle::encode(const ubyte* src, size_t srclen, ubyte* dst) {
 	if (srclen == 0) return 0;
 
@@ -110,4 +128,70 @@ size_t extrle::encode(const ubyte* src, size_t srclen, ubyte* dst) {
 	}
 	dst[offset++] = c;
 	return offset;
+}
+
+size_t extrle::decode16(const ubyte* src, size_t srclen, ubyte* dst8) {
+    auto dst = reinterpret_cast<uint16_t*>(dst8);
+    size_t offset = 0;
+    for (size_t i = 0; i < srclen;) {
+        uint len = src[i++];
+        bool widechar = len & 0x40;
+        if (len & 0x80) {
+            len &= 0x3F;
+            len |= (static_cast<uint>(src[i++])) << 6;
+        } else {
+            len &= 0x3F;
+        }
+        uint16_t c = src[i++];
+        if (widechar) {
+            c |= ((static_cast<uint>(src[i++])) << 8);
+        }
+        for (size_t j = 0; j <= len; ++j) {
+            dst[offset++] = c;
+        }
+    }
+    return offset * 2;
+}
+
+size_t extrle::encode16(const ubyte* src8, size_t srclen, ubyte* dst) {
+    if (srclen == 0) return 0;
+
+    auto src = reinterpret_cast<const uint16_t*>(src8);
+    size_t offset = 0;
+    uint counter = 0;
+    uint16_t c = src[0];
+    for (size_t i = 1; i < srclen / 2; ++i) {
+        uint16_t cnext = src[i];
+        if (cnext != c || counter == max_sequence16) {
+            if (counter >= 0x40) {
+                dst[offset++] = 0x80 | ((c > 255) << 6) | (counter & 0x3F);
+                dst[offset++] = counter >> 6;
+            } else {
+                dst[offset++] = counter | ((c > 255) << 6);
+            }
+            if (c > 255) {
+                dst[offset++] = c & 0xFF;
+                dst[offset++] = c >> 8;
+            } else {
+                dst[offset++] = c;
+            }
+            c = cnext;
+            counter = 0;
+        } else {
+            counter++;
+        }
+    }
+    if (counter >= 0x40) {
+        dst[offset++] = 0x80 | ((c > 255) << 6) | (counter & 0x3F);
+        dst[offset++] = counter >> 6;
+    } else {
+        dst[offset++] = counter | ((c > 255) << 6);
+    }
+    if (c > 255) {
+        dst[offset++] = c & 0xFF;
+        dst[offset++] = c >> 8;
+    } else {
+        dst[offset++] = c;
+    }
+    return offset;
 }

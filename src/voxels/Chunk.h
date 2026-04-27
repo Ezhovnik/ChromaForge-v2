@@ -12,7 +12,7 @@
 inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
 
 class Inventory;
-class ContentLUT;
+class ContentReport;
 
 using chunk_inventories_map = std::unordered_map<uint, std::shared_ptr<Inventory>>;
 
@@ -58,5 +58,5 @@ public:
     std::unique_ptr<ubyte[]> encode() const;
 	bool decode(const ubyte* data);
 
-    static void convert(ubyte* data, const ContentLUT* lut);
+    static void convert(ubyte* data, const ContentReport* report);
 };

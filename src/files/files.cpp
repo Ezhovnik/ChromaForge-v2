@@ -69,6 +69,12 @@ bool files::read(const std::filesystem::path& filename, char* data, size_t size)
 	return true;
 }
 
+util::Buffer<ubyte> files::read_bytes_buffer(const std::filesystem::path& path) {
+    size_t size;
+    auto bytes = files::read_bytes(path, size);
+    return util::Buffer<ubyte>(std::move(bytes), size);
+}
+
 std::unique_ptr<ubyte[]> files::read_bytes(const std::filesystem::path& filename, size_t& length) {
 	std::ifstream input(filename, std::ios::binary);
 	if (!input.is_open()) return nullptr;

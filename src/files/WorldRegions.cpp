@@ -12,7 +12,7 @@
 
 WorldRegion::WorldRegion() :
     chunksData(std::make_unique<std::unique_ptr<ubyte[]>[]>(RegionConsts::VOLUME)),
-    sizes(std::make_unique<uint32_t[]>(RegionConsts::VOLUME))
+    sizes(std::make_unique<glm::u32vec2[]>(RegionConsts::VOLUME))
 {}
 
 WorldRegion::~WorldRegion() = default;
@@ -28,21 +28,23 @@ std::unique_ptr<ubyte[]>* WorldRegion::getChunks() const {
     return chunksData.get();
 }
 
-uint32_t* WorldRegion::getSizes() const {
+glm::u32vec2* WorldRegion::getSizes() const {
     return sizes.get();
 }
 
-void WorldRegion::put(uint x, uint z, std::unique_ptr<ubyte[]> data, uint32_t size) {
+void WorldRegion::put(
+    uint x, uint z, std::unique_ptr<ubyte[]> data, uint32_t size, uint32_t srcSize
+) {
     size_t chunk_index = z * RegionConsts::SIZE + x;
     chunksData[chunk_index] = std::move(data);
-    sizes[chunk_index] = size;
+    sizes[chunk_index] = glm::u32vec2(size, srcSize);
 }
 
 ubyte* WorldRegion::getChunkData(uint x, uint z) {
     return chunksData[z * RegionConsts::SIZE + x].get();
 }
 
-uint WorldRegion::getChunkDataSize(uint x, uint z) {
+glm::u32vec2 WorldRegion::getChunkDataSize(uint x, uint z) {
     return sizes[z * RegionConsts::SIZE + x];
 }
 
@@ -52,7 +54,7 @@ WorldRegions::WorldRegions(const std::filesystem::path& directory) : directory(d
     }
     auto& voxels = layers[REGION_LAYER_VOXELS];
     voxels.folder = directory/std::filesystem::path("regions");
-    voxels.compression = compression::Method::Extrle8;
+    voxels.compression = compression::Method::Extrle16;
 
     auto& lights = layers[REGION_LAYER_LIGHTS];
     lights.folder = directory/std::filesystem::path("lights");
@@ -74,7 +76,13 @@ void RegionsLayer::writeAll() {
     }
 }
 
-void WorldRegions::put(int x, int z, RegionLayerIndex layerID, std::unique_ptr<ubyte[]> data, size_t size) {
+void WorldRegions::put(
+    int x, int z,
+    RegionLayerIndex layerID,
+    std::unique_ptr<ubyte[]> data,
+    size_t srcSize
+) {
+    size_t size = srcSize;
     auto& layer = layers[layerID];
     if (layer.compression != compression::Method::None) {
         data = compression::compress(data.get(), size, size, layer.compression);
@@ -84,11 +92,12 @@ void WorldRegions::put(int x, int z, RegionLayerIndex layerID, std::unique_ptr<u
 
     WorldRegion* region = layer.getOrCreateRegion(regionX, regionZ);
     region->setUnsaved(true);
-    region->put(localX, localZ, std::move(data), size);
+    region->put(localX, localZ, std::move(data), size, srcSize);
 }
 
-static std::unique_ptr<ubyte[]> write_inventories(Chunk* chunk, uint& datasize) {
-    auto& inventories = chunk->inventories;
+static std::unique_ptr<ubyte[]> write_inventories(
+    const chunk_inventories_map& inventories, uint32_t& datasize
+) {
     ByteBuilder builder;
     builder.putInt32(inventories.size());
     for (auto& entry : inventories) {
@@ -103,6 +112,24 @@ static std::unique_ptr<ubyte[]> write_inventories(Chunk* chunk, uint& datasize) 
     auto data = std::make_unique<ubyte[]>(datasize);
     std::memcpy(data.get(), datavec, datasize);
     return data;
+}
+
+static chunk_inventories_map load_inventories(
+    const ubyte* src, uint32_t size
+) {
+    chunk_inventories_map inventories;
+    ByteReader reader(src, size);
+    auto count = reader.getInt32();
+    for (int i = 0; i < count; ++i) {
+        uint index = reader.getInt32();
+        uint size = reader.getInt32();
+        auto map = json::from_binary(reader.pointer(), size);
+        reader.skip(size);
+        auto inv = std::make_shared<Inventory>(0, 0);
+        inv->deserialize(map.get());
+        inventories[index] = inv;
+    }
+    return inventories;
 }
 
 void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
@@ -132,7 +159,7 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
     }
     if (!chunk->inventories.empty()) {
         uint datasize;
-        auto data = write_inventories(chunk, datasize);
+        auto data = write_inventories(chunk->inventories, datasize);
         put(
             chunk->chunk_x, chunk->chunk_z,
             REGION_LAYER_INVENTORIES,
@@ -156,55 +183,64 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
 
 std::unique_ptr<ubyte[]> WorldRegions::getVoxels(int x, int z){
     uint32_t size;
+    uint32_t srcSize;
     auto& layer = layers[REGION_LAYER_VOXELS];
-    auto* data = layer.getData(x, z, size);
+    auto* data = layer.getData(x, z, size, srcSize);
     if (data == nullptr) return nullptr;
-    return compression::decompress(data, size, CHUNK_DATA_LEN, layer.compression);
+    assert(srcSize == CHUNK_DATA_LEN);
+    return compression::decompress(data, size, srcSize, layer.compression);
 }
 
 std::unique_ptr<light_t[]> WorldRegions::getLights(int x, int z) {
     uint32_t size;
+    uint32_t srcSize;
     auto& layer = layers[REGION_LAYER_LIGHTS];
-    auto* bytes = layer.getData(x, z, size);
+    auto* bytes = layer.getData(x, z, size, srcSize);
     if (bytes == nullptr) return nullptr;
     auto data = compression::decompress(
-        bytes, size, LIGHTMAP_DATA_LEN, layer.compression
+        bytes, size, srcSize, layer.compression
     );
+    assert(srcSize == LIGHTMAP_DATA_LEN);
     return LightMap::decode(data.get());
 }
 
 chunk_inventories_map WorldRegions::fetchInventories(int x, int z) {
-    chunk_inventories_map meta;
     uint32_t bytesSize;
-    auto bytes = layers[REGION_LAYER_INVENTORIES].getData(x, z, bytesSize);
-    if (bytes == nullptr) return meta;
-    ByteReader reader(bytes, bytesSize);
-    auto count = reader.getInt32();
-    for (int i = 0; i < count; ++i) {
-        uint index = reader.getInt32();
-        uint size = reader.getInt32();
-        auto map = json::from_binary(reader.pointer(), size);
-        reader.skip(size);
-        auto inv = std::make_shared<Inventory>(0, 0);
-        inv->deserialize(map.get());
-        meta[index] = inv;
-    }
-    return meta;
+    uint32_t srcSize;
+    auto bytes = layers[REGION_LAYER_INVENTORIES].getData(x, z, bytesSize, srcSize);
+    if (bytes == nullptr) return {};
+    return load_inventories(bytes, bytesSize);
+}
+
+void WorldRegions::processInventories(
+    int x, int z, const inventoryproc& func
+) {
+    processRegion(x, z, REGION_LAYER_INVENTORIES,
+    [=](std::unique_ptr<ubyte[]> data, uint32_t* size) {
+        auto inventories = load_inventories(data.get(), *size);
+        for (const auto& [_, inventory] : inventories) {
+            func(inventory.get());
+        }
+        return write_inventories(inventories, *size);
+    });
 }
 
 dynamic::Map_sptr WorldRegions::fetchEntities(int x, int z) {
     if (generatorTestMode) return nullptr;
 
     uint32_t bytesSize;
-    const ubyte* data = layers[REGION_LAYER_ENTITIES].getData(x, z, bytesSize);
+    uint32_t srcSize;
+    const ubyte* data = layers[REGION_LAYER_ENTITIES].getData(x, z, bytesSize, srcSize);
     if (data == nullptr) return nullptr;
     auto map = json::from_binary(data, bytesSize);
     if (map->size() == 0) return nullptr;
     return map;
 }
 
-void WorldRegions::processRegionVoxels(int x, int z, const regionproc& func) {
-    auto& layer = layers[REGION_LAYER_VOXELS];
+void WorldRegions::processRegion(
+    int x, int z, RegionLayerIndex layerID, const regionproc& func
+) {
+    auto& layer = layers[layerID];
     if (layer.getRegion(x, z)) {
         LOG_ERROR("Not implemented for in-memory regions");
         throw std::runtime_error("Not implemented for in-memory regions");
@@ -219,28 +255,32 @@ void WorldRegions::processRegionVoxels(int x, int z, const regionproc& func) {
         for (uint cx = 0; cx < RegionConsts::SIZE; ++cx) {
             int gx = cx + x * RegionConsts::SIZE;
             uint32_t length;
-            auto data = RegionsLayer::readChunkData(gx, gz, length, regFile.get());
+            uint32_t srcSize;
+            auto data = RegionsLayer::readChunkData(gx, gz, length, srcSize, regFile.get());
             if (data == nullptr) continue;
-            data = compression::decompress(
-                data.get(), length, CHUNK_DATA_LEN, layer.compression
-            );
-            if (func(data.get())) {
-                put(
-                    gx, gz,
-                    REGION_LAYER_VOXELS,
-                    std::move(data),
-                    CHUNK_DATA_LEN
+            if (layer.compression != compression::Method::None) {
+                data = compression::decompress(
+                    data.get(), length, srcSize, layer.compression
                 );
+            } else {
+                srcSize = length;
+            }
+            if (auto writeData = func(std::move(data), &srcSize)) {
+                put(gx, gz, layerID, std::move(writeData), srcSize);
             }
         }
     }
 }
 
-std::filesystem::path WorldRegions::getRegionsFolder(int layer) const {
-    return layers[layer].folder;
+const std::filesystem::path& WorldRegions::getRegionsFolder(RegionLayerIndex layerID) const {
+    return layers[layerID].folder;
 }
 
-void WorldRegions::write() {
+std::filesystem::path WorldRegions::getRegionFilePath(RegionLayerIndex layerID, int x, int z) const {
+    return layers[layerID].getRegionFilePath(x, z);
+}
+
+void WorldRegions::writeAll() {
     for (auto& layer : layers) {
         std::filesystem::create_directories(layer.folder);
         layer.writeAll();

@@ -98,6 +98,3 @@ inline const std::string LAYOUTS_FOLDER = "layouts";
 inline const std::string SOUNDS_FOLDER = "sounds";
 /** Папка с моделями */
 inline const std::string MODELS_FOLDER = "models";
-
-inline constexpr uint REGION_FORMAT_VERSION = 2;
-inline constexpr uint MAX_OPEN_REGION_FILES = 32;

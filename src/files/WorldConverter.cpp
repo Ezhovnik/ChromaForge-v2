@@ -6,12 +6,14 @@
 
 #include <files/WorldFiles.h>
 #include <voxels/Chunk.h>
-#include <content/ContentLUT.h>
+#include <content/ContentReport.h>
 #include <debug/Logger.h>
 #include <data/dynamic.h>
 #include <files/files.h>
 #include <objects/Player.h>
 #include <util/ThreadPool.h>
+#include <items/Inventory.h>
+#include <files/compatibility.h>
 
 class ConverterWorker : public util::Worker<ConvertTask, int> {
 private:
@@ -25,24 +27,87 @@ public:
     }
 };
 
+void WorldConverter::addRegionsTasks(
+    RegionLayerIndex layerID,
+    ConvertTaskType taskType
+) {
+    const auto& regions = wfile->getRegions();
+    auto regionsFolder = regions.getRegionsFolder(layerID);
+    if (!std::filesystem::is_directory(regionsFolder)) {
+        return;
+    }
+    for (const auto& file : std::filesystem::directory_iterator(regionsFolder)) {
+        int x, z;
+        std::string name = file.path().stem().string();
+        if (!WorldRegions::parseRegionFilename(name, x, z)) {
+            LOG_ERROR("Could not parse region name {}", name);
+            continue;
+        }
+        tasks.push(ConvertTask {taskType, file.path(), x, z, layerID});
+    }
+}
+
+void WorldConverter::createUpgradeTasks() {
+    const auto& regions = wfile->getRegions();
+    for (auto& issue : report->getIssues()) {
+        if (issue.issueType != ContentIssueType::RegionFormatUpdate) {
+            continue;
+        }
+        addRegionsTasks(issue.regionLayer, ConvertTaskType::UpgradeRegion);
+    }
+}
+
+void WorldConverter::createConvertTasks() {
+    auto handleReorder = [=](ContentType contentType) {
+        switch (contentType) {
+            case ContentType::Block:
+                addRegionsTasks(
+                    REGION_LAYER_VOXELS,
+                    ConvertTaskType::Voxels
+                );
+                break;
+            case ContentType::Item:
+                addRegionsTasks(
+                    REGION_LAYER_INVENTORIES,
+                    ConvertTaskType::Inventories
+                );
+                break;
+            default:
+                break;
+        }
+    };
+
+    const auto& regions = wfile->getRegions();
+    for (auto& issue : report->getIssues()) {
+        switch (issue.issueType) {
+            case ContentIssueType::RegionFormatUpdate:
+                break;
+            case ContentIssueType::Missing:
+                LOG_ERROR("Issue can't be resolved");
+                throw std::runtime_error("Issue can't be resolved");
+            case ContentIssueType::Reorder:
+                handleReorder(issue.contentType);
+                break;
+        }
+    }
+
+    tasks.push(ConvertTask {ConvertTaskType::Player, wfile->getPlayerFile()});
+}
+
 WorldConverter::WorldConverter(
     const std::shared_ptr<WorldFiles>& worldFiles, 
     const Content* content, 
-    std::shared_ptr<ContentLUT> lut
+    std::shared_ptr<ContentReport> reportPtr,
+    bool upgradeMode
 ) : wfile(worldFiles),
-    lut(std::move(lut)),
-    content(content) 
+    report(std::move(reportPtr)),
+    content(content),
+    upgradeMode(upgradeMode)
 {
-    std::filesystem::path regionsFolder = wfile->getRegions().getRegionsFolder(REGION_LAYER_VOXELS);
-    if (!std::filesystem::is_directory(regionsFolder)) {
-        LOG_WARN("Nothing to convert");
-        return;
-    }
-
-    tasks.push(ConvertTask{ConvertTaskType::Player, wfile->getPlayerFile()});
-
-    for (const auto& file : std::filesystem::directory_iterator(regionsFolder)) {
-        tasks.push(ConvertTask{ConvertTaskType::Region, file.path()});
+    if (upgradeMode) {
+        createUpgradeTasks();
+    } else {
+        createConvertTasks();
     }
 }
 
@@ -52,11 +117,14 @@ WorldConverter::~WorldConverter() {
 std::shared_ptr<Task> WorldConverter::startTask(
     const std::shared_ptr<WorldFiles>& worldFiles, 
     const Content* content, 
-    const std::shared_ptr<ContentLUT>& lut,
+    const std::shared_ptr<ContentReport>& report,
     const runnable& onDone,
+    bool upgradeMode,
     bool multithreading
 ) {
-    auto converter = std::make_shared<WorldConverter>(worldFiles, content, lut);
+    auto converter = std::make_shared<WorldConverter>(
+        worldFiles, content, report, upgradeMode
+    );
     if (!multithreading) {
         converter->setOnComplete([=]() {
             converter->write();
@@ -83,28 +151,35 @@ std::shared_ptr<Task> WorldConverter::startTask(
     return pool;
 }
 
-void WorldConverter::convertRegion(const std::filesystem::path& file) const {
-    int x, z;
-    std::string name = file.stem().string();
-    if (!WorldRegions::parseRegionFilename(name, x, z)) {
-        LOG_ERROR("Could not parse name '{}'", name);
-        return;
-    }
+void WorldConverter::upgradeRegion(
+    const std::filesystem::path& file, int x, int z, RegionLayerIndex layer
+) const {
+    auto path = wfile->getRegions().getRegionFilePath(layer, x, z);
+    auto bytes = files::read_bytes_buffer(path);
+    auto buffer = compatibility::convert_region_2to3(bytes, layer);
+    files::write_bytes(path, buffer.data(), buffer.size());
+}
 
-    LOG_INFO("Converting region '{}'", name);
-    wfile->getRegions().processRegionVoxels(x, z, [=](ubyte* data) {
-        if (lut) {
-            Chunk::convert(data, lut.get());
-        }
-        return true;
+void WorldConverter::convertVoxels(const std::filesystem::path& file, int x, int z) const {
+    LOG_INFO("Converting voxels region {} {}", x, z);
+    wfile->getRegions().processRegion(x, z, REGION_LAYER_VOXELS,
+    [=](std::unique_ptr<ubyte[]> data, uint32_t*) {
+        Chunk::convert(data.get(), report.get());
+        return data;
     });
-    LOG_INFO("Region '{}' successfully converted", name);
+}
+
+void WorldConverter::convertInventories(const std::filesystem::path& file, int x, int z) const {
+    LOG_INFO("Converting inventories region {} {}", x, z);
+    wfile->getRegions().processInventories(x, z, [=](Inventory* inventory) {
+        inventory->convert(report.get());
+    });
 }
 
 void WorldConverter::convertPlayer(const std::filesystem::path& file) const {
     LOG_INFO("Converting player {}", file.u8string());
     auto map = files::read_json(file);
-    Player::convert(map.get(), lut.get());
+    Player::convert(map.get(), report.get());
     files::write_json(file, map.get());
     LOG_INFO("Player {} successfully converted", file.u8string());
 }
@@ -113,8 +188,14 @@ void WorldConverter::convert(const ConvertTask& task) const {
     if (!std::filesystem::is_regular_file(task.file)) return;
 
     switch (task.type) {
-        case ConvertTaskType::Region:
-            convertRegion(task.file);
+        case ConvertTaskType::UpgradeRegion:
+            upgradeRegion(task.file, task.x, task.z, task.layer);
+            break;
+        case ConvertTaskType::Voxels:
+            convertVoxels(task.file, task.x, task.z);
+            break;
+        case ConvertTaskType::Inventories:
+            convertInventories(task.file, task.x, task.z);
             break;
         case ConvertTaskType::Player:
             convertPlayer(task.file);
@@ -152,9 +233,14 @@ bool WorldConverter::isActive() const {
 }
 
 void WorldConverter::write() {
-    LOG_INFO("Writing world");
-    wfile->write(nullptr, content);
-    LOG_INFO("World successfully writed");
+    if (upgradeMode) {
+        LOG_INFO("Refreshing version");
+        wfile->patchIndicesVersion("region-version", REGION_FORMAT_VERSION);
+    } else {
+        LOG_INFO("Writing world");
+        wfile->write(nullptr, content);
+        LOG_INFO("World successfully writed");
+    }
 }
 
 uint WorldConverter::getWorkTotal() const {

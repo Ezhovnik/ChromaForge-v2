@@ -19,21 +19,13 @@
 #include <data/dynamic_fwd.h>
 #include <math/voxmaths.h>
 #include <coders/compression.h>
+#include <files/world_regions_fwd.h>
 
 namespace RegionConsts {
     inline constexpr uint SIZE_BIT = 5; // Размер региона 
     inline constexpr uint SIZE = 1 << SIZE_BIT; // Длина региона в чанках
     inline constexpr uint VOLUME = SIZE * SIZE; // Количество чанков в регионе
 }
-
-enum RegionLayerIndex : uint {
-    REGION_LAYER_VOXELS = 0,
-    REGION_LAYER_LIGHTS,
-    REGION_LAYER_INVENTORIES,
-    REGION_LAYER_ENTITIES,
-
-    REGION_LAYERS_COUNT
-};
 
 class illegal_region_format : public std::runtime_error {
 public:
@@ -44,21 +36,26 @@ public:
 class WorldRegion {
 private:
     std::unique_ptr<std::unique_ptr<ubyte[]>[]> chunksData;
-    std::unique_ptr<uint32_t[]> sizes;
+    std::unique_ptr<glm::u32vec2[]> sizes;
     bool unsaved = false;
 public:
     WorldRegion();
     ~WorldRegion();
 
-    void put(uint x, uint z, std::unique_ptr<ubyte[]> data, uint32_t size);
+    void put(
+        uint x, uint z,
+        std::unique_ptr<ubyte[]> data,
+        uint32_t size,
+        uint32_t srcSize
+    );
     ubyte* getChunkData(uint x, uint z);
-    uint getChunkDataSize(uint x, uint z);
+    glm::u32vec2 getChunkDataSize(uint x, uint z);
 
     void setUnsaved(bool unsaved);
     bool isUnsaved() const;
 
     std::unique_ptr<ubyte[]>* getChunks() const;
-    uint32_t* getSizes() const;
+    glm::u32vec2* getSizes() const;
 };
 
 struct regFile {
@@ -69,7 +66,7 @@ struct regFile {
     regFile(std::filesystem::path filename);
     regFile(const regFile&) = delete;
 
-    std::unique_ptr<ubyte[]> read(int index, uint32_t& length);
+    std::unique_ptr<ubyte[]> read(int index, uint32_t& size, uint32_t& srcSize);
 };
 
 class regFile_ptr {
@@ -111,7 +108,8 @@ public:
 };
 
 using regionsmap = std::unordered_map<glm::ivec2, std::unique_ptr<WorldRegion>>;
-using regionproc = std::function<bool(ubyte*)>;
+using regionproc = std::function<std::unique_ptr<ubyte[]>(std::unique_ptr<ubyte[]>,uint32_t*)>;
+using inventoryproc = std::function<void(Inventory*)>;
 
 inline void calc_reg_coords(
     int x, int z, int& regionX, int& regionZ, int& localX, int& localZ
@@ -131,17 +129,24 @@ struct RegionsLayer {
     std::unordered_map<glm::ivec2, std::unique_ptr<regFile>> openRegFiles;
     std::mutex regFilesMutex;
     std::condition_variable regFilesCv;
+
     [[nodiscard]] regFile_ptr getRegFile(glm::ivec2 coord, bool create = true);
     [[nodiscard]] regFile_ptr useRegFile(glm::ivec2 coord);
     regFile_ptr createRegFile(glm::ivec2 coord);
     void closeRegFile(glm::ivec2 coord);
+
     WorldRegion* getRegion(int x, int z);
     WorldRegion* getOrCreateRegion(int x, int z);
-    [[nodiscard]] ubyte* getData(int x, int z, uint32_t& size);
+
+    std::filesystem::path getRegionFilePath(int x, int z) const;
+
+    [[nodiscard]] ubyte* getData(int x, int z, uint32_t& size, uint32_t& srcSize);
+
     void writeRegion(int x, int y, WorldRegion* entry);
     void writeAll();
+
     [[nodiscard]] static std::unique_ptr<ubyte[]> readChunkData(
-        int x, int z, uint32_t& length, regFile* rfile
+        int x, int z, uint32_t& size, uint32_t& srcSize, regFile* rfile
     );
 };
 
@@ -170,11 +175,18 @@ public:
     chunk_inventories_map fetchInventories(int x, int z);
     dynamic::Map_sptr fetchEntities(int x, int z);
 
-    void processRegionVoxels(int x, int z, const regionproc& func);
+    void processRegion(
+        int x, int z, RegionLayerIndex layerID, const regionproc& func
+    );
 
-    std::filesystem::path getRegionsFolder(int layer) const;
+    void processInventories(
+        int x, int z, const inventoryproc& func
+    );
 
-    void write();
+    const std::filesystem::path& getRegionsFolder(RegionLayerIndex layerID) const;
+    std::filesystem::path getRegionFilePath(RegionLayerIndex layerID, int x, int z) const;
+
+    void writeAll();
 
     static bool parseRegionFilename(const std::string& name, int& x, int& z);
 };

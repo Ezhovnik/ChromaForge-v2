@@ -13,7 +13,7 @@
 #include <physics/PhysicsSolver.h>
 #include <debug/Logger.h>
 #include <content/Content.h>
-#include <content/ContentLUT.h>
+#include <content/ContentReport.h>
 #include <items/Inventories.h>
 #include <world/generator/WorldGenerator.h>
 #include <world/generator/Generator.h>
@@ -105,9 +105,9 @@ std::unique_ptr<Level> World::create(
 	return std::make_unique<Level>(std::move(world), content, settings);
 }
 
-std::shared_ptr<ContentLUT> World::checkIndices(const std::shared_ptr<WorldFiles>& worldFiles, const Content* content) {
+std::shared_ptr<ContentReport> World::checkIndices(const std::shared_ptr<WorldFiles>& worldFiles, const Content* content) {
 	std::filesystem::path indicesFile = worldFiles->getIndicesFile();
-	if (std::filesystem::is_regular_file(indicesFile)) return ContentLUT::create(worldFiles, indicesFile, content);
+	if (std::filesystem::is_regular_file(indicesFile)) return ContentReport::create(worldFiles, indicesFile, content);
 
 	return nullptr;
 }

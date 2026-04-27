@@ -7,37 +7,57 @@
 #include <typedefs.h>
 #include <delegates.h>
 #include <interfaces/Task.h>
+#include <files/world_regions_fwd.h>
 
 class Content;
-class ContentLUT;
+class ContentReport;
 class WorldFiles;
 
 enum class ConvertTaskType {
-    Region, 
-    Player
+    Voxels,
+    Inventories,
+    Player,
+    UpgradeRegion
 };
 
 struct ConvertTask {
     ConvertTaskType type;
     std::filesystem::path file;
+
+    int x, z;
+    RegionLayerIndex layer;
 };
 
 class WorldConverter : public Task {
 private:
     std::shared_ptr<WorldFiles> wfile;
-    std::shared_ptr<ContentLUT> const lut;
+    std::shared_ptr<ContentReport> const report;
     const Content* const content;
     std::queue<ConvertTask> tasks;
     runnable onComplete;
     uint tasksDone = 0;
+    bool upgradeMode;
 
+    void upgradeRegion(
+        const std::filesystem::path& file, int x, int z, RegionLayerIndex layer
+    ) const;
     void convertPlayer(const std::filesystem::path& file) const;
-    void convertRegion(const std::filesystem::path& file) const;
+    void convertVoxels(const std::filesystem::path& file, int x, int z) const;
+    void convertInventories(const std::filesystem::path& file, int x, int z) const;
+
+    void addRegionsTasks(
+        RegionLayerIndex layerID,
+        ConvertTaskType taskType
+    );
+
+    void createUpgradeTasks();
+    void createConvertTasks();
 public:
     WorldConverter(
         const std::shared_ptr<WorldFiles>& worldFiles, 
         const Content* content, 
-        std::shared_ptr<ContentLUT> lut
+        std::shared_ptr<ContentReport> report,
+        bool upgradeMode
     );
     ~WorldConverter();
 
@@ -56,8 +76,9 @@ public:
     static std::shared_ptr<Task> startTask(
         const std::shared_ptr<WorldFiles>& worldFiles, 
         const Content* content, 
-        const std::shared_ptr<ContentLUT>& lut,
+        const std::shared_ptr<ContentReport>& report,
         const runnable& onDone,
+        bool upgradeMode,
         bool multithreading
     );
 };

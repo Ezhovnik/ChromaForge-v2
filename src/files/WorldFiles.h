@@ -52,6 +52,8 @@ public:
 
     bool readResourcesData(const Content* content);
 
+    void patchIndicesVersion(const std::string& field, uint version);
+
     void write(const World* world, const Content* content);
     void writePacks(const std::vector<ContentPack>& packs);
 
