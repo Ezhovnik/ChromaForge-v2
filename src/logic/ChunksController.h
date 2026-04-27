@@ -29,5 +29,10 @@ public:
 	ChunksController(Level* level, uint chunksPadding);
 	~ChunksController();
 
-    void update(int64_t maxDuration);
+    void update(
+        int64_t maxDuration,
+        int loadDistance,
+        int centerX,
+        int centerY
+	);
 };

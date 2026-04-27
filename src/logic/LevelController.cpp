@@ -11,6 +11,7 @@
 #include <files/WorldFiles.h>
 #include <settings.h>
 #include <objects/Entities.h>
+#include <math/voxmaths.h>
 
 LevelController::LevelController(EngineSettings& settings, std::unique_ptr<Level> level) : 
     settings(settings), 
@@ -29,7 +30,10 @@ void LevelController::update(float delta, bool input, bool pause) {
         position.z, 
         settings.chunks.loadDistance.get() + settings.chunks.padding.get() * 2
     );
-    chunks->update(settings.chunks.loadSpeed.get());
+    chunks->update(
+        settings.chunks.loadSpeed.get(), settings.chunks.loadDistance.get(),
+        floordiv(position.x, CHUNK_WIDTH), floordiv(position.z, CHUNK_DEPTH)
+    );
 
     if (!pause) {
         for(const auto& obj : level->objects) {

@@ -3,11 +3,13 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 #include <typedefs.h>
 #include <core_content_defs.h>
 #include <voxels/voxel.h>
 #include <constants.h>
+#include <world/generator/SurroundMap.h>
 
 class Content;
 struct Generator;
@@ -40,6 +42,10 @@ class WorldGenerator {
     const Content* content;
     uint64_t seed;
 
+    std::unordered_map<glm::ivec2, std::unique_ptr<ChunkPrototype>> prototypes;
+
+    SurroundMap surroundMap;
+
     std::unique_ptr<ChunkPrototype> generatePrototype(int x, int z);
 
     void generateHeightmap(ChunkPrototype* prototype, int x, int z);
@@ -49,6 +55,9 @@ public:
         const Content* content,
         uint64_t seed
     );
+    virtual ~WorldGenerator() = default;
+
+    virtual void update(int centerX, int centerY, int loadDistance);
 
 	virtual void generate(voxel* voxels, int x, int z);
 

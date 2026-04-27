@@ -41,7 +41,7 @@ Chunks::Chunks(
 	areaMap(width, depth)
 {
 	areaMap.setCenter(areaOffsetX - width / 2, areaOffsetZ - depth / 2);
-    areaMap.setOutCallback([this](const auto& chunk) {
+    areaMap.setOutCallback([this](int, int, const auto& chunk) {
         save(chunk.get());
     });
 }

@@ -10,16 +10,43 @@
 #include <util/timeutil.h>
 #include <constants.h>
 #include <math/rand.h>
+#include <debug/Logger.h>
 
-static inline constexpr uint MAX_PARAMETERS = 16;
+static inline constexpr uint MAX_PARAMETERS = 8;
+static inline constexpr uint MAX_CHUNK_PROTOTYPE_LEVELS = 8;
 
 WorldGenerator::WorldGenerator(
     const Generator& def,
     const Content* content,
     uint64_t seed
-) : def(def),
-    content(content),
-    seed(seed) {}
+) : def(def), 
+    content(content), 
+    seed(seed), 
+    surroundMap(0, MAX_CHUNK_PROTOTYPE_LEVELS) 
+{
+    surroundMap.setOutCallback([this](int const x, int const z, int8_t) {
+        const auto& found = prototypes.find({x, z});
+        if (found == prototypes.end()) {
+            LOG_WARN("Unable to remove non-existing chunk prototype");
+            return;
+        }
+        prototypes.erase({x, z});
+    });
+    surroundMap.setLevelCallback(1, [this](int const x, int const z) {
+        if (prototypes.find({x, z}) != prototypes.end()) {
+            return;
+        }
+        prototypes[{x, z}] = generatePrototype(x, z);
+    });
+    surroundMap.setLevelCallback(2, [this](int const x, int const z) {
+        const auto& found = prototypes.find({x, z});
+        if (found == prototypes.end()) {
+            LOG_ERROR("Prototype not found");
+            throw std::runtime_error("Prototype not found");
+        }
+        generateHeightmap(found->second.get(), x, z);
+    });
+}
 
 static inline void generate_pole(
     const BlocksLayers& layers,
@@ -99,15 +126,30 @@ std::unique_ptr<ChunkPrototype> WorldGenerator::generatePrototype(
 void WorldGenerator::generateHeightmap(
     ChunkPrototype* prototype, int chunkX, int chunkZ
 ) {
+    if (prototype->level >= ChunkPrototypeLevel::Heightmap) return;
+
     prototype->heightmap = def.script->generateHeightmap(
         {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
     );
     prototype->level = ChunkPrototypeLevel::Heightmap;
 }
 
+void WorldGenerator::update(int centerX, int centerY, int loadDistance) {
+    surroundMap.setCenter(centerX, centerY);
+    surroundMap.resize(loadDistance + 1);
+    surroundMap.setCenter(centerX, centerY);
+}
+
 void WorldGenerator::generate(voxel* voxels, int chunkX, int chunkZ) {
-    auto prototype = generatePrototype(chunkX, chunkZ);
-    generateHeightmap(prototype.get(), chunkX, chunkZ);
+    surroundMap.completeAt(chunkX, chunkZ);
+
+    const auto& found = prototypes.find({chunkX, chunkZ});
+    if (found == prototypes.end()) {
+        LOG_ERROR("No prototype found");
+        throw std::runtime_error("No prototype found");
+    }
+
+    auto prototype = found->second.get();
 
     const auto values = prototype->heightmap->getValues();
 

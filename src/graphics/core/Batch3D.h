@@ -56,7 +56,7 @@ public:
 	void cube(const glm::vec3 coords, const glm::vec3 size, const UVRegion(&texfaces)[6], const glm::vec4 tint, bool shading=true);
 	void blockCube(const glm::vec3 size, const UVRegion(&texfaces)[6], const glm::vec4 tint, bool shading=true);
 	void point(glm::vec3 pos, glm::vec4 tint);
-	void point(glm::vec3 pos, glm::vec2 uv, glm::vec4 tint);
+	void vertex(glm::vec3 pos, glm::vec2 uv, glm::vec4 tint);
 	void flush() override;
 	void flushPoints();
 };

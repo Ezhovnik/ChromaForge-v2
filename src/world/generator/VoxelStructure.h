@@ -11,13 +11,13 @@ inline constexpr int STRUCTURE_FORMAT_VERSION = 1;
 class Level;
 class Content;
 
-struct Structure : public Serializable {
+struct VoxelStructure : public Serializable {
     glm::ivec3 size;
     std::vector<voxel> voxels;
     std::vector<std::string> blockNames;
 
-    Structure() : size() {}
-    Structure(
+    VoxelStructure() : size() {}
+    VoxelStructure(
         glm::ivec3 size,
         std::vector<voxel> voxels,
         std::vector<std::string> blockNames
@@ -28,7 +28,7 @@ struct Structure : public Serializable {
     std::unique_ptr<dynamic::Map> serialize() const override;
     void deserialize(dynamic::Map* src) override;
 
-    static std::unique_ptr<Structure> create(
+    static std::unique_ptr<VoxelStructure> create(
         Level* level, const glm::ivec3& a, const glm::ivec3& b, bool entities
     );
 };

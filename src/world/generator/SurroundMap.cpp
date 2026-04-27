@@ -4,111 +4,69 @@
 #include <cstring>
 #include <stdexcept>
 
-void SurroundMap::resetMarks() {
-    for (auto& [_, entry] : entries) {
-        entry.marked = false;
+#include <debug/Logger.h>
+
+SurroundMap::SurroundMap(
+    int maxLevelRadius,
+    int8_t maxLevel
+) : areaMap((maxLevelRadius + maxLevel) * 2 + 1, (maxLevelRadius + maxLevel) * 2 + 1),
+    levelCallbacks(maxLevel),
+    maxLevel(maxLevel) 
+{}
+
+void SurroundMap::setLevelCallback(int8_t level, LevelCallback callback) {
+    auto& wrapper = levelCallbacks.at(level - 1);
+    wrapper.callback = callback;
+    wrapper.active = callback != nullptr;
+}
+
+void SurroundMap::setOutCallback(util::AreaMap2D<int8_t>::OutCallback callback) {
+    areaMap.setOutCallback(callback);
+}
+
+void SurroundMap::upgrade(int x, int y, int8_t level) {
+    auto& callback = levelCallbacks[level - 1];
+    int size = maxLevel - level + 1;
+    for (int ly = -size + 1; ly < size; ++ly) {
+        for (int lx = -size + 1; lx < size; ++lx) {
+            int posX = lx + x;
+            int posY = ly + y;
+            int8_t sourceLevel = areaMap.get(posX, posY, 0);
+            if (sourceLevel < level - 1) {
+                LOG_ERROR("Invalid map state");
+                throw std::runtime_error("Invalid map state");
+            }
+            if (sourceLevel >= level) continue;
+            areaMap.set(posX, posY, level);
+            if (callback.active) {
+                callback.callback(posX, posY);
+            }
+        }
     }
 }
 
-bool SurroundMap::createEntry(const glm::ivec2& origin) {
-    auto& entry = entries[origin];
-    if (entry.confirmed) {
-        return false;
-    }
-    entry.confirmed = true;
-
-    int bitOffset = 0;
-    for (int y = -1; y <= 1; ++y) {
-        for (int x = -1; x <= 1; ++x) {
-            if (x == y && x == 0) {
-                continue;
-            }
-            const auto& found = entries.find(origin + glm::ivec2(x, y));
-            if (found != entries.end()) {
-                entry.surrounding |= (1 << bitOffset);
-                if (found->second.level == 0) {
-                    found->second.surrounding |= (1 << (7 - bitOffset));
-                }
-            }
-            bitOffset++;
-        }
-    }
-    return true;
+void SurroundMap::resize(int maxLevelRadius) {
+    areaMap.resize((maxLevelRadius + maxLevel) * 2 + 1, (maxLevelRadius + maxLevel) * 2 + 1);
 }
 
-std::vector<glm::ivec2> SurroundMap::upgrade() {
-    std::vector<glm::ivec2> expansion;
-    std::queue<glm::ivec2> expanding;
-    for (const auto& [pos, entry] : entries) {
-        if (entry.confirmed && entry.surrounding != 0xFF) {
-            expanding.push(pos);
-        }
+void SurroundMap::completeAt(int x, int y) {
+    if (!areaMap.isInside(x - maxLevel + 1, y - maxLevel + 1) || !areaMap.isInside(x + maxLevel - 1, y + maxLevel - 1)) {
+        LOG_ERROR("Upgrade square is not fully inside of area");
+        throw std::invalid_argument("Upgrade square is not fully inside of area");
     }
-    while (!expanding.empty()) {
-        assert(expanding.size() < 64);
-
-        glm::ivec2 pos = expanding.front();
-        expanding.pop();
-
-        const auto& found = entries.find(pos);
-        assert(found != entries.end() && "concurrent modification");
-
-        auto& entry = found->second;
-        int uplevelSurrounding = 0;
-        int bitOffset = 0;
-        for (int y = -1; y <= 1; ++y) {
-            for (int x = -1; x <= 1; ++x) {
-                if (x == y && x == 0) {
-                    continue;
-                }
-                glm::ivec2 npos = {pos.x+x, pos.y+y};
-                const auto& nfound = entries.find(npos);
-                
-                if (entry.surrounding & (1 << bitOffset)) {
-                    auto& nentry = nfound->second;
-                    if (nentry.level > entry.level) {
-                        uplevelSurrounding |= (1 << bitOffset);
-                    }
-                    bitOffset++;
-                    continue;
-                }
-                if (entry.level == 0) {
-                    createEntry(npos);
-                    expansion.push_back(npos);
-                } else{
-                    assert(nfound != entries.end() && "invalid map state");
-                    if (nfound->second.level == entry.level + 1) {
-                        nfound->second.surrounding |= (1 << (7 - bitOffset));
-                        expanding.push(npos);
-                    }
-                }
-                bitOffset++;
-            }
-        }
-        entry.surrounding = uplevelSurrounding;
-        entry.level++;
+    for (int8_t level = 1; level <= maxLevel; ++level) {
+        upgrade(x, y, level);
     }
-    return expansion;
 }
 
-void SurroundMap::getLevels(unsigned char* out, int width, int height, int ox, int oy) const {
-    std::memset(out, 0, width * height);
-    for (const auto& [pos, entry] : entries) {
-        int x = pos.x - ox;
-        int y = pos.y - oy;
-        if (x < 0 || x >= width || y < 0 || y >= height) {
-            continue;
-        }
+void SurroundMap::setCenter(int x, int y) {
+    areaMap.setCenter(x, y);
+}
 
-        int surroundNum = 0;
-        for (int i = 0; i < 8; ++i) {
-            if (entry.surrounding & (1 << i)) {
-                surroundNum++;
-            }
-        }
-        if (surroundNum) {
-            out[y * width + x] = surroundNum + 1;
-        }
-        out[y * width + x] = entry.level + 1;
+int8_t SurroundMap::at(int x, int y) {
+    if (auto ptr = areaMap.getIf(x, y)) {
+        return *ptr;
     }
+    LOG_ERROR("Position is out of area");
+    throw std::invalid_argument("Position is out of area");
 }

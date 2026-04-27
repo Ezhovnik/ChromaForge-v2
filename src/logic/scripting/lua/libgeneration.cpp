@@ -4,7 +4,7 @@
 #include <files/util.h>
 #include <coders/binary_json.h>
 #include <world/Level.h>
-#include <world/generator/Structure.h>
+#include <world/generator/VoxelStructure.h>
 
 static int l_save_structure(lua::State* L) {
     auto pointA = lua::tovec<3>(L, 1);
@@ -15,7 +15,7 @@ static int l_save_structure(lua::State* L) {
     }
     bool saveEntities = lua::toboolean(L, 4);
 
-    auto structure = Structure::create(
+    auto structure = VoxelStructure::create(
         scripting::level,
         pointA, pointB,
         saveEntities
