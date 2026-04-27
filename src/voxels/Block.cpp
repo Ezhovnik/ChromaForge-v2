@@ -4,6 +4,7 @@
 
 #include <core_content_defs.h>
 #include <util/stringutil.h>
+#include <data/StructLayout.h>
 
 std::string to_string(BlockModel model) {
     switch (model) {
@@ -81,6 +82,8 @@ Block::Block(const std::string& name) :
 	textureFaces{TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND},
 	caption(util::id_to_caption(name))
 {}
+
+Block::~Block() {}
 
 Block::Block(
 	std::string name, 

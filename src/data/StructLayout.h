@@ -7,6 +7,7 @@
 #include <optional>
 
 #include <typedefs.h>
+#include <interfaces/Serializable.h>
 
 namespace data {
     /**
@@ -27,6 +28,14 @@ namespace data {
         COUNT
     };
 
+    inline std::string to_string(FieldType type) {
+        const char* names[] = {
+            "int8", "int16", "int32", "int64", "float32", "float64", "char" 
+        };
+        return names[static_cast<int>(type)];
+    }
+    FieldType FieldType_from_string(std::string_view name);
+
     enum class FieldIncapatibilityType {
         None = 0,
         Data_loss,
@@ -40,7 +49,7 @@ namespace data {
     };
 
     inline constexpr int sizeof_type(FieldType type) {
-        const int sizes[static_cast<int>(FieldType::COUNT)] = {
+        const int sizes[] = {
             1, 2, 4, 8, 4, 8, 1
         };
         return sizes[static_cast<int>(type)];
@@ -52,9 +61,17 @@ namespace data {
     };
 
     enum class FieldConvertStrategy {
-        Reset,
+        Reset = 0,
         Clamp
     };
+
+    inline const char* to_string(FieldConvertStrategy strategy) {
+        const char* names[] = {
+            "reset", "clamp"
+        };
+        return names[static_cast<int>(strategy)];
+    }
+    FieldConvertStrategy FieldConvertStrategy_from_string(std::string_view name);
 
     /**
      * @brief Метаданные одного поля в структурной схеме.
@@ -69,6 +86,19 @@ namespace data {
         FieldConvertStrategy convertStrategy;
         int offset;         ///< Смещение поля в байтах от начала данных структуры.
         int size;
+
+        bool operator==(const Field& o) const {
+            return type == o.type && 
+                name == o.name && 
+                elements == o.elements &&
+                convertStrategy == o.convertStrategy &&
+                offset == o.offset &&
+                size == o.size;
+        }
+
+        bool operator!=(const Field& o) const {
+            return !operator==(o);
+        }
     };
 
     /**
@@ -78,11 +108,11 @@ namespace data {
      * метаданным поля по его имени. Используется для интерпретации и доступа
      * к сырым данным, соответствующим описанной структуре.
      */
-    class StructLayout {
+    class StructLayout : public Serializable{
         int totalSize;
         std::vector<Field> fields;                    ///< Упорядоченный список полей.
         std::unordered_map<std::string, int> indices; ///< Отображение имени поля на индекс в векторе fields.
-    public:
+
         StructLayout(
             int totalSize,
             std::vector<Field> fields,
@@ -91,6 +121,15 @@ namespace data {
             fields(std::move(fields)),
             indices(std::move(indices))
         {}
+    public:
+        StructLayout() : StructLayout(0, {}, {}) {}
+
+        bool operator==(const StructLayout& o) const {
+            return fields == o.fields;
+        }
+        bool operator!=(const StructLayout& o) const {
+            return !operator==(o);
+        }
 
         /**
          * @brief Получение метаданных поля по его имени.
@@ -144,5 +183,8 @@ namespace data {
 
         [[nodiscard]]
         static StructLayout create(const std::vector<Field>& fields);
+
+        std::unique_ptr<dynamic::Map> serialize() const override;
+        void deserialize(dynamic::Map* src) override;
     };
 } // namespace data

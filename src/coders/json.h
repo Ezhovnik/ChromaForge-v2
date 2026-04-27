@@ -5,10 +5,14 @@
 #include <typedefs.h>
 #include <coders/binary_json.h>
 #include <data/dynamic.h>
+#include <data/dv.h>
 
 namespace json {
     dynamic::Map_sptr parse(std::string_view filename, std::string_view source);
     dynamic::Map_sptr parse(std::string_view source);
+
+    dv::value parseDV(std::string_view filename, std::string_view source);
+    dv::value parseDV(std::string_view source);
 
     std::string stringify(
         const dynamic::Map* obj,
@@ -24,5 +28,10 @@ namespace json {
         const dynamic::Value& value,
         bool nice,
         const std::string& indent
+    );
+    std::string stringifyDV(
+        const dv::value& value,
+        bool nice,
+        const std::string& indent="  "
     );
 }

@@ -9,6 +9,10 @@
 #include <math/UVRegion.h>
 #include <core_content_defs.h>
 
+namespace data {
+    class StructLayout;
+}
+
 inline const std::string BLOCK_ITEM_SUFFIX = ".item"; 
 
 inline std::string DEFAULT_MATERIAL = CHROMAFORGE_CONTENT_NAMESPACE + ":stone";
@@ -119,6 +123,8 @@ public:
 
     BlockRotProfile rotations = BlockRotProfile::NONE;
 
+    std::unique_ptr<data::StructLayout> dataStruct;
+
 	struct {
         blockid_t id;
 		bool solid = true;
@@ -132,6 +138,7 @@ public:
     Block(const std::string& name);
     Block(std::string name, const std::string& texture);
     Block(const Block&) = delete;
+    ~Block();
 
     void cloneTo(Block& dst);
 };

@@ -4,15 +4,39 @@
 #include <string.h>
 #include <algorithm>
 #include <climits>
+#include <map>
+#include <string>
 
 #include <util/data_io.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
+#include <data/dynamic.h>
 
 using namespace data;
 
 static_assert(sizeof(float) == sizeof(int32_t));
 static_assert(sizeof(double) == sizeof(int64_t));
+
+FieldType data::FieldType_from_string(std::string_view name) {
+    std::map<std::string_view, FieldType> map {
+        {"int8", FieldType::I8},
+        {"int16", FieldType::I16},
+        {"int32", FieldType::I32},
+        {"int64", FieldType::I64},
+        {"float32", FieldType::F32},
+        {"float64", FieldType::F64},
+        {"char", FieldType::CHAR},
+    };
+    return map.at(name);
+}
+
+FieldConvertStrategy data::FieldConvertStrategy_from_string(std::string_view name) {
+    std::map<std::string_view, FieldConvertStrategy> map {
+        {"reset", FieldConvertStrategy::Reset},
+        {"clamp", FieldConvertStrategy::Clamp}
+    };
+    return map.at(name);
+}
 
 StructLayout StructLayout::create(const std::vector<Field>& fields) {
     std::vector<Field> builtFields = fields;
@@ -338,4 +362,43 @@ std::string_view StructLayout::getChars(
     }
     auto ptr = reinterpret_cast<const char*>(src + field.offset);
     return std::string_view(ptr, strnlen(ptr, field.elements));
+}
+
+std::unique_ptr<dynamic::Map> StructLayout::serialize() const {
+    auto map = std::make_unique<dynamic::Map>();
+    for (const auto& [name, index] : indices) {
+        auto& fieldmap = map->putMap(name);
+        const auto& field = fields[index];
+        fieldmap.put("type", to_string(field.type));
+        if (field.elements != 1) {
+            fieldmap.put("length", field.elements);
+        }
+        if (field.convertStrategy != FieldConvertStrategy::Reset) {
+            fieldmap.put("convert-strategy", to_string(field.convertStrategy));
+        }
+    }
+    return map;
+}
+
+void StructLayout::deserialize(dynamic::Map* src) {
+    std::vector<Field> fields;
+    for (auto& [name, value] : src->values) {
+        if (auto fieldmapptr = std::get_if<dynamic::Map_sptr>(&value)) {
+            const auto& fieldmap = *fieldmapptr;
+
+            auto typeName = fieldmap->get<std::string>("type");
+            FieldType type = FieldType_from_string(typeName);
+            
+            int elements = fieldmap->get("length", 1);
+
+            auto convertStrategy = FieldConvertStrategy::Reset;
+            if (fieldmap->has("convert-strategy")) {
+                convertStrategy = FieldConvertStrategy_from_string(
+                    fieldmap->get<std::string>("convert-strategy")
+                );
+            }
+            fields.push_back(Field {type, name, elements, convertStrategy});
+        }
+    }
+    *this = create(fields);
 }

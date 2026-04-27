@@ -8,6 +8,7 @@
 #include <constants.h>
 #include <voxels/voxel.h>
 #include <lighting/LightMap.h>
+#include <util/SmallHeap.h>
 
 inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
 
@@ -36,6 +37,8 @@ public:
     LightMap light_map; // Карта освещения чанка
 
     chunk_inventories_map inventories;
+
+    util::SmallHeap<uint16_t, uint8_t> blocksMetadata;
 
     Chunk(int chunk_x, int chunk_z); // Конструктор
 

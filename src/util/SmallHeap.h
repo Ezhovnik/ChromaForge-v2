@@ -4,6 +4,7 @@
 #include <cstring>
 #include <vector>
 #include <stdexcept>
+#include <limits>
 
 namespace util {
 
@@ -30,7 +31,6 @@ template <typename Tindex, typename Tsize>
 class SmallHeap {
     std::vector<uint8_t> buffer;   ///< Буфер, содержащий все записи.
     Tindex entriesCount;           ///< Текущее количество записей в буфере.
-
 public:
     /**
      * @brief Конструктор по умолчанию.
@@ -105,9 +105,15 @@ public:
      * @return Указатель на начало данных выделенной записи.
      * @throw std::runtime_error Если @p size равен нулю.
      */
-    uint8_t* allocate(Tindex index, Tsize size) {
+    uint8_t* allocate(Tindex index, size_t size) {
+        const auto maxSize = std::numeric_limits<Tsize>::max();
+        if (size > maxSize) {
+            throw std::invalid_argument(
+                "Requested " + std::to_string(size) + " bytes but limit is "+ std::to_string(maxSize)
+            );
+        }
         if (size == 0) {
-            throw std::runtime_error("size is 0");
+            throw std::invalid_argument("Zero size");
         }
         ptrdiff_t offset = 0;
         if (auto found = find(index)) {
