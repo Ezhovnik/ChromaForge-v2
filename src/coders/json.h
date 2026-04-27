@@ -16,6 +16,11 @@ namespace json {
         const std::string& indent
     );
     std::string stringify(
+        const dynamic::List* arr,
+        bool nice,
+        const std::string& indent
+    );
+    std::string stringify(
         const dynamic::Value& value,
         bool nice,
         const std::string& indent

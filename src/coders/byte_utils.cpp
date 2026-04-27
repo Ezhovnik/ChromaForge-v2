@@ -14,7 +14,7 @@ void ByteBuilder::put(ubyte b) {
 }
 
 void ByteBuilder::putCStr(const char* str) {
-    size_t size = strlen(str) + 1; // включаем завершающий нуль
+    size_t size = std::strlen(str) + 1; // включаем завершающий нуль
     buffer.reserve(buffer.size() + size);
     for (size_t i = 0; i < size; ++i) {
         buffer.push_back(str[i]);
@@ -186,7 +186,7 @@ const char* ByteReader::getCString() {
 }
 
 std::string ByteReader::getString() {
-    uint32_t length = (uint32_t)getInt32();
+    uint32_t length = static_cast<uint32_t>(getInt32());
     if (pos + length > size) {
         LOG_ERROR("Buffer underflow");
         throw std::runtime_error("Buffer underflow");
@@ -197,6 +197,10 @@ std::string ByteReader::getString() {
 
 bool ByteReader::hasNext() const {
     return pos < size;
+}
+
+size_t ByteReader::remaining() const {
+    return size - pos;
 }
 
 const ubyte* ByteReader::pointer() const {

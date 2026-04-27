@@ -45,5 +45,9 @@ namespace util {
         Buffer clone() const {
             return Buffer(ptr.get(), length);
         }
+
+        void resizeFast(size_t size) {
+            length = size;
+        }
     };
 }

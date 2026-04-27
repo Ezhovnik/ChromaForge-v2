@@ -225,6 +225,8 @@ public:
      */
     bool hasNext() const;
 
+    size_t remaining() const;
+
     /**
      * @brief Возвращает указатель на текущую позицию в буфере.
      * @return Указатель data + pos.

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <typedefs.h>
+#include <util/Buffer.h>
 
 namespace util {
     std::string escape(const std::string& s);
@@ -36,8 +37,8 @@ namespace util {
     void trim(std::string &s);
 
     std::string base64_encode(const ubyte* data, size_t size);
-    std::vector<ubyte> base64_decode(const char* str, size_t size);
-    std::vector<ubyte> base64_decode(const std::string& str);
+    util::Buffer<ubyte> base64_decode(const char* str, size_t size);
+    util::Buffer<ubyte> base64_decode(const std::string& str);
 
     std::string mangleid(uint64_t value);
 

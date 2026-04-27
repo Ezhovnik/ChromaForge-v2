@@ -16,15 +16,21 @@ static void to_binary(ByteBuilder& builder, const Value& value) {
             LOG_ERROR("None value is not implemented");
             throw std::runtime_error("none value is not implemented");
         } case Type::Map: {
-            auto bytes = to_binary(std::get<Map_sptr>(value).get());
+            const auto bytes = to_binary(std::get<Map_sptr>(value).get());
             builder.put(bytes.data(), bytes.size());
             break;
         } case Type::List: {
             builder.put(BJSON_TYPE_LIST);
-            for (auto& element : std::get<List_sptr>(value)->values) {
+            for (const auto& element : std::get<List_sptr>(value)->values) {
                 to_binary(builder, element);
             }
             builder.put(BJSON_END);
+            break;
+        } case Type::Bytes: {
+            const auto& bytes = std::get<ByteBuffer_sptr>(value).get();
+            builder.put(BJSON_TYPE_BYTES);
+            builder.putInt32(bytes->size());
+            builder.put(bytes->data(), bytes->size());
             break;
         } case Type::Integer: {
             auto val = std::get<integer_t>(value);
@@ -110,10 +116,31 @@ static Value value_from_binary(ByteReader& reader) {
             return (typecode - BJSON_TYPE_FALSE) != 0;
         case BJSON_TYPE_STRING:
             return reader.getString();
-        default:
-            LOG_ERROR("Type {} is not supported", typecode);
-            throw std::runtime_error("Type " + std::to_string(typecode) + " is not supported");
+        case BJSON_TYPE_NULL:
+            return NONE;
+        case BJSON_TYPE_BYTES: {
+            int32_t size = reader.getInt32();
+            if (size < 0) {
+                LOG_ERROR("Invalid byte-buffer size {}", size);
+                throw std::runtime_error(
+                    "invalid byte-buffer size " + std::to_string(size)
+                );
+            }
+            if (size > reader.remaining()) {
+                LOG_ERROR("buffer_size > remaining_size", size);
+                throw std::runtime_error(
+                    "buffer_size > remaining_size " + std::to_string(size)
+                );
+            }
+            auto bytes = std::make_shared<ByteBuffer>(reader.pointer(), size);
+            reader.skip(size);
+            return bytes;
+        }
     }
+    LOG_ERROR("Type support not implemented for <{}>", typecode);
+    throw std::runtime_error(
+        "type support not implemented for <" + std::to_string(typecode) + ">"
+    );
 }
 
 static std::unique_ptr<List> array_from_binary(ByteReader& reader) {

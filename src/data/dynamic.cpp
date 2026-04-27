@@ -9,8 +9,18 @@ std::ostream& operator<<(std::ostream& stream, const dynamic::Value& value) {
     return stream;
 }
 
+std::ostream& operator<<(std::ostream& stream, const dynamic::Map& value) {
+    stream << json::stringify(&value, false, " ");
+    return stream;
+}
+
 std::ostream& operator<<(std::ostream& stream, const dynamic::Map_sptr& value) {
     stream << json::stringify(value, false, " ");
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const dynamic::List& value) {
+    stream << json::stringify(&value, false, " ");
     return stream;
 }
 
@@ -108,6 +118,12 @@ Map& List::putMap() {
     auto map = create_map();
     put(map);
     return *map;
+}
+
+ByteBuffer& List::putBytes(size_t size) {
+    auto bytes = create_bytes(size);
+    put(bytes);
+    return *bytes;
 }
 
 void List::remove(size_t index) {
@@ -228,6 +244,12 @@ List_sptr Map::list(const std::string& key) const {
     return nullptr;
 }
 
+ByteBuffer_sptr Map::bytes(const std::string& key) const {
+    auto found = values.find(key);
+    if (found != values.end()) return std::get<ByteBuffer_sptr>(found->second);
+    return nullptr;
+}
+
 void Map::flag(const std::string& key, bool& dst) const {
     dst = get(key, dst);
 }
@@ -251,6 +273,12 @@ Map& Map::putMap(const std::string& key) {
     auto obj = create_map();
     put(key, obj);
     return *obj;
+}
+
+ByteBuffer& Map::putBytes(const std::string& key, size_t size) {
+    auto bytes = create_bytes(size);
+    put(key, bytes);
+    return *bytes;
 }
 
 bool Map::has(const std::string& key) const {
@@ -277,6 +305,10 @@ List_sptr dynamic::create_list(std::initializer_list<Value> values) {
 
 Map_sptr dynamic::create_map(std::initializer_list<std::pair<const std::string, Value>> entries) {
     return std::make_shared<Map>(entries);
+}
+
+ByteBuffer_sptr dynamic::create_bytes(size_t size) {
+    return std::make_shared<ByteBuffer>(size);
 }
 
 number_t dynamic::get_number(const Value& value) {
