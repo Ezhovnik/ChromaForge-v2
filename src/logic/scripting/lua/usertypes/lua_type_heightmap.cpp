@@ -12,8 +12,12 @@
 #include <graphics/core/ImageData.h>
 #include <util/functional_util.h>
 #include <files/util.h>
+#include <math/Heightmap.h>
 
 using namespace lua;
+
+LuaHeightmap::LuaHeightmap(const std::shared_ptr<Heightmap>& map) : map(map), noise(std::make_unique<fnl_state>(fnlCreateState())) {
+}
 
 LuaHeightmap::LuaHeightmap(
     uint width, uint height
@@ -24,6 +28,22 @@ LuaHeightmap::~LuaHeightmap() {}
 
 void LuaHeightmap::setSeed(uint64_t seed) {
     noise->seed = static_cast<int>(seed);
+}
+
+uint LuaHeightmap::getWidth() const {
+    return map->getWidth();
+}
+
+uint LuaHeightmap::getHeight() const {
+    return map->getHeight();
+}
+
+float* LuaHeightmap::getValues() {
+    return map->getValues();
+}
+
+const float* LuaHeightmap::getValues() const {
+    return map->getValues();
 }
 
 static int l_dump(lua::State* L) {
@@ -48,6 +68,15 @@ static int l_dump(lua::State* L) {
             }
         }
         png::writeImage(filename, &image);
+    }
+    return 0;
+}
+
+static int l_at(lua::State* L) {
+    if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
+        int x = lua::tointeger(L, 2);
+        int y = lua::tointeger(L, 3);
+        return lua::pushnumber(L, heightmap->getHeightmap()->get(x, y));
     }
     return 0;
 }
@@ -189,6 +218,7 @@ static std::unordered_map<std::string, lua_CFunction> methods {
     {"abs", lua::wrap<l_unaryop_func<util::abs>>},
     {"resize", lua::wrap<l_resize>},
     {"crop", lua::wrap<l_crop>},
+    {"at", lua::wrap<l_at>},
 };
 
 static int l_meta_meta_call(lua::State* L) {

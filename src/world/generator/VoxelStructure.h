@@ -11,10 +11,13 @@ inline constexpr int STRUCTURE_FORMAT_VERSION = 1;
 class Level;
 class Content;
 
-struct VoxelStructure : public Serializable {
+class VoxelStructure : public Serializable {
     glm::ivec3 size;
     std::vector<voxel> voxels;
     std::vector<std::string> blockNames;
+
+    std::vector<voxel> voxelsRuntime;
+public:
 
     VoxelStructure() : size() {}
     VoxelStructure(
@@ -28,7 +31,18 @@ struct VoxelStructure : public Serializable {
     dv::value serialize() const override;
     void deserialize(const dv::value& src) override;
 
+    void prepare(const Content& content);
+
     static std::unique_ptr<VoxelStructure> create(
         Level* level, const glm::ivec3& a, const glm::ivec3& b, bool entities
     );
+
+    const glm::ivec3& getSize() const {
+        return size;
+    }
+
+    const std::vector<voxel>& getRuntimeVoxels() {
+        assert(!voxelsRuntime.empty());
+        return voxelsRuntime;
+    }
 };

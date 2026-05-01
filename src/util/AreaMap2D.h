@@ -52,26 +52,26 @@ namespace util {
               firstBuffer(width * height), secondBuffer(width * height) {
         }
 
-        const T* getIf(TCoord x, TCoord y) const {
+        const T* getIf(TCoord x, TCoord z) const {
             auto lx = x - offsetX;
-            auto ly = y - offsetZ;
-            if (lx < 0 || ly < 0 || lx >= sizeX || ly >= sizeZ) {
+            auto lz = z - offsetZ;
+            if (lx < 0 || lz < 0 || lx >= sizeX || lz >= sizeZ) {
                 return nullptr;
             }
-            return &firstBuffer[ly * sizeX + lx];
+            return &firstBuffer[lz * sizeX + lx];
         }
 
-        T get(TCoord x, TCoord y) {
+        T get(TCoord x, TCoord z) const {
             auto lx = x - offsetX;
-            auto ly = y - offsetZ;
-            if (lx < 0 || ly < 0 || lx >= sizeX || ly >= sizeZ) {
+            auto lz = z - offsetZ;
+            if (lx < 0 || lz < 0 || lx >= sizeX || lz >= sizeZ) {
                 return T{};
             }
-            return firstBuffer[ly * sizeX + lx];
+            return firstBuffer[lz * sizeX + lx];
         }
 
-        T get(TCoord x, TCoord y, const T& def) const {
-            if (auto ptr = getIf(x, y)) {
+        T get(TCoord x, TCoord z, const T& def) const {
+            if (auto ptr = getIf(x, z)) {
                 const auto& value = *ptr;
                 if (value == T{}) {
                     return def;

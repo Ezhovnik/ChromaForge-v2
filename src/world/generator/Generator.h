@@ -6,8 +6,10 @@
 
 #include <typedefs.h>
 #include <math/Heightmap.h>
+#include <world/generator/StructurePlacement.h>
 
 class Content;
+class VoxelStructure;
 
 struct BlocksLayer {
     std::string block;
@@ -77,12 +79,19 @@ class GeneratorScript {
 public:
     virtual ~GeneratorScript() = default;
 
+    virtual std::vector<std::shared_ptr<VoxelStructure>> loadStructures() = 0;
+
     virtual std::shared_ptr<Heightmap> generateHeightmap(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed
     ) = 0;
 
     virtual std::vector<std::shared_ptr<Heightmap>> generateParameterMaps(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed
+    ) = 0;
+
+    virtual std::vector<StructurePlacement> placeStructures(
+        const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
+        const std::shared_ptr<Heightmap>& heightmap
     ) = 0;
 
     virtual const std::vector<Biome>& getBiomes() const = 0;

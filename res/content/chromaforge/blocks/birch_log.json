@@ -1,0 +1,12 @@
+{
+    "texture-faces": [
+        "birch_log",
+        "birch_log",
+        "birch_log_top",
+        "birch_log_top",
+        "birch_log",
+        "birch_log"
+    ],
+    "rotation": "pipe",
+    "material": "chromaforge:wood"
+}

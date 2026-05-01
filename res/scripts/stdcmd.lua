@@ -155,6 +155,6 @@ console.add_command(
         local d = args[6]
 
         local name = args[7]
-        generation.save_structure({x, y, z}, {x + w, y + h, z + d}, name..'.chroma', false)
+        generation.save_structure({x, y, z}, {x + w, y + h, z + d}, name..'.vox', false)
     end
 )

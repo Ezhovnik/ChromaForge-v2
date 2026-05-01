@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <vector>
 #include <stdexcept>
+#include <tuple>
 
 #include <content/ContentPack.h>
 
@@ -43,6 +44,8 @@ public:
     std::vector<std::filesystem::path> scanForWorlds();
 
     std::filesystem::path resolve(const std::string& path, bool throwErr = true);
+
+    static std::tuple<std::string, std::string> parsePath(std::string_view view);
 };
 
 struct PathsRoot {

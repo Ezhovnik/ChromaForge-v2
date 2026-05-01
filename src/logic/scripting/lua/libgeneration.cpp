@@ -5,6 +5,8 @@
 #include <coders/binary_json.h>
 #include <world/Level.h>
 #include <world/generator/VoxelStructure.h>
+#include <engine.h>
+#include <logic/scripting/lua/lua_custom_types.h>
 
 static int l_save_structure(lua::State* L) {
     auto pointA = lua::tovec<3>(L, 1);
@@ -31,7 +33,22 @@ static int l_save_structure(lua::State* L) {
     return 0;
 }
 
+static int l_load_structure(lua::State* L) {
+    auto paths = scripting::engine->getPaths();
+    auto [prefix, filename] = EnginePaths::parsePath(lua::require_string(L, 1));
+    auto path = paths->resolve(prefix + ":generators/" + filename + ".vox");
+    if (!std::filesystem::exists(path)) {
+        throw std::runtime_error("File " + path.u8string() + " does not exist");
+    }
+    auto map = files::read_binary_json(path);
+
+    auto structure = std::make_shared<VoxelStructure>();
+    structure->deserialize(map);
+    return lua::newuserdata<lua::LuaVoxelStructure>(L, std::move(structure));
+}
+
 const luaL_Reg generationlib[] = {
     {"save_structure", lua::wrap<l_save_structure>},
+    {"load_structure", lua::wrap<l_load_structure>},
     {NULL, NULL}
 };

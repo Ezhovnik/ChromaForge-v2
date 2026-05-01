@@ -130,15 +130,23 @@ void EnginePaths::setCurrentWorldFolder(std::filesystem::path folder) {
     this->currentWorldFolder = std::move(folder);
 }
 
-std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwErr) {
+std::tuple<std::string, std::string> EnginePaths::parsePath(std::string_view path) {
     size_t separator = path.find(':');
     if (separator == std::string::npos) {
+        return {"", std::string(path)};
+    }
+    auto prefix = std::string(path.substr(0, separator));
+    auto filename = std::string(path.substr(separator + 1));
+    return {prefix, filename};
+}
+
+std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwErr) {
+    auto [prefix, filename] = EnginePaths::parsePath(path);
+    if (prefix.empty()) {
         LOG_ERROR("No entry point specified");
         throw files_access_error("No entry point specified");
     }
 
-    std::string prefix = path.substr(0, separator);
-    std::string filename = path.substr(separator + 1);
     filename = toCanonic(std::filesystem::u8path(filename)).u8string();
 
     if (prefix == "res" || prefix == BUILTIN_CONTENT_NAMESPACE) return resourcesFolder/std::filesystem::u8path(filename);

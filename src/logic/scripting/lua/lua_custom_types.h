@@ -4,9 +4,10 @@
 #include <vector>
 
 #include <logic/scripting/lua/lua_commons.h>
-#include <math/Heightmap.h>
 
 struct fnl_state;
+class Heightmap;
+class VoxelStructure;
 
 namespace lua {
     class Userdata {
@@ -15,13 +16,13 @@ namespace lua {
         virtual const std::string& getTypeName() const = 0;
     };
 
-    class Bytearray : public Userdata {
+    class LuaBytearray : public Userdata {
     private:
         std::vector<ubyte> buffer;
     public:
-        Bytearray(size_t capacity);
-        Bytearray(std::vector<ubyte> buffer);
-        virtual ~Bytearray();
+        LuaBytearray(size_t capacity);
+        LuaBytearray(std::vector<ubyte> buffer);
+        virtual ~LuaBytearray();
 
         const std::string& getTypeName() const override {
             return TYPENAME;
@@ -35,31 +36,23 @@ namespace lua {
 
         inline static std::string TYPENAME = "Bytearray";
     };
+    static_assert(!std::is_abstract<LuaBytearray>());
 
     class LuaHeightmap : public Userdata {
     private:
         std::shared_ptr<Heightmap> map;
         std::unique_ptr<fnl_state> noise;
     public:
+        LuaHeightmap(const std::shared_ptr<Heightmap>& map);
         LuaHeightmap(uint width, uint height);
 
         virtual ~LuaHeightmap();
 
-        uint getWidth() const {
-            return map->getWidth();
-        }
+        uint getWidth() const;
+        uint getHeight() const;
 
-        uint getHeight() const {
-            return map->getHeight();
-        }
-
-        float* getValues() {
-            return map->getValues();
-        }
-
-        const float* getValues() const {
-            return map->getValues();
-        }
+        float* getValues();
+        const float* getValues() const;
 
         const std::string& getTypeName() const override {
             return TYPENAME;
@@ -79,4 +72,26 @@ namespace lua {
 
         inline static std::string TYPENAME = "Heightmap";
     };
+    static_assert(!std::is_abstract<LuaHeightmap>());
+
+    class LuaVoxelStructure : public Userdata {
+    private:
+        std::shared_ptr<VoxelStructure> structure;
+    public:
+        LuaVoxelStructure(std::shared_ptr<VoxelStructure> structure);
+
+        virtual ~LuaVoxelStructure();
+
+        std::shared_ptr<VoxelStructure> getStructure() const {
+            return structure;
+        }
+
+        const std::string& getTypeName() const override {
+            return TYPENAME;
+        }
+
+        static int createMetatable(lua::State*);
+        inline static std::string TYPENAME = "VoxelStructure";
+    };
+    static_assert(!std::is_abstract<LuaVoxelStructure>());
 }

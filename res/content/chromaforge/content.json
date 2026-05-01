@@ -33,7 +33,8 @@
         "torch",
         "iron_block",
         "oak_door",
-        "wool"
+        "wool",
+        "birch_log"
     ],
     "items": [
         "bedrock_breaker"

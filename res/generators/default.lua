@@ -51,13 +51,46 @@ biomes = {
             {block="chromaforge:water", height=-1},
         },
         layers = {
-            {block="chromaforge:stone", height=6},
+            {block="chromaforge:moss", height=1, below_sea_level=false},
+            {block="chromaforge:dirt", height=3, below_sea_level=false},
             {block="chromaforge:stone", height=-1},
             {block="chromaforge:bedrock", height=1},
         }
     }
 }
 
+function load_structures()
+    local structures = {}
+    local names = {"tree0", "tree1", "tree2", "tower"}
+    for i, name in ipairs(names) do
+        local filename = "builtin:default.files/"..name
+        debug.info("loading structure "..filename)
+        table.insert(structures, generation.load_structure(filename))
+    end
+    return structures
+end
+
+function place_structures(x, z, w, d, seed, hmap)
+    local placements = {}
+    for i=0, math.floor(math.random() * 3) do
+        local px = math.random() * w
+        local pz = math.random() * d
+        local py = hmap:at(px, pz) * 256
+        if py <= sea_level then
+            goto continue
+        end
+        table.insert(placements, {math.floor(math.random() * 3), {px - 8, py, pz - 8}})
+        ::continue::
+    end
+
+    if math.random() < 0.01 then
+        local px = math.random() * w
+        local pz = math.random() * d
+        local py = hmap:at(px, pz) * 256
+        table.insert(placements, {3, {px - 8, py, pz - 8}})
+    end
+    return placements
+end
 
 local function _generate_heightmap(x, y, w, h, seed, s)
     local umap = Heightmap(w, h)
@@ -106,10 +139,10 @@ end
 local function _generate_biome_parameters(x, y, w, h, seed, s)
     local tempmap = Heightmap(w, h)
     tempmap.noiseSeed = seed + 5324
-    tempmap:noise({x, y}, 0.4 * s, 4)
+    tempmap:noise({x, y}, 0.04 * s, 4)
     local hummap = Heightmap(w, h)
     hummap.noiseSeed = seed + 953
-    hummap:noise({x, y}, 0.16 * s, 4)
+    hummap:noise({x, y}, 0.016 * s, 4)
     tempmap:pow(2)
     hummap:pow(2)
     return tempmap, hummap

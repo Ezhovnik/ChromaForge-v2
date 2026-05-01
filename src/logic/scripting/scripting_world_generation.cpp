@@ -13,6 +13,7 @@
 #include <world/generator/Generator.h>
 #include <debug/Logger.h>
 #include <data/dv.h>
+#include <util/timeutil.h>
 
 class LuaGeneratorScript : public GeneratorScript {
     scriptenv env;
@@ -29,6 +30,26 @@ public:
         biomes(std::move(biomes)),
         biomeParameters(biomeParameters),
         seaLevel(seaLevel) {}
+
+    std::vector<std::shared_ptr<VoxelStructure>> loadStructures() override {
+        std::vector<std::shared_ptr<VoxelStructure>> structures;
+
+        auto L = lua::get_main_thread();
+        lua::pushenv(L, *env);
+        if (lua::getfield(L, "load_structures")) {
+            if (lua::call_nothrow(L, 0, 1)) {
+                for (int i = 1; i <= lua::objlen(L, -1); ++i) {
+                    lua::rawgeti(L, i);
+                    if (auto lstruct = lua::touserdata<lua::LuaVoxelStructure>(L, -1)) {
+                        structures.push_back(lstruct->getStructure());
+                    }
+                    lua::pop(L);
+                }
+            }
+        }
+        lua::pop(L);
+        return structures;
+    }
 
     std::shared_ptr<Heightmap> generateHeightmap(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed
@@ -75,6 +96,43 @@ public:
             maps.push_back(std::make_shared<Heightmap>(size.x, size.y));
         }
         return maps;
+    }
+
+    std::vector<StructurePlacement> placeStructures(
+        const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
+        const std::shared_ptr<Heightmap>& heightmap
+    ) override {
+        std::vector<StructurePlacement> placements;
+
+        auto L = lua::get_main_thread();
+        lua::stackguard _(L);
+        lua::pushenv(L, *env);
+        if (lua::getfield(L, "place_structures")) {
+            lua::pushivec_stack(L, offset);
+            lua::pushivec_stack(L, size);
+            lua::pushinteger(L, seed);
+            lua::newuserdata<lua::LuaHeightmap>(L, heightmap);
+            if (lua::call_nothrow(L, 6, 1)) {
+                int len = lua::objlen(L, -1);
+                for (int i = 1; i <= len; ++i) {
+                    lua::rawgeti(L, i);
+
+                    lua::rawgeti(L, 1);
+                    int structIndex = lua::tointeger(L, -1);
+                    lua::pop(L);
+
+                    lua::rawgeti(L, 2);
+                    glm::ivec3 pos = lua::tovec3(L, -1);
+                    lua::pop(L);
+
+                    lua::pop(L);
+
+                    placements.emplace_back(structIndex, pos);
+                }
+                lua::pop(L);
+            }
+        }
+        return placements;
     }
 
     void prepare(const Content* content) override {

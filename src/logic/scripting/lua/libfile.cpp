@@ -108,7 +108,7 @@ static int l_file_write_bytes(lua::State* L) {
     int pathIndex = 1;
     if (!lua::isstring(L, pathIndex)) throw std::runtime_error("String expected");
     std::filesystem::path path = resolve_path(lua::require_string(L, pathIndex));
-    if (auto bytearray = lua::touserdata<lua::Bytearray>(L, -1)) {
+    if (auto bytearray = lua::touserdata<lua::LuaBytearray>(L, -1)) {
         auto& bytes = bytearray->data();
         return lua::pushboolean(L, files::write_bytes(path, bytes.data(), bytes.size()));
     }
