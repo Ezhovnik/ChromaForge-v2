@@ -106,15 +106,6 @@ void ContentLoader::fixPackIndices() {
     if (modified) files::write_json(indexFile, root);
 }
 
-void ContentLoader::loadGenerator(Generator& def, const std::string& full, const std::string& name) {
-    auto folder = pack->folder;
-    auto generatorFile = folder/std::filesystem::path("generators/" + name + ".lua");
-    if (!std::filesystem::exists(generatorFile)) {
-        return;
-    }
-    def.script = scripting::load_generator(generatorFile);
-}
-
 void ContentLoader::loadBlock(Block& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
 
@@ -492,6 +483,7 @@ void ContentLoader::load() {
     if (std::filesystem::is_directory(generatorsDir)) {
         for (const auto& entry : std::filesystem::directory_iterator(generatorsDir)) {
             const auto& file = entry.path();
+            if (std::filesystem::is_directory(file)) continue;
 
             std::string name = file.stem().u8string();
             auto [packid, full, filename] = create_unit_id(pack->id, file.stem().u8string());

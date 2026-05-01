@@ -13,6 +13,7 @@
 #include <logic/scripting/scripting.h>
 #include <objects/rigging.h>
 #include <world/generator/Generator.h>
+#include <world/generator/VoxelFragment.h>
 
 ContentIndices::ContentIndices(
     ContentUnitIndices<Block> blocks,

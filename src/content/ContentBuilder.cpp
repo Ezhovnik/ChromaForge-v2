@@ -88,7 +88,7 @@ std::unique_ptr<Content> ContentBuilder::build() {
     }
 
     for (auto& [name, def] : content->generators.getDefs()) {
-        def->script->prepare(content.get());
+        def->script->prepare(*def, content.get());
     }
 
     return content;

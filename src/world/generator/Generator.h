@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <unordered_map>
+#include <array>
 
 #include <glm/glm.hpp>
 
@@ -9,7 +12,12 @@
 #include <world/generator/StructurePlacement.h>
 
 class Content;
-class VoxelStructure;
+class VoxelFragment;
+struct Generator;
+
+struct VoxelStructureMeta {
+    std::string name;
+};
 
 struct BlocksLayer {
     std::string block;
@@ -31,46 +39,55 @@ struct BiomeParameter {
     float weight;
 };
 
-struct PlantEntry {
-    std::string block;
+struct WeightedEntry {
+    std::string name;
     float weight;
 
     struct {
-        blockid_t id;
+        size_t id;
     } rt;
 
-    bool operator > (const PlantEntry& other) const {
+    bool operator > (const WeightedEntry& other) const {
         return weight > other.weight;
     }
 };
 
-struct BiomePlants {
-    static inline float MIN_CHANCE = 0.000001f;
+struct BiomeElementList {
+    static inline float MIN_CHANCE = 1e-6f;
 
-    std::vector<PlantEntry> plants;
-    float weightsSum;
+    std::vector<WeightedEntry> entries;
+    float weightsSum = 0.0f;
     float chance;
 
-    inline blockid_t choose(float rand) const {
-        if (plants.empty() || rand > chance || chance < MIN_CHANCE) {
-            return 0;
+    BiomeElementList() {}
+
+    BiomeElementList(std::vector<WeightedEntry> entries, float chance) : entries(entries), chance(chance) {
+        for (const auto& entry : entries) {
+            weightsSum += entry.weight;
+        }
+    }
+
+    inline size_t choose(float rand, size_t def = 0) const {
+        if (entries.empty() || rand > chance || chance < MIN_CHANCE) {
+            return def;
         }
         rand = rand / chance;
         rand *= weightsSum;
-        for (const auto& plant : plants) {
-            rand -= plant.weight;
+        for (const auto& entry : entries) {
+            rand -= entry.weight;
             if (rand <= 0.0f) {
-                return plant.rt.id;
+                return entry.rt.id;
             }
         }
-        return plants[plants.size() - 1].rt.id;
+        return entries[entries.size() - 1].rt.id;
     }
 };
 
 struct Biome {
     std::string name;
     std::vector<BiomeParameter> parameters;
-    BiomePlants plants;
+    BiomeElementList plants;
+    BiomeElementList structures;
     BlocksLayers groundLayers;
     BlocksLayers seaLayers;
 };
@@ -78,8 +95,6 @@ struct Biome {
 class GeneratorScript {
 public:
     virtual ~GeneratorScript() = default;
-
-    virtual std::vector<std::shared_ptr<VoxelStructure>> loadStructures() = 0;
 
     virtual std::shared_ptr<Heightmap> generateHeightmap(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed
@@ -99,13 +114,26 @@ public:
 
     virtual uint getSeaLevel() const = 0;
 
-    virtual void prepare(const Content* content) = 0;
+    virtual void prepare(const Generator& def, const Content* content) = 0;
+};
+
+struct GeneratingVoxelStructure {
+    VoxelStructureMeta meta;
+    std::array<std::unique_ptr<VoxelFragment>, 4> fragments;
+
+    GeneratingVoxelStructure(
+        VoxelStructureMeta meta,
+        std::unique_ptr<VoxelFragment> structure
+    );
 };
 
 struct Generator {
     std::string name;
     std::unique_ptr<GeneratorScript> script;
 
-    Generator(std::string name) : name(std::move(name)) {}
+    std::unordered_map<std::string, size_t> structuresIndices;
+    std::vector<std::unique_ptr<GeneratingVoxelStructure>> structures;
+
+    Generator(std::string name);
     Generator(const Generator&) = delete;
 };

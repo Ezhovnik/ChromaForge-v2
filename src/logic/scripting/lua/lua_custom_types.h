@@ -7,7 +7,7 @@
 
 struct fnl_state;
 class Heightmap;
-class VoxelStructure;
+class VoxelFragment;
 
 namespace lua {
     class Userdata {
@@ -58,7 +58,7 @@ namespace lua {
             return TYPENAME;
         }
 
-        std::shared_ptr<Heightmap> getHeightmap() const {
+        const std::shared_ptr<Heightmap>& getHeightmap() const {
             return map;
         }
 
@@ -76,13 +76,13 @@ namespace lua {
 
     class LuaVoxelStructure : public Userdata {
     private:
-        std::shared_ptr<VoxelStructure> structure;
+        std::shared_ptr<VoxelFragment> structure;
     public:
-        LuaVoxelStructure(std::shared_ptr<VoxelStructure> structure);
+        LuaVoxelStructure(std::shared_ptr<VoxelFragment> structure);
 
         virtual ~LuaVoxelStructure();
 
-        std::shared_ptr<VoxelStructure> getStructure() const {
+        std::shared_ptr<VoxelFragment> getStructure() const {
             return structure;
         }
 
@@ -91,7 +91,7 @@ namespace lua {
         }
 
         static int createMetatable(lua::State*);
-        inline static std::string TYPENAME = "VoxelStructure";
+        inline static std::string TYPENAME = "VoxelFragment";
     };
     static_assert(!std::is_abstract<LuaVoxelStructure>());
 }

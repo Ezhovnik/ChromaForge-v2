@@ -1,18 +1,18 @@
 #include <logic/scripting/lua/lua_custom_types.h>
 
 #include <logic/scripting/lua/lua_util.h>
-#include <world/generator/VoxelStructure.h>
+#include <world/generator/VoxelFragment.h>
 #include <util/stringutil.h>
 
 using namespace lua;
 
-LuaVoxelStructure::LuaVoxelStructure(std::shared_ptr<VoxelStructure> structure) : structure(std::move(structure)) {}
+LuaVoxelStructure::LuaVoxelStructure(std::shared_ptr<VoxelFragment> structure) : structure(std::move(structure)) {}
 
 LuaVoxelStructure::~LuaVoxelStructure() {
 }
 
 static int l_meta_tostring(lua::State* L) {
-    return pushstring(L, "VoxelStructure(0x" + util::tohex(
+    return pushstring(L, "VoxelFragment(0x" + util::tohex(
         reinterpret_cast<uint64_t>(topointer(L, 1))) + ")"
     );
 }

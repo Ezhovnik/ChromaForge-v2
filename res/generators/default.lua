@@ -7,8 +7,8 @@ biome_parameters = 2
 biomes = {
     plains = {
         parameters = {
-            {value=0.5, weight=1.0},
-            {value=0.5, weight=0.3},
+            {value=0.5, weight=0.6},
+            {value=0.5, weight=0.6},
         },
         sea_layers = {
             {block="chromaforge:water", height=-1},
@@ -26,12 +26,16 @@ biomes = {
             {block="chromaforge:poppy", weight=0.05},
             {block="chromaforge:daisy", weight=0.04},
             {block="chromaforge:marigold", weight=0.03},
+        },
+        structure_chance = 0.0001,
+        structures = {
+            {name="tree0", weight=1}
         }
     },
     desert = {
         parameters = {
-            {value=0.0, weight=0.36},
-            {value=0.0, weight=0.4},
+            {value=0.0, weight=0.1},
+            {value=0.0, weight=0.1},
         },
         sea_layers = {
             {block="chromaforge:water", height=-1},
@@ -42,7 +46,7 @@ biomes = {
             {block="chromaforge:bedrock", height=1},
         }
     },
-    mountains = {
+    wooded_hills = {
         parameters = {
             {value=1.0, weight=1.0},
             {value=0.2, weight=0.5},
@@ -52,43 +56,30 @@ biomes = {
         },
         layers = {
             {block="chromaforge:moss", height=1, below_sea_level=false},
-            {block="chromaforge:dirt", height=3, below_sea_level=false},
+            {block="chromaforge:dirt", height=7, below_sea_level=false},
             {block="chromaforge:stone", height=-1},
             {block="chromaforge:bedrock", height=1},
+        },
+        plant_chance = 0.4,
+        plants = {
+            {block="chromaforge:grass", weight=1},
+            {block="chromaforge:dandelion", weight=0.08},
+            {block="chromaforge:poppy", weight=0.05},
+            {block="chromaforge:daisy", weight=0.04},
+            {block="chromaforge:marigold", weight=0.03},
+        },
+        structure_chance = 0.032,
+        structures = {
+            {name="tree0", weight=1},
+            {name="tree1", weight=1},
+            {name="tree2", weight=1},
+            {name="tower", weight=0.002},
         }
     }
 }
 
-function load_structures()
-    local structures = {}
-    local names = {"tree0", "tree1", "tree2", "tower"}
-    for i, name in ipairs(names) do
-        local filename = "builtin:default.files/"..name
-        debug.info("loading structure "..filename)
-        table.insert(structures, generation.load_structure(filename))
-    end
-    return structures
-end
-
 function place_structures(x, z, w, d, seed, hmap)
     local placements = {}
-    for i=0, math.floor(math.random() * 3) do
-        local px = math.random() * w
-        local pz = math.random() * d
-        local py = hmap:at(px, pz) * 256
-        if py <= sea_level then
-            goto continue
-        end
-        table.insert(placements, {math.floor(math.random() * 3), {px - 8, py, pz - 8}})
-        ::continue::
-    end
-
-    if math.random() < 0.01 then
-        local px = math.random() * w
-        local pz = math.random() * d
-        local py = hmap:at(px, pz) * 256
-        table.insert(placements, {3, {px - 8, py, pz - 8}})
-    end
     return placements
 end
 
@@ -102,21 +93,19 @@ local function _generate_heightmap(x, y, w, h, seed, s)
 
     local map = Heightmap(w, h)
     map.noiseSeed = seed
-    map:noise({x, y}, 0.8 * s, 4, 0.04)
-    map:cellnoise({x, y}, 0.1 * s, 3, 0.7, umap, vmap)
-    map:mul(0.5)
-    map:add(0.5)
+    map:noise({x, y}, 0.8 * s, 4, 0.02)
+    map:cellnoise({x, y}, 0.1 * s, 3, 0.3, umap, vmap)
+    map:add(0.4)
 
     local rivermap = Heightmap(w, h)
     rivermap.noiseSeed = seed
     rivermap:noise({x + 21, y + 12}, 0.1 * s, 4)
     rivermap:abs()
     rivermap:mul(2.0)
-    rivermap:pow(0.3)
-    rivermap:max(0.6)
-    map:add(0.4)
+    rivermap:pow(0.15)
+    rivermap:max(0.3)
+    map:add(0.3)
     map:mul(rivermap)
-    map:add(-0.15)
 
     return map
 end
@@ -139,12 +128,12 @@ end
 local function _generate_biome_parameters(x, y, w, h, seed, s)
     local tempmap = Heightmap(w, h)
     tempmap.noiseSeed = seed + 5324
-    tempmap:noise({x, y}, 0.04 * s, 4)
+    tempmap:noise({x, y}, 0.04 * s, 6)
     local hummap = Heightmap(w, h)
     hummap.noiseSeed = seed + 953
-    hummap:noise({x, y}, 0.016 * s, 4)
-    tempmap:pow(2)
-    hummap:pow(2)
+    hummap:noise({x, y}, 0.04 * s, 6)
+    tempmap:pow(3)
+    hummap:pow(3)
     return tempmap, hummap
 end
 

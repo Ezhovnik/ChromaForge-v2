@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <array>
 
 #include <typedefs.h>
 #include <core_content_defs.h>
@@ -16,7 +17,7 @@ class Content;
 struct Generator;
 class Heightmap;
 struct Biome;
-class VoxelStructure;
+class VoxelFragment;
 
 enum class ChunkPrototypeLevel {
     Void = 0,
@@ -43,8 +44,6 @@ class WorldGenerator {
 
     SurroundMap surroundMap;
 
-    std::vector<std::shared_ptr<VoxelStructure>> structures;
-
     std::unique_ptr<ChunkPrototype> generatePrototype(int x, int z);
 
     ChunkPrototype& requirePrototype(int x, int z);
@@ -54,6 +53,11 @@ class WorldGenerator {
     void generateBiomes(ChunkPrototype& prototype, int x, int z);
 
     void generateHeightmap(ChunkPrototype& prototype, int x, int z);
+
+    void placeStructure(
+        const glm::ivec3 offset, size_t structure, uint8_t rotation,
+        int chunkX, int chunkZ
+    );
 public:
 	WorldGenerator(
         const Generator& def,

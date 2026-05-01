@@ -10,6 +10,7 @@
 #include <content/Content.h>
 #include <content/ContentPack.h>
 #include <world/generator/Generator.h>
+#include <world/generator/VoxelFragment.h>
 
 template<class T>
 class ContentUnitBuilder {

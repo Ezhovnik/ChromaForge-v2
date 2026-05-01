@@ -120,7 +120,7 @@ typedef enum
 } fnl_domain_warp_type;
 
 /**
- * VoxelStructure containing entire noise system state.
+ * VoxelFragment containing entire noise system state.
  * @note Must only be created using fnlCreateState(optional: seed). To ensure defaults are set.
  */
 typedef struct fnl_state
