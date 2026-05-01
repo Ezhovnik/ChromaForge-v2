@@ -1,0 +1,78 @@
+{
+    "forest": {
+        "parameters": [
+            {"weight": 1, "value": 1},
+            {"weight": 0.5, "value": 0.2}
+        ],
+        "layers": [
+            {"below_sea_level": false, "height": 1, "block": "chromaforge:moss"},
+            {"below_sea_level": false, "height": 7, "block": "chromaforge:dirt"},
+            {"height": -1, "block": "chromaforge:stone"},
+            {"height": 1, "block": "chromaforge:bedrock"}
+        ],
+        "sea_layers": [
+            {"height": -1, "block": "chromaforge:water"}
+        ],
+        "plant_chance": 0.4,
+        "plants": [
+            {"weight": 1, "block": "chromaforge:grass"},
+            {"weight": 0.03, "block": "chromaforge:dandelion"},
+            {"weight": 0.03, "block": "chromaforge:poppy"},
+            {"weight": 0.03, "block": "chromaforge:daisy"},
+            {"weight": 0.03, "block": "chromaforge:marigold"}
+        ],
+        "structure_chance": 0.032,
+        "structures": [
+            {"name": "tree0", "weight": 1},
+            {"name": "tree1", "weight": 1},
+            {"name": "tree2", "weight": 1},
+            {"name": "tower", "weight": 0.002}
+        ]
+    },
+    "desert": {
+        "parameters": [
+            {"weight": 0.1, "value": 0},
+            {"weight": 0.1, "value": 0}
+        ],
+        "layers": [
+            {"height": 6, "block": "chromaforge:sand"},
+            {"height": -1, "block": "chromaforge:stone"},
+            {"height": 1, "block": "chromaforge:bedrock"}
+        ],
+        "plant_chance": 0.01,
+        "plants": [
+            {"weight": 1, "block": "chromaforge:dead_bush"}
+        ],
+        "sea_layers": [
+            {"height": -1, "block": "chromaforge:water"}
+        ]
+    },
+    "plains": {
+        "parameters": [
+            {"weight": 0.6, "value": 0.5},
+            {"weight": 0.6, "value": 0.5}
+        ],
+        "layers": [
+            {"below_sea_level": false, "height": 1, "block": "chromaforge:moss"},
+            {"below_sea_level": false, "height": 5, "block": "chromaforge:dirt"},
+            {"height": -1, "block": "chromaforge:stone"},
+            {"height": 1, "block": "chromaforge:bedrock"}
+        ],
+        "sea_layers": [
+            {"height": -1, "block": "chromaforge:water"}
+        ],
+        "plant_chance": 0.3,
+        "plants": [
+            {"weight": 1, "block": "chromaforge:grass"},
+            {"weight": 0.03, "block": "chromaforge:dandelion"},
+            {"weight": 0.03, "block": "chromaforge:poppy"},
+            {"weight": 0.03, "block": "chromaforge:daisy"},
+            {"weight": 0.03, "block": "chromaforge:marigold"}
+        ],
+        "structure_chance": 0.0001,
+        "structures": [
+            {"name": "tree0", "weight": 1},
+            {"name": "tree1", "weight": 1}
+        ]
+    }
+}
