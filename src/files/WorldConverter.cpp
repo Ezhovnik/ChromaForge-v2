@@ -8,7 +8,6 @@
 #include <voxels/Chunk.h>
 #include <content/ContentReport.h>
 #include <debug/Logger.h>
-#include <data/dynamic.h>
 #include <files/files.h>
 #include <objects/Player.h>
 #include <util/ThreadPool.h>
@@ -179,8 +178,8 @@ void WorldConverter::convertInventories(const std::filesystem::path& file, int x
 void WorldConverter::convertPlayer(const std::filesystem::path& file) const {
     LOG_INFO("Converting player {}", file.u8string());
     auto map = files::read_json(file);
-    Player::convert(map.get(), report.get());
-    files::write_json(file, map.get());
+    Player::convert(map, report.get());
+    files::write_json(file, map);
     LOG_INFO("Player {} successfully converted", file.u8string());
 }
 

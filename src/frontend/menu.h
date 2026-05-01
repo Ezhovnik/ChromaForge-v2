@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include <data/dynamic.h>
+#include <data/dv.h>
 #include <graphics/ui/elements/layout/Menu.h>
 
 class Task;
@@ -19,7 +19,7 @@ namespace menus {
     UIDocument* show(
         Engine* engine, 
         const std::string& name,
-        std::vector<dynamic::Value> args
+        std::vector<dv::value> args
     );
 
     void show_process_panel(

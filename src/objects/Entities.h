@@ -12,7 +12,7 @@
 
 #include <typedefs.h>
 #include <physics/Hitbox.h>
-#include <data/dynamic.h>
+#include <data/dv.h>
 #include <util/Clock.h>
 
 struct entity_funcs_set {
@@ -199,8 +199,8 @@ public:
     entityid_t spawn(
         const Entity& def,
         glm::vec3 position,
-        dynamic::Map_sptr args=nullptr,
-        dynamic::Map_sptr saved=nullptr,
+        dv::value args=nullptr,
+        dv::value saved=nullptr,
         entityid_t uid=0
     );
     void despawn(entityid_t id);
@@ -213,17 +213,17 @@ public:
         entityid_t ignore = -1
     );
 
-    void loadEntities(dynamic::Map_sptr map);
-    void loadEntity(const dynamic::Map_sptr& map);
-    void loadEntity(const dynamic::Map_sptr& map, Entt_Entity entity);
+    void loadEntities(dv::value map);
+    void loadEntity(const dv::value& map);
+    void loadEntity(const dv::value& map, Entt_Entity entity);
     void onSave(const Entt_Entity& entity);
 
     bool hasBlockingInside(AABB aabb);
     std::vector<Entt_Entity> getAllInside(AABB aabb);
     std::vector<Entt_Entity> getAllInRadius(glm::vec3 center, float radius);
 
-    dynamic::Value serialize(const Entt_Entity& entity);
-    dynamic::List_sptr serialize(const std::vector<Entt_Entity>& entities);
+    dv::value serialize(const Entt_Entity& entity);
+    dv::value serialize(const std::vector<Entt_Entity>& entities);
 
     void setNextID(entityid_t id) {
         nextID = id;

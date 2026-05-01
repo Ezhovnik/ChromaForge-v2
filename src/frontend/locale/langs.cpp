@@ -8,8 +8,7 @@
 #include <files/files.h>
 #include <util/stringutil.h>
 #include <debug/Logger.h>
-
-using namespace std::literals;
+#include <data/dv.h>
 
 std::unique_ptr<langs::Lang> langs::current;
 std::unordered_map<std::string, langs::LocaleInfo> langs::locales_info;
@@ -79,22 +78,20 @@ void langs::loadLocalesInfo(const std::filesystem::path& resdir, std::string& fa
     auto root = files::read_json(file);
 
     langs::locales_info.clear();
-    root->str("fallback", fallback);
+    root.at("fallback").get(fallback);
 
-    auto langs = root->map("langs");
-    if (langs) {
-        for (auto& entry : langs->values) {
-            auto langInfo = entry.second;
-
+    if (auto found = root.at("langs")) {
+        auto& langs = *found;
+        for (const auto& [key, langInfo] : langs.asObject()) {
             std::string name;
-            if (auto mapptr = std::get_if<dynamic::Map_sptr>(&langInfo)) {
-                name = (*mapptr)->get("name", "none"s);
+            if (langInfo.isObject()) {
+                name = langInfo["name"].asString("none");
             } else {
                 continue;
             }
 
-            langs::locales_info[entry.first] = LocaleInfo{entry.first, name};
-            LOG_DEBUG("Locale {} ({}) added successfully", entry.first, name);
+            langs::locales_info[key] = LocaleInfo{key, name};
+            LOG_DEBUG("Locale {} ({}) added successfully", key, name);
         } 
     }
 }

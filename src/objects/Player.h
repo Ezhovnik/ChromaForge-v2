@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 
 #include <voxels/voxel.h>
-#include <data/dynamic.h>
+#include <data/dv.h>
 #include <interfaces/Serializable.h>
 #include <interfaces/Object.h>
 #include <constants.h>
@@ -171,15 +171,10 @@ public:
 
     void postUpdate();
 
-	std::unique_ptr<dynamic::Map> serialize() const override;
-    void deserialize(dynamic::Map *src) override;
+	dv::value serialize() const override;
+    void deserialize(const dv::value& src) override;
 
-	/**
-     * @brief Конвертирует старые данные игрока при обновлении контента.
-     * @param data JSON-объект с данными игрока.
-     * @param report Таблица соответствия старых и новых идентификаторов.
-     */
-    static void convert(dynamic::Map* data, const ContentReport* report);
+    static void convert(dv::value& data, const ContentReport* report);
 
 	inline int getId() const {
         return objectUID;

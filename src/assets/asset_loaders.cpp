@@ -161,17 +161,17 @@ static void read_anim_file(
     std::vector<std::pair<std::string, int>>& frameList
 ) {
     auto root = files::read_json(animFile);
-    auto frameArr = root->list("frames");
     float frameDuration = DEFAULT_FRAME_DURATION;
     std::string frameName;
 
-    if (frameArr) {
-        for (size_t i = 0; i < frameArr->size(); i++) {
-            auto currentFrame = frameArr->list(i);
+    if (auto found = root.at("frames")) {
+        auto& frameArr = *found;
+        for (size_t i = 0; i < frameArr.size(); ++i) {
+            const auto& currentFrame = frameArr[i];
 
-            frameName = currentFrame->str(0);
-            if (currentFrame->size() > 1) {
-                frameDuration = currentFrame->integer(1);
+            frameName = currentFrame[0].asString();
+            if (currentFrame.size() > 1) {
+                frameDuration = currentFrame[1].asNumber();
             }
             frameList.emplace_back(frameName, frameDuration);
         }

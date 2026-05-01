@@ -16,7 +16,6 @@
 #include <core_content_defs.h>
 #include <content/Content.h>
 #include <logic/scripting/scripting.h>
-#include <data/dynamic.h>
 #include <files/files.h>
 #include <util/ThreadPool.h>
 #include <voxels/Block.h>
@@ -137,7 +136,7 @@ static std::string assets_def_folder(AssetType tag) {
 void AssetsLoader::processPreload(
     AssetType tag, 
     const std::string& name, 
-    dynamic::Map* map
+    const dv::value& map
 ) {
     std::string defFolder = assets_def_folder(tag);
     std::string path = defFolder + "/" + name;
@@ -145,48 +144,48 @@ void AssetsLoader::processPreload(
         add(tag, path, name);
         return;
     }
-    map->str("path", path);
+    map.at("path").get(path);
     switch (tag) {
-        case AssetType::Sound:
-            add(tag, path, name, std::make_shared<SoundConfig>(
-                map->get("keep-pcm", false)
-            ));
+        case AssetType::Sound: {
+            bool keepPCM = false;
+            add(tag,
+                path,
+                name,
+                std::make_shared<SoundConfig>(map.at("keep-pcm").get(keepPCM))
+            );
             break;
+        }
         default:
             add(tag, path, name);
             break;
     }
 }
 
-void AssetsLoader::processPreloadList(AssetType tag, dynamic::List* list) {
+void AssetsLoader::processPreloadList(AssetType tag, const dv::value& list) {
     if (list == nullptr) return;
-    for (uint i = 0; i < list->size(); ++i) {
-        auto value = list->get(i);
-        switch (static_cast<dynamic::Type>(value.index())) {
-            case dynamic::Type::String: {
-                processPreload(tag, std::get<std::string>(value), nullptr);
+    for (const auto& value : list) {
+        switch (value.getType()) {
+            case dv::value_type::String:
+                processPreload(tag, value.asString(), nullptr);
                 break;
-			} case dynamic::Type::Map: {
-                auto map = std::get<dynamic::Map_sptr>(value);
-                auto name = map->get<std::string>("name");
-                processPreload(tag, name, map.get());
+			case dv::value_type::Object:
+                processPreload(tag, value["name"].asString(), value);
                 break;
-            } default: {
+            default:
 				LOG_ERROR("Invalid entry type");
                 throw std::runtime_error("invalid entry type");
-			}
         }
     }
 }
 
 void AssetsLoader::processPreloadConfig(const std::filesystem::path& file) {
     auto root = files::read_json(file);
-    processPreloadList(AssetType::Atlas, root->list("atlases").get());
-    processPreloadList(AssetType::Font, root->list("fonts").get());
-    processPreloadList(AssetType::Shader, root->list("shaders").get());
-    processPreloadList(AssetType::Texture, root->list("textures").get());
-    processPreloadList(AssetType::Sound, root->list("sounds").get());
-    processPreloadList(AssetType::Model, root->list("models").get());
+    processPreloadList(AssetType::Atlas, root["atlases"]);
+    processPreloadList(AssetType::Font, root["fonts"]);
+    processPreloadList(AssetType::Shader, root["shaders"]);
+    processPreloadList(AssetType::Texture, root["textures"]);
+    processPreloadList(AssetType::Sound, root["sounds"]);
+    processPreloadList(AssetType::Model, root["models"]);
     // Макеты загружаются автоматически
 }
 

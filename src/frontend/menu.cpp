@@ -22,13 +22,12 @@
 #include <frontend/locale/langs.h>
 #include <interfaces/Task.h>
 #include <graphics/ui/elements/layout/Panel.h>
-#include <data/dynamic.h>
 #include <coders/commons.h>
 #include <frontend/screens/MenuScreen.h>
 
 gui::page_loader_func menus::create_page_loader(Engine* engine) {
     return [=](const std::string& query) {
-        std::vector<dynamic::Value> args;
+        std::vector<dv::value> args;
 
         std::string name;
         size_t index = query.find('?');
@@ -36,14 +35,14 @@ gui::page_loader_func menus::create_page_loader(Engine* engine) {
             auto argstr = query.substr(index+1);
             name = query.substr(0, index);
 
-            auto map = dynamic::create_map();
+            auto map = dv::object();
             auto filename = "Query for " + name;
             BasicParser parser(filename, argstr);
             while (parser.hasNext()) {
                 auto key = std::string(parser.readUntil('='));
                 parser.nextChar();
                 auto value = std::string(parser.readUntil('&'));
-                map->put(key, value);
+                map[key] = value;
             }
             args.emplace_back(map);
         } else {
@@ -71,7 +70,7 @@ void menus::create_version_label(Engine* engine) {
     ));
 }
 
-UIDocument* menus::show(Engine* engine, const std::string& name, std::vector<dynamic::Value> args) {
+UIDocument* menus::show(Engine* engine, const std::string& name, std::vector<dv::value> args) {
     auto menu = engine->getGUI()->getMenu();
     auto file = engine->getResPaths()->find("layouts/" + name + ".xml");
     auto fullname = BUILTIN_CONTENT_NAMESPACE + ":layouts/" + name;

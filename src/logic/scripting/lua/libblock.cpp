@@ -434,6 +434,8 @@ const luaL_Reg blocklib [] = {
     {"get_hitbox", lua::wrap<l_get_hitbox>},
     {"get_rotation_profile", lua::wrap<l_get_rotation_profile>},
     {"get_picking_item", lua::wrap<l_get_picking_item>},
+    {"place", lua::wrap<l_place>},
+    {"destruct", lua::wrap<l_destruct>},
     {"raycast", lua::wrap<l_raycast>},
     {"compose_state", lua::wrap<l_compose_state>},
     {"decompose_state", lua::wrap<l_decompose_state>},

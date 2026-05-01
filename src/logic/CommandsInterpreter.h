@@ -5,7 +5,7 @@
 #include <functional>
 #include <unordered_map>
 
-#include <data/dynamic.h>
+#include <data/dv.h>
 
 namespace cmd {
     enum class ArgType {
@@ -31,8 +31,8 @@ namespace cmd {
         std::string name;
         ArgType type;
         bool optional;
-        dynamic::Value def;
-        dynamic::Value origin;
+        dv::value def;
+        dv::value origin;
         std::string enumname;
     };
 
@@ -41,14 +41,14 @@ namespace cmd {
 
     struct Prompt {
         Command* command;
-        dynamic::List_sptr args;
-        dynamic::Map_sptr kwargs;
+        dv::value args;
+        dv::value kwargs;
     };
 
-    using executor_func = std::function<dynamic::Value(
+    using executor_func = std::function<dv::value(
         CommandsInterpreter*,
-        dynamic::List_sptr args,
-        dynamic::Map_sptr kwargs
+        const dv::value& args,
+        const dv::value& kwargs
     )>;
 
     class Command {
@@ -84,7 +84,7 @@ namespace cmd {
             return &found->second;
         }
 
-        dynamic::Value execute(CommandsInterpreter* interpreter, const Prompt& prompt) {
+        dv::value execute(CommandsInterpreter* interpreter, const Prompt& prompt) {
             return executor(interpreter, prompt.args, prompt.kwargs);
         }
 
@@ -129,7 +129,7 @@ namespace cmd {
     class CommandsInterpreter {
     private:
         std::unique_ptr<CommandsRepository> repository;
-        std::unordered_map<std::string, dynamic::Value> variables;
+        std::unordered_map<std::string, dv::value> variables;
     public:
         CommandsInterpreter() : repository(std::make_unique<CommandsRepository>()) {}
         CommandsInterpreter(const CommandsInterpreter&) = delete;
@@ -137,15 +137,15 @@ namespace cmd {
 
         Prompt parse(std::string_view text);
 
-        dynamic::Value& operator[](const std::string& name) {
+        dv::value& operator[](const std::string& name) {
             return variables[name];
         }
 
-        dynamic::Value execute(std::string_view input) {
+        dv::value execute(std::string_view input) {
             return execute(parse(input));
         }
 
-        dynamic::Value execute(const Prompt& prompt) {
+        dv::value execute(const Prompt& prompt) {
             return prompt.command->execute(this, prompt);
         }
 

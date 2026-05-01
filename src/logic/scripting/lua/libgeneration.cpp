@@ -22,7 +22,7 @@ static int l_save_structure(lua::State* L) {
     );
     auto map = structure->serialize();
 
-    auto bytes = json::to_binary(map.get());
+    auto bytes = json::to_binary(map);
     files::write_bytes(
         std::filesystem::u8path(filename),
         bytes.data(),

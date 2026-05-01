@@ -6,7 +6,6 @@
 #include <assert.h>
 
 #include <coders/commons.h>
-#include <data/dynamic.h>
 #include <util/stringutil.h>
 #include <files/settings_io.h>
 #include <debug/Logger.h>
@@ -15,7 +14,7 @@
 using namespace toml;
 
 class TomlReader : BasicParser {
-    dynamic::Map_sptr root;
+    dv::value root;
 
     void skipWhitespace() override {
         BasicParser::skipWhitespace();
@@ -25,31 +24,31 @@ class TomlReader : BasicParser {
         }
     }
 
-    dynamic::Map& getSection(const std::string& section) {
-        if (section.empty()) return *root;
+    dv::value& getSection(const std::string& section) {
+        if (section.empty()) return root;
         size_t offset = 0;
-        auto& rootMap = *root;
+        auto rootMap = &root;
         do {
             size_t index = section.find('.', offset);
             if (index == std::string::npos) {
-                auto map = rootMap.map(section);
-                if (map == nullptr) {
-                    return rootMap.putMap(section);
+                auto map = rootMap->at(section);
+                if (!map) {
+                    return rootMap->object(section);
                 }
                 return *map;
             }
             auto subsection = section.substr(offset, index);
-            auto map = rootMap.map(subsection);
-            if (map == nullptr) {
-                rootMap = rootMap.putMap(subsection);
+            auto map = rootMap->at(subsection);
+            if (!map) {
+                rootMap = &rootMap->object(subsection);
             } else {
-                rootMap = *map;
+                rootMap = &*map;
             }
             offset = index + 1;
         } while (true);
     }
 
-    void readSection(const std::string& section, dynamic::Map& map) {
+    void readSection(const std::string& section, dv::value& map) {
         while (hasNext()) {
             skipWhitespace();
             if (!hasNext()) break;
@@ -65,23 +64,23 @@ class TomlReader : BasicParser {
             expect('=');
             c = peek();
             if (is_digit(c)) {
-                map.put(name, parseNumber(1));
+                map[name] = parseNumber(1);
             } else if (c == '-' || c == '+') {
                 int sign = c == '-' ? -1 : 1;
                 pos++;
-                map.put(name, parseNumber(sign));
+                map[name] = parseNumber(sign);
             } else if (is_identifier_start(c)) {
                 std::string identifier = parseName();
                 if (identifier == "true" || identifier == "false") {
-                    map.put(name, identifier == "true");
+                    map[name] = identifier == "true";
                 } else if (identifier == "inf") {
-                    map.put(name, INFINITY);
+                    map[name] = INFINITY;
                 } else if (identifier == "nan") {
-                    map.put(name, NAN);
+                    map[name] = NAN;
                 }
             } else if (c == '"' || c == '\'') {
                 pos++;
-                map.put(name, parseString(c));
+                map[name] = parseString(c);
             } else {
                 LOG_ERROR("Feature is not supported");
                 throw error("Feature is not supported");
@@ -95,20 +94,16 @@ public:
         std::string_view file, 
         std::string_view source
     ) : BasicParser(file, source) {
-        root = dynamic::create_map();
+        root = dv::object();
     }
 
-    dynamic::Map_sptr read() {
+    dv::value read() {
         skipWhitespace();
-        if (!hasNext()) return root;
-        readSection("", *root);
-        return root;
+        if (!hasNext()) return std::move(root);
+        readSection("", root);
+        return std::move(root);
     }
 };
-
-dynamic::Map_sptr toml::parse(std::string_view file, std::string_view source) {
-    return TomlReader(file, source).read();
-}
 
 void toml::parse(
     SettingsHandler& handler, 
@@ -116,14 +111,10 @@ void toml::parse(
     std::string_view source
 ) {
     auto map = parse(file, source);
-    for (auto& entry : map->values) {
-        const auto& sectionName = entry.first;
-        auto sectionMap = std::get_if<dynamic::Map_sptr>(&entry.second);
-        if (sectionMap == nullptr) continue;
+    for (const auto& [sectionName, sectionMap] : map.asObject()) {
+        if (!sectionMap.isObject()) continue;
 
-        for (auto& sectionEntry : (*sectionMap)->values) {
-            const auto& name = sectionEntry.first;
-            auto& value = sectionEntry.second;
+        for (const auto& [name, value] : sectionMap.asObject()) {
             auto fullname = sectionName + "." + name;
             if (handler.has(fullname)) {
                 handler.setValue(fullname, value);
@@ -132,23 +123,22 @@ void toml::parse(
     }
 }
 
-std::string toml::stringify(dynamic::Map& root, const std::string& name) {
+dv::value toml::parse(std::string_view file, std::string_view source) {
+    return TomlReader(file, source).read();
+}
+
+std::string toml::stringify(const dv::value& root, const std::string& name) {
     std::stringstream ss;
     if (!name.empty()) ss << "[" << name << "]\n";
 
-    for (auto& entry : root.values) {
-        if (!std::holds_alternative<dynamic::Map_sptr>(entry.second)) {
-            ss << entry.first << " = ";
-            ss << entry.second << "\n";
+    for (const auto& [key, value] : root.asObject()) {
+        if (!value.isObject()) {
+            ss << key << " = " << value << "\n";
         }
     }
-    for (auto& entry : root.values) {
-        if (auto submap = std::get_if<dynamic::Map_sptr>(&entry.second)) {
-            ss << "\n" << toml::stringify(
-                **submap, name.empty() 
-                    ? entry.first
-                    : name + "." + entry.first
-            );
+    for (const auto& [key, value] : root.asObject()) {
+        if (value.isObject()) {
+            ss << "\n" << toml::stringify(value, name.empty() ? key : name + "." + key);
         }
     }
     return ss.str();

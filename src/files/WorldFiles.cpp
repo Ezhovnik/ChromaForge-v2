@@ -12,7 +12,6 @@
 #include <constants.h>
 #include <content/Content.h>
 #include <core_content_defs.h>
-#include <data/dynamic.h>
 #include <items/Inventory.h>
 #include <items/Item.h>
 #include <lighting/Lightmap.h>
@@ -89,26 +88,25 @@ void WorldFiles::writePacks(const std::vector<ContentPack>& packs) {
 }
 
 template<class T>
-static void write_indices(const ContentUnitIndices<T>& indices, dynamic::List& list) {
+static void write_indices(const ContentUnitIndices<T>& indices, dv::value& list) {
     for (auto unit : indices.getIterable()) {
-        list.put(unit->name);
+        list.add(unit->name);
 	}
 }
 
 void WorldFiles::writeIndices(const ContentIndices* indices) {
-    dynamic::Map root;
+    dv::value root = dv::object();
 
-    root.put("region-version", REGION_FORMAT_VERSION);
+    root["region-version"] = dv::value(REGION_FORMAT_VERSION);
 
-    write_indices(indices->blocks, root.putList("blocks"));
-    write_indices(indices->items, root.putList("items"));
-    write_indices(indices->entities, root.putList("entities"));
-
-	files::write_json(getIndicesFile(), &root);
+    write_indices(indices->blocks, root.list("blocks"));
+    write_indices(indices->items, root.list("items"));
+    write_indices(indices->entities, root.list("entities"));
+    files::write_json(getIndicesFile(), root);
 }
 
 void WorldFiles::writeWorldInfo(const WorldInfo& info) {
-	files::write_json(getWorldFile(), info.serialize().get());
+	files::write_json(getWorldFile(), info.serialize());
 }
 
 std::optional<WorldInfo> WorldFiles::readWorldInfo() {
@@ -120,25 +118,24 @@ std::optional<WorldInfo> WorldFiles::readWorldInfo() {
 
     auto root = files::read_json(file);
 	WorldInfo info {};
-    info.deserialize(root.get());
+    info.deserialize(root);
     return info;
 }
 
 static void read_resources_data(
     const Content* content, 
-    const dynamic::List_sptr& list,
+    const dv::value& list,
     ResourceType type
 ) {
     const auto& indices = content->getIndices(type);
-    for (size_t i = 0; i < list->size(); ++i) {
-        auto map = list->map(i);
-        std::string name;
-        map->str("name", name);
+    for (size_t i = 0; i < list.size(); ++i) {
+        auto& map = list[i];
+        const auto& name = map["name"].asString();
         size_t index = indices.indexOf(name);
         if (index == ResourceIndices::MISSING) {
             LOG_WARN("Discard {}", name);
         } else {
-            indices.saveData(index, map->map("saved"));
+            indices.saveData(index, map["saved"]);
         }
     }
 }
@@ -150,11 +147,9 @@ bool WorldFiles::readResourcesData(const Content* content) {
         return false;
     }
     auto root = files::read_json(file);
-    for (const auto& [key, _] : root->values) {
+    for (const auto& [key, arr] : root.asObject()) {
         if (auto resType = ResourceType_from(key)) {
-            if (auto arr = root->list(key)) {
-                read_resources_data(content, arr, *resType);
-            }
+            read_resources_data(content, arr, *resType);
         } else {
             LOG_WARN("Unknown resource type: {}", key);
         }
@@ -169,35 +164,33 @@ void WorldFiles::patchIndicesVersion(const std::string& field, uint version) {
         return;
     }
     auto root = files::read_json(file);
-    root->put(field, version);
-    files::write_json(file, root.get(), true);
+    root[field] = version;
+    files::write_json(file, root, true);
 }
 
-static void erase_pack_indices(dynamic::Map* root, const std::string& id) {
+static void erase_pack_indices(dv::value& root, const std::string& id) {
 	auto prefix = id + ":";
-    auto blocks = root->list("blocks");
-    for (uint i = 0; i < blocks->size(); ++i) {
-        auto name = blocks->str(i);
+    auto& blocks = root["blocks"];
+    for (uint i = 0; i < blocks.size(); ++i) {
+        auto name = blocks[i].asString();
         if (name.find(prefix) != 0) continue;
-        auto value = blocks->getValueWriteable(i);
-        *value = BUILTIN_AIR;
+        blocks[i] = BUILTIN_AIR;
     }
 
-    auto items = root->list("items");
-    for (uint i = 0; i < items->size(); ++i) {
-        auto name = items->str(i);
+    auto& items = root["items"];
+    for (uint i = 0; i < items.size(); ++i) {
+        auto& name = items[i].asString();
         if (name.find(prefix) != 0) continue;
-        auto value = items->getValueWriteable(i);
-        *value = BUILTIN_EMPTY;
+        items[i] = BUILTIN_EMPTY;
     }
 }
 
 void WorldFiles::removeIndices(const std::vector<std::string>& packs) {
     auto root = files::read_json(getIndicesFile());
     for (const auto& id : packs) {
-        erase_pack_indices(root.get(), id);
+        erase_pack_indices(root, id);
     }
-    files::write_json(getIndicesFile(), root.get());
+    files::write_json(getIndicesFile(), root);
 }
 
 std::filesystem::path WorldFiles::getFolder() const {

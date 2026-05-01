@@ -11,15 +11,11 @@
 #include <interfaces/Task.h>
 #include <delegates.h>
 #include <typedefs.h>
+#include <data/dv.h>
 
 class ResPaths;
 class Content;
 class AssetsLoader;
-
-namespace dynamic {
-	class Map;
-	class List;
-}
 
 struct AssetsConfig {
 	virtual ~AssetsConfig() {}
@@ -72,8 +68,8 @@ private:
 
      void tryAddSound(const std::string& name);
 
-     void processPreload(AssetType tag, const std::string& name, dynamic::Map* map);
-	void processPreloadList(AssetType tag, dynamic::List* list);
+     void processPreload(AssetType tag, const std::string& name, const dv::value& map);
+	void processPreloadList(AssetType tag, const dv::value& list);
 	void processPreloadConfig(const std::filesystem::path& file);
 	void processPreloadConfigs(const Content* content);
 public:

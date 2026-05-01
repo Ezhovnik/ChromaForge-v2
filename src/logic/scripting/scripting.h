@@ -10,7 +10,7 @@
 #include <delegates.h>
 #include <logic/scripting/scripting_functional.h>
 #include <typedefs.h>
-#include <data/dynamic.h>
+#include <data/dv.h>
 
 class Engine;
 class Content;
@@ -68,14 +68,14 @@ namespace scripting {
     bool on_item_use_on_block(Player* player, const Item& item, glm::ivec3 ipos, glm::ivec3 normal);
     bool on_item_break_block(Player* player, const Item& item, int x, int y, int z);
 
-    dynamic::Value get_component_value(const scriptenv& env, const std::string& name);
+    dv::value get_component_value(const scriptenv& env, const std::string& name);
 
     void on_entity_spawn(
         const Entity& def,
         entityid_t eid,
         const std::vector<std::unique_ptr<UserComponent>>& components,
-        dynamic::Map_sptr args,
-        dynamic::Map_sptr saved
+        const dv::value& args,
+        const dv::value& saved
     );
     void on_entity_despawn(const Entt_Entity& entity);
     void on_entity_grounded(const Entt_Entity& entity, float force);
@@ -92,7 +92,7 @@ namespace scripting {
 
     void on_ui_open(
         UIDocument* layout, 
-        std::vector<dynamic::Value> args
+        std::vector<dv::value> args
     );
     void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
     void on_ui_close(UIDocument* layout, Inventory* inventory);

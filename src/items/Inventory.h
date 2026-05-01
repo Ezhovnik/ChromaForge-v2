@@ -5,7 +5,6 @@
 
 #include <items/ItemStack.h>
 #include <typedefs.h>
-#include <data/dynamic.h>
 #include <interfaces/Serializable.h>
 
 class ContentIndices;
@@ -28,11 +27,11 @@ public:
 
     void move(ItemStack& item, const ContentIndices* indices, size_t begin=0, size_t end=-1);
 
-    void deserialize(dynamic::Map* src) override;
-    std::unique_ptr<dynamic::Map> serialize() const override;
+    void deserialize(const dv::value& src) override;
+    dv::value serialize() const override;
 
     void convert(const ContentReport* report);
-    static void convert(dynamic::Map* data, const ContentReport* report);
+    static void convert(dv::value& data, const ContentReport* report);
 
     inline int64_t getId() const {
         return id;

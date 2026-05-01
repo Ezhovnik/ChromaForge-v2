@@ -31,10 +31,18 @@ namespace dv {
         String
     };
 
-    namespace objects {
-        class Object;
-        class List;
-        using Bytes = util::Buffer<byte_t>;
+    inline const std::string& type_name(value_type type) {
+        static std::string type_names[] = {
+            "none",
+            "number",
+            "boolean",
+            "integer",
+            "object",
+            "list",
+            "bytes",
+            "string"
+        };
+        return type_names[static_cast<int>(type)];
     }
 
     class value;
@@ -46,6 +54,60 @@ namespace dv {
     using reference = value&;
     using const_reference = const value&;
 
+    namespace objects {
+        using Object = std::unordered_map<key_t, value>;
+        using List = std::vector<value>;
+        using Bytes = util::Buffer<byte_t>;
+    }
+
+    struct optionalvalue {
+        value* ptr;
+
+        optionalvalue(value* ptr) noexcept : ptr(ptr) {}
+
+        inline operator bool() const noexcept {
+            return ptr != nullptr;
+        }
+
+        inline value& operator*() noexcept {
+            return *ptr;
+        }
+
+        inline const value& operator*() const noexcept {
+            return *ptr;
+        }
+
+        bool get(std::string& dst) const;
+        bool get(bool& dst) const;
+        bool get(char& dst) const;
+        bool get(short& dst) const;
+        bool get(int& dst) const;
+        bool get(long& dst) const;
+        bool get(long long& dst) const;
+        bool get(unsigned char& dst) const;
+        bool get(unsigned short& dst) const;
+        bool get(unsigned int& dst) const;
+        bool get(unsigned long& dst) const;
+        bool get(unsigned long long& dst) const;
+        bool get(float& dst) const;
+        bool get(double& dst) const;
+    };
+
+    void log_error(const std::string& log);
+
+    inline void throw_type_error(value_type got, value_type expected) {
+        log_error("Type error: expected " + type_name(expected) + ", got " + type_name(got));
+        throw std::runtime_error(
+            "Type error: expected " + type_name(expected) + ", got " + type_name(got)
+        );
+    }
+
+    inline void check_type(value_type got, value_type expected) {
+        if (got != expected) {
+            throw_type_error(got, expected);
+        }
+    }
+
     class value {
         value_type type = value_type::None;
         union value_u {
@@ -56,70 +118,81 @@ namespace dv {
             std::shared_ptr<objects::Object> object;
             std::shared_ptr<objects::List> list;
             std::shared_ptr<objects::Bytes> bytes;
-            value_u() {}
-            ~value_u() {}
+            value_u() noexcept {}
+            ~value_u() noexcept {}
         } val;
 
-        inline value& setBoolean(boolean_t v) {
+        inline value& setBoolean(boolean_t v) noexcept {
             this->~value();
             type = value_type::Boolean;
             val.boolean = v;
             return *this;
         }
-        inline value& setInteger(integer_t v) {
+        inline value& setInteger(integer_t v) noexcept {
             this->~value();
             type = value_type::Integer;
             val.integer = v;
             return *this;
         }
-        inline value& setNumber(number_t v) {
+        inline value& setNumber(number_t v) noexcept {
             this->~value();
             type = value_type::Number;
             val.number = v;
             return *this;
         }
-        inline value& setNone() {
+        inline value& setNone() noexcept {
             this->~value();
             type = value_type::None;
             return *this;
         }
-        inline value& setString(std::string v) {
+        inline value& setString(std::string v) noexcept {
             this->~value();
             new(&val.string)std::unique_ptr<std::string>(std::make_unique<std::string>(std::move(v)));
             type = value_type::String;
             return *this;
         }
-        inline value& setString(std::unique_ptr<std::string> v) {
+        inline value& setString(std::unique_ptr<std::string> v) noexcept {
             this->~value();
             new(&val.string)std::unique_ptr<std::string>(std::move(v));
             type = value_type::String;
             return *this;
         }
-        inline value& setList(std::shared_ptr<objects::List> ptr) {
+        inline value& setList(std::shared_ptr<objects::List> ptr) noexcept {
             this->~value();
             new(&val.list)std::shared_ptr<objects::List>(std::move(ptr));
             type = value_type::List;
             return *this;
         }
-        inline value& setObject(std::shared_ptr<objects::Object> ptr) {
+        inline value& setObject(std::shared_ptr<objects::Object> ptr) noexcept {
             this->~value();
             new(&val.object)std::shared_ptr<objects::Object>(std::move(ptr));
             type = value_type::Object;
             return *this;
         }
-        inline value& setBytes(std::shared_ptr<objects::Bytes> ptr) {
+        inline value& setBytes(std::shared_ptr<objects::Bytes> ptr) noexcept {
             this->~value();
             new(&val.bytes)std::shared_ptr<objects::Bytes>(std::move(ptr));
             type = value_type::Bytes;
             return *this;
         }
     public:
-        value() : type(value_type::None) {}
-        value(value_type type);
+        value() noexcept : type(value_type::None) {}
 
-        template<class T>
-        value(T v) {
+        template<typename T>
+        value(T v, std::enable_if_t<std::is_fundamental<T>::value, int> = 0) noexcept {
             this->operator=(v);
+        }
+        value(std::string v) noexcept {
+            this->operator=(std::move(v));
+        }
+        value(std::shared_ptr<objects::Object> v) noexcept {
+            this->operator=(std::move(v));
+        }
+        value(std::shared_ptr<objects::List> v) noexcept {
+            this->operator=(std::move(v));
+        }
+        value(std::shared_ptr<objects::Bytes> v) noexcept {
+            this->operator=(std::move(v));
         }
 
         value(const value& v) noexcept : type(value_type::None) {
@@ -130,7 +203,7 @@ namespace dv {
             this->operator=(std::move(v));
         }
 
-        ~value() {
+        ~value() noexcept {
             switch (type) {
                 case value_type::Object:
                     val.object.reset();
@@ -149,28 +222,12 @@ namespace dv {
             }
         }
 
-        inline value& operator=(int8_t v) {
-            return setInteger(v);
+        inline value& operator=(std::nullptr_t) {
+            return setNone();
         }
-        inline value& operator=(int16_t v) {
-            return setInteger(v);
-        }
-        inline value& operator=(int32_t v) {
-            return setInteger(v);
-        }
-        inline value& operator=(int64_t v) {
-            return setInteger(v);
-        }
-        inline value& operator=(uint8_t v) {
-            return setInteger(v);
-        }
-        inline value& operator=(uint16_t v) {
-            return setInteger(v);
-        }
-        inline value& operator=(uint32_t v) {
-            return setInteger(v);
-        }
-        inline value& operator=(uint64_t v) {
+
+        template<typename T>
+        inline std::enable_if_t<std::is_integral<T>() && !std::is_same<T, bool>(), value&>operator=(T v) {
             return setInteger(v);
         }
         inline value& operator=(float v) {
@@ -302,6 +359,10 @@ namespace dv {
             return add(value(v));
         }
 
+        void erase(const key_t& key);
+
+        void erase(size_t index);
+
         value& operator[](const key_t& key);
 
         const value& operator[](const key_t& key) const;
@@ -309,6 +370,14 @@ namespace dv {
         value& operator[](size_t index);
 
         const value& operator[](size_t index) const;
+
+        bool operator!=(std::nullptr_t) const noexcept {
+            return type != value_type::None;
+        }
+
+        bool operator==(std::nullptr_t) const noexcept {
+            return type == value_type::None;
+        }
 
         value& object(const key_t& key);
 
@@ -342,93 +411,105 @@ namespace dv {
             return type;
         }
 
-        const size_t size() const;
+        std::string asString(std::string def) const {
+            if (type != value_type::String) {
+                return def;
+            }
+            return *val.string;
+        }
 
-        const size_t length() const {
+        std::string asString(const char* s) const {
+            return asString(std::string(s));
+        }
+
+        integer_t asBoolean(boolean_t def) const {
+            switch (type) {
+                case value_type::Boolean: 
+                    return val.boolean;
+                default:
+                    return def;
+            }
+        }
+
+        integer_t asInteger(integer_t def) const {
+            switch (type) {
+                case value_type::Integer: 
+                    return val.integer;
+                case value_type::Number: 
+                    return static_cast<integer_t>(val.number);
+                default:
+                    return def;
+            }
+        }
+
+    integer_t asNumber(integer_t def) const {
+            switch (type) {
+                case value_type::Integer: 
+                    return static_cast<number_t>(val.integer);
+                case value_type::Number: 
+                    return val.number;
+                default:
+                    return def;
+            }
+        }
+
+        optionalvalue at(const key_t& k) const {
+            check_type(type, value_type::Object);
+            const auto& found = val.object->find(k);
+            if (found == val.object->end()) {
+                return optionalvalue(nullptr);
+            }
+            return optionalvalue(&found->second);
+        }
+
+        optionalvalue at(size_t index) {
+            check_type(type, value_type::List);
+            return optionalvalue(&val.list->at(index));
+        }
+
+        const optionalvalue at(size_t index) const {
+            check_type(type, value_type::List);
+            return optionalvalue(&val.list->at(index));
+        }
+
+        bool has(const key_t& k) const;
+
+        size_t size() const noexcept;
+
+        size_t length() const noexcept {
             return size();
         }
-        inline bool empty() const {
+        inline bool empty() const noexcept {
             return size() == 0;
         }
-    };
 
-    inline value none = value();
-}
-
-namespace dv::objects {
-    class Object {
-        map_t map;
-    public:
-        Object() = default;
-        Object(std::initializer_list<pair> pairs) : map(pairs) {}
-        Object(const Object&) = delete;
-        ~Object() = default;
-
-        reference operator[](const key_t& key) {
-            return map[key];
+        inline bool isString() const noexcept {
+            return type == value_type::String;
         }
-        const_reference operator[](const key_t& key) const {
-            return map.at(key);
+        inline bool isObject() const noexcept {
+            return type == value_type::Object;
         }
-
-        map_t::const_iterator begin() const {
-            return map.begin();
+        inline bool isList() const noexcept {
+            return type == value_type::List;
         }
-        map_t::const_iterator end() const {
-            return map.end();
+        inline bool isInteger() const noexcept {
+            return type == value_type::Integer;
         }
-
-        const size_t size() const {
-            return map.size();
+        inline bool isNumber() const noexcept {
+            return type == value_type::Number;
         }
     };
 
-    class List {
-        list_t list;
-    public:
-        List() = default;
-        List(std::initializer_list<value> values) : list(values) {}
-        List(const List&) = delete;
-        ~List() = default;
-
-        reference operator[](std::size_t index) {
-            return list.at(index);
-        }
-
-        const_reference operator[](std::size_t index) const {
-            return list.at(index);
-        }
-
-        void push(value v) {
-            list.push_back(std::move(v));
-        }
-
-        reference add(value v) {
-            list.push_back(std::move(v));
-            return list[list.size()-1];
-        }
-
-        auto begin() {
-            return list.begin();
-        }
-        auto end() {
-            return list.end();
-        }
-
-        list_t::const_iterator begin() const {
-            return list.begin();
-        }
-        list_t::const_iterator end() const {
-            return list.end();
-        }
-
-        const size_t size() const {
-            return list.size();
-        }
-    };
+    inline bool is_numeric(const value& val) {
+        return val.isInteger() || val.isNumber();
+    }
 }
 
 namespace dv {
+    inline const std::string& type_name(const value& value) {
+        return type_name(value.getType());
+    }
+
     inline value object() {
         return std::make_shared<objects::Object>();
     }
@@ -440,4 +521,73 @@ namespace dv {
     inline value list(std::initializer_list<value> values) {
         return std::make_shared<objects::List>(values);
     }
+
+    template<typename T> inline bool get_to_int(value* ptr, T& dst) {
+        if (ptr) {
+            dst = ptr->asInteger();
+            return true;
+        }
+        return false;
+    }
+    template<typename T> inline bool get_to_num(value* ptr, T& dst) {
+        if (ptr) {
+            dst = ptr->asNumber();
+            return true;
+        }
+        return false;
+    }
+    inline bool optionalvalue::get(std::string& dst) const {
+        if (ptr) {
+            dst = ptr->asString();
+            return true;
+        }
+        return false;
+    }
+
+    inline bool optionalvalue::get(bool& dst) const {
+        if (ptr) {
+            dst = ptr->asBoolean();
+            return true;
+        }
+        return false;
+    }
+
+    inline bool optionalvalue::get(char& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(short& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(int& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(long& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(long long& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(unsigned char& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(unsigned short& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(unsigned int& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(unsigned long& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(unsigned long long& dst) const {
+        return get_to_int(ptr, dst);
+    }
+    inline bool optionalvalue::get(float& dst) const {
+        return get_to_num(ptr, dst);
+    }
+    inline bool optionalvalue::get(double& dst) const {
+        return get_to_num(ptr, dst);
+    }
 }
+
+std::ostream& operator<<(std::ostream& stream, const dv::value& value);

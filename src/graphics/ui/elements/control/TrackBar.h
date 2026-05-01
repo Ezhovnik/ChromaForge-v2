@@ -1,7 +1,6 @@
 #pragma once
 
 #include <graphics/ui/elements/UINode.h>
-#include <data/dynamic.h>
 
 namespace gui {
     class TrackBar : public UINode {

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include <data/dynamic_fwd.h>
+#include <data/dv.h>
 
 /**
  * @brief Абстрактный интерфейс для объектов, поддерживающих сериализацию в JSON.
@@ -12,16 +12,6 @@
 class Serializable {
 public:
     virtual ~Serializable() {}
-
-    /**
-     * @brief Сериализует объект в JSON-объект (Map).
-     * @return Умный указатель на динамический Map, содержащий данные объекта.
-     */
-    virtual std::unique_ptr<dynamic::Map> serialize() const = 0;
-
-/**
-     * @brief Восстанавливает состояние объекта из JSON-объекта.
-     * @param src Указатель на динамический Map, содержащий сериализованные данные.
-     */
-    virtual void deserialize(dynamic::Map* src) = 0;
+    virtual dv::value serialize() const = 0;
+    virtual void deserialize(const dv::value& src) = 0;
 };

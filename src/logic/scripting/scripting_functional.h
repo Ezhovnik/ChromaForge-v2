@@ -4,10 +4,11 @@
 
 #include <delegates.h>
 #include <typedefs.h>
-#include <data/dynamic.h>
+#include <data/dv.h>
 
 namespace scripting {
-    using common_func = std::function<dynamic::Value(const std::vector<dynamic::Value>&)>;
+    using common_func = std::function<dv::value(const std::vector<dv::value>&)>;
+    using value_to_string_func = std::function<std::string(const dv::value&)>;
 
     runnable create_runnable(
         const scriptenv& env,
@@ -69,7 +70,7 @@ namespace scripting {
         const std::string& file="<string>"
     );
 
-    dynamic::to_string_func create_tostring(
+    value_to_string_func create_tostring(
         const scriptenv& env,
         const std::string& src,
         const std::string& file="<string>"

@@ -7,7 +7,7 @@
 #include <typedefs.h>
 #include <util/timeutil.h>
 #include <content/ContentPack.h>
-#include <data/dynamic.h>
+#include <data/dv.h>
 #include <interfaces/Serializable.h>
 
 /**
@@ -50,8 +50,8 @@ struct WorldInfo : public Serializable {
 
      int major = 0, minor = -1, maintenance = -1;
 
-     std::unique_ptr<dynamic::Map> serialize() const override;
-     void deserialize(dynamic::Map* src) override;
+     dv::value serialize() const override;
+     void deserialize(const dv::value& src) override;
 };
 
 class World {

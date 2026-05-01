@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include <debug/Logger.h>
-#include <data/dynamic.h>
+#include <data/dv.h>
 #include <coders/json.h>
 #include <util/stringutil.h>
 #include <coders/toml.h>
@@ -168,7 +168,7 @@ void Events::setPosition(float xpos, float ypos) {
 }
 
 std::string Events::writeBindings() {
-    dynamic::Map obj;
+    auto obj = dv::object();
     for (auto& entry : Events::bindings) {
         const auto& binding = entry.second;
 
@@ -184,32 +184,28 @@ std::string Events::writeBindings() {
 				LOG_ERROR("Unsupported control type");
 				throw std::runtime_error("Unsupported control type");
         }
-        obj.put(entry.first, value);
+        obj[entry.first] = std::move(value);
     }
     return toml::stringify(obj);
 }
 
 void Events::loadBindings(const std::string& filename, const std::string& source) {
     auto map = toml::parse(filename, source);
-    for (auto& entry : map->values) {
-        if (auto value = std::get_if<std::string>(&entry.second)) {
-            auto [prefix, codename] = util::split_at(*value, ':');
-            inputType type;
-            int code;
-            if (prefix == "key") {
-                type = inputType::keyboard;
-                code = static_cast<int>(input_util::keycode_from(codename));
-            } else if (prefix == "mouse") {
-                type = inputType::mouse;
-                code = static_cast<int>(input_util::mousecode_from(codename));
-            } else {
-                LOG_ERROR("Unknown input type: {} (binding {})", prefix, util::quote(entry.first));
-                continue;
-            }
-            Events::bind(entry.first, type, code);
+    for (auto& [key, value] : map.asObject()) {
+        auto [prefix, codename] = util::split_at(value.asString(), ':');
+        inputType type;
+        int code;
+        if (prefix == "key") {
+            type = inputType::keyboard;
+            code = static_cast<int>(input_util::keycode_from(codename));
+        } else if (prefix == "mouse") {
+            type = inputType::mouse;
+            code = static_cast<int>(input_util::mousecode_from(codename));
         } else {
-            LOG_ERROR("Invalid binding entry: {}", entry.first);
+            LOG_ERROR("Unknown input type: {} (binding {})", prefix, util::quote(key));
+            continue;
         }
+        Events::bind(key, type, code);
     }
 }
 

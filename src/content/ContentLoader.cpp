@@ -16,11 +16,11 @@
 #include <logic/scripting/scripting.h>
 #include <util/listutil.h>
 #include <items/Item.h>
-#include <data/dynamic.h>
 #include <core_content_defs.h>
 #include <content/ContentBuilder.h>
 #include <util/stringutil.h>
 #include <objects/rigging.h>
+#include <data/dv_util.h>
 
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder) : pack(pack), builder(builder) {
     auto runtime = std::make_unique<ContentPackRuntime>(
@@ -53,7 +53,7 @@ static void detect_defs(
 
 bool ContentLoader::fixPackIndices(
     const std::filesystem::path& folder,
-    dynamic::Map* indicesRoot,
+    dv::value& indicesRoot,
     const std::string& contentSection
 ) {
     std::vector<std::string> detected;
@@ -61,25 +61,23 @@ bool ContentLoader::fixPackIndices(
 
     std::vector<std::string> indexed;
     bool modified = false;
-    if (!indicesRoot->has(contentSection)) {
-        indicesRoot->putList(contentSection);
+    if (!indicesRoot.has(contentSection)) {
+        indicesRoot.list(contentSection);
     }
-    auto arr = indicesRoot->list(contentSection);
-    if (arr) {
-        for (uint i = 0; i < arr->size(); ++i) {
-            std::string name = arr->str(i);
-            if (!util::contains(detected, name)) {
-                arr->remove(i);
-                i--;
-                modified = true;
-                continue;
-            }
-            indexed.push_back(name);
+    auto& arr = indicesRoot[contentSection];
+    for (size_t i = 0; i < arr.size(); ++i) {
+        const std::string& name = arr[i].asString();
+        if (!util::contains(detected, name)) {
+            arr.erase(i);
+            i--;
+            modified = true;
+            continue;
         }
+        indexed.push_back(name);
     }
     for (const auto &name : detected) {
         if (!util::contains(indexed, name)) {
-            arr->put(name);
+            arr.add(name);
             modified = true;
         }
     }
@@ -93,19 +91,19 @@ void ContentLoader::fixPackIndices() {
     auto itemsFolder = folder/ContentPack::ITEMS_FOLDER;
     auto entitiesFolder = folder/ContentPack::ENTITIES_FOLDER;
 
-    dynamic::Map_sptr root;
+    dv::value root;
     if (std::filesystem::is_regular_file(indexFile)) {
         root = files::read_json(indexFile);
     } else {
-        root = dynamic::create_map();
+        root = dv::object();
     }
 
     bool modified = false;
-    modified |= fixPackIndices(blocksFolder, root.get(), "blocks");
-    modified |= fixPackIndices(itemsFolder, root.get(), "items");
-    modified |= fixPackIndices(entitiesFolder, root.get(), "entities");
+    modified |= fixPackIndices(blocksFolder, root, "blocks");
+    modified |= fixPackIndices(itemsFolder, root, "items");
+    modified |= fixPackIndices(entitiesFolder, root, "entities");
 
-    if (modified) files::write_json(indexFile, root.get());
+    if (modified) files::write_json(indexFile, root);
 }
 
 void ContentLoader::loadGenerator(Generator& def, const std::string& full, const std::string& name) {
@@ -120,9 +118,8 @@ void ContentLoader::loadGenerator(Generator& def, const std::string& full, const
 void ContentLoader::loadBlock(Block& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
 
-    if (root->has("parent")) {
-        std::string parentName;
-        root->str("parent", parentName);
+    if (root.has("parent")) {
+        const auto& parentName = root["parent"].asString();
         auto parentDef = this->builder.blocks.get(parentName);
         if (parentDef == nullptr) {
             LOG_ERROR("Failed to find parent ({}) for {}", parentName, name);
@@ -133,27 +130,26 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         parentDef->cloneTo(def);
     }
 
-    root->str("caption", def.caption);
+    root.at("caption").get(def.caption);
 
-    if (root->has("texture")) {
-        std::string texture;
-        root->str("texture", texture);
+    if (root.has("texture")) {
+        const auto& texture = root["texture"].asString();
         for (uint i = 0; i < 6; ++i) {
             def.textureFaces[i] = texture;
         }
-    } else if (root->has("texture-faces")) {
-        auto texarr = root->list("texture-faces");
+    } else if (root.has("texture-faces")) {
+        const auto& texarr = root["texture-faces"];
         for (uint i = 0; i < 6; ++i) {
-            def.textureFaces[i] = texarr->str(i);
+            def.textureFaces[i] = texarr[i].asString();
         }
     }
 
     std::string modelName;
-    root->str("model", modelName);
+    root.at("model").get(modelName);
     if (auto model = BlockModel_from(modelName)) {
         if (*model == BlockModel::Custom) {
-            if (root->has("model-primitives")) {
-                loadCustomBlockModel(def, root->map("model-primitives").get());
+            if (root.has("model-primitives")) {
+                loadCustomBlockModel(def, root["model-primitives"]);
             } else {
                 LOG_ERROR("Error occured while block {} parsed: no 'model-primitives' found", name);
             }
@@ -164,10 +160,10 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         def.model = BlockModel::None;
     }
 
-    root->str("material", def.material);
+    root.at("material").get(def.material);
 
     std::string profile = BlockRotProfile::NONE_NAME;
-    root->str("rotation", profile);
+    root.at("rotation").get(profile);
     def.rotatable = profile != BlockRotProfile::NONE_NAME;
     if (profile == BlockRotProfile::PIPE_NAME) {
         def.rotations = BlockRotProfile::PIPE;
@@ -178,20 +174,29 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         def.rotatable = false;
     }
 
-    auto boxarr = root->list("hitboxes");
-    if (boxarr) {
-        def.hitboxes.resize(boxarr->size());
-        for (uint i = 0; i < boxarr->size(); ++i) {
-            auto box = boxarr->list(i);
+    if (auto found = root.at("hitboxes")) {
+        const auto& boxarr = *found;
+        def.hitboxes.resize(boxarr.size());
+        for (uint i = 0; i < boxarr.size(); i++) {
+            const auto& box = boxarr[i];
             auto& hitboxesIndex = def.hitboxes[i];
-            hitboxesIndex.a = glm::vec3(box->num(0), box->num(1), box->num(2));
-            hitboxesIndex.b = glm::vec3(box->num(3), box->num(4), box->num(5));
+            hitboxesIndex.a = glm::vec3(
+                box[0].asNumber(), box[1].asNumber(), box[2].asNumber()
+            );
+            hitboxesIndex.b = glm::vec3(
+                box[3].asNumber(), box[4].asNumber(), box[5].asNumber()
+            );
             hitboxesIndex.b += hitboxesIndex.a;
         }
-    } else if ((boxarr = root->list("hitbox"))) {
+    } else if (auto found = root.at("hitbox")) {
+        const auto& box = *found;
         AABB aabb;
-        aabb.a = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
-        aabb.b = glm::vec3(boxarr->num(3), boxarr->num(4), boxarr->num(5));
+        aabb.a = glm::vec3(
+            box[0].asNumber(), box[1].asNumber(), box[2].asNumber()
+        );
+        aabb.b = glm::vec3(
+            box[3].asNumber(), box[4].asNumber(), box[5].asNumber()
+        );
         aabb.b += aabb.a;
         def.hitboxes = { aabb };
     } else if (!def.modelBoxes.empty()) {
@@ -200,38 +205,40 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         def.hitboxes = { AABB() };
     }
 
-    if (auto emissionarr = root->list("emission")) {
-        def.emission[0] = emissionarr->num(0);
-        def.emission[1] = emissionarr->num(1);
-        def.emission[2] = emissionarr->num(2);
+    if (auto found = root.at("emission")) {
+        const auto& emissionarr = *found;
+        def.emission[0] = emissionarr[0].asNumber();
+        def.emission[1] = emissionarr[1].asNumber();
+        def.emission[2] = emissionarr[2].asNumber();
     }
 
-    if (auto sizearr = root->list("size")) {
-        def.size.x = sizearr->num(0);
-        def.size.y = sizearr->num(1);
-        def.size.z = sizearr->num(2);
+    if (auto found = root.at("size")) {
+        const auto& sizearr = *found;
+        def.size.x = sizearr[0].asNumber();
+        def.size.y = sizearr[1].asNumber();
+        def.size.z = sizearr[2].asNumber();
         if (def.model == BlockModel::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
             def.model = BlockModel::AABB;
             def.hitboxes = {AABB(def.size)};
         }
     }
 
-    root->flag("obstacle", def.obstacle);
-    root->flag("replaceable", def.replaceable);
-    root->flag("light-passing", def.lightPassing);
-    root->flag("sky-light-passing", def.skyLightPassing);
-    root->flag("shadeless", def.shadeless);
-    root->flag("ambient-occlusion", def.ambientOcclusion);
-    root->flag("breakable", def.breakable);
-    root->flag("selectable", def.selectable);
-    root->flag("grounded", def.grounded);
-    root->flag("hidden", def.hidden);
-    root->num("draw-group", def.drawGroup);
-    root->str("picking-item", def.pickingItem);
-    root->str("script-name", def.scriptName);
-    root->str("ui-layout", def.uiLayout);
-    root->num("inventory-size", def.inventorySize);
-    root->num("tick-interval", def.sparkInterval);
+    root.at("obstacle").get(def.obstacle);
+    root.at("replaceable").get(def.replaceable);
+    root.at("light-passing").get(def.lightPassing);
+    root.at("sky-light-passing").get(def.skyLightPassing);
+    root.at("shadeless").get(def.shadeless);
+    root.at("ambient-occlusion").get(def.ambientOcclusion);
+    root.at("breakable").get(def.breakable);
+    root.at("selectable").get(def.selectable);
+    root.at("grounded").get(def.grounded);
+    root.at("hidden").get(def.hidden);
+    root.at("draw-group").get(def.drawGroup);
+    root.at("picking-item").get(def.pickingItem);
+    root.at("script-name").get(def.scriptName);
+    root.at("ui-layout").get(def.uiLayout);
+    root.at("inventory-size").get(def.inventorySize);
+    root.at("spark-interval").get(def.sparkInterval);
     if (def.sparkInterval == 0) {
         def.sparkInterval = 1;
     }
@@ -241,24 +248,28 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
     }
 }
 
-void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
-    if (primitives->has("aabbs")) {
-        auto modelboxes = primitives->list("aabbs");
-        for (uint i = 0; i < modelboxes->size(); ++i) {
-            auto boxarr = modelboxes->list(i);
+void ContentLoader::loadCustomBlockModel(Block& def, const dv::value& primitives) {
+    if (primitives.has("aabbs")) {
+        const auto& modelboxes = primitives["aabbs"];
+        for (uint i = 0; i < modelboxes.size(); ++i) {
+            const auto& boxarr = modelboxes[i];
             AABB modelbox;
-            modelbox.a = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
-            modelbox.b = glm::vec3(boxarr->num(3), boxarr->num(4), boxarr->num(5));
+            modelbox.a = glm::vec3(
+                boxarr[0].asNumber(), boxarr[1].asNumber(), boxarr[2].asNumber()
+            );
+            modelbox.b = glm::vec3(
+                boxarr[3].asNumber(), boxarr[4].asNumber(), boxarr[5].asNumber()
+            );
             modelbox.b += modelbox.a;
             def.modelBoxes.push_back(modelbox);
 
-            if (boxarr->size() == 7) {
+            if (boxarr.size() == 7) {
                 for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.emplace_back(boxarr->str(6));
+                    def.modelTextures.emplace_back(boxarr[6].asString());
                 }
-            } else if (boxarr->size() == 12) {
+            } else if (boxarr.size() == 12) {
                 for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.emplace_back(boxarr->str(j));
+                    def.modelTextures.emplace_back(boxarr[j].asString());
                 }
             } else {
                 for (uint j = 6; j < 12; ++j) {
@@ -268,19 +279,25 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
         }
     }
 
-    if (primitives->has("tetragons")) {
-        auto modeltetragons = primitives->list("tetragons");
-        for (uint i = 0; i < modeltetragons->size(); ++i) {
-            auto tgonobj = modeltetragons->list(i);
-            glm::vec3 p1(tgonobj->num(0), tgonobj->num(1), tgonobj->num(2));
-            glm::vec3 xw(tgonobj->num(3), tgonobj->num(4), tgonobj->num(5));
-            glm::vec3 yh(tgonobj->num(6), tgonobj->num(7), tgonobj->num(8));
+    if (primitives.has("tetragons")) {
+        const auto& modeltetragons = primitives["tetragons"];
+        for (uint i = 0; i < modeltetragons.size(); ++i) {
+            const auto& tgonobj = modeltetragons[i];
+            glm::vec3 p1(
+                tgonobj[0].asNumber(), tgonobj[1].asNumber(), tgonobj[2].asNumber()
+            );
+            glm::vec3 xw(
+                tgonobj[3].asNumber(), tgonobj[4].asNumber(), tgonobj[5].asNumber()
+            );
+            glm::vec3 yh(
+                tgonobj[6].asNumber(), tgonobj[7].asNumber(), tgonobj[8].asNumber()
+            );
             def.modelExtraPoints.push_back(p1);
             def.modelExtraPoints.push_back(p1 + xw);
             def.modelExtraPoints.push_back(p1 + xw + yh);
             def.modelExtraPoints.push_back(p1 + yh);
 
-            def.modelTextures.emplace_back(tgonobj->str(9));
+            def.modelTextures.emplace_back(tgonobj[9].asString());
         }
     }
 }
@@ -288,9 +305,8 @@ void ContentLoader::loadCustomBlockModel(Block& def, dynamic::Map* primitives) {
 void ContentLoader::loadItem(Item& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
 
-    if (root->has("parent")) {
-        std::string parentName;
-        root->str("parent", parentName);
+    if (root.has("parent")) {
+        const auto& parentName = root["parent"].asString();
         auto parentDef = this->builder.items.get(parentName);
         if (parentDef == nullptr) {
             LOG_ERROR("Failed to find parent ({}) for {}", parentName, name);
@@ -301,10 +317,10 @@ void ContentLoader::loadItem(Item& def, const std::string& name, const std::file
         parentDef->cloneTo(def);
     }
 
-    root->str("caption", def.caption);
+    root.at("caption").get(def.caption);
 
     std::string iconTypeStr = "";
-    root->str("icon-type", iconTypeStr);
+    root.at("icon-type").get(iconTypeStr);
     if (iconTypeStr == "none") {
         def.iconType = ItemIconType::None;
     } else if (iconTypeStr == "block") {
@@ -314,24 +330,24 @@ void ContentLoader::loadItem(Item& def, const std::string& name, const std::file
     } else if (iconTypeStr.length()){
         LOG_WARN("Unknown icon type: {}", iconTypeStr);
     }
-    root->str("icon", def.icon);
-    root->str("placing-block", def.placingBlock);
-    root->str("script-name", def.scriptName);
-    root->num("stack-size", def.stackSize);
+    root.at("icon").get(def.icon);
+    root.at("placing-block").get(def.placingBlock);
+    root.at("script-name").get(def.scriptName);
+    root.at("stack-size").get(def.stackSize);
 
-    if (auto emissionarr = root->list("emission")) {
-        def.emission[0] = emissionarr->num(0);
-        def.emission[1] = emissionarr->num(1);
-        def.emission[2] = emissionarr->num(2);
+    if (auto found = root.at("emission")) {
+        const auto& emissionarr = *found;
+        def.emission[0] = emissionarr[0].asNumber();
+        def.emission[1] = emissionarr[1].asNumber();
+        def.emission[2] = emissionarr[2].asNumber();
     }
 }
 
 void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
 
-    if (root->has("parent")) {
-        std::string parentName;
-        root->str("parent", parentName);
+    if (root.has("parent")) {
+        const auto& parentName = root["parent"].asString();
         auto parentDef = this->builder.entities.get(parentName);
         if (parentDef == nullptr) {
             LOG_ERROR("Failed to find parent ({}) for {}", parentName, name);
@@ -342,48 +358,62 @@ void ContentLoader::loadEntity(Entity& def, const std::string& name, const std::
         parentDef->cloneTo(def);
     }
 
-    if (auto componentsarr = root->list("components")) {
-        for (size_t i = 0; i < componentsarr->size(); ++i) {
-            def.components.push_back(componentsarr->str(i));
+    if (auto found = root.at("components")) {
+        for (const auto& elem : *found) {
+            def.components.emplace_back(elem.asString());
         }
     }
 
-    if (auto boxarr = root->list("hitbox")) {
-        def.hitbox = glm::vec3(boxarr->num(0), boxarr->num(1), boxarr->num(2));
+    if (auto found = root.at("hitbox")) {
+        const auto& arr = *found;
+        def.hitbox = glm::vec3(
+            arr[0].asNumber(), arr[1].asNumber(), arr[2].asNumber()
+        );
     }
 
-    if (auto sensorsarr = root->list("sensors")) {
-        for (size_t i = 0; i < sensorsarr->size(); ++i) {
-            if (auto sensorarr = sensorsarr->list(i)) {
-                auto sensorType = sensorarr->str(0);
-                if (sensorType == "aabb") {
-                    def.boxSensors.emplace_back(i, AABB{
-                        {sensorarr->num(1), sensorarr->num(2), sensorarr->num(3)},
-                        {sensorarr->num(4), sensorarr->num(5), sensorarr->num(6)}
-                    });
-                } else if (sensorType == "radius") {
-                    def.radialSensors.emplace_back(i, sensorarr->num(1));
-                } else {
-                    LOG_WARN("Entity {}: sensor #{} - unknown type {}", name, i, util::quote(sensorType));
-                }
+    if (auto found = root.at("sensors")) {
+        const auto& arr = *found;
+        for (size_t i = 0; i < arr.size(); ++i) {
+            const auto& sensorarr = arr[i];
+            const auto& sensorType = sensorarr[0].asString();
+            if (sensorType == "aabb") {
+                def.boxSensors.emplace_back(
+                    i,
+                    AABB {
+                        {
+                            sensorarr[1].asNumber(),
+                            sensorarr[2].asNumber(),
+                            sensorarr[3].asNumber()
+                        },
+                        {
+                            sensorarr[4].asNumber(),
+                            sensorarr[5].asNumber(),
+                            sensorarr[6].asNumber()
+                        }
+                    }
+                );
+            } else if (sensorType == "radius") {
+                def.radialSensors.emplace_back(i, sensorarr[1].asNumber());
+            } else {
+                LOG_WARN("Entity {}: sensor #{} - unknown type {}", name, i, util::quote(sensorType));
             }
         }
     }
 
-    root->flag("save", def.save.enabled);
-    root->flag("save-skeleton-pose", def.save.skeleton.pose);
-    root->flag("save-skeleton-textures", def.save.skeleton.textures);
-    root->flag("save-body-velocity", def.save.body.velocity);
-    root->flag("save-body-settings", def.save.body.settings);
+    root.at("save").get(def.save.enabled);
+    root.at("save-skeleton-pose").get(def.save.skeleton.pose);
+    root.at("save-skeleton-textures").get(def.save.skeleton.textures);
+    root.at("save-body-velocity").get(def.save.body.velocity);
+    root.at("save-body-settings").get(def.save.body.settings);
 
     std::string bodyTypeName;
-    root->str("body-type", bodyTypeName);
+    root.at("body-type").get(bodyTypeName);
     if (auto bodyType = BodyType_from(bodyTypeName)) {
         def.bodyType = *bodyType;
     }
 
-    root->str("skeleton-name", def.skeletonName);
-    root->flag("blocking", def.blocking);
+    root.at("skeleton-name").get(def.skeletonName);
+    root.at("blocking").get(def.blocking);
 }
 
 void ContentLoader::loadEntity(Entity& def, const std::string& full, const std::string& name) {
@@ -429,9 +459,9 @@ void ContentLoader::loadItem(Item& def, const std::string& full, const std::stri
 
 void ContentLoader::loadBlockMaterial(BlockMaterial& def, const std::filesystem::path& file) {
     auto root = files::read_json(file);
-    root->str("steps-sound", def.stepsSound);
-    root->str("place-sound", def.placeSound);
-    root->str("break-sound", def.breakSound);
+    root.at("steps-sound").get(def.stepsSound);
+    root.at("place-sound").get(def.placeSound);
+    root.at("break-sound").get(def.breakSound);
 }
 
 static std::tuple<std::string, std::string, std::string> create_unit_id(
@@ -487,7 +517,7 @@ void ContentLoader::load() {
             std::string parent;
             if (std::filesystem::exists(configFile)) {
                 auto root = files::read_json(configFile);
-                if (root->has("parent")) root->str("parent", parent);
+                root.at("parent").get(parent);
             }
             return parent;
         };
@@ -500,9 +530,10 @@ void ContentLoader::load() {
         return std::make_pair(full, new_name);
     };
 
-    if (auto blocksarr = root->list("blocks")) {
-        for (size_t i = 0; i < blocksarr->size(); ++i) {
-            auto [full, name] = processName(blocksarr->str(i));
+    if (auto found = root.at("blocks")) {
+        const auto& blocksarr = *found;
+        for (size_t i = 0; i < blocksarr.size(); ++i) {
+            auto [full, name] = processName(blocksarr[i].asString());
             auto parent = getJsonParent("blocks", name);
             if (parent.empty() || builder.blocks.get(parent)) {
                 // Нет зависимости или зависимость уже загружена/существует в другом пакете контента
@@ -543,9 +574,10 @@ void ContentLoader::load() {
         }
     }
 
-    if (auto itemsarr = root->list("items")) {
-        for (size_t i = 0; i < itemsarr->size(); ++i) {
-            auto [full, name] = processName(itemsarr->str(i));
+    if (auto found = root.at("items")) {
+        const auto& itemsarr = *found;
+        for (size_t i = 0; i < itemsarr.size(); ++i) {
+            auto [full, name] = processName(itemsarr[i].asString());
             auto parent = getJsonParent("items", name);
             if (parent.empty() || builder.items.get(parent)) {
                 // Нет зависимости или зависимость уже загружена/существует в другом пакете контента
@@ -586,9 +618,10 @@ void ContentLoader::load() {
         }
     }
 
-    if (auto entitiesarr = root->list("entities")) {
-        for (size_t i = 0; i < entitiesarr->size(); ++i) {
-            auto [full, name] = processName(entitiesarr->str(i));
+    if (auto found = root.at("entities")) {
+        const auto& entitiesarr = *found;
+        for (size_t i = 0; i < entitiesarr.size(); ++i) {
+            auto [full, name] = processName(entitiesarr[i].asString());
             auto parent = getJsonParent("entities", name);
             if (parent.empty() || builder.entities.get(parent)) {
                 // Нет зависимости или зависимость уже загружена/существует в другом пакете контента
@@ -665,11 +698,9 @@ void ContentLoader::load() {
     std::filesystem::path resourcesFile = folder/std::filesystem::u8path("resources.json");
     if (std::filesystem::exists(resourcesFile)) {
         auto resRoot = files::read_json(resourcesFile);
-        for (const auto& [key, _] : resRoot->values) {
+        for (const auto& [key, arr] : resRoot.asObject()) {
             if (auto resType = ResourceType_from(key)) {
-                if (auto arr = resRoot->list(key)) {
-                    loadResources(*resType, arr.get());
-                }
+                loadResources(*resType, arr);
             } else {
                 LOG_WARN("Unknown resource type: {}", key);
             }
@@ -679,8 +710,10 @@ void ContentLoader::load() {
     LOG_INFO("Successfully loaded content pack [{}]", pack->id);
 }
 
-void ContentLoader::loadResources(ResourceType type, dynamic::List* list) {
-    for (size_t i = 0; i < list->size(); ++i) {
-        builder.resourceIndices[static_cast<size_t>(type)].add(pack->id + ":" + list->str(i), nullptr);
+void ContentLoader::loadResources(ResourceType type, const dv::value& list) {
+    for (size_t i = 0; i < list.size(); ++i) {
+        builder.resourceIndices[static_cast<size_t>(type)].add(
+            pack->id + ":" + list[i].asString(), nullptr
+        );
     }
 }

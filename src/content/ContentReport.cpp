@@ -7,7 +7,6 @@
 #include <files/files.h>
 #include <coders/json.h>
 #include <voxels/Block.h>
-#include <data/dynamic.h>
 #include <items/Item.h>
 #include <world/World.h>
 #include <files/WorldFiles.h>
@@ -22,9 +21,11 @@ ContentReport::ContentReport(
     regionsVersion(regionsVersion) {}
 
 template<class T> static constexpr size_t get_entries_count(
-    const ContentUnitIndices<T>& indices, const dynamic::List_sptr& list
+    const ContentUnitIndices<T>& indices, const dv::value& list
 ) {
-    return list ? std::max(list->size(), indices.count()) : indices.count();
+    return list != nullptr 
+        ? std::max(list.size(), indices.count()) 
+        : indices.count();
 }
 
 std::shared_ptr<ContentReport> ContentReport::create(
@@ -38,9 +39,9 @@ std::shared_ptr<ContentReport> ContentReport::create(
     }
 
     auto root = files::read_json(filename);
-    uint regionsVersion = root->get("region-version", REGION_FORMAT_VERSION);
-    auto blocklist = root->list("blocks");
-    auto itemlist = root->list("items");
+    uint regionsVersion = static_cast<uint>(root["region-version"].asInteger(REGION_FORMAT_VERSION));
+    auto& blocklist = root["blocks"];
+    auto& itemlist = root["items"];
 
     auto* indices = content->getIndices();
     size_t blocks_c = get_entries_count(indices->blocks, blocklist);
@@ -50,8 +51,8 @@ std::shared_ptr<ContentReport> ContentReport::create(
         indices, blocks_c, items_c, regionsVersion
     );
 
-    report->blocks.setup(blocklist.get(), content->blocks);
-    report->items.setup(itemlist.get(), content->items);
+    report->blocks.setup(blocklist, content->blocks);
+    report->items.setup(itemlist, content->items);
     report->buildIssues();
 
     if (report->isUpgradeRequired() || report->hasContentReorder() || report->hasMissingContent()) {

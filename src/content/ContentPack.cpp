@@ -9,7 +9,7 @@
 #include <debug/Logger.h>
 #include <files/engine_paths.h>
 #include <core_content_defs.h>
-#include <data/dynamic.h>
+#include <data/dv.h>
 #include <constants.h>
 #include <core_content_defs.h>
 
@@ -72,18 +72,18 @@ ContentPack ContentPack::read(const std::filesystem::path& folder) {
     auto root = files::read_json(folder/std::filesystem::path(PACKAGE_FILENAME));
     ContentPack pack;
 
-    root->str("id", pack.id);
-    root->str("title", pack.title);
-    root->str("version", pack.version);
-    root->str("creator", pack.creator);
-    root->str("description", pack.description);
+    root.at("id").get(pack.id);
+    root.at("title").get(pack.title);
+    root.at("version").get(pack.version);
+    root.at("creator").get(pack.creator);
+    root.at("description").get(pack.description);
     pack.folder = folder;
 
-    auto dependencies = root->list("dependencies");
-    if (dependencies) {
-        for (size_t i = 0; i < dependencies->size(); ++i) {
+    if (auto found = root.at("dependencies")) {
+        const auto& dependencies = *found;
+        for (const auto& elem : dependencies) {
             pack.dependencies.push_back(
-                {DependencyLevel::Required, dependencies->str(i)}
+                {DependencyLevel::Required, elem.asString()}
             );
         }
     }

@@ -1,38 +1,21 @@
 #include <data/dv.h>
 
 #include <util/Buffer.h>
+#include <debug/Logger.h>
+#include <coders/json.h>
 
 namespace dv {
-    value::value(value_type type) : type(type) {
-        switch (type) {
-            case value_type::Object:
-                val.object = std::make_shared<objects::Object>();
-                break;
-            case value_type::List:
-                val.list = std::make_shared<objects::List>();
-                break;
-            case value_type::Bytes:
-                val.bytes = nullptr;
-                break;
-            case value_type::String:
-                val.string = std::make_unique<std::string>("");
-                break;
-            default:
-                break;
-        }
+    void log_error(const std::string& msg) {
+        LOG_ERROR("{}", msg);
     }
 
     value& value::operator[](const key_t& key) {
-        if (type == value_type::Object) {
-            return (*val.object)[key];
-        }
-        throw std::runtime_error("Value is not an object");
+        check_type(type, value_type::Object);
+        return (*val.object)[key];
     }
     const value& value::operator[](const key_t& key) const {
-        if (type == value_type::Object) {
-            return (*val.object)[key];
-        }
-        throw std::runtime_error("Value is not an object");
+        check_type(type, value_type::Object);
+        return (*val.object)[key];
     }
 
     value& value::operator=(const objects::Bytes& bytes) {
@@ -40,23 +23,17 @@ namespace dv {
     }
 
     value& value::operator[](size_t index) {
-        if (type == value_type::List) {
-            return (*val.list)[index];
-        }
-        throw std::runtime_error("Value is not a list");
+        check_type(type, value_type::List);
+        return (*val.list)[index];
     }
     const value& value::operator[](size_t index) const {
-        if (type == value_type::List) {
-            return (*val.list)[index];
-        }
-        throw std::runtime_error("Value is not a list");
+        check_type(type, value_type::List);
+        return (*val.list)[index];
     }
 
     void value::add(value v) {
-        if (type == value_type::List) {
-            return val.list->push(std::move(v));
-        }
-        throw std::runtime_error("Value is not a list");
+        check_type(type, value_type::List);
+        return val.list->push_back(std::move(v));
     }
 
     value& value::object(const key_t& key) {
@@ -72,54 +49,42 @@ namespace dv {
     }
 
     value& value::object() {
-        if (type == value_type::List) {
-            return val.list->add(std::make_shared<objects::Object>());
-        }
-        throw std::runtime_error("Value is not a list");
+        check_type(type, value_type::List);
+        val.list->push_back(std::make_shared<objects::Object>());
+        return val.list->operator[](val.list->size() - 1);
     }
 
     value& value::list() {
-        if (type == value_type::List) {
-            return val.list->add(std::make_shared<objects::List>());
-        }
-        throw std::runtime_error("Value is not a list");
+        check_type(type, value_type::List);
+        val.list->push_back(std::make_shared<objects::List>());
+        return val.list->operator[](val.list->size()-1);
     }
 
     list_t::iterator value::begin() {
-        if (type == value_type::List) {
-            return val.list->begin();
-        }
-        throw std::runtime_error("Value is not a list");
+        check_type(type, value_type::List);
+        return val.list->begin();
     }
 
     list_t::iterator value::end() {
-        if (type == value_type::List) {
-            return val.list->end();
-        }
-        throw std::runtime_error("Value is not a list");
+        check_type(type, value_type::List);
+        return val.list->end();
     }
 
     list_t::const_iterator value::begin() const {
-        if (type == value_type::List) {
-            const auto& constlist = *val.list;
-            return constlist.begin();
-        }
-        throw std::runtime_error("Value is not a list");
+        check_type(type, value_type::List);
+        const auto& constlist = *val.list;
+        return constlist.begin();
     }
 
     list_t::const_iterator value::end() const {
-        if (type == value_type::List) {
-            const auto& constlist = *val.list;
-            return constlist.end();
-        }
-        throw std::runtime_error("Value is not a list");
+        check_type(type, value_type::List);
+        const auto& constlist = *val.list;
+        return constlist.end();
     }
 
     const std::string& value::asString() const {
-        if (type == value_type::String) {
-            return *val.string;
-        }
-        throw std::runtime_error("Type error");
+        check_type(type, value_type::String);
+        return *val.string;
     }
 
     integer_t value::asInteger() const {
@@ -128,7 +93,8 @@ namespace dv {
         } else if (type == value_type::Number) {
             return static_cast<integer_t>(val.number);
         }
-        throw std::runtime_error("Type error");
+        throw_type_error(type, value_type::Integer);
+        return 0; // unreachable
     }
 
     number_t value::asNumber() const {
@@ -137,40 +103,31 @@ namespace dv {
         } else if (type == value_type::Integer) {
             return static_cast<number_t>(val.integer);
         }
-        throw std::runtime_error("Type error");
+        throw_type_error(type, value_type::Integer);
+        return 0; // unreachable
     }
 
     boolean_t value::asBoolean() const {
-        if (type == value_type::Boolean) {
-            return val.boolean;
-        } else if (type == value_type::Integer) {
-            return val.integer != 0;
-        }
-        throw std::runtime_error("Type error");
+        check_type(type, value_type::Boolean);
+        return val.boolean;
     }
 
     objects::Bytes& value::asBytes() {
-        if (type == value_type::Bytes) {
-            return *val.bytes;
-        }
-        throw std::runtime_error("Type error");
+        check_type(type, value_type::Bytes);
+        return *val.bytes;
     }
 
     const objects::Bytes& value::asBytes() const {
-        if (type == value_type::Bytes) {
-            return *val.bytes;
-        }
-        throw std::runtime_error("Type error");
+        check_type(type, value_type::Bytes);
+        return *val.bytes;
     }
 
     const objects::Object& value::asObject() const {
-        if (type == value_type::Object) {
-            return *val.object;
-        }
-        throw std::runtime_error("Type error");
+        check_type(type, value_type::Object);
+        return *val.object;
     }
 
-    const size_t value::size() const {
+    size_t value::size() const noexcept {
         switch (type) {
             case value_type::List:
                 return val.list->size();
@@ -179,7 +136,28 @@ namespace dv {
             case value_type::String:
                 return val.string->size();
             default:
-                throw std::runtime_error("Type error");
+                return 0;
         }
     }
+
+    bool value::has(const key_t& k) const {
+        if (type == value_type::Object) {
+            return val.object->find(k) != val.object->end();
+        }
+        return false;
+    }
+
+    void value::erase(const key_t& key) {
+        check_type(type, value_type::Object);
+        val.object->erase(key);
+    }
+
+    void value::erase(size_t index) {
+        check_type(type, value_type::List);
+        val.list->erase(val.list->begin() + index);
+    }
+}
+
+std::ostream& operator<<(std::ostream& stream, const dv::value& value) {
+    return stream << json::stringify(value, false);
 }

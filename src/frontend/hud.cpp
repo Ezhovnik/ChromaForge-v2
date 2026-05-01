@@ -475,7 +475,7 @@ void Hud::add(const HudElement& element) {
     if (document) {
         auto invview = std::dynamic_pointer_cast<gui::InventoryView>(element.getNode());
         auto inventory = invview ? invview->getInventory() : nullptr;
-        std::vector<dynamic::Value> args;
+        std::vector<dv::value> args;
         args.emplace_back(inventory ? inventory.get()->getId() : 0);
         for (int i = 0; i < 3; ++i) {
             args.emplace_back(static_cast<integer_t>(blockPos[i]));

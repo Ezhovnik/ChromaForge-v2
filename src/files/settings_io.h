@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-#include <data/dynamic.h>
+#include <data/dv.h>
 
 class Setting;
 struct EngineSettings;
@@ -22,8 +22,8 @@ private:
 public:
     SettingsHandler(EngineSettings& settings);
 
-    dynamic::Value getValue(const std::string& name) const;
-    void setValue(const std::string& name, const dynamic::Value& value);
+    dv::value getValue(const std::string& name) const;
+    void setValue(const std::string& name, const dv::value& value);
 
     std::string toString(const std::string& name) const;
 

@@ -8,7 +8,7 @@
 #include <typedefs.h>
 #include <constants.h>
 #include <content/Content.h>
-#include <data/dynamic.h>
+#include <data/dv.h>
 #include <files/world_regions_fwd.h>
 
 enum class ContentIssueType {
@@ -54,10 +54,10 @@ public:
         }
     }
 
-    void setup(dynamic::List* list, const ContentUnitDefs<U>& defs) {
-        if (list) {
-            for (size_t i = 0; i < list->size(); ++i) {
-                std::string name = list->str(i);
+    void setup(const dv::value& list, const ContentUnitDefs<U>& defs) {
+        if (list != nullptr) {
+            for (size_t i = 0; i < list.size(); ++i) {
+                const std::string& name = list[i].asString();
                 if (auto def = defs.find(name)) {
                     set(i, name, def->rt.id);
                 } else {

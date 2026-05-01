@@ -57,7 +57,7 @@ public:
         }
     }
 
-    dynamic::Value parseValue() {
+    dv::value parseValue() {
         char c = peek();
         if (is_cmd_identifier_start(c) || c == '@') {
             auto str = parseIdentifier(true);
@@ -66,7 +66,7 @@ public:
             } else if (str == "false") {
                 return false;
             } else if (str == "none" || str == "nil" || str == "null") {
-                return dynamic::NONE;
+                return nullptr;
             }
             return str;
         }
@@ -114,8 +114,8 @@ public:
             enumname = parseEnum();
         }
         bool optional = false;
-        dynamic::Value def {};
-        dynamic::Value origin {};
+        dv::value def;
+        dv::value origin;
         bool loop = true;
         while (hasNext() && loop) {
             char c = peek();
@@ -134,7 +134,14 @@ public:
                     break;
             }
         }
-        return Argument {name, type, optional, def, origin, enumname};
+        return Argument {
+            std::move(name),
+            type,
+            optional,
+            std::move(def),
+            std::move(origin),
+            std::move(enumname)
+        };
     }
 
     Command parseScheme(executor_func executor, std::string_view description) {
@@ -173,16 +180,15 @@ public:
     inline parsing_error typeError(
         const std::string& argname, 
         const std::string& expected, 
-        const dynamic::Value& value
+        const dv::value& value
     ) {
         return argumentError(
-            argname, expected + " expected, got " + dynamic::type_name(value)
+            argname, expected + " expected, got " + dv::type_name(value)
         );
     }
 
-    template<typename T>
-    inline bool typeCheck(Argument* arg, const dynamic::Value& value, const std::string& tname) {
-        if (!std::holds_alternative<T>(value)) {
+    inline bool typeCheck(Argument* arg, dv::value_type type, const dv::value& value, const std::string& tname) {
+        if (value.getType() != type) {
             if (arg->optional) {
                 return false;
             } else {
@@ -192,10 +198,11 @@ public:
         return true;
     }
 
-    inline bool selectorCheck(Argument* arg, const dynamic::Value& value) {
-        if (auto string = std::get_if<std::string>(&value)) {
-            if ((*string)[0] == '@') {
-                if (!util::is_integer((*string).substr(1))) {
+    inline bool selectorCheck(Argument* arg, const dv::value& value) {
+        if (value.isString()) {
+            const auto& string = value.asString();
+            if (string[0] == '@') {
+                if (!util::is_integer(string.substr(1))) {
                     throw argumentError(arg->name, "Invalid selector");
                 }
                 return true;
@@ -209,12 +216,13 @@ public:
         }
     }
 
-    bool typeCheck(Argument* arg, const dynamic::Value& value) {
+    bool typeCheck(Argument* arg, const dv::value& value) {
         switch (arg->type) {
             case ArgType::Enumvalue: {
-                if (auto* string = std::get_if<std::string>(&value)) {
+                if (value.getType() == dv::value_type::String) {
+                    const auto& string = value.asString();
                     auto& enumname = arg->enumname;
-                    if (enumname.find("|" + *string + "|") == std::string::npos) {
+                    if (enumname.find("|" + string + "|") == std::string::npos) {
                         throw error("Argument " + util::quote(arg->name) + ": invalid enumeration value");
                     }
                 } else {
@@ -224,7 +232,7 @@ public:
                 break;
             }
             case ArgType::Number:
-                if (!dynamic::is_numeric(value)) {
+                if (!dv::is_numeric(value)) {
                     if (arg->optional) {
                         return false;
                     } else {
@@ -235,9 +243,9 @@ public:
             case ArgType::Selector:
                 return selectorCheck(arg, value);
             case ArgType::Integer:
-                return typeCheck<integer_t>(arg, value, "integer");
+                return typeCheck(arg, dv::value_type::Integer, value, "integer");
             case ArgType::String:
-                if (!std::holds_alternative<std::string>(value)) {
+                if (!value.isString()) {
                     return !arg->optional;
                 }
                 break;
@@ -245,33 +253,33 @@ public:
         return true;
     }
 
-    dynamic::Value fetchOrigin(CommandsInterpreter* interpreter, Argument* arg) {
-        if (dynamic::is_numeric(arg->origin)) {
-            return arg->origin;
-        } else if (auto string = std::get_if<std::string>(&arg->origin)) {
-            return (*interpreter)[*string];
+    dv::value fetchOrigin(CommandsInterpreter* interpreter, Argument* arg) {
+        if (dv::is_numeric(arg->origin)) {
+            return dv::value(arg->origin);
+        } else if (arg->origin.getType() == dv::value_type::String) {
+            return dv::value((*interpreter)[arg->origin.asString()]);
         }
-        return dynamic::NONE;
+        return nullptr;
     }
 
-    dynamic::Value applyRelative(
+    dv::value applyRelative(
         Argument* arg,
-        dynamic::Value value,
-        const dynamic::Value& origin
+        dv::value value,
+        const dv::value& origin
     ) {
-        if (origin.index() == 0) return value;
+        if (origin == nullptr) return value;
         try {
             if (arg->type == ArgType::Number) {
-                return dynamic::get_number(origin) + dynamic::get_number(value);
+                return origin.asNumber() + value.asNumber();
             } else {
-                return dynamic::get_integer(origin) + dynamic::get_integer(value);
+                return origin.asInteger() + value.asInteger();
             }
         } catch (std::runtime_error& err) {
             throw argumentError(arg->name, err.what());
         }
     }
 
-    dynamic::Value parseRelativeValue(CommandsInterpreter* interpreter, Argument* arg) {
+    dv::value parseRelativeValue(CommandsInterpreter* interpreter, Argument* arg) {
         if (arg->type != ArgType::Number && arg->type != ArgType::Integer) {
             throw error("'~' operator is only allowed for numeric arguments");
         }
@@ -279,11 +287,11 @@ public:
         auto origin = fetchOrigin(interpreter, arg);
         if (peekNoJump() == ' ' || !hasNext()) return origin;
         auto value = parseValue();
-        if (origin.index() == 0) return value;
-        return applyRelative(arg, value, origin);
+        if (origin == nullptr) return value;
+        return applyRelative(arg, std::move(value), origin);
     }
 
-    inline dynamic::Value performKeywordArg(
+    inline dv::value performKeywordArg(
         CommandsInterpreter* interpreter,
         Command* command,
         const std::string& key
@@ -305,14 +313,14 @@ public:
         std::string name = parseIdentifier(true);
         auto command = repo->get(name);
         if (command == nullptr) throw error("Unknown command " + util::quote(name));
-        auto args = dynamic::create_list();
-        auto kwargs = dynamic::create_map();
+        auto args = dv::list();
+        auto kwargs = dv::object();
 
         int arg_index = 0;
 
         while (hasNext()) {
             bool relative = false;
-            dynamic::Value value = dynamic::NONE;
+            dv::value value;
             if (peek() == '~') {
                 relative = true;
                 value = static_cast<integer_t>(0);
@@ -322,54 +330,57 @@ public:
             if (hasNext() && peekNoJump() != ' ') {
                 value = parseValue();
 
-                if (auto string = std::get_if<std::string>(&value)) {
-                    if ((*string)[0] == '$') {
-                        value = (*interpreter)[string->substr(1)];
+                if (value.isString()) {
+                    const auto& string = value.asString();
+                    if (string[0] == '$') {
+                        value = (*interpreter)[string.substr(1)];
                     }
                 }
 
-                if (!relative && hasNext() && peek() == '=') {
-                    auto key = std::get<std::string>(value);
-                    kwargs->put(key, performKeywordArg(interpreter, command, key));
+                if (value.isString() && !relative && hasNext() && peek() == '=') {
+                    const auto& key = value.asString();
+                    kwargs[key] = performKeywordArg(interpreter, command, key);
                 }
             }
 
             Argument* arg = nullptr;
             do {
                 if (arg) {
-                    if (auto string = std::get_if<std::string>(&arg->def)) {
-                        if ((*string)[0] == '$') {
-                            args->put((*interpreter)[string->substr(1)]);
+                    if (arg->def.isString()) {
+                        const auto& string = arg->def.asString();
+                        if (string[0] == '$') {
+                            args.add((*interpreter)[string.substr(1)]);
                         } else {
-                            args->put(arg->def);
+                            args.add(arg->def);
                         }
                     } else {
-                        args->put(arg->def);
+                        args.add(arg->def);
                     }
                 }
                 arg = command->getArgument(arg_index++);
                 if (arg == nullptr) throw error("Extra positional argument");
-                if (arg->origin.index() && relative) break;
+                if (arg->origin != nullptr && relative) break;
             } while (!typeCheck(arg, value));
 
-            if (relative) value = applyRelative(arg, value, fetchOrigin(interpreter, arg));
-            args->put(value);
+            if (relative) value = applyRelative(arg, std::move(value), fetchOrigin(interpreter, arg));
+            args.add(std::move(value));
         }
 
         while (auto arg = command->getArgument(arg_index++)) {
             if (!arg->optional) {
                 throw error("Missing argument " + util::quote(arg->name));
             } else {
-                if (auto string = std::get_if<std::string>(&arg->def)) {
-                    if ((*string)[0] == '$') {
-                        args->put((*interpreter)[string->substr(1)]);
+                if (arg->def.isString()) {
+                    const auto& string = arg->def.asString();
+                    if (string[0] == '$') {
+                        args.add((*interpreter)[string.substr(1)]);
                         continue;
                     }
                 }
-                args->put(arg->def);
+                args.add(arg->def);
             }
         }
-        return Prompt {command, args, kwargs};
+        return Prompt {command, std::move(args), std::move(kwargs)};
     }
 };
 

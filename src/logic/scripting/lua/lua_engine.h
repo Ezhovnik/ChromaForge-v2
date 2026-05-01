@@ -3,7 +3,6 @@
 #include <logic/scripting/lua/lua_util.h>
 
 #include <logic/scripting/scripting_functional.h>
-#include <data/dynamic.h>
 #include <delegates.h>
 
 #include <string>

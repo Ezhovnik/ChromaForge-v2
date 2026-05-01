@@ -8,10 +8,7 @@
 
 #include <typedefs.h>
 #include <util/Buffer.h>
-
-namespace dynamic {
-    class Map;
-}
+#include <data/dv.h>
 
 namespace files {
     class rafile {
@@ -41,12 +38,12 @@ namespace files {
     );
     bool write_json(
         const std::filesystem::path& filename,
-        const dynamic::Map* obj,
+        const dv::value& obj,
         bool nice=true
     );
     bool write_binary_json(
         const std::filesystem::path& filename,
-        const dynamic::Map* obj,
+        const dv::value& obj,
         bool compression=false
     );
 
@@ -68,16 +65,16 @@ namespace files {
     std::string read_string(
         const std::filesystem::path& filename
     );
-    std::shared_ptr<dynamic::Map> read_json(
+    dv::value read_json(
         const std::filesystem::path& file
     );
-    std::shared_ptr<dynamic::Map> read_binary_json(
+    dv::value read_binary_json(
         const std::filesystem::path& file
     );
     std::vector<std::string> read_list(
         const std::filesystem::path& file
     );
-    std::shared_ptr<dynamic::Map> read_toml(
+    dv::value read_toml(
         const std::filesystem::path& file
     );
 }

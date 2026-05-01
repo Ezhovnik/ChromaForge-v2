@@ -9,7 +9,6 @@
 #include <debug/Logger.h>
 #include <coders/json.h>
 #include <util/stringutil.h>
-#include <data/dynamic.h>
 #include <coders/zip.h>
 #include <coders/commons.h>
 #include <coders/toml.h>
@@ -122,22 +121,22 @@ bool files::write_string(const std::filesystem::path& filename, const std::strin
 	return true;
 }
 
-bool files::write_json(const std::filesystem::path& filename, const dynamic::Map* obj, bool nice) {
+bool files::write_json(const std::filesystem::path& filename, const dv::value& obj, bool nice) {
     return files::write_string(filename, json::stringify(obj, nice, "  "));
 }
 
-bool files::write_binary_json(const std::filesystem::path& filename, const dynamic::Map* obj, bool compression) {
+bool files::write_binary_json(const std::filesystem::path& filename, const dv::value& obj, bool compression) {
     auto bytes = json::to_binary(obj, compression);
     return files::write_bytes(filename, bytes.data(), bytes.size());
 }
 
-std::shared_ptr<dynamic::Map> files::read_binary_json(const std::filesystem::path& file) {
+dv::value files::read_binary_json(const std::filesystem::path& file) {
     size_t size;
-    std::unique_ptr<ubyte[]> bytes (files::read_bytes(file, size));
+    auto bytes = files::read_bytes(file, size);
     return json::from_binary(bytes.get(), size);
 }
 
-std::shared_ptr<dynamic::Map> files::read_json(const std::filesystem::path& filename) {
+dv::value files::read_json(const std::filesystem::path& filename) {
 	std::string text = files::read_string(filename);
 	return json::parse(filename.u8string(), text);
 }
@@ -159,6 +158,6 @@ std::vector<std::string> files::read_list(const std::filesystem::path& filename)
 	return lines;
 }
 
-std::shared_ptr<dynamic::Map> files::read_toml(const std::filesystem::path& file) {
+dv::value files::read_toml(const std::filesystem::path& file) {
     return toml::parse(file.u8string(), files::read_string(file));
 }

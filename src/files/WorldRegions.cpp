@@ -8,7 +8,7 @@
 #include <math/voxmaths.h>
 #include <items/Inventory.h>
 #include <debug/Logger.h>
-#include <coders/json.h>
+#include <coders/binary_json.h>
 
 WorldRegion::WorldRegion() :
     chunksData(std::make_unique<std::unique_ptr<ubyte[]>[]>(RegionConsts::VOLUME)),
@@ -103,7 +103,7 @@ static std::unique_ptr<ubyte[]> write_inventories(
     for (auto& entry : inventories) {
         builder.putInt32(entry.first);
         auto map = entry.second->serialize();
-        auto bytes = json::to_binary(map.get(), true);
+        auto bytes = json::to_binary(map, true);
         builder.putInt32(bytes.size());
         builder.put(bytes.data(), bytes.size());
     }   
@@ -126,7 +126,7 @@ static chunk_inventories_map load_inventories(
         auto map = json::from_binary(reader.pointer(), size);
         reader.skip(size);
         auto inv = std::make_shared<Inventory>(0, 0);
-        inv->deserialize(map.get());
+        inv->deserialize(map);
         inventories[index] = inv;
     }
     return inventories;
@@ -225,7 +225,7 @@ void WorldRegions::processInventories(
     });
 }
 
-dynamic::Map_sptr WorldRegions::fetchEntities(int x, int z) {
+dv::value WorldRegions::fetchEntities(int x, int z) {
     if (generatorTestMode) return nullptr;
 
     uint32_t bytesSize;
@@ -233,7 +233,7 @@ dynamic::Map_sptr WorldRegions::fetchEntities(int x, int z) {
     const ubyte* data = layers[REGION_LAYER_ENTITIES].getData(x, z, bytesSize, srcSize);
     if (data == nullptr) return nullptr;
     auto map = json::from_binary(data, bytesSize);
-    if (map->size() == 0) return nullptr;
+    if (map.size() == 0) return nullptr;
     return map;
 }
 
