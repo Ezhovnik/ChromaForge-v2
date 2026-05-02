@@ -105,6 +105,7 @@ public:
     ) = 0;
 
     virtual std::vector<StructurePlacement> placeStructures(
+        const Generator& def,
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
         const std::shared_ptr<Heightmap>& heightmap
     ) = 0;

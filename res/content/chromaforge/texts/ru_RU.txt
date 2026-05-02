@@ -29,3 +29,5 @@ oak door=дубовая дверь
 wool=шерсть
 bedrock breaker=разрушитель бедрока
 birch log=березовое бревно
+dead bush=мертвый куст
+coal ore=угольная руда

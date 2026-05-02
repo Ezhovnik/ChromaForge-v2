@@ -8,6 +8,12 @@ biomes = json.parse(file.read("builtin:generators/default/biomes.json"))
 
 function place_structures(x, z, w, d, seed, hmap)
     local placements = {}
+    for i=1,10 do
+        local sx = math.random() * w
+        local sz = math.random() * d
+        local sy = math.random() * hmap:at(sx, sz)*256 - 6
+        table.insert(placements, {"coal_ore0", {sx, sy, sz}, math.random() * 4})
+    end
     return placements
 end
 
@@ -47,7 +53,8 @@ function generate_heightmap(x, y, w, h, seed)
     local bpd = 4
     local map = _generate_heightmap(
         math.floor(x / bpd), math.floor(y / bpd), 
-        math.floor(w / bpd) + 1, math.floor(h / bpd) + 1, seed, bpd)
+        math.floor(w / bpd) + 1, math.floor(h / bpd) + 1, seed, bpd
+    )
     map:resize(w + bpd, h + bpd, 'linear')
     map:crop(0, 0, w, h)
     return map
@@ -66,7 +73,7 @@ local function _generate_biome_parameters(x, y, w, h, seed, s)
 end
 
 function generate_biome_parameters(x, y, w, h, seed)
-    local bpd = 4
+    local bpd = 8
     local tmap, hmap = _generate_biome_parameters(
         math.floor(x / bpd), math.floor(y / bpd), 
         math.floor(w / bpd) + 1, math.floor(h / bpd) + 1, seed, bpd

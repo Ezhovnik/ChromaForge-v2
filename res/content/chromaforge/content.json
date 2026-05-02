@@ -35,7 +35,8 @@
         "oak_door",
         "wool",
         "birch_log",
-        "dead_bush"
+        "dead_bush",
+        "coal_ore"
     ],
     "items": [
         "bedrock_breaker"

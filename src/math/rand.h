@@ -108,16 +108,16 @@ public:
      * @brief Генерирует следующее 16-битное псевдослучайное число.
      * @return Значение в диапазоне 0..65535.
      */
-	int rand(){
-		seed = (seed + 0x7ed5 + (seed << 6));
-		seed = (seed ^ 0xc23c ^ (seed >> 9));
-		seed = (seed + 0x1656 + (seed << 3));
-		seed = ((seed + 0xa264) ^ (seed << 4));
-		seed = (seed + 0xfd70 - (seed << 3));
-		seed = (seed ^ 0xba49 ^ (seed >> 8));
+	int rand() {
+        seed = (seed + 0x7ed5 + (seed << 6));
+        seed = (seed ^ 0xc23c ^ (seed >> 9));
+        seed = (seed + 0x1656 + (seed << 3));
+        seed = ((seed + 0xa264) ^ (seed << 4));
+        seed = (seed + 0xfd70 - (seed << 3));
+        seed = (seed ^ 0xba49 ^ (seed >> 8));
 
-		return (int)seed;
-	}
+        return static_cast<int>(seed);
+    }
 
     /**
      * @brief Генерирует 32-битное знаковое целое.
@@ -145,12 +145,26 @@ public:
         return (x << 32ULL) | y;
     }
 
+    uint64_t randU64() {
+        uint64_t x = randU32();
+        uint64_t y = randU32();
+        return (x << 32ULL) | y;
+    }
+
+    float randFloat() {
+        return randU32() / static_cast<float>(UINT32_MAX);
+    }
+
+    double randDouble() {
+        return randU64() / static_cast<double>(UINT64_MAX);
+    }
+
     /**
      * @brief Устанавливает seed по одному числу.
      * @param number Исходное значение для инициализации.
      */
 	void setSeed(int number){
-		seed = ((ushort)(number * 3729) ^ (ushort)(number + 16786));
+		seed = (static_cast<ushort>(number * 23729) ^ static_cast<ushort>(number + 16786));
 		rand(); // Прогон для улучшения распределения
 	}
 
@@ -160,7 +174,7 @@ public:
      * @param number2 Второе число.
      */
 	void setSeed(int number1, int number2){
-		seed = (((ushort)(number1 * 23729) | (ushort)(number2 % 16786)) ^ (ushort)(number2 * number1));
+		seed = ((static_cast<ushort>(number1 * 23729) | static_cast<ushort>(number2 % 16786)) ^ static_cast<ushort>(number2 * number1));
 		rand(); // Прогон для улучшения распределения
 	}
 };

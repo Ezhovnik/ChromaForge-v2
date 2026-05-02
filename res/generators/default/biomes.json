@@ -23,9 +23,9 @@
         ],
         "structure_chance": 0.032,
         "structures": [
-            {"name": "tree0", "weight": 1},
-            {"name": "tree1", "weight": 1},
-            {"name": "tree2", "weight": 1},
+            {"name": "oak0", "weight": 1},
+            {"name": "oak1", "weight": 1},
+            {"name": "birch0", "weight": 1},
             {"name": "tower", "weight": 0.002}
         ]
     },
@@ -71,8 +71,8 @@
         ],
         "structure_chance": 0.0001,
         "structures": [
-            {"name": "tree0", "weight": 1},
-            {"name": "tree1", "weight": 1}
+            {"name": "oak0", "weight": 1},
+            {"name": "oak1", "weight": 1}
         ]
     }
 }

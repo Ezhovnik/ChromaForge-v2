@@ -21,10 +21,10 @@ WorldGenerator::WorldGenerator(
     const Generator& def,
     const Content* content,
     uint64_t seed
-) : def(def), 
-    content(content), 
-    seed(seed), 
-    surroundMap(0, MAX_CHUNK_PROTOTYPE_LEVELS) 
+) : def(def),
+    content(content),
+    seed(seed),
+    surroundMap(0, MAX_CHUNK_PROTOTYPE_LEVELS)
 {
     surroundMap.setOutCallback([this](int const x, int const z, int8_t) {
         const auto& found = prototypes.find({x, z});
@@ -53,7 +53,7 @@ WorldGenerator::WorldGenerator(
     for (int i = 0; i < def.structures.size(); i++) {
         def.structures[i]->fragments[0]->prepare(*content);
         for (int j = 1; j < 4; ++j) {
-            def.structures[i]->fragments[j] = def.structures[i]->fragments[j-1]->rotated(*content);
+            def.structures[i]->fragments[j] = def.structures[i]->fragments[j - 1]->rotated(*content);
         }
     }
 }
@@ -144,8 +144,8 @@ void WorldGenerator::placeStructure(
     auto position = glm::ivec3(chunkX * CHUNK_WIDTH, 0, chunkZ * CHUNK_DEPTH) + offset;
     auto size = structure.getSize() + glm::ivec3(0, CHUNK_HEIGHT, 0);
     AABB aabb(position, position + size);
-    for (int lcz = -1; lcz <= 1; lcz++) {
-        for (int lcx = -1; lcx <= 1; lcx++) {
+    for (int lcz = -1; lcz <= 1; ++lcz) {
+        for (int lcx = -1; lcx <= 1; ++lcx) {
             if (lcx == 0 && lcz == 0) {
                 continue;
             }
@@ -167,15 +167,13 @@ void WorldGenerator::placeStructure(
 void WorldGenerator::generateStructures(
     ChunkPrototype& prototype, int chunkX, int chunkZ
 ) {
-    if (prototype.level >= ChunkPrototypeLevel::Structures) {
-        return;
-    }
+    if (prototype.level >= ChunkPrototypeLevel::Structures) return;
 
     const auto& biomes = prototype.biomes;
     const auto& heightmap = prototype.heightmap;
-    const auto& heights = heightmap->getValues();
 
     util::concat(prototype.structures, def.script->placeStructures(
+        def,
         {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed,
         heightmap
     ));
@@ -187,16 +185,17 @@ void WorldGenerator::generateStructures(
             continue;
         }
         placeStructure(
-            offset, placement.structure, placement.rotation, chunkX, chunkZ);
+            offset, placement.structure, placement.rotation, chunkX, chunkZ
+        );
     }
 
     PseudoRandom structsRand;
     structsRand.setSeed(chunkX, chunkZ);
 
+    auto heights = heightmap->getValues();
     for (uint z = 0; z < CHUNK_DEPTH; ++z) {
         for (uint x = 0; x < CHUNK_WIDTH; ++x) {
-            float rand = (structsRand.randU32() % RAND_MAX) / 
-                static_cast<float>(RAND_MAX);
+            float rand = structsRand.randFloat();
             const Biome* biome = biomes[z * CHUNK_WIDTH + x];
             size_t structureId = biome->structures.choose(rand, -1);
             if (structureId == -1) {
@@ -230,9 +229,8 @@ void WorldGenerator::generateStructures(
 void WorldGenerator::generateBiomes(
     ChunkPrototype& prototype, int chunkX, int chunkZ
 ) {
-    if (prototype.level >= ChunkPrototypeLevel::Biomes) {
-        return;
-    }
+    if (prototype.level >= ChunkPrototypeLevel::Biomes) return;
+
     auto biomeParams = def.script->generateParameterMaps(
         {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
     );
@@ -292,9 +290,9 @@ void WorldGenerator::generate(voxel* voxels, int chunkX, int chunkZ) {
 
             generate_pole(seaLayers, seaLevel, height, seaLevel, voxels, x, z);
             generate_pole(groundLayers, height, 0, seaLevel, voxels, x, z);
-            
+
             if (height + 1 > seaLevel) {
-                float rand = (plantsRand.randU32() % RAND_MAX) / static_cast<float>(RAND_MAX);
+                float rand = plantsRand.randFloat();
                 blockid_t plant = biome->plants.choose(rand);
                 if (plant) {
                     voxels[vox_index(x, height + 1, z)].id = plant;
@@ -308,7 +306,8 @@ void WorldGenerator::generate(voxel* voxels, int chunkX, int chunkZ) {
             LOG_ERROR("Invalid structure index {}", placement.structure);
             continue;
         }
-        auto& structure = *def.structures[placement.structure]->fragments[placement.rotation];
+        auto& generatingStructure = def.structures[placement.structure];
+        auto& structure = *generatingStructure->fragments[placement.rotation];
         auto& structVoxels = structure.getRuntimeVoxels();
         const auto& offset = placement.position;
         const auto& size = structure.getSize();

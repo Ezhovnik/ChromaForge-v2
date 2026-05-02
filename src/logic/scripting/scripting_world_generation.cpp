@@ -80,6 +80,7 @@ public:
     }
 
     std::vector<StructurePlacement> placeStructures(
+        const Generator& def,
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
         const std::shared_ptr<Heightmap>& heightmap
     ) override {
@@ -99,7 +100,15 @@ public:
                     lua::rawgeti(L, i);
 
                     lua::rawgeti(L, 1);
-                    int structIndex = lua::tointeger(L, -1);
+                    int structIndex = 0;
+                    if (lua::isstring(L, -1)) {
+                        const auto& found = def.structuresIndices.find(lua::require_string(L, -1));
+                        if (found != def.structuresIndices.end()) {
+                            structIndex = found->second;
+                        }
+                    } else {
+                        structIndex = lua::tointeger(L, -1);
+                    }
                     lua::pop(L);
 
                     lua::rawgeti(L, 2);
@@ -189,7 +198,8 @@ static inline BlocksLayers load_layers(
         const auto& layerMap = layersArr[i];
         try {
             layers.push_back(
-                load_layer(layerMap, lastLayersHeight, hasResizeableLayer));
+                load_layer(layerMap, lastLayersHeight, hasResizeableLayer)
+            );
         } catch (const std::runtime_error& err) {
             LOG_ERROR("{} №{}: {}", fieldname, std::to_string(i), err.what());
             throw std::runtime_error(
@@ -215,7 +225,8 @@ static inline BiomeElementList load_biome_element_list(
             const auto& name = entry[nameName].asString();
             float weight = entry["weight"].asNumber();
             if (weight <= 0.0f) {
-                throw std::runtime_error("weight must be positive");
+                LOG_ERROR("Weight must be positive");
+                throw std::runtime_error("Weight must be positive");
             }
             entries.push_back(WeightedEntry {name, weight, {}});
         }
@@ -292,7 +303,9 @@ std::unique_ptr<GeneratorScript> scripting::load_generator(
     const auto& biomesMap = root["biomes"];
     for (const auto& [biomeName, biomeMap] : biomesMap.asObject()) {
         try {
-            biomes.push_back(load_biome(biomeMap, biomeName, biomeParameters, -2));
+            biomes.push_back(
+                load_biome(biomeMap, biomeName, biomeParameters, -2)
+            );
         } catch (const std::runtime_error& err) {
             LOG_ERROR("Biome {}: {}", biomeName, err.what());
             throw std::runtime_error("Biome " + biomeName + ": " + err.what());
