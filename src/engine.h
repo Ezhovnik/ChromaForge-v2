@@ -91,6 +91,7 @@ public:
 	EngineSettings& getSettings();
     const Content* getContent() const;
     std::vector<ContentPack>& getContentPacks();
+    std::vector<ContentPack> getAllContentPacks();
     std::shared_ptr<Screen> getScreen();
     double getDeltaTime() const;
     SettingsHandler& getSettingsHandler();

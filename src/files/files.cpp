@@ -5,6 +5,7 @@
 #include <memory>
 #include <cerrno>
 #include <cstring>
+#include <map>
 
 #include <debug/Logger.h>
 #include <coders/json.h>
@@ -160,4 +161,33 @@ std::vector<std::string> files::read_list(const std::filesystem::path& filename)
 
 dv::value files::read_toml(const std::filesystem::path& file) {
     return toml::parse(file.u8string(), files::read_string(file));
+}
+
+using DecodeFunc = dv::value(*)(std::string_view, std::string_view);
+
+static std::map<std::filesystem::path, DecodeFunc> data_decoders {
+    {std::filesystem::u8path(".json"), json::parse},
+    {std::filesystem::u8path(".toml"), toml::parse},
+};
+
+bool files::is_data_file(const std::filesystem::path& file) {
+    return is_data_interchange_format(file.extension());
+}
+
+bool files::is_data_interchange_format(const std::filesystem::path& ext) {
+    return data_decoders.find(ext) != data_decoders.end();
+}
+
+dv::value files::read_object(const std::filesystem::path& file) {
+    const auto& found = data_decoders.find(file.extension());
+    if (found == data_decoders.end()) {
+		LOG_ERROR("Unknown file format");
+        throw std::runtime_error("Unknown file format");
+    }
+    auto text = read_string(file);
+    try {
+        return found->second(file.u8string(), text);
+    } catch (const parsing_error& err) {
+        throw std::runtime_error(err.errorLog());
+    }
 }

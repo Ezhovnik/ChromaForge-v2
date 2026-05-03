@@ -32,6 +32,7 @@ class LevelController;
 struct Entity;
 class Entt_Entity;
 class GeneratorScript;
+struct Generator;
 
 namespace scripting {
     extern Engine* engine;
@@ -126,6 +127,7 @@ namespace scripting {
         const std::filesystem::path& file
     );
     std::unique_ptr<GeneratorScript> load_generator(
+        const Generator& def,
         const std::filesystem::path& file
     );
 

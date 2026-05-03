@@ -36,10 +36,16 @@ private:
     void loadItem(Item& def, const std::string& name, const std::filesystem::path& file);
     void loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file);
     void loadResources(ResourceType type, const dv::value& list);
+
+    void loadContent(const dv::value& map);
 public:
     ContentLoader(ContentPack* pack, ContentBuilder& builder);
 
-    bool fixPackIndices(
+    static std::vector<std::string> scanContent(
+        const ContentPack& pack, ContentType type
+    );
+
+    static bool fixPackIndices(
         const std::filesystem::path& folder,
         dv::value& indicesRoot,
         const std::string& contentSection

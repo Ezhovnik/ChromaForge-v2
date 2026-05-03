@@ -19,7 +19,7 @@ static VoxelStructureMeta load_structure_meta(
 static std::vector<std::unique_ptr<GeneratingVoxelStructure>> load_structures(
     const std::filesystem::path& structuresFile
 ) {
-    auto structuresDir = structuresFile.parent_path();
+    auto structuresDir = structuresFile.parent_path()/std::filesystem::path("fragments");
     auto map = files::read_json(structuresFile);
 
     std::vector<std::unique_ptr<GeneratingVoxelStructure>> structures;
@@ -62,15 +62,20 @@ void ContentLoader::loadGenerator(
     Generator& def, const std::string& full, const std::string& name
 ) {
     auto packDir = pack->folder;
-    auto generatorsDir = packDir / GENERATORS_DIR;
-    auto folder = generatorsDir / std::filesystem::u8path(name);
-    auto generatorFile = generatorsDir / std::filesystem::u8path(name + ".lua");
+    auto generatorsDir = packDir/GENERATORS_DIR;
+    auto generatorFile = generatorsDir/std::filesystem::u8path(name + ".toml");
     if (!std::filesystem::exists(generatorFile)) {
         return;
     }
+    auto map = files::read_toml(generatorsDir/std::filesystem::u8path(name + ".toml"));
+    map.at("biome_parameters").get(def.biomeParameters);
+    map.at("sea_level").get(def.seaLevel);
+
+    auto folder = generatorsDir/std::filesystem::u8path(name + ".files");
+    auto scriptFile = folder/std::filesystem::u8path("script.lua");
     auto structuresFile = folder / STRUCTURES_FILE;
     if (std::filesystem::exists(structuresFile)) {
         load_structures(def, structuresFile);
     }
-    def.script = scripting::load_generator(generatorFile);
+    def.script = scripting::load_generator(def, scriptFile);
 }

@@ -37,9 +37,9 @@ Player::Player(
 	speed(speed),
 	chosenSlot(0),
 	position(position),
-	camera(level->getCamera(CHROMAFORGE_CONTENT_NAMESPACE + ":first-person")),
-    spCamera(level->getCamera(CHROMAFORGE_CONTENT_NAMESPACE + ":third-person-front")),
-    tpCamera(level->getCamera(CHROMAFORGE_CONTENT_NAMESPACE + ":third-person-back")),
+	camera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":first-person")),
+    spCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-front")),
+    tpCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-back")),
 	currentCamera(camera),
 	inventory(std::move(inventory)),
 	eid(eid)

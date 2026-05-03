@@ -4,15 +4,17 @@ sea_level = 64
 -- 2 - humidity
 biome_parameters = 2
 
-biomes = json.parse(file.read("builtin:generators/default/biomes.json"))
+biomes = json.parse(file.read("chromaforge:generators/demo.files/biomes.json"))
 
 function place_structures(x, z, w, d, seed, hmap)
     local placements = {}
-    for i=1,10 do
+    for i=1, 10 do
         local sx = math.random() * w
         local sz = math.random() * d
-        local sy = math.random() * hmap:at(sx, sz)*256 - 6
-        table.insert(placements, {"coal_ore0", {sx, sy, sz}, math.random() * 4})
+        local sy = math.random() * 128
+        if sy < hmap:at(sx, sz) * 256 - 6 then
+            table.insert(placements, {"coal_ore0", {sx, sy, sz}, math.random() * 4})
+        end
     end
     return placements
 end
@@ -40,7 +42,6 @@ local function _generate_heightmap(x, y, w, h, seed, s)
     rivermap:max(0.3)
     map:add(0.3)
     map:mul(rivermap)
-
     return map
 end
 
@@ -77,7 +78,7 @@ function generate_biome_parameters(x, y, w, h, seed)
     local tmap, hmap = _generate_biome_parameters(
         math.floor(x / bpd), math.floor(y / bpd), 
         math.floor(w / bpd) + 1, math.floor(h / bpd) + 1, seed, bpd
-    )
+    ) 
     tmap:resize(w + bpd, h + bpd, 'linear')
     tmap:crop(0, 0, w, h)
 

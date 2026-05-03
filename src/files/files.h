@@ -77,4 +77,8 @@ namespace files {
     dv::value read_toml(
         const std::filesystem::path& file
     );
+
+    bool is_data_file(const std::filesystem::path& file);
+    bool is_data_interchange_format(const std::filesystem::path& ext);
+    dv::value read_object(const std::filesystem::path& file);
 }

@@ -15,6 +15,7 @@
 #include <data/setting.h>
 #include <content/Content.h>
 #include <world/generator/WorldGenerator.h>
+#include <util/listutil.h>
 
 static int l_open_world(lua::State* L) {
     auto name = lua::require_string(L, 1);
@@ -116,19 +117,6 @@ static int l_get_default_generator(lua::State* L) {
     return lua::pushstring(L, WorldGenerator::DEFAULT);
 }
 
-static int l_get_generators(lua::State* L) {
-    const auto& generators = scripting::content->generators.getDefs();
-    lua::createtable(L, generators.size(), 0);
-
-    int i = 0;
-    for (auto& [name, _] : generators) {
-        lua::pushstring(L, name);
-        lua::rawseti(L, i + 1);
-        ++i;
-    }
-    return 1;
-}
-
 static int l_get_setting_info(lua::State* L) {
     auto name = lua::require_string(L, 1);
     auto setting = scripting::engine->getSettingsHandler().getSetting(name);
@@ -164,6 +152,5 @@ const luaL_Reg builtinlib [] = {
     {"get_setting_info", lua::wrap<l_get_setting_info>},
     {"quit", lua::wrap<l_quit>},
     {"get_default_generator", lua::wrap<l_get_default_generator>},
-    {"get_generators", lua::wrap<l_get_generators>},
     {NULL, NULL}
 };

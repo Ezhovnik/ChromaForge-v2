@@ -105,15 +105,11 @@ public:
     ) = 0;
 
     virtual std::vector<StructurePlacement> placeStructures(
-        const Generator& def,
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
         const std::shared_ptr<Heightmap>& heightmap
     ) = 0;
 
     virtual const std::vector<Biome>& getBiomes() const = 0;
-    virtual uint getBiomeParameters() const = 0;
-
-    virtual uint getSeaLevel() const = 0;
 
     virtual void prepare(const Generator& def, const Content* content) = 0;
 };
@@ -131,6 +127,9 @@ struct GeneratingVoxelStructure {
 struct Generator {
     std::string name;
     std::unique_ptr<GeneratorScript> script;
+
+    uint seaLevel = 0;
+    uint biomeParameters = 0;
 
     std::unordered_map<std::string, size_t> structuresIndices;
     std::vector<std::unique_ptr<GeneratingVoxelStructure>> structures;

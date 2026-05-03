@@ -19,17 +19,34 @@
 
 void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
     // Воздух
-    Block& block = builder->blocks.create(BUILTIN_AIR);
-    block.drawGroup = 1;
-    block.lightPassing = true;
-    block.skyLightPassing = true;
-    block.obstacle = false;
-    block.selectable = false;
-    block.replaceable = true;
-    block.model = BlockModel::None;
-    block.pickingItem = BUILTIN_EMPTY;
+    {
+        Block& block = builder->blocks.create(BUILTIN_AIR);
+        block.drawGroup = 1;
+        block.lightPassing = true;
+        block.skyLightPassing = true;
+        block.obstacle = false;
+        block.selectable = false;
+        block.replaceable = true;
+        block.model = BlockModel::None;
+        block.pickingItem = BUILTIN_EMPTY;
+    }
 
     // Пустота
     Item& item = builder->items.create(BUILTIN_EMPTY);
     item.iconType = ItemIconType::None;
+
+    {
+        Block& block = builder->blocks.create(BUILTIN_OBSTACLE);
+        for (uint i = 0; i < 6; ++i) {
+            block.textureFaces[i] = "obstacle";
+        }
+        block.hitboxes = {AABB()};
+        block.breakable = false;
+
+        Item& item = builder->items.create(BUILTIN_OBSTACLE + ".item");
+        item.iconType = ItemIconType::Block;
+        item.icon = BUILTIN_OBSTACLE;
+        item.placingBlock = BUILTIN_OBSTACLE;
+        item.caption = block.caption;
+    }
 }
