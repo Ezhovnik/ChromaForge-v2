@@ -160,11 +160,13 @@ Parser::Parser(
 
 dv::value Parser::parse() {
     char next = peek();
-    if (next != '{') {
-        LOG_ERROR("'{' expected");
-        throw error("'{' expected");
+    if (next == '{') {
+        return parseObject();
+    } else if (next == '[') {
+        return parseList();
     }
-    return parseObject();
+    LOG_ERROR("'{' or '[' expected");
+    throw error("'{' or '[' expected");
 }
 
 dv::value Parser::parseObject() {

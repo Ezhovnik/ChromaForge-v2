@@ -97,28 +97,31 @@ public:
     virtual ~GeneratorScript() = default;
 
     virtual std::shared_ptr<Heightmap> generateHeightmap(
-        const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed
+        const glm::ivec2& offset,
+        const glm::ivec2& size,
+        uint64_t seed,
+        uint bpd
     ) = 0;
 
     virtual std::vector<std::shared_ptr<Heightmap>> generateParameterMaps(
-        const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed
+        const glm::ivec2& offset,
+        const glm::ivec2& size,
+        uint64_t seed,
+        uint bpd
     ) = 0;
 
     virtual std::vector<StructurePlacement> placeStructures(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
-        const std::shared_ptr<Heightmap>& heightmap
+        const std::shared_ptr<Heightmap>& heightmap,
+        uint chunkHeight
     ) = 0;
-
-    virtual const std::vector<Biome>& getBiomes() const = 0;
-
-    virtual void prepare(const Generator& def, const Content* content) = 0;
 };
 
-struct GeneratingVoxelStructure {
+struct VoxelStructure {
     VoxelStructureMeta meta;
     std::array<std::unique_ptr<VoxelFragment>, 4> fragments;
 
-    GeneratingVoxelStructure(
+    VoxelStructure(
         VoxelStructureMeta meta,
         std::unique_ptr<VoxelFragment> structure
     );
@@ -130,10 +133,15 @@ struct Generator {
 
     uint seaLevel = 0;
     uint biomeParameters = 0;
+    uint biomesBPD = 8;
+    uint heightsBPD = 4;
 
     std::unordered_map<std::string, size_t> structuresIndices;
-    std::vector<std::unique_ptr<GeneratingVoxelStructure>> structures;
+    std::vector<std::unique_ptr<VoxelStructure>> structures;
+    std::vector<Biome> biomes;
 
     Generator(std::string name);
     Generator(const Generator&) = delete;
+
+    void prepare(const Content* content);
 };

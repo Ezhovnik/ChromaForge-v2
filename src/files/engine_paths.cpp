@@ -30,7 +30,6 @@ static std::array<std::string, F_F_NAME::COUNT> f_f_names{
     "settings.toml"
 };
 
-
 static std::filesystem::path toCanonic(std::filesystem::path path) {
     std::stack<std::string> parts;
     path = path.lexically_normal();
@@ -239,6 +238,28 @@ std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderNa
         }
     }
     return entries;
+}
+
+dv::value ResPaths::readCombinedList(const std::string& filename) {
+    dv::value list = dv::list();
+    for (const auto& root : roots) {
+        auto path = root.path / std::filesystem::u8path(filename);
+        if (!std::filesystem::exists(path)) continue;
+
+        try {
+            auto value = files::read_object(path);
+            if (!value.isList()) {
+                LOG_WARN("Reading combined list {}: {} is not a list (skipped)", root.name, filename);
+                continue;
+            }
+            for (const auto& elem : value) {
+                list.add(elem);
+            }
+        } catch (const std::runtime_error& err) {
+            LOG_WARN("Reading combined list {}: {}: {}", root.name, filename, err.what());
+        }
+    }
+    return list;
 }
 
 const std::filesystem::path& ResPaths::getMainRoot() const {

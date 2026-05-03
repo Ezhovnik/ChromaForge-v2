@@ -1,0 +1,6 @@
+[
+    {"struct": "coal_ore0", "rarity": 22000},
+    {"struct": "copper_ore0", "rarity": 21000},
+    {"struct": "iron_ore0", "rarity": 15000},
+    {"struct": "gold_ore0", "rarity": 10000}
+]

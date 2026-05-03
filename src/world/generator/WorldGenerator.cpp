@@ -13,6 +13,7 @@
 #include <debug/Logger.h>
 #include <world/generator/VoxelFragment.h>
 #include <util/listutil.h>
+#include <math/voxmaths.h>
 
 static inline constexpr uint MAX_PARAMETERS = 4;
 static inline constexpr uint MAX_CHUNK_PROTOTYPE_LEVELS = 5;
@@ -174,7 +175,8 @@ void WorldGenerator::generateStructures(
 
     util::concat(prototype.structures, def.script->placeStructures(
         {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed,
-        heightmap
+        heightmap,
+        CHUNK_HEIGHT
     ));
 
     for (const auto& placement : prototype.structures) {
@@ -230,10 +232,21 @@ void WorldGenerator::generateBiomes(
 ) {
     if (prototype.level >= ChunkPrototypeLevel::Biomes) return;
 
+    uint bpd = def.biomesBPD;
     auto biomeParams = def.script->generateParameterMaps(
-        {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
+        {floordiv(chunkX * CHUNK_WIDTH, bpd), floordiv(chunkZ * CHUNK_DEPTH, bpd)},
+        {floordiv(CHUNK_WIDTH, bpd) + 1, floordiv(CHUNK_DEPTH, bpd) + 1},
+        seed,
+        bpd
     );
-    const auto& biomes = def.script->getBiomes();
+
+    for (const auto& map : biomeParams) {
+        map->resize(
+            CHUNK_WIDTH + bpd, CHUNK_DEPTH + bpd, InterpolationType::Linear
+        );
+        map->crop(0, 0, CHUNK_WIDTH, CHUNK_DEPTH);
+    }
+    const auto& biomes = def.biomes;
 
     auto chunkBiomes = std::make_unique<const Biome*[]>(CHUNK_WIDTH * CHUNK_DEPTH);
     for (uint z = 0; z < CHUNK_DEPTH; ++z) {
@@ -251,9 +264,17 @@ void WorldGenerator::generateHeightmap(
 ) {
     if (prototype.level >= ChunkPrototypeLevel::Heightmap) return;
 
+    uint bpd = def.heightsBPD;
     prototype.heightmap = def.script->generateHeightmap(
-        {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH}, {CHUNK_WIDTH, CHUNK_DEPTH}, seed
+        {floordiv(chunkX * CHUNK_WIDTH, bpd), floordiv(chunkZ * CHUNK_DEPTH, bpd)},
+        {floordiv(CHUNK_WIDTH, bpd) + 1, floordiv(CHUNK_DEPTH, bpd) + 1},
+        seed,
+        bpd
     );
+    prototype.heightmap->resize(
+        CHUNK_WIDTH + bpd, CHUNK_DEPTH + bpd, InterpolationType::Linear
+    );
+    prototype.heightmap->crop(0, 0, CHUNK_WIDTH, CHUNK_DEPTH);
     prototype.level = ChunkPrototypeLevel::Heightmap;
 }
 

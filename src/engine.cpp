@@ -284,21 +284,25 @@ void Engine::loadContent() {
     names = manager.assembly(names);
     contentPacks = manager.getAll(names);
 
-    std::vector<PathsRoot> resRoots;
-    {
-        auto pack = ContentPack::createBuiltin(paths);
-        resRoots.push_back({BUILTIN_CONTENT_NAMESPACE, pack.folder});
-        ContentLoader(&pack, contentBuilder).load();
-        load_configs(pack.folder);
-    }
+    auto builtinPack = ContentPack::createBuiltin(paths);
+
+    std::vector<PathsRoot> resRoots {
+        {BUILTIN_CONTENT_NAMESPACE, builtinPack.folder}
+    };
     for (auto& pack : contentPacks) {
         resRoots.push_back({pack.id, pack.folder});
+    }
+    resPaths = std::make_unique<ResPaths>(resdir, resRoots);
+    {
+        ContentLoader(&builtinPack, contentBuilder).load();
+        load_configs(builtinPack.folder);
+    }
+    for (auto& pack : contentPacks) {
         ContentLoader(&pack, contentBuilder).load();
         load_configs(pack.folder);
     }
 
     content = contentBuilder.build();
-    resPaths = std::make_unique<ResPaths>(resdir, resRoots);
 
     langs::setup(resdir, langs::current->getId(), contentPacks);
 

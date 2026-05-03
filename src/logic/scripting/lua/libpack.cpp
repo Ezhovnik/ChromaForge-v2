@@ -15,11 +15,8 @@
 
 static int l_pack_get_folder(lua::State* L) {
     std::string packName = lua::tostring(L, 1);
-    if (packName == BUILTIN_CONTENT_NAMESPACE) {
-        auto folder = scripting::engine->getPaths()->getResourcesFolder().u8string() + "/";
-        return lua::pushstring(L, folder);
-    }
-    for (auto& pack : scripting::engine->getContentPacks()) {
+    auto packs = scripting::engine->getAllContentPacks();
+    for (auto& pack : packs) {
         if (pack.id == packName) {
             return lua::pushstring(L, pack.folder.u8string() + "/");
         }

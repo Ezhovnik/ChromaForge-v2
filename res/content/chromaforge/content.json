@@ -36,7 +36,11 @@
         "wool",
         "birch_log",
         "dead_bush",
-        "coal_ore"
+        "coal_ore",
+        "iron_ore",
+        "gold_ore",
+        "copper_ore",
+        "gold_block"
     ],
     "items": [
         "bedrock_breaker"

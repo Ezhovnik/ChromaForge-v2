@@ -217,6 +217,14 @@ static int l_file_zip_decompress(lua::State* L) {
     } 
 }
 
+static int l_file_read_combined_list(lua::State* L) {
+    std::string path = lua::require_string(L, 1);
+    if (path.find(':') != std::string::npos) {
+        throw std::runtime_error("Entry point must not be specified");
+    }
+    return lua::pushvalue(L, scripting::engine->getResPaths()->readCombinedList(path));
+}
+
 const luaL_Reg filelib [] = {
     {"exists", lua::wrap<l_file_exists>},
     {"find", lua::wrap<l_file_find>},
@@ -235,5 +243,6 @@ const luaL_Reg filelib [] = {
     {"write", lua::wrap<l_file_write>},
     {"zip_compress", lua::wrap<l_file_zip_compress>},
     {"zip_decompress", lua::wrap<l_file_zip_decompress>},
+    {"read_combined_list", lua::wrap<l_file_read_combined_list>},
     {NULL, NULL}
 };

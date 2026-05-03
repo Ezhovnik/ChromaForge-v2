@@ -7,6 +7,7 @@
 #include <tuple>
 
 #include <content/ContentPack.h>
+#include <data/dv.h>
 
 class files_access_error : public std::runtime_error {
 public:
@@ -67,6 +68,8 @@ public:
     std::string findRaw(const std::string& filename) const;
     std::vector<std::filesystem::path> listdir(const std::string& folder) const;
     std::vector<std::string> listdirRaw(const std::string& folder) const;
+
+    dv::value readCombinedList(const std::string& file);
 
     const std::filesystem::path& getMainRoot() const;
 };

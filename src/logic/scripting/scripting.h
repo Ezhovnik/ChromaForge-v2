@@ -128,7 +128,8 @@ namespace scripting {
     );
     std::unique_ptr<GeneratorScript> load_generator(
         const Generator& def,
-        const std::filesystem::path& file
+        const std::filesystem::path& file,
+        const std::string& dirPath
     );
 
     void close();
