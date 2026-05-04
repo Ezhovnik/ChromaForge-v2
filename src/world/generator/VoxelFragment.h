@@ -18,7 +18,6 @@ class VoxelFragment : public Serializable {
 
     std::vector<voxel> voxelsRuntime;
 public:
-
     VoxelFragment() : size() {}
     VoxelFragment(
         glm::ivec3 size,

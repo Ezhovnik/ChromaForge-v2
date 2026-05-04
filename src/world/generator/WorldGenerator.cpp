@@ -51,7 +51,7 @@ WorldGenerator::WorldGenerator(
         generateStructures(requirePrototype(x, z), x, z);
     });
 
-    for (int i = 0; i < def.structures.size(); i++) {
+    for (int i = 0; i < def.structures.size(); ++i) {
         def.structures[i]->fragments[0]->prepare(*content);
         for (int j = 1; j < 4; ++j) {
             def.structures[i]->fragments[j] = def.structures[i]->fragments[j - 1]->rotated(*content);
@@ -147,9 +147,7 @@ void WorldGenerator::placeStructure(
     AABB aabb(position, position + size);
     for (int lcz = -1; lcz <= 1; ++lcz) {
         for (int lcx = -1; lcx <= 1; ++lcx) {
-            if (lcx == 0 && lcz == 0) {
-                continue;
-            }
+            if (lcx == 0 && lcz == 0) continue;
             auto& otherPrototype = requirePrototype(
                 chunkX + lcx, chunkZ + lcz
             );
@@ -354,4 +352,22 @@ void WorldGenerator::generate(voxel* voxels, int chunkX, int chunkZ) {
             }
         }
     }
+}
+
+WorldGenDebugInfo WorldGenerator::createDebugInfo() const {
+    const auto& area = surroundMap.getArea();
+    const auto& levels = area.getBuffer();
+    auto values = std::make_unique<ubyte[]>(area.getWidth() * area.getDepth());
+
+    for (uint i = 0; i < levels.size(); ++i) {
+        values[i] = levels[i];
+    }
+
+    return WorldGenDebugInfo {
+        area.getOffsetX(),
+        area.getOffsetZ(),
+        static_cast<uint>(area.getWidth()),
+        static_cast<uint>(area.getDepth()),
+        std::move(values)
+    };
 }

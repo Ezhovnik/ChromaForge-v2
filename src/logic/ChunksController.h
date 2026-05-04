@@ -35,4 +35,8 @@ public:
         int centerX,
         int centerY
 	);
+
+	const WorldGenerator* getGenerator() const {
+		return generator.get();
+	}
 };

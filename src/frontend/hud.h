@@ -16,6 +16,7 @@ class Block;
 class LevelFrontend;
 class UIDocument;
 class Inventory;
+class ImageData;
 
 namespace gui {
     class GUI;
@@ -85,6 +86,8 @@ private:
     std::shared_ptr<gui::UINode> darkOverlay;
     std::shared_ptr<gui::UINode> secondUI = nullptr;
 
+    std::unique_ptr<ImageData> debugImgWorldGen;
+
 	gui::GUI* guiController;
     LevelFrontend* levelFrontend;
 
@@ -101,6 +104,7 @@ private:
     void cleanup();
 
     void showExchangeSlot();
+    void updateWorldGenDebugVisualization();
 public:
 	Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player);
 	~Hud();
@@ -125,4 +129,6 @@ public:
     Player* getPlayer() const;
 
     std::shared_ptr<Inventory> getBlockInventory();
+
+    inline static std::string DEBUG_WORLDGEN_IMAGE = "#debug.img.worldgen";
 };

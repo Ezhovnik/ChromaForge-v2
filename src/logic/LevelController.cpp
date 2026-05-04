@@ -85,3 +85,7 @@ PlayerController* LevelController::getPlayerController() {
 BlocksController* LevelController::getBlocksController() {
     return blocks.get();
 }
+
+ChunksController* LevelController::getChunksController() {
+    return chunks.get();
+}

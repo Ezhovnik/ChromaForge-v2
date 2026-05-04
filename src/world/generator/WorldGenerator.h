@@ -34,6 +34,14 @@ struct ChunkPrototype {
     std::vector<StructurePlacement> structures;
 };
 
+struct WorldGenDebugInfo {
+    int areaOffsetX;
+    int areaOffsetZ;
+    uint areaWidth;
+    uint areaDepth;
+    std::unique_ptr<ubyte[]> areaLevels;
+};
+
 // Класс для генерации воксельного мира
 class WorldGenerator {
 	const Generator& def;
@@ -69,6 +77,8 @@ public:
     void update(int centerX, int centerY, int loadDistance);
 
 	void generate(voxel* voxels, int x, int z);
+
+    WorldGenDebugInfo createDebugInfo() const;
 
     inline static std::string DEFAULT = BUILTIN_CONTENT_NAMESPACE + ":default";
 };

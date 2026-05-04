@@ -33,5 +33,6 @@ public:
     Player* getPlayer();
 
     PlayerController* getPlayerController();
+    ChunksController* getChunksController();
     BlocksController* getBlocksController();
 };

@@ -21,6 +21,7 @@
 #include <util/stringutil.h>
 #include <objects/rigging.h>
 #include <data/dv_util.h>
+#include <data/StructLayout.h>
 
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder) : pack(pack), builder(builder) {
     auto runtime = std::make_unique<ContentPackRuntime>(
@@ -238,6 +239,12 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
     root.at("ui-layout").get(def.uiLayout);
     root.at("inventory-size").get(def.inventorySize);
     root.at("spark-interval").get(def.sparkInterval);
+
+    if (root.has("fields")) {
+        def.dataStruct = std::make_unique<data::StructLayout>();
+        def.dataStruct->deserialize(root["fields"]);
+    }
+
     if (def.sparkInterval == 0) {
         def.sparkInterval = 1;
     }

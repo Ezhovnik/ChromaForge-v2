@@ -183,7 +183,7 @@ std::vector<FieldIncapatibility> StructLayout::checkCompatibility(
     return report;
 }
 
-const Field& StructLayout::requreField(const std::string& name) const {
+const Field& StructLayout::requireField(const std::string& name) const {
     auto found = indices.find(name);
     if (found == indices.end()) {
         LOG_ERROR("Field '{}' does not exist", name);
@@ -201,9 +201,8 @@ static void set_int(ubyte* dst, integer_t value) {
 }
 
 void StructLayout::setInteger(
-    ubyte* dst, integer_t value, const std::string& name, int index
+    ubyte* dst, integer_t value, const Field& field, int index
 ) const {
-    const auto& field = requreField(name);
     if (index < 0 || index >= field.elements) {
         LOG_ERROR("Index out of bounds [0, {}]", field.elements);
         throw std::out_of_range(
@@ -219,7 +218,7 @@ void StructLayout::setInteger(
         case FieldType::CHAR: set_int<int8_t>(ptr, value); break;
         case FieldType::F32:
         case FieldType::F64:
-            setNumber(dst, static_cast<number_t>(value), name, index);
+            setNumber(dst, static_cast<number_t>(value), field, index);
             break;
         default:
             LOG_ERROR("Type error");
@@ -228,9 +227,8 @@ void StructLayout::setInteger(
 }
 
 void StructLayout::setNumber(
-    ubyte* dst, number_t value, const std::string& name, int index
+    ubyte* dst, number_t value, const Field& field, int index
 ) const {
-    const auto& field = requreField(name);
     if (index < 0 || index >= field.elements) {
         LOG_ERROR("Index out of bounds [0, {}]", field.elements);
         throw std::out_of_range(
@@ -262,7 +260,7 @@ void StructLayout::setNumber(
 size_t StructLayout::setAscii(
     ubyte* dst, std::string_view value, const std::string& name
 ) const {
-    const auto& field = requreField(name);
+    const auto& field = requireField(name);
     if (field.type != FieldType::CHAR) {
         throw std::runtime_error("'char' field type required");
     }
@@ -273,9 +271,8 @@ size_t StructLayout::setAscii(
 }
 
 size_t StructLayout::setUnicode(
-    ubyte* dst, std::string_view value, const std::string& name
+    ubyte* dst, std::string_view value, const Field& field
 ) const {
-    const auto& field = requreField(name);
     if (field.type != FieldType::CHAR) {
         LOG_ERROR("'char' field type required");
         throw std::runtime_error("'char' field type required");
@@ -293,9 +290,8 @@ static T get_int(const ubyte* src) {
 }
 
 integer_t StructLayout::getInteger(
-    const ubyte* src, const std::string& name, int index
+    const ubyte* src, const Field& field, int index
 ) const {
-    const auto& field = requreField(name);
     if (index < 0 || index >= field.elements) {
         LOG_ERROR("Index out of bounds [0, {}]", field.elements);
         throw std::out_of_range(
@@ -316,9 +312,8 @@ integer_t StructLayout::getInteger(
 }
 
 number_t StructLayout::getNumber(
-    const ubyte* src, const std::string& name, int index
+    const ubyte* src, const Field& field, int index
 ) const {
-    const auto& field = requreField(name);
     if (index < 0 || index >= field.elements) {
         LOG_ERROR("Index out of bounds [0, {}]", field.elements);
         throw std::out_of_range(
@@ -344,7 +339,7 @@ number_t StructLayout::getNumber(
         case FieldType::I32:
         case FieldType::I64:
         case FieldType::CHAR:
-            return getInteger(src, name, index);
+            return getInteger(src, field, index);
         default:
             LOG_ERROR("Type error");
             throw std::runtime_error("Type error");
@@ -352,9 +347,8 @@ number_t StructLayout::getNumber(
 }
 
 std::string_view StructLayout::getChars(
-    const ubyte* src, const std::string& name
+    const ubyte* src, const Field& field
 ) const {
-    const auto& field = requreField(name);
     if (field.type != FieldType::CHAR) {
         LOG_ERROR("'char' field type required");
         throw std::runtime_error("'char' field type required");

@@ -46,6 +46,9 @@
 #include <items/Inventories.h>
 #include <voxels/Chunk.h>
 #include <graphics/ui/gui_util.h>
+#include <graphics/core/ImageData.h>
+#include <logic/LevelController.h>
+#include <world/generator/WorldGenerator.h>
 
 extern std::shared_ptr<gui::UINode> create_debug_panel(
     Engine* engine, 
@@ -139,7 +142,22 @@ std::shared_ptr<gui::InventoryView> Hud::createHotbar() {
     return view;
 }
 
-Hud::Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player) : assets(engine->getAssets()), guiController(engine->getGUI()), levelFrontend(levelFrontend), player(player) {
+static constexpr uint WORLDGEN_IMG_SIZE = 64U;
+
+Hud::Hud(
+    Engine* engine, 
+    LevelFrontend* levelFrontend,
+    Player* player
+) : assets(engine->getAssets()),
+    guiController(engine->getGUI()),
+    levelFrontend(levelFrontend),
+    player(player),
+    debugImgWorldGen(
+        std::make_unique<ImageData>(
+            ImageFormat::rgba8888, WORLDGEN_IMG_SIZE, WORLDGEN_IMG_SIZE
+        )
+    )
+{
     contentAccess = createContentAccess();
     contentAccess->setId("hud.content-access");
     contentAccessPanel = std::make_shared<gui::Panel>(contentAccess->getSize(), glm::vec4(0.0f), 0.0f);
@@ -170,6 +188,17 @@ Hud::Hud(Engine* engine, LevelFrontend* levelFrontend, Player* player) : assets(
     dplotter->setGravity(gui::Gravity::bottom_right);
     dplotter->setInteractive(false);
     add(HudElement(HudElementMode::Permanent, nullptr, dplotter, true));
+
+    assets->store(
+        Texture::from(debugImgWorldGen.get()), DEBUG_WORLDGEN_IMAGE
+    );
+
+    add(HudElement(HudElementMode::Permanent, nullptr, 
+        guiutil::create(
+            "<image src='" + DEBUG_WORLDGEN_IMAGE +
+            "' pos='0' size='256' gravity='top-right' margin='0,20,0,0'/>"
+        ), true)
+    );
 }
 
 Hud::~Hud() {
@@ -240,6 +269,39 @@ void Hud::updateHotbarControl() {
     }
 }
 
+void Hud::updateWorldGenDebugVisualization() {
+    auto level = levelFrontend->getLevel();
+    auto generator = levelFrontend->getController()->getChunksController()->getGenerator();
+    auto debugInfo = generator->createDebugInfo();
+    uint width = debugImgWorldGen->getWidth();
+    uint height = debugImgWorldGen->getHeight();
+    ubyte* data = debugImgWorldGen->getData();
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            if (x >= debugInfo.areaWidth || y >= debugInfo.areaDepth) {
+                for (int i = 0; i < 4; ++i) {
+                    data[(y * width + x) * 4 + i] = 0;
+                }
+                continue;
+            }
+            int cx = x + debugInfo.areaOffsetX;
+            int cz = y + debugInfo.areaOffsetZ;
+            auto value = debugInfo.areaLevels[y * debugInfo.areaWidth + x] * 35;
+
+            if (level->chunks->getChunk(cx, cz)) {
+                value = 255;
+            }
+            for (int i = 0; i < 3; ++i) {
+                data[(y * width + x) * 4 + i] = value;
+            }
+            data[(y * width + x) * 4 + 3] = 100;
+        }
+    }
+
+    auto texture = assets->get<Texture>(DEBUG_WORLDGEN_IMAGE);
+    texture->reload(*debugImgWorldGen);
+}
+
 void Hud::update(bool hudVisible) {
 	auto level = levelFrontend->getLevel();
 	auto menu = guiController->getMenu();
@@ -276,6 +338,10 @@ void Hud::update(bool hudVisible) {
     }
 
     cleanup();
+
+    if (player->debug) {
+        updateWorldGenDebugVisualization();
+    }
 }
 
 void Hud::draw(const DrawContext& context) {

@@ -21,6 +21,7 @@
 #include <objects/Entities.h>
 #include <coders/byte_utils.h>
 #include <coders/json.h>
+#include <data/StructLayout.h>
 
 // TODO: Refactor this garbage
 
@@ -313,6 +314,7 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
 
 	int lx = x - cx * CHUNK_WIDTH;
 	int lz = z - cz * CHUNK_DEPTH;
+	size_t index = vox_index(lx, y, lz);
 
 	voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 	const auto& prevdef = contentIds->blocks.require(vox.id);
@@ -321,6 +323,9 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
 	}
 	if (prevdef.rt.extended && !vox.state.segment) {
         eraseSegments(prevdef, vox.state, x, y, z);
+    }
+	if (prevdef.dataStruct) {
+        chunk->blocksMetadata.free(chunk->blocksMetadata.find(index));
     }
 
 	const auto& newdef = contentIds->blocks.require(id);

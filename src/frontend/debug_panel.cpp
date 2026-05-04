@@ -26,6 +26,7 @@
 #include <objects/Entities.h>
 #include <content/Content.h>
 #include <objects/Entity.h>
+#include <frontend/hud.h>
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");

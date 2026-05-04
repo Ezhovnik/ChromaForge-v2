@@ -149,22 +149,45 @@ namespace data {
             return &fields.at(found->second);
         }
 
-        const Field& requreField(const std::string& name) const;
+        const Field& requireField(const std::string& name) const;
 
         [[nodiscard]]
-        integer_t getInteger(const ubyte* src, const std::string& name, int index=0) const;
+        integer_t getInteger(const ubyte* src, const std::string& name, int index=0) const {
+            return getInteger(src, requireField(name), index);
+        }
 
         [[nodiscard]]
-        number_t getNumber(const ubyte* src, const std::string& name, int index=0) const;
+        integer_t getInteger(const ubyte* src, const Field& field, int index=0) const;
 
         [[nodiscard]]
-        std::string_view getChars(const ubyte* src, const std::string& name) const;
+        number_t getNumber(const ubyte* src, const std::string& name, int index=0) const {
+            return getNumber(src, requireField(name), index);
+        }
 
-        void setInteger(ubyte* dst, integer_t value, const std::string& name, int index=0) const;
-        void setNumber(ubyte* dst, number_t value, const std::string& name, int index=0) const;
+        [[nodiscard]]
+        number_t getNumber(const ubyte* src, const Field& field, int index=0) const;
+
+        [[nodiscard]]
+        std::string_view getChars(const ubyte* src, const std::string& name) const {
+            return getChars(src, requireField(name));
+        }
+
+        [[nodiscard]]
+        std::string_view getChars(const ubyte* src, const Field& field) const;
+
+        void setInteger(ubyte* dst, integer_t value, const std::string& name, int index=0) const {
+            setInteger(dst, value, requireField(name), index);
+        }
+        void setInteger(ubyte* dst, integer_t value, const Field& field, int index=0) const;
+        void setNumber(ubyte* dst, number_t value, const std::string& name, int index=0) const {
+            setNumber(dst, value, requireField(name), index);
+        }
+        void setNumber(ubyte* dst, number_t value, const Field& field, int index=0) const;
         size_t setAscii(ubyte* dst, std::string_view value, const std::string& name) const;
-
-        size_t setUnicode(ubyte* dst, std::string_view value, const std::string& name) const;
+        size_t setUnicode(ubyte* dst, std::string_view value, const std::string& name) const {
+            return setUnicode(dst, value, requireField(name));
+        }
+        size_t setUnicode(ubyte* dst, std::string_view value, const Field& field) const;
 
         [[nodiscard]] size_t size() const {
             return totalSize;
