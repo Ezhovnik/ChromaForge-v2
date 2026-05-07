@@ -17,7 +17,8 @@ enum class ConvertTaskType {
     Voxels,
     Inventories,
     Player,
-    UpgradeRegion
+    UpgradeRegion,
+    ConvertBlocksData
 };
 
 struct ConvertTask {
@@ -28,6 +29,12 @@ struct ConvertTask {
     RegionLayerIndex layer;
 };
 
+enum class ConvertMode {
+    Upgrade,
+    Reindex,
+    BlockFields
+};
+
 class WorldConverter : public Task {
 private:
     std::shared_ptr<WorldFiles> wfile;
@@ -36,7 +43,7 @@ private:
     std::queue<ConvertTask> tasks;
     runnable onComplete;
     uint tasksDone = 0;
-    bool upgradeMode;
+    ConvertMode mode;
 
     void upgradeRegion(
         const std::filesystem::path& file, int x, int z, RegionLayerIndex layer
@@ -44,6 +51,7 @@ private:
     void convertPlayer(const std::filesystem::path& file) const;
     void convertVoxels(const std::filesystem::path& file, int x, int z) const;
     void convertInventories(const std::filesystem::path& file, int x, int z) const;
+    void convertBlocksData(int x, int z, const ContentReport& report) const;
 
     void addRegionsTasks(
         RegionLayerIndex layerID,
@@ -52,12 +60,13 @@ private:
 
     void createUpgradeTasks();
     void createConvertTasks();
+    void createBlockFieldsConvertTasks();
 public:
     WorldConverter(
         const std::shared_ptr<WorldFiles>& worldFiles, 
         const Content* content, 
         std::shared_ptr<ContentReport> report,
-        bool upgradeMode
+        ConvertMode mode
     );
     ~WorldConverter();
 
@@ -78,7 +87,7 @@ public:
         const Content* content, 
         const std::shared_ptr<ContentReport>& report,
         const runnable& onDone,
-        bool upgradeMode,
+        ConvertMode mode,
         bool multithreading
     );
 };

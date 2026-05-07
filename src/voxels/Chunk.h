@@ -15,7 +15,8 @@ inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
 class Inventory;
 class ContentReport;
 
-using chunk_inventories_map = std::unordered_map<uint, std::shared_ptr<Inventory>>;
+using ChunkInventoriesMap = std::unordered_map<uint, std::shared_ptr<Inventory>>;
+using BlocksMetadata = util::SmallHeap<uint16_t, uint8_t>;
 
 // Чанк - часть воксельного мира
 class Chunk {
@@ -32,13 +33,14 @@ public:
         bool unsaved: 1;
         bool loadedLights: 1;
         bool entities: 1;
+        bool blocksData: 1;
     } flags {};
 
     LightMap light_map; // Карта освещения чанка
 
-    chunk_inventories_map inventories;
+    ChunkInventoriesMap inventories;
 
-    util::SmallHeap<uint16_t, uint8_t> blocksMetadata;
+    BlocksMetadata blocksMetadata;
 
     Chunk(int chunk_x, int chunk_z); // Конструктор
 
@@ -51,7 +53,7 @@ public:
     void addBlockInventory(std::shared_ptr<Inventory> inventory, uint x, uint y, uint z);
     std::shared_ptr<Inventory> getBlockInventory(uint x, uint y, uint z) const;
     void removeBlockInventory(uint x, uint y, uint z);
-	void setBlockInventories(chunk_inventories_map map);
+	void setBlockInventories(ChunkInventoriesMap map);
 
     inline void setModifiedAndUnsaved() {
         flags.modified = true;

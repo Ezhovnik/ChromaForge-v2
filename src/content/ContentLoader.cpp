@@ -115,6 +115,30 @@ void ContentLoader::fixPackIndices() {
     if (modified) files::write_json(contentFile, root);
 }
 
+static void perform_user_block_fields(
+    const std::string& blockName, data::StructLayout& layout
+) {
+    if (layout.size() > MAX_USER_BLOCK_FIELDS_SIZE) {
+        std::string errLog = util::quote(blockName) + 
+            " fields total size exceeds limit (" + 
+            std::to_string(layout.size()) + "/" +
+            std::to_string(MAX_USER_BLOCK_FIELDS_SIZE) + ")";
+        LOG_ERROR("{}", errLog);
+        throw std::runtime_error(errLog);
+    }
+    for (const auto& field : layout) {
+        if (field.name.at(0) == '.') {
+            std::string errLog = util::quote(blockName) + " field " + field.name + ": user field may not start with '.'";
+            LOG_ERROR("{}", errLog);
+            throw std::runtime_error(errLog);
+        }
+    }
+
+    std::vector<data::Field> fields;
+    fields.insert(fields.end(), layout.begin(), layout.end());
+    layout = data::StructLayout::create(fields);
+}
+
 void ContentLoader::loadBlock(Block& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
 
@@ -243,6 +267,7 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
     if (root.has("fields")) {
         def.dataStruct = std::make_unique<data::StructLayout>();
         def.dataStruct->deserialize(root["fields"]);
+        perform_user_block_fields(def.name, *def.dataStruct);
     }
 
     if (def.sparkInterval == 0) {

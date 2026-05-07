@@ -28,6 +28,42 @@ template<class T> static constexpr size_t get_entries_count(
         : indices.count();
 }
 
+static void process_blocks_data(
+    const Content* content,
+    ContentReport& report,
+    const dv::value& root
+) {
+    for (const auto& [name, map] : root.asObject()) {
+        data::StructLayout layout;
+        layout.deserialize(map);
+        auto def = content->blocks.find(name);
+        if (def == nullptr) continue;
+
+        if (def->dataStruct == nullptr) {
+            ContentIssue issue {ContentIssueType::BlockDataLayoutsUpdate};
+            report.issues.push_back(issue);
+            report.dataLoss.push_back(name + ": discard data");
+            continue;
+        }
+        if (layout != *def->dataStruct) {
+            ContentIssue issue {ContentIssueType::BlockDataLayoutsUpdate};
+            report.issues.push_back(issue);
+            report.dataLayoutsUpdated = true;
+        }
+
+        auto incapatibility = layout.checkCompatibility(*def->dataStruct);
+        if (!incapatibility.empty()) {
+            for (const auto& error : incapatibility) {
+                report.dataLoss.push_back(
+                    "[" + name + "] field " + error.name + " - " +
+                    data::to_string(error.type)
+                );
+            }
+        }
+        report.blocksDataLayouts[name] = std::move(layout);
+    }
+}
+
 std::shared_ptr<ContentReport> ContentReport::create(
     const std::shared_ptr<WorldFiles>& worldFiles,
     const std::filesystem::path& filename, 
@@ -53,9 +89,18 @@ std::shared_ptr<ContentReport> ContentReport::create(
 
     report->blocks.setup(blocklist, content->blocks);
     report->items.setup(itemlist, content->items);
+
+    if (root.has("blocks-data")) {
+        process_blocks_data(content, *report, root["blocks-data"]);
+    }
+
     report->buildIssues();
 
-    if (report->isUpgradeRequired() || report->hasContentReorder() || report->hasMissingContent()) {
+    if (report->isUpgradeRequired() ||
+        report->hasContentReorder() ||
+        report->hasMissingContent() ||
+        report->hasUpdatedLayouts()
+    ) {
         return report;
     } else {
         return nullptr;

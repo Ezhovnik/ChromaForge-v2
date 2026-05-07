@@ -23,9 +23,7 @@ namespace data {
         I64,  ///< 64-битное знаковое целое (int64_t)
         F32,  ///< 32-битное число с плавающей точкой (float)
         F64,   ///< 64-битное число с плавающей точкой (double)
-        CHAR,
-
-        COUNT
+        CHAR
     };
 
     inline std::string to_string(FieldType type) {
@@ -42,6 +40,12 @@ namespace data {
         Type_error,
         Missing,
     };
+    inline const char* to_string(FieldIncapatibilityType type) {
+        const char* names[] = {
+            "none", "data_loss", "type_error", "missing"
+        };
+        return names[static_cast<int>(type)];
+    }
 
     struct FieldIncapatibility {
         std::string name;
@@ -86,6 +90,18 @@ namespace data {
         FieldConvertStrategy convertStrategy;
         int offset;         ///< Смещение поля в байтах от начала данных структуры.
         int size;
+
+        Field(
+            FieldType type, 
+            std::string name, 
+            int elements, 
+            FieldConvertStrategy strategy=FieldConvertStrategy::Reset
+        ) : type(type), 
+            name(std::move(name)), 
+            elements(elements), 
+            convertStrategy(strategy),
+            offset(0),
+            size(0) {}
 
         bool operator==(const Field& o) const {
             return type == o.type && 
@@ -191,6 +207,14 @@ namespace data {
 
         [[nodiscard]] size_t size() const {
             return totalSize;
+        }
+
+        [[nodiscard]] const auto begin() const {
+            return fields.begin();
+        }
+
+        [[nodiscard]] const auto end() const {
+            return fields.end();
         }
 
         void convert(

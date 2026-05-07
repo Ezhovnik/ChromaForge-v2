@@ -95,13 +95,16 @@ void VoxelFragment::prepare(const Content& content) {
 }
 
 std::unique_ptr<VoxelFragment> VoxelFragment::rotated(const Content& content) const {
-    std::vector<voxel> newVoxels(voxels.size());
+    std::vector<voxel> newVoxels(size.z * size.y * size.x);
 
     for (int y = 0; y < size.y; ++y) {
         for (int z = 0; z < size.z; ++z) {
             for (int x = 0; x < size.x; ++x) {
-                auto& voxel = newVoxels[vox_index(x, y, z, size.x, size.z)];
-                voxel = voxels[vox_index(size.z - z - 1, y, x, size.z, size.x)];
+                int newX = size.z - 1 - z;
+                int newZ = x;
+
+                auto& voxel = newVoxels[vox_index(newX, y, newZ, size.z, size.x)];
+                voxel = voxels[vox_index(x, y, z, size.x, size.z)];
                 voxel.state.segment = ((voxel.state.segment & 0b001) << 2) | (voxel.state.segment & 0b010) | ((voxel.state.segment & 0b100) >> 2);
                 auto& def = content.blocks.require(blockNames[voxel.id]);
                 if (def.rotations.name == BlockRotProfile::PANE_NAME || def.rotations.name == BlockRotProfile::PIPE_NAME) {

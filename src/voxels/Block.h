@@ -37,6 +37,8 @@ inline constexpr int FACE_PZ = 5;
 
 inline constexpr int BLOCK_AABB_GRID = 16;
 
+inline constexpr size_t MAX_USER_BLOCK_FIELDS_SIZE = 240;
+
 struct block_funcs_set {
 	bool init = false;
 	bool update = false;
@@ -141,6 +143,8 @@ public:
     ~Block();
 
     void cloneTo(Block& dst);
+
+    static bool isReservedBlockField(std::string_view view);
 };
 
 inline glm::ivec3 get_ground_direction(const Block& def, int rotation) {

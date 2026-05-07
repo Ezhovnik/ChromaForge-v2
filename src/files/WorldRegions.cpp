@@ -63,6 +63,9 @@ WorldRegions::WorldRegions(const std::filesystem::path& directory) : directory(d
     layers[REGION_LAYER_INVENTORIES].folder = directory/std::filesystem::path("inventories");
 
     layers[REGION_LAYER_ENTITIES].folder = directory/std::filesystem::path("entities");
+
+    auto& blocksData = layers[REGION_LAYER_BLOCKS_DATA];
+    blocksData.folder = directory/std::filesystem::path("blocksdata");
 }
 
 WorldRegions::~WorldRegions() = default;
@@ -84,19 +87,28 @@ void WorldRegions::put(
 ) {
     size_t size = srcSize;
     auto& layer = layers[layerID];
-    if (layer.compression != compression::Method::None) {
-        data = compression::compress(data.get(), size, size, layer.compression);
-    }
     int regionX, regionZ, localX, localZ;
     calc_reg_coords(x, z, regionX, regionZ, localX, localZ);
 
     WorldRegion* region = layer.getOrCreateRegion(regionX, regionZ);
     region->setUnsaved(true);
+
+    if (data == nullptr) {
+        region->put(localX, localZ, nullptr, 0, 0);
+        return;
+    }
+
+    if (layer.compression != compression::Method::None) {
+        data = compression::compress(
+            data.get(), size, size, layer.compression
+        );
+    }
+
     region->put(localX, localZ, std::move(data), size, srcSize);
 }
 
 static std::unique_ptr<ubyte[]> write_inventories(
-    const chunk_inventories_map& inventories, uint32_t& datasize
+    const ChunkInventoriesMap& inventories, uint32_t& datasize
 ) {
     ByteBuilder builder;
     builder.putInt32(inventories.size());
@@ -114,10 +126,10 @@ static std::unique_ptr<ubyte[]> write_inventories(
     return data;
 }
 
-static chunk_inventories_map load_inventories(
+static ChunkInventoriesMap load_inventories(
     const ubyte* src, uint32_t size
 ) {
-    chunk_inventories_map inventories;
+    ChunkInventoriesMap inventories;
     ByteReader reader(src, size);
     auto count = reader.getInt32();
     for (int i = 0; i < count; ++i) {
@@ -179,6 +191,14 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
             entitiesData.size()
         );
     }
+    if (chunk->flags.blocksData) {
+        auto bytes = chunk->blocksMetadata.serialize();
+        put(chunk->chunk_x, chunk->chunk_z,
+            REGION_LAYER_BLOCKS_DATA,
+            bytes.release(),
+            bytes.size()
+        );
+    }
 }
 
 std::unique_ptr<ubyte[]> WorldRegions::getVoxels(int x, int z){
@@ -204,7 +224,7 @@ std::unique_ptr<light_t[]> WorldRegions::getLights(int x, int z) {
     return LightMap::decode(data.get());
 }
 
-chunk_inventories_map WorldRegions::fetchInventories(int x, int z) {
+ChunkInventoriesMap WorldRegions::fetchInventories(int x, int z) {
     uint32_t bytesSize;
     uint32_t srcSize;
     auto bytes = layers[REGION_LAYER_INVENTORIES].getData(x, z, bytesSize, srcSize);
@@ -212,8 +232,18 @@ chunk_inventories_map WorldRegions::fetchInventories(int x, int z) {
     return load_inventories(bytes, bytesSize);
 }
 
+BlocksMetadata WorldRegions::getBlocksData(int x, int z) {
+    uint32_t bytesSize;
+    uint32_t srcSize;
+    auto bytes = layers[REGION_LAYER_BLOCKS_DATA].getData(x, z, bytesSize, srcSize);
+    if (bytes == nullptr) return {};
+    BlocksMetadata heap;
+    heap.deserialize(bytes, bytesSize);
+    return heap;
+}
+
 void WorldRegions::processInventories(
-    int x, int z, const inventoryproc& func
+    int x, int z, const InventoryProc& func
 ) {
     processRegion(x, z, REGION_LAYER_INVENTORIES,
     [=](std::unique_ptr<ubyte[]> data, uint32_t* size) {
@@ -223,6 +253,64 @@ void WorldRegions::processInventories(
         }
         return write_inventories(inventories, *size);
     });
+}
+
+void WorldRegions::processBlocksData(int x, int z, const BlockDataProc& func) {
+    auto& voxLayer = layers[REGION_LAYER_VOXELS];
+    auto& datLayer = layers[REGION_LAYER_BLOCKS_DATA];
+    if (voxLayer.getRegion(x, z) || datLayer.getRegion(x, z)) {
+        LOG_ERROR("Not implemented for in-memory regions");
+        throw std::runtime_error("Not implemented for in-memory regions");
+    }
+    auto datRegfile = datLayer.getRegFile({x, z});
+    if (datRegfile == nullptr) {
+        LOG_ERROR("Could not open region file");
+        throw std::runtime_error("Could not open region file");
+    }
+    auto voxRegfile = voxLayer.getRegFile({x, z});
+    if (voxRegfile == nullptr) {
+        LOG_WARN("Missing voxels region - discard blocks data for {}x {}z", x, z);;
+        abort(); // TODO: Delete region file
+    }
+    for (uint cz = 0; cz < RegionConsts::SIZE; cz++) {
+        for (uint cx = 0; cx < RegionConsts::SIZE; cx++) {
+            int gx = cx + x * RegionConsts::SIZE;
+            int gz = cz + z * RegionConsts::SIZE;
+
+            uint32_t datLength;
+            uint32_t datSrcSize;
+            auto datData = RegionsLayer::readChunkData(
+                gx, gz, datLength, datSrcSize, datRegfile.get()
+            );
+            if (datData == nullptr) {
+                continue;
+            }
+            uint32_t voxLength;
+            uint32_t voxSrcSize;
+            auto voxData = RegionsLayer::readChunkData(
+                gx, gz, voxLength, voxSrcSize, voxRegfile.get()
+            );
+            if (voxData == nullptr) {
+                LOG_WARN("Missing voxels for chunk {}x {}z", gx, gz);
+                put(gx, gz, REGION_LAYER_BLOCKS_DATA, nullptr, 0);
+                continue;
+            }
+            voxData = compression::decompress(
+                voxData.get(), voxLength, voxSrcSize, voxLayer.compression
+            );
+
+            BlocksMetadata blocksData;
+            blocksData.deserialize(datData.get(), datLength);
+            try {
+                func(&blocksData, std::move(voxData));
+            } catch (const std::exception& err) {
+                LOG_WARN("An error ocurred while processing blocks data in chunk {}x {}z: {}", gx, gz, err.what());
+                blocksData = {};
+            }
+            auto bytes = blocksData.serialize();
+            put(gx, gz, REGION_LAYER_BLOCKS_DATA, bytes.release(), bytes.size());
+        }
+    }
 }
 
 dv::value WorldRegions::fetchEntities(int x, int z) {
@@ -238,7 +326,7 @@ dv::value WorldRegions::fetchEntities(int x, int z) {
 }
 
 void WorldRegions::processRegion(
-    int x, int z, RegionLayerIndex layerID, const regionproc& func
+    int x, int z, RegionLayerIndex layerID, const RegionProc& func
 ) {
     auto& layer = layers[layerID];
     if (layer.getRegion(x, z)) {

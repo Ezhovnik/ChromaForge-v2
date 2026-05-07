@@ -52,7 +52,14 @@ public:
 
     bool readResourcesData(const Content* content);
 
-    void patchIndicesVersion(const std::string& field, uint version);
+    static void createContentIndicesCache(
+        const ContentIndices* indices, dv::value& root
+    );
+    static void createBlockFieldsIndices(
+        const ContentIndices* indices, dv::value& root
+    );
+
+    void patchIndicesFile(const dv::value& map);
 
     void write(const World* world, const Content* content);
     void writePacks(const std::vector<ContentPack>& packs);

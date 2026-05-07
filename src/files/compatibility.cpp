@@ -95,7 +95,8 @@ util::Buffer<ubyte> compatibility::convert_region_2to3(
                 builder.put(data, size);
                 break;
             case REGION_LAYER_ENTITIES:
-            case REGION_LAYER_INVENTORIES: {
+            case REGION_LAYER_INVENTORIES:
+            case REGION_LAYER_BLOCKS_DATA: {
                 builder.putInt32(size);
                 builder.putInt32(size);
                 builder.put(data, size);

@@ -48,6 +48,8 @@ world.Create World=Создать Мир
 world.convert-request=Есть изменения в индексах! Конвертировать мир?
 world.upgrade-request=Формат мира устарел! Конвертировать мир?
 world.delete-confirm=Удалить мир безвозвратно?
+world.convert-block-layouts=Есть изменения в полях блоков! Конвертировать мир?
+world.convert-with-loss=Конвертировать мир с потерями?
 
 # Настройки
 settings.Ambient=Фон

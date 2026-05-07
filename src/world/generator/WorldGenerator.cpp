@@ -142,9 +142,9 @@ void WorldGenerator::placeStructure(
     int chunkX, int chunkZ
 ) {
     auto& structure = *def.structures[structureId]->fragments[rotation];
-    auto position = glm::ivec3(chunkX * CHUNK_WIDTH, 0, chunkZ * CHUNK_DEPTH) + offset;
-    auto size = structure.getSize() + glm::ivec3(0, CHUNK_HEIGHT, 0);
-    AABB aabb(position, position + size);
+    auto absolutePosition = glm::ivec3(chunkX * CHUNK_WIDTH, 0, chunkZ * CHUNK_DEPTH) + offset;
+    auto size = structure.getSize();
+    AABB aabb(absolutePosition, absolutePosition + glm::ivec3(size.x, CHUNK_HEIGHT, size.z));
     for (int lcz = -1; lcz <= 1; ++lcz) {
         for (int lcx = -1; lcx <= 1; ++lcx) {
             if (lcx == 0 && lcz == 0) continue;
@@ -153,9 +153,14 @@ void WorldGenerator::placeStructure(
             );
             auto chunkAABB = gen_chunk_aabb(chunkX + lcx, chunkZ + lcz);
             if (chunkAABB.intersect(aabb)) {
+                glm::ivec3 localOffset = absolutePosition - glm::ivec3(
+                    (chunkX + lcx) * CHUNK_WIDTH, 
+                    0, 
+                    (chunkZ + lcz) * CHUNK_DEPTH
+                );
                 otherPrototype.structures.emplace_back(
                     structureId, 
-                    offset - glm::ivec3(lcx * CHUNK_WIDTH, 0, lcz * CHUNK_DEPTH),
+                    localOffset,
                     rotation
                 );
             }

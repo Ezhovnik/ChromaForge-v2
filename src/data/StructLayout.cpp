@@ -267,6 +267,9 @@ size_t StructLayout::setAscii(
     auto ptr = reinterpret_cast<char*>(dst + field.offset);
     auto size = std::min(value.size(), static_cast<std::size_t>(field.elements));
     std::memcpy(ptr, value.data(), size);
+    if (size < field.elements) {
+        std::memset(ptr + size, 0, field.elements - size);
+    }
     return size;
 }
 
@@ -281,6 +284,9 @@ size_t StructLayout::setUnicode(
     size_t size = util::crop_utf8(text, field.elements);
     auto ptr = reinterpret_cast<char*>(dst + field.offset);
     std::memcpy(ptr, value.data(), size);
+    if (size < field.elements) {
+        std::memset(ptr + size, 0, field.elements - size);
+    }
     return size;
 }
 
@@ -378,9 +384,14 @@ void StructLayout::deserialize(const dv::value& src) {
     for (const auto& [name, fieldmap] : src.asObject()) {
         const auto& typeName = fieldmap["type"].asString();
         FieldType type = FieldType_from_string(typeName);
-        
+
         int elements = 1;
         fieldmap.at("length").get(elements);
+        if (elements <= 0) {
+            std::string errorLog = "Invalid field " + util::quote(name) + " length: " + std::to_string(elements);
+            LOG_ERROR("{}", errorLog);
+            throw std::runtime_error(errorLog);
+        }
 
         auto convertStrategy = FieldConvertStrategy::Reset;
         if (fieldmap.has("convert-strategy")) {
@@ -388,7 +399,7 @@ void StructLayout::deserialize(const dv::value& src) {
                 fieldmap["convert-strategy"].asString()
             );
         }
-        fields.push_back(Field {type, name, elements, convertStrategy});
+        fields.push_back(Field(type, name, elements, convertStrategy));
     }
     *this = create(fields);
 }

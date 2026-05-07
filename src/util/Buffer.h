@@ -12,7 +12,9 @@ namespace util {
         Buffer(size_t length) : ptr(std::make_unique<T[]>(length)), length(length) {
         }
 
-        Buffer(const Buffer<T>& o) : Buffer(o.data(), o.size()) {}
+        explicit Buffer(const Buffer<T>& o) : Buffer(o.data(), o.size()) {}
+
+        Buffer(Buffer<T>&& o) : ptr(std::move(o.ptr)), length(o.length) {}
 
         Buffer(std::unique_ptr<T[]> ptr, size_t length) : ptr(std::move(ptr)), length(length) {}
 

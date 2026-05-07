@@ -13,6 +13,7 @@
 #include <util/ThreadPool.h>
 #include <items/Inventory.h>
 #include <files/compatibility.h>
+#include <voxels/Block.h>
 
 class ConverterWorker : public util::Worker<ConvertTask, int> {
 private:
@@ -79,6 +80,7 @@ void WorldConverter::createConvertTasks() {
     const auto& regions = wfile->getRegions();
     for (auto& issue : report->getIssues()) {
         switch (issue.issueType) {
+            case ContentIssueType::BlockDataLayoutsUpdate:
             case ContentIssueType::RegionFormatUpdate:
                 break;
             case ContentIssueType::Missing:
@@ -93,20 +95,42 @@ void WorldConverter::createConvertTasks() {
     tasks.push(ConvertTask {ConvertTaskType::Player, wfile->getPlayerFile()});
 }
 
+void WorldConverter::createBlockFieldsConvertTasks() {
+    const auto& regions = wfile->getRegions();
+    for (auto& issue : report->getIssues()) {
+        switch (issue.issueType) {
+            case ContentIssueType::BlockDataLayoutsUpdate:
+                addRegionsTasks(
+                    REGION_LAYER_BLOCKS_DATA,
+                    ConvertTaskType::ConvertBlocksData
+                );
+                break;
+            default:
+                break;
+        }
+    }
+}
+
 WorldConverter::WorldConverter(
     const std::shared_ptr<WorldFiles>& worldFiles, 
     const Content* content, 
     std::shared_ptr<ContentReport> reportPtr,
-    bool upgradeMode
+    ConvertMode mode
 ) : wfile(worldFiles),
     report(std::move(reportPtr)),
     content(content),
-    upgradeMode(upgradeMode)
+    mode(mode)
 {
-    if (upgradeMode) {
-        createUpgradeTasks();
-    } else {
-        createConvertTasks();
+    switch (mode) {
+        case ConvertMode::Upgrade:
+            createUpgradeTasks();
+            break;
+        case ConvertMode::Reindex:
+            createConvertTasks();
+            break;
+        case ConvertMode::BlockFields:
+            createBlockFieldsConvertTasks();
+            break;
     }
 }
 
@@ -118,11 +142,11 @@ std::shared_ptr<Task> WorldConverter::startTask(
     const Content* content, 
     const std::shared_ptr<ContentReport>& report,
     const runnable& onDone,
-    bool upgradeMode,
+    ConvertMode mode,
     bool multithreading
 ) {
     auto converter = std::make_shared<WorldConverter>(
-        worldFiles, content, report, upgradeMode
+        worldFiles, content, report, mode
     );
     if (!multithreading) {
         converter->setOnComplete([=]() {
@@ -183,6 +207,33 @@ void WorldConverter::convertPlayer(const std::filesystem::path& file) const {
     LOG_INFO("Player {} successfully converted", file.u8string());
 }
 
+void WorldConverter::convertBlocksData(int x, int z, const ContentReport& report) const {
+    LOG_INFO("Converting blocks data");
+    wfile->getRegions().processBlocksData(x, z, 
+    [=](BlocksMetadata* heap, std::unique_ptr<ubyte[]> voxelsData) {
+        Chunk chunk(0, 0);
+        chunk.decode(voxelsData.get());
+
+        const auto& indices = content->getIndices()->blocks;
+
+        BlocksMetadata newHeap;
+        for (const auto& entry : *heap) {
+            size_t index = entry.index;
+            const auto& def = indices.require(chunk.voxels[index].id);
+            const auto& newStruct = *def.dataStruct;
+            const auto& found = report.blocksDataLayouts.find(def.name);
+            if (found == report.blocksDataLayouts.end()) {
+                LOG_ERROR("No previous fields layout found for block {} - discard", def.name);
+                continue; 
+            }
+            const auto& prevStruct = found->second;
+            uint8_t* dst = newHeap.allocate(index, newStruct.size());
+            newStruct.convert(prevStruct, entry.data(), dst, true);
+        }
+        *heap = std::move(newHeap);
+    });
+}
+
 void WorldConverter::convert(const ConvertTask& task) const {
     if (!std::filesystem::is_regular_file(task.file)) return;
 
@@ -198,6 +249,9 @@ void WorldConverter::convert(const ConvertTask& task) const {
             break;
         case ConvertTaskType::Player:
             convertPlayer(task.file);
+            break;
+        case ConvertTaskType::ConvertBlocksData:
+            convertBlocksData(task.x, task.z, *report);
             break;
     }
 }
@@ -232,14 +286,22 @@ bool WorldConverter::isActive() const {
 }
 
 void WorldConverter::write() {
-    if (upgradeMode) {
-        LOG_INFO("Refreshing version");
-        wfile->patchIndicesVersion("region-version", REGION_FORMAT_VERSION);
-    } else {
-        LOG_INFO("Writing world");
-        wfile->write(nullptr, content);
-        LOG_INFO("World successfully writed");
+    LOG_INFO("Applying changes");
+
+    auto patch = dv::object();
+    switch (mode) {
+        case ConvertMode::Upgrade:
+            patch["region-version"] = REGION_FORMAT_VERSION;
+            break;
+        case ConvertMode::Reindex:
+            WorldFiles::createContentIndicesCache(content->getIndices(), patch);
+            break;
+        case ConvertMode::BlockFields:
+            WorldFiles::createBlockFieldsIndices(content->getIndices(), patch);
+            break;
     }
+    wfile->patchIndicesFile(patch);
+    wfile->write(nullptr, nullptr);
 }
 
 uint WorldConverter::getWorkTotal() const {

@@ -62,7 +62,7 @@ void Chunk::removeBlockInventory(uint x, uint y, uint z) {
 	if (inventories.erase(vox_index(x, y, z))) flags.unsaved = true;
 }
 
-void Chunk::setBlockInventories(chunk_inventories_map map) {
+void Chunk::setBlockInventories(ChunkInventoriesMap map) {
 	inventories = std::move(map);
 }
 

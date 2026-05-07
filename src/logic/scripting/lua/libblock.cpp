@@ -427,8 +427,6 @@ static int get_field(
         case data::FieldType::CHAR:
             return lua::pushstring(L, 
                 std::string(dataStruct.getChars(src, field)).c_str());
-        case data::FieldType::COUNT:
-            return 0;
     }
     return 0;
 }
@@ -459,6 +457,11 @@ static int l_get_field(lua::State* L) {
     if (field == nullptr) {
         return 0;
     }
+    if (index >= field->elements) {
+        throw std::out_of_range(
+            "Index out of bounds [0, " + std::to_string(field->elements) + "]"
+        );
+    }
     const ubyte* src = chunk->blocksMetadata.find(voxelIndex);
     if (src == nullptr) {
         return 0;
@@ -488,8 +491,6 @@ static int set_field(
         case data::FieldType::F32:
         case data::FieldType::F64:
             dataStruct.setNumber(dst, value.asNumber(), field, index);
-            break;
-        case data::FieldType::COUNT:
             break;
     }
     return 0;
@@ -522,10 +523,17 @@ static int l_set_field(lua::State* L) {
     if (field == nullptr) {
         return 0;
     }
+    if (index >= field->elements) {
+        throw std::out_of_range(
+            "Index out of bounds [0, " + std::to_string(field->elements) + "]"
+        );
+    }
     ubyte* dst = chunk->blocksMetadata.find(voxelIndex);
     if (dst == nullptr) {
         dst = chunk->blocksMetadata.allocate(voxelIndex, dataStruct.size());
     }
+    chunk->flags.unsaved = true;
+    chunk->flags.blocksData = true;
     return set_field(L, dst, *field, index, dataStruct, value);
 }
 

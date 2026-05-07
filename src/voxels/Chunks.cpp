@@ -325,7 +325,11 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
         eraseSegments(prevdef, vox.state, x, y, z);
     }
 	if (prevdef.dataStruct) {
-        chunk->blocksMetadata.free(chunk->blocksMetadata.find(index));
+        if (auto found = chunk->blocksMetadata.find(index)) {
+            chunk->blocksMetadata.free(found);
+            chunk->flags.unsaved = true;
+            chunk->flags.blocksData = true;
+        }
     }
 
 	const auto& newdef = contentIds->blocks.require(id);

@@ -4,17 +4,20 @@
 #include <vector>
 #include <filesystem>
 #include <utility>
+#include <unordered_map>
 
 #include <typedefs.h>
 #include <constants.h>
 #include <content/Content.h>
 #include <data/dv.h>
 #include <files/world_regions_fwd.h>
+#include <data/StructLayout.h>
 
 enum class ContentIssueType {
     Reorder,
     Missing,
-    RegionFormatUpdate
+    RegionFormatUpdate,
+    BlockDataLayoutsUpdate
 };
 
 struct ContentIssue {
@@ -117,7 +120,11 @@ public:
     ContentUnitLUT<itemid_t, Item> items;
     uint regionsVersion;
 
+    std::unordered_map<std::string, data::StructLayout> blocksDataLayouts;
     std::vector<ContentIssue> issues;
+    std::vector<std::string> dataLoss;
+
+    bool dataLayoutsUpdated = false;
 
     ContentReport(
         const ContentIndices* indices, 
@@ -132,6 +139,10 @@ public:
         const Content* content
     );
 
+    inline const std::vector<std::string>& getDataLoss() const {
+        return dataLoss;
+    }
+
     inline bool hasContentReorder() const {
         return blocks.hasContentReorder() || items.hasContentReorder();
     }
@@ -142,6 +153,14 @@ public:
 
     inline bool isUpgradeRequired() const {
         return regionsVersion < REGION_FORMAT_VERSION;
+    }
+
+    inline bool hasDataLoss() const {
+        return !dataLoss.empty();
+    }
+
+    inline bool hasUpdatedLayouts() {
+        return dataLayoutsUpdated;
     }
 
     void buildIssues();

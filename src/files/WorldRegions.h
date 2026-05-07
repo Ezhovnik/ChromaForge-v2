@@ -106,9 +106,10 @@ public:
     }
 };
 
-using regionsmap = std::unordered_map<glm::ivec2, std::unique_ptr<WorldRegion>>;
-using regionproc = std::function<std::unique_ptr<ubyte[]>(std::unique_ptr<ubyte[]>,uint32_t*)>;
-using inventoryproc = std::function<void(Inventory*)>;
+using RegionsMap = std::unordered_map<glm::ivec2, std::unique_ptr<WorldRegion>>;
+using RegionProc = std::function<std::unique_ptr<ubyte[]>(std::unique_ptr<ubyte[]>,uint32_t*)>;
+using InventoryProc = std::function<void(Inventory*)>;
+using BlockDataProc = std::function<void(BlocksMetadata*, std::unique_ptr<ubyte[]>)>;
 
 inline void calc_reg_coords(
     int x, int z, int& regionX, int& regionZ, int& localX, int& localZ
@@ -123,7 +124,7 @@ struct RegionsLayer {
     RegionLayerIndex layer;
     std::filesystem::path folder;
     compression::Method compression = compression::Method::None;
-    regionsmap regions;
+    RegionsMap regions;
     std::mutex mapMutex;
     std::unordered_map<glm::ivec2, std::unique_ptr<regFile>> openRegFiles;
     std::mutex regFilesMutex;
@@ -171,15 +172,21 @@ public:
 
     std::unique_ptr<ubyte[]> getVoxels(int x, int z);
     std::unique_ptr<light_t[]> getLights(int x, int z);
-    chunk_inventories_map fetchInventories(int x, int z);
+    ChunkInventoriesMap fetchInventories(int x, int z);
     dv::value fetchEntities(int x, int z);
 
+    BlocksMetadata getBlocksData(int x, int z);
+
     void processRegion(
-        int x, int z, RegionLayerIndex layerID, const regionproc& func
+        int x, int z, RegionLayerIndex layerID, const RegionProc& func
     );
 
     void processInventories(
-        int x, int z, const inventoryproc& func
+        int x, int z, const InventoryProc& func
+    );
+
+    void processBlocksData(
+        int x, int z, const BlockDataProc& func
     );
 
     const std::filesystem::path& getRegionsFolder(RegionLayerIndex layerID) const;

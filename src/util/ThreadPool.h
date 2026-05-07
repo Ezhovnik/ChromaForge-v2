@@ -143,6 +143,10 @@ namespace util {
             }
         }
     public:
+        static constexpr int UNLIMITED = 0;
+        static constexpr int HALF = -2;
+        static constexpr int QUARTER = -4;
+
         /**
          * @brief Конструктор пула потоков.
          *
@@ -155,10 +159,26 @@ namespace util {
         ThreadPool(
             std::string name,
             supplier<std::shared_ptr<Worker<T, R>>> workersSupplier, 
-            consumer<R&> resultConsumer
+            consumer<R&> resultConsumer,
+            int maxWorkers=UNLIMITED
         ) : name(std::move(name)), resultConsumer(resultConsumer) {
-            const uint num_threads = std::thread::hardware_concurrency();
-            for (uint i = 0; i < num_threads; ++i) {
+            uint numThreads = std::thread::hardware_concurrency();
+            switch (maxWorkers) {
+                case UNLIMITED:
+                    break;
+                case HALF:
+                    numThreads = std::max(1U, numThreads);
+                    break;
+                case QUARTER:
+                    numThreads = std::max(1U, numThreads / 4);
+                    break;
+                default:
+                    numThreads = std::max(
+                        1U, std::min(numThreads, static_cast<uint>(maxWorkers))
+                    );
+                    break;
+            }
+            for (uint i = 0; i < numThreads; ++i) {
                 threads.emplace_back(&ThreadPool<T,R>::threadLoop, this, i, workersSupplier());
                 workersBlocked.emplace_back();
             }

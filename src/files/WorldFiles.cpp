@@ -28,6 +28,8 @@
 #include <debug/Logger.h>
 #include <settings.h>
 #include <objects/Entity.h>
+#include <data/StructLayout.h>
+#include <util/stringutil.h>
 
 WorldFiles::WorldFiles(const std::filesystem::path& directory) : directory(directory), regions(directory) {
 }
@@ -94,14 +96,31 @@ static void write_indices(const ContentUnitIndices<T>& indices, dv::value& list)
 	}
 }
 
-void WorldFiles::writeIndices(const ContentIndices* indices) {
-    dv::value root = dv::object();
-
-    root["region-version"] = dv::value(REGION_FORMAT_VERSION);
-
+void WorldFiles::createContentIndicesCache(
+    const ContentIndices* indices, dv::value& root
+) {
     write_indices(indices->blocks, root.list("blocks"));
     write_indices(indices->items, root.list("items"));
     write_indices(indices->entities, root.list("entities"));
+}
+
+void WorldFiles::createBlockFieldsIndices(
+    const ContentIndices* indices, dv::value& root
+) {
+    auto& structsMap = root.object("blocks-data");
+    for (const auto* def : indices->blocks.getIterable()) {
+        if (def->dataStruct == nullptr) continue;
+        structsMap[def->name] = def->dataStruct->serialize();
+    }
+}
+
+void WorldFiles::writeIndices(const ContentIndices* indices) {
+    dv::value root = dv::object();
+    root["region-version"] = REGION_FORMAT_VERSION;
+
+    createContentIndicesCache(indices, root);
+    createBlockFieldsIndices(indices, root);
+
     files::write_json(getIndicesFile(), root);
 }
 
@@ -157,14 +176,17 @@ bool WorldFiles::readResourcesData(const Content* content) {
     return true;
 }
 
-void WorldFiles::patchIndicesVersion(const std::string& field, uint version) {
+void WorldFiles::patchIndicesFile(const dv::value& map) {
     std::filesystem::path file = getIndicesFile();
     if (!std::filesystem::is_regular_file(file)) {
         LOG_ERROR("{} does not exists", file.filename().u8string());
         return;
     }
     auto root = files::read_json(file);
-    root[field] = version;
+    for (const auto& [key, value] : map.asObject()) {
+        LOG_INFO("Patching indices.json update: {}", util::quote(key));
+        root[key] = value;
+    }
     files::write_json(file, root, true);
 }
 

@@ -24,7 +24,7 @@ BlocksRenderer::BlocksRenderer(
 	const ContentGfxCache* cache,
 	const EngineSettings* settings
 ) : content(content),
-	vertexBuffer(std::make_unique<float[]>(capacity)),
+	vertexBuffer(std::make_unique<float[]>(capacity * BR_VERTEX_SIZE)),
     indexBuffer(std::make_unique<int[]>(capacity)),
 	vertexOffset(0),
 	indexOffset(0),
