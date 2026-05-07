@@ -49,12 +49,23 @@ int lua::pushvalue(lua::State* L, const dv::value& value) {
             }
             break;
         }
-        case dv::value_type::Object: {
+        case dv::value_type::Object:
             createtable(L, 0, value.size());
             for (const auto& [key, elem] : value.asObject()) {
                 pushvalue(L, elem);
                 setfield(L, key);
             }
+            break;
+        case dv::value_type::Bytes: {
+            const auto& bytes = value.asBytes();
+            createtable(L, 0, bytes.size());
+            size_t size = bytes.size();
+            for (size_t i = 0; i < size;) {
+                pushinteger(L, bytes[i]);
+                ++i;
+                rawseti(L, i);
+            }
+            break;
         }
     }
     return 1;

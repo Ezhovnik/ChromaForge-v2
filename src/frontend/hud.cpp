@@ -49,6 +49,7 @@
 #include <graphics/core/ImageData.h>
 #include <logic/LevelController.h>
 #include <world/generator/WorldGenerator.h>
+#include <voxels/ChunksStorage.h>
 
 extern std::shared_ptr<gui::UINode> create_debug_panel(
     Engine* engine, 
@@ -142,7 +143,7 @@ std::shared_ptr<gui::InventoryView> Hud::createHotbar() {
     return view;
 }
 
-static constexpr uint WORLDGEN_IMG_SIZE = 64U;
+static constexpr uint WORLDGEN_IMG_SIZE = 128U;
 
 Hud::Hud(
     Engine* engine, 
@@ -273,28 +274,40 @@ void Hud::updateWorldGenDebugVisualization() {
     auto level = levelFrontend->getLevel();
     auto generator = levelFrontend->getController()->getChunksController()->getGenerator();
     auto debugInfo = generator->createDebugInfo();
-    uint width = debugImgWorldGen->getWidth();
-    uint height = debugImgWorldGen->getHeight();
+    int width = debugImgWorldGen->getWidth();
+    int height = debugImgWorldGen->getHeight();
     ubyte* data = debugImgWorldGen->getData();
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            if (x >= debugInfo.areaWidth || y >= debugInfo.areaDepth) {
-                for (int i = 0; i < 4; ++i) {
-                    data[(y * width + x) * 4 + i] = 0;
-                }
+
+    int ox = debugInfo.areaOffsetX;
+    int oz = debugInfo.areaOffsetZ;
+
+    int areaWidth = debugInfo.areaWidth;
+    int areaHeight = debugInfo.areaDepth;
+
+    for (int z = 0; z < height; z++) {
+        for (int x = 0; x < width; x++) {
+            int cx = x + ox;
+            int cz = z + oz;
+
+            int ax = x - (width - areaWidth) / 2;
+            int az = z - (height - areaHeight) / 2;
+
+            data[(z * width + x) * 4 + 1] = 
+                level->chunks->getChunk(ax + ox, az + oz) ? 255 : 0;
+            data[(z * width + x) * 4 + 0] = 
+                level->chunksStorage->get(ax + ox, az + oz) ? 255 : 0;
+
+            if (ax < 0 || az < 0 || 
+                ax >= areaWidth || az >= areaHeight) {
+                data[(z * width + x) * 4 + 2] = 0;
+                data[(z * width + x) * 4 + 3] = 0;
+                data[(z * width + x) * 4 + 3] = 100;
                 continue;
             }
-            int cx = x + debugInfo.areaOffsetX;
-            int cz = y + debugInfo.areaOffsetZ;
-            auto value = debugInfo.areaLevels[y * debugInfo.areaWidth + x] * 35;
+            auto value = debugInfo.areaLevels[az * areaWidth + ax] * 25;
 
-            if (level->chunks->getChunk(cx, cz)) {
-                value = 255;
-            }
-            for (int i = 0; i < 3; ++i) {
-                data[(y * width + x) * 4 + i] = value;
-            }
-            data[(y * width + x) * 4 + 3] = 100;
+            data[(z * width + x) * 4 + 2] = value;
+            data[(z * width + x) * 4 + 3] = 150;
         }
     }
 

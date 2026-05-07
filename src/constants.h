@@ -55,6 +55,7 @@ inline constexpr itemid_t ITEM_VOID = std::numeric_limits<itemid_t>::max();
 /** Идентификатор воздуха. */
 inline constexpr blockid_t BLOCK_AIR = 0;
 inline constexpr blockid_t BLOCK_OBSTACLE = 1;
+inline constexpr blockid_t BLOCK_STRUCT_AIR = 2;
 /** Идентификатор пустого слота предмета. */
 inline constexpr itemid_t ITEM_EMPTY = 0;
 /** Идентификатор "пустой" сущности. */

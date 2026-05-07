@@ -32,8 +32,10 @@ void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
     }
 
     // Пустота
-    Item& item = builder->items.create(BUILTIN_EMPTY);
-    item.iconType = ItemIconType::None;
+    {
+        Item& item = builder->items.create(BUILTIN_EMPTY);
+        item.iconType = ItemIconType::None;
+    }
 
     {
         Block& block = builder->blocks.create(BUILTIN_OBSTACLE);
@@ -47,6 +49,24 @@ void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
         item.iconType = ItemIconType::Block;
         item.icon = BUILTIN_OBSTACLE;
         item.placingBlock = BUILTIN_OBSTACLE;
+        item.caption = block.caption;
+    }
+
+    {
+        Block& block = builder->blocks.create(BUILTIN_STRUCT_AIR);
+        for (uint i = 0; i < 6; i++) {
+            block.textureFaces[i] = "struct_air";
+        }
+        block.drawGroup = -1;
+        block.skyLightPassing = true;
+        block.lightPassing = true;
+        block.hitboxes = {AABB()};
+        block.obstacle = false;
+
+        Item& item = builder->items.create(BUILTIN_STRUCT_AIR + ".item");
+        item.iconType = ItemIconType::Block;
+        item.icon = BUILTIN_STRUCT_AIR;
+        item.placingBlock = BUILTIN_STRUCT_AIR;
         item.caption = block.caption;
     }
 }

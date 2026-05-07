@@ -194,5 +194,7 @@ public:
 
     void writeAll();
 
+    void deleteRegion(RegionLayerIndex layerID, int x, int z);
+
     static bool parseRegionFilename(const std::string& name, int& x, int& z);
 };

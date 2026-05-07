@@ -345,7 +345,6 @@ void Window::toggleFullscreen(){
 		glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, GLFW_DONT_CARE);
 	} else {
 		glfwSetWindowMonitor(window, nullptr, posX, posY, settings->width.get(), settings->height.get(), GLFW_DONT_CARE);
-		glfwSetWindowAttrib(window, GLFW_MAXIMIZED, GLFW_FALSE);
 	}
 
 	double xPos, yPos;
