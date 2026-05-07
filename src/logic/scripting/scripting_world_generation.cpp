@@ -14,21 +14,31 @@
 #include <debug/Logger.h>
 #include <data/dv.h>
 #include <util/timeutil.h>
+#include <files/files.h>
 
 class LuaGeneratorScript : public GeneratorScript {
+    lua::State* L;
     const Generator& def;
     scriptenv env;
 public:
     LuaGeneratorScript(
+        lua::State* L,
         const Generator& def,
         scriptenv env
-    ) : def(def),
+    ) : L(L),
+        def(def),
         env(std::move(env)) {}
+
+    virtual ~LuaGeneratorScript() {
+        env.reset();
+        if (L != lua::get_main_state()) {
+            lua::close(L);
+        }
+    }
 
     std::shared_ptr<Heightmap> generateHeightmap(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed, uint bpd
     ) override {
-        auto L = lua::get_main_thread();
         lua::pushenv(L, *env);
         if (lua::getfield(L, "generate_heightmap")) {
             lua::pushivec_stack(L, offset);
@@ -51,7 +61,6 @@ public:
         std::vector<std::shared_ptr<Heightmap>> maps;
 
         uint biomeParameters = def.biomeParameters;
-        auto L = lua::get_main_thread();
         lua::pushenv(L, *env);
         if (lua::getfield(L, "generate_biome_parameters")) {
             lua::pushivec_stack(L, offset);
@@ -82,7 +91,6 @@ public:
     ) override {
         std::vector<StructurePlacement> placements;
 
-        auto L = lua::get_main_thread();
         lua::stackguard _(L);
         lua::pushenv(L, *env);
         if (lua::getfield(L, "place_structures")) {
@@ -130,8 +138,8 @@ public:
 std::unique_ptr<GeneratorScript> scripting::load_generator(
     const Generator& def, const std::filesystem::path& file, const std::string& dirPath
 ) {
-    auto env = create_environment();
-    auto L = lua::get_main_thread();
+    auto L = lua::create_state(lua::StateType::Generator);
+    auto env = lua::create_environment(L);
     lua::stackguard _(L);
 
     lua::pushenv(L, *env);
@@ -143,12 +151,14 @@ std::unique_ptr<GeneratorScript> scripting::load_generator(
     lua::pop(L);
 
     if (std::filesystem::exists(file)) {
-        lua::pop(L, load_script(*env, "generator", file));
+        std::string src = files::read_string(file);
+        lua::pop(L, lua::execute(L, *env, src, file.u8string()));
     } else {
-        lua::pop(L, lua::execute(lua::get_main_thread(), *env, "", "<empty>"));
+        lua::pop(L, lua::execute(L, *env, "", "<empty>"));
     }
 
     return std::make_unique<LuaGeneratorScript>(
+        L,
         def,
         std::move(env)
     );

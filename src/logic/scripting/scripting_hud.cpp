@@ -12,10 +12,10 @@ Hud* scripting::hud = nullptr;
 
 void scripting::on_frontend_init(Hud* hud) {
     scripting::hud = hud;
-    lua::openlib(lua::get_main_thread(), "hud", hudlib);
+    lua::openlib(lua::get_main_state(), "hud", hudlib);
 
     for (auto& pack : engine->getContentPacks()) {
-        lua::emit_event(lua::get_main_thread(), pack.id + ".hudopen", 
+        lua::emit_event(lua::get_main_state(), pack.id + ".hudopen", 
         [&] (lua::State* L) {
             return lua::pushinteger(L, hud->getPlayer()->getId());        
         });
@@ -24,7 +24,7 @@ void scripting::on_frontend_init(Hud* hud) {
 
 void scripting::on_frontend_close() {
     for (auto& pack : engine->getContentPacks()) {
-        lua::emit_event(lua::get_main_thread(), pack.id + ".hudclose", 
+        lua::emit_event(lua::get_main_state(), pack.id + ".hudclose", 
         [&] (lua::State* L) {
             return lua::pushinteger(L, hud->getPlayer()->getId());            
         });
@@ -34,7 +34,7 @@ void scripting::on_frontend_close() {
 
 void scripting::on_frontend_render() {
     for (auto& pack : engine->getContentPacks()) {
-        lua::emit_event(lua::get_main_thread(), pack.id + ".hudrender", 
+        lua::emit_event(lua::get_main_state(), pack.id + ".hudrender", 
         [&] (lua::State* L) {
             return 0;            
         });
@@ -50,7 +50,7 @@ void scripting::load_hud_script(
     std::string src = files::read_string(file);
     LOG_DEBUG("Loading script {}", file.u8string());
 
-    lua::execute(lua::get_main_thread(), env, src, file.u8string());
+    lua::execute(lua::get_main_state(), env, src, file.u8string());
 
     register_event(env, "init", packid + ".init");
     register_event(env, "on_hud_open", packid + ".hudopen");

@@ -16,7 +16,7 @@ using namespace lua;
 luaerror::luaerror(const std::string& message) : std::runtime_error(message) {
 }
 
-static void remove_lib_funcs(lua::State* L, const char* libname, const char* funcs[]) {
+static void remove_lib_funcs(State* L, const char* libname, const char* funcs[]) {
     if (getglobal(L, libname)) {
         for (uint i = 0; funcs[i]; ++i) {
             pushnil(L);
@@ -26,49 +26,52 @@ static void remove_lib_funcs(lua::State* L, const char* libname, const char* fun
     }
 }
 
-static void create_libs(lua::State* L) {
+[[nodiscard]] scriptenv lua::create_environment(State* L) {
+    int id = lua::create_environment(L, 0);
+    return std::shared_ptr<int>(new int(id), [=](int* id) {
+        lua::remove_environment(L, *id);
+        delete id;
+    });
+}
+
+static void create_libs(State* L, StateType stateType) {
     openlib(L, "audio", audiolib);
     openlib(L, "block", blocklib);
     openlib(L, "builtin", builtinlib);
-    openlib(L, "cameras", cameralib);
-    openlib(L, "console", consolelib);
-    openlib(L, "entities", entitylib);
     openlib(L, "file", filelib);
-    openlib(L, "gui", guilib);
-    openlib(L, "input", inputlib);
-    openlib(L, "inventory", inventorylib);
     openlib(L, "generation", generationlib);
     openlib(L, "item", itemlib);
     openlib(L, "json", jsonlib);
     openlib(L, "mat4", mat4lib);
     openlib(L, "pack", packlib);
-    openlib(L, "player", playerlib);
     openlib(L, "quat", quatlib);
     openlib(L, "time", timelib);
     openlib(L, "toml", tomllib);
     openlib(L, "vec2", vec2lib);
     openlib(L, "vec3", vec3lib);
     openlib(L, "vec4", vec4lib);
-    openlib(L, "world", worldlib);
 
-    openlib(L, "__skeleton", skeletonlib);
-    openlib(L, "__rigidbody", rigidbodylib);
-    openlib(L, "__transform", transformlib);
+    if (stateType == StateType::Base) {
+        openlib(L, "gui", guilib);
+        openlib(L, "input", inputlib);
+        openlib(L, "inventory", inventorylib);
+        openlib(L, "world", worldlib);
+        openlib(L, "audio", audiolib);
+        openlib(L, "console", consolelib);
+        openlib(L, "player", playerlib);
+
+        openlib(L, "entities", entitylib);
+        openlib(L, "cameras", cameralib);
+
+        openlib(L, "__skeleton", skeletonlib);
+        openlib(L, "__rigidbody", rigidbodylib);
+        openlib(L, "__transform", transformlib);
+    }
 
     addfunc(L, "print", lua::wrap<l_print>);
 }
 
-void lua::initialize() {
-    LOG_INFO("Lua version: {}", LUA_VERSION);
-    LOG_INFO("LuaJIT version: {}", LUAJIT_VERSION);
-
-    auto L = luaL_newstate();
-    if (L == nullptr) {
-        LOG_ERROR("Could not to initialize Lua");
-        throw luaerror("Could not to initialize Lua");
-    }
-    main_thread = L;
-
+void lua::init_state(State* L, StateType stateType) {
     pop(L, luaopen_base(L));
     pop(L, luaopen_math(L));
     pop(L, luaopen_string(L));
@@ -88,7 +91,7 @@ void lua::initialize() {
         nullptr
     };
     remove_lib_funcs(L, "os", removed_os);
-    create_libs(L);
+    create_libs(L, stateType);
 
     pushglobals(L);
     setglobal(L, env_name(0));
@@ -106,11 +109,18 @@ void lua::initialize() {
     newusertype<LuaVoxelStructure>(L);
 }
 
-void lua::finalize() {
-    lua_close(main_thread);
+void lua::initialize() {
+    LOG_INFO("Lua version: {}", LUA_VERSION);
+    LOG_INFO("LuaJIT version: {}", LUAJIT_VERSION);
+
+    main_thread = create_state(StateType::Base);
 }
 
-bool lua::emit_event(lua::State* L, const std::string &name, std::function<int(lua::State*)> args) {
+void lua::finalize() {
+    lua::close(main_thread);
+}
+
+bool lua::emit_event(State* L, const std::string &name, std::function<int(State*)> args) {
     getglobal(L, "events");
     getfield(L, "emit");
     pushstring(L, name);
@@ -120,6 +130,16 @@ bool lua::emit_event(lua::State* L, const std::string &name, std::function<int(l
     return result;
 }
 
-lua::State* lua::get_main_thread() {
+lua::State* lua::get_main_state() {
     return main_thread;
+}
+
+State* lua::create_state(StateType stateType) {
+    auto L = luaL_newstate();
+    if (L == nullptr) {
+        LOG_ERROR("Could not initialize Lua state");
+        throw luaerror("Could not initialize Lua state");
+    }
+    init_state(L, stateType);
+    return L;
 }
