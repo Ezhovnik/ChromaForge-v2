@@ -49,10 +49,10 @@ pack.is_installed(packid: str) -> bool
 pack.data_file(packid: str, filename: str) -> str
 ```
 
-Возвращает путь к файлу данных по типу: `world:data/packid/filename`
+Возвращает путь к файлу данных `world:data/packid/filename`
 и создает недостающие директории в пути.
 
-Используйте эту функцию при сохранении настроек пака или иных данных в мире.
+Используйте для хранения данных в мире.
 
 Пример:
 
@@ -60,7 +60,24 @@ pack.data_file(packid: str, filename: str) -> str
 file.write(pack.data_file(PACK_ID, "example.txt"), text)
 ```
 
-Для пака *containermod* запишет текст в файл `world:data/containermod/example.txt`
+Для пака *supermod* запишет текст в файл `world:data/supermod/example.txt`
+
+```lua
+pack.shared_file(packid: str, filename: str) -> str
+```
+
+Возвращает путь к файлу данных `config:packid/filename`
+и создает недостающие директории в пути.
+
+Используйте для хранения данных общих для всех миров.
+
+Пример:
+
+```lua
+file.write(pack.shared_file(PACK_ID, "example.txt"), text)
+```
+
+Для пака *supermod* запишет текст в файл `world:data/supermod/example.txt`
 
 ```lua
 pack.get_folder(packid: str) -> str

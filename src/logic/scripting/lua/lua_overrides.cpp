@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <logic/scripting/lua/api_lua.h>
+#include <logic/scripting/lua/libs/api_lua.h>
 
 int l_print(lua::State* L) {
     int n = lua::gettop(L);

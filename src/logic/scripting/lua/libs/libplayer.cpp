@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include <logic/scripting/lua/libentity.h>
+#include <logic/scripting/lua/libs/libentity.h>
 #include <objects/Player.h>
 #include <physics/Hitbox.h>
 #include <window/Camera.h>

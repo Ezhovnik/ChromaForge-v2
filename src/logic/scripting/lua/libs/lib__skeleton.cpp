@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/libentity.h>
+#include <logic/scripting/lua/libs/libentity.h>
 #include <objects/rigging.h>
 
 static int index_range_check(const rigging::Skeleton& skeleton, lua::Integer index) {

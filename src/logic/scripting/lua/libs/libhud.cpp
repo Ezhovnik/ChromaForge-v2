@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/api_lua.h>
+#include <logic/scripting/lua/libs/api_lua.h>
 #include <assets/Assets.h>
 #include <frontend/hud.h>
 #include <world/Level.h>

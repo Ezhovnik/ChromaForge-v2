@@ -12,23 +12,13 @@
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 
-enum F_F_NAME{
-    SCREENSHOTS_FOLDER,
-    CONTENT_FOLDER,
-    LOGS_FOLDER,
-    CONTROLS_FILE,
-    SETTINGS_FILE,
-
-    COUNT
-};
-
-static std::array<std::string, F_F_NAME::COUNT> f_f_names{
-    "screenshots",
-    "content",
-    "logs",
-    "controls.toml",
-    "settings.toml"
-};
+static inline auto SCREENSHOTS_FOLDER = std::filesystem::u8path("screenshots");
+static inline auto CONTENT_FOLDER = std::filesystem::u8path("content");
+static inline auto LOGS_FOLDER = std::filesystem::u8path("logs");
+static inline auto WORLDS_FOLDER = std::filesystem::u8path("saves");
+static inline auto CONFIG_FOLDER = std::filesystem::u8path("config");
+static inline auto CONTROLS_FILE = std::filesystem::u8path("controls.toml");
+static inline auto SETTINGS_FILE = std::filesystem::u8path("settings.toml");
 
 static std::filesystem::path toCanonic(std::filesystem::path path) {
     std::stack<std::string> parts;
@@ -52,7 +42,7 @@ static std::filesystem::path toCanonic(std::filesystem::path path) {
 }
 
 void EnginePaths::prepare() {
-    auto contentFolder = userFilesFolder/std::filesystem::path(f_f_names[CONTENT_FOLDER]);
+    auto contentFolder = userFilesFolder/CONTENT_FOLDER;
     if (!std::filesystem::is_directory(contentFolder)) {
         std::filesystem::create_directories(contentFolder);
     }
@@ -66,16 +56,16 @@ std::filesystem::path EnginePaths::getResourcesFolder() const {
 	return resourcesFolder;
 }
 
-std::filesystem::path EnginePaths::getControlsFile() {
-    return userFilesFolder/std::filesystem::path(f_f_names[CONTROLS_FILE]);
+std::filesystem::path EnginePaths::getControlsFile() const {
+    return userFilesFolder/CONTROLS_FILE;
 }
 
-std::filesystem::path EnginePaths::getSettingsFile() {
-    return userFilesFolder/std::filesystem::path(f_f_names[SETTINGS_FILE]);
+std::filesystem::path EnginePaths::getSettingsFile() const {
+    return userFilesFolder/SETTINGS_FILE;
 }
 
 std::filesystem::path EnginePaths::getNewScreenshotFile(const std::string& ext) {
-	auto folder = userFilesFolder/std::filesystem::path(f_f_names[SCREENSHOTS_FOLDER]);
+	auto folder = userFilesFolder/SCREENSHOTS_FOLDER;
 	if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
 
 	auto t = std::time(nullptr);
@@ -95,12 +85,16 @@ std::filesystem::path EnginePaths::getNewScreenshotFile(const std::string& ext) 
 	return filename;
 }
 
-std::filesystem::path EnginePaths::getWorldsFolder() {
-    return userFilesFolder/std::filesystem::path("saves");
+std::filesystem::path EnginePaths::getWorldsFolder() const {
+    return userFilesFolder/WORLDS_FOLDER;
 }
 
-std::filesystem::path EnginePaths::getLogsFile() {
-    auto folder = std::filesystem::path(f_f_names[LOGS_FOLDER]);
+std::filesystem::path EnginePaths::getConfigFolder() const {
+    return userFilesFolder/CONFIG_FOLDER;
+}
+
+std::filesystem::path EnginePaths::getLogsFile() const {
+    auto folder = userFilesFolder/LOGS_FOLDER;
     if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
     return folder/std::filesystem::u8path("ChromaForge.log");
 }
@@ -150,6 +144,7 @@ std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwEr
 
     if (prefix == "res" || prefix == BUILTIN_CONTENT_NAMESPACE) return resourcesFolder/std::filesystem::u8path(filename);
     if (prefix == "user") return userFilesFolder/std::filesystem::u8path(filename);
+    if (prefix == "config") return getConfigFolder()/std::filesystem::u8path(filename);
     if (prefix == "world") return currentWorldFolder/std::filesystem::u8path(filename);
 
     if (contentPacks) {

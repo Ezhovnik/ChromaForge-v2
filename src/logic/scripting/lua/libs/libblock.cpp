@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/api_lua.h>
+#include <logic/scripting/lua/libs/api_lua.h>
 #include <world/Level.h>
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>

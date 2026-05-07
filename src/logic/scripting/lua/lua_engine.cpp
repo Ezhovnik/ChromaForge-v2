@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include <logic/scripting/lua/api_lua.h>
+#include <logic/scripting/lua/libs/api_lua.h>
 #include <logic/scripting/lua/lua_util.h>
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <debug/Logger.h>

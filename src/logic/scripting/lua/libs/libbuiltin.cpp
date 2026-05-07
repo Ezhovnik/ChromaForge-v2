@@ -1,7 +1,7 @@
 #include <vector>
 #include <memory>
 
-#include <logic/scripting/lua/api_lua.h>
+#include <logic/scripting/lua/libs/api_lua.h>
 #include <engine.h>
 #include <files/engine_paths.h>
 #include <frontend/menu.h>

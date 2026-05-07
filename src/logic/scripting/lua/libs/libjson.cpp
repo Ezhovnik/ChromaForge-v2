@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/api_lua.h>
+#include <logic/scripting/lua/libs/api_lua.h>
 #include <coders/json.h>
 
 static int l_json_stringify(lua::State* L) {

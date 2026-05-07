@@ -1,7 +1,7 @@
 #include <cmath>
 #include <filesystem>
 
-#include <logic/scripting/lua/api_lua.h>
+#include <logic/scripting/lua/libs/api_lua.h>
 #include <world/Level.h>
 #include <world/World.h>
 #include <engine.h>

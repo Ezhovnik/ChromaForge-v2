@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/libentity.h>
+#include <logic/scripting/lua/libs/libentity.h>
 
 static int l_get_pos(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {

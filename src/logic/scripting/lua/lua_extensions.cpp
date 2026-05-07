@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <logic/scripting/lua/api_lua.h>
+#include <logic/scripting/lua/libs/api_lua.h>
 #include <debug/Logger.h>
 
 static int l_debug_critical(lua::State* L) {

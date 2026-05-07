@@ -231,16 +231,22 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
 
     if (auto found = root.at("emission")) {
         const auto& emissionarr = *found;
-        def.emission[0] = emissionarr[0].asNumber();
-        def.emission[1] = emissionarr[1].asNumber();
-        def.emission[2] = emissionarr[2].asNumber();
+        def.emission[0] = emissionarr[0].asInteger();
+        def.emission[1] = emissionarr[1].asInteger();
+        def.emission[2] = emissionarr[2].asInteger();
     }
 
     if (auto found = root.at("size")) {
         const auto& sizearr = *found;
-        def.size.x = sizearr[0].asNumber();
-        def.size.y = sizearr[1].asNumber();
-        def.size.z = sizearr[2].asNumber();
+        def.size.x = sizearr[0].asInteger();
+        def.size.y = sizearr[1].asInteger();
+        def.size.z = sizearr[2].asInteger();
+        if (def.size.x < 1 || def.size.y < 1 || def.size.z < 1) {
+            LOG_ERROR("Block {}: invalid block size", util::quote(def.name));
+            throw std::runtime_error(
+                "Block " + util::quote(def.name) + ": invalid block size"
+            );
+        }
         if (def.model == BlockModel::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
             def.model = BlockModel::AABB;
             def.hitboxes = {AABB(def.size)};

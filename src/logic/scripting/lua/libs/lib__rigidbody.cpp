@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/libentity.h>
+#include <logic/scripting/lua/libs/libentity.h>
 
 #include <util/stringutil.h>
 

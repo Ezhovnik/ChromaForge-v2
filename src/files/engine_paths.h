@@ -29,16 +29,17 @@ public:
     void setResourcesFolder(std::filesystem::path folder);
     std::filesystem::path getResourcesFolder() const;
 
-    std::filesystem::path getWorldsFolder();
+    std::filesystem::path getConfigFolder() const;
+    std::filesystem::path getWorldsFolder() const;
     std::filesystem::path getWorldFolderByName(const std::string& name);
 
     void setCurrentWorldFolder(std::filesystem::path folder);
     std::filesystem::path getCurrentWorldFolder();
 
     std::filesystem::path getNewScreenshotFile(const std::string& ext);
-    std::filesystem::path getControlsFile();
-    std::filesystem::path getSettingsFile();
-    std::filesystem::path getLogsFile();
+    std::filesystem::path getControlsFile() const;
+    std::filesystem::path getSettingsFile() const;
+    std::filesystem::path getLogsFile() const;
 
     void setContentPacks(std::vector<ContentPack>* contentPacks);
 
