@@ -106,6 +106,7 @@ public:
     std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
     std::string scriptName = name.substr(name.find(':') + 1);
     uint inventorySize = 0;
+    std::string surfaceReplacement = name;
     std::string uiLayout = name;
     uint sparkInterval = 1;
 
@@ -135,6 +136,7 @@ public:
 		std::vector<AABB> hitboxes[BlockRotProfile::MAX_COUNT];
         block_funcs_set funcsset {};
         itemid_t pickingItem = 0;
+        blockid_t surfaceReplacement = 0;
 	} rt {};
 
     Block(const std::string& name);

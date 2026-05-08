@@ -84,12 +84,63 @@ public:
         return maps;
     }
 
-    std::vector<StructurePlacement> placeStructures(
+    void perform_line(lua::State* L, PrototypePlacements& placements) {
+        lua::rawgeti(L, 2);
+        blockid_t block = lua::touinteger(L, -1);
+        lua::pop(L);
+
+        lua::rawgeti(L, 3);
+        glm::ivec3 a = lua::tovec3(L, -1);
+        lua::pop(L);
+
+        lua::rawgeti(L, 4);
+        glm::ivec3 b = lua::tovec3(L, -1);
+        lua::pop(L);
+
+        lua::rawgeti(L, 5);
+        int radius = lua::touinteger(L, -1);
+        lua::pop(L);
+
+        placements.lines.emplace_back(block, a, b, radius);
+    }
+
+    void perform_placement(lua::State* L, PrototypePlacements& placements) {
+        lua::rawgeti(L, 1);
+        int structIndex = 0;
+        if (lua::isstring(L, -1)) {
+            const char* name = lua::require_string(L, -1);
+            if (!std::strcmp(name, ":line")) {
+                lua::pop(L);
+
+                perform_line(L, placements);
+                return;
+            }
+            const auto& found = def.structuresIndices.find(name);
+            if (found != def.structuresIndices.end()) {
+                structIndex = found->second;
+            }
+        } else {
+            structIndex = lua::tointeger(L, -1);
+        }
+        lua::pop(L);
+
+        lua::rawgeti(L, 2);
+        glm::ivec3 pos = lua::tovec3(L, -1);
+        lua::pop(L);
+
+        lua::rawgeti(L, 3);
+        int rotation = lua::tointeger(L, -1) & 0b11;
+        lua::pop(L);
+
+        placements.structs.emplace_back(structIndex, pos, rotation);
+    }
+
+    PrototypePlacements placeStructures(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
         const std::shared_ptr<Heightmap>& heightmap,
         uint chunkHeight
     ) override {
-        std::vector<StructurePlacement> placements;
+        PrototypePlacements placements {};
 
         lua::stackguard _(L);
         lua::pushenv(L, *env);
@@ -104,29 +155,8 @@ public:
                 for (int i = 1; i <= len; ++i) {
                     lua::rawgeti(L, i);
 
-                    lua::rawgeti(L, 1);
-                    int structIndex = 0;
-                    if (lua::isstring(L, -1)) {
-                        const auto& found = def.structuresIndices.find(lua::require_string(L, -1));
-                        if (found != def.structuresIndices.end()) {
-                            structIndex = found->second;
-                        }
-                    } else {
-                        structIndex = lua::tointeger(L, -1);
-                    }
+                    perform_placement(L, placements);
                     lua::pop(L);
-
-                    lua::rawgeti(L, 2);
-                    glm::ivec3 pos = lua::tovec3(L, -1);
-                    lua::pop(L);
-
-                    lua::rawgeti(L, 3);
-                    int rotation = lua::tointeger(L, -1) & 0b11;
-                    lua::pop(L);
-
-                    lua::pop(L);
-
-                    placements.emplace_back(structIndex, pos, rotation);
                 }
                 lua::pop(L);
             }

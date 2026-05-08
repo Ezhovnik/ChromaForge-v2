@@ -92,6 +92,11 @@ struct Biome {
     BlocksLayers seaLayers;
 };
 
+struct PrototypePlacements {
+    std::vector<StructurePlacement> structs {};
+    std::vector<LinePlacement> lines {};
+};
+
 class GeneratorScript {
 public:
     virtual ~GeneratorScript() = default;
@@ -110,7 +115,7 @@ public:
         uint bpd
     ) = 0;
 
-    virtual std::vector<StructurePlacement> placeStructures(
+    virtual PrototypePlacements placeStructures(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
         const std::shared_ptr<Heightmap>& heightmap,
         uint chunkHeight

@@ -265,6 +265,7 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
     root.at("hidden").get(def.hidden);
     root.at("draw-group").get(def.drawGroup);
     root.at("picking-item").get(def.pickingItem);
+    root.at("surface-replacement").get(def.surfaceReplacement);
     root.at("script-name").get(def.scriptName);
     root.at("ui-layout").get(def.uiLayout);
     root.at("inventory-size").get(def.inventorySize);

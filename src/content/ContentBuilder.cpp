@@ -81,6 +81,7 @@ std::unique_ptr<Content> ContentBuilder::build() {
 
     for (Block* def : blockDefsIndices) {
         def->rt.pickingItem = content->items.require(def->pickingItem).rt.id;
+        def->rt.surfaceReplacement = content->blocks.require(def->surfaceReplacement).rt.id;
     }
 
     for (Item* def : itemDefsIndices) {
