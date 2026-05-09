@@ -47,8 +47,8 @@ using aloader_func = std::function<asset_loader::postfunc(
  */
 struct aloader_entry {
 	AssetType tag; ///< Тип ресурса
-	const std::string filename; ///< Имя файла (или путь)
-	const std::string alias; ///< Псевдоним в менеджере ресурсов
+	std::string filename; ///< Имя файла (или путь)
+	std::string alias; ///< Псевдоним в менеджере ресурсов
 	std::shared_ptr<AssetsConfig> config; ///< Дополнительные настройки
 };
 

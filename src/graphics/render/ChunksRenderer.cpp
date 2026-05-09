@@ -10,7 +10,7 @@
 #include <debug/Logger.h>
 #include <settings.h>
 
-class RendererWorker : public util::Worker<Chunk, RendererResult> {
+class RendererWorker : public util::Worker<std::shared_ptr<Chunk>, RendererResult> {
     Level* level;
     BlocksRenderer renderer;
 public:
@@ -23,7 +23,15 @@ public:
 
     RendererResult operator()(const std::shared_ptr<Chunk>& chunk) override {
         renderer.build(chunk.get(), level->chunksStorage.get());
-        return RendererResult{glm::ivec2(chunk->chunk_x, chunk->chunk_z), &renderer};
+        if (renderer.isCancelled()) {
+            return RendererResult {
+                glm::ivec2(chunk->chunk_x, chunk->chunk_z), true, MeshData()
+            };
+        }
+        auto meshData = renderer.createMesh();
+        return RendererResult {
+            glm::ivec2(chunk->chunk_x, chunk->chunk_z), false, std::move(meshData)
+        };
     }
 };
 
@@ -35,16 +43,15 @@ ChunksRenderer::ChunksRenderer(
     threadPool(
         "chunks-render-pool",
         [=](){return std::make_shared<RendererWorker>(level, cache, settings);}, 
-        [=](RendererResult& mesh){
-            if (!mesh.renderer->isCancelled()) {
-                meshes[mesh.key] = mesh.renderer->createMesh();
+        [=](RendererResult& result){
+            if (!result.cancelled) {
+                meshes[result.key] = std::make_shared<Mesh>(result.meshData);
             }
-            inwork.erase(mesh.key);
+            inwork.erase(result.key);
         },
         settings->graphics.chunkMaxRenderers.get()
     )
 {
-    threadPool.setStandaloneResults(false);
     threadPool.setStopOnFail(false);
     renderer = std::make_unique<BlocksRenderer>(
         settings->graphics.chunkMaxVertices.get(), level->content, cache, settings

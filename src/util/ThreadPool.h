@@ -26,7 +26,7 @@ namespace util {
      */
     template<class J, class T>
     struct ThreadPoolResult {
-        std::shared_ptr<J> job; ///< Указатель на выполненное задание.
+        J job; ///< Указатель на выполненное задание.
         std::condition_variable& variable; ///< Условная переменная для ожидания обработки результата.
         int workerIndex; ///< Индекс рабочего потока, выполнившего задание.
         bool& locked; ///< Флаг, указывающий, что результат ещё не обработан.
@@ -53,7 +53,7 @@ namespace util {
          * @param job Задание для обработки.
          * @return Результат обработки.
          */
-        virtual R operator()(const std::shared_ptr<T>&) = 0;
+        virtual R operator()(const T&) = 0;
     };
 
     /**
@@ -71,7 +71,7 @@ namespace util {
     class ThreadPool : public Task {
         std::string name; ///< Имя пула (для логирования)
 
-        std::queue<std::shared_ptr<T>> jobs; ///< Очередь заданий, ожидающих выполнения
+        std::queue<T> jobs; ///< Очередь заданий, ожидающих выполнения
         std::queue<ThreadPoolResult<T, R>> results; ///< Очередь готовых результатов
         std::mutex resultsMutex; ///< Мьютекс для синхронизации доступа к очереди результатов
 
@@ -82,7 +82,7 @@ namespace util {
         std::vector<std::unique_lock<std::mutex>> workersBlocked; ///< Вектор блокировок для управления паузой рабочих потоков
 
         consumer<R&> resultConsumer; ///< Функция-потребитель для обработки готовых результатов
-        consumer<std::shared_ptr<T>&> onJobFailed = nullptr; ///< Колбэк при ошибке выполнения задания
+        consumer<T&> onJobFailed = nullptr; ///< Колбэк при ошибке выполнения задания
         runnable onComplete = nullptr; ///< Колбэк при завершении всех заданий
 
         std::atomic<int> busyWorkers = 0; ///< Количество потоков, занятых обработкой заданий
@@ -102,14 +102,14 @@ namespace util {
             std::mutex mutex;
             bool locked = false;
             while (working) {
-                std::shared_ptr<T> job;
+                T job;
                 {
                     std::unique_lock<std::mutex> lock(jobsMutex);
                     jobsMutexCondition.wait(lock, [this] {
                         return !jobs.empty() || !working;
                     });
                     if (!working || failed) break;
-                    job = jobs.front();
+                    job = std::move(jobs.front());
                     jobs.pop();
 
                     busyWorkers++;
@@ -288,10 +288,10 @@ namespace util {
          * @brief Добавляет задание в очередь.
          * @param job Умный указатель на задание.
          */
-        void enqueueJob(const std::shared_ptr<T>& job) {
+        void enqueueJob(T job) {
             {
                 std::lock_guard<std::mutex> lock(jobsMutex);
-                jobs.push(job);
+                jobs.push(std::move(job));
             }
             jobsMutexCondition.notify_one();
         }

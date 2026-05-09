@@ -21,8 +21,8 @@ private:
 public:
     ConverterWorker(std::shared_ptr<WorldConverter> converter) : converter(std::move(converter)) {}
 
-    int operator()(const std::shared_ptr<ConvertTask>& task) override {
-        converter->convert(*task);
+    int operator()(const ConvertTask& task) override {
+        converter->convert(task);
         return 0;
     }
 };
@@ -162,10 +162,9 @@ std::shared_ptr<Task> WorldConverter::startTask(
     );
     auto& converterTasks = converter->tasks;
     while (!converterTasks.empty()) {
-        const ConvertTask& task = converterTasks.front();
-        auto ptr = std::make_shared<ConvertTask>(task);
-        pool->enqueueJob(ptr);
+        ConvertTask task = std::move(converterTasks.front());
         converterTasks.pop();
+        pool->enqueueJob(std::move(task));
     }
     pool->setOnComplete([=]() {
         converter->write();

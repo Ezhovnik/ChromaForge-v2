@@ -12,6 +12,8 @@
 #include <voxels/Chunk.h>
 #include <voxels/VoxelsVolume.h>
 #include <core_content_defs.h>
+#include <graphics/core/MeshData.h>
+#include <math/rand.h>
 
 class Content;
 class Mesh;
@@ -49,6 +51,8 @@ private:
 	const Block* const* blockDefsCache;
 	const ContentGfxCache* const cache;
 	const EngineSettings* settings;
+
+    PseudoRandom randomizer;
 
     /**
      * @brief Добавляет вершину в буфер.
@@ -314,7 +318,7 @@ public:
      * @brief Создаёт Mesh из текущих буферов.
      * @return Указатель на новый Mesh.
      */
-    std::shared_ptr<Mesh> createMesh();
+    MeshData createMesh();
 
     /**
      * @brief Возвращает буфер вокселей.

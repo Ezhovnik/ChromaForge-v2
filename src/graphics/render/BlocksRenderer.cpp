@@ -229,7 +229,9 @@ void BlocksRenderer::blockXSprite(
     };
 
     // Случайное смещение для вариации
-	int rand = ((x * z + y) ^ (z * y - x)) * (z + y);
+	randomizer.setSeed((x * 52321) ^ (z * 389) ^ y);
+    short rand = randomizer.rand32();
+
 	float xs = ((float)(char)rand / 512) * spread;
 	float zs = ((float)(char)(rand >> 8) / 512) * spread;
 
@@ -573,17 +575,21 @@ void BlocksRenderer::build(const Chunk* chunk, const ChunksStorage* chunks) {
 	render(voxels);
 }
 
-std::shared_ptr<Mesh> BlocksRenderer::createMesh() {
-	const vattr attrs[]{ {3}, {2}, {1}, {0} };
-	size_t vcount = vertexOffset / BR_VERTEX_SIZE;
-	return std::make_shared<Mesh>(
-		vertexBuffer.get(), vcount, indexBuffer.get(), indexSize, attrs
-	);
+MeshData BlocksRenderer::createMesh() {
+	return MeshData(
+        util::Buffer<float>(vertexBuffer.get(), vertexOffset), 
+        util::Buffer<int>(indexBuffer.get(), indexSize),
+        util::Buffer<vattr>({{3}, {2}, {1}, {0}})
+    );
 }
 
 std::shared_ptr<Mesh> BlocksRenderer::render(const Chunk* chunk, const ChunksStorage* chunks) {
     build(chunk, chunks);
-    return createMesh();
+    const vattr attrs[]{{3}, {2}, {1}, {0}};
+    size_t vcount = vertexOffset / BR_VERTEX_SIZE;
+    return std::make_shared<Mesh>(
+        vertexBuffer.get(), vcount, indexBuffer.get(), indexSize, attrs
+    );
 }
 
 VoxelsVolume* BlocksRenderer::getVoxelsBuffer() const {
