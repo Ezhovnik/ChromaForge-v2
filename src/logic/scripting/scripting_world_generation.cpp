@@ -15,6 +15,7 @@
 #include <data/dv.h>
 #include <util/timeutil.h>
 #include <files/files.h>
+#include <engine.h>
 
 class LuaGeneratorScript : public GeneratorScript {
     lua::State* L;
@@ -84,7 +85,7 @@ public:
         return maps;
     }
 
-    void perform_line(lua::State* L, PrototypePlacements& placements) {
+    void perform_line(lua::State* L, std::vector<Placement>& placements) {
         lua::rawgeti(L, 2);
         blockid_t block = lua::touinteger(L, -1);
         lua::pop(L);
@@ -101,10 +102,17 @@ public:
         int radius = lua::touinteger(L, -1);
         lua::pop(L);
 
-        placements.lines.emplace_back(block, a, b, radius);
+        int priority = 0;
+        if (lua::objlen(L, -1) >= 6) {
+            lua::rawgeti(L, 6);
+            priority = lua::tointeger(L, -1);
+            lua::pop(L);
+        }
+
+        placements.emplace_back(priority, LinePlacement {block, a, b, radius});
     }
 
-    void perform_placement(lua::State* L, PrototypePlacements& placements) {
+    void perform_placement(lua::State* L, std::vector<Placement>& placements) {
         lua::rawgeti(L, 1);
         int structIndex = 0;
         if (lua::isstring(L, -1)) {
@@ -129,18 +137,57 @@ public:
         lua::pop(L);
 
         lua::rawgeti(L, 3);
-        int rotation = lua::tointeger(L, -1) & 0b11;
+        uint8_t rotation = lua::tointeger(L, -1) & 0b11;
         lua::pop(L);
 
-        placements.structs.emplace_back(structIndex, pos, rotation);
+        int priority = 1;
+        if (lua::objlen(L, -1) >= 4) {
+            lua::rawgeti(L, 4);
+            priority = lua::tointeger(L, -1);
+            lua::pop(L);
+        }
+
+        placements.emplace_back(
+            priority, StructurePlacement {structIndex, pos, rotation}
+        );
     }
 
-    PrototypePlacements placeStructures(
+    std::vector<Placement> placeStructuresWide(
+        const glm::ivec2& offset, 
+        const glm::ivec2& size, 
+        uint64_t seed,
+        uint chunkHeight
+    ) override {
+        std::vector<Placement> placements {};
+
+        lua::stackguard _(L);
+        lua::pushenv(L, *env);
+        if (lua::getfield(L, "place_structures_wide")) {
+            lua::pushivec_stack(L, offset);
+            lua::pushivec_stack(L, size);
+            lua::pushinteger(L, seed);
+            lua::pushinteger(L, chunkHeight);
+            if (lua::call_nothrow(L, 6, 1)) {
+                int len = lua::objlen(L, -1);
+                for (int i = 1; i <= len; ++i) {
+                    lua::rawgeti(L, i);
+
+                    perform_placement(L, placements);
+
+                    lua::pop(L);
+                }
+                lua::pop(L);
+            }
+        }
+        return placements;
+    }
+
+    std::vector<Placement> placeStructures(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
         const std::shared_ptr<Heightmap>& heightmap,
         uint chunkHeight
     ) override {
-        PrototypePlacements placements {};
+        std::vector<Placement> placements {};
 
         lua::stackguard _(L);
         lua::pushenv(L, *env);
@@ -168,7 +215,7 @@ public:
 std::unique_ptr<GeneratorScript> scripting::load_generator(
     const Generator& def, const std::filesystem::path& file, const std::string& dirPath
 ) {
-    auto L = lua::create_state(lua::StateType::Generator);
+    auto L = lua::create_state(*scripting::engine->getPaths(), lua::StateType::Generator);
     auto env = lua::create_environment(L);
     lua::stackguard _(L);
 

@@ -203,6 +203,7 @@ void ContentLoader::loadGenerator(
     map.at("biome-bpd").get(def.biomesBPD);
     map.at("heights-bpd").get(def.heightsBPD);
     map.at("sea_level").get(def.seaLevel);
+    map.at("wide-structs-chunks-radius").get(def.wideStructsChunksRadius);
 
     auto folder = generatorsDir/std::filesystem::u8path(name + ".files");
     auto scriptFile = folder/std::filesystem::u8path("script.lua");

@@ -1,6 +1,6 @@
 [
-    {"struct": "coal_ore0", "rarity": 22000},
-    {"struct": "copper_ore0", "rarity": 21000},
-    {"struct": "iron_ore0", "rarity": 15000},
-    {"struct": "gold_ore0", "rarity": 10000}
+    {"struct": "coal_ore0", "rarity": 4400},
+    {"struct": "copper_ore0", "rarity": 4300},
+    {"struct": "iron_ore0", "rarity": 3900},
+    {"struct": "gold_ore0", "rarity": 3000}
 ]

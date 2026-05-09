@@ -21,6 +21,7 @@ class VoxelFragment;
 
 enum class ChunkPrototypeLevel {
     Void = 0,
+    WideStructs,
     Biomes,
     Heightmap,
     Structures
@@ -31,9 +32,8 @@ struct ChunkPrototype {
 
     std::unique_ptr<const Biome*[]> biomes;
     std::shared_ptr<Heightmap> heightmap;
-    std::vector<StructurePlacement> structures;
 
-    std::vector<LinePlacement> lines;
+    std::vector<Placement> placements;
 };
 
 struct WorldGenDebugInfo {
@@ -58,25 +58,37 @@ class WorldGenerator {
 
     ChunkPrototype& requirePrototype(int x, int z);
 
+    void generateStructuresWide(ChunkPrototype& prototype, int x, int z);
+
     void generateStructures(ChunkPrototype& prototype, int x, int z);
+
+    void generatePlacements(
+        const ChunkPrototype& prototype, voxel* voxels, int x, int z
+    );
 
     void generateBiomes(ChunkPrototype& prototype, int x, int z);
 
     void generateHeightmap(ChunkPrototype& prototype, int x, int z);
 
     void placeStructure(
-        const glm::ivec3& offset, size_t structure, uint8_t rotation,
+        const StructurePlacement& placement, int priority,
         int chunkX, int chunkZ
     );
 
-    void placeLine(const LinePlacement& line);
+    void placeLine(const LinePlacement& line, int priority);
 
-    void generateLines(
-        const ChunkPrototype& prototype, voxel* voxels, int x, int z
+    void generateLine(
+        const ChunkPrototype& prototype, 
+        const LinePlacement& placement,
+        voxel* voxels, 
+        int x, int z
     );
 
-    void generateStructures(
-        const ChunkPrototype& prototype, voxel* voxels, int x, int z
+    void generateStructure(
+        const ChunkPrototype& prototype, 
+        const StructurePlacement& placement,
+        voxel* voxels, 
+        int x, int z
     );
 
     void generatePlants(
@@ -95,6 +107,12 @@ class WorldGenerator {
         int x,
         int z,
         const Biome** biomes
+    );
+
+    void placeStructures(
+        const std::vector<Placement>& placements,
+        ChunkPrototype& prototype,
+        int x, int z
     );
 public:
 	WorldGenerator(

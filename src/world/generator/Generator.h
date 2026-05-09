@@ -92,11 +92,6 @@ struct Biome {
     BlocksLayers seaLayers;
 };
 
-struct PrototypePlacements {
-    std::vector<StructurePlacement> structs {};
-    std::vector<LinePlacement> lines {};
-};
-
 class GeneratorScript {
 public:
     virtual ~GeneratorScript() = default;
@@ -115,7 +110,14 @@ public:
         uint bpd
     ) = 0;
 
-    virtual PrototypePlacements placeStructures(
+    virtual std::vector<Placement> placeStructuresWide(
+        const glm::ivec2& offset, 
+        const glm::ivec2& size, 
+        uint64_t seed,
+        uint chunkHeight
+    ) = 0;
+
+    virtual std::vector<Placement> placeStructures(
         const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
         const std::shared_ptr<Heightmap>& heightmap,
         uint chunkHeight
@@ -140,6 +142,7 @@ struct Generator {
     uint biomeParameters = 0;
     uint biomesBPD = 8;
     uint heightsBPD = 4;
+    uint wideStructsChunksRadius = 3;
 
     std::unordered_map<std::string, size_t> structuresIndices;
     std::vector<std::unique_ptr<VoxelStructure>> structures;

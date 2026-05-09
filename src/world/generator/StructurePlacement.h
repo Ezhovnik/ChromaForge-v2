@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <stdint.h>
+#include <variant>
 
 struct StructurePlacement {
     int structure;
@@ -26,4 +27,14 @@ struct LinePlacement {
 
     LinePlacement(blockid_t block, glm::ivec3 a, glm::ivec3 b, int radius) : block(block), a(std::move(a)), b(std::move(b)), radius(radius) {
     }
+};
+
+struct Placement {
+    int priority;
+    std::variant<StructurePlacement, LinePlacement> placement;
+
+    Placement(
+        int priority,
+        std::variant<StructurePlacement, LinePlacement> placement
+    ) : priority(priority), placement(std::move(placement)) {}
 };

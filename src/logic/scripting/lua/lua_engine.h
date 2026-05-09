@@ -8,18 +8,20 @@
 #include <string>
 #include <stdexcept>
 
+class EnginePaths;
+
 namespace lua {
     enum class StateType {
         Base,
         Generator
     };
 
-    void initialize();
+    void initialize(const EnginePaths& paths);
     void finalize();
 
     bool emit_event(State*, const std::string& name, std::function<int(State*)> args=[](auto*){return 0;});
     State* get_main_state();
-    State* create_state(StateType stateType);
+    State* create_state(const EnginePaths& paths, StateType stateType);
     [[nodiscard]] scriptenv create_environment(State* L);
 
     void init_state(State* L, StateType stateType);

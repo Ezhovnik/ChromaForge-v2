@@ -1,11 +1,3 @@
-function parse_path(path)
-    local index = string.find(path, ':')
-    if index == nil then
-        error("invalid path syntax (':' missing)")
-    end
-    return string.sub(path, 1, index - 1), string.sub(path, index + 1, -1)
-end
-
 local _, dir = parse_path(__DIR__)
 ores = file.read_combined_list(dir.."/ores.json")
 
@@ -24,7 +16,7 @@ local function place_ores(placements, x, z, w, d, seed, hmap, chunk_height)
             local sz = math.random() * d
             local sy = math.random() * (chunk_height * 0.5)
             if sy < hmap:at(sx, sz) * chunk_height - 6 then
-                table.insert(placements, {ore.struct, {sx, sy, sz}, math.random() * 4})
+                table.insert(placements, {ore.struct, {sx, sy, sz}, math.random() * 4, -1})
             end
         end
     end
@@ -33,16 +25,42 @@ end
 function place_structures(x, z, w, d, seed, hmap, chunk_height)
     local placements = {}
     place_ores(placements, x, z, w, d, seed, hmap, chunk_height)
+    return placements
+end
 
-    if math.random() < 0.1 then -- generate caves
-        local sy = math.random() * (chunk_height / 2)
-        local ey = math.random() * (chunk_height / 2)
-        local sx = x + math.random() * 20 - 10
-        local ex = x + math.random() * 20 - 10
-        local sz = z + math.random() * 20 - 10
-        local ez = z + math.random() * 20 - 10
-        table.insert(placements, 
-            {":line", 0, {sx - 10, sy, sz - 10}, {ex + 10, ey, ez + 10}, 3})
+function place_structures_wide(x, z, w, d, seed, chunk_height)
+    local placements = {}
+
+    if math.random() < 0.05 then -- generate caves
+        local sx = x + math.random() * 10 - 5
+        local sy = math.random() * (chunk_height / 4) + 10
+        local sz = z + math.random() * 10 - 5
+
+        local dir = math.random() * math.pi * 2
+        local dir_inertia = (math.random() - 0.5) * 2
+        local elevation = -3
+        local width = math.random() * 3 + 2
+
+        for i=1, 18 do
+            local dx = math.sin(dir) * 10
+            local dz = -math.cos(dir) * 10
+
+            local ex = sx + dx
+            local ey = sy + elevation
+            local ez = sz + dz
+
+            table.insert(placements, 
+                {":line", 0, {sx, sy, sz}, {ex, ey, ez}, width}
+            )
+
+            sx = ex
+            sy = ey
+            sz = ez
+
+            dir_inertia = dir_inertia * 0.8 + (math.random() - 0.5) * math.pow(math.random(), 2) * 8
+            elevation = elevation * 0.9 + (math.random() - 0.4) * (1.0 - math.pow(math.random(), 4)) * 8
+            dir = dir + dir_inertia
+        end
     end
 
     return placements
@@ -68,7 +86,7 @@ function generate_heightmap(x, y, w, h, seed, s)
     rivermap:abs()
     rivermap:mul(2.0)
     rivermap:pow(0.15)
-    rivermap:max(0.3)
+    rivermap:max(0.5)
     map:mul(rivermap)
     return map
 end

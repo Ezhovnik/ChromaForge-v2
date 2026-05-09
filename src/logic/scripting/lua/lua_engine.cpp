@@ -8,6 +8,8 @@
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
+#include <files/files.h>
+#include <files/engine_paths.h>
 
 static lua::State* main_thread = nullptr;
 
@@ -109,11 +111,11 @@ void lua::init_state(State* L, StateType stateType) {
     newusertype<LuaVoxelStructure>(L);
 }
 
-void lua::initialize() {
+void lua::initialize(const EnginePaths& paths) {
     LOG_INFO("Lua version: {}", LUA_VERSION);
     LOG_INFO("LuaJIT version: {}", LUAJIT_VERSION);
 
-    main_thread = create_state(StateType::Base);
+    main_thread = create_state(paths, StateType::Base);
 }
 
 void lua::finalize() {
@@ -134,12 +136,16 @@ lua::State* lua::get_main_state() {
     return main_thread;
 }
 
-State* lua::create_state(StateType stateType) {
+State* lua::create_state(const EnginePaths& paths, StateType stateType) {
     auto L = luaL_newstate();
     if (L == nullptr) {
         LOG_ERROR("Could not initialize Lua state");
         throw luaerror("Could not initialize Lua state");
     }
     init_state(L, stateType);
+
+    auto resDir = paths.getResourcesFolder();
+    auto src = files::read_string(resDir/std::filesystem::u8path("scripts/stdmin.lua"));
+    lua::pop(L, lua::execute(L, 0, src, "<stdmin>"));
     return L;
 }

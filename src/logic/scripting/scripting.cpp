@@ -57,7 +57,7 @@ int scripting::load_script(int env, const std::string& type, const std::filesyst
 void scripting::initialize(Engine* engine) {
     scripting::engine = engine;
 
-    lua::initialize();
+    lua::initialize(*scripting::engine->getPaths());
 
     load_script(std::filesystem::path("stdlib.lua"), true);
     load_script(std::filesystem::path("stdcmd.lua"), true);
