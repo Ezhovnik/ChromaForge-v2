@@ -142,8 +142,8 @@ struct Generator {
 
     uint seaLevel = 0;
     uint biomeParameters = 0;
-    uint biomesBPD = 8;
-    uint heightsBPD = 8;
+    uint biomesBPD = 4;
+    uint heightsBPD = 4;
     uint wideStructsChunksRadius = 3;
 
     std::vector<uint8_t> heightmapInputs;

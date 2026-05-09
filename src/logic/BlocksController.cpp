@@ -36,6 +36,29 @@ void BlocksController::updateSides(int x, int y, int z) {
     updateBlock(x, y, z + 1);
 }
 
+void BlocksController::updateSides(int x, int y, int z, int w, int h, int d) {
+    voxel* vox = chunks->getVoxel(x, y, z);
+    const auto& def = level->content->getIndices()->blocks.require(vox->id);
+    const auto& rot = def.rotations.variants[vox->state.rotation];
+    const auto& xaxis = rot.axisX;
+    const auto& yaxis = rot.axisY;
+    const auto& zaxis = rot.axisZ;
+    for (int ly = -1; ly <= h; ++ly) {
+        for (int lz = -1; lz <= d; ++lz) {
+            for (int lx = -1; lx <= w; ++lx) {
+                if (lx >= 0 && lx < w && ly >= 0 && ly < h && lz >= 0 && lz < d) {
+                    continue;
+                }
+                updateBlock(
+                    x + lx * xaxis.x + ly * yaxis.x + lz * zaxis.x,
+                    y + lx * xaxis.y + ly * yaxis.y + lz * zaxis.y,
+                    z + lx * xaxis.z + ly * yaxis.z + lz * zaxis.z
+                );
+            }
+        }
+    }
+}
+
 void BlocksController::breakBlock(Player* player, const Block& def, int x, int y, int z) {
     onBlockInteraction(
         player, glm::ivec3(x, y, z), def, BlockInteraction::Destruction
@@ -43,7 +66,11 @@ void BlocksController::breakBlock(Player* player, const Block& def, int x, int y
     chunks->setVoxel(x, y, z, BLOCK_AIR, {});
     lighting->onBlockSet(x, y, z, BLOCK_AIR);
     scripting::on_block_broken(player, def, x, y, z);
-    updateSides(x, y, z);
+    if (def.rt.extended) {
+        updateSides(x, y, z, def.size.x, def.size.y, def.size.z);
+    } else {
+        updateSides(x, y, z);
+    }
 }
 
 void BlocksController::placeBlock(Player* player, const Block& def, blockstate state, int x, int y, int z) {
@@ -52,10 +79,12 @@ void BlocksController::placeBlock(Player* player, const Block& def, blockstate s
     );
     chunks->setVoxel(x, y, z, def.rt.id, state);
     lighting->onBlockSet(x, y, z, def.rt.id);
-    if (def.rt.funcsset.onplaced) {
-        scripting::on_block_placed(player, def, x, y, z);
+    scripting::on_block_placed(player, def, x, y, z);
+    if (def.rt.extended) {
+        updateSides(x, y, z, def.size.x, def.size.y, def.size.z);
+    } else {
+        updateSides(x, y, z);
     }
-    updateSides(x, y, z);
 }
 
 void BlocksController::updateBlock(int x, int y, int z) {
@@ -102,7 +131,7 @@ void BlocksController::randomSpark(
             int bx = random.rand() % CHUNK_WIDTH;
             int by = random.rand() % segheight + s * segheight;
             int bz = random.rand() % CHUNK_DEPTH;
-            const voxel& vox = chunk.voxels[(by * CHUNK_DEPTH + bz) * CHUNK_WIDTH + bx];
+            const voxel& vox = chunk.voxels[vox_index(bx, by, bz)];
             auto& block = indices->blocks.require(vox.id);
             if (block.rt.funcsset.randupdate) {
                 scripting::random_update_block(

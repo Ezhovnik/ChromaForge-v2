@@ -442,14 +442,17 @@ void WorldGenerator::generate(voxel* voxels, int chunkX, int chunkZ) {
     generatePlacements(prototype, voxels, chunkX, chunkZ);
     generatePlants(prototype, values, voxels, chunkX, chunkZ, biomes);
 
-#ifndef NDEBUG
     for (uint i = 0; i < CHUNK_VOLUME; ++i) {
-        blockid_t id = voxels[i].id;
+        blockid_t& id = voxels[i].id;
+        if (id == BLOCK_STRUCT_AIR) {
+            id = BLOCK_AIR;
+        }
+#ifndef NDEBUG
         if (indices.get(id) == nullptr) {
             abort();
         }
-    }
 #endif
+    }
 }
 
 void WorldGenerator::generatePlacements(
@@ -503,11 +506,7 @@ void WorldGenerator::generateStructure(
                 }
                 const auto& structVoxel = structVoxels[vox_index(x, y, z, size.x, size.z)];
                 if (structVoxel.id) {
-                    if (structVoxel.id == BLOCK_STRUCT_AIR) {
-                        voxels[vox_index(sx, sy, sz)] = {0, {}};
-                    } else {
-                        voxels[vox_index(sx, sy, sz)] = structVoxel;
-                    }
+                    voxels[vox_index(sx, sy, sz)] = structVoxel;
                 }
             }
         }
@@ -547,11 +546,12 @@ void WorldGenerator::generateLine(
                 glm::ivec3 closest = util::closest_point_on_segment(
                     a, b, point
                 );
-                if (y > 0 &&
-                    util::distance2(closest, point) <= radius * radius &&
-                    line.block == BLOCK_AIR
-                ) {
+                if (y > 0 && util::distance2(closest, point) <= radius * radius) {
                     auto& voxel = voxels[vox_index(x, y, z)];
+                    if (line.block != BLOCK_AIR) {
+                        voxel = {line.block, {}};
+                        continue;
+                    }
                     if (!indices.require(voxel.id).replaceable) {
                         voxel = {line.block, {}};
                     }

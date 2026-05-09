@@ -263,8 +263,9 @@ void Player::convert(dv::value& data, const ContentReport* report) {
 
 void Player::teleport(glm::vec3 position) {
     this->position = position;
-    if (auto hitbox = getHitbox()) {
-        hitbox->position = position;
+    if (auto entity = level->entities->get(eid)) {
+        entity->getRigidbody().hitbox.position = position;
+        entity->getTransform().setPos(position);
     }
 }
 

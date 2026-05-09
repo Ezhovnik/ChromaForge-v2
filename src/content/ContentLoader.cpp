@@ -66,11 +66,15 @@ static void detect_defs_pairs(
             if (name[0] == '_') continue;
 
             if (std::filesystem::is_regular_file(file) && files::is_data_file(file)) {
-                auto map = files::read_object(file);
-                std::string id = prefix.empty() ? name : prefix + ":" + name;
-                std::string caption = util::id_to_caption(id);
-                map.at("caption").get(caption);
-                detected.emplace_back(id, name);
+                try {
+                    auto map = files::read_object(file);
+                    auto id = prefix.empty() ? name : prefix + ":" + name;
+                    auto caption = util::id_to_caption(id);
+                    map.at("caption").get(caption);
+                    detected.emplace_back(id, name);
+                } catch (const std::runtime_error& err) {
+                    LOG_ERROR("{}", err.what());
+                }
             } else if (std::filesystem::is_directory(file) && file.extension() != std::filesystem::u8path(".files")) {
                 detect_defs_pairs(file, name, detected);
             }

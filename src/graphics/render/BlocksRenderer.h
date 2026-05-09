@@ -41,6 +41,7 @@ private:
 
     int voxelBufferPadding = 2;
 	bool overflow = false; ///< Флаг переполнения буфера
+    bool cancelled = false;
 
 	const Chunk* chunk = nullptr;
 	std::unique_ptr<VoxelsVolume> voxelsBuffer;
@@ -319,4 +320,8 @@ public:
      * @brief Возвращает буфер вокселей.
      */
 	VoxelsVolume* getVoxelsBuffer() const;
+
+    bool isCancelled() const {
+        return cancelled;
+    }
 };

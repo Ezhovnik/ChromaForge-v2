@@ -36,13 +36,14 @@ class BlocksController {
     util::Clock worldSparkClock;
     uint padding;
 
-    FastRandom random;
+    FastRandom random {};
 
     std::vector<on_block_interaction> blockInteractionCallbacks;
 public:
     BlocksController(Level* level, uint padding);
 
     void updateSides(int x, int y, int z);
+    void updateSides(int x, int y, int z, int w, int h, int d);
     void updateBlock(int x, int y, int z);
 
     void breakBlock(

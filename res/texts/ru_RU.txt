@@ -43,7 +43,6 @@ world.Seed=Зерно
 world.Name=Название
 world.World generator=Генератор мира
 world.generators.default=По-умолчанию
-world.generators.flat=Плоский
 world.Create World=Создать Мир
 world.convert-request=Есть изменения в индексах! Конвертировать мир?
 world.upgrade-request=Формат мира устарел! Конвертировать мир?

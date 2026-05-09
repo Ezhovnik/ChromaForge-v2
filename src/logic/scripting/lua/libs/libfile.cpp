@@ -1,5 +1,6 @@
 #include <string>
 #include <filesystem>
+#include <set>
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine.h>
@@ -162,11 +163,15 @@ static int l_file_list(lua::State* L) {
     return 1;
 }
 
+static std::set<std::string> writeable_entry_points {
+    "world", "export", "config"
+};
+
 static int l_file_remove(lua::State* L) {
     std::string rawpath = lua::require_string(L, 1);
     std::filesystem::path path = resolve_path(rawpath);
     auto entryPoint = rawpath.substr(0, rawpath.find(':'));
-    if (entryPoint != "world") {
+    if (writeable_entry_points.find(entryPoint) == writeable_entry_points.end()) {
         throw std::runtime_error("Access denied");
     }
     return lua::pushboolean(L, std::filesystem::remove(path));
@@ -176,7 +181,7 @@ static int l_file_remove_tree(lua::State* L) {
     std::string rawpath = lua::require_string(L, 1);
     std::filesystem::path path = resolve_path(rawpath);
     auto entryPoint = rawpath.substr(0, rawpath.find(':'));
-    if (entryPoint != "world") {
+    if (writeable_entry_points.find(entryPoint) == writeable_entry_points.end()) {
         throw std::runtime_error("Access denied");
     }
     return lua::pushinteger(L, std::filesystem::remove_all(path));

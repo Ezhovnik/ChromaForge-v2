@@ -139,12 +139,14 @@ static ChunkInventoriesMap load_inventories(
         reader.skip(size);
         auto inv = std::make_shared<Inventory>(0, 0);
         inv->deserialize(map);
-        inventories[index] = inv;
+        inventories[index] = std::move(inv);
     }
     return inventories;
 }
 
 void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
+    if (generatorTestMode) return;
+
     assert(chunk != nullptr);
 
     if (!chunk->flags.lighted) return;

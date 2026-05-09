@@ -82,9 +82,22 @@ ContentPack ContentPack::read(const std::filesystem::path& folder) {
     if (auto found = root.at("dependencies")) {
         const auto& dependencies = *found;
         for (const auto& elem : dependencies) {
-            pack.dependencies.push_back(
-                {DependencyLevel::Required, elem.asString()}
-            );
+            std::string depName = elem.asString();
+            auto level = DependencyLevel::Required;
+            switch (depName.at(0)) {
+                case '!':
+                    depName = depName.substr(1);
+                    break;
+                case '?':
+                    depName = depName.substr(1);
+                    level = DependencyLevel::Optional;
+                    break;
+                case '~':
+                    depName = depName.substr(1);
+                    level = DependencyLevel::Weak;
+                    break;
+            }
+            pack.dependencies.push_back({level, depName});
         }
     }
 

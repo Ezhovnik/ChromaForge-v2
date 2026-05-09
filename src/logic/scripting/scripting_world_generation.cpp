@@ -222,21 +222,25 @@ public:
 
         lua::stackguard _(L);
         lua::pushenv(L, *env);
-        if (lua::getfield(L, "place_structures")) {
-            lua::pushivec_stack(L, offset);
-            lua::pushivec_stack(L, size);
-            lua::newuserdata<lua::LuaHeightmap>(L, heightmap);
-            lua::pushinteger(L, chunkHeight);
-            if (lua::call_nothrow(L, 6, 1)) {
-                int len = lua::objlen(L, -1);
-                for (int i = 1; i <= len; ++i) {
-                    lua::rawgeti(L, i);
+        try {
+            if (lua::getfield(L, "place_structures_wide")) {
+                lua::pushivec_stack(L, offset);
+                lua::pushivec_stack(L, size);
+                lua::pushinteger(L, chunkHeight);
+                if (lua::call_nothrow(L, 5, 1)) {
+                    int len = lua::objlen(L, -1);
+                    for (int i = 1; i <= len; ++i) {
+                        lua::rawgeti(L, i);
 
-                    perform_placement(L, placements);
+                        perform_placement(L, placements);
+
+                        lua::pop(L);
+                    }
                     lua::pop(L);
                 }
-                lua::pop(L);
             }
+        } catch (const std::runtime_error& err) {
+            LOG_ERROR("{}", err.what());
         }
         return placements;
     }
