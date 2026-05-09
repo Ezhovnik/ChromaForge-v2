@@ -38,6 +38,7 @@ private:
         {"int", ArgType::Integer},
         {"str", ArgType::String},
         {"sel", ArgType::Selector},
+        {"bool", ArgType::Boolean},
         {"enum", ArgType::Enumvalue},
     };
 public:
@@ -244,6 +245,11 @@ public:
                 return selectorCheck(arg, value);
             case ArgType::Integer:
                 return typeCheck(arg, dv::value_type::Integer, value, "integer");
+            case ArgType::Boolean:
+                if (!arg->optional) {
+                    throw typeError(arg->name, "boolean", value);
+                }
+                return value.isBoolean();
             case ArgType::String:
                 if (!value.isString()) {
                     return !arg->optional;

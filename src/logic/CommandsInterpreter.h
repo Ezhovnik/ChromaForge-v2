@@ -13,6 +13,7 @@ namespace cmd {
         Integer,
         Enumvalue,
         Selector,
+        Boolean,
         String
     };
 
@@ -22,6 +23,7 @@ namespace cmd {
             case ArgType::Integer: return "integer";
             case ArgType::Enumvalue: return "enumeration";
             case ArgType::Selector: return "selector";
+            case ArgType::Boolean: return "boolean";
             case ArgType::String: return "string";
             default: return "<unknown>";
         }

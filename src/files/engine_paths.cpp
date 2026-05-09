@@ -17,6 +17,7 @@ static inline auto CONTENT_FOLDER = std::filesystem::u8path("content");
 static inline auto LOGS_FOLDER = std::filesystem::u8path("logs");
 static inline auto WORLDS_FOLDER = std::filesystem::u8path("saves");
 static inline auto CONFIG_FOLDER = std::filesystem::u8path("config");
+static inline auto EXPORT_FOLDER = std::filesystem::u8path("export");
 static inline auto CONTROLS_FILE = std::filesystem::u8path("controls.toml");
 static inline auto SETTINGS_FILE = std::filesystem::u8path("settings.toml");
 
@@ -45,6 +46,11 @@ void EnginePaths::prepare() {
     auto contentFolder = userFilesFolder/CONTENT_FOLDER;
     if (!std::filesystem::is_directory(contentFolder)) {
         std::filesystem::create_directories(contentFolder);
+    }
+
+    auto exportFolder = userFilesFolder/EXPORT_FOLDER;
+    if (!std::filesystem::is_directory(exportFolder)) {
+        std::filesystem::create_directories(exportFolder);
     }
 }
 
@@ -146,6 +152,7 @@ std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwEr
     if (prefix == "user") return userFilesFolder/std::filesystem::u8path(filename);
     if (prefix == "config") return getConfigFolder()/std::filesystem::u8path(filename);
     if (prefix == "world") return currentWorldFolder/std::filesystem::u8path(filename);
+    if (prefix == "export") return userFilesFolder/EXPORT_FOLDER/std::filesystem::u8path(filename);
 
     if (contentPacks) {
         for (auto& pack : *contentPacks) {

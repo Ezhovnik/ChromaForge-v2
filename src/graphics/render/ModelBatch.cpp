@@ -15,6 +15,7 @@
 #include <voxels/Chunks.h>
 #include <lighting/LightMap.h>
 #include <graphics/core/Atlas.h>
+#include <settings.h>
 
 inline constexpr uint MB_VERTEX_SIZE = 9;
 
@@ -48,13 +49,18 @@ static glm::mat4 extract_rotation(glm::mat4 matrix) {
     return glm::toMat3(rotation);
 }
 
-ModelBatch::ModelBatch(size_t capacity, Assets* assets, Chunks* chunks) 
-  : buffer(std::make_unique<float[]>(capacity * MB_VERTEX_SIZE)),
+ModelBatch::ModelBatch(
+    size_t capacity,
+    Assets* assets,
+    Chunks* chunks,
+    const EngineSettings* settings
+) : buffer(std::make_unique<float[]>(capacity * MB_VERTEX_SIZE)),
     capacity(capacity),
     index(0),
     mesh(std::make_unique<Mesh>(buffer.get(), 0, attrs)),
     assets(assets),
-    chunks(chunks)
+    chunks(chunks),
+    settings(settings)
 {
     const ubyte pixels[] = {
         255, 255, 255, 255,
@@ -70,7 +76,8 @@ void ModelBatch::draw(
     const glm::mat4& matrix,
     const glm::mat3& rotation,
     glm::vec3 tint,
-    const texture_names_map* varTextures
+    const texture_names_map* varTextures,
+    bool backlight
 ) {
     glm::vec3 gpos = matrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     light_t light = chunks->getLight(
@@ -78,11 +85,13 @@ void ModelBatch::draw(
         std::floor(std::min(CHUNK_HEIGHT - 1.0f, gpos.y)), 
         std::floor(gpos.z)
     );
-    glm::vec4 lights (
-        LightMap::extract(light, 0) / 15.0f,
-        LightMap::extract(light, 1) / 15.0f,
-        LightMap::extract(light, 2) / 15.0f,
-        LightMap::extract(light, 3) / 15.0f
+
+    light_t minIntensity = backlight ? 1 : 0;
+    glm::vec4 lights(
+        glm::max(LightMap::extract(light, 0), minIntensity) / 15.0f,
+        glm::max(LightMap::extract(light, 1), minIntensity) / 15.0f,
+        glm::max(LightMap::extract(light, 2), minIntensity) / 15.0f,
+        glm::max(LightMap::extract(light, 3), minIntensity) / 15.0f
     );
     setTexture(mesh.texture, varTextures);
     size_t vcount = mesh.vertices.size();
@@ -121,8 +130,16 @@ void ModelBatch::render() {
             return a.mesh->texture < b.mesh->texture;
         }
     );
+    bool backlight = settings->graphics.backlight.get();
     for (auto& entry : entries) {
-        draw(*entry.mesh, entry.matrix, entry.rotation, entry.tint, entry.varTextures);
+        draw(
+            *entry.mesh,
+            entry.matrix,
+            entry.rotation,
+            entry.tint,
+            entry.varTextures,
+            backlight
+        );
     }
     flush();
     entries.clear();

@@ -108,7 +108,7 @@ void lua::init_state(State* L, StateType stateType) {
 
     newusertype<LuaBytearray>(L);
     newusertype<LuaHeightmap>(L);
-    newusertype<LuaVoxelStructure>(L);
+    newusertype<LuaVoxelFragment>(L);
 }
 
 void lua::initialize(const EnginePaths& paths) {

@@ -62,10 +62,6 @@ class WorldGenerator {
 
     void generateStructures(ChunkPrototype& prototype, int x, int z);
 
-    void generatePlacements(
-        const ChunkPrototype& prototype, voxel* voxels, int x, int z
-    );
-
     void generateBiomes(ChunkPrototype& prototype, int x, int z);
 
     void generateHeightmap(ChunkPrototype& prototype, int x, int z);
@@ -82,6 +78,10 @@ class WorldGenerator {
         const LinePlacement& placement,
         voxel* voxels, 
         int x, int z
+    );
+
+    void generatePlacements(
+        const ChunkPrototype& prototype, voxel* voxels, int x, int z
     );
 
     void generateStructure(

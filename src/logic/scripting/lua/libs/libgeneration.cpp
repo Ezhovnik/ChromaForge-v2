@@ -9,43 +9,40 @@
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <content/ContentLoader.h>
 
-static int l_save_structure(lua::State* L) {
-    auto pointA = lua::tovec<3>(L, 1);
-    auto pointB = lua::tovec<3>(L, 2);
-    auto filename = lua::require_string(L, 3);
-    if (!files::is_valid_name(filename)) {
-        throw std::runtime_error("Invalid file name");
-    }
-    bool saveEntities = lua::toboolean(L, 4);
-
-    auto structure = VoxelFragment::create(
-        scripting::level,
-        pointA, pointB,
-        saveEntities
-    );
-    auto map = structure->serialize();
-
-    auto bytes = json::to_binary(map);
-    files::write_bytes(
-        std::filesystem::u8path(filename),
-        bytes.data(),
-        bytes.size()
-    );
+static int l_save_fragment(lua::State* L) {
+    auto paths = scripting::engine->getPaths();
+    auto fragment = lua::touserdata<lua::LuaVoxelFragment>(L, 1);
+    auto file = paths->resolve(lua::require_string(L, 2), true);
+    auto map = fragment->getFragment()->serialize();
+    auto bytes = json::to_binary(map, true);
+    files::write_bytes(file, bytes.data(), bytes.size());
     return 0;
 }
 
-static int l_load_structure(lua::State* L) {
+static int l_create_fragment(lua::State* L) {
+    auto pointA = lua::tovec<3>(L, 1);
+    auto pointB = lua::tovec<3>(L, 2);
+    bool crop = lua::toboolean(L, 3);
+    bool saveEntities = lua::toboolean(L, 4);
+
+    auto fragment = VoxelFragment::create(scripting::level, pointA, pointB, crop, saveEntities);
+    return lua::newuserdata<lua::LuaVoxelFragment>(
+        L, std::shared_ptr<VoxelFragment>(std::move(fragment))
+    );
+}
+
+static int l_load_fragment(lua::State* L) {
     auto paths = scripting::engine->getPaths();
-    auto [prefix, filename] = EnginePaths::parsePath(lua::require_string(L, 1));
-    auto path = paths->resolve(prefix + ":generators/" + filename + ".vox");
+    auto filename = lua::require_string(L, 1);
+    auto path = paths->resolve(filename);
     if (!std::filesystem::exists(path)) {
         throw std::runtime_error("File " + path.u8string() + " does not exist");
     }
     auto map = files::read_binary_json(path);
 
-    auto structure = std::make_shared<VoxelFragment>();
-    structure->deserialize(map);
-    return lua::newuserdata<lua::LuaVoxelStructure>(L, std::move(structure));
+    auto fragment = std::make_shared<VoxelFragment>();
+    fragment->deserialize(map);
+    return lua::newuserdata<lua::LuaVoxelFragment>(L, std::move(fragment));
 }
 
 static int l_get_generators(lua::State* L) {
@@ -73,8 +70,9 @@ static int l_get_default_generator(lua::State* L) {
 }
 
 const luaL_Reg generationlib[] = {
-    {"save_structure", lua::wrap<l_save_structure>},
-    {"load_structure", lua::wrap<l_load_structure>},
+    {"create_fragment", lua::wrap<l_create_fragment>},
+    {"save_fragment", lua::wrap<l_save_fragment>},
+    {"load_fragment", lua::wrap<l_load_fragment>},
     {"get_generators", lua::wrap<l_get_generators>},
     {"get_default_generator", lua::wrap<l_get_default_generator>},
     {NULL, NULL}

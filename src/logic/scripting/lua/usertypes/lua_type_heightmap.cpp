@@ -8,11 +8,12 @@
 #include <logic/scripting/lua/lua_util.h>
 #define FNL_IMPL
 #include <math/FastNoiseLite.h>
-#include <coders/png.h>
+#include <coders/imageio.h>
 #include <graphics/core/ImageData.h>
 #include <util/functional_util.h>
 #include <files/util.h>
 #include <math/Heightmap.h>
+#include <engine.h>
 
 using namespace lua;
 
@@ -47,11 +48,9 @@ const float* LuaHeightmap::getValues() const {
 }
 
 static int l_dump(lua::State* L) {
+    auto paths = scripting::engine->getPaths();
     if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
-        auto filename = require_string(L, 2);
-        if (!files::is_valid_name(filename)) {
-            throw std::runtime_error("Invalid file name");
-        }
+        auto file = paths->resolve(require_string(L, 2));
         uint w = heightmap->getWidth();
         uint h = heightmap->getHeight();
         ImageData image(ImageFormat::rgb888, w, h);
@@ -67,7 +66,7 @@ static int l_dump(lua::State* L) {
                 raster[i*3 + 2] = val;
             }
         }
-        png::writeImage(filename, &image);
+        imageio::write(file.u8string(), &image);
     }
     return 0;
 }

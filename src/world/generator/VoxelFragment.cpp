@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <unordered_map>
+#include <algorithm>
 
 #include <data/dv_util.h>
 #include <voxels/ChunksStorage.h>
@@ -9,12 +10,44 @@
 #include <world/Level.h>
 #include <content/Content.h>
 #include <voxels/Block.h>
+#include <debug/Logger.h>
+#include <core_content_defs.h>
 
 std::unique_ptr<VoxelFragment> VoxelFragment::create(
-    Level* level, const glm::ivec3& a, const glm::ivec3& b, bool entities
+    Level* level,
+    const glm::ivec3& a,
+    const glm::ivec3& b,
+    bool crop,
+    bool entities
 ) {
     auto start = glm::min(a, b);
     auto size = glm::abs(a - b);
+
+    if (crop) {
+        VoxelsVolume volume(size.x, size.y, size.z);
+        volume.setPosition(start.x, start.y, start.z);
+        level->chunksStorage->getVoxels(&volume);
+
+        auto end = start + size;
+
+        auto min = end;
+        auto max = start;
+
+        for (int y = start.y; y < end.y; ++y) {
+            for (int z = start.z; z < end.z; ++z) {
+                for (int x = start.x; x < end.x; ++x) {
+                    if (volume.pickBlockId(x, y, z)) {
+                        min = glm::min(min, {x, y, z});
+                        max = glm::max(max, {x + 1, y + 1, z + 1});
+                    }
+                }
+            }
+        }
+        if (glm::min(min, max) == min) {
+            start = min;
+            size = max - min;
+        }
+    }
 
     VoxelsVolume volume(size.x, size.y, size.z);
     volume.setPosition(start.x, start.y, start.z);
@@ -22,8 +55,8 @@ std::unique_ptr<VoxelFragment> VoxelFragment::create(
 
     auto volVoxels = volume.getVoxels();
     std::vector<voxel> voxels(size.x * size.y * size.z);
-    std::vector<std::string> blockNames;
-    std::unordered_map<blockid_t, blockid_t> blocksRegistered;
+    std::vector<std::string> blockNames {BUILTIN_AIR};
+    std::unordered_map<blockid_t, blockid_t> blocksRegistered {{0, 0}};
     auto contentIndices = level->content->getIndices();
     for (size_t i = 0 ; i < voxels.size(); ++i) {
         blockid_t id = volVoxels[i].id;
@@ -81,6 +114,51 @@ void VoxelFragment::deserialize(const dv::value& src) {
     for (size_t i = 0; i < volume; ++i) {
         voxels[i].id = voxelsArr[i * 2].asInteger();
         voxels[i].state = int2blockstate(voxelsArr[i * 2 + 1].asInteger());
+    }
+}
+
+void VoxelFragment::crop() {
+    glm::ivec3 min = size;
+    glm::ivec3 max = {};
+
+    blockid_t air;
+    const auto& found = std::find(blockNames.begin(), blockNames.end(), BUILTIN_AIR);
+    if (found == blockNames.end()) {
+        LOG_ERROR("{} not found in fragment", BUILTIN_AIR);
+        throw std::runtime_error(BUILTIN_AIR + " is not found in fragment");
+    }
+    air = found - blockNames.begin();
+
+    for (int y = 0; y < size.y; ++y) {
+        for (int z = 0; z < size.z; ++z) {
+            for (int x = 0; x < size.x; ++x) {
+                if (voxels[vox_index(x, y, z, size.x, size.z)].id != air) {
+                    min = glm::min(min, {x, y, z});
+                    max = glm::max(max, {x + 1, y + 1, z + 1});
+                }
+            }
+        }
+    }
+    if (glm::min(min, max) == min) {
+        auto newSize = max - min;
+        std::vector<voxel> newVoxels(newSize.x * newSize.y * newSize.z);
+        for (int y = 0; y < newSize.y; ++y) {
+            for (int z = 0; z < newSize.z; ++z) {
+                for (int x = 0; x < newSize.x; ++x) {
+                    newVoxels[vox_index(x, y, z, newSize.x, newSize.z)] =
+                        voxels[vox_index(
+                            x + min.x,
+                            y + min.y,
+                            z + min.z,
+                            size.x,
+                            size.z
+                        )
+                    ];
+                }
+            }
+        }
+        voxels = std::move(newVoxels);
+        size = newSize;
     }
 }
 

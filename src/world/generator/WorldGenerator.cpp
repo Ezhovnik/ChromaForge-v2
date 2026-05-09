@@ -158,9 +158,9 @@ void WorldGenerator::placeStructure(
     AABB aabb(absolutePosition, absolutePosition + glm::ivec3(size.x, CHUNK_HEIGHT, size.z));
     for (int lcz = -1; lcz <= 1; ++lcz) {
         for (int lcx = -1; lcx <= 1; ++lcx) {
-            auto& otherPrototype = requirePrototype(
-                chunkX + lcx, chunkZ + lcz
-            );
+            const auto& found = prototypes.find({chunkX + lcx, chunkZ + lcz});
+            if (found == prototypes.end()) continue;
+            auto& otherPrototype = *found->second;
             auto chunkAABB = gen_chunk_aabb(chunkX + lcx, chunkZ + lcz);
             if (chunkAABB.intersect(aabb)) {
                 otherPrototype.placements.emplace_back(
@@ -269,9 +269,6 @@ void WorldGenerator::generateStructures(
             glm::ivec3 position {x, height, z};
             position.x -= structure.getSize().x / 2;
             position.z -= structure.getSize().z / 2;
-            prototype.placements.emplace_back(
-                1, StructurePlacement {structureId, position, rotation}
-            );
             placeStructure(
                 StructurePlacement {
                     structureId,
