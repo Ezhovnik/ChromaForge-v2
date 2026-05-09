@@ -77,7 +77,12 @@ util::Buffer<ubyte> files::read_bytes_buffer(const std::filesystem::path& path) 
 
 std::unique_ptr<ubyte[]> files::read_bytes(const std::filesystem::path& filename, size_t& length) {
 	std::ifstream input(filename, std::ios::binary);
-	if (!input.is_open()) return nullptr;
+	if (!input.is_open()) {
+		LOG_ERROR("Could not to load file '{}'", filename.string());
+        throw std::runtime_error(
+            "Could not to load file '" + filename.string() + "'"
+        );
+    }
 	input.seekg(0, std::ios_base::end);
 	length = input.tellg();
 	input.seekg(0, std::ios_base::beg);
@@ -104,15 +109,11 @@ std::vector<ubyte> files::read_bytes(const std::filesystem::path& filename) {
 
 std::string files::read_string(const std::filesystem::path& filename) {
 	size_t size;
-	std::unique_ptr<ubyte[]> bytes (read_bytes(filename, size));
-	if (bytes == nullptr) {
-		LOG_ERROR("Could not to load file '{}'", filename.string());
-		throw std::runtime_error("Could not to load file '" + filename.string() + "'");
-	}
+	auto bytes = read_bytes(filename, size);
 	return std::string((const char*)bytes.get(), size);
 }
 
-bool files::write_string(const std::filesystem::path& filename, const std::string content) {
+bool files::write_string(const std::filesystem::path& filename, std::string_view content) {
 	std::ofstream file(filename);
 	if (!file) {
 		return false;

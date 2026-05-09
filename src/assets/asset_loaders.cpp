@@ -24,6 +24,8 @@
 #include <graphics/core/Model.h>
 #include <coders/obj.h>
 #include <objects/rigging.h>
+#include <coders/vec3.h>
+#include <util/stringutil.h>
 
 static bool animation(
     Assets* assets, 
@@ -70,10 +72,16 @@ asset_loader::postfunc asset_loader::texture(
 	const std::string& name, 
 	const std::shared_ptr<AssetsConfig>&)
 {
-	std::shared_ptr<ImageData> image(imageio::read(paths->find(filename + ".png").u8string()).release());
-	return [name, image](auto assets) {
-        assets->store(Texture::from(image.get()), name);
-    };
+    auto actualFile = paths->find(filename + ".png").u8string();
+    try {
+        std::shared_ptr<ImageData> image(imageio::read(actualFile).release());
+        return [name, image, actualFile](auto assets) {
+            assets->store(Texture::from(image.get()), name);
+        };
+    } catch (const std::runtime_error& err) {
+        LOG_ERROR("{}: {}", actualFile, err.what());
+        return [](auto) {};
+    }
 }
 
 asset_loader::postfunc asset_loader::font(
@@ -349,6 +357,17 @@ asset_loader::postfunc asset_loader::sound(
     };
 }
 
+static void request_textures(AssetsLoader* loader, const model::Model& model) {
+    for (auto& mesh : model.meshes) {
+        if (mesh.texture.find('$') == std::string::npos) {
+            auto filename = TEXTURES_FOLDER + "/" + mesh.texture;
+            loader->add(
+                AssetType::Texture, filename, mesh.texture, nullptr
+            );
+        }
+    }
+}
+
 asset_loader::postfunc asset_loader::model(
     AssetsLoader* loader,
     const ResPaths* paths,
@@ -356,17 +375,31 @@ asset_loader::postfunc asset_loader::model(
     const std::string& name,
     const std::shared_ptr<AssetsConfig>&
 ) {
-    auto path = paths->find(file + ".obj");
+    auto path = paths->find(file + ".vec3");
+    if (std::filesystem::exists(path)) {
+        auto bytes = files::read_bytes_buffer(path);
+        auto modelVEC3 = std::make_shared<vec3::File>(vec3::load(path.u8string(), bytes));
+        return [loader, name, modelVEC3=std::move(modelVEC3)](Assets* assets) {
+            for (auto& [modelName, model] : modelVEC3->models) {
+                request_textures(loader, model.model);
+                std::string fullName = name;
+                if (name != modelName) {
+                    fullName += "." + modelName;
+                }
+                assets->store(
+                    std::make_unique<model::Model>(model.model),
+                    fullName
+                );
+                LOG_INFO("Store model {} as {}", util::quote(modelName), util::quote(fullName));
+            }
+        };
+    }
+    path = paths->find(file + ".obj");
     auto text = files::read_string(path);
     try {
         auto model = obj::parse(path.u8string(), text).release();
         return [=](Assets* assets) {
-            for (auto& mesh : model->meshes) {
-                if (mesh.texture.find('$') == std::string::npos) {
-                    auto filename = TEXTURES_FOLDER + "/" + mesh.texture;
-                    loader->add(AssetType::Texture, filename, mesh.texture, nullptr);
-                }
-            }
+            request_textures(loader, *model);
             assets->store(std::unique_ptr<model::Model>(model), name);
         };
     } catch (const parsing_error& err) {

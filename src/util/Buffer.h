@@ -31,6 +31,8 @@ namespace util {
 
         Buffer(std::nullptr_t) noexcept : ptr(nullptr), length(0) {}
 
+        Buffer& operator=(Buffer&&) = default;
+
         inline bool operator==(std::nullptr_t) const noexcept {
             return ptr == nullptr;
         }

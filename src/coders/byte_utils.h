@@ -158,6 +158,8 @@ public:
      */
     void checkMagic(const char* data, size_t size);
 
+    void get(char* dst, size_t size);
+
     /**
      * @brief Читает один байт и перемещает указатель.
      * @return Следующий байт.

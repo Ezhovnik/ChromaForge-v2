@@ -7,6 +7,7 @@
 
 #include <typedefs.h>
 #include <debug/Logger.h>
+#include <util/stringutil.h>
 
 namespace platform {
     const std::string DEFAULT_LOCALE = "en_US"; // Локаль по умолчанию, используемая, если системную определить не удалось.
@@ -70,3 +71,15 @@ std::string platform::detect_locale() {
     return result;
 }
 #endif
+
+void platform::open_folder(const std::filesystem::path& folder) {
+    if (!std::filesystem::is_directory(folder)) return;
+#ifdef __APPLE__
+    auto cmd = "open " + util::quote(folder.u8string());
+#elif defined(_WIN32)
+    auto cmd = "explorer " + util::quote(folder.u8string());
+#else
+    auto cmd = "xdg-open " + util::quote(folder.u8string());
+#endif
+    system(cmd.c_str());
+}

@@ -114,7 +114,8 @@ inline uint utf8_len(ubyte cp) {
     if ((cp & 0xF8) == 0xF0) {
         return 4;
     }
-    return 0;
+    LOG_ERROR("utf8 decode error");
+    throw std::runtime_error("utf8 decode error");
 }
 
 uint32_t util::decode_utf8(uint& size, const char* chr) {
@@ -140,6 +141,16 @@ size_t util::crop_utf8(std::string_view s, size_t maxSize) {
         pos += size;
     }
     return pos;
+}
+
+size_t util::length_utf8(std::string_view s) {
+    size_t length = 0;
+    size_t pos = 0;
+    while (pos < s.length()) {
+        pos += utf8_len(s[pos]);
+        ++length;
+    }
+    return length;
 }
 
 template<class C>

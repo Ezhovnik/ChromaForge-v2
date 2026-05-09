@@ -34,7 +34,7 @@ namespace files {
     );
     bool write_string(
         const std::filesystem::path& filename,
-        const std::string content
+        std::string_view content
     );
     bool write_json(
         const std::filesystem::path& filename,

@@ -19,6 +19,7 @@ namespace util {
     std::string wstr2str_utf8(const std::wstring &ws);
     std::wstring str2wstr_utf8(const std::string &s);
     size_t crop_utf8(std::string_view s, size_t maxSize);
+    size_t length_utf8(std::string_view s);
     std::string double2str(double x);
     std::wstring double2wstr(double x, int precision);
     std::string u32str2str_utf8(const std::u32string& ws);

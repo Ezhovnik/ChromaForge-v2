@@ -27,4 +27,6 @@ namespace platform {
      * анализируются переменные окружения LC_ALL и LANG.
      */
     std::string detect_locale();
+
+    void open_folder(const std::filesystem::path& folder);
 }
