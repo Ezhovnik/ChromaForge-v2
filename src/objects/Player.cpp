@@ -289,7 +289,7 @@ void Player::setEntity(entityid_t eid) {
     this->eid = eid;
 }
 
-std::shared_ptr<Inventory> Player::getInventory() const {
+const std::shared_ptr<Inventory>& Player::getInventory() const {
     return inventory;
 }
 

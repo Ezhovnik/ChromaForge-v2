@@ -25,6 +25,7 @@ class Batch3D;
 class Player;
 struct EngineSettings;
 class ModelBatch;
+class Assets;
 
 namespace model {
     struct Model;
@@ -46,28 +47,29 @@ private:
 
     bool drawChunk(
 		size_t index, 
-		Camera* camera, 
+		const Camera& camera, 
 		ShaderProgram* shader, 
 		bool culling
 	);
 	void drawChunks(
 		Chunks* chunks, 
-		Camera* camera, 
+		const Camera& camera, 
 		ShaderProgram* shader
 	);
 	void renderBlockSelection();
+	void renderHands(const Camera& camera, const Assets& assets);
 	void renderDebugLines(
         const DrawContext& context, 
-        Camera* camera, 
+        const Camera& camera, 
         ShaderProgram* linesShader
     );
-	void renderLines(Camera* camera, ShaderProgram* linesShader, const DrawContext& pctx);
+	void renderLines(const Camera& camera, ShaderProgram* linesShader, const DrawContext& pctx);
 
 	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);
 
 	void setupWorldShader(
         ShaderProgram* shader,
-        Camera* camera,
+        const Camera& camera,
         const EngineSettings& settings,
         float fogFactor
     );
@@ -77,7 +79,7 @@ public:
 
 	void draw(
 		const DrawContext& context,
-		Camera* camera,
+		Camera& camera,
 		bool hudVisible,
 		bool pause,
 		float deltaTime,
@@ -86,7 +88,7 @@ public:
 
 	void renderLevel(
         const DrawContext& context,
-        Camera* camera,
+        const Camera& camera,
         const EngineSettings& settings,
 		float deltaTime,
 		bool pause

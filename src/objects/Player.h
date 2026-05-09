@@ -146,7 +146,7 @@ public:
 	/**
      * @brief Возвращает инвентарь игрока.
      */
-	std::shared_ptr<Inventory> getInventory() const;
+	const std::shared_ptr<Inventory>& getInventory() const;
 
 	/**
      * @brief Устанавливает точку возрождения.

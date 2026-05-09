@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <array>
 
 #include <math/AABB.h>
 #include <typedefs.h>
@@ -92,7 +93,7 @@ public:
 
     std::string caption;
 
-    std::string textureFaces[6]; // -x, +x, -y, +y, -z, +z
+    std::array<std::string, 6> textureFaces; // -x, +x, -y, +y, -z, +z
     std::vector<std::string> modelTextures = {};
 	std::vector<AABB> modelBoxes = {};
 	std::vector<glm::vec3> modelExtraPoints = {};

@@ -22,6 +22,9 @@ public:
     bool flipped = false;
     bool perspective = true;
 
+    float near = 0.05f;
+    float far = 1500.0f;
+
     // Матрица вращения камеры
     glm::mat4 rotation {1.0f}; // Хранит текущую ориентацию камеры в пространстве.
 
@@ -33,9 +36,9 @@ public:
     void updateVectors(); // Обновляет векторы направления камеры на основе текущей матрицы вращения
     void rotate(float x, float y, float z); // Поворачивает камеру на заданные углы.
 
-    glm::mat4 getProjection(); // Возвращает матрицу проекции камеры.
-    glm::mat4 getView(bool position_flag = true); // Возвращает матрицу вида камеры.
-    glm::mat4 getProjView(bool position_flag = true);
+    glm::mat4 getProjection() const; // Возвращает матрицу проекции камеры.
+    glm::mat4 getView(bool position_flag = true) const; // Возвращает матрицу вида камеры.
+    glm::mat4 getProjView(bool position_flag = true) const;
 
     void setFov(float fov) {this->fov = fov;}
     float getFov() const {return fov;}

@@ -96,7 +96,7 @@ void LevelScreen::saveWorldPreview() {
         Viewport viewport(previewSize * 1.5, previewSize);
         DrawContext parent_ctx(nullptr, {Window::width, Window::height}, batch.get());
         DrawContext ctx(&parent_ctx, viewport, batch.get());
-        worldRenderer->draw(ctx, &camera, false, true, 0.0f, postProcessing.get());
+        worldRenderer->draw(ctx, camera, false, true, 0.0f, postProcessing.get());
         auto image = postProcessing->toImage();
         image->flipY();
         imageio::write(paths->resolve("world:preview.png").string(), image.get());
@@ -152,7 +152,7 @@ void LevelScreen::draw(float deltaTime) {
 
     worldRenderer->draw(
         ctx,
-        camera.get(),
+        *camera,
         hudVisible,
         hud->isPause(),
         deltaTime,

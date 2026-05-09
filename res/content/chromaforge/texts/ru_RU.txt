@@ -31,3 +31,7 @@ bedrock breaker=разрушитель
 birch log=березовое бревно
 dead bush=мертвый куст
 coal ore=угольная руда
+iron ore=железная руда
+gold ore=золотая руда
+copper ore=медная руда
+gold block=золотой блок

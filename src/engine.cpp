@@ -49,6 +49,7 @@
 #include <content/ContentBuilder.h>
 #include <objects/rigging.h>
 #include <coders/commons.h>
+#include <graphics/render/ModelsGenerator.h>
 
 static void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -176,6 +177,18 @@ void Engine::loadAssets() {
     }
 
     assets = std::move(new_assets);
+
+    if (content) {
+        for (auto& [name, def] : content->items.getDefs()) {
+            assets->store(
+                std::make_unique<model::Model>(
+                    ModelsGenerator::generate(*def, *content, *assets)
+                ),
+                name + ".model"
+            );
+        }
+    }
+
     LOG_INFO("Assets loaded successfully");
 }
 

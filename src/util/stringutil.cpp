@@ -2,6 +2,9 @@
 
 #include <vector>
 #include <locale>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <sstream>
 #include <stdexcept>
 #include <iomanip>
@@ -399,50 +402,76 @@ std::pair<std::string, std::string> util::split_at(std::string_view view, char c
 }
 
 std::wstring util::lower_case(const std::wstring& str) {
+    if (str.empty()) return str;
     std::wstring result = str;
+#ifdef _WIN32
+    CharLowerBuffW(&result[0], result.length());
+#else
     static const std::locale loc("");
-    for (uint i = 0; i < result.length(); ++i) {
-        result[i] = static_cast<wchar_t>(std::tolower(str[i], loc));
+    for (size_t i = 0; i < result.length(); ++i) {
+        result[i] = std::tolower(result[i], loc);
     }
+#endif
     return result;
 }
 
 std::wstring util::upper_case(const std::wstring& str) {
+    if (str.empty()) return str;
     std::wstring result = str;
+#ifdef _WIN32
+    CharUpperBuffW(&result[0], result.length());
+#else
     static const std::locale loc("");
-    for (uint i = 0; i < result.length(); ++i) {
-        result[i] = static_cast<wchar_t>(std::toupper(str[i], loc));
+    for (size_t i = 0; i < result.length(); ++i) {
+        result[i] = std::toupper(result[i], loc);
     }
+#endif
     return result;
 }
 
 std::wstring util::capitalized(const std::wstring& str) {
     if (str.empty()) return str;
+    wchar_t first = str[0];
+#ifdef _WIN32
+    CharUpperBuffW(&first, 1);
+#else
     static const std::locale loc("");
-    return std::wstring({static_cast<wchar_t>(std::toupper(str[0], loc))}) + str.substr(1);
+    first = std::toupper<wchar_t>(first, loc);
+#endif
+    return std::wstring(1, first) + str.substr(1);
+}
+
+std::wstring util::pascal_case(const std::wstring& str) {
+    if (str.empty()) return str;
+    std::wstring result = str;
+    bool upper = true;
+#ifdef _WIN32
+    for (size_t i = 0; i < result.length(); ++i) {
+        if (result[i] <= L' ') {
+            upper = true;
+        } else if (upper) {
+            CharUpperBuffW(&result[i], 1);
+            upper = false;
+        }
+    }
+#else
+    static const std::locale loc("");
+    for (size_t i = 0; i < result.length(); ++i) {
+        if (result[i] <= L' ') {
+            upper = true;
+        } else if (upper) {
+            result[i] = std::toupper(result[i], loc);
+            upper = false;
+        }
+    }
+#endif
+    return result;
 }
 
 std::string util::capitalized(const std::string& str) {
     if (str.empty()) return str;
     static const std::locale loc("");
-    return std::string({static_cast<char>(std::toupper(str[0], loc))}) + str.substr(1);
-}
-
-std::wstring util::pascal_case(const std::wstring& str) {
-    if (str.empty()) return str;
-    static const std::locale loc("");
-    std::wstring result = str;
-    bool upper = true;
-    for (uint i = 0; i < result.length(); ++i) {
-        auto c = result[i];
-        if (c <= ' ') {
-            upper = true;
-        } else if (upper) {
-            result[i] = static_cast<wchar_t>(std::toupper(str[i], loc));
-            upper = false;
-        }
-    }
-    return result;
+    return std::string(1, std::toupper(str[0], loc)) + str.substr(1);
 }
 
 std::string util::id_to_caption(const std::string& id) {

@@ -11,6 +11,7 @@
 #include <stdexcept>
 
 #include <graphics/core/TextureAnimation.h>
+#include <util/stringutil.h>
 
 class Assets;
 
@@ -107,6 +108,15 @@ public:
           const auto& found = map.find(name);
           if (found == map.end()) return nullptr;
           return static_cast<T*>(found->second.get());
+     }
+
+     template <class T>
+     T& require(const std::string& name) const {
+          T* asset = get<T>(name);
+          if (asset == nullptr) {
+               throw std::runtime_error(util::quote(name) + " not found");
+          }
+          return *asset;
      }
 
      template<class T>

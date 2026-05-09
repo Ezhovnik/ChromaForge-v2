@@ -80,6 +80,7 @@ void ModelBatch::draw(
     bool backlight
 ) {
     glm::vec3 gpos = matrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    gpos += lightsOffset;
     light_t light = chunks->getLight(
         std::floor(gpos.x), 
         std::floor(std::min(CHUNK_HEIGHT - 1.0f, gpos.y)), 
@@ -143,6 +144,10 @@ void ModelBatch::render() {
     }
     flush();
     entries.clear();
+}
+
+void ModelBatch::setLightsOffset(const glm::vec3& offset) {
+    lightsOffset = offset;
 }
 
 void ModelBatch::setTexture(const std::string& name, const texture_names_map* varTextures) {

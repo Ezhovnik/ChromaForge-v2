@@ -29,6 +29,12 @@ void Mesh::addBox(glm::vec3 pos, glm::vec3 size) {
     addPlane(pos - X * size, Z * size, Y * size, -X);
 }
 
+void Mesh::scale(const glm::vec3& size) {
+    for (auto& vertex : vertices) {
+        vertex.coord *= size;
+    }
+}
+
 void Model::clean() {
     meshes.erase(
         std::remove_if(meshes.begin(), meshes.end(), 

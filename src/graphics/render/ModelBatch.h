@@ -38,6 +38,8 @@ private:
 
     const EngineSettings* settings;
 
+    glm::vec3 lightsOffset {};
+
     static inline glm::vec3 SUN_VECTOR {0.411934f, 0.863868f, -0.279161f};
 
     inline void vertex(
@@ -108,4 +110,6 @@ public:
     );
 
     void render();
+
+    void setLightsOffset(const glm::vec3& offset);
 };

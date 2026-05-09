@@ -15,9 +15,10 @@ namespace model {
     struct Mesh {
         std::string texture;
         std::vector<Vertex> vertices;
-    
+
         void addPlane(glm::vec3 pos, glm::vec3 right, glm::vec3 up, glm::vec3 norm);
         void addBox(glm::vec3 pos, glm::vec3 size);
+        void scale(const glm::vec3& size);
     };
 
     struct Model {

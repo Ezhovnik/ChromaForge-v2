@@ -89,7 +89,7 @@ WorldRenderer::~WorldRenderer() = default;
 // Отрисовывает один чанк
 bool WorldRenderer::drawChunk(
 	size_t index, 
-	Camera* camera, 
+	const Camera& camera, 
 	ShaderProgram* shader, 
 	bool culling)
 {
@@ -97,10 +97,10 @@ bool WorldRenderer::drawChunk(
 	if (!chunk->flags.lighted) return false;
 
 	float distance = glm::distance(
-        camera->position,
+        camera.position,
         glm::vec3(
 			(chunk->chunk_x + 0.5f) * CHUNK_WIDTH, 
-			camera->position.y, 
+			camera.position.y, 
 			(chunk->chunk_z + 0.5f) * CHUNK_DEPTH
 		)
     );
@@ -132,7 +132,7 @@ bool WorldRenderer::drawChunk(
     return true;
 }
 
-void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* shader) {
+void WorldRenderer::drawChunks(Chunks* chunks, const Camera& camera, ShaderProgram* shader) {
 	auto assets = engine->getAssets();
     auto atlas = assets->get<Atlas>("blocks");
 
@@ -145,8 +145,8 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 		indices.emplace_back(i);
 	}
 
-	float px = camera->position.x / static_cast<float>(CHUNK_WIDTH) - 0.5f;
-    float pz = camera->position.z / static_cast<float>(CHUNK_DEPTH) - 0.5f;
+	float px = camera.position.x / static_cast<float>(CHUNK_WIDTH) - 0.5f;
+    float pz = camera.position.z / static_cast<float>(CHUNK_DEPTH) - 0.5f;
     std::sort(indices.begin(), indices.end(), [chunks, px, pz](auto i, auto j) {
         const auto& chunksBuffer = chunks->getChunks();
         const auto a = chunksBuffer[i].get();
@@ -159,7 +159,7 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 	});
 
 	bool culling = engine->getSettings().graphics.frustumCulling.get();
-	if (culling) frustumCulling->update(camera->getProjView());
+	if (culling) frustumCulling->update(camera.getProjView());
 	chunks->visibleCount = 0;
 	for (size_t i = 0; i < indices.size(); ++i){
 		chunks->visibleCount += drawChunk(indices[i], camera, shader, culling);
@@ -168,18 +168,18 @@ void WorldRenderer::drawChunks(Chunks* chunks, Camera* camera, ShaderProgram* sh
 
 void WorldRenderer::setupWorldShader(
     ShaderProgram* shader,
-    Camera* camera,
+    const Camera& camera,
     const EngineSettings& settings, 
     float fogFactor
 ) {
 	shader->use();
     shader->uniformMatrix("u_model", glm::mat4(1.0f));
-    shader->uniformMatrix("u_proj", camera->getProjection());
-    shader->uniformMatrix("u_view", camera->getView());
+    shader->uniformMatrix("u_proj", camera.getProjection());
+    shader->uniformMatrix("u_view", camera.getView());
     shader->uniform1f("u_gamma", settings.graphics.gamma.get());
     shader->uniform1f("u_fogFactor", fogFactor);
     shader->uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
-    shader->uniform3f("u_cameraPos", camera->position);
+    shader->uniform3f("u_cameraPos", camera.position);
     shader->uniform1i("u_cubemap", 1);
     shader->uniform1f("u_timer", timer);
     shader->uniform1f("u_dayTime", level->getWorld()->getInfo().daytime);
@@ -206,7 +206,7 @@ void WorldRenderer::setupWorldShader(
 
 void WorldRenderer::renderLevel(
     const DrawContext&,
-    Camera* camera, 
+    const Camera& camera, 
     const EngineSettings& settings,
     float deltaTime,
     bool pause
@@ -270,12 +270,12 @@ void WorldRenderer::renderBlockSelection() {
     lineBatch->flush();
 }
 void WorldRenderer::renderLines(
-    Camera* camera,
+    const Camera& camera,
     ShaderProgram* linesShader,
     const DrawContext& pctx
 ) {
     linesShader->use();
-    linesShader->uniformMatrix("u_projview", camera->getProjView());
+    linesShader->uniformMatrix("u_projview", camera.getProjView());
     if (player->selection.vox.id != BLOCK_VOID && !player->isNoclip()) {
         renderBlockSelection();
     }
@@ -290,7 +290,7 @@ void WorldRenderer::renderLines(
 
 void WorldRenderer::renderDebugLines(
     const DrawContext& pctx, 
-    Camera* camera,
+    const Camera& camera,
     ShaderProgram* linesShader
 ) {
     DrawContext ctx = pctx.sub(lineBatch.get());
@@ -302,7 +302,7 @@ void WorldRenderer::renderDebugLines(
     linesShader->use();
 
     if (drawChunkBorders) {
-        linesShader->uniformMatrix("u_projview", camera->getProjView());
+        linesShader->uniformMatrix("u_projview", camera.getProjView());
         glm::vec3 coord = player->camera->position;
         if (coord.x < 0) coord.x--;
         if (coord.z < 0) coord.z--;
@@ -321,7 +321,7 @@ void WorldRenderer::renderDebugLines(
     linesShader->uniformMatrix("u_projview", glm::ortho(
         0.0f, static_cast<float>(displayWidth), 
         0.0f, static_cast<float>(displayHeight),
-        -length, length) * model * glm::inverse(camera->rotation)
+        -length, length) * model * glm::inverse(camera.rotation)
     );
 
     ctx.setDepthTest(false);
@@ -336,6 +336,61 @@ void WorldRenderer::renderDebugLines(
     lineBatch->line(0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
     lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f);
     lineBatch->line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, length, 0.0f, 0.0f, 1.0f, 1.0f);
+}
+
+void WorldRenderer::renderHands(const Camera& camera, const Assets& assets) {
+    auto entityShader = assets.get<ShaderProgram>("entity");
+    auto indices = level->content->getIndices();
+
+    const auto& inventory = player->getInventory();
+    int slot = player->getChosenSlot();
+    const ItemStack& stack = inventory->getSlot(slot);
+    const auto& def = indices->items.require(stack.getItemId());
+
+    Camera hudcam = camera;
+    hudcam.far = 100.0f;
+    hudcam.setFov(1.2f);
+    hudcam.position = {};
+
+    const glm::vec3 itemOffset(0.08f, 0.035f, -0.1);
+
+    static glm::mat4 prevRotation(1.0f);
+
+    const float speed = 24.0f;
+
+    glm::mat4 matrix = glm::translate(glm::mat4(1.0f), itemOffset);
+    matrix = glm::scale(matrix, glm::vec3(0.1f));
+    glm::mat4 rotation = camera.rotation;
+    glm::quat rot0 = glm::quat_cast(prevRotation);
+    glm::quat rot1 = glm::quat_cast(rotation);
+    glm::quat finalRot = glm::slerp(rot0, rot1, static_cast<float>(engine->getDeltaTime() * speed));
+    rotation = glm::mat4_cast(finalRot);
+    matrix = rotation * matrix * glm::rotate(glm::mat4(1.0f), -glm::pi<float>() * 0.5f, glm::vec3(0, 1, 0));
+    prevRotation = rotation;
+    auto offset = -(camera.position - player->getPosition());
+    float angle = glm::radians(player->cam.x - 90);
+    float cos = glm::cos(angle);
+    float sin = glm::sin(angle);
+
+    float newX = offset.x * cos - offset.z * sin;
+    float newZ = offset.x * sin + offset.z * cos;
+    offset = glm::vec3(newX, offset.y, newZ);
+    matrix = matrix * glm::translate(glm::mat4(1.0f), offset);
+
+    texture_names_map map = {};
+    modelBatch->setLightsOffset(camera.position);
+    modelBatch->draw(
+        matrix,
+        glm::vec3(1.0f),
+        assets.get<model::Model>(def.name + ".model"),
+        &map
+    );
+    Window::clearDepth();
+    setupWorldShader(entityShader, hudcam, engine->getSettings(), 0.0f);
+    skybox->bind();
+    modelBatch->render();
+    modelBatch->setLightsOffset(glm::vec3());
+    skybox->unbind();
 }
 
 void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z) {
@@ -366,7 +421,7 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 
 void WorldRenderer::draw(
     const DrawContext& pctx,
-    Camera* camera,
+    Camera& camera,
     bool hudVisible,
     bool pause,
     float deltaTime,
@@ -376,7 +431,7 @@ void WorldRenderer::draw(
 
     auto world = level->getWorld();
     const Viewport& vp = pctx.getViewport();
-    camera->aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
+    camera.aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
 
     const auto& settings = engine->getSettings();
     const auto& worldInfo = world->getInfo();
@@ -389,7 +444,7 @@ void WorldRenderer::draw(
         DrawContext wctx = pctx.sub();
         postProcessing->use(wctx);
         Window::clearDepth();
-        skybox->draw(pctx, camera, assets, worldInfo.daytime, worldInfo.skyClearness);
+        skybox->draw(pctx, &camera, assets, worldInfo.daytime, worldInfo.skyClearness);
         {
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
@@ -397,6 +452,7 @@ void WorldRenderer::draw(
             renderLevel(ctx, camera, settings, deltaTime, pause);
             if (hudVisible) {
                 renderLines(camera, linesShader, ctx);
+                renderHands(camera, *assets);
             }
         }
 
