@@ -1,6 +1,6 @@
 [forest]
 parameters = [
-    {weight=1, value=1},
+    {weight=1, value=0},
     {weight=0.5, value=0.2}
 ]
 layers = [
@@ -30,8 +30,8 @@ structures = [
 
 [desert]
 parameters = [
-    {weight=0.3, value=0},
-    {weight=0.1, value=0}
+    {weight=1.0, value=1},
+    {weight=0.5, value=0}
 ]
 layers = [
     {height=6, block="chromaforge:sand"},
@@ -48,8 +48,8 @@ plants =[
 
 [plains]
 parameters = [
-    {weight=0.6, value=0.5},
-    {weight=0.6, value=0.5}
+    {weight=0.8, value=0.5},
+    {weight=0.8, value=0.0}
 ]
 layers = [
     {below-sea-level=false, height=1, block="chromaforge:moss"},

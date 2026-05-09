@@ -29,6 +29,8 @@ WorldGenerator::WorldGenerator(
     seed(seed),
     surroundMap(0, BASIC_PROTOTYPE_LAYERS + def.wideStructsChunksRadius * 2)
 {
+    def.script->initialize(seed);
+
     uint levels = BASIC_PROTOTYPE_LAYERS + def.wideStructsChunksRadius * 2;
 
     surroundMap = SurroundMap(0, levels);
@@ -223,7 +225,6 @@ void WorldGenerator::generateStructuresWide(
     auto placements = def.script->placeStructuresWide(
         {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH},
         {CHUNK_WIDTH, CHUNK_DEPTH},
-        seed,
         CHUNK_HEIGHT
     );
     placeStructures(placements, prototype, chunkX, chunkZ);
@@ -242,7 +243,6 @@ void WorldGenerator::generateStructures(
     auto placements = def.script->placeStructures(
         {chunkX * CHUNK_WIDTH, chunkZ * CHUNK_DEPTH},
         {CHUNK_WIDTH, CHUNK_DEPTH},
-        seed,
         heightmap,
         CHUNK_HEIGHT
     );
@@ -294,9 +294,18 @@ void WorldGenerator::generateBiomes(
     auto biomeParams = def.script->generateParameterMaps(
         {floordiv(chunkX * CHUNK_WIDTH, bpd), floordiv(chunkZ * CHUNK_DEPTH, bpd)},
         {floordiv(CHUNK_WIDTH, bpd) + 1, floordiv(CHUNK_DEPTH, bpd) + 1},
-        seed,
         bpd
     );
+
+    for (auto index : def.heightmapInputs) {
+        auto copy = std::make_shared<Heightmap>(*biomeParams[index]);
+        copy->resize(
+            floordiv(CHUNK_WIDTH, def.heightsBPD) + 1,
+            floordiv(CHUNK_DEPTH, def.heightsBPD) + 1,
+            InterpolationType::Linear
+        );
+        prototype.heightmapInputs.push_back(std::move(copy));
+    }
 
     for (const auto& map : biomeParams) {
         map->resize(
@@ -326,9 +335,10 @@ void WorldGenerator::generateHeightmap(
     prototype.heightmap = def.script->generateHeightmap(
         {floordiv(chunkX * CHUNK_WIDTH, bpd), floordiv(chunkZ * CHUNK_DEPTH, bpd)},
         {floordiv(CHUNK_WIDTH, bpd) + 1, floordiv(CHUNK_DEPTH, bpd) + 1},
-        seed,
-        bpd
+        bpd,
+        prototype.heightmapInputs
     );
+    prototype.heightmap->clamp();
     prototype.heightmap->resize(
         CHUNK_WIDTH + bpd, CHUNK_DEPTH + bpd, InterpolationType::Linear
     );
@@ -359,9 +369,9 @@ void WorldGenerator::generatePlants(
             const Biome* biome = biomes[z * CHUNK_WIDTH + x];
 
             int height = heights[z * CHUNK_WIDTH + x] * CHUNK_HEIGHT;
-            height = std::max(0, height);
+            height = std::min(std::max(0, height), CHUNK_HEIGHT - 1);
 
-            if (height + 1 > def.seaLevel) {
+            if (height + 1 > def.seaLevel && height + 1 < CHUNK_HEIGHT) {
                 float rand = plantsRand.randFloat();
                 blockid_t plant = biome->plants.choose(rand);
                 if (plant) {

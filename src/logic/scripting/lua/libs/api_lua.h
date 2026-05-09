@@ -28,6 +28,7 @@ extern const luaL_Reg vec4lib []; // vecn.cpp
 extern const luaL_Reg cameralib [];
 extern const luaL_Reg quatlib [];
 extern const luaL_Reg generationlib[];
+extern const luaL_Reg bjsonlib[];
 
 extern const luaL_Reg skeletonlib [];
 extern const luaL_Reg rigidbodylib [];

@@ -140,7 +140,7 @@ static std::vector<std::unique_ptr<VoxelStructure>> load_structures(
     const std::filesystem::path& structuresFile
 ) {
     auto structuresDir = structuresFile.parent_path()/std::filesystem::path("fragments");
-    auto map = files::read_json(structuresFile);
+    auto map = files::read_object(structuresFile);
 
     std::vector<std::unique_ptr<VoxelStructure>> structures;
     for (auto& [name, config] : map.asObject()) {
@@ -175,7 +175,7 @@ static void load_structures(Generator& def, const std::filesystem::path& structu
     }
 }
 
-static inline const auto STRUCTURES_FILE = std::filesystem::u8path("structures.json");
+static inline const auto STRUCTURES_FILE = std::filesystem::u8path("structures.toml");
 static inline const auto BIOMES_FILE = std::filesystem::u8path("biomes.toml");
 static inline const auto GENERATORS_DIR = std::filesystem::u8path("generators");
 
@@ -206,6 +206,22 @@ void ContentLoader::loadGenerator(
     map.at("heights-bpd").get(def.heightsBPD);
     map.at("sea-level").get(def.seaLevel);
     map.at("wide-structs-chunks-radius").get(def.wideStructsChunksRadius);
+
+    if (map.has("heightmap-inputs")) {
+        for (const auto& element : map["heightmap-inputs"]) {
+            int index = element.asInteger();
+            if (index <= 0 || index > def.biomeParameters) {
+                LOG_ERROR("Invalid biome parameter index {}", std::to_string(index));
+                throw std::runtime_error(
+                    "Invalid biome parameter index " + std::to_string(index)
+                );
+            }
+            def.heightmapInputs.push_back(index - 1);
+        }
+    }
+    if (!def.heightmapInputs.empty() && def.biomesBPD != def.heightsBPD) {
+        LOG_WARN("Generator has heightmap-inputs but biomes-bpd is not equal to heights-bpd, generator will work slower!");
+    }
 
     auto folder = generatorsDir/std::filesystem::u8path(name + ".files");
     auto scriptFile = folder/std::filesystem::u8path("script.lua");

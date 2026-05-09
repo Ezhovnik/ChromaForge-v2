@@ -46,6 +46,7 @@ public:
         bool important
     );
     void unload(const Chunk* chunk);
+    void clear();
 
     std::shared_ptr<Mesh> getOrRender(
         const std::shared_ptr<Chunk>& chunk,

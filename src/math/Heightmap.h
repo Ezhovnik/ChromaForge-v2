@@ -27,6 +27,8 @@ public:
 
     void crop(uint srcX, uint srcY, uint dstWidth, uint dstHeight);
 
+    void clamp();
+
     uint getWidth() const {
         return width;
     }

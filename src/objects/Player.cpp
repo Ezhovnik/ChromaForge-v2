@@ -25,6 +25,7 @@ namespace PlayerConsts {
     constexpr float GROUND_DAMPING = 10.0f; ///< Затухание скорости на земле
     constexpr float AIR_DAMPING = 7.0f; ///< Затухание скорости в воздухе
     constexpr float CHEAT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме читов
+	constexpr int SPAWN_ATTEMPTS_PER_UPDATE = 64;
 }
 
 Player::Player(
@@ -154,7 +155,11 @@ void Player::postUpdate() {
     }
 
 	// Если точка возрождения не задана, пытаемся найти её
-	if (spawnpoint.y <= 0.1) attemptToFindSpawnpoint();
+	if (spawnpoint.y <= 0.1) {
+		for (int i = 0; i < PlayerConsts::SPAWN_ATTEMPTS_PER_UPDATE; ++i) {
+            attemptToFindSpawnpoint();
+        }
+	}
 
 	auto& skeleton = entity->getSkeleton();
 

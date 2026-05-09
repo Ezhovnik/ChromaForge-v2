@@ -241,6 +241,10 @@ static int p_get_clear(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_content_offset(gui::UINode* node, lua::State* L) {
+    return lua::pushvec(L, node->getContentOffset());
+}
+
 static int p_get_color(gui::UINode* node, lua::State* L) {
     return lua::pushcolor(L, node->getColor());
 }
@@ -364,7 +368,8 @@ static int l_gui_getattr(lua::State* L) {
         {"tooltip", p_get_tooltip},
         {"tooltipDelay", p_get_tooltip_delay},
         {"setInterval", p_set_interval},
-        {"destruct", p_get_destruct}
+        {"destruct", p_get_destruct},
+        {"contentOffset", p_get_content_offset}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) {

@@ -372,7 +372,7 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
     state.rotation = determine_rotation(&def, selection.normal, camera->dir);
 
     if (!input.crouch && target.rt.funcsset.oninteract) {
-        if (scripting::on_block_interact(player.get(), target, selection.position)) {
+        if (scripting::on_block_interact(player.get(), target, selection.actualPosition)) {
             return;
         }
     }

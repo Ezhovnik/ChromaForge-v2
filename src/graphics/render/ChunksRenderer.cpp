@@ -79,6 +79,12 @@ void ChunksRenderer::unload(const Chunk* chunk) {
     if (found != meshes.end()) meshes.erase(found);
 }
 
+void ChunksRenderer::clear() {
+    meshes.clear();
+    inwork.clear();
+    threadPool.clearQueue();
+}
+
 std::shared_ptr<Mesh> ChunksRenderer::getOrRender(
     const std::shared_ptr<Chunk>& chunk,
     bool important

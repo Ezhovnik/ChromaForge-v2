@@ -206,6 +206,11 @@ static int l_get_user_bits(lua::State* L) {
     if (vox == nullptr) {
         return lua::pushinteger(L, 0);
     }
+    const auto& def = scripting::content->getIndices()->blocks.require(vox->id);
+    if (def.rt.extended) {
+        auto origin = scripting::level->chunks->seekOrigin({x, y, z}, def, vox->state);
+        vox = scripting::level->chunks->getVoxel(origin.x, origin.y, origin.z);
+    }
     uint mask = ((1 << bits) - 1) << offset;
     uint data = (blockstate2int(vox->state) & mask) >> offset;
     return lua::pushinteger(L, data);
@@ -225,6 +230,11 @@ static int l_set_user_bits(lua::State* L) {
     if (chunk == nullptr) return 0;
     voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
     if (vox == nullptr) return 0;
+    const auto& def = scripting::content->getIndices()->blocks.require(vox->id);
+    if (def.rt.extended) {
+        auto origin = scripting::level->chunks->seekOrigin({x, y, z}, def, vox->state);
+        vox = scripting::level->chunks->getVoxel(origin);
+    }
     vox->state.userbits = (vox->state.userbits & (~mask)) | value;
     chunk->setModifiedAndUnsaved();
     return 0; 

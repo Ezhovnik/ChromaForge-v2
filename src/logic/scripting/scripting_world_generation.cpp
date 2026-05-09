@@ -20,15 +20,17 @@
 class LuaGeneratorScript : public GeneratorScript {
     lua::State* L;
     const Generator& def;
-    scriptenv env;
+    scriptenv env = nullptr;
+
+    std::filesystem::path file;
+    std::string dirPath;
 public:
     LuaGeneratorScript(
         lua::State* L,
         const Generator& def,
-        scriptenv env
-    ) : L(L),
-        def(def),
-        env(std::move(env)) {}
+        const std::filesystem::path& file,
+        const std::string& dirPath
+    ) : L(L), def(def), file(file), dirPath(dirPath) {}
 
     virtual ~LuaGeneratorScript() {
         env.reset();
@@ -37,16 +39,48 @@ public:
         }
     }
 
+    void initialize(uint64_t seed) override {
+        env = lua::create_environment(L);
+        lua::stackguard _(L);
+
+        lua::pushenv(L, *env);
+        lua::pushstring(L, dirPath);
+        lua::setfield(L, "__DIR__");
+        lua::pushstring(L, dirPath + "/script.lua");
+        lua::setfield(L, "__FILE__");
+        lua::pushinteger(L, seed);
+        lua::setfield(L, "SEED");
+
+        lua::pop(L);
+
+        if (std::filesystem::exists(file)) {
+            std::string src = files::read_string(file);
+            lua::pop(L, lua::execute(L, *env, src, file.u8string()));
+        } else {
+            lua::pop(L, lua::execute(L, *env, "", "<empty>"));
+        }
+    }
+
     std::shared_ptr<Heightmap> generateHeightmap(
-        const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed, uint bpd
+        const glm::ivec2& offset,
+        const glm::ivec2& size,
+        uint bpd,
+        const std::vector<std::shared_ptr<Heightmap>>& inputs
     ) override {
         lua::pushenv(L, *env);
         if (lua::getfield(L, "generate_heightmap")) {
             lua::pushivec_stack(L, offset);
             lua::pushivec_stack(L, size);
-            lua::pushinteger(L, seed);
             lua::pushinteger(L, bpd);
-            if (lua::call_nothrow(L, 6)) {
+            if (!inputs.empty()) {
+                size_t inputsNum = def.heightmapInputs.size();
+                lua::createtable(L, inputsNum, 0);
+                for (size_t i = 0; i < inputsNum; ++i) {
+                    lua::newuserdata<lua::LuaHeightmap>(L, inputs[i]);
+                    lua::rawseti(L, i + 1);
+                }
+            }
+            if (lua::call_nothrow(L, 5 + (!inputs.empty()))) {
                 auto map = lua::touserdata<lua::LuaHeightmap>(L, -1)->getHeightmap();
                 lua::pop(L, 2);
                 return map;
@@ -57,7 +91,7 @@ public:
     }
 
     std::vector<std::shared_ptr<Heightmap>> generateParameterMaps(
-        const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed, uint bpd
+        const glm::ivec2& offset, const glm::ivec2& size, uint bpd
     ) override {
         std::vector<std::shared_ptr<Heightmap>> maps;
 
@@ -66,9 +100,8 @@ public:
         if (lua::getfield(L, "generate_biome_parameters")) {
             lua::pushivec_stack(L, offset);
             lua::pushivec_stack(L, size);
-            lua::pushinteger(L, seed);
             lua::pushinteger(L, bpd);
-            if (lua::call_nothrow(L, 6, biomeParameters)) {
+            if (lua::call_nothrow(L, 5, biomeParameters)) {
                 for (int i = biomeParameters-1; i >= 0; --i) {
                     maps.push_back(
                         lua::touserdata<lua::LuaHeightmap>(L, -1 - i)->getHeightmap()
@@ -153,9 +186,8 @@ public:
     }
 
     std::vector<Placement> placeStructuresWide(
-        const glm::ivec2& offset, 
-        const glm::ivec2& size, 
-        uint64_t seed,
+        const glm::ivec2& offset,
+        const glm::ivec2& size,
         uint chunkHeight
     ) override {
         std::vector<Placement> placements {};
@@ -165,9 +197,8 @@ public:
         if (lua::getfield(L, "place_structures_wide")) {
             lua::pushivec_stack(L, offset);
             lua::pushivec_stack(L, size);
-            lua::pushinteger(L, seed);
             lua::pushinteger(L, chunkHeight);
-            if (lua::call_nothrow(L, 6, 1)) {
+            if (lua::call_nothrow(L, 5, 1)) {
                 int len = lua::objlen(L, -1);
                 for (int i = 1; i <= len; ++i) {
                     lua::rawgeti(L, i);
@@ -183,7 +214,7 @@ public:
     }
 
     std::vector<Placement> placeStructures(
-        const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
+        const glm::ivec2& offset, const glm::ivec2& size,
         const std::shared_ptr<Heightmap>& heightmap,
         uint chunkHeight
     ) override {
@@ -194,10 +225,9 @@ public:
         if (lua::getfield(L, "place_structures")) {
             lua::pushivec_stack(L, offset);
             lua::pushivec_stack(L, size);
-            lua::pushinteger(L, seed);
             lua::newuserdata<lua::LuaHeightmap>(L, heightmap);
             lua::pushinteger(L, chunkHeight);
-            if (lua::call_nothrow(L, 7, 1)) {
+            if (lua::call_nothrow(L, 6, 1)) {
                 int len = lua::objlen(L, -1);
                 for (int i = 1; i <= len; ++i) {
                     lua::rawgeti(L, i);
@@ -216,27 +246,5 @@ std::unique_ptr<GeneratorScript> scripting::load_generator(
     const Generator& def, const std::filesystem::path& file, const std::string& dirPath
 ) {
     auto L = lua::create_state(*scripting::engine->getPaths(), lua::StateType::Generator);
-    auto env = lua::create_environment(L);
-    lua::stackguard _(L);
-
-    lua::pushenv(L, *env);
-    lua::pushstring(L, dirPath);
-    lua::setfield(L, "__DIR__");
-    lua::pushstring(L, dirPath + "/script.lua");
-    lua::setfield(L, "__FILE__");
-
-    lua::pop(L);
-
-    if (std::filesystem::exists(file)) {
-        std::string src = files::read_string(file);
-        lua::pop(L, lua::execute(L, *env, src, file.u8string()));
-    } else {
-        lua::pop(L, lua::execute(L, *env, "", "<empty>"));
-    }
-
-    return std::make_unique<LuaGeneratorScript>(
-        L,
-        def,
-        std::move(env)
-    );
+    return std::make_unique<LuaGeneratorScript>(L, def, file, dirPath);
 }

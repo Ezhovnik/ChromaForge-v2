@@ -96,29 +96,30 @@ class GeneratorScript {
 public:
     virtual ~GeneratorScript() = default;
 
+    virtual void initialize(uint64_t seed) = 0;
+
     virtual std::shared_ptr<Heightmap> generateHeightmap(
         const glm::ivec2& offset,
         const glm::ivec2& size,
-        uint64_t seed,
-        uint bpd
+        uint bpd,
+        const std::vector<std::shared_ptr<Heightmap>>& inputs
     ) = 0;
 
     virtual std::vector<std::shared_ptr<Heightmap>> generateParameterMaps(
         const glm::ivec2& offset,
         const glm::ivec2& size,
-        uint64_t seed,
         uint bpd
     ) = 0;
 
     virtual std::vector<Placement> placeStructuresWide(
         const glm::ivec2& offset, 
         const glm::ivec2& size, 
-        uint64_t seed,
         uint chunkHeight
     ) = 0;
 
     virtual std::vector<Placement> placeStructures(
-        const glm::ivec2& offset, const glm::ivec2& size, uint64_t seed,
+        const glm::ivec2& offset,
+        const glm::ivec2& size,
         const std::shared_ptr<Heightmap>& heightmap,
         uint chunkHeight
     ) = 0;
@@ -142,8 +143,10 @@ struct Generator {
     uint seaLevel = 0;
     uint biomeParameters = 0;
     uint biomesBPD = 8;
-    uint heightsBPD = 4;
+    uint heightsBPD = 8;
     uint wideStructsChunksRadius = 3;
+
+    std::vector<uint8_t> heightmapInputs;
 
     std::unordered_map<std::string, size_t> structuresIndices;
     std::vector<std::unique_ptr<VoxelStructure>> structures;

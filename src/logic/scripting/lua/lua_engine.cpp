@@ -37,7 +37,7 @@ static void remove_lib_funcs(State* L, const char* libname, const char* funcs[])
 }
 
 static void create_libs(State* L, StateType stateType) {
-    openlib(L, "audio", audiolib);
+    openlib(L, "bjson", bjsonlib);
     openlib(L, "block", blocklib);
     openlib(L, "builtin", builtinlib);
     openlib(L, "file", filelib);

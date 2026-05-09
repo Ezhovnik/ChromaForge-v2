@@ -296,6 +296,11 @@ namespace util {
             jobsMutexCondition.notify_one();
         }
 
+        void clearQueue() {
+            std::lock_guard<std::mutex> lock(jobsMutex);
+            jobs = {};
+        }
+
         /**
          * @brief Устанавливает режим автономной обработки результатов.
          *

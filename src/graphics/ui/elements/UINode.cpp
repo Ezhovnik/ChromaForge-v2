@@ -144,7 +144,7 @@ float UINode::getTooltipDelay() const {
 }
 
 glm::vec2 UINode::calcPos() const {
-    if (parent) return pos + parent->calcPos() + parent->contentOffset();
+    if (parent) return pos + parent->calcPos() + parent->getContentOffset();
     return pos;
 }
 

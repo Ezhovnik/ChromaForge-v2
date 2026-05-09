@@ -409,3 +409,7 @@ void WorldRenderer::draw(
     screenShader->uniform1f("u_dayTime", worldInfo.daytime);
     postProcessing->render(pctx, screenShader);
 }
+
+void WorldRenderer::clear() {
+    renderer->clear();
+}

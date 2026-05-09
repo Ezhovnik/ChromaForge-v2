@@ -92,6 +92,8 @@ public:
 		bool pause
     );
 
+	void clear();
+
 	static bool drawChunkBorders;
 	static bool drawEntityHitboxes;
 };
