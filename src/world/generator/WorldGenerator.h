@@ -127,6 +127,4 @@ public:
 	void generate(voxel* voxels, int x, int z);
 
     WorldGenDebugInfo createDebugInfo() const;
-
-    inline static std::string DEFAULT = BUILTIN_CONTENT_NAMESPACE + ":default";
 };

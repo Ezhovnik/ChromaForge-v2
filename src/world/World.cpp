@@ -213,8 +213,6 @@ void WorldInfo::deserialize(const dv::value& root) {
     generator = root["generator"].asString(generator);
     seed = root["seed"].asInteger(seed);
 
-	if (generator.empty()) generator = WorldGenerator::DEFAULT;
-
 	// Информация о версии движка
 	if (root.has("version")) {
         auto& verobj = root["version"];

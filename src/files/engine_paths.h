@@ -48,6 +48,8 @@ public:
     std::filesystem::path resolve(const std::string& path, bool throwErr = true);
 
     static std::tuple<std::string, std::string> parsePath(std::string_view view);
+
+    static inline auto CONFIG_DEFAULTS = std::filesystem::u8path("config/defaults.toml");
 };
 
 struct PathsRoot {

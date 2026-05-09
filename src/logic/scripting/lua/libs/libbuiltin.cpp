@@ -113,10 +113,6 @@ static int l_new_world(lua::State* L) {
     return 0;
 }
 
-static int l_get_default_generator(lua::State* L) {
-    return lua::pushstring(L, WorldGenerator::DEFAULT);
-}
-
 static int l_get_setting_info(lua::State* L) {
     auto name = lua::require_string(L, 1);
     auto setting = scripting::engine->getSettingsHandler().getSetting(name);
@@ -151,6 +147,5 @@ const luaL_Reg builtinlib [] = {
     {"str_setting", lua::wrap<l_str_setting>},
     {"get_setting_info", lua::wrap<l_get_setting_info>},
     {"quit", lua::wrap<l_quit>},
-    {"get_default_generator", lua::wrap<l_get_default_generator>},
     {NULL, NULL}
 };

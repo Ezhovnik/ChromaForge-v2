@@ -321,6 +321,11 @@ void Engine::resetContent() {
         resRoots.push_back({BUILTIN_CONTENT_NAMESPACE, pack.folder});
         load_configs(pack.folder);
     }
+    auto manager = createPacksManager(std::filesystem::path());
+    manager.scan();
+    for (const auto& pack : manager.getAll(basePacks)) {
+        resRoots.push_back({pack.id, pack.folder});
+    }
     resPaths = std::make_unique<ResPaths>(resdir, resRoots);
     contentPacks.clear();
     content.reset();
@@ -329,8 +334,6 @@ void Engine::resetContent() {
     loadAssets();
     onAssetsLoaded();
 
-    auto manager = createPacksManager(std::filesystem::path());
-    manager.scan();
     contentPacks = manager.getAll(basePacks);
 }
 
