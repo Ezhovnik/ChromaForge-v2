@@ -70,7 +70,9 @@ public:
     std::vector<std::filesystem::path> listdir(const std::string& folder) const;
     std::vector<std::string> listdirRaw(const std::string& folder) const;
 
-    dv::value readCombinedList(const std::string& file);
+    dv::value readCombinedList(const std::string& file) const;
+
+    dv::value readCombinedObject(const std::string& file) const;
 
     const std::filesystem::path& getMainRoot() const;
 };

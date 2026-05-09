@@ -347,7 +347,7 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
 	if (lx == 0 && (chunk = getChunk(cx - 1, cz))) chunk->flags.modified = true;
 	if (lz == 0 && (chunk = getChunk(cx, cz - 1))) chunk->flags.modified = true;
 
-	if (lx == CHUNK_WIDTH - 1 && (chunk = getChunk(cx, cz))) chunk->flags.modified = true;
+	if (lx == CHUNK_WIDTH - 1 && (chunk = getChunk(cx + 1, cz))) chunk->flags.modified = true;
 	if (lz == CHUNK_DEPTH - 1 && (chunk = getChunk(cx, cz + 1))) chunk->flags.modified = true;
 }
 

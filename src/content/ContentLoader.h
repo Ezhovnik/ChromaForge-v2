@@ -16,6 +16,7 @@ struct BlockMaterial;
 struct ContentPackStats;
 class ContentPackRuntime;
 struct Generator;
+class ResPaths;
 
 class ContentLoader {
 private:
@@ -24,6 +25,7 @@ private:
     scriptenv env;
     ContentBuilder& builder;
     ContentPackStats* stats;
+    const ResPaths& paths;
 
     void loadBlock(Block& def, const std::string& full, const std::string& name);
     void loadItem(Item& def, const std::string& full, const std::string& name);
@@ -39,9 +41,13 @@ private:
 
     void loadContent(const dv::value& map);
 public:
-    ContentLoader(ContentPack* pack, ContentBuilder& builder);
+    ContentLoader(
+        ContentPack* pack,
+        ContentBuilder& builder,
+        const ResPaths& paths
+    );
 
-    static std::vector<std::string> scanContent(
+    static std::vector<std::tuple<std::string, std::string>> scanContent(
         const ContentPack& pack, ContentType type
     );
 

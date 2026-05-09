@@ -13,7 +13,7 @@ VoxelStructure::VoxelStructure(
     meta(std::move(meta)) {}
 
 
-Generator::Generator(std::string name) : name(std::move(name)) {}
+Generator::Generator(std::string name) : name(std::move(name)), caption(util::id_to_caption(name)) {}
 
 void Generator::prepare(const Content* content) {
     for (auto& biome : biomes) {

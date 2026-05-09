@@ -136,6 +136,7 @@ struct VoxelStructure {
 
 struct Generator {
     std::string name;
+    std::string caption;
     std::unique_ptr<GeneratorScript> script;
 
     uint seaLevel = 0;

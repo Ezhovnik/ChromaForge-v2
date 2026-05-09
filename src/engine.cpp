@@ -295,11 +295,11 @@ void Engine::loadContent() {
     }
     resPaths = std::make_unique<ResPaths>(resdir, resRoots);
     {
-        ContentLoader(&builtinPack, contentBuilder).load();
+        ContentLoader(&builtinPack, contentBuilder, *resPaths).load();
         load_configs(builtinPack.folder);
     }
     for (auto& pack : contentPacks) {
-        ContentLoader(&pack, contentBuilder).load();
+        ContentLoader(&pack, contentBuilder, *resPaths).load();
         load_configs(pack.folder);
     }
 

@@ -23,7 +23,7 @@
 #include <data/dv_util.h>
 #include <data/StructLayout.h>
 
-ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder) : pack(pack), builder(builder) {
+ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder, const ResPaths& paths) : pack(pack), builder(builder), paths(paths) {
     auto runtime = std::make_unique<ContentPackRuntime>(
         *pack, scripting::create_pack_environment(*pack)
     );
@@ -44,7 +44,9 @@ static void detect_defs(
             std::string name = file.stem().string();
             if (name[0] == '_') continue;
             if (std::filesystem::is_regular_file(file) && files::is_data_file(file)) {
-                detected.push_back(prefix.empty() ? name : prefix + ":" + name);
+                auto map = files::read_object(file);
+                std::string id = prefix.empty() ? name : prefix + ":" + name;
+                detected.emplace_back(id);
             } else if (std::filesystem::is_directory(file) && file.extension() != std::filesystem::u8path(".files")) {
                 detect_defs(file, name, detected);
             }
@@ -52,11 +54,35 @@ static void detect_defs(
     }
 }
 
-std::vector<std::string> ContentLoader::scanContent(
+static void detect_defs_pairs(
+    const std::filesystem::path& folder,
+    const std::string& prefix,
+    std::vector<std::tuple<std::string, std::string>>& detected
+) {
+    if (std::filesystem::is_directory(folder)) {
+        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+            const std::filesystem::path& file = entry.path();
+            std::string name = file.stem().string();
+            if (name[0] == '_') continue;
+
+            if (std::filesystem::is_regular_file(file) && files::is_data_file(file)) {
+                auto map = files::read_object(file);
+                std::string id = prefix.empty() ? name : prefix + ":" + name;
+                std::string caption = util::id_to_caption(id);
+                map.at("caption").get(caption);
+                detected.emplace_back(id, name);
+            } else if (std::filesystem::is_directory(file) && file.extension() != std::filesystem::u8path(".files")) {
+                detect_defs_pairs(file, name, detected);
+            }
+        }
+    }
+}
+
+std::vector<std::tuple<std::string, std::string>> ContentLoader::scanContent(
     const ContentPack& pack, ContentType type
 ) {
-    std::vector<std::string> detected;
-    detect_defs(pack.folder/ContentPack::getFolderFor(type), pack.id, detected);
+    std::vector<std::tuple<std::string, std::string>> detected;
+    detect_defs_pairs(pack.folder/ContentPack::getFolderFor(type), pack.id, detected);
     return detected;
 }
 

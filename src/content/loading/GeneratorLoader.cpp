@@ -8,6 +8,8 @@
 #include <world/generator/Generator.h>
 #include <world/generator/VoxelFragment.h>
 #include <debug/Logger.h>
+#include <files/engine_paths.h>
+#include <util/stringutil.h>
 
 static BlocksLayer load_layer(
     const dv::value& map, uint& lastLayersHeight, bool& hasResizeableLayer
@@ -174,11 +176,10 @@ static void load_structures(Generator& def, const std::filesystem::path& structu
 }
 
 static inline const auto STRUCTURES_FILE = std::filesystem::u8path("structures.json");
-static inline const auto BIOMES_FILE = std::filesystem::u8path("biomes.json");
+static inline const auto BIOMES_FILE = std::filesystem::u8path("biomes.toml");
 static inline const auto GENERATORS_DIR = std::filesystem::u8path("generators");
 
-static void load_biomes(Generator& def, const std::filesystem::path& file) {
-    auto root = files::read_json(file);
+static void load_biomes(Generator& def, const dv::value& root) {
     for (const auto& [biomeName, biomeMap] : root.asObject()) {
         try {
             def.biomes.push_back(
@@ -199,6 +200,7 @@ void ContentLoader::loadGenerator(
     auto generatorFile = generatorsDir/std::filesystem::u8path(name + ".toml");
     if (!std::filesystem::exists(generatorFile)) return;
     auto map = files::read_toml(generatorsDir/std::filesystem::u8path(name + ".toml"));
+    map.at("caption").get(def.caption);
     map.at("biome_parameters").get(def.biomeParameters);
     map.at("biome-bpd").get(def.biomesBPD);
     map.at("heights-bpd").get(def.heightsBPD);
@@ -213,14 +215,15 @@ void ContentLoader::loadGenerator(
         load_structures(def, structuresFile);
     }
 
-    auto biomesFiles = folder/BIOMES_FILE;
-    if (!std::filesystem::exists(biomesFiles)) {
-        LOG_ERROR("{}: file not found (at least one biome required)", BIOMES_FILE.u8string());
+    auto biomesFile = GENERATORS_DIR/std::filesystem::u8path(name + ".files")/BIOMES_FILE;
+    auto biomesMap = paths.readCombinedObject(biomesFile.u8string());
+    if (biomesMap.empty()) {
+        LOG_ERROR("Generator {}: at least one biome required", util::quote(def.name));
         throw std::runtime_error(
-            BIOMES_FILE.u8string() + ": file not found (at least one biome required)"
+            "Generator " + util::quote(def.name) + ": at least one biome required"
         );
     }
-    load_biomes(def, biomesFiles);
+    load_biomes(def, biomesMap);
     def.script = scripting::load_generator(
         def, scriptFile, pack->id + ":generators/" + name + ".files"
     );

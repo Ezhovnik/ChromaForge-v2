@@ -47,6 +47,7 @@ namespace util {
     std::wstring lower_case(const std::wstring& str);
     std::wstring upper_case(const std::wstring& str);
     std::wstring capitalized(const std::wstring& str);
+    std::string capitalized(const std::string& str);
     std::wstring pascal_case(const std::wstring& str);
 
     std::string id_to_caption(const std::string& id);
