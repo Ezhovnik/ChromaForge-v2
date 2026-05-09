@@ -748,6 +748,18 @@ void ContentLoader::load() {
         }
     }
 
+    std::filesystem::path aliasesFile = folder/std::filesystem::u8path("resource-aliases.json");
+    if (std::filesystem::exists(aliasesFile)) {
+        auto resRoot = files::read_json(aliasesFile);
+        for (const auto& [key, arr] : resRoot.asObject()) {
+            if (auto resType = ResourceType_from(key)) {
+                loadResourceAliases(*resType, arr);
+            } else {
+                LOG_WARN("Unknown resource type: {}", key);
+            }
+        }
+    }
+
     // Load block materials
     std::filesystem::path materialsDir = folder / std::filesystem::u8path("block_materials");
     if (std::filesystem::is_directory(materialsDir)) {
@@ -788,6 +800,14 @@ void ContentLoader::loadResources(ResourceType type, const dv::value& list) {
     for (size_t i = 0; i < list.size(); ++i) {
         builder.resourceIndices[static_cast<size_t>(type)].add(
             pack->id + ":" + list[i].asString(), nullptr
+        );
+    }
+}
+
+void ContentLoader::loadResourceAliases(ResourceType type, const dv::value& aliases) {
+    for (const auto& [alias, name] : aliases.asObject()) {
+        builder.resourceIndices[static_cast<size_t>(type)].addAlias(
+            name.asString(), alias
         );
     }
 }

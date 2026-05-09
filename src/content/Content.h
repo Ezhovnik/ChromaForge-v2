@@ -130,11 +130,13 @@ public:
 
     static constexpr size_t MISSING = SIZE_MAX;
 
-    void add(std::string name, dv::value map) {
+    void add(const std::string& name, dv::value map) {
         indices[name] = names.size();
         names.push_back(name);
         savedData->push_back(std::move(map));
     }
+
+    void addAlias(const std::string& name, const std::string& alias);
 
     const std::string& getName(size_t index) const {
         return names.at(index);

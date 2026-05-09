@@ -1,0 +1,8 @@
+{
+    "camera": {
+        "chromaforge:first-person": "builtin:first-person",
+        "chromaforge:third-person-front": "builtin:third-person-front",
+        "chromaforge:third-person-back": "builtin:third-person-back",
+        "chromaforge:cinematic": "builtin:cinematic"
+    }
+}

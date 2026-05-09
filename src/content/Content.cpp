@@ -80,3 +80,14 @@ const UptrsMap<std::string, BlockMaterial>& Content::getBlockMaterials() const {
 const UptrsMap<std::string, rigging::SkeletonConfig>& Content::getSkeletons() const {
     return skeletons;
 }
+
+void ResourceIndices::addAlias(const std::string& name, const std::string& alias) {
+    size_t index = indexOf(name);
+    if (index == MISSING) {
+        LOG_ERROR("Resource does not exists: {}", name);
+        throw std::runtime_error(
+            "Resource does not exists: " + name
+        );
+    }
+    indices[alias] = index;
+}

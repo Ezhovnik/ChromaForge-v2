@@ -222,3 +222,61 @@ function file.readlines(path)
     end
     return lines
 end
+
+package = {
+    loaded={}
+}
+local __cached_scripts = {}
+local __warnings_hidden = {}
+
+function on_deprecated_call(name, alternatives)
+    if __warnings_hidden[name] then
+        return
+    end
+    __warnings_hidden[name] = true
+    if alternatives then
+        debug.warning("Deprecated function called ("..name.."), use ".. alternatives.." instead\n"..debug.traceback())
+    else
+        debug.warning("Deprecated function called ("..name..")\n"..debug.traceback())
+    end
+end
+
+local function __load_script(path, nocache)
+    local packname, filename = parse_path(path)
+
+    -- __cached_scripts used in condition because cached result may be nil
+    if not nocache and __cached_scripts[path] ~= nil then
+        return package.loaded[path]
+    end
+    if not file.isfile(path) then
+        error("Script '"..filename.."' not found in '"..packname.."'")
+    end
+
+    local script, err = load(file.read(path), path)
+    if script == nil then
+        error(err)
+    end
+    local result = script()
+    if not nocache then
+        __cached_scripts[path] = script
+        package.loaded[path] = result
+    end
+    return result
+end
+
+function require(path)
+    local prefix, file = parse_path(path)
+    return __load_script(prefix..":modules/"..file..".lua")
+end
+
+function __scripts_cleanup()
+    print("Cleaning scripts cache")
+    for k, v in pairs(__cached_scripts) do
+        local packname, _ = parse_path(k)
+        if packname ~= "builtin" then
+            print("Unloaded "..k)
+            __cached_scripts[k] = nil
+            package.loaded[k] = nil
+        end
+    end
+end
