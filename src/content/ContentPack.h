@@ -81,6 +81,7 @@ struct ContentPack {
             case ContentType::Entity: return ContentPack::ENTITIES_FOLDER;
             case ContentType::Generator: return ContentPack::GENERATORS_FOLDER;
             case ContentType::None: return std::filesystem::u8path("");
+            default: return std::filesystem::u8path("");
         }
     }
 };

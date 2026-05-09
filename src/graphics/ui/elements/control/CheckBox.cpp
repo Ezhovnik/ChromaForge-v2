@@ -44,7 +44,8 @@ FullCheckBox::FullCheckBox(
     glm::vec2 size, 
     bool checked
 ) : Panel(size), 
-    checkbox(std::make_shared<CheckBox>(checked))
+    checkbox(std::make_shared<CheckBox>(checked)),
+    label(std::make_shared<Label>(text))
 {
     setColor(glm::vec4(0.0f));
     setOrientation(Orientation::Horizontal);
