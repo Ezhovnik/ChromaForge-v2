@@ -194,6 +194,9 @@ namespace dv {
         value(std::shared_ptr<objects::Bytes> v) noexcept {
             this->operator=(std::move(v));
         }
+        value(list_t values) {
+            this->operator=(std::make_shared<list_t>(std::move(values)));
+        }
 
         value(const value& v) noexcept : type(value_type::None) {
             this->operator=(v);

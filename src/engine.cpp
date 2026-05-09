@@ -48,6 +48,7 @@
 #include <logic/CommandsInterpreter.h>
 #include <content/ContentBuilder.h>
 #include <objects/rigging.h>
+#include <coders/commons.h>
 
 static void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -446,7 +447,12 @@ void Engine::loadSettings() {
     if (std::filesystem::is_regular_file(settings_file)) {
         LOG_INFO("Reading the settings file");
         std::string text = files::read_string(settings_file);
-        toml::parse(settingsHandler, settings_file.string(), text);
+        try {
+            toml::parse(settingsHandler, settings_file.string(), text);
+        } catch (const parsing_error& err) {
+            LOG_ERROR("{}", err.errorLog());
+            throw;
+        }
         LOG_INFO("The settings file has been successfully read");
     }
 }

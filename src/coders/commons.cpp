@@ -91,6 +91,10 @@ bool BasicParser::hasNext() {
     return pos < source.length();
 }
 
+size_t BasicParser::remain() const {
+    return source.length() - pos;
+}
+
 bool BasicParser::isNext(const std::string& substring) {
     if (source.length() - pos < substring.length()) return false;
     return source.substr(pos, substring.length()) == substring;
@@ -219,16 +223,25 @@ void BasicParser::goBack(size_t count) {
 std::string BasicParser::parseName() {
     char c = peek();
     if (!is_identifier_start(c)) {
-        if (c == '"') {
-            pos++;
-            return parseString(c);
-        }
         LOG_ERROR("Identifier expected");
         throw error("Identifier expected");
     }
     int start = pos;
     while (hasNext() && is_identifier_part(source[pos])) {
         pos++;
+    }
+    return std::string(source.substr(start, pos - start));
+}
+
+std::string BasicParser::parseXmlName() {
+    char c = peek();
+    if (!is_json_identifier_start(c)) {
+        LOG_ERROR("Identifier expected");
+        throw error("Identifier expected");
+    }
+    int start = pos;
+    while (hasNext() && is_json_identifier_part(source[pos])) {
+        ++pos;
     }
     return std::string(source.substr(start, pos - start));
 }
@@ -358,7 +371,7 @@ std::string BasicParser::parseString(char quote, bool closeRequired) {
                 case '"': ss << '"'; break;
                 case '\\': ss << '\\'; break;
                 case '/': ss << '/'; break;
-                case '\n': pos++; continue;
+                case '\n': continue;
                 default:
                     LOG_ERROR("'\\{}' is an illegal escape", std::string({c}));
                     throw error("'\\" + std::string({c}) + "' is an illegal escape");

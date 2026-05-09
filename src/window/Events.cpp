@@ -191,21 +191,24 @@ std::string Events::writeBindings() {
 
 void Events::loadBindings(const std::string& filename, const std::string& source) {
     auto map = toml::parse(filename, source);
-    for (auto& [key, value] : map.asObject()) {
-        auto [prefix, codename] = util::split_at(value.asString(), ':');
-        inputType type;
-        int code;
-        if (prefix == "key") {
-            type = inputType::keyboard;
-            code = static_cast<int>(input_util::keycode_from(codename));
-        } else if (prefix == "mouse") {
-            type = inputType::mouse;
-            code = static_cast<int>(input_util::mousecode_from(codename));
-        } else {
-            LOG_ERROR("Unknown input type: {} (binding {})", prefix, util::quote(key));
-            continue;
+    for (auto& [sectionName, section] : map.asObject()) {
+        for (auto& [name, value] : section.asObject()) {
+            auto key = sectionName + "." + name;
+            auto [prefix, codename] = util::split_at(value.asString(), ':');
+            inputType type;
+            int code;
+            if (prefix == "key") {
+                type = inputType::keyboard;
+                code = static_cast<int>(input_util::keycode_from(codename));
+            } else if (prefix == "mouse") {
+                type = inputType::mouse;
+                code = static_cast<int>(input_util::mousecode_from(codename));
+            } else {
+                LOG_ERROR("Unknown input type: {} (binding {})", prefix, util::quote(key));
+                continue;
+            }
+            Events::bind(key, type, code);
         }
-        Events::bind(key, type, code);
     }
 }
 

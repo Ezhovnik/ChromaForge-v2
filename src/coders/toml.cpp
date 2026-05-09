@@ -24,67 +24,183 @@ class TomlReader : BasicParser {
         }
     }
 
-    dv::value& getSection(const std::string& section) {
-        if (section.empty()) return root;
-        size_t offset = 0;
-        auto rootMap = &root;
-        do {
-            size_t index = section.find('.', offset);
-            if (index == std::string::npos) {
-                auto map = rootMap->at(section);
-                if (!map) {
-                    return rootMap->object(section);
+    std::string parseMultilineString() {
+        pos += 2;
+        char next = peek();
+
+        std::stringstream ss;
+        while (hasNext()) {
+            char c = source[pos];
+            if (c == '"' && remain() >= 2 && 
+                source[pos + 1] == '"' && 
+                source[pos + 2] == '"') {
+                pos += 3;
+                return ss.str();
+            }
+            if (c == '\\') {
+                pos++;
+                c = nextChar();
+                if (c >= '0' && c <= '7') {
+                    --pos;
+                    ss << (char)parseSimpleInt(8);
+                    continue;
                 }
-                return *map;
+                switch (c) {
+                    case 'n': ss << '\n'; break;
+                    case 'r': ss << '\r'; break;
+                    case 'b': ss << '\b'; break;
+                    case 't': ss << '\t'; break;
+                    case 'f': ss << '\f'; break;
+                    case '\'': ss << '\\'; break;
+                    case '"': ss << '"'; break;
+                    case '\\': ss << '\\'; break;
+                    case '/': ss << '/'; break;
+                    case '\n': continue;
+                    default:
+                        LOG_ERROR("'\\{}' is an illegal escape", std::string{c});
+                        throw error(
+                            "'\\" + std::string({c}) + "' is an illegal escape"
+                        );
+                }
+                continue;
             }
-            auto subsection = section.substr(offset, index);
-            auto map = rootMap->at(subsection);
-            if (!map) {
-                rootMap = &rootMap->object(subsection);
-            } else {
-                rootMap = &*map;
-            }
-            offset = index + 1;
-        } while (true);
+            ss << c;
+            pos++;
+        }
+        LOG_ERROR("Unexpected end");
+        throw error("Unexpected end");
     }
 
-    void readSection(const std::string& section, dv::value& map) {
+    dv::value parseValue() {
+        char c = peek();
+        if (is_digit(c)) {
+            int start = pos;
+            auto value = parseNumber(1);
+            if (hasNext() && peekNoJump() == '-') {
+                while (hasNext()) {
+                    c = source[pos];
+                    if (!is_digit(c) && c != ':' && c != '.' && c != '-' && c != 'T' && c != 'Z') {
+                        break;
+                    }
+                    pos++;
+                }
+                return std::string(source.substr(start, pos - start));
+            }
+            return value;
+        } else if (c == '-' || c == '+') {
+            int sign = c == '-' ? -1 : 1;
+            pos++;
+            return parseNumber(sign);
+        } else if (is_identifier_start(c)) {
+            std::string keyword = parseName();
+            if (keyword == "true" || keyword == "false") {
+                return keyword == "true";
+            } else if (keyword == "inf") {
+                return INFINITY;
+            } else if (keyword == "nan") {
+                return NAN;
+            }
+            LOG_ERROR("Unknown keyword {}", util::quote(keyword));
+            throw error("Unknown keyword " + util::quote(keyword));
+        } else if (c == '"' || c == '\'') {
+            pos++;
+            if (remain() >= 2 && 
+                c  == '"' && 
+                source[pos] == '"' && 
+                source[pos + 1] == '"') {
+                return parseMultilineString();
+            }
+            return parseString(c);
+        } else if (c == '[') {
+            pos++;
+            dv::list_t values;
+            while (peek() != ']') {
+                values.push_back(parseValue());
+                if (peek() != ']') {
+                    expect(',');
+                }
+            }
+            pos++;
+            return dv::value(std::move(values));
+        } else if (c == '{') {
+            pos++;
+            auto table = dv::object();
+            while (peek() != '}') {
+                auto key = parseName();
+                expect('=');
+                table[key] = parseValue();
+                if (peek() != '}') {
+                    expect(',');
+                }
+            }
+            pos++;
+            return table;
+        } else {
+            LOG_ERROR("Feature is not supported");
+            throw error("Feature is not supported");
+        }
+    }
+
+    dv::value& parseLValue(dv::value& root) {
+        dv::value* lvalue = &root;
+        while (hasNext()) {
+            char c = peek();
+            std::string name;
+            if (c == '\'' || c == '"') {
+                pos++;
+                name = parseString(c);
+            } else {
+                name = parseName();
+            }
+            if (lvalue->getType() == dv::value_type::None) {
+                *lvalue = dv::object();
+            }
+            lvalue = &(*lvalue)[name];
+            if (peek() != '.') {
+                break;
+            }
+            pos++;
+        }
+        return *lvalue;
+    }
+
+    void readSection(dv::value& map, dv::value& root) {
         while (hasNext()) {
             skipWhitespace();
             if (!hasNext()) break;
             char c = nextChar();
             if (c == '[') {
-                std::string name = parseName();
-                pos++;
-                readSection(name, getSection(name));
+                if (hasNext() && peek() == '[') {
+                    pos++;
+                    dv::value& list = parseLValue(root);
+                    if (list == nullptr) {
+                        list = dv::list();
+                    } else if (!list.isList()) {
+                        LOG_ERROR("Target is not an array");
+                        throw error("Target is not an array");
+                    }
+                    expect(']');
+                    expect(']');
+                    dv::value section = dv::object();
+                    readSection(section, root);
+                    list.add(std::move(section));
+                    return;
+                }
+                dv::value& section = parseLValue(root);
+                if (section == nullptr) {
+                    section = dv::object();
+                } else if (!section.isObject()) {
+                    LOG_ERROR("Target is not a table");
+                    throw error("Target is not a table");
+                }
+                expect(']');
+                readSection(section, root);
                 return;
             }
             pos--;
-            std::string name = parseName();
+            dv::value& lvalue = parseLValue(map);
             expect('=');
-            c = peek();
-            if (is_digit(c)) {
-                map[name] = parseNumber(1);
-            } else if (c == '-' || c == '+') {
-                int sign = c == '-' ? -1 : 1;
-                pos++;
-                map[name] = parseNumber(sign);
-            } else if (is_identifier_start(c)) {
-                std::string identifier = parseName();
-                if (identifier == "true" || identifier == "false") {
-                    map[name] = identifier == "true";
-                } else if (identifier == "inf") {
-                    map[name] = INFINITY;
-                } else if (identifier == "nan") {
-                    map[name] = NAN;
-                }
-            } else if (c == '"' || c == '\'') {
-                pos++;
-                map[name] = parseString(c);
-            } else {
-                LOG_ERROR("Feature is not supported");
-                throw error("Feature is not supported");
-            }
+            lvalue = parseValue();
             expectNewLine();
         }
     }
@@ -93,14 +209,12 @@ public:
     TomlReader(
         std::string_view file, 
         std::string_view source
-    ) : BasicParser(file, source) {
-        root = dv::object();
-    }
+    ) : BasicParser(file, source), root(dv::object()) {}
 
     dv::value read() {
         skipWhitespace();
         if (!hasNext()) return std::move(root);
-        readSection("", root);
+        readSection(root, root);
         return std::move(root);
     }
 };

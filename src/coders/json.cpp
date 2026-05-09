@@ -177,7 +177,8 @@ dv::value Parser::parseObject() {
             skipLine();
             continue;
         }
-        std::string key = parseName();
+        expect('"');
+        std::string key = parseString('"');
         char next = peek();
         if (next != ':') {
             LOG_ERROR("':' expected");
