@@ -99,6 +99,28 @@ dv::value SettingsHandler::getValue(const std::string& name) const {
     }
 }
 
+dv::value SettingsHandler::getDefault(const std::string& name) const {
+    auto found = map.find(name);
+    if (found == map.end()) {
+        LOG_ERROR("Setting {} does not exist", name);
+        throw std::runtime_error("Setting '" + name + "' does not exist");
+    }
+    auto setting = found->second;
+
+    if (auto number = dynamic_cast<NumberSetting*>(setting)) {
+        return static_cast<number_t>(number->getDefault());
+    } else if (auto integer = dynamic_cast<IntegerSetting*>(setting)) {
+        return static_cast<integer_t>(integer->getDefault());
+    } else if (auto flag = dynamic_cast<BoolSetting*>(setting)) {
+        return flag->getDefault();
+    } else if (auto string = dynamic_cast<StringSetting*>(setting)) {
+        return string->getDefault();
+    } else {
+        LOG_ERROR("Type is not implemented for '{}'", name);
+        throw std::runtime_error("Type is not implemented for '" + name + "'");
+    }
+}
+
 std::string SettingsHandler::toString(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {

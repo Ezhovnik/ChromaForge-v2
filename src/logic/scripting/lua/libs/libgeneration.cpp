@@ -42,6 +42,7 @@ static int l_load_fragment(lua::State* L) {
 
     auto fragment = std::make_shared<VoxelFragment>();
     fragment->deserialize(map);
+    fragment->prepare(*scripting::content);
     return lua::newuserdata<lua::LuaVoxelFragment>(L, std::move(fragment));
 }
 

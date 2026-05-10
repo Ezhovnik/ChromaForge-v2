@@ -3,6 +3,7 @@
 #include <logic/scripting/lua/lua_util.h>
 #include <world/generator/VoxelFragment.h>
 #include <util/stringutil.h>
+#include <world/Level.h>
 
 using namespace lua;
 
@@ -18,8 +19,20 @@ static int l_crop(lua::State* L) {
     return 0;
 }
 
+static int l_place(lua::State* L) {
+    if (auto fragment = touserdata<LuaVoxelFragment>(L, 1)) {
+        auto offset = tovec3(L, 2);
+        int rotation = tointeger(L, 3) & 0b11;
+        fragment->getFragment()->place(
+            *scripting::level->chunks, offset, rotation 
+        );
+    }
+    return 0;
+}
+
 static std::unordered_map<std::string, lua_CFunction> methods {
     {"crop", lua::wrap<l_crop>},
+    {"place", lua::wrap<l_place>},
 };
 
 static int l_meta_tostring(lua::State* L) {

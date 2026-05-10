@@ -37,6 +37,8 @@ struct Item {
     std::string placingBlock = BUILTIN_AIR;
     std::string scriptName = name.substr(name.find(':') + 1);
 
+    std::string modelName = name + ".model";
+
     struct {
         itemid_t id;
         blockid_t placingBlock;

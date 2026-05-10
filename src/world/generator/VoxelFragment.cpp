@@ -12,6 +12,7 @@
 #include <voxels/Block.h>
 #include <debug/Logger.h>
 #include <core_content_defs.h>
+#include <voxels/Chunks.h>
 
 std::unique_ptr<VoxelFragment> VoxelFragment::create(
     Level* level,
@@ -21,7 +22,7 @@ std::unique_ptr<VoxelFragment> VoxelFragment::create(
     bool entities
 ) {
     auto start = glm::min(a, b);
-    auto size = glm::abs(a - b);
+    auto size = glm::abs(a - b) + 1;
 
     if (crop) {
         VoxelsVolume volume(size.x, size.y, size.z);
@@ -169,6 +170,26 @@ void VoxelFragment::prepare(const Content& content) {
         const auto& name = blockNames.at(voxels[i].id);
         voxelsRuntime[i].id = content.blocks.require(name).rt.id;
         voxelsRuntime[i].state = voxels[i].state;
+    }
+}
+
+void VoxelFragment::place(
+    Chunks& chunks, const glm::ivec3& offset, ubyte rotation
+) {
+    auto& structVoxels = getRuntimeVoxels();
+    for (int y = 0; y < size.y; ++y) {
+        int sy = y + offset.y;
+        if (sy < 0 || sy >= CHUNK_HEIGHT) continue;
+        for (int z = 0; z < size.z; ++z) {
+            int sz = z + offset.z;
+            for (int x = 0; x < size.x; ++x) {
+                int sx = x + offset.x;
+                const auto& structVoxel = structVoxels[vox_index(x, y, z, size.x, size.z)];
+                if (structVoxel.id) {
+                    chunks.setVoxel(sx, sy, sz, structVoxel.id, structVoxel.state);
+                }
+            }
+        }
     }
 }
 

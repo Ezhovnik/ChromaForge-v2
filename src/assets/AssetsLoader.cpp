@@ -20,6 +20,7 @@
 #include <util/ThreadPool.h>
 #include <voxels/Block.h>
 #include <objects/rigging.h>
+#include <items/Item.h>
 
 AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(assets), paths(paths) {
 	// Регистрируем встроенные загрузчики из asset_loaders.h
@@ -243,6 +244,16 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
                 if (!model.empty()) {
                     loader.add(AssetType::Model, MODELS_FOLDER + "/" + model, model);
                 }
+            }
+        }
+
+        for (const auto& [_, def] : content->items.getDefs()) {
+            if (def->modelName.find(':') == std::string::npos) {
+                loader.add(
+                    AssetType::Model,
+                    MODELS_FOLDER + "/" + def->modelName,
+                    def->modelName
+                );
             }
         }
 	}

@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <glm/glm.hpp>
+
 #include <typedefs.h>
 #include <math/rand.h>
 #include <graphics/core/DrawContext.h>
@@ -27,6 +29,7 @@ class Skybox {
     uint size;
     ShaderProgram* shader;
     FastRandom random;
+    glm::vec3 lightDir;
 
     std::unique_ptr<Mesh> mesh;
     std::unique_ptr<Batch3D> batch3d;
@@ -46,4 +49,7 @@ public:
     void bind() const;
     void unbind() const;
     bool isReady() const {return ready;};
+    const glm::vec3 getLightDir() const {
+        return lightDir;
+    }
 };

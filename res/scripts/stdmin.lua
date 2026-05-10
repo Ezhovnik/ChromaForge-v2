@@ -139,7 +139,7 @@ function string.formatted_time(seconds, format)
 end
 
 function string.replace(str, tofind, toreplace)
-    local tbl = string.Explode(tofind, str)
+    local tbl = string.explode(tofind, str)
     if (tbl[1]) then return table.concat(tbl, toreplace) end
     return str
 end

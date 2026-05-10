@@ -8,30 +8,30 @@ static const Item* get_item_def(lua::State* L, int idx) {
     return indices->items.get(id);
 }
 
-static int l_item_name(lua::State* L) {
+static int l_name(lua::State* L) {
     if (auto def = get_item_def(L, 1)) {
         return lua::pushstring(L, def->name);
     }
     return 0;
 }
 
-static int l_item_index(lua::State* L) {
+static int l_index(lua::State* L) {
     auto name = lua::require_string(L, 1);
     return lua::pushinteger(L, scripting::content->items.require(name).rt.id);
 }
 
-static int l_item_stack_size(lua::State* L) {
+static int l_stack_size(lua::State* L) {
     if (auto def = get_item_def(L, 1)) {
         return lua::pushinteger(L, def->stackSize);
     }
     return 0;
 }
 
-static int l_item_defs_count(lua::State* L) {
+static int l_defs_count(lua::State* L) {
     return lua::pushinteger(L, scripting::indices->items.count());
 }
 
-static int l_item_get_icon(lua::State* L) {
+static int l_get_icon(lua::State* L) {
     if (auto def = get_item_def(L, 1)) {
         switch (def->iconType) {
             case ItemIconType::None:
@@ -45,19 +45,35 @@ static int l_item_get_icon(lua::State* L) {
     return 0;
 }
 
-static int l_item_caption(lua::State* L) {
+static int l_caption(lua::State* L) {
     if (auto def = get_item_def(L, 1)) {
         return lua::pushstring(L, def->caption);
     }
     return 0;
 }
 
+static int l_get_placing_block(lua::State* L) {
+    if (auto def = get_item_def(L, 1)) {
+        return lua::pushinteger(L, def->rt.placingBlock);
+    }
+    return 0;
+}
+
+static int l_get_model_name(lua::State* L) {
+    if (auto def = get_item_def(L, 1)) {
+        return lua::pushstring(L, def->modelName);
+    }
+    return 0;
+}
+
 const luaL_Reg itemlib [] = {
-    {"index", lua::wrap<l_item_index>},
-    {"name", lua::wrap<l_item_name>},
-    {"caption", lua::wrap<l_item_caption>},
-    {"stack_size", lua::wrap<l_item_stack_size>},
-    {"defs_count", lua::wrap<l_item_defs_count>},
-    {"icon", lua::wrap<l_item_get_icon>},
+    {"index", lua::wrap<l_index>},
+    {"name", lua::wrap<l_name>},
+    {"caption", lua::wrap<l_caption>},
+    {"stack_size", lua::wrap<l_stack_size>},
+    {"defs_count", lua::wrap<l_defs_count>},
+    {"icon", lua::wrap<l_get_icon>},
+    {"get_placing_block", lua::wrap<l_get_placing_block>},
+    {"get_model_name", lua::wrap<l_get_model_name>},
     {NULL, NULL}
 };

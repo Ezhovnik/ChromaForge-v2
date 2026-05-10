@@ -180,6 +180,7 @@ void WorldRenderer::setupWorldShader(
     shader->uniform1f("u_fogFactor", fogFactor);
     shader->uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
     shader->uniform3f("u_cameraPos", camera.position);
+    shader->uniform2f("u_lightDir", skybox->getLightDir());
     shader->uniform1i("u_cubemap", 1);
     shader->uniform1f("u_timer", timer);
     shader->uniform1f("u_dayTime", level->getWorld()->getInfo().daytime);
@@ -382,7 +383,7 @@ void WorldRenderer::renderHands(const Camera& camera, const Assets& assets) {
     modelBatch->draw(
         matrix,
         glm::vec3(1.0f),
-        assets.get<model::Model>(def.name + ".model"),
+        assets.get<model::Model>(def.modelName),
         &map
     );
     Window::clearDepth();
@@ -452,7 +453,7 @@ void WorldRenderer::draw(
             renderLevel(ctx, camera, settings, deltaTime, pause);
             if (hudVisible) {
                 renderLines(camera, linesShader, ctx);
-                renderHands(camera, *assets);
+                if (!player->isNoclip()) renderHands(camera, *assets);
             }
         }
 

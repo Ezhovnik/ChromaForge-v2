@@ -32,7 +32,7 @@ struct Entity {
         } skeleton;
         struct {
             bool velocity = true;
-            bool settings = false;
+            bool settings = true;
         } body;
     } save {};
 

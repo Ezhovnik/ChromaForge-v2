@@ -22,6 +22,8 @@ private:
 public:
     SettingsHandler(EngineSettings& settings);
 
+    dv::value getDefault(const std::string& name) const;
+
     dv::value getValue(const std::string& name) const;
     void setValue(const std::string& name, const dv::value& value);
 

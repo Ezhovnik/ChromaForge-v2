@@ -401,6 +401,7 @@ void ContentLoader::loadItem(Item& def, const std::string& name, const std::file
     root.at("icon").get(def.icon);
     root.at("placing-block").get(def.placingBlock);
     root.at("script-name").get(def.scriptName);
+    root.at("model-name").get(def.modelName);
     root.at("stack-size").get(def.stackSize);
 
     if (auto found = root.at("emission")) {
