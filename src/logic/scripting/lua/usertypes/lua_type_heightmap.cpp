@@ -226,8 +226,10 @@ static int l_resize(lua::State* L) {
         uint height = touinteger(L, 3);
         auto interpName = tostring(L, 4);
         auto interpolation = InterpolationType::Nearest;
-        if (!std::strcmp(interpName, "linear")) {
+        if (std::strcmp(interpName, "linear") == 0) {
             interpolation = InterpolationType::Linear;
+        } else if (std::strcmp(interpName, "cubic") == 0) {
+            interpolation = InterpolationType::Cubic;
         }
         heightmap->getHeightmap()->resize(width, height, interpolation);
     }

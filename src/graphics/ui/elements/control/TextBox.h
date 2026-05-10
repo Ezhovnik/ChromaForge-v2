@@ -17,6 +17,7 @@ namespace gui {
         std::wstring placeholder;
         wstringsupplier supplier = nullptr;
         wstringconsumer consumer = nullptr;
+        wstringconsumer subconsumer = nullptr;
         wstringchecker validator = nullptr;
         runnable onEditStart = nullptr;
         runnable onUpPressed;
@@ -60,6 +61,8 @@ namespace gui {
         void performEditingKeyboardEvents(keycode key);
 
         void refreshLabel();
+
+        void onInput();
     public:
         TextBox(
             std::wstring placeholder, 
@@ -69,6 +72,8 @@ namespace gui {
         virtual void setTextSupplier(wstringsupplier supplier);
 
         virtual void setTextConsumer(wstringconsumer consumer);
+
+        virtual void setTextSubConsumer(wstringconsumer consumer);
 
         virtual void setTextValidator(wstringchecker validator);
 

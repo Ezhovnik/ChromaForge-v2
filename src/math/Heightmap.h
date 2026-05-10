@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <optional>
 
 #include <typedefs.h>
 
@@ -10,6 +11,8 @@ enum class InterpolationType {
     Linear,
     Cubic
 };
+
+std::optional<InterpolationType> InterpolationType_from(std::string_view str);
 
 class Heightmap {
 private:

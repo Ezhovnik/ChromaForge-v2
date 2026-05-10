@@ -146,6 +146,9 @@ struct Generator {
     uint heightsBPD = 4;
     uint wideStructsChunksRadius = 3;
 
+    InterpolationType biomesInterpolation = InterpolationType::Linear;
+    InterpolationType heightsInterpolation = InterpolationType::Linear;
+
     std::vector<uint8_t> heightmapInputs;
 
     std::unordered_map<std::string, size_t> structuresIndices;

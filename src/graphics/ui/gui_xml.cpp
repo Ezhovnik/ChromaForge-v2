@@ -301,6 +301,13 @@ static std::shared_ptr<UINode> readTextBox(
             reader.getFilename()
         ));
     }
+    if (element->has("sub-consumer")) {
+        textbox->setTextSubConsumer(scripting::create_wstring_consumer(
+            reader.getEnvironment(),
+            element->attr("sub-consumer").getText(),
+            reader.getFilename()
+        ));
+    }
     if (element->has("supplier")) {
         textbox->setTextSupplier(scripting::create_wstring_supplier(
             reader.getEnvironment(),
