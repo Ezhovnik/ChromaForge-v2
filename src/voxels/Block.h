@@ -108,6 +108,7 @@ public:
     std::string scriptName = name.substr(name.find(':') + 1);
     uint inventorySize = 0;
     std::string surfaceReplacement = name;
+    std::string overlayTexture;
     std::string uiLayout = name;
     uint sparkInterval = 1;
 

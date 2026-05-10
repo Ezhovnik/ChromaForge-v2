@@ -47,7 +47,7 @@ LevelScreen::LevelScreen(
         worldRenderer->clear();
     }));
     keepAlive(settings.camera.fov.observe([=](double value) {
-        controller->getPlayer()->camera->setFov(glm::radians(value));
+        controller->getPlayer()->fpCamera->setFov(glm::radians(value));
     }));
     keepAlive(Events::getBinding(BIND_CHUNKS_RELOAD).onactived.add([=](){
         controller->getLevel()->chunks->saveAndClear();
@@ -91,7 +91,7 @@ void LevelScreen::saveWorldPreview() {
         auto& settings = engine->getSettings();
         int previewSize = settings.ui.worldPreviewSize.get();
 
-        Camera camera = *player->camera;
+        Camera camera = *player->fpCamera;
         camera.setFov(glm::radians(70.0f));
         Viewport viewport(previewSize * 1.5, previewSize);
         DrawContext parent_ctx(nullptr, {Window::width, Window::height}, batch.get());

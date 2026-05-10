@@ -127,6 +127,7 @@ void Block::cloneTo(Block& dst) {
     dst.uiLayout = uiLayout;
     dst.inventorySize = inventorySize;
     dst.sparkInterval = sparkInterval;
+    dst.overlayTexture = overlayTexture;
 }
 
 static std::set<std::string, std::less<>> RESERVED_BLOCK_FIELDS {

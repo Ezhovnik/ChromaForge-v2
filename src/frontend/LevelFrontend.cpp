@@ -36,9 +36,9 @@ LevelFrontend::LevelFrontend(
                 glm::vec3 pos {};
                 auto soundsCamera = currentPlayer->currentCamera.get();
                 if (soundsCamera == currentPlayer->spCamera.get() || soundsCamera == currentPlayer->tpCamera.get()) {
-                    soundsCamera = currentPlayer->camera.get();
+                    soundsCamera = currentPlayer->fpCamera.get();
                 }
-                bool relative = player == currentPlayer && soundsCamera == currentPlayer->camera.get();
+                bool relative = player == currentPlayer && soundsCamera == currentPlayer->fpCamera.get();
                 if (!relative) {
                     pos = player->getPosition();
                 }

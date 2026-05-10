@@ -304,7 +304,7 @@ void WorldRenderer::renderDebugLines(
 
     if (drawChunkBorders) {
         linesShader->uniformMatrix("u_projview", camera.getProjView());
-        glm::vec3 coord = player->camera->position;
+        glm::vec3 coord = player->fpCamera->position;
         if (coord.x < 0) coord.x--;
         if (coord.z < 0) coord.z--;
         int cx = floordiv(static_cast<int>(coord.x), CHUNK_WIDTH);
@@ -438,14 +438,14 @@ void WorldRenderer::draw(
     const auto& worldInfo = world->getInfo();
     skybox->refresh(pctx, worldInfo.daytime, 1.0f + worldInfo.skyClearness * 2.0f, 4);
 
-    Assets* assets = engine->getAssets();
-    ShaderProgram* linesShader = assets->get<ShaderProgram>("lines");
+    const auto& assets = *engine->getAssets();
+    ShaderProgram* linesShader = assets.get<ShaderProgram>("lines");
 
     {
         DrawContext wctx = pctx.sub();
         postProcessing->use(wctx);
         Window::clearDepth();
-        skybox->draw(pctx, &camera, assets, worldInfo.daytime, worldInfo.skyClearness);
+        skybox->draw(pctx, camera, assets, worldInfo.daytime, worldInfo.skyClearness);
         {
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
@@ -453,18 +453,62 @@ void WorldRenderer::draw(
             renderLevel(ctx, camera, settings, deltaTime, pause);
             if (hudVisible) {
                 renderLines(camera, linesShader, ctx);
-                if (!player->isNoclip()) renderHands(camera, *assets);
+                if (!player->isNoclip() && player->currentCamera == player->fpCamera) {
+                    renderHands(camera, assets);
+                }
             }
         }
 
         if (hudVisible && player->debug) renderDebugLines(wctx, camera, linesShader);
+        renderBlockOverlay(wctx, assets);
     }
 
-    auto screenShader = assets->get<ShaderProgram>("screen");
+    auto screenShader = assets.get<ShaderProgram>("screen");
     screenShader->use();
     screenShader->uniform1f("u_timer", timer);
     screenShader->uniform1f("u_dayTime", worldInfo.daytime);
     postProcessing->render(pctx, screenShader);
+}
+
+void WorldRenderer::renderBlockOverlay(const DrawContext& wctx, const Assets& assets) {
+    int x = std::floor(player->currentCamera->position.x);
+    int y = std::floor(player->currentCamera->position.y);
+    int z = std::floor(player->currentCamera->position.z);
+    auto block = level->chunks->getVoxel(x, y, z);
+    if (block && block->id) {
+        const auto& def = level->content->getIndices()->blocks.require(block->id);
+        if (def.overlayTexture.empty()) return;
+
+        DrawContext ctx = wctx.sub();
+        ctx.setDepthTest(false);
+        ctx.setCullFace(false);
+
+        auto& shader = assets.require<ShaderProgram>("ui3d");
+        auto& atlas = assets.require<Atlas>("blocks");
+        shader.use();
+        batch3d->begin();
+        shader.uniformMatrix("u_projview", glm::mat4(1.0f));
+        shader.uniformMatrix("u_apply", glm::mat4(1.0f));
+        auto light = level->chunks->getLight(x, y, z);
+        float s = LightMap::extract(light, 3) / 15.0f;
+        glm::vec4 tint(
+            glm::min(1.0f, LightMap::extract(light, 0) / 15.0f + s),
+            glm::min(1.0f, LightMap::extract(light, 1) / 15.0f + s),
+            glm::min(1.0f, LightMap::extract(light, 2) / 15.0f + s),
+            1.0f
+        );
+        batch3d->texture(atlas.getTexture());
+        batch3d->sprite(
+            glm::vec3(),
+            glm::vec3(0, 1, 0),
+            glm::vec3(1, 0, 0),
+            2,
+            2,
+            atlas.get(def.overlayTexture),
+            tint
+        );
+        batch3d->flush();
+    }
 }
 
 void WorldRenderer::clear() {

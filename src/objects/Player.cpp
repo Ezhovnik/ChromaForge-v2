@@ -38,14 +38,14 @@ Player::Player(
 	speed(speed),
 	chosenSlot(0),
 	position(position),
-	camera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":first-person")),
+	fpCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":first-person")),
     spCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-front")),
     tpCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-back")),
-	currentCamera(camera),
+	currentCamera(fpCamera),
 	inventory(std::move(inventory)),
 	eid(eid)
 {
-	camera->setFov(glm::radians(90.0f));
+	fpCamera->setFov(glm::radians(90.0f));
     spCamera->setFov(glm::radians(90.0f));
     tpCamera->setFov(glm::radians(90.0f));
 }
@@ -96,16 +96,16 @@ void Player::updateInput(PlayerInput& input, float delta) {
 	// Вычисляем направление движения на основе ввода и ориентации камеры
 	glm::vec3 dir(0, 0, 0);
 	if (input.moveForward){
-		dir += camera->dir;
+		dir += fpCamera->dir;
 	}
 	if (input.moveBack){
-		dir -= camera->dir;
+		dir -= fpCamera->dir;
 	}
 	if (input.moveRight){
-		dir += camera->right;
+		dir += fpCamera->right;
 	}
 	if (input.moveLeft){
-		dir -= camera->right;
+		dir -= fpCamera->right;
 	}
 	// Если есть движение, нормализуем и придаём импульс
 	if (length(dir) > 0.0f) {
@@ -163,7 +163,7 @@ void Player::postUpdate() {
 
 	auto& skeleton = entity->getSkeleton();
 
-    skeleton.visible = currentCamera != camera;
+    skeleton.visible = currentCamera != fpCamera;
 
     auto body = skeleton.config->find("body");
     auto head = skeleton.config->find("head");
@@ -222,7 +222,7 @@ dv::value Player::serialize() const {
 void Player::deserialize(const dv::value& src) {
     const auto& posarr = src["position"];
     dv::get_vec(posarr, position);
-	camera->position = position;
+	fpCamera->position = position;
 
 	const auto& rotarr = src["rotation"];
     dv::get_vec(rotarr, cam);

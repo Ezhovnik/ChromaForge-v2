@@ -53,11 +53,13 @@ Skybox::Skybox(uint size, ShaderProgram* shader) : size(size), shader(shader), b
 
 Skybox::~Skybox() = default;
 
-void Skybox::drawBackground(Camera* camera, Assets* assets, int width, int height) {
-    ShaderProgram* backShader = assets->get<ShaderProgram>("background");
+void Skybox::drawBackground(
+    const Camera& camera, const Assets& assets, int width, int height
+) {
+    auto backShader = assets.get<ShaderProgram>("background");
     backShader->use();
-	backShader->uniformMatrix("u_view", camera->getView(false));
-	backShader->uniform1f("u_zoom", camera->zoom * camera->getFov() / (PI * 0.5f));
+	backShader->uniformMatrix("u_view", camera.getView(false));
+	backShader->uniform1f("u_zoom", camera.zoom * camera.getFov() / (PI * 0.5f));
 	backShader->uniform1f("u_ar", float(width) / float(height));
     backShader->uniform1i("u_cubemap", 1);
     bind();
@@ -86,7 +88,13 @@ void Skybox::drawStars(float angle, float opacity) {
 }
 
 // FIXME: Спрайты Луны и Солнца рисуются лежащими на боку
-void Skybox::draw(const DrawContext& pctx, Camera* camera, Assets* assets, float daytime, float fog) {
+void Skybox::draw(
+    const DrawContext& pctx,
+    const Camera& camera, 
+    const Assets& assets,
+    float daytime,
+    float fog
+) {
     const Viewport& viewport = pctx.getViewport();
     int width = viewport.getWidth();
 	int height = viewport.getHeight();
@@ -96,9 +104,9 @@ void Skybox::draw(const DrawContext& pctx, Camera* camera, Assets* assets, float
     DrawContext ctx = pctx.sub();
     ctx.setBlendMode(BlendMode::Addition);
 
-    auto shader = assets->get<ShaderProgram>("ui3d");
+    auto shader = assets.get<ShaderProgram>("ui3d");
     shader->use();
-    shader->uniformMatrix("u_projview", camera->getProjView(false));
+    shader->uniformMatrix("u_projview", camera.getProjView(false));
     shader->uniformMatrix("u_apply", glm::mat4(1.0f));
     batch3d->begin();
 
@@ -106,7 +114,7 @@ void Skybox::draw(const DrawContext& pctx, Camera* camera, Assets* assets, float
     float opacity = glm::pow(1.0f - fog, 7.0f);
 
     for (auto& sprite : sprites) {
-        batch3d->texture(assets->get<Texture>(sprite.texture));
+        batch3d->texture(assets.get<Texture>(sprite.texture));
 
         float sangle = daytime * float(PI) * 2.0f + sprite.phase;
         float distance = sprite.distance;

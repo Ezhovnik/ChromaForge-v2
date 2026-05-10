@@ -52,14 +52,14 @@ static int l_caption(lua::State* L) {
     return 0;
 }
 
-static int l_get_placing_block(lua::State* L) {
+static int l_placing_block(lua::State* L) {
     if (auto def = get_item_def(L, 1)) {
         return lua::pushinteger(L, def->rt.placingBlock);
     }
     return 0;
 }
 
-static int l_get_model_name(lua::State* L) {
+static int l_model_name(lua::State* L) {
     if (auto def = get_item_def(L, 1)) {
         return lua::pushstring(L, def->modelName);
     }
@@ -73,7 +73,7 @@ const luaL_Reg itemlib [] = {
     {"stack_size", lua::wrap<l_stack_size>},
     {"defs_count", lua::wrap<l_defs_count>},
     {"icon", lua::wrap<l_get_icon>},
-    {"get_placing_block", lua::wrap<l_get_placing_block>},
-    {"get_model_name", lua::wrap<l_get_model_name>},
+    {"placing_block", lua::wrap<l_placing_block>},
+    {"model_name", lua::wrap<l_model_name>},
     {NULL, NULL}
 };

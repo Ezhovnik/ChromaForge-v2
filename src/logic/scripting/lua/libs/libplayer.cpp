@@ -122,7 +122,7 @@ static int l_get_selected_block(lua::State* L) {
 
 static int l_get_dir(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        return lua::pushvec3(L, player->camera->front);
+        return lua::pushvec3(L, player->fpCamera->front);
     }
     return 0;
 }

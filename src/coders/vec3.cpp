@@ -127,7 +127,6 @@ static model::Mesh load_mesh(
         LOG_ERROR("Compression is not supported yet");
         throw std::runtime_error("Compression is not supported yet");
     }
-    assert(flags == 0);
     std::vector<VertexAttribute> attributes;
     for (int i = 0; i < attributeCount; ++i) {
         attributes.push_back(load_attribute(reader));

@@ -73,7 +73,7 @@ private:
 
     entityid_t selectedEid;
 public:
-	std::shared_ptr<Camera> camera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
+	std::shared_ptr<Camera> fpCamera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
     std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
 
     bool debug = false;

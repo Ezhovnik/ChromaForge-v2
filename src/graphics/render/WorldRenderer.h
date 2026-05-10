@@ -67,6 +67,8 @@ private:
 
 	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);
 
+	void renderBlockOverlay(const DrawContext& context, const Assets& assets);
+
 	void setupWorldShader(
         ShaderProgram* shader,
         const Camera& camera,
