@@ -18,12 +18,7 @@
 #include <graphics/core/Atlas.h>
 #include <settings.h>
 #include <core_content_defs.h>
-
-inline constexpr uint MB_VERTEX_SIZE = 9;
-
-static const vattr attrs[] = {
-    {3}, {2}, {3}, {1}, {0}
-};
+#include <graphics/render/MainBatch.h>
 
 inline constexpr glm::vec3 X(1, 0, 0);
 inline constexpr glm::vec3 Y(0, 1, 0);
@@ -56,20 +51,10 @@ ModelBatch::ModelBatch(
     Assets* assets,
     Chunks* chunks,
     const EngineSettings* settings
-) : buffer(std::make_unique<float[]>(capacity * MB_VERTEX_SIZE)),
-    capacity(capacity),
-    index(0),
-    mesh(std::make_unique<Mesh>(buffer.get(), 0, attrs)),
+) : batch(std::make_unique<MainBatch>(capacity)),
     assets(assets),
     chunks(chunks),
-    settings(settings)
-{
-    const ubyte pixels[] = {
-        255, 255, 255, 255,
-    };
-    ImageData image(ImageFormat::rgba8888, 1, 1, pixels);
-    blank = Texture::from(&image);
-}
+    settings(settings) {}
 
 ModelBatch::~ModelBatch() = default;
 
@@ -100,16 +85,14 @@ void ModelBatch::draw(
     size_t vcount = mesh.vertices.size();
     const auto& vertexData = mesh.vertices.data();
     for (size_t i = 0; i < vcount / 3; ++i) {
-        if (index + MB_VERTEX_SIZE * 3 > capacity * MB_VERTEX_SIZE) {
-            flush();
-        }
+        batch->prepare(3);
         for (size_t j = 0; j < 3; ++j) {
             const auto vert = vertexData[i * 3 + j];
             auto norm = rotation * vert.normal;
             float d = glm::dot(norm, SUN_VECTOR);
             d = 0.8f + d * 0.2f;
 
-            vertex(matrix * glm::vec4(vert.coord, 1.0f), vert.uv, lights * d, tint);
+            batch->vertex(matrix * glm::vec4(vert.coord, 1.0f), vert.uv, lights * d, tint);
         }
     }
 }
@@ -144,7 +127,7 @@ void ModelBatch::render() {
             backlight
         );
     }
-    flush();
+    batch->flush();
     entries.clear();
 }
 
@@ -156,28 +139,11 @@ void ModelBatch::setTexture(const std::string& name, const texture_names_map* va
     if (varTextures && name.at(0) == '$') {
         const auto& found = varTextures->find(name);
         if (found == varTextures->end()) {
-            return setTexture(nullptr);
+            return batch->setTexture(nullptr);
         } else {
             return setTexture(found->second, varTextures);
         }
     }
-    auto textureRegion = util::get_texture_region(*assets, name, "blocks:" + TEXTURE_NOTFOUND);
-    setTexture(textureRegion.texture);
-    region = textureRegion.region;
-}
-
-void ModelBatch::setTexture(const Texture* texture) {
-    if (texture == nullptr) texture = blank.get();
-    if (texture != this->texture) flush();
-    this->texture = texture;
-    region = UVRegion {0.0f, 0.0f, 1.0f, 1.0f};
-}
-
-void ModelBatch::flush() {
-    if (index == 0) return;
-    if (texture == nullptr) texture = blank.get();
-    texture->bind();
-    mesh->reload(buffer.get(), index / MB_VERTEX_SIZE);
-    mesh->draw();
-    index = 0;
+    auto region = util::get_texture_region(*assets, name, "blocks:" + TEXTURE_NOTFOUND);
+    batch->setTexture(region.texture, region.region);
 }
