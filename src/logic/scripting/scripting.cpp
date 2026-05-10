@@ -161,32 +161,41 @@ void scripting::on_world_load(LevelController* controller) {
 
     auto L = lua::get_main_state();
     for (auto& pack : scripting::engine->getContentPacks()) {
-        lua::emit_event(L, pack.id + ".worldopen");
+        lua::emit_event(L, pack.id + ":.worldopen");
     }
 }
 
 void scripting::on_world_spark() {
     auto L = lua::get_main_state();
     for (auto& pack : scripting::engine->getContentPacks()) {
-        lua::emit_event(L, pack.id + ".worldspark");
+        lua::emit_event(L, pack.id + ":.worldspark");
     }
 }
 
 void scripting::on_world_save() {
     auto L = lua::get_main_state();
     for (auto& pack : scripting::engine->getContentPacks()) {
-        lua::emit_event(L, pack.id + ".worldsave");
+        lua::emit_event(L, pack.id + ":.worldsave");
     }
 }
 
 void scripting::on_world_quit() {
     auto L = lua::get_main_state();
     for (auto& pack : scripting::engine->getContentPacks()) {
-        lua::emit_event(L, pack.id + ".worldquit");
+        lua::emit_event(L, pack.id + ":.worldquit");
     }
+    scripting::level = nullptr;
+    scripting::content = nullptr;
+    scripting::indices = nullptr;
+    scripting::blocks = nullptr;
+    scripting::controller = nullptr;
+}
+
+void scripting::cleanup() {
+    auto L = lua::get_main_state();
 
     lua::getglobal(L, "pack");
-    for (auto& pack : scripting::engine->getContentPacks()) {
+    for (auto& pack : scripting::engine->getAllContentPacks()) {
         lua::getfield(L, "unload");
         lua::pushstring(L, pack.id);
         lua::call_nothrow(L, 1);   
@@ -196,11 +205,6 @@ void scripting::on_world_quit() {
     if (lua::getglobal(L, "__scripts_cleanup")) {
         lua::call_nothrow(L, 0);
     }
-    scripting::level = nullptr;
-    scripting::content = nullptr;
-    scripting::indices = nullptr;
-    scripting::blocks = nullptr;
-    scripting::controller = nullptr;
 }
 
 void scripting::on_blocks_spark(const Block& block, int tps) {
@@ -242,7 +246,7 @@ void scripting::on_block_placed(Player* player, const Block& block, int x, int y
     };
     for (auto& [packid, pack] : content->getPacks()) {
         if (pack->worldfuncsset.onblockplaced) {
-            lua::emit_event(lua::get_main_state(), packid + ".blockplaced", world_event_args);
+            lua::emit_event(lua::get_main_state(), packid + ":.blockplaced", world_event_args);
         }
     }
 }
@@ -264,7 +268,7 @@ void scripting::on_block_broken(Player* player, const Block& block, int x, int y
     };
     for (auto& [packid, pack] : content->getPacks()) {
         if (pack->worldfuncsset.onblockbroken) {
-            lua::emit_event(lua::get_main_state(), packid + ".blockbroken", world_event_args);
+            lua::emit_event(lua::get_main_state(), packid + ":.blockbroken", world_event_args);
         }
     }
 }
@@ -537,7 +541,7 @@ bool scripting::register_event(int env, const std::string& name, const std::stri
     if (lua::getfield(L, name)) {
         lua::pop(L);
         lua::getglobal(L, "events");
-        lua::getfield(L, "on");
+        lua::getfield(L, "reset");
         lua::pushstring(L, id);
         lua::getfield(L, name, -4);
         lua::call_nothrow(L, 2);
@@ -592,13 +596,13 @@ void scripting::load_world_script(
     int env = *senv;
     lua::pop(lua::get_main_state(), load_script(env, "world", file));
     register_event(env, "init", prefix + ".init");
-    register_event(env, "on_world_open", prefix + ".worldopen");
-    register_event(env, "on_world_spark", prefix + ".worldspark");
-    register_event(env, "on_world_save", prefix + ".worldsave");
-    register_event(env, "on_world_quit", prefix + ".worldquit");
+    register_event(env, "on_world_open", prefix + ":.worldopen");
+    register_event(env, "on_world_spark", prefix + ":.worldspark");
+    register_event(env, "on_world_save", prefix + ":.worldsave");
+    register_event(env, "on_world_quit", prefix + ":.worldquit");
 
-    funcsset.onblockplaced = register_event(env, "on_block_placed", prefix + ".blockplaced");
-    funcsset.onblockbroken = register_event(env, "on_block_broken", prefix + ".blockbroken");
+    funcsset.onblockplaced = register_event(env, "on_block_placed", prefix + ":.blockplaced");
+    funcsset.onblockbroken = register_event(env, "on_block_broken", prefix + ":.blockbroken");
 }
 
 void scripting::load_layout_script(const scriptenv& senv, const std::string& prefix, const std::filesystem::path& file, uidocscript& script) {

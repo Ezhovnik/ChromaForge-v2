@@ -230,7 +230,7 @@ void Hud::processInput(bool visible) {
         }
     }
 
-    if (!pause && Events::isActive(BIND_DEVTOOLS_CONSOLE)) {
+    if (!pause && Events::justActive(BIND_DEVTOOLS_CONSOLE)) {
         showOverlay(assets->get<UIDocument>(BUILTIN_CONTENT_NAMESPACE + ":console"), false);
     }
 

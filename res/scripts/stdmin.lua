@@ -237,6 +237,7 @@ function on_deprecated_call(name, alternatives)
         return
     end
     __warnings_hidden[name] = true
+    events.emit("builtin:warning", "Deprecated call", name)
     if alternatives then
         debug.warning("Deprecated function called ("..name.."), use ".. alternatives.." instead\n"..debug.traceback())
     else

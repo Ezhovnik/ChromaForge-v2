@@ -284,6 +284,8 @@ static void load_configs(const std::filesystem::path& root) {
 }
 
 void Engine::loadContent() {
+    scripting::cleanup();
+
     LOG_INFO("Loading content");
     auto resdir = paths->getResourcesFolder();
 
@@ -329,6 +331,8 @@ void Engine::loadContent() {
 }
 
 void Engine::resetContent() {
+    scripting::cleanup();
+
     auto resdir = paths->getResourcesFolder();
     std::vector<PathsRoot> resRoots;
     {

@@ -217,14 +217,6 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
             loader.tryAddSound(material.breakSound);
         }
 
-		// Макеты интерфейса из корневой папки "layouts" (встроенный контент)
-		addLayouts(
-			0, 
-			BUILTIN_CONTENT_NAMESPACE, 
-			loader.getPaths()->getMainRoot()/std::filesystem::path(LAYOUTS_FOLDER), 
-			loader
-		);
-
 		// Макеты из каждого установленного пака
         for (auto& entry : content->getPacks()) {
 			auto pack = entry.second.get();
