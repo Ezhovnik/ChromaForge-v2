@@ -53,6 +53,7 @@ static int l_close_world(lua::State* L) {
     if (scripting::controller == nullptr) throw std::runtime_error("No world open");
     bool save_world = lua::toboolean(L, 1);
     if (save_world) scripting::controller->saveWorld();
+    Events::enableBindings();
     scripting::engine->setScreen(nullptr);
     scripting::engine->setScreen(std::make_shared<MenuScreen>(scripting::engine));
     return 0;

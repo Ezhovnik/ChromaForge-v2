@@ -69,4 +69,6 @@ public:
         const std::string& source,
         BindType bindType
     );
+
+    static void enableBindings();
 };

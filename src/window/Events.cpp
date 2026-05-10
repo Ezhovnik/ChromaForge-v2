@@ -128,6 +128,10 @@ void Events::pollEvents() {
     glfwPollEvents();
 
     for (auto& [name, binding] : bindings) {
+        if (!binding.enable) {
+            binding.state = false;
+            continue;
+        }
 		binding.justChange = false;
 
 		bool newstate = false;
@@ -232,4 +236,11 @@ Binding& Events::getBinding(const std::string& name) {
         throw std::runtime_error("Binding '" + name + "' does not exist");
     }
     return found->second;
+}
+
+void Events::enableBindings() {
+    for (auto& entry : bindings) {
+        auto& binding = entry.second;
+        binding.enable = true;
+    }
 }

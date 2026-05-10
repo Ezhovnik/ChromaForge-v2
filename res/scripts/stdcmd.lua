@@ -124,6 +124,21 @@ console.add_command(
 )
 
 console.add_command(
+    "time.daycycle operation:[stop|reset]",
+    "Control time.daycycle",
+    function(args, kwargs)
+        local operation = args[1]
+        if operation == "stop" then
+            world.set_day_time_speed(0)
+            return "Daily cycle has stopped"
+        else
+            world.set_day_time_speed(1.0)
+            return "Daily cycle has started"
+        end
+    end
+)
+
+console.add_command(
     "player.respawn player:sel=$obj.id",
     "Respawn player entity",
     function(args, kwargs)
