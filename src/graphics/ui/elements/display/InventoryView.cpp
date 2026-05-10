@@ -29,6 +29,7 @@
 #include <items/ItemStack.h>
 #include <frontend/locale/langs.h>
 #include <graphics/core/Texture.h>
+#include <assets/assets_util.h>
 
 using namespace gui;
 
@@ -164,20 +165,10 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
             break;
         }
         case ItemIconType::Sprite: {
-            size_t index = item.icon.find(':');
-            std::string name = item.icon.substr(index + 1);
-            UVRegion region(0.0f, 0.0, 1.0f, 1.0f);
-            if (index == std::string::npos) {
-                batch->texture(assets->get<Texture>(name));
-            } else {
-                std::string atlasname = item.icon.substr(0, index);
-                Atlas* atlas = assets->get<Atlas>(atlasname);
-                if (atlas && atlas->has(name)) {
-                    region = atlas->get(name);
-                    batch->texture(atlas->getTexture());
-                }
-            }
-            batch->rect(pos.x, pos.y, slotSize, slotSize, 0, 0, 0, region, false, true, tint);
+            auto textureRegion = util::get_texture_region(*assets, item.icon, "blocks:" + TEXTURE_NOTFOUND);
+
+            batch->texture(textureRegion.texture);
+            batch->rect(pos.x, pos.y, slotSize, slotSize, 0, 0, 0, textureRegion.region, false, true, tint);
             break;
         }
     }

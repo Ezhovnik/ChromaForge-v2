@@ -104,7 +104,7 @@ void Batch3D::face(
 	vertex(coord + axisY * h, region.u1, region.v2, tint.r, tint.g, tint.b, tint.a);
 }
 
-void Batch3D::texture(Texture* new_texture){
+void Batch3D::texture(const Texture* new_texture){
 	if (currentTexture == new_texture) return;
 	flush();
 	currentTexture = new_texture;

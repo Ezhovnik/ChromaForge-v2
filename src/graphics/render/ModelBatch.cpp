@@ -7,6 +7,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include <assets/assets_util.h>
 #include <graphics/core/Mesh.h>
 #include <graphics/core/Model.h>
 #include <graphics/core/Texture.h>
@@ -16,6 +17,7 @@
 #include <lighting/LightMap.h>
 #include <graphics/core/Atlas.h>
 #include <settings.h>
+#include <core_content_defs.h>
 
 inline constexpr uint MB_VERTEX_SIZE = 9;
 
@@ -151,7 +153,7 @@ void ModelBatch::setLightsOffset(const glm::vec3& offset) {
 }
 
 void ModelBatch::setTexture(const std::string& name, const texture_names_map* varTextures) {
-    if (name.at(0) == '$') {
+    if (varTextures && name.at(0) == '$') {
         const auto& found = varTextures->find(name);
         if (found == varTextures->end()) {
             return setTexture(nullptr);
@@ -159,25 +161,12 @@ void ModelBatch::setTexture(const std::string& name, const texture_names_map* va
             return setTexture(found->second, varTextures);
         }
     }
-    size_t sep = name.find(':');
-    if (sep == std::string::npos) {
-        setTexture(assets->get<Texture>(name));
-    } else {
-        auto atlas = assets->get<Atlas>(name.substr(0, sep));
-        if (atlas == nullptr) {
-            setTexture(nullptr);
-        } else {
-            setTexture(atlas->getTexture());
-            if (auto reg = atlas->getIf(name.substr(sep + 1))) {
-                region = *reg;
-            } else {
-                setTexture("blocks:notfound", varTextures);
-            }
-        }
-    }
+    auto textureRegion = util::get_texture_region(*assets, name, "blocks:" + TEXTURE_NOTFOUND);
+    setTexture(textureRegion.texture);
+    region = textureRegion.region;
 }
 
-void ModelBatch::setTexture(Texture* texture) {
+void ModelBatch::setTexture(const Texture* texture) {
     if (texture == nullptr) texture = blank.get();
     if (texture != this->texture) flush();
     this->texture = texture;

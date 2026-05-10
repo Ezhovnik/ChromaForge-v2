@@ -46,6 +46,7 @@
 #include <graphics/core/Model.h>
 #include <objects/Entities.h>
 #include <logic/scripting/scripting_hud.h>
+#include <assets/assets_util.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -378,13 +379,12 @@ void WorldRenderer::renderHands(const Camera& camera, const Assets& assets) {
     offset = glm::vec3(newX, offset.y, newZ);
     matrix = matrix * glm::translate(glm::mat4(1.0f), offset);
 
-    texture_names_map map = {};
     modelBatch->setLightsOffset(camera.position);
     modelBatch->draw(
         matrix,
         glm::vec3(1.0f),
         assets.get<model::Model>(def.modelName),
-        &map
+        nullptr
     );
     Window::clearDepth();
     setupWorldShader(entityShader, hudcam, engine->getSettings(), 0.0f);
@@ -479,12 +479,15 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx, const Assets& as
         const auto& def = level->content->getIndices()->blocks.require(block->id);
         if (def.overlayTexture.empty()) return;
 
+        auto textureRegion = util::get_texture_region(
+            assets, def.overlayTexture, "blocks:" + TEXTURE_NOTFOUND
+        );
+
         DrawContext ctx = wctx.sub();
         ctx.setDepthTest(false);
         ctx.setCullFace(false);
 
         auto& shader = assets.require<ShaderProgram>("ui3d");
-        auto& atlas = assets.require<Atlas>("blocks");
         shader.use();
         batch3d->begin();
         shader.uniformMatrix("u_projview", glm::mat4(1.0f));
@@ -497,14 +500,14 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx, const Assets& as
             glm::min(1.0f, LightMap::extract(light, 2) / 15.0f + s),
             1.0f
         );
-        batch3d->texture(atlas.getTexture());
+        batch3d->texture(textureRegion.texture);
         batch3d->sprite(
             glm::vec3(),
             glm::vec3(0, 1, 0),
             glm::vec3(1, 0, 0),
             2,
             2,
-            atlas.get(def.overlayTexture),
+            textureRegion.region,
             tint
         );
         batch3d->flush();

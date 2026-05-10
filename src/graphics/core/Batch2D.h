@@ -28,7 +28,7 @@ class Batch2D : public Flushable {
 	glm::vec4 color;
 
 	std::unique_ptr<Texture> blank; ///< Белая текстура 1x1 для случаев, когда текстура не задана
-	Texture* currentTexture; ///< Текущая активная текстура
+	const Texture* currentTexture; ///< Текущая активная текстура
      DrawPrimitive primitive = DrawPrimitive::Triangle;
      UVRegion region {0.0f, 0.0f, 1.0f, 1.0f};
 
@@ -74,9 +74,9 @@ public:
 	/**
      * @brief Устанавливает текущую текстуру. Если текстура отличается от предыдущей,
      *        вызывает flush() для отрисовки накопленных данных.
-     * @param new_texture Указатель на текстуру (может быть nullptr).
+     * @param texture Указатель на текстуру (может быть nullptr).
      */
-	void texture(Texture* texture);
+	void texture(const Texture* texture);
 
 	/**
      * @brief Сбрасывает текстуру в nullptr (биндит blank).
