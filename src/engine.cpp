@@ -276,7 +276,9 @@ static void load_configs(const std::filesystem::path& root) {
     auto bindsFile = configFolder/std::filesystem::path("bindings.toml");
     if (std::filesystem::is_regular_file(bindsFile)) {
         Events::loadBindings(
-            bindsFile.u8string(), files::read_string(bindsFile)
+            bindsFile.u8string(),
+            files::read_string(bindsFile),
+            BindType::Bind
         );
     }
 }
@@ -478,7 +480,11 @@ void Engine::loadControls() {
     if (std::filesystem::is_regular_file(controls_file)) {
         LOG_INFO("Reading the controls file");
         std::string text = files::read_string(controls_file);
-        Events::loadBindings(controls_file.u8string(), text);
+        Events::loadBindings(
+            controls_file.u8string(),
+            text,
+            BindType::Bind
+        );
         LOG_INFO("The controls file has been successfully read");
     }
 }

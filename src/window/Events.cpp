@@ -90,6 +90,11 @@ void Events::bind(const std::string& name, inputType type, int code) {
 }
 
 void Events::rebind(const std::string& name, inputType type, int code) {
+    const auto& found = bindings.find(name);
+    if (found == bindings.end()) {
+        LOG_ERROR("Binding '{}' does not exist", name);
+        throw std::runtime_error("Binding '" + name + "' does not exist");
+    }
     bindings[name] = Binding(type, code);
 }
 
@@ -189,7 +194,11 @@ std::string Events::writeBindings() {
     return toml::stringify(obj);
 }
 
-void Events::loadBindings(const std::string& filename, const std::string& source) {
+void Events::loadBindings(
+    const std::string& filename,
+    const std::string& source,
+    BindType bindType
+) {
     auto map = toml::parse(filename, source);
     for (auto& [sectionName, section] : map.asObject()) {
         for (auto& [name, value] : section.asObject()) {
@@ -207,16 +216,20 @@ void Events::loadBindings(const std::string& filename, const std::string& source
                 LOG_ERROR("Unknown input type: {} (binding {})", prefix, util::quote(key));
                 continue;
             }
-            Events::bind(key, type, code);
+            if (bindType == BindType::Bind) {
+                Events::bind(key, type, code);
+            } else if (bindType == BindType::Rebind) {
+                Events::rebind(key, type, code);
+            }
         }
     }
 }
 
 Binding& Events::getBinding(const std::string& name) {
-    auto found = bindings.find(name);
+    const auto found = bindings.find(name);
     if (found == bindings.end()) {
-        LOG_ERROR("Binding '{}' does not exists", name);
-        throw std::runtime_error("Binding '" + name + "' does not exists");
+        LOG_ERROR("Binding '{}' does not exist", name);
+        throw std::runtime_error("Binding '" + name + "' does not exist");
     }
     return found->second;
 }

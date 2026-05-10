@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <window/input.h>
 #include <window/Events.h>
@@ -6,6 +8,7 @@
 #include <frontend/hud.h>
 #include <util/stringutil.h>
 #include <graphics/ui/GUI.h>
+#include <files/files.h>
 
 namespace scripting {
     extern Hud* hud;
@@ -99,6 +102,27 @@ static int l_is_pressed(lua::State* L) {
     }
 }
 
+static void resetPackBindings(std::filesystem::path& packFolder) {
+    auto configFolder = packFolder/std::filesystem::path("config");
+    auto bindsFile = configFolder/std::filesystem::path("bindings.toml");
+    if (std::filesystem::is_regular_file(bindsFile)) {
+        Events::loadBindings(
+            bindsFile.u8string(),
+            files::read_string(bindsFile),
+            BindType::Rebind
+        );
+    }
+}
+
+static int l_reset_bindings(lua::State*) {
+    auto resFolder = scripting::engine->getPaths()->getResourcesFolder();
+    resetPackBindings(resFolder);
+    for (auto& pack : scripting::engine->getContentPacks()) {
+        resetPackBindings(pack.folder);
+    }
+    return 0;
+}
+
 const luaL_Reg inputlib [] = {
     {"keycode", lua::wrap<l_keycode>},
     {"mousecode", lua::wrap<l_mousecode>},
@@ -108,5 +132,6 @@ const luaL_Reg inputlib [] = {
     {"get_binding_text", lua::wrap<l_get_binding_text>},
     {"is_active", lua::wrap<l_is_active>},
     {"is_pressed", lua::wrap<l_is_pressed>},
+    {"reset_bindings", lua::wrap<l_reset_bindings>},
     {NULL, NULL}
 };

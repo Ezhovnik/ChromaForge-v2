@@ -11,6 +11,11 @@
 
 inline constexpr short KEYS_BUFFER_SIZE = 1036;
 
+enum class BindType {
+    Bind = 0,
+    Rebind = 1
+};
+
 // Система обработки событий ввода (клавиатура, мышь)
 class Events {
 private:
@@ -59,5 +64,9 @@ public:
     static void setPosition(float xpos, float ypos);
 
     static std::string writeBindings();
-    static void loadBindings(const std::string& filename, const std::string& source);
+    static void loadBindings(
+        const std::string& filename,
+        const std::string& source,
+        BindType bindType
+    );
 };
