@@ -60,10 +60,12 @@ public:
     }
     void setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate state); // Устанавливает идентификатор вокселя по мировым координатам
 
-    light_t getLight(int32_t x, int32_t y, int32_t z);
-	ubyte getLight(int32_t x, int32_t y, int32_t z, int channel);
+    light_t getLight(int32_t x, int32_t y, int32_t z) const;
+	ubyte getLight(int32_t x, int32_t y, int32_t z, int channel) const;
 
-    glm::ivec3 seekOrigin(glm::ivec3 pos, const Block& def, blockstate state);
+    glm::ivec3 seekOrigin(
+        const glm::ivec3& pos, const Block& def, blockstate state
+    ) const;
 
     void setRotation(int32_t x, int32_t y, int32_t z, uint8_t rotation);
 
@@ -78,7 +80,10 @@ public:
     );
     glm::vec3 rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDist);
 
-    const AABB* isObstacleAt(float x, float y, float z);
+    const AABB* isObstacleAt(float x, float y, float z) const;
+    const AABB* isObstacleAt(const glm::vec3& pos) const {
+        return isObstacleAt(pos.x, pos.y, pos.z);
+    }
     bool isSolidBlock(int32_t x, int32_t y, int32_t z);
     bool isReplaceableBlock(int32_t x, int32_t y, int32_t z);
 	bool isObstacleBlock(int32_t x, int32_t y, int32_t z);

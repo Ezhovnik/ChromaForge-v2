@@ -3,6 +3,7 @@
 #include <glm/gtc/random.hpp>
 
 #include <graphics/core/Texture.h>
+#include <math/rand.h>
 
 Emitter::Emitter(
     std::variant<glm::vec3, entityid_t> origin,
@@ -14,7 +15,8 @@ Emitter::Emitter(
     prototype(std::move(prototype)),
     texture(texture),
     spawnInterval(spawnInterval),
-    count(count)
+    count(count),
+    behaviour()
 {
     this->prototype.emitter = this;
 }
@@ -35,11 +37,13 @@ void Emitter::update(float delta, std::vector<Particle>& particles) {
     timer += delta;
     while (count && timer > spawnInterval) {
         Particle particle = prototype;
+        particle.emitter = this;
+        particle.random = random.rand32();
         particle.position = position;
         particle.velocity += glm::ballRand(1.0f) * explosion;
         particles.push_back(std::move(particle));
         timer -= spawnInterval;
-        count--;
+        if (count > 0) count--;
     }
 }
 

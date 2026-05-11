@@ -68,10 +68,10 @@ voxel* Chunks::getVoxel(int32_t x, int32_t y, int32_t z) const {
 	return &chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 }
 
-const AABB* Chunks::isObstacleAt(float x, float y, float z) {
-	int ix = floor(x);
-	int iy = floor(y);
-	int iz = floor(z);
+const AABB* Chunks::isObstacleAt(float x, float y, float z) const {
+	int ix = std::floor(x);
+	int iy = std::floor(y);
+	int iz = std::floor(z);
 	voxel* vox = getVoxel(ix, iy, iz);
 
 	if (vox == nullptr) {
@@ -192,7 +192,7 @@ bool Chunks::isObstacleBlock(int32_t x, int32_t y, int32_t z) {
 	return contentIds->blocks.get(v->id)->obstacle;
 }
 
-ubyte Chunks::getLight(int32_t x, int32_t y, int32_t z, int channel) {
+ubyte Chunks::getLight(int32_t x, int32_t y, int32_t z, int channel) const {
 	if (y < 0 || y >= CHUNK_HEIGHT) return 0;
 
 	int cx = floordiv(x, CHUNK_WIDTH);
@@ -210,7 +210,7 @@ ubyte Chunks::getLight(int32_t x, int32_t y, int32_t z, int channel) {
 	return chunk->light_map.get(lx, y, lz, channel);
 }
 
-light_t Chunks::getLight(int32_t x, int32_t y, int32_t z){
+light_t Chunks::getLight(int32_t x, int32_t y, int32_t z) const {
 	if (y < 0 || y >= CHUNK_HEIGHT) return 0;
 
 	int cx = floordiv(x, CHUNK_WIDTH);
@@ -247,7 +247,10 @@ Chunk* Chunks::getChunk(int32_t x, int32_t z) {
 	return nullptr;
 }
 
-glm::ivec3 Chunks::seekOrigin(glm::ivec3 pos, const Block& def, blockstate state) {
+glm::ivec3 Chunks::seekOrigin(
+	const glm::ivec3& srcpos, const Block& def, blockstate state
+) const {
+	auto pos = srcpos;
     const auto& rotation = def.rotations.variants[state.rotation];
     auto segment = state.segment;
     while (true) {

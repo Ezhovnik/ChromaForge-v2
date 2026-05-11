@@ -66,7 +66,7 @@ WorldRenderer::WorldRenderer(
     frustumCulling(std::make_unique<Frustum>()),
     lineBatch(std::make_unique<LineBatch>()),
     modelBatch(std::make_unique<ModelBatch>(20'000, engine->getAssets(), level->chunks.get(), &engine->getSettings())),
-    particles(std::make_unique<ParticlesRenderer>(*engine->getAssets()))
+    particles(std::make_unique<ParticlesRenderer>(*engine->getAssets(), *levelFrontend->getLevel(), &engine->getSettings().graphics))
 {
     renderer = std::make_unique<ChunksRenderer>(
         level,

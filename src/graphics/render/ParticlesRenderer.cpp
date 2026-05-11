@@ -7,33 +7,63 @@
 #include <window/Camera.h>
 #include <assets/assets_util.h>
 #include <core_content_defs.h>
+#include <world/Level.h>
+#include <voxels/Chunks.h>
+#include <settings.h>
 
 size_t ParticlesRenderer::visibleParticles = 0;
 size_t ParticlesRenderer::aliveEmitters = 0;
 
-ParticlesRenderer::ParticlesRenderer(const Assets& assets) : batch(std::make_unique<MainBatch>(1024)) {
+ParticlesRenderer::ParticlesRenderer(
+    const Assets& assets,
+    const Level& level,
+    const GraphicsSettings* settings
+) : batch(std::make_unique<MainBatch>(1024)),
+    level(level),
+    settings(settings)
+{
     auto region = util::get_texture_region(assets, "blocks:moss_block", "");
-    Emitter emitter(
-        glm::vec3(0, 100, 0),
-        Particle {
-            nullptr,
-            glm::vec3(),
-            glm::vec3(),
-            5.0f,
-            region.region
-        },
-        region.texture,
-        0.001f,
-        1000
+    emitters.push_back(
+        std::make_unique<Emitter>(
+            glm::vec3(0, 80, 0),
+            Particle {
+                nullptr,
+                0,
+                glm::vec3(),
+                glm::vec3(),
+                5.0f,
+                region.region
+            },
+            region.texture,
+            0.002f,
+            -1
+        )
     );
-    emitters.push_back(std::make_unique<Emitter>(emitter));
 }
 
 ParticlesRenderer::~ParticlesRenderer() = default;
 
+static inline void update_particle(
+    Particle& particle, float deltaTime, const Chunks& chunks
+) {
+    const auto& behave = particle.emitter->behaviour;
+    auto& pos = particle.position;
+    auto& vel = particle.velocity;
+
+    vel += deltaTime * behave.gravity;
+    if (behave.collision && chunks.isObstacleAt(pos + vel * deltaTime)) {
+        vel *= 0.0f;
+    }
+    pos += vel * deltaTime;
+    particle.lifetime -= deltaTime;
+}
+
 void ParticlesRenderer::renderParticles(const Camera& camera, float deltaTime) {
     const auto& right = camera.right;
     const auto& up = camera.up;
+
+    const auto& chunks = *level.chunks;
+    bool backlight = settings->backlight.get();
 
     std::vector<const Texture*> unusedTextures;
 
@@ -50,19 +80,26 @@ void ParticlesRenderer::renderParticles(const Camera& camera, float deltaTime) {
         while (iter != vec.end()) {
             auto& particle = *iter;
 
-            particle.position += particle.velocity * deltaTime;
+            update_particle(particle, deltaTime, chunks);
+
+            glm::vec4 light(1, 1, 1, 0);
+            if (particle.emitter->behaviour.lighting) {
+                light = MainBatch::sampleLight(
+                    particle.position, chunks, backlight
+                );
+                light *= 0.8f + (particle.random % 200) * 0.001f;
+            }
 
             batch->quad(
                 particle.position,
                 right,
                 up,
                 glm::vec2(0.3f),
-                glm::vec4(1),
+                light,
                 glm::vec3(1.0f),
                 particle.region
             );
 
-            particle.lifetime -= deltaTime;
             if (particle.lifetime <= 0.0f) {
                 iter = vec.erase(iter);
             } else {
