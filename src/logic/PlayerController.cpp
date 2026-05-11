@@ -40,12 +40,14 @@ namespace ZoomConsts {
 	inline constexpr float INPUT = 0.1f;
 }
 
+constexpr float INTERACTION_RELOAD = 0.160f;
+
 CameraControl::CameraControl(
 	const std::shared_ptr<Player>& player, 
 	const CameraSettings& settings
 ) : player(player), 
-	camera(player->fpCamera), 
-	settings(settings), 
+	camera(player->fpCamera),
+	settings(settings),
 	offset(0.0f, 0.0f, 0.0f) {}
 
 void CameraControl::refresh() {
@@ -165,10 +167,11 @@ void CameraControl::update(PlayerInput input, float delta, Chunks* chunks) {
 }
 
 PlayerController::PlayerController(
-	Level* level, 
-	const EngineSettings& settings, 
+	const EngineSettings& settings,
+    Level* level,
 	BlocksController* blocksController
-) : level(level), 
+) : settings(settings),
+    level(level), 
 	player(level->getObject<Player>(0)), 
 	camControl(player, settings.camera), 
 	blocksController(blocksController) {}
@@ -188,8 +191,6 @@ void PlayerController::updateKeyboard() {
 	input.flight = Events::justActive(BIND_PLAYER_FLIGHT);
 	input.cameraMode = Events::justActive(BIND_CAM_MODE);
 
-	input.attack = Events::justActive(BIND_PLAYER_ATTACK);
-	input.build = Events::justActive(BIND_PLAYER_BUILD);
     input.dropBlock = Events::justActive(BIND_PLAYER_DROP);
 	input.pickBlock = Events::justActive(BIND_PLAYER_PICK);
 }
@@ -425,17 +426,27 @@ void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool
     }
 }
 
-void PlayerController::updateInteraction() {
+void PlayerController::updateInteraction(float deltaTime) {
     if (player->isNoclip()) return;
     auto indices = level->content->getIndices();
     auto chunks = level->chunks.get();
     const auto& selection = player->selection;
 
+    if (interactionTimer > 0.0f) {
+        interactionTimer -= deltaTime;
+    }
+    bool xkey = Events::isActive(BIND_PLAYER_FAST_INTERACTOIN);
+    float maxDistance = xkey ? 20.0f : 10.0f;
+    bool longInteraction = interactionTimer <= 0 || xkey;
+    input.attack = Events::justActive(BIND_PLAYER_ATTACK) || (longInteraction && Events::isActive(BIND_PLAYER_ATTACK));
+	input.build = Events::justActive(BIND_PLAYER_BUILD) || (longInteraction && Events::isActive(BIND_PLAYER_BUILD));
+    if (input.attack || input.build) interactionTimer = INTERACTION_RELOAD;
+
     auto inventory = player->getInventory();
     const ItemStack& stack = inventory->getSlot(player->getChosenSlot());
     auto& item = indices->items.require(stack.getItemId());
 
-    auto vox = updateSelection(10.0f);
+    auto vox = updateSelection(maxDistance);
     if (vox == nullptr) {
         if (input.build && item.rt.funcsset.on_use) {
             scripting::on_item_use(player.get(), item);
@@ -494,18 +505,21 @@ void PlayerController::update(float delta, bool input_flag, bool pause) {
     }
 }
 
-void PlayerController::postUpdate(float delta, bool input_flag, bool pause) {
-    if (!pause) {
-        updateFootsteps(delta);
-	}
+void PlayerController::postUpdate(float deltaTime, bool input_flag, bool pause) {
+    if (!pause) updateFootsteps(deltaTime);
+
     if (!pause && input_flag) {
         camControl.updateMouse(this->input);
     }
 
     player->postUpdate();
-    camControl.update(this->input, pause ? 0.0f : delta, level->chunks.get());
+    camControl.update(
+        this->input,
+        pause ? 0.0f : deltaTime,
+        level->chunks.get()
+    );
 	if (input_flag) {
-		updateInteraction();
+		updateInteraction(deltaTime);
 	} else {
 		player->selection = {};
 	}

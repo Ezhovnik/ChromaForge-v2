@@ -8,6 +8,7 @@
 
 class Level;
 struct EngineSettings;
+class Engine;
 
 class LevelController {
 private:
@@ -20,7 +21,7 @@ private:
     std::unique_ptr<PlayerController> player;
 public:
     LevelController(
-        EngineSettings& settings,
+        Engine* engine,
         std::unique_ptr<Level> level
     );
 

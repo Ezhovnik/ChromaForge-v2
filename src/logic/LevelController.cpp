@@ -12,13 +12,14 @@
 #include <settings.h>
 #include <objects/Entities.h>
 #include <math/voxmaths.h>
+#include <engine.h>
 
-LevelController::LevelController(EngineSettings& settings, std::unique_ptr<Level> level) : 
-    settings(settings), 
+LevelController::LevelController(Engine* engine, std::unique_ptr<Level> level) : 
+    settings(engine->getSettings()), 
     level(std::move(level)),
     blocks(std::make_unique<BlocksController>(this->level.get(), settings.chunks.padding.get())),
     chunks(std::make_unique<ChunksController>(this->level.get(), settings.chunks.padding.get())),
-    player(std::make_unique<PlayerController>(this->level.get(), settings, blocks.get()))
+    player(std::make_unique<PlayerController>(settings, this->level.get(), blocks.get()))
 {
     scripting::on_world_load(this);
 }
