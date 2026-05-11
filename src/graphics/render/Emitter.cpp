@@ -1,22 +1,28 @@
 #include <graphics/render/Emitter.h>
 
 #include <glm/gtc/random.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
 
 #include <graphics/core/Texture.h>
 #include <math/rand.h>
+#include <objects/Entities.h>
+#include <world/Level.h>
 
 Emitter::Emitter(
+    const Level& level,
     std::variant<glm::vec3, entityid_t> origin,
     Particle prototype,
     const Texture* texture,
     float spawnInterval,
     int count
-) : origin(std::move(origin)),
+) : level(level),
+    origin(std::move(origin)),
     prototype(std::move(prototype)),
     texture(texture),
     spawnInterval(spawnInterval),
     count(count),
-    behaviour()
+    preset()
 {
     this->prototype.emitter = this;
 }
@@ -25,14 +31,34 @@ const Texture* Emitter::getTexture() const {
     return texture;
 }
 
-void Emitter::update(float delta, std::vector<Particle>& particles) {
-    if (count == 0) return;
+void Emitter::update(
+    float delta,
+    const glm::vec3& cameraPosition,
+    std::vector<Particle>& particles
+) {
+    if (count == 0 || (count == -1 && spawnInterval < FLT_EPSILON)) return;
 
     glm::vec3 position {};
     if (auto staticPos = std::get_if<glm::vec3>(&origin)) {
         position = *staticPos;
-    } else {
-        // TODO: implement for entity origin
+    } else if (auto entityId = std::get_if<entityid_t>(&origin)) {
+        if (auto entity = level.entities->get(*entityId)) {
+            position = entity->getTransform().pos;
+        }
+    }
+
+    const float maxDistance = preset.maxDistance;
+    if (glm::distance2(position, cameraPosition) > maxDistance * maxDistance) {
+        if (count > 0) {
+            if (spawnInterval < FLT_EPSILON) {
+                count = 0;
+                return;
+            }
+            int skipped = timer / spawnInterval;
+            count = std::max(0, count - skipped);
+            timer -= skipped * spawnInterval;
+        }
+        return;
     }
     timer += delta;
     while (count && timer > spawnInterval) {

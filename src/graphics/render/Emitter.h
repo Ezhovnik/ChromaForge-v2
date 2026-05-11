@@ -8,8 +8,10 @@
 #include <typedefs.h>
 #include <math/UVRegion.h>
 #include <math/rand.h>
+#include <presets/ParticlesPreset.h>
 
 class Emitter;
+class Level;
 
 struct Particle {
     Emitter* emitter;
@@ -22,13 +24,8 @@ struct Particle {
 
 class Texture;
 
-struct ParticleBehaviour {
-    bool collision = true;
-    bool lighting = true;
-    glm::vec3 gravity {0.0f, -16.0f, 0.0f};
-};
-
 class Emitter {
+    const Level& level;
     std::variant<glm::vec3, entityid_t> origin;
     Particle prototype;
     const Texture* texture;
@@ -38,9 +35,10 @@ class Emitter {
     glm::vec3 explosion {8.0f};
     PseudoRandom random;
 public:
-    ParticleBehaviour behaviour;
+    ParticlesPreset preset;
 
     Emitter(
+        const Level& level,
         std::variant<glm::vec3, entityid_t> origin,
         Particle prototype,
         const Texture* texture,
@@ -52,7 +50,11 @@ public:
 
     const Texture* getTexture() const;
 
-    void update(float delta, std::vector<Particle>& particles);    
+    void update(
+        float delta,
+        const glm::vec3& cameraPosition,
+        std::vector<Particle>& particles
+    ); 
 
     void setExplosion(const glm::vec3& magnitude);
 

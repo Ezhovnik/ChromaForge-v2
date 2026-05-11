@@ -25,6 +25,7 @@ ParticlesRenderer::ParticlesRenderer(
     auto region = util::get_texture_region(assets, "blocks:moss_block", "");
     emitters.push_back(
         std::make_unique<Emitter>(
+            level,
             glm::vec3(0, 80, 0),
             Particle {
                 nullptr,
@@ -46,12 +47,12 @@ ParticlesRenderer::~ParticlesRenderer() = default;
 static inline void update_particle(
     Particle& particle, float deltaTime, const Chunks& chunks
 ) {
-    const auto& behave = particle.emitter->behaviour;
+    const auto& preset = particle.emitter->preset;
     auto& pos = particle.position;
     auto& vel = particle.velocity;
 
-    vel += deltaTime * behave.gravity;
-    if (behave.collision && chunks.isObstacleAt(pos + vel * deltaTime)) {
+    vel += deltaTime * preset.acceleration;
+    if (preset.collision && chunks.isObstacleAt(pos + vel * deltaTime)) {
         vel *= 0.0f;
     }
     pos += vel * deltaTime;
@@ -83,7 +84,7 @@ void ParticlesRenderer::renderParticles(const Camera& camera, float deltaTime) {
             update_particle(particle, deltaTime, chunks);
 
             glm::vec4 light(1, 1, 1, 0);
-            if (particle.emitter->behaviour.lighting) {
+            if (particle.emitter->preset.lighting) {
                 light = MainBatch::sampleLight(
                     particle.position, chunks, backlight
                 );
@@ -136,7 +137,7 @@ void ParticlesRenderer::render(const Camera& camera, float deltaTime) {
         } else {
             vec = &found->second;
         }
-        emitter.update(deltaTime, *vec);
+        emitter.update(deltaTime, camera.position, *vec);
 
         iter++;
     }
