@@ -27,6 +27,7 @@
 #include <content/Content.h>
 #include <objects/Entity.h>
 #include <frontend/hud.h>
+#include <graphics/render/ParticlesRenderer.h>
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
@@ -68,6 +69,12 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
     }));
     panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Chunks: " + std::to_wstring(level->chunks->getChunksCount()) + L" (visible: " + std::to_wstring(level->chunks->visibleCount) + L")";
+	})));
+    panel->add(std::shared_ptr<gui::Label>(create_label([=](){
+		return L"Particles: " +
+                std::to_wstring(ParticlesRenderer::visibleParticles) +
+                L" Emitters: " +
+                std::to_wstring(ParticlesRenderer::aliveEmitters);
 	})));
     panel->add(create_label([=]() {
         return L"Entities: " + std::to_wstring(level->entities->size()) +

@@ -47,6 +47,7 @@
 #include <objects/Entities.h>
 #include <logic/scripting/scripting_hud.h>
 #include <assets/assets_util.h>
+#include <graphics/render/ParticlesRenderer.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -64,7 +65,8 @@ WorldRenderer::WorldRenderer(
 	player(player),
     frustumCulling(std::make_unique<Frustum>()),
     lineBatch(std::make_unique<LineBatch>()),
-    modelBatch(std::make_unique<ModelBatch>(20'000, engine->getAssets(), level->chunks.get(), &engine->getSettings()))
+    modelBatch(std::make_unique<ModelBatch>(20'000, engine->getAssets(), level->chunks.get(), &engine->getSettings())),
+    particles(std::make_unique<ParticlesRenderer>(*engine->getAssets()))
 {
     renderer = std::make_unique<ChunksRenderer>(
         level,
@@ -92,8 +94,8 @@ bool WorldRenderer::drawChunk(
 	size_t index, 
 	const Camera& camera, 
 	ShaderProgram* shader, 
-	bool culling)
-{
+	bool culling
+) {
 	auto chunk = level->chunks->getChunks()[index];
 	if (!chunk->flags.lighted) return false;
 
@@ -207,7 +209,7 @@ void WorldRenderer::setupWorldShader(
 }
 
 void WorldRenderer::renderLevel(
-    const DrawContext&,
+    const DrawContext& ctx,
     const Camera& camera, 
     const EngineSettings& settings,
     float deltaTime,
@@ -231,6 +233,7 @@ void WorldRenderer::renderLevel(
         pause
     );
 
+    particles->render(camera, deltaTime * !pause);
     modelBatch->render();
 
     auto shader = assets->get<ShaderProgram>("default");
