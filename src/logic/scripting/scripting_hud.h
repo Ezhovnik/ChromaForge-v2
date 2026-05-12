@@ -6,11 +6,13 @@
 #include <typedefs.h>
 
 class Hud;
+class WorldRenderer;
 
 namespace scripting {
     extern Hud* hud;
+    extern WorldRenderer* renderer;
 
-    void on_frontend_init(Hud* hud);
+    void on_frontend_init(Hud* hud, WorldRenderer* renderer);
     void on_frontend_close();
     void on_frontend_render();
 

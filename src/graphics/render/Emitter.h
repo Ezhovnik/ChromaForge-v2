@@ -24,15 +24,15 @@ struct Particle {
 
 class Texture;
 
+using EmitterOrigin = std::variant<glm::vec3, entityid_t>;
+
 class Emitter {
     const Level& level;
-    std::variant<glm::vec3, entityid_t> origin;
+    EmitterOrigin origin;
     Particle prototype;
     const Texture* texture;
-    float spawnInterval;
     int count;
     float timer = 0.0f;
-    glm::vec3 explosion {8.0f};
     PseudoRandom random;
 public:
     ParticlesPreset preset;
@@ -40,9 +40,9 @@ public:
     Emitter(
         const Level& level,
         std::variant<glm::vec3, entityid_t> origin,
-        Particle prototype,
+        ParticlesPreset preset,
         const Texture* texture,
-        float spawnInterval,
+        const UVRegion& region,
         int count
     );
 
@@ -54,9 +54,9 @@ public:
         float delta,
         const glm::vec3& cameraPosition,
         std::vector<Particle>& particles
-    ); 
+    );
 
-    void setExplosion(const glm::vec3& magnitude);
+    void stop();
 
     bool isDead() const;
 };

@@ -48,6 +48,7 @@
 #include <logic/scripting/scripting_hud.h>
 #include <assets/assets_util.h>
 #include <graphics/render/ParticlesRenderer.h>
+#include <graphics/render/Emitter.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -515,6 +516,10 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx, const Assets& as
         );
         batch3d->flush();
     }
+}
+
+void WorldRenderer::addEmitter(std::unique_ptr<Emitter> emitter) {
+    particles->add(std::move(emitter));
 }
 
 void WorldRenderer::clear() {

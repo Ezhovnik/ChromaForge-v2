@@ -27,6 +27,7 @@ struct EngineSettings;
 class ModelBatch;
 class Assets;
 class ParticlesRenderer;
+class Emitter;
 
 namespace model {
     struct Model;
@@ -97,6 +98,8 @@ public:
 		float deltaTime,
 		bool pause
     );
+
+	void addEmitter(std::unique_ptr<Emitter> emitter);
 
 	void clear();
 

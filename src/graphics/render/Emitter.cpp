@@ -12,17 +12,16 @@
 Emitter::Emitter(
     const Level& level,
     std::variant<glm::vec3, entityid_t> origin,
-    Particle prototype,
+    ParticlesPreset preset,
     const Texture* texture,
-    float spawnInterval,
+    const UVRegion& region,
     int count
 ) : level(level),
     origin(std::move(origin)),
-    prototype(std::move(prototype)),
+    prototype({this, 0, glm::vec3(), preset.velocity, preset.lifetime, region}),
     texture(texture),
-    spawnInterval(spawnInterval),
     count(count),
-    preset()
+    preset(std::move(preset))
 {
     this->prototype.emitter = this;
 }
@@ -31,11 +30,25 @@ const Texture* Emitter::getTexture() const {
     return texture;
 }
 
+static inline glm::vec3 generate_coord(ParticleSpawnShape shape) {
+    switch (shape) {
+        case ParticleSpawnShape::Ball:
+            return glm::ballRand(1.0f);
+        case ParticleSpawnShape::Sphere:
+            return glm::sphericalRand(1.0f);
+        case ParticleSpawnShape::Box:
+            return glm::linearRand(glm::vec3(-1.0f), glm::vec3(1.0f));
+        default:
+            return {};
+    }
+}
+
 void Emitter::update(
     float delta,
     const glm::vec3& cameraPosition,
     std::vector<Particle>& particles
 ) {
+    const float spawnInterval = preset.spawnInterval;
     if (count == 0 || (count == -1 && spawnInterval < FLT_EPSILON)) return;
 
     glm::vec3 position {};
@@ -44,6 +57,9 @@ void Emitter::update(
     } else if (auto entityId = std::get_if<entityid_t>(&origin)) {
         if (auto entity = level.entities->get(*entityId)) {
             position = entity->getTransform().pos;
+        } else {
+            stop();
+            return;
         }
     }
 
@@ -65,16 +81,29 @@ void Emitter::update(
         Particle particle = prototype;
         particle.emitter = this;
         particle.random = random.rand32();
-        particle.position = position;
-        particle.velocity += glm::ballRand(1.0f) * explosion;
+
+        glm::vec3 spawnOffset = generate_coord(preset.spawnShape);
+        spawnOffset *= preset.spawnSpread;
+
+        particle.position = position + spawnOffset;
+        particle.lifetime *= 1.0f - preset.lifetimeSpread * random.randFloat();
+        particle.velocity += glm::ballRand(1.0f) * preset.explosion;
+        if (preset.randomSubUV < 1.0f) {
+            particle.region.autoSub(
+                preset.randomSubUV,
+                preset.randomSubUV,
+                random.randFloat(),
+                random.randFloat()
+            );
+        }
         particles.push_back(std::move(particle));
         timer -= spawnInterval;
         if (count > 0) count--;
     }
 }
 
-void Emitter::setExplosion(const glm::vec3& magnitude) {
-    explosion = magnitude;
+void Emitter::stop() {
+    count = 0;
 }
 
 bool Emitter::isDead() const {

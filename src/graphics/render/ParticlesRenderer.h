@@ -17,6 +17,8 @@ class ParticlesRenderer {
 private:
     const Level& level;
 
+    const Assets& assets;
+
     const GraphicsSettings* settings;
 
     std::unordered_map<const Texture*, std::vector<Particle>> particles;
@@ -36,6 +38,8 @@ public:
         const Camera& camera,
         float deltaTime
     );
+
+    void add(std::unique_ptr<Emitter> emitter);
 
     static size_t visibleParticles;
     static size_t aliveEmitters;

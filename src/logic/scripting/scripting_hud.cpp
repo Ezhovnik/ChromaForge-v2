@@ -7,12 +7,17 @@
 #include <files/files.h>
 #include <frontend/hud.h>
 #include <objects/Player.h>
+#include <graphics/render/WorldRenderer.h>
 
 Hud* scripting::hud = nullptr;
+WorldRenderer* scripting::renderer = nullptr;
 
-void scripting::on_frontend_init(Hud* hud) {
+void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
     scripting::hud = hud;
+    scripting::renderer = renderer;
+
     lua::openlib(lua::get_main_state(), "hud", hudlib);
+    lua::openlib(lua::get_main_state(), "particles", particleslib);
 
     for (auto& pack : engine->getContentPacks()) {
         lua::emit_event(lua::get_main_state(), pack.id + ":.hudopen", 

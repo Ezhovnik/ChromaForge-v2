@@ -10,6 +10,7 @@
 #include <world/Level.h>
 #include <voxels/Chunks.h>
 #include <settings.h>
+#include <assets/assets_util.h>
 
 size_t ParticlesRenderer::visibleParticles = 0;
 size_t ParticlesRenderer::aliveEmitters = 0;
@@ -20,27 +21,8 @@ ParticlesRenderer::ParticlesRenderer(
     const GraphicsSettings* settings
 ) : batch(std::make_unique<MainBatch>(1024)),
     level(level),
-    settings(settings)
-{
-    auto region = util::get_texture_region(assets, "blocks:moss_block", "");
-    emitters.push_back(
-        std::make_unique<Emitter>(
-            level,
-            glm::vec3(0, 80, 0),
-            Particle {
-                nullptr,
-                0,
-                glm::vec3(),
-                glm::vec3(),
-                5.0f,
-                region.region
-            },
-            region.texture,
-            0.002f,
-            -1
-        )
-    );
-}
+    assets(assets),
+    settings(settings) {}
 
 ParticlesRenderer::~ParticlesRenderer() = default;
 
@@ -80,22 +62,41 @@ void ParticlesRenderer::renderParticles(const Camera& camera, float deltaTime) {
         auto iter = vec.begin();
         while (iter != vec.end()) {
             auto& particle = *iter;
+            auto& preset = particle.emitter->preset;
+
+            if (!preset.frames.empty()) {
+                float time = preset.lifetime - particle.lifetime;
+                int framesCount = preset.frames.size();
+                int frameid = time / preset.lifetime * framesCount;
+                int frameid2 = glm::min(
+                    (time + deltaTime) / preset.lifetime * framesCount,
+                    framesCount - 1.0f
+                );
+                if (frameid2 != frameid) {
+                    auto tregion = util::get_texture_region(
+                        assets, preset.frames.at(frameid2), ""
+                    );
+                    if (tregion.texture == texture) {
+                        particle.region = tregion.region;
+                    }
+                }
+            }
 
             update_particle(particle, deltaTime, chunks);
 
             glm::vec4 light(1, 1, 1, 0);
-            if (particle.emitter->preset.lighting) {
+            if (preset.lighting) {
                 light = MainBatch::sampleLight(
                     particle.position, chunks, backlight
                 );
-                light *= 0.8f + (particle.random % 200) * 0.001f;
+                light *= 0.9f + (particle.random % 100) * 0.001f;
             }
 
             batch->quad(
                 particle.position,
                 right,
                 up,
-                glm::vec2(0.3f),
+                preset.size,
                 light,
                 glm::vec3(1.0f),
                 particle.region
@@ -141,4 +142,8 @@ void ParticlesRenderer::render(const Camera& camera, float deltaTime) {
 
         iter++;
     }
+}
+
+void ParticlesRenderer::add(std::unique_ptr<Emitter> emitter) {
+    emitters.push_back(std::move(emitter));
 }
