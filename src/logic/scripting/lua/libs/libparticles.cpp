@@ -5,6 +5,7 @@
 #include <graphics/render/WorldRenderer.h>
 #include <assets/assets_util.h>
 #include <engine.h>
+#include <graphics/render/ParticlesRenderer.h>
 
 static int l_emit(lua::State* L) {
     EmitterOrigin origin;
@@ -32,11 +33,19 @@ static int l_emit(lua::State* L) {
         region.region,
         count
     );
-    scripting::renderer->addEmitter(std::move(emitter));
+    return lua::pushinteger(L, scripting::renderer->particles->add(std::move(emitter)));
+}
+
+static int l_stop(lua::State* L) {
+    uint64_t id = lua::touinteger(L, 1);
+    if (auto emitter = scripting::renderer->particles->getEmitter(id)) {
+        emitter->stop();
+    }
     return 0;
 }
 
 const luaL_Reg particleslib[] = {
     {"emit", lua::wrap<l_emit>},
+    {"stop", lua::wrap<l_stop>},
     {NULL, NULL}
 };

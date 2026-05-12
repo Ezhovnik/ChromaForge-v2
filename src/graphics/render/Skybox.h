@@ -16,6 +16,7 @@ class Assets;
 class Camera;
 class Batch3D;
 class Framebuffer;
+class Cubemap;
 
 struct skysprite {
     std::string texture;
@@ -34,6 +35,10 @@ class Skybox {
     std::unique_ptr<Mesh> mesh;
     std::unique_ptr<Batch3D> batch3d;
     std::vector<skysprite> sprites;
+    int frameID = 0;
+
+    float prevMie = -1.0f;
+    float prevT = -1.0f;
 
     void drawStars(float angle, float opacity);
     void drawBackground(
@@ -41,6 +46,8 @@ class Skybox {
         const Assets& assets,
         int width, int height
     );
+
+    void refreshFace(uint face, Cubemap* cubemap);
 
     bool ready = false;
 public:

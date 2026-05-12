@@ -1,5 +1,7 @@
 #include <graphics/render/ParticlesRenderer.h>
 
+#include <set>
+
 #include <assets/Assets.h>
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Texture.h>
@@ -125,7 +127,7 @@ void ParticlesRenderer::render(const Camera& camera, float deltaTime) {
 
     auto iter = emitters.begin();
     while (iter != emitters.end()) {
-        auto& emitter = **iter;
+        auto& emitter = *iter->second;
         auto texture = emitter.getTexture();
         const auto& found = particles.find(texture);
         std::vector<Particle>* vec;
@@ -144,6 +146,34 @@ void ParticlesRenderer::render(const Camera& camera, float deltaTime) {
     }
 }
 
-void ParticlesRenderer::add(std::unique_ptr<Emitter> emitter) {
-    emitters.push_back(std::move(emitter));
+void ParticlesRenderer::gc() {
+    std::set<Emitter*> usedEmitters;
+    for (const auto& [_, vec] : particles) {
+        for (const auto& particle : vec) {
+            usedEmitters.insert(particle.emitter);
+        }
+    }
+    auto iter = emitters.begin();
+    while (iter != emitters.end()) {
+        auto emitter = iter->second.get();
+        if (usedEmitters.find(emitter) == usedEmitters.end()) {
+            iter = emitters.erase(iter);
+        } else {
+            iter++;
+        }
+    }
+}
+
+Emitter* ParticlesRenderer::getEmitter(uint64_t id) const {
+    const auto& found = emitters.find(id);
+    if (found == emitters.end()) {
+        return nullptr;
+    }
+    return found->second.get();
+}
+
+uint64_t ParticlesRenderer::add(std::unique_ptr<Emitter> emitter) {
+    uint64_t uid = nextEmitter++;
+    emitters[uid] = std::move(emitter);
+    return uid;
 }

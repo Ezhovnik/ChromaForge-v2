@@ -44,7 +44,6 @@ private:
 	std::unique_ptr<Skybox> skybox;
 	std::unique_ptr<Batch3D> batch3d;
 	std::unique_ptr<ModelBatch> modelBatch;
-	std::unique_ptr<ParticlesRenderer> particles;
 
 	float timer = 0.0f;
 
@@ -79,6 +78,8 @@ private:
         float fogFactor
     );
 public:
+	std::unique_ptr<ParticlesRenderer> particles;
+
 	WorldRenderer(Engine* engine, LevelFrontend* levelFrontend, Player* player);
 	~WorldRenderer();
 
@@ -98,8 +99,6 @@ public:
 		float deltaTime,
 		bool pause
     );
-
-	void addEmitter(std::unique_ptr<Emitter> emitter);
 
 	void clear();
 
