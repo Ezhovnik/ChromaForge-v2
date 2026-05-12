@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <time.h>
 #include <algorithm>
+#include <thread>
 
 #include <typedefs.h>
 #include <debug/Logger.h>
@@ -72,12 +73,34 @@ std::string platform::detect_locale() {
 }
 #endif
 
+#ifdef _WIN32
+void platform::sleep(size_t millis) {
+    static const UINT periodMin = []{
+        TIMECAPS tc;
+        timeGetDevCaps(&tc, sizeof(TIMECAPS));
+        return tc.wPeriodMin;
+    }();
+
+    timeBeginPeriod(periodMin);
+
+    Sleep(static_cast<DWORD>(millis));
+
+    timeEndPeriod(periodMin);
+}
+
+#else
+void platform::sleep(size_t millis) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(millis));
+}
+
+#endif
+
 void platform::open_folder(const std::filesystem::path& folder) {
     if (!std::filesystem::is_directory(folder)) return;
 #ifdef __APPLE__
     auto cmd = "open " + util::quote(folder.u8string());
 #elif defined(_WIN32)
-    auto cmd = "explorer " + util::quote(folder.u8string());
+    auto cmd = "start explorer " + util::quote(folder.u8string());
 #else
     auto cmd = "xdg-open " + util::quote(folder.u8string());
 #endif

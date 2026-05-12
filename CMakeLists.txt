@@ -32,6 +32,7 @@ target_link_libraries(ChromaForge
         glfw
         PkgConfig::VORBIS
         PkgConfig::LUAJIT
+        $<$<PLATFORM_ID:Windows>:winmm>
 )
 
 target_include_directories(ChromaForge PRIVATE

@@ -13,6 +13,8 @@ struct DisplaySettings {
 	IntegerSetting framerate{-1, -1, 120};
 
 	BoolSetting fullscreen {false};
+
+	BoolSetting limitFpsIconified {false};
 };
 
 struct ChunksSettings {

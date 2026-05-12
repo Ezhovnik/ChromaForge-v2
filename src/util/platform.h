@@ -29,4 +29,6 @@ namespace platform {
     std::string detect_locale();
 
     void open_folder(const std::filesystem::path& folder);
+
+    void sleep(size_t millis);
 }

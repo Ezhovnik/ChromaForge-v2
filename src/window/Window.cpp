@@ -15,6 +15,7 @@
 #include <settings.h>
 #include <util/ObjectsKeeper.h>
 #include <constants.h>
+#include <util/platform.h>
 
 GLFWwindow* Window::window = nullptr; // Статическая переменная-член класса - указатель на окно GLFW
 DisplaySettings* Window::settings = nullptr;
@@ -297,9 +298,14 @@ void Window::setFramerate(int framerate) {
 void Window::swapBuffers() {
     glfwSwapBuffers(window);
     Window::resetScissor();
-    double currentTime = time();
-    if (framerate > 0 && currentTime - prevSwap < (1.0 / framerate)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>((1.0 / framerate - (currentTime - prevSwap)) * 1000)));
+    if (framerate > 0) {
+        auto elapsedTime = time() - prevSwap;
+        auto frameTime = 1.0 / framerate;
+        if (elapsedTime < frameTime) {
+            platform::sleep(
+                static_cast<size_t>((frameTime - elapsedTime) * 1000)
+            );
+        }
     }
     prevSwap = time();
 }
