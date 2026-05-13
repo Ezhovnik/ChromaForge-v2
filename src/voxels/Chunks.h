@@ -58,6 +58,9 @@ public:
     inline voxel* getVoxel(glm::ivec3 pos) {
         return getVoxel(pos.x, pos.y, pos.z);
     }
+    inline const voxel* getVoxel(glm::ivec3 pos) const {
+        return getVoxel(pos.x, pos.y, pos.z);
+    }
     void setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate state); // Устанавливает идентификатор вокселя по мировым координатам
 
     light_t getLight(int32_t x, int32_t y, int32_t z) const;

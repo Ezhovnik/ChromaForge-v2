@@ -22,6 +22,7 @@
 #include <objects/rigging.h>
 #include <data/dv_util.h>
 #include <data/StructLayout.h>
+#include <presets/ParticlesPreset.h>
 
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder, const ResPaths& paths) : pack(pack), builder(builder), paths(paths) {
     auto runtime = std::make_unique<ContentPackRuntime>(
@@ -306,6 +307,11 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         def.dataStruct = std::make_unique<data::StructLayout>();
         def.dataStruct->deserialize(root["fields"]);
         perform_user_block_fields(def.name, *def.dataStruct);
+    }
+
+    if (root.has("particles")) {
+        def.particles = std::make_unique<ParticlesPreset>();
+        def.particles->deserialize(root["particles"]);
     }
 
     if (def.sparkInterval == 0) {

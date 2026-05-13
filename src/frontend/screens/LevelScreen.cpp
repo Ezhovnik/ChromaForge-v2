@@ -24,23 +24,28 @@
 #include <settings.h>
 #include <input_bindings.h>
 #include <content/Content.h>
+#include <graphics/render/Decorator.h>
 
 LevelScreen::LevelScreen(
     Engine* engine,
-    std::unique_ptr<Level> level
+    std::unique_ptr<Level> levelPtr
 ) : Screen(engine),
     postProcessing(std::make_unique<PostProcessing>())
 {
+    Level* level = levelPtr.get();
+
     auto& settings = engine->getSettings();
     auto assets = engine->getAssets();
     auto menu = engine->getGUI()->getMenu();
     menu->reset();
 
-    controller = std::make_unique<LevelController>(engine, std::move(level));
+    controller = std::make_unique<LevelController>(engine, std::move(levelPtr));
     frontend = std::make_unique<LevelFrontend>(controller->getPlayer(), controller.get(), assets);
 
     worldRenderer = std::make_unique<WorldRenderer>(engine, frontend.get(), controller->getPlayer());
     hud = std::make_unique<Hud>(engine, frontend.get(), controller->getPlayer());
+
+    decorator = std::make_unique<Decorator>(*level, *worldRenderer->particles, *assets);
 
     keepAlive(settings.graphics.backlight.observe([=](bool) {
         controller->getLevel()->chunks->saveAndClear();
@@ -142,6 +147,7 @@ void LevelScreen::update(float deltaTime) {
     }
     controller->update(glm::min(deltaTime, 0.2f), !inputLocked, hud->isPause());
     hud->update(hudVisible);
+    decorator->update(deltaTime, *camera);
 }
 
 void LevelScreen::draw(float deltaTime) {

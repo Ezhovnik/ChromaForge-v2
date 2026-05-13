@@ -10,6 +10,7 @@
 #include <math/UVRegion.h>
 #include <core_content_defs.h>
 
+struct ParticlesPreset;
 namespace data {
     class StructLayout;
 }
@@ -129,6 +130,8 @@ public:
     BlockRotProfile rotations = BlockRotProfile::NONE;
 
     std::unique_ptr<data::StructLayout> dataStruct;
+
+    std::unique_ptr<ParticlesPreset> particles;
 
 	struct {
         blockid_t id;
