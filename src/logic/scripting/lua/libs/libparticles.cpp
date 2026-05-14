@@ -44,8 +44,45 @@ static int l_stop(lua::State* L) {
     return 0;
 }
 
+static int l_get_origin(lua::State* L) {
+    uint64_t id = lua::touinteger(L, 1);
+    if (auto emitter = scripting::renderer->particles->getEmitter(id)) {
+        const auto& origin = emitter->getOrigin();
+        if (auto pos = std::get_if<glm::vec3>(&origin)) {
+            return lua::pushvec3(L, *pos);
+        } else if (auto entityid = std::get_if<entityid_t>(&origin)) {
+            return lua::pushinteger(L, *entityid);
+        }
+    }
+    return 0;
+}
+
+static int l_set_origin(lua::State* L) {
+    uint64_t id = lua::touinteger(L, 1);
+    if (auto emitter = scripting::renderer->particles->getEmitter(id)) {
+        EmitterOrigin origin;
+        if (lua::istable(L, 2)) {
+            emitter->setOrigin(lua::tovec3(L, 2));
+        } else {
+            emitter->setOrigin(static_cast<entityid_t>(lua::tointeger(L, 2)));
+        }
+    }
+    return 0;
+}
+
+static int l_is_alive(lua::State* L) {
+    uint64_t id = lua::touinteger(L, 1);
+    if (auto emitter = scripting::renderer->particles->getEmitter(id)) {
+        return lua::pushboolean(L, !emitter->isDead());
+    }
+    return lua::pushboolean(L, false);
+}
+
 const luaL_Reg particleslib[] = {
     {"emit", lua::wrap<l_emit>},
     {"stop", lua::wrap<l_stop>},
+    {"is_alive", lua::wrap<l_is_alive>},
+    {"get_origin", lua::wrap<l_get_origin>},
+    {"set_origin", lua::wrap<l_set_origin>},
     {NULL, NULL}
 };

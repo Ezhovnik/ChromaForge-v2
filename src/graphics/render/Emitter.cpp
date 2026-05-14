@@ -24,6 +24,7 @@ Emitter::Emitter(
     preset(std::move(preset))
 {
     this->prototype.emitter = this;
+    timer = preset.spawnInterval;
 }
 
 const Texture* Emitter::getTexture() const {
@@ -108,4 +109,12 @@ void Emitter::stop() {
 
 bool Emitter::isDead() const {
     return count == 0;
+}
+
+const EmitterOrigin& Emitter::getOrigin() const {
+    return origin;
+}
+
+void Emitter::setOrigin(const EmitterOrigin& origin) {
+    this->origin = origin;
 }

@@ -45,7 +45,9 @@ LevelScreen::LevelScreen(
     worldRenderer = std::make_unique<WorldRenderer>(engine, frontend.get(), controller->getPlayer());
     hud = std::make_unique<Hud>(engine, frontend.get(), controller->getPlayer());
 
-    decorator = std::make_unique<Decorator>(*level, *worldRenderer->particles, *assets);
+    decorator = std::make_unique<Decorator>(
+        *controller, *worldRenderer->particles, *assets
+    );
 
     keepAlive(settings.graphics.backlight.observe([=](bool) {
         controller->getLevel()->chunks->saveAndClear();

@@ -8,6 +8,7 @@
 #include <world/Level.h>
 #include <window/Camera.h>
 #include <math/util.h>
+#include <logic/LevelController.h>
 
 inline constexpr int UPDATE_AREA_DIAMETER = 32;
 inline constexpr int UPDATE_BLOCKS = UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER;
@@ -15,12 +16,37 @@ inline constexpr int ITERATIONS = 512;
 inline constexpr int BIG_PRIME = 1791791791;
 
 Decorator::Decorator(
-    const Level& level,
+    LevelController& controller,
     ParticlesRenderer& particles,
     const Assets& assets
-) : level(level),
+) : level(*controller.getLevel()),
     particles(particles),
-    assets(assets) {}
+    assets(assets)
+{
+    controller.getBlocksController()->listenBlockInteraction(
+    [this](auto player, const auto& pos, const auto& def, BlockInteraction type) {
+        if (type == BlockInteraction::Placing && def.particles) {
+            addParticles(def, pos);
+        }
+    });
+}
+
+void Decorator::addParticles(const Block& def, const glm::ivec3& pos) {
+    const auto& found = blockEmitters.find(pos);
+    if (found == blockEmitters.end()) {
+        auto treg = util::get_texture_region(
+            assets, def.particles->texture, ""
+        );
+        blockEmitters[pos] = particles.add(std::make_unique<Emitter>(
+            level,
+            glm::vec3{pos.x + 0.5, pos.y + 0.5, pos.z + 0.5},
+            *def.particles,
+            treg.texture,
+            treg.region,
+            -1
+        ));
+    }
+}
 
 void Decorator::update(
     float delta, const glm::ivec3& areaStart, const glm::ivec3& areaCenter
@@ -40,20 +66,7 @@ void Decorator::update(
     if (auto vox = chunks.getVoxel(pos)) {
         const auto& def = indices.blocks.require(vox->id);
         if (def.particles) {
-            const auto& found = blockEmitters.find(pos);
-            if (found == blockEmitters.end()) {
-                auto treg = util::get_texture_region(
-                    assets, def.particles->texture, ""
-                );
-                blockEmitters[pos] = particles.add(std::make_unique<Emitter>(
-                    level,
-                    glm::vec3{pos.x + 0.5, pos.y + 0.5, pos.z + 0.5},
-                    *def.particles,
-                    treg.texture,
-                    treg.region,
-                    -1
-                ));
-            }
+            addParticles(def, pos);
         }
     }
 }

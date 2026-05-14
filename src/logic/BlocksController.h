@@ -24,7 +24,7 @@ enum class BlockInteraction {
 };
 
 using on_block_interaction = std::function<void(
-    Player*, glm::ivec3, const Block&, BlockInteraction type
+    Player*, const glm::ivec3&, const Block&, BlockInteraction type
 )>;
 
 class BlocksController {
