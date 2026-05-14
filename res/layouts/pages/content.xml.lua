@@ -95,6 +95,13 @@ function refresh()
     packs_cur:clear()
     packs_add:clear()
 
+    if world.is_open() then
+        local genpack, genname = parse_path(world.get_generator())
+        if genpack ~= "builtin" then
+            table.insert(base_packs, genpack)
+        end
+    end
+
     for i,id in ipairs(packs_installed) do
         local packinfo = pack.get_info(id)
         packinfo.index = i

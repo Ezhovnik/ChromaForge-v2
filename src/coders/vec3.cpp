@@ -5,7 +5,7 @@
 #include <coders/byte_utils.h>
 #include <util/data_io.h>
 #include <util/stringutil.h>
-#include <graphics/core/Model.h>
+#include <graphics/commons/Model.h>
 #include <debug/Logger.h>
 
 inline constexpr int VERSION = 1;

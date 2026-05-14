@@ -21,7 +21,7 @@
 #include <coders/GLSLExtension.h>
 #include <coders/commons.h>
 #include <constants.h>
-#include <graphics/core/Model.h>
+#include <graphics/commons/Model.h>
 #include <coders/obj.h>
 #include <objects/rigging.h>
 #include <coders/vec3.h>

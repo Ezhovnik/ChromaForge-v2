@@ -59,11 +59,11 @@ namespace scripting {
     void on_world_quit();
     void cleanup();
     void on_blocks_spark(const Block& block, int tps);
-    void update_block(const Block& block, int x, int y, int z);
-    void random_update_block(const Block& block, int x, int y, int z);
-    void on_block_placed(Player* player, const Block& block, int x, int y, int z);
-    void on_block_broken(Player* player, const Block& block, int x, int y, int z);
-    bool on_block_interact(Player* player, const Block& block, glm::ivec3 pos);
+    void update_block(const Block& block, const glm::ivec3& pos);
+    void random_update_block(const Block& block, const glm::ivec3& pos);
+    void on_block_placed(Player* player, const Block& block, const glm::ivec3& pos);
+    void on_block_broken(Player* player, const Block& block, const glm::ivec3& pos);
+    bool on_block_interact(Player* player, const Block& block, const glm::ivec3& pos);
 
     bool on_item_use(Player* player, const Item& item);
     bool on_item_use_on_block(Player* player, const Item& item, glm::ivec3 ipos, glm::ivec3 normal);

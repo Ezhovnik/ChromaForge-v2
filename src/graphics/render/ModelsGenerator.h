@@ -1,6 +1,6 @@
 #pragma once
 
-#include <graphics/core/Model.h>
+#include <graphics/commons/Model.h>
 
 struct Item;
 class Assets;

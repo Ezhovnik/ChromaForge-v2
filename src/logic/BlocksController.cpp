@@ -65,7 +65,7 @@ void BlocksController::breakBlock(Player* player, const Block& def, int x, int y
     );
     chunks->setVoxel(x, y, z, BLOCK_AIR, {});
     lighting->onBlockSet(x, y, z, BLOCK_AIR);
-    scripting::on_block_broken(player, def, x, y, z);
+    scripting::on_block_broken(player, def, glm::ivec3(x, y, z));
     if (def.rt.extended) {
         updateSides(x, y, z, def.size.x, def.size.y, def.size.z);
     } else {
@@ -79,7 +79,7 @@ void BlocksController::placeBlock(Player* player, const Block& def, blockstate s
     );
     chunks->setVoxel(x, y, z, def.rt.id, state);
     lighting->onBlockSet(x, y, z, def.rt.id);
-    scripting::on_block_placed(player, def, x, y, z);
+    scripting::on_block_placed(player, def, glm::ivec3(x, y, z));
     if (def.rt.extended) {
         updateSides(x, y, z, def.size.x, def.size.y, def.size.z);
     } else {
@@ -90,7 +90,7 @@ void BlocksController::placeBlock(Player* player, const Block& def, blockstate s
 void BlocksController::updateBlock(int x, int y, int z) {
     voxel* vox = chunks->getVoxel(x, y, z);
     if (vox == nullptr) return;
-    auto& def = level->content->getIndices()->blocks.require(vox->id);
+    const auto& def = level->content->getIndices()->blocks.require(vox->id);
     if (def.grounded) {
         const auto& vec = get_ground_direction(def, vox->state.rotation);
         if (!chunks->isSolidBlock(x + vec.x, y + vec.y, z + vec.z)) {
@@ -98,7 +98,7 @@ void BlocksController::updateBlock(int x, int y, int z) {
             return;
         }
     }
-    if (def.rt.funcsset.update) scripting::update_block(def, x, y, z);
+    if (def.rt.funcsset.update) scripting::update_block(def, glm::ivec3(x, y, z));
 }
 
 void BlocksController::update(float delta) {
@@ -135,9 +135,12 @@ void BlocksController::randomSpark(
             auto& block = indices->blocks.require(vox.id);
             if (block.rt.funcsset.randupdate) {
                 scripting::random_update_block(
-                    block, 
-                    chunk.chunk_x * CHUNK_WIDTH + bx, by, 
-                    chunk.chunk_z * CHUNK_DEPTH + bz
+                    block,
+                    glm::ivec3(
+                        chunk.chunk_x * CHUNK_WIDTH + bx,
+                        by,
+                        chunk.chunk_z * CHUNK_DEPTH + bz
+                    )
                 );
             }
         }

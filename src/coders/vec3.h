@@ -8,7 +8,7 @@
 
 #include <typedefs.h>
 #include <util/Buffer.h>
-#include <graphics/core/Model.h>
+#include <graphics/commons/Model.h>
 
 namespace vec3 {
     struct Material {

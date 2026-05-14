@@ -1,7 +1,7 @@
 #include <coders/obj.h>
 
 #include <coders/commons.h>
-#include <graphics/core/Model.h>
+#include <graphics/commons/Model.h>
 
 using namespace model;
 

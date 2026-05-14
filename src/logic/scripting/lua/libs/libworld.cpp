@@ -94,7 +94,12 @@ static int l_get_generator(lua::State* L) {
     return lua::pushstring(L, require_world_info().generator);
 }
 
+static int l_is_open(lua::State* L) {
+    return lua::pushboolean(L, scripting::level != nullptr);
+}
+
 const luaL_Reg worldlib [] = {
+    {"is_open", lua::wrap<l_is_open>},
     {"get_list", lua::wrap<l_get_list>},
     {"get_total_time", lua::wrap<l_get_total_time>},
     {"get_day_time", lua::wrap<l_get_day_time>},

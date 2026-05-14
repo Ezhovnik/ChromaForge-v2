@@ -19,12 +19,12 @@ static std::filesystem::path resolve_path_soft(const std::string& path) {
     return scripting::engine->getPaths()->resolve(path, false);
 }
 
-static int l_file_resolve(lua::State* L) {
+static int l_resolve(lua::State* L) {
     std::filesystem::path path = resolve_path(lua::require_string(L, 1));
     return lua::pushstring(L, path.u8string());
 }
 
-static int l_file_read(lua::State* L) {
+static int l_read(lua::State* L) {
     std::filesystem::path path = resolve_path(lua::require_string(L, 1));
     if (std::filesystem::is_regular_file(path)) {
         return lua::pushstring(L, files::read_string(path));
@@ -32,29 +32,29 @@ static int l_file_read(lua::State* L) {
     throw std::runtime_error("File does not exists " + util::quote(path.u8string()));
 }
 
-static int l_file_write(lua::State* L) {
+static int l_write(lua::State* L) {
     std::filesystem::path path = resolve_path(lua::require_string(L, 1));
     auto text = lua::require_string(L, 2);
     files::write_string(path, text);
     return 1;    
 }
 
-static int l_file_exists(lua::State* L) {
+static int l_exists(lua::State* L) {
     std::filesystem::path path = resolve_path_soft(lua::require_string(L, 1));
     return lua::pushboolean(L, std::filesystem::exists(path));
 }
 
-static int l_file_isfile(lua::State* L) {
+static int l_isfile(lua::State* L) {
     std::filesystem::path path = resolve_path_soft(lua::require_string(L, 1));
     return lua::pushboolean(L, std::filesystem::is_regular_file(path));
 }
 
-static int l_file_isdir(lua::State* L) {
+static int l_isdir(lua::State* L) {
     std::filesystem::path path = resolve_path_soft(lua::require_string(L, 1));
     return lua::pushboolean(L, std::filesystem::is_directory(path));
 }
 
-static int l_file_length(lua::State* L) {
+static int l_length(lua::State* L) {
     std::filesystem::path path = resolve_path(lua::require_string(L, 1));
     if (std::filesystem::exists(path)){
         return lua::pushinteger(L, std::filesystem::file_size(path));
@@ -64,17 +64,17 @@ static int l_file_length(lua::State* L) {
     return 1;
 }
 
-static int l_file_mkdir(lua::State* L) {
+static int l_mkdir(lua::State* L) {
     std::filesystem::path path = resolve_path(lua::require_string(L, 1));
     return lua::pushboolean(L, std::filesystem::create_directory(path));    
 }
 
-static int l_file_mkdirs(lua::State* L) {
+static int l_mkdirs(lua::State* L) {
     std::filesystem::path path = resolve_path(lua::require_string(L, 1));
     return lua::pushboolean(L, std::filesystem::create_directories(path));    
 }
 
-static int l_file_read_bytes(lua::State* L) {
+static int l_read_bytes(lua::State* L) {
     std::filesystem::path path = resolve_path(lua::require_string(L, 1));
     if (std::filesystem::is_regular_file(path)) {
         size_t length = static_cast<size_t>(std::filesystem::file_size(path));
@@ -105,7 +105,7 @@ static int read_bytes_from_table(lua::State* L, int tableIndex, std::vector<ubyt
     return 1;
 }
 
-static int l_file_write_bytes(lua::State* L) {
+static int l_write_bytes(lua::State* L) {
     int pathIndex = 1;
     if (!lua::isstring(L, pathIndex)) throw std::runtime_error("String expected");
     std::filesystem::path path = resolve_path(lua::require_string(L, pathIndex));
@@ -122,7 +122,7 @@ static int l_file_write_bytes(lua::State* L) {
     }
 }
 
-static int l_file_find(lua::State* L) {
+static int l_find(lua::State* L) {
     std::string path = lua::require_string(L, 1);
 
     try {
@@ -132,7 +132,7 @@ static int l_file_find(lua::State* L) {
     }
 }
 
-static int l_file_list_all_res(lua::State* L, const std::string& path) {
+static int l_list_all_res(lua::State* L, const std::string& path) {
     auto files = scripting::engine->getResPaths()->listdirRaw(path);
     lua::createtable(L, files.size(), 0);
     for (size_t i = 0; i < files.size(); ++i) {
@@ -142,10 +142,10 @@ static int l_file_list_all_res(lua::State* L, const std::string& path) {
     return 1;
 }
 
-static int l_file_list(lua::State* L) {
+static int l_list(lua::State* L) {
     std::string dirname = lua::require_string(L, 1);
     if (dirname.find(':') == std::string::npos) {
-        return l_file_list_all_res(L, dirname);
+        return l_list_all_res(L, dirname);
     }
     std::filesystem::path path = resolve_path(dirname);
     if (!std::filesystem::is_directory(path)) {
@@ -167,7 +167,7 @@ static std::set<std::string> writeable_entry_points {
     "world", "export", "config"
 };
 
-static int l_file_remove(lua::State* L) {
+static int l_remove(lua::State* L) {
     std::string rawpath = lua::require_string(L, 1);
     std::filesystem::path path = resolve_path(rawpath);
     auto entryPoint = rawpath.substr(0, rawpath.find(':'));
@@ -177,7 +177,7 @@ static int l_file_remove(lua::State* L) {
     return lua::pushboolean(L, std::filesystem::remove(path));
 }
 
-static int l_file_remove_tree(lua::State* L) {
+static int l_remove_tree(lua::State* L) {
     std::string rawpath = lua::require_string(L, 1);
     std::filesystem::path path = resolve_path(rawpath);
     auto entryPoint = rawpath.substr(0, rawpath.find(':'));
@@ -187,7 +187,7 @@ static int l_file_remove_tree(lua::State* L) {
     return lua::pushinteger(L, std::filesystem::remove_all(path));
 }
 
-static int l_file_zip_compress(lua::State* L) {
+static int l_zip_compress(lua::State* L) {
     std::vector<ubyte> bytes;
     int result = read_bytes_from_table(L, -1, bytes);
     if (result != 1) {
@@ -204,7 +204,7 @@ static int l_file_zip_compress(lua::State* L) {
     }
 }
 
-static int l_file_zip_decompress(lua::State* L) { 
+static int l_zip_decompress(lua::State* L) { 
     std::vector<ubyte> bytes;
     int result = read_bytes_from_table(L, -1, bytes);
 
@@ -222,7 +222,7 @@ static int l_file_zip_decompress(lua::State* L) {
     } 
 }
 
-static int l_file_read_combined_list(lua::State* L) {
+static int l_read_combined_list(lua::State* L) {
     std::string path = lua::require_string(L, 1);
     if (path.find(':') != std::string::npos) {
         throw std::runtime_error("Entry point must not be specified");
@@ -230,24 +230,33 @@ static int l_file_read_combined_list(lua::State* L) {
     return lua::pushvalue(L, scripting::engine->getResPaths()->readCombinedList(path));
 }
 
+static int l_read_combined_object(lua::State* L) {
+    std::string path = lua::require_string(L, 1);
+    if (path.find(':') != std::string::npos) {
+        throw std::runtime_error("Entry point must not be specified");
+    }
+    return lua::pushvalue(L, scripting::engine->getResPaths()->readCombinedObject(path));
+}
+
 const luaL_Reg filelib [] = {
-    {"exists", lua::wrap<l_file_exists>},
-    {"find", lua::wrap<l_file_find>},
-    {"isdir", lua::wrap<l_file_isdir>},
-    {"isfile", lua::wrap<l_file_isfile>},
-    {"length", lua::wrap<l_file_length>},
-    {"list", lua::wrap<l_file_list>},
-    {"mkdir", lua::wrap<l_file_mkdir>},
-    {"mkdirs", lua::wrap<l_file_mkdirs>},
-    {"read_bytes", lua::wrap<l_file_read_bytes>},
-    {"read", lua::wrap<l_file_read>},
-    {"remove", lua::wrap<l_file_remove>},
-    {"remove_tree", lua::wrap<l_file_remove_tree>},
-    {"resolve", lua::wrap<l_file_resolve>},
-    {"write_bytes", lua::wrap<l_file_write_bytes>},
-    {"write", lua::wrap<l_file_write>},
-    {"zip_compress", lua::wrap<l_file_zip_compress>},
-    {"zip_decompress", lua::wrap<l_file_zip_decompress>},
-    {"read_combined_list", lua::wrap<l_file_read_combined_list>},
+    {"exists", lua::wrap<l_exists>},
+    {"find", lua::wrap<l_find>},
+    {"isdir", lua::wrap<l_isdir>},
+    {"isfile", lua::wrap<l_isfile>},
+    {"length", lua::wrap<l_length>},
+    {"list", lua::wrap<l_list>},
+    {"mkdir", lua::wrap<l_mkdir>},
+    {"mkdirs", lua::wrap<l_mkdirs>},
+    {"read_bytes", lua::wrap<l_read_bytes>},
+    {"read", lua::wrap<l_read>},
+    {"remove", lua::wrap<l_remove>},
+    {"remove_tree", lua::wrap<l_remove_tree>},
+    {"resolve", lua::wrap<l_resolve>},
+    {"write_bytes", lua::wrap<l_write_bytes>},
+    {"write", lua::wrap<l_write>},
+    {"zip_compress", lua::wrap<l_zip_compress>},
+    {"zip_decompress", lua::wrap<l_zip_decompress>},
+    {"read_combined_list", lua::wrap<l_read_combined_list>},
+    {"read_combined_object", lua::wrap<l_read_combined_object>},
     {NULL, NULL}
 };

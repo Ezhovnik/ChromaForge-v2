@@ -9,7 +9,7 @@
 
 #include <assets/assets_util.h>
 #include <graphics/core/Mesh.h>
-#include <graphics/core/Model.h>
+#include <graphics/commons/Model.h>
 #include <graphics/core/Texture.h>
 #include <assets/Assets.h>
 #include <window/Window.h>

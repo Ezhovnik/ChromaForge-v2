@@ -43,7 +43,7 @@
 #include <graphics/core/Batch3D.h>
 #include <graphics/core/PostProcessing.h>
 #include <graphics/render/ModelBatch.h>
-#include <graphics/core/Model.h>
+#include <graphics/commons/Model.h>
 #include <objects/Entities.h>
 #include <logic/scripting/scripting_hud.h>
 #include <assets/assets_util.h>

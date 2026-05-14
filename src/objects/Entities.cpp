@@ -9,7 +9,7 @@
 #include <physics/Hitbox.h>
 #include <physics/PhysicsSolver.h>
 #include <graphics/render/ModelBatch.h>
-#include <graphics/core/Model.h>
+#include <graphics/commons/Model.h>
 #include <math/FrustumCulling.h>
 #include <graphics/core/LineBatch.h>
 #include <objects/Entity.h>

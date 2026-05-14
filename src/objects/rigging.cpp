@@ -5,7 +5,7 @@
 #include <glm/ext/matrix_transform.hpp>
 
 #include <assets/Assets.h>
-#include <graphics/core/Model.h>
+#include <graphics/commons/Model.h>
 #include <coders/json.h>
 #include <debug/Logger.h>
 #include <graphics/render/ModelBatch.h>
