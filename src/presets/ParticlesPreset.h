@@ -16,6 +16,7 @@ ParticleSpawnShape ParticleSpawnShape_from(std::string_view s);
 struct ParticlesPreset : public Serializable {
     bool collision = true;
     bool lighting = true;
+    bool globalUpVector = false;
     float maxDistance = 16.0f;
     float spawnInterval = 0.1f;
     float lifetime = 5.0f;

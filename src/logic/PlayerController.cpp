@@ -377,7 +377,7 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
             return;
         }
     }
-    auto coord = selection.actualPosition;
+    glm::ivec3 coord = selection.actualPosition;
     if (!target.replaceable){
         coord += selection.normal;
     } else if (def.rotations.name == BlockRotProfile::PIPE_NAME) {
@@ -385,12 +385,13 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
     }
     blockid_t chosenBlock = def.rt.id;
 
-    AABB blockAABB(coord, coord + 1);
-    bool blocked = level->entities->hasBlockingInside(blockAABB);
-
-    if (def.obstacle && blocked) {
-        return;
+    if (def.obstacle) {
+        const auto& hitboxes = def.rt.hitboxes[state.rotation];
+        for (const AABB& blockAABB : hitboxes) {
+            if (level->entities->hasBlockingInside(blockAABB.translated(coord))) return;
+        }
     }
+
     auto vox = chunks->getVoxel(coord);
     if (vox == nullptr) return;
     if (!chunks->checkReplaceability(def, state, coord)) {

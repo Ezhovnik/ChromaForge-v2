@@ -26,6 +26,10 @@ struct AABB {
     // Центр параллелепипеда
     inline glm::vec3 center() const {return (a + b) * 0.5f;}
 
+    inline AABB translated(const glm::vec3& pos) const {
+        return AABB(a + pos, b + pos);
+    }
+
     /* Масштабирует параллелепипед относительно центра. 
     После масштабирования центр остаётся на месте*/
     inline void scale(const glm::vec3 mul) {
