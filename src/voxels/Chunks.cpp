@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <vector>
 #include <algorithm>
+#include <stdexcept>
 
 #include <voxels/Chunk.h>
 #include <voxels/voxel.h>
@@ -22,6 +23,7 @@
 #include <coders/byte_utils.h>
 #include <coders/json.h>
 #include <data/StructLayout.h>
+#include <debug/Logger.h>
 
 // TODO: Refactor this garbage
 
@@ -68,6 +70,15 @@ voxel* Chunks::getVoxel(int32_t x, int32_t y, int32_t z) const {
 	return &chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 }
 
+voxel& Chunks::requireVoxel(int32_t x, int32_t y, int32_t z) const {
+    auto voxel = getVoxel(x, y, z);
+    if (voxel == nullptr) {
+		LOG_ERROR("Voxel {}x {}y {}z does not exist", x, y, z);
+        throw std::runtime_error("voxel does not exist");
+    }
+    return *voxel;
+}
+
 const AABB* Chunks::isObstacleAt(float x, float y, float z) const {
 	int ix = std::floor(x);
 	int iy = std::floor(y);
@@ -101,7 +112,7 @@ const AABB* Chunks::isObstacleAt(float x, float y, float z) const {
 }
 
 void Chunks::setRotationExtended(
-    const Block& def, blockstate state, glm::ivec3 origin, uint8_t index
+    const Block& def, blockstate state, const glm::ivec3& origin, uint8_t index
 ) {
     auto newstate = state;
     newstate.rotation = index;
@@ -358,8 +369,8 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
 }
 
 voxel* Chunks::rayCast(
-	glm::vec3 start,
-	glm::vec3 dir,
+	const glm::vec3& start,
+	const glm::vec3& dir,
 	float maxDist,
 	glm::vec3& end,
 	glm::ivec3& norm,
@@ -489,7 +500,11 @@ voxel* Chunks::rayCast(
 	return nullptr;
 }
 
-glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDist) {
+glm::vec3 Chunks::rayCastToObstacle(
+	const glm::vec3& start,
+	const glm::vec3& dir,
+	float maxDist
+) {
 	const float px = start.x;
 	const float py = start.y;
 	const float pz = start.z;
@@ -581,7 +596,12 @@ void Chunks::setCenter(int32_t x, int32_t z) {
 	areaMap.setCenter(floordiv(x, CHUNK_WIDTH), floordiv(z, CHUNK_DEPTH));
 }
 
-bool Chunks::checkReplaceability(const Block& def, blockstate state, glm::ivec3 origin, blockid_t ignore) {
+bool Chunks::checkReplaceability(
+	const Block& def,
+	blockstate state,
+	const glm::ivec3& origin,
+	blockid_t ignore
+) {
     const auto& rotation = def.rotations.variants[state.rotation];
     const auto size = def.size;
     for (int sy = 0; sy < size.y; ++sy) {

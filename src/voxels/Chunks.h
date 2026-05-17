@@ -29,7 +29,7 @@ private:
 
     void eraseSegments(const Block& def, blockstate state, int x, int y, int z);
     void repairSegments(const Block& def, blockstate state, int x, int y, int z);
-    void setRotationExtended(const Block& def, blockstate state, glm::ivec3 origin, uint8_t rotation);
+    void setRotationExtended(const Block& def, blockstate state, const glm::ivec3& origin, uint8_t rotation);
 
     util::AreaMap2D<std::shared_ptr<Chunk>, int32_t> areaMap;
 public:
@@ -47,7 +47,12 @@ public:
     ); 
     ~Chunks() = default;
 
-    bool checkReplaceability(const Block& def, blockstate state, glm::ivec3 coord, blockid_t ignore=0);
+    bool checkReplaceability(
+        const Block& def,
+        blockstate state,
+        const glm::ivec3& coord,
+        blockid_t ignore=0
+    );
 
     bool putChunk(const std::shared_ptr<Chunk>& chunk);
 
@@ -55,13 +60,14 @@ public:
     Chunk* getChunkByVoxel(int32_t x, int32_t y, int32_t z); // Получает чанк, содержащий воксель с заданными мировыми координатами
 
     voxel* getVoxel(int32_t x, int32_t y, int32_t z) const; // Возвращает воксель по мировым координатам
-    inline voxel* getVoxel(glm::ivec3 pos) {
+    inline voxel* getVoxel(const glm::ivec3& pos) {
         return getVoxel(pos.x, pos.y, pos.z);
     }
-    inline const voxel* getVoxel(glm::ivec3 pos) const {
+    inline const voxel* getVoxel(const glm::ivec3& pos) const {
         return getVoxel(pos.x, pos.y, pos.z);
     }
     void setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate state); // Устанавливает идентификатор вокселя по мировым координатам
+    voxel& requireVoxel(int32_t x, int32_t y, int32_t z) const;
 
     light_t getLight(int32_t x, int32_t y, int32_t z) const;
 	ubyte getLight(int32_t x, int32_t y, int32_t z, int channel) const;
@@ -73,15 +79,19 @@ public:
     void setRotation(int32_t x, int32_t y, int32_t z, uint8_t rotation);
 
     voxel* rayCast( // Выполняет трассировку луча через воксельный мир.
-        glm::vec3 start, // Начальная точка луча
-        glm::vec3 dir, // Направление луча
+        const glm::vec3& start, // Начальная точка луча
+        const glm::vec3& dir, // Направление луча
         float maxDist, // Максимальная дистанция трассировки
         glm::vec3& end, // Точка попадания луча
         glm::ivec3& norm, // Нормаль поверхности в точке попадания
         glm::ivec3& iend, // Координаты вокселя в точке попадания
         std::set<blockid_t> filter = {}
     );
-    glm::vec3 rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDist);
+    glm::vec3 rayCastToObstacle(
+        const glm::vec3& start,
+        const glm::vec3& dir,
+        float maxDist
+    );
 
     const AABB* isObstacleAt(float x, float y, float z) const;
     const AABB* isObstacleAt(const glm::vec3& pos) const {

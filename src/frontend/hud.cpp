@@ -51,6 +51,8 @@
 #include <world/generator/WorldGenerator.h>
 #include <voxels/ChunksStorage.h>
 
+bool Hud::showGeneratorMinimap = false;
+
 extern std::shared_ptr<gui::UINode> create_debug_panel(
     Engine* engine, 
     Level* level, 
@@ -194,12 +196,11 @@ Hud::Hud(
         Texture::from(debugImgWorldGen.get()), DEBUG_WORLDGEN_IMAGE
     );
 
-    add(HudElement(HudElementMode::Permanent, nullptr, 
-        guiutil::create(
-            "<image src='" + DEBUG_WORLDGEN_IMAGE +
-            "' pos='0' size='256' gravity='top-right' margin='0,20,0,0'/>"
-        ), true)
+    debugMinimap = guiutil::create(
+        "<image src='" + DEBUG_WORLDGEN_IMAGE +
+        "' pos='0' size='256' gravity='top-right' margin='0,20,0,0'/>"
     );
+    add(HudElement(HudElementMode::Permanent, nullptr, debugMinimap, true));
 }
 
 Hud::~Hud() {
@@ -353,7 +354,8 @@ void Hud::update(bool hudVisible) {
 
     cleanup();
 
-    if (player->debug) {
+    debugMinimap->setVisible(player->debug && showGeneratorMinimap);
+    if (player->debug && showGeneratorMinimap) {
         updateWorldGenDebugVisualization();
     }
 }

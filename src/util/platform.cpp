@@ -74,6 +74,8 @@ std::string platform::detect_locale() {
 #endif
 
 #ifdef _WIN32
+#pragma comment(lib, "winmm.lib")
+
 void platform::sleep(size_t millis) {
     static const UINT periodMin = []{
         TIMECAPS tc;

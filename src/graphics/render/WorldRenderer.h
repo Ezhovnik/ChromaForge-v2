@@ -59,7 +59,7 @@ private:
 		ShaderProgram* shader
 	);
 	void renderBlockSelection();
-	void renderHands(const Camera& camera, const Assets& assets);
+	void renderHands(const Camera& camera, const Assets& assets, float deltaTime);
 	void renderDebugLines(
         const DrawContext& context, 
         const Camera& camera, 

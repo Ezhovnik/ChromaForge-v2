@@ -98,6 +98,15 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
             return L"Block: " + std::to_wstring(vox.id) + L" " + stream.str();
         }
 	})));
+    panel->add(create_label([=]() -> std::wstring {
+        const auto& vox = player->selection.vox;
+        if (vox.id == BLOCK_VOID) {
+            return L"x: - y: - z: -";
+        }
+        return L"x: " + std::to_wstring(player->selection.actualPosition.x) +
+            L" y: " + std::to_wstring(player->selection.actualPosition.y) +
+            L" z: " + std::to_wstring(player->selection.actualPosition.z);
+    }));
     panel->add(create_label([=](){
         auto* indices = level->content->getIndices();
         if (auto def = indices->blocks.get(player->selection.vox.id)) {
@@ -222,6 +231,18 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         });
 		panel->add(checkbox);
 	}
+    {
+        auto checkbox = std::make_shared<gui::FullCheckBox>(
+            L"Show Generator Minimap", glm::vec2(400, 24)
+        );
+        checkbox->setSupplier([=]() {
+            return Hud::showGeneratorMinimap;
+        });
+        checkbox->setConsumer([=](bool checked) {
+            Hud::showGeneratorMinimap = checked;
+        });
+        panel->add(checkbox);
+    }
 
 	panel->refresh();
 	return panel;

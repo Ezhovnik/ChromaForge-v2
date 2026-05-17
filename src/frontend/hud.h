@@ -85,6 +85,7 @@ private:
     std::shared_ptr<Inventory> exchangeSlotInv = nullptr;
     std::shared_ptr<gui::UINode> darkOverlay;
     std::shared_ptr<gui::UINode> secondUI = nullptr;
+    std::shared_ptr<gui::UINode> debugMinimap = nullptr;
 
     std::unique_ptr<ImageData> debugImgWorldGen;
 
@@ -129,6 +130,8 @@ public:
     Player* getPlayer() const;
 
     std::shared_ptr<Inventory> getBlockInventory();
+
+    static bool showGeneratorMinimap;
 
     inline static std::string DEBUG_WORLDGEN_IMAGE = "#debug.img.worldgen";
 };
