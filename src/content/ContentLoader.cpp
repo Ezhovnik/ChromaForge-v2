@@ -199,19 +199,27 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         }
     }
 
-    std::string modelName;
-    root.at("model").get(modelName);
-    if (auto model = BlockModel_from(modelName)) {
+    std::string modelTypeName;
+    root.at("model").get(modelTypeName);
+    root.at("model-name").get(def.modelName);
+    if (auto model = BlockModel_from(modelTypeName)) {
         if (*model == BlockModel::Custom) {
             if (root.has("model-primitives")) {
-                loadCustomBlockModel(def, root["model-primitives"]);
-            } else {
-                LOG_ERROR("Error occured while block {} parsed: no 'model-primitives' found", name);
+                def.customModelRaw = root["model-primitives"];
+            } else if (def.modelName.empty()) {
+                LOG_ERROR("Error occured while block {} parsed: no 'model-primitives' of 'model-name' found", name);
+                throw std::runtime_error("Error occured while block " + name + " no 'model-primitives' or 'model-name' found");
+            }
+            for (uint i = 0; i < 6; ++i) {
+                std::string& texture = def.textureFaces[i];
+                if (texture == TEXTURE_NOTFOUND) {
+                    texture = "";
+                }
             }
         }
         def.model = *model;
-    } else if (!modelName.empty()) {
-        LOG_WARN("Unknown block {} model {}", name, modelName);
+    } else if (!modelTypeName.empty()) {
+        LOG_WARN("Unknown block {} model {}", name, modelTypeName);
         def.model = BlockModel::None;
     }
 
@@ -253,11 +261,9 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
             box[3].asNumber(), box[4].asNumber(), box[5].asNumber()
         );
         aabb.b += aabb.a;
-        def.hitboxes = { aabb };
-    } else if (!def.modelBoxes.empty()) {
-        def.hitboxes = def.modelBoxes;
+        def.hitboxes = {aabb};
     } else {
-        def.hitboxes = { AABB() };
+        def.hitboxes = {AABB()};
     }
 
     if (auto found = root.at("emission")) {
@@ -320,60 +326,6 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
 
     if (def.hidden && def.pickingItem == def.name + BLOCK_ITEM_SUFFIX) {
         def.pickingItem = BUILTIN_EMPTY;
-    }
-}
-
-void ContentLoader::loadCustomBlockModel(Block& def, const dv::value& primitives) {
-    if (primitives.has("aabbs")) {
-        const auto& modelboxes = primitives["aabbs"];
-        for (uint i = 0; i < modelboxes.size(); ++i) {
-            const auto& boxarr = modelboxes[i];
-            AABB modelbox;
-            modelbox.a = glm::vec3(
-                boxarr[0].asNumber(), boxarr[1].asNumber(), boxarr[2].asNumber()
-            );
-            modelbox.b = glm::vec3(
-                boxarr[3].asNumber(), boxarr[4].asNumber(), boxarr[5].asNumber()
-            );
-            modelbox.b += modelbox.a;
-            def.modelBoxes.push_back(modelbox);
-
-            if (boxarr.size() == 7) {
-                for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.emplace_back(boxarr[6].asString());
-                }
-            } else if (boxarr.size() == 12) {
-                for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.emplace_back(boxarr[j].asString());
-                }
-            } else {
-                for (uint j = 6; j < 12; ++j) {
-                    def.modelTextures.emplace_back(TEXTURE_NOTFOUND);
-                }
-            }
-        }
-    }
-
-    if (primitives.has("tetragons")) {
-        const auto& modeltetragons = primitives["tetragons"];
-        for (uint i = 0; i < modeltetragons.size(); ++i) {
-            const auto& tgonobj = modeltetragons[i];
-            glm::vec3 p1(
-                tgonobj[0].asNumber(), tgonobj[1].asNumber(), tgonobj[2].asNumber()
-            );
-            glm::vec3 xw(
-                tgonobj[3].asNumber(), tgonobj[4].asNumber(), tgonobj[5].asNumber()
-            );
-            glm::vec3 yh(
-                tgonobj[6].asNumber(), tgonobj[7].asNumber(), tgonobj[8].asNumber()
-            );
-            def.modelExtraPoints.push_back(p1);
-            def.modelExtraPoints.push_back(p1 + xw);
-            def.modelExtraPoints.push_back(p1 + xw + yh);
-            def.modelExtraPoints.push_back(p1 + yh);
-
-            def.modelTextures.emplace_back(tgonobj[9].asString());
-        }
     }
 }
 

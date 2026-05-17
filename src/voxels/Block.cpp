@@ -102,14 +102,11 @@ void Block::cloneTo(Block& dst) {
         dst.textureFaces[i] = textureFaces[i];
     }
 
-    dst.modelTextures = modelTextures;
-    dst.modelBoxes = modelBoxes;
-    dst.modelExtraPoints = modelExtraPoints;
-    dst.modelUVs = modelUVs;
     dst.material = material;
     std::copy(&emission[0], &emission[3], dst.emission);
     dst.size = size;
     dst.model = model;
+    dst.drawGroup = drawGroup;
     dst.lightPassing = lightPassing;
     dst.skyLightPassing = skyLightPassing;
     dst.shadeless = shadeless;
@@ -129,7 +126,10 @@ void Block::cloneTo(Block& dst) {
     dst.inventorySize = inventorySize;
     dst.sparkInterval = sparkInterval;
     dst.overlayTexture = overlayTexture;
-    dst.particles = std::make_unique<ParticlesPreset>(*particles);
+    if (particles) {
+        dst.particles = std::make_unique<ParticlesPreset>(*particles);
+    }
+    dst.customModelRaw = customModelRaw;
 }
 
 static std::set<std::string, std::less<>> RESERVED_BLOCK_FIELDS {

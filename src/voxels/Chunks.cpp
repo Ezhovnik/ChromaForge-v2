@@ -528,9 +528,7 @@ glm::vec3 Chunks::rayCastToObstacle(glm::vec3 start, glm::vec3 dir, float maxDis
             const auto& def = contentIds->blocks.require(voxel->id);
             if (def.obstacle) {
                 if (!def.rt.solid) {
-                    const std::vector<AABB>& hitboxes = def.rotatable
-                        ? def.rt.hitboxes[voxel->state.rotation]
-                        : def.modelBoxes;
+                    const std::vector<AABB>& hitboxes = def.rt.hitboxes[voxel->state.rotation];
 
                     scalar_t distance;
                     glm::ivec3 norm;

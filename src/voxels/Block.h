@@ -9,6 +9,7 @@
 #include <typedefs.h>
 #include <math/UVRegion.h>
 #include <core_content_defs.h>
+#include <data/dv.h>
 
 struct ParticlesPreset;
 namespace data {
@@ -95,16 +96,14 @@ public:
     std::string caption;
 
     std::array<std::string, 6> textureFaces; // -x, +x, -y, +y, -z, +z
-    std::vector<std::string> modelTextures = {};
-	std::vector<AABB> modelBoxes = {};
-	std::vector<glm::vec3> modelExtraPoints = {};
-	std::vector<UVRegion> modelUVs = {};
     std::string material = DEFAULT_MATERIAL;
 
     ubyte emission[4] {0, 0, 0, 0};
     glm::i8vec3 size {1, 1, 1};
     ubyte drawGroup = 0;
     BlockModel model = BlockModel::Cube;
+    dv::value customModelRaw = nullptr;
+    std::string modelName = "";
     std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
     std::string scriptName = name.substr(name.find(':') + 1);
     uint inventorySize = 0;

@@ -125,25 +125,6 @@ private:
     );
 
     /**
-     * @brief Рисует четырёхугольную грань, заданную четырьмя точками в локальных координатах.
-     * @param coord Базовая координата.
-     * @param p1,p2,p3,p4 Локальные координаты углов (в диапазоне 0..1).
-     * @param X,Y,Z Глобальные оси.
-     * @param texreg Текстурная область.
-     * @param lights Включить ли освещение.
-     */
-	void tetragonicFace(
-        const glm::vec3& coord,
-		const glm::vec3& p1, const glm::vec3& p2,
-		const glm::vec3& p3, const glm::vec3& p4,
-		const glm::vec3& X,
-		const glm::vec3& Y,
-		const glm::vec3& Z,
-		const UVRegion& texreg,
-		bool lights
-    );
-
-    /**
      * @brief Рендерит кубический блок (стандартная модель).
      * @param x,y,z Координаты блока в чанке.
      * @param faces Массив из 6 текстурных областей для каждой грани.

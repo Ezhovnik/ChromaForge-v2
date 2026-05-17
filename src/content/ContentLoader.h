@@ -32,7 +32,6 @@ private:
     void loadEntity(Entity& def, const std::string& full, const std::string& name);
     void loadGenerator(Generator& def, const std::string& full, const std::string& name);
 
-    static void loadCustomBlockModel(Block& def, const dv::value& primitives);
     static void loadBlockMaterial(BlockMaterial& def, const std::filesystem::path& file);
     void loadBlock(Block& def, const std::string& name, const std::filesystem::path& file);
     void loadItem(Item& def, const std::string& name, const std::filesystem::path& file);
