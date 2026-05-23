@@ -10,6 +10,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(CURL REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -32,6 +33,7 @@ target_link_libraries(ChromaForge
         glfw
         PkgConfig::VORBIS
         PkgConfig::LUAJIT
+        CURL::libcurl
         $<$<PLATFORM_ID:Windows>:winmm>
 )
 
