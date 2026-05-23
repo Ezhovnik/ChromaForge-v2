@@ -44,7 +44,7 @@ public:
 
     Chunk(int chunk_x, int chunk_z); // Конструктор
 
-    bool isEmpty(); // Проверяет, является ли чанк пустым (однородным).
+    bool isEmpty() const; // Проверяет, является ли чанк пустым (однородным).
 
     void updateHeights();
 

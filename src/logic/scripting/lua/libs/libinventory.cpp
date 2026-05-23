@@ -102,6 +102,26 @@ static int l_inventory_unbind_block(lua::State* L) {
     return 0;
 }
 
+static int l_inventory_create(lua::State* L) {
+    auto invsize = lua::tointeger(L, 1);
+    auto inv = scripting::level->inventories->create(invsize);
+    if (inv == nullptr) {
+        return lua::pushinteger(L, 0);
+    }
+    return lua::pushinteger(L, inv->getId());
+}
+
+static int l_inventory_remove(lua::State* L) {
+    auto invid = lua::tointeger(L, 1);
+    auto inv = get_inventory(invid);
+    if (inv == nullptr) {
+        return 0;
+    }
+
+    scripting::level->inventories->remove(invid);
+    return 0;
+}
+
 static int l_inventory_clone(lua::State* L) {
     auto id = lua::tointeger(L, 1);
     auto clone = scripting::level->inventories->clone(id);
@@ -139,6 +159,8 @@ const luaL_Reg inventorylib [] = {
     {"get_block", lua::wrap<l_inventory_get_block>},
     {"bind_block", lua::wrap<l_inventory_bind_block>},
     {"unbind_block", lua::wrap<l_inventory_unbind_block>},
+    {"create", lua::wrap<l_inventory_create>},
+    {"remove", lua::wrap<l_inventory_remove>},
     {"clone", lua::wrap<l_inventory_clone>},
     {NULL, NULL}
 };

@@ -74,6 +74,7 @@ private:
 
     std::shared_ptr<gui::InventoryView> inventoryView = nullptr;
     std::shared_ptr<gui::InventoryView> blockUI = nullptr;
+    std::shared_ptr<gui::InventoryView> secondInvView = nullptr;
 
 	glm::ivec3 blockPos {};
     blockid_t currentblockid = 0;
@@ -122,7 +123,17 @@ public:
     void setPause(bool pause);
 
     void openInventory();
-    void openInventory(glm::ivec3 block, UIDocument* doc, std::shared_ptr<Inventory> blockInv, bool playerInventory);
+    void openInventory(
+        UIDocument* doc,
+        std::shared_ptr<Inventory> inv,
+        bool playerInventory
+    );
+    void openInventory(
+        glm::ivec3 block,
+        UIDocument* doc,
+        std::shared_ptr<Inventory> blockInv,
+        bool playerInventory
+    );
     void closeInventory();
     bool isInventoryOpen() const;
     void openPermanent(UIDocument* doc);

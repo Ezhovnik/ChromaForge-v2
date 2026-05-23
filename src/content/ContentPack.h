@@ -45,6 +45,8 @@ struct ContentPack {
 
     std::filesystem::path folder;
 
+    std::string source = "";
+
     std::filesystem::path getContentFile() const;
 
     static inline const std::string PACKAGE_FILENAME = "package.json";

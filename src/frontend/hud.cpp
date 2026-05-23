@@ -488,6 +488,39 @@ void Hud::openInventory() {
     add(HudElement(HudElementMode::InventoryBound, nullptr, exchangeSlot, false));
 }
 
+void Hud::openInventory(
+    UIDocument* doc,
+    std::shared_ptr<Inventory> inv,
+    bool playerInventory
+) {
+    if (inv == nullptr) {
+        return;
+    }
+
+    if (isInventoryOpen()) {
+        closeInventory();
+    }
+    auto level = levelFrontend->getLevel();
+    auto content = level->content;
+    secondInvView = std::dynamic_pointer_cast<gui::InventoryView>(doc->getRoot());
+    if (secondInvView == nullptr) {
+        LOG_ERROR("Secondary UI root element must be 'inventory'");
+        throw std::runtime_error("Secondary UI root element must be 'inventory'");
+    }
+    secondUI = secondInvView;
+
+    if (playerInventory) {
+        openInventory();
+    } else {
+        inventoryOpen = true;
+    }
+    if (inv == nullptr) {
+        inv = level->inventories->createVirtual(secondInvView->getSlotsCount());
+    }
+    secondInvView->bind(inv, content);
+    add(HudElement(HudElementMode::InventoryBound, doc, secondUI, false));
+}
+
 void Hud::showExchangeSlot() {
     auto level = levelFrontend->getLevel();
     auto content = level->content;

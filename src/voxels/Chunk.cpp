@@ -19,7 +19,7 @@ Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
 }
 
 // Проверяет, является ли чанк пустым (однородным).
-bool Chunk::isEmpty() {
+bool Chunk::isEmpty() const {
     int id = -1;
 	for (uint i = 0; i < CHUNK_VOLUME; ++i){
 		if (voxels[i].id != id){

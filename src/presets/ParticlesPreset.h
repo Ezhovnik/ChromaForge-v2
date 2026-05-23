@@ -25,6 +25,7 @@ struct ParticlesPreset : public Serializable {
     glm::vec3 acceleration {0.0f, -16.0f, 0.0f};
     glm::vec3 explosion {2.0f};
     glm::vec3 size {0.1f};
+    float sizeSpread = 0.2f;
     ParticleSpawnShape spawnShape = Ball;
     glm::vec3 spawnSpread {};
     std::string texture = "";
