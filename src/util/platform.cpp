@@ -101,10 +101,12 @@ void platform::open_folder(const std::filesystem::path& folder) {
     if (!std::filesystem::is_directory(folder)) return;
 #ifdef __APPLE__
     auto cmd = "open " + util::quote(folder.u8string());
+    system(cmd.c_str());
 #elif defined(_WIN32)
     auto cmd = "start explorer " + util::quote(folder.u8string());
+    ShellExecuteW(NULL, L"open", folder.wstring().c_str(), NULL, NULL, SW_SHOWDEFAULT);
 #else
     auto cmd = "xdg-open " + util::quote(folder.u8string());
-#endif
     system(cmd.c_str());
+#endif
 }

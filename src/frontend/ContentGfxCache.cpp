@@ -28,7 +28,21 @@ ContentGfxCache::ContentGfxCache(const Content* content, Assets* assets) : conte
             }
         }
         if (def->model == BlockModel::Custom) {
-            models[def->rt.id] = assets->require<model::Model>(def->modelName);
+            auto model = assets->require<model::Model>(def->modelName);
+            if (def->modelName.find(':') == std::string::npos) {
+                for (auto& mesh : model.meshes) {
+                    size_t pos = mesh.texture.find(':');
+                    if (pos == std::string::npos) {
+                        continue;
+                    }
+                    if (auto region = atlas->getIf(mesh.texture.substr(pos+1))) {
+                        for (auto& vertex : mesh.vertices) {
+                            vertex.uv = region->apply(vertex.uv);
+                        }
+                    }
+                }
+            }
+            models[def->rt.id] = std::move(model);
         }
     }
 }
