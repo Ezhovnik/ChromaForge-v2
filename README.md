@@ -26,7 +26,7 @@
 
 Скачайте последнюю сборку:
 
-[**ChromaForge-v0.3.0-Windows-x64.zip**](https://github.com/Ezhovnik/ChromaForge-v2/releases/download/v0.3.0/ChromaForge.v0.3.0.Windows.64.bit.build.zip)
+[**ChromaForge-v0.3.0-Windows-x64.zip**](https://github.com/Ezhovnik/ChromaForge-v2/releases/download/v0.3.0/ChromaForge-v.0.3.0-Windows-64-bit.zip)
 
 Распакуйте архив и запустите `ChromaForge.exe`.
 
