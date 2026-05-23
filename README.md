@@ -4,16 +4,33 @@
 
 ## *Воксельный движок, стирающий границы между мечтой и реальностью*
 
-[![Version](https://img.shields.io/badge/v0.2.0-green?style=flat-square)](https://github.com/Ezhovnik/ChromaForge-v2/releases/tag/v0.2.0)
-[![Version](https://img.shields.io/badge/v0.0-beta.1-gray?style=flat-square)](https://github.com/Ezhovnik/ChromaForge-v2/releases/tag/v0.0-beta.1)
+[![Version](https://img.shields.io/badge/version-0.3.0-green?style=flat-square)](https://github.com/Ezhovnik/ChromaForge-v2/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey?style=flat-square)]
 
 **ChromaForge** — это воксельный движок с открытым исходным кодом, вдохновлённый Minecraft и Hytale.  
 Творите, создавайте, вдохновляйте и вдохновляйтесь!
 </div>
 
-# Готовые сборки
+---
 
-- [Windows 64 bit](https://github.com/Ezhovnik/ChromaForge-v2/releases/download/v0.2.0/ChromaForge.v0.2.0.Windows.64.bit.build.zip)
+## 📸 Скриншоты
+
+[![Закат](doc/screenshots/screenshot1_thumb.png)](doc/screenshots/screenshot1.png)
+[![Ночное время суток](doc/screenshots/screenshot2_thumb.png)](doc/screenshots/screenshot2.png)
+[![Цветное освещение](doc/screenshots/screenshot3_thumb.png)](doc/screenshots/screenshot3.png)
+[![Творите!](doc/screenshots/screenshot4_thumb.png)](doc/screenshots/screenshot4.png)
+
+---
+
+## 📦 Быстрый старт (Windows)
+
+Скачайте последнюю сборку:
+
+[**ChromaForge-v0.3.0-Windows-x64.zip**](https://github.com/Ezhovnik/ChromaForge-v2/releases/download/v0.3.0/ChromaForge.v0.3.0.Windows.64.bit.build.zip)
+
+Распакуйте архив и запустите `ChromaForge.exe`.
+
+---
 
 # Управление по умолчанию
 
