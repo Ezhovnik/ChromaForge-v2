@@ -17,10 +17,10 @@
 #include <items/Inventories.h>
 #include <objects/Entities.h>
 
-void ChunksStorage::verifyLoadedChunk(ContentIndices* indices, Chunk* chunk) {
+static void check_voxels(const ContentIndices& indices, Chunk* chunk) {
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         blockid_t id = chunk->voxels[i].id;
-        if (indices->blocks.get(id) == nullptr) {
+        if (indices.blocks.get(id) == nullptr) {
             LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
 			chunk->voxels[i].id = BLOCK_AIR;
         }
@@ -54,9 +54,26 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	store(chunk);
 
 	if (auto data = regions.getVoxels(chunk->chunk_x, chunk->chunk_z)) {
+		const auto& indices = *level->content->getIndices();
+
 		chunk->decode(data.get());
+		check_voxels(indices, chunk.get());
 
 		auto invs = regions.fetchInventories(chunk->chunk_x, chunk->chunk_z);
+		auto iterator = invs.begin();
+        while (iterator != invs.end()) {
+            uint index = iterator->first;
+            const auto& def = indices.blocks.require(chunk->voxels[index].id);
+            if (def.inventorySize == 0) {
+                iterator = invs.erase(iterator);
+                continue;
+            }
+            auto& inventory = iterator->second;
+            if (def.inventorySize != inventory->size()) {
+                inventory->resize(def.inventorySize);
+            }
+            ++iterator;
+        }
 		chunk->setBlockInventories(std::move(invs));
 
 		auto entitiesData = regions.fetchEntities(chunk->chunk_x, chunk->chunk_z);
@@ -69,7 +86,6 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 		for (auto& entry : chunk->inventories) {
 			level->inventories->store(entry.second);
 		}
-		verifyLoadedChunk(level->content->getIndices(), chunk.get());
 	}
 
 	if (auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z)) {

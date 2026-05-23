@@ -381,7 +381,7 @@ void Hud::draw(const DrawContext& context) {
 	uiShader->uniformMatrix("u_projview", uicamera->getProjView());
 
 	if (!pause && !inventoryOpen && !player->debug) {
-		DrawContext crosshair_context = context.sub();
+		DrawContext crosshair_context = context.sub(batch);
         crosshair_context.setBlendMode(BlendMode::Inversion);
         auto texture = assets->get<Texture>("gui/crosshair");
         batch->texture(texture);

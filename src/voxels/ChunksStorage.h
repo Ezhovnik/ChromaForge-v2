@@ -18,8 +18,6 @@ class ChunksStorage {
 private:
     Level* level;
 	std::unordered_map<glm::ivec2, std::shared_ptr<Chunk>> chunksMap;
-
-	void verifyLoadedChunk(ContentIndices* indices, Chunk* chunk);
 public:
 	ChunksStorage(Level* level);
 	~ChunksStorage() = default;

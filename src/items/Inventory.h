@@ -28,6 +28,8 @@ public:
 
     void move(ItemStack& item, const ContentIndices* indices, size_t begin=0, size_t end=-1);
 
+    void resize(uint newSize);
+
     void deserialize(const dv::value& src) override;
     dv::value serialize() const override;
 
