@@ -201,7 +201,12 @@ void scripting::cleanup() {
         lua::call_nothrow(L, 1);   
     }
     lua::pop(L);
-    
+
+    lua::getglobal(L, "rules");
+    lua::getfield(L, "clear");
+    lua::call_nothrow(L, 0);
+    lua::pop(L);
+
     if (lua::getglobal(L, "__scripts_cleanup")) {
         lua::call_nothrow(L, 0);
     }

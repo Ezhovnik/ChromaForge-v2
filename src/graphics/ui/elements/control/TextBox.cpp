@@ -456,7 +456,7 @@ void TextBox::performEditingKeyboardEvents(keycode key) {
             paste(L"\n");
         } else {
             defocus();
-            if (validate()) consumer(label->getText());
+            if (validate() && consumer) consumer(label->getText());
         }
     } else if (key == keycode::TAB) {
         paste(L"    ");

@@ -35,7 +35,12 @@ static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     return label;
 }
 
-std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Player* player) {
+std::shared_ptr<gui::UINode> create_debug_panel(
+    Engine* engine,
+    Level* level,
+    Player* player,
+    bool allowDebugCheats
+) {
 	auto panel = std::make_shared<gui::Panel>(glm::vec2(350, 200), glm::vec4(5.0f), 2.0f);
     panel->setId("hud.debug-panel");
     panel->setPos(glm::vec2(10, 10));
@@ -144,16 +149,20 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
         box->setTextSupplier([=]() {
             return std::to_wstring(static_cast<int>(player->getPosition()[ax]));
         });
-        box->setTextConsumer([=](const std::wstring& text) {
-            try {
-                glm::vec3 position = player->getPosition();
-                position[ax] = std::stoi(text);
-                player->teleport(position);
-            } catch (std::exception& _) {
-            }
-        });
-        box->setOnEditStart([=](){
-            boxRef->setText(std::to_wstring(static_cast<int>(player->getPosition()[ax])));
+        if (allowDebugCheats) {
+            box->setTextConsumer([=](const std::wstring& text) {
+                try {
+                    glm::vec3 position = player->getPosition();
+                    position[ax] = std::stoi(text);
+                    player->teleport(position);
+                } catch (std::exception& _){
+                }
+            });
+        }
+        box->setOnEditStart([=]() {
+            boxRef->setText(
+                std::to_wstring(static_cast<int>(player->getPosition()[ax]))
+            );
         });
         box->setSize(glm::vec2(230, 27));
 
@@ -170,7 +179,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 		return L"Sky clearness: " + ss.str();
 	})));
 
-	{
+	if (allowDebugCheats) {
 		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 0.0f, 0.005f, 8);
 		bar->setSupplier([&]() {
 			return worldInfo.skyClearness;
@@ -191,7 +200,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 		return L"Time: " + timeString;
 	})));
 
-	{
+	if (allowDebugCheats) {
 		auto bar = std::make_shared<gui::TrackBar>(0.0f, 1.0f, 1.0f, 0.005f, 8);
 		bar->setSupplier([&]() {
 			return worldInfo.daytime;
@@ -201,6 +210,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(Engine* engine, Level* level, Pl
 		});
 		panel->add(bar);
 	}
+
 	{
         auto checkbox = std::make_shared<gui::FullCheckBox>(L"Frustum-Culling", glm::vec2(400, 24));
         checkbox->setSupplier([=]() {

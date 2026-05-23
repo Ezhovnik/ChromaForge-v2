@@ -64,8 +64,9 @@ public:
 
 class Hud : public util::ObjectsKeeper {
 private:
-	std::unique_ptr<Camera> uicamera;
+    Engine* engine;
     Assets* assets;
+    std::unique_ptr<Camera> uicamera;
 
     std::shared_ptr<gui::Container> contentAccessPanel;
     std::shared_ptr<gui::InventoryView> contentAccess;
@@ -76,6 +77,10 @@ private:
 
 	glm::ivec3 blockPos {};
     blockid_t currentblockid = 0;
+
+    bool showContentPanel = true;
+
+    bool allowDebugCheats = true;
 
     bool inventoryOpen = false;
     bool pause = false;
@@ -122,6 +127,9 @@ public:
     bool isInventoryOpen() const;
     void openPermanent(UIDocument* doc);
     void showOverlay(UIDocument* doc, bool playerInventory);
+    bool isContentAccess() const;
+    void setContentAccess(bool flag);
+    void setDebugCheats(bool flag);
 
     void add(const HudElement& element);
 	void onRemove(const HudElement& element);

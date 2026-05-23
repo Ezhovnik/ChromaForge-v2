@@ -23,7 +23,9 @@ console.add_command(
             table.sort(commands)
             local str = "Available commands:"
             for i,k in ipairs(commands) do
-                str = str .. "\n  " .. build_scheme(console.get_command_info(k))
+                if rules.get("cheat-commands") or not table.has(console.cheats, k) then
+                    str = str .. "\n  " .. build_scheme(console.get_command_info(k))
+                end
             end
             return str .. "\nuse 'help <command>'"
         end
@@ -156,7 +158,7 @@ console.add_command(
         local entity = entities.get(eid)
         if entity ~= nil then
             entity:despawn()
-            return "despawned entity #" .. tostring(eid)
+            return "Despawned entity #" .. tostring(eid)
         end
     end
 )
@@ -212,3 +214,45 @@ console.add_command(
         fragment:place({x, y, z}, rotation)
     end
 )
+
+console.add_command(
+    "rule.set name:str value:bool",
+    "Set rule value",
+    function(args, kwargs)
+        local name = args[1]
+        local value = args[2]
+        rules.set(name, value)
+        return "Rule '"..name.."' set to "..tostring(value)
+    end
+)
+
+console.add_command(
+    "rule.list",
+    "Show registered rules list",
+    function(args, kwargs)
+        local names = ""
+        for name, rule in pairs(rules.rules) do
+            if #names > 0 then
+                names = names .. "\n  "
+            else
+                names = "  "
+            end
+            local value = rule.value
+            if value == nil then
+                value = "not set"
+            end
+            names = names .. name .. ":\t" .. tostring(value)
+        end
+        return "Registered rules:\n" .. names
+    end
+)
+
+console.cheats = {
+    "blocks.fill",
+    "tp",
+    "fragment.place",
+    "time.set",
+    "time.daycycle",
+    "entity.despawn",
+    "player.respawn"
+}

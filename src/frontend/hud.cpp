@@ -56,7 +56,8 @@ bool Hud::showGeneratorMinimap = false;
 extern std::shared_ptr<gui::UINode> create_debug_panel(
     Engine* engine, 
     Level* level, 
-    Player* player
+    Player* player,
+    bool allowDebugCheats
 );
 
 HudElement::HudElement(
@@ -151,7 +152,8 @@ Hud::Hud(
     Engine* engine, 
     LevelFrontend* levelFrontend,
     Player* player
-) : assets(engine->getAssets()),
+) : engine(engine),
+    assets(engine->getAssets()),
     guiController(engine->getGUI()),
     levelFrontend(levelFrontend),
     player(player),
@@ -179,12 +181,14 @@ Hud::Hud(
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
-    debugPanel = create_debug_panel(engine, levelFrontend->getLevel(), player);
+    debugPanel = create_debug_panel(
+        engine, levelFrontend->getLevel(), player, allowDebugCheats
+    );
 	debugPanel->setZIndex(2);
+    guiController->add(debugPanel);
 
 	guiController->add(darkOverlay);
     guiController->add(hotbarView);
-	guiController->add(debugPanel);
     guiController->add(contentAccessPanel);
 
     auto dplotter = std::make_shared<gui::Plotter>(350, 250, 2000, 16);
@@ -340,7 +344,7 @@ void Hud::update(bool hudVisible) {
     }
 
 	glm::vec2 invSize = contentAccessPanel->getSize();
-    contentAccessPanel->setVisible(inventoryView != nullptr);
+    contentAccessPanel->setVisible(inventoryView != nullptr && showContentPanel);
     contentAccessPanel->setSize(glm::vec2(invSize.x, Window::height));
     contentAccess->setMinSize(glm::vec2(1, Window::height));
 	hotbarView->setVisible(hudVisible && !(secondUI && !inventoryView));
@@ -392,7 +396,7 @@ void Hud::updateElementsPosition(const Viewport& viewport) {
     const uint height = viewport.getHeight();
 
 	if (inventoryOpen) {
-		float caWidth = inventoryView ? contentAccess->getSize().x : 0.0f;
+		float caWidth = (inventoryView && showContentPanel) ? contentAccess->getSize().x : 0.0f;
         contentAccessPanel->setPos(glm::vec2(width-caWidth, 0));
 
 		glm::vec2 invSize = inventoryView ? inventoryView->getSize() : glm::vec2();
@@ -599,4 +603,23 @@ Player* Hud::getPlayer() const {
 std::shared_ptr<Inventory> Hud::getBlockInventory() {
     if (blockUI == nullptr) return nullptr;
     return blockUI->getInventory();
+}
+
+bool Hud::isContentAccess() const {
+    return showContentPanel;
+}
+
+void Hud::setContentAccess(bool flag) {
+    showContentPanel = flag;
+}
+
+void Hud::setDebugCheats(bool flag) {
+    allowDebugCheats = flag;
+
+    guiController->remove(debugPanel);
+    debugPanel = create_debug_panel(
+        engine, levelFrontend->getLevel(), player, allowDebugCheats
+    );
+    debugPanel->setZIndex(2);
+    guiController->add(debugPanel);
 }
