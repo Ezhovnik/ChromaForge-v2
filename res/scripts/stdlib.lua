@@ -225,7 +225,10 @@ function _rules.create(name, value, handler)
 end
 
 function _rules.unlisten(name, id)
-    local rule = _rules.get_rule(name)
+    local rule = _rules.rules[name]
+    if rule == nil then
+        return
+    end
     rule.listeners[utf8.encode(id)] = nil
 end
 
@@ -233,12 +236,13 @@ function _rules.clear()
     _rules.rules = {}
     _rules.nextid = 1
 
-    _rules.create("cheat-commands", true)
+    _rules.create("allow-cheats", true)
 end
 
 function __vc_create_hud_rules()
-    _rules.create("show-content-access", hud._is_content_access(), function(value)
+    _rules.create("allow-content-access", hud._is_content_access(), function(value)
         hud._set_content_access(value)
+        input.set_enabled("player.pick", value)
     end)
     _rules.create("allow-flight", true, function(value)
         input.set_enabled("player.flight", value)
@@ -246,8 +250,11 @@ function __vc_create_hud_rules()
     _rules.create("allow-noclip", true, function(value)
         input.set_enabled("player.noclip", value)
     end)
-    _rules.create("allow-destruct", true, function(value)
+    _rules.create("allow-attack", true, function(value)
         input.set_enabled("player.attack", value)
+    end)
+    _rules.create("allow-destroy", true, function(value)
+        input.set_enabled("player.destroy", value)
     end)
     _rules.create("allow-cheat-movement", true, function(value)
         input.set_enabled("movement.cheat", value)

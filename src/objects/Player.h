@@ -34,6 +34,7 @@ struct PlayerInput {
 	bool noclip : 1;
 	bool flight : 1;
     bool attack : 1;
+    bool destroy : 1;
     bool build : 1;
     bool pickBlock : 1;
     bool dropBlock : 1;

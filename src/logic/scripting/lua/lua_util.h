@@ -596,10 +596,31 @@ namespace lua {
         setglobal(L, name);
     }
 
-    inline void openlib(lua::State* L, const std::string& name, const luaL_Reg* libfuncs) {
+    inline void openlib(
+        lua::State* L,
+        const std::string& name,
+        const luaL_Reg* libfuncs
+    ) {
         createtable(L, 0, 0);
         luaL_setfuncs(L, libfuncs, 0);
         setglobal(L, name);
+    }
+
+    inline void openlib(
+        lua::State* L,
+        const std::string& package,
+        const std::string& name,
+        const luaL_Reg* libfuncs
+    ) {
+        if (!hasglobal(L, package)) {
+            createtable(L, 0, 1);
+            setglobal(L, package);
+        }
+        getglobal(L, package);
+        createtable(L, 0, 0);
+        luaL_setfuncs(L, libfuncs, 0);
+        setfield(L, name);
+        pop(L);
     }
 
     inline const char* require_string_field(

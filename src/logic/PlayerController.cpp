@@ -246,6 +246,7 @@ void PlayerController::resetKeyboard() {
 	input.jump = false;
 	input.attack = false;
 	input.build = false;
+    input.destroy = false;
 	input.pickBlock = false;
 	input.cameraMode = false;
     input.dropBlock = false;
@@ -440,8 +441,9 @@ void PlayerController::updateInteraction(float deltaTime) {
     float maxDistance = xkey ? 20.0f : 10.0f;
     bool longInteraction = interactionTimer <= 0 || xkey;
     input.attack = Events::justActive(BIND_PLAYER_ATTACK) || (longInteraction && Events::isActive(BIND_PLAYER_ATTACK));
-	input.build = Events::justActive(BIND_PLAYER_BUILD) || (longInteraction && Events::isActive(BIND_PLAYER_BUILD));
-    if (input.attack || input.build) interactionTimer = INTERACTION_RELOAD;
+	input.destroy = Events::justActive(BIND_PLAYER_DESTROY) || (longInteraction && Events::isActive(BIND_PLAYER_DESTROY));
+    input.build = Events::justActive(BIND_PLAYER_BUILD) || (longInteraction && Events::isActive(BIND_PLAYER_BUILD));
+    if (input.destroy || input.build) interactionTimer = INTERACTION_RELOAD;
 
     auto inventory = player->getInventory();
     const ItemStack& stack = inventory->getSlot(player->getChosenSlot());
@@ -459,13 +461,13 @@ void PlayerController::updateInteraction(float deltaTime) {
     }
 
     auto iend = selection.position;
-    if (input.attack && !input.crouch && item.rt.funcsset.on_block_break_by) {
+    if (input.destroy && !input.crouch && item.rt.funcsset.on_block_break_by) {
         if (scripting::on_item_break_block(player.get(), item, iend.x, iend.y, iend.z)) {
             return;
         }
     }
     auto& target = indices->blocks.require(vox->id);
-    if (input.attack && target.breakable) {
+    if (input.destroy && target.breakable) {
         blocksController->breakBlock(
             player.get(),
             target,
