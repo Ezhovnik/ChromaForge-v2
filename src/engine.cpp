@@ -443,7 +443,6 @@ EngineController* Engine::getController() {
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
-    Events::enableBindings();
     audio::reset_channel(audio::get_channel_index("regular"));
     audio::reset_channel(audio::get_channel_index("ambient"));
 	this->screen = std::move(screen);

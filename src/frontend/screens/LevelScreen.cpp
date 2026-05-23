@@ -70,6 +70,7 @@ LevelScreen::LevelScreen(
 LevelScreen::~LevelScreen() {
     saveWorldPreview();
     scripting::on_frontend_close();
+    Events::enableBindings();
     controller->onWorldQuit();
     engine->getPaths()->setCurrentWorldFolder(std::filesystem::path());
 }
