@@ -56,12 +56,3 @@ add_custom_target(copy_resources ALL
     COMMENT "Copying resources to build directory"
 )
 add_dependencies(ChromaForge copy_resources)
-
-add_custom_command(TARGET ChromaForge POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E $<IF:$<CONFIG:Release>,copy_if_different,echo>
-        $<$<CONFIG:Release>:$<TARGET_RUNTIME_DLLS:ChromaForge>>
-        $<$<CONFIG:Release>:$<TARGET_FILE_DIR:ChromaForge>>
-    COMMAND_EXPAND_LISTS
-    COMMAND ${CMAKE_COMMAND} -E $<IF:$<CONFIG:Release>,echo,true>
-        $<$<CONFIG:Release>:"Copied runtime DLLs to $<TARGET_FILE_DIR:ChromaForge>">
-)
