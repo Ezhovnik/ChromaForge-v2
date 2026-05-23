@@ -246,7 +246,7 @@ public:
             case ArgType::Integer:
                 return typeCheck(arg, dv::value_type::Integer, value, "integer");
             case ArgType::Boolean:
-                if (!arg->optional) {
+                if (!arg->optional && !value.isBoolean()) {
                     throw typeError(arg->name, "boolean", value);
                 }
                 return value.isBoolean();
