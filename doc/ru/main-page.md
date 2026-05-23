@@ -1,17 +1,21 @@
 # Документация
 
+Основная страница документации движка «ChromaForge» версии 0.3.0.
+
 ## Разделы
 
-- [Рекомендации по использованию движка](engine-use-recommendations.md)
+- [XML разметка интерфейса](xml-ui-layouts.md)
+- [Аудио](audio.md)
+- [Движок генерации мира](world-generator.md)
+- [Консоль](console.md)
 - [Контент-паки](content-packs.md)
+- [Модели блоков](block-models.md)
+- [Предзагрузка ассетов](assets-preload.md)
+- [Рекомендации по использованию движка](engine-use-recommendations.md)
+- [Ресурсы (файл resources.json)](resources.md)
+- [Риггинг](rigging.md)
 - [Свойства блоков](block-properties.md)
 - [Свойства предметов](item-properties.md)
 - [Свойства сущностей](entity-properties.md)
-- [XML разметка интерфейса](xml-ui-layouts.md)
-- [Предзагрузка ассетов](assets-preload.md)
-- [Аудио](audio.md)
 - [Скриптинг](scripting.md)
-- [Консоль](console.md)
-- [Модели блоков](block-models.md)
-- [Риггинг](rigging.md)
-- [Ресурсы (файл resources.json)](resources.md)
+- [Частицы](particles.md)

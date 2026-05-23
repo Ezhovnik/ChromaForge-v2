@@ -4,7 +4,6 @@
 
 Ассеты в файле разделяются на категории:
 
-- atlases - атласы
 - fonts - шрифты
 - shaders - шейдеры
 - textures - текстуры
@@ -45,30 +44,18 @@
 
 ```json
 {
-    "shaders": [
-        "ui",
-        "default",
-        "lines"
+    "sounds": [
+        "blocks/door_open",
+        "blocks/door_close",
+        "events/pickup"
+    ],
+    "models": [
+        "drop-item"
     ],
     "textures": [
-        "gui/menubg",
-        "gui/delete_icon",
-        "gui/no_icon",
-        "gui/no_world_icon",
-        "gui/warning",
-        "gui/error",
-        "gui/cross",
-        "gui/refresh"
-    ],
-    "fonts": [
-        {
-            "name": "normal",
-            "path": "fonts/font"
-        }
-    ],
-    "atlases": [
-        "blocks",
-        "items"
+        "misc/moon",
+        "misc/sun",
+        "gui/crosshair"
     ]
 }
 ```
