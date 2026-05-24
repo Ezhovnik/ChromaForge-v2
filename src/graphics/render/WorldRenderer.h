@@ -50,29 +50,39 @@ private:
     bool drawChunk(
 		size_t index, 
 		const Camera& camera, 
-		ShaderProgram* shader, 
+		ShaderProgram& shader, 
 		bool culling
 	);
 	void drawChunks(
 		Chunks* chunks, 
 		const Camera& camera, 
-		ShaderProgram* shader
+		ShaderProgram& shader
 	);
 	void renderBlockSelection();
 	void renderHands(const Camera& camera, const Assets& assets, float deltaTime);
 	void renderDebugLines(
         const DrawContext& context, 
         const Camera& camera, 
-        ShaderProgram* linesShader
+        ShaderProgram& linesShader
     );
-	void renderLines(const Camera& camera, ShaderProgram* linesShader, const DrawContext& pctx);
+	void renderLines(
+		const Camera& camera,
+		ShaderProgram& linesShader,
+		const DrawContext& pctx
+	);
 
-	void drawBorders(int start_x, int start_y, int start_z, int end_x, int end_y, int end_z);
+	void drawBorders(
+		int start_x, int start_y, int start_z,
+		int end_x, int end_y, int end_z
+	);
 
-	void renderBlockOverlay(const DrawContext& context, const Assets& assets);
+	void renderBlockOverlay(
+		const DrawContext& context,
+		const Assets& assets
+	);
 
 	void setupWorldShader(
-        ShaderProgram* shader,
+        ShaderProgram& shader,
         const Camera& camera,
         const EngineSettings& settings,
         float fogFactor
