@@ -36,7 +36,7 @@ int Font::calcWidth(const std::wstring& text, size_t length) {
 }
 
 int Font::calcWidth(const std::wstring& text, size_t offset, size_t length) {
-	return std::min(text.length() - offset, length) * 8;
+	return std::min(text.length() - offset, length) * glyphInterval;
 }
 
 bool Font::isPrintableChar(uint codepoint) const {
@@ -52,52 +52,13 @@ bool Font::isPrintableChar(uint codepoint) const {
 	}
 }
 
-static inline void drawGlyph(Batch2D* batch, int x, int y, uint c, FontStyle style) {
-    switch (style) {
-		case FontStyle::None:
-			break;
-        case FontStyle::Shadow:
-			// Рисуем тень со смещением (1,1) чёрным цветом
-            batch->sprite(
-				x + 1, y + 1, 
-				FontsConsts::GLYPH_SIZE,
-				FontsConsts::GLYPH_SIZE,
-				16,
-				c,
-				FontsConsts::SHADOW_TINT
-			);
-            break;
-        case FontStyle::Outline:
-			// Рисуем 8 соседних пикселей вокруг основного глифа для создания контура
-            for (int oy = -1; oy <= 1; ++oy){
-                for (int ox = -1; ox <= 1; ++ox){
-                    if (ox || oy) {
-                        batch->sprite(
-							x + ox, y + oy, 
-							FontsConsts::GLYPH_SIZE,
-							FontsConsts::GLYPH_SIZE,
-							16,
-							c,
-							FontsConsts::SHADOW_TINT
-						);
-                    }
-                }
-            }
-            break;
-    }
-	// Рисуем основной глиф текущим цветом пакетного рендерера
-    batch->sprite(x, y, FontsConsts::GLYPH_SIZE, FontsConsts::GLYPH_SIZE, 16, c, batch->getColor());
+static inline void drawGlyph(
+    Batch2D* batch, int x, int y, uint c, int glyphSize
+) {
+    batch->sprite(x, y, glyphSize, glyphSize, 16, c, batch->getColor());
 }
 
-void Font::draw(Batch2D* batch, std::wstring text, int x, int y) {
-	draw(batch, std::move(text), x, y, FontStyle::None);
-}
-
-void Font::draw(Batch2D* batch, const std::wstring& text, int x, int y, FontStyle style) {
-    draw(batch, std::wstring_view(text.c_str(), text.length()), x, y, style);
-}
-
-void Font::draw(Batch2D* batch, std::wstring_view text, int x, int y, FontStyle style) {
+void Font::draw(Batch2D* batch, std::wstring_view text, int x, int y) {
     uint page = 0; // текущая обрабатываемая страница
     uint next = FontsConsts::MAX_CODEPAGES; // следующая страница, которую нужно обработать
     int init_x = x; // запоминаем начальную позицию X для каждой страницы
@@ -106,7 +67,7 @@ void Font::draw(Batch2D* batch, std::wstring_view text, int x, int y, FontStyle 
         for (uint c : text) {
 			// Пропускаем пробельные символы
             if (!isPrintableChar(c)) {
-                x += 8;
+                x += glyphInterval;
                 continue;
             }
             uint charpage = c >> 8;
@@ -118,11 +79,11 @@ void Font::draw(Batch2D* batch, std::wstring_view text, int x, int y, FontStyle 
                 }
                 if (texture == nullptr) texture = pages[0].get();
                 batch->texture(texture);
-                drawGlyph(batch, x, y, c, style);
+                drawGlyph(batch, x, y, c, lineHeight);
             } else if (charpage > page && charpage < next) {
                 next = charpage;
             }
-            x += 8; // смещаемся к следующему символу
+            x += glyphInterval;
         }
 
 		// Переходим к следующей странице

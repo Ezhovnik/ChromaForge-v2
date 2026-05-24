@@ -27,11 +27,11 @@ enum class FontStyle {
  */
 class Font {
 private:
-    int lineHeight; ///< Высота строки в пикселях
+     int lineHeight; ///< Высота строки в пикселях
 	int yoffset; ///< Смещение по Y (для коррекции позиции)
-public:
+     int glyphInterval = 8;
 	std::vector<std::unique_ptr<Texture>> pages; ///< Страницы текстуры шрифта
-
+public:
 	/**
      * @brief Конструктор.
      * @param pages Вектор страниц (текстур). Вектор будет перемещён.
@@ -62,29 +62,5 @@ public:
      */
 	bool isPrintableChar(uint codepoint) const;
 
-	/**
-     * @brief Рисует текст без дополнительного стиля.
-     * @param batch Указатель на Batch2D.
-     * @param text Текст.
-     * @param x,y Позиция левого верхнего угла.
-     */
-	void draw(Batch2D* batch, std::wstring text, int x, int y);
-
-	/**
-     * @brief Рисует текст с указанным стилем.
-     * @param batch Batch2D.
-     * @param text Текст.
-     * @param x,y Позиция.
-     * @param style Стиль.
-     */
-     void draw(Batch2D* batch, const std::wstring& text, int x, int y, FontStyle style);
-
-	/**
-     * @brief Рисует текст с указанным стилем (перегрузка для std::wstring_view).
-     * @param batch Batch2D.
-     * @param text Текст.
-     * @param x,y Позиция.
-     * @param style Стиль.
-     */
-     void draw(Batch2D* batch, std::wstring_view text, int x, int y, FontStyle style);
+	void draw(Batch2D* batch, std::wstring_view text, int x, int y);
 };
