@@ -51,6 +51,8 @@
 #include <graphics/render/Emitter.h>
 #include <graphics/core/Font.h>
 #include <util/listutil.h>
+#include <graphics/render/TextNote.h>
+#include <presets/NotePreset.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -172,8 +174,12 @@ void WorldRenderer::drawChunks(
 	bool culling = engine->getSettings().graphics.frustumCulling.get();
 	if (culling) frustumCulling->update(camera.getProjView());
 	chunks->visibleCount = 0;
-	for (size_t i = 0; i < indices.size(); ++i) {
-		chunks->visibleCount += drawChunk(indices[i].index, camera, shader, culling);
+	if (GLEW_ARB_multi_draw_indirect && false) {
+        // TODO: implement Multi Draw Indirect chunks draw
+    } else {
+        for (size_t i = 0; i < indices.size(); ++i) {
+            chunks->visibleCount += drawChunk(indices[i].index, camera, shader, culling);
+        }
 	}
 }
 
@@ -282,6 +288,7 @@ void WorldRenderer::renderBlockSelection() {
     }
     lineBatch->flush();
 }
+
 void WorldRenderer::renderLines(
     const Camera& camera,
     ShaderProgram& linesShader,
@@ -431,12 +438,60 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 	lineBatch->flush();
 }
 
+void WorldRenderer::renderText(
+    const TextNote& note,
+    const DrawContext& context,
+    const Assets& assets,
+    const Camera& camera,
+    const EngineSettings& settings,
+    bool hudVisible
+) {
+    auto& font = assets.require<Font>("normal");
+
+    const auto& text = note.getText();
+    const auto& preset = note.getPreset();
+    const auto& pos = note.getPosition();
+
+    glm::vec3 xvec {1, 0, 0};
+    glm::vec3 yvec {0, 1, 0};
+
+    if (preset.displayMode == NoteDisplayMode::YFreeBillboard || preset.displayMode == NoteDisplayMode::XYFreeBillboard) {
+        xvec = camera.position - pos;
+        xvec.y = 0;
+        std::swap(xvec.x, xvec.z);
+        xvec.z *= -1;
+        xvec = glm::normalize(xvec);
+        if (preset.displayMode == NoteDisplayMode::XYFreeBillboard) {
+            yvec = camera.up;
+        }
+    }
+    
+    float ppbx = 100;
+    float ppby = 100;
+    font.draw(
+        *batch3d,
+        text,
+        pos - xvec * (font.calcWidth(text, text.length()) * 0.5f) / ppbx,
+        xvec / ppbx,
+        yvec / ppby
+    );
+}
+
 void WorldRenderer::renderTexts(
     const DrawContext& context,
     const Camera& camera,
     const EngineSettings& settings,
     bool hudVisible
 ) {
+    NotePreset preset;
+    preset.displayMode = NoteDisplayMode::YFreeBillboard;
+
+    TextNote note(
+        L"Amogus",
+        std::move(preset),
+        glm::vec3(0, 100, 0)
+    );
+
     const auto& assets = *engine->getAssets();
     auto& shader = assets.require<ShaderProgram>("ui3d");
     auto& font = assets.require<Font>("normal");
@@ -444,23 +499,9 @@ void WorldRenderer::renderTexts(
     shader.uniformMatrix("u_projview", camera.getProjView());
     shader.uniformMatrix("u_apply", glm::mat4(1.0f));
     batch3d->begin();
-    std::wstring string = L"Amogus";
-    glm::vec3 pos(0, 100, 0);
-    auto zvec = camera.position - pos;
-    zvec.y = 0;
-    std::swap(zvec.x, zvec.z);
-    zvec.z *= -1;
-    zvec = glm::normalize(zvec);
 
-    float ppbx = 100;
-    float ppby = 100;
-    font.draw(
-        *batch3d,
-        string,
-        pos - zvec * (font.calcWidth(string, string.length()) * 0.5f) / ppbx,
-        zvec / ppbx,
-        camera.up / ppby
-    );
+    renderText(note, context, assets, camera, settings, hudVisible);
+
     batch3d->flush();
 }
 

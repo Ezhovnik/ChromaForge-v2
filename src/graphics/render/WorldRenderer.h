@@ -28,6 +28,7 @@ class ModelBatch;
 class Assets;
 class ParticlesRenderer;
 class Emitter;
+class TextNote;
 
 namespace model {
     struct Model;
@@ -99,6 +100,14 @@ private:
         float fogFactor
     );
 
+	void renderText(
+        const TextNote& note,
+        const DrawContext& context,
+        const Assets& assets,
+        const Camera& camera,
+        const EngineSettings& settings,
+        bool hudVisible
+    );
 	void renderTexts(
         const DrawContext& context,
         const Camera& camera,

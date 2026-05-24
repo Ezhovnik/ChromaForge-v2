@@ -113,7 +113,9 @@ asset_loader::postfunc asset_loader::font(
             if (page == nullptr) {
                 textures.emplace_back(nullptr);
             } else {
-                textures.emplace_back(Texture::from(page.get()));
+                auto texture = Texture::from(page.get());
+                texture->setMipMapping(false);
+                textures.emplace_back(std::move(texture));
             }
         }
         assets->store(std::make_unique<Font>(std::move(textures), res, 4), name);
