@@ -21,7 +21,7 @@ class Block;
 class Chunk;
 class Chunks;
 class VoxelsVolume;
-class ChunksStorage;
+class Chunks;
 class ContentGfxCache;
 struct EngineSettings;
 struct UVRegion;
@@ -285,7 +285,7 @@ public:
      * @param chunk Чанк.
      * @param chunks Хранилище чанков (для доступа к соседям).
      */
-    void build(const Chunk* chunk, const ChunksStorage* chunks);
+    void build(const Chunk* chunk, const Chunks* chunks);
 
     /**
      * @brief Рендерит чанк и возвращает Mesh.
@@ -293,7 +293,7 @@ public:
      * @param chunks Хранилище чанков.
      * @return Указатель на новый Mesh.
      */
-	std::shared_ptr<Mesh> render(const Chunk* chunk, const ChunksStorage* chunks);
+	std::shared_ptr<Mesh> render(const Chunk* chunk, const Chunks* chunks);
 
     /**
      * @brief Создаёт Mesh из текущих буферов.

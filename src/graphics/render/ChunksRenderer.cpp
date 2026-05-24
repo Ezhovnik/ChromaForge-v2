@@ -22,7 +22,7 @@ public:
         renderer(settings->graphics.chunkMaxVertices.get(), level->content, cache, settings) {}
 
     RendererResult operator()(const std::shared_ptr<Chunk>& chunk) override {
-        renderer.build(chunk.get(), level->chunksStorage.get());
+        renderer.build(chunk.get(), level->chunks.get());
         if (renderer.isCancelled()) {
             return RendererResult {
                 glm::ivec2(chunk->chunk_x, chunk->chunk_z), true, MeshData()
@@ -70,7 +70,7 @@ std::shared_ptr<Mesh> ChunksRenderer::render(
     chunk->flags.modified = false;
 
     if (important) {
-        auto mesh = renderer->render(chunk.get(), level->chunksStorage.get());
+        auto mesh = renderer->render(chunk.get(), level->chunks.get());
         meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = mesh;
         return mesh;
     }

@@ -24,6 +24,7 @@
 #include <coders/json.h>
 #include <data/StructLayout.h>
 #include <debug/Logger.h>
+#include <voxels/VoxelsVolume.h>
 
 // TODO: Refactor this garbage
 
@@ -239,7 +240,7 @@ light_t Chunks::getLight(int32_t x, int32_t y, int32_t z) const {
 	return chunk->light_map.get(lx, y, lz);
 }
 
-Chunk* Chunks::getChunkByVoxel(int x, int y, int z) {
+Chunk* Chunks::getChunkByVoxel(int x, int y, int z) const {
     if (y < 0 || y >= CHUNK_HEIGHT) return nullptr;
 
     int cx = floordiv(x, CHUNK_WIDTH);
@@ -251,7 +252,7 @@ Chunk* Chunks::getChunkByVoxel(int x, int y, int z) {
     return nullptr;
 }
 
-Chunk* Chunks::getChunk(int32_t x, int32_t z) {
+Chunk* Chunks::getChunk(int32_t x, int32_t z) const {
 	if (auto ptr = areaMap.getIf(x, z)) {
         return ptr->get();
 	}
@@ -629,6 +630,79 @@ bool Chunks::putChunk(const std::shared_ptr<Chunk>& chunk) {
 
 void Chunks::resize(uint32_t newWidth, uint32_t newDepth) {
 	areaMap.resize(newWidth, newDepth);
+}
+
+// TODO: reduce nesting
+void Chunks::getVoxels(VoxelsVolume* volume, bool backlight) const {
+    const Content* content = level->content;
+    auto indices = content->getIndices();
+    voxel* voxels = volume->getVoxels();
+    light_t* lights = volume->getLights();
+    int x = volume->getX();
+    int y = volume->getY();
+    int z = volume->getZ();
+
+    int w = volume->getW();
+    int h = volume->getH();
+    int d = volume->getD();
+
+    int scx = floordiv(x, CHUNK_WIDTH);
+    int scz = floordiv(z, CHUNK_DEPTH);
+
+    int ecx = floordiv(x + w, CHUNK_WIDTH);
+    int ecz = floordiv(z + d, CHUNK_DEPTH);
+
+    int cw = ecx - scx + 1;
+    int cd = ecz - scz + 1;
+
+    for (int cz = scz; cz < scz + cd; ++cz) {
+        for (int cx = scx; cx < scx + cw; ++cx) {
+            const auto chunk = getChunk(cx, cz);
+            if (chunk == nullptr) {
+                for (int ly = y; ly < y + h; ++ly) {
+                    for (int lz = std::max(z, cz * CHUNK_DEPTH); lz < std::min(z + d, (cz + 1) * CHUNK_DEPTH); ++lz) {
+                        for (int lx = std::max(x, cx * CHUNK_WIDTH); lx < std::min(x + w, (cx + 1) * CHUNK_WIDTH); ++lx) {
+                            uint idx = vox_index(lx - x, ly - y, lz - z, w, d);
+                            voxels[idx].id = BLOCK_VOID;
+                            lights[idx] = 0;
+                        }
+                    }
+                }
+            } else {
+                const voxel* cvoxels = chunk->voxels;
+                const light_t* clights = chunk->light_map.getLights();
+                for (int ly = y; ly < y + h; ly++) {
+                    for (int lz = std::max(z, cz * CHUNK_DEPTH); lz < std::min(z + d, (cz + 1) * CHUNK_DEPTH); ++lz) {
+                        for (int lx = std::max(x, cx * CHUNK_WIDTH); lx < std::min(x + w, (cx + 1) * CHUNK_WIDTH); ++lx) {
+                            uint vidx = vox_index(lx - x, ly - y, lz - z, w, d);
+                            uint cidx = vox_index(
+                                lx - cx * CHUNK_WIDTH,
+                                ly,
+                                lz - cz * CHUNK_DEPTH,
+                                CHUNK_WIDTH,
+                                CHUNK_DEPTH
+                            );
+                            voxels[vidx] = cvoxels[cidx];
+                            light_t light = clights[cidx];
+                            if (backlight) {
+                                const auto block =
+                                    indices->blocks.get(voxels[vidx].id);
+                                if (block && block->lightPassing) {
+                                    light = LightMap::combine(
+                                        std::min(15, LightMap::extract(light, 0) + 1),
+                                        std::min(15, LightMap::extract(light, 1) + 1),
+                                        std::min(15, LightMap::extract(light, 2) + 1),
+                                        std::min(15, static_cast<int>(LightMap::extract(light, 3)))
+                                    );
+                                }
+                            }
+                            lights[vidx] = light;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 void Chunks::saveAndClear() {

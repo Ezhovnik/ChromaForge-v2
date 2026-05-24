@@ -6,7 +6,7 @@
 #include <math/UVRegion.h>
 #include <constants.h>
 #include <content/Content.h>
-#include <voxels/ChunksStorage.h>
+#include <voxels/Chunks.h>
 #include <lighting/Lightmap.h>
 #include <frontend/ContentGfxCache.h>
 #include <settings.h>
@@ -519,7 +519,7 @@ void BlocksRenderer::render(const voxel* voxels) {
 	}
 }
 
-void BlocksRenderer::build(const Chunk* chunk, const ChunksStorage* chunks) {
+void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
 	this->chunk = chunk;
 	voxelsBuffer->setPosition(
         chunk->chunk_x * CHUNK_WIDTH - voxelBufferPadding, 
@@ -550,7 +550,7 @@ MeshData BlocksRenderer::createMesh() {
     );
 }
 
-std::shared_ptr<Mesh> BlocksRenderer::render(const Chunk* chunk, const ChunksStorage* chunks) {
+std::shared_ptr<Mesh> BlocksRenderer::render(const Chunk* chunk, const Chunks* chunks) {
     build(chunk, chunks);
     const vattr attrs[]{{3}, {2}, {1}, {0}};
     size_t vcount = vertexOffset / BR_VERTEX_SIZE;

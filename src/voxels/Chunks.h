@@ -20,6 +20,7 @@ class ContentIndices;
 struct AABB;
 class Block;
 class Level;
+class VoxelsVolume;
 
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
@@ -56,8 +57,8 @@ public:
 
     bool putChunk(const std::shared_ptr<Chunk>& chunk);
 
-    Chunk* getChunk(int32_t chunk_x, int32_t chunk_z); // Возвращает чанк по координатам чанка
-    Chunk* getChunkByVoxel(int32_t x, int32_t y, int32_t z); // Получает чанк, содержащий воксель с заданными мировыми координатами
+    Chunk* getChunk(int32_t chunk_x, int32_t chunk_z) const; // Возвращает чанк по координатам чанка
+    Chunk* getChunkByVoxel(int32_t x, int32_t y, int32_t z) const; // Получает чанк, содержащий воксель с заданными мировыми координатами
 
     voxel* getVoxel(int32_t x, int32_t y, int32_t z) const; // Возвращает воксель по мировым координатам
     inline voxel* getVoxel(const glm::ivec3& pos) {
@@ -100,6 +101,8 @@ public:
     bool isSolidBlock(int32_t x, int32_t y, int32_t z);
     bool isReplaceableBlock(int32_t x, int32_t y, int32_t z);
 	bool isObstacleBlock(int32_t x, int32_t y, int32_t z);
+
+    void getVoxels(VoxelsVolume* volume, bool backlight = false) const;
 
     void setCenter(int32_t x, int32_t z);
     void resize(uint32_t newWidth, uint32_t newDepth);
