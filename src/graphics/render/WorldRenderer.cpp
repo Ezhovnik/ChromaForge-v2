@@ -49,6 +49,7 @@
 #include <assets/assets_util.h>
 #include <graphics/render/ParticlesRenderer.h>
 #include <graphics/render/Emitter.h>
+#include <graphics/core/Font.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -424,6 +425,35 @@ void WorldRenderer::drawBorders(int start_x, int start_y, int start_z, int end_x
 	lineBatch->flush();
 }
 
+void WorldRenderer::renderTexts(
+    const DrawContext& context,
+    const Camera& camera,
+    const EngineSettings& settings,
+    bool hudVisible
+) {
+    const auto& assets = *engine->getAssets();
+    auto& shader = assets.require<ShaderProgram>("ui3d");
+    auto& font = assets.require<Font>("normal");
+    shader.uniformMatrix("u_projview", camera.getProjView());
+    shader.uniformMatrix("u_apply", glm::mat4(1.0f));
+    batch3d->begin();
+    std::wstring string = L"Amogus";
+    glm::vec3 pos(0, 100, 0);
+    auto zvec = camera.position - pos;
+    zvec.y = 0;
+    std::swap(zvec.x, zvec.z);
+    zvec.z *= -1;
+    zvec = glm::normalize(zvec);
+    font.draw(
+        *batch3d,
+        string,
+        pos - zvec * (font.calcWidth(string, string.length()) * 0.5f),
+        zvec,
+        camera.up
+    );
+    batch3d->flush();
+}
+
 void WorldRenderer::draw(
     const DrawContext& pctx,
     Camera& camera,
@@ -454,6 +484,7 @@ void WorldRenderer::draw(
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
             ctx.setCullFace(true);
+            renderTexts(ctx, camera, settings, hudVisible);
             renderLevel(ctx, camera, settings, deltaTime, pause);
             if (hudVisible) {
                 renderLines(camera, linesShader, ctx);

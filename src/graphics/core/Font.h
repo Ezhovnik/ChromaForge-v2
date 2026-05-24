@@ -4,10 +4,14 @@
 #include <vector>
 #include <memory>
 
+#include <glm/glm.hpp>
+
 #include <typedefs.h>
 
 class Texture;
 class Batch2D;
+class Batch3D;
+class Camera;
 
 /**
  * @brief Стили отрисовки текста (тени, контур).
@@ -52,8 +56,8 @@ public:
      */
      int getYOffset() const;
 
-	int calcWidth(const std::wstring& text, size_t length=-1);
-     int calcWidth(const std::wstring& text, size_t offset, size_t length);
+	int calcWidth(const std::wstring& text, size_t length=-1) const;
+     int calcWidth(const std::wstring& text, size_t offset, size_t length) const;
 
 	/**
      * @brief Проверяет, является ли символ печатным (не пробельным).
@@ -62,5 +66,20 @@ public:
      */
 	bool isPrintableChar(uint codepoint) const;
 
-	void draw(Batch2D* batch, std::wstring_view text, int x, int y);
+	void draw(
+          Batch2D& batch,
+          std::wstring_view text,
+          int x, int y,
+          float scale=1
+     ) const;
+
+     void draw(
+          Batch3D& batch,
+          std::wstring_view text,
+          const glm::vec3& pos,
+          const glm::vec3& right={1, 0, 0},
+          const glm::vec3& up={0, 1, 0}
+     ) const;
+
+     const Texture* getPage(int page) const;
 };
