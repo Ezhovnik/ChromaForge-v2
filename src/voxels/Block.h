@@ -123,6 +123,7 @@ public:
     bool hidden = false;
     bool shadeless = false;
     bool ambientOcclusion = true;
+    bool translucent = false; // TODO
 
     std::vector<AABB> hitboxes;
 
