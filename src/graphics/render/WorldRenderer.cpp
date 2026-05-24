@@ -444,12 +444,15 @@ void WorldRenderer::renderTexts(
     std::swap(zvec.x, zvec.z);
     zvec.z *= -1;
     zvec = glm::normalize(zvec);
+
+    float ppbx = 100;
+    float ppby = 100;
     font.draw(
         *batch3d,
         string,
-        pos - zvec * (font.calcWidth(string, string.length()) * 0.5f),
-        zvec,
-        camera.up
+        pos - zvec * (font.calcWidth(string, string.length()) * 0.5f) / ppbx,
+        zvec / ppbx,
+        camera.up / ppby
     );
     batch3d->flush();
 }

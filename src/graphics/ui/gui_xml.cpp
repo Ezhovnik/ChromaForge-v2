@@ -67,7 +67,7 @@ static runnable create_runnable(
 }
 
 static onaction create_action(
-    UIXmlReader& reader,
+    const UIXmlReader& reader,
     const xml::xmlelement& element,
     const std::string& name
 ) {
@@ -77,7 +77,7 @@ static onaction create_action(
 }
 
 static void _readUINode(
-    UIXmlReader& reader,
+    const UIXmlReader& reader,
     const xml::xmlelement& element,
     UINode& node
 ) {
@@ -285,8 +285,11 @@ static std::shared_ptr<UINode> readTextBox(
     const xml::xmlelement& element
 ) {
     auto placeholder = util::str2wstr_utf8(element->attr("placeholder", "").getText());
+    auto hint = util::str2wstr_utf8(element->attr("hint", "").getText());
     auto text = readAndProcessInnerText(element, reader.getContext());
     auto textbox = std::make_shared<TextBox>(placeholder, glm::vec4(0.0f));
+    textbox->setHint(hint);
+
     _readPanel(reader, element, *textbox);
     textbox->setText(text);
 
