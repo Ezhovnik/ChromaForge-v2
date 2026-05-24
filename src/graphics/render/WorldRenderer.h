@@ -33,6 +33,15 @@ namespace model {
     struct Model;
 }
 
+struct ChunksSortEntry {
+    int index;
+    int d;
+
+    inline bool operator<(const ChunksSortEntry& o) const noexcept {
+        return d > o.d;
+    }
+};
+
 class WorldRenderer {
 private:
     Engine* engine;
@@ -44,6 +53,8 @@ private:
 	std::unique_ptr<Skybox> skybox;
 	std::unique_ptr<Batch3D> batch3d;
 	std::unique_ptr<ModelBatch> modelBatch;
+
+	std::vector<ChunksSortEntry> indices;
 
 	float timer = 0.0f;
 

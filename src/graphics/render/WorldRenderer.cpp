@@ -50,6 +50,7 @@
 #include <graphics/render/ParticlesRenderer.h>
 #include <graphics/render/Emitter.h>
 #include <graphics/core/Font.h>
+#include <util/listutil.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -99,6 +100,7 @@ bool WorldRenderer::drawChunk(
 	bool culling
 ) {
 	auto chunk = level->chunks->getChunks()[index];
+    if (chunk == nullptr) return false;
 	if (!chunk->flags.lighted) return false;
 
 	float distance = glm::distance(
@@ -146,30 +148,32 @@ void WorldRenderer::drawChunks(
     atlas->getTexture()->bind();
 
     renderer->update();
-	std::vector<size_t> indices;
-	for (size_t i = 0; i < chunks->getVolume(); ++i){
-		if (chunks->getChunks()[i] == nullptr) continue;
-		indices.emplace_back(i);
+
+    int chunksWidth = chunks->getWidth();
+    int chunksOffsetX = chunks->getOffsetX();
+    int chunksOffsetZ = chunks->getOffsetZ();
+
+	if (indices.size() != chunks->getVolume()) {
+        indices.clear();
+        for (int i = 0; i < chunks->getVolume(); ++i) {
+            indices.push_back(ChunksSortEntry{i, 0});
+        }
 	}
 
 	float px = camera.position.x / static_cast<float>(CHUNK_WIDTH) - 0.5f;
     float pz = camera.position.z / static_cast<float>(CHUNK_DEPTH) - 0.5f;
-    std::sort(indices.begin(), indices.end(), [chunks, px, pz](auto i, auto j) {
-        const auto& chunksBuffer = chunks->getChunks();
-        const auto a = chunksBuffer[i].get();
-        const auto b = chunksBuffer[j].get();
-        auto adx = (a->chunk_x - px);
-        auto adz = (a->chunk_z - pz);
-        auto bdx = (b->chunk_x - px);
-        auto bdz = (b->chunk_z - pz);
-        return (adx * adx + adz * adz > bdx * bdx + bdz * bdz);
-	});
+    for (auto& index : indices) {
+        float x = index.index % chunksWidth + chunksOffsetX - px;
+        float z = index.index / chunksWidth + chunksOffsetZ - pz;
+        index.d = (x * x + z * z) * 1024;
+    }
+    util::insertion_sort(indices.begin(), indices.end());
 
 	bool culling = engine->getSettings().graphics.frustumCulling.get();
 	if (culling) frustumCulling->update(camera.getProjView());
 	chunks->visibleCount = 0;
-	for (size_t i = 0; i < indices.size(); ++i){
-		chunks->visibleCount += drawChunk(indices[i], camera, shader, culling);
+	for (size_t i = 0; i < indices.size(); ++i) {
+		chunks->visibleCount += drawChunk(indices[i].index, camera, shader, culling);
 	}
 }
 
