@@ -1,7 +1,7 @@
 oak0 = {}
 oak1 = {}
 birch0 = {}
-tower = {}
+tower = {lowering=1}
 coal_ore0 = {}
 iron_ore0 = {}
 gold_ore0 = {}

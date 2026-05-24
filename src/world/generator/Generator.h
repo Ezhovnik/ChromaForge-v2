@@ -17,6 +17,7 @@ struct Generator;
 
 struct VoxelStructureMeta {
     std::string name;
+    int lowering = 0;
 };
 
 struct BlocksLayer {
