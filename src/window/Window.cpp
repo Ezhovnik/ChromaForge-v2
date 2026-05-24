@@ -208,13 +208,15 @@ bool Window::initialize(DisplaySettings* settings) {
 
     const GLubyte* vendor = glGetString(GL_VENDOR);
 	const GLubyte* renderer = glGetString(GL_RENDERER);
-    LOG_DEBUG("GL Vendor: {}", (char*)vendor);
-    LOG_DEBUG("GL Renderer: {}", (char*)renderer);
+    LOG_DEBUG("GL Vendor: {}", reinterpret_cast<const char*>(vendor));
+    LOG_DEBUG("GL Renderer: {}", reinterpret_cast<const char*>(renderer));
     LOG_DEBUG("GLFW version: {}", glfwGetVersionString());
 
-    input_util::initialize();
+    glm::vec2 scale;
+    glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &scale.x, &scale.y);
+    LOG_INFO("Monitor content scale: {} x {}", scale.x, scale.y);
 
-    LOG_INFO("Window initialized successfully: {}x{}", settings->width.get(), settings->height.get());
+    input_util::initialize();
 
     return true;
 }
