@@ -34,7 +34,7 @@ struct UVRegion;
  */
 class BlocksRenderer {
 private:
-	const Content* const content;
+	const Content& content;
 	std::unique_ptr<float[]> vertexBuffer;
 	std::unique_ptr<int[]> indexBuffer;
 	size_t vertexOffset;
@@ -49,8 +49,8 @@ private:
 	std::unique_ptr<VoxelsVolume> voxelsBuffer;
 
 	const Block* const* blockDefsCache;
-	const ContentGfxCache* const cache;
-	const EngineSettings* settings;
+	const ContentGfxCache& cache;
+    const EngineSettings& settings;
 
     PseudoRandom randomizer;
 
@@ -273,9 +273,9 @@ public:
      */
 	BlocksRenderer(
         size_t capacity, 
-        const Content* content, 
-        const ContentGfxCache* cache, 
-        const EngineSettings* settings
+        const Content& content, 
+        const ContentGfxCache& cache, 
+        const EngineSettings& settings
     );
 
 	virtual ~BlocksRenderer();

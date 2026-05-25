@@ -21,9 +21,9 @@ inline constexpr glm::vec3 SUN_VECTOR = {0.411934f, 0.863868f, -0.279161f};
 
 BlocksRenderer::BlocksRenderer(
     size_t capacity,
-	const Content* content,
-	const ContentGfxCache* cache,
-	const EngineSettings* settings
+	const Content& content,
+	const ContentGfxCache& cache,
+	const EngineSettings& settings
 ) : content(content),
 	vertexBuffer(std::make_unique<float[]>(capacity * BR_VERTEX_SIZE)),
     indexBuffer(std::make_unique<int[]>(capacity)),
@@ -39,7 +39,7 @@ BlocksRenderer::BlocksRenderer(
         CHUNK_HEIGHT, 
         CHUNK_DEPTH + voxelBufferPadding * 2
 	);
-	blockDefsCache = content->getIndices()->blocks.getDefs();
+	blockDefsCache = content.getIndices()->blocks.getDefs();
 }
 
 BlocksRenderer::~BlocksRenderer() {
@@ -293,7 +293,7 @@ void BlocksRenderer::blockCustomModel(
 	}
 
     // Рендерим каждый бокс модели
-	const auto& model = cache->getModel(block->rt.id);
+	const auto& model = cache.getModel(block->rt.id);
     for (const auto& mesh : model.meshes) {
         if (vertexOffset + BR_VERTEX_SIZE * mesh.vertices.size() > capacity) {
             overflow = true;
@@ -460,7 +460,7 @@ void BlocksRenderer::render(const voxel* voxels) {
         beginEnds[def.drawGroup][1] = i;
     }
 
-	for (const auto drawGroup : *content->drawGroups) {
+	for (const auto drawGroup : *content.drawGroups) {
 		int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
         int end = beginEnds[drawGroup][1];
@@ -473,12 +473,12 @@ void BlocksRenderer::render(const voxel* voxels) {
 
             // Получаем текстурные регионы для всех шести граней
 			const UVRegion texfaces[6]{
-                cache->getRegion(id, 0), 
-				cache->getRegion(id, 1),
-				cache->getRegion(id, 2), 
-				cache->getRegion(id, 3),
-				cache->getRegion(id, 4), 
-				cache->getRegion(id, 5)
+                cache.getRegion(id, 0), 
+				cache.getRegion(id, 1),
+				cache.getRegion(id, 2), 
+				cache.getRegion(id, 3),
+				cache.getRegion(id, 4), 
+				cache.getRegion(id, 5)
             };
 
             // Вычисляем координаты x,y,z внутри чанка
@@ -540,7 +540,7 @@ void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
         0, 
         chunk->chunk_z * CHUNK_DEPTH - voxelBufferPadding
     );
-	chunks->getVoxels(voxelsBuffer.get(), settings->graphics.backlight.get());
+	chunks->getVoxels(voxelsBuffer.get(), settings.graphics.backlight.get());
 	overflow = false;
 	vertexOffset = 0;
 	indexOffset = indexSize = 0;

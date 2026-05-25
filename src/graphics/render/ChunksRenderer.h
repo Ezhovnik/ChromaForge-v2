@@ -18,9 +18,23 @@
 class Mesh;
 class Chunk;
 class Level;
+class Camera;
+class ShaderProgram;
+class Chunks;
+class Assets;
+class Frustum;
 class BlocksRenderer;
 class ContentGfxCache;
 struct EngineSettings;
+
+struct ChunksSortEntry {
+    int index;
+    int d;
+
+    inline bool operator<(const ChunksSortEntry& o) const noexcept {
+        return d > o.d;
+    }
+};
 
 struct RendererResult {
     glm::ivec2 key;
@@ -29,17 +43,27 @@ struct RendererResult {
 };
 
 class ChunksRenderer {
-    Level* level;
+    const Level& level;
+    const Assets& assets;
+    const Frustum& frustum;
+    const EngineSettings& settings;
     std::unique_ptr<BlocksRenderer> renderer;
     std::unordered_map<glm::ivec2, std::shared_ptr<Mesh>> meshes;
     std::unordered_map<glm::ivec2, bool> inwork;
+    std::vector<ChunksSortEntry> indices;
 
     util::ThreadPool<std::shared_ptr<Chunk>, RendererResult> threadPool;
+
+    bool drawChunk(
+        size_t index, const Camera& camera, ShaderProgram& shader, bool culling
+    );
 public:
     ChunksRenderer(
-        Level* level, 
-        const ContentGfxCache* cache, 
-        const EngineSettings* settings
+        const Level* level,
+        const Assets& assets,
+        const Frustum& frustum,
+        const ContentGfxCache& cache,
+        const EngineSettings& settings
     );
     virtual ~ChunksRenderer();
 
@@ -54,7 +78,9 @@ public:
         const std::shared_ptr<Chunk>& chunk,
         bool important
     );
-    std::shared_ptr<Mesh> get(Chunk* chunk);
+    void drawChunks(const Camera& camera, ShaderProgram& shader);
 
     void update();
+
+    static size_t visibleChunks;
 };

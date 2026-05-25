@@ -15,24 +15,25 @@
 LevelFrontend::LevelFrontend(
     Player* currentPlayer,
     LevelController* controller, 
-    Assets* assets
+    Assets& assets
 ) : controller(controller),
-    level(controller->getLevel()), 
+    level(*controller->getLevel()), 
     assets(assets), 
-    contentCache(std::make_unique<ContentGfxCache>(level->content, assets))
+    contentCache(std::make_unique<ContentGfxCache>(level.content, assets))
 {
-    assets->store(
-        BlocksPreview::build(contentCache.get(), assets, level->content),
+    assets.store(
+        BlocksPreview::build(*contentCache, assets, *level.content->getIndices()),
         "block-previews"
     );
 
     controller->getBlocksController()->listenBlockInteraction(
-        [=](auto player, const auto& pos, const auto& def, BlockInteraction type) {
-            auto material = level->content->findBlockMaterial(def.material);
+        [currentPlayer, controller, &assets](auto player, const auto& pos, const auto& def, BlockInteraction type) {
+            const auto& level = *controller->getLevel();
+            auto material = level.content->findBlockMaterial(def.material);
             if (material == nullptr) return;
 
             if (type == BlockInteraction::Step) {
-                auto sound = assets->get<audio::Sound>(material->stepsSound);
+                auto sound = assets.get<audio::Sound>(material->stepsSound);
                 glm::vec3 pos {};
                 auto soundsCamera = currentPlayer->currentCamera.get();
                 if (soundsCamera == currentPlayer->spCamera.get() || soundsCamera == currentPlayer->tpCamera.get()) {
@@ -56,10 +57,10 @@ LevelFrontend::LevelFrontend(
                 audio::Sound* sound = nullptr;
                 switch (type) {
                     case BlockInteraction::Placing:
-                        sound = assets->get<audio::Sound>(material->placeSound);
+                        sound = assets.get<audio::Sound>(material->placeSound);
                         break;
                     case BlockInteraction::Destruction:
-                        sound = assets->get<audio::Sound>(material->breakSound);
+                        sound = assets.get<audio::Sound>(material->breakSound);
                         break; 
                     default:
                         break;   
@@ -81,16 +82,20 @@ LevelFrontend::LevelFrontend(
 
 LevelFrontend::~LevelFrontend() = default;
 
-Level* LevelFrontend::getLevel() const {
+Level& LevelFrontend::getLevel() {
     return level;
 }
 
-Assets* LevelFrontend::getAssets() const {
+const Level& LevelFrontend::getLevel() const {
+    return level;
+}
+
+const Assets& LevelFrontend::getAssets() const {
     return assets;
 }
 
-ContentGfxCache* LevelFrontend::getContentGfxCache() const {
-    return contentCache.get();
+const ContentGfxCache& LevelFrontend::getContentGfxCache() const {
+    return *contentCache;
 }
 
 LevelController* LevelFrontend::getController() const {

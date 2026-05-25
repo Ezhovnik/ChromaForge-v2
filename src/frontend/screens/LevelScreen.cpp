@@ -35,18 +35,18 @@ LevelScreen::LevelScreen(
     Level* level = levelPtr.get();
 
     auto& settings = engine->getSettings();
-    auto assets = engine->getAssets();
+    auto& assets = *engine->getAssets();
     auto menu = engine->getGUI()->getMenu();
     menu->reset();
 
     controller = std::make_unique<LevelController>(engine, std::move(levelPtr));
     frontend = std::make_unique<LevelFrontend>(controller->getPlayer(), controller.get(), assets);
 
-    worldRenderer = std::make_unique<WorldRenderer>(engine, frontend.get(), controller->getPlayer());
-    hud = std::make_unique<Hud>(engine, frontend.get(), controller->getPlayer());
+    worldRenderer = std::make_unique<WorldRenderer>(engine, *frontend, controller->getPlayer());
+    hud = std::make_unique<Hud>(engine, *frontend, controller->getPlayer());
 
     decorator = std::make_unique<Decorator>(
-        *controller, *worldRenderer->particles, *assets
+        *controller, *worldRenderer->particles, assets
     );
 
     keepAlive(settings.graphics.backlight.observe([=](bool) {
@@ -62,7 +62,7 @@ LevelScreen::LevelScreen(
     }));
 
     animator = std::make_unique<TextureAnimator>();
-    animator->addAnimations(assets->getAnimations());
+    animator->addAnimations(assets.getAnimations());
 
     initializeContent();
 }

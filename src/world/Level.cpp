@@ -100,6 +100,10 @@ World* Level::getWorld() {
     return world.get();
 }
 
+const World* Level::getWorld() const {
+    return world.get();
+}
+
 void Level::onSave() {
     auto& cameraIndices = content->getIndices(ResourceType::Camera);
     for (size_t i = 0; i < cameraIndices.size(); ++i) {

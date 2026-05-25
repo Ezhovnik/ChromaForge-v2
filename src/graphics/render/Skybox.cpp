@@ -22,7 +22,7 @@ namespace SkyboxConsts {
     inline constexpr int STARS_SEED = 632;
 }
 
-Skybox::Skybox(uint size, ShaderProgram* shader) : size(size), shader(shader), batch3d(std::make_unique<Batch3D>(4096)) {
+Skybox::Skybox(uint size, ShaderProgram& shader) : size(size), shader(shader), batch3d(std::make_unique<Batch3D>(4096)) {
     auto cubemap = std::make_unique<Cubemap>(size, size, ImageFormat::rgb888);
 
     uint fboid;
@@ -145,15 +145,15 @@ void Skybox::refresh(const DrawContext& parent_context, float t, float mie, uint
     ready = true;
     glActiveTexture(GL_TEXTURE1);
     cubemap->bind();
-    shader->use();
+    shader.use();
     t *= PI * 2.0f;
 
     lightDir = glm::normalize(glm::vec3(sin(t), -cos(t), 0.0f));
-    shader->uniform1i("u_quality", quality);
-    shader->uniform1f("u_mie", mie);
-    shader->uniform1f("u_fog", mie - 1.0f);
-    shader->uniform3f("u_lightDir", lightDir);
-    shader->uniform1f("u_dayTime", dayTime);
+    shader.uniform1i("u_quality", quality);
+    shader.uniform1f("u_mie", mie);
+    shader.uniform1f("u_fog", mie - 1.0f);
+    shader.uniform3f("u_lightDir", lightDir);
+    shader.uniform1f("u_dayTime", dayTime);
 
     if (glm::abs(mie - prevMie) + glm::abs(t - prevT) >= 0.01) {
         for (uint face = 0; face < 6; ++face) {
@@ -200,10 +200,16 @@ void Skybox::refreshFace(uint face, Cubemap* cubemap) {
         {0.0f, 0.0f, 1.0f},
     };
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, cubemap->getId(), 0);
-    shader->uniform3f("u_xaxis", xaxs[face]);
-    shader->uniform3f("u_yaxis", yaxs[face]);
-    shader->uniform3f("u_zaxis", zaxs[face]);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
+        cubemap->getId(),
+        0
+    );
+    shader.uniform3f("u_xaxis", xaxs[face]);
+    shader.uniform3f("u_yaxis", yaxs[face]);
+    shader.uniform3f("u_zaxis", zaxs[face]);
     mesh->draw();
 }
 

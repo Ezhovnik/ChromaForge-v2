@@ -10,14 +10,14 @@
 #include <graphics/core/ShaderProgram.h>
 #include <presets/NotePreset.h>
 
-TextsRenderer::TextsRenderer(const Frustum* frustum) : frustum(frustum) {
+TextsRenderer::TextsRenderer(
+    Batch3D& batch, const Assets& assets, const Frustum& frustum
+) : batch(batch), assets(assets), frustum(frustum) {
 }
 
 void TextsRenderer::renderText(
-    Batch3D& batch,
     const TextNote& note,
     const DrawContext& context,
-    const Assets& assets,
     const Camera& camera,
     const EngineSettings& settings,
     bool hudVisible
@@ -50,7 +50,7 @@ void TextsRenderer::renderText(
     }
 
     if (preset.displayMode != NoteDisplayMode::Projected) {
-        if (!frustum->isBoxVisible(pos - xvec * (width * 0.5f), pos + xvec * (width * 0.5f))) {
+        if (!frustum.isBoxVisible(pos - xvec * (width * 0.5f), pos + xvec * (width * 0.5f))) {
             return;
         }
     }
@@ -66,9 +66,7 @@ void TextsRenderer::renderText(
 }
 
 void TextsRenderer::renderTexts(
-    Batch3D& batch,
     const DrawContext& context,
-    const Assets& assets,
     const Camera& camera,
     const EngineSettings& settings,
     bool hudVisible,
@@ -94,7 +92,7 @@ void TextsRenderer::renderTexts(
     batch.begin();
 
     for (const auto& note : notes) {
-        renderText(batch, note, context, assets, camera, settings, hudVisible);
+        renderText(note, context, camera, settings, hudVisible);
     }
     batch.flush();
 }

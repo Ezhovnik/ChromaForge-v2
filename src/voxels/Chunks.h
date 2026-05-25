@@ -33,11 +33,9 @@ private:
     void setRotationExtended(const Block& def, blockstate state, const glm::ivec3& origin, uint8_t rotation);
 
     util::AreaMap2D<std::shared_ptr<Chunk>, int32_t> areaMap;
-public:
-    size_t visibleCount = 0;
 
     WorldFiles* worldFiles;
-
+public:
     Chunks(
         int32_t width, 
         int32_t depth, 

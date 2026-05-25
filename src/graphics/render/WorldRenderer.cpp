@@ -50,7 +50,6 @@
 #include <graphics/render/ParticlesRenderer.h>
 #include <graphics/render/Emitter.h>
 #include <graphics/core/Font.h>
-#include <util/listutil.h>
 #include <graphics/render/TextNote.h>
 #include <graphics/render/TextsRenderer.h>
 #include <graphics/render/GuidesRenderer.h>
@@ -59,131 +58,42 @@ inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
 inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
+inline constexpr size_t BATCH3D_CAPACITY = 4096;
+inline constexpr size_t MODEL_BATCH_CAPACITY = 20'000;
+
 bool WorldRenderer::drawChunkBorders = false;
 bool WorldRenderer::drawEntityHitboxes = false;
 
 WorldRenderer::WorldRenderer(
 	Engine* engine,
-	LevelFrontend* levelFrontend,
+	LevelFrontend& levelFrontend,
 	Player* player
 ) : engine(engine), 
-	level(levelFrontend->getLevel()),
+	level(levelFrontend.getLevel()),
 	player(player),
+    assets(*engine->getAssets()),
     frustumCulling(std::make_unique<Frustum>()),
     lineBatch(std::make_unique<LineBatch>()),
-    modelBatch(std::make_unique<ModelBatch>(20'000, engine->getAssets(), level->chunks.get(), &engine->getSettings())),
-    particles(std::make_unique<ParticlesRenderer>(*engine->getAssets(), *levelFrontend->getLevel(), &engine->getSettings().graphics)),
-    texts(std::make_unique<TextsRenderer>(frustumCulling.get())),
-    guides(std::make_unique<GuidesRenderer>())
+    batch3d(std::make_unique<Batch3D>(BATCH3D_CAPACITY)),
+    modelBatch(std::make_unique<ModelBatch>(MODEL_BATCH_CAPACITY, assets, *level.chunks, engine->getSettings())),
+    particles(std::make_unique<ParticlesRenderer>(assets, level, &engine->getSettings().graphics)),
+    texts(std::make_unique<TextsRenderer>(*batch3d, assets, *frustumCulling)),
+    guides(std::make_unique<GuidesRenderer>()),
+    chunks(std::make_unique<ChunksRenderer>(&level, assets, *frustumCulling, levelFrontend.getContentGfxCache(), engine->getSettings()))
 {
-    renderer = std::make_unique<ChunksRenderer>(
-        level,
-        levelFrontend->getContentGfxCache(),
-        &engine->getSettings()
-    );
-    batch3d = std::make_unique<Batch3D>(4096);
-
 	auto& settings = engine->getSettings();
 	auto assets = engine->getAssets();
     skybox = std::make_unique<Skybox>(
         settings.graphics.skyboxResolution.get(), 
-        assets->get<ShaderProgram>("skybox_gen")
+        assets->require<ShaderProgram>("skybox_gen")
     );
 
-    level->events->listen(CHUNK_HIDDEN, [this](lvl_event_type, Chunk* chunk) {
-		renderer->unload(chunk);
+    level.events->listen(CHUNK_HIDDEN, [this](lvl_event_type, Chunk* chunk) {
+		chunks->unload(chunk);
 	});
 }
 
 WorldRenderer::~WorldRenderer() = default;
-
-// Отрисовывает один чанк
-bool WorldRenderer::drawChunk(
-	size_t index, 
-	const Camera& camera, 
-	ShaderProgram& shader, 
-	bool culling
-) {
-	auto chunk = level->chunks->getChunks()[index];
-    if (chunk == nullptr || !chunk->flags.lighted) return false;
-
-	float distance = glm::distance(
-        camera.position,
-        glm::vec3(
-			(chunk->chunk_x + 0.5f) * CHUNK_WIDTH, 
-			camera.position.y, 
-			(chunk->chunk_z + 0.5f) * CHUNK_DEPTH
-		)
-    );
-	auto mesh = renderer->getOrRender(chunk, distance < CHUNK_WIDTH * 1.5f);
-	if (mesh == nullptr) return true;
-
-	if (culling){
-		glm::vec3 min(
-			chunk->chunk_x * CHUNK_WIDTH, 
-			chunk->bottom, 
-			chunk->chunk_z * CHUNK_DEPTH
-		);
-		glm::vec3 max(
-			chunk->chunk_x * CHUNK_WIDTH + CHUNK_WIDTH, 
-			chunk->top, 
-			chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH
-		);
-
-		if (!frustumCulling->isBoxVisible(min, max)) return false;
-	}
-	glm::vec3 coord = glm::vec3(
-		chunk->chunk_x * CHUNK_WIDTH + 0.5f,
-		0.5f,
-		chunk->chunk_z * CHUNK_DEPTH + 0.5f
-	);
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), coord);
-	shader.uniformMatrix("u_model", model);
-	mesh->draw();
-    return true;
-}
-
-void WorldRenderer::drawChunks(
-    Chunks* chunks, const Camera& camera, ShaderProgram& shader
-) {
-	auto assets = engine->getAssets();
-    auto atlas = assets->get<Atlas>("blocks");
-
-    atlas->getTexture()->bind();
-
-    renderer->update();
-
-    int chunksWidth = chunks->getWidth();
-    int chunksOffsetX = chunks->getOffsetX();
-    int chunksOffsetZ = chunks->getOffsetZ();
-
-	if (indices.size() != chunks->getVolume()) {
-        indices.clear();
-        for (int i = 0; i < chunks->getVolume(); ++i) {
-            indices.push_back(ChunksSortEntry{i, 0});
-        }
-	}
-
-	float px = camera.position.x / static_cast<float>(CHUNK_WIDTH) - 0.5f;
-    float pz = camera.position.z / static_cast<float>(CHUNK_DEPTH) - 0.5f;
-    for (auto& index : indices) {
-        float x = index.index % chunksWidth + chunksOffsetX - px;
-        float z = index.index / chunksWidth + chunksOffsetZ - pz;
-        index.d = (x * x + z * z) * 1024;
-    }
-    util::insertion_sort(indices.begin(), indices.end());
-
-	bool culling = engine->getSettings().graphics.frustumCulling.get();
-	if (culling) frustumCulling->update(camera.getProjView());
-	chunks->visibleCount = 0;
-	if (GLEW_ARB_multi_draw_indirect && false) {
-        // TODO: implement Multi Draw Indirect chunks draw
-    } else {
-        for (size_t i = 0; i < indices.size(); ++i) {
-            chunks->visibleCount += drawChunk(indices[i].index, camera, shader, culling);
-        }
-	}
-}
 
 void WorldRenderer::setupWorldShader(
     ShaderProgram& shader,
@@ -202,9 +112,9 @@ void WorldRenderer::setupWorldShader(
     shader.uniform2f("u_lightDir", skybox->getLightDir());
     shader.uniform1i("u_cubemap", 1);
     shader.uniform1f("u_timer", timer);
-    shader.uniform1f("u_dayTime", level->getWorld()->getInfo().daytime);
+    shader.uniform1f("u_dayTime", level.getWorld()->getInfo().daytime);
 
-    auto contentIds = level->content->getIndices();
+    auto contentIds = level.content->getIndices();
 	{
 		auto inventory = player->getInventory();
 		ItemStack& stack = inventory->getSlot(player->getChosenSlot());
@@ -232,11 +142,7 @@ void WorldRenderer::renderLevel(
     bool pause,
     bool hudVisible
 ) {
-    const auto& assets = *engine->getAssets();
-
-    texts->renderTexts(
-        *batch3d, ctx, assets, camera, settings, hudVisible, false
-    );
+    texts->renderTexts(ctx, camera, settings, hudVisible, false);
 
     bool culling = engine->getSettings().graphics.frustumCulling.get();
 
@@ -246,7 +152,9 @@ void WorldRenderer::renderLevel(
     setupWorldShader(entityShader, camera, settings, fogFactor);
     skybox->bind();
 
-    level->entities->render(
+    if (culling) frustumCulling->update(camera.getProjView());
+
+    level.entities->render(
         assets,
         *modelBatch,
         culling ? frustumCulling.get() : nullptr,
@@ -254,13 +162,13 @@ void WorldRenderer::renderLevel(
         pause
     );
 
-    particles->render(camera, deltaTime * !pause);
     modelBatch->render();
+    particles->render(camera, deltaTime * !pause);
 
     auto& shader = assets.require<ShaderProgram>("default");
     setupWorldShader(shader, camera, settings, fogFactor);
 
-    drawChunks(level->chunks.get(), camera, shader);
+    chunks->drawChunks(camera, shader);
 
     if (!pause) {
         scripting::on_frontend_render();
@@ -271,7 +179,7 @@ void WorldRenderer::renderLevel(
 
 void WorldRenderer::renderBlockSelection() {
     const auto& selection = player->selection;
-    auto indices = level->content->getIndices();
+    auto indices = level.content->getIndices();
     blockid_t id = selection.vox.id;
     auto block = indices->blocks.get(id);
     const glm::ivec3 pos = player->selection.position;
@@ -309,15 +217,15 @@ void WorldRenderer::renderLines(
     if (player->debug && drawEntityHitboxes) {
         auto ctx = pctx.sub(lineBatch.get());
         bool culling = engine->getSettings().graphics.frustumCulling.get();
-        level->entities->renderDebug(
+        level.entities->renderDebug(
             *lineBatch, culling ? frustumCulling.get() : nullptr, ctx
         );
     }
 }
 
-void WorldRenderer::renderHands(const Camera& camera, const Assets& assets, float deltaTime) {
+void WorldRenderer::renderHands(const Camera& camera, float deltaTime) {
     auto& entityShader = assets.require<ShaderProgram>("entity");
-    auto indices = level->content->getIndices();
+    auto indices = level.content->getIndices();
 
     const auto& inventory = player->getInventory();
     int slot = player->getChosenSlot();
@@ -379,7 +287,7 @@ void WorldRenderer::draw(
 ) {
     timer += deltaTime * !pause;
 
-    auto world = level->getWorld();
+    auto world = level.getWorld();
     const Viewport& vp = pctx.getViewport();
     camera.aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
 
@@ -408,12 +316,12 @@ void WorldRenderer::draw(
                 }
                 renderLines(camera, linesShader, ctx);
                 if (!player->isNoclip() && player->currentCamera == player->fpCamera) {
-                    renderHands(camera, assets, deltaTime * !pause);
+                    renderHands(camera, deltaTime * !pause);
                 }
             }
         }
 
-        renderBlockOverlay(wctx, assets);
+        renderBlockOverlay(wctx);
     }
 
     auto screenShader = assets.get<ShaderProgram>("screen");
@@ -423,13 +331,13 @@ void WorldRenderer::draw(
     postProcessing->render(pctx, screenShader);
 }
 
-void WorldRenderer::renderBlockOverlay(const DrawContext& wctx, const Assets& assets) {
+void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
     int x = std::floor(player->currentCamera->position.x);
     int y = std::floor(player->currentCamera->position.y);
     int z = std::floor(player->currentCamera->position.z);
-    auto block = level->chunks->getVoxel(x, y, z);
+    auto block = level.chunks->getVoxel(x, y, z);
     if (block && block->id) {
-        const auto& def = level->content->getIndices()->blocks.require(block->id);
+        const auto& def = level.content->getIndices()->blocks.require(block->id);
         if (def.overlayTexture.empty()) return;
 
         auto textureRegion = util::get_texture_region(
@@ -445,7 +353,7 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx, const Assets& as
         batch3d->begin();
         shader.uniformMatrix("u_projview", glm::mat4(1.0f));
         shader.uniformMatrix("u_apply", glm::mat4(1.0f));
-        auto light = level->chunks->getLight(x, y, z);
+        auto light = level.chunks->getLight(x, y, z);
         float s = LightMap::extract(light, 3) / 15.0f;
         glm::vec4 tint(
             glm::min(1.0f, LightMap::extract(light, 0) / 15.0f + s),
@@ -468,5 +376,5 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx, const Assets& as
 }
 
 void WorldRenderer::clear() {
-    renderer->clear();
+    chunks->clear();
 }

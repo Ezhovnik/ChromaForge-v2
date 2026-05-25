@@ -18,7 +18,6 @@ class ShaderProgram;
 class PostProcessing;
 class Frustum;
 class Engine;
-class Chunks;
 class LevelFrontend;
 class Skybox;
 class Batch3D;
@@ -27,54 +26,28 @@ struct EngineSettings;
 class ModelBatch;
 class Assets;
 class ParticlesRenderer;
-class Emitter;
 class TextsRenderer;
 class GuidesRenderer;
-
-namespace model {
-    struct Model;
-}
-
-struct ChunksSortEntry {
-    int index;
-    int d;
-
-    inline bool operator<(const ChunksSortEntry& o) const noexcept {
-        return d > o.d;
-    }
-};
 
 class WorldRenderer {
 private:
     Engine* engine;
+	const Level& level;
 	Player* player;
-	Level* level;
+	const Assets& assets;
     std::unique_ptr<Frustum> frustumCulling;
-    std::unique_ptr<ChunksRenderer> renderer;
+    std::unique_ptr<Batch3D> batch3d;
+    std::unique_ptr<ChunksRenderer> chunks;
 	std::unique_ptr<TextsRenderer> texts;
 	std::unique_ptr<GuidesRenderer> guides;
 	std::unique_ptr<LineBatch> lineBatch;
 	std::unique_ptr<Skybox> skybox;
-	std::unique_ptr<Batch3D> batch3d;
 	std::unique_ptr<ModelBatch> modelBatch;
-
-	std::vector<ChunksSortEntry> indices;
 
 	float timer = 0.0f;
 
-    bool drawChunk(
-		size_t index, 
-		const Camera& camera, 
-		ShaderProgram& shader, 
-		bool culling
-	);
-	void drawChunks(
-		Chunks* chunks, 
-		const Camera& camera, 
-		ShaderProgram& shader
-	);
 	void renderBlockSelection();
-	void renderHands(const Camera& camera, const Assets& assets, float deltaTime);
+	void renderHands(const Camera& camera, float deltaTime);
 	void renderLines(
 		const Camera& camera,
 		ShaderProgram& linesShader,
@@ -82,8 +55,7 @@ private:
 	);
 
 	void renderBlockOverlay(
-		const DrawContext& context,
-		const Assets& assets
+		const DrawContext& context
 	);
 
 	void setupWorldShader(
@@ -95,7 +67,7 @@ private:
 public:
 	std::unique_ptr<ParticlesRenderer> particles;
 
-	WorldRenderer(Engine* engine, LevelFrontend* levelFrontend, Player* player);
+	WorldRenderer(Engine* engine, LevelFrontend& levelFrontend, Player* player);
 	~WorldRenderer();
 
 	void draw(
