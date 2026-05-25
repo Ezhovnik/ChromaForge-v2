@@ -72,18 +72,6 @@ void TextsRenderer::renderTexts(
     bool hudVisible,
     bool frontLayer
 ) {
-    std::vector<TextNote> notes;
-    NotePreset preset;
-    preset.displayMode = NoteDisplayMode::StaticBillboard;
-    preset.color = glm::vec4(0, 0, 0, 1);
-    preset.scale = 0.005f;
-
-    notes.emplace_back(
-        L"Amogus",
-        std::move(preset),
-        glm::vec3(0.5f, 99.5f, 0.0015f)
-    );
-
     auto& shader = assets.require<ShaderProgram>("ui3d");
 
     shader.use();
@@ -91,8 +79,26 @@ void TextsRenderer::renderTexts(
     shader.uniformMatrix("u_apply", glm::mat4(1.0f));
     batch.begin();
 
-    for (const auto& note : notes) {
-        renderText(note, context, camera, settings, hudVisible);
+    for (const auto& [id, note] : notes) {
+        renderText(*note, context, camera, settings, hudVisible);
     }
     batch.flush();
+}
+
+uint64_t TextsRenderer::add(std::unique_ptr<TextNote> note) {
+    uint64_t uid = nextNote++;
+    notes[uid] = std::move(note);
+    return uid;
+}
+
+TextNote* TextsRenderer::get(uint64_t id) const {
+    const auto& found = notes.find(id);
+    if (found == notes.end()) {
+        return nullptr;
+    }
+    return found->second.get();
+}
+
+void TextsRenderer::remove(uint64_t id) {
+    notes.erase(id);
 }

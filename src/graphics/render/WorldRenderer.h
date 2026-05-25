@@ -38,7 +38,6 @@ private:
     std::unique_ptr<Frustum> frustumCulling;
     std::unique_ptr<Batch3D> batch3d;
     std::unique_ptr<ChunksRenderer> chunks;
-	std::unique_ptr<TextsRenderer> texts;
 	std::unique_ptr<GuidesRenderer> guides;
 	std::unique_ptr<LineBatch> lineBatch;
 	std::unique_ptr<Skybox> skybox;
@@ -65,6 +64,7 @@ private:
         float fogFactor
     );
 public:
+	std::unique_ptr<TextsRenderer> texts;
 	std::unique_ptr<ParticlesRenderer> particles;
 
 	WorldRenderer(Engine* engine, LevelFrontend& levelFrontend, Player* player);

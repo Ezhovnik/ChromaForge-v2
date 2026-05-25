@@ -31,6 +31,7 @@ extern const luaL_Reg quatlib [];
 extern const luaL_Reg generationlib[];
 extern const luaL_Reg bjsonlib[];
 extern const luaL_Reg particleslib[];
+extern const luaL_Reg text3dlib[];
 
 extern const luaL_Reg skeletonlib [];
 extern const luaL_Reg rigidbodylib [];
