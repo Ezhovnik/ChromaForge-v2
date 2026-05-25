@@ -5,26 +5,27 @@
 #include <glm/gtx/norm.hpp>
 
 namespace util {
+    template<typename T>
+    inline T sqr(T value) {
+        return value * value;
+    }
+
     constexpr inline float EPSILON = 1e-6f;
 
     inline int distance2(const glm::ivec3& a, const glm::ivec3& b) {
-        return (b.x - a.x) * (b.x - a.x) +
-                (b.y - a.y) * (b.y - a.y) +
-                (b.z - a.z) * (b.z - a.z);
+        return sqr(b.x - a.x) + sqr(b.y - a.y) + sqr(b.z - a.z);
     }
 
     inline int distance2(int ax, int ay, int az, int bx, int by, int bz) {
-        return (bx - ax) * (bx - ax) +
-               (by - ay) * (by - ay) +
-               (bz - az) * (bz - az);
+        return sqr(bx - ax) + sqr(by - ay) + sqr(bz - az);
     }
 
     inline int length2(const glm::ivec3& a) {
-        return a.x * a.x + a.y * a.y + a.z * a.z;
+        return sqr(a.x) + sqr(a.y) + sqr(a.z);
     }
 
     inline int length2(int x, int y, int z) {
-        return x * x + y * y + z * z;
+        return sqr(x) + sqr(y) + sqr(z);
     }
 
     inline glm::vec3 closest_point_on_segment(

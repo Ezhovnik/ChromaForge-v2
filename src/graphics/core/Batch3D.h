@@ -17,6 +17,7 @@ private:
 	size_t capacity;
 	std::unique_ptr<Mesh> mesh;
 	size_t index;
+	glm::vec4 tint {1.0f};
 
 	std::unique_ptr<Texture> blank;
 	const Texture* currentTexture;
@@ -66,7 +67,7 @@ public:
         float w, float h,
         int atlasRes,
         int index,
-        glm::vec4 tint
+        const glm::vec4& tint
     );
 	void xSprite(
 		float w, float h,
@@ -91,4 +92,7 @@ public:
     void point(const glm::vec3& pos, const glm::vec4& tint);
 	void flush() override;
 	void flushPoints();
+
+	void setColor(const glm::vec4& color);
+    const glm::vec4& getColor() const;
 };

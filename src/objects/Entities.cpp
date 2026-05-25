@@ -577,7 +577,7 @@ std::vector<Entt_Entity> Entities::getAllInRadius(glm::vec3 center, float radius
     return collected;
 }
 
-void Entities::render(Assets* assets, ModelBatch& batch, const Frustum* frustum, float deltaTime, bool pause) {
+void Entities::render(const Assets& assets, ModelBatch& batch, const Frustum* frustum, float deltaTime, bool pause) {
     if (!pause) {
         scripting::on_entities_render(deltaTime);
     }

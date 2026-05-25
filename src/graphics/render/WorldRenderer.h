@@ -28,7 +28,8 @@ class ModelBatch;
 class Assets;
 class ParticlesRenderer;
 class Emitter;
-class TextNote;
+class TextsRenderer;
+class GuidesRenderer;
 
 namespace model {
     struct Model;
@@ -50,6 +51,8 @@ private:
 	Level* level;
     std::unique_ptr<Frustum> frustumCulling;
     std::unique_ptr<ChunksRenderer> renderer;
+	std::unique_ptr<TextsRenderer> texts;
+	std::unique_ptr<GuidesRenderer> guides;
 	std::unique_ptr<LineBatch> lineBatch;
 	std::unique_ptr<Skybox> skybox;
 	std::unique_ptr<Batch3D> batch3d;
@@ -72,20 +75,10 @@ private:
 	);
 	void renderBlockSelection();
 	void renderHands(const Camera& camera, const Assets& assets, float deltaTime);
-	void renderDebugLines(
-        const DrawContext& context, 
-        const Camera& camera, 
-        ShaderProgram& linesShader
-    );
 	void renderLines(
 		const Camera& camera,
 		ShaderProgram& linesShader,
 		const DrawContext& pctx
-	);
-
-	void drawBorders(
-		int start_x, int start_y, int start_z,
-		int end_x, int end_y, int end_z
 	);
 
 	void renderBlockOverlay(
@@ -98,21 +91,6 @@ private:
         const Camera& camera,
         const EngineSettings& settings,
         float fogFactor
-    );
-
-	void renderText(
-        const TextNote& note,
-        const DrawContext& context,
-        const Assets& assets,
-        const Camera& camera,
-        const EngineSettings& settings,
-        bool hudVisible
-    );
-	void renderTexts(
-        const DrawContext& context,
-        const Camera& camera,
-        const EngineSettings& settings,
-        bool hudVisible
     );
 public:
 	std::unique_ptr<ParticlesRenderer> particles;
@@ -134,7 +112,8 @@ public:
         const Camera& camera,
         const EngineSettings& settings,
 		float deltaTime,
-		bool pause
+		bool pause,
+		bool hudVisible
     );
 
 	void clear();
