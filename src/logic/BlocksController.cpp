@@ -92,10 +92,14 @@ void BlocksController::updateBlock(int x, int y, int z) {
     if (vox == nullptr) return;
     const auto& def = level->content->getIndices()->blocks.require(vox->id);
     if (def.grounded) {
-        const auto& vec = get_ground_direction(def, vox->state.rotation);
-        if (!chunks->isSolidBlock(x + vec.x, y + vec.y, z + vec.z)) {
-            breakBlock(nullptr, def, x, y, z);
-            return;
+        // Для много-блочных блоков grounded проверяется только для origin-блока.
+        // Сегменты не являются самостоятельными блоками.
+        if (!(def.rt.extended && vox->state.segment)) {
+            const auto& vec = get_ground_direction(def, vox->state.rotation);
+            if (!chunks->isSolidBlock(x + vec.x, y + vec.y, z + vec.z)) {
+                breakBlock(nullptr, def, x, y, z);
+                return;
+            }
         }
     }
     if (def.rt.funcsset.update) scripting::update_block(def, glm::ivec3(x, y, z));

@@ -82,11 +82,12 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
         case BlockModel::X: {
             shader.uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), offset));
             glm::vec3 right = glm::normalize(glm::vec3(1.0f, 0.0f, -1.0f));
+            float heightScale = static_cast<float>(def.size.y);
             batch.sprite(
-                right * float(size) * 0.43f + glm::vec3(0, size * 0.4f, 0), 
+                right * float(size) * 0.43f + glm::vec3(0, size * 0.4f * heightScale, 0), 
                 glm::vec3(0.0f, 1.0f, 0.0f), 
                 right, 
-                size * 0.5f, size * 0.6f, 
+                size * 0.5f, size * 0.6f * heightScale, 
                 texfaces[0], 
                 glm::vec4(1.0f)
             );

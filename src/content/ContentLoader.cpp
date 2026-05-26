@@ -284,9 +284,13 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
                 "Block " + util::quote(def.name) + ": invalid block size"
             );
         }
-        if (def.model == BlockModel::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
-            def.model = BlockModel::AABB;
-            def.hitboxes = {AABB(def.size)};
+        if (def.size.x != 1 || def.size.y != 1 || def.size.z != 1) {
+            if (!root.has("hitbox") && !root.has("hitboxes")) {
+                def.hitboxes = {AABB(def.size)};
+            }
+            if (def.model == BlockModel::Cube) {
+                def.model = BlockModel::AABB;
+            }
         }
     }
 

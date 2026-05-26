@@ -46,7 +46,9 @@ std::unique_ptr<Content> ContentBuilder::build() {
                 }
             }
         } else {
-            def.rt.hitboxes->emplace_back(AABB(glm::vec3(1.0f)));
+            for (const auto& aabb : def.hitboxes) {
+                def.rt.hitboxes[0].push_back(aabb);
+            }
         }
 
         blockDefsIndices.push_back(&def);

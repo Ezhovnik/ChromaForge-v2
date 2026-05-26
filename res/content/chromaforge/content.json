@@ -40,7 +40,9 @@
         "iron_ore",
         "gold_ore",
         "copper_ore",
-        "gold_block"
+        "gold_block",
+        "rose_bush",
+        "tall_dandelion"
     ],
     "items": [
         "bedrock_breaker"
