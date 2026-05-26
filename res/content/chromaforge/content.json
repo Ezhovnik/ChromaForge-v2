@@ -42,7 +42,13 @@
         "copper_ore",
         "gold_block",
         "rose_bush",
-        "tall_dandelion"
+        "tall_dandelion",
+        "petunia",
+        "dahlia",
+        "baileya",
+        "blue_orchid",
+        "heather",
+        "pontederia"
     ],
     "items": [
         "bedrock_breaker"
