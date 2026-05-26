@@ -41,3 +41,6 @@ baileya=пустынные бархатцы
 heather=вереск
 pontederia=понтедерия
 blue orchid=голубая орхидея
+rose bush=розовый куст
+tall dandelion=высокий одуванчик
+drimia=дримия
