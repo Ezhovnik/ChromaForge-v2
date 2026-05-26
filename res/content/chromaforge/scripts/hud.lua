@@ -31,7 +31,8 @@ function on_hud_open()
     note = gfx.text3d.new({0.5, 99.5, 0.0015}, "Amogus", {
         scale=0.005,
         color={0, 0, 0, 1},
-        displayMode="static_billboard"
+        displayMode="static_billboard",
+        xray_opacity=0.2
     })
 end
 

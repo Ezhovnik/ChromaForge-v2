@@ -15,12 +15,13 @@ TextsRenderer::TextsRenderer(
 ) : batch(batch), assets(assets), frustum(frustum) {
 }
 
-void TextsRenderer::renderText(
+void TextsRenderer::renderNote(
     const TextNote& note,
     const DrawContext& context,
     const Camera& camera,
     const EngineSettings& settings,
-    bool hudVisible
+    bool hudVisible,
+    bool frontLayer
 ) {
     const auto& text = note.getText();
     const auto& preset = note.getPreset();
@@ -32,7 +33,12 @@ void TextsRenderer::renderText(
 
     if (preset.displayMode == NoteDisplayMode::Projected) return;
 
-    auto& font = assets.require<Font>("normal");
+    float opacity = 1.0f;
+    if (frontLayer) {
+        if (preset.xrayOpacity <= 0.0001f) return;
+        opacity = preset.xrayOpacity;
+    }
+    const auto& font = assets.require<Font>("normal");
 
     glm::vec3 xvec {1, 0, 0};
     glm::vec3 yvec {0, 1, 0};
@@ -55,7 +61,8 @@ void TextsRenderer::renderText(
         }
     }
 
-    batch.setColor(preset.color);
+    auto color = preset.color;
+    batch.setColor(glm::vec4(color.r, color.g, color.b, color.a * opacity));
     font.draw(
         batch,
         text,
@@ -65,7 +72,7 @@ void TextsRenderer::renderText(
     );
 }
 
-void TextsRenderer::renderTexts(
+void TextsRenderer::render(
     const DrawContext& context,
     const Camera& camera,
     const EngineSettings& settings,
@@ -80,7 +87,7 @@ void TextsRenderer::renderTexts(
     batch.begin();
 
     for (const auto& [id, note] : notes) {
-        renderText(*note, context, camera, settings, hudVisible);
+        renderNote(*note, context, camera, settings, hudVisible, frontLayer);
     }
     batch.flush();
 }
