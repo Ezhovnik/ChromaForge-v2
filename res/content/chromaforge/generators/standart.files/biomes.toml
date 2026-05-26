@@ -28,6 +28,41 @@ structures = [
     {name="tower", weight=0.002}
 ]
 
+[blossoming_forest]
+parameters = [
+    {weight=0.8, value=0.15},
+    {weight=0.7, value=0.6}
+]
+layers = [
+    {below-sea-level=false, height=1, block="chromaforge:moss"},
+    {below-sea-level=false, height=7, block="chromaforge:dirt"},
+    {height=-1, block="chromaforge:stone"},
+    {height=1, block="chromaforge:bedrock"}
+]
+sea-layers = [
+    {height=-1, block="chromaforge:water"}
+]
+plant-chance = 0.5
+plants = [
+    {weight=1, block="chromaforge:grass"},
+    {weight=0.02, block="chromaforge:poppy"},
+    {weight=0.02, block="chromaforge:dandelion"},
+    {weight=0.02, block="chromaforge:marigold"},
+    {weight=0.02, block="chromaforge:daisy"},
+    {weight=0.05, block="chromaforge:dahlia"},
+    {weight=0.05, block="chromaforge:petunia"},
+    {weight=0.05, block="chromaforge:blue_orchid"},
+    {weight=0.05, block="chromaforge:heather"},
+    {weight=0.05, block="chromaforge:pontederia"}
+]
+structure-chance = 0.032
+structures = [
+    {name="oak0", weight=1},
+    {name="oak1", weight=1},
+    {name="birch0", weight=1},
+    {name="tower", weight=0.002}
+]
+
 [desert]
 parameters = [
     {weight=1.0, value=1},
@@ -43,7 +78,8 @@ sea-layers = [
 ]
 plant-chance = 0.02
 plants =[
-    {weight=1, block="chromaforge:dead_bush"}
+    {weight=1, block="chromaforge:dead_bush"},
+    {weight=0.03, block="chromaforge:baileya"}
 ]
 
 [plains]

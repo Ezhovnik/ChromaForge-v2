@@ -40,7 +40,13 @@
         "iron_ore",
         "gold_ore",
         "copper_ore",
-        "gold_block"
+        "gold_block",
+        "petunia",
+        "dahlia",
+        "baileya",
+        "blue_orchid",
+        "heather",
+        "pontederia"
     ],
     "items": [
         "bedrock_breaker"
