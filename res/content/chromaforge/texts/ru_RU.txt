@@ -41,3 +41,4 @@ baileya=пустынные бархатцы
 heather=вереск
 pontederia=понтедерия
 blue orchid=голубая орхидея
+ice=лёд

@@ -13,6 +13,11 @@ class Mesh;
 struct SortingMeshEntry {
     glm::vec3 position;
     util::Buffer<float> vertexData;
+    long long distance;
+
+    inline bool operator<(const SortingMeshEntry& o) const noexcept {
+        return distance > o.distance;
+    }
 };
 
 struct SortingMeshData {
@@ -25,6 +30,7 @@ struct ChunkMeshData {
 };
 
 struct ChunkMesh {
-    std::shared_ptr<Mesh> mesh;
-    SortingMeshData sortingMesh;
+    std::unique_ptr<Mesh> mesh;
+    SortingMeshData sortingMeshData;
+    std::unique_ptr<Mesh> sortedMesh = nullptr;
 };

@@ -45,6 +45,9 @@ public:
     }
 };
 
+const vattr CR_ATTRS[]{{3}, {2}, {1}, {0}};
+inline constexpr int CR_VERTEX_SIZE = 6;
+
 ChunksRenderer::ChunksRenderer(
     const Level* level, 
     const Assets& assets,
@@ -62,7 +65,7 @@ ChunksRenderer::ChunksRenderer(
             if (!result.cancelled) {
                 auto meshData = std::move(result.meshData);
                 meshes[result.key] = ChunkMesh {
-                    std::make_shared<Mesh>(meshData.mesh),
+                    std::make_unique<Mesh>(meshData.mesh),
                     std::move(meshData.sortingMesh)
                 };
             }
@@ -77,12 +80,15 @@ ChunksRenderer::ChunksRenderer(
     );
 
     LOG_INFO("Created {} workers", threadPool.getWorkersCount());
+
+    float buf[1]{};
+    sortedMesh = std::make_unique<Mesh>(buf, 0, CR_ATTRS);
 }
 
 ChunksRenderer::~ChunksRenderer() {
 }
 
-std::shared_ptr<Mesh> ChunksRenderer::render(
+const Mesh* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk,
     bool important
 ) {
@@ -91,9 +97,9 @@ std::shared_ptr<Mesh> ChunksRenderer::render(
     if (important) {
         auto mesh = renderer->render(chunk.get(), level.chunks.get());
         meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = ChunkMesh {
-            std::move(mesh.mesh), std::move(mesh.sortingMesh)
+            std::move(mesh.mesh), std::move(mesh.sortingMeshData)
         };
-        return meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)].mesh;
+        return meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)].mesh.get();
     }
 
     glm::ivec2 key(chunk->chunk_x, chunk->chunk_z);
@@ -115,7 +121,7 @@ void ChunksRenderer::clear() {
     threadPool.clearQueue();
 }
 
-std::shared_ptr<Mesh> ChunksRenderer::getOrRender(
+const Mesh* ChunksRenderer::getOrRender(
     const std::shared_ptr<Chunk>& chunk,
     bool important
 ) {
@@ -124,7 +130,7 @@ std::shared_ptr<Mesh> ChunksRenderer::getOrRender(
 
     if (chunk->flags.modified) render(chunk, important);
 
-    return found->second.mesh;
+    return found->second.mesh.get();
 }
 
 void ChunksRenderer::update() {
@@ -196,11 +202,95 @@ void ChunksRenderer::drawChunks(
     bool culling = settings.graphics.frustumCulling.get();
 
     visibleChunks = 0;
+    shader.uniform1i("u_alphaClip", true);
     // if (GLEW_ARB_multi_draw_indirect && false) {
         // TODO: implement Multi Draw Indirect chunks draw
     // } else {
-        for (size_t i = 0; i < indices.size(); i++) {
+        for (size_t i = 0; i < indices.size(); ++i) {
             visibleChunks += drawChunk(indices[i].index, camera, shader, culling);
         }
     // }
+}
+
+void ChunksRenderer::drawSortedMeshes(const Camera& camera, ShaderProgram& shader) {
+    const int sortInterval = 6;
+    static int frameid = 0;
+    frameid++;
+
+    bool culling = settings.graphics.frustumCulling.get();
+    const auto& chunks = level.chunks->getChunks();
+    const auto& cameraPos = camera.position;
+
+    const auto& atlas = assets.require<Atlas>("blocks");
+    atlas.getTexture()->bind();
+
+    shader.uniformMatrix("u_model", glm::mat4(1.0f));
+    shader.uniform1i("u_alphaClip", false);
+
+    for (const auto& index : indices) {
+        const auto& chunk = chunks[index.index];
+        if (chunk == nullptr || !chunk->flags.lighted) continue;
+
+        const auto& found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
+        if (found == meshes.end()) continue;
+
+        glm::vec3 min(
+            chunk->chunk_x * CHUNK_WIDTH - CHUNK_WIDTH,
+            0,
+            chunk->chunk_z * CHUNK_DEPTH - CHUNK_DEPTH
+        );
+        glm::vec3 max(
+            chunk->chunk_x * CHUNK_WIDTH + CHUNK_WIDTH * 2,
+            CHUNK_HEIGHT,
+            chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH * 2
+        );
+
+        if (!frustum.isBoxVisible(min, max)) continue;
+
+        auto& chunkEntries = found->second.sortingMeshData.entries;
+
+        if (chunkEntries.empty()) {
+            continue;
+        } else if (chunkEntries.size() == 1) {
+            auto& entry = chunkEntries.at(0);
+            if (found->second.sortedMesh == nullptr) {
+                found->second.sortedMesh = std::make_unique<Mesh>(
+                    entry.vertexData.data(),
+                    entry.vertexData.size() / CR_VERTEX_SIZE,
+                    CR_ATTRS
+                );
+            }
+            found->second.sortedMesh->draw();
+            continue;
+        }
+
+        for (auto& entry : chunkEntries) {
+            entry.distance = static_cast<long long>(glm::distance2(entry.position, cameraPos));
+        }
+
+        if (found->second.sortedMesh == nullptr || (frameid + chunk->chunk_x) % sortInterval == 0) {
+            std::sort(chunkEntries.begin(), chunkEntries.end());
+            size_t size = 0;
+            for (const auto& entry : chunkEntries) {
+                size += entry.vertexData.size();
+            }
+            static util::Buffer<float> buffer;
+            if (buffer.size() < size) {
+                buffer = util::Buffer<float>(size);
+            }
+            size_t offset = 0;
+            for (const auto& entry : chunkEntries) {
+                std::memcpy(
+                    (buffer.data() + offset),
+                    entry.vertexData.data(),
+                    entry.vertexData.size() * sizeof(float)
+                );
+                offset += entry.vertexData.size();
+            }
+            found->second.sortedMesh = std::make_unique<Mesh>(
+                buffer.data(), size / CR_VERTEX_SIZE, CR_ATTRS
+            );
+        }
+        found->second.sortedMesh->draw();
+    }
 }

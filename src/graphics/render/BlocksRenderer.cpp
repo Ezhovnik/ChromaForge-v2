@@ -457,8 +457,7 @@ void BlocksRenderer::render(
 			blockid_t id = vox.id;
 			blockstate state = vox.state;
 			const auto& def = *blockDefsCache[id];
-			if (id == 0 || def.drawGroup != drawGroup || state.segment) continue;
-
+			if (id == 0 || def.drawGroup != drawGroup || state.segment || def.translucent) continue;
             // Получаем текстурные регионы для всех шести граней
 			const UVRegion texfaces[6]{
                 cache.getRegion(id, 0), 
@@ -526,12 +525,15 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 ) {
     SortingMeshData sortingMesh {{}};
 
+	AABB aabb {};
+	bool aabbInit = false;
+	size_t totalSize = 0;
     for (const auto drawGroup : *content.drawGroups) {
         int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
 
         int end = beginEnds[drawGroup][1];
-        for (int i = begin-1; i <= end; ++i) {
+        for (int i = begin - 1; i <= end; ++i) {
             const voxel& vox = voxels[i];
             blockid_t id = vox.id;
             blockstate state = vox.state;
@@ -596,23 +598,58 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 
             SortingMeshEntry entry {
 				glm::vec3(
-                    x + chunk->chunk_x * CHUNK_WIDTH, y, z + chunk->chunk_z * CHUNK_DEPTH
+                    x + chunk->chunk_x * CHUNK_WIDTH + 0.5f,
+					y + 0.5f,
+					z + chunk->chunk_z * CHUNK_DEPTH + 0.5f
 				),
 				util::Buffer<float>(indexSize * BR_VERTEX_SIZE)
 			};
 
+			totalSize += entry.vertexData.size();
+
             for (int j = 0; j < indexSize; ++j) {
                 std::memcpy(
-                    entry.vertexData.data(),
+                    entry.vertexData.data() + j * BR_VERTEX_SIZE,
                     vertexBuffer.get() + indexBuffer[j] * BR_VERTEX_SIZE,
                     sizeof(float) * BR_VERTEX_SIZE
                 );
+				float& vx = entry.vertexData[j * BR_VERTEX_SIZE + 0];
+                float& vy = entry.vertexData[j * BR_VERTEX_SIZE + 1];
+                float& vz = entry.vertexData[j * BR_VERTEX_SIZE + 2];
+
+                if (!aabbInit) {
+                    aabbInit = true;
+                    aabb.a = aabb.b = {vx, vy, vz};
+                } else {
+                    aabb.addPoint(glm::vec3(vx, vy, vz));
+                }
+                vx += chunk->chunk_x * CHUNK_WIDTH + 0.5f;
+                vy += 0.5f;
+                vz += chunk->chunk_z * CHUNK_DEPTH + 0.5f;
             }
             sortingMesh.entries.push_back(std::move(entry));
             vertexOffset = 0;
             indexOffset = indexSize = 0;
         }
     }
+
+	auto size = aabb.size();
+    if (glm::abs(size.y) < 0.01f && sortingMesh.entries.size() > 1) {
+        SortingMeshEntry newEntry {
+            sortingMesh.entries[0].position,
+            util::Buffer<float>(totalSize)
+        };
+        size_t offset = 0;
+        for (const auto& entry : sortingMesh.entries) {
+            std::memcpy(
+                newEntry.vertexData.data() + offset,
+                entry.vertexData.data(), entry.vertexData.size() * sizeof(float)
+            );
+            offset += entry.vertexData.size();
+        }
+        return SortingMeshData {{std::move(newEntry)}};
+    }
+
     return sortingMesh;
 }
 
@@ -673,7 +710,7 @@ ChunkMesh BlocksRenderer::render(const Chunk* chunk, const Chunks* chunks) {
     build(chunk, chunks);
     const vattr attrs[]{{3}, {2}, {1}, {0}};
     size_t vcount = vertexOffset / BR_VERTEX_SIZE;
-    return ChunkMesh{std::make_shared<Mesh>(
+    return ChunkMesh{std::make_unique<Mesh>(
         vertexBuffer.get(), vcount, indexBuffer.get(), indexSize, attrs
     ), std::move(sortingMesh)};
 }

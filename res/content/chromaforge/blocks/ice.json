@@ -1,0 +1,7 @@
+{
+    "texture": "ice",
+    "material": "chromaforge:glass",
+    "draw-group": 4,
+    "light-passing": true,
+    "translucent": true
+}
