@@ -13,7 +13,7 @@
 
 #include <debug/Logger.h>
 
-std::string util::escape(const std::string& s) {
+std::string util::escape(std::string_view s) {
     std::stringstream ss;
     ss << '"';
     size_t pos = 0;

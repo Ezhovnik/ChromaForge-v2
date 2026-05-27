@@ -161,6 +161,7 @@ end
 
 string.lower = utf8.lower
 string.upper = utf8.upper
+string.escape = utf8.escape
 
 local meta = getmetatable("")
 
@@ -224,6 +225,20 @@ function file.readlines(path)
         table.insert(lines, s)
     end
     return lines
+end
+
+function debug.get_trackback()
+    local frames = {}
+    local n = 0
+    while true do
+        local info = debug.getinfo(n)
+        if info then
+            table.insert(frames, info)
+        else
+            return frames 
+        end
+        n = n + 1
+    end
 end
 
 package = {
