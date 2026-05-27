@@ -634,7 +634,7 @@ void scripting::load_entity_component(
     auto L = lua::get_main_state();
     std::string src = files::read_string(file);
     LOG_INFO("Script (entity component) {}", file.u8string());
-    lua::loadbuffer(L, 0, src, "C!" + name);
+    lua::loadbuffer(L, 0, src, fileName);
     lua::store_in(L, lua::CHUNKS_TABLE, name);
 }
 

@@ -235,7 +235,11 @@ void Hud::processInput(bool visible) {
     }
 
     if (!pause && Events::justActive(BIND_DEVTOOLS_CONSOLE)) {
-        showOverlay(assets->get<UIDocument>(BUILTIN_CONTENT_NAMESPACE + ":console"), false);
+        showOverlay(
+            assets->get<UIDocument>(BUILTIN_CONTENT_NAMESPACE + ":console"),
+            false,
+            std::string("console")
+        );
     }
 
     if (!Window::isFocused() && !pause && !isInventoryOpen()) setPause(true);
@@ -439,7 +443,7 @@ void Hud::updateElementsPosition(const Viewport& viewport) {
     hotbarView->setSelected(player->getChosenSlot());
 }
 
-void Hud::showOverlay(UIDocument* doc, bool playerInventory) {
+void Hud::showOverlay(UIDocument* doc, bool playerInventory, const dv::value& arg) {
     if (isInventoryOpen()) closeInventory();
 
     secondUI = doc->getRoot();
@@ -449,7 +453,7 @@ void Hud::showOverlay(UIDocument* doc, bool playerInventory) {
         showExchangeSlot();
         inventoryOpen = true;
     }
-    add(HudElement(HudElementMode::InventoryBound, doc, secondUI, false));
+    add(HudElement(HudElementMode::InventoryBound, doc, secondUI, false), arg);
 }
 
 void Hud::openInventory(
@@ -594,13 +598,13 @@ void Hud::setPause(bool pause) {
     menu->setVisible(pause);
 }
 
-void Hud::add(const HudElement& element) {
+void Hud::add(const HudElement& element, const dv::value& arg) {
     guiController->add(element.getNode());
     auto document = element.getDocument();
     if (document) {
         auto invview = std::dynamic_pointer_cast<gui::InventoryView>(element.getNode());
         auto inventory = invview ? invview->getInventory() : nullptr;
-        std::vector<dv::value> args;
+        std::vector<dv::value> args {arg};
         args.emplace_back(inventory ? inventory.get()->getId() : 0);
         for (int i = 0; i < 3; ++i) {
             args.emplace_back(static_cast<integer_t>(blockPos[i]));
