@@ -28,6 +28,7 @@
 #include <objects/Entity.h>
 #include <frontend/hud.h>
 #include <graphics/render/ParticlesRenderer.h>
+#include <graphics/render/ChunksRenderer.h>
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
@@ -37,8 +38,8 @@ static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
 
 std::shared_ptr<gui::UINode> create_debug_panel(
     Engine* engine,
-    Level* level,
-    Player* player,
+    Level& level,
+    Player& player,
     bool allowDebugCheats
 ) {
 	auto panel = std::make_shared<gui::Panel>(glm::vec2(350, 200), glm::vec4(5.0f), 2.0f);
@@ -72,8 +73,8 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         Mesh::drawCalls = 0;
         return L"Draw-calls: " + std::to_wstring(drawCalls);
     }));
-    panel->add(std::shared_ptr<gui::Label>(create_label([=](){
-		return L"Chunks: " + std::to_wstring(level->chunks->getChunksCount()) + L" (visible: " + std::to_wstring(level->chunks->visibleCount) + L")";
+    panel->add(std::shared_ptr<gui::Label>(create_label([&](){
+		return L"Chunks: " + std::to_wstring(level.chunks->getChunksCount()) + L" (visible: " + std::to_wstring(ChunksRenderer::visibleChunks) + L")";
 	})));
     panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Particles: " +
@@ -81,9 +82,9 @@ std::shared_ptr<gui::UINode> create_debug_panel(
                 L" Emitters: " +
                 std::to_wstring(ParticlesRenderer::aliveEmitters);
 	})));
-    panel->add(create_label([=]() {
-        return L"Entities: " + std::to_wstring(level->entities->size()) +
-        L" Next: " + std::to_wstring(level->entities->peekNextID());
+    panel->add(create_label([&]() {
+        return L"Entities: " + std::to_wstring(level.entities->size()) +
+        L" Next: " + std::to_wstring(level.entities->peekNextID());
     }));
     panel->add(create_label([](){
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());
@@ -91,47 +92,48 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     panel->add(create_label([](){
         return L"Lua stack: " + std::to_wstring(scripting::get_values_on_stack());
     }));
-	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
-        const auto& vox = player->selection.vox;
+	panel->add(std::shared_ptr<gui::Label>(create_label([&]() -> std::wstring{
+        const auto& vox = player.selection.vox;
         std::wstringstream stream;
         stream << "R:" << vox.state.rotation << " S:"
             << std::bitset<3>(vox.state.segment) << " U:"
             << std::bitset<8>(vox.state.userbits);
         if (vox.id == BLOCK_VOID) {
-            return std::wstring {L"Block: -"};
+            return L"Block: -";
         } else {
             return L"Block: " + std::to_wstring(vox.id) + L" " + stream.str();
         }
 	})));
-    panel->add(create_label([=]() -> std::wstring {
-        const auto& vox = player->selection.vox;
+    panel->add(create_label([&]() -> std::wstring {
+        const auto& selection = player.selection;
+        const auto& vox = selection.vox;
         if (vox.id == BLOCK_VOID) {
             return L"x: - y: - z: -";
         }
-        return L"x: " + std::to_wstring(player->selection.actualPosition.x) +
-            L" y: " + std::to_wstring(player->selection.actualPosition.y) +
-            L" z: " + std::to_wstring(player->selection.actualPosition.z);
+        return L"x: " + std::to_wstring(selection.actualPosition.x) +
+            L" y: " + std::to_wstring(selection.actualPosition.y) +
+            L" z: " + std::to_wstring(selection.actualPosition.z);
     }));
-    panel->add(create_label([=](){
-        auto* indices = level->content->getIndices();
-        if (auto def = indices->blocks.get(player->selection.vox.id)) {
+    panel->add(create_label([&](){
+        auto* indices = level.content->getIndices();
+        if (auto def = indices->blocks.get(player.selection.vox.id)) {
             return L"Name: " + util::str2wstr_utf8(def->name);
         } else {
             return std::wstring {L"Name: void"};
         }
     }));
-    panel->add(create_label([=]() {
-        auto eid = player->getSelectedEntity();
+    panel->add(create_label([&]() {
+        auto eid = player.getSelectedEntity();
         if (eid == ENTITY_NONE) {
             return std::wstring {L"Entity: -"};
-        } else if (auto entity = level->entities->get(eid)) {
+        } else if (auto entity = level.entities->get(eid)) {
             return L"Entity: " + util::str2wstr_utf8(entity->getDef().name) + L" (UID: "+std::to_wstring(entity->getUID()) + L")";
         } else {
             return std::wstring {L"Entity: error (invalid UID)"};
         }
     }));
-	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
-		return L"Seed: " + std::to_wstring(level->getWorld()->getSeed());
+	panel->add(std::shared_ptr<gui::Label>(create_label([&](){
+		return L"Seed: " + std::to_wstring(level.getWorld()->getSeed());
 	})));
 	for (int ax = 0; ax < 3; ++ax){
 		auto sub = std::make_shared<gui::Container>(glm::vec2(350, 27));
@@ -146,22 +148,22 @@ std::shared_ptr<gui::UINode> create_debug_panel(
 
         auto box = std::make_shared<gui::TextBox>(L"");
         auto boxRef = box.get();
-        box->setTextSupplier([=]() {
-            return std::to_wstring(static_cast<int>(player->getPosition()[ax]));
+        box->setTextSupplier([&player, ax]() {
+            return std::to_wstring(static_cast<int>(player.getPosition()[ax]));
         });
         if (allowDebugCheats) {
-            box->setTextConsumer([=](const std::wstring& text) {
+            box->setTextConsumer([&player, ax](const std::wstring& text) {
                 try {
-                    glm::vec3 position = player->getPosition();
+                    glm::vec3 position = player.getPosition();
                     position[ax] = std::stoi(text);
-                    player->teleport(position);
+                    player.teleport(position);
                 } catch (std::exception& _){
                 }
             });
         }
-        box->setOnEditStart([=]() {
+        box->setOnEditStart([&player, boxRef, ax]() {
             boxRef->setText(
-                std::to_wstring(static_cast<int>(player->getPosition()[ax]))
+                std::to_wstring(static_cast<int>(player.getPosition()[ax]))
             );
         });
         box->setSize(glm::vec2(230, 27));
@@ -170,7 +172,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         panel->add(sub);
 	}
 
-    auto& worldInfo = level->getWorld()->getInfo();
+    auto& worldInfo = level.getWorld()->getInfo();
 
 	panel->add(std::shared_ptr<gui::Label>(create_label([&](){
 		std::wstringstream ss;

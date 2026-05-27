@@ -4,10 +4,14 @@
 #include <vector>
 #include <memory>
 
+#include <glm/glm.hpp>
+
 #include <typedefs.h>
 
 class Texture;
 class Batch2D;
+class Batch3D;
+class Camera;
 
 /**
  * @brief Стили отрисовки текста (тени, контур).
@@ -27,11 +31,11 @@ enum class FontStyle {
  */
 class Font {
 private:
-    int lineHeight; ///< Высота строки в пикселях
+     int lineHeight; ///< Высота строки в пикселях
 	int yoffset; ///< Смещение по Y (для коррекции позиции)
-public:
+     int glyphInterval = 8;
 	std::vector<std::unique_ptr<Texture>> pages; ///< Страницы текстуры шрифта
-
+public:
 	/**
      * @brief Конструктор.
      * @param pages Вектор страниц (текстур). Вектор будет перемещён.
@@ -52,8 +56,8 @@ public:
      */
      int getYOffset() const;
 
-	int calcWidth(const std::wstring& text, size_t length=-1);
-     int calcWidth(const std::wstring& text, size_t offset, size_t length);
+	int calcWidth(const std::wstring& text, size_t length=-1) const;
+     int calcWidth(const std::wstring& text, size_t offset, size_t length) const;
 
 	/**
      * @brief Проверяет, является ли символ печатным (не пробельным).
@@ -62,29 +66,20 @@ public:
      */
 	bool isPrintableChar(uint codepoint) const;
 
-	/**
-     * @brief Рисует текст без дополнительного стиля.
-     * @param batch Указатель на Batch2D.
-     * @param text Текст.
-     * @param x,y Позиция левого верхнего угла.
-     */
-	void draw(Batch2D* batch, std::wstring text, int x, int y);
+	void draw(
+          Batch2D& batch,
+          std::wstring_view text,
+          int x, int y,
+          float scale=1
+     ) const;
 
-	/**
-     * @brief Рисует текст с указанным стилем.
-     * @param batch Batch2D.
-     * @param text Текст.
-     * @param x,y Позиция.
-     * @param style Стиль.
-     */
-     void draw(Batch2D* batch, const std::wstring& text, int x, int y, FontStyle style);
+     void draw(
+          Batch3D& batch,
+          std::wstring_view text,
+          const glm::vec3& pos,
+          const glm::vec3& right={1, 0, 0},
+          const glm::vec3& up={0, 1, 0}
+     ) const;
 
-	/**
-     * @brief Рисует текст с указанным стилем (перегрузка для std::wstring_view).
-     * @param batch Batch2D.
-     * @param text Текст.
-     * @param x,y Позиция.
-     * @param style Стиль.
-     */
-     void draw(Batch2D* batch, std::wstring_view text, int x, int y, FontStyle style);
+     const Texture* getPage(int page) const;
 };

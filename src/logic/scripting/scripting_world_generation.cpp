@@ -223,11 +223,12 @@ public:
         lua::stackguard _(L);
         lua::pushenv(L, *env);
         try {
-            if (lua::getfield(L, "place_structures_wide")) {
+            if (lua::getfield(L, "place_structures")) {
                 lua::pushivec_stack(L, offset);
                 lua::pushivec_stack(L, size);
+                lua::newuserdata<lua::LuaHeightmap>(L, heightmap);
                 lua::pushinteger(L, chunkHeight);
-                if (lua::call_nothrow(L, 5, 1)) {
+                if (lua::call_nothrow(L, 6, 1)) {
                     int len = lua::objlen(L, -1);
                     for (int i = 1; i <= len; ++i) {
                         lua::rawgeti(L, i);

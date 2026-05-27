@@ -25,10 +25,10 @@ using texture_names_map = std::unordered_map<std::string, std::string>;
 
 class ModelBatch {
 private:
-    Assets* assets;
-    Chunks* chunks;
+    const Assets& assets;
+    const Chunks& chunks;
 
-    const EngineSettings* settings;
+    const EngineSettings& settings;
 
     glm::vec3 lightsOffset {};
 
@@ -60,9 +60,9 @@ private:
 public:
     ModelBatch(
         size_t capacity,
-        Assets* assets,
-        Chunks* chunks,
-        const EngineSettings* settings
+        const Assets& assets,
+        const Chunks& chunks,
+        const EngineSettings& settings
     );
     ~ModelBatch();
 

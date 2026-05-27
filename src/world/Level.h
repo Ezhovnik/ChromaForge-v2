@@ -67,6 +67,7 @@ public:
      * @return Указатель на World (принадлежит Level).
      */
 	World* getWorld();
+     const World* getWorld() const;
 
 	/**
      * @brief Создаёт новый объект (сущность) типа T и добавляет его на уровень.

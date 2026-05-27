@@ -192,7 +192,7 @@ public:
 
     void updatePhysics(float delta);
     void update(float deltaTime);
-    void render(Assets* assets, ModelBatch& batch, const Frustum* frustum, float deltaTime, bool pause);
+    void render(const Assets& assets, ModelBatch& batch, const Frustum* frustum, float deltaTime, bool pause);
     void renderDebug(LineBatch& batch, const Frustum* frustum, const DrawContext& ctx);
     void clean();
 

@@ -15,7 +15,7 @@
 /** Основная версия (major). */
 inline constexpr int ENGINE_VERSION_MAJOR = 0;
 /** Минорная версия (minor). */
-inline constexpr int ENGINE_VERSION_MINOR = 3;
+inline constexpr int ENGINE_VERSION_MINOR = 4;
 /** Версия поддержки (maintenance). */
 inline constexpr int ENGINE_VERSION_MAINTENANCE = 0;
 /** Текстовое название версии */

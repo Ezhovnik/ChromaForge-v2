@@ -21,7 +21,7 @@ class Block;
 class Chunk;
 class Chunks;
 class VoxelsVolume;
-class ChunksStorage;
+class Chunks;
 class ContentGfxCache;
 struct EngineSettings;
 struct UVRegion;
@@ -34,7 +34,7 @@ struct UVRegion;
  */
 class BlocksRenderer {
 private:
-	const Content* const content;
+	const Content& content;
 	std::unique_ptr<float[]> vertexBuffer;
 	std::unique_ptr<int[]> indexBuffer;
 	size_t vertexOffset;
@@ -49,8 +49,8 @@ private:
 	std::unique_ptr<VoxelsVolume> voxelsBuffer;
 
 	const Block* const* blockDefsCache;
-	const ContentGfxCache* const cache;
-	const EngineSettings* settings;
+	const ContentGfxCache& cache;
+    const EngineSettings& settings;
 
     PseudoRandom randomizer;
 
@@ -273,9 +273,9 @@ public:
      */
 	BlocksRenderer(
         size_t capacity, 
-        const Content* content, 
-        const ContentGfxCache* cache, 
-        const EngineSettings* settings
+        const Content& content, 
+        const ContentGfxCache& cache, 
+        const EngineSettings& settings
     );
 
 	virtual ~BlocksRenderer();
@@ -285,7 +285,7 @@ public:
      * @param chunk Чанк.
      * @param chunks Хранилище чанков (для доступа к соседям).
      */
-    void build(const Chunk* chunk, const ChunksStorage* chunks);
+    void build(const Chunk* chunk, const Chunks* chunks);
 
     /**
      * @brief Рендерит чанк и возвращает Mesh.
@@ -293,7 +293,7 @@ public:
      * @param chunks Хранилище чанков.
      * @return Указатель на новый Mesh.
      */
-	std::shared_ptr<Mesh> render(const Chunk* chunk, const ChunksStorage* chunks);
+	std::shared_ptr<Mesh> render(const Chunk* chunk, const Chunks* chunks);
 
     /**
      * @brief Создаёт Mesh из текущих буферов.

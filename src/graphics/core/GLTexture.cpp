@@ -72,6 +72,18 @@ void GLTexture::setNearestFilter() {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void GLTexture::setMipMapping(bool flag) {
+    bind();
+    if (flag) {
+        glTexParameteri(
+            GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST
+        );
+    } else {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 std::unique_ptr<GLTexture> GLTexture::from(const ImageData* image) {
     uint width = image->getWidth();
     uint height = image->getHeight();

@@ -308,6 +308,7 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
     root.at("inventory-size").get(def.inventorySize);
     root.at("spark-interval").get(def.sparkInterval);
     root.at("overlay-texture").get(def.overlayTexture);
+    root.at("translucent").get(def.translucent);
 
     if (root.has("fields")) {
         def.dataStruct = std::make_unique<data::StructLayout>();

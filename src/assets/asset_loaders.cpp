@@ -27,7 +27,7 @@
 #include <coders/vec3.h>
 #include <util/stringutil.h>
 
-static bool animation(
+static bool load_animation(
     Assets* assets, 
 	const ResPaths* paths,
     const std::string& atlasName, 
@@ -92,18 +92,31 @@ asset_loader::postfunc asset_loader::font(
 	const std::shared_ptr<AssetsConfig>&)
 {
     auto pages = std::make_shared<std::vector<std::unique_ptr<ImageData>>>();
-	for (size_t i = 0; i <= 4; ++i) {
+	for (size_t i = 0; i <= 1024; ++i) {
 		// Формируем имя файла страницы: filename_i.png
 		std::string page_name = filename + "_" + std::to_string(i) + ".png"; 
-        page_name = paths->find(page_name).string(); // ищем полный путь
-		pages->push_back(imageio::read(page_name));
+        auto file = paths->find(page_name);
+        if (std::filesystem::exists(file)) {
+            pages->push_back(imageio::read(file.u8string()));
+        } else if (i == 0) {
+            LOG_ERROR("Font must have page 0");
+            throw std::runtime_error("Font must have page 0");
+        } else {
+            pages->push_back(nullptr);
+        }
 	}
 
 	return [=](auto assets) {
         int res = pages->at(0)->getHeight() / 16;
         std::vector<std::unique_ptr<Texture>> textures;
         for (auto& page : *pages) {
-            textures.emplace_back(Texture::from(page.get()));
+            if (page == nullptr) {
+                textures.emplace_back(nullptr);
+            } else {
+                auto texture = Texture::from(page.get());
+                texture->setMipMapping(false);
+                textures.emplace_back(std::move(texture));
+            }
         }
         assets->store(std::make_unique<Font>(std::move(textures), res, 4), name);
     };
@@ -159,7 +172,7 @@ asset_loader::postfunc asset_loader::atlas(
         assets->store(std::unique_ptr<Atlas>(atlas), name);
 
         for (const auto& file : names) {
-            animation(assets, paths, name, directory, file, atlas);
+            load_animation(assets, paths, name, directory, file, atlas);
         }
     };
 }
@@ -235,7 +248,7 @@ inline bool contains(
     return false;
 }
 
-static bool animation(
+static bool load_animation(
 	Assets* assets, 
 	const ResPaths* paths,
     const std::string& atlasName, 

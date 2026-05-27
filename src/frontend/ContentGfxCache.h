@@ -17,7 +17,7 @@ private:
     std::unique_ptr<UVRegion[]> sideregions;
     std::unordered_map<blockid_t, model::Model> models;
 public:
-    ContentGfxCache(const Content* content, Assets* assets);
+    ContentGfxCache(const Content* content, const Assets& assets);
     ~ContentGfxCache();
 
     inline const UVRegion& getRegion(blockid_t id, int side) const {

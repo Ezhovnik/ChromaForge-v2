@@ -5,6 +5,24 @@
 #include <string>
 
 namespace util {
+    template<typename Iter>
+    inline void insertion_sort(Iter first, Iter last) {
+        for (Iter it = first; it != last; ++it) {
+            std::rotate(
+                std::upper_bound(first, it, *it), it, std::next(it)
+            );
+        }
+    }
+
+    template<typename Iter, typename Compare>
+    inline void insertion_sort(Iter first, Iter last, Compare compare) {
+        for (Iter it = first; it != last; ++it) {
+            std::rotate(
+                std::upper_bound(first, it, *it, compare), it, std::next(it)
+            );
+        }
+    }
+
     /**
      * @brief Проверяет, содержится ли значение в векторе.
      * @tparam T Тип элементов вектора (должен поддерживать сравнение через operator==).

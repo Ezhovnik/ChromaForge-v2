@@ -216,6 +216,13 @@ static int p_get_placeholder(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_hint(gui::UINode* node, lua::State* L) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return lua::pushwstring(L, box->getHint());
+    }
+    return 0;
+}
+
 static int p_get_text(gui::UINode* node, lua::State* L) {
     if (auto button = dynamic_cast<gui::Button*>(node)) {
         return lua::pushwstring(L, button->getText());
@@ -347,6 +354,7 @@ static int l_gui_getattr(lua::State* L) {
         {"add", p_get_add},
         {"clear", p_get_clear},
         {"placeholder", p_get_placeholder},
+        {"hint", p_get_hint},
         {"valid", p_is_valid},
         {"text", p_get_text},
         {"editable", p_get_editable},
@@ -383,32 +391,47 @@ static int l_gui_getattr(lua::State* L) {
 static void p_set_color(gui::UINode* node, lua::State* L, int idx) {
     node->setColor(lua::tocolor(L, idx));
 }
+
 static void p_set_hover_color(gui::UINode* node, lua::State* L, int idx) {
     node->setHoverColor(lua::tocolor(L, idx));
 }
+
 static void p_set_pressed_color(gui::UINode* node, lua::State* L, int idx) {
     node->setPressedColor(lua::tocolor(L, idx));
 }
+
 static void p_set_pos(gui::UINode* node, lua::State* L, int idx) {
     node->setPos(lua::tovec2(L, idx));
 }
+
 static void p_set_size(gui::UINode* node, lua::State* L, int idx) {
     node->setSize(lua::tovec2(L, idx));
 }
+
 static void p_set_interactive(gui::UINode* node, lua::State* L, int idx) {
     node->setInteractive(lua::toboolean(L, idx));
 }
+
 static void p_set_visible(gui::UINode* node, lua::State* L, int idx) {
     node->setVisible(lua::toboolean(L, idx));
 }
+
 static void p_set_enabled(gui::UINode* node, lua::State* L, int idx) {
     node->setEnabled(lua::toboolean(L, idx));
 }
+
 static void p_set_placeholder(gui::UINode* node, lua::State* L, int idx) {
     if (auto box = dynamic_cast<gui::TextBox*>(node)) {
         box->setPlaceholder(lua::require_wstring(L, idx));
     }
 }
+
+static void p_set_hint(gui::UINode* node, lua::State* L, int idx) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        box->setHint(lua::require_wstring(L, idx));
+    }
+}
+
 static void p_set_text(gui::UINode* node, lua::State* L, int idx) {
     if (auto label = dynamic_cast<gui::Label*>(node)) {
         label->setText(lua::require_wstring(L, idx));
@@ -418,36 +441,43 @@ static void p_set_text(gui::UINode* node, lua::State* L, int idx) {
         box->setText(lua::require_wstring(L, idx));
     }
 }
+
 static void p_set_value(gui::UINode* node, lua::State* L, int idx) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         bar->setValue(lua::tonumber(L, idx));
     }
 }
+
 static void p_set_min(gui::UINode* node, lua::State* L, int idx) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         bar->setMin(lua::tonumber(L, idx));
     }
 }
+
 static void p_set_max(gui::UINode* node, lua::State* L, int idx) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         bar->setMax(lua::tonumber(L, idx));
     }
 }
+
 static void p_set_step(gui::UINode* node, lua::State* L, int idx) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         bar->setStep(lua::tonumber(L, idx));
     }
 }
+
 static void p_set_track_width(gui::UINode* node, lua::State* L, int idx) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         bar->setTrackWidth(lua::tointeger(L, idx));
     }
 }
+
 static void p_set_track_color(gui::UINode* node, lua::State* L, int idx) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         bar->setTrackColor(lua::tocolor(L, idx));
     }
 }
+
 static void p_set_checked(gui::UINode* node, lua::State* L, int idx) {
     if (auto box = dynamic_cast<gui::CheckBox*>(node)) {
         box->setChecked(lua::toboolean(L, idx));
@@ -455,11 +485,13 @@ static void p_set_checked(gui::UINode* node, lua::State* L, int idx) {
         box->setChecked(lua::toboolean(L, idx));
     }
 }
+
 static void p_set_page(gui::UINode* node, lua::State* L, int idx) {
     if (auto menu = dynamic_cast<gui::Menu*>(node)) {
         menu->setPage(lua::require_string(L, idx));
     }
 }
+
 static void p_set_inventory(gui::UINode* node, lua::State* L, int idx) {
     if (auto view = dynamic_cast<gui::InventoryView*>(node)) {
         auto inventory = scripting::level->inventories->get(lua::tointeger(L, idx));
@@ -530,6 +562,7 @@ static int l_gui_setattr(lua::State* L) {
         {"visible", p_set_visible},
         {"enabled", p_set_enabled},
         {"placeholder", p_set_placeholder},
+        {"hint", p_set_hint},
         {"text", p_set_text},
         {"editable", p_set_editable},
         {"value", p_set_value},

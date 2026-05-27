@@ -15,6 +15,7 @@ namespace gui {
         std::shared_ptr<Label> label;
         std::wstring input;
         std::wstring placeholder;
+        std::wstring hint;
         wstringsupplier supplier = nullptr;
         wstringconsumer consumer = nullptr;
         wstringconsumer subconsumer = nullptr;
@@ -83,11 +84,14 @@ namespace gui {
         virtual void setErrorColor(glm::vec4 color);
         virtual glm::vec4 getErrorColor() const;
 
-        virtual std::wstring getText() const;
+        virtual const std::wstring& getText() const;
         virtual void setText(const std::wstring& value);
 
-        virtual std::wstring getPlaceholder() const;
+        virtual const std::wstring& getPlaceholder() const;
         virtual void setPlaceholder(const std::wstring& text);
+
+        virtual const std::wstring& getHint() const;
+        virtual void setHint(const std::wstring& text);
 
         virtual std::wstring getSelection() const;
 
