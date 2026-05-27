@@ -42,4 +42,6 @@ public:
 
     void setFov(float fov) {this->fov = fov;}
     float getFov() const {return fov;}
+
+    float getAspectRatio() const {return aspect;};
 };

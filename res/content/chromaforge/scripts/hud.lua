@@ -1,8 +1,6 @@
 local DROP_FORCE = 8
 local DROP_INIT_VEL = {0, 3, 0}
 
-local note
-
 function on_hud_open()
     input.add_callback("player.drop", function ()
         if hud.is_paused() or hud.is_inventory_open() then
@@ -27,17 +25,4 @@ function on_hud_open()
         local velocity = vec3.add(throw_force, vec3.add(pvel, DROP_INIT_VEL))
         drop.rigidbody:set_vel(velocity)
     end)
-
-    note = gfx.text3d.new({0.5, 99.5, 0.0015}, "Amogus", {
-        scale=0.005,
-        color={0, 0, 0, 1},
-        displayMode="static_billboard",
-        xray_opacity=0.2
-    })
-end
-
-function on_hud_render()
-    note:update_settings({
-        color={math.sin(time.uptime() * 12) * 0.5 + 0.5, 0, 0, 1}
-    })
 end
