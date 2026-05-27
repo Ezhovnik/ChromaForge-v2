@@ -37,6 +37,7 @@ static void remove_lib_funcs(State* L, const char* libname, const char* funcs[])
 }
 
 static void create_libs(State* L, StateType stateType) {
+    openlib(L, "base64", base64lib);
     openlib(L, "bjson", bjsonlib);
     openlib(L, "block", blocklib);
     openlib(L, "builtin", builtinlib);
