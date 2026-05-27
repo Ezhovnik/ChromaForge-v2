@@ -320,6 +320,7 @@ static std::shared_ptr<UINode> readTextBox(
     }
     if (element->has("focused-color")) textbox->setFocusedColor(element->attr("focused-color").asColor());
     if (element->has("error-color")) textbox->setErrorColor(element->attr("error-color").asColor());
+    if (element->has("text-color")) textbox->setTextColor(element->attr("text-color").asColor());
     if (element->has("validator")) {
         textbox->setTextValidator(scripting::create_wstring_validator(
             reader.getEnvironment(),

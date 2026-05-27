@@ -255,27 +255,42 @@ static int p_get_content_offset(gui::UINode* node, lua::State* L) {
 static int p_get_color(gui::UINode* node, lua::State* L) {
     return lua::pushcolor(L, node->getColor());
 }
+
 static int p_get_hover_color(gui::UINode* node, lua::State* L) {
     return lua::pushcolor(L, node->getHoverColor());
 }
+
+static int p_get_text_color(gui::UINode* node, lua::State* L) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return lua::pushcolor(L, box->getTextColor());
+    }
+    return 0;
+}
+
 static int p_get_pressed_color(gui::UINode* node, lua::State* L) {
     return lua::pushcolor(L, node->getPressedColor());
 }
+
 static int p_get_pos(gui::UINode* node, lua::State* L) {
     return lua::pushvec2(L, node->getPos());
 }
+
 static int p_get_size(gui::UINode* node, lua::State* L) {
     return lua::pushvec2(L, node->getSize());
 }
+
 static int p_is_interactive(gui::UINode* node, lua::State* L) {
     return lua::pushboolean(L, node->isInteractive());
 }
+
 static int p_is_visible(gui::UINode* node, lua::State* L) {
     return lua::pushboolean(L, node->isVisible());
 }
+
 static int p_is_enabled(gui::UINode* node, lua::State* L) {
     return lua::pushboolean(L, node->isEnabled());
 }
+
 static int p_move_into(gui::UINode*, lua::State* L) {
     return lua::pushcfunction(L, lua::wrap<l_move_into>);
 }
@@ -364,6 +379,7 @@ static int l_gui_getattr(lua::State* L) {
         {"step", p_get_step},
         {"trackWidth", p_get_track_width},
         {"trackColor", p_get_track_color},
+        {"textColor", p_get_text_color},
         {"checked", p_is_checked},
         {"page", p_get_page},
         {"back", p_get_back},
@@ -478,6 +494,12 @@ static void p_set_track_color(gui::UINode* node, lua::State* L, int idx) {
     }
 }
 
+static void p_set_text_color(gui::UINode* node, lua::State* L, int idx) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        box->setTextColor(lua::tocolor(L, idx));
+    }
+}
+
 static void p_set_checked(gui::UINode* node, lua::State* L, int idx) {
     if (auto box = dynamic_cast<gui::CheckBox*>(node)) {
         box->setChecked(lua::toboolean(L, idx));
@@ -571,6 +593,7 @@ static int l_gui_setattr(lua::State* L) {
         {"step", p_set_step},
         {"trackWidth", p_set_track_width},
         {"trackColor", p_set_track_color},
+        {"textColor", p_set_text_color},
         {"checked", p_set_checked},
         {"page", p_set_page},
         {"inventory", p_set_inventory},
