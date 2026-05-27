@@ -14,6 +14,7 @@
 #include <voxels/ChunksStorage.h>
 #include <util/ThreadPool.h>
 #include <graphics/core/MeshData.h>
+#include <graphics/render/commons.h>
 
 class Mesh;
 class Chunk;
@@ -39,7 +40,7 @@ struct ChunksSortEntry {
 struct RendererResult {
     glm::ivec2 key;
     bool cancelled;
-    MeshData meshData;
+    ChunkMeshData meshData;
 };
 
 class ChunksRenderer {
@@ -48,7 +49,7 @@ class ChunksRenderer {
     const Frustum& frustum;
     const EngineSettings& settings;
     std::unique_ptr<BlocksRenderer> renderer;
-    std::unordered_map<glm::ivec2, std::shared_ptr<Mesh>> meshes;
+    std::unordered_map<glm::ivec2, ChunkMesh> meshes;
     std::unordered_map<glm::ivec2, bool> inwork;
     std::vector<ChunksSortEntry> indices;
 
