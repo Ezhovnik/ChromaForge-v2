@@ -405,6 +405,10 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
         }
     }
     if (chosenBlock != vox->id && chosenBlock) {
+        if (!player->isInfiniteItems()) {
+            auto& slot = player->getInventory()->getSlot(player->getChosenSlot());
+            slot.setCount(slot.getCount() - 1);
+        }
         blocksController->placeBlock(
             player.get(),
             def,

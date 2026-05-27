@@ -69,6 +69,7 @@ private:
 
 	bool flight = false;
     bool noclip = false;
+    bool infiniteItems = true;
 
     entityid_t eid;
 
@@ -134,6 +135,9 @@ public:
 
     bool isNoclip() const;
     void setNoclip(bool flag);
+
+    bool isInfiniteItems() const;
+    void setInfiniteItems(bool flag);
 
     entityid_t getEntity() const;
     void setEntity(entityid_t eid);
