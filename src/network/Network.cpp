@@ -14,23 +14,6 @@
 
 using namespace network;
 
-// TODO: костыль
-static std::string gai_strerror_to_string(int errcode) {
-#ifdef _WIN32
-    const wchar_t* wmsg = gai_strerror(errcode);
-    if (!wmsg) return "Unknown error";
-
-    int len = WideCharToMultiByte(CP_UTF8, 0, wmsg, -1, nullptr, 0, nullptr, nullptr);
-    if (len <= 0) return "Conversion error";
-
-    std::string narrow(len - 1, '\0'); 
-    WideCharToMultiByte(CP_UTF8, 0, wmsg, -1, &narrow[0], len, nullptr, nullptr);
-    return narrow;
-#else
-    return gai_strerror(errcode);
-#endif
-}
-
 static size_t write_callback(
     char* ptr, size_t size, size_t nmemb, void* userdata
 ) {
@@ -230,7 +213,7 @@ public:
         if (int res = getaddrinfo(
             address.c_str(), std::to_string(port).c_str(), &hints, &addrinfo
         )) {
-            throw std::runtime_error(gai_strerror_to_string(res));
+            throw std::runtime_error(gai_strerrorA(res));
         }
         int descriptor = socket(
             addrinfo->ai_family, addrinfo->ai_socktype, addrinfo->ai_protocol

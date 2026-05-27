@@ -35,6 +35,7 @@ target_link_libraries(ChromaForge
         PkgConfig::LUAJIT
         CURL::libcurl
         $<$<PLATFORM_ID:Windows>:winmm>
+        $<$<PLATFORM_ID:Windows>:ws2_32>
 )
 
 target_include_directories(ChromaForge PRIVATE
