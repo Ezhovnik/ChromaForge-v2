@@ -202,6 +202,20 @@ static int l_set_infinite_items(lua::State* L) {
     return 0;
 }
 
+static int l_is_instant_destruction(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        return lua::pushboolean(L, player->isInstantDestruction());
+    }
+    return 0;
+}
+
+static int l_set_instant_destruction(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        player->setInstantDestruction(lua::toboolean(L, 2));
+    }
+    return 0;
+}
+
 const luaL_Reg playerlib [] = {
     {"get_pos", lua::wrap<l_get_pos>},
     {"set_pos", lua::wrap<l_set_pos>},
@@ -217,6 +231,8 @@ const luaL_Reg playerlib [] = {
     {"set_noclip", lua::wrap<l_set_noclip>},
     {"is_infinite_items", lua::wrap<l_is_infinite_items>},
     {"set_infinite_items", lua::wrap<l_set_infinite_items>},
+    {"is_instant_destruction", lua::wrap<l_is_instant_destruction>},
+    {"set_instant_destruction", lua::wrap<l_set_instant_destruction>},
     {"get_selected_block", lua::wrap<l_get_selected_block>},
     {"get_selected_entity", lua::wrap<l_get_selected_entity>},
     {"set_spawnpoint", lua::wrap<l_set_spawnpoint>},

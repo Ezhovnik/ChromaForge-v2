@@ -28,9 +28,9 @@ using on_block_interaction = std::function<void(
 )>;
 
 class BlocksController {
-    Level* level;
-	Chunks* chunks;
-	Lighting* lighting;
+    const Level& level;
+	Chunks& chunks;
+	Lighting& lighting;
     util::Clock randSparkClock;
     util::Clock blocksSparkClock;
     util::Clock worldSparkClock;
@@ -40,7 +40,7 @@ class BlocksController {
 
     std::vector<on_block_interaction> blockInteractionCallbacks;
 public:
-    BlocksController(Level* level, uint padding);
+    BlocksController(const Level& level, uint padding);
 
     void updateSides(int x, int y, int z);
     void updateSides(int x, int y, int z, int w, int h, int d);

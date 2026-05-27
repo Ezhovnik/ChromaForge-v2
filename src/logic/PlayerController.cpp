@@ -174,7 +174,8 @@ PlayerController::PlayerController(
     level(level), 
 	player(level->getObject<Player>(0)), 
 	camControl(player, settings.camera), 
-	blocksController(blocksController) {}
+	blocksController(blocksController),
+    playerSparkClock(20, 3) {}
 
 void PlayerController::updateKeyboard() {
 	input.moveForward = Events::isActive(BIND_MOVE_FORWARD);
@@ -257,7 +258,7 @@ void PlayerController::updatePlayer(float deltaTime){
 	player->updateInput(input, deltaTime);
 }
 
-static int determine_rotation(const Block* def, const glm::ivec3& norm, glm::vec3& camDir) {
+static int determine_rotation(const Block* def, const glm::ivec3& norm, const glm::vec3& camDir) {
     if (def && def->rotatable){
         const std::string& name = def->rotations.name;
         if (name == "pipe") {
@@ -471,13 +472,16 @@ void PlayerController::updateInteraction(float deltaTime) {
         }
     }
     auto& target = indices->blocks.require(vox->id);
-    if (input.destroy && target.breakable) {
-        blocksController->breakBlock(
-            player.get(),
-            target,
-            iend.x, iend.y, iend.z
-        );
+    if (input.destroy) {
+        if (player->isInstantDestruction() && target.breakable) {
+            blocksController->breakBlock(
+                player.get(),
+                target,
+                iend.x, iend.y, iend.z
+            );
+        }
     }
+
     if (input.build && !input.crouch) {
         bool preventDefault = false;
         if (item.rt.funcsset.on_use_on_block) {
@@ -509,6 +513,12 @@ void PlayerController::update(float delta, bool input_flag, bool pause) {
         }
 
 		updatePlayer(delta);
+
+        if (playerSparkClock.update(delta)) {
+            if (player->getId() % playerSparkClock.getParts() == playerSparkClock.getPart()) {
+                scripting::on_player_spark(player.get(), playerSparkClock.getSparkRate());
+            }
+        }
     }
 }
 

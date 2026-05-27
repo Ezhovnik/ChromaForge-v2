@@ -85,12 +85,12 @@ public:
         glm::ivec3& norm, // Нормаль поверхности в точке попадания
         glm::ivec3& iend, // Координаты вокселя в точке попадания
         std::set<blockid_t> filter = {}
-    );
+    ) const;
     glm::vec3 rayCastToObstacle(
         const glm::vec3& start,
         const glm::vec3& dir,
         float maxDist
-    );
+    ) const;
 
     const AABB* isObstacleAt(float x, float y, float z) const;
     const AABB* isObstacleAt(const glm::vec3& pos) const {

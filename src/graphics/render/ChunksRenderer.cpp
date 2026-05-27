@@ -236,6 +236,7 @@ void ChunksRenderer::drawSortedMeshes(const Camera& camera, ShaderProgram& shade
     const auto& cameraPos = camera.position;
 
     const auto& atlas = assets.require<Atlas>("blocks");
+    shader.use();
     atlas.getTexture()->bind();
 
     shader.uniformMatrix("u_model", glm::mat4(1.0f));

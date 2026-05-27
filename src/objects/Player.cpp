@@ -210,6 +210,7 @@ dv::value Player::serialize() const {
     root["flight"] = flight;
     root["noclip"] = noclip;
 	root["infinite-items"] = infiniteItems;
+	root["instant-destruction"] = instantDestruction;
     root["chosen-slot"] = chosenSlot;
     root["entity"] = eid;
     root["inventory"] = inventory->serialize();
@@ -234,6 +235,7 @@ void Player::deserialize(const dv::value& src) {
 	flight = src["flight"].asBoolean();
     noclip = src["noclip"].asBoolean();
 	src.at("infinite-items").get(infiniteItems);
+	src.at("instant-destruction").get(instantDestruction);
     setChosenSlot(src["chosen-slot"].asInteger());
     eid = src["entity"].asNumber();
 
@@ -333,4 +335,12 @@ void Player::updateSelectedEntity() {
 
 entityid_t Player::getSelectedEntity() const {
     return selectedEid;
+}
+
+bool Player::isInstantDestruction() const {
+    return instantDestruction;
+}
+
+void Player::setInstantDestruction(bool flag) {
+    instantDestruction = flag;
 }

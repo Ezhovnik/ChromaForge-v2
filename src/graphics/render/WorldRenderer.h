@@ -28,6 +28,7 @@ class Assets;
 class ParticlesRenderer;
 class TextsRenderer;
 class GuidesRenderer;
+class BlockWrapsRenderer;
 
 class WorldRenderer {
 private:
@@ -66,6 +67,7 @@ private:
 public:
 	std::unique_ptr<TextsRenderer> texts;
 	std::unique_ptr<ParticlesRenderer> particles;
+	std::unique_ptr<BlockWrapsRenderer> blockWraps;
 
 	WorldRenderer(Engine* engine, LevelFrontend& levelFrontend, Player* player);
 	~WorldRenderer();

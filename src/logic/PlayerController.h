@@ -7,6 +7,7 @@
 
 #include <objects/Player.h>
 #include <interfaces/Object.h>
+#include <util/Clock.h>
 
 class Camera;
 class BlocksController;
@@ -51,6 +52,7 @@ private:
 	PlayerInput input {};
 	CameraControl camControl;
 	BlocksController* blocksController;
+	util::Clock playerSparkClock;
 
 	float interactionTimer = 0.0f;
 

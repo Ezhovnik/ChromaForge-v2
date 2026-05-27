@@ -70,6 +70,7 @@ private:
 	bool flight = false;
     bool noclip = false;
     bool infiniteItems = true;
+    bool instantDestruction = true;
 
     entityid_t eid;
 
@@ -138,6 +139,9 @@ public:
 
     bool isInfiniteItems() const;
     void setInfiniteItems(bool flag);
+
+    bool isInstantDestruction() const;
+    void setInstantDestruction(bool flag);
 
     entityid_t getEntity() const;
     void setEntity(entityid_t eid);
