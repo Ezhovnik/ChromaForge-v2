@@ -151,12 +151,25 @@ static bool append_atlas(AtlasBuilder& atlas, const std::filesystem::path& file)
 }
 
 asset_loader::postfunc asset_loader::atlas(
-	AssetsLoader*,
+	AssetsLoader* loader,
 	const ResPaths* paths, 
 	const std::string& directory, 
 	const std::string& name, 
-	const std::shared_ptr<AssetsConfig>&)
-{
+	const std::shared_ptr<AssetsConfig>& config
+) {
+    auto atlasConfig = std::dynamic_pointer_cast<AtlasConfig>(config);
+    if (atlasConfig && atlasConfig->type == AtlasType::Separate) {
+        for (const auto& file : paths->listdir(directory)) {
+            if (!imageio::is_read_supported(file.extension().u8string())) continue;
+            loader->add(
+                AssetType::Texture,
+                directory + "/" + file.stem().u8string(),
+                name + "/" + file.stem().u8string()
+            );
+        }
+        return [](auto){};
+    }
+
 	AtlasBuilder builder;
 
 	// Проходим по всем файлам в указанной директории и пытаемся добавить каждый PNG в атлас

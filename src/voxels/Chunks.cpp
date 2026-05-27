@@ -336,7 +336,7 @@ void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate 
 
 	voxel& vox = chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 	const auto& prevdef = contentIds->blocks.require(vox.id);
-    if (prevdef.inventorySize == 0) {
+    if (prevdef.inventorySize != 0) {
 		chunk->removeBlockInventory(lx, y, lz);
 	}
 	if (prevdef.rt.extended && !vox.state.segment) {

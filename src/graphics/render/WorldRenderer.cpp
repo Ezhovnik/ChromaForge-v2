@@ -154,6 +154,7 @@ void WorldRenderer::renderLevel(
 
     if (culling) frustumCulling->update(camera.getProjView());
 
+    entityShader.uniform1i("u_alphaClip", true);
     level.entities->render(
         assets,
         *modelBatch,

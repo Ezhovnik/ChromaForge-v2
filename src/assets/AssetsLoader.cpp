@@ -43,7 +43,9 @@ void AssetsLoader::add(
     const std::string& alias,
     std::shared_ptr<AssetsConfig> config
 ) {
+    if (enqueued.find({tag, alias}) != enqueued.end()) return;
 	entries.push(aloader_entry{tag, filename, alias, std::move(config)});
+    enqueued.insert({tag, alias});
 }
 
 bool AssetsLoader::hasNext() const {
@@ -154,6 +156,14 @@ void AssetsLoader::processPreload(
                 name,
                 std::make_shared<SoundConfig>(map.at("keep-pcm").get(keepPCM))
             );
+            break;
+        }
+        case AssetType::Atlas: {
+            std::string typeName = "atlas";
+            map.at("type").get(typeName);
+            auto type = AtlasType::Atlas;
+            if (typeName == "separate") type = AtlasType::Separate;
+            add(tag, path, name, std::make_shared<AtlasConfig>(type));
             break;
         }
         default:
