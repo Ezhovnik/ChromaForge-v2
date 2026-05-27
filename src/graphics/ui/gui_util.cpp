@@ -66,7 +66,7 @@ std::shared_ptr<gui::UINode> guiutil::create(const std::string& source, scripten
     if (env == nullptr) env = scripting::get_root_environment();
 
     UIXmlReader reader(env);
-    return reader.readXML("<string>", source);
+    return reader.readXML("[string]", source);
 }
 
 void guiutil::confirmWithMemo(

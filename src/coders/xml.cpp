@@ -249,7 +249,7 @@ std::string Parser::parseText() {
         if (c == '<') break;
         nextChar();
     }
-    return std::string(source.substr(start, pos - start));
+    return Parser("[string]", std::string(source.substr(start, pos - start))).parseString('\0', false);
 }
 
 inline bool is_xml_identifier_start(char c) {
@@ -328,7 +328,7 @@ xmldocument Parser::parse() {
     return document;
 }
 
-xmldocument xml::parse(const std::string& filename, const std::string& source) {
+xmldocument xml::parse(std::string_view filename, std::string_view source) {
     Parser parser(filename, source);
     return parser.parse();
 }

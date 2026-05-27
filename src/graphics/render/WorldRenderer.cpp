@@ -53,6 +53,7 @@
 #include <graphics/render/TextNote.h>
 #include <graphics/render/TextsRenderer.h>
 #include <graphics/render/GuidesRenderer.h>
+#include <graphics/render/BlockWrapsRenderer.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -79,7 +80,8 @@ WorldRenderer::WorldRenderer(
     particles(std::make_unique<ParticlesRenderer>(assets, level, &engine->getSettings().graphics)),
     texts(std::make_unique<TextsRenderer>(*batch3d, assets, *frustumCulling)),
     guides(std::make_unique<GuidesRenderer>()),
-    chunks(std::make_unique<ChunksRenderer>(&level, assets, *frustumCulling, levelFrontend.getContentGfxCache(), engine->getSettings()))
+    chunks(std::make_unique<ChunksRenderer>(&level, assets, *frustumCulling, levelFrontend.getContentGfxCache(), engine->getSettings())),
+    blockWraps(std::make_unique<BlockWrapsRenderer>(assets, level))
 {
 	auto& settings = engine->getSettings();
 	auto assets = engine->getAssets();
@@ -154,6 +156,7 @@ void WorldRenderer::renderLevel(
 
     if (culling) frustumCulling->update(camera.getProjView());
 
+    entityShader.uniform1i("u_alphaClip", true);
     level.entities->render(
         assets,
         *modelBatch,
@@ -166,9 +169,16 @@ void WorldRenderer::renderLevel(
     particles->render(camera, deltaTime * !pause);
 
     auto& shader = assets.require<ShaderProgram>("default");
+    auto& linesShader = assets.require<ShaderProgram>("lines");
     setupWorldShader(shader, camera, settings, fogFactor);
 
     chunks->drawChunks(camera, shader);
+    blockWraps->draw(ctx, *player);
+
+    if (hudVisible) renderLines(camera, linesShader, ctx);
+
+    shader.use();
+    chunks->drawSortedMeshes(camera, shader);
 
     if (!pause) {
         scripting::on_frontend_render();
@@ -314,7 +324,6 @@ void WorldRenderer::draw(
                         ctx, camera, *lineBatch, linesShader, drawChunkBorders
                     );
                 }
-                renderLines(camera, linesShader, ctx);
                 if (!player->isNoclip() && player->currentCamera == player->fpCamera) {
                     renderHands(camera, deltaTime * !pause);
                 }

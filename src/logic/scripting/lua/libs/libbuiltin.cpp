@@ -163,7 +163,7 @@ static int l_get_setting_info(lua::State* L) {
 static void load_texture(
     const ubyte* bytes, size_t size, const std::string& destname
 ) {
-    auto path = scripting::engine->getPaths()->resolve("export:.__vc_imagedata");
+    auto path = scripting::engine->getPaths()->resolve("export:.__chroma_imagedata");
     try {
         files::write_bytes(path, bytes, size);
         scripting::engine->getAssets()->store(

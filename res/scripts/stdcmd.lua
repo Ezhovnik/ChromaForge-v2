@@ -82,6 +82,14 @@ console.add_command(
 )
 
 console.add_command(
+    "chat text:str",
+    "Send chat message",
+    function (args, kwargs)
+        console.log("[you] "..args[1])
+    end
+)
+
+console.add_command(
     "blocks.fill id:str x1:int~pos.x y1:int~pos.y z1:int~pos.z "..
                         "x2:int~pos.x y2:int~pos.y z2:int~pos.z",
     "Fill specified zone with blocks",

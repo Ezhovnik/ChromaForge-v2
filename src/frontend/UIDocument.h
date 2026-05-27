@@ -48,9 +48,10 @@ public:
     static std::unique_ptr<UIDocument> read(
         const scriptenv& parent_env,
         const std::string& name,
-        const std::filesystem::path& file
+        const std::filesystem::path& file,
+        const std::string& fileName
     );
     static std::shared_ptr<gui::UINode> readElement(
-        const std::filesystem::path& file
+        const std::filesystem::path& file, const std::string& fileName
     );
 };

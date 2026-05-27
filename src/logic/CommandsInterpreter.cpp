@@ -391,7 +391,7 @@ public:
 };
 
 Command Command::create(std::string_view scheme, std::string_view description, executor_func executor) {
-    return CommandParser("<string>", scheme).parseScheme(std::move(executor), description);
+    return CommandParser("[string]", scheme).parseScheme(std::move(executor), description);
 }
 
 void CommandsRepository::add(
@@ -410,5 +410,5 @@ Command* CommandsRepository::get(const std::string& name) {
 }
 
 Prompt CommandsInterpreter::parse(std::string_view text) {
-    return CommandParser("<string>", text).parsePrompt(this);
+    return CommandParser("[string]", text).parsePrompt(this);
 }

@@ -458,7 +458,13 @@ void ContentLoader::loadBlock(Block& def, const std::string& full, const std::st
 
     auto scriptfile = folder/std::filesystem::path("scripts/" + def.scriptName + ".lua");
     if (std::filesystem::is_regular_file(scriptfile)) {
-        scripting::load_block_script(env, full, scriptfile, def.rt.funcsset);
+        scripting::load_block_script(
+            env,
+            full,
+            scriptfile,
+            pack->id + ":scripts/" + def.scriptName + ".lua",
+            def.rt.funcsset
+        );
     }
     if (!def.hidden) {
         auto& item = builder.items.create(full + BLOCK_ITEM_SUFFIX);
@@ -482,7 +488,13 @@ void ContentLoader::loadItem(Item& def, const std::string& full, const std::stri
 
     auto scriptfile = folder/std::filesystem::path("scripts/" + def.scriptName + ".lua");
     if (std::filesystem::is_regular_file(scriptfile)) {
-        scripting::load_item_script(env, full, scriptfile, def.rt.funcsset);
+        scripting::load_item_script(
+            env,
+            full,
+            scriptfile,
+            pack->id + ":scripts/" + def.scriptName + ".lua",
+            def.rt.funcsset
+        );
     }
 }
 
@@ -682,7 +694,11 @@ void ContentLoader::load() {
     std::filesystem::path scriptFile = folder/std::filesystem::path("scripts/world.lua");
     if (std::filesystem::is_regular_file(scriptFile)) {
         scripting::load_world_script(
-            env, pack->id, scriptFile, runtime->worldfuncsset
+            env,
+            pack->id,
+            scriptFile,
+            pack->id + ":scripts/world.lua",
+            runtime->worldfuncsset
         );
     }
 
@@ -750,7 +766,11 @@ void ContentLoader::load() {
     std::filesystem::path componentsDir = folder/std::filesystem::u8path("scripts/components");
     foreach_file(componentsDir, [this](const std::filesystem::path& file) {
         auto name = pack->id + ":" + file.stem().u8string();
-        scripting::load_entity_component(name, file);
+        scripting::load_entity_component(
+            name,
+            file,
+            pack->id + ":scripts/components/" + file.filename().u8string()
+        );
     });
 
     auto contentFile = pack->getContentFile();

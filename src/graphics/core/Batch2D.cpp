@@ -11,7 +11,7 @@
 #include <graphics/core/gl_util.h>
 
 inline constexpr uint B2D_VERTEX_SIZE = 8; ///< Размер одной вершины в количестве float-ов
-static const vattr attrs[] = { ///< Формат вершин: позиция (2), текстурные координаты (2), цвет (4)
+static const VertexAttribute attrs[] = { ///< Формат вершин: позиция (2), текстурные координаты (2), цвет (4)
 	{2}, {2}, {4}, {0}
 };
 

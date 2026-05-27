@@ -79,7 +79,7 @@ namespace gui {
         glm::vec4 color {1.0f};
         glm::vec4 hoverColor {1.0f};
         glm::vec4 pressedColor {1.0f};
-        glm::vec4 margin {1.0f};
+        glm::vec4 margin {0.0f};
         int zindex = 0;
         bool visible = true;
         bool hover = false;

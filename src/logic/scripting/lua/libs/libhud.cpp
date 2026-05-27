@@ -83,7 +83,8 @@ static int l_show_overlay(lua::State* L) {
     if (layout == nullptr) {
         throw std::runtime_error("There is no ui layout " + util::quote(name));
     }
-    scripting::hud->showOverlay(layout, playerInventory);
+    auto args = lua::tovalue(L, 3);
+    scripting::hud->showOverlay(layout, playerInventory, std::move(args));
     return 0;
 }
 

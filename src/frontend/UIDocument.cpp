@@ -58,7 +58,8 @@ std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const {
 std::unique_ptr<UIDocument> UIDocument::read(
     const scriptenv& parent_env,
     const std::string& name,
-    const std::filesystem::path& file
+    const std::filesystem::path& file,
+    const std::string& fileName
 ) {
     const std::string text = files::read_string(file);
     auto xmldoc = xml::parse(file.u8string(), text);
@@ -71,13 +72,15 @@ std::unique_ptr<UIDocument> UIDocument::read(
     view->setId("root");
     uidocscript script {};
     auto scriptFile = std::filesystem::path(file.u8string() + ".lua");
-    if (std::filesystem::is_regular_file(scriptFile)) scripting::load_layout_script(env, name, scriptFile, script);
+    if (std::filesystem::is_regular_file(scriptFile)) {
+        scripting::load_layout_script(env, name, scriptFile, fileName + ".lua", script);
+    }
     return std::make_unique<UIDocument>(name, script, view, env);
 }
 
 std::shared_ptr<gui::UINode> UIDocument::readElement(
-    const std::filesystem::path& file
+    const std::filesystem::path& file, const std::string& fileName
 ) {
-    auto document = read(nullptr, file.filename().u8string(), file);
+    auto document = read(nullptr, file.filename().u8string(), file, fileName);
     return document->getRoot();
 }

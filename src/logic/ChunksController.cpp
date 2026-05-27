@@ -25,16 +25,16 @@ inline constexpr int MAX_WORK_PER_FRAME = 128;
 inline constexpr int MIN_SURROUNDING = 9;
 
 ChunksController::ChunksController(
-	Level* level, 
+	Level& level, 
 	uint chunksPadding
 ) : level(level), 
-	chunks(level->chunks.get()), 
-	lighting(level->lighting.get()), 
+	chunks(*level.chunks), 
+	lighting(*level.lighting), 
 	chunksPadding(chunksPadding), 
 	generator(std::make_unique<WorldGenerator>(
-        level->content->generators.require(level->getWorld()->getGenerator()),
-        level->content,
-		level->getWorld()->getSeed()
+        level.content->generators.require(level.getWorld()->getGenerator()),
+        level.content,
+		level.getWorld()->getSeed()
     )) {}
 
 ChunksController::~ChunksController() = default;
@@ -58,8 +58,8 @@ void ChunksController::update(
 }
 
 bool ChunksController::loadVisible() {
-	int sizeX = chunks->getWidth();
-    int sizeY = chunks->getDepth();
+	int sizeX = chunks.getWidth();
+    int sizeY = chunks.getDepth();
 
 	int nearX = 0;
 	int nearZ = 0;
@@ -68,7 +68,7 @@ bool ChunksController::loadVisible() {
 	for (uint z = chunksPadding; z < sizeY - chunksPadding; ++z){
 		for (uint x = chunksPadding; x < sizeX - chunksPadding; ++x){
 			int index = z * sizeX + x;
-			auto& chunk = chunks->getChunks()[index];
+			auto& chunk = chunks.getChunks()[index];
 			if (chunk != nullptr) {
 				if (chunk->flags.loaded && !chunk->flags.lighted) {
 					if (buildLights(chunk)) {
@@ -89,13 +89,13 @@ bool ChunksController::loadVisible() {
 		}
 	}
 
-	const auto& chunk = chunks->getChunks()[nearZ * sizeX + nearX];
+	const auto& chunk = chunks.getChunks()[nearZ * sizeX + nearX];
 	if (chunk != nullptr || !assigned) {
 		return false;
 	}
 
-	int offsetX = chunks->getOffsetX();
-    int offsetZ = chunks->getOffsetZ();
+	int offsetX = chunks.getOffsetX();
+    int offsetZ = chunks.getOffsetZ();
     createChunk(nearX + offsetX, nearZ + offsetZ);
 	return true;
 }
@@ -104,14 +104,14 @@ bool ChunksController::buildLights(const std::shared_ptr<Chunk>& chunk) {
     int surrounding = 0;
     for (int dz = -1; dz <= 1; ++dz) {
         for (int dx = -1; dx <= 1; ++dx) {
-            if (chunks->getChunk(chunk->chunk_x + dx, chunk->chunk_z + dz)) surrounding++;
+            if (chunks.getChunk(chunk->chunk_x + dx, chunk->chunk_z + dz)) surrounding++;
         }
     }
 
     if (surrounding == MIN_SURROUNDING) {
         bool lightsCache = chunk->flags.loadedLights;
-        if (!lightsCache) lighting->buildSkyLight(chunk->chunk_x, chunk->chunk_z);
-        lighting->onChunkLoaded(chunk->chunk_x, chunk->chunk_z, !lightsCache);
+        if (!lightsCache) lighting.buildSkyLight(chunk->chunk_x, chunk->chunk_z);
+        lighting.onChunkLoaded(chunk->chunk_x, chunk->chunk_z, !lightsCache);
         chunk->flags.lighted = true;
         return true;
     }
@@ -119,8 +119,8 @@ bool ChunksController::buildLights(const std::shared_ptr<Chunk>& chunk) {
 }
 
 void ChunksController::createChunk(int x, int z) {
-    auto chunk = level->chunksStorage->create(x, z);
-	chunks->putChunk(chunk);
+    auto chunk = level.chunksStorage->create(x, z);
+	chunks.putChunk(chunk);
 	auto& chunkFlags = chunk->flags;
 
 	if (!chunkFlags.loaded) {
@@ -129,7 +129,7 @@ void ChunksController::createChunk(int x, int z) {
 	}
 	chunk->updateHeights();
 
-	if (!chunkFlags.loadedLights) Lighting::preBuildSkyLight(chunk.get(), level->content->getIndices());
+	if (!chunkFlags.loadedLights) Lighting::preBuildSkyLight(chunk.get(), level.content->getIndices());
 
     chunkFlags.loaded = true;
 	chunkFlags.ready = true;

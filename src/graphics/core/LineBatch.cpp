@@ -5,7 +5,7 @@
 #include <graphics/core/Mesh.h>
 
 inline constexpr int LB_VERTEX_SIZE = 7;
-static const vattr attrs[] = {
+static const VertexAttribute attrs[] = {
     {3}, {4}, {0}
 };
 
