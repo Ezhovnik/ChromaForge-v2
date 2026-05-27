@@ -77,6 +77,7 @@ DrawContext DrawContext::sub(Flushable* flushable) const {
     auto ctx = DrawContext(*this);
     ctx.parent = this;
     ctx.flushable = flushable;
+    ctx.scissorsCount = 0;
     return ctx;
 }
 

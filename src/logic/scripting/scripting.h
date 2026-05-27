@@ -102,29 +102,34 @@ namespace scripting {
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
+        const std::string& fileName,
         block_funcs_set& funcsset
     );
     void load_item_script(
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
+        const std::string& fileName,
         item_funcs_set& funcsset
     );
     void load_world_script(
         const scriptenv& env,
         const std::string& packid,
         const std::filesystem::path& file,
+        const std::string& fileName,
         world_funcs_set& funcsset
     );
     void load_layout_script(
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
+        const std::string& fileName,
         uidocscript& script
     );
     void load_entity_component(
         const std::string& name,
-        const std::filesystem::path& file
+        const std::filesystem::path& file,
+        const std::string& fileName
     );
     std::unique_ptr<GeneratorScript> load_generator(
         const Generator& def,
