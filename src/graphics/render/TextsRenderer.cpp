@@ -9,6 +9,7 @@
 #include <graphics/core/Batch3D.h>
 #include <graphics/core/ShaderProgram.h>
 #include <presets/NotePreset.h>
+#include <window/Window.h>
 
 TextsRenderer::TextsRenderer(
     Batch3D& batch, const Assets& assets, const Frustum& frustum
@@ -21,27 +22,28 @@ void TextsRenderer::renderNote(
     const Camera& camera,
     const EngineSettings& settings,
     bool hudVisible,
-    bool frontLayer
+    bool frontLayer,
+    bool projected
 ) {
     const auto& text = note.getText();
     const auto& preset = note.getPreset();
-    const auto& pos = note.getPosition();
+    auto pos = note.getPosition();
 
     if (util::distance2(pos, camera.position) > util::sqr(preset.renderDistance / camera.zoom)) {
         return;
     }
 
-    if (preset.displayMode == NoteDisplayMode::Projected) return;
+    if ((preset.displayMode == NoteDisplayMode::Projected) != projected) return;
 
     float opacity = 1.0f;
-    if (frontLayer) {
+    if (frontLayer && preset.displayMode != NoteDisplayMode::Projected) {
         if (preset.xrayOpacity <= 0.0001f) return;
         opacity = preset.xrayOpacity;
     }
     const auto& font = assets.require<Font>("normal");
 
-    glm::vec3 xvec {1, 0, 0};
-    glm::vec3 yvec {0, 1, 0};
+    glm::vec3 xvec = note.getAxisX();
+    glm::vec3 yvec = note.getAxisY();
 
     int width = font.calcWidth(text, text.length());
     if (preset.displayMode == NoteDisplayMode::YFreeBillboard || preset.displayMode == NoteDisplayMode::XYFreeBillboard) {
@@ -59,6 +61,22 @@ void TextsRenderer::renderNote(
         if (!frustum.isBoxVisible(pos - xvec * (width * 0.5f), pos + xvec * (width * 0.5f))) {
             return;
         }
+    } else {
+        float scale = 1.0f;
+        if (glm::abs(preset.perspective) > 0.0001f) {
+            float scale2 = scale / (glm::distance(camera.position, pos) * util::sqr(camera.zoom) * glm::sqrt(glm::tan(camera.getFov() * 0.5f)));
+            scale = scale2 * preset.perspective +
+                    scale * (1.0f - preset.perspective);
+        }
+        auto projpos = camera.getProjView() * glm::vec4(pos, 1.0f);
+        pos = projpos;
+        if (pos.z < 0.0f) {
+            return;
+        }
+        pos /= pos.z;
+        pos.z = 0;
+        xvec = {2.0f / Window::width*scale, 0, 0};
+        yvec = {0, 2.0f /Window::height* scale, 0};
     }
 
     auto color = preset.color;
@@ -86,10 +104,20 @@ void TextsRenderer::render(
     shader.uniformMatrix("u_apply", glm::mat4(1.0f));
     batch.begin();
 
-    for (const auto& [id, note] : notes) {
-        renderNote(*note, context, camera, settings, hudVisible, frontLayer);
+    for (const auto& [_, note] : notes) {
+        renderNote(*note, context, camera, settings, hudVisible, frontLayer, false);
     }
     batch.flush();
+    if (frontLayer) {
+        shader.uniformMatrix(
+            "u_projview",
+            glm::mat4(1.0f)
+        );
+        for (const auto& [_, note] : notes) {
+            renderNote(*note, context, camera, settings, hudVisible, true, true);
+        }
+        batch.flush();
+    }
 }
 
 uint64_t TextsRenderer::add(std::unique_ptr<TextNote> note) {
