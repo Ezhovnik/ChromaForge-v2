@@ -8,6 +8,9 @@
 #include <graphics/core/MeshData.h>
 #include <util/Buffer.h>
 
+inline const VertexAttribute CHUNK_VATTRS[]{{3}, {2}, {1}, {0}};
+inline constexpr int CHUNK_VERTEX_SIZE = 6;
+
 class Mesh;
 
 struct SortingMeshEntry {

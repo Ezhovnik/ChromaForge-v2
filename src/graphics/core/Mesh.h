@@ -31,7 +31,7 @@ public:
         size_t vertices, 
         const int* indexBuffer, 
         size_t indices, 
-        const vattr* attrs
+        const VertexAttribute* attrs
     );
 
     /**
@@ -40,7 +40,7 @@ public:
      * @param vertices Количество вершин.
      * @param attrs Описания атрибутов.
      */
-	Mesh(const float* vertexBuffer, size_t vertices, const vattr* attrs) :
+	Mesh(const float* vertexBuffer, size_t vertices, const VertexAttribute* attrs) :
 		Mesh(vertexBuffer, vertices, nullptr, 0, attrs) {};
 
     /// Деструктор, освобождающий ресурсы OpenGL.

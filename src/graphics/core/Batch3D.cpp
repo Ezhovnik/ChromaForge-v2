@@ -8,7 +8,7 @@
 #include <math/UVRegion.h>
 
 inline constexpr int B3D_VERTEX_SIZE = 9;
-static const vattr attrs[] = {
+static const VertexAttribute attrs[] = {
 	{3}, {2}, {4}, {0}
 };
 

@@ -14,9 +14,6 @@
 #include <graphics/commons/Model.h>
 #include <util/timeutil.h>
 
-// Размер вершины в количестве float-ов
-inline constexpr int BR_VERTEX_SIZE = 6; 
-
 // Направление на солнце (нормализованный вектор) для расчёта затенения граней
 inline constexpr glm::vec3 SUN_VECTOR = {0.411934f, 0.863868f, -0.279161f};
 
@@ -26,7 +23,7 @@ BlocksRenderer::BlocksRenderer(
 	const ContentGfxCache& cache,
 	const EngineSettings& settings
 ) : content(content),
-	vertexBuffer(std::make_unique<float[]>(capacity * BR_VERTEX_SIZE)),
+	vertexBuffer(std::make_unique<float[]>(capacity * CHUNK_VERTEX_SIZE)),
     indexBuffer(std::make_unique<int[]>(capacity)),
 	vertexOffset(0),
 	indexOffset(0),
@@ -88,7 +85,7 @@ void BlocksRenderer::face(
 	const glm::vec4(&lights)[4],
 	const glm::vec4& tint) 
 {
-	if (vertexOffset + BR_VERTEX_SIZE * 4 > capacity) {
+	if (vertexOffset + CHUNK_VERTEX_SIZE * 4 > capacity) {
 		overflow = true;
 		return;
 	}
@@ -125,7 +122,7 @@ void BlocksRenderer::faceAO(
 	const UVRegion& region,
     bool lights)
 {
-	if (vertexOffset + BR_VERTEX_SIZE * 4 > capacity) {
+	if (vertexOffset + CHUNK_VERTEX_SIZE * 4 > capacity) {
 		overflow = true;
 		return;
 	}
@@ -164,7 +161,7 @@ void BlocksRenderer::face(
     glm::vec4 tint,
     bool lights
 ) {
-    if (vertexOffset + BR_VERTEX_SIZE * 4 > capacity) {
+    if (vertexOffset + CHUNK_VERTEX_SIZE * 4 > capacity) {
         overflow = true;
         return;
     }
@@ -296,7 +293,7 @@ void BlocksRenderer::blockCustomModel(
     // Рендерим каждый бокс модели
 	const auto& model = cache.getModel(block->rt.id);
     for (const auto& mesh : model.meshes) {
-        if (vertexOffset + BR_VERTEX_SIZE * mesh.vertices.size() > capacity) {
+        if (vertexOffset + CHUNK_VERTEX_SIZE * mesh.vertices.size() > capacity) {
             overflow = true;
             return;
         }
@@ -602,20 +599,20 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 					y + 0.5f,
 					z + chunk->chunk_z * CHUNK_DEPTH + 0.5f
 				),
-				util::Buffer<float>(indexSize * BR_VERTEX_SIZE)
+				util::Buffer<float>(indexSize * CHUNK_VERTEX_SIZE)
 			};
 
 			totalSize += entry.vertexData.size();
 
             for (int j = 0; j < indexSize; ++j) {
                 std::memcpy(
-                    entry.vertexData.data() + j * BR_VERTEX_SIZE,
-                    vertexBuffer.get() + indexBuffer[j] * BR_VERTEX_SIZE,
-                    sizeof(float) * BR_VERTEX_SIZE
+                    entry.vertexData.data() + j * CHUNK_VERTEX_SIZE,
+                    vertexBuffer.get() + indexBuffer[j] * CHUNK_VERTEX_SIZE,
+                    sizeof(float) * CHUNK_VERTEX_SIZE
                 );
-				float& vx = entry.vertexData[j * BR_VERTEX_SIZE + 0];
-                float& vy = entry.vertexData[j * BR_VERTEX_SIZE + 1];
-                float& vz = entry.vertexData[j * BR_VERTEX_SIZE + 2];
+				float& vx = entry.vertexData[j * CHUNK_VERTEX_SIZE + 0];
+                float& vy = entry.vertexData[j * CHUNK_VERTEX_SIZE + 1];
+                float& vz = entry.vertexData[j * CHUNK_VERTEX_SIZE + 2];
 
                 if (!aabbInit) {
                     aabbInit = true;
@@ -702,16 +699,15 @@ ChunkMeshData BlocksRenderer::createMesh() {
 	return ChunkMeshData{MeshData(
         util::Buffer<float>(vertexBuffer.get(), vertexOffset), 
         util::Buffer<int>(indexBuffer.get(), indexSize),
-        util::Buffer<vattr>({{3}, {2}, {1}, {0}})
+        util::Buffer<VertexAttribute>(CHUNK_VATTRS, sizeof(CHUNK_VATTRS) / sizeof(VertexAttribute))
     ), std::move(sortingMesh)};
 }
 
 ChunkMesh BlocksRenderer::render(const Chunk* chunk, const Chunks* chunks) {
     build(chunk, chunks);
-    const vattr attrs[]{{3}, {2}, {1}, {0}};
-    size_t vcount = vertexOffset / BR_VERTEX_SIZE;
+    size_t vcount = vertexOffset / CHUNK_VERTEX_SIZE;
     return ChunkMesh{std::make_unique<Mesh>(
-        vertexBuffer.get(), vcount, indexBuffer.get(), indexSize, attrs
+        vertexBuffer.get(), vcount, indexBuffer.get(), indexSize, CHUNK_VATTRS
     ), std::move(sortingMesh)};
 }
 

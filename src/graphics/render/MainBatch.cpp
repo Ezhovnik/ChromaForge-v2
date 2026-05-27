@@ -6,7 +6,7 @@
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>
 
-static const vattr attrs[] = {
+static const VertexAttribute attrs[] = {
     {3}, {2}, {3}, {1}, {0}
 };
 
