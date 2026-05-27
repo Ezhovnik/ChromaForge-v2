@@ -98,6 +98,9 @@ public:
     std::string caption;
 
     std::array<std::string, 6> textureFaces; // -x, +x, -y, +y, -z, +z
+
+    dv::value properties = nullptr;
+
     std::string material = DEFAULT_MATERIAL;
 
     ubyte emission[4] {0, 0, 0, 0};

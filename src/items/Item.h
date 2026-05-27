@@ -6,6 +6,7 @@
 #include <math/UVRegion.h>
 #include <typedefs.h>
 #include <core_content_defs.h>
+#include <data/dv.h>
 
 struct item_funcs_set {
 	bool init: 1;
@@ -24,6 +25,8 @@ struct Item {
     std::string const name;
 
     std::string caption;
+
+    dv::value properties = nullptr;
 
     itemcount_t stackSize = 64;
 

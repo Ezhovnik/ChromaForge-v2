@@ -172,6 +172,7 @@ static void perform_user_block_fields(
 
 void ContentLoader::loadBlock(Block& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
+    def.properties = root;
 
     if (root.has("parent")) {
         const auto& parentName = root["parent"].asString();
@@ -332,6 +333,7 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
 
 void ContentLoader::loadItem(Item& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
+    def.properties = root;
 
     if (root.has("parent")) {
         const auto& parentName = root["parent"].asString();
@@ -751,7 +753,7 @@ static void load_scripts(Content& content, ContentUnitDefs<T>& units) {
         const auto& pack = runtime->getInfo();
         const auto& folder = pack.folder;
         auto scriptfile = folder/std::filesystem::path("scripts/" + def->scriptName + ".lua");
-        if (fs::is_regular_file(scriptfile)) {
+        if (std::filesystem::is_regular_file(scriptfile)) {
             scripting::load_content_script(
                 runtime->getEnvironment(),
                 name,
