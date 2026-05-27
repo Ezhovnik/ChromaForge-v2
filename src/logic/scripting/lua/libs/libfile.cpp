@@ -51,7 +51,7 @@ static std::filesystem::path get_writeable_path(lua::State* L) {
     std::filesystem::path path = resolve_path(rawpath);
     auto entryPoint = rawpath.substr(0, rawpath.find(':'));
     if (writeable_entry_points.find(entryPoint) == writeable_entry_points.end()) {
-        if (lua::getglobal(L, "__vc_warning")) {
+        if (lua::getglobal(L, "__chroma_warning")) {
             lua::pushstring(L, "writing to read-only entry point");
             lua::pushstring(L, entryPoint);
             lua::pushinteger(L, 1);

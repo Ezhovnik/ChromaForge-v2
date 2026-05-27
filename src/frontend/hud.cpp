@@ -234,14 +234,6 @@ void Hud::processInput(bool visible) {
         }
     }
 
-    if (!pause && Events::justActive(BIND_DEVTOOLS_CONSOLE)) {
-        showOverlay(
-            assets->get<UIDocument>(BUILTIN_CONTENT_NAMESPACE + ":console"),
-            false,
-            std::string("console")
-        );
-    }
-
     if (!Window::isFocused() && !pause && !isInventoryOpen()) setPause(true);
 
     if (!pause && visible && Events::justActive(BIND_HUD_INVENTORY)) {
@@ -443,7 +435,7 @@ void Hud::updateElementsPosition(const Viewport& viewport) {
     hotbarView->setSelected(player->getChosenSlot());
 }
 
-void Hud::showOverlay(UIDocument* doc, bool playerInventory, const dv::value& arg) {
+void Hud::showOverlay(UIDocument* doc, bool playerInventory, const dv::value& args) {
     if (isInventoryOpen()) closeInventory();
 
     secondUI = doc->getRoot();
@@ -453,7 +445,10 @@ void Hud::showOverlay(UIDocument* doc, bool playerInventory, const dv::value& ar
         showExchangeSlot();
         inventoryOpen = true;
     }
-    add(HudElement(HudElementMode::InventoryBound, doc, secondUI, false), arg);
+    add(
+        HudElement(HudElementMode::InventoryBound, doc, secondUI, false),
+        args
+    );
 }
 
 void Hud::openInventory(
@@ -598,13 +593,18 @@ void Hud::setPause(bool pause) {
     menu->setVisible(pause);
 }
 
-void Hud::add(const HudElement& element, const dv::value& arg) {
+void Hud::add(const HudElement& element, const dv::value& argsArray) {
     guiController->add(element.getNode());
     auto document = element.getDocument();
     if (document) {
         auto invview = std::dynamic_pointer_cast<gui::InventoryView>(element.getNode());
         auto inventory = invview ? invview->getInventory() : nullptr;
-        std::vector<dv::value> args {arg};
+        std::vector<dv::value> args;
+        if (argsArray != nullptr) {
+            for (const auto& arg : argsArray) {
+                args.push_back(arg);
+            }
+        }
         args.emplace_back(inventory ? inventory.get()->getId() : 0);
         for (int i = 0; i < 3; ++i) {
             args.emplace_back(static_cast<integer_t>(blockPos[i]));

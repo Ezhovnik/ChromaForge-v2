@@ -265,7 +265,7 @@ function _rules.clear()
     _rules.create("allow-cheats", true)
 end
 
-function __vc_create_hud_rules()
+function __chroma_on_hud_open()
     _rules.create("allow-content-access", hud._is_content_access(), function(value)
         hud._set_content_access(value)
         input.set_enabled("player.pick", value)
@@ -294,10 +294,18 @@ function __vc_create_hud_rules()
     _rules.create("allow-debug-cheats", true, function(value)
         hud._set_debug_cheats(value)
     end)
+    input.add_callback("devtools.console", function()
+        if hud.is_paused() then
+            return
+        end
+        time.post_runnable(function()
+            hud.show_overlay("builtin:console", false, {"console"})
+        end)
+    end)
 end
 
 local RULES_FILE = "world:rules.toml"
-function __vc_on_world_open()
+function __chroma_on_world_open()
     if not file.exists(RULES_FILE) then
         return
     end
@@ -307,7 +315,7 @@ function __vc_on_world_open()
     end
 end
 
-function __vc_on_world_save()
+function __chroma_on_world_save()
     local rule_values = {}
     for name, rule in pairs(rules.rules) do
         rule_values[name] = rule.value
@@ -315,7 +323,7 @@ function __vc_on_world_save()
     file.write(RULES_FILE, toml.tostring(rule_values))
 end
 
-function __vc_on_world_quit()
+function __chroma_on_world_quit()
     _rules.clear()
 end
 

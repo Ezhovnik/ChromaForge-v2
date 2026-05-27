@@ -304,14 +304,14 @@ function __scripts_cleanup()
     end
 end
 
-function __vc__error(msg, frame)
+function __chroma__error(msg, frame)
     if events then
         events.emit("builtin:error", msg, debug.get_traceback(1))
     end
     return debug.traceback(msg, frame)
 end
 
-function __vc_warning(msg, detail, n)
+function __chroma_warning(msg, detail, n)
     if events then
         events.emit(
             "builtin:warning", msg, detail, debug.get_traceback(1 + (n or 0)))

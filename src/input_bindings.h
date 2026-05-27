@@ -21,5 +21,4 @@ inline const std::string BIND_PLAYER_BUILD = "player.build";
 inline const std::string BIND_PLAYER_PICK = "player.pick";
 inline const std::string BIND_PLAYER_DROP = "player.drop";
 inline const std::string BIND_PLAYER_FAST_INTERACTOIN = "player.fast_interaction";
-inline const std::string BIND_DEVTOOLS_CONSOLE = "devtools.console";
 inline const std::string BIND_CHUNKS_RELOAD = "chunks.reload";

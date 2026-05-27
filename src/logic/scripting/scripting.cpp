@@ -164,7 +164,7 @@ void scripting::on_world_load(LevelController* controller) {
     scripting::controller = controller;
 
     auto L = lua::get_main_state();
-    if (lua::getglobal(L, "__vc_on_world_open")) {
+    if (lua::getglobal(L, "__chroma_on_world_open")) {
         lua::call_nothrow(L, 0, 0);
     } 
     load_script("world.lua", false);
@@ -186,7 +186,7 @@ void scripting::on_world_save() {
     for (auto& pack : scripting::engine->getContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldsave");
     }
-    if (lua::getglobal(L, "__vc_on_world_save")) {
+    if (lua::getglobal(L, "__chroma_on_world_save")) {
         lua::call_nothrow(L, 0, 0);
     }
 }
@@ -196,7 +196,7 @@ void scripting::on_world_quit() {
     for (auto& pack : scripting::engine->getContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldquit");
     }
-    if (lua::getglobal(L, "__vc_on_world_quit")) {
+    if (lua::getglobal(L, "__chroma_on_world_quit")) {
         lua::call_nothrow(L, 0, 0);
     }
     scripting::level = nullptr;

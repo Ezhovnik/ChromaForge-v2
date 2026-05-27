@@ -133,7 +133,7 @@ dv::value lua::tovalue(State* L, int idx) {
 
 static int l_error_handler(lua_State* L) {
     if (!isstring(L, 1)) return 1;
-    if (getglobal(L, "__vc__error")) {
+    if (getglobal(L, "__chroma__error")) {
         lua_pushvalue(L, 1);
         lua_pushinteger(L, 2);
         lua_call(L, 2, 1);
