@@ -341,6 +341,9 @@ void Engine::loadContent() {
     }
 
     content = contentBuilder.build();
+    scripting::on_content_load(content.get());
+
+    ContentLoader::loadScripts(*content);
 
     langs::setup(resdir, langs::current->getId(), contentPacks);
 

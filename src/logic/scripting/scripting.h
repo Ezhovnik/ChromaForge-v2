@@ -44,6 +44,8 @@ namespace scripting {
 
     void initialize(Engine* engine);
 
+    void on_content_load(Content* content);
+
     bool register_event(int env, const std::string& name, const std::string& id);
     int get_values_on_stack();
 
@@ -100,14 +102,14 @@ namespace scripting {
     void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
     void on_ui_close(UIDocument* layout, Inventory* inventory);
 
-    void load_block_script(
+    void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
         const std::string& fileName,
         block_funcs_set& funcsset
     );
-    void load_item_script(
+    void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
