@@ -31,6 +31,10 @@ namespace cmd {
     class CommandsInterpreter;
 }
 
+namespace network {
+    class Network;
+}
+
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
 class initialize_error : public std::runtime_error {
 public:
@@ -56,6 +60,8 @@ private:
     std::recursive_mutex postRunnablesMutex;
 
     std::unique_ptr<cmd::CommandsInterpreter> interpreter;
+
+    std::unique_ptr<network::Network> network;
 
     std::vector<std::string> basePacks;
 
@@ -98,6 +104,7 @@ public:
     EngineController* getController();
     std::vector<std::string>& getBasePacks();
     cmd::CommandsInterpreter* getCommandsInterpreter();
+    network::Network& getNetwork();
 
     void postRunnable(const runnable& callback);
 

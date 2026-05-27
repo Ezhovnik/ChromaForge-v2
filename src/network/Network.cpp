@@ -2,7 +2,9 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
+#define NOMINMAX
 #include <stdexcept>
+#include <limits>
 #include <string>
 #include <cerrno>
 #include <cstring>

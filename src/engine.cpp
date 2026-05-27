@@ -50,6 +50,7 @@
 #include <objects/rigging.h>
 #include <coders/commons.h>
 #include <graphics/render/ModelsGenerator.h>
+#include <network/Network.h>
 
 static void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -79,7 +80,8 @@ Engine::Engine(
 ) : settings(settings),
     paths(paths),
     settingsHandler(settingsHandler),
-    interpreter(std::make_unique<cmd::CommandsInterpreter>())
+    interpreter(std::make_unique<cmd::CommandsInterpreter>()),
+    network(network::Network::create(settings.network))
 {
     paths->prepare();
     loadSettings();
@@ -138,6 +140,7 @@ Engine::~Engine() {
     interpreter.reset();
     gui.reset();
     audio::close();
+    network.reset();
     scripting::close();
     Window::terminate();
     LOG_INFO("Engine has finished successfuly");
@@ -284,6 +287,7 @@ void Engine::mainloop() {
                 : settings.display.framerate.get()
         );
 
+        network->update();
         processPostRunnables();
 
         Window::swapBuffers(); // Показать отрендеренный кадр
@@ -515,4 +519,8 @@ void Engine::loadControls() {
 
 cmd::CommandsInterpreter* Engine::getCommandsInterpreter() {
     return interpreter.get();
+}
+
+network::Network& Engine::getNetwork() {
+    return *network;
 }
