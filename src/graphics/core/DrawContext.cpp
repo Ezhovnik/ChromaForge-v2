@@ -121,7 +121,7 @@ void DrawContext::setBlendMode(BlendMode mode) {
     set_blend_mode(mode);
 }
 
-void DrawContext::setScissors(glm::vec4 area) {
+void DrawContext::setScissors(const glm::vec4& area) {
     Window::pushScissor(area);
     scissorsCount++;
 }

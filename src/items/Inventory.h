@@ -26,7 +26,12 @@ public:
         return slots.size();
     }
 
-    void move(ItemStack& item, const ContentIndices* indices, size_t begin=0, size_t end=-1);
+    void move(
+        ItemStack& item,
+        const ContentIndices* indices,
+        size_t begin=0,
+        size_t end=-1
+    );
 
     void resize(uint newSize);
 

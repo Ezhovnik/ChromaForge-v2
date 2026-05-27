@@ -401,7 +401,10 @@ void Hud::updateElementsPosition(const Viewport& viewport) {
 		glm::vec2 invSize = inventoryView ? inventoryView->getSize() : glm::vec2();
         if (secondUI == nullptr && inventoryView) {
             inventoryView->setPos(glm::vec2(
-                glm::min(width / 2 - invSize.x / 2, width - caWidth - 10 - invSize.x),
+                glm::min(
+                    width / 2 - invSize.x / 2,
+                    width - caWidth - 10 - invSize.x
+                ),
                 height / 2 - invSize.y / 2
             ));
         } else {
@@ -411,14 +414,20 @@ void Hud::updateElementsPosition(const Viewport& viewport) {
             float totalHeight = invSize.y + secondUISize.y + interval;
             if (inventoryView) {
                 inventoryView->setPos(glm::vec2(
-                    glm::min(width / 2 - invwidth / 2, width - caWidth - 10 - invwidth),
+                    glm::min(
+                        width / 2 - invwidth / 2,
+                        width - caWidth - 10 - invwidth
+                    ),
                     height / 2 + totalHeight / 2 - invSize.y
                 ));
             }
             if (secondUI->getPositionFunc() == nullptr) {
                 secondUI->setPos(glm::vec2(
-                    glm::min(width / 2 - invwidth / 2, width - caWidth - (inventoryView ? 10 : 0) - invwidth),
-                    height / 2 - totalHeight / 2
+                    glm::min(
+                        width / 2.0f - invwidth / 2.0f,
+                        width - caWidth - (inventoryView ? 10 : 0) - invwidth
+                    ),
+                    height / 2.0f - totalHeight / 2.0f
                 ));
             }
         }
