@@ -1,5 +1,7 @@
 #include <network/Network.h>
 
+#pragma comment(lib, "Ws2_32.lib")
+
 #include <stdexcept>
 #include <string>
 #include <cerrno>
@@ -11,6 +13,23 @@
 #include <debug/Logger.h>
 
 using namespace network;
+
+// TODO: костыль
+static std::string gai_strerror_to_string(int errcode) {
+#ifdef _WIN32
+    const wchar_t* wmsg = gai_strerror(errcode);
+    if (!wmsg) return "Unknown error";
+
+    int len = WideCharToMultiByte(CP_UTF8, 0, wmsg, -1, nullptr, 0, nullptr, nullptr);
+    if (len <= 0) return "Conversion error";
+
+    std::string narrow(len - 1, '\0'); 
+    WideCharToMultiByte(CP_UTF8, 0, wmsg, -1, &narrow[0], len, nullptr, nullptr);
+    return narrow;
+#else
+    return gai_strerror(errcode);
+#endif
+}
 
 static size_t write_callback(
     char* ptr, size_t size, size_t nmemb, void* userdata
@@ -108,9 +127,9 @@ static inline int connectsocket(
 }
 
 static inline int recvsocket(
-    int descriptor, char* buf, size_t len, int flags
+    int descriptor, char* buf, size_t len
 ) noexcept {
-    return recv(descriptor, buf, len, flags);
+    return recv(descriptor, buf, len, 0);
 }
 
 static inline int sendsocket(
@@ -152,8 +171,8 @@ public:
         freeaddrinfo(addr);
     }
 
-    int recv(char* buffer, size_t length, bool blocking) override {
-        int len = recvsocket(descriptor, buffer, length, blocking ? MSG_WAITALL : MSG_DONTWAIT); // FIXME: identifier "MSG_DONTWAIT" is undefined
+    int recv(char* buffer, size_t length) override {
+        int len = recvsocket(descriptor, buffer, length);
         if (len == 0) {
             int err = errno;
             close();
@@ -211,7 +230,7 @@ public:
         if (int res = getaddrinfo(
             address.c_str(), std::to_string(port).c_str(), &hints, &addrinfo
         )) {
-            throw std::runtime_error(gai_strerror(res)); // FIXME: no instance of constructor "std::runtime_error::runtime_error" matches the argument list
+            throw std::runtime_error(gai_strerror_to_string(res));
         }
         int descriptor = socket(
             addrinfo->ai_family, addrinfo->ai_socktype, addrinfo->ai_protocol
