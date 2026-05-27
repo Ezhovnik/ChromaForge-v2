@@ -122,6 +122,24 @@ static int l_textbox_paste(lua::State* L) {
     return 0;
 }
 
+static int l_get_line_at(lua::State* L) {
+    auto node = getDocumentNode(L, 1);
+    auto position = lua::tointeger(L, 2);
+    if (auto box = dynamic_cast<gui::TextBox*>(node.node.get())) {
+        return lua::pushinteger(L, box->getLineAt(position));
+    }
+    return 0;
+}
+
+static int l_get_line_pos(lua::State* L) {
+    auto node = getDocumentNode(L, 1);
+    auto line = lua::tointeger(L, 2);
+    if (auto box = dynamic_cast<gui::TextBox*>(node.node.get())) {
+        return lua::pushinteger(L, box->getLinePos(line));
+    }
+    return 0;
+}
+
 static int p_get_inventory(gui::UINode* node, lua::State* L) {
     if (auto inventory = dynamic_cast<gui::InventoryView*>(node)) {
         auto inv = inventory->getInventory();
@@ -234,6 +252,13 @@ static int p_get_text(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_line_numbers(gui::UINode* node, lua::State* L) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return lua::pushboolean(L, box->isShowLineNumbers());
+    }
+    return 0;
+}
+
 static int p_get_add(gui::UINode* node, lua::State* L) {
     if (dynamic_cast<gui::Container*>(node)) {
         return lua::pushcfunction(L, lua::wrap<l_container_add>);
@@ -310,6 +335,13 @@ static int p_get_focused(gui::UINode* node, lua::State* L) {
     return lua::pushboolean(L, node->isFocused());
 }
 
+static int p_get_line_at(gui::UINode*, lua::State* L) {
+    return lua::pushcfunction(L, l_get_line_at);
+}
+static int p_get_line_pos(gui::UINode*, lua::State* L) {
+    return lua::pushcfunction(L, l_get_line_pos);
+}
+
 static int p_get_paste(gui::UINode* node, lua::State* L) {
     if (dynamic_cast<gui::TextBox*>(node)) {
         return lua::pushcfunction(L, lua::wrap<l_textbox_paste>);
@@ -373,6 +405,9 @@ static int l_gui_getattr(lua::State* L) {
         {"valid", p_is_valid},
         {"text", p_get_text},
         {"editable", p_get_editable},
+        {"lineNumbers", p_get_line_numbers},
+        {"lineAt", p_get_line_at},
+        {"linePos", p_get_line_pos},
         {"value", p_get_value},
         {"min", p_get_min},
         {"max", p_get_max},
@@ -500,6 +535,12 @@ static void p_set_text_color(gui::UINode* node, lua::State* L, int idx) {
     }
 }
 
+static void p_set_line_numbers(gui::UINode* node, lua::State* L, int idx) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        box->setShowLineNumbers(lua::toboolean(L, idx));
+    }
+}
+
 static void p_set_checked(gui::UINode* node, lua::State* L, int idx) {
     if (auto box = dynamic_cast<gui::CheckBox*>(node)) {
         box->setChecked(lua::toboolean(L, idx));
@@ -587,6 +628,7 @@ static int l_gui_setattr(lua::State* L) {
         {"hint", p_set_hint},
         {"text", p_set_text},
         {"editable", p_set_editable},
+        {"lineNumbers", p_set_line_numbers},
         {"value", p_set_value},
         {"min", p_set_min},
         {"max", p_set_max},

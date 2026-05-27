@@ -34,6 +34,9 @@ namespace gui {
         virtual void refresh() override;
         virtual void clear();
 
+        virtual int getScrollStep() const;
+        virtual void setScrollStep(int step);
+
         const std::vector<std::shared_ptr<UINode>>& getNodes() const;
     };
 }

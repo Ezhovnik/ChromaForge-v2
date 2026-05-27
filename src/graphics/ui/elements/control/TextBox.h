@@ -8,12 +8,14 @@ class Font;
 namespace gui {
     class Label;
 
-    class TextBox : public Panel {
+    class TextBox : public Container {
     protected:
         glm::vec4 focusedColor {0.0f, 0.0f, 0.0f, 1.0f};
         glm::vec4 invalidColor {0.1f, 0.05f, 0.03f, 1.0f};
         glm::vec4 textColor {1.0f, 1.0f, 1.0f, 1.0f};
+        glm::vec4 padding {2};
         std::shared_ptr<Label> label;
+        std::shared_ptr<Label> lineNumbersLabel;
         std::wstring input;
         std::wstring placeholder;
         std::wstring hint;
@@ -39,6 +41,7 @@ namespace gui {
         bool multiline = false;
         bool editable = true;
         bool autoresize = false;
+        bool showLineNumbers = false;
 
         void stepLeft(bool shiftPressed, bool breakSelection);
         void stepRight(bool shiftPressed, bool breakSelection);
@@ -105,6 +108,10 @@ namespace gui {
 
         virtual void select(int start, int end);
 
+        virtual uint getLineAt(size_t position) const;
+
+        virtual size_t getLinePos(uint line) const;
+
         virtual bool validate();
 
         virtual void setValid(bool valid);
@@ -116,8 +123,14 @@ namespace gui {
         virtual void setEditable(bool editable);
         virtual bool isEditable() const;
 
+        virtual void setPadding(glm::vec4 padding);
+        glm::vec4 getPadding() const;
+
         virtual void setAutoResize(bool flag);
         virtual bool isAutoResize() const;
+
+        virtual void setShowLineNumbers(bool flag);
+        virtual bool isShowLineNumbers() const;
 
         virtual void setOnEditStart(runnable oneditstart);
 
