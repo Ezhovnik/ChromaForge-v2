@@ -3,5 +3,6 @@
     "draw-group": 2,
     "light-passing": true,
     "sky-light-passing": true,
+    "translucent": true,
     "material": "chromaforge:glass"
 }

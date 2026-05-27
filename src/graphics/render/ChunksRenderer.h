@@ -1,17 +1,15 @@
 #pragma once
 
 #include <queue>
-#include <mutex>
-#include <thread>
 #include <memory>
 #include <vector>
 #include <unordered_map>
-#include <condition_variable>
 
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 #include <voxels/Block.h>
-#include <voxels/ChunksStorage.h>
 #include <util/ThreadPool.h>
 #include <graphics/core/MeshData.h>
 #include <graphics/render/commons.h>
@@ -21,7 +19,6 @@ class Chunk;
 class Level;
 class Camera;
 class ShaderProgram;
-class Chunks;
 class Assets;
 class Frustum;
 class BlocksRenderer;
@@ -55,10 +52,9 @@ class ChunksRenderer {
 
     util::ThreadPool<std::shared_ptr<Chunk>, RendererResult> threadPool;
 
-    bool drawChunk(
+    const Mesh* retrieveChunk(
         size_t index, const Camera& camera, ShaderProgram& shader, bool culling
     );
-    std::unique_ptr<Mesh> sortedMesh;
 public:
     ChunksRenderer(
         const Level* level,

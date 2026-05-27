@@ -631,7 +631,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
     }
 
 	auto size = aabb.size();
-    if (glm::abs(size.y) < 0.01f && sortingMesh.entries.size() > 1) {
+    if ((size.y < 0.01f || size.x < 0.01f || size.z < 0.01f) && sortingMesh.entries.size() > 1) {
         SortingMeshEntry newEntry {
             sortingMesh.entries[0].position,
             util::Buffer<float>(totalSize)
