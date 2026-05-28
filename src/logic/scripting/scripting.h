@@ -65,6 +65,7 @@ namespace scripting {
     void random_update_block(const Block& block, const glm::ivec3& pos);
     void on_block_placed(Player* player, const Block& block, const glm::ivec3& pos);
     void on_block_broken(Player* player, const Block& block, const glm::ivec3& pos);
+    void on_block_replaced(Player* player, const Block& block, const glm::ivec3& pos);
     bool on_block_interact(Player* player, const Block& block, const glm::ivec3& pos);
 
     void on_player_spark(Player* player, int tps);

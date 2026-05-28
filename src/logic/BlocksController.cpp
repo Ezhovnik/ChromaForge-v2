@@ -74,6 +74,12 @@ void BlocksController::breakBlock(Player* player, const Block& def, int x, int y
 }
 
 void BlocksController::placeBlock(Player* player, const Block& def, blockstate state, int x, int y, int z) {
+    auto voxel = chunks.getVoxel(x, y, z);
+    if (voxel != nullptr) {
+        const auto& prevDef = level.content->getIndices()->blocks.require(voxel->id);
+        scripting::on_block_replaced(player, prevDef, {x, y, z});
+    }
+
     onBlockInteraction(
         player, glm::ivec3(x, y, z), def, BlockInteraction::Placing
     );

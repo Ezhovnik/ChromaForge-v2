@@ -334,6 +334,32 @@ void scripting::on_block_broken(Player* player, const Block& block, const glm::i
     }
 }
 
+void scripting::on_block_replaced(
+    Player* player, const Block& block, const glm::ivec3& pos
+) {
+    if (block.rt.funcsset.onreplaced) {
+        std::string name = block.name + ".replaced";
+        lua::emit_event(lua::get_main_state(), name, [pos, player](auto L) {
+            lua::pushivec_stack(L, pos);
+            lua::pushinteger(L, player ? player->getId() : -1);
+            return 4;
+        });
+    }
+    auto args = [&](lua::State* L) {
+        lua::pushinteger(L, block.rt.id);
+        lua::pushivec_stack(L, pos);
+        lua::pushinteger(L, player ? player->getId() : -1);
+        return 5;
+    };
+    for (auto& [packid, pack] : content->getPacks()) {
+        if (pack->worldfuncsset.onblockreplaced) {
+            lua::emit_event(
+                lua::get_main_state(), packid + ":.blockreplaced", args
+            );
+        }
+    }
+}
+
 bool scripting::on_block_interact(Player* player, const Block& block, const glm::ivec3& pos) {
     std::string name = block.name + ".interact";
     return lua::emit_event(lua::get_main_state(), name, [pos, player] (auto L) {
@@ -663,6 +689,7 @@ void scripting::load_content_script(
     funcsset.randupdate = register_event(env, "on_random_update", prefix + ".randupdate");
     funcsset.onbroken = register_event(env, "on_broken", prefix + ".broken");
     funcsset.onplaced = register_event(env, "on_placed", prefix + ".placed");
+    funcsset.onreplaced = register_event(env, "on_replaced", prefix + ".replaced");
     funcsset.oninteract = register_event(env, "on_interact", prefix + ".interact");
     funcsset.onblocksspark = register_event(env, "on_blocks_spark", prefix + ".blocksspark");
 }
@@ -709,6 +736,7 @@ void scripting::load_world_script(
 
     funcsset.onblockplaced = register_event(env, "on_block_placed", prefix + ":.blockplaced");
     funcsset.onblockbroken = register_event(env, "on_block_broken", prefix + ":.blockbroken");
+    funcsset.onblockreplaced = register_event(env, "on_block_replaced", prefix + ":.blockreplaced");
     funcsset.onblockinteract = register_event(env, "on_block_interact", prefix + ":.blockinteract");
     funcsset.onplayerspark = register_event(env, "on_player_spark", prefix + ":.playerspark");
 }
