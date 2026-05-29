@@ -6,7 +6,6 @@
 #include <glm/glm.hpp>
 
 #include <objects/Player.h>
-#include <interfaces/Object.h>
 #include <util/Clock.h>
 
 class Camera;
@@ -20,7 +19,7 @@ struct Hitbox;
 
 class CameraControl {
 private:
-	std::shared_ptr<Player> player;
+	Player* player;
     std::shared_ptr<Camera> camera;
     const CameraSettings& settings;
     glm::vec3 offset;
@@ -35,7 +34,7 @@ private:
 	void switchCamera();
 public:
 	CameraControl(
-		const std::shared_ptr<Player>& player,
+		Player* player,
 		const CameraSettings& settings
 	);
 
@@ -48,7 +47,7 @@ class PlayerController {
 private:
 	const EngineSettings& settings;
 	Level* level;
-	std::shared_ptr<Player> player;
+	Player* player;
 	PlayerInput input {};
 	CameraControl camControl;
 	BlocksController* blocksController;

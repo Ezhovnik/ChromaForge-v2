@@ -381,8 +381,8 @@ static int l_place(lua::State* L) {
     if (def == nullptr) {
         throw std::runtime_error("There is no block with index " + std::to_string(id));
     }
-    auto player = scripting::level->getObject<Player>(playerid);
-    scripting::controller->getBlocksController()->placeBlock(player ? player.get() : nullptr, *def, int2blockstate(state), x, y, z);
+    auto player = scripting::level->getPlayer(playerid);
+    scripting::controller->getBlocksController()->placeBlock(player, *def, int2blockstate(state), x, y, z);
     return 0;
 }
 
@@ -394,8 +394,8 @@ static int l_destruct(lua::State* L) {
     auto voxel = scripting::level->chunks->getVoxel(x, y, z);
     if (voxel == nullptr) return 0;
     auto& def = scripting::level->content->getIndices()->blocks.require(voxel->id);
-    auto player = scripting::level->getObject<Player>(playerid);
-    scripting::controller->getBlocksController()->breakBlock(player ? player.get() : nullptr, def, x, y, z);
+    auto player = scripting::level->getPlayer(playerid);
+    scripting::controller->getBlocksController()->breakBlock(player, def, x, y, z);
     return 0;
 }
 

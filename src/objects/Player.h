@@ -8,7 +8,6 @@
 #include <voxels/voxel.h>
 #include <data/dv.h>
 #include <interfaces/Serializable.h>
-#include <interfaces/Object.h>
 #include <constants.h>
 
 class Camera;
@@ -55,9 +54,11 @@ struct CursorSelection {
  * Управляет состоянием игрока: позицией, скоростью, инвентарём, камерами,
  * режимами полёта и noclip. Также обрабатывает ввод и обновление физики.
  */
-class Player : public Object, public Serializable {
+class Player : public Serializable {
 private:
     Level* level;
+
+    int64_t id;
 
 	float speed;
 	int chosenSlot;
@@ -74,7 +75,7 @@ private:
 
     entityid_t eid;
 
-    entityid_t selectedEid;
+    entityid_t selectedEid = 0;
 public:
 	std::shared_ptr<Camera> fpCamera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
     std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
@@ -95,6 +96,7 @@ public:
 	 */
 	Player(
         Level* level,
+        int64_t id,
         glm::vec3 position,
         float speed,
         std::shared_ptr<Inventory> inventory,
@@ -185,7 +187,7 @@ public:
 
     static void convert(dv::value& data, const ContentReport* report);
 
-	inline int getId() const {
-        return objectUID;
+	inline uint64_t getId() const {
+        return id;
     }
 };

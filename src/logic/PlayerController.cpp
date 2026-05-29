@@ -43,7 +43,7 @@ namespace ZoomConsts {
 constexpr float INTERACTION_RELOAD = 0.160f;
 
 CameraControl::CameraControl(
-	const std::shared_ptr<Player>& player, 
+	Player* player, 
 	const CameraSettings& settings
 ) : player(player), 
 	camera(player->fpCamera),
@@ -172,7 +172,7 @@ PlayerController::PlayerController(
 	BlocksController* blocksController
 ) : settings(settings),
     level(level), 
-	player(level->getObject<Player>(0)), 
+	player(level->getPlayer(0)), 
 	camControl(player, settings.camera), 
 	blocksController(blocksController),
     playerSparkClock(20, 3) {}
@@ -210,7 +210,7 @@ void PlayerController::onFootstep(const Hitbox& hitbox) {
                 auto& def = level->content->getIndices()->blocks.require(vox->id);
                 if (!def.obstacle) continue;
                 blocksController->onBlockInteraction(
-                    player.get(),
+                    player,
                     glm::ivec3(x, y, z), def,
                     BlockInteraction::Step
                 );
@@ -334,12 +334,12 @@ voxel* PlayerController::updateSelection(float maxDistance) {
     if (selection.entity != prevEntity) {
         if (prevEntity != ENTITY_NONE) {
             if (auto pentity = level->entities->get(prevEntity)) {
-                scripting::on_aim_off(*pentity, player.get());
+                scripting::on_aim_off(*pentity, player);
             }
         }
         if (selection.entity != ENTITY_NONE) {
             if (auto pentity = level->entities->get(selection.entity)) {
-                scripting::on_aim_on(*pentity, player.get());
+                scripting::on_aim_on(*pentity, player);
             }
         }
     }
@@ -375,7 +375,7 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
     state.rotation = determine_rotation(&def, selection.normal, camera->dir);
 
     if (!input.crouch && target.rt.funcsset.oninteract) {
-        if (scripting::on_block_interact(player.get(), target, selection.actualPosition)) {
+        if (scripting::on_block_interact(player, target, selection.actualPosition)) {
             return;
         }
     }
@@ -411,7 +411,7 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
             slot.setCount(slot.getCount() - 1);
         }
         blocksController->placeBlock(
-            player.get(),
+            player,
             def,
             state,
             coord.x, coord.y, coord.z
@@ -426,10 +426,10 @@ void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool
     }
     auto entity = *entityOpt;
     if (lclick) {
-        scripting::on_attacked(entity, player.get(), player->getEntity());
+        scripting::on_attacked(entity, player, player->getEntity());
     }
     if (rclick) {
-        scripting::on_entity_used(entity, player.get());
+        scripting::on_entity_used(entity, player);
     }
 }
 
@@ -457,7 +457,7 @@ void PlayerController::updateInteraction(float deltaTime) {
     auto vox = updateSelection(maxDistance);
     if (vox == nullptr) {
         if (input.build && item.rt.funcsset.on_use) {
-            scripting::on_item_use(player.get(), item);
+            scripting::on_item_use(player, item);
         }
         if (selection.entity) {
             updateEntityInteraction(selection.entity, input.attack, input.build);
@@ -467,7 +467,7 @@ void PlayerController::updateInteraction(float deltaTime) {
 
     auto iend = selection.position;
     if (input.destroy && !input.crouch && item.rt.funcsset.on_block_break_by) {
-        if (scripting::on_item_break_block(player.get(), item, iend.x, iend.y, iend.z)) {
+        if (scripting::on_item_break_block(player, item, iend.x, iend.y, iend.z)) {
             return;
         }
     }
@@ -475,7 +475,7 @@ void PlayerController::updateInteraction(float deltaTime) {
     if (input.destroy) {
         if (player->isInstantDestruction() && target.breakable) {
             blocksController->breakBlock(
-                player.get(),
+                player,
                 target,
                 iend.x, iend.y, iend.z
             );
@@ -486,10 +486,10 @@ void PlayerController::updateInteraction(float deltaTime) {
         bool preventDefault = false;
         if (item.rt.funcsset.on_use_on_block) {
             preventDefault = scripting::on_item_use_on_block(
-                player.get(), item, iend, selection.normal
+                player, item, iend, selection.normal
             );
         } else if (item.rt.funcsset.on_use) {
-            preventDefault = scripting::on_item_use(player.get(), item);
+            preventDefault = scripting::on_item_use(player, item);
         }
         if (preventDefault) return;
     }
@@ -499,7 +499,7 @@ void PlayerController::updateInteraction(float deltaTime) {
     }
     if (input.pickBlock) {
         auto coord = selection.actualPosition;
-        pick_block(indices, chunks, player.get(), coord.x, coord.y, coord.z);
+        pick_block(indices, chunks, player, coord.x, coord.y, coord.z);
     }
 }
 
@@ -516,7 +516,7 @@ void PlayerController::update(float delta, bool input_flag, bool pause) {
 
         if (playerSparkClock.update(delta)) {
             if (player->getId() % playerSparkClock.getParts() == playerSparkClock.getPart()) {
-                scripting::on_player_spark(player.get(), playerSparkClock.getSparkRate());
+                scripting::on_player_spark(player, playerSparkClock.getSparkRate());
             }
         }
     }
@@ -543,5 +543,5 @@ void PlayerController::postUpdate(float deltaTime, bool input_flag, bool pause) 
 }
 
 Player* PlayerController::getPlayer() {
-    return player.get();
+    return player;
 }

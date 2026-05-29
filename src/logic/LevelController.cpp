@@ -6,7 +6,6 @@
 #include <physics/Hitbox.h>
 #include <logic/scripting/scripting.h>
 #include <world/World.h>
-#include <interfaces/Object.h>
 #include <debug/Logger.h>
 #include <files/WorldFiles.h>
 #include <settings.h>
@@ -19,7 +18,7 @@ LevelController::LevelController(Engine* engine, std::unique_ptr<Level> levelPtr
     level(std::move(levelPtr)),
     blocks(std::make_unique<BlocksController>(*level, settings.chunks.padding.get())),
     chunks(std::make_unique<ChunksController>(*level, settings.chunks.padding.get())),
-    player(std::make_unique<PlayerController>(settings, this->level.get(), blocks.get()))
+    player(std::make_unique<PlayerController>(settings, level.get(), blocks.get()))
 {
     scripting::on_world_load(this);
 }
@@ -37,10 +36,6 @@ void LevelController::update(float delta, bool input, bool pause) {
     );
 
     if (!pause) {
-        for(const auto& obj : level->objects) {
-            if(obj && obj->shouldUpdate) obj->update(delta);
-        }
-
         blocks->update(delta);
         player->update(delta, input, pause);
         level->entities->updatePhysics(delta);
@@ -48,14 +43,6 @@ void LevelController::update(float delta, bool input, bool pause) {
     }
     level->entities->clean();
     player->postUpdate(delta, input, pause);
-
-    auto& objects = level->objects;
-    objects.erase(
-        std::remove_if(
-            objects.begin(), objects.end(),
-            [](auto obj) { return obj == nullptr; }),
-        objects.end()
-    );
 }
 
 void LevelController::saveWorld() {

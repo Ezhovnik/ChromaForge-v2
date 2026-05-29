@@ -8,8 +8,8 @@
 #include <window/Camera.h>
 #include <items/Inventory.h>
 
-inline std::shared_ptr<Player> get_player(lua::State* L, int idx) {
-    return scripting::level->getObject<Player>(lua::tointeger(L, idx));
+inline Player* get_player(lua::State* L, int idx) {
+    return scripting::level->getPlayer(lua::tointeger(L, idx));
 }
 
 static int l_get_pos(lua::State* L) {

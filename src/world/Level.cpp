@@ -11,7 +11,6 @@
 #include <world/LevelEvents.h>
 #include <content/Content.h>
 #include <items/Inventories.h>
-#include <interfaces/Object.h>
 #include <settings.h>
 #include <objects/Entities.h>
 #include <window/Camera.h>
@@ -31,7 +30,7 @@ Level::Level(
     entities(std::make_unique<Entities>(this)),
     settings(settings)
 {
-    auto& worldInfo = world->getInfo();
+    const auto& worldInfo = world->getInfo();
     auto& cameraIndices = content->getIndices(ResourceType::Camera);
     for (size_t i = 0; i < cameraIndices.size(); ++i) {
         auto camera = std::make_shared<Camera>();
@@ -58,13 +57,16 @@ Level::Level(
         world->getNextInventoryId(), 
         DEFAULT_PLAYER_INVENTORY_SIZE
     );
-    auto player = spawnObject<Player>(
+    auto playerPtr = std::make_unique<Player>(
         this,
+        0,
         DEFAULT_SPAWNPOINT, 
         DEFAULT_PLAYER_SPEED, 
         inventory,
         0
     );
+    auto player = playerPtr.get();
+    addPlayer(std::move(playerPtr));
 
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
     uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
@@ -81,10 +83,19 @@ Level::Level(
     inventories->store(player->getInventory());
 }
 
-Level::~Level(){
-    for (auto obj : objects) {
-        obj.reset();
+Level::~Level() {
+}
+
+void Level::addPlayer(std::unique_ptr<Player> player) {
+    players[player->getId()] = std::move(player);
+}
+
+Player* Level::getPlayer(int64_t id) const {
+    const auto& found = players.find(id);
+    if (found == players.end()) {
+        return nullptr;
     }
+    return found->second.get();
 }
 
 void Level::loadMatrix(int32_t x, int32_t z, uint32_t radius) {
