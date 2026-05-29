@@ -4,12 +4,13 @@
 
 #include <logic/scripting/lua/libs/libentity.h>
 #include <objects/Player.h>
+#include <objects/Players.h>
 #include <physics/Hitbox.h>
 #include <window/Camera.h>
 #include <items/Inventory.h>
 
 inline Player* get_player(lua::State* L, int idx) {
-    return scripting::level->getPlayer(lua::tointeger(L, idx));
+    return scripting::level->players->getPlayer(lua::tointeger(L, idx));
 }
 
 static int l_get_pos(lua::State* L) {

@@ -10,6 +10,7 @@
 #include <voxels/Chunks.h>
 #include <voxels/ChunksStorage.h>
 #include <objects/Player.h>
+#include <objects/Players.h>
 #include <physics/PhysicsSolver.h>
 #include <debug/Logger.h>
 #include <content/Content.h>
@@ -71,11 +72,7 @@ void World::write(Level* level) {
 
 	// Запись метаданных мира и игрока
 	wfile->write(this, content);
-	auto playerFile = dv::object();
-    auto& players = playerFile.list("players");
-    for (const auto& [id, player] : level->players) {
-        players.add(player->serialize());
-    }
+	auto playerFile = level->players->serialize();
     files::write_json(wfile->getPlayerFile(), playerFile);
 
 	writeResources(content);
@@ -94,14 +91,15 @@ std::unique_ptr<Level> World::create(
     info.name = name;
     info.generator = generator;
     info.seed = seed;
-    info.nextPlayerId = 1;
 	auto world = std::make_unique<World>(
         info,
         std::make_unique<WorldFiles>(directory, settings.debug),
         content,
         packs
     );
-	return std::make_unique<Level>(std::move(world), content, settings);
+	auto level = std::make_unique<Level>(std::move(world), content, settings);
+    level->players->create();
+    return level;
 }
 
 std::shared_ptr<ContentReport> World::checkIndices(const std::shared_ptr<WorldFiles>& worldFiles, const Content* content) {
@@ -148,32 +146,13 @@ std::unique_ptr<Level> World::load(
     std::filesystem::path file = wfile->getPlayerFile();
     if (!std::filesystem::is_regular_file(file)) {
         LOG_WARN("'player.json' does not exists");
+        level->players->create();
     } else {
-        level->players.clear();
-
         auto playerRoot = files::read_json(file);
-        const auto& players = playerRoot["players"];
-        if (!players[0].has("id")) {
-            world->getInfo().nextPlayerId++;
-        }
-        for (auto& playerMap : players) {
-            auto playerPtr = std::make_unique<Player>(
-                level.get(),
-                0,
-                DEFAULT_SPAWNPOINT,
-                DEFAULT_PLAYER_SPEED,
-                level->inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE),
-                0
-            );
-            auto player = playerPtr.get();
-            player->deserialize(playerMap);
-            level->addPlayer(std::move(playerPtr));
-            auto& inventory = player->getInventory();
+        level->players->deserialize(playerRoot);
 
-            if (inventory->getId() == 0) {
-                inventory->setId(level->getWorld()->getNextInventoryId());
-            }
-            level->inventories->store(player->getInventory());
+        if (!playerRoot["players"][0].has("id")) {
+            level->getWorld()->getInfo().nextPlayerId++;
         }
     }
 

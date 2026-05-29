@@ -22,6 +22,7 @@
 #include <items/Inventory.h>
 #include <settings.h>
 #include <objects/Entities.h>
+#include <objects/Players.h>
 
 namespace CameraConsts {
     inline constexpr float STEPS_SPEED = 2.2f;
@@ -172,7 +173,7 @@ PlayerController::PlayerController(
 	BlocksController* blocksController
 ) : settings(settings),
     level(level), 
-	player(level->getPlayer(0)), 
+	player(level->players->getPlayer(0)), 
 	camControl(player, settings.camera), 
 	blocksController(blocksController),
     playerSparkClock(20, 3) {}

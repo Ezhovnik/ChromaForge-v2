@@ -8,10 +8,6 @@
 
 #include <typedefs.h>
 
-inline constexpr glm::vec3 DEFAULT_SPAWNPOINT = {0, 256, 0}; ///< Точка появления игрока
-inline constexpr float DEFAULT_PLAYER_SPEED = 4.0f; ///< Базовая скорость перемещения игрока
-inline constexpr int DEFAULT_PLAYER_INVENTORY_SIZE = 40; ///< Размер инвентаря игрока (количество слотов)
-
 class World;
 class Chunks;
 class Lighting;
@@ -22,7 +18,7 @@ class Content;
 class Inventories;
 struct EngineSettings;
 class Entities;
-class Player;
+class Players;
 class Camera;
 
 /**
@@ -37,13 +33,13 @@ private:
 	std::unique_ptr<World> world;
 public:
      const Content* const content;
-	std::unordered_map<int64_t, std::unique_ptr<Player>> players;
 	std::unique_ptr<Chunks> chunks; ///< Менеджер чанков
 	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
 	std::unique_ptr<Lighting> lighting; ///< Освещение чанков
      std::unique_ptr<ChunksStorage> chunksStorage; ///< Хранилище чанков
      std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
      std::unique_ptr<Entities> entities;
+     std::unique_ptr<Players> players;
      std::vector<std::shared_ptr<Camera>> cameras;
      const EngineSettings& settings;
 	std::unique_ptr<Inventories> inventories; ///< Менеджер инвентарей (хранит все инвентари уровня)
@@ -69,10 +65,6 @@ public:
      */
 	World* getWorld();
      const World* getWorld() const;
-
-	void addPlayer(std::unique_ptr<Player> player);
-
-     Player* getPlayer(int64_t id) const;
 
      void onSave();
 

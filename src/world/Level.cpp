@@ -7,6 +7,7 @@
 #include <physics/PhysicsSolver.h>
 #include <physics/Hitbox.h>
 #include <objects/Player.h>
+#include <objects/Players.h>
 #include <world/World.h>
 #include <world/LevelEvents.h>
 #include <content/Content.h>
@@ -28,6 +29,7 @@ Level::Level(
 	physics(std::make_unique<PhysicsSolver>(glm::vec3(0, GRAVITY, 0))),
     events(std::make_unique<LevelEvents>()),
     entities(std::make_unique<Entities>(this)),
+    players(std::make_unique<Players>(this)),
     settings(settings)
 {
     const auto& worldInfo = world->getInfo();
@@ -53,21 +55,6 @@ Level::Level(
         entities->setNextID(worldInfo.nextEntityId);
     }
 
-    auto inventory = std::make_shared<Inventory>(
-        world->getNextInventoryId(), 
-        DEFAULT_PLAYER_INVENTORY_SIZE
-    );
-    auto playerPtr = std::make_unique<Player>(
-        this,
-        0,
-        DEFAULT_SPAWNPOINT, 
-        DEFAULT_PLAYER_SPEED, 
-        inventory,
-        0
-    );
-    auto player = playerPtr.get();
-    addPlayer(std::move(playerPtr));
-
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
     uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
     chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, world->wfile.get(), this);
@@ -80,23 +67,9 @@ Level::Level(
 
     // Инициализируем менеджер инвентарей и сохраняем инвентарь игрока
     inventories = std::make_unique<Inventories>(*this);
-    inventories->store(player->getInventory());
 }
 
-Level::~Level() {
-}
-
-void Level::addPlayer(std::unique_ptr<Player> player) {
-    players[player->getId()] = std::move(player);
-}
-
-Player* Level::getPlayer(int64_t id) const {
-    const auto& found = players.find(id);
-    if (found == players.end()) {
-        return nullptr;
-    }
-    return found->second.get();
-}
+Level::~Level() = default;
 
 void Level::loadMatrix(int32_t x, int32_t z, uint32_t radius) {
 	chunks->setCenter(x, z);
