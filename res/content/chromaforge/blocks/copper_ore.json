@@ -1,4 +1,5 @@
 {
     "texture": "copper_ore",
-    "material": "chromaforge:stone"
+    "material": "chromaforge:stone",
+    "chromaforge:durability": 16.0
 }

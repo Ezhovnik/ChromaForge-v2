@@ -3,5 +3,6 @@
     "material": "chromaforge:glass",
     "draw-group": 4,
     "light-passing": true,
-    "translucent": true
+    "translucent": true,
+    "chromaforge:durability": 0.3
 }

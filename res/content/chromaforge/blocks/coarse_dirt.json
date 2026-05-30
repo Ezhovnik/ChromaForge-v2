@@ -1,4 +1,5 @@
 {
     "texture": "coarse_dirt",
-    "material": "chromaforge:ground"
+    "material": "chromaforge:ground",
+    "chromaforge:durability": 1.3
 }

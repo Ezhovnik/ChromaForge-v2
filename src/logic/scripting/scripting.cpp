@@ -194,6 +194,7 @@ void scripting::on_content_load(Content* content) {
         lua::setfield(L, "properties");
         lua::pop(L);
     }
+    load_script(std::filesystem::path("post_content.lua"), true);
     load_script(std::filesystem::path("stdcmd.lua"), true);
 }
 

@@ -1,5 +1,6 @@
 {
     "texture": "dirt",
     "material": "chromaforge:ground",
-    "surface-replacement": "chromaforge:moss"
+    "surface-replacement": "chromaforge:moss",
+    "chromaforge:durability": 1.0
 }

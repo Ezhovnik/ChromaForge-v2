@@ -1,4 +1,5 @@
 {
     "texture": "oak_planks",
-    "material": "chromaforge:wood"
+    "material": "chromaforge:wood",
+    "chromaforge:durability": 5.0
 }
