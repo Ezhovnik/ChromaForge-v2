@@ -341,6 +341,7 @@ void Engine::loadContent() {
     }
 
     content = contentBuilder.build();
+    interpreter->reset();
     scripting::on_content_load(content.get());
 
     ContentLoader::loadScripts(*content);

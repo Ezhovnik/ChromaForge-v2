@@ -330,8 +330,16 @@ asset_loader::postfunc asset_loader::layout(
     return [=](auto assets) {
         try {
             auto cfg = std::dynamic_pointer_cast<LayoutConfig>(config);
+            size_t pos = name.find(':');
+            auto prefix = name.substr(0, pos);
             assets->store(
-                UIDocument::read(cfg->env, name, file, "abs:" + file), name
+                UIDocument::read(
+                    cfg->env,
+                    name,
+                    file,
+                    prefix + ":layouts/" + name.substr(pos + 1) + ".xml"
+                ),
+                name
             );
         } catch (const parsing_error& err) {
 			LOG_ERROR("Failed to parse layout XML '{}'. What: {}", file, err.errorLog());

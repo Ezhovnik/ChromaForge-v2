@@ -65,7 +65,6 @@ void scripting::initialize(Engine* engine) {
     lua::initialize(*scripting::engine->getPaths());
 
     load_script(std::filesystem::path("stdlib.lua"), true);
-    load_script(std::filesystem::path("stdcmd.lua"), true);
     load_script(std::filesystem::path("classes.lua"), true);
 }
 
@@ -195,6 +194,7 @@ void scripting::on_content_load(Content* content) {
         lua::setfield(L, "properties");
         lua::pop(L);
     }
+    load_script(std::filesystem::path("stdcmd.lua"), true);
 }
 
 void scripting::on_world_load(LevelController* controller) {
