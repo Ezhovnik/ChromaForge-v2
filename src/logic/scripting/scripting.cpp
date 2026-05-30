@@ -206,8 +206,7 @@ void scripting::on_world_load(LevelController* controller) {
     auto L = lua::get_main_state();
     if (lua::getglobal(L, "__chroma_on_world_open")) {
         lua::call_nothrow(L, 0, 0);
-    } 
-    load_script("world.lua", false);
+    }
 
     for (auto& pack : scripting::engine->getContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldopen");
