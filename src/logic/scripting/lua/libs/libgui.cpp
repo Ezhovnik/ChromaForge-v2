@@ -277,6 +277,10 @@ static int p_get_content_offset(gui::UINode* node, lua::State* L) {
     return lua::pushvec(L, node->getContentOffset());
 }
 
+static int p_get_id(gui::UINode* node, lua::State* L) {
+    return lua::pushstring(L, node->getId());
+}
+
 static int p_get_color(gui::UINode* node, lua::State* L) {
     return lua::pushcolor(L, node->getColor());
 }
@@ -388,6 +392,7 @@ static int l_gui_getattr(lua::State* L) {
     auto attr = lua::require_string(L, 3);
 
     static const std::unordered_map<std::string_view, std::function<int(gui::UINode*, lua::State*)>> getters {
+        {"id", p_get_id},
         {"color", p_get_color},
         {"hoverColor", p_get_hover_color},
         {"pressedColor", p_get_pressed_color},

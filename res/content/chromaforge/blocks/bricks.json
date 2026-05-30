@@ -1,3 +1,4 @@
 {
-    "texture": "bricks"
+    "texture": "bricks",
+    "chromaforge:durability": 10.5
 }

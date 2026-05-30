@@ -8,5 +8,6 @@
         "basalt"
     ],
     "rotation": "pipe",
-    "material": "chromaforge:stone"
+    "material": "chromaforge:stone",
+    "chromaforge:durability": 12.0
 }

@@ -8,5 +8,6 @@
         "birch_log"
     ],
     "rotation": "pipe",
-    "material": "chromaforge:wood"
+    "material": "chromaforge:wood",
+    "chromaforge:durability": 6.0
 }

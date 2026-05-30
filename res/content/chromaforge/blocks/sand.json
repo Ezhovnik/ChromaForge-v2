@@ -1,4 +1,5 @@
 {
     "texture": "sand",
-    "material": "chromaforge:sand"
+    "material": "chromaforge:sand",
+    "chromaforge:durability": 0.7
 }

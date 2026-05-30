@@ -35,6 +35,9 @@ namespace gui {
         slotcallback rightClick;
         int padding = 0;
 
+        bool taking = true;
+        bool placing = true;
+
         SlotLayout(
             int index,
             glm::vec2 position, 
@@ -57,6 +60,9 @@ namespace gui {
 
         std::wstring tooltip;
         itemid_t prevItem = 0;
+
+        void performLeftClick(ItemStack& stack, ItemStack& grabbed);
+        void performRightClick(ItemStack& stack, ItemStack& grabbed);
     public:
         SlotView(SlotLayout layout);
 

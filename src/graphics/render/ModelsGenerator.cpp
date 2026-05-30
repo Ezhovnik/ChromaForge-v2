@@ -113,7 +113,7 @@ model::Model ModelsGenerator::generate(
         } else if (blockDef.model == BlockModel::Custom) {
             model = assets.require<model::Model>(blockDef.modelName);
             for (auto& mesh : model.meshes) {
-                mesh.scale(glm::vec3(0.3f));
+                mesh.scale(glm::vec3(0.2f));
             }
             return model;
         }
@@ -129,7 +129,7 @@ model::Model ModelsGenerator::generate(
                 } default:
                     break;
             }
-            mesh.scale(glm::vec3(0.3f));
+            mesh.scale(glm::vec3(0.2f));
         }
         configure_textures(model, blockDef, assets);
         return model;

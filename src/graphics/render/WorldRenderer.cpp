@@ -243,11 +243,11 @@ void WorldRenderer::renderHands(const Camera& camera, float deltaTime) {
     const auto& def = indices->items.require(stack.getItemId());
 
     Camera hudcam = camera;
-    hudcam.far = 100.0f;
-    hudcam.setFov(1.2f);
+    hudcam.far = 10.0f;
+    hudcam.setFov(0.9f);
     hudcam.position = {};
 
-    const glm::vec3 itemOffset(0.08f, 0.035f, -0.1);
+    const glm::vec3 itemOffset(0.06f, 0.035f, -0.1);
 
     static glm::mat4 prevRotation(1.0f);
 

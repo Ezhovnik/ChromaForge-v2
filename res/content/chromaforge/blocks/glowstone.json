@@ -1,5 +1,6 @@
 {
     "texture": "glowstone",
     "emission": [15, 14, 13],
-    "shadeless": true
+    "shadeless": true,
+    "chromaforge:durability": 12.0
 }

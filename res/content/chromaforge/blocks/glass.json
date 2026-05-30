@@ -4,5 +4,6 @@
     "light-passing": true,
     "sky-light-passing": true,
     "translucent": true,
-    "material": "chromaforge:glass"
+    "material": "chromaforge:glass",
+    "chromaforge:durability": 0.36
 }

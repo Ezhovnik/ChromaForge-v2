@@ -1,4 +1,5 @@
 {
     "texture": "leaves",
-    "material": "chromaforge:grass"
+    "material": "chromaforge:grass",
+    "chromaforge:durability": 0.7
 }

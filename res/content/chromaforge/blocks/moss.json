@@ -1,4 +1,5 @@
 {
     "texture": "moss_block",
-    "material": "chromaforge:moss"
+    "material": "chromaforge:moss",
+    "chromaforge:durability": 1.3
 }

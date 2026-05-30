@@ -12,5 +12,6 @@
     "light-passing": true,
     "sky-light-passing": true,
     "rotation": "pane",
-    "material": "chromaforge:wood"
+    "material": "chromaforge:wood",
+    "chromaforge:durability": 2.5
 }
