@@ -563,7 +563,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
                 case BlockModel::X: {
                     blockXSprite(
 						x, y, z,
-						glm::vec3(1.0f), 
+						glm::vec3(def.size), 
                         texfaces[FACE_MX],
 						texfaces[FACE_MZ],
 						1.0f
