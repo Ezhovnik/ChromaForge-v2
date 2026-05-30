@@ -33,6 +33,12 @@ void Inventory::move(ItemStack& item, const ContentIndices* indices, size_t begi
     end = std::min(slots.size(), end);
     for (size_t i = begin; i < end && !item.isEmpty(); ++i) {
         ItemStack& slot = slots[i];
+        if (!slot.isEmpty() && slot.accepts(item)) {
+            slot.move(item, indices);
+        }
+    }
+    for (size_t i = begin; i < end && !item.isEmpty(); ++i) {
+        ItemStack& slot = slots[i];
         if (slot.accepts(item)) slot.move(item, indices);
     }
 }

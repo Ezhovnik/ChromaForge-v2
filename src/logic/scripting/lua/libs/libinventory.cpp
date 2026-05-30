@@ -11,7 +11,6 @@ static void validate_itemid(itemid_t id) {
     }
 }
 
-// Inventory library
 static std::shared_ptr<Inventory> get_inventory(int64_t id) {
     auto inv = scripting::level->inventories->get(id);
     if (inv == nullptr) {
@@ -145,7 +144,27 @@ static int l_inventory_move(lua::State* L) {
     if (slotBid == -1) {
         invB->move(slot, scripting::content->getIndices());
     } else {
-        invB->move(slot, scripting::content->getIndices(), slotBid, slotBid+1);
+        invB->move(slot, scripting::content->getIndices(), slotBid, slotBid + 1);
+    }
+    return 0;
+}
+
+
+static int l_inventory_move_range(lua::State* L) {
+    auto invAid = lua::tointeger(L, 1);
+    auto slotAid = lua::tointeger(L, 2);
+    auto invA = get_inventory(invAid, 1);
+    validate_slotid(slotAid, invA.get());
+
+    auto invBid = lua::tointeger(L, 3);
+    auto slotBegin = lua::isnoneornil(L, 4) ? -1 : lua::tointeger(L, 4);
+    auto slotEnd = lua::isnoneornil(L, 5) ? -1 : lua::tointeger(L, 5) + 1;
+    auto invB = get_inventory(invBid, 3);
+    auto& slot = invA->getSlot(slotAid);
+    if (slotBegin == -1) {
+        invB->move(slot, scripting::content->getIndices());
+    } else {
+        invB->move(slot, scripting::content->getIndices(), slotBegin, slotEnd);
     }
     return 0;
 }
@@ -156,6 +175,7 @@ const luaL_Reg inventorylib [] = {
     {"size", lua::wrap<l_inventory_size>},
     {"add", lua::wrap<l_inventory_add>},
     {"move", lua::wrap<l_inventory_move>},
+    {"move_range", lua::wrap<l_inventory_move_range>},
     {"get_block", lua::wrap<l_inventory_get_block>},
     {"bind_block", lua::wrap<l_inventory_bind_block>},
     {"unbind_block", lua::wrap<l_inventory_unbind_block>},

@@ -176,7 +176,7 @@ PlayerController::PlayerController(
 	player(level->players->getPlayer(0)), 
 	camControl(player, settings.camera), 
 	blocksController(blocksController),
-    playerSparkClock(20, 3) {}
+    playerSparkClock(60, 1) {}
 
 void PlayerController::updateKeyboard() {
 	input.moveForward = Events::isActive(BIND_MOVE_FORWARD);
