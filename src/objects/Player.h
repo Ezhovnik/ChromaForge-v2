@@ -60,6 +60,8 @@ private:
 
     int64_t id;
 
+    std::string name;
+
 	float speed;
 	int chosenSlot;
 
@@ -97,6 +99,7 @@ public:
 	Player(
         Level* level,
         int64_t id,
+        const std::string& name,
         glm::vec3 position,
         float speed,
         std::shared_ptr<Inventory> inventory,
@@ -148,7 +151,10 @@ public:
     entityid_t getEntity() const;
     void setEntity(entityid_t eid);
 
-    glm::vec3 getPosition() const {
+    void setName(const std::string& name);
+    const std::string& getName() const;
+
+    const glm::vec3& getPosition() const {
         return position;
     }
 

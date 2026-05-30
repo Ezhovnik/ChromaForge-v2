@@ -23,4 +23,12 @@ public:
 
     dv::value serialize() const override;
     void deserialize(const dv::value& src) override;
+
+    auto begin() const {
+        return players.begin();
+    }
+
+    auto end() const {
+        return players.end();
+    }
 };

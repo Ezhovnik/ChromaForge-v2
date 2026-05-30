@@ -217,6 +217,21 @@ static int l_set_instant_destruction(lua::State* L) {
     return 0;
 }
 
+static int l_get_name(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        return lua::pushstring(L, player->getName());
+    }
+    return 0;
+}
+
+static int l_set_name(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        player->setName(lua::require_string(L, 2));
+    }
+    return 0;
+}
+
+
 const luaL_Reg playerlib [] = {
     {"get_pos", lua::wrap<l_get_pos>},
     {"set_pos", lua::wrap<l_set_pos>},
@@ -242,5 +257,7 @@ const luaL_Reg playerlib [] = {
     {"set_entity", lua::wrap<l_set_entity>},
     {"get_camera", lua::wrap<l_get_camera>},
     {"set_camera", lua::wrap<l_set_camera>},
+    {"get_name", lua::wrap<l_get_name>},
+    {"set_name", lua::wrap<l_set_name>},
     {NULL, NULL}
 };
