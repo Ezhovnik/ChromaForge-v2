@@ -23,7 +23,7 @@ namespace PlayerConsts {
     constexpr float FLIGHT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме полёта
     constexpr float JUMP_FORCE = 8.0f; ///< Сила прыжка
     constexpr float GROUND_DAMPING = 10.0f; ///< Затухание скорости на земле
-    constexpr float AIR_DAMPING = 7.0f; ///< Затухание скорости в воздухе
+    constexpr float AIR_DAMPING = 8.0f; ///< Затухание скорости в воздухе
     constexpr float CHEAT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме читов
 	constexpr int SPAWN_ATTEMPTS_PER_UPDATE = 64;
 }
