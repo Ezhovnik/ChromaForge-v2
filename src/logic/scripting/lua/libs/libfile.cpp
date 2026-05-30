@@ -14,7 +14,7 @@ static std::filesystem::path resolve_path(const std::string& path) {
 }
 
 static std::filesystem::path resolve_path_soft(const std::string& path) {
-    if (path.find(':') == std::string::npos) return path;
+    if (path.find(':') == std::string::npos) return std::filesystem::u8path("");
     return scripting::engine->getPaths()->resolve(path, false);
 }
 

@@ -446,7 +446,7 @@ void PlayerController::updateInteraction(float deltaTime) {
     bool xkey = Events::isActive(BIND_PLAYER_FAST_INTERACTOIN);
     float maxDistance = xkey ? 20.0f : 10.0f;
     bool longInteraction = interactionTimer <= 0 || xkey;
-    input.attack = Events::justActive(BIND_PLAYER_ATTACK) || (longInteraction && Events::isActive(BIND_PLAYER_ATTACK));
+    input.attack = Events::justActive(BIND_PLAYER_ATTACK);
 	input.destroy = Events::justActive(BIND_PLAYER_DESTROY) || (longInteraction && Events::isActive(BIND_PLAYER_DESTROY));
     input.build = Events::justActive(BIND_PLAYER_BUILD) || (longInteraction && Events::isActive(BIND_PLAYER_BUILD));
     if (input.destroy || input.build) interactionTimer = INTERACTION_RELOAD;

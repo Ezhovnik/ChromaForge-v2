@@ -84,13 +84,11 @@ events.on("builtin:open_traceback", function(traceback_b64)
             framestr = framestr.."("..tostring(frame.name)..")"
         end
         local color = "#FFFFFF"
-        if frame.source:starts_with("builtin:") then
-            color = "#C0D0C5"
-        end
         tb_list:add(gui.template("stack_frame", {
             location=framestr, 
             color=color,
-            callback=callback
+            callback=callback,
+            enabled=file.exists(frame.source)
         }))
     end
     tb_list.size = srcsize
