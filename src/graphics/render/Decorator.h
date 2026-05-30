@@ -6,20 +6,29 @@
 
 #include <unordered_map>
 
+#include <typedefs.h>
+#include <presets/NotePreset.h>
+
 class Level;
 class Chunks;
 class Camera;
 class Assets;
-class ParticlesRenderer;
+class WorldRenderer;
 class Block;
+class Engine;
 class LevelController;
+class Player;
 
 class Decorator {
+    Engine& engine;
     const Level& level;
     const Assets& assets;
-    ParticlesRenderer& particles;
+    Player& player;
+    WorldRenderer& renderer;
     std::unordered_map<glm::ivec3, uint64_t> blockEmitters;
+    std::unordered_map<int64_t, uint64_t> playerTexts;
     int currentIndex = 0;
+    NotePreset playerNamePreset {};
 
     void update(
         float delta, const glm::ivec3& areaStart, const glm::ivec3& areaCenter
@@ -27,7 +36,10 @@ class Decorator {
     void addParticles(const Block& def, const glm::ivec3& pos);
 public:
     Decorator(
-        LevelController& level, ParticlesRenderer& particles, const Assets& assets
+        Engine& engine,
+        LevelController& level,
+        WorldRenderer& renderer,
+        const Assets& assets
     );
 
     void update(float delta, const Camera& camera);

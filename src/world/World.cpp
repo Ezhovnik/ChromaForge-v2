@@ -10,6 +10,7 @@
 #include <voxels/Chunks.h>
 #include <voxels/ChunksStorage.h>
 #include <objects/Player.h>
+#include <objects/Players.h>
 #include <physics/PhysicsSolver.h>
 #include <debug/Logger.h>
 #include <content/Content.h>
@@ -71,13 +72,7 @@ void World::write(Level* level) {
 
 	// Запись метаданных мира и игрока
 	wfile->write(this, content);
-	auto playerFile = dv::object();
-    auto& players = playerFile.list("players");
-    for (const auto& object : level->objects) {
-        if (auto player = std::dynamic_pointer_cast<Player>(object)) {
-            players.add(player->serialize());
-        }
-    }
+	auto playerFile = level->players->serialize();
     files::write_json(wfile->getPlayerFile(), playerFile);
 
 	writeResources(content);
@@ -102,7 +97,9 @@ std::unique_ptr<Level> World::create(
         content,
         packs
     );
-	return std::make_unique<Level>(std::move(world), content, settings);
+	auto level = std::make_unique<Level>(std::move(world), content, settings);
+    level->players->create();
+    return level;
 }
 
 std::shared_ptr<ContentReport> World::checkIndices(const std::shared_ptr<WorldFiles>& worldFiles, const Content* content) {
@@ -145,38 +142,20 @@ std::unique_ptr<Level> World::load(
 
 	LOG_INFO("Creating a level");
 	auto level = std::make_unique<Level>(std::move(world), content, settings);
-	{
-        std::filesystem::path file = wfile->getPlayerFile();
-        if (!std::filesystem::is_regular_file(file)) {
-			LOG_WARN("'player.json' does not exists");
-        } else {
-            auto playerRoot = files::read_json(file);
-            if (playerRoot.has("players")) {
-                level->objects.clear();
-                const auto& players = playerRoot["players"];
-                for (auto& playerMap : players) {
-                    auto player = level->spawnObject<Player>(
-						level.get(),
-						DEFAULT_SPAWNPOINT,
-						DEFAULT_PLAYER_SPEED,
-						level->inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE),
-						0
-					);
-                    player->deserialize(playerMap);
-                    auto& inventory = player->getInventory();
-                    // invalid inventory id pre 0.4.0 version
-                    if (inventory->getId() == 0) {
-                        inventory->setId(level->getWorld()->getNextInventoryId());
-                    }
-                    level->inventories->store(player->getInventory());
-                }
-            } else {
-				auto player = level->getObject<Player>(0);
-                player->deserialize(playerRoot);
-                level->inventories->store(player->getInventory());
-            }
+
+    std::filesystem::path file = wfile->getPlayerFile();
+    if (!std::filesystem::is_regular_file(file)) {
+        LOG_WARN("'player.json' does not exists");
+        level->players->create();
+    } else {
+        auto playerRoot = files::read_json(file);
+        level->players->deserialize(playerRoot);
+
+        if (!playerRoot["players"][0].has("id")) {
+            level->getWorld()->getInfo().nextPlayerId++;
         }
     }
+
 	LOG_INFO("Level successfully created");
 	LOG_INFO("World successfully created");
 	return level;
@@ -245,6 +224,7 @@ void WorldInfo::deserialize(const dv::value& root) {
 	// Счётчик инвентарей (по умолчанию 2, т.к. 1 обычно зарезервирован)
     nextInventoryId = root["next-inventory-id"].asInteger(2);
     nextEntityId = root["next-entity-id"].asInteger(1);
+    root.at("next-player-id").get(nextPlayerId);
 }
 
 dv::value WorldInfo::serialize() const {
@@ -271,6 +251,7 @@ dv::value WorldInfo::serialize() const {
 
     root["next-inventory-id"] = nextInventoryId;
     root["next-entity-id"] = nextEntityId;
+    root["next-player-id"] = nextPlayerId;
 
     return root;
 }

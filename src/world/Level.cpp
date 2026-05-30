@@ -7,11 +7,11 @@
 #include <physics/PhysicsSolver.h>
 #include <physics/Hitbox.h>
 #include <objects/Player.h>
+#include <objects/Players.h>
 #include <world/World.h>
 #include <world/LevelEvents.h>
 #include <content/Content.h>
 #include <items/Inventories.h>
-#include <interfaces/Object.h>
 #include <settings.h>
 #include <objects/Entities.h>
 #include <window/Camera.h>
@@ -29,9 +29,10 @@ Level::Level(
 	physics(std::make_unique<PhysicsSolver>(glm::vec3(0, GRAVITY, 0))),
     events(std::make_unique<LevelEvents>()),
     entities(std::make_unique<Entities>(this)),
+    players(std::make_unique<Players>(this)),
     settings(settings)
 {
-    auto& worldInfo = world->getInfo();
+    const auto& worldInfo = world->getInfo();
     auto& cameraIndices = content->getIndices(ResourceType::Camera);
     for (size_t i = 0; i < cameraIndices.size(); ++i) {
         auto camera = std::make_shared<Camera>();
@@ -54,18 +55,6 @@ Level::Level(
         entities->setNextID(worldInfo.nextEntityId);
     }
 
-    auto inventory = std::make_shared<Inventory>(
-        world->getNextInventoryId(), 
-        DEFAULT_PLAYER_INVENTORY_SIZE
-    );
-    auto player = spawnObject<Player>(
-        this,
-        DEFAULT_SPAWNPOINT, 
-        DEFAULT_PLAYER_SPEED, 
-        inventory,
-        0
-    );
-
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
     uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
     chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, world->wfile.get(), this);
@@ -78,14 +67,9 @@ Level::Level(
 
     // Инициализируем менеджер инвентарей и сохраняем инвентарь игрока
     inventories = std::make_unique<Inventories>(*this);
-    inventories->store(player->getInventory());
 }
 
-Level::~Level(){
-    for (auto obj : objects) {
-        obj.reset();
-    }
-}
+Level::~Level() = default;
 
 void Level::loadMatrix(int32_t x, int32_t z, uint32_t radius) {
 	chunks->setCenter(x, z);

@@ -172,6 +172,7 @@ static void perform_user_block_fields(
 
 void ContentLoader::loadBlock(Block& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
+    def.properties = root;
 
     if (root.has("parent")) {
         const auto& parentName = root["parent"].asString();
@@ -332,6 +333,7 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
 
 void ContentLoader::loadItem(Item& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
+    def.properties = root;
 
     if (root.has("parent")) {
         const auto& parentName = root["parent"].asString();
@@ -456,16 +458,6 @@ void ContentLoader::loadBlock(Block& def, const std::string& full, const std::st
     auto configFile = folder/std::filesystem::path("blocks/" + name + ".json");
     if (std::filesystem::exists(configFile)) loadBlock(def, full, configFile);
 
-    auto scriptfile = folder/std::filesystem::path("scripts/" + def.scriptName + ".lua");
-    if (std::filesystem::is_regular_file(scriptfile)) {
-        scripting::load_block_script(
-            env,
-            full,
-            scriptfile,
-            pack->id + ":scripts/" + def.scriptName + ".lua",
-            def.rt.funcsset
-        );
-    }
     if (!def.hidden) {
         auto& item = builder.items.create(full + BLOCK_ITEM_SUFFIX);
         item.generated = true;
@@ -485,17 +477,6 @@ void ContentLoader::loadItem(Item& def, const std::string& full, const std::stri
     auto folder = pack->folder;
     auto configFile = folder/std::filesystem::path("items/" + name + ".json");
     if (std::filesystem::exists(configFile)) loadItem(def, full, configFile);
-
-    auto scriptfile = folder/std::filesystem::path("scripts/" + def.scriptName + ".lua");
-    if (std::filesystem::is_regular_file(scriptfile)) {
-        scripting::load_item_script(
-            env,
-            full,
-            scriptfile,
-            pack->id + ":scripts/" + def.scriptName + ".lua",
-            def.rt.funcsset
-        );
-    }
 }
 
 void ContentLoader::loadBlockMaterial(BlockMaterial& def, const std::filesystem::path& file) {
@@ -691,17 +672,6 @@ void ContentLoader::load() {
 
     auto folder = pack->folder;
 
-    std::filesystem::path scriptFile = folder/std::filesystem::path("scripts/world.lua");
-    if (std::filesystem::is_regular_file(scriptFile)) {
-        scripting::load_world_script(
-            env,
-            pack->id,
-            scriptFile,
-            pack->id + ":scripts/world.lua",
-            runtime->worldfuncsset
-        );
-    }
-
     std::filesystem::path generatorsDir = folder / std::filesystem::u8path("generators");
     foreach_file(generatorsDir, [this](const std::filesystem::path& file) {
         std::string name = file.stem().u8string();
@@ -763,22 +733,67 @@ void ContentLoader::load() {
         );
     });
 
-    std::filesystem::path componentsDir = folder/std::filesystem::u8path("scripts/components");
-    foreach_file(componentsDir, [this](const std::filesystem::path& file) {
-        auto name = pack->id + ":" + file.stem().u8string();
-        scripting::load_entity_component(
-            name,
-            file,
-            pack->id + ":scripts/components/" + file.filename().u8string()
-        );
-    });
-
     auto contentFile = pack->getContentFile();
     if (std::filesystem::exists(contentFile)) {
         loadContent(files::read_json(contentFile));
     }
 
     LOG_INFO("Successfully loaded content pack [{}]", pack->id);
+}
+
+template <class T>
+static void load_scripts(Content& content, ContentUnitDefs<T>& units) {
+    for (const auto& [name, def] : units.getDefs()) {
+        size_t pos = name.find(':');
+        if (pos == std::string::npos) {
+            LOG_ERROR("Invalid content unit name");
+            throw std::runtime_error("Invalid content unit name");
+        }
+        const auto runtime = content.getPackRuntime(name.substr(0, pos));
+        const auto& pack = runtime->getInfo();
+        const auto& folder = pack.folder;
+        auto scriptfile = folder/std::filesystem::path("scripts/" + def->scriptName + ".lua");
+        if (std::filesystem::is_regular_file(scriptfile)) {
+            scripting::load_content_script(
+                runtime->getEnvironment(),
+                name,
+                scriptfile,
+                pack.id + ":scripts/" + def->scriptName + ".lua",
+                def->rt.funcsset
+            );
+        }
+    }
+}
+
+void ContentLoader::loadScripts(Content& content) {
+    load_scripts(content, content.blocks);
+    load_scripts(content, content.items);
+
+    for (const auto& [packid, runtime] : content.getPacks()) {
+        const auto& pack = runtime->getInfo();
+        const auto& folder = pack.folder;
+
+        std::filesystem::path scriptFile = folder/std::filesystem::path("scripts/world.lua");
+        if (std::filesystem::is_regular_file(scriptFile)) {
+            scripting::load_world_script(
+                runtime->getEnvironment(),
+                pack.id,
+                scriptFile,
+                pack.id + ":scripts/world.lua",
+                runtime->worldfuncsset
+            );
+        }
+
+        std::filesystem::path componentsDir = folder/std::filesystem::u8path("scripts/components");
+        foreach_file(componentsDir, [&pack](const std::filesystem::path& file) {
+            auto name = pack.id + ":" + file.stem().u8string();
+            scripting::load_entity_component(
+                name,
+                file,
+                pack.id + ":scripts/components/" + file.filename().u8string()
+            );
+        });
+    }
 }
 
 void ContentLoader::loadResources(ResourceType type, const dv::value& list) {

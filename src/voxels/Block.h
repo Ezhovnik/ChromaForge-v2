@@ -43,13 +43,14 @@ inline constexpr int BLOCK_AABB_GRID = 16;
 inline constexpr size_t MAX_USER_BLOCK_FIELDS_SIZE = 240;
 
 struct block_funcs_set {
-	bool init = false;
-	bool update = false;
-    bool onplaced = false;
-    bool onbroken = false;
-    bool oninteract = false;
-    bool randupdate = false;
-    bool onblocksspark = false;
+	bool init : 1;
+	bool update : 1;
+    bool onplaced : 1;
+    bool onbroken : 1;
+    bool onreplaced : 1;
+    bool oninteract : 1;
+    bool randupdate : 1;
+    bool onblocksspark : 1;
 };
 
 struct CoordSystem {
@@ -87,6 +88,8 @@ struct BlockMaterial {
 	std::string stepsSound {""};
 	std::string placeSound {""};
 	std::string breakSound {""};
+
+    dv::value serialize() const;
 };
 
 class Block {
@@ -96,6 +99,9 @@ public:
     std::string caption;
 
     std::array<std::string, 6> textureFaces; // -x, +x, -y, +y, -z, +z
+
+    dv::value properties = nullptr;
+
     std::string material = DEFAULT_MATERIAL;
 
     ubyte emission[4] {0, 0, 0, 0};

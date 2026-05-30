@@ -100,6 +100,7 @@ struct ContentPackStats {
 
 struct world_funcs_set {
     bool onblockplaced : 1;
+    bool onblockreplaced : 1;
     bool onblockbroken : 1;
     bool onblockinteract : 1;
     bool onplayerspark : 1;
