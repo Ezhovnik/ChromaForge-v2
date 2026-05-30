@@ -10,10 +10,30 @@
 #include <cstring>
 #include <memory>
 #include <queue>
+#include <chrono>
+#include <thread>
 
 #include <curl/curl.h>
 
+#ifdef _WIN32
+/// ...
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+
+using SOCKET = int;
+
+#endif // _WIN32
+
 #include <debug/Logger.h>
+#include <util/stringutil.h>
 
 using namespace network;
 
@@ -174,21 +194,41 @@ public:
     }
 };
 
-#ifdef _WIN32
-/// ...
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#endif
-
 #ifndef _WIN32
 static inline int closesocket(int descriptor) noexcept {
     return close(descriptor);
+}
+
+static inline std::runtime_error handle_socket_error(const std::string& message) {
+    int err = errno;
+    LOG_ERROR(
+        "{} [errno={}]: {}", message, err, strerror(err)
+    );
+    return std::runtime_error(
+        message + " [errno=" + std::to_string(err) + "]: " + std::string(strerror(err))
+    );
+}
+#else
+static inline std::runtime_error handle_socket_error(const std::string& message) {
+    int errorCode = WSAGetLastError();
+    wchar_t* s = nullptr;
+    size_t size = FormatMessageW(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        nullptr,
+        errorCode,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPWSTR)&s,
+        0,
+        nullptr
+    );
+    assert(s != nullptr);
+    while (size && isspace(s[size-1])) {
+        s[--size] = 0;
+    }
+    auto errorString = util::wstr2str_utf8(std::wstring(s));
+    LocalFree(s);
+    LOG_ERROR("{} [WSA error={}] {}", message, errorCode, errorString);
+    return std::runtime_error(message+" [WSA error=" + std::to_string(errorCode) + "]: "+errorString);
 }
 #endif
 
@@ -228,13 +268,13 @@ static std::string to_string(const addrinfo* addr) {
 }
 
 class SocketImpl : public Socket {
-    int descriptor;
+    SOCKET descriptor;
     bool open = true;
     addrinfo* addr;
     size_t totalUpload = 0;
     size_t totalDownload = 0;
 public:
-    SocketImpl(int descriptor, addrinfo* addr)
+    SocketImpl(SOCKET descriptor, addrinfo* addr)
         : descriptor(descriptor), addr(addr) {
     }
 
@@ -304,7 +344,7 @@ public:
         )) {
             throw std::runtime_error(gai_strerrorA(res));
         }
-        int descriptor = socket(
+        SOCKET descriptor = socket(
             addrinfo->ai_family, addrinfo->ai_socktype, addrinfo->ai_protocol
         );
         if (descriptor == -1) {
@@ -313,16 +353,13 @@ public:
             throw std::runtime_error("Could not create socket");
         }
         int res = connectsocket(descriptor, addrinfo->ai_addr, addrinfo->ai_addrlen);
-        if (res == -1) {
+        if (res < 0) {
+            auto error = handle_socket_error("Connect failed");
             closesocket(descriptor);
             freeaddrinfo(addrinfo);
-
-            int err = errno;
-            LOG_ERROR("Connect failed [errno={}]: {}", err, strerror(err));
-            throw std::runtime_error(
-                "Connect failed [errno=" + std::to_string(err) + "]: " + std::string(strerror(err))
-            );
+            throw error;
         }
+
         LOG_INFO("Connected to {} [{}:{}]", address, to_string(addrinfo), port);
         return std::make_shared<SocketImpl>(descriptor, addrinfo);
     }
@@ -342,15 +379,24 @@ void Network::get(
     requests->get(url, onResponse, onReject, maxSize);
 }
 
-std::shared_ptr<Socket> Network::connect(const std::string& address, int port) {
+Socket* Network::getConnection(uint64_t id) const {
+    const auto& found = connections.find(id);
+    if (found == connections.end()) {
+        return nullptr;
+    }
+    return found->second.get();
+}
+
+uint64_t Network::connect(const std::string& address, int port) {
     auto socket = SocketImpl::connect(address, port);
-    connections.push_back(socket);
-    return socket;
+    uint64_t id = nextConnection++;
+    connections[id] = std::move(socket);
+    return id;
 }
 
 size_t Network::getTotalUpload() const {
     size_t totalUpload = 0;
-    for (const auto& socket : connections) {
+    for (const auto& [_, socket] : connections) {
         totalUpload += socket->getTotalUpload();
     }
     return requests->getTotalUpload() + totalUpload;
@@ -358,7 +404,7 @@ size_t Network::getTotalUpload() const {
 
 size_t Network::getTotalDownload() const {
     size_t totalDownload = 0;
-    for (const auto& socket : connections) {
+    for (const auto& [_, socket] : connections) {
         totalDownload += socket->getTotalDownload();
     }
     return requests->getTotalDownload() + totalDownload;

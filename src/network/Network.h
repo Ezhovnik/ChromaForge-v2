@@ -41,7 +41,8 @@ namespace network {
 
     class Network {
         std::unique_ptr<Requests> requests;
-        std::vector<std::shared_ptr<Socket>> connections;
+        std::unordered_map<uint64_t, std::shared_ptr<Socket>> connections;
+        uint64_t nextConnection = 1;
     public:
         Network(std::unique_ptr<Requests> requests);
         ~Network();
@@ -53,7 +54,9 @@ namespace network {
             long maxSize=0
         );
 
-        std::shared_ptr<Socket> connect(const std::string& address, int port);
+        Socket* getConnection(uint64_t id) const;
+
+        uint64_t connect(const std::string& address, int port);
 
         size_t getTotalUpload() const;
         size_t getTotalDownload() const;
