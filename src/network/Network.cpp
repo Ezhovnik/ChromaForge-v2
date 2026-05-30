@@ -10,7 +10,7 @@
 #include <cstring>
 #include <memory>
 #include <queue>
-#include <chrono>
+#include <mutex>
 #include <thread>
 
 #include <curl/curl.h>
@@ -267,36 +267,89 @@ static std::string to_string(const addrinfo* addr) {
     return "";
 }
 
-class SocketImpl : public Socket {
+class SocketConnection : public Connection {
     SOCKET descriptor;
     bool open = true;
     addrinfo* addr;
     size_t totalUpload = 0;
     size_t totalDownload = 0;
-public:
-    SocketImpl(SOCKET descriptor, addrinfo* addr)
-        : descriptor(descriptor), addr(addr) {
-    }
+ConnectionState state = ConnectionState::Initial;
+    std::unique_ptr<std::thread> thread = nullptr;
+    std::vector<char> readBatch;
+    util::Buffer<char> buffer;
+    std::mutex mutex;
 
-    ~SocketImpl() {
-        closesocket(descriptor);
+    void connectSocket() {
+        state = ConnectionState::Connecting;
+        LOG_INFO("Connecting to {}", to_string(addr));
+        int res = connectsocket(descriptor, addr->ai_addr, addr->ai_addrlen);
+        if (res < 0) {
+            auto error = handle_socket_error("Connect failed");
+            closesocket(descriptor);
+            freeaddrinfo(addr);
+            state = ConnectionState::Closed;
+            throw error;
+        }
+        LOG_INFO("Connected to {}", to_string(addr));
+        state = ConnectionState::Connected;
+    }
+public:
+    SocketConnection(SOCKET descriptor, addrinfo* addr) : descriptor(descriptor), addr(addr), buffer(16'384) {}
+
+    ~SocketConnection() {
+        if (state != ConnectionState::Closed) {
+            shutdown(descriptor, 2);
+            closesocket(descriptor);
+        }
+        thread->join();
         freeaddrinfo(addr);
     }
 
+    void connect(runnable callback) override {
+        thread = std::make_unique<std::thread>([this, callback]() {
+            connectSocket();
+            callback();
+            while (state == ConnectionState::Connected) {
+                int size = recvsocket(descriptor, buffer.data(), buffer.size());
+                if (size == 0) {
+                    LOG_INFO("Closed connection {}", to_string(addr));
+                    closesocket(descriptor);
+                    state = ConnectionState::Closed;
+                    break;
+                } else if (size < 0) {
+                    LOG_INFO(
+                        "An error ocurred while receiving from {}", to_string(addr)
+                    );
+                    auto error = handle_socket_error("recv(...) error");
+                    closesocket(descriptor);
+                    state = ConnectionState::Closed;
+                    LOG_ERROR("{}", error.what());
+                    break;
+                }
+                {
+                    std::lock_guard lock(mutex);
+                    for (size_t i = 0; i < size; ++i) {
+                        readBatch.emplace_back(buffer[i]);
+                    }
+                    totalDownload += size;
+                }
+                LOG_INFO(
+                    "Read {} bytes from {}", size, to_string(addr)
+                );
+            }
+        });
+    }
+
     int recv(char* buffer, size_t length) override {
-        int len = recvsocket(descriptor, buffer, length);
-        if (len == 0) {
-            int err = errno;
-            close();
-            LOG_ERROR("Read failed [errno={}]: {}", err, strerror(err));
-            throw std::runtime_error(
-                "Read failed [errno=" + std::to_string(err) + "]: " + std::string(strerror(err))
-            );
-        } else if (len == -1) {
-            return 0;
+        std::lock_guard lock(mutex);
+
+        if (state != ConnectionState::Connected && readBatch.empty()) {
+            return -1;
         }
-        totalDownload += len;
-        return len;
+        int size = std::min(readBatch.size(), length);
+        std::memcpy(buffer, readBatch.data(), size);
+        readBatch.erase(readBatch.begin(), readBatch.begin() + size);
+        return size;
     }
 
     int send(const char* buffer, size_t length) override {
@@ -313,13 +366,17 @@ public:
         return len;
     }
 
-    void close() override {
-        closesocket(descriptor);
-        open = false;
+    int available() override {
+        std::lock_guard lock(mutex);
+        return readBatch.size();
     }
 
-    bool isOpen() const override {
-        return open;
+    void close() override {
+        if (state != ConnectionState::Closed) {
+            shutdown(descriptor, 2);
+            closesocket(descriptor);
+        }
+        thread->join();
     }
 
     size_t getTotalUpload() const override {
@@ -330,8 +387,8 @@ public:
         return totalDownload;
     }
 
-    static std::shared_ptr<SocketImpl> connect(
-        const std::string& address, int port
+    static std::shared_ptr<SocketConnection> connect(
+        const std::string& address, int port, runnable callback
     ) {
         addrinfo hints {};
 
@@ -352,16 +409,13 @@ public:
             LOG_ERROR("Could not create socket");
             throw std::runtime_error("Could not create socket");
         }
-        int res = connectsocket(descriptor, addrinfo->ai_addr, addrinfo->ai_addrlen);
-        if (res < 0) {
-            auto error = handle_socket_error("Connect failed");
-            closesocket(descriptor);
-            freeaddrinfo(addrinfo);
-            throw error;
-        }
+        auto socket =  std::make_shared<SocketConnection>(descriptor, addrinfo);
+        socket->connect(std::move(callback));
+        return socket;
+    }
 
-        LOG_INFO("Connected to {} [{}:{}]", address, to_string(addrinfo), port);
-        return std::make_shared<SocketImpl>(descriptor, addrinfo);
+    ConnectionState getState() const override {
+        return state;
     }
 };
 
@@ -379,7 +433,7 @@ void Network::get(
     requests->get(url, onResponse, onReject, maxSize);
 }
 
-Socket* Network::getConnection(uint64_t id) const {
+Connection* Network::getConnection(uint64_t id) const {
     const auto& found = connections.find(id);
     if (found == connections.end()) {
         return nullptr;
@@ -387,9 +441,11 @@ Socket* Network::getConnection(uint64_t id) const {
     return found->second.get();
 }
 
-uint64_t Network::connect(const std::string& address, int port) {
-    auto socket = SocketImpl::connect(address, port);
+uint64_t Network::connect(const std::string& address, int port, consumer<uint64_t> callback) {
     uint64_t id = nextConnection++;
+    auto socket = SocketConnection::connect(address, port, [id, callback]() {
+        callback(id);
+    });
     connections[id] = std::move(socket);
     return id;
 }
