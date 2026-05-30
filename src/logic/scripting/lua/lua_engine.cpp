@@ -37,6 +37,7 @@ static void remove_lib_funcs(State* L, const char* libname, const char* funcs[])
 }
 
 static void create_libs(State* L, StateType stateType) {
+    openlib(L, "base64", base64lib);
     openlib(L, "bjson", bjsonlib);
     openlib(L, "block", blocklib);
     openlib(L, "builtin", builtinlib);
@@ -146,7 +147,8 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
     init_state(L, stateType);
 
     auto resDir = paths.getResourcesFolder();
-    auto src = files::read_string(resDir/std::filesystem::u8path("scripts/stdmin.lua"));
-    lua::pop(L, lua::execute(L, 0, src, "<stdmin>"));
+    auto file = resDir/std::filesystem::u8path("scripts/stdmin.lua");
+    auto src = files::read_string(file);
+    lua::pop(L, lua::execute(L, 0, src, "builtin:scripts/stdmin.lua"));
     return L;
 }

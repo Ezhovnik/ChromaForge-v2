@@ -14,6 +14,7 @@
 #include <core_content_defs.h>
 #include <graphics/core/MeshData.h>
 #include <math/rand.h>
+#include <graphics/render/commons.h>
 
 class Content;
 class Mesh;
@@ -53,6 +54,8 @@ private:
     const EngineSettings& settings;
 
     PseudoRandom randomizer;
+
+    SortingMeshData sortingMesh;
 
     /**
      * @brief Добавляет вершину в буфер.
@@ -258,11 +261,8 @@ private:
         const glm::ivec3& up
     ) const;
 
-    /**
-     * @brief Основной метод рендеринга, проходящий по вокселям чанка.
-     * @param voxels Массив вокселей чанка.
-     */
-	void render(const voxel* voxels);
+	void render(const voxel* voxels, int beginEnds[256][2]);
+    SortingMeshData renderTranslucent(const voxel* voxels, int beginEnds[256][2]);
 public:
     /**
      * @brief Конструктор.
@@ -293,13 +293,13 @@ public:
      * @param chunks Хранилище чанков.
      * @return Указатель на новый Mesh.
      */
-	std::shared_ptr<Mesh> render(const Chunk* chunk, const Chunks* chunks);
+	ChunkMesh render(const Chunk* chunk, const Chunks* chunks);
 
     /**
      * @brief Создаёт Mesh из текущих буферов.
      * @return Указатель на новый Mesh.
      */
-    MeshData createMesh();
+    ChunkMeshData createMesh();
 
     /**
      * @brief Возвращает буфер вокселей.

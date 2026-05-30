@@ -17,6 +17,12 @@ function on_broken(x, y, z, playerid)
 Вызывается после разрушения блока игроком
 
 ```lua
+function on_replaced(x, y, z, playerid)
+```
+
+Вызывается после замены блока игроком
+
+```lua
 function on_interact(x, y, z, playerid) -> bool
 ```
 
@@ -35,10 +41,17 @@ function on_random_update(x, y, z)
 Вызывается в случайные моменты времени (рост травы на блоках земли)  
 
 ```lua
-function on_blocks_tick(tps: int)
+function on_blocks_spark(tps: int)
 ```
 
 Вызывается tps (20) раз в секунду
+Вызывается tps (20) раз в секунду. Используйте 1/tps вместо `time.delta()`.
+
+```lua
+function on_player_spark(playerid: int, tps: int)
+```
+
+Вызывается tps (20) раз в секунду. Используйте 1/tps вместо `time.delta()`.
 
 ## События предметов
 
@@ -79,7 +92,7 @@ function on_world_save()
 Вызывается перед сохранением мира
 
 ```lua
-function on_world_tick()
+function on_world_spark()
 ```
 
 Вызывается 20 раз в секунду

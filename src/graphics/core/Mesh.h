@@ -31,7 +31,7 @@ public:
         size_t vertices, 
         const int* indexBuffer, 
         size_t indices, 
-        const vattr* attrs
+        const VertexAttribute* attrs
     );
 
     /**
@@ -40,7 +40,7 @@ public:
      * @param vertices Количество вершин.
      * @param attrs Описания атрибутов.
      */
-	Mesh(const float* vertexBuffer, size_t vertices, const vattr* attrs) :
+	Mesh(const float* vertexBuffer, size_t vertices, const VertexAttribute* attrs) :
 		Mesh(vertexBuffer, vertices, nullptr, 0, attrs) {};
 
     /// Деструктор, освобождающий ресурсы OpenGL.
@@ -68,12 +68,12 @@ public:
      * @brief Отрисовывает меш с указанным типом примитива.
      * @param primitive Тип примитива OpenGL (например, GL_TRIANGLES, GL_LINES).
      */
-    void draw(uint primititve);
+    void draw(uint primititve) const;
 
     /**
      * @brief Отрисовывает меш с типом примитива GL_TRIANGLES.
      */
-    void draw();
+    void draw() const;
 
     /// Счётчик всех созданных экземпляров Mesh (для отладки).
     static int meshesCount;

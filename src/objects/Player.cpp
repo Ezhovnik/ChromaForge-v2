@@ -30,11 +30,15 @@ namespace PlayerConsts {
 
 Player::Player(
 	Level* level,
+	int64_t id,
+	const std::string& name,
 	glm::vec3 position,
 	float speed,
 	std::shared_ptr<Inventory> inventory,
 	entityid_t eid
 ) : level(level),
+	id(id),
+	name(name),
 	speed(speed),
 	chosenSlot(0),
 	position(position),
@@ -50,8 +54,7 @@ Player::Player(
     tpCamera->setFov(glm::radians(90.0f));
 }
 
-Player::~Player() {
-}
+Player::~Player() = default;
 
 void Player::updateEntity() {
     if (eid == 0) {
@@ -203,12 +206,17 @@ void Player::attemptToFindSpawnpoint() {
 dv::value Player::serialize() const {
     auto root = dv::object();
 
+	root["id"] = id;
+	root["name"] = name;
+
     root["position"] = dv::to_value(position);
     root["rotation"] = dv::to_value(cam);
     root["spawnpoint"] = dv::to_value(spawnpoint);
 
     root["flight"] = flight;
     root["noclip"] = noclip;
+	root["infinite-items"] = infiniteItems;
+	root["instant-destruction"] = instantDestruction;
     root["chosen-slot"] = chosenSlot;
     root["entity"] = eid;
     root["inventory"] = inventory->serialize();
@@ -220,6 +228,9 @@ dv::value Player::serialize() const {
 }
 
 void Player::deserialize(const dv::value& src) {
+	src.at("id").get(id);
+	src.at("name").get(name);
+
     const auto& posarr = src["position"];
     dv::get_vec(posarr, position);
 	fpCamera->position = position;
@@ -232,6 +243,8 @@ void Player::deserialize(const dv::value& src) {
 
 	flight = src["flight"].asBoolean();
     noclip = src["noclip"].asBoolean();
+	src.at("infinite-items").get(infiniteItems);
+	src.at("instant-destruction").get(instantDestruction);
     setChosenSlot(src["chosen-slot"].asInteger());
     eid = src["entity"].asNumber();
 
@@ -317,10 +330,34 @@ void Player::setNoclip(bool flag) {
     this->noclip = flag;
 }
 
+bool Player::isInfiniteItems() const {
+    return infiniteItems;
+}
+
+void Player::setInfiniteItems(bool flag) {
+    infiniteItems = flag;
+}
+
 void Player::updateSelectedEntity() {
     selectedEid = selection.entity;
 }
 
 entityid_t Player::getSelectedEntity() const {
     return selectedEid;
+}
+
+bool Player::isInstantDestruction() const {
+    return instantDestruction;
+}
+
+void Player::setInstantDestruction(bool flag) {
+    instantDestruction = flag;
+}
+
+void Player::setName(const std::string& name) {
+    this->name = name;
+}
+
+const std::string& Player::getName() const {
+    return name;
 }

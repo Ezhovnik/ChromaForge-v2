@@ -9,6 +9,8 @@
 #include <assets/Assets.h>
 #include <assets/AssetsLoader.h>
 #include <files/engine_paths.h>
+#include <coders/json.h>
+#include <files/files.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {
@@ -25,7 +27,15 @@ static int l_get_list(lua::State* L) {
     for (size_t i = 0; i < worlds.size(); ++i) {
         lua::createtable(L, 0, 1);
 
-        auto name = worlds[i].filename().u8string();
+        const auto& folder = worlds[i];
+
+        auto root = json::parse(files::read_string(folder/std::filesystem::u8path("world.json")));
+        const auto& versionMap = root["version"];
+        int versionMajor = versionMap["major"].asInteger();
+        int versionMinor = versionMap["minor"].asInteger();
+        int versionMaintenance = versionMap["maintenance"].asInteger();
+
+        auto name = folder.filename().u8string();
         lua::pushstring(L, name);
         lua::setfield(L, "name");
 
@@ -40,6 +50,9 @@ static int l_get_list(lua::State* L) {
         }
         lua::pushstring(L, icon);
         lua::setfield(L, "icon");
+
+        lua::pushvec3(L, {versionMajor, versionMinor, versionMaintenance});
+        lua::setfield(L, "version");
 
         lua::rawseti(L, i + 1);
     }

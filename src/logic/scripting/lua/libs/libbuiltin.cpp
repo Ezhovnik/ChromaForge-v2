@@ -22,6 +22,12 @@
 #include <files/files.h>
 #include <graphics/core/Texture.h>
 
+static int l_get_version(lua::State* L) {
+    return lua::pushvec_stack(
+        L, glm::vec3(ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_MAINTENANCE)
+    );
+}
+
 static int l_open_world(lua::State* L) {
     auto name = lua::require_string(L, 1);
     auto controller = scripting::engine->getController();
@@ -163,7 +169,7 @@ static int l_get_setting_info(lua::State* L) {
 static void load_texture(
     const ubyte* bytes, size_t size, const std::string& destname
 ) {
-    auto path = scripting::engine->getPaths()->resolve("export:.__vc_imagedata");
+    auto path = scripting::engine->getPaths()->resolve("export:.__chroma_imagedata");
     try {
         files::write_bytes(path, bytes, size);
         scripting::engine->getAssets()->store(
@@ -198,6 +204,7 @@ static int l_load_texture(lua::State* L) {
 }
 
 const luaL_Reg builtinlib [] = {
+    {"get_version", lua::wrap<l_get_version>},
     {"new_world", lua::wrap<l_new_world>},
     {"open_world", lua::wrap<l_open_world>},
     {"reopen_world", lua::wrap<l_reopen_world>},

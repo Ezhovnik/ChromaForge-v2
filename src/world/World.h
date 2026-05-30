@@ -30,7 +30,8 @@ struct WorldInfo : public Serializable {
 
 	std::string generator;
 
-	int64_t nextInventoryId = 0; ///< Счётчик для выдачи следующих идентификаторов инвентарей
+	int64_t nextInventoryId = 1; ///< Счётчик для выдачи следующих идентификаторов инвентарей
+     int64_t nextPlayerId = 0;
 
 	/** 
      * Таймер дня/ночи в диапазоне 0..1.

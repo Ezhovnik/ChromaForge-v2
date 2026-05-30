@@ -7,6 +7,7 @@
 
 #include <graphics/core/DrawContext.h>
 #include <util/ObjectsKeeper.h>
+#include <data/dv.h>
 
 class Camera;
 class Assets;
@@ -135,12 +136,16 @@ public:
     void closeInventory();
     bool isInventoryOpen() const;
     void openPermanent(UIDocument* doc);
-    void showOverlay(UIDocument* doc, bool playerInventory);
+    void showOverlay(
+        UIDocument* doc,
+        bool playerInventory,
+        const dv::value& arg=nullptr
+    );
     bool isContentAccess() const;
     void setContentAccess(bool flag);
     void setDebugCheats(bool flag);
 
-    void add(const HudElement& element);
+    void add(const HudElement& element, const dv::value& arg=nullptr);
 	void onRemove(const HudElement& element);
     void remove(const std::shared_ptr<gui::UINode>& node);
 

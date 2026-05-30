@@ -36,7 +36,7 @@ void TextsRenderer::renderNote(
     if ((preset.displayMode == NoteDisplayMode::Projected) != projected) return;
 
     float opacity = 1.0f;
-    if (frontLayer && preset.displayMode != NoteDisplayMode::Projected) {
+    if (frontLayer) {
         if (preset.xrayOpacity <= 0.0001f) return;
         opacity = preset.xrayOpacity;
     }
@@ -55,6 +55,9 @@ void TextsRenderer::renderNote(
         if (preset.displayMode == NoteDisplayMode::XYFreeBillboard) {
             yvec = camera.up;
         }
+        float scale = (1.0f - preset.perspective) * glm::pow(glm::distance(camera.position, pos), 1.0f-preset.perspective);
+        xvec *= 1.0f + scale;
+        yvec *= 1.0f + scale;
     }
 
     if (preset.displayMode != NoteDisplayMode::Projected) {
@@ -65,18 +68,25 @@ void TextsRenderer::renderNote(
         float scale = 1.0f;
         if (glm::abs(preset.perspective) > 0.0001f) {
             float scale2 = scale / (glm::distance(camera.position, pos) * util::sqr(camera.zoom) * glm::sqrt(glm::tan(camera.getFov() * 0.5f)));
-            scale = scale2 * preset.perspective +
-                    scale * (1.0f - preset.perspective);
+            scale = scale2 * preset.perspective + scale * (1.0f - preset.perspective);
         }
-        auto projpos = camera.getProjView() * glm::vec4(pos, 1.0f);
-        pos = projpos;
-        if (pos.z < 0.0f) {
-            return;
+        if (frontLayer) {
+            auto projpos = camera.getProjView() * glm::vec4(pos, 1.0f);
+            pos = projpos;
+            if (pos.z < 0.0f) return;
+            pos /= projpos.w;
+            pos.z = 0;
+            xvec = {2.0f/Window::width * scale, 0, 0};
+            yvec = {0, 2.0f/Window::height * scale, 0};
+        } else {
+            auto matrix = camera.getProjView();
+            auto screenPos = matrix * glm::vec4(pos, 1.0f);
+
+            xvec = glm::vec3(2.0f/Window::width * scale, 0, 0);
+            yvec = glm::vec3(0, 2.0f/Window::height * scale, 0);
+
+            pos = screenPos / screenPos.w;
         }
-        pos /= pos.z;
-        pos.z = 0;
-        xvec = {2.0f / Window::width*scale, 0, 0};
-        yvec = {0, 2.0f /Window::height* scale, 0};
     }
 
     auto color = preset.color;
@@ -107,17 +117,13 @@ void TextsRenderer::render(
     for (const auto& [_, note] : notes) {
         renderNote(*note, context, camera, settings, hudVisible, frontLayer, false);
     }
+
     batch.flush();
-    if (frontLayer) {
-        shader.uniformMatrix(
-            "u_projview",
-            glm::mat4(1.0f)
-        );
-        for (const auto& [_, note] : notes) {
-            renderNote(*note, context, camera, settings, hudVisible, true, true);
-        }
-        batch.flush();
+    shader.uniformMatrix("u_projview", glm::mat4(1.0f));
+    for (const auto& [_, note] : notes) {
+        renderNote(*note, context, camera, settings, hudVisible, frontLayer, true);
     }
+    batch.flush();
 }
 
 uint64_t TextsRenderer::add(std::unique_ptr<TextNote> note) {

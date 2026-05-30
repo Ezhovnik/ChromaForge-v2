@@ -4,15 +4,15 @@
 
 #include <logic/scripting/lua/libs/libentity.h>
 #include <objects/Player.h>
+#include <objects/Players.h>
 #include <physics/Hitbox.h>
 #include <window/Camera.h>
 #include <items/Inventory.h>
 
-inline std::shared_ptr<Player> get_player(lua::State* L, int idx) {
-    return scripting::level->getObject<Player>(lua::tointeger(L, idx));
+inline Player* get_player(lua::State* L, int idx) {
+    return scripting::level->players->getPlayer(lua::tointeger(L, idx));
 }
 
-// Player library
 static int l_get_pos(lua::State* L) {
     if (auto player = get_player(L, 1)) {
         return lua::pushvec_stack(L, player->getPosition());
@@ -189,6 +189,49 @@ static int l_get_selected_entity(lua::State* L) {
     return 0;
 }
 
+static int l_is_infinite_items(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        return lua::pushboolean(L, player->isInfiniteItems());
+    }
+    return 0;
+}
+
+static int l_set_infinite_items(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        player->setInfiniteItems(lua::toboolean(L, 2));
+    }
+    return 0;
+}
+
+static int l_is_instant_destruction(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        return lua::pushboolean(L, player->isInstantDestruction());
+    }
+    return 0;
+}
+
+static int l_set_instant_destruction(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        player->setInstantDestruction(lua::toboolean(L, 2));
+    }
+    return 0;
+}
+
+static int l_get_name(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        return lua::pushstring(L, player->getName());
+    }
+    return 0;
+}
+
+static int l_set_name(lua::State* L) {
+    if (auto player = get_player(L, 1)) {
+        player->setName(lua::require_string(L, 2));
+    }
+    return 0;
+}
+
+
 const luaL_Reg playerlib [] = {
     {"get_pos", lua::wrap<l_get_pos>},
     {"set_pos", lua::wrap<l_set_pos>},
@@ -202,6 +245,10 @@ const luaL_Reg playerlib [] = {
     {"set_flight", lua::wrap<l_set_flight>},
     {"is_noclip", lua::wrap<l_is_noclip>},
     {"set_noclip", lua::wrap<l_set_noclip>},
+    {"is_infinite_items", lua::wrap<l_is_infinite_items>},
+    {"set_infinite_items", lua::wrap<l_set_infinite_items>},
+    {"is_instant_destruction", lua::wrap<l_is_instant_destruction>},
+    {"set_instant_destruction", lua::wrap<l_set_instant_destruction>},
     {"get_selected_block", lua::wrap<l_get_selected_block>},
     {"get_selected_entity", lua::wrap<l_get_selected_entity>},
     {"set_spawnpoint", lua::wrap<l_set_spawnpoint>},
@@ -210,5 +257,7 @@ const luaL_Reg playerlib [] = {
     {"set_entity", lua::wrap<l_set_entity>},
     {"get_camera", lua::wrap<l_get_camera>},
     {"set_camera", lua::wrap<l_set_camera>},
+    {"get_name", lua::wrap<l_get_name>},
+    {"set_name", lua::wrap<l_set_name>},
     {NULL, NULL}
 };

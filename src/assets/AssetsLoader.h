@@ -6,6 +6,7 @@
 #include <queue>
 #include <filesystem>
 #include <utility>
+#include <set>
 
 #include <assets/Assets.h>
 #include <interfaces/Task.h>
@@ -32,6 +33,17 @@ struct LayoutConfig : AssetsConfig {
 struct SoundConfig : AssetsConfig {
 	bool keepPCM;
 	SoundConfig(bool keepPCM) : keepPCM(keepPCM) {}
+};
+
+enum class AtlasType {
+     Atlas, Separate
+};
+
+struct AtlasConfig : AssetsConfig {
+     AtlasType type;
+
+     AtlasConfig(AtlasType type) : type(type) {
+     }
 };
 
 using aloader_func = std::function<asset_loader::postfunc(
@@ -63,6 +75,7 @@ private:
 	Assets* assets; ///< Менеджер ресурсов, куда сохраняются загруженные объекты
 	std::map<AssetType, aloader_func> loaders; ///< Зарегистрированные загрузчики по типам
 	std::queue<aloader_entry> entries; ///< Очередь заданий на загрузку
+     std::set<std::pair<AssetType, std::string>> enqueued;
 
 	const ResPaths* paths; ///< Пути для поиска файлов
 

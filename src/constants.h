@@ -66,6 +66,11 @@ inline constexpr entityid_t ENTITY_NONE = 0;
 /** Размер иконки предмета в пикселях. */
 inline constexpr int ITEM_ICON_SIZE = 48;
 
+// ========== --- ==========
+
+/** */
+inline constexpr int TRANSLUCENT_BLOCKS_SORT_INTERVAL = 8;
+
 // ========== Математические константы ==========
 
 /** Число π. */

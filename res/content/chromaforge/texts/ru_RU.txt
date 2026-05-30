@@ -44,3 +44,4 @@ blue orchid=голубая орхидея
 rose bush=розовый куст
 tall dandelion=высокий одуванчик
 drimia=дримия
+ice=лёд

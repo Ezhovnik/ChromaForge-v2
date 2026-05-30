@@ -110,5 +110,7 @@ namespace xml {
         const std::string& indentStr="    "
     );
 
-    extern xmldocument parse(const std::string& filename, const std::string& source);
+    extern xmldocument parse(
+        std::string_view filename, std::string_view source
+    );
 }

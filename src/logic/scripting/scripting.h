@@ -44,6 +44,8 @@ namespace scripting {
 
     void initialize(Engine* engine);
 
+    void on_content_load(Content* content);
+
     bool register_event(int env, const std::string& name, const std::string& id);
     int get_values_on_stack();
 
@@ -63,7 +65,10 @@ namespace scripting {
     void random_update_block(const Block& block, const glm::ivec3& pos);
     void on_block_placed(Player* player, const Block& block, const glm::ivec3& pos);
     void on_block_broken(Player* player, const Block& block, const glm::ivec3& pos);
+    void on_block_replaced(Player* player, const Block& block, const glm::ivec3& pos);
     bool on_block_interact(Player* player, const Block& block, const glm::ivec3& pos);
+
+    void on_player_spark(Player* player, int tps);
 
     bool on_item_use(Player* player, const Item& item);
     bool on_item_use_on_block(Player* player, const Item& item, glm::ivec3 ipos, glm::ivec3 normal);
@@ -98,33 +103,38 @@ namespace scripting {
     void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
     void on_ui_close(UIDocument* layout, Inventory* inventory);
 
-    void load_block_script(
+    void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
+        const std::string& fileName,
         block_funcs_set& funcsset
     );
-    void load_item_script(
+    void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
+        const std::string& fileName,
         item_funcs_set& funcsset
     );
     void load_world_script(
         const scriptenv& env,
         const std::string& packid,
         const std::filesystem::path& file,
+        const std::string& fileName,
         world_funcs_set& funcsset
     );
     void load_layout_script(
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
+        const std::string& fileName,
         uidocscript& script
     );
     void load_entity_component(
         const std::string& name,
-        const std::filesystem::path& file
+        const std::filesystem::path& file,
+        const std::string& fileName
     );
     std::unique_ptr<GeneratorScript> load_generator(
         const Generator& def,

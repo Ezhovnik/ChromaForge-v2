@@ -57,11 +57,32 @@ player.set_noclip(bool)
 Геттер и сеттер noclip режима (выключенная коллизия игрока)
 
 ```lua
+player.is_infinite_items() -> bool
+player.set_infinite_items(bool)
+```
+
+Геттер и сеттер бесконечных предметов (не удаляются из инвентаря при использовании)
+
+```lua
+player.is_instant_destruction() -> bool
+player.set_instant_destruction(bool)
+```
+
+Геттер и сеттер мнгновенного разрушения блоков при активации привязки `player.destroy`.
+
+```lua
 player.set_spawnpoint(playerid: int, x: number, y: number, z: number) 
 player.get_spawnpoint(playerid: int) -> number, number, number
 ```
 
 Сеттер и геттер точки спавна игрока
+
+```lua
+player.set_name(playerid: int, name: str) 
+player.get_name(playerid: int) -> str
+```
+
+Сеттер и геттер имени игрока
 
 ```lua
 player.get_selected_block(playerid: int) -> x,y,z

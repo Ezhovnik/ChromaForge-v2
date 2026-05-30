@@ -5,7 +5,7 @@
 int Mesh::meshesCount = 0;
 int Mesh::drawCalls = 0;
 
-inline size_t calc_vertex_size(const vattr* attrs) {
+inline size_t calc_vertex_size(const VertexAttribute* attrs) {
     size_t vertexSize = 0;
     for (int i = 0; attrs[i].size; ++i) {
         vertexSize += attrs[i].size;
@@ -27,10 +27,10 @@ Mesh::Mesh(const float* vertexBuffer,
     size_t vertices, 
     const int* indexBuffer, 
     size_t indices, 
-    const vattr* attrs
+    const VertexAttribute* attrs
 ) : IBO(0),
-    vertices(vertices),
-	indices(indices)
+    vertices(0),
+	indices(0)
 {
     meshesCount++;
 
@@ -81,9 +81,9 @@ void Mesh::reload(const float* vertexBuffer, size_t vertices, const int* indexBu
 
     // Загружаем данные вершин в VBO.
 	if (vertexBuffer != nullptr && vertices != 0) {
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexSize * vertices, vertexBuffer, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexSize * vertices, vertexBuffer, GL_STREAM_DRAW);
 	} else {
-		glBufferData(GL_ARRAY_BUFFER, 0, {}, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, 0, {}, GL_STREAM_DRAW);
 	}
 
     // Обрабатываем индексный буфер.
@@ -97,7 +97,7 @@ void Mesh::reload(const float* vertexBuffer, size_t vertices, const int* indexBu
 	}
 }
 
-void Mesh::draw(uint primitive) {
+void Mesh::draw(uint primitive) const {
     drawCalls++;
     glBindVertexArray(VAO);
     if (IBO != 0) {
@@ -110,6 +110,6 @@ void Mesh::draw(uint primitive) {
     glBindVertexArray(0);
 }
 
-void Mesh::draw() {
+void Mesh::draw() const {
     draw(GL_TRIANGLES);
 }
