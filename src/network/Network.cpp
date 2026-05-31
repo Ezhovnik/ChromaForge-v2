@@ -250,18 +250,22 @@ static inline int sendsocket(
     return send(descriptor, buf, len, flags);
 }
 
+static std::string to_string(const sockaddr_in* addr) {
+    char ip[INET_ADDRSTRLEN];
+    if (inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN)) {
+        return std::string(ip) + ":" + std::to_string(addr->sin_port);
+    }
+    return "";
+}
+
 static std::string to_string(const addrinfo* addr) {
     if (addr->ai_family == AF_INET) {
-        auto psai = reinterpret_cast<sockaddr_in*>(addr->ai_addr);
-        char ip[INET_ADDRSTRLEN];
-        if (inet_ntop(addr->ai_family, &(psai->sin_addr), ip, INET_ADDRSTRLEN)) {
-            return std::string(ip);
-        }
+        return to_string(reinterpret_cast<sockaddr_in*>(addr->ai_addr));
     } else if (addr->ai_family == AF_INET6) {
         auto psai = reinterpret_cast<sockaddr_in6*>(addr->ai_addr);
         char ip[INET6_ADDRSTRLEN];
         if (inet_ntop(addr->ai_family, &(psai->sin6_addr), ip, INET6_ADDRSTRLEN)) {
-            return std::string(ip);
+            return std::string(ip) + ":" + std::to_string(psai->sin6_port);
         }
     }
     return "";
@@ -271,9 +275,10 @@ class SocketConnection : public Connection {
     SOCKET descriptor;
     bool open = true;
     addrinfo* addr;
+    std::string addrString;
     size_t totalUpload = 0;
     size_t totalDownload = 0;
-ConnectionState state = ConnectionState::Initial;
+    ConnectionState state = ConnectionState::Initial;
     std::unique_ptr<std::thread> thread = nullptr;
     std::vector<char> readBatch;
     util::Buffer<char> buffer;
@@ -294,7 +299,7 @@ ConnectionState state = ConnectionState::Initial;
         state = ConnectionState::Connected;
     }
 public:
-    SocketConnection(SOCKET descriptor, addrinfo* addr) : descriptor(descriptor), addr(addr), buffer(16'384) {}
+    SocketConnection(SOCKET descriptor, addrinfo* addr, const std::string& addrString) : descriptor(descriptor), addr(addr), addrString(addrString), buffer(16'384) {}
 
     ~SocketConnection() {
         if (state != ConnectionState::Closed) {
@@ -302,7 +307,7 @@ public:
             closesocket(descriptor);
         }
         thread->join();
-        freeaddrinfo(addr);
+        if (addr) freeaddrinfo(addr);
     }
 
     void connect(runnable callback) override {
@@ -358,8 +363,7 @@ public:
             int err = errno;
             close();
             throw std::runtime_error(
-                "Send failed [errno=" + std::to_string(err) +
-                "]: " + std::string(strerror(err))
+                "Send failed [errno=" + std::to_string(err) + "]: " + std::string(strerror(err))
             );
         }
         totalUpload += len;
@@ -376,7 +380,10 @@ public:
             shutdown(descriptor, 2);
             closesocket(descriptor);
         }
-        thread->join();
+        if (thread) {
+            thread->join();
+            thread = nullptr;
+        }
     }
 
     size_t getTotalUpload() const override {
@@ -409,13 +416,114 @@ public:
             LOG_ERROR("Could not create socket");
             throw std::runtime_error("Could not create socket");
         }
-        auto socket =  std::make_shared<SocketConnection>(descriptor, addrinfo);
+        auto socket =  std::make_shared<SocketConnection>(descriptor, addrinfo, to_string(addrinfo));
         socket->connect(std::move(callback));
         return socket;
     }
 
     ConnectionState getState() const override {
         return state;
+    }
+};
+
+class SocketTcpSServer : public TcpServer {
+    Network* network;
+    SOCKET descriptor;
+    std::vector<uint64_t> clients;
+    bool open = true;
+    std::unique_ptr<std::thread> thread = nullptr;
+public:
+    SocketTcpSServer(Network* network, SOCKET descriptor)
+    : network(network), descriptor(descriptor) {}
+
+    ~SocketTcpSServer() {
+        closeSocket();
+    }
+
+    void startListen(consumer<uint64_t> handler) override {
+        thread = std::make_unique<std::thread>([this, handler]() {
+            while (open) {
+                LOG_INFO("Listening for connectrions");
+                if (listen(descriptor, 2) < 0) {
+                    close();
+                    break;
+                }
+                socklen_t addrlen = sizeof(sockaddr_in);
+                SOCKET clientDescriptor;
+                sockaddr_in address;
+                LOG_INFO("Accepting clients");
+                if ((clientDescriptor = accept(descriptor, (sockaddr*)&address, &addrlen)) < 0) {
+                    close();
+                    break;
+                }
+                LOG_INFO("Client connected: {}", to_string(&address));
+                auto socket = std::make_shared<SocketConnection>(
+                    clientDescriptor, nullptr, to_string(&address)
+                );
+                uint64_t id = network->addConnection(socket);
+                clients.push_back(id);
+                handler(id);
+            }
+        });
+    }
+
+    void closeSocket() {
+        if (!open) return;
+        LOG_INFO("Closing server");
+        open = false;
+        for (uint64_t clientid : clients) {
+            if (auto client = network->getConnection(clientid)) {
+                client->close();
+            }
+        }
+        clients.clear();
+
+        shutdown(descriptor, 2);
+        closesocket(descriptor);
+        thread->join();
+    }
+
+    void close() override {
+        closeSocket();
+    }
+
+    bool isOpen() override {
+        return open;
+    }
+
+    static std::shared_ptr<SocketTcpSServer> openServer(
+        Network* network, int port, consumer<uint64_t> handler
+    ) {
+        SOCKET descriptor = socket(
+            AF_INET, SOCK_STREAM, 0
+        );
+        if (descriptor == -1) {
+            LOG_ERROR("Could not create server socket");
+            throw std::runtime_error("Could not create server socket");
+        }
+        int opt = 1;
+        int flags = SO_REUSEADDR;
+#       ifndef _WIN32
+            flags |= SO_REUSEPORT;
+#       endif
+        if (setsockopt(descriptor, SOL_SOCKET, flags, (const char*)&opt, sizeof(opt))) {
+            closesocket(descriptor);
+            LOG_ERROR("setsockopt");
+            throw std::runtime_error("setsockopt");
+        }
+        sockaddr_in address;
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = INADDR_ANY;
+        address.sin_port = htons(port);
+        if (bind(descriptor, (sockaddr*)&address, sizeof(address)) < 0) {
+            closesocket(descriptor);
+            LOG_ERROR("Could not bind port {}", port);
+            throw std::runtime_error("Could not bind port " + std::to_string(port));
+        }
+        LOG_INFO("Opened server at port {}", port);
+        auto server = std::make_shared<SocketTcpSServer>(network, descriptor);
+        server->startListen(std::move(handler));
+        return server;
     }
 };
 
@@ -441,11 +549,32 @@ Connection* Network::getConnection(uint64_t id) const {
     return found->second.get();
 }
 
+TcpServer* Network::getServer(uint64_t id) const {
+    const auto& found = servers.find(id);
+    if (found == servers.end()) {
+        return nullptr;
+    }
+    return found->second.get();
+}
+
 uint64_t Network::connect(const std::string& address, int port, consumer<uint64_t> callback) {
     uint64_t id = nextConnection++;
     auto socket = SocketConnection::connect(address, port, [id, callback]() {
         callback(id);
     });
+    connections[id] = std::move(socket);
+    return id;
+}
+
+uint64_t Network::openServer(int port, consumer<uint64_t> handler) {
+    uint64_t id = nextServer++;
+    auto server = SocketTcpSServer::openServer(this, port, handler);
+    servers[id] = std::move(server);
+    return id;
+}
+
+uint64_t Network::addConnection(const std::shared_ptr<Connection>& socket) {
+    uint64_t id = nextConnection++;
     connections[id] = std::move(socket);
     return id;
 }

@@ -35,6 +35,8 @@ namespace network {
 
     class Connection {
     public:
+        virtual ~Connection() {}
+
         virtual void connect(runnable callback) = 0;
         virtual int recv(char* buffer, size_t length) = 0;
         virtual int send(const char* buffer, size_t length) = 0;
@@ -47,10 +49,21 @@ namespace network {
         virtual ConnectionState getState() const = 0;
     };
 
+    class TcpServer {
+    public:
+        virtual ~TcpServer() {}
+        virtual void startListen(consumer<uint64_t> handler) = 0;
+        virtual void close() = 0;
+        virtual bool isOpen() = 0;
+    };
+
     class Network {
         std::unique_ptr<Requests> requests;
         std::unordered_map<uint64_t, std::shared_ptr<Connection>> connections;
         uint64_t nextConnection = 1;
+
+        std::unordered_map<uint64_t, std::shared_ptr<TcpServer>> servers;
+        uint64_t nextServer = 1;
     public:
         Network(std::unique_ptr<Requests> requests);
         ~Network();
@@ -63,8 +76,13 @@ namespace network {
         );
 
         [[nodiscard]] Connection* getConnection(uint64_t id) const;
+        [[nodiscard]] TcpServer* getServer(uint64_t id) const;
 
         uint64_t connect(const std::string& address, int port, consumer<uint64_t> callback);;
+
+        uint64_t openServer(int port, consumer<uint64_t> handler);
+
+        uint64_t addConnection(const std::shared_ptr<Connection>& connection);
 
         size_t getTotalUpload() const;
         size_t getTotalDownload() const;
