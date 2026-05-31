@@ -14,7 +14,6 @@ class Batch3D;
 class Camera;
 
 struct FontStyle {
-     size_t n = -1;
      bool bold = false;
      bool italic = false;
      glm::vec4 color {1, 1, 1, 1};
@@ -22,6 +21,7 @@ struct FontStyle {
 
 struct FontStylesScheme {
      std::vector<FontStyle> palette;
+     std::vector<ubyte> map;
 };
 
 /**
@@ -74,6 +74,7 @@ public:
           int x,
           int y,
           const FontStylesScheme* styles,
+          size_t styleMapOffset,
           float scale = 1
      ) const;
 
@@ -81,6 +82,7 @@ public:
           Batch3D& batch,
           std::wstring_view text,
           const FontStylesScheme* styles,
+          size_t styleMapOffset,
           const glm::vec3& pos,
           const glm::vec3& right={1, 0, 0},
           const glm::vec3& up={0, 1, 0}

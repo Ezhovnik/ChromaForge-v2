@@ -181,9 +181,9 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
         int y = pos.y + slotSize - 16;
 
         batch->setColor({0, 0, 0, 1.0f});
-        font->draw(*batch, text, x + 1, y + 1, nullptr);
+        font->draw(*batch, text, x + 1, y + 1, nullptr, 0);
         batch->setColor(glm::vec4(1.0f));
-        font->draw(*batch, text, x, y, nullptr);
+        font->draw(*batch, text, x, y, nullptr, 0);
     }
 }
 

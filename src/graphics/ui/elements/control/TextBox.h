@@ -43,6 +43,8 @@ namespace gui {
         bool autoresize = false;
         bool showLineNumbers = false;
 
+        std::string syntax;
+
         void stepLeft(bool shiftPressed, bool breakSelection);
         void stepRight(bool shiftPressed, bool breakSelection);
         void stepDefaultDown(bool shiftPressed, bool breakSelection);
@@ -68,6 +70,8 @@ namespace gui {
         void refreshLabel();
 
         void onInput();
+
+        void refreshSyntax();
     public:
         TextBox(
             std::wstring placeholder, 
@@ -139,6 +143,8 @@ namespace gui {
 
         virtual void setOnUpPressed(const runnable& callback);
         virtual void setOnDownPressed(const runnable& callback);
+
+        virtual void setSyntax(const std::string& lang);
 
         virtual void onFocus(GUI*) override;
         virtual void refresh() override;

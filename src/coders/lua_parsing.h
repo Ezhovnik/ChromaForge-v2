@@ -21,7 +21,8 @@ namespace lua {
         Operator,
         Comma,
         Semicolon,
-        Unexpected
+        Unexpected,
+        Comment
     };
 
     struct Token {

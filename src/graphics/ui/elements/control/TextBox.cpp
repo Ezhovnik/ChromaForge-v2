@@ -12,6 +12,7 @@
 #include <util/stringutil.h>
 #include <window/Events.h>
 #include <window/Window.h>
+#include <devtools/syntax_highlighting.h>
 
 using namespace gui;
 
@@ -63,11 +64,11 @@ void TextBox::draw(const DrawContext* pctx, Assets* assets) {
     glm::vec2 lcoord = label->calcPos();
     lcoord.y -= 2;
     auto batch = pctx->getBatch2D();
-    batch->texture(nullptr);
+    batch->untexture();
+    batch->setColor(glm::vec4(1.0f));
     if (editable && int((Window::time() - caretLastMove) * 2) % 2 == 0) {
         uint line = label->getLineByTextIndex(caret);
         uint lcaret = caret - label->getTextLineOffset(line);
-        batch->setColor(glm::vec4(1.0f));
 
         int width = font->calcWidth(input, lcaret);
         batch->rect(lcoord.x + width, lcoord.y + label->getLineYOffset(line), 2, lineHeight);
@@ -494,10 +495,19 @@ void TextBox::stepDefaultUp(bool shiftPressed, bool breakSelection) {
     }
 }
 
+void TextBox::refreshSyntax() {
+    if (!syntax.empty()) {
+        if (auto styles = devtools::syntax_highlight(syntax, util::wstr2str_utf8(input))) {
+            label->setStyles(std::move(styles));
+        }
+    }
+}
+
 void TextBox::onInput() {
     if (subconsumer) {
         subconsumer(input);
     }
+    refreshSyntax();
 }
 
 void TextBox::performEditingKeyboardEvents(keycode key) {
@@ -638,6 +648,7 @@ const std::wstring& TextBox::getText() const {
 void TextBox::setText(const std::wstring& value) {
     this->input = value;
     input.erase(std::remove(input.begin(), input.end(), '\r'), input.end());
+    refreshSyntax();
 }
 
 const std::wstring& TextBox::getPlaceholder() const {
@@ -744,5 +755,14 @@ void TextBox::setOnDownPressed(const runnable& callback) {
         };
     } else {
         onDownPressed = callback;
+    }
+}
+
+void TextBox::setSyntax(const std::string& lang) {
+    syntax = lang;
+    if (syntax.empty()) {
+        label->setStyles(nullptr);
+    } else {
+        refreshSyntax();
     }
 }

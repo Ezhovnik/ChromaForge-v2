@@ -303,6 +303,7 @@ static std::shared_ptr<UINode> readTextBox(
     }
     textbox->setText(text);
 
+    if (element->has("syntax")) textbox->setSyntax(element->attr("syntax").getText());
     if (element->has("multiline")) textbox->setMultiline(element->attr("multiline").asBool());
     if (element->has("text-wrap")) textbox->setTextWrapping(element->attr("text-wrap").asBool());
     if (element->has("editable")) textbox->setEditable(element->attr("editable").asBool());

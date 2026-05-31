@@ -70,7 +70,7 @@ static inline void draw_glyph(
             pos.y + offset.y * right.y,
             right.x / glyphInterval,
             up.y,
-            -0.2f * style.italic,
+            -0.15f * style.italic,
             16,
             c,
             batch.getColor() * style.color
@@ -110,11 +110,10 @@ static inline void draw_text(
     const glm::vec3& right,
     const glm::vec3& up,
     float glyphInterval,
-    const FontStylesScheme* styles
+    const FontStylesScheme* styles,
+    size_t styleMapOffset
 ) {
-    static FontStylesScheme defStyles {
-        {{std::numeric_limits<size_t>::max()}},
-    };
+    static FontStylesScheme defStyles {{{}}, {0}};
     if (styles == nullptr) styles = &defStyles;
 
     uint page = 0; // текущая обрабатываемая страница
@@ -124,16 +123,12 @@ static inline void draw_text(
 
     do {
 		// Проходим по всем символам строки
-        size_t entryIndex = 0;
-        int styleCharsCounter = -1;
-        const FontStyle* style = &styles->palette.at(entryIndex);
-
-        for (uint c : text) {
-            styleCharsCounter++;
-            if (styleCharsCounter > style->n && entryIndex + 1 < styles->palette.size()) {
-                style = &styles->palette.at(++entryIndex);
-                styleCharsCounter = -1;
-            }
+        for (size_t i = 0; i < text.length(); ++i) {
+            uint c = text[i];
+            size_t styleIndex = styles->map.at(
+                std::min(styles->map.size() - 1, i + styleMapOffset)
+            );
+            const FontStyle& style = styles->palette.at(styleIndex);
 			// Пропускаем пробельные символы
             if (!font.isPrintableChar(c)) {
                 x++;
@@ -150,7 +145,7 @@ static inline void draw_text(
                     right,
                     up,
                     glyphInterval,
-                    *style
+                    style
                 );
             } else if (charpage > page && charpage < next) {
                 next = charpage;
@@ -181,6 +176,7 @@ void Font::draw(
     std::wstring_view text,
     int x, int y,
     const FontStylesScheme* styles,
+    size_t styleMapOffset,
     float scale
 ) const {
     draw_text(
@@ -191,7 +187,8 @@ void Font::draw(
         glm::vec3(glyphInterval * scale, 0, 0),
         glm::vec3(0, lineHeight * scale, 0),
         glyphInterval / static_cast<float>(lineHeight),
-        styles
+        styles,
+        styleMapOffset
     );
 }
 
@@ -199,6 +196,7 @@ void Font::draw(
     Batch3D& batch,
     std::wstring_view text,
     const FontStylesScheme* styles,
+    size_t styleMapOffset,
     const glm::vec3& pos,
     const glm::vec3& right,
     const glm::vec3& up
@@ -211,6 +209,7 @@ void Font::draw(
         right * static_cast<float>(glyphInterval),
         up * static_cast<float>(lineHeight),
         glyphInterval / static_cast<float>(lineHeight),
-        styles
+        styles,
+        styleMapOffset
     );
 }
