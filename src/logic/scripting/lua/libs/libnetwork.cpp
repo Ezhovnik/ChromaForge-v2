@@ -124,6 +124,34 @@ static int l_open(lua::State* L) {
     return lua::pushinteger(L, id);
 }
 
+static int l_is_alive(lua::State* L) {
+    uint64_t id = lua::tointeger(L, 1);
+    if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
+        return lua::pushboolean(
+            L, connection->getState() != network::ConnectionState::Closed
+        );
+    }
+    return lua::pushboolean(L, false);
+}
+
+static int l_is_connected(lua::State* L) {
+    uint64_t id = lua::tointeger(L, 1);
+    if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
+        return lua::pushboolean(
+            L, connection->getState() == network::ConnectionState::Connected
+        );
+    }
+    return lua::pushboolean(L, false);
+}
+
+static int l_is_serveropen(lua::State* L) {
+    uint64_t id = lua::tointeger(L, 1);
+    if (auto server = scripting::engine->getNetwork().getServer(id)) {
+        return lua::pushboolean(L, server->isOpen());
+    }
+    return lua::pushboolean(L, false);
+}
+
 const luaL_Reg networklib[] = {
     {"get", lua::wrap<l_get>},
     {"get_binary", lua::wrap<l_get_binary>},
@@ -133,5 +161,8 @@ const luaL_Reg networklib[] = {
     {"__close", lua::wrap<l_close>},
     {"__send", lua::wrap<l_send>},
     {"__recv", lua::wrap<l_recv>},
+    {"__is_alive", lua::wrap<l_is_alive>},
+    {"__is_connected", lua::wrap<l_is_connected>},
+    {"__is_serveropen", lua::wrap<l_is_serveropen>},
     {NULL, NULL}
 };

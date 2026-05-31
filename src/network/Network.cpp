@@ -10,7 +10,6 @@
 #include <cstring>
 #include <memory>
 #include <queue>
-#include <mutex>
 #include <thread>
 
 #include <curl/curl.h>
@@ -73,8 +72,8 @@ public:
     }
 
     virtual ~CurlRequests() {
-        curl_easy_cleanup(curl);
         curl_multi_remove_handle(multiHandle, curl);
+        curl_easy_cleanup(curl);
         curl_multi_cleanup(multiHandle);
     }
 
@@ -228,7 +227,7 @@ static inline std::runtime_error handle_socket_error(const std::string& message)
     auto errorString = util::wstr2str_utf8(std::wstring(s));
     LocalFree(s);
     LOG_ERROR("{} [WSA error={}] {}", message, errorCode, errorString);
-    return std::runtime_error(message+" [WSA error=" + std::to_string(errorCode) + "]: "+errorString);
+    return std::runtime_error(message + " [WSA error=" + std::to_string(errorCode) + "]: "+errorString);
 }
 #endif
 
@@ -253,20 +252,7 @@ static inline int sendsocket(
 static std::string to_string(const sockaddr_in* addr) {
     char ip[INET_ADDRSTRLEN];
     if (inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN)) {
-        return std::string(ip) + ":" + std::to_string(addr->sin_port);
-    }
-    return "";
-}
-
-static std::string to_string(const addrinfo* addr) {
-    if (addr->ai_family == AF_INET) {
-        return to_string(reinterpret_cast<sockaddr_in*>(addr->ai_addr));
-    } else if (addr->ai_family == AF_INET6) {
-        auto psai = reinterpret_cast<sockaddr_in6*>(addr->ai_addr);
-        char ip[INET6_ADDRSTRLEN];
-        if (inet_ntop(addr->ai_family, &(psai->sin6_addr), ip, INET6_ADDRSTRLEN)) {
-            return std::string(ip) + ":" + std::to_string(psai->sin6_port);
-        }
+        return std::string(ip) + ":" + std::to_string(htons(addr->sin_port));
     }
     return "";
 }
@@ -274,8 +260,7 @@ static std::string to_string(const addrinfo* addr) {
 class SocketConnection : public Connection {
     SOCKET descriptor;
     bool open = true;
-    addrinfo* addr;
-    std::string addrString;
+    sockaddr_in addr;
     size_t totalUpload = 0;
     size_t totalDownload = 0;
     ConnectionState state = ConnectionState::Initial;
@@ -286,20 +271,19 @@ class SocketConnection : public Connection {
 
     void connectSocket() {
         state = ConnectionState::Connecting;
-        LOG_INFO("Connecting to {}", to_string(addr));
-        int res = connectsocket(descriptor, addr->ai_addr, addr->ai_addrlen);
+        LOG_INFO("Connecting to {}", to_string(&addr));
+        int res = connectsocket(descriptor, (const sockaddr*)&addr, sizeof(sockaddr_in));
         if (res < 0) {
             auto error = handle_socket_error("Connect failed");
             closesocket(descriptor);
-            freeaddrinfo(addr);
             state = ConnectionState::Closed;
-            throw error;
+            return;
         }
-        LOG_INFO("Connected to {}", to_string(addr));
+        LOG_INFO("Connected to {}", to_string(&addr));
         state = ConnectionState::Connected;
     }
 public:
-    SocketConnection(SOCKET descriptor, addrinfo* addr, const std::string& addrString) : descriptor(descriptor), addr(addr), addrString(addrString), buffer(16'384) {}
+    SocketConnection(SOCKET descriptor, sockaddr_in addr) : descriptor(descriptor), addr(std::move(addr)), buffer(16'384) {}
 
     ~SocketConnection() {
         if (state != ConnectionState::Closed) {
@@ -307,23 +291,24 @@ public:
             closesocket(descriptor);
         }
         thread->join();
-        if (addr) freeaddrinfo(addr);
     }
 
     void connect(runnable callback) override {
         thread = std::make_unique<std::thread>([this, callback]() {
             connectSocket();
-            callback();
+            if (state == ConnectionState::Connected) {
+                callback();
+            }
             while (state == ConnectionState::Connected) {
                 int size = recvsocket(descriptor, buffer.data(), buffer.size());
                 if (size == 0) {
-                    LOG_INFO("Closed connection {}", to_string(addr));
+                    LOG_INFO("Closed connection with {}", to_string(&addr));
                     closesocket(descriptor);
                     state = ConnectionState::Closed;
                     break;
                 } else if (size < 0) {
                     LOG_INFO(
-                        "An error ocurred while receiving from {}", to_string(addr)
+                        "An error ocurred while receiving from {}", to_string(&addr)
                     );
                     auto error = handle_socket_error("recv(...) error");
                     closesocket(descriptor);
@@ -339,7 +324,7 @@ public:
                     totalDownload += size;
                 }
                 LOG_INFO(
-                    "Read {} bytes from {}", size, to_string(addr)
+                    "Read {} bytes from {}", size, to_string(&addr)
                 );
             }
         });
@@ -399,24 +384,26 @@ public:
     ) {
         addrinfo hints {};
 
-        hints.ai_family = AF_UNSPEC;
+        hints.ai_family = AF_INET;
         hints.ai_socktype = SOCK_STREAM;
 
         addrinfo* addrinfo;
         if (int res = getaddrinfo(
-            address.c_str(), std::to_string(port).c_str(), &hints, &addrinfo
+            address.c_str(), nullptr, &hints, &addrinfo
         )) {
             throw std::runtime_error(gai_strerrorA(res));
         }
-        SOCKET descriptor = socket(
-            addrinfo->ai_family, addrinfo->ai_socktype, addrinfo->ai_protocol
-        );
+        sockaddr_in serverAddress = *(sockaddr_in*)addrinfo->ai_addr;
+        freeaddrinfo(addrinfo);
+        serverAddress.sin_port = htons(port);
+
+        SOCKET descriptor = socket(AF_INET, SOCK_STREAM, 0);
         if (descriptor == -1) {
             freeaddrinfo(addrinfo);
             LOG_ERROR("Could not create socket");
             throw std::runtime_error("Could not create socket");
         }
-        auto socket =  std::make_shared<SocketConnection>(descriptor, addrinfo, to_string(addrinfo));
+        auto socket = std::make_shared<SocketConnection>(descriptor, std::move(serverAddress));
         socket->connect(std::move(callback));
         return socket;
     }
@@ -430,6 +417,7 @@ class SocketTcpSServer : public TcpServer {
     Network* network;
     SOCKET descriptor;
     std::vector<uint64_t> clients;
+    std::mutex clientsMutex;
     bool open = true;
     std::unique_ptr<std::thread> thread = nullptr;
 public:
@@ -443,7 +431,7 @@ public:
     void startListen(consumer<uint64_t> handler) override {
         thread = std::make_unique<std::thread>([this, handler]() {
             while (open) {
-                LOG_INFO("Listening for connectrions");
+                LOG_INFO("Listening for connections");
                 if (listen(descriptor, 2) < 0) {
                     close();
                     break;
@@ -452,16 +440,19 @@ public:
                 SOCKET clientDescriptor;
                 sockaddr_in address;
                 LOG_INFO("Accepting clients");
-                if ((clientDescriptor = accept(descriptor, (sockaddr*)&address, &addrlen)) < 0) {
+                if ((clientDescriptor = accept(descriptor, (sockaddr*)&address, &addrlen)) == -1) {
                     close();
                     break;
                 }
                 LOG_INFO("Client connected: {}", to_string(&address));
                 auto socket = std::make_shared<SocketConnection>(
-                    clientDescriptor, nullptr, to_string(&address)
+                    clientDescriptor, address
                 );
                 uint64_t id = network->addConnection(socket);
-                clients.push_back(id);
+                {
+                    std::lock_guard lock(clientsMutex);
+                    clients.push_back(id);
+                }
                 handler(id);
             }
         });
@@ -471,9 +462,12 @@ public:
         if (!open) return;
         LOG_INFO("Closing server");
         open = false;
-        for (uint64_t clientid : clients) {
-            if (auto client = network->getConnection(clientid)) {
-                client->close();
+        {
+            std::lock_guard lock(clientsMutex);
+            for (uint64_t clientid : clients) {
+                if (auto client = network->getConnection(clientid)) {
+                    client->close();
+                }
             }
         }
         clients.clear();
@@ -541,7 +535,9 @@ void Network::get(
     requests->get(url, onResponse, onReject, maxSize);
 }
 
-Connection* Network::getConnection(uint64_t id) const {
+Connection* Network::getConnection(uint64_t id) {
+    std::lock_guard lock(connectionsMutex);
+
     const auto& found = connections.find(id);
     if (found == connections.end()) {
         return nullptr;
@@ -558,6 +554,8 @@ TcpServer* Network::getServer(uint64_t id) const {
 }
 
 uint64_t Network::connect(const std::string& address, int port, consumer<uint64_t> callback) {
+    std::lock_guard lock(connectionsMutex);    
+
     uint64_t id = nextConnection++;
     auto socket = SocketConnection::connect(address, port, [id, callback]() {
         callback(id);
@@ -574,29 +572,35 @@ uint64_t Network::openServer(int port, consumer<uint64_t> handler) {
 }
 
 uint64_t Network::addConnection(const std::shared_ptr<Connection>& socket) {
+    std::lock_guard lock(connectionsMutex);
+
     uint64_t id = nextConnection++;
     connections[id] = std::move(socket);
     return id;
 }
 
 size_t Network::getTotalUpload() const {
-    size_t totalUpload = 0;
-    for (const auto& [_, socket] : connections) {
-        totalUpload += socket->getTotalUpload();
-    }
     return requests->getTotalUpload() + totalUpload;
 }
 
 size_t Network::getTotalDownload() const {
-    size_t totalDownload = 0;
-    for (const auto& [_, socket] : connections) {
-        totalDownload += socket->getTotalDownload();
-    }
     return requests->getTotalDownload() + totalDownload;
 }
 
 void Network::update() {
     requests->update();
+
+    totalDownload = 0;
+    totalUpload = 0;
+    {
+        std::lock_guard lock(connectionsMutex);
+        for (const auto& [_, socket] : connections) {
+            totalDownload += socket->getTotalDownload();
+        }
+        for (const auto& [_, socket] : connections) {
+            totalUpload += socket->getTotalUpload();
+        }
+    }
 }
 
 std::unique_ptr<Network> Network::create(
