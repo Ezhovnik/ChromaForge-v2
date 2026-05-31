@@ -14,65 +14,24 @@
 #include <graphics/core/GLTexture.h>
 #include <debug/Logger.h>
 #include <typedefs.h>
+#include <files/files.h>
 
-std::unique_ptr<ImageData> _loadImage(const std::string& filename, bool flipVertically) {
-    int channels = 0, width = 0, height = 0;
-
-    stbi_set_flip_vertically_on_load(flipVertically); // Устанавливаем флаг вертикального переворота
-    // Загружаем изображение через stb_image (возвращает указатель на данные RGB/RGBA)
-    ubyte* stb_data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
-
-    if (!stb_data) {
+std::unique_ptr<ImageData> png::loadImage(const ubyte* bytes, size_t size, bool flipVertically) {
+    int width, height, channels;
+    stbi_set_flip_vertically_on_load(flipVertically);
+    stbi_uc* data = stbi_load_from_memory(bytes, static_cast<int>(size), &width, &height, &channels, 4);
+    if (!data) {
         const char* error_msg = stbi_failure_reason();
-        LOG_ERROR("Failed to load image: '{}'. Reason: {}", filename, error_msg ? error_msg : "Unknown error");
-        return nullptr;
+        LOG_ERROR("Failed to load image. Reason: {}", error_msg ? error_msg : "Unknown error");
+        throw std::runtime_error("Failed to load image");
     }
 
-    // Определяем формат пикселей по количеству каналов
-    ImageFormat format;
-    switch (channels) {
-        case 4:
-            format = ImageFormat::rgba8888;
-            break;
-        case 3:
-            format = ImageFormat::rgb888;
-            break;
-        default:
-            LOG_ERROR("Unsupported number of channels: {}", channels);
-            stbi_image_free(stb_data);
-            return nullptr;
-    }
+    auto imageData = std::make_unique<ubyte[]>(width * height * 4);
+    std::memcpy(imageData.get(), data, width * height * 4);
 
-    // Вычисляем размер данных и копируем их в новый буфер
-    const size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
-    const size_t dataSize = pixelCount * static_cast<size_t>(channels);
+    stbi_image_free(data);
 
-    auto image_data = std::make_unique<ubyte[]>(dataSize);
-    memcpy(image_data.get(), stb_data, dataSize);
-
-    // Освобождаем память stb_image
-    stbi_image_free(stb_data);
-
-    // Создаём объект ImageData, который будет владеть скопированными данными
-    auto image = std::make_unique<ImageData>(
-        format, 
-        width, 
-        height, 
-        std::move(image_data)
-    );
-
-    LOG_DEBUG("Succesfully loaded PNG image: '{}' ({}x{}, {} channels)", filename, width, height, channels);
-
-    return image;
-}
-
-std::unique_ptr<ImageData> png::loadImage(const std::string& filename, bool flipVertically) {
-    auto image = _loadImage(filename, flipVertically);
-    if (image == nullptr) {
-        LOG_ERROR("Could not load image '{}'", filename);
-        throw std::runtime_error("Could not load image '" + filename + "'");
-    }
-    return image;
+    return std::make_unique<ImageData>(ImageFormat::rgba8888, width, height, std::move(imageData));
 }
 
 bool png::writeImage(const std::string& filename, const ImageData* image) {
@@ -114,11 +73,20 @@ bool png::writeImage(const std::string& filename, const ImageData* image) {
 }
 
 // Загружает текстуру из PNG файла
-std::unique_ptr<Texture> png::loadTexture(const std::string& filename) {
-    std::unique_ptr<ImageData> image(loadImage(filename, true));
+std::unique_ptr<Texture> png::loadTexture(const ubyte* bytes, size_t size) {
+    auto image = loadImage(bytes, size, true);
 
     // Создание объекта Texture
     auto texture = GLTexture::from(image.get());
     texture->setNearestFilter(); // Устанавливаем фильтрацию без сглаживания (для пиксельной графики)
     return texture;
+}
+
+std::unique_ptr<Texture> png::loadTexture(const std::string& filename) {
+    auto bytes = files::read_bytes_buffer(std::filesystem::u8path(filename));
+    try {
+        return loadTexture(bytes.data(), bytes.size());
+    } catch (const std::runtime_error& err) {
+        throw std::runtime_error("Could not to load '" + filename + "'");
+    }
 }

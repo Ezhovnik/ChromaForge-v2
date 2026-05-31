@@ -7,7 +7,7 @@
 #include <util/Buffer.h>
 
 namespace util {
-    std::string escape(std::string_view s);
+    std::string escape(std::string_view s, bool escapeUnicode=true);
 
     std::string quote(const std::string& s);
 

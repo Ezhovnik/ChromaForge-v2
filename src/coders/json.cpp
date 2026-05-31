@@ -70,7 +70,7 @@ void stringifyValue(
             break;
         }
         case dv::value_type::String:
-            ss << util::escape(value.asString());
+            ss << util::escape(value.asString(), !nice);
             break;
         case dv::value_type::Number:
             ss << std::setprecision(15) << value.asNumber();
@@ -243,6 +243,8 @@ dv::value Parser::parseValue() {
             return INFINITY;
         } else if (literal == "nan") {
             return NAN;
+        } else if (literal == "null") {
+            return nullptr;
         }
         LOG_ERROR("Invalid keyword {}", literal);
         throw error("Invalid keyword " + literal);
