@@ -14,13 +14,14 @@
 #include <graphics/core/GLTexture.h>
 #include <debug/Logger.h>
 #include <typedefs.h>
+#include <files/files.h>
 
 std::unique_ptr<ImageData> _loadImage(const std::string& filename, bool flipVertically) {
     int channels = 0, width = 0, height = 0;
 
     stbi_set_flip_vertically_on_load(flipVertically); // Устанавливаем флаг вертикального переворота
     // Загружаем изображение через stb_image (возвращает указатель на данные RGB/RGBA)
-    ubyte* stb_data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
+    ubyte* stb_data = stbi_load(filename.c_str(), &width, &height, &channels, 4);
 
     if (!stb_data) {
         const char* error_msg = stbi_failure_reason();
@@ -61,13 +62,30 @@ std::unique_ptr<ImageData> _loadImage(const std::string& filename, bool flipVert
         std::move(image_data)
     );
 
-    LOG_DEBUG("Succesfully loaded PNG image: '{}' ({}x{}, {} channels)", filename, width, height, channels);
-
     return image;
 }
 
+std::unique_ptr<ImageData> png::loadImageInMemory(const ubyte* bytes, size_t size, bool flipVertically) {
+    int width, height, channels;
+    stbi_set_flip_vertically_on_load(flipVertically);
+    stbi_uc* data = stbi_load_from_memory(bytes, static_cast<int>(size), &width, &height, &channels, 4);
+    if (!data) {
+        const char* error_msg = stbi_failure_reason();
+        LOG_ERROR("Failed to load image from memory. Reason: {}", error_msg ? error_msg : "Unknown error");
+        return nullptr;
+    }
+
+    auto imageData = std::make_unique<ubyte[]>(width * height * 4);
+    std::memcpy(imageData.get(), data, width * height * 4);
+
+    stbi_image_free(data);
+
+    return std::make_unique<ImageData>(ImageFormat::rgba8888, width, height, std::move(imageData));
+}
+
 std::unique_ptr<ImageData> png::loadImage(const std::string& filename, bool flipVertically) {
-    auto image = _loadImage(filename, flipVertically);
+    auto bytes = files::read_bytes_buffer(std::filesystem::u8path(filename));
+    auto image = loadImageInMemory(bytes.data(), bytes.size(), flipVertically);
     if (image == nullptr) {
         LOG_ERROR("Could not load image '{}'", filename);
         throw std::runtime_error("Could not load image '" + filename + "'");
