@@ -123,7 +123,7 @@ std::shared_ptr<gui::InventoryView> Hud::createContentAccess() {
     });
 
     gui::InventoryBuilder builder;
-    builder.addGrid(8, itemsCount - 1, glm::vec2(), 8, true, slotLayout);
+    builder.addGrid(8, itemsCount - 1, glm::vec2(), glm::vec4(8, 8, 12, 8), true, slotLayout);
     auto view = builder.build();
     view->bind(accessInventory, content);
 	view->setMargin(glm::vec4());
@@ -136,7 +136,7 @@ std::shared_ptr<gui::InventoryView> Hud::createHotbar() {
 
     gui::SlotLayout slotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr);
     gui::InventoryBuilder builder;
-    builder.addGrid(10, 10, glm::vec2(), 4, true, slotLayout);
+    builder.addGrid(10, 10, glm::vec2(), glm::vec4(4), true, slotLayout);
     auto view = builder.build();
     view->setId("hud.hotbar");
     view->setOrigin(glm::vec2(view->getSize().x / 2, 0));
@@ -338,9 +338,9 @@ void Hud::update(bool hudVisible) {
         element.getNode()->setVisible(hudVisible);
     }
 
-	glm::vec2 invSize = contentAccessPanel->getSize();
+	glm::vec2 caSize = contentAccessPanel->getSize();
     contentAccessPanel->setVisible(inventoryView != nullptr && showContentPanel);
-    contentAccessPanel->setSize(glm::vec2(invSize.x, Window::height));
+    contentAccessPanel->setSize(glm::vec2(caSize.x, Window::height));
     contentAccess->setMinSize(glm::vec2(1, Window::height));
 	hotbarView->setVisible(hudVisible && !(secondUI && !inventoryView));
 

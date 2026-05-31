@@ -132,11 +132,11 @@ namespace gui {
         void addGrid(
             int cols, int count, 
             glm::vec2 pos, 
-            int padding,
+            glm::vec4 padding,
             bool addpanel,
             const SlotLayout& slotLayout
         );
-        
+
         void add(const SlotLayout& slotLayout);
         std::shared_ptr<InventoryView> build();
     };

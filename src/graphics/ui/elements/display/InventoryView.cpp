@@ -57,7 +57,7 @@ void InventoryBuilder::addGrid(
     int cols,
     int count,
     glm::vec2 pos,
-    int padding,
+    glm::vec4 padding,
     bool addpanel,
     const SlotLayout& slotLayout
 ) {
@@ -66,8 +66,8 @@ void InventoryBuilder::addGrid(
 
     int rows = ceildiv(count, cols);
 
-    uint width =  cols * (slotSize + interval) - interval + padding * 2;
-    uint height = rows * (slotSize + interval) - interval + padding * 2;
+    uint width =  cols * (slotSize + interval) - interval + padding.x + padding.z;
+    uint height = rows * (slotSize + interval) - interval + padding.y + padding.w;
 
     glm::vec2 vsize = view->getSize();
     if (pos.x + width > vsize.x) vsize.x = pos.x + width;
@@ -85,8 +85,8 @@ void InventoryBuilder::addGrid(
             if (row * cols + col >= count) break;
 
             glm::vec2 position (
-                col * (slotSize + interval) + padding,
-                row * (slotSize + interval) + padding
+                col * (slotSize + interval) + padding.x,
+                row * (slotSize + interval) + padding.y
             );
             auto builtSlot = slotLayout;
             builtSlot.index = row * cols + col;
