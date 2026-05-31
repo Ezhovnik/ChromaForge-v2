@@ -1,6 +1,6 @@
 #include <graphics/core/Font.h>
 
-#include <limits.h>
+#include <limits>
 #include <utility>
 
 #include <graphics/core/Texture.h>
@@ -61,17 +61,21 @@ static inline void draw_glyph(
     uint c,
     const glm::vec3& right,
     const glm::vec3& up,
-    float glyphInterval
+    float glyphInterval,
+    const FontStyle& style
 ) {
-    batch.sprite(
-        pos.x + offset.x * right.x,
-        pos.y + offset.y * right.y,
-        right.x / glyphInterval,
-        up.y,
-        16,
-        c,
-        batch.getColor()
-    );
+    for (int i = 0; i <= style.bold; ++i) {
+        batch.sprite(
+            pos.x + (offset.x + i / (right.x / glyphInterval / 2.0f)) * right.x,
+            pos.y + offset.y * right.y,
+            right.x / glyphInterval,
+            up.y,
+            -0.2f * style.italic,
+            16,
+            c,
+            batch.getColor() * style.color
+        );
+    }
 }
 
 static inline void draw_glyph(
@@ -81,17 +85,20 @@ static inline void draw_glyph(
     uint c,
     const glm::vec3& right,
     const glm::vec3& up,
-    float glyphInterval
+    float glyphInterval,
+    const FontStyle& style
 ) {
-    batch.sprite(
-        pos + right * offset.x + up * offset.y,
-        up, right / glyphInterval,
-        0.5f,
-        0.5f,
-        16,
-        c,
-        batch.getColor()
-    );
+    for (int i = 0; i <= style.bold; ++i) {
+        batch.sprite(
+            pos + right * (offset.x + i) + up * offset.y,
+            up, right / glyphInterval,
+            0.5f,
+            0.5f,
+            16,
+            c,
+            batch.getColor() * style.color
+        );
+    }
 }
 
 template <class Batch>
@@ -102,15 +109,31 @@ static inline void draw_text(
     const glm::vec3& pos,
     const glm::vec3& right,
     const glm::vec3& up,
-    float glyphInterval
+    float glyphInterval,
+    const FontStylesScheme* styles
 ) {
+    static FontStylesScheme defStyles {
+        {{std::numeric_limits<size_t>::max()}},
+    };
+    if (styles == nullptr) styles = &defStyles;
+
     uint page = 0; // текущая обрабатываемая страница
     uint next = FontsConsts::MAX_CODEPAGES; // следующая страница, которую нужно обработать
     int x = 0;
     int y = 0;
+
     do {
 		// Проходим по всем символам строки
+        size_t entryIndex = 0;
+        int styleCharsCounter = -1;
+        const FontStyle* style = &styles->palette.at(entryIndex);
+
         for (uint c : text) {
+            styleCharsCounter++;
+            if (styleCharsCounter > style->n && entryIndex + 1 < styles->palette.size()) {
+                style = &styles->palette.at(++entryIndex);
+                styleCharsCounter = -1;
+            }
 			// Пропускаем пробельные символы
             if (!font.isPrintableChar(c)) {
                 x++;
@@ -120,7 +143,14 @@ static inline void draw_text(
             if (charpage == page) {
 				batch.texture(font.getPage(charpage));
                 draw_glyph(
-                    batch, pos, glm::vec2(x, y), c, right, up, glyphInterval
+                    batch,
+                    pos,
+                    glm::vec2(x, y),
+                    c,
+                    right,
+                    up,
+                    glyphInterval,
+                    *style
                 );
             } else if (charpage > page && charpage < next) {
                 next = charpage;
@@ -147,7 +177,11 @@ const Texture* Font::getPage(int charpage) const {
 }
 
 void Font::draw(
-    Batch2D& batch, std::wstring_view text, int x, int y, float scale
+    Batch2D& batch,
+    std::wstring_view text,
+    int x, int y,
+    const FontStylesScheme* styles,
+    float scale
 ) const {
     draw_text(
         *this,
@@ -156,13 +190,15 @@ void Font::draw(
         glm::vec3(x, y, 0),
         glm::vec3(glyphInterval * scale, 0, 0),
         glm::vec3(0, lineHeight * scale, 0),
-        glyphInterval / static_cast<float>(lineHeight)
+        glyphInterval / static_cast<float>(lineHeight),
+        styles
     );
 }
 
 void Font::draw(
     Batch3D& batch,
     std::wstring_view text,
+    const FontStylesScheme* styles,
     const glm::vec3& pos,
     const glm::vec3& right,
     const glm::vec3& up
@@ -174,6 +210,7 @@ void Font::draw(
         pos,
         right * static_cast<float>(glyphInterval),
         up * static_cast<float>(lineHeight),
-        glyphInterval / static_cast<float>(lineHeight)
+        glyphInterval / static_cast<float>(lineHeight),
+        styles
     );
 }
