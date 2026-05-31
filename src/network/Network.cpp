@@ -2,7 +2,10 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
+
 #include <stdexcept>
 #include <limits>
 #include <string>
