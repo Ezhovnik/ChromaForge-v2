@@ -47,6 +47,9 @@ namespace network {
         virtual size_t pullUpload() = 0;
         virtual size_t pullDownload() = 0;
 
+        virtual int getPort() const = 0;
+        virtual std::string getAddress() const = 0;
+
         virtual ConnectionState getState() const = 0;
     };
 
@@ -56,6 +59,7 @@ namespace network {
         virtual void startListen(consumer<uint64_t> handler) = 0;
         virtual void close() = 0;
         virtual bool isOpen() = 0;
+        virtual int getPort() const = 0;
     };
 
     class Network {
