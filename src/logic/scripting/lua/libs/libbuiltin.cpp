@@ -169,15 +169,10 @@ static int l_get_setting_info(lua::State* L) {
 static void load_texture(
     const ubyte* bytes, size_t size, const std::string& destname
 ) {
-    auto path = scripting::engine->getPaths()->resolve("export:.__chroma_imagedata");
     try {
-        files::write_bytes(path, bytes, size);
-        scripting::engine->getAssets()->store(
-            png::loadTexture(path.u8string()), destname
-        );
-        std::filesystem::remove(path);
+        scripting::engine->getAssets()->store(png::loadTexture(bytes, size), destname);
     } catch (const std::runtime_error& err) {
-        LOG_ERROR("Could not to decode image: {}", err.what());
+        LOG_ERROR("{}", err.what());
     }
 }
 

@@ -15,15 +15,7 @@ class ImageData;
  * Поддерживаются форматы RGB (3 канала) и RGBA (4 канала).
  */
 namespace png {
-    std::unique_ptr<ImageData> loadImageInMemory(const ubyte* bytes, size_t size, bool flipVertically);
-
-    /**
-     * @brief Загружает изображение из PNG-файла.
-     * @param filename Путь к файлу.
-     * @param flipVertically Если true, изображение будет перевёрнуто по вертикали.
-     * @return Указатель на объект ImageData или nullptr в случае ошибки.
-     */
-    std::unique_ptr<ImageData> loadImage(const std::string& filename, bool flipVertically);
+    std::unique_ptr<ImageData> loadImage(const ubyte* bytes, size_t size, bool flipVertically);
 
     /**
      * @brief Сохраняет изображение в PNG-файл.
@@ -40,4 +32,6 @@ namespace png {
      *         Текстура создаётся с флагом GL_NEAREST фильтрации.
      */
     std::unique_ptr<Texture> loadTexture(const std::string& filename);
+
+    std::unique_ptr<Texture> loadTexture(const ubyte* bytes, size_t size);
 }

@@ -7,8 +7,9 @@
 #include <coders/png.h>
 #include <graphics/core/ImageData.h>
 #include <debug/Logger.h>
+#include <files/files.h>
 
-using image_reader = std::function<std::unique_ptr<ImageData>(const std::string&, bool)>;
+using image_reader = std::function<std::unique_ptr<ImageData>(const ubyte*, size_t, bool)>;
 using image_writer = std::function<void(const std::string&, const ImageData*)>;
 
 static std::unordered_map<std::string, image_reader> readers {
@@ -31,13 +32,18 @@ inline std::string extensionOf(const std::string& filename) {
     return std::filesystem::u8path(filename).extension().u8string();
 }
 
-std::unique_ptr<ImageData> imageio::read(const std::string& filename, bool flipVertically) {
-    auto found = readers.find(extensionOf(filename));
+std::unique_ptr<ImageData> imageio::read(const std::filesystem::path& filename, bool flipVertically) {
+    auto found = readers.find(extensionOf(filename.u8string()));
     if (found == readers.end()) {
-        LOG_ERROR("File format is not supported (read): '{}'", filename);
-        throw std::runtime_error("File format is not supported (read): '" + filename + "'");
+        LOG_ERROR("File format is not supported (read): '{}'", filename.u8string());
+        throw std::runtime_error("File format is not supported (read): '" + filename.u8string() + "'");
     }
-    return std::unique_ptr<ImageData>(found->second(filename, flipVertically));
+    auto bytes = files::read_bytes_buffer(filename);
+    try {
+        return std::unique_ptr<ImageData>(found->second(bytes.data(), bytes.size(), flipVertically));
+    } catch (const std::runtime_error& err) {
+        throw std::runtime_error("Could not to load image '" + filename.u8string() + "'");
+    }
 }
 
 void imageio::write(const std::string& filename, const ImageData* image) {
