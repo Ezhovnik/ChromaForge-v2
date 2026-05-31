@@ -495,13 +495,11 @@ void Hud::openInventory() {
     add(HudElement(HudElementMode::InventoryBound, nullptr, exchangeSlot, false));
 }
 
-void Hud::openInventory(
+std::shared_ptr<Inventory> Hud::openInventory(
     UIDocument* doc,
     std::shared_ptr<Inventory> inv,
     bool playerInventory
 ) {
-    if (inv == nullptr) return;
-
     if (isInventoryOpen()) closeInventory();
 
     const auto& level = levelFrontend.getLevel();
@@ -524,6 +522,7 @@ void Hud::openInventory(
     }
     secondInvView->bind(inv, content);
     add(HudElement(HudElementMode::InventoryBound, doc, secondUI, false));
+    return inv;
 }
 
 void Hud::showExchangeSlot() {

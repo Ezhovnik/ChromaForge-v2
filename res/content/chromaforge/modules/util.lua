@@ -1,6 +1,9 @@
-local chromaforge_entities = {}
+local util = {}
 
-function chromaforge_entities.drop(ppos, itemid, count, pickup_delay)
+function util.drop(ppos, itemid, count, pickup_delay)
+    if itemid == 0 or not itemid then
+        return nil
+    end
     return entities.spawn("chromaforge:drop", ppos, {chromaforge__drop={
         id=itemid,
         count=count,
@@ -8,4 +11,4 @@ function chromaforge_entities.drop(ppos, itemid, count, pickup_delay)
     }})
 end
 
-return chromaforge_entities
+return util
