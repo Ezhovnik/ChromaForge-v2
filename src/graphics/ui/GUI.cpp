@@ -174,18 +174,18 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
     if (focus && !focus->isFocused()) focus = nullptr;
 }
 
-void GUI::draw(const DrawContext* parent_context, Assets* assets) {
-    auto& viewport = parent_context->getViewport();
+void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
+    auto& viewport = parent_context.getViewport();
     glm::vec2 wsize = viewport.size();
 
     menu->setPos((wsize - menu->getSize()) / 2.0f);
     uicamera->setFov(wsize.y);
 
-	ShaderProgram* uishader = assets->get<ShaderProgram>("ui");
+	ShaderProgram* uishader = assets.get<ShaderProgram>("ui");
 	uishader->use();
 	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
-    parent_context->getBatch2D()->begin();
+    parent_context.getBatch2D()->begin();
     container->draw(parent_context, assets);
 }
 

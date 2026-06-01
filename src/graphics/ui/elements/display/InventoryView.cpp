@@ -109,7 +109,7 @@ SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(InventoryView::SLOT_SIZ
     setTooltipDelay(0.0f);
 }
 
-void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
+void SlotView::draw(const DrawContext& parent_context, const Assets& assets) {
     if (bound == nullptr) return;
 
     itemid_t itemid = bound->getItemId();
@@ -136,7 +136,7 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
         color = glm::vec4(1, 1, 1, 0.2f);
     }
 
-    auto batch = parent_context->getBatch2D();
+    auto batch = parent_context.getBatch2D();
     batch->setColor(color);
     if (color.a > 0.0) {
         batch->untexture();
@@ -149,7 +149,7 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
 
     batch->setColor(glm::vec4(1.0f));
 
-    auto previews = assets->get<Atlas>("block-previews");
+    auto previews = assets.get<Atlas>("block-previews");
     auto indices = content->getIndices();
 
     auto& item = indices->items.require(stack.getItemId());    
@@ -165,7 +165,7 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
             break;
         }
         case ItemIconType::Sprite: {
-            auto textureRegion = util::get_texture_region(*assets, item.icon, "blocks:" + TEXTURE_NOTFOUND);
+            auto textureRegion = util::get_texture_region(assets, item.icon, "blocks:" + TEXTURE_NOTFOUND);
 
             batch->texture(textureRegion.texture);
             batch->rect(pos.x, pos.y, slotSize, slotSize, 0, 0, 0, textureRegion.region, false, true, tint);
@@ -174,7 +174,7 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
     }
 
     if (stack.getCount() > 1) {
-        auto font = assets->get<Font>("normal");
+        auto font = assets.get<Font>("normal");
         std::wstring text = std::to_wstring(stack.getCount());
 
         int x = pos.x + slotSize - text.length() * 8;

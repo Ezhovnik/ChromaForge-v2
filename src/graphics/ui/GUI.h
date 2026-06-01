@@ -25,25 +25,25 @@ Padding is element inner space, margin is outer
     w - bottom
 
 Outer element
- +======================================================================+
- |            .           .                    .          .             |
- |            .padding.y  .                    .          .             |
- | padding.x  .           .                    .          .   padding.z |
- |- - - - - - + - - - - - + - - - - - - - - - -+- - - - - + - - - - - - |
- |            .           .                    .          .             |
- |            .           .margin.y            .          .             |
- |            .margin.x   .                    .  margin.z.             |
- |- - - - - - + - - - - - +====================+- - - - - + - - - - - - |
- |            .           |    Inner element   |          .             |
- |- - - - - - + - - - - - +====================+- - - - - + - - - - - - |
- |            .           .                    .          .             |
- |            .           .margin.w            .          .             |
- |            .           .                    .          .             |
- |- - - - - - + - - - - - + - - - - - - - - - -+- - - - - + - - - - - - |
- |            .           .                    .          .             |
- |            .padding.w  .                    .          .             |
- |            .           .                    .          .             |
- +======================================================================+
+    +======================================================================+
+    |            .           .                    .          .             |
+    |            .padding.y  .                    .          .             |
+    | padding.x  .           .                    .          .   padding.z |
+    |- - - - - - + - - - - - + - - - - - - - - - -+- - - - - + - - - - - - |
+    |            .           .                    .          .             |
+    |            .           .margin.y            .          .             |
+    |            .margin.x   .                    .  margin.z.             |
+    |- - - - - - + - - - - - +====================+- - - - - + - - - - - - |
+    |            .           |    Inner element   |          .             |
+    |- - - - - - + - - - - - +====================+- - - - - + - - - - - - |
+    |            .           .                    .          .             |
+    |            .           .margin.w            .          .             |
+    |            .           .                    .          .             |
+    |- - - - - - + - - - - - + - - - - - - - - - -+- - - - - + - - - - - - |
+    |            .           .                    .          .             |
+    |            .padding.w  .                    .          .             |
+    |            .           .                    .          .             |
+    +======================================================================+
 */
 
 namespace gui {
@@ -87,7 +87,7 @@ namespace gui {
         void setFocus(std::shared_ptr<UINode> node);
 
         void activate(float deltaTime, const Viewport& viewport);
-        void draw(const DrawContext* parent_context, Assets* assets);
+        void draw(const DrawContext& parent_context, const Assets& assets);
         void add(std::shared_ptr<UINode> panel);
         void remove(std::shared_ptr<UINode> panel) noexcept;
         void store(const std::string& name, std::shared_ptr<UINode> node);

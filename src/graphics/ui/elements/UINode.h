@@ -100,7 +100,7 @@ namespace gui {
     public:
         virtual ~UINode();
         virtual void activate(float deltaTime) {};
-        virtual void draw(const DrawContext* parent_context, Assets* assets) = 0;
+        virtual void draw(const DrawContext& parent_context, const Assets& assets) = 0;
 
         virtual void setVisible(bool flag);
         bool isVisible() const;
@@ -163,7 +163,10 @@ namespace gui {
         virtual void keyPressed(keycode key) {};
 
         virtual bool isInside(glm::vec2 pos);
-        virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self);
+        virtual std::shared_ptr<UINode> getAt(
+            const glm::vec2& pos,
+            const std::shared_ptr<UINode>& self
+        );
 
         virtual bool isInteractive() const;
         virtual void setInteractive(bool flag);

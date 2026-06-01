@@ -76,9 +76,9 @@ private:
     std::shared_ptr<gui::InventoryView> contentAccess;
     std::shared_ptr<gui::InventoryView> hotbarView;
 
-    std::shared_ptr<gui::InventoryView> inventoryView = nullptr;
-    std::shared_ptr<gui::InventoryView> blockUI = nullptr;
-    std::shared_ptr<gui::InventoryView> secondInvView = nullptr;
+    std::shared_ptr<gui::InventoryView> inventoryView;
+    std::shared_ptr<gui::InventoryView> blockUI;
+    std::shared_ptr<gui::InventoryView> secondInvView;
 
 	glm::ivec3 blockPos {};
     blockid_t currentblockid = 0;
@@ -92,10 +92,10 @@ private:
 
     std::shared_ptr<gui::UINode> debugPanel;
     std::shared_ptr<gui::SlotView> exchangeSlot;
-    std::shared_ptr<Inventory> exchangeSlotInv = nullptr;
+    std::shared_ptr<Inventory> exchangeSlotInv;
     std::shared_ptr<gui::UINode> darkOverlay;
-    std::shared_ptr<gui::UINode> secondUI = nullptr;
-    std::shared_ptr<gui::UINode> debugMinimap = nullptr;
+    std::shared_ptr<gui::UINode> secondUI;
+    std::shared_ptr<gui::UINode> debugMinimap;
 
     std::unique_ptr<ImageData> debugImgWorldGen;
 
