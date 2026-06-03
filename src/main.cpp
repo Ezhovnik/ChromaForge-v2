@@ -4,7 +4,6 @@
 #include <string>
 
 #include <engine.h>
-#include <settings.h>
 #include <files/files.h>
 #include <util/platform.h>
 #include <coders/toml.h>
@@ -12,7 +11,6 @@
 #include <core_content_defs.h>
 #include <debug/Logger.h>
 #include <util/command_line.h>
-#include <files/settings_io.h>
 #include <files/engine_paths.h>
 #include <constants.h>
 #include <window/Events.h>
@@ -36,10 +34,7 @@ int main(int argc, char** argv) {
 	}
 
     try {
-        EngineSettings settings;
-        SettingsHandler handler(settings);
-        Engine engine(settings, handler, &paths);
-        engine.mainloop();
+        Engine(paths).mainloop();
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred:\n{}", err.what());
     } catch (const std::exception& err) {

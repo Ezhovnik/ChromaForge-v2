@@ -67,7 +67,7 @@ public:
 	}
 };
 
-bool perform_keyword(ArgsReader& reader, const std::string& keyword, EnginePaths& paths) {
+static bool perform_keyword(ArgsReader& reader, const std::string& keyword, EnginePaths& paths) {
     if (keyword == "--res") {
 		// Читаем следующий аргумент как путь к папке ресурсов
 		auto token = reader.next();

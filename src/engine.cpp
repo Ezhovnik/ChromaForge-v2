@@ -15,7 +15,6 @@
 #include <assets/AssetsLoader.h>
 #include <core_content_defs.h>
 #include <debug/Logger.h>
-#include <settings.h>
 #include <graphics/ui/GUI.h>
 #include <graphics/core/Batch2D.h>
 #include <graphics/core/ShaderProgram.h>
@@ -74,19 +73,17 @@ static std::unique_ptr<ImageData> load_icon(const std::filesystem::path& resdir)
 
 // Реализация конструктора
 Engine::Engine(
-    EngineSettings& settings,
-    SettingsHandler& settingsHandler,
-    EnginePaths* paths
-) : settings(settings),
+    EnginePaths& paths
+) : settings(),
+    settingsHandler({settings}),
     paths(paths),
-    settingsHandler(settingsHandler),
     interpreter(std::make_unique<cmd::CommandsInterpreter>()),
     network(network::Network::create(settings.network))
 {
-    paths->prepare();
+    paths.prepare();
     loadSettings();
 
-    auto resdir = paths->getResourcesFolder();
+    auto resdir = paths.getResourcesFolder();
 
     controller = std::make_unique<EngineController>(this);
 
@@ -151,8 +148,8 @@ PacksManager Engine::createPacksManager(const std::filesystem::path& worldFolder
     PacksManager manager;
     manager.setSources({
         worldFolder/std::filesystem::path("content"),
-        paths->getUserFilesFolder()/std::filesystem::path("content"),
-        paths->getResourcesFolder()/std::filesystem::path("content")
+        paths.getUserFilesFolder()/std::filesystem::path("content"),
+        paths.getResourcesFolder()/std::filesystem::path("content")
     });
     return manager;
 }
@@ -228,7 +225,7 @@ void Engine::updateHotkeys() {
 void Engine::saveScreenshot() {
     auto image = Window::takeScreenshot();
     image->flipY();
-    std::filesystem::path filename = paths->getNewScreenshotFile("png");
+    std::filesystem::path filename = paths.getNewScreenshotFile("png");
     imageio::write(filename.string(), image.get());
     LOG_INFO("Save screenshot as '{}'", filename.u8string());
 }
@@ -311,7 +308,7 @@ void Engine::loadContent() {
     scripting::cleanup();
 
     LOG_INFO("Loading content");
-    auto resdir = paths->getResourcesFolder();
+    auto resdir = paths.getResourcesFolder();
 
     std::vector<std::string> names;
     for (auto& pack : contentPacks) {
@@ -319,9 +316,9 @@ void Engine::loadContent() {
     }
 
     ContentBuilder contentBuilder;
-    CoreContent::setup(paths, &contentBuilder);
-    paths->setContentPacks(&contentPacks);
-    PacksManager manager = createPacksManager(paths->getCurrentWorldFolder());
+    CoreContent::setup(paths, contentBuilder);
+    paths.setContentPacks(&contentPacks);
+    PacksManager manager = createPacksManager(paths.getCurrentWorldFolder());
     manager.scan();
     names = manager.assembly(names);
     contentPacks = manager.getAll(names);
@@ -361,7 +358,7 @@ void Engine::loadContent() {
 void Engine::resetContent() {
     scripting::cleanup();
 
-    auto resdir = paths->getResourcesFolder();
+    auto resdir = paths.getResourcesFolder();
     std::vector<PathsRoot> resRoots;
     {
         auto pack = ContentPack::createBuiltin(paths);
@@ -390,12 +387,12 @@ void Engine::loadWorldContent(const std::filesystem::path& folder) {
     PacksManager manager;
     manager.setSources({
         folder/std::filesystem::path("content"),
-        paths->getUserFilesFolder()/std::filesystem::path("content"),
-        paths->getResourcesFolder()/std::filesystem::path("content")
+        paths.getUserFilesFolder()/std::filesystem::path("content"),
+        paths.getResourcesFolder()/std::filesystem::path("content")
     });
     manager.scan();
     contentPacks = manager.getAll(manager.assembly(packNames));
-    paths->setCurrentWorldFolder(folder);
+    paths.setCurrentWorldFolder(folder);
     loadContent();
     loadControls();
 }
@@ -403,9 +400,9 @@ void Engine::loadWorldContent(const std::filesystem::path& folder) {
 void Engine::loadAllPacks() {
 	PacksManager manager;
     manager.setSources({
-        paths->getCurrentWorldFolder()/std::filesystem::path("content"),
-        paths->getUserFilesFolder()/std::filesystem::path("content"),
-        paths->getResourcesFolder()/std::filesystem::path("content")
+        paths.getCurrentWorldFolder()/std::filesystem::path("content"),
+        paths.getUserFilesFolder()/std::filesystem::path("content"),
+        paths.getResourcesFolder()/std::filesystem::path("content")
     });
     manager.scan();
     auto allnames = manager.getAllNames();
@@ -413,7 +410,7 @@ void Engine::loadAllPacks() {
 }
 
 EnginePaths* Engine::getPaths() {
-	return paths;
+	return &paths;
 }
 
 ResPaths* Engine::getResPaths() {
@@ -465,7 +462,7 @@ double Engine::getDeltaTime() const {
 }
 
 void Engine::setLanguage(std::string locale) {
-	langs::setup(paths->getResourcesFolder(), std::move(locale), contentPacks);
+	langs::setup(paths.getResourcesFolder(), std::move(locale), contentPacks);
 	gui->getMenu()->setPageLoader(menus::create_page_loader(this));
 }
 
@@ -484,16 +481,16 @@ std::vector<std::string>& Engine::getBasePacks() {
 
 void Engine::saveSettings() {
     LOG_INFO("Writing the settings to a file");
-    files::write_string(paths->getSettingsFile(), toml::stringify(settingsHandler));
+    files::write_string(paths.getSettingsFile(), toml::stringify(settingsHandler));
     LOG_INFO("The settings were successfully written to the file");
 
     LOG_INFO("Writing the settings to a file");
-    files::write_string(paths->getControlsFile(), Events::writeBindings());
+    files::write_string(paths.getControlsFile(), Events::writeBindings());
     LOG_INFO("The controls were successfully written to the file");
 }
 
 void Engine::loadSettings() {
-    std::filesystem::path settings_file = paths->getSettingsFile();
+    std::filesystem::path settings_file = paths.getSettingsFile();
     if (std::filesystem::is_regular_file(settings_file)) {
         LOG_INFO("Reading the settings file");
         std::string text = files::read_string(settings_file);
@@ -508,7 +505,7 @@ void Engine::loadSettings() {
 }
 
 void Engine::loadControls() {
-    std::filesystem::path controls_file = paths->getControlsFile();
+    std::filesystem::path controls_file = paths.getControlsFile();
     if (std::filesystem::is_regular_file(controls_file)) {
         LOG_INFO("Reading the controls file");
         std::string text = files::read_string(controls_file);

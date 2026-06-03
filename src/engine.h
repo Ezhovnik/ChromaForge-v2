@@ -16,6 +16,8 @@
 #include <content/PacksManager.h>
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
+#include <settings.h>
+#include <files/settings_io.h>
 
 class Screen;
 class Batch2D;
@@ -44,9 +46,9 @@ public:
 // Основной класс Engine, управляющий жизненным циклом приложения
 class Engine : public util::ObjectsKeeper {
 private:
-    EngineSettings& settings;
-    SettingsHandler& settingsHandler;
-    EnginePaths* paths;
+    EngineSettings settings;
+    SettingsHandler settingsHandler;
+    EnginePaths& paths;
 
     std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen;
@@ -83,7 +85,7 @@ private:
     void loadSettings();
     void saveSettings();
 public:
-    Engine(EngineSettings& settings, SettingsHandler& settingsHandler, EnginePaths* paths); // Конструктор
+    Engine(EnginePaths& paths); // Конструктор
     ~Engine(); // Деструктор
 
     void mainloop(); // Основной цикл приложения
