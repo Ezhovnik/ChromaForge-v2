@@ -11,6 +11,10 @@
 #include <files/engine_paths.h>
 #include <coders/json.h>
 #include <files/files.h>
+#include <voxels/Chunks.h>
+#include <voxels/Chunk.h>
+#include <coders/compression.h>
+#include <lighting/Lighting.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {
@@ -111,6 +115,115 @@ static int l_is_open(lua::State* L) {
     return lua::pushboolean(L, scripting::level != nullptr);
 }
 
+static int l_get_chunk_data(lua::State* L) {
+    int x = (int)lua::tointeger(L, 1);
+    int y = (int)lua::tointeger(L, 2);
+    const auto& chunk = scripting::level->chunks->getChunk(x, y);
+    if (chunk == nullptr) {
+        lua::pushnil(L);
+        return 0;
+    }
+
+    bool compress = false;
+    if (lua::gettop(L) >= 3) {
+        compress = lua::toboolean(L, 3);
+    }
+    std::vector<ubyte> chunk_data;
+    if (compress) {
+        size_t rle_compressed_size;
+        size_t zip_compressed_size;
+        const auto& data_ptr = chunk->encode();
+        ubyte* data = data_ptr.get();
+        const auto& rle_compressed_data_ptr = compression::compress(
+            data,
+            CHUNK_DATA_LEN,
+            rle_compressed_size,
+            compression::Method::Extrle16
+        );
+        const auto& zip_compressed_data = compression::compress(
+            rle_compressed_data_ptr.get(),
+            rle_compressed_size,
+            zip_compressed_size,
+            compression::Method::Zip
+        );
+        auto tmp = dataio::h2le(rle_compressed_size);
+        chunk_data.reserve(zip_compressed_size + sizeof(tmp));
+        chunk_data.insert(
+            chunk_data.begin() + 0, (char*)&tmp, ((char*)&tmp) + sizeof(tmp)
+        );
+        chunk_data.insert(
+            chunk_data.begin() + sizeof(tmp),
+            zip_compressed_data.get(),
+            zip_compressed_data.get() + zip_compressed_size
+        );
+    } else {
+        const auto& data = chunk->encode();
+        chunk_data.reserve(CHUNK_DATA_LEN);
+        chunk_data.insert(
+            chunk_data.begin(), data.get(), data.get() + CHUNK_DATA_LEN
+        );
+    }
+    return lua::newuserdata<lua::LuaBytearray>(L, chunk_data);
+}
+
+static int l_set_chunk_data(lua::State* L) {
+    int x = (int)lua::tointeger(L, 1);
+    int y = (int)lua::tointeger(L, 2);
+    auto buffer = lua::touserdata<lua::LuaBytearray>(L, 3);
+    bool is_compressed = false;
+    if (lua::gettop(L) >= 4) {
+        is_compressed = lua::toboolean(L, 4);
+    }
+    auto chunk = scripting::level->chunks->getChunk(x, y);
+    if (chunk== nullptr) return 0;
+    if (is_compressed) {
+        std::vector<ubyte>& raw_data = buffer->data();
+        size_t zip_decompressed_size = dataio::le2h(*(size_t*)(raw_data.data()));
+        const auto& rle_data = compression::decompress(
+            raw_data.data() + sizeof(zip_decompressed_size),
+            buffer->data().size() - sizeof(zip_decompressed_size),
+            zip_decompressed_size,
+            compression::Method::Zip
+        );
+        const auto& data = compression::decompress(
+            rle_data.get(),
+            zip_decompressed_size,
+            CHUNK_DATA_LEN,
+            compression::Method::Extrle16
+        );
+        chunk->decode(data.get());
+    } else {
+        chunk->decode(buffer->data().data());
+    }
+    chunk->updateHeights();
+    scripting::level->lighting->buildSkyLight(x, y);
+    chunk->flags.modified = true;
+    scripting::level->lighting->onChunkLoaded(x, y, true);
+
+    chunk = scripting::level->chunks->getChunk(x - 1, y);
+    if (chunk != nullptr) {
+        chunk->flags.modified = true;
+        scripting::level->lighting->onChunkLoaded(x - 1, y, true);
+    }
+    chunk = scripting::level->chunks->getChunk(x + 1, y);
+    if (chunk != nullptr) {
+        chunk->flags.modified = true;
+        scripting::level->lighting->onChunkLoaded(x + 1, y, true);
+    }
+    chunk = scripting::level->chunks->getChunk(x, y - 1);
+    if (chunk != nullptr) {
+        chunk->flags.modified = true;
+        scripting::level->lighting->onChunkLoaded(x, y - 1, true);
+    }
+    chunk = scripting::level->chunks->getChunk(x, y + 1);
+    if (chunk != nullptr) {
+        chunk->flags.modified = true;
+        scripting::level->lighting->onChunkLoaded(x, y + 1, true);
+    }
+
+    return 1;
+}
+
 const luaL_Reg worldlib [] = {
     {"is_open", lua::wrap<l_is_open>},
     {"get_list", lua::wrap<l_get_list>},
@@ -124,5 +237,7 @@ const luaL_Reg worldlib [] = {
     {"is_night", lua::wrap<l_is_night>},
     {"exists", lua::wrap<l_exists>},
     {"get_generator", lua::wrap<l_get_generator>},
+    {"get_chunk_data", lua::wrap<l_get_chunk_data>},
+    {"set_chunk_data", lua::wrap<l_set_chunk_data>},
     {NULL, NULL}
 };
