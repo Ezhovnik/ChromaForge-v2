@@ -13,6 +13,7 @@
 #include <window/Events.h>
 #include <window/Window.h>
 #include <devtools/syntax_highlighting.h>
+#include <graphics/ui/markdown.h>
 
 using namespace gui;
 
@@ -195,7 +196,18 @@ void TextBox::drawBackground(const DrawContext& pctx, const Assets&) {
 
 void TextBox::refreshLabel() {
     label->setColor(textColor * glm::vec4(input.empty() ? 0.5f : 1.0f));
-    label->setText(input.empty() && !hint.empty() ? hint : getText());
+
+    const auto& displayText = input.empty() && !hint.empty() ? hint : getText();
+    if (markup == "md") {
+        auto [processedText, styles] = markdown::process(displayText, !focused);
+        label->setText(std::move(processedText));
+        label->setStyles(std::move(styles));
+    } else {
+        label->setText(displayText);
+        if (syntax.empty()) {
+            label->setStyles(nullptr);
+        }
+    }
 
     if (showLineNumbers) {
         if (lineNumbersLabel->getLinesNumber() != label->getLinesNumber()) {
@@ -797,11 +809,23 @@ void TextBox::setOnDownPressed(const runnable& callback) {
     }
 }
 
-void TextBox::setSyntax(const std::string& lang) {
+void TextBox::setSyntax(std::string_view lang) {
     syntax = lang;
     if (syntax.empty()) {
         label->setStyles(nullptr);
     } else {
         refreshSyntax();
     }
+}
+
+const std::string& TextBox::getSyntax() const {
+    return syntax;
+}
+
+void TextBox::setMarkup(std::string_view lang) {
+    markup = lang;
+}
+
+const std::string& TextBox::getMarkup() const {
+    return markup;
 }

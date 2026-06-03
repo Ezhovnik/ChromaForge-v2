@@ -364,6 +364,22 @@ static int p_get_destruct(gui::UINode*, lua::State* L) {
     return lua::pushcfunction(L, lua::wrap<l_node_destruct>);
 }
 
+static int p_get_syntax(gui::UINode* node, lua::State* L) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return lua::pushstring(L, box->getSyntax());
+    }
+    return 0;
+}
+
+static int p_get_markup(gui::UINode* node, lua::State* L) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return lua::pushstring(L, box->getMarkup());
+    } else if (auto label = dynamic_cast<gui::Label*>(node)) {
+        return lua::pushstring(L, label->getMarkup());
+    }
+    return 0;
+}
+
 static int p_get_src(gui::UINode* node, lua::State* L) {
     if (auto image = dynamic_cast<gui::Image*>(node)) {
         return lua::pushstring(L, image->getTexture());
@@ -413,6 +429,8 @@ static int l_gui_getattr(lua::State* L) {
         {"lineNumbers", p_get_line_numbers},
         {"lineAt", p_get_line_at},
         {"linePos", p_get_line_pos},
+        {"syntax", p_get_syntax},
+        {"markup", p_get_markup},
         {"value", p_get_value},
         {"min", p_get_min},
         {"max", p_get_max},
@@ -591,6 +609,20 @@ static void p_set_caret(gui::UINode* node, lua::State* L, int idx) {
     }
 }
 
+static void p_set_syntax(gui::UINode* node, lua::State* L, int idx) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        box->setSyntax(lua::require_string(L, idx));
+    }
+}
+
+static void p_set_markup(gui::UINode* node, lua::State* L, int idx) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        box->setMarkup(lua::require_string(L, idx));
+    } else if (auto label = dynamic_cast<gui::Label*>(node)) {
+        label->setMarkup(lua::require_string(L, idx));
+    }
+}
+
 static void p_set_src(gui::UINode* node, lua::State* L, int idx) {
     if (auto image = dynamic_cast<gui::Image*>(node)) {
         image->setTexture(lua::require_string(L, idx));
@@ -634,6 +666,8 @@ static int l_gui_setattr(lua::State* L) {
         {"text", p_set_text},
         {"editable", p_set_editable},
         {"lineNumbers", p_set_line_numbers},
+        {"syntax", p_set_syntax},
+        {"markup", p_set_markup},
         {"value", p_set_value},
         {"min", p_set_min},
         {"max", p_set_max},

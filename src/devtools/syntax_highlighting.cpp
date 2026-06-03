@@ -7,28 +7,27 @@
 using namespace devtools;
 
 static std::unique_ptr<FontStylesScheme> build_styles(
-    const std::vector<lua::Token>& tokens
+    const std::vector<devtools::Token>& tokens
 ) {
     FontStylesScheme styles {
         {
-            {false, false, glm::vec4(0.8f, 0.8f, 0.8f, 1)}, // Default
-            {true, false, glm::vec4(0.9, 0.6f, 0.4f, 1)},   // Keyword
-            {false, false, glm::vec4(0.4, 0.8f, 0.5f, 1)},  // String
-            {false, false, glm::vec4(0.3, 0.3f, 0.3f, 1)},  // Comment
-            {false, false, glm::vec4(0.4, 0.45f, 0.5f, 1)}, // Self
-            {true, false, glm::vec4(1.0f, 0.2f, 0.1f, 1)}, // Unexpected
+            {false, false, false, false, glm::vec4(0.8f, 0.8f, 0.8f, 1)}, // default
+            {true, false, false, false, glm::vec4(0.9, 0.6f, 0.4f, 1)},   // keyword
+            {false, false, false, false, glm::vec4(0.4, 0.8f, 0.5f, 1)},  // string
+            {false, false, false, false, glm::vec4(0.3, 0.3f, 0.3f, 1)},  // comment
+            {true, false, false, false, glm::vec4(1.0f, 0.2f, 0.1f, 1)},  // unexpected
         }, 
         {}
     };
     size_t offset = 0;
     for (int i = 0; i < tokens.size(); ++i) {
         const auto& token = tokens.at(i);
-        if (token.tag != lua::TokenTag::Keyword &&
-            token.tag != lua::TokenTag::String &&
-            token.tag != lua::TokenTag::Integer &&
-            token.tag != lua::TokenTag::Number &&
-            token.tag != lua::TokenTag::Comment &&
-            token.tag != lua::TokenTag::Unexpected) {
+        if (token.tag != devtools::TokenTag::Keyword &&
+            token.tag != devtools::TokenTag::String &&
+            token.tag != devtools::TokenTag::Integer &&
+            token.tag != devtools::TokenTag::Number &&
+            token.tag != devtools::TokenTag::Comment &&
+            token.tag != devtools::TokenTag::Unexpected) {
             continue;
         }
         if (token.start.pos > offset) {
@@ -38,12 +37,12 @@ static std::unique_ptr<FontStylesScheme> build_styles(
         offset = token.end.pos;
         int styleIndex;
         switch (token.tag) {
-            case lua::TokenTag::Keyword: styleIndex = 1; break;
-            case lua::TokenTag::String:
-            case lua::TokenTag::Integer:
-            case lua::TokenTag::Number: styleIndex = 2; break;
-            case lua::TokenTag::Comment: styleIndex = 3; break;
-            case lua::TokenTag::Unexpected: styleIndex = 5; break;
+            case devtools::TokenTag::Keyword: styleIndex = SyntaxStyles::Keyword; break;
+            case devtools::TokenTag::String:
+            case devtools::TokenTag::Integer:
+            case devtools::TokenTag::Number: styleIndex = SyntaxStyles::Literal; break;
+            case devtools::TokenTag::Comment: styleIndex = SyntaxStyles::Comment; break;
+            case devtools::TokenTag::Unexpected: styleIndex = SyntaxStyles::Error; break;
             default:
                 styleIndex = 0;
                 break;

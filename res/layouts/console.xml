@@ -18,6 +18,7 @@
             multiline='true' 
             size-func="gui.get_viewport()[1],40"
             gravity="bottom-left"
+            markup="md"
         ></textbox>
     </container>
     <container id="editorContainer" pos="0,60" color="#00000080" size-func="unpack(vec2.add(gui.get_viewport(), {-350,-230}))">
@@ -50,6 +51,7 @@
         id='prompt' 
         consumer='submit' 
         margin='0' 
+        markup="md"
         gravity='bottom-left' 
         size-func="gui.get_viewport()[1],40"
         onup="on_history_up()"

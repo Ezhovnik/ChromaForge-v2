@@ -32,7 +32,7 @@ inline bool is_lua_operator_start(int c) {
 }
 
 class Tokenizer : BasicParser {
-    std::vector<Token> tokens;
+    std::vector<devtools::Token> tokens;
 public:
     Tokenizer(std::string_view file, std::string_view source)
         : BasicParser(file, source) {
@@ -51,15 +51,15 @@ public:
         return std::string(source.substr(start, pos - start));
     }
 
-    inline Location currentLocation() const {
-        return Location {
+    inline devtools::Location currentLocation() const {
+        return devtools::Location {
             static_cast<int>(pos),
             static_cast<int>(linestart),
             static_cast<int>(line)};
     }
 
     void emitToken(
-        TokenTag tag, std::string name, Location start, bool standalone=false
+        devtools::TokenTag tag, std::string name, devtools::Location start, bool standalone=false
     ) {
         tokens.emplace_back(
             tag,
@@ -102,7 +102,7 @@ public:
         return std::string(source.substr(start, pos - start));
     }
 
-    std::vector<Token> tokenize() {
+    std::vector<devtools::Token> tokenize() {
         skipWhitespace();
         while (hasNext()) {
             skipWhitespace();
@@ -114,17 +114,17 @@ public:
             if (is_lua_identifier_start(c)) {
                 auto name = parseLuaName();
                 emitToken(
-                    is_lua_keyword(name) ? TokenTag::Keyword : TokenTag::Name,
+                    is_lua_keyword(name) ? devtools::TokenTag::Keyword : devtools::TokenTag::Name,
                     std::move(name),
                     start
                 );
                 continue;
             } else if (is_digit(c)) {
                 dv::value value;
-                auto tag = TokenTag::Unexpected;
+                auto tag = devtools::TokenTag::Unexpected;
                 try {
                     value = parseNumber(1);
-                    tag = value.isInteger() ? TokenTag::Integer : TokenTag::Number;
+                    tag = value.isInteger() ? devtools::TokenTag::Integer : devtools::TokenTag::Number;
                 } catch (const parsing_error& err) {}
                 auto literal = source.substr(start.pos, pos - start.pos);
                 emitToken(tag, std::string(literal), start);
@@ -135,30 +135,30 @@ public:
                     if (isNext("[==[")) {
                         auto string = readUntil("]==]", true);
                         skip(4);
-                        emitToken(TokenTag::Comment, std::string(string)+"]==]", start);
+                        emitToken(devtools::TokenTag::Comment, std::string(string)+"]==]", start);
                         continue;
                     } else if (isNext("[[")) {
                         skip(2);
                         auto string = readUntil("]]", true);
                         skip(2);
-                        emitToken(TokenTag::String, std::string(string), start);
+                        emitToken(devtools::TokenTag::String, std::string(string), start);
                         continue;
                     }
-                    emitToken(TokenTag::OpenBracket, std::string({c}), start, true);
+                    emitToken(devtools::TokenTag::OpenBracket, std::string({c}), start, true);
                     continue;
                 case ')': case ']': case '}': 
-                    emitToken(TokenTag::CloseBracket, std::string({c}), start, true);
+                    emitToken(devtools::TokenTag::CloseBracket, std::string({c}), start, true);
                     continue;
                 case ',':
-                    emitToken(TokenTag::Comma, std::string({c}), start, true);
+                    emitToken(devtools::TokenTag::Comma, std::string({c}), start, true);
                     continue;
                 case ';':
-                    emitToken(TokenTag::Semicolon, std::string({c}), start, true);
+                    emitToken(devtools::TokenTag::Semicolon, std::string({c}), start, true);
                     continue;
                 case '\'': case '"': {
                     skip(1);
                     auto string = parseString(c, false);
-                    emitToken(TokenTag::String, std::move(string), start);
+                    emitToken(devtools::TokenTag::String, std::move(string), start);
                     continue;
                 }
                 default: break;
@@ -167,20 +167,20 @@ public:
                 auto text = parseOperator();
                 if (text == "--") {
                     auto string = readUntilEOL();
-                    emitToken(TokenTag::Comment, std::string(string), start);
+                    emitToken(devtools::TokenTag::Comment, std::string(string), start);
                     skipLine();
                     continue;
                 }
-                emitToken(TokenTag::Operator, std::move(text), start);
+                emitToken(devtools::TokenTag::Operator, std::move(text), start);
                 continue;
             }
             auto text = readUntilWhitespace();
-            emitToken(TokenTag::Unexpected, std::string(text), start);
+            emitToken(devtools::TokenTag::Unexpected, std::string(text), start);
         }
         return std::move(tokens);
     }
 };
 
-std::vector<Token> lua::tokenize(std::string_view file, std::string_view source) {
+std::vector<devtools::Token> lua::tokenize(std::string_view file, std::string_view source) {
     return Tokenizer(file, source).tokenize();
 }

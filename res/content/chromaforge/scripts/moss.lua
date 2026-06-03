@@ -1,12 +1,12 @@
 function on_random_update(x, y, z)
     local dirtid = block.index('chromaforge:dirt');
     if block.is_solid_at(x, y + 1, z) then
-        block.set(x, y, z, dirtid, 0)
+        set_block(x, y, z, dirtid, 0)
     else
         local grassblockid = block.index('chromaforge:moss')
-        for lx=-1,1 do
-            for ly=-1,1 do
-                for lz=-1,1 do
+        for lx=-1, 1 do
+            for ly=-1, 1 do
+                for lz=-1, 1 do
                     if block.get(x + lx, y + ly, z + lz) == dirtid then
                         if not block.is_solid_at(x + lx, y + ly + 1, z + lz) then
                             block.set(x + lx, y + ly, z + lz, grassblockid, 0)

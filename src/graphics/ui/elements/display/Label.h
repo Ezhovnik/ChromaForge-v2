@@ -34,14 +34,13 @@ namespace gui {
         Align valign = Align::center;
 
         bool multiline = false;
-
         bool textWrap = true;
-
         bool autoresize = false;
 
         int textYOffset = 0;
-
         int totalLineHeight = 1;
+
+        std::string markup;
 
         std::unique_ptr<FontStylesScheme> styles;
     public:
@@ -50,7 +49,7 @@ namespace gui {
 
         virtual ~Label();
 
-        virtual void setText(const std::wstring& text);
+        virtual void setText(std::wstring text);
         const std::wstring& getText() const;
 
         virtual void setFontName(std::string name);
@@ -87,6 +86,9 @@ namespace gui {
 
         virtual void setTextWrapping(bool flag);
         virtual bool isTextWrapping() const;
+
+        virtual void setMarkup(std::string_view lang);
+        virtual const std::string& getMarkup() const;
 
         virtual void setStyles(std::unique_ptr<FontStylesScheme> styles);
     };

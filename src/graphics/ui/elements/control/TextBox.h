@@ -43,6 +43,7 @@ namespace gui {
         bool autoresize = false;
         bool showLineNumbers = false;
 
+        std::string markup;
         std::string syntax;
 
         void stepLeft(bool shiftPressed, bool breakSelection);
@@ -144,7 +145,11 @@ namespace gui {
         virtual void setOnUpPressed(const runnable& callback);
         virtual void setOnDownPressed(const runnable& callback);
 
-        virtual void setSyntax(const std::string& lang);
+        virtual void setSyntax(std::string_view lang);
+        virtual const std::string& getSyntax() const;
+
+        virtual void setMarkup(std::string_view lang);
+        virtual const std::string& getMarkup() const;
 
         virtual void onFocus(GUI*) override;
         virtual void refresh() override;

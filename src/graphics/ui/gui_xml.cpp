@@ -244,6 +244,7 @@ static std::shared_ptr<UINode> readLabel(
         if (!element.has("valign")) label->setVerticalAlign(Align::top);
     }
     if (element.has("text-wrap")) label->setTextWrapping(element.attr("text-wrap").asBool());
+    if (element.has("markup")) label->setMarkup(element.attr("markup").getText());
     return label;
 }
 
@@ -309,6 +310,7 @@ static std::shared_ptr<UINode> readTextBox(
     if (element.has("editable")) textbox->setEditable(element.attr("editable").asBool());
     if (element.has("autoresize")) textbox->setAutoResize(element.attr("autoresize").asBool());
     if (element.has("line-numbers")) textbox->setShowLineNumbers(element.attr("line-numbers").asBool());
+    if (element.has("markup")) textbox->setMarkup(element.attr("markup").getText());
     if (element.has("consumer")) {
         textbox->setTextConsumer(scripting::create_wstring_consumer(
             reader.getEnvironment(),
