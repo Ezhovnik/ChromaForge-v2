@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include <files/engine_paths.h>
+#include <engine.h>
 
 /**
  * @brief Утилита для последовательного чтения аргументов командной строки.
@@ -67,30 +68,28 @@ public:
 	}
 };
 
-static bool perform_keyword(ArgsReader& reader, const std::string& keyword, EnginePaths& paths) {
+static bool perform_keyword(
+	ArgsReader& reader, const std::string& keyword, CoreParameters& params
+) {
     if (keyword == "--res") {
 		// Читаем следующий аргумент как путь к папке ресурсов
 		auto token = reader.next();
-		if (!std::filesystem::is_directory(std::filesystem::path(token))) {
-			std::cerr << token << " is not a directory" << std::endl;
-			throw std::runtime_error(token + " is not a directory");
-		}
-		paths.setResourcesFolder(std::filesystem::path(token));
-		std::cout << "Resources folder: " << token << std::endl;
+		params.resFolder = std::filesystem::u8path(token);
 	} else if (keyword == "--dir") {
 		// Читаем следующий аргумент как путь к папке пользовательских файлов
 		auto token = reader.next();
-		if (!std::filesystem::is_directory(std::filesystem::path(token))) {
-			std::filesystem::create_directories(std::filesystem::path(token));
-		}
-		paths.setUserFilesFolder(std::filesystem::path(token));
-		std::cout << "Userfiles folder: " << token << std::endl;
+		params.userFolder = std::filesystem::u8path(token);
 	} else if (keyword == "--help" || keyword == "-h") {
 		// Выводим справку и сообщаем, что запуск нужно прервать.
-		std::cout << "ChromaForge command-line arguments:" << std::endl;
-		std::cout << " --res [path] - set resources directory" << std::endl;
-		std::cout << " --dir [path] - set userfiles directory" << std::endl;
+		std::cout << "ChromaForge command-line arguments:\n";
+        std::cout << " --help - show help\n";
+        std::cout << " --res [path] - set resources directory\n";
+        std::cout << " --dir [path] - set userfiles directory\n";
+        std::cout << " --headless - run in headless mode\n";
+        std::cout << std::endl;
 		return false;
+	} else if (keyword == "--headless") {
+        params.headless = true;
 	} else {
 		// Неизвестный ключ
 		std::cerr << "Unknown argument " << keyword << std::endl;
@@ -99,7 +98,7 @@ static bool perform_keyword(ArgsReader& reader, const std::string& keyword, Engi
     return true;
 }
 
-bool parse_cmdline(int argc, char** argv, EnginePaths& paths) {
+bool parse_cmdline(int argc, char** argv, CoreParameters& params) {
 	ArgsReader reader(argc, argv);
 	reader.skip(); // пропускаем имя исполняемого файла (argv[0])
 	while (reader.hasNext()) {
@@ -107,7 +106,7 @@ bool parse_cmdline(int argc, char** argv, EnginePaths& paths) {
 
 		if (reader.isKeywordArg()) {
 			// Если аргумент начинается с '-', это ключ
-			if (!perform_keyword(reader, token, paths)) return false;
+			if (!perform_keyword(reader, token, params)) return false;
 		} else {
 			// Если аргумент не является ключом, но ожидался только ключ
 			std::cerr << "Unexpected token" << std::endl;

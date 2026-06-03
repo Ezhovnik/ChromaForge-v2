@@ -73,13 +73,20 @@ static std::unique_ptr<ImageData> load_icon(const std::filesystem::path& resdir)
 
 // Реализация конструктора
 Engine::Engine(
-    EnginePaths& paths
-) : settings(),
+    CoreParameters coreParameters
+) : params(std::move(coreParameters)),
+    settings(),
     settingsHandler({settings}),
-    paths(paths),
     interpreter(std::make_unique<cmd::CommandsInterpreter>()),
     network(network::Network::create(settings.network))
 {
+    LOG_INFO("ChromaForge engine version: {}", ENGINE_VERSION_STRING);
+
+    if (params.headless) {
+        LOG_INFO("Headless mode is enabled");
+    }
+    paths.setResourcesFolder(params.resFolder);
+    paths.setUserFilesFolder(params.userFolder);
     paths.prepare();
     loadSettings();
 
@@ -88,31 +95,37 @@ Engine::Engine(
     controller = std::make_unique<EngineController>(this);
 
     // Инициализация окна GLFW
-    if (!Window::initialize(&this->settings.display)) {
-        LOG_CRITICAL("Failed to load Window");
-        Window::terminate();
-        throw initialize_error("Failed to load Window");
+    if (!params.headless) {
+        if (!Window::initialize(&this->settings.display)) {
+            LOG_CRITICAL("Failed to load Window");
+            Window::terminate();
+            throw initialize_error("Failed to load Window");
+        }
+        if (auto icon = load_icon(resdir)) {
+            icon->flipY();
+            if (icon->getFormat() != ImageFormat::rgba8888) icon.reset(toRGBA(icon.get()));
+            Window::setIcon(icon.get());
+        }
+        loadControls();
+
+        gui = std::make_unique<gui::GUI>();
+        if (ENGINE_DEBUG_BUILD) {
+            menus::create_version_label(this);
+        }
     }
-    if (auto icon = load_icon(resdir)) {
-        icon->flipY();
-        if (icon->getFormat() != ImageFormat::rgba8888) icon.reset(toRGBA(icon.get()));
-        Window::setIcon(icon.get());
-    }
-    loadControls();
-    audio::initialize(settings.audio.enabled.get());
+
+    audio::initialize(settings.audio.enabled.get() && !params.headless);
     create_channel(this, "master", settings.audio.volumeMaster);
     create_channel(this, "regular", settings.audio.volumeRegular);
     create_channel(this, "music", settings.audio.volumeMusic);
     create_channel(this, "ambient", settings.audio.volumeAmbient);
     create_channel(this, "ui", settings.audio.volumeUI);
 
-    gui = std::make_unique<gui::GUI>();
-
-    if (settings.ui.language.get() == "auto") settings.ui.language.set(platform::detect_locale());
-    if (ENGINE_DEBUG_BUILD) menus::create_version_label(this);
+    bool langNotSet = settings.ui.language.get() == "auto";
+    if (langNotSet) settings.ui.language.set(platform::detect_locale());
     keepAlive(settings.ui.language.observe([=](auto lang) {
         setLanguage(lang);
-    }, true));
+    }, !langNotSet));
 
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);
@@ -135,11 +148,18 @@ Engine::~Engine() {
     content.reset();
     assets.reset();
     interpreter.reset();
-    gui.reset();
+    if (gui) {
+        gui.reset();
+        LOG_INFO("GUI finished");
+    }
     audio::close();
     network.reset();
+    clearKeepedObjects();
     scripting::close();
-    Window::terminate();
+    if (!params.headless) {
+        Window::terminate();
+        LOG_INFO("Window closed");
+    }
     LOG_INFO("Engine has finished successfuly");
     Logger::getInstance().flush();
 }
@@ -250,6 +270,14 @@ void Engine::processPostRunnables() {
         postRunnables.pop();
     }
     scripting::process_post_runnables();
+}
+
+void Engine::run() {
+    if (params.headless) {
+        LOG_INFO("Nothing to do ¯\\_(ツ)_/¯");
+    } else {
+        mainloop();
+    }
 }
 
 // Основной цикл приложения
@@ -463,7 +491,9 @@ double Engine::getDeltaTime() const {
 
 void Engine::setLanguage(std::string locale) {
 	langs::setup(paths.getResourcesFolder(), std::move(locale), contentPacks);
-	gui->getMenu()->setPageLoader(menus::create_page_loader(this));
+	if (gui) {
+        gui->getMenu()->setPageLoader(menus::create_page_loader(this));
+    }
 }
 
 void Engine::postRunnable(const runnable& callback) {
@@ -484,9 +514,11 @@ void Engine::saveSettings() {
     files::write_string(paths.getSettingsFile(), toml::stringify(settingsHandler));
     LOG_INFO("The settings were successfully written to the file");
 
-    LOG_INFO("Writing the settings to a file");
-    files::write_string(paths.getControlsFile(), Events::writeBindings());
-    LOG_INFO("The controls were successfully written to the file");
+    if (!params.headless) {
+        LOG_INFO("Writing the controls to a file");
+        files::write_string(paths.getControlsFile(), Events::writeBindings());
+        LOG_INFO("The controls were successfully written to the file");
+    }
 }
 
 void Engine::loadSettings() {

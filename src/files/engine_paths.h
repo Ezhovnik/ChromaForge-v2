@@ -39,7 +39,6 @@ public:
     std::filesystem::path getNewScreenshotFile(const std::string& ext);
     std::filesystem::path getControlsFile() const;
     std::filesystem::path getSettingsFile() const;
-    std::filesystem::path getLogsFile() const;
 
     void setContentPacks(std::vector<ContentPack>* contentPacks);
 

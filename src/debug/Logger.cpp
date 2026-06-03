@@ -86,8 +86,8 @@ Logger& Logger::getInstance() {
     return instance;
 }
 
-void Logger::initialize(const std::string& logFile, LogLevel consoleLevel, LogLevel fileLevel) {
-    pimpl_->initialize(logFile, consoleLevel, fileLevel);
+void Logger::initialize(const std::filesystem::path& folder, LogLevel consoleLevel, LogLevel fileLevel) {
+    pimpl_->initialize(folder.u8string(), consoleLevel, fileLevel);
 }
 
 void Logger::setConsoleLevel(LogLevel level) {

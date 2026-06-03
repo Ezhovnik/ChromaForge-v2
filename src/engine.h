@@ -43,12 +43,19 @@ public:
     initialize_error(const std::string& message) : std::runtime_error(message) {}
 };
 
+struct CoreParameters {
+    bool headless = false;
+    std::filesystem::path resFolder {"res"};
+    std::filesystem::path userFolder {"."};
+};
+
 // Основной класс Engine, управляющий жизненным циклом приложения
 class Engine : public util::ObjectsKeeper {
 private:
+    CoreParameters params;
     EngineSettings settings;
     SettingsHandler settingsHandler;
-    EnginePaths& paths;
+    EnginePaths paths;
 
     std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen;
@@ -85,8 +92,10 @@ private:
     void loadSettings();
     void saveSettings();
 public:
-    Engine(EnginePaths& paths); // Конструктор
+    Engine(CoreParameters coreParameters); // Конструктор
     ~Engine(); // Деструктор
+
+    void run();
 
     void mainloop(); // Основной цикл приложения
 

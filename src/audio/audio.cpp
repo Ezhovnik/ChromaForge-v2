@@ -131,9 +131,15 @@ public:
 };
 
 void audio::initialize(bool enabled) {
-    if (enabled) backend = ALAudio::create().release();
+    if (enabled) {
+        LOG_INFO("Initializing ALAudion backend");
+        backend = ALAudio::create().release();
+    }
     if (backend == nullptr) {
-        LOG_ERROR("Could not to initialize audio");
+        if (enabled) {
+            LOG_ERROR("Could not to initialize audio");
+        }
+        LOG_INFO("Initializing NoAudio backend");
         backend = NoAudio::create().release();
     }
 

@@ -14,7 +14,6 @@
 
 static inline auto SCREENSHOTS_FOLDER = std::filesystem::u8path("screenshots");
 static inline auto CONTENT_FOLDER = std::filesystem::u8path("content");
-static inline auto LOGS_FOLDER = std::filesystem::u8path("logs");
 static inline auto WORLDS_FOLDER = std::filesystem::u8path("saves");
 static inline auto CONFIG_FOLDER = std::filesystem::u8path("config");
 static inline auto EXPORT_FOLDER = std::filesystem::u8path("export");
@@ -43,6 +42,20 @@ static std::filesystem::path toCanonic(std::filesystem::path path) {
 }
 
 void EnginePaths::prepare() {
+    if (!std::filesystem::is_directory(resourcesFolder)) {
+        LOG_ERROR("{} is not a directory", resourcesFolder.u8string());
+        throw std::runtime_error(
+            resourcesFolder.u8string() + " is not a directory"
+        );
+    }
+
+    if (!std::filesystem::is_directory(userFilesFolder)) {
+        std::filesystem::create_directories(userFilesFolder);
+    }
+
+    LOG_INFO("Resources folder: {}", std::filesystem::canonical(resourcesFolder).u8string());
+    LOG_INFO("User files folder: {}", std::filesystem::canonical(userFilesFolder).u8string());
+
     auto contentFolder = userFilesFolder/CONTENT_FOLDER;
     if (!std::filesystem::is_directory(contentFolder)) {
         std::filesystem::create_directories(contentFolder);
@@ -102,12 +115,6 @@ std::filesystem::path EnginePaths::getWorldsFolder() const {
 
 std::filesystem::path EnginePaths::getConfigFolder() const {
     return userFilesFolder/CONFIG_FOLDER;
-}
-
-std::filesystem::path EnginePaths::getLogsFile() const {
-    auto folder = userFilesFolder/LOGS_FOLDER;
-    if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
-    return folder/std::filesystem::u8path("ChromaForge.log");
 }
 
 std::filesystem::path EnginePaths::getCurrentWorldFolder() {
