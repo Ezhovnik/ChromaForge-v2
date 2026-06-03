@@ -1,7 +1,5 @@
 #include <graphics/ui/markdown.h>
 
-#include <sstream>
-
 #include <graphics/core/Font.h>
 
 using namespace markdown;
@@ -65,6 +63,7 @@ Result<CharT> process_markdown(
                         pos++;
                         continue;
                 }
+                pos--;
             }
         } else if (first == '*') {
             if (pos + 1 < source.size() && source[pos + 1] == '*') {
