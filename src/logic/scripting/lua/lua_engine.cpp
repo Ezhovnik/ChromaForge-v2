@@ -10,6 +10,7 @@
 #include <util/stringutil.h>
 #include <files/files.h>
 #include <files/engine_paths.h>
+#include <engine.h>
 
 static lua::State* main_thread = nullptr;
 
@@ -55,7 +56,10 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "vec3", vec3lib);
     openlib(L, "vec4", vec4lib);
 
-    if (stateType == StateType::Base) {
+    if (stateType == StateType::Test) {
+        openlib(L, "test", testlib);
+    }
+    if (stateType == StateType::Base || stateType == StateType::Test) {
         openlib(L, "gui", guilib);
         openlib(L, "input", inputlib);
         openlib(L, "inventory", inventorylib);
@@ -114,11 +118,15 @@ void lua::init_state(State* L, StateType stateType) {
     newusertype<LuaVoxelFragment>(L);
 }
 
-void lua::initialize(const EnginePaths& paths) {
+void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     LOG_INFO("Lua version: {}", LUA_VERSION);
     LOG_INFO("LuaJIT version: {}", LUAJIT_VERSION);
 
-    main_thread = create_state(paths, StateType::Base);
+    main_thread = create_state(
+        paths, params.headless ? StateType::Test : StateType::Base
+    );
+    lua::pushstring(main_thread, params.testFile.stem().u8string());
+    lua::setglobal(main_thread, "__CHROMA_TEST_NAME");
 }
 
 void lua::finalize() {

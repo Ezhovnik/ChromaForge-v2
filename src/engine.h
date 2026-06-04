@@ -114,11 +114,13 @@ public:
     std::vector<ContentPack> getAllContentPacks();
     std::shared_ptr<Screen> getScreen();
     double getDeltaTime() const;
+    double getUptime() const;
     SettingsHandler& getSettingsHandler();
     EngineController* getController();
     std::vector<std::string>& getBasePacks();
     cmd::CommandsInterpreter* getCommandsInterpreter();
     network::Network& getNetwork();
+    const CoreParameters& getCoreParameters() const;
 
     void postRunnable(const runnable& callback);
 

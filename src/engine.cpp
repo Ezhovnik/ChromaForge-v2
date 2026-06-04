@@ -286,9 +286,15 @@ void Engine::runTest() {
         LOG_INFO("Nothing to do ¯\\_(ツ)_/¯");
         return;
     }
+    int tps = 20;
+
     LOG_INFO("Starting test {}", params.testFile.u8string());
     auto process = scripting::start_coroutine(params.testFile);
     while (process->isActive()) {
+        frame++;
+        deltaTime = 1.0f / static_cast<float>(tps);
+        lastTime += deltaTime;
+
         process->update();
     }
     LOG_INFO("Test finished");
@@ -489,6 +495,10 @@ EngineController* Engine::getController() {
     return controller.get();
 }
 
+double Engine::getUptime() const {
+    return lastTime;
+}
+
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
     audio::reset_channel(audio::get_channel_index("regular"));
     audio::reset_channel(audio::get_channel_index("ambient"));
@@ -570,4 +580,8 @@ cmd::CommandsInterpreter* Engine::getCommandsInterpreter() {
 
 network::Network& Engine::getNetwork() {
     return *network;
+}
+
+const CoreParameters& Engine::getCoreParameters() const {
+    return params;
 }

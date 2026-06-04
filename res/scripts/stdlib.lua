@@ -9,7 +9,14 @@ function sleep(timesec)
     end
 end
 
--- events
+if test then
+    test.sleep = sleep
+    test.name = __CHROMA_TEST_NAME
+end
+
+------------------------------------------------
+------------------- Events ---------------------
+------------------------------------------------
 events = {
     handlers = {}
 }
