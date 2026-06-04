@@ -23,7 +23,7 @@ static bool perform_keyword(
     if (keyword == "--help" || keyword == "-h") {
         std::cout << "Options\n\n";
         std::cout << "  --help, -h                      = show help\n";
-        std::cout << "  --exe <path>, -e <path>         = VoxelCore executable path\n";
+        std::cout << "  --exe <path>, -e <path>         = ChromaForge executable path\n";
         std::cout << "  --tests <path>, -d <path>       = tests directory path\n";
         std::cout << "  --res <path>, -r <path>         = 'res' directory path\n";
         std::cout << "  --working-dir <path>, -w <path> = user directory path\n";
@@ -101,8 +101,7 @@ static void dump_config(const Config& config) {
     std::cout << std::endl;
 }
 
-static void cleanup(const std::filesystem::path& workingDir) {
-    auto dir = workingDir / TESTING_DIR;
+static void cleanup(const std::filesystem::path& dir) {
     std::cout << "Cleaning up " << dir << std::endl;
     std::filesystem::remove_all(dir);
 }
@@ -111,7 +110,7 @@ static void setup_working_dir(const std::filesystem::path& workingDir) {
     auto dir = workingDir / TESTING_DIR;
     std::cout << "Setting up working directory " << dir << std::endl;
     if (std::filesystem::is_directory(dir)) {
-        cleanup(workingDir);
+        cleanup(dir);
     }
     std::filesystem::create_directories(dir);
 }
@@ -124,6 +123,15 @@ static void display_test_output(const std::filesystem::path& path, std::ostream&
     }
 }
 
+static std::string fix_path(std::string s) {
+    for (char& c : s) {
+        if (c == '\\') {
+            c = '/';
+        }
+    }
+    return s;
+}
+
 static bool run_test(const Config& config, const std::filesystem::path& path) {
     using std::chrono::duration_cast;
     using std::chrono::high_resolution_clock;
@@ -133,11 +141,11 @@ static bool run_test(const Config& config, const std::filesystem::path& path) {
 
     auto name = path.stem();
     std::stringstream ss;
-    ss << config.executable << " --headless";
-    ss << " --test " << path;
-    ss << " --res " << config.resDir;
-    ss << " --dir " << config.workingDir;
-    ss << " >" << (config.workingDir / "output.txt") << " 2>&1";
+    ss << "\"" << std::filesystem::canonical(config.executable).string() << "\" --headless";
+    ss << " --test \"" << fix_path(path.string()) << "\"";
+    ss << " --res \"" << fix_path(config.resDir.string()) << "\"";
+    ss << " --dir \"" << fix_path(config.workingDir.string()) << "\"";
+    ss << " >" << fix_path(outputFile.string()) << " 2>&1";
     auto command = ss.str();
 
     print_separator(std::cout);
@@ -178,7 +186,6 @@ int main(int argc, char** argv) {
         return 1;
     }
     dump_config(config);
-    
     std::vector<std::filesystem::path> tests;
     std::cout << "Scanning for tests" << std::endl;
     for (const auto& entry : std::filesystem::directory_iterator(config.directory)) {
