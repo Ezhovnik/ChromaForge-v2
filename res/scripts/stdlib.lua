@@ -327,6 +327,43 @@ function __chroma_on_world_quit()
     _rules.clear()
 end
 
+local __chroma_coroutines = {}
+local __chroma_next_coroutine = 1
+local __chroma_coroutine_error = nil
+
+function __chroma_start_coroutine(chunk)
+    local co = coroutine.create(function()
+        local status, err = pcall(chunk)
+        if not status then
+            __chroma_coroutine_error = err
+        end
+    end)
+    local id = __chroma_next_coroutine
+    __chroma_next_coroutine = __chroma_next_coroutine + 1
+    __chroma_coroutines[id] = co
+    return id
+end
+
+function __chroma_resume_coroutine(id)
+    local co = __chroma_coroutines[id]
+    if co then
+        coroutine.resume(co)
+        if __chroma_coroutine_error then
+            error(__chroma_coroutine_error)
+        end
+        return coroutine.status(co) ~= "dead"
+    end
+    return false
+end
+
+function __chroma_stop_coroutine(id)
+    local co = __chroma_coroutines[id]
+    if co then
+        coroutine.close(co)
+        __chroma_coroutines[id] = nil
+    end
+end
+
 assets = {}
 assets.load_texture = builtin.__load_texture
 

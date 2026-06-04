@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <cstdlib>
 #include <string>
+#include <iostream>
 
 #include <engine.h>
 #include <files/files.h>
@@ -17,12 +18,17 @@
 // Точка входа в программу
 int main(int argc, char** argv) {
     CoreParameters coreParameters;
-    if (!parse_cmdline(argc, argv, coreParameters)) return EXIT_SUCCESS;
-
-    platform::configure_encoding();
+    try {
+        if (!parse_cmdline(argc, argv, coreParameters)) {
+            return EXIT_SUCCESS;
+        }
+    } catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 
     // Инициализация логгера
-	if (ENGINE_DEBUG_BUILD) {
+    if (ENGINE_DEBUG_BUILD) {
 		Logger::getInstance().initialize(
             coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log")
         );
@@ -33,6 +39,8 @@ int main(int argc, char** argv) {
 			LogLevel::INFO
 		);
 	}
+
+    platform::configure_encoding();
 
     try {
         Engine(std::move(coreParameters)).run();

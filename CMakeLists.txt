@@ -59,3 +59,5 @@ add_custom_target(copy_resources ALL
     COMMENT "Copying resources to build directory"
 )
 add_dependencies(ChromaForge copy_resources)
+
+add_subdirectory(vctest)

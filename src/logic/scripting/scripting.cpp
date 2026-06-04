@@ -24,6 +24,7 @@
 #include <objects/Entities.h>
 #include <content/Content.h>
 #include <logic/scripting/scripting_commons.h>
+#include <interfaces/Process.h>
 
 static inline const std::string STDCOMP = "stdcomp";
 
@@ -66,6 +67,59 @@ void scripting::initialize(Engine* engine) {
 
     load_script(std::filesystem::path("stdlib.lua"), true);
     load_script(std::filesystem::path("classes.lua"), true);
+}
+
+class LuaCoroutine : public Process {
+    lua::State* L;
+    int id;
+    bool alive = true;
+public:
+    LuaCoroutine(lua::State* L, int id) : L(L), id(id) {
+    }
+
+    bool isActive() const override {
+        return alive;
+    }
+
+    void update() override {
+        if (lua::getglobal(L, "__chroma_resume_coroutine")) {
+            lua::pushinteger(L, id);
+            if (lua::call(L, 1)) {
+                alive = lua::toboolean(L, -1);
+                lua::pop(L);
+            }
+        }
+    }
+
+    void waitForEnd() override {
+        while (isActive()) {
+            update();
+        }
+    }
+
+    void terminate() override {
+        if (lua::getglobal(L, "__chroma_stop_coroutine")) {
+            lua::pushinteger(L, id);
+            lua::pop(L, lua::call(L, 1));
+        }
+    }
+};
+
+std::unique_ptr<Process> scripting::start_coroutine(
+    const std::filesystem::path& script
+) {
+    auto L = lua::get_main_state();
+    if (lua::getglobal(L, "__chroma_start_coroutine")) {
+        auto source = files::read_string(script);
+        lua::loadbuffer(L, 0, source, script.filename().u8string());
+        if (lua::call(L, 1)) {
+            int id = lua::tointeger(L, -1);
+            lua::pop(L, 2);
+            return std::make_unique<LuaCoroutine>(L, id);
+        }
+        lua::pop(L);
+    }
+    return nullptr;
 }
 
 [[nodiscard]]

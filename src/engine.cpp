@@ -50,6 +50,7 @@
 #include <coders/commons.h>
 #include <graphics/render/ModelsGenerator.h>
 #include <network/Network.h>
+#include <interfaces/Process.h>
 
 static void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -274,10 +275,23 @@ void Engine::processPostRunnables() {
 
 void Engine::run() {
     if (params.headless) {
-        LOG_INFO("Nothing to do ¯\\_(ツ)_/¯");
+        runTest();
     } else {
         mainloop();
     }
+}
+
+void Engine::runTest() {
+    if (params.testFile.empty()) {
+        LOG_INFO("Nothing to do ¯\\_(ツ)_/¯");
+        return;
+    }
+    LOG_INFO("Starting test {}", params.testFile.u8string());
+    auto process = scripting::start_coroutine(params.testFile);
+    while (process->isActive()) {
+        process->update();
+    }
+    LOG_INFO("Test finished");
 }
 
 // Основной цикл приложения

@@ -47,6 +47,7 @@ struct CoreParameters {
     bool headless = false;
     std::filesystem::path resFolder {"res"};
     std::filesystem::path userFolder {"."};
+    std::filesystem::path testFile;
 };
 
 // Основной класс Engine, управляющий жизненным циклом приложения
@@ -98,6 +99,8 @@ public:
     void run();
 
     void mainloop(); // Основной цикл приложения
+
+    void runTest();
 
     void onAssetsLoaded();
 
