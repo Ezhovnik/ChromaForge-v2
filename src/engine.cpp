@@ -395,7 +395,8 @@ void Engine::loadContent() {
 
     ContentLoader::loadScripts(*content);
 
-    langs::setup(resdir, langs::current->getId(), contentPacks);
+    std::string locale = langs::current ? langs::current->getId() : langs::FALLBACK_DEFAULT;
+    setLanguage(locale);
 
 	loadAssets();
     onAssetsLoaded();
@@ -422,7 +423,8 @@ void Engine::resetContent() {
     contentPacks.clear();
     content.reset();
 
-    langs::setup(resdir, langs::current->getId(), contentPacks);
+    std::string locale = langs::current ? langs::current->getId() : langs::FALLBACK_DEFAULT;
+    setLanguage(locale);
     loadAssets();
     onAssetsLoaded();
 
