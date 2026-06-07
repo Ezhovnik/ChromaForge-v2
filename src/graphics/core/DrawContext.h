@@ -11,7 +11,7 @@ class DrawContext {
 private:
     const DrawContext* parent;
     Viewport viewport;
-    Batch2D* const g2d;
+    Batch2D* g2d;
     Flushable* flushable = nullptr;
     Framebuffer* fbo = nullptr;
 

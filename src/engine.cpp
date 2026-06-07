@@ -16,7 +16,6 @@
 #include <core_content_defs.h>
 #include <debug/Logger.h>
 #include <graphics/ui/GUI.h>
-#include <graphics/core/Batch2D.h>
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Viewport.h>
 #include <graphics/core/ImageData.h>
@@ -50,7 +49,8 @@
 #include <coders/commons.h>
 #include <graphics/render/ModelsGenerator.h>
 #include <network/Network.h>
-#include <interfaces/Process.h>
+#include <Mainloop.h>
+#include <TestMainloop.h>
 
 static void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -102,6 +102,7 @@ Engine::Engine(
             Window::terminate();
             throw initialize_error("Failed to load Window");
         }
+        time.set(Window::time());
         if (auto icon = load_icon(resdir)) {
             icon->flipY();
             if (icon->getFormat() != ImageFormat::rgba8888) icon.reset(toRGBA(icon.get()));
@@ -229,14 +230,6 @@ void Engine::loadAssets() {
     LOG_INFO("Assets loaded successfully");
 }
 
-// Обновление таймеров
-void Engine::updateTimers() {
-    frame++;
-    double currentTime = Window::time(); // Текущее время от GLFW
-    deltaTime = currentTime - lastTime; // Расчёт времени между кадрами
-    lastTime = currentTime; // Обновление lastTime для следующего кадра
-}
-
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
     if (Events::justPressed(keycode::F2)) saveScreenshot();
@@ -256,11 +249,11 @@ void Engine::onAssetsLoaded() {
     gui->onAssetsLoad(assets.get());
 }
 
-void Engine::renderFrame(Batch2D& batch) {
-    screen->draw(deltaTime);
+void Engine::renderFrame() {
+    screen->draw(time.getDeltaTime());
 
     Viewport viewport(Window::width, Window::height);
-    DrawContext ctx(nullptr, viewport, &batch);
+    DrawContext ctx(nullptr, viewport, nullptr);
     gui->draw(ctx, *assets);
 }
 
@@ -275,69 +268,33 @@ void Engine::processPostRunnables() {
 
 void Engine::run() {
     if (params.headless) {
-        runTest();
+        TestMainloop(*this).run();
     } else {
-        mainloop();
+        Mainloop(*this).run();
     }
 }
 
-void Engine::runTest() {
-    if (params.testFile.empty()) {
-        LOG_INFO("Nothing to do ¯\\_(ツ)_/¯");
-        return;
-    }
-    int tps = 20;
-
-    LOG_INFO("Starting test {}", params.testFile.u8string());
-    auto process = scripting::start_coroutine(params.testFile);
-    while (process->isActive()) {
-        frame++;
-        deltaTime = 1.0f / static_cast<float>(tps);
-        lastTime += deltaTime;
-
-        process->update();
-    }
-    LOG_INFO("Test finished");
+void Engine::postUpdate() {
+    network->update();
+    processPostRunnables();
 }
 
-// Основной цикл приложения
-void Engine::mainloop() {
-    LOG_INFO("Loading the menu screen");
-    setScreen(std::make_shared<MenuScreen>(this));
-    LOG_INFO("The menu screen has loaded successfully");
+void Engine::updateFrontend() {
+    double delta = time.getDeltaTime();
+    updateHotkeys();
+    audio::update(delta);
+    gui->activate(delta, Viewport(Window::width, Window::height));
+    screen->update(delta);
+}
 
-    LOG_INFO("Preparing systems");
-    Batch2D batch(1024);
-    lastTime = Window::time();
-    LOG_INFO("Systems have been prepared");
-
-    Logger::getInstance().flush();
-
-    while (!Window::isShouldClose()) {
-        assert(screen != nullptr);
-
-        updateTimers(); // Обновляем время и deltaTime
-        updateHotkeys(); // Обрабатываем нажатия клавиш
-
-        audio::update(deltaTime);
-
-        gui->activate(deltaTime, Viewport(Window::width, Window::height));
-
-        screen->update(deltaTime);
-
-        if (!Window::isIconified()) renderFrame(batch);
-        Window::setFramerate(
-            Window::isIconified() && settings.display.limitFpsIconified.get()
-                ? 20
-                : settings.display.framerate.get()
-        );
-
-        network->update();
-        processPostRunnables();
-
-        Window::swapBuffers(); // Показать отрендеренный кадр
-        Events::pollEvents(); // Обработка событий ОС и ввода
-    }
+void Engine::nextFrame() {
+    Window::setFramerate(
+        Window::isIconified() && settings.display.limitFpsIconified.get()
+            ? 20
+            : settings.display.framerate.get()
+    );
+    Window::swapBuffers();
+    Events::pollEvents();
 }
 
 static void load_configs(const std::filesystem::path& root) {
@@ -497,10 +454,6 @@ EngineController* Engine::getController() {
     return controller.get();
 }
 
-double Engine::getUptime() const {
-    return lastTime;
-}
-
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
     audio::reset_channel(audio::get_channel_index("regular"));
     audio::reset_channel(audio::get_channel_index("ambient"));
@@ -509,10 +462,6 @@ void Engine::setScreen(std::shared_ptr<Screen> screen) {
 
 std::shared_ptr<Screen> Engine::getScreen() {
     return screen;
-}
-
-double Engine::getDeltaTime() const {
-    return deltaTime;
 }
 
 void Engine::setLanguage(std::string locale) {
@@ -586,4 +535,12 @@ network::Network& Engine::getNetwork() {
 
 const CoreParameters& Engine::getCoreParameters() const {
     return params;
+}
+
+bool Engine::isHeadless() const {
+    return params.headless;
+}
+
+EngineTime& Engine::getTime() {
+    return time;
 }

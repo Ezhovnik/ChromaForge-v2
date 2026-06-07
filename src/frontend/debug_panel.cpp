@@ -52,7 +52,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     static std::wstring fpsString = L"";
 
     panel->listenInterval(0.016f, [engine]() {
-        fps = 1.0f / engine->getDeltaTime();
+        fps = 1.0f / engine->getTime().getDeltaTime();
         fpsMin = std::min(fps, fpsMin);
         fpsMax = std::max(fps, fpsMax);
     });

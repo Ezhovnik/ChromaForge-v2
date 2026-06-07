@@ -3,11 +3,11 @@
 #include <window/Window.h>
 
 static int l_uptime(lua::State* L) {
-    return lua::pushnumber(L, scripting::engine->getUptime());
+    return lua::pushnumber(L, scripting::engine->getTime().getTime());
 }
 
 static int l_delta(lua::State* L) {
-    return lua::pushnumber(L, scripting::engine->getDeltaTime());
+    return lua::pushnumber(L, scripting::engine->getTime().getDeltaTime());
 }
 
 const luaL_Reg timelib [] = {

@@ -15,6 +15,7 @@ class DrawContext;
 class Assets;
 class Camera;
 class Viewport;
+class Batch2D;
 
 /*
 Padding is element inner space, margin is outer
@@ -52,6 +53,7 @@ namespace gui {
     class Menu;
 
     class GUI {
+        std::unique_ptr<Batch2D> batch2D;
         std::shared_ptr<Container> container;
 
         std::shared_ptr<UINode> hover;

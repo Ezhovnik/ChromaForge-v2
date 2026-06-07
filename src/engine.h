@@ -18,9 +18,9 @@
 #include <core_content_defs.h>
 #include <settings.h>
 #include <files/settings_io.h>
+#include <EngineTime.h>
 
 class Screen;
-class Batch2D;
 class EngineController;
 class SettingsHandler;
 struct EngineSettings;
@@ -77,14 +77,9 @@ private:
 
     std::unique_ptr<gui::GUI> gui;
 
-    uint64_t frame = 0; // Номер текущего кадра
-    double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
-    double deltaTime = 0.0; // Разница во времени между кадрами
+    EngineTime time;
 
-    void updateTimers(); // Обновление таймеров (frame, deltaTime)
     void updateHotkeys(); // Обработка горячих клавиш
-
-    void renderFrame(Batch2D& batch);
 
     void processPostRunnables();
 
@@ -98,9 +93,11 @@ public:
 
     void run();
 
-    void mainloop(); // Основной цикл приложения
+    void postUpdate();
 
-    void runTest();
+    void updateFrontend();
+    void renderFrame();
+    void nextFrame();
 
     void onAssetsLoaded();
 
@@ -113,14 +110,15 @@ public:
     std::vector<ContentPack>& getContentPacks();
     std::vector<ContentPack> getAllContentPacks();
     std::shared_ptr<Screen> getScreen();
-    double getDeltaTime() const;
-    double getUptime() const;
     SettingsHandler& getSettingsHandler();
     EngineController* getController();
     std::vector<std::string>& getBasePacks();
     cmd::CommandsInterpreter* getCommandsInterpreter();
     network::Network& getNetwork();
     const CoreParameters& getCoreParameters() const;
+    EngineTime& getTime();
+
+    bool isHeadless() const;
 
     void postRunnable(const runnable& callback);
 
