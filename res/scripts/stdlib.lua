@@ -12,6 +12,9 @@ end
 if test then
     test.sleep = sleep
     test.name = __CHROMA_TEST_NAME
+    test.new_world = builtin.new_world
+    test.close_world = builtin.close_world
+    test.reconfig_packs = builtin.reconfig_packs
 end
 
 ------------------------------------------------

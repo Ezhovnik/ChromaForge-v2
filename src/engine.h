@@ -24,6 +24,7 @@ class Screen;
 class EngineController;
 class SettingsHandler;
 struct EngineSettings;
+class Level;
 
 namespace gui {
     class GUI;
@@ -79,6 +80,8 @@ private:
 
     EngineTime time;
 
+    consumer<std::unique_ptr<Level>> levelConsumer;
+
     void updateHotkeys(); // Обработка горячих клавиш
 
     void processPostRunnables();
@@ -128,6 +131,10 @@ public:
 
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLanguage(std::string locale);
+    void setLevelConsumer(consumer<std::unique_ptr<Level>> levelConsumer);
+
+    void onWorldOpen(std::unique_ptr<Level> level);
+    void onWorldClosed();
 
     void loadContent();
     void resetContent();

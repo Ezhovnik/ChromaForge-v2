@@ -51,6 +51,8 @@
 #include <network/Network.h>
 #include <Mainloop.h>
 #include <TestMainloop.h>
+#include <frontend/screens/LevelScreen.h>
+#include <world/Level.h>
 
 static void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -127,7 +129,7 @@ Engine::Engine(
     if (langNotSet) settings.ui.language.set(platform::detect_locale());
     keepAlive(settings.ui.language.observe([=](auto lang) {
         setLanguage(lang);
-    }, !langNotSet));
+    }, true));
 
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);
@@ -174,6 +176,10 @@ PacksManager Engine::createPacksManager(const std::filesystem::path& worldFolder
         paths.getResourcesFolder()/std::filesystem::path("content")
     });
     return manager;
+}
+
+void Engine::setLevelConsumer(consumer<std::unique_ptr<Level>> levelConsumer) {
+    this->levelConsumer = std::move(levelConsumer);
 }
 
 void Engine::loadAssets() {
@@ -355,8 +361,11 @@ void Engine::loadContent() {
     std::string locale = langs::current ? langs::current->getId() : langs::FALLBACK_DEFAULT;
     setLanguage(locale);
 
-	loadAssets();
-    onAssetsLoaded();
+    if (!isHeadless()) {
+        loadAssets();
+        onAssetsLoaded();
+    }
+
     LOG_INFO("Content loaded sucessfully");
     Logger::getInstance().flush();
 }
@@ -543,4 +552,14 @@ bool Engine::isHeadless() const {
 
 EngineTime& Engine::getTime() {
     return time;
+}
+
+void Engine::onWorldOpen(std::unique_ptr<Level> level) {
+    LOG_INFO("World open");
+    levelConsumer(std::move(level));
+}
+
+void Engine::onWorldClosed() {
+    LOG_INFO("World closed");
+    levelConsumer(nullptr);
 }

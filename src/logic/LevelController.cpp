@@ -46,8 +46,9 @@ void LevelController::update(float delta, bool input, bool pause) {
 }
 
 void LevelController::saveWorld() {
-    LOG_INFO("Saving world");
-    level->getWorld()->wfile->createDirectories();
+    auto world = level->getWorld();
+    LOG_INFO("Writing world '{}'", world->getName());
+    world->wfile->createDirectories();
     scripting::on_world_save();
     level->onSave();
     level->getWorld()->write(level.get());
