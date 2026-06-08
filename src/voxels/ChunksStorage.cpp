@@ -17,10 +17,18 @@
 #include <objects/Entities.h>
 
 static void check_voxels(const ContentIndices& indices, Chunk* chunk) {
-    for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+    bool corrupted = false;
+	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         blockid_t id = chunk->voxels[i].id;
         if (indices.blocks.get(id) == nullptr) {
-            LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
+			if (!corrupted) {
+				if (!ENGINE_DEBUG_BUILD) {
+					LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
+					corrupted = true;
+				} else {
+					abort();
+				}
+			}
 			chunk->voxels[i].id = BLOCK_AIR;
         }
     }
@@ -29,28 +37,33 @@ static void check_voxels(const ContentIndices& indices, Chunk* chunk) {
 ChunksStorage::ChunksStorage(Level* level) : level(level) {
 }
 
-void ChunksStorage::store(const std::shared_ptr<Chunk>& chunk) {
-	chunksMap[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = chunk;
-}
+std::shared_ptr<Chunk> ChunksStorage::fetch(int x, int z) {
+    std::lock_guard lock(mutex);
 
-void ChunksStorage::remove(int x, int z) {
-	auto found = chunksMap.find(glm::ivec2(x, z));
-	if (found != chunksMap.end()) chunksMap.erase(found->first);
-}
-
-std::shared_ptr<Chunk> ChunksStorage::get(int x, int z) const {
 	auto found = chunksMap.find(glm::ivec2(x, z));
 	if (found == chunksMap.end()) return nullptr;
 
-	return found->second;
+	auto ptr = found->second.lock();
+    if (ptr == nullptr) {
+        chunksMap.erase(found);
+    }
+    return ptr;
 }
 
 std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
+	std::lock_guard lock(mutex);
+
+    auto found = chunksMap.find(glm::ivec2(x, z));
+    if (found != chunksMap.end()) {
+        auto chunk = found->second.lock();
+        if (chunk) return chunk;
+    }
+
 	World* world = level->getWorld();
 	auto& regions = world->wfile.get()->getRegions();
 
 	auto chunk = std::make_shared<Chunk>(x, z);
-	store(chunk);
+	chunksMap[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = chunk;
 
 	if (auto data = regions.getVoxels(chunk->chunk_x, chunk->chunk_z)) {
 		const auto& indices = *level->content->getIndices();

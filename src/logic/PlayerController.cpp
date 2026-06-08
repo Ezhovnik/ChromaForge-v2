@@ -170,10 +170,11 @@ void CameraControl::update(PlayerInput input, float delta, Chunks* chunks) {
 PlayerController::PlayerController(
 	const EngineSettings& settings,
     Level* level,
+    Player* player,
 	BlocksController* blocksController
 ) : settings(settings),
     level(level), 
-	player(level->players->getPlayer(0)), 
+	player(player),
 	camControl(player, settings.camera), 
 	blocksController(blocksController),
     playerSparkClock(20, 3) {}
@@ -504,21 +505,18 @@ void PlayerController::updateInteraction(float deltaTime) {
     }
 }
 
-void PlayerController::update(float delta, bool input_flag, bool pause) {
-	if (!pause) {
-		if (input_flag) {
-            updateKeyboard();
-            player->updateSelectedEntity();
-        } else {
-            resetKeyboard();
-        }
+void PlayerController::update(float delta, bool input) {
+    if (input) {
+        updateKeyboard();
+        player->updateSelectedEntity();
+    } else {
+        resetKeyboard();
+    }
+    updatePlayer(delta);
 
-		updatePlayer(delta);
-
-        if (playerSparkClock.update(delta)) {
-            if (player->getId() % playerSparkClock.getParts() == playerSparkClock.getPart()) {
-                scripting::on_player_spark(player, playerSparkClock.getSparkRate());
-            }
+    if (playerSparkClock.update(delta)) {
+        if (player->getId() % playerSparkClock.getParts() == playerSparkClock.getPart()) {
+            scripting::on_player_spark(player, playerSparkClock.getSparkRate());
         }
     }
 }

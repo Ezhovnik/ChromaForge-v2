@@ -26,6 +26,7 @@
 #include <frontend/menu.h>
 #include <coders/commons.h>
 #include <settings.h>
+#include <objects/Players.h>
 
 EngineController::EngineController(Engine* engine) : engine(engine) {
 }
@@ -230,6 +231,9 @@ void EngineController::createWorld(
         engine->getContent(),
         engine->getContentPacks()
     );
+    if (!engine->isHeadless()) {
+        level->players->create();
+    }
     engine->onWorldOpen(std::move(level));
 }
 
