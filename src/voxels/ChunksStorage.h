@@ -1,13 +1,10 @@
 #pragma once
 
-#include <memory>
-#include <unordered_map>
-#include <mutex>
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
 #include <typedefs.h>
+#include <util/WeakPtrsMap.h>
 
 class Chunk;
 class Level;
@@ -16,8 +13,7 @@ class ContentIndices;
 class ChunksStorage {
 private:
     Level* level;
-	std::mutex mutex;
-    std::unordered_map<glm::ivec2, std::weak_ptr<Chunk>> chunksMap;
+	std::shared_ptr<util::WeakPtrsMap<glm::ivec2, Chunk>> chunksMap;
 public:
 	ChunksStorage(Level* level);
 	~ChunksStorage() = default;

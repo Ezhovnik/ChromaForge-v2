@@ -16,60 +16,57 @@
 #include <items/Inventories.h>
 #include <objects/Entities.h>
 
-static void check_voxels(const ContentIndices& indices, Chunk* chunk) {
+static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     bool corrupted = false;
+	blockid_t defsCount = indices.blocks.count();
 	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        blockid_t id = chunk->voxels[i].id;
-        if (indices.blocks.get(id) == nullptr) {
+        blockid_t id = chunk.voxels[i].id;
+        if (id >= defsCount) {
 			if (!corrupted) {
 				if (!ENGINE_DEBUG_BUILD) {
-					LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk->chunk_x, chunk->chunk_z);
+					LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk.chunk_x, chunk.chunk_z);
 					corrupted = true;
 				} else {
 					abort();
 				}
 			}
-			chunk->voxels[i].id = BLOCK_AIR;
+			chunk.voxels[i].id = BLOCK_AIR;
         }
     }
 }
 
-ChunksStorage::ChunksStorage(Level* level) : level(level) {
-}
+ChunksStorage::ChunksStorage(
+	Level* level
+) : level(level),
+	chunksMap(std::make_shared<util::WeakPtrsMap<glm::ivec2, Chunk>>()) {}
 
 std::shared_ptr<Chunk> ChunksStorage::fetch(int x, int z) {
-    std::lock_guard lock(mutex);
-
-	auto found = chunksMap.find(glm::ivec2(x, z));
-	if (found == chunksMap.end()) return nullptr;
-
-	auto ptr = found->second.lock();
-    if (ptr == nullptr) {
-        chunksMap.erase(found);
-    }
-    return ptr;
+    std::lock_guard lock(*chunksMap);
+    return chunksMap->fetch({x, z});
 }
 
 std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
-	std::lock_guard lock(mutex);
-
-    auto found = chunksMap.find(glm::ivec2(x, z));
-    if (found != chunksMap.end()) {
-        auto chunk = found->second.lock();
-        if (chunk) return chunk;
-    }
+	if (auto ptr = chunksMap->fetch({x, z})) return ptr;
 
 	World* world = level->getWorld();
 	auto& regions = world->wfile.get()->getRegions();
 
-	auto chunk = std::make_shared<Chunk>(x, z);
-	chunksMap[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = chunk;
+	auto& localChunksMap = chunksMap;
+    auto chunk = std::shared_ptr<Chunk>(
+        new Chunk(x, z),
+        [localChunksMap, x, z](Chunk* ptr) {
+            std::lock_guard lock(*localChunksMap);
+            localChunksMap->erase({x, z});
+            delete ptr;
+        }
+    );
+    (*chunksMap)[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = chunk;
 
 	if (auto data = regions.getVoxels(chunk->chunk_x, chunk->chunk_z)) {
 		const auto& indices = *level->content->getIndices();
 
 		chunk->decode(data.get());
-		check_voxels(indices, chunk.get());
+		check_voxels(indices, *chunk);
 
 		auto invs = regions.fetchInventories(chunk->chunk_x, chunk->chunk_z);
 		auto iterator = invs.begin();
