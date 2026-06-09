@@ -28,13 +28,12 @@ int main(int argc, char** argv) {
     }
 
     // Инициализация логгера
+    auto logPath = coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log");
     if (ENGINE_DEBUG_BUILD) {
-		Logger::getInstance().initialize(
-            coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log")
-        );
+		Logger::getInstance().initialize(logPath);
 	} else {
 		Logger::getInstance().initialize(
-			coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log"),
+			logPath,
 			LogLevel::WARN,
 			LogLevel::INFO
 		);
