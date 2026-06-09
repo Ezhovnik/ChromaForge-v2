@@ -20,36 +20,16 @@ LevelController::LevelController(Engine* engine, std::unique_ptr<Level> levelPtr
     blocks(std::make_unique<BlocksController>(*level, settings.chunks.padding.get())),
     chunks(std::make_unique<ChunksController>(*level, settings.chunks.padding.get()))
 {
-    if (!engine->isHeadless()) {
-        player = std::make_unique<PlayerController>(
-            settings, level.get(), level->players->getPlayer(0), blocks.get()
-        );
-    }
     scripting::on_world_load(this);
 }
 
-void LevelController::update(float delta, bool input, bool pause) {
-    if (player) {
-        glm::vec3 position = player->getPlayer()->getPosition();
-        level->loadMatrix(
-            position.x,
-            position.z,
-            settings.chunks.loadDistance.get() + settings.chunks.padding.get() * 2
-        );
-        chunks->update(
-            settings.chunks.loadSpeed.get(), settings.chunks.loadDistance.get(),
-            floordiv(position.x, CHUNK_WIDTH), floordiv(position.z, CHUNK_DEPTH)
-        );
-    }
-
+void LevelController::update(float delta, bool pause) {
     if (!pause) {
         blocks->update(delta);
-        if (player) player->update(delta, input);
         level->entities->updatePhysics(delta);
         level->entities->update(delta);
     }
     level->entities->clean();
-    if (player) player->postUpdate(delta, input, pause);
 }
 
 void LevelController::saveWorld() {
@@ -68,14 +48,6 @@ void LevelController::onWorldQuit() {
 
 Level* LevelController::getLevel() {
     return level.get();
-}
-
-Player* LevelController::getPlayer() {
-    return player->getPlayer();
-}
-
-PlayerController* LevelController::getPlayerController() {
-    return player.get();
 }
 
 BlocksController* LevelController::getBlocksController() {

@@ -578,10 +578,6 @@ std::vector<Entt_Entity> Entities::getAllInRadius(glm::vec3 center, float radius
 }
 
 void Entities::render(const Assets& assets, ModelBatch& batch, const Frustum* frustum, float deltaTime, bool pause) {
-    if (!pause) {
-        scripting::on_entities_render(deltaTime);
-    }
-
     auto view = registry.view<Transform, rigging::Skeleton>();
     for (auto [entity, transform, skeleton] : view.each()) {
         if (transform.dirty) transform.refresh();

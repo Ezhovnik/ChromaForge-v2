@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include <logic/PlayerController.h>
 #include <logic/BlocksController.h>
 #include <logic/ChunksController.h>
 
@@ -18,22 +17,19 @@ private:
 
     std::unique_ptr<BlocksController> blocks;
     std::unique_ptr<ChunksController> chunks;
-    std::unique_ptr<PlayerController> player;
 public:
     LevelController(
         Engine* engine,
         std::unique_ptr<Level> level
     );
 
-    void update(float delta, bool input, bool pause);
+    void update(float delta, bool pause);
 
     void saveWorld();
     void onWorldQuit();
 
     Level* getLevel();
-    Player* getPlayer();
 
-    PlayerController* getPlayerController();
     ChunksController* getChunksController();
     BlocksController* getBlocksController();
 };

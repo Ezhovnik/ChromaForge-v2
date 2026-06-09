@@ -35,7 +35,7 @@ void TestMainloop::run() {
         if (controller) {
             float deltaTime = time.getDeltaTime();
             controller->getLevel()->getWorld()->updateTimers(deltaTime);
-            controller->update(glm::min(deltaTime, 0.2f), false, false);
+            controller->update(glm::min(deltaTime, 0.2f), false);
         }
     }
     LOG_INFO("Test finished");

@@ -42,3 +42,6 @@ heather=вереск
 pontederia=понтедерия
 blue orchid=голубая орхидея
 ice=лёд
+orange neon=оранжевый неоновый блок
+yellow neon=жёлтый неоновый блок
+lime neon=лаймовый неоновый блок

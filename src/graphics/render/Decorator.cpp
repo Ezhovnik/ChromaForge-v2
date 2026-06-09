@@ -13,6 +13,7 @@
 #include <graphics/render/TextsRenderer.h>
 #include <graphics/render/TextNote.h>
 #include <objects/Players.h>
+#include <objects/Player.h>
 #include <util/stringutil.h>
 #include <engine.h>
 #include <files/files.h>
@@ -26,12 +27,13 @@ Decorator::Decorator(
     Engine& engine,
     LevelController& controller,
     WorldRenderer& renderer,
-    const Assets& assets
+    const Assets& assets,
+    Player& player
 ) : engine(engine),
     level(*controller.getLevel()),
     renderer(renderer),
     assets(assets),
-    player(*controller.getPlayer())
+    player(player)
 {
     controller.getBlocksController()->listenBlockInteraction(
     [this](auto player, const auto& pos, const auto& def, BlockInteraction type) {
@@ -40,7 +42,7 @@ Decorator::Decorator(
         }
     });
     for (const auto& [id, player] : *level.players) {
-        if (id == controller.getPlayer()->getId()) {
+        if (id == this->player.getId()) {
             continue;
         }
         playerTexts[id] = renderer.texts->add(std::make_unique<TextNote>(
