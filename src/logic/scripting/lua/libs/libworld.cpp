@@ -15,6 +15,7 @@
 #include <voxels/Chunk.h>
 #include <coders/compression.h>
 #include <lighting/Lighting.h>
+#include <voxels/ChunksStorage.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {
@@ -222,6 +223,13 @@ static int l_set_chunk_data(lua::State* L) {
     }
 
     return 1;
+}
+
+static int l_count_chunks(lua::State* L) {
+    if (scripting::level == nullptr) {
+        return 0;
+    }
+    return lua::pushinteger(L, scripting::level->chunksStorage->size());
 }
 
 const luaL_Reg worldlib [] = {

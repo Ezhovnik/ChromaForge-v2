@@ -110,3 +110,12 @@ void platform::open_folder(const std::filesystem::path& folder) {
     system(cmd.c_str());
 #endif
 }
+
+int platform::get_process_id() {
+#ifdef _WIN32
+    #include <unistd.h>
+    return getpid();
+#else
+    return GetCurrentProcessId();
+#endif
+}

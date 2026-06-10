@@ -105,3 +105,7 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	chunk->blocksMetadata = regions.getBlocksData(chunk->chunk_x, chunk->chunk_z);
 	return chunk;
 }
+
+size_t ChunksStorage::size() const {
+    return chunksMap->size();
+}

@@ -13,6 +13,7 @@
 #include <math/voxmaths.h>
 #include <engine.h>
 #include <objects/Players.h>
+#include <objects/Player.h>
 
 LevelController::LevelController(Engine* engine, std::unique_ptr<Level> levelPtr) : 
     settings(engine->getSettings()),
@@ -24,6 +25,18 @@ LevelController::LevelController(Engine* engine, std::unique_ptr<Level> levelPtr
 }
 
 void LevelController::update(float delta, bool pause) {
+    for (const auto& [uid, player] : *level->players) {
+        glm::vec3 position = player->getPosition();
+        level->loadMatrix(
+            position.x,
+            position.z,
+            settings.chunks.loadDistance.get() + settings.chunks.padding.get() * 2
+        );
+        chunks->update(
+            settings.chunks.loadSpeed.get(), settings.chunks.loadDistance.get(),
+            floordiv(position.x, CHUNK_WIDTH), floordiv(position.z, CHUNK_DEPTH)
+        );
+    }
     if (!pause) {
         blocks->update(delta);
         level->entities->updatePhysics(delta);

@@ -172,16 +172,6 @@ void LevelScreen::update(float deltaTime) {
         animator->update(deltaTime);
     }
 
-    glm::vec3 position = player->getPosition();
-    level->loadMatrix(
-        position.x,
-        position.z,
-        settings.chunks.loadDistance.get() + settings.chunks.padding.get() * 2
-    );
-    controller->getChunksController()->update(
-        settings.chunks.loadSpeed.get(), settings.chunks.loadDistance.get(),
-        floordiv(position.x, CHUNK_WIDTH), floordiv(position.z, CHUNK_DEPTH)
-    );
     if (!hud->isPause()) {
         playerController->update(deltaTime, !inputLocked);
     }

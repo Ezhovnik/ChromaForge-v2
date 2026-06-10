@@ -22,4 +22,6 @@ public:
     std::shared_ptr<Chunk> create(int x, int z);
 
 	light_t getLight(int x, int y, int z, ubyte channel) const;
+
+	size_t size() const;
 };

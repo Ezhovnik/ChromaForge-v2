@@ -1,1 +1,12 @@
-print("Hello, world!")
+test.set_setting("chunks.load-distance", 2)
+test.set_setting("chunks.load-speed", 16)
+
+test.new_world("demo", "67", "builtin:default")
+local pid = player.create("Ezhovnik")
+assert(player.get_name(pid) == "Ezhovnik")
+test.sleep_until(function() return world.count_chunks() >= 9 end, 1000)
+print(world.count_chunks())
+assert(block.get(0, 0, 0) == block.index("builtin:obstacle"))
+block.destruct(0, 0, 0, pid)
+assert(block.get(0, 0, 0) == 0)
+test.close_world(true)

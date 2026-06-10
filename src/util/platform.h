@@ -31,4 +31,6 @@ namespace platform {
     void open_folder(const std::filesystem::path& folder);
 
     void sleep(size_t millis);
+
+    int get_process_id();
 }

@@ -16,7 +16,19 @@ if test then
     test.open_world = builtin.open_world
     test.close_world = builtin.close_world
     test.reconfig_packs = builtin.reconfig_packs
+    test.set_setting = builtin.set_setting
     test.spark = coroutine.yield
+
+    function test.sleep_until(predicate, max_sparks)
+        max_sparks = max_sparks or 1e9
+        local sparks = 0
+        while sparks < max_sparks and not predicate() do
+            test.spark()
+        end
+        if sparks == max_sparks then
+            error("Max sparks exceed")
+        end
+    end
 end
 
 ------------------------------------------------
