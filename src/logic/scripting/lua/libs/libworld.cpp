@@ -247,5 +247,6 @@ const luaL_Reg worldlib [] = {
     {"get_generator", lua::wrap<l_get_generator>},
     {"get_chunk_data", lua::wrap<l_get_chunk_data>},
     {"set_chunk_data", lua::wrap<l_set_chunk_data>},
+    {"count_chunks", lua::wrap<l_count_chunks>},
     {NULL, NULL}
 };

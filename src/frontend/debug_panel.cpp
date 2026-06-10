@@ -29,6 +29,7 @@
 #include <frontend/hud.h>
 #include <graphics/render/ParticlesRenderer.h>
 #include <graphics/render/ChunksRenderer.h>
+#include <voxels/ChunksStorage.h>
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
@@ -74,7 +75,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         return L"Draw-calls: " + std::to_wstring(drawCalls);
     }));
     panel->add(std::shared_ptr<gui::Label>(create_label([&](){
-		return L"Chunks: " + std::to_wstring(level.chunks->getChunksCount()) + L" (visible: " + std::to_wstring(ChunksRenderer::visibleChunks) + L")";
+		return L"Chunks: " + std::to_wstring(level.chunksStorage->size()) + L" (visible: " + std::to_wstring(ChunksRenderer::visibleChunks) + L")";
 	})));
     panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Particles: " +

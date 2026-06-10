@@ -21,7 +21,6 @@
 #include <world/Level.h>
 #include <objects/Entities.h>
 #include <coders/byte_utils.h>
-#include <coders/json.h>
 #include <data/StructLayout.h>
 #include <debug/Logger.h>
 #include <voxels/VoxelsVolume.h>
@@ -46,7 +45,6 @@ Chunks::Chunks(
 {
 	areaMap.setCenter(areaOffsetX - width / 2, areaOffsetZ - depth / 2);
     areaMap.setOutCallback([this](int, int, const auto& chunk) {
-        save(chunk.get());
 		this->level->events->trigger(CHUNK_HIDDEN, chunk.get());
     });
 }
@@ -56,8 +54,8 @@ voxel* Chunks::getVoxel(int32_t x, int32_t y, int32_t z) const {
         return nullptr;
     }
 
-    int cx = floordiv(x, CHUNK_WIDTH);
-    int cz = floordiv(z, CHUNK_DEPTH);
+    int cx = floordiv<CHUNK_WIDTH>(x);
+    int cz = floordiv<CHUNK_DEPTH>(z);
 
 	auto ptr = areaMap.getIf(cx, cz);
     if (ptr == nullptr) return nullptr;
@@ -189,26 +187,26 @@ void Chunks::setRotation(int32_t x, int32_t y, int32_t z, uint8_t index) {
 bool Chunks::isSolidBlock(int32_t x, int32_t y, int32_t z) {
     voxel* vox = getVoxel(x, y, z);
     if (vox == nullptr) return false;
-    return contentIds->blocks.get(vox->id)->rt.solid;
+    return contentIds->blocks.require(vox->id).rt.solid;
 }
 
 bool Chunks::isReplaceableBlock(int32_t x, int32_t y, int32_t z) {
     voxel* v = getVoxel(x, y, z);
     if (v == nullptr) return false;
-    return contentIds->blocks.get(v->id)->replaceable;
+    return contentIds->blocks.require(v->id).replaceable;
 }
 
 bool Chunks::isObstacleBlock(int32_t x, int32_t y, int32_t z) {
 	voxel* v = getVoxel(x, y, z);
 	if (v == nullptr) return false;
-	return contentIds->blocks.get(v->id)->obstacle;
+	return contentIds->blocks.require(v->id).obstacle;
 }
 
 ubyte Chunks::getLight(int32_t x, int32_t y, int32_t z, int channel) const {
 	if (y < 0 || y >= CHUNK_HEIGHT) return 0;
 
-	int cx = floordiv(x, CHUNK_WIDTH);
-	int cz = floordiv(z, CHUNK_DEPTH);
+	int cx = floordiv<CHUNK_WIDTH>(x);
+    int cz = floordiv<CHUNK_DEPTH>(z);
 
 	auto ptr = areaMap.getIf(cx, cz);
     if (ptr == nullptr) return 0;
@@ -225,8 +223,8 @@ ubyte Chunks::getLight(int32_t x, int32_t y, int32_t z, int channel) const {
 light_t Chunks::getLight(int32_t x, int32_t y, int32_t z) const {
 	if (y < 0 || y >= CHUNK_HEIGHT) return 0;
 
-	int cx = floordiv(x, CHUNK_WIDTH);
-	int cz = floordiv(z, CHUNK_DEPTH);
+	int cx = floordiv<CHUNK_WIDTH>(x);
+    int cz = floordiv<CHUNK_DEPTH>(z);
 
 	auto ptr = areaMap.getIf(cx, cz);
     if (ptr == nullptr) return 0;
@@ -243,8 +241,8 @@ light_t Chunks::getLight(int32_t x, int32_t y, int32_t z) const {
 Chunk* Chunks::getChunkByVoxel(int x, int y, int z) const {
     if (y < 0 || y >= CHUNK_HEIGHT) return nullptr;
 
-    int cx = floordiv(x, CHUNK_WIDTH);
-	int cz = floordiv(z, CHUNK_DEPTH);
+    int cx = floordiv<CHUNK_WIDTH>(x);
+    int cz = floordiv<CHUNK_DEPTH>(z);
 
 	if (auto ptr = areaMap.getIf(cx, cz)) {
         return ptr->get();
@@ -321,8 +319,8 @@ void Chunks::repairSegments(const Block& def, blockstate state, int x, int y, in
 void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate state) {
     if (y < 0 || y >= CHUNK_HEIGHT) return;
 
-    int cx = floordiv(x, CHUNK_WIDTH);
-    int cz = floordiv(z, CHUNK_DEPTH);
+    int cx = floordiv<CHUNK_WIDTH>(x);
+    int cz = floordiv<CHUNK_DEPTH>(z);
 
 	auto ptr = areaMap.getIf(cx, cz);
     if (ptr == nullptr) return;
@@ -625,7 +623,11 @@ bool Chunks::checkReplaceability(
 }
 
 bool Chunks::putChunk(const std::shared_ptr<Chunk>& chunk) {
-	return areaMap.set(chunk->chunk_x, chunk->chunk_z, chunk);
+	if (areaMap.set(chunk->chunk_x, chunk->chunk_z, chunk)) {
+        level->events->trigger(LevelEventType::CHUNK_SHOWN, chunk.get());
+        return true;
+    }
+    return false;
 }
 
 void Chunks::resize(uint32_t newWidth, uint32_t newDepth) {
@@ -646,11 +648,11 @@ void Chunks::getVoxels(VoxelsVolume* volume, bool backlight) const {
     int h = volume->getH();
     int d = volume->getD();
 
-    int scx = floordiv(x, CHUNK_WIDTH);
-    int scz = floordiv(z, CHUNK_DEPTH);
+    int scx = floordiv<CHUNK_WIDTH>(x);
+    int scz = floordiv<CHUNK_DEPTH>(z);
 
-    int ecx = floordiv(x + w, CHUNK_WIDTH);
-    int ecz = floordiv(z + d, CHUNK_DEPTH);
+    int ecx = floordiv<CHUNK_WIDTH>(x + w);
+    int ecz = floordiv<CHUNK_DEPTH>(z + d);
 
     int cw = ecx - scx + 1;
     int cd = ecz - scz + 1;
@@ -707,41 +709,4 @@ void Chunks::getVoxels(VoxelsVolume* volume, bool backlight) const {
 
 void Chunks::saveAndClear() {
 	areaMap.clear();
-}
-
-void Chunks::save(Chunk* chunk) {
-    if (chunk != nullptr) {
-        AABB aabb (
-            glm::vec3(
-				chunk->chunk_x * CHUNK_WIDTH,
-				-INFINITY,
-				chunk->chunk_z * CHUNK_DEPTH
-			),
-            glm::vec3(
-				(chunk->chunk_x + 1) * CHUNK_WIDTH,
-				INFINITY,
-				(chunk->chunk_z + 1) * CHUNK_DEPTH
-			)
-        );
-        auto entities = level->entities->getAllInside(aabb);
-		auto root = dv::object();
-        root["data"] = level->entities->serialize(entities);
-        if (!entities.empty()) {
-            level->entities->despawn(std::move(entities));
-            chunk->flags.entities = true;
-        }
-		worldFiles->getRegions().put(
-            chunk,
-            chunk->flags.entities ? json::to_binary(root, true) : std::vector<ubyte>()
-        );
-    }
-}
-
-void Chunks::saveAll() {
-    const auto& chunks = areaMap.getBuffer();
-    for (size_t i = 0; i < areaMap.area(); ++i) {
-        if (auto& chunk = chunks[i]) {
-            save(chunk.get());
-        }
-    }
 }

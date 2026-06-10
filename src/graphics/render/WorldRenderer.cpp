@@ -90,7 +90,7 @@ WorldRenderer::WorldRenderer(
         assets->require<ShaderProgram>("skybox_gen")
     );
 
-    level.events->listen(CHUNK_HIDDEN, [this](lvl_event_type, Chunk* chunk) {
+    level.events->listen(CHUNK_HIDDEN, [this](LevelEventType, Chunk* chunk) {
 		chunks->unload(chunk);
 	});
 }

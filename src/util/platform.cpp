@@ -5,6 +5,7 @@
 #include <time.h>
 #include <algorithm>
 #include <thread>
+#include <unistd.h> 
 
 #include <typedefs.h>
 #include <debug/Logger.h>

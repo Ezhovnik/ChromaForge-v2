@@ -55,6 +55,13 @@ Level::Level(
         entities->setNextID(worldInfo.nextEntityId);
     }
 
+    events->listen(LevelEventType::CHUNK_SHOWN, [this](LevelEventType, Chunk* chunk) {
+        chunksStorage->incref(chunk);
+    });
+    events->listen(LevelEventType::CHUNK_HIDDEN, [this](LevelEventType, Chunk* chunk) {
+        chunksStorage->decref(chunk);
+    });
+
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
     uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
     chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, world->wfile.get(), this);

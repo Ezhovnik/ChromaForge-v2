@@ -272,6 +272,7 @@ void Hud::updateHotbarControl() {
 
 void Hud::updateWorldGenDebugVisualization() {
     auto& level = levelFrontend.getLevel();
+    auto& chunks = *level.chunks;
     auto generator = levelFrontend.getController()->getChunksController()->getGenerator();
     auto debugInfo = generator->createDebugInfo();
     int width = debugImgWorldGen->getWidth();
@@ -294,7 +295,7 @@ void Hud::updateWorldGenDebugVisualization() {
             int az = z - (height - areaHeight) / 2;
 
             data[(flippedZ * width + x) * 4 + 1] = 
-                level.chunks->getChunk(ax + ox, az + oz) ? 255 : 0;
+                chunks.getChunk(ax + ox, az + oz) ? 255 : 0;
             data[(flippedZ * width + x) * 4 + 0] = 
                 level.chunksStorage->fetch(ax + ox, az + oz) ? 255 : 0;
 
