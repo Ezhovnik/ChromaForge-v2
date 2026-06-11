@@ -2,5 +2,6 @@
     "texture": "blue_neon",
     "emission": [0, 0, 15],
     "material": "chromaforge:glass",
-    "shadeless": true
+    "shadeless": true,
+    "chromaforge:durability": 0.3
 }

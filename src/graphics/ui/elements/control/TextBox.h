@@ -43,6 +43,9 @@ namespace gui {
         bool autoresize = false;
         bool showLineNumbers = false;
 
+        std::string markup;
+        std::string syntax;
+
         void stepLeft(bool shiftPressed, bool breakSelection);
         void stepRight(bool shiftPressed, bool breakSelection);
         void stepDefaultDown(bool shiftPressed, bool breakSelection);
@@ -68,6 +71,8 @@ namespace gui {
         void refreshLabel();
 
         void onInput();
+
+        void refreshSyntax();
     public:
         TextBox(
             std::wstring placeholder, 
@@ -140,17 +145,26 @@ namespace gui {
         virtual void setOnUpPressed(const runnable& callback);
         virtual void setOnDownPressed(const runnable& callback);
 
+        virtual void setSyntax(std::string_view lang);
+        virtual const std::string& getSyntax() const;
+
+        virtual void setMarkup(std::string_view lang);
+        virtual const std::string& getMarkup() const;
+
         virtual void onFocus(GUI*) override;
         virtual void refresh() override;
         virtual void click(GUI*, int, int) override;
         virtual void doubleClick(GUI*, int x, int y) override;
         virtual void mouseMove(GUI*, int x, int y) override;
         virtual bool isFocuskeeper() const override {return true;}
-        virtual void draw(const DrawContext* pctx, Assets* assets) override;
-        virtual void drawBackground(const DrawContext* pctx, Assets* assets) override;
+        virtual void draw(const DrawContext& pctx, const Assets& assets) override;
+        virtual void drawBackground(const DrawContext& pctx, const Assets& assets) override;
         virtual void typed(unsigned int codepoint) override; 
         void paste(const std::wstring& text);
         virtual void keyPressed(keycode key) override;
-        virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
+        virtual std::shared_ptr<UINode> getAt(
+            const glm::vec2& pos,
+            const std::shared_ptr<UINode>& self
+        ) override;
     };
 }

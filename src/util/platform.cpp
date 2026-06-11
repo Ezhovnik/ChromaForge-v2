@@ -5,6 +5,7 @@
 #include <time.h>
 #include <algorithm>
 #include <thread>
+#include <unistd.h> 
 
 #include <typedefs.h>
 #include <debug/Logger.h>
@@ -108,5 +109,14 @@ void platform::open_folder(const std::filesystem::path& folder) {
 #else
     auto cmd = "xdg-open " + util::quote(folder.u8string());
     system(cmd.c_str());
+#endif
+}
+
+int platform::get_process_id() {
+#ifdef _WIN32
+    #include <unistd.h>
+    return getpid();
+#else
+    return GetCurrentProcessId();
 #endif
 }

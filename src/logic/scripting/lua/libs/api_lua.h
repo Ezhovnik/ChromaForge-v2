@@ -34,6 +34,8 @@ extern const luaL_Reg particleslib[]; // gfx.particles
 extern const luaL_Reg text3dlib[]; // gfx.text3d
 extern const luaL_Reg base64lib[];
 extern const luaL_Reg blockwrapslib[]; // gfx.blockwraps
+extern const luaL_Reg networklib[];
+extern const luaL_Reg testlib[];
 
 extern const luaL_Reg skeletonlib [];
 extern const luaL_Reg rigidbodylib [];

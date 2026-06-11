@@ -9,14 +9,16 @@
 #include <stdexcept>
 
 class EnginePaths;
+struct CoreParameters;
 
 namespace lua {
     enum class StateType {
         Base,
+        Test,
         Generator
     };
 
-    void initialize(const EnginePaths& paths);
+    void initialize(const EnginePaths& paths, const CoreParameters& params);
     void finalize();
 
     bool emit_event(State*, const std::string& name, std::function<int(State*)> args=[](auto*){return 0;});

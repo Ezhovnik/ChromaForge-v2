@@ -66,7 +66,7 @@ void World::writeResources(const Content* content) {
 void World::write(Level* level) {
 	const Content* content = level->content;
 
-	level->chunks->saveAll();
+	level->chunksStorage->saveAll();
 
 	info.nextEntityId = level->entities->peekNextID();
 
@@ -97,9 +97,10 @@ std::unique_ptr<Level> World::create(
         content,
         packs
     );
-	auto level = std::make_unique<Level>(std::move(world), content, settings);
-    level->players->create();
-    return level;
+    LOG_INFO("Created world '{}' ({})", name, directory.u8string());
+    LOG_INFO("World seed: {}", seed);
+    LOG_INFO("World generator: {}", generator);
+	return std::make_unique<Level>(std::move(world), content, settings);
 }
 
 std::shared_ptr<ContentReport> World::checkIndices(const std::shared_ptr<WorldFiles>& worldFiles, const Content* content) {
@@ -151,8 +152,10 @@ std::unique_ptr<Level> World::load(
         auto playerRoot = files::read_json(file);
         level->players->deserialize(playerRoot);
 
-        if (!playerRoot["players"][0].has("id")) {
-            level->getWorld()->getInfo().nextPlayerId++;
+        if (!playerRoot["players"].empty()) {
+            if (!playerRoot["players"][0].has("id")) {
+                level->getWorld()->getInfo().nextPlayerId++;
+            }
         }
     }
 

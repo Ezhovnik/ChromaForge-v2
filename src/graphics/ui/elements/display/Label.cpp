@@ -7,6 +7,7 @@
 #include <graphics/core/Font.h>
 #include <assets/Assets.h>
 #include <util/stringutil.h>
+#include <graphics/ui/markdown.h>
 
 using namespace gui;
 
@@ -63,6 +64,8 @@ Label::Label(const std::wstring& text, std::string fontName) :
     cache.update(this->text, multiline, textWrap);
 }
 
+Label::~Label() = default;
+
 glm::vec2 Label::calcSize() {
     auto font = cache.font;
     uint lineHeight = font->getLineHeight();
@@ -73,10 +76,16 @@ glm::vec2 Label::calcSize() {
     );
 }
 
-void Label::setText(const std::wstring& text) {
+void Label::setText(std::wstring text) {
+    if (markup == "md") {
+        auto [processedText, styles] = markdown::process(text, true);
+        text = std::move(processedText);
+        setStyles(std::move(styles));
+    }
+
     if (text == this->text && !cache.resetFlag) return;
 
-    this->text = text;
+    this->text = std::move(text);
     cache.update(this->text, multiline, textWrap);
 
     if (cache.font && autoresize) setSize(calcSize());
@@ -144,9 +153,9 @@ uint Label::getLinesNumber() const {
     return cache.lines.size();
 }
 
-void Label::draw(const DrawContext* pctx, Assets* assets) {
-    auto batch = pctx->getBatch2D();
-    auto font = assets->get<Font>(fontName);
+void Label::draw(const DrawContext& pctx, const Assets& assets) {
+    auto batch = pctx.getBatch2D();
+    auto font = assets.get<Font>(fontName);
     cache.prepare(font, static_cast<size_t>(glm::abs(getSize().x)));
 
     if (supplier) setText(supplier());
@@ -181,12 +190,12 @@ void Label::draw(const DrawContext* pctx, Assets* assets) {
             size_t offset = line.offset;
             std::wstring_view view(text.c_str() + offset, text.length() - offset);
             if (i < cache.lines.size() - 1) {
-                view = std::wstring_view(text.c_str()+offset, cache.lines.at(i + 1).offset-offset);
+                view = std::wstring_view(text.c_str() + offset, cache.lines.at(i + 1).offset - offset);
             }
-            font->draw(*batch, view, pos.x, pos.y + i * totalLineHeight);
+            font->draw(*batch, view, pos.x, pos.y + i * totalLineHeight, styles.get(), offset);
         }
     } else {
-        font->draw(*batch, text, pos.x, pos.y);
+        font->draw(*batch, text, pos.x, pos.y, styles.get(), 0);
     }
 }
 
@@ -220,4 +229,17 @@ void Label::setAutoResize(bool flag) {
 
 bool Label::isAutoResize() const {
     return autoresize;
+}
+
+void Label::setStyles(std::unique_ptr<FontStylesScheme> styles) {
+    this->styles = std::move(styles);
+}
+
+void Label::setMarkup(std::string_view lang) {
+    markup = lang;
+    setText(text);
+}
+
+const std::string& Label::getMarkup() const {
+    return markup;  
 }

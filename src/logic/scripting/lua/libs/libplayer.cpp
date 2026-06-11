@@ -231,6 +231,13 @@ static int l_set_name(lua::State* L) {
     return 0;
 }
 
+static int l_create(lua::State* L) {
+    auto player = scripting::level->players->create();
+    if (lua::isstring(L, 1)) {
+        player->setName(lua::require_string(L, 1));
+    }
+    return lua::pushinteger(L, player->getId());
+}
 
 const luaL_Reg playerlib [] = {
     {"get_pos", lua::wrap<l_get_pos>},
@@ -259,5 +266,6 @@ const luaL_Reg playerlib [] = {
     {"set_camera", lua::wrap<l_set_camera>},
     {"get_name", lua::wrap<l_get_name>},
     {"set_name", lua::wrap<l_set_name>},
+    {"create", lua::wrap<l_create>},
     {NULL, NULL}
 };

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <filesystem>
 
 #include <fmt/format.h>
 
@@ -28,7 +29,7 @@ public:
     static Logger& getInstance();
 
     void initialize(
-        const std::string& logFile = "../build/logs/ChromaForge.log", 
+        const std::filesystem::path& folder, 
         LogLevel consoleLevel = LogLevel::INFO, 
         LogLevel fileLevel = LogLevel::DEBUG
     );

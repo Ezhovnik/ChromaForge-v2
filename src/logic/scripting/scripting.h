@@ -33,6 +33,7 @@ struct Entity;
 class Entt_Entity;
 class GeneratorScript;
 struct Generator;
+class Process;
 
 namespace scripting {
     extern Engine* engine;
@@ -54,6 +55,10 @@ namespace scripting {
     scriptenv create_doc_environment(const scriptenv& parent, const std::string& name);
 
     void process_post_runnables();
+
+    std::unique_ptr<Process> start_coroutine(
+        const std::filesystem::path& script
+    );
 
     void on_world_load(LevelController* controller);
     void on_world_spark();

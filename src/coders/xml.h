@@ -14,11 +14,6 @@ namespace xml {
     class Attribute;
     class Document;
 
-    typedef Attribute xmlattribute;
-    typedef std::shared_ptr<Node> xmlelement;
-    typedef std::shared_ptr<Document> xmldocument;
-    typedef std::unordered_map<std::string, xmlattribute> xmlelements_map;
-
     class Attribute {
     private:
         std::string name;
@@ -41,12 +36,13 @@ namespace xml {
     class Node {
     private:
         std::string tag;
-        std::unordered_map<std::string, xmlattribute> attrs;
-        std::vector<xmlelement> elements;
+        std::unordered_map<std::string, Attribute> attrs;
+        std::vector<std::unique_ptr<Node>> elements;
     public:
         Node(std::string tag);
+        Node(const Node&) = delete;
 
-        void add(const xmlelement& element);
+        void add(std::unique_ptr<Node> element);
 
         void set(const std::string& name, const std::string& text);
 
@@ -60,57 +56,44 @@ namespace xml {
             return attr("#").getText();
         }
 
-        const xmlattribute& attr(const std::string& name) const;
-        xmlattribute attr(const std::string& name, const std::string& def) const;
+        const Attribute& attr(const std::string& name) const;
+        Attribute attr(const std::string& name, const std::string& def) const;
 
         bool has(const std::string& name) const;
 
-        xmlelement sub(size_t index);
+        Node& sub(size_t index);
+        const Node& sub(size_t index) const;
 
         size_t size() const;
 
-        const std::vector<xmlelement>& getElements() const;
-        const xmlelements_map& getAttributes() const;
+        const std::vector<std::unique_ptr<Node>>& getElements() const;
+        const std::unordered_map<std::string, Attribute>& getAttributes() const;
     };
 
     class Document {
     private:
-        xmlelement root = nullptr;
+        std::unique_ptr<Node> root = nullptr;
         std::string version;
         std::string encoding;
     public:
         Document(std::string version, std::string encoding);
 
-        void setRoot(const xmlelement& element);
-        xmlelement getRoot() const;
+        void setRoot(std::unique_ptr<Node> element);
+        const Node* getRoot() const;
 
         const std::string& getVersion() const;
         const std::string& getEncoding() const;
     };
 
-    class Parser : BasicParser {
-    private:
-        xmldocument document;
-
-        xmlelement parseOpenTag();
-        xmlelement parseElement();
-        void parseDeclaration();
-        void parseComment();
-        std::string parseText();
-        std::string parseXMLName();
-    public:
-        Parser(std::string_view filename, std::string_view source);
-
-        xmldocument parse();
-    };
-
-    extern std::string stringify(
-        const xmldocument& document,
+    std::string stringify(
+        const Document& document,
         bool nice=true,
         const std::string& indentStr="    "
     );
 
-    extern xmldocument parse(
+    std::unique_ptr<Document> parse(
         std::string_view filename, std::string_view source
     );
+
+    using xmlelement = Node;
 }

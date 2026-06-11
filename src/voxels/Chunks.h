@@ -106,8 +106,6 @@ public:
     void resize(uint32_t newWidth, uint32_t newDepth);
 
     void saveAndClear();
-    void save(Chunk* chunk);
-    void saveAll();
 
     const std::vector<std::shared_ptr<Chunk>>& getChunks() const {
         return areaMap.getBuffer();

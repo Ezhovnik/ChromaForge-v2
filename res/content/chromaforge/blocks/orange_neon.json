@@ -1,0 +1,7 @@
+{
+    "texture": "orange_neon",
+    "emission": [15, 10, 0],
+    "material": "chromaforge:glass",
+    "shadeless": true,
+    "chromaforge:durability": 0.3
+}

@@ -25,6 +25,11 @@
 #include <input_bindings.h>
 #include <content/Content.h>
 #include <graphics/render/Decorator.h>
+#include <logic/scripting/scripting.h>
+#include <math/voxmaths.h>
+#include <objects/Player.h>
+#include <logic/PlayerController.h>
+#include <objects/Players.h>
 
 LevelScreen::LevelScreen(
     Engine* engine,
@@ -40,13 +45,22 @@ LevelScreen::LevelScreen(
     menu->reset();
 
     controller = std::make_unique<LevelController>(engine, std::move(levelPtr));
-    frontend = std::make_unique<LevelFrontend>(controller->getPlayer(), controller.get(), assets);
 
-    worldRenderer = std::make_unique<WorldRenderer>(engine, *frontend, controller->getPlayer());
-    hud = std::make_unique<Hud>(engine, *frontend, controller->getPlayer());
+    auto player = level->players->getPlayer(0);
+    playerController = std::make_unique<PlayerController>(
+        settings,
+        level,
+        player,
+        controller->getBlocksController()
+    );
+
+    frontend = std::make_unique<LevelFrontend>(player, controller.get(), assets);
+
+    worldRenderer = std::make_unique<WorldRenderer>(engine, *frontend, player);
+    hud = std::make_unique<Hud>(engine, *frontend, player);
 
     decorator = std::make_unique<Decorator>(
-        *engine, *controller, *worldRenderer, assets
+        *engine, *controller, *worldRenderer, assets, *player
     );
 
     keepAlive(settings.graphics.backlight.observe([=](bool) {
@@ -54,7 +68,7 @@ LevelScreen::LevelScreen(
         worldRenderer->clear();
     }));
     keepAlive(settings.camera.fov.observe([=](double value) {
-        controller->getPlayer()->fpCamera->setFov(glm::radians(value));
+        player->fpCamera->setFov(glm::radians(value));
     }));
     keepAlive(Events::getBinding(BIND_CHUNKS_RELOAD).onactived.add([=](){
         controller->getLevel()->chunks->saveAndClear();
@@ -100,7 +114,7 @@ void LevelScreen::saveWorldPreview() {
     try {
         LOG_INFO("Saving world preview");
         auto paths = engine->getPaths();
-        auto player = controller->getPlayer();
+        auto player = playerController->getPlayer();
         auto& settings = engine->getSettings();
         int previewSize = settings.ui.worldPreviewSize.get();
 
@@ -120,10 +134,11 @@ void LevelScreen::saveWorldPreview() {
 }
 
 void LevelScreen::updateHotkeys() {
+    auto player = playerController->getPlayer();
     auto& settings = engine->getSettings();
 
     if (Events::justPressed(keycode::F1)) hudVisible = !hudVisible;
-    if (Events::justPressed(keycode::F3)) controller->getPlayer()->debug = !controller->getPlayer()->debug;
+    if (Events::justPressed(keycode::F3)) player->debug = !player->debug;
 }
 
 void LevelScreen::update(float deltaTime) {
@@ -132,7 +147,7 @@ void LevelScreen::update(float deltaTime) {
     bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();
 
-    auto player = controller->getPlayer();
+    auto player = playerController->getPlayer();
     auto camera = player->currentCamera;
 
     bool paused = hud->isPause();
@@ -149,20 +164,34 @@ void LevelScreen::update(float deltaTime) {
         glm::vec3(0, 1, 0)
     );
 
+    auto level = controller->getLevel();
+    const auto& settings = engine->getSettings();
+
     if (!hud->isPause()) {
-        controller->getLevel()->getWorld()->updateTimers(deltaTime);
+        level->getWorld()->updateTimers(deltaTime);
         animator->update(deltaTime);
     }
-    controller->update(glm::min(deltaTime, 0.2f), !inputLocked, hud->isPause());
+
+    if (!hud->isPause()) {
+        playerController->update(deltaTime, !inputLocked);
+    }
+    controller->update(glm::min(deltaTime, 0.2f), hud->isPause());
+    playerController->postUpdate(deltaTime, !inputLocked, hud->isPause());
+
+
     hud->update(hudVisible);
     decorator->update(deltaTime, *camera);
 }
 
 void LevelScreen::draw(float deltaTime) {
-    auto camera = controller->getPlayer()->currentCamera;
+    auto camera = playerController->getPlayer()->currentCamera;
 
     Viewport viewport(Window::width, Window::height);
     DrawContext ctx(nullptr, viewport, batch.get());
+
+    if (!hud->isPause()) {
+        scripting::on_entities_render(engine->getTime().getDeltaTime());
+    }
 
     worldRenderer->draw(
         ctx,

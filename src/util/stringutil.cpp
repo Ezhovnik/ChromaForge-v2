@@ -13,7 +13,7 @@
 
 #include <debug/Logger.h>
 
-std::string util::escape(std::string_view s) {
+std::string util::escape(std::string_view s, bool escapeUnicode) {
     std::stringstream ss;
     ss << '"';
     size_t pos = 0;
@@ -31,8 +31,12 @@ std::string util::escape(std::string_view s) {
                 if (c & 0x80) {
                     uint cpsize;
                     int codepoint = decode_utf8(cpsize, s.data() + pos);
+                    if (escapeUnicode) {
+                        ss << "\\u" << std::hex << codepoint;
+                    } else {
+                        ss << std::string(s.data() + pos, cpsize);
+                    }
                     pos += cpsize-1;
-                    ss << "\\u" << std::hex << codepoint;
                     break;
                 }
                 if (c < ' ') {
@@ -49,7 +53,7 @@ std::string util::escape(std::string_view s) {
 }
 
 std::string util::quote(const std::string& s) {
-    return escape(s);
+    return escape(s, false);
 }
 
 std::wstring util::lfill(std::wstring s, uint length, wchar_t c) {
@@ -313,7 +317,7 @@ std::string util::base64_encode(const ubyte* data, size_t size) {
 util::Buffer<ubyte> util::base64_decode(const char* str, size_t size) {
     util::Buffer<ubyte> bytes((size / 4) * 3);
     ubyte* dst = bytes.data();
-    for (size_t i = 0; i < size;) {
+    for (size_t i = 0; i < (size / 4) * 4;) {
         ubyte a = base64_decode_char(ubyte(str[i++]));
         ubyte b = base64_decode_char(ubyte(str[i++]));
         ubyte c = base64_decode_char(ubyte(str[i++]));

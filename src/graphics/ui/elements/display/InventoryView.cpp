@@ -57,7 +57,7 @@ void InventoryBuilder::addGrid(
     int cols,
     int count,
     glm::vec2 pos,
-    int padding,
+    glm::vec4 padding,
     bool addpanel,
     const SlotLayout& slotLayout
 ) {
@@ -66,8 +66,8 @@ void InventoryBuilder::addGrid(
 
     int rows = ceildiv(count, cols);
 
-    uint width =  cols * (slotSize + interval) - interval + padding * 2;
-    uint height = rows * (slotSize + interval) - interval + padding * 2;
+    uint width =  cols * (slotSize + interval) - interval + padding.x + padding.z;
+    uint height = rows * (slotSize + interval) - interval + padding.y + padding.w;
 
     glm::vec2 vsize = view->getSize();
     if (pos.x + width > vsize.x) vsize.x = pos.x + width;
@@ -85,8 +85,8 @@ void InventoryBuilder::addGrid(
             if (row * cols + col >= count) break;
 
             glm::vec2 position (
-                col * (slotSize + interval) + padding,
-                row * (slotSize + interval) + padding
+                col * (slotSize + interval) + padding.x,
+                row * (slotSize + interval) + padding.y
             );
             auto builtSlot = slotLayout;
             builtSlot.index = row * cols + col;
@@ -106,10 +106,10 @@ std::shared_ptr<InventoryView> InventoryBuilder::build() {
 
 SlotView::SlotView(SlotLayout layout) : UINode(glm::vec2(InventoryView::SLOT_SIZE)), layout(std::move(layout)) {
     setColor(glm::vec4(0, 0, 0, 0.2f));
-    setTooltipDelay(0.05f);
+    setTooltipDelay(0.0f);
 }
 
-void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
+void SlotView::draw(const DrawContext& parent_context, const Assets& assets) {
     if (bound == nullptr) return;
 
     itemid_t itemid = bound->getItemId();
@@ -136,7 +136,7 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
         color = glm::vec4(1, 1, 1, 0.2f);
     }
 
-    auto batch = parent_context->getBatch2D();
+    auto batch = parent_context.getBatch2D();
     batch->setColor(color);
     if (color.a > 0.0) {
         batch->untexture();
@@ -149,7 +149,7 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
 
     batch->setColor(glm::vec4(1.0f));
 
-    auto previews = assets->get<Atlas>("block-previews");
+    auto previews = assets.get<Atlas>("block-previews");
     auto indices = content->getIndices();
 
     auto& item = indices->items.require(stack.getItemId());    
@@ -165,7 +165,7 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
             break;
         }
         case ItemIconType::Sprite: {
-            auto textureRegion = util::get_texture_region(*assets, item.icon, "blocks:" + TEXTURE_NOTFOUND);
+            auto textureRegion = util::get_texture_region(assets, item.icon, "blocks:" + TEXTURE_NOTFOUND);
 
             batch->texture(textureRegion.texture);
             batch->rect(pos.x, pos.y, slotSize, slotSize, 0, 0, 0, textureRegion.region, false, true, tint);
@@ -174,16 +174,16 @@ void SlotView::draw(const DrawContext* parent_context, Assets* assets) {
     }
 
     if (stack.getCount() > 1) {
-        auto font = assets->get<Font>("normal");
+        auto font = assets.get<Font>("normal");
         std::wstring text = std::to_wstring(stack.getCount());
 
         int x = pos.x + slotSize - text.length() * 8;
         int y = pos.y + slotSize - 16;
 
         batch->setColor({0, 0, 0, 1.0f});
-        font->draw(*batch, text, x + 1, y + 1);
+        font->draw(*batch, text, x + 1, y + 1, nullptr, 0);
         batch->setColor(glm::vec4(1.0f));
-        font->draw(*batch, text, x, y);
+        font->draw(*batch, text, x, y, nullptr, 0);
     }
 }
 
@@ -201,6 +201,63 @@ const std::wstring& SlotView::getTooltip() const {
     return tooltip;
 }
 
+void SlotView::performLeftClick(ItemStack& stack, ItemStack& grabbed) {
+    if (layout.taking && Events::isPressed(keycode::LEFT_SHIFT)) {
+        if (layout.shareFunc) {
+            layout.shareFunc(layout.index, stack);
+        }
+        if (layout.updateFunc) {
+            layout.updateFunc(layout.index, stack);
+        }
+        return;
+    }
+    if (!layout.itemSource && stack.accepts(grabbed) && layout.placing) {
+        stack.move(grabbed, content->getIndices());
+    } else {
+        if (layout.itemSource) {
+            if (grabbed.isEmpty()) {
+                grabbed.set(stack);
+            } else {
+                grabbed.clear();
+            }
+        } else if (grabbed.isEmpty()) {
+            if (layout.taking) std::swap(grabbed, stack);
+        } else if (layout.taking && layout.placing) {
+            std::swap(grabbed, stack);
+        }
+    }
+}
+
+void SlotView::performRightClick(ItemStack& stack, ItemStack& grabbed) {
+    if (layout.rightClick) {
+        layout.rightClick(inventoryId, stack);
+        if (layout.updateFunc) {
+            layout.updateFunc(layout.index, stack);
+        }
+        return;
+    }
+    if (layout.itemSource) return;
+    if (grabbed.isEmpty()) {
+        if (!stack.isEmpty() && layout.taking) {
+            grabbed.set(stack);
+            int halfremain = stack.getCount() / 2;
+            grabbed.setCount(stack.getCount() - halfremain);
+            stack.setCount(halfremain);
+        }
+        return;
+    }
+    auto& stackDef = content->getIndices()->items.require(stack.getItemId());
+    if (!layout.placing) return;
+    if (stack.isEmpty()) {
+        stack.set(grabbed);
+        stack.setCount(1);
+        grabbed.setCount(grabbed.getCount() - 1);
+    } else if (stack.accepts(grabbed) && stack.getCount() < stackDef.stackSize) {
+        stack.setCount(stack.getCount() + 1);
+        grabbed.setCount(grabbed.getCount() - 1);
+    }
+}
+
 void SlotView::clicked(gui::GUI* gui, mousecode button) {
     if (bound == nullptr) return;
 
@@ -210,46 +267,9 @@ void SlotView::clicked(gui::GUI* gui, mousecode button) {
     ItemStack& stack = *bound;
 
     if (button == mousecode::BUTTON_1) {
-        if (Events::isPressed(keycode::LEFT_SHIFT)) {
-            if (layout.shareFunc) layout.shareFunc(layout.index, stack);
-            if (layout.updateFunc) layout.updateFunc(layout.index, stack);
-            return;
-        }
-        if (!layout.itemSource && stack.accepts(grabbed)) {
-            stack.move(grabbed, content->getIndices());
-        } else {
-            if (layout.itemSource) {
-                if (grabbed.isEmpty()) grabbed.set(stack);
-                else grabbed.clear();
-            } else {
-                std::swap(grabbed, stack);
-            }
-        }
+        performLeftClick(stack, grabbed);
     } else if (button == mousecode::BUTTON_2) {
-        if (layout.rightClick) {
-            layout.rightClick(inventoryId, stack);
-            if (layout.updateFunc) layout.updateFunc(layout.index, stack);
-            return;
-        }
-        if (layout.itemSource) return;
-        if (grabbed.isEmpty()) {
-            if (!stack.isEmpty()) {
-                grabbed.set(stack);
-                int halfremain = stack.getCount() / 2;
-                grabbed.setCount(stack.getCount() - halfremain);
-                stack.setCount(halfremain);
-            }
-        } else {
-            auto& stackDef = content->getIndices()->items.require(stack.getItemId());
-            if (stack.isEmpty()) {
-                stack.set(grabbed);
-                stack.setCount(1);
-                grabbed.setCount(grabbed.getCount() - 1);
-            } else if (stack.accepts(grabbed) && stack.getCount() < stackDef.stackSize) {
-                stack.setCount(stack.getCount() + 1);
-                grabbed.setCount(grabbed.getCount() - 1);
-            }
-        }
+        performRightClick(stack, grabbed);
     }
     if (layout.updateFunc) layout.updateFunc(layout.index, stack);
 }

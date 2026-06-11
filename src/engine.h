@@ -16,12 +16,15 @@
 #include <content/PacksManager.h>
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
+#include <settings.h>
+#include <files/settings_io.h>
+#include <EngineTime.h>
 
 class Screen;
-class Batch2D;
 class EngineController;
 class SettingsHandler;
 struct EngineSettings;
+class Level;
 
 namespace gui {
     class GUI;
@@ -31,18 +34,30 @@ namespace cmd {
     class CommandsInterpreter;
 }
 
+namespace network {
+    class Network;
+}
+
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
 class initialize_error : public std::runtime_error {
 public:
     initialize_error(const std::string& message) : std::runtime_error(message) {}
 };
 
+struct CoreParameters {
+    bool headless = false;
+    std::filesystem::path resFolder {"res"};
+    std::filesystem::path userFolder {"."};
+    std::filesystem::path testFile;
+};
+
 // Основной класс Engine, управляющий жизненным циклом приложения
 class Engine : public util::ObjectsKeeper {
 private:
-    EngineSettings& settings;
-    SettingsHandler& settingsHandler;
-    EnginePaths* paths;
+    CoreParameters params;
+    EngineSettings settings;
+    SettingsHandler settingsHandler;
+    EnginePaths paths;
 
     std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen;
@@ -57,18 +72,17 @@ private:
 
     std::unique_ptr<cmd::CommandsInterpreter> interpreter;
 
+    std::unique_ptr<network::Network> network;
+
     std::vector<std::string> basePacks;
 
     std::unique_ptr<gui::GUI> gui;
 
-    uint64_t frame = 0; // Номер текущего кадра
-    double lastTime = 0.0; // Время последнего кадра (для расчёта deltaTime)
-    double deltaTime = 0.0; // Разница во времени между кадрами
+    EngineTime time;
 
-    void updateTimers(); // Обновление таймеров (frame, deltaTime)
+    consumer<std::unique_ptr<Level>> levelConsumer;
+
     void updateHotkeys(); // Обработка горячих клавиш
-
-    void renderFrame(Batch2D& batch);
 
     void processPostRunnables();
 
@@ -77,10 +91,16 @@ private:
     void loadSettings();
     void saveSettings();
 public:
-    Engine(EngineSettings& settings, SettingsHandler& settingsHandler, EnginePaths* paths); // Конструктор
+    Engine(CoreParameters coreParameters); // Конструктор
     ~Engine(); // Деструктор
 
-    void mainloop(); // Основной цикл приложения
+    void run();
+
+    void postUpdate();
+
+    void updateFrontend();
+    void renderFrame();
+    void nextFrame();
 
     void onAssetsLoaded();
 
@@ -93,11 +113,15 @@ public:
     std::vector<ContentPack>& getContentPacks();
     std::vector<ContentPack> getAllContentPacks();
     std::shared_ptr<Screen> getScreen();
-    double getDeltaTime() const;
     SettingsHandler& getSettingsHandler();
     EngineController* getController();
     std::vector<std::string>& getBasePacks();
     cmd::CommandsInterpreter* getCommandsInterpreter();
+    network::Network& getNetwork();
+    const CoreParameters& getCoreParameters() const;
+    EngineTime& getTime();
+
+    bool isHeadless() const;
 
     void postRunnable(const runnable& callback);
 
@@ -107,6 +131,10 @@ public:
 
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLanguage(std::string locale);
+    void setLevelConsumer(consumer<std::unique_ptr<Level>> levelConsumer);
+
+    void onWorldOpen(std::unique_ptr<Level> level);
+    void onWorldClosed();
 
     void loadContent();
     void resetContent();

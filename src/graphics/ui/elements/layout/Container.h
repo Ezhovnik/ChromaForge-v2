@@ -7,21 +7,27 @@
 
 namespace gui {
     class Container : public UINode {
+        int prevScrollY = -1;
     protected:
         std::vector<std::shared_ptr<UINode>> nodes;
         std::vector<IntervalEvent> intervalEvents;
         int scroll = 0;
         int scrollStep = 40;
+        int scrollBarWidth = 10;
         int actualLength = 0;
         bool scrollable = true;
+
+        bool isScrolling() {
+            return prevScrollY != -1;
+        }
     public:
         Container(glm::vec2 size);
         virtual ~Container();
 
         virtual void activate(float delta) override;
-        virtual void drawBackground(const DrawContext* pctx, Assets* assets);
-        virtual void draw(const DrawContext* pctx, Assets* assets) override;
-        virtual std::shared_ptr<UINode> getAt(glm::vec2 pos, std::shared_ptr<UINode> self) override;
+        virtual void drawBackground(const DrawContext& pctx, const Assets& assets);
+        virtual void draw(const DrawContext& pctx, const Assets& assets) override;
+        virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos, const std::shared_ptr<UINode>& self) override;
         virtual void add(const std::shared_ptr<UINode>& node);
         virtual void add(const std::shared_ptr<UINode>& node, glm::vec2 pos);
         virtual void remove(const std::shared_ptr<UINode>& node);
@@ -36,6 +42,9 @@ namespace gui {
 
         virtual int getScrollStep() const;
         virtual void setScrollStep(int step);
+
+        virtual void mouseMove(GUI*, int x, int y) override;
+        virtual void mouseRelease(GUI*, int x, int y) override;
 
         const std::vector<std::shared_ptr<UINode>>& getNodes() const;
     };

@@ -34,11 +34,11 @@ end
 
 
 function timeit(iters, func, ...)
-    local tm = time.uptime()
+    local tm = os.clock()
     for i=1,iters do
         func(...)
     end
-    print("[time mcs]", (time.uptime()-tm) * 1000000)
+    print("[time mcs]", (os.clock() - tm) * 1000000)
 end
 
 ----------------------------------------------
@@ -58,6 +58,20 @@ function table.copy(t)
 
     for k, v in pairs(t) do
         copied[k] = v
+    end
+
+    return copied
+end
+
+function table.deep_copy(t)
+    local copied = {}
+
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            copied[k] = table.deep_copy(v)
+        else
+            copied[k] = v
+        end
     end
 
     return copied

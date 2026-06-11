@@ -63,8 +63,7 @@ static int l_close_world(lua::State* L) {
     if (scripting::controller == nullptr) throw std::runtime_error("No world open");
     bool save_world = lua::toboolean(L, 1);
     if (save_world) scripting::controller->saveWorld();
-    scripting::engine->setScreen(nullptr);
-    scripting::engine->setScreen(std::make_shared<MenuScreen>(scripting::engine));
+    scripting::engine->onWorldClosed();
     return 0;
 }
 
@@ -169,15 +168,10 @@ static int l_get_setting_info(lua::State* L) {
 static void load_texture(
     const ubyte* bytes, size_t size, const std::string& destname
 ) {
-    auto path = scripting::engine->getPaths()->resolve("export:.__chroma_imagedata");
     try {
-        files::write_bytes(path, bytes, size);
-        scripting::engine->getAssets()->store(
-            png::loadTexture(path.u8string()), destname
-        );
-        std::filesystem::remove(path);
+        scripting::engine->getAssets()->store(png::loadTexture(bytes, size), destname);
     } catch (const std::runtime_error& err) {
-        LOG_ERROR("Could not to decode image: {}", err.what());
+        LOG_ERROR("{}", err.what());
     }
 }
 
@@ -203,7 +197,12 @@ static int l_load_texture(lua::State* L) {
     return 0;
 }
 
+static int l_blank(lua::State* L) {
+    return 0;
+}
+
 const luaL_Reg builtinlib [] = {
+    {"nop", lua::wrap<l_blank>},
     {"get_version", lua::wrap<l_get_version>},
     {"new_world", lua::wrap<l_new_world>},
     {"open_world", lua::wrap<l_open_world>},

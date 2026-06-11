@@ -16,6 +16,8 @@
 #include <graphics/ui/elements/display/InventoryView.h>
 #include <world/Level.h>
 #include <graphics/ui/elements/display/Image.h>
+#include <graphics/ui/markdown.h>
+#include <graphics/core/Font.h>
 
 struct DocumentNode {
     UIDocument* document;
@@ -277,6 +279,10 @@ static int p_get_content_offset(gui::UINode* node, lua::State* L) {
     return lua::pushvec(L, node->getContentOffset());
 }
 
+static int p_get_id(gui::UINode* node, lua::State* L) {
+    return lua::pushstring(L, node->getId());
+}
+
 static int p_get_color(gui::UINode* node, lua::State* L) {
     return lua::pushcolor(L, node->getColor());
 }
@@ -360,6 +366,22 @@ static int p_get_destruct(gui::UINode*, lua::State* L) {
     return lua::pushcfunction(L, lua::wrap<l_node_destruct>);
 }
 
+static int p_get_syntax(gui::UINode* node, lua::State* L) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return lua::pushstring(L, box->getSyntax());
+    }
+    return 0;
+}
+
+static int p_get_markup(gui::UINode* node, lua::State* L) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return lua::pushstring(L, box->getMarkup());
+    } else if (auto label = dynamic_cast<gui::Label*>(node)) {
+        return lua::pushstring(L, label->getMarkup());
+    }
+    return 0;
+}
+
 static int p_get_src(gui::UINode* node, lua::State* L) {
     if (auto image = dynamic_cast<gui::Image*>(node)) {
         return lua::pushstring(L, image->getTexture());
@@ -388,6 +410,7 @@ static int l_gui_getattr(lua::State* L) {
     auto attr = lua::require_string(L, 3);
 
     static const std::unordered_map<std::string_view, std::function<int(gui::UINode*, lua::State*)>> getters {
+        {"id", p_get_id},
         {"color", p_get_color},
         {"hoverColor", p_get_hover_color},
         {"pressedColor", p_get_pressed_color},
@@ -408,6 +431,8 @@ static int l_gui_getattr(lua::State* L) {
         {"lineNumbers", p_get_line_numbers},
         {"lineAt", p_get_line_at},
         {"linePos", p_get_line_pos},
+        {"syntax", p_get_syntax},
+        {"markup", p_get_markup},
         {"value", p_get_value},
         {"min", p_get_min},
         {"max", p_get_max},
@@ -586,6 +611,20 @@ static void p_set_caret(gui::UINode* node, lua::State* L, int idx) {
     }
 }
 
+static void p_set_syntax(gui::UINode* node, lua::State* L, int idx) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        box->setSyntax(lua::require_string(L, idx));
+    }
+}
+
+static void p_set_markup(gui::UINode* node, lua::State* L, int idx) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        box->setMarkup(lua::require_string(L, idx));
+    } else if (auto label = dynamic_cast<gui::Label*>(node)) {
+        label->setMarkup(lua::require_string(L, idx));
+    }
+}
+
 static void p_set_src(gui::UINode* node, lua::State* L, int idx) {
     if (auto image = dynamic_cast<gui::Image*>(node)) {
         image->setTexture(lua::require_string(L, idx));
@@ -629,6 +668,8 @@ static int l_gui_setattr(lua::State* L) {
         {"text", p_set_text},
         {"editable", p_set_editable},
         {"lineNumbers", p_set_line_numbers},
+        {"syntax", p_set_syntax},
+        {"markup", p_set_markup},
         {"value", p_set_value},
         {"min", p_set_min},
         {"max", p_set_max},
@@ -700,6 +741,25 @@ static int l_gui_get_viewport(lua::State* L) {
     return lua::pushvec2(L, scripting::engine->getGUI()->getContainer()->getSize());;
 }
 
+static int l_gui_clear_markup(lua::State* L) {
+    auto lang = lua::require_string(L, 1);
+    std::string text = lua::require_string(L, 2);
+    if (std::strcmp(lang, "md") == 0) {
+        auto [processed, _] = markdown::process(text, true);
+        text = std::move(processed);
+    }
+    return lua::pushstring(L, text);
+}
+
+static int l_gui_escape_markup(lua::State* L) {
+    auto lang = lua::require_string(L, 1);
+    std::string text = lua::require_string(L, 2);
+    if (std::strcmp(lang, "md") == 0) {
+        text = std::move(markdown::escape<char>(text));
+    }
+    return lua::pushstring(L, text);
+}
+
 const luaL_Reg guilib [] = {
     {"get_viewport", lua::wrap<l_gui_get_viewport>},
     {"getattr", lua::wrap<l_gui_getattr>},
@@ -707,6 +767,8 @@ const luaL_Reg guilib [] = {
     {"get_env", lua::wrap<l_gui_get_env>},
     {"str", lua::wrap<l_gui_str>},
     {"get_locales_info", lua::wrap<l_gui_get_locales_info>},
+    {"clear_markup", lua::wrap<l_gui_clear_markup>},
+    {"escape_markup", lua::wrap<l_gui_escape_markup>},
     {"__reindex", lua::wrap<l_gui_reindex>},
     {NULL, NULL}
 };

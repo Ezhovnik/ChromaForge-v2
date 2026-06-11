@@ -12,42 +12,43 @@
 #include <objects/Entities.h>
 #include <math/voxmaths.h>
 #include <engine.h>
+#include <objects/Players.h>
+#include <objects/Player.h>
 
 LevelController::LevelController(Engine* engine, std::unique_ptr<Level> levelPtr) : 
     settings(engine->getSettings()),
     level(std::move(levelPtr)),
     blocks(std::make_unique<BlocksController>(*level, settings.chunks.padding.get())),
-    chunks(std::make_unique<ChunksController>(*level, settings.chunks.padding.get())),
-    player(std::make_unique<PlayerController>(settings, level.get(), blocks.get()))
+    chunks(std::make_unique<ChunksController>(*level, settings.chunks.padding.get()))
 {
     scripting::on_world_load(this);
 }
 
-void LevelController::update(float delta, bool input, bool pause) {
-    glm::vec3 position = player->getPlayer()->getPosition();
-    level->loadMatrix(
-        position.x, 
-        position.z, 
-        settings.chunks.loadDistance.get() + settings.chunks.padding.get() * 2
-    );
-    chunks->update(
-        settings.chunks.loadSpeed.get(), settings.chunks.loadDistance.get(),
-        floordiv(position.x, CHUNK_WIDTH), floordiv(position.z, CHUNK_DEPTH)
-    );
-
+void LevelController::update(float delta, bool pause) {
+    for (const auto& [uid, player] : *level->players) {
+        glm::vec3 position = player->getPosition();
+        level->loadMatrix(
+            position.x,
+            position.z,
+            settings.chunks.loadDistance.get() + settings.chunks.padding.get() * 2
+        );
+        chunks->update(
+            settings.chunks.loadSpeed.get(), settings.chunks.loadDistance.get(),
+            floordiv(position.x, CHUNK_WIDTH), floordiv(position.z, CHUNK_DEPTH)
+        );
+    }
     if (!pause) {
         blocks->update(delta);
-        player->update(delta, input, pause);
         level->entities->updatePhysics(delta);
         level->entities->update(delta);
     }
     level->entities->clean();
-    player->postUpdate(delta, input, pause);
 }
 
 void LevelController::saveWorld() {
-    LOG_INFO("Saving world");
-    level->getWorld()->wfile->createDirectories();
+    auto world = level->getWorld();
+    LOG_INFO("Writing world '{}'", world->getName());
+    world->wfile->createDirectories();
     scripting::on_world_save();
     level->onSave();
     level->getWorld()->write(level.get());
@@ -60,14 +61,6 @@ void LevelController::onWorldQuit() {
 
 Level* LevelController::getLevel() {
     return level.get();
-}
-
-Player* LevelController::getPlayer() {
-    return player->getPlayer();
-}
-
-PlayerController* LevelController::getPlayerController() {
-    return player.get();
 }
 
 BlocksController* LevelController::getBlocksController() {

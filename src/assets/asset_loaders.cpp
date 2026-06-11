@@ -74,7 +74,7 @@ asset_loader::postfunc asset_loader::texture(
 {
     auto actualFile = paths->find(filename + ".png").u8string();
     try {
-        std::shared_ptr<ImageData> image(imageio::read(actualFile).release());
+        std::shared_ptr<ImageData> image(imageio::read(std::filesystem::u8path(actualFile)).release());
         return [name, image, actualFile](auto assets) {
             assets->store(Texture::from(image.get()), name);
         };
@@ -97,7 +97,7 @@ asset_loader::postfunc asset_loader::font(
 		std::string page_name = filename + "_" + std::to_string(i) + ".png"; 
         auto file = paths->find(page_name);
         if (std::filesystem::exists(file)) {
-            pages->push_back(imageio::read(file.u8string()));
+            pages->push_back(imageio::read(file));
         } else if (i == 0) {
             LOG_ERROR("Font must have page 0");
             throw std::runtime_error("Font must have page 0");
@@ -132,7 +132,7 @@ static bool append_atlas(AtlasBuilder& atlas, const std::filesystem::path& file)
 	if (atlas.has(name)) return false;
 
 	// Загружаем изображение
-	auto image = imageio::read(file.string());
+	auto image = imageio::read(file);
 	if (image == nullptr) {
 		LOG_ERROR("Failed to load atlas entry '{}'", name);
 		return false;

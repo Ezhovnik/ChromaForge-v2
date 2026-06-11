@@ -30,7 +30,7 @@ struct ParticlesPreset : public Serializable {
     glm::vec3 spawnSpread {};
     std::string texture = "";
     float randomSubUV = 1.0f;
-    std::vector<std::string> frames {};
+    std::vector<std::string> frames;
 
     dv::value serialize() const override;
     void deserialize(const dv::value& src) override;

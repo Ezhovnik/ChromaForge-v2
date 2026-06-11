@@ -73,10 +73,11 @@ public:
 	PlayerController(
 		const EngineSettings& settings,
 		Level* level,
+		Player* player,
 		BlocksController* blocksController
 	);
 
-	void update(float delta, bool input_flag, bool pause);
+	void update(float delta, bool input_flag);
 	void postUpdate(float delta, bool input_flag, bool pause);
 
 	Player* getPlayer();

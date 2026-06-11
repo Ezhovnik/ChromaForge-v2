@@ -26,6 +26,7 @@
 #include <frontend/menu.h>
 #include <coders/commons.h>
 #include <settings.h>
+#include <objects/Players.h>
 
 EngineController::EngineController(Engine* engine) : engine(engine) {
 }
@@ -127,20 +128,25 @@ static void show_content_missing(
     menus::show(engine, "reports/missing_content", {std::move(root)});
 }
 
-static bool loadWorldContent(Engine* engine, const std::filesystem::path& folder) {
-    return menus::call(engine, [engine, folder]() {
+static bool load_world_content(Engine* engine, const std::filesystem::path& folder) {
+    if (engine->isHeadless()) {
         engine->loadWorldContent(folder);
-    });
+        return true;
+    } else {
+        return menus::call(engine, [engine, folder]() {
+            engine->loadWorldContent(folder);
+        });
+    }
 }
 
-static void loadWorld(Engine* engine, const std::shared_ptr<WorldFiles>& worldFiles) {
+static void load_world(Engine* engine, const std::shared_ptr<WorldFiles>& worldFiles) {
     try {
         auto content = engine->getContent();
         auto& packs = engine->getContentPacks();
         auto& settings = engine->getSettings();
 
         auto level = World::load(worldFiles, settings, content, packs);
-        engine->setScreen(std::make_shared<LevelScreen>(engine, std::move(level)));
+        engine->onWorldOpen(std::move(level));
     } catch (const world_load_error& error) {
         guiutil::alert(
             engine->getGUI(), langs::get(L"Error") + L": " +
@@ -153,7 +159,13 @@ static void loadWorld(Engine* engine, const std::shared_ptr<WorldFiles>& worldFi
 void EngineController::openWorld(const std::string& name, bool confirmConvert) {
     auto paths = engine->getPaths();
     auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
-    if (!loadWorldContent(engine, folder)) return;
+    auto worldFile = folder/std::filesystem::u8path("world.json");
+    if (!std::filesystem::exists(worldFile)) {
+        LOG_ERROR("{} does not exists", worldFile.u8string());
+        throw std::runtime_error(worldFile.u8string() + " does not exists");
+    }
+
+    if (!load_world_content(engine, folder)) return;
 
     auto* content = engine->getContent();
 
@@ -177,7 +189,7 @@ void EngineController::openWorld(const std::string& name, bool confirmConvert) {
         }
         return;
     }
-    loadWorld(engine, std::move(worldFiles));
+    load_world(engine, std::move(worldFiles));
 }
 
 inline uint64_t str2seed(const std::string& seedstr) {
@@ -203,7 +215,10 @@ void EngineController::createWorld(
 
     EnginePaths* paths = engine->getPaths();
     auto folder = paths->getWorldsFolder()/std::filesystem::u8path(name);
-    if (!menus::call(engine, [this, paths, folder]() {
+    if (engine->isHeadless()) {
+        engine->loadContent();
+        paths->setCurrentWorldFolder(folder);
+    } else if (!menus::call(engine, [this, paths, folder]() {
         engine->loadContent();
         paths->setCurrentWorldFolder(folder);
     })) {
@@ -216,7 +231,10 @@ void EngineController::createWorld(
         engine->getContent(),
         engine->getContentPacks()
     );
-    engine->setScreen(std::make_shared<LevelScreen>(engine, std::move(level)));
+    if (!engine->isHeadless()) {
+        level->players->create();
+    }
+    engine->onWorldOpen(std::move(level));
 }
 
 void EngineController::reopenWorld(World* world) {

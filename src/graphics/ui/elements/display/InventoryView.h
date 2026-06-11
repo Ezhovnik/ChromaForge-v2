@@ -35,6 +35,9 @@ namespace gui {
         slotcallback rightClick;
         int padding = 0;
 
+        bool taking = true;
+        bool placing = true;
+
         SlotLayout(
             int index,
             glm::vec2 position, 
@@ -57,10 +60,13 @@ namespace gui {
 
         std::wstring tooltip;
         itemid_t prevItem = 0;
+
+        void performLeftClick(ItemStack& stack, ItemStack& grabbed);
+        void performRightClick(ItemStack& stack, ItemStack& grabbed);
     public:
         SlotView(SlotLayout layout);
 
-        virtual void draw(const DrawContext* pctx, Assets* assets) override;
+        virtual void draw(const DrawContext& pctx, const Assets& assets) override;
 
         void setHighlighted(bool flag);
         bool isHighlighted() const;
@@ -126,11 +132,11 @@ namespace gui {
         void addGrid(
             int cols, int count, 
             glm::vec2 pos, 
-            int padding,
+            glm::vec4 padding,
             bool addpanel,
             const SlotLayout& slotLayout
         );
-        
+
         void add(const SlotLayout& slotLayout);
         std::shared_ptr<InventoryView> build();
     };

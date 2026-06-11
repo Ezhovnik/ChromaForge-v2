@@ -29,9 +29,9 @@ static int l_close_inventory(lua::State*) {
 }
 
 static int l_open(lua::State* L) {
-    auto invid = lua::tointeger(L, 1);
-    auto layoutid = lua::require_string(L, 2);
-    bool playerInventory = !lua::toboolean(L, 3);
+    auto layoutid = lua::require_string(L, 1);
+    bool playerInventory = !lua::toboolean(L, 2);
+    auto invid = lua::tointeger(L, 3);
 
     auto assets = scripting::engine->getAssets();
     auto layout = assets->get<UIDocument>(layoutid);
@@ -39,13 +39,11 @@ static int l_open(lua::State* L) {
         throw std::runtime_error("There is no ui layout " + util::quote(layoutid));
     }
 
-    scripting::hud->openInventory(
+    return lua::pushinteger(L, scripting::hud->openInventory(
         layout,
         scripting::level->inventories->get(invid),
         playerInventory
-    );
-
-    return 0;
+    )->getId());
 }
 
 static int l_open_block(lua::State* L) {

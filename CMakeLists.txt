@@ -10,6 +10,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(CURL REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -32,7 +33,9 @@ target_link_libraries(ChromaForge
         glfw
         PkgConfig::VORBIS
         PkgConfig::LUAJIT
+        CURL::libcurl
         $<$<PLATFORM_ID:Windows>:winmm>
+        $<$<PLATFORM_ID:Windows>:ws2_32>
 )
 
 target_include_directories(ChromaForge PRIVATE
@@ -56,3 +59,5 @@ add_custom_target(copy_resources ALL
     COMMENT "Copying resources to build directory"
 )
 add_dependencies(ChromaForge copy_resources)
+
+add_subdirectory(vctest)

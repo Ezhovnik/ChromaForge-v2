@@ -26,7 +26,7 @@ namespace util {
             std::fill(secondBuffer.begin(), secondBuffer.end(), T{});
             for (TCoord z = 0; z < sizeZ; ++z) {
                 for (TCoord x = 0; x < sizeX; ++x) {
-                    auto& value = firstBuffer[z * sizeX + x];
+                    auto value = std::move(firstBuffer[z * sizeX + x]);
                     auto nx = x - dx;
                     auto nz = z - dz;
                     if (value == T{}) {
@@ -39,7 +39,7 @@ namespace util {
                         valuesCount--;
                         continue;
                     }
-                    secondBuffer[nz * sizeX + nx] = value;
+                    secondBuffer[nz * sizeX + nx] = std::move(value);
                 }
             }
             std::swap(firstBuffer, secondBuffer);

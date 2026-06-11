@@ -1,4 +1,5 @@
 {
     "texture": "gold_block",
-    "material": "chromaforge:metal"
+    "material": "chromaforge:metal",
+    "chromaforge:durability": 10.0
 }

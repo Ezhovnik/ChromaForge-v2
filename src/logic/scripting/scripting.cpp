@@ -24,6 +24,7 @@
 #include <objects/Entities.h>
 #include <content/Content.h>
 #include <logic/scripting/scripting_commons.h>
+#include <interfaces/Process.h>
 
 static inline const std::string STDCOMP = "stdcomp";
 
@@ -62,10 +63,63 @@ int scripting::load_script(
 void scripting::initialize(Engine* engine) {
     scripting::engine = engine;
 
-    lua::initialize(*scripting::engine->getPaths());
+    lua::initialize(*engine->getPaths(), engine->getCoreParameters());
 
     load_script(std::filesystem::path("stdlib.lua"), true);
     load_script(std::filesystem::path("classes.lua"), true);
+}
+
+class LuaCoroutine : public Process {
+    lua::State* L;
+    int id;
+    bool alive = true;
+public:
+    LuaCoroutine(lua::State* L, int id) : L(L), id(id) {
+    }
+
+    bool isActive() const override {
+        return alive;
+    }
+
+    void update() override {
+        if (lua::getglobal(L, "__chroma_resume_coroutine")) {
+            lua::pushinteger(L, id);
+            if (lua::call(L, 1)) {
+                alive = lua::toboolean(L, -1);
+                lua::pop(L);
+            }
+        }
+    }
+
+    void waitForEnd() override {
+        while (isActive()) {
+            update();
+        }
+    }
+
+    void terminate() override {
+        if (lua::getglobal(L, "__chroma_stop_coroutine")) {
+            lua::pushinteger(L, id);
+            lua::pop(L, lua::call(L, 1));
+        }
+    }
+};
+
+std::unique_ptr<Process> scripting::start_coroutine(
+    const std::filesystem::path& script
+) {
+    auto L = lua::get_main_state();
+    if (lua::getglobal(L, "__chroma_start_coroutine")) {
+        auto source = files::read_string(script);
+        lua::loadbuffer(L, 0, source, script.filename().u8string());
+        if (lua::call(L, 1)) {
+            int id = lua::tointeger(L, -1);
+            lua::pop(L, 2);
+            return std::make_unique<LuaCoroutine>(L, id);
+        }
+        lua::pop(L);
+    }
+    return nullptr;
 }
 
 [[nodiscard]]
@@ -190,10 +244,11 @@ void scripting::on_content_load(Content* content) {
         lua::pop(L);
     }
     if (lua::getglobal(L, "item")) {
-        push_properties_tables(L, indices.blocks);
+        push_properties_tables(L, indices.items);
         lua::setfield(L, "properties");
         lua::pop(L);
     }
+    load_script(std::filesystem::path("post_content.lua"), true);
     load_script(std::filesystem::path("stdcmd.lua"), true);
 }
 
@@ -205,24 +260,23 @@ void scripting::on_world_load(LevelController* controller) {
     auto L = lua::get_main_state();
     if (lua::getglobal(L, "__chroma_on_world_open")) {
         lua::call_nothrow(L, 0, 0);
-    } 
-    load_script("world.lua", false);
+    }
 
-    for (auto& pack : scripting::engine->getContentPacks()) {
+    for (auto& pack : scripting::engine->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldopen");
     }
 }
 
 void scripting::on_world_spark() {
     auto L = lua::get_main_state();
-    for (auto& pack : scripting::engine->getContentPacks()) {
+    for (auto& pack : scripting::engine->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldspark");
     }
 }
 
 void scripting::on_world_save() {
     auto L = lua::get_main_state();
-    for (auto& pack : scripting::engine->getContentPacks()) {
+    for (auto& pack : scripting::engine->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldsave");
     }
     if (lua::getglobal(L, "__chroma_on_world_save")) {
@@ -232,7 +286,7 @@ void scripting::on_world_save() {
 
 void scripting::on_world_quit() {
     auto L = lua::get_main_state();
-    for (auto& pack : scripting::engine->getContentPacks()) {
+    for (auto& pack : scripting::engine->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldquit");
     }
     if (lua::getglobal(L, "__chroma_on_world_quit")) {
@@ -362,7 +416,7 @@ void scripting::on_block_replaced(
 
 bool scripting::on_block_interact(Player* player, const Block& block, const glm::ivec3& pos) {
     std::string name = block.name + ".interact";
-    return lua::emit_event(lua::get_main_state(), name, [pos, player] (auto L) {
+    auto result = lua::emit_event(lua::get_main_state(), name, [pos, player] (auto L) {
         lua::pushivec_stack(L, pos);
         lua::pushinteger(L, player->getId());
         return 4;
@@ -382,6 +436,7 @@ bool scripting::on_block_interact(Player* player, const Block& block, const glm:
             );
         }
     }
+    return result;
 }
 
 void scripting::on_player_spark(Player* player, int tps) {

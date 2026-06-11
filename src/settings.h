@@ -62,6 +62,9 @@ struct AudioSettings {
     NumberSetting volumeMusic {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
 };
 
+struct NetworkSettings {
+};
+
 struct EngineSettings {
 	AudioSettings audio;
     DisplaySettings display;
@@ -70,4 +73,5 @@ struct EngineSettings {
     GraphicsSettings graphics;
     DebugSettings debug;
 	UISettings ui;
+	NetworkSettings network;
 };

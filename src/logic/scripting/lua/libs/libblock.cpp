@@ -12,6 +12,7 @@
 #include <math/voxmaths.h>
 #include <data/StructLayout.h>
 #include <objects/Players.h>
+#include <voxels/ChunksStorage.h>
 
 static const Block* require_block(lua::State* L) {
     auto indices = scripting::content->getIndices();
@@ -109,7 +110,7 @@ static int l_get_x(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
+    voxel* vox = scripting::level->chunksStorage->get(x, y, z);
     if (vox == nullptr) {
         return lua::pushivec_stack(L, glm::ivec3(1, 0, 0));
     }
@@ -126,7 +127,7 @@ static int l_get_y(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
+    voxel* vox = scripting::level->chunksStorage->get(x, y, z);
     if (vox == nullptr) {
         return lua::pushivec_stack(L, glm::ivec3(0, 1, 0));
     }
@@ -143,7 +144,7 @@ static int l_get_z(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
+    voxel* vox = scripting::level->chunksStorage->get(x, y, z);
     if (vox == nullptr) {
         return lua::pushivec_stack(L, glm::ivec3(0, 0, 1));
     }
@@ -160,7 +161,7 @@ static int l_get_rotation(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
+    voxel* vox = scripting::level->chunksStorage->get(x, y, z);
     int rotation = vox == nullptr ? 0 : vox->state.rotation;
     return lua::pushinteger(L, rotation);
 }
@@ -178,7 +179,7 @@ static int l_get_states(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
+    voxel* vox = scripting::level->chunksStorage->get(x, y, z);
     int states = vox == nullptr ? 0 : blockstate2int(vox->state);
     return lua::pushinteger(L, states);
 }
@@ -562,6 +563,15 @@ static int l_set_field(lua::State* L) {
     return set_field(L, dst, *field, index, dataStruct, value);
 }
 
+static int l_get_slow(lua::State* L) {
+    auto x = lua::tointeger(L, 1);
+    auto y = lua::tointeger(L, 2);
+    auto z = lua::tointeger(L, 3);
+    auto vox = scripting::level->chunksStorage->get(x, y, z);
+    int id = vox == nullptr ? -1 : vox->id;
+    return lua::pushinteger(L, id);
+}
+
 const luaL_Reg blocklib [] = {
     {"index", lua::wrap<l_index>},
     {"name", lua::wrap<l_get_def>},
@@ -572,6 +582,7 @@ const luaL_Reg blocklib [] = {
     {"is_replaceable_at", lua::wrap<l_is_replaceable_at>},
     {"set", lua::wrap<l_set>},
     {"get", lua::wrap<l_get>},
+    {"get_slow", lua::wrap<l_get_slow>},
     {"get_X", lua::wrap<l_get_x>},
     {"get_Y", lua::wrap<l_get_y>},
     {"get_Z", lua::wrap<l_get_z>},

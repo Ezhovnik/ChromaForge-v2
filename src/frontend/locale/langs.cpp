@@ -37,44 +37,47 @@ const std::string& langs::Lang::getId() const {
  * Поддерживаются комментарии, начинающиеся с '#'.
  * Пустые строки игнорируются.
  */
-class Reader : BasicParser {
-    /**
-     * @brief Переопределённый метод пропуска пробелов, пропускает комментарии.
-     */
-    void skipWhitespace() override {
-        BasicParser::skipWhitespace();
-        if (hasNext() && source[pos] == '#') {
-            skipLine();
-            if (hasNext() && is_whitespace(peek())) skipWhitespace();
+namespace {
+    class Reader : BasicParser {
+        /**
+         * @brief Переопределённый метод пропуска пробелов, пропускает комментарии.
+        */
+        void skipWhitespace() override {
+            BasicParser::skipWhitespace();
+            if (hasNext() && source[pos] == '#') {
+                skipLine();
+                if (hasNext() && is_whitespace(peek())) {
+                    skipWhitespace();
+                }
+            }
         }
-    }
-public:
-    Reader(
-        std::string_view file,
-        std::string_view source
-    ) : BasicParser(file, source) {}
+    public:
+        Reader(std::string_view file, std::string_view source)
+            : BasicParser(file, source) {
+        }
 
-    /**
-     * @brief Читает файл перевода и заполняет объект Lang.
-     * @param lang Целевой объект.
-     * @param prefix Префикс, добавляемый к каждому ключу (например, идентификатор мода).
-     */
-    void read(langs::Lang& lang, const std::string& prefix) {
-        skipWhitespace();
-        while (hasNext()) {
-            std::string key = parseString('=', true);
-            util::trim(key);
-            key = prefix + key;
-            std::string text = parseString('\n', false);
-            util::trim(text);
-            lang.put(util::str2wstr_utf8(key), util::str2wstr_utf8(text));
+        /**
+         * @brief Читает файл перевода и заполняет объект Lang.
+         * @param lang Целевой объект.
+         * @param prefix Префикс, добавляемый к каждому ключу (например, идентификатор мода).
+         */
+        void read(langs::Lang& lang, const std::string &prefix) {
             skipWhitespace();
+            while (hasNext()) {
+                std::string key = parseString('=', true);
+                util::trim(key);
+                key = prefix + key;
+                std::string text = parseString('\n', false);
+                util::trim(text);
+                lang.put(util::str2wstr_utf8(key), util::str2wstr_utf8(text));
+                skipWhitespace();
+            }
         }
-    }
-};
+    };
+}
 
 void langs::loadLocalesInfo(const std::filesystem::path& resdir, std::string& fallback) {
-    std::filesystem::path file = resdir/std::filesystem::path(langs::TEXTS_FOLDER)/std::filesystem::path("langs.json");
+    auto file = resdir/std::filesystem::u8path(langs::TEXTS_FOLDER)/std::filesystem::u8path("langs.json");
     auto root = files::read_json(file);
 
     langs::locales_info.clear();

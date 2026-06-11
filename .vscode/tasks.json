@@ -28,6 +28,7 @@
             "args": [
                 "--build", "${workspaceFolder}/build",
                 "--target", "ChromaForge",
+                "--target", "vctest",
                 "-j", "8"
             ],
             "dependsOn": ["CMake: Configure"],

@@ -23,7 +23,7 @@
 
 using namespace gui;
 
-GUI::GUI() {
+GUI::GUI() : batch2D(std::make_unique<Batch2D>(1024)) {
     container = std::make_shared<Container>(glm::vec2(1000));
     uicamera = std::make_unique<Camera>(glm::vec3(), Window::height);
 
@@ -174,19 +174,21 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
     if (focus && !focus->isFocused()) focus = nullptr;
 }
 
-void GUI::draw(const DrawContext* parent_context, Assets* assets) {
-    auto& viewport = parent_context->getViewport();
+void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
+    auto ctx = parent_context.sub(batch2D.get());
+
+    auto& viewport = ctx.getViewport();
     glm::vec2 wsize = viewport.size();
 
     menu->setPos((wsize - menu->getSize()) / 2.0f);
     uicamera->setFov(wsize.y);
 
-	ShaderProgram* uishader = assets->get<ShaderProgram>("ui");
+	ShaderProgram* uishader = assets.get<ShaderProgram>("ui");
 	uishader->use();
 	uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
-    parent_context->getBatch2D()->begin();
-    container->draw(parent_context, assets);
+    batch2D->begin();
+    container->draw(ctx, assets);
 }
 
 std::shared_ptr<UINode> GUI::getFocused() const {

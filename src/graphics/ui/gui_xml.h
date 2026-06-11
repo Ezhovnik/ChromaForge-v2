@@ -12,7 +12,7 @@
 namespace gui {
     class UIXmlReader;
 
-    using uinode_reader = std::function<std::shared_ptr<UINode>(UIXmlReader&, xml::xmlelement)>;
+    using uinode_reader = std::function<std::shared_ptr<UINode>(UIXmlReader&, const xml::xmlelement&)>;
 
     class UIXmlReader {
     private:
@@ -32,7 +32,7 @@ namespace gui {
 
         std::shared_ptr<UINode> readUINode(const xml::xmlelement& element);
         void readUINode(
-            UIXmlReader& reader,
+            const UIXmlReader& reader,
             const xml::xmlelement& element,
             UINode& node
         );

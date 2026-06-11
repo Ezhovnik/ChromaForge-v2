@@ -3,6 +3,7 @@
 #include <graphics/ui/elements/UINode.h>
 
 class Font;
+struct FontStylesScheme;
 
 namespace gui {
     struct LineScheme {
@@ -33,19 +34,22 @@ namespace gui {
         Align valign = Align::center;
 
         bool multiline = false;
-
         bool textWrap = true;
-
         bool autoresize = false;
 
         int textYOffset = 0;
-
         int totalLineHeight = 1;
+
+        std::string markup;
+
+        std::unique_ptr<FontStylesScheme> styles;
     public:
         Label(const std::string& text, std::string fontName="normal");
         Label(const std::wstring& text, std::string fontName="normal");
 
-        virtual void setText(const std::wstring& text);
+        virtual ~Label();
+
+        virtual void setText(std::wstring text);
         const std::wstring& getText() const;
 
         virtual void setFontName(std::string name);
@@ -70,7 +74,7 @@ namespace gui {
 
         virtual bool isFakeLine(size_t line) const;
 
-        virtual void draw(const DrawContext* pctx, Assets* assets) override;
+        virtual void draw(const DrawContext& pctx, const Assets& assets) override;
 
         virtual void textSupplier(wstringsupplier supplier);
 
@@ -82,5 +86,10 @@ namespace gui {
 
         virtual void setTextWrapping(bool flag);
         virtual bool isTextWrapping() const;
+
+        virtual void setMarkup(std::string_view lang);
+        virtual const std::string& getMarkup() const;
+
+        virtual void setStyles(std::unique_ptr<FontStylesScheme> styles);
     };
 }

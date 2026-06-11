@@ -1,6 +1,7 @@
 #include <lighting/LightMap.h>
 
-#include <assert.h>
+#include <cassert>
+#include <cstring>
 
 #include <util/data_io.h>
 
@@ -11,9 +12,7 @@ void LightMap::set(const LightMap* light_map) {
 }
 
 void LightMap::set(const light_t* map) {
-	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        this->map[i] = map[i];
-    }
+	std::memcpy(this->map, map, sizeof(light_t) * CHUNK_VOLUME);
 }
 
 std::unique_ptr<ubyte[]> LightMap::encode() const {

@@ -2,9 +2,9 @@
 #include <filesystem>
 #include <cstdlib>
 #include <string>
+#include <iostream>
 
 #include <engine.h>
-#include <settings.h>
 #include <files/files.h>
 #include <util/platform.h>
 #include <coders/toml.h>
@@ -12,34 +12,37 @@
 #include <core_content_defs.h>
 #include <debug/Logger.h>
 #include <util/command_line.h>
-#include <files/settings_io.h>
-#include <files/engine_paths.h>
 #include <constants.h>
 #include <window/Events.h>
 
 // Точка входа в программу
 int main(int argc, char** argv) {
-    EnginePaths paths;
-	if (!parse_cmdline(argc, argv, paths)) return EXIT_SUCCESS;
-
-    platform::configure_encoding();
+    CoreParameters coreParameters;
+    try {
+        if (!parse_cmdline(argc, argv, coreParameters)) {
+            return EXIT_SUCCESS;
+        }
+    } catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 
     // Инициализация логгера
-	if (ENGINE_DEBUG_BUILD) {
-		Logger::getInstance().initialize(paths.getLogsFile().string());
+    auto logPath = coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log");
+    if (ENGINE_DEBUG_BUILD) {
+		Logger::getInstance().initialize(logPath);
 	} else {
 		Logger::getInstance().initialize(
-			paths.getLogsFile().string(),
+			logPath,
 			LogLevel::WARN,
 			LogLevel::INFO
 		);
 	}
 
+    platform::configure_encoding();
+
     try {
-        EngineSettings settings;
-        SettingsHandler handler(settings);
-        Engine engine(settings, handler, &paths);
-        engine.mainloop();
+        Engine(std::move(coreParameters)).run();
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred:\n{}", err.what());
     } catch (const std::exception& err) {

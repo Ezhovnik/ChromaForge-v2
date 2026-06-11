@@ -60,11 +60,7 @@ void TextsRenderer::renderNote(
         yvec *= 1.0f + scale;
     }
 
-    if (preset.displayMode != NoteDisplayMode::Projected) {
-        if (!frustum.isBoxVisible(pos - xvec * (width * 0.5f), pos + xvec * (width * 0.5f))) {
-            return;
-        }
-    } else {
+    if (preset.displayMode == NoteDisplayMode::Projected) {
         float scale = 1.0f;
         if (glm::abs(preset.perspective) > 0.0001f) {
             float scale2 = scale / (glm::distance(camera.position, pos) * util::sqr(camera.zoom) * glm::sqrt(glm::tan(camera.getFov() * 0.5f)));
@@ -87,6 +83,8 @@ void TextsRenderer::renderNote(
 
             pos = screenPos / screenPos.w;
         }
+    } else if (!frustum.isBoxVisible(pos - xvec * (width * 0.5f * preset.scale), pos + xvec * (width * 0.5f * preset.scale))) {
+        return;
     }
 
     auto color = preset.color;
@@ -94,6 +92,8 @@ void TextsRenderer::renderNote(
     font.draw(
         batch,
         text,
+        nullptr,
+        0,
         pos - xvec * (width * 0.5f) * preset.scale,
         xvec * preset.scale,
         yvec * preset.scale

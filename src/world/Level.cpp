@@ -55,15 +55,17 @@ Level::Level(
         entities->setNextID(worldInfo.nextEntityId);
     }
 
+    events->listen(LevelEventType::CHUNK_SHOWN, [this](LevelEventType, Chunk* chunk) {
+        chunksStorage->incref(chunk);
+    });
+    events->listen(LevelEventType::CHUNK_HIDDEN, [this](LevelEventType, Chunk* chunk) {
+        chunksStorage->decref(chunk);
+    });
+
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
     uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
     chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, world->wfile.get(), this);
 	lighting = std::make_unique<Lighting>(content, chunks.get());
-
-    // Создаем событие скрытия чанка
-    events->listen(CHUNK_HIDDEN, [this](lvl_event_type, Chunk* chunk) {
-		this->chunksStorage->remove(chunk->chunk_x, chunk->chunk_z);
-	});
 
     // Инициализируем менеджер инвентарей и сохраняем инвентарь игрока
     inventories = std::make_unique<Inventories>(*this);

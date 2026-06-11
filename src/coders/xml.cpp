@@ -107,8 +107,8 @@ glm::vec4 Attribute::asColor() const {
 Node::Node(std::string tag) : tag(std::move(tag)) {
 }
 
-void Node::add(const xmlelement& element) {
-    elements.push_back(element);
+void Node::add(std::unique_ptr<Node> element) {
+    elements.push_back(std::move(element));
 }
 
 void Node::set(const std::string& name, const std::string& text) {
@@ -119,7 +119,7 @@ const std::string& Node::getTag() const {
     return tag;
 }
 
-const xmlattribute& Node::attr(const std::string& name) const {
+const Attribute& Node::attr(const std::string& name) const {
     auto found = attrs.find(name);
     if (found == attrs.end()) {
         LOG_ERROR("Element <{} ...> missing attribute {}", tag, name);
@@ -128,7 +128,7 @@ const xmlattribute& Node::attr(const std::string& name) const {
     return found->second;
 }
 
-xmlattribute Node::attr(const std::string& name, const std::string& def) const {
+Attribute Node::attr(const std::string& name, const std::string& def) const {
     auto found = attrs.find(name);
     if (found == attrs.end()) return Attribute(name, def);
     return found->second;
@@ -139,31 +139,35 @@ bool Node::has(const std::string& name) const {
     return found != attrs.end();
 }
 
-xmlelement Node::sub(size_t index) {
-    return elements.at(index);
+Node& Node::sub(size_t index) {
+    return *elements.at(index);
+}
+
+const Node& Node::sub(size_t index) const {
+    return *elements.at(index);
 }
 
 size_t Node::size() const {
     return elements.size();
 }
 
-const std::vector<xmlelement>& Node::getElements() const {
+const std::vector<std::unique_ptr<Node>>& Node::getElements() const {
     return elements;
 }
 
-const xmlelements_map& Node::getAttributes() const {
+const std::unordered_map<std::string, Attribute>& Node::getAttributes() const {
     return attrs;
 }
 
 Document::Document(std::string version, std::string encoding) : version(std::move(version)), encoding(std::move(encoding)) {
 }
 
-void Document::setRoot(const xmlelement& element) {
-    this->root = element;
+void Document::setRoot(std::unique_ptr<Node> element) {
+    root = std::move(element);
 }
 
-xmlelement Document::getRoot() const {
-    return root;
+const Node* Document::getRoot() const {
+    return root.get();
 }
 
 const std::string& Document::getVersion() const {
@@ -174,161 +178,174 @@ const std::string& Document::getEncoding() const {
     return encoding;
 }
 
-Parser::Parser(
-    std::string_view filename,
-    std::string_view source
-) : BasicParser(filename, source) {
-}
-
-xmlelement Parser::parseOpenTag() {
-    std::string tag = parseXMLName();
-    auto node = std::make_shared<Node>(tag);
-
-    char c;
-    while (true) {
-        skipWhitespace();
-        c = peek();
-        if (c == '/' || c == '>' || c == '?') break;
-        std::string attrname = parseXMLName();
-        std::string attrtext = "";
-        skipWhitespace();
-        if (peek() == '=') {
-            nextChar();
-            skipWhitespace();
-            char quote = peek();
-            if (quote != '\'' && quote != '"') {
-                LOG_ERROR("String literal expected");
-                throw error("String literal expected");
-            }
-            skip(1);
-            attrtext = parseString(quote);
-        }
-        node->set(attrname, attrtext);
-    }
-    return node;
-}
-
-void Parser::parseDeclaration() {
-    std::string version = "1.0";
-    std::string encoding = "UTF-8";
-    expect('<');
-    if (peek() == '?') {
-        nextChar();
-        xmlelement node = parseOpenTag();
-        expect("?>");
-        if (node->getTag() != "xml") {
-            LOG_ERROR("Invalid declaration");
-            throw error("Invalid declaration");
-        }
-        version = node->attr("version", version).getText();
-        encoding = node->attr("encoding", encoding).getText();
-        if (encoding != "utf-8" && encoding != "UTF-8") {
-            LOG_ERROR("UTF-8 encoding is only supported");
-            throw error("UTF-8 encoding is only supported");
-        }
-    } else {
-        goBack();
-    }
-    document = std::make_shared<Document>(version, encoding);
-}
-
-void Parser::parseComment() {
-    expect("!--");
-    if (skipTo("-->")) {
-        skip(3);
-    } else {
-        LOG_ERROR("Comment close missing");
-        throw error("Comment close missing");
-    }
-}
-
-std::string Parser::parseText() {
-    size_t start = pos;
-    while (hasNext()) {
-        char c = peek();
-        if (c == '<') break;
-        nextChar();
-    }
-    return Parser("[string]", std::string(source.substr(start, pos - start))).parseString('\0', false);
-}
-
 inline bool is_xml_identifier_start(char c) {
     return is_identifier_start(c) || c == ':';
 }
 
 inline bool is_xml_identifier_part(char c) {
-    return is_identifier_part(c) || c == '-' || c == '.'  || c == ':';
+    return is_identifier_part(c) || c == '-' || c == '.' || c == ':';
 }
 
-std::string Parser::parseXMLName() {
-    char c = peek();
-    if (!is_xml_identifier_start(c)) {
-        LOG_ERROR("Identifier expected");
-        throw error("Identifier expected");
-    }
-    int start = pos;
-    while (hasNext() && is_xml_identifier_part(source[pos])) {
-        pos++;
-    }
-    return std::string(source.substr(start, pos - start));
-}
+namespace {
+class Parser : BasicParser {
+    std::unique_ptr<Document> document;
 
-xmlelement Parser::parseElement() {
-    if (peek() != '<') {
-        auto element = std::make_shared<Node>("#");
-        auto text = parseText();
-        util::replaceAll(text, "&quot;", "\"");
-        util::replaceAll(text, "&apos;", "'");
-        util::replaceAll(text, "&lt;", "<");
-        util::replaceAll(text, "&gt;", ">");
-        util::replaceAll(text, "&amp;", "&");
-        element->set("#", text);
+    std::unique_ptr<Node> parseOpenTag() {
+        std::string tag = parseXMLName();
+        auto node = std::make_unique<Node>(tag);
+
+        char c;
+        while (true) {
+            skipWhitespace();
+            c = peek();
+            if (c == '/' || c == '>' || c == '?') break;
+            std::string attrname = parseXMLName();
+            std::string attrtext = "";
+            skipWhitespace();
+            if (peek() == '=') {
+                nextChar();
+                skipWhitespace();
+
+                char quote = peek();
+                if (quote != '\'' && quote != '"') {
+                    throw error("string literal expected");
+                }
+                skip(1);
+                attrtext = parseString(quote);
+            }
+            node->set(attrname, attrtext);
+        }
+        return node;
+    }
+
+    std::unique_ptr<Node> parseElement() {
+        // text element
+        if (peek() != '<') {
+            auto element = std::make_unique<Node>("#");
+            auto text = parseText();
+            util::replaceAll(text, "&quot;", "\"");
+            util::replaceAll(text, "&apos;", "'");
+            util::replaceAll(text, "&lt;", "<");
+            util::replaceAll(text, "&gt;", ">");
+            util::replaceAll(text, "&amp;", "&");
+            element->set("#", text);
+            return element;
+        }
+        nextChar();
+
+        // <!--element-->
+        if (peek() == '!') {
+            if (isNext("!DOCTYPE ")) {
+                throw error("XML DTD is not supported yet");
+            }
+            parseComment();
+            return nullptr;
+        }
+
+        auto element = parseOpenTag();
+        char c = nextChar();
+
+        // <element/>
+        if (c == '/') {
+            expect('>');
+        }
+        // <element>...</element>
+        else if (c == '>') {
+            skipWhitespace();
+            while (!isNext("</")) {
+                auto sub = parseElement();
+                if (sub) {
+                    element->add(std::move(sub));
+                }
+                skipWhitespace();
+            }
+            skip(2);
+            expect(element->getTag());
+            expect('>');
+        }
+        // <element?>
+        else {
+            throw error("invalid syntax");
+        }
         return element;
     }
-    nextChar();
 
-    if (peek() == '!') {
-        if (isNext("!DOCTYPE ")) {
-            LOG_ERROR("XML DTD is not supported yet");
-            throw error("XML DTD is not supported yet");
+    void parseDeclaration() {
+        std::string version = "1.0";
+        std::string encoding = "UTF-8";
+        expect('<');
+        if (peek() == '?') {
+            nextChar();
+            auto node = parseOpenTag();
+            expect("?>");
+            if (node->getTag() != "xml") {
+                throw error("invalid declaration");
+            }
+            version = node->attr("version", version).getText();
+            encoding = node->attr("encoding", encoding).getText();
+            if (encoding != "utf-8" && encoding != "UTF-8") {
+                throw error("UTF-8 encoding is only supported");
+            }
+        } else {
+            goBack();
         }
-        parseComment();
-        return nullptr;
+        document = std::make_unique<Document>(version, encoding);
     }
 
-    auto element = parseOpenTag();
-    char c = nextChar();
-
-    if (c == '/') expect('>');
-
-    else if (c == '>') {
-        skipWhitespace();
-        while (!isNext("</")) {
-            auto sub = parseElement();
-            if (sub) element->add(sub);
-            skipWhitespace();
+    void parseComment() {
+        expect("!--");
+        if (skipTo("-->")) {
+            skip(3);
+        } else {
+            throw error("comment close missing");
         }
-        skip(2);
-        expect(element->getTag());
-        expect('>');
-    } else {
-        LOG_ERROR("Invalid syntax");
-        throw error("Invalid syntax");
     }
-    return element;
+
+    std::string parseText() {
+        size_t start = pos;
+        while (hasNext()) {
+            char c = peek();
+            if (c == '<') {
+                break;
+            }
+            nextChar();
+        }
+        return Parser("[string]", std::string(source.substr(start, pos - start)))
+            .parseString('\0', false);
+    }
+
+    std::string parseXMLName() {
+        char c = peek();
+        if (!is_xml_identifier_start(c)) {
+            throw error("identifier expected");
+        }
+        int start = pos;
+        while (hasNext() && is_xml_identifier_part(source[pos])) {
+            pos++;
+        }
+        return std::string(source.substr(start, pos - start));
+    }
+public:
+    Parser(std::string_view filename, std::string_view source)
+        : BasicParser(filename, source) {
+    }
+
+    std::unique_ptr<Document> parse() {
+        parseDeclaration();
+
+        std::unique_ptr<Node> root;
+        while (root == nullptr) {
+            root = parseElement();
+        }
+        document->setRoot(std::move(root));
+        return std::move(document);
+    }
+};
 }
 
-xmldocument Parser::parse() {
-    parseDeclaration();
-    xmlelement root = nullptr;
-    while (root == nullptr) {
-        root = parseElement();
-    }
-    document->setRoot(root);
-    return document;
-}
-
-xmldocument xml::parse(std::string_view filename, std::string_view source) {
+std::unique_ptr<Document> xml::parse(
+    std::string_view filename, std::string_view source
+) {
     Parser parser(filename, source);
     return parser.parse();
 }
@@ -341,9 +358,9 @@ inline void newline(std::stringstream& ss, bool nice, const std::string& indentS
     }
 }
 
-static void stringifyElement(std::stringstream& ss, const xmlelement& element, bool nice, const std::string& indentStr, int indent) {
-    if (element->isText()) {
-        std::string text = element->attr("#").getText();
+static void stringifyElement(std::stringstream& ss, const Node& element, bool nice, const std::string& indentStr, int indent) {
+    if (element.isText()) {
+        std::string text = element.attr("#").getText();
         util::replaceAll(text, "&", "&amp;");
         util::replaceAll(text, "\"","&quot;");
         util::replaceAll(text, "'", "&apos;");
@@ -352,10 +369,10 @@ static void stringifyElement(std::stringstream& ss, const xmlelement& element, b
         ss << text;
         return;
     }
-    const std::string& tag = element->getTag();
+    const std::string& tag = element.getTag();
 
     ss << '<' << tag;
-    auto& attrs = element->getAttributes();
+    auto& attrs = element.getAttributes();
     if (!attrs.empty()) {
         ss << ' ';
         int count = 0;
@@ -367,18 +384,18 @@ static void stringifyElement(std::stringstream& ss, const xmlelement& element, b
             count++;
         }
     }
-    auto& elements = element->getElements();
+    auto& elements = element.getElements();
     if (elements.size() == 1 && elements[0]->isText()) {
         ss << ">";
-        stringifyElement(ss, elements[0], nice, indentStr, indent+1);
+        stringifyElement(ss, *elements[0], nice, indentStr, indent + 1);
         ss << "</" << tag << ">";
         return;
     }
     if (!elements.empty()) {
         ss << '>';
         for (auto& sub : elements) {
-            newline(ss, nice, indentStr, indent+1);
-            stringifyElement(ss, sub, nice, indentStr, indent+1);
+            newline(ss, nice, indentStr, indent + 1);
+            stringifyElement(ss, *sub, nice, indentStr, indent + 1);
         }
         newline(ss, nice, indentStr, indent);
         ss << "</" << tag << ">";
@@ -387,14 +404,16 @@ static void stringifyElement(std::stringstream& ss, const xmlelement& element, b
     }
 }
 
-std::string xml::stringify(const xmldocument& document, bool nice, const std::string& indentStr) {
+std::string xml::stringify(
+    const Document& document, bool nice, const std::string& indentStr
+) {
     std::stringstream ss;
 
-    ss << "<?xml version=\"" << document->getVersion();
+    ss << "<?xml version=\"" << document.getVersion();
     ss << "\" encoding=\"UTF-8\" ?>";
     newline(ss, nice, indentStr, 0);
 
-    stringifyElement(ss, document->getRoot(), nice, indentStr, 0);
+    stringifyElement(ss, *document.getRoot(), nice, indentStr, 0);
 
     return ss.str();
 }

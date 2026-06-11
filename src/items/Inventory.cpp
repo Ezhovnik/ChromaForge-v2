@@ -5,7 +5,7 @@
 Inventory::Inventory(int64_t id, size_t size) : id(id), slots(size) {
 }
 
-Inventory::Inventory(const Inventory& orig) {
+Inventory::Inventory(const Inventory& orig) : id(0LL) {
     this->slots = orig.slots;
 }
 
@@ -31,6 +31,12 @@ size_t Inventory::findSlotByItem(itemid_t id, size_t begin, size_t end) {
 
 void Inventory::move(ItemStack& item, const ContentIndices* indices, size_t begin, size_t end) {
     end = std::min(slots.size(), end);
+    for (size_t i = begin; i < end && !item.isEmpty(); ++i) {
+        ItemStack& slot = slots[i];
+        if (!slot.isEmpty() && slot.accepts(item)) {
+            slot.move(item, indices);
+        }
+    }
     for (size_t i = begin; i < end && !item.isEmpty(); ++i) {
         ItemStack& slot = slots[i];
         if (slot.accepts(item)) slot.move(item, indices);

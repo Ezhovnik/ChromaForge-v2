@@ -104,6 +104,8 @@ public:
      */
 	void sprite(float x, float y, float w, float h, int atlasRes, int index, glm::vec4 tint);
 
+     void sprite(float x, float y, float w, float h, float skew, int atlasRes, int index, glm::vec4 tint);
+
 	/**
      * @brief Рисует точку.
      * @param x,y Координаты.
@@ -133,6 +135,12 @@ public:
      inline glm::vec4 getColor() const {
           return color;
      }
+
+     void parallelogram(
+          float x, float y, float w, float h, float skew,
+          float u, float v, float tx, float ty,
+          float r, float g, float b, float a
+     );
 
 	/**
      * @brief Рисует прямоугольник с текстурой, поворотом и отражением.

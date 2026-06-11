@@ -17,10 +17,10 @@
 #include <files/files.h>
 #include <files/engine_paths.h>
 
-void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
+void CoreContent::setup(const EnginePaths& paths, ContentBuilder& builder) {
     // Воздух
     {
-        Block& block = builder->blocks.create(BUILTIN_AIR);
+        Block& block = builder.blocks.create(BUILTIN_AIR);
         block.drawGroup = 1;
         block.lightPassing = true;
         block.skyLightPassing = true;
@@ -33,19 +33,19 @@ void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
 
     // Пустота
     {
-        Item& item = builder->items.create(BUILTIN_EMPTY);
+        Item& item = builder.items.create(BUILTIN_EMPTY);
         item.iconType = ItemIconType::None;
     }
 
     {
-        Block& block = builder->blocks.create(BUILTIN_OBSTACLE);
+        Block& block = builder.blocks.create(BUILTIN_OBSTACLE);
         for (uint i = 0; i < 6; ++i) {
             block.textureFaces[i] = "obstacle";
         }
         block.hitboxes = {AABB()};
         block.breakable = false;
 
-        Item& item = builder->items.create(BUILTIN_OBSTACLE + ".item");
+        Item& item = builder.items.create(BUILTIN_OBSTACLE + ".item");
         item.iconType = ItemIconType::Block;
         item.icon = BUILTIN_OBSTACLE;
         item.placingBlock = BUILTIN_OBSTACLE;
@@ -53,7 +53,7 @@ void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
     }
 
     {
-        Block& block = builder->blocks.create(BUILTIN_STRUCT_AIR);
+        Block& block = builder.blocks.create(BUILTIN_STRUCT_AIR);
         for (uint i = 0; i < 6; i++) {
             block.textureFaces[i] = "struct_air";
         }
@@ -63,7 +63,7 @@ void CoreContent::setup(EnginePaths* paths, ContentBuilder* builder) {
         block.hitboxes = {AABB()};
         block.obstacle = false;
 
-        Item& item = builder->items.create(BUILTIN_STRUCT_AIR + ".item");
+        Item& item = builder.items.create(BUILTIN_STRUCT_AIR + ".item");
         item.iconType = ItemIconType::Block;
         item.icon = BUILTIN_STRUCT_AIR;
         item.placingBlock = BUILTIN_STRUCT_AIR;

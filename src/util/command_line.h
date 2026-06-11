@@ -1,6 +1,6 @@
 #pragma once
 
-class EnginePaths;
+struct CoreParameters;
 
 /**
  * @brief Разбирает аргументы командной строки и настраивает пути EnginePaths.
@@ -15,4 +15,4 @@ class EnginePaths;
  * - --dir [path] : задаёт папку с пользовательскими данными (создаётся, если не существует).
  * - --help, -h   : выводит справку и завершает разбор.
  */
-bool parse_cmdline(int argc, char** argv, EnginePaths& paths);
+bool parse_cmdline(int argc, char** argv, CoreParameters& params);
