@@ -15,7 +15,7 @@
 #include <voxels/Chunk.h>
 #include <coders/compression.h>
 #include <lighting/Lighting.h>
-#include <voxels/ChunksStorage.h>
+#include <voxels/GlobalChunks.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {

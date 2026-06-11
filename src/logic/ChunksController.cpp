@@ -6,7 +6,7 @@
 #include <voxels/Block.h>
 #include <voxels/Chunk.h>
 #include <voxels/Chunks.h>
-#include <voxels/ChunksStorage.h>
+#include <voxels/GlobalChunks.h>
 #include <world/generator/WorldGenerator.h>
 #include <graphics/core/Mesh.h>
 #include <lighting/Lighting.h>

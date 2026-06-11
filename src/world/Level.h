@@ -12,7 +12,7 @@ class World;
 class Chunks;
 class Lighting;
 class PhysicsSolver;
-class ChunksStorage;
+class GlobalChunks;
 class LevelEvents;
 class Content;
 class Inventories;
@@ -36,7 +36,7 @@ public:
 	std::unique_ptr<Chunks> chunks; ///< Менеджер чанков
 	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
 	std::unique_ptr<Lighting> lighting; ///< Освещение чанков
-     std::unique_ptr<ChunksStorage> chunksStorage; ///< Хранилище чанков
+     std::unique_ptr<GlobalChunks> chunksStorage; ///< Хранилище чанков
      std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
      std::unique_ptr<Entities> entities;
      std::unique_ptr<Players> players;

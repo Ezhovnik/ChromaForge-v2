@@ -29,7 +29,7 @@
 #include <frontend/hud.h>
 #include <graphics/render/ParticlesRenderer.h>
 #include <graphics/render/ChunksRenderer.h>
-#include <voxels/ChunksStorage.h>
+#include <voxels/GlobalChunks.h>
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");

@@ -49,7 +49,7 @@
 #include <graphics/core/ImageData.h>
 #include <logic/LevelController.h>
 #include <world/generator/WorldGenerator.h>
-#include <voxels/ChunksStorage.h>
+#include <voxels/GlobalChunks.h>
 
 bool Hud::showGeneratorMinimap = false;
 

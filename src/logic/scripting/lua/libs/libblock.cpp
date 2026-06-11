@@ -12,7 +12,7 @@
 #include <math/voxmaths.h>
 #include <data/StructLayout.h>
 #include <objects/Players.h>
-#include <voxels/ChunksStorage.h>
+#include <voxels/GlobalChunks.h>
 
 static const Block* require_block(lua::State* L) {
     auto indices = scripting::content->getIndices();

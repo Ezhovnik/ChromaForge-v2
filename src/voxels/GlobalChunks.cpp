@@ -1,4 +1,4 @@
-#include <voxels/ChunksStorage.h>
+#include <voxels/GlobalChunks.h>
 
 #include <assert.h>
 #include <algorithm>
@@ -46,9 +46,9 @@ static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     }
 }
 
-ChunksStorage::ChunksStorage(Level* level) : level(level) {}
+GlobalChunks::GlobalChunks(Level* level) : level(level) {}
 
-std::shared_ptr<Chunk> ChunksStorage::fetch(int x, int z) {
+std::shared_ptr<Chunk> GlobalChunks::fetch(int x, int z) {
     const auto& found = chunksMap.find(keyfrom(x, z));
     if (found == chunksMap.end()) {
         return nullptr;
@@ -56,11 +56,11 @@ std::shared_ptr<Chunk> ChunksStorage::fetch(int x, int z) {
     return found->second;
 }
 
-void ChunksStorage::erase(int x, int z) {
+void GlobalChunks::erase(int x, int z) {
     chunksMap.erase(keyfrom(x, z));
 }
 
-std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
+std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
 	const auto& found = chunksMap.find(keyfrom(x, z));
     if (found != chunksMap.end()) return found->second;
 
@@ -116,19 +116,19 @@ std::shared_ptr<Chunk> ChunksStorage::create(int x, int z) {
 	return chunk;
 }
 
-void ChunksStorage::pinChunk(std::shared_ptr<Chunk> chunk) {
+void GlobalChunks::pinChunk(std::shared_ptr<Chunk> chunk) {
     pinnedChunks[{chunk->chunk_x, chunk->chunk_z}] = std::move(chunk);
 }
 
-void ChunksStorage::unpinChunk(int x, int z) {
+void GlobalChunks::unpinChunk(int x, int z) {
     pinnedChunks.erase({x, z});
 }
 
-size_t ChunksStorage::size() const {
+size_t GlobalChunks::size() const {
     return chunksMap.size();
 }
 
-voxel* ChunksStorage::get(int x, int y, int z) const {
+voxel* GlobalChunks::get(int x, int y, int z) const {
     if (y < 0 || y >= CHUNK_HEIGHT) return nullptr;
 
     int cx = floordiv<CHUNK_WIDTH>(x);
@@ -144,7 +144,7 @@ voxel* ChunksStorage::get(int x, int y, int z) const {
     return &chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 }
 
-void ChunksStorage::incref(Chunk* chunk) {
+void GlobalChunks::incref(Chunk* chunk) {
     auto key = reinterpret_cast<ptrdiff_t>(chunk);
     const auto& found = refCounters.find(key);
     if (found == refCounters.end()) {
@@ -154,7 +154,7 @@ void ChunksStorage::incref(Chunk* chunk) {
     found->second++;
 }
 
-void ChunksStorage::decref(Chunk* chunk) {
+void GlobalChunks::decref(Chunk* chunk) {
     auto key = reinterpret_cast<ptrdiff_t>(chunk);
     const auto& found = refCounters.find(key);
     if (found == refCounters.end()) {
@@ -174,7 +174,7 @@ void ChunksStorage::decref(Chunk* chunk) {
     }
 }
 
-void ChunksStorage::save(Chunk* chunk) {
+void GlobalChunks::save(Chunk* chunk) {
     if (chunk == nullptr) return;
 
     AABB aabb(
@@ -196,7 +196,7 @@ void ChunksStorage::save(Chunk* chunk) {
     );
 }
 
-void ChunksStorage::saveAll() {
+void GlobalChunks::saveAll() {
     for (const auto& [_, chunk] : chunksMap) {
         save(chunk.get());
     }

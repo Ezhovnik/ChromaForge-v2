@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include <data/dv_util.h>
-#include <voxels/ChunksStorage.h>
+#include <voxels/GlobalChunks.h>
 #include <voxels/VoxelsVolume.h>
 #include <world/Level.h>
 #include <content/Content.h>

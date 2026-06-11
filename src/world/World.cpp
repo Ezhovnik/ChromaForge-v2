@@ -8,7 +8,7 @@
 #include <files/WorldFiles.h>
 #include <voxels/Chunk.h>
 #include <voxels/Chunks.h>
-#include <voxels/ChunksStorage.h>
+#include <voxels/GlobalChunks.h>
 #include <objects/Player.h>
 #include <objects/Players.h>
 #include <physics/PhysicsSolver.h>
