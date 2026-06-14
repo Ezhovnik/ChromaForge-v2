@@ -29,7 +29,7 @@ ChunksController::ChunksController(
 	uint chunksPadding
 ) : level(level), 
 	chunks(*level.chunks), 
-	lighting(*level.lighting), 
+	lighting(std::make_unique<Lighting>(level.content, level.chunks.get())),
 	chunksPadding(chunksPadding), 
 	generator(std::make_unique<WorldGenerator>(
         level.content->generators.require(level.getWorld()->getGenerator()),
@@ -110,8 +110,8 @@ bool ChunksController::buildLights(const std::shared_ptr<Chunk>& chunk) {
 
     if (surrounding == MIN_SURROUNDING) {
         bool lightsCache = chunk->flags.loadedLights;
-        if (!lightsCache) lighting.buildSkyLight(chunk->chunk_x, chunk->chunk_z);
-        lighting.onChunkLoaded(chunk->chunk_x, chunk->chunk_z, !lightsCache);
+        if (!lightsCache) lighting->buildSkyLight(chunk->chunk_x, chunk->chunk_z);
+        lighting->onChunkLoaded(chunk->chunk_x, chunk->chunk_z, !lightsCache);
         chunk->flags.lighted = true;
         return true;
     }

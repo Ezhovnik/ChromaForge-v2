@@ -100,7 +100,10 @@ static int l_set(lua::State* L) {
     int cz = floordiv<CHUNK_DEPTH>(z);
     if (!blocks_agent::get_chunk(*scripting::level->chunksStorage, cx, cz)) return 0;
     blocks_agent::set(*scripting::level->chunksStorage, x, y, z, id, int2blockstate(state));
-    scripting::level->lighting->onBlockSet(x,y,z, id);
+    auto chunksController = scripting::controller->getChunksController();
+    if (chunksController == nullptr) return 1;
+    Lighting& lighting = *chunksController->lighting;
+    lighting.onBlockSet(x, y, z, id);
     if (!noupdate) scripting::blocks->updateSides(x, y, z);
     return 0;
 }

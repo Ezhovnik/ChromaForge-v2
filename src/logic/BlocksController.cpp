@@ -17,11 +17,12 @@
 #include <constants.h>
 
 BlocksController::BlocksController(
-    const Level& level, 
+    const Level& level,
+    Lighting& lighting,
     uint padding
 ) : level(level), 
     chunks(*level.chunks), 
-    lighting(*level.lighting), 
+    lighting(lighting), 
     randSparkClock(20, 3), 
     padding(padding), 
     blocksSparkClock(20, 1),

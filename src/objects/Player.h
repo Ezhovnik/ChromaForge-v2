@@ -15,6 +15,7 @@ struct Hitbox;
 class Level;
 class Inventory;
 class ContentReport;
+class Chunks;
 
 /**
  * @brief Структура, содержащая текущее состояние ввода игрока.
@@ -79,6 +80,7 @@ private:
 
     entityid_t selectedEid = 0;
 public:
+    std::unique_ptr<Chunks> chunks;
 	std::shared_ptr<Camera> fpCamera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
     std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
 

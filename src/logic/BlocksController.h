@@ -40,7 +40,7 @@ class BlocksController {
 
     std::vector<on_block_interaction> blockInteractionCallbacks;
 public:
-    BlocksController(const Level& level, uint padding);
+    BlocksController(const Level& level, Lighting& lighting, uint padding);
 
     void updateSides(int x, int y, int z);
     void updateSides(int x, int y, int z, int w, int h, int d);

@@ -19,13 +19,12 @@ class Content;
 class ContentIndices;
 struct AABB;
 class Block;
-class Level;
 class VoxelsVolume;
 
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
 private:
-    Level* level;
+    LevelEvents* events;
 	const ContentIndices* const contentIds;
 
     void eraseSegments(const Block& def, blockstate state, int x, int y, int z);
@@ -33,16 +32,14 @@ private:
     void setRotationExtended(const Block& def, blockstate state, const glm::ivec3& origin, uint8_t rotation);
 
     util::AreaMap2D<std::shared_ptr<Chunk>, int32_t> areaMap;
-
-    WorldFiles* worldFiles;
 public:
     Chunks(
         int32_t width, 
         int32_t depth, 
         int32_t areaOffsetX, 
         int32_t areaOffsetZ, 
-        WorldFiles* worldFiles, 
-        Level* level
+        LevelEvents* events, 
+        const ContentIndices* indices
     ); 
     ~Chunks() = default;
 
@@ -137,5 +134,9 @@ public:
 
     const ContentIndices& getContentIndices() const {
         return *contentIds;
+    }
+
+    static inline constexpr unsigned matrixSize(int loadDistance, int padding) {
+        return (loadDistance + padding) * 2;
     }
 };

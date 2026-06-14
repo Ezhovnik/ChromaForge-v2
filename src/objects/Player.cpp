@@ -42,6 +42,9 @@ Player::Player(
 	speed(speed),
 	chosenSlot(0),
 	position(position),
+	chunks(std::make_unique<Chunks>(
+        3, 3, 0, 0, level->events.get(), level->content->getIndices()
+    )),
 	fpCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":first-person")),
     spCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-front")),
     tpCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-back")),

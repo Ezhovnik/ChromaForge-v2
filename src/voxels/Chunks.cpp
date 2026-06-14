@@ -1,14 +1,10 @@
 #include <voxels/Chunks.h>
 
 #include <math.h>
-#include <limits.h>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
 
-#include <voxels/Chunk.h>
-#include <voxels/voxel.h>
-#include <voxels/Block.h>
 #include <lighting/Lightmap.h>
 #include <files/WorldFiles.h>
 #include <graphics/core/Mesh.h>
@@ -33,16 +29,15 @@ Chunks::Chunks(
 	int32_t depth, 
 	int32_t areaOffsetX, 
 	int32_t areaOffsetZ, 
-	WorldFiles* worldFiles, 
-	Level* level
-) : level(level),
-	worldFiles(worldFiles),
-	contentIds(level ? level->content->getIndices() : nullptr),
+	LevelEvents* events, 
+	const ContentIndices* indices
+) : events(events),
+    contentIds(indices),
 	areaMap(width, depth)
 {
 	areaMap.setCenter(areaOffsetX - width / 2, areaOffsetZ - depth / 2);
     areaMap.setOutCallback([this](int, int, const auto& chunk) {
-		this->level->events->trigger(CHUNK_HIDDEN, chunk.get());
+		this->events->trigger(CHUNK_HIDDEN, chunk.get());
     });
 }
 
@@ -304,7 +299,7 @@ bool Chunks::checkReplaceability(
 
 bool Chunks::putChunk(const std::shared_ptr<Chunk>& chunk) {
 	if (areaMap.set(chunk->chunk_x, chunk->chunk_z, chunk)) {
-        if (level) level->events->trigger(LevelEventType::CHUNK_SHOWN, chunk.get());
+        if (events) events->trigger(LevelEventType::CHUNK_SHOWN, chunk.get());
         return true;
     }
     return false;
@@ -316,8 +311,6 @@ void Chunks::resize(uint32_t newWidth, uint32_t newDepth) {
 
 // TODO: reduce nesting
 void Chunks::getVoxels(VoxelsVolume* volume, bool backlight) const {
-    const Content* content = level->content;
-    auto indices = content->getIndices();
     voxel* voxels = volume->getVoxels();
     light_t* lights = volume->getLights();
     int x = volume->getX();
@@ -367,8 +360,7 @@ void Chunks::getVoxels(VoxelsVolume* volume, bool backlight) const {
                             voxels[vidx] = cvoxels[cidx];
                             light_t light = clights[cidx];
                             if (backlight) {
-                                const auto block =
-                                    indices->blocks.get(voxels[vidx].id);
+                                const auto block = contentIds->blocks.get(voxels[vidx].id);
                                 if (block && block->lightPassing) {
                                     light = LightMap::combine(
                                         std::min(15, LightMap::extract(light, 0) + 1),

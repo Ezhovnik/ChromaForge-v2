@@ -30,18 +30,17 @@ class Camera;
  */
 class Level {
 private:
+     const EngineSettings& settings;
 	std::unique_ptr<World> world;
 public:
      const Content* const content;
 	std::unique_ptr<Chunks> chunks; ///< Менеджер чанков
 	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
-	std::unique_ptr<Lighting> lighting; ///< Освещение чанков
      std::unique_ptr<GlobalChunks> chunksStorage; ///< Хранилище чанков
      std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
      std::unique_ptr<Entities> entities;
      std::unique_ptr<Players> players;
      std::vector<std::shared_ptr<Camera>> cameras;
-     const EngineSettings& settings;
 	std::unique_ptr<Inventories> inventories; ///< Менеджер инвентарей (хранит все инвентари уровня)
 
 	/**

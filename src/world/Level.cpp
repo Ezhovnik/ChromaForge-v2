@@ -23,14 +23,14 @@ Level::Level(
     std::unique_ptr<World> worldPtr,
     const Content* content,
     EngineSettings& settings
-) : world(std::move(worldPtr)),
+) : settings(settings),
+    world(std::move(worldPtr)),
     content(content),
     chunksStorage(std::make_unique<GlobalChunks>(this)),
 	physics(std::make_unique<PhysicsSolver>(glm::vec3(0, GRAVITY, 0))),
     events(std::make_unique<LevelEvents>()),
     entities(std::make_unique<Entities>(this)),
-    players(std::make_unique<Players>(this)),
-    settings(settings)
+    players(std::make_unique<Players>(this))
 {
     const auto& worldInfo = world->getInfo();
     auto& cameraIndices = content->getIndices(ResourceType::Camera);
@@ -64,8 +64,7 @@ Level::Level(
 
     // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
     uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
-    chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, world->wfile.get(), this);
-	lighting = std::make_unique<Lighting>(content, chunks.get());
+    chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, events.get(), content->getIndices());
 
     // Инициализируем менеджер инвентарей и сохраняем инвентарь игрока
     inventories = std::make_unique<Inventories>(*this);
