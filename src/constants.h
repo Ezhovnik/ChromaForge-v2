@@ -39,6 +39,8 @@ inline constexpr int CHUNK_DEPTH = 16;
 /** Объём чанка (количество блоков). */
 inline constexpr int CHUNK_VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH;
 
+inline constexpr float CHUNKS_MAP_MAX_LOAD_FACTOR = 0.1f;
+
 // ========== Биты пользовательских данных в блоке ==========
 
 /** Количество бит, отведённых под пользовательские данные в блоке. */

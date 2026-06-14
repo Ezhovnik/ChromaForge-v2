@@ -7,11 +7,8 @@ local pid = player.create("Ezhovnik")
 assert(player.get_name(pid) == "Ezhovnik")
 test.sleep_until(function() return world.count_chunks() >= 9 end, 1000)
 print(world.count_chunks())
-for i=1,3 do
-    print("---")
-    timeit(1000000, block.get, 0, 0, 0)
-    timeit(1000000, block.get_slow, 0, 0, 0)
-end
+timeit(10000000, block.get, 0, 0, 0)
+timeit(10000000, builtin.blank, 0, 0, 0)
 block.destruct(0, 0, 0, pid)
 assert(block.get(0, 0, 0) == 0)
 test.close_world(true)

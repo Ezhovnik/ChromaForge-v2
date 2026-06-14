@@ -202,7 +202,7 @@ static int l_blank(lua::State* L) {
 }
 
 const luaL_Reg builtinlib [] = {
-    {"nop", lua::wrap<l_blank>},
+    {"blank", lua::wrap<l_blank>},
     {"get_version", lua::wrap<l_get_version>},
     {"new_world", lua::wrap<l_new_world>},
     {"open_world", lua::wrap<l_open_world>},

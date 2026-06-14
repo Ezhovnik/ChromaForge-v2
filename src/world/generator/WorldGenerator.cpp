@@ -183,10 +183,10 @@ void WorldGenerator::placeLine(const LinePlacement& line, int priority) {
     aabb.fix();
     aabb.a -= line.radius;
     aabb.b += line.radius;
-    int cxa = floordiv(aabb.a.x, CHUNK_WIDTH);
-    int cza = floordiv(aabb.a.z, CHUNK_DEPTH);
-    int cxb = floordiv(aabb.b.x, CHUNK_WIDTH);
-    int czb = floordiv(aabb.b.z, CHUNK_DEPTH);
+    int cxa = floordiv<CHUNK_WIDTH>(aabb.a.x);
+    int cza = floordiv<CHUNK_DEPTH>(aabb.a.z);
+    int cxb = floordiv<CHUNK_WIDTH>(aabb.b.x);
+    int czb = floordiv<CHUNK_DEPTH>(aabb.b.z);
     for (int cz = cza; cz <= czb; ++cz) {
         for (int cx = cxa; cx <= cxb; ++cx) {
             const auto& found = prototypes.find({cx, cz});

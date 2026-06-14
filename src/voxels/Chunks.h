@@ -134,4 +134,8 @@ public:
     size_t getVolume() const {
         return areaMap.area();
     }
+
+    const ContentIndices& getContentIndices() const {
+        return *contentIds;
+    }
 };

@@ -17,16 +17,6 @@
 #include <objects/Entities.h>
 #include <coders/json.h>
 
-inline long long keyfrom(int x, int z) {
-    union {
-        int pos[2];
-        long long key;
-    } ekey;
-    ekey.pos[0] = x;
-    ekey.pos[1] = z;
-    return ekey.key;
-}
-
 static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     bool corrupted = false;
 	blockid_t defsCount = indices.blocks.count();
@@ -46,7 +36,13 @@ static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     }
 }
 
-GlobalChunks::GlobalChunks(Level* level) : level(level) {}
+GlobalChunks::GlobalChunks(
+    Level* level
+) : level(level),
+    indices(level ? level->content->getIndices() : nullptr)
+{
+    chunksMap.max_load_factor(CHUNKS_MAP_MAX_LOAD_FACTOR);
+}
 
 std::shared_ptr<Chunk> GlobalChunks::fetch(int x, int z) {
     const auto& found = chunksMap.find(keyfrom(x, z));
@@ -58,6 +54,29 @@ std::shared_ptr<Chunk> GlobalChunks::fetch(int x, int z) {
 
 void GlobalChunks::erase(int x, int z) {
     chunksMap.erase(keyfrom(x, z));
+}
+
+static inline auto load_inventories(
+    WorldRegions& regions,
+    const Chunk& chunk,
+    const ContentUnitIndices<Block>& defs
+) {
+    auto invs = regions.fetchInventories(chunk.chunk_x, chunk.chunk_z);
+    auto iterator = invs.begin();
+    while (iterator != invs.end()) {
+        uint index = iterator->first;
+        const auto& def = defs.require(chunk.voxels[index].id);
+        if (def.inventorySize == 0) {
+            iterator = invs.erase(iterator);
+            continue;
+        }
+        auto& inventory = iterator->second;
+        if (def.inventorySize != inventory->size()) {
+            inventory->resize(def.inventorySize);
+        }
+        ++iterator;
+    }
+    return invs;
 }
 
 std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
@@ -78,22 +97,9 @@ std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
 		chunk->decode(data.get());
 		check_voxels(indices, *chunk);
 
-		auto invs = regions.fetchInventories(chunk->chunk_x, chunk->chunk_z);
-		auto iterator = invs.begin();
-        while (iterator != invs.end()) {
-            uint index = iterator->first;
-            const auto& def = indices.blocks.require(chunk->voxels[index].id);
-            if (def.inventorySize == 0) {
-                iterator = invs.erase(iterator);
-                continue;
-            }
-            auto& inventory = iterator->second;
-            if (def.inventorySize != inventory->size()) {
-                inventory->resize(def.inventorySize);
-            }
-            ++iterator;
-        }
-		chunk->setBlockInventories(std::move(invs));
+		chunk->setBlockInventories(
+            load_inventories(regions, *chunk, indices.blocks)
+        );
 
 		auto entitiesData = regions.fetchEntities(chunk->chunk_x, chunk->chunk_z);
         if (entitiesData.getType() == dv::value_type::Object) {
@@ -126,22 +132,6 @@ void GlobalChunks::unpinChunk(int x, int z) {
 
 size_t GlobalChunks::size() const {
     return chunksMap.size();
-}
-
-voxel* GlobalChunks::get(int x, int y, int z) const {
-    if (y < 0 || y >= CHUNK_HEIGHT) return nullptr;
-
-    int cx = floordiv<CHUNK_WIDTH>(x);
-    int cz = floordiv<CHUNK_DEPTH>(z);
-
-    const auto& found = chunksMap.find(keyfrom(cx, cz));
-    if (found == chunksMap.end()) {
-        return nullptr;
-    }
-    const auto& chunk = found->second;
-    int lx = x - cx * CHUNK_WIDTH;
-    int lz = z - cz * CHUNK_DEPTH;
-    return &chunk->voxels[(y * CHUNK_DEPTH + lz) * CHUNK_WIDTH + lx];
 }
 
 void GlobalChunks::incref(Chunk* chunk) {
@@ -200,4 +190,8 @@ void GlobalChunks::saveAll() {
     for (const auto& [_, chunk] : chunksMap) {
         save(chunk.get());
     }
+}
+
+void GlobalChunks::putChunk(std::shared_ptr<Chunk> chunk) {
+    chunksMap[keyfrom(chunk->chunk_x, chunk->chunk_z)] = std::move(chunk);
 }
