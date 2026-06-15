@@ -15,6 +15,9 @@
 #include <math/voxmaths.h>
 #include <typedefs.h>
 #include <constants.h>
+#include <voxels/VoxelsVolume.h>
+
+struct AABB;
 
 namespace blocks_agent {
     template<class Storage>
@@ -295,4 +298,45 @@ namespace blocks_agent {
         glm::ivec3& iend,
         std::set<blockid_t> filter
     );
+
+    void get_voxels(const Chunks& chunks, VoxelsVolume* volume, bool backlight=false);
+
+    void get_voxels(const GlobalChunks& chunks, VoxelsVolume* volume, bool backlight=false);
+
+    template <class Storage>
+    inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float z) {
+        int ix = std::floor(x);
+        int iy = std::floor(y);
+        int iz = std::floor(z);
+        voxel* v = get(chunks, ix, iy, iz);
+        if (v == nullptr) {
+            if (iy >= CHUNK_HEIGHT) {
+                return nullptr;
+            } else {
+                static const AABB empty;
+                return &empty;
+            }
+        }
+        const auto& def = chunks.getContentIndices().blocks.require(v->id);
+        if (def.obstacle) {
+            glm::ivec3 offset {};
+            if (v->state.segment) {
+                glm::ivec3 point(ix, iy, iz);
+                offset = seek_origin(chunks, point, def, v->state) - point;
+            }
+            const auto& boxes = def.rotatable ? def.rt.hitboxes[v->state.rotation] : def.hitboxes;
+            for (const auto& hitbox : boxes) {
+                if (hitbox.contains(
+                    {
+                        x - ix - offset.x,
+                        y - iy - offset.y,
+                        z - iz - offset.z
+                    }
+                )) {
+                    return &hitbox;
+                }
+            }
+        }
+        return nullptr;
+    }
 } // blocks_agent

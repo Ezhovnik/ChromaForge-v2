@@ -20,9 +20,11 @@ size_t ParticlesRenderer::aliveEmitters = 0;
 ParticlesRenderer::ParticlesRenderer(
     const Assets& assets,
     const Level& level,
+    const Chunks& chunks,
     const GraphicsSettings* settings
 ) : batch(std::make_unique<MainBatch>(4096)),
     level(level),
+    chunks(chunks),
     assets(assets),
     settings(settings) {}
 
@@ -47,7 +49,6 @@ void ParticlesRenderer::renderParticles(const Camera& camera, float deltaTime) {
     const auto& right = camera.right;
     const auto& up = camera.up;
 
-    const auto& chunks = *level.chunks;
     bool backlight = settings->backlight.get();
 
     std::vector<const Texture*> unusedTextures;

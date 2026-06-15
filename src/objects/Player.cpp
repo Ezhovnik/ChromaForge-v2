@@ -195,13 +195,13 @@ void Player::attemptToFindSpawnpoint() {
 	};
 
 	// Опускаемся вниз, пока не найдём твёрдый блок под ногами
-	while (newpos.y > 0 && !level->chunks->isObstacleBlock(newpos.x, newpos.y - 2, newpos.z)) {
+	while (newpos.y > 0 && !chunks->isObstacleBlock(newpos.x, newpos.y - 2, newpos.z)) {
 		newpos.y--;
 	}
 
 	// Проверяем, что в позиции игрока нет препятствий и над головой воздух
-	voxel* headvox = level->chunks->getVoxel(newpos.x, newpos.y + 1, newpos.z);
-	if (level->chunks->isObstacleBlock(newpos.x, newpos.y, newpos.z) || headvox == nullptr || headvox->id != 0) return; // не удалось найти безопасное место
+	voxel* headvox = chunks->getVoxel(newpos.x, newpos.y + 1, newpos.z);
+	if (chunks->isObstacleBlock(newpos.x, newpos.y, newpos.z) || headvox == nullptr || headvox->id != 0) return; // не удалось найти безопасное место
 	spawnpoint = newpos + glm::vec3(0.5f, 0.0f, 0.5f);
 	teleport(spawnpoint);
 }

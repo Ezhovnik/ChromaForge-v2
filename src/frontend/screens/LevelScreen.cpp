@@ -44,9 +44,10 @@ LevelScreen::LevelScreen(
     auto menu = engine->getGUI()->getMenu();
     menu->reset();
 
-    controller = std::make_unique<LevelController>(engine, std::move(levelPtr));
-
     auto player = level->players->getPlayer(0);
+    controller = std::make_unique<LevelController>(
+        engine, std::move(levelPtr), player
+    );
     playerController = std::make_unique<PlayerController>(
         settings,
         level,
@@ -57,21 +58,21 @@ LevelScreen::LevelScreen(
     frontend = std::make_unique<LevelFrontend>(player, controller.get(), assets);
 
     worldRenderer = std::make_unique<WorldRenderer>(engine, *frontend, player);
-    hud = std::make_unique<Hud>(engine, *frontend, player);
+    hud = std::make_unique<Hud>(engine, *frontend, *player);
 
     decorator = std::make_unique<Decorator>(
         *engine, *controller, *worldRenderer, assets, *player
     );
 
     keepAlive(settings.graphics.backlight.observe([=](bool) {
-        controller->getLevel()->chunks->saveAndClear();
+        player->chunks->saveAndClear();
         worldRenderer->clear();
     }));
     keepAlive(settings.camera.fov.observe([=](double value) {
         player->fpCamera->setFov(glm::radians(value));
     }));
     keepAlive(Events::getBinding(BIND_CHUNKS_RELOAD).onactived.add([=](){
-        controller->getLevel()->chunks->saveAndClear();
+        player->chunks->saveAndClear();
         worldRenderer->clear();
     }));
 

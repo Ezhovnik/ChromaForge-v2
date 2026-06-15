@@ -1,6 +1,7 @@
 #include <logic/BlocksController.h>
 
 #include <cassert>
+#include <set>
 
 #include <voxels/voxel.h>
 #include <voxels/Block.h>
@@ -15,13 +16,16 @@
 #include <items/Inventories.h>
 #include <debug/Logger.h>
 #include <constants.h>
+#include <voxels/blocks_agent.h>
+#include <objects/Player.h>
+#include <objects/Players.h>
 
 BlocksController::BlocksController(
     const Level& level,
-    Lighting& lighting,
+    Lighting* lighting,
     uint padding
 ) : level(level), 
-    chunks(*level.chunks), 
+    chunks(*level.chunksStorage), 
     lighting(lighting), 
     randSparkClock(20, 3), 
     padding(padding), 
@@ -38,7 +42,7 @@ void BlocksController::updateSides(int x, int y, int z) {
 }
 
 void BlocksController::updateSides(int x, int y, int z, int w, int h, int d) {
-    voxel* vox = chunks.getVoxel(x, y, z);
+    voxel* vox = blocks_agent::get(chunks, x, y, z);
     const auto& def = level.content->getIndices()->blocks.require(vox->id);
     const auto& rot = def.rotations.variants[vox->state.rotation];
     const auto& xaxis = rot.axisX;
@@ -64,8 +68,10 @@ void BlocksController::breakBlock(Player* player, const Block& def, int x, int y
     onBlockInteraction(
         player, glm::ivec3(x, y, z), def, BlockInteraction::Destruction
     );
-    chunks.setVoxel(x, y, z, BLOCK_AIR, {});
-    lighting.onBlockSet(x, y, z, BLOCK_AIR);
+    blocks_agent::set(chunks, x, y, z, BLOCK_AIR, {});
+    if (lighting) {
+        lighting->onBlockSet(x, y, z, BLOCK_AIR);
+    }
     scripting::on_block_broken(player, def, glm::ivec3(x, y, z));
     if (def.rt.extended) {
         updateSides(x, y, z, def.size.x, def.size.y, def.size.z);
@@ -75,7 +81,7 @@ void BlocksController::breakBlock(Player* player, const Block& def, int x, int y
 }
 
 void BlocksController::placeBlock(Player* player, const Block& def, blockstate state, int x, int y, int z) {
-    auto voxel = chunks.getVoxel(x, y, z);
+    auto voxel = blocks_agent::get(chunks, x, y, z);
     if (voxel != nullptr) {
         const auto& prevDef = level.content->getIndices()->blocks.require(voxel->id);
         scripting::on_block_replaced(player, prevDef, {x, y, z});
@@ -84,8 +90,10 @@ void BlocksController::placeBlock(Player* player, const Block& def, blockstate s
     onBlockInteraction(
         player, glm::ivec3(x, y, z), def, BlockInteraction::Placing
     );
-    chunks.setVoxel(x, y, z, def.rt.id, state);
-    lighting.onBlockSet(x, y, z, def.rt.id);
+    blocks_agent::set(chunks, x, y, z, def.rt.id, state);
+    if (lighting) {
+        lighting->onBlockSet(x, y, z, def.rt.id);
+    }
     scripting::on_block_placed(player, def, glm::ivec3(x, y, z));
     if (def.rt.extended) {
         updateSides(x, y, z, def.size.x, def.size.y, def.size.z);
@@ -95,12 +103,12 @@ void BlocksController::placeBlock(Player* player, const Block& def, blockstate s
 }
 
 void BlocksController::updateBlock(int x, int y, int z) {
-    voxel* vox = chunks.getVoxel(x, y, z);
+    voxel* vox = blocks_agent::get(chunks, x, y, z);
     if (vox == nullptr) return;
     const auto& def = level.content->getIndices()->blocks.require(vox->id);
     if (def.grounded) {
         const auto& vec = get_ground_direction(def, vox->state.rotation);
-        if (!chunks.isSolidBlock(x + vec.x, y + vec.y, z + vec.z)) {
+        if (!blocks_agent::is_solid_at(chunks, x + vec.x, y + vec.y, z + vec.z)) {
             breakBlock(nullptr, def, x, y, z);
             return;
         }
@@ -155,24 +163,43 @@ void BlocksController::randomSpark(
 
 void BlocksController::randomSpark(int sparkId, int parts) {
     auto indices = level.content->getIndices();
-    int width = chunks.getWidth();
-    int depth = chunks.getDepth();
-    int segments = 4;
+    std::set<uint64_t> chunksIterated;
 
-    for (uint z = padding; z < depth - padding; ++z){
-        for (uint x = padding; x < width - padding; ++x){
-            int index = z * width + x;
-            if ((index + sparkId) % parts != 0) continue;
-            auto& chunk = chunks.getChunks()[index];
-            if (chunk == nullptr || !chunk->flags.lighted) continue;
-            randomSpark(*chunk, segments, indices);
+    for (const auto& [pid, player] : *level.players) {
+        const auto& chunks = *player->chunks;
+        int offsetX = chunks.getOffsetX();
+        int offsetZ = chunks.getOffsetZ();
+        int width = chunks.getWidth();
+        int depth = chunks.getDepth();
+        int segments = 4;
+
+        for (uint z = padding; z < depth - padding; ++z) {
+            for (uint x = padding; x < width - padding; ++x) {
+                int index = z * width + x;
+                if ((index + sparkId) % parts != 0) continue;
+                auto& chunk = chunks.getChunks()[index];
+                if (chunk == nullptr || !chunk->flags.lighted) continue;
+                union {
+                    int32_t pos[2];
+                    uint64_t key;
+                } posU;
+                posU.pos[0] = x + offsetX;
+                posU.pos[1] = z + offsetZ;
+                if (chunksIterated.find(posU.key) != chunksIterated.end()) {
+                    continue;
+                }
+                chunksIterated.insert(posU.key);
+                randomSpark(*chunk, segments, indices);
+            }
         }
 	}
 }
 
 int64_t BlocksController::createBlockInventory(int x, int y, int z) {
-	auto chunk = chunks.getChunkByVoxel(x, y, z);
-	if (chunk == nullptr) return 0;
+	auto chunk = blocks_agent::get_chunk(
+        chunks, floordiv<CHUNK_WIDTH>(x), floordiv<CHUNK_DEPTH>(z)
+    );
+    if (chunk == nullptr || y < 0 || y >= CHUNK_HEIGHT) return 0;
 	int lx = x - chunk->chunk_x * CHUNK_WIDTH;
 	int lz = z - chunk->chunk_z * CHUNK_DEPTH;
 	auto inv = chunk->getBlockInventory(lx, y, lz);
@@ -188,7 +215,9 @@ int64_t BlocksController::createBlockInventory(int x, int y, int z) {
 }
 
 void BlocksController::bindInventory(int64_t invId, int x, int y, int z) {
-    auto chunk = chunks.getChunkByVoxel(x, y, z);
+    auto chunk = blocks_agent::get_chunk(
+        chunks, floordiv<CHUNK_WIDTH>(x), floordiv<CHUNK_DEPTH>(z)
+    );
 	if (chunk == nullptr) {
         LOG_ERROR("Block does not exists");
 		throw std::runtime_error("Block does not exists");
@@ -203,7 +232,9 @@ void BlocksController::bindInventory(int64_t invId, int x, int y, int z) {
 }
 
 void BlocksController::unbindInventory(int x, int y, int z) {
-    auto chunk = chunks.getChunkByVoxel(x, y, z);
+    auto chunk = blocks_agent::get_chunk(
+        chunks, floordiv<CHUNK_WIDTH>(x), floordiv<CHUNK_DEPTH>(z)
+    );
 	if (chunk == nullptr) {
         LOG_ERROR("Block does not exists");
 		throw std::runtime_error("block does not exists");

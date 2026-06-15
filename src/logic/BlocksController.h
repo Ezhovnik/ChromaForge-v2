@@ -16,6 +16,7 @@ class Chunks;
 class Lighting;
 class Chunk;
 class ContentIndices;
+class GlobalChunks;
 
 enum class BlockInteraction {
     Step,
@@ -24,13 +25,13 @@ enum class BlockInteraction {
 };
 
 using on_block_interaction = std::function<void(
-    Player*, const glm::ivec3&, const Block&, BlockInteraction type
+    Player*, const glm::ivec3&, const Block&, BlockInteraction
 )>;
 
 class BlocksController {
     const Level& level;
-	Chunks& chunks;
-	Lighting& lighting;
+	GlobalChunks& chunks;
+    Lighting* lighting;
     util::Clock randSparkClock;
     util::Clock blocksSparkClock;
     util::Clock worldSparkClock;
@@ -40,7 +41,7 @@ class BlocksController {
 
     std::vector<on_block_interaction> blockInteractionCallbacks;
 public:
-    BlocksController(const Level& level, Lighting& lighting, uint padding);
+    BlocksController(const Level& level, Lighting* lighting, uint padding);
 
     void updateSides(int x, int y, int z);
     void updateSides(int x, int y, int z, int w, int h, int d);

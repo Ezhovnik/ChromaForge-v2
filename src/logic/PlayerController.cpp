@@ -210,7 +210,7 @@ void PlayerController::onFootstep(const Hitbox& hitbox) {
             int x = std::floor(pos.x + half.x * offsetX);
             int y = std::floor(pos.y - half.y * 1.1f);
             int z = std::floor(pos.z + half.z * offsetZ);
-            auto vox = level->chunks->getVoxel(x, y, z);
+            auto vox = player->chunks->getVoxel(x, y, z);
             if (vox) {
                 auto& def = level->content->getIndices()->blocks.require(vox->id);
                 if (!def.obstacle) continue;
@@ -304,14 +304,14 @@ static void pick_block(const ContentIndices* indices, Chunks* chunks, Player* pl
 
 voxel* PlayerController::updateSelection(float maxDistance) {
     auto indices = level->content->getIndices();
-    auto chunks = level->chunks.get();
+    auto& chunks = *player->chunks;
     auto camera = player->fpCamera.get();
     auto& selection = player->selection;
 
     glm::vec3 end;
     glm::ivec3 iend;
     glm::ivec3 norm;
-    voxel* vox = chunks->rayCast(
+    voxel* vox = chunks.rayCast(
         camera->position, 
         camera->front, 
         maxDistance, 
@@ -355,12 +355,12 @@ voxel* PlayerController::updateSelection(float maxDistance) {
     blockstate selectedState = vox->state;
     selection.vox = *vox;
     if (selectedState.segment) {
-        selection.position = chunks->seekOrigin(
+        selection.position = chunks.seekOrigin(
             iend, indices->blocks.require(selection.vox.id), selectedState
         );
-        auto origin = chunks->getVoxel(selection.position);
+        auto origin = chunks.getVoxel(selection.position);
         if (origin && origin->id != vox->id) {
-            chunks->setVoxel(iend.x, iend.y, iend.z, 0, {});
+            chunks.setVoxel(iend.x, iend.y, iend.z, 0, {});
             return updateSelection(maxDistance);
         }
     } else {
@@ -373,7 +373,7 @@ voxel* PlayerController::updateSelection(float maxDistance) {
 
 void PlayerController::processRightClick(const Block& def, const Block& target) {
     const auto& selection = player->selection;
-    auto chunks = level->chunks.get();
+    auto& chunks = *player->chunks;
     auto camera = player->fpCamera.get();
 
     blockstate state {};
@@ -399,14 +399,14 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
         }
     }
 
-    auto vox = chunks->getVoxel(coord);
+    auto vox = chunks.getVoxel(coord);
     if (vox == nullptr) return;
-    if (!chunks->checkReplaceability(def, state, coord)) {
+    if (!chunks.checkReplaceability(def, state, coord)) {
         return;
     }
     if (def.grounded) {
         const auto& vec = get_ground_direction(def, state.rotation);
-        if (!chunks->isSolidBlock(coord.x + vec.x, coord.y + vec.y, coord.z + vec.z)) {
+        if (!chunks.isSolidBlock(coord.x + vec.x, coord.y + vec.y, coord.z + vec.z)) {
             return;
         }
     }
@@ -441,7 +441,7 @@ void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool
 void PlayerController::updateInteraction(float deltaTime) {
     if (player->isNoclip()) return;
     auto indices = level->content->getIndices();
-    auto chunks = level->chunks.get();
+    auto chunks = player->chunks.get();
     const auto& selection = player->selection;
 
     if (interactionTimer > 0.0f) {
@@ -535,7 +535,7 @@ void PlayerController::postUpdate(float deltaTime, bool input_flag, bool pause) 
     camControl.update(
         this->input,
         pause ? 0.0f : deltaTime,
-        level->chunks.get()
+        player->chunks.get()
     );
 	if (input_flag) {
 		updateInteraction(deltaTime);

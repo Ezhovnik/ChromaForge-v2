@@ -24,6 +24,7 @@ class Frustum;
 class BlocksRenderer;
 class ContentGfxCache;
 struct EngineSettings;
+class Chunks;
 
 struct ChunksSortEntry {
     int index;
@@ -42,6 +43,7 @@ struct RendererResult {
 
 class ChunksRenderer {
     const Level& level;
+    const Chunks& chunks;
     const Assets& assets;
     const Frustum& frustum;
     const EngineSettings& settings;
@@ -58,6 +60,7 @@ class ChunksRenderer {
 public:
     ChunksRenderer(
         const Level* level,
+        const Chunks& chunks,
         const Assets& assets,
         const Frustum& frustum,
         const ContentGfxCache& cache,

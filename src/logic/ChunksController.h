@@ -12,18 +12,18 @@ class VoxelRenderer;
 class ChunksLoader;
 class WorldGenerator;
 class Chunk;
+class Player;
 
 class ChunksController {
 private:
 	Level& level;
-	Chunks& chunks;
 	std::unique_ptr<WorldGenerator> generator;
 
     uint chunksPadding;
 
-	bool loadVisible();
-	bool buildLights(const std::shared_ptr<Chunk>& chunk);
-    void createChunk(int x, int y);
+	bool loadVisible(const Player& player) const;
+    bool buildLights(const Player& player, const std::shared_ptr<Chunk>& chunk) const;
+    void createChunk(const Player& player, int x, int y) const;
 public:
 	std::unique_ptr<Lighting> lighting;
 
@@ -33,9 +33,8 @@ public:
     void update(
         int64_t maxDuration,
         int loadDistance,
-        int centerX,
-        int centerY
-	);
+        Player& player
+	) const;
 
 	const WorldGenerator* getGenerator() const {
 		return generator.get();

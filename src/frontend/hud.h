@@ -70,7 +70,7 @@ private:
     std::unique_ptr<Camera> uicamera;
     gui::GUI* guiController;
     LevelFrontend& levelFrontend;
-    Player* player;
+    Player& player;
 
     std::shared_ptr<gui::Container> contentAccessPanel;
     std::shared_ptr<gui::InventoryView> contentAccess;
@@ -112,7 +112,7 @@ private:
     void showExchangeSlot();
     void updateWorldGenDebugVisualization();
 public:
-	Hud(Engine* engine, LevelFrontend& levelFrontend, Player* player);
+	Hud(Engine* engine, LevelFrontend& levelFrontend, Player& player);
 	~Hud();
 
     void update(bool hudVisible);

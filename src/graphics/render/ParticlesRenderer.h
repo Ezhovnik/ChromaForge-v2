@@ -12,15 +12,14 @@ class Camera;
 class MainBatch;
 class Level;
 struct GraphicsSettings;
+class Chunks;
 
 class ParticlesRenderer {
 private:
     const Level& level;
-
+    const Chunks& chunks;
     const Assets& assets;
-
     const GraphicsSettings* settings;
-
     std::unordered_map<const Texture*, std::vector<Particle>> particles;
     std::unique_ptr<MainBatch> batch;
 
@@ -32,6 +31,7 @@ public:
     ParticlesRenderer(
         const Assets& assets,
         const Level& level,
+        const Chunks& chunks,
         const GraphicsSettings* settings
     );
     ~ParticlesRenderer();

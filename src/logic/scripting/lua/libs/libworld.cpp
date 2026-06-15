@@ -121,7 +121,7 @@ static int l_is_open(lua::State* L) {
 static int l_get_chunk_data(lua::State* L) {
     int x = (int)lua::tointeger(L, 1);
     int y = (int)lua::tointeger(L, 2);
-    const auto& chunk = scripting::level->chunks->getChunk(x, y);
+    const auto& chunk = scripting::level->chunksStorage->getChunk(x, y);
     if (chunk == nullptr) {
         lua::pushnil(L);
         return 0;
@@ -177,8 +177,8 @@ static int l_set_chunk_data(lua::State* L) {
     if (lua::gettop(L) >= 4) {
         is_compressed = lua::toboolean(L, 4);
     }
-    auto chunk = scripting::level->chunks->getChunk(x, y);
-    if (chunk== nullptr) return 0;
+    auto chunk = scripting::level->chunksStorage->getChunk(x, y);
+    if (chunk == nullptr) return 0;
     if (is_compressed) {
         std::vector<ubyte>& raw_data = buffer->data();
         size_t zip_decompressed_size = dataio::le2h(*(size_t*)(raw_data.data()));
@@ -209,22 +209,22 @@ static int l_set_chunk_data(lua::State* L) {
     chunk->flags.modified = true;
     lighting.onChunkLoaded(x, y, true);
 
-    chunk = scripting::level->chunks->getChunk(x - 1, y);
+    chunk = scripting::level->chunksStorage->getChunk(x - 1, y);
     if (chunk != nullptr) {
         chunk->flags.modified = true;
         lighting.onChunkLoaded(x - 1, y, true);
     }
-    chunk = scripting::level->chunks->getChunk(x + 1, y);
+    chunk = scripting::level->chunksStorage->getChunk(x + 1, y);
     if (chunk != nullptr) {
         chunk->flags.modified = true;
         lighting.onChunkLoaded(x + 1, y, true);
     }
-    chunk = scripting::level->chunks->getChunk(x, y - 1);
+    chunk = scripting::level->chunksStorage->getChunk(x, y - 1);
     if (chunk != nullptr) {
         chunk->flags.modified = true;
         lighting.onChunkLoaded(x, y - 1, true);
     }
-    chunk = scripting::level->chunks->getChunk(x, y + 1);
+    chunk = scripting::level->chunksStorage->getChunk(x, y + 1);
     if (chunk != nullptr) {
         chunk->flags.modified = true;
         lighting.onChunkLoaded(x, y + 1, true);

@@ -11,6 +11,7 @@ class Assets;
 class Player;
 class Level;
 class DrawContext;
+class Chunks;
 
 struct BlockWrapper {
     glm::ivec3 position;
@@ -20,6 +21,7 @@ struct BlockWrapper {
 class BlockWrapsRenderer {
     const Assets& assets;
     const Level& level;
+    const Chunks& chunks;
     std::unique_ptr<MainBatch> batch;
 
     std::unordered_map<uint64_t, std::unique_ptr<BlockWrapper>> wrappers;
@@ -27,7 +29,9 @@ class BlockWrapsRenderer {
 
     void draw(const BlockWrapper& wrapper);
 public:
-    BlockWrapsRenderer(const Assets& assets, const Level& level);
+    BlockWrapsRenderer(
+        const Assets& assets, const Level& level, const Chunks& chunks
+    );
     ~BlockWrapsRenderer();
 
     void draw(const DrawContext& ctx, const Player& player);

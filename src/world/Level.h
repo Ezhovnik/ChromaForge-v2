@@ -9,8 +9,6 @@
 #include <typedefs.h>
 
 class World;
-class Chunks;
-class Lighting;
 class PhysicsSolver;
 class GlobalChunks;
 class LevelEvents;
@@ -34,7 +32,6 @@ private:
 	std::unique_ptr<World> world;
 public:
      const Content* const content;
-	std::unique_ptr<Chunks> chunks; ///< Менеджер чанков
 	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
      std::unique_ptr<GlobalChunks> chunksStorage; ///< Хранилище чанков
      std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
@@ -55,8 +52,6 @@ public:
           EngineSettings& settings
      );
 	~Level();
-
-     void loadMatrix(int32_t x, int32_t z, uint32_t radius);
 
 	/**
      * @brief Возвращает указатель на мир.

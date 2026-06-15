@@ -13,6 +13,7 @@
 class Chunk;
 class Level;
 class ContentIndices;
+struct AABB;
 
 class GlobalChunks {
     static inline uint64_t keyfrom(int32_t x, int32_t z) {
@@ -53,6 +54,8 @@ public:
     void saveAll();
 
     void putChunk(std::shared_ptr<Chunk> chunk);
+
+    const AABB* isObstacleAt(float x, float y, float z) const;
 
     inline Chunk* getChunk(int cx, int cz) const {
         const auto& found = chunksMap.find(keyfrom(cx, cz));

@@ -9,7 +9,7 @@
 #include <typedefs.h>
 #include <physics/Hitbox.h>
 
-class Chunks;
+class GlobalChunks;
 class Block;
 struct blockstate;
 
@@ -22,7 +22,7 @@ public:
 	PhysicsSolver(glm::vec3 gravity); // Конструтор
 
 	void step(
-		Chunks* chunks,
+		const GlobalChunks& chunks,
 		Hitbox* hitbox,
 		float delta,
 		uint substeps,
@@ -30,7 +30,7 @@ public:
 	); // Выполняет один шаг физического моделирования для указанного хитбокса.
 
 	void colisionCalc(
-		Chunks* chunks,
+		const GlobalChunks& chunks,
 		Hitbox* hitbox,
 		glm::vec3& vel,
 		glm::vec3& pos,

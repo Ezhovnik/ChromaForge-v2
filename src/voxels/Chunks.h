@@ -43,6 +43,8 @@ public:
     ); 
     ~Chunks() = default;
 
+    void configure(int32_t x, int32_t z, uint32_t radius);
+
     bool checkReplaceability(
         const Block& def,
         blockstate state,

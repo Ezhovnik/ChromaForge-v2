@@ -1,9 +1,7 @@
 #include <world/Level.h>
 
-#include <lighting/Lighting.h>
 #include <voxels/Chunks.h>
 #include <voxels/GlobalChunks.h>
-#include <voxels/Chunk.h>
 #include <physics/PhysicsSolver.h>
 #include <physics/Hitbox.h>
 #include <objects/Player.h>
@@ -62,24 +60,11 @@ Level::Level(
         chunksStorage->decref(chunk);
     });
 
-    // Вычисляем размер матрицы чанков на основе дистанции загрузки и запаса
-    uint matrixSize = (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2;
-    chunks = std::make_unique<Chunks>(matrixSize, matrixSize, 0, 0, events.get(), content->getIndices());
-
     // Инициализируем менеджер инвентарей и сохраняем инвентарь игрока
     inventories = std::make_unique<Inventories>(*this);
 }
 
 Level::~Level() = default;
-
-void Level::loadMatrix(int32_t x, int32_t z, uint32_t radius) {
-	chunks->setCenter(x, z);
-    uint32_t diameter = std::min(
-        radius * 2LL, 
-        (settings.chunks.loadDistance.get() + settings.chunks.padding.get()) * 2
-    );
-	if (chunks->getWidth() != diameter) chunks->resize(diameter, diameter);
-}
 
 World* Level::getWorld() {
     return world.get();

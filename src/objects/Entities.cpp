@@ -416,7 +416,7 @@ void Entities::updatePhysics(float delta) {
         int substeps = static_cast<int>(delta * vel * 20);
         substeps = std::min(100, std::max(2, substeps));
         physics->step(
-            level->chunks.get(),
+            *level->chunksStorage,
             &hitbox,
             delta,
             substeps,

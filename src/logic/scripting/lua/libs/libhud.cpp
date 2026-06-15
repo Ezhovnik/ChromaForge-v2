@@ -13,6 +13,7 @@
 #include <graphics/ui/elements/display/InventoryView.h>
 #include <util/stringutil.h>
 #include <objects/Player.h>
+#include <voxels/blocks_agent.h>
 
 namespace scripting {
     extern Hud* hud;
@@ -52,7 +53,7 @@ static int l_open_block(lua::State* L) {
     auto z = lua::tointeger(L, 3);
     bool playerInventory = !lua::toboolean(L, 4);
 
-    voxel* vox = scripting::level->chunks->getVoxel(x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
     if (vox == nullptr) {
         throw std::runtime_error("Block does not exists at " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z));
     }

@@ -14,6 +14,7 @@
 #include <constants.h>
 #include <objects/Entity.h>
 #include <voxels/Block.h>
+#include <voxels/blocks_agent.h>
 
 static const Entity* require_entity_def(lua::State* L) {
     auto indices = scripting::content->getIndices();
@@ -122,7 +123,17 @@ static int l_raycast(lua::State* L) {
 
     blockid_t block = BLOCK_VOID;
 
-    if (auto voxel = scripting::level->chunks->rayCast(start, dir, maxDistance, end, normal, iend, filteredBlocks)) {
+    if (auto voxel = blocks_agent::raycast(
+            *scripting::level->chunksStorage,
+            start,
+            dir,
+            maxDistance,
+            end,
+            normal,
+            iend,
+            filteredBlocks
+        )
+    ) {
         maxDistance = glm::distance(start, end);
         block = voxel->id;
     }

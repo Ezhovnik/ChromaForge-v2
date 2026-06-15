@@ -25,7 +25,7 @@ static int l_create_fragment(lua::State* L) {
     bool crop = lua::toboolean(L, 3);
     bool saveEntities = lua::toboolean(L, 4);
 
-    auto fragment = VoxelFragment::create(scripting::level, pointA, pointB, crop, saveEntities);
+    auto fragment = VoxelFragment::create(*scripting::level, pointA, pointB, crop, saveEntities);
     return lua::newuserdata<lua::LuaVoxelFragment>(
         L, std::shared_ptr<VoxelFragment>(std::move(fragment))
     );

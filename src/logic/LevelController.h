@@ -20,7 +20,8 @@ private:
 public:
     LevelController(
         Engine* engine,
-        std::unique_ptr<Level> level
+        std::unique_ptr<Level> level,
+        Player* clientPlayer
     );
 
     void update(float delta, bool pause);
