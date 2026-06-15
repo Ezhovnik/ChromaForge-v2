@@ -7,7 +7,7 @@
 #include <typedefs.h>
 #include <constants.h>
 #include <voxels/voxel.h>
-#include <lighting/LightMap.h>
+#include <lighting/Lightmap.h>
 #include <util/SmallHeap.h>
 
 inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
@@ -36,7 +36,7 @@ public:
         bool blocksData: 1;
     } flags {};
 
-    LightMap light_map; // Карта освещения чанка
+    Lightmap lightmap; // Карта освещения чанка
 
     ChunkInventoriesMap inventories;
 

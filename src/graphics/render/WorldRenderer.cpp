@@ -366,11 +366,11 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
         shader.uniformMatrix("u_projview", glm::mat4(1.0f));
         shader.uniformMatrix("u_apply", glm::mat4(1.0f));
         auto light = player->chunks->getLight(x, y, z);
-        float s = LightMap::extract(light, 3) / 15.0f;
+        float s = Lightmap::extract(light, 3) / 15.0f;
         glm::vec4 tint(
-            glm::min(1.0f, LightMap::extract(light, 0) / 15.0f + s),
-            glm::min(1.0f, LightMap::extract(light, 1) / 15.0f + s),
-            glm::min(1.0f, LightMap::extract(light, 2) / 15.0f + s),
+            glm::min(1.0f, Lightmap::extract(light, 0) / 15.0f + s),
+            glm::min(1.0f, Lightmap::extract(light, 1) / 15.0f + s),
+            glm::min(1.0f, Lightmap::extract(light, 2) / 15.0f + s),
             1.0f
         );
         batch3d->texture(textureRegion.texture);

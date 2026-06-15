@@ -167,7 +167,7 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
         put(
             chunk->chunk_x, chunk->chunk_z,
             REGION_LAYER_LIGHTS, 
-            chunk->light_map.encode(),
+            chunk->lightmap.encode(),
             LIGHTMAP_DATA_LEN
         );
     }
@@ -223,7 +223,7 @@ std::unique_ptr<light_t[]> WorldRegions::getLights(int x, int z) {
         bytes, size, srcSize, layer.compression
     );
     assert(srcSize == LIGHTMAP_DATA_LEN);
-    return LightMap::decode(data.get());
+    return Lightmap::decode(data.get());
 }
 
 ChunkInventoriesMap WorldRegions::fetchInventories(int x, int z) {

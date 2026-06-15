@@ -7,12 +7,12 @@
 
 inline constexpr int LIGHTMAP_DATA_LEN = CHUNK_VOLUME / 2;
 
-class LightMap {
+class Lightmap {
 public:
 	light_t map[CHUNK_VOLUME] {};
     int highestPoint = 0;
 
-    void set(const LightMap* light_map);
+    void set(const Lightmap* lightmap);
 	void set(const light_t* map);
 
     inline ushort get(int x, int y, int z) const {

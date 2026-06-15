@@ -75,10 +75,10 @@ glm::vec4 MainBatch::sampleLight(
     );
     light_t minIntensity = backlight ? 1 : 0;
     return glm::vec4(
-        glm::max(LightMap::extract(light, 0), minIntensity) / 15.0f,
-        glm::max(LightMap::extract(light, 1), minIntensity) / 15.0f,
-        glm::max(LightMap::extract(light, 2), minIntensity) / 15.0f,
-        glm::max(LightMap::extract(light, 3), minIntensity) / 15.0f
+        glm::max(Lightmap::extract(light, 0), minIntensity) / 15.0f,
+        glm::max(Lightmap::extract(light, 1), minIntensity) / 15.0f,
+        glm::max(Lightmap::extract(light, 2), minIntensity) / 15.0f,
+        glm::max(Lightmap::extract(light, 3), minIntensity) / 15.0f
     );
 }
 

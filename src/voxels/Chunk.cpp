@@ -8,7 +8,7 @@
 
 #include <items/Inventory.h>
 #include <voxels/voxel.h>
-#include <lighting/LightMap.h>
+#include <lighting/Lightmap.h>
 #include <content/ContentReport.h>
 #include <util/data_io.h>
 
@@ -72,7 +72,7 @@ std::unique_ptr<Chunk> Chunk::clone() const {
 	for (uint i = 0; i < CHUNK_VOLUME; ++i) {
 		other->voxels[i] = voxels[i];
     }
-	other->light_map.set(&light_map);
+	other->lightmap.set(&lightmap);
 	return other;
 }
 

@@ -6,7 +6,7 @@
 #include <voxels/voxel.h>
 #include <coders/compression.h>
 #include <coders/byte_utils.h>
-#include <lighting/LightMap.h>
+#include <lighting/Lightmap.h>
 #include <util/data_io.h>
 
 static inline size_t VOXELS_DATA_SIZE_V1 = CHUNK_VOLUME * 4;

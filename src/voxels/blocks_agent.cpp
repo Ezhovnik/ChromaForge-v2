@@ -293,7 +293,7 @@ inline void get_voxels_impl(
                 }
             } else {
                 const voxel* cvoxels = chunk->voxels;
-                const light_t* clights = chunk->light_map.getLights();
+                const light_t* clights = chunk->lightmap.getLights();
                 for (int ly = y; ly < y + h; ++ly) {
                     for (int lz = std::max(z, cz * CHUNK_DEPTH); lz < std::min(z + d, (cz + 1) * CHUNK_DEPTH); ++lz) {
                         for (int lx = std::max(x, cx * CHUNK_WIDTH); lx < std::min(x + w, (cx + 1) * CHUNK_WIDTH); ++lx) {
@@ -310,11 +310,11 @@ inline void get_voxels_impl(
                             if (backlight) {
                                 const auto block = blocks.get(voxels[vidx].id);
                                 if (block && block->lightPassing) {
-                                    light = LightMap::combine(
-                                        std::min(15, LightMap::extract(light, 0) + 1),
-                                        std::min(15, LightMap::extract(light, 1) + 1),
-                                        std::min(15, LightMap::extract(light, 2) + 1),
-                                        std::min(15, static_cast<int>(LightMap::extract(light, 3)))
+                                    light = Lightmap::combine(
+                                        std::min(15, Lightmap::extract(light, 0) + 1),
+                                        std::min(15, Lightmap::extract(light, 1) + 1),
+                                        std::min(15, Lightmap::extract(light, 2) + 1),
+                                        std::min(15, static_cast<int>(Lightmap::extract(light, 3)))
                                     );
                                 }
                             }

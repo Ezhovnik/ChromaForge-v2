@@ -115,7 +115,7 @@ std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
 	}
 
 	if (auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z)) {
-		chunk->light_map.set(lights.get());
+		chunk->lightmap.set(lights.get());
 		chunk->flags.loadedLights = true;
 	}
 

@@ -14,7 +14,7 @@
 #include <assets/Assets.h>
 #include <window/Window.h>
 #include <voxels/Chunks.h>
-#include <lighting/LightMap.h>
+#include <lighting/Lightmap.h>
 #include <graphics/core/Atlas.h>
 #include <settings.h>
 #include <core_content_defs.h>
