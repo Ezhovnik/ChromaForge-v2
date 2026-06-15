@@ -50,7 +50,7 @@
 #include <graphics/render/ModelsGenerator.h>
 #include <network/Network.h>
 #include <Mainloop.h>
-#include <TestMainloop.h>
+#include <ServerMainloop.h>
 #include <frontend/screens/LevelScreen.h>
 #include <world/Level.h>
 
@@ -274,7 +274,7 @@ void Engine::processPostRunnables() {
 
 void Engine::run() {
     if (params.headless) {
-        TestMainloop(*this).run();
+        ServerMainloop(*this).run();
     } else {
         Mainloop(*this).run();
     }

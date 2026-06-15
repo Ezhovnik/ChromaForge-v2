@@ -1,4 +1,6 @@
-#include <TestMainloop.h>
+#include <ServerMainloop.h>
+
+#include <chrono>
 
 #include <engine.h>
 #include <debug/Logger.h>
@@ -7,18 +9,19 @@
 #include <logic/LevelController.h>
 #include <world/Level.h>
 #include <world/World.h>
+#include <util/platform.h>
 
 inline constexpr int SPS = 20;
 
-TestMainloop::TestMainloop(Engine& engine) : engine(engine) {}
+ServerMainloop::ServerMainloop(Engine& engine) : engine(engine) {}
 
-TestMainloop::~TestMainloop() = default;
+ServerMainloop::~ServerMainloop() = default;
 
-void TestMainloop::run() {
+void ServerMainloop::run() {
     const auto& coreParams = engine.getCoreParameters();
     auto& time = engine.getTime();
 
-    if (coreParams.testFile.empty()) {
+    if (coreParams.scriptFile.empty()) {
         LOG_INFO("Nothing to do(✿◠‿◠)");
         return;
     }
@@ -27,21 +30,33 @@ void TestMainloop::run() {
         setLevel(std::move(level));
     });
 
-    LOG_INFO("Starting task {}", coreParams.testFile.u8string());
-    auto process = scripting::start_coroutine(coreParams.testFile);
+    LOG_INFO("Starting task {}", coreParams.scriptFile.u8string());
+    auto process = scripting::start_coroutine(coreParams.scriptFile);
+
+    double targetDelta = 1.0f / static_cast<float>(SPS);
+    double delta = targetDelta;
+    auto begin = std::chrono::steady_clock::now();
     while (process->isActive()) {
-        time.step(1.0f / static_cast<float>(SPS));
+        time.step(delta);
         process->update();
         if (controller) {
             float deltaTime = time.getDeltaTime();
             controller->getLevel()->getWorld()->updateTimers(deltaTime);
             controller->update(glm::min(deltaTime, 0.2f), false);
         }
+
+        if (!coreParams.testMode) {
+            auto end = std::chrono::steady_clock::now();
+            platform::sleep(targetDelta * 1000 - std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000);
+            end = std::chrono::steady_clock::now();
+            delta = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1e6;
+            begin = end;
+        }
     }
     LOG_INFO("Test finished");
 }
 
-void TestMainloop::setLevel(std::unique_ptr<Level> level) {
+void ServerMainloop::setLevel(std::unique_ptr<Level> level) {
     if (level == nullptr) {
         controller->onWorldQuit();
         engine.getPaths()->setCurrentWorldFolder(std::filesystem::path());
