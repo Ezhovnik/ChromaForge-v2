@@ -33,7 +33,7 @@ private:
 public:
      const Content* const content;
 	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
-     std::unique_ptr<GlobalChunks> chunksStorage; ///< Хранилище чанков
+     std::unique_ptr<GlobalChunks> chunks; ///< Хранилище чанков
      std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
      std::unique_ptr<Entities> entities;
      std::unique_ptr<Players> players;

@@ -25,7 +25,7 @@ BlocksController::BlocksController(
     Lighting* lighting,
     uint padding
 ) : level(level), 
-    chunks(*level.chunksStorage), 
+    chunks(*level.chunks), 
     lighting(lighting), 
     randSparkClock(20, 3), 
     padding(padding), 

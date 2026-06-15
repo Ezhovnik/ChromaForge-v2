@@ -124,7 +124,7 @@ static int l_raycast(lua::State* L) {
     blockid_t block = BLOCK_VOID;
 
     if (auto voxel = blocks_agent::raycast(
-            *scripting::level->chunksStorage,
+            *scripting::level->chunks,
             start,
             dir,
             maxDistance,

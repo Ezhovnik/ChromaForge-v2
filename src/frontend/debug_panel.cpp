@@ -75,7 +75,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         return L"Draw-calls: " + std::to_wstring(drawCalls);
     }));
     panel->add(std::shared_ptr<gui::Label>(create_label([&](){
-		return L"Chunks: " + std::to_wstring(level.chunksStorage->size()) + L" (visible: " + std::to_wstring(ChunksRenderer::visibleChunks) + L")";
+		return L"Chunks: " + std::to_wstring(level.chunks->size()) + L" (visible: " + std::to_wstring(ChunksRenderer::visibleChunks) + L")";
 	})));
     panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"Particles: " +

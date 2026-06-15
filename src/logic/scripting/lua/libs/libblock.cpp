@@ -41,7 +41,7 @@ static int l_is_solid_at(lua::State* L) {
     auto z = lua::tointeger(L, 3);
 
     return lua::pushboolean(
-        L, blocks_agent::is_solid_at(*scripting::level->chunksStorage, x, y, z)
+        L, blocks_agent::is_solid_at(*scripting::level->chunks, x, y, z)
     );
 }
 
@@ -72,7 +72,7 @@ static int l_is_segment(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    const auto& vox = blocks_agent::require(*scripting::level->chunksStorage, x, y, z);
+    const auto& vox = blocks_agent::require(*scripting::level->chunks, x, y, z);
     return lua::pushboolean(L, vox.state.segment);
 }
 
@@ -80,12 +80,12 @@ static int l_seek_origin(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    const auto& vox = blocks_agent::require(*scripting::level->chunksStorage, x, y, z);
+    const auto& vox = blocks_agent::require(*scripting::level->chunks, x, y, z);
     auto& def = scripting::indices->blocks.require(vox.id);
     return lua::pushivec_stack(
         L,
         blocks_agent::seek_origin(
-            *scripting::level->chunksStorage, {x, y, z}, def, vox.state
+            *scripting::level->chunks, {x, y, z}, def, vox.state
         )
     );
 }
@@ -100,8 +100,8 @@ static int l_set(lua::State* L) {
     if (static_cast<size_t>(id) >= scripting::indices->blocks.count()) return 0;
     int cx = floordiv<CHUNK_WIDTH>(x);
     int cz = floordiv<CHUNK_DEPTH>(z);
-    if (!blocks_agent::get_chunk(*scripting::level->chunksStorage, cx, cz)) return 0;
-    blocks_agent::set(*scripting::level->chunksStorage, x, y, z, id, int2blockstate(state));
+    if (!blocks_agent::get_chunk(*scripting::level->chunks, cx, cz)) return 0;
+    blocks_agent::set(*scripting::level->chunks, x, y, z, id, int2blockstate(state));
     auto chunksController = scripting::controller->getChunksController();
     if (chunksController == nullptr) return 1;
     Lighting& lighting = *chunksController->lighting;
@@ -114,7 +114,7 @@ static int l_get(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     int id = vox == nullptr ? -1 : vox->id;
     return lua::pushinteger(L, id);
 }
@@ -123,7 +123,7 @@ static int l_get_x(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     if (vox == nullptr) {
         return lua::pushivec_stack(L, glm::ivec3(1, 0, 0));
     }
@@ -140,7 +140,7 @@ static int l_get_y(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     if (vox == nullptr) {
         return lua::pushivec_stack(L, glm::ivec3(0, 1, 0));
     }
@@ -157,7 +157,7 @@ static int l_get_z(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     if (vox == nullptr) {
         return lua::pushivec_stack(L, glm::ivec3(0, 0, 1));
     }
@@ -174,7 +174,7 @@ static int l_get_rotation(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     int rotation = vox == nullptr ? 0 : vox->state.rotation;
     return lua::pushinteger(L, rotation);
 }
@@ -184,7 +184,7 @@ static int l_set_rotation(lua::State* L) {
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
     auto value = lua::tointeger(L, 4);
-    blocks_agent::set_rotation(*scripting::level->chunksStorage, x, y, z, value);
+    blocks_agent::set_rotation(*scripting::level->chunks, x, y, z, value);
     return 0;
 }
 
@@ -192,7 +192,7 @@ static int l_get_states(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
-    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     int states = vox == nullptr ? 0 : blockstate2int(vox->state);
     return lua::pushinteger(L, states);
 }
@@ -206,7 +206,7 @@ static int l_set_states(lua::State* L) {
     if (y < 0 || y >= CHUNK_HEIGHT) return 0;
     int cx = floordiv<CHUNK_WIDTH>(x);
     int cz = floordiv<CHUNK_DEPTH>(z);
-    auto chunk = blocks_agent::get_chunk(*scripting::level->chunksStorage, cx, cz);
+    auto chunk = blocks_agent::get_chunk(*scripting::level->chunks, cx, cz);
     if (chunk == nullptr) return 0;
     int lx = x - cx * CHUNK_WIDTH;
     int lz = z - cz * CHUNK_DEPTH;
@@ -222,17 +222,17 @@ static int l_get_user_bits(lua::State* L) {
     auto offset = lua::tointeger(L, 4) + VOXEL_USER_BITS_OFFSET;
     auto bits = lua::tointeger(L, 5);
 
-    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     if (vox == nullptr) {
         return lua::pushinteger(L, 0);
     }
     const auto& def = scripting::content->getIndices()->blocks.require(vox->id);
     if (def.rt.extended) {
         auto origin = blocks_agent::seek_origin(
-            *scripting::level->chunksStorage, {x, y, z}, def, vox->state
+            *scripting::level->chunks, {x, y, z}, def, vox->state
         );
         vox = blocks_agent::get(
-            *scripting::level->chunksStorage, origin.x, origin.y, origin.z
+            *scripting::level->chunks, origin.x, origin.y, origin.z
         );
         if (vox == nullptr) {
             return lua::pushinteger(L, 0);
@@ -244,7 +244,7 @@ static int l_get_user_bits(lua::State* L) {
 }
 
 static int l_set_user_bits(lua::State* L) {
-    auto& chunks = *scripting::level->chunksStorage;
+    auto& chunks = *scripting::level->chunks;
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
@@ -279,7 +279,7 @@ static int l_is_replaceable_at(lua::State* L) {
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
     return lua::pushboolean(
-        L, blocks_agent::is_replaceable_at(*scripting::level->chunksStorage, x, y, z)
+        L, blocks_agent::is_replaceable_at(*scripting::level->chunks, x, y, z)
     );
 }
 
@@ -369,7 +369,7 @@ static int l_raycast(lua::State* L) {
     glm::ivec3 normal;
     glm::ivec3 iend;
     if (auto voxel = blocks_agent::raycast(
-            *scripting::level->chunksStorage,
+            *scripting::level->chunks,
             start,
             dir,
             maxDistance,
@@ -413,7 +413,7 @@ static int l_place(lua::State* L) {
     if (static_cast<size_t>(id) >= scripting::indices->blocks.count()) {
         return 0;
     }
-    if (!blocks_agent::get(*scripting::level->chunksStorage, x, y, z)) {
+    if (!blocks_agent::get(*scripting::level->chunks, x, y, z)) {
         return 0;
     }
     const auto def = scripting::level->content->getIndices()->blocks.get(id);
@@ -430,7 +430,7 @@ static int l_destruct(lua::State* L) {
     auto y = lua::tointeger(L, 2);
     auto z = lua::tointeger(L, 3);
     auto playerid = lua::gettop(L) >= 4 ? lua::tointeger(L, 4) : -1;
-    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     if (vox == nullptr) return 0;
     auto& def = scripting::level->content->getIndices()->blocks.require(vox->id);
     auto player = scripting::level->players->getPlayer(playerid);
@@ -504,7 +504,7 @@ static int l_get_field(lua::State* L) {
 
     auto cx = floordiv(x, CHUNK_WIDTH);
     auto cz = floordiv(z, CHUNK_DEPTH);
-    auto chunk = blocks_agent::get_chunk(*scripting::level->chunksStorage, cx, cz);
+    auto chunk = blocks_agent::get_chunk(*scripting::level->chunks, cx, cz);
     if (chunk == nullptr || y < 0 || y >= CHUNK_HEIGHT) {
         return 0;
     }
@@ -575,7 +575,7 @@ static int l_set_field(lua::State* L) {
     auto cz = floordiv(z, CHUNK_DEPTH);
     auto lx = x - cx * CHUNK_WIDTH;
     auto lz = z - cz * CHUNK_WIDTH;
-    auto chunk = blocks_agent::get_chunk(*scripting::level->chunksStorage, cx, cz);
+    auto chunk = blocks_agent::get_chunk(*scripting::level->chunks, cx, cz);
     if (chunk == nullptr || y < 0 || y >= CHUNK_HEIGHT) {
         return 0;
     }

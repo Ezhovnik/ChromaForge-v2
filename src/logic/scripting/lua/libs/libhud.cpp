@@ -53,7 +53,7 @@ static int l_open_block(lua::State* L) {
     auto z = lua::tointeger(L, 3);
     bool playerInventory = !lua::toboolean(L, 4);
 
-    auto vox = blocks_agent::get(*scripting::level->chunksStorage, x, y, z);
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     if (vox == nullptr) {
         throw std::runtime_error("Block does not exists at " + std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z));
     }
