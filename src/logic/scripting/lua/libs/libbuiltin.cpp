@@ -37,6 +37,9 @@ static int l_open_world(lua::State* L) {
 
 static int l_reopen_world(lua::State*) {
     auto controller = scripting::engine->getController();
+    if (scripting::level == nullptr) {
+        throw std::runtime_error("No world open");
+    }
     controller->reopenWorld(scripting::level->getWorld());
     return 0;
 }
@@ -48,7 +51,7 @@ static int l_open_folder(lua::State* L) {
 }
 
 static int l_quit(lua::State*) {
-    Window::setShouldClose(true);
+    scripting::engine->quit();
     return 0;
 }
 

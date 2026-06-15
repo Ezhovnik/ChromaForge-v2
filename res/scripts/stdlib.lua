@@ -9,15 +9,40 @@ function sleep(timesec)
     end
 end
 
+function tb_frame_tostring(frame)
+    local s = frame.short_src
+    if frame.what ~= "C" then
+        s = s .. ":" .. tostring(frame.currentline)
+    end
+    if frame.what == "main" then
+        s = s .. ": in main chunk"
+    elseif frame.name then
+        s = s .. ": in function " .. utf8.escape(frame.name)
+    end
+    return s
+end
+
 if test then
     test.sleep = sleep
     test.name = __CHROMA_TEST_NAME
     test.new_world = builtin.new_world
     test.open_world = builtin.open_world
     test.close_world = builtin.close_world
+    test.reopen_world = builtin.reopen_world
     test.reconfig_packs = builtin.reconfig_packs
     test.set_setting = builtin.set_setting
     test.spark = coroutine.yield
+
+    function test.quit()
+        local tb = debug.get_traceback(1)
+        local s = "test.quit() traceback:"
+        for i, frame in ipairs(tb) do
+            s = s .. "\n\t"..tb_frame_tostring(frame)
+        end
+        debug.info(s)
+        builtin.quit()
+        coroutine.yield()
+    end
 
     function test.sleep_until(predicate, max_sparks)
         max_sparks = max_sparks or 1e9
@@ -383,7 +408,9 @@ end
 function __chroma_stop_coroutine(id)
     local co = __chroma_coroutines[id]
     if co then
-        coroutine.close(co)
+        if coroutine.close then
+            coroutine.close(co)
+        end
         __chroma_coroutines[id] = nil
     end
 end

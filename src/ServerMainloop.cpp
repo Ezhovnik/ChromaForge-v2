@@ -37,6 +37,11 @@ void ServerMainloop::run() {
     double delta = targetDelta;
     auto begin = std::chrono::steady_clock::now();
     while (process->isActive()) {
+        if (engine.isQuitSignal()) {
+            process->terminate();
+            LOG_INFO("Script has been terminated due to quit signal");
+            break;
+        }
         time.step(delta);
         process->update();
         if (controller) {

@@ -84,6 +84,8 @@ private:
 
     consumer<std::unique_ptr<Level>> levelConsumer;
 
+    bool quitSignal = false;
+
     void updateHotkeys(); // Обработка горячих клавиш
 
     void processPostRunnables();
@@ -137,6 +139,9 @@ public:
 
     void onWorldOpen(std::unique_ptr<Level> level);
     void onWorldClosed();
+
+    void quit();
+    bool isQuitSignal() const;
 
     void loadContent();
     void resetContent();
