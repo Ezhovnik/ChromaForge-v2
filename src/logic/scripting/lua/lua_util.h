@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <typeindex>
 #include <typeinfo>
+#include <stdexcept>
 
 #ifdef __linux__ 
 #include <luajit-2.1/luaconf.h>
@@ -704,5 +705,30 @@ namespace lua {
             return value;
         }
         return def;
+    }
+
+    inline void read_bytes_from_table(
+        lua::State* L, int tableIndex, std::vector<ubyte>& bytes
+    ) {
+        if (!lua::istable(L, tableIndex)) {
+            log_error("Table expected");
+            throw std::runtime_error("Table expected");
+        } else {
+            size_t size = lua::objlen(L, tableIndex);
+            for (size_t i = 0; i < size; ++i) {
+                lua::rawgeti(L, i + 1, tableIndex);
+                const int byte = lua::tointeger(L, -1);
+                lua::pop(L);
+                if (byte < 0 || byte > 255) {
+                    log_error(
+                        "Invalid byte '" + std::to_string(byte) + "'"
+                    );
+                    throw std::runtime_error(
+                        "Invalid byte '" + std::to_string(byte) + "'"
+                    );
+                }
+                bytes.push_back(byte);
+            }
+        }
     }
 }
