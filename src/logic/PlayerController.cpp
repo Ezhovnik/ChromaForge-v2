@@ -193,13 +193,8 @@ void PlayerController::updateKeyboard() {
 	input.cheat = Events::isActive(BIND_MOVE_CHEAT);
 	input.jump = Events::isActive(BIND_MOVE_JUMP);
 	input.zoom = Events::isActive(BIND_CAM_ZOOM);
-
-	input.noclip = Events::justActive(BIND_PLAYER_NOCLIP);
-	input.flight = Events::justActive(BIND_PLAYER_FLIGHT);
 	input.cameraMode = Events::justActive(BIND_CAM_MODE);
-
     input.dropBlock = Events::justActive(BIND_PLAYER_DROP);
-	input.pickBlock = Events::justActive(BIND_PLAYER_PICK);
 }
 
 void PlayerController::onFootstep(const Hitbox& hitbox) {
@@ -254,7 +249,6 @@ void PlayerController::resetKeyboard() {
 	input.attack = false;
 	input.build = false;
     input.destroy = false;
-	input.pickBlock = false;
 	input.cameraMode = false;
     input.dropBlock = false;
 }
@@ -287,24 +281,6 @@ static int determine_rotation(const Block* def, const glm::ivec3& norm, const gl
         }
     }
     return 0;
-}
-
-static void pick_block(
-    ContentIndices* indices,
-    const Block& block,
-    Player& player,
-    int x, int y, int z
-) {
-    itemid_t id = block.rt.pickingItem;
-    auto inventory = player.getInventory();
-    size_t slotid = inventory->findSlotByItem(id, 0, 10);
-    if (slotid == Inventory::npos) {
-        slotid = player.getChosenSlot();
-    } else {
-        player.setChosenSlot(slotid);
-    }
-    ItemStack& stack = inventory->getSlot(slotid);
-    if (stack.getItemId() != id) stack.set(ItemStack(id, 1));
 }
 
 voxel* PlayerController::updateSelection(float maxDistance) {
@@ -507,10 +483,6 @@ void PlayerController::updateInteraction(float deltaTime) {
     auto def = indices->blocks.get(item.rt.placingBlock);
     if (def && input.build) {
         processRightClick(*def, target);
-    }
-    if (input.pickBlock) {
-        auto coord = selection.actualPosition;
-        pick_block(indices, target, player, coord.x, coord.y, coord.z);
     }
 }
 

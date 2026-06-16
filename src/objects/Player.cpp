@@ -137,16 +137,8 @@ void Player::updateInput(PlayerInput& input, float delta) {
 	if (input.jump && hitbox->grounded) {
 		hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
 	}
-	if ((input.flight && !noclip) || (input.noclip && flight == noclip)){
-		flight = !flight;
-		if (flight) hitbox->velocity.y += 1.0f;
-	}
 
 	hitbox->type = noclip ? BodyType::Kinematic : BodyType::Dynamic;
-	if (input.noclip) noclip = !noclip;
-
-	input.noclip = false;
-	input.flight = false;
 }
 
 void Player::postUpdate() {
