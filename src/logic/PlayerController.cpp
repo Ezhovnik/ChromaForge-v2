@@ -483,6 +483,7 @@ void PlayerController::updateInteraction(float deltaTime) {
     }
     auto& target = indices->blocks.require(vox->id);
     if (input.destroy) {
+        scripting::on_block_breaking(&player, target, iend);
         if (player.isInstantDestruction() && target.breakable) {
             blocksController.breakBlock(
                 &player,

@@ -99,11 +99,12 @@ struct ContentPackStats {
 };
 
 struct WorldFuncsSet {
-    bool onblockplaced : 1;
-    bool onblockreplaced : 1;
-    bool onblockbroken : 1;
-    bool onblockinteract : 1;
-    bool onplayerspark : 1;
+    bool onblockplaced;
+    bool onblockreplaced;
+    bool onblockbreaking;
+    bool onblockbroken;
+    bool onblockinteract;
+    bool onplayerspark;
 };
 
 class ContentPackRuntime {

@@ -336,14 +336,23 @@ void scripting::random_update_block(const Block& block, const glm::ivec3& pos) {
     });
 }
 
-void scripting::on_block_placed(Player* player, const Block& block, const glm::ivec3& pos) {
-    if (block.rt.funcsset.onplaced) {
-        std::string name = block.name + ".placed";
-        lua::emit_event(lua::get_main_state(), name, [pos, player](auto L) {
-            lua::pushivec_stack(L, pos);
-            lua::pushinteger(L, player ? player->getId() : -1);
-            return 4;
-        });
+template<bool WorldFuncsSet::*worldfunc>
+static bool on_block_common(
+    const std::string& suffix,
+    bool blockfunc,
+    Player* player,
+    const Block& block,
+    const glm::ivec3& pos
+) {
+    bool result = false;
+    if (blockfunc) {
+        std::string name = block.name + "." + suffix;
+        result =
+            lua::emit_event(lua::get_main_state(), name, [pos, player](auto L) {
+                lua::pushivec_stack(L, pos);
+                lua::pushinteger(L, player->getId());
+                return 4;
+            });
     }
     auto args = [&](lua::State* L) {
         lua::pushinteger(L, block.rt.id);
@@ -351,92 +360,50 @@ void scripting::on_block_placed(Player* player, const Block& block, const glm::i
         lua::pushinteger(L, player ? player->getId() : -1);
         return 5;
     };
-    for (auto& [packid, pack] : content->getPacks()) {
-        if (pack->worldfuncsset.onblockplaced) {
+    for (auto& [packid, pack] : scripting::content->getPacks()) {
+        if (pack->worldfuncsset.*worldfunc) {
             lua::emit_event(
-                lua::get_main_state(),
-                packid + ":.blockplaced",
-                args
+                lua::get_main_state(), packid + ":.block" + suffix, args
             );
         }
     }
+    return result;
+}
+
+void scripting::on_block_placed(
+    Player* player, const Block& block, const glm::ivec3& pos
+) {
+    on_block_common<&WorldFuncsSet::onblockplaced>(
+        "placed", block.rt.funcsset.onplaced, player, block, pos
+    );
 }
 
 void scripting::on_block_broken(Player* player, const Block& block, const glm::ivec3& pos) {
-    if (block.rt.funcsset.onbroken) {
-        std::string name = block.name + ".broken";
-        lua::emit_event(lua::get_main_state(), name, [pos, player] (auto L) {
-            lua::pushivec_stack(L, pos);
-            lua::pushinteger(L, player ? player->getId() : -1);
-            return 4;
-        });
-    }
-    auto args = [&](lua::State* L) {
-        lua::pushinteger(L, block.rt.id);
-        lua::pushivec_stack(L, pos);
-        lua::pushinteger(L, player ? player->getId() : -1);
-        return 5;
-    };
-    for (auto& [packid, pack] : content->getPacks()) {
-        if (pack->worldfuncsset.onblockbroken) {
-            lua::emit_event(
-                lua::get_main_state(),
-                packid + ":.blockbroken",
-                args
-            );
-        }
-    }
+    on_block_common<&WorldFuncsSet::onblockbroken>(
+        "broken", block.rt.funcsset.onbroken, player, block, pos
+    );
 }
 
 void scripting::on_block_replaced(
     Player* player, const Block& block, const glm::ivec3& pos
 ) {
-    if (block.rt.funcsset.onreplaced) {
-        std::string name = block.name + ".replaced";
-        lua::emit_event(lua::get_main_state(), name, [pos, player](auto L) {
-            lua::pushivec_stack(L, pos);
-            lua::pushinteger(L, player ? player->getId() : -1);
-            return 4;
-        });
-    }
-    auto args = [&](lua::State* L) {
-        lua::pushinteger(L, block.rt.id);
-        lua::pushivec_stack(L, pos);
-        lua::pushinteger(L, player ? player->getId() : -1);
-        return 5;
-    };
-    for (auto& [packid, pack] : content->getPacks()) {
-        if (pack->worldfuncsset.onblockreplaced) {
-            lua::emit_event(
-                lua::get_main_state(), packid + ":.blockreplaced", args
-            );
-        }
-    }
+    on_block_common<&WorldFuncsSet::onblockreplaced>(
+        "replaced", block.rt.funcsset.onreplaced, player, block, pos
+    );
+}
+
+void scripting::on_block_breaking(
+    Player* player, const Block& block, const glm::ivec3& pos
+) {
+    on_block_common<&WorldFuncsSet::onblockbreaking>(
+        "breaking", block.rt.funcsset.onbreaking, player, block, pos
+    );
 }
 
 bool scripting::on_block_interact(Player* player, const Block& block, const glm::ivec3& pos) {
-    std::string name = block.name + ".interact";
-    auto result = lua::emit_event(lua::get_main_state(), name, [pos, player] (auto L) {
-        lua::pushivec_stack(L, pos);
-        lua::pushinteger(L, player->getId());
-        return 4;
-    });
-    auto args = [&](lua::State* L) {
-        lua::pushinteger(L, block.rt.id);
-        lua::pushivec_stack(L, pos);
-        lua::pushinteger(L, player ? player->getId() : -1);
-        return 5;
-    };
-    for (auto& [packid, pack] : content->getPacks()) {
-        if (pack->worldfuncsset.onblockinteract) {
-            lua::emit_event(
-                lua::get_main_state(),
-                packid + ":.blockinteract",
-                args
-            );
-        }
-    }
-    return result;
+    return on_block_common<&WorldFuncsSet::onblockinteract>(
+        "interact", block.rt.funcsset.oninteract, player, block, pos
+    );
 }
 
 void scripting::on_player_spark(Player* player, int tps) {
@@ -448,7 +415,7 @@ void scripting::on_player_spark(Player* player, int tps) {
     for (auto& [packid, pack] : scripting::content->getPacks()) {
         if (pack->worldfuncsset.onplayerspark) {
             lua::emit_event(
-                lua::get_main_state(), packid + ":.playertick", args
+                lua::get_main_state(), packid + ":.playerspark", args
             );
         }
     }
@@ -742,6 +709,7 @@ void scripting::load_content_script(
     funcsset.init = register_event(env, "init", prefix + ".init");
     funcsset.update = register_event(env, "on_update", prefix + ".update");
     funcsset.randupdate = register_event(env, "on_random_update", prefix + ".randupdate");
+    funcsset.onbreaking = register_event(env, "on_breaking", prefix + ".breaking");
     funcsset.onbroken = register_event(env, "on_broken", prefix + ".broken");
     funcsset.onplaced = register_event(env, "on_placed", prefix + ".placed");
     funcsset.onreplaced = register_event(env, "on_replaced", prefix + ".replaced");
@@ -790,6 +758,7 @@ void scripting::load_world_script(
     register_event(env, "on_world_quit", prefix + ":.worldquit");
 
     funcsset.onblockplaced = register_event(env, "on_block_placed", prefix + ":.blockplaced");
+    funcsset.onblockbreaking = register_event(env, "on_block_breaking", prefix + ":.blockbreaking");
     funcsset.onblockbroken = register_event(env, "on_block_broken", prefix + ":.blockbroken");
     funcsset.onblockreplaced = register_event(env, "on_block_replaced", prefix + ":.blockreplaced");
     funcsset.onblockinteract = register_event(env, "on_block_interact", prefix + ":.blockinteract");
