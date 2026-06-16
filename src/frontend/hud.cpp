@@ -153,7 +153,7 @@ Hud::Hud(
     Player& player
 ) : engine(engine),
     assets(*engine.getAssets()),
-    guiController(engine.getGUI()),
+    guiController(*engine.getGUI()),
     levelFrontend(levelFrontend),
     player(player),
     debugImgWorldGen(
@@ -184,11 +184,11 @@ Hud::Hud(
         engine, levelFrontend.getLevel(), player, allowDebugCheats
     );
 	debugPanel->setZIndex(2);
-    guiController->add(debugPanel);
+    guiController.add(debugPanel);
 
-	guiController->add(darkOverlay);
-    guiController->add(hotbarView);
-    guiController->add(contentAccessPanel);
+	guiController.add(darkOverlay);
+    guiController.add(hotbarView);
+    guiController.add(contentAccessPanel);
 
     auto dplotter = std::make_shared<gui::Plotter>(350, 250, 2000, 16);
     dplotter->setGravity(gui::Gravity::bottom_right);
@@ -210,10 +210,10 @@ Hud::~Hud() {
     for (auto& element : elements) {
         onRemove(element);
     }
-    guiController->remove(hotbarView);
-	guiController->remove(darkOverlay);
-    guiController->remove(contentAccessPanel);
-	guiController->remove(debugPanel);
+    guiController.remove(hotbarView);
+	guiController.remove(darkOverlay);
+    guiController.remove(contentAccessPanel);
+	guiController.remove(debugPanel);
 }
 
 void Hud::cleanup() {
@@ -320,14 +320,14 @@ void Hud::updateWorldGenDebugVisualization() {
 void Hud::update(bool hudVisible) {
 	const auto& level = levelFrontend.getLevel();
     const auto& chunks = *player.chunks;
-	auto menu = guiController->getMenu();
+	const auto& menu = guiController.getMenu();
 
 	debugPanel->setVisible(player.debug && hudVisible);
 
 	if (!hudVisible && inventoryOpen) closeInventory();
 	if (pause && menu->getCurrent().panel == nullptr) setPause(false);
 
-	if (!guiController->isFocusCaught()) processInput(hudVisible);
+	if (!guiController.isFocusCaught()) processInput(hudVisible);
 
 	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();
 
@@ -539,12 +539,12 @@ void Hud::showExchangeSlot() {
     exchangeSlot->setColor(glm::vec4());
     exchangeSlot->setInteractive(false);
     exchangeSlot->setZIndex(1);
-    guiController->store(gui::SlotView::EXCHANGE_SLOT_NAME, exchangeSlot);
+    guiController.store(gui::SlotView::EXCHANGE_SLOT_NAME, exchangeSlot);
 }
 
 void Hud::dropExchangeSlot() {
     auto slotView = std::dynamic_pointer_cast<gui::SlotView>(
-        guiController->get(gui::SlotView::EXCHANGE_SLOT_NAME)
+        guiController.get(gui::SlotView::EXCHANGE_SLOT_NAME)
     );
     if (slotView == nullptr) return;
     ItemStack& stack = slotView->getStack();
@@ -563,7 +563,7 @@ void Hud::dropExchangeSlot() {
 
 
 void Hud::closeInventory() {
-    guiController->remove(gui::SlotView::EXCHANGE_SLOT_NAME);
+    guiController.remove(gui::SlotView::EXCHANGE_SLOT_NAME);
     exchangeSlot = nullptr;
     exchangeSlotInv = nullptr;
     inventoryOpen = false;
@@ -603,7 +603,7 @@ void Hud::setPause(bool pause) {
 
     if (inventoryOpen) closeInventory();
 
-    auto menu = guiController->getMenu();
+    const auto& menu = guiController.getMenu();
     if (pause) {
         menu->setPage("pause");
     } else {
@@ -615,7 +615,7 @@ void Hud::setPause(bool pause) {
 }
 
 void Hud::add(const HudElement& element, const dv::value& argsArray) {
-    guiController->add(element.getNode());
+    guiController.add(element.getNode());
     auto document = element.getDocument();
     if (document) {
         auto invview = std::dynamic_pointer_cast<gui::InventoryView>(element.getNode());
@@ -647,7 +647,7 @@ void Hud::onRemove(const HudElement& element) {
         scripting::on_ui_close(document, inventory);
         if (invview) invview->unbind();
     }
-    guiController->remove(element.getNode());
+    guiController.remove(element.getNode());
 }
 
 void Hud::remove(const std::shared_ptr<gui::UINode>& node) {
@@ -680,10 +680,10 @@ void Hud::setContentAccess(bool flag) {
 void Hud::setDebugCheats(bool flag) {
     allowDebugCheats = flag;
 
-    guiController->remove(debugPanel);
+    guiController.remove(debugPanel);
     debugPanel = create_debug_panel(
         engine, levelFrontend.getLevel(), player, allowDebugCheats
     );
     debugPanel->setZIndex(2);
-    guiController->add(debugPanel);
+    guiController.add(debugPanel);
 }

@@ -68,7 +68,7 @@ private:
     Engine& engine;
     Assets& assets;
     std::unique_ptr<Camera> uicamera;
-    gui::GUI* guiController;
+    gui::GUI& guiController;
     LevelFrontend& levelFrontend;
     Player& player;
 
