@@ -179,8 +179,7 @@ PlayerController::PlayerController(
     level(level), 
 	player(player),
 	camControl(player, settings.camera), 
-	blocksController(blocksController),
-    playerSparkClock(20, 3) {}
+	blocksController(blocksController) {}
 
 void PlayerController::updateKeyboard() {
 	input.moveForward = Events::isActive(BIND_MOVE_FORWARD);
@@ -516,12 +515,6 @@ void PlayerController::update(float delta, bool input) {
         resetKeyboard();
     }
     updatePlayer(delta);
-
-    if (playerSparkClock.update(delta)) {
-        if (player->getId() % playerSparkClock.getParts() == playerSparkClock.getPart()) {
-            scripting::on_player_spark(player, playerSparkClock.getSparkRate());
-        }
-    }
 }
 
 void PlayerController::postUpdate(float deltaTime, bool input_flag, bool pause) {

@@ -23,7 +23,8 @@ LevelController::LevelController(
     Player* clientPlayer
 ) : settings(engine->getSettings()),
     level(std::move(levelPtr)),
-    chunks(std::make_unique<ChunksController>(*level, settings.chunks.padding.get()))
+    chunks(std::make_unique<ChunksController>(*level)),
+    playerSparkClock(20, 3)
 {
     if (clientPlayer) {
         chunks->lighting = std::make_unique<Lighting>(
@@ -33,14 +34,29 @@ LevelController::LevelController(
 
     blocks = std::make_unique<BlocksController>(
         *level, 
-        chunks ? chunks->lighting.get() : nullptr,
-        settings.chunks.padding.get()
+        chunks ? chunks->lighting.get() : nullptr
     );
     scripting::on_world_load(this);
+
+    // TODO: players added later
+    int confirmed;
+    do {
+        confirmed = 0;
+        for (const auto& [_, player] : *level->players) {
+            glm::vec3 position = player->getPosition();
+            player->chunks->configure(
+                std::floor(position.x), std::floor(position.z), 1
+            );
+            chunks->update(16, 1, 0, *player);
+            if (player->chunks->getVoxel(std::floor(position.x), std::floor(position.y), std::floor(position.z))) {
+                confirmed++;
+            }
+        }
+    } while (confirmed < level->players->size());
 }
 
 void LevelController::update(float delta, bool pause) {
-    for (const auto& [uid, player] : *level->players) {
+    for (const auto& [_, player] : *level->players) {
         glm::vec3 position = player->getPosition();
         player->chunks->configure(
             position.x,
@@ -50,13 +66,28 @@ void LevelController::update(float delta, bool pause) {
         chunks->update(
             settings.chunks.loadSpeed.get(),
             settings.chunks.loadDistance.get(),
+            settings.chunks.padding.get(),
             *player
         );
     }
     if (!pause) {
-        blocks->update(delta);
+        blocks->update(delta, settings.chunks.padding.get());
         level->entities->updatePhysics(delta);
         level->entities->update(delta);
+
+        for (const auto& [_, player] : *level->players) {
+            if (playerSparkClock.update(delta)) {
+                if (player->getId() % playerSparkClock.getParts() == playerSparkClock.getPart()) {
+
+                    const auto& position = player->getPosition();
+                    if (!player->chunks->getVoxel(std::floor(position.x), std::floor(position.y), std::floor(position.z))){
+                        scripting::on_player_spark(
+                            player.get(), playerSparkClock.getSparkRate()
+                        );
+                    }
+                }
+            }
+        }
     }
     level->entities->clean();
 }

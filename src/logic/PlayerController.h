@@ -51,7 +51,6 @@ private:
 	PlayerInput input {};
 	CameraControl camControl;
 	BlocksController* blocksController;
-	util::Clock playerSparkClock;
 
 	float interactionTimer = 0.0f;
 

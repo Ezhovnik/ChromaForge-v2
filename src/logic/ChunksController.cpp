@@ -26,10 +26,8 @@ inline constexpr int MAX_WORK_PER_FRAME = 128;
 inline constexpr int MIN_SURROUNDING = 9;
 
 ChunksController::ChunksController(
-	Level& level, 
-	uint chunksPadding
-) : level(level),
-	chunksPadding(chunksPadding), 
+	Level& level
+) : level(level), 
 	generator(std::make_unique<WorldGenerator>(
         level.content->generators.require(level.getWorld()->getGenerator()),
         level.content,
@@ -39,7 +37,7 @@ ChunksController::ChunksController(
 ChunksController::~ChunksController() = default;
 
 void ChunksController::update(
-    int64_t maxDuration, int loadDistance, Player& player
+    int64_t maxDuration, int loadDistance, uint padding, Player& player
 ) const {
     const auto& position = player.getPosition();
     int centerX = floordiv<CHUNK_WIDTH>(position.x);
@@ -48,7 +46,7 @@ void ChunksController::update(
     int64_t mcstotal = 0;
     for (uint i = 0; i < MAX_WORK_PER_FRAME; ++i) {
         timeutil::Timer timer;
-        if (loadVisible(player)) {
+        if (loadVisible(player, padding)) {
             int64_t mcs = timer.stop();
             if (mcstotal + mcs < maxDuration * 1000) {
                 mcstotal += mcs;
@@ -59,7 +57,7 @@ void ChunksController::update(
     }
 }
 
-bool ChunksController::loadVisible(const Player& player) const {
+bool ChunksController::loadVisible(const Player& player, uint padding) const {
     const auto& chunks = *player.chunks;
 	int sizeX = chunks.getWidth();
     int sizeY = chunks.getDepth();
@@ -67,9 +65,9 @@ bool ChunksController::loadVisible(const Player& player) const {
 	int nearX = 0;
 	int nearZ = 0;
 	bool assigned = false;
-	int minDistance = ((sizeX - chunksPadding * 2) / 2) * ((sizeY - chunksPadding * 2) / 2);
-	for (uint z = chunksPadding; z < sizeY - chunksPadding; ++z){
-		for (uint x = chunksPadding; x < sizeX - chunksPadding; ++x){
+	int minDistance = ((sizeX - padding * 2) / 2) * ((sizeY - padding * 2) / 2);
+	for (uint z = padding; z < sizeY - padding; ++z){
+		for (uint x = padding; x < sizeX - padding; ++x){
 			int index = z * sizeX + x;
 			auto& chunk = chunks.getChunks()[index];
 			if (chunk != nullptr) {

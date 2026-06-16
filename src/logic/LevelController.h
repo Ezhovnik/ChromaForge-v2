@@ -4,6 +4,7 @@
 
 #include <logic/BlocksController.h>
 #include <logic/ChunksController.h>
+#include <util/Clock.h>
 
 class Level;
 struct EngineSettings;
@@ -17,6 +18,8 @@ private:
 
     std::unique_ptr<BlocksController> blocks;
     std::unique_ptr<ChunksController> chunks;
+
+    util::Clock playerSparkClock;
 public:
     LevelController(
         Engine* engine,

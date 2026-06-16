@@ -35,13 +35,12 @@ class BlocksController {
     util::Clock randSparkClock;
     util::Clock blocksSparkClock;
     util::Clock worldSparkClock;
-    uint padding;
 
     FastRandom random {};
 
     std::vector<on_block_interaction> blockInteractionCallbacks;
 public:
-    BlocksController(const Level& level, Lighting* lighting, uint padding);
+    BlocksController(const Level& level, Lighting* lighting);
 
     void updateSides(int x, int y, int z);
     void updateSides(int x, int y, int z, int w, int h, int d);
@@ -59,13 +58,13 @@ public:
         int x, int y, int z
     );
 
-    void update(float delta);
+    void update(float delta, uint padding);
     void randomSpark(
         const Chunk& chunk,
         int segments,
         const ContentIndices* indices
     );
-    void randomSpark(int sparkId, int parts);
+    void randomSpark(int sparkId, int parts, uint padding);
     void onBlocksSpark(int sparkId, int parts);
 
     int64_t createBlockInventory(int x, int y, int z);

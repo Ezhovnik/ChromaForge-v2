@@ -22,13 +22,11 @@
 
 BlocksController::BlocksController(
     const Level& level,
-    Lighting* lighting,
-    uint padding
-) : level(level), 
-    chunks(*level.chunks), 
-    lighting(lighting), 
-    randSparkClock(20, 3), 
-    padding(padding), 
+    Lighting* lighting
+) : level(level),
+    chunks(*level.chunks),
+    lighting(lighting),
+    randSparkClock(20, 3),
     blocksSparkClock(20, 1),
     worldSparkClock(20, 1) {}
 
@@ -116,8 +114,8 @@ void BlocksController::updateBlock(int x, int y, int z) {
     if (def.rt.funcsset.update) scripting::update_block(def, glm::ivec3(x, y, z));
 }
 
-void BlocksController::update(float delta) {
-    if (randSparkClock.update(delta)) randomSpark(randSparkClock.getPart(), randSparkClock.getParts());
+void BlocksController::update(float delta, uint padding) {
+    if (randSparkClock.update(delta)) randomSpark(randSparkClock.getPart(), randSparkClock.getParts(), padding);
     if (blocksSparkClock.update(delta)) onBlocksSpark(blocksSparkClock.getPart(), blocksSparkClock.getParts());
     if (worldSparkClock.update(delta)) scripting::on_world_spark();
 }
@@ -161,7 +159,7 @@ void BlocksController::randomSpark(
     }
 }
 
-void BlocksController::randomSpark(int sparkId, int parts) {
+void BlocksController::randomSpark(int sparkId, int parts, uint padding) {
     auto indices = level.content->getIndices();
     std::set<uint64_t> chunksIterated;
 

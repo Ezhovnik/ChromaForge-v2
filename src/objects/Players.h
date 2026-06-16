@@ -31,4 +31,8 @@ public:
     auto end() const {
         return players.end();
     }
+
+    size_t size() const {
+        return players.size();
+    }
 };
