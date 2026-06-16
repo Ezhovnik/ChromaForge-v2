@@ -11,7 +11,7 @@ class MenuScreen : public Screen {
 private:
     std::unique_ptr<Camera> uicamera;
 public:
-    MenuScreen(Engine* engine);
+    MenuScreen(Engine& engine);
     ~MenuScreen();
 
     void update(float deltaTime) override;

@@ -13,7 +13,7 @@ Hud* scripting::hud = nullptr;
 WorldRenderer* scripting::renderer = nullptr;
 
 static void load_script(const std::string& name) {
-    auto file = scripting::engine->getPaths()->getResourcesFolder()/"scripts"/name;
+    auto file = scripting::engine->getPaths().getResourcesFolder()/"scripts"/name;
     std::string src = files::read_string(file);
     LOG_INFO("Loading script {}", file.u8string());
 

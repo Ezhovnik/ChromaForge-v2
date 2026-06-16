@@ -250,6 +250,6 @@ public:
 std::unique_ptr<GeneratorScript> scripting::load_generator(
     const Generator& def, const std::filesystem::path& file, const std::string& dirPath
 ) {
-    auto L = lua::create_state(*scripting::engine->getPaths(), lua::StateType::Generator);
+    auto L = lua::create_state(scripting::engine->getPaths(), lua::StateType::Generator);
     return std::make_unique<LuaGeneratorScript>(L, def, file, dirPath);
 }

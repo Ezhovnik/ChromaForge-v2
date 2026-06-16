@@ -108,7 +108,7 @@ public:
 
     void onAssetsLoaded();
 
-    EnginePaths* getPaths();
+    EnginePaths& getPaths();
     ResPaths* getResPaths();
     Assets* getAssets();
 	gui::GUI* getGUI();

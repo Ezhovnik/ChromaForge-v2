@@ -64,7 +64,7 @@ void ServerMainloop::run() {
 void ServerMainloop::setLevel(std::unique_ptr<Level> level) {
     if (level == nullptr) {
         controller->onWorldQuit();
-        engine.getPaths()->setCurrentWorldFolder(std::filesystem::path());
+        engine.getPaths().setCurrentWorldFolder(std::filesystem::path());
         controller = nullptr;
     } else {
         controller = std::make_unique<LevelController>(

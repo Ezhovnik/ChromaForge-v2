@@ -32,21 +32,21 @@
 #include <objects/Players.h>
 
 LevelScreen::LevelScreen(
-    Engine* engine,
+    Engine& engine,
     std::unique_ptr<Level> levelPtr
 ) : Screen(engine),
     postProcessing(std::make_unique<PostProcessing>())
 {
     Level* level = levelPtr.get();
 
-    auto& settings = engine->getSettings();
-    auto& assets = *engine->getAssets();
-    auto menu = engine->getGUI()->getMenu();
+    auto& settings = engine.getSettings();
+    auto& assets = *engine.getAssets();
+    auto menu = engine.getGUI()->getMenu();
     menu->reset();
 
     auto player = level->players->getPlayer(0);
     controller = std::make_unique<LevelController>(
-        engine, std::move(levelPtr), player
+        &engine, std::move(levelPtr), player
     );
     playerController = std::make_unique<PlayerController>(
         settings,
@@ -55,13 +55,17 @@ LevelScreen::LevelScreen(
         controller->getBlocksController()
     );
 
-    frontend = std::make_unique<LevelFrontend>(player, controller.get(), assets);
+    frontend = std::make_unique<LevelFrontend>(
+        player, controller.get(), assets
+    );
 
-    worldRenderer = std::make_unique<WorldRenderer>(engine, *frontend, player);
+    worldRenderer = std::make_unique<WorldRenderer>(
+        engine, *frontend, *player
+    );
     hud = std::make_unique<Hud>(engine, *frontend, *player);
 
     decorator = std::make_unique<Decorator>(
-        *engine, *controller, *worldRenderer, assets, *player
+        engine, *controller, *worldRenderer, assets, *player
     );
 
     keepAlive(settings.graphics.backlight.observe([=](bool) {
@@ -87,7 +91,7 @@ LevelScreen::~LevelScreen() {
     scripting::on_frontend_close();
     Events::enableBindings();
     controller->onWorldQuit();
-    engine->getPaths()->setCurrentWorldFolder(std::filesystem::path());
+    engine.getPaths().setCurrentWorldFolder(std::filesystem::path());
 }
 
 void LevelScreen::initializeContent() {
@@ -114,9 +118,9 @@ void LevelScreen::initializePack(ContentPackRuntime* pack) {
 void LevelScreen::saveWorldPreview() {
     try {
         LOG_INFO("Saving world preview");
-        auto paths = engine->getPaths();
+        const auto& paths = engine.getPaths();
         auto player = playerController->getPlayer();
-        auto& settings = engine->getSettings();
+        auto& settings = engine.getSettings();
         int previewSize = settings.ui.worldPreviewSize.get();
 
         Camera camera = *player->fpCamera;
@@ -127,7 +131,7 @@ void LevelScreen::saveWorldPreview() {
         worldRenderer->draw(ctx, camera, false, true, 0.0f, postProcessing.get());
         auto image = postProcessing->toImage();
         image->flipY();
-        imageio::write(paths->resolve("world:preview.png").string(), image.get());
+        imageio::write(paths.resolve("world:preview.png").string(), image.get());
         LOG_INFO("World preview successfully saved");
     } catch (const std::exception& err) {
         LOG_ERROR("Failed to save world preview: {}", err.what());
@@ -136,14 +140,14 @@ void LevelScreen::saveWorldPreview() {
 
 void LevelScreen::updateHotkeys() {
     auto player = playerController->getPlayer();
-    auto& settings = engine->getSettings();
+    auto& settings = engine.getSettings();
 
     if (Events::justPressed(keycode::F1)) hudVisible = !hudVisible;
     if (Events::justPressed(keycode::F3)) player->debug = !player->debug;
 }
 
 void LevelScreen::update(float deltaTime) {
-    gui::GUI* gui = engine->getGUI();
+    gui::GUI* gui = engine.getGUI();
 
     bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();
@@ -166,7 +170,7 @@ void LevelScreen::update(float deltaTime) {
     );
 
     auto level = controller->getLevel();
-    const auto& settings = engine->getSettings();
+    const auto& settings = engine.getSettings();
 
     if (!hud->isPause()) {
         level->getWorld()->updateTimers(deltaTime);
@@ -191,7 +195,7 @@ void LevelScreen::draw(float deltaTime) {
     DrawContext ctx(nullptr, viewport, batch.get());
 
     if (!hud->isPause()) {
-        scripting::on_entities_render(engine->getTime().getDeltaTime());
+        scripting::on_entities_render(engine.getTime().getDeltaTime());
     }
 
     worldRenderer->draw(

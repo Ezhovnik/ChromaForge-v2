@@ -10,12 +10,12 @@
 #include <coders/zip.h>
 
 static std::filesystem::path resolve_path(const std::string& path) {
-    return scripting::engine->getPaths()->resolve(path);
+    return scripting::engine->getPaths().resolve(path);
 }
 
 static std::filesystem::path resolve_path_soft(const std::string& path) {
     if (path.find(':') == std::string::npos) return std::filesystem::u8path("");
-    return scripting::engine->getPaths()->resolve(path, false);
+    return scripting::engine->getPaths().resolve(path, false);
 }
 
 static int l_find(lua::State* L) {

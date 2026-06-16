@@ -32,9 +32,9 @@ class BlockWrapsRenderer;
 
 class WorldRenderer {
 private:
-    Engine* engine;
+    Engine& engine;
 	const Level& level;
-	Player* player;
+	Player& player;
 	const Assets& assets;
     std::unique_ptr<Frustum> frustumCulling;
     std::unique_ptr<Batch3D> batch3d;
@@ -69,7 +69,7 @@ public:
 	std::unique_ptr<ParticlesRenderer> particles;
 	std::unique_ptr<BlockWrapsRenderer> blockWraps;
 
-	WorldRenderer(Engine* engine, LevelFrontend& levelFrontend, Player* player);
+	WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
 	~WorldRenderer();
 
 	void draw(

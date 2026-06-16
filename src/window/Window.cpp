@@ -198,7 +198,7 @@ bool Window::initialize(DisplaySettings* settings) {
     glfwSetScrollCallback(window, scroll_callback);
 
 	observers_keeper = util::ObjectsKeeper();
-    observers_keeper.keepAlive(settings->fullscreen.observe([=](bool value) {
+    observers_keeper.keepAlive(settings->fullscreen.observe([](bool value) {
         if (value != isFullscreen()) {
             toggleFullscreen();
         }

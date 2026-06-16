@@ -15,14 +15,14 @@ void Mainloop::run() {
     engine.setLevelConsumer([this](auto level) {
         if (level == nullptr) {
             engine.setScreen(nullptr);
-            engine.setScreen(std::make_shared<MenuScreen>(&engine));
+            engine.setScreen(std::make_shared<MenuScreen>(engine));
         } else {
-            engine.setScreen(std::make_shared<LevelScreen>(&engine, std::move(level)));
+            engine.setScreen(std::make_shared<LevelScreen>(engine, std::move(level)));
         }
     });
 
     LOG_INFO("Loading the menu screen");
-    engine.setScreen(std::make_shared<MenuScreen>(&engine));
+    engine.setScreen(std::make_shared<MenuScreen>(engine));
     LOG_INFO("The menu screen has loaded successfully");
 
     LOG_INFO("Main loop started");

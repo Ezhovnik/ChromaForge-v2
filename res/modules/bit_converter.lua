@@ -57,7 +57,7 @@ end
 
 function bit_converter.validate_order(order)
 	if not bit_converter.is_valid_order(order) then
-		 error("invalid order: "..order)
+		error("Invalid order: "..order)
 	end
 end
 

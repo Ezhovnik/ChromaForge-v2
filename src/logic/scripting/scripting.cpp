@@ -36,8 +36,8 @@ LevelController* scripting::controller = nullptr;
 const ContentIndices* scripting::indices = nullptr;
 
 void scripting::load_script(const std::filesystem::path& name, bool throwable) {
-    auto paths = scripting::engine->getPaths();
-    std::filesystem::path file = paths->getResourcesFolder()/std::filesystem::path("scripts")/name;
+    const auto& paths = scripting::engine->getPaths();
+    std::filesystem::path file = paths.getResourcesFolder()/std::filesystem::path("scripts")/name;
 
     std::string src = files::read_string(file);
     auto L = lua::get_main_state();
@@ -63,7 +63,7 @@ int scripting::load_script(
 void scripting::initialize(Engine* engine) {
     scripting::engine = engine;
 
-    lua::initialize(*engine->getPaths(), engine->getCoreParameters());
+    lua::initialize(engine->getPaths(), engine->getCoreParameters());
 
     load_script(std::filesystem::path("stdlib.lua"), true);
     load_script(std::filesystem::path("classes.lua"), true);

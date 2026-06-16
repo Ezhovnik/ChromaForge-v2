@@ -10,10 +10,10 @@
 #include <graphics/core/Texture.h>
 #include <math/UVRegion.h>
 
-MenuScreen::MenuScreen(Engine* engine) : Screen(engine) {
-    engine->resetContent();
+MenuScreen::MenuScreen(Engine& engine) : Screen(engine) {
+    engine.resetContent();
 
-    auto menu = engine->getGUI()->getMenu();
+    auto menu = engine.getGUI()->getMenu();
     menu->reset();
     menu->setPage("main");
 
@@ -29,7 +29,7 @@ void MenuScreen::update(float deltaTime) {
 }
 
 void MenuScreen::draw(float deltaTime) {
-    auto assets = engine->getAssets();
+    auto assets = engine.getAssets();
 
     Window::clear();
     Window::setBgColor(glm::vec3(0.2f));

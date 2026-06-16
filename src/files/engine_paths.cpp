@@ -151,7 +151,7 @@ std::tuple<std::string, std::string> EnginePaths::parsePath(std::string_view pat
     return {prefix, filename};
 }
 
-std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwErr) {
+std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwErr) const {
     auto [prefix, filename] = EnginePaths::parsePath(path);
     if (prefix.empty()) {
         LOG_ERROR("No entry point specified");
@@ -177,7 +177,7 @@ std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwEr
     return std::filesystem::path(filename);
 }
 
-std::vector<std::filesystem::path> EnginePaths::scanForWorlds() {
+std::vector<std::filesystem::path> EnginePaths::scanForWorlds() const {
     std::vector<std::filesystem::path> folders;
 
     auto folder = getWorldsFolder();

@@ -35,7 +35,7 @@ private:
     void initializeContent();
     void initializePack(ContentPackRuntime* pack);
 public:
-    LevelScreen(Engine* engine, std::unique_ptr<Level> level);
+    LevelScreen(Engine& engine, std::unique_ptr<Level> level);
     ~LevelScreen();
 
     void update(float deltaTime) override;

@@ -9,9 +9,9 @@ class LevelController;
 
 class EngineController {
 private:
-    Engine* engine;
+    Engine& engine;
 public:
-    EngineController(Engine* engine);
+    EngineController(Engine& engine);
 
     void openWorld(const std::string& name, bool confirmConvert);
     void deleteWorld(const std::string& name);

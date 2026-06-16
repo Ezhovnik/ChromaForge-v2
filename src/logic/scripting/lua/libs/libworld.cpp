@@ -27,8 +27,8 @@ static WorldInfo& require_world_info() {
 }
 
 static int l_get_list(lua::State* L) {
-    auto paths = scripting::engine->getPaths();
-    auto worlds = paths->scanForWorlds();
+    const auto& paths = scripting::engine->getPaths();
+    auto worlds = paths.scanForWorlds();
 
     lua::createtable(L, worlds.size(), 0);
     for (size_t i = 0; i < worlds.size(); ++i) {
@@ -96,7 +96,7 @@ static int l_get_seed(lua::State* L) {
 
 static int l_exists(lua::State* L) {
     auto name = lua::require_string(L, 1);
-    auto worldsDir = scripting::engine->getPaths()->getWorldFolderByName(name);
+    auto worldsDir = scripting::engine->getPaths().getWorldFolderByName(name);
     return lua::pushboolean(L, std::filesystem::is_directory(worldsDir));
 }
 

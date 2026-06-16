@@ -38,7 +38,7 @@ static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
 }
 
 std::shared_ptr<gui::UINode> create_debug_panel(
-    Engine* engine,
+    Engine& engine,
     Level& level,
     Player& player,
     bool allowDebugCheats
@@ -52,8 +52,8 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     static int fpsMax = fps;
     static std::wstring fpsString = L"";
 
-    panel->listenInterval(0.016f, [engine]() {
-        fps = 1.0f / engine->getTime().getDeltaTime();
+    panel->listenInterval(0.016f, [&engine]() {
+        fps = 1.0f / engine.getTime().getDeltaTime();
         fpsMin = std::min(fps, fpsMin);
         fpsMax = std::max(fps, fpsMax);
     });
@@ -216,11 +216,11 @@ std::shared_ptr<gui::UINode> create_debug_panel(
 
 	{
         auto checkbox = std::make_shared<gui::FullCheckBox>(L"Frustum-Culling", glm::vec2(400, 24));
-        checkbox->setSupplier([=]() {
-            return engine->getSettings().graphics.frustumCulling.get();
+        checkbox->setSupplier([&engine]() {
+            return engine.getSettings().graphics.frustumCulling.get();
         });
-        checkbox->setConsumer([=](bool checked) {
-            engine->getSettings().graphics.frustumCulling.set(checked);
+        checkbox->setConsumer([&engine](bool checked) {
+            engine.getSettings().graphics.frustumCulling.set(checked);
         });
         panel->add(checkbox);
 	}
