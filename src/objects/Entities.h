@@ -15,7 +15,7 @@
 #include <data/dv.h>
 #include <util/Clock.h>
 
-struct entity_funcs_set {
+struct EntityFuncsSet {
     bool init;
     bool on_despawn;
     bool on_grounded;
@@ -79,12 +79,12 @@ struct Transform {
 
 struct UserComponent {
     std::string name;
-    entity_funcs_set funcsset;
+    EntityFuncsSet funcsset;
     scriptenv env;
 
     UserComponent(
         const std::string& name,
-        entity_funcs_set funcsset,
+        EntityFuncsSet funcsset,
         scriptenv env
     ) : name(name), funcsset(funcsset), env(env) {}
 };

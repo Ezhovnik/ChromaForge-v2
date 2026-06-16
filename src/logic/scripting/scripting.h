@@ -19,9 +19,9 @@ class Block;
 class Player;
 struct Item;
 class BlocksController;
-struct block_funcs_set;
-struct item_funcs_set;
-struct world_funcs_set;
+struct BlockFuncsSet;
+struct ItemFuncsSet;
+struct WorldFuncsSet;
 struct UserComponent;
 class ContentIndices;
 struct uidocscript;
@@ -113,21 +113,21 @@ namespace scripting {
         const std::string& prefix,
         const std::filesystem::path& file,
         const std::string& fileName,
-        block_funcs_set& funcsset
+        BlockFuncsSet& funcsset
     );
     void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
         const std::filesystem::path& file,
         const std::string& fileName,
-        item_funcs_set& funcsset
+        ItemFuncsSet& funcsset
     );
     void load_world_script(
         const scriptenv& env,
         const std::string& packid,
         const std::filesystem::path& file,
         const std::string& fileName,
-        world_funcs_set& funcsset
+        WorldFuncsSet& funcsset
     );
     void load_layout_script(
         const scriptenv& env,

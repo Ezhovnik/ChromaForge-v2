@@ -80,7 +80,7 @@ void LevelController::update(float delta, bool pause) {
                 if (player->getId() % playerSparkClock.getParts() == playerSparkClock.getPart()) {
 
                     const auto& position = player->getPosition();
-                    if (!player->chunks->getVoxel(std::floor(position.x), std::floor(position.y), std::floor(position.z))){
+                    if (player->chunks->getVoxel(std::floor(position.x), std::floor(position.y), std::floor(position.z))){
                         scripting::on_player_spark(
                             player.get(), playerSparkClock.getSparkRate()
                         );

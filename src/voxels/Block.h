@@ -51,7 +51,7 @@ inline constexpr int BLOCK_AABB_GRID = 16;
 
 inline constexpr size_t MAX_USER_BLOCK_FIELDS_SIZE = 240;
 
-struct block_funcs_set {
+struct BlockFuncsSet {
 	bool init : 1;
 	bool update : 1;
     bool onplaced : 1;
@@ -155,7 +155,7 @@ public:
 		bool emissive = false;
         bool extended = false;
 		std::vector<AABB> hitboxes[BlockRotProfile::MAX_COUNT];
-        block_funcs_set funcsset {};
+        BlockFuncsSet funcsset {};
         itemid_t pickingItem = 0;
         blockid_t surfaceReplacement = 0;
 	} rt {};
