@@ -36,13 +36,21 @@ void ServerMainloop::run() {
     double targetDelta = 1.0 / static_cast<double>(SPS);
     double delta = targetDelta;
     auto begin = std::chrono::system_clock::now();
+    auto startupTime = begin;
+
     while (process->isActive()) {
         if (engine.isQuitSignal()) {
             process->terminate();
             LOG_INFO("Script has been terminated due to quit signal");
             break;
         }
-        time.step(delta);
+        if (coreParams.testMode) {
+            time.step(delta);
+        } else {
+            auto now = std::chrono::system_clock::now();
+            time.update(std::chrono::duration_cast<std::chrono::microseconds>(now - startupTime).count() / 1e6);
+            delta = time.getDeltaTime();
+        }
         process->update();
         if (controller) {
             controller->getLevel()->getWorld()->updateTimers(delta);
@@ -52,9 +60,7 @@ void ServerMainloop::run() {
         if (!coreParams.testMode) {
             auto end = std::chrono::system_clock::now();
             platform::sleep(targetDelta * 1000 - std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000);
-            end = std::chrono::system_clock::now();
-            delta = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1e6;
-            begin = end;
+            begin = std::chrono::system_clock::now();
         }
     }
     LOG_INFO("Test finished");

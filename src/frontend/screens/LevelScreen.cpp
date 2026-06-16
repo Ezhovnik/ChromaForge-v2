@@ -50,9 +50,9 @@ LevelScreen::LevelScreen(
     );
     playerController = std::make_unique<PlayerController>(
         settings,
-        level,
-        player,
-        controller->getBlocksController()
+        *level,
+        *player,
+        *controller->getBlocksController()
     );
 
     frontend = std::make_unique<LevelFrontend>(

@@ -19,7 +19,7 @@ struct Hitbox;
 
 class CameraControl {
 private:
-	Player* player;
+	Player& player;
     std::shared_ptr<Camera> camera;
     const CameraSettings& settings;
     glm::vec3 offset;
@@ -34,23 +34,23 @@ private:
 	void switchCamera();
 public:
 	CameraControl(
-		Player* player,
+		Player& player,
 		const CameraSettings& settings
 	);
 
 	void updateMouse(PlayerInput& input);
-	void update(PlayerInput input, float delta, Chunks* chunks);
+	void update(PlayerInput input, float delta, const Chunks& chunks);
 	void refresh();
 };
 
 class PlayerController {
 private:
 	const EngineSettings& settings;
-	Level* level;
-	Player* player;
+	Level& level;
+	Player& player;
 	PlayerInput input {};
 	CameraControl camControl;
-	BlocksController* blocksController;
+	BlocksController& blocksController;
 
 	float interactionTimer = 0.0f;
 
@@ -71,9 +71,9 @@ public:
 
 	PlayerController(
 		const EngineSettings& settings,
-		Level* level,
-		Player* player,
-		BlocksController* blocksController
+		Level& level,
+		Player& player,
+		BlocksController& blocksController
 	);
 
 	void update(float delta, bool input_flag);
