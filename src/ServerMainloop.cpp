@@ -33,9 +33,9 @@ void ServerMainloop::run() {
     LOG_INFO("Starting task {}", coreParams.scriptFile.u8string());
     auto process = scripting::start_coroutine(coreParams.scriptFile);
 
-    double targetDelta = 1.0f / static_cast<float>(SPS);
+    double targetDelta = 1.0 / static_cast<double>(SPS);
     double delta = targetDelta;
-    auto begin = std::chrono::steady_clock::now();
+    auto begin = std::chrono::system_clock::now();
     while (process->isActive()) {
         if (engine.isQuitSignal()) {
             process->terminate();
@@ -45,15 +45,14 @@ void ServerMainloop::run() {
         time.step(delta);
         process->update();
         if (controller) {
-            float deltaTime = time.getDeltaTime();
-            controller->getLevel()->getWorld()->updateTimers(deltaTime);
-            controller->update(glm::min(deltaTime, 0.2f), false);
+            controller->getLevel()->getWorld()->updateTimers(delta);
+            controller->update(glm::min(delta, 0.2), false);
         }
 
         if (!coreParams.testMode) {
-            auto end = std::chrono::steady_clock::now();
+            auto end = std::chrono::system_clock::now();
             platform::sleep(targetDelta * 1000 - std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000);
-            end = std::chrono::steady_clock::now();
+            end = std::chrono::system_clock::now();
             delta = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1e6;
             begin = end;
         }

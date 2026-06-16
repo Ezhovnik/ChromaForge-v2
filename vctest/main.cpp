@@ -115,8 +115,10 @@ static void setup_working_dir(const std::filesystem::path& workingDir) {
     std::filesystem::create_directories(dir);
 }
 
-static void display_test_output(const std::filesystem::path& path, std::ostream& stream) {
-    stream << "[OUTPUT]" << std::endl;
+static void display_test_output(
+    const std::filesystem::path& path, const std::filesystem::path& name, std::ostream& stream
+) {
+    stream << "[OUTPUT]" << name << std::endl;
     if (std::filesystem::exists(path)) {
         std::ifstream t(path);
         stream << t.rdbuf();
@@ -158,13 +160,13 @@ static bool run_test(const Config& config, const std::filesystem::path& path) {
     auto testTime = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
     if (code) {
-        display_test_output(outputFile, std::cerr);
+        display_test_output(outputFile, name, std::cerr);
         std::cerr << "[FAILED] " << name << " in " << testTime << " ms" << std::endl;
         std::filesystem::remove(outputFile);
         return false;
     } else {
         if (config.outputAlways) {
-            display_test_output(outputFile, std::cout);
+            display_test_output(outputFile, name, std::cout);
         }
         std::cout << "[PASSED] " << name << " in " << testTime << " ms" << std::endl;
         std::filesystem::remove(outputFile);
