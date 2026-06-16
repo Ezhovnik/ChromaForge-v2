@@ -39,6 +39,7 @@ struct GraphicsSettings {
 	BoolSetting frustumCulling {true};
 	IntegerSetting skyboxResolution {64 + 32, 64, 128};
 	IntegerSetting chunkMaxVertices {200'000, 0, 4'000'000};
+	IntegerSetting chunkMaxVerticesDense {800'000, 0, 8'000'000};
     IntegerSetting chunkMaxRenderers {6, -4, 32};
 };
 

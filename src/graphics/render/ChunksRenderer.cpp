@@ -31,7 +31,14 @@ public:
         const EngineSettings& settings
     ) : level(level),
         chunks(chunks),
-        renderer(settings.graphics.chunkMaxVertices.get(), *level.content, cache, settings) {}
+        renderer(
+            settings.graphics.denseRender.get()
+                ? settings.graphics.chunkMaxVerticesDense.get()
+                : settings.graphics.chunkMaxVertices.get(),
+            *level.content,
+            cache,
+            settings
+        ) {}
 
     RendererResult operator()(const std::shared_ptr<Chunk>& chunk) override {
         renderer.build(chunk.get(), &chunks);
