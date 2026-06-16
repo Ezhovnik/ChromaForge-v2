@@ -17,6 +17,7 @@ pack.remove-confirm=Do you want to erase all pack(s) content from the world fore
 graphics.gamma.tooltip=Lighting brightness curve
 graphics.backlight.tooltip=Backlight to prevent total darkness
 controls.key.tooltip=Search by attached button name
+graphics.dense-render.tooltip=Enables transparency in blocks like leaves
 
 # Bindings
 chunks.reload=Reload Chunks

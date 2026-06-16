@@ -7,6 +7,7 @@ class Assets;
 class ContentGfxCache;
 class LevelController;
 class Player;
+struct EngineSettings;
 
 class LevelFrontend {
 private:
@@ -15,12 +16,18 @@ private:
     const Assets& assets;
     std::unique_ptr<ContentGfxCache> contentCache;
 public:
-    LevelFrontend(Player* currentPlayer, LevelController* controller, Assets& assets);
+    LevelFrontend(
+        Player* currentPlayer,
+        LevelController* controller,
+        Assets& assets,
+        const EngineSettings& settings
+    );
     ~LevelFrontend();
 
     Level& getLevel();
     const Level& getLevel() const;
     const Assets& getAssets() const;
     const ContentGfxCache& getContentGfxCache() const;
+    ContentGfxCache& getContentGfxCache();
     LevelController* getController() const;
 };

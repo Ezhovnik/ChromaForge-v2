@@ -109,6 +109,8 @@ private:
     void updateHotbarControl();
     void cleanup();
 
+    void dropExchangeSlot();
+
     void showExchangeSlot();
     void updateWorldGenDebugVisualization();
 public:

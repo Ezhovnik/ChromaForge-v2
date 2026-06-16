@@ -30,6 +30,8 @@
 #include <objects/Player.h>
 #include <logic/PlayerController.h>
 #include <objects/Players.h>
+#include <frontend/ContentGfxCache.h>
+#include <voxels/GlobalChunks.h>
 
 LevelScreen::LevelScreen(
     Engine& engine,
@@ -56,7 +58,7 @@ LevelScreen::LevelScreen(
     );
 
     frontend = std::make_unique<LevelFrontend>(
-        player, controller.get(), assets
+        player, controller.get(), assets, settings
     );
 
     worldRenderer = std::make_unique<WorldRenderer>(
@@ -71,6 +73,11 @@ LevelScreen::LevelScreen(
     keepAlive(settings.graphics.backlight.observe([=](bool) {
         player->chunks->saveAndClear();
         worldRenderer->clear();
+    }));
+    keepAlive(settings.graphics.denseRender.observe([=](bool) {
+        player->chunks->saveAndClear();
+        worldRenderer->clear();
+        frontend->getContentGfxCache().refresh();
     }));
     keepAlive(settings.camera.fov.observe([=](double value) {
         player->fpCamera->setFov(glm::radians(value));

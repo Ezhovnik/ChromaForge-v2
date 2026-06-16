@@ -43,6 +43,30 @@ std::optional<BlockModel> BlockModel_from(std::string_view str) {
     return std::nullopt;
 }
 
+std::string to_string(CullingMode mode) {
+    switch (mode) {
+        case CullingMode::Default:
+            return "default";
+        case CullingMode::Optional:
+            return "optional";
+        case CullingMode::Disabled:
+            return "disabled";
+        default:
+            return "unknown";
+    }
+}
+
+std::optional<CullingMode> CullingMode_from(std::string_view str) {
+    if (str == "default") {
+        return CullingMode::Default;
+    } else if (str == "optional") {
+        return CullingMode::Optional;
+    } else if (str == "disabled") {
+        return CullingMode::Disabled;
+    }
+    return std::nullopt;
+}
+
 CoordSystem::CoordSystem(glm::ivec3 axisX, glm::ivec3 axisY, glm::ivec3 axisZ) : axisX(axisX), axisY(axisY), axisZ(axisZ) {
 	fix = glm::ivec3(0);
 	if (isVectorHasNegatives(axisX)) fix -= axisX;

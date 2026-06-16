@@ -200,11 +200,11 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         }
     }
 
-    std::string modelTypeName;
+    std::string modelTypeName = to_string(def.model);
     root.at("model").get(modelTypeName);
     root.at("model-name").get(def.modelName);
     if (auto model = BlockModel_from(modelTypeName)) {
-        if (*model == BlockModel::Custom) {
+        if (*model == BlockModel::Custom && def.customModelRaw == nullptr) {
             if (root.has("model-primitives")) {
                 def.customModelRaw = root["model-primitives"];
             } else if (def.modelName.empty()) {
@@ -224,9 +224,17 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         def.model = BlockModel::None;
     }
 
+    std::string cullingModeName = to_string(def.culling);
+    root.at("culling").get(cullingModeName);
+    if (auto mode = CullingMode_from(cullingModeName)) {
+        def.culling = *mode;
+    } else {
+        LOG_WARN("Unknown block {} culling mode {}", name, cullingModeName);
+    }
+
     root.at("material").get(def.material);
 
-    std::string profile = BlockRotProfile::NONE_NAME;
+    std::string profile = def.rotations.name;
     root.at("rotation").get(profile);
     def.rotatable = profile != BlockRotProfile::NONE_NAME;
     if (profile == BlockRotProfile::PIPE_NAME) {
@@ -263,8 +271,6 @@ void ContentLoader::loadBlock(Block& def, const std::string& name, const std::fi
         );
         aabb.b += aabb.a;
         def.hitboxes = {aabb};
-    } else {
-        def.hitboxes = {AABB()};
     }
 
     if (auto found = root.at("emission")) {

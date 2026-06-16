@@ -137,6 +137,10 @@ void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
     this->contentPacks = contentPacks;
 }
 
+void EnginePaths::setScriptFolder(std::filesystem::path folder) {
+    this->scriptFolder = std::move(folder);
+}
+
 void EnginePaths::setCurrentWorldFolder(std::filesystem::path folder) {
     this->currentWorldFolder = std::move(folder);
 }
@@ -165,6 +169,7 @@ std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwEr
     if (prefix == "config") return getConfigFolder()/std::filesystem::u8path(filename);
     if (prefix == "world") return currentWorldFolder/std::filesystem::u8path(filename);
     if (prefix == "export") return userFilesFolder/EXPORT_FOLDER/std::filesystem::u8path(filename);
+    if (prefix == "script" && scriptFolder) return scriptFolder.value()/std::filesystem::u8path(filename);
 
     if (contentPacks) {
         for (auto& pack : *contentPacks) {

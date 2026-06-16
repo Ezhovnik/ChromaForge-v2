@@ -91,6 +91,7 @@ Engine::Engine(
     paths.setResourcesFolder(params.resFolder);
     paths.setUserFilesFolder(params.userFolder);
     paths.prepare();
+    if (!params.scriptFile.empty()) paths.setScriptFolder(params.scriptFile.parent_path());
     loadSettings();
 
     auto resdir = paths.getResourcesFolder();

@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <vector>
 #include <stdexcept>
+#include <optional>
 #include <tuple>
 
 #include <content/ContentPack.h>
@@ -19,6 +20,7 @@ private:
     std::filesystem::path userFilesFolder {"."};
     std::filesystem::path resourcesFolder {"res"};
     std::filesystem::path currentWorldFolder;
+    std::optional<std::filesystem::path> scriptFolder;
     std::vector<ContentPack>* contentPacks = nullptr;
 public:
     void prepare();
@@ -28,6 +30,8 @@ public:
 
     void setResourcesFolder(std::filesystem::path folder);
     std::filesystem::path getResourcesFolder() const;
+
+    void setScriptFolder(std::filesystem::path folder);
 
     std::filesystem::path getConfigFolder() const;
     std::filesystem::path getWorldsFolder() const;

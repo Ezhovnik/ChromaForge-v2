@@ -31,6 +31,15 @@ enum class BlockModel {
 std::string to_string(BlockModel model);
 std::optional<BlockModel> BlockModel_from(std::string_view str);
 
+enum class CullingMode {
+    Default,
+    Optional,
+    Disabled,
+};
+
+std::string to_string(CullingMode mode);
+std::optional<CullingMode> CullingMode_from(std::string_view str);
+
 inline constexpr int FACE_MX = 0;
 inline constexpr int FACE_PX = 1;
 inline constexpr int FACE_MY = 2;
@@ -110,6 +119,7 @@ public:
     BlockModel model = BlockModel::Cube;
     dv::value customModelRaw = nullptr;
     std::string modelName = "";
+    CullingMode culling = CullingMode::Default;
     std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
     std::string scriptName = name.substr(name.find(':') + 1);
     uint inventorySize = 0;
@@ -131,7 +141,7 @@ public:
     bool ambientOcclusion = true;
     bool translucent = false; // TODO
 
-    std::vector<AABB> hitboxes;
+    std::vector<AABB> hitboxes {AABB()};
 
     BlockRotProfile rotations = BlockRotProfile::NONE;
 

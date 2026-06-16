@@ -52,6 +52,7 @@ menu.Open content folder=Открыть папку [content]
 graphics.gamma.tooltip=Кривая яркости освещения
 graphics.backlight.tooltip=Подсветка, предотвращающая полную темноту
 controls.key.tooltip=Поиск по привязвнной кнопки управления
+graphics.dense-render.tooltip=Включает прозрачность блоков, таких как листья.
 
 world.Seed=Зерно
 world.Name=Название
@@ -67,6 +68,7 @@ world.convert-with-loss=Конвертировать мир с потерями?
 # Настройки
 settings.Ambient=Фон
 settings.Backlight=Подсветка
+settings.Dense blocks render=Плотный рендер блоков
 settings.Camera Shaking=Тряска Камеры
 settings.Camera Inertia=Инерция Камеры
 settings.Camera FOV Effects=Эффекты поля зрения

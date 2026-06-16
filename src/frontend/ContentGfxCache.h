@@ -10,14 +10,23 @@
 
 class Content;
 class Assets;
+class Atlas;
+class Block;
+struct GraphicsSettings;
 
 class ContentGfxCache {
 private:
-    const Content* content;
+    const Content& content;
+    const Assets& assets;
+    const GraphicsSettings& settings;
     std::unique_ptr<UVRegion[]> sideregions;
     std::unordered_map<blockid_t, model::Model> models;
 public:
-    ContentGfxCache(const Content* content, const Assets& assets);
+    ContentGfxCache(
+        const Content& content,
+        const Assets& assets,
+        const GraphicsSettings& settings
+    );
     ~ContentGfxCache();
 
     inline const UVRegion& getRegion(blockid_t id, int side) const {
@@ -27,4 +36,7 @@ public:
     const model::Model& getModel(blockid_t id) const;
 
     const Content* getContent() const;
+
+    void refresh(const Block& block, const Atlas& atlas);
+    void refresh();
 };

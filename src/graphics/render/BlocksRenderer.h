@@ -15,6 +15,7 @@
 #include <graphics/core/MeshData.h>
 #include <math/rand.h>
 #include <graphics/render/commons.h>
+#include <settings.h>
 
 class Content;
 class Mesh;
@@ -24,7 +25,6 @@ class Chunks;
 class VoxelsVolume;
 class Chunks;
 class ContentGfxCache;
-struct EngineSettings;
 struct UVRegion;
 
 /**
@@ -207,7 +207,7 @@ private:
      * @param group Группа отрисовки текущего блока.
      * @return true, если грань должна быть отрисована.
      */
-	inline bool isOpen(const glm::ivec3& pos, ubyte group) const {
+	inline bool isOpen(const glm::ivec3& pos, const Block& def) const {
         auto id = voxelsBuffer->pickBlockId(
             chunk->chunk_x * CHUNK_WIDTH + pos.x,
             pos.y,
@@ -217,7 +217,10 @@ private:
             return false;
         }
         const auto& block = *blockDefsCache[id];
-        if ((block.drawGroup != group && block.lightPassing) || !block.rt.solid) {
+        if (((block.drawGroup != def.drawGroup) && block.drawGroup) || !block.rt.solid) {
+            return true;
+        }
+        if ((def.culling == CullingMode::Disabled || (def.culling == CullingMode::Optional && settings.graphics.denseRender.get())) && id == def.rt.id) {
             return true;
         }
         return id == BLOCK_AIR;

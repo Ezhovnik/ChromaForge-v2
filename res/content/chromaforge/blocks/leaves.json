@@ -1,5 +1,7 @@
 {
     "texture": "leaves",
     "material": "chromaforge:grass",
-    "chromaforge:durability": 0.7
+    "draw-group": 5,
+    "chromaforge:durability": 0.7,
+    "culling": "optional"
 }

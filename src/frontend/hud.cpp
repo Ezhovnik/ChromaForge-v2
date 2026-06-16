@@ -540,8 +540,27 @@ void Hud::showExchangeSlot() {
     exchangeSlot->setInteractive(false);
     exchangeSlot->setZIndex(1);
     guiController->store(gui::SlotView::EXCHANGE_SLOT_NAME, exchangeSlot);
-
 }
+
+void Hud::dropExchangeSlot() {
+    auto slotView = std::dynamic_pointer_cast<gui::SlotView>(
+        guiController->get(gui::SlotView::EXCHANGE_SLOT_NAME)
+    );
+    if (slotView == nullptr) return;
+    ItemStack& stack = slotView->getStack();
+
+    auto indices = levelFrontend.getLevel().content->getIndices();
+    if (auto invView = std::dynamic_pointer_cast<gui::InventoryView>(blockUI)) {
+        invView->getInventory()->move(stack, indices);
+    }
+    if (stack.isEmpty()) return;
+    player.getInventory()->move(stack, indices);
+    if (!stack.isEmpty()) {
+        LOG_WARN("Discard item [{}]: {}", stack.getItemId(), stack.getCount());
+        stack.clear();
+    }
+}
+
 
 void Hud::closeInventory() {
     guiController->remove(gui::SlotView::EXCHANGE_SLOT_NAME);

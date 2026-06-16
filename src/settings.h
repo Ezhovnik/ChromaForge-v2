@@ -35,6 +35,7 @@ struct GraphicsSettings {
     NumberSetting fogCurve {1.0f, 1.0f, 6.0f};
 	NumberSetting gamma {1.0f, 0.4f, 1.0f};
 	BoolSetting backlight {true};
+	BoolSetting denseRender {true};
 	BoolSetting frustumCulling {true};
 	IntegerSetting skyboxResolution {64 + 32, 64, 128};
 	IntegerSetting chunkMaxVertices {200'000, 0, 4'000'000};

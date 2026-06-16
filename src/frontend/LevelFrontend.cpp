@@ -11,15 +11,17 @@
 #include <voxels/Block.h>
 #include <audio/audio.h>
 #include <objects/Player.h>
+#include <settings.h>
 
 LevelFrontend::LevelFrontend(
     Player* currentPlayer,
     LevelController* controller, 
-    Assets& assets
+    Assets& assets,
+    const EngineSettings& settings
 ) : controller(controller),
     level(*controller->getLevel()), 
     assets(assets), 
-    contentCache(std::make_unique<ContentGfxCache>(level.content, assets))
+    contentCache(std::make_unique<ContentGfxCache>(*level.content, assets, settings.graphics))
 {
     assets.store(
         BlocksPreview::build(*contentCache, assets, *level.content->getIndices()),
@@ -95,6 +97,10 @@ const Assets& LevelFrontend::getAssets() const {
 }
 
 const ContentGfxCache& LevelFrontend::getContentGfxCache() const {
+    return *contentCache;
+}
+
+ContentGfxCache& LevelFrontend::getContentGfxCache() {
     return *contentCache;
 }
 
