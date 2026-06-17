@@ -237,9 +237,9 @@ void BlocksRenderer::blockAABB(
 	if (block->rotatable) {
 		auto& rotations = block->rotations;
 		auto& orient = rotations.variants[rotation];
-		X = orient.axisX;
-		Y = orient.axisY;
-		Z = orient.axisZ;
+		X = orient.axes[0];
+        Y = orient.axes[1];
+        Z = orient.axes[2];
         orient.transform(hitbox);
 	}
 
@@ -277,14 +277,13 @@ void BlocksRenderer::blockCustomModel(
 	glm::vec3 X(1, 0, 0);
 	glm::vec3 Y(0, 1, 0);
 	glm::vec3 Z(0, 0, 1);
-	CoordSystem orient(X, Y, Z);
 	glm::vec3 coord(icoord);
 	if (block->rotatable) {
 		auto& rotations = block->rotations;
-		orient = rotations.variants[rotation];
-		X = orient.axisX;
-		Y = orient.axisY;
-		Z = orient.axisZ;
+		CoordSystem orient = rotations.variants[rotation];
+        X = orient.axes[0];
+        Y = orient.axes[1];
+        Z = orient.axes[2];
 	}
 
     // Рендерим каждый бокс модели
@@ -332,9 +331,9 @@ void BlocksRenderer::blockCube(
 	if (block.rotatable) {
 		auto& rotations = block.rotations;
 		auto& orient = rotations.variants[state.rotation];
-		X = orient.axisX;
-		Y = orient.axisY;
-		Z = orient.axisZ;
+		X = orient.axes[0];
+        Y = orient.axes[1];
+        Z = orient.axes[2];
 	}
 
 	if (ao) {

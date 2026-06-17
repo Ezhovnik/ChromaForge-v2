@@ -207,6 +207,7 @@ int main(int argc, char** argv) {
     std::cout << "Running " << tests.size() << " test(s)" << std::endl;
     for (const auto& path : tests) {
         passed += run_test(config, path);
+        std::filesystem::remove_all(config.workingDir/std::filesystem::u8path("saves"));
     }
     print_separator(std::cout);
     cleanup(config.workingDir);
