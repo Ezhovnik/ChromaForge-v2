@@ -51,12 +51,7 @@ static std::filesystem::path get_writeable_path(lua::State* L) {
     std::filesystem::path path = resolve_path(rawpath);
     auto entryPoint = rawpath.substr(0, rawpath.find(':'));
     if (writeable_entry_points.find(entryPoint) == writeable_entry_points.end()) {
-        if (lua::getglobal(L, "__chroma_warning")) {
-            lua::pushstring(L, "writing to read-only entry point");
-            lua::pushstring(L, entryPoint);
-            lua::pushinteger(L, 1);
-            lua::call_nothrow(L, 3);
-        }
+        throw std::runtime_error("Access denied");
     }
     return path;
 }
@@ -235,6 +230,16 @@ static int l_read_combined_object(lua::State* L) {
     return lua::pushvalue(L, scripting::engine->getResPaths()->readCombinedObject(path));
 }
 
+static int l_is_writeable(lua::State* L) {
+    std::string rawpath = lua::require_string(L, 1);
+    std::filesystem::path path = resolve_path(rawpath);
+    auto entryPoint = rawpath.substr(0, rawpath.find(':'));
+    if (writeable_entry_points.find(entryPoint) == writeable_entry_points.end()) {
+        return lua::pushboolean(L, false);
+    }
+    return lua::pushboolean(L, true);
+}
+
 const luaL_Reg filelib[] = {
     {"exists", lua::wrap<l_exists>},
     {"find", lua::wrap<l_find>},
@@ -255,5 +260,6 @@ const luaL_Reg filelib[] = {
     {"zip_decompress", lua::wrap<l_zip_decompress>},
     {"read_combined_list", lua::wrap<l_read_combined_list>},
     {"read_combined_object", lua::wrap<l_read_combined_object>},
+    {"is_writeable", lua::wrap<l_is_writeable>},
     {NULL, NULL}
 };
