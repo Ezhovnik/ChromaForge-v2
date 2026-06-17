@@ -7,7 +7,7 @@
 #include <physics/Hitbox.h>
 #include <window/Camera.h>
 #include <content/Content.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <objects/rigging.h>
 #include <objects/Entities.h>
 #include <voxels/Chunks.h>

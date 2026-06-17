@@ -4,7 +4,7 @@
 #include <graphics/render/Emitter.h>
 #include <graphics/render/WorldRenderer.h>
 #include <assets/assets_util.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <graphics/render/ParticlesRenderer.h>
 
 static int l_emit(lua::State* L) {

@@ -6,7 +6,7 @@
 #include <graphics/core/ShaderProgram.h>
 #include <window/Window.h>
 #include <window/Camera.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <graphics/core/Texture.h>
 #include <math/UVRegion.h>
 

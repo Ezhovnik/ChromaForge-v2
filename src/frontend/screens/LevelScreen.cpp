@@ -16,7 +16,7 @@
 #include <world/World.h>
 #include <window/Camera.h>
 #include <window/Events.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <coders/imageio.h>
 #include <graphics/core/PostProcessing.h>
 #include <graphics/core/ImageData.h>

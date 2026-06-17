@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 #include <logic/scripting/lua/libs/api_lua.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <files/engine_paths.h>
 #include <core_content_defs.h>
 #include <files/WorldFiles.h>

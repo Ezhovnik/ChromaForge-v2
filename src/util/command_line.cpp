@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include <files/engine_paths.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <util/ArgsReader.h>
 
 static bool perform_keyword(

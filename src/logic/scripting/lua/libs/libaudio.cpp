@@ -1,7 +1,7 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 
 #include <audio/audio.h>
-#include <engine.h>
+#include <engine/Engine.h>
 
 inline const char* DEFAULT_CHANNEL = "regular";
 

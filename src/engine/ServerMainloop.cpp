@@ -1,8 +1,8 @@
-#include <ServerMainloop.h>
+#include <engine/ServerMainloop.h>
 
 #include <chrono>
 
-#include <engine.h>
+#include <engine/Engine.h>
 #include <debug/Logger.h>
 #include <interfaces/Process.h>
 #include <logic/scripting/scripting.h>

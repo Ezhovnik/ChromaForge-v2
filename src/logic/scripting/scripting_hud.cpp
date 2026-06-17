@@ -2,7 +2,7 @@
 
 #include <logic/scripting/lua/lua_engine.h>
 #include <logic/scripting/lua/libs/api_lua.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <debug/Logger.h>
 #include <files/files.h>
 #include <frontend/hud.h>

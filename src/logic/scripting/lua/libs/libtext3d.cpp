@@ -4,7 +4,7 @@
 #include <graphics/render/WorldRenderer.h>
 #include <graphics/render/TextsRenderer.h>
 #include <graphics/render/TextNote.h>
-#include <engine.h>
+#include <engine/Engine.h>
 
 static int l_show(lua::State* L) {
     auto position = lua::tovec3(L, 1);

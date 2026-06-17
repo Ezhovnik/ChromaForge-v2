@@ -8,7 +8,7 @@
 #include <content/Content.h>
 #include <logic/BlocksController.h>
 #include <items/Inventories.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <frontend/UIDocument.h>
 #include <graphics/ui/elements/display/InventoryView.h>
 #include <util/stringutil.h>

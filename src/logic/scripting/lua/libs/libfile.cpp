@@ -3,7 +3,7 @@
 #include <set>
 
 #include <logic/scripting/lua/libs/api_lua.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <files/files.h>
 #include <files/engine_paths.h>
 #include <util/stringutil.h>

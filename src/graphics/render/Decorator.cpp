@@ -15,7 +15,7 @@
 #include <objects/Players.h>
 #include <objects/Player.h>
 #include <util/stringutil.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <files/files.h>
 
 inline constexpr int UPDATE_AREA_DIAMETER = 32;

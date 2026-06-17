@@ -5,7 +5,7 @@
 #include <coders/binary_json.h>
 #include <world/Level.h>
 #include <world/generator/VoxelFragment.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <content/ContentLoader.h>
 

@@ -11,7 +11,7 @@
 #include <settings.h>
 #include <objects/Entities.h>
 #include <math/voxmaths.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <objects/Players.h>
 #include <objects/Player.h>
 #include <voxels/Chunks.h>

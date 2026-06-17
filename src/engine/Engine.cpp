@@ -1,4 +1,4 @@
-#include <engine.h>
+#include <engine/Engine.h>
 
 #include <vector>
 #include <memory>
@@ -49,8 +49,8 @@
 #include <coders/commons.h>
 #include <graphics/render/ModelsGenerator.h>
 #include <network/Network.h>
-#include <Mainloop.h>
-#include <ServerMainloop.h>
+#include <engine/Mainloop.h>
+#include <engine/ServerMainloop.h>
 #include <frontend/screens/LevelScreen.h>
 #include <world/Level.h>
 
@@ -195,13 +195,8 @@ void Engine::loadAssets() {
         auto task = loader.startTask([=](){});
         task->waitForEnd();
     } else {
-        try {
-            while (loader.hasNext()) {
-                loader.loadNext();
-            }
-        } catch (const asset_loader::error& err) {
-            new_assets.reset();
-            throw;
+        while (loader.hasNext()) {
+            loader.loadNext();
         }
     }
 
@@ -264,15 +259,6 @@ void Engine::renderFrame() {
     gui->draw(ctx, *assets);
 }
 
-void Engine::processPostRunnables() {
-    std::lock_guard<std::recursive_mutex> lock(postRunnablesMutex);
-    while (!postRunnables.empty()) {
-        postRunnables.front()();
-        postRunnables.pop();
-    }
-    scripting::process_post_runnables();
-}
-
 void Engine::run() {
     if (params.headless) {
         ServerMainloop(*this).run();
@@ -283,7 +269,7 @@ void Engine::run() {
 
 void Engine::postUpdate() {
     network->update();
-    processPostRunnables();
+    postRunnables.run();
 }
 
 void Engine::updateFrontend() {
@@ -479,11 +465,6 @@ void Engine::setLanguage(std::string locale) {
 	if (gui) {
         gui->getMenu()->setPageLoader(menus::create_page_loader(*this));
     }
-}
-
-void Engine::postRunnable(const runnable& callback) {
-    std::lock_guard<std::recursive_mutex> lock(postRunnablesMutex);
-    postRunnables.push(callback);
 }
 
 SettingsHandler& Engine::getSettingsHandler() {

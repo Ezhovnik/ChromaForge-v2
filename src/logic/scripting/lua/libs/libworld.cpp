@@ -5,7 +5,7 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <world/Level.h>
 #include <world/World.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <assets/Assets.h>
 #include <assets/AssetsLoader.h>
 #include <files/engine_paths.h>

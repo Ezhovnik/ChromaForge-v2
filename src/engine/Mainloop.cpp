@@ -1,6 +1,6 @@
-#include <Mainloop.h>
+#include <engine/Mainloop.h>
 
-#include <engine.h>
+#include <engine/Engine.h>
 #include <window/Window.h>
 #include <frontend/screens/MenuScreen.h>
 #include <debug/Logger.h>

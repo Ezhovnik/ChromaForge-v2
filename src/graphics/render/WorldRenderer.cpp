@@ -32,7 +32,7 @@
 #include <world/LevelEvents.h>
 #include <math/FrustumCulling.h>
 #include <math/voxmaths.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <settings.h>
 #include <frontend/LevelFrontend.h>
 #include <graphics/render/Skybox.h>

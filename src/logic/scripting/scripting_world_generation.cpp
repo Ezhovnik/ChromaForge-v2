@@ -15,7 +15,7 @@
 #include <data/dv.h>
 #include <util/timeutil.h>
 #include <files/files.h>
-#include <engine.h>
+#include <engine/Engine.h>
 
 class LuaGeneratorScript : public GeneratorScript {
     lua::State* L;

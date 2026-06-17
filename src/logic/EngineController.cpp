@@ -6,7 +6,7 @@
 
 #include <content/ContentReport.h>
 #include <debug/Logger.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <files/WorldFiles.h>
 #include <files/WorldConverter.h>
 #include <frontend/locale/langs.h>

@@ -4,8 +4,6 @@
 #include <stdexcept>
 #include <memory>
 #include <filesystem>
-#include <queue>
-#include <mutex>
 
 #include <typedefs.h>
 #include <delegates.h>
@@ -18,7 +16,8 @@
 #include <core_content_defs.h>
 #include <settings.h>
 #include <files/settings_io.h>
-#include <EngineTime.h>
+#include <engine/EngineTime.h>
+#include <engine/PostRunnables.h>
 
 class Screen;
 class EngineController;
@@ -69,9 +68,6 @@ private:
 
     std::unique_ptr<ResPaths> resPaths;
 
-    std::queue<runnable> postRunnables;
-    std::recursive_mutex postRunnablesMutex;
-
     std::unique_ptr<cmd::CommandsInterpreter> interpreter;
 
     std::unique_ptr<network::Network> network;
@@ -80,6 +76,8 @@ private:
 
     std::unique_ptr<gui::GUI> gui;
 
+    PostRunnables postRunnables;
+
     EngineTime time;
 
     consumer<std::unique_ptr<Level>> levelConsumer;
@@ -87,8 +85,6 @@ private:
     bool quitSignal = false;
 
     void updateHotkeys(); // Обработка горячих клавиш
-
-    void processPostRunnables();
 
     void loadAssets();
     void loadControls();
@@ -127,7 +123,9 @@ public:
 
     bool isHeadless() const;
 
-    void postRunnable(const runnable& callback);
+    void postRunnable(const runnable& callback) {
+        postRunnables.postRunnable(callback);
+    }
 
     PacksManager createPacksManager(const std::filesystem::path& worldFolder);
 

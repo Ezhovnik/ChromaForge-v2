@@ -18,7 +18,7 @@
 #include <debug/Logger.h>
 #include <data/dv_util.h>
 #include <content/Content.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <math/rays.h>
 #include <graphics/core/DrawContext.h>
 

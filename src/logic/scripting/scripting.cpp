@@ -10,7 +10,7 @@
 #include <debug/Logger.h>
 #include <items/Item.h>
 #include <logic/BlocksController.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <content/ContentPack.h>
 #include <logic/scripting/lua/lua_engine.h>
 #include <logic/scripting/lua/lua_custom_types.h>

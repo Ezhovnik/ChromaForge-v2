@@ -4,7 +4,7 @@
 #include <window/input.h>
 #include <window/Events.h>
 #include <frontend/screens/Screen.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <frontend/hud.h>
 #include <util/stringutil.h>
 #include <graphics/ui/GUI.h>

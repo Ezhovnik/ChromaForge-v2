@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 
 #include <delegates.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <files/engine_paths.h>
 #include <graphics/ui/elements/display/Label.h>
 #include <graphics/ui/elements/layout/Menu.h>

@@ -10,7 +10,7 @@
 #include <util/stringutil.h>
 #include <files/files.h>
 #include <files/engine_paths.h>
-#include <engine.h>
+#include <engine/Engine.h>
 
 static lua::State* main_thread = nullptr;
 

@@ -1,5 +1,5 @@
 #include <logic/scripting/lua/libs/api_lua.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <assets/Assets.h>
 #include <graphics/ui/elements/UINode.h>
 #include <frontend/UiDocument.h>

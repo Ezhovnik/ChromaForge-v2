@@ -18,7 +18,7 @@
 #include <voxels/Block.h>
 #include <util/stringutil.h>
 #include <delegates.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <graphics/render/WorldRenderer.h>
 #include <audio/audio.h>
 #include <settings.h>

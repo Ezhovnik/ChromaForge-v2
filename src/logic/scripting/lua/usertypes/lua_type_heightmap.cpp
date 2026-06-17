@@ -13,7 +13,7 @@
 #include <util/functional_util.h>
 #include <files/util.h>
 #include <math/Heightmap.h>
-#include <engine.h>
+#include <engine/Engine.h>
 
 using namespace lua;
 

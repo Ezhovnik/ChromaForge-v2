@@ -26,7 +26,7 @@
 #include <graphics/ui/elements/display/Plotter.h>
 #include <graphics/ui/elements/UINode.h>
 #include <graphics/ui/GUI.h>
-#include <engine.h>
+#include <engine/Engine.h>
 #include <input_bindings.h>
 #include <window/input.h>
 #include <content/Content.h>
