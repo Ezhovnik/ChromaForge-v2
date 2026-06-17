@@ -31,8 +31,11 @@ if app then
     app.reopen_world = builtin.reopen_world
     app.delete_world = builtin.delete_world
     app.reconfig_packs = builtin.reconfig_packs
+    app.get_setting = builtin.get_setting
     app.set_setting = builtin.set_setting
     app.spark = coroutine.yield
+    app.get_version = builtin.get_version
+    app.get_setting_info = builtin.get_setting_info
 
     function app.quit()
         local tb = debug.get_traceback(1)
@@ -50,6 +53,7 @@ if app then
         local sparks = 0
         while sparks < max_sparks and not predicate() do
             app.spark()
+            sparks = sparks + 1
         end
         if sparks == max_sparks then
             error("Max sparks exceed")
