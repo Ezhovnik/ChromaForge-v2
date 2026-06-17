@@ -17,15 +17,15 @@ local function maskHighBytes(num)
 end
 
 local function reverse(tbl)
-	  for i=1, math.floor(#tbl / 2) do
-	    local tmp = tbl[i]
-	    tbl[i] = tbl[#tbl - i + 1]
-	    tbl[#tbl - i + 1] = tmp
-	  end
+	for i=1, math.floor(#tbl / 2) do
+		local tmp = tbl[i]
+		tbl[i] = tbl[#tbl - i + 1]
+		tbl[#tbl - i + 1] = tmp
+	end
     return tbl
 end
 
-local orders = { "LE", "BE" }
+local orders = {"LE", "BE"}
 
 local fromLEConvertors =
 {
@@ -39,7 +39,7 @@ local toLEConvertors =
 		BE = function(bytes) return reverse(bytes) end
 }
 
-bit_converter.default_order = "LE"
+bit_converter.default_order = "BE"
 
 local function fromLE(bytes, orderTo)
 	if orderTo then
@@ -88,64 +88,64 @@ end
 -- Credits to Iryont <https://github.com/iryont/lua-struct>
 
 local function floatOrDoubleToBytes(val, opt)
-      local sign = 0
+    local sign = 0
 
-      if val < 0 then
+    if val < 0 then
         sign = 1
         val = -val
-      end
+    end
 
-      local mantissa, exponent = math.frexp(val)
-      if val == 0 then
+    local mantissa, exponent = math.frexp(val)
+    if val == 0 then
         mantissa = 0
         exponent = 0
-      else
+    else
         mantissa = (mantissa * 2 - 1) * math.ldexp(0.5, (opt == 'd') and 53 or 24)
         exponent = exponent + ((opt == 'd') and 1022 or 126)
-      end
+    end
 
-      local bytes = {}
-      if opt == 'd' then
+    local bytes = {}
+    if opt == 'd' then
         val = mantissa
         for i = 1, 6 do
-          bytes[#bytes + 1] = math.floor(val) % (2 ^ 8)
-          val = math.floor(val / (2 ^ 8))
+			bytes[#bytes + 1] = math.floor(val) % (2 ^ 8)
+			val = math.floor(val / (2 ^ 8))
         end
-      else
+    else
         bytes[#bytes + 1] = math.floor(mantissa) % (2 ^ 8)
         val = math.floor(mantissa / (2 ^ 8))
         bytes[#bytes + 1] = math.floor(val) % (2 ^ 8)
         val = math.floor(val / (2 ^ 8))
-      end
+    end
 
-      bytes[#bytes + 1] = math.floor(exponent * ((opt == 'd') and 16 or 128) + val) % (2 ^ 8)
-      val = math.floor((exponent * ((opt == 'd') and 16 or 128) + val) / (2 ^ 8))
-      bytes[#bytes + 1] = math.floor(sign * 128 + val) % (2 ^ 8)
-      val = math.floor((sign * 128 + val) / (2 ^ 8))
+    bytes[#bytes + 1] = math.floor(exponent * ((opt == 'd') and 16 or 128) + val) % (2 ^ 8)
+    val = math.floor((exponent * ((opt == 'd') and 16 or 128) + val) / (2 ^ 8))
+    bytes[#bytes + 1] = math.floor(sign * 128 + val) % (2 ^ 8)
+    val = math.floor((sign * 128 + val) / (2 ^ 8))
 
-      return bytes
+    return bytes
 end
 
 local function bytesToFloatOrDouble(bytes, opt)
-      local n = (opt == 'd') and 8 or 4
+    local n = (opt == 'd') and 8 or 4
 
-      local sign = 1
-      local mantissa = bytes[n - 1] % ((opt == 'd') and 16 or 128)
-      for i = n - 2, 1, -1 do
+    local sign = 1
+    local mantissa = bytes[n - 1] % ((opt == 'd') and 16 or 128)
+    for i = n - 2, 1, -1 do
         mantissa = mantissa * (2 ^ 8) + bytes[i]
-      end
+    end
 
-      if bytes[n] > 127 then
+    if bytes[n] > 127 then
         sign = -1
-      end
+    end
 
-      local exponent = (bytes[n] % 128) * ((opt == 'd') and 16 or 2) + math.floor(bytes[n - 1] / ((opt == 'd') and 16 or 128))
-      if exponent == 0 then
+    local exponent = (bytes[n] % 128) * ((opt == 'd') and 16 or 2) + math.floor(bytes[n - 1] / ((opt == 'd') and 16 or 128))
+    if exponent == 0 then
         return 0.0
-      else
+    else
         mantissa = (math.ldexp(mantissa, (opt == 'd') and -52 or -23) + 1) * sign
         return math.ldexp(mantissa, exponent - ((opt == 'd') and 1023 or 127))
-      end
+    end
 end
 
 --
@@ -170,17 +170,17 @@ end
 
 local function uint32ToBytes(int, order)
 	return fromLE({
-		maskHighBytes(bit.rshift(int, 24)),
-		maskHighBytes(bit.rshift(int, 16)),
+		maskHighBytes(int),
 		maskHighBytes(bit.rshift(int, 8)),
-		maskHighBytes(int)
+		maskHighBytes(bit.rshift(int, 16)),
+        maskHighBytes(bit.rshift(int, 24))
 	}, order)
 end
 
 local function uint16ToBytes(int, order)
 	return fromLE({
-		maskHighBytes(bit.rshift(int, 8)),
-		maskHighBytes(int)
+		maskHighBytes(int),
+        maskHighBytes(bit.rshift(int, 8))
 	}, order)
 end
 
@@ -206,14 +206,14 @@ function bit_converter.int64_to_bytes(int, order)
 	end
 
 	return fromLE({
-		maskHighBytes(bit.rshift(int, 56)),
-		maskHighBytes(bit.rshift(int, 48)),
-		maskHighBytes(bit.rshift(int, 40)),
-		maskHighBytes(bit.rshift(int, 32)),
-		maskHighBytes(bit.rshift(int, 24)),
-		maskHighBytes(bit.rshift(int, 16)),
+		maskHighBytes(int),
 		maskHighBytes(bit.rshift(int, 8)),
-		maskHighBytes(int)
+		maskHighBytes(bit.rshift(int, 16)),
+        maskHighBytes(bit.rshift(int, 24)),
+        maskHighBytes(bit.rshift(int, 32)),
+        maskHighBytes(bit.rshift(int, 40)),
+        maskHighBytes(bit.rshift(int, 48)),
+        maskHighBytes(bit.rshift(int, 56))
 	}, order)
 end
 
@@ -294,13 +294,16 @@ function bit_converter.bytes_to_uint32(bytes, order)
 
 	bytes = toLE(bytes, order)
 
-     return
-     bit.bor(
-     bit.bor(
-     bit.bor(
-     bit.lshift(bytes[1], 24),
-     bit.lshift(bytes[2], 16)),
-     bit.lshift(bytes[3], 8)),bytes[4])
+    return bit.bor(
+		bit.bor(
+			bit.bor(
+				bytes[1],
+				bit.lshift(bytes[2], 8)
+			),
+			bit.lshift(bytes[3], 16)
+		),
+		bit.lshift(bytes[4], 24)
+	)
 end
 
 function bit_converter.bytes_to_uint16(bytes, order)
@@ -310,10 +313,11 @@ function bit_converter.bytes_to_uint16(bytes, order)
 
 	bytes = toLE(bytes, order)
 
-     return
-     bit.bor(
-     bit.lshift(bytes[1], 8),
-     bytes[2], 0)
+    return bit.bor(
+		bit.lshift(bytes[2], 8),
+		bytes[1],
+		0
+	)
 end
 
 function bit_converter.bytes_to_int64(bytes, order)
@@ -323,21 +327,21 @@ function bit_converter.bytes_to_int64(bytes, order)
 
 	bytes = toLE(bytes, order)
 
-     return
-     bit.bor(
-     bit.bor(
-     bit.bor(
-     bit.bor(
-     bit.bor(
-     bit.bor(
-     bit.bor(
-     bit.lshift(bytes[1], 56),
-     bit.lshift(bytes[2], 48)),
-     bit.lshift(bytes[3], 40)),
-     bit.lshift(bytes[4], 32)),
-     bit.lshift(bytes[5], 24)),
-     bit.lshift(bit.band(bytes[6], 0xFF), 16)),
-     bit.lshift(bit.band(bytes[7], 0xFF), 8)),bit.band(bytes[8], 0xFF))
+	return
+	bit.bor(
+	bit.bor(
+	bit.bor(
+	bit.bor(
+	bit.bor(
+	bit.bor(
+	bit.bor(
+	bit.lshift(bytes[8], 56),
+	bit.lshift(bytes[7], 48)),
+	bit.lshift(bytes[6], 40)),
+	bit.lshift(bytes[5], 32)),
+	bit.lshift(bytes[4], 24)),
+	bit.lshift(bit.band(bytes[3], 0xFF), 16)),
+	bit.lshift(bit.band(bytes[2], 0xFF), 8)),bit.band(bytes[1], 0xFF))
 end
 
 function bit_converter.bytes_to_int32(bytes, order)

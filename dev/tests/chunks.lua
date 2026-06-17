@@ -1,8 +1,8 @@
+local util = require("builtin:tests_util")
+util.create_demo_world()
+
 app.set_setting("chunks.load-distance", 3)
 app.set_setting("chunks.load-speed", 1)
-
-app.reconfig_packs({"chromaforge"}, {})
-app.new_world("demo", "67", "builtin:default")
 
 local pid1 = player.create("Ezhovnik")
 assert(player.get_name(pid1) == "Ezhovnik")
