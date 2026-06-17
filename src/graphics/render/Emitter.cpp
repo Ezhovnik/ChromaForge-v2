@@ -23,8 +23,9 @@ Emitter::Emitter(
     count(count),
     preset(std::move(preset))
 {
+    random.setSeed(reinterpret_cast<ptrdiff_t>(this));
     this->prototype.emitter = this;
-    timer = preset.spawnInterval;
+    timer = preset.spawnInterval * random.randFloat();
 }
 
 const Texture* Emitter::getTexture() const {
@@ -82,6 +83,17 @@ void Emitter::update(
         Particle particle = prototype;
         particle.emitter = this;
         particle.random = random.rand32();
+        if (glm::abs(preset.angleSpread) >= 0.005f) {
+            particle.angle = random.randFloat() * preset.angleSpread * glm::pi<float>() * 2;
+        }
+
+        particle.angularVelocity = (
+            preset.minAngularVelocity +
+            random.randFloat() *
+                (preset.maxAngularVelocity - preset.minAngularVelocity)
+        ) * (
+            (random.rand() % 2) * 2 - 1
+        );
 
         glm::vec3 spawnOffset = generate_coord(preset.spawnShape);
         spawnOffset *= preset.spawnSpread;

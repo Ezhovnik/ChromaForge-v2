@@ -36,12 +36,14 @@ static inline void update_particle(
     const auto& preset = particle.emitter->preset;
     auto& pos = particle.position;
     auto& vel = particle.velocity;
+    auto& angle = particle.angle;
 
     vel += deltaTime * preset.acceleration;
     if (preset.collision && chunks.isObstacleAt(pos + vel * deltaTime)) {
         vel *= 0.0f;
     }
     pos += vel * deltaTime;
+    angle += particle.angularVelocity * deltaTime;
     particle.lifetime -= deltaTime;
 }
 
@@ -87,18 +89,46 @@ void ParticlesRenderer::renderParticles(const Camera& camera, float deltaTime) {
 
             update_particle(particle, deltaTime, chunks);
 
+            float scale = 1.0f + ((particle.random ^ 2628172) % 1000) * 0.001f * preset.sizeSpread;
+
             glm::vec4 light(1, 1, 1, 0);
             if (preset.lighting) {
                 light = MainBatch::sampleLight(
                     particle.position, chunks, backlight
                 );
+                auto size = glm::max(glm::vec3(0.5f), preset.size * scale);
+                for (int x = -1; x <= 1; ++x) {
+                    for (int y = -1; y <= 1; ++y) {
+                        for (int z = -1; z <= 1; ++z) {
+                            light = glm::max(
+                                light,
+                                MainBatch::sampleLight(
+                                    particle.position - size * glm::vec3(x, y, z),
+                                    chunks,
+                                    backlight
+                                )
+                            );
+                        }
+                    }
+                }
                 light *= 0.9f + (particle.random % 100) * 0.001f;
             }
-            float scale = 1.0f + ((particle.random ^ 2628172) % 1000) * 0.001f * preset.sizeSpread;
+
+            glm::vec3 localRight = right;
+            glm::vec3 localUp = preset.globalUpVector ? glm::vec3(0, 1, 0) : up;
+            float angle = particle.angle;
+            if (glm::abs(angle) >= 0.005f) {
+                glm::vec3 rotatedRight(glm::cos(angle), -glm::sin(angle), 0.0f);
+                glm::vec3 rotatedUp(glm::sin(angle), glm::cos(angle), 0.0f);
+
+                localRight = right * rotatedRight.x + localUp * rotatedRight.y + camera.front * rotatedRight.z;
+                localUp = right * rotatedUp.x + localUp * rotatedUp.y + camera.front * rotatedUp.z;
+            }
+
             batch->quad(
                 particle.position,
-                right,
-                preset.globalUpVector ? glm::vec3(0, 1, 0) : up,
+                localRight,
+                localUp,
                 preset.size * scale,
                 light,
                 glm::vec3(1.0f),

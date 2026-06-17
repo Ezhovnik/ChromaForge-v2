@@ -17,7 +17,7 @@ struct ParticlesPreset : public Serializable {
     bool collision = true;
     bool lighting = true;
     bool globalUpVector = false;
-    float maxDistance = 16.0f;
+    float maxDistance = 32.0f;
     float spawnInterval = 0.1f;
     float lifetime = 5.0f;
     float lifetimeSpread = 0.2f;
@@ -26,6 +26,9 @@ struct ParticlesPreset : public Serializable {
     glm::vec3 explosion {2.0f};
     glm::vec3 size {0.1f};
     float sizeSpread = 0.2f;
+    float angleSpread = 0.0f;
+    float minAngularVelocity = 0.0f;
+    float maxAngularVelocity = 0.0f;
     ParticleSpawnShape spawnShape = Ball;
     glm::vec3 spawnSpread {};
     std::string texture = "";

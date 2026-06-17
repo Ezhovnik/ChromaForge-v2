@@ -20,6 +20,8 @@ struct Particle {
     glm::vec3 velocity;
     float lifetime;
     UVRegion region;
+    float angle;
+    float angularVelocity;
 };
 
 class Texture;
