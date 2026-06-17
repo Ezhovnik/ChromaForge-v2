@@ -8,6 +8,14 @@
 
 #include <typedefs.h>
 
+namespace util {
+    inline uint64_t shuffle_bits_step(uint64_t x, uint64_t m, unsigned shift) {
+        uint64_t t = ((x >> shift) ^ x) & m;
+        x = (x ^ t) ^ (t << shift);
+        return x;
+    }
+}
+
 /**
  * @brief Генератор случайных чисел на основе std::mt19937 (вихрь Мерсенна).
  *
@@ -160,15 +168,6 @@ public:
     }
 
     /**
-     * @brief Устанавливает seed по одному числу.
-     * @param number Исходное значение для инициализации.
-     */
-	void setSeed(int number){
-		seed = (static_cast<ushort>(number * 23729) ^ static_cast<ushort>(number + 16786));
-		rand(); // Прогон для улучшения распределения
-	}
-
-    /**
      * @brief Устанавливает seed по двум числам.
      * @param number1 Первое число.
      * @param number2 Второе число.
@@ -177,4 +176,16 @@ public:
 		seed = ((static_cast<ushort>(number1 * 23729) | static_cast<ushort>(number2 % 16786)) ^ static_cast<ushort>(number2 * number1));
 		rand(); // Прогон для улучшения распределения
 	}
+
+    /**
+     * @brief Устанавливает seed по одному числу.
+     * @param number Исходное значение для инициализации.
+     */
+    void setSeed(long number) {
+        number = util::shuffle_bits_step(number, 0x2222222222222222ull, 1);
+        number = util::shuffle_bits_step(number, 0x0c0c0c0c0c0c0c0cull, 2);
+        number = util::shuffle_bits_step(number, 0x00f000f000f000f0ull, 4);
+        seed = number;
+        rand();
+    }
 };
