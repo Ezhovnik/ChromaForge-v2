@@ -183,11 +183,17 @@ void BlocksRenderer::blockXSprite(
 	const UVRegion& texface2,
 	float spread
 ) {
-	glm::vec4 lights[] {
+	glm::vec4 lights1[] {
 		pickSoftLight({x, y + 1, z}, {1, 0, 0}, {0, 1, 0}),
 		pickSoftLight({x + 1, y + 1, z}, {1, 0, 0}, {0, 1, 0}),
 		pickSoftLight({x + 1, y + 1, z}, {1, 0, 0}, {0, 1, 0}),
 		pickSoftLight({x, y + 1, z}, {1, 0, 0}, {0, 1, 0})
+    };
+    glm::vec4 lights2[] {
+        pickSoftLight({x, y + 1, z}, {-1, 0, 0}, {0, 1, 0}),
+        pickSoftLight({x - 1, y + 1, z}, {-1, 0, 0}, {0, 1, 0}),
+        pickSoftLight({x - 1, y + 1, z}, {-1, 0, 0}, {0, 1, 0}),
+        pickSoftLight({x, y + 1, z}, {-1, 0, 0}, {0, 1, 0})
     };
 
     // Случайное смещение для вариации
@@ -201,15 +207,15 @@ void BlocksRenderer::blockXSprite(
 	const glm::vec4 tint (0.8f);
 
     // Рисуем две пересекающиеся плоскости (всего 4 грани)
-    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, 1}, {0, 1, 0}, glm::vec3(),
-        texface1, lights, tint);
-    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, -1}, {0, 1, 0}, glm::vec3(), 
-        texface1, lights, tint);
+    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, 1}, {0, 1, 0}, glm::vec3(),
+        texface1, lights2, tint);
+    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, 1}, {0, 1, 0}, glm::vec3(), 
+        texface1, lights1, tint);
 
+    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, -1}, {0, 1, 0}, glm::vec3(), 
+        texface2, lights2, tint);
     face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, -1}, {0, 1, 0}, glm::vec3(), 
-        texface2, lights, tint);
-    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, 1}, {0, 1, 0}, glm::vec3(), 
-        texface2, lights, tint);
+        texface2, lights1, tint);
 }
 
 void BlocksRenderer::blockAABB(

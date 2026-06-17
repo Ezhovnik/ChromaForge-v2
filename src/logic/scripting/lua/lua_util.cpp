@@ -232,7 +232,7 @@ runnable lua::create_runnable(lua::State* L) {
     };
 }
 
-supplier<bool> lua::create_simple_handler(State* L) {
+KeyCallback lua::create_simple_handler(State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=]() -> bool {
         getglobal(L, LAMBDAS_TABLE);

@@ -9,6 +9,8 @@ using runnable = std::function<void()>;
 template<class T> using supplier = std::function<T()>;
 template<class T> using consumer = std::function<void(T)>;
 
+using KeyCallback = std::function<bool()>;
+
 using wstringsupplier = std::function<std::wstring()>;
 using doublesupplier = std::function<double()>;
 using boolsupplier = std::function<bool()>;

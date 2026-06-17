@@ -8,6 +8,7 @@
 #include <window/Window.h>
 #include <window/input.h>
 #include <typedefs.h>
+#include <delegates.h>
 
 inline constexpr short KEYS_BUFFER_SIZE = 1036;
 
@@ -24,8 +25,6 @@ private:
     static uint currentFrame;
     static bool cursor_drag;
 public:
-    using KeyCallback = std::function<bool()>;
-
     // Переменные для отсеживания состояния мыши
     static glm::vec2 delta;
     static glm::vec2 cursor;
