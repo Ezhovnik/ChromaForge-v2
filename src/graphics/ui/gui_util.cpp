@@ -42,6 +42,7 @@ void guiutil::confirm(
     const std::shared_ptr<gui::Menu>& menu,
     const std::wstring& text,
     const runnable& on_confirm,
+    const runnable& on_deny,
     std::wstring yestext,
     std::wstring notext
 ) {
@@ -60,6 +61,7 @@ void guiutil::confirm(
     }));
 
     subpanel->add(std::make_shared<Button>(notext, glm::vec4(8.f), [=](GUI*){
+        if (on_deny) on_deny();
         menu->back();
     }));
 
