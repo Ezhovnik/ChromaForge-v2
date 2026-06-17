@@ -212,6 +212,7 @@ dv::value Player::serialize() const {
     root["noclip"] = noclip;
 	root["infinite-items"] = infiniteItems;
 	root["instant-destruction"] = instantDestruction;
+    root["loading-chunks"] = loadingChunks;
     root["chosen-slot"] = chosenSlot;
     root["entity"] = eid;
     root["inventory"] = inventory->serialize();
@@ -240,6 +241,7 @@ void Player::deserialize(const dv::value& src) {
     noclip = src["noclip"].asBoolean();
 	src.at("infinite-items").get(infiniteItems);
 	src.at("instant-destruction").get(instantDestruction);
+    src.at("loading-chunks").get(loadingChunks);
     setChosenSlot(src["chosen-slot"].asInteger());
     eid = src["entity"].asNumber();
 
@@ -355,4 +357,12 @@ void Player::setName(const std::string& name) {
 
 const std::string& Player::getName() const {
     return name;
+}
+
+bool Player::isLoadingChunks() const {
+    return loadingChunks;
+}
+
+void Player::setLoadingChunks(bool flag) {
+    loadingChunks = flag;
 }

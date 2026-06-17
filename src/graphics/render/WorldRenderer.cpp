@@ -207,7 +207,7 @@ void WorldRenderer::renderBlockSelection() {
         const glm::vec3 center = glm::vec3(pos) + hitbox.center();
         const glm::vec3 size = hitbox.size();
         lineBatch->box(center, size + boxOffset, boxColor);
-        if (player.debug) {
+        if (debug) {
             lineBatch->line(point, point + norm * 0.5f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
         }
     }
@@ -224,7 +224,7 @@ void WorldRenderer::renderLines(
     if (player.selection.vox.id != BLOCK_VOID && !player.isNoclip()) {
         renderBlockSelection();
     }
-    if (player.debug && drawEntityHitboxes) {
+    if (debug && drawEntityHitboxes) {
         auto ctx = pctx.sub(lineBatch.get());
         bool culling = engine.getSettings().graphics.frustumCulling.get();
         level.entities->renderDebug(
@@ -319,7 +319,7 @@ void WorldRenderer::draw(
             ctx.setCullFace(true);
             renderLevel(ctx, camera, settings, deltaTime, pause, hudVisible);
             if (hudVisible) {
-                if (player.debug) {
+                if (debug) {
                     guides->renderDebugLines(
                         ctx, camera, *lineBatch, linesShader, drawChunkBorders
                     );
@@ -389,4 +389,8 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
 
 void WorldRenderer::clear() {
     chunks->clear();
+}
+
+void WorldRenderer::setDebug(bool flag) {
+    debug = flag;
 }

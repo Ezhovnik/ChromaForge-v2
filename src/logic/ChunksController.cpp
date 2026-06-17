@@ -42,7 +42,10 @@ void ChunksController::update(
     const auto& position = player.getPosition();
     int centerX = floordiv<CHUNK_WIDTH>(position.x);
     int centerY = floordiv<CHUNK_DEPTH>(position.z);
-    generator->update(centerX, centerY, loadDistance);
+	if (player.isLoadingChunks()) {
+		// FIXME: one generator for multiple players
+		generator->update(centerX, centerY, loadDistance);
+	}
     int64_t mcstotal = 0;
     for (uint i = 0; i < MAX_WORK_PER_FRAME; ++i) {
         timeutil::Timer timer;
@@ -122,7 +125,13 @@ bool ChunksController::buildLights(const Player& player, const std::shared_ptr<C
 }
 
 void ChunksController::createChunk(const Player& player, int x, int z) const {
-    auto chunk = level.chunks->create(x, z);
+    if (!player.isLoadingChunks()) {
+        if (auto chunk = level.chunks->fetch(x, z)) {
+            player.chunks->putChunk(chunk);
+        }
+        return;
+    }
+	auto chunk = level.chunks->create(x, z);
 	player.chunks->putChunk(chunk);
 	auto& chunkFlags = chunk->flags;
 

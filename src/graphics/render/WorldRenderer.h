@@ -46,6 +46,8 @@ private:
 
 	float timer = 0.0f;
 
+	bool debug = false;
+
 	void renderBlockSelection();
 	void renderHands(const Camera& camera, float deltaTime);
 	void renderLines(
@@ -91,6 +93,8 @@ public:
     );
 
 	void clear();
+
+	void setDebug(bool flag);
 
 	static bool drawChunkBorders;
 	static bool drawEntityHitboxes;

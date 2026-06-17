@@ -86,6 +86,7 @@ private:
     bool showContentPanel = true;
 
     bool allowDebugCheats = true;
+    bool debug = false;
 
     bool inventoryOpen = false;
     bool pause = false;
@@ -152,6 +153,8 @@ public:
     void remove(const std::shared_ptr<gui::UINode>& node);
 
     Player* getPlayer() const;
+
+    void setDebug(bool flag);
 
     std::shared_ptr<Inventory> getBlockInventory();
 

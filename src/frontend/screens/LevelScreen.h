@@ -30,6 +30,7 @@ private:
     void saveWorldPreview();
 
     bool hudVisible = true;
+    bool debug = false;
     void updateHotkeys();
 
     void initializeContent();

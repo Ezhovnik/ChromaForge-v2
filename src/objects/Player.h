@@ -72,6 +72,7 @@ private:
     bool noclip = false;
     bool infiniteItems = true;
     bool instantDestruction = true;
+    bool loadingChunks = true;
 
     entityid_t eid;
 
@@ -80,8 +81,6 @@ public:
     std::unique_ptr<Chunks> chunks;
 	std::shared_ptr<Camera> fpCamera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
     std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
-
-    bool debug = false;
 
 	glm::vec3 cam {}; ///< Углы поворота камеры
 
@@ -146,6 +145,9 @@ public:
 
     bool isInstantDestruction() const;
     void setInstantDestruction(bool flag);
+
+    bool isLoadingChunks() const;
+    void setLoadingChunks(bool flag);
 
     entityid_t getEntity() const;
     void setEntity(entityid_t eid);

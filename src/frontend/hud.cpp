@@ -322,7 +322,7 @@ void Hud::update(bool hudVisible) {
     const auto& chunks = *player.chunks;
 	const auto& menu = guiController.getMenu();
 
-	debugPanel->setVisible(player.debug && hudVisible);
+	debugPanel->setVisible(debug && hudVisible);
 
 	if (!hudVisible && inventoryOpen) closeInventory();
 	if (pause && menu->getCurrent().panel == nullptr) setPause(false);
@@ -348,15 +348,15 @@ void Hud::update(bool hudVisible) {
 
 	if (hudVisible) {
         for (auto& element : elements) {
-            element.update(pause, inventoryOpen, player.debug);
+            element.update(pause, inventoryOpen, debug);
             if (element.isRemoved()) onRemove(element);
         }
     }
 
     cleanup();
 
-    debugMinimap->setVisible(player.debug && showGeneratorMinimap);
-    if (player.debug && showGeneratorMinimap) {
+    debugMinimap->setVisible(debug && showGeneratorMinimap);
+    if (debug && showGeneratorMinimap) {
         updateWorldGenDebugVisualization();
     }
 }
@@ -377,7 +377,7 @@ void Hud::draw(const DrawContext& context) {
 	uiShader.use();
 	uiShader.uniformMatrix("u_projview", uicamera->getProjView());
 
-	if (!pause && !inventoryOpen && !player.debug) {
+	if (!pause && !inventoryOpen && !debug) {
 		DrawContext crosshair_context = context.sub(batch);
         crosshair_context.setBlendMode(BlendMode::Inversion);
         auto texture = assets.get<Texture>("gui/crosshair");
@@ -686,4 +686,8 @@ void Hud::setDebugCheats(bool flag) {
     );
     debugPanel->setZIndex(2);
     guiController.add(debugPanel);
+}
+
+void Hud::setDebug(bool flag) {
+    debug = flag;
 }

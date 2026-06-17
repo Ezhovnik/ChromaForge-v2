@@ -150,7 +150,11 @@ void LevelScreen::updateHotkeys() {
     auto& settings = engine.getSettings();
 
     if (Events::justPressed(keycode::F1)) hudVisible = !hudVisible;
-    if (Events::justPressed(keycode::F3)) player->debug = !player->debug;
+    if (Events::justPressed(keycode::F3)) {
+        debug = !debug;
+        hud->setDebug(debug);
+        worldRenderer->setDebug(debug);
+    }
 }
 
 void LevelScreen::update(float deltaTime) {
