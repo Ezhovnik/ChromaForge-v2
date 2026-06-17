@@ -8,5 +8,6 @@
     "model": "X",
     "hitbox": [0.15, 0.0, 0.15, 0.7, 0.7, 0.7],
     "material": "chromaforge:grass",
-    "chromaforge:durability": 0.0
+    "chromaforge:durability": 0.0,
+    "chromaforge:loot": []
 }
