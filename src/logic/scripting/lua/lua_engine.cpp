@@ -55,6 +55,7 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "vec2", vec2lib);
     openlib(L, "vec3", vec3lib);
     openlib(L, "vec4", vec4lib);
+    openlib(L, "byteutil", byteutillib);
 
     if (stateType == StateType::Script) {
         openlib(L, "app", applib);

@@ -10,9 +10,11 @@
 - [Свойства и методы UI элементов](scripting/ui.md)
 - [Сущности и компоненты](scripting/entities-and-components.md)
 - [Библиотеки]
+  - [app](scripting/builtins/libapp.md)
   - [base64](scripting/builtins/libbase64.md)
   - [bjson, json, toml](scripting/filesystem.md)
   - [block](scripting/builtins/libblock.md)
+  - [byteutil](scripting/builtins/libbyteutil.md)
   - [cameras](scripting/builtins/libcameras.md)
   - [entities](scripting/builtins/libentities.md)
   - [file](scripting/builtins/libfile.md)

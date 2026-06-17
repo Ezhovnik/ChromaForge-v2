@@ -15,6 +15,9 @@ class ByteBuilder {
 private:
     std::vector<ubyte> buffer;
 public:
+    ByteBuilder() = default;
+    ByteBuilder(size_t size);
+
     /**
      * @brief Записывает один байт (8‑битное беззнаковое целое).
      * @param b Значение байта.
@@ -31,31 +34,31 @@ public:
      * @brief Записывает знаковое 16‑битное целое.
      * @param val Значение.
      */
-    void putInt16(int16_t val);
+    void putInt16(int16_t val, bool bigEndian = false);
 
     /**
      * @brief Записывает знаковое 32‑битное целое.
      * @param val Значение.
      */
-    void putInt32(int32_t val);
+    void putInt32(int32_t val, bool bigEndian = false);
 
     /**
      * @brief Записывает знаковое 64‑битное целое.
      * @param val Значение.
      */
-    void putInt64(int64_t val);
+    void putInt64(int64_t val, bool bigEndian = false);
     
     /**
      * @brief Записывает 32‑битное число с плавающей точкой.
      * @param val Значение.
      */
-    void putFloat32(float val);
+    void putFloat32(float val, bool bigEndian = false);
 
     /**
      * @brief Записывает 64‑битное число с плавающей точкой.
      * @param val Значение.
      */
-    void putFloat64(double val);   
+    void putFloat64(double val, bool bigEndian = false);   
 
     /**
      * @brief Записывает строку как длину (uint32) и затем байты строки.
@@ -150,6 +153,8 @@ public:
      */
     ByteReader(const ubyte* data);
 
+    ByteReader(const std::vector<ubyte>& data);
+
     /**
      * @brief Проверяет наличие магической последовательности в текущей позиции.
      * @param data Ожидаемая строка-магия.
@@ -179,33 +184,33 @@ public:
      * @return Прочитанное значение.
      * @throw std::runtime_error При попытке чтения за концом буфера.
      */
-    int16_t getInt16();
+    int16_t getInt16(bool bigEndian = false);
 
     /**
      * @brief Читает знаковое 32‑битное целое.
      * @return Прочитанное значение.
      * @throw std::runtime_error При попытке чтения за концом буфера.
      */
-    int32_t getInt32();
+    int32_t getInt32(bool bigEndian = false);
 
     /**
      * @brief Читает знаковое 64‑битное целое (little-endian).
      * @return Прочитанное значение.
      * @throw std::runtime_error При попытке чтения за концом буфера.
      */
-    int64_t getInt64();
+    int64_t getInt64(bool bigEndian = false);
 
     /**
      * @brief Читает 32‑битное число с плавающей точкой.
      * @return Прочитанное значение.
      */
-    float getFloat32();
+    float getFloat32(bool bigEndian = false);
 
     /**
      * @brief Читает 64‑битное число с плавающей точкой.
      * @return Прочитанное значение.
      */
-    double getFloat64();
+    double getFloat64(bool bigEndian = false);
 
     /**
      * @brief Читает C-строку (до завершающего нуля) и возвращает указатель на неё.
