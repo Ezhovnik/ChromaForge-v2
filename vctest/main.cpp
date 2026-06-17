@@ -26,7 +26,7 @@ static bool perform_keyword(
         std::cout << "  --exe <path>, -e <path>         = ChromaForge executable path\n";
         std::cout << "  --tests <path>, -d <path>       = tests directory path\n";
         std::cout << "  --res <path>, -r <path>         = 'res' directory path\n";
-        std::cout << "  --working-dir <path>, -w <path> = user directory path\n";
+        std::cout << "  --user <path>, -u <path>        = user directory path\n";
         std::cout << "  --output-always                 = always show tests output\n";
         std::cout << std::endl;
         return false;

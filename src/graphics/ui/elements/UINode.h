@@ -11,6 +11,7 @@
 #include <typedefs.h>
 #include <delegates.h>
 #include <window/input.h>
+#include <graphics/core/commons.h>
 
 class DrawContext;
 class Assets;
@@ -95,6 +96,7 @@ namespace gui {
         ActionsSet doubleClickCallbacks;
         std::wstring tooltip;
         float tooltipDelay = 0.5f;
+        CursorShape cursor = CursorShape::Arrow;
 
         UINode(glm::vec2 size);
     public:
@@ -116,6 +118,9 @@ namespace gui {
 
         virtual void setTooltipDelay(float delay);
         virtual float getTooltipDelay() const;
+
+        virtual void setCursor(CursorShape shape);
+        virtual CursorShape getCursor() const;
 
         virtual void setParent(UINode* node);
         UINode* getParent() const;

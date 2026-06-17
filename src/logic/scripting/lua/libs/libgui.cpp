@@ -404,6 +404,10 @@ static int p_set_interval(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_cursor(gui::UINode* node, lua::State* L) {
+    return lua::pushstring(L, to_string(node->getCursor()));
+}
+
 static int l_gui_getattr(lua::State* L) {
     auto docname = lua::require_string(L, 1);
     auto element = lua::require_string(L, 2);
@@ -453,7 +457,8 @@ static int l_gui_getattr(lua::State* L) {
         {"tooltipDelay", p_get_tooltip_delay},
         {"setInterval", p_set_interval},
         {"destruct", p_get_destruct},
-        {"contentOffset", p_get_content_offset}
+        {"contentOffset", p_get_content_offset},
+        {"cursor", p_get_cursor}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) {
@@ -643,6 +648,12 @@ static void p_set_tooltip_delay(gui::UINode* node, lua::State* L, int idx) {
     node->setTooltipDelay(lua::tonumber(L, idx));
 }
 
+static void p_set_cursor(gui::UINode* node, lua::State* L, int idx) {
+    if (auto cursor = CursorShape_from(lua::require_string(L, idx))) {
+        node->setCursor(*cursor);
+    }
+}
+
 static int l_gui_setattr(lua::State* L) {
     auto docname = lua::require_string(L, 1);
     auto element = lua::require_string(L, 2);
@@ -681,7 +692,8 @@ static int l_gui_setattr(lua::State* L) {
         {"page", p_set_page},
         {"inventory", p_set_inventory},
         {"caret", p_set_caret},
-        {"src", p_set_src}
+        {"src", p_set_src},
+        {"cursor", p_set_cursor}
     };
     auto func = setters.find(attr);
     if (func != setters.end()) func->second(node.get(), L, 4);

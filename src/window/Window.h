@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include <typedefs.h>
+#include <graphics/core/commons.h>
 
 struct GLFWwindow; // Предварительное объявление класса GLFWwindow
 class ImageData;
@@ -27,6 +28,7 @@ private:
 
     static int framerate;
     static double prevSwap;
+    static CursorShape cursor;
 
     static bool tryToMaximize(GLFWwindow* window, GLFWmonitor* monitor);
 public:
@@ -57,6 +59,8 @@ public:
     static void pushScissor(glm::vec4 area);
 	static void popScissor();
 	static void resetScissor();
+
+    static void setCursor(CursorShape shape);
 
     static double time();
 

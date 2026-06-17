@@ -20,6 +20,7 @@ using namespace gui;
 inline constexpr int LINE_NUMBERS_PANE_WIDTH = 40;
 
 TextBox::TextBox(std::wstring placeholder, glm::vec4 padding) : Container(glm::vec2(200, 32)), padding(padding), input(L""), placeholder(std::move(placeholder)) {
+    setCursor(CursorShape::Text);
     setOnUpPressed(nullptr);
     setOnDownPressed(nullptr);
     setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.75f));
@@ -788,6 +789,10 @@ bool TextBox::isTextWrapping() const {
 void TextBox::setOnUpPressed(const runnable& callback) {
     if (callback == nullptr) {
         onUpPressed = [this]() {
+            if (Events::isPressed(keycode::LEFT_CONTROL)) {
+                scrolled(1);
+                return;
+            }
             bool shiftPressed = Events::isPressed(keycode::LEFT_SHIFT);
             bool breakSelection = getSelectionLength() != 0 && !shiftPressed;
             stepDefaultUp(shiftPressed, breakSelection);
@@ -800,6 +805,10 @@ void TextBox::setOnUpPressed(const runnable& callback) {
 void TextBox::setOnDownPressed(const runnable& callback) {
     if (callback == nullptr) {
         onDownPressed = [this]() {
+            if (Events::isPressed(keycode::LEFT_CONTROL)) {
+                scrolled(-1);
+                return;
+            }
             bool shiftPressed = Events::isPressed(keycode::LEFT_SHIFT);
             bool breakSelection = getSelectionLength() != 0 && !shiftPressed;
             stepDefaultDown(shiftPressed, breakSelection);

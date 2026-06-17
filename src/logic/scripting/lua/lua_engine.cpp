@@ -138,10 +138,13 @@ bool lua::emit_event(State* L, const std::string &name, std::function<int(State*
     getglobal(L, "events");
     getfield(L, "emit");
     pushstring(L, name);
-    call_nothrow(L, args(L) + 1);
-    bool result = toboolean(L, -1);
-    pop(L, 2);
-    return result;
+    if (call_nothrow(L, args(L) + 1)) {
+        bool result = toboolean(L, -1);
+        pop(L, 2);
+        return result;
+    }
+    pop(L, 1);
+    return false;
 }
 
 lua::State* lua::get_main_state() {

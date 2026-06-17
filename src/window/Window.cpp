@@ -28,6 +28,7 @@ int Window::posY = 0;
 int Window::framerate = -1;
 double Window::prevSwap = 0.0;
 bool Window::fullscreen = false;
+CursorShape Window::cursor = CursorShape::Arrow;
 static util::ObjectsKeeper observers_keeper;
 
 const char* glfwErrorName(int error) {
@@ -115,6 +116,8 @@ void character_callback(GLFWwindow*, uint codepoint){
 void scroll_callback(GLFWwindow*, double xoffset, double yoffset) {
     Events::scroll += yoffset;
 }
+
+static GLFWcursor* standard_cursors[static_cast<int>(CursorShape::Last) + 1] = {};
 
 // Инициализация окна и OpenGL контекста
 bool Window::initialize(DisplaySettings* settings) {
@@ -218,12 +221,19 @@ bool Window::initialize(DisplaySettings* settings) {
 
     input_util::initialize();
 
+    for (int i = 0; i <= static_cast<int>(CursorShape::Last); ++i) {
+        standard_cursors[i] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR + i);
+    }
+
     return true;
 }
 
 // Завершение работы окна и освобождение ресурсов GLFW
 void Window::terminate() {
     observers_keeper = util::ObjectsKeeper();
+    for (int i = 0; i <= static_cast<int>(CursorShape::Last); ++i) {
+        glfwDestroyCursor(standard_cursors[i]);
+    }
     glfwDestroyWindow(window);
     glfwTerminate();
 }
@@ -372,6 +382,13 @@ bool Window::isFullscreen() {
 
 DisplaySettings* Window::getDisplaySettings() {
 	return settings;
+}
+
+void Window::setCursor(CursorShape shape) {
+    if (cursor == shape) return;
+
+    cursor = shape;
+    glfwSetCursor(window, standard_cursors[static_cast<int>(shape)]);
 }
 
 std::unique_ptr<ImageData> Window::takeScreenshot() {

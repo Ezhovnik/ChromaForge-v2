@@ -160,6 +160,14 @@ glm::vec2 UINode::getPos() const {
     return pos;
 }
 
+void UINode::setCursor(CursorShape shape) {
+    cursor = shape;
+}
+
+CursorShape UINode::getCursor() const {
+    return cursor;
+}
+
 glm::vec2 UINode::getSize() const {
     return size;
 }
