@@ -323,7 +323,7 @@ void EngineController::reconfigPacks(
                         LOG_WARN("Attempt to remove non-installed pack: {}", id);
                     }
                 }
-                names = manager.assembly(names);
+                names = manager.assemble(names);
                 engine.getContentPacks() = manager.getAll(names);
             } catch (const contentpack_error& err) {
                 std::string errorLog = std::string(err.what()) + " [" + err.getPackId() + "]";

@@ -38,6 +38,25 @@ if app then
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
 
+    function app.config_packs(packs_list)
+        packs_list = pack.assemble(packs_list)
+
+        local installed = pack.get_installed()
+        local toremove = {}
+        for _, packid in ipairs(installed) do
+            if not table.has(packs_list, packid) then
+                table.insert(toremove, packid)
+            end
+        end
+        local toadd = {}
+        for _, packid in ipairs(packs_list) do
+            if not table.has(installed, packid) then
+                table.insert(toadd, packid)
+            end
+        end
+        app.reconfig_packs(toadd, toremove)
+    end
+
     function app.quit()
         local tb = debug.get_traceback(1)
         local s = "app.quit() traceback:"
@@ -107,7 +126,12 @@ function events.emit(event, ...)
         return nil
     end
     for _, func in ipairs(handlers) do
-        result = result or func(...)
+        local status, newres = xpcall(func, __chroma__error, ...)
+        if not status then
+            debug.error("Error in event (" .. event .. ") handler: " .. newres)
+        else 
+            result = result or newres
+        end
     end
     return result
 end
@@ -172,9 +196,9 @@ local __post_runnables = {}
 function __process_post_runnables()
     if #__post_runnables then
         for _, func in ipairs(__post_runnables) do
-            local status, result = pcall(func)
+            local status, result = xpcall(func, __chroma__error)
             if not status then
-                debug.info("Error in post_runnable: " .. result)
+                debug.error("Error in post_runnable: " .. result)
             end
         end
         __post_runnables = {}

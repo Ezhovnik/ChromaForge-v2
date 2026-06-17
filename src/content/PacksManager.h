@@ -23,7 +23,7 @@ public:
 
     std::vector<ContentPack> getAll(const std::vector<std::string>& names) const;
 
-    std::vector<std::string> assembly(const std::vector<std::string>& names) const;
+    std::vector<std::string> assemble(const std::vector<std::string>& names) const;
 
     static std::vector<std::string> getNames(const std::vector<ContentPack>& packs);
 };

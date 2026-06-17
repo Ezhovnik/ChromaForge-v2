@@ -319,7 +319,7 @@ void Engine::loadContent() {
     paths.setContentPacks(&contentPacks);
     PacksManager manager = createPacksManager(paths.getCurrentWorldFolder());
     manager.scan();
-    names = manager.assembly(names);
+    names = manager.assemble(names);
     contentPacks = manager.getAll(names);
 
     auto builtinPack = ContentPack::createBuiltin(paths);
@@ -379,8 +379,10 @@ void Engine::resetContent() {
 
     std::string locale = langs::current ? langs::current->getId() : langs::FALLBACK_DEFAULT;
     setLanguage(locale);
-    loadAssets();
-    onAssetsLoaded();
+    if (!isHeadless()) {
+        loadAssets();
+        onAssetsLoaded();
+    }
 
     contentPacks = manager.getAll(basePacks);
 }
@@ -395,7 +397,7 @@ void Engine::loadWorldContent(const std::filesystem::path& folder) {
         paths.getResourcesFolder()/std::filesystem::path("content")
     });
     manager.scan();
-    contentPacks = manager.getAll(manager.assembly(packNames));
+    contentPacks = manager.getAll(manager.assemble(packNames));
     paths.setCurrentWorldFolder(folder);
     loadContent();
     loadControls();
@@ -410,7 +412,7 @@ void Engine::loadAllPacks() {
     });
     manager.scan();
     auto allnames = manager.getAllNames();
-    contentPacks = manager.getAll(manager.assembly(allnames));
+    contentPacks = manager.getAll(manager.assemble(allnames));
 }
 
 EnginePaths& Engine::getPaths() {
