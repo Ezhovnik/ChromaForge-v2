@@ -170,9 +170,50 @@ static void perform_user_block_fields(
     layout = data::StructLayout::create(fields);
 }
 
+static void process_method(
+    dv::value& properties,
+    const std::string& method,
+    const std::string& name,
+    const dv::value& value
+) {
+    if (method == "append") {
+        if (!properties.has(name)) {
+            properties[name] = dv::list();
+        }
+        auto& list = properties[name];
+        if (value.isList()) {
+            for (const auto& item : value) {
+                list.add(item);
+            }
+        } else {
+            list.add(value);
+        }
+    } else {
+        LOG_ERROR(
+            "Unknown method {} for {}", method, name
+        );
+        throw std::runtime_error(
+            "Unknown method " + method + " for " + name
+        );
+    }
+}
+
 void ContentLoader::loadBlock(Block& def, const std::string& name, const std::filesystem::path& file) {
     auto root = files::read_json(file);
-    def.properties = root;
+    if (def.properties == nullptr) {
+        def.properties = dv::object();
+        def.properties["name"] = name;
+    }
+    for (auto& [key, value] : root.asObject()) {
+        auto pos = key.rfind('@');
+        if (pos == std::string::npos) {
+            def.properties[key] = value;
+            continue;
+        }
+        auto field = key.substr(0, pos);
+        auto suffix = key.substr(pos + 1);
+        process_method(def.properties, suffix, field, value);
+    }
 
     if (root.has("parent")) {
         const auto& parentName = root["parent"].asString();
@@ -465,7 +506,8 @@ void ContentLoader::loadBlock(Block& def, const std::string& full, const std::st
     if (std::filesystem::exists(configFile)) loadBlock(def, full, configFile);
 
     if (!def.hidden) {
-        auto& item = builder.items.create(full + BLOCK_ITEM_SUFFIX);
+        bool created;
+        auto& item = builder.items.create(full + BLOCK_ITEM_SUFFIX, &created);
         item.generated = true;
         item.caption = def.caption;
         item.iconType = ItemIconType::Block;
@@ -475,7 +517,7 @@ void ContentLoader::loadBlock(Block& def, const std::string& full, const std::st
         for (uint j = 0; j < 4; j++) {
             item.emission[j] = def.emission[j];
         }
-        stats->totalItems++;
+        stats->totalItems += created;
     }
 }
 
@@ -531,9 +573,10 @@ void ContentLoader::loadContent(const dv::value& root) {
             auto parent = getJsonParent("blocks", name);
             if (parent.empty() || builder.blocks.get(parent)) {
                 // Нет зависимости или зависимость уже загружена/существует в другом пакете контента
-                auto& def = builder.blocks.create(full);
+                bool created;
+                auto& def = builder.blocks.create(full, &created);
                 loadBlock(def, full, name);
-                stats->totalBlocks++;
+                stats->totalBlocks += created;
             } else {
                 // Зависимость ещё не загружена, добавляем в ожидающие
                 pendingDefs.emplace_back(full, name);
@@ -549,9 +592,10 @@ void ContentLoader::loadContent(const dv::value& root) {
                 auto parent = getJsonParent("blocks", it->second);
                 if (builder.blocks.get(parent)) {
                     // Зависимость разрешена или родитель существует в другом пакете, загружаем элемент
-                    auto& def = builder.blocks.create(it->first);
+                    bool created;
+                    auto& def = builder.blocks.create(it->first, &created);
                     loadBlock(def, it->first, it->second);
-                    stats->totalBlocks++;
+                    stats->totalBlocks += created;
                     it = pendingDefs.erase(it);  // Удалить разрешённый элемент
                     progressMade = true;
                 } else {
@@ -575,9 +619,10 @@ void ContentLoader::loadContent(const dv::value& root) {
             auto parent = getJsonParent("items", name);
             if (parent.empty() || builder.items.get(parent)) {
                 // Нет зависимости или зависимость уже загружена/существует в другом пакете контента
-                auto& def = builder.items.create(full);
+                bool created;
+                auto& def = builder.items.create(full, &created);
                 loadItem(def, full, name);
-                stats->totalItems++;
+                stats->totalItems += created;
             } else {
                 // Зависимость ещё не загружена, добавляем в ожидающие
                 pendingDefs.emplace_back(full, name);
@@ -593,9 +638,10 @@ void ContentLoader::loadContent(const dv::value& root) {
                 auto parent = getJsonParent("items", it->second);
                 if (builder.items.get(parent)) {
                     // Зависимость разрешена или родитель существует в другом пакете, загружаем элемент
-                    auto& def = builder.items.create(it->first);
+                    bool created;
+                    auto& def = builder.items.create(it->first, &created);
                     loadItem(def, it->first, it->second);
-                    stats->totalItems++;
+                    stats->totalItems += created;
                     it = pendingDefs.erase(it);  // Удалить разрешённый элемент
                     progressMade = true;
                 } else {
@@ -619,9 +665,10 @@ void ContentLoader::loadContent(const dv::value& root) {
             auto parent = getJsonParent("entities", name);
             if (parent.empty() || builder.entities.get(parent)) {
                 // Нет зависимости или зависимость уже загружена/существует в другом пакете контента
-                auto& def = builder.entities.create(full);
+                bool created;
+                auto& def = builder.entities.create(full, &created);
                 loadEntity(def, full, name);
-                stats->totalEntities++;
+                stats->totalEntities += created;
             } else {
                 // Зависимость ещё не загружена, добавляем в ожидающие
                 pendingDefs.emplace_back(full, name);
@@ -637,9 +684,10 @@ void ContentLoader::loadContent(const dv::value& root) {
                 auto parent = getJsonParent("entities", it->second);
                 if (builder.entities.get(parent)) {
                     // Зависимость разрешена или родитель существует в другом пакете, загружаем элемент
-                    auto& def = builder.entities.create(it->first);
+                    bool created;
+                    auto& def = builder.entities.create(it->first, &created);
                     loadEntity(def, it->first, it->second);
-                    stats->totalEntities++;
+                    stats->totalEntities += created;
                     it = pendingDefs.erase(it);  // Удалить разрешённый элемент
                     progressMade = true;
                 } else {
