@@ -146,7 +146,6 @@ void LevelScreen::saveWorldPreview() {
 }
 
 void LevelScreen::updateHotkeys() {
-    auto player = playerController->getPlayer();
     auto& settings = engine.getSettings();
 
     if (Events::justPressed(keycode::F1)) hudVisible = !hudVisible;

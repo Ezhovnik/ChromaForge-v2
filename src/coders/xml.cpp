@@ -94,10 +94,10 @@ glm::vec4 Attribute::asColor() const {
             throw std::runtime_error("#RRGGBB or #RRGGBBAA required");
         }
         int a = 255;
-        int r = (hexchar2int(text[1]) << 4) | hexchar2int(text[2]);
-        int g = (hexchar2int(text[3]) << 4) | hexchar2int(text[4]);
-        int b = (hexchar2int(text[5]) << 4) | hexchar2int(text[6]);
-        if (text.length() == 9) a = (hexchar2int(text[7]) << 4) | hexchar2int(text[8]);
+        int r = (std::max(0, hexchar2int(text[1])) << 4) | hexchar2int(text[2]);
+        int g = (std::max(0, hexchar2int(text[3])) << 4) | hexchar2int(text[4]);
+        int b = (std::max(0, hexchar2int(text[5])) << 4) | hexchar2int(text[6]);
+        if (text.length() == 9) a = (std::max(0, hexchar2int(text[7])) << 4) | hexchar2int(text[8]);
         return glm::vec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
     } else {
         return asVec4() / 255.0f;

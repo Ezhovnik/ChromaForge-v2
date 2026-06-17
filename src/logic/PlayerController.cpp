@@ -432,7 +432,6 @@ void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool
 void PlayerController::updateInteraction(float deltaTime) {
     if (player.isNoclip()) return;
     auto indices = level.content.getIndices();
-    auto chunks = player.chunks.get();
     const auto& selection = player.selection;
 
     if (interactionTimer > 0.0f) {

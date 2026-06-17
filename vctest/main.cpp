@@ -14,6 +14,7 @@ struct Config {
     std::filesystem::path directory;
     std::filesystem::path resDir {"res"};
     std::filesystem::path workingDir {"."};
+    std::string memchecker = "valgrind";
     bool outputAlways = false;
 };
 
@@ -27,6 +28,7 @@ static bool perform_keyword(
         std::cout << "  --tests <path>, -d <path>       = tests directory path\n";
         std::cout << "  --res <path>, -r <path>         = 'res' directory path\n";
         std::cout << "  --user <path>, -u <path>        = user directory path\n";
+        std::cout << "  --memchecker <path>             = path to valgrind\n";
         std::cout << "  --output-always                 = always show tests output\n";
         std::cout << std::endl;
         return false;
@@ -125,6 +127,36 @@ static void display_test_output(
     }
 }
 
+static void display_segfault_valgrind(
+    const std::filesystem::path& path, const std::filesystem::path& name, std::ostream& stream
+) {
+    stream << "[MEMCHECK] " << name << std::endl;
+    if (std::filesystem::exists(path)) {
+        std::ifstream t(path);
+        while (!t.eof()) {
+            std::string line;
+            std::getline(t, line);
+            if (line.find("Process terminating with default action of signal ") != std::string::npos) {
+                break;
+            }
+        }
+        std::stringstream ss;
+        while (!t.eof()) {
+            std::string line;
+            std::getline(t, line);
+            size_t pos = line.find("== ");
+            if (pos == std::string::npos) {
+                continue;
+            }
+            if (line.find("If you") != std::string::npos || line.find("HEAP SUMMARY:") != std::string::npos) {
+                break;
+            }
+            ss << line.substr(pos + 3) << "\n";
+        }
+        stream << ss.str() << std::endl;
+    }
+}
+
 static std::string fix_path(std::string s) {
     for (char& c : s) {
         if (c == '\\') {
@@ -134,15 +166,17 @@ static std::string fix_path(std::string s) {
     return s;
 }
 
-static bool run_test(const Config& config, const std::filesystem::path& path) {
+static bool run_test(const Config& config, const std::filesystem::path& path, bool memcheck = false) {
     using std::chrono::duration_cast;
     using std::chrono::high_resolution_clock;
     using std::chrono::milliseconds;
 
     auto outputFile = config.workingDir / "output.txt";
+    auto memcheckLogFile = config.workingDir / "memcheck.txt";
 
     auto name = path.stem();
     std::stringstream ss;
+    if (memcheck) ss << config.memchecker << " --log-file=" << fix_path(memcheckLogFile.string()) << " ";
     ss << "\"" << std::filesystem::canonical(config.executable).string() << "\" --headless";
     ss << " --test \"" << fix_path(path.string()) << "\"";
     ss << " --res \"" << fix_path(config.resDir.string()) << "\"";
@@ -160,9 +194,16 @@ static bool run_test(const Config& config, const std::filesystem::path& path) {
     auto testTime = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
     if (code) {
-        display_test_output(outputFile, name, std::cerr);
-        std::cerr << "[FAILED] " << name << " in " << testTime << " ms" << std::endl;
-        std::filesystem::remove(outputFile);
+        if (memcheck) {
+            display_segfault_valgrind(memcheckLogFile, name, std::cerr);
+            std::filesystem::remove(memcheckLogFile);
+            std::filesystem::remove(outputFile);
+        } else {
+            display_test_output(outputFile, name, std::cerr);
+            std::cerr << "[FAILED] " << name << " in " << testTime << " ms (code=" << code << ")" << std::endl;
+            std::filesystem::remove(outputFile);
+            run_test(config, path, true);
+        }
         return false;
     } else {
         if (config.outputAlways) {

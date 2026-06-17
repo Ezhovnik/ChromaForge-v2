@@ -359,7 +359,6 @@ int util::replaceAll(std::string& str, const std::string& from, const std::strin
         str.replace(start_pos, from.length(), to);
         offset = start_pos + to.length();
         count++;
-        break;
     }
     return count;
 }

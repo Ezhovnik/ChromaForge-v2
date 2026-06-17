@@ -96,8 +96,8 @@ static inline FieldIncapatibilityType checkIncapatibility(
 
 static inline integer_t clamp_value(integer_t value, FieldType type) {
     auto typesize = sizeof_type(type) * CHAR_BIT;
-    integer_t minval = -(1 << (typesize - 1));
-    integer_t maxval = (1 << (typesize - 1)) - 1;
+    integer_t minval = -(1LL << (typesize - 1));
+    integer_t maxval = (1LL << (typesize - 1)) - 1;
     return std::min(maxval, std::max(minval, value));
 }
 
@@ -191,7 +191,6 @@ const Field& StructLayout::requireField(const std::string& name) const {
     }
     return *&fields.at(found->second);
 }
-
 
 template<typename T>
 static void set_int(ubyte* dst, integer_t value) {
