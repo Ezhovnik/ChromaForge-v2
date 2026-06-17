@@ -28,7 +28,7 @@ LevelController::LevelController(
 {
     if (clientPlayer) {
         chunks->lighting = std::make_unique<Lighting>(
-            level->content, clientPlayer->chunks.get()
+            level->content, *clientPlayer->chunks
         );
     }
 

@@ -35,7 +35,7 @@ public:
             settings.graphics.denseRender.get()
                 ? settings.graphics.chunkMaxVerticesDense.get()
                 : settings.graphics.chunkMaxVertices.get(),
-            *level.content,
+            level.content,
             cache,
             settings
         ) {}
@@ -88,7 +88,7 @@ ChunksRenderer::ChunksRenderer(
 {
     threadPool.setStopOnFail(false);
     renderer = std::make_unique<BlocksRenderer>(
-        settings.graphics.chunkMaxVertices.get(), *level->content, cache, settings
+        settings.graphics.chunkMaxVertices.get(), level->content, cache, settings
     );
 
     LOG_INFO("Created {} workers", threadPool.getWorkersCount());

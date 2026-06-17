@@ -116,7 +116,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
             L" z: " + std::to_wstring(selection.actualPosition.z);
     }));
     panel->add(create_label([&](){
-        auto* indices = level.content->getIndices();
+        auto indices = level.content.getIndices();
         if (auto def = indices->blocks.get(player.selection.vox.id)) {
             return L"Name: " + util::str2wstr_utf8(def->name);
         } else {

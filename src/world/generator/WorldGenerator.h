@@ -49,7 +49,7 @@ struct WorldGenDebugInfo {
 // Класс для генерации воксельного мира
 class WorldGenerator {
 	const Generator& def;
-    const Content* content;
+    const Content& content;
     uint64_t seed;
 
     std::unordered_map<glm::ivec2, std::unique_ptr<ChunkPrototype>> prototypes;
@@ -119,7 +119,7 @@ class WorldGenerator {
 public:
 	WorldGenerator(
         const Generator& def,
-        const Content* content,
+        const Content& content,
         uint64_t seed
     );
     ~WorldGenerator();

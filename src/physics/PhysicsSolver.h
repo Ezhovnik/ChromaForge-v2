@@ -23,7 +23,7 @@ public:
 
 	void step(
 		const GlobalChunks& chunks,
-		Hitbox* hitbox,
+		Hitbox& hitbox,
 		float delta,
 		uint substeps,
         entityid_t entity
@@ -31,7 +31,7 @@ public:
 
 	void colisionCalc(
 		const GlobalChunks& chunks,
-		Hitbox* hitbox,
+		Hitbox& hitbox,
 		glm::vec3& vel,
 		glm::vec3& pos,
 		const glm::vec3 half,

@@ -11,14 +11,14 @@ class Chunk;
 class ContentIndices;
 
 class Lighting {
-    const Content* const content;
-    Chunks* chunks = nullptr;
+    const Content& content;
+    Chunks& chunks;
     std::unique_ptr<LightSolver> solverR;
 	std::unique_ptr<LightSolver> solverG;
 	std::unique_ptr<LightSolver> solverB;
 	std::unique_ptr<LightSolver> solverS;
 public:
-    Lighting(const Content* content, Chunks* chunks);
+    Lighting(const Content& content, Chunks& chunks);
 	~Lighting();
 
     void clear();
@@ -26,5 +26,5 @@ public:
     void onChunkLoaded(int chunk_x, int chunk_z, bool expand);
     void onBlockSet(int x, int y, int z, blockid_t id);
 
-    static void preBuildSkyLight(Chunk* chunk, const ContentIndices* indices);
+    static void preBuildSkyLight(Chunk& chunk, const ContentIndices& indices);
 };

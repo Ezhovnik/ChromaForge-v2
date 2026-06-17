@@ -14,8 +14,8 @@
 #include <constants.h>
 #include <content/Content.h>
 
-Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), content(content) {
-    const ContentIndices* contentIds = content->getIndices();
+Lighting::Lighting(const Content& content, Chunks& chunks) : chunks(chunks), content(content) {
+    auto& contentIds = *content.getIndices();
 	solverR = std::make_unique<LightSolver>(contentIds, chunks, 0);
 	solverG = std::make_unique<LightSolver>(contentIds, chunks, 1);
 	solverB = std::make_unique<LightSolver>(contentIds, chunks, 2);
@@ -25,7 +25,7 @@ Lighting::Lighting(const Content* content, Chunks* chunks) : chunks(chunks), con
 Lighting::~Lighting() = default;
 
 void Lighting::clear() {
-	const auto& chunks = this->chunks->getChunks();
+	const auto& chunks = this->chunks.getChunks();
     for (size_t index = 0; index < chunks.size(); ++index) {
         auto chunk = chunks[index];
         if (chunk == nullptr) continue;
@@ -37,31 +37,31 @@ void Lighting::clear() {
     }
 }
 
-void Lighting::preBuildSkyLight(Chunk* chunk, const ContentIndices* indices){
-    const auto* blockDefs = indices->blocks.getDefs();
+void Lighting::preBuildSkyLight(Chunk& chunk, const ContentIndices& indices){
+    const auto* blockDefs = indices.blocks.getDefs();
 	int highestPoint = 0;
 	for (int z = 0; z < CHUNK_DEPTH; ++z){
 		for (int x = 0; x < CHUNK_WIDTH; ++x){
 			for (int y = CHUNK_HEIGHT - 1; y >= 0; --y){
 				int index = (y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x;
-				voxel& vox = chunk->voxels[index];
+				voxel& vox = chunk.voxels[index];
 				const Block* block = blockDefs[vox.id];
 				if (!block->skyLightPassing) {
 					if (highestPoint < y) highestPoint = y;
 					break;
 				}
-				chunk->lightmap.setS(x, y, z, 15);
+				chunk.lightmap.setS(x, y, z, 15);
 			}
 		}
 	}
 	if (highestPoint < CHUNK_HEIGHT - 1) highestPoint++;
-	chunk->lightmap.highestPoint = highestPoint;
+	chunk.lightmap.highestPoint = highestPoint;
 }
 
 void Lighting::buildSkyLight(int cx, int cz) {
-    const auto blockDefs = content->getIndices()->blocks.getDefs();
+    const auto blockDefs = content.getIndices()->blocks.getDefs();
 
-	Chunk* chunk = chunks->getChunk(cx, cz);
+	Chunk* chunk = chunks.getChunk(cx, cz);
 	for (int z = 0; z < CHUNK_DEPTH; ++z) {
 		int gz = z + cz * CHUNK_DEPTH;
 		for (int x = 0; x < CHUNK_WIDTH; ++x) {
@@ -91,8 +91,8 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z, bool expand) {
     auto& solverB = *this->solverB;
     auto& solverS = *this->solverS;
 
-    auto blockDefs = content->getIndices()->blocks.getDefs();
-    auto chunk = chunks->getChunk(chunk_x, chunk_z);
+    auto blockDefs = content.getIndices()->blocks.getDefs();
+    auto chunk = chunks.getChunk(chunk_x, chunk_z);
 
 	for (uint y = 0; y < CHUNK_HEIGHT; ++y){
 		for (uint z = 0; z < CHUNK_DEPTH; ++z){
@@ -152,7 +152,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z, bool expand) {
 }
 
 void Lighting::onBlockSet(int x, int y, int z, blockid_t id) {
-    const auto& block = content->getIndices()->blocks.require(id);
+    const auto& block = content.getIndices()->blocks.require(id);
 
 	solverR->remove(x, y, z);
     solverG->remove(x, y, z);
@@ -163,9 +163,9 @@ void Lighting::onBlockSet(int x, int y, int z, blockid_t id) {
         solverG->solve();
         solverB->solve();
 
-        if (chunks->getLight(x, y + 1, z, 3) == 0xF){
+        if (chunks.getLight(x, y + 1, z, 3) == 0xF){
             for (int i = y; i >= 0; --i){
-                voxel* vox = chunks->getVoxel(x, i, z);
+                voxel* vox = chunks.getVoxel(x, i, z);
                 if ((vox == nullptr || vox->id != BLOCK_AIR) && block.skyLightPassing) break;
                 solverS->add(x, i, z, 0xF);
             }
@@ -187,7 +187,7 @@ void Lighting::onBlockSet(int x, int y, int z, blockid_t id) {
             solverS->remove(x, y, z);
             for (int i = y - 1; i >= 0; --i){
                 solverS->remove(x, i, z);
-                if (i == 0 || chunks->getVoxel(x, i - 1, z)->id != BLOCK_AIR) break;
+                if (i == 0 || chunks.getVoxel(x, i - 1, z)->id != BLOCK_AIR) break;
             }
             solverS->solve();
         }

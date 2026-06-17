@@ -16,6 +16,7 @@
 #include <core_content_defs.h>
 #include <objects/rigging.h>
 #include <data/dv_util.h>
+#include <debug/Logger.h>
 
 namespace PlayerConsts {
     constexpr float CROUCH_SPEED_MUL = 0.35f; ///< Множитель скорости при приседании
@@ -29,7 +30,7 @@ namespace PlayerConsts {
 }
 
 Player::Player(
-	Level* level,
+	Level& level,
 	int64_t id,
 	const std::string& name,
 	glm::vec3 position,
@@ -43,11 +44,11 @@ Player::Player(
 	chosenSlot(0),
 	position(position),
 	chunks(std::make_unique<Chunks>(
-        3, 3, 0, 0, level->events.get(), level->content->getIndices()
+        3, 3, 0, 0, level.events.get(), *level.content.getIndices()
     )),
-	fpCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":first-person")),
-    spCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-front")),
-    tpCamera(level->getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-back")),
+	fpCamera(level.getCamera(BUILTIN_CONTENT_NAMESPACE + ":first-person")),
+    spCamera(level.getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-front")),
+    tpCamera(level.getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-back")),
 	currentCamera(fpCamera),
 	inventory(std::move(inventory)),
 	eid(eid)
@@ -61,17 +62,18 @@ Player::~Player() = default;
 
 void Player::updateEntity() {
     if (eid == 0) {
-        auto& def = level->content->entities.require(CHROMAFORGE_CONTENT_NAMESPACE + ":player");
-        eid = level->entities->spawn(def, getPosition());
-	} else if (auto entity = level->entities->get(eid)) {
+        auto& def = level.content.entities.require(CHROMAFORGE_CONTENT_NAMESPACE + ":player");
+        eid = level.entities->spawn(def, getPosition());
+	} else if (auto entity = level.entities->get(eid)) {
         position = entity->getTransform().pos;
-    } else {
-        // TODO: Check if chunk loaded
+    } else if (chunks->getChunkByVoxel(position)) {
+        LOG_ERROR("Player entity despawned or deleted; will be respawned");
+        eid = 0;
     }
 }
 
 Hitbox* Player::getHitbox() {
-    if (auto entity = level->entities->get(eid)) {
+    if (auto entity = level.entities->get(eid)) {
         return &entity->getRigidbody().hitbox;
     }
     return nullptr;
@@ -142,7 +144,7 @@ void Player::updateInput(PlayerInput& input, float delta) {
 }
 
 void Player::postUpdate() {
-    auto entity = level->entities->get(eid);
+    auto entity = level.entities->get(eid);
     if (!entity.has_value()) return;
 
     auto& hitbox = entity->getRigidbody().hitbox;
@@ -168,12 +170,12 @@ void Player::postUpdate() {
 
 	if (body) {
 		skeleton.pose.matrices[body->getIndex()] = glm::rotate(
-			glm::mat4(1.0f), glm::radians(cam.x), glm::vec3(0, 1, 0)
+			glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(0, 1, 0)
 		);
 	}
 	if (head) {
 		skeleton.pose.matrices[head->getIndex()] = glm::rotate(
-			glm::mat4(1.0f), glm::radians(cam.y), glm::vec3(1, 0, 0)
+			glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(1, 0, 0)
 		);
 	}
 }
@@ -205,7 +207,7 @@ dv::value Player::serialize() const {
 	root["name"] = name;
 
     root["position"] = dv::to_value(position);
-    root["rotation"] = dv::to_value(cam);
+    root["rotation"] = dv::to_value(rotation);
     root["spawnpoint"] = dv::to_value(spawnpoint);
 
     root["flight"] = flight;
@@ -216,9 +218,9 @@ dv::value Player::serialize() const {
     root["chosen-slot"] = chosenSlot;
     root["entity"] = eid;
     root["inventory"] = inventory->serialize();
-	auto found = std::find(level->cameras.begin(), level->cameras.end(), currentCamera);
-    if (found != level->cameras.end()) {
-        root["camera"] = level->content->getIndices(ResourceType::Camera).getName(found - level->cameras.begin());
+	auto found = std::find(level.cameras.begin(), level.cameras.end(), currentCamera);
+    if (found != level.cameras.end()) {
+        root["camera"] = level.content.getIndices(ResourceType::Camera).getName(found - level.cameras.begin());
     }
     return root;
 }
@@ -232,7 +234,7 @@ void Player::deserialize(const dv::value& src) {
 	fpCamera->position = position;
 
 	const auto& rotarr = src["rotation"];
-    dv::get_vec(rotarr, cam);
+    dv::get_vec(rotarr, rotation);
 
 	const auto& sparr = src["spawnpoint"];
     setSpawnPoint(glm::vec3(sparr[0].asNumber(), sparr[1].asNumber(), sparr[2].asNumber()));
@@ -251,7 +253,7 @@ void Player::deserialize(const dv::value& src) {
 
 	if (src.has("camera")) {
         std::string name = src["camera"].asString();
-        if (auto camera = level->getCamera(name)) {
+        if (auto camera = level.getCamera(name)) {
             currentCamera = camera;
         }
     }
@@ -273,7 +275,7 @@ void Player::convert(dv::value& data, const ContentReport* report) {
 
 void Player::teleport(glm::vec3 position) {
     this->position = position;
-    if (auto entity = level->entities->get(eid)) {
+    if (auto entity = level.entities->get(eid)) {
         entity->getRigidbody().hitbox.position = position;
         entity->getTransform().setPos(position);
     }

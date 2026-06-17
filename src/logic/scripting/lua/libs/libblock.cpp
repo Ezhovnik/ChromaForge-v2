@@ -127,7 +127,7 @@ static int l_get_x(lua::State* L) {
     if (vox == nullptr) {
         return lua::pushivec_stack(L, glm::ivec3(1, 0, 0));
     }
-    const auto& def = scripting::level->content->getIndices()->blocks.require(vox->id);
+    const auto& def = scripting::level->content.getIndices()->blocks.require(vox->id);
     if (!def.rotatable) {
         return lua::pushivec_stack(L, glm::ivec3(1, 0, 0));
     } else {
@@ -144,7 +144,7 @@ static int l_get_y(lua::State* L) {
     if (vox == nullptr) {
         return lua::pushivec_stack(L, glm::ivec3(0, 1, 0));
     }
-    const auto& def = scripting::level->content->getIndices()->blocks.require(vox->id);
+    const auto& def = scripting::level->content.getIndices()->blocks.require(vox->id);
     if (!def.rotatable) {
         return lua::pushivec_stack(L, glm::ivec3(0, 1, 0));
     } else {
@@ -161,7 +161,7 @@ static int l_get_z(lua::State* L) {
     if (vox == nullptr) {
         return lua::pushivec_stack(L, glm::ivec3(0, 0, 1));
     }
-    const auto& def = scripting::level->content->getIndices()->blocks.require(vox->id);
+    const auto& def = scripting::level->content.getIndices()->blocks.require(vox->id);
     if (def.rotatable) {
         return lua::pushivec_stack(L, glm::ivec3(0, 0, 1));
     } else {
@@ -416,7 +416,7 @@ static int l_place(lua::State* L) {
     if (!blocks_agent::get(*scripting::level->chunks, x, y, z)) {
         return 0;
     }
-    const auto def = scripting::level->content->getIndices()->blocks.get(id);
+    const auto def = scripting::level->content.getIndices()->blocks.get(id);
     if (def == nullptr) {
         throw std::runtime_error("There is no block with index " + std::to_string(id));
     }
@@ -432,7 +432,7 @@ static int l_destruct(lua::State* L) {
     auto playerid = lua::gettop(L) >= 4 ? lua::tointeger(L, 4) : -1;
     auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
     if (vox == nullptr) return 0;
-    auto& def = scripting::level->content->getIndices()->blocks.require(vox->id);
+    auto& def = scripting::level->content.getIndices()->blocks.require(vox->id);
     auto player = scripting::level->players->getPlayer(playerid);
     scripting::controller->getBlocksController()->breakBlock(player, def, x, y, z);
     return 0;

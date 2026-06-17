@@ -31,7 +31,7 @@ private:
      const EngineSettings& settings;
 	std::unique_ptr<World> world;
 public:
-     const Content* const content;
+     const Content& content;
 	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
      std::unique_ptr<GlobalChunks> chunks; ///< Хранилище чанков
      std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
@@ -48,7 +48,7 @@ public:
      */
 	Level(
           std::unique_ptr<World> world, 
-          const Content* content, 
+          const Content& content, 
           EngineSettings& settings
      );
 	~Level();

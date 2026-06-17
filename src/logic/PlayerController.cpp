@@ -57,20 +57,30 @@ void CameraControl::refresh() {
 
 void CameraControl::updateMouse(PlayerInput& input) {
 	float sensitivity = input.zoom ? settings.sensitivity.get() / 4.0f : settings.sensitivity.get();
-	glm::vec3& cam = player.cam;
+	glm::vec3& rotation = player.rotation;
 
     auto cam_delta = glm::degrees(Events::delta / (float)Window::height * sensitivity);
-    cam.x -= cam_delta.x;
-    cam.y -= cam_delta.y;
+    rotation.x -= cam_delta.x;
+    rotation.y -= cam_delta.y;
 
-	if (cam.y < -CameraConsts::MAX_PITCH) cam.y = -CameraConsts::MAX_PITCH;
-	else if (cam.y > CameraConsts::MAX_PITCH) cam.y = CameraConsts::MAX_PITCH;
+	if (rotation.y < -CameraConsts::MAX_PITCH) {
+        rotation.y = -CameraConsts::MAX_PITCH;
+    } else if (rotation.y > CameraConsts::MAX_PITCH) {
+        rotation.y = CameraConsts::MAX_PITCH;
+    }
 
-	if (cam.x > 180.0f) cam.x -= 360.0f;
-	else if (cam.x < -180.0f) cam.x += 360.0f;
+	if (rotation.x > 180.0f) {
+        rotation.x -= 360.0f;
+    } else if (rotation.x < -180.0f) {
+        rotation.x += 360.0f;
+    }
 
 	camera->rotation = glm::mat4(1.0f);
-	camera->rotate(glm::radians(cam.y), glm::radians(cam.x), glm::radians(cam.z));
+	camera->rotate(
+        glm::radians(rotation.y),
+        glm::radians(rotation.x),
+        glm::radians(rotation.z)
+    );
 }
 
 glm::vec3 CameraControl::updateCameraShaking(const Hitbox& hitbox, float delta) {
@@ -208,7 +218,7 @@ void PlayerController::onFootstep(const Hitbox& hitbox) {
             int z = std::floor(pos.z + half.z * offsetZ);
             auto vox = player.chunks->getVoxel(x, y, z);
             if (vox) {
-                auto& def = level.content->getIndices()->blocks.require(vox->id);
+                auto& def = level.content.getIndices()->blocks.require(vox->id);
                 if (!def.obstacle) continue;
                 blocksController.onBlockInteraction(
                     &player,
@@ -284,7 +294,7 @@ static int determine_rotation(const Block* def, const glm::ivec3& norm, const gl
 }
 
 voxel* PlayerController::updateSelection(float maxDistance) {
-    auto indices = level.content->getIndices();
+    auto indices = level.content.getIndices();
     auto& chunks = *player.chunks;
     auto camera = player.fpCamera.get();
     auto& selection = player.selection;
@@ -421,7 +431,7 @@ void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool
 
 void PlayerController::updateInteraction(float deltaTime) {
     if (player.isNoclip()) return;
-    auto indices = level.content->getIndices();
+    auto indices = level.content.getIndices();
     auto chunks = player.chunks.get();
     const auto& selection = player.selection;
 

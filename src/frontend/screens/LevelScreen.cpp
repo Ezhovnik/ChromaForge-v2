@@ -102,8 +102,8 @@ LevelScreen::~LevelScreen() {
 }
 
 void LevelScreen::initializeContent() {
-    auto content = controller->getLevel()->content;
-    for (auto& entry : content->getPacks()) {
+    auto& content = controller->getLevel()->content;
+    for (auto& entry : content.getPacks()) {
         initializePack(entry.second.get());
     }
     scripting::on_frontend_init(hud.get(), worldRenderer.get());

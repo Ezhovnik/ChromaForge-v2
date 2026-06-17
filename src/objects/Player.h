@@ -54,7 +54,7 @@ struct CursorSelection {
  */
 class Player : public Serializable {
 private:
-    Level* level;
+    Level& level;
 
     int64_t id;
 
@@ -82,7 +82,7 @@ public:
 	std::shared_ptr<Camera> fpCamera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
     std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
 
-	glm::vec3 cam {}; ///< Углы поворота камеры
+	glm::vec3 rotation {}; ///< Углы поворота камеры
 
 	CursorSelection selection {};
 
@@ -95,7 +95,7 @@ public:
      * @param eid Идентификатор сущности.
 	 */
 	Player(
-        Level* level,
+        Level& level,
         int64_t id,
         const std::string& name,
         glm::vec3 position,

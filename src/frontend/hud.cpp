@@ -103,8 +103,8 @@ std::shared_ptr<gui::UINode> HudElement::getNode() const {
 }
 
 std::shared_ptr<gui::InventoryView> Hud::createContentAccess() {
-    auto content = levelFrontend.getLevel().content;
-    auto indices = content->getIndices();
+    auto& content = levelFrontend.getLevel().content;
+    auto indices = content.getIndices();
     auto inventory = player.getInventory();
 
     int itemsCount = indices->items.count();
@@ -125,14 +125,14 @@ std::shared_ptr<gui::InventoryView> Hud::createContentAccess() {
     gui::InventoryBuilder builder;
     builder.addGrid(8, itemsCount - 1, glm::vec2(), glm::vec4(8, 8, 12, 8), true, slotLayout);
     auto view = builder.build();
-    view->bind(accessInventory, content);
+    view->bind(accessInventory, &content);
 	view->setMargin(glm::vec4());
     return view;
 }
 
 std::shared_ptr<gui::InventoryView> Hud::createHotbar() {
     auto inventory = player.getInventory();
-    auto content = levelFrontend.getLevel().content;
+    auto& content = levelFrontend.getLevel().content;
 
     gui::SlotLayout slotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr);
     gui::InventoryBuilder builder;
@@ -140,7 +140,7 @@ std::shared_ptr<gui::InventoryView> Hud::createHotbar() {
     auto view = builder.build();
     view->setId("hud.hotbar");
     view->setOrigin(glm::vec2(view->getSize().x / 2, 0));
-    view->bind(inventory, content);
+    view->bind(inventory, &content);
 	view->setInteractive(false);
     return view;
 }
@@ -463,7 +463,7 @@ void Hud::openInventory(
 
     auto& level = levelFrontend.getLevel();
     const auto& chunks = *player.chunks;
-    auto content = level.content;
+    auto& content = level.content;
 
     blockUI = std::dynamic_pointer_cast<gui::InventoryView>(doc->getRoot());
     if (blockUI == nullptr) {
@@ -477,15 +477,15 @@ void Hud::openInventory(
     else inventoryOpen = true;
 
     if (blockinv == nullptr) blockinv = level.inventories->createVirtual(blockUI->getSlotsCount());
-    chunks.getChunkByVoxel(block.x, block.y, block.z)->flags.unsaved = true;
-    blockUI->bind(blockinv, content);
+    chunks.getChunkByVoxel(block)->flags.unsaved = true;
+    blockUI->bind(blockinv, &content);
 	blockPos = block;
 	currentblockid = chunks.requireVoxel(block.x, block.y, block.z).id;
     add(HudElement(HudElementMode::InventoryBound, doc, blockUI, false));
 }
 
 void Hud::openInventory() {
-    auto content = levelFrontend.getLevel().content;
+    auto& content = levelFrontend.getLevel().content;
     showExchangeSlot();
 
     inventoryOpen = true;
@@ -493,7 +493,7 @@ void Hud::openInventory() {
     auto inventory = player.getInventory();
     auto inventoryDocument = assets.get<UIDocument>(BUILTIN_CONTENT_NAMESPACE + ":inventory");
     inventoryView = std::dynamic_pointer_cast<gui::InventoryView>(inventoryDocument->getRoot());
-    inventoryView->bind(inventory, content);
+    inventoryView->bind(inventory, &content);
     add(HudElement(HudElementMode::InventoryBound, inventoryDocument, inventoryView, false));
     add(HudElement(HudElementMode::InventoryBound, nullptr, exchangeSlot, false));
 }
@@ -506,7 +506,7 @@ std::shared_ptr<Inventory> Hud::openInventory(
     if (isInventoryOpen()) closeInventory();
 
     const auto& level = levelFrontend.getLevel();
-    auto content = level.content;
+    auto& content = level.content;
 
     secondInvView = std::dynamic_pointer_cast<gui::InventoryView>(doc->getRoot());
     if (secondInvView == nullptr) {
@@ -523,19 +523,19 @@ std::shared_ptr<Inventory> Hud::openInventory(
     if (inv == nullptr) {
         inv = level.inventories->createVirtual(secondInvView->getSlotsCount());
     }
-    secondInvView->bind(inv, content);
+    secondInvView->bind(inv, &content);
     add(HudElement(HudElementMode::InventoryBound, doc, secondUI, false));
     return inv;
 }
 
 void Hud::showExchangeSlot() {
     auto& level = levelFrontend.getLevel();
-    auto content = level.content;
+    auto& content = level.content;
     exchangeSlotInv = level.inventories->createVirtual(1);
     exchangeSlot = std::make_shared<gui::SlotView>(
         gui::SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr)
     );
-    exchangeSlot->bind(exchangeSlotInv->getId(), exchangeSlotInv->getSlot(0), content);
+    exchangeSlot->bind(exchangeSlotInv->getId(), exchangeSlotInv->getSlot(0), &content);
     exchangeSlot->setColor(glm::vec4());
     exchangeSlot->setInteractive(false);
     exchangeSlot->setZIndex(1);
@@ -549,7 +549,7 @@ void Hud::dropExchangeSlot() {
     if (slotView == nullptr) return;
     ItemStack& stack = slotView->getStack();
 
-    auto indices = levelFrontend.getLevel().content->getIndices();
+    auto indices = levelFrontend.getLevel().content.getIndices();
     if (auto invView = std::dynamic_pointer_cast<gui::InventoryView>(blockUI)) {
         invView->getInventory()->move(stack, indices);
     }
@@ -585,7 +585,7 @@ void Hud::openPermanent(UIDocument* doc) {
     remove(root);
 
     auto invview = std::dynamic_pointer_cast<gui::InventoryView>(root);
-    if (invview) invview->bind(player.getInventory(), levelFrontend.getLevel().content);
+    if (invview) invview->bind(player.getInventory(), &levelFrontend.getLevel().content);
     add(HudElement(HudElementMode::Permanent, doc, doc->getRoot(), false));
 }
 

@@ -54,7 +54,7 @@ void Entt_Entity::setRig(const rigging::SkeletonConfig* skeletonConfig) {
     skeleton.calculated.matrices.resize(skeletonConfig->getBones().size(), glm::mat4(1.0f));
 }
 
-Entities::Entities(Level* level) : level(level), sensorsSparkClock(20, 3), updateSparkClock(20, 3) {
+Entities::Entities(Level& level) : level(level), sensorsSparkClock(20, 3), updateSparkClock(20, 3) {
 }
 
 template<void(*callback)(const Entt_Entity&, size_t, entityid_t)>
@@ -99,7 +99,7 @@ entityid_t Entities::spawn(
     dv::value saved,
     entityid_t uid
 ) {
-    auto skeleton = level->content->getSkeleton(def.skeletonName);
+    auto skeleton = level.content.getSkeleton(def.skeletonName);
     if (skeleton == nullptr) {
         LOG_ERROR("Skeleton {} not found", def.skeletonName);
         throw std::runtime_error("Skeleton " + def.skeletonName + " not found");
@@ -178,7 +178,7 @@ void Entities::despawn(entityid_t id) {
 void Entities::loadEntity(const dv::value& map) {
     entityid_t uid = map["uid"].asInteger();
     std::string defname = map["def"].asString();
-    auto& def = level->content->entities.require(defname);
+    auto& def = level.content.entities.require(defname);
     spawn(def, {}, nullptr, map, uid);
 }
 
@@ -207,7 +207,7 @@ void Entities::loadEntity(const dv::value& map, Entt_Entity entity) {
     std::string skeletonName = skeleton.config->getName();
     map.at("skeleton").get(skeletonName);
     if (skeletonName != skeleton.config->getName()) {
-        skeleton.config = level->content->getSkeleton(skeletonName);
+        skeleton.config = level.content.getSkeleton(skeletonName);
     }
     if (auto found = map.at(COMP_SKELETON)) {
         auto& skeletonmap = *found;
@@ -390,7 +390,7 @@ void Entities::preparePhysics(float delta) {
         auto parts = sensorsSparkClock.getParts();
 
         auto view = registry.view<EntityId, Transform, Rigidbody>();
-        auto physics = level->physics.get();
+        auto physics = level.physics.get();
         std::vector<Sensor*> sensors;
         for (auto [entity, eid, transform, rigidbody] : view.each()) {
             if (!rigidbody.enabled) continue;
@@ -405,7 +405,7 @@ void Entities::updatePhysics(float delta) {
     preparePhysics(delta);
 
     auto view = registry.view<EntityId, Transform, Rigidbody>();
-    auto physics = level->physics.get();
+    auto physics = level.physics.get();
     for (auto [entity, eid, transform, rigidbody] : view.each()) {
         if (!rigidbody.enabled || rigidbody.hitbox.type == BodyType::Static) continue;
         auto& hitbox = rigidbody.hitbox;
@@ -416,8 +416,8 @@ void Entities::updatePhysics(float delta) {
         int substeps = static_cast<int>(delta * vel * 20);
         substeps = std::min(100, std::max(2, substeps));
         physics->step(
-            *level->chunks,
-            &hitbox,
+            *level.chunks,
+            hitbox,
             delta,
             substeps,
             eid.uid
@@ -508,8 +508,8 @@ dv::value Entities::serialize(const std::vector<Entt_Entity>& entities) {
     auto list = dv::list();
     for (auto& entity : entities) {
         if (!entity.getDef().save.enabled) continue;
-        level->entities->onSave(entity);
-        list.add(level->entities->serialize(entity));
+        level.entities->onSave(entity);
+        list.add(level.entities->serialize(entity));
     }
     return list;
 }
@@ -526,7 +526,7 @@ void Entities::clean() {
             ++it;
         } else {
             auto& rigidbody = registry.get<Rigidbody>(it->second);
-            auto physics = level->physics.get();
+            auto physics = level.physics.get();
             for (auto& sensor : rigidbody.sensors) {
                 physics->removeSensor(&sensor);
             }

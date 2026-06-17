@@ -50,7 +50,7 @@ public:
 
     std::optional<WorldInfo> readWorldInfo();
 
-    bool readResourcesData(const Content* content);
+    bool readResourcesData(const Content& content);
 
     static void createContentIndicesCache(
         const ContentIndices* indices, dv::value& root

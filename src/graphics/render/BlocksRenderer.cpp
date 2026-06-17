@@ -654,7 +654,7 @@ void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
         0, 
         chunk->chunk_z * CHUNK_DEPTH - voxelBufferPadding
     );
-	chunks->getVoxels(voxelsBuffer.get(), settings.graphics.backlight.get());
+	chunks->getVoxels(*voxelsBuffer, settings.graphics.backlight.get());
 	if (voxelsBuffer->pickBlockId(
         	chunk->chunk_x * CHUNK_WIDTH, 0, chunk->chunk_z * CHUNK_DEPTH
 		) == BLOCK_VOID

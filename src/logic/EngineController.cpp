@@ -147,7 +147,7 @@ static void load_world(
         auto& packs = engine.getContentPacks();
         auto& settings = engine.getSettings();
 
-        auto level = World::load(worldFiles, settings, content, packs);
+        auto level = World::load(worldFiles, settings, *content, packs);
         engine.onWorldOpen(std::move(level));
     } catch (const world_load_error& error) {
         guiutil::alert(
@@ -159,7 +159,7 @@ static void load_world(
 }
 
 void EngineController::openWorld(const std::string& name, bool confirmConvert) {
-    auto& paths = engine.getPaths();
+    const auto& paths = engine.getPaths();
     auto folder = paths.getWorldsFolder()/std::filesystem::u8path(name);
     auto worldFile = folder/std::filesystem::u8path("world.json");
     if (!std::filesystem::exists(worldFile)) {
@@ -230,7 +230,7 @@ void EngineController::createWorld(
     auto level = World::create(
         name, generatorID, folder, seed, 
         engine.getSettings(), 
-        engine.getContent(),
+        *engine.getContent(),
         engine.getContentPacks()
     );
     if (!engine.isHeadless()) {

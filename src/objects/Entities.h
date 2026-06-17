@@ -170,7 +170,7 @@ public:
 class Entities {
 private:
     entt::registry registry;
-    Level* level;
+    Level& level;
     std::unordered_map<entityid_t, entt::entity> entities;
     std::unordered_map<entt::entity, entityid_t> uids;
     entityid_t nextID = 1;
@@ -188,7 +188,7 @@ public:
         float distance;
     };
 
-    Entities(Level* level);
+    Entities(Level& level);
 
     void updatePhysics(float delta);
     void update(float deltaTime);

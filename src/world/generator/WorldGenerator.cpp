@@ -22,7 +22,7 @@ static inline constexpr uint BASIC_PROTOTYPE_LAYERS = 5;
 
 WorldGenerator::WorldGenerator(
     const Generator& def,
-    const Content* content,
+    const Content& content,
     uint64_t seed
 ) : def(def),
     content(content),
@@ -65,9 +65,9 @@ WorldGenerator::WorldGenerator(
     });
 
     for (int i = 0; i < def.structures.size(); ++i) {
-        def.structures[i]->fragments[0]->prepare(*content);
+        def.structures[i]->fragments[0]->prepare(content);
         for (int j = 1; j < 4; ++j) {
-            def.structures[i]->fragments[j] = def.structures[i]->fragments[j - 1]->rotated(*content);
+            def.structures[i]->fragments[j] = def.structures[i]->fragments[j - 1]->rotated(content);
         }
     }
 }
@@ -361,7 +361,7 @@ void WorldGenerator::generatePlants(
     int chunkZ,
     const Biome** biomes
 ) {
-    const auto& indices = content->getIndices()->blocks;
+    const auto& indices = content.getIndices()->blocks;
     PseudoRandom plantsRand;
     plantsRand.setSeed(chunkX, chunkZ);
 
@@ -423,7 +423,7 @@ void WorldGenerator::generate(voxel* voxels, int chunkX, int chunkZ) {
 
     std::memset(voxels, 0, sizeof(voxel) * CHUNK_VOLUME);
 
-    const auto& indices = content->getIndices()->blocks;
+    const auto& indices = content.getIndices()->blocks;
     const auto& biomes = prototype.biomes.get();
     for (uint z = 0; z < CHUNK_DEPTH; ++z) {
         for (uint x = 0; x < CHUNK_WIDTH; ++x) {
@@ -520,7 +520,7 @@ void WorldGenerator::generateLine(
     voxel* voxels, 
     int chunkX, int chunkZ
 ) {
-    const auto& indices = content->getIndices()->blocks;
+    const auto& indices = content.getIndices()->blocks;
     int cgx = chunkX * CHUNK_WIDTH;
     int cgz = chunkZ * CHUNK_DEPTH;
 

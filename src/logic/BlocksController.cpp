@@ -41,7 +41,7 @@ void BlocksController::updateSides(int x, int y, int z) {
 
 void BlocksController::updateSides(int x, int y, int z, int w, int h, int d) {
     voxel* vox = blocks_agent::get(chunks, x, y, z);
-    const auto& def = level.content->getIndices()->blocks.require(vox->id);
+    const auto& def = level.content.getIndices()->blocks.require(vox->id);
     const auto& rot = def.rotations.variants[vox->state.rotation];
     const auto& xaxis = rot.axisX;
     const auto& yaxis = rot.axisY;
@@ -81,7 +81,7 @@ void BlocksController::breakBlock(Player* player, const Block& def, int x, int y
 void BlocksController::placeBlock(Player* player, const Block& def, blockstate state, int x, int y, int z) {
     auto voxel = blocks_agent::get(chunks, x, y, z);
     if (voxel != nullptr) {
-        const auto& prevDef = level.content->getIndices()->blocks.require(voxel->id);
+        const auto& prevDef = level.content.getIndices()->blocks.require(voxel->id);
         scripting::on_block_replaced(player, prevDef, {x, y, z});
     }
 
@@ -103,7 +103,7 @@ void BlocksController::placeBlock(Player* player, const Block& def, blockstate s
 void BlocksController::updateBlock(int x, int y, int z) {
     voxel* vox = blocks_agent::get(chunks, x, y, z);
     if (vox == nullptr) return;
-    const auto& def = level.content->getIndices()->blocks.require(vox->id);
+    const auto& def = level.content.getIndices()->blocks.require(vox->id);
     if (def.grounded) {
         const auto& vec = get_ground_direction(def, vox->state.rotation);
         if (!blocks_agent::is_solid_at(chunks, x + vec.x, y + vec.y, z + vec.z)) {
@@ -121,7 +121,7 @@ void BlocksController::update(float delta, uint padding) {
 }
 
 void BlocksController::onBlocksSpark(int sparkId, int parts) {
-    const auto& indices = level.content->getIndices()->blocks;
+    const auto& indices = level.content.getIndices()->blocks;
     int sparkRate = blocksSparkClock.getSparkRate();
     for (size_t id = 0; id < indices.count(); ++id) {
         if ((id + sparkId) % parts != 0) continue;
@@ -160,7 +160,7 @@ void BlocksController::randomSpark(
 }
 
 void BlocksController::randomSpark(int sparkId, int parts, uint padding) {
-    auto indices = level.content->getIndices();
+    auto indices = level.content.getIndices();
     std::set<uint64_t> chunksIterated;
 
     for (const auto& [pid, player] : *level.players) {
@@ -202,7 +202,7 @@ int64_t BlocksController::createBlockInventory(int x, int y, int z) {
 	int lz = z - chunk->chunk_z * CHUNK_DEPTH;
 	auto inv = chunk->getBlockInventory(lx, y, lz);
 	if (inv == nullptr) {
-        const auto& indices = level.content->getIndices()->blocks;
+        const auto& indices = level.content.getIndices()->blocks;
         auto& def = indices.require(chunk->voxels[vox_index(lx, y, lz)].id);
         int invsize = def.inventorySize;
         if (invsize == 0) return 0;

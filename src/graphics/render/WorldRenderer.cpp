@@ -116,7 +116,7 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1f("u_timer", timer);
     shader.uniform1f("u_dayTime", level.getWorld()->getInfo().daytime);
 
-    auto contentIds = level.content->getIndices();
+    auto contentIds = level.content.getIndices();
 	{
 		auto inventory = player.getInventory();
 		ItemStack& stack = inventory->getSlot(player.getChosenSlot());
@@ -189,7 +189,7 @@ void WorldRenderer::renderLevel(
 
 void WorldRenderer::renderBlockSelection() {
     const auto& selection = player.selection;
-    auto indices = level.content->getIndices();
+    auto indices = level.content.getIndices();
     blockid_t id = selection.vox.id;
     auto block = indices->blocks.get(id);
     const glm::ivec3 pos = player.selection.position;
@@ -235,7 +235,7 @@ void WorldRenderer::renderLines(
 
 void WorldRenderer::renderHands(const Camera& camera, float deltaTime) {
     auto& entityShader = assets.require<ShaderProgram>("entity");
-    auto indices = level.content->getIndices();
+    auto indices = level.content.getIndices();
 
     const auto& inventory = player.getInventory();
     int slot = player.getChosenSlot();
@@ -263,7 +263,7 @@ void WorldRenderer::renderHands(const Camera& camera, float deltaTime) {
     matrix = rotation * matrix * glm::rotate(glm::mat4(1.0f), -glm::pi<float>() * 0.5f, glm::vec3(0, 1, 0));
     prevRotation = rotation;
     auto offset = -(camera.position - player.getPosition());
-    float angle = glm::radians(player.cam.x - 90);
+    float angle = glm::radians(player.rotation.x - 90);
     float cos = glm::cos(angle);
     float sin = glm::sin(angle);
 
@@ -349,7 +349,7 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
     int z = std::floor(player.currentCamera->position.z);
     auto block = player.chunks->getVoxel(x, y, z);
     if (block && block->id) {
-        const auto& def = level.content->getIndices()->blocks.require(block->id);
+        const auto& def = level.content.getIndices()->blocks.require(block->id);
         if (def.overlayTexture.empty()) return;
 
         auto textureRegion = util::get_texture_region(

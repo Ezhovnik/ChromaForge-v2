@@ -25,7 +25,7 @@ class VoxelsVolume;
 class Chunks{
 private:
     LevelEvents* events;
-	const ContentIndices* const contentIds;
+	const ContentIndices& contentIds;
 
     void eraseSegments(const Block& def, blockstate state, int x, int y, int z);
     void repairSegments(const Block& def, blockstate state, int x, int y, int z);
@@ -39,7 +39,7 @@ public:
         int32_t areaOffsetX, 
         int32_t areaOffsetZ, 
         LevelEvents* events, 
-        const ContentIndices* indices
+        const ContentIndices& indices
     ); 
     ~Chunks() = default;
 
@@ -56,6 +56,13 @@ public:
 
     Chunk* getChunk(int32_t chunk_x, int32_t chunk_z) const; // Возвращает чанк по координатам чанка
     Chunk* getChunkByVoxel(int32_t x, int32_t y, int32_t z) const; // Получает чанк, содержащий воксель с заданными мировыми координатами
+
+    template <typename T>
+    Chunk* getChunkByVoxel(const glm::vec<3, T>& pos) const {
+        return getChunkByVoxel(
+            glm::floor(pos.x), glm::floor(pos.y), glm::floor(pos.z)
+        );
+    }
 
     voxel* getVoxel(int32_t x, int32_t y, int32_t z) const; // Возвращает воксель по мировым координатам
     inline voxel* getVoxel(const glm::ivec3& pos) {
@@ -99,7 +106,7 @@ public:
     bool isReplaceableBlock(int32_t x, int32_t y, int32_t z);
 	bool isObstacleBlock(int32_t x, int32_t y, int32_t z);
 
-    void getVoxels(VoxelsVolume* volume, bool backlight = false) const;
+    void getVoxels(VoxelsVolume& volume, bool backlight = false) const;
 
     void setCenter(int32_t x, int32_t z);
     void resize(uint32_t newWidth, uint32_t newDepth);
@@ -135,7 +142,7 @@ public:
     }
 
     const ContentIndices& getContentIndices() const {
-        return *contentIds;
+        return contentIds;
     }
 
     static inline constexpr unsigned matrixSize(int loadDistance, int padding) {

@@ -58,19 +58,19 @@ struct WorldInfo : public Serializable {
 class World {
      WorldInfo info {};
 
-     const Content* const content;
+     const Content& content;
      std::vector<ContentPack> packs;
 
      // int64_t nextInventoryId = 0;
 
-     void writeResources(const Content* content);
+     void writeResources(const Content& content);
 public:
      std::shared_ptr<WorldFiles> wfile;
 
 	World(
 		WorldInfo info,
           const std::shared_ptr<WorldFiles>& worldFiles,
-		const Content* content, 
+		const Content& content, 
 		const std::vector<ContentPack>& packs
 	);
 	~World();
@@ -115,7 +115,7 @@ public:
 		const std::filesystem::path& directory, 
 		uint64_t seed, 
 		EngineSettings& settings, 
-		const Content* content,
+		const Content& content,
 		const std::vector<ContentPack>& packs
 	);
 
@@ -131,7 +131,7 @@ public:
      static std::unique_ptr<Level> load(
 		const std::shared_ptr<WorldFiles>& worldFiles, 
 		EngineSettings& settings, 
-		const Content* content, 
+		const Content& content, 
 		const std::vector<ContentPack>& packs
 	);
 
@@ -183,13 +183,6 @@ public:
      * Возвращает список контент-паков мира.
      */
 	const std::vector<ContentPack>& getPacks() const;
-
-	/**
-     * Возвращает указатель на контент, используемый миром.
-     */
-	const Content* getContent() const {
-          return content;
-     }
 
 	/**
      * Генерирует и возвращает следующий идентификатор инвентаря.
