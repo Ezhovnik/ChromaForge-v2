@@ -34,6 +34,7 @@ public:
     static std::vector<uint> codepoints;
     static std::vector<keycode> pressedKeys;
     static std::unordered_map<std::string, Binding> bindings;
+    static std::unordered_map<keycode, util::RunnablesList> keyCallbacks;
 
     static void pollEvents(); // Обработка событий текущего кадра
 
@@ -55,6 +56,8 @@ public:
 
 	static bool isActive(const std::string& name);
 	static bool justActive(const std::string& name);
+
+    static observer_handler addKeyCallback(keycode key, runnable callback);
 
     static void toggleCursor(); // Переключает режим курсора между нормальным и заблокированным состоянием
 

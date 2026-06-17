@@ -31,6 +31,7 @@ int Events::scroll = 0;
 std::vector<uint> Events::codepoints;
 std::vector<keycode> Events::pressedKeys;
 std::unordered_map<std::string, Binding> Events::bindings;
+std::unordered_map<keycode, util::RunnablesList> Events::keyCallbacks;
 
 bool Events::isPressed(keycode code) {
 	return isPressed(static_cast<int>(code));
@@ -158,6 +159,12 @@ void Events::pollEvents() {
 void Events::setKey(int key, bool b) {
     Events::keys[key] = b;
     Events::frames[key] = Events::currentFrame;
+    if (b) {
+        const auto& callbacks = keyCallbacks.find(static_cast<keycode>(key));
+        if (callbacks != keyCallbacks.end()) {
+            callbacks->second.notify();
+        }
+    }
 }
 
 void Events::setButton(int button, bool b) {
@@ -174,6 +181,10 @@ void Events::setPosition(float xpos, float ypos) {
 
     Events::cursor.x = xpos;
     Events::cursor.y = ypos;
+}
+
+observer_handler Events::addKeyCallback(keycode key, runnable callback) {
+    return keyCallbacks[key].add(std::move(callback));
 }
 
 std::string Events::writeBindings() {
