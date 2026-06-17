@@ -270,6 +270,7 @@ void Engine::run() {
 void Engine::postUpdate() {
     network->update();
     postRunnables.run();
+    scripting::process_post_runnables();
 }
 
 void Engine::updateFrontend() {
