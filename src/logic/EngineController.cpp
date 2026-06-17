@@ -33,7 +33,7 @@ EngineController::EngineController(Engine& engine) : engine(engine) {
 
 void EngineController::deleteWorld(const std::string& name) {
     std::filesystem::path folder = engine.getPaths().getWorldFolderByName(name);
-    guiutil::confirm(engine.getGUI(), langs::get(L"delete-confirm", L"world") +
+    guiutil::confirm(engine.getGUI()->getMenu(), langs::get(L"delete-confirm", L"world") +
     L" (" + util::str2wstr_utf8(folder.u8string()) + L")", [=]() {
         LOG_INFO("Deleting {}", folder.u8string());
         std::filesystem::remove_all(folder);
@@ -92,8 +92,8 @@ static void show_convert_request(
         for (const auto& line : report->getDataLoss()) {
             text += util::str2wstr_utf8(line) + L"\n";
         }
-        guiutil::confirmWithMemo(
-            engine.getGUI(),
+        guiutil::confirm_with_memo(
+            engine.getGUI()->getMenu(),
             langs::get(message),
             text,
             on_confirm,
@@ -103,7 +103,7 @@ static void show_convert_request(
         return;
     }
     guiutil::confirm(
-        engine.getGUI(),
+        engine.getGUI()->getMenu(),
         langs::get(message),
         on_confirm,
         L"",
@@ -151,8 +151,8 @@ static void load_world(
         engine.onWorldOpen(std::move(level));
     } catch (const world_load_error& error) {
         guiutil::alert(
-            engine.getGUI(), langs::get(L"Error") + L": " +
-            util::str2wstr_utf8(error.what())
+            engine.getGUI()->getMenu(),
+            langs::get(L"Error") + L": " + util::str2wstr_utf8(error.what())
         );
         return;
     }
@@ -311,7 +311,7 @@ void EngineController::reconfigPacks(
 
     if (hasIndices) {
         guiutil::confirm(
-            engine.getGUI(),
+            engine.getGUI()->getMenu(),
             langs::get(L"remove-confirm", L"pack") +
             L" (" + util::str2wstr_utf8(ss.str()) + L")",
             [=]() {removeFunc();}
