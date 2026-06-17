@@ -67,7 +67,8 @@ void ParticlesRenderer::renderParticles(const Camera& camera, float deltaTime) {
         auto iter = vec.begin();
         while (iter != vec.end()) {
             auto& particle = *iter;
-            auto& preset = particle.emitter->preset;
+            auto& emitter = *particle.emitter;
+            auto& preset = emitter.preset;
 
             if (!preset.frames.empty()) {
                 float time = preset.lifetime - particle.lifetime;
@@ -137,6 +138,7 @@ void ParticlesRenderer::renderParticles(const Camera& camera, float deltaTime) {
 
             if (particle.lifetime <= 0.0f) {
                 iter = vec.erase(iter);
+                emitter.refCount--;
             } else {
                 iter++;
             }
@@ -159,18 +161,14 @@ void ParticlesRenderer::render(const Camera& camera, float deltaTime) {
     auto iter = emitters.begin();
     while (iter != emitters.end()) {
         auto& emitter = *iter->second;
+        if (emitter.isDead() && !emitter.isReferred()) {
+            iter = emitters.erase(iter);
+            continue;
+        }
         auto texture = emitter.getTexture();
         const auto& found = particles.find(texture);
         std::vector<Particle>* vec;
-        if (found == particles.end()) {
-            if (emitter.isDead()) {
-                iter = emitters.erase(iter);
-                continue;
-            }
-            vec = &particles[texture];
-        } else {
-            vec = &found->second;
-        }
+        vec = &particles[texture];
         emitter.update(deltaTime, camera.position, *vec);
 
         iter++;

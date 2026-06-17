@@ -37,6 +37,7 @@ class Emitter {
     float timer = 0.0f;
     PseudoRandom random;
 public:
+    int refCount = 0;
     ParticlesPreset preset;
 
     Emitter(
@@ -61,6 +62,8 @@ public:
     void stop();
 
     bool isDead() const;
+
+    bool isReferred() const;
 
     const EmitterOrigin& getOrigin() const;
 
