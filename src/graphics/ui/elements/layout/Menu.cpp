@@ -20,6 +20,10 @@ void Menu::addPage(
     pages[name] = Page{name, panel};
 }
 
+void Menu::removePage(const std::string& name) {
+    pages.erase(name);
+}
+
 void Menu::addSupplier(
     const std::string& name,
     const supplier<std::shared_ptr<UINode>>& pageSupplier

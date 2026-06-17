@@ -24,6 +24,8 @@ private:
     static uint currentFrame;
     static bool cursor_drag;
 public:
+    using KeyCallback = std::function<bool()>;
+
     // Переменные для отсеживания состояния мыши
     static glm::vec2 delta;
     static glm::vec2 cursor;
@@ -34,7 +36,7 @@ public:
     static std::vector<uint> codepoints;
     static std::vector<keycode> pressedKeys;
     static std::unordered_map<std::string, Binding> bindings;
-    static std::unordered_map<keycode, util::RunnablesList> keyCallbacks;
+    static std::unordered_map<keycode, util::HandlersList<>> keyCallbacks;
 
     static void pollEvents(); // Обработка событий текущего кадра
 
@@ -57,7 +59,7 @@ public:
 	static bool isActive(const std::string& name);
 	static bool justActive(const std::string& name);
 
-    static observer_handler addKeyCallback(keycode key, runnable callback);
+    static observer_handler addKeyCallback(keycode key, KeyCallback callback);
 
     static void toggleCursor(); // Переключает режим курсора между нормальным и заблокированным состоянием
 

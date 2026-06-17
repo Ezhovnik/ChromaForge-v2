@@ -1,6 +1,6 @@
 #include <filesystem>
 
-#include <logic/scripting/lua/libs/api_lua.h>
+#include <logic/scripting/lua/libs/libgui.h>
 #include <window/input.h>
 #include <window/Events.h>
 #include <frontend/screens/Screen.h>
@@ -9,6 +9,7 @@
 #include <util/stringutil.h>
 #include <graphics/ui/GUI.h>
 #include <files/files.h>
+#include <graphics/ui/elements/layout/Container.h>
 
 namespace scripting {
     extern Hud* hud;
@@ -34,7 +35,7 @@ static int l_add_callback(lua::State* L) {
                 throw std::runtime_error("on_hud_open is not called yet");
             }
             auto key = input_util::keycode_from(bindname.substr(pos + 1));
-            auto callback = lua::create_runnable(L);
+            auto callback = lua::create_simple_handler(L);
             scripting::hud->keepAlive(Events::keyCallbacks[key].add(callback));
             return 0;
         }
@@ -45,18 +46,25 @@ static int l_add_callback(lua::State* L) {
         throw std::runtime_error("Unknown binding: " + util::quote(bindname));
     }
     lua::pushvalue(L, 2);
-    runnable actual_callback = lua::create_runnable(L);
-    runnable callback = [=]() {
+    auto actual_callback = lua::create_simple_handler(L);
+    auto callback = [=]() -> bool {
         if (!scripting::engine->getGUI()->isFocusCaught()) {
-            actual_callback();
+            return actual_callback();
         }
+        return false;
     };
     if (scripting::hud) {
         scripting::hud->keepAlive(bind->second.onactived.add(callback));
-    } else {
-        throw std::runtime_error("'on_hud_open' is not called yet");
-    }
     return 0;
+    } else if (lua::gettop(L) >= 3) {
+        auto node = get_document_node(L, 3);
+        if (auto container = std::dynamic_pointer_cast<gui::Container>(node.node)) {
+            container->keepAlive(bind->second.onactived.add(callback));
+            return 0;
+        }
+        throw std::runtime_error("Owner expected to be a container");
+    }
+    throw std::runtime_error("on_hud_open is not called yet");
 }
 
 static int l_get_mouse_pos(lua::State* L) {

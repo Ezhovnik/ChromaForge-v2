@@ -1,8 +1,7 @@
-#include <logic/scripting/lua/libs/api_lua.h>
+#include <logic/scripting/lua/libs/libgui.h>
+
 #include <engine/Engine.h>
 #include <assets/Assets.h>
-#include <graphics/ui/elements/UINode.h>
-#include <frontend/UiDocument.h>
 #include <util/stringutil.h>
 #include <graphics/ui/gui_util.h>
 #include <frontend/locale/langs.h>
@@ -19,12 +18,7 @@
 #include <graphics/ui/markdown.h>
 #include <graphics/core/Font.h>
 
-struct DocumentNode {
-    UIDocument* document;
-    std::shared_ptr<gui::UINode> node;
-};
-
-static DocumentNode getDocumentNode(lua::State*, const std::string& name, const std::string& nodeName) {
+static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
     if (doc == nullptr) {
         throw std::runtime_error("Document '" + name + "' not found");
@@ -36,18 +30,18 @@ static DocumentNode getDocumentNode(lua::State*, const std::string& name, const 
     return {doc, node};
 }
 
-static DocumentNode getDocumentNode(lua::State* L, int idx=1) {
+DocumentNode get_document_node(lua::State* L, int idx) {
     lua::getfield(L, "docname", idx);
     lua::getfield(L, "name", idx);
     auto docname = lua::require_string(L, -2);
     auto name = lua::require_string(L, -1);
-    auto node = getDocumentNode(L, docname, name);
+    auto node = get_document_node_impl(L, docname, name);
     lua::pop(L, 2);
     return node;
 }
 
 static int l_menu_back(lua::State* L) {
-    auto node = getDocumentNode(L);
+    auto node = get_document_node(L);
     if (auto menu = dynamic_cast<gui::Menu*>(node.node.get())) {
         menu->back();
     }
@@ -55,7 +49,7 @@ static int l_menu_back(lua::State* L) {
 }
 
 static int l_menu_reset(lua::State* L) {
-    auto node = getDocumentNode(L);
+    auto node = get_document_node(L);
     if (auto menu = dynamic_cast<gui::Menu*>(node.node.get())) {
         menu->reset();
     }
@@ -63,7 +57,7 @@ static int l_menu_reset(lua::State* L) {
 }
 
 static int l_container_add(lua::State* L) {
-    auto docnode = getDocumentNode(L);
+    auto docnode = get_document_node(L);
     auto node = dynamic_cast<gui::Container*>(docnode.node.get());
     if (node == nullptr) {
         return 0;
@@ -80,13 +74,13 @@ static int l_container_add(lua::State* L) {
 }
 
 static int l_container_clear(lua::State* L) {
-    auto node = getDocumentNode(L, 1);
+    auto node = get_document_node(L, 1);
     if (auto container = std::dynamic_pointer_cast<gui::Container>(node.node)) container->clear();
     return 0;
 }
 
 static int l_node_destruct(lua::State* L) {
-    auto docnode = getDocumentNode(L);
+    auto docnode = get_document_node(L);
     auto node = docnode.node;
     scripting::engine->getGUI()->postRunnable([node]() {
         auto parent = node->getParent();
@@ -98,7 +92,7 @@ static int l_node_destruct(lua::State* L) {
 }
 
 static int l_container_set_interval(lua::State* L) {
-    auto node = getDocumentNode(L, 1);
+    auto node = get_document_node(L, 1);
     auto interval = lua::tointeger(L, 2) / 1000.0f;
     if (auto container = std::dynamic_pointer_cast<gui::Container>(node.node)) {
         lua::pushvalue(L, 3);
@@ -109,14 +103,14 @@ static int l_container_set_interval(lua::State* L) {
 }
 
 static int l_move_into(lua::State* L) {
-    auto node = getDocumentNode(L, 1);
-    auto dest = getDocumentNode(L, 2);
+    auto node = get_document_node(L, 1);
+    auto dest = get_document_node(L, 2);
     gui::UINode::moveInto(node.node, std::dynamic_pointer_cast<gui::Container>(dest.node));
     return 0;
 }
 
 static int l_textbox_paste(lua::State* L) {
-    auto node = getDocumentNode(L);
+    auto node = get_document_node(L);
     if (auto box = dynamic_cast<gui::TextBox*>(node.node.get())) {
         auto text = lua::require_string(L, 2);
         box->paste(util::str2wstr_utf8(text));
@@ -125,7 +119,7 @@ static int l_textbox_paste(lua::State* L) {
 }
 
 static int l_get_line_at(lua::State* L) {
-    auto node = getDocumentNode(L, 1);
+    auto node = get_document_node(L, 1);
     auto position = lua::tointeger(L, 2);
     if (auto box = dynamic_cast<gui::TextBox*>(node.node.get())) {
         return lua::pushinteger(L, box->getLineAt(position));
@@ -134,7 +128,7 @@ static int l_get_line_at(lua::State* L) {
 }
 
 static int l_get_line_pos(lua::State* L) {
-    auto node = getDocumentNode(L, 1);
+    auto node = get_document_node(L, 1);
     auto line = lua::tointeger(L, 2);
     if (auto box = dynamic_cast<gui::TextBox*>(node.node.get())) {
         return lua::pushinteger(L, box->getLinePos(line));
@@ -462,7 +456,7 @@ static int l_gui_getattr(lua::State* L) {
     };
     auto func = getters.find(attr);
     if (func != getters.end()) {
-        auto docnode = getDocumentNode(L, docname, element);
+        auto docnode = get_document_node_impl(L, docname, element);
         auto node = docnode.node;
         return func->second(node.get(), L);
     }
@@ -659,7 +653,7 @@ static int l_gui_setattr(lua::State* L) {
     auto element = lua::require_string(L, 2);
     auto attr = lua::require_string(L, 3);
 
-    auto docnode = getDocumentNode(L, docname, element);
+    auto docnode = get_document_node_impl(L, docname, element);
     auto node = docnode.node;
 
     static const std::unordered_map<std::string_view, std::function<void(gui::UINode*, lua::State*, int)>> setters {
@@ -790,13 +784,24 @@ static int l_gui_confirm(lua::State* L) {
         notext = lua::require_wstring(L, 5);
     }
     guiutil::confirm(
-        scripting::engine->getGUI()->getMenu(),
+        *scripting::engine,
         question,
         onconfirm,
         ondeny,
         yestext,
         notext
     );
+    return 0;
+}
+
+static int l_gui_alert(lua::State* L) {
+    auto message = lua::require_wstring(L, 1);
+    runnable onconfirm = nullptr;
+    if (lua::gettop(L) >= 2) {
+        lua::pushvalue(L, 2);
+        onconfirm = lua::create_runnable(L);
+    }
+    guiutil::alert(*scripting::engine, message, onconfirm);
     return 0;
 }
 
@@ -810,6 +815,7 @@ const luaL_Reg guilib [] = {
     {"clear_markup", lua::wrap<l_gui_clear_markup>},
     {"escape_markup", lua::wrap<l_gui_escape_markup>},
     {"confirm", lua::wrap<l_gui_confirm>},
+    {"alert", lua::wrap<l_gui_alert>},
     {"__reindex", lua::wrap<l_gui_reindex>},
     {NULL, NULL}
 };

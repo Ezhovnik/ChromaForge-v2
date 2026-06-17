@@ -4,9 +4,10 @@
 
 #include <graphics/ui/elements/UINode.h>
 #include <graphics/ui/elements/commons.h>
+#include <util/ObjectsKeeper.h>
 
 namespace gui {
-    class Container : public UINode {
+    class Container : public UINode, public util::ObjectsKeeper {
         int prevScrollY = -1;
     protected:
         std::vector<std::shared_ptr<UINode>> nodes;

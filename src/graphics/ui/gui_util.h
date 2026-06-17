@@ -7,14 +7,16 @@
 #include <delegates.h>
 #include <typedefs.h>
 
+class Engine;
+
 namespace guiutil {
     void alert(
-        const std::shared_ptr<gui::Menu>& menu,
+        Engine& engine,
         const std::wstring& text,
         const runnable& on_hidden = nullptr
     );
     void confirm(
-        const std::shared_ptr<gui::Menu>& menu,
+        Engine& engine,
         const std::wstring& text,
         const runnable& on_confirm = nullptr,
         const runnable& on_deny=nullptr,

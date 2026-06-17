@@ -30,6 +30,7 @@ namespace gui {
             const std::string& name,
             const std::shared_ptr<UINode>& panel
         );
+        void removePage(const std::string& name);
         std::shared_ptr<UINode> fetchPage(const std::string& name);
 
         void addSupplier(

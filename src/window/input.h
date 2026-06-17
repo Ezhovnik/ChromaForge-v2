@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <util/RunnablesList.h>
+#include <util/HandlersList.h>
 
 /**
  * @brief Представляет собой значения кодов клавиш glfw3.
@@ -150,7 +150,7 @@ enum class inputType {
  * Хранит текущее состояние (нажата или нет) и флаг, было ли состояние изменено в текущем кадре.
  */
 struct Binding {
-	util::RunnablesList onactived;
+	util::HandlersList<> onactived;
 
     inputType type;
     int code;

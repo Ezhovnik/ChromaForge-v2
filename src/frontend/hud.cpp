@@ -204,6 +204,17 @@ Hud::Hud(
         "' pos='0' size='256' gravity='top-right' margin='0,20,0,0'/>"
     );
     add(HudElement(HudElementMode::Permanent, nullptr, debugMinimap, true));
+
+    keepAlive(Events::keyCallbacks[keycode::ESCAPE].add([this]() -> bool {
+        if (pause) {
+            setPause(false);
+        } else if (inventoryOpen) {
+            closeInventory();
+        } else {
+            setPause(true);
+        }
+        return false;
+    }));
 }
 
 Hud::~Hud() {
@@ -224,16 +235,6 @@ void Hud::cleanup() {
 }
 
 void Hud::processInput(bool visible) {
-    if (Events::justPressed(keycode::ESCAPE)) {
-        if (pause) {
-            setPause(false);
-        } else if (inventoryOpen) {
-            closeInventory();
-        } else {
-            setPause(true);
-        }
-    }
-
     if (!Window::isFocused() && !pause && !isInventoryOpen()) setPause(true);
 
     if (!pause && visible && Events::justActive(BIND_HUD_INVENTORY)) {

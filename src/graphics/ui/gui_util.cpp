@@ -11,16 +11,28 @@
 #include <logic/scripting/scripting.h>
 #include <util/stringutil.h>
 #include <graphics/ui/elements/control/TextBox.h>
+#include <window/Events.h>
+#include <engine/Engine.h>
 
 using namespace gui;
 
 void guiutil::alert(
-    const std::shared_ptr<gui::Menu>& menu,
+    Engine& engine,
     const std::wstring& text,
     const runnable& on_hidden
 ) {
     auto panel = std::make_shared<Panel>(glm::vec2(500, 300), glm::vec4(8.0f), 8.0f);
     panel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+
+    auto menu = engine.getGUI()->getMenu();
+    runnable on_hidden_final = [on_hidden, menu, &engine]() {
+        if (on_hidden) {
+            on_hidden();
+        } else {
+            menu->back();
+        }
+        menu->removePage("<alert>");
+    };
 
     auto label = std::make_shared<Label>(text);
     label->setMultiline(true);
@@ -29,17 +41,24 @@ void guiutil::alert(
     panel->add(std::make_shared<Button>(
         langs::get(L"Ok"), glm::vec4(10.f), 
         [=](GUI*) {
-            if (on_hidden) on_hidden();
-            menu->back();
+            on_hidden_final();
         }
     ));
     panel->refresh();
+    panel->keepAlive(Events::keyCallbacks[keycode::ENTER].add([=](){
+        on_hidden_final();
+        return true;
+    }));
+    panel->keepAlive(Events::keyCallbacks[keycode::ESCAPE].add([=](){
+        on_hidden_final();
+        return true;
+    }));
     menu->addPage("<alert>", panel);
     menu->setPage("<alert>");
 }
 
 void guiutil::confirm(
-    const std::shared_ptr<gui::Menu>& menu,
+    Engine& engine,
     const std::wstring& text,
     const runnable& on_confirm,
     const runnable& on_deny,
@@ -55,17 +74,43 @@ void guiutil::confirm(
     auto subpanel = std::make_shared<Panel>(glm::vec2(600, 53));
     subpanel->setColor(glm::vec4(0));
 
+    auto menu = engine.getGUI()->getMenu();
+
+    runnable on_confirm_final = [on_confirm, menu, &engine]() {
+        if (on_confirm) {
+            on_confirm();
+        } else {
+            menu->back();
+        }
+        menu->removePage("<confirm>");
+    };
+
+    runnable on_deny_final = [on_deny, menu, &engine]() {
+        if (on_deny) {
+            on_deny();
+        } else {
+            menu->back();
+        }
+        menu->removePage("<confirm>");
+    };
+
     subpanel->add(std::make_shared<Button>(yestext, glm::vec4(8.f), [=](GUI*){
-        if (on_confirm) on_confirm();
-        menu->back();
+        on_confirm_final();
     }));
 
     subpanel->add(std::make_shared<Button>(notext, glm::vec4(8.f), [=](GUI*){
-        if (on_deny) on_deny();
-        menu->back();
+        on_deny_final();
     }));
 
     panel->add(subpanel);
+    panel->keepAlive(Events::keyCallbacks[keycode::ENTER].add([=](){
+        on_confirm_final();
+        return true;
+    }));
+    panel->keepAlive(Events::keyCallbacks[keycode::ESCAPE].add([=](){
+        on_deny_final();
+        return true;
+    }));
 
     panel->refresh();
     menu->addPage("<confirm>", panel);
