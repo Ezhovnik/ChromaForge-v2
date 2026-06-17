@@ -47,6 +47,14 @@ input.add_callback("hud.inventory", function ()
 end)
 ```
 
+Можно назначить функцию на нажатие клавиши.
+
+```lua
+input.add_callback("key:space", function ()
+    print("Space pressed")
+end)
+```
+
 ```python
 input.get_mouse_pos() -> {int, int}
 ```

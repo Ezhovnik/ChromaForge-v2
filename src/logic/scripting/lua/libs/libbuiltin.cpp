@@ -62,6 +62,12 @@ static int l_delete_world(lua::State* L) {
     return 0;
 }
 
+static int l_save_world(lua::State* L) {
+    if (scripting::controller == nullptr) throw std::runtime_error("No world open");
+    scripting::controller->saveWorld();
+    return 0;
+}
+
 static int l_close_world(lua::State* L) {
     if (scripting::controller == nullptr) throw std::runtime_error("No world open");
     bool save_world = lua::toboolean(L, 1);
@@ -210,6 +216,7 @@ const luaL_Reg builtinlib [] = {
     {"new_world", lua::wrap<l_new_world>},
     {"open_world", lua::wrap<l_open_world>},
     {"reopen_world", lua::wrap<l_reopen_world>},
+    {"save_world", lua::wrap<l_save_world>},
     {"close_world", lua::wrap<l_close_world>},
     {"delete_world", lua::wrap<l_delete_world>},
     {"reconfig_packs", lua::wrap<l_reconfig_packs>},

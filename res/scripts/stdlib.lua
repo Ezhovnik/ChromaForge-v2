@@ -27,6 +27,7 @@ if app then
     app.name = __CHROMA_SCRIPT_NAME
     app.new_world = builtin.new_world
     app.open_world = builtin.open_world
+    app.save_world = builtin.save_world
     app.close_world = builtin.close_world
     app.reopen_world = builtin.reopen_world
     app.delete_world = builtin.delete_world

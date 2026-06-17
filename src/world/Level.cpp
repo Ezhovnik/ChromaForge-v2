@@ -14,6 +14,7 @@
 #include <objects/Entities.h>
 #include <window/Camera.h>
 #include <data/dv_util.h>
+#include <voxels/Chunk.h>
 
 inline constexpr float GRAVITY = -22.6f;
 
@@ -58,6 +59,11 @@ Level::Level(
     });
     events->listen(LevelEventType::CHUNK_HIDDEN, [this](LevelEventType, Chunk* chunk) {
         chunks->decref(chunk);
+    });
+
+    chunks->setOnUnload([this](const Chunk& chunk) {
+        AABB aabb = chunk.getAABB();
+        entities->despawn(entities->getAllInside(aabb));
     });
 
     // Инициализируем менеджер инвентарей и сохраняем инвентарь игрока

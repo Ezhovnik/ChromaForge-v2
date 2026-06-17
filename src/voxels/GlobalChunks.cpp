@@ -45,6 +45,10 @@ GlobalChunks::GlobalChunks(
     chunksMap.max_load_factor(CHUNKS_MAP_MAX_LOAD_FACTOR);
 }
 
+void GlobalChunks::setOnUnload(consumer<Chunk&> onUnload) {
+    this->onUnload = std::move(onUnload);
+}
+
 std::shared_ptr<Chunk> GlobalChunks::fetch(int x, int z) {
     const auto& found = chunksMap.find(keyfrom(x, z));
     if (found == chunksMap.end()) {
@@ -148,9 +152,8 @@ void GlobalChunks::incref(Chunk* chunk) {
 void GlobalChunks::decref(Chunk* chunk) {
     auto key = reinterpret_cast<ptrdiff_t>(chunk);
     const auto& found = refCounters.find(key);
-    if (found == refCounters.end()) {
-        abort();
-    }
+    if (found == refCounters.end()) abort();
+
     if (--found->second == 0) {
         union {
             int pos[2];
@@ -159,6 +162,7 @@ void GlobalChunks::decref(Chunk* chunk) {
         ekey.pos[0] = chunk->chunk_x;
         ekey.pos[1] = chunk->chunk_z;
 
+        if (onUnload) onUnload(*chunk);
         save(chunk);
         chunksMap.erase(ekey.key);
         refCounters.erase(found);
@@ -168,17 +172,11 @@ void GlobalChunks::decref(Chunk* chunk) {
 void GlobalChunks::save(Chunk* chunk) {
     if (chunk == nullptr) return;
 
-    AABB aabb(
-        glm::vec3(chunk->chunk_x * CHUNK_WIDTH, -INFINITY, chunk->chunk_z * CHUNK_DEPTH),
-        glm::vec3(
-            (chunk->chunk_x + 1) * CHUNK_WIDTH, INFINITY, (chunk->chunk_z + 1) * CHUNK_DEPTH
-        )
-    );
+    AABB aabb = chunk->getAABB();
     auto entities = level->entities->getAllInside(aabb);
     auto root = dv::object();
     root["data"] = level->entities->serialize(entities);
     if (!entities.empty()) {
-        level->entities->despawn(std::move(entities));
         chunk->flags.entities = true;
     }
     level->getWorld()->wfile->getRegions().put(

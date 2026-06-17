@@ -9,6 +9,7 @@
 #include <voxels/voxel.h>
 #include <lighting/Lightmap.h>
 #include <util/SmallHeap.h>
+#include <math/AABB.h>
 
 inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
 
@@ -64,4 +65,11 @@ public:
 	bool decode(const ubyte* data);
 
     static void convert(ubyte* data, const ContentReport* report);
+
+    AABB getAABB() const {
+        return AABB(
+            glm::vec3(chunk_x * CHUNK_WIDTH, -INFINITY, chunk_z * CHUNK_DEPTH),
+            glm::vec3((chunk_x + 1) * CHUNK_WIDTH, INFINITY, (chunk_z + 1) * CHUNK_DEPTH)
+        );
+    }
 };
