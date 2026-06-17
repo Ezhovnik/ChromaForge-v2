@@ -56,10 +56,10 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "vec3", vec3lib);
     openlib(L, "vec4", vec4lib);
 
-    if (stateType == StateType::Test) {
-        openlib(L, "test", testlib);
+    if (stateType == StateType::Script) {
+        openlib(L, "app", applib);
     }
-    if (stateType == StateType::Base || stateType == StateType::Test) {
+    if (stateType == StateType::Base || stateType == StateType::Script) {
         openlib(L, "gui", guilib);
         openlib(L, "input", inputlib);
         openlib(L, "inventory", inventorylib);
@@ -123,10 +123,10 @@ void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     LOG_INFO("LuaJIT version: {}", LUAJIT_VERSION);
 
     main_thread = create_state(
-        paths, params.headless ? StateType::Test : StateType::Base
+        paths, params.headless ? StateType::Script : StateType::Base
     );
     lua::pushstring(main_thread, params.scriptFile.stem().u8string());
-    lua::setglobal(main_thread, "__CHROMA_TEST_NAME");
+    lua::setglobal(main_thread, "__CHROMA_SCRIPT_NAME");
 }
 
 void lua::finalize() {

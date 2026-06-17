@@ -14,7 +14,7 @@ struct CoreParameters;
 namespace lua {
     enum class StateType {
         Base,
-        Test,
+        Script,
         Generator
     };
 

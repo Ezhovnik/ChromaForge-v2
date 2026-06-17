@@ -22,21 +22,21 @@ function tb_frame_tostring(frame)
     return s
 end
 
-if test then
-    test.sleep = sleep
-    test.name = __CHROMA_TEST_NAME
-    test.new_world = builtin.new_world
-    test.open_world = builtin.open_world
-    test.close_world = builtin.close_world
-    test.reopen_world = builtin.reopen_world
-    test.delete_world = builtin.delete_world
-    test.reconfig_packs = builtin.reconfig_packs
-    test.set_setting = builtin.set_setting
-    test.spark = coroutine.yield
+if app then
+    app.sleep = sleep
+    app.name = __CHROMA_SCRIPT_NAME
+    app.new_world = builtin.new_world
+    app.open_world = builtin.open_world
+    app.close_world = builtin.close_world
+    app.reopen_world = builtin.reopen_world
+    app.delete_world = builtin.delete_world
+    app.reconfig_packs = builtin.reconfig_packs
+    app.set_setting = builtin.set_setting
+    app.spark = coroutine.yield
 
-    function test.quit()
+    function app.quit()
         local tb = debug.get_traceback(1)
-        local s = "test.quit() traceback:"
+        local s = "app.quit() traceback:"
         for i, frame in ipairs(tb) do
             s = s .. "\n\t"..tb_frame_tostring(frame)
         end
@@ -45,11 +45,11 @@ if test then
         coroutine.yield()
     end
 
-    function test.sleep_until(predicate, max_sparks)
+    function app.sleep_until(predicate, max_sparks)
         max_sparks = max_sparks or 1e9
         local sparks = 0
         while sparks < max_sparks and not predicate() do
-            test.spark()
+            app.spark()
         end
         if sparks == max_sparks then
             error("Max sparks exceed")
