@@ -44,6 +44,7 @@ struct ContentPack {
     std::vector<DependencyPack> dependencies;
 
     std::filesystem::path folder;
+    std::string path;
 
     std::string source = "";
 
@@ -58,9 +59,10 @@ struct ContentPack {
     static const std::vector<std::string> RESERVED_NAMES;
 
     static bool is_pack(const std::filesystem::path& folder);
-    static ContentPack read(const std::filesystem::path& folder);
+    static ContentPack read(const std::string& path, const std::filesystem::path& folder);
 
     static void scanFolder(
+        const std::string& path,
         const std::filesystem::path& folder,
         std::vector<ContentPack>& packs
     );

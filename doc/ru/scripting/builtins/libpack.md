@@ -73,6 +73,7 @@ pack.get_info(packid: str) -> {
     creator: str,
     description: str,
     version: str,
+    path: str,
     icon: str, -- отсутствует в headless режиме
     dependencies: опциональный массив строк
 }

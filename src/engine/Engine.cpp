@@ -172,9 +172,9 @@ Engine::~Engine() {
 PacksManager Engine::createPacksManager(const std::filesystem::path& worldFolder) {
     PacksManager manager;
     manager.setSources({
-        worldFolder/std::filesystem::path("content"),
-        paths.getUserFilesFolder()/std::filesystem::path("content"),
-        paths.getResourcesFolder()/std::filesystem::path("content")
+        {"world:content", worldFolder.empty() ? worldFolder : worldFolder/std::filesystem::path("content")},
+        {"user:content", paths.getUserFilesFolder()/std::filesystem::path("content")},
+        {"res:content", paths.getResourcesFolder()/std::filesystem::path("content")}
     });
     return manager;
 }
@@ -392,9 +392,9 @@ void Engine::loadWorldContent(const std::filesystem::path& folder) {
     auto packNames = ContentPack::worldPacksList(folder);
     PacksManager manager;
     manager.setSources({
-        folder/std::filesystem::path("content"),
-        paths.getUserFilesFolder()/std::filesystem::path("content"),
-        paths.getResourcesFolder()/std::filesystem::path("content")
+        {"world:content", folder.empty() ? folder : folder/std::filesystem::path("content")},
+        {"user:content", paths.getUserFilesFolder()/std::filesystem::path("content")},
+        {"res:content", paths.getResourcesFolder()/std::filesystem::path("content")}
     });
     manager.scan();
     contentPacks = manager.getAll(manager.assemble(packNames));
@@ -404,12 +404,7 @@ void Engine::loadWorldContent(const std::filesystem::path& folder) {
 }
 
 void Engine::loadAllPacks() {
-	PacksManager manager;
-    manager.setSources({
-        paths.getCurrentWorldFolder()/std::filesystem::path("content"),
-        paths.getUserFilesFolder()/std::filesystem::path("content"),
-        paths.getResourcesFolder()/std::filesystem::path("content")
-    });
+	PacksManager manager = createPacksManager(paths.getCurrentWorldFolder());
     manager.scan();
     auto allnames = manager.getAllNames();
     contentPacks = manager.getAll(manager.assemble(allnames));
