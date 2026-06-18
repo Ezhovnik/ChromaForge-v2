@@ -18,6 +18,8 @@
 #include <voxels/GlobalChunks.h>
 #include <logic/LevelController.h>
 #include <logic/ChunksController.h>
+#include <coders/rle.h>
+#include <coders/zip.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {
@@ -119,45 +121,41 @@ static int l_is_open(lua::State* L) {
 }
 
 static int l_get_chunk_data(lua::State* L) {
-    int x = (int)lua::tointeger(L, 1);
-    int y = (int)lua::tointeger(L, 2);
+    int x = static_cast<int>(lua::tointeger(L, 1));
+    int y = static_cast<int>(lua::tointeger(L, 2));
     const auto& chunk = scripting::level->chunks->getChunk(x, y);
     if (chunk == nullptr) {
         lua::pushnil(L);
         return 0;
     }
 
-    bool compress = false;
+    bool compress = true;
     if (lua::gettop(L) >= 3) {
         compress = lua::toboolean(L, 3);
     }
     std::vector<ubyte> chunk_data;
     if (compress) {
-        size_t rle_compressed_size;
-        size_t zip_compressed_size;
+        static util::Buffer<ubyte> rlebuffer;
+        if (rlebuffer.size() < CHUNK_DATA_LEN * 2) {
+            rlebuffer = util::Buffer<ubyte>(CHUNK_DATA_LEN * 2);
+        }
+
         const auto& data_ptr = chunk->encode();
         ubyte* data = data_ptr.get();
-        const auto& rle_compressed_data_ptr = compression::compress(
-            data,
-            CHUNK_DATA_LEN,
-            rle_compressed_size,
-            compression::Method::Extrle16
-        );
-        const auto& zip_compressed_data = compression::compress(
-            rle_compressed_data_ptr.get(),
-            rle_compressed_size,
-            zip_compressed_size,
-            compression::Method::Zip
+        size_t rle_compressed_size = extrle::encode16(data, CHUNK_DATA_LEN, rlebuffer.data());
+
+        const auto zip_compressed_data = zip::compress(
+            rlebuffer.data(), rle_compressed_size
         );
         auto tmp = dataio::h2le(rle_compressed_size);
-        chunk_data.reserve(zip_compressed_size + sizeof(tmp));
+        chunk_data.reserve(zip_compressed_data.size() + sizeof(tmp));
         chunk_data.insert(
             chunk_data.begin() + 0, (char*)&tmp, ((char*)&tmp) + sizeof(tmp)
         );
         chunk_data.insert(
             chunk_data.begin() + sizeof(tmp),
-            zip_compressed_data.get(),
-            zip_compressed_data.get() + zip_compressed_size
+            zip_compressed_data.data(),
+            zip_compressed_data.data() + zip_compressed_data.size()
         );
     } else {
         const auto& data = chunk->encode();
@@ -170,10 +168,10 @@ static int l_get_chunk_data(lua::State* L) {
 }
 
 static int l_set_chunk_data(lua::State* L) {
-    int x = (int)lua::tointeger(L, 1);
-    int y = (int)lua::tointeger(L, 2);
+    int x = static_cast<int>(lua::tointeger(L, 1));
+    int y = static_cast<int>(lua::tointeger(L, 2));
     auto buffer = lua::touserdata<lua::LuaBytearray>(L, 3);
-    bool is_compressed = false;
+    bool is_compressed = true;
     if (lua::gettop(L) >= 4) {
         is_compressed = lua::toboolean(L, 4);
     }
@@ -200,37 +198,33 @@ static int l_set_chunk_data(lua::State* L) {
     }
 
     auto chunksController = scripting::controller->getChunksController();
-    if (chunksController == nullptr) return 1;
+    if (chunksController->lighting == nullptr) {
+        return lua::pushboolean(L, true);
+    }
 
     Lighting& lighting = *chunksController->lighting;
 
     chunk->updateHeights();
-    lighting.buildSkyLight(x, y);
-    chunk->flags.modified = true;
+    chunk->flags.loadedLights = false;
+    chunk->flags.lighted = false;
+    chunk->setModifiedAndUnsaved();
+    Lighting::preBuildSkyLight(*chunk, *scripting::indices);
     lighting.onChunkLoaded(x, y, true);
 
-    chunk = scripting::level->chunks->getChunk(x - 1, y);
-    if (chunk != nullptr) {
-        chunk->flags.modified = true;
-        lighting.onChunkLoaded(x - 1, y, true);
-    }
-    chunk = scripting::level->chunks->getChunk(x + 1, y);
-    if (chunk != nullptr) {
-        chunk->flags.modified = true;
-        lighting.onChunkLoaded(x + 1, y, true);
-    }
-    chunk = scripting::level->chunks->getChunk(x, y - 1);
-    if (chunk != nullptr) {
-        chunk->flags.modified = true;
-        lighting.onChunkLoaded(x, y - 1, true);
-    }
-    chunk = scripting::level->chunks->getChunk(x, y + 1);
-    if (chunk != nullptr) {
-        chunk->flags.modified = true;
-        lighting.onChunkLoaded(x, y + 1, true);
+    for (int lz = -1; lz <= 1; ++lz) {
+        for (int lx = -1; lx <= 1; ++lx) {
+            if (std::abs(lx) + std::abs(lz) != 1) {
+                continue;
+            }
+            chunk = scripting::level->chunks->getChunk(x + lx, y + lz);
+            if (chunk != nullptr) {
+                chunk->setModifiedAndUnsaved();
+                lighting.onChunkLoaded(x - 1, y, true);
+            }
+        }
     }
 
-    return 1;
+    return lua::pushboolean(L, true);
 }
 
 static int l_count_chunks(lua::State* L) {

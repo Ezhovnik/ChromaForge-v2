@@ -137,7 +137,7 @@ const Mesh* ChunksRenderer::getOrRender(
     auto found = meshes.find(glm::ivec2(chunk->chunk_x, chunk->chunk_z));
     if (found == meshes.end()) return render(chunk, important);
 
-    if (chunk->flags.modified) render(chunk, important);
+    if (chunk->flags.modified && chunk->flags.lighted) render(chunk, important);
 
     return found->second.mesh.get();
 }
@@ -150,7 +150,15 @@ const Mesh* ChunksRenderer::retrieveChunk(
     size_t index, const Camera& camera, ShaderProgram& shader, bool culling
 ) {
     auto chunk = chunks.getChunks()[index];
-    if (chunk == nullptr || !chunk->flags.lighted) return nullptr;
+    if (chunk == nullptr) return nullptr;
+    if (!chunk->flags.lighted) {
+        const auto& found = meshes.find({chunk->chunk_x, chunk->chunk_z});
+        if (found == meshes.end()) {
+            return nullptr;
+        } else {
+            return found->second.mesh.get();
+        }
+    }
 
     float distance = glm::distance(
         camera.position,

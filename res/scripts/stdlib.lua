@@ -39,6 +39,7 @@ local function complete_app_lib(app)
     app.get_setting_info = builtin.get_setting_info
     app.load_content = builtin.load_content
     app.reset_content = builtin.reset_content
+    app.is_content_loaded = builtin.is_content_loaded
 
     function app.config_packs(packs_list)
         packs_list = pack.assemble(packs_list)
