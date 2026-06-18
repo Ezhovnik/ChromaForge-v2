@@ -4,6 +4,8 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <unordered_set>
+#include <string>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -90,6 +92,12 @@ static void GLAPIENTRY gl_message_callback(
 ) {
     if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
     if (!ENGINE_DEBUG_BUILD && severity != GL_DEBUG_SEVERITY_HIGH) return;
+
+    std::string key = std::to_string(type) + ":" + std::to_string(id) + ":" + std::to_string(severity) + ":" + std::string(message);
+    static std::unordered_set<std::string> shownMessages;
+    if (shownMessages.find(key) != shownMessages.end()) return;
+    shownMessages.insert(key);
+
     LOG_ERROR("GL:{}:{}: {}", gl_error_name(type), gl_severity_name(severity), message);
 }
 
