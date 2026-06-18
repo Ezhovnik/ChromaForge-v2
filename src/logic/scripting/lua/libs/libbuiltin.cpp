@@ -200,6 +200,19 @@ static int l_load_texture(lua::State* L) {
     return 0;
 }
 
+static int l_load_content(lua::State* L) {
+    scripting::engine->loadContent();
+    return 0;
+}
+
+static int l_reset_content(lua::State* L) {
+    if (scripting::level != nullptr) {
+        throw std::runtime_error("World must be closed before");
+    }
+    scripting::engine->resetContent();
+    return 0;
+}
+
 static int l_blank(lua::State* L) {
     return 0;
 }
@@ -207,6 +220,8 @@ static int l_blank(lua::State* L) {
 const luaL_Reg builtinlib [] = {
     {"blank", lua::wrap<l_blank>},
     {"get_version", lua::wrap<l_get_version>},
+    {"load_content", lua::wrap<l_load_content>},
+    {"reset_content", lua::wrap<l_reset_content>},
     {"new_world", lua::wrap<l_new_world>},
     {"open_world", lua::wrap<l_open_world>},
     {"reopen_world", lua::wrap<l_reopen_world>},

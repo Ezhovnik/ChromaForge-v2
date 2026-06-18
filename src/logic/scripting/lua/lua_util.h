@@ -556,9 +556,11 @@ namespace lua {
             if (getfield(L, name)) {
                 return 1;
             } else if (required) {
+                pop(L);
                 log_error("Table " + tableName + " has no member " + name);
                 throw std::runtime_error("Table " + tableName + " has no member " + name);
             }
+            pop(L);
             return 0;
         } else {
             log_error("Table " + tableName + " not found");

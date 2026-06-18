@@ -26,44 +26,6 @@
 #include <frontend/screens/MenuScreen.h>
 #include <debug/Logger.h>
 
-gui::page_loader_func menus::create_page_loader(Engine& engine) {
-    return [&](const std::string& query) {
-        std::vector<dv::value> args;
-
-        std::string name;
-        size_t index = query.find('?');
-        if (index != std::string::npos) {
-            auto argstr = query.substr(index+1);
-            name = query.substr(0, index);
-
-            auto map = dv::object();
-            auto filename = "Query for " + name;
-            BasicParser parser(filename, argstr);
-            while (parser.hasNext()) {
-                auto key = std::string(parser.readUntil('='));
-                parser.nextChar();
-                auto value = std::string(parser.readUntil('&'));
-                map[key] = value;
-            }
-            args.emplace_back(map);
-        } else {
-            name = query;
-        }
-        auto file = engine.getResPaths()->find("layouts/pages/" + name + ".xml");
-        auto fullname = BUILTIN_CONTENT_NAMESPACE + ":pages/" + name;
-        auto documentPtr = UIDocument::read(
-            scripting::get_root_environment(),
-            fullname,
-            file,
-            "builtin:layouts/pages/" + name
-        );
-        auto document = documentPtr.get();
-        engine.getAssets()->store(std::move(documentPtr), fullname);
-        scripting::on_ui_open(document, std::move(args));
-        return document->getRoot();
-    };
-}
-
 void menus::create_version_label(Engine& engine) {
     auto gui = engine.getGUI();
     auto text = "v" + ENGINE_VERSION_STRING + " development build ";

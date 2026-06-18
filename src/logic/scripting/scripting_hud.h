@@ -2,11 +2,18 @@
 
 #include <filesystem>
 #include <string>
+#include <functional>
+#include <memory>
 
 #include <typedefs.h>
 
 class Hud;
 class WorldRenderer;
+
+namespace gui {
+    class UINode;
+    using PageLoaderFunc = std::function<std::shared_ptr<UINode>(const std::string&)>;
+}
 
 namespace scripting {
     extern Hud* hud;
@@ -22,4 +29,6 @@ namespace scripting {
         const std::filesystem::path& file,
         const std::string& fileName
     );
+
+    gui::PageLoaderFunc create_page_loader();
 }

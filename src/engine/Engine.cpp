@@ -53,6 +53,7 @@
 #include <engine/ServerMainloop.h>
 #include <frontend/screens/LevelScreen.h>
 #include <world/Level.h>
+#include <logic/scripting/scripting_hud.h>
 
 static void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
     if (name != "master") audio::create_channel(name);
@@ -126,15 +127,16 @@ Engine::Engine(
     create_channel(this, "ambient", settings.audio.volumeAmbient);
     create_channel(this, "ui", settings.audio.volumeUI);
 
-    bool langNotSet = settings.ui.language.get() == "auto";
-    if (langNotSet) settings.ui.language.set(platform::detect_locale());
-    keepAlive(settings.ui.language.observe([this](auto lang) {
-        setLanguage(lang);
-    }, true));
-
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);
     LOG_INFO("Scripting system initialization has been successfully finished");
+
+    bool langNotSet = settings.ui.language.get() == "auto";
+    if (langNotSet) settings.ui.language.set(platform::detect_locale());
+    if (!isHeadless()) gui->setPageLoader(scripting::create_page_loader());
+    keepAlive(settings.ui.language.observe([this](auto lang) {
+        setLanguage(lang);
+    }, true));
 
     basePacks = files::read_list(resdir/std::filesystem::path("config/builtins.list"));
 
@@ -460,9 +462,6 @@ std::shared_ptr<Screen> Engine::getScreen() {
 
 void Engine::setLanguage(std::string locale) {
 	langs::setup(paths.getResourcesFolder(), std::move(locale), contentPacks);
-	if (gui) {
-        gui->getMenu()->setPageLoader(menus::create_page_loader(*this));
-    }
 }
 
 SettingsHandler& Engine::getSettingsHandler() {

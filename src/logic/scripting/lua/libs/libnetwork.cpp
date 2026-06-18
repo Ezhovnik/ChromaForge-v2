@@ -116,6 +116,14 @@ static int l_recv(lua::State* L) {
     return 1;
 }
 
+static int l_available(lua::State* L) {
+    uint64_t id = lua::tointeger(L, 1);
+    if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
+        return lua::pushinteger(L, connection->available());
+    }
+    return 0;
+}
+
 static int l_open(lua::State* L) {
     int port = lua::tointeger(L, 1);
     lua::pushvalue(L, 2);
@@ -193,6 +201,7 @@ const luaL_Reg networklib[] = {
     {"__close", lua::wrap<l_close>},
     {"__send", lua::wrap<l_send>},
     {"__recv", lua::wrap<l_recv>},
+    {"__available", lua::wrap<l_available>},
     {"__is_alive", lua::wrap<l_is_alive>},
     {"__is_connected", lua::wrap<l_is_connected>},
     {"__get_address", lua::wrap<l_get_address>},

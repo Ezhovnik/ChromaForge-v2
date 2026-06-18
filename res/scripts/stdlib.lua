@@ -22,7 +22,7 @@ function tb_frame_tostring(frame)
     return s
 end
 
-if app then
+local function complete_app_lib(app)
     app.sleep = sleep
     app.name = __CHROMA_SCRIPT_NAME
     app.new_world = builtin.new_world
@@ -37,6 +37,8 @@ if app then
     app.spark = coroutine.yield
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
+    app.load_content = builtin.load_content
+    app.reset_content = builtin.reset_content
 
     function app.config_packs(packs_list)
         packs_list = pack.assemble(packs_list)
@@ -79,6 +81,12 @@ if app then
             error("Max sparks exceed")
         end
     end
+end
+
+if app then
+    complete_app_lib(app)
+elseif __chroma_app then
+    complete_app_lib(__chroma_app)
 end
 
 ------------------------------------------------
@@ -190,6 +198,9 @@ RadioGroup = _RadioGroup
 _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
+
+local gui_util = require "builtin:gui_util"
+__chroma_page_loader = gui_util.load_page
 
 console.cheats = {}
 
@@ -413,6 +424,7 @@ function __chroma_resume_coroutine(id)
     if co then
         coroutine.resume(co)
         if __chroma_coroutine_error then
+            debug.error(__chroma_coroutine_error)
             error(__chroma_coroutine_error)
         end
         return coroutine.status(co) ~= "dead"

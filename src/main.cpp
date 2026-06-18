@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred:\n{}", err.what());
     } catch (const std::exception& err) {
-        LOG_ERROR("Uncaught exception:\n{}", err.what());
+        LOG_ERROR("Uncaught exception: {}", err.what());
         throw;
     }
 

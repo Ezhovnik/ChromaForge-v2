@@ -20,6 +20,8 @@
 #include <math/voxmaths.h>
 #include <graphics/ui/elements/layout/Menu.h>
 #include <frontend/menu.h>
+#include <graphics/ui/GUI.h>
+#include <engine/Engine.h>
 
 using namespace gui;
 
@@ -540,7 +542,7 @@ static std::shared_ptr<UINode> readPageBox(
     const xml::xmlelement& element
 ) {
     auto menu = std::make_shared<Menu>();
-    menu->setPageLoader(menus::create_page_loader(*scripting::engine));
+    menu->setPageLoader(scripting::engine->getGUI()->getMenu()->getPageLoader());
     _readContainer(reader, element, *menu);
 
     return menu;

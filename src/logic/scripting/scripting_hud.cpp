@@ -8,6 +8,7 @@
 #include <frontend/hud.h>
 #include <objects/Player.h>
 #include <graphics/render/WorldRenderer.h>
+#include <frontend/UIDocument.h>
 
 Hud* scripting::hud = nullptr;
 WorldRenderer* scripting::renderer = nullptr;
@@ -82,4 +83,16 @@ void scripting::load_hud_script(
     register_event(env, "on_hud_close", packid + ".:hudclose");
 
     LOG_DEBUG("Script {} successfully loaded", file.u8string());
+}
+
+gui::PageLoaderFunc scripting::create_page_loader() {
+    auto L = lua::get_main_state();
+    if (lua::getglobal(L, "__chroma_page_loader")) {
+        auto func = lua::create_lambda(L);
+        return [func](const std::string& name) -> std::shared_ptr<gui::UINode> {
+            auto docname = func({name}).asString();
+            return engine->getAssets()->require<UIDocument>(docname).getRoot();
+        };
+    }
+    return nullptr;
 }
