@@ -162,7 +162,7 @@ function Document.new(docname)
 end
 
 local _RadioGroup = {}
-function _RadioGroup:set(self, key)
+function _RadioGroup:set(key)
     if type(self) ~= 'table' then
         error("Called as non-OOP via '.', use radiogroup:set")
     end
@@ -175,7 +175,7 @@ function _RadioGroup:set(self, key)
         self.callback(key)
     end
 end
-function _RadioGroup:__call(self, elements, onset, default)
+function _RadioGroup:__call(elements, onset, default)
     local group = setmetatable({
         elements=elements, 
         callback=onset, 
