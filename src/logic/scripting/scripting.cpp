@@ -25,6 +25,7 @@
 #include <content/Content.h>
 #include <logic/scripting/scripting_commons.h>
 #include <interfaces/Process.h>
+#include <voxels/Chunk.h>
 
 static inline const std::string STDCOMP = "stdcomp";
 
@@ -406,6 +407,35 @@ bool scripting::on_block_interact(Player* player, const Block& block, const glm:
     );
 }
 
+void scripting::on_chunk_present(const Chunk& chunk, bool loaded) {
+    auto args = [&chunk, loaded](lua::State* L) {
+        lua::pushvec_stack<2>(L, {chunk.chunk_x, chunk.chunk_z});
+        lua::pushboolean(L, loaded);
+        return 3;
+    };
+    for (auto& [packid, pack] : content->getPacks()) {
+        if (pack->worldfuncsset.onchunkpresent) {
+            lua::emit_event(
+                lua::get_main_state(), packid + ":.chunkpresent", args
+            );
+        }
+    }
+}
+
+void scripting::on_chunk_remove(const Chunk& chunk) {
+    auto args = [&chunk](lua::State* L) {
+        lua::pushvec_stack<2>(L, {chunk.chunk_x, chunk.chunk_z});
+        return 2;
+    };
+    for (auto& [packid, pack] : content->getPacks()) {
+        if (pack->worldfuncsset.onchunkremove) {
+            lua::emit_event(
+                lua::get_main_state(), packid + ":.chunkremove", args
+            );
+        }
+    }
+}
+
 void scripting::on_player_spark(Player* player, int tps) {
     auto args = [=](lua::State* L) {
         lua::pushinteger(L, player ? player->getId() : -1);
@@ -763,6 +793,8 @@ void scripting::load_world_script(
     funcsset.onblockreplaced = register_event(env, "on_block_replaced", prefix + ":.blockreplaced");
     funcsset.onblockinteract = register_event(env, "on_block_interact", prefix + ":.blockinteract");
     funcsset.onplayerspark = register_event(env, "on_player_spark", prefix + ":.playerspark");
+    funcsset.onchunkpresent = register_event(env, "on_chunk_present", prefix + ":.chunkpresent");
+    funcsset.onchunkremove = register_event(env, "on_chunk_remove", prefix + ":.chunkremove");
 }
 
 void scripting::load_layout_script(

@@ -16,6 +16,7 @@
 #include <objects/Player.h>
 #include <voxels/Chunks.h>
 #include <lighting/Lighting.h>
+#include <world/LevelEvents.h>
 
 LevelController::LevelController(
     Engine* engine,
@@ -26,6 +27,13 @@ LevelController::LevelController(
     chunks(std::make_unique<ChunksController>(*level)),
     playerSparkClock(20, 3)
 {
+    level->events->listen(LevelEventType::CHUNK_PRESENT, [](auto, Chunk* chunk) {
+        scripting::on_chunk_present(*chunk, chunk->flags.loaded);
+    });
+    level->events->listen(LevelEventType::CHUNK_UNLOAD, [](auto, Chunk* chunk) {
+        scripting::on_chunk_remove(*chunk);
+    });
+
     if (clientPlayer) {
         chunks->lighting = std::make_unique<Lighting>(
             level->content, *clientPlayer->chunks
