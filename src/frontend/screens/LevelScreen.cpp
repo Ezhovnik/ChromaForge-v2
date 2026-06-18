@@ -146,6 +146,49 @@ void LevelScreen::saveWorldPreview() {
     }
 }
 
+void LevelScreen::saveWorldPanorama() {
+    auto& settings = engine.getSettings();
+    int panoramaSize = settings.ui.worldPanoramaSize.get();
+    auto player = playerController->getPlayer();
+    glm::vec3 eyePos = player->fpCamera->position;
+
+    const struct {
+        glm::vec3 dir;
+        glm::vec3 up;
+        int index;
+    } faces[6] = {
+        {glm::vec3(1, 0, 0), glm::vec3(0, 1, 0),  0},
+        {glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0),  1},
+        {glm::vec3(0, 1, 0), glm::vec3(0, 0, 1),  2},
+        {glm::vec3(0, -1, 0), glm::vec3(0, 0, -1),  3},
+        {glm::vec3(0, 0, -1), glm::vec3(0, 1, 0),  4},
+        {glm::vec3(0, 0, 1), glm::vec3(0, 1, 0),  5}
+    };
+
+    auto& paths = engine.getPaths();
+    auto panorama_folder = paths.getNewPanoramaFolder();
+
+    for (const auto& face : faces) {
+        Camera cam(eyePos, glm::radians(90.0f));
+        cam.front = face.dir;
+        cam.up = face.up;
+        cam.perspective = true;
+        cam.aspect = 1.0f;
+
+        Viewport viewport(panoramaSize, panoramaSize);
+        DrawContext parentCtx(nullptr, {static_cast<uint>(panoramaSize), static_cast<uint>(panoramaSize)}, batch.get());
+        DrawContext ctx(&parentCtx, viewport, batch.get());
+
+        worldRenderer->draw(ctx, cam, false, true, 0.0f, postProcessing.get());
+        auto image = postProcessing->toImage();
+        image->flipY();
+
+        imageio::write(panorama_folder.u8string() + "/" + std::to_string(face.index) + ".png", image.get());
+    }
+
+    LOG_INFO("Panorama saved to {}", panorama_folder.u8string());
+}
+
 void LevelScreen::updateHotkeys() {
     auto& settings = engine.getSettings();
 
@@ -155,6 +198,7 @@ void LevelScreen::updateHotkeys() {
         hud->setDebug(debug);
         worldRenderer->setDebug(debug);
     }
+    if (Events::justPressed(keycode::F12)) saveWorldPanorama();
 }
 
 void LevelScreen::update(float deltaTime) {

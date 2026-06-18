@@ -19,7 +19,13 @@
         "gui/cross",
         "gui/refresh",
         "gui/folder_icon",
-        "gui/settings_icon"
+        "gui/settings_icon",
+        "panorama/0",
+        "panorama/1",
+        "panorama/2",
+        "panorama/3",
+        "panorama/4",
+        "panorama/5"
     ],
     "fonts": [
         {

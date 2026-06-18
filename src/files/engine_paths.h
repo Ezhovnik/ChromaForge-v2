@@ -41,6 +41,7 @@ public:
     std::filesystem::path getCurrentWorldFolder();
 
     std::filesystem::path getNewScreenshotFile(const std::string& ext);
+    std::filesystem::path getNewPanoramaFolder();
     std::filesystem::path getControlsFile() const;
     std::filesystem::path getSettingsFile() const;
 

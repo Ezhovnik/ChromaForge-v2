@@ -52,6 +52,7 @@ struct UISettings {
 	StringSetting language {"auto"};
 
 	IntegerSetting worldPreviewSize {64, 1, 512};
+	IntegerSetting worldPanoramaSize {1024, 256, 2048};
 };
 
 struct AudioSettings {

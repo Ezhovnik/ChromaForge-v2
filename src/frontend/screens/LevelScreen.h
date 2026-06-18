@@ -28,6 +28,7 @@ private:
     std::unique_ptr<Hud> hud;
 
     void saveWorldPreview();
+    void saveWorldPanorama();
 
     bool hudVisible = true;
     bool debug = false;
