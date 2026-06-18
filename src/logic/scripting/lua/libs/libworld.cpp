@@ -120,6 +120,39 @@ static int l_is_open(lua::State* L) {
     return lua::pushboolean(L, scripting::level != nullptr);
 }
 
+static std::vector<ubyte> prepare_chunk_data(const Chunk& chunk, bool compress) {
+    auto data = chunk.encode();
+
+    std::vector<ubyte> chunkData;
+    if (compress) {
+        static util::Buffer<ubyte> rleBuffer;
+        if (rleBuffer.size() < CHUNK_DATA_LEN * 2) {
+            rleBuffer = util::Buffer<ubyte>(CHUNK_DATA_LEN * 2);
+        }
+        size_t rleCompressedSize = extrle::encode16(data.get(), CHUNK_DATA_LEN, rleBuffer.data());
+
+        const auto zipCompressedData = zip::compress(
+            rleBuffer.data(), rleCompressedSize
+        );
+        auto tmp = dataio::h2le(rleCompressedSize);
+        chunkData.reserve(zipCompressedData.size() + sizeof(tmp));
+        chunkData.insert(
+            chunkData.begin() + 0, (char*)&tmp, ((char*)&tmp) + sizeof(tmp)
+        );
+        chunkData.insert(
+            chunkData.begin() + sizeof(tmp),
+            zipCompressedData.data(),
+            zipCompressedData.data() + zipCompressedData.size()
+        );
+    } else {
+        chunkData.reserve(CHUNK_DATA_LEN);
+        chunkData.insert(
+            chunkData.begin(), data.get(), data.get() + CHUNK_DATA_LEN
+        );
+    }
+    return chunkData;
+}
+
 static int l_get_chunk_data(lua::State* L) {
     int x = static_cast<int>(lua::tointeger(L, 1));
     int y = static_cast<int>(lua::tointeger(L, 2));
@@ -133,62 +166,32 @@ static int l_get_chunk_data(lua::State* L) {
     if (lua::gettop(L) >= 3) {
         compress = lua::toboolean(L, 3);
     }
-    std::vector<ubyte> chunk_data;
-    if (compress) {
-        static util::Buffer<ubyte> rlebuffer;
-        if (rlebuffer.size() < CHUNK_DATA_LEN * 2) {
-            rlebuffer = util::Buffer<ubyte>(CHUNK_DATA_LEN * 2);
-        }
-
-        const auto& data_ptr = chunk->encode();
-        ubyte* data = data_ptr.get();
-        size_t rle_compressed_size = extrle::encode16(data, CHUNK_DATA_LEN, rlebuffer.data());
-
-        const auto zip_compressed_data = zip::compress(
-            rlebuffer.data(), rle_compressed_size
-        );
-        auto tmp = dataio::h2le(rle_compressed_size);
-        chunk_data.reserve(zip_compressed_data.size() + sizeof(tmp));
-        chunk_data.insert(
-            chunk_data.begin() + 0, (char*)&tmp, ((char*)&tmp) + sizeof(tmp)
-        );
-        chunk_data.insert(
-            chunk_data.begin() + sizeof(tmp),
-            zip_compressed_data.data(),
-            zip_compressed_data.data() + zip_compressed_data.size()
-        );
-    } else {
-        const auto& data = chunk->encode();
-        chunk_data.reserve(CHUNK_DATA_LEN);
-        chunk_data.insert(
-            chunk_data.begin(), data.get(), data.get() + CHUNK_DATA_LEN
-        );
-    }
-    return lua::newuserdata<lua::LuaBytearray>(L, chunk_data);
+    auto chunkData = prepare_chunk_data(*chunk, compress);
+    return lua::newuserdata<lua::LuaBytearray>(L, std::move(chunkData));
 }
 
 static int l_set_chunk_data(lua::State* L) {
     int x = static_cast<int>(lua::tointeger(L, 1));
     int y = static_cast<int>(lua::tointeger(L, 2));
     auto buffer = lua::touserdata<lua::LuaBytearray>(L, 3);
-    bool is_compressed = true;
+    bool isCompressed = true;
     if (lua::gettop(L) >= 4) {
-        is_compressed = lua::toboolean(L, 4);
+        isCompressed = lua::toboolean(L, 4);
     }
     auto chunk = scripting::level->chunks->getChunk(x, y);
     if (chunk == nullptr) return 0;
-    if (is_compressed) {
-        std::vector<ubyte>& raw_data = buffer->data();
-        size_t zip_decompressed_size = dataio::le2h(*(size_t*)(raw_data.data()));
-        const auto& rle_data = compression::decompress(
-            raw_data.data() + sizeof(zip_decompressed_size),
-            buffer->data().size() - sizeof(zip_decompressed_size),
-            zip_decompressed_size,
+    if (isCompressed) {
+        std::vector<ubyte>& rawData = buffer->data();
+        size_t zipDecompressedSize = dataio::le2h(*(size_t*)(rawData.data()));
+        auto rleData = compression::decompress(
+            rawData.data() + sizeof(zipDecompressedSize),
+            buffer->data().size() - sizeof(zipDecompressedSize),
+            zipDecompressedSize,
             compression::Method::Zip
         );
-        const auto& data = compression::decompress(
-            rle_data.get(),
-            zip_decompressed_size,
+        auto data = compression::decompress(
+            rleData.get(),
+            zipDecompressedSize,
             CHUNK_DATA_LEN,
             compression::Method::Extrle16
         );
@@ -197,17 +200,18 @@ static int l_set_chunk_data(lua::State* L) {
         chunk->decode(buffer->data().data());
     }
 
+    chunk->setModifiedAndUnsaved();
+    chunk->updateHeights();
+
     auto chunksController = scripting::controller->getChunksController();
     if (chunksController->lighting == nullptr) {
         return lua::pushboolean(L, true);
     }
 
     Lighting& lighting = *chunksController->lighting;
-
-    chunk->updateHeights();
     chunk->flags.loadedLights = false;
     chunk->flags.lighted = false;
-    chunk->setModifiedAndUnsaved();
+
     Lighting::preBuildSkyLight(*chunk, *scripting::indices);
     lighting.onChunkLoaded(x, y, true);
 
@@ -218,7 +222,7 @@ static int l_set_chunk_data(lua::State* L) {
             }
             chunk = scripting::level->chunks->getChunk(x + lx, y + lz);
             if (chunk != nullptr) {
-                chunk->setModifiedAndUnsaved();
+                chunk->flags.modified = true;
                 lighting.onChunkLoaded(x - 1, y, true);
             }
         }

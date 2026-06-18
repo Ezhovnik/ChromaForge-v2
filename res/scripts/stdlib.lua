@@ -377,6 +377,14 @@ function __chroma_on_hud_open()
             hud.show_overlay("builtin:console", false, {"console"})
         end)
     end)
+    input.add_callback("hud.chat", function()
+        if hud.is_paused() then
+            return
+        end
+        time.post_runnable(function()
+            hud.show_overlay("builtin:console", false, {"chat"})
+        end)
+    end)
 end
 
 local RULES_FILE = "world:rules.toml"
