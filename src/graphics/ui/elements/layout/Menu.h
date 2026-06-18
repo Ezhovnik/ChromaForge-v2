@@ -7,7 +7,8 @@
 namespace gui {
     struct Page {
         std::string name;
-        std::shared_ptr<UINode> panel = nullptr;
+        std::shared_ptr<UINode> panel;
+        bool temporal = false;
     };
 
     using page_loader_func = std::function<std::shared_ptr<UINode>(const std::string& name)>;
@@ -28,10 +29,11 @@ namespace gui {
         void setPage(Page page, bool history=true);
         void addPage(
             const std::string& name,
-            const std::shared_ptr<UINode>& panel
+            const std::shared_ptr<UINode>& panel,
+            bool temporal = false
         );
         void removePage(const std::string& name);
-        std::shared_ptr<UINode> fetchPage(const std::string& name);
+        Page fetchPage(const std::string& name);
 
         void addSupplier(
             const std::string& name,

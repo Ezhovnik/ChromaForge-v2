@@ -26,12 +26,12 @@ void guiutil::alert(
 
     auto menu = engine.getGUI()->getMenu();
     runnable on_hidden_final = [on_hidden, menu, &engine]() {
+        menu->removePage("<alert>");
         if (on_hidden) {
             on_hidden();
         } else {
             menu->back();
         }
-        menu->removePage("<alert>");
     };
 
     auto label = std::make_shared<Label>(text);
@@ -53,7 +53,7 @@ void guiutil::alert(
         on_hidden_final();
         return true;
     }));
-    menu->addPage("<alert>", panel);
+    menu->addPage("<alert>", panel, true);
     menu->setPage("<alert>");
 }
 
@@ -77,21 +77,21 @@ void guiutil::confirm(
     auto menu = engine.getGUI()->getMenu();
 
     runnable on_confirm_final = [on_confirm, menu, &engine]() {
+        menu->removePage("<confirm>");
         if (on_confirm) {
             on_confirm();
         } else {
             menu->back();
         }
-        menu->removePage("<confirm>");
     };
 
     runnable on_deny_final = [on_deny, menu, &engine]() {
+        menu->removePage("<confirm>");
         if (on_deny) {
             on_deny();
         } else {
             menu->back();
         }
-        menu->removePage("<confirm>");
     };
 
     subpanel->add(std::make_shared<Button>(yestext, glm::vec4(8.f), [=](GUI*){
@@ -113,7 +113,7 @@ void guiutil::confirm(
     }));
 
     panel->refresh();
-    menu->addPage("<confirm>", panel);
+    menu->addPage("<confirm>", panel, true);
     menu->setPage("<confirm>");
 }
 
@@ -163,6 +163,6 @@ void guiutil::confirm_with_memo(
     panel->add(subpanel);
 
     panel->refresh();
-    menu->addPage("<confirm>", panel);
+    menu->addPage("<confirm>", panel, true);
     menu->setPage("<confirm>");
 }

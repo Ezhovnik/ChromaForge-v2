@@ -15,7 +15,7 @@
 
 ContentPack ContentPack::createBuiltin(const EnginePaths& paths) {
     return ContentPack {
-        BUILTIN_CONTENT_NAMESPACE, "ChromaForge Builtin", ENGINE_VERSION_STRING, "ChromaForge", "", {}, paths.getResourcesFolder()
+        BUILTIN_CONTENT_NAMESPACE, "ChromaForge Builtin", ENGINE_VERSION_STRING, "ChromaForge", "", {}, paths.getResourcesFolder(), "res:"
     };
 }
 
@@ -68,7 +68,7 @@ static void checkContentPackId(const std::string& id, const std::filesystem::pat
     }
 }
 
-ContentPack ContentPack::read(const std::filesystem::path& folder) {
+ContentPack ContentPack::read(const std::string& path, const std::filesystem::path& folder) {
     auto root = files::read_json(folder/std::filesystem::path(PACKAGE_FILENAME));
     ContentPack pack;
 
@@ -89,6 +89,7 @@ ContentPack ContentPack::read(const std::filesystem::path& folder) {
     root.at("description").get(pack.description);
     root.at("source").get(pack.source);
     pack.folder = folder;
+    pack.path = path;
 
     if (auto found = root.at("dependencies")) {
         const auto& dependencies = *found;
@@ -122,17 +123,20 @@ ContentPack ContentPack::read(const std::filesystem::path& folder) {
 }
 
 void ContentPack::scanFolder(
+    const std::string& path,
     const std::filesystem::path& folder,
     std::vector<ContentPack>& packs
 ) {
     if (!std::filesystem::is_directory(folder)) return;
 
     for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-        const std::filesystem::path& folder = entry.path();
-        if (!std::filesystem::is_directory(folder)) continue;
-        if (!is_pack(folder)) continue;
+        const std::filesystem::path& packFolder = entry.path();
+        if (!std::filesystem::is_directory(packFolder)) continue;
+        if (!is_pack(packFolder)) continue;
         try {
-            packs.push_back(read(folder));
+            packs.push_back(
+                read(path + "/" + packFolder.filename().string(), packFolder)
+            );
         } catch (const contentpack_error& err) {
             LOG_ERROR("package.json error at '{}': {}", err.getFolder().u8string(), err.what());
         } catch (const std::runtime_error& err) {

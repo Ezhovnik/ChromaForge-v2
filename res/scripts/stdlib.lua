@@ -162,7 +162,7 @@ function Document.new(docname)
 end
 
 local _RadioGroup = {}
-function _RadioGroup.set(self, key)
+function _RadioGroup:set(key)
     if type(self) ~= 'table' then
         error("Called as non-OOP via '.', use radiogroup:set")
     end
@@ -175,7 +175,7 @@ function _RadioGroup.set(self, key)
         self.callback(key)
     end
 end
-function _RadioGroup.__call(self, elements, onset, default)
+function _RadioGroup:__call(elements, onset, default)
     local group = setmetatable({
         elements=elements, 
         callback=onset, 
@@ -190,24 +190,6 @@ RadioGroup = _RadioGroup
 _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
-
-local __post_runnables = {}
-
-function __process_post_runnables()
-    if #__post_runnables then
-        for _, func in ipairs(__post_runnables) do
-            local status, result = xpcall(func, __chroma__error)
-            if not status then
-                debug.error("Error in post_runnable: " .. result)
-            end
-        end
-        __post_runnables = {}
-    end
-end
-
-function time.post_runnable(runnable)
-    table.insert(__post_runnables, runnable)
-end
 
 console.cheats = {}
 
@@ -409,6 +391,7 @@ function __chroma_on_world_quit()
 end
 
 local __chroma_coroutines = {}
+local __chroma_named_coroutines = {}
 local __chroma_next_coroutine = 1
 local __chroma_coroutine_error = nil
 
@@ -445,6 +428,45 @@ function __chroma_stop_coroutine(id)
         end
         __chroma_coroutines[id] = nil
     end
+end
+
+function start_coroutine(chunk, name)
+    local co = coroutine.create(function()
+        local status, error = xpcall(chunk, __chroma__error)
+        if not status then
+            debug.error(error)
+        end
+    end)
+    __chroma_named_coroutines[name] = co
+end
+
+local __post_runnables = {}
+
+function __process_post_runnables()
+    if #__post_runnables then
+        for _, func in ipairs(__post_runnables) do
+            local status, result = xpcall(func, __chroma__error)
+            if not status then
+                debug.error("Error in post_runnable: "..result)
+            end
+        end
+        __post_runnables = {}
+    end
+
+    local dead = {}
+    for name, co in pairs(__chroma_named_coroutines) do
+        coroutine.resume(co)
+        if coroutine.status(co) == "dead" then
+            table.insert(dead, name)
+        end
+    end
+    for _, name in ipairs(dead) do
+        __chroma_named_coroutines[name] = nil
+    end
+end
+
+function time.post_runnable(runnable)
+    table.insert(__post_runnables, runnable)
 end
 
 assets = {}
