@@ -35,7 +35,8 @@
 
 LevelScreen::LevelScreen(
     Engine& engine,
-    std::unique_ptr<Level> levelPtr
+    std::unique_ptr<Level> levelPtr,
+    int64_t localPlayer
 ) : Screen(engine),
     postProcessing(std::make_unique<PostProcessing>())
 {
@@ -46,7 +47,9 @@ LevelScreen::LevelScreen(
     auto menu = engine.getGUI()->getMenu();
     menu->reset();
 
-    auto player = level->players->getPlayer(0);
+    auto player = level->players->getPlayer(localPlayer);
+    assert(player != nullptr);
+
     controller = std::make_unique<LevelController>(
         &engine, std::move(levelPtr), player
     );
@@ -163,6 +166,7 @@ void LevelScreen::update(float deltaTime) {
     bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();
 
+    auto level = controller->getLevel();
     auto player = playerController->getPlayer();
     auto camera = player->currentCamera;
 
@@ -180,7 +184,6 @@ void LevelScreen::update(float deltaTime) {
         glm::vec3(0, 1, 0)
     );
 
-    auto level = controller->getLevel();
     const auto& settings = engine.getSettings();
 
     if (!hud->isPause()) {

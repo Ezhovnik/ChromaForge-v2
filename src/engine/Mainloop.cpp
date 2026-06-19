@@ -12,12 +12,14 @@ Mainloop::Mainloop(Engine& engine) : engine(engine) {}
 void Mainloop::run() {
     auto& time = engine.getTime();
 
-    engine.setLevelConsumer([this](auto level) {
+    engine.setLevelConsumer([this](auto level, int64_t localPlayer) {
         if (level == nullptr) {
             engine.setScreen(nullptr);
             engine.setScreen(std::make_shared<MenuScreen>(engine));
         } else {
-            engine.setScreen(std::make_shared<LevelScreen>(engine, std::move(level)));
+            engine.setScreen(std::make_shared<LevelScreen>(
+                engine, std::move(level), localPlayer
+            ));
         }
     });
 

@@ -52,6 +52,8 @@ struct CoreParameters {
     std::filesystem::path scriptFile;
 };
 
+using OnWorldOpen = std::function<void(std::unique_ptr<Level>, int64_t)>;
+
 // Основной класс Engine, управляющий жизненным циклом приложения
 class Engine : public util::ObjectsKeeper {
 private:
@@ -80,7 +82,7 @@ private:
 
     EngineTime time;
 
-    consumer<std::unique_ptr<Level>> levelConsumer;
+    OnWorldOpen levelConsumer;
 
     bool quitSignal = false;
 
@@ -133,9 +135,9 @@ public:
 
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLanguage(std::string locale);
-    void setLevelConsumer(consumer<std::unique_ptr<Level>> levelConsumer);
+    void setLevelConsumer(OnWorldOpen levelConsumer);
 
-    void onWorldOpen(std::unique_ptr<Level> level);
+    void onWorldOpen(std::unique_ptr<Level> level, int64_t localPlayer);
     void onWorldClosed();
 
     void quit();

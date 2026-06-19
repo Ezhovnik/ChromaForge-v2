@@ -213,6 +213,15 @@ static int l_get_all_in_radius(lua::State* L) {
     return 1;  
 }
 
+static int l_get_player(lua::State* L) {
+    entityid_t eid = lua::touinteger(L, 1);
+    auto level = scripting::controller->getLevel();
+    if (auto entity = level->entities->get(eid)) {
+        return lua::pushinteger(L, entity->getPlayer());
+    }
+    return 0;
+}
+
 const luaL_Reg entitylib [] = {
     {"exists", lua::wrap<l_exists>},
     {"def_index", lua::wrap<l_def_index>},
@@ -224,6 +233,7 @@ const luaL_Reg entitylib [] = {
     {"despawn", lua::wrap<l_despawn>},
     {"get_skeleton", lua::wrap<l_get_skeleton>},
     {"set_skeleton", lua::wrap<l_set_skeleton>},
+    {"get_player", lua::wrap<l_get_player>},
     {"get_all_in_box", lua::wrap<l_get_all_in_box>},
     {"get_all_in_radius", lua::wrap<l_get_all_in_radius>},
     {"raycast", lua::wrap<l_raycast>},

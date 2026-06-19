@@ -159,8 +159,8 @@ void CameraControl::update(
     }
     if (input.cameraMode) switchCamera();
 
-    auto& spCamera = player.spCamera;
-    auto& tpCamera = player.tpCamera;
+    const auto& spCamera = player.spCamera;
+    const auto& tpCamera = player.tpCamera;
 
     refresh();
 
@@ -264,7 +264,6 @@ void PlayerController::resetKeyboard() {
 }
 
 void PlayerController::updatePlayer(float deltaTime){
-    player.updateEntity();
 	player.updateInput(input, deltaTime);
 }
 
@@ -273,11 +272,11 @@ static int determine_rotation(const Block* def, const glm::ivec3& norm, const gl
         const std::string& name = def->rotations.name;
         if (name == "pipe") {
             if (norm.x < 0.0f) return BLOCK_DIR_WEST;
-            else if (norm.x > 0.0f) return BLOCK_DIR_EAST;
-            else if (norm.y > 0.0f) return BLOCK_DIR_UP;
-            else if (norm.y < 0.0f) return BLOCK_DIR_DOWN;
-            else if (norm.z > 0.0f) return BLOCK_DIR_NORTH;
-            else if (norm.z < 0.0f) return BLOCK_DIR_SOUTH;
+            if (norm.x > 0.0f) return BLOCK_DIR_EAST;
+            if (norm.y > 0.0f) return BLOCK_DIR_UP;
+            if (norm.y < 0.0f) return BLOCK_DIR_DOWN;
+            if (norm.z > 0.0f) return BLOCK_DIR_NORTH;
+            if (norm.z < 0.0f) return BLOCK_DIR_SOUTH;
         } 
         else if (name == "pane") {
             if (abs(camDir.x) > abs(camDir.z)){

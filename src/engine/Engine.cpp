@@ -181,7 +181,7 @@ PacksManager Engine::createPacksManager(const std::filesystem::path& worldFolder
     return manager;
 }
 
-void Engine::setLevelConsumer(consumer<std::unique_ptr<Level>> levelConsumer) {
+void Engine::setLevelConsumer(OnWorldOpen levelConsumer) {
     this->levelConsumer = std::move(levelConsumer);
 }
 
@@ -533,14 +533,14 @@ EngineTime& Engine::getTime() {
     return time;
 }
 
-void Engine::onWorldOpen(std::unique_ptr<Level> level) {
+void Engine::onWorldOpen(std::unique_ptr<Level> level, int64_t localPlayer) {
     LOG_INFO("World open");
-    levelConsumer(std::move(level));
+    levelConsumer(std::move(level), localPlayer);
 }
 
 void Engine::onWorldClosed() {
     LOG_INFO("World closed");
-    levelConsumer(nullptr);
+    levelConsumer(nullptr, -1);
 }
 
 void Engine::quit() {

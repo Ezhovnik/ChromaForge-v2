@@ -92,7 +92,7 @@ bool ChunksController::loadVisible(const Player& player, uint padding) const {
 	}
 
 	const auto& chunk = chunks.getChunks()[nearZ * sizeX + nearX];
-	if (chunk != nullptr || !assigned) {
+	if (chunk != nullptr || !assigned || !player.isLoadingChunks()) {
 		return false;
 	}
 

@@ -26,7 +26,7 @@ void ServerMainloop::run() {
         return;
     }
 
-    engine.setLevelConsumer([this](auto level) {
+    engine.setLevelConsumer([this](auto level, auto) {
         setLevel(std::move(level));
     });
 

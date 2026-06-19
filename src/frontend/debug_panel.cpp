@@ -30,6 +30,7 @@
 #include <graphics/render/ParticlesRenderer.h>
 #include <graphics/render/ChunksRenderer.h>
 #include <voxels/GlobalChunks.h>
+#include <objects/Players.h>
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
@@ -86,6 +87,10 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     panel->add(create_label([&]() {
         return L"Entities: " + std::to_wstring(level.entities->size()) +
         L" Next: " + std::to_wstring(level.entities->peekNextID());
+    }));
+    panel->add(create_label([&]() {
+        return L"Players: " + std::to_wstring(level.players->size()) +
+        L" Local: " + std::to_wstring(player.getId());
     }));
     panel->add(create_label([](){
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());

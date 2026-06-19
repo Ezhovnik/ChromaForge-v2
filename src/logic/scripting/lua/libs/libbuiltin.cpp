@@ -34,6 +34,7 @@ static int l_open_world(lua::State* L) {
         throw std::runtime_error("World must be closed before");
     }
     auto controller = scripting::engine->getController();
+    controller->setLocalPlayer(0);
     controller->openWorld(name, false);
     return 0;
 }
@@ -130,10 +131,15 @@ static int l_new_world(lua::State* L) {
     auto name = lua::require_string(L, 1);
     auto seed = lua::require_string(L, 2);
     auto generator = lua::require_string(L, 3);
+    int64_t localPlayer = 0;
+    if (lua::gettop(L) >= 4) {
+        localPlayer = lua::tointeger(L, 4);
+    }
     if (scripting::level != nullptr) {
         throw std::runtime_error("World must be closed before");
     }
     auto controller = scripting::engine->getController();
+    controller->setLocalPlayer(localPlayer);
     controller->createWorld(name, seed, generator);
     return 0;
 }

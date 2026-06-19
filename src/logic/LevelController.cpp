@@ -51,6 +51,10 @@ LevelController::LevelController(
     do {
         confirmed = 0;
         for (const auto& [_, player] : *level->players) {
+            if (!player->isLoadingChunks()) {
+                confirmed++;
+                continue;
+            }
             glm::vec3 position = player->getPosition();
             player->chunks->configure(
                 std::floor(position.x), std::floor(position.z), 1
@@ -66,6 +70,7 @@ LevelController::LevelController(
 void LevelController::update(float delta, bool pause) {
     for (const auto& [_, player] : *level->players) {
         if (player->isSuspended()) continue;
+        player->updateEntity();
         glm::vec3 position = player->getPosition();
         player->chunks->configure(
             position.x,
