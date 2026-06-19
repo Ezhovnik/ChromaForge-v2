@@ -95,7 +95,11 @@ std::unique_ptr<Level> World::create(
         content,
         packs
     );
-    LOG_INFO("Created world '{}' ({})", name, directory.u8string());
+    if (name.empty()) {
+        LOG_INFO("Created nameless world");
+    } else {
+        LOG_INFO("Created world '{}' ({})", name, directory.u8string());
+    }
     LOG_INFO("World seed: {}", seed);
     LOG_INFO("World generator: {}", generator);
 	return std::make_unique<Level>(std::move(world), content, settings);
