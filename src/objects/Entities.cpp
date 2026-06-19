@@ -43,6 +43,18 @@ void Entt_Entity::destroy() {
     }
 }
 
+void Entt_Entity::setInterpolatedPosition(const glm::vec3& position) {
+    getSkeleton().interpolation.refresh(position);
+}
+
+glm::vec3 Entt_Entity::getInterpolatedPosition() const {
+    const auto& skeleton = getSkeleton();
+    if (skeleton.interpolation.isEnabled()) {
+        return skeleton.interpolation.getCurrent();
+    }
+    return getTransform().pos;
+}
+
 rigging::Skeleton& Entt_Entity::getSkeleton() const {
     return registry.get<rigging::Skeleton>(entity);
 }
@@ -581,12 +593,12 @@ void Entities::render(const Assets& assets, ModelBatch& batch, const Frustum* fr
     auto view = registry.view<Transform, rigging::Skeleton>();
     for (auto [entity, transform, skeleton] : view.each()) {
         if (transform.dirty) transform.refresh();
-
+        if (skeleton.interpolation.isEnabled()) skeleton.interpolation.updateTimer(deltaTime);
         const auto& pos = transform.pos;
         const auto& size = transform.size;
         if (!frustum || frustum->isBoxVisible(pos - size, pos + size)) {
             const auto* skeletonConfig = skeleton.config;
-            skeletonConfig->render(assets, batch, skeleton, transform.combined);
+            skeletonConfig->render(assets, batch, skeleton, transform.combined, pos);
         }
     }
 }

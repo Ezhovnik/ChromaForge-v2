@@ -50,5 +50,7 @@ namespace gui {
         void reset();
 
         Page& getCurrent();
+
+        bool hasOpenPage() const;
     };
 }

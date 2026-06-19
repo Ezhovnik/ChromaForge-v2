@@ -224,7 +224,8 @@ void Hud::cleanup() {
 }
 
 void Hud::processInput(bool visible) {
-    if (!Window::isFocused() && !pause && !isInventoryOpen()) setPause(true);
+    auto menu = guiController.getMenu();
+    if (!Window::isFocused() && !menu->hasOpenPage() && !isInventoryOpen()) setPause(true);
 
     if (!pause && visible && Events::justActive(BIND_HUD_INVENTORY)) {
         if (inventoryOpen) {
@@ -313,11 +314,11 @@ void Hud::update(bool hudVisible) {
 	debugPanel->setVisible(debug && hudVisible);
 
 	if (!hudVisible && inventoryOpen) closeInventory();
-	if (pause && menu->getCurrent().panel == nullptr) setPause(false);
+	if (pause && !menu->hasOpenPage()) setPause(false);
 
 	if (!guiController.isFocusCaught()) processInput(hudVisible);
 
-	if ((pause || inventoryOpen) == Events::_cursor_locked) Events::toggleCursor();
+	if ((menu->hasOpenPage() || inventoryOpen) == Events::isCursorLocked()) Events::toggleCursor();
 
 	if (blockUI) {
         voxel* vox = chunks.getVoxel(blockPos.x, blockPos.y, blockPos.z);
@@ -353,7 +354,9 @@ void Hud::draw(const DrawContext& context) {
     const Viewport& viewport = context.getViewport();
 	const uint width = viewport.getWidth();
 	const uint height = viewport.getHeight();
+    auto menu = guiController.getMenu();
 
+    darkOverlay->setVisible(menu->hasOpenPage());
     updateElementsPosition(viewport);
 
     uicamera->setFov(height);
@@ -596,18 +599,18 @@ bool Hud::isPause() const {
 
 void Hud::setPause(bool pause) {
     if (this->pause == pause) return;
-    this->pause = pause;
+    if (allowPause) {
+        this->pause = pause;
+    }
 
     if (inventoryOpen) closeInventory();
 
     const auto& menu = guiController.getMenu();
-    if (pause) {
-        menu->setPage("pause");
-    } else {
+    if (menu->hasOpenPage()) {
         menu->reset();
+    } else {
+        menu->setPage("pause");
     }
-
-    darkOverlay->setVisible(pause);
     menu->setVisible(pause);
 }
 
@@ -687,4 +690,13 @@ void Hud::setDebugCheats(bool flag) {
 
 void Hud::setDebug(bool flag) {
     debug = flag;
+}
+
+void Hud::setAllowPause(bool flag) {
+    if (pause) {
+        auto menu = guiController.getMenu();
+        setPause(false);
+        menu->setPage("pause", true);
+    }
+    allowPause = flag;
 }

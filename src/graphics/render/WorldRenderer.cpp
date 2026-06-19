@@ -262,8 +262,9 @@ void WorldRenderer::renderHands(const Camera& camera, float deltaTime) {
     rotation = glm::mat4_cast(finalRot);
     matrix = rotation * matrix * glm::rotate(glm::mat4(1.0f), -glm::pi<float>() * 0.5f, glm::vec3(0, 1, 0));
     prevRotation = rotation;
+    glm::vec3 cameraRotation = player.getRotation();
     auto offset = -(camera.position - player.getPosition());
-    float angle = glm::radians(player.rotation.x - 90);
+    float angle = glm::radians(cameraRotation.x - 90);
     float cos = glm::cos(angle);
     float sin = glm::sin(angle);
 

@@ -149,7 +149,7 @@ void GUI::activateFocused() {
         focus->keyPressed(key);
     }
 
-    if (!Events::_cursor_locked) {
+    if (!Events::isCursorLocked()) {
         if (Events::isClicked(mousecode::BUTTON_1) && (Events::justClicked(mousecode::BUTTON_1) || Events::delta.x || Events::delta.y)) {
             if (!doubleClicked) {
                 focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
@@ -170,7 +170,7 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
     auto prevfocus = focus;
 
     updateTooltip(deltaTime);
-    if (!Events::_cursor_locked) {
+    if (!Events::isCursorLocked()) {
         activateMouse(deltaTime);
     } else {
         if (hover) {

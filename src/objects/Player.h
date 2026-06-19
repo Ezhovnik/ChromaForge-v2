@@ -9,6 +9,7 @@
 #include <data/dv.h>
 #include <interfaces/Serializable.h>
 #include <constants.h>
+#include <util/Interpolation.h>
 
 class Camera;
 struct Hitbox;
@@ -78,12 +79,14 @@ private:
     entityid_t eid;
 
     entityid_t selectedEid = 0;
+
+    glm::vec3 rotation {}; ///< Углы поворота камеры
 public:
+    util::VecInterpolation<3, float, true> rotationInterpolation {true};
+
     std::unique_ptr<Chunks> chunks;
 	std::shared_ptr<Camera> fpCamera, spCamera, tpCamera; ///< Камеры: от первого лица, от третьего лица (спереди/сзади)
     std::shared_ptr<Camera> currentCamera; ///< Текущая активная камера
-
-	glm::vec3 rotation {}; ///< Углы поворота камеры
 
 	CursorSelection selection {};
 
@@ -180,6 +183,9 @@ public:
      * @brief Возвращает точку возрождения.
      */
     glm::vec3 getSpawnPoint() const;
+
+    glm::vec3 getRotation(bool interpolated=false) const;
+    void setRotation(const glm::vec3& rotation);
 
 	/**
      * @brief Обновляет состояние игрока (физика, ввод, камера).

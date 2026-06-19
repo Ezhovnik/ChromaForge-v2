@@ -17,6 +17,7 @@
 #include <util/stringutil.h>
 #include <engine/Engine.h>
 #include <files/files.h>
+#include <objects/Entities.h>
 
 inline constexpr int UPDATE_AREA_DIAMETER = 32;
 inline constexpr int UPDATE_BLOCKS = UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER;
@@ -151,7 +152,11 @@ void Decorator::update(float delta, const Camera& camera) {
             renderer.texts->remove(textsIter->second);
             textsIter = playerTexts.erase(textsIter);
         } else {
-            note->setPosition(player->getPosition() + glm::vec3(0, 1, 0));
+            glm::vec3 position = player->getPosition();
+            if (auto entity = level.entities->get(player->getEntity())) {
+                position = entity->getInterpolatedPosition();
+            }
+            note->setPosition(position + glm::vec3(0, 1, 0));
             ++textsIter;
         }
     }

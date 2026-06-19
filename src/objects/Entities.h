@@ -173,6 +173,9 @@ public:
         registry.get<EntityId>(entity).player = id;
     }
 
+    void setInterpolatedPosition(const glm::vec3& position);
+    glm::vec3 getInterpolatedPosition() const;
+
     void destroy();
 };
 

@@ -162,8 +162,9 @@ void LevelScreen::updateHotkeys() {
 
 void LevelScreen::update(float deltaTime) {
     gui::GUI* gui = engine.getGUI();
+    auto menu = gui->getMenu();
 
-    bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
+    bool inputLocked = menu->hasOpenPage() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();
 
     auto level = controller->getLevel();

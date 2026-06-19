@@ -253,7 +253,7 @@ void Player::deserialize(const dv::value& src) {
 void Player::convert(dv::value& data, const ContentReport* report) {
     if (data.has("players")) {
         auto& players = data["players"];
-        for (uint i = 0; i < players.size(); i++) {
+        for (uint i = 0; i < players.size(); ++i) {
             auto& playerData = players[i];
             if (playerData.has("inventory")) {
                 Inventory::convert(playerData["inventory"], report);
@@ -269,6 +269,7 @@ void Player::teleport(glm::vec3 position) {
     if (auto entity = level.entities->get(eid)) {
         entity->getRigidbody().hitbox.position = position;
         entity->getTransform().setPos(position);
+        entity->setInterpolatedPosition(position);
     }
 }
 
@@ -366,4 +367,16 @@ bool Player::isSuspended() const {
 
 void Player::setSuspended(bool flag) {
     suspended = flag;
+}
+
+glm::vec3 Player::getRotation(bool interpolated) const {
+    if (interpolated) {
+        return rotationInterpolation.getCurrent();
+    }
+    return rotation;
+}
+
+void Player::setRotation(const glm::vec3& rotation) {
+    this->rotation = rotation;
+    rotationInterpolation.refresh(rotation);
 }

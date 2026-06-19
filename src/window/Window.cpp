@@ -413,7 +413,7 @@ void Window::toggleFullscreen(){
 	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
-	if (Events::_cursor_locked) Events::toggleCursor();
+	if (Events::isCursorLocked()) Events::toggleCursor();
 
 	if (fullscreen) {
         glfwGetWindowPos(window, &posX, &posY);

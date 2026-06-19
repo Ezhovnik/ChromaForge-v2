@@ -1,7 +1,6 @@
 #include <objects/rigging.h>
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/norm.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
 #include <assets/Assets.h>
@@ -74,8 +73,8 @@ size_t SkeletonConfig::update(
     size_t index, 
     Skeleton& skeleton, 
     Bone* node, 
-    glm::mat4 matrix) const 
-{
+    const glm::mat4& matrix
+) const {
     auto boneMatrix = skeleton.pose.matrices[index];
     auto boneOffset = node->getOffset();
     glm::mat4 baseMatrix(1.0f);
@@ -90,17 +89,32 @@ size_t SkeletonConfig::update(
     return count;
 }
 
-void SkeletonConfig::update(Skeleton& skeleton, glm::mat4 matrix) const {
-    update(0, skeleton, root.get(), matrix);
+void SkeletonConfig::update(
+    Skeleton& skeleton, const glm::mat4& matrix, const glm::vec3& position
+) const {
+    if (skeleton.interpolation.isEnabled()) {
+        const auto& interpolation = skeleton.interpolation;
+        glm::vec3 scale, translation, skew;
+        glm::quat rotation;
+        glm::vec4 perspective;
+        glm::decompose(matrix, scale, rotation, translation, skew, perspective);
+
+        auto delta = interpolation.getCurrent() - position;
+        auto interpolatedMatrix = glm::translate(matrix, delta);
+        update(0, skeleton, root.get(), interpolatedMatrix);
+    } else {
+        update(0, skeleton, root.get(), matrix);
+    }
 }
 
 void SkeletonConfig::render(
     const Assets& assets,
     ModelBatch& batch,
     Skeleton& skeleton,
-    const glm::mat4& matrix) const
-{
-    update(skeleton, matrix);
+    const glm::mat4& matrix,
+    const glm::vec3& position
+) const {
+    update(skeleton, matrix, position);
     if (!skeleton.visible) return;
     for (size_t i = 0; i < nodes.size(); ++i) {
         auto* node = nodes[i];
