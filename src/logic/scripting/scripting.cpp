@@ -413,7 +413,7 @@ void scripting::on_chunk_present(const Chunk& chunk, bool loaded) {
         lua::pushboolean(L, loaded);
         return 3;
     };
-    for (auto& [packid, pack] : content->getPacks()) {
+    for (auto& [packid, pack] : scripting::content->getPacks()) {
         if (pack->worldfuncsset.onchunkpresent) {
             lua::emit_event(
                 lua::get_main_state(), packid + ":.chunkpresent", args
@@ -427,10 +427,40 @@ void scripting::on_chunk_remove(const Chunk& chunk) {
         lua::pushvec_stack<2>(L, {chunk.chunk_x, chunk.chunk_z});
         return 2;
     };
-    for (auto& [packid, pack] : content->getPacks()) {
+    for (auto& [packid, pack] : scripting::content->getPacks()) {
         if (pack->worldfuncsset.onchunkremove) {
             lua::emit_event(
                 lua::get_main_state(), packid + ":.chunkremove", args
+            );
+        }
+    }
+}
+
+void scripting::on_inventory_open(const Player* player, const Inventory& inventory) {
+    auto args = [player, &inventory](lua::State* L) {
+        lua::pushinteger(L, inventory.getId());
+        lua::pushinteger(L, player ? player->getId() : -1);
+        return 2;
+    };
+    for (auto& [packid, pack] : scripting::content->getPacks()) {
+        if (pack->worldfuncsset.oninventoryopen) {
+            lua::emit_event(
+                lua::get_main_state(), packid + ":.inventoryopen", args
+            );
+        }
+    }
+}
+
+void scripting::on_inventory_closed(const Player* player, const Inventory& inventory) {
+    auto args = [player, &inventory](lua::State* L) {
+        lua::pushinteger(L, inventory.getId());
+        lua::pushinteger(L, player ? player->getId() : -1);
+        return 2;
+    };
+    for (auto& [packid, pack] : scripting::content->getPacks()) {
+        if (pack->worldfuncsset.oninventoryclosed) {
+            lua::emit_event(
+                lua::get_main_state(), packid + ":.inventoryclosed", args
             );
         }
     }
@@ -795,6 +825,8 @@ void scripting::load_world_script(
     funcsset.onplayerspark = register_event(env, "on_player_spark", prefix + ":.playerspark");
     funcsset.onchunkpresent = register_event(env, "on_chunk_present", prefix + ":.chunkpresent");
     funcsset.onchunkremove = register_event(env, "on_chunk_remove", prefix + ":.chunkremove");
+    funcsset.oninventoryopen = register_event(env, "on_inventory_open", prefix + ":.inventoryopen");
+    funcsset.oninventoryclosed = register_event(env, "on_inventory_closed", prefix + ":.inventoryclosed");
 }
 
 void scripting::load_layout_script(

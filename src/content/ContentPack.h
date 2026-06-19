@@ -109,6 +109,8 @@ struct WorldFuncsSet {
     bool onplayerspark;
     bool onchunkpresent;
     bool onchunkremove;
+    bool oninventoryopen;
+    bool oninventoryclosed;
 };
 
 class ContentPackRuntime {

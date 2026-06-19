@@ -78,6 +78,9 @@ namespace scripting {
     void on_chunk_present(const Chunk& chunk, bool loaded);
     void on_chunk_remove(const Chunk& chunk);
 
+    void on_inventory_open(const Player* player, const Inventory& inventory);
+    void on_inventory_closed(const Player* player, const Inventory& inventory);
+
     void on_player_spark(Player* player, int tps);
 
     bool on_item_use(Player* player, const Item& item);
