@@ -351,6 +351,7 @@ function __chroma_on_hud_open()
             hud.pause()
         end
     end)
+    hud.open_permanent("builtin:ingame_chat")
 end
 
 local RULES_FILE = "world:rules.toml"

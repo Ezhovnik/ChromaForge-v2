@@ -159,12 +159,6 @@ void GUI::activateFocused() {
 }
 
 void GUI::activate(float deltaTime, const Viewport& vp) {
-    while (!postRunnables.empty()) {
-        runnable callback = postRunnables.back();
-        postRunnables.pop();
-        callback();
-    }
-
     container->setSize(vp.size());
     container->activate(deltaTime);
     auto prevfocus = focus;
@@ -181,6 +175,14 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
 
     if (focus) activateFocused();
     if (focus && !focus->isFocused()) focus = nullptr;
+}
+
+void GUI::postActivate() {
+    while (!postRunnables.empty()) {
+        runnable callback = postRunnables.back();
+        postRunnables.pop();
+        callback();
+    }
 }
 
 void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
