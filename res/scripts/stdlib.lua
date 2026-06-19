@@ -413,15 +413,9 @@ end
 local __chroma_coroutines = {}
 local __chroma_named_coroutines = {}
 local __chroma_next_coroutine = 1
-local __chroma_coroutine_error = nil
 
 function __chroma_start_coroutine(chunk)
-    local co = coroutine.create(function()
-        local status, err = pcall(chunk)
-        if not status then
-            __chroma_coroutine_error = err
-        end
-    end)
+    local co = coroutine.create(chunk)
     local id = __chroma_next_coroutine
     __chroma_next_coroutine = __chroma_next_coroutine + 1
     __chroma_coroutines[id] = co
@@ -431,10 +425,10 @@ end
 function __chroma_resume_coroutine(id)
     local co = __chroma_coroutines[id]
     if co then
-        coroutine.resume(co)
-        if __chroma_coroutine_error then
-            debug.error(__chroma_coroutine_error)
-            error(__chroma_coroutine_error)
+        local success, err = coroutine.resume(co)
+        if not success then
+            debug.error(err)
+            error(err)
         end
         return coroutine.status(co) ~= "dead"
     end

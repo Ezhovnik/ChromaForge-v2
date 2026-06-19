@@ -86,7 +86,9 @@ static int l_closeserver(lua::State* L) {
 static int l_send(lua::State* L) {
     uint64_t id = lua::tointeger(L, 1);
     auto connection = scripting::engine->getNetwork().getConnection(id);
-    if (connection == nullptr) return 0;
+    if (connection == nullptr || connection->getState() == network::ConnectionState::Closed) {
+        return 0;
+    }
     if (lua::istable(L, 2)) {
         lua::pushvalue(L, 2);
         size_t size = lua::objlen(L, 2);
@@ -160,7 +162,8 @@ static int l_is_alive(lua::State* L) {
     uint64_t id = lua::tointeger(L, 1);
     if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
         return lua::pushboolean(
-            L, connection->getState() != network::ConnectionState::Closed
+            L,
+            connection->getState() != network::ConnectionState::Closed || connection->available() > 0
         );
     }
     return lua::pushboolean(L, false);

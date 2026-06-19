@@ -252,12 +252,13 @@ scripting::common_func lua::create_lambda(lua::State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=](const std::vector<dv::value>& args) -> dv::value {
         if (!get_from(L, LAMBDAS_TABLE, *funcptr, false)) return nullptr;
-        int top = gettop(L) + 1;
+        int top = gettop(L) - 1;
         for (const auto& arg : args) {
             pushvalue(L, arg);
         }
         if (call(L, args.size(), 1)) {
             int nres = gettop(L) - top;
+            assert(nres >= 0);
             if (nres) {
                 auto result = tovalue(L, -1);
                 pop(L, 1 + nres);
