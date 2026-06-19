@@ -599,16 +599,15 @@ bool Hud::isPause() const {
 
 void Hud::setPause(bool pause) {
     if (this->pause == pause) return;
-    if (allowPause) {
-        this->pause = pause;
-    }
+    if (allowPause) this->pause = pause;
 
     if (inventoryOpen) closeInventory();
 
     const auto& menu = guiController.getMenu();
-    if (menu->hasOpenPage()) {
+    if (!pause && menu->hasOpenPage()) {
         menu->reset();
-    } else {
+    }
+    if (pause && !menu->hasOpenPage()) {
         menu->setPage("pause");
     }
     menu->setVisible(pause);

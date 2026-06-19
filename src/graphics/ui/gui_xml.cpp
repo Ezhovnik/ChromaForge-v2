@@ -22,6 +22,7 @@
 #include <frontend/menu.h>
 #include <graphics/ui/GUI.h>
 #include <engine/Engine.h>
+#include <graphics/ui/elements/layout/Canvas.h>
 
 using namespace gui;
 
@@ -384,6 +385,16 @@ static std::shared_ptr<UINode> readCheckBox(
     return checkbox;
 }
 
+static std::shared_ptr<UINode> readCanvas(
+    const UIXmlReader& reader, const xml::xmlelement& element
+) {
+    auto size = glm::uvec2{32, 32};
+    if (element.has("size")) size = element.attr("size").asVec2();
+    auto image = std::make_shared<Canvas>(ImageFormat::rgba8888, size);
+    _readUINode(reader, element, *image);
+    return image;
+}
+
 static std::shared_ptr<UINode> readTrackBar(
     const UIXmlReader& reader,
     const xml::xmlelement& element
@@ -553,6 +564,7 @@ static std::shared_ptr<UINode> readPageBox(
 UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
     contextStack.emplace("");
     add("image", readImage);
+    add("canvas", readCanvas);
     add("label", readLabel);
     add("button", readButton);
     add("textbox", readTextBox);

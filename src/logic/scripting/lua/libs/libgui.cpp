@@ -17,6 +17,7 @@
 #include <graphics/ui/elements/display/Image.h>
 #include <graphics/ui/markdown.h>
 #include <graphics/core/Font.h>
+#include <graphics/ui/elements/layout/Canvas.h>
 
 static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
@@ -261,6 +262,13 @@ static int p_get_line_numbers(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_data(gui::UINode* node, lua::State* L) {
+    if (auto canvas = dynamic_cast<gui::Canvas*>(node)) {
+        return lua::newuserdata<lua::LuaCanvas>(L, canvas->texture());
+    }
+    return 0;
+}
+
 static int p_get_add(gui::UINode* node, lua::State* L) {
     if (dynamic_cast<gui::Container*>(node)) {
         return lua::pushcfunction(L, lua::wrap<l_container_add>);
@@ -463,7 +471,8 @@ static int l_gui_getattr(lua::State* L) {
         {"destruct", p_get_destruct},
         {"contentOffset", p_get_content_offset},
         {"cursor", p_get_cursor},
-        {"reposition", p_get_reposition}
+        {"reposition", p_get_reposition},
+        {"data", p_get_data}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) {
