@@ -179,7 +179,7 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
 
 void GUI::postActivate() {
     while (!postRunnables.empty()) {
-        runnable callback = postRunnables.back();
+        runnable callback = postRunnables.front();
         postRunnables.pop();
         callback();
     }

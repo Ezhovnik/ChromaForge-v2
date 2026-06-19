@@ -259,7 +259,6 @@ void Engine::renderFrame() {
     Viewport viewport(Window::width, Window::height);
     DrawContext ctx(nullptr, viewport, nullptr);
     gui->draw(ctx, *assets);
-    gui->postActivate();
 }
 
 void Engine::run() {
@@ -282,6 +281,7 @@ void Engine::updateFrontend() {
     audio::update(delta);
     gui->activate(delta, Viewport(Window::width, Window::height));
     screen->update(delta);
+    gui->postActivate();
 }
 
 void Engine::nextFrame() {

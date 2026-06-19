@@ -98,7 +98,9 @@ LevelScreen::LevelScreen(
 }
 
 LevelScreen::~LevelScreen() {
-    saveWorldPreview();
+    if (!controller->getLevel()->getWorld()->isNameless()) {
+        saveWorldPreview();
+    }
     scripting::on_frontend_close();
     Events::enableBindings();
     controller->onWorldQuit();

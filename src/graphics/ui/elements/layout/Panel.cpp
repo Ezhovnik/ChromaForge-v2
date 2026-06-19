@@ -56,6 +56,7 @@ void Panel::cropToContent() {
 void Panel::fullRefresh() {
     refresh();
     cropToContent();
+    reposition();
     Container::fullRefresh();
 }
 

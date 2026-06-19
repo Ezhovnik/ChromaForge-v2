@@ -8,7 +8,7 @@
         <label id="title" pos="8,8"></label>
     </container>
 
-    <container id="logContainer" pos="0,60" size-func="unpack(vec2.add(gui.get_viewport(), {0,-100}))">
+    <container id="logContainer" pos="0,60" size-func="unpack(vec2.add(gui.get_viewport(), {-350, -100}))">
         <textbox 
             id='log' 
             color='0'
@@ -16,7 +16,7 @@
             margin='0'
             editable='false' 
             multiline='true' 
-            size-func="gui.get_viewport()[1],40"
+            size-func="gui.get_viewport()[1] - 350, 40"
             gravity="bottom-left"
             markup="md"
         ></textbox>
