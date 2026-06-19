@@ -145,63 +145,15 @@ function events.emit(event, ...)
     return result
 end
 
--- class designed for simple UI-nodes access via properties syntax
-local Element = {}
-function Element.new(docname, name)
-    return setmetatable({docname=docname, name=name}, {
-        __index=function(self, k)
-            return gui.getattr(self.docname, self.name, k)
-        end,
-        __newindex=function(self, k, v)
-            gui.setattr(self.docname, self.name, k, v)
-        end
-    })
-end
+gui_util = require "builtin:internal/gui_util"
 
--- the engine automatically creates an instance for every ui document (layout)
-Document = {}
-function Document.new(docname)
-    return setmetatable({name=docname}, {
-        __index=function(self, k)
-            local elem = Element.new(self.name, k)
-            rawset(self, k, elem)
-            return elem
-        end
-    })
-end
-
-local _RadioGroup = {}
-function _RadioGroup:set(key)
-    if type(self) ~= 'table' then
-        error("Called as non-OOP via '.', use radiogroup:set")
-    end
-    if self.current then
-        self.elements[self.current].enabled = true
-    end
-    self.elements[key].enabled = false
-    self.current = key
-    if self.callback then
-        self.callback(key)
-    end
-end
-function _RadioGroup:__call(elements, onset, default)
-    local group = setmetatable({
-        elements=elements, 
-        callback=onset, 
-        current=nil
-    }, {__index=_RadioGroup})
-    group:set(default)
-    return group
-end
-setmetatable(_RadioGroup, _RadioGroup)
-RadioGroup = _RadioGroup
+Document = gui_util.Document
+RadioGroup = gui_util.RadioGroup
+__chroma_page_loader = gui_util.load_page
 
 _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
-
-gui_util = require "builtin:gui_util"
-__chroma_page_loader = gui_util.load_page
 
 console.cheats = {}
 
@@ -221,6 +173,11 @@ function console.log(...)
         text = '\n'..text
     end
     log_element:paste(text)
+end
+
+function console.chat(...)
+    console.log(...)
+    events.emit("builtin:chat", ...)
 end
 
 function gui.template(name, params)

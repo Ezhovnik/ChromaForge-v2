@@ -70,7 +70,7 @@ static int l_connect(lua::State* L) {
 static int l_close(lua::State* L) {
     uint64_t id = lua::tointeger(L, 1);
     if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
-        connection->close();
+        connection->close(true);
     }
     return 0;
 }
