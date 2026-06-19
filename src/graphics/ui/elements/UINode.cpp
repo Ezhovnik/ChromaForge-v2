@@ -144,7 +144,9 @@ float UINode::getTooltipDelay() const {
 }
 
 glm::vec2 UINode::calcPos() const {
-    if (parent) return pos + parent->calcPos() + parent->getContentOffset();
+    if (parent) {
+        return pos + parent->calcPos() + parent->getContentOffset();
+    }
     return pos;
 }
 
@@ -324,8 +326,14 @@ const std::string& UINode::getId() const {
 }
 
 void UINode::reposition() {
+    if (sizefunc) {
+        auto newSize = sizefunc();
+        setSize({
+            newSize.x < 0 ? size.x : newSize.x,
+            newSize.y < 0 ? size.y : newSize.y
+        });
+    }
     if (positionfunc) setPos(positionfunc());
-    if (sizefunc) setSize(sizefunc());
 }
 
 void UINode::getIndices(

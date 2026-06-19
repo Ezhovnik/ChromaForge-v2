@@ -73,6 +73,12 @@ static int l_container_add(lua::State* L) {
     return 0;
 }
 
+static int l_node_reposition(lua::State* L) {
+    auto docnode = get_document_node(L);
+    docnode.node->reposition();
+    return 0;
+}
+
 static int l_container_clear(lua::State* L) {
     auto node = get_document_node(L, 1);
     if (auto container = std::dynamic_pointer_cast<gui::Container>(node.node)) container->clear();
@@ -260,6 +266,10 @@ static int p_get_add(gui::UINode* node, lua::State* L) {
         return lua::pushcfunction(L, lua::wrap<l_container_add>);
     }
     return 0;
+}
+
+static int p_get_reposition(gui::UINode*, lua::State* L) {
+    return lua::pushcfunction(L, lua::wrap<l_node_reposition>);
 }
 
 static int p_get_clear(gui::UINode* node, lua::State* L) {
@@ -452,7 +462,8 @@ static int l_gui_getattr(lua::State* L) {
         {"setInterval", p_set_interval},
         {"destruct", p_get_destruct},
         {"contentOffset", p_get_content_offset},
-        {"cursor", p_get_cursor}
+        {"cursor", p_get_cursor},
+        {"reposition", p_get_reposition}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) {

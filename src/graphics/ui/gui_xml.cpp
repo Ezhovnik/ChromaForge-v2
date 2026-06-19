@@ -85,6 +85,7 @@ static void _readUINode(
 ) {
     if (element.has("id")) node.setId(element.attr("id").getText());
     if (element.has("pos")) node.setPos(element.attr("pos").asVec2());
+    if (element.has("min-size")) node.setMinSize(element.attr("min-size").asVec2());
     if (element.has("size")) node.setSize(element.attr("size").asVec2());
     if (element.has("color")) {
         glm::vec4 color = element.attr("color").asColor();
@@ -190,6 +191,7 @@ static void _readPanel(
     }
     if (element.has("size")) panel.setResizing(false);
     if (element.has("max-length")) panel.setMaxLength(element.attr("max-length").asInt());
+    if (element.has("min-length")) panel.setMinLength(element.attr("min-length").asInt());
     if (element.has("orientation")) {
         auto &oname = element.attr("orientation").getText();
         if (oname == "horizontal") panel.setOrientation(Orientation::Horizontal);

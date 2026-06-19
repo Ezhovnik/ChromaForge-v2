@@ -9,6 +9,7 @@ namespace gui {
         Orientation orientation = Orientation::Vertical;
         glm::vec4 padding {2.0f};
         float interval = 2.0f;
+        int minLength = 0;
         int maxLength = 0;
     public:
         Panel(
@@ -27,6 +28,9 @@ namespace gui {
 
         virtual void refresh() override;
         virtual void fullRefresh() override;
+
+        virtual void setMinLength(int value);
+        int getMinLength() const;
 
         virtual void setMaxLength(int value);
         int getMaxLength() const;
