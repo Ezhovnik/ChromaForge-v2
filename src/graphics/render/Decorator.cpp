@@ -148,6 +148,7 @@ void Decorator::update(float delta, const Camera& camera) {
         auto note = renderer.texts->get(textsIter->second);
         auto player = level.players->getPlayer(textsIter->first);
         if (player == nullptr) {
+            renderer.texts->remove(textsIter->second);
             textsIter = playerTexts.erase(textsIter);
         } else {
             note->setPosition(player->getPosition() + glm::vec3(0, 1, 0));
