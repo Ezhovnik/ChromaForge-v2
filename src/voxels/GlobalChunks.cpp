@@ -17,6 +17,7 @@
 #include <objects/Entities.h>
 #include <coders/json.h>
 #include <voxels/blocks_agent.h>
+#include <world/LevelEvents.h>
 
 static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     bool corrupted = false;
@@ -124,7 +125,9 @@ std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
 	}
 
 	chunk->blocksMetadata = regions.getBlocksData(chunk->chunk_x, chunk->chunk_z);
-	return chunk;
+
+    level.events->trigger(LevelEventType::CHUNK_PRESENT, chunk.get());
+    return chunk;
 }
 
 void GlobalChunks::pinChunk(std::shared_ptr<Chunk> chunk) {

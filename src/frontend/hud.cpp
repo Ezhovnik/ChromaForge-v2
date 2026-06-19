@@ -481,6 +481,8 @@ void Hud::openInventory(
 	blockPos = block;
 	currentblockid = chunks.requireVoxel(block.x, block.y, block.z).id;
     add(HudElement(HudElementMode::InventoryBound, doc, blockUI, false));
+
+    scripting::on_inventory_open(&player, *blockinv);
 }
 
 void Hud::openInventory() {
@@ -524,6 +526,8 @@ std::shared_ptr<Inventory> Hud::openInventory(
     }
     secondInvView->bind(inv, &content);
     add(HudElement(HudElementMode::InventoryBound, doc, secondUI, false));
+
+    scripting::on_inventory_open(&player, *inv);
     return inv;
 }
 
@@ -560,14 +564,19 @@ void Hud::dropExchangeSlot() {
     }
 }
 
-
 void Hud::closeInventory() {
+    if (blockUI) {
+        scripting::on_inventory_closed(&player, *blockUI->getInventory());
+        blockUI = nullptr;
+    }
+    if (secondInvView) {
+        scripting::on_inventory_closed(&player, *secondInvView->getInventory());
+    }
     guiController.remove(gui::SlotView::EXCHANGE_SLOT_NAME);
     exchangeSlot = nullptr;
     exchangeSlotInv = nullptr;
     inventoryOpen = false;
     inventoryView = nullptr;
-	blockUI = nullptr;
     secondUI = nullptr;
 
     for (auto& element : elements) {

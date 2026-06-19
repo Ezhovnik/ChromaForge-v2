@@ -34,6 +34,7 @@ class Entt_Entity;
 class GeneratorScript;
 struct Generator;
 class Process;
+class Chunk;
 
 namespace scripting {
     extern Engine* engine;
@@ -73,6 +74,12 @@ namespace scripting {
     void on_block_replaced(Player* player, const Block& block, const glm::ivec3& pos);
     void on_block_breaking(Player* player, const Block& block, const glm::ivec3& pos);
     bool on_block_interact(Player* player, const Block& block, const glm::ivec3& pos);
+
+    void on_chunk_present(const Chunk& chunk, bool loaded);
+    void on_chunk_remove(const Chunk& chunk);
+
+    void on_inventory_open(const Player* player, const Inventory& inventory);
+    void on_inventory_closed(const Player* player, const Inventory& inventory);
 
     void on_player_spark(Player* player, int tps);
 

@@ -11,7 +11,7 @@ player.set_pos(pid, 0, 100, 0)
 app.sleep_until(function () return block.get(0, 0, 0) ~= -1 end)
 
 block.place(0, 2, 0, block.index("chromaforge:sand"), 0, pid)
-app.tick()
+app.spark()
 
 assert(block.get(0, 2, 0) == 0)
 

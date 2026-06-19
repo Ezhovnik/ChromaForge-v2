@@ -68,6 +68,7 @@ private:
 	glm::vec3 spawnpoint {};
 	std::shared_ptr<Inventory> inventory;
 
+    bool suspended = false;
 	bool flight = false;
     bool noclip = false;
     bool infiniteItems = true;
@@ -148,6 +149,9 @@ public:
 
     bool isLoadingChunks() const;
     void setLoadingChunks(bool flag);
+
+    bool isSuspended() const;
+    void setSuspended(bool flag);
 
     entityid_t getEntity() const;
     void setEntity(entityid_t eid);

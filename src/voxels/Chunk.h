@@ -45,8 +45,6 @@ public:
 
     Chunk(int chunk_x, int chunk_z); // Конструктор
 
-    bool isEmpty() const; // Проверяет, является ли чанк пустым (однородным).
-
     void updateHeights();
 
     std::unique_ptr<Chunk> clone() const; // Создает полную копию текущего чанка.

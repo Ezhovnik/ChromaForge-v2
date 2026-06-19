@@ -30,6 +30,9 @@ static int l_get_version(lua::State* L) {
 
 static int l_open_world(lua::State* L) {
     auto name = lua::require_string(L, 1);
+    if (scripting::level != nullptr) {
+        throw std::runtime_error("World must be closed before");
+    }
     auto controller = scripting::engine->getController();
     controller->openWorld(name, false);
     return 0;
@@ -127,6 +130,9 @@ static int l_new_world(lua::State* L) {
     auto name = lua::require_string(L, 1);
     auto seed = lua::require_string(L, 2);
     auto generator = lua::require_string(L, 3);
+    if (scripting::level != nullptr) {
+        throw std::runtime_error("World must be closed before");
+    }
     auto controller = scripting::engine->getController();
     controller->createWorld(name, seed, generator);
     return 0;
@@ -200,6 +206,23 @@ static int l_load_texture(lua::State* L) {
     return 0;
 }
 
+static int l_load_content(lua::State* L) {
+    scripting::engine->loadContent();
+    return 0;
+}
+
+static int l_reset_content(lua::State* L) {
+    if (scripting::level != nullptr) {
+        throw std::runtime_error("World must be closed before");
+    }
+    scripting::engine->resetContent();
+    return 0;
+}
+
+static int l_is_content_loaded(lua::State* L) {
+    return lua::pushboolean(L, scripting::content != nullptr);
+}
+
 static int l_blank(lua::State* L) {
     return 0;
 }
@@ -207,6 +230,9 @@ static int l_blank(lua::State* L) {
 const luaL_Reg builtinlib [] = {
     {"blank", lua::wrap<l_blank>},
     {"get_version", lua::wrap<l_get_version>},
+    {"load_content", lua::wrap<l_load_content>},
+    {"reset_content", lua::wrap<l_reset_content>},
+    {"is_content_loaded", lua::wrap<l_is_content_loaded>},
     {"new_world", lua::wrap<l_new_world>},
     {"open_world", lua::wrap<l_open_world>},
     {"reopen_world", lua::wrap<l_reopen_world>},

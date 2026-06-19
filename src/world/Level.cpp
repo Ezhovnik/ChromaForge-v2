@@ -61,7 +61,8 @@ Level::Level(
         chunks->decref(chunk);
     });
 
-    chunks->setOnUnload([this](const Chunk& chunk) {
+    chunks->setOnUnload([this](Chunk& chunk) {
+        events->trigger(LevelEventType::CHUNK_UNLOAD, &chunk);
         AABB aabb = chunk.getAABB();
         entities->despawn(entities->getAllInside(aabb));
     });

@@ -85,7 +85,7 @@ WorldRenderer::WorldRenderer(
     blockWraps(std::make_unique<BlockWrapsRenderer>(assets, level, *player.chunks))
 {
 	auto& settings = engine.getSettings();
-    level.events->listen(CHUNK_HIDDEN, [this](LevelEventType, Chunk* chunk) {
+    level.events->listen(LevelEventType::CHUNK_HIDDEN, [this](LevelEventType, Chunk* chunk) {
 		chunks->unload(chunk);
 	});
 	auto assets = engine.getAssets();

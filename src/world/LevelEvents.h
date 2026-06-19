@@ -9,6 +9,8 @@ class Chunk;
 enum LevelEventType {
 	CHUNK_SHOWN,
 	CHUNK_HIDDEN,
+	CHUNK_PRESENT,
+	CHUNK_UNLOAD
 };
 
 using ChunkEventFunc = std::function<void(LevelEventType, Chunk*)>;

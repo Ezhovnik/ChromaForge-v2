@@ -24,6 +24,14 @@ namespace network {
             long maxSize=0
         ) = 0;
 
+        virtual void post(
+            const std::string& url,
+            const std::string& data,
+            OnResponse onResponse,
+            OnReject onReject=nullptr,
+            long maxSize=0
+        ) = 0;
+
         virtual size_t getTotalUpload() const = 0;
         virtual size_t getTotalDownload() const = 0;
 
@@ -80,6 +88,14 @@ namespace network {
 
         void get(
             const std::string& url,
+            OnResponse onResponse,
+            OnReject onReject = nullptr,
+            long maxSize=0
+        );
+
+        void post(
+            const std::string& url,
+            const std::string& fieldsData,
             OnResponse onResponse,
             OnReject onReject = nullptr,
             long maxSize=0

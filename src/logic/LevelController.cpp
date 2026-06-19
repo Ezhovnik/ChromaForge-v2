@@ -16,6 +16,7 @@
 #include <objects/Player.h>
 #include <voxels/Chunks.h>
 #include <lighting/Lighting.h>
+#include <world/LevelEvents.h>
 
 LevelController::LevelController(
     Engine* engine,
@@ -26,6 +27,13 @@ LevelController::LevelController(
     chunks(std::make_unique<ChunksController>(*level)),
     playerSparkClock(20, 3)
 {
+    level->events->listen(LevelEventType::CHUNK_PRESENT, [](auto, Chunk* chunk) {
+        scripting::on_chunk_present(*chunk, chunk->flags.loaded);
+    });
+    level->events->listen(LevelEventType::CHUNK_UNLOAD, [](auto, Chunk* chunk) {
+        scripting::on_chunk_remove(*chunk);
+    });
+
     if (clientPlayer) {
         chunks->lighting = std::make_unique<Lighting>(
             level->content, *clientPlayer->chunks
@@ -57,6 +65,7 @@ LevelController::LevelController(
 
 void LevelController::update(float delta, bool pause) {
     for (const auto& [_, player] : *level->players) {
+        if (player->isSuspended()) continue;
         glm::vec3 position = player->getPosition();
         player->chunks->configure(
             position.x,
@@ -76,6 +85,7 @@ void LevelController::update(float delta, bool pause) {
         level->entities->update(delta);
 
         for (const auto& [_, player] : *level->players) {
+            if (player->isSuspended()) continue;
             if (playerSparkClock.update(delta)) {
                 if (player->getId() % playerSparkClock.getParts() == playerSparkClock.getPart()) {
 
@@ -94,6 +104,10 @@ void LevelController::update(float delta, bool pause) {
 
 void LevelController::saveWorld() {
     auto world = level->getWorld();
+    if (world->isNameless()) {
+        LOG_WARN("Nameless world will not be saved");
+        return;
+    }
     LOG_INFO("Writing world '{}'", world->getName());
     world->wfile->createDirectories();
     scripting::on_world_save();

@@ -13,6 +13,7 @@
 #include <typedefs.h>
 #include <constants.h>
 #include <content/Content.h>
+#include <debug/Logger.h>
 
 Lighting::Lighting(const Content& content, Chunks& chunks) : chunks(chunks), content(content) {
     auto& contentIds = *content.getIndices();
@@ -62,6 +63,10 @@ void Lighting::buildSkyLight(int cx, int cz) {
     const auto blockDefs = content.getIndices()->blocks.getDefs();
 
 	Chunk* chunk = chunks.getChunk(cx, cz);
+	if (chunk == nullptr) {
+		LOG_ERROR("Attempted to build sky lights to chunk missing in local matrix");
+		return;
+	}
 	for (int z = 0; z < CHUNK_DEPTH; ++z) {
 		int gz = z + cz * CHUNK_DEPTH;
 		for (int x = 0; x < CHUNK_WIDTH; ++x) {
@@ -93,6 +98,10 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z, bool expand) {
 
     auto blockDefs = content.getIndices()->blocks.getDefs();
     auto chunk = chunks.getChunk(chunk_x, chunk_z);
+	if (chunk == nullptr) {
+		LOG_ERROR("Attempted to build lights to chunk missing in local matrix");
+		return;
+	}
 
 	for (uint y = 0; y < CHUNK_HEIGHT; ++y){
 		for (uint z = 0; z < CHUNK_DEPTH; ++z){

@@ -37,5 +37,8 @@
         "blocks",
         "items",
         "particles"
+    ],
+    "models": [
+        "block"
     ]
 }

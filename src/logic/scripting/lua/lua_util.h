@@ -29,6 +29,7 @@ namespace lua {
     int userdata_destructor(lua::State* L);
 
     std::string env_name(int env);
+    void dump_stack(lua::State*);
 
     inline bool getglobal(lua::State* L, const std::string& name) {
         lua_getglobal(L, name.c_str());
@@ -232,7 +233,7 @@ namespace lua {
     }
 
     inline bool isstring(lua::State* L, int idx) {
-        return lua_isstring(L, idx);
+        return lua_type(L, idx) == LUA_TSTRING;
     }
 
     inline bool istable(lua::State* L, int idx) {
@@ -256,6 +257,11 @@ namespace lua {
     }
 
     inline lua::Integer tointeger(lua::State* L, int idx) {
+#ifndef NDEBUG
+        if (lua_type(L, idx) == LUA_TSTRING) {
+            throw std::runtime_error("Integer expected, got string");
+        }
+#endif
         return lua_tointeger(L, idx);
     }
 
@@ -269,6 +275,11 @@ namespace lua {
     }
 
     inline lua::Number tonumber(lua::State* L, int idx) {
+#ifndef NDEBUG
+        if (lua_type(L, idx) != LUA_TNUMBER && !lua_isnoneornil(L, idx)) {
+            throw std::runtime_error("Integer expected");
+        }
+#endif
         return lua_tonumber(L, idx);
     }
 
@@ -556,9 +567,11 @@ namespace lua {
             if (getfield(L, name)) {
                 return 1;
             } else if (required) {
+                pop(L);
                 log_error("Table " + tableName + " has no member " + name);
                 throw std::runtime_error("Table " + tableName + " has no member " + name);
             }
+            pop(L);
             return 0;
         } else {
             log_error("Table " + tableName + " not found");
@@ -597,8 +610,6 @@ namespace lua {
     inline void close(lua::State* L) {
         lua_close(L);
     }
-
-    void dump_stack(lua::State*);
 
     inline void addfunc(lua::State* L, const std::string& name, lua_CFunction func) {
         pushcfunction(L, func);

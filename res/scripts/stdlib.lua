@@ -22,7 +22,7 @@ function tb_frame_tostring(frame)
     return s
 end
 
-if app then
+local function complete_app_lib(app)
     app.sleep = sleep
     app.name = __CHROMA_SCRIPT_NAME
     app.new_world = builtin.new_world
@@ -37,6 +37,9 @@ if app then
     app.spark = coroutine.yield
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
+    app.load_content = builtin.load_content
+    app.reset_content = builtin.reset_content
+    app.is_content_loaded = builtin.is_content_loaded
 
     function app.config_packs(packs_list)
         packs_list = pack.assemble(packs_list)
@@ -79,6 +82,12 @@ if app then
             error("Max sparks exceed")
         end
     end
+end
+
+if app then
+    complete_app_lib(app)
+elseif __chroma_app then
+    complete_app_lib(__chroma_app)
 end
 
 ------------------------------------------------
@@ -190,6 +199,9 @@ RadioGroup = _RadioGroup
 _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
+
+local gui_util = require "builtin:gui_util"
+__chroma_page_loader = gui_util.load_page
 
 console.cheats = {}
 
@@ -365,6 +377,14 @@ function __chroma_on_hud_open()
             hud.show_overlay("builtin:console", false, {"console"})
         end)
     end)
+    input.add_callback("hud.chat", function()
+        if hud.is_paused() then
+            return
+        end
+        time.post_runnable(function()
+            hud.show_overlay("builtin:console", false, {"chat"})
+        end)
+    end)
 end
 
 local RULES_FILE = "world:rules.toml"
@@ -393,15 +413,9 @@ end
 local __chroma_coroutines = {}
 local __chroma_named_coroutines = {}
 local __chroma_next_coroutine = 1
-local __chroma_coroutine_error = nil
 
 function __chroma_start_coroutine(chunk)
-    local co = coroutine.create(function()
-        local status, err = pcall(chunk)
-        if not status then
-            __chroma_coroutine_error = err
-        end
-    end)
+    local co = coroutine.create(chunk)
     local id = __chroma_next_coroutine
     __chroma_next_coroutine = __chroma_next_coroutine + 1
     __chroma_coroutines[id] = co
@@ -411,9 +425,10 @@ end
 function __chroma_resume_coroutine(id)
     local co = __chroma_coroutines[id]
     if co then
-        coroutine.resume(co)
-        if __chroma_coroutine_error then
-            error(__chroma_coroutine_error)
+        local success, err = coroutine.resume(co)
+        if not success then
+            debug.error(err)
+            error(err)
         end
         return coroutine.status(co) ~= "dead"
     end

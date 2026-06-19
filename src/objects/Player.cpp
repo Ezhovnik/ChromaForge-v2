@@ -368,3 +368,11 @@ bool Player::isLoadingChunks() const {
 void Player::setLoadingChunks(bool flag) {
     loadingChunks = flag;
 }
+
+bool Player::isSuspended() const {
+    return suspended;
+}
+
+void Player::setSuspended(bool flag) {
+    suspended = flag;
+}

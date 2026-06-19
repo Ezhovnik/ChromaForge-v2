@@ -191,4 +191,8 @@ public:
      int64_t getNextInventoryId() {
           return info.nextInventoryId++;
      }
+
+     bool isNameless() const {
+          return info.name.empty();
+     }
 };

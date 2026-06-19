@@ -52,6 +52,8 @@ namespace gui {
     class Container;
     class Menu;
 
+    using PageLoaderFunc = std::function<std::shared_ptr<UINode>(const std::string&)>;
+
     class GUI {
         std::unique_ptr<Batch2D> batch2D;
         std::shared_ptr<Container> container;
@@ -68,6 +70,8 @@ namespace gui {
 
         std::queue<runnable> postRunnables;
 
+        PageLoaderFunc pagesLoader;
+
         float doubleClickTimer = 0.0f;
         float doubleClickDelay = 0.5f;
         bool doubleClicked = false;
@@ -81,6 +85,9 @@ namespace gui {
     public:
         GUI();
         ~GUI();
+
+        void setPageLoader(PageLoaderFunc pageLoader);
+        PageLoaderFunc getPagesLoader();
 
         std::shared_ptr<Menu> getMenu();
 

@@ -1,6 +1,7 @@
 #include <graphics/ui/markdown.h>
 
 #include <graphics/core/Font.h>
+#include <coders/commons.h>
 
 using namespace markdown;
 
@@ -18,6 +19,38 @@ static inline void emit_md(
 ) {
     ss << c;
     styles.map.emplace_back(0);
+}
+
+template <typename CharT>
+static glm::vec4 parse_color(const std::basic_string_view<CharT>& color_code) {
+    if (color_code.size() != 8 || color_code[0] != '#') {
+        return glm::vec4(1, 1, 1, 1);
+    }
+
+    auto hex_to_float = [](char high, char low) {
+        int high_val = hexchar2int(high);
+        int low_val = hexchar2int(low);
+        if (high_val == -1 || low_val == -1) {
+            return 1.0f;
+        }
+        return (high_val * 16 + low_val) / 255.0f;
+    };
+
+    return glm::vec4(
+        hex_to_float(color_code[1], color_code[2]),
+        hex_to_float(color_code[3], color_code[4]),
+        hex_to_float(color_code[5], color_code[6]),
+        1
+    );
+}
+
+template <typename CharT>
+static inline void apply_color(
+    const std::basic_string_view<CharT>& color_code, FontStylesScheme& styles
+) {
+    FontStyle style = styles.palette.back();
+    style.color = parse_color(color_code);
+    styles.palette.push_back(style);
 }
 
 template <typename CharT>
@@ -62,15 +95,35 @@ Result<CharT> process_markdown(
                         emit(second, styles, ss);
                         pos++;
                         continue;
+                    case '[':
+                        if (pos + 9 < source.size() && source[pos + 1] == '#' && source[pos + 8] == ']') {
+                            if (!eraseMarkdown) {
+                                emit_md(source[pos - 1], styles, ss);
+                            }
+                            for (int i = 0; i < 10; ++i) {
+                                emit(source[pos + i], styles, ss);
+                            }
+
+                            pos += 10;
+                            continue;
+                        }
                 }
                 pos--;
             }
+        } else if (first == '[' && pos + 9 <= source.size() && source[pos + 1] == '#' && source[pos + 8] == ']') {
+            std::basic_string_view<CharT> color_code = source.substr(pos + 1, 8);
+            apply_color(color_code, styles);
+            if (!eraseMarkdown) {
+                for (int i = 0; i < 9; ++i) {
+                    emit_md(source[pos + i], styles, ss);
+                }
+            }
+            pos += 9;
+            continue;
         } else if (first == '*') {
             if (pos + 1 < source.size() && source[pos + 1] == '*') {
                 pos++;
-                if (!eraseMarkdown) {
-                    emit_md(first, styles, ss);
-                }
+                if (!eraseMarkdown) emit_md(first, styles, ss);
                 style.bold = !style.bold;
                 restyle(first, style, styles, ss, pos, eraseMarkdown);
                 continue;
@@ -80,17 +133,13 @@ Result<CharT> process_markdown(
             continue;
         } else if (first == '_' && pos + 1 < source.size() && source[pos+1] == '_') {
             pos++;
-            if (!eraseMarkdown) {
-                emit_md(first, styles, ss);
-            }
+            if (!eraseMarkdown) emit_md(first, styles, ss);
             style.underline = !style.underline;
             restyle(first, style, styles, ss, pos, eraseMarkdown);
             continue;
         } else if (first == '~' && pos + 1 < source.size() && source[pos+1] == '~') {
             pos++;
-            if (!eraseMarkdown) {
-                emit_md(first, styles, ss);
-            }
+            if (!eraseMarkdown) emit_md(first, styles, ss);
             style.strikethrough = !style.strikethrough;
             restyle(first, style, styles, ss, pos, eraseMarkdown);
             continue;

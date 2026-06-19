@@ -18,18 +18,6 @@ Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
 	top = CHUNK_HEIGHT;
 }
 
-// Проверяет, является ли чанк пустым (однородным).
-bool Chunk::isEmpty() const {
-    int id = -1;
-	for (uint i = 0; i < CHUNK_VOLUME; ++i){
-		if (voxels[i].id != id){
-			if (id != -1) return false;
-			else id = voxels[i].id;
-		}
-	}
-	return true;
-}
-
 void Chunk::updateHeights() {
 	for (uint i = 0; i < CHUNK_VOLUME; i++) {
 		if (voxels[i].id != 0) {

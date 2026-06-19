@@ -4,6 +4,7 @@
 #include <items/Inventories.h>
 #include <world/Level.h>
 #include <world/World.h>
+#include <objects/Entities.h>
 
 inline constexpr glm::vec3 DEFAULT_SPAWNPOINT = {0, 256, 0}; ///< Точка появления игрока
 inline constexpr float DEFAULT_PLAYER_SPEED = 4.0f; ///< Базовая скорость перемещения игрока
@@ -43,6 +44,22 @@ Player* Players::create() {
 
 void Players::remove(int64_t id) {
     players.erase(id);
+}
+
+void Players::suspend(int64_t id) {
+    if (auto player = getPlayer(id)) {
+        if (player->isSuspended()) return;
+        player->setSuspended(true);
+        level.entities->despawn(player->getEntity());
+        player->setEntity(0);
+    }
+}
+
+void Players::resume(int64_t id) {
+    if (auto player = getPlayer(id)) {
+        if (!player->isSuspended()) return;
+        player->setSuspended(false);
+    }
 }
 
 dv::value Players::serialize() const {

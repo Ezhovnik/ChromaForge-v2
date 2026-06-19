@@ -3,6 +3,7 @@ app.reconfig_packs({"chromaforge"}, {})
 app.new_world("demo", "67", "builtin:default")
 assert(world.is_open())
 assert(world.get_generator() == "builtin:default")
+assert(app.is_content_loaded())
 app.sleep(1)
 assert(world.get_total_time() > 0.0)
 print(world.get_total_time())
@@ -10,6 +11,7 @@ print(world.get_total_time())
 -- Close
 app.close_world(true)
 assert(not world.is_open())
+assert(not app.is_content_loaded())
 
 -- Reopen
 app.open_world("demo")

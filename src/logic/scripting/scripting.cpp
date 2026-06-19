@@ -25,6 +25,7 @@
 #include <content/Content.h>
 #include <logic/scripting/scripting_commons.h>
 #include <interfaces/Process.h>
+#include <voxels/Chunk.h>
 
 static inline const std::string STDCOMP = "stdcomp";
 
@@ -302,9 +303,9 @@ void scripting::on_world_quit() {
 void scripting::cleanup() {
     auto L = lua::get_main_state();
 
-    lua::getglobal(L, "pack");
+    lua::requireglobal(L, "pack");
     for (auto& pack : scripting::engine->getAllContentPacks()) {
-        lua::getfield(L, "unload");
+        lua::requirefield(L, "unload");
         lua::pushstring(L, pack.id);
         lua::call_nothrow(L, 1);   
     }
@@ -404,6 +405,65 @@ bool scripting::on_block_interact(Player* player, const Block& block, const glm:
     return on_block_common<&WorldFuncsSet::onblockinteract>(
         "interact", block.rt.funcsset.oninteract, player, block, pos
     );
+}
+
+void scripting::on_chunk_present(const Chunk& chunk, bool loaded) {
+    auto args = [&chunk, loaded](lua::State* L) {
+        lua::pushvec_stack<2>(L, {chunk.chunk_x, chunk.chunk_z});
+        lua::pushboolean(L, loaded);
+        return 3;
+    };
+    for (auto& [packid, pack] : scripting::content->getPacks()) {
+        if (pack->worldfuncsset.onchunkpresent) {
+            lua::emit_event(
+                lua::get_main_state(), packid + ":.chunkpresent", args
+            );
+        }
+    }
+}
+
+void scripting::on_chunk_remove(const Chunk& chunk) {
+    auto args = [&chunk](lua::State* L) {
+        lua::pushvec_stack<2>(L, {chunk.chunk_x, chunk.chunk_z});
+        return 2;
+    };
+    for (auto& [packid, pack] : scripting::content->getPacks()) {
+        if (pack->worldfuncsset.onchunkremove) {
+            lua::emit_event(
+                lua::get_main_state(), packid + ":.chunkremove", args
+            );
+        }
+    }
+}
+
+void scripting::on_inventory_open(const Player* player, const Inventory& inventory) {
+    auto args = [player, &inventory](lua::State* L) {
+        lua::pushinteger(L, inventory.getId());
+        lua::pushinteger(L, player ? player->getId() : -1);
+        return 2;
+    };
+    for (auto& [packid, pack] : scripting::content->getPacks()) {
+        if (pack->worldfuncsset.oninventoryopen) {
+            lua::emit_event(
+                lua::get_main_state(), packid + ":.inventoryopen", args
+            );
+        }
+    }
+}
+
+void scripting::on_inventory_closed(const Player* player, const Inventory& inventory) {
+    auto args = [player, &inventory](lua::State* L) {
+        lua::pushinteger(L, inventory.getId());
+        lua::pushinteger(L, player ? player->getId() : -1);
+        return 2;
+    };
+    for (auto& [packid, pack] : scripting::content->getPacks()) {
+        if (pack->worldfuncsset.oninventoryclosed) {
+            lua::emit_event(
+                lua::get_main_state(), packid + ":.inventoryclosed", args
+            );
+        }
+    }
 }
 
 void scripting::on_player_spark(Player* player, int tps) {
@@ -763,6 +823,10 @@ void scripting::load_world_script(
     funcsset.onblockreplaced = register_event(env, "on_block_replaced", prefix + ":.blockreplaced");
     funcsset.onblockinteract = register_event(env, "on_block_interact", prefix + ":.blockinteract");
     funcsset.onplayerspark = register_event(env, "on_player_spark", prefix + ":.playerspark");
+    funcsset.onchunkpresent = register_event(env, "on_chunk_present", prefix + ":.chunkpresent");
+    funcsset.onchunkremove = register_event(env, "on_chunk_remove", prefix + ":.chunkremove");
+    funcsset.oninventoryopen = register_event(env, "on_inventory_open", prefix + ":.inventoryopen");
+    funcsset.oninventoryclosed = register_event(env, "on_inventory_closed", prefix + ":.inventoryclosed");
 }
 
 void scripting::load_layout_script(
