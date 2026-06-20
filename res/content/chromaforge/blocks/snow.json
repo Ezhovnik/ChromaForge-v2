@@ -1,0 +1,5 @@
+{
+    "texture": "snow",
+    "material": "chromaforge:snow",
+    "chromaforge:durability": 1.0
+}
