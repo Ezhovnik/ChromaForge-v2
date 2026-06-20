@@ -123,7 +123,13 @@ static int l_reconfig_packs(lua::State* L) {
         lua::pop(L);
     }
     auto controller = scripting::engine->getController();
-    controller->reconfigPacks(scripting::controller, addPacks, remPacks);
+    try {
+        controller->reconfigPacks(scripting::controller, addPacks, remPacks);
+    } catch (const contentpack_error& err) {
+        throw std::runtime_error(
+            std::string(err.what()) + " [" + err.getPackId() + " ]"
+        );
+    }
     return 0;
 }
 
