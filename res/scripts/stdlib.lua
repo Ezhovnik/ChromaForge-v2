@@ -191,8 +191,8 @@ function gui.template(name, params)
     end
     text = text:gsub("if%s*=%s*'%%{%w+}'", "if=''")
     text = text:gsub("if%s*=%s*\"%%{%w+}\"", "if=\"\"")
-    text = text:gsub("%w+%s*=%s*'%%{%w+}'%s?", "")
-    text = text:gsub("%w+%s*=%s*\"%%{%w+}\"%s?", "")
+    text = text:gsub("%s*%S+='%%{[^}]+}'%s*", " ")
+    text = text:gsub('%s*%S+="%%{[^}]+}"%s*', " ")
     return text
 end
 

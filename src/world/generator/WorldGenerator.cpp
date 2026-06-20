@@ -129,11 +129,12 @@ static inline const Biome* choose_biome(
         for (uint i = 0; i < paramsCount; ++i) {
             score += glm::abs((params[i] - biome.parameters[i].value) / biome.parameters[i].weight);
         }
-        if (score < chosenScore) {
+        if (score < chosenScore || std::isinf(chosenScore)) {
             chosenScore = score;
             chosenBiome = &biome;
         }
     }
+    assert(chosenBiome != nullptr);
     return chosenBiome;
 }
 
