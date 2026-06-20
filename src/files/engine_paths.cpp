@@ -7,7 +7,7 @@
 #include <utility>
 
 #include <typedefs.h>
-#include <files/WorldFiles.h>
+#include <world/files/WorldFiles.h>
 #include <core_content_defs.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>

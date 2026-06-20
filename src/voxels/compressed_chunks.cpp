@@ -2,7 +2,7 @@
 
 #include <coders/rle.h>
 #include <coders/zip.h>
-#include <files/WorldFiles.h>
+#include <world/files/WorldFiles.h>
 
 inline constexpr int HAS_VOXELS = 0x1;
 inline constexpr int HAS_METADATA = 0x2;

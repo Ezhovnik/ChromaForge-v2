@@ -8,7 +8,7 @@
 #include <content/Content.h>
 #include <world/Level.h>
 #include <world/World.h>
-#include <files/WorldFiles.h>
+#include <world/files/WorldFiles.h>
 #include <math/voxmaths.h>
 #include <lighting/Lightmap.h>
 #include <debug/Logger.h>

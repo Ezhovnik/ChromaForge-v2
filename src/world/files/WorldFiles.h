@@ -13,7 +13,7 @@
 #include <files/files.h>
 #include <voxels/Chunk.h>
 #include <content/ContentPack.h>
-#include <files/WorldRegions.h>
+#include <world/files/WorldRegions.h>
 
 class Player;
 class Content;

@@ -1,10 +1,10 @@
-#include <files/WorldConverter.h>
+#include <world/files/WorldConverter.h>
 
 #include <memory>
 #include <stdexcept>
 #include <utility>
 
-#include <files/WorldFiles.h>
+#include <world/files/WorldFiles.h>
 #include <voxels/Chunk.h>
 #include <content/ContentReport.h>
 #include <debug/Logger.h>
@@ -12,7 +12,7 @@
 #include <objects/Player.h>
 #include <util/ThreadPool.h>
 #include <items/Inventory.h>
-#include <files/compatibility.h>
+#include <world/files/compatibility.h>
 #include <voxels/Block.h>
 
 class ConverterWorker : public util::Worker<ConvertTask, int> {

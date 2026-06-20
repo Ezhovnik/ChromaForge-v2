@@ -9,7 +9,7 @@
 #include <voxels/Block.h>
 #include <items/Item.h>
 #include <world/World.h>
-#include <files/WorldFiles.h>
+#include <world/files/WorldFiles.h>
 
 ContentReport::ContentReport(
     const ContentIndices* indices,

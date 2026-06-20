@@ -7,7 +7,7 @@
 #include <logic/scripting/scripting.h>
 #include <world/World.h>
 #include <debug/Logger.h>
-#include <files/WorldFiles.h>
+#include <world/files/WorldFiles.h>
 #include <settings.h>
 #include <objects/Entities.h>
 #include <math/voxmaths.h>

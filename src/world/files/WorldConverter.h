@@ -7,7 +7,7 @@
 #include <typedefs.h>
 #include <delegates.h>
 #include <interfaces/Task.h>
-#include <files/world_regions_fwd.h>
+#include <world/files/world_regions_fwd.h>
 
 class Content;
 class ContentReport;

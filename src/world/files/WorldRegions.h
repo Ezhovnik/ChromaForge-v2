@@ -18,7 +18,7 @@
 #include <voxels/Chunk.h>
 #include <math/voxmaths.h>
 #include <coders/compression.h>
-#include <files/world_regions_fwd.h>
+#include <world/files/world_regions_fwd.h>
 
 namespace RegionConsts {
     inline constexpr uint SIZE_BIT = 5; // Размер региона 

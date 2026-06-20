@@ -18,7 +18,7 @@
 #include <logic/LevelController.h>
 #include <logic/ChunksController.h>
 #include <voxels/compressed_chunks.h>
-#include <files/WorldFiles.h>
+#include <world/files/WorldFiles.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {

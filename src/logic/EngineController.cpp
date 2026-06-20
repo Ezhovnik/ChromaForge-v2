@@ -7,8 +7,8 @@
 #include <content/ContentReport.h>
 #include <debug/Logger.h>
 #include <engine/Engine.h>
-#include <files/WorldFiles.h>
-#include <files/WorldConverter.h>
+#include <world/files/WorldFiles.h>
+#include <world/files/WorldConverter.h>
 #include <frontend/locale/langs.h>
 #include <frontend/screens/MenuScreen.h>
 #include <frontend/screens/LevelScreen.h>

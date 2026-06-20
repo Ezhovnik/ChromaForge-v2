@@ -10,7 +10,7 @@
 #include <constants.h>
 #include <content/Content.h>
 #include <data/dv.h>
-#include <files/world_regions_fwd.h>
+#include <world/files/world_regions_fwd.h>
 #include <data/StructLayout.h>
 
 enum class ContentIssueType {
