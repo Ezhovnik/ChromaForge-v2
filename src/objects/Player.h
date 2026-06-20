@@ -76,7 +76,7 @@ private:
     bool instantDestruction = true;
     bool loadingChunks = true;
 
-    entityid_t eid;
+    entityid_t eid = ENTITY_AUTO;
 
     entityid_t selectedEid = 0;
 

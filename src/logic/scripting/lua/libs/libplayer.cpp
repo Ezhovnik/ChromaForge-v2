@@ -155,7 +155,9 @@ static int l_get_entity(lua::State* L) {
 static int l_set_entity(lua::State* L) {
     auto player = get_player(L, 1);
     if (player == nullptr) return 0;
-    if (auto entity = get_entity(L, 2)) {
+    if (lua::isnumber(L, 2)) {
+        player->setEntity(lua::tointeger(L, 2));
+    } else if (auto entity = get_entity(L, 2)) {
         player->setEntity(entity->getUID());
     }
     return 0;

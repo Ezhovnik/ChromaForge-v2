@@ -40,7 +40,7 @@ Player* Players::create(int64_t id) {
         DEFAULT_SPAWNPOINT,
         DEFAULT_PLAYER_SPEED,
         level.inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE),
-        0
+        ENTITY_AUTO
     );
     auto player = playerPtr.get();
     add(std::move(playerPtr));
@@ -91,7 +91,7 @@ void Players::deserialize(const dv::value& src) {
             DEFAULT_SPAWNPOINT,
             DEFAULT_PLAYER_SPEED,
             level.inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE),
-            0
+            ENTITY_AUTO
         );
         auto player = playerPtr.get();
         player->deserialize(playerMap);

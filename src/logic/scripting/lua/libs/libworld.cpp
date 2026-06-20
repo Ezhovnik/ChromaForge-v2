@@ -149,8 +149,8 @@ static void integrate_chunk_client(Chunk& chunk) {
     chunk.flags.loadedLights = false;
     chunk.flags.lighted = false;
 
+    chunk.lightmap.clear();
     Lighting::preBuildSkyLight(chunk, *scripting::indices);
-    lighting.onChunkLoaded(x, z, true);
 
     for (int lz = -1; lz <= 1; ++lz) {
         for (int lx = -1; lx <= 1; ++lx) {
@@ -159,7 +159,6 @@ static void integrate_chunk_client(Chunk& chunk) {
             }
             if (auto other = scripting::level->chunks->getChunk(x + lx, z + lz)) {
                 other->flags.modified = true;
-                lighting.onChunkLoaded(x - 1, z, true);
             }
         }
     }

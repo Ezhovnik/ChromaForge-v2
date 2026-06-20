@@ -37,7 +37,10 @@ local function complete_app_lib(app)
     app.spark = coroutine.yield
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
-    app.load_content = builtin.load_content
+    app.load_content = function()
+        builtin.load_content()
+        app.spark()
+    end
     app.reset_content = builtin.reset_content
     app.is_content_loaded = builtin.is_content_loaded
 
@@ -416,7 +419,18 @@ end
 
 function start_coroutine(chunk, name)
     local co = coroutine.create(function()
-        local status, error = xpcall(chunk, __chroma__error)
+        local status, error = xpcall(chunk, function(...)
+            gui.alert(debug.traceback(), function()
+                if world.is_open() then
+                    __chroma_app.close_world()
+                else
+                    __chroma_app.reset_content()
+                    menu:reset()
+                    menu.page = "main"
+                end
+            end)
+            return ...
+        end)
         if not status then
             debug.error(error)
         end

@@ -83,7 +83,8 @@ public:
     }
 
     void update() override {
-        if (lua::getglobal(L, "__chroma_resume_coroutine")) {
+        if (id == 0) return;
+        if (lua::requireglobal(L, "__chroma_resume_coroutine")) {
             lua::pushinteger(L, id);
             if (lua::call(L, 1)) {
                 alive = lua::toboolean(L, -1);
@@ -99,10 +100,10 @@ public:
     }
 
     void terminate() override {
-        if (lua::getglobal(L, "__chroma_stop_coroutine")) {
-            lua::pushinteger(L, id);
-            lua::pop(L, lua::call(L, 1));
-        }
+        lua::requireglobal(L, "__chroma_stop_coroutine");
+        lua::pushinteger(L, id);
+        lua::pop(L, lua::call(L, 1));
+        id = 0;
     }
 };
 
@@ -593,6 +594,10 @@ static void process_entity_callback(
 ) {
     auto L = lua::get_main_state();
     lua::pushenv(L, *env);
+    if (lua::hasfield(L, "__disabled")) {
+        lua::pop(L);
+        return;
+    }
     if (lua::getfield(L, name)) {
         if (args) {
             lua::call_nothrow(L, args(L), 0);

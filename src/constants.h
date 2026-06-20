@@ -62,6 +62,7 @@ inline constexpr blockid_t BLOCK_STRUCT_AIR = 2;
 inline constexpr itemid_t ITEM_EMPTY = 0;
 /** Идентификатор "пустой" сущности. */
 inline constexpr entityid_t ENTITY_NONE = 0;
+inline constexpr entityid_t ENTITY_AUTO = std::numeric_limits<entityid_t>::max();
 
 // ========== Настройки интерфейса ==========
 

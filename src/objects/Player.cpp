@@ -61,7 +61,7 @@ Player::Player(
 Player::~Player() = default;
 
 void Player::updateEntity() {
-    if (eid == 0) {
+    if (eid == ENTITY_AUTO) {
         auto& def = level.content.entities.require(CHROMAFORGE_CONTENT_NAMESPACE + ":player");
         eid = level.entities->spawn(def, getPosition());
         if (auto entity = level.entities->get(eid)) {
@@ -72,9 +72,9 @@ void Player::updateEntity() {
         if (auto entity = level.entities->get(eid)) {
             entity->setPlayer(id);
         }
-    } else if (chunks->getChunkByVoxel(position)) {
+    } else if (chunks->getChunkByVoxel(position) && eid != ENTITY_NONE) {
         LOG_WARN("Player entity despawned or deleted; will be respawned");
-        eid = 0;
+        eid = ENTITY_AUTO;
     }
 }
 
