@@ -59,9 +59,9 @@ class Engine : public util::ObjectsKeeper {
 private:
     CoreParameters params;
     EngineSettings settings;
-    SettingsHandler settingsHandler;
     EnginePaths paths;
 
+    std::unique_ptr<SettingsHandler> settingsHandler;
     std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen;
     std::unique_ptr<EngineController> controller;
@@ -93,8 +93,12 @@ private:
     void loadSettings();
     void saveSettings();
 public:
-    Engine(CoreParameters coreParameters); // Конструктор
+    Engine(); // Конструктор
     ~Engine(); // Деструктор
+
+    static Engine& getInstance();
+    void initialize(CoreParameters coreParameters);
+    static void terminate();
 
     void run();
 

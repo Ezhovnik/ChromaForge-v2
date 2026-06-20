@@ -555,7 +555,9 @@ static std::shared_ptr<UINode> readPageBox(
     const xml::xmlelement& element
 ) {
     auto menu = std::make_shared<Menu>();
-    menu->setPageLoader(scripting::engine->getGUI()->getMenu()->getPageLoader());
+    menu->setPageLoader(
+        Engine::getInstance().getGUI()->getMenu()->getPageLoader()
+    );
     _readContainer(reader, element, *menu);
 
     return menu;

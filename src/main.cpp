@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <cstdlib>
 #include <string>
+#include <csignal>
 #include <iostream>
 
 #include <engine/Engine.h>
@@ -15,6 +16,10 @@
 #include <constants.h>
 #include <window/Events.h>
 
+static void sigterm_handler(int signum) {
+    Engine::getInstance().quit();
+}
+
 // Точка входа в программу
 int main(int argc, char** argv) {
     CoreParameters coreParameters;
@@ -26,6 +31,8 @@ int main(int argc, char** argv) {
         std::cerr << err.what() << std::endl;
         return EXIT_FAILURE;
     }
+
+    std::signal(SIGTERM, sigterm_handler);
 
     // Инициализация логгера
     auto logPath = coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log");
@@ -41,16 +48,20 @@ int main(int argc, char** argv) {
 
     platform::configure_encoding();
 
+    auto& engine = Engine::getInstance();
     try {
-        Engine(std::move(coreParameters)).run();
+        engine.initialize(std::move(coreParameters));
+        engine.run();
     } catch (const initialize_error& err) {
         LOG_CRITICAL("An initialization error occurred:\n{}", err.what());
-    } catch (const std::exception& err) {
+    }
+#if defined(NDEBUG)
+    catch (const std::exception& err) {
         LOG_ERROR("Uncaught exception: {}", err.what());
+        Logger::getInstance().flush();
         throw;
     }
-
-    Logger::getInstance().flush();
-
+#endif
+    Engine::terminate();
     return EXIT_SUCCESS;
 }

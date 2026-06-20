@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include <typedefs.h>
+#include <settings.h>
 
 namespace audio {
     using speakerid_t = int64_t;
@@ -319,11 +320,7 @@ namespace audio {
         virtual bool isDummy() const = 0;
     };
 
-    /**
-     * @brief Инициализация аудиосистемы
-     * @param enabled Нужно ли пытаться инициализировать реальную аудиосистему
-     */
-    void initialize(bool enabled);
+    void initialize(bool enabled, AudioSettings& settings);
 
     std::unique_ptr<PCM> load_PCM(const std::filesystem::path& file, bool headerOnly);
 
