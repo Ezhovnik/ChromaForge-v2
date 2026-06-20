@@ -7,7 +7,7 @@
 #include <coders/png.h>
 #include <graphics/core/ImageData.h>
 #include <debug/Logger.h>
-#include <files/files.h>
+#include <io/io.h>
 
 using image_reader = std::function<std::unique_ptr<ImageData>(const ubyte*, size_t, bool)>;
 using image_writer = std::function<void(const std::string&, const ImageData*)>;
@@ -38,7 +38,7 @@ std::unique_ptr<ImageData> imageio::read(const std::filesystem::path& filename, 
         LOG_ERROR("File format is not supported (read): '{}'", filename.u8string());
         throw std::runtime_error("File format is not supported (read): '" + filename.u8string() + "'");
     }
-    auto bytes = files::read_bytes_buffer(filename);
+    auto bytes = io::read_bytes_buffer(filename);
     try {
         return std::unique_ptr<ImageData>(found->second(bytes.data(), bytes.size(), flipVertically));
     } catch (const std::runtime_error& err) {

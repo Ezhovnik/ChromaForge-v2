@@ -21,7 +21,7 @@
 #include <graphics/core/ImageData.h>
 #include <coders/GLSLExtension.h>
 #include <coders/imageio.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <frontend/screens/Screen.h>
 #include <frontend/screens/MenuScreen.h>
 #include <content/content.h>
@@ -39,9 +39,9 @@
 #include <content/PacksManager.h>
 #include <util/listutil.h>
 #include <logic/EngineController.h>
-#include <files/settings_io.h>
+#include <io/settings_io.h>
 #include <coders/toml.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <input_bindings.h>
 #include <logic/CommandsInterpreter.h>
 #include <content/ContentBuilder.h>
@@ -133,7 +133,7 @@ void Engine::initialize(CoreParameters coreParameters) {
         setLanguage(lang);
     }, true));
 
-    basePacks = files::read_list(resdir/std::filesystem::path("config/builtins.list"));
+    basePacks = io::read_list(resdir/std::filesystem::path("config/builtins.list"));
 
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -295,7 +295,7 @@ static void load_configs(const std::filesystem::path& root) {
     if (std::filesystem::is_regular_file(bindsFile)) {
         Events::loadBindings(
             bindsFile.u8string(),
-            files::read_string(bindsFile),
+            io::read_string(bindsFile),
             BindType::Bind
         );
     }
@@ -470,12 +470,12 @@ std::vector<std::string>& Engine::getBasePacks() {
 
 void Engine::saveSettings() {
     LOG_INFO("Writing the settings to a file");
-    files::write_string(paths.getSettingsFile(), toml::stringify(*settingsHandler));
+    io::write_string(paths.getSettingsFile(), toml::stringify(*settingsHandler));
     LOG_INFO("The settings were successfully written to the file");
 
     if (!params.headless) {
         LOG_INFO("Writing the controls to a file");
-        files::write_string(paths.getControlsFile(), Events::writeBindings());
+        io::write_string(paths.getControlsFile(), Events::writeBindings());
         LOG_INFO("The controls were successfully written to the file");
     }
 }
@@ -484,7 +484,7 @@ void Engine::loadSettings() {
     std::filesystem::path settings_file = paths.getSettingsFile();
     if (std::filesystem::is_regular_file(settings_file)) {
         LOG_INFO("Reading the settings file");
-        std::string text = files::read_string(settings_file);
+        std::string text = io::read_string(settings_file);
         try {
             toml::parse(*settingsHandler, settings_file.string(), text);
         } catch (const parsing_error& err) {
@@ -499,7 +499,7 @@ void Engine::loadControls() {
     std::filesystem::path controls_file = paths.getControlsFile();
     if (std::filesystem::is_regular_file(controls_file)) {
         LOG_INFO("Reading the controls file");
-        std::string text = files::read_string(controls_file);
+        std::string text = io::read_string(controls_file);
         Events::loadBindings(
             controls_file.u8string(),
             text,

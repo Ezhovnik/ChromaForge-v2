@@ -8,7 +8,7 @@
 #include <frontend/hud.h>
 #include <util/stringutil.h>
 #include <graphics/ui/GUI.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <graphics/ui/elements/layout/Container.h>
 
 namespace scripting {
@@ -131,7 +131,7 @@ static void resetPackBindings(std::filesystem::path& packFolder) {
     if (std::filesystem::is_regular_file(bindsFile)) {
         Events::loadBindings(
             bindsFile.u8string(),
-            files::read_string(bindsFile),
+            io::read_string(bindsFile),
             BindType::Rebind
         );
     }

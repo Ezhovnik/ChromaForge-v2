@@ -4,10 +4,10 @@
 #include <algorithm>
 #include <utility>
 
-#include <files/files.h>
+#include <io/io.h>
 #include <coders/json.h>
 #include <debug/Logger.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <core_content_defs.h>
 #include <data/dv.h>
 #include <constants.h>
@@ -69,7 +69,7 @@ static void checkContentPackId(const std::string& id, const std::filesystem::pat
 }
 
 ContentPack ContentPack::read(const std::string& path, const std::filesystem::path& folder) {
-    auto root = files::read_json(folder/std::filesystem::path(PACKAGE_FILENAME));
+    auto root = io::read_json(folder/std::filesystem::path(PACKAGE_FILENAME));
     ContentPack pack;
 
     root.at("id").get(pack.id);
@@ -153,7 +153,7 @@ std::vector<std::string> ContentPack::worldPacksList(
         LOG_ERROR("Missing file 'packs.list'");
         throw std::runtime_error("Missing file 'packs.list'");
     }
-    return files::read_list(listfile);
+    return io::read_list(listfile);
 }
 
 std::filesystem::path ContentPack::findPack(

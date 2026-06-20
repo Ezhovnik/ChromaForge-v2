@@ -6,14 +6,14 @@
 #include <assets/Assets.h>
 #include <assets/AssetsLoader.h>
 #include <coders/imageio.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Texture.h>
 #include <graphics/core/ImageData.h>
 #include <graphics/core/Atlas.h>
 #include <graphics/core/Font.h>
 #include <debug/Logger.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <coders/json.h>
 #include <graphics/core/TextureAnimation.h>
 #include <frontend/UIDocument.h>
@@ -48,8 +48,8 @@ asset_loader::postfunc asset_loader::shader(
     std::filesystem::path fragmentFile = paths->find(filename + ".frag");
 
 	// Читаем исходный код шейдеров из файлов
-    std::string vertexSource = files::read_string(vertexFile);
-    std::string fragmentSource = files::read_string(fragmentFile);
+    std::string vertexSource = io::read_string(vertexFile);
+    std::string fragmentSource = io::read_string(fragmentFile);
 
 	vertexSource = ShaderProgram::preprocessor->process(vertexFile, vertexSource);
     fragmentSource = ShaderProgram::preprocessor->process(fragmentFile, fragmentSource);
@@ -194,7 +194,7 @@ static void read_anim_file(
     const std::string& animFile,
     std::vector<std::pair<std::string, int>>& frameList
 ) {
-    auto root = files::read_json(animFile);
+    auto root = io::read_json(animFile);
     float frameDuration = DEFAULT_FRAME_DURATION;
     std::string frameName;
 
@@ -413,7 +413,7 @@ asset_loader::postfunc asset_loader::model(
 ) {
     auto path = paths->find(file + ".vec3");
     if (std::filesystem::exists(path)) {
-        auto bytes = files::read_bytes_buffer(path);
+        auto bytes = io::read_bytes_buffer(path);
         auto modelVEC3 = std::make_shared<vec3::File>(vec3::load(path.u8string(), bytes));
         return [loader, name, modelVEC3=std::move(modelVEC3)](Assets* assets) {
             for (auto& [modelName, model] : modelVEC3->models) {
@@ -431,7 +431,7 @@ asset_loader::postfunc asset_loader::model(
         };
     }
     path = paths->find(file + ".obj");
-    auto text = files::read_string(path);
+    auto text = io::read_string(path);
     try {
         auto model = obj::parse(path.u8string(), text).release();
         return [=](Assets* assets) {

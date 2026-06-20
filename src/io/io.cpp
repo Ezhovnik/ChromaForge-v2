@@ -1,4 +1,4 @@
-#include <files/files.h>
+#include <io/io.h>
 
 #include <fstream>
 #include <filesystem>
@@ -14,7 +14,7 @@
 #include <coders/commons.h>
 #include <coders/toml.h>
 
-files::rafile::rafile(const std::filesystem::path& filename) : file(filename, std::ios::binary | std::ios::ate) {
+io::rafile::rafile(const std::filesystem::path& filename) : file(filename, std::ios::binary | std::ios::ate) {
     if (!file) {
 		LOG_ERROR("Could not to open file '{}'", filename.string());
         throw std::runtime_error("Could not to open file " + filename.string());
@@ -23,20 +23,20 @@ files::rafile::rafile(const std::filesystem::path& filename) : file(filename, st
     file.seekg(0);
 }
 
-size_t files::rafile::length() const {
+size_t io::rafile::length() const {
     return filelength;
 }
 
-void files::rafile::seekg(std::streampos pos) {
+void io::rafile::seekg(std::streampos pos) {
     file.seekg(pos);
 }
 
-void files::rafile::read(char* buffer, std::streamsize size) {
+void io::rafile::read(char* buffer, std::streamsize size) {
     file.read(buffer, size);
 }
 
 // Записывает данные в бинарный файл (перезаписывает сущесвующий)
-bool files::write_bytes(const std::filesystem::path& filename, const ubyte* data, size_t size) {
+bool io::write_bytes(const std::filesystem::path& filename, const ubyte* data, size_t size) {
 	std::ofstream output(filename, std::ios::binary);
 	if (!output.is_open()) return false;
 
@@ -47,7 +47,7 @@ bool files::write_bytes(const std::filesystem::path& filename, const ubyte* data
 }
 
 // Добавляет данные в конец бинарного файла
-uint files::append_bytes(const std::filesystem::path& filename, const ubyte* data, size_t size) {
+uint io::append_bytes(const std::filesystem::path& filename, const ubyte* data, size_t size) {
 	std::ofstream output(filename, std::ios::binary | std::ios::app);
 	if (!output.is_open()) return 0;
 
@@ -59,7 +59,7 @@ uint files::append_bytes(const std::filesystem::path& filename, const ubyte* dat
 }
 
 // Читает данные из бинарного файла с начала
-bool files::read(const std::filesystem::path& filename, char* data, size_t size) {
+bool io::read(const std::filesystem::path& filename, char* data, size_t size) {
 	std::ifstream input(filename, std::ios::binary);
 	if (!input.is_open()) return false;
 
@@ -69,13 +69,13 @@ bool files::read(const std::filesystem::path& filename, char* data, size_t size)
 	return true;
 }
 
-util::Buffer<ubyte> files::read_bytes_buffer(const std::filesystem::path& path) {
+util::Buffer<ubyte> io::read_bytes_buffer(const std::filesystem::path& path) {
     size_t size;
-    auto bytes = files::read_bytes(path, size);
+    auto bytes = io::read_bytes(path, size);
     return util::Buffer<ubyte>(std::move(bytes), size);
 }
 
-std::unique_ptr<ubyte[]> files::read_bytes(const std::filesystem::path& filename, size_t& length) {
+std::unique_ptr<ubyte[]> io::read_bytes(const std::filesystem::path& filename, size_t& length) {
 	std::ifstream input(filename, std::ios::binary);
 	if (!input.is_open()) {
 		LOG_ERROR("Could not to load file '{}'", filename.string());
@@ -93,7 +93,7 @@ std::unique_ptr<ubyte[]> files::read_bytes(const std::filesystem::path& filename
 	return data;
 }
 
-std::vector<ubyte> files::read_bytes(const std::filesystem::path& filename) {
+std::vector<ubyte> io::read_bytes(const std::filesystem::path& filename) {
     std::ifstream input(filename, std::ios::binary);
     if (!input.is_open()) return {};
     input.seekg(0, std::ios_base::end);
@@ -107,13 +107,13 @@ std::vector<ubyte> files::read_bytes(const std::filesystem::path& filename) {
     return data;
 }
 
-std::string files::read_string(const std::filesystem::path& filename) {
+std::string io::read_string(const std::filesystem::path& filename) {
 	size_t size;
 	auto bytes = read_bytes(filename, size);
 	return std::string((const char*)bytes.get(), size);
 }
 
-bool files::write_string(const std::filesystem::path& filename, std::string_view content) {
+bool io::write_string(const std::filesystem::path& filename, std::string_view content) {
 	std::ofstream file(filename);
 	if (!file) {
 		return false;
@@ -123,27 +123,27 @@ bool files::write_string(const std::filesystem::path& filename, std::string_view
 	return true;
 }
 
-bool files::write_json(const std::filesystem::path& filename, const dv::value& obj, bool nice) {
-    return files::write_string(filename, json::stringify(obj, nice, "  "));
+bool io::write_json(const std::filesystem::path& filename, const dv::value& obj, bool nice) {
+    return io::write_string(filename, json::stringify(obj, nice, "  "));
 }
 
-bool files::write_binary_json(const std::filesystem::path& filename, const dv::value& obj, bool compression) {
+bool io::write_binary_json(const std::filesystem::path& filename, const dv::value& obj, bool compression) {
     auto bytes = json::to_binary(obj, compression);
-    return files::write_bytes(filename, bytes.data(), bytes.size());
+    return io::write_bytes(filename, bytes.data(), bytes.size());
 }
 
-dv::value files::read_binary_json(const std::filesystem::path& file) {
+dv::value io::read_binary_json(const std::filesystem::path& file) {
     size_t size;
-    auto bytes = files::read_bytes(file, size);
+    auto bytes = io::read_bytes(file, size);
     return json::from_binary(bytes.get(), size);
 }
 
-dv::value files::read_json(const std::filesystem::path& filename) {
-	std::string text = files::read_string(filename);
+dv::value io::read_json(const std::filesystem::path& filename) {
+	std::string text = io::read_string(filename);
 	return json::parse(filename.u8string(), text);
 }
 
-std::vector<std::string> files::read_list(const std::filesystem::path& filename) {
+std::vector<std::string> io::read_list(const std::filesystem::path& filename) {
 	std::ifstream file(filename);
 	if (!file) {
 		LOG_ERROR("Could not to open file {}", filename.u8string());
@@ -160,8 +160,8 @@ std::vector<std::string> files::read_list(const std::filesystem::path& filename)
 	return lines;
 }
 
-dv::value files::read_toml(const std::filesystem::path& file) {
-    return toml::parse(file.u8string(), files::read_string(file));
+dv::value io::read_toml(const std::filesystem::path& file) {
+    return toml::parse(file.u8string(), io::read_string(file));
 }
 
 using DecodeFunc = dv::value(*)(std::string_view, std::string_view);
@@ -171,15 +171,15 @@ static std::map<std::filesystem::path, DecodeFunc> data_decoders {
     {std::filesystem::u8path(".toml"), toml::parse},
 };
 
-bool files::is_data_file(const std::filesystem::path& file) {
+bool io::is_data_file(const std::filesystem::path& file) {
     return is_data_interchange_format(file.extension());
 }
 
-bool files::is_data_interchange_format(const std::filesystem::path& ext) {
+bool io::is_data_interchange_format(const std::filesystem::path& ext) {
     return data_decoders.find(ext) != data_decoders.end();
 }
 
-dv::value files::read_object(const std::filesystem::path& file) {
+dv::value io::read_object(const std::filesystem::path& file) {
     const auto& found = data_decoders.find(file.extension());
     if (found == data_decoders.end()) {
 		LOG_ERROR("Unknown file format");

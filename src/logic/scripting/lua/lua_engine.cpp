@@ -8,8 +8,8 @@
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
-#include <files/files.h>
-#include <files/engine_paths.h>
+#include <io/io.h>
+#include <io/engine_paths.h>
 #include <engine/Engine.h>
 
 static lua::State* main_thread = nullptr;
@@ -164,7 +164,7 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
 
     auto resDir = paths.getResourcesFolder();
     auto file = resDir/std::filesystem::u8path("scripts/stdmin.lua");
-    auto src = files::read_string(file);
+    auto src = io::read_string(file);
     lua::pop(L, lua::execute(L, 0, src, "builtin:scripts/stdmin.lua"));
     return L;
 }

@@ -5,7 +5,7 @@
 #include <graphics/ui/elements/UINode.h>
 #include <graphics/ui/elements/display/InventoryView.h>
 #include <logic/scripting/scripting.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <graphics/ui/gui_xml.h>
 
 UIDocument::UIDocument(
@@ -61,7 +61,7 @@ std::unique_ptr<UIDocument> UIDocument::read(
     const std::filesystem::path& file,
     const std::string& fileName
 ) {
-    const std::string text = files::read_string(file);
+    const std::string text = io::read_string(file);
     auto xmldoc = xml::parse(file.u8string(), text);
 
     auto env = parent_env == nullptr 

@@ -6,7 +6,6 @@
 #include <iostream>
 
 #include <engine/Engine.h>
-#include <files/files.h>
 #include <util/platform.h>
 #include <coders/toml.h>
 #include <input_bindings.h>

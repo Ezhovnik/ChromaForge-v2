@@ -8,9 +8,9 @@
 #include <engine/Engine.h>
 #include <assets/Assets.h>
 #include <assets/AssetsLoader.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <coders/json.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>
 #include <lighting/Lighting.h>
@@ -37,7 +37,7 @@ static int l_get_list(lua::State* L) {
 
         const auto& folder = worlds[i];
 
-        auto root = json::parse(files::read_string(folder/std::filesystem::u8path("world.json")));
+        auto root = json::parse(io::read_string(folder/std::filesystem::u8path("world.json")));
         const auto& versionMap = root["version"];
         int versionMajor = versionMap["major"].asInteger();
         int versionMinor = versionMap["minor"].asInteger();

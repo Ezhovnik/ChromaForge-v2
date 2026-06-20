@@ -3,14 +3,14 @@
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <frontend/menu.h>
 #include <window/Window.h>
 #include <frontend/screens/MenuScreen.h>
 #include <logic/LevelController.h>
 #include <window/Events.h>
 #include <logic/EngineController.h>
-#include <files/settings_io.h>
+#include <io/settings_io.h>
 #include <world/Level.h>
 #include <data/setting.h>
 #include <content/Content.h>
@@ -19,7 +19,7 @@
 #include <util/platform.h>
 #include <coders/png.h>
 #include <debug/Logger.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <graphics/core/Texture.h>
 
 static int l_get_version(lua::State* L) {

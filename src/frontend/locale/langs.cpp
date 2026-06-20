@@ -5,7 +5,7 @@
 #include <coders/json.h>
 #include <coders/commons.h>
 #include <content/ContentPack.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <util/stringutil.h>
 #include <debug/Logger.h>
 #include <data/dv.h>
@@ -78,7 +78,7 @@ namespace {
 
 void langs::loadLocalesInfo(const std::filesystem::path& resdir, std::string& fallback) {
     auto file = resdir/std::filesystem::u8path(langs::TEXTS_FOLDER)/std::filesystem::u8path("langs.json");
-    auto root = files::read_json(file);
+    auto root = io::read_json(file);
 
     langs::locales_info.clear();
     root.at("fallback").get(fallback);
@@ -105,7 +105,7 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
     // Сначала загружаем из основных ресурсов
     std::filesystem::path core_file = resdir/filename;
     if (std::filesystem::is_regular_file(core_file)) {
-        std::string text = files::read_string(core_file);
+        std::string text = io::read_string(core_file);
         Reader reader(core_file.string(), text);
         reader.read(lang, ""); // без префикса
     }
@@ -114,7 +114,7 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
     for (auto pack : packs) {
         std::filesystem::path file = pack.folder/filename;
         if (std::filesystem::is_regular_file(file)) {
-            std::string text = files::read_string(file);
+            std::string text = io::read_string(file);
             Reader reader(file.string(), text);
             reader.read(lang, "");
         }

@@ -12,11 +12,11 @@
 #include <constants.h>
 #include <graphics/core/ImageData.h>
 #include <assets/asset_loaders.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <core_content_defs.h>
 #include <content/Content.h>
 #include <logic/scripting/scripting.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <util/ThreadPool.h>
 #include <voxels/Block.h>
 #include <objects/rigging.h>
@@ -190,7 +190,7 @@ void AssetsLoader::processPreloadList(AssetType tag, const dv::value& list) {
 }
 
 void AssetsLoader::processPreloadConfig(const std::filesystem::path& file) {
-    auto root = files::read_json(file);
+    auto root = io::read_json(file);
     processPreloadList(AssetType::Atlas, root["atlases"]);
     processPreloadList(AssetType::Font, root["fonts"]);
     processPreloadList(AssetType::Shader, root["shaders"]);

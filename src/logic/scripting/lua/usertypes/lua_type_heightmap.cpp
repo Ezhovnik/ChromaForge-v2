@@ -11,7 +11,7 @@
 #include <coders/imageio.h>
 #include <graphics/core/ImageData.h>
 #include <util/functional_util.h>
-#include <files/util.h>
+#include <io/util.h>
 #include <math/Heightmap.h>
 #include <engine/Engine.h>
 

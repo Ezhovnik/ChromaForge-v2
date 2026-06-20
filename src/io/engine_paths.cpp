@@ -1,4 +1,4 @@
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 
 #include <filesystem>
 #include <sstream>
@@ -266,7 +266,7 @@ dv::value ResPaths::readCombinedList(const std::string& filename) const {
         if (!std::filesystem::exists(path)) continue;
 
         try {
-            auto value = files::read_object(path);
+            auto value = io::read_object(path);
             if (!value.isList()) {
                 LOG_WARN("Reading combined list {}: {} is not a list (skipped)", root.name, filename);
                 continue;
@@ -288,7 +288,7 @@ dv::value ResPaths::readCombinedObject(const std::string& filename) const {
         if (!std::filesystem::exists(path)) continue;
 
         try {
-            auto value = files::read_object(path);
+            auto value = io::read_object(path);
             if (!value.isObject()) {
                 LOG_WARN("Reading combined object {}: is not an object (skipped)", root.name, filename);
             }

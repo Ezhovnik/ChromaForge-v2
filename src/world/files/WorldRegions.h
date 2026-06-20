@@ -12,7 +12,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
-#include <files/files.h>
+#include <io/io.h>
 #include <typedefs.h>
 #include <util/BufferPool.h>
 #include <voxels/Chunk.h>
@@ -58,7 +58,7 @@ public:
 };
 
 struct regFile {
-    files::rafile file;
+    io::rafile file;
     int version;
     bool inUse = false;
 

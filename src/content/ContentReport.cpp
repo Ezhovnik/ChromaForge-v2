@@ -4,7 +4,7 @@
 
 #include <content/Content.h>
 #include <constants.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <coders/json.h>
 #include <voxels/Block.h>
 #include <items/Item.h>
@@ -74,7 +74,7 @@ std::shared_ptr<ContentReport> ContentReport::create(
         return nullptr;
     }
 
-    auto root = files::read_json(filename);
+    auto root = io::read_json(filename);
     uint regionsVersion = static_cast<uint>(root["region-version"].asInteger(REGION_FORMAT_VERSION));
     auto& blocklist = root["blocks"];
     auto& itemlist = root["items"];

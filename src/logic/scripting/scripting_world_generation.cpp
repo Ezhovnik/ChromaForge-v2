@@ -14,7 +14,7 @@
 #include <debug/Logger.h>
 #include <data/dv.h>
 #include <util/timeutil.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <engine/Engine.h>
 
 class LuaGeneratorScript : public GeneratorScript {
@@ -54,7 +54,7 @@ public:
         lua::pop(L);
 
         if (std::filesystem::exists(file)) {
-            std::string src = files::read_string(file);
+            std::string src = io::read_string(file);
             lua::pop(L, lua::execute(L, *env, src, file.u8string()));
         } else {
             lua::pop(L, lua::execute(L, *env, "", "<empty>"));

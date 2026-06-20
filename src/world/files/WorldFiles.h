@@ -10,7 +10,7 @@
 #include <glm/gtx/hash.hpp>
 
 #include <typedefs.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <voxels/Chunk.h>
 #include <content/ContentPack.h>
 #include <world/files/WorldRegions.h>

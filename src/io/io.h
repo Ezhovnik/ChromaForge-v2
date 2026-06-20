@@ -10,7 +10,7 @@
 #include <util/Buffer.h>
 #include <data/dv.h>
 
-namespace files {
+namespace io {
     class rafile {
         std::ifstream file;
         size_t filelength;

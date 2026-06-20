@@ -3,12 +3,12 @@
 #include <algorithm>
 
 #include <content/ContentPack.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <logic/scripting/scripting.h>
 #include <world/generator/Generator.h>
 #include <world/generator/VoxelFragment.h>
 #include <debug/Logger.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <util/stringutil.h>
 
 static BlocksLayer load_layer(
@@ -151,7 +151,7 @@ static std::vector<std::unique_ptr<VoxelStructure>> load_structures(
             throw std::runtime_error("Structure file does not exist: " + structFile.u8string());
         }
         auto fragment = std::make_unique<VoxelFragment>();
-        fragment->deserialize(files::read_binary_json(structFile));
+        fragment->deserialize(io::read_binary_json(structFile));
 
         structures.push_back(std::make_unique<VoxelStructure>(
             load_structure_meta(name, config),
@@ -204,7 +204,7 @@ void ContentLoader::loadGenerator(
     auto generatorsDir = packDir/GENERATORS_DIR;
     auto generatorFile = generatorsDir/std::filesystem::u8path(name + ".toml");
     if (!std::filesystem::exists(generatorFile)) return;
-    auto map = files::read_toml(generatorsDir/std::filesystem::u8path(name + ".toml"));
+    auto map = io::read_toml(generatorsDir/std::filesystem::u8path(name + ".toml"));
     map.at("caption").get(def.caption);
     map.at("biome-parameters").get(def.biomeParameters);
     map.at("biome-bpd").get(def.biomesBPD);

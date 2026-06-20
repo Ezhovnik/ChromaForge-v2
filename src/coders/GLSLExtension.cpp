@@ -6,9 +6,9 @@
 
 #include <util/stringutil.h>
 #include <typedefs.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <debug/Logger.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <constants.h>
 
 void GLSLExtension::setVersion(std::string version) {
@@ -21,7 +21,7 @@ void GLSLExtension::setPaths(const ResPaths* paths) {
 
 void GLSLExtension::loadHeader(const std::string& name) {
     std::filesystem::path file = paths->find(SHADERS_FOLDER + "/lib/" + name + ".glsl");
-    std::string source = files::read_string(file);
+    std::string source = io::read_string(file);
     addHeader(name, "");
     addHeader(name, process(file, source, true));
 }

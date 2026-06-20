@@ -14,7 +14,7 @@
 #include <graphics/core/GLTexture.h>
 #include <debug/Logger.h>
 #include <typedefs.h>
-#include <files/files.h>
+#include <io/io.h>
 
 std::unique_ptr<ImageData> png::loadImage(const ubyte* bytes, size_t size, bool flipVertically) {
     int width, height, channels;
@@ -83,7 +83,7 @@ std::unique_ptr<Texture> png::loadTexture(const ubyte* bytes, size_t size) {
 }
 
 std::unique_ptr<Texture> png::loadTexture(const std::string& filename) {
-    auto bytes = files::read_bytes_buffer(std::filesystem::u8path(filename));
+    auto bytes = io::read_bytes_buffer(std::filesystem::u8path(filename));
     try {
         return loadTexture(bytes.data(), bytes.size());
     } catch (const std::runtime_error& err) {

@@ -69,9 +69,6 @@ std::shared_ptr<Task> create_converter(
         mode = ConvertMode::BlockFields;
     }
     return WorldConverter::startTask(worldFiles, content, report, [&engine, postRunnable](){
-            // auto menu = engine.getGUI()->getMenu();
-            // menu->reset();
-            // menu->setPage("main", false);
             engine.postRunnable([=]() {postRunnable();});
         },
         mode,

@@ -14,8 +14,8 @@
 #include <content/Content.h>
 #include <items/Item.h>
 #include <content/ContentBuilder.h>
-#include <files/files.h>
-#include <files/engine_paths.h>
+#include <io/io.h>
+#include <io/engine_paths.h>
 
 void CoreContent::setup(const EnginePaths& paths, ContentBuilder& builder) {
     // Воздух

@@ -2,8 +2,8 @@
 
 #include <stdexcept>
 
-#include <files/engine_paths.h>
-#include <files/files.h>
+#include <io/engine_paths.h>
+#include <io/io.h>
 #include <util/timeutil.h>
 #include <world/Level.h>
 #include <voxels/Block.h>
@@ -40,7 +40,7 @@ void scripting::load_script(const std::filesystem::path& name, bool throwable) {
     const auto& paths = scripting::engine->getPaths();
     std::filesystem::path file = paths.getResourcesFolder()/std::filesystem::path("scripts")/name;
 
-    std::string src = files::read_string(file);
+    std::string src = io::read_string(file);
     auto L = lua::get_main_state();
     lua::loadbuffer(L, 0, src, "builtin:scripts/" + name.u8string());
     if (throwable) {
@@ -56,7 +56,7 @@ int scripting::load_script(
     const std::filesystem::path& file,
     const std::string& fileName
 ) {
-    std::string src = files::read_string(file);
+    std::string src = io::read_string(file);
     LOG_INFO("Script ({}) {}", type, file.u8string());
     return lua::execute(lua::get_main_state(), env, src, fileName);
 }
@@ -112,7 +112,7 @@ std::unique_ptr<Process> scripting::start_coroutine(
 ) {
     auto L = lua::get_main_state();
     if (lua::getglobal(L, "__chroma_start_coroutine")) {
-        auto source = files::read_string(script);
+        auto source = io::read_string(script);
         lua::loadbuffer(L, 0, source, script.filename().u8string());
         if (lua::call(L, 1)) {
             int id = lua::tointeger(L, -1);
@@ -801,7 +801,7 @@ void scripting::load_entity_component(
     const std::string& name, const std::filesystem::path& file, const std::string& fileName
 ) {
     auto L = lua::get_main_state();
-    std::string src = files::read_string(file);
+    std::string src = io::read_string(file);
     LOG_INFO("Script (entity component) {}", file.u8string());
     lua::loadbuffer(L, 0, src, fileName);
     lua::store_in(L, lua::CHUNKS_TABLE, name);

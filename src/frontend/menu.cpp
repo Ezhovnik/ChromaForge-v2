@@ -8,7 +8,7 @@
 
 #include <delegates.h>
 #include <engine/Engine.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <graphics/ui/elements/display/Label.h>
 #include <graphics/ui/elements/layout/Menu.h>
 #include <graphics/ui/gui_util.h>

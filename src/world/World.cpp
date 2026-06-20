@@ -60,7 +60,7 @@ void World::writeResources(const Content& content) {
             }
         }
     }
-    files::write_json(wfile->getResourcesFile(), root);
+    io::write_json(wfile->getResourcesFile(), root);
 }
 
 void World::write(Level* level) {
@@ -71,7 +71,7 @@ void World::write(Level* level) {
 	// Запись метаданных мира и игрока
 	wfile->write(this, &content);
 	auto playerFile = level->players->serialize();
-    files::write_json(wfile->getPlayerFile(), playerFile);
+    io::write_json(wfile->getPlayerFile(), playerFile);
 
 	writeResources(content);
 }
@@ -151,7 +151,7 @@ std::unique_ptr<Level> World::load(
         LOG_WARN("'player.json' does not exists");
         level->players->create();
     } else {
-        auto playerRoot = files::read_json(file);
+        auto playerRoot = io::read_json(file);
         level->players->deserialize(playerRoot);
 
         if (!playerRoot["players"].empty()) {

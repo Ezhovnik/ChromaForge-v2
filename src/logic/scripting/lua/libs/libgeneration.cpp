@@ -1,7 +1,7 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 
-#include <files/files.h>
-#include <files/util.h>
+#include <io/io.h>
+#include <io/util.h>
 #include <coders/binary_json.h>
 #include <world/Level.h>
 #include <world/generator/VoxelFragment.h>
@@ -15,7 +15,7 @@ static int l_save_fragment(lua::State* L) {
     auto file = paths.resolve(lua::require_string(L, 2), true);
     auto map = fragment->getFragment()->serialize();
     auto bytes = json::to_binary(map, true);
-    files::write_bytes(file, bytes.data(), bytes.size());
+    io::write_bytes(file, bytes.data(), bytes.size());
     return 0;
 }
 
@@ -38,7 +38,7 @@ static int l_load_fragment(lua::State* L) {
     if (!std::filesystem::exists(path)) {
         throw std::runtime_error("File " + path.u8string() + " does not exist");
     }
-    auto map = files::read_binary_json(path);
+    auto map = io::read_binary_json(path);
 
     auto fragment = std::make_shared<VoxelFragment>();
     fragment->deserialize(map);
