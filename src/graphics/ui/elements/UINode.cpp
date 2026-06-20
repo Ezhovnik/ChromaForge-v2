@@ -175,7 +175,10 @@ glm::vec2 UINode::getSize() const {
 }
 
 void UINode::setSize(glm::vec2 size_) {
-    size = glm::vec2(glm::max(minSize.x, size_.x), glm::max(minSize.y, size_.y));
+    size = glm::vec2(
+        glm::max(minSize.x, glm::min(maxSize.x, size_.x)),
+        glm::max(minSize.y, glm::min(maxSize.y, size_.y))
+    );
 }
 
 glm::vec2 UINode::getMinSize() const {
@@ -184,6 +187,15 @@ glm::vec2 UINode::getMinSize() const {
 
 void UINode::setMinSize(glm::vec2 minSize_) {
     minSize = minSize_;
+    setSize(getSize());
+}
+
+glm::vec2 UINode::getMaxSize() const {
+    return maxSize;
+}
+
+void UINode::setMaxSize(glm::vec2 maxSize) {
+    this->maxSize = maxSize;
     setSize(getSize());
 }
 

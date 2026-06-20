@@ -4,6 +4,7 @@
 #include <iomanip>
 
 #include <util/stringutil.h>
+#include <logic/scripting/lua/lua_engine.h>
 
 using namespace lua;
 
@@ -58,13 +59,7 @@ int lua::pushvalue(lua::State* L, const dv::value& value) {
             break;
         case dv::value_type::Bytes: {
             const auto& bytes = value.asBytes();
-            createtable(L, 0, bytes.size());
-            size_t size = bytes.size();
-            for (size_t i = 0; i < size;) {
-                pushinteger(L, bytes[i]);
-                ++i;
-                rawseti(L, i);
-            }
+            newuserdata<LuaBytearray>(L, bytes.data(), bytes.size());
             break;
         }
     }
@@ -220,6 +215,7 @@ static std::shared_ptr<std::string> create_lambda_handler(lua::State* L) {
     pop(L, 2);
 
     return std::shared_ptr<std::string>(new std::string(name), [=](std::string* name) {
+        auto L = lua::get_main_state();
         requireglobal(L, LAMBDAS_TABLE);
         pushnil(L);
         setfield(L, *name);
@@ -231,6 +227,7 @@ static std::shared_ptr<std::string> create_lambda_handler(lua::State* L) {
 runnable lua::create_runnable(lua::State* L) {
     auto funcptr = create_lambda_handler(L);
     return [=]() {
+        auto L = lua::get_main_state();
         if (!get_from(L, LAMBDAS_TABLE, *funcptr, false)) return;
         call_nothrow(L, 0, 0);
         pop(L);

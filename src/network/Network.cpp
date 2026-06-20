@@ -327,9 +327,8 @@ public:
     ~SocketConnection() {
         if (state != ConnectionState::Closed) {
             shutdown(descriptor, 2);
-            closesocket(descriptor);
         }
-        thread->join();
+        if (thread) thread->join();
     }
 
     void startListen() {
@@ -387,6 +386,7 @@ public:
     }
 
     int send(const char* buffer, size_t length) override {
+        if (state == ConnectionState::Closed) return 0;
         int len = sendsocket(descriptor, buffer, length, 0);
         if (len == -1) {
             int err = errno;
@@ -448,19 +448,18 @@ public:
         hints.ai_family = AF_INET;
         hints.ai_socktype = SOCK_STREAM;
 
-        addrinfo* addrinfo;
+        addrinfo* addrinfo = nullptr;
         if (int res = getaddrinfo(
             address.c_str(), nullptr, &hints, &addrinfo
         )) {
             throw std::runtime_error(gai_strerrorA(res));
         }
         sockaddr_in serverAddress = *(sockaddr_in*)addrinfo->ai_addr;
-        freeaddrinfo(addrinfo);
         serverAddress.sin_port = htons(port);
+        freeaddrinfo(addrinfo);
 
         SOCKET descriptor = socket(AF_INET, SOCK_STREAM, 0);
         if (descriptor == -1) {
-            freeaddrinfo(addrinfo);
             LOG_ERROR("Could not create socket");
             throw std::runtime_error("Could not create socket");
         }

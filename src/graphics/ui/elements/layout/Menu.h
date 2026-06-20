@@ -43,7 +43,7 @@ namespace gui {
         void setPageLoader(PageLoaderFunc loader);
         PageLoaderFunc getPageLoader();
 
-        void back();
+        bool back();
 
         void clearHistory();
 
