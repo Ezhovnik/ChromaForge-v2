@@ -10,11 +10,6 @@
 #include <data/dv.h>
 #include <io/io.h>
 
-class files_access_error : public std::runtime_error {
-public:
-    files_access_error(const std::string& msg) : std::runtime_error(msg) {}
-};
-
 class EnginePaths {
 private:
     std::filesystem::path userFilesFolder {"."};

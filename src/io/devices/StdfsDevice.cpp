@@ -18,7 +18,7 @@ StdfsDevice::StdfsDevice(std::filesystem::path root, bool createDirectory) : roo
 }
 
 std::filesystem::path StdfsDevice::resolve(std::string_view path) {
-    return root / std::filesystem::u8path(path);
+    return root / std::filesystem::u8path(io::path(std::string(path)).normalized().string());
 }
 
 void StdfsDevice::write(std::string_view path, const void* data, size_t size) {
@@ -118,5 +118,5 @@ private:
 };
 
 std::unique_ptr<PathsGenerator> StdfsDevice::list(std::string_view path) {
-    return std::make_unique<StdfsPathsGenerator>(root / std::filesystem::u8path(path));
+    return std::make_unique<StdfsPathsGenerator>(resolve(path));
 }

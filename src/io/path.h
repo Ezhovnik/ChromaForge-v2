@@ -1,9 +1,16 @@
 #pragma once
 
 #include <string>
+#include <stdexcept>
 #include <filesystem>
 
 namespace io {
+    class access_error : public std::runtime_error {
+    public:
+        access_error(const std::string& msg) : std::runtime_error(msg) {
+        }
+    };
+
     class path {
     public:
         path() = default;
@@ -106,6 +113,8 @@ namespace io {
             }
             return str.substr(0, slashpos);
         }
+
+        path normalized() const;
 
         std::string string() const {
             return str;
