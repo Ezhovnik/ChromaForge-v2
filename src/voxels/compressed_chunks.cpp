@@ -3,6 +3,7 @@
 #include <coders/rle.h>
 #include <coders/zip.h>
 #include <world/files/WorldFiles.h>
+#include <content/Content.h>
 
 inline constexpr int HAS_VOXELS = 0x1;
 inline constexpr int HAS_METADATA = 0x2;
@@ -45,7 +46,9 @@ static void read_voxel_data(ByteReader& reader, util::Buffer<ubyte>& dst) {
     extrle::decode16(rleData.data(), rleData.size(), dst.data());
 }
 
-void compressed_chunks::decode(Chunk& chunk, const ubyte* src, size_t size) {
+void compressed_chunks::decode(
+    Chunk& chunk, const ubyte* src, size_t size, const ContentIndices& indices
+) {
     ByteReader reader(src, size);
 
     ubyte flags = reader.get();
@@ -54,6 +57,17 @@ void compressed_chunks::decode(Chunk& chunk, const ubyte* src, size_t size) {
     if (flags & HAS_VOXELS) {
         static util::Buffer<ubyte> voxelData (CHUNK_DATA_LEN);
         read_voxel_data(reader, voxelData);
+        auto src = reinterpret_cast<const uint16_t*>(voxelData.data());
+        for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+            blockid_t id = dataio::le2h(src[i]);;
+            if (indices.blocks.get(id) == nullptr) {
+                throw std::runtime_error(
+                    "Block data corruption (chunk: " + std::to_string(chunk.chunk_x) +
+                    ", " + std::to_string(chunk.chunk_z) + ") at " +
+                    std::to_string(i) + " id: " + std::to_string(id)
+                );
+            }
+        }
         chunk.decode(voxelData.data());
         chunk.updateHeights();
     }

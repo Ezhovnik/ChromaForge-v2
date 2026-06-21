@@ -19,6 +19,7 @@
 #include <logic/ChunksController.h>
 #include <voxels/compressed_chunks.h>
 #include <world/files/WorldFiles.h>
+#include <content/Content.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {
@@ -175,7 +176,7 @@ static int l_set_chunk_data(lua::State* L) {
     auto chunk = scripting::level->chunks->getChunk(x, z);
     if (chunk == nullptr) return lua::pushboolean(L, false);
     compressed_chunks::decode(
-        *chunk, buffer.data(), buffer.size()
+        *chunk, buffer.data(), buffer.size(), *scripting::content->getIndices()
     );
     if (scripting::controller->getChunksController()->lighting == nullptr) {
         return lua::pushboolean(L, true);

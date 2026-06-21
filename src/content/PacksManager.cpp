@@ -2,6 +2,7 @@
 
 #include <queue>
 #include <sstream>
+#include <algorithm>
 
 #include <util/listutil.h>
 #include <debug/Logger.h>
@@ -98,7 +99,9 @@ std::vector<std::string> PacksManager::assemble(const std::vector<std::string>& 
     std::queue<const ContentPack*> queue;
     std::queue<const ContentPack*> queue2;
 
-    for (auto& name : names) {
+    std::sort(allNames.begin(), allNames.end());
+
+    for (auto& name : allNames) {
         auto found = packs.find(name);
         if (found == packs.end()) {
             LOG_ERROR("Pack '{}' not found", name);
