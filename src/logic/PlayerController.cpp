@@ -91,19 +91,25 @@ glm::vec3 CameraControl::updateCameraShaking(const Hitbox& hitbox, float delta) 
     const float ov = CameraConsts::SHAKE_OFFSET_Y;
     const glm::vec3& vel = hitbox.velocity;
 
-    interpVel = interpVel * (1.0f - delta * 5) + vel * delta * 0.1f;
-    if (hitbox.grounded && interpVel.y < 0.0f) interpVel.y *= -30.0f;
-    shake = shake * (1.0f - delta * k);
-    float oh = CameraConsts::SHAKE_OFFSET;
-    if (hitbox.grounded) {
-        float f = glm::length(glm::vec2(vel.x, vel.z));
-        shakeTimer += delta * f * CameraConsts::SHAKE_SPEED;
-        shake += f * delta * k;
-        oh *= glm::sqrt(f);
+    if (settings.shaking.get()) {
+        shake = shake * (1.0f - delta * k);
+        float oh = CameraConsts::SHAKE_OFFSET;
+        if (hitbox.grounded) {
+            float f = glm::length(glm::vec2(vel.x, vel.z));
+            shakeTimer += delta * f * CameraConsts::SHAKE_SPEED;
+            shake += f * delta * k;
+            oh *= glm::sqrt(f);
+        }
+        offset += camera->right * glm::sin(shakeTimer) * oh * shake;
+        offset += camera->up * glm::abs(glm::cos(shakeTimer)) * ov * shake;
     }
-    offset += camera->right * glm::sin(shakeTimer) * oh * shake;
-    offset += camera->up * glm::abs(glm::cos(shakeTimer)) * ov * shake;
-    if (settings.inertia.get()) offset -= glm::min(interpVel * 0.05f, 1.0f);
+    if (settings.inertia.get()) {
+        interpVel = interpVel * (1.0f - delta * 5) + vel * delta * 0.1f;
+        if (hitbox.grounded && interpVel.y < 0.0f) {
+            interpVel.y *= -30.0f;
+        }
+        offset -= glm::min(interpVel * 0.05f, 1.0f);
+    }
     return offset;
 }
 
@@ -115,7 +121,7 @@ void CameraControl::updateFovEffects(const Hitbox& hitbox, PlayerInput input, fl
     if (crouch){
         offset += glm::vec3(0.0f, CameraConsts::CROUCH_SHIFT_Y, 0.0f);
         zoomValue = ZoomConsts::CROUCH;
-    } else if (input.sprint){
+    } else if (input.sprint && (input.moveForward || input.moveBack || input.moveLeft || input.moveRight)) {
         zoomValue = ZoomConsts::RUN;
     }
     if (input.zoom) zoomValue *= ZoomConsts::INPUT;
@@ -152,7 +158,7 @@ void CameraControl::update(
 
     if (auto hitbox = player.getHitbox()) {
         offset.y += hitbox->halfsize.y * (0.7f / 0.9f);
-        if (settings.shaking.get() && !input.cheat) {
+        if (!input.cheat) {
             offset += updateCameraShaking(*hitbox, delta);
         }
         if (settings.fovEffects.get()){

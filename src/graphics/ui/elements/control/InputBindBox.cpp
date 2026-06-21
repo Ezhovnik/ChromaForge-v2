@@ -16,6 +16,8 @@ InputBindBox::InputBindBox(
 {
     add(label);
     setScrollable(false);
+
+    hoverColor = glm::vec4(0.05f, 0.1f, 0.2f, 0.75f);
 }
 
 void InputBindBox::drawBackground(const DrawContext& pctx, const Assets&) {
@@ -28,8 +30,10 @@ void InputBindBox::drawBackground(const DrawContext& pctx, const Assets&) {
 }
 
 void InputBindBox::clicked(GUI*, mousecode button) {
-    binding.reset(button);
-    defocus();
+    if (isFocused()) {
+        binding.reset(button);
+        defocus();
+    }
 }
 
 void InputBindBox::keyPressed(keycode key) {

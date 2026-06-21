@@ -106,13 +106,23 @@ enum class mousecode : int {
 	BUTTON_1 = 0, ///< Левая кнопка мыши
 	BUTTON_2 = 1, ///< Правая кнопка мыши
 	BUTTON_3 = 2, ///< Средняя кнопка мыши (колёсико)
+    BUTTON_4 = 3,
+    BUTTON_5 = 4,
+    BUTTON_6 = 5,
+    BUTTON_7 = 6,
+    BUTTON_8 = 7,
     UNKNOWN = -1,
 };
 
 inline mousecode MOUSECODES_ALL[] {
 	mousecode::BUTTON_1,
-	mousecode::BUTTON_2,
-	mousecode::BUTTON_3
+    mousecode::BUTTON_2,
+    mousecode::BUTTON_3,
+    mousecode::BUTTON_4,
+    mousecode::BUTTON_5,
+    mousecode::BUTTON_6,
+    mousecode::BUTTON_7,
+    mousecode::BUTTON_8
 };
 
 namespace input_util {
