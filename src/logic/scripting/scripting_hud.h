@@ -1,11 +1,11 @@
 #pragma once
 
-#include <filesystem>
 #include <string>
 #include <functional>
 #include <memory>
 
 #include <typedefs.h>
+#include <io/fwd.h>
 
 class Hud;
 class WorldRenderer;
@@ -26,7 +26,7 @@ namespace scripting {
     void load_hud_script(
         const scriptenv& env,
         const std::string& packid,
-        const std::filesystem::path& file,
+        const io::path& file,
         const std::string& fileName
     );
 

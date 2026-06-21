@@ -13,11 +13,11 @@ static bool perform_keyword(
     if (keyword == "--res") {
 		// Читаем следующий аргумент как путь к папке ресурсов
 		auto token = reader.next();
-		params.resFolder = std::filesystem::u8path(token);
+		params.resFolder = token;
 	} else if (keyword == "--dir") {
 		// Читаем следующий аргумент как путь к папке пользовательских файлов
 		auto token = reader.next();
-		params.userFolder = std::filesystem::u8path(token);
+		params.userFolder = token;
 	} else if (keyword == "--help" || keyword == "-h") {
 		// Выводим справку и сообщаем, что запуск нужно прервать.
 		std::cout << "ChromaForge v " << ENGINE_VERSION_STRING << "\n\n";
@@ -39,11 +39,11 @@ static bool perform_keyword(
 	} else if (keyword == "--test") {
 		auto token = reader.next();
 		params.testMode = true;
-        params.scriptFile = std::filesystem::u8path(token);
+        params.scriptFile = token;
     } else if (keyword == "--script") {
         auto token = reader.next();
         params.testMode = false;
-        params.scriptFile = std::filesystem::u8path(token);
+        params.scriptFile = token;
 	} else {
 		// Неизвестный ключ
 		throw std::runtime_error("Unknown argument " + keyword);

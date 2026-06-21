@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <filesystem>
 #include <memory>
 
 #include <typedefs.h>
@@ -9,6 +8,7 @@
 #include <content/ContentPack.h>
 #include <data/dv.h>
 #include <interfaces/Serializable.h>
+#include <io/fwd.h>
 
 /**
  * @brief Исключение, выбрасываемое при ошибках загрузки мира.
@@ -112,7 +112,7 @@ public:
 	static std::unique_ptr<Level> create(
 		const std::string& name,
 		const std::string& generator,
-		const std::filesystem::path& directory, 
+		const io::path& directory, 
 		uint64_t seed, 
 		EngineSettings& settings, 
 		const Content& content,

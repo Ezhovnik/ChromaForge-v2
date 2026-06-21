@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <cctype>
+#include <cwctype>
 
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <util/stringutil.h>

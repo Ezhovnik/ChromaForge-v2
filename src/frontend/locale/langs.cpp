@@ -76,8 +76,8 @@ namespace {
     };
 }
 
-void langs::loadLocalesInfo(const std::filesystem::path& resdir, std::string& fallback) {
-    auto file = resdir/std::filesystem::u8path(langs::TEXTS_FOLDER)/std::filesystem::u8path("langs.json");
+void langs::loadLocalesInfo(const io::path& resdir, std::string& fallback) {
+    auto file = resdir / langs::TEXTS_FOLDER / "langs.json";
     auto root = io::read_json(file);
 
     langs::locales_info.clear();
@@ -99,12 +99,12 @@ void langs::loadLocalesInfo(const std::filesystem::path& resdir, std::string& fa
     }
 }
 
-void langs::load(const std::filesystem::path& resdir, const std::string& locale, const std::vector<ContentPack>& packs, Lang& lang) {
-    std::filesystem::path filename = std::filesystem::path(TEXTS_FOLDER)/std::filesystem::path(locale + LANG_FILE_EXT);
+void langs::load(const io::path& resdir, const std::string& locale, const std::vector<ContentPack>& packs, Lang& lang) {
+    io::path filename = io::path(TEXTS_FOLDER) / (locale + LANG_FILE_EXT);
 
     // Сначала загружаем из основных ресурсов
-    std::filesystem::path core_file = resdir/filename;
-    if (std::filesystem::is_regular_file(core_file)) {
+    io::path core_file = resdir / filename;
+    if (io::is_regular_file(core_file)) {
         std::string text = io::read_string(core_file);
         Reader reader(core_file.string(), text);
         reader.read(lang, ""); // без префикса
@@ -112,8 +112,8 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
 
     // Затем загружаем из каждого мода, добавляя префикс (идентификатор мода)
     for (auto pack : packs) {
-        std::filesystem::path file = pack.folder/filename;
-        if (std::filesystem::is_regular_file(file)) {
+        io::path file = pack.folder / filename;
+        if (io::is_regular_file(file)) {
             std::string text = io::read_string(file);
             Reader reader(file.string(), text);
             reader.read(lang, "");
@@ -121,7 +121,7 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
     }
 }
 
-void langs::load(const std::filesystem::path& resdir, const std::string& locale, const std::string& fallback, const std::vector<ContentPack>& packs) {
+void langs::load(const io::path& resdir, const std::string& locale, const std::string& fallback, const std::vector<ContentPack>& packs) {
     auto lang = std::make_unique<Lang>(locale);
     // Сначала загружаем fallback-локаль (обычно английскую)
     load(resdir, fallback, packs, *lang.get());
@@ -130,7 +130,7 @@ void langs::load(const std::filesystem::path& resdir, const std::string& locale,
     current = std::move(lang);
 }
 
-void langs::setup(const std::filesystem::path& resdir, std::string locale, const std::vector<ContentPack>& packs) {
+void langs::setup(const io::path& resdir, std::string locale, const std::vector<ContentPack>& packs) {
     std::string fallback = langs::FALLBACK_DEFAULT;
     langs::loadLocalesInfo(resdir, fallback); // Загружаем информацию о доступных локалях из langs.json
     if (langs::locales_info.find(locale) == langs::locales_info.end()) locale = fallback;

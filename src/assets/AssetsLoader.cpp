@@ -99,21 +99,21 @@ void AssetsLoader::loadNext() {
  * Функция проходит по всем файлам с расширением .xml в папке folder и добавляет их как Layout.
  * Имя формируется как "prefix:stem", где stem — имя файла без расширения.
  */
-void addLayouts(
+static void add_layouts(
     const scriptenv& env,
     const std::string& prefix,
-    const std::filesystem::path& folder,
+    const io::path& folder,
     AssetsLoader& loader
 ) {
-    if (!std::filesystem::is_directory(folder)) return;
+    if (!io::is_directory(folder)) return;
 
-    for (auto& entry : std::filesystem::directory_iterator(folder)) {
-        const std::filesystem::path& file = entry.path();
-        if (file.extension().u8string() != ".xml") continue;
-        std::string name = prefix + ":" + file.stem().u8string();
+    for (auto& entry : std::filesystem::directory_iterator(io::resolve(folder))) {
+        io::path file = folder / entry.path().filename().u8string();
+        if (file.extension() != ".xml") continue;
+        std::string name = prefix + ":" + file.stem();
 
 		// Для каждого макета создаём LayoutConfig с указанным окружением
-        loader.add(AssetType::Layout, file.u8string(), name, std::make_shared<LayoutConfig>(env));
+        loader.add(AssetType::Layout, file.string(), name, std::make_shared<LayoutConfig>(env));
     }
 }
 
@@ -189,7 +189,7 @@ void AssetsLoader::processPreloadList(AssetType tag, const dv::value& list) {
     }
 }
 
-void AssetsLoader::processPreloadConfig(const std::filesystem::path& file) {
+void AssetsLoader::processPreloadConfig(const io::path& file) {
     auto root = io::read_json(file);
     processPreloadList(AssetType::Atlas, root["atlases"]);
     processPreloadList(AssetType::Font, root["fonts"]);
@@ -201,16 +201,16 @@ void AssetsLoader::processPreloadConfig(const std::filesystem::path& file) {
 }
 
 void AssetsLoader::processPreloadConfigs(const Content* content) {
-    auto preloadFile = paths->getMainRoot()/std::filesystem::path("preload.json");
-    if (std::filesystem::exists(preloadFile)) {
+    auto preloadFile = paths->getMainRoot() / "preload.json";
+    if (io::exists(preloadFile)) {
         processPreloadConfig(preloadFile);
     }
     if (content == nullptr) return;
     for (auto& entry : content->getPacks()) {
         if (entry.first == BUILTIN_CONTENT_NAMESPACE) continue;
         const auto& pack = entry.second;
-        auto preloadFile = pack->getInfo().folder/std::filesystem::path("preload.json");
-        if (std::filesystem::exists(preloadFile)) {
+        auto preloadFile = pack->getInfo().folder / "preload.json";
+        if (io::exists(preloadFile)) {
             processPreloadConfig(preloadFile);
         }
     }
@@ -231,8 +231,8 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
         for (auto& entry : content->getPacks()) {
 			auto pack = entry.second.get();
             auto& info = pack->getInfo();
-            std::filesystem::path folder = info.folder/std::filesystem::path(LAYOUTS_FOLDER);
-            addLayouts(pack->getEnvironment(), info.id, folder, loader);
+            io::path folder = info.folder / LAYOUTS_FOLDER;
+            add_layouts(pack->getEnvironment(), info.id, folder, loader);
         }
 
         for (auto& entry : content->getSkeletons()) {
@@ -272,18 +272,18 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
 bool AssetsLoader::loadExternalTexture(
     Assets* assets,
     const std::string& name,
-    const std::vector<std::filesystem::path>& alternatives)
+    const std::vector<io::path>& alternatives)
 {
     if (assets->get<Texture>(name) != nullptr) return true;
 
     for (auto& path : alternatives) {
-        if (std::filesystem::exists(path)) {
+        if (io::exists(path)) {
             try {
                 auto image = imageio::read(path);
                 assets->store(Texture::from(image.get()), name);
                 return true;
             } catch (const std::exception& err) {
-                LOG_ERROR("Error while loading external '{}': {}", path.u8string(), err.what());
+                LOG_ERROR("Error while loading external '{}': {}", path.string(), err.what());
             }
         }
     }

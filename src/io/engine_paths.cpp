@@ -11,23 +11,24 @@
 #include <core_content_defs.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
+#include <io/devices/StdfsDevice.h>
 
-static inline auto SCREENSHOTS_FOLDER = std::filesystem::u8path("screenshots");
-static inline auto CONTENT_FOLDER = std::filesystem::u8path("content");
-static inline auto WORLDS_FOLDER = std::filesystem::u8path("saves");
-static inline auto CONFIG_FOLDER = std::filesystem::u8path("config");
-static inline auto EXPORT_FOLDER = std::filesystem::u8path("export");
-static inline auto CONTROLS_FILE = std::filesystem::u8path("controls.toml");
-static inline auto SETTINGS_FILE = std::filesystem::u8path("settings.toml");
+static inline auto SCREENSHOTS_FOLDER = "screenshots";
+static inline auto CONTENT_FOLDER = "content";
+static inline auto WORLDS_FOLDER = "saves";
+static inline auto CONFIG_FOLDER = "config";
+static inline auto EXPORT_FOLDER = "export";
+static inline auto CONTROLS_FILE = "controls.toml";
+static inline auto SETTINGS_FILE = "settings.toml";
 
-static std::filesystem::path toCanonic(std::filesystem::path path) {
+static io::path toCanonic(io::path path) {
     std::stack<std::string> parts;
-    path = path.lexically_normal();
+    path = std::filesystem::u8path(path.string()).lexically_normal().string();
     do {
-        parts.push(path.filename().u8string());
-        path = path.parent_path();
+        parts.push(path.name());
+        path = path.parent();
     } while (!path.empty());
-    path = std::filesystem::u8path("");
+    path = "";
     while (!parts.empty()) {
         const std::string part = parts.top();
         parts.pop();
@@ -36,61 +37,64 @@ static std::filesystem::path toCanonic(std::filesystem::path path) {
             LOG_ERROR("Entry point reached");
             throw files_access_error("Entry point reached");
         }
-        path = path/std::filesystem::path(part);
+        path = path / part;
     }
     return path;
 }
 
 void EnginePaths::prepare() {
-    if (!std::filesystem::is_directory(resourcesFolder)) {
+    io::set_device("res", std::make_shared<io::StdfsDevice>(resourcesFolder));
+    io::set_device("user", std::make_shared<io::StdfsDevice>(userFilesFolder));
+
+    if (!io::is_directory("res:")) {
         LOG_ERROR("{} is not a directory", resourcesFolder.u8string());
         throw std::runtime_error(
             resourcesFolder.u8string() + " is not a directory"
         );
     }
 
-    if (!std::filesystem::is_directory(userFilesFolder)) {
-        std::filesystem::create_directories(userFilesFolder);
+    if (!io::is_directory("user:")) {
+        io::create_directories("user:");
     }
 
     LOG_INFO("Resources folder: {}", std::filesystem::canonical(resourcesFolder).u8string());
     LOG_INFO("User files folder: {}", std::filesystem::canonical(userFilesFolder).u8string());
 
-    auto contentFolder = userFilesFolder/CONTENT_FOLDER;
-    if (!std::filesystem::is_directory(contentFolder)) {
-        std::filesystem::create_directories(contentFolder);
+    auto contentFolder = io::path("user:") / CONTENT_FOLDER;
+    if (!io::is_directory(contentFolder)) {
+        io::create_directories(contentFolder);
     }
 
-    auto exportFolder = userFilesFolder/EXPORT_FOLDER;
-    if (!std::filesystem::is_directory(exportFolder)) {
-        std::filesystem::create_directories(exportFolder);
+    auto exportFolder = io::path("user:") / EXPORT_FOLDER;
+    if (!io::is_directory(exportFolder)) {
+        io::create_directories(exportFolder);
     }
 
-    auto configFolder = userFilesFolder/CONFIG_FOLDER;
-    if (!std::filesystem::is_directory(configFolder)) {
-        std::filesystem::create_directories(configFolder);
+    auto configFolder = io::path("user:") / CONFIG_FOLDER;
+    if (!io::is_directory(configFolder)) {
+        io::create_directories(configFolder);
     }
 }
 
-std::filesystem::path EnginePaths::getUserFilesFolder() const {
+const std::filesystem::path& EnginePaths::getUserFilesFolder() const {
 	return userFilesFolder;
 }
 
-std::filesystem::path EnginePaths::getResourcesFolder() const {
+const std::filesystem::path& EnginePaths::getResourcesFolder() const {
 	return resourcesFolder;
 }
 
-std::filesystem::path EnginePaths::getControlsFile() const {
-    return userFilesFolder/CONTROLS_FILE;
+io::path EnginePaths::getControlsFile() const {
+    return io::path("user:") / CONTROLS_FILE;
 }
 
-std::filesystem::path EnginePaths::getSettingsFile() const {
-    return userFilesFolder/SETTINGS_FILE;
+io::path EnginePaths::getSettingsFile() const {
+    return io::path("user:") / SETTINGS_FILE;
 }
 
-std::filesystem::path EnginePaths::getNewScreenshotFile(const std::string& ext) {
-	auto folder = userFilesFolder/SCREENSHOTS_FOLDER;
-	if (!std::filesystem::is_directory(folder)) std::filesystem::create_directory(folder);
+io::path EnginePaths::getNewScreenshotFile(const std::string& ext) {
+	auto folder = io::path("user:") / SCREENSHOTS_FOLDER;
+	if (io::is_directory(folder)) io::create_directories(folder);
 
 	auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
@@ -100,29 +104,29 @@ std::filesystem::path EnginePaths::getNewScreenshotFile(const std::string& ext) 
 	ss << std::put_time(&tm, format);
 	std::string datetimestr = ss.str();
 
-	auto filename = folder/std::filesystem::u8path("screenshot-" + datetimestr + "." + ext);
+	auto file = folder / ("screenshot-" + datetimestr + "." + ext);
 	uint index = 0;
-	while (std::filesystem::exists(filename)) {
-		filename = folder/std::filesystem::u8path("screenshot-" + datetimestr + "-" + std::to_string(index) + "." + ext);
+	while (io::exists(file)) {
+		file = folder / ("screenshot-" + datetimestr + "-" + std::to_string(index) + "." + ext);
 		index++;
 	}
-	return filename;
+	return file;
 }
 
-std::filesystem::path EnginePaths::getWorldsFolder() const {
-    return userFilesFolder/WORLDS_FOLDER;
+io::path EnginePaths::getWorldsFolder() const {
+    return io::path("user:") / WORLDS_FOLDER;
 }
 
-std::filesystem::path EnginePaths::getConfigFolder() const {
-    return userFilesFolder/CONFIG_FOLDER;
+io::path EnginePaths::getConfigFolder() const {
+    return io::path("user:") / CONFIG_FOLDER;
 }
 
-std::filesystem::path EnginePaths::getCurrentWorldFolder() {
+io::path EnginePaths::getCurrentWorldFolder() {
     return currentWorldFolder;
 }
 
-std::filesystem::path EnginePaths::getWorldFolderByName(const std::string& name) {
-    return getWorldsFolder()/std::filesystem::path(name);
+io::path EnginePaths::getWorldFolderByName(const std::string& name) {
+    return getWorldsFolder() / name;
 }
 
 void EnginePaths::setUserFilesFolder(std::filesystem::path folder) {
@@ -138,11 +142,13 @@ void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
 }
 
 void EnginePaths::setScriptFolder(std::filesystem::path folder) {
+    io::set_device("script", std::make_shared<io::StdfsDevice>(folder));
     this->scriptFolder = std::move(folder);
 }
 
-void EnginePaths::setCurrentWorldFolder(std::filesystem::path folder) {
+void EnginePaths::setCurrentWorldFolder(io::path folder) {
     this->currentWorldFolder = std::move(folder);
+    io::create_subdevice("world", "user", currentWorldFolder);
 }
 
 std::tuple<std::string, std::string> EnginePaths::parsePath(std::string_view path) {
@@ -155,75 +161,82 @@ std::tuple<std::string, std::string> EnginePaths::parsePath(std::string_view pat
     return {prefix, filename};
 }
 
-std::filesystem::path EnginePaths::resolve(const std::string& path, bool throwErr) const {
+io::path EnginePaths::resolve(
+    const std::string& path, bool throwErr
+) const {
     auto [prefix, filename] = EnginePaths::parsePath(path);
     if (prefix.empty()) {
         LOG_ERROR("No entry point specified");
         throw files_access_error("No entry point specified");
     }
 
-    filename = toCanonic(std::filesystem::u8path(filename)).u8string();
+    filename = toCanonic(filename).string();
 
-    if (prefix == "res" || prefix == BUILTIN_CONTENT_NAMESPACE) return resourcesFolder/std::filesystem::u8path(filename);
-    if (prefix == "user") return userFilesFolder/std::filesystem::u8path(filename);
-    if (prefix == "config") return getConfigFolder()/std::filesystem::u8path(filename);
-    if (prefix == "world") return currentWorldFolder/std::filesystem::u8path(filename);
-    if (prefix == "export") return userFilesFolder/EXPORT_FOLDER/std::filesystem::u8path(filename);
-    if (prefix == "script" && scriptFolder) return scriptFolder.value()/std::filesystem::u8path(filename);
+    if (prefix == "builtin") return io::path("res:") / filename;
+    if (prefix == "res" || prefix == "user" || prefix == "script") return prefix + ":" + filename;
+    if (prefix == "config") return getConfigFolder() / filename;
+    if (prefix == "world") return currentWorldFolder / filename;
+    if (prefix == "export") return io::path("user:") / EXPORT_FOLDER / filename;
 
     if (contentPacks) {
         for (auto& pack : *contentPacks) {
-            if (pack.id == prefix) return pack.folder/std::filesystem::u8path(filename);
+            if (pack.id == prefix) {
+                return pack.folder / filename;
+            }
         }
     }
 
     LOG_ERROR("Unknown entry point '{}'", prefix);
-    if (throwErr) throw files_access_error("Unknown entry point '" + prefix + "'");
-    return std::filesystem::path(filename);
+    if (throwErr) {
+        throw files_access_error("Unknown entry point '" + prefix + "'");
+    }
+    return filename;
 }
 
-std::vector<std::filesystem::path> EnginePaths::scanForWorlds() const {
-    std::vector<std::filesystem::path> folders;
+std::vector<io::path> EnginePaths::scanForWorlds() const {
+    std::vector<io::path> folders;
 
     auto folder = getWorldsFolder();
-    if (!std::filesystem::is_directory(folder)) return folders;
+    if (!io::is_directory(folder)) return folders;
 
-    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+    for (const auto& entry : std::filesystem::directory_iterator(io::resolve(folder))) {
         if (!entry.is_directory()) continue;
 
-        const std::filesystem::path& worldFolder = entry.path();
-        std::filesystem::path worldFile = worldFolder/std::filesystem::u8path(WorldFiles::WORLD_FILE);
-        if (!std::filesystem::is_regular_file(worldFile)) continue;
+        io::path worldFolder = folder / entry.path().filename().u8string();
+        auto worldFile = worldFolder / WorldFiles::WORLD_FILE;
+        if (!io::is_regular_file(worldFile)) continue;
         folders.push_back(worldFolder);
     }
 
-    std::sort(folders.begin(), folders.end(), [](std::filesystem::path a, std::filesystem::path b) {
-        a = a/std::filesystem::u8path(WorldFiles::WORLD_FILE);
-        b = b/std::filesystem::u8path(WorldFiles::WORLD_FILE);
-        return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
+    std::sort(
+        folders.begin(), folders.end(),
+        [](io::path a, io::path b) {
+            a = a / WorldFiles::WORLD_FILE;
+            b = b / WorldFiles::WORLD_FILE;
+            return std::filesystem::last_write_time(io::resolve(a)) > std::filesystem::last_write_time(io::resolve(b));
     });
 
     return folders;
 }
 
 ResPaths::ResPaths(
-    std::filesystem::path mainRoot, 
+    io::path mainRoot, 
     std::vector<PathsRoot> roots
 ) : mainRoot(std::move(mainRoot)), roots(std::move(roots)) {}
 
-std::filesystem::path ResPaths::find(const std::string& filename) const {
+io::path ResPaths::find(const std::string& filename) const {
     for (int i = roots.size() - 1; i >= 0; --i) {
         auto& root = roots[i];
-        auto file = root.path/std::filesystem::u8path(filename);
-        if (std::filesystem::exists(file)) return file;
+        auto file = root.path / filename;
+        if (io::exists(file)) return file;
     }
-    return mainRoot/std::filesystem::path(filename);
+    return mainRoot / filename;
 }
 
 std::string ResPaths::findRaw(const std::string& filename) const {
     for (int i = roots.size() - 1; i >= 0; --i) {
         auto& root = roots[i];
-        if (std::filesystem::exists(root.path/std::filesystem::path(filename))) {
+        if (io::exists(root.path / filename)) {
             return root.name + ":" + filename;
         }
     }
@@ -236,9 +249,9 @@ std::vector<std::string> ResPaths::listdirRaw(const std::string& folderName) con
     std::vector<std::string> entries;
     for (int i = roots.size() - 1; i >= 0; --i) {
         auto& root = roots[i];
-        auto folder = root.path/std::filesystem::u8path(folderName);
-        if (!std::filesystem::is_directory(folder)) continue;
-        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+        auto folder = root.path / folderName;
+        if (!io::is_directory(folder)) continue;
+        for (const auto& entry : std::filesystem::directory_iterator(io::resolve(folder))) {
             auto name = entry.path().filename().u8string();
             entries.emplace_back(root.name + ":" + folderName + "/" + name);
         }
@@ -246,14 +259,14 @@ std::vector<std::string> ResPaths::listdirRaw(const std::string& folderName) con
     return entries;
 }
 
-std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderName) const {
-    std::vector<std::filesystem::path> entries;
+std::vector<io::path> ResPaths::listdir(const std::string& folderName) const {
+    std::vector<io::path> entries;
     for (int i = roots.size() - 1; i >= 0; --i) {
         auto& root = roots[i];
-        auto folder = root.path/std::filesystem::u8path(folderName);
-        if (!std::filesystem::is_directory(folder)) continue;
-        for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-            entries.push_back(entry.path());
+        io::path folder = root.path / folderName;
+        if (!io::is_directory(folder)) continue;
+        for (const auto& entry : std::filesystem::directory_iterator(io::resolve(folder))) {
+            entries.push_back(folder / entry.path().filename().u8string());
         }
     }
     return entries;
@@ -262,8 +275,8 @@ std::vector<std::filesystem::path> ResPaths::listdir(const std::string& folderNa
 dv::value ResPaths::readCombinedList(const std::string& filename) const {
     dv::value list = dv::list();
     for (const auto& root : roots) {
-        auto path = root.path/std::filesystem::u8path(filename);
-        if (!std::filesystem::exists(path)) continue;
+        auto path = root.path / filename;
+        if (!io::exists(path)) continue;
 
         try {
             auto value = io::read_object(path);
@@ -284,8 +297,8 @@ dv::value ResPaths::readCombinedList(const std::string& filename) const {
 dv::value ResPaths::readCombinedObject(const std::string& filename) const {
     dv::value object = dv::object();
     for (const auto& root : roots) {
-        auto path = root.path/std::filesystem::u8path(filename);
-        if (!std::filesystem::exists(path)) continue;
+        auto path = root.path / filename;
+        if (!io::exists(path)) continue;
 
         try {
             auto value = io::read_object(path);
@@ -302,6 +315,6 @@ dv::value ResPaths::readCombinedObject(const std::string& filename) const {
     return object;
 }
 
-const std::filesystem::path& ResPaths::getMainRoot() const {
+const io::path& ResPaths::getMainRoot() const {
     return mainRoot;
 }

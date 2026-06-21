@@ -83,7 +83,7 @@ std::unique_ptr<Texture> png::loadTexture(const ubyte* bytes, size_t size) {
 }
 
 std::unique_ptr<Texture> png::loadTexture(const std::string& filename) {
-    auto bytes = io::read_bytes_buffer(std::filesystem::u8path(filename));
+    auto bytes = io::read_bytes_buffer(filename);
     try {
         return loadTexture(bytes.data(), bytes.size());
     } catch (const std::runtime_error& err) {

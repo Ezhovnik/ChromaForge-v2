@@ -3,7 +3,6 @@
 #include <mutex>
 #include <memory>
 #include <functional>
-#include <filesystem>
 #include <unordered_map>
 #include <condition_variable>
 #include <vector>
@@ -62,7 +61,7 @@ struct regFile {
     int version;
     bool inUse = false;
 
-    regFile(std::filesystem::path filename);
+    regFile(io::path filename);
     regFile(const regFile&) = delete;
 
     std::unique_ptr<ubyte[]> read(int index, uint32_t& size, uint32_t& srcSize);
@@ -122,7 +121,7 @@ inline void calc_reg_coords(
 
 struct RegionsLayer {
     RegionLayerIndex layer;
-    std::filesystem::path folder;
+    io::path folder;
     compression::Method compression = compression::Method::None;
     RegionsMap regions;
     std::mutex mapMutex;
@@ -138,7 +137,7 @@ struct RegionsLayer {
     WorldRegion* getRegion(int x, int z);
     WorldRegion* getOrCreateRegion(int x, int z);
 
-    std::filesystem::path getRegionFilePath(int x, int z) const;
+    io::path getRegionFilePath(int x, int z) const;
 
     [[nodiscard]] ubyte* getData(int x, int z, uint32_t& size, uint32_t& srcSize);
 
@@ -151,13 +150,13 @@ struct RegionsLayer {
 };
 
 class WorldRegions {
-    std::filesystem::path directory;
+    io::path directory;
     RegionsLayer layers[REGION_LAYERS_COUNT] {};
 public:
     bool generatorTestMode = false;
     bool doWriteLights = true;
 
-    WorldRegions(const std::filesystem::path& directory);
+    WorldRegions(const io::path& directory);
     WorldRegions(const WorldRegions&) = delete;
     ~WorldRegions();
 
@@ -189,8 +188,8 @@ public:
         int x, int z, const BlockDataProc& func
     );
 
-    const std::filesystem::path& getRegionsFolder(RegionLayerIndex layerID) const;
-    std::filesystem::path getRegionFilePath(RegionLayerIndex layerID, int x, int z) const;
+    const io::path& getRegionsFolder(RegionLayerIndex layerID) const;
+    io::path getRegionFilePath(RegionLayerIndex layerID, int x, int z) const;
 
     void writeAll();
 

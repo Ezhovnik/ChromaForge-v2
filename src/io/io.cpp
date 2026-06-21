@@ -13,8 +13,42 @@
 #include <coders/zip.h>
 #include <coders/commons.h>
 #include <coders/toml.h>
+#include <io/devices/Device.h>
 
-io::rafile::rafile(const std::filesystem::path& filename) : file(filename, std::ios::binary | std::ios::ate) {
+static std::map<std::string, std::shared_ptr<io::Device>> devices;
+
+void io::set_device(const std::string& name, std::shared_ptr<io::Device> device) {
+    devices[name] = device;
+}
+
+std::shared_ptr<io::Device> io::get_device(const std::string& name) {
+    const auto& found = devices.find(name);
+    if (found == devices.end()) return nullptr;
+    return found->second;
+}
+
+io::Device& io::require_device(const std::string& name) {
+    auto device = get_device(name);
+    if (!device) {
+		LOG_ERROR("IO-device not found: {}", name);
+        throw std::runtime_error("IO-device not found: " + name);
+    }
+    return *device;
+}
+
+void io::create_subdevice(
+    const std::string& name, const std::string& parent, const io::path& root
+) {
+    auto parentDevice = get_device(parent);
+    if (!parentDevice) {
+		LOG_ERROR("Parent device not found for entry-point: {}", parent);
+        throw std::runtime_error("Parent device not found for entry-point: " + parent);
+    }
+    set_device(name, std::make_shared<io::SubDevice>(parentDevice, root.pathPart()));
+}
+
+io::rafile::rafile(const io::path& filename)
+    : file(io::resolve(filename), std::ios::binary | std::ios::ate) {
     if (!file) {
 		LOG_ERROR("Could not to open file '{}'", filename.string());
         throw std::runtime_error("Could not to open file " + filename.string());
@@ -35,133 +69,152 @@ void io::rafile::read(char* buffer, std::streamsize size) {
     file.read(buffer, size);
 }
 
-// Записывает данные в бинарный файл (перезаписывает сущесвующий)
-bool io::write_bytes(const std::filesystem::path& filename, const ubyte* data, size_t size) {
-	std::ofstream output(filename, std::ios::binary);
-	if (!output.is_open()) return false;
-
-	output.write((const char*)data, size);
-	output.close();
-
-	return true;
+bool io::write_bytes(
+    const io::path& filename, const ubyte* data, size_t size
+) {
+    auto device = io::get_device(filename.entryPoint());
+    if (device == nullptr) return false;
+    device->write(filename.pathPart(), data, size);
+    return true;
 }
 
-// Добавляет данные в конец бинарного файла
-uint io::append_bytes(const std::filesystem::path& filename, const ubyte* data, size_t size) {
-	std::ofstream output(filename, std::ios::binary | std::ios::app);
-	if (!output.is_open()) return 0;
-
-	uint position = output.tellp();
-	output.write((const char*)data, size);
-	output.close();
-
-	return position;
+bool io::read(const io::path& filename, char* data, size_t size) {
+    auto device = io::get_device(filename.entryPoint());
+    if (device == nullptr) return false;
+    device->read(filename.pathPart(), data, size);
+    return true;
 }
 
-// Читает данные из бинарного файла с начала
-bool io::read(const std::filesystem::path& filename, char* data, size_t size) {
-	std::ifstream input(filename, std::ios::binary);
-	if (!input.is_open()) return false;
-
-	input.read(data, size);
-	input.close();
-
-	return true;
-}
-
-util::Buffer<ubyte> io::read_bytes_buffer(const std::filesystem::path& path) {
+util::Buffer<ubyte> io::read_bytes_buffer(const path& file) {
     size_t size;
-    auto bytes = io::read_bytes(path, size);
+    auto bytes = io::read_bytes(file, size);
     return util::Buffer<ubyte>(std::move(bytes), size);
 }
 
-std::unique_ptr<ubyte[]> io::read_bytes(const std::filesystem::path& filename, size_t& length) {
-	std::ifstream input(filename, std::ios::binary);
-	if (!input.is_open()) {
-		LOG_ERROR("Could not to load file '{}'", filename.string());
-        throw std::runtime_error(
-            "Could not to load file '" + filename.string() + "'"
-        );
-    }
-	input.seekg(0, std::ios_base::end);
-	length = input.tellg();
-	input.seekg(0, std::ios_base::beg);
-
-	auto data = std::make_unique<ubyte[]>(length);
-	input.read((char*)data.get(), length);
-	input.close();
-	return data;
-}
-
-std::vector<ubyte> io::read_bytes(const std::filesystem::path& filename) {
-    std::ifstream input(filename, std::ios::binary);
-    if (!input.is_open()) return {};
-    input.seekg(0, std::ios_base::end);
-    size_t length = input.tellg();
-    input.seekg(0, std::ios_base::beg);
-
-    std::vector<ubyte> data(length);
-    data.resize(length);
-    input.read((char*)data.data(), length);
-    input.close();
+std::unique_ptr<ubyte[]> io::read_bytes(
+    const io::path& filename, size_t& length
+) {
+    auto& device = io::require_device(filename.entryPoint());
+    length = device.size(filename.pathPart());
+    auto data = std::make_unique<ubyte[]>(length);
+    device.read(filename.pathPart(), data.get(), length);
     return data;
 }
 
-std::string io::read_string(const std::filesystem::path& filename) {
-	size_t size;
-	auto bytes = read_bytes(filename, size);
-	return std::string((const char*)bytes.get(), size);
+std::vector<ubyte> io::read_bytes(const path& filename) {
+    auto& device = io::require_device(filename.entryPoint());
+    size_t length = device.size(filename.pathPart());
+    std::vector<ubyte> data(length);
+    device.read(filename.pathPart(), data.data(), length);
+    return data;
 }
 
-bool io::write_string(const std::filesystem::path& filename, std::string_view content) {
-	std::ofstream file(filename);
-	if (!file) {
-		return false;
-	}
-
-	file << content;
-	return true;
+std::string io::read_string(const path& filename) {
+    size_t size;
+    auto bytes = read_bytes(filename, size);
+    return std::string((const char*)bytes.get(), size);
 }
 
-bool io::write_json(const std::filesystem::path& filename, const dv::value& obj, bool nice) {
-    return io::write_string(filename, json::stringify(obj, nice, "  "));
+bool io::write_string(const io::path& file, std::string_view content) {
+    return io::write_bytes(file, (const ubyte*)content.data(), content.size());
 }
 
-bool io::write_binary_json(const std::filesystem::path& filename, const dv::value& obj, bool compression) {
+bool io::write_json(
+    const io::path& file, const dv::value& obj, bool nice
+) {
+    return io::write_string(file, json::stringify(obj, nice, "  "));
+}
+
+bool io::write_binary_json(
+    const io::path& file, const dv::value& obj, bool compression
+) {
     auto bytes = json::to_binary(obj, compression);
-    return io::write_bytes(filename, bytes.data(), bytes.size());
+    return io::write_bytes(file, bytes.data(), bytes.size());
 }
 
-dv::value io::read_binary_json(const std::filesystem::path& file) {
+dv::value io::read_json(const path& filename) {
+    std::string text = io::read_string(filename);
+    return json::parse(filename.string(), text);
+}
+
+dv::value io::read_binary_json(const path& file) {
     size_t size;
     auto bytes = io::read_bytes(file, size);
     return json::from_binary(bytes.get(), size);
 }
 
-dv::value io::read_json(const std::filesystem::path& filename) {
-	std::string text = io::read_string(filename);
-	return json::parse(filename.u8string(), text);
+dv::value io::read_toml(const path& file) {
+    return toml::parse(file.string(), io::read_string(file));
 }
 
-std::vector<std::string> io::read_list(const std::filesystem::path& filename) {
-	std::ifstream file(filename);
-	if (!file) {
-		LOG_ERROR("Could not to open file {}", filename.u8string());
-		throw std::runtime_error("Could not to open file " + filename.u8string());
-	}
-	std::vector<std::string> lines;
-	std::string line;
-	while (std::getline(file, line)) {
-		util::trim(line);
-		if (line.length() == 0) continue;
-		if (line[0] == '#') continue;
-		lines.push_back(line);
-	}
-	return lines;
+std::vector<std::string> io::read_list(const io::path& filename) {
+    std::ifstream file(resolve(filename)); // FIXME
+    if (!file) {
+		LOG_ERROR(
+			"Could not to open file {}", filename.string()
+		);
+        throw std::runtime_error(
+            "Could not to open file " + filename.string()
+        );
+    }
+    std::vector<std::string> lines;
+    std::string line;
+    while (std::getline(file, line)) {
+        util::trim(line);
+        if (line.length() == 0) continue;
+        if (line[0] == '#') continue;
+        lines.push_back(line);
+    }
+    return lines;
 }
 
-dv::value io::read_toml(const std::filesystem::path& file) {
-    return toml::parse(file.u8string(), io::read_string(file));
+bool io::is_regular_file(const io::path& file) {
+    if (file.empty()) return false;
+    auto device = io::get_device(file.entryPoint());
+    if (device == nullptr) return false;
+    return device->isfile(file.pathPart());
+}
+
+bool io::is_directory(const io::path& file) {
+    if (file.empty()) return false;
+    auto device = io::get_device(file.entryPoint());
+    if (device == nullptr) return false;
+    return device->isdir(file.pathPart());
+}
+
+bool io::exists(const io::path& file) {
+    if (file.empty()) return false;
+    auto device = io::get_device(file.entryPoint());
+    if (device == nullptr) return false;
+    return device->exists(file.pathPart());
+}
+
+bool io::create_directories(const io::path& file) {
+    auto& device = io::require_device(file.entryPoint());
+    if (device.isdir(file.pathPart())) return false;
+    device.mkdirs(file.pathPart());
+    return true;
+}
+
+bool io::remove(const io::path& file) {
+    auto& device = io::require_device(file.entryPoint());
+    return device.remove(file.pathPart());
+}
+
+uint64_t io::remove_all(const io::path& file) {
+    auto& device = io::require_device(file.entryPoint());
+    return device.removeAll(file.pathPart());
+}
+
+size_t io::file_size(const io::path& file) {
+    auto& device = io::require_device(file.entryPoint());
+    return device.size(file.pathPart());
+}
+
+std::filesystem::path io::resolve(const io::path& file) {
+    auto device = io::get_device(file.entryPoint());
+    if (device == nullptr) return {};
+    return device->resolve(file.pathPart());
 }
 
 using DecodeFunc = dv::value(*)(std::string_view, std::string_view);
@@ -171,23 +224,23 @@ static std::map<std::filesystem::path, DecodeFunc> data_decoders {
     {std::filesystem::u8path(".toml"), toml::parse},
 };
 
-bool io::is_data_file(const std::filesystem::path& file) {
+bool io::is_data_file(const io::path& file) {
     return is_data_interchange_format(file.extension());
 }
 
-bool io::is_data_interchange_format(const std::filesystem::path& ext) {
+bool io::is_data_interchange_format(const std::string& ext) {
     return data_decoders.find(ext) != data_decoders.end();
 }
 
-dv::value io::read_object(const std::filesystem::path& file) {
+dv::value io::read_object(const path& file) {
     const auto& found = data_decoders.find(file.extension());
     if (found == data_decoders.end()) {
-		LOG_ERROR("Unknown file format");
-        throw std::runtime_error("Unknown file format");
+		LOG_ERROR("Unknown file format {}", file.extension());
+        throw std::runtime_error("Unknown file format " + file.extension());
     }
     auto text = read_string(file);
     try {
-        return found->second(file.u8string(), text);
+        return found->second(file.string(), text);
     } catch (const parsing_error& err) {
         throw std::runtime_error(err.errorLog());
     }

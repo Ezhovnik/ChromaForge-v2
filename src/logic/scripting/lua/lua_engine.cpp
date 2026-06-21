@@ -162,8 +162,7 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
     }
     init_state(L, stateType);
 
-    auto resDir = paths.getResourcesFolder();
-    auto file = resDir/std::filesystem::u8path("scripts/stdmin.lua");
+    auto file = "res:scripts/stdmin.lua";
     auto src = io::read_string(file);
     lua::pop(L, lua::execute(L, 0, src, "builtin:scripts/stdmin.lua"));
     return L;

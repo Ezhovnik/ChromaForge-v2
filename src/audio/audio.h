@@ -2,12 +2,12 @@
 
 #include <vector>
 #include <memory>
-#include <filesystem>
 
 #include <glm/glm.hpp>
 
 #include <typedefs.h>
 #include <settings.h>
+#include <io/fwd.h>
 
 namespace audio {
     using speakerid_t = int64_t;
@@ -322,15 +322,15 @@ namespace audio {
 
     void initialize(bool enabled, AudioSettings& settings);
 
-    std::unique_ptr<PCM> load_PCM(const std::filesystem::path& file, bool headerOnly);
+    std::unique_ptr<PCM> load_PCM(const io::path& file, bool headerOnly);
 
-    std::unique_ptr<Sound> load_sound(const std::filesystem::path& file, bool keepPCM);
+    std::unique_ptr<Sound> load_sound(const io::path& file, bool keepPCM);
 
     std::unique_ptr<Sound> create_sound(std::shared_ptr<PCM> pcm, bool keepPCM);
 
-    std::unique_ptr<PCMStream> open_PCM_stream(const std::filesystem::path& file);
+    std::unique_ptr<PCMStream> open_PCM_stream(const io::path& file);
 
-    std::unique_ptr<Stream> open_stream(const std::filesystem::path& file, bool keepSource);
+    std::unique_ptr<Stream> open_stream(const io::path& file, bool keepSource);
 
     std::unique_ptr<Stream> open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
 
@@ -370,7 +370,7 @@ namespace audio {
     );
 
     speakerid_t play_stream(
-        const std::filesystem::path& file,
+        const io::path& file,
         glm::vec3 position,
         bool relative,
         float volume,

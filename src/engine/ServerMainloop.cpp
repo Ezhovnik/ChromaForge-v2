@@ -31,7 +31,9 @@ void ServerMainloop::run() {
     });
 
     LOG_INFO("Starting task {}", coreParams.scriptFile.u8string());
-    auto process = scripting::start_coroutine(coreParams.scriptFile);
+    auto process = scripting::start_coroutine(
+        "script:" + coreParams.scriptFile.filename().u8string()
+    );
 
     double targetDelta = 1.0 / static_cast<double>(SPS);
     double delta = targetDelta;
@@ -71,7 +73,7 @@ void ServerMainloop::run() {
 void ServerMainloop::setLevel(std::unique_ptr<Level> level) {
     if (level == nullptr) {
         controller->onWorldQuit();
-        engine.getPaths().setCurrentWorldFolder(std::filesystem::path());
+        engine.getPaths().setCurrentWorldFolder("");
         controller = nullptr;
     } else {
         controller = std::make_unique<LevelController>(

@@ -8,6 +8,7 @@
 
 #include <audio/audio.h>
 #include <debug/Logger.h>
+#include <io/io.h>
 
 bool is_big_endian() {
     uint32_t ui32_v = 0x01020304;
@@ -107,11 +108,11 @@ public:
     }
 };
 
-std::unique_ptr<audio::PCMStream> wav::create_stream(const std::filesystem::path& file) {
-    std::ifstream in(file, std::ios::binary);
+std::unique_ptr<audio::PCMStream> wav::create_stream(const io::path& file) {
+    std::ifstream in(io::resolve(file), std::ios::binary);
     if (!in.is_open()) {
-        LOG_ERROR("Could not open file '{}'", file.u8string());
-        throw std::runtime_error("Could not open file '" + file.u8string() + "'");
+        LOG_ERROR("Could not open file '{}'", file.string());
+        throw std::runtime_error("Could not open file '" + file.string() + "'");
     }
 
     char buffer[6];
@@ -222,7 +223,9 @@ std::unique_ptr<audio::PCMStream> wav::create_stream(const std::filesystem::path
     );
 }
 
-std::unique_ptr<audio::PCM> wav::load_pcm(const std::filesystem::path& file, bool headerOnly) {
+std::unique_ptr<audio::PCM> wav::load_pcm(
+    const io::path& file, bool headerOnly
+) {
     auto stream = wav::create_stream(file);
 
     size_t totalSamples = stream->getTotalSamples();

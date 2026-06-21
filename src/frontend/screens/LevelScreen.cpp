@@ -104,7 +104,7 @@ LevelScreen::~LevelScreen() {
     scripting::on_frontend_close();
     Events::enableBindings();
     controller->onWorldQuit();
-    engine.getPaths().setCurrentWorldFolder(std::filesystem::path());
+    engine.getPaths().setCurrentWorldFolder("");
 }
 
 void LevelScreen::initializeContent() {
@@ -117,8 +117,8 @@ void LevelScreen::initializeContent() {
 
 void LevelScreen::initializePack(ContentPackRuntime* pack) {
     const ContentPack& info = pack->getInfo();
-    std::filesystem::path scriptFile = info.folder/std::filesystem::path("scripts/hud.lua");
-    if (std::filesystem::is_regular_file(scriptFile)) {
+    io::path scriptFile = info.folder / "scripts/hud.lua";
+    if (io::is_regular_file(scriptFile)) {
         scripting::load_hud_script(
             pack->getEnvironment(),
             info.id,

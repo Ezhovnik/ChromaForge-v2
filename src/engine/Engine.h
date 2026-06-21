@@ -3,7 +3,6 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
-#include <filesystem>
 
 #include <typedefs.h>
 #include <delegates.h>
@@ -47,8 +46,8 @@ struct CoreParameters {
     bool headless = false;
     bool testMode = false;
 
-    std::filesystem::path resFolder {"res"};
-    std::filesystem::path userFolder {"."};
+    std::filesystem::path resFolder = "res";
+    std::filesystem::path userFolder = ".";
     std::filesystem::path scriptFile;
 };
 
@@ -133,7 +132,7 @@ public:
         postRunnables.postRunnable(callback);
     }
 
-    PacksManager createPacksManager(const std::filesystem::path& worldFolder);
+    PacksManager createPacksManager(const io::path& worldFolder);
 
     void saveScreenshot();
 
@@ -149,6 +148,6 @@ public:
 
     void loadContent();
     void resetContent();
-    void loadWorldContent(const std::filesystem::path& folder);
+    void loadWorldContent(const io::path& folder);
     void loadAllPacks();
 };

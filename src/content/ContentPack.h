@@ -1,11 +1,11 @@
 #pragma once
 
 #include <string>
-#include <filesystem>
 #include <vector>
 
 #include <typedefs.h>
 #include <content/content_fwd.h>
+#include <io/io.h>
 
 class EnginePaths;
 
@@ -22,16 +22,16 @@ struct DependencyPack {
 
 class contentpack_error : public std::runtime_error {
     std::string packId;
-    std::filesystem::path folder;
+    io::path folder;
 public:
     contentpack_error(
         std::string packId,
-        std::filesystem::path folder,
+        io::path folder,
         const std::string& message
     );
 
     std::string getPackId() const;
-    std::filesystem::path getFolder() const;
+    io::path getFolder() const;
 };
 
 struct ContentPack {
@@ -43,49 +43,49 @@ struct ContentPack {
 
     std::vector<DependencyPack> dependencies;
 
-    std::filesystem::path folder;
+    io::path folder;
     std::string path;
 
     std::string source = "";
 
-    std::filesystem::path getContentFile() const;
+    io::path getContentFile() const;
 
     static inline const std::string PACKAGE_FILENAME = "package.json";
     static inline const std::string CONTENT_FILENAME = "content.json";
-    static inline const std::filesystem::path BLOCKS_FOLDER = "blocks";
-    static inline const std::filesystem::path ITEMS_FOLDER = "items";
-    static inline const std::filesystem::path ENTITIES_FOLDER = "entities";
-    static inline const std::filesystem::path GENERATORS_FOLDER = "generators";
+    static inline const io::path BLOCKS_FOLDER = "blocks";
+    static inline const io::path ITEMS_FOLDER = "items";
+    static inline const io::path ENTITIES_FOLDER = "entities";
+    static inline const io::path GENERATORS_FOLDER = "generators";
     static const std::vector<std::string> RESERVED_NAMES;
 
-    static bool is_pack(const std::filesystem::path& folder);
-    static ContentPack read(const std::string& path, const std::filesystem::path& folder);
+    static bool is_pack(const io::path& folder);
+    static ContentPack read(const std::string& path, const io::path& folder);
 
     static void scanFolder(
         const std::string& path,
-        const std::filesystem::path& folder,
+        const io::path& folder,
         std::vector<ContentPack>& packs
     );
 
     static std::vector<std::string> worldPacksList(
-        const std::filesystem::path& folder
+        const io::path& folder
     );
-    static std::filesystem::path findPack(
+    static io::path findPack(
         const EnginePaths* paths, 
-        const std::filesystem::path& worldDir, 
+        const io::path& worldDir, 
         const std::string& name
     );
 
     static ContentPack createBuiltin(const EnginePaths&);
 
-    static inline std::filesystem::path getFolderFor(ContentType type) {
+    static inline io::path getFolderFor(ContentType type) {
         switch (type) {
             case ContentType::Block: return ContentPack::BLOCKS_FOLDER;
             case ContentType::Item: return ContentPack::ITEMS_FOLDER;
             case ContentType::Entity: return ContentPack::ENTITIES_FOLDER;
             case ContentType::Generator: return ContentPack::GENERATORS_FOLDER;
-            case ContentType::None: return std::filesystem::u8path("");
-            default: return std::filesystem::u8path("");
+            case ContentType::None: return "";
+            default: return "";
         }
     }
 };

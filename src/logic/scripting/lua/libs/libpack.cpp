@@ -19,7 +19,7 @@ static int l_pack_get_folder(lua::State* L) {
     auto packs = scripting::engine->getAllContentPacks();
     for (auto& pack : packs) {
         if (pack.id == packName) {
-            return lua::pushstring(L, pack.folder.u8string() + "/");
+            return lua::pushstring(L, pack.folder.string() + "/");
         }
     }
     return lua::pushstring(L, "");
@@ -36,7 +36,7 @@ static int l_pack_get_installed(lua::State* L) {
 }
 
 static int l_pack_get_available(lua::State* L) {
-    std::filesystem::path worldFolder("");
+    io::path worldFolder;
     if (scripting::level) worldFolder = scripting::level->getWorld()->wfile->getFolder();
     auto manager = scripting::engine->createPacksManager(worldFolder);
     manager.scan();
@@ -80,7 +80,7 @@ static int l_pack_get_info(lua::State* L, const ContentPack& pack, const Content
         auto assets = scripting::engine->getAssets();
         std::string icon = pack.id + ".icon";
         if (!AssetsLoader::loadExternalTexture(
-            assets, icon, {pack.folder/std::filesystem::path("icon.png")}
+            assets, icon, {pack.folder / "icon.png"}
         )) {
             icon = "gui/no_icon";
         }
@@ -131,7 +131,7 @@ static int pack_get_infos(lua::State* L) {
         }
     }
     if (!ids.empty()) {
-        std::filesystem::path worldFolder("");
+        io::path worldFolder;
         if (scripting::level) {
             worldFolder = scripting::level->getWorld()->wfile->getFolder();
         }
@@ -164,7 +164,7 @@ static int l_pack_get_info(lua::State* L) {
         return pack.id == packid;
     });
     if (found == packs.end()) {
-        std::filesystem::path worldFolder("");
+        io::path worldFolder;
         if (scripting::level) worldFolder = scripting::level->getWorld()->wfile->getFolder();
         auto manager = scripting::engine->createPacksManager(worldFolder);
         manager.scan();
@@ -197,7 +197,7 @@ static int l_pack_assemble(lua::State* L) {
         ids.push_back(lua::require_string(L, -1));
         lua::pop(L);
     }
-    std::filesystem::path worldFolder("");
+    io::path worldFolder;
     if (scripting::level) {
         worldFolder = scripting::level->getWorld()->wfile->getFolder();
     }

@@ -37,13 +37,13 @@ static int l_get_list(lua::State* L) {
 
         const auto& folder = worlds[i];
 
-        auto root = json::parse(io::read_string(folder/std::filesystem::u8path("world.json")));
+        auto root = json::parse(io::read_string(folder / "world.json"));
         const auto& versionMap = root["version"];
         int versionMajor = versionMap["major"].asInteger();
         int versionMinor = versionMap["minor"].asInteger();
         int versionMaintenance = versionMap["maintenance"].asInteger();
 
-        auto name = folder.filename().u8string();
+        auto name = folder.name();
         lua::pushstring(L, name);
         lua::setfield(L, "name");
 
@@ -51,8 +51,8 @@ static int l_get_list(lua::State* L) {
         std::string icon = "world#" + name + ".icon";
 
         if (!scripting::engine->isHeadless() && !AssetsLoader::loadExternalTexture(assets, icon, {
-            worlds[i]/std::filesystem::path("icon.png"),
-            worlds[i]/std::filesystem::path("preview.png")
+            worlds[i] / "icon.png",
+            worlds[i] / "preview.png"
         })) {
             icon = "gui/no_world_icon";
         }
@@ -98,7 +98,7 @@ static int l_get_seed(lua::State* L) {
 static int l_exists(lua::State* L) {
     auto name = lua::require_string(L, 1);
     auto worldsDir = scripting::engine->getPaths().getWorldFolderByName(name);
-    return lua::pushboolean(L, std::filesystem::is_directory(worldsDir));
+    return lua::pushboolean(L, io::is_directory(worldsDir));
 }
 
 static int l_is_day(lua::State* L) {

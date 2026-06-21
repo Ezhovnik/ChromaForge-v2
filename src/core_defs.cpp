@@ -17,7 +17,7 @@
 #include <io/io.h>
 #include <io/engine_paths.h>
 
-void CoreContent::setup(const EnginePaths& paths, ContentBuilder& builder) {
+void CoreContent::setup(ContentBuilder& builder) {
     // Воздух
     {
         Block& block = builder.blocks.create(BUILTIN_AIR);
@@ -54,7 +54,7 @@ void CoreContent::setup(const EnginePaths& paths, ContentBuilder& builder) {
 
     {
         Block& block = builder.blocks.create(BUILTIN_STRUCT_AIR);
-        for (uint i = 0; i < 6; i++) {
+        for (uint i = 0; i < 6; ++i) {
             block.textureFaces[i] = "struct_air";
         }
         block.drawGroup = -1;
@@ -68,5 +68,12 @@ void CoreContent::setup(const EnginePaths& paths, ContentBuilder& builder) {
         item.icon = BUILTIN_STRUCT_AIR;
         item.placingBlock = BUILTIN_STRUCT_AIR;
         item.caption = block.caption;
+    }
+
+    auto bindsFile = "res:bindings.toml";
+    if (io::is_regular_file(bindsFile)) {
+        Events::loadBindings(
+            bindsFile, io::read_string(bindsFile), BindType::Bind
+        );
     }
 }

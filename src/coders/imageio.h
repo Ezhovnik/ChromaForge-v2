@@ -2,7 +2,8 @@
 
 #include <string>
 #include <memory>
-#include <filesystem>
+
+#include <io/fwd.h>
 
 class ImageData;
 
@@ -12,6 +13,6 @@ namespace imageio {
     bool is_read_supported(const std::string& extension);
     bool is_write_supported(const std::string& extension);
 
-    std::unique_ptr<ImageData> read(const std::filesystem::path& filename, bool flipVertically = true);
-    void write(const std::string& filename, const ImageData* image);
+    std::unique_ptr<ImageData> read(const io::path& filename, bool flipVertically = true);
+    void write(const io::path& file, const ImageData* image);
 }

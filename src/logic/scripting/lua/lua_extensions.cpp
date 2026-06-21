@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <debug/Logger.h>

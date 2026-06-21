@@ -8,7 +8,7 @@
 
 PacksManager::PacksManager() = default;
 
-void PacksManager::setSources(std::vector<std::pair<std::string, std::filesystem::path>> sources) {
+void PacksManager::setSources(std::vector<std::pair<std::string, io::path>> sources) {
     this->sources = std::move(sources);
 }
 
@@ -42,7 +42,7 @@ std::vector<ContentPack> PacksManager::getAll(const std::vector<std::string>& na
         auto found = packs.find(name);
         if (found == packs.end()) {
             LOG_ERROR("Pack '{}' not found", name);
-            throw contentpack_error(name, std::filesystem::path(""), "Pack not found");
+            throw contentpack_error(name, io::path(""), "Pack not found");
         }
         packsList.push_back(found->second);
     }
@@ -78,7 +78,7 @@ static bool resolve_dependencies (
         bool exists = found != packs.end();
         if (!exists && dep.level == DependencyLevel::Required) {
             LOG_ERROR("Missing dependency of '{}'", pack->id);
-            throw contentpack_error(dep.id, std::filesystem::path(), "Missing dependency of '" + pack->id + "'");
+            throw contentpack_error(dep.id, io::path(), "Missing dependency of '" + pack->id + "'");
         }
         if (!exists) continue;
         if (resolveWeaks && dep.level == DependencyLevel::Weak) continue;
@@ -102,7 +102,7 @@ std::vector<std::string> PacksManager::assemble(const std::vector<std::string>& 
         auto found = packs.find(name);
         if (found == packs.end()) {
             LOG_ERROR("Pack '{}' not found", name);
-            throw contentpack_error(name, std::filesystem::path(""), "Pack not found");
+            throw contentpack_error(name, io::path(), "Pack not found");
         }
         queue.push(&found->second);
     }

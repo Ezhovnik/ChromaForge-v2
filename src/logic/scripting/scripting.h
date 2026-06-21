@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <filesystem>
 #include <vector>
 #include <memory>
 
@@ -11,6 +10,7 @@
 #include <logic/scripting/scripting_functional.h>
 #include <typedefs.h>
 #include <data/dv.h>
+#include <io/fwd.h>
 
 class Engine;
 class Content;
@@ -48,7 +48,11 @@ namespace scripting {
 
     void on_content_load(Content* content);
 
-    bool register_event(int env, const std::string& name, const std::string& id);
+    bool register_event(
+        int env,
+        const std::string& name,
+        const std::string& id
+    );
     int get_values_on_stack();
 
     scriptenv get_root_environment();
@@ -58,7 +62,7 @@ namespace scripting {
     void process_post_runnables();
 
     std::unique_ptr<Process> start_coroutine(
-        const std::filesystem::path& script
+        const io::path& script
     );
 
     void on_world_load(LevelController* controller);
@@ -119,39 +123,39 @@ namespace scripting {
     void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
-        const std::filesystem::path& file,
+        const io::path& file,
         const std::string& fileName,
         BlockFuncsSet& funcsset
     );
     void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
-        const std::filesystem::path& file,
+        const io::path& file,
         const std::string& fileName,
         ItemFuncsSet& funcsset
     );
     void load_world_script(
         const scriptenv& env,
         const std::string& packid,
-        const std::filesystem::path& file,
+        const io::path& file,
         const std::string& fileName,
         WorldFuncsSet& funcsset
     );
     void load_layout_script(
         const scriptenv& env,
         const std::string& prefix,
-        const std::filesystem::path& file,
+        const io::path& file,
         const std::string& fileName,
         uidocscript& script
     );
     void load_entity_component(
         const std::string& name,
-        const std::filesystem::path& file,
+        const io::path& file,
         const std::string& fileName
     );
     std::unique_ptr<GeneratorScript> load_generator(
         const Generator& def,
-        const std::filesystem::path& file,
+        const io::path& file,
         const std::string& dirPath
     );
 

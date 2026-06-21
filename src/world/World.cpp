@@ -79,7 +79,7 @@ void World::write(Level* level) {
 std::unique_ptr<Level> World::create(
 	const std::string& name,
 	const std::string& generator,
-	const std::filesystem::path& directory, 
+	const io::path& directory, 
 	uint64_t seed, 
 	EngineSettings& settings, 
 	const Content& content, 
@@ -98,7 +98,7 @@ std::unique_ptr<Level> World::create(
     if (name.empty()) {
         LOG_INFO("Created nameless world");
     } else {
-        LOG_INFO("Created world '{}' ({})", name, directory.u8string());
+        LOG_INFO("Created world '{}' ({})", name, directory.string());
     }
     LOG_INFO("World seed: {}", seed);
     LOG_INFO("World generator: {}", generator);
@@ -106,8 +106,8 @@ std::unique_ptr<Level> World::create(
 }
 
 std::shared_ptr<ContentReport> World::checkIndices(const std::shared_ptr<WorldFiles>& worldFiles, const Content* content) {
-	std::filesystem::path indicesFile = worldFiles->getIndicesFile();
-	if (std::filesystem::is_regular_file(indicesFile)) return ContentReport::create(worldFiles, indicesFile, content);
+	io::path indicesFile = worldFiles->getIndicesFile();
+	if (io::is_regular_file(indicesFile)) return ContentReport::create(worldFiles, indicesFile, content);
 
 	return nullptr;
 }
@@ -128,7 +128,7 @@ std::unique_ptr<Level> World::load(
         throw world_load_error("could not to find world.json");
 	}
 
-    LOG_INFO("Loading world {} ({})", info->name, worldFilesPtr->getFolder().u8string());
+    LOG_INFO("Loading world {} ({})", info->name, worldFilesPtr->getFolder().string());
 	LOG_INFO("World version: {}.{}.{}", info->major, info->minor, info->maintenance);
     LOG_INFO("World seed: {}", info->seed);
     LOG_INFO("World generator: {}", info->generator);
@@ -146,8 +146,8 @@ std::unique_ptr<Level> World::load(
 	LOG_INFO("Creating a level");
 	auto level = std::make_unique<Level>(std::move(world), content, settings);
 
-    std::filesystem::path file = wfile->getPlayerFile();
-    if (!std::filesystem::is_regular_file(file)) {
+    io::path file = wfile->getPlayerFile();
+    if (!io::is_regular_file(file)) {
         LOG_WARN("'player.json' does not exists");
         level->players->create();
     } else {
