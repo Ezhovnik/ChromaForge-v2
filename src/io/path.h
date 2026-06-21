@@ -114,10 +114,20 @@ namespace io {
         bool empty() const {
             return str.empty();
         }
+
+        bool emptyOrInvalid() const {
+            return str.empty() || colonPos == std::string::npos;
+        }
     private:
         std::string str;
         size_t colonPos = std::string::npos;
 
         void checkValid() const;
+    };
+
+    class PathsGenerator {
+    public:
+        virtual ~PathsGenerator() = default;
+        virtual bool next(path& dst) = 0;
     };
 }

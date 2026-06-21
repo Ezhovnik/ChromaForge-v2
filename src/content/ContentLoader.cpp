@@ -40,8 +40,7 @@ static void detect_defs(
     std::vector<std::string>& detected
 ) {
     if (!io::is_directory(folder)) return;
-    for (const auto& entry : std::filesystem::directory_iterator(io::resolve(folder))) {
-        io::path file = folder / entry.path().filename().u8string();
+    for (const auto& file : io::directory_iterator(folder)) {
         std::string name = file.stem();
         if (name[0] == '_') {
             continue;
@@ -62,8 +61,7 @@ static void detect_defs_pairs(
     std::vector<std::tuple<std::string, std::string>>& detected
 ) {
     if (!io::is_directory(folder)) return;
-    for (const auto& entry : std::filesystem::directory_iterator(io::resolve(folder))) {
-        io::path file = folder / entry.path().filename().u8string();
+    for (const auto& file : io::directory_iterator(folder)) {
         std::string name = file.stem();
         if (name[0] == '_') {
             continue;
@@ -724,8 +722,7 @@ static inline void foreach_file(
     const io::path& dir, std::function<void(const io::path&)> handler
 ) {
     if (!io::is_directory(dir)) return;
-    for (const auto& entry : std::filesystem::directory_iterator(io::resolve(dir))) {
-        io::path path = dir / entry.path().filename().u8string();
+    for (const auto& path : io::directory_iterator(dir)) {
         if (io::is_directory(path)) continue;
         handler(path);
     }
@@ -779,8 +776,7 @@ void ContentLoader::load() {
     // Load block materials
     io::path materialsDir = folder / "block_materials";
     if (io::is_directory(materialsDir)) {
-        for (const auto& entry : std::filesystem::directory_iterator(io::resolve(materialsDir))) {
-            io::path file = materialsDir / entry.path().filename().u8string();
+        for (const auto& file : io::directory_iterator(materialsDir)) {
             auto [packid, full, filename] = create_unit_id(pack->id, file.stem());
             loadBlockMaterial(
                 builder.createBlockMaterial(full),

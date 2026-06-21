@@ -47,6 +47,11 @@ void io::create_subdevice(
     set_device(name, std::make_shared<io::SubDevice>(parentDevice, root.pathPart()));
 }
 
+io::directory_iterator::directory_iterator(const io::path& folder) : folder(folder) {
+    auto& device = io::require_device(folder.entryPoint());
+    generator = device.list(folder.pathPart());
+}
+
 io::rafile::rafile(const io::path& filename)
     : file(io::resolve(filename), std::ios::binary | std::ios::ate) {
     if (!file) {
@@ -169,21 +174,21 @@ std::vector<std::string> io::read_list(const io::path& filename) {
 }
 
 bool io::is_regular_file(const io::path& file) {
-    if (file.empty()) return false;
+    if (file.emptyOrInvalid()) return false;
     auto device = io::get_device(file.entryPoint());
     if (device == nullptr) return false;
     return device->isfile(file.pathPart());
 }
 
 bool io::is_directory(const io::path& file) {
-    if (file.empty()) return false;
+    if (file.emptyOrInvalid()) return false;
     auto device = io::get_device(file.entryPoint());
     if (device == nullptr) return false;
     return device->isdir(file.pathPart());
 }
 
 bool io::exists(const io::path& file) {
-    if (file.empty()) return false;
+    if (file.emptyOrInvalid()) return false;
     auto device = io::get_device(file.entryPoint());
     if (device == nullptr) return false;
     return device->exists(file.pathPart());

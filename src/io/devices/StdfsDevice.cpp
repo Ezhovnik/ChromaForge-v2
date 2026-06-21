@@ -61,3 +61,26 @@ uint64_t StdfsDevice::removeAll(std::string_view path) {
     auto resolved = resolve(path);
     return std::filesystem::remove_all(resolved);
 }
+
+class StdfsPathsGenerator : public PathsGenerator {
+public:
+    StdfsPathsGenerator(std::filesystem::path root) : root(std::move(root)) {
+        it = std::filesystem::directory_iterator(this->root);
+    }
+
+    bool next(io::path& path) override {
+        if (it == std::filesystem::directory_iterator()) {
+            return false;
+        }
+        path = it->path().filename().u8string();
+        ++it;
+        return true;
+    }
+private:
+    std::filesystem::path root;
+    std::filesystem::directory_iterator it;
+};
+
+std::unique_ptr<PathsGenerator> StdfsDevice::list(std::string_view path) {
+    return std::make_unique<StdfsPathsGenerator>(root / std::filesystem::u8path(path));
+}

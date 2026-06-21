@@ -199,10 +199,9 @@ std::vector<io::path> EnginePaths::scanForWorlds() const {
     auto folder = getWorldsFolder();
     if (!io::is_directory(folder)) return folders;
 
-    for (const auto& entry : std::filesystem::directory_iterator(io::resolve(folder))) {
-        if (!entry.is_directory()) continue;
+    for (const auto& worldFolder : io::directory_iterator(folder)) {
+        if (!io::is_directory(worldFolder)) continue;
 
-        io::path worldFolder = folder / entry.path().filename().u8string();
         auto worldFile = worldFolder / WorldFiles::WORLD_FILE;
         if (!io::is_regular_file(worldFile)) continue;
         folders.push_back(worldFolder);
@@ -251,9 +250,8 @@ std::vector<std::string> ResPaths::listdirRaw(const std::string& folderName) con
         auto& root = roots[i];
         auto folder = root.path / folderName;
         if (!io::is_directory(folder)) continue;
-        for (const auto& entry : std::filesystem::directory_iterator(io::resolve(folder))) {
-            auto name = entry.path().filename().u8string();
-            entries.emplace_back(root.name + ":" + folderName + "/" + name);
+        for (const auto& file : io::directory_iterator(folder)) {
+            entries.emplace_back(root.name + ":" + folderName + "/" + file.name());
         }
     }
     return entries;
@@ -265,8 +263,8 @@ std::vector<io::path> ResPaths::listdir(const std::string& folderName) const {
         auto& root = roots[i];
         io::path folder = root.path / folderName;
         if (!io::is_directory(folder)) continue;
-        for (const auto& entry : std::filesystem::directory_iterator(io::resolve(folder))) {
-            entries.push_back(folder / entry.path().filename().u8string());
+        for (const auto& entry : io::directory_iterator(folder)) {
+            entries.push_back(entry);
         }
     }
     return entries;

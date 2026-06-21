@@ -324,8 +324,9 @@ namespace lua {
     }
 
     template <class T>
-    inline std::enable_if_t<std::is_base_of_v<Userdata, T>> 
-    newusertype(lua::State* L) {
+    inline std::enable_if_t<std::is_base_of_v<Userdata, T>> newusertype(
+        lua::State* L
+    ) {
         const std::string& name = T::TYPENAME;
         usertypeNames[typeid(T)] = name;
         T::createMetatable(L);
@@ -470,8 +471,7 @@ namespace lua {
 
     int pushvalue(lua::State*, const dv::value& value);
 
-    [[nodiscard]]
-    dv::value tovalue(lua::State*, int idx);
+    [[nodiscard]] dv::value tovalue(lua::State*, int idx);
 
     inline bool getfield(lua::State* L, const std::string& name, int idx=-1) {
         lua_getfield(L, idx, name.c_str());

@@ -5,7 +5,6 @@
 
 #include <io/path.h>
 
-
 namespace io {
     class Device {
     public:
@@ -24,6 +23,7 @@ namespace io {
         virtual void mkdirs(std::string_view path) = 0;
         virtual bool remove(std::string_view path) = 0;
         virtual uint64_t removeAll(std::string_view path) = 0;
+        virtual std::unique_ptr<PathsGenerator> list(std::string_view path) = 0;
     };
 
     class SubDevice : public Device {
@@ -68,6 +68,10 @@ namespace io {
 
         uint64_t removeAll(std::string_view path) override {
             return parent->removeAll((root / path).pathPart());
+        }
+
+        std::unique_ptr<PathsGenerator> list(std::string_view path) override {
+            return parent->list((root / path).pathPart());
         }
     private:
         std::shared_ptr<Device> parent;
