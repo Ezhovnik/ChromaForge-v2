@@ -2,6 +2,8 @@
 
 #include <string>
 #include <filesystem>
+#include <memory>
+#include <iostream>
 
 #include <io/path.h>
 
@@ -12,8 +14,8 @@ namespace io {
 
         virtual std::filesystem::path resolve(std::string_view path) = 0;
 
-        virtual void write(std::string_view path, const void* data, size_t size) = 0;
-        virtual void read(std::string_view path, void* data, size_t size) = 0;
+        virtual std::unique_ptr<std::ostream> write(std::string_view path) = 0;
+        virtual std::unique_ptr<std::istream> read(std::string_view path) = 0;
 
         virtual size_t size(std::string_view path) = 0;
 
@@ -39,12 +41,12 @@ namespace io {
             return parent->resolve((root / path).pathPart());
         }
 
-        void write(std::string_view path, const void* data, size_t size) override {
-            parent->write((root / path).pathPart(), data, size);
+        std::unique_ptr<std::ostream> write(std::string_view path) override {
+            return parent->write((root / path).pathPart());
         }
 
-        void read(std::string_view path, void* data, size_t size) override {
-            parent->read((root / path).pathPart(), data, size);
+        std::unique_ptr<std::istream> read(std::string_view path) override {
+            return parent->read((root / path).pathPart());
         }
 
         size_t size(std::string_view path) override {

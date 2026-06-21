@@ -25,10 +25,11 @@ namespace io {
     );
 
     class rafile {
-        std::ifstream file;
+        std::unique_ptr<std::istream> file;
         size_t filelength;
     public:
         rafile(const path& filename);
+        rafile(std::unique_ptr<std::istream> file, size_t length);
 
         void seekg(std::streampos pos);
         void read(char* buffer, std::streamsize size);
@@ -118,6 +119,7 @@ namespace io {
         bool compressed = false
     );
 
+    std::unique_ptr<std::istream> read(const io::path& file);
     bool read(const io::path& file, char* data, size_t size);
     util::Buffer<ubyte> read_bytes_buffer(const path& file);
     std::unique_ptr<ubyte[]> read_bytes(const path& file, size_t& length);

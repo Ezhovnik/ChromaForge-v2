@@ -21,24 +21,24 @@ std::filesystem::path StdfsDevice::resolve(std::string_view path) {
     return root / std::filesystem::u8path(io::path(std::string(path)).normalized().string());
 }
 
-void StdfsDevice::write(std::string_view path, const void* data, size_t size) {
+std::unique_ptr<std::ostream> StdfsDevice::write(std::string_view path) {
     auto resolved = resolve(path);
-    std::ofstream output(resolved, std::ios::binary);
-    if (!output.is_open()) {
+    auto output = std::make_unique<std::ofstream>(resolved, std::ios::binary);
+    if (!output->is_open()) {
         LOG_ERROR("Could not to open file {}", resolved.u8string());
         throw std::runtime_error("Could not to open file " + resolved.u8string());
     }
-    output.write((const char*)data, size);
+    return output;
 }
 
-void StdfsDevice::read(std::string_view path, void* data, size_t size) {
+std::unique_ptr<std::istream> StdfsDevice::read(std::string_view path) {
     auto resolved = resolve(path);
-    std::ifstream input(resolved, std::ios::binary);
-    if (!input.is_open()) {
+    auto input = std::make_unique<std::ifstream>(resolved, std::ios::binary);
+    if (!*input) {
         LOG_ERROR("Could not to open file {}", resolved.u8string());
         throw std::runtime_error("Could not to open file " + resolved.u8string());
     }
-    input.read((char*)data, size);
+    return input;
 }
 
 size_t StdfsDevice::size(std::string_view path) {
