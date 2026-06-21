@@ -13,13 +13,13 @@
 #include <util/stringutil.h>
 #include <io/devices/StdfsDevice.h>
 
-static inline auto SCREENSHOTS_FOLDER = "screenshots";
-static inline auto CONTENT_FOLDER = "content";
-static inline auto WORLDS_FOLDER = "saves";
-static inline auto CONFIG_FOLDER = "config";
-static inline auto EXPORT_FOLDER = "export";
-static inline auto CONTROLS_FILE = "controls.toml";
-static inline auto SETTINGS_FILE = "settings.toml";
+static inline io::path SCREENSHOTS_FOLDER = "screenshots";
+static inline io::path CONTENT_FOLDER = "content";
+static inline io::path WORLDS_FOLDER = "saves";
+static inline io::path CONFIG_FOLDER = "config";
+static inline io::path EXPORT_FOLDER = "export";
+static inline io::path CONTROLS_FILE = "controls.toml";
+static inline io::path SETTINGS_FILE = "settings.toml";
 
 static io::path toCanonic(io::path path) {
     std::stack<std::string> parts;
@@ -128,15 +128,17 @@ void EnginePaths::setResourcesFolder(std::filesystem::path folder) {
 }
 
 void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
-    for (const auto& pack : *this->contentPacks) {
-        io::remove_device(pack.id);
+    for (const auto& id : contentEntryPoints) {
+        io::remove_device(id);
     }
 
+    contentEntryPoints.clear();
     this->contentPacks = contentPacks;
 
     for (const auto& pack : *contentPacks) {
         auto parent = pack.folder.entryPoint();
         io::create_subdevice(pack.id, parent, pack.folder);
+        contentEntryPoints.push_back(pack.id);
     }
 }
 
