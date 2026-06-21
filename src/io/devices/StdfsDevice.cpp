@@ -61,14 +61,26 @@ bool StdfsDevice::isfile(std::string_view path) {
     return std::filesystem::is_regular_file(resolved);
 }
 
-void StdfsDevice::mkdirs(std::string_view path) {
+bool StdfsDevice::mkdir(std::string_view path) {
     auto resolved = resolve(path);
 
     std::error_code ec;
-    std::filesystem::create_directories(resolved, ec);
+    bool created = std::filesystem::create_directory(resolved, ec);
     if (ec) {
         LOG_ERROR("Error creating directory {}: {}", resolved.u8string(), ec.message());
     }
+    return created;
+}
+
+bool StdfsDevice::mkdirs(std::string_view path) {
+    auto resolved = resolve(path);
+
+    std::error_code ec;
+    bool created = std::filesystem::create_directories(resolved, ec);
+    if (ec) {
+        LOG_ERROR("Error creating directories {}: {}", resolved.u8string(), ec.message());
+    }
+    return created;
 }
 
 bool StdfsDevice::remove(std::string_view path) {
