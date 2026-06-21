@@ -49,8 +49,7 @@ static int l_reopen_world(lua::State*) {
 }
 
 static int l_open_folder(lua::State* L) {
-    auto path = scripting::engine->getPaths().resolve(lua::require_string(L, 1));
-    platform::open_folder(io::resolve(path));
+    platform::open_folder(io::resolve(lua::require_string(L, 1)));
     return 0;
 }
 

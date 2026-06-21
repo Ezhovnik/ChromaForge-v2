@@ -144,7 +144,7 @@ void LevelScreen::saveWorldPreview() {
         worldRenderer->draw(ctx, camera, false, true, 0.0f, postProcessing.get());
         auto image = postProcessing->toImage();
         image->flipY();
-        imageio::write(paths.resolve("world:preview.png").string(), image.get());
+        imageio::write("world:preview.png", image.get());
         LOG_INFO("World preview successfully saved");
     } catch (const std::exception& err) {
         LOG_ERROR("Failed to save world preview: {}", err.what());

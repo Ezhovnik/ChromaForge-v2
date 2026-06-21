@@ -3,7 +3,19 @@
 #include <fstream>
 #include <filesystem>
 
+#include <debug/Logger.h>
+
 using namespace io;
+
+StdfsDevice::StdfsDevice(std::filesystem::path root, bool createDirectory) : root(std::move(root)) {
+    if (createDirectory && !std::filesystem::is_directory(this->root)) {
+        std::error_code ec;
+        std::filesystem::create_directories(this->root, ec);
+        if (ec) {
+            LOG_ERROR("Error creating root directory {}: {}", this->root.u8string(), ec.message());
+        }
+    }
+}
 
 std::filesystem::path StdfsDevice::resolve(std::string_view path) {
     return root / std::filesystem::u8path(path);
@@ -13,6 +25,7 @@ void StdfsDevice::write(std::string_view path, const void* data, size_t size) {
     auto resolved = resolve(path);
     std::ofstream output(resolved, std::ios::binary);
     if (!output.is_open()) {
+        LOG_ERROR("Could not to open file {}", resolved.u8string());
         throw std::runtime_error("Could not to open file " + resolved.u8string());
     }
     output.write((const char*)data, size);
@@ -22,6 +35,7 @@ void StdfsDevice::read(std::string_view path, void* data, size_t size) {
     auto resolved = resolve(path);
     std::ifstream input(resolved, std::ios::binary);
     if (!input.is_open()) {
+        LOG_ERROR("Could not to open file {}", resolved.u8string());
         throw std::runtime_error("Could not to open file " + resolved.u8string());
     }
     input.read((char*)data, size);
@@ -49,7 +63,12 @@ bool StdfsDevice::isfile(std::string_view path) {
 
 void StdfsDevice::mkdirs(std::string_view path) {
     auto resolved = resolve(path);
-    std::filesystem::create_directories(resolved);
+
+    std::error_code ec;
+    std::filesystem::create_directories(resolved, ec);
+    if (ec) {
+        LOG_ERROR("Error creating directory {}: {}", resolved.u8string(), ec.message());
+    }
 }
 
 bool StdfsDevice::remove(std::string_view path) {
@@ -59,7 +78,12 @@ bool StdfsDevice::remove(std::string_view path) {
 
 uint64_t StdfsDevice::removeAll(std::string_view path) {
     auto resolved = resolve(path);
-    return std::filesystem::remove_all(resolved);
+    if (std::filesystem::exists(resolved)) {
+        LOG_INFO("removeALL {}", resolved.u8string());
+        return std::filesystem::remove_all(resolved);
+    } else {
+        return 0;
+    }
 }
 
 class StdfsPathsGenerator : public PathsGenerator {

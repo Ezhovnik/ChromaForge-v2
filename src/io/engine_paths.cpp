@@ -43,7 +43,7 @@ static io::path toCanonic(io::path path) {
 }
 
 void EnginePaths::prepare() {
-    io::set_device("res", std::make_shared<io::StdfsDevice>(resourcesFolder));
+    io::set_device("res", std::make_shared<io::StdfsDevice>(resourcesFolder, false));
     io::set_device("user", std::make_shared<io::StdfsDevice>(userFilesFolder));
 
     if (!io::is_directory("res:")) {
@@ -51,10 +51,6 @@ void EnginePaths::prepare() {
         throw std::runtime_error(
             resourcesFolder.u8string() + " is not a directory"
         );
-    }
-
-    if (!io::is_directory("user:")) {
-        io::create_directories("user:");
     }
 
     LOG_INFO("Resources folder: {}", std::filesystem::canonical(resourcesFolder).u8string());
@@ -65,15 +61,9 @@ void EnginePaths::prepare() {
         io::create_directories(contentFolder);
     }
 
-    auto exportFolder = io::path("user:") / EXPORT_FOLDER;
-    if (!io::is_directory(exportFolder)) {
-        io::create_directories(exportFolder);
-    }
-
-    auto configFolder = io::path("user:") / CONFIG_FOLDER;
-    if (!io::is_directory(configFolder)) {
-        io::create_directories(configFolder);
-    }
+    io::create_subdevice("builtin", "res", "");
+    io::create_subdevice("export", "user", EXPORT_FOLDER);
+    io::create_subdevice("config", "user", CONFIG_FOLDER);
 }
 
 const std::filesystem::path& EnginePaths::getUserFilesFolder() const {
@@ -138,7 +128,16 @@ void EnginePaths::setResourcesFolder(std::filesystem::path folder) {
 }
 
 void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
+    for (const auto& pack : *this->contentPacks) {
+        io::remove_device(pack.id);
+    }
+
     this->contentPacks = contentPacks;
+
+    for (const auto& pack : *contentPacks) {
+        auto parent = pack.folder.entryPoint();
+        io::create_subdevice(pack.id, parent, pack.folder);
+    }
 }
 
 void EnginePaths::setScriptFolder(std::filesystem::path folder) {
@@ -159,38 +158,6 @@ std::tuple<std::string, std::string> EnginePaths::parsePath(std::string_view pat
     auto prefix = std::string(path.substr(0, separator));
     auto filename = std::string(path.substr(separator + 1));
     return {prefix, filename};
-}
-
-io::path EnginePaths::resolve(
-    const std::string& path, bool throwErr
-) const {
-    auto [prefix, filename] = EnginePaths::parsePath(path);
-    if (prefix.empty()) {
-        LOG_ERROR("No entry point specified");
-        throw files_access_error("No entry point specified");
-    }
-
-    filename = toCanonic(filename).string();
-
-    if (prefix == "builtin") return io::path("res:") / filename;
-    if (prefix == "res" || prefix == "user" || prefix == "script") return prefix + ":" + filename;
-    if (prefix == "config") return getConfigFolder() / filename;
-    if (prefix == "world") return currentWorldFolder / filename;
-    if (prefix == "export") return io::path("user:") / EXPORT_FOLDER / filename;
-
-    if (contentPacks) {
-        for (auto& pack : *contentPacks) {
-            if (pack.id == prefix) {
-                return pack.folder / filename;
-            }
-        }
-    }
-
-    LOG_ERROR("Unknown entry point '{}'", prefix);
-    if (throwErr) {
-        throw files_access_error("Unknown entry point '" + prefix + "'");
-    }
-    return filename;
 }
 
 std::vector<io::path> EnginePaths::scanForWorlds() const {

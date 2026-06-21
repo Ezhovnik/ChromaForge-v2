@@ -829,15 +829,15 @@ static int l_gui_alert(lua::State* L) {
 }
 
 static int l_gui_load_document(lua::State* L) {
-    auto filename = lua::require_string(L, 1);
+    io::path filename = lua::require_string(L, 1);
     auto alias = lua::require_string(L, 2);
     auto args = lua::tovalue(L, 3);
 
     auto documentPtr = UIDocument::read(
         scripting::get_root_environment(),
         alias,
-        scripting::engine->getPaths().resolve(filename),
-        filename  
+        filename,
+        filename.string() 
     );
     auto document = documentPtr.get();
     scripting::engine->getAssets()->store(std::move(documentPtr), alias);

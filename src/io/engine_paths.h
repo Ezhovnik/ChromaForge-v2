@@ -48,8 +48,6 @@ public:
 
     std::vector<io::path> scanForWorlds() const;
 
-    io::path resolve(const std::string& path, bool throwErr = true) const;
-
     static std::tuple<std::string, std::string> parsePath(std::string_view view);
 
     static inline auto CONFIG_DEFAULTS = std::filesystem::u8path("config/defaults.toml");
