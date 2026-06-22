@@ -254,12 +254,6 @@ void ContentLoader::loadBlock(
                 LOG_ERROR("Error occured while block {} parsed: no 'model-primitives' of 'model-name' found", name);
                 throw std::runtime_error("Error occured while block " + name + " no 'model-primitives' or 'model-name' found");
             }
-            for (uint i = 0; i < 6; ++i) {
-                std::string& texture = def.textureFaces[i];
-                if (texture == TEXTURE_NOTFOUND) {
-                    texture = "";
-                }
-            }
         }
         def.model = *model;
     } else if (!modelTypeName.empty()) {
