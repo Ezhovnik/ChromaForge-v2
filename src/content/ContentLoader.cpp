@@ -416,6 +416,7 @@ void ContentLoader::loadItem(
     root.at("script-name").get(def.scriptName);
     root.at("model-name").get(def.modelName);
     root.at("stack-size").get(def.stackSize);
+    root.at("uses").get(def.uses);
 
     if (auto found = root.at("emission")) {
         const auto& emissionarr = *found;

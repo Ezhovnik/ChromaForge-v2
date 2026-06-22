@@ -125,15 +125,19 @@ public:
      * @brief Устанавливает текущий цвет по умолчанию.
      * @param color Цвет (RGBA).
      */
-	inline void setColor(glm::vec4 color) {
+	void setColor(glm::vec4 color) {
           this->color = color;
      }
 
 	/**
      * @brief Возвращает текущий цвет по умолчанию.
      */
-     inline glm::vec4 getColor() const {
+     glm::vec4 getColor() const {
           return color;
+     }
+
+     void resetColor() {
+          this->color = glm::vec4(1.0f);
      }
 
      void parallelogram(

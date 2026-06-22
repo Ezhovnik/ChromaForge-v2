@@ -9,11 +9,14 @@
 #include <graphics/ui/elements/layout/Container.h>
 #include <constants.h>
 #include <typedefs.h>
+#include <items/ItemStack.h>
 
+class Font;
 class Assets;
 class DrawContext;
 class Content;
-class ItemStack;
+class Item;
+class Batch2D;
 class ContentIndices;
 class LevelFrontend;
 class Inventory;
@@ -50,7 +53,11 @@ namespace gui {
     };
 
     class SlotView : public gui::UINode {
-    private:
+        struct {
+            ItemStack stack {};
+            std::wstring countStr;
+        } cache;
+
         const Content* content = nullptr;
         SlotLayout layout;
         bool highlighted = false;
@@ -58,11 +65,27 @@ namespace gui {
         int64_t inventoryId = 0;
         ItemStack* bound = nullptr;
 
-        std::wstring tooltip;
-        itemid_t prevItem = 0;
-
         void performLeftClick(ItemStack& stack, ItemStack& grabbed);
         void performRightClick(ItemStack& stack, ItemStack& grabbed);
+
+        void drawItemIcon(
+            Batch2D& batch,
+            const ItemStack& stack,
+            const Item& item,
+            const Assets& assets,
+            const glm::vec4& tint,
+            const glm::vec2& pos
+        );
+
+        void drawItemInfo(
+            Batch2D& batch,
+            const ItemStack& stack,
+            const Item& item,
+            const Font& font,
+            const glm::vec2& pos
+        );
+
+        void refreshTooltip(const ItemStack& stack, const Item& item);
     public:
         SlotView(SlotLayout layout);
 
