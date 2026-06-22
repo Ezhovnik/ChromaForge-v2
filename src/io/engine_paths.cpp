@@ -82,6 +82,28 @@ io::path EnginePaths::getNewScreenshotFile(const std::string& ext) {
 	return file;
 }
 
+io::path EnginePaths::getNewPanoramaFolder() {
+    auto screenshots_folder = io::path("user:") / SCREENSHOTS_FOLDER;
+	if (!io::is_directory(screenshots_folder)) io::create_directories(screenshots_folder);
+
+	auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+
+	const char* format = "%Y-%m-%d_%H-%M-%S";
+	std::stringstream ss;
+	ss << std::put_time(&tm, format);
+	std::string datetimestr = ss.str();
+
+	auto panorama_folder = screenshots_folder / ("panorama-" + datetimestr);
+	uint index = 0;
+	while (io::is_directory(panorama_folder)) {
+        panorama_folder = screenshots_folder / ("panorama-" + datetimestr + "-" + std::to_string(index));
+		index++;
+	}
+    io::create_directories(panorama_folder);
+	return panorama_folder;
+}
+
 io::path EnginePaths::getWorldsFolder() const {
     return io::path("user:") / WORLDS_FOLDER;
 }

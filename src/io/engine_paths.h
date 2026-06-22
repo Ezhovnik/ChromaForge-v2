@@ -37,6 +37,7 @@ public:
     io::path getCurrentWorldFolder();
 
     io::path getNewScreenshotFile(const std::string& ext);
+    io::path getNewPanoramaFolder();
     io::path getControlsFile() const;
     io::path getSettingsFile() const;
 

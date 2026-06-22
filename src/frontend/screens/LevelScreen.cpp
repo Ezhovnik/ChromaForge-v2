@@ -188,10 +188,10 @@ void LevelScreen::saveWorldPanorama() {
         auto image = postProcessing->toImage();
         image->flipY();
 
-        imageio::write(panorama_folder.u8string() + "/" + std::to_string(face.index) + ".png", image.get());
+        imageio::write(panorama_folder / std::to_string(face.index) / ".png", image.get());
     }
 
-    LOG_INFO("Panorama saved to {}", panorama_folder.u8string());
+    LOG_INFO("Panorama saved to {}", panorama_folder.string());
 }
 
 void LevelScreen::updateHotkeys() {
