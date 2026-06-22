@@ -21,6 +21,14 @@ enum class ItemIconType {
     Block
 };
 
+enum class ItemUsesDisplay {
+    None,
+    Number,
+    Relation,
+    VBar,
+    Default = VBar,
+};
+
 struct Item {
     std::string const name;
 
@@ -35,6 +43,7 @@ struct Item {
     ubyte emission[4] {0, 0, 0, 0};
 
     int16_t uses = -1;
+    ItemUsesDisplay usesDisplay = ItemUsesDisplay::Default;
 
     ItemIconType iconType = ItemIconType::Sprite;
     std::string icon = "blocks:notfound";
