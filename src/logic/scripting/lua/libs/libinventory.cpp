@@ -60,13 +60,17 @@ static int l_get(lua::State* L, ItemStack& item) {
 static int l_set(lua::State* L, ItemStack& item) {
     auto itemid = lua::tointeger(L, 3);
     auto count = lua::tointeger(L, 4);
-    item.set(ItemStack(itemid, count));
+    auto data = lua::tovalue(L, 5);
+    if (!data.isObject() && data != nullptr) {
+        throw std::runtime_error("Invalid data argument type (table expected)");
+    }
+    item.set(ItemStack(itemid, count, std::move(data)));
     return 0;
 }
 
 static int l_size(lua::State* L) {
     auto invid = lua::tointeger(L, 1);
-    auto& inv = get_inventory(invid);
+    const auto& inv = get_inventory(invid);
     return lua::pushinteger(L, inv.size());
 }
 
@@ -74,10 +78,15 @@ static int l_add(lua::State* L) {
     auto invid = lua::tointeger(L, 1);
     auto itemid = lua::tointeger(L, 2);
     auto count = lua::tointeger(L, 3);
+    auto data = lua::tovalue(L, 4);
+
     validate_itemid(itemid);
+    if (!data.isObject() && data != nullptr) {
+        throw std::runtime_error("Invalid data argument type (table expected)");
+    }
 
     auto& inv = get_inventory(invid);
-    ItemStack item(itemid, count);
+    ItemStack item(itemid, count, std::move(data));
     inv.move(item, *scripting::indices);
     return lua::pushinteger(L, item.getCount());
 }
@@ -182,7 +191,7 @@ static int l_find_by_item(lua::State* L) {
     return lua::pushinteger(L, index);
 }
 
-static int l_get_field(lua::State* L, ItemStack& stack) {
+static int l_get_data(lua::State* L, ItemStack& stack) {
     auto key = lua::require_string(L, 3);
     auto value = stack.getField(key);
     if (value == nullptr) {
@@ -191,7 +200,16 @@ static int l_get_field(lua::State* L, ItemStack& stack) {
     return lua::pushvalue(L, *value);
 }
 
-static int l_set_field(lua::State* L, ItemStack& stack) {
+static int l_get_all_data(lua::State* L, ItemStack& stack) {
+    return lua::pushvalue(L, stack.getFields());
+}
+
+static int l_has_data(lua::State* L, ItemStack& stack) {
+    auto key = lua::require_string(L, 3);
+    return lua::pushboolean(L, stack.getField(key) != nullptr);
+}
+
+static int l_set_data(lua::State* L, ItemStack& stack) {
     auto key = lua::require_string(L, 3);
     auto value = lua::tovalue(L, 4);
     auto& fields = stack.getFields();
@@ -210,8 +228,10 @@ const luaL_Reg inventorylib[] = {
     {"get_block", lua::wrap<l_get_block>},
     {"bind_block", lua::wrap<l_bind_block>},
     {"unbind_block", lua::wrap<l_unbind_block>},
-    {"get_field", wrap_slot<l_get_field>},
-    {"set_field", wrap_slot<l_set_field>},
+    {"get_data", wrap_slot<l_get_data>},
+    {"set_data", wrap_slot<l_set_data>},
+    {"get_all_data", wrap_slot<l_get_all_data>},
+    {"has_data", wrap_slot<l_has_data>},
     {"create", lua::wrap<l_create>},
     {"remove", lua::wrap<l_remove>},
     {"clone", lua::wrap<l_clone>},

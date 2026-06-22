@@ -6,9 +6,8 @@
 class Font;
 
 namespace gui {
-    class Label;
-
     class TextBox : public Container {
+        LabelCache rawTextCache;
     protected:
         glm::vec4 focusedColor {0.0f, 0.0f, 0.0f, 1.0f};
         glm::vec4 invalidColor {0.1f, 0.05f, 0.03f, 1.0f};
@@ -30,7 +29,7 @@ namespace gui {
         size_t caret = 0;
         size_t maxLocalCaret = 0;
         size_t textOffset = 0;
-        int textInitX;
+        int textInitX = 0;
         double caretLastMove = 0.0;
         Font* font = nullptr;
 
