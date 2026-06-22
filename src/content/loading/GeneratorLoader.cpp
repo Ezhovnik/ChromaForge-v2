@@ -247,7 +247,7 @@ void ContentLoader::loadGenerator(
     load_structures(def, structuresMap, structuresFile.parent(), paths);
 
     auto biomesFile = GENERATORS_DIR / (name + ".files") / BIOMES_FILE;
-    auto biomesMap = paths.readCombinedObject(biomesFile.string());
+    auto biomesMap = paths.readCombinedObject(biomesFile.string(), true);
     if (biomesMap.empty()) {
         LOG_ERROR("Generator {}: at least one biome required", util::quote(def.name));
         throw std::runtime_error(

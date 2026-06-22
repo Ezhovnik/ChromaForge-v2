@@ -68,6 +68,15 @@ static int l_set(lua::State* L, ItemStack& item) {
     return 0;
 }
 
+static int l_set_count(lua::State* L, ItemStack& item) {
+    auto count = lua::tointeger(L, 3);
+    if (item.getItemId() == ITEM_EMPTY) {
+        return 0;
+    }
+    item.setCount(count);
+    return 0;
+}
+
 static int l_size(lua::State* L) {
     auto invid = lua::tointeger(L, 1);
     const auto& inv = get_inventory(invid);
@@ -205,7 +214,10 @@ static int l_get_all_data(lua::State* L, ItemStack& stack) {
 }
 
 static int l_has_data(lua::State* L, ItemStack& stack) {
-    auto key = lua::require_string(L, 3);
+    auto key = lua::tostring(L, 3);
+    if (key == nullptr) {
+        return lua::pushboolean(L, stack.hasFields());
+    }
     return lua::pushboolean(L, stack.getField(key) != nullptr);
 }
 
@@ -220,6 +232,7 @@ static int l_set_data(lua::State* L, ItemStack& stack) {
 const luaL_Reg inventorylib[] = {
     {"get", wrap_slot<l_get>},
     {"set", wrap_slot<l_set>},
+    {"set_count", wrap_slot<l_set_count>},
     {"size", lua::wrap<l_size>},
     {"add", lua::wrap<l_add>},
     {"move", lua::wrap<l_move>},

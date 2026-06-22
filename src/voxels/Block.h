@@ -81,6 +81,7 @@ struct BlockRotProfile {
 	static const int MAX_COUNT = 8;
     std::string name;
 	CoordSystem variants[MAX_COUNT];
+    int variantsCount;
 
 	static const BlockRotProfile PIPE;
     static const BlockRotProfile PANE;
@@ -93,9 +94,10 @@ struct BlockRotProfile {
 
 struct BlockMaterial {
 	std::string name;
-	std::string stepsSound {""};
-	std::string placeSound {""};
-	std::string breakSound {""};
+	std::string stepsSound;
+    std::string placeSound;
+    std::string breakSound;
+    std::string hitSound;
 
     dv::value serialize() const;
 };

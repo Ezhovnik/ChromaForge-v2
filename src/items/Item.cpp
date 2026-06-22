@@ -16,4 +16,6 @@ void Item::cloneTo(Item& dst) {
     dst.placingBlock = placingBlock;
     dst.scriptName = scriptName;
     dst.modelName = modelName;
+    dst.uses = uses;
+    dst.usesDisplay = usesDisplay;
 }

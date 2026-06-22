@@ -254,16 +254,10 @@ void ContentLoader::loadBlock(
                 LOG_ERROR("Error occured while block {} parsed: no 'model-primitives' of 'model-name' found", name);
                 throw std::runtime_error("Error occured while block " + name + " no 'model-primitives' or 'model-name' found");
             }
-            for (uint i = 0; i < 6; ++i) {
-                std::string& texture = def.textureFaces[i];
-                if (texture == TEXTURE_NOTFOUND) {
-                    texture = "";
-                }
-            }
         }
         def.model = *model;
     } else if (!modelTypeName.empty()) {
-        LOG_WARN("Unknown block {} model {}", name, modelTypeName);
+        LOG_WARN("{}: unknown block model — {}", name, modelTypeName);
         def.model = BlockModel::None;
     }
 
@@ -272,7 +266,7 @@ void ContentLoader::loadBlock(
     if (auto mode = CullingMode_from(cullingModeName)) {
         def.culling = *mode;
     } else {
-        LOG_WARN("Unknown block {} culling mode {}", name, cullingModeName);
+        LOG_WARN("Block {}: unknown block culling mode — {}", name, cullingModeName);
     }
 
     root.at("material").get(def.material);
@@ -285,7 +279,7 @@ void ContentLoader::loadBlock(
     } else if (profile == BlockRotProfile::PANE_NAME) {
         def.rotations = BlockRotProfile::PANE;
     } else if (profile != BlockRotProfile::NONE_NAME) {
-        LOG_WARN("Unknown block {} rotation profile {}", name, profile);
+        LOG_WARN("Block {}: unknown block rotation profile — {}", name, profile);
         def.rotatable = false;
     }
 
@@ -409,7 +403,7 @@ void ContentLoader::loadItem(
     } else if (iconTypeStr == "sprite") {
         def.iconType = ItemIconType::Sprite;
     } else if (iconTypeStr.length()){
-        LOG_WARN("Unknown icon type: {}", iconTypeStr);
+        LOG_WARN("Item {}: unknown icon type — {}", name, iconTypeStr);
     }
     root.at("icon").get(def.icon);
     root.at("placing-block").get(def.placingBlock);
@@ -417,6 +411,20 @@ void ContentLoader::loadItem(
     root.at("model-name").get(def.modelName);
     root.at("stack-size").get(def.stackSize);
     root.at("uses").get(def.uses);
+
+    std::string usesDisplayStr = "";
+    root.at("uses-display").get(usesDisplayStr);
+    if (usesDisplayStr == "none") {
+        def.usesDisplay = ItemUsesDisplay::None;
+    } else if (usesDisplayStr == "number") {
+        def.usesDisplay = ItemUsesDisplay::Number;
+    } else if (usesDisplayStr == "relation") {
+        def.usesDisplay = ItemUsesDisplay::Relation;
+    } else if (usesDisplayStr == "vbar") {
+        def.usesDisplay = ItemUsesDisplay::VBar;
+    } else if (usesDisplayStr.length()) {
+        LOG_WARN("Item {}: unknown uses display mode — {}", name, usesDisplayStr);
+    }
 
     if (auto found = root.at("emission")) {
         const auto& emissionarr = *found;
@@ -547,6 +555,10 @@ void ContentLoader::loadBlockMaterial(
     root.at("steps-sound").get(def.stepsSound);
     root.at("place-sound").get(def.placeSound);
     root.at("break-sound").get(def.breakSound);
+    root.at("hit-sound").get(def.hitSound);
+    if (def.hitSound.empty()) {
+        def.hitSound = def.stepsSound;
+    }
 }
 
 static std::tuple<std::string, std::string, std::string> create_unit_id(

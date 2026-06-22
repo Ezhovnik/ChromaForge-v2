@@ -44,4 +44,8 @@ public:
     const dv::value& getFields() const {
         return fields;
     }
+
+    bool hasFields() const {
+        return fields != nullptr;
+    }
 };

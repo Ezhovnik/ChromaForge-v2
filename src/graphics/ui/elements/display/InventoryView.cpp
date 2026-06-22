@@ -203,6 +203,15 @@ void SlotView::draw(const DrawContext& pctx, const Assets& assets) {
     }
 }
 
+static void draw_shaded_text(
+    Batch2D& batch, const Font& font, const std::wstring& text, int x, int y
+) {
+    batch.setColor({0, 0, 0, 1.0f});
+    font.draw(batch, text, x + 1, y + 1, nullptr, 0);
+    batch.resetColor();
+    font.draw(batch, text, x, y, nullptr, 0);
+}
+
 void SlotView::drawItemInfo(
     Batch2D& batch,
     const ItemStack& stack,
@@ -215,28 +224,39 @@ void SlotView::drawItemInfo(
         const auto& countStr = cache.countStr;
         int x = pos.x + SLOT_SIZE - countStr.length() * 8;
         int y = pos.y + SLOT_SIZE - 16;
-
-        batch.setColor({0, 0, 0, 1.0f});
-        font.draw(batch, countStr, x + 1, y + 1, nullptr, 0);
-        batch.resetColor();
-        font.draw(batch, countStr, x, y, nullptr, 0);
+        draw_shaded_text(batch, font, countStr, x, y);
     }
-    if (auto ptr = stack.getField("uses")) {
-        if (!ptr->isInteger()) return;
 
-        {
-            std::wstring text = std::to_wstring(ptr->asInteger());
-            batch.setColor({0, 0, 0, 1.0f});
-            font.draw(batch, text, pos.x - 2, pos.y - 2, nullptr, 0);
-            batch.resetColor();
-            font.draw(batch, text, pos.x - 3, pos.y - 3, nullptr, 0);
-        }
-        {
-            std::wstring text = std::to_wstring(item.uses);
-            batch.setColor({0, 0, 0, 1.0f});
-            font.draw(batch, text, pos.x - 2, pos.y - 2 + 12, nullptr, 0);
-            batch.resetColor();
-            font.draw(batch, text, pos.x - 3, pos.y - 3 + 12, nullptr, 0);
+    auto usesPtr = stack.getField("uses");
+    if (usesPtr == nullptr || !usesPtr->isInteger()) {
+        return;
+    }
+
+    int16_t uses = usesPtr->asInteger();
+    if (uses < 0) return;
+    switch (item.usesDisplay) {
+        case ItemUsesDisplay::None:
+            break;
+        case ItemUsesDisplay::Relation:
+            draw_shaded_text(
+                batch, font, std::to_wstring(item.uses), pos.x - 3, pos.y + 9
+            );
+            [[fallthrough]];
+        case ItemUsesDisplay::Number:
+            draw_shaded_text(
+                batch, font, std::to_wstring(uses), pos.x - 3, pos.y - 3
+            );
+            break;
+        case ItemUsesDisplay::VBar: {
+            batch.untexture();
+            batch.setColor({0, 0, 0, 0.75f});
+            batch.rect(pos.x - 2, pos.y - 2, 6, SLOT_SIZE + 4);
+            float t = static_cast<float>(uses) / item.uses;
+            
+            int height = SLOT_SIZE * t;
+            batch.setColor({(1.0f - t * 0.8f), 0.4f, t * 0.8f + 0.2f, 1.0f});
+            batch.rect(pos.x, pos.y + SLOT_SIZE - height, 2, height);
+            break;
         }
     }
 }
@@ -294,19 +314,24 @@ void SlotView::performRightClick(ItemStack& stack, ItemStack& grabbed) {
     if (layout.itemSource) return;
     if (grabbed.isEmpty()) {
         if (!stack.isEmpty() && layout.taking) {
-            grabbed.set(stack);
+            grabbed.set(std::move(stack));
             int halfremain = stack.getCount() / 2;
             grabbed.setCount(stack.getCount() - halfremain);
-            stack.setCount(halfremain);
+            stack = ItemStack(stack.getItemId(), halfremain);
         }
         return;
     }
     auto& stackDef = content->getIndices()->items.require(stack.getItemId());
     if (!layout.placing) return;
     if (stack.isEmpty()) {
-        stack.set(grabbed);
+        itemcount_t count = grabbed.getCount();
+        stack.set(std::move(grabbed));
         stack.setCount(1);
-        grabbed.setCount(grabbed.getCount() - 1);
+        if (count == 1) {
+            grabbed = {};
+        } else {
+            grabbed = ItemStack(stack.getItemId(), count - 1);
+        }
     } else if (stack.accepts(grabbed) && stack.getCount() < stackDef.stackSize) {
         stack.setCount(stack.getCount() + 1);
         grabbed.setCount(grabbed.getCount() - 1);
