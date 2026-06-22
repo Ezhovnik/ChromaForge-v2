@@ -93,9 +93,10 @@ struct BlockRotProfile {
 
 struct BlockMaterial {
 	std::string name;
-	std::string stepsSound {""};
-	std::string placeSound {""};
-	std::string breakSound {""};
+	std::string stepsSound;
+    std::string placeSound;
+    std::string breakSound;
+    std::string hitSound;
 
     dv::value serialize() const;
 };

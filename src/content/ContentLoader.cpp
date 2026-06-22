@@ -561,6 +561,10 @@ void ContentLoader::loadBlockMaterial(
     root.at("steps-sound").get(def.stepsSound);
     root.at("place-sound").get(def.placeSound);
     root.at("break-sound").get(def.breakSound);
+    root.at("hit-sound").get(def.hitSound);
+    if (def.hitSound.empty()) {
+        def.hitSound = def.stepsSound;
+    }
 }
 
 static std::tuple<std::string, std::string, std::string> create_unit_id(

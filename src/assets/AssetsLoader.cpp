@@ -224,6 +224,7 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
             loader.tryAddSound(material.stepsSound);
             loader.tryAddSound(material.placeSound);
             loader.tryAddSound(material.breakSound);
+            loader.tryAddSound(material.hitSound);
         }
 
 		// Макеты из каждого установленного пака
