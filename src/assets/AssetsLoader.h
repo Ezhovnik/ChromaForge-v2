@@ -4,7 +4,6 @@
 #include <functional>
 #include <map>
 #include <queue>
-#include <filesystem>
 #include <utility>
 #include <set>
 
@@ -13,6 +12,7 @@
 #include <delegates.h>
 #include <typedefs.h>
 #include <data/dv.h>
+#include <io/fwd.h>
 
 class ResPaths;
 class Content;
@@ -83,7 +83,7 @@ private:
 
      void processPreload(AssetType tag, const std::string& name, const dv::value& map);
 	void processPreloadList(AssetType tag, const dv::value& list);
-	void processPreloadConfig(const std::filesystem::path& file);
+	void processPreloadConfig(const io::path& file);
 	void processPreloadConfigs(const Content* content);
 public:
 	/**
@@ -149,6 +149,6 @@ public:
      static bool loadExternalTexture(
           Assets* assets,
           const std::string& name,
-          const std::vector<std::filesystem::path>& alternatives
+          const std::vector<io::path>& alternatives
      );
 };

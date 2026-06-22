@@ -1,10 +1,7 @@
-#include <logic/scripting/lua/libs/api_lua.h>
+#include <logic/scripting/lua/libs/libhud.h>
 
-#include <logic/scripting/scripting_hud.h>
 #include <graphics/render/Emitter.h>
-#include <graphics/render/WorldRenderer.h>
 #include <assets/assets_util.h>
-#include <engine/Engine.h>
 #include <graphics/render/ParticlesRenderer.h>
 
 static int l_emit(lua::State* L) {
@@ -79,10 +76,10 @@ static int l_is_alive(lua::State* L) {
 }
 
 const luaL_Reg particleslib[] = {
-    {"emit", lua::wrap<l_emit>},
-    {"stop", lua::wrap<l_stop>},
-    {"is_alive", lua::wrap<l_is_alive>},
-    {"get_origin", lua::wrap<l_get_origin>},
-    {"set_origin", lua::wrap<l_set_origin>},
+    {"emit", lua::wrap_hud<l_emit>},
+    {"stop", lua::wrap_hud<l_stop>},
+    {"is_alive", lua::wrap_hud<l_is_alive>},
+    {"get_origin", lua::wrap_hud<l_get_origin>},
+    {"set_origin", lua::wrap_hud<l_set_origin>},
     {NULL, NULL}
 };

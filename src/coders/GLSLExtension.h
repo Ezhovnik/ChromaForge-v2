@@ -2,8 +2,9 @@
 
 #include <string>
 #include <unordered_map>
-#include <filesystem>
 #include <vector>
+
+#include <io/io.h>
 
 class ResPaths;
 
@@ -36,5 +37,9 @@ public:
     bool hasHeader(const std::string& name) const; // Проверяем наличие заголовка
 
     // Основная функций обработки
-    std::string process(const std::filesystem::path& file, const std::string& source, bool header=false);
+    std::string process(
+        const io::path& file,
+        const std::string& source,
+        bool header=false
+    );
 };

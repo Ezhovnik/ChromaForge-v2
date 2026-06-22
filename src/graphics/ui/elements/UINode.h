@@ -77,6 +77,7 @@ namespace gui {
         glm::vec2 pos {0.0f};
         glm::vec2 size;
         glm::vec2 minSize {1.0f};
+        glm::vec2 maxSize {1e6f};
         glm::vec4 color {1.0f};
         glm::vec4 hoverColor {1.0f};
         glm::vec4 pressedColor {1.0f};
@@ -186,6 +187,8 @@ namespace gui {
         virtual void setSize(glm::vec2 size);
         virtual glm::vec2 getMinSize() const;
         virtual void setMinSize(glm::vec2 size);
+        virtual glm::vec2 getMaxSize() const;
+        virtual void setMaxSize(glm::vec2 size);
 
         virtual vec2supplier getPositionFunc() const;
         virtual void setPositionFunc(vec2supplier);

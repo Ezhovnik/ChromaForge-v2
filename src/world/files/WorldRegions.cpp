@@ -1,4 +1,4 @@
-#include <files/WorldRegions.h>
+#include <world/files/WorldRegions.h>
 
 #include <cstring>
 #include <utility>
@@ -48,24 +48,24 @@ glm::u32vec2 WorldRegion::getChunkDataSize(uint x, uint z) {
     return sizes[z * RegionConsts::SIZE + x];
 }
 
-WorldRegions::WorldRegions(const std::filesystem::path& directory) : directory(directory) {
+WorldRegions::WorldRegions(const io::path& directory) : directory(directory) {
     for (size_t i = 0; i < REGION_LAYERS_COUNT; ++i) {
         layers[i].layer = static_cast<RegionLayerIndex>(i);
     }
     auto& voxels = layers[REGION_LAYER_VOXELS];
-    voxels.folder = directory/std::filesystem::path("regions");
+    voxels.folder = directory / "regions";
     voxels.compression = compression::Method::Extrle16;
 
     auto& lights = layers[REGION_LAYER_LIGHTS];
-    lights.folder = directory/std::filesystem::path("lights");
+    lights.folder = directory / "lights";
     lights.compression = compression::Method::Extrle8;
 
-    layers[REGION_LAYER_INVENTORIES].folder = directory/std::filesystem::path("inventories");
+    layers[REGION_LAYER_INVENTORIES].folder = directory / "inventories";
 
-    layers[REGION_LAYER_ENTITIES].folder = directory/std::filesystem::path("entities");
+    layers[REGION_LAYER_ENTITIES].folder = directory / "entities";
 
     auto& blocksData = layers[REGION_LAYER_BLOCKS_DATA];
-    blocksData.folder = directory/std::filesystem::path("blocksdata");
+    blocksData.folder = directory / "blocksdata";
 }
 
 WorldRegions::~WorldRegions() = default;
@@ -363,17 +363,17 @@ void WorldRegions::processRegion(
     }
 }
 
-const std::filesystem::path& WorldRegions::getRegionsFolder(RegionLayerIndex layerID) const {
+const io::path& WorldRegions::getRegionsFolder(RegionLayerIndex layerID) const {
     return layers[layerID].folder;
 }
 
-std::filesystem::path WorldRegions::getRegionFilePath(RegionLayerIndex layerID, int x, int z) const {
+io::path WorldRegions::getRegionFilePath(RegionLayerIndex layerID, int x, int z) const {
     return layers[layerID].getRegionFilePath(x, z);
 }
 
 void WorldRegions::writeAll() {
     for (auto& layer : layers) {
-        std::filesystem::create_directories(layer.folder);
+        io::create_directories(layer.folder);
         layer.writeAll();
     }
 }
@@ -385,9 +385,9 @@ void WorldRegions::deleteRegion(RegionLayerIndex layerid, int x, int z) {
         throw std::runtime_error("Region file is currently in use");
     }
     auto file = layer.getRegionFilePath(x, z);
-    if (std::filesystem::exists(file)) {
-        LOG_INFO("Remove region file {}", file.u8string());
-        std::filesystem::remove(file);
+    if (io::exists(file)) {
+        LOG_INFO("Remove region file {}", file.string());
+        io::remove(file);
     }
 }
 

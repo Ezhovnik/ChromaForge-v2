@@ -8,6 +8,7 @@
 #include <audio/audio.h>
 #include <typedefs.h>
 #include <debug/Logger.h>
+#include <io/io.h>
 
 using namespace audio;
 
@@ -28,10 +29,12 @@ static inline std::string vorbis_error_message(int code) {
     }
 }
 
-std::unique_ptr<audio::PCM> ogg::load_pcm(const std::filesystem::path& file, bool headerOnly) {
+std::unique_ptr<audio::PCM> ogg::load_pcm(
+    const io::path& file, bool headerOnly
+) {
     OggVorbis_File vf;
     int code;
-    if ((code = ov_fopen(file.u8string().c_str(), &vf))) {
+    if ((code = ov_fopen(io::resolve(file).u8string().c_str(), &vf))) {
         LOG_ERROR("Vorbis error: {}", vorbis_error_message(code));
         throw std::runtime_error("Vorbis error: " + vorbis_error_message(code));
     }
@@ -142,10 +145,12 @@ public:
     }
 };
 
-std::unique_ptr<PCMStream> ogg::create_stream(const std::filesystem::path& file) {
+std::unique_ptr<PCMStream> ogg::create_stream(
+    const io::path& file
+) {
     OggVorbis_File vf;
     int code;
-    if ((code = ov_fopen(file.u8string().c_str(), &vf))) {
+    if ((code = ov_fopen(io::resolve(file).u8string().c_str(), &vf))) {
         LOG_ERROR("Vorbis error: {}", vorbis_error_message(code));
         throw std::runtime_error("Vorbis error: " + vorbis_error_message(code));
     }

@@ -3,11 +3,10 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
-#include <filesystem>
 
 #include <typedefs.h>
 #include <delegates.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <content/ContentPack.h>
 #include <assets/Assets.h>
 #include <content/content_fwd.h>
@@ -15,7 +14,7 @@
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
 #include <settings.h>
-#include <files/settings_io.h>
+#include <io/settings_io.h>
 #include <engine/EngineTime.h>
 #include <engine/PostRunnables.h>
 
@@ -47,19 +46,21 @@ struct CoreParameters {
     bool headless = false;
     bool testMode = false;
 
-    std::filesystem::path resFolder {"res"};
-    std::filesystem::path userFolder {"."};
+    std::filesystem::path resFolder = "res";
+    std::filesystem::path userFolder = ".";
     std::filesystem::path scriptFile;
 };
+
+using OnWorldOpen = std::function<void(std::unique_ptr<Level>, int64_t)>;
 
 // Основной класс Engine, управляющий жизненным циклом приложения
 class Engine : public util::ObjectsKeeper {
 private:
     CoreParameters params;
     EngineSettings settings;
-    SettingsHandler settingsHandler;
     EnginePaths paths;
 
+    std::unique_ptr<SettingsHandler> settingsHandler;
     std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen;
     std::unique_ptr<EngineController> controller;
@@ -80,7 +81,7 @@ private:
 
     EngineTime time;
 
-    consumer<std::unique_ptr<Level>> levelConsumer;
+    OnWorldOpen levelConsumer;
 
     bool quitSignal = false;
 
@@ -91,8 +92,12 @@ private:
     void loadSettings();
     void saveSettings();
 public:
-    Engine(CoreParameters coreParameters); // Конструктор
+    Engine(); // Конструктор
     ~Engine(); // Деструктор
+
+    static Engine& getInstance();
+    void initialize(CoreParameters coreParameters);
+    static void terminate();
 
     void run();
 
@@ -127,15 +132,15 @@ public:
         postRunnables.postRunnable(callback);
     }
 
-    PacksManager createPacksManager(const std::filesystem::path& worldFolder);
+    PacksManager createPacksManager(const io::path& worldFolder);
 
     void saveScreenshot();
 
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLanguage(std::string locale);
-    void setLevelConsumer(consumer<std::unique_ptr<Level>> levelConsumer);
+    void setLevelConsumer(OnWorldOpen levelConsumer);
 
-    void onWorldOpen(std::unique_ptr<Level> level);
+    void onWorldOpen(std::unique_ptr<Level> level, int64_t localPlayer);
     void onWorldClosed();
 
     void quit();
@@ -143,6 +148,6 @@ public:
 
     void loadContent();
     void resetContent();
-    void loadWorldContent(const std::filesystem::path& folder);
+    void loadWorldContent(const io::path& folder);
     void loadAllPacks();
 };

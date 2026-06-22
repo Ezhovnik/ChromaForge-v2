@@ -26,12 +26,14 @@ void ServerMainloop::run() {
         return;
     }
 
-    engine.setLevelConsumer([this](auto level) {
+    engine.setLevelConsumer([this](auto level, auto) {
         setLevel(std::move(level));
     });
 
     LOG_INFO("Starting task {}", coreParams.scriptFile.u8string());
-    auto process = scripting::start_coroutine(coreParams.scriptFile);
+    auto process = scripting::start_coroutine(
+        "script:" + coreParams.scriptFile.filename().u8string()
+    );
 
     double targetDelta = 1.0 / static_cast<double>(SPS);
     double delta = targetDelta;
@@ -60,7 +62,8 @@ void ServerMainloop::run() {
 
         if (!coreParams.testMode) {
             auto end = std::chrono::system_clock::now();
-            platform::sleep(targetDelta * 1000 - std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000);
+            int64_t millis = targetDelta * 1000 - std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() / 1000;
+            if (millis > 0) platform::sleep(millis);
             begin = std::chrono::system_clock::now();
         }
     }
@@ -70,7 +73,7 @@ void ServerMainloop::run() {
 void ServerMainloop::setLevel(std::unique_ptr<Level> level) {
     if (level == nullptr) {
         controller->onWorldQuit();
-        engine.getPaths().setCurrentWorldFolder(std::filesystem::path());
+        engine.getPaths().setCurrentWorldFolder("");
         controller = nullptr;
     } else {
         controller = std::make_unique<LevelController>(

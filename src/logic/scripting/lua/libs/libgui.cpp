@@ -17,6 +17,7 @@
 #include <graphics/ui/elements/display/Image.h>
 #include <graphics/ui/markdown.h>
 #include <graphics/core/Font.h>
+#include <graphics/ui/elements/layout/Canvas.h>
 
 static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
@@ -70,6 +71,12 @@ static int l_container_add(lua::State* L) {
     } catch (const std::exception& err) {
         throw std::runtime_error(err.what());
     }
+    return 0;
+}
+
+static int l_node_reposition(lua::State* L) {
+    auto docnode = get_document_node(L);
+    docnode.node->reposition();
     return 0;
 }
 
@@ -255,11 +262,22 @@ static int p_get_line_numbers(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_data(gui::UINode* node, lua::State* L) {
+    if (auto canvas = dynamic_cast<gui::Canvas*>(node)) {
+        return lua::newuserdata<lua::LuaCanvas>(L, canvas->texture());
+    }
+    return 0;
+}
+
 static int p_get_add(gui::UINode* node, lua::State* L) {
     if (dynamic_cast<gui::Container*>(node)) {
         return lua::pushcfunction(L, lua::wrap<l_container_add>);
     }
     return 0;
+}
+
+static int p_get_reposition(gui::UINode*, lua::State* L) {
+    return lua::pushcfunction(L, lua::wrap<l_node_reposition>);
 }
 
 static int p_get_clear(gui::UINode* node, lua::State* L) {
@@ -452,7 +470,9 @@ static int l_gui_getattr(lua::State* L) {
         {"setInterval", p_set_interval},
         {"destruct", p_get_destruct},
         {"contentOffset", p_get_content_offset},
-        {"cursor", p_get_cursor}
+        {"cursor", p_get_cursor},
+        {"reposition", p_get_reposition},
+        {"data", p_get_data}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) {
@@ -809,15 +829,15 @@ static int l_gui_alert(lua::State* L) {
 }
 
 static int l_gui_load_document(lua::State* L) {
-    auto filename = lua::require_string(L, 1);
+    io::path filename = lua::require_string(L, 1);
     auto alias = lua::require_string(L, 2);
     auto args = lua::tovalue(L, 3);
 
     auto documentPtr = UIDocument::read(
         scripting::get_root_environment(),
         alias,
-        scripting::engine->getPaths().resolve(filename),
-        filename  
+        filename,
+        filename.string() 
     );
     auto document = documentPtr.get();
     scripting::engine->getAssets()->store(std::move(documentPtr), alias);

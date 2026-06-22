@@ -55,6 +55,7 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
     font = assets.get<Font>(label->getFontName());
 
     if (!isFocused()) return;
+    const auto& labelText = getText();
 
     glm::vec2 pos = calcPos();
     glm::vec2 size = getSize();
@@ -69,8 +70,8 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
     batch->untexture();
     batch->setColor(glm::vec4(1.0f));
     if (editable && int((Window::time() - caretLastMove) * 2) % 2 == 0) {
-        uint line = label->getLineByTextIndex(caret);
-        uint lcaret = caret - label->getTextLineOffset(line);
+        uint line = rawTextCache.getLineByTextIndex(caret);
+        uint lcaret = caret - rawTextCache.getTextLineOffset(line);
 
         int width = font->calcWidth(input, lcaret);
         batch->rect(
@@ -89,11 +90,11 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
 
         batch->setColor(glm::vec4(0.8f, 0.9f, 1.0f, 0.25f));
         int start = font->calcWidth(
-            input,
+            labelText,
             selectionStart - label->getTextLineOffset(startLine)
         );
         int end = font->calcWidth(
-            input,
+            labelText,
             selectionEnd - label->getTextLineOffset(endLine)
         );
         int lineY = label->getLineYOffset(startLine);
@@ -196,11 +197,14 @@ void TextBox::drawBackground(const DrawContext& pctx, const Assets&) {
 }
 
 void TextBox::refreshLabel() {
+    rawTextCache.prepare(font, static_cast<size_t>(getSize().x));
+    rawTextCache.update(input, multiline, false);
+
     label->setColor(textColor * glm::vec4(input.empty() ? 0.5f : 1.0f));
 
     const auto& displayText = input.empty() && !hint.empty() ? hint : getText();
     if (markup == "md") {
-        auto [processedText, styles] = markdown::process(displayText, !focused);
+        auto [processedText, styles] = markdown::process(displayText, !focused || !editable);
         label->setText(std::move(processedText));
         label->setStyles(std::move(styles));
     } else {
@@ -282,8 +286,9 @@ void TextBox::erase(size_t start, size_t length) {
 bool TextBox::eraseSelected() {
     if (selectionStart == selectionEnd) return false;
 
-    erase(selectionStart, selectionEnd-selectionStart);
+    erase(selectionStart, selectionEnd - selectionStart);
     resetSelection();
+    onInput();
     return true;
 }
 
@@ -302,7 +307,9 @@ void TextBox::extendSelection(int index) {
 size_t TextBox::getLineLength(uint line) const {
     size_t position = label->getTextLineOffset(line);
     size_t lineLength = label->getTextLineOffset(line + 1) - position;
-    if (lineLength == 0) lineLength = input.length() - position + 1;
+    if (lineLength == 0) {
+        lineLength = label->getText().length() - position + 1;
+    }
     return lineLength;
 }
 
@@ -311,8 +318,8 @@ size_t TextBox::getSelectionLength() const {
 }
 
 void TextBox::setTextOffset(uint x) {
-    label->setPos(glm::vec2(textInitX - int(x), label->getPos().y));
     textOffset = x;
+    refresh();
 }
 
 void TextBox::typed(unsigned int codepoint) {
@@ -381,7 +388,8 @@ void TextBox::refresh() {
         size - glm::vec2(padding.z + padding.x, padding.w + padding.y)
     );
     label->setPos(glm::vec2(
-        padding.x + LINE_NUMBERS_PANE_WIDTH * showLineNumbers, padding.y
+        padding.x + LINE_NUMBERS_PANE_WIDTH * showLineNumbers + textInitX - static_cast<int>(textOffset),
+        padding.y
     ));
 }
 
@@ -391,16 +399,16 @@ size_t TextBox::normalizeIndex(int index) {
 
 int TextBox::calcIndexAt(int x, int y) const {
     if (font == nullptr) return 0;
-
+    const auto& labelText = label->getText();
     glm::vec2 lcoord = label->calcPos();
     uint line = label->getLineByYOffset(y - lcoord.y);
     line = std::min(line, label->getLinesNumber() - 1);
     size_t lineLength = getLineLength(line);
     uint offset = 0;
-    while (lcoord.x + font->calcWidth(input, offset) < x && offset < lineLength - 1) {
+    while (lcoord.x + font->calcWidth(labelText, offset) < x && offset < lineLength - 1) {
         offset++;
     }
-    return std::min(offset+label->getTextLineOffset(line), input.length());
+    return std::min(offset+label->getTextLineOffset(line), labelText .length());
 }
 
 static inline std::wstring get_alphabet(wchar_t c) {
@@ -414,19 +422,20 @@ static inline std::wstring get_alphabet(wchar_t c) {
 }
 
 void TextBox::tokenSelectAt(int index) {
-    if (input.empty()) return;
+    const auto& actualText = label->getText();
+    if (actualText.empty()) return;
     int left = index;
     int right = index;
 
-    std::wstring alphabet = get_alphabet(input.at(index));
+    std::wstring alphabet = get_alphabet(actualText.at(index));
     while (left >= 0) {
-        if (alphabet.find(input.at(left)) == std::wstring::npos) {
+        if (alphabet.find(actualText.at(left)) == std::wstring::npos) {
             break;
         }
         --left;
     }
-    while (static_cast<size_t>(right) < input.length()) {
-        if (alphabet.find(input.at(right)) == std::wstring::npos) {
+    while (static_cast<size_t>(right) < actualText.length()) {
+        if (alphabet.find(actualText.at(right)) == std::wstring::npos) {
             break;
         }
         ++right;
@@ -720,7 +729,8 @@ void TextBox::setHint(const std::wstring& text) {
 }
 
 std::wstring TextBox::getSelection() const {
-    return input.substr(selectionStart, selectionEnd-selectionStart);
+    const auto& text = label->getText();
+    return text.substr(selectionStart, selectionEnd - selectionStart);
 }
 
 size_t TextBox::getCaret() const {
@@ -753,12 +763,18 @@ void TextBox::setCaret(ptrdiff_t position) {
 }
 
 void TextBox::setCaret(size_t position) {
+    const auto& labelText = label->getText();
+    caret = std::min(static_cast<size_t>(position), input.length());
     this->caret = std::min(static_cast<size_t>(position), input.length());
     if (font == nullptr) return;
+    int width = label->getSize().x;
+
+    rawTextCache.prepare(font, width);
+    rawTextCache.update(input, multiline, label->isTextWrapping());
+
     caretLastMove = Window::time();
 
-    int width = label->getSize().x;
-    uint line = label->getLineByTextIndex(caret);
+    uint line = rawTextCache.getLineByTextIndex(caret);
     int offset = label->getLineYOffset(line) + getContentOffset().y;
     uint lineHeight = font->getLineHeight() * label->getLineInterval();
     if (scrollStep == 0) scrollStep = lineHeight;
@@ -769,8 +785,8 @@ void TextBox::setCaret(size_t position) {
         scrolled(-glm::ceil(offset / static_cast<double>(scrollStep) + 0.5f));
     }
 
-    uint lcaret = caret - label->getTextLineOffset(line);
-    int realoffset = font->calcWidth(input, lcaret) - int(textOffset) + 2;
+    int lcaret = caret - rawTextCache.getTextLineOffset(line);
+    int realoffset = font->calcWidth(labelText, lcaret) - static_cast<int>(textOffset) + 2;
     if (realoffset-width > 0) {
         setTextOffset(textOffset + realoffset - width);
     } else if (realoffset < 0) {

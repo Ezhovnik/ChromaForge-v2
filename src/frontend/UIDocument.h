@@ -2,10 +2,10 @@
 
 #include <string>
 #include <memory>
-#include <filesystem>
 #include <unordered_map>
 
 #include <typedefs.h>
+#include <io/fwd.h>
 
 namespace gui {
     class UINode;
@@ -48,10 +48,10 @@ public:
     static std::unique_ptr<UIDocument> read(
         const scriptenv& parent_env,
         const std::string& name,
-        const std::filesystem::path& file,
+        const io::path& file,
         const std::string& fileName
     );
     static std::shared_ptr<gui::UINode> readElement(
-        const std::filesystem::path& file, const std::string& fileName
+        const io::path& file, const std::string& fileName
     );
 };

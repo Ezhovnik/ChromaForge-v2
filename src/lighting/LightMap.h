@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <cstring>
 
 #include <typedefs.h>
 #include <constants.h>
@@ -14,6 +15,10 @@ public:
 
     void set(const Lightmap* lightmap);
 	void set(const light_t* map);
+
+	void clear() {
+        std::memset(map, 0, sizeof(map));
+    }
 
     inline ushort get(int x, int y, int z) const {
 		return (map[(y * CHUNK_DEPTH + z) * CHUNK_WIDTH + x]);

@@ -1,13 +1,12 @@
 #include <coders/imageio.h>
 
-#include <filesystem>
 #include <functional>
 #include <unordered_map>
 
 #include <coders/png.h>
 #include <graphics/core/ImageData.h>
 #include <debug/Logger.h>
-#include <files/files.h>
+#include <io/io.h>
 
 using image_reader = std::function<std::unique_ptr<ImageData>(const ubyte*, size_t, bool)>;
 using image_writer = std::function<void(const std::string&, const ImageData*)>;
@@ -28,29 +27,25 @@ bool imageio::is_write_supported(const std::string& extension) {
     return writers.find(extension) != writers.end();
 }
 
-inline std::string extensionOf(const std::string& filename) {
-    return std::filesystem::u8path(filename).extension().u8string();
-}
-
-std::unique_ptr<ImageData> imageio::read(const std::filesystem::path& filename, bool flipVertically) {
-    auto found = readers.find(extensionOf(filename.u8string()));
+std::unique_ptr<ImageData> imageio::read(const io::path& file, bool flipVertically) {
+    auto found = readers.find(file.extension());
     if (found == readers.end()) {
-        LOG_ERROR("File format is not supported (read): '{}'", filename.u8string());
-        throw std::runtime_error("File format is not supported (read): '" + filename.u8string() + "'");
+        LOG_ERROR("File format is not supported (read): '{}'", file.string());
+        throw std::runtime_error("File format is not supported (read): '" + file.string() + "'");
     }
-    auto bytes = files::read_bytes_buffer(filename);
+    auto bytes = io::read_bytes_buffer(file);
     try {
         return std::unique_ptr<ImageData>(found->second(bytes.data(), bytes.size(), flipVertically));
     } catch (const std::runtime_error& err) {
-        throw std::runtime_error("Could not to load image '" + filename.u8string() + "'");
+        throw std::runtime_error("Could not to load image '" + file.string() + "'");
     }
 }
 
-void imageio::write(const std::string& filename, const ImageData* image) {
-    auto found = writers.find(extensionOf(filename));
+void imageio::write(const io::path& file, const ImageData* image) {
+    auto found = writers.find(file.extension());
     if (found == writers.end()) {
-        LOG_ERROR("File format is not supported (write): '{}'", filename);
-        throw std::runtime_error("file format is not supported (write): '" + filename + "'");
+        LOG_ERROR("File format is not supported (write): '{}'", file.string());
+        throw std::runtime_error("file format is not supported (write): '" + file.string() + "'");
     }
-    return found->second(filename, image);
+    return found->second(io::resolve(file).u8string(), image);
 }

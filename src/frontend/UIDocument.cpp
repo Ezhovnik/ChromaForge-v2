@@ -5,7 +5,7 @@
 #include <graphics/ui/elements/UINode.h>
 #include <graphics/ui/elements/display/InventoryView.h>
 #include <logic/scripting/scripting.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <graphics/ui/gui_xml.h>
 
 UIDocument::UIDocument(
@@ -58,29 +58,29 @@ std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const {
 std::unique_ptr<UIDocument> UIDocument::read(
     const scriptenv& parent_env,
     const std::string& name,
-    const std::filesystem::path& file,
+    const io::path& file,
     const std::string& fileName
 ) {
-    const std::string text = files::read_string(file);
-    auto xmldoc = xml::parse(file.u8string(), text);
+    const std::string text = io::read_string(file);
+    auto xmldoc = xml::parse(file.string(), text);
 
     auto env = parent_env == nullptr 
         ? scripting::create_doc_environment(scripting::get_root_environment(), name)
         : scripting::create_doc_environment(parent_env, name);
     gui::UIXmlReader reader(env);
-    auto view = reader.readXML(file.u8string(), *xmldoc->getRoot());
+    auto view = reader.readXML(file.string(), *xmldoc->getRoot());
     view->setId("root");
     uidocscript script {};
-    auto scriptFile = std::filesystem::path(file.u8string() + ".lua");
-    if (std::filesystem::is_regular_file(scriptFile)) {
+    auto scriptFile = io::path(file.string() + ".lua");
+    if (io::is_regular_file(scriptFile)) {
         scripting::load_layout_script(env, name, scriptFile, fileName + ".lua", script);
     }
     return std::make_unique<UIDocument>(name, script, view, env);
 }
 
 std::shared_ptr<gui::UINode> UIDocument::readElement(
-    const std::filesystem::path& file, const std::string& fileName
+    const io::path& file, const std::string& fileName
 ) {
-    auto document = read(nullptr, file.filename().u8string(), file, fileName);
+    auto document = read(nullptr, file.name(), file, fileName);
     return document->getRoot();
 }

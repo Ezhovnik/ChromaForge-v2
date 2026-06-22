@@ -37,7 +37,10 @@ local function complete_app_lib(app)
     app.spark = coroutine.yield
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
-    app.load_content = builtin.load_content
+    app.load_content = function()
+        builtin.load_content()
+        app.spark()
+    end
     app.reset_content = builtin.reset_content
     app.is_content_loaded = builtin.is_content_loaded
 
@@ -145,63 +148,15 @@ function events.emit(event, ...)
     return result
 end
 
--- class designed for simple UI-nodes access via properties syntax
-local Element = {}
-function Element.new(docname, name)
-    return setmetatable({docname=docname, name=name}, {
-        __index=function(self, k)
-            return gui.getattr(self.docname, self.name, k)
-        end,
-        __newindex=function(self, k, v)
-            gui.setattr(self.docname, self.name, k, v)
-        end
-    })
-end
+gui_util = require "builtin:internal/gui_util"
 
--- the engine automatically creates an instance for every ui document (layout)
-Document = {}
-function Document.new(docname)
-    return setmetatable({name=docname}, {
-        __index=function(self, k)
-            local elem = Element.new(self.name, k)
-            rawset(self, k, elem)
-            return elem
-        end
-    })
-end
-
-local _RadioGroup = {}
-function _RadioGroup:set(key)
-    if type(self) ~= 'table' then
-        error("Called as non-OOP via '.', use radiogroup:set")
-    end
-    if self.current then
-        self.elements[self.current].enabled = true
-    end
-    self.elements[key].enabled = false
-    self.current = key
-    if self.callback then
-        self.callback(key)
-    end
-end
-function _RadioGroup:__call(elements, onset, default)
-    local group = setmetatable({
-        elements=elements, 
-        callback=onset, 
-        current=nil
-    }, {__index=_RadioGroup})
-    group:set(default)
-    return group
-end
-setmetatable(_RadioGroup, _RadioGroup)
-RadioGroup = _RadioGroup
+Document = gui_util.Document
+RadioGroup = gui_util.RadioGroup
+__chroma_page_loader = gui_util.load_page
 
 _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
-
-local gui_util = require "builtin:gui_util"
-__chroma_page_loader = gui_util.load_page
 
 console.cheats = {}
 
@@ -223,6 +178,11 @@ function console.log(...)
     log_element:paste(text)
 end
 
+function console.chat(...)
+    console.log(...)
+    events.emit("builtin:chat", ...)
+end
+
 function gui.template(name, params)
     local text = file.read(file.find("layouts/templates/"..name..".xml"))
     for k,v in pairs(params) do
@@ -231,8 +191,8 @@ function gui.template(name, params)
     end
     text = text:gsub("if%s*=%s*'%%{%w+}'", "if=''")
     text = text:gsub("if%s*=%s*\"%%{%w+}\"", "if=\"\"")
-    text = text:gsub("%w+%s*=%s*'%%{%w+}'%s?", "")
-    text = text:gsub("%w+%s*=%s*\"%%{%w+}\"%s?", "")
+    text = text:gsub("%s*%S+='%%{[^}]+}'%s*", " ")
+    text = text:gsub('%s*%S+="%%{[^}]+}"%s*', " ")
     return text
 end
 
@@ -370,7 +330,7 @@ function __chroma_on_hud_open()
         hud._set_debug_cheats(value)
     end)
     input.add_callback("devtools.console", function()
-        if hud.is_paused() then
+        if menu.page ~= "" then
             return
         end
         time.post_runnable(function()
@@ -378,13 +338,23 @@ function __chroma_on_hud_open()
         end)
     end)
     input.add_callback("hud.chat", function()
-        if hud.is_paused() then
+        if menu.page ~= "" then
             return
         end
         time.post_runnable(function()
             hud.show_overlay("builtin:console", false, {"chat"})
         end)
     end)
+    input.add_callback("key:escape", function()
+        if menu.page ~= "" then
+            menu:reset()
+        elseif hud.is_inventory_open() then
+            hud.close_inventory()
+        else
+            hud.pause()
+        end
+    end)
+    hud.open_permanent("builtin:ingame_chat")
 end
 
 local RULES_FILE = "world:rules.toml"
@@ -408,6 +378,8 @@ end
 
 function __chroma_on_world_quit()
     _rules.clear()
+    gui_util:__reset_local()
+    stdcomp.__reset()
 end
 
 local __chroma_coroutines = {}
@@ -447,7 +419,19 @@ end
 
 function start_coroutine(chunk, name)
     local co = coroutine.create(function()
-        local status, error = xpcall(chunk, __chroma__error)
+        local status, error = xpcall(chunk, function(err)
+            local fullmsg = "Error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
+            gui.alert(fullmsg, function()
+                if world.is_open() then
+                    __chroma_app.close_world()
+                else
+                    __chroma_app.reset_content()
+                    menu:reset()
+                    menu.page = "main"
+                end
+            end)
+            return fullmsg
+        end)
         if not status then
             debug.error(error)
         end
@@ -470,7 +454,10 @@ function __process_post_runnables()
 
     local dead = {}
     for name, co in pairs(__chroma_named_coroutines) do
-        coroutine.resume(co)
+        local success, err = coroutine.resume(co)
+        if not success then
+            debug.error(err)
+        end
         if coroutine.status(co) == "dead" then
             table.insert(dead, name)
         end

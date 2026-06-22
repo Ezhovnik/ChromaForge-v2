@@ -11,7 +11,7 @@
 #include <coders/imageio.h>
 #include <graphics/core/ImageData.h>
 #include <util/functional_util.h>
-#include <files/util.h>
+#include <io/util.h>
 #include <math/Heightmap.h>
 #include <engine/Engine.h>
 
@@ -50,7 +50,7 @@ const float* LuaHeightmap::getValues() const {
 static int l_dump(lua::State* L) {
     const auto& paths = scripting::engine->getPaths();
     if (auto heightmap = touserdata<LuaHeightmap>(L, 1)) {
-        auto file = paths.resolve(require_string(L, 2));
+        io::path file = require_string(L, 2);
         uint w = heightmap->getWidth();
         uint h = heightmap->getHeight();
         ImageData image(ImageFormat::rgb888, w, h);
@@ -66,7 +66,7 @@ static int l_dump(lua::State* L) {
                 raster[i*3 + 2] = val;
             }
         }
-        imageio::write(file.u8string(), &image);
+        imageio::write(file, &image);
     }
     return 0;
 }

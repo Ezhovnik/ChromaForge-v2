@@ -25,15 +25,22 @@ Player* Players::getPlayer(int64_t id) const {
     return found->second.get();
 }
 
-Player* Players::create() {
+Player* Players::create(int64_t id) {
+    int64_t& nextPlayerID = level.getWorld()->getInfo().nextPlayerId;
+    if (id == NONE) {
+        id = nextPlayerID++;
+    } else {
+        if (auto player = getPlayer(id)) return player;
+        nextPlayerID = std::max(id + 1, nextPlayerID);
+    }
     auto playerPtr = std::make_unique<Player>(
         level,
-        level.getWorld()->getInfo().nextPlayerId++,
+        id,
         "",
         DEFAULT_SPAWNPOINT,
         DEFAULT_PLAYER_SPEED,
         level.inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE),
-        0
+        ENTITY_AUTO
     );
     auto player = playerPtr.get();
     add(std::move(playerPtr));
@@ -84,7 +91,7 @@ void Players::deserialize(const dv::value& src) {
             DEFAULT_SPAWNPOINT,
             DEFAULT_PLAYER_SPEED,
             level.inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE),
-            0
+            ENTITY_AUTO
         );
         auto player = playerPtr.get();
         player->deserialize(playerMap);

@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <filesystem>
 #include <utility>
 #include <unordered_map>
 
@@ -10,8 +9,9 @@
 #include <constants.h>
 #include <content/Content.h>
 #include <data/dv.h>
-#include <files/world_regions_fwd.h>
+#include <world/files/world_regions_fwd.h>
 #include <data/StructLayout.h>
+#include <io/io.h>
 
 enum class ContentIssueType {
     Reorder,
@@ -135,7 +135,7 @@ public:
 
     static std::shared_ptr<ContentReport> create(
         const std::shared_ptr<WorldFiles>& worldFiles,
-        const std::filesystem::path& filename,
+        const io::path& filename,
         const Content* content
     );
 

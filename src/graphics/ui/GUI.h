@@ -96,6 +96,8 @@ namespace gui {
         void setFocus(std::shared_ptr<UINode> node);
 
         void activate(float deltaTime, const Viewport& viewport);
+        void postActivate();
+
         void draw(const DrawContext& parent_context, const Assets& assets);
         void add(std::shared_ptr<UINode> panel);
         void remove(std::shared_ptr<UINode> panel) noexcept;

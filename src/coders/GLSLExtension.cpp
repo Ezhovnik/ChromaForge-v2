@@ -6,9 +6,8 @@
 
 #include <util/stringutil.h>
 #include <typedefs.h>
-#include <files/files.h>
 #include <debug/Logger.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <constants.h>
 
 void GLSLExtension::setVersion(std::string version) {
@@ -20,8 +19,8 @@ void GLSLExtension::setPaths(const ResPaths* paths) {
 }
 
 void GLSLExtension::loadHeader(const std::string& name) {
-    std::filesystem::path file = paths->find(SHADERS_FOLDER + "/lib/" + name + ".glsl");
-    std::string source = files::read_string(file);
+    io::path file = paths->find(SHADERS_FOLDER + "/lib/" + name + ".glsl");
+    std::string source = io::read_string(file);
     addHeader(name, "");
     addHeader(name, process(file, source, true));
 }
@@ -66,7 +65,7 @@ void GLSLExtension::undefine(const std::string& name) {
 
 // Вспомогательная функция: выбрасывает исключение с сообщением об ошибке парсинга
 inline void parsing_error(
-    const std::filesystem::path& file, 
+    const io::path& file, 
     uint linenum, 
     const std::string& message
 ) {
@@ -76,7 +75,7 @@ inline void parsing_error(
 
 // Вспомогательная функция: выводит предупреждение о проблеме при парсинге
 inline void parsing_warning(
-    const std::filesystem::path& file, 
+    const io::path& file, 
     uint linenum, const 
     std::string& message
 ) {
@@ -89,7 +88,9 @@ inline void source_line(std::stringstream& ss, uint linenum) {
 }
 
 // Основной метод обработки исходного кода шейдера
-std::string GLSLExtension::process(const std::filesystem::path& file, const std::string& source, bool header) {
+std::string GLSLExtension::process(
+    const io::path& file, const std::string& source, bool header
+) {
     std::stringstream ss;
     size_t pos = 0;
     uint linenum = 1; // текущая обрабатываемая строка исходного файла

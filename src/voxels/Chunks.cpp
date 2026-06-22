@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 #include <lighting/Lightmap.h>
-#include <files/WorldFiles.h>
+#include <world/files/WorldFiles.h>
 #include <graphics/core/Mesh.h>
 #include <math/voxmaths.h>
 #include <world/LevelEvents.h>

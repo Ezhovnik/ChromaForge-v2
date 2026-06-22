@@ -61,14 +61,24 @@ Player::Player(
 Player::~Player() = default;
 
 void Player::updateEntity() {
-    if (eid == 0) {
-        auto& def = level.content.entities.require(CHROMAFORGE_CONTENT_NAMESPACE + ":player");
-        eid = level.entities->spawn(def, getPosition());
+    if (eid == ENTITY_AUTO) {
+        const auto& defaults = level.content.getDefaults();
+        const auto& defName = defaults["player-entity"].asString();
+        if (!defName.empty()) {
+            auto& def = level.content.entities.require(defName);
+            eid = level.entities->spawn(def, getPosition());
+            if (auto entity = level.entities->get(eid)) {
+                entity->setPlayer(id);
+            }
+        }
 	} else if (auto entity = level.entities->get(eid)) {
         position = entity->getTransform().pos;
-    } else if (chunks->getChunkByVoxel(position)) {
-        LOG_ERROR("Player entity despawned or deleted; will be respawned");
-        eid = 0;
+        if (auto entity = level.entities->get(eid)) {
+            entity->setPlayer(id);
+        }
+    } else if (chunks->getChunkByVoxel(position) && eid != ENTITY_NONE) {
+        LOG_WARN("Player entity despawned or deleted; will be respawned");
+        eid = ENTITY_AUTO;
     }
 }
 
@@ -162,22 +172,7 @@ void Player::postUpdate() {
 	}
 
 	auto& skeleton = entity->getSkeleton();
-
     skeleton.visible = currentCamera != fpCamera;
-
-    auto body = skeleton.config->find("body");
-    auto head = skeleton.config->find("head");
-
-	if (body) {
-		skeleton.pose.matrices[body->getIndex()] = glm::rotate(
-			glm::mat4(1.0f), glm::radians(rotation.x), glm::vec3(0, 1, 0)
-		);
-	}
-	if (head) {
-		skeleton.pose.matrices[head->getIndex()] = glm::rotate(
-			glm::mat4(1.0f), glm::radians(rotation.y), glm::vec3(1, 0, 0)
-		);
-	}
 }
 
 void Player::attemptToFindSpawnpoint() {
@@ -262,7 +257,7 @@ void Player::deserialize(const dv::value& src) {
 void Player::convert(dv::value& data, const ContentReport* report) {
     if (data.has("players")) {
         auto& players = data["players"];
-        for (uint i = 0; i < players.size(); i++) {
+        for (uint i = 0; i < players.size(); ++i) {
             auto& playerData = players[i];
             if (playerData.has("inventory")) {
                 Inventory::convert(playerData["inventory"], report);
@@ -278,6 +273,7 @@ void Player::teleport(glm::vec3 position) {
     if (auto entity = level.entities->get(eid)) {
         entity->getRigidbody().hitbox.position = position;
         entity->getTransform().setPos(position);
+        entity->setInterpolatedPosition(position);
     }
 }
 
@@ -375,4 +371,16 @@ bool Player::isSuspended() const {
 
 void Player::setSuspended(bool flag) {
     suspended = flag;
+}
+
+glm::vec3 Player::getRotation(bool interpolated) const {
+    if (interpolated) {
+        return rotationInterpolation.getCurrent();
+    }
+    return rotation;
+}
+
+void Player::setRotation(const glm::vec3& rotation) {
+    this->rotation = rotation;
+    rotationInterpolation.refresh(rotation);
 }

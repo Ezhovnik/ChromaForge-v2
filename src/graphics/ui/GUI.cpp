@@ -20,11 +20,15 @@
 #include <graphics/ui/elements/display/Label.h>
 #include <frontend/locale/langs.h>
 #include <graphics/ui/gui_util.h>
+#include <graphics/ui/elements/layout/Panel.h>
 
 using namespace gui;
 
-GUI::GUI() : batch2D(std::make_unique<Batch2D>(1024)) {
-    container = std::make_shared<Container>(glm::vec2(1000));
+GUI::GUI()
+    : batch2D(std::make_unique<Batch2D>(1024)),
+    container(std::make_shared<Container>(glm::vec2(1000)))
+{
+    container->setId("root");
     uicamera = std::make_unique<Camera>(glm::vec3(), Window::height);
 
 	uicamera->perspective = false;
@@ -149,7 +153,7 @@ void GUI::activateFocused() {
         focus->keyPressed(key);
     }
 
-    if (!Events::_cursor_locked) {
+    if (!Events::isCursorLocked()) {
         if (Events::isClicked(mousecode::BUTTON_1) && (Events::justClicked(mousecode::BUTTON_1) || Events::delta.x || Events::delta.y)) {
             if (!doubleClicked) {
                 focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
@@ -159,18 +163,12 @@ void GUI::activateFocused() {
 }
 
 void GUI::activate(float deltaTime, const Viewport& vp) {
-    while (!postRunnables.empty()) {
-        runnable callback = postRunnables.back();
-        postRunnables.pop();
-        callback();
-    }
-
     container->setSize(vp.size());
     container->activate(deltaTime);
     auto prevfocus = focus;
 
     updateTooltip(deltaTime);
-    if (!Events::_cursor_locked) {
+    if (!Events::isCursorLocked()) {
         activateMouse(deltaTime);
     } else {
         if (hover) {
@@ -183,11 +181,28 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
     if (focus && !focus->isFocused()) focus = nullptr;
 }
 
+void GUI::postActivate() {
+    while (!postRunnables.empty()) {
+        runnable callback = postRunnables.front();
+        postRunnables.pop();
+        callback();
+    }
+}
+
 void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
     auto ctx = parent_context.sub(batch2D.get());
 
     auto& viewport = ctx.getViewport();
     glm::vec2 wsize = viewport.size();
+
+    auto& page = menu->getCurrent();
+    if (page.panel) {
+        menu->setSize(page.panel->getSize());
+        page.panel->refresh();
+        if (auto panel = std::dynamic_pointer_cast<gui::Panel>(page.panel)) {
+            panel->cropToContent();
+        }
+    }
 
     menu->setPos((wsize - menu->getSize()) / 2.0f);
     uicamera->setFov(wsize.y);

@@ -43,12 +43,14 @@ namespace gui {
         void setPageLoader(PageLoaderFunc loader);
         PageLoaderFunc getPageLoader();
 
-        void back();
+        bool back();
 
         void clearHistory();
 
         void reset();
 
         Page& getCurrent();
+
+        bool hasOpenPage() const;
     };
 }

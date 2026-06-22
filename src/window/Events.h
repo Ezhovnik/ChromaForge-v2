@@ -23,12 +23,12 @@ private:
     static bool keys[KEYS_BUFFER_SIZE];
     static uint frames[KEYS_BUFFER_SIZE];
     static uint currentFrame;
-    static bool cursor_drag;
+    static bool cursorDrag;
+    static bool cursorLocked;
 public:
     // Переменные для отсеживания состояния мыши
     static glm::vec2 delta;
     static glm::vec2 cursor;
-    static bool _cursor_locked; // Режим захвата курсора
 
     static int scroll;
 
@@ -75,4 +75,6 @@ public:
     );
 
     static void enableBindings();
+
+    static bool isCursorLocked();
 };

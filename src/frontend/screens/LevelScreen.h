@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <frontend/screens/Screen.h>
+#include <typedefs.h>
 
 class Engine;
 class LevelFrontend;
@@ -37,7 +38,9 @@ private:
     void initializeContent();
     void initializePack(ContentPackRuntime* pack);
 public:
-    LevelScreen(Engine& engine, std::unique_ptr<Level> level);
+    LevelScreen(
+        Engine& engine, std::unique_ptr<Level> level, int64_t localPlayer
+    );
     ~LevelScreen();
 
     void update(float deltaTime) override;

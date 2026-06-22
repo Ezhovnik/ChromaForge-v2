@@ -35,7 +35,8 @@
 
 LevelScreen::LevelScreen(
     Engine& engine,
-    std::unique_ptr<Level> levelPtr
+    std::unique_ptr<Level> levelPtr,
+    int64_t localPlayer
 ) : Screen(engine),
     postProcessing(std::make_unique<PostProcessing>())
 {
@@ -46,7 +47,9 @@ LevelScreen::LevelScreen(
     auto menu = engine.getGUI()->getMenu();
     menu->reset();
 
-    auto player = level->players->getPlayer(0);
+    auto player = level->players->getPlayer(localPlayer);
+    assert(player != nullptr);
+
     controller = std::make_unique<LevelController>(
         &engine, std::move(levelPtr), player
     );
@@ -95,11 +98,13 @@ LevelScreen::LevelScreen(
 }
 
 LevelScreen::~LevelScreen() {
-    saveWorldPreview();
+    if (!controller->getLevel()->getWorld()->isNameless()) {
+        saveWorldPreview();
+    }
     scripting::on_frontend_close();
     Events::enableBindings();
     controller->onWorldQuit();
-    engine.getPaths().setCurrentWorldFolder(std::filesystem::path());
+    engine.getPaths().setCurrentWorldFolder("");
 }
 
 void LevelScreen::initializeContent() {
@@ -112,8 +117,8 @@ void LevelScreen::initializeContent() {
 
 void LevelScreen::initializePack(ContentPackRuntime* pack) {
     const ContentPack& info = pack->getInfo();
-    std::filesystem::path scriptFile = info.folder/std::filesystem::path("scripts/hud.lua");
-    if (std::filesystem::is_regular_file(scriptFile)) {
+    io::path scriptFile = info.folder / "scripts/hud.lua";
+    if (io::is_regular_file(scriptFile)) {
         scripting::load_hud_script(
             pack->getEnvironment(),
             info.id,
@@ -139,7 +144,7 @@ void LevelScreen::saveWorldPreview() {
         worldRenderer->draw(ctx, camera, false, true, 0.0f, postProcessing.get());
         auto image = postProcessing->toImage();
         image->flipY();
-        imageio::write(paths.resolve("world:preview.png").string(), image.get());
+        imageio::write("world:preview.png", image.get());
         LOG_INFO("World preview successfully saved");
     } catch (const std::exception& err) {
         LOG_ERROR("Failed to save world preview: {}", err.what());
@@ -203,10 +208,12 @@ void LevelScreen::updateHotkeys() {
 
 void LevelScreen::update(float deltaTime) {
     gui::GUI* gui = engine.getGUI();
+    auto menu = gui->getMenu();
 
-    bool inputLocked = hud->isPause() || hud->isInventoryOpen() || gui->isFocusCaught();
+    bool inputLocked = menu->hasOpenPage() || hud->isInventoryOpen() || gui->isFocusCaught();
     if (!gui->isFocusCaught()) updateHotkeys();
 
+    auto level = controller->getLevel();
     auto player = playerController->getPlayer();
     auto camera = player->currentCamera;
 
@@ -224,7 +231,6 @@ void LevelScreen::update(float deltaTime) {
         glm::vec3(0, 1, 0)
     );
 
-    auto level = controller->getLevel();
     const auto& settings = engine.getSettings();
 
     if (!hud->isPause()) {

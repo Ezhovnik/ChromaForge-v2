@@ -144,7 +144,9 @@ float UINode::getTooltipDelay() const {
 }
 
 glm::vec2 UINode::calcPos() const {
-    if (parent) return pos + parent->calcPos() + parent->getContentOffset();
+    if (parent) {
+        return pos + parent->calcPos() + parent->getContentOffset();
+    }
     return pos;
 }
 
@@ -173,7 +175,10 @@ glm::vec2 UINode::getSize() const {
 }
 
 void UINode::setSize(glm::vec2 size_) {
-    size = glm::vec2(glm::max(minSize.x, size_.x), glm::max(minSize.y, size_.y));
+    size = glm::vec2(
+        glm::max(minSize.x, glm::min(maxSize.x, size_.x)),
+        glm::max(minSize.y, glm::min(maxSize.y, size_.y))
+    );
 }
 
 glm::vec2 UINode::getMinSize() const {
@@ -182,6 +187,15 @@ glm::vec2 UINode::getMinSize() const {
 
 void UINode::setMinSize(glm::vec2 minSize_) {
     minSize = minSize_;
+    setSize(getSize());
+}
+
+glm::vec2 UINode::getMaxSize() const {
+    return maxSize;
+}
+
+void UINode::setMaxSize(glm::vec2 maxSize) {
+    this->maxSize = maxSize;
     setSize(getSize());
 }
 
@@ -324,8 +338,14 @@ const std::string& UINode::getId() const {
 }
 
 void UINode::reposition() {
+    if (sizefunc) {
+        auto newSize = sizefunc();
+        setSize({
+            newSize.x < 0 ? size.x : newSize.x,
+            newSize.y < 0 ? size.y : newSize.y
+        });
+    }
     if (positionfunc) setPos(positionfunc());
-    if (sizefunc) setSize(sizefunc());
 }
 
 void UINode::getIndices(

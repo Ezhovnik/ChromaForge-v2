@@ -21,7 +21,7 @@
 #include <graphics/core/ImageData.h>
 #include <coders/GLSLExtension.h>
 #include <coders/imageio.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <frontend/screens/Screen.h>
 #include <frontend/screens/MenuScreen.h>
 #include <content/content.h>
@@ -39,9 +39,9 @@
 #include <content/PacksManager.h>
 #include <util/listutil.h>
 #include <logic/EngineController.h>
-#include <files/settings_io.h>
+#include <io/settings_io.h>
 #include <coders/toml.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <input_bindings.h>
 #include <logic/CommandsInterpreter.h>
 #include <content/ContentBuilder.h>
@@ -55,18 +55,10 @@
 #include <world/Level.h>
 #include <logic/scripting/scripting_hud.h>
 
-static void create_channel(Engine* engine, std::string name, NumberSetting& setting) {
-    if (name != "master") audio::create_channel(name);
-
-    engine->keepAlive(setting.observe([=](auto value) {
-        audio::get_channel(name)->setVolume(value * value);
-    }, true));
-}
-
-static std::unique_ptr<ImageData> load_icon(const std::filesystem::path& resdir) {
+static std::unique_ptr<ImageData> load_icon() {
     try {
-        auto file = resdir/std::filesystem::u8path("textures/misc/icon.png");
-        if (std::filesystem::exists(file)) {
+        auto file = "res:textures/misc/icon.png";
+        if (io::exists(file)) {
             return imageio::read(file);
         }
     } catch (const std::exception& err) {
@@ -75,15 +67,23 @@ static std::unique_ptr<ImageData> load_icon(const std::filesystem::path& resdir)
     return nullptr;
 }
 
-// Реализация конструктора
-Engine::Engine(
-    CoreParameters coreParameters
-) : params(std::move(coreParameters)),
-    settings(),
-    settingsHandler({settings}),
-    interpreter(std::make_unique<cmd::CommandsInterpreter>()),
-    network(network::Network::create(settings.network))
-{
+Engine::Engine() = default;
+
+static std::unique_ptr<Engine> engine;
+
+Engine& Engine::getInstance() {
+    if (!engine) {
+        engine = std::make_unique<Engine>();
+    }
+    return *engine;
+}
+
+void Engine::initialize(CoreParameters coreParameters) {
+    params = std::move(coreParameters);
+    settingsHandler = std::make_unique<SettingsHandler>(settings);
+    interpreter = std::make_unique<cmd::CommandsInterpreter>();
+    network = network::Network::create(settings.network);
+
     LOG_INFO("ChromaForge engine version: {}", ENGINE_VERSION_STRING);
 
     if (params.headless) {
@@ -107,7 +107,7 @@ Engine::Engine(
             throw initialize_error("Failed to load Window");
         }
         time.set(Window::time());
-        if (auto icon = load_icon(resdir)) {
+        if (auto icon = load_icon()) {
             icon->flipY();
             if (icon->getFormat() != ImageFormat::rgba8888) icon.reset(toRGBA(icon.get()));
             Window::setIcon(icon.get());
@@ -120,12 +120,7 @@ Engine::Engine(
         }
     }
 
-    audio::initialize(settings.audio.enabled.get() && !params.headless);
-    create_channel(this, "master", settings.audio.volumeMaster);
-    create_channel(this, "regular", settings.audio.volumeRegular);
-    create_channel(this, "music", settings.audio.volumeMusic);
-    create_channel(this, "ambient", settings.audio.volumeAmbient);
-    create_channel(this, "ui", settings.audio.volumeUI);
+    audio::initialize(!params.headless, settings.audio);
 
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);
@@ -138,7 +133,7 @@ Engine::Engine(
         setLanguage(lang);
     }, true));
 
-    basePacks = files::read_list(resdir/std::filesystem::path("config/builtins.list"));
+    basePacks = io::read_list("res:config/builtins.list");
 
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -171,17 +166,17 @@ Engine::~Engine() {
     Logger::getInstance().flush();
 }
 
-PacksManager Engine::createPacksManager(const std::filesystem::path& worldFolder) {
+PacksManager Engine::createPacksManager(const io::path& worldFolder) {
     PacksManager manager;
     manager.setSources({
-        {"world:content", worldFolder.empty() ? worldFolder : worldFolder/std::filesystem::path("content")},
-        {"user:content", paths.getUserFilesFolder()/std::filesystem::path("content")},
-        {"res:content", paths.getResourcesFolder()/std::filesystem::path("content")}
+        {"world:content", worldFolder.empty() ? worldFolder : worldFolder / "content"},
+        {"user:content", "user:content"},
+        {"res:content", "res:content"}
     });
     return manager;
 }
 
-void Engine::setLevelConsumer(consumer<std::unique_ptr<Level>> levelConsumer) {
+void Engine::setLevelConsumer(OnWorldOpen levelConsumer) {
     this->levelConsumer = std::move(levelConsumer);
 }
 
@@ -243,9 +238,9 @@ void Engine::updateHotkeys() {
 void Engine::saveScreenshot() {
     auto image = Window::takeScreenshot();
     image->flipY();
-    std::filesystem::path filename = paths.getNewScreenshotFile("png");
+    io::path filename = paths.getNewScreenshotFile("png");
     imageio::write(filename.string(), image.get());
-    LOG_INFO("Save screenshot as '{}'", filename.u8string());
+    LOG_INFO("Save screenshot as '{}'", filename.string());
 }
 
 void Engine::onAssetsLoaded() {
@@ -281,6 +276,7 @@ void Engine::updateFrontend() {
     audio::update(delta);
     gui->activate(delta, Viewport(Window::width, Window::height));
     screen->update(delta);
+    gui->postActivate();
 }
 
 void Engine::nextFrame() {
@@ -293,13 +289,13 @@ void Engine::nextFrame() {
     Events::pollEvents();
 }
 
-static void load_configs(const std::filesystem::path& root) {
-    auto configFolder = root/std::filesystem::path("config");
-    auto bindsFile = configFolder/std::filesystem::path("bindings.toml");
-    if (std::filesystem::is_regular_file(bindsFile)) {
+static void load_configs(const io::path& root) {
+    auto configFolder = root / io::path("config");
+    auto bindsFile = configFolder / io::path("bindings.toml");
+    if (io::is_regular_file(bindsFile)) {
         Events::loadBindings(
-            bindsFile.u8string(),
-            files::read_string(bindsFile),
+            bindsFile.string(),
+            io::read_string(bindsFile),
             BindType::Bind
         );
     }
@@ -309,7 +305,6 @@ void Engine::loadContent() {
     scripting::cleanup();
 
     LOG_INFO("Loading content");
-    auto resdir = paths.getResourcesFolder();
 
     std::vector<std::string> names;
     for (auto& pack : contentPacks) {
@@ -317,7 +312,7 @@ void Engine::loadContent() {
     }
 
     ContentBuilder contentBuilder;
-    CoreContent::setup(paths, contentBuilder);
+    CoreContent::setup(contentBuilder);
     paths.setContentPacks(&contentPacks);
     PacksManager manager = createPacksManager(paths.getCurrentWorldFolder());
     manager.scan();
@@ -332,7 +327,7 @@ void Engine::loadContent() {
     for (auto& pack : contentPacks) {
         resRoots.push_back({pack.id, pack.folder});
     }
-    resPaths = std::make_unique<ResPaths>(resdir, resRoots);
+    resPaths = std::make_unique<ResPaths>("res:", resRoots);
     {
         ContentLoader(&builtinPack, contentBuilder, *resPaths).load();
         load_configs(builtinPack.folder);
@@ -363,19 +358,18 @@ void Engine::loadContent() {
 void Engine::resetContent() {
     scripting::cleanup();
 
-    auto resdir = paths.getResourcesFolder();
     std::vector<PathsRoot> resRoots;
     {
         auto pack = ContentPack::createBuiltin(paths);
         resRoots.push_back({BUILTIN_CONTENT_NAMESPACE, pack.folder});
         load_configs(pack.folder);
     }
-    auto manager = createPacksManager(std::filesystem::path());
+    auto manager = createPacksManager(io::path());
     manager.scan();
     for (const auto& pack : manager.getAll(basePacks)) {
         resRoots.push_back({pack.id, pack.folder});
     }
-    resPaths = std::make_unique<ResPaths>(resdir, resRoots);
+    resPaths = std::make_unique<ResPaths>("res:", resRoots);
     contentPacks.clear();
     content.reset();
 
@@ -389,14 +383,14 @@ void Engine::resetContent() {
     contentPacks = manager.getAll(basePacks);
 }
 
-void Engine::loadWorldContent(const std::filesystem::path& folder) {
+void Engine::loadWorldContent(const io::path& folder) {
     contentPacks.clear();
     auto packNames = ContentPack::worldPacksList(folder);
     PacksManager manager;
     manager.setSources({
-        {"world:content", folder.empty() ? folder : folder/std::filesystem::path("content")},
-        {"user:content", paths.getUserFilesFolder()/std::filesystem::path("content")},
-        {"res:content", paths.getResourcesFolder()/std::filesystem::path("content")}
+        {"world:content", folder.empty() ? folder : folder / "content"},
+        {"user:content", "user:content"},
+        {"res:content", "res:content"}
     });
     manager.scan();
     contentPacks = manager.getAll(manager.assemble(packNames));
@@ -461,11 +455,11 @@ std::shared_ptr<Screen> Engine::getScreen() {
 }
 
 void Engine::setLanguage(std::string locale) {
-	langs::setup(paths.getResourcesFolder(), std::move(locale), contentPacks);
+	langs::setup("res:", std::move(locale), contentPacks);
 }
 
 SettingsHandler& Engine::getSettingsHandler() {
-    return settingsHandler;
+    return *settingsHandler;
 }
 
 std::vector<std::string>& Engine::getBasePacks() {
@@ -474,23 +468,23 @@ std::vector<std::string>& Engine::getBasePacks() {
 
 void Engine::saveSettings() {
     LOG_INFO("Writing the settings to a file");
-    files::write_string(paths.getSettingsFile(), toml::stringify(settingsHandler));
+    io::write_string(paths.getSettingsFile(), toml::stringify(*settingsHandler));
     LOG_INFO("The settings were successfully written to the file");
 
     if (!params.headless) {
         LOG_INFO("Writing the controls to a file");
-        files::write_string(paths.getControlsFile(), Events::writeBindings());
+        io::write_string(paths.getControlsFile(), Events::writeBindings());
         LOG_INFO("The controls were successfully written to the file");
     }
 }
 
 void Engine::loadSettings() {
-    std::filesystem::path settings_file = paths.getSettingsFile();
-    if (std::filesystem::is_regular_file(settings_file)) {
+    io::path settings_file = paths.getSettingsFile();
+    if (io::is_regular_file(settings_file)) {
         LOG_INFO("Reading the settings file");
-        std::string text = files::read_string(settings_file);
+        std::string text = io::read_string(settings_file);
         try {
-            toml::parse(settingsHandler, settings_file.string(), text);
+            toml::parse(*settingsHandler, settings_file.string(), text);
         } catch (const parsing_error& err) {
             LOG_ERROR("{}", err.errorLog());
             throw;
@@ -500,12 +494,12 @@ void Engine::loadSettings() {
 }
 
 void Engine::loadControls() {
-    std::filesystem::path controls_file = paths.getControlsFile();
-    if (std::filesystem::is_regular_file(controls_file)) {
+    io::path controls_file = paths.getControlsFile();
+    if (io::is_regular_file(controls_file)) {
         LOG_INFO("Reading the controls file");
-        std::string text = files::read_string(controls_file);
+        std::string text = io::read_string(controls_file);
         Events::loadBindings(
-            controls_file.u8string(),
+            controls_file.string(),
             text,
             BindType::Bind
         );
@@ -533,14 +527,14 @@ EngineTime& Engine::getTime() {
     return time;
 }
 
-void Engine::onWorldOpen(std::unique_ptr<Level> level) {
+void Engine::onWorldOpen(std::unique_ptr<Level> level, int64_t localPlayer) {
     LOG_INFO("World open");
-    levelConsumer(std::move(level));
+    levelConsumer(std::move(level), localPlayer);
 }
 
 void Engine::onWorldClosed() {
     LOG_INFO("World closed");
-    levelConsumer(nullptr);
+    levelConsumer(nullptr, -1);
 }
 
 void Engine::quit() {
@@ -552,4 +546,8 @@ void Engine::quit() {
 
 bool Engine::isQuitSignal() const {
     return quitSignal;
+}
+
+void Engine::terminate() {
+    engine.reset();
 }

@@ -30,6 +30,8 @@
 #include <graphics/render/ParticlesRenderer.h>
 #include <graphics/render/ChunksRenderer.h>
 #include <voxels/GlobalChunks.h>
+#include <objects/Players.h>
+#include <network/Network.h>
 
 static std::shared_ptr<gui::Label> create_label(wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(L"-");
@@ -50,7 +52,11 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     static int fps = 0;
     static int fpsMin = fps;
     static int fpsMax = fps;
-    static std::wstring fpsString = L"";
+    static std::wstring fpsString = L"FPS: - / -";
+
+    static size_t lastTotalDownload = 0;
+    static size_t lastTotalUpload = 0;
+    static std::wstring netSpeedString = L"Download: - B/s upload: - B/s";
 
     panel->listenInterval(0.016f, [&engine]() {
         fps = 1.0f / engine.getTime().getDeltaTime();
@@ -63,6 +69,19 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         fpsMin = fps;
         fpsMax = fps;
     });
+
+    panel->listenInterval(1.0f, [&engine]() {
+        const auto& network = engine.getNetwork();
+        size_t totalDownload = network.getTotalDownload();
+        size_t totalUpload = network.getTotalUpload();
+        netSpeedString =
+            L"Download: " + std::to_wstring(totalDownload - lastTotalDownload) +
+            L" B/s upload: " + std::to_wstring(totalUpload - lastTotalUpload) +
+            L" B/s";
+        lastTotalDownload = totalDownload;
+        lastTotalUpload = totalUpload;
+    });
+
 	panel->add(std::shared_ptr<gui::Label>(create_label([=](){
 		return L"FPS: " + fpsString;
 	})));
@@ -87,12 +106,17 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         return L"Entities: " + std::to_wstring(level.entities->size()) +
         L" Next: " + std::to_wstring(level.entities->peekNextID());
     }));
+    panel->add(create_label([&]() {
+        return L"Players: " + std::to_wstring(level.players->size()) +
+        L" Local: " + std::to_wstring(player.getId());
+    }));
     panel->add(create_label([](){
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());
     }));
     panel->add(create_label([](){
         return L"Lua stack: " + std::to_wstring(scripting::get_values_on_stack());
     }));
+    panel->add(create_label([]() {return netSpeedString;}));
 	panel->add(std::shared_ptr<gui::Label>(create_label([&]() -> std::wstring{
         const auto& vox = player.selection.vox;
         std::wstringstream stream;

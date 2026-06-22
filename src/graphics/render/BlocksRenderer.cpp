@@ -12,7 +12,7 @@
 #include <util/timeutil.h>
 
 // Направление на солнце (нормализованный вектор) для расчёта затенения граней
-inline constexpr glm::vec3 SUN_VECTOR = {0.411934f, 0.863868f, -0.279161f};
+inline constexpr glm::vec3 SUN_VECTOR = {0.2275f, 0.9388f, -0.1005f};
 
 BlocksRenderer::BlocksRenderer(
     size_t capacity,
@@ -128,7 +128,7 @@ void BlocksRenderer::faceAO(
     if (lights) {
         // Вычисляем яркость грани по нормали (Z) относительно солнца
         float d = glm::dot(glm::normalize(Z), SUN_VECTOR);
-        d = 0.8f + d * 0.2f; // базовая яркость + вклад солнца
+        d = 0.7f + d * 0.3f; // базовая яркость + вклад солнца
 
         auto axisX = glm::normalize(X);
         auto axisY = glm::normalize(Y);
@@ -166,7 +166,7 @@ void BlocksRenderer::face(
     float s = 0.5f;
     if (lights) {
         float d = glm::dot(glm::normalize(Z), SUN_VECTOR);
-        d = 0.8f + d * 0.2f;
+        d = 0.7f + d * 0.3f;
         tint *= d;
     }
     vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint);

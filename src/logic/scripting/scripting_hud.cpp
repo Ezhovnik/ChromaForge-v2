@@ -4,7 +4,7 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>
 #include <debug/Logger.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <frontend/hud.h>
 #include <objects/Player.h>
 #include <graphics/render/WorldRenderer.h>
@@ -14,11 +14,11 @@ Hud* scripting::hud = nullptr;
 WorldRenderer* scripting::renderer = nullptr;
 
 static void load_script(const std::string& name) {
-    auto file = scripting::engine->getPaths().getResourcesFolder()/"scripts"/name;
-    std::string src = files::read_string(file);
-    LOG_INFO("Loading script {}", file.u8string());
+    auto file = io::path("res:scripts") / name;
+    std::string src = io::read_string(file);
+    LOG_INFO("Loading script {}", file.string());
 
-    lua::execute(lua::get_main_state(), 0, src, file.u8string());
+    lua::execute(lua::get_main_state(), 0, src, file.string());
 }
 
 void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
@@ -47,12 +47,19 @@ void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
 }
 
 void scripting::on_frontend_close() {
+    auto L = lua::get_main_state();
     for (auto& pack : engine->getAllContentPacks()) {
-        lua::emit_event(lua::get_main_state(), pack.id + ":.hudclose", 
+        lua::emit_event(L, pack.id + ":.hudclose", 
         [&] (lua::State* L) {
             return lua::pushinteger(L, hud->getPlayer()->getId());            
         });
     }
+    lua::pushnil(L);
+    lua::setglobal(L, "hud");
+    lua::pushnil(L);
+    lua::setglobal(L, "gfx");
+
+    scripting::renderer = nullptr;
     scripting::hud = nullptr;
 }
 
@@ -68,12 +75,12 @@ void scripting::on_frontend_render() {
 void scripting::load_hud_script(
     const scriptenv& senv,
     const std::string& packid,
-    const std::filesystem::path& file,
+    const io::path& file,
     const std::string& fileName
 ) {
     int env = *senv;
-    std::string src = files::read_string(file);
-    LOG_DEBUG("Loading script {}", file.u8string());
+    std::string src = io::read_string(file);
+    LOG_DEBUG("Loading script {}", file.string());
 
     lua::execute(lua::get_main_state(), env, src, fileName);
 
@@ -82,7 +89,7 @@ void scripting::load_hud_script(
     register_event(env, "on_hud_render", packid + ":.hudrender");
     register_event(env, "on_hud_close", packid + ".:hudclose");
 
-    LOG_DEBUG("Script {} successfully loaded", file.u8string());
+    LOG_DEBUG("Script {} successfully loaded", file.string());
 }
 
 gui::PageLoaderFunc scripting::create_page_loader() {

@@ -14,7 +14,7 @@
 #include <debug/Logger.h>
 #include <data/dv.h>
 #include <util/timeutil.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <engine/Engine.h>
 
 class LuaGeneratorScript : public GeneratorScript {
@@ -22,13 +22,13 @@ class LuaGeneratorScript : public GeneratorScript {
     const Generator& def;
     scriptenv env = nullptr;
 
-    std::filesystem::path file;
+    io::path file;
     std::string dirPath;
 public:
     LuaGeneratorScript(
         lua::State* L,
         const Generator& def,
-        const std::filesystem::path& file,
+        const io::path& file,
         const std::string& dirPath
     ) : L(L), def(def), file(file), dirPath(dirPath) {}
 
@@ -53,9 +53,9 @@ public:
 
         lua::pop(L);
 
-        if (std::filesystem::exists(file)) {
-            std::string src = files::read_string(file);
-            lua::pop(L, lua::execute(L, *env, src, file.u8string()));
+        if (io::exists(file)) {
+            std::string src = io::read_string(file);
+            lua::pop(L, lua::execute(L, *env, src, file.string()));
         } else {
             lua::pop(L, lua::execute(L, *env, "", "<empty>"));
         }
@@ -248,7 +248,7 @@ public:
 };
 
 std::unique_ptr<GeneratorScript> scripting::load_generator(
-    const Generator& def, const std::filesystem::path& file, const std::string& dirPath
+    const Generator& def, const io::path& file, const std::string& dirPath
 ) {
     auto L = lua::create_state(scripting::engine->getPaths(), lua::StateType::Generator);
     return std::make_unique<LuaGeneratorScript>(L, def, file, dirPath);

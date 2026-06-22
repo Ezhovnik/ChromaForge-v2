@@ -8,8 +8,8 @@
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
-#include <files/files.h>
-#include <files/engine_paths.h>
+#include <io/io.h>
+#include <io/engine_paths.h>
 #include <engine/Engine.h>
 
 static lua::State* main_thread = nullptr;
@@ -119,6 +119,7 @@ void lua::init_state(State* L, StateType stateType) {
     newusertype<LuaBytearray>(L);
     newusertype<LuaHeightmap>(L);
     newusertype<LuaVoxelFragment>(L);
+    newusertype<LuaCanvas>(L);
 }
 
 void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
@@ -161,9 +162,8 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
     }
     init_state(L, stateType);
 
-    auto resDir = paths.getResourcesFolder();
-    auto file = resDir/std::filesystem::u8path("scripts/stdmin.lua");
-    auto src = files::read_string(file);
+    auto file = "res:scripts/stdmin.lua";
+    auto src = io::read_string(file);
     lua::pop(L, lua::execute(L, 0, src, "builtin:scripts/stdmin.lua"));
     return L;
 }

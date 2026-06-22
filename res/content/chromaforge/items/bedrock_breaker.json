@@ -1,4 +1,6 @@
 {
     "icon-type": "sprite",
-    "icon": "items:bedrock_breaker"
+    "icon": "items:bedrock_breaker",
+    "uses": 100,
+    "stack-size": 1
 }

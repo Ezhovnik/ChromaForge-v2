@@ -1,11 +1,11 @@
 #pragma once
 
 #include <string>
-#include <filesystem>
 #include <memory>
 
 #include <content/content_fwd.h>
 #include <data/dv.h>
+#include <io/io.h>
 
 class ContentBuilder;
 struct ContentPack;
@@ -33,10 +33,18 @@ private:
     void loadEntity(Entity& def, const std::string& full, const std::string& name);
     void loadGenerator(Generator& def, const std::string& full, const std::string& name);
 
-    static void loadBlockMaterial(BlockMaterial& def, const std::filesystem::path& file);
-    void loadBlock(Block& def, const std::string& name, const std::filesystem::path& file);
-    void loadItem(Item& def, const std::string& name, const std::filesystem::path& file);
-    void loadEntity(Entity& def, const std::string& name, const std::filesystem::path& file);
+    static void loadBlockMaterial(
+        BlockMaterial& def, const io::path& file
+    );
+    void loadBlock(
+        Block& def, const std::string& name, const io::path& file
+    );
+    void loadItem(
+        Item& def, const std::string& name, const io::path& file
+    );
+    void loadEntity(
+        Entity& def, const std::string& name, const io::path& file
+    );
     void loadResources(ResourceType type, const dv::value& list);
     void loadResourceAliases(ResourceType type, const dv::value& aliases);
 
@@ -53,7 +61,7 @@ public:
     );
 
     static bool fixPackIndices(
-        const std::filesystem::path& folder,
+        const io::path& folder,
         dv::value& indicesRoot,
         const std::string& contentSection
     );

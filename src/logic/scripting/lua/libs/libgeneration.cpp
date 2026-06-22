@@ -1,21 +1,22 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 
-#include <files/files.h>
-#include <files/util.h>
+#include <io/io.h>
+#include <io/util.h>
 #include <coders/binary_json.h>
 #include <world/Level.h>
 #include <world/generator/VoxelFragment.h>
 #include <engine/Engine.h>
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <content/ContentLoader.h>
+#include <content/Content.h>
 
 static int l_save_fragment(lua::State* L) {
     const auto& paths = scripting::engine->getPaths();
     auto fragment = lua::touserdata<lua::LuaVoxelFragment>(L, 1);
-    auto file = paths.resolve(lua::require_string(L, 2), true);
+    auto file = lua::require_string(L, 2);
     auto map = fragment->getFragment()->serialize();
     auto bytes = json::to_binary(map, true);
-    files::write_bytes(file, bytes.data(), bytes.size());
+    io::write_bytes(file, bytes.data(), bytes.size());
     return 0;
 }
 
@@ -32,13 +33,11 @@ static int l_create_fragment(lua::State* L) {
 }
 
 static int l_load_fragment(lua::State* L) {
-    const auto& paths = scripting::engine->getPaths();
-    auto filename = lua::require_string(L, 1);
-    auto path = paths.resolve(filename);
-    if (!std::filesystem::exists(path)) {
-        throw std::runtime_error("File " + path.u8string() + " does not exist");
+    io::path path = lua::require_string(L, 1);
+    if (!io::exists(path)) {
+        throw std::runtime_error("File " + path.string() + " does not exist");
     }
-    auto map = files::read_binary_json(path);
+    auto map = io::read_binary_json(path);
 
     auto fragment = std::make_shared<VoxelFragment>();
     fragment->deserialize(map);
@@ -65,7 +64,7 @@ static int l_get_generators(lua::State* L) {
 
 static int l_get_default_generator(lua::State* L) {
     auto combined = scripting::engine->getResPaths()->readCombinedObject(
-        EnginePaths::CONFIG_DEFAULTS.u8string()
+        EnginePaths::CONFIG_DEFAULTS.string()
     );
     return lua::pushstring(L, combined["generator"].asString());
 }

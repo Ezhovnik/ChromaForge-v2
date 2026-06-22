@@ -1,4 +1,4 @@
-#include <files/WorldRegions.h>
+#include <world/files/WorldRegions.h>
 
 #include <cstring>
 
@@ -8,8 +8,8 @@
 #define REGION_FORMAT_MAGIC ".CHROMAREG"
 inline constexpr int REGION_HEADER_SIZE = 13;
 
-static std::filesystem::path get_region_filename(int x, int z) {
-    return std::filesystem::path(std::to_string(x) + "_" + std::to_string(z) + ".bin");
+static io::path get_region_filename(int x, int z) {
+    return std::to_string(x) + "_" + std::to_string(z) + ".bin";
 }
 
 static void fetch_chunks(WorldRegion* region, int x, int z, regFile* file) {
@@ -25,7 +25,7 @@ static void fetch_chunks(WorldRegion* region, int x, int z, regFile* file) {
     }
 }
 
-regFile::regFile(std::filesystem::path filename) : file(std::move(filename)) {
+regFile::regFile(io::path filename) : file(std::move(filename)) {
     if (file.length() < REGION_HEADER_SIZE) {
         LOG_ERROR("Incomplete region file header");
         throw std::runtime_error("Incomplete region file header");
@@ -101,9 +101,7 @@ regFile_ptr RegionsLayer::getRegFile(glm::ivec2 coord, bool create) {
 
 regFile_ptr RegionsLayer::createRegFile(glm::ivec2 coord) {
     auto file =  folder / get_region_filename(coord[0], coord[1]);
-    if (!std::filesystem::exists(file)) {
-        return nullptr;
-    }
+    if (!io::exists(file)) return nullptr;
     if (openRegFiles.size() == MAX_OPEN_REGION_FILES) {
         std::unique_lock lock(regFilesMutex);
         while (true) {
@@ -139,8 +137,8 @@ WorldRegion* RegionsLayer::getRegion(int x, int z) {
     return found->second.get();
 }
 
-std::filesystem::path RegionsLayer::getRegionFilePath(int x, int z) const {
-    return folder/get_region_filename(x, z);
+io::path RegionsLayer::getRegionFilePath(int x, int z) const {
+    return folder / get_region_filename(x, z);
 }
 
 WorldRegion* RegionsLayer::getOrCreateRegion(int x, int z) {
@@ -180,7 +178,7 @@ ubyte* RegionsLayer::getData(int x, int z, uint32_t& size, uint32_t& srcSize) {
 }
 
 void RegionsLayer::writeRegion(int x, int z, WorldRegion* entry) {
-    std::filesystem::path filename = folder / get_region_filename(x, z);
+    io::path filename = folder / get_region_filename(x, z);
 
     glm::ivec2 regcoord(x, z);
     if (auto regFile = getRegFile(regcoord, false)) {
@@ -194,7 +192,7 @@ void RegionsLayer::writeRegion(int x, int z, WorldRegion* entry) {
     char header[REGION_HEADER_SIZE] = REGION_FORMAT_MAGIC;
     header[REGION_HEADER_SIZE - 2] = REGION_FORMAT_VERSION;
     header[REGION_HEADER_SIZE - 1] = static_cast<ubyte>(compression);
-    std::ofstream file(filename, std::ios::out | std::ios::binary);
+    std::ofstream file(io::resolve(filename), std::ios::out | std::ios::binary);
     file.write(header, REGION_HEADER_SIZE);
 
     size_t offset = REGION_HEADER_SIZE;

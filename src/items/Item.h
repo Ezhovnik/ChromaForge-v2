@@ -34,6 +34,8 @@ struct Item {
 
     ubyte emission[4] {0, 0, 0, 0};
 
+    int16_t uses = -1;
+
     ItemIconType iconType = ItemIconType::Sprite;
     std::string icon = "blocks:notfound";
 

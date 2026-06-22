@@ -8,7 +8,7 @@
 #include <frontend/hud.h>
 #include <util/stringutil.h>
 #include <graphics/ui/GUI.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <graphics/ui/elements/layout/Container.h>
 
 namespace scripting {
@@ -125,23 +125,22 @@ static int l_is_pressed(lua::State* L) {
     }
 }
 
-static void resetPackBindings(std::filesystem::path& packFolder) {
-    auto configFolder = packFolder/std::filesystem::path("config");
-    auto bindsFile = configFolder/std::filesystem::path("bindings.toml");
-    if (std::filesystem::is_regular_file(bindsFile)) {
+static void reset_pack_bindings(const io::path& packFolder) {
+    auto configFolder = packFolder / "config";
+    auto bindsFile = configFolder / "bindings.toml";
+    if (io::is_regular_file(bindsFile)) {
         Events::loadBindings(
-            bindsFile.u8string(),
-            files::read_string(bindsFile),
+            bindsFile.string(),
+            io::read_string(bindsFile),
             BindType::Rebind
         );
     }
 }
 
 static int l_reset_bindings(lua::State*) {
-    auto resFolder = scripting::engine->getPaths().getResourcesFolder();
-    resetPackBindings(resFolder);
+    reset_pack_bindings("res:");
     for (auto& pack : scripting::engine->getContentPacks()) {
-        resetPackBindings(pack.folder);
+        reset_pack_bindings(pack.folder);
     }
     return 0;
 }

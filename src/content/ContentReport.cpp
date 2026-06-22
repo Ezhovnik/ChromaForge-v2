@@ -4,12 +4,12 @@
 
 #include <content/Content.h>
 #include <constants.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <coders/json.h>
 #include <voxels/Block.h>
 #include <items/Item.h>
 #include <world/World.h>
-#include <files/WorldFiles.h>
+#include <world/files/WorldFiles.h>
 
 ContentReport::ContentReport(
     const ContentIndices* indices,
@@ -66,7 +66,7 @@ static void process_blocks_data(
 
 std::shared_ptr<ContentReport> ContentReport::create(
     const std::shared_ptr<WorldFiles>& worldFiles,
-    const std::filesystem::path& filename, 
+    const io::path& filename,
     const Content* content
 ) {
     auto worldInfo = worldFiles->readWorldInfo();
@@ -74,7 +74,7 @@ std::shared_ptr<ContentReport> ContentReport::create(
         return nullptr;
     }
 
-    auto root = files::read_json(filename);
+    auto root = io::read_json(filename);
     uint regionsVersion = static_cast<uint>(root["region-version"].asInteger(REGION_FORMAT_VERSION));
     auto& blocklist = root["blocks"];
     auto& itemlist = root["items"];

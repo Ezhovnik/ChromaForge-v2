@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <filesystem>
 #include <vector>
 #include <optional>
 
@@ -10,10 +9,10 @@
 #include <glm/gtx/hash.hpp>
 
 #include <typedefs.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <voxels/Chunk.h>
 #include <content/ContentPack.h>
-#include <files/WorldRegions.h>
+#include <world/files/WorldRegions.h>
 
 class Player;
 class Content;
@@ -25,27 +24,27 @@ struct DebugSettings;
 // Класс для управления хранением и загрузкой данных мира в формате чанков и регионов.
 class WorldFiles {
 private:
-    std::filesystem::path directory; // Путь к директории с файлами мира
+    io::path directory; // Путь к директории с файлами мира
     WorldRegions regions;
 
     bool generatorTestMode = false;
     bool doWriteLights = true;
 
-    std::filesystem::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информация о мире
-    std::filesystem::path getPacksFile() const;
+    io::path getWorldFile() const; // Генерирует имя файла, в котором записана общая информация о мире
+    io::path getPacksFile() const;
 
     void writeWorldInfo(const WorldInfo& info);
     void writeIndices(const ContentIndices* indices);
 public:
     static const inline std::string WORLD_FILE = "world.json";
 
-    WorldFiles(const std::filesystem::path& directory);
-    WorldFiles(const std::filesystem::path& directory, const DebugSettings& settings); // Конструктор
+    WorldFiles(const io::path& directory);
+    WorldFiles(const io::path& directory, const DebugSettings& settings); // Конструктор
     ~WorldFiles(); // Деструктор
 
-    std::filesystem::path getPlayerFile() const;
-    std::filesystem::path getResourcesFile() const;
-    std::filesystem::path getIndicesFile() const;
+    io::path getPlayerFile() const;
+    io::path getResourcesFile() const;
+    io::path getIndicesFile() const;
     void createDirectories();
 
     std::optional<WorldInfo> readWorldInfo();
@@ -66,7 +65,7 @@ public:
 
     void removeIndices(const std::vector<std::string>& packs);
 
-    std::filesystem::path getFolder() const;
+    io::path getFolder() const;
 
     WorldRegions& getRegions() {
         return regions;

@@ -3,12 +3,12 @@
 #include <algorithm>
 
 #include <content/ContentPack.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <logic/scripting/scripting.h>
 #include <world/generator/Generator.h>
 #include <world/generator/VoxelFragment.h>
 #include <debug/Logger.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <util/stringutil.h>
 
 static BlocksLayer load_layer(
@@ -137,21 +137,21 @@ static VoxelStructureMeta load_structure_meta(
 }
 
 static std::vector<std::unique_ptr<VoxelStructure>> load_structures(
-    const dv::value& map, const std::filesystem::path& filesFolder, const ResPaths& paths
+    const dv::value& map, const io::path& filesFolder, const ResPaths& paths
 ) {
-    auto structuresDir = filesFolder/std::filesystem::path("fragments");
+    auto structuresDir = filesFolder / "fragments";
 
     std::vector<std::unique_ptr<VoxelStructure>> structures;
     for (auto& [name, config] : map.asObject()) {
-        auto structFile = structuresDir / std::filesystem::u8path(name + ".vox");
-        structFile = paths.find(structFile.u8string());
-        LOG_DEBUG("Loading voxel fragment {}", structFile.u8string());
-        if (!std::filesystem::exists(structFile)) {
-            LOG_ERROR("Structure file does not exist: {}", structFile.u8string());
-            throw std::runtime_error("Structure file does not exist: " + structFile.u8string());
+        auto structFile = structuresDir / (name + ".vox");
+        structFile = paths.find(structFile.string());
+        LOG_DEBUG("Loading voxel fragment {}", structFile.string());
+        if (!io::exists(structFile)) {
+            LOG_ERROR("Structure file does not exist: {}", structFile.string());
+            throw std::runtime_error("Structure file does not exist: " + structFile.string());
         }
         auto fragment = std::make_unique<VoxelFragment>();
-        fragment->deserialize(files::read_binary_json(structFile));
+        fragment->deserialize(io::read_binary_json(structFile));
 
         structures.push_back(std::make_unique<VoxelStructure>(
             load_structure_meta(name, config),
@@ -164,7 +164,7 @@ static std::vector<std::unique_ptr<VoxelStructure>> load_structures(
 static void load_structures(
     Generator& def,
     const dv::value& map,
-    const std::filesystem::path& filesFolder,
+    const io::path& filesFolder,
     const ResPaths& paths
 ) {
     auto rawStructures = load_structures(map, filesFolder, paths);
@@ -180,9 +180,9 @@ static void load_structures(
     }
 }
 
-static inline const auto STRUCTURES_FILE = std::filesystem::u8path("structures.toml");
-static inline const auto BIOMES_FILE = std::filesystem::u8path("biomes.toml");
-static inline const auto GENERATORS_DIR = std::filesystem::u8path("generators");
+static inline const io::path STRUCTURES_FILE = "structures.toml";
+static inline const io::path BIOMES_FILE = "biomes.toml";
+static inline const io::path GENERATORS_DIR = "generators";
 
 static void load_biomes(Generator& def, const dv::value& root) {
     for (const auto& [biomeName, biomeMap] : root.asObject()) {
@@ -201,10 +201,10 @@ void ContentLoader::loadGenerator(
     Generator& def, const std::string& full, const std::string& name
 ) {
     auto packDir = pack->folder;
-    auto generatorsDir = packDir/GENERATORS_DIR;
-    auto generatorFile = generatorsDir/std::filesystem::u8path(name + ".toml");
-    if (!std::filesystem::exists(generatorFile)) return;
-    auto map = files::read_toml(generatorsDir/std::filesystem::u8path(name + ".toml"));
+    auto generatorsDir = packDir / GENERATORS_DIR;
+    auto generatorFile = generatorsDir / (name + ".toml");
+    if (!io::exists(generatorFile)) return;
+    auto map = io::read_toml(generatorsDir / (name + ".toml"));
     map.at("caption").get(def.caption);
     map.at("biome-parameters").get(def.biomeParameters);
     map.at("biome-bpd").get(def.biomesBPD);
@@ -239,15 +239,15 @@ void ContentLoader::loadGenerator(
         LOG_WARN("Generator has heightmap-inputs but biomes-bpd is not equal to heights-bpd, generator will work slower!");
     }
 
-    auto folder = generatorsDir/std::filesystem::u8path(name + ".files");
-    auto scriptFile = folder/std::filesystem::u8path("script.lua");
+    auto folder = generatorsDir / (name + ".files");
+    auto scriptFile = folder / "script.lua";
 
-    auto structuresFile = GENERATORS_DIR/std::filesystem::u8path(name + ".files")/STRUCTURES_FILE;
-    auto structuresMap = paths.readCombinedObject(structuresFile.u8string());
-    load_structures(def, structuresMap, structuresFile.parent_path(), paths);
+    auto structuresFile = GENERATORS_DIR / (name + ".files") / STRUCTURES_FILE;
+    auto structuresMap = paths.readCombinedObject(structuresFile.string());
+    load_structures(def, structuresMap, structuresFile.parent(), paths);
 
-    auto biomesFile = GENERATORS_DIR/std::filesystem::u8path(name + ".files")/BIOMES_FILE;
-    auto biomesMap = paths.readCombinedObject(biomesFile.u8string());
+    auto biomesFile = GENERATORS_DIR / (name + ".files") / BIOMES_FILE;
+    auto biomesMap = paths.readCombinedObject(biomesFile.string());
     if (biomesMap.empty()) {
         LOG_ERROR("Generator {}: at least one biome required", util::quote(def.name));
         throw std::runtime_error(

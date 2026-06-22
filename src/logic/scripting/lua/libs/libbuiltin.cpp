@@ -3,14 +3,14 @@
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>
-#include <files/engine_paths.h>
+#include <io/engine_paths.h>
 #include <frontend/menu.h>
 #include <window/Window.h>
 #include <frontend/screens/MenuScreen.h>
 #include <logic/LevelController.h>
 #include <window/Events.h>
 #include <logic/EngineController.h>
-#include <files/settings_io.h>
+#include <io/settings_io.h>
 #include <world/Level.h>
 #include <data/setting.h>
 #include <content/Content.h>
@@ -19,7 +19,7 @@
 #include <util/platform.h>
 #include <coders/png.h>
 #include <debug/Logger.h>
-#include <files/files.h>
+#include <io/io.h>
 #include <graphics/core/Texture.h>
 
 static int l_get_version(lua::State* L) {
@@ -34,6 +34,7 @@ static int l_open_world(lua::State* L) {
         throw std::runtime_error("World must be closed before");
     }
     auto controller = scripting::engine->getController();
+    controller->setLocalPlayer(0);
     controller->openWorld(name, false);
     return 0;
 }
@@ -48,8 +49,7 @@ static int l_reopen_world(lua::State*) {
 }
 
 static int l_open_folder(lua::State* L) {
-    auto path = scripting::engine->getPaths().resolve(lua::require_string(L, 1));
-    platform::open_folder(path);
+    platform::open_folder(io::resolve(lua::require_string(L, 1)));
     return 0;
 }
 
@@ -122,7 +122,13 @@ static int l_reconfig_packs(lua::State* L) {
         lua::pop(L);
     }
     auto controller = scripting::engine->getController();
-    controller->reconfigPacks(scripting::controller, addPacks, remPacks);
+    try {
+        controller->reconfigPacks(scripting::controller, addPacks, remPacks);
+    } catch (const contentpack_error& err) {
+        throw std::runtime_error(
+            std::string(err.what()) + " [" + err.getPackId() + " ]"
+        );
+    }
     return 0;
 }
 
@@ -130,10 +136,15 @@ static int l_new_world(lua::State* L) {
     auto name = lua::require_string(L, 1);
     auto seed = lua::require_string(L, 2);
     auto generator = lua::require_string(L, 3);
+    int64_t localPlayer = 0;
+    if (lua::gettop(L) >= 4) {
+        localPlayer = lua::tointeger(L, 4);
+    }
     if (scripting::level != nullptr) {
         throw std::runtime_error("World must be closed before");
     }
     auto controller = scripting::engine->getController();
+    controller->setLocalPlayer(localPlayer);
     controller->createWorld(name, seed, generator);
     return 0;
 }

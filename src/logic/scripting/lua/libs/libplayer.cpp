@@ -32,7 +32,7 @@ static int l_set_pos(lua::State* L) {
 
 static int l_get_rot(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        return lua::pushvec_stack(L, player->rotation);
+        return lua::pushvec_stack(L, player->getRotation(lua::toboolean(L, 2)));
     }
     return 0;
 }
@@ -40,7 +40,7 @@ static int l_get_rot(lua::State* L) {
 static int l_set_rot(lua::State* L) {
     auto player = get_player(L, 1);
     if (!player) return 0;
-    glm::vec3& rotation = player->rotation;
+    glm::vec3 rotation = player->getRotation();
 
     auto x = lua::tonumber(L, 2);
     auto y = lua::tonumber(L, 3);
@@ -51,6 +51,7 @@ static int l_set_rot(lua::State* L) {
     rotation.x = x;
     rotation.y = y;
     rotation.z = z;
+    player->setRotation(rotation);
     return 0;
 }
 
@@ -154,7 +155,9 @@ static int l_get_entity(lua::State* L) {
 static int l_set_entity(lua::State* L) {
     auto player = get_player(L, 1);
     if (player == nullptr) return 0;
-    if (auto entity = get_entity(L, 2)) {
+    if (lua::isnumber(L, 2)) {
+        player->setEntity(lua::tointeger(L, 2));
+    } else if (auto entity = get_entity(L, 2)) {
         player->setEntity(entity->getUID());
     }
     return 0;
@@ -232,10 +235,12 @@ static int l_set_name(lua::State* L) {
 }
 
 static int l_create(lua::State* L) {
-    auto player = scripting::level->players->create();
-    if (lua::isstring(L, 1)) {
-        player->setName(lua::require_string(L, 1));
+    int64_t playerId = Players::NONE;
+    if (lua::gettop(L) >= 2) {
+        playerId = lua::tointeger(L, 2);
     }
+    auto player = scripting::level->players->create(playerId);
+    player->setName(lua::require_string(L, 1));
     return lua::pushinteger(L, player->getId());
 }
 
@@ -261,7 +266,9 @@ static int l_set_loading_chunks(lua::State* L) {
 }
 
 static int l_delete(lua::State* L) {
-    scripting::level->players->remove(lua::tointeger(L, 1));
+    auto id = lua::tointeger(L, 1);
+    scripting::level->players->suspend(id);
+    scripting::level->players->remove(id);
     return 0;
 }
 

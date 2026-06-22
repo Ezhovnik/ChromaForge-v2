@@ -90,6 +90,7 @@ private:
 
     bool inventoryOpen = false;
     bool pause = false;
+    bool allowPause = true;
 
     std::shared_ptr<gui::UINode> debugPanel;
     std::shared_ptr<gui::SlotView> exchangeSlot;
@@ -147,6 +148,7 @@ public:
     bool isContentAccess() const;
     void setContentAccess(bool flag);
     void setDebugCheats(bool flag);
+    void setAllowPause(bool flag);
 
     void add(const HudElement& element, const dv::value& arg=nullptr);
 	void onRemove(const HudElement& element);

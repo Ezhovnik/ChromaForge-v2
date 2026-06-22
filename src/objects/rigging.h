@@ -4,10 +4,13 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <cmath>
 
-#include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
 
 #include <typedefs.h>
+#include <util/Interpolation.h>
 
 class Assets;
 class ModelBatch;
@@ -86,6 +89,8 @@ namespace rigging {
         bool visible;
         glm::vec3 tint {1.0f, 1.0f, 1.0f};
 
+        util::VecInterpolation<3, float> interpolation {false};
+
         Skeleton(const SkeletonConfig* config);
     };
 
@@ -100,7 +105,7 @@ namespace rigging {
             size_t index,
             Skeleton& skeleton,
             Bone* node,
-            glm::mat4 matrix
+            const glm::mat4& matrix
         ) const;
     public:
         SkeletonConfig(
@@ -109,12 +114,17 @@ namespace rigging {
             size_t nodesCount
         );
 
-        void update(Skeleton& skeleton, glm::mat4 matrix) const;
+        void update(
+            Skeleton& skeleton,
+            const glm::mat4& matrix,
+            const glm::vec3& position
+        ) const;
         void render(
             const Assets& assets,
             ModelBatch& batch,
             Skeleton& skeleton, 
-            const glm::mat4& matrix
+            const glm::mat4& matrix,
+            const glm::vec3& position
         ) const;
 
         Skeleton instance() const {

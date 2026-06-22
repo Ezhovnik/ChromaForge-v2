@@ -3,8 +3,9 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <filesystem>
 #include <unordered_map>
+
+#include <io/fwd.h>
 
 struct ContentPack;
 
@@ -81,7 +82,7 @@ namespace langs {
      * @param[out] fallback Сюда будет записана локаль по умолчанию из файла (или FALLBACK_DEFAULT).
      */
     extern void loadLocalesInfo(
-        const std::filesystem::path& resdir, 
+        const io::path& resdir, 
         std::string& fallback
     );
 
@@ -93,7 +94,7 @@ namespace langs {
      * @param lang Объект Lang, в который будут добавлены переводы.
      */
     extern void load(
-        const std::filesystem::path& resdir,
+        const io::path& resdir,
         const std::string& locale, 
         const std::vector<ContentPack>& packs, 
         Lang& lang
@@ -110,7 +111,7 @@ namespace langs {
      * Результат сохраняется в current.
      */
     extern void load(
-        const std::filesystem::path& resdir, 
+        const io::path& resdir, 
         const std::string& locale, 
         const std::string& fallback, 
         const std::vector<ContentPack>& packs
@@ -139,7 +140,7 @@ namespace langs {
      * @param packs Список контент-паков.
      */
     extern void setup(
-        const std::filesystem::path& resdir, 
+        const io::path& resdir, 
         std::string locale, 
         const std::vector<ContentPack>& packs
     );

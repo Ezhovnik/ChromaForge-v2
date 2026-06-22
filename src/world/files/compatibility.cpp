@@ -1,8 +1,8 @@
-#include <files/compatibility.h>
+#include <world/files/compatibility.h>
 
 #include <stdexcept>
 
-#include <files/world_regions_fwd.h>
+#include <world/files/world_regions_fwd.h>
 #include <voxels/voxel.h>
 #include <coders/compression.h>
 #include <coders/byte_utils.h>

@@ -23,8 +23,8 @@ glm::vec2 Events::delta = {};
 glm::vec2 Events::cursor = {};
 
 // Флаги для упраления состоянием курсора
-bool Events::_cursor_locked = false; // Режим захвата курсора
-bool Events::cursor_drag = false; // Начал ли пользователь движение мышью
+bool Events::cursorLocked = false; // Режим захвата курсора
+bool Events::cursorDrag = false; // Начал ли пользователь движение мышью
 
 int Events::scroll = 0;
 
@@ -73,9 +73,9 @@ bool Events::justClicked(int button) {
 
 // Переключает режим курсора между нормальным и заблокированным состоянием
 void Events::toggleCursor() {
-	cursor_drag = false;
-    _cursor_locked = !_cursor_locked;
-    Window::setCursorMode(_cursor_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	cursorDrag = false;
+    cursorLocked = !cursorLocked;
+    Window::setCursorMode(cursorLocked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 }
 
 void Events::bind(const std::string& name, inputType type, keycode code) {
@@ -172,11 +172,11 @@ void Events::setButton(int button, bool b) {
 }
 
 void Events::setPosition(float xpos, float ypos) {
-    if (Events::cursor_drag) {
+    if (Events::cursorDrag) {
         Events::delta.x += xpos - Events::cursor.x;
         Events::delta.y += ypos - Events::cursor.y;
     } else {
-        Events::cursor_drag = true;
+        Events::cursorDrag = true;
 	}
 
     Events::cursor.x = xpos;
@@ -254,4 +254,8 @@ void Events::enableBindings() {
         auto& binding = entry.second;
         binding.enable = true;
     }
+}
+
+bool Events::isCursorLocked() {
+    return cursorLocked;
 }
