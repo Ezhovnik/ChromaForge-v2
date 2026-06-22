@@ -30,7 +30,7 @@ public:
 
     void move(
         ItemStack& item,
-        const ContentIndices* indices,
+        const ContentIndices& indices,
         size_t begin=0,
         size_t end=-1
     );

@@ -1,10 +1,7 @@
-#include <logic/scripting/lua/libs/api_lua.h>
+#include <logic/scripting/lua/libs/libhud.h>
 
-#include <logic/scripting/scripting_hud.h>
-#include <graphics/render/WorldRenderer.h>
 #include <graphics/render/TextsRenderer.h>
 #include <graphics/render/TextNote.h>
-#include <engine/Engine.h>
 
 static int l_show(lua::State* L) {
     auto position = lua::tovec3(L, 1);
@@ -98,17 +95,17 @@ static int l_set_rotation(lua::State* L) {
 }
 
 const luaL_Reg text3dlib[] = {
-    {"show", lua::wrap<l_show>},
-    {"hide", lua::wrap<l_hide>},
-    {"get_text", lua::wrap<l_get_text>},
-    {"set_text", lua::wrap<l_set_text>},
-    {"get_pos", lua::wrap<l_get_pos>},
-    {"set_pos", lua::wrap<l_set_pos>},
-    {"get_axis_x", lua::wrap<l_get_axis_x>},
-    {"set_axis_x", lua::wrap<l_set_axis_x>},
-    {"get_axis_y", lua::wrap<l_get_axis_y>},
-    {"set_axis_y", lua::wrap<l_set_axis_y>},
-    {"set_rotation", lua::wrap<l_set_rotation>},
-    {"update_settings", lua::wrap<l_update_settings>},
+    {"show", lua::wrap_hud<l_show>},
+    {"hide", lua::wrap_hud<l_hide>},
+    {"get_text", lua::wrap_hud<l_get_text>},
+    {"set_text", lua::wrap_hud<l_set_text>},
+    {"get_pos", lua::wrap_hud<l_get_pos>},
+    {"set_pos", lua::wrap_hud<l_set_pos>},
+    {"get_axis_x", lua::wrap_hud<l_get_axis_x>},
+    {"set_axis_x", lua::wrap_hud<l_set_axis_x>},
+    {"get_axis_y", lua::wrap_hud<l_get_axis_y>},
+    {"set_axis_y", lua::wrap_hud<l_set_axis_y>},
+    {"set_rotation", lua::wrap_hud<l_set_rotation>},
+    {"update_settings", lua::wrap_hud<l_update_settings>},
     {NULL, NULL}
 };

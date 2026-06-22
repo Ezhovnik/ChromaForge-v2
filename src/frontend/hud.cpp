@@ -104,21 +104,21 @@ std::shared_ptr<gui::UINode> HudElement::getNode() const {
 
 std::shared_ptr<gui::InventoryView> Hud::createContentAccess() {
     auto& content = levelFrontend.getLevel().content;
-    auto indices = content.getIndices();
+    auto& indices = *content.getIndices();
     auto inventory = player.getInventory();
 
-    int itemsCount = indices->items.count();
+    int itemsCount = indices.items.count();
     auto accessInventory = std::make_shared<Inventory>(0, itemsCount);
     for (size_t id = 1; id < itemsCount; ++id) {
         accessInventory->getSlot(id - 1).set(ItemStack(id, 1));
     }
 
     gui::SlotLayout slotLayout(-1, glm::vec2(), false, true, nullptr,
-    [=](uint, ItemStack& item) {
+    [inventory, &indices](uint, ItemStack& item) {
         auto copy = ItemStack(item);
         inventory->move(copy, indices);
     }, 
-    [=](uint, ItemStack& item) {
+    [this, inventory](uint, ItemStack& item) {
         inventory->getSlot(player.getChosenSlot()).set(item);
     });
 
@@ -356,7 +356,10 @@ void Hud::draw(const DrawContext& context) {
 	const uint height = viewport.getHeight();
     auto menu = guiController.getMenu();
 
-    darkOverlay->setVisible(menu->hasOpenPage());
+    bool is_menu_open = menu->hasOpenPage();
+    darkOverlay->setVisible(is_menu_open);
+    menu->setVisible(is_menu_open);
+
     updateElementsPosition(viewport);
 
     uicamera->setFov(height);
@@ -546,10 +549,10 @@ void Hud::dropExchangeSlot() {
 
     auto indices = levelFrontend.getLevel().content.getIndices();
     if (auto invView = std::dynamic_pointer_cast<gui::InventoryView>(blockUI)) {
-        invView->getInventory()->move(stack, indices);
+        invView->getInventory()->move(stack, *indices);
     }
     if (stack.isEmpty()) return;
-    player.getInventory()->move(stack, indices);
+    player.getInventory()->move(stack, *indices);
     if (!stack.isEmpty()) {
         LOG_WARN("Discard item [{}]: {}", stack.getItemId(), stack.getCount());
         stack.clear();
@@ -610,7 +613,6 @@ void Hud::setPause(bool pause) {
     if (pause && !menu->hasOpenPage()) {
         menu->setPage("pause");
     }
-    menu->setVisible(pause);
 }
 
 void Hud::add(const HudElement& element, const dv::value& argsArray) {
