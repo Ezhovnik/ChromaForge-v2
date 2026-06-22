@@ -8,6 +8,7 @@
 #include <engine/Engine.h>
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <content/ContentLoader.h>
+#include <content/Content.h>
 
 static int l_save_fragment(lua::State* L) {
     const auto& paths = scripting::engine->getPaths();
@@ -63,7 +64,7 @@ static int l_get_generators(lua::State* L) {
 
 static int l_get_default_generator(lua::State* L) {
     auto combined = scripting::engine->getResPaths()->readCombinedObject(
-        EnginePaths::CONFIG_DEFAULTS.u8string()
+        EnginePaths::CONFIG_DEFAULTS.string()
     );
     return lua::pushstring(L, combined["generator"].asString());
 }

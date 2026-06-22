@@ -282,8 +282,9 @@ void TextBox::erase(size_t start, size_t length) {
 bool TextBox::eraseSelected() {
     if (selectionStart == selectionEnd) return false;
 
-    erase(selectionStart, selectionEnd-selectionStart);
+    erase(selectionStart, selectionEnd - selectionStart);
     resetSelection();
+    onInput();
     return true;
 }
 

@@ -23,6 +23,7 @@
 #include <data/dv_util.h>
 #include <data/StructLayout.h>
 #include <presets/ParticlesPreset.h>
+#include <io/engine_paths.h>
 
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder, const ResPaths& paths) : pack(pack), builder(builder), paths(paths) {
     auto runtime = std::make_unique<ContentPackRuntime>(
@@ -734,6 +735,10 @@ void ContentLoader::load() {
     fixPackIndices();
 
     auto folder = pack->folder;
+
+    builder.defaults = paths.readCombinedObject(
+        EnginePaths::CONFIG_DEFAULTS.string()
+    );
 
     io::path generatorsDir = folder / "generators";
     foreach_file(generatorsDir, [this](const io::path& file) {

@@ -46,7 +46,7 @@ public:
 
     static std::tuple<std::string, std::string> parsePath(std::string_view view);
 
-    static inline auto CONFIG_DEFAULTS = std::filesystem::u8path("config/defaults.toml");
+    static inline io::path CONFIG_DEFAULTS = "config/defaults.toml";
 };
 
 struct PathsRoot {
