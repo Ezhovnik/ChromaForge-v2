@@ -263,7 +263,7 @@ std::optional<Entities::RaycastResult> Entities::rayCast(
     glm::ivec3 foundNormal;
 
     for (auto [entity, eid, transform, body] : view.each()) {
-        if (eid.uid == ignore) continue;
+        if (eid.uid == ignore || !body.enabled) continue;
         auto& hitbox = body.hitbox;
         glm::ivec3 normal;
         double distance;

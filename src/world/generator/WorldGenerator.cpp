@@ -381,7 +381,11 @@ void WorldGenerator::generatePlants(
                     if (voxel.id) continue;
                     auto& groundVoxel = voxels[vox_index(x, height, z)];
                     if (indices.get(groundVoxel.id)->rt.solid) {
+                        const auto& def = indices.require(plant);
                         voxel = {plant, {}};
+                        if (def.rotatable && def.rotations.variantsCount) {
+                            voxel.state.rotation = plantsRand.rand() % def.rotations.variantsCount;
+                        }
                     }
                 }
             }
