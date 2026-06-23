@@ -7,6 +7,7 @@
 
 #include <util/stringutil.h>
 #include <debug/Logger.h>
+#include <coders/BasicParser.h>
 
 using namespace xml;
 
@@ -187,7 +188,7 @@ inline bool is_xml_identifier_part(char c) {
 }
 
 namespace {
-class Parser : BasicParser {
+class Parser : BasicParser<char> {
     std::unique_ptr<Document> document;
 
     std::unique_ptr<Node> parseOpenTag() {

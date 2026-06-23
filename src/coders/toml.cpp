@@ -5,7 +5,7 @@
 #include <sstream>
 #include <assert.h>
 
-#include <coders/commons.h>
+#include <coders/BasicParser.h>
 #include <util/stringutil.h>
 #include <io/settings_io.h>
 #include <debug/Logger.h>
@@ -13,7 +13,7 @@
 
 using namespace toml;
 
-class TomlReader : BasicParser {
+class TomlReader : BasicParser<char> {
     dv::value root;
 
     void skipWhitespace() override {

@@ -3,23 +3,7 @@
 #include <string>
 #include <stdexcept>
 
-#include <data/dv.h>
 #include <typedefs.h>
-
-inline int detect_base(char c) {
-    switch (c) {
-        case 'B':
-        case 'b':
-            return 2;
-        case 'O':
-        case 'o':
-            return 8;
-        case 'X':
-        case 'x':
-            return 16; 
-    }
-    return 10;
-}
 
 inline int hexchar2int(char c) {
     if (c >= '0' && c <= '9') return c - '0';
@@ -70,48 +54,13 @@ public:
         uint linestart
     );
 
+    parsing_error(
+        const std::string& message,
+        std::string&& filename,
+        std::string&& source,
+        uint pos,
+        uint line,
+        uint linestart
+    );
     std::string errorLog() const;
-};
-
-class BasicParser {
-protected:
-    std::string_view filename;
-    std::string_view source;
-    uint pos = 0;
-    uint line = 1;
-    uint linestart = 0;
-
-    virtual void skipWhitespace();
-    void skip(size_t n);
-    bool skipTo(const std::string& substring);
-    void skipLine();
-
-    void expect(char expected);
-    void expect(const std::string& substring);
-    void expectNewLine();
-    bool isNext(const std::string& substring);
-    void goBack(size_t count=1);
-    void reset();
-
-    int64_t parseSimpleInt(int base);
-    dv::value parseNumber(int sign);
-    dv::value parseNumber();
-    std::string parseString(char chr, bool closeRequired = true);
-
-    parsing_error error(const std::string& message);
-public:
-    std::string_view readUntil(char c);
-    std::string_view readUntil(std::string_view s, bool nothrow);
-    std::string_view readUntilWhitespace();
-    std::string_view readUntilEOL();
-    std::string parseName();
-    std::string parseXmlName();
-    bool hasNext();
-    size_t remain() const;
-    char peek();
-    char peekInLine();
-    char peekNoJump();
-    char nextChar();
-
-    BasicParser(std::string_view file, std::string_view source);
 };

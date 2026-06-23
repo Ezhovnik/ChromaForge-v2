@@ -5,14 +5,14 @@
 #include <iomanip>
 #include <memory>
 
-#include <coders/commons.h>
+#include <coders/BasicParser.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 
 using namespace json;
 
 namespace {
-    class Parser : BasicParser {
+    class Parser : BasicParser<char> {
     private:
         dv::value parseList();
         dv::value parseObject();

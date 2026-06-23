@@ -3,7 +3,7 @@
 #include <utility>
 
 #include <coders/json.h>
-#include <coders/commons.h>
+#include <coders/BasicParser.h>
 #include <content/ContentPack.h>
 #include <io/io.h>
 #include <util/stringutil.h>
@@ -38,7 +38,7 @@ const std::string& langs::Lang::getId() const {
  * Пустые строки игнорируются.
  */
 namespace {
-    class Reader : BasicParser {
+    class Reader : BasicParser<char> {
         /**
          * @brief Переопределённый метод пропуска пробелов, пропускает комментарии.
         */
