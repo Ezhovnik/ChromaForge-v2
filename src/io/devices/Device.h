@@ -19,6 +19,8 @@ namespace io {
 
         virtual size_t size(std::string_view path) = 0;
 
+        virtual file_time_type lastWriteTime(std::string_view path) = 0;
+
         virtual bool exists(std::string_view path) = 0;
         virtual bool isdir(std::string_view path) = 0;
         virtual bool isfile(std::string_view path) = 0;
@@ -51,6 +53,10 @@ namespace io {
 
         size_t size(std::string_view path) override {
             return parent->size((root / path).pathPart());
+        }
+
+        file_time_type lastWriteTime(std::string_view path) override {
+            return parent->lastWriteTime((root / path).pathPart());
         }
 
         bool exists(std::string_view path) override {

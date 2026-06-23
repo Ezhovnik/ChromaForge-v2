@@ -5,6 +5,8 @@
 #include <filesystem>
 
 namespace io {
+    using file_time_type = std::filesystem::file_time_type;
+
     class access_error : public std::runtime_error {
     public:
         access_error(const std::string& msg) : std::runtime_error(msg) {

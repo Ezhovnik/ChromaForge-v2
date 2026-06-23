@@ -119,6 +119,8 @@ namespace io {
         bool compressed = false
     );
 
+    std::unique_ptr<std::ostream> write(const io::path& file);
+
     std::unique_ptr<std::istream> read(const io::path& file);
     bool read(const io::path& file, char* data, size_t size);
     util::Buffer<ubyte> read_bytes_buffer(const path& file);
@@ -141,7 +143,11 @@ namespace io {
     bool create_directories(const io::path& file);
     bool remove(const io::path& file);
     uint64_t remove_all(const io::path& file);
+    bool copy(const io::path& src, const io::path& dst);
+    uint64_t copy_all(const io::path& src, const io::path& dst);
     size_t file_size(const io::path& file);
+
+    file_time_type last_write_time(const io::path& file);
 
     std::filesystem::path resolve(const io::path& file);
 
