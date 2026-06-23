@@ -54,6 +54,7 @@ public:
     void update(
         float delta,
         const Camera& camera,
-        const WeatherPreset& preset
+        const WeatherPreset& weatherA,
+        const WeatherPreset& weatherB
     );
 };

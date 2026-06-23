@@ -123,7 +123,12 @@ void PrecipitationRenderer::render(
         {{0, 0, 1}, {1, 0, 0}},
     };
 
+    bool cutBack = glm::dot(camera.up, glm::vec3(0, 1, 0)) > 0.35f * camera.getFov();
     for (const auto& face : faces) {
+        if (glm::dot(camera.right, face.right) < 0.0f && cutBack) {
+            continue;
+        }
+
         for (int lx = -radius; lx <= radius; ++lx) {
             for (int lz = depth; lz > 0; --lz) {
                 glm::vec3 pos = face.right * static_cast<float>(lx) + face.front * static_cast<float>(lz);

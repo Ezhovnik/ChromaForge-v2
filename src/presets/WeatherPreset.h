@@ -12,14 +12,17 @@ struct WeatherPreset : Serializable {
         float vspeed = 1.0f;
         float hspeed = 0.1f;
         float scale = 0.1f;
-        float minOpacity = 0.8f;
+        float minOpacity = 0.0f;
+        float maxOpacity = 1.0f;
+        bool opaque = false;
         std::optional<ParticlesPreset> splash;
     } fall {};
 
-    float fogOpacity = 0.8f;
-    float fogDencity = 2.0f;
-    float clouds = 0.5f;
-    float intensity = 0.9f;
+    float fogOpacity = 0.0f;
+    float fogDencity = 1.0f;
+    float fogCurve = 1.0f;
+    float clouds = 0.0f;
+    float intensity = 1.0f;
 
     dv::value serialize() const override;
     void deserialize(const dv::value& src) override;
