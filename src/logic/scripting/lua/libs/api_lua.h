@@ -37,6 +37,7 @@ extern const luaL_Reg blockwrapslib[]; // gfx.blockwraps
 extern const luaL_Reg networklib[];
 extern const luaL_Reg applib[];
 extern const luaL_Reg byteutillib[];
+extern const luaL_Reg weatherlib[];
 
 extern const luaL_Reg skeletonlib [];
 extern const luaL_Reg rigidbodylib [];
