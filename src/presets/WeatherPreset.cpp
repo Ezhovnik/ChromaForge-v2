@@ -10,7 +10,15 @@ dv::value WeatherPreset::serialize() const {
     froot["vspeed"] = fall.vspeed;
     froot["hspeed"] = fall.hspeed;
     froot["scale"] = fall.scale;
+    froot["noise"] = fall.noise;
+    if (fall.splash) {
+        froot["splash"] = fall.splash->serialize();
+    }
     root["fall"] = froot;
+
+    root["fog_opacity"] = fogOpacity;
+    root["fog_dencity"] = fogDencity;
+    root["clouds"] = clouds;
 
     return root;
 }
@@ -22,5 +30,15 @@ void WeatherPreset::deserialize(const dv::value& src) {
         froot.at("vspeed").get(fall.vspeed);
         froot.at("hspeed").get(fall.hspeed);
         froot.at("scale").get(fall.scale);
+        froot.at("noise").get(fall.noise);
+
+        if (froot.has("splash")) {
+            const auto& sroot = froot["splash"];
+            fall.splash = ParticlesPreset {};
+            fall.splash->deserialize(sroot);
+        }
     }
+    src.at("fog_opacity").get(fogOpacity);
+    src.at("fog_dencity").get(fogDencity);
+    src.at("clouds").get(clouds);
 }

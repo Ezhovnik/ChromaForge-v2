@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 
 #include <graphics/core/DrawContext.h>
+#include <presets/WeatherPreset.h>
 
 class Camera;
 class Level;
@@ -72,6 +73,7 @@ public:
 	std::unique_ptr<ParticlesRenderer> particles;
 	std::unique_ptr<BlockWrapsRenderer> blockWraps;
 	std::unique_ptr<PrecipitationRenderer> precipitation;
+	WeatherPreset weather;
 
 	WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
 	~WorldRenderer();
