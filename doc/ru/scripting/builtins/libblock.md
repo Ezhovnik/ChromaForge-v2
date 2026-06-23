@@ -13,6 +13,9 @@ block.material(blockid: int) -> str
 -- Таблица материалов по их полным именам (пример: chromaforge:glass)
 block.materials: table<string, table>
 
+-- Таблица пользовательских свойств блоков (см. ../../block-properties.md)
+block.properties: table<int, table<string, object>>
+
 -- Возвращает название блока, отображаемое в интерфейсе.
 block.caption(blockid: int) -> str
 

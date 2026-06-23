@@ -107,6 +107,8 @@ class PseudoRandom {
 private:
 	ushort seed; ///< 16-битное состояние.
 public:
+    PseudoRandom(unsigned short seed) : seed(seed) {}
+
     /**
      * @brief Конструктор, инициализирующий seed текущим временем.
      */

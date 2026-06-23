@@ -55,6 +55,7 @@
 #include <graphics/render/GuidesRenderer.h>
 #include <graphics/render/BlockWrapsRenderer.h>
 #include <frontend/ContentGfxCache.h>
+#include <graphics/render/PrecipitationRenderer.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -77,12 +78,53 @@ WorldRenderer::WorldRenderer(
     frustumCulling(std::make_unique<Frustum>()),
     lineBatch(std::make_unique<LineBatch>()),
     batch3d(std::make_unique<Batch3D>(BATCH3D_CAPACITY)),
-    modelBatch(std::make_unique<ModelBatch>(MODEL_BATCH_CAPACITY, assets, *player.chunks, engine.getSettings())),
-    particles(std::make_unique<ParticlesRenderer>(assets, level, *player.chunks, &engine.getSettings().graphics)),
-    texts(std::make_unique<TextsRenderer>(*batch3d, assets, *frustumCulling)),
+    modelBatch(
+        std::make_unique<ModelBatch>(
+            MODEL_BATCH_CAPACITY,
+            assets,
+            *player.chunks,
+            engine.getSettings()
+        )
+    ),
+    particles(
+        std::make_unique<ParticlesRenderer>(
+            assets,
+            level,
+            *player.chunks,
+            &engine.getSettings().graphics
+        )
+    ),
+    texts(
+        std::make_unique<TextsRenderer>(
+            *batch3d, assets, *frustumCulling
+        )
+    ),
     guides(std::make_unique<GuidesRenderer>()),
-    chunks(std::make_unique<ChunksRenderer>(&level, *player.chunks, assets, *frustumCulling, levelFrontend.getContentGfxCache(), engine.getSettings())),
-    blockWraps(std::make_unique<BlockWrapsRenderer>(assets, level, *player.chunks))
+    chunks(
+        std::make_unique<ChunksRenderer>(
+            &level,
+            *player.chunks,
+            assets,
+            *frustumCulling,
+            levelFrontend.getContentGfxCache(),
+            engine.getSettings()
+        )
+    ),
+    blockWraps(
+        std::make_unique<BlockWrapsRenderer>(
+            assets,
+            level,
+            *player.chunks
+        )
+    ),
+    precipitation(
+        std::make_unique<PrecipitationRenderer>(
+            assets,
+            level,
+            *player.chunks,
+            &engine.getSettings().graphics
+        )
+    )
 {
 	auto& settings = engine.getSettings();
     level.events->listen(LevelEventType::CHUNK_HIDDEN, [this](LevelEventType, Chunk* chunk) {
@@ -183,6 +225,10 @@ void WorldRenderer::renderLevel(
     if (!pause) {
         scripting::on_frontend_render();
     }
+
+    setupWorldShader(entityShader, camera, settings, fogFactor);
+    entityShader.uniform1i("u_alphaClip", false);
+    precipitation->render(camera, pause ? 0.0f : deltaTime);
 
     skybox->unbind();
 }

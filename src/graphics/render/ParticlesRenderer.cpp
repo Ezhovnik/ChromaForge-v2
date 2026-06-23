@@ -175,24 +175,6 @@ void ParticlesRenderer::render(const Camera& camera, float deltaTime) {
     }
 }
 
-void ParticlesRenderer::gc() {
-    std::set<Emitter*> usedEmitters;
-    for (const auto& [_, vec] : particles) {
-        for (const auto& particle : vec) {
-            usedEmitters.insert(particle.emitter);
-        }
-    }
-    auto iter = emitters.begin();
-    while (iter != emitters.end()) {
-        auto emitter = iter->second.get();
-        if (usedEmitters.find(emitter) == usedEmitters.end()) {
-            iter = emitters.erase(iter);
-        } else {
-            iter++;
-        }
-    }
-}
-
 Emitter* ParticlesRenderer::getEmitter(uint64_t id) const {
     const auto& found = emitters.find(id);
     if (found == emitters.end()) {

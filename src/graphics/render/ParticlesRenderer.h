@@ -43,8 +43,6 @@ public:
 
     uint64_t add(std::unique_ptr<Emitter> emitter);
 
-    void gc();
-
     Emitter* getEmitter(uint64_t id) const;
 
     static size_t visibleParticles;

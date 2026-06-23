@@ -29,6 +29,7 @@ class ParticlesRenderer;
 class TextsRenderer;
 class GuidesRenderer;
 class BlockWrapsRenderer;
+class PrecipitationRenderer;
 
 class WorldRenderer {
 private:
@@ -70,6 +71,7 @@ public:
 	std::unique_ptr<TextsRenderer> texts;
 	std::unique_ptr<ParticlesRenderer> particles;
 	std::unique_ptr<BlockWrapsRenderer> blockWraps;
+	std::unique_ptr<PrecipitationRenderer> precipitation;
 
 	WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
 	~WorldRenderer();
