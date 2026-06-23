@@ -264,7 +264,7 @@ static int p_get_line_numbers(gui::UINode* node, lua::State* L) {
 
 static int p_get_data(gui::UINode* node, lua::State* L) {
     if (auto canvas = dynamic_cast<gui::Canvas*>(node)) {
-        return lua::newuserdata<lua::LuaCanvas>(L, canvas->texture());
+        return lua::newuserdata<lua::LuaCanvas>(L, canvas->texture(), canvas->data());
     }
     return 0;
 }
