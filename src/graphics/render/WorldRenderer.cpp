@@ -152,6 +152,8 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1f("u_gamma", settings.graphics.gamma.get());
     shader.uniform1f("u_fogFactor", fogFactor);
     shader.uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
+    shader.uniform1f("u_weatherFogOpacity", 0.8f);
+    shader.uniform1f("u_weatherFogDencity", 2.0f);
     shader.uniform3f("u_cameraPos", camera.position);
     shader.uniform2f("u_lightDir", skybox->getLightDir());
     shader.uniform1i("u_cubemap", 1);
