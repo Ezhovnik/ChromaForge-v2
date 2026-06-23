@@ -11,6 +11,9 @@
 #include <settings.h>
 #include <math/rand.h>
 #include <lighting/Lightmap.h>
+#include <voxels/Chunk.h>
+#include <math/voxmaths.h>
+#include <util/CentredMatrix.h>
 
 PrecipitationRenderer::PrecipitationRenderer(
     const Assets& assets,
@@ -27,12 +30,20 @@ PrecipitationRenderer::~PrecipitationRenderer() = default;
 
 int PrecipitationRenderer::getHeightAt(int x, int z) {
     int y = CHUNK_HEIGHT - 1;
+    int cx = floordiv<CHUNK_WIDTH>(x);
+    int cz = floordiv<CHUNK_DEPTH>(z);
+    auto chunk = chunks.getChunk(cx, cz);
+    if (chunk == nullptr) {
+        return y;
+    }
+    y = chunk->top;
+    x -= cx * CHUNK_WIDTH;
+    z -= cz * CHUNK_DEPTH;
     while (y > 0) {
-        if (auto voxel = chunks.getVoxel({x, y, z})) {
-            if (voxel->id == 0) {
-                y--;
-                continue;
-            }
+        const auto& vox = chunk->voxels[vox_index(x, y, z)];
+        if (vox.id == 0) {
+            y--;
+            continue;
         }
         break;
     }
@@ -66,117 +77,65 @@ void PrecipitationRenderer::render(const Camera& camera, float delta) {
     const auto& front = camera.front;
     glm::ivec2 size {1, 16};
 
-    float horizontal = 0.5f;
+    float horizontal = 0.5f * 5;
 
     glm::vec4 light = light_at(chunks, x, y, z);
 
-    int radius = 6;
-    int depth = 12;
+    const int radius = 6;
+    const int depth = 12;
     float scale = 0.4f;
     int quads = 0;
     float k = 21.41149;
-    for (int lx = -radius; lx <= radius; ++lx) {
-        for (int lz = -depth; lz < 0; ++lz) {
-            glm::vec4 light = light_at(chunks, x + lx, y, z + lz);
-            random.setSeed(lx + x, lz + z);
-            float hspeed = (random.randFloat() * 2.0f - 1.0f) * horizontal;
-            glm::vec3 pos {
-                x + lx + 0.5f,
-                glm::max(y - size.y / 2, getHeightAt(x + lx, z + lz)) + size.y / 2 + 1,
-                z + lz + 0.5f
-            };
-            batch->quad(
-                pos,
-                {1, 0, 0},
-                {0, 1, 0},
-                size,
-                light,
-                glm::vec3(1.0f),
-                UVRegion(
-                    (lx + x) * scale + timer * hspeed,
-                    timer + y * scale + (z + lz) * k,
-                    (lx + x + 1) * scale + timer * hspeed,
-                    timer + (size.y + y) * scale + (z + lz) * k
-                )
-            );
+    const struct {
+        glm::vec3 right;
+        glm::vec3 front;
+    } faces[] {
+        {{-1, 0, 0}, {0, 0, 1}},
+        {{1, 0, 0}, {0, 0, -1}},
+        {{0, 0, -1}, {-1, 0, 0}},
+        {{0, 0, 1}, {1, 0, 0}},
+    };
+
+    util::CentredMatrix<int, (depth + 1) * 2> heights;
+    heights.setCenter(x, z);
+    for (int z = heights.beginY(); z < heights.endY(); ++z) {
+        for (int x = heights.beginX(); x < heights.endX(); ++x) {
+            heights.at(x, z) = getHeightAt(x, z);
         }
     }
-    for (int lx = -radius; lx <= radius; ++lx) {
-        for (int lz = depth; lz > 0; --lz) {
-            glm::vec4 light = light_at(chunks, x + lx, y, z + lz);
-            random.setSeed(lx + x, lz + z);
-            float hspeed = (random.randFloat() * 2.0f - 1.0f) * horizontal;
-            glm::vec3 pos {
-                x + lx + 0.5f,
-                glm::max(y - size.y / 2, getHeightAt(x + lx, z + lz)) + size.y / 2 + 1,
-                z + lz + 0.5f
-            };
-            batch->quad(
-                pos,
-                {-1, 0, 0},
-                {0, 1, 0},
-                size,
-                light,
-                glm::vec3(1.0f),
-                UVRegion(
-                    (lx + x) * scale + timer * hspeed,
-                    timer + y * scale + (z + lz) * k,
-                    (lx + x + 1) * scale + timer * hspeed,
-                    timer + (size.y + y) * scale + (z + lz) * k
-                )
-            );
-        }
-    }
-    for (int lz = -radius; lz <= radius; ++lz) {
-        for (int lx = -depth; lx < 0; ++lx) {
-            glm::vec4 light = light_at(chunks, x + lx, y, z + lz);
-            random.setSeed(lx + x, lz + z);
-            float hspeed = (random.randFloat() * 2.0f - 1.0f) * horizontal;
-            glm::vec3 pos {
-                x + lx + 0.5f,
-                glm::max(y - size.y / 2, getHeightAt(x + lx, z + lz)) + size.y / 2 + 1,
-                z + lz + 0.5f
-            };
-            batch->quad(
-                pos,
-                {0, 0, -1},
-                {0, 1, 0},
-                size,
-                light,
-                glm::vec3(1.0f),
-                UVRegion(
-                    (lz + z) * scale + timer * hspeed,
-                    timer + y * scale + (x + lx) * k,
-                    (lz + z + 1) * scale + timer * hspeed,
-                    timer + (size.y + y) * scale + (x + lx) * k
-                )
-            );
-        }
-    }
-    for (int lz = -radius; lz <= radius; ++lz) {
-        for (int lx = depth; lx > 0; --lx) {
-            glm::vec4 light = light_at(chunks, x + lx, y, z + lz);
-            random.setSeed(lx + x, lz + z);
-            float hspeed = (random.randFloat() * 2.0f - 1.0f) * horizontal;
-            glm::vec3 pos {
-                x + lx + 0.5f,
-                glm::max(y - size.y / 2, getHeightAt(x + lx, z + lz)) + size.y / 2 + 1,
-                z + lz + 0.5f
-            };
-            batch->quad(
-                pos,
-                {0, 0, 1},
-                {0, 1, 0},
-                size,
-                light,
-                glm::vec3(1.0f),
-                UVRegion(
-                    (lz + z) * scale + timer * hspeed,
-                    timer + y * scale + (x + lx) * k,
-                    (lz + z + 1) * scale + timer * hspeed,
-                    timer + (size.y + y) * scale + (x + lx) * k
-                )
-            );
+
+    for (const auto& face : faces) {
+        for (int lx = -radius; lx <= radius; ++lx) {
+            for (int lz = depth; lz > 0; --lz) {
+                glm::vec3 pos = face.right * static_cast<float>(lx) + face.front * static_cast<float>(lz);
+                pos += glm::vec3(x, 0, z);
+                pos.y = glm::max(y - size.y / 2, heights.at(pos.x, pos.z)) + size.y / 2 + 1;
+                pos += glm::vec3(0.5f, 0.0f, 0.5f);
+
+                float m = glm::sign(face.right.x + face.right.z);
+                int ux = pos.x;
+                int uz = pos.z;
+
+                if (glm::abs(face.right.x) < glm::abs(face.right.z)) {
+                    std::swap(ux, uz);
+                }
+
+                random.setSeed(uz);
+                float hspeed = (random.randFloat() * 2.0f - 1.0f) * horizontal;
+                float u1 = ux * scale + timer * hspeed * -m;
+                float v1 = timer + pos.y * scale + uz * k;
+
+                glm::vec4 light = light_at(chunks, pos.x, y, pos.z);
+                batch->quad(
+                    pos,
+                    face.right,
+                    {0, 1, 0},
+                    size,
+                    light,
+                    glm::vec3(1.0f),
+                    UVRegion(u1, v1, u1 + m * scale, v1 + size.y * scale)
+                );
+            }
         }
     }
     batch->flush();
