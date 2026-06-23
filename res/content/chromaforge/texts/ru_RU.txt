@@ -46,3 +46,4 @@ orange neon=оранжевый неоновый блок
 yellow neon=жёлтый неоновый блок
 lime neon=лаймовый неоновый блок
 snow=снег
+birch leaves=берёзовая листва
