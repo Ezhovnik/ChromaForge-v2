@@ -110,7 +110,8 @@ void Decorator::updateRandom(
             return;
         }
     }
-    if (dst2 < 128 && random.randFloat() < glm::pow(weather.intensity, 2.0f) && rainSplash.has_value()) {
+    float intensity = weather.intensity * weather.fall.maxIntensity;
+    if (dst2 < 128 && random.randFloat() < glm::pow(intensity, 2.0f) && rainSplash.has_value()) {
         auto treg = util::get_texture_region(
             assets, "particles:rain_splash_0", ""
         );
@@ -133,7 +134,7 @@ void Decorator::updateRandom(
             sound,
             pos,
             false,
-            weather.intensity * weather.intensity,
+            intensity * intensity,
             1.0f,
             false,
             audio::Priority::Low,

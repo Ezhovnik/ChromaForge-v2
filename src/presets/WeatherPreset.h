@@ -14,6 +14,7 @@ struct WeatherPreset : Serializable {
         float scale = 0.1f;
         float minOpacity = 0.0f;
         float maxOpacity = 1.0f;
+        float maxIntensity = 1.0f;
         bool opaque = false;
         std::optional<ParticlesPreset> splash;
     } fall {};

@@ -239,9 +239,10 @@ void WorldRenderer::renderLevel(
 
     std::array<const WeatherPreset*, 2> weatherInstances {&weather.a, &weather.b};
     for (const auto& weather : weatherInstances) {
+        float maxIntensity = weather->fall.maxIntensity;
         float zero = weather->fall.minOpacity;
         float one = weather->fall.maxOpacity;
-        float t = (weather->intensity * (one - zero)) + zero;
+        float t = (weather->intensity * (one - zero)) * maxIntensity + zero;
         entityShader.uniform1i("u_alphaClip", weather->fall.opaque);
         entityShader.uniform1f("u_opacity", weather->fall.opaque ? t * t : t);
         if (weather->intensity > 1.e-3f && !weather->fall.texture.empty()) {
