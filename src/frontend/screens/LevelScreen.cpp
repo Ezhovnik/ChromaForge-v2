@@ -200,13 +200,14 @@ void LevelScreen::update(float deltaTime) {
     controller->update(glm::min(deltaTime, 0.2f), hud->isPause());
     playerController->postUpdate(deltaTime, !inputLocked, hud->isPause());
 
-
     hud->update(hudVisible);
+
+    const auto& weather = level->getWorld()->getInfo().weather;
     decorator->update(
         hud->isPause() ? 0.0f : deltaTime,
         *camera,
-        worldRenderer->weather.a,
-        worldRenderer->weather.b
+        weather.a,
+        weather.b
     );
 }
 

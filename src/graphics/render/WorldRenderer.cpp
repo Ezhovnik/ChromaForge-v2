@@ -56,6 +56,7 @@
 #include <graphics/render/BlockWrapsRenderer.h>
 #include <frontend/ContentGfxCache.h>
 #include <graphics/render/PrecipitationRenderer.h>
+#include <world/Weather.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -145,6 +146,8 @@ void WorldRenderer::setupWorldShader(
     const EngineSettings& settings, 
     float fogFactor
 ) {
+    const auto& weather = level.getWorld()->getInfo().weather;
+
 	shader.use();
     shader.uniformMatrix("u_model", glm::mat4(1.0f));
     shader.uniformMatrix("u_proj", camera.getProjection());
@@ -189,7 +192,7 @@ void WorldRenderer::renderLevel(
     bool pause,
     bool hudVisible
 ) {
-    weather.update(deltaTime);
+    const auto& weather = level.getWorld()->getInfo().weather;
 
     texts->render(ctx, camera, settings, hudVisible, false);
 
@@ -234,7 +237,7 @@ void WorldRenderer::renderLevel(
 
     setupWorldShader(entityShader, camera, settings, fogFactor);
 
-    std::array<WeatherPreset*, 2> weatherInstances {&weather.a, &weather.b};
+    std::array<const WeatherPreset*, 2> weatherInstances {&weather.a, &weather.b};
     for (const auto& weather : weatherInstances) {
         float zero = weather->fall.minOpacity;
         float one = weather->fall.maxOpacity;
@@ -361,6 +364,7 @@ void WorldRenderer::draw(
     timer += deltaTime * !pause;
 
     auto world = level.getWorld();
+    const auto& weather = world->getInfo().weather;
     const Viewport& vp = pctx.getViewport();
     camera.aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
 

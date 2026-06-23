@@ -82,7 +82,7 @@ void Decorator::updateRandom(
     const glm::ivec3& areaCenter,
     const WeatherPreset& weather
 ) {
-    PseudoRandom random(42);
+    PseudoRandom random(rand());
 
     const auto& chunks = *player.chunks;
     const auto& indices = *level.content.getIndices();
@@ -172,6 +172,25 @@ void Decorator::update(
     const WeatherPreset& weatherA,
     const WeatherPreset& weatherB
 ) {
+    float thunderRate = weatherA.thunderRate * weatherA.intensity + weatherB.thunderRate * weatherB.intensity;
+    thunderTimer += delta;
+    PseudoRandom random(rand());
+    if (thunderTimer >= 1.0f) {
+        thunderTimer = 0.0f;
+        if (random.randFloat() < thunderRate) {
+            audio::play(
+                assets.get<audio::Sound>("ambient/thunder"),
+                glm::vec3(),
+                false,
+                1.0f,
+                1.0f + random.randFloat() - 0.5f,
+                false,
+                audio::Priority::Normal,
+                audio::get_channel_index("ambient")
+            );
+        }
+    }
+
     glm::ivec3 pos = camera.position;
     for (int i = 0; i < ITERATIONS; ++i) {
         update(delta, pos - glm::ivec3(UPDATE_AREA_DIAMETER / 2), pos);

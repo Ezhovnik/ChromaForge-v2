@@ -223,6 +223,7 @@ void WorldInfo::deserialize(const dv::value& root) {
 	}
 
 	if (root.has("weather")) {
+        weather.deserialize(root["weather"]);
         skyClearness = root["weather"]["skyClearness"].asNumber();
     }
 
@@ -251,8 +252,8 @@ dv::value WorldInfo::serialize() const {
     timeobj["day-time-speed"] = daytimeSpeed;
     timeobj["total-time"] = totalTime;
 
-	auto& weatherobj = root.object("weather");
-    weatherobj["skyClearness"] = skyClearness;
+	root["weather"] = weather.serialize();
+    root["weather"]["skyClearness"] = skyClearness;
 
     root["next-inventory-id"] = nextInventoryId;
     root["next-entity-id"] = nextEntityId;

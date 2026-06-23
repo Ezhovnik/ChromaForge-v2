@@ -9,6 +9,7 @@
 #include <data/dv.h>
 #include <interfaces/Serializable.h>
 #include <io/fwd.h>
+#include <world/Weather.h>
 
 /**
  * @brief Исключение, выбрасываемое при ошибках загрузки мира.
@@ -50,6 +51,8 @@ struct WorldInfo : public Serializable {
      entityid_t nextEntityId = 0;
 
      int major = 0, minor = -1, maintenance = -1;
+
+     Weather weather {};
 
      dv::value serialize() const override;
      void deserialize(const dv::value& src) override;
