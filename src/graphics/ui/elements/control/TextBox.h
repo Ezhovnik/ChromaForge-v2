@@ -4,10 +4,14 @@
 #include <graphics/ui/elements/display/Label.h>
 
 class Font;
+class ActionsHistory;
 
 namespace gui {
+    class TextBoxHistorian;
     class TextBox : public Container {
         LabelCache rawTextCache;
+        std::shared_ptr<ActionsHistory> history;
+        std::unique_ptr<TextBoxHistorian> historian;
     protected:
         glm::vec4 focusedColor {0.0f, 0.0f, 0.0f, 1.0f};
         glm::vec4 invalidColor {0.1f, 0.05f, 0.03f, 1.0f};
@@ -54,7 +58,6 @@ namespace gui {
 
         int calcIndexAt(int x, int y) const;
         void setTextOffset(uint x);
-        void erase(size_t start, size_t length);
         bool eraseSelected();
         void resetSelection();
         void extendSelection(int index);
@@ -77,6 +80,8 @@ namespace gui {
             std::wstring placeholder, 
             glm::vec4 padding=glm::vec4(4.0f)
         );
+
+        virtual ~TextBox();
 
         virtual void setTextSupplier(wstringsupplier supplier);
 
@@ -150,6 +155,8 @@ namespace gui {
         virtual void setMarkup(std::string_view lang);
         virtual const std::string& getMarkup() const;
 
+        virtual bool isEdited() const;
+
         virtual void reposition() override;
         virtual void onFocus(GUI*) override;
         virtual void refresh() override;
@@ -160,11 +167,11 @@ namespace gui {
         virtual void draw(const DrawContext& pctx, const Assets& assets) override;
         virtual void drawBackground(const DrawContext& pctx, const Assets& assets) override;
         virtual void typed(unsigned int codepoint) override; 
-        void paste(const std::wstring& text);
+        void paste(const std::wstring& text, bool history=true);
+        void erase(size_t start, size_t length);
+        size_t getSelectionStart() const;
+        size_t getSelectionEnd() const;
         virtual void keyPressed(keycode key) override;
-        virtual std::shared_ptr<UINode> getAt(
-            const glm::vec2& pos,
-            const std::shared_ptr<UINode>& self
-        ) override;
+        virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos) override;
     };
 }

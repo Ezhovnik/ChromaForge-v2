@@ -68,7 +68,7 @@ namespace gui {
         bottom_right
     };
 
-    class UINode {
+    class UINode : public std::enable_shared_from_this<UINode> {
     private:
         std::string id = "";
 
@@ -169,10 +169,7 @@ namespace gui {
         virtual void keyPressed(keycode key) {};
 
         virtual bool isInside(glm::vec2 pos);
-        virtual std::shared_ptr<UINode> getAt(
-            const glm::vec2& pos,
-            const std::shared_ptr<UINode>& self
-        );
+        virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos);
 
         virtual bool isInteractive() const;
         virtual void setInteractive(bool flag);

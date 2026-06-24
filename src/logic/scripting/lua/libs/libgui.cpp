@@ -255,6 +255,13 @@ static int p_get_text(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_edited(gui::UINode* node, lua::State* L) {
+    if (auto box = dynamic_cast<gui::TextBox*>(node)) {
+        return lua::pushboolean(L, box->isEdited());
+    }
+    return 0;
+}
+
 static int p_get_line_numbers(gui::UINode* node, lua::State* L) {
     if (auto box = dynamic_cast<gui::TextBox*>(node)) {
         return lua::pushboolean(L, box->isShowLineNumbers());
@@ -444,6 +451,7 @@ static int l_gui_getattr(lua::State* L) {
         {"valid", p_is_valid},
         {"text", p_get_text},
         {"editable", p_get_editable},
+        {"edited", p_get_edited},
         {"lineNumbers", p_get_line_numbers},
         {"lineAt", p_get_line_at},
         {"linePos", p_get_line_pos},
