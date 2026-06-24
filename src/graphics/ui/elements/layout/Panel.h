@@ -1,16 +1,10 @@
 #pragma once
 
 #include <graphics/ui/elements/commons.h>
-#include <graphics/ui/elements/layout/Container.h>
+#include <graphics/ui/elements/layout/BasePanel.h>
 
 namespace gui {
-    class Panel : public Container {
-    protected:
-        Orientation orientation = Orientation::Vertical;
-        glm::vec4 padding;
-        float interval = 2.0f;
-        int minLength = 0;
-        int maxLength = 0;
+    class Panel : public BasePanel {
     public:
         Panel(
             glm::vec2 size, 
@@ -20,9 +14,6 @@ namespace gui {
         virtual ~Panel();
 
         virtual void cropToContent();
-
-        virtual void setOrientation(Orientation orientation);
-        Orientation getOrientation() const;
 
         virtual void add(const std::shared_ptr<UINode>& node) override;
         virtual void remove(UINode* node) override;
@@ -36,7 +27,8 @@ namespace gui {
         virtual void setMaxLength(int value);
         int getMaxLength() const;
 
-        virtual void setPadding(glm::vec4 padding);
-        glm::vec4 getPadding() const;
+    protected:
+        int minLength = 0;
+        int maxLength = 0;
     };
 }

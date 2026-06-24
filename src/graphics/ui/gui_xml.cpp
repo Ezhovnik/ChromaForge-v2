@@ -130,7 +130,15 @@ static void read_uinode(
         ));
     }
 
-    if (element.has("tooltip")) node.setTooltip(util::str2wstr_utf8(element.attr("tooltip").getText()));
+    if (element.has("tooltip")) {
+        auto tooltip = util::str2wstr_utf8(element.attr("tooltip").getText());
+        if (!tooltip.empty() && tooltip[0] == '@') {
+            tooltip = langs::get(
+                tooltip.substr(1), util::str2wstr_utf8(reader.getContext())
+            );
+        }
+        node.setTooltip(tooltip);
+    }
     if (element.has("tooltip-delay")) node.setTooltipDelay(element.attr("tooltip-delay").asFloat());
     if (element.has("cursor")) {
         if (auto cursor = CursorShape_from(element.attr("cursor").getText())) {
@@ -174,11 +182,10 @@ void UIXmlReader::readUINode(
     read_uinode(reader, element, node);
 }
 
-static void read_panel_impl(
+static void read_base_panel_impl(
     UIXmlReader& reader,
     const xml::xmlelement& element,
-    Panel& panel,
-    bool subnodes=true
+    BasePanel& panel
 ) {
     read_uinode(reader, element, panel);
 
@@ -191,13 +198,25 @@ static void read_panel_impl(
             size.y + padding.y + padding.w
         ));
     }
+    if (element.has("orientation")) {
+        auto &oname = element.attr("orientation").getText();
+        if (oname == "horizontal") {
+            panel.setOrientation(Orientation::Horizontal);
+        }
+    }
+}
+
+static void read_panel_impl(
+    UIXmlReader& reader,
+    const xml::xmlelement& element,
+    Panel& panel,
+    bool subnodes = true
+) {
+    read_base_panel_impl(reader, element, panel);
     if (element.has("size")) panel.setResizing(false);
     if (element.has("max-length")) panel.setMaxLength(element.attr("max-length").asInt());
     if (element.has("min-length")) panel.setMinLength(element.attr("min-length").asInt());
-    if (element.has("orientation")) {
-        auto &oname = element.attr("orientation").getText();
-        if (oname == "horizontal") panel.setOrientation(Orientation::Horizontal);
-    }
+
     if (subnodes) {
         for (auto& sub : element.getElements()) {
             if (sub->isText()) continue;
@@ -215,7 +234,14 @@ static std::shared_ptr<UINode> read_split_box(
         ? Orientation::Horizontal
         : Orientation::Vertical;
     auto splitBox = std::make_shared<SplitBox>(glm::vec2(), splitPos, orientation);
-    read_container_impl(reader, element, *splitBox);
+    read_base_panel_impl(reader, element, *splitBox);
+    for (auto& sub : element.getElements()) {
+        if (sub->isText()) continue;
+        auto subnode = reader.readUINode(*sub);
+        if (subnode) {
+            splitBox->add(subnode);
+        }
+    }
     return splitBox;
 }
 

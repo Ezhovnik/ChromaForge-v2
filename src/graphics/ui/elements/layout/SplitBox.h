@@ -1,9 +1,9 @@
 #pragma once
 
-#include <graphics/ui/elements/layout/Container.h>
+#include <graphics/ui/elements/layout/BasePanel.h>
 
 namespace gui {
-    class SplitBox : public Container {
+    class SplitBox : public BasePanel {
     public:
         SplitBox(const glm::vec2& size, float splitPos, Orientation orientation);
 
@@ -12,7 +12,5 @@ namespace gui {
         virtual void fullRefresh() override;
     private:
         float splitPos;
-        int splitRadius = 2;
-        Orientation orientation;
     };
 }
