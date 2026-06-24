@@ -150,6 +150,7 @@ namespace gui {
         virtual void setMarkup(std::string_view lang);
         virtual const std::string& getMarkup() const;
 
+        virtual void reposition() override;
         virtual void onFocus(GUI*) override;
         virtual void refresh() override;
         virtual void click(GUI*, int, int) override;

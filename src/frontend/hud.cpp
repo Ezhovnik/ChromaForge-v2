@@ -261,7 +261,7 @@ void Hud::updateHotbarControl() {
     }
 }
 
-void Hud::updateWorldGenDebugVisualization() {
+void Hud::updateWorldGenDebug() {
     auto& level = levelFrontend.getLevel();
     const auto& chunks = *player.chunks;
     auto generator = levelFrontend.getController()->getChunksController()->getGenerator();
@@ -311,7 +311,9 @@ void Hud::update(bool hudVisible) {
     const auto& chunks = *player.chunks;
 	const auto& menu = guiController.getMenu();
 
-	debugPanel->setVisible(debug && hudVisible);
+	debugPanel->setVisible(
+        debug && hudVisible && !(inventoryOpen && inventoryView == nullptr)
+    );
 
 	if (!hudVisible && inventoryOpen) closeInventory();
 	if (pause && !menu->hasOpenPage()) setPause(false);
@@ -346,7 +348,7 @@ void Hud::update(bool hudVisible) {
 
     debugMinimap->setVisible(debug && showGeneratorMinimap);
     if (debug && showGeneratorMinimap) {
-        updateWorldGenDebugVisualization();
+        updateWorldGenDebug();
     }
 }
 

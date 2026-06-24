@@ -114,7 +114,7 @@ private:
     void dropExchangeSlot();
 
     void showExchangeSlot();
-    void updateWorldGenDebugVisualization();
+    void updateWorldGenDebug();
 public:
 	Hud(Engine& engine, LevelFrontend& levelFrontend, Player& player);
 	~Hud();

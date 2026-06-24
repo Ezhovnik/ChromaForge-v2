@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <glm/glm.hpp>
 
 #include <graphics/ui/elements/UINode.h>
 #include <typedefs.h>

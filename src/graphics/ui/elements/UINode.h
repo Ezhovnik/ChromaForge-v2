@@ -212,7 +212,7 @@ namespace gui {
         void setId(const std::string& id);
         const std::string& getId() const;
 
-        void reposition();
+        virtual void reposition();
 
         static void getIndices(
             const std::shared_ptr<UINode>& node,

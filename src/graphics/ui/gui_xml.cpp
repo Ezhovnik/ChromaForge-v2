@@ -23,6 +23,7 @@
 #include <graphics/ui/GUI.h>
 #include <engine/Engine.h>
 #include <graphics/ui/elements/layout/Canvas.h>
+#include <graphics/ui/elements/layout/SplitBox.h>
 
 using namespace gui;
 
@@ -204,6 +205,18 @@ static void read_panel_impl(
             if (subnode) panel.add(subnode);
         }
     }
+}
+
+static std::shared_ptr<UINode> read_split_box(
+    UIXmlReader& reader, const xml::xmlelement& element
+) {
+    float splitPos = element.attr("split-pos", "0.5").asFloat();
+    Orientation orientation = element.attr("orientation", "vertical").getText() == "horizontal"
+        ? Orientation::Horizontal
+        : Orientation::Vertical;
+    auto splitBox = std::make_shared<SplitBox>(glm::vec2(), splitPos, orientation);
+    read_container_impl(reader, element, *splitBox);
+    return splitBox;
 }
 
 static std::shared_ptr<UINode> read_panel(UIXmlReader& reader, const xml::xmlelement& element) {
@@ -572,6 +585,7 @@ UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
     add("button", read_button);
     add("textbox", read_text_box);
     add("pagebox", read_page_box);
+    add("splitbox", read_split_box);
     add("checkbox", read_check_box);
     add("trackbar", read_track_bar);
     add("container", read_container);
