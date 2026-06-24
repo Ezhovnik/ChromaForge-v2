@@ -152,20 +152,23 @@ int lua::call(lua::State* L, int argc, int nresults) {
     int handler_pos = gettop(L) - argc;
     pushcfunction(L, l_error_handler);
     insert(L, handler_pos);
+    int top = gettop(L);
     if (lua_pcall(L, argc, nresults, handler_pos)) {
         std::string log = tostring(L, -1);
         pop(L);
         remove(L, handler_pos);
         throw luaerror(log);
     }
+    int added = gettop(L) - (top - argc - 1);
     remove(L, handler_pos);
-    return nresults == -1 ? 1 : nresults;
+    return added;
 }
 
 int lua::call_nothrow(lua::State* L, int argc, int nresults) {
     int handler_pos = gettop(L) - argc;
     pushcfunction(L, l_error_handler);
     insert(L, handler_pos);
+    int top = gettop(L);
     if (lua_pcall(L, argc, -1, handler_pos)) {
         auto errorstr = tostring(L, -1);
         if (errorstr) {
@@ -177,8 +180,9 @@ int lua::call_nothrow(lua::State* L, int argc, int nresults) {
         remove(L, handler_pos);
         return 0;
     }
+    int added = gettop(L) - (top - argc - 1);
     remove(L, handler_pos);
-    return 1;
+    return added;
 }
 
 void lua::dump_stack(lua::State* L) {
