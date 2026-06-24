@@ -108,3 +108,5 @@ inline const std::string LAYOUTS_FOLDER = "layouts";
 inline const std::string SOUNDS_FOLDER = "sounds";
 /** Папка с моделями */
 inline const std::string MODELS_FOLDER = "models";
+
+inline const std::string FONT_DEFAULT = "normal";

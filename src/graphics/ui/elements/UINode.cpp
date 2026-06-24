@@ -323,7 +323,7 @@ void UINode::moveInto(
 ) {
     auto parent = node->getParent();
     if (auto container = dynamic_cast<Container*>(parent)) {
-        container->remove(node);
+        container->remove(node.get());
     }
     if (parent) parent->scrolled(0);
     dest->add(node);

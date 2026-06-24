@@ -16,6 +16,7 @@ class Assets;
 class Camera;
 class Viewport;
 class Batch2D;
+class LineBatch;
 
 /*
 Padding is element inner space, margin is outer
@@ -75,6 +76,7 @@ namespace gui {
         float doubleClickTimer = 0.0f;
         float doubleClickDelay = 0.5f;
         bool doubleClicked = false;
+        bool debug = false;
 
         float tooltipTimer = 0.0f;
 
@@ -100,7 +102,10 @@ namespace gui {
 
         void draw(const DrawContext& parent_context, const Assets& assets);
         void add(std::shared_ptr<UINode> panel);
-        void remove(std::shared_ptr<UINode> panel) noexcept;
+        void remove(UINode* node) noexcept;
+        void remove(const std::shared_ptr<UINode>& node) noexcept {
+            return remove(node.get());
+        }
         void store(const std::string& name, std::shared_ptr<UINode> node);
         std::shared_ptr<UINode> get(const std::string& name) noexcept;
         void remove(const std::string& name) noexcept;
@@ -113,5 +118,7 @@ namespace gui {
 
         void setDoubleClickDelay(float delay);
         float getDoubleClickDelay() const;
+
+        void toggleDebug();
     };
 }

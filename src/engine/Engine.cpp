@@ -232,6 +232,7 @@ void Engine::loadAssets() {
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
     if (Events::justPressed(keycode::F2)) saveScreenshot();
+    if (Events::justPressed(keycode::F8)) gui->toggleDebug();
     if (Events::justPressed(keycode::F11)) settings.display.fullscreen.toggle();
 }
 

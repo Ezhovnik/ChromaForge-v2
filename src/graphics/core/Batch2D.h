@@ -125,8 +125,12 @@ public:
      * @brief Устанавливает текущий цвет по умолчанию.
      * @param color Цвет (RGBA).
      */
-	void setColor(glm::vec4 color) {
+	void setColor(const glm::vec4& color) {
           this->color = color;
+     }
+
+     void setColor(int r, int g, int b, int a=255) {
+          this->color = glm::vec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
      }
 
 	/**

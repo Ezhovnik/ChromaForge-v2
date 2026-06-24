@@ -316,9 +316,12 @@ void Batch2D::rect(
 }
 
 void Batch2D::lineRect(float x, float y, float w, float h) {
-    vertex(x, y, 0.0f, 0.0f, color.r, color.g, color.b, color.a);
+    if (index + 8 * B2D_VERTEX_SIZE >= capacity) flush();
+    setPrimitive(DrawPrimitive::Line);
+
+	vertex(x, y, 0.0f, 0.0f, color.r, color.g, color.b, color.a);
     vertex(x, y + h, 0.0f, 1.0f, color.r, color.g, color.b, color.a);
-    
+
     vertex(x, y + h, 0.0f, 1.0f, color.r, color.g, color.b, color.a);
     vertex(x + w, y+  h, 1.0f, 1.0f, color.r, color.g, color.b, color.a);
 

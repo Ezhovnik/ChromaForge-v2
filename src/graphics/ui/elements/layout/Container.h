@@ -31,7 +31,7 @@ namespace gui {
         virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos, const std::shared_ptr<UINode>& self) override;
         virtual void add(const std::shared_ptr<UINode>& node);
         virtual void add(const std::shared_ptr<UINode>& node, glm::vec2 pos);
-        virtual void remove(const std::shared_ptr<UINode>& node);
+        virtual void remove(UINode* node);
         virtual void remove(const std::string& id);
         virtual void scrolled(int value) override;
         virtual void setScrollable(bool flag);

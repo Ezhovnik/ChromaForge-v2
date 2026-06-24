@@ -92,7 +92,7 @@ static int l_node_destruct(lua::State* L) {
     scripting::engine->getGUI()->postRunnable([node]() {
         auto parent = node->getParent();
         if (auto container = dynamic_cast<gui::Container*>(parent)) {
-            container->remove(node);
+            container->remove(node.get());
         }
     });
     return 0;
