@@ -10,6 +10,7 @@
 
 #include <graphics/core/DrawContext.h>
 #include <presets/WeatherPreset.h>
+#include <world/Weather.h>
 
 class Camera;
 class Level;
@@ -45,6 +46,7 @@ private:
 	std::unique_ptr<LineBatch> lineBatch;
 	std::unique_ptr<Skybox> skybox;
 	std::unique_ptr<ModelBatch> modelBatch;
+	Weather weather {};
 
 	float timer = 0.0f;
 
@@ -83,7 +85,7 @@ public:
 		bool hudVisible,
 		bool pause,
 		float deltaTime,
-		PostProcessing* postProcessing
+		PostProcessing& postProcessing
 	);
 
 	void renderLevel(
@@ -98,6 +100,8 @@ public:
 	void clear();
 
 	void setDebug(bool flag);
+
+	Weather& getWeather();
 
 	static bool drawChunkBorders;
 	static bool drawEntityHitboxes;

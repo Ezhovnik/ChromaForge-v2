@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/libs/api_lua.h>
+#include <logic/scripting/lua/libs/libhud.h>
 
 #include <world/Level.h>
 #include <world/World.h>
@@ -9,7 +9,7 @@ static Weather& require_weather() {
     if (scripting::level == nullptr) {
         throw std::runtime_error("World is not open");
     }
-    return scripting::level->getWorld()->getInfo().weather;
+    return scripting::renderer->getWeather();
 }
 
 static int l_change(lua::State* L) {

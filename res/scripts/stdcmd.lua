@@ -261,10 +261,10 @@ console.add_command(
     function (args, kwargs)
         local filename = file.find("presets/weather/"..args[1]..".json")
         if not filename then
-            return "weather preset not found"
+            return "Weather preset not found"
         end
         local preset = json.parse(file.read(filename))
-        weather.change(preset, args[2], args[1])
+        gfx.weather.change(preset, args[2], args[1])
         return "Weather set to "..filename.." preset ("..tostring(args[2]).." s)"
     end
 )
@@ -273,9 +273,9 @@ console.add_command(
     "weather.get",
     "Display current weather preset name",
     function (args, kwargs)
-        local name = weather.get_current()
+        local name = gfx.weather.get_current()
         if name == "" then
-            return "Unnamed " .. json.tostring(weather.get_current_data(), true)
+            return "Unnamed " .. json.tostring(gfx.weather.get_current_data(), true)
         else
             return name
         end
