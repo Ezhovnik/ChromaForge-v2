@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <stack>
 #include <utility>
+#include <chrono>
 
 #include <typedefs.h>
 #include <world/files/WorldFiles.h>
@@ -12,6 +13,7 @@
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 #include <io/devices/StdfsDevice.h>
+#include <math/rand.h>
 
 static inline io::path SCREENSHOTS_FOLDER = "screenshots";
 static inline io::path CONTENT_FOLDER = "content";
@@ -119,6 +121,34 @@ void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
         io::create_subdevice(pack.id, parent, pack.folder);
         contentEntryPoints.push_back(pack.id);
     }
+}
+
+std::string EnginePaths::createWriteablePackDevice(const std::string& name) {
+    const auto& found = writeablePacks.find(name);
+    if (found != writeablePacks.end()) return found->second;
+
+    io::path folder;
+    for (const auto& pack : *contentPacks) {
+        if (pack.id == name) {
+            folder = pack.folder;
+            break;
+        }
+    }
+    if (folder.emptyOrInvalid()) {
+        LOG_ERROR("Pack not found");
+        throw std::runtime_error("Pack not found");
+    }
+
+    auto now = std::chrono::high_resolution_clock::now();
+    auto seed = now.time_since_epoch().count();
+
+    PseudoRandom random(seed); // FIXME: Replace with safe random
+    auto number = random.rand64();
+    auto entryPoint = std::string("W.") + util::base64_urlsafe_encode(reinterpret_cast<ubyte*>(&number), 6);
+
+    io::create_subdevice(entryPoint, folder.entryPoint(), folder.pathPart());
+    writeablePacks[name] = entryPoint;
+    return entryPoint;
 }
 
 void EnginePaths::setScriptFolder(std::filesystem::path folder) {

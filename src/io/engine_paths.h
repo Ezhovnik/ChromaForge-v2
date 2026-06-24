@@ -18,6 +18,7 @@ private:
     std::optional<std::filesystem::path> scriptFolder;
     std::vector<ContentPack>* contentPacks = nullptr;
     std::vector<std::string> contentEntryPoints;
+    std::unordered_map<std::string, std::string> writeablePacks;
 public:
     void prepare();
 
@@ -41,6 +42,8 @@ public:
     io::path getSettingsFile() const;
 
     void setContentPacks(std::vector<ContentPack>* contentPacks);
+
+    std::string createWriteablePackDevice(const std::string& name);
 
     std::vector<io::path> scanForWorlds() const;
 

@@ -38,7 +38,12 @@ namespace util {
     bool is_integer(const std::wstring& text);
     bool is_valid_filename(const std::wstring& name);
 
-    int replaceAll(std::string& str, const std::string& from, const std::string& to);
+    int replaceAll(
+        std::string& str, const std::string& from, const std::string& to
+    );
+    int replaceAll(
+        std::wstring& str, const std::wstring& from, const std::wstring& to
+    );
 
     double parse_double(const std::string& str);
     double parse_double(const std::string& str, size_t offset, size_t len);
@@ -48,8 +53,11 @@ namespace util {
     void trim(std::string &s);
 
     std::string base64_encode(const ubyte* data, size_t size);
+    std::string base64_urlsafe_encode(const ubyte* data, size_t size);
     util::Buffer<ubyte> base64_decode(const char* str, size_t size);
+    util::Buffer<ubyte> base64_urlsafe_decode(const char* str, size_t size);
     util::Buffer<ubyte> base64_decode(std::string_view str);
+    util::Buffer<ubyte> base64_urlsafe_decode(std::string_view str);
 
     std::string tohex(uint64_t value);
 

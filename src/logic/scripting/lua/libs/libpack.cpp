@@ -13,6 +13,9 @@
 #include <world/World.h>
 #include <assets/AssetsLoader.h>
 #include <content/Content.h>
+#include <graphics/ui/gui_util.h>
+#include <graphics/ui/elements/layout/Menu.h>
+#include <frontend/locale/langs.h>
 
 static int l_pack_get_folder(lua::State* L) {
     std::string packName = lua::tostring(L, 1);
@@ -219,6 +222,20 @@ static int l_pack_assemble(lua::State* L) {
     return 1;
 }
 
+static int l_pack_request_writeable(lua::State* L) {
+    auto packid = lua::require_string(L, 1);
+    lua::pushvalue(L, 2);
+    auto handler = lua::create_lambda_nothrow(L);
+
+    auto str = langs::get(L"Grant %{0} pack modification permission?");
+    util::replaceAll(str, L"%{0}", util::str2wstr_utf8(packid));
+    guiutil::confirm(*scripting::engine, str, [packid, handler]() {
+        handler({scripting::engine->getPaths().createWriteablePackDevice(packid)});
+        scripting::engine->getGUI()->getMenu()->reset();
+    });
+    return 0;
+}
+
 const luaL_Reg packlib [] = {
     {"get_folder", lua::wrap<l_pack_get_folder>},
     {"get_installed", lua::wrap<l_pack_get_installed>},
@@ -226,5 +243,6 @@ const luaL_Reg packlib [] = {
     {"get_info", lua::wrap<l_pack_get_info>},
     {"get_base_packs", lua::wrap<l_pack_get_base_packs>},
     {"assemble", lua::wrap<l_pack_assemble>},
+    {"request_writeable", lua::wrap<l_pack_request_writeable>},
     {NULL, NULL}
 };
