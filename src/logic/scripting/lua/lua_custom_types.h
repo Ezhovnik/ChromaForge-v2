@@ -118,6 +118,10 @@ namespace lua {
             return *mData;
         }
 
+        [[nodiscard]] bool hasTexture() const {
+            return mTexture != nullptr;
+        }
+
         static int createMetatable(lua::State*);
         inline static std::string TYPENAME = "Canvas";
     private:
