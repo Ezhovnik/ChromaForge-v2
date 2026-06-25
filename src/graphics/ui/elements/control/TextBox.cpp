@@ -792,7 +792,12 @@ void TextBox::performEditingKeyboardEvents(keycode key) {
 void TextBox::keyPressed(keycode key) {
     if (editable) performEditingKeyboardEvents(key);
 
-    if (Events::isPressed(keycode::LEFT_CONTROL)) {
+    if (Events::isPressed(keycode::LEFT_CONTROL) && key != keycode::LEFT_CONTROL) {
+        if (controlCombinationsHandler) {
+            if (controlCombinationsHandler(static_cast<int>(key))) {
+                return;
+            }
+        }
         if (key == keycode::C || key == keycode::X) {
             std::string text = util::wstr2str_utf8(getSelection());
             if (!text.empty()) {
@@ -905,6 +910,9 @@ const std::wstring& TextBox::getText() const {
 void TextBox::setText(const std::wstring& value) {
     this->input = value;
     input.erase(std::remove(input.begin(), input.end(), '\r'), input.end());
+    historian->reset();
+    history->clear();
+    editedHistorySize = 0;
     refreshSyntax();
 }
 
@@ -1060,5 +1068,14 @@ const std::string& TextBox::getMarkup() const {
 }
 
 bool TextBox::isEdited() const {
-    return history->size() != 0 || !historian->isSynced();
+    return history->size() != editedHistorySize || !historian->isSynced();
+}
+
+void TextBox::setUnedited() {
+    historian->sync();
+    editedHistorySize = history->size();
+}
+
+void TextBox::setOnControlCombination(key_handler handler) {
+    this->controlCombinationsHandler = std::move(handler);
 }

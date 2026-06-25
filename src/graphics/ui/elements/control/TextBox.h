@@ -12,6 +12,7 @@ namespace gui {
         LabelCache rawTextCache;
         std::shared_ptr<ActionsHistory> history;
         std::unique_ptr<TextBoxHistorian> historian;
+        int editedHistorySize = 0;
     protected:
         glm::vec4 focusedColor {0.0f, 0.0f, 0.0f, 1.0f};
         glm::vec4 invalidColor {0.1f, 0.05f, 0.03f, 1.0f};
@@ -26,6 +27,7 @@ namespace gui {
         wstringconsumer consumer = nullptr;
         wstringconsumer subconsumer = nullptr;
         wstringchecker validator = nullptr;
+        key_handler controlCombinationsHandler = nullptr;
         runnable onEditStart = nullptr;
         runnable onUpPressed;
         runnable onDownPressed;
@@ -90,6 +92,8 @@ namespace gui {
         virtual void setTextSubConsumer(wstringconsumer consumer);
 
         virtual void setTextValidator(wstringchecker validator);
+
+        virtual void setOnControlCombination(key_handler handler);
 
         virtual void setFocusedColor(glm::vec4 color);
         virtual glm::vec4 getFocusedColor() const;
@@ -156,6 +160,7 @@ namespace gui {
         virtual const std::string& getMarkup() const;
 
         virtual bool isEdited() const;
+        virtual void setUnedited();
 
         virtual void reposition() override;
         virtual void onFocus(GUI*) override;

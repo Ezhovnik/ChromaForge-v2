@@ -345,8 +345,8 @@ void UINode::reposition() {
             defsize = parent->getSize();
         }
         setSize({
-            newSize.x < 0 ? defsize.x : newSize.x,
-            newSize.y < 0 ? defsize.y : newSize.y
+            newSize.x < 0 ? defsize.x + (newSize.x + 1) : newSize.x,
+            newSize.y < 0 ? defsize.y + (newSize.y + 1) : newSize.y
         });
     }
     if (positionfunc) setPos(positionfunc());

@@ -130,6 +130,9 @@ public:
             : history(history), historySize(history.size()) {
         }
 
+        Combination(const Combination&) = delete;
+        Combination(Combination&&) = default;
+
         ~Combination() {
             history.squash(history.size() - historySize);
         }
