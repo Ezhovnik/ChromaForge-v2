@@ -44,6 +44,7 @@ extern const luaL_Reg rigidbodylib [];
 extern const luaL_Reg transformlib [];
 
 extern int l_print(lua::State* L);
+extern int l_crc32(lua::State* L);
 
 namespace lua {
     inline uint check_argc(lua::State* L, int a) {

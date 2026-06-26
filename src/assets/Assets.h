@@ -100,6 +100,11 @@ public:
           assets[typeid(T)][name].reset(asset.release());
      }
 
+     template <class T>
+     void store(std::shared_ptr<T> asset, const std::string& name) {
+          assets[typeid(T)][name] = std::move(asset);
+     }
+
      template<class T>
      T* get(const std::string& name) const {
           const auto& mapIter = assets.find(typeid(T));

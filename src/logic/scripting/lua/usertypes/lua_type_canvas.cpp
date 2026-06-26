@@ -4,6 +4,8 @@
 #include <graphics/core/Texture.h>
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <logic/scripting/lua/lua_util.h>
+#include <engine/Engine.h>
+#include <assets/Assets.h>
 
 using namespace lua;
 
@@ -12,6 +14,11 @@ LuaCanvas::LuaCanvas(
     std::shared_ptr<ImageData> inData
 ) : mTexture(std::move(inTexture)),
     mData(std::move(inData)) {}
+
+void LuaCanvas::createTexture() {
+    mTexture = Texture::from(mData.get());
+    mTexture->setMipMapping(false, true);
+}
 
 union RGBA {
     struct {
@@ -168,6 +175,19 @@ static int l_update(State* L) {
     return 0;
 }
 
+static int l_create_texture(State* L) {
+    if (auto canvas = touserdata<LuaCanvas>(L, 1)) {
+        if (!canvas->hasTexture()) {
+            canvas->createTexture();
+        }
+        if (canvas->hasTexture()) {
+            std::string name = require_string(L, 2);
+            scripting::engine->getAssets()->store(canvas->shareTexture(), name);
+        }
+    }
+    return 0;
+}
+
 static std::unordered_map<std::string, lua_CFunction> methods {
     {"at", lua::wrap<l_at>},
     {"set", lua::wrap<l_set>},
@@ -175,6 +195,7 @@ static std::unordered_map<std::string, lua_CFunction> methods {
     {"blit", lua::wrap<l_blit>},
     {"clear", lua::wrap<l_clear>},
     {"update", lua::wrap<l_update>},
+    {"create_texture", lua::wrap<l_create_texture>},
     {"_set_data", lua::wrap<l_set_data>},
 };
 

@@ -114,7 +114,7 @@ asset_loader::postfunc asset_loader::font(
                 textures.emplace_back(nullptr);
             } else {
                 auto texture = Texture::from(page.get());
-                texture->setMipMapping(false);
+                texture->setMipMapping(false, true);
                 textures.emplace_back(std::move(texture));
             }
         }

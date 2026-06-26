@@ -122,6 +122,12 @@ namespace lua {
             return mTexture != nullptr;
         }
 
+        auto shareTexture() const {
+            return mTexture;
+        }
+
+        void createTexture();
+
         static int createMetatable(lua::State*);
         inline static std::string TYPENAME = "Canvas";
     private:
