@@ -8,7 +8,9 @@ world.convert-with-loss=Convert world with data loss?
 world.generators.default=Default
 world.generators.flat=Flat
 
+editor.info.tooltip=CTRL+S - Save\nCTRL+R - Run\nCTRL+Z - Undo\nCTRL+Y - Redo
 devtools.traceback=Traceback (most recent call first)
+devtools.output=Output
 error.dependency-not-found=Dependency pack is not found
 error.pack-not-found=Could not to find pack
 pack.remove-confirm=Do you want to erase all pack(s) content from the world forever?

@@ -33,11 +33,11 @@ int Font::getLineHeight() const {
 	return lineHeight;
 }
 
-int Font::calcWidth(const std::wstring& text, size_t length) const {
+int Font::calcWidth(std::wstring_view text, size_t length) const {
 	return calcWidth(text, 0, length);
 }
 
-int Font::calcWidth(const std::wstring& text, size_t offset, size_t length) const {
+int Font::calcWidth(std::wstring_view text, size_t offset, size_t length) const {
 	return std::min(text.length() - offset, length) * glyphInterval;
 }
 

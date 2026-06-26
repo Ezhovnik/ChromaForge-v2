@@ -36,7 +36,7 @@ uint LabelCache::getLineByTextIndex(size_t index) const {
     return lines.size() - 1;
 }
 
-void LabelCache::update(const std::wstring& text, bool multiline, bool wrap) {
+void LabelCache::update(std::wstring_view text, bool multiline, bool wrap) {
     resetFlag = false;
     lines.clear();
     lines.push_back(LineScheme{0, false});
@@ -56,6 +56,28 @@ void LabelCache::update(const std::wstring& text, bool multiline, bool wrap) {
                     len = 0;
                 }
             }
+        }
+
+        if (font != nullptr) {
+            int lineHeight = font->getLineHeight();
+            int maxWidth = 0;
+            for (int i = 0; i < lines.size() - 1; ++i) {
+                const auto& next = lines[i + 1];
+                const auto& cur = lines[i];
+                maxWidth = std::max(
+                    font->calcWidth(
+                        text.substr(cur.offset, next.offset - cur.offset)
+                    ),
+                    maxWidth
+                );
+            }
+            maxWidth = std::max(
+                font->calcWidth(
+                    text.substr(lines[lines.size() - 1].offset)
+                ),
+                maxWidth
+            );
+            multilineWidth = maxWidth;
         }
     }
 }
@@ -84,8 +106,15 @@ glm::vec2 Label::calcSize() {
     auto font = cache.font;
     uint lineHeight = font->getLineHeight();
     if (cache.lines.size() > 1) lineHeight *= lineInterval;
+    auto view = std::wstring_view(text);
+    if (multiline) {
+        return glm::vec2(
+            cache.multilineWidth,
+            lineHeight * cache.lines.size() + font->getYOffset()
+        );
+    }
     return glm::vec2 (
-        cache.font->calcWidth(text), 
+        cache.font->calcWidth(view), 
         lineHeight * cache.lines.size() + font->getYOffset()
     );
 }
