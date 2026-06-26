@@ -115,6 +115,7 @@ public:
 	gui::GUI* getGUI();
 	EngineSettings& getSettings();
     const Content* getContent() const;
+    Content* getWriteableContent();
     std::vector<ContentPack>& getContentPacks();
     std::vector<ContentPack> getAllContentPacks();
     std::shared_ptr<Screen> getScreen();

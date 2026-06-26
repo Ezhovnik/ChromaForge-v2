@@ -1,6 +1,8 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <content/Content.h>
 #include <items/Item.h>
+#include <content/ContentLoader.h>
+#include <engine/Engine.h>
 
 static const Item* get_item_def(lua::State* L, int idx) {
     auto indices = scripting::content->getIndices();
@@ -85,6 +87,17 @@ static int l_uses(lua::State* L) {
     return 0;
 }
 
+static int l_reload_script(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    if (scripting::content == nullptr) {
+        throw std::runtime_error("Content is not initialized");
+    }
+    auto& writeableContent = *scripting::engine->getWriteableContent();
+    auto& def = writeableContent.items.require(name);
+    ContentLoader::reloadScript(writeableContent, def);
+    return 0;
+}
+
 const luaL_Reg itemlib [] = {
     {"index", lua::wrap<l_index>},
     {"name", lua::wrap<l_name>},
@@ -96,5 +109,6 @@ const luaL_Reg itemlib [] = {
     {"model_name", lua::wrap<l_model_name>},
     {"emission", lua::wrap<l_emission>},
     {"uses", lua::wrap<l_uses>},
+    {"reload_script", lua::wrap<l_reload_script>},
     {NULL, NULL}
 };

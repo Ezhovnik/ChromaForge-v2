@@ -14,6 +14,8 @@
 #include <objects/Players.h>
 #include <voxels/GlobalChunks.h>
 #include <voxels/blocks_agent.h>
+#include <content/ContentLoader.h>
+#include <engine/Engine.h>
 
 static inline const Block* require_block(lua::State* L) {
     auto indices = scripting::content->getIndices();
@@ -599,6 +601,17 @@ static int l_set_field(lua::State* L) {
     return set_field(L, dst, *field, index, dataStruct, value);
 }
 
+static int l_reload_script(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    if (scripting::content == nullptr) {
+        throw std::runtime_error("Content is not initialized");
+    }
+    auto& writeableContent = *scripting::engine->getWriteableContent();
+    auto& def = writeableContent.blocks.require(name);
+    ContentLoader::reloadScript(writeableContent, def);
+    return 0;
+}
+
 const luaL_Reg blocklib [] = {
     {"index", lua::wrap<l_index>},
     {"name", lua::wrap<l_get_def>},
@@ -634,5 +647,6 @@ const luaL_Reg blocklib [] = {
     {"decompose_state", lua::wrap<l_decompose_state>},
     {"get_field", lua::wrap<l_get_field>},
     {"set_field", lua::wrap<l_set_field>},
+    {"reload_script", lua::wrap<l_reload_script>},
     {NULL, NULL}
 };

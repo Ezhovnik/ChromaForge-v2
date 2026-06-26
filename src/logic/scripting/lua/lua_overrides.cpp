@@ -14,11 +14,11 @@ int l_print(lua::State* L) {
             return luaL_error(L, LUA_QL("tostring") " must return a string to " LUA_QL("print"));
         }
         if (i > 1) {
-            std::cout << "\t";
+            *scripting::output_stream << "\t";
         }
-        std::cout << s;
+        *scripting::output_stream << s;
         lua::pop(L);
     }
-    std::cout << std::endl;
+    *scripting::output_stream << std::endl;
     return 0;
 }

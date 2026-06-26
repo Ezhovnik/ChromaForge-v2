@@ -431,6 +431,10 @@ const Content* Engine::getContent() const {
     return content.get();
 }
 
+Content* Engine::getWriteableContent() {
+    return content.get();
+}
+
 std::vector<ContentPack>& Engine::getContentPacks() {
     return contentPacks;
 }
