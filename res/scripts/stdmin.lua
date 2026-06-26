@@ -472,6 +472,35 @@ function on_deprecated_call(name, alternatives)
     end
 end
 
+function reload_module(name)
+    local prefix, name = parse_path(name)
+    local path = prefix..":modules/"..name..".lua"
+
+    local previous = package.loaded[path]
+    if not previous then
+        debug.info("Attempt to reload non-loaded module "..name.." ("..path..")")
+        return
+    end
+    local script, err = load(file.read(path), path)
+    if script == nil then
+        error(err)
+    end
+    local result = script()
+    if not result then
+        return
+    end
+    for i, value in ipairs(result) do
+        previous[i] = value
+    end
+    local copy = table.copy(result)
+    for key, value in pairs(result) do
+        result[key] = nil
+    end
+    for key, value in pairs(copy) do
+        previous[key] = value
+    end
+end
+
 function __load_script(path, nocache)
     local packname, filename = parse_path(path)
 

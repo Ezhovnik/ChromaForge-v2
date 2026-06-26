@@ -97,10 +97,15 @@ function build_files_list(filenames, selected)
         end
         local parent = file.parent(filename)
         local info = registry.get_info(actual_filename)
+        local icon = "file"
+        if info then
+            icon = info.type == "component" and "entity" or info.type
+        end
         files_list:add(gui.template("script_file", {
             path = parent .. (parent[#parent] == ':' and '' or '/'), 
             name = file.name(filename),
-            type = info and info.type or "file",
+            icon = icon,
+            unit = info and info.unit or '',
             filename = actual_filename
         }))
     end
@@ -154,6 +159,7 @@ function run_current_file()
     end
     local info = registry.get_info(current_file.filename)
     local script_type = info and info.type or "file"
+    local unit = info and info.unit
     save_current_file()
 
     local func = function()
@@ -161,16 +167,16 @@ function run_current_file()
         xpcall(chunk, function(msg) __vc__error(msg, 1, 1, stack_size) end)
     end
 
-    if script_type == "block" then
-        func = function() block.reload_script(info.unit) end
-    elseif script_type == "item" then
-        func = function() item.reload_script(info.unit) end
-    elseif script_type == "world" then
-        func = function() world.reload_script(info.unit) end
-    elseif script_type == "hud" then
-        func = function() hud.reload_script(info.unit) end
-    end
-    local output = builtin.capture_output(func)
+    local funcs = {
+        block = block.reload_script,
+        item = item.reload_script,
+        world = world.reload_script,
+        hud = hud.reload_script,
+        component = entities.reload_component,
+        module = reload_module,
+    }
+    func = funcs[script_type] or func
+    local output = core.capture_output(function() func(unit) end)
     document.output:add(
         string.format(
             "<label enabled='false' multiline='true' margin='2'>%s</label>", 
