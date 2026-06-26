@@ -168,14 +168,10 @@ static dv::value create_missing_content_report(
 
 void EngineController::onMissingContent(const std::shared_ptr<ContentReport>& report) {
     if (engine.isHeadless()) {
-        LOG_ERROR(
-            "Missing content: {}",
-            json::stringify(create_missing_content_report(report), true)
-        );
-        throw std::runtime_error(
-            "Missing content: " +
-            json::stringify(create_missing_content_report(report), true)
-        );
+        auto errorLog = "Missing content: " +
+            json::stringify(create_missing_content_report(report), "  ");
+        LOG_ERROR("{}", errorLog);
+        throw std::runtime_error(errorLog);
     } else {
         engine.setScreen(std::make_shared<MenuScreen>(engine));
         menus::show(

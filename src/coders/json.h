@@ -13,6 +13,7 @@ namespace json {
     std::string stringify(
         const dv::value& value,
         bool nice,
-        const std::string& indent="  "
+        const std::string& indent="  ",
+        bool escapeUtf8 = false
     );
 }

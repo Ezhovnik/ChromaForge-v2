@@ -58,9 +58,15 @@ inline audio::speakerid_t play_stream(
     int channel
 ) {
     if (channel == -1) return 0;
-    auto paths = scripting::engine->getResPaths();
+    io::path file;
+    if (std::strchr(filename, ':')) {
+        file = std::string(filename);
+    } else {
+        auto paths = scripting::engine->getResPaths();
+        file = paths->find(filename);
+    }
     return audio::play_stream(
-        paths->find(std::filesystem::path(filename).string()), 
+        file,
         glm::vec3(
             static_cast<float>(x), 
             static_cast<float>(y), 
