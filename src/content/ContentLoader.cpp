@@ -862,6 +862,21 @@ void ContentLoader::reloadScript(const Content& content, Item& item) {
     load_script(content, item);
 }
 
+void ContentLoader::loadWorldScript(ContentPackRuntime& runtime) {
+    const auto& pack = runtime.getInfo();
+    const auto& folder = pack.folder;
+    io::path scriptFile = folder / "scripts/world.lua";
+    if (io::is_regular_file(scriptFile)) {
+        scripting::load_world_script(
+            runtime.getEnvironment(),
+            pack.id,
+            scriptFile,
+            pack.id + ":scripts/world.lua",
+            runtime.worldfuncsset
+        );
+    }
+}
+
 void ContentLoader::loadScripts(Content& content) {
     load_scripts(content, content.blocks);
     load_scripts(content, content.items);
@@ -870,16 +885,7 @@ void ContentLoader::loadScripts(Content& content) {
         const auto& pack = runtime->getInfo();
         const auto& folder = pack.folder;
 
-        io::path scriptFile = folder / "scripts/world.lua";
-        if (io::is_regular_file(scriptFile)) {
-            scripting::load_world_script(
-                runtime->getEnvironment(),
-                pack.id,
-                scriptFile,
-                pack.id + ":scripts/world.lua",
-                runtime->worldfuncsset
-            );
-        }
+        loadWorldScript(*runtime);
 
         io::path componentsDir = folder / "scripts/components";
         foreach_file(componentsDir, [&pack](const io::path& file) {

@@ -172,6 +172,10 @@ function run_current_file()
         func = function() block.reload_script(unit) end
     elseif script_type == "item" then
         func = function() item.reload_script(unit) end
+    elseif script_type == "world" then
+        func = function() world.reload_script(unit) end
+    elseif script_type == "hud" then
+        func = function() hud.reload_script(unit) end
     end
     local output = builtin.capture_output(func)
     document.output:add(
@@ -388,6 +392,11 @@ local function build_scripts_classification()
     end
     for id, props in pairs(item.properties) do
         scripts_classification[props["script-file"]] = {"item", item.name(id)}
+    end
+    local packs = pack.get_installed()
+    for _, packid in ipairs(packs) do
+        scripts_classification[packid..":scripts/world.lua"] = {"world", packid}
+        scripts_classification[packid..":scripts/hud.lua"] = {"hud", packid}
     end
 end
 

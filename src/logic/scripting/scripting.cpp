@@ -744,20 +744,21 @@ bool scripting::register_event(int env, const std::string& name, const std::stri
     if (lua::pushenv(L, env) == 0) {
         lua::pushglobals(L);
     }
-    if (lua::getfield(L, name)) {
-        lua::pop(L);
-        lua::getglobal(L, "events");
-        lua::getfield(L, "reset");
-        lua::pushstring(L, id);
-        lua::getfield(L, name, -4);
-        lua::call_nothrow(L, 2);
-        lua::pop(L);
+    bool success = true;
+    lua::getglobal(L, "events");
+    lua::getfield(L, "reset");
+    lua::pushstring(L, id);
+    if (!lua::getfield(L, name, -4)) {
+        success = false;
 
         lua::pushnil(L);
-        lua::setfield(L, name);
-        return true;
     }
-    return false;
+    lua::call_nothrow(L, 2);
+    lua::pop(L);
+
+    lua::pushnil(L);
+    lua::setfield(L, name);
+    return success;
 }
 
 int scripting::get_values_on_stack() {
@@ -773,6 +774,8 @@ void scripting::load_content_script(
 ) {
     int env = *senv;
     lua::pop(lua::get_main_state(), load_script(env, "block", file, fileName));
+
+    funcsset = {};
     funcsset.init = register_event(env, "init", prefix + ".init");
     funcsset.update = register_event(env, "on_update", prefix + ".update");
     funcsset.randupdate = register_event(env, "on_random_update", prefix + ".randupdate");
@@ -792,6 +795,8 @@ void scripting::load_content_script(
     ItemFuncsSet& funcsset
 ) {
     int env = *senv;
+
+    funcsset = {};
     lua::pop(lua::get_main_state(), load_script(env, "item", file, fileName));
     funcsset.init = register_event(env, "init", prefix + ".init");
     funcsset.on_use = register_event(env, "on_use", prefix + ".use");
@@ -824,6 +829,7 @@ void scripting::load_world_script(
     register_event(env, "on_world_save", prefix + ":.worldsave");
     register_event(env, "on_world_quit", prefix + ":.worldquit");
 
+    funcsset = {};
     funcsset.onblockplaced = register_event(env, "on_block_placed", prefix + ":.blockplaced");
     funcsset.onblockbreaking = register_event(env, "on_block_breaking", prefix + ":.blockbreaking");
     funcsset.onblockbroken = register_event(env, "on_block_broken", prefix + ":.blockbroken");

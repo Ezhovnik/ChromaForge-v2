@@ -65,6 +65,13 @@ const ContentPackRuntime* Content::getPackRuntime(const std::string& id) const {
     return found->second.get();
 }
 
+ContentPackRuntime* Content::getPackRuntime(const std::string& id) {
+    auto found = packs.find(id);
+    if (found == packs.end()) return nullptr;
+    return found->second.get();
+}
+
+
 const UptrsMap<std::string, ContentPackRuntime>& Content::getPacks() const {
     return packs;
 }

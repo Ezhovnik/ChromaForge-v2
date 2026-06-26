@@ -69,6 +69,7 @@ public:
     void load();
 
     static void loadScripts(Content& content);
+    static void loadWorldScript(ContentPackRuntime& pack);
     static void reloadScript(const Content& content, Block& block);
     static void reloadScript(const Content& content, Item& item);
 };

@@ -20,6 +20,7 @@
 #include <voxels/compressed_chunks.h>
 #include <world/files/WorldFiles.h>
 #include <content/Content.h>
+#include <content/ContentLoader.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {
@@ -208,6 +209,17 @@ static int l_count_chunks(lua::State* L) {
     return lua::pushinteger(L, scripting::level->chunks->size());
 }
 
+static int l_reload_script(lua::State* L) {
+    auto packid = lua::require_string(L, 1);
+    if (scripting::content == nullptr) {
+        throw std::runtime_error("Content is not initialized");
+    }
+    auto& writeableContent = *scripting::engine->getWriteableContent();
+    auto pack = writeableContent.getPackRuntime(packid);
+    ContentLoader::loadWorldScript(*pack);
+    return 0;
+}
+
 const luaL_Reg worldlib [] = {
     {"is_open", lua::wrap<l_is_open>},
     {"get_list", lua::wrap<l_get_list>},
@@ -225,5 +237,6 @@ const luaL_Reg worldlib [] = {
     {"set_chunk_data", lua::wrap<l_set_chunk_data>},
     {"save_chunk_data", lua::wrap<l_save_chunk_data>},
     {"count_chunks", lua::wrap<l_count_chunks>},
+    {"reload_script", lua::wrap<l_reload_script>},
     {NULL, NULL}
 };
