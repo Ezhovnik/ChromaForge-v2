@@ -123,6 +123,7 @@ public:
     CullingMode culling = CullingMode::Default;
     std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
     std::string scriptName = name.substr(name.find(':') + 1);
+    std::string scriptFile;
     uint inventorySize = 0;
     std::string surfaceReplacement = name;
     std::string overlayTexture;

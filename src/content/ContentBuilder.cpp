@@ -93,8 +93,9 @@ std::unique_ptr<Content> ContentBuilder::build() {
         def->rt.surfaceReplacement = content->blocks.require(def->surfaceReplacement).rt.id;
         if (def->properties == nullptr) {
             def->properties = dv::object();
-            def->properties["name"] = def->name;
         }
+        def->properties["name"] = def->name;
+        def->properties["script-file"] = def->scriptFile;
     }
 
     for (Item* def : itemDefsIndices) {
@@ -103,6 +104,7 @@ std::unique_ptr<Content> ContentBuilder::build() {
             def->properties = dv::object();
         }
         def->properties["name"] = def->name;
+        def->properties["script-file"] = def->scriptFile;
     }
 
     for (auto& [name, def] : content->generators.getDefs()) {
