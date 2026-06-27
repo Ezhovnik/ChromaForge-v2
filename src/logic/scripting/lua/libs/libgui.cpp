@@ -427,6 +427,13 @@ static int p_get_cursor(gui::UINode* node, lua::State* L) {
     return lua::pushstring(L, to_string(node->getCursor()));
 }
 
+static int p_get_scroll(gui::UINode* node, lua::State* L) {
+    if (auto container = dynamic_cast<gui::Container*>(node)) {
+        return lua::pushnumber(L, container->getContentOffset().y);
+    }
+    return 0;
+}
+
 static int l_gui_getattr(lua::State* L) {
     auto docname = lua::require_string(L, 1);
     auto element = lua::require_string(L, 2);
@@ -461,6 +468,7 @@ static int l_gui_getattr(lua::State* L) {
         {"min", p_get_min},
         {"max", p_get_max},
         {"step", p_get_step},
+        {"scroll", p_get_scroll},
         {"trackWidth", p_get_track_width},
         {"trackColor", p_get_track_color},
         {"textColor", p_get_text_color},
@@ -684,6 +692,13 @@ static void p_set_cursor(gui::UINode* node, lua::State* L, int idx) {
     }
 }
 
+static int p_set_scroll(gui::UINode* node, lua::State* L, int idx) {
+    if (auto container = dynamic_cast<gui::Container*>(node)) {
+        container->setScroll(lua::tointeger(L, idx));
+    }
+    return 0;
+}
+
 static int l_gui_setattr(lua::State* L) {
     auto docname = lua::require_string(L, 1);
     auto element = lua::require_string(L, 2);
@@ -716,6 +731,7 @@ static int l_gui_setattr(lua::State* L) {
         {"min", p_set_min},
         {"max", p_set_max},
         {"step", p_set_step},
+        {"scroll", p_set_scroll},
         {"trackWidth", p_set_track_width},
         {"trackColor", p_set_track_color},
         {"textColor", p_set_text_color},

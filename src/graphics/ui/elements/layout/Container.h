@@ -39,6 +39,7 @@ namespace gui {
         virtual glm::vec2 getContentOffset() override {return glm::vec2(0.0f, scroll);};
         virtual void setSize(glm::vec2 size) override;
         virtual void refresh() override;
+        void setScroll(int scroll);
         virtual void clear();
 
         virtual int getScrollStep() const;
