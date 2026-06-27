@@ -39,21 +39,11 @@ const std::string& langs::Lang::getId() const {
  */
 namespace {
     class Reader : BasicParser<char> {
-        /**
-         * @brief Переопределённый метод пропуска пробелов, пропускает комментарии.
-        */
-        void skipWhitespace() override {
-            BasicParser::skipWhitespace();
-            if (hasNext() && source[pos] == '#') {
-                skipLine();
-                if (hasNext() && is_whitespace(peek())) {
-                    skipWhitespace();
-                }
-            }
-        }
     public:
         Reader(std::string_view file, std::string_view source)
-            : BasicParser(file, source) {
+            : BasicParser(file, source)
+        {
+            hashComment = true;
         }
 
         /**

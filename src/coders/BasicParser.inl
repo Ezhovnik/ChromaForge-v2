@@ -34,10 +34,15 @@ namespace {
 }
 
 template<typename CharT>
-void BasicParser<CharT>::skipWhitespace() {
+void BasicParser<CharT>::skipWhitespace(bool newline) {
+    if (hashComment) {
+        skipWhitespaceHashComment(newline);
+        return;
+    }
     while (hasNext()) {
         char next = source[pos];
         if (next == '\n') {
+            if (!newline) break;
             line++;
             linestart = ++pos;
             continue;
@@ -46,6 +51,34 @@ void BasicParser<CharT>::skipWhitespace() {
             pos++;
         } else {
             break;
+        }
+    }
+}
+
+template<typename CharT>
+void BasicParser<CharT>::skipWhitespaceHashComment(bool newline) {
+    while (hasNext()) {
+        char next = source[pos];
+        if (next == '\n') {
+            if (!newline) break;
+            line++;
+            linestart = ++pos;
+            continue;
+        }
+        if (is_whitespace(next)) {
+            pos++;
+        } else {
+            break;
+        }
+    }
+    if (hasNext() && source[pos] == '#') {
+        if (!newline) {
+            readUntilEOL();
+            return;
+        }
+        skipLine();
+        if (hasNext() && (is_whitespace(source[pos]) || source[pos] == '#')) {
+            skipWhitespaceHashComment(newline);
         }
     }
 }
@@ -74,6 +107,12 @@ void BasicParser<CharT>::skipLine() {
         }
         pos++;
     }
+}
+
+template<typename CharT>
+void BasicParser<CharT>::skipEmptyLines() {
+    skipWhitespace();
+    pos = linestart;
 }
 
 template<typename CharT>
@@ -243,8 +282,11 @@ std::basic_string_view<CharT> BasicParser<CharT>::readUntilWhitespace() {
 template <typename CharT>
 std::basic_string_view<CharT> BasicParser<CharT>::readUntilEOL() {
     int start = pos;
-    while (hasNext() && source[pos] != '\r' && source[pos] != '\n') {
+    while (hasNext() && source[pos] != '\n') {
         pos++;
+    }
+    if (pos > start && source[pos - 1] == '\r') {
+        return source.substr(start, pos - start - 1);
     }
     return source.substr(start, pos - start);
 }
