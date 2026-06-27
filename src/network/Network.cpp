@@ -92,7 +92,9 @@ public:
         OnReject onReject,
         long maxSize
     ) override {
-        Request request {RequestType::Get, url, onResponse, onReject, maxSize};
+        Request request {
+            RequestType::Get, url, onResponse, onReject, maxSize, false, ""
+        };
         processRequest(std::move(request));
     }
 
@@ -103,7 +105,9 @@ public:
         OnReject onReject=nullptr,
         long maxSize=0
     ) override {
-        Request request {RequestType::Post, url, onResponse, onReject, maxSize};
+        Request request {
+            RequestType::Post, url, onResponse, onReject, maxSize, false, ""
+        };
         request.data = data;
         processRequest(std::move(request));
     }
@@ -298,7 +302,6 @@ static std::string to_string(const sockaddr_in& addr, bool port=true) {
 
 class SocketConnection : public Connection {
     SOCKET descriptor;
-    bool open = true;
     sockaddr_in addr;
     size_t totalUpload = 0;
     size_t totalDownload = 0;
@@ -454,7 +457,8 @@ public:
         )) {
             throw std::runtime_error(gai_strerrorA(res));
         }
-        sockaddr_in serverAddress = *(sockaddr_in*)addrinfo->ai_addr;
+        sockaddr_in serverAddress;
+        std::memcpy(&serverAddress, addrinfo->ai_addr, sizeof(sockaddr_in));
         serverAddress.sin_port = htons(port);
         freeaddrinfo(addrinfo);
 

@@ -561,7 +561,6 @@ void TextBox::onFocus(GUI* gui) {
 }
 
 void TextBox::reposition() {
-    auto size = getSize();
     UINode::reposition();
     refreshLabel();
 }

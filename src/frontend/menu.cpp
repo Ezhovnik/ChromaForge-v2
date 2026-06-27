@@ -81,7 +81,6 @@ bool menus::call(Engine& engine, runnable func) {
         LOG_ERROR("menus::call(...) in headless mode");
         throw std::runtime_error("menus::call(...) in headless mode");
     }
-    auto gui = engine.getGUI();
     try {
         func();
         return true;

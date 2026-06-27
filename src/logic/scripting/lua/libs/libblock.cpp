@@ -139,7 +139,7 @@ static int get_axis(lua::State* L) {
     }
     auto z = lua::tointeger(L, 3);
 
-    glm::ivec3 defAxis;
+    glm::ivec3 defAxis {};
     defAxis[n] = 1;
 
     auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
@@ -543,6 +543,7 @@ static int set_field(
             if (value.isString()) {
                 return lua::pushinteger(L, dataStruct.setUnicode(dst, value.asString(), field));
             }
+            [[fallthrough]];
         case data::FieldType::I8:
         case data::FieldType::I16:
         case data::FieldType::I32:

@@ -15,7 +15,7 @@ class Font;
 class Assets;
 class DrawContext;
 class Content;
-class Item;
+struct Item;
 class Batch2D;
 class ContentIndices;
 class LevelFrontend;

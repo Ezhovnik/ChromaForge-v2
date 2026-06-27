@@ -46,7 +46,6 @@ void WorldConverter::addRegionsTasks(
 }
 
 void WorldConverter::createUpgradeTasks() {
-    const auto& regions = wfile->getRegions();
     for (auto& issue : report->getIssues()) {
         if (issue.issueType != ContentIssueType::RegionFormatUpdate) {
             continue;
@@ -75,7 +74,6 @@ void WorldConverter::createConvertTasks() {
         }
     };
 
-    const auto& regions = wfile->getRegions();
     for (auto& issue : report->getIssues()) {
         switch (issue.issueType) {
             case ContentIssueType::BlockDataLayoutsUpdate:
@@ -90,11 +88,12 @@ void WorldConverter::createConvertTasks() {
         }
     }
 
-    tasks.push(ConvertTask {ConvertTaskType::Player, wfile->getPlayerFile()});
+    tasks.push(
+        ConvertTask {ConvertTaskType::Player, wfile->getPlayerFile(), 0, 0, {}}
+    );
 }
 
 void WorldConverter::createBlockFieldsConvertTasks() {
-    const auto& regions = wfile->getRegions();
     for (auto& issue : report->getIssues()) {
         switch (issue.issueType) {
             case ContentIssueType::BlockDataLayoutsUpdate:

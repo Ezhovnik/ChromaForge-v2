@@ -26,7 +26,6 @@ class TomlReader : BasicParser<char> {
 
     std::string parseMultilineString() {
         pos += 2;
-        char next = peek();
 
         std::stringstream ss;
         while (hasNext()) {

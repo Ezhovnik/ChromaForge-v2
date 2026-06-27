@@ -28,7 +28,6 @@ class Camera;
  */
 class Level {
 private:
-     const EngineSettings& settings;
 	std::unique_ptr<World> world;
 public:
      const Content& content;

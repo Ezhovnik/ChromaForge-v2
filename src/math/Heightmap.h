@@ -16,8 +16,8 @@ std::optional<InterpolationType> InterpolationType_from(std::string_view str);
 
 class Heightmap {
 private:
-    std::vector<float> buffer;
     uint width, height;
+    std::vector<float> buffer;
 public:
     Heightmap(uint width, uint height) : width(width), height(height) {
         buffer.resize(width*height);

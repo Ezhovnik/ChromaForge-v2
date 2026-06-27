@@ -22,11 +22,10 @@ ParticlesRenderer::ParticlesRenderer(
     const Level& level,
     const Chunks& chunks,
     const GraphicsSettings* settings
-) : batch(std::make_unique<MainBatch>(4096)),
-    level(level),
-    chunks(chunks),
+) : chunks(chunks),
     assets(assets),
-    settings(settings) {}
+    settings(settings),
+    batch(std::make_unique<MainBatch>(4096)) {}
 
 ParticlesRenderer::~ParticlesRenderer() = default;
 
@@ -166,7 +165,6 @@ void ParticlesRenderer::render(const Camera& camera, float deltaTime) {
             continue;
         }
         auto texture = emitter.getTexture();
-        const auto& found = particles.find(texture);
         std::vector<Particle>* vec;
         vec = &particles[texture];
         emitter.update(deltaTime, camera.position, *vec);

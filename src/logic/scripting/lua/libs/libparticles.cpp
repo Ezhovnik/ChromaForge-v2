@@ -57,7 +57,6 @@ static int l_get_origin(lua::State* L) {
 static int l_set_origin(lua::State* L) {
     uint64_t id = lua::touinteger(L, 1);
     if (auto emitter = scripting::renderer->particles->getEmitter(id)) {
-        EmitterOrigin origin;
         if (lua::istable(L, 2)) {
             emitter->setOrigin(lua::tovec3(L, 2));
         } else {

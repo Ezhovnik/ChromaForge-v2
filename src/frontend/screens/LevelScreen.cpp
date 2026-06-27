@@ -153,7 +153,6 @@ void LevelScreen::saveDecorations() {
 void LevelScreen::saveWorldPreview() {
     try {
         LOG_INFO("Saving world preview");
-        const auto& paths = engine.getPaths();
         auto player = playerController->getPlayer();
         auto& settings = engine.getSettings();
         int previewSize = settings.ui.worldPreviewSize.get();

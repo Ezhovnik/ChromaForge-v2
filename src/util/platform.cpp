@@ -108,7 +108,9 @@ void platform::open_folder(const std::filesystem::path& folder) {
     ShellExecuteW(NULL, L"open", folder.wstring().c_str(), NULL, NULL, SW_SHOWDEFAULT);
 #else
     auto cmd = "xdg-open " + util::quote(folder.u8string());
-    system(cmd.c_str());
+    if (int res = system(cmd.c_str())) {
+        LOG_WARN("'{}' returned code {}", cmd, res);
+    }
 #endif
 }
 

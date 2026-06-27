@@ -6,7 +6,7 @@
 #include <util/stringutil.h>
 
 namespace {
-    int detect_base(int c) {
+    inline int detect_base(int c) {
         switch (c) {
             case 'B':
             case 'b':

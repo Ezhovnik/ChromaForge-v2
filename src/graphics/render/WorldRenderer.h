@@ -36,17 +36,17 @@ class PrecipitationRenderer;
 class WorldRenderer {
 private:
     Engine& engine;
-	const Level& level;
-	Player& player;
-	const Assets& assets;
+    const Level& level;
+    Player& player;
+    const Assets& assets;
     std::unique_ptr<Frustum> frustumCulling;
+    std::unique_ptr<LineBatch> lineBatch;
     std::unique_ptr<Batch3D> batch3d;
+    std::unique_ptr<ModelBatch> modelBatch;
+    std::unique_ptr<GuidesRenderer> guides;
     std::unique_ptr<ChunksRenderer> chunks;
-	std::unique_ptr<GuidesRenderer> guides;
-	std::unique_ptr<LineBatch> lineBatch;
-	std::unique_ptr<Skybox> skybox;
-	std::unique_ptr<ModelBatch> modelBatch;
-	Weather weather {};
+    std::unique_ptr<Skybox> skybox;
+    Weather weather {};
 
 	float timer = 0.0f;
 
@@ -71,10 +71,10 @@ private:
         float fogFactor
     );
 public:
-	std::unique_ptr<TextsRenderer> texts;
 	std::unique_ptr<ParticlesRenderer> particles;
-	std::unique_ptr<BlockWrapsRenderer> blockWraps;
-	std::unique_ptr<PrecipitationRenderer> precipitation;
+    std::unique_ptr<TextsRenderer> texts;
+    std::unique_ptr<BlockWrapsRenderer> blockWraps;
+    std::unique_ptr<PrecipitationRenderer> precipitation;
 
 	WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
 	~WorldRenderer();

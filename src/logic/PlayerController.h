@@ -46,7 +46,6 @@ public:
 
 class PlayerController {
 private:
-	const EngineSettings& settings;
 	Level& level;
 	Player& player;
 	PlayerInput input {};

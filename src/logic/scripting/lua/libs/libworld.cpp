@@ -145,9 +145,6 @@ static void integrate_chunk_client(Chunk& chunk) {
     int x = chunk.chunk_x;
     int z = chunk.chunk_z;
 
-    auto chunksController = scripting::controller->getChunksController();
-
-    Lighting& lighting = *chunksController->lighting;
     chunk.flags.loadedLights = false;
     chunk.flags.lighted = false;
 

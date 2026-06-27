@@ -19,10 +19,9 @@ class Engine;
 class LevelController;
 class Player;
 struct WeatherPreset;
-class Weather;
+struct Weather;
 
 class Decorator {
-    Engine& engine;
     const Level& level;
     const Assets& assets;
     Player& player;

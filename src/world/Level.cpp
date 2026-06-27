@@ -22,8 +22,7 @@ Level::Level(
     std::unique_ptr<World> worldPtr,
     const Content& content,
     EngineSettings& settings
-) : settings(settings),
-    world(std::move(worldPtr)),
+) : world(std::move(worldPtr)),
     content(content),
     chunks(std::make_unique<GlobalChunks>(*this)),
 	physics(std::make_unique<PhysicsSolver>(glm::vec3(0, GRAVITY, 0))),

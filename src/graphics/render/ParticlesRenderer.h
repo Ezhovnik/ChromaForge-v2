@@ -16,7 +16,6 @@ class Chunks;
 
 class ParticlesRenderer {
 private:
-    const Level& level;
     const Chunks& chunks;
     const Assets& assets;
     const GraphicsSettings* settings;

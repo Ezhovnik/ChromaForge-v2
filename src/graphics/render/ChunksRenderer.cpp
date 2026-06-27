@@ -20,7 +20,6 @@
 size_t ChunksRenderer::visibleChunks = 0;
 
 class RendererWorker : public util::Worker<std::shared_ptr<Chunk>, RendererResult> {
-    const Level& level;
     const Chunks& chunks;
     BlocksRenderer renderer;
 public:
@@ -29,8 +28,7 @@ public:
         const Chunks& chunks,
         const ContentGfxCache& cache,
         const EngineSettings& settings
-    ) : level(level),
-        chunks(chunks),
+    ) : chunks(chunks),
         renderer(
             settings.graphics.denseRender.get()
                 ? settings.graphics.chunkMaxVerticesDense.get()
@@ -44,7 +42,7 @@ public:
         renderer.build(chunk.get(), &chunks);
         if (renderer.isCancelled()) {
             return RendererResult {
-                glm::ivec2(chunk->chunk_x, chunk->chunk_z), true, MeshData()
+                glm::ivec2(chunk->chunk_x, chunk->chunk_z), true, ChunkMeshData {}
             };
         }
         auto meshData = renderer.createMesh();
@@ -61,8 +59,7 @@ ChunksRenderer::ChunksRenderer(
     const Frustum& frustum,
     const ContentGfxCache& cache,
     const EngineSettings& settings
-) : level(*level),
-    chunks(chunks),
+) : chunks(chunks),
     assets(assets),
     frustum(frustum),
     settings(settings),
