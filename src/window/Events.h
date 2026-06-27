@@ -17,64 +17,53 @@ enum class BindType {
     Rebind = 1
 };
 
-// Система обработки событий ввода (клавиатура, мышь)
-class Events {
-private:
-    static bool keys[KEYS_BUFFER_SIZE];
-    static uint frames[KEYS_BUFFER_SIZE];
-    static uint currentFrame;
-    static bool cursorDrag;
-    static bool cursorLocked;
-public:
-    // Переменные для отсеживания состояния мыши
-    static glm::vec2 delta;
-    static glm::vec2 cursor;
+namespace Events {
+    extern int scroll;
+    extern glm::vec2 delta;
+    extern glm::vec2 cursor;
+    extern std::vector<uint> codepoints;
+    extern std::vector<keycode> pressedKeys;
+    extern std::unordered_map<std::string, Binding> bindings;
 
-    static int scroll;
+    void pollEvents();
 
-    static std::vector<uint> codepoints;
-    static std::vector<keycode> pressedKeys;
-    static std::unordered_map<std::string, Binding> bindings;
-    static std::unordered_map<keycode, util::HandlersList<>> keyCallbacks;
+    int getScroll();
 
-    static void pollEvents(); // Обработка событий текущего кадра
+    bool isPressed(keycode keycode);
+    bool isPressed(int keycode);
+    bool justPressed(keycode keycode);
+    bool justPressed(int keycode);
 
-    static bool isPressed(keycode code);
-    static bool isPressed(int keycode); // Проверяет, нажата ли клавиша в текущий момент
-    static bool justPressed(keycode code);
-    static bool justPressed(int keycode); // Проверяет, была ли клавиша нажата именно в текущем кадре 
+    bool isClicked(mousecode button);
+    bool isClicked(int button);
+    bool justClicked(mousecode button);
+    bool justClicked(int button);
 
-    static bool isClicked(mousecode button);
-    static bool isClicked(int button); // Проверяет, нажата ли кнопка мыши в данный момент
-    static bool justClicked(mousecode button);
-    static bool justClicked(int button); // Проверяет, была ли кнопка мыши нажата именно в текущем кадре
+    void toggleCursor();
 
-    static Binding& getBinding(const std::string& name);
-    static void bind(const std::string& name, inputType type, keycode code);
-	static void bind(const std::string& name, inputType type, mousecode code);
-    static void bind(const std::string& name, inputType type, int code);
-    static void rebind(const std::string& name, inputType type, int code);
+    Binding& getBinding(const std::string& name);
+    void bind(const std::string& name, inputType type, keycode code);
+    void bind(const std::string& name, inputType type, mousecode code);
+    void bind(const std::string& name, inputType type, int code);
+    void rebind(const std::string& name, inputType type, int code);
+    bool isActive(const std::string& name);
+    bool justActive(const std::string& name);
 
-	static bool isActive(const std::string& name);
-	static bool justActive(const std::string& name);
+    observer_handler addKeyCallback(keycode key, KeyCallback callback);
 
-    static observer_handler addKeyCallback(keycode key, KeyCallback callback);
+    void setKey(int key, bool b);
+    void setButton(int button, bool b);
 
-    static void toggleCursor(); // Переключает режим курсора между нормальным и заблокированным состоянием
+    void setPosition(float xpos, float ypos);
 
-    static void setKey(int key, bool b);
-    static void setButton(int button, bool b);
-
-    static void setPosition(float xpos, float ypos);
-
-    static std::string writeBindings();
-    static void loadBindings(
+    std::string writeBindings();
+    void loadBindings(
         const std::string& filename,
         const std::string& source,
         BindType bindType
     );
 
-    static void enableBindings();
+    void enableBindings();
 
-    static bool isCursorLocked();
+    bool isCursorLocked();
 };

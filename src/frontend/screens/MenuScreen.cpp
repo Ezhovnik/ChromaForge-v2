@@ -34,14 +34,15 @@ void MenuScreen::draw(float deltaTime) {
     Window::clear();
     Window::setBgColor(glm::vec3(0.2f));
 
+    uint width = Window::width;
+    uint height = Window::height;
+
     uicamera->setFov(Window::height);
+    uicamera->setAspectRatio(width / static_cast<float>(height));
 
     ShaderProgram* uishader = assets->get<ShaderProgram>("ui");
     uishader->use();
     uishader->uniformMatrix("u_projview", uicamera->getProjView());
-
-    uint width = Window::width;
-    uint height = Window::height;
 
     auto bg = assets->get<Texture>("gui/menubg");
     batch->begin();

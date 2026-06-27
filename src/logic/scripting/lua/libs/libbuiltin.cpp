@@ -5,7 +5,6 @@
 #include <engine/Engine.h>
 #include <io/engine_paths.h>
 #include <frontend/menu.h>
-#include <window/Window.h>
 #include <frontend/screens/MenuScreen.h>
 #include <logic/LevelController.h>
 #include <window/Events.h>

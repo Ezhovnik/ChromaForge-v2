@@ -363,8 +363,8 @@ void WorldRenderer::draw(
     weather.update(deltaTime);
 
     auto world = level.getWorld();
-    const Viewport& vp = pctx.getViewport();
-    camera.aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
+    const auto& vp = pctx.getViewport();
+    camera.setAspectRatio(vp.getRatio());
 
     const auto& settings = engine.getSettings();
     const auto& worldInfo = world->getInfo();

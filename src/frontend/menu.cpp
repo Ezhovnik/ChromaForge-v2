@@ -16,7 +16,6 @@
 #include <logic/scripting/scripting.h>
 #include <settings.h>
 #include <util/stringutil.h>
-#include <window/Window.h>
 #include <frontend/UIDocument.h>
 #include <core_content_defs.h>
 #include <frontend/locale/langs.h>

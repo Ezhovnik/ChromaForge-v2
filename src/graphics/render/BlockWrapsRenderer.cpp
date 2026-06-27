@@ -11,7 +11,6 @@
 #include <objects/Player.h>
 #include <voxels/Block.h>
 #include <voxels/Chunks.h>
-#include <window/Window.h>
 #include <world/Level.h>
 
 BlockWrapsRenderer::BlockWrapsRenderer(

@@ -13,25 +13,28 @@
 
 inline constexpr short _MOUSE_KEYS_OFFSET = 1024;
 
-// Статические массивы для хранения состояние клавиш и кнопок мыши
-bool Events::keys[KEYS_BUFFER_SIZE] = {}; // Хранит текущее состояние (нажата / не нажата)
-uint Events::frames[KEYS_BUFFER_SIZE] = {}; // Храние номер кадра, в котором было последнее изменение состояния
-uint Events::currentFrame = 0; // Номер текущего кадра
+namespace {
+    bool keys[KEYS_BUFFER_SIZE] = {};
+    uint frames[KEYS_BUFFER_SIZE] = {};
+    uint current_frame = 0;
+    bool cursor_drag = false;
+    bool cursor_locked = false;
+    std::unordered_map<keycode, util::HandlersList<>> key_callbacks;
+}
 
 // Переменные для отслеживания позиции мыши
 glm::vec2 Events::delta = {};
 glm::vec2 Events::cursor = {};
-
-// Флаги для упраления состоянием курсора
-bool Events::cursorLocked = false; // Режим захвата курсора
-bool Events::cursorDrag = false; // Начал ли пользователь движение мышью
 
 int Events::scroll = 0;
 
 std::vector<uint> Events::codepoints;
 std::vector<keycode> Events::pressedKeys;
 std::unordered_map<std::string, Binding> Events::bindings;
-std::unordered_map<keycode, util::HandlersList<>> Events::keyCallbacks;
+
+int Events::getScroll() {
+    return scroll;
+}
 
 bool Events::isPressed(keycode code) {
 	return isPressed(static_cast<int>(code));
@@ -50,7 +53,7 @@ bool Events::justPressed(keycode code) {
 
 // Проверяет, была ли клавиша нажата именно в текущем кадре 
 bool Events::justPressed(int keycode) {
-    return Events::isPressed(keycode) && frames[keycode] == currentFrame;
+    return Events::isPressed(keycode) && frames[keycode] == current_frame;
 }
 
 bool Events::isClicked(mousecode button) {
@@ -73,9 +76,11 @@ bool Events::justClicked(int button) {
 
 // Переключает режим курсора между нормальным и заблокированным состоянием
 void Events::toggleCursor() {
-	cursorDrag = false;
-    cursorLocked = !cursorLocked;
-    Window::setCursorMode(cursorLocked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	cursor_drag = false;
+    cursor_locked = !cursor_locked;
+    Window::setCursorMode(
+        cursor_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL
+    );
 }
 
 void Events::bind(const std::string& name, inputType type, keycode code) {
@@ -119,7 +124,7 @@ bool Events::justActive(const std::string& name) {
 
 // Обработка событий текущего кадра
 void Events::pollEvents() {
-    currentFrame++;
+    current_frame++;
     delta.x = 0.0f;
     delta.y = 0.0f;
     codepoints.clear();
@@ -157,11 +162,11 @@ void Events::pollEvents() {
 }
 
 void Events::setKey(int key, bool b) {
-    Events::keys[key] = b;
-    Events::frames[key] = Events::currentFrame;
+    ::keys[key] = b;
+    ::frames[key] = current_frame;
     if (b) {
-        const auto& callbacks = keyCallbacks.find(static_cast<keycode>(key));
-        if (callbacks != keyCallbacks.end()) {
+        const auto& callbacks = ::key_callbacks.find(static_cast<keycode>(key));
+        if (callbacks != ::key_callbacks.end()) {
             callbacks->second.notify();
         }
     }
@@ -172,11 +177,11 @@ void Events::setButton(int button, bool b) {
 }
 
 void Events::setPosition(float xpos, float ypos) {
-    if (Events::cursorDrag) {
+    if (::cursor_drag) {
         Events::delta.x += xpos - Events::cursor.x;
         Events::delta.y += ypos - Events::cursor.y;
     } else {
-        Events::cursorDrag = true;
+        ::cursor_drag = true;
 	}
 
     Events::cursor.x = xpos;
@@ -184,7 +189,7 @@ void Events::setPosition(float xpos, float ypos) {
 }
 
 observer_handler Events::addKeyCallback(keycode key, KeyCallback callback) {
-    return keyCallbacks[key].add(std::move(callback));
+    return ::key_callbacks[key].add(std::move(callback));
 }
 
 std::string Events::writeBindings() {
@@ -257,5 +262,5 @@ void Events::enableBindings() {
 }
 
 bool Events::isCursorLocked() {
-    return cursorLocked;
+    return cursor_locked;
 }
