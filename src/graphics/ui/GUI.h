@@ -16,7 +16,9 @@ class Assets;
 class Camera;
 class Viewport;
 class Batch2D;
-class LineBatch;
+struct CursorState;
+class Engine;
+class Input;
 
 /*
 Padding is element inner space, margin is outer
@@ -56,6 +58,8 @@ namespace gui {
     using PageLoaderFunc = std::function<std::shared_ptr<UINode>(const std::string&)>;
 
     class GUI {
+        Engine& engine;
+        Input& input;
         std::unique_ptr<Batch2D> batch2D;
         std::shared_ptr<Container> container;
 
@@ -80,12 +84,12 @@ namespace gui {
 
         float tooltipTimer = 0.0f;
 
-        void activateMouse(float deltaTIme);
+        void activateMouse(float deltaTime, const CursorState& cursor);
         void activateFocused();
         void updateTooltip(float deltaTime);
         void resetTooltip();
     public:
-        GUI();
+        GUI(Engine& engine);
         ~GUI();
 
         void setPageLoader(PageLoaderFunc pageLoader);
@@ -120,5 +124,7 @@ namespace gui {
         float getDoubleClickDelay() const;
 
         void toggleDebug();
+        const Input& getInput() const;
+        Input& getInput();
     };
 }

@@ -165,15 +165,76 @@ static void scroll_callback(GLFWwindow*, double xoffset, double yoffset) {
 
 static GLFWcursor* standard_cursors[static_cast<int>(CursorShape::Last) + 1] = {};
 
-// Инициализация окна и OpenGL контекста
-bool Window::initialize(DisplaySettings* settings) {
+class GLFWInput : public Input {
+public:
+    void pollEvents() override {
+        Events::pollEvents();
+    }
+
+    const char* getClipboardText() const override {
+        return glfwGetClipboardString(::window);
+    }
+
+    int getScroll() override {
+        return Events::getScroll();
+    }
+
+    bool isPressed(keycode keycode) const override {
+        return Events::isPressed(keycode);
+    }
+    bool justPressed(keycode keycode) const override {
+        return Events::justPressed(keycode);
+    }
+
+    bool isClicked(mousecode mousecode) const override {
+        return Events::isClicked(mousecode);
+    }
+    bool justClicked(mousecode mousecode) const override {
+        return Events::justClicked(mousecode);
+    }
+
+    CursorState getCursor() const override {
+        return {
+            Events::isCursorLocked(),
+            Events::cursor,
+            Events::delta
+        };
+    }
+
+    void toggleCursor() override {
+        Events::toggleCursor();
+    }
+
+    Bindings& getBindings() override {
+        return Events::bindings;
+    }
+
+    const Bindings& getBindings() const override {
+        return Events::bindings;
+    }
+
+    observer_handler addKeyCallback(keycode key, KeyCallback callback) override {
+        return Events::addKeyCallback(key, std::move(callback));
+    }
+
+    const std::vector<keycode>& getPressedKeys() const override {
+        return Events::pressedKeys;
+    }
+
+    const std::vector<uint>& getCodepoints() const override {
+        return Events::codepoints;
+    }
+};
+static_assert(!std::is_abstract<GLFWInput>());
+
+std::unique_ptr<Input> Window::initialize(DisplaySettings* settings) {
     ::settings = settings;
     Window::width = settings->width.get();
     Window::height = settings->height.get();
 
     if (!glfwInit()){ // Инициализация GLFW
         LOG_CRITICAL("GLFW initialization failed");
-        return false;
+        return nullptr;
     }
 
     glfwSetErrorCallback(glfw_error_callback);
@@ -209,7 +270,7 @@ bool Window::initialize(DisplaySettings* settings) {
     if (window == nullptr) {
         LOG_CRITICAL("Failed to create GLFW Window");
         glfwTerminate();
-        return false;
+        return nullptr;
     }
 
     // Установка созданного окна как текущего контекста OpenGL
@@ -222,7 +283,7 @@ bool Window::initialize(DisplaySettings* settings) {
         LOG_WARN("glewInit() returned GLEW_ERROR_NO_GLX_DISPLAY; ignored");
     } else if (glewError != GLEW_OK) {
         LOG_CRITICAL("Failed to initialize GLEW {}", reinterpret_cast<const char*>(glewGetErrorString(glewError)));
-        return false;
+        return nullptr;
     }
 
     glEnable(GL_DEBUG_OUTPUT);
@@ -279,7 +340,7 @@ bool Window::initialize(DisplaySettings* settings) {
         standard_cursors[i] = glfwCreateStandardCursor(cursor);
     }
 
-    return true;
+    return std::make_unique<GLFWInput>();
 }
 
 // Завершение работы окна и освобождение ресурсов GLFW
@@ -384,10 +445,6 @@ void Window::swapBuffers() {
 
 double Window::time() {
 	return glfwGetTime();
-}
-
-const char* Window::getClipboardText() {
-    return glfwGetClipboardString(window);
 }
 
 void Window::setClipboardText(const char* text) {

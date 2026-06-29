@@ -7,6 +7,7 @@ namespace gui {
     class Panel : public BasePanel {
     public:
         Panel(
+            GUI& gui,
             glm::vec2 size, 
             glm::vec4 padding=glm::vec4(0.0f), 
             float interval=2.0f

@@ -12,7 +12,7 @@ class Engine;
 class UIDocument;
 
 namespace menus {
-    void create_version_label(Engine& engine);
+    void create_version_label(gui::GUI& gui);
 
     UIDocument* show(
         Engine& engine, 

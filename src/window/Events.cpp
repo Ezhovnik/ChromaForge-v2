@@ -7,9 +7,7 @@
 
 #include <debug/Logger.h>
 #include <data/dv.h>
-#include <coders/json.h>
 #include <util/stringutil.h>
-#include <coders/toml.h>
 
 inline constexpr short _MOUSE_KEYS_OFFSET = 1024;
 
@@ -30,7 +28,7 @@ int Events::scroll = 0;
 
 std::vector<uint> Events::codepoints;
 std::vector<keycode> Events::pressedKeys;
-std::unordered_map<std::string, Binding> Events::bindings;
+Bindings Events::bindings {};
 
 int Events::getScroll() {
     return scroll;
@@ -92,34 +90,19 @@ void Events::bind(const std::string& name, inputType type, mousecode code) {
 }
 
 void Events::bind(const std::string& name, inputType type, int code) {
-	bindings.try_emplace(name, Binding(type, code));
+	bindings.bind(name, type, code);
 }
 
 void Events::rebind(const std::string& name, inputType type, int code) {
-    const auto& found = bindings.find(name);
-    if (found == bindings.end()) {
-        LOG_ERROR("Binding '{}' does not exist", name);
-        throw std::runtime_error("Binding '" + name + "' does not exist");
-    }
-    bindings[name] = Binding(type, code);
+    requireBinding(name) = Binding(type, code);
 }
 
 bool Events::isActive(const std::string& name) {
-	const auto& found = bindings.find(name);
-	if (found == bindings.end()) {
-        LOG_WARN("Binding {} not found", name);
-		return false;
-	}
-	return found->second.isActive();
+	return bindings.isActive(name);
 }
 
 bool Events::justActive(const std::string& name) {
-	const auto& found = bindings.find(name);
-	if (found == bindings.end()) {
-        LOG_WARN("Binding {} not found", name);
-		return false;
-	}
-	return found->second.justActive();
+	return bindings.justActive(name);
 }
 
 // Обработка событий текущего кадра
@@ -133,8 +116,8 @@ void Events::pollEvents() {
 
     glfwPollEvents();
 
-    for (auto& [name, binding] : bindings) {
-        if (!binding.enable) {
+    for (auto& [name, binding] : bindings.getAll()) {
+        if (!binding.enabled) {
             binding.state = false;
             continue;
         }
@@ -192,73 +175,16 @@ observer_handler Events::addKeyCallback(keycode key, KeyCallback callback) {
     return ::key_callbacks[key].add(std::move(callback));
 }
 
-std::string Events::writeBindings() {
-    auto obj = dv::object();
-    for (auto& entry : Events::bindings) {
-        const auto& binding = entry.second;
-
-        std::string value;
-        switch (binding.type) {
-            case inputType::keyboard: 
-                value = "key:"+input_util::get_name(static_cast<keycode>(binding.code)); 
-                break;
-            case inputType::mouse: 
-                value = "mouse:"+input_util::get_name(static_cast<mousecode>(binding.code));
-                break;
-            default:
-				LOG_ERROR("Unsupported control type");
-				throw std::runtime_error("Unsupported control type");
-        }
-        obj[entry.first] = std::move(value);
-    }
-    return toml::stringify(obj);
+Binding* Events::getBinding(const std::string& name) {
+    return bindings.get(name);
 }
 
-void Events::loadBindings(
-    const std::string& filename,
-    const std::string& source,
-    BindType bindType
-) {
-    auto map = toml::parse(filename, source);
-    for (auto& [sectionName, section] : map.asObject()) {
-        for (auto& [name, value] : section.asObject()) {
-            auto key = sectionName + "." + name;
-            auto [prefix, codename] = util::split_at(value.asString(), ':');
-            inputType type;
-            int code;
-            if (prefix == "key") {
-                type = inputType::keyboard;
-                code = static_cast<int>(input_util::keycode_from(codename));
-            } else if (prefix == "mouse") {
-                type = inputType::mouse;
-                code = static_cast<int>(input_util::mousecode_from(codename));
-            } else {
-                LOG_ERROR("Unknown input type: {} (binding {})", prefix, util::quote(key));
-                continue;
-            }
-            if (bindType == BindType::Bind) {
-                Events::bind(key, type, code);
-            } else if (bindType == BindType::Rebind) {
-                Events::rebind(key, type, code);
-            }
-        }
+Binding& Events::requireBinding(const std::string& name) {
+    if (const auto found = getBinding(name)) {
+        return *found;
     }
-}
-
-Binding& Events::getBinding(const std::string& name) {
-    const auto found = bindings.find(name);
-    if (found == bindings.end()) {
-        LOG_ERROR("Binding '{}' does not exist", name);
-        throw std::runtime_error("Binding '" + name + "' does not exist");
-    }
-    return found->second;
-}
-
-void Events::enableBindings() {
-    for (auto& entry : bindings) {
-        auto& binding = entry.second;
-        binding.enable = true;
-    }
+    LOG_ERROR("Binding '{}' does not exist");
+    throw std::runtime_error("Binding '" + name + "' does not exist");
 }
 
 bool Events::isCursorLocked() {

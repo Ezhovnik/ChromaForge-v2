@@ -16,6 +16,7 @@ class Block;
 struct EngineSettings;
 struct CameraSettings;
 struct Hitbox;
+class Input;
 
 class CameraControl {
 private:
@@ -54,11 +55,11 @@ private:
 
 	float interactionTimer = 0.0f;
 
-	void updateKeyboard();
+	void updateKeyboard(const Input& inputEvents);
 	void resetKeyboard();
 	void updatePlayer(float deltaTime);
 	void updateEntityInteraction(entityid_t eid, bool lclick, bool rclick);
-	void updateInteraction(float deltaTime);
+	void updateInteraction(const Input& inputEvents, float deltaTime);
 
     float stepsTimer = 0.0f;
     void onFootstep(const Hitbox& hitbox);
@@ -76,8 +77,8 @@ public:
 		BlocksController& blocksController
 	);
 
-	void update(float delta, bool input_flag);
-	void postUpdate(float delta, bool input_flag, bool pause);
+	void update(float delta, const Input* inputEvents);
+	void postUpdate(float delta, const Input* inputEvents, bool pause);
 
 	Player* getPlayer();
 };

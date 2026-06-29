@@ -4,13 +4,13 @@
 #include <network/Network.h>
 #include <coders/json.h>
 
-static int l_get(lua::State* L) {
+static int l_get(lua::State* L, network::Network& network) {
     std::string url(lua::require_lstring(L, 1));
 
     lua::pushvalue(L, 2);
     auto onResponse = lua::create_lambda_nothrow(L);
 
-    scripting::engine->getNetwork().get(url, [onResponse](std::vector<char> bytes) {
+    network.get(url, [onResponse](std::vector<char> bytes) {
         scripting::engine->postRunnable([=]() {
             onResponse({std::string(bytes.data(), bytes.size())});
         });
@@ -18,13 +18,13 @@ static int l_get(lua::State* L) {
     return 0;
 }
 
-static int l_get_binary(lua::State* L) {
+static int l_get_binary(lua::State* L, network::Network& network) {
     std::string url(lua::require_lstring(L, 1));
 
     lua::pushvalue(L, 2);
     auto onResponse = lua::create_lambda_nothrow(L);
 
-    scripting::engine->getNetwork().get(url, [onResponse](std::vector<char> bytes) {
+    network.get(url, [onResponse](std::vector<char> bytes) {
         auto buffer = std::make_shared<util::Buffer<ubyte>>(
             reinterpret_cast<const ubyte*>(bytes.data()), bytes.size()
         );
@@ -35,7 +35,7 @@ static int l_get_binary(lua::State* L) {
     return 0;
 }
 
-static int l_post(lua::State* L) {
+static int l_post(lua::State* L, network::Network& network) {
     std::string url(lua::require_lstring(L, 1));
     auto data = lua::tovalue(L, 2);
 
@@ -60,12 +60,12 @@ static int l_post(lua::State* L) {
     return 0;
 }
 
-static int l_connect(lua::State* L) {
+static int l_connect(lua::State* L, network::Network& network) {
     std::string address = lua::require_string(L, 1);
     int port = lua::tointeger(L, 2);
     lua::pushvalue(L, 3);
     auto callback = lua::create_lambda_nothrow(L);
-    uint64_t id = scripting::engine->getNetwork().connect(address, port, [callback](uint64_t id) {
+    uint64_t id = network.connect(address, port, [callback](uint64_t id) {
         scripting::engine->postRunnable([=]() {
             callback({id});
         });
@@ -73,25 +73,25 @@ static int l_connect(lua::State* L) {
     return lua::pushinteger(L, id);
 }
 
-static int l_close(lua::State* L) {
+static int l_close(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
-    if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
+    if (auto connection = network.getConnection(id)) {
         connection->close(true);
     }
     return 0;
 }
 
-static int l_closeserver(lua::State* L) {
+static int l_closeserver(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
-    if (auto server = scripting::engine->getNetwork().getServer(id)) {
+    if (auto server = network.getServer(id)) {
         server->close();
     }
     return 0;
 }
 
-static int l_send(lua::State* L) {
+static int l_send(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
-    auto connection = scripting::engine->getNetwork().getConnection(id);
+    auto connection = network.getConnection(id);
     if (connection == nullptr || connection->getState() == network::ConnectionState::Closed) {
         return 0;
     }
@@ -117,7 +117,7 @@ static int l_send(lua::State* L) {
     return 0;
 }
 
-static int l_recv(lua::State* L) {
+static int l_recv(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
     int length = lua::tointeger(L, 2);
     auto connection = scripting::engine->getNetwork().getConnection(id);
@@ -144,19 +144,19 @@ static int l_recv(lua::State* L) {
     return 1;
 }
 
-static int l_available(lua::State* L) {
+static int l_available(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
-    if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
+    if (auto connection = network.getConnection(id)) {
         return lua::pushinteger(L, connection->available());
     }
     return 0;
 }
 
-static int l_open(lua::State* L) {
+static int l_open(lua::State* L, network::Network& network) {
     int port = lua::tointeger(L, 1);
     lua::pushvalue(L, 2);
     auto callback = lua::create_lambda_nothrow(L);
-    uint64_t id = scripting::engine->getNetwork().openServer(port, [callback](uint64_t id) {
+    uint64_t id = network.openServer(port, [callback](uint64_t id) {
         scripting::engine->postRunnable([=]() {
             callback({id});
         });
@@ -164,9 +164,9 @@ static int l_open(lua::State* L) {
     return lua::pushinteger(L, id);
 }
 
-static int l_is_alive(lua::State* L) {
+static int l_is_alive(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
-    if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
+    if (auto connection = network.getConnection(id)) {
         return lua::pushboolean(
             L,
             connection->getState() != network::ConnectionState::Closed || connection->available() > 0
@@ -175,9 +175,9 @@ static int l_is_alive(lua::State* L) {
     return lua::pushboolean(L, false);
 }
 
-static int l_is_connected(lua::State* L) {
+static int l_is_connected(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
-    if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
+    if (auto connection = network.getConnection(id)) {
         return lua::pushboolean(
             L, connection->getState() == network::ConnectionState::Connected
         );
@@ -185,9 +185,9 @@ static int l_is_connected(lua::State* L) {
     return lua::pushboolean(L, false);
 }
 
-static int l_get_address(lua::State* L) {
+static int l_get_address(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
-    if (auto connection = scripting::engine->getNetwork().getConnection(id)) {
+    if (auto connection = network.getConnection(id)) {
         lua::pushstring(L, connection->getAddress());
         lua::pushinteger(L, connection->getPort());
         return 2;
@@ -195,47 +195,63 @@ static int l_get_address(lua::State* L) {
     return 0;
 }
 
-static int l_is_serveropen(lua::State* L) {
+static int l_is_serveropen(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
-    if (auto server = scripting::engine->getNetwork().getServer(id)) {
+    if (auto server = network.getServer(id)) {
         return lua::pushboolean(L, server->isOpen());
     }
     return lua::pushboolean(L, false);
 }
 
-static int l_get_serverport(lua::State* L) {
+static int l_get_serverport(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
-    if (auto server = scripting::engine->getNetwork().getServer(id)) {
+    if (auto server = network.getServer(id)) {
         return lua::pushinteger(L, server->getPort());
     }
     return 0;
 }
 
-static int l_get_total_upload(lua::State* L) {
-    return lua::pushinteger(L, scripting::engine->getNetwork().getTotalUpload());
+static int l_get_total_upload(lua::State* L, network::Network& network) {
+    return lua::pushinteger(L, network.getTotalUpload());
 }
 
-static int l_get_total_download(lua::State* L) {
-    return lua::pushinteger(L, scripting::engine->getNetwork().getTotalDownload());
+static int l_get_total_download(lua::State* L, network::Network& network) {
+    return lua::pushinteger(L, network.getTotalDownload());
 }
+
+template <int(*func)(lua::State*, network::Network&)>
+int wrap(lua_State* L) {
+    int result = 0;
+    try {
+        result = func(L, scripting::engine->getNetwork());
+    }
+    catch (std::exception& e) {
+        luaL_error(L, e.what());
+    }
+    catch (...) {
+        throw;
+    }
+    return result;
+}
+
 
 const luaL_Reg networklib[] = {
-    {"get", lua::wrap<l_get>},
-    {"get_binary", lua::wrap<l_get_binary>},
-    {"post", lua::wrap<l_post>},
-    {"get_total_upload", lua::wrap<l_get_total_upload>},
-    {"get_total_download", lua::wrap<l_get_total_download>},
-    {"__open", lua::wrap<l_open>},
-    {"__closeserver", lua::wrap<l_closeserver>},
-    {"__connect", lua::wrap<l_connect>},
-    {"__close", lua::wrap<l_close>},
-    {"__send", lua::wrap<l_send>},
-    {"__recv", lua::wrap<l_recv>},
-    {"__available", lua::wrap<l_available>},
-    {"__is_alive", lua::wrap<l_is_alive>},
-    {"__is_connected", lua::wrap<l_is_connected>},
-    {"__get_address", lua::wrap<l_get_address>},
-    {"__is_serveropen", lua::wrap<l_is_serveropen>},
-    {"__get_serverport", lua::wrap<l_get_serverport>},
+    {"get", wrap<l_get>},
+    {"get_binary", wrap<l_get_binary>},
+    {"post", wrap<l_post>},
+    {"get_total_upload", wrap<l_get_total_upload>},
+    {"get_total_download", wrap<l_get_total_download>},
+    {"__open", wrap<l_open>},
+    {"__closeserver", wrap<l_closeserver>},
+    {"__connect", wrap<l_connect>},
+    {"__close", wrap<l_close>},
+    {"__send", wrap<l_send>},
+    {"__recv", wrap<l_recv>},
+    {"__available", wrap<l_available>},
+    {"__is_alive", wrap<l_is_alive>},
+    {"__is_connected", wrap<l_is_connected>},
+    {"__get_address", wrap<l_get_address>},
+    {"__is_serveropen", wrap<l_is_serveropen>},
+    {"__get_serverport", wrap<l_get_serverport>},
     {NULL, NULL}
 };

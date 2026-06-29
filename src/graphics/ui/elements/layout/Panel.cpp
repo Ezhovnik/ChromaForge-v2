@@ -5,16 +5,16 @@
 using namespace gui;
 
 Panel::Panel(
+    GUI& gui,
     glm::vec2 size, 
     glm::vec4 padding, 
     float interval
-) : BasePanel(size, padding, interval, Orientation::Vertical)
+) : BasePanel(gui, size, padding, interval)
 {
     setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.75f));
 }
 
-Panel::~Panel() {
-}
+Panel::~Panel() = default;
 
 void Panel::setMinLength(int value) {
     minLength = value;

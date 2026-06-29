@@ -6,7 +6,6 @@
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Texture.h>
 #include <graphics/core/Font.h>
-#include <window/Events.h>
 #include <window/input.h>
 #include <voxels/Block.h>
 #include <debug/Logger.h>
@@ -15,8 +14,9 @@
 #include <content/ContentBuilder.h>
 #include <io/io.h>
 #include <io/engine_paths.h>
+#include <coders/toml.h>
 
-void CoreContent::setup(ContentBuilder& builder) {
+void CoreContent::setup(Input& input, ContentBuilder& builder) {
     // Воздух
     {
         Block& block = builder.blocks.create(BUILTIN_AIR);
@@ -71,8 +71,8 @@ void CoreContent::setup(ContentBuilder& builder) {
 
     auto bindsFile = "res:bindings.toml";
     if (io::is_regular_file(bindsFile)) {
-        Events::loadBindings(
-            bindsFile, io::read_string(bindsFile), BindType::Bind
+        input.getBindings().read(
+            toml::parse(bindsFile, io::read_string(bindsFile)), BindType::Bind
         );
     }
 }

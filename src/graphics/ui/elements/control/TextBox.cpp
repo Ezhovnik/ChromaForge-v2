@@ -15,6 +15,8 @@
 #include <devtools/syntax_highlighting.h>
 #include <graphics/ui/markdown.h>
 #include <devtools/actions.h>
+#include <graphics/ui/GUI.h>
+#include <engine/Engine.h>
 
 using namespace gui;
 
@@ -178,8 +180,9 @@ namespace gui {
 }
 
 TextBox::TextBox(
-    std::wstring placeholder, glm::vec4 padding
-) : Container(glm::vec2(200, 32)),
+    GUI& gui, std::wstring placeholder, glm::vec4 padding
+) : Container(gui, glm::vec2(200, 32)),
+    inputEvents(gui.getInput()),
     history(std::make_shared<ActionsHistory>()),
     historian(std::make_unique<TextBoxHistorian>(*this, *history)),
     padding(padding),
@@ -191,7 +194,7 @@ TextBox::TextBox(
     setOnDownPressed(nullptr);
     setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.75f));
 
-    label = std::make_shared<Label>(L"");
+    label = std::make_shared<Label>(gui, L"");
     label->setSize(
         size - glm::vec2(padding.z + padding.x, padding.w + padding.y)
     );
@@ -200,7 +203,7 @@ TextBox::TextBox(
     ));
     add(label);
 
-    lineNumbersLabel = std::make_shared<Label>(L"");
+    lineNumbersLabel = std::make_shared<Label>(gui, L"");
     lineNumbersLabel->setMultiline(true);
     lineNumbersLabel->setSize(
         size - glm::vec2(padding.z + padding.x, padding.w + padding.y)
@@ -551,8 +554,8 @@ void TextBox::setOnEditStart(runnable oneditstart) {
     onEditStart = oneditstart;
 }
 
-void TextBox::onFocus(GUI* gui) {
-    Container::onFocus(gui);
+void TextBox::onFocus() {
+    Container::onFocus();
     if (onEditStart){
         setCaret(input.size());
         onEditStart();
@@ -626,20 +629,20 @@ void TextBox::tokenSelectAt(int index) {
     select(left + 1, right);
 }
 
-void TextBox::doubleClick(GUI* gui, int x, int y) {
-    UINode::doubleClick(gui, x, y);
+void TextBox::doubleClick(int x, int y) {
+    UINode::doubleClick(x, y);
     tokenSelectAt(normalizeIndex(calcIndexAt(x, y) - 1));
 }
 
-void TextBox::click(GUI*, int x, int y) {
+void TextBox::click(int x, int y) {
     int index = normalizeIndex(calcIndexAt(x, y));
     selectionStart = index;
     selectionEnd = index;
     selectionOrigin = index;
 }
 
-void TextBox::mouseMove(GUI* gui, int x, int y) {
-    Container::mouseMove(gui, x, y);
+void TextBox::mouseMove(int x, int y) {
+    Container::mouseMove(x, y);
     if (isScrolling()) return;
     ptrdiff_t index = calcIndexAt(x, y);
     setCaret(index);
@@ -752,7 +755,7 @@ void TextBox::onInput() {
 }
 
 void TextBox::performEditingKeyboardEvents(keycode key) {
-    bool shiftPressed = Events::isPressed(keycode::LEFT_SHIFT);
+    bool shiftPressed = gui.getInput().isPressed(keycode::LEFT_SHIFT);
     bool breakSelection = getSelectionLength() != 0 && !shiftPressed;
     if (key == keycode::BACKSPACE) {
         if (!eraseSelected() && caret > 0 && input.length() > 0) {
@@ -789,9 +792,10 @@ void TextBox::performEditingKeyboardEvents(keycode key) {
 }
 
 void TextBox::keyPressed(keycode key) {
+    const auto& inputEvents = gui.getInput();
     if (editable) performEditingKeyboardEvents(key);
 
-    if (Events::isPressed(keycode::LEFT_CONTROL) && key != keycode::LEFT_CONTROL) {
+    if (inputEvents.isPressed(keycode::LEFT_CONTROL) && key != keycode::LEFT_CONTROL) {
         if (controlCombinationsHandler) {
             if (controlCombinationsHandler(static_cast<int>(key))) {
                 return;
@@ -808,7 +812,7 @@ void TextBox::keyPressed(keycode key) {
         }
 
         if (key == keycode::V && editable) {
-            const char* text = Window::getClipboardText();
+            const char* text = inputEvents.getClipboardText();
             if (text) {
                 historian->sync();
                 auto combination = history->beginCombination();
@@ -1016,11 +1020,11 @@ bool TextBox::isTextWrapping() const {
 void TextBox::setOnUpPressed(const runnable& callback) {
     if (callback == nullptr) {
         onUpPressed = [this]() {
-            if (Events::isPressed(keycode::LEFT_CONTROL)) {
+            if (inputEvents.isPressed(keycode::LEFT_CONTROL)) {
                 scrolled(1);
                 return;
             }
-            bool shiftPressed = Events::isPressed(keycode::LEFT_SHIFT);
+            bool shiftPressed = inputEvents.isPressed(keycode::LEFT_SHIFT);
             bool breakSelection = getSelectionLength() != 0 && !shiftPressed;
             stepDefaultUp(shiftPressed, breakSelection);
         };
@@ -1032,11 +1036,11 @@ void TextBox::setOnUpPressed(const runnable& callback) {
 void TextBox::setOnDownPressed(const runnable& callback) {
     if (callback == nullptr) {
         onDownPressed = [this]() {
-            if (Events::isPressed(keycode::LEFT_CONTROL)) {
+            if (inputEvents.isPressed(keycode::LEFT_CONTROL)) {
                 scrolled(-1);
                 return;
             }
-            bool shiftPressed = Events::isPressed(keycode::LEFT_SHIFT);
+            bool shiftPressed = inputEvents.isPressed(keycode::LEFT_SHIFT);
             bool breakSelection = getSelectionLength() != 0 && !shiftPressed;
             stepDefaultDown(shiftPressed, breakSelection);
         };

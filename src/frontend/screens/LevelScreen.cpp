@@ -41,13 +41,15 @@ LevelScreen::LevelScreen(
     int64_t localPlayer
 ) : Screen(engine),
     world(*levelPtr->getWorld()),
-    postProcessing(std::make_unique<PostProcessing>())
+    postProcessing(std::make_unique<PostProcessing>()),
+    gui(engine.getGUI()),
+    input(engine.getInput())
 {
     Level* level = levelPtr.get();
 
     auto& settings = engine.getSettings();
     auto& assets = *engine.getAssets();
-    auto menu = engine.getGUI()->getMenu();
+    auto menu = engine.getGUI().getMenu();
     menu->reset();
 
     auto player = level->players->getPlayer(localPlayer);
@@ -88,7 +90,7 @@ LevelScreen::LevelScreen(
     keepAlive(settings.camera.fov.observe([=](double value) {
         player->fpCamera->setFov(glm::radians(value));
     }));
-    keepAlive(Events::getBinding(BIND_CHUNKS_RELOAD).onactived.add([=](){
+    keepAlive(input.addCallback(BIND_CHUNKS_RELOAD, [=](){
         player->chunks->saveAndClear();
         renderer->clear();
         return false;
@@ -107,7 +109,7 @@ LevelScreen::~LevelScreen() {
         saveWorldPreview();
     }
     scripting::on_frontend_close();
-    Events::enableBindings();
+    input.getBindings().enableAll();
     controller->onWorldQuit();
     engine.getPaths().setCurrentWorldFolder("");
 }
@@ -175,8 +177,8 @@ void LevelScreen::saveWorldPreview() {
 void LevelScreen::updateHotkeys() {
     auto& settings = engine.getSettings();
 
-    if (Events::justPressed(keycode::F1)) hudVisible = !hudVisible;
-    if (Events::justPressed(keycode::F3)) {
+    if (input.justPressed(keycode::F1)) hudVisible = !hudVisible;
+    if (input.justPressed(keycode::F3)) {
         debug = !debug;
         hud->setDebug(debug);
         renderer->setDebug(debug);
@@ -203,7 +205,7 @@ void LevelScreen::updateAudio() {
 }
 
 void LevelScreen::update(float deltaTime) {
-    auto& gui = *engine.getGUI();
+    auto& gui = engine.getGUI();
 
     if (!gui.isFocusCaught()) {
         updateHotkeys();
@@ -217,10 +219,10 @@ void LevelScreen::update(float deltaTime) {
     if (!paused) {
         world.updateTimers(deltaTime);
         animator->update(deltaTime);
-        playerController->update(deltaTime, !inputLocked);
+        playerController->update(deltaTime, inputLocked ? nullptr : &engine.getInput());
     }
     controller->update(glm::min(deltaTime, 0.2f), paused);
-    playerController->postUpdate(deltaTime, !inputLocked, paused);
+    playerController->postUpdate(deltaTime, inputLocked ? nullptr : &engine.getInput(), paused);
 
     hud->update(hudVisible);
 

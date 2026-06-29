@@ -7,7 +7,7 @@
 
 using namespace gui;
 
-Menu::Menu() : Container(glm::vec2(1)) {}
+Menu::Menu(GUI& gui) : Container(gui, glm::vec2(1)) {}
 
 bool Menu::has(const std::string& name) {
     return pages.find(name) != pages.end() || pageSuppliers.find(name) != pageSuppliers.end();

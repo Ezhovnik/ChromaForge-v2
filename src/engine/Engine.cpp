@@ -68,20 +68,21 @@ static std::unique_ptr<ImageData> load_icon() {
 }
 
 Engine::Engine() = default;
+Engine::~Engine() = default;
 
-static std::unique_ptr<Engine> engine;
+static std::unique_ptr<Engine> instance = nullptr;
 
 Engine& Engine::getInstance() {
-    if (!engine) {
-        engine = std::make_unique<Engine>();
+    if (!instance) {
+        instance = std::make_unique<Engine>();
     }
-    return *engine;
+    return *instance;
 }
 
 void Engine::initialize(CoreParameters coreParameters) {
     params = std::move(coreParameters);
     settingsHandler = std::make_unique<SettingsHandler>(settings);
-    interpreter = std::make_unique<cmd::CommandsInterpreter>();
+    cmd = std::make_unique<cmd::CommandsInterpreter>();
     network = network::Network::create(settings.network);
 
     LOG_INFO("ChromaForge engine version: {}", ENGINE_VERSION_STRING);
@@ -101,7 +102,7 @@ void Engine::initialize(CoreParameters coreParameters) {
 
     // Инициализация окна GLFW
     if (!params.headless) {
-        if (!Window::initialize(&this->settings.display)) {
+        if (!(input = Window::initialize(&settings.display))){
             LOG_CRITICAL("Failed to load Window");
             Window::terminate();
             throw initialize_error("Failed to load Window");
@@ -114,9 +115,9 @@ void Engine::initialize(CoreParameters coreParameters) {
         }
         loadControls();
 
-        gui = std::make_unique<gui::GUI>();
+        gui = std::make_unique<gui::GUI>(*this);
         if (ENGINE_DEBUG_BUILD) {
-            menus::create_version_label(*this);
+            menus::create_version_label(*gui);
         }
     }
 
@@ -139,8 +140,7 @@ void Engine::initialize(CoreParameters coreParameters) {
     Logger::getInstance().flush();
 }
 
-// Реализация деструктора
-Engine::~Engine() {
+void Engine::close() {
     LOG_INFO("Shutting down");
     saveSettings();
     if (screen) {
@@ -149,7 +149,7 @@ Engine::~Engine() {
     }
     content.reset();
     assets.reset();
-    interpreter.reset();
+    cmd.reset();
     if (gui) {
         gui.reset();
         LOG_INFO("GUI finished");
@@ -185,7 +185,7 @@ void Engine::loadAssets() {
     ShaderProgram::preprocessor->setPaths(resPaths.get());
 
     auto new_assets = std::make_unique<Assets>();
-    AssetsLoader loader(new_assets.get(), resPaths.get());
+    AssetsLoader loader(*this, *new_assets, resPaths.get());
     AssetsLoader::addDefaults(loader, content.get());
     bool threading = false;
     if (threading) {
@@ -231,9 +231,9 @@ void Engine::loadAssets() {
 
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
-    if (Events::justPressed(keycode::F2)) saveScreenshot();
-    if (Events::justPressed(keycode::F8)) gui->toggleDebug();
-    if (Events::justPressed(keycode::F11)) settings.display.fullscreen.toggle();
+    if (input->justPressed(keycode::F2)) saveScreenshot();
+    if (input->justPressed(keycode::F8)) gui->toggleDebug();
+    if (input->justPressed(keycode::F11)) settings.display.fullscreen.toggle();
 }
 
 void Engine::saveScreenshot() {
@@ -287,16 +287,17 @@ void Engine::nextFrame() {
             : settings.display.framerate.get()
     );
     Window::swapBuffers();
-    Events::pollEvents();
+    input->pollEvents();
 }
 
-static void load_configs(const io::path& root) {
+static void load_configs(Engine& engine, const io::path& root) {
+    auto& input = engine.getInput();
     auto configFolder = root / io::path("config");
     auto bindsFile = configFolder / io::path("bindings.toml");
     if (io::is_regular_file(bindsFile)) {
-        Events::loadBindings(
-            bindsFile.string(),
-            io::read_string(bindsFile),
+        input.getBindings().read(
+            toml::parse(bindsFile.string(),
+            io::read_string(bindsFile)),
             BindType::Bind
         );
     }
@@ -313,7 +314,7 @@ void Engine::loadContent() {
     }
 
     ContentBuilder contentBuilder;
-    CoreContent::setup(contentBuilder);
+    CoreContent::setup(*input, contentBuilder);
     paths.setContentPacks(&contentPacks);
     PacksManager manager = createPacksManager(paths.getCurrentWorldFolder());
     manager.scan();
@@ -331,15 +332,14 @@ void Engine::loadContent() {
     resPaths = std::make_unique<ResPaths>("res:", resRoots);
     {
         ContentLoader(&builtinPack, contentBuilder, *resPaths).load();
-        load_configs(builtinPack.folder);
+        load_configs(*this, builtinPack.folder);
     }
     for (auto& pack : contentPacks) {
         ContentLoader(&pack, contentBuilder, *resPaths).load();
-        load_configs(pack.folder);
+        load_configs(*this, pack.folder);
     }
 
     content = contentBuilder.build();
-    interpreter->reset();
     scripting::on_content_load(content.get());
 
     ContentLoader::loadScripts(*content);
@@ -363,7 +363,7 @@ void Engine::resetContent() {
     {
         auto pack = ContentPack::createBuiltin(paths);
         resRoots.push_back({BUILTIN_CONTENT_NAMESPACE, pack.folder});
-        load_configs(pack.folder);
+        load_configs(*this, pack.folder);
     }
     auto manager = createPacksManager(io::path());
     manager.scan();
@@ -413,10 +413,6 @@ EnginePaths& Engine::getPaths() {
 
 ResPaths* Engine::getResPaths() {
     return resPaths.get();
-}
-
-gui::GUI* Engine::getGUI() {
-	return gui.get();
 }
 
 EngineSettings& Engine::getSettings() {
@@ -478,7 +474,7 @@ void Engine::saveSettings() {
 
     if (!params.headless) {
         LOG_INFO("Writing the controls to a file");
-        io::write_string(paths.getControlsFile(), Events::writeBindings());
+        io::write_string(paths.getControlsFile(), input->getBindings().write());
         LOG_INFO("The controls were successfully written to the file");
     }
 }
@@ -503,21 +499,11 @@ void Engine::loadControls() {
     if (io::is_regular_file(controls_file)) {
         LOG_INFO("Reading the controls file");
         std::string text = io::read_string(controls_file);
-        Events::loadBindings(
-            controls_file.string(),
-            text,
-            BindType::Bind
+        input->getBindings().read(
+            toml::parse(controls_file.string(), text), BindType::Bind
         );
         LOG_INFO("The controls file has been successfully read");
     }
-}
-
-cmd::CommandsInterpreter* Engine::getCommandsInterpreter() {
-    return interpreter.get();
-}
-
-network::Network& Engine::getNetwork() {
-    return *network;
 }
 
 const CoreParameters& Engine::getCoreParameters() const {
@@ -554,5 +540,6 @@ bool Engine::isQuitSignal() const {
 }
 
 void Engine::terminate() {
-    engine.reset();
+    instance->close();
+    instance.reset();
 }

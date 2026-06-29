@@ -87,15 +87,15 @@ namespace gui {
 
         void refreshTooltip(const ItemStack& stack, const Item& item);
     public:
-        SlotView(SlotLayout layout);
+        SlotView(GUI& gui, SlotLayout layout);
 
         virtual void draw(const DrawContext& pctx, const Assets& assets) override;
 
         void setHighlighted(bool flag);
         bool isHighlighted() const;
 
-        virtual void clicked(gui::GUI*, mousecode) override;
-        virtual void onFocus(gui::GUI*) override;
+        virtual void clicked(mousecode) override;
+        virtual void onFocus() override;
         virtual const std::wstring& getTooltip() const override;
 
         void bind(
@@ -119,7 +119,7 @@ namespace gui {
         std::vector<SlotView*> slots;
         glm::vec2 origin {};
     public:
-        InventoryView();
+        InventoryView(GUI& gui);
         virtual ~InventoryView();
 
         virtual void setPos(glm::vec2 pos) override;
@@ -148,9 +148,10 @@ namespace gui {
 
     class InventoryBuilder {
     private:
+        GUI& gui;
         std::shared_ptr<InventoryView> view;
     public:
-        InventoryBuilder();
+        InventoryBuilder(GUI& gui);
 
         void addGrid(
             int cols, int count, 

@@ -39,7 +39,7 @@ void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
         lua::call_nothrow(L, 0, 0);
     }
 
-    for (auto& pack : engine->getAllContentPacks()) {
+    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
         lua::emit_event(lua::get_main_state(), pack.id + ":.hudopen", 
         [&] (lua::State* L) {
             return lua::pushinteger(L, hud->getPlayer()->getId());        
@@ -49,7 +49,7 @@ void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
 
 void scripting::on_frontend_close() {
     auto L = lua::get_main_state();
-    for (auto& pack : engine->getAllContentPacks()) {
+    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.hudclose", 
         [&] (lua::State* L) {
             return lua::pushinteger(L, hud->getPlayer()->getId());            
@@ -65,7 +65,7 @@ void scripting::on_frontend_close() {
 }
 
 void scripting::on_frontend_render() {
-    for (auto& pack : engine->getAllContentPacks()) {
+    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
         lua::emit_event(lua::get_main_state(), pack.id + ":.hudrender", 
         [] (lua::State* L) {
             return 0;            
@@ -99,7 +99,7 @@ gui::PageLoaderFunc scripting::create_page_loader() {
         auto func = lua::create_lambda(L);
         return [func](const std::string& name) -> std::shared_ptr<gui::UINode> {
             auto docname = func({name}).asString();
-            return engine->getAssets()->require<UIDocument>(docname).getRoot();
+            return Engine::getInstance().getAssets()->require<UIDocument>(docname).getRoot();
         };
     }
     return nullptr;

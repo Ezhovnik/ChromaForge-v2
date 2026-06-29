@@ -4,6 +4,11 @@
 
 #include <GLFW/glfw3.h>
 
+#include <debug/Logger.h>
+#include <util/stringutil.h>
+#include <data/dv.h>
+#include <coders/toml.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif // _WIN32
@@ -178,4 +183,69 @@ std::string input_util::get_name(keycode code) {
         return "unknown";
     }
     return found->second;
+}
+
+const Binding& Bindings::require(const std::string& name) const {
+    if (const auto found = get(name)) {
+        return *found;
+    }
+    LOG_ERROR("Binding '{}' does not exist", name);
+    throw std::runtime_error("Binding '" + name + "' does not exist");
+}
+
+Binding& Bindings::require(const std::string& name) {
+    if (const auto found = get(name)) {
+        return *found;
+    }
+    LOG_ERROR("Binding '{}' does not exist", name);
+    throw std::runtime_error("Binding '" + name + "' does not exist");
+}
+
+void Bindings::read(const dv::value& map, BindType bindType) {
+    for (auto& [sectionName, section] : map.asObject()) {
+        for (auto& [name, value] : section.asObject()) {
+            auto key = sectionName + "." + name;
+            auto [prefix, codename] = util::split_at(value.asString(), ':');
+            inputType type;
+            int code;
+            if (prefix == "key") {
+                type = inputType::keyboard;
+                code = static_cast<int>(input_util::keycode_from(codename));
+            } else if (prefix == "mouse") {
+                type = inputType::mouse;
+                code = static_cast<int>(input_util::mousecode_from(codename));
+            } else {
+                LOG_ERROR("Unknown input type: {} (binding {})", prefix, util::quote(key));
+                continue;
+            }
+            if (bindType == BindType::Bind) {
+                bind(key, type, code);
+            } else if (bindType == BindType::Rebind) {
+                rebind(key, type, code);
+            }
+        }
+    }
+}
+
+std::string Bindings::write() const {
+    auto obj = dv::object();
+    for (auto& entry : bindings) {
+        const auto& binding = entry.second;
+        std::string value;
+        switch (binding.type) {
+            case inputType::keyboard:
+                value = "key:" +
+                    input_util::get_name(static_cast<keycode>(binding.code));
+                break;
+            case inputType::mouse:
+                value = "mouse:" +
+                    input_util::get_name(static_cast<mousecode>(binding.code));
+                break;
+            default:
+                LOG_ERROR("Unsupported control type");
+                throw std::runtime_error("Unsupported control type");
+        }
+        obj[entry.first] = std::move(value);
+    }
+    return toml::stringify(obj);
 }

@@ -15,14 +15,14 @@ namespace gui {
     using uinode_reader = std::function<std::shared_ptr<UINode>(UIXmlReader&, const xml::xmlelement&)>;
 
     class UIXmlReader {
-    private:
+        gui::GUI& gui;
         std::string filename;
         std::unordered_map<std::string, uinode_reader> readers;
         std::unordered_set<std::string> ignored;
         std::stack<std::string> contextStack;
         const scriptenv& env;
     public:
-        UIXmlReader(const scriptenv& env);
+        UIXmlReader(gui::GUI& gui, const scriptenv& env);
 
         void add(const std::string& tag, uinode_reader reader);
 
@@ -54,5 +54,6 @@ namespace gui {
         const std::string& getContext() const;
         const scriptenv& getEnvironment() const;
         const std::string& getFilename() const;
+        gui::GUI& getGUI() const;
     };
 }

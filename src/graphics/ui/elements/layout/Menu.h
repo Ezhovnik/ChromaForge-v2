@@ -21,7 +21,7 @@ namespace gui {
         std::unordered_map<std::string, supplier<std::shared_ptr<UINode>>> pageSuppliers;
         PageLoaderFunc pagesLoader = nullptr;
     public:
-        Menu();
+        explicit Menu(GUI& gui);
 
         bool has(const std::string& name);
 

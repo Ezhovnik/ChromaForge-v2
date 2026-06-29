@@ -22,20 +22,23 @@ class Chunks;
  * @brief Структура, содержащая текущее состояние ввода игрока.
  */
 struct PlayerInput {
-	bool zoom : 1;
-	bool cameraMode : 1; ///< Переключение режима камеры
-	bool moveForward : 1;
-	bool moveBack : 1;
-	bool moveRight : 1;
-	bool moveLeft : 1;
-	bool sprint : 1;
-	bool crouch : 1;
-	bool cheat : 1;
-	bool jump : 1;
-    bool attack : 1;
-    bool destroy : 1;
-    bool build : 1;
-    bool dropBlock : 1;
+    struct {
+        bool zoom : 1;
+        bool cameraMode : 1; ///< Переключение режима камеры
+        bool moveForward : 1;
+        bool moveBack : 1;
+        bool moveRight : 1;
+        bool moveLeft : 1;
+        bool sprint : 1;
+        bool crouch : 1;
+        bool cheat : 1;
+        bool jump : 1;
+        bool attack : 1;
+        bool destroy : 1;
+        bool build : 1;
+        bool dropBlock : 1;
+    };
+    glm::vec2 delta;
 };
 
 struct CursorSelection {

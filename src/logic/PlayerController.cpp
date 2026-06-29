@@ -12,7 +12,7 @@
 #include <voxels/voxel.h>
 #include <voxels/Chunks.h>
 #include <window/Camera.h>
-#include <window/Events.h>
+#include <window/Window.h>
 #include <window/input.h>
 #include <input_bindings.h>
 #include <logic/BlocksController.h>
@@ -23,6 +23,7 @@
 #include <settings.h>
 #include <objects/Entities.h>
 #include <objects/Players.h>
+#include <engine/Engine.h>
 
 namespace CameraConsts {
     inline constexpr float STEPS_SPEED = 2.2f;
@@ -69,7 +70,9 @@ void CameraControl::updateMouse(PlayerInput& input) {
 	float sensitivity = input.zoom ? settings.sensitivity.get() / 4.0f : settings.sensitivity.get();
 	glm::vec3 rotation = player.getRotation();
 
-    auto cam_delta = glm::degrees(Events::delta / (float)Window::height * sensitivity);
+    auto cam_delta = glm::degrees(
+        input.delta / static_cast<float>(Window::height) * sensitivity
+    );
     rotation.x -= cam_delta.x;
     rotation.y -= cam_delta.y;
 
@@ -210,18 +213,21 @@ PlayerController::PlayerController(
 	camControl(player, settings.camera), 
 	blocksController(blocksController) {}
 
-void PlayerController::updateKeyboard() {
-	input.moveForward = Events::isActive(BIND_MOVE_FORWARD);
-	input.moveBack = Events::isActive(BIND_MOVE_BACK);
-	input.moveLeft = Events::isActive(BIND_MOVE_LEFT);
-	input.moveRight = Events::isActive(BIND_MOVE_RIGHT);
-	input.sprint = Events::isActive(BIND_MOVE_SPRINT);
-	input.crouch = Events::isActive(BIND_MOVE_CROUCH);
-	input.cheat = Events::isActive(BIND_MOVE_CHEAT);
-	input.jump = Events::isActive(BIND_MOVE_JUMP);
-	input.zoom = Events::isActive(BIND_CAM_ZOOM);
-	input.cameraMode = Events::justActive(BIND_CAM_MODE);
-    input.dropBlock = Events::justActive(BIND_PLAYER_DROP);
+void PlayerController::updateKeyboard(const Input& inputEvents) {
+    const auto& bindings = inputEvents.getBindings();
+
+	input.moveForward = bindings.isActive(BIND_MOVE_FORWARD);
+	input.moveBack = bindings.isActive(BIND_MOVE_BACK);
+	input.moveLeft = bindings.isActive(BIND_MOVE_LEFT);
+	input.moveRight = bindings.isActive(BIND_MOVE_RIGHT);
+	input.sprint = bindings.isActive(BIND_MOVE_SPRINT);
+	input.crouch = bindings.isActive(BIND_MOVE_CROUCH);
+	input.cheat = bindings.isActive(BIND_MOVE_CHEAT);
+	input.jump = bindings.isActive(BIND_MOVE_JUMP);
+	input.zoom = bindings.isActive(BIND_CAM_ZOOM);
+	input.cameraMode = bindings.justActive(BIND_CAM_MODE);
+    input.dropBlock = bindings.justActive(BIND_PLAYER_DROP);
+    input.delta = inputEvents.getCursor().delta;
 }
 
 void PlayerController::onFootstep(const Hitbox& hitbox) {
@@ -278,6 +284,7 @@ void PlayerController::resetKeyboard() {
     input.destroy = false;
 	input.cameraMode = false;
     input.dropBlock = false;
+    input.delta = {};
 }
 
 void PlayerController::updatePlayer(float deltaTime){
@@ -445,7 +452,7 @@ void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool
     }
 }
 
-void PlayerController::updateInteraction(float deltaTime) {
+void PlayerController::updateInteraction(const Input& inputEvents, float deltaTime) {
     if (player.isNoclip()) return;
     auto indices = level.content.getIndices();
     const auto& selection = player.selection;
@@ -453,12 +460,13 @@ void PlayerController::updateInteraction(float deltaTime) {
     if (interactionTimer > 0.0f) {
         interactionTimer -= deltaTime;
     }
-    bool xkey = Events::isActive(BIND_PLAYER_FAST_INTERACTOIN);
+    const auto& bindings = inputEvents.getBindings();
+    bool xkey = bindings.isActive(BIND_PLAYER_FAST_INTERACTOIN);
     float maxDistance = xkey ? 20.0f : 10.0f;
     bool longInteraction = interactionTimer <= 0 || xkey;
-    input.attack = Events::justActive(BIND_PLAYER_ATTACK);
-	input.destroy = Events::justActive(BIND_PLAYER_DESTROY) || (longInteraction && Events::isActive(BIND_PLAYER_DESTROY));
-    input.build = Events::justActive(BIND_PLAYER_BUILD) || (longInteraction && Events::isActive(BIND_PLAYER_BUILD));
+    input.attack = bindings.justActive(BIND_PLAYER_ATTACK);
+	input.destroy = bindings.justActive(BIND_PLAYER_DESTROY) || (longInteraction && bindings.isActive(BIND_PLAYER_DESTROY));
+    input.build = bindings.justActive(BIND_PLAYER_BUILD) || (longInteraction && bindings.isActive(BIND_PLAYER_BUILD));
     if (input.destroy || input.build) interactionTimer = INTERACTION_RELOAD;
 
     auto inventory = player.getInventory();
@@ -511,9 +519,9 @@ void PlayerController::updateInteraction(float deltaTime) {
     }
 }
 
-void PlayerController::update(float delta, bool input) {
-    if (input) {
-        updateKeyboard();
+void PlayerController::update(float delta, const Input* inputEvents) {
+    if (inputEvents) {
+        updateKeyboard(*inputEvents);
         player.updateSelectedEntity();
     } else {
         resetKeyboard();
@@ -521,10 +529,10 @@ void PlayerController::update(float delta, bool input) {
     updatePlayer(delta);
 }
 
-void PlayerController::postUpdate(float deltaTime, bool input_flag, bool pause) {
+void PlayerController::postUpdate(float deltaTime, const Input* input, bool pause) {
     if (!pause) updateFootsteps(deltaTime);
 
-    if (!pause && input_flag) {
+    if (!pause && input) {
         camControl.updateMouse(this->input);
     }
     camControl.refreshRotation();
@@ -534,8 +542,8 @@ void PlayerController::postUpdate(float deltaTime, bool input_flag, bool pause) 
         pause ? 0.0f : deltaTime,
         *player.chunks
     );
-	if (input_flag) {
-		updateInteraction(deltaTime);
+	if (input) {
+		updateInteraction(*input, deltaTime);
 	} else {
 		player.selection = {};
 	}

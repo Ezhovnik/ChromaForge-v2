@@ -8,6 +8,7 @@
 #include <io/fwd.h>
 
 namespace gui {
+    class GUI;
     class UINode;
 }
 
@@ -46,12 +47,13 @@ public:
     std::shared_ptr<gui::UINode> get(const std::string& id) const;
 
     static std::unique_ptr<UIDocument> read(
+        gui::GUI&,
         const scriptenv& parent_env,
         const std::string& name,
         const io::path& file,
         const std::string& fileName
     );
     static std::shared_ptr<gui::UINode> readElement(
-        const io::path& file, const std::string& fileName
+        gui::GUI&, const io::path& file, const std::string& fileName
     );
 };

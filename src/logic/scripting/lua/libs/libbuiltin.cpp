@@ -7,7 +7,6 @@
 #include <frontend/menu.h>
 #include <frontend/screens/MenuScreen.h>
 #include <logic/LevelController.h>
-#include <window/Events.h>
 #include <logic/EngineController.h>
 #include <io/settings_io.h>
 #include <world/Level.h>

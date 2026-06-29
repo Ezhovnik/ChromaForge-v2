@@ -11,13 +11,17 @@ namespace gui {
         glm::vec4 focusedColor {0.1f, 0.15f, 0.35f, 0.75f};
         std::shared_ptr<Label> label;
     public:
-        InputBindBox(Binding& binding, glm::vec4 padding=glm::vec4(6.0f));
+        InputBindBox(
+            GUI& gui, Binding& binding, glm::vec4 padding=glm::vec4(6.0f)
+        );
         virtual void drawBackground(
             const DrawContext& pctx, const Assets& assets
         ) override;
 
-        virtual void clicked(GUI*, mousecode button) override;
+        virtual void clicked(mousecode button) override;
         virtual void keyPressed(keycode key) override;
-        virtual bool isFocuskeeper() const override {return true;}
+        virtual bool isFocuskeeper() const override {
+            return true;
+        }
     };
 }

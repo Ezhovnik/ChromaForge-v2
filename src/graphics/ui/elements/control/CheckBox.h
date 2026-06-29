@@ -13,13 +13,13 @@ namespace gui {
         boolconsumer consumer = nullptr;
         bool checked = false;
     public:
-        CheckBox(bool checked=false);
+        explicit CheckBox(GUI& gui, bool checked=false);
 
         virtual void draw(
             const DrawContext& pctx, const Assets& assets
         ) override;
 
-        virtual void mouseRelease(GUI*, int x, int y) override;
+        virtual void mouseRelease(int x, int y) override;
 
         virtual void setSupplier(boolsupplier supplier);
         virtual void setConsumer(boolconsumer consumer);
@@ -37,7 +37,12 @@ namespace gui {
         std::shared_ptr<CheckBox> checkbox;
         std::shared_ptr<Label> label;
     public:
-        FullCheckBox(const std::wstring& text, glm::vec2 size, bool checked=false);
+        explicit FullCheckBox(
+            GUI& gui,
+            const std::wstring& text,
+            glm::vec2 size,
+            bool checked=false
+        );
 
         virtual void setSupplier(boolsupplier supplier) {
             checkbox->setSupplier(std::move(supplier));

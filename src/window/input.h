@@ -2,7 +2,18 @@
 
 #include <string>
 
+#include <glm/vec2.hpp>
+
 #include <util/HandlersList.h>
+
+namespace dv {
+    class value;
+}
+
+enum class BindType {
+    Bind = 0,
+    Rebind = 1
+};
 
 /**
  * @brief Представляет собой значения кодов клавиш glfw3.
@@ -166,7 +177,7 @@ struct Binding {
     int code;
     bool state = false;
     bool justChange = false;
-    bool enable = true;
+    bool enabled = true;
 
 	Binding() = default;
     Binding(inputType type, int code) : type(type), code(code) {}
@@ -175,7 +186,7 @@ struct Binding {
      * @brief Проверяет, активно ли нажатие (кнопка удерживается).
      * @return true, если кнопка нажата.
      */
-    bool isActive() {
+    bool isActive() const {
         return state;
     }
 
@@ -183,7 +194,7 @@ struct Binding {
      * @brief Проверяет, было ли только что совершено нажатие (в этом кадре).
      * @return true, если кнопка нажата и состояние изменилось в этом кадре.
      */
-    bool justActive() {
+    bool justActive() const {
         return state && justChange;
     }
 
@@ -201,5 +212,104 @@ struct Binding {
             case inputType::mouse: return input_util::to_string(static_cast<mousecode>(code));
         }
         return "<unknown input type>";
+    }
+};
+
+class Bindings {
+    std::unordered_map<std::string, Binding> bindings;
+public:
+    bool isActive(const std::string& name) const {
+        const auto& found = bindings.find(name);
+        if (found == bindings.end()) {
+            return false;
+        }
+        return found->second.isActive();
+    }
+
+    bool justActive(const std::string& name) const {
+        const auto& found = bindings.find(name);
+        if (found == bindings.end()) {
+            return false;
+        }
+        return found->second.justActive();
+    }
+
+    Binding* get(const std::string& name) {
+        const auto found = bindings.find(name);
+        if (found == bindings.end()) {
+            return nullptr;
+        }
+        return &found->second;
+    }
+
+    const Binding* get(const std::string& name) const {
+        const auto found = bindings.find(name);
+        if (found == bindings.end()) {
+            return nullptr;
+        }
+        return &found->second;
+    }
+
+    Binding& require(const std::string& name);
+    const Binding& require(const std::string& name) const;
+
+    void bind(const std::string& name, inputType type, int code) {
+        bindings.try_emplace(name, Binding(type, code));
+    }
+
+    void rebind(const std::string& name, inputType type, int code) {
+        require(name) = Binding(type, code);
+    }
+
+    auto& getAll() {
+        return bindings;
+    }
+
+    void enableAll() {
+        for (auto& entry : bindings) {
+            entry.second.enabled = true;
+        }
+    }
+
+    void read(const dv::value& map, BindType bindType);
+    std::string write() const;
+};
+
+struct CursorState {
+    bool locked = false;
+    glm::vec2 pos {};
+    glm::vec2 delta {};
+};
+
+class Input {
+public:
+    virtual ~Input() = default;
+
+    virtual void pollEvents() = 0;
+
+    virtual const char* getClipboardText() const = 0;
+
+    virtual int getScroll() = 0;
+
+    virtual bool isPressed(keycode keycode) const = 0;
+    virtual bool justPressed(keycode keycode) const = 0;
+
+    virtual bool isClicked(mousecode mousecode) const = 0;
+    virtual bool justClicked(mousecode mousecode) const = 0;
+
+    virtual CursorState getCursor() const = 0;
+    virtual void toggleCursor() = 0;
+
+    virtual Bindings& getBindings() = 0;
+
+    virtual const Bindings& getBindings() const = 0;
+
+    virtual observer_handler addKeyCallback(keycode key, KeyCallback callback) = 0;
+
+    virtual const std::vector<keycode>& getPressedKeys() const = 0;
+    virtual const std::vector<uint>& getCodepoints() const = 0;
+
+    observer_handler addCallback(const std::string& name, KeyCallback callback) {
+        return getBindings().require(name).onactived.add(callback);
     }
 };

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <graphics/ui/elements/UINode.h>
-#include <constants.h>
 
 class Font;
 struct FontStylesScheme;
@@ -49,8 +48,8 @@ namespace gui {
 
         std::unique_ptr<FontStylesScheme> styles;
     public:
-        Label(const std::string& text, std::string fontName=FONT_DEFAULT);
-        Label(const std::wstring& text, std::string fontName=FONT_DEFAULT);
+        Label(GUI& gui, const std::string& text, std::string fontName="normal");
+        Label(GUI& gui, const std::wstring& text, std::string fontName="normal");
 
         virtual ~Label();
 

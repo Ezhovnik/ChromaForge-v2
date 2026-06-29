@@ -21,8 +21,8 @@ namespace gui {
     class GUI;
     class Container;
 
-    using onaction = std::function<void(GUI*)>;
-    using onnumberchange = std::function<void(GUI*, double)>;
+    using onaction = std::function<void(GUI&)>;
+    using onnumberchange = std::function<void(GUI&, double)>;
 
     class ActionsSet {
     private:
@@ -35,7 +35,7 @@ namespace gui {
             callbacks->push_back(callback);
         }
 
-        void notify(GUI* gui) {
+        void notify(GUI& gui) {
             if (callbacks) {
                 for (auto& callback : *callbacks) {
                     callback(gui);
@@ -69,6 +69,8 @@ namespace gui {
     };
 
     class UINode : public std::enable_shared_from_this<UINode> {
+    protected:
+        GUI& gui;
     private:
         std::string id = "";
 
@@ -99,7 +101,7 @@ namespace gui {
         float tooltipDelay = 0.5f;
         CursorShape cursor = CursorShape::Arrow;
 
-        UINode(glm::vec2 size);
+        UINode(GUI& gui, glm::vec2 size);
     public:
         virtual ~UINode();
         virtual void activate(float deltaTime) {};
@@ -152,12 +154,12 @@ namespace gui {
         virtual UINode* listenAction(const onaction& action);
         virtual UINode* listenDoubleClick(const onaction& action);
 
-        virtual void onFocus(GUI*) {focused = true;}
-        virtual void click(GUI*, int x, int y);
-        virtual void doubleClick(GUI*, int x, int y);
-        virtual void clicked(GUI*, mousecode button) {}
-        virtual void mouseMove(GUI*, int x, int y) {};
-        virtual void mouseRelease(GUI*, int x, int y);
+        virtual void onFocus() {focused = true;}
+        virtual void click(int x, int y);
+        virtual void doubleClick(int x, int y);
+        virtual void clicked(mousecode button) {}
+        virtual void mouseMove(int x, int y) {};
+        virtual void mouseRelease(int x, int y);
         virtual void scrolled(int value);
 
         bool isPressed() const;

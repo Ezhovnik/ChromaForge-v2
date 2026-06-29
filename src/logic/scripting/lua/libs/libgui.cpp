@@ -65,7 +65,9 @@ static int l_container_add(lua::State* L) {
     }
     auto xmlsrc = lua::require_string(L, 2);
     try {
-        auto subnode = guiutil::create(xmlsrc, docnode.document->getEnvironment());
+        auto subnode = guiutil::create(
+            scripting::engine->getGUI(), xmlsrc, docnode.document->getEnvironment()
+        );
         node->add(subnode);
         gui::UINode::getIndices(subnode, docnode.document->getMapWriteable());
     } catch (const std::exception& err) {
@@ -89,7 +91,7 @@ static int l_container_clear(lua::State* L) {
 static int l_node_destruct(lua::State* L) {
     auto docnode = get_document_node(L);
     auto node = docnode.node;
-    scripting::engine->getGUI()->postRunnable([node]() {
+    scripting::engine->getGUI().postRunnable([node]() {
         auto parent = node->getParent();
         if (auto container = dynamic_cast<gui::Container*>(parent)) {
             container->remove(node.get());
@@ -642,7 +644,7 @@ static void p_set_editable(gui::UINode* node, lua::State* L, int idx) {
 
 static void p_set_focused(const std::shared_ptr<gui::UINode>& node, lua::State* L, int idx) {
     if (lua::toboolean(L, idx) && !node->isFocused()) {
-        scripting::engine->getGUI()->setFocus(node);
+        scripting::engine->getGUI().setFocus(node);
     } else if (node->isFocused()){
         node->defocus();
     }
@@ -797,7 +799,7 @@ static int l_gui_get_locales_info(lua::State* L) {
 }
 
 static int l_gui_get_viewport(lua::State* L) {
-    return lua::pushvec2(L, scripting::engine->getGUI()->getContainer()->getSize());;
+    return lua::pushvec2(L, scripting::engine->getGUI().getContainer()->getSize());;
 }
 
 static int l_gui_clear_markup(lua::State* L) {
@@ -867,6 +869,7 @@ static int l_gui_load_document(lua::State* L) {
     auto args = lua::tovalue(L, 3);
 
     auto documentPtr = UIDocument::read(
+        scripting::engine->getGUI(),
         scripting::get_root_environment(),
         alias,
         filename,

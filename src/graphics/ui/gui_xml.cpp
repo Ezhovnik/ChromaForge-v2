@@ -77,7 +77,7 @@ static onaction create_action(
 ) {
     auto callback = create_runnable(reader, element, name);
     if (callback == nullptr) return nullptr;
-    return [callback](GUI*) {callback();};
+    return [callback](GUI&) {callback();};
 }
 
 static void read_uinode(
@@ -216,7 +216,12 @@ static void read_panel_impl(
     if (element.has("size")) panel.setResizing(false);
     if (element.has("max-length")) panel.setMaxLength(element.attr("max-length").asInt());
     if (element.has("min-length")) panel.setMinLength(element.attr("min-length").asInt());
-
+    if (element.has("orientation")) {
+        auto& oname = element.attr("orientation").getText();
+        if (oname == "horizontal") {
+            panel.setOrientation(Orientation::Horizontal);
+        }
+    }
     if (subnodes) {
         for (auto& sub : element.getElements()) {
             if (sub->isText()) continue;
@@ -233,7 +238,9 @@ static std::shared_ptr<UINode> read_split_box(
     Orientation orientation = element.attr("orientation", "vertical").getText() == "horizontal"
         ? Orientation::Horizontal
         : Orientation::Vertical;
-    auto splitBox = std::make_shared<SplitBox>(glm::vec2(), splitPos, orientation);
+    auto splitBox = std::make_shared<SplitBox>(
+        reader.getGUI(), glm::vec2(), splitPos, orientation
+    );
     read_base_panel_impl(reader, element, *splitBox);
     for (auto& sub : element.getElements()) {
         if (sub->isText()) continue;
@@ -247,7 +254,9 @@ static std::shared_ptr<UINode> read_split_box(
 
 static std::shared_ptr<UINode> read_panel(UIXmlReader& reader, const xml::xmlelement& element) {
     float interval = element.attr("interval", "2").asFloat();
-    auto panel = std::make_shared<Panel>(glm::vec2(), glm::vec4(), interval);
+    auto panel = std::make_shared<Panel>(
+        reader.getGUI(), glm::vec2(), glm::vec4(), interval
+    );
     read_panel_impl(reader, element, *panel);
     return panel;
 }
@@ -277,7 +286,7 @@ static std::shared_ptr<UINode> readLabel(
     const xml::xmlelement& element
 ) {
     std::wstring text = parse_inner_text(element, reader.getContext());
-    auto label = std::make_shared<Label>(text);
+    auto label = std::make_shared<Label>(reader.getGUI(), text);
     read_uinode(reader, element, *label);
     if (element.has("valign")) label->setVerticalAlign(align_from_string(element.attr("valign").getText(), label->getVerticalAlign()));
     if (element.has("autoresize")) label->setAutoResize(element.attr("autoresize").asBool());
@@ -301,7 +310,7 @@ static std::shared_ptr<UINode> read_container(
     UIXmlReader& reader,
     const xml::xmlelement& element
 ) {
-    auto container = std::make_shared<Container>(glm::vec2());
+    auto container = std::make_shared<Container>(reader.getGUI(), glm::vec2());
     read_container_impl(reader, element, *container);
     return container;
 }
@@ -310,20 +319,21 @@ static std::shared_ptr<UINode> read_button(
     UIXmlReader& reader,
     const xml::xmlelement& element
 ) {
+    auto& gui = reader.getGUI();
     glm::vec4 padding = element.attr("padding", "10").asVec4();
     std::shared_ptr<Button> button;
     auto& elements = element.getElements();
     if (!elements.empty() && elements[0]->getTag() != "#") {
         auto inner = reader.readUINode(*elements.at(0));
         if (inner != nullptr) {
-            button = std::make_shared<Button>(inner, padding);
+            button = std::make_shared<Button>(gui, inner, padding);
         } else {
-            button = std::make_shared<Button>(L"", padding, nullptr);
+            button = std::make_shared<Button>(gui, L"", padding, nullptr);
         }
         read_panel_impl(reader, element, *button, false);
     } else {
         std::wstring text = parse_inner_text(element, reader.getContext());
-        button = std::make_shared<Button>(text, padding, nullptr);
+        button = std::make_shared<Button>(gui, text, padding, nullptr);
         read_panel_impl(reader, element, *button, true);
     }
     if (element.has("text-align")) button->setTextAlign(align_from_string(element.attr("text-align").getText(), button->getTextAlign()));
@@ -338,7 +348,9 @@ static std::shared_ptr<UINode> read_text_box(
     auto placeholder = util::str2wstr_utf8(element.attr("placeholder", "").getText());
     auto hint = util::str2wstr_utf8(element.attr("hint", "").getText());
     auto text = parse_inner_text(element, reader.getContext());
-    auto textbox = std::make_shared<TextBox>(placeholder, glm::vec4(0.0f));
+    auto textbox = std::make_shared<TextBox>(
+        reader.getGUI(), placeholder, glm::vec4(0.0f)
+    );
     textbox->setHint(hint);
 
     read_container_impl(reader, element, *textbox);
@@ -410,7 +422,9 @@ static std::shared_ptr<UINode> read_check_box(
 ) {
     auto text = parse_inner_text(element, reader.getContext());
     bool checked = element.attr("checked", "false").asBool();
-    auto checkbox = std::make_shared<FullCheckBox>(text, glm::vec2(32), checked);
+    auto checkbox = std::make_shared<FullCheckBox>(
+        reader.getGUI(), text, glm::vec2(32), checked
+    );
     read_panel_impl(reader, element, *checkbox);
 
     if (element.has("consumer")) {
@@ -436,7 +450,9 @@ static std::shared_ptr<UINode> read_canvas(
 ) {
     auto size = glm::uvec2{32, 32};
     if (element.has("size")) size = element.attr("size").asVec2();
-    auto image = std::make_shared<Canvas>(ImageFormat::rgba8888, size);
+    auto image = std::make_shared<Canvas>(
+        reader.getGUI(), ImageFormat::rgba8888, size
+    );
     read_uinode(reader, element, *image);
     return image;
 }
@@ -452,7 +468,9 @@ static std::shared_ptr<UINode> read_track_bar(
     float def = element.attr("value", "0.0").asFloat();
     float step = element.attr("step", "1.0").asFloat();
     int trackWidth = element.attr("track-width", "12").asInt();
-    auto bar = std::make_shared<TrackBar>(minv, maxv, def, step, trackWidth);
+    auto bar = std::make_shared<TrackBar>(
+        reader.getGUI(), minv, maxv, def, step, trackWidth
+    );
     read_uinode(reader, element, *bar);
     if (element.has("consumer")) {
         bar->setConsumer(scripting::create_number_consumer(env, element.attr("consumer").getText(), file));
@@ -474,13 +492,11 @@ static std::shared_ptr<UINode> read_input_bind_box(
     const xml::xmlelement& element
 ) {
     auto bindname = element.attr("binding").getText();
-    auto found = Events::bindings.find(bindname);
-    if (found == Events::bindings.end()) {
-        LOG_ERROR("Binding does not exists '{}'", bindname);
-        throw std::runtime_error("Binding does not exists " + util::quote(bindname));
-    }
+    auto& found = reader.getGUI().getInput().getBindings().require(bindname);
     glm::vec4 padding = element.attr("padding", "6").asVec4();
-    auto bindbox = std::make_shared<InputBindBox>(found->second, padding);
+    auto bindbox = std::make_shared<InputBindBox>(
+        reader.getGUI(), found, padding
+    );
     read_panel_impl(reader, element, *bindbox);
 
     return bindbox;
@@ -491,7 +507,7 @@ static std::shared_ptr<UINode> read_image(
     const xml::xmlelement& element
 ) {
     std::string src = element.attr("src", "").getText();
-    auto image = std::make_shared<Image>(src);
+    auto image = std::make_shared<Image>(reader.getGUI(), src);
     read_uinode(reader, element, *image);
     return image;
 }
@@ -507,7 +523,10 @@ static slotcallback read_slot_func(
         element.attr(attr).getText()
     );
     return [=](uint slot, ItemStack&) {
-        int args[] {int(view->getInventory()->getId()), int(slot)};
+        int args[] {
+            static_cast<int>(view->getInventory()->getId()),
+            static_cast<int>(slot)
+        };
         consumer(args, 2);
     };
 }
@@ -580,8 +599,8 @@ static std::shared_ptr<UINode> read_inventory(
     UIXmlReader& reader,
     const xml::xmlelement& element
 ) {
-    auto view = std::make_shared<InventoryView>();
-    view->setColor(glm::vec4(0.122f, 0.122f, 0.122f, 0.878f));
+    auto view = std::make_shared<InventoryView>(reader.getGUI());
+    view->setColor(glm::vec4(0.122f, 0.122f, 0.122f, 0.878f)); // FIXME
     reader.addIgnore("slot");
     reader.addIgnore("slots-grid");
     reader.readUINode(reader, element, *view);
@@ -600,16 +619,15 @@ static std::shared_ptr<UINode> read_page_box(
     UIXmlReader& reader,
     const xml::xmlelement& element
 ) {
-    auto menu = std::make_shared<Menu>();
-    menu->setPageLoader(
-        Engine::getInstance().getGUI()->getMenu()->getPageLoader()
-    );
+    auto& gui = reader.getGUI();
+    auto menu = std::make_shared<Menu>(gui);
+    menu->setPageLoader(gui.getMenu()->getPageLoader());
     read_container_impl(reader, element, *menu);
 
     return menu;
 }
 
-UIXmlReader::UIXmlReader(const scriptenv& env) : env(env) {
+UIXmlReader::UIXmlReader(gui::GUI& gui, const scriptenv& env) : gui(gui), env(env) {
     contextStack.emplace("");
     add("image", read_image);
     add("canvas", read_canvas);
@@ -688,4 +706,8 @@ const scriptenv& UIXmlReader::getEnvironment() const {
 
 const std::string& UIXmlReader::getContext() const {
     return contextStack.top();
+}
+
+gui::GUI& UIXmlReader::getGUI() const {
+    return gui;
 }

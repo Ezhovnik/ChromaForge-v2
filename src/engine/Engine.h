@@ -23,6 +23,7 @@ class EngineController;
 class SettingsHandler;
 struct EngineSettings;
 class Level;
+class Input;
 
 namespace gui {
     class GUI;
@@ -66,12 +67,10 @@ private:
     std::unique_ptr<EngineController> controller;
     std::vector<ContentPack> contentPacks;
     std::unique_ptr<Content> content;
-
     std::unique_ptr<ResPaths> resPaths;
-
-    std::unique_ptr<cmd::CommandsInterpreter> interpreter;
-
+    std::unique_ptr<cmd::CommandsInterpreter> cmd;
     std::unique_ptr<network::Network> network;
+    std::unique_ptr<Input> input;
 
     std::vector<std::string> basePacks;
 
@@ -97,6 +96,7 @@ public:
 
     static Engine& getInstance();
     void initialize(CoreParameters coreParameters);
+    void close();
     static void terminate();
 
     void run();
@@ -112,7 +112,6 @@ public:
     EnginePaths& getPaths();
     ResPaths* getResPaths();
     Assets* getAssets();
-	gui::GUI* getGUI();
 	EngineSettings& getSettings();
     const Content* getContent() const;
     Content* getWriteableContent();
@@ -122,10 +121,24 @@ public:
     SettingsHandler& getSettingsHandler();
     EngineController* getController();
     std::vector<std::string>& getBasePacks();
-    cmd::CommandsInterpreter* getCommandsInterpreter();
-    network::Network& getNetwork();
     const CoreParameters& getCoreParameters() const;
     EngineTime& getTime();
+
+    gui::GUI& getGUI() {
+        return *gui;
+    }
+
+    Input& getInput() {
+        return *input;
+    }
+
+    network::Network& getNetwork() {
+        return *network;
+    }
+
+    cmd::CommandsInterpreter& getCmd() {
+        return *cmd;
+    }
 
     bool isHeadless() const;
 

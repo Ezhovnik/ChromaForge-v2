@@ -24,11 +24,12 @@ namespace guiutil {
         std::wstring notext=L""
     );
     std::shared_ptr<gui::UINode> create(
+        gui::GUI& gui,
         const std::string& source, 
         scriptenv env=0
     );
     void confirm_with_memo(
-        const std::shared_ptr<gui::Menu>& menu,
+        Engine& engine,
         const std::wstring& text,
         const std::wstring& memo,
         const runnable& on_confirm=nullptr,

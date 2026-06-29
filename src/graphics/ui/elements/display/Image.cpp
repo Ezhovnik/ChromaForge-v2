@@ -11,7 +11,11 @@
 
 using namespace gui;
 
-Image::Image(std::string texture, glm::vec2 size) : UINode(size), texture(std::move(texture)) {
+Image::Image(
+    GUI& gui, std::string texture, glm::vec2 size
+) : UINode(gui, size),
+    texture(std::move(texture))
+{
     setInteractive(false);
 }
 

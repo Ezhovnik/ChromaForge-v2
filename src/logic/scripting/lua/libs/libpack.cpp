@@ -231,7 +231,7 @@ static int l_pack_request_writeable(lua::State* L) {
     util::replaceAll(str, L"%{0}", util::str2wstr_utf8(packid));
     guiutil::confirm(*scripting::engine, str, [packid, handler]() {
         handler({scripting::engine->getPaths().createWriteablePackDevice(packid)});
-        scripting::engine->getGUI()->getMenu()->reset();
+        scripting::engine->getGUI().getMenu()->reset();
     });
     return 0;
 }

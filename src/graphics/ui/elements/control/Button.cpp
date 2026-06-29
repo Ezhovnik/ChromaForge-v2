@@ -6,9 +6,12 @@
 
 using namespace gui;
 
-Button::Button(const std::shared_ptr<UINode>& content, glm::vec4 padding) : Panel(glm::vec2(), padding, 0) {
+Button::Button(
+    GUI& gui, const std::shared_ptr<UINode>& content, glm::vec4 padding
+) : Panel(gui, glm::vec2(), padding, 0) {
     glm::vec4 margin = getMargin();
-    setSize(content->getSize() +
+    setSize(
+        content->getSize() +
         glm::vec2(
             padding[0] + padding[2] + margin[0] + margin[2],
             padding[1] + padding[3] + margin[1] + margin[3]
@@ -22,11 +25,12 @@ Button::Button(const std::shared_ptr<UINode>& content, glm::vec4 padding) : Pane
 }
 
 Button::Button(
+    GUI& gui,
     const std::wstring& text, 
     glm::vec4 padding, 
     const onaction& action,
     glm::vec2 size
-) : Panel(size, padding, 0) 
+) : Panel(gui, size, padding, 0) 
 {
     if (size.y < 0.0f) {
         size = glm::vec2(
@@ -40,7 +44,7 @@ Button::Button(
 
     setScrollable(false);
 
-    label = std::make_shared<Label>(text);
+    label = std::make_shared<Label>(gui, text);
     label->setAlign(Align::center);
     label->setSize(size-glm::vec2(padding.z + padding.x, padding.w + padding.y));
     label->setInteractive(false);

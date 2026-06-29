@@ -17,6 +17,7 @@ namespace gui {
         bool changeOnRelease = false;
     public:
         TrackBar(
+            GUI& gui,
             double min, 
             double max, 
             double value, 
@@ -29,8 +30,8 @@ namespace gui {
         virtual void setConsumer(doubleconsumer);
         virtual void setSubConsumer(doubleconsumer);
 
-        virtual void mouseMove(GUI*, int x, int y) override;
-        virtual void mouseRelease(GUI*, int x, int y) override;
+        virtual void mouseMove(int x, int y) override;
+        virtual void mouseRelease(int x, int y) override;
 
         virtual double getValue() const;
         virtual double getMin() const;

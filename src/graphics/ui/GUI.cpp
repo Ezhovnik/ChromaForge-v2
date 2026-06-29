@@ -23,12 +23,15 @@
 #include <graphics/ui/elements/layout/Panel.h>
 #include <graphics/core/LineBatch.h>
 #include <graphics/core/Font.h>
+#include <engine/Engine.h>
 
 using namespace gui;
 
-GUI::GUI()
-    : batch2D(std::make_unique<Batch2D>(1024)),
-    container(std::make_shared<Container>(glm::vec2(1000)))
+GUI::GUI(Engine& engine)
+    : engine(engine),
+    input(engine.getInput()),
+    batch2D(std::make_unique<Batch2D>(1024)),
+    container(std::make_shared<Container>(*this, glm::vec2(1000)))
 {
     container->setId("root");
     uicamera = std::make_unique<Camera>(glm::vec3(), Window::height);
@@ -36,13 +39,14 @@ GUI::GUI()
 	uicamera->perspective = false;
 	uicamera->flipped = true;
 
-    menu = std::make_shared<Menu>();
+    menu = std::make_shared<Menu>(*this);
     menu->setId("menu");
     menu->setZIndex(10);
     container->add(menu);
     container->setScrollable(false);
 
     tooltip = guiutil::create(
+        *this,
         "<container color='#000000A0' interactive='false' z-index='999'>"
             "<label id='tooltip.label' pos='2' autoresize='true' multiline='true' text-wrap='false'></label>"
         "</container>"
@@ -73,7 +77,8 @@ void GUI::resetTooltip() {
 }
 
 void GUI::updateTooltip(float deltaTime) {
-    if (hover == nullptr || !hover->isInside(Events::cursor)) return resetTooltip();
+    const auto& cursor = input.getCursor();
+    if (hover == nullptr || !hover->isInside(cursor.pos)) return resetTooltip();
 
     if (tooltipTimer + deltaTime >= hover->getTooltipDelay()) {
         auto label = std::dynamic_pointer_cast<gui::Label>(get("tooltip.label"));
@@ -84,7 +89,7 @@ void GUI::updateTooltip(float deltaTime) {
             tooltip->setVisible(true);
             label->setText(langs::get(text));
             auto size = label->getSize() + glm::vec2(4.0f);
-            auto pos = Events::cursor + glm::vec2(10.0f);
+            auto pos = cursor.pos + glm::vec2(10.0f);
             auto rootSize = container->getSize();
             pos.x = glm::min(pos.x, rootSize.x - size.x);
             pos.y = glm::min(pos.y, rootSize.y - size.y);
@@ -95,8 +100,8 @@ void GUI::updateTooltip(float deltaTime) {
     tooltipTimer += deltaTime;
 }
 
-void GUI::activateMouse(float deltaTime) {
-    float mouseDelta = glm::length(Events::delta);
+void GUI::activateMouse(float deltaTime, const CursorState& cursor) {
+    float mouseDelta = glm::length(cursor.delta);
     doubleClicked = false;
     doubleClickTimer += deltaTime + mouseDelta * 0.1f;
 
@@ -105,27 +110,27 @@ void GUI::activateMouse(float deltaTime) {
 
     if (hover) {
         hover->setHover(true);
-        int scroll = Events::getScroll();
+        int scroll = input.getScroll();
         if (scroll) {
             hover->scrolled(scroll);
         }
     }
     this->hover = hover;
 
-    if (Events::justClicked(mousecode::BUTTON_1)) {
+    if (input.justClicked(mousecode::BUTTON_1)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
             if (doubleClickTimer < doubleClickDelay) {
-                pressed->doubleClick(this, Events::cursor.x, Events::cursor.y);
+                pressed->doubleClick(cursor.pos.x, cursor.pos.y);
                 doubleClicked = true;
             } else {
-                pressed->click(this, Events::cursor.x, Events::cursor.y);
+                pressed->click(cursor.pos.x, cursor.pos.y);
             }
             doubleClickTimer = 0.0f;
             if (focus && focus != pressed) focus->defocus();
             if (focus != pressed) {
                 focus = pressed;
-                focus->onFocus(this);
+                focus->onFocus();
                 return;
             }
         }
@@ -133,36 +138,37 @@ void GUI::activateMouse(float deltaTime) {
             focus->defocus();
             focus = nullptr;
         }
-    } else if (!Events::isClicked(mousecode::BUTTON_1) && pressed) {
-        pressed->mouseRelease(this, Events::cursor.x, Events::cursor.y);
+    } else if (!input.isClicked(mousecode::BUTTON_1) && pressed) {
+        pressed->mouseRelease(cursor.pos.x, cursor.pos.y);
         pressed = nullptr;
     }
 
     if (hover) {
         for (mousecode code : MOUSECODES_ALL) {
-            if (Events::justClicked(code)) hover->clicked(this, code);
+            if (input.justClicked(code)) hover->clicked(code);
         }
     }
 } 
 
 void GUI::activateFocused() {
-    if (Events::justPressed(keycode::ESCAPE)) {
+    if (input.justPressed(keycode::ESCAPE)) {
         focus->defocus();
         focus = nullptr;
         return;
     }
 
-    for (auto codepoint : Events::codepoints) {
+    for (auto codepoint : input.getCodepoints()) {
         focus->typed(codepoint);
     }
-    for (auto key : Events::pressedKeys) {
+    for (auto key : input.getPressedKeys()) {
         focus->keyPressed(key);
     }
 
-    if (!Events::isCursorLocked()) {
-        if (Events::isClicked(mousecode::BUTTON_1) && (Events::justClicked(mousecode::BUTTON_1) || Events::delta.x || Events::delta.y)) {
+    const auto& cursor = input.getCursor();
+    if (!cursor.locked) {
+        if (input.isClicked(mousecode::BUTTON_1) && (input.justClicked(mousecode::BUTTON_1) || cursor.delta.x || cursor.delta.y)) {
             if (!doubleClicked) {
-                focus->mouseMove(this, Events::cursor.x, Events::cursor.y);
+                focus->mouseMove(cursor.pos.x, cursor.pos.y);
             }
         }
     }
@@ -174,8 +180,10 @@ void GUI::activate(float deltaTime, const Viewport& vp) {
     auto prevfocus = focus;
 
     updateTooltip(deltaTime);
-    if (!Events::isCursorLocked()) {
-        activateMouse(deltaTime);
+
+    const auto& cursor = input.getCursor();
+    if (!cursor.locked){
+        activateMouse(deltaTime, cursor);
     } else {
         if (hover) {
             hover->setHover(false);
@@ -291,7 +299,7 @@ void GUI::setFocus(std::shared_ptr<UINode> node) {
     if (focus) focus->defocus();
 
     focus = std::move(node);
-    if (focus) focus->onFocus(this);
+    if (focus) focus->onFocus();
 }
 
 std::shared_ptr<Container> GUI::getContainer() const {
@@ -303,12 +311,15 @@ void GUI::postRunnable(const runnable& callback) {
 }
 
 void GUI::onAssetsLoad(Assets* assets) {
-    assets->store(std::make_unique<UIDocument>(
-        BUILTIN_CONTENT_NAMESPACE + ":root", 
-        uidocscript {}, 
-        std::dynamic_pointer_cast<gui::UINode>(container), 
-        nullptr
-    ), BUILTIN_CONTENT_NAMESPACE + ":root");
+    assets->store(
+        std::make_unique<UIDocument>(
+            BUILTIN_CONTENT_NAMESPACE + ":root",
+            uidocscript {},
+            std::dynamic_pointer_cast<gui::UINode>(container),
+            nullptr
+        ),
+        BUILTIN_CONTENT_NAMESPACE + ":root"
+    );
 }
 
 void GUI::setDoubleClickDelay(float delay) {
@@ -321,4 +332,12 @@ float GUI::getDoubleClickDelay() const {
 
 void GUI::toggleDebug() {
     debug = !debug;
+}
+
+const Input& GUI::getInput() const {
+    return engine.getInput();
+}
+
+Input& GUI::getInput() {
+    return engine.getInput();
 }

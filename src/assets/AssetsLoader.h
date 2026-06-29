@@ -17,6 +17,11 @@
 class ResPaths;
 class Content;
 class AssetsLoader;
+class Engine;
+
+namespace gui {
+     class GUI;
+}
 
 struct AssetsConfig {
 	virtual ~AssetsConfig() {}
@@ -26,8 +31,9 @@ struct AssetsConfig {
  * @brief Структура для передачи конфигурации при загрузке макетов интерфейса.
  */
 struct LayoutConfig : AssetsConfig {
+     gui::GUI*  gui;
      scriptenv env; ///< Идентификатор окружения
-     LayoutConfig(scriptenv env) : env(std::move(env)) {}
+     LayoutConfig(gui::GUI* gui, scriptenv env) : gui(gui), env(std::move(env)) {}
 };
 
 struct SoundConfig : AssetsConfig {
@@ -72,7 +78,8 @@ struct aloader_entry {
  */
 class AssetsLoader {
 private:
-	Assets* assets; ///< Менеджер ресурсов, куда сохраняются загруженные объекты
+	Engine& engine;
+     Assets& assets; ///< Менеджер ресурсов, куда сохраняются загруженные объекты
 	std::map<AssetType, aloader_func> loaders; ///< Зарегистрированные загрузчики по типам
 	std::queue<aloader_entry> entries; ///< Очередь заданий на загрузку
      std::set<std::pair<AssetType, std::string>> enqueued;
@@ -91,7 +98,7 @@ public:
      * @param assets Менеджер ресурсов (не должен быть nullptr).
      * @param paths Объект с путями (не должен быть nullptr).
      */
-	AssetsLoader(Assets* assets, const ResPaths* paths);
+	AssetsLoader(Engine& engine, Assets& assets, const ResPaths* paths);
 
 	/**
      * @brief Регистрирует функцию-загрузчик для указанного типа ресурса.
@@ -151,4 +158,6 @@ public:
           const std::string& name,
           const std::vector<io::path>& alternatives
      );
+
+     Engine& getEngine();
 };

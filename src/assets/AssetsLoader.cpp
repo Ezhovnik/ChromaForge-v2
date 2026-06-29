@@ -21,8 +21,11 @@
 #include <voxels/Block.h>
 #include <objects/rigging.h>
 #include <items/Item.h>
+#include <engine/Engine.h>
 
-AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(assets), paths(paths) {
+AssetsLoader::AssetsLoader(
+    Engine& engine, Assets& assets, const ResPaths* paths
+) : engine(engine), assets(assets), paths(paths) {
 	// Регистрируем встроенные загрузчики из asset_loaders.h
 	addLoader(AssetType::Shader, asset_loader::shader);
 	addLoader(AssetType::Texture, asset_loader::texture);
@@ -77,7 +80,7 @@ void AssetsLoader::loadNext() {
 	try {
         aloader_func loader = getLoader(entry.tag);
         auto postfunc = loader(this, paths, entry.filename, entry.alias, entry.config);
-        postfunc(assets);
+        postfunc(&assets);
         entries.pop();
     } catch (std::runtime_error& err) {
         LOG_ERROR("{}", err.what());
@@ -112,7 +115,12 @@ static void add_layouts(
         std::string name = prefix + ":" + file.stem();
 
 		// Для каждого макета создаём LayoutConfig с указанным окружением
-        loader.add(AssetType::Layout, file.string(), name, std::make_shared<LayoutConfig>(env));
+        loader.add(
+            AssetType::Layout,
+            file.string(),
+            name,
+            std::make_shared<LayoutConfig>(&loader.getEngine().getGUI(), env)
+        );
     }
 }
 
@@ -318,8 +326,8 @@ std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
     >(
         "assets-loader-pool", 
         [=](){return std::make_shared<LoaderWorker>(this);},
-        [=](const asset_loader::postfunc& func) {
-            func(assets);
+        [this](const asset_loader::postfunc& func) {
+            func(&assets);
         }
     );
     pool->setOnComplete(std::move(onDone));
@@ -329,4 +337,8 @@ std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
         pool->enqueueJob(std::move(entry));
     }
     return pool;
+}
+
+Engine& AssetsLoader::getEngine() {
+    return engine;
 }

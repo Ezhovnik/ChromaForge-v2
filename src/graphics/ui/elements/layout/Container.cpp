@@ -8,7 +8,7 @@
 
 using namespace gui;
 
-Container::Container(glm::vec2 size) : UINode(size) {
+Container::Container(GUI& gui, glm::vec2 size) : UINode(gui, size) {
     actualLength = size.y;
     setColor(glm::vec4());
 }
@@ -37,8 +37,8 @@ std::shared_ptr<UINode> Container::getAt(
     return UINode::getAt(pos);
 }
 
-void Container::mouseMove(GUI* gui, int x, int y) {
-    UINode::mouseMove(gui, x, y);
+void Container::mouseMove(int x, int y) {
+    UINode::mouseMove(x, y);
     if (!scrollable) return;
 
     auto pos = calcPos();
@@ -60,8 +60,8 @@ void Container::mouseMove(GUI* gui, int x, int y) {
     prevScrollY = y;
 }
 
-void Container::mouseRelease(GUI* gui, int x, int y) {
-    UINode::mouseRelease(gui, x, y);
+void Container::mouseRelease(int x, int y) {
+    UINode::mouseRelease(x, y);
     prevScrollY = -1;
 }
 

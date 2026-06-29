@@ -25,22 +25,25 @@
 #include <frontend/screens/MenuScreen.h>
 #include <debug/Logger.h>
 
-void menus::create_version_label(Engine& engine) {
-    auto gui = engine.getGUI();
+void menus::create_version_label(gui::GUI& gui) {
     auto text = "v" + ENGINE_VERSION_STRING + " development build ";
-    gui->add(guiutil::create(
+    gui.add(guiutil::create(
+        gui,
         "<label z-index='1000' color='#FFFFFF80' gravity='top-right' margin='4'>"
         + text +
         "</label>"
     ));
 }
 
-UIDocument* menus::show(Engine& engine, const std::string& name, std::vector<dv::value> args) {
-    auto menu = engine.getGUI()->getMenu();
+UIDocument* menus::show(
+    Engine& engine, const std::string& name, std::vector<dv::value> args
+) {
+    auto menu = engine.getGUI().getMenu();
     auto file = engine.getResPaths()->find("layouts/" + name + ".xml");
     auto fullname = BUILTIN_CONTENT_NAMESPACE + ":layouts/" + name;
 
     auto documentPtr = UIDocument::read(
+        engine.getGUI(),
         scripting::get_root_environment(),
         fullname,
         file,
@@ -62,7 +65,7 @@ void menus::show_process_panel(
 ) {
     uint initialWork = task->getWorkTotal();
 
-    auto menu = engine.getGUI()->getMenu();
+    auto menu = engine.getGUI().getMenu();
     menu->reset();
     auto doc = menus::show(engine, "process", {
         util::wstr2str_utf8(langs::get(text))

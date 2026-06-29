@@ -38,7 +38,7 @@ void EngineController::deleteWorld(const std::string& name) {
     auto deletion = [this, folder]() {
         LOG_INFO("Deleting {}", folder.string());
         io::remove_all(folder);
-        if (!engine.isHeadless()) engine.getGUI()->getMenu()->back();
+        if (!engine.isHeadless()) engine.getGUI().getMenu()->back();
     };
 
     if (engine.isHeadless()) {
@@ -101,7 +101,7 @@ static void show_convert_request(
             text += util::str2wstr_utf8(line) + L"\n";
         }
         guiutil::confirm_with_memo(
-            engine.getGUI()->getMenu(),
+            engine,
             langs::get(message),
             text,
             on_confirm,

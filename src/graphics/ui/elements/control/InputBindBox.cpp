@@ -8,11 +8,12 @@
 using namespace gui;
 
 InputBindBox::InputBindBox(
+    GUI& gui,
     Binding& binding,
     glm::vec4 padding
-) : Panel(glm::vec2(100,32), padding, 0),
+) : Panel(gui, glm::vec2(100,32), padding, 0),
     binding(binding),
-    label(std::make_unique<Label>(L""))
+    label(std::make_unique<Label>(gui, L""))
 {
     add(label);
     setScrollable(false);
@@ -29,7 +30,7 @@ void InputBindBox::drawBackground(const DrawContext& pctx, const Assets&) {
     label->setText(util::str2wstr_utf8(binding.text()));
 }
 
-void InputBindBox::clicked(GUI*, mousecode button) {
+void InputBindBox::clicked(mousecode button) {
     if (isFocused()) {
         binding.reset(button);
         defocus();

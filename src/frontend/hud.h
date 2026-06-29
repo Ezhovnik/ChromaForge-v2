@@ -18,9 +18,11 @@ class LevelFrontend;
 class UIDocument;
 class Inventory;
 class ImageData;
+class Input;
 
 namespace gui {
     class GUI;
+    class Menu;
     class UINode;
     class Panel;
     class Container;
@@ -66,9 +68,11 @@ public:
 class Hud : public util::ObjectsKeeper {
 private:
     Engine& engine;
+    Input& input;
     Assets& assets;
-    std::unique_ptr<Camera> uicamera;
     gui::GUI& guiController;
+    gui::Menu& menu;
+    std::unique_ptr<Camera> uicamera;
     LevelFrontend& levelFrontend;
     Player& player;
 
