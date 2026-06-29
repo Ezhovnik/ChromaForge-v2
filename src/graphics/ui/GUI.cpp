@@ -5,7 +5,7 @@
 #include <utility>
 
 #include <graphics/ui/elements/UINode.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Menu.h>
 #include <assets/Assets.h>
 #include <graphics/core/Batch2D.h>
 #include <window/Events.h>
@@ -17,10 +17,10 @@
 #include <graphics/core/DrawContext.h>
 #include <frontend/UIDocument.h>
 #include <core_content_defs.h>
-#include <graphics/ui/elements/display/Label.h>
+#include <graphics/ui/elements/Label.h>
 #include <frontend/locale.h>
 #include <graphics/ui/gui_util.h>
-#include <graphics/ui/elements/layout/Panel.h>
+#include <graphics/ui/elements/Panel.h>
 #include <graphics/core/LineBatch.h>
 #include <graphics/core/Font.h>
 #include <engine/Engine.h>

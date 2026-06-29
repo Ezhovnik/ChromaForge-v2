@@ -2,7 +2,7 @@
 
 #include <stack>
 
-#include <graphics/ui/elements/layout/Container.h>
+#include <graphics/ui/elements/Container.h>
 
 namespace gui {
     struct Page {

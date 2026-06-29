@@ -1,4 +1,4 @@
-#include <graphics/ui/elements/display/Label.h>
+#include <graphics/ui/elements/Label.h>
 
 #include <utility>
 

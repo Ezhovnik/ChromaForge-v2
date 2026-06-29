@@ -1,7 +1,7 @@
 #include <frontend/screens/MenuScreen.h>
 
 #include <graphics/ui/GUI.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Menu.h>
 #include <graphics/core/Batch2D.h>
 #include <graphics/core/ShaderProgram.h>
 #include <window/Window.h>

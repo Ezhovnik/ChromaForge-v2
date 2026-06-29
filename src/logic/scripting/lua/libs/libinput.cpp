@@ -9,7 +9,7 @@
 #include <util/stringutil.h>
 #include <graphics/ui/GUI.h>
 #include <io/io.h>
-#include <graphics/ui/elements/layout/Container.h>
+#include <graphics/ui/elements/Container.h>
 #include <coders/toml.h>
 
 namespace scripting {

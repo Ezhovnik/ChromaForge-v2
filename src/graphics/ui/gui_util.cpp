@@ -2,15 +2,15 @@
 
 #include <glm/glm.hpp>
 
-#include <graphics/ui/elements/display/Label.h>
-#include <graphics/ui/elements/layout/Menu.h>
-#include <graphics/ui/elements/control/Button.h>
+#include <graphics/ui/elements/Label.h>
+#include <graphics/ui/elements/Menu.h>
+#include <graphics/ui/elements/Button.h>
 #include <frontend/locale.h>
 #include <delegates.h>
 #include <graphics/ui/gui_xml.h>
 #include <logic/scripting/scripting.h>
 #include <util/stringutil.h>
-#include <graphics/ui/elements/control/TextBox.h>
+#include <graphics/ui/elements/TextBox.h>
 #include <window/Events.h>
 #include <engine/Engine.h>
 

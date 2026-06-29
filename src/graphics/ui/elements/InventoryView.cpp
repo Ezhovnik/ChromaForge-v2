@@ -1,4 +1,4 @@
-#include <graphics/ui/elements/display/InventoryView.h>
+#include <graphics/ui/elements/InventoryView.h>
 
 #include <utility>
 

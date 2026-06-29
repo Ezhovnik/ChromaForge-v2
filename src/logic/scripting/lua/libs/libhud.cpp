@@ -10,7 +10,7 @@
 #include <logic/BlocksController.h>
 #include <items/Inventories.h>
 #include <frontend/UIDocument.h>
-#include <graphics/ui/elements/display/InventoryView.h>
+#include <graphics/ui/elements/InventoryView.h>
 #include <util/stringutil.h>
 #include <objects/Player.h>
 #include <voxels/blocks_agent.h>

@@ -1,4 +1,4 @@
-#include <graphics/ui/elements/layout/SplitBox.h>
+#include <graphics/ui/elements/SplitBox.h>
 
 using namespace gui;
 

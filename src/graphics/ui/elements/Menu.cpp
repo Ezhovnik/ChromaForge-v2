@@ -1,4 +1,4 @@
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Menu.h>
 
 #include <stdexcept>
 #include <utility>

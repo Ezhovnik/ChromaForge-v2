@@ -3,7 +3,7 @@
 #include <utility>
 
 #include <graphics/ui/elements/UINode.h>
-#include <graphics/ui/elements/display/InventoryView.h>
+#include <graphics/ui/elements/InventoryView.h>
 #include <logic/scripting/scripting.h>
 #include <io/io.h>
 #include <graphics/ui/gui_xml.h>

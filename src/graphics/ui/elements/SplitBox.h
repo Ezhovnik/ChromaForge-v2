@@ -1,6 +1,6 @@
 #pragma once
 
-#include <graphics/ui/elements/layout/BasePanel.h>
+#include <graphics/ui/elements/BasePanel.h>
 
 namespace gui {
     class SplitBox : public BasePanel {

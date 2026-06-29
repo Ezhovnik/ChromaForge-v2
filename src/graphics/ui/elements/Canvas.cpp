@@ -1,4 +1,4 @@
-#include <graphics/ui/elements/layout/Canvas.h>
+#include <graphics/ui/elements/Canvas.h>
 
 #include <graphics/core/Batch2D.h>
 #include <graphics/core/DrawContext.h>

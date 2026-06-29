@@ -2,8 +2,8 @@
 
 #include <utility>
 
-#include <graphics/ui/elements/layout/Panel.h>
-#include <graphics/ui/elements/display/Label.h>
+#include <graphics/ui/elements/Panel.h>
+#include <graphics/ui/elements/Label.h>
 
 namespace gui {
     class CheckBox : public UINode {

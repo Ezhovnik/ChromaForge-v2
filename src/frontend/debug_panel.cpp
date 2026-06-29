@@ -4,10 +4,10 @@
 #include <bitset>
 #include <utility>
 
-#include <graphics/ui/elements/control/CheckBox.h>
-#include <graphics/ui/elements/control/TextBox.h>
-#include <graphics/ui/elements/control/TrackBar.h>
-#include <graphics/ui/elements/control/InputBindBox.h>
+#include <graphics/ui/elements/CheckBox.h>
+#include <graphics/ui/elements/TextBox.h>
+#include <graphics/ui/elements/TrackBar.h>
+#include <graphics/ui/elements/InputBindBox.h>
 #include <graphics/core/Mesh.h>
 #include <objects/Player.h>
 #include <physics/Hitbox.h>

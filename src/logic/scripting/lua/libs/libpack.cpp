@@ -14,7 +14,7 @@
 #include <assets/AssetsLoader.h>
 #include <content/Content.h>
 #include <graphics/ui/gui_util.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Menu.h>
 #include <frontend/locale.h>
 
 static int l_pack_get_folder(lua::State* L) {

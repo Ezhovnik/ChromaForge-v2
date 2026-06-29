@@ -1,7 +1,7 @@
 #pragma once
 
 #include <graphics/ui/elements/commons.h>
-#include <graphics/ui/elements/layout/BasePanel.h>
+#include <graphics/ui/elements/BasePanel.h>
 
 namespace gui {
     class Panel : public BasePanel {

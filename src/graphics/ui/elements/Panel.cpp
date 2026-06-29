@@ -1,4 +1,4 @@
-#include <graphics/ui/elements/layout/Panel.h>
+#include <graphics/ui/elements/Panel.h>
 
 #include <algorithm>
 

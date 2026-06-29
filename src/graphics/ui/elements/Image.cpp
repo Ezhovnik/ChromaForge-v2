@@ -1,4 +1,4 @@
-#include <graphics/ui/elements/display/Image.h>
+#include <graphics/ui/elements/Image.h>
 
 #include <utility>
 

@@ -21,9 +21,9 @@
 #include <objects/Player.h>
 #include <physics/Hitbox.h>
 #include <debug/Logger.h>
-#include <graphics/ui/elements/layout/Menu.h>
-#include <graphics/ui/elements/layout/Panel.h>
-#include <graphics/ui/elements/display/Plotter.h>
+#include <graphics/ui/elements/Menu.h>
+#include <graphics/ui/elements/Panel.h>
+#include <graphics/ui/elements/Plotter.h>
 #include <graphics/ui/elements/UINode.h>
 #include <graphics/ui/GUI.h>
 #include <engine/Engine.h>
@@ -35,7 +35,7 @@
 #include <graphics/render/WorldRenderer.h>
 #include <util/stringutil.h>
 #include <graphics/core/Batch3D.h>
-#include <graphics/ui/elements/display/InventoryView.h>
+#include <graphics/ui/elements/InventoryView.h>
 #include <frontend/LevelFrontend.h>
 #include <items/Item.h>
 #include <items/Inventory.h>

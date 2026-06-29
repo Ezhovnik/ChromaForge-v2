@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 
 #include <graphics/ui/elements/UINode.h>
-#include <graphics/ui/elements/layout/Container.h>
+#include <graphics/ui/elements/Container.h>
 #include <constants.h>
 #include <typedefs.h>
 #include <items/ItemStack.h>

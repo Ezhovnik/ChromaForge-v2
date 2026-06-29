@@ -3,14 +3,14 @@
 #include <stdexcept>
 #include <utility>
 
-#include <graphics/ui/elements/layout/Panel.h>
-#include <graphics/ui/elements/display/Image.h>
-#include <graphics/ui/elements/control/Button.h>
-#include <graphics/ui/elements/control/CheckBox.h>
-#include <graphics/ui/elements/control/TextBox.h>
-#include <graphics/ui/elements/control/TrackBar.h>
-#include <graphics/ui/elements/control/InputBindBox.h>
-#include <graphics/ui/elements/display/InventoryView.h>
+#include <graphics/ui/elements/Panel.h>
+#include <graphics/ui/elements/Image.h>
+#include <graphics/ui/elements/Button.h>
+#include <graphics/ui/elements/CheckBox.h>
+#include <graphics/ui/elements/TextBox.h>
+#include <graphics/ui/elements/TrackBar.h>
+#include <graphics/ui/elements/InputBindBox.h>
+#include <graphics/ui/elements/InventoryView.h>
 #include <frontend/locale.h>
 #include <logic/scripting/scripting.h>
 #include <util/stringutil.h>
@@ -18,12 +18,12 @@
 #include <window/Events.h>
 #include <items/Inventory.h>
 #include <math/voxmaths.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Menu.h>
 #include <frontend/menu.h>
 #include <graphics/ui/GUI.h>
 #include <engine/Engine.h>
-#include <graphics/ui/elements/layout/Canvas.h>
-#include <graphics/ui/elements/layout/SplitBox.h>
+#include <graphics/ui/elements/Canvas.h>
+#include <graphics/ui/elements/SplitBox.h>
 
 using namespace gui;
 

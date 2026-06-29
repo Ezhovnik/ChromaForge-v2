@@ -1,4 +1,4 @@
-#include <graphics/ui/elements/control/TrackBar.h>
+#include <graphics/ui/elements/TrackBar.h>
 
 #include <utility>
 

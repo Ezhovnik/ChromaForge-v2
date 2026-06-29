@@ -5,19 +5,19 @@
 #include <util/stringutil.h>
 #include <graphics/ui/gui_util.h>
 #include <frontend/locale.h>
-#include <graphics/ui/elements/control/Button.h>
-#include <graphics/ui/elements/control/CheckBox.h>
-#include <graphics/ui/elements/control/TextBox.h>
-#include <graphics/ui/elements/control/TrackBar.h>
-#include <graphics/ui/elements/layout/Panel.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Button.h>
+#include <graphics/ui/elements/CheckBox.h>
+#include <graphics/ui/elements/TextBox.h>
+#include <graphics/ui/elements/TrackBar.h>
+#include <graphics/ui/elements/Panel.h>
+#include <graphics/ui/elements/Menu.h>
 #include <items/Inventories.h>
-#include <graphics/ui/elements/display/InventoryView.h>
+#include <graphics/ui/elements/InventoryView.h>
 #include <world/Level.h>
-#include <graphics/ui/elements/display/Image.h>
+#include <graphics/ui/elements/Image.h>
 #include <graphics/ui/markdown.h>
 #include <graphics/core/Font.h>
-#include <graphics/ui/elements/layout/Canvas.h>
+#include <graphics/ui/elements/Canvas.h>
 
 static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);

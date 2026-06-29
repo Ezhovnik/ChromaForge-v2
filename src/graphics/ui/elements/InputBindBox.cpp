@@ -1,6 +1,6 @@
-#include <graphics/ui/elements/control/InputBindBox.h>
+#include <graphics/ui/elements/InputBindBox.h>
 
-#include <graphics/ui/elements/display/Label.h>
+#include <graphics/ui/elements/Label.h>
 #include <graphics/core/DrawContext.h>
 #include <graphics/core/Batch2D.h>
 #include <util/stringutil.h>

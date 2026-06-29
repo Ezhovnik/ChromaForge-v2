@@ -6,7 +6,7 @@
 #include <graphics/core/DrawContext.h>
 #include <graphics/core/Viewport.h>
 #include <graphics/ui/GUI.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Menu.h>
 #include <graphics/render/WorldRenderer.h>
 #include <logic/LevelController.h>
 #include <logic/scripting/scripting_hud.h>

@@ -1,4 +1,4 @@
-#include <graphics/ui/elements/display/Plotter.h>
+#include <graphics/ui/elements/Plotter.h>
 
 #include <graphics/core/Batch2D.h>
 #include <graphics/core/Font.h>

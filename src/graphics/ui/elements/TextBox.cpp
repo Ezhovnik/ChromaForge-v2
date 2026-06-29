@@ -1,10 +1,10 @@
-#include <graphics/ui/elements/control/TextBox.h>
+#include <graphics/ui/elements/TextBox.h>
 
 #include <algorithm>
 #include <utility>
 #include <sstream>
 
-#include <graphics/ui/elements/display/Label.h>
+#include <graphics/ui/elements/Label.h>
 #include <graphics/core/DrawContext.h>
 #include <graphics/core/Batch2D.h>
 #include <graphics/core/Font.h>

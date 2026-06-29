@@ -1,6 +1,6 @@
 #pragma once
 
-#include <graphics/ui/elements/layout/Panel.h>
+#include <graphics/ui/elements/Panel.h>
 
 namespace gui {
     class Label;

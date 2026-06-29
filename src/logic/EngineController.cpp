@@ -12,10 +12,10 @@
 #include <frontend/locale.h>
 #include <frontend/screens/MenuScreen.h>
 #include <frontend/screens/LevelScreen.h>
-#include <graphics/ui/elements/display/Label.h>
-#include <graphics/ui/elements/control/Button.h>
-#include <graphics/ui/elements/layout/Panel.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Label.h>
+#include <graphics/ui/elements/Button.h>
+#include <graphics/ui/elements/Panel.h>
+#include <graphics/ui/elements/Menu.h>
 #include <graphics/ui/gui_util.h>
 #include <interfaces/Task.h>
 #include <util/stringutil.h>

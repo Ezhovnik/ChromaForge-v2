@@ -9,8 +9,8 @@
 #include <delegates.h>
 #include <engine/Engine.h>
 #include <io/engine_paths.h>
-#include <graphics/ui/elements/display/Label.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Label.h>
+#include <graphics/ui/elements/Menu.h>
 #include <graphics/ui/gui_util.h>
 #include <graphics/ui/GUI.h>
 #include <logic/scripting/scripting.h>
@@ -20,7 +20,7 @@
 #include <core_content_defs.h>
 #include <frontend/locale.h>
 #include <interfaces/Task.h>
-#include <graphics/ui/elements/layout/Panel.h>
+#include <graphics/ui/elements/Panel.h>
 #include <coders/commons.h>
 #include <frontend/screens/MenuScreen.h>
 #include <debug/Logger.h>
