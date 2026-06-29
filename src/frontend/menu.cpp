@@ -18,7 +18,7 @@
 #include <util/stringutil.h>
 #include <frontend/UIDocument.h>
 #include <core_content_defs.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 #include <interfaces/Task.h>
 #include <graphics/ui/elements/layout/Panel.h>
 #include <coders/commons.h>

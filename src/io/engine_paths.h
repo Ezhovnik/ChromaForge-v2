@@ -6,9 +6,14 @@
 #include <optional>
 #include <tuple>
 
-#include <content/ContentPack.h>
 #include <data/dv.h>
 #include <io/io.h>
+
+struct PathsRoot {
+    std::string name;
+    io::path path;
+    PathsRoot(std::string name, io::path path) : name(std::move(name)), path(std::move(path)) {}
+};
 
 class EnginePaths {
 private:
@@ -16,10 +21,11 @@ private:
     std::filesystem::path resourcesFolder {"res"};
     io::path currentWorldFolder;
     std::optional<std::filesystem::path> scriptFolder;
-    std::vector<ContentPack>* contentPacks = nullptr;
-    std::vector<std::string> contentEntryPoints;
-    std::unordered_map<std::string, std::string> writeablePacks;
+    std::vector<PathsRoot> entryPoints;
+    std::unordered_map<std::string, std::string> writeables;
     std::vector<std::string> mounted;
+
+    void cleanup();
 public:
     void prepare();
 
@@ -45,20 +51,15 @@ public:
     std::string mount(const io::path& file);
     void unmount(const std::string& name);
 
-    void setContentPacks(std::vector<ContentPack>* contentPacks);
+    void setEntryPoints(std::vector<PathsRoot> entryPoints);
 
-    std::string createWriteablePackDevice(const std::string& name);
+    std::string createWriteableDevice(const std::string& name);
 
     std::vector<io::path> scanForWorlds() const;
 
     static std::tuple<std::string, std::string> parsePath(std::string_view view);
 
     static inline io::path CONFIG_DEFAULTS = "config/defaults.toml";
-};
-
-struct PathsRoot {
-    std::string name;
-    io::path path;
 };
 
 class ResPaths {
@@ -79,6 +80,8 @@ public:
     dv::value readCombinedList(const std::string& file) const;
 
     dv::value readCombinedObject(const std::string& file, bool deep=false) const;
+
+    std::vector<io::path> collectRoots();
 
     const io::path& getMainRoot() const;
 };

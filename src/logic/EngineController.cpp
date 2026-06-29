@@ -9,7 +9,7 @@
 #include <engine/Engine.h>
 #include <world/files/WorldFiles.h>
 #include <world/files/WorldConverter.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 #include <frontend/screens/MenuScreen.h>
 #include <frontend/screens/LevelScreen.h>
 #include <graphics/ui/elements/display/Label.h>

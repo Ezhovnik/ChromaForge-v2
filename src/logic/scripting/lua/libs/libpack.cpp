@@ -15,7 +15,7 @@
 #include <content/Content.h>
 #include <graphics/ui/gui_util.h>
 #include <graphics/ui/elements/layout/Menu.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 
 static int l_pack_get_folder(lua::State* L) {
     std::string packName = lua::tostring(L, 1);
@@ -230,7 +230,7 @@ static int l_pack_request_writeable(lua::State* L) {
     auto str = langs::get(L"Grant %{0} pack modification permission?");
     util::replaceAll(str, L"%{0}", util::str2wstr_utf8(packid));
     guiutil::confirm(*scripting::engine, str, [packid, handler]() {
-        handler({scripting::engine->getPaths().createWriteablePackDevice(packid)});
+        handler({scripting::engine->getPaths().createWriteableDevice(packid)});
         scripting::engine->getGUI().getMenu()->reset();
     });
     return 0;

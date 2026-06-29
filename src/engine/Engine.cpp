@@ -25,7 +25,7 @@
 #include <frontend/screens/Screen.h>
 #include <frontend/screens/MenuScreen.h>
 #include <content/content.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 #include <util/platform.h>
 #include <frontend/menu.h>
 #include <content/Content.h>
@@ -128,7 +128,14 @@ void Engine::initialize(CoreParameters coreParameters) {
     LOG_INFO("Scripting system initialization has been successfully finished");
 
     bool langNotSet = settings.ui.language.get() == "auto";
-    if (langNotSet) settings.ui.language.set(platform::detect_locale());
+    if (langNotSet) {
+        settings.ui.language.set(
+            langs::locale_by_envlocale(
+                platform::detect_locale(),
+                "res:"
+            )
+        );
+    }
     if (!isHeadless()) gui->setPageLoader(scripting::create_page_loader());
     keepAlive(settings.ui.language.observe([this](auto lang) {
         setLanguage(lang);
@@ -313,13 +320,19 @@ void Engine::loadContent() {
         names.push_back(pack.id);
     }
 
-    ContentBuilder contentBuilder;
-    CoreContent::setup(*input, contentBuilder);
-    paths.setContentPacks(&contentPacks);
     PacksManager manager = createPacksManager(paths.getCurrentWorldFolder());
     manager.scan();
     names = manager.assemble(names);
     contentPacks = manager.getAll(names);
+
+    std::vector<PathsRoot> entryPoints;
+    for (auto& pack : contentPacks) {
+        entryPoints.emplace_back(pack.id, pack.folder);
+    }
+    paths.setEntryPoints(std::move(entryPoints));
+
+    ContentBuilder contentBuilder;
+    CoreContent::setup(*input, contentBuilder);
 
     auto builtinPack = ContentPack::createBuiltin(paths);
 
@@ -344,8 +357,7 @@ void Engine::loadContent() {
 
     ContentLoader::loadScripts(*content);
 
-    std::string locale = langs::current ? langs::current->getId() : langs::FALLBACK_DEFAULT;
-    setLanguage(locale);
+    setLanguage(langs::get_current());
 
     if (!isHeadless()) {
         loadAssets();
@@ -374,8 +386,7 @@ void Engine::resetContent() {
     contentPacks.clear();
     content.reset();
 
-    std::string locale = langs::current ? langs::current->getId() : langs::FALLBACK_DEFAULT;
-    setLanguage(locale);
+    setLanguage(langs::get_current());
     if (!isHeadless()) {
         loadAssets();
         onAssetsLoaded();
@@ -456,7 +467,11 @@ std::shared_ptr<Screen> Engine::getScreen() {
 }
 
 void Engine::setLanguage(std::string locale) {
-	langs::setup("res:", std::move(locale), contentPacks);
+	langs::setup(
+        "res:",
+        std::move(locale),
+        resPaths ? resPaths->collectRoots() : std::vector<io::path> {{BUILTIN_CONTENT_NAMESPACE, "res:"}}
+    );
 }
 
 SettingsHandler& Engine::getSettingsHandler() {

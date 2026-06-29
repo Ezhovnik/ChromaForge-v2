@@ -1,6 +1,5 @@
 #include <io/engine_paths.h>
 
-#include <filesystem>
 #include <sstream>
 #include <algorithm>
 #include <stack>
@@ -120,25 +119,28 @@ void EnginePaths::setResourcesFolder(std::filesystem::path folder) {
     this->resourcesFolder = std::move(folder);
 }
 
-void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
-    for (const auto& id : contentEntryPoints) {
+void EnginePaths::cleanup() {
+    for (const auto& [id, _] : entryPoints) {
         io::remove_device(id);
     }
-    for (const auto& [_, entryPoint] : writeablePacks) {
+    for (const auto& [_, entryPoint] : writeables) {
         io::remove_device(entryPoint);
     }
     for (const auto& entryPoint : mounted) {
         io::remove_device(entryPoint);
     }
 
-    contentEntryPoints.clear();
-    this->contentPacks = contentPacks;
+    entryPoints.clear();
+}
 
-    for (const auto& pack : *contentPacks) {
-        auto parent = pack.folder.entryPoint();
-        io::create_subdevice(pack.id, parent, pack.folder);
-        contentEntryPoints.push_back(pack.id);
+void EnginePaths::setEntryPoints(std::vector<PathsRoot> entryPoints) {
+    cleanup();
+
+    for (const auto& point : entryPoints) {
+        auto parent = point.path.entryPoint();
+        io::create_subdevice(point.name, parent, point.path);
     }
+    this->entryPoints = std::move(entryPoints);
 }
 
 std::string EnginePaths::mount(const io::path& file) {
@@ -170,14 +172,14 @@ void EnginePaths::unmount(const std::string& name) {
     mounted.erase(found);
 }
 
-std::string EnginePaths::createWriteablePackDevice(const std::string& name) {
-    const auto& found = writeablePacks.find(name);
-    if (found != writeablePacks.end()) return found->second;
+std::string EnginePaths::createWriteableDevice(const std::string& name) {
+    const auto& found = writeables.find(name);
+    if (found != writeables.end()) return found->second;
 
     io::path folder;
-    for (const auto& pack : *contentPacks) {
-        if (pack.id == name) {
-            folder = pack.folder;
+    for (const auto& point : entryPoints) {
+        if (point.name == name) {
+            folder = point.path;
             break;
         }
     }
@@ -189,7 +191,7 @@ std::string EnginePaths::createWriteablePackDevice(const std::string& name) {
     auto entryPoint = std::string("W.") + generate_random_base64<6>();
 
     io::create_subdevice(entryPoint, folder.entryPoint(), folder.pathPart());
-    writeablePacks[name] = entryPoint;
+    writeables[name] = entryPoint;
     return entryPoint;
 }
 
@@ -329,6 +331,15 @@ dv::value ResPaths::readCombinedObject(const std::string& filename, bool deep) c
         }
     }
     return object;
+}
+
+std::vector<io::path> ResPaths::collectRoots() {
+    std::vector<io::path> collected;
+    collected.reserve(roots.size());
+    for (const auto& root : roots) {
+        collected.emplace_back(root.path);
+    }
+    return collected;
 }
 
 const io::path& ResPaths::getMainRoot() const {

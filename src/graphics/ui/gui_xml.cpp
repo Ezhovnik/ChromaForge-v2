@@ -11,7 +11,7 @@
 #include <graphics/ui/elements/control/TrackBar.h>
 #include <graphics/ui/elements/control/InputBindBox.h>
 #include <graphics/ui/elements/display/InventoryView.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 #include <logic/scripting/scripting.h>
 #include <util/stringutil.h>
 #include <debug/Logger.h>

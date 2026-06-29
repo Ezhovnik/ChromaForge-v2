@@ -4,7 +4,7 @@
 #include <assets/Assets.h>
 #include <util/stringutil.h>
 #include <graphics/ui/gui_util.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 #include <graphics/ui/elements/control/Button.h>
 #include <graphics/ui/elements/control/CheckBox.h>
 #include <graphics/ui/elements/control/TextBox.h>
@@ -787,7 +787,7 @@ static int l_gui_reindex(lua::State* L) {
 }
 
 static int l_gui_get_locales_info(lua::State* L) {
-    auto& locales = langs::locales_info;
+    auto& locales = langs::get_locales_info();
     lua::createtable(L, 0, locales.size());
     for (auto& entry : locales) {
         lua::createtable(L, 0, 1);

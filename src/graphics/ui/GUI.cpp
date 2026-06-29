@@ -18,7 +18,7 @@
 #include <frontend/UIDocument.h>
 #include <core_content_defs.h>
 #include <graphics/ui/elements/display/Label.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 #include <graphics/ui/gui_util.h>
 #include <graphics/ui/elements/layout/Panel.h>
 #include <graphics/core/LineBatch.h>

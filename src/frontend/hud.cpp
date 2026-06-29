@@ -373,6 +373,7 @@ void Hud::draw(const DrawContext& context) {
     updateElementsPosition(viewport);
 
     uicamera->setFov(height);
+    uicamera->setAspectRatio(viewport.getRatio());
 
 	auto batch = context.getBatch2D();
 	batch->begin();

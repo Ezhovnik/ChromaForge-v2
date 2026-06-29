@@ -27,7 +27,7 @@
 #include <items/Inventories.h>
 #include <graphics/ui/GUI.h>
 #include <items/ItemStack.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 #include <graphics/core/Texture.h>
 #include <assets/assets_util.h>
 

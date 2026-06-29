@@ -5,7 +5,7 @@
 #include <graphics/ui/elements/display/Label.h>
 #include <graphics/ui/elements/layout/Menu.h>
 #include <graphics/ui/elements/control/Button.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 #include <delegates.h>
 #include <graphics/ui/gui_xml.h>
 #include <logic/scripting/scripting.h>
