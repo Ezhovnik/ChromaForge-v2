@@ -13,7 +13,7 @@
  */
 
 using scriptenv = std::shared_ptr<int>;
-using observer_handler = std::shared_ptr<int>;
+class observer_handler;
 
 // ========== Базовые типы (сокращения) ==========
 

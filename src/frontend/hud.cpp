@@ -7,8 +7,6 @@
 #include <assets/Assets.h>
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Batch2D.h>
-#include <graphics/core/Font.h>
-#include <graphics/core/Mesh.h>
 #include <graphics/core/Atlas.h>
 #include <window/Camera.h>
 #include <window/Window.h>

@@ -9,6 +9,7 @@
 #include <objects/Player.h>
 #include <graphics/render/WorldRenderer.h>
 #include <frontend/UIDocument.h>
+#include <assets/Assets.h>
 
 Hud* scripting::hud = nullptr;
 WorldRenderer* scripting::renderer = nullptr;

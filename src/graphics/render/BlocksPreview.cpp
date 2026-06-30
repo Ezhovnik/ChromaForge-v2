@@ -17,6 +17,7 @@
 #include <content/Content.h>
 #include <constants.h>
 #include <graphics/core/ImageData.h>
+#include <graphics/commons/Model.h>
 
 std::unique_ptr<ImageData> BlocksPreview::draw(
     const ContentGfxCache& cache,

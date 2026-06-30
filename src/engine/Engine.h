@@ -1,14 +1,12 @@
 #pragma once
 
 #include <string>
-#include <stdexcept>
 #include <memory>
 
 #include <typedefs.h>
 #include <delegates.h>
 #include <io/engine_paths.h>
 #include <content/ContentPack.h>
-#include <assets/Assets.h>
 #include <content/content_fwd.h>
 #include <content/PacksManager.h>
 #include <util/ObjectsKeeper.h>
@@ -18,6 +16,7 @@
 #include <engine/EngineTime.h>
 #include <engine/PostRunnables.h>
 
+class Assets;
 class Screen;
 class EngineController;
 class SettingsHandler;

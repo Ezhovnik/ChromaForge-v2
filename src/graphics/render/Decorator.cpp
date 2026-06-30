@@ -21,6 +21,7 @@
 #include <audio/audio.h>
 #include <math/rand.h>
 #include <voxels/Chunk.h>
+#include <assets/Assets.h>
 
 inline constexpr int UPDATE_AREA_DIAMETER = 32;
 inline constexpr int UPDATE_BLOCKS = UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER;

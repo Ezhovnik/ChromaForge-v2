@@ -19,6 +19,7 @@
 #include <debug/Logger.h>
 #include <io/io.h>
 #include <graphics/core/Texture.h>
+#include <assets/Assets.h>
 
 static int l_get_version(lua::State* L) {
     return lua::pushvec_stack(

@@ -1,6 +1,5 @@
 #include <frontend/menu.h>
 
-#include <filesystem>
 #include <random>
 #include <chrono>
 
@@ -24,6 +23,7 @@
 #include <coders/commons.h>
 #include <frontend/screens/MenuScreen.h>
 #include <debug/Logger.h>
+#include <assets/asset_loaders.h>
 
 void menus::create_version_label(gui::GUI& gui) {
     auto text = "v" + ENGINE_VERSION_STRING + " development build ";

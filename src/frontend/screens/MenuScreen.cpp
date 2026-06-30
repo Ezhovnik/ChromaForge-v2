@@ -9,6 +9,7 @@
 #include <engine/Engine.h>
 #include <graphics/core/Texture.h>
 #include <math/UVRegion.h>
+#include <assets/Assets.h>
 
 MenuScreen::MenuScreen(Engine& engine) : Screen(engine) {
     engine.resetContent();

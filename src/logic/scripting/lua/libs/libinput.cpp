@@ -1,5 +1,3 @@
-#include <filesystem>
-
 #include <logic/scripting/lua/libs/libgui.h>
 #include <window/input.h>
 #include <window/Events.h>
@@ -11,6 +9,7 @@
 #include <io/io.h>
 #include <graphics/ui/elements/Container.h>
 #include <coders/toml.h>
+#include <util/observer_handler.h>
 
 namespace scripting {
     extern Hud* hud;
@@ -56,12 +55,12 @@ static int l_add_callback(lua::State* L) {
         handler = bind.onactived.add(callback);
     }
     if (scripting::hud) {
-        scripting::hud->keepAlive(handler);
+        scripting::hud->keepAlive(std::move(handler));
         return 0;
     } else if (lua::gettop(L) >= 3) {
         auto node = get_document_node(L, 3);
         if (auto container = std::dynamic_pointer_cast<gui::Container>(node.node)) {
-            container->keepAlive(handler);
+            container->keepAlive(std::move(handler));
             return 0;
         }
         throw std::runtime_error("Owner expected to be a container");

@@ -18,13 +18,13 @@ struct uidocscript {
     bool onclose : 1;
 };
 
-using uinodes_map = std::unordered_map<std::string, std::shared_ptr<gui::UINode>>;
+using UINodesMap = std::unordered_map<std::string, std::shared_ptr<gui::UINode>>;
 
 class UIDocument {
 private:
     std::string id;
     uidocscript script;
-    uinodes_map map;
+    UINodesMap map;
     std::shared_ptr<gui::UINode> root;
 
     scriptenv env;
@@ -38,8 +38,8 @@ public:
 
     void rebuildIndices();
 
-    const uinodes_map& getMap() const;
-    uinodes_map& getMapWriteable();
+    const UINodesMap& getMap() const;
+    UINodesMap& getMapWriteable();
     const std::string& getId() const;
     std::shared_ptr<gui::UINode> getRoot() const;
     const uidocscript& getScript() const;

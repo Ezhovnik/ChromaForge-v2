@@ -32,6 +32,8 @@
 #include <objects/Players.h>
 #include <frontend/ContentGfxCache.h>
 #include <voxels/GlobalChunks.h>
+#include <assets/Assets.h>
+#include <graphics/core/TextureAnimation.h>
 
 inline const io::path CLIENT_FILE = "world:client/environment.json";
 

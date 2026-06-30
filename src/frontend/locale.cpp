@@ -12,8 +12,8 @@
 using namespace langs;
 
 namespace {
-    static std::unique_ptr<langs::Lang> current;
-    static std::unordered_map<std::string, LocaleInfo> locales_info;
+    std::unique_ptr<langs::Lang> current;
+    std::unordered_map<std::string, LocaleInfo> locales_info;
 }
 
 langs::Lang::Lang(std::string locale) : locale(std::move(locale)) {

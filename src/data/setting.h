@@ -7,6 +7,7 @@
 
 #include <typedefs.h>
 #include <delegates.h>
+#include <util/observer_handler.h>
 
 enum class SettingFormat {
     Simple,
@@ -45,9 +46,8 @@ public:
         const int id = nextid++;
         observers.emplace(id, callback);
         if (callOnStart) callback(value);
-        return std::shared_ptr<int>(new int(id), [this](int* id) {
-            observers.erase(*id);
-            delete id;
+        return observer_handler([this, id]() {
+            observers.erase(id);
         });
     }
 

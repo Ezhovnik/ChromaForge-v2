@@ -5,11 +5,15 @@
 #include <vector>
 
 #include <data/dv.h>
-#include <graphics/ui/elements/Menu.h>
+#include <delegates.h>
 
 class Task;
 class Engine;
 class UIDocument;
+
+namespace gui {
+    class GUI;
+}
 
 namespace menus {
     void create_version_label(gui::GUI& gui);

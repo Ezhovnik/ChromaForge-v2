@@ -4,7 +4,7 @@
 
 #include <delegates.h>
 #include <typedefs.h>
-#include <data/dv.h>
+#include <data/dv_fwd.h>
 
 namespace scripting {
     using common_func = std::function<dv::value(const std::vector<dv::value>&)>;

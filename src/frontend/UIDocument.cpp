@@ -25,11 +25,11 @@ void UIDocument::rebuildIndices() {
     gui::UINode::getIndices(root, map);
 }
 
-const uinodes_map& UIDocument::getMap() const {
+const UINodesMap& UIDocument::getMap() const {
     return map;
 }
 
-uinodes_map& UIDocument::getMapWriteable() {
+UINodesMap& UIDocument::getMapWriteable() {
     return map;
 }
 
