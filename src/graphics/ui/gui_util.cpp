@@ -11,7 +11,6 @@
 #include <logic/scripting/scripting.h>
 #include <util/stringutil.h>
 #include <graphics/ui/elements/TextBox.h>
-#include <window/Events.h>
 #include <engine/Engine.h>
 
 using namespace gui;

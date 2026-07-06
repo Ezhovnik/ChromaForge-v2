@@ -23,6 +23,7 @@ class SettingsHandler;
 struct EngineSettings;
 class Level;
 class Input;
+class Window;
 
 namespace gui {
     class GUI;
@@ -70,7 +71,7 @@ private:
     std::unique_ptr<cmd::CommandsInterpreter> cmd;
     std::unique_ptr<network::Network> network;
     std::unique_ptr<Input> input;
-
+    std::unique_ptr<Window> window;
     std::vector<std::string> basePacks;
 
     std::unique_ptr<gui::GUI> gui;
@@ -137,6 +138,10 @@ public:
 
     cmd::CommandsInterpreter& getCmd() {
         return *cmd;
+    }
+
+    Window& getWindow() {
+        return *window;
     }
 
     bool isHeadless() const;

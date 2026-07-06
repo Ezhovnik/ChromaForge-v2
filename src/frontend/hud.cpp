@@ -9,8 +9,7 @@
 #include <graphics/core/Batch2D.h>
 #include <graphics/core/Atlas.h>
 #include <window/Camera.h>
-#include <window/Window.h>
-#include <window/Events.h>
+#include <window/Window.h>  
 #include <window/input.h>
 #include <voxels/Chunks.h>
 #include <voxels/Block.h>
@@ -230,7 +229,10 @@ void Hud::cleanup() {
 }
 
 void Hud::processInput(bool visible) {
-    if (!Window::isFocused() && !menu.hasOpenPage() && !isInventoryOpen()) setPause(true);
+    const auto& window = engine.getWindow();
+    if (!window.isFocused() && !menu.hasOpenPage() && !isInventoryOpen()) {
+        setPause(true);
+    }
 
     const auto& bindings = input.getBindings();
     if (!pause && visible && bindings.justActive(BIND_HUD_INVENTORY)) {
@@ -338,10 +340,11 @@ void Hud::update(bool hudVisible) {
         element.getNode()->setVisible(hudVisible);
     }
 
+    const auto& windowSize = engine.getWindow().getSize();
 	glm::vec2 caSize = contentAccessPanel->getSize();
     contentAccessPanel->setVisible(inventoryView != nullptr && showContentPanel);
-    contentAccessPanel->setSize(glm::vec2(caSize.x, Window::height));
-    contentAccess->setMinSize(glm::vec2(1, Window::height));
+    contentAccessPanel->setSize(glm::vec2(caSize.x, windowSize.y));
+    contentAccess->setMinSize(glm::vec2(1, windowSize.y));
 	hotbarView->setVisible(hudVisible && !(secondUI && !inventoryView));
 
 	if (hudVisible) {

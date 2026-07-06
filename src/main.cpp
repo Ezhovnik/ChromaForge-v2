@@ -13,7 +13,6 @@
 #include <debug/Logger.h>
 #include <util/command_line.h>
 #include <constants.h>
-#include <window/Events.h>
 
 static void sigterm_handler(int signum) {
     Engine::getInstance().quit();

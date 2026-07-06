@@ -6,9 +6,11 @@
 
 class Batch2D;
 class Framebuffer;
+class Window;
 
 class DrawContext {
 private:
+    Window& window;
     const DrawContext* parent;
     Viewport viewport;
     Batch2D* g2d;
@@ -24,7 +26,11 @@ private:
     int scissorsCount = 0;
     float lineWidth = 1.0f;
 public:
-    DrawContext(const DrawContext* parent, Viewport viewport, Batch2D* g2d);
+    DrawContext(
+        const DrawContext* parent,
+        Window& window,
+        Batch2D* g2d
+    );
     ~DrawContext();
 
     Batch2D* getBatch2D() const;

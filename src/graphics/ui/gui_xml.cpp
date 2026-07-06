@@ -15,7 +15,6 @@
 #include <logic/scripting/scripting.h>
 #include <util/stringutil.h>
 #include <debug/Logger.h>
-#include <window/Events.h>
 #include <items/Inventory.h>
 #include <math/voxmaths.h>
 #include <graphics/ui/elements/Menu.h>

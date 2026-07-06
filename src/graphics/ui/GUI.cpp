@@ -8,7 +8,6 @@
 #include <graphics/ui/elements/Menu.h>
 #include <assets/Assets.h>
 #include <graphics/core/Batch2D.h>
-#include <window/Events.h>
 #include <window/input.h>
 #include <window/Camera.h>
 #include <window/Window.h>
@@ -34,7 +33,7 @@ GUI::GUI(Engine& engine)
     container(std::make_shared<Container>(*this, glm::vec2(1000)))
 {
     container->setId("root");
-    uicamera = std::make_unique<Camera>(glm::vec3(), Window::height);
+    uicamera = std::make_unique<Camera>(glm::vec3(), engine.getWindow().getSize().y);
 
 	uicamera->perspective = false;
 	uicamera->flipped = true;
@@ -105,7 +104,7 @@ void GUI::activateMouse(float deltaTime, const CursorState& cursor) {
     doubleClicked = false;
     doubleClickTimer += deltaTime + mouseDelta * 0.1f;
 
-    auto hover = container->getAt(Events::cursor);
+    auto hover = container->getAt(cursor.pos);
     if (this->hover && this->hover != hover) this->hover->setHover(false);
 
     if (hover) {
@@ -229,7 +228,7 @@ void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
     batch2D->begin();
     container->draw(ctx, assets);
 
-    if (hover) Window::setCursor(hover->getCursor());
+    if (hover) engine.getWindow().setCursor(hover->getCursor());
 
     if (hover && debug) {
         auto pos = hover->calcPos();
@@ -340,4 +339,8 @@ const Input& GUI::getInput() const {
 
 Input& GUI::getInput() {
     return engine.getInput();
+}
+
+Window& GUI::getWindow() {
+    return engine.getWindow();
 }

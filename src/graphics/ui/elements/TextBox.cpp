@@ -10,7 +10,6 @@
 #include <graphics/core/Font.h>
 #include <assets/Assets.h>
 #include <util/stringutil.h>
-#include <window/Events.h>
 #include <window/Window.h>
 #include <devtools/syntax_highlighting.h>
 #include <graphics/ui/markdown.h>
@@ -240,7 +239,8 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
     auto batch = pctx.getBatch2D();
     batch->untexture();
     batch->setColor(glm::vec4(1.0f));
-    if (editable && int((Window::time() - caretLastMove) * 2) % 2 == 0) {
+    float time = gui.getWindow().time();
+    if (editable && static_cast<int>((time - caretLastMove) * 2) % 2 == 0) {
         uint line = rawTextCache.getLineByTextIndex(caret);
         uint lcaret = caret - rawTextCache.getTextLineOffset(line);
 
@@ -683,7 +683,7 @@ void TextBox::stepRight(bool shiftPressed, bool breakSelection) {
     size_t caret = breakSelection ? selectionEnd : this->caret;
     if (caret < input.length()) {
         setCaret(caret + 1);
-        caretLastMove = Window::time();
+        caretLastMove = gui.getWindow().time();
         if (shiftPressed) {
             if (selectionStart == selectionEnd) {
                 selectionOrigin = previousCaret;
@@ -804,7 +804,7 @@ void TextBox::keyPressed(keycode key) {
         if (key == keycode::C || key == keycode::X) {
             std::string text = util::wstr2str_utf8(getSelection());
             if (!text.empty()) {
-                Window::setClipboardText(text.c_str());
+                gui.getInput().setClipboardText(text.c_str());
             }
             if (editable && key == keycode::X) {
                 eraseSelected();
@@ -987,7 +987,7 @@ void TextBox::setCaret(size_t position) {
     rawTextCache.prepare(font, width);
     rawTextCache.update(input, multiline, label->isTextWrapping());
 
-    caretLastMove = Window::time();
+    caretLastMove = gui.getWindow().time();
 
     uint line = rawTextCache.getLineByTextIndex(caret);
     int offset = label->getLineYOffset(line) + getContentOffset().y;

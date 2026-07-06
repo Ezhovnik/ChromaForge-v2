@@ -66,12 +66,12 @@ void CameraControl::refreshRotation() {
     );
 }
 
-void CameraControl::updateMouse(PlayerInput& input) {
+void CameraControl::updateMouse(PlayerInput& input, int windowHeight) {
 	float sensitivity = input.zoom ? settings.sensitivity.get() / 4.0f : settings.sensitivity.get();
 	glm::vec3 rotation = player.getRotation();
 
     auto cam_delta = glm::degrees(
-        input.delta / static_cast<float>(Window::height) * sensitivity
+        input.delta / static_cast<float>(windowHeight) * sensitivity
     );
     rotation.x -= cam_delta.x;
     rotation.y -= cam_delta.y;
@@ -529,11 +529,13 @@ void PlayerController::update(float delta, const Input* inputEvents) {
     updatePlayer(delta);
 }
 
-void PlayerController::postUpdate(float deltaTime, const Input* input, bool pause) {
+void PlayerController::postUpdate(
+    float deltaTime, int windowHeight, const Input* input, bool pause
+) {
     if (!pause) updateFootsteps(deltaTime);
 
     if (!pause && input) {
-        camControl.updateMouse(this->input);
+        camControl.updateMouse(this->input, windowHeight);
     }
     camControl.refreshRotation();
     player.postUpdate();

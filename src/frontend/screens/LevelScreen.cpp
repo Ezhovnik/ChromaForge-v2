@@ -15,7 +15,7 @@
 #include <world/Level.h>
 #include <world/World.h>
 #include <window/Camera.h>
-#include <window/Events.h>
+#include <window/Window.h>
 #include <engine/Engine.h>
 #include <coders/imageio.h>
 #include <graphics/core/PostProcessing.h>
@@ -68,7 +68,7 @@ LevelScreen::LevelScreen(
     );
 
     frontend = std::make_unique<LevelFrontend>(
-        player, controller.get(), assets, settings
+        engine, player, controller.get(), settings
     );
 
     renderer = std::make_unique<WorldRenderer>(
@@ -163,9 +163,14 @@ void LevelScreen::saveWorldPreview() {
 
         Camera camera = *player->fpCamera;
         camera.setFov(glm::radians(70.0f));
-        Viewport viewport(previewSize * 1.5, previewSize);
-        DrawContext parent_ctx(nullptr, {Window::width, Window::height}, batch.get());
-        DrawContext ctx(&parent_ctx, viewport, batch.get());
+
+        DrawContext parent_ctx(nullptr, engine.getWindow(), batch.get());
+
+        DrawContext ctx(&parent_ctx, engine.getWindow(), batch.get());
+        ctx.setViewport(
+            {static_cast<uint>(previewSize * 1.5), static_cast<uint>(previewSize)}
+        );
+
         renderer->draw(ctx, camera, false, true, 0.0f, *postProcessing);
         auto image = postProcessing->toImage();
         image->flipY();
@@ -224,7 +229,12 @@ void LevelScreen::update(float deltaTime) {
         playerController->update(deltaTime, inputLocked ? nullptr : &engine.getInput());
     }
     controller->update(glm::min(deltaTime, 0.2f), paused);
-    playerController->postUpdate(deltaTime, inputLocked ? nullptr : &engine.getInput(), paused);
+    playerController->postUpdate(
+        deltaTime,
+        engine.getWindow().getSize().y,
+        inputLocked ? nullptr : &engine.getInput(),
+        paused
+    );
 
     hud->update(hudVisible);
 
@@ -237,8 +247,7 @@ void LevelScreen::update(float deltaTime) {
 void LevelScreen::draw(float deltaTime) {
     auto camera = playerController->getPlayer()->currentCamera;
 
-    Viewport viewport(Window::width, Window::height);
-    DrawContext ctx(nullptr, viewport, batch.get());
+    DrawContext ctx(nullptr, engine.getWindow(), batch.get());
 
     if (!hud->isPause()) {
         scripting::on_entities_render(engine.getTime().getDeltaTime());

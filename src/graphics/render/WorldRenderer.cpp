@@ -342,7 +342,7 @@ void WorldRenderer::renderHands(const Camera& camera, float deltaTime) {
         assets.get<model::Model>(def.modelName),
         nullptr
     );
-    Window::clearDepth();
+    display::clearDepth();
     setupWorldShader(entityShader, hudcam, engine.getSettings(), 0.0f);
     skybox->bind();
     modelBatch->render();
@@ -380,7 +380,7 @@ void WorldRenderer::draw(
     {
         DrawContext wctx = pctx.sub();
         postProcessing.use(wctx);
-        Window::clearDepth();
+        display::clearDepth();
         skybox->draw(pctx, camera, assets, worldInfo.daytime, clouds);
         {
             DrawContext ctx = wctx.sub();

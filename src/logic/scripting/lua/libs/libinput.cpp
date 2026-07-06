@@ -1,6 +1,5 @@
 #include <logic/scripting/lua/libs/libgui.h>
 #include <window/input.h>
-#include <window/Events.h>
 #include <frontend/screens/Screen.h>
 #include <engine/Engine.h>
 #include <frontend/hud.h>

@@ -10,7 +10,6 @@
 #define GLEW_STATIC
 
 #include <window/Window.h>
-#include <window/Events.h>
 #include <window/input.h>
 #include <assets/AssetsLoader.h>
 #include <core_content_defs.h>
@@ -102,23 +101,39 @@ void Engine::initialize(CoreParameters coreParameters) {
 
     // Инициализация окна GLFW
     if (!params.headless) {
-        if (!(input = Window::initialize(&settings.display))){
+        std::string title = "ChromaForge v" + ENGINE_VERSION_STRING;
+        if (ENGINE_DEBUG_BUILD) title += " [development build]";
+
+        auto [window, input] = Window::initialize(&settings.display, title);
+        if (!window || !input){
             LOG_CRITICAL("Failed to load Window");
-            Window::terminate();
             throw initialize_error("Failed to load Window");
         }
-        time.set(Window::time());
+        window->setFramerate(settings.display.framerate.get());
+
+        time.set(window->time());
         if (auto icon = load_icon()) {
             icon->flipY();
             if (icon->getFormat() != ImageFormat::rgba8888) icon.reset(toRGBA(icon.get()));
-            Window::setIcon(icon.get());
+            window->setIcon(icon.get());
         }
+        this->window = std::move(window);
+        this->input = std::move(input);
+
         loadControls();
 
         gui = std::make_unique<gui::GUI>(*this);
         if (ENGINE_DEBUG_BUILD) {
             menus::create_version_label(*gui);
         }
+        keepAlive(settings.display.fullscreen.observe(
+            [this](bool value) {
+                if (value != this->window->isFullscreen()) {
+                    this->window->toggleFullscreen();
+                }
+            },
+            true
+        ));
     }
 
     audio::initialize(!params.headless, settings.audio);
@@ -166,7 +181,7 @@ void Engine::close() {
     clearKeepedObjects();
     scripting::close();
     if (!params.headless) {
-        Window::terminate();
+        window.reset();
         LOG_INFO("Window closed");
     }
     LOG_INFO("Engine has finished successfuly");
@@ -244,7 +259,7 @@ void Engine::updateHotkeys() {
 }
 
 void Engine::saveScreenshot() {
-    auto image = Window::takeScreenshot();
+    auto image = window->takeScreenshot();
     image->flipY();
     io::path filename = paths.getNewScreenshotFile("png");
     imageio::write(filename.string(), image.get());
@@ -259,8 +274,8 @@ void Engine::onAssetsLoaded() {
 void Engine::renderFrame() {
     screen->draw(time.getDeltaTime());
 
-    Viewport viewport(Window::width, Window::height);
-    DrawContext ctx(nullptr, viewport, nullptr);
+    Viewport viewport(window->getSize());
+    DrawContext ctx(nullptr, *window, nullptr);
     gui->draw(ctx, *assets);
 }
 
@@ -282,18 +297,18 @@ void Engine::updateFrontend() {
     double delta = time.getDeltaTime();
     updateHotkeys();
     audio::update(delta);
-    gui->activate(delta, Viewport(Window::width, Window::height));
+    gui->activate(delta, Viewport(window->getSize()));
     screen->update(delta);
     gui->postActivate();
 }
 
 void Engine::nextFrame() {
-    Window::setFramerate(
-        Window::isIconified() && settings.display.limitFpsIconified.get()
+    window->setFramerate(
+        window->isIconified() && settings.display.limitFpsIconified.get()
             ? 20
             : settings.display.framerate.get()
     );
-    Window::swapBuffers();
+    window->swapBuffers();
     input->pollEvents();
 }
 
@@ -546,7 +561,7 @@ void Engine::onWorldClosed() {
 void Engine::quit() {
     quitSignal = true;
     if (!isHeadless()) {
-        Window::setShouldClose(true);
+        window->setShouldClose(true);
     }
 }
 

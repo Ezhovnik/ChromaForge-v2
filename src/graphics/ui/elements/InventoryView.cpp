@@ -6,7 +6,6 @@
 
 #include <graphics/render/BlocksPreview.h>
 #include <frontend/LevelFrontend.h>
-#include <window/Events.h>
 #include <window/input.h>
 #include <assets/Assets.h>
 #include <graphics/core/Atlas.h>

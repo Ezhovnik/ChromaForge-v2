@@ -39,7 +39,7 @@ public:
 		const CameraSettings& settings
 	);
 
-	void updateMouse(PlayerInput& input);
+	void updateMouse(PlayerInput& input, int windowHeight);
 	void update(PlayerInput input, float delta, const Chunks& chunks);
 	void refreshPosition();
     void refreshRotation();
@@ -78,7 +78,9 @@ public:
 	);
 
 	void update(float delta, const Input* inputEvents);
-	void postUpdate(float delta, const Input* inputEvents, bool pause);
+	void postUpdate(
+		float delta, int windowHeight, const Input* inputEvents, bool pause
+	);
 
 	Player* getPlayer();
 };

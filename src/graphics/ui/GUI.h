@@ -19,6 +19,7 @@ class Batch2D;
 struct CursorState;
 class Engine;
 class Input;
+class Window;
 
 /*
 Padding is element inner space, margin is outer
@@ -126,5 +127,6 @@ namespace gui {
         void toggleDebug();
         const Input& getInput() const;
         Input& getInput();
+        Window& getWindow();
     };
 }
