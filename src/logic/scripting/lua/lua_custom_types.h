@@ -18,29 +18,6 @@ namespace lua {
         virtual const std::string& getTypeName() const = 0;
     };
 
-    class LuaBytearray : public Userdata {
-    private:
-        std::vector<ubyte> buffer;
-    public:
-        LuaBytearray(size_t capacity);
-        LuaBytearray(std::vector<ubyte> buffer);
-        LuaBytearray(const ubyte* data, size_t size);
-        virtual ~LuaBytearray();
-
-        const std::string& getTypeName() const override {
-            return TYPENAME;
-        }
-
-        inline std::vector<ubyte>& data() {
-            return buffer;
-        }
-
-        static int createMetatable(lua::State*);
-
-        inline static std::string TYPENAME = "Bytearray";
-    };
-    static_assert(!std::is_abstract<LuaBytearray>());
-
     class LuaHeightmap : public Userdata {
     private:
         std::shared_ptr<Heightmap> map;
