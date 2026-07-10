@@ -616,3 +616,6 @@ function file.join(a, b)
     end
     return a .. "/" .. b
 end
+
+bit.compile = require "builtin:bitwise/compiler"
+bit.execute = require "builtin:bitwise/executor"
