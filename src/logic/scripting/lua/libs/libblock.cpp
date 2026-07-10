@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <logic/scripting/lua/libs/api_lua.h>
 
 #include <world/Level.h>
@@ -301,7 +302,7 @@ static int l_get_textures(lua::State* L) {
 
 static int l_get_model(lua::State* L) {
     if (auto def = require_block(L)) {
-        return lua::pushstring(L, to_string(def->model));
+        return lua::pushlstring(L, BlockModelMeta.getName(def->model));
     }
     return 0;
 }

@@ -5,6 +5,7 @@
 #include <optional>
 
 #include <typedefs.h>
+#include <util/EnumMetadata.h>
 
 enum class InterpolationType {
     Nearest,
@@ -12,7 +13,11 @@ enum class InterpolationType {
     Cubic
 };
 
-std::optional<InterpolationType> InterpolationType_from(std::string_view str);
+CHROMA_ENUM_METADATA(InterpolationType)
+    {"nearest", InterpolationType::Nearest},
+    {"linear", InterpolationType::Linear},
+    {"cubic", InterpolationType::Cubic},
+CHROMA_ENUM_END
 
 class Heightmap {
 private:

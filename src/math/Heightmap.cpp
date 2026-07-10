@@ -8,17 +8,6 @@
 
 #include <debug/Logger.h>
 
-std::optional<InterpolationType> InterpolationType_from(std::string_view str) {
-    if (str == "nearest") {
-        return InterpolationType::Nearest;
-    } else if (str == "linear") {
-        return InterpolationType::Linear;
-    } else if (str == "cubic") {
-        return InterpolationType::Cubic;
-    }
-    return std::nullopt;
-}
-
 static inline float sample_at(
     const float* buffer,
     uint width,

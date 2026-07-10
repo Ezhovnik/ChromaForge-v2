@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <content/ContentLoader.h>
 
 #include <string>
@@ -243,11 +244,11 @@ void ContentLoader::loadBlock(
         }
     }
 
-    std::string modelTypeName = to_string(def.model);
+    std::string modelTypeName = BlockModelMeta.getNameString(def.model);
     root.at("model").get(modelTypeName);
     root.at("model-name").get(def.modelName);
-    if (auto model = BlockModel_from(modelTypeName)) {
-        if (*model == BlockModel::Custom && def.customModelRaw == nullptr) {
+    if (BlockModelMeta.getItem(modelTypeName, def.model)) {
+        if (def.model == BlockModel::Custom && def.customModelRaw == nullptr) {
             if (root.has("model-primitives")) {
                 def.customModelRaw = root["model-primitives"];
             } else if (def.modelName.empty()) {
@@ -255,17 +256,14 @@ void ContentLoader::loadBlock(
                 throw std::runtime_error("Error occured while block " + name + " no 'model-primitives' or 'model-name' found");
             }
         }
-        def.model = *model;
     } else if (!modelTypeName.empty()) {
         LOG_WARN("{}: unknown block model — {}", name, modelTypeName);
         def.model = BlockModel::None;
     }
 
-    std::string cullingModeName = to_string(def.culling);
+    std::string cullingModeName = CullingModeMeta.getNameString(def.culling);
     root.at("culling").get(cullingModeName);
-    if (auto mode = CullingMode_from(cullingModeName)) {
-        def.culling = *mode;
-    } else {
+    if (!CullingModeMeta.getItem(cullingModeName, def.culling)) {
         LOG_WARN("Block {}: unknown block culling mode — {}", name, cullingModeName);
     }
 
@@ -505,9 +503,7 @@ void ContentLoader::loadEntity(
 
     std::string bodyTypeName;
     root.at("body-type").get(bodyTypeName);
-    if (auto bodyType = BodyType_from(bodyTypeName)) {
-        def.bodyType = *bodyType;
-    }
+    BodyTypeMeta.getItem(bodyTypeName, def.bodyType);
 
     root.at("skeleton-name").get(def.skeletonName);
     root.at("blocking").get(def.blocking);
@@ -720,8 +716,9 @@ void ContentLoader::load() {
     if (io::exists(resourcesFile)) {
         auto resRoot = io::read_json(resourcesFile);
         for (const auto& [key, arr] : resRoot.asObject()) {
-            if (auto resType = ResourceType_from(key)) {
-                loadResources(*resType, arr);
+            ResourceType type;
+            if (ResourceTypeMeta.getItem(key, type)) {
+                loadResources(type, arr);
             } else {
                 LOG_WARN("Unknown resource type: {}", key);
             }
@@ -732,8 +729,9 @@ void ContentLoader::load() {
     if (io::exists(aliasesFile)) {
         auto resRoot = io::read_json(aliasesFile);
         for (const auto& [key, arr] : resRoot.asObject()) {
-            if (auto resType = ResourceType_from(key)) {
-                loadResourceAliases(*resType, arr);
+            ResourceType type;
+            if (ResourceTypeMeta.getItem(key, type)) {
+                loadResourceAliases(type, arr);
             } else {
                 LOG_WARN("Unknown resource type: {}", key);
             }

@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <objects/Entities.h>
 
 #include <sstream>
@@ -204,9 +205,7 @@ void Entities::loadEntity(const dv::value& map, Entt_Entity entity) {
         dv::get_vec(bodymap, "vel", body.hitbox.velocity);
         std::string bodyTypeName;
         map.at("type").get(bodyTypeName);
-        if (auto bodyType = BodyType_from(bodyTypeName)) {
-            body.hitbox.type = *bodyType;
-        }
+        BodyTypeMeta.getItem(bodyTypeName, body.hitbox.type);
         bodymap["crouch"].asBoolean(body.hitbox.crouching);
         bodymap["damping"].asNumber(body.hitbox.linearDamping);
     }
@@ -478,7 +477,7 @@ dv::value Entities::serialize(const Entt_Entity& entity) {
         if (def.save.body.settings) {
             bodymap["damping"] = rigidbody.hitbox.linearDamping;
             if (hitbox.type != def.bodyType) {
-                bodymap["type"] = to_string(hitbox.type);
+                bodymap["type"] = BodyTypeMeta.getNameString(hitbox.type);
             }
             if (hitbox.crouching) {
                 bodymap["crouch"] = hitbox.crouching;

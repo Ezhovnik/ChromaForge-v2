@@ -3,6 +3,8 @@
 #include <string>
 #include <optional>
 
+#include <util/EnumMetadata.h>
+
 enum class DrawPrimitive {
     Point = 0,
     Line,
@@ -20,20 +22,30 @@ enum class CursorShape {
     Text,
     Crosshair,
     Pointer,
-    EwResize,
-    NsResize,
+    EWResize,
+    NSResize,
 
     // GLFW 3.4+ cursor shapes
-    NwseResize,
-    NeswResize,
+    NWSEResize,
+    NESWResize,
     AllResize,
     NotAllowed,
 
     Last=NotAllowed
 };
 
-std::optional<CursorShape> CursorShape_from(std::string_view name);
-std::string to_string(CursorShape shape);
+CHROMA_ENUM_METADATA(CursorShape)
+    {"arrow", CursorShape::Arrow},
+    {"text", CursorShape::Text},
+    {"crosshair", CursorShape::Crosshair},
+    {"pointer", CursorShape::Pointer},
+    {"ew-resize", CursorShape::EWResize},
+    {"ns-resize", CursorShape::NSResize},
+    {"nwse-resize", CursorShape::NWSEResize},
+    {"nesw-resize", CursorShape::NESWResize},
+    {"all-resize", CursorShape::AllResize},
+    {"not-allowed", CursorShape::NotAllowed},
+CHROMA_ENUM_END
 
 class Flushable {
 public:

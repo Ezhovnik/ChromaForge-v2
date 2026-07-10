@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <optional>
 #include <array>
 
 #include <math/AABB.h>
@@ -10,6 +9,7 @@
 #include <math/UVRegion.h>
 #include <core_content_defs.h>
 #include <data/dv.h>
+#include <util/EnumMetadata.h>
 
 struct ParticlesPreset;
 namespace data {
@@ -28,8 +28,13 @@ enum class BlockModel {
     Custom
 };
 
-std::string to_string(BlockModel model);
-std::optional<BlockModel> BlockModel_from(std::string_view str);
+CHROMA_ENUM_METADATA(BlockModel)
+    {"none", BlockModel::None},
+    {"cube", BlockModel::Cube},
+    {"X", BlockModel::X},
+    {"aabb", BlockModel::AABB},
+    {"custom", BlockModel::Custom},
+CHROMA_ENUM_END
 
 enum class CullingMode {
     Default,
@@ -37,8 +42,11 @@ enum class CullingMode {
     Disabled,
 };
 
-std::string to_string(CullingMode mode);
-std::optional<CullingMode> CullingMode_from(std::string_view str);
+CHROMA_ENUM_METADATA(CullingMode)
+    {"default", CullingMode::Default},
+    {"optional", CullingMode::Optional},
+    {"disabled", CullingMode::Disabled},
+CHROMA_ENUM_END
 
 inline constexpr int FACE_MX = 0;
 inline constexpr int FACE_PX = 1;

@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <graphics/ui/gui_xml.h>
 
 #include <stdexcept>
@@ -140,8 +141,9 @@ static void read_uinode(
     }
     if (element.has("tooltip-delay")) node.setTooltipDelay(element.attr("tooltip-delay").asFloat());
     if (element.has("cursor")) {
-        if (auto cursor = CursorShape_from(element.attr("cursor").getText())) {
-            node.setCursor(*cursor);
+        CursorShape cursor;
+        if (CursorShapeMeta.getItem(element.attr("cursor").getText(), cursor)) {
+            node.setCursor(cursor);
         }
     }
     if (auto onclick = create_action(reader, element, "onclick")) node.listenAction(onclick);

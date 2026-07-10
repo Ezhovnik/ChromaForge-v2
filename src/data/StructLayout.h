@@ -4,7 +4,6 @@
 #include <string>
 #include <unordered_map>
 #include <stdexcept>
-#include <optional>
 
 #include <typedefs.h>
 #include <interfaces/Serializable.h>

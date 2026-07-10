@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 
 #include <data/dv_fwd.h>
+#include <util/EnumMetadata.h>
 
 class ShaderProgram;
 
@@ -20,6 +21,14 @@ public:
             Vec3,
             Vec4
         };
+
+        CHROMA_ENUM_METADATA(Type)
+            {"float", Type::Float},
+            {"vec2", Type::Vec2},
+            {"vec3", Type::Vec3},
+            {"vec4", Type::Vec4},
+        CHROMA_ENUM_END
+
         using Value = std::variant<float, glm::vec2, glm::vec3, glm::vec4>;
 
         Type type;

@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <logic/scripting/lua/libs/libgui.h>
 
 #include <engine/Engine.h>
@@ -427,7 +428,7 @@ static int p_set_interval(gui::UINode* node, lua::State* L) {
 }
 
 static int p_get_cursor(gui::UINode* node, lua::State* L) {
-    return lua::pushstring(L, to_string(node->getCursor()));
+    return lua::pushlstring(L, CursorShapeMeta.getName(node->getCursor()));
 }
 
 static int p_get_scroll(gui::UINode* node, lua::State* L) {
@@ -690,9 +691,9 @@ static void p_set_tooltip_delay(gui::UINode* node, lua::State* L, int idx) {
 }
 
 static void p_set_cursor(gui::UINode* node, lua::State* L, int idx) {
-    if (auto cursor = CursorShape_from(lua::require_string(L, idx))) {
-        node->setCursor(*cursor);
-    }
+    auto cursor = CursorShape::Arrow;
+    CursorShapeMeta.getItem(lua::require_string(L, idx), cursor);
+    node->setCursor(cursor);
 }
 
 static int p_set_scroll(gui::UINode* node, lua::State* L, int idx) {

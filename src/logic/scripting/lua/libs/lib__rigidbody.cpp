@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <logic/scripting/lua/libs/libentity.h>
 
 #include <util/stringutil.h>
@@ -95,16 +96,18 @@ static int l_set_crouching(lua::State* L) {
 
 static int l_get_body_type(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {
-        return lua::pushstring(L, to_string(entity->getRigidbody().hitbox.type));
+        return lua::pushlstring(
+            L, BodyTypeMeta.getName(entity->getRigidbody().hitbox.type)
+        );
     }
     return 0;
 }
 
 static int l_set_body_type(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {
-        if (auto type = BodyType_from(lua::tostring(L, 2))) {
-            entity->getRigidbody().hitbox.type = *type;
-        } else {
+        if (!BodyTypeMeta.getItem(
+            lua::tostring(L, 2), entity->getRigidbody().hitbox.type
+        )) {
             throw std::runtime_error(
                 "Unknown body type " + util::quote(lua::tostring(L, 2))
             );

@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <coders/GLSLExtension.h>
 
 #include <sstream>
@@ -90,22 +91,6 @@ inline void parsing_warning(
 // Вставляет директиву #line с указанным номером строки для сохранения корректной информации о строках в сообщениях компилятора
 inline void source_line(std::stringstream& ss, uint linenum) {
     ss << "#line " << linenum << "\n";
-}
-
-static std::optional<PostEffect::Param::Type> param_type_from(
-    const std::string& name
-) {
-    static const std::unordered_map<std::string, PostEffect::Param::Type> typeNames {
-        {"float", PostEffect::Param::Type::Float},
-        {"vec2", PostEffect::Param::Type::Vec2},
-        {"vec3", PostEffect::Param::Type::Vec3},
-        {"vec4", PostEffect::Param::Type::Vec4},
-    };
-    const auto& found = typeNames.find(name);
-    if (found == typeNames.end()) {
-        return std::nullopt;
-    }
-    return found->second;
 }
 
 static PostEffect::Param::Value default_value_for(PostEffect::Param::Type type) {
@@ -214,8 +199,8 @@ public:
     bool processParamDirective() {
         skipWhitespace(false);
         auto typeName = parseName();
-        auto type = param_type_from(typeName);
-        if (!type.has_value()) {
+        PostEffect::Param::Type type;
+        if (!PostEffect::Param::TypeMeta.getItem(typeName, type)) {
             LOG_ERROR("Unsupported param type {}", util::quote(typeName));
             throw error("Unsupported param type " + util::quote(typeName));
         }
@@ -227,15 +212,15 @@ public:
         }
         skipWhitespace(false);
         ss << "uniform " << typeName << " " << paramName << ";\n";
-        auto defValue = default_value_for(type.value());
+        auto defValue = default_value_for(type);
         if (peekNoJump() == '=') {
             skip(1);
             skipWhitespace(false);
-            defValue = parseDefaultValue(type.value(), typeName);
+            defValue = parseDefaultValue(type, typeName);
         }
         skipLine();
 
-        params[paramName] = PostEffect::Param(type.value(), std::move(defValue));
+        params[paramName] = PostEffect::Param(type, std::move(defValue));
         return false;
     }
 

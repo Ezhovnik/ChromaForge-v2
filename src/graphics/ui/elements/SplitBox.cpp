@@ -11,8 +11,8 @@ SplitBox::SplitBox(
 {
     setCursor(
         orientation == Orientation::Vertical 
-        ? CursorShape::NsResize
-        : CursorShape::EwResize
+        ? CursorShape::NSResize
+        : CursorShape::EWResize
     );
 }
 

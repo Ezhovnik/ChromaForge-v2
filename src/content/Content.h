@@ -6,7 +6,6 @@
 #include <set>
 #include <stdexcept>
 #include <memory>
-#include <optional>
 
 #include <content/content_fwd.h>
 #include <data/dv.h>
@@ -22,18 +21,6 @@ struct BlockMaterial;
 struct Generator;
 namespace rigging {
     class SkeletonConfig;
-}
-
-constexpr const char* contenttype_name(ContentType type) {
-    switch (type) {
-        case ContentType::None: return "none";
-        case ContentType::Block: return "block";
-        case ContentType::Item: return "item";
-        case ContentType::Entity: return "entity";
-        case ContentType::Generator: return "generator";
-        default:
-            return "unknown";
-    }
 }
 
 class namereuse_error: public std::runtime_error {
@@ -170,23 +157,6 @@ public:
         return names.size();
     }
 };
-
-constexpr const char* to_string(ResourceType type) {
-    switch (type) {
-        case ResourceType::Camera: return "camera";
-        case ResourceType::PostEffectSlot: return "post-effect-slot";
-        default: return "unknown";
-    }
-}
-
-inline std::optional<ResourceType> ResourceType_from(std::string_view str) {
-    if (str == "camera") {
-        return ResourceType::Camera;
-    } else if (str == "post-effect-slot") {
-        return ResourceType::PostEffectSlot;
-    }
-    return std::nullopt;
-}
 
 using ResourceIndicesSet = ResourceIndices[RESOURCE_TYPES_COUNT];
 
