@@ -173,8 +173,8 @@ void GUI::activateFocused() {
     }
 }
 
-void GUI::activate(float deltaTime, const Viewport& vp) {
-    container->setSize(vp.size());
+void GUI::activate(float deltaTime, const glm::uvec2& vp) {
+    container->setSize(vp);
     container->activate(deltaTime);
     auto prevfocus = focus;
 
@@ -206,7 +206,6 @@ void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
     auto ctx = parent_context.sub(batch2D.get());
 
     auto& viewport = ctx.getViewport();
-    glm::vec2 wsize = viewport.size();
 
     auto& page = menu->getCurrent();
     if (page.panel) {
@@ -217,9 +216,9 @@ void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
         }
     }
 
-    menu->setPos((wsize - menu->getSize()) / 2.0f);
-    uicamera->setFov(wsize.y);
-    uicamera->setAspectRatio(viewport.getRatio());
+    menu->setPos((glm::vec2(viewport) - menu->getSize()) / 2.0f);
+    uicamera->setFov(viewport.y);
+    uicamera->setAspectRatio(viewport.x / static_cast<float>(viewport.y));
 
 	ShaderProgram* uishader = assets.get<ShaderProgram>("ui");
 	uishader->use();

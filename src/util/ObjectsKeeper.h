@@ -3,13 +3,13 @@
 #include <vector>
 #include <memory>
 
-#include <util/observer_handler.h>
+#include <util/ObserverHandler.h>
 
 namespace util {
     class ObjectsKeeper {
     private:
         std::vector<std::shared_ptr<void>> ptrs;
-        std::vector<observer_handler> handlers;
+        std::vector<ObserverHandler> handlers;
     public:
         ObjectsKeeper() = default;
 
@@ -27,7 +27,7 @@ namespace util {
             ptrs.push_back(std::move(ptr));
         }
 
-        virtual void keepAlive(observer_handler&& ptr) {
+        virtual void keepAlive(ObserverHandler&& ptr) {
             handlers.emplace_back(std::move(ptr));
         }
 

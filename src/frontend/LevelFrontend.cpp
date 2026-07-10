@@ -95,14 +95,6 @@ Level& LevelFrontend::getLevel() {
     return level;
 }
 
-const Level& LevelFrontend::getLevel() const {
-    return level;
-}
-
-const Assets& LevelFrontend::getAssets() const {
-    return assets;
-}
-
 const ContentGfxCache& LevelFrontend::getContentGfxCache() const {
     return *contentCache;
 }

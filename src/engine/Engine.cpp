@@ -16,7 +16,6 @@
 #include <debug/Logger.h>
 #include <graphics/ui/GUI.h>
 #include <graphics/core/ShaderProgram.h>
-#include <graphics/core/Viewport.h>
 #include <graphics/core/ImageData.h>
 #include <coders/GLSLExtension.h>
 #include <coders/imageio.h>
@@ -142,6 +141,18 @@ void Engine::initialize(CoreParameters coreParameters) {
     content = std::make_unique<ContentControl>(paths, *input, [this]() {
         langs::setup(langs::get_current(), paths.resPaths.collectRoots());
         if (!isHeadless()) {
+            for (auto& pack : content->getAllContentPacks()) {
+                auto configFolder = pack.folder / "config";
+                auto bindsFile = configFolder / "bindings.toml";
+                if (io::is_regular_file(bindsFile)) {
+                    input->getBindings().read(
+                        toml::parse(
+                            bindsFile.string(), io::read_string(bindsFile)
+                        ),
+                        BindType::Bind
+                    );
+                }
+            }
             loadAssets();
         }
     });
@@ -235,7 +246,6 @@ void Engine::saveScreenshot() {
 void Engine::renderFrame() {
     screen->draw(time.getDeltaTime());
 
-    Viewport viewport(window->getSize());
     DrawContext ctx(nullptr, *window, nullptr);
     gui->draw(ctx, *assets);
 }
@@ -258,7 +268,7 @@ void Engine::updateFrontend() {
     double delta = time.getDeltaTime();
     updateHotkeys();
     audio::update(delta);
-    gui->activate(delta, Viewport(window->getSize()));
+    gui->activate(delta, window->getSize());
     screen->update(delta);
     gui->postActivate();
 }

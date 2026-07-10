@@ -14,7 +14,6 @@
 class DrawContext;
 class Assets;
 class Camera;
-class Viewport;
 class Batch2D;
 struct CursorState;
 class Engine;
@@ -102,7 +101,7 @@ namespace gui {
         bool isFocusCaught() const;
         void setFocus(std::shared_ptr<UINode> node);
 
-        void activate(float deltaTime, const Viewport& viewport);
+        void activate(float deltaTime, const glm::uvec2& viewport);
         void postActivate();
 
         void draw(const DrawContext& parent_context, const Assets& assets);

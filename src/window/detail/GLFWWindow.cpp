@@ -16,18 +16,16 @@
 #include <util/platform.h>
 #include <window/input.h>
 
-static std::unordered_set<std::string> extensions_cache;
+static std::unordered_set<std::string> supported_gl_extensions;
 
-static void init_gl_extensions_cache() {
-    if (!extensions_cache.empty()) return;
-
+static void init_gl_extensions_list() {
     GLint numExtensions = 0;
     glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
 
     for (GLint i = 0; i < numExtensions; ++i) {
         const char *ext = reinterpret_cast<const char *>(glGetStringi(GL_EXTENSIONS, i));
         if (ext) {
-            extensions_cache.insert(ext);
+            supported_gl_extensions.insert(ext);
         }
     }
 }
@@ -36,8 +34,7 @@ static bool is_gl_extension_supported(const char *extension) {
     if (!extension || !*extension) {
         return false;
     }
-    init_gl_extensions_cache();
-    return extensions_cache.find(extension) != extensions_cache.end();
+    return supported_gl_extensions.find(extension) != supported_gl_extensions.end();
 }
 
 static const char* gl_error_name(int error) {
@@ -307,7 +304,7 @@ public:
         return bindings;
     }
 
-    observer_handler addKeyCallback(keycode key, KeyCallback callback) override {
+    ObserverHandler addKeyCallback(keycode key, KeyCallback callback) override {
         return keyCallbacks[key].add(std::move(callback));
     }
 
@@ -347,6 +344,7 @@ public:
         for (int i = 0; i <= static_cast<int>(CursorShape::Last); ++i) {
             glfwDestroyCursor(standard_cursors[i]);
         }
+        glfwDestroyWindow(window);
         glfwTerminate();
     }
 
@@ -399,14 +397,14 @@ public:
 
     void toggleFullscreen() override {
         fullscreen = !fullscreen;
-    
+
         GLFWmonitor* monitor = glfwGetPrimaryMonitor();
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    
+
         if (input.isCursorLocked()){
             input.toggleCursor();
         }
-    
+
         if (fullscreen) {
             glfwGetWindowPos(window, &posX, &posY);
             glfwSetWindowMonitor(
@@ -423,7 +421,7 @@ public:
                 GLFW_DONT_CARE
             );
         }
-    
+
         double xPos, yPos;
         glfwGetCursorPos(window, &xPos, &yPos);
         input.setCursorPosition(xPos, yPos);
@@ -618,6 +616,10 @@ std::tuple<
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+
+#if GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 4
+    glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GL_FALSE);
+#endif
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -649,6 +651,7 @@ std::tuple<
         }
     }
 
+    init_gl_extensions_list();
     if (is_gl_extension_supported("GL_KHR_debug")) {
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(gl_message_callback, nullptr);

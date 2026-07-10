@@ -1,7 +1,9 @@
 #pragma once
 
+#include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
+
 #include <typedefs.h>
-#include <graphics/core/Viewport.h>
 #include <graphics/core/commons.h>
 
 class Batch2D;
@@ -12,7 +14,7 @@ class DrawContext {
 private:
     Window& window;
     const DrawContext* parent;
-    Viewport viewport;
+    glm::uvec2 viewport;
     Batch2D* g2d;
     Flushable* flushable = nullptr;
     Framebuffer* fbo = nullptr;
@@ -34,10 +36,10 @@ public:
     ~DrawContext();
 
     Batch2D* getBatch2D() const;
-    const Viewport& getViewport() const;
+    const glm::uvec2& getViewport() const;
     DrawContext sub(Flushable* flushable=nullptr) const;
 
-    void setViewport(const Viewport& viewport);
+    void setViewport(const glm::uvec2& viewport);
     void setFramebuffer(Framebuffer* fbo);
     void setDepthMask(bool flag);
     void setDepthTest(bool flag);

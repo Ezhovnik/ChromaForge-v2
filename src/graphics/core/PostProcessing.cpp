@@ -7,7 +7,6 @@
 #include <graphics/core/Texture.h>
 #include <graphics/core/Framebuffer.h>
 #include <debug/Logger.h>
-#include <graphics/core/Viewport.h>
 #include <graphics/core/DrawContext.h>
 
 PostProcessing::PostProcessing() {
@@ -24,9 +23,9 @@ PostProcessing::~PostProcessing() = default;
 void PostProcessing::use(DrawContext& context) {
     const auto& vp = context.getViewport();
     if (fbo) {
-        fbo->resize(vp.getWidth(), vp.getHeight());
+        fbo->resize(vp.x, vp.y);
     } else {
-        fbo = std::make_unique<Framebuffer>(vp.getWidth(), vp.getHeight());
+        fbo = std::make_unique<Framebuffer>(vp.x, vp.y);
     }
     context.setFramebuffer(fbo.get());
 }
@@ -39,7 +38,7 @@ void PostProcessing::render(const DrawContext& context, ShaderProgram* screenSha
 
     const auto& viewport = context.getViewport();
     screenShader->use();
-    screenShader->uniform2i("u_screenSize", viewport.size());
+    screenShader->uniform2i("u_screenSize", viewport);
     fbo->getTexture()->bind();
     quadMesh->draw();
 }

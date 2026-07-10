@@ -2,7 +2,6 @@
 
 #include <io/io.h>
 #include <io/engine_paths.h>
-#include <coders/toml.h>
 #include <content/Content.h>
 #include <content/ContentPack.h>
 #include <content/ContentBuilder.h>
@@ -10,18 +9,10 @@
 #include <content/PacksManager.h>
 #include <objects/rigging.h>
 #include <logic/scripting/scripting.h>
-#include <window/input.h>
 #include <core_content_defs.h>
 
 static void load_configs(Input& input, const io::path& root) {
     auto configFolder = root / "config";
-    auto bindsFile = configFolder / "bindings.toml";
-    if (io::is_regular_file(bindsFile)) {
-        input.getBindings().read(
-            toml::parse(bindsFile.string(), io::read_string(bindsFile)),
-            BindType::Bind
-        );
-    }
 }
 
 ContentControl::ContentControl(

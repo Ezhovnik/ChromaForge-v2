@@ -8,7 +8,7 @@
 #include <io/io.h>
 #include <graphics/ui/elements/Container.h>
 #include <coders/toml.h>
-#include <util/observer_handler.h>
+#include <util/ObserverHandler.h>
 #include <content/ContentControl.h>
 
 namespace scripting {
@@ -31,7 +31,7 @@ static int l_add_callback(lua::State* L) {
 
     lua::pushvalue(L, 2);
     auto actual_callback = lua::create_simple_handler(L);
-    observer_handler handler;
+    ObserverHandler handler;
 
     auto& gui = scripting::engine->getGUI();
     auto& input = scripting::engine->getInput();

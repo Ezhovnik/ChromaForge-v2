@@ -26,8 +26,6 @@ public:
     ~LevelFrontend();
 
     Level& getLevel();
-    const Level& getLevel() const;
-    const Assets& getAssets() const;
     const ContentGfxCache& getContentGfxCache() const;
     ContentGfxCache& getContentGfxCache();
     LevelController* getController() const;

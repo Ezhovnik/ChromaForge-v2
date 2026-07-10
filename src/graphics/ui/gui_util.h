@@ -3,11 +3,15 @@
 #include <string>
 #include <memory>
 
-#include <graphics/ui/GUI.h>
 #include <delegates.h>
 #include <typedefs.h>
 
 class Engine;
+
+namespace gui {
+    class GUI;
+    class UINode;
+}
 
 namespace guiutil {
     void alert(

@@ -94,11 +94,9 @@ void Skybox::draw(
     float daytime,
     float fog
 ) {
-    const Viewport& viewport = pctx.getViewport();
-    int width = viewport.getWidth();
-	int height = viewport.getHeight();
+    const glm::uvec2& viewport = pctx.getViewport();
 
-    drawBackground(camera, assets, width, height);
+    drawBackground(camera, assets, viewport.x, viewport.y);
 
     DrawContext ctx = pctx.sub();
     ctx.setBlendMode(BlendMode::Addition);
@@ -137,7 +135,7 @@ void Skybox::refresh(const DrawContext& parent_context, float t, float mie, uint
     context.setDepthMask(false);
     context.setDepthTest(false);
     context.setFramebuffer(fbo.get());
-    context.setViewport(Viewport(size, size));
+    context.setViewport({size, size});
 
     auto cubemap = dynamic_cast<Cubemap*>(fbo->getTexture());
     assert(cubemap != nullptr);

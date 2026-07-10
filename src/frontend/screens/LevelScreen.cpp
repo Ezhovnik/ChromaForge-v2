@@ -4,7 +4,6 @@
 #include <frontend/LevelFrontend.h>
 #include <audio/audio.h>
 #include <graphics/core/DrawContext.h>
-#include <graphics/core/Viewport.h>
 #include <graphics/ui/GUI.h>
 #include <graphics/ui/elements/Menu.h>
 #include <graphics/render/WorldRenderer.h>

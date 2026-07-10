@@ -306,12 +306,12 @@ public:
 
     virtual const Bindings& getBindings() const = 0;
 
-    virtual observer_handler addKeyCallback(keycode key, KeyCallback callback) = 0;
+    virtual ObserverHandler addKeyCallback(keycode key, KeyCallback callback) = 0;
 
     virtual const std::vector<keycode>& getPressedKeys() const = 0;
     virtual const std::vector<uint>& getCodepoints() const = 0;
 
-    observer_handler addCallback(const std::string& name, KeyCallback callback) {
+    ObserverHandler addCallback(const std::string& name, KeyCallback callback) {
         return getBindings().require(name).onactived.add(callback);
     }
 };

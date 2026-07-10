@@ -5,7 +5,7 @@
 
 #include <glm/glm.hpp>
 
-#include <graphics/core/DrawContext.h>
+#include <typedefs.h>
 #include <util/ObjectsKeeper.h>
 #include <data/dv.h>
 
@@ -19,6 +19,7 @@ class UIDocument;
 class Inventory;
 class ImageData;
 class Input;
+class DrawContext;
 
 namespace gui {
     class GUI;
@@ -111,7 +112,7 @@ private:
     std::shared_ptr<gui::InventoryView> createHotbar();
 
     void processInput(bool visible);
-    void updateElementsPosition(const Viewport& viewport);
+    void updateElementsPosition(const glm::uvec2& viewport);
     void updateHotbarControl();
     void cleanup();
 

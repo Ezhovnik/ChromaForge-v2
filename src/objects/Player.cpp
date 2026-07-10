@@ -80,6 +80,18 @@ void Player::updateEntity() {
         LOG_WARN("Player entity despawned or deleted; will be respawned");
         eid = ENTITY_AUTO;
     }
+
+    auto hitbox = getHitbox();
+    if (hitbox == nullptr) {
+        return;
+    }
+    hitbox->linearDamping = PlayerConsts::GROUND_DAMPING;
+    hitbox->verticalDamping = flight;
+    hitbox->gravityScale = flight ? 0.0f : 1.0f;
+    if (flight || !hitbox->grounded) {
+        hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
+    }
+    hitbox->type = noclip ? BodyType::Kinematic : BodyType::Dynamic;
 }
 
 Hitbox* Player::getHitbox() {
@@ -131,11 +143,7 @@ void Player::updateInput(PlayerInput& input, float delta) {
 		hitbox->velocity += dir * speed * delta * 9.0f;
 	}
 
-	hitbox->linearDamping = PlayerConsts::GROUND_DAMPING;
-    hitbox->verticalDamping = flight;
-	hitbox->gravityScale = flight ? 0.0f : 1.0f;
     if (flight) {
-        hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
         if (input.jump) {
             hitbox->velocity.y += speed * delta * 9;
         }
@@ -143,14 +151,10 @@ void Player::updateInput(PlayerInput& input, float delta) {
             hitbox->velocity.y -= speed * delta * 9;
         }
     }
-    if (!hitbox->grounded) {
-        hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
-	}
+
 	if (input.jump && hitbox->grounded) {
 		hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
 	}
-
-	hitbox->type = noclip ? BodyType::Kinematic : BodyType::Dynamic;
 }
 
 void Player::postUpdate() {

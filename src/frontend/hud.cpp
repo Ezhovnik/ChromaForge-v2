@@ -363,9 +363,7 @@ void Hud::update(bool hudVisible) {
 }
 
 void Hud::draw(const DrawContext& context) {
-    const Viewport& viewport = context.getViewport();
-	const uint width = viewport.getWidth();
-	const uint height = viewport.getHeight();
+    const auto& viewport = context.getViewport();
 
     bool is_menu_open = menu.hasOpenPage();
     darkOverlay->setVisible(is_menu_open);
@@ -373,8 +371,8 @@ void Hud::draw(const DrawContext& context) {
 
     updateElementsPosition(viewport);
 
-    uicamera->setFov(height);
-    uicamera->setAspectRatio(viewport.getRatio());
+    uicamera->setFov(viewport.y);
+    uicamera->setAspectRatio(viewport.x / static_cast<float>(viewport.y));
 
 	auto batch = context.getBatch2D();
 	batch->begin();
@@ -390,26 +388,26 @@ void Hud::draw(const DrawContext& context) {
         batch->texture(texture);
         int chsizex = texture != nullptr ? texture->getWidth() : 16;
         int chsizey = texture != nullptr ? texture->getHeight(): 16;
-        batch->rect((width - chsizex) / 2, (height - chsizey) / 2, chsizex, chsizey, 0, 0, 1, 1, 1, 1, 1, 1);
+        batch->rect(
+            (viewport.x - chsizex) / 2, (viewport.y - chsizey) / 2, 
+            chsizex, chsizey, 0, 0, 1, 1, 1, 1, 1, 1
+        );
 	}
 }
 
-void Hud::updateElementsPosition(const Viewport& viewport) {
-    const uint width = viewport.getWidth();
-    const uint height = viewport.getHeight();
-
+void Hud::updateElementsPosition(const glm::uvec2& viewport) {
 	if (inventoryOpen) {
 		float caWidth = (inventoryView && showContentPanel) ? contentAccess->getSize().x : 0.0f;
-        contentAccessPanel->setPos(glm::vec2(width-caWidth, 0));
+        contentAccessPanel->setPos(glm::vec2(viewport.x - caWidth, 0));
 
 		glm::vec2 invSize = inventoryView ? inventoryView->getSize() : glm::vec2();
         if (secondUI == nullptr && inventoryView) {
             inventoryView->setPos(glm::vec2(
                 glm::min(
-                    width / 2 - invSize.x / 2,
-                    width - caWidth - 10 - invSize.x
+                    viewport.x / 2 - invSize.x / 2,
+                    viewport.x - caWidth - 10 - invSize.x
                 ),
-                height / 2 - invSize.y / 2
+                viewport.y / 2 - invSize.y / 2
             ));
         } else {
             glm::vec2 secondUISize = secondUI->getSize();
@@ -419,19 +417,19 @@ void Hud::updateElementsPosition(const Viewport& viewport) {
             if (inventoryView) {
                 inventoryView->setPos(glm::vec2(
                     glm::min(
-                        width / 2 - invwidth / 2,
-                        width - caWidth - 10 - invwidth
+                        viewport.x / 2 - invwidth / 2,
+                        viewport.x - caWidth - 10 - invwidth
                     ),
-                    height / 2 + totalHeight / 2 - invSize.y
+                    viewport.y / 2 + totalHeight / 2 - invSize.y
                 ));
             }
             if (secondUI->getPositionFunc() == nullptr) {
                 secondUI->setPos(glm::vec2(
                     glm::min(
-                        width / 2.0f - invwidth / 2.0f,
-                        width - caWidth - (inventoryView ? 10 : 0) - invwidth
+                        viewport.x / 2.f - invwidth / 2.f,
+                        viewport.x - caWidth - (inventoryView ? 10 : 0) - invwidth
                     ),
-                    height / 2.0f - totalHeight / 2.0f
+                    viewport.y / 2.0f - totalHeight / 2.0f
                 ));
             }
         }
@@ -439,7 +437,7 @@ void Hud::updateElementsPosition(const Viewport& viewport) {
 
 	if (exchangeSlot != nullptr) exchangeSlot->setPos(input.getCursor().pos);
 
-	hotbarView->setPos(glm::vec2(width / 2, height - 65));
+	hotbarView->setPos(glm::vec2(viewport.x / 2, viewport.y - 65));
     hotbarView->setSelected(player.getChosenSlot());
 }
 

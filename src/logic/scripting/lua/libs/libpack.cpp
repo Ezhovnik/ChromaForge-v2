@@ -18,6 +18,7 @@
 #include <frontend/locale.h>
 #include <content/ContentControl.h>
 #include <content/PacksManager.h>
+#include <graphics/ui/GUI.h>
 
 static int l_pack_get_folder(lua::State* L) {
     std::string packName = lua::tostring(L, 1);

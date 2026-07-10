@@ -30,6 +30,7 @@
 #include <coders/json.h>
 #include <content/ContentControl.h>
 #include <content/PacksManager.h>
+#include <graphics/ui/GUI.h>
 
 EngineController::EngineController(Engine& engine) : engine(engine) {
 }
@@ -47,7 +48,7 @@ void EngineController::deleteWorld(const std::string& name) {
         deletion();
         return;
     }
-    
+
     guiutil::confirm(
         engine,
         langs::get(L"delete-confirm", L"world") + L" (" + util::str2wstr_utf8(folder.string()) + L")",
@@ -78,62 +79,67 @@ std::shared_ptr<Task> create_converter(
     );
 }
 
-static void show_convert_request(
-    Engine& engine, 
-    const Content* content, 
-    const std::shared_ptr<ContentReport>& report,
-    const std::shared_ptr<WorldFiles>& worldFiles,
-    const runnable& postRunnable
-) {
-    auto on_confirm = [&engine, worldFiles, content, report, postRunnable]() {
-        auto converter = create_converter(engine, worldFiles, content, report, postRunnable);
-        menus::show_process_panel(engine, converter, L"Converting world...");
-    };
+struct ConfirmRequest {
+    bool memo;
+    std::wstring message;
+    std::wstring text;
+};
 
-    std::wstring message = L"world.convert-block-layouts";
+static ConfirmRequest create_convert_request(
+    const std::shared_ptr<ContentReport>& report
+) {
+    ConfirmRequest request {false, L"", L""};
+
+    request.message = L"world.convert-block-layouts";
     if (report->hasContentReorder()) {
-        message = L"world.convert-request";
+        request.message = L"world.convert-request";
     }
     if (report->isUpgradeRequired()) {
-        message = L"world.upgrade-request";
+        request.message = L"world.upgrade-request";
     } else if (report->hasDataLoss()) {
-        message = L"world.convert-with-loss";
-        std::wstring text;
+        request.message = L"world.convert-with-loss";
+        request.memo = true;
         for (const auto& line : report->getDataLoss()) {
-            text += util::str2wstr_utf8(line) + L"\n";
+            request.text += util::str2wstr_utf8(line) + L"\n";
         }
-        guiutil::confirm_with_memo(
-            engine,
-            langs::get(message),
-            text,
-            on_confirm,
-            L"",
-            langs::get(L"Cancel")
-        );
-        return;
     }
-    guiutil::confirm(
-        engine,
-        langs::get(message),
-        on_confirm,
-        nullptr,
-        L"",
-        langs::get(L"Cancel")
-    );
+    return request;
 }
 
-static bool load_world_content(Engine& engine, const io::path& folder) {
+static void call(Engine& engine, runnable func) {
+    if (engine.isHeadless()) {
+        func();
+    } else {
+        menus::call(engine, std::move(func));
+    }
+}
+
+static void start(Engine& engine, std::shared_ptr<Task> task, const std::wstring& message) {
+    if (engine.isHeadless()) {
+        task->waitForEnd();
+    } else {
+        menus::show_process_panel(engine, task, message);
+    }
+}
+
+static void check_world(const EnginePaths& paths, const io::path& folder) {
+    auto worldFile = folder / "world.json";
+    if (!io::exists(worldFile)) {
+        LOG_ERROR("{} does not exists", worldFile.string());
+        throw std::runtime_error(worldFile.string() + " does not exists");
+    }
+}
+
+static const Content* load_world_content(Engine& engine, const io::path& folder) {
     auto& paths = engine.getPaths();
     auto& contentControl = engine.getContentControl();
     paths.setCurrentWorldFolder(folder);
-    if (engine.isHeadless()) {
+
+    check_world(paths, folder);
+    call(engine, [&contentControl]() {
         contentControl.loadContent(ContentPack::worldPacksList("world:"));
-        return true;
-    } else {
-        return menus::call(engine, [&contentControl]() {
-            contentControl.loadContent(ContentPack::worldPacksList("world:"));
-        });
-    }
+    });
+    return contentControl.get();
 }
 
 static void load_world(
@@ -141,21 +147,15 @@ static void load_world(
     const std::shared_ptr<WorldFiles>& worldFiles,
     int64_t localPlayer
 ) {
-    try {
+    call(engine, [&engine, worldFiles, localPlayer] () {
         auto& contentControl = engine.getContentControl();
         auto content = contentControl.get();
-        auto& packs = contentControl.getContentPacks();
+        const auto& packs = contentControl.getContentPacks();
         auto& settings = engine.getSettings();
 
         auto level = World::load(worldFiles, settings, *content, packs);
         engine.onWorldOpen(std::move(level), localPlayer);
-    } catch (const world_load_error& error) {
-        guiutil::alert(
-            engine,
-            langs::get(L"Error") + L": " + util::str2wstr_utf8(error.what())
-        );
-        return;
-    }
+    });
 }
 
 static dv::value create_missing_content_report(
@@ -188,51 +188,66 @@ void EngineController::onMissingContent(const std::shared_ptr<ContentReport>& re
     }
 }
 
-void EngineController::openWorld(const std::string& name, bool confirmConvert) {
-    const auto& paths = engine.getPaths();
-    auto folder = paths.getWorldsFolder() / name;
-    auto worldFile = folder / "world.json";
-    if (!io::exists(worldFile)) {
-        LOG_ERROR("{} does not exists", worldFile.string());
-        throw std::runtime_error(worldFile.string() + " does not exists");
-    }
-
-    if (!load_world_content(engine, folder)) return;
-
-    const auto& contentControl = engine.getContentControl();
-    const Content* content = contentControl.get();
-
-    auto worldFiles = std::make_shared<WorldFiles>(
-        folder, engine.getSettings().debug
-    );
-    if (auto report = World::checkIndices(worldFiles, content)) {
-        if (report->hasMissingContent()) {
-            onMissingContent(report);
-        } else {
-            if (confirmConvert) {
-                auto task = create_converter(
-                    engine,
-                    worldFiles,
-                    content,
-                    report,
-                    [=]() {openWorld(name, false);}
-                );
-                if (engine.isHeadless()) {
-                    task->waitForEnd();
-                } else {
-                    menus::show_process_panel(
-                        engine, task, L"Converting world..."
-                    );
-                }
-            } else {
-                show_convert_request(engine, content, report, std::move(worldFiles), [=](){
-                    openWorld(name, false);
-                });
-            }
-        }
+static void confirm(
+    Engine& engine,
+    ConfirmRequest request,
+    bool confirmed, 
+    runnable callback
+) {
+    if (confirmed || engine.isHeadless()) {
+        callback();
         return;
     }
-    load_world(engine, std::move(worldFiles), localPlayer);
+    if (request.memo) {
+        guiutil::confirm_with_memo(
+            engine,
+            langs::get(request.message),
+            request.text,
+            callback,
+            L"",
+            langs::get(L"Cancel")
+        );
+    } else {
+        guiutil::confirm(
+            engine,
+            langs::get(request.message),
+            callback,
+            nullptr,
+            L"",
+            langs::get(L"Cancel")
+        );
+    }
+}
+
+void EngineController::openWorld(const std::string& name, bool confirmConvert) {
+    const auto& paths = engine.getPaths();
+    auto& debugSettings = engine.getSettings().debug;
+    auto folder = paths.getWorldsFolder() / name;
+
+    auto content = load_world_content(engine, folder);
+    auto worldFiles = std::make_shared<WorldFiles>(folder, debugSettings);
+    auto report = World::checkIndices(worldFiles, content);
+
+    if (report == nullptr) {
+        load_world(engine, std::move(worldFiles), localPlayer);
+        return;
+    }
+    if (report->hasMissingContent()) {
+        onMissingContent(report);
+        return;
+    }
+
+    auto request = create_convert_request(report);
+    confirm(engine, std::move(request), confirmConvert, [=]() {
+        auto task = create_converter(
+            engine,
+            worldFiles,
+            content,
+            report,
+            [=]() { openWorld(name, false); }
+        );
+        start(engine, std::move(task), L"Converting world...");
+    });
 }
 
 inline uint64_t str2seed(const std::string& seedstr) {
@@ -258,20 +273,19 @@ void EngineController::createWorld(
 
     EnginePaths& paths = engine.getPaths();
     auto folder = paths.getWorldsFolder() / name;
-    if (engine.isHeadless()) {
+
+    call(engine, [this, &paths, folder]() {
         engine.getContentControl().loadContent();
         paths.setCurrentWorldFolder(folder);
-    } else if (!menus::call(engine, [this, &paths, folder]() {
-        engine.getContentControl().loadContent();
-        paths.setCurrentWorldFolder(folder);
-    })) {
-        return;
-    }
+    });
 
     auto& contentControl = engine.getContentControl();
     auto level = World::create(
-        name, generatorID, folder, seed, 
-        engine.getSettings(), 
+        name,
+        generatorID,
+        folder,
+        seed,
+        engine.getSettings(),
         *contentControl.get(),
         contentControl.getContentPacks()
     );
@@ -291,15 +305,80 @@ void EngineController::reopenWorld(World* world) {
     openWorld(name, true);
 }
 
+static void reconfig_packs_outside(
+    ContentControl& contentControl,
+    const std::vector<std::string>& packsToAdd,
+    const std::vector<std::string>& packsToRemove
+) {
+    auto& manager = contentControl.scan();
+
+    auto names = PacksManager::getNames(
+        contentControl.getContentPacks()
+    );
+    for (const auto& id : packsToAdd) {
+        names.push_back(id);
+    }
+    for (const auto& id : packsToRemove) {
+        manager.exclude(id);
+        names.erase(std::find(names.begin(), names.end(), id));
+    }
+    names = manager.assemble(names);
+    contentControl.getContentPacks() = manager.getAll(names);
+}
+
+static void reconfig_packs_inside(
+    PacksManager& manager,
+    std::vector<std::string>& names,
+    const std::vector<std::string>& packsToAdd,
+    const std::vector<std::string>& packsToRemove
+) {
+    for (const auto& id : packsToAdd) {
+        names.push_back(id);
+    }
+    for (const auto& id : packsToRemove) {
+        manager.exclude(id);
+        const auto& found = std::find(names.begin(), names.end(), id);
+        if (found != names.end()) {
+            names.erase(found);
+        } else {
+            LOG_WARN("Attempt to remove non-installed pack: {}", id);
+        }
+    }
+}
+
 void EngineController::reconfigPacks(
     LevelController* controller,
     const std::vector<std::string>& packsToAdd,
-    const std::vector<std::string>& packsToRemove)
-{
+    const std::vector<std::string>& packsToRemove
+) {
     auto& contentControl = engine.getContentControl();
     auto content = contentControl.get();
-    bool hasIndices = false;
 
+    runnable removeFunc = [this, controller, packsToAdd, packsToRemove, &contentControl]() {
+        if (controller == nullptr) {
+            try {
+                reconfig_packs_outside(contentControl, packsToAdd, packsToRemove);
+            } catch (const contentpack_error& err) {
+                throw std::runtime_error(
+                    std::string(err.what()) + " [" + err.getPackId() + "]"
+                );
+            }
+        } else {
+            auto world = controller->getLevel()->getWorld();
+            controller->saveWorld();
+
+            auto names = PacksManager::getNames(world->getPacks());
+            auto& manager = contentControl.scan();
+            reconfig_packs_inside(manager, names, packsToAdd, packsToRemove);
+
+            auto& wfile = *world->wfile;
+            wfile.removeIndices(packsToRemove);
+            wfile.writePacks(manager.getAll(names));
+            reopenWorld(world);
+        }
+    };
+
+    bool hasIndices = false;
     std::stringstream ss;
     if (content) {
         for (const auto& id : packsToRemove) {
@@ -313,58 +392,11 @@ void EngineController::reconfigPacks(
             }
         }
     }
-
-    runnable removeFunc = [this, controller, packsToAdd, packsToRemove, &contentControl]() {
-        auto& manager = contentControl.scan();
-        if (controller == nullptr) {
-            try {
-                auto names = PacksManager::getNames(
-                    engine.getContentControl().getContentPacks()
-                );
-                for (const auto& id : packsToAdd) {
-                    names.push_back(id);
-                }
-                for (const auto& id : packsToRemove) {
-                    manager.exclude(id);
-                    const auto& found = std::find(names.begin(), names.end(), id);
-                    if (found != names.end()) {
-                        names.erase(found);
-                    } else {
-                        LOG_WARN("Attempt to remove non-installed pack: {}", id);
-                    }
-                }
-                names = manager.assemble(names);
-                engine.getContentControl().getContentPacks() = manager.getAll(names);
-            } catch (const contentpack_error& err) {
-                std::string errorLog = std::string(err.what()) + " [" + err.getPackId() + "]";
-                LOG_ERROR("{}", errorLog);
-                throw std::runtime_error(errorLog);
-            }
-        } else {
-            auto world = controller->getLevel()->getWorld();
-            auto& wfile = *world->wfile;
-            controller->saveWorld();
-
-            auto names = PacksManager::getNames(world->getPacks());
-            for (const auto& id : packsToAdd) {
-                names.push_back(id);
-            }
-            for (const auto& id : packsToRemove) {
-                manager.exclude(id);
-                names.erase(std::find(names.begin(), names.end(), id));
-            }
-            wfile.removeIndices(packsToRemove);
-            wfile.writePacks(manager.getAll(names));
-            reopenWorld(world);
-        }
-    };
-
     if (hasIndices && !engine.isHeadless()) {
         guiutil::confirm(
             engine,
-            langs::get(L"remove-confirm", L"pack") +
-            L" (" + util::str2wstr_utf8(ss.str()) + L")",
-            [=]() {removeFunc();}
+            langs::get(L"remove-confirm", L"pack") + L" (" + util::str2wstr_utf8(ss.str()) + L")",
+            [=]() { removeFunc(); }
         );
     } else {
         removeFunc();

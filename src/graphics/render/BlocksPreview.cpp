@@ -8,7 +8,6 @@
 #include <graphics/core/Batch3D.h>
 #include <window/Camera.h>
 #include <voxels/Block.h>
-#include <graphics/core/Viewport.h>
 #include <frontend/ContentGfxCache.h>
 #include <assets/Assets.h>
 #include <graphics/core/Framebuffer.h>
@@ -126,7 +125,7 @@ std::unique_ptr<Atlas> BlocksPreview::build(
     );
 
     AtlasBuilder builder;
-    ctx.setViewport(Viewport(iconSize, iconSize));
+    ctx.setViewport({iconSize, iconSize});
     display::setBgColor(glm::vec4(0.0f));
 
     fbo.bind();

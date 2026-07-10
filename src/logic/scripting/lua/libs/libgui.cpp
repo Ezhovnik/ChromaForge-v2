@@ -18,6 +18,7 @@
 #include <graphics/ui/markdown.h>
 #include <graphics/core/Font.h>
 #include <graphics/ui/elements/Canvas.h>
+#include <graphics/ui/GUI.h>
 
 static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
