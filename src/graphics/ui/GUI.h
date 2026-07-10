@@ -19,6 +19,9 @@ struct CursorState;
 class Engine;
 class Input;
 class Window;
+namespace devtools {
+    class Editor;
+}
 
 /*
 Padding is element inner space, margin is outer
@@ -127,5 +130,6 @@ namespace gui {
         const Input& getInput() const;
         Input& getInput();
         Window& getWindow();
+        devtools::Editor& getEditor();
     };
 }

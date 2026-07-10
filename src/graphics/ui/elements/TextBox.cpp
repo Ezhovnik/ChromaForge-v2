@@ -11,7 +11,8 @@
 #include <assets/Assets.h>
 #include <util/stringutil.h>
 #include <window/Window.h>
-#include <devtools/syntax_highlighting.h>
+#include <devtools/Editor.h>
+#include <devtools/SyntaxProcessor.h>
 #include <graphics/ui/markdown.h>
 #include <devtools/actions.h>
 #include <graphics/ui/GUI.h>
@@ -741,7 +742,8 @@ void TextBox::stepDefaultUp(bool shiftPressed, bool breakSelection) {
 
 void TextBox::refreshSyntax() {
     if (!syntax.empty()) {
-        if (auto styles = devtools::syntax_highlight(syntax, input)) {
+        const auto& processor = gui.getEditor().getSyntaxProcessor();
+        if (auto styles = processor.highlight(syntax, input)) {
             label->setStyles(std::move(styles));
         }
     }

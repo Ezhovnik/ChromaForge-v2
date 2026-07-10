@@ -1,10 +1,8 @@
-#include <devtools/syntax_highlighting.h>
+#include <devtools/SyntaxProcessor.h>
 
 #include <coders/commons.h>
-#include <coders/lua_parsing.h>
+#include <coders/syntax_parser.h>
 #include <graphics/core/Font.h>
-
-using namespace devtools;
 
 static std::unique_ptr<FontStylesScheme> build_styles(
     const std::vector<devtools::Token>& tokens
@@ -36,12 +34,12 @@ static std::unique_ptr<FontStylesScheme> build_styles(
         offset = token.end.pos;
         int styleIndex;
         switch (token.tag) {
-            case devtools::TokenTag::Keyword: styleIndex = SyntaxStyles::Keyword; break;
+            case devtools::TokenTag::Keyword: styleIndex = devtools::SyntaxStyles::Keyword; break;
             case devtools::TokenTag::String:
             case devtools::TokenTag::Integer:
-            case devtools::TokenTag::Number: styleIndex = SyntaxStyles::Literal; break;
-            case devtools::TokenTag::Comment: styleIndex = SyntaxStyles::Comment; break;
-            case devtools::TokenTag::Unexpected: styleIndex = SyntaxStyles::Error; break;
+            case devtools::TokenTag::Number: styleIndex = devtools::SyntaxStyles::Literal; break;
+            case devtools::TokenTag::Comment: styleIndex = devtools::SyntaxStyles::Comment; break;
+            case devtools::TokenTag::Unexpected: styleIndex = devtools::SyntaxStyles::Error; break;
             default:
                 styleIndex = 0;
                 break;
@@ -54,16 +52,28 @@ static std::unique_ptr<FontStylesScheme> build_styles(
     return std::make_unique<FontStylesScheme>(std::move(styles));
 }
 
-std::unique_ptr<FontStylesScheme> devtools::syntax_highlight(
-    const std::string& lang, std::wstring_view source
+void devtools::SyntaxProcessor::addSyntax(
+    std::unique_ptr<Syntax> syntax
 ) {
+    const auto ptr = syntax.get();
+    langs.emplace_back(std::move(syntax));
+
+    for (auto& ext : ptr->extensions) {
+        langsExtensions[ext] = ptr;
+    }
+}
+
+std::unique_ptr<FontStylesScheme> devtools::SyntaxProcessor::highlight(
+    const std::string& ext, std::wstring_view source
+) const {
+    const auto& found = langsExtensions.find(ext);
+    if (found == langsExtensions.end()) {
+        return nullptr;
+    } 
+    const auto& syntax = *found->second;
     try {
-        if (lang == "lua") {
-            auto tokens = lua::tokenize("<string>", source);
-            return build_styles(tokens);
-        } else {
-            return nullptr;
-        }
+        auto tokens = tokenize(syntax, "<string>", source);
+        return build_styles(tokens);
     } catch (const parsing_error& err) {
         return nullptr;
     }

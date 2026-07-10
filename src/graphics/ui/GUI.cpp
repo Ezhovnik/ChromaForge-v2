@@ -343,3 +343,7 @@ Input& GUI::getInput() {
 Window& GUI::getWindow() {
     return engine.getWindow();
 }
+
+devtools::Editor& GUI::getEditor() {
+    return engine.getEditor();
+}

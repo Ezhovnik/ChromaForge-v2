@@ -33,6 +33,10 @@ namespace network {
     class Network;
 }
 
+namespace devtools {
+    class Editor;
+}
+
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
 class initialize_error : public std::runtime_error {
 public:
@@ -68,6 +72,7 @@ private:
     std::unique_ptr<Window> window;
 
     std::unique_ptr<gui::GUI> gui;
+    std::unique_ptr<devtools::Editor> editor;
 
     PostRunnables postRunnables;
 
@@ -125,6 +130,10 @@ public:
 
     cmd::CommandsInterpreter& getCmd() {
         return *cmd;
+    }
+
+    devtools::Editor& getEditor() {
+        return *editor;
     }
 
     Window& getWindow() {

@@ -48,6 +48,7 @@
 #include <world/Level.h>
 #include <logic/scripting/scripting_hud.h>
 #include <content/ContentControl.h>
+#include <devtools/Editor.h>
 
 static std::unique_ptr<ImageData> load_icon() {
     try {
@@ -76,6 +77,7 @@ Engine& Engine::getInstance() {
 void Engine::initialize(CoreParameters coreParameters) {
     params = std::move(coreParameters);
     settingsHandler = std::make_unique<SettingsHandler>(settings);
+    editor = std::make_unique<devtools::Editor>(*this);
     cmd = std::make_unique<cmd::CommandsInterpreter>();
     network = network::Network::create(settings.network);
 
@@ -139,6 +141,7 @@ void Engine::initialize(CoreParameters coreParameters) {
     }
 
     content = std::make_unique<ContentControl>(paths, *input, [this]() {
+        editor->loadTools();
         langs::setup(langs::get_current(), paths.resPaths.collectRoots());
         if (!isHeadless()) {
             for (auto& pack : content->getAllContentPacks()) {
