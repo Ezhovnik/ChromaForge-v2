@@ -15,18 +15,30 @@ struct PathsRoot {
     PathsRoot(std::string name, io::path path) : name(std::move(name)), path(std::move(path)) {}
 };
 
-class EnginePaths {
-private:
-    std::filesystem::path userFilesFolder {"."};
-    std::filesystem::path resourcesFolder {"res"};
-    io::path currentWorldFolder;
-    std::optional<std::filesystem::path> scriptFolder;
-    std::vector<PathsRoot> entryPoints;
-    std::unordered_map<std::string, std::string> writeables;
-    std::vector<std::string> mounted;
-
-    void cleanup();
+class ResPaths {
 public:
+    ResPaths() = default;
+
+    ResPaths(std::vector<PathsRoot> roots);
+
+    io::path find(const std::string& filename) const;
+    std::string findRaw(const std::string& filename) const;
+    std::vector<io::path> listdir(const std::string& folder) const;
+    std::vector<std::string> listdirRaw(const std::string& folder) const;
+
+    dv::value readCombinedList(const std::string& file) const;
+
+    dv::value readCombinedObject(const std::string& file, bool deep=false) const;
+
+    std::vector<io::path> collectRoots();
+private:
+    std::vector<PathsRoot> roots;
+};
+
+class EnginePaths {
+public:
+    ResPaths resPaths;
+
     void prepare();
 
     void setUserFilesFolder(std::filesystem::path folder);
@@ -37,7 +49,6 @@ public:
 
     void setScriptFolder(std::filesystem::path folder);
 
-    io::path getConfigFolder() const;
     io::path getWorldsFolder() const;
     io::path getWorldFolderByName(const std::string& name);
 
@@ -45,8 +56,6 @@ public:
     io::path getCurrentWorldFolder();
 
     io::path getNewScreenshotFile(const std::string& ext);
-    io::path getControlsFile() const;
-    io::path getSettingsFile() const;
 
     std::string mount(const io::path& file);
     void unmount(const std::string& name);
@@ -60,28 +69,16 @@ public:
     static std::tuple<std::string, std::string> parsePath(std::string_view view);
 
     static inline io::path CONFIG_DEFAULTS = "config/defaults.toml";
-};
-
-class ResPaths {
+    static inline io::path CONTROLS_FILE = "user:controls.toml";
+    static inline io::path SETTINGS_FILE = "user:settings.toml";
 private:
-    io::path mainRoot;
-    std::vector<PathsRoot> roots;
-public:
-    ResPaths(
-        io::path mainRoot,
-        std::vector<PathsRoot> roots
-    );
+    std::filesystem::path userFilesFolder {"."};
+    std::filesystem::path resourcesFolder {"res"};
+    io::path currentWorldFolder;
+    std::optional<std::filesystem::path> scriptFolder;
+    std::vector<PathsRoot> entryPoints;
+    std::unordered_map<std::string, std::string> writeables;
+    std::vector<std::string> mounted;
 
-    io::path find(const std::string& filename) const;
-    std::string findRaw(const std::string& filename) const;
-    std::vector<io::path> listdir(const std::string& folder) const;
-    std::vector<std::string> listdirRaw(const std::string& folder) const;
-
-    dv::value readCombinedList(const std::string& file) const;
-
-    dv::value readCombinedObject(const std::string& file, bool deep=false) const;
-
-    std::vector<io::path> collectRoots();
-
-    const io::path& getMainRoot() const;
+    void cleanup();
 };

@@ -27,6 +27,7 @@
 #include <logic/scripting/scripting_commons.h>
 #include <interfaces/Process.h>
 #include <voxels/Chunk.h>
+#include <content/ContentControl.h>
 
 static inline const std::string STDCOMP = "stdcomp";
 
@@ -38,6 +39,7 @@ const Content* scripting::content = nullptr;
 BlocksController* scripting::blocks = nullptr;
 LevelController* scripting::controller = nullptr;
 const ContentIndices* scripting::indices = nullptr;
+ContentControl* scripting::content_control = nullptr;
 
 void scripting::load_script(const io::path& name, bool throwable) {
     io::path file = io::path("res:scripts") / name;
@@ -65,6 +67,7 @@ int scripting::load_script(
 
 void scripting::initialize(Engine* engine) {
     scripting::engine = engine;
+    scripting::content_control = &engine->getContentControl();
 
     lua::initialize(engine->getPaths(), engine->getCoreParameters());
 
@@ -266,21 +269,21 @@ void scripting::on_world_load(LevelController* controller) {
         lua::call_nothrow(L, 0, 0);
     }
 
-    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldopen");
     }
 }
 
 void scripting::on_world_spark() {
     auto L = lua::get_main_state();
-    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldspark");
     }
 }
 
 void scripting::on_world_save() {
     auto L = lua::get_main_state();
-    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldsave");
     }
     if (lua::getglobal(L, "__chroma_on_world_save")) {
@@ -290,7 +293,7 @@ void scripting::on_world_save() {
 
 void scripting::on_world_quit() {
     auto L = lua::get_main_state();
-    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldquit");
     }
     if (lua::getglobal(L, "__chroma_on_world_quit")) {
@@ -307,7 +310,7 @@ void scripting::cleanup() {
     auto L = lua::get_main_state();
 
     lua::requireglobal(L, "pack");
-    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::requirefield(L, "unload");
         lua::pushstring(L, pack.id);
         lua::call_nothrow(L, 1);   

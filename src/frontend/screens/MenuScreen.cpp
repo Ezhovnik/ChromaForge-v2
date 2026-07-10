@@ -10,9 +10,10 @@
 #include <graphics/core/Texture.h>
 #include <math/UVRegion.h>
 #include <assets/Assets.h>
+#include <content/ContentControl.h>
 
 MenuScreen::MenuScreen(Engine& engine) : Screen(engine) {
-    engine.resetContent();
+    engine.getContentControl().resetContent();
 
     auto menu = engine.getGUI().getMenu();
     menu->reset();

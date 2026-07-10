@@ -6,9 +6,6 @@
 #include <typedefs.h>
 #include <delegates.h>
 #include <io/engine_paths.h>
-#include <content/ContentPack.h>
-#include <content/content_fwd.h>
-#include <content/PacksManager.h>
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
 #include <settings.h>
@@ -19,11 +16,10 @@
 class Assets;
 class Screen;
 class EngineController;
-class SettingsHandler;
-struct EngineSettings;
 class Level;
 class Input;
 class Window;
+class ContentControl;
 
 namespace gui {
     class GUI;
@@ -65,14 +61,11 @@ private:
     std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen;
     std::unique_ptr<EngineController> controller;
-    std::vector<ContentPack> contentPacks;
-    std::unique_ptr<Content> content;
-    std::unique_ptr<ResPaths> resPaths;
+    std::unique_ptr<ContentControl> content;
     std::unique_ptr<cmd::CommandsInterpreter> cmd;
     std::unique_ptr<network::Network> network;
     std::unique_ptr<Input> input;
     std::unique_ptr<Window> window;
-    std::vector<std::string> basePacks;
 
     std::unique_ptr<gui::GUI> gui;
 
@@ -107,22 +100,16 @@ public:
     void renderFrame();
     void nextFrame();
 
-    void onAssetsLoaded();
-
     EnginePaths& getPaths();
-    ResPaths* getResPaths();
+    ResPaths& getResPaths();
     Assets* getAssets();
 	EngineSettings& getSettings();
-    const Content* getContent() const;
-    Content* getWriteableContent();
-    std::vector<ContentPack>& getContentPacks();
-    std::vector<ContentPack> getAllContentPacks();
     std::shared_ptr<Screen> getScreen();
     SettingsHandler& getSettingsHandler();
     EngineController* getController();
-    std::vector<std::string>& getBasePacks();
     const CoreParameters& getCoreParameters() const;
     EngineTime& getTime();
+    ContentControl& getContentControl();
 
     gui::GUI& getGUI() {
         return *gui;
@@ -150,12 +137,9 @@ public:
         postRunnables.postRunnable(callback);
     }
 
-    PacksManager createPacksManager(const io::path& worldFolder);
-
     void saveScreenshot();
 
 	void setScreen(std::shared_ptr<Screen> screen);
-    void setLanguage(std::string locale);
     void setLevelConsumer(OnWorldOpen levelConsumer);
 
     void onWorldOpen(std::unique_ptr<Level> level, int64_t localPlayer);
@@ -163,9 +147,4 @@ public:
 
     void quit();
     bool isQuitSignal() const;
-
-    void loadContent();
-    void resetContent();
-    void loadWorldContent(const io::path& folder);
-    void loadAllPacks();
 };

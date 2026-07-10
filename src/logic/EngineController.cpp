@@ -28,6 +28,8 @@
 #include <settings.h>
 #include <objects/Players.h>
 #include <coders/json.h>
+#include <content/ContentControl.h>
+#include <content/PacksManager.h>
 
 EngineController::EngineController(Engine& engine) : engine(engine) {
 }
@@ -121,12 +123,15 @@ static void show_convert_request(
 }
 
 static bool load_world_content(Engine& engine, const io::path& folder) {
+    auto& paths = engine.getPaths();
+    auto& contentControl = engine.getContentControl();
+    paths.setCurrentWorldFolder(folder);
     if (engine.isHeadless()) {
-        engine.loadWorldContent(folder);
+        contentControl.loadContent(ContentPack::worldPacksList("world:"));
         return true;
     } else {
-        return menus::call(engine, [&engine, folder]() {
-            engine.loadWorldContent(folder);
+        return menus::call(engine, [&contentControl]() {
+            contentControl.loadContent(ContentPack::worldPacksList("world:"));
         });
     }
 }
@@ -137,8 +142,9 @@ static void load_world(
     int64_t localPlayer
 ) {
     try {
-        auto content = engine.getContent();
-        auto& packs = engine.getContentPacks();
+        auto& contentControl = engine.getContentControl();
+        auto content = contentControl.get();
+        auto& packs = contentControl.getContentPacks();
         auto& settings = engine.getSettings();
 
         auto level = World::load(worldFiles, settings, *content, packs);
@@ -193,7 +199,8 @@ void EngineController::openWorld(const std::string& name, bool confirmConvert) {
 
     if (!load_world_content(engine, folder)) return;
 
-    const Content* content = engine.getContent();
+    const auto& contentControl = engine.getContentControl();
+    const Content* content = contentControl.get();
 
     auto worldFiles = std::make_shared<WorldFiles>(
         folder, engine.getSettings().debug
@@ -243,7 +250,7 @@ inline uint64_t str2seed(const std::string& seedstr) {
 }
 
 void EngineController::createWorld(
-    const std::string& name, 
+    const std::string& name,
     const std::string& seedstr,
     const std::string& generatorID
 ) {
@@ -252,20 +259,21 @@ void EngineController::createWorld(
     EnginePaths& paths = engine.getPaths();
     auto folder = paths.getWorldsFolder() / name;
     if (engine.isHeadless()) {
-        engine.loadContent();
+        engine.getContentControl().loadContent();
         paths.setCurrentWorldFolder(folder);
     } else if (!menus::call(engine, [this, &paths, folder]() {
-        engine.loadContent();
+        engine.getContentControl().loadContent();
         paths.setCurrentWorldFolder(folder);
     })) {
         return;
     }
 
+    auto& contentControl = engine.getContentControl();
     auto level = World::create(
         name, generatorID, folder, seed, 
         engine.getSettings(), 
-        *engine.getContent(),
-        engine.getContentPacks()
+        *contentControl.get(),
+        contentControl.getContentPacks()
     );
     if (!engine.isHeadless()) {
         level->players->create(localPlayer);
@@ -288,7 +296,8 @@ void EngineController::reconfigPacks(
     const std::vector<std::string>& packsToAdd,
     const std::vector<std::string>& packsToRemove)
 {
-    auto content = engine.getContent();
+    auto& contentControl = engine.getContentControl();
+    auto content = contentControl.get();
     bool hasIndices = false;
 
     std::stringstream ss;
@@ -305,12 +314,13 @@ void EngineController::reconfigPacks(
         }
     }
 
-    runnable removeFunc = [this, controller, packsToAdd, packsToRemove]() {
+    runnable removeFunc = [this, controller, packsToAdd, packsToRemove, &contentControl]() {
+        auto& manager = contentControl.scan();
         if (controller == nullptr) {
             try {
-                auto manager = engine.createPacksManager("");
-                manager.scan();
-                auto names = PacksManager::getNames(engine.getContentPacks());
+                auto names = PacksManager::getNames(
+                    engine.getContentControl().getContentPacks()
+                );
                 for (const auto& id : packsToAdd) {
                     names.push_back(id);
                 }
@@ -324,7 +334,7 @@ void EngineController::reconfigPacks(
                     }
                 }
                 names = manager.assemble(names);
-                engine.getContentPacks() = manager.getAll(names);
+                engine.getContentControl().getContentPacks() = manager.getAll(names);
             } catch (const contentpack_error& err) {
                 std::string errorLog = std::string(err.what()) + " [" + err.getPackId() + "]";
                 LOG_ERROR("{}", errorLog);
@@ -334,8 +344,6 @@ void EngineController::reconfigPacks(
             auto world = controller->getLevel()->getWorld();
             auto& wfile = *world->wfile;
             controller->saveWorld();
-            auto manager = engine.createPacksManager(wfile.getFolder());
-            manager.scan();
 
             auto names = PacksManager::getNames(world->getPacks());
             for (const auto& id : packsToAdd) {

@@ -16,10 +16,12 @@
 #include <graphics/ui/gui_util.h>
 #include <graphics/ui/elements/Menu.h>
 #include <frontend/locale.h>
+#include <content/ContentControl.h>
+#include <content/PacksManager.h>
 
 static int l_pack_get_folder(lua::State* L) {
     std::string packName = lua::tostring(L, 1);
-    auto packs = scripting::engine->getAllContentPacks();
+    auto packs = scripting::content_control->getAllContentPacks();
     for (auto& pack : packs) {
         if (pack.id == packName) {
             return lua::pushstring(L, pack.folder.string() + "/");
@@ -29,7 +31,7 @@ static int l_pack_get_folder(lua::State* L) {
 }
 
 static int l_pack_get_installed(lua::State* L) {
-    auto& packs = scripting::engine->getContentPacks();
+    auto& packs = scripting::content_control->getContentPacks();
     lua::createtable(L, packs.size(), 0);
     for (size_t i = 0; i < packs.size(); ++i) {
         lua::pushstring(L, packs[i].id);
@@ -39,12 +41,8 @@ static int l_pack_get_installed(lua::State* L) {
 }
 
 static int l_pack_get_available(lua::State* L) {
-    io::path worldFolder;
-    if (scripting::level) worldFolder = scripting::level->getWorld()->wfile->getFolder();
-    auto manager = scripting::engine->createPacksManager(worldFolder);
-    manager.scan();
-
-    const auto& installed = scripting::engine->getContentPacks();
+    auto& manager = scripting::content_control->scan();
+    const auto& installed = scripting::content_control->getContentPacks();
     for (auto& pack : installed) {
         manager.exclude(pack.id);
     }
@@ -76,7 +74,7 @@ static int l_pack_get_info(lua::State* L, const ContentPack& pack, const Content
     lua::pushstring(L, pack.version);
     lua::setfield(L, "version");
 
-    lua::pushstring(L, pack.path);
+    lua::pushstring(L, pack.folder.string());
     lua::setfield(L, "path");
 
     if (!scripting::engine->isHeadless()) {
@@ -125,8 +123,7 @@ static int pack_get_infos(lua::State* L) {
         lua::pop(L, 1);
     }
     std::unordered_map<std::string, ContentPack> packs;
-    auto content = scripting::engine->getContent();
-    const auto& loadedPacks = scripting::engine->getContentPacks();
+    const auto& loadedPacks = scripting::content_control->getContentPacks();
     for (const auto& pack : loadedPacks) {
         if (ids.find(pack.id) != ids.end()) {
             packs[pack.id] = pack;
@@ -134,12 +131,7 @@ static int pack_get_infos(lua::State* L) {
         }
     }
     if (!ids.empty()) {
-        io::path worldFolder;
-        if (scripting::level) {
-            worldFolder = scripting::level->getWorld()->wfile->getFolder();
-        }
-        auto manager = scripting::engine->createPacksManager(worldFolder);
-        manager.scan();
+        auto& manager = scripting::content_control->scan();
         auto vec = manager.getAll(std::vector<std::string>(ids.begin(), ids.end()));
         for (const auto& pack : vec) {
             packs[pack.id] = pack;
@@ -147,7 +139,7 @@ static int pack_get_infos(lua::State* L) {
     }
     lua::createtable(L, 0, packs.size());
     for (const auto& [id, pack] : packs) {
-        l_pack_get_info(L, pack, content);
+        l_pack_get_info(L, pack, scripting::content);
         lua::setfield(L, id);
     }
     return 1;
@@ -161,26 +153,22 @@ static int l_pack_get_info(lua::State* L) {
     }
     auto packid = lua::tostring(L, 1);
 
-    auto content = scripting::engine->getContent();
-    auto& packs = scripting::engine->getContentPacks();
+    auto& packs = scripting::content_control->getContentPacks();
     auto found = std::find_if(packs.begin(), packs.end(), [packid](const auto& pack) {
         return pack.id == packid;
     });
     if (found == packs.end()) {
-        io::path worldFolder;
-        if (scripting::level) worldFolder = scripting::level->getWorld()->wfile->getFolder();
-        auto manager = scripting::engine->createPacksManager(worldFolder);
-        manager.scan();
+        auto& manager = scripting::content_control->scan();
         auto vec = manager.getAll({packid});
-        if (!vec.empty()) return l_pack_get_info(L, vec[0], content);
+        if (!vec.empty()) return l_pack_get_info(L, vec[0], scripting::content);
         return 0;
     }
     const auto& pack = *found;
-    return l_pack_get_info(L, pack, content);
+    return l_pack_get_info(L, pack, scripting::content);
 }
 
 static int l_pack_get_base_packs(lua::State* L) {
-    auto& packs = scripting::engine->getBasePacks();
+    auto& packs = scripting::engine->getContentControl().getBasePacks();
     lua::createtable(L, packs.size(), 0);
     for (size_t i = 0; i < packs.size(); ++i) {
         lua::pushstring(L, packs[i]);
@@ -204,8 +192,7 @@ static int l_pack_assemble(lua::State* L) {
     if (scripting::level) {
         worldFolder = scripting::level->getWorld()->wfile->getFolder();
     }
-    auto manager = scripting::engine->createPacksManager(worldFolder);
-    manager.scan();
+    auto& manager = scripting::content_control->scan();
     try {
         ids = manager.assemble(ids);
     } catch (const contentpack_error& err) {

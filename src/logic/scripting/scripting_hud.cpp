@@ -10,6 +10,7 @@
 #include <graphics/render/WorldRenderer.h>
 #include <frontend/UIDocument.h>
 #include <assets/Assets.h>
+#include <content/ContentControl.h>
 
 Hud* scripting::hud = nullptr;
 WorldRenderer* scripting::renderer = nullptr;
@@ -40,7 +41,7 @@ void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
         lua::call_nothrow(L, 0, 0);
     }
 
-    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(lua::get_main_state(), pack.id + ":.hudopen", 
         [&] (lua::State* L) {
             return lua::pushinteger(L, hud->getPlayer()->getId());        
@@ -50,7 +51,7 @@ void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
 
 void scripting::on_frontend_close() {
     auto L = lua::get_main_state();
-    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.hudclose", 
         [&] (lua::State* L) {
             return lua::pushinteger(L, hud->getPlayer()->getId());            
@@ -66,7 +67,7 @@ void scripting::on_frontend_close() {
 }
 
 void scripting::on_frontend_render() {
-    for (auto& pack : Engine::getInstance().getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(lua::get_main_state(), pack.id + ":.hudrender", 
         [] (lua::State* L) {
             return 0;            

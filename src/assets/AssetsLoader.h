@@ -54,7 +54,7 @@ struct AtlasConfig : AssetsConfig {
 
 using aloader_func = std::function<asset_loader::postfunc(
      AssetsLoader*,
-     const ResPaths*, 
+     const ResPaths&, 
      const std::string&, 
      const std::string&, 
      std::shared_ptr<AssetsConfig>
@@ -84,7 +84,7 @@ private:
 	std::queue<aloader_entry> entries; ///< Очередь заданий на загрузку
      std::set<std::pair<AssetType, std::string>> enqueued;
 
-	const ResPaths* paths; ///< Пути для поиска файлов
+	const ResPaths& paths; ///< Пути для поиска файлов
 
      void tryAddSound(const std::string& name);
 
@@ -98,7 +98,7 @@ public:
      * @param assets Менеджер ресурсов (не должен быть nullptr).
      * @param paths Объект с путями (не должен быть nullptr).
      */
-	AssetsLoader(Engine& engine, Assets& assets, const ResPaths* paths);
+	AssetsLoader(Engine& engine, Assets& assets, const ResPaths& paths);
 
 	/**
      * @brief Регистрирует функцию-загрузчик для указанного типа ресурса.
@@ -149,7 +149,7 @@ public:
      * @brief Возвращает объект с путями, используемый загрузчиком.
      * @return Указатель на ResPaths.
      */
-	const ResPaths* getPaths() const;
+	const ResPaths& getPaths() const;
 
      aloader_func getLoader(AssetType tag);
 

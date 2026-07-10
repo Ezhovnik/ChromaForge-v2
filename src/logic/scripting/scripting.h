@@ -34,11 +34,13 @@ class GeneratorScript;
 struct Generator;
 class Process;
 class Chunk;
+class ContentControl;
 
 namespace scripting {
     extern Engine* engine;
     extern const Content* content;
     extern const ContentIndices* indices;
+    extern ContentControl* content_control;
     extern Level* level;
     extern BlocksController* blocks;
     extern LevelController* controller;

@@ -68,9 +68,7 @@ namespace langs {
         std::string name; ///< Отображаемое название (например, "Русский")
     };
 
-    std::string locale_by_envlocale(
-        const std::string& envlocale, const io::path& resdir
-    );
+    std::string locale_by_envlocale(const std::string& envlocale);
 
     const std::string& get_current();
     const std::unordered_map<std::string, LocaleInfo>& get_locales_info();
@@ -81,7 +79,6 @@ namespace langs {
     );
 
     void setup(
-        const io::path& resdir,
         std::string locale,
         const std::vector<io::path>& roots
     );

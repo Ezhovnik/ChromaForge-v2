@@ -9,6 +9,7 @@
 #include <graphics/ui/elements/Container.h>
 #include <coders/toml.h>
 #include <util/observer_handler.h>
+#include <content/ContentControl.h>
 
 namespace scripting {
     extern Hud* hud;
@@ -127,7 +128,7 @@ static void reset_pack_bindings(const io::path& packFolder) {
 
 static int l_reset_bindings(lua::State*) {
     reset_pack_bindings("res:");
-    for (auto& pack : scripting::engine->getContentPacks()) {
+    for (const auto& pack : scripting::content_control->getContentPacks()) {
         reset_pack_bindings(pack.folder);
     }
     return 0;

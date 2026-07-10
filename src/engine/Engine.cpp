@@ -23,12 +23,9 @@
 #include <io/engine_paths.h>
 #include <frontend/screens/Screen.h>
 #include <frontend/screens/MenuScreen.h>
-#include <content/content.h>
 #include <frontend/locale.h>
 #include <util/platform.h>
 #include <frontend/menu.h>
-#include <content/Content.h>
-#include <content/ContentLoader.h>
 #include <logic/scripting/scripting.h>
 #include <graphics/core/DrawContext.h>
 #include <audio/audio.h>
@@ -36,14 +33,12 @@
 #include <frontend/UIDocument.h>
 #include <graphics/ui/elements/UINode.h>
 #include <content/PacksManager.h>
-#include <util/listutil.h>
 #include <logic/EngineController.h>
 #include <io/settings_io.h>
 #include <coders/toml.h>
 #include <io/io.h>
 #include <input_bindings.h>
 #include <logic/CommandsInterpreter.h>
-#include <content/ContentBuilder.h>
 #include <objects/rigging.h>
 #include <coders/commons.h>
 #include <graphics/render/ModelsGenerator.h>
@@ -53,6 +48,7 @@
 #include <frontend/screens/LevelScreen.h>
 #include <world/Level.h>
 #include <logic/scripting/scripting_hud.h>
+#include <content/ContentControl.h>
 
 static std::unique_ptr<ImageData> load_icon() {
     try {
@@ -95,8 +91,6 @@ void Engine::initialize(CoreParameters coreParameters) {
     if (!params.scriptFile.empty()) paths.setScriptFolder(params.scriptFile.parent_path());
     loadSettings();
 
-    auto resdir = paths.getResourcesFolder();
-
     controller = std::make_unique<EngineController>(*this);
 
     // Инициализация окна GLFW
@@ -138,25 +132,28 @@ void Engine::initialize(CoreParameters coreParameters) {
 
     audio::initialize(!params.headless, settings.audio);
 
+    bool langNotSet = settings.ui.language.get() == "auto";
+    if (langNotSet) {
+        settings.ui.language.set(
+            langs::locale_by_envlocale(platform::detect_locale())
+        );
+    }
+
+    content = std::make_unique<ContentControl>(paths, *input, [this]() {
+        langs::setup(langs::get_current(), paths.resPaths.collectRoots());
+        if (!isHeadless()) {
+            loadAssets();
+        }
+    });
+
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);
     LOG_INFO("Scripting system initialization has been successfully finished");
 
-    bool langNotSet = settings.ui.language.get() == "auto";
-    if (langNotSet) {
-        settings.ui.language.set(
-            langs::locale_by_envlocale(
-                platform::detect_locale(),
-                "res:"
-            )
-        );
-    }
     if (!isHeadless()) gui->setPageLoader(scripting::create_page_loader());
     keepAlive(settings.ui.language.observe([this](auto lang) {
-        setLanguage(lang);
+        langs::setup(lang, paths.resPaths.collectRoots());
     }, true));
-
-    basePacks = io::read_list("res:config/builtins.list");
 
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -188,27 +185,18 @@ void Engine::close() {
     Logger::getInstance().flush();
 }
 
-PacksManager Engine::createPacksManager(const io::path& worldFolder) {
-    PacksManager manager;
-    manager.setSources({
-        {"world:content", worldFolder.empty() ? worldFolder : worldFolder / "content"},
-        {"user:content", "user:content"},
-        {"res:content", "res:content"}
-    });
-    return manager;
-}
-
 void Engine::setLevelConsumer(OnWorldOpen levelConsumer) {
     this->levelConsumer = std::move(levelConsumer);
 }
 
 void Engine::loadAssets() {
     LOG_INFO("Loading assets");
-    ShaderProgram::preprocessor->setPaths(resPaths.get());
+    ShaderProgram::preprocessor->setPaths(&paths.resPaths);
 
+    auto content = this->content->get();
     auto new_assets = std::make_unique<Assets>();
-    AssetsLoader loader(*this, *new_assets, resPaths.get());
-    AssetsLoader::addDefaults(loader, content.get());
+    AssetsLoader loader(*this, *new_assets, paths.resPaths);
+    AssetsLoader::addDefaults(loader, content);
     bool threading = false;
     if (threading) {
         auto task = loader.startTask([=](){});
@@ -222,32 +210,10 @@ void Engine::loadAssets() {
     assets = std::move(new_assets);
 
     if (content) {
-        for (auto& [name, def] : content->blocks.getDefs()) {
-            if (def->model == BlockModel::Custom) {
-                if (def->modelName.empty()) {
-                    assets->store(
-                        std::make_unique<model::Model>(
-                            ModelsGenerator::loadCustomBlockModel(
-                                def->customModelRaw, *assets, !def->shadeless
-                            )
-                        ),
-                        name + ".model"
-                    );
-                    def->modelName = def->name + ".model";
-                }
-            }
-        }
-
-        for (auto& [name, def] : content->items.getDefs()) {
-            assets->store(
-                std::make_unique<model::Model>(
-                    ModelsGenerator::generate(*def, *content, *assets)
-                ),
-                name + ".model"
-            );
-        }
+        ModelsGenerator::prepare(*content, *assets);
     }
-
+    assets->setup();
+    gui->onAssetsLoad(assets.get());
     LOG_INFO("Assets loaded successfully");
 }
 
@@ -264,11 +230,6 @@ void Engine::saveScreenshot() {
     io::path filename = paths.getNewScreenshotFile("png");
     imageio::write(filename.string(), image.get());
     LOG_INFO("Save screenshot as '{}'", filename.string());
-}
-
-void Engine::onAssetsLoaded() {
-    assets->setup();
-    gui->onAssetsLoad(assets.get());
 }
 
 void Engine::renderFrame() {
@@ -312,133 +273,12 @@ void Engine::nextFrame() {
     input->pollEvents();
 }
 
-static void load_configs(Engine& engine, const io::path& root) {
-    auto& input = engine.getInput();
-    auto configFolder = root / io::path("config");
-    auto bindsFile = configFolder / io::path("bindings.toml");
-    if (io::is_regular_file(bindsFile)) {
-        input.getBindings().read(
-            toml::parse(bindsFile.string(),
-            io::read_string(bindsFile)),
-            BindType::Bind
-        );
-    }
-}
-
-void Engine::loadContent() {
-    scripting::cleanup();
-
-    LOG_INFO("Loading content");
-
-    std::vector<std::string> names;
-    for (auto& pack : contentPacks) {
-        names.push_back(pack.id);
-    }
-
-    PacksManager manager = createPacksManager(paths.getCurrentWorldFolder());
-    manager.scan();
-    names = manager.assemble(names);
-    contentPacks = manager.getAll(names);
-
-    std::vector<PathsRoot> entryPoints;
-    for (auto& pack : contentPacks) {
-        entryPoints.emplace_back(pack.id, pack.folder);
-    }
-    paths.setEntryPoints(std::move(entryPoints));
-
-    ContentBuilder contentBuilder;
-    CoreContent::setup(*input, contentBuilder);
-
-    auto builtinPack = ContentPack::createBuiltin(paths);
-
-    std::vector<PathsRoot> resRoots {
-        {BUILTIN_CONTENT_NAMESPACE, builtinPack.folder}
-    };
-    for (auto& pack : contentPacks) {
-        resRoots.push_back({pack.id, pack.folder});
-    }
-    resPaths = std::make_unique<ResPaths>("res:", resRoots);
-    {
-        ContentLoader(&builtinPack, contentBuilder, *resPaths).load();
-        load_configs(*this, builtinPack.folder);
-    }
-    for (auto& pack : contentPacks) {
-        ContentLoader(&pack, contentBuilder, *resPaths).load();
-        load_configs(*this, pack.folder);
-    }
-
-    content = contentBuilder.build();
-    scripting::on_content_load(content.get());
-
-    ContentLoader::loadScripts(*content);
-
-    setLanguage(langs::get_current());
-
-    if (!isHeadless()) {
-        loadAssets();
-        onAssetsLoaded();
-    }
-
-    LOG_INFO("Content loaded sucessfully");
-    Logger::getInstance().flush();
-}
-
-void Engine::resetContent() {
-    scripting::cleanup();
-
-    std::vector<PathsRoot> resRoots;
-    {
-        auto pack = ContentPack::createBuiltin(paths);
-        resRoots.push_back({BUILTIN_CONTENT_NAMESPACE, pack.folder});
-        load_configs(*this, pack.folder);
-    }
-    auto manager = createPacksManager(io::path());
-    manager.scan();
-    for (const auto& pack : manager.getAll(basePacks)) {
-        resRoots.push_back({pack.id, pack.folder});
-    }
-    resPaths = std::make_unique<ResPaths>("res:", resRoots);
-    contentPacks.clear();
-    content.reset();
-
-    setLanguage(langs::get_current());
-    if (!isHeadless()) {
-        loadAssets();
-        onAssetsLoaded();
-    }
-
-    contentPacks = manager.getAll(basePacks);
-}
-
-void Engine::loadWorldContent(const io::path& folder) {
-    contentPacks.clear();
-    auto packNames = ContentPack::worldPacksList(folder);
-    PacksManager manager;
-    manager.setSources({
-        {"world:content", folder.empty() ? folder : folder / "content"},
-        {"user:content", "user:content"},
-        {"res:content", "res:content"}
-    });
-    manager.scan();
-    contentPacks = manager.getAll(manager.assemble(packNames));
-    paths.setCurrentWorldFolder(folder);
-    loadContent();
-    loadControls();
-}
-
-void Engine::loadAllPacks() {
-	PacksManager manager = createPacksManager(paths.getCurrentWorldFolder());
-    manager.scan();
-    auto allnames = manager.getAllNames();
-    contentPacks = manager.getAll(manager.assemble(allnames));
-}
-
 EnginePaths& Engine::getPaths() {
 	return paths;
 }
 
-ResPaths* Engine::getResPaths() {
-    return resPaths.get();
+ResPaths& Engine::getResPaths() {
+    return paths.resPaths;
 }
 
 EngineSettings& Engine::getSettings() {
@@ -447,24 +287,6 @@ EngineSettings& Engine::getSettings() {
 
 Assets* Engine::getAssets() {
 	return assets.get();
-}
-
-const Content* Engine::getContent() const {
-    return content.get();
-}
-
-Content* Engine::getWriteableContent() {
-    return content.get();
-}
-
-std::vector<ContentPack>& Engine::getContentPacks() {
-    return contentPacks;
-}
-
-std::vector<ContentPack> Engine::getAllContentPacks() {
-    auto packs = getContentPacks();
-    packs.insert(packs.begin(), ContentPack::createBuiltin(paths));
-    return packs;
 }
 
 EngineController* Engine::getController() {
@@ -481,36 +303,24 @@ std::shared_ptr<Screen> Engine::getScreen() {
     return screen;
 }
 
-void Engine::setLanguage(std::string locale) {
-	langs::setup(
-        "res:",
-        std::move(locale),
-        resPaths ? resPaths->collectRoots() : std::vector<io::path> {{BUILTIN_CONTENT_NAMESPACE, "res:"}}
-    );
-}
-
 SettingsHandler& Engine::getSettingsHandler() {
     return *settingsHandler;
 }
 
-std::vector<std::string>& Engine::getBasePacks() {
-    return basePacks;
-}
-
 void Engine::saveSettings() {
     LOG_INFO("Writing the settings to a file");
-    io::write_string(paths.getSettingsFile(), toml::stringify(*settingsHandler));
+    io::write_string(EnginePaths::SETTINGS_FILE, toml::stringify(*settingsHandler));
     LOG_INFO("The settings were successfully written to the file");
 
     if (!params.headless) {
         LOG_INFO("Writing the controls to a file");
-        io::write_string(paths.getControlsFile(), input->getBindings().write());
+        io::write_string(EnginePaths::CONTROLS_FILE, input->getBindings().write());
         LOG_INFO("The controls were successfully written to the file");
     }
 }
 
 void Engine::loadSettings() {
-    io::path settings_file = paths.getSettingsFile();
+    io::path settings_file = EnginePaths::SETTINGS_FILE;
     if (io::is_regular_file(settings_file)) {
         LOG_INFO("Reading the settings file");
         std::string text = io::read_string(settings_file);
@@ -525,7 +335,7 @@ void Engine::loadSettings() {
 }
 
 void Engine::loadControls() {
-    io::path controls_file = paths.getControlsFile();
+    io::path controls_file = EnginePaths::CONTROLS_FILE;
     if (io::is_regular_file(controls_file)) {
         LOG_INFO("Reading the controls file");
         std::string text = io::read_string(controls_file);
@@ -572,4 +382,8 @@ bool Engine::isQuitSignal() const {
 void Engine::terminate() {
     instance->close();
     instance.reset();
+}
+
+ContentControl& Engine::getContentControl() {
+    return *content;
 }

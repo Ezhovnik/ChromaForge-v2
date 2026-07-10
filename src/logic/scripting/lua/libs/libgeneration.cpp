@@ -9,6 +9,7 @@
 #include <logic/scripting/lua/lua_custom_types.h>
 #include <content/ContentLoader.h>
 #include <content/Content.h>
+#include <content/ContentControl.h>
 
 static int l_save_fragment(lua::State* L) {
     auto fragment = lua::touserdata<lua::LuaVoxelFragment>(L, 1);
@@ -45,7 +46,7 @@ static int l_load_fragment(lua::State* L) {
 }
 
 static int l_get_generators(lua::State* L) {
-    auto packs = scripting::engine->getAllContentPacks();
+    auto packs = scripting::content_control->getAllContentPacks();
 
     lua::createtable(L, 0, 0);
 
@@ -60,7 +61,7 @@ static int l_get_generators(lua::State* L) {
 }
 
 static int l_get_default_generator(lua::State* L) {
-    auto combined = scripting::engine->getResPaths()->readCombinedObject(
+    auto combined = scripting::engine->getResPaths().readCombinedObject(
         EnginePaths::CONFIG_DEFAULTS.string()
     );
     return lua::pushstring(L, combined["generator"].asString());

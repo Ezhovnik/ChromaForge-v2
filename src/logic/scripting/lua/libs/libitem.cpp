@@ -3,6 +3,7 @@
 #include <items/Item.h>
 #include <content/ContentLoader.h>
 #include <engine/Engine.h>
+#include <content/ContentControl.h>
 
 static const Item* get_item_def(lua::State* L, int idx) {
     auto indices = scripting::content->getIndices();
@@ -92,7 +93,7 @@ static int l_reload_script(lua::State* L) {
     if (scripting::content == nullptr) {
         throw std::runtime_error("Content is not initialized");
     }
-    auto& writeableContent = *scripting::engine->getWriteableContent();
+    auto& writeableContent = *scripting::content_control->get();
     auto& def = writeableContent.items.require(name);
     ContentLoader::reloadScript(writeableContent, def);
     return 0;

@@ -22,9 +22,10 @@
 #include <objects/rigging.h>
 #include <items/Item.h>
 #include <engine/Engine.h>
+#include <content/ContentPack.h>
 
 AssetsLoader::AssetsLoader(
-    Engine& engine, Assets& assets, const ResPaths* paths
+    Engine& engine, Assets& assets, const ResPaths& paths
 ) : engine(engine), assets(assets), paths(paths) {
 	// Регистрируем встроенные загрузчики из asset_loaders.h
 	addLoader(AssetType::Shader, asset_loader::shader);
@@ -208,7 +209,7 @@ void AssetsLoader::processPreloadConfig(const io::path& file) {
 }
 
 void AssetsLoader::processPreloadConfigs(const Content* content) {
-    auto preloadFile = paths->getMainRoot() / "preload.json";
+    io::path preloadFile = "res:preload.json";
     if (io::exists(preloadFile)) {
         processPreloadConfig(preloadFile);
     }
@@ -216,7 +217,7 @@ void AssetsLoader::processPreloadConfigs(const Content* content) {
     for (auto& entry : content->getPacks()) {
         if (entry.first == BUILTIN_CONTENT_NAMESPACE) continue;
         const auto& pack = entry.second;
-        auto preloadFile = pack->getInfo().folder / "preload.json";
+        preloadFile = pack->getInfo().folder / "preload.json";
         if (io::exists(preloadFile)) {
             processPreloadConfig(preloadFile);
         }
@@ -298,7 +299,7 @@ bool AssetsLoader::loadExternalTexture(
     return false;
 }
 
-const ResPaths* AssetsLoader::getPaths() const {
+const ResPaths& AssetsLoader::getPaths() const {
 	return paths;
 }
 

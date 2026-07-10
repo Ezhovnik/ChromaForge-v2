@@ -26,13 +26,9 @@ static std::string generate_random_base64() {
     return util::base64_urlsafe_encode(bytes, n);
 }
 
-static inline io::path SCREENSHOTS_FOLDER = "screenshots";
-static inline io::path CONTENT_FOLDER = "content";
-static inline io::path WORLDS_FOLDER = "saves";
-static inline io::path CONFIG_FOLDER = "config";
-static inline io::path EXPORT_FOLDER = "export";
-static inline io::path CONTROLS_FILE = "controls.toml";
-static inline io::path SETTINGS_FILE = "settings.toml";
+static inline io::path SCREENSHOTS_FOLDER = "user:screenshots";
+static inline io::path CONTENT_FOLDER = "user:content";
+static inline io::path WORLDS_FOLDER = "user:saves";
 
 void EnginePaths::prepare() {
     io::set_device("res", std::make_shared<io::StdfsDevice>(resourcesFolder, false));
@@ -48,14 +44,13 @@ void EnginePaths::prepare() {
     LOG_INFO("Resources folder: {}", std::filesystem::canonical(resourcesFolder).u8string());
     LOG_INFO("User files folder: {}", std::filesystem::canonical(userFilesFolder).u8string());
 
-    auto contentFolder = io::path("user:") / CONTENT_FOLDER;
-    if (!io::is_directory(contentFolder)) {
-        io::create_directories(contentFolder);
+    if (!io::is_directory(CONTENT_FOLDER)) {
+        io::create_directories(CONTENT_FOLDER);
     }
 
     io::create_subdevice("builtin", "res", "");
-    io::create_subdevice("export", "user", EXPORT_FOLDER);
-    io::create_subdevice("config", "user", CONFIG_FOLDER);
+    io::create_subdevice("export", "user", "export");
+    io::create_subdevice("config", "user", "config");
 }
 
 const std::filesystem::path& EnginePaths::getUserFilesFolder() const {
@@ -66,16 +61,8 @@ const std::filesystem::path& EnginePaths::getResourcesFolder() const {
 	return resourcesFolder;
 }
 
-io::path EnginePaths::getControlsFile() const {
-    return io::path("user:") / CONTROLS_FILE;
-}
-
-io::path EnginePaths::getSettingsFile() const {
-    return io::path("user:") / SETTINGS_FILE;
-}
-
 io::path EnginePaths::getNewScreenshotFile(const std::string& ext) {
-	auto folder = io::path("user:") / SCREENSHOTS_FOLDER;
+	auto folder = SCREENSHOTS_FOLDER;
 	if (io::is_directory(folder)) io::create_directories(folder);
 
 	auto t = std::time(nullptr);
@@ -96,11 +83,7 @@ io::path EnginePaths::getNewScreenshotFile(const std::string& ext) {
 }
 
 io::path EnginePaths::getWorldsFolder() const {
-    return io::path("user:") / WORLDS_FOLDER;
-}
-
-io::path EnginePaths::getConfigFolder() const {
-    return io::path("user:") / CONFIG_FOLDER;
+    return WORLDS_FOLDER;
 }
 
 io::path EnginePaths::getCurrentWorldFolder() {
@@ -241,9 +224,8 @@ std::vector<io::path> EnginePaths::scanForWorlds() const {
 }
 
 ResPaths::ResPaths(
-    io::path mainRoot, 
     std::vector<PathsRoot> roots
-) : mainRoot(std::move(mainRoot)), roots(std::move(roots)) {}
+) : roots(std::move(roots)) {}
 
 io::path ResPaths::find(const std::string& filename) const {
     for (int i = roots.size() - 1; i >= 0; --i) {
@@ -251,7 +233,7 @@ io::path ResPaths::find(const std::string& filename) const {
         auto file = root.path / filename;
         if (io::exists(file)) return file;
     }
-    return mainRoot / filename;
+    return io::path("res:") / filename;
 }
 
 std::string ResPaths::findRaw(const std::string& filename) const {
@@ -340,8 +322,4 @@ std::vector<io::path> ResPaths::collectRoots() {
         collected.emplace_back(root.path);
     }
     return collected;
-}
-
-const io::path& ResPaths::getMainRoot() const {
-    return mainRoot;
 }

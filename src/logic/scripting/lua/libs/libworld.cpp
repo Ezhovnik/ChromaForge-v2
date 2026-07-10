@@ -21,6 +21,7 @@
 #include <world/files/WorldFiles.h>
 #include <content/Content.h>
 #include <content/ContentLoader.h>
+#include <content/ContentControl.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {
@@ -211,7 +212,7 @@ static int l_reload_script(lua::State* L) {
     if (scripting::content == nullptr) {
         throw std::runtime_error("Content is not initialized");
     }
-    auto& writeableContent = *scripting::engine->getWriteableContent();
+    auto& writeableContent = *scripting::content_control->get();
     auto pack = writeableContent.getPackRuntime(packid);
     ContentLoader::loadWorldScript(*pack);
     return 0;

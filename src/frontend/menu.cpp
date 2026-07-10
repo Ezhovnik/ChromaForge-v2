@@ -24,6 +24,7 @@
 #include <frontend/screens/MenuScreen.h>
 #include <debug/Logger.h>
 #include <assets/asset_loaders.h>
+#include <content/ContentPack.h>
 
 void menus::create_version_label(gui::GUI& gui) {
     auto text = "v" + ENGINE_VERSION_STRING + " development build ";
@@ -39,7 +40,7 @@ UIDocument* menus::show(
     Engine& engine, const std::string& name, std::vector<dv::value> args
 ) {
     auto menu = engine.getGUI().getMenu();
-    auto file = engine.getResPaths()->find("layouts/" + name + ".xml");
+    auto file = engine.getResPaths().find("layouts/" + name + ".xml");
     auto fullname = BUILTIN_CONTENT_NAMESPACE + ":layouts/" + name;
 
     auto documentPtr = UIDocument::read(

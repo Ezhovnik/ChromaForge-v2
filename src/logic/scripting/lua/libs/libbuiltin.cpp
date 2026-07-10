@@ -20,6 +20,7 @@
 #include <io/io.h>
 #include <graphics/core/Texture.h>
 #include <assets/Assets.h>
+#include <content/ContentControl.h>
 
 static int l_get_version(lua::State* L) {
     return lua::pushvec_stack(
@@ -217,7 +218,7 @@ static int l_load_texture(lua::State* L) {
 }
 
 static int l_load_content(lua::State* L) {
-    scripting::engine->loadContent();
+    scripting::content_control->loadContent();
     return 0;
 }
 
@@ -225,7 +226,7 @@ static int l_reset_content(lua::State* L) {
     if (scripting::level != nullptr) {
         throw std::runtime_error("World must be closed before");
     }
-    scripting::engine->resetContent();
+    scripting::content_control->resetContent();
     return 0;
 }
 

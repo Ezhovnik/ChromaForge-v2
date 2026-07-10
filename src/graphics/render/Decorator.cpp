@@ -55,7 +55,7 @@ Decorator::Decorator(
             player->getPosition()
         ));
     }
-    playerNamePreset.deserialize(engine.getResPaths()->readCombinedObject(
+    playerNamePreset.deserialize(engine.getResPaths().readCombinedObject(
         "presets/text3d/player_name.toml"
     ));
 }

@@ -14,6 +14,7 @@
 #include <util/stringutil.h>
 #include <objects/Player.h>
 #include <voxels/blocks_agent.h>
+#include <content/ContentControl.h>
 
 static int l_open_inventory(lua::State*) {
     if (!scripting::hud->isInventoryOpen()) scripting::hud->openInventory();
@@ -160,7 +161,7 @@ static int l_reload_script(lua::State* L) {
     if (scripting::content == nullptr) {
         throw std::runtime_error("Content is not initialized");
     }
-    auto& writeableContent = *scripting::engine->getWriteableContent();
+    auto& writeableContent = *scripting::content_control->get();
     auto pack = writeableContent.getPackRuntime(packid);
     const auto& info = pack->getInfo();
     scripting::load_hud_script(
