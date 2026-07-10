@@ -174,6 +174,7 @@ public:
 constexpr const char* to_string(ResourceType type) {
     switch (type) {
         case ResourceType::Camera: return "camera";
+        case ResourceType::PostEffectSlot: return "post-effect-slot";
         default: return "unknown";
     }
 }
@@ -181,6 +182,8 @@ constexpr const char* to_string(ResourceType type) {
 inline std::optional<ResourceType> ResourceType_from(std::string_view str) {
     if (str == "camera") {
         return ResourceType::Camera;
+    } else if (str == "post-effect-slot") {
+        return ResourceType::PostEffectSlot;
     }
     return std::nullopt;
 }

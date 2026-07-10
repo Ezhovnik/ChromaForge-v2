@@ -15,7 +15,9 @@ enum class ContentType {
 
 enum class ResourceType : size_t {
     Camera,
-    Last=Camera
+    PostEffectSlot,
+
+    Last=PostEffectSlot
 };
 
 inline constexpr auto RESOURCE_TYPES_COUNT = static_cast<size_t>(ResourceType::Last) + 1;

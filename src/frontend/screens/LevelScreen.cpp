@@ -42,7 +42,9 @@ LevelScreen::LevelScreen(
     int64_t localPlayer
 ) : Screen(engine),
     world(*levelPtr->getWorld()),
-    postProcessing(std::make_unique<PostProcessing>()),
+    postProcessing(std::make_unique<PostProcessing>(
+        levelPtr->content.getIndices(ResourceType::PostEffectSlot).size()
+    )),
     gui(engine.getGUI()),
     input(engine.getInput())
 {
@@ -120,7 +122,9 @@ void LevelScreen::initializeContent() {
     for (auto& entry : content.getPacks()) {
         initializePack(entry.second.get());
     }
-    scripting::on_frontend_init(hud.get(), renderer.get());
+    scripting::on_frontend_init(
+        hud.get(), renderer.get(), postProcessing.get()
+    );
 }
 
 void LevelScreen::initializePack(ContentPackRuntime* pack) {
