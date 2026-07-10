@@ -94,7 +94,7 @@ namespace gui {
         void setHighlighted(bool flag);
         bool isHighlighted() const;
 
-        virtual void clicked(mousecode) override;
+        virtual void clicked(Mousecode) override;
         virtual void onFocus() override;
         virtual const std::wstring& getTooltip() const override;
 

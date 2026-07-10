@@ -164,10 +164,10 @@ public:
     uint currentFrame = 0;
     uint frames[KEYS_BUFFER_SIZE] {};
     std::vector<uint> codepoints;
-    std::vector<keycode> pressedKeys;
+    std::vector<Keycode> pressedKeys;
     Bindings bindings;
     bool keys[KEYS_BUFFER_SIZE] {};
-    std::unordered_map<keycode, util::HandlersList<>> keyCallbacks;
+    std::unordered_map<Keycode, util::HandlersList<>> keyCallbacks;
 
     GLFWInput(GLFWwindow* window)
         : window(window) {
@@ -193,10 +193,10 @@ public:
             bool newstate = false;
             switch (binding.type) {
                 case inputType::keyboard:
-                    newstate = isPressed(static_cast<keycode>(binding.code));
+                    newstate = isPressed(static_cast<Keycode>(binding.code));
                     break;
                 case inputType::mouse:
-                    newstate = isClicked(static_cast<mousecode>(binding.code));
+                    newstate = isClicked(static_cast<Mousecode>(binding.code));
                     break;
             }
 
@@ -220,13 +220,13 @@ public:
         keys[key] = pressed;
         frames[key] = currentFrame;
         if (pressed && !prevPressed) {
-            const auto& callbacks = keyCallbacks.find(static_cast<keycode>(key));
+            const auto& callbacks = keyCallbacks.find(static_cast<Keycode>(key));
             if (callbacks != keyCallbacks.end()) {
                 callbacks->second.notify();
             }
         }
         if (pressed) {
-            pressedKeys.push_back(static_cast<keycode>(key));
+            pressedKeys.push_back(static_cast<Keycode>(key));
         }
     }
 
@@ -247,23 +247,23 @@ public:
         return scroll;
     }
 
-    bool isPressed(keycode key) const override {
-        int keycode = static_cast<int>(key);
-        if (keycode < 0 || keycode >= KEYS_BUFFER_SIZE) {
+    bool isPressed(Keycode key) const override {
+        int Keycode = static_cast<int>(key);
+        if (Keycode < 0 || Keycode >= KEYS_BUFFER_SIZE) {
             return false;
         }
-        return keys[keycode];
+        return keys[Keycode];
     }
-    bool justPressed(keycode keycode) const override {
-        return isPressed(keycode) && frames[static_cast<int>(keycode)] == currentFrame;
+    bool justPressed(Keycode Keycode) const override {
+        return isPressed(Keycode) && frames[static_cast<int>(Keycode)] == currentFrame;
     }
 
-    bool isClicked(mousecode code) const override {
+    bool isClicked(Mousecode code) const override {
         return isPressed(
-            static_cast<keycode>(MOUSE_KEYS_OFFSET + static_cast<int>(code))
+            static_cast<Keycode>(MOUSE_KEYS_OFFSET + static_cast<int>(code))
         );
     }
-    bool justClicked(mousecode code) const override {
+    bool justClicked(Mousecode code) const override {
         return isClicked(code) && frames[static_cast<int>(code) + MOUSE_KEYS_OFFSET] == currentFrame;
     }
 
@@ -304,11 +304,11 @@ public:
         return bindings;
     }
 
-    ObserverHandler addKeyCallback(keycode key, KeyCallback callback) override {
+    ObserverHandler addKeyCallback(Keycode key, KeyCallback callback) override {
         return keyCallbacks[key].add(std::move(callback));
     }
 
-    const std::vector<keycode>& getPressedKeys() const override {
+    const std::vector<Keycode>& getPressedKeys() const override {
         return pressedKeys;
     }
 

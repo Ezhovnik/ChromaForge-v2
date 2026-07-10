@@ -754,10 +754,10 @@ void TextBox::onInput() {
     refreshSyntax();
 }
 
-void TextBox::performEditingKeyboardEvents(keycode key) {
-    bool shiftPressed = gui.getInput().isPressed(keycode::LEFT_SHIFT);
+void TextBox::performEditingKeyboardEvents(Keycode key) {
+    bool shiftPressed = gui.getInput().isPressed(Keycode::LEFT_SHIFT);
     bool breakSelection = getSelectionLength() != 0 && !shiftPressed;
-    if (key == keycode::BACKSPACE) {
+    if (key == Keycode::BACKSPACE) {
         if (!eraseSelected() && caret > 0 && input.length() > 0) {
             if (caret > input.length()) caret = input.length();
             historian->onErase(caret - 1, input.substr(caret - 1, 1));
@@ -765,53 +765,53 @@ void TextBox::performEditingKeyboardEvents(keycode key) {
             setCaret(caret - 1);
             if (validate()) onInput();
         }
-    } else if (key == keycode::DEL) {
+    } else if (key == Keycode::DEL) {
         if (!eraseSelected() && caret < input.length()) {
             historian->onErase(caret, input.substr(caret, 1));
             input = input.substr(0, caret) + input.substr(caret + 1);
             if (validate()) onInput();
         }
-    } else if (key == keycode::ENTER) {
+    } else if (key == Keycode::ENTER) {
         if (multiline) {
             paste(L"\n");
         } else {
             defocus();
             if (validate() && consumer) consumer(getText());
         }
-    } else if (key == keycode::TAB) {
+    } else if (key == Keycode::TAB) {
         paste(L"    ");
-    } else if (key == keycode::LEFT) {
+    } else if (key == Keycode::LEFT) {
         stepLeft(shiftPressed, breakSelection);
-    } else if (key == keycode::RIGHT) {
+    } else if (key == Keycode::RIGHT) {
         stepRight(shiftPressed, breakSelection);
-    } else if (key == keycode::UP && onUpPressed) {
+    } else if (key == Keycode::UP && onUpPressed) {
         onUpPressed();
-    } else if (key == keycode::DOWN && onDownPressed) {
+    } else if (key == Keycode::DOWN && onDownPressed) {
         onDownPressed();
     }
 }
 
-void TextBox::keyPressed(keycode key) {
+void TextBox::keyPressed(Keycode key) {
     const auto& inputEvents = gui.getInput();
     if (editable) performEditingKeyboardEvents(key);
 
-    if (inputEvents.isPressed(keycode::LEFT_CONTROL) && key != keycode::LEFT_CONTROL) {
+    if (inputEvents.isPressed(Keycode::LEFT_CONTROL) && key != Keycode::LEFT_CONTROL) {
         if (controlCombinationsHandler) {
             if (controlCombinationsHandler(static_cast<int>(key))) {
                 return;
             }
         }
-        if (key == keycode::C || key == keycode::X) {
+        if (key == Keycode::C || key == Keycode::X) {
             std::string text = util::wstr2str_utf8(getSelection());
             if (!text.empty()) {
                 gui.getInput().setClipboardText(text.c_str());
             }
-            if (editable && key == keycode::X) {
+            if (editable && key == Keycode::X) {
                 eraseSelected();
             }
         }
 
-        if (key == keycode::V && editable) {
+        if (key == Keycode::V && editable) {
             const char* text = inputEvents.getClipboardText();
             if (text) {
                 historian->sync();
@@ -821,7 +821,7 @@ void TextBox::keyPressed(keycode key) {
             }
         }
 
-        if (key == keycode::A) {
+        if (key == Keycode::A) {
             if (selectionStart == selectionEnd) {
                 select(0, input.length());
             } else {
@@ -829,12 +829,12 @@ void TextBox::keyPressed(keycode key) {
             }
         }
 
-        if (key == keycode::Z) {
+        if (key == Keycode::Z) {
             historian->undo();
             refreshSyntax();
         }
 
-        if (key == keycode::Y) {
+        if (key == Keycode::Y) {
             historian->redo();
             refreshSyntax();
         }
@@ -1020,11 +1020,11 @@ bool TextBox::isTextWrapping() const {
 void TextBox::setOnUpPressed(const runnable& callback) {
     if (callback == nullptr) {
         onUpPressed = [this]() {
-            if (inputEvents.isPressed(keycode::LEFT_CONTROL)) {
+            if (inputEvents.isPressed(Keycode::LEFT_CONTROL)) {
                 scrolled(1);
                 return;
             }
-            bool shiftPressed = inputEvents.isPressed(keycode::LEFT_SHIFT);
+            bool shiftPressed = inputEvents.isPressed(Keycode::LEFT_SHIFT);
             bool breakSelection = getSelectionLength() != 0 && !shiftPressed;
             stepDefaultUp(shiftPressed, breakSelection);
         };
@@ -1036,11 +1036,11 @@ void TextBox::setOnUpPressed(const runnable& callback) {
 void TextBox::setOnDownPressed(const runnable& callback) {
     if (callback == nullptr) {
         onDownPressed = [this]() {
-            if (inputEvents.isPressed(keycode::LEFT_CONTROL)) {
+            if (inputEvents.isPressed(Keycode::LEFT_CONTROL)) {
                 scrolled(-1);
                 return;
             }
-            bool shiftPressed = inputEvents.isPressed(keycode::LEFT_SHIFT);
+            bool shiftPressed = inputEvents.isPressed(Keycode::LEFT_SHIFT);
             bool breakSelection = getSelectionLength() != 0 && !shiftPressed;
             stepDefaultDown(shiftPressed, breakSelection);
         };

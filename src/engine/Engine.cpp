@@ -230,9 +230,9 @@ void Engine::loadAssets() {
 
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
-    if (input->justPressed(keycode::F2)) saveScreenshot();
-    if (input->justPressed(keycode::F8)) gui->toggleDebug();
-    if (input->justPressed(keycode::F11)) settings.display.fullscreen.toggle();
+    if (input->justPressed(Keycode::F2)) saveScreenshot();
+    if (input->justPressed(Keycode::F8)) gui->toggleDebug();
+    if (input->justPressed(Keycode::F11)) settings.display.fullscreen.toggle();
 }
 
 void Engine::saveScreenshot() {

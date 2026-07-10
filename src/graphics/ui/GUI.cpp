@@ -116,7 +116,7 @@ void GUI::activateMouse(float deltaTime, const CursorState& cursor) {
     }
     this->hover = hover;
 
-    if (input.justClicked(mousecode::BUTTON_1)) {
+    if (input.justClicked(Mousecode::BUTTON_1)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
             if (doubleClickTimer < doubleClickDelay) {
@@ -137,20 +137,20 @@ void GUI::activateMouse(float deltaTime, const CursorState& cursor) {
             focus->defocus();
             focus = nullptr;
         }
-    } else if (!input.isClicked(mousecode::BUTTON_1) && pressed) {
+    } else if (!input.isClicked(Mousecode::BUTTON_1) && pressed) {
         pressed->mouseRelease(cursor.pos.x, cursor.pos.y);
         pressed = nullptr;
     }
 
     if (hover) {
-        for (mousecode code : MOUSECODES_ALL) {
+        for (Mousecode code : MOUSECODES_ALL) {
             if (input.justClicked(code)) hover->clicked(code);
         }
     }
 } 
 
 void GUI::activateFocused() {
-    if (input.justPressed(keycode::ESCAPE)) {
+    if (input.justPressed(Keycode::ESCAPE)) {
         focus->defocus();
         focus = nullptr;
         return;
@@ -165,7 +165,7 @@ void GUI::activateFocused() {
 
     const auto& cursor = input.getCursor();
     if (!cursor.locked) {
-        if (input.isClicked(mousecode::BUTTON_1) && (input.justClicked(mousecode::BUTTON_1) || cursor.delta.x || cursor.delta.y)) {
+        if (input.isClicked(Mousecode::BUTTON_1) && (input.justClicked(Mousecode::BUTTON_1) || cursor.delta.x || cursor.delta.y)) {
             if (!doubleClicked) {
                 focus->mouseMove(cursor.pos.x, cursor.pos.y);
             }
@@ -249,11 +249,11 @@ void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
         batch2D->untexture();
         auto node = hover->getParent();
         while (node) {
-            auto pos = node->calcPos();
+            auto parentPos = node->calcPos();
             auto size = node->getSize();
 
             batch2D->setColor(0, 255, 255);
-            batch2D->lineRect(pos.x, pos.y, size.x - 1, size.y - 1);
+            batch2D->lineRect(parentPos.x, parentPos.y, size.x - 1, size.y - 1);
 
             node = node->getParent();
         }

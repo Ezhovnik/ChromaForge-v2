@@ -71,7 +71,7 @@ namespace gui {
 
         void resetMaxLocalCaret();
 
-        void performEditingKeyboardEvents(keycode key);
+        void performEditingKeyboardEvents(Keycode key);
 
         void refreshLabel();
 
@@ -178,7 +178,7 @@ namespace gui {
         void erase(size_t start, size_t length);
         size_t getSelectionStart() const;
         size_t getSelectionEnd() const;
-        virtual void keyPressed(keycode key) override;
+        virtual void keyPressed(Keycode key) override;
         virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos) override;
     };
 }

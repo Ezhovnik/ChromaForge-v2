@@ -157,7 +157,7 @@ namespace gui {
         virtual void onFocus() {focused = true;}
         virtual void click(int x, int y);
         virtual void doubleClick(int x, int y);
-        virtual void clicked(mousecode button) {}
+        virtual void clicked(Mousecode button) {}
         virtual void mouseMove(int x, int y) {};
         virtual void mouseRelease(int x, int y);
         virtual void scrolled(int value);
@@ -168,7 +168,7 @@ namespace gui {
         virtual bool isFocuskeeper() const {return false;}
 
         virtual void typed(uint codepoint) {};
-        virtual void keyPressed(keycode key) {};
+        virtual void keyPressed(Keycode key) {};
 
         virtual bool isInside(glm::vec2 pos);
         virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos);
