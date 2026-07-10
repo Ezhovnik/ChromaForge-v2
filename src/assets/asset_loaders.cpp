@@ -36,6 +36,22 @@ static bool load_animation(
 	Atlas* dstAtlas
 );
 
+static auto process_program(const ResPaths& paths, const std::string& filename) {
+    // Формируем пути к файлам вершинного и фрагментного шейдеров
+    io::path vertexFile = paths.find(filename + ".vert");
+    io::path fragmentFile = paths.find(filename + ".frag");
+
+    // Читаем исходный код шейдеров из файлов
+    std::string vertexSource = io::read_string(vertexFile);
+    std::string fragmentSource = io::read_string(fragmentFile);
+
+    auto& preprocessor = *ShaderProgram::preprocessor;
+
+    auto vertex = preprocessor.process(vertexFile, vertexSource);
+    auto fragment = preprocessor.process(fragmentFile, fragmentSource);
+    return std::make_pair(vertex, fragment);
+}
+
 asset_loader::postfunc asset_loader::shader(
 	AssetsLoader*,
 	const ResPaths& paths, 
@@ -43,16 +59,13 @@ asset_loader::postfunc asset_loader::shader(
 	const std::string& name, 
 	const std::shared_ptr<AssetsConfig>&)
 {
-	// Формируем пути к файлам вершинного и фрагментного шейдеров
+	auto [vertex, fragment] = process_program(paths, filename);
+
     io::path vertexFile = paths.find(filename + ".vert");
     io::path fragmentFile = paths.find(filename + ".frag");
 
-	// Читаем исходный код шейдеров из файлов
-    std::string vertexSource = io::read_string(vertexFile);
-    std::string fragmentSource = io::read_string(fragmentFile);
-
-	vertexSource = ShaderProgram::preprocessor->process(vertexFile, vertexSource);
-    fragmentSource = ShaderProgram::preprocessor->process(fragmentFile, fragmentSource);
+	std::string vertexSource = std::move(vertex.code);
+    std::string fragmentSource = std::move(fragment.code);
 
 	// Сохраняем шейдер в менеджере ресурсов под указанным именем
 	return [=](auto assets) {
@@ -119,6 +132,40 @@ asset_loader::postfunc asset_loader::font(
             }
         }
         assets->store(std::make_unique<Font>(std::move(textures), res, 4), name);
+    };
+}
+
+asset_loader::postfunc asset_loader::posteffect(
+    AssetsLoader*,
+    const ResPaths& paths,
+    const std::string& file,
+    const std::string& name,
+    const std::shared_ptr<AssetsConfig>& settings
+) {
+    io::path effectFile = paths.find(file + ".glsl");
+    std::string effectSource = io::read_string(effectFile);
+
+    auto& preprocessor = *ShaderProgram::preprocessor;
+    preprocessor.addHeader(
+        "__effect__", preprocessor.process(effectFile, effectSource, true)
+    );
+
+    auto [vertex, fragment] = process_program(paths, SHADERS_FOLDER + "/effect");
+    auto params = std::move(fragment.params);
+
+    std::string vertexSource = std::move(vertex.code);
+    std::string fragmentSource = std::move(fragment.code);
+
+    return [=](auto assets) {
+        auto program = ShaderProgram::create(
+            effectFile.string(),
+            effectFile.string(),
+            vertexSource,
+            fragmentSource
+        );
+        assets->store(
+            std::make_shared<PostEffect>(std::move(program), params), name
+        );
     };
 }
 

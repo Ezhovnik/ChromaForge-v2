@@ -9,31 +9,34 @@
 #include <debug/Logger.h>
 #include <io/engine_paths.h>
 #include <constants.h>
-
-void GLSLExtension::setVersion(std::string version) {
-    this->version = std::move(version);
-}
+#include <coders/BasicParser.h>
+#include <coders/json.h>
+#include <data/dv_util.h>
 
 void GLSLExtension::setPaths(const ResPaths* paths) {
     this->paths = paths;
 }
 
 void GLSLExtension::loadHeader(const std::string& name) {
+    if (paths == nullptr) return;
+
     io::path file = paths->find(SHADERS_FOLDER + "/lib/" + name + ".glsl");
     std::string source = io::read_string(file);
-    addHeader(name, "");
+    addHeader(name, {});
     addHeader(name, process(file, source, true));
 }
 
-void GLSLExtension::addHeader(const std::string& name, std::string source) {
-    headers[name] = std::move(source);
+void GLSLExtension::addHeader(const std::string& name, ProcessingResult header) {
+    headers[name] = std::move(header);
 }
 
 void GLSLExtension::define(const std::string& name, std::string value) {
     defines[name] = std::move(value);
 }
 
-const std::string& GLSLExtension::getHeader(const std::string& name) const {
+const GLSLExtension::ProcessingResult& GLSLExtension::getHeader(
+    const std::string& name
+) const {
     auto found = headers.find(name);
     if (found == headers.end()) {
         LOG_ERROR("No header {} loaded", name);
@@ -49,6 +52,10 @@ const std::string& GLSLExtension::getDefine(const std::string& name) const {
         throw std::runtime_error("Name '" + name + "' is not defined");
     }
     return found->second;
+}
+
+const std::unordered_map<std::string, std::string>& GLSLExtension::getDefines() const {
+    return defines;
 }
 
 bool GLSLExtension::hasDefine(const std::string& name) const {
@@ -75,11 +82,9 @@ inline void parsing_error(
 
 // Вспомогательная функция: выводит предупреждение о проблеме при парсинге
 inline void parsing_warning(
-    const io::path& file, 
-    uint linenum, const 
-    std::string& message
+    std::string_view file, uint linenum, const std::string& message
 ) {
-    LOG_WARN("File {}: {} at line {}", file.string(), message, std::to_string(linenum));
+    LOG_WARN("File {}: {} at line {}", std::string(file), message, std::to_string(linenum));
 }
 
 // Вставляет директиву #line с указанным номером строки для сохранения корректной информации о строках в сообщениях компилятора
@@ -87,64 +92,191 @@ inline void source_line(std::stringstream& ss, uint linenum) {
     ss << "#line " << linenum << "\n";
 }
 
-// Основной метод обработки исходного кода шейдера
-std::string GLSLExtension::process(
-    const io::path& file, const std::string& source, bool header
+static std::optional<PostEffect::Param::Type> param_type_from(
+    const std::string& name
 ) {
-    std::stringstream ss;
-    size_t pos = 0;
-    uint linenum = 1; // текущая обрабатываемая строка исходного файла
-
-    // Вставляем версию GLSL в начало
-    if (!header) {
-        ss << "#version " << version << '\n';
+    static const std::unordered_map<std::string, PostEffect::Param::Type> typeNames {
+        {"float", PostEffect::Param::Type::Float},
+        {"vec2", PostEffect::Param::Type::Vec2},
+        {"vec3", PostEffect::Param::Type::Vec3},
+        {"vec4", PostEffect::Param::Type::Vec4},
+    };
+    const auto& found = typeNames.find(name);
+    if (found == typeNames.end()) {
+        return std::nullopt;
     }
-    // Вставляем все определённые макросы.
-    for (auto& entry : defines) {
-        ss << "#define " << entry.first << " " << entry.second << '\n';
+    return found->second;
+}
+
+static PostEffect::Param::Value default_value_for(PostEffect::Param::Type type) {
+    switch (type) {
+        case PostEffect::Param::Type::Float:
+            return 0.0f;
+        case PostEffect::Param::Type::Vec2:
+            return glm::vec2 {0.0f, 0.0f};
+        case PostEffect::Param::Type::Vec3:
+            return glm::vec3 {0.0f, 0.0f, 0.0f};
+        case PostEffect::Param::Type::Vec4:
+            return glm::vec4 {0.0f, 0.0f, 0.0f, 0.0f};
+        default:
+            LOG_ERROR("Unsupported type");
+            throw std::runtime_error("Unsupported type");
     }
-    // Устанавливаем #line на начало исходного кода (после добавленных директив)
-    source_line(ss, linenum);
+}
 
-    while (pos < source.length()) {
-        size_t endline = source.find('\n', pos);
-        if (endline == std::string::npos) endline = source.length();
+class GLSLParser : public BasicParser<char> {
+public:
+    GLSLParser(GLSLExtension& glsl, std::string_view file, std::string_view source, bool header) : BasicParser(file, source), glsl(glsl) {
+        if (!header) {
+            ss << "#version " << GLSLExtension::VERSION << '\n';
+        }
+        for (auto& entry : glsl.getDefines()) {
+            ss << "#define " << entry.first << " " << entry.second << '\n';
+        }
+        uint linenum = 1;
+        source_line(ss, linenum);
 
-        // Если строка начинается с '#', проверяем директивы препроцессора.
-        if (source[pos] == '#') {
-            std::string line = source.substr(pos + 1, endline - pos);
-            util::trim(line);
+        clikeComment = true;
+    }
 
-            if (line.find("include") != std::string::npos) {
-                // Обработка #include
-                line = line.substr(7);
-                util::trim(line);
-                if (line.length() < 3) parsing_error(file, linenum, "invalid 'include' syntax");
+    bool processIncludeDirective() {
+        skipWhitespace(false);
+        if (peekNoJump() != '<') {
+            LOG_ERROR("'<' expected");
+            throw error("'<' expected");
+        }
+        skip(1);
+        skipWhitespace(false);
+        auto headerName = parseName();
+        skipWhitespace(false);
+        if (peekNoJump() != '>') {
+            LOG_ERROR("'>' expected");
+            throw error("'>' expected");
+        }
+        skip(1);
+        skipWhitespace(false);
+        skipLine();
 
-                if (line[0] != '<' || line[line.length() - 1] != '>') parsing_error(file, linenum, "expected '#include <filename>' syntax");
+        if (!glsl.hasHeader(headerName)) {
+            glsl.loadHeader(headerName);
+        }
+        const auto& header = glsl.getHeader(headerName);
+        for (const auto& [name, param] : header.params) {
+            params[name] = param;
+        }
+        ss << header.code << '\n';
+        source_line(ss, line);
+        return false;
+    }
 
-                // Извлекаем имя файла без угловых скобок.
-                std::string name = line.substr(1, line.length() - 2);
-                if (!hasHeader(name)) loadHeader(name);
-                source_line(ss, 1);
-                ss << getHeader(name) << '\n';
-                pos = endline + 1;
-                linenum++;
-                source_line(ss, linenum);
-                continue;
-            } else if (line.find("version") != std::string::npos) {
-                // Обработка #version – удаляем её с предупреждением, так как версия уже задана программно
-                parsing_warning(file, linenum, "removed #version directive");
-                pos = endline + 1;
-                linenum++;
-                source_line(ss, linenum);
-                continue;
+    bool processVersionDirective() {
+        parsing_warning(filename, line, "Removed #version directive");
+        source_line(ss, line);
+        skipLine();
+        return false;
+    }
+
+    template<int n>
+    PostEffect::Param::Value parseVectorValue() {
+        if (peekNoJump() != '[') {
+            LOG_ERROR("'[' expected");
+            throw error("'[' expected");
+        }
+        auto value = json::parse(
+            filename,
+            std::string_view(source.data() + pos, source.size() - pos)
+        );
+        glm::vec<n, float> vec {};
+        try {
+            dv::get_vec<n>(value, vec);
+            return vec;
+        } catch (const std::exception& err) {
+            throw error(err.what());
+        }
+    }
+
+    PostEffect::Param::Value parseDefaultValue(PostEffect::Param::Type type, const std::string& name) {
+        switch (type) {
+            case PostEffect::Param::Type::Float:
+                return static_cast<float>(parseNumber(1).asNumber());
+            case PostEffect::Param::Type::Vec2:
+                return parseVectorValue<2>();
+            case PostEffect::Param::Type::Vec3:
+                return parseVectorValue<3>();
+            case PostEffect::Param::Type::Vec4:
+                return parseVectorValue<4>();
+            default:
+                LOG_ERROR("Unsupported default value for type {}", name);
+                throw error("Unsupported default value for type " + name);
+        }
+    }
+
+    bool processParamDirective() {
+        skipWhitespace(false);
+        auto typeName = parseName();
+        auto type = param_type_from(typeName);
+        if (!type.has_value()) {
+            LOG_ERROR("Unsupported param type {}", util::quote(typeName));
+            throw error("Unsupported param type " + util::quote(typeName));
+        }
+        skipWhitespace(false);
+        auto paramName = parseName();
+        if (params.find(paramName) != params.end()) {
+            LOG_ERROR("Duplicating param {}", util::quote(typeName));
+            throw error("duplicating param " + util::quote(paramName));
+        }
+        skipWhitespace(false);
+        ss << "uniform " << typeName << " " << paramName << ";\n";
+        auto defValue = default_value_for(type.value());
+        if (peekNoJump() == '=') {
+            skip(1);
+            skipWhitespace(false);
+            defValue = parseDefaultValue(type.value(), typeName);
+        }
+        skipLine();
+
+        params[paramName] = PostEffect::Param(type.value(), std::move(defValue));
+        return false;
+    }
+
+    bool processPreprocessorDirective() {
+        skip(1);
+
+        auto name = parseName();
+
+        if (name == "version") {
+            return processVersionDirective();
+        } else if (name == "include") {
+            return processIncludeDirective();
+        } else if (name == "param") {
+            return processParamDirective();
+        }
+        return true;
+    }
+
+    GLSLExtension::ProcessingResult process() {
+        while (hasNext()) {
+            skipWhitespace(false);
+            if (!hasNext()) break;
+            if (source[pos] != '#' || processPreprocessorDirective()) {
+                pos = linestart;
+                ss << readUntilEOL() << '\n';
+                skip(1);
             }
         }
-        // Обычная строка – копируем её в выходной поток.
-        linenum++;
-        ss << source.substr(pos, endline + 1 - pos);
-        pos = endline + 1;
+        return {ss.str(), std::move(params)};
     }
-    return ss.str();    
+private:
+    GLSLExtension& glsl;
+    std::unordered_map<std::string, PostEffect::Param> params;
+    std::stringstream ss;
+};
+
+GLSLExtension::ProcessingResult GLSLExtension::process(
+    const io::path& file, const std::string& source, bool header
+) {
+    std::string filename = file.string();
+    GLSLParser parser(*this, filename, source, header);
+    return parser.process();
 }
+

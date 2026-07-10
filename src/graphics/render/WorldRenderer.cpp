@@ -6,11 +6,6 @@
 #include <assert.h>
 #include <string>
 
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include <content/Content.h>
 #include <window/Window.h>
 #include <window/Camera.h>
@@ -405,11 +400,7 @@ void WorldRenderer::draw(
         renderBlockOverlay(wctx);
     }
 
-    auto screenShader = assets.get<ShaderProgram>("screen");
-    screenShader->use();
-    screenShader->uniform1f("u_timer", timer);
-    screenShader->uniform1f("u_dayTime", worldInfo.daytime);
-    postProcessing.render(pctx, screenShader);
+    postProcessing.render(pctx, assets, timer);
 }
 
 void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {

@@ -5,9 +5,11 @@
         "default",
         "lines",
         "entity",
-        "screen",
         "background",
         "skybox_gen"
+    ],
+    "post-effects": [
+        "default"
     ],
     "textures": [
         "gui/menubg",

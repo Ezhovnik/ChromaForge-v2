@@ -50,7 +50,7 @@ public:
      * @param name Имя uniform-переменной в шейдере.
      * @param matrix Значение матрицы.
      */
-    void uniformMatrix(const std::string& name, glm::mat4 matrix);
+    void uniformMatrix(const std::string&, const glm::mat4& matrix);
 
     /**
      * @brief Загружает целое число в uniform-переменную.
@@ -78,14 +78,14 @@ public:
      * @param name Имя переменной.
      * @param xy Два вещественных числа в виде вектора.
      */
-    void uniform2f(const std::string& name, glm::vec2 xy);
+    void uniform2f(const std::string& name, const glm::vec2& xy);
 
     /**
      * @brief Загружает два целых числа в uniform-переменную (vec2).
      * @param name Имя переменной.
      * @param xy Два целых числа в виде вектора.
      */
-    void uniform2i(const std::string& name, glm::ivec2 xy);
+    void uniform2i(const std::string& name, const glm::ivec2& xy);
 
     /**
      * @brief Загружает три вещественных числа в uniform-переменную (vec3).
@@ -99,7 +99,14 @@ public:
      * @param name Имя переменной.
      * @param xyz Три вещественных числа в виде вектора.
      */
-    void uniform3f(const std::string& name, glm::vec3 xyz);
+    void uniform3f(const std::string& name, const glm::vec3& xyz);
+
+    /**
+     * @brief Загружает четыре вещественных числа в uniform-переменную (vec4).
+     * @param name Имя переменной.
+     * @param xyzw Четыре вещественных числа в виде вектора.
+     */
+    void uniform4f(const std::string& name, const glm::vec4& xyzw);
 
     /**
      * @brief Создаёт шейдерную программу из исходных кодов вершинного и фрагментного шейдеров.

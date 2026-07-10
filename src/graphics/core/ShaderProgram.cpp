@@ -41,38 +41,43 @@ void ShaderProgram::use() {
     glUseProgram(id);
 }
 
-void ShaderProgram::uniformMatrix(const std::string& name, glm::mat4 matrix) {
+void ShaderProgram::uniformMatrix(const std::string& name, const glm::mat4& matrix) {
     glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
-void ShaderProgram::uniform1i(const std::string& name, int x){
+void ShaderProgram::uniform1i(const std::string& name, int x) {
 
 	glUniform1i(getUniformLocation(name), x);
 }
 
-void ShaderProgram::uniform1f(const std::string& name, float x){
+void ShaderProgram::uniform1f(const std::string& name, float x) {
 	glUniform1f(getUniformLocation(name), x);
 }
 
-void ShaderProgram::uniform2f(const std::string& name, float x, float y){
+void ShaderProgram::uniform2f(const std::string& name, float x, float y) {
 	glUniform2f(getUniformLocation(name), x, y);
 }
 
-void ShaderProgram::uniform2f(const std::string& name, glm::vec2 xy) {
-    uniform2f(name, xy.x, xy.y);
+void ShaderProgram::uniform2f(const std::string& name, const glm::vec2& xy) {
+    glUniform2f(getUniformLocation(name), xy.x, xy.y);
 }
 
-void ShaderProgram::uniform2i(const std::string& name, glm::ivec2 xy){
+void ShaderProgram::uniform2i(const std::string& name, const glm::ivec2& xy) {
     glUniform2i(getUniformLocation(name), xy.x, xy.y);
 }
 
 void ShaderProgram::uniform3f(const std::string& name, float x, float y, float z){
-	glUniform3f(getUniformLocation(name), x,y,z);
+	glUniform3f(getUniformLocation(name), x, y, z);
 }
 
-void ShaderProgram::uniform3f(const std::string& name, glm::vec3 xyz) {
-    uniform3f(name, xyz.x, xyz.y, xyz.z);
+void ShaderProgram::uniform3f(const std::string& name, const glm::vec3& xyz) {
+    glUniform3f(getUniformLocation(name), xyz.x, xyz.y, xyz.z);
 }
+
+void ShaderProgram::uniform4f(const std::string& name, const glm::vec4& xyzw) {
+    glUniform4f(getUniformLocation(name), xyzw.x, xyzw.y, xyzw.z, xyzw.w);
+}
+
 
 inline auto shader_deleter = [](GLuint* shader) {
     glDeleteShader(*shader);

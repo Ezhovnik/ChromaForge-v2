@@ -8,7 +8,9 @@ class BasicParser {
     using StringT = std::basic_string<CharT>;
     using StringViewT = std::basic_string_view<CharT>;
 
+    void skipWhitespaceBasic(bool newline = true);
     void skipWhitespaceHashComment(bool newline = true);
+    void skipWhitespaceCLikeComment(bool newline = true);
 protected:
     std::string_view filename;
     StringViewT source;
@@ -16,6 +18,7 @@ protected:
     uint line = 1;
     uint linestart = 0;
     bool hashComment = false;
+    bool clikeComment = false;
 
     void skipWhitespace(bool newline = true);
     void skip(size_t n);

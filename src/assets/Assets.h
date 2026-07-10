@@ -25,7 +25,8 @@ enum class AssetType {
 	Atlas, ///< Атлас текстур
 	Layout, ///< Макет интерфейса (XML)
      Sound, ///< Звук
-     Model
+     Model,
+     PostEffect
 };
 
 namespace asset_loader {
@@ -113,6 +114,16 @@ public:
           const auto& found = map.find(name);
           if (found == map.end()) return nullptr;
           return static_cast<T*>(found->second.get());
+     }
+
+     template <class T>
+     std::shared_ptr<T> getShared(const std::string& name) const {
+          const auto& mapIter = assets.find(typeid(T));
+          if (mapIter == assets.end()) return nullptr;
+          const auto& map = mapIter->second;
+          const auto& found = map.find(name);
+          if (found == map.end()) return nullptr;
+          return std::static_pointer_cast<T>(found->second);
      }
 
      template <class T>

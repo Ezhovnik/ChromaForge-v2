@@ -5,41 +5,45 @@
 #include <vector>
 
 #include <io/io.h>
+#include <graphics/core/PostEffect.h>
 
 class ResPaths;
 
 // Предобработчик GLSL-шейдеров
 class GLSLExtension {
-    std::unordered_map<std::string, std::string> headers; // Кэш заголовков (имя -> исходный код)
-    std::unordered_map<std::string, std::string> defines; // Кэш макросов (имя -> значение)
-
-    // Версия GLSL, используемая для подстановки в шейдер
-    std::string version = "330 core";
-
-    // Указатель на объект путей ресурсов для поиска заголовочных файлов
-    const ResPaths* paths = nullptr;
-
-    // Загружает заголовок name из файловой системы (через paths) и сохраняет в кэш
-    void loadHeader(const std::string& name);
 public:
+    using ParamsMap = std::unordered_map<std::string, PostEffect::Param>;
+
+    struct ProcessingResult {
+        std::string code;
+        ParamsMap params;
+    };
+
     void setPaths(const ResPaths* paths);
-    void setVersion(std::string version);
 
     // Макросы
     void define(const std::string& name, std::string value); // Добавляем определение макроса
     void undefine(const std::string& name); // Удаляем определение макроса
     const std::string& getDefine(const std::string& name) const; // Получаем значение макроса
+    const std::unordered_map<std::string, std::string>& getDefines() const;
     bool hasDefine(const std::string& name) const; // Проверяем наличие определения макроса
 
     // Заголовки
-    void addHeader(const std::string& name, std::string source); // Добавляем заголовок вручную (минуя файловую систему)
-    const std::string& getHeader(const std::string& name) const; // Получаем код заголовка по имени
+    void addHeader(const std::string& name, ProcessingResult header);
+    const ProcessingResult& getHeader(const std::string& name) const;
     bool hasHeader(const std::string& name) const; // Проверяем наличие заголовка
+    void loadHeader(const std::string& name);
 
-    // Основная функций обработки
-    std::string process(
+    ProcessingResult process(
         const io::path& file,
         const std::string& source,
         bool header=false
     );
+
+    static inline std::string VERSION = "330 core";
+private:
+    std::unordered_map<std::string, ProcessingResult> headers;
+    std::unordered_map<std::string, std::string> defines;
+
+    const ResPaths* paths = nullptr;
 };
