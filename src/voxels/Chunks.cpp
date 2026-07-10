@@ -42,9 +42,9 @@ Chunks::Chunks(
 }
 
 void Chunks::configure(int32_t x, int32_t z, uint32_t radius) {
-    setCenter(x, z);
     uint32_t diameter = radius * 2LL;
     if (getWidth() != diameter) resize(diameter, diameter);
+    setCenter(x, z);
 }
 
 voxel* Chunks::getVoxel(int32_t x, int32_t y, int32_t z) const {
@@ -291,7 +291,7 @@ glm::vec3 Chunks::rayCastToObstacle(
 }
 
 void Chunks::setCenter(int32_t x, int32_t z) {
-	areaMap.setCenter(floordiv(x, CHUNK_WIDTH), floordiv(z, CHUNK_DEPTH));
+	areaMap.setCenter(floordiv<CHUNK_WIDTH>(x), floordiv<CHUNK_DEPTH>(z));
 }
 
 bool Chunks::checkReplaceability(

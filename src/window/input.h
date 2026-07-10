@@ -176,7 +176,7 @@ struct Binding {
     inputType type;
     int code;
     bool state = false;
-    bool justChange = false;
+    bool justChanged = false;
     bool enabled = true;
 
 	Binding() = default;
@@ -195,7 +195,7 @@ struct Binding {
      * @return true, если кнопка нажата и состояние изменилось в этом кадре.
      */
     bool justActive() const {
-        return state && justChange;
+        return state && justChanged;
     }
 
     void reset(inputType, int);

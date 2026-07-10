@@ -350,7 +350,7 @@ void WorldGenerator::generateHeightmap(
 
 void WorldGenerator::update(int centerX, int centerY, int loadDistance) {
     surroundMap.setCenter(centerX, centerY);
-    surroundMap.resize(loadDistance + 2);
+    surroundMap.resize(loadDistance);
     surroundMap.setCenter(centerX, centerY);
 }
 

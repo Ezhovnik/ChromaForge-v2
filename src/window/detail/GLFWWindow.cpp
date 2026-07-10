@@ -182,13 +182,12 @@ public:
         pressedKeys.clear();
         glfwPollEvents();
 
-        for (auto& entry : bindings.getAll()) {
-            auto& binding = entry.second;
+        for (auto& [_, binding] : bindings.getAll()) {
             if (!binding.enabled) {
                 binding.state = false;
                 continue;
             }
-            binding.justChange = false;
+            binding.justChanged = false;
 
             bool newstate = false;
             switch (binding.type) {
@@ -203,13 +202,13 @@ public:
             if (newstate) {
                 if (!binding.state) {
                     binding.state = true;
-                    binding.justChange = true;
+                    binding.justChanged = true;
                     binding.onactived.notify();
                 }
             } else {
                 if (binding.state) {
                     binding.state = false;
-                    binding.justChange = true;
+                    binding.justChanged = true;
                 }
             }
         }

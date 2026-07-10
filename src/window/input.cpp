@@ -170,7 +170,7 @@ std::string input_util::to_string(Mousecode code) {
 }
 
 std::string input_util::get_name(Mousecode code) {
-    auto found = buttonsnames.find(static_cast<int>(code));
+    const auto found = buttonsnames.find(static_cast<int>(code));
     if (found == buttonsnames.end()) {
         return "unknown";
     }
@@ -178,7 +178,7 @@ std::string input_util::get_name(Mousecode code) {
 }
 
 std::string input_util::get_name(Keycode code) {
-    auto found = keynames.find(static_cast<int>(code));
+    const auto found = keynames.find(static_cast<int>(code));
     if (found == keynames.end()) {
         return "unknown";
     }
