@@ -199,7 +199,7 @@ public:
     bool processParamDirective() {
         skipWhitespace(false);
         auto typeName = parseName();
-        PostEffect::Param::Type type;
+        PostEffect::Param::Type type {};
         if (!PostEffect::Param::TypeMeta.getItem(typeName, type)) {
             LOG_ERROR("Unsupported param type {}", util::quote(typeName));
             throw error("Unsupported param type " + util::quote(typeName));

@@ -20,7 +20,7 @@ ContentPack ContentPack::createBuiltin(const EnginePaths& paths) {
 }
 
 const std::vector<std::string> ContentPack::RESERVED_NAMES = {
-    "res", "abs", "local", BUILTIN_CONTENT_NAMESPACE, "user", "world", "none", "null"
+    "res", "abs", "local", BUILTIN_CONTENT_NAMESPACE, "user", "world", "none", "null", "project", "pack", "packid", "root"
 };
 
 contentpack_error::contentpack_error(

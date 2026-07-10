@@ -10,6 +10,7 @@
 #include <core_content_defs.h>
 #include <data/dv.h>
 #include <util/EnumMetadata.h>
+#include <interfaces/Serializable.h>
 
 struct ParticlesPreset;
 namespace data {
@@ -100,14 +101,16 @@ struct BlockRotProfile {
     static inline const std::string PANE_NAME = "pane";
 };
 
-struct BlockMaterial {
+struct BlockMaterial : Serializable {
 	std::string name;
 	std::string stepsSound;
     std::string placeSound;
     std::string breakSound;
     std::string hitSound;
 
-    dv::value serialize() const;
+    dv::value toTable() const;
+    dv::value serialize() const override;
+    void deserialize(const dv::value& src) override;
 };
 
 class Block {
