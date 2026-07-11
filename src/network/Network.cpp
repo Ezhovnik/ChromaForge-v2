@@ -39,6 +39,9 @@ using SOCKET = int;
 
 using namespace network;
 
+inline constexpr int HTTP_OK = 200;
+inline constexpr int HTTP_BAD_GATEWAY = 502;
+
 static size_t write_callback(
     char* ptr, size_t size, size_t nmemb, void* userdata
 ) {
@@ -158,7 +161,7 @@ public:
             auto message = curl_multi_strerror(res);
             LOG_ERROR("{} ({})", message, url);
             if (onReject) {
-                onReject(message);
+                onReject(HTTP_BAD_GATEWAY);
             }
             url = "";
         }
@@ -173,7 +176,7 @@ public:
             auto message = curl_multi_strerror(res);
             LOG_ERROR("{} ({})", message, url);
             if (onReject) {
-                onReject(message);
+                onReject(HTTP_BAD_GATEWAY);
             }
             curl_multi_remove_handle(multiHandle, curl);
             url = "";
@@ -185,7 +188,7 @@ public:
             }
             int response;
             curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &response);
-            if (response == 200) {
+            if (response == HTTP_OK) {
                 long size;
                 if (!curl_easy_getinfo(curl, CURLINFO_REQUEST_SIZE, &size)) {
                     totalUpload += size;
@@ -200,7 +203,7 @@ public:
             } else {
                 LOG_ERROR("Response code: {} ({})", response, url);
                 if (onReject) {
-                    onReject(std::to_string(response).c_str());
+                    onReject(response);
                 }
             }
             url = "";

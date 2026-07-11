@@ -10,11 +10,20 @@ static int l_get(lua::State* L, network::Network& network) {
     lua::pushvalue(L, 2);
     auto onResponse = lua::create_lambda_nothrow(L);
 
+    network::OnReject onReject = nullptr;
+    if (lua::gettop(L) >= 3) {
+        lua::pushvalue(L, 3);
+        auto callback = lua::create_lambda_nothrow(L);
+        onReject = [callback](int code) {
+            callback({code});
+        };
+    }
+
     network.get(url, [onResponse](std::vector<char> bytes) {
         scripting::engine->postRunnable([=]() {
             onResponse({std::string(bytes.data(), bytes.size())});
         });
-    });
+    }, std::move(onReject));
     return 0;
 }
 
@@ -24,6 +33,15 @@ static int l_get_binary(lua::State* L, network::Network& network) {
     lua::pushvalue(L, 2);
     auto onResponse = lua::create_lambda_nothrow(L);
 
+    network::OnReject onReject = nullptr;
+    if (lua::gettop(L) >= 3) {
+        lua::pushvalue(L, 3);
+        auto callback = lua::create_lambda_nothrow(L);
+        onReject = [callback](int code) {
+            callback({code});
+        };
+    }
+
     network.get(url, [onResponse](std::vector<char> bytes) {
         auto buffer = std::make_shared<util::Buffer<ubyte>>(
             reinterpret_cast<const ubyte*>(bytes.data()), bytes.size()
@@ -31,7 +49,7 @@ static int l_get_binary(lua::State* L, network::Network& network) {
         scripting::engine->postRunnable([=]() {
             onResponse({buffer});
         });
-    });
+    }, std::move(onReject));
     return 0;
 }
 
@@ -41,6 +59,15 @@ static int l_post(lua::State* L, network::Network& network) {
 
     lua::pushvalue(L, 3);
     auto onResponse = lua::create_lambda_nothrow(L);
+
+    network::OnReject onReject = nullptr;
+    if (lua::gettop(L) >= 4) {
+        lua::pushvalue(L, 4);
+        auto callback = lua::create_lambda_nothrow(L);
+        onReject = [callback](int code) {
+            callback({code});
+        };
+    }
 
     std::string string;
     if (data.isString()) {
@@ -56,7 +83,7 @@ static int l_post(lua::State* L, network::Network& network) {
         scripting::engine->postRunnable([=]() {
             onResponse({std::string(bytes.data(), bytes.size())});
         });
-    });
+    }, std::move(onReject));
     return 0;
 }
 
