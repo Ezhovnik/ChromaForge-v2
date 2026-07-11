@@ -11,8 +11,8 @@
 #include <graphics/core/DrawContext.h>
 #include <presets/WeatherPreset.h>
 #include <world/Weather.h>
+#include <window/Camera.h>
 
-class Camera;
 class Level;
 class LineBatch;
 class ChunksRenderer;
@@ -49,9 +49,11 @@ private:
     std::unique_ptr<ChunksRenderer> chunks;
     std::unique_ptr<Skybox> skybox;
 	std::unique_ptr<ShadowMap> shadowMap;
+	std::unique_ptr<ShadowMap> wideShadowMap;
     Weather weather {};
 
-	std::unique_ptr<Camera> shadowCamera;
+	Camera shadowCamera;
+	Camera wideShadowCamera;
 
 	float timer = 0.0f;
 
@@ -59,7 +61,7 @@ private:
 	bool lightsDebug = false;
 
 	bool gbufferPipeline = false;
-    bool shadows = true;
+    bool shadows = false;
 
 	void renderBlockSelection();
 	void renderHands(const Camera& camera, float deltaTime);
@@ -78,6 +80,14 @@ private:
         const Camera& camera,
         const EngineSettings& settings,
         float fogFactor
+    );
+
+	void generateShadowsMap(
+        const Camera& camera,
+        const DrawContext& pctx,
+        ShadowMap& shadowMap,
+        Camera& shadowCamera,
+        float scale
     );
 public:
 	std::unique_ptr<ParticlesRenderer> particles;

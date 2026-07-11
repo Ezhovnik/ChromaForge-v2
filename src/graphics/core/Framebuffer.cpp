@@ -42,8 +42,6 @@ Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), he
     format = alpha ? GL_RGBA : GL_RGB;
 
     texture = create_texture(width, height, format);
-    unsigned int attachments[1] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, attachments);
 
     glGenRenderbuffers(1, &depth);
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
@@ -59,7 +57,7 @@ Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), he
 
 Framebuffer::~Framebuffer() {
 	glDeleteFramebuffers(1, &fbo);
-    glDeleteTextures(1, &depth);
+    glDeleteRenderbuffers(1, &depth);
 }
 
 void Framebuffer::bind() {

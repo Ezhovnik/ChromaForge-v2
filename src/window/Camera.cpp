@@ -36,6 +36,8 @@ void Camera::rotate(float x, float y, float z) {
 // Возвращает матрицу проекции камеры.
 // Матрица проекции преобразует координаты из пространства камеры в нормализованные координаты устройства (NDC).
 glm::mat4 Camera::getProjection() const {
+	if (projset) return projection;
+
 	if (perspective) {
 		return glm::perspective(fov * zoom, ar, near, far);
 	} else if (flipped) {
@@ -60,6 +62,11 @@ glm::mat4 Camera::getView(bool position_flag) const {
 
 glm::mat4 Camera::getProjView(bool position_flag) const {
     return getProjection() * getView(position_flag);
+}
+
+void Camera::setProjection(const glm::mat4& matrix) {
+    projection = matrix;
+    projset = true;
 }
 
 float Camera::getAspectRatio() const {

@@ -8,7 +8,6 @@
 
 #include <content/Content.h>
 #include <window/Window.h>
-#include <window/Camera.h>
 #include <graphics/core/Mesh.h>
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Texture.h>
@@ -133,9 +132,6 @@ WorldRenderer::WorldRenderer(
         settings.graphics.skyboxResolution.get(), 
         assets->require<ShaderProgram>("skybox_gen")
     );
-
-    shadowMap = std::make_unique<ShadowMap>(1024 * 8);
-    shadowCamera = std::make_unique<Camera>();
 }
 
 WorldRenderer::~WorldRenderer() = default;
@@ -166,12 +162,19 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1i("u_enableShadows", shadows);
 
     if (shadows) {
-        shader.uniformMatrix("u_shadowsMatrix", shadowCamera->getProjView());
-        shader.uniform3f("u_sunDir", shadowCamera->front);
+        shader.uniformMatrix("u_shadowsMatrix", shadowCamera.getProjView());
+        shader.uniformMatrix("u_wideShadowsMatrix", wideShadowCamera.getProjView());
+        shader.uniform3f("u_sunDir", shadowCamera.front);
         shader.uniform1i("u_shadowsRes", shadowMap->getResolution());
+
         glActiveTexture(GL_TEXTURE4);
         shader.uniform1i("u_shadows", 4);
         glBindTexture(GL_TEXTURE_2D, shadowMap->getDepthMap());
+
+        glActiveTexture(GL_TEXTURE5);
+        shader.uniform1i("u_wideShadows", 5);
+        glBindTexture(GL_TEXTURE_2D, wideShadowMap->getDepthMap());
+
         glActiveTexture(GL_TEXTURE0);
     }
 
@@ -363,6 +366,65 @@ void WorldRenderer::renderHands(const Camera& camera, float deltaTime) {
     skybox->unbind();
 }
 
+void WorldRenderer::generateShadowsMap(
+    const Camera& camera,
+    const DrawContext& pctx,
+    ShadowMap& shadowMap,
+    Camera& shadowCamera,
+    float scale
+) {
+    auto& shadowsShader = assets.require<ShaderProgram>("shadows");
+
+    auto world = level.getWorld();
+    const auto& worldInfo = world->getInfo();
+
+    const auto& settings = engine.getSettings();
+    int resolution = shadowMap.getResolution();
+    float shadowMapScale = 0.2f / (1 << glm::max(0LL, settings.graphics.shadowsQuality.get())) * scale;
+    float shadowMapSize = resolution * shadowMapScale;
+    glm::vec3 basePos = glm::floor(camera.position / 500.0f) * 500.0f;
+    shadowCamera = Camera(basePos + glm::mod(camera.position, 500.0f), shadowMapSize);
+    shadowCamera.near = 0.1f;
+    shadowCamera.far = 800.0f;
+    shadowCamera.perspective = false;
+    shadowCamera.setAspectRatio(1.0f);
+
+    float sunAngle = glm::radians(fmod(90.0f - worldInfo.daytime * 360.0f, 180.0f));
+    shadowCamera.rotate(
+        sunAngle,
+        glm::radians(-45.0f),
+        glm::radians(-0.0f)
+    );
+    shadowCamera.updateVectors();
+    shadowCamera.position -= shadowCamera.front * 200.0f;
+    shadowCamera.position += shadowCamera.up * 10.0f;
+
+    auto view = shadowCamera.getView();
+
+    auto currentPos = shadowCamera.position;
+    auto min = view * glm::dvec4(currentPos - (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
+    auto max = view * glm::dvec4(currentPos + (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
+
+    float texelSize = (max.x - min.x) / shadowMapSize;
+    float snappedLeft = glm::round(min.x / texelSize) * texelSize;
+    float snappedBottom = glm::round(min.y / texelSize) * texelSize;
+    float snappedRight = snappedLeft + shadowMapSize * texelSize;
+    float snappedTop = snappedBottom + shadowMapSize * texelSize;
+
+    shadowCamera.setProjection(glm::ortho(snappedLeft, snappedRight, snappedBottom, snappedTop, 0.1f, 800.0f));
+    {
+        frustumCulling->update(shadowCamera.getProjView());
+        auto sctx = pctx.sub();
+        sctx.setDepthTest(true);
+        sctx.setCullFace(true);
+        sctx.setViewport({resolution, resolution});
+        shadowMap.bind();
+        setupWorldShader(shadowsShader, shadowCamera, settings, 0.0f);
+        chunks->drawChunksShadowsPass(shadowCamera, shadowsShader);
+        shadowMap.unbind();
+    }
+}
+
 void WorldRenderer::draw(
     const DrawContext& pctx,
     Camera& camera,
@@ -380,6 +442,24 @@ void WorldRenderer::draw(
     camera.setAspectRatio(vp.x / static_cast<float>(vp.y));
 
     const auto& settings = engine.getSettings();
+
+    gbufferPipeline = settings.graphics.advancedRender.get();
+    int shadowsQuality = settings.graphics.shadowsQuality.get();
+    int resolution = 512 << shadowsQuality;
+    if (shadowsQuality > 0 && !shadows) {
+        shadowMap = std::make_unique<ShadowMap>(resolution);
+        wideShadowMap = std::make_unique<ShadowMap>(resolution);
+        shadows = true;
+    } else if (shadowsQuality == 0) {
+        shadowMap.reset();
+        wideShadowMap.reset();
+        shadows = false;
+    }
+    if (shadows && shadowMap->getResolution() != resolution) {
+        shadowMap = std::make_unique<ShadowMap>(resolution);
+        wideShadowMap = std::make_unique<ShadowMap>(resolution);
+    }
+
     const auto& worldInfo = world->getInfo();
 
     float clouds = weather.b.clouds * glm::sqrt(weather.t) + weather.a.clouds * glm::sqrt(1.0f - weather.t);
@@ -387,43 +467,31 @@ void WorldRenderer::draw(
     float mie = 1.0f + glm::max(worldInfo.skyClearness, clouds * 0.5f) * 2.0f;
     skybox->refresh(pctx, worldInfo.daytime, mie, 4);
 
-    const auto& assets = *engine.getAssets();
-    auto& linesShader = assets.require<ShaderProgram>("lines");
-    auto& shadowsShader = assets.require<ShaderProgram>("shadows");
+    chunks->update();
 
+    static int frameid = 0;
     if (shadows) {
-        int resolution = shadowMap->getResolution();
-        float shadowMapScale = 0.05f;
-        float shadowMapSize = resolution * shadowMapScale;
-        *shadowCamera = Camera(camera.position, shadowMapSize);
-        shadowCamera->near = 0.1f;
-        shadowCamera->far = 800.0f;
-        shadowCamera->perspective = false;
-        shadowCamera->setAspectRatio(1.0f);
-        shadowCamera->rotate(
-            glm::radians(fmod(90.0f - worldInfo.daytime * 360.0f, 180.0f)),
-            glm::radians(-40.0f),
-            glm::radians(-0.0f)
-        );
-        shadowCamera->updateVectors();
-        // shadowCamera->position += camera.dir * shadowMapSize * 0.5f;
-        shadowCamera->position -= shadowCamera->front * 200.0f;
-        shadowCamera->position -= shadowCamera->right * (resolution * shadowMapScale) * 0.5f;
-        shadowCamera->position -= shadowCamera->up * (resolution * shadowMapScale) * 0.5f;
-        shadowCamera->position = glm::floor(shadowCamera->position * 0.25f) * 4.0f;
-        {
-            frustumCulling->update(shadowCamera->getProjView());
-            auto sctx = pctx.sub();
-            sctx.setDepthTest(true);
-            sctx.setCullFace(true);
-            sctx.setViewport({resolution, resolution});
-            shadowMap->bind();
-            setupWorldShader(shadowsShader, *shadowCamera, settings, 0.0f);
-            chunks->drawChunksShadowsPass(*shadowCamera, shadowsShader);
-            shadowMap->unbind();
+        if (frameid % 2 == 0) {
+            generateShadowsMap(
+                camera,
+                pctx,
+                *shadowMap,
+                shadowCamera,
+                1.0f
+            );
+        } else {
+            generateShadowsMap(
+                camera,
+                pctx,
+                *wideShadowMap,
+                wideShadowCamera,
+                8.0f
+            );
         }
     }
+    frameid++;
 
+    auto& linesShader = assets.require<ShaderProgram>("lines");
     {
         DrawContext wctx = pctx.sub();
         postProcessing.use(wctx, gbufferPipeline);
@@ -458,10 +526,9 @@ void WorldRenderer::draw(
         camera,
         shadows ? shadowMap->getDepthMap() : 0
     );
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     renderBlockOverlay(pctx);
+
+    glActiveTexture(GL_TEXTURE0);
 }
 
 void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {

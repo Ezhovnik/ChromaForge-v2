@@ -97,6 +97,8 @@ settings.UI Sounds=Звуки Интерфейса
 settings.V-Sync=Вертикальная Синхронизация
 settings.Key=Кнопка
 settings.Limit Background FPS=Ограничить фоновую частоту кадров
+settings.Advanced render=Продвинутый рендер
+settings.Shadows quality=Качество теней
 
 # Управление
 chunks.reload=Перезагрузить Чанки

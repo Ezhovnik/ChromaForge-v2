@@ -133,18 +133,20 @@ void PostProcessing::render(
     const auto& vp = context.getViewport();
     refreshFbos(vp.x, vp.y);
 
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+
     if (gbuffer) {
         gbuffer->bindBuffers();
 
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, noiseTexture);
 
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, shadowMap);
+        glActiveTexture(GL_TEXTURE0);
     } else {
+        glActiveTexture(GL_TEXTURE0);
         fbo->getTexture()->bind();
     }
-    glActiveTexture(GL_TEXTURE0);
 
     if (totalPasses == 0) {
         auto& effect = assets.require<PostEffect>("default");

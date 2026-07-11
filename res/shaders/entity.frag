@@ -1,3 +1,4 @@
+in float a_distance;
 in vec4 a_color;
 in vec2 a_texCoord;
 in vec3 a_position;
@@ -18,12 +19,9 @@ uniform float u_fogFactor;
 uniform float u_fogCurve;
 uniform bool u_alphaClip;
 
-uniform sampler2DShadow u_shadows;
 uniform vec3 u_sunDir;
-uniform int u_shadowsRes;
 
 uniform bool u_enableShadows;
-uniform mat4 u_shadowsMatrix;
 
 #include <shadows>
 

@@ -13,7 +13,7 @@
 
 // Направление на солнце (нормализованный вектор) для расчёта затенения граней
 inline constexpr glm::vec3 SUN_VECTOR = {0.528265f, 0.833149f, -0.163704f};
-const float DIRECTIONAL_LIGHT_FACTOR = 0.2f;
+const float DIRECTIONAL_LIGHT_FACTOR = 0.3f;
 
 BlocksRenderer::BlocksRenderer(
     size_t capacity,
@@ -208,14 +208,21 @@ void BlocksRenderer::blockXSprite(
 	const glm::vec4 tint (0.8f);
 
     // Рисуем две пересекающиеся плоскости (всего 4 грани)
-    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, 1}, {0, 1, 0}, glm::vec3(),
+    glm::vec3 n;
+    float bias = 0.05f;
+
+    n = glm::vec3(-0.7f, 0, -0.7f);
+    face(glm::vec3(x + xs, y, z + zs) + n * bias, w, size.y, 0, {-1, 0, 1}, {0, 1, 0}, n,
         texface1, lights2, tint);
-    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, 1}, {0, 1, 0}, glm::vec3(), 
+    n = glm::vec3(-0.7f, 0, 0.7f);
+    face(glm::vec3(x + xs, y, z + zs) + n * bias, w, size.y, 0, {1, 0, 1}, {0, 1, 0}, n,
         texface1, lights1, tint);
 
-    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, -1}, {0, 1, 0}, glm::vec3(), 
+    n = glm::vec3(0.7f, 0, -0.7f);
+    face(glm::vec3(x + xs, y, z + zs) + n * bias, w, size.y, 0, {-1, 0, -1}, {0, 1, 0}, n,
         texface2, lights2, tint);
-    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, -1}, {0, 1, 0}, glm::vec3(), 
+    n = glm::vec3(0.7f, 0, 0.7f);
+    face(glm::vec3(x + xs, y, z + zs) + n * bias, w, size.y, 0, {1, 0, -1}, {0, 1, 0}, n,
         texface2, lights1, tint);
 }
 

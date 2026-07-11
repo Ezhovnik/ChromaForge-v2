@@ -24,6 +24,9 @@ public:
     float near = 0.05f;
     float far = 1500.0f;
 
+    bool projset = false;
+    glm::mat4 projection;
+
     // Матрица вращения камеры
     glm::mat4 rotation {1.0f}; // Хранит текущую ориентацию камеры в пространстве.
 
@@ -41,6 +44,8 @@ public:
 
     void setFov(float fov) {this->fov = fov;}
     float getFov() const {return fov;}
+
+    void setProjection(const glm::mat4& matrix);
 
     float getAspectRatio() const;
     void setAspectRatio(float ar);

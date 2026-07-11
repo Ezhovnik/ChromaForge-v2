@@ -2,6 +2,7 @@ layout (location = 0) out vec4 f_color;
 layout (location = 1) out vec4 f_position;
 layout (location = 2) out vec4 f_normal;
 
+in float a_distance;
 in vec4 a_torchLight;
 in vec3 a_skyLight;
 in vec2 a_texCoord;
@@ -14,17 +15,13 @@ in vec4 a_modelpos;
 
 uniform sampler2D u_texture0;
 uniform samplerCube u_skybox;
-uniform sampler2DShadow u_shadows;
 uniform vec3 u_sunDir;
-uniform int u_shadowsRes;
 
 // Flags
 uniform bool u_alphaClip;
 uniform bool u_debugLights;
 uniform bool u_debugNormals;
 uniform bool u_enableShadows;
-
-uniform mat4 u_shadowsMatrix;
 
 #include <shadows>
 

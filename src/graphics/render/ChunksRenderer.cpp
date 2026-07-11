@@ -188,8 +188,7 @@ void ChunksRenderer::drawChunksShadowsPass(
 
     atlas.getTexture()->bind();
 
-    for (int i = indices.size()-1; i >= 0; --i) {
-        auto& chunk = chunks.getChunks()[indices[i].index];
+    for (const auto& chunk : chunks.getChunks()) {
         if (chunk == nullptr) {
             continue;
         }
@@ -215,7 +214,6 @@ void ChunksRenderer::drawChunks(
     const auto& atlas = assets.require<Atlas>("blocks");
 
     atlas.getTexture()->bind();
-    update();
 
     int chunksWidth = chunks.getWidth();
     int chunksOffsetX = chunks.getOffsetX();
