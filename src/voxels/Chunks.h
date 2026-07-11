@@ -11,7 +11,6 @@
 #include <voxels/voxel.h>
 #include <util/AreaMap2D.h>
 
-class Mesh;
 class Chunk;
 class WorldFiles;
 class LevelEvents;

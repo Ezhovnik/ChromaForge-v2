@@ -1,6 +1,5 @@
 #pragma once
 
-#include <queue>
 #include <memory>
 #include <vector>
 #include <unordered_map>
@@ -9,12 +8,10 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
-#include <voxels/Block.h>
 #include <util/ThreadPool.h>
-#include <graphics/core/MeshData.h>
 #include <graphics/render/commons.h>
 
-class Mesh;
+template<typename VertexStructure> class Mesh;
 class Chunk;
 class Level;
 class Camera;
@@ -53,7 +50,7 @@ class ChunksRenderer {
 
     util::ThreadPool<std::shared_ptr<Chunk>, RendererResult> threadPool;
 
-    const Mesh* retrieveChunk(
+    const Mesh<ChunkVertex>* retrieveChunk(
         size_t index, const Camera& camera, ShaderProgram& shader, bool culling
     );
 public:
@@ -67,14 +64,14 @@ public:
     );
     virtual ~ChunksRenderer();
 
-    const Mesh* render(
+    const Mesh<ChunkVertex>* render(
         const std::shared_ptr<Chunk>& chunk,
         bool important
     );
     void unload(const Chunk* chunk);
     void clear();
 
-    const Mesh* getOrRender(
+    const Mesh<ChunkVertex>* getOrRender(
         const std::shared_ptr<Chunk>& chunk,
         bool important
     );

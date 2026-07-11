@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdlib.h>
-#include <vector>
 #include <memory>
 
 #include <glm/glm.hpp>
@@ -12,16 +10,14 @@
 #include <voxels/Chunk.h>
 #include <voxels/VoxelsVolume.h>
 #include <core_content_defs.h>
-#include <graphics/core/MeshData.h>
 #include <math/rand.h>
 #include <graphics/render/commons.h>
 #include <settings.h>
 
+template<typename VertexStructure> class Mesh;
 class Content;
-class Mesh;
 class Block;
 class Chunk;
-class Chunks;
 class VoxelsVolume;
 class Chunks;
 class ContentGfxCache;
@@ -36,10 +32,11 @@ struct UVRegion;
 class BlocksRenderer {
 private:
 	const Content& content;
-	std::unique_ptr<float[]> vertexBuffer;
-	std::unique_ptr<int[]> indexBuffer;
+	std::unique_ptr<ChunkVertex[]> vertexBuffer;
+    std::unique_ptr<uint32_t[]> indexBuffer;
+    size_t vertexCount;
 	size_t vertexOffset;
-	size_t indexOffset, indexSize;
+	size_t indexCount;
 	size_t capacity;
 
     int voxelBufferPadding = 2;
@@ -72,7 +69,7 @@ private:
      * @brief Добавляет шесть индексов для четырёх вершин (два треугольника).
      * @param a,b,c,d,e,f Индексы вершин (относительно текущего indexOffset).
      */
-	void index(int a, int b, int c, int d, int e, int f);
+	void index(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t f);
 
     /**
      * @brief Вершинная функция с дополнительными осями для мягкого освещения (перегрузка).

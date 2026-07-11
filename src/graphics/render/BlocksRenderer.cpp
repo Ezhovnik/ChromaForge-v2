@@ -20,11 +20,11 @@ BlocksRenderer::BlocksRenderer(
 	const ContentGfxCache& cache,
 	const EngineSettings& settings
 ) : content(content),
-	vertexBuffer(std::make_unique<float[]>(capacity * CHUNK_VERTEX_SIZE)),
-    indexBuffer(std::make_unique<int[]>(capacity)),
+	vertexBuffer(std::make_unique<ChunkVertex[]>(capacity)),
+    indexBuffer(std::make_unique<uint32_t[]>(capacity)),
+    vertexCount(0),
 	vertexOffset(0),
-	indexOffset(0),
-	indexSize(0),
+	indexCount(0),
 	capacity(capacity),
 	cache(cache),
 	settings(settings) 
@@ -41,35 +41,25 @@ BlocksRenderer::~BlocksRenderer() {
 }
 
 void BlocksRenderer::vertex(const glm::vec3& coord, float u, float v, const glm::vec4& light) {
-	vertexBuffer[vertexOffset++] = coord.x;
-	vertexBuffer[vertexOffset++] = coord.y;
-	vertexBuffer[vertexOffset++] = coord.z;
+	vertexBuffer[vertexCount].position = coord;
 
-	vertexBuffer[vertexOffset++] = u;
-	vertexBuffer[vertexOffset++] = v;
+	vertexBuffer[vertexCount].uv = {u, v};
 
-    // Упаковываем 4 байта освещения в 32-битное число и интерпретируем как float
-	union {
-		float floating;
-		uint32_t integer;
-	} compressed;
-
-	compressed.integer = (static_cast<uint32_t>(light.r * 255) & 0xff) << 24;
-	compressed.integer |= (static_cast<uint32_t>(light.g * 255) & 0xff) << 16;
-	compressed.integer |= (static_cast<uint32_t>(light.b * 255) & 0xff) << 8;
-	compressed.integer |= (static_cast<uint32_t>(light.a * 255) & 0xff);
-
-	vertexBuffer[vertexOffset++] = compressed.floating;
+	vertexBuffer[vertexCount].color[0] = static_cast<uint8_t>(light.r * 255);
+    vertexBuffer[vertexCount].color[1] = static_cast<uint8_t>(light.g * 255);
+    vertexBuffer[vertexCount].color[2] = static_cast<uint8_t>(light.b * 255);
+    vertexBuffer[vertexCount].color[3] = static_cast<uint8_t>(light.a * 255);
+    vertexCount++;
 }
 
-void BlocksRenderer::index(int a, int b, int c, int d, int e, int f) {
-	indexBuffer[indexSize++] = indexOffset + a;
-	indexBuffer[indexSize++] = indexOffset + b;
-	indexBuffer[indexSize++] = indexOffset + c;
-	indexBuffer[indexSize++] = indexOffset + d;
-	indexBuffer[indexSize++] = indexOffset + e;
-	indexBuffer[indexSize++] = indexOffset + f;
-	indexOffset += 4;
+void BlocksRenderer::index(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t f) {
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + a);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + b);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + c);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + d);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + e);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + f);
+    vertexOffset += 4;
 }
 
 void BlocksRenderer::face(
@@ -82,7 +72,7 @@ void BlocksRenderer::face(
 	const glm::vec4(&lights)[4],
 	const glm::vec4& tint) 
 {
-	if (vertexOffset + CHUNK_VERTEX_SIZE * 4 > capacity) {
+	if (vertexCount + 4 >= capacity) {
 		overflow = true;
 		return;
 	}
@@ -119,7 +109,7 @@ void BlocksRenderer::faceAO(
 	const UVRegion& region,
     bool lights)
 {
-	if (vertexOffset + CHUNK_VERTEX_SIZE * 4 > capacity) {
+	if (vertexCount + 4 >= capacity) {
 		overflow = true;
 		return;
 	}
@@ -158,7 +148,7 @@ void BlocksRenderer::face(
     glm::vec4 tint,
     bool lights
 ) {
-    if (vertexOffset + CHUNK_VERTEX_SIZE * 4 > capacity) {
+    if (vertexCount + 4 >= capacity) {
         overflow = true;
         return;
     }
@@ -295,7 +285,7 @@ void BlocksRenderer::blockCustomModel(
     // Рендерим каждый бокс модели
 	const auto& model = cache.getModel(block->rt.id);
     for (const auto& mesh : model.meshes) {
-        if (vertexOffset + CHUNK_VERTEX_SIZE * mesh.vertices.size() > capacity) {
+        if (vertexCount + mesh.vertices.size() >= capacity) {
             overflow = true;
             return;
         }
@@ -314,7 +304,7 @@ void BlocksRenderer::blockCustomModel(
                 glm::vec3(0, 1, 0),
                 n
             );
-            indexBuffer[indexSize++] = indexOffset++;
+            indexBuffer[indexCount++] = vertexOffset++;
 		}
 	}
 }
@@ -591,7 +581,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
                 default:
                     break;
             }
-            if (vertexOffset == 0) continue;
+            if (vertexCount == 0) continue;
 
             SortingMeshEntry entry {
 				glm::vec3(
@@ -599,35 +589,33 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 					y + 0.5f,
 					z + chunk->chunk_z * CHUNK_DEPTH + 0.5f
 				),
-				util::Buffer<float>(indexSize * CHUNK_VERTEX_SIZE),
+				util::Buffer<ChunkVertex>(indexCount),
                 0
 			};
 
 			totalSize += entry.vertexData.size();
 
-            for (int j = 0; j < indexSize; ++j) {
+            for (int j = 0; j < indexCount; ++j) {
                 std::memcpy(
-                    entry.vertexData.data() + j * CHUNK_VERTEX_SIZE,
-                    vertexBuffer.get() + indexBuffer[j] * CHUNK_VERTEX_SIZE,
-                    sizeof(float) * CHUNK_VERTEX_SIZE
+                    entry.vertexData.data() + j,
+                    vertexBuffer.get() + indexBuffer[j],
+                    sizeof(ChunkVertex)
                 );
-				float& vx = entry.vertexData[j * CHUNK_VERTEX_SIZE + 0];
-                float& vy = entry.vertexData[j * CHUNK_VERTEX_SIZE + 1];
-                float& vz = entry.vertexData[j * CHUNK_VERTEX_SIZE + 2];
+				ChunkVertex& vertex = entry.vertexData[j];
 
                 if (!aabbInit) {
                     aabbInit = true;
-                    aabb.a = aabb.b = {vx, vy, vz};
+                    aabb.a = aabb.b = vertex.position;
                 } else {
-                    aabb.addPoint(glm::vec3(vx, vy, vz));
+                    aabb.addPoint(vertex.position);
                 }
-                vx += chunk->chunk_x * CHUNK_WIDTH + 0.5f;
-                vy += 0.5f;
-                vz += chunk->chunk_z * CHUNK_DEPTH + 0.5f;
+                vertex.position.x += chunk->chunk_x * CHUNK_WIDTH + 0.5f;
+                vertex.position.y += 0.5f;
+                vertex.position.z += chunk->chunk_z * CHUNK_DEPTH + 0.5f;
             }
             sortingMesh.entries.push_back(std::move(entry));
-            vertexOffset = 0;
-            indexOffset = indexSize = 0;
+            vertexCount = 0;
+            vertexOffset = indexCount = 0;
         }
     }
 
@@ -635,14 +623,15 @@ SortingMeshData BlocksRenderer::renderTranslucent(
     if ((size.y < 0.01f || size.x < 0.01f || size.z < 0.01f) && sortingMesh.entries.size() > 1) {
         SortingMeshEntry newEntry {
             sortingMesh.entries[0].position,
-            util::Buffer<float>(totalSize),
+            util::Buffer<ChunkVertex>(totalSize),
             0
         };
         size_t offset = 0;
         for (const auto& entry : sortingMesh.entries) {
             std::memcpy(
                 newEntry.vertexData.data() + offset,
-                entry.vertexData.data(), entry.vertexData.size() * sizeof(float)
+                entry.vertexData.data(),
+                entry.vertexData.size() * sizeof(ChunkVertex)
             );
             offset += entry.vertexData.size();
         }
@@ -685,31 +674,37 @@ void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
     cancelled = false;
 
     overflow = false;
-    vertexOffset = 0;
-    indexOffset = indexSize = 0;
+    vertexCount = 0;
+    vertexOffset = indexCount = 0;
 
     sortingMesh = renderTranslucent(voxels, beginEnds);
 
     overflow = false;
+    vertexCount = 0;
     vertexOffset = 0;
-    indexOffset = indexSize = 0;
+    indexCount = 0;
 
     render(voxels, beginEnds);
 }
 
 ChunkMeshData BlocksRenderer::createMesh() {
-	return ChunkMeshData{MeshData(
-        util::Buffer<float>(vertexBuffer.get(), vertexOffset), 
-        util::Buffer<int>(indexBuffer.get(), indexSize),
-        util::Buffer<VertexAttribute>(CHUNK_VATTRS, sizeof(CHUNK_VATTRS) / sizeof(VertexAttribute))
-    ), std::move(sortingMesh)};
+	return ChunkMeshData{
+        MeshData(
+            util::Buffer(vertexBuffer.get(), vertexCount),
+            util::Buffer(indexBuffer.get(), indexCount),
+            util::Buffer(
+                ChunkVertex::ATTRIBUTES, sizeof(ChunkVertex::ATTRIBUTES) / sizeof(VertexAttribute)
+            )
+        ),
+        std::move(sortingMesh)
+    };
 }
 
 ChunkMesh BlocksRenderer::render(const Chunk* chunk, const Chunks* chunks) {
     build(chunk, chunks);
-    size_t vcount = vertexOffset / CHUNK_VERTEX_SIZE;
-    return ChunkMesh{std::make_unique<Mesh>(
-        vertexBuffer.get(), vcount, indexBuffer.get(), indexSize, CHUNK_VATTRS
+    return ChunkMesh{std::make_unique<Mesh<ChunkVertex>>(
+        vertexBuffer.get(), vertexCount,
+        indexBuffer.get(), indexCount
     ), std::move(sortingMesh)};
 }
 

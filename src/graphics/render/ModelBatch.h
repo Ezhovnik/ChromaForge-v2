@@ -7,9 +7,7 @@
 
 #include <glm/glm.hpp>
 
-#include <math/UVRegion.h>
-
-class Mesh;
+template<typename VertexStructure> class Mesh;
 class Texture;
 class Chunks;
 class Assets;

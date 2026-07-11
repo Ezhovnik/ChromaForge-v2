@@ -1,15 +1,29 @@
 #pragma once
 
-#include <stdlib.h>
 #include <glm/glm.hpp>
 #include <memory>
 
 #include <graphics/core/commons.h>
 #include <typedefs.h>
 #include <math/UVRegion.h>
+#include <graphics/core/MeshData.h>
 
+template<typename VertexStructure>
 class Mesh;
 class Texture;
+
+struct Batch2DVertex {
+     glm::vec2 position;
+     glm::vec2 uv;
+     glm::vec4 color;
+
+     static constexpr VertexAttribute ATTRIBUTES[] {
+          {VertexAttribute::Type::FLOAT, false, 2},
+          {VertexAttribute::Type::FLOAT, false, 2},
+          {VertexAttribute::Type::FLOAT, false, 4},
+          {{}, 0}
+     };
+};
 
 /**
  * @brief Класс для пакетной отрисовки 2D-примитивов (спрайтов, прямоугольников, линий).
@@ -19,10 +33,10 @@ class Texture;
  * повороты, отражения и закруглённые прямоугольники.
  */
 class Batch2D : public Flushable {
-	std::unique_ptr<float[]> buffer;
+	std::unique_ptr<Batch2DVertex[]> buffer;
 	size_t capacity;
 
-	std::unique_ptr<Mesh> mesh;
+	std::unique_ptr<Mesh<Batch2DVertex>> mesh;
 	size_t index;
 
 	glm::vec4 color;

@@ -16,25 +16,35 @@
 #include <graphics/core/Cubemap.h>
 #include <graphics/core/Framebuffer.h>
 #include <math/UVRegion.h>
+#include <graphics/core/DrawContext.h>
 
 namespace SkyboxConsts {
     inline constexpr int STARS_COUNT = 3000;
     inline constexpr int STARS_SEED = 632;
 }
 
-Skybox::Skybox(uint size, ShaderProgram& shader) : size(size), shader(shader), batch3d(std::make_unique<Batch3D>(4096)) {
+Skybox::Skybox(
+    uint size,
+    ShaderProgram& shader
+) : size(size),
+    shader(shader),
+    batch3d(std::make_unique<Batch3D>(4096))
+{
     auto cubemap = std::make_unique<Cubemap>(size, size, ImageFormat::rgb888);
 
     uint fboid;
     glGenFramebuffers(1, &fboid);
     fbo = std::make_unique<Framebuffer>(fboid, 0, std::move(cubemap));
 
-    float vertices[] {
-        -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f,  1.0f, 1.0f, 1.0f, -1.0f
+    SkyboxVertex vertices[]{
+        {{-1.0f, -1.0f}},
+        {{-1.0f, 1.0f}},
+        {{1.0f, 1.0f}},
+        {{-1.0f, -1.0f}},
+        {{1.0f, 1.0f}},
+        {{1.0f, -1.0f}}
     };
-    VertexAttribute attrs[] {{2}, {0}};
-    mesh = std::make_unique<Mesh>(vertices, 6, attrs);
+    mesh = std::make_unique<Mesh<SkyboxVertex>>(vertices, 6);
 
     sprites.push_back(skysprite{
         "misc/moon",

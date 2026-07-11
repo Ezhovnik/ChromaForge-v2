@@ -12,12 +12,15 @@
 #include <assets/Assets.h>
 
 PostProcessing::PostProcessing(size_t effectSlotsCount) : effectSlots(effectSlotsCount) {
-    float vertices[] {
-        -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f,  1.0f, 1.0f, 1.0f, -1.0f
+    PostProcessingVertex meshData[]{
+            {{-1.0f, -1.0f}},
+            {{-1.0f, 1.0f}},
+            {{1.0f, 1.0f}},
+            {{-1.0f, -1.0f}},
+            {{1.0f, 1.0f}},
+            {{1.0f, -1.0f}},
     };
-    VertexAttribute attrs[] {{2}, {0}};
-    quadMesh = std::make_unique<Mesh>(vertices, 6, attrs);
+    quadMesh = std::make_unique<Mesh<PostProcessingVertex>>(meshData, 6);
 }
 
 PostProcessing::~PostProcessing() = default;

@@ -7,7 +7,6 @@
 
 #include <lighting/Lightmap.h>
 #include <world/files/WorldFiles.h>
-#include <graphics/core/Mesh.h>
 #include <math/voxmaths.h>
 #include <world/LevelEvents.h>
 #include <core_content_defs.h>

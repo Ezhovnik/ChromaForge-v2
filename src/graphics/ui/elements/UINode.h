@@ -71,6 +71,7 @@ namespace gui {
     class UINode : public std::enable_shared_from_this<UINode> {
     protected:
         GUI& gui;
+        bool mustRefresh = true;
     private:
         std::string id = "";
 
@@ -106,7 +107,12 @@ namespace gui {
         UINode(GUI& gui, glm::vec2 size);
     public:
         virtual ~UINode();
-        virtual void activate(float deltaTime) {};
+        virtual void activate(float deltaTime) {
+            if (mustRefresh) {
+                mustRefresh = false;
+                refresh();
+            }
+        };
         virtual void draw(const DrawContext& parent_context, const Assets& assets) = 0;
 
         virtual void setVisible(bool flag);
@@ -200,6 +206,10 @@ namespace gui {
         virtual void setSizeFunc(vec2supplier);
 
         virtual void setGravity(Gravity gravity);
+
+        void setMustRefresh() {
+            mustRefresh = true;
+        }
 
         bool isSubnodeOf(const UINode* node);
 

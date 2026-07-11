@@ -6,17 +6,29 @@
 #include <glm/glm.hpp>
 
 #include <graphics/core/commons.h>
+#include <graphics/core/MeshData.h>
 
+template<typename VertexStructure>
 class Mesh;
+
+struct LineVertex {
+    glm::vec3 position;
+    glm::vec4 color;
+
+    static constexpr VertexAttribute ATTRIBUTES[] {
+        {VertexAttribute::Type::FLOAT, false, 3},
+        {VertexAttribute::Type::FLOAT, false, 4},
+        {{}, 0}
+    };
+};
 
 // Буфер для пакетной отрисовки линий
 class LineBatch : public Flushable {
 private:
-    std::unique_ptr<float[]> buffer; // Указатель на буфер вершинных данных
+    std::unique_ptr<Mesh<LineVertex>> mesh;
+    std::unique_ptr<LineVertex[]> buffer;
     size_t index; // Текущая позиция в буфере (в вершинах)
     size_t capacity;  // Максимальная вместимость буфера (в вершинах)
-
-    std::unique_ptr<Mesh> mesh; // Указатель на Mesh объект для рендеринга
 public:
     LineBatch(size_t capacity = 4096); // Конструктор
     ~LineBatch(); // Деструктор
