@@ -70,6 +70,10 @@ struct UVRegion {
           v2 = cy + h * 0.5f * y;
      }
 
+     void scale(const glm::vec2& vec) {
+          scale(vec.x, vec.y);
+     }
+
      void set(const glm::vec4& vec) {
           u1 = vec.x;
           v1 = vec.y;

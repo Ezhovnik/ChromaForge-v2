@@ -31,6 +31,9 @@ static void perform_rect(const xmlelement& root, model::Model& model) {
     } else {
         region.scale(glm::length(right), glm::length(up));
     }
+    if (root.has("region-scale")) {
+        region.scale(root.attr("region-scale").asVec2());
+    }
 
     auto flip = root.attr("flip", "").getText();
     if (flip == "h") {
@@ -83,6 +86,12 @@ static void perform_box(const xmlelement& root, model::Model& model) {
                 int idx = found->second;
                 if (elem->has("texture")) {
                     texfaces[idx] = elem->attr("texture").getText();
+                }
+                if (elem->has("region")) {
+                    regions[idx].set(elem->attr("region").asVec4());
+                }
+                if (elem->has("region-scale")) {
+                    regions[idx].scale(elem->attr("region-scale").asVec2());
                 }
             }
         }
