@@ -47,16 +47,28 @@ static inline UVRegion get_region_for(
 
 void ModelsGenerator::prepare(Content& content, Assets& assets) {
     for (auto& [name, def] : content.blocks.getDefs()) {
-        if (def->model.type == BlockModelType::Custom && def->model.name.empty()) {
-            assets.store(
-                std::make_unique<model::Model>(
-                    loadCustomBlockModelType(
-                        def->model.customRaw, assets, !def->shadeless
-                    )
-                ),
-                name + ".model"
-            );
-            def->model.name = def->name + ".model";
+        if (def->model.type == BlockModelType::Custom) {
+            if (def->model.name.empty()) {
+                assets.store(
+                    std::make_unique<model::Model>(
+                        loadCustomBlockModelType(
+                            def->model.customRaw, assets, !def->shadeless
+                        )
+                    ),
+                    name + ".model"
+                );
+                def->model.name = def->name + ".model";
+            } else {
+                auto model = assets.get<model::Model>(def->model.name);
+                if (model) {
+                    for (auto& mesh : model->meshes) {
+                        if (mesh.texture.length() && mesh.texture[0] == '$') {
+                            int index = std::stoll(mesh.texture.substr(1));
+                            mesh.texture = "blocks:" + def->textureFaces[index];
+                        }
+                    }
+                }
+            }
         }
     }
     for (auto& [name, def] : content.items.getDefs()) {
@@ -89,8 +101,12 @@ model::Model ModelsGenerator::fromCustom(
             get_region_for(modelTextures[i * 6 + 1], assets),
             get_region_for(modelTextures[i * 6 + 0], assets)
         };
+        bool enabled[6] {1, 1, 1, 1, 1, 1};
         mesh.addBox(
-            modelBoxes[i].center(), modelBoxes[i].size() * 0.5f, boxtexfaces
+            modelBoxes[i].center(),
+            modelBoxes[i].size() * 0.5f,
+            boxtexfaces,
+            enabled
         );
     }
 

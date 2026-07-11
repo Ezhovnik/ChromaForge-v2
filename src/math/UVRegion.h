@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cmath>
+
 #include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
 
 /**
  * @brief Представляет прямоугольную область в UV-пространстве текстуры.
@@ -66,5 +68,12 @@ struct UVRegion {
           v1 = cy - h * 0.5f * y;
           u2 = cx + w * 0.5f * x;
           v2 = cy + h * 0.5f * y;
+     }
+
+     void set(const glm::vec4& vec) {
+          u1 = vec.x;
+          v1 = vec.y;
+          u2 = vec.z;
+          v2 = vec.w;
      }
 };
