@@ -12,7 +12,8 @@
 #include <util/timeutil.h>
 
 // Направление на солнце (нормализованный вектор) для расчёта затенения граней
-inline constexpr glm::vec3 SUN_VECTOR = {0.2275f, 0.9388f, -0.1005f};
+inline constexpr glm::vec3 SUN_VECTOR = {0.528265f, 0.833149f, -0.163704f};
+const float DIRECTIONAL_LIGHT_FACTOR = 0.3f;
 
 BlocksRenderer::BlocksRenderer(
     size_t capacity,
@@ -118,7 +119,7 @@ void BlocksRenderer::faceAO(
     if (lights) {
         // Вычисляем яркость грани по нормали (Z) относительно солнца
         float d = glm::dot(glm::normalize(Z), SUN_VECTOR);
-        d = 0.7f + d * 0.3f; // базовая яркость + вклад солнца
+        d = (1.0f - DIRECTIONAL_LIGHT_FACTOR) + d * DIRECTIONAL_LIGHT_FACTOR; // базовая яркость + вклад солнца
 
         auto axisX = glm::normalize(X);
         auto axisY = glm::normalize(Y);
@@ -156,7 +157,7 @@ void BlocksRenderer::face(
     float s = 0.5f;
     if (lights) {
         float d = glm::dot(glm::normalize(Z), SUN_VECTOR);
-        d = 0.7f + d * 0.3f;
+        d = (1.0f - DIRECTIONAL_LIGHT_FACTOR) + d * DIRECTIONAL_LIGHT_FACTOR;
         tint *= d;
     }
     vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint);
@@ -263,6 +264,19 @@ void BlocksRenderer::blockAABB(
     }
 }
 
+static bool is_aligned(const glm::vec3& v, float e = 1e-6f) {
+    if (std::abs(v.y) < e && std::abs(v.z) < e && std::abs(v.x) > e) {
+        return true;
+    }
+    if (std::abs(v.x) < e && std::abs(v.z) < e && std::abs(v.y) > e) {
+        return true;
+    }
+    if (std::abs(v.x) < e && std::abs(v.y) < e && std::abs(v.z) > e) {
+        return true;
+    }
+    return false;
+}
+
 void BlocksRenderer::blockCustomModel(
     const glm::ivec3& icoord,
 	const Block* block, 
@@ -296,10 +310,10 @@ void BlocksRenderer::blockCustomModel(
 
             const auto& v0 = mesh.vertices[triangle * 3];
             auto n = v0.normal.x * X + v0.normal.y * Y + v0.normal.z * Z;
-            if (!isOpen(coord + n, *block)) continue;
+            if (!isOpen(glm::floor(coord + n * 1e-4f), *block) && is_aligned(n)) continue;
 
             float d = glm::dot(n, SUN_VECTOR);
-            d = 0.7f + d * 0.3f;
+            d = (1.0f - DIRECTIONAL_LIGHT_FACTOR) + d * DIRECTIONAL_LIGHT_FACTOR;
             glm::vec3 t = glm::cross(r, n);
 
             for (int i = 0; i < 3; ++i) {

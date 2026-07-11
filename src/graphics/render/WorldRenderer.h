@@ -51,6 +51,7 @@ private:
 	float timer = 0.0f;
 
 	bool debug = false;
+	bool lightsDebug = false;
 
 	void renderBlockSelection();
 	void renderHands(const Camera& camera, float deltaTime);
@@ -100,6 +101,7 @@ public:
 	void clear();
 
 	void setDebug(bool flag);
+	void toggleLightsDebug();
 
 	Weather& getWeather();
 

@@ -188,10 +188,16 @@ void LevelScreen::updateHotkeys() {
     auto& settings = engine.getSettings();
 
     if (input.justPressed(Keycode::F1)) hudVisible = !hudVisible;
-    if (input.justPressed(Keycode::F3)) {
-        debug = !debug;
-        hud->setDebug(debug);
-        renderer->setDebug(debug);
+    if (!input.isPressed(Keycode::LEFT_CONTROL)) {
+        if (input.justPressed(Keycode::F3)) {
+            debug = !debug;
+            hud->setDebug(debug);
+            renderer->setDebug(debug);
+        }
+    } else if (input.isPressed(Keycode::F3)) {
+        if (input.justPressed(Keycode::L)) {
+            renderer->toggleLightsDebug();
+        }
     }
 }
 
