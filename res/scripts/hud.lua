@@ -58,5 +58,5 @@ function on_hud_open()
 
     local slot = gfx.posteffects.index("builtin:default")
     gfx.posteffects.set_effect(slot, "ssao")
-    gfx.posteffects.set_intensity(slot, 1.0)
+    --gfx.posteffects.set_intensity(slot, 1.0)
 end

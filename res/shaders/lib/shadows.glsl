@@ -12,15 +12,16 @@ float calc_shadow() {
         shadow = 0.0;
 
         if (dot(a_realnormal, u_sunDir) < 0.0) {
-            for (int x = -1; x <= 1; x++) {
-                for (int y = -1; y <= 1; y++) {
-                    shadow += texture(u_shadows, projCoords.xyz + vec3(
-                        x * (1.0 / u_shadowsRes), 
-                        y * (1.0 / u_shadowsRes), 0.0
-                    ));
-                }
+            const vec3 offsets[4] = vec3[4](
+                vec3(0.5, 0.5, 0.0),
+                vec3(-0.5, 0.5, 0.0),
+                vec3(0.5, -0.5, 0.0),
+                vec3(-0.5, -0.5, 0.0)
+            );
+            for (int i = 0; i < 4; i++) {
+                shadow += texture(u_shadows, projCoords.xyz + offsets[i] / u_shadowsRes);
             }
-            shadow /= 9;
+            shadow /= 4;
             shadow = shadow * 0.5 + 0.5;
         } else {
             shadow = 0.5;

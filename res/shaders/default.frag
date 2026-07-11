@@ -2,7 +2,8 @@ layout (location = 0) out vec4 f_color;
 layout (location = 1) out vec4 f_position;
 layout (location = 2) out vec4 f_normal;
 
-in vec4 a_color;
+in vec4 a_torchLight;
+in vec3 a_skyLight;
 in vec2 a_texCoord;
 in float a_fog;
 in vec3 a_position;
@@ -31,7 +32,7 @@ void main() {
     float shadow = calc_shadow();
     vec3 fogColor = texture(u_skybox, a_dir).rgb;
     vec4 texColor = texture(u_texture0, a_texCoord);
-    float alpha = a_color.a * texColor.a;
+    float alpha = texColor.a;
     if (u_alphaClip) {
         if (alpha < 0.2f)
             discard;
@@ -47,8 +48,8 @@ void main() {
         texColor.rgb *= a_normal * 0.5 + 0.5;
     }
 
-    f_color = a_color * texColor;
-    f_color.rgb *= shadow;
+    f_color = texColor;
+    f_color.rgb *= min(vec3(1.0), a_torchLight.rgb + a_skyLight * shadow);
     f_color = mix(f_color, vec4(fogColor, 1.0), a_fog);
     f_color.a = alpha;
     f_position = vec4(a_position, 1.0);

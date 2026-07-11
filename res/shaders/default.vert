@@ -12,7 +12,8 @@ out vec3 a_dir;
 out vec3 a_normal;
 out vec3 a_position;
 out vec3 a_realnormal;
-out vec4 a_color;
+out vec4 a_torchLight;
+out vec3 a_skyLight;
 out vec4 a_modelpos;
 
 uniform mat4 u_model;
@@ -38,13 +39,13 @@ void main(){
 
     vec3 light = v_light.rgb;
     float torchlight = calc_torch_light(a_modelpos.xyz);
-    light += torchlight * u_torchlightColor;
-    a_color = vec4(pow(light, vec3(u_gamma)), 1.0f);
+    a_torchLight = vec4(pow(light + torchlight * u_torchlightColor, vec3(u_gamma)), 1.0f);
+
     a_texCoord = v_texCoord;
 
     a_dir = a_modelpos.xyz - u_cameraPos;
     vec3 skyLightColor = pick_sky_color(u_skybox);
-    a_color.rgb = max(a_color.rgb, skyLightColor.rgb * v_light.a);
+    a_skyLight = skyLightColor.rgb * v_light.a;
 
     a_distance = length(u_view * u_model * vec4(pos3d * FOG_POS_SCALE, 0.0));
     a_fog = calc_fog(a_distance / 256.0);

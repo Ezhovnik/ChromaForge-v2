@@ -68,6 +68,7 @@ void PostProcessing::use(DrawContext& context, bool gbufferPipeline) {
         }
         context.setFramebuffer(gbuffer.get());
     } else {
+        gbuffer.reset();
         refreshFbos(vp.x, vp.y);
         context.setFramebuffer(fbo.get());
     }

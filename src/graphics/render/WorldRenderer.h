@@ -58,7 +58,8 @@ private:
 	bool debug = false;
 	bool lightsDebug = false;
 
-	bool gbufferPipeline = true;
+	bool gbufferPipeline = false;
+    bool shadows = true;
 
 	void renderBlockSelection();
 	void renderHands(const Camera& camera, float deltaTime);
