@@ -26,7 +26,7 @@ void CoreContent::setup(Input& input, ContentBuilder& builder) {
         block.obstacle = false;
         block.selectable = false;
         block.replaceable = true;
-        block.model = BlockModel::None;
+        block.model.type = BlockModelType::None;
         block.pickingItem = BUILTIN_EMPTY;
     }
 

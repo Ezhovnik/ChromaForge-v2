@@ -21,7 +21,7 @@ inline const std::string BLOCK_ITEM_SUFFIX = ".item";
 
 inline std::string DEFAULT_MATERIAL = CHROMAFORGE_CONTENT_NAMESPACE + ":stone";
 
-enum class BlockModel {
+enum class BlockModelType {
     None, // Невидимый блок
     Cube, // Полноценный блок
     X, // Крест-накрест (трава, растения)
@@ -29,12 +29,18 @@ enum class BlockModel {
     Custom
 };
 
-CHROMA_ENUM_METADATA(BlockModel)
-    {"none", BlockModel::None},
-    {"cube", BlockModel::Cube},
-    {"X", BlockModel::X},
-    {"aabb", BlockModel::AABB},
-    {"custom", BlockModel::Custom},
+struct BlockModel {
+    BlockModelType type = BlockModelType::Cube;
+    dv::value customRaw = nullptr;
+    std::string name = "";
+};
+
+CHROMA_ENUM_METADATA(BlockModelType)
+    {"none", BlockModelType::None},
+    {"cube", BlockModelType::Cube},
+    {"X", BlockModelType::X},
+    {"aabb", BlockModelType::AABB},
+    {"custom", BlockModelType::Custom},
 CHROMA_ENUM_END
 
 enum class CullingMode {
@@ -128,9 +134,7 @@ public:
     ubyte emission[4] {0, 0, 0, 0};
     glm::i8vec3 size {1, 1, 1};
     ubyte drawGroup = 0;
-    BlockModel model = BlockModel::Cube;
-    dv::value customModelRaw = nullptr;
-    std::string modelName = "";
+    BlockModel model {};
     CullingMode culling = CullingMode::Default;
     std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
     std::string scriptName = name.substr(name.find(':') + 1);

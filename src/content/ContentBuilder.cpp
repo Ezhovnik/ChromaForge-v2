@@ -28,7 +28,7 @@ std::unique_ptr<Content> ContentBuilder::build() {
 
         def.rt.id = blockDefsIndices.size();
         def.rt.emissive = *reinterpret_cast<uint32_t*>(def.emission);
-        def.rt.solid = def.model == BlockModel::Cube;
+        def.rt.solid = def.model.type == BlockModelType::Cube;
         def.rt.extended = def.size.x > 1 || def.size.y > 1 || def.size.z > 1;
 
         constexpr float EPSILON = 0.01f;

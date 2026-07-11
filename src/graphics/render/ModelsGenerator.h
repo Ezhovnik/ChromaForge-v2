@@ -25,7 +25,7 @@ public:
         bool lighting
     );
 
-    static model::Model loadCustomBlockModel(
+    static model::Model loadCustomBlockModelType(
         const dv::value& primitives, const Assets& assets, bool lighting
     );
 };

@@ -33,9 +33,9 @@ void ContentGfxCache::refresh(const Block& def, const Atlas& atlas) {
             sideregions[def.rt.id * 6 + side] = atlas.get(TEXTURE_NOTFOUND);
         }
     }
-    if (def.model == BlockModel::Custom) {
-        auto model = assets.require<model::Model>(def.modelName);
-        if (def.modelName.find(':') == std::string::npos) {
+    if (def.model.type == BlockModelType::Custom) {
+        auto model = assets.require<model::Model>(def.model.name);
+        if (def.model.name.find(':') == std::string::npos) {
             for (auto& mesh : model.meshes) {
                 size_t pos = mesh.texture.find(':');
                 if (pos == std::string::npos) continue;

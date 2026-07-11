@@ -289,23 +289,37 @@ void BlocksRenderer::blockCustomModel(
             overflow = true;
             return;
         }
-        int i = 0;
-        for (const auto& vertex : mesh.vertices) {
-            auto n = vertex.normal.x * X + vertex.normal.y * Y + vertex.normal.z * Z;
-            float d = glm::dot(glm::normalize(n), SUN_VECTOR);
-            d = 0.8f + d * 0.2f;
-            const auto& vcoord = vertex.coord - 0.5f;
-            vertexAO(
-                coord + vcoord.x * X + vcoord.y * Y + vcoord.z * Z,
-                vertex.uv.x,
-                vertex.uv.y,
-                glm::vec4(1, 1, 1, 1),
-                glm::vec3(1, 0, 0),
-                glm::vec3(0, 1, 0),
-                n
-            );
-            indexBuffer[indexCount++] = vertexOffset++;
-		}
+        for (int triangle = 0; triangle < mesh.vertices.size() / 3; ++triangle) {
+            auto r = mesh.vertices[triangle * 3 + (triangle % 2) * 2].coord - mesh.vertices[triangle * 3 + 1].coord;
+            r = r.x * X + r.y * Y + r.z * Z;
+            r = glm::normalize(r);
+
+            const auto& v0 = mesh.vertices[triangle * 3];
+            auto n = v0.normal.x * X + v0.normal.y * Y + v0.normal.z * Z;
+            if (!isOpen(coord + n, *block)) continue;
+
+            float d = glm::dot(n, SUN_VECTOR);
+            d = 0.7f + d * 0.3f;
+            glm::vec3 t = glm::cross(r, n);
+
+            for (int i = 0; i < 3; ++i) {
+                const auto& vertex = mesh.vertices[triangle * 3 + i];
+                const auto& vcoord = vertex.coord - 0.5f;
+
+                glm::vec4 aoColor {1.0f, 1.0f, 1.0f, 1.0f};
+                if (ao) {
+                    auto p = coord + vcoord.x * X + vcoord.y * Y + vcoord.z * Z + r * 0.5f + t * 0.5f + n * 0.5f;
+                    aoColor = pickSoftLight(p.x, p.y, p.z, glm::ivec3(r), glm::ivec3(t));
+                }
+                this->vertex(
+                    coord + vcoord.x * X + vcoord.y * Y + vcoord.z * Z,
+                    vertex.uv.x,
+                    vertex.uv.y,
+                    glm::vec4(d, d, d, d) * aoColor
+                );
+                indexBuffer[indexCount++] = vertexOffset++;
+            }
+        }
 	}
 }
 
@@ -460,8 +474,8 @@ void BlocksRenderer::render(
 			int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);
 			int z = (i / CHUNK_DEPTH) % CHUNK_WIDTH;
 
-			switch (def.model) {
-                case BlockModel::Cube: {
+			switch (def.model.type) {
+                case BlockModelType::Cube: {
                     blockCube(
 						{x, y, z},
 						texfaces,
@@ -471,7 +485,7 @@ void BlocksRenderer::render(
 						def.ambientOcclusion
 					);
                     break;
-                } case BlockModel::X: {
+                } case BlockModelType::X: {
                     blockXSprite(
 						x, y, z,
 						glm::vec3(1.0f),
@@ -480,7 +494,7 @@ void BlocksRenderer::render(
 						1.0f
 					);
                     break;
-                } case BlockModel::AABB: {
+                } case BlockModelType::AABB: {
                     blockAABB(
 						{x, y, z},
 						texfaces,
@@ -490,7 +504,7 @@ void BlocksRenderer::render(
 						def.ambientOcclusion
 					);
                     break;
-                } case BlockModel::Custom: {
+                } case BlockModelType::Custom: {
                     blockCustomModel(
 						{x, y, z},
 						&def,
@@ -536,8 +550,8 @@ SortingMeshData BlocksRenderer::renderTranslucent(
             int x = i % CHUNK_WIDTH;
             int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);
             int z = (i / CHUNK_DEPTH) % CHUNK_WIDTH;
-            switch (def.model) {
-                case BlockModel::Cube:
+            switch (def.model.type) {
+                case BlockModelType::Cube:
                     blockCube(
 						{x, y, z},
 						texfaces,
@@ -547,7 +561,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 						def.ambientOcclusion
 					);
                     break;
-                case BlockModel::X: {
+                case BlockModelType::X: {
                     blockXSprite(
 						x, y, z,
 						glm::vec3(1.0f), 
@@ -557,7 +571,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 					);
                     break;
                 }
-                case BlockModel::AABB: {
+                case BlockModelType::AABB: {
                     blockAABB(
 						{x, y, z},
 						texfaces,
@@ -568,7 +582,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 					);
                     break;
                 }
-                case BlockModel::Custom: {
+                case BlockModelType::Custom: {
                     blockCustomModel(
 						{x, y, z},
 						&def,

@@ -83,21 +83,22 @@ template<> void ContentUnitLoader<Block>::loadUnit(
         }
     }
 
-    std::string modelTypeName = BlockModelMeta.getNameString(def.model);
+    auto& model = def.model;
+    std::string modelTypeName = BlockModelTypeMeta.getNameString(model.type);
     root.at("model").get(modelTypeName);
-    root.at("model-name").get(def.modelName);
-    if (BlockModelMeta.getItem(modelTypeName, def.model)) {
-        if (def.model == BlockModel::Custom && def.customModelRaw == nullptr) {
+    root.at("model-name").get(def.model.name);
+    if (BlockModelTypeMeta.getItem(modelTypeName, model.type)) {
+        if (model.type == BlockModelType::Custom && def.model.customRaw == nullptr) {
             if (root.has("model-primitives")) {
-                def.customModelRaw = root["model-primitives"];
-            } else if (def.modelName.empty()) {
+                def.model.customRaw = root["model-primitives"];
+            } else if (def.model.name.empty()) {
                 LOG_ERROR("Block {}: no 'model-primitives' or 'model-name found", name);
                 throw std::runtime_error("Block " + name + ": no 'model-primitives' or 'model-name' found");
             }
         }
     } else if (!modelTypeName.empty()) {
         LOG_WARN("Block {}: unknown model — {}", name, modelTypeName);
-        def.model = BlockModel::None;
+        model.type = BlockModelType::None;
     }
 
     std::string cullingModeName = CullingModeMeta.getNameString(def.culling);
@@ -166,8 +167,8 @@ template<> void ContentUnitLoader<Block>::loadUnit(
                 "Block " + util::quote(def.name) + ": invalid block size"
             );
         }
-        if (def.model == BlockModel::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
-            def.model = BlockModel::AABB;
+        if (def.model.type == BlockModelType::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
+            model.type = BlockModelType::AABB;
             def.hitboxes = {AABB(def.size)};
         }
     }

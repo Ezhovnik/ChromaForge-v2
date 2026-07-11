@@ -35,15 +35,15 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
     };
 
     glm::vec3 offset(0.1f, 0.5f, 0.1f);
-    switch (def.model) {
-        case BlockModel::None:
+    switch (def.model.type) {
+        case BlockModelType::None:
             break;
-        case BlockModel::Cube:
+        case BlockModelType::Cube:
             shader.uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), offset));
             batch.blockCube(glm::vec3(size * 0.63f), texfaces, glm::vec4(1.0f), !def.rt.emissive);
             batch.flush();
             break;
-        case BlockModel::AABB:
+        case BlockModelType::AABB:
             {
                 glm::vec3 hitbox {};
                 for (const auto& box : def.hitboxes) {
@@ -61,7 +61,7 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
             }
             batch.flush();
             break;
-        case BlockModel::Custom:{
+        case BlockModelType::Custom:{
             glm::vec3 pmul = glm::vec3(size * 0.63f);
             glm::vec3 hitbox = glm::vec3(1.0f);
             glm::vec3 poff = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -79,7 +79,7 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
             }
             break;
         } 
-        case BlockModel::X: {
+        case BlockModelType::X: {
             shader.uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), offset));
             glm::vec3 right = glm::normalize(glm::vec3(1.0f, 0.0f, -1.0f));
             batch.sprite(
