@@ -160,7 +160,7 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1f("u_weatherFogCurve", weather.fogCurve());
     shader.uniform3f("u_cameraPos", camera.position);
     shader.uniform2f("u_lightDir", skybox->getLightDir());
-    shader.uniform1i("u_cubemap", 1);
+    shader.uniform1i("u_skybox", 1);
     shader.uniform1f("u_timer", timer);
     shader.uniform1f("u_dayTime", level.getWorld()->getInfo().daytime);
     shader.uniform1i("u_enableShadows", gbufferPipeline);

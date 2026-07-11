@@ -71,7 +71,7 @@ void Skybox::drawBackground(
 	backShader->uniformMatrix("u_view", camera.getView(false));
 	backShader->uniform1f("u_zoom", camera.zoom * camera.getFov() / (PI * 0.5f));
 	backShader->uniform1f("u_ar", float(width) / float(height));
-    backShader->uniform1i("u_cubemap", 1);
+    backShader->uniform1i("u_skybox", 1);
     bind();
     mesh->draw();
     unbind();
