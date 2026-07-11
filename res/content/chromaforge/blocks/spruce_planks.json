@@ -1,0 +1,5 @@
+{
+    "texture": "spruce_planks",
+    "material": "chromaforge:wood",
+    "chromaforge:durability": 5.0
+}

@@ -1,0 +1,7 @@
+{
+    "texture": "spruce_needles",
+    "material": "chromaforge:grass",
+    "draw-group": 5,
+    "chromaforge:durability": 0.7,
+    "culling": "optional"
+}

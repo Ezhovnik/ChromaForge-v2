@@ -1,0 +1,5 @@
+{
+    "texture": "mossy_cobblestone",
+    "material": "chromaforge:stone",
+    "chromaforge:durability": 12.0
+}
