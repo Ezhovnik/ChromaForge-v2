@@ -26,6 +26,7 @@
 #include <objects/rigging.h>
 #include <coders/vec3.h>
 #include <util/stringutil.h>
+#include <coders/cfmodel.h>
 
 static bool load_animation(
     Assets* assets, 
@@ -443,7 +444,7 @@ asset_loader::postfunc asset_loader::sound(
 
 static void request_textures(AssetsLoader* loader, const model::Model& model) {
     for (auto& mesh : model.meshes) {
-        if (mesh.texture.find('$') == std::string::npos) {
+        if (mesh.texture.find('$') == std::string::npos && mesh.texture.find(':') == std::string::npos) {
             auto filename = TEXTURES_FOLDER + "/" + mesh.texture;
             loader->add(
                 AssetType::Texture, filename, mesh.texture, nullptr
@@ -480,14 +481,33 @@ asset_loader::postfunc asset_loader::model(
     }
     path = paths.find(file + ".obj");
     auto text = io::read_string(path);
-    try {
-        auto model = obj::parse(path.string(), text).release();
-        return [=](Assets* assets) {
-            request_textures(loader, *model);
-            assets->store(std::unique_ptr<model::Model>(model), name);
-        };
-    } catch (const parsing_error& err) {
-        LOG_ERROR("Failed to load model '{}': {}", file, err.errorLog());
-        throw;
+    if (io::exists(path)) {
+        auto text = io::read_string(path);
+        try {
+            auto model = obj::parse(path.string(), text).release();
+            return [=](Assets* assets) {
+                request_textures(loader, *model);
+                assets->store(std::unique_ptr<model::Model>(model), name);
+            };
+        } catch (const parsing_error& err) {
+            LOG_ERROR("Failed to load model '{}': {}", file, err.errorLog());
+            throw;
+        }
     }
+    path = paths.find(file + ".xml");
+    if (io::exists(path)) {
+        auto text = io::read_string(path);
+        try {
+            auto model = cfmodel::parse(path.string(), text).release();
+            return [=](Assets* assets) {
+                request_textures(loader, *model);
+                assets->store(std::unique_ptr<model::Model>(model), name);
+            };
+        } catch (const parsing_error& err) {
+            LOG_ERROR("Failed to load model '{}': {}", file, err.errorLog());
+            throw;
+        }
+    }
+    LOG_ERROR("Could not to find model {}", util::quote(file));
+    throw std::runtime_error("Could not to find model " + util::quote(file));
 }

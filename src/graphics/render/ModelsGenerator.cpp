@@ -59,14 +59,17 @@ void ModelsGenerator::prepare(Content& content, Assets& assets) {
                 );
                 def->model.name = def->name + ".model";
             } else {
-                auto model = assets.get<model::Model>(def->model.name);
-                if (model) {
+                auto srcModel = assets.get<model::Model>(def->model.name);
+                if (srcModel) {
+                    auto model = std::make_unique<model::Model>(*srcModel);
                     for (auto& mesh : model->meshes) {
                         if (mesh.texture.length() && mesh.texture[0] == '$') {
                             int index = std::stoll(mesh.texture.substr(1));
                             mesh.texture = "blocks:" + def->textureFaces[index];
                         }
                     }
+                    def->model.name = name + ".model";
+                    assets.store(std::move(model), def->model.name);
                 }
             }
         }
