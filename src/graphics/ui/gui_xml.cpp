@@ -271,7 +271,7 @@ static std::wstring parse_inner_text(
 ) {
     std::wstring text = L"";
     if (element.size() == 1) {
-        std::string source = element.sub(0).attr("#").getText();
+        std::string source = element.sub(0).getInnerText();
         util::trim(source);
         text = util::str2wstr_utf8(source); 
         if (text[0] == '@') {
@@ -327,7 +327,7 @@ static std::shared_ptr<UINode> read_button(
     glm::vec4 padding = element.attr("padding", "10").asVec4();
     std::shared_ptr<Button> button;
     auto& elements = element.getElements();
-    if (!elements.empty() && elements[0]->getTag() != "#") {
+    if (!elements.empty() && !elements[0]->isText()) {
         auto inner = reader.readUINode(*elements.at(0));
         if (inner != nullptr) {
             button = std::make_shared<Button>(gui, inner, padding);
