@@ -9,7 +9,7 @@
 #include <stb/stb_image_write.h>
 
 #include <graphics/core/ImageData.h>
-#include <graphics/core/GLTexture.h>
+#include <graphics/core/Texture.h>
 #include <debug/Logger.h>
 #include <typedefs.h>
 #include <io/io.h>
@@ -75,7 +75,7 @@ std::unique_ptr<Texture> png::loadTexture(const ubyte* bytes, size_t size) {
     auto image = loadImage(bytes, size, true);
 
     // Создание объекта Texture
-    auto texture = GLTexture::from(image.get());
+    auto texture = Texture::from(image.get());
     texture->setNearestFilter(); // Устанавливаем фильтрацию без сглаживания (для пиксельной графики)
     return texture;
 }

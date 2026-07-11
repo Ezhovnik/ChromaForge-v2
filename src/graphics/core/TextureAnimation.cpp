@@ -4,7 +4,7 @@
 
 #include <GL/glew.h>
 
-#include <graphics/core/GLTexture.h>
+#include <graphics/core/Texture.h>
 #include <graphics/core/Framebuffer.h>
 
 TextureAnimator::TextureAnimator() {

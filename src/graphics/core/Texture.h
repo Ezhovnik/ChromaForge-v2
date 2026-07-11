@@ -8,33 +8,36 @@
 
 class Texture {
 protected:
+    uint id;
     uint width, height; ///< Размеры текстуры в пикселях
 
-    Texture(uint width, uint height) : width(width), height(height) {}
 public:
-    static uint MAX_RESOLUTION;
+    Texture(uint id, uint width, uint height);
+    Texture(const ubyte* data, uint width, uint height, ImageFormat format);
+    virtual ~Texture();
 
-    virtual ~Texture() {}
+    virtual void bind() const;
+    virtual void unbind() const;
+    void reload(const ubyte* data);
+    void reload(const ImageData& image);
 
-    virtual void bind() const = 0;
-    virtual void unbind() const = 0;
+    void setNearestFilter();
+    void setMipMapping(bool flag, bool pixelated);
 
-    virtual void reload(const ImageData& image) = 0;
+    std::unique_ptr<ImageData> readData();
+    uint getId() const;
 
-    virtual std::unique_ptr<ImageData> readData() = 0;
+    UVRegion getUVRegion() const {
+        return UVRegion(0.0f, 0.0f, 1.0f, 1.0f);
+    }
 
-    virtual uint getWidth() const {
+    uint getWidth() const {
         return width;
     }
-    virtual uint getHeight() const {
+    uint getHeight() const {
         return height;
     }
 
-    virtual UVRegion getUVRegion() const = 0;
-
-    virtual uint getId() const = 0;
-
-    virtual void setMipMapping(bool flag, bool pixelated) = 0;
-
     static std::unique_ptr<Texture> from(const ImageData* image);
+    static uint MAX_RESOLUTION;
 };

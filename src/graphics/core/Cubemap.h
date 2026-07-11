@@ -1,8 +1,8 @@
 #pragma once
 
-#include <graphics/core/GLTexture.h>
+#include <graphics/core/Texture.h>
 
-class Cubemap : public GLTexture {
+class Cubemap : public Texture {
 public:
     Cubemap(uint width, uint height, ImageFormat format);
 
