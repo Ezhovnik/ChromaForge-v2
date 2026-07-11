@@ -20,6 +20,7 @@
 #include <graphics/core/Font.h>
 #include <graphics/ui/elements/Canvas.h>
 #include <graphics/ui/GUI.h>
+#include <graphics/ui/elements/InlineFrame.h>
 
 static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
@@ -440,6 +441,8 @@ static int p_get_markup(gui::UINode* node, lua::State* L) {
 static int p_get_src(gui::UINode* node, lua::State* L) {
     if (auto image = dynamic_cast<gui::Image*>(node)) {
         return lua::pushstring(L, image->getTexture());
+    } else if (auto iframe = dynamic_cast<gui::InlineFrame*>(node)) {
+        return lua::pushstring(L, iframe->getSrc());
     }
     return 0;
 }
@@ -688,9 +691,11 @@ static void p_set_editable(gui::UINode* node, lua::State* L, int idx) {
     }
 }
 
-static void p_set_focused(const std::shared_ptr<gui::UINode>& node, lua::State* L, int idx) {
+static void p_set_focused(
+    gui::UINode* node, lua::State* L, int idx
+) {
     if (lua::toboolean(L, idx) && !node->isFocused()) {
-        scripting::engine->getGUI().setFocus(node);
+        scripting::engine->getGUI().setFocus(node->shared_from_this());
     } else if (node->isFocused()){
         node->defocus();
     }
@@ -719,6 +724,8 @@ static void p_set_markup(gui::UINode* node, lua::State* L, int idx) {
 static void p_set_src(gui::UINode* node, lua::State* L, int idx) {
     if (auto image = dynamic_cast<gui::Image*>(node)) {
         image->setTexture(lua::require_string(L, idx));
+    } else if (auto iframe = dynamic_cast<gui::InlineFrame*>(node)) {
+        iframe->setSrc(lua::require_string(L, idx));
     }
 }
 
@@ -788,16 +795,12 @@ static int l_gui_setattr(lua::State* L) {
         {"inventory", p_set_inventory},
         {"caret", p_set_caret},
         {"src", p_set_src},
-        {"cursor", p_set_cursor}
+        {"cursor", p_set_cursor},
+        {"focused", p_set_focused}
     };
     auto func = setters.find(attr);
     if (func != setters.end()) func->second(node.get(), L, 4);
 
-    static const std::unordered_map<std::string_view, std::function<void(std::shared_ptr<gui::UINode>, lua::State*, int)>> setters2 {
-        {"focused", p_set_focused},
-    };
-    auto func2 = setters2.find(attr);
-    if (func2 != setters2.end()) func2->second(node, L, 4);
     return 0;
 }
 

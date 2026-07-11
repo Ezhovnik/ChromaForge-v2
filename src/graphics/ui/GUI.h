@@ -131,5 +131,6 @@ namespace gui {
         Input& getInput();
         Window& getWindow();
         devtools::Editor& getEditor();
+        Engine& getEngine();
     };
 }

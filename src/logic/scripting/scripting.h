@@ -50,6 +50,7 @@ namespace scripting {
     void initialize(Engine* engine);
 
     void on_content_load(Content* content);
+    void on_content_reset();
 
     bool register_event(
         int env,
