@@ -213,6 +213,8 @@ std::unique_ptr<VoxelFragment> VoxelFragment::rotated(const Content& content) co
                     if (voxel.state.rotation < 4) {
                         voxel.state.rotation = (voxel.state.rotation + 3) & 0b11;
                     }
+                } else if (def.rotations.name == BlockRotProfile::STAIRS_NAME) {
+                    voxel.state.rotation = ((voxel.state.rotation + 3) & 0b11) | (voxel.state.rotation & 0b100);
                 }
             }
         }

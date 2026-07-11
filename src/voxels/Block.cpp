@@ -84,6 +84,20 @@ const BlockRotProfile BlockRotProfile::PANE {"pane", {
     0
 };
 
+const BlockRotProfile BlockRotProfile::STAIRS {"stairs", {
+        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, // North
+        {{0, 0, -1}, {0, 1, 0}, {1, 0, 0}}, // East
+        {{-1, 0, 0}, {0, 1, 0}, {0, 0, -1}}, // South
+        {{0, 0, 1}, {0, 1, 0}, {-1, 0, 0}}, // West
+
+        {{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}},
+        {{0, 0, 1}, {0, -1, 0}, {1, 0, 0}},
+        {{1, 0, 0}, {0, -1, 0}, {0, 0, -1}},
+        {{0, 0, -1}, {0, -1, 0}, {-1, 0, 0}},
+    },
+    8
+};
+
 Block::Block(const std::string& name) : 
 	name(name), 
 	textureFaces{TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND},
