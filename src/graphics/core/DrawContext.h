@@ -17,7 +17,7 @@ private:
     glm::uvec2 viewport;
     Batch2D* g2d;
     Flushable* flushable = nullptr;
-    Framebuffer* fbo = nullptr;
+    Bindable* fbo = nullptr;
 
     bool depthMask = true;
     bool depthTest = false;
@@ -40,7 +40,7 @@ public:
     DrawContext sub(Flushable* flushable=nullptr) const;
 
     void setViewport(const glm::uvec2& viewport);
-    void setFramebuffer(Framebuffer* fbo);
+    void setFramebuffer(Bindable* fbo);
     void setDepthMask(bool flag);
     void setDepthTest(bool flag);
     void setCullFace(bool flag);

@@ -54,16 +54,12 @@ private:
 
     SortingMeshData sortingMesh;
 
-    /**
-     * @brief Добавляет вершину в буфер.
-     * @param coord Координаты вершины.
-     * @param u Текстурная координата U.
-     * @param v Текстурная координата V.
-     * @param light Цвет освещения (RGBA, каждый компонент 0..1).
-     *
-     * Упаковывает light в 32-битное число (4 байта) и сохраняет как float.
-     */
-	void vertex(const glm::vec3& coord, float u, float v, const glm::vec4& light);
+	void vertex(
+        const glm::vec3& coord,
+        float u, float v,
+        const glm::vec4& light,
+        const glm::vec3& normal
+    );
 
     /**
      * @brief Добавляет шесть индексов для четырёх вершин (два треугольника).

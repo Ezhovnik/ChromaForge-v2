@@ -42,16 +42,24 @@ Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), he
     format = alpha ? GL_RGBA : GL_RGB;
 
     texture = create_texture(width, height, format);
+    unsigned int attachments[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, attachments);
+
     glGenRenderbuffers(1, &depth);
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        LOG_ERROR("Framebuffer is not complete!");
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 Framebuffer::~Framebuffer() {
 	glDeleteFramebuffers(1, &fbo);
-    glDeleteRenderbuffers(1, &depth);
+    glDeleteTextures(1, &depth);
 }
 
 void Framebuffer::bind() {
@@ -68,11 +76,12 @@ void Framebuffer::resize(uint width, uint height) {
     this->width = width;
     this->height = height;
 
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     texture = create_texture(width, height, format);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

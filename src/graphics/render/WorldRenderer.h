@@ -32,6 +32,8 @@ class TextsRenderer;
 class GuidesRenderer;
 class BlockWrapsRenderer;
 class PrecipitationRenderer;
+class ShadowMap;
+class GBuffer;
 
 class WorldRenderer {
 private:
@@ -46,12 +48,17 @@ private:
     std::unique_ptr<GuidesRenderer> guides;
     std::unique_ptr<ChunksRenderer> chunks;
     std::unique_ptr<Skybox> skybox;
+	std::unique_ptr<ShadowMap> shadowMap;
     Weather weather {};
+
+	std::unique_ptr<Camera> shadowCamera;
 
 	float timer = 0.0f;
 
 	bool debug = false;
 	bool lightsDebug = false;
+
+	bool gbufferPipeline = true;
 
 	void renderBlockSelection();
 	void renderHands(const Camera& camera, float deltaTime);

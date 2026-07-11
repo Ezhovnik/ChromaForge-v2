@@ -39,9 +39,9 @@ glm::mat4 Camera::getProjection() const {
 	if (perspective) {
 		return glm::perspective(fov * zoom, ar, near, far);
 	} else if (flipped) {
-		return glm::ortho(0.0f, fov * ar, fov, 0.0f);
+		return glm::ortho(0.0f, fov * ar, fov, 0.0f, near, far);
 	} else {
-		return glm::ortho(0.0f, fov * ar, 0.0f, fov);
+		return glm::ortho(0.0f, fov * ar, 0.0f, fov, near, far);
 	}
 }
 
@@ -51,8 +51,11 @@ glm::mat4 Camera::getView(bool position_flag) const {
 	glm::vec3 camera_pos = this->position;
 	if (!position_flag) camera_pos = glm::vec3(0.0f);
 
-    if (perspective) return glm::lookAt(camera_pos, camera_pos + front, up);
-	else return glm::translate(glm::mat4(1.0f), camera_pos);
+    if (perspective) {
+		return glm::lookAt(camera_pos, camera_pos + front, up);
+	} else {
+		return glm::lookAt(camera_pos, camera_pos + front, up);
+	}
 }
 
 glm::mat4 Camera::getProjView(bool position_flag) const {

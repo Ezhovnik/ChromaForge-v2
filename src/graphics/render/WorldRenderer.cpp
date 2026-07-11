@@ -52,6 +52,8 @@
 #include <frontend/ContentGfxCache.h>
 #include <graphics/render/PrecipitationRenderer.h>
 #include <world/Weather.h>
+#include <graphics/core/ShadowMap.h>
+#include <graphics/core/GBuffer.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -131,6 +133,9 @@ WorldRenderer::WorldRenderer(
         settings.graphics.skyboxResolution.get(), 
         assets->require<ShaderProgram>("skybox_gen")
     );
+
+    shadowMap = std::make_unique<ShadowMap>(1024 * 4);
+    shadowCamera = std::make_unique<Camera>();
 }
 
 WorldRenderer::~WorldRenderer() = default;
@@ -149,6 +154,7 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1f("u_fogFactor", fogFactor);
     shader.uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
     shader.uniform1i("u_debugLights", lightsDebug);
+    shader.uniform1i("u_debugNormals", false);
     shader.uniform1f("u_weatherFogOpacity", weather.fogOpacity());
     shader.uniform1f("u_weatherFogDencity", weather.fogDencity());
     shader.uniform1f("u_weatherFogCurve", weather.fogCurve());
@@ -157,6 +163,17 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1i("u_cubemap", 1);
     shader.uniform1f("u_timer", timer);
     shader.uniform1f("u_dayTime", level.getWorld()->getInfo().daytime);
+    shader.uniform1i("u_enableShadows", gbufferPipeline);
+
+    if (gbufferPipeline) {
+        shader.uniformMatrix("u_shadowsMatrix", shadowCamera->getProjView());
+        shader.uniform3f("u_sunDir", shadowCamera->front);
+        shader.uniform1i("u_shadowsRes", shadowMap->getResolution());
+        glActiveTexture(GL_TEXTURE4);
+        shader.uniform1i("u_shadows", 4);
+        glBindTexture(GL_TEXTURE_2D, shadowMap->getDepthMap());
+        glActiveTexture(GL_TEXTURE0);
+    }
 
     auto contentIds = level.content.getIndices();
 	{
@@ -372,10 +389,44 @@ void WorldRenderer::draw(
 
     const auto& assets = *engine.getAssets();
     auto& linesShader = assets.require<ShaderProgram>("lines");
+    auto& shadowsShader = assets.require<ShaderProgram>("shadows");
+
+    if (gbufferPipeline) {
+        int resolution = shadowMap->getResolution();
+        float shadowMapScale = 0.05f;
+        float shadowMapSize = resolution * shadowMapScale;
+        *shadowCamera = Camera(camera.position, shadowMapSize);
+        shadowCamera->near = 0.1f;
+        shadowCamera->far = 800.0f;
+        shadowCamera->perspective = false;
+        shadowCamera->setAspectRatio(1.0f);
+        shadowCamera->rotate(
+            glm::radians(90.0f - worldInfo.daytime * 360.0f),
+            glm::radians(-40.0f),
+            glm::radians(-0.0f)
+        );
+        shadowCamera->updateVectors();
+        // shadowCamera->position += camera.dir * shadowMapSize * 0.5f;
+        shadowCamera->position -= shadowCamera->front * 200.0f;
+        shadowCamera->position -= shadowCamera->right * (resolution * shadowMapScale) * 0.5f;
+        shadowCamera->position -= shadowCamera->up * (resolution * shadowMapScale) * 0.5f;
+        shadowCamera->position = glm::floor(shadowCamera->position * 0.25f) * 4.0f;
+        {
+            frustumCulling->update(shadowCamera->getProjView());
+            auto sctx = pctx.sub();
+            sctx.setDepthTest(true);
+            sctx.setCullFace(true);
+            sctx.setViewport({resolution, resolution});
+            shadowMap->bind();
+            setupWorldShader(shadowsShader, *shadowCamera, settings, 0.0f);
+            chunks->drawChunks(*shadowCamera, shadowsShader);
+            shadowMap->unbind();
+        }
+    }
 
     {
         DrawContext wctx = pctx.sub();
-        postProcessing.use(wctx);
+        postProcessing.use(wctx, gbufferPipeline);
         display::clearDepth();
         skybox->draw(pctx, camera, assets, worldInfo.daytime, clouds);
         {
@@ -389,7 +440,7 @@ void WorldRenderer::draw(
                         ctx, camera, *lineBatch, linesShader, drawChunkBorders
                     );
                 }
-                if (!player.isNoclip() && player.currentCamera == player.fpCamera) {
+                if (player.currentCamera == player.fpCamera) {
                     renderHands(camera, deltaTime);
                 }
             }
@@ -398,10 +449,19 @@ void WorldRenderer::draw(
             DrawContext ctx = wctx.sub();
             texts->render(ctx, camera, settings, hudVisible, true);
         }
-        renderBlockOverlay(wctx);
     }
 
-    postProcessing.render(pctx, assets, timer);
+    postProcessing.render(
+        pctx,
+        assets,
+        timer,
+        camera,
+        gbufferPipeline ? shadowMap->getDepthMap() : 0
+    );
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    renderBlockOverlay(pctx);
 }
 
 void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {

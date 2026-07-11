@@ -134,7 +134,8 @@ void Skybox::draw(
         batch3d->sprite(pos, up, glm::vec3(0, 0, 1), 1, 1, UVRegion(), tint);
     }
 
-    drawStars(angle, opacity);
+    batch3d->flush();
+    // drawStars(angle, opacity);
 }
 
 void Skybox::refresh(const DrawContext& parent_context, float t, float mie, uint quality) {

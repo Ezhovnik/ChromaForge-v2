@@ -37,6 +37,8 @@ GUI::GUI(Engine& engine)
 
 	uicamera->perspective = false;
 	uicamera->flipped = true;
+    uicamera->near = -1.0f;
+    uicamera->far = 1.0f;
 
     menu = std::make_shared<Menu>(*this);
     menu->setId("menu");

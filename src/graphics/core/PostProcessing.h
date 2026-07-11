@@ -13,6 +13,9 @@ class Framebuffer;
 class DrawContext;
 class ImageData;
 class PostEffect;
+class Camera;
+class GBuffer;
+class ShaderProgram;
 
 struct PostProcessingVertex {
     glm::vec2 position;
@@ -25,17 +28,19 @@ struct PostProcessingVertex {
 
 class PostProcessing {
 private:
-    std::unique_ptr<Framebuffer> fbo;
-    std::unique_ptr<Framebuffer> fboSecond;
-    std::unique_ptr<Mesh<PostProcessingVertex>> quadMesh;
-    std::vector<std::shared_ptr<PostEffect>> effectSlots;
 public:
     PostProcessing(size_t effectSlotsCount);
     ~PostProcessing();
 
-    void use(DrawContext& context);
+    void use(DrawContext& context, bool gbufferPipeline);
 
-    void render(const DrawContext& context, const Assets& assets, float timer);
+    void render(
+        const DrawContext& context,
+        const Assets& assets,
+        float timer,
+        const Camera& camera,
+        uint shadowMap
+    );
 
     void setEffect(size_t slot, std::shared_ptr<PostEffect> effect);
     PostEffect* getEffect(size_t slot);
@@ -43,4 +48,24 @@ public:
     std::unique_ptr<ImageData> toImage();
 
     Framebuffer* getFramebuffer() const;
+private:
+    void configureEffect(
+        const DrawContext& context,
+        ShaderProgram& shader,
+        float timer,
+        const Camera& camera,
+        uint shadowMap
+    );
+
+    void refreshFbos(uint width, uint height);
+
+    std::unique_ptr<Framebuffer> fbo;
+    std::unique_ptr<Framebuffer> fboSecond;
+    std::unique_ptr<Mesh<PostProcessingVertex>> quadMesh;
+    std::vector<std::shared_ptr<PostEffect>> effectSlots;
+    std::unique_ptr<GBuffer> gbuffer;
+
+    std::vector<glm::vec3> ssaoKernel;
+    uint noiseTexture;
+    bool ssaoConfigured = false;
 };

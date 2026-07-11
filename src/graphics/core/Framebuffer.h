@@ -3,10 +3,11 @@
 #include <memory>
 
 #include <typedefs.h>
+#include <graphics/core/commons.h>
 
 class Texture;
 
-class Framebuffer {
+class Framebuffer : public Bindable {
 	uint fbo;
 	uint depth;
 	uint width;
@@ -18,8 +19,8 @@ public:
 	Framebuffer(uint width, uint height, bool alpha=false);
 	~Framebuffer();
 
-	void bind();
-	void unbind();
+	void bind() override;
+	void unbind() override;
 
 	void resize(uint width, uint height);
 
