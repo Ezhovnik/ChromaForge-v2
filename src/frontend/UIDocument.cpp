@@ -68,7 +68,7 @@ std::unique_ptr<UIDocument> UIDocument::read(
     auto env = parent_env == nullptr 
         ? scripting::create_doc_environment(scripting::get_root_environment(), name)
         : scripting::create_doc_environment(parent_env, name);
-    gui::UIXmlReader reader(gui, env);
+    gui::UIXmlReader reader(gui, scriptenv(env));
     auto view = reader.readXML(file.string(), *xmldoc->getRoot());
     view->setId("root");
     uidocscript script {};

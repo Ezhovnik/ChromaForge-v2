@@ -20,6 +20,7 @@ class Level;
 class Input;
 class Window;
 class ContentControl;
+struct Project;
 
 namespace gui {
     class GUI;
@@ -50,6 +51,7 @@ struct CoreParameters {
     std::filesystem::path resFolder = "res";
     std::filesystem::path userFolder = ".";
     std::filesystem::path scriptFile;
+    std::filesystem::path projectFolder;
 };
 
 using OnWorldOpen = std::function<void(std::unique_ptr<Level>, int64_t)>;
@@ -61,6 +63,7 @@ private:
     EngineSettings settings;
     EnginePaths paths;
 
+    std::unique_ptr<Project> project;
     std::unique_ptr<SettingsHandler> settingsHandler;
     std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen;
@@ -85,6 +88,7 @@ private:
     void updateHotkeys(); // Обработка горячих клавиш
 
     void loadAssets();
+    void loadProject();
     void loadControls();
     void loadSettings();
     void saveSettings();

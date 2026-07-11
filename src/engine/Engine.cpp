@@ -49,6 +49,7 @@
 #include <logic/scripting/scripting_hud.h>
 #include <content/ContentControl.h>
 #include <devtools/Editor.h>
+#include <devtools/Project.h>
 
 static std::unique_ptr<ImageData> load_icon() {
     try {
@@ -77,18 +78,25 @@ Engine& Engine::getInstance() {
 void Engine::initialize(CoreParameters coreParameters) {
     params = std::move(coreParameters);
     settingsHandler = std::make_unique<SettingsHandler>(settings);
-    editor = std::make_unique<devtools::Editor>(*this);
-    cmd = std::make_unique<cmd::CommandsInterpreter>();
-    network = network::Network::create(settings.network);
 
     LOG_INFO("ChromaForge engine version: {}", ENGINE_VERSION_STRING);
 
     if (params.headless) {
         LOG_INFO("Headless mode is enabled");
     }
+    if (params.projectFolder.empty()) {
+        params.projectFolder = params.resFolder;
+    }
     paths.setResourcesFolder(params.resFolder);
     paths.setUserFilesFolder(params.userFolder);
+    paths.setProjectFolder(params.projectFolder);
     paths.prepare();
+    loadProject();
+
+    editor = std::make_unique<devtools::Editor>(*this);
+    cmd = std::make_unique<cmd::CommandsInterpreter>();
+    network = network::Network::create(settings.network);
+
     if (!params.scriptFile.empty()) paths.setScriptFolder(params.scriptFile.parent_path());
     loadSettings();
 
@@ -96,7 +104,8 @@ void Engine::initialize(CoreParameters coreParameters) {
 
     // Инициализация окна GLFW
     if (!params.headless) {
-        std::string title = "ChromaForge v" + ENGINE_VERSION_STRING;
+        std::string title = project->title;
+        if (title.empty()) title = "ChromaForge v" + ENGINE_VERSION_STRING;
         if (ENGINE_DEBUG_BUILD) title += " [development build]";
 
         auto [window, input] = Window::initialize(&settings.display, title);
@@ -140,7 +149,7 @@ void Engine::initialize(CoreParameters coreParameters) {
         );
     }
 
-    content = std::make_unique<ContentControl>(paths, *input, [this]() {
+    content = std::make_unique<ContentControl>(*project, paths, *input, [this]() {
         editor->loadTools();
         langs::setup(langs::get_current(), paths.resPaths.collectRoots());
         if (!isHeadless()) {
@@ -304,6 +313,13 @@ Assets* Engine::getAssets() {
 
 EngineController* Engine::getController() {
     return controller.get();
+}
+
+void Engine::loadProject() {
+    io::path projectFile = "project:project.toml";
+    project = std::make_unique<Project>();
+    project->deserialize(io::read_object(projectFile));
+    LOG_INFO("Loaded project {}", util::quote(project->name));
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {

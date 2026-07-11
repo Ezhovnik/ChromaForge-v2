@@ -68,11 +68,19 @@ static int l_container_add(lua::State* L) {
     }
     auto xmlsrc = lua::require_string(L, 2);
     try {
+        auto env = docnode.document->getEnvironment();
+        if (lua::istable(L, 3)) {
+            env = scripting::create_environment(std::move(env));
+            lua::pushenv(L, *env);
+            lua::pushvalue(L, 3);
+            lua::setfield(L, "DATA");
+            lua::pop(L);
+        }
         auto subnode = guiutil::create(
-            scripting::engine->getGUI(), xmlsrc, docnode.document->getEnvironment()
+            scripting::engine->getGUI(), xmlsrc, std::move(env)
         );
-        node->add(subnode);
         gui::UINode::getIndices(subnode, docnode.document->getMapWriteable());
+        node->add(std::move(subnode));
     } catch (const std::exception& err) {
         throw std::runtime_error(err.what());
     }

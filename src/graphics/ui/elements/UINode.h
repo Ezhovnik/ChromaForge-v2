@@ -97,6 +97,8 @@ namespace gui {
         UINode* parent = nullptr;
         ActionsSet actions;
         ActionsSet doubleClickCallbacks;
+        ActionsSet focusCallbacks;
+        ActionsSet defocusCallbacks;
         std::wstring tooltip;
         float tooltipDelay = 0.5f;
         CursorShape cursor = CursorShape::Arrow;
@@ -153,8 +155,10 @@ namespace gui {
 
         virtual UINode* listenAction(const onaction& action);
         virtual UINode* listenDoubleClick(const onaction& action);
+        virtual UINode* listenFocus(const onaction& action);
+        virtual UINode* listenDefocus(const onaction& action);
 
-        virtual void onFocus() {focused = true;}
+        virtual void onFocus();
         virtual void click(int x, int y);
         virtual void doubleClick(int x, int y);
         virtual void clicked(Mousecode button) {}

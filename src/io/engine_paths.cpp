@@ -43,6 +43,7 @@ void EnginePaths::prepare() {
 
     LOG_INFO("Resources folder: {}", std::filesystem::canonical(resourcesFolder).u8string());
     LOG_INFO("User files folder: {}", std::filesystem::canonical(userFilesFolder).u8string());
+    LOG_INFO("Project folder: {}", std::filesystem::canonical(projectFolder).u8string());
 
     if (!io::is_directory(CONTENT_FOLDER)) {
         io::create_directories(CONTENT_FOLDER);
@@ -181,6 +182,11 @@ std::string EnginePaths::createWriteableDevice(const std::string& name) {
 void EnginePaths::setScriptFolder(std::filesystem::path folder) {
     io::set_device("script", std::make_shared<io::StdfsDevice>(folder));
     this->scriptFolder = std::move(folder);
+}
+
+void EnginePaths::setProjectFolder(std::filesystem::path folder) {
+    io::set_device("project", std::make_shared<io::StdfsDevice>(folder));
+    this->projectFolder = std::move(folder);
 }
 
 void EnginePaths::setCurrentWorldFolder(io::path folder) {

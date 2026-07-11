@@ -61,7 +61,7 @@ static runnable create_runnable(
     const std::string& name
 ) {
     if (element.has(name)) {
-        std::string text = element.attr(name).getText();
+        const std::string& text = element.attr(name).getText();
         if (!text.empty()) {
             return scripting::create_runnable(
                 reader.getEnvironment(), text, reader.getFilename()
@@ -148,6 +148,8 @@ static void read_uinode(
         }
     }
     if (auto onclick = create_action(reader, element, "onclick")) node.listenAction(onclick);
+    if (auto onfocus = create_action(reader, element, "onfocus")) node.listenFocus(onfocus);
+    if (auto ondefocus = create_action(reader, element, "ondefocus")) node.listenDefocus(ondefocus);
     if (auto ondoubleclick = create_action(reader, element, "ondoubleclick")) node.listenDoubleClick(ondoubleclick);
 }
 
@@ -646,7 +648,7 @@ static std::shared_ptr<UINode> read_iframe(
     return iframe;
 }
 
-UIXmlReader::UIXmlReader(gui::GUI& gui, const scriptenv& env) : gui(gui), env(env) {
+UIXmlReader::UIXmlReader(gui::GUI& gui, scriptenv&& env) : gui(gui), env(std::move(env)) {
     contextStack.emplace("");
     add("image", read_image);
     add("canvas", read_canvas);

@@ -66,6 +66,10 @@ void Container::mouseRelease(int x, int y) {
 }
 
 void Container::activate(float delta) {
+    if (mustRefresh) {
+        refresh();
+        mustRefresh = false;
+    }
     for (const auto& node : nodes) {
         if (node->isVisible()) node->activate(delta);
     }
@@ -148,7 +152,7 @@ void Container::add(const std::shared_ptr<UINode>& node) {
     nodes.push_back(node);
     node->setParent(this);
     node->reposition();
-    refresh();
+    mustRefresh = true;
 }
 
 void Container::add(const std::shared_ptr<UINode>& node, glm::vec2 pos) {
@@ -178,7 +182,6 @@ void Container::listenInterval(float interval, ontimeout callback, int repeat) {
 
 void Container::setSize(glm::vec2 size) {
     if (size == getSize()) {
-        refresh();
         return;
     }
     UINode::setSize(size);

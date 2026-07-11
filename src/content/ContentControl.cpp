@@ -10,17 +10,21 @@
 #include <objects/rigging.h>
 #include <logic/scripting/scripting.h>
 #include <core_content_defs.h>
+#include <devtools/Project.h>
 
 static void load_configs(Input& input, const io::path& root) {
     auto configFolder = root / "config";
 }
 
 ContentControl::ContentControl(
-    EnginePaths& paths, Input& input, std::function<void()> postContent
+    const Project& project,
+    EnginePaths& paths,
+    Input& input,
+    std::function<void()> postContent
 ) : paths(paths),
     input(input),
     postContent(std::move(postContent)),
-    basePacks(io::read_list("res:config/builtins.list")),
+    basePacks(project.basePacks),
     manager(std::make_unique<PacksManager>())
 {
     manager->setSources({

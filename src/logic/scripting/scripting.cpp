@@ -150,6 +150,22 @@ scriptenv scripting::create_pack_environment(const ContentPack& pack) {
     });
 }
 
+[[nodiscard]] scriptenv scripting::create_environment(
+    const scriptenv& parent
+) {
+    auto L = lua::get_main_state();
+    int id = lua::create_environment(L, (parent ? *parent : 0));
+    lua::pushenv(L, id);
+    lua::pushvalue(L, -1);
+    lua::setfield(L, "CUR_ENV");
+
+    lua::pop(L);
+    return std::shared_ptr<int>(new int(id), [=](int* id) {
+        lua::remove_environment(L, *id);
+        delete id;
+    });
+}
+
 [[nodiscard]]
 scriptenv scripting::create_doc_environment(const scriptenv& parent, const std::string& name) {
     auto L = lua::get_main_state();

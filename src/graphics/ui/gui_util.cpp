@@ -150,7 +150,7 @@ std::shared_ptr<gui::UINode> guiutil::create(
 ) {
     if (env == nullptr) env = scripting::get_root_environment();
 
-    UIXmlReader reader(gui, env);
+    UIXmlReader reader(gui, std::move(env));
     return reader.readXML("[string]", source);
 }
 

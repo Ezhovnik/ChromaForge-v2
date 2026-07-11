@@ -20,9 +20,9 @@ namespace gui {
         std::unordered_map<std::string, uinode_reader> readers;
         std::unordered_set<std::string> ignored;
         std::stack<std::string> contextStack;
-        const scriptenv& env;
+        scriptenv env;
     public:
-        UIXmlReader(gui::GUI& gui, const scriptenv& env);
+        UIXmlReader(gui::GUI& gui, scriptenv&& env);
 
         void add(const std::string& tag, uinode_reader reader);
 

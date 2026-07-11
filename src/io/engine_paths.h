@@ -49,6 +49,8 @@ public:
 
     void setScriptFolder(std::filesystem::path folder);
 
+    void setProjectFolder(std::filesystem::path folder);
+
     io::path getWorldsFolder() const;
     io::path getWorldFolderByName(const std::string& name);
 
@@ -74,6 +76,7 @@ public:
 private:
     std::filesystem::path userFilesFolder {"."};
     std::filesystem::path resourcesFolder {"res"};
+    std::filesystem::path projectFolder = resourcesFolder;
     io::path currentWorldFolder;
     std::optional<std::filesystem::path> scriptFolder;
     std::vector<PathsRoot> entryPoints;
