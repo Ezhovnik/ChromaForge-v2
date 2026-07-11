@@ -30,7 +30,7 @@ void menus::create_version_label(gui::GUI& gui) {
     auto text = "v" + ENGINE_VERSION_STRING + " development build ";
     gui.add(guiutil::create(
         gui,
-        "<label z-index='1000' color='#FFFFFF80' gravity='top-right' margin='4'>"
+        "<label z-index='1000' color='#FFFFFF30' gravity='top-right' margin='4'>"
         + text +
         "</label>"
     ));

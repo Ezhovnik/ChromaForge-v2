@@ -349,6 +349,11 @@ static std::shared_ptr<UINode> read_text_box(
 ) {
     auto placeholder = util::str2wstr_utf8(element.attr("placeholder", "").getText());
     auto hint = util::str2wstr_utf8(element.attr("hint", "").getText());
+    if (!hint.empty() && hint[0] == '@') {
+        hint = langs::get(
+            hint.substr(1), util::str2wstr_utf8(reader.getContext())
+        );
+    }
     auto text = parse_inner_text(element, reader.getContext());
     auto textbox = std::make_shared<TextBox>(
         reader.getGUI(), placeholder, glm::vec4(0.0f)
@@ -533,7 +538,7 @@ static slotcallback read_slot_func(
     };
 }
 
-static void readSlot(InventoryView* view, UIXmlReader& reader, const xml::xmlelement& element) {
+static void read_slot(InventoryView* view, UIXmlReader& reader, const xml::xmlelement& element) {
     int index = element.attr("index", "0").asInt();
     bool itemSource = element.attr("item-source", "false").asBool();
     bool taking = element.attr("taking", "true").asBool();
@@ -550,7 +555,7 @@ static void readSlot(InventoryView* view, UIXmlReader& reader, const xml::xmlele
     view->add(slot);
 }
 
-static void readSlotsGrid(InventoryView* view, UIXmlReader& reader, const xml::xmlelement& element) {
+static void read_slots_grid(InventoryView* view, UIXmlReader& reader, const xml::xmlelement& element) {
     int startIndex = element.attr("start-index", "0").asInt();
     int rows = element.attr("rows", "0").asInt();
     int cols = element.attr("cols", "0").asInt();
@@ -609,9 +614,9 @@ static std::shared_ptr<UINode> read_inventory(
 
     for (auto& sub : element.getElements()) {
         if (sub->getTag() == "slot") {
-            readSlot(view.get(), reader, *sub);
+            read_slot(view.get(), reader, *sub);
         } else if (sub->getTag() == "slots-grid") {
-            readSlotsGrid(view.get(), reader, *sub);
+            read_slots_grid(view.get(), reader, *sub);
         }
     }
     return view;

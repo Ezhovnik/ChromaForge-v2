@@ -6,7 +6,7 @@
 
 namespace dv {
     template <int n, typename T>
-    inline dv::value to_value(glm::vec<n, T> vec) {
+    dv::value to_value(const glm::vec<n, T>& vec) {
         auto list = dv::list();
         for (size_t i = 0; i < n; ++i) {
             list.add(vec[i]);
@@ -15,7 +15,7 @@ namespace dv {
     }
 
     template <int n, int m, typename T>
-    inline dv::value to_value(glm::mat<n, m, T> mat) {
+    dv::value to_value(const glm::mat<n, m, T>& mat) {
         auto list = dv::list();
         for (size_t i = 0; i < n; ++i) {
             for (size_t j = 0; j < m; ++j) {
@@ -23,6 +23,15 @@ namespace dv {
             }
         }
         return list;
+    }
+
+    template <typename T>
+    dv::value to_value(const std::vector<T>& vec) {
+        auto values = dv::list();
+        for (const auto& value : vec) {
+            values.add(value);
+        }
+        return values;
     }
 
     template <int n>
@@ -34,9 +43,8 @@ namespace dv {
 
     template <int n, typename T>
     void get_vec(const dv::value& map, const std::string& key, glm::vec<n, T>& vec) {
-        if (!map.has(key)) {
-            return;
-        }
+        if (!map.has(key)) return;
+
         auto& list = map[key];
         for (size_t i = 0; i < n; i++) {
             if constexpr (std::is_floating_point<T>()) {
@@ -65,14 +73,25 @@ namespace dv {
         const std::string& key,
         glm::mat<n, m, float>& mat
     ) {
-        if (!map.has(key)) {
-            return;
-        }
-        auto& list = map[key];
+        if (!map.has(key)) return;
+
+        auto& arr = map[key];
         for (size_t y = 0; y < n; ++y) {
             for (size_t x = 0; x < m; ++x) {
-                mat[y][x] = list[y * m + x].asNumber();
+                mat[y][x] = arr[y * m + x].asNumber();
             }
+        }
+    }
+
+    template <typename T>
+    void get(const dv::value& map, const std::string& key, std::vector<T>& vec) {
+        if (!map.has(key)) return;
+
+        const auto& arr = map[key];
+        for (size_t i = 0; i < arr.size(); ++i) {
+            T value;
+            arr.at(i).get(value);
+            vec.emplace_back(std::move(value));
         }
     }
 }
