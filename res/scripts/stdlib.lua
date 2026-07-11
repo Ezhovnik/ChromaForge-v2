@@ -185,8 +185,13 @@ end
 gui_util = require "builtin:internal/gui_util"
 
 Document = gui_util.Document
+Element = gui_util.Element
 RadioGroup = gui_util.RadioGroup
 __chroma_page_loader = gui_util.load_page
+
+function __chroma_get_document_node(docname, nodeid)
+    return Element.new(docname, nodeid)
+end
 
 _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
