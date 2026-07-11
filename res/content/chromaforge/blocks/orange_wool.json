@@ -1,0 +1,5 @@
+{
+    "texture": "orange_wool",
+    "material": "chromaforge:carpet",
+    "chromaforge:durability": 2.0
+}

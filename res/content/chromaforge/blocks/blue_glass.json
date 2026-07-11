@@ -1,0 +1,9 @@
+{
+    "texture": "blue_glass",
+    "draw-group": 2,
+    "light-passing": true,
+    "sky-light-passing": true,
+    "translucent": true,
+    "material": "chromaforge:glass",
+    "chromaforge:durability": 0.36
+}
