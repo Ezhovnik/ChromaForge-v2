@@ -1,11 +1,13 @@
 #pragma once
 
 #include <graphics/ui/elements/UINode.h>
+#include <math/UVRegion.h>
 
 namespace gui {
     class Image : public UINode {
     protected:
         std::string texture;
+        UVRegion region {};
         bool autoresize = false;
     public:
         Image(
@@ -21,5 +23,8 @@ namespace gui {
 
         virtual const std::string& getTexture() const;
         virtual void setTexture(const std::string& name);
+
+        void setRegion(const UVRegion& region);
+        const UVRegion& getRegion() const;
     };
 }

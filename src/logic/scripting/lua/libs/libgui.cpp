@@ -282,6 +282,14 @@ static int p_get_line_numbers(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_region(gui::UINode* node, lua::State* L) {
+    if (auto image = dynamic_cast<gui::Image*>(node)) {
+        const auto& region = image->getRegion();
+        return lua::pushvec4(L, {region.u1, region.v1, region.u2, region.v2});
+    }
+    return 0;
+}
+
 static int p_get_data(gui::UINode* node, lua::State* L) {
     if (auto canvas = dynamic_cast<gui::Canvas*>(node)) {
         return lua::newuserdata<lua::LuaCanvas>(L, canvas->texture(), canvas->data());
@@ -547,7 +555,8 @@ static int l_gui_getattr(lua::State* L) {
         {"cursor", p_get_cursor},
         {"reposition", p_get_reposition},
         {"data", p_get_data},
-        {"parent", p_get_parent}
+        {"parent", p_get_parent},
+        {"region", p_get_region}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) {
@@ -609,6 +618,13 @@ static void p_set_text(gui::UINode* node, lua::State* L, int idx) {
         button->setText(lua::require_wstring(L, idx));
     } else if (auto box = dynamic_cast<gui::TextBox*>(node)) {
         box->setText(lua::require_wstring(L, idx));
+    }
+}
+
+static void p_set_region(gui::UINode* node, lua::State* L, int idx) {
+    if (auto image = dynamic_cast<gui::Image*>(node)) {
+        auto vec = lua::tovec4(L, idx);
+        image->setRegion(UVRegion(vec.x, vec.y, vec.z, vec.w));
     }
 }
 
@@ -804,7 +820,8 @@ static int l_gui_setattr(lua::State* L) {
         {"caret", p_set_caret},
         {"src", p_set_src},
         {"cursor", p_set_cursor},
-        {"focused", p_set_focused}
+        {"focused", p_set_focused},
+        {"region", p_set_region}
     };
     auto func = setters.find(attr);
     if (func != setters.end()) func->second(node.get(), L, 4);

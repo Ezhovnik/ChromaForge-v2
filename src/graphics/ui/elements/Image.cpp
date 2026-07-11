@@ -51,8 +51,13 @@ void Image::draw(const DrawContext& pctx, const Assets& assets) {
     }
 
     batch->rect(
-        pos.x, pos.y, size.x, size.y, 
-        0, 0, 0, UVRegion(), false, true, calcColor()
+        pos.x, pos.y,
+        size.x, size.y, 
+        0, 0,
+        0,
+        region,
+        false, true,
+        calcColor()
     );
 }
 
@@ -69,4 +74,12 @@ const std::string& Image::getTexture() const {
 
 void Image::setTexture(const std::string& name) {
     texture = name;
+}
+
+void Image::setRegion(const UVRegion& region) {
+    this->region = region;
+}
+
+const UVRegion& Image::getRegion() const {
+    return region;
 }
