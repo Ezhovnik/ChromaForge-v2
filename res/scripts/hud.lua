@@ -1,13 +1,13 @@
 local function configure_SSAO()
     local slot = gfx.posteffects.index("builtin:default")
     gfx.posteffects.set_effect(slot, "ssao")
-    gfx.posteffects.set_intensity(slot, 1.0)
+    --gfx.posteffects.set_intensity(slot, 1.0)
 
     local buffer = Bytearray(0)
     for i = 0, 63 do
         local x = math.random() * 2.0 - 1.0
         local y = math.random() * 2.0 - 1.0
-        local z = math.random()
+        local z = math.random() * 2.0
         local len = math.sqrt(x * x + y * y + z * z)
         if len > 0 then
             x = x / len
@@ -76,4 +76,6 @@ function on_hud_open()
             player.set_vel(pid, 0, 1, 0)
         end
     end)
+
+    configure_SSAO()
 end

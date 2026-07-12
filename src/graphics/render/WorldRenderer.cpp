@@ -384,7 +384,8 @@ void WorldRenderer::generateShadowsMap(
 
     const auto& settings = engine.getSettings();
     int resolution = shadowMap.getResolution();
-    float shadowMapScale = 0.16f / (1 << glm::max(0LL, settings.graphics.shadowsQuality.get())) * scale;
+    int quality = settings.graphics.shadowsQuality.get();
+    float shadowMapScale = 0.16f / (1 << glm::max(0, quality)) * scale;
     float shadowMapSize = resolution * shadowMapScale;
     glm::vec3 basePos = glm::floor(camera.position);
     shadowCamera = Camera(basePos, shadowMapSize);
@@ -396,11 +397,15 @@ void WorldRenderer::generateShadowsMap(
     float t = worldInfo.daytime - 0.25f;
     if (t < 0.0f) t += 1.0f;
     t = fmod(t, 0.5f);
-    float sunAngle = glm::radians(90.0f - (((int)(t * 1000)) / 1000.0f + 0.25f) * 360.0f);
+    float sunCycleStep = 1.0f / 1000.0f;
+    float sunAngle = glm::radians(
+        90.0f - ((static_cast<int>(t / sunCycleStep)) * sunCycleStep + 0.25f) * 360.0f
+    );
+    float sunAltitude = float(PI) * 0.25f;
     shadowCamera.rotate(
-        sunAngle,
-        glm::radians(-45.0f),
-        glm::radians(-0.0f)
+        -glm::cos(sunAngle + float(PI) * 0.5f) * sunAltitude,
+        sunAngle - float(PI) * 0.5f,
+        glm::radians(0.0f)
     );
     shadowCamera.updateVectors();
     shadowCamera.position -= shadowCamera.front * 500.0f;

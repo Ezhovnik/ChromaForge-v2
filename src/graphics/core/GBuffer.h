@@ -10,9 +10,11 @@ public:
     ~GBuffer() override;
 
     void bind() override;
+    void bindSSAO() const;
     void unbind() override;
 
     void bindBuffers() const;
+    void bindSSAOBuffer() const;
 
     void resize(uint width, uint height);
 
@@ -29,9 +31,12 @@ private:
     uint positionsBuffer;
     uint normalsBuffer;
     uint depthBuffer;
+    uint ssaoFbo;
+    uint ssaoBuffer;
 
     void createColorBuffer();
     void createPositionsBuffer();
     void createNormalsBuffer();
     void createDepthBuffer();
+    void createSSAOBuffer();
 };
