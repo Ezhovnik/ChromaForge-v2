@@ -30,15 +30,13 @@ Button::Button(
     glm::vec4 padding, 
     const onaction& action,
     glm::vec2 size
-) : Panel(gui, size, padding, 0) 
+) : Panel(gui, size, padding, 0.0f) 
 {
-    if (size.y < 0.0f) {
-        size = glm::vec2(
-            glm::max(padding.x + padding.z + text.length() * 8, size.x),
-            glm::max(padding.y + padding.w + 16, size.y)
-        );
+    if (size.x < 0.0f || size.y < 0.0f) {
+        setContentSize({text.length() * 8, 16});
+    } else {
+        setSize(size);
     }
-    setSize(size);
 
     if (action) listenAction(action);
 
@@ -46,11 +44,11 @@ Button::Button(
 
     label = std::make_shared<Label>(gui, text);
     label->setAlign(Align::center);
-    label->setSize(size-glm::vec2(padding.z + padding.x, padding.w + padding.y));
+    label->setSize(getContentSize());
     label->setInteractive(false);
     add(label);
-    setHoverColor(glm::vec4(0.05f, 0.1f, 0.15f, 0.75f));
-    setPressedColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.95f));
+    setHoverColor({0.05f, 0.1f, 0.15f, 0.75f});
+    setPressedColor({0.0f, 0.0f, 0.0f, 0.95f});
 }
 
 void Button::setText(std::wstring text) {
@@ -62,22 +60,17 @@ std::wstring Button::getText() const {
     return L"";
 }
 
-Button* Button::textSupplier(wstringsupplier supplier) {
-    if (label) label->textSupplier(std::move(supplier));
-    return this;
-}
-
 void Button::refresh() {
     Panel::refresh();
     if (label) {
-        label->setSize(size-glm::vec2(padding.z + padding.x, padding.w + padding.y));
+        label->setSize(getContentSize());
     }
 }
 
 void Button::drawBackground(const DrawContext& pctx, const Assets&) {
     glm::vec2 pos = calcPos();
     auto batch = pctx.getBatch2D();
-    batch->texture(nullptr);
+    batch->untexture();
     batch->setColor(calcColor());
     batch->rect(pos.x, pos.y, size.x, size.y);
 }

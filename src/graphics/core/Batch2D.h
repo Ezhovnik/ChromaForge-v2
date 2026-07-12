@@ -219,6 +219,12 @@ public:
 
 	void lineRect(float x, float y, float w, float h);
 
+     void triangle(
+          float x1, float y1,
+          float x2, float y2,
+          float x3, float y3
+     );
+
 	/**
      * @brief Отправляет накопленные вершины как треугольники (GL_TRIANGLES).
      */

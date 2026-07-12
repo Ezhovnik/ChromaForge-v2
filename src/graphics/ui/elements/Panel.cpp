@@ -60,6 +60,17 @@ void Panel::remove(UINode* node) {
     fullRefresh();
 }
 
+void Panel::setContentSize(const glm::ivec2& contentSize) {
+    setSize(glm::vec2(
+        glm::max(padding.x + padding.z + contentSize.x, size.x),
+        glm::max(padding.y + padding.w + contentSize.y, size.y)
+    ));
+}
+
+glm::vec2 Panel::getContentSize() const {
+    return size - glm::vec2(padding.z + padding.x, padding.w + padding.y);
+}
+
 void Panel::refresh() {
     UINode::refresh();
 

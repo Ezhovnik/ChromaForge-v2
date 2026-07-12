@@ -343,6 +343,18 @@ void Batch2D::rect(
 	vertex(x + w, y + h, u + tx, v, r, g, b, a);
 }
 
+void Batch2D::triangle(
+	float x1, float y1,
+	float x2, float y2,
+	float x3, float y3
+) {
+    if (index + 3 >= capacity) flush();
+
+    vertex({x1, y1}, {x1, y1}, color.r, color.g, color.b, color.a);
+    vertex({x2, y2}, {x2, y2}, color.r, color.g, color.b, color.a);
+    vertex({x3, y3}, {x3, y3}, color.r, color.g, color.b, color.a);
+}
+
 void Batch2D::sprite(
     float x,
     float y,

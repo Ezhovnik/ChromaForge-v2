@@ -26,10 +26,11 @@
 #include <graphics/ui/elements/SplitBox.h>
 #include <graphics/ui/elements/InlineFrame.h>
 #include <graphics/ui/elements/ModelViewer.h>
+#include <graphics/ui/elements/SelectBox.h>
 
 using namespace gui;
 
-static Align align_from_string(const std::string& str, Align def) {
+static Align align_from_string(std::string_view str, Align def) {
     if (str == "left") return Align::left;
     if (str == "center") return Align::center;
     if (str == "right") return Align::right;
@@ -123,7 +124,7 @@ static void read_uinode(
     if (element.has("hover-color")) node.setHoverColor(element.attr("hover-color").asColor());
     if (element.has("pressed-color")) node.setPressedColor(element.attr("pressed-color").asColor());
 
-    std::string alignName = element.attr("align", "").getText();
+    const auto& alignName = element.attr("align", "").getText();
     node.setAlign(align_from_string(alignName, node.getAlign()));
 
     if (element.has("gravity")) {
@@ -288,8 +289,10 @@ static std::wstring parse_inner_text(
     const std::string& context
 ) {
     std::wstring text = L"";
-    if (element.size() == 1) {
-        std::string source = element.sub(0).getInnerText();
+    for (const auto& elem : element.getElements()) {
+        if (!elem->isText()) continue;
+
+        std::string source = elem->getInnerText();
         util::trim(source);
         text = util::str2wstr_utf8(source); 
         if (text[0] == '@') {
@@ -299,6 +302,7 @@ static std::wstring parse_inner_text(
                 text = langs::get(text.substr(1), util::str2wstr_utf8(context));
             }
         }
+        break;
     }
     return text;
 }
@@ -441,6 +445,65 @@ static std::shared_ptr<UINode> read_text_box(
     if (auto onDownPressed = create_runnable(reader, element, "ondown")) textbox->setOnDownPressed(onDownPressed);
 
     return textbox;
+}
+
+static std::shared_ptr<UINode> read_select(
+    UIXmlReader& reader, const xml::xmlelement& element
+) {
+    auto& gui = reader.getGUI();
+    glm::vec4 padding = element.attr("padding", "10").asVec4();
+    int contentWidth = element.attr("width", "100").asInt();
+
+    auto& elements = element.getElements();
+    std::vector<SelectBox::Option> options;
+    SelectBox::Option selected;
+    for (const auto& elem : elements) {
+        const auto& tag = elem->getTag();
+        if (tag != "option") continue;
+        auto value = elem->attr("value").getText();
+        auto text = parse_inner_text(*elem, reader.getContext());
+        options.push_back(SelectBox::Option {std::move(value), std::move(text)});
+    }
+
+    if (element.has("selected")) {
+        auto selectedValue = element.attr("selected").getText();
+        selected.value = selectedValue;
+        selected.text = L"";
+        for (const auto& option : options) {
+            if (option.value == selectedValue) {
+                selected.text = option.text;
+            }
+        }
+        if (selected.text.empty()) {
+            selected.text = util::str2wstr_utf8(selected.value);
+        }
+    }
+
+    auto innerText = parse_inner_text(element, "");
+    if (!innerText.empty()) {
+        selected.text = innerText;
+    }
+
+    auto selectBox = std::make_shared<SelectBox>(
+        gui,
+        std::move(options),
+        std::move(selected),
+        contentWidth,
+        std::move(padding)
+    );
+    if (element.has("onselect")) {
+        auto callback = scripting::create_string_consumer(
+            reader.getEnvironment(),
+            element.attr("onselect").getText(),
+            reader.getFilename()
+        );
+        selectBox->listenChange(
+        [callback=std::move(callback)](GUI&, const std::string& value) {
+            callback(value);
+        });
+    }
+    read_panel_impl(reader, element, *selectBox, false);
+    return selectBox;
 }
 
 static std::shared_ptr<UINode> read_check_box(
@@ -680,6 +743,7 @@ UIXmlReader::UIXmlReader(gui::GUI& gui, scriptenv&& env) : gui(gui), env(std::mo
     add("label", read_label);
     add("panel", read_panel);
     add("button", read_button);
+    add("select", read_select);
     add("textbox", read_text_box);
     add("pagebox", read_page_box);
     add("splitbox", read_split_box);

@@ -22,6 +22,12 @@ namespace scripting {
         const std::string& file = "[string]"
     );
 
+    stringconsumer create_string_consumer(
+        const scriptenv& env,
+        const std::string& src,
+        const std::string& file="[string]"
+    );
+
     wstringconsumer create_wstring_consumer(
         const scriptenv& env,
         const std::string& src,

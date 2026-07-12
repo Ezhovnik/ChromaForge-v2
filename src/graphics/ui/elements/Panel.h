@@ -28,6 +28,8 @@ namespace gui {
         virtual void setMaxLength(int value);
         int getMaxLength() const;
 
+        void setContentSize(const glm::ivec2& size);
+        glm::vec2 getContentSize() const;
     protected:
         int minLength = 0;
         int maxLength = 0;
