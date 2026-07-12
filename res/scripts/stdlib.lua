@@ -524,9 +524,6 @@ function time.post_runnable(runnable)
     table.insert(__post_runnables, runnable)
 end
 
-assets = {}
-assets.load_texture = builtin.__load_texture
-
 -- --------- Deprecated functions ------ --
 local function wrap_deprecated(func, name, alternatives)
     return function (...)

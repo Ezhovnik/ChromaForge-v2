@@ -60,8 +60,8 @@ struct UVRegion {
      }
 
      void scale(float x, float y) {
-          float w = getWidth();
-          float h = getHeight();
+          float w = u2 - u1;
+          float h = v2 - v1;
           float cx = (u1 + u2) * 0.5f;
           float cy = (v1 + v2) * 0.5f;
           u1 = cx - w * 0.5f * x;
@@ -79,5 +79,11 @@ struct UVRegion {
           v1 = vec.y;
           u2 = vec.z;
           v2 = vec.w;
+     }
+
+     UVRegion operator*(const glm::vec2& scale) const {
+          auto copy = UVRegion(*this);
+          copy.scale(scale);
+          return copy;
      }
 };

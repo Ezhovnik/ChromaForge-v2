@@ -87,6 +87,14 @@ static int l_container_add(lua::State* L) {
     return 0;
 }
 
+static int l_container_refresh(lua::State* L) {
+    auto docnode = get_document_node(L);
+    auto node = dynamic_cast<gui::Container*>(docnode.node.get());
+    if (node == nullptr) return 0;
+    node->refresh();
+    return 0;
+}
+
 static int l_node_reposition(lua::State* L) {
     auto docnode = get_document_node(L);
     docnode.node->reposition();
@@ -336,6 +344,13 @@ static int p_get_add(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_refresh(gui::UINode* node, lua::State* L) {
+    if (dynamic_cast<gui::Container*>(node)) {
+        return lua::pushcfunction(L, lua::wrap<l_container_refresh>);
+    }
+    return 0;
+}
+
 static int p_get_reposition(gui::UINode*, lua::State* L) {
     return lua::pushcfunction(L, lua::wrap<l_node_reposition>);
 }
@@ -490,6 +505,13 @@ static int p_get_scroll(gui::UINode* node, lua::State* L) {
 }
 
 static int l_gui_getattr(lua::State* L) {
+    if (!lua::isstring(L, 1)) {
+        throw std::runtime_error("Document name is not a string");
+    }
+    if (!lua::isstring(L, 2)) {
+        throw std::runtime_error("Element id is not a string");
+    }
+
     auto docname = lua::require_string(L, 1);
     auto element = lua::require_string(L, 2);
     if (lua::isnumber(L, 3)) {
@@ -502,6 +524,9 @@ static int l_gui_getattr(lua::State* L) {
         const auto& node = nodes.at(index);
         const auto& id = request_node_id(DocumentNode {docnode.document, node});
         return push_document_node(L, id);
+    }
+    if (!lua::isstring(L, 3)) {
+        throw std::runtime_error("Attribute name is not a string");
     }
     auto attr = lua::require_string(L, 3);
 
@@ -551,6 +576,7 @@ static int l_gui_getattr(lua::State* L) {
         {"tooltipDelay", p_get_tooltip_delay},
         {"setInterval", p_set_interval},
         {"destruct", p_get_destruct},
+        {"refresh", p_refresh},
         {"contentOffset", p_get_content_offset},
         {"cursor", p_get_cursor},
         {"reposition", p_get_reposition},
@@ -779,6 +805,15 @@ static int p_set_scroll(gui::UINode* node, lua::State* L, int idx) {
 }
 
 static int l_gui_setattr(lua::State* L) {
+    if (!lua::isstring(L, 1)) {
+        throw std::runtime_error("Document name is not a string");
+    }
+    if (!lua::isstring(L, 2)) {
+        throw std::runtime_error("Element id is not a string");
+    }
+    if (!lua::isstring(L, 3)) {
+        throw std::runtime_error("Attribute name is not a string");
+    }
     auto docname = lua::require_string(L, 1);
     auto element = lua::require_string(L, 2);
     auto attr = lua::require_string(L, 3);

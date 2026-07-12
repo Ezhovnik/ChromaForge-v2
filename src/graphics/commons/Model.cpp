@@ -79,16 +79,16 @@ void Mesh::addBox(
         addPlane(pos - Z * size, -X * size, Y * size, -Z, uvs[1]);
     }
     if (enabledSides[2]) { // Top
-        addPlane(pos + Y * size, X * size, -Z * size, Y, uvs[2]);
+        addPlane(pos + Y * size, X * size, -Z * size, Y, uvs[2] * glm::vec2(-1));
     }
     if (enabledSides[3]) { // Bottom
-        addPlane(pos - Y * size, X * size, Z * size, -Y, uvs[3]);
+        addPlane(pos - Y * size, X * size, Z * size, -Y, uvs[3] * glm::vec2(-1, 1));
     }
     if (enabledSides[4]) { // West
         addPlane(pos + X * size, -Z * size, Y * size, X, uvs[4]);
     }
     if (enabledSides[5]) { // East
-        addPlane(pos - X * size, Z * size, Y * size, -X, uvs[5]);
+        addPlane(pos - X * size, Z * size, Y * size, -X, uvs[5] * glm::vec2(-1, 1));
     }
 }
 

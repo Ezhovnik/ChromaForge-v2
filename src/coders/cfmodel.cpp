@@ -13,8 +13,8 @@ static const std::unordered_map<std::string, int> side_indices {
     {"south", 1},
     {"top", 2},
     {"bottom", 3},
-    {"east", 4},
-    {"west", 5},
+    {"west", 4},
+    {"east", 5},
 };
 
 static void perform_rect(const xmlelement& root, model::Model& model) {

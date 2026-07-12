@@ -56,7 +56,7 @@ local function load_models_list(packs)
     for _, filename in ipairs(file.list("models")) do
         local ext = file.ext(filename)
         if ext == "xml" then
-            registry[filename] = {type="model"}
+            registry[filename] = {type="model", unit=file.stem(filename)}
             table.insert(export.filenames, filename)
         end
     end

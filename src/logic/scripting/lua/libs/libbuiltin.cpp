@@ -15,8 +15,6 @@
 #include <world/generator/WorldGenerator.h>
 #include <util/listutil.h>
 #include <util/platform.h>
-#include <coders/png.h>
-#include <debug/Logger.h>
 #include <io/io.h>
 #include <graphics/core/Texture.h>
 #include <assets/Assets.h>
@@ -185,40 +183,6 @@ static int l_get_setting_info(lua::State* L) {
     throw std::runtime_error("Unsupported setting type");
 }
 
-static void load_texture(
-    const ubyte* bytes, size_t size, const std::string& destname
-) {
-    try {
-        scripting::engine->getAssets()->store(png::loadTexture(bytes, size), destname);
-    } catch (const std::runtime_error& err) {
-        LOG_ERROR("{}", err.what());
-    }
-}
-
-static int l_load_texture(lua::State* L) {
-    if (lua::istable(L, 1)) {
-        lua::pushvalue(L, 1);
-        size_t size = lua::objlen(L, 1);
-        util::Buffer<ubyte> buffer(size);
-        for (size_t i = 0; i < size; ++i) {
-            lua::rawgeti(L, i + 1);
-            buffer[i] = lua::tointeger(L, -1);
-            lua::pop(L);
-        }
-        lua::pop(L);
-        load_texture(buffer.data(), buffer.size(), lua::require_string(L, 2));
-    } else {
-        auto string = lua::bytearray_as_string(L, 1);
-        load_texture(
-            reinterpret_cast<const ubyte*>(string.data()),
-            string.size(),
-            lua::require_string(L, 2)
-        );
-        lua::pop(L);
-    }
-    return 0;
-}
-
 static int l_load_content(lua::State* L) {
     scripting::content_control->loadContent();
     return 0;
@@ -287,6 +251,5 @@ const luaL_Reg builtinlib [] = {
     {"open_folder", lua::wrap<l_open_folder>},
     {"quit", lua::wrap<l_quit>},
     {"capture_output", lua::wrap<l_capture_output>},
-    {"__load_texture", lua::wrap<l_load_texture>},
     {NULL, NULL}
 };

@@ -62,6 +62,7 @@ static void create_libs(State* L, StateType stateType) {
         openlib(L, "__chroma_app", applib);
     }
     if (stateType == StateType::Base || stateType == StateType::Script) {
+        openlib(L, "assets", assetslib);
         openlib(L, "audio", audiolib);
         openlib(L, "console", consolelib);
         openlib(L, "builtin", builtinlib);
