@@ -157,15 +157,12 @@ void AssetsLoader::processPreload(
         add(tag, path, name);
         return;
     }
+    std::shared_ptr<AssetsConfig> config = nullptr;
     map.at("path").get(path);
     switch (tag) {
         case AssetType::Sound: {
             bool keepPCM = false;
-            add(tag,
-                path,
-                name,
-                std::make_shared<SoundConfig>(map.at("keep-pcm").get(keepPCM))
-            );
+            config = std::make_shared<SoundConfig>(map.at("keep-pcm").get(keepPCM));
             break;
         }
         case AssetType::Atlas: {
@@ -173,13 +170,19 @@ void AssetsLoader::processPreload(
             map.at("type").get(typeName);
             auto type = AtlasType::Atlas;
             if (typeName == "separate") type = AtlasType::Separate;
-            add(tag, path, name, std::make_shared<AtlasConfig>(type));
+            config = std::make_shared<AtlasConfig>(type);
+            break;
+        }
+        case AssetType::PostEffect: {
+            bool advanced = false;
+            map.at("advanced").get(advanced);
+            config = std::make_shared<PostEffectConfig>(advanced);
             break;
         }
         default:
-            add(tag, path, name);
             break;
     }
+    add(tag, path, name, std::move(config));
 }
 
 void AssetsLoader::processPreloadList(AssetType tag, const dv::value& list) {

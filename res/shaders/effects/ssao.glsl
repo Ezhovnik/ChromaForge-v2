@@ -1,8 +1,7 @@
-uniform vec3 u_ssaoSamples[64];
-
-int kernelSize = 16;
-float radius = 0.25;
-float bias = 0.025;
+#param vec3 u_ssaoSamples[64]
+#param int u_kernelSize = 16
+#param float u_radius = 0.25
+#param float u_bias = 0.025
 
 vec4 effect() {
     vec2 noiseScale = u_screenSize / 4.0;
@@ -17,20 +16,20 @@ vec4 effect() {
     mat3 tbn = mat3(tangent, bitangent, normal);
 
     float occlusion = 0.0;
-    for (int i = 0; i < kernelSize; i++) {
+    for (int i = 0; i < u_kernelSize; i++) {
         vec3 samplePos = tbn * u_ssaoSamples[i];
-        samplePos = position + samplePos * radius; 
-
+        samplePos = position + samplePos * u_radius; 
+        
         vec4 offset = vec4(samplePos, 1.0);
         offset = u_projection * offset;
         offset.xyz /= offset.w;
         offset.xyz = offset.xyz * 0.5 + 0.5;
-
+        
         float sampleDepth = texture(u_position, offset.xy).z;
-        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(position.z - sampleDepth));
-        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+        float rangeCheck = smoothstep(0.0, 1.0, u_radius / abs(position.z - sampleDepth));
+        occlusion += (sampleDepth >= samplePos.z + u_bias ? 1.0 : 0.0) * rangeCheck;
     }
-    occlusion = min(1.0, 1.05 - (occlusion / kernelSize));
+    occlusion = min(1.0, 1.05 - (occlusion / u_kernelSize));
 
     float z = -position.z * 0.02;
     z = max(0.0, 1.0 - z);

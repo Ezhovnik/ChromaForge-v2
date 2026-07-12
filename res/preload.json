@@ -11,7 +11,10 @@
     ],
     "post-effects": [
         "default",
-        "ssao"
+        {
+            "name": "ssao",
+            "advanced": true
+        }
     ],
     "textures": [
         "gui/menubg",

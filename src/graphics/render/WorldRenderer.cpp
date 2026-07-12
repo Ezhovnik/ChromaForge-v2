@@ -162,10 +162,14 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1i("u_enableShadows", shadows);
 
     if (shadows) {
+        const auto& worldInfo = level.getWorld()->getInfo();
+        float cloudsIntensity = glm::max(worldInfo.skyClearness, weather.clouds());
         shader.uniformMatrix("u_shadowsMatrix[0]", shadowCamera.getProjView());
         shader.uniformMatrix("u_shadowsMatrix[1]", wideShadowCamera.getProjView());
         shader.uniform3f("u_sunDir", shadowCamera.front);
         shader.uniform1i("u_shadowsRes", shadowMap->getResolution());
+        shader.uniform1f("u_shadowsOpacity", 1.0f - cloudsIntensity); // TODO: make it configurable
+        shader.uniform1f("u_shadowsSoftness", 1.0f + cloudsIntensity * 4); // TODO: make it configurable
 
         glActiveTexture(GL_TEXTURE4);
         shader.uniform1i("u_shadows[0]", 4);
@@ -380,28 +384,28 @@ void WorldRenderer::generateShadowsMap(
 
     const auto& settings = engine.getSettings();
     int resolution = shadowMap.getResolution();
-    float shadowMapScale = 0.2f / (1 << glm::max(0LL, settings.graphics.shadowsQuality.get())) * scale;
+    float shadowMapScale = 0.16f / (1 << glm::max(0LL, settings.graphics.shadowsQuality.get())) * scale;
     float shadowMapSize = resolution * shadowMapScale;
     glm::vec3 basePos = glm::floor(camera.position);
     shadowCamera = Camera(basePos, shadowMapSize);
     shadowCamera.near = 0.1f;
-    shadowCamera.far = 800.0f;
+    shadowCamera.far = 1000.0f;
     shadowCamera.perspective = false;
     shadowCamera.setAspectRatio(1.0f);
 
     float t = worldInfo.daytime - 0.25f;
     if (t < 0.0f) t += 1.0f;
     t = fmod(t, 0.5f);
-    float sunAngle = glm::radians(90.0f - (t + 0.25f) * 360.0f);
+    float sunAngle = glm::radians(90.0f - (((int)(t * 1000)) / 1000.0f + 0.25f) * 360.0f);
     shadowCamera.rotate(
         sunAngle,
         glm::radians(-45.0f),
         glm::radians(-0.0f)
     );
     shadowCamera.updateVectors();
-    shadowCamera.position -= shadowCamera.front * 200.0f;
-    shadowCamera.position += shadowCamera.up * 10.0f;
-    shadowCamera.position += camera.front * 100.0f;
+    shadowCamera.position -= shadowCamera.front * 500.0f;
+    shadowCamera.position += shadowCamera.up * 0.0f;
+    shadowCamera.position += camera.front * 0.0f;
 
     auto view = shadowCamera.getView();
 
@@ -409,7 +413,7 @@ void WorldRenderer::generateShadowsMap(
     auto min = view * glm::vec4(currentPos - (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
     auto max = view * glm::vec4(currentPos + (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
 
-    shadowCamera.setProjection(glm::ortho(min.x, max.x, min.y, max.y, 0.1f, 800.0f));
+    shadowCamera.setProjection(glm::ortho(min.x, max.x, min.y, max.y, 0.1f, 1000.0f));
     {
         frustumCulling->update(shadowCamera.getProjView());
         auto sctx = pctx.sub();
@@ -460,7 +464,7 @@ void WorldRenderer::draw(
 
     const auto& worldInfo = world->getInfo();
 
-    float clouds = weather.b.clouds * glm::sqrt(weather.t) + weather.a.clouds * glm::sqrt(1.0f - weather.t);
+    float clouds = weather.clouds();
     clouds = glm::max(worldInfo.skyClearness, clouds);
     float mie = 1.0f + glm::max(worldInfo.skyClearness, clouds * 0.5f) * 2.0f;
     skybox->refresh(pctx, worldInfo.daytime, mie, 4);
@@ -468,7 +472,7 @@ void WorldRenderer::draw(
     chunks->update();
 
     static int frameid = 0;
-    if (shadows && frameid % 3 == 0) {
+    if (shadows) {
         if (frameid % 2 == 0) {
             generateShadowsMap(
                 camera,

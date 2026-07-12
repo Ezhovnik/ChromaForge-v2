@@ -109,6 +109,12 @@ public:
      */
     void uniform4f(const std::string& name, const glm::vec4& xyzw);
 
+    void uniform1v(const std::string& name, int length, const int* v);
+    void uniform1v(const std::string& name, int length, const float* v);
+    void uniform2v(const std::string& name, int length, const float* v);
+    void uniform3v(const std::string& name, int length, const float* v);
+    void uniform4v(const std::string& name, int length, const float* v);
+
     /**
      * @brief Создаёт шейдерную программу из исходных кодов вершинного и фрагментного шейдеров.
      * @param vertexFile Имя файла вершинного шейдера.

@@ -15,7 +15,10 @@ static int l_set_effect(lua::State* L) {
     size_t index = static_cast<size_t>(lua::tointeger(L, 1));
     auto name = lua::require_string(L, 2);
     auto& assets = *scripting::engine->getAssets();
-    auto effect = std::make_shared<PostEffect>(assets.require<PostEffect>(name));
+    auto effect = assets.getShared<PostEffect>(name);
+    if (effect == nullptr) {
+        throw std::runtime_error(std::string("Post-effect '") + name + "' not found");
+    }
     scripting::post_processing->setEffect(index, std::move(effect));
     return 0;
 }
@@ -55,6 +58,21 @@ static int l_set_params(lua::State* L) {
     return 0;
 }
 
+static int l_set_array(lua::State* L) {
+    size_t index = static_cast<size_t>(lua::tointeger(L, 1));
+    auto key = lua::require_string(L, 2);
+    auto data = lua::require_lstring(L, 3);
+    auto effect = scripting::post_processing->getEffect(index);
+    if (effect == nullptr) return 0;
+
+    std::vector<ubyte> buffer(
+        reinterpret_cast<const ubyte*>(data.begin()),
+        reinterpret_cast<const ubyte*>(data.end())
+    );
+    effect->setArray(key, std::move(buffer));
+    return 0;
+}
+
 const luaL_Reg posteffectslib[] = {
     {"index", lua::wrap<l_index>},
     {"set_effect", lua::wrap<l_set_effect>},
@@ -62,5 +80,6 @@ const luaL_Reg posteffectslib[] = {
     {"set_intensity", lua::wrap<l_set_intensity>},
     {"is_active", lua::wrap<l_is_active>},
     {"set_params", lua::wrap<l_set_params>},
+    {"set_array", lua::wrap<l_set_array>},
     {NULL, NULL}
 };

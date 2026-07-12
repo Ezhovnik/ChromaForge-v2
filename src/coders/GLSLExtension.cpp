@@ -95,6 +95,8 @@ inline void source_line(std::stringstream& ss, uint linenum) {
 
 static PostEffect::Param::Value default_value_for(PostEffect::Param::Type type) {
     switch (type) {
+        case PostEffect::Param::Type::Int:
+            return 0;
         case PostEffect::Param::Type::Float:
             return 0.0f;
         case PostEffect::Param::Type::Vec2:
@@ -182,6 +184,8 @@ public:
 
     PostEffect::Param::Value parseDefaultValue(PostEffect::Param::Type type, const std::string& name) {
         switch (type) {
+            case PostEffect::Param::Type::Int:
+                return static_cast<int>(parseNumber(1).asInteger());
             case PostEffect::Param::Type::Float:
                 return static_cast<float>(parseNumber(1).asNumber());
             case PostEffect::Param::Type::Vec2:
@@ -211,7 +215,20 @@ public:
             throw error("duplicating param " + util::quote(paramName));
         }
         skipWhitespace(false);
-        ss << "uniform " << typeName << " " << paramName << ";\n";
+        int start = pos;
+
+        ss << "uniform " << typeName << " " << paramName;
+
+        bool array = false;
+        if (peekNoJump() == '[') {
+            skip(1);
+            array = true;
+            readUntil(']');
+            skip(1);
+            ss << source.substr(start, pos - start + 1);
+        }
+
+        ss << ";\n";
         auto defValue = default_value_for(type);
         if (peekNoJump() == '=') {
             skip(1);
@@ -220,7 +237,7 @@ public:
         }
         skipLine();
 
-        params[paramName] = PostEffect::Param(type, std::move(defValue));
+        params[paramName] = PostEffect::Param(type, std::move(defValue), array);
         return false;
     }
 

@@ -52,6 +52,12 @@ struct AtlasConfig : AssetsConfig {
      }
 };
 
+struct PostEffectConfig : AssetsConfig {
+     bool advanced;
+
+     PostEffectConfig(bool advanced) : advanced(advanced) {}
+};
+
 using aloader_func = std::function<asset_loader::postfunc(
      AssetsLoader*,
      const ResPaths&, 
