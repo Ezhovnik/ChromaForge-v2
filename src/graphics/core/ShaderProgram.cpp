@@ -13,6 +13,7 @@
 #include <debug/Logger.h>
 
 GLSLExtension* ShaderProgram::preprocessor = new GLSLExtension();
+ShaderProgram* ShaderProgram::used = nullptr;
 
 uint ShaderProgram::getUniformLocation(const std::string& name) {
     auto it = uniformLocationCache.find(name);
@@ -38,6 +39,7 @@ ShaderProgram::~ShaderProgram(){
 }
 
 void ShaderProgram::use() {
+    used = this;
     glUseProgram(id);
 }
 
@@ -46,7 +48,6 @@ void ShaderProgram::uniformMatrix(const std::string& name, const glm::mat4& matr
 }
 
 void ShaderProgram::uniform1i(const std::string& name, int x) {
-
 	glUniform1i(getUniformLocation(name), x);
 }
 
@@ -77,7 +78,6 @@ void ShaderProgram::uniform3f(const std::string& name, const glm::vec3& xyz) {
 void ShaderProgram::uniform4f(const std::string& name, const glm::vec4& xyzw) {
     glUniform4f(getUniformLocation(name), xyzw.x, xyzw.y, xyzw.z, xyzw.w);
 }
-
 
 inline auto shader_deleter = [](GLuint* shader) {
     glDeleteShader(*shader);
@@ -143,4 +143,8 @@ std::unique_ptr<ShaderProgram> ShaderProgram::create(
     glDeleteShader(*fragment);
 
     return std::make_unique<ShaderProgram>(id);
+}
+
+ShaderProgram& ShaderProgram::getUsed() {
+    return *used;
 }

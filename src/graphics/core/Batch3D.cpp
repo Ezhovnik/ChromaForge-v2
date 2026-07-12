@@ -5,6 +5,11 @@
 #include <typedefs.h>
 #include <math/UVRegion.h>
 
+namespace {
+    const glm::vec3 SUN_VECTOR(0.528265f, 0.833149f, -0.163704f);
+    const float DIRECTIONAL_LIGHT_FACTOR = 0.3f;
+}
+
 Batch3D::Batch3D(size_t capacity) : capacity(capacity) {
     buffer = std::make_unique<Batch3DVertex[]>(capacity);
     mesh = std::make_unique<Mesh<Batch3DVertex>>(buffer.get(), 0);
@@ -30,7 +35,10 @@ void Batch3D::vertex(
 	float r, float g, float b, float a
 ) {
 	buffer[index].position = {x, y, z};
-    buffer[index].uv = {u, v};
+    buffer[index].uv = {
+        u * region.getWidth() + region.u1,
+		v * region.getHeight() + region.v1
+	};
     buffer[index].color = {r, g, b, a};
     index++;
 }
@@ -41,7 +49,10 @@ void Batch3D::vertex(
 	float r, float g, float b, float a
 ) {
 	buffer[index].position = point;
-    buffer[index].uv = uvpoint;
+    buffer[index].uv = {
+        uvpoint.x * region.getWidth() + region.u1,
+        uvpoint.y * region.getHeight() + region.v1
+	};
     buffer[index].color = {r, g, b, a};
     index++;
 }
@@ -52,7 +63,10 @@ void Batch3D::vertex(
 	float r, float g, float b, float a
 ) {
 	buffer[index].position = coord;
-    buffer[index].uv = {u, v};
+    buffer[index].uv = {
+        u * region.getWidth() + region.u1,
+		v * region.getHeight() + region.v1
+	};
     buffer[index].color = {r, g, b, a};
     index++;
 }
@@ -80,8 +94,13 @@ void Batch3D::texture(const Texture* new_texture){
 	if (currentTexture == new_texture) return;
 	flush();
 	currentTexture = new_texture;
-	if (new_texture == nullptr) blank->bind();
-	else new_texture->bind();
+	if (new_texture == nullptr) {
+		blank->bind();
+		region = blank->getUVRegion();
+	} else {
+		new_texture->bind();
+		region = currentTexture->getUVRegion();
+	}
 }
 
 void Batch3D::sprite(
@@ -190,6 +209,20 @@ void Batch3D::blockCube(
 	bool shading
 ) {
     cube((1.0f - size) * -0.5f, size, texfaces, tint, shading);
+}
+
+void Batch3D::setRegion(UVRegion region) {
+    this->region = region;
+}
+
+void Batch3D::vertex(
+	const glm::vec3& pos,
+	const glm::vec2& uv,
+	const glm::vec3& norm
+) {
+    float d = glm::dot(glm::normalize(norm), SUN_VECTOR);
+    d = (1.0f - DIRECTIONAL_LIGHT_FACTOR) + d * DIRECTIONAL_LIGHT_FACTOR;
+    vertex(pos, uv, glm::vec4(d, d, d, 1.0f));
 }
 
 void Batch3D::vertex(

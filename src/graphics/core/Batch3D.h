@@ -7,11 +7,11 @@
 
 #include <graphics/core/commons.h>
 #include <graphics/core/MeshData.h>
+#include <math/UVRegion.h>
 
 template<typename VertexStructure> class Mesh;
 
 class Texture;
-struct UVRegion;
 
 struct Batch3DVertex {
     glm::vec3 position;
@@ -36,6 +36,7 @@ private:
 
 	std::unique_ptr<Texture> blank;
 	const Texture* currentTexture;
+	UVRegion region {0.0f, 0.0f, 1.0f, 1.0f};
 
 	void vertex(
 		float x, float y, float z,
@@ -103,6 +104,8 @@ public:
 		const glm::vec4& tint,
 		bool shading=true
 	);
+	void setRegion(UVRegion region);
+    void vertex(const glm::vec3& pos, const glm::vec2& uv, const glm::vec3& norm);
 	void vertex(const glm::vec3& pos, const glm::vec2& uv, const glm::vec4& tint);
     void point(const glm::vec3& pos, const glm::vec4& tint);
 	void flush() override;

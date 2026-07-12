@@ -18,7 +18,8 @@ class GLSLExtension;
  * Предоставляет методы для загрузки uniform-переменных различных типов.
  */
 class ShaderProgram {
-private:
+    static ShaderProgram* used;
+
     /// Идентификатор шейдерной програмы OpenGL
     uint id;
 
@@ -124,4 +125,6 @@ public:
         const std::string& vertexSource, 
         const std::string& fragmentSource
     );
+
+    static ShaderProgram& getUsed();
 };

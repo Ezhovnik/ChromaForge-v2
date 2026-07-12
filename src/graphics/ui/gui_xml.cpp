@@ -25,6 +25,7 @@
 #include <graphics/ui/elements/Canvas.h>
 #include <graphics/ui/elements/SplitBox.h>
 #include <graphics/ui/elements/InlineFrame.h>
+#include <graphics/ui/elements/ModelViewer.h>
 
 using namespace gui;
 
@@ -256,7 +257,24 @@ static std::shared_ptr<UINode> read_split_box(
     return splitBox;
 }
 
-static std::shared_ptr<UINode> read_panel(UIXmlReader& reader, const xml::xmlelement& element) {
+static std::shared_ptr<UINode> read_model_viewer(
+    UIXmlReader& reader, const xml::xmlelement& element
+) {
+    auto model = element.attr("model", "").getText();
+    auto viewer = std::make_shared<ModelViewer>(
+        reader.getGUI(), glm::vec2(), model
+    );
+    read_container_impl(reader, element, *viewer);
+
+    if (element.has("center")) viewer->setCenter(element.attr("center").asVec3());
+    if (element.has("cam-rotation")) viewer->setRotation(glm::radians(element.attr("cam-rotation").asVec3()));
+
+    return viewer;
+}
+
+static std::shared_ptr<UINode> read_panel(
+    UIXmlReader& reader, const xml::xmlelement& element
+) {
     float interval = element.attr("interval", "2").asFloat();
     auto panel = std::make_shared<Panel>(
         reader.getGUI(), glm::vec2(), glm::vec4(), interval
@@ -669,6 +687,7 @@ UIXmlReader::UIXmlReader(gui::GUI& gui, scriptenv&& env) : gui(gui), env(std::mo
     add("trackbar", read_track_bar);
     add("container", read_container);
     add("bindbox", read_input_bind_box);
+    add("modelviewer", read_model_viewer);
     add("inventory", read_inventory);
 }
 
