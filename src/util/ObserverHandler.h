@@ -13,6 +13,7 @@ public:
 
     ObserverHandler(ObserverHandler&& handler) noexcept
         : destructor(std::move(handler.destructor)) {
+        handler.destructor = nullptr;
     }
 
     ~ObserverHandler() {
@@ -29,6 +30,7 @@ public:
         if (destructor) destructor();
 
         destructor = std::move(handler.destructor);
+        handler.destructor = nullptr;
         return *this;
     }
 private:

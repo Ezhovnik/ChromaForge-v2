@@ -224,7 +224,7 @@ public:
                 callbacks->second.notify();
             }
         }
-        if (pressed) {
+        if (pressed && key < MOUSE_KEYS_OFFSET) {
             pressedKeys.push_back(static_cast<Keycode>(key));
         }
     }
