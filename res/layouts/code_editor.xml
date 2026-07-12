@@ -1,11 +1,6 @@
 <splitbox id="editorRoot" orientation="horizontal" split-pos="0.3">
     <splitbox split-pos="0.75">
-        <panel interval="2" color="0" padding="2">
-            <textbox pos="2" padding="4,0,4,0" sub-consumer="filter_files" hint="@Filter"></textbox>
-            <panel id="filesList" color="#00000030" interval="6" padding="4" size-func="-1,-45" pos="2,38">
-                <!-- Content is generated in script -->
-            </panel>
-        </panel>
+        <iframe src="builtin:files_panel"></iframe>
         <panel id="problemsLog"
             color="#00000030" 
             padding="5,15,5,15">
