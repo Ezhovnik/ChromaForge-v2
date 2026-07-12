@@ -104,10 +104,29 @@ function unlock_access()
     )
 end
 
+local function reload_model(filename, name)
+    assets.parse_model("xml", document.editor.text, name)
+end
+
 function run_current_file()
     if not current_file.filename then
         return
     end
+
+    local info = registry.get_info(current_file.filename)
+    local script_type = info and info.type or "file"
+    local unit = info and info.unit
+
+    if script_type == "model" then
+        print(current_file.filename)
+        clear_output()
+        local _, err = pcall(reload_model, current_file.filename, unit)
+        if err then
+            document.output:paste(string.format("\n[#FF0000]%s[#FFFFFF]", err))
+        end
+        return
+    end
+
     local chunk, err = loadstring(document.editor.text, current_file.filename)
     clear_output()
     if not chunk then
@@ -119,9 +138,7 @@ function run_current_file()
         )
         return
     end
-    local info = registry.get_info(current_file.filename)
-    local script_type = info and info.type or "file"
-    local unit = info and info.unit
+
     save_current_file()
 
     local func = function()
@@ -203,6 +220,17 @@ function save_current_file()
 end
 
 function open_file_in_editor(filename, line, mutable)
+    debug.info("Opening file " .. string.escape(filename) .. " in editor")
+
+    local ext = file.ext(filename)
+    if ext == "xml" or ext == "cfmodel" then
+        document.modelviewer.src = file.stem(filename)
+        document.modelviewer.visible = true
+    else
+        document.modelviewer.visible = false
+    end
+    document.codePanel:refresh()
+
     local editor = document.editor
     local source = file.read(filename):gsub('\t', '    ')
     editor.scroll = 0
@@ -225,7 +253,7 @@ end
 function on_open(mode)
     registry = require "builtin:internal/scripts_registry"
 
-    document.editorContainer:setInterval(200, refresh_file_title)
+    document.codePanel:setInterval(200, refresh_file_title)
 
     clear_traceback()
     clear_output()

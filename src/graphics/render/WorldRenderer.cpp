@@ -389,7 +389,10 @@ void WorldRenderer::generateShadowsMap(
     shadowCamera.perspective = false;
     shadowCamera.setAspectRatio(1.0f);
 
-    float sunAngle = glm::radians(fmod(90.0f - worldInfo.daytime * 360.0f, 180.0f));
+    float t = worldInfo.daytime - 0.25f;
+    if (t < 0.0f) t += 1.0f;
+    t = fmod(t, 0.5f);
+    float sunAngle = glm::radians(90.0f - (t + 0.25f) * 360.0f);
     shadowCamera.rotate(
         sunAngle,
         glm::radians(-45.0f),
@@ -503,9 +506,6 @@ void WorldRenderer::draw(
                         ctx, camera, *lineBatch, linesShader, drawChunkBorders
                     );
                 }
-                if (player.currentCamera == player.fpCamera) {
-                    renderHands(camera, deltaTime);
-                }
             }
         }
         {
@@ -521,6 +521,12 @@ void WorldRenderer::draw(
         camera,
         shadows ? shadowMap->getDepthMap() : 0
     );
+    if (player.currentCamera == player.fpCamera) {
+        DrawContext ctx = pctx.sub();
+        ctx.setDepthTest(true);
+        ctx.setCullFace(true);
+        renderHands(camera, deltaTime);
+    }
     renderBlockOverlay(pctx);
 
     glActiveTexture(GL_TEXTURE0);

@@ -167,6 +167,7 @@ std::string EnginePaths::createWriteableDevice(const std::string& name) {
             break;
         }
     }
+    if (name == BUILTIN_CONTENT_NAMESPACE) folder = "res:";
     if (folder.emptyOrInvalid()) {
         LOG_ERROR("Pack not found");
         throw std::runtime_error("Pack not found");

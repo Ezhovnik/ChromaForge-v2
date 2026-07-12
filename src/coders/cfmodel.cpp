@@ -4,6 +4,7 @@
 #include <util/stringutil.h>
 #include <graphics/commons/Model.h>
 #include <debug/Logger.h>
+#include <io/io.h>
 
 using namespace cfmodel;
 using namespace xml;
@@ -137,15 +138,20 @@ static std::unique_ptr<model::Model> load_model(const xmlelement& root) {
 }
 
 std::unique_ptr<model::Model> cfmodel::parse(std::string_view file, std::string_view src) {
-    auto doc = xml::parse(file, src);
-    const auto& root = *doc->getRoot();
-    if (root.getTag() != "model") {
-        LOG_ERROR(
-            "'model' tag expected as root, got '{}'", root.getTag()
-        );
-        throw std::runtime_error(
-            "'model' tag expected as root, got '" + root.getTag() + "'"
-        );
+    try {
+        auto doc = io::path(std::string(file)).extension() == ".xml" ? xml::parse(file, src) : xml::parse_cfmodel(file, src, "model");
+        const auto& root = *doc->getRoot();
+        if (root.getTag() != "model") {
+            LOG_ERROR(
+                "'model' tag expected as root, got '{}'", root.getTag()
+            );
+            throw std::runtime_error(
+                "'model' tag expected as root, got '" + root.getTag() + "'"
+            );
+        }
+        return load_model(root);
+    } catch (const parsing_error& err) {
+        LOG_ERROR("{}", err.errorLog());
+        throw std::runtime_error(err.errorLog());
     }
-    return load_model(root);
 }

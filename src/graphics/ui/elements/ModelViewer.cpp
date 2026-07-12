@@ -1,5 +1,7 @@
 #include <graphics/ui/elements/ModelViewer.h>
 
+#include <array>
+
 #include <glm/ext.hpp>
 #include <GL/glew.h> // TODO: remove
 

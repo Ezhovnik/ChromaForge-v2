@@ -21,6 +21,7 @@
 #include <graphics/ui/elements/Canvas.h>
 #include <graphics/ui/GUI.h>
 #include <graphics/ui/elements/InlineFrame.h>
+#include <graphics/ui/elements/ModelViewer.h>
 
 static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
@@ -474,6 +475,8 @@ static int p_get_src(gui::UINode* node, lua::State* L) {
         return lua::pushstring(L, image->getTexture());
     } else if (auto iframe = dynamic_cast<gui::InlineFrame*>(node)) {
         return lua::pushstring(L, iframe->getSrc());
+    } else if (auto modelviewer = dynamic_cast<gui::ModelViewer*>(node)) {
+        return lua::pushstring(L, modelviewer->getModel());
     }
     return 0;
 }
@@ -776,6 +779,8 @@ static void p_set_src(gui::UINode* node, lua::State* L, int idx) {
         image->setTexture(lua::require_string(L, idx));
     } else if (auto iframe = dynamic_cast<gui::InlineFrame*>(node)) {
         iframe->setSrc(lua::require_string(L, idx));
+    } else if (auto modelviewer = dynamic_cast<gui::ModelViewer*>(node)) {
+        modelviewer->setModel(lua::require_string(L, idx));
     }
 }
 

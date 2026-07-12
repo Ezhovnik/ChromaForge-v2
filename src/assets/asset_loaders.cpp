@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <stdexcept>
+#include <array>
 
 #include <assets/Assets.h>
 #include <assets/AssetsLoader.h>
@@ -480,7 +481,6 @@ asset_loader::postfunc asset_loader::model(
         };
     }
     path = paths.find(file + ".obj");
-    auto text = io::read_string(path);
     if (io::exists(path)) {
         auto text = io::read_string(path);
         try {
@@ -494,20 +494,33 @@ asset_loader::postfunc asset_loader::model(
             throw;
         }
     }
-    path = paths.find(file + ".xml");
-    if (io::exists(path)) {
-        auto text = io::read_string(path);
-        try {
-            auto model = cfmodel::parse(path.string(), text).release();
-            return [=](Assets* assets) {
-                request_textures(loader, *model);
-                assets->store(std::unique_ptr<model::Model>(model), name);
-            };
-        } catch (const parsing_error& err) {
-            LOG_ERROR("Failed to load model '{}': {}", file, err.errorLog());
-            throw;
+    std::array<std::string, 2> extensions {
+        ".xml",
+        ".vcm"
+    };
+
+    path = "";
+    for (const auto& ext : extensions) {
+        auto newPath = paths.find(file + ext);
+        if (io::exists(newPath)) {
+            path = std::move(newPath);
+            break;
         }
     }
-    LOG_ERROR("Could not to find model {}", util::quote(file));
-    throw std::runtime_error("Could not to find model " + util::quote(file));
+    if (path.empty()) {
+        LOG_ERROR("Could not to find model {}", util::quote(file));
+        throw std::runtime_error("Could not to find model " + util::quote(file));
+    }
+
+    auto text = io::read_string(path);
+    try {
+        auto model = cfmodel::parse(path.string(), text).release();
+        return [=](Assets* assets) {
+            request_textures(loader, *model);
+            assets->store(std::unique_ptr<model::Model>(model), name);
+        };
+    } catch (const parsing_error& err) {
+        LOG_ERROR("{}", err.errorLog());
+        throw;
+    }
 }

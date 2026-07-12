@@ -1,5 +1,7 @@
 #include <graphics/ui/elements/SplitBox.h>
 
+#include <util/stack_vector.h>
+
 using namespace gui;
 
 SplitBox::SplitBox(
@@ -34,17 +36,28 @@ void SplitBox::mouseMove(int x, int y) {
 void SplitBox::refresh() {
     Container::refresh();
 
-    if (nodes.empty()) return;
+    util::stack_vector<UINode*, 2> visibleNodes;
+
+    for (const auto& node : nodes) {
+        if (!node->isVisible()) continue;
+
+        visibleNodes.push_back(node.get());
+        if (visibleNodes.full()) {
+            break;
+        }
+    }
+
+    if (visibleNodes.empty()) return;
 
     glm::vec2 size = getSize();
-    if (nodes.size() == 1) {
-        auto node = nodes.at(0);
+    if (visibleNodes.size() == 1) {
+        auto node = visibleNodes.at(0);
         node->setPos(glm::vec2());
         node->setSize(size);
         return;
     }
-    auto nodeA = nodes.at(0);
-    auto nodeB = nodes.at(1);
+    auto nodeA = visibleNodes.at(0);
+    auto nodeB = visibleNodes.at(1);
 
     float sepRadius = interval / 2.0f;
 

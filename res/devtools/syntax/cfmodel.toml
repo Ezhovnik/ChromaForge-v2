@@ -1,0 +1,3 @@
+language = "ChromaForgeModel"
+extensions = ["cfmodel"]
+line-comment-start = "#"

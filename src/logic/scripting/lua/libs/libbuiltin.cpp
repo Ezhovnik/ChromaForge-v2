@@ -1,5 +1,6 @@
 #include <vector>
 #include <memory>
+#include <sstream>
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>

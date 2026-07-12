@@ -95,5 +95,9 @@ namespace xml {
         std::string_view filename, std::string_view source
     );
 
+    std::unique_ptr<Document> parse_cfmodel(
+        std::string_view filename, std::string_view source, std::string_view tag
+    );
+
     using xmlelement = Node;
 }

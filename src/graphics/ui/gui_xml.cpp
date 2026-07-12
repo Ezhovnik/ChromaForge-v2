@@ -260,7 +260,7 @@ static std::shared_ptr<UINode> read_split_box(
 static std::shared_ptr<UINode> read_model_viewer(
     UIXmlReader& reader, const xml::xmlelement& element
 ) {
-    auto model = element.attr("model", "").getText();
+    auto model = element.attr("src", "").getText();
     auto viewer = std::make_shared<ModelViewer>(
         reader.getGUI(), glm::vec2(), model
     );
