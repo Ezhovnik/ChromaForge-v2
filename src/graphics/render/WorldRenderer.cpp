@@ -162,17 +162,17 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1i("u_enableShadows", shadows);
 
     if (shadows) {
-        shader.uniformMatrix("u_shadowsMatrix", shadowCamera.getProjView());
-        shader.uniformMatrix("u_wideShadowsMatrix", wideShadowCamera.getProjView());
+        shader.uniformMatrix("u_shadowsMatrix[0]", shadowCamera.getProjView());
+        shader.uniformMatrix("u_shadowsMatrix[1]", wideShadowCamera.getProjView());
         shader.uniform3f("u_sunDir", shadowCamera.front);
         shader.uniform1i("u_shadowsRes", shadowMap->getResolution());
 
         glActiveTexture(GL_TEXTURE4);
-        shader.uniform1i("u_shadows", 4);
+        shader.uniform1i("u_shadows[0]", 4);
         glBindTexture(GL_TEXTURE_2D, shadowMap->getDepthMap());
 
         glActiveTexture(GL_TEXTURE5);
-        shader.uniform1i("u_wideShadows", 5);
+        shader.uniform1i("u_shadows[1]", 5);
         glBindTexture(GL_TEXTURE_2D, wideShadowMap->getDepthMap());
 
         glActiveTexture(GL_TEXTURE0);
@@ -382,8 +382,8 @@ void WorldRenderer::generateShadowsMap(
     int resolution = shadowMap.getResolution();
     float shadowMapScale = 0.2f / (1 << glm::max(0LL, settings.graphics.shadowsQuality.get())) * scale;
     float shadowMapSize = resolution * shadowMapScale;
-    glm::vec3 basePos = glm::floor(camera.position / 500.0f) * 500.0f;
-    shadowCamera = Camera(basePos + glm::mod(camera.position, 500.0f), shadowMapSize);
+    glm::vec3 basePos = glm::floor(camera.position);
+    shadowCamera = Camera(basePos, shadowMapSize);
     shadowCamera.near = 0.1f;
     shadowCamera.far = 800.0f;
     shadowCamera.perspective = false;
@@ -398,20 +398,15 @@ void WorldRenderer::generateShadowsMap(
     shadowCamera.updateVectors();
     shadowCamera.position -= shadowCamera.front * 200.0f;
     shadowCamera.position += shadowCamera.up * 10.0f;
+    shadowCamera.position += camera.front * 100.0f;
 
     auto view = shadowCamera.getView();
 
     auto currentPos = shadowCamera.position;
-    auto min = view * glm::dvec4(currentPos - (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
-    auto max = view * glm::dvec4(currentPos + (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
+    auto min = view * glm::vec4(currentPos - (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
+    auto max = view * glm::vec4(currentPos + (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
 
-    float texelSize = (max.x - min.x) / shadowMapSize;
-    float snappedLeft = glm::round(min.x / texelSize) * texelSize;
-    float snappedBottom = glm::round(min.y / texelSize) * texelSize;
-    float snappedRight = snappedLeft + shadowMapSize * texelSize;
-    float snappedTop = snappedBottom + shadowMapSize * texelSize;
-
-    shadowCamera.setProjection(glm::ortho(snappedLeft, snappedRight, snappedBottom, snappedTop, 0.1f, 800.0f));
+    shadowCamera.setProjection(glm::ortho(min.x, max.x, min.y, max.y, 0.1f, 800.0f));
     {
         frustumCulling->update(shadowCamera.getProjView());
         auto sctx = pctx.sub();
@@ -445,7 +440,7 @@ void WorldRenderer::draw(
 
     gbufferPipeline = settings.graphics.advancedRender.get();
     int shadowsQuality = settings.graphics.shadowsQuality.get();
-    int resolution = 512 << shadowsQuality;
+    int resolution = 1024 << shadowsQuality;
     if (shadowsQuality > 0 && !shadows) {
         shadowMap = std::make_unique<ShadowMap>(resolution);
         wideShadowMap = std::make_unique<ShadowMap>(resolution);
@@ -470,7 +465,7 @@ void WorldRenderer::draw(
     chunks->update();
 
     static int frameid = 0;
-    if (shadows) {
+    if (shadows && frameid % 3 == 0) {
         if (frameid % 2 == 0) {
             generateShadowsMap(
                 camera,
@@ -485,7 +480,7 @@ void WorldRenderer::draw(
                 pctx,
                 *wideShadowMap,
                 wideShadowCamera,
-                8.0f
+                4.0f
             );
         }
     }

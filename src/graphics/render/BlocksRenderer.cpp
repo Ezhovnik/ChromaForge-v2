@@ -208,21 +208,16 @@ void BlocksRenderer::blockXSprite(
 	const glm::vec4 tint (0.8f);
 
     // Рисуем две пересекающиеся плоскости (всего 4 грани)
-    glm::vec3 n;
-    float bias = 0.05f;
+    glm::vec3 n(0.0f, 1.0f, 0.0f);
 
-    n = glm::vec3(-0.7f, 0, -0.7f);
-    face(glm::vec3(x + xs, y, z + zs) + n * bias, w, size.y, 0, {-1, 0, 1}, {0, 1, 0}, n,
+    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, 1}, {0, 1, 0}, n,
         texface1, lights2, tint);
-    n = glm::vec3(-0.7f, 0, 0.7f);
-    face(glm::vec3(x + xs, y, z + zs) + n * bias, w, size.y, 0, {1, 0, 1}, {0, 1, 0}, n,
+    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, 1}, {0, 1, 0}, n,
         texface1, lights1, tint);
 
-    n = glm::vec3(0.7f, 0, -0.7f);
-    face(glm::vec3(x + xs, y, z + zs) + n * bias, w, size.y, 0, {-1, 0, -1}, {0, 1, 0}, n,
+    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, -1}, {0, 1, 0}, n,
         texface2, lights2, tint);
-    n = glm::vec3(0.7f, 0, 0.7f);
-    face(glm::vec3(x + xs, y, z + zs) + n * bias, w, size.y, 0, {1, 0, -1}, {0, 1, 0}, n,
+    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, -1}, {0, 1, 0}, n,
         texface2, lights1, tint);
 }
 

@@ -81,13 +81,14 @@ local function refresh_file_title()
 end
 
 function filter_files(text)
+    local pattern_safe = text:pattern_safe();
     local filtered = {}
     for _, filename in ipairs(filenames) do
-        if filename:find(text) then
+        if filename:find(pattern_safe) then
             table.insert(filtered, filename)
         end
     end
-    build_files_list(filtered, text)
+    build_files_list(filtered, pattern_safe)
 end
 
 function on_control_combination(keycode)
@@ -229,15 +230,15 @@ function open_file_in_editor(filename, line, mutable)
     document.saveIcon.enabled = current_file.modified
 end
 
-function build_files_list(filenames, selected)
+function build_files_list(filenames, highlighted_part)
     local files_list = document.filesList
     files_list.scroll = 0
     files_list:clear()
 
     for _, actual_filename in ipairs(filenames) do
         local filename = actual_filename
-        if selected then
-            filename = filename:gsub(selected, "**"..selected.."**")
+        if highlighted_part then
+            filename = filename:gsub(highlighted_part, "**"..highlighted_part.."**")
         end
         local parent = file.parent(filename)
         local info = registry.get_info(actual_filename)
@@ -250,7 +251,8 @@ function build_files_list(filenames, selected)
             name = file.name(filename),
             icon = icon,
             unit = info and info.unit or '',
-            filename = actual_filename
+            filename = actual_filename,
+            open_func = "open_file_in_editor",
         }))
     end
 end

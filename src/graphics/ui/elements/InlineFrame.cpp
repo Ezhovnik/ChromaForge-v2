@@ -33,6 +33,7 @@ void InlineFrame::setDocument(const std::shared_ptr<UIDocument>& document) {
 }
 
 void InlineFrame::activate(float delta) {
+    Container::activate(delta);
     if (document || src.empty()) return;
 
     const auto& assets = *gui.getEngine().getAssets();
