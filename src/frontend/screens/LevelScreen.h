@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <cstdint>
 
 #include <frontend/screens/Screen.h>
-#include <typedefs.h>
 
 class Engine;
 class LevelFrontend;
