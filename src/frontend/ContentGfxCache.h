@@ -14,6 +14,8 @@ class Atlas;
 class Block;
 struct GraphicsSettings;
 
+inline constexpr int MAX_VARIANTS = 16;
+
 class ContentGfxCache {
 private:
     const Content& content;
@@ -29,8 +31,8 @@ public:
     );
     ~ContentGfxCache();
 
-    inline const UVRegion& getRegion(blockid_t id, int side) const {
-        return sideregions[id * 6 + side];
+    inline const UVRegion& getRegion(blockid_t id, uint8_t variant, int side) const {
+        return sideregions[(id * 6 + side) * MAX_VARIANTS + variant];
     }
 
     const model::Model& getModel(blockid_t id) const;

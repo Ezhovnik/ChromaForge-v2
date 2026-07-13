@@ -182,8 +182,8 @@ private:
      */
 	void blockCustomModel(
         const glm::ivec3& icoord,
-		const Block* block, 
-        ubyte rotation,
+		const Block& block, 
+        blockstate states,
 		bool lights,
         bool ao
     );
@@ -201,23 +201,25 @@ private:
      * @param group Группа отрисовки текущего блока.
      * @return true, если грань должна быть отрисована.
      */
-	inline bool isOpen(const glm::ivec3& pos, const Block& def) const {
-        auto id = voxelsBuffer->pickBlockId(
+	inline bool isOpen(const glm::ivec3& pos, const Block& def, const Variant& variant) const {
+        auto vox = voxelsBuffer->pickBlock(
             chunk->chunk_x * CHUNK_WIDTH + pos.x,
             pos.y,
             chunk->chunk_z * CHUNK_DEPTH + pos.z
         );
-        if (id == BLOCK_VOID) {
+        if (vox.id == BLOCK_VOID) {
             return false;
         }
-        const auto& block = *blockDefsCache[id];
-        if (((block.drawGroup != def.drawGroup) && block.drawGroup) || !block.rt.solid) {
+        const auto& block = *blockDefsCache[vox.id];
+        const auto& blockVariant = block.getVariantByBits(vox.state.userbits);
+        uint8_t otherDrawGroup = blockVariant.drawGroup;
+        if ((otherDrawGroup && (otherDrawGroup != variant.drawGroup)) || !blockVariant.rt.solid) {
             return true;
         }
-        if ((def.culling == CullingMode::Disabled || (def.culling == CullingMode::Optional && settings.graphics.denseRender.get())) && id == def.rt.id) {
+        if ((variant.culling == CullingMode::Disabled || (variant.culling == CullingMode::Optional && settings.graphics.denseRender.get())) && vox.id == def.rt.id) {
             return true;
         }
-        return id == BLOCK_AIR;
+        return vox.id == BLOCK_AIR;
     }
 
     /**

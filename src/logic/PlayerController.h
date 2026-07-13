@@ -30,7 +30,9 @@ private:
 
 	glm::vec3 updateCameraShaking(const Hitbox& hitbox, float delta);
 
-	void updateFovEffects(const Hitbox& hitbox, PlayerInput input, float delta);
+	void updateFov(
+        const Hitbox& hitbox, PlayerInput input, float delta, bool effects
+    );
 
 	void switchCamera();
 public:

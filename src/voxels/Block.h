@@ -11,6 +11,7 @@
 #include <data/dv.h>
 #include <util/EnumMetadata.h>
 #include <interfaces/Serializable.h>
+#include <util/stack_vector.h>
 
 struct ParticlesPreset;
 namespace data {
@@ -78,6 +79,27 @@ struct BlockFuncsSet {
     bool onblocksspark : 1;
 };
 
+inline constexpr int BLOCK_MAX_VARIANTS = 16;
+
+struct Variant {
+    BlockModel model {};
+    std::array<std::string, 6> textureFaces;  // -x, x, -y, y, -z, z
+    CullingMode culling = CullingMode::Default;
+    uint8_t drawGroup = 0;
+
+    struct {
+        bool solid = true;
+    } rt;
+};
+
+struct Variants {
+    uint8_t offset;
+    uint8_t mask;
+
+    /// First variant is copy of Block::defaults
+    util::stack_vector<Variant, BLOCK_MAX_VARIANTS> variants {};
+};
+
 struct CoordSystem {
 	std::array<glm::ivec3, 3> axes;
 	glm::ivec3 fix;
@@ -127,7 +149,7 @@ public:
 
     std::string caption;
 
-    std::array<std::string, 6> textureFaces; // -x, +x, -y, +y, -z, +z
+    Variant defaults {};
 
     dv::value properties = nullptr;
 
@@ -135,9 +157,6 @@ public:
 
     ubyte emission[4] {0, 0, 0, 0};
     glm::i8vec3 size {1, 1, 1};
-    ubyte drawGroup = 0;
-    BlockModel model {};
-    CullingMode culling = CullingMode::Default;
     std::string pickingItem = name + BLOCK_ITEM_SUFFIX;
     std::string scriptName = name.substr(name.find(':') + 1);
     std::string scriptFile;
@@ -168,6 +187,8 @@ public:
 
     std::unique_ptr<ParticlesPreset> particles;
 
+    std::unique_ptr<Variants> variants;
+
 	struct {
         blockid_t id;
 		bool solid = true;
@@ -185,6 +206,27 @@ public:
     ~Block();
 
     void cloneTo(Block& dst);
+
+    uint8_t getVariantIndex(uint8_t userbits) const {
+        if (variants == nullptr) return 0;
+        return (userbits >> variants->offset) & variants->mask;
+    }
+
+    const Variant& getVariantByBits(uint8_t userbits) const {
+        if (userbits == 0 || variants == nullptr) return defaults;
+        return variants->variants[
+            (userbits >> variants->offset) & variants->mask
+        ];
+    }
+
+    const Variant& getVariant(uint8_t index) const {
+        if (index == 0) return defaults;
+        return variants->variants[index];
+    }
+
+    const BlockModel& getModel(uint8_t bits) const {
+        return getVariantByBits(bits).model;
+    }
 
     static bool isReservedBlockField(std::string_view view);
 };

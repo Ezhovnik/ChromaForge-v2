@@ -115,6 +115,7 @@ void EnginePaths::cleanup() {
     }
 
     entryPoints.clear();
+    writeables.clear();
 }
 
 void EnginePaths::setEntryPoints(std::vector<PathsRoot> entryPoints) {

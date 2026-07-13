@@ -8,6 +8,7 @@ struct Item;
 class Assets;
 class Content;
 class Block;
+struct Variant;
 
 class ModelsGenerator {
 public:
@@ -25,7 +26,11 @@ public:
         bool lighting
     );
 
-    static model::Model loadCustomBlockModelType(
+    static model::Model loadCustomBlockModel(
         const dv::value& primitives, const Assets& assets, bool lighting
+    );
+
+    static void prepareModel(
+        Assets& assets, const Block& def, Variant& variant, uint8_t variantId
     );
 };

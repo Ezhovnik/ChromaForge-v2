@@ -9,8 +9,8 @@
 
 static void configure_textures(
     model::Model& model,
-    const Block& blockDef,
-    const Assets& assets
+    const Assets& assets,
+    const std::array<std::string, 6>& textureFaces
 ) {
     for (auto& mesh : model.meshes) {
         auto& texture = mesh.texture;
@@ -18,7 +18,7 @@ static void configure_textures(
 
         try {
             int index = std::stoi(texture.substr(1));
-            texture = "blocks:" + blockDef.textureFaces.at(index);
+            texture = "blocks:" + textureFaces.at(index);
         } catch (const std::invalid_argument& err) {
         } catch (const std::runtime_error& err) {
             LOG_ERROR("{}", err.what());
@@ -45,34 +45,42 @@ static inline UVRegion get_region_for(
     return texreg.region;
 }
 
-void ModelsGenerator::prepare(Content& content, Assets& assets) {
-    for (auto& [name, def] : content.blocks.getDefs()) {
-        if (def->model.type == BlockModelType::Custom) {
-            if (def->model.name.empty()) {
-                assets.store(
-                    std::make_unique<model::Model>(
-                        loadCustomBlockModelType(
-                            def->model.customRaw, assets, !def->shadeless
-                        )
-                    ),
-                    name + ".model"
-                );
-                def->model.name = def->name + ".model";
-            } else {
-                auto srcModel = assets.get<model::Model>(def->model.name);
-                if (srcModel) {
-                    auto model = std::make_unique<model::Model>(*srcModel);
-                    for (auto& mesh : model->meshes) {
-                        if (mesh.texture.length() && mesh.texture[0] == '$') {
-                            int index = std::stoll(mesh.texture.substr(1));
-                            mesh.texture = "blocks:" + def->textureFaces[index];
-                        }
+void ModelsGenerator::prepareModel(
+    Assets& assets, const Block& def, Variant& variant, uint8_t variantId
+) {
+    BlockModel& blockModel = variant.model;
+    if (blockModel.type == BlockModelType::Custom) {
+        std::string modelName = def.name + ".model" + (variantId == 0 ? "" : "$" + std::to_string(variantId));
+        if (blockModel.name.empty()) {
+            assets.store(
+                std::make_unique<model::Model>(
+                    loadCustomBlockModel(
+                        blockModel.customRaw, assets, !def.shadeless
+                    )
+                ),
+                modelName
+            );
+            blockModel.name = modelName;
+        } else {
+            auto srcModel = assets.get<model::Model>(blockModel.name);
+            if (srcModel) {
+                auto model = std::make_unique<model::Model>(*srcModel);
+                for (auto& mesh : model->meshes) {
+                    if (mesh.texture.length() && mesh.texture[0] == '$') {
+                        int index = std::stoll(mesh.texture.substr(1));
+                        mesh.texture = "blocks:" + variant.textureFaces[index];
                     }
-                    def->model.name = name + ".model";
-                    assets.store(std::move(model), def->model.name);
                 }
+                blockModel.name = modelName;
+                assets.store(std::move(model), blockModel.name);
             }
         }
+    }
+}
+
+void ModelsGenerator::prepare(Content& content, Assets& assets) {
+    for (auto& [name, def] : content.blocks.getDefs()) {
+        prepareModel(assets, *def, def->defaults, 0);
     }
     for (auto& [name, def] : content.items.getDefs()) {
         assets.store(
@@ -149,12 +157,14 @@ model::Model ModelsGenerator::generate(
     if (def.iconType == ItemIconType::Block) {
         auto model = assets.require<model::Model>("block");
         const auto& blockDef = content.blocks.require(def.icon);
-        if (blockDef.model.type == BlockModelType::X) {
+        const auto& variant = blockDef.defaults;
+        const auto& blockModel = variant.model;
+        if (blockModel.type == BlockModelType::X) {
             return create_flat_model(
-                "blocks:" + blockDef.textureFaces.at(0), assets
+                "blocks:" + blockDef.defaults.textureFaces.at(0), assets
             );
-        } else if (blockDef.model.type == BlockModelType::Custom) {
-            model = assets.require<model::Model>(blockDef.model.name);
+        } else if (blockModel.type == BlockModelType::Custom) {
+            model = assets.require<model::Model>(blockModel.name);
             for (auto& mesh : model.meshes) {
                 mesh.scale(glm::vec3(0.2f));
             }
@@ -162,7 +172,7 @@ model::Model ModelsGenerator::generate(
         }
         for (auto& mesh : model.meshes) {
             mesh.shading = !blockDef.shadeless;
-            switch (blockDef.model.type) {
+            switch (blockModel.type) {
                 case BlockModelType::AABB: {
                     glm::vec3 size = blockDef.hitboxes.at(0).size();
                     float m = glm::max(size.x, glm::max(size.y, size.z));
@@ -174,7 +184,7 @@ model::Model ModelsGenerator::generate(
             }
             mesh.scale(glm::vec3(0.2f));
         }
-        configure_textures(model, blockDef, assets);
+        configure_textures(model, assets, blockDef.defaults.textureFaces);
         return model;
     } else if (def.iconType == ItemIconType::Sprite) {
         return create_flat_model(def.icon, assets);
@@ -183,7 +193,7 @@ model::Model ModelsGenerator::generate(
     }
 }
 
-model::Model ModelsGenerator::loadCustomBlockModelType(
+model::Model ModelsGenerator::loadCustomBlockModel(
     const dv::value& primitives, const Assets& assets, bool lighting
 ) {
     std::vector<AABB> modelBoxes;

@@ -20,13 +20,13 @@ void CoreContent::setup(Input& input, ContentBuilder& builder) {
     // Воздух
     {
         Block& block = builder.blocks.create(BUILTIN_AIR);
-        block.drawGroup = 1;
         block.lightPassing = true;
         block.skyLightPassing = true;
         block.obstacle = false;
         block.selectable = false;
         block.replaceable = true;
-        block.model.type = BlockModelType::None;
+        block.defaults.drawGroup = 1;
+        block.defaults.model.type = BlockModelType::None;
         block.pickingItem = BUILTIN_EMPTY;
     }
 
@@ -39,7 +39,7 @@ void CoreContent::setup(Input& input, ContentBuilder& builder) {
     {
         Block& block = builder.blocks.create(BUILTIN_OBSTACLE);
         for (uint i = 0; i < 6; ++i) {
-            block.textureFaces[i] = "obstacle";
+            block.defaults.textureFaces[i] = "obstacle";
         }
         block.hitboxes = {AABB()};
         block.breakable = false;
@@ -54,9 +54,9 @@ void CoreContent::setup(Input& input, ContentBuilder& builder) {
     {
         Block& block = builder.blocks.create(BUILTIN_STRUCT_AIR);
         for (uint i = 0; i < 6; ++i) {
-            block.textureFaces[i] = "struct_air";
+            block.defaults.textureFaces[i] = "struct_air";
         }
-        block.drawGroup = -1;
+        block.defaults.drawGroup = -1;
         block.skyLightPassing = true;
         block.lightPassing = true;
         block.hitboxes = {AABB()};

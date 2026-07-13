@@ -128,16 +128,20 @@ glm::vec3 CameraControl::updateCameraShaking(const Hitbox& hitbox, float delta) 
     return offset;
 }
 
-void CameraControl::updateFovEffects(const Hitbox& hitbox, PlayerInput input, float delta) {
+void CameraControl::updateFov(
+    const Hitbox& hitbox, PlayerInput input, float delta, bool effects
+) {
     bool crouch = input.crouch && hitbox.grounded && !input.sprint;
 
     float dt = fmin(1.0f, delta * ZoomConsts::SPEED);
     float zoomValue = 1.0f;
-    if (crouch){
-        offset += glm::vec3(0.0f, CameraConsts::CROUCH_SHIFT_Y, 0.0f);
-        zoomValue = ZoomConsts::CROUCH;
-    } else if (input.sprint && (input.moveForward || input.moveBack || input.moveLeft || input.moveRight)) {
-        zoomValue = ZoomConsts::RUN;
+    if (effects) {
+        if (crouch) {
+            offset += glm::vec3(0.0f, CameraConsts::CROUCH_SHIFT_Y, 0.0f);
+            zoomValue = ZoomConsts::CROUCH;
+        } else if (input.sprint && (input.moveForward || input.moveBack || input.moveLeft || input.moveRight)) {
+            zoomValue = ZoomConsts::RUN;
+        }
     }
     if (input.zoom) zoomValue *= ZoomConsts::INPUT;
     camera->zoom = zoomValue * dt + camera->zoom * (1.0f - dt);
@@ -176,9 +180,7 @@ void CameraControl::update(
         if (!input.cheat) {
             offset += updateCameraShaking(*hitbox, delta);
         }
-        if (settings.fovEffects.get()){
-            updateFovEffects(*hitbox, input, delta);
-        }
+        updateFov(*hitbox, input, delta, settings.fovEffects.get());
     }
     if (input.cameraMode) switchCamera();
 

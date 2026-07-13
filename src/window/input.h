@@ -258,7 +258,7 @@ public:
     }
 
     void rebind(const std::string& name, inputType type, int code) {
-        require(name) = Binding(type, code);
+        require(name).reset(type, code);
     }
 
     auto& getAll() {

@@ -293,25 +293,26 @@ static bool is_aligned(const glm::vec3& v, float e = 1e-6f) {
 
 void BlocksRenderer::blockCustomModel(
     const glm::ivec3& icoord,
-	const Block* block, 
-    ubyte rotation, 
+	const Block& block,
+    blockstate states, 
     bool lights,
 	bool ao
 ) {
+    const auto& variant = block.getVariantByBits(states.userbits);
 	glm::vec3 X(1, 0, 0);
 	glm::vec3 Y(0, 1, 0);
 	glm::vec3 Z(0, 0, 1);
 	glm::vec3 coord(icoord);
-	if (block->rotatable) {
-		auto& rotations = block->rotations;
-		CoordSystem orient = rotations.variants[rotation];
+	if (block.rotatable) {
+        auto& rotations = block.rotations;
+        CoordSystem orient = rotations.variants[states.rotation];
         X = orient.axes[0];
         Y = orient.axes[1];
         Z = orient.axes[2];
 	}
 
     // Рендерим каждый бокс модели
-	const auto& model = cache.getModel(block->rt.id);
+	const auto& model = cache.getModel(block.rt.id);
     for (const auto& mesh : model.meshes) {
         if (vertexCount + mesh.vertices.size() >= capacity) {
             overflow = true;
@@ -331,7 +332,7 @@ void BlocksRenderer::blockCustomModel(
             ) * 0.3333f - 0.5f;
             vp = vp.x * X + vp.y * Y + vp.z * Z;
 
-            if (!isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), *block) && is_aligned(n)) {
+            if (!isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), block, variant) && is_aligned(n)) {
                 continue;
             }
 
@@ -364,61 +365,62 @@ void BlocksRenderer::blockCustomModel(
 
 /* Fastest solid shaded blocks render method */
 void BlocksRenderer::blockCube(
-    const glm::ivec3& coord, 
-	const UVRegion(&texfaces)[6], 
-	const Block& block, 
-	blockstate state,
+    const glm::ivec3& coord,
+	const UVRegion(&texfaces)[6],
+	const Block& block,
+	blockstate states,
     bool lights,
 	bool ao
 ) {
+    const auto& variant = block.getVariantByBits(states.userbits);
 	glm::ivec3 X(1, 0, 0);
 	glm::ivec3 Y(0, 1, 0);
 	glm::ivec3 Z(0, 0, 1);
 
 	if (block.rotatable) {
 		auto& rotations = block.rotations;
-		auto& orient = rotations.variants[state.rotation];
+		auto& orient = rotations.variants[states.rotation];
 		X = orient.axes[0];
         Y = orient.axes[1];
         Z = orient.axes[2];
 	}
 
 	if (ao) {
-        if (isOpen(coord + Z, block)) {
+        if (isOpen(coord + Z, block, variant)) {
             faceAO(coord, X, Y, Z, texfaces[5], lights);
         }
-        if (isOpen(coord - Z, block)) {
+        if (isOpen(coord - Z, block, variant)) {
             faceAO(coord, -X, Y, -Z, texfaces[4], lights);
         }
-        if (isOpen(coord + Y, block)) {
+        if (isOpen(coord + Y, block, variant)) {
             faceAO(coord, X, -Z, Y, texfaces[3], lights);
         }
-        if (isOpen(coord - Y, block)) {
+        if (isOpen(coord - Y, block, variant)) {
             faceAO(coord, X, Z, -Y, texfaces[2], lights);
         }
-        if (isOpen(coord + X, block)) {
+        if (isOpen(coord + X, block, variant)) {
             faceAO(coord, -Z, Y, X, texfaces[1], lights);
         }
-        if (isOpen(coord - X, block)) {
+        if (isOpen(coord - X, block, variant)) {
             faceAO(coord, Z, Y, -X, texfaces[0], lights);
         }
     } else {
-        if (isOpen(coord + Z, block)) {
+        if (isOpen(coord + Z, block, variant)) {
             face(coord, X, Y, Z, texfaces[5], pickLight(coord + Z), lights);
         }
-        if (isOpen(coord - Z, block)) {
+        if (isOpen(coord - Z, block, variant)) {
             face(coord, -X, Y, -Z, texfaces[4], pickLight(coord - Z), lights);
         }
-        if (isOpen(coord + Y, block)) {
+        if (isOpen(coord + Y, block, variant)) {
             face(coord, X, -Z, Y, texfaces[3], pickLight(coord + Y), lights);
         }
-        if (isOpen(coord - Y, block)) {
+        if (isOpen(coord - Y, block, variant)) {
             face(coord, X, Z, -Y, texfaces[2], pickLight(coord - Y), lights);
         }
-        if (isOpen(coord + X, block)) {
+        if (isOpen(coord + X, block, variant)) {
             face(coord, -Z, Y, X, texfaces[1], pickLight(coord + X), lights);
         }
-        if (isOpen(coord - X, block)) {
+        if (isOpen(coord - X, block, variant)) {
             face(coord, Z, Y, -X, texfaces[0], pickLight(coord - X), lights);
         }
 	}
@@ -497,15 +499,17 @@ void BlocksRenderer::render(
 			blockid_t id = vox.id;
 			blockstate state = vox.state;
 			const auto& def = *blockDefsCache[id];
-			if (id == 0 || def.drawGroup != drawGroup || state.segment || def.translucent) continue;
+			uint8_t variantId = def.getVariantIndex(state.userbits);
+            const auto& variant = def.getVariant(variantId);
+            if (id == 0 || variant.drawGroup != drawGroup || state.segment || def.translucent) continue;
             // Получаем текстурные регионы для всех шести граней
 			const UVRegion texfaces[6]{
-                cache.getRegion(id, 0), 
-				cache.getRegion(id, 1),
-				cache.getRegion(id, 2), 
-				cache.getRegion(id, 3),
-				cache.getRegion(id, 4), 
-				cache.getRegion(id, 5)
+                cache.getRegion(id, variantId, 0),
+                cache.getRegion(id, variantId, 1),
+                cache.getRegion(id, variantId, 2),
+                cache.getRegion(id, variantId, 3),
+                cache.getRegion(id, variantId, 4),
+                cache.getRegion(id, variantId, 5)
             };
 
             // Вычисляем координаты x,y,z внутри чанка
@@ -513,7 +517,7 @@ void BlocksRenderer::render(
 			int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);
 			int z = (i / CHUNK_DEPTH) % CHUNK_WIDTH;
 
-			switch (def.model.type) {
+			switch (def.getModel(state.userbits).type) {
                 case BlockModelType::Cube: {
                     blockCube(
 						{x, y, z},
@@ -545,12 +549,12 @@ void BlocksRenderer::render(
                     break;
                 } case BlockModelType::Custom: {
                     blockCustomModel(
-						{x, y, z},
-						&def,
-						vox.state.rotation,
-						!def.shadeless,
-						def.ambientOcclusion
-					);
+                        {x, y, z},
+                        def,
+                        vox.state,
+                        !def.shadeless,
+                        def.ambientOcclusion
+                    );
                     break;
                 } default:
                     break;
@@ -578,18 +582,23 @@ SortingMeshData BlocksRenderer::renderTranslucent(
             blockid_t id = vox.id;
             blockstate state = vox.state;
             const auto& def = *blockDefsCache[id];
-            if (id == 0 || def.drawGroup != drawGroup || state.segment) continue;
+            uint8_t variantId = def.getVariantIndex(state.userbits);
+            const auto& variant = def.getVariant(variantId);
+            if (id == BLOCK_AIR || variant.drawGroup != drawGroup || state.segment) continue;
             if (!def.translucent) continue;
 
             const UVRegion texfaces[6] {
-                cache.getRegion(id, 0), cache.getRegion(id, 1),
-                cache.getRegion(id, 2), cache.getRegion(id, 3),
-                cache.getRegion(id, 4), cache.getRegion(id, 5)
+                cache.getRegion(id, variantId, 0),
+                cache.getRegion(id, variantId, 1),
+                cache.getRegion(id, variantId, 2),
+                cache.getRegion(id, variantId, 3),
+                cache.getRegion(id, variantId, 4),
+                cache.getRegion(id, variantId, 5)
             };
             int x = i % CHUNK_WIDTH;
             int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);
             int z = (i / CHUNK_DEPTH) % CHUNK_WIDTH;
-            switch (def.model.type) {
+            switch (def.getModel(state.userbits).type) {
                 case BlockModelType::Cube:
                     blockCube(
 						{x, y, z},
@@ -623,9 +632,9 @@ SortingMeshData BlocksRenderer::renderTranslucent(
                 }
                 case BlockModelType::Custom: {
                     blockCustomModel(
-						{x, y, z},
-						&def,
-						vox.state.rotation, 
+                        {x, y, z},
+                        def,
+                        vox.state,
                         !def.shadeless,
 						def.ambientOcclusion
 					);
@@ -718,11 +727,12 @@ void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
         const voxel& vox = voxels[i];
         blockid_t id = vox.id;
         const auto& def = *blockDefsCache[id];
+        const auto& variant = def.getVariantByBits(vox.state.userbits);
 
-        if (beginEnds[def.drawGroup][0] == 0) {
-            beginEnds[def.drawGroup][0] = i + 1;
+        if (beginEnds[variant.drawGroup][0] == 0) {
+            beginEnds[variant.drawGroup][0] = i + 1;
         }
-        beginEnds[def.drawGroup][1] = i;
+        beginEnds[variant.drawGroup][1] = i;
     }
     cancelled = false;
 

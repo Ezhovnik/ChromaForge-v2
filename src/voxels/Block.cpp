@@ -99,33 +99,38 @@ const BlockRotProfile BlockRotProfile::STAIRS {"stairs", {
 };
 
 Block::Block(const std::string& name) : 
-	name(name), 
-	textureFaces{TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND},
+	name(name),
 	caption(util::id_to_caption(name))
-{}
+{
+    for (int i = 0; i < defaults.textureFaces.size(); ++i) {
+        defaults.textureFaces[i] = TEXTURE_NOTFOUND;
+    }
+}
 
-Block::~Block() {}
+Block::~Block() = default;
 
 Block::Block(
 	std::string name, 
 	const std::string& texture
-) : name(std::move(name)), 
-	textureFaces{texture, texture, texture, texture, texture, texture}, 
+) : name(std::move(name)),
 	caption(util::id_to_caption(name))
-{}
+{
+    for (int i = 0; i < defaults.textureFaces.size(); ++i) {
+        defaults.textureFaces[i] = texture;
+    }
+}
 
 void Block::cloneTo(Block& dst) {
     dst.caption = caption;
 
-    for (int i = 0; i < 6; ++i) {
-        dst.textureFaces[i] = textureFaces[i];
+    dst.defaults = defaults;
+    if (variants) {
+        dst.variants = std::make_unique<Variants>(*variants);
     }
 
     dst.material = material;
     std::copy(&emission[0], &emission[3], dst.emission);
     dst.size = size;
-    dst.model = model;
-    dst.drawGroup = drawGroup;
     dst.lightPassing = lightPassing;
     dst.skyLightPassing = skyLightPassing;
     dst.shadeless = shadeless;

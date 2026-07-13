@@ -34,4 +34,24 @@ gfx.posteffect.is_active(slot: int) --> bool
 
 -- Устанавливает значения параметров (директивы 'param')
 gfx.posteffect.set_params(params: table)
+
+-- Устанавливает значения в массив
+gfx.posteffect.set_array(
+    -- индекс слота эффектов
+    slot: int,
+    -- имя параметра (массива)
+    name: str
+    -- строка данных (используйте функцию Bytearray_as_string)
+    data: str
+)
+
+-- Пример заполнения массива `#param vec3 u_имяМассива[64]`:
+local buffer = Bytearray(0)
+for i = 0, 63 do
+    local x = math.random() * 2.0 - 1.0
+    local y = math.random() * 2.0 - 1.0
+    local z = math.random() * 2.0 - 1.0
+    Bytearray.append(buffer, byteutil.pack("fff", x, y, z))
+end
+gfx.posteffects.set_array(slot, "u_имяМассива", Bytearray_as_string(buffer))
 ```
