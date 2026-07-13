@@ -61,21 +61,17 @@ asset_loader::postfunc asset_loader::shader(
 	const std::string& name, 
 	const std::shared_ptr<AssetsConfig>&)
 {
-	auto [vertex, fragment] = process_program(paths, filename);
-
     io::path vertexFile = paths.find(filename + ".vert");
     io::path fragmentFile = paths.find(filename + ".frag");
 
-	std::string vertexSource = std::move(vertex.code);
-    std::string fragmentSource = std::move(fragment.code);
+    auto vertex = io::read_string(vertexFile);
+    auto fragment = io::read_string(fragmentFile);
 
 	// Сохраняем шейдер в менеджере ресурсов под указанным именем
 	return [=](auto assets) {
         assets->store(ShaderProgram::create(
-            vertexFile.string(),
-            fragmentFile.string(),
-            vertexSource, 
-			fragmentSource
+            {vertexFile.string(), vertex},
+            {fragmentFile.string(), fragment}
         ), name);
     };
 }
@@ -160,10 +156,8 @@ asset_loader::postfunc asset_loader::posteffect(
 
     return [=](auto assets) {
         auto program = ShaderProgram::create(
-            effectFile.string(),
-            effectFile.string(),
-            vertexSource,
-            fragmentSource
+            {effectFile.string(), vertexSource},
+            {effectFile.string(), fragmentSource}
         );
         bool advanced = false;
         if (settings) {

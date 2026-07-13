@@ -18,6 +18,12 @@ class GLSLExtension;
  * Предоставляет методы для загрузки uniform-переменных различных типов.
  */
 class ShaderProgram {
+public:
+    struct Source {
+        std::string file;
+        std::string code;
+    };
+private:
     static ShaderProgram* used;
 
     /// Идентификатор шейдерной програмы OpenGL
@@ -26,16 +32,19 @@ class ShaderProgram {
     std::unordered_map<std::string, uint> uniformLocationCache;
     std::unordered_set<std::string> warnedUniforms;
 
+    Source vertexSource;
+    Source fragmentSource;
+
     uint getUniformLocation(const std::string& name);
 public:
     /// Глобальный препроцессор для шейдеров (обрабатывает #include и директивы).
     static GLSLExtension* preprocessor;
 
-    /**
-     * @brief Конструктор, создающий объект из существующего OpenGL-идентификатора.
-     * @param id Идентификатор скомпилированной и слинкованной программы.
-     */
-    ShaderProgram(uint id);
+    ShaderProgram(
+        uint id,
+        Source&& vertexSource,
+        Source&& fragmentSource
+    );
 
     ~ShaderProgram();
 
@@ -115,6 +124,8 @@ public:
     void uniform3v(const std::string& name, int length, const float* v);
     void uniform4v(const std::string& name, int length, const float* v);
 
+    void recompile();
+
     /**
      * @brief Создаёт шейдерную программу из исходных кодов вершинного и фрагментного шейдеров.
      * @param vertexFile Имя файла вершинного шейдера.
@@ -126,10 +137,7 @@ public:
      * Код предварительно обрабатывается препроцессором (GLSLExtension), затем компилируется и линкуется.
      */
     static std::unique_ptr<ShaderProgram> create(
-        const std::string& vertexFile, 
-        const std::string& fragmentFile, 
-        const std::string& vertexSource, 
-        const std::string& fragmentSource
+        Source&& vertexSource, Source&& fragmentSource
     );
 
     static ShaderProgram& getUsed();

@@ -53,6 +53,7 @@
 #include <world/Weather.h>
 #include <graphics/core/ShadowMap.h>
 #include <graphics/core/GBuffer.h>
+#include <coders/GLSLExtension.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -385,7 +386,7 @@ void WorldRenderer::generateShadowsMap(
     const auto& settings = engine.getSettings();
     int resolution = shadowMap.getResolution();
     int quality = settings.graphics.shadowsQuality.get();
-    float shadowMapScale = 0.16f / (1 << glm::max(0, quality)) * scale;
+    float shadowMapScale = 0.32f / (1 << glm::max(0, quality)) * scale;
     float shadowMapSize = resolution * shadowMapScale;
     glm::vec3 basePos = glm::floor(camera.position);
     shadowCamera = Camera(basePos, shadowMapSize);
@@ -397,7 +398,7 @@ void WorldRenderer::generateShadowsMap(
     float t = worldInfo.daytime - 0.25f;
     if (t < 0.0f) t += 1.0f;
     t = fmod(t, 0.5f);
-    float sunCycleStep = 1.0f / 1000.0f;
+    float sunCycleStep = 1.0f / 500.0f;
     float sunAngle = glm::radians(
         90.0f - ((static_cast<int>(t / sunCycleStep)) * sunCycleStep + 0.25f) * 360.0f
     );
@@ -450,17 +451,22 @@ void WorldRenderer::draw(
 
     const auto& settings = engine.getSettings();
 
+    auto& defaultShader = assets.require<ShaderProgram>("default");
     gbufferPipeline = settings.graphics.advancedRender.get();
     int shadowsQuality = settings.graphics.shadowsQuality.get();
-    int resolution = 1024 << shadowsQuality;
+    int resolution = 512 << shadowsQuality;
     if (shadowsQuality > 0 && !shadows) {
         shadowMap = std::make_unique<ShadowMap>(resolution);
         wideShadowMap = std::make_unique<ShadowMap>(resolution);
         shadows = true;
-    } else if (shadowsQuality == 0) {
+        ShaderProgram::preprocessor->define("ENABLE_SHADOWS", "true");
+        defaultShader.recompile();
+    } else if (shadowsQuality == 0 && shadows) {
         shadowMap.reset();
         wideShadowMap.reset();
         shadows = false;
+        ShaderProgram::preprocessor->undefine("ENABLE_SHADOWS");
+        defaultShader.recompile();
     }
     if (shadows && shadowMap->getResolution() != resolution) {
         shadowMap = std::make_unique<ShadowMap>(resolution);
@@ -492,7 +498,7 @@ void WorldRenderer::draw(
                 pctx,
                 *wideShadowMap,
                 wideShadowCamera,
-                4.0f
+                3.0f
             );
         }
     }

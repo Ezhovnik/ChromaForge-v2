@@ -38,7 +38,7 @@ void main(){
     a_normal = calc_screen_normal(a_realnormal);
 
     vec3 light = v_light.rgb;
-    float torchlight = calc_torch_light(a_modelpos.xyz);
+    float torchlight = calc_torch_light(a_realnormal, a_modelpos.xyz);
     a_torchLight = vec4(pow(light + torchlight * u_torchlightColor, vec3(u_gamma)), 1.0f);
 
     a_texCoord = v_texCoord;

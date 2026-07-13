@@ -31,10 +31,16 @@ uint ShaderProgram::getUniformLocation(const std::string& name) {
     return loc;
 }
 
-ShaderProgram::ShaderProgram(uint id) : id(id) {
+ShaderProgram::ShaderProgram(
+    uint id,
+    Source&& vertexSource,
+    Source&& fragmentSource
+) : id(id),
+    vertexSource(std::move(vertexSource)),
+    fragmentSource(std::move(fragmentSource)) {
 }
 
-ShaderProgram::~ShaderProgram(){
+ShaderProgram::~ShaderProgram() {
     glDeleteProgram(id);
 }
 
@@ -99,7 +105,7 @@ void ShaderProgram::uniform4v(const std::string& name, int length, const float* 
     glUniform4fv(getUniformLocation(name), length, v);
 }
 
-inline auto shader_deleter = [](GLuint* shader) {
+static inline auto shader_deleter = [](GLuint* shader) {
     glDeleteShader(*shader);
     delete shader;
 };
@@ -107,7 +113,9 @@ inline auto shader_deleter = [](GLuint* shader) {
 inline constexpr uint GL_LOG_LEN = 512;
 using glshader = std::unique_ptr<GLuint, decltype(shader_deleter)>;
 
-glshader compile_shader(GLenum type, const GLchar* source, const std::string& file) {
+glshader compile_shader(
+    GLenum type, const GLchar* source, const std::string& file
+) {
     GLint success;
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, nullptr);
@@ -124,45 +132,65 @@ glshader compile_shader(GLenum type, const GLchar* source, const std::string& fi
     return glshader(new GLuint(shader), shader_deleter);
 }
 
-std::unique_ptr<ShaderProgram> ShaderProgram::create(
-    const std::string& vertexFile, 
-    const std::string& fragmentFile, 
-    const std::string& vertexSource, 
-    const std::string& fragmentSource
+static GLuint compile_program(
+    const ShaderProgram::Source& vertexSource, const ShaderProgram::Source& fragmentSource
 ) {
-    // Преобразование строк в C-строки для OpenGL
-    const GLchar* vShaderCode = vertexSource.c_str();
-    const GLchar* fShaderCode = fragmentSource.c_str();
+    auto& preprocessor = *ShaderProgram::preprocessor;
 
-    glshader vertex = compile_shader(GL_VERTEX_SHADER, vShaderCode, vertexFile);
-    glshader fragment = compile_shader(GL_FRAGMENT_SHADER, fShaderCode, fragmentFile);
+    auto vertexCode = std::move(
+        preprocessor.process(vertexSource.file, vertexSource.code).code
+    );
+    auto fragmentCode = std::move(
+        preprocessor.process(fragmentSource.file, fragmentSource.code).code
+    );
 
-    // Создание и линковка шейдерной программы
+    const GLchar* vCode = vertexCode.c_str();
+    const GLchar* fCode = fragmentCode.c_str();
+
+    glshader vertex = compile_shader(
+        GL_VERTEX_SHADER, vCode, vertexSource.file
+    );
+    glshader fragment = compile_shader(
+        GL_FRAGMENT_SHADER, fCode, fragmentSource.file
+    );
+
     GLint success;
-    GLuint id = glCreateProgram();
-    glAttachShader(id, *vertex);
-    glAttachShader(id, *fragment);
-    glLinkProgram(id);
+    GLuint program = glCreateProgram();
+    glAttachShader(program, *vertex);
+    glAttachShader(program, *fragment);
+    glLinkProgram(program);
 
-    // Проверяем успешность линковки
-    glGetProgramiv(id, GL_LINK_STATUS, &success);
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+
     if (!success) {
         GLchar infoLog[GL_LOG_LEN];
-        glGetProgramInfoLog(id, 512, nullptr, infoLog);
-        LOG_CRITICAL("Shader Program linking failed. Info: {}", infoLog);
-
-        glDeleteShader(*vertex);
-        glDeleteShader(*fragment);
-        glDeleteProgram(id);
-
-        return nullptr;
+        glGetProgramInfoLog(program, GL_LOG_LEN, nullptr, infoLog);
+        LOG_ERROR(
+            "Shader program linking failed: {}", std::string(infoLog)
+        );
+        throw std::runtime_error(
+            "Shader program linking failed: " + std::string(infoLog)
+        );
     }
+    return program;
+}
 
-    // После успешной линковки шейдеры можно удалить
-    glDeleteShader(*vertex);
-    glDeleteShader(*fragment);
+void ShaderProgram::recompile() {
+    GLuint newProgram = compile_program(vertexSource, fragmentSource);
+    glDeleteProgram(id);
+    id = newProgram;
+    uniformLocationCache.clear();
+    LOG_INFO("Shader {} has been recompiled", id);
+}
 
-    return std::make_unique<ShaderProgram>(id);
+std::unique_ptr<ShaderProgram> ShaderProgram::create(
+    Source&& vertexSource, Source&& fragmentSource
+) {
+    return std::make_unique<ShaderProgram>(
+        compile_program(vertexSource, fragmentSource),
+        std::move(vertexSource),
+        std::move(fragmentSource)
+    );
 }
 
 ShaderProgram& ShaderProgram::getUsed() {
