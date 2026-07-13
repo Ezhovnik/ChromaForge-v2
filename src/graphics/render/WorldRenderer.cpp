@@ -197,7 +197,7 @@ void WorldRenderer::setupWorldShader(
 		ItemStack& stack = inventory->getSlot(player.getChosenSlot());
 		auto& choosen_item = contentIds->items.require(stack.getItemId());
 		if (!player.isNoclip()) {
-			float multiplier = 0.8f;
+			float multiplier = 0.75f;
 			shader.uniform3f("u_torchlightColor",
 				choosen_item.emission[0] / 15.0f * multiplier,
 				choosen_item.emission[1] / 15.0f * multiplier,
@@ -207,7 +207,7 @@ void WorldRenderer::setupWorldShader(
 			shader.uniform3f("u_torchlightColor", 0.0f, 0.0f, 0.0f);
 		}
 
-		shader.uniform1f("u_torchlightDistance", 6.0f);
+		shader.uniform1f("u_torchlightDistance", 8.0f);
 	}
 }
 

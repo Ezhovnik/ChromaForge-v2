@@ -1,3 +1,6 @@
 language = "ChromaForgeModel"
 extensions = ["cfmodel"]
 line-comment-start = "#"
+keywords = [
+    "on", "off"
+]

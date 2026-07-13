@@ -94,7 +94,7 @@ model::Model ModelsGenerator::fromCustom(
     auto model = model::Model();
     for (size_t i = 0; i < modelBoxes.size(); ++i) {
         auto& mesh = model.addMesh("blocks:");
-        mesh.lighting = lighting;
+        mesh.shading = lighting;
         UVRegion boxtexfaces[6] = {
             get_region_for(modelTextures[i * 6 + 5], assets),
             get_region_for(modelTextures[i * 6 + 4], assets),
@@ -130,7 +130,7 @@ model::Model ModelsGenerator::fromCustom(
         norm = glm::normalize(norm);
 
         auto& mesh = model.addMesh(texture);
-        mesh.lighting = lighting;
+        mesh.shading = lighting;
 
         auto reg = get_region_for(texture, assets);
         mesh.vertices.push_back({v0, glm::vec2(reg.u1, reg.v1), norm});
@@ -161,7 +161,7 @@ model::Model ModelsGenerator::generate(
             return model;
         }
         for (auto& mesh : model.meshes) {
-            mesh.lighting = !blockDef.shadeless;
+            mesh.shading = !blockDef.shadeless;
             switch (blockDef.model.type) {
                 case BlockModelType::AABB: {
                     glm::vec3 size = blockDef.hitboxes.at(0).size();
