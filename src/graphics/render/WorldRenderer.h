@@ -35,6 +35,12 @@ class PrecipitationRenderer;
 class ShadowMap;
 class GBuffer;
 
+struct CompileTimeShaderSettings {
+    bool advancedRender = false;
+    bool shadows = false;
+	bool ssao = false;
+};
+
 class WorldRenderer {
 private:
     Engine& engine;
@@ -62,6 +68,8 @@ private:
 
 	bool gbufferPipeline = false;
     bool shadows = false;
+
+	CompileTimeShaderSettings prevCTShaderSettings {};
 
 	void renderBlockSelection();
 	void renderHands(const Camera& camera, float deltaTime);

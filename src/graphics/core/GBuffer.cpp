@@ -5,7 +5,7 @@
 #include <debug/Logger.h>
 
 void GBuffer::createColorBuffer() {
-    glGenTextures(1, &colorBuffer);
+    if (colorBuffer == 0) glGenTextures(1, &colorBuffer);
     glBindTexture(GL_TEXTURE_2D, colorBuffer);
     glTexImage2D(
         GL_TEXTURE_2D,
@@ -28,7 +28,7 @@ void GBuffer::createColorBuffer() {
 }
 
 void GBuffer::createPositionsBuffer() {
-    glGenTextures(1, &positionsBuffer);
+    if (positionsBuffer == 0) glGenTextures(1, &positionsBuffer);
     glBindTexture(GL_TEXTURE_2D, positionsBuffer);
     glTexImage2D(
         GL_TEXTURE_2D,
@@ -51,7 +51,7 @@ void GBuffer::createPositionsBuffer() {
 }
 
 void GBuffer::createNormalsBuffer() {
-    glGenTextures(1, &normalsBuffer);
+    if (normalsBuffer == 0) glGenTextures(1, &normalsBuffer);
     glBindTexture(GL_TEXTURE_2D, normalsBuffer);
     glTexImage2D(
         GL_TEXTURE_2D,
@@ -60,7 +60,7 @@ void GBuffer::createNormalsBuffer() {
         width,
         height,
         0,
-        GL_RGBA,
+        GL_RGB,
         GL_FLOAT,
         nullptr
     );
@@ -73,8 +73,31 @@ void GBuffer::createNormalsBuffer() {
     );
 }
 
+void GBuffer::createEmissionBuffer() {
+    if (emissionBuffer == 0) glGenTextures(1, &emissionBuffer);
+    glBindTexture(GL_TEXTURE_2D, emissionBuffer);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_R8,
+        width,
+        height,
+        0,
+        GL_RED,
+        GL_FLOAT,
+        nullptr
+    );
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, emissionBuffer, 0
+    );
+}
+
 void GBuffer::createDepthBuffer() {
-    glGenRenderbuffers(1, &depthBuffer);
+    if (depthBuffer == 0) glGenRenderbuffers(1, &depthBuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(
@@ -83,7 +106,7 @@ void GBuffer::createDepthBuffer() {
 }
 
 void GBuffer::createSSAOBuffer() {
-    glGenTextures(1, &ssaoBuffer);
+    if (ssaoBuffer == 0) glGenTextures(1, &ssaoBuffer);
     glBindTexture(GL_TEXTURE_2D, ssaoBuffer);
     glTexImage2D(
         GL_TEXTURE_2D,
@@ -109,16 +132,21 @@ GBuffer::GBuffer(uint width, uint height) : width(width), height(height) {
     createColorBuffer();
     createPositionsBuffer();
     createNormalsBuffer();
+    createEmissionBuffer();
 
-    GLenum attachments[3] = {
-        GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2
+    GLenum attachments[4] = {
+        GL_COLOR_ATTACHMENT0,
+        GL_COLOR_ATTACHMENT1,
+        GL_COLOR_ATTACHMENT2,
+        GL_COLOR_ATTACHMENT3,
     };
-    glDrawBuffers(3, attachments);
+    glDrawBuffers(4, attachments);
 
     createDepthBuffer();
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        LOG_ERROR("GBuffer is not complete!");
+    int status;
+    if ((status = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
+        LOG_ERROR("GBuffer is not complete! ({})", status);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -130,8 +158,8 @@ GBuffer::GBuffer(uint width, uint height) : width(width), height(height) {
     );
     GLenum ssaoAttachments[1] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, ssaoAttachments);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        LOG_ERROR("SSAO framebuffer is not complete!");
+    if ((status = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
+        LOG_ERROR("SSAO framebuffer is not complete ({})", status);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -140,6 +168,7 @@ GBuffer::~GBuffer() {
     glDeleteTextures(1, &colorBuffer);
     glDeleteTextures(1, &positionsBuffer);
     glDeleteTextures(1, &normalsBuffer);
+    glDeleteTextures(1, &emissionBuffer);
     glDeleteTextures(1, &ssaoBuffer);
     glDeleteRenderbuffers(1, &depthBuffer);
     glDeleteFramebuffers(1, &fbo);
@@ -160,6 +189,9 @@ void GBuffer::unbind() {
 }
 
 void GBuffer::bindBuffers() const {
+    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_EMISSION);
+    glBindTexture(GL_TEXTURE_2D, emissionBuffer);
+
     glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_NORMALS);
     glBindTexture(GL_TEXTURE_2D, normalsBuffer);
 
@@ -176,9 +208,9 @@ void GBuffer::bindSSAOBuffer() const {
     glBindTexture(GL_TEXTURE_2D, ssaoBuffer);
 }
 
-void GBuffer::bindDepthBuffer() {
+void GBuffer::bindDepthBuffer(int drawFbo) {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFbo);
     glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 }
 
@@ -191,53 +223,17 @@ void GBuffer::resize(uint width, uint height) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    glBindTexture(GL_TEXTURE_2D, colorBuffer);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGB,
-        width,
-        height,
-        0,
-        GL_RGB,
-        GL_UNSIGNED_BYTE,
-        nullptr
-    );
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0
-    );
-
-    glBindTexture(GL_TEXTURE_2D, positionsBuffer);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr
-    );
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, positionsBuffer, 0
-    );
-
-    glBindTexture(GL_TEXTURE_2D, normalsBuffer);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr
-    );
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, normalsBuffer, 0
-    );
+    createDepthBuffer();
+    createColorBuffer();
+    createPositionsBuffer();
+    createNormalsBuffer();
+    createEmissionBuffer();
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, ssaoFbo);
-    glBindTexture(GL_TEXTURE_2D, ssaoBuffer);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_R16F, width, height, 0, GL_RED, GL_FLOAT, nullptr
-    );
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoBuffer, 0
-    );
+    createSSAOBuffer();
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

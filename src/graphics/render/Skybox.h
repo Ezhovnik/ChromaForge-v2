@@ -50,6 +50,8 @@ class Skybox {
 
     float prevMie = -1.0f;
     float prevT = -1.0f;
+    float sunAltitude = 45.0f;
+    glm::mat4 rotation;
 
     void drawStars(float angle, float opacity);
     void drawBackground(

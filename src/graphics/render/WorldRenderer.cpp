@@ -56,6 +56,7 @@
 #include <graphics/core/ShadowMap.h>
 #include <graphics/core/GBuffer.h>
 #include <coders/GLSLExtension.h>
+#include <graphics/core/Framebuffer.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -65,6 +66,8 @@ inline constexpr size_t BATCH3D_CAPACITY = 4096;
 inline constexpr size_t MODEL_BATCH_CAPACITY = 20'000;
 
 inline constexpr GLenum TEXTURE_MAIN = GL_TEXTURE0;
+
+inline constexpr int MIN_SHADOW_MAP_RES = 512;
 
 bool WorldRenderer::drawChunkBorders = false;
 bool WorldRenderer::drawEntityHitboxes = false;
@@ -169,6 +172,7 @@ void WorldRenderer::setupWorldShader(
     if (shadows) {
         const auto& worldInfo = level.getWorld()->getInfo();
         float cloudsIntensity = glm::max(worldInfo.skyClearness, weather.clouds());
+        shader.uniform1i("u_screen", 0);
         shader.uniformMatrix("u_shadowsMatrix[0]", shadowCamera.getProjView());
         shader.uniformMatrix("u_shadowsMatrix[1]", wideShadowCamera.getProjView());
         shader.uniform3f("u_sunDir", shadowCamera.front);
@@ -256,21 +260,6 @@ void WorldRenderer::renderLevel(
         scripting::on_frontend_render();
     }
 
-    setupWorldShader(entityShader, camera, settings, fogFactor);
-
-    std::array<const WeatherPreset*, 2> weatherInstances {&weather.a, &weather.b};
-    for (const auto& weather : weatherInstances) {
-        float maxIntensity = weather->fall.maxIntensity;
-        float zero = weather->fall.minOpacity;
-        float one = weather->fall.maxOpacity;
-        float t = (weather->intensity * (one - zero)) * maxIntensity + zero;
-        entityShader.uniform1i("u_alphaClip", weather->fall.opaque);
-        entityShader.uniform1f("u_opacity", weather->fall.opaque ? t * t : t);
-        if (weather->intensity > 1.e-3f && !weather->fall.texture.empty()) {
-            precipitation->render(camera, pause ? 0.0f : deltaTime, *weather);
-        }
-    }
-
     skybox->unbind();
 }
 
@@ -289,7 +278,7 @@ void WorldRenderer::renderBlockSelection() {
 
     lineBatch->setLineWidth(2.0f);
     constexpr auto boxOffset = glm::vec3(0.01);
-    constexpr auto boxColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
+    constexpr auto boxColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     for (auto& hitbox: hitboxes) {
         const glm::vec3 center = glm::vec3(pos) + hitbox.center();
         const glm::vec3 size = hitbox.size();
@@ -393,7 +382,11 @@ void WorldRenderer::generateShadowsMap(
     float shadowMapScale = 0.32f / (1 << glm::max(0, quality)) * scale;
     float shadowMapSize = resolution * shadowMapScale;
     glm::vec3 basePos = glm::floor(camera.position / 4.0f) * 4.0f;
-    shadowCamera = Camera(basePos, shadowMapSize);
+    glm::vec3 prevPos = shadowCamera.position;
+    shadowCamera = Camera(
+        glm::distance2(prevPos, basePos) > 25.0f ? basePos : prevPos,
+        shadowMapSize
+    );
     shadowCamera.near = 0.1f;
     shadowCamera.far = 1000.0f;
     shadowCamera.perspective = false;
@@ -412,7 +405,6 @@ void WorldRenderer::generateShadowsMap(
         sunAngle - glm::pi<float>() * 0.5f,
         glm::radians(0.0f)
     );
-    shadowCamera.updateVectors();
     shadowCamera.position -= shadowCamera.front * 500.0f;
     shadowCamera.position += shadowCamera.up * 0.0f;
     shadowCamera.position += camera.front * 0.0f;
@@ -446,39 +438,53 @@ void WorldRenderer::draw(
     float uiDelta,
     PostProcessing& postProcessing
 ) {
+    // TODO: Refactor whole render engine
     float deltaTime = uiDelta * !pause;
     timer += deltaTime;
     weather.update(deltaTime);
 
     auto world = level.getWorld();
+
     const auto& vp = pctx.getViewport();
     camera.setAspectRatio(vp.x / static_cast<float>(vp.y));
-
-    const auto& settings = engine.getSettings();
 
     auto& defaultShader = assets.require<ShaderProgram>("default");
     auto& entityShader = assets.require<ShaderProgram>("entity");
     auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
+    const auto& settings = engine.getSettings();
+
     gbufferPipeline = settings.graphics.advancedRender.get();
     int shadowsQuality = settings.graphics.shadowsQuality.get() * gbufferPipeline;
-    int resolution = 512 << shadowsQuality;
+    int resolution = MIN_SHADOW_MAP_RES << shadowsQuality;
     if (shadowsQuality > 0 && !shadows) {
         shadowMap = std::make_unique<ShadowMap>(resolution);
         wideShadowMap = std::make_unique<ShadowMap>(resolution);
         shadows = true;
-        ShaderProgram::preprocessor->define("ENABLE_SHADOWS", "true");
-        defaultShader.recompile();
-        entityShader.recompile();
-        deferredShader.recompile();
     } else if (shadowsQuality == 0 && shadows) {
         shadowMap.reset();
         wideShadowMap.reset();
         shadows = false;
-        ShaderProgram::preprocessor->undefine("ENABLE_SHADOWS");
+    }
+
+    CompileTimeShaderSettings currentSettings {
+        gbufferPipeline,
+        shadows,
+        settings.graphics.ssao.get() && gbufferPipeline
+    };
+    if (
+        prevCTShaderSettings.advancedRender != currentSettings.advancedRender ||
+        prevCTShaderSettings.shadows != currentSettings.shadows ||
+        prevCTShaderSettings.ssao != currentSettings.ssao
+    ) {
+        ShaderProgram::preprocessor->setDefined("ENABLE_SHADOWS", currentSettings.shadows);
+        ShaderProgram::preprocessor->setDefined("ENABLE_SSAO", currentSettings.ssao);
+        ShaderProgram::preprocessor->setDefined("ADVANCED_RENDER", currentSettings.advancedRender);
         defaultShader.recompile();
         entityShader.recompile();
         deferredShader.recompile();
+        prevCTShaderSettings = currentSettings;
     }
+
     if (shadows && shadowMap->getResolution() != resolution) {
         shadowMap = std::make_unique<ShadowMap>(resolution);
         wideShadowMap = std::make_unique<ShadowMap>(resolution);
@@ -489,6 +495,7 @@ void WorldRenderer::draw(
     float clouds = weather.clouds();
     clouds = glm::max(worldInfo.skyClearness, clouds);
     float mie = 1.0f + glm::max(worldInfo.skyClearness, clouds * 0.5f) * 2.0f;
+
     skybox->refresh(pctx, worldInfo.daytime, mie, 4);
 
     chunks->update();
@@ -535,28 +542,45 @@ void WorldRenderer::draw(
         }
         texts->render(pctx, camera, settings, hudVisible, true);
     }
-
     skybox->bind();
-    deferredShader.use();
-    float fogFactor = 15.0f / static_cast<float>(settings.chunks.loadDistance.get() - 2);
-    setupWorldShader(deferredShader, camera, settings, fogFactor);
-    postProcessing.render(
-        pctx,
-        assets,
-        timer,
-        camera,
-        shadows ? shadowMap->getDepthMap() : 0,
-        shadows ? wideShadowMap->getDepthMap() : 0,
-        shadowCamera.getProjView(),
-        wideShadowCamera.getProjView(),
-        shadows ? shadowMap->getResolution() : 0
-    );
+    float fogFactor =
+        15.0f / static_cast<float>(settings.chunks.loadDistance.get() - 2);
+    if (gbufferPipeline) {
+        deferredShader.use();
+        setupWorldShader(deferredShader, camera, settings, fogFactor);
+        postProcessing.renderDeferredShading(pctx, assets, timer, camera);
+    }
     {
         DrawContext ctx = pctx.sub();
         ctx.setDepthTest(true);
-        postProcessing.bindDepthBuffer();
+        if (gbufferPipeline) {
+            postProcessing.bindDepthBuffer();
+        } else {
+            postProcessing.getFramebuffer()->bind();
+        }
+
         skybox->draw(ctx, camera, assets, worldInfo.daytime, clouds);
+
+        entityShader.use();
+        setupWorldShader(entityShader, camera, settings, fogFactor);
+
+        std::array<const WeatherPreset*, 2> weatherInstances {&weather.a, &weather.b};
+        for (const auto& weather : weatherInstances) {
+            float maxIntensity = weather->fall.maxIntensity;
+            float zero = weather->fall.minOpacity;
+            float one = weather->fall.maxOpacity;
+            float t = (weather->intensity * (one - zero)) * maxIntensity + zero;
+            entityShader.uniform1i("u_alphaClip", weather->fall.opaque);
+            entityShader.uniform1f("u_opacity", weather->fall.opaque ? t * t : t);
+            if (weather->intensity > 1.e-3f && !weather->fall.texture.empty()) {
+                precipitation->render(camera, pause ? 0.0f : deltaTime, *weather);
+            }
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+    postProcessing.render(pctx, assets, timer, camera);
+
     skybox->unbind();
     if (player.currentCamera == player.fpCamera) {
         DrawContext ctx = pctx.sub();

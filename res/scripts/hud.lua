@@ -1,7 +1,7 @@
 local function configure_SSAO()
+    -- A temporary slot for configuring the built-in SSAO effect
     local slot = gfx.posteffects.index("builtin:default")
     gfx.posteffects.set_effect(slot, "ssao")
-    --gfx.posteffects.set_intensity(slot, 1.0)
 
     local buffer = Bytearray(0)
     for i = 0, 63 do

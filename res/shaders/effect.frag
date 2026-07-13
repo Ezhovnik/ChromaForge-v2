@@ -4,6 +4,7 @@ out vec4 f_color;
 uniform sampler2D u_screen;
 uniform sampler2D u_position;
 uniform sampler2D u_normal;
+uniform sampler2D u_emission;
 uniform sampler2D u_noise;
 uniform sampler2D u_ssao;
 uniform samplerCube u_skybox;

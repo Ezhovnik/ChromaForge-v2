@@ -72,7 +72,9 @@ void PostProcessing::refreshFbos(uint width, uint height) {
 }
 
 void PostProcessing::bindDepthBuffer() {
-    gbuffer->bindDepthBuffer();
+    if (gbuffer) {
+        gbuffer->bindDepthBuffer(fbo->getFBO());
+    }
 }
 
 void PostProcessing::configureEffect(
@@ -80,12 +82,7 @@ void PostProcessing::configureEffect(
     PostEffect& effect,
     ShaderProgram& shader,
     float timer,
-    const Camera& camera,
-    uint shadowMap,
-    uint shadowMap2,
-    const glm::mat4& shadowMatrix,
-    const glm::mat4& shadowMatrix2,
-    uint shadowMapResolution
+    const Camera& camera
 ) {
     const auto& viewport = context.getViewport();
 
@@ -94,105 +91,104 @@ void PostProcessing::configureEffect(
     if (gbuffer) {
         shader.uniform1i("u_position", advanced_pipeline::TARGET_POSITIONS);
         shader.uniform1i("u_normal", advanced_pipeline::TARGET_NORMALS);
+        shader.uniform1i("u_emission", advanced_pipeline::TARGET_EMISSION);
     }
     shader.uniform1i("u_noise", advanced_pipeline::TARGET_SSAO);
     shader.uniform1i("u_ssao", advanced_pipeline::TARGET_SSAO);
 
-    shader.uniform1i("u_shadows[0]", advanced_pipeline::TARGET_SHADOWS0);
-    shader.uniform1i("u_shadows[1]", advanced_pipeline::TARGET_SHADOWS1);
-    shader.uniformMatrix("u_shadowsMatrix[0]", shadowMatrix);
-    shader.uniformMatrix("u_shadowsMatrix[1]", shadowMatrix2);
-    shader.uniform1f("u_shadowsOpacity", 1.0f);
-    shader.uniform1f("u_shadowsSoftness", 1.0f);
-    shader.uniform1i("u_shadowsRes", shadowMapResolution);
     shader.uniform2i("u_screenSize", viewport);
     shader.uniform3f("u_cameraPos", camera.position);
     shader.uniform1f("u_timer", timer);
-    shader.uniform1i("u_enableShadows", shadowMap != 0);
     shader.uniformMatrix("u_projection", camera.getProjection());
     shader.uniformMatrix("u_view", camera.getView());
     shader.uniformMatrix("u_inverseView", glm::inverse(camera.getView()));
 }
 
-void PostProcessing::render(
+void PostProcessing::renderDeferredShading(
     const DrawContext& context,
     const Assets& assets,
     float timer,
-    const Camera& camera,
-    uint shadowMap,
-    uint shadowMap2,
-    const glm::mat4& shadowMatrix,
-    const glm::mat4& shadowMatrix2,
-    uint shadowMapResolution
+    const Camera& camera
 ) {
-    if (fbo == nullptr && gbuffer == nullptr) {
-        LOG_ERROR("'use(...)' was never called");
-        throw std::runtime_error("'use(...)' was never called");
+    if (gbuffer == nullptr) {
+        LOG_ERROR("GBuffer is not initialized");
+        throw std::runtime_error("GBuffer is not initialized");
     }
 
-    int totalPasses = 0;
-    for (const auto& effect : effectSlots) {
-        totalPasses += (effect != nullptr && effect->isActive() && !(effect->isAdvanced() && gbuffer == nullptr));
-    }
+    gbuffer->bindBuffers();
 
-    const auto& vp = context.getViewport();
-    refreshFbos(vp.x, vp.y);
+    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SSAO);
+    glBindTexture(GL_TEXTURE_2D, noiseTexture);
 
-    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SHADOWS0);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glActiveTexture(GL_TEXTURE0);
 
-    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SHADOWS1);
-    glBindTexture(GL_TEXTURE_2D, shadowMap2);
+    auto& ssaoEffect = assets.require<PostEffect>("ssao");
+    auto& shader = ssaoEffect.use();
+    configureEffect(
+        context,
+        ssaoEffect,
+        shader,
+        timer,
+        camera
+    );
+    gbuffer->bindSSAO();
+    quadMesh->draw();
+    gbuffer->unbind();
 
-    if (gbuffer) {
-        gbuffer->bindBuffers();
+    {
+        auto viewport = context.getViewport();
+        refreshFbos(viewport.x, viewport.y);
 
-        glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SSAO);
-        glBindTexture(GL_TEXTURE_2D, noiseTexture);
-
-        glActiveTexture(GL_TEXTURE0);
-
-        auto& ssaoEffect = assets.require<PostEffect>("ssao");
-        auto& shader = ssaoEffect.use();
-        configureEffect(
-            context,
-            ssaoEffect,
-            shader,
-            timer,
-            camera,
-            shadowMap,
-            shadowMap2,
-            shadowMatrix,
-            shadowMatrix2,
-            shadowMapResolution
-        );
-        gbuffer->bindSSAO();
-        quadMesh->draw();
-        gbuffer->unbind();
+        auto ctx = context.sub();
+        ctx.setFramebuffer(fbo.get());
 
         glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SSAO);
         gbuffer->bindSSAOBuffer();
-    } else {
-        glActiveTexture(GL_TEXTURE0);
-        fbo->getTexture()->bind();
-    }
 
-    if (totalPasses == 0) {
-        auto& effect = assets.require<PostEffect>(
-            gbuffer ? "deferred_lighting" : "default"
-        );
+        glActiveTexture(GL_TEXTURE0);
+
+        gbuffer->bindBuffers();
+
+        auto& effect = assets.require<PostEffect>("deferred_lighting");
         auto& shader = effect.use();
         configureEffect(
             context,
             effect,
             shader,
             timer,
-            camera,
-            shadowMap,
-            shadowMap2,
-            shadowMatrix,
-            shadowMatrix2,
-            shadowMapResolution
+            camera
+        );
+        quadMesh->draw();
+    }
+}
+
+void PostProcessing::render(
+    const DrawContext& context,
+    const Assets& assets,
+    float timer,
+    const Camera& camera
+) {
+    if (fbo == nullptr) {
+        LOG_ERROR("'use(...)' was never called");
+        throw std::runtime_error("'use(...)' was never called");
+    }
+    int totalPasses = 0;
+    for (const auto& effect : effectSlots) {
+        totalPasses +=
+            (effect != nullptr && effect->isActive() && !(effect->isAdvanced() && gbuffer == nullptr));
+    }
+
+    const auto& vp = context.getViewport();
+    refreshFbos(vp.x, vp.y);
+
+    glActiveTexture(GL_TEXTURE0);
+    fbo->getTexture()->bind();
+
+    if (totalPasses == 0) {
+        auto& effect = assets.require<PostEffect>("default");
+        auto& shader = effect.use();
+        configureEffect(
+            context, effect, shader, timer, camera
         );
         quadMesh->draw();
         return;
@@ -212,12 +208,7 @@ void PostProcessing::render(
             *effect,
             shader,
             timer,
-            camera,
-            shadowMap,
-            shadowMap2,
-            shadowMatrix,
-            shadowMatrix2,
-            shadowMapResolution
+            camera
         );
 
         if (currentPass > 1) {
@@ -245,9 +236,6 @@ PostEffect* PostProcessing::getEffect(size_t slot) {
 }
 
 std::unique_ptr<ImageData> PostProcessing::toImage() {
-    if (gbuffer) {
-        return gbuffer->toImage();
-    }
     return fbo->getTexture()->readData();
 }
 

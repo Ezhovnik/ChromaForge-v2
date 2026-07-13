@@ -93,7 +93,8 @@ void ModelBatch::draw(
                 vert.uv,
                 lights * d,
                 tint,
-                norm
+                norm,
+                mesh.lighting ? 0.0f : 1.0f
             );
         }
     }

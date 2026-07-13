@@ -15,6 +15,7 @@ out vec3 a_position;
 out vec3 a_realnormal;
 out vec4 a_color;
 out vec4 a_modelpos;
+out float a_emission;
 
 uniform mat4 u_model;
 uniform mat4 u_proj;
@@ -49,9 +50,11 @@ void main() {
     vec3 skyLightColor = pick_sky_color(u_skybox);
     a_color.rgb = max(a_color.rgb, skyLightColor.rgb * v_light.a) * v_color;
     a_color.a = u_opacity;
+
     mat4 viewmodel = u_view * u_model;
     a_distance = length(viewmodel * vec4(pos3d, 0.0));
     a_fog = calc_fog(length(viewmodel * vec4(pos3d * FOG_POS_SCALE, 0.0)) / 256.0);
+    a_emission = v_normal.w;
 
     vec4 viewmodelpos = u_view * a_modelpos;
     a_position = viewmodelpos.xyz;

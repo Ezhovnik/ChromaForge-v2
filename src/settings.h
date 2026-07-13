@@ -42,6 +42,7 @@ struct GraphicsSettings {
 	IntegerSetting chunkMaxVerticesDense {800'000, 0, 8'000'000};
     IntegerSetting chunkMaxRenderers {6, -4, 32};
 	BoolSetting advancedRender {true};
+	BoolSetting ssao {true};
 	IntegerSetting shadowsQuality {0, 0, 3};
 };
 

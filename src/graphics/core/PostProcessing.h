@@ -34,16 +34,18 @@ public:
 
     void use(DrawContext& context, bool gbufferPipeline);
 
+    void renderDeferredShading(
+        const DrawContext& context,
+        const Assets& assets,
+        float timer,
+        const Camera& camera
+    );
+
     void render(
         const DrawContext& context,
         const Assets& assets,
         float timer,
-        const Camera& camera,
-        uint shadowMap,
-        uint shadowMap2,
-        const glm::mat4& shadowMatrix,
-        const glm::mat4& shadowMatrix2,
-        uint shadowMapResolution
+        const Camera& camera
     );
 
     void setEffect(size_t slot, std::shared_ptr<PostEffect> effect);
@@ -59,12 +61,7 @@ private:
         PostEffect& effect,
         ShaderProgram& shader,
         float timer,
-        const Camera& camera,
-        uint shadowMap,
-        uint shadowMap2,
-        const glm::mat4& shadowMatrix,
-        const glm::mat4& shadowMatrix2,
-        uint shadowMapResolution
+        const Camera& camera
     );
 
     void refreshFbos(uint width, uint height);

@@ -39,9 +39,10 @@ namespace advanced_pipeline {
     inline constexpr int TARGET_SKYBOX = 1;
     inline constexpr int TARGET_POSITIONS = 2;
     inline constexpr int TARGET_NORMALS = 3;
-    inline constexpr int TARGET_SSAO = 4;
-    inline constexpr int TARGET_SHADOWS0 = 5;
-    inline constexpr int TARGET_SHADOWS1 = 6;
+    inline constexpr int TARGET_EMISSION = 4;
+    inline constexpr int TARGET_SSAO = 5;
+    inline constexpr int TARGET_SHADOWS0 = 6;
+    inline constexpr int TARGET_SHADOWS1 = 7;
 }
 
 CHROMA_ENUM_METADATA(CursorShape)

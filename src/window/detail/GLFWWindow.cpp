@@ -510,6 +510,7 @@ public:
     }
 
     std::unique_ptr<ImageData> takeScreenshot() override {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         auto data = std::make_unique<ubyte[]>(size.x * size.y * 3);
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glReadPixels(0, 0, size.x, size.y, GL_RGB, GL_UNSIGNED_BYTE, data.get());

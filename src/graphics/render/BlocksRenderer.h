@@ -58,7 +58,8 @@ private:
         const glm::vec3& coord,
         float u, float v,
         const glm::vec4& light,
-        const glm::vec3& normal
+        const glm::vec3& normal,
+        float emission
     );
 
     /**

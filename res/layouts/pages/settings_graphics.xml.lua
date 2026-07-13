@@ -42,5 +42,6 @@ function on_open()
     create_checkbox("graphics.backlight", "Backlight", "graphics.backlight.tooltip")
     create_checkbox("graphics.dense-render", "Dense blocks render", "graphics.dense-render.tooltip")
     create_checkbox("graphics.advanced-render", "Advanced render", "graphics.advanced-render.tooltip")
+    create_checkbox("graphics.ssao", "SSAO", "graphics.ssao.tooltip")
     create_setting("graphics.shadows-quality", "Shadows quality", 1)
 end

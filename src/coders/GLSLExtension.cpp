@@ -71,6 +71,14 @@ void GLSLExtension::undefine(const std::string& name) {
     if (hasDefine(name)) defines.erase(name);
 }
 
+void GLSLExtension::setDefined(const std::string& name, bool defined) {
+    if (defined) {
+        define(name, "TRUE");
+    } else {
+        undefine(name);
+    }
+}
+
 // Вспомогательная функция: выбрасывает исключение с сообщением об ошибке парсинга
 inline void parsing_error(
     const io::path& file, 
@@ -157,7 +165,6 @@ public:
     }
 
     bool processVersionDirective() {
-        parsing_warning(filename, line, "Removed #version directive");
         source_line(ss, line);
         skipLine();
         return false;

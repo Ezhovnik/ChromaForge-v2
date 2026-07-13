@@ -29,6 +29,7 @@ vec4 effect() {
         occlusion += (sampleDepth >= samplePos.z + u_bias ? 1.0 : 0.0) * rangeCheck;
     }
     occlusion = min(1.0, 1.05 - (occlusion / u_kernelSize));
+    occlusion = max(occlusion, texture(u_emission, v_uv).r);
 
     float z = -position.z * 0.01;
     z = max(0.0, 1.0 - z);

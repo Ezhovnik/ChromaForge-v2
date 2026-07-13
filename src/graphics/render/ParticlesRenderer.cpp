@@ -133,7 +133,8 @@ void ParticlesRenderer::renderParticles(const Camera& camera, float deltaTime) {
                 preset.size * scale,
                 light,
                 glm::vec3(1.0f),
-                particle.region
+                particle.region,
+                preset.lighting ? 0.0f : 1.0f
             );
 
             if (particle.lifetime <= 0.0f) {

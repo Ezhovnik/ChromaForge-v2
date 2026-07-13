@@ -27,6 +27,7 @@ public:
 	Texture* getTexture() const;
 
 	uint getWidth() const;
-
 	uint getHeight() const;
+
+	uint getFBO() const;
 };

@@ -15,7 +15,7 @@ public:
 
     void bindBuffers() const;
     void bindSSAOBuffer() const;
-    void bindDepthBuffer();
+    void bindDepthBuffer(int drawFbo);
 
     void resize(uint width, uint height);
 
@@ -28,16 +28,18 @@ private:
     uint height;
 
     uint fbo;
-    uint colorBuffer;
-    uint positionsBuffer;
-    uint normalsBuffer;
-    uint depthBuffer;
-    uint ssaoFbo;
-    uint ssaoBuffer;
+    uint colorBuffer = 0;
+    uint positionsBuffer = 0;
+    uint normalsBuffer = 0;
+    uint emissionBuffer = 0;
+    uint depthBuffer = 0;
+    uint ssaoFbo = 0;
+    uint ssaoBuffer = 0;
 
     void createColorBuffer();
     void createPositionsBuffer();
     void createNormalsBuffer();
+    void createEmissionBuffer();
     void createDepthBuffer();
     void createSSAOBuffer();
 };

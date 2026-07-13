@@ -24,6 +24,7 @@ public:
     // Макросы
     void define(const std::string& name, std::string value); // Добавляем определение макроса
     void undefine(const std::string& name); // Удаляем определение макроса
+    void setDefined(const std::string& name, bool defined);
     const std::string& getDefine(const std::string& name) const; // Получаем значение макроса
     const std::unordered_map<std::string, std::string>& getDefines() const;
     bool hasDefine(const std::string& name) const; // Проверяем наличие определения макроса

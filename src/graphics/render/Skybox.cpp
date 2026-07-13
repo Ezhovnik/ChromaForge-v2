@@ -94,19 +94,28 @@ void Skybox::drawBackground(
 void Skybox::drawStars(float angle, float opacity) {
     batch3d->texture(nullptr);
     random.setSeed(SkyboxConsts::STARS_SEED);
+
+    glm::mat4 rotation = glm::rotate(
+        glm::mat4(1.0f),
+        -angle + glm::pi<float>() * 0.5f,
+        glm::vec3(0, 0, -1)
+    );
+    rotation = glm::rotate(rotation, sunAltitude, glm::vec3(1, 0, 0));
+
+    float depth = 1e3;
     for (int i = 0; i < SkyboxConsts::STARS_COUNT; ++i) {
         float rx = (random.randFloat()) - 0.5f;
         float ry = (random.randFloat()) - 0.5f;
-        float z = (random.randFloat()) - 0.5f;
-        float x = rx * std::sin(angle) + ry * -std::cos(angle);
-        float y = rx * std::cos(angle) + ry * std::sin(angle);
+        float rz = (random.randFloat()) - 0.5f;
+
+        glm::vec3 pos = glm::vec4(rx, ry, rz, 1) * rotation;
 
         float sopacity = random.randFloat();
-        if (y < 0.0f) continue;
+        if (pos.y < 0.0f) continue;
 
         sopacity *= (0.2f + std::sqrt(std::cos(angle)) * 0.5f) - 0.05f;
         glm::vec4 tint (1, 1, 1, sopacity * opacity);
-        batch3d->point(glm::vec3(x, y, z), tint);
+        batch3d->point(pos * depth, tint);
     }
     batch3d->flushPoints();
 }
@@ -159,7 +168,7 @@ void Skybox::draw(
     }
 
     batch3d->flush();
-    // drawStars(angle, opacity);
+    drawStars(angle, opacity);
 }
 
 void Skybox::refresh(const DrawContext& parent_context, float t, float mie, uint quality) {
@@ -182,6 +191,16 @@ void Skybox::refresh(const DrawContext& parent_context, float t, float mie, uint
     t *= glm::two_pi<float>();
 
     lightDir = glm::normalize(glm::vec3(sin(t), -cos(t), 0.0f));
+
+    float sunAngle = glm::radians((t / glm::two_pi<float>() - 0.25f) * 360.0f);
+    float x = -glm::cos(sunAngle + glm::pi<float>() * 0.5f) * glm::radians(sunAltitude);
+    float y = sunAngle - glm::pi<float>() * 0.5f;
+    float z = glm::radians(0.0f);
+    rotation = glm::rotate(glm::mat4(1.0f), y, glm::vec3(0, 1, 0));
+    rotation = glm::rotate(rotation, x, glm::vec3(1, 0, 0));
+    rotation = glm::rotate(rotation, z, glm::vec3(0, 0, 1));
+    lightDir = glm::vec3(rotation * glm::vec4(0, 0, -1, 1));
+
     shader.uniform1i("u_quality", quality);
     shader.uniform1f("u_mie", mie);
     shader.uniform1f("u_fog", mie - 1.0f);
