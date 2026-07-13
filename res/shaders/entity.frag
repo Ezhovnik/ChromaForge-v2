@@ -24,7 +24,7 @@ uniform vec3 u_sunDir;
 #include <shadows>
 
 void main() {
-    float shadow = calc_shadow();
+    float shadow = calc_shadow(a_modelpos, a_realnormal, a_distance);
     vec3 fogColor = texture(u_skybox, a_dir).rgb;
     vec4 tex_color = texture(u_texture0, a_texCoord);
     float alpha = a_color.a * tex_color.a;

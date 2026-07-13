@@ -22,7 +22,7 @@ public:
     bool perspective = true;
 
     float near = 0.05f;
-    float far = 1500.0f;
+    float far = 1e4f;
 
     bool projset = false;
     glm::mat4 projection;

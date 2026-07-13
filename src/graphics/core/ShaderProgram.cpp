@@ -50,7 +50,15 @@ void ShaderProgram::use() {
 }
 
 void ShaderProgram::uniformMatrix(const std::string& name, const glm::mat4& matrix) {
-    glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix));
+    glUniformMatrix4fv(
+        getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix)
+    );
+}
+
+void ShaderProgram::uniformMatrix(const std::string& name, const glm::mat3& matrix) {
+    glUniformMatrix3fv(
+        getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix)
+    );
 }
 
 void ShaderProgram::uniform1i(const std::string& name, int x) {

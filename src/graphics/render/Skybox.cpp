@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/constants.hpp>
 
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Mesh.h>
@@ -48,27 +49,27 @@ Skybox::Skybox(
     mesh = std::make_unique<Mesh<SkyboxVertex>>(vertices, 6);
 
     sprites.push_back(SkySprite {
-        "misc/moon_flare",
-        PI * 0.5f,
-        0.5f,
+        "misc/moon",
+        glm::pi<float>() * 0.5f,
+        4.0f,
         false,
-        PI * 0.25f,
+        glm::pi<float>() * 0.25f,
     });
 
     sprites.push_back(SkySprite {
-        "misc/moon",
-        PI * 0.5f,
-        4.0f,
+        "misc/moon_flare",
+        glm::pi<float>() * 0.5f,
+        0.5f,
         false,
-        PI * 0.25f,
+        glm::pi<float>() * 0.25f,
     });
 
     sprites.push_back(SkySprite {
         "misc/sun",
-        PI * 1.5f,
+        glm::pi<float>() * 1.5f,
         4.0f,
         true,
-        PI * 0.25f
+        glm::pi<float>() * 0.25f
     });
 }
 
@@ -80,7 +81,9 @@ void Skybox::drawBackground(
     auto backShader = assets.get<ShaderProgram>("background");
     backShader->use();
 	backShader->uniformMatrix("u_view", camera.getView(false));
-	backShader->uniform1f("u_zoom", camera.zoom * camera.getFov() / (PI * 0.5f));
+	backShader->uniform1f(
+        "u_zoom", camera.zoom * camera.getFov() / glm::half_pi<float>()
+    );
 	backShader->uniform1f("u_ar", float(width) / float(height));
     backShader->uniform1i("u_skybox", 1);
     bind();
@@ -117,6 +120,8 @@ void Skybox::draw(
 ) {
     const glm::uvec2& viewport = pctx.getViewport();
 
+    glActiveTexture(GL_TEXTURE0);
+
     drawBackground(camera, assets, viewport.x, viewport.y);
 
     DrawContext ctx = pctx.sub();
@@ -128,20 +133,25 @@ void Skybox::draw(
     shader->uniformMatrix("u_apply", glm::mat4(1.0f));
     batch3d->begin();
 
-    float angle = daytime * float(PI) * 2.0f;
+    float angle = daytime * glm::pi<float>() * 2.0f;
     float opacity = glm::pow(1.0f - fog, 7.0f);
 
+    float depthScale = 1e3;
     for (auto& sprite : sprites) {
         batch3d->texture(assets.get<Texture>(sprite.texture));
 
-        float sangle = daytime * float(PI) * 2.0 + sprite.phase;
-        float distance = sprite.distance;
+        float sangle = daytime * glm::pi<float>() * 2.0 + sprite.phase;
+        float distance = sprite.distance * depthScale;
 
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), -sangle + float(PI) * 0.5f, glm::vec3(0, 0, -1));
+        glm::mat4 rotation = glm::rotate(
+            glm::mat4(1.0f),
+            -sangle + glm::pi<float>() * 0.5f,
+            glm::vec3(0, 0, -1)
+        );
         rotation = glm::rotate(rotation, sprite.altitude, glm::vec3(1, 0, 0));
         glm::vec3 pos = glm::vec4(0, distance, 0, 1) * rotation;
-        glm::vec3 up = glm::vec4(1, 0, 0, 1) * rotation;
-        glm::vec3 right = glm::vec4(0, 0, 1, 1) * rotation;
+        glm::vec3 up = glm::vec4(depthScale, 0, 0, 1) * rotation;
+        glm::vec3 right = glm::vec4(0, 0, depthScale, 1) * rotation;
         glm::vec4 tint(1, 1, 1, opacity);
         if (!sprite.emissive) tint *= 0.6f + std::cos(angle) * 0.4;
 
@@ -166,10 +176,10 @@ void Skybox::refresh(const DrawContext& parent_context, float t, float mie, uint
     assert(cubemap != nullptr);
 
     ready = true;
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SKYBOX);
     cubemap->bind();
     shader.use();
-    t *= PI * 2.0f;
+    t *= glm::two_pi<float>();
 
     lightDir = glm::normalize(glm::vec3(sin(t), -cos(t), 0.0f));
     shader.uniform1i("u_quality", quality);
@@ -237,13 +247,13 @@ void Skybox::refreshFace(uint face, Cubemap* cubemap) {
 }
 
 void Skybox::bind() const {
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SKYBOX);
     fbo->getTexture()->bind();
     glActiveTexture(GL_TEXTURE0);
 }
 
 void Skybox::unbind() const {
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SKYBOX);
     fbo->getTexture()->unbind();
     glActiveTexture(GL_TEXTURE0);
 }

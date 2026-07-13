@@ -101,6 +101,10 @@ ShaderProgram& PostEffect::use() {
     return *shader;
 }
 
+ShaderProgram& PostEffect::getShader() {
+    return *shader;
+}
+
 float PostEffect::getIntensity() const {
     return intensity;
 }

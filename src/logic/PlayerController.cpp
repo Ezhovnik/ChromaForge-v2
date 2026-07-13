@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <glm/gtc/constants.hpp>
+
 #include <objects/Player.h>
 #include <physics/PhysicsSolver.h>
 #include <physics/Hitbox.h>
@@ -260,12 +262,12 @@ void PlayerController::updateFootsteps(float delta) {
         const glm::vec3& vel = hitbox->velocity;
         float f = glm::length(glm::vec2(vel.x, vel.z));
         stepsTimer += delta * f * CameraConsts::STEPS_SPEED;
-        if (stepsTimer >= PI) {
-            stepsTimer = fmod(stepsTimer, PI);
+        if (stepsTimer >= glm::pi<float>()) {
+            stepsTimer = fmod(stepsTimer, glm::pi<float>());
             onFootstep(*hitbox);
         }
     } else {
-        stepsTimer = PI;
+        stepsTimer = glm::pi<float>();
     }
 }
 

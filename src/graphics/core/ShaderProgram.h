@@ -62,6 +62,8 @@ public:
      */
     void uniformMatrix(const std::string&, const glm::mat4& matrix);
 
+    void uniformMatrix(const std::string&, const glm::mat3& matrix);
+
     /**
      * @brief Загружает целое число в uniform-переменную.
      * @param name Имя переменной.

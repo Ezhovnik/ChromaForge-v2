@@ -71,28 +71,47 @@ void PostProcessing::refreshFbos(uint width, uint height) {
     }
 }
 
+void PostProcessing::bindDepthBuffer() {
+    gbuffer->bindDepthBuffer();
+}
+
 void PostProcessing::configureEffect(
     const DrawContext& context,
     PostEffect& effect,
     ShaderProgram& shader,
     float timer,
     const Camera& camera,
-    uint shadowMap
+    uint shadowMap,
+    uint shadowMap2,
+    const glm::mat4& shadowMatrix,
+    const glm::mat4& shadowMatrix2,
+    uint shadowMapResolution
 ) {
     const auto& viewport = context.getViewport();
 
-    shader.uniform1i("u_screen", 0);
+    shader.uniform1i("u_screen", advanced_pipeline::TARGET_COLOR);
+    shader.uniform1i("u_skybox", advanced_pipeline::TARGET_SKYBOX);
     if (gbuffer) {
-        shader.uniform1i("u_position", 1);
-        shader.uniform1i("u_normal", 2);
+        shader.uniform1i("u_position", advanced_pipeline::TARGET_POSITIONS);
+        shader.uniform1i("u_normal", advanced_pipeline::TARGET_NORMALS);
     }
-    shader.uniform1i("u_noise", 3);
-    shader.uniform1i("u_ssao", 3);
-    shader.uniform1i("u_shadows", 4);
+    shader.uniform1i("u_noise", advanced_pipeline::TARGET_SSAO);
+    shader.uniform1i("u_ssao", advanced_pipeline::TARGET_SSAO);
+
+    shader.uniform1i("u_shadows[0]", advanced_pipeline::TARGET_SHADOWS0);
+    shader.uniform1i("u_shadows[1]", advanced_pipeline::TARGET_SHADOWS1);
+    shader.uniformMatrix("u_shadowsMatrix[0]", shadowMatrix);
+    shader.uniformMatrix("u_shadowsMatrix[1]", shadowMatrix2);
+    shader.uniform1f("u_shadowsOpacity", 1.0f);
+    shader.uniform1f("u_shadowsSoftness", 1.0f);
+    shader.uniform1i("u_shadowsRes", shadowMapResolution);
     shader.uniform2i("u_screenSize", viewport);
+    shader.uniform3f("u_cameraPos", camera.position);
     shader.uniform1f("u_timer", timer);
     shader.uniform1i("u_enableShadows", shadowMap != 0);
     shader.uniformMatrix("u_projection", camera.getProjection());
+    shader.uniformMatrix("u_view", camera.getView());
+    shader.uniformMatrix("u_inverseView", glm::inverse(camera.getView()));
 }
 
 void PostProcessing::render(
@@ -100,7 +119,11 @@ void PostProcessing::render(
     const Assets& assets,
     float timer,
     const Camera& camera,
-    uint shadowMap
+    uint shadowMap,
+    uint shadowMap2,
+    const glm::mat4& shadowMatrix,
+    const glm::mat4& shadowMatrix2,
+    uint shadowMapResolution
 ) {
     if (fbo == nullptr && gbuffer == nullptr) {
         LOG_ERROR("'use(...)' was never called");
@@ -115,25 +138,39 @@ void PostProcessing::render(
     const auto& vp = context.getViewport();
     refreshFbos(vp.x, vp.y);
 
-    glActiveTexture(GL_TEXTURE4);
+    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SHADOWS0);
     glBindTexture(GL_TEXTURE_2D, shadowMap);
+
+    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SHADOWS1);
+    glBindTexture(GL_TEXTURE_2D, shadowMap2);
 
     if (gbuffer) {
         gbuffer->bindBuffers();
 
-        glActiveTexture(GL_TEXTURE3);
+        glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SSAO);
         glBindTexture(GL_TEXTURE_2D, noiseTexture);
 
         glActiveTexture(GL_TEXTURE0);
 
         auto& ssaoEffect = assets.require<PostEffect>("ssao");
         auto& shader = ssaoEffect.use();
-        configureEffect(context, ssaoEffect, shader, timer, camera, shadowMap);
+        configureEffect(
+            context,
+            ssaoEffect,
+            shader,
+            timer,
+            camera,
+            shadowMap,
+            shadowMap2,
+            shadowMatrix,
+            shadowMatrix2,
+            shadowMapResolution
+        );
         gbuffer->bindSSAO();
         quadMesh->draw();
         gbuffer->unbind();
 
-        glActiveTexture(GL_TEXTURE3);
+        glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SSAO);
         gbuffer->bindSSAOBuffer();
     } else {
         glActiveTexture(GL_TEXTURE0);
@@ -145,7 +182,18 @@ void PostProcessing::render(
             gbuffer ? "deferred_lighting" : "default"
         );
         auto& shader = effect.use();
-        configureEffect(context, effect, shader, timer, camera, shadowMap);
+        configureEffect(
+            context,
+            effect,
+            shader,
+            timer,
+            camera,
+            shadowMap,
+            shadowMap2,
+            shadowMatrix,
+            shadowMatrix2,
+            shadowMapResolution
+        );
         quadMesh->draw();
         return;
     }
@@ -159,7 +207,18 @@ void PostProcessing::render(
             continue;
         }
         auto& shader = effect->use();
-        configureEffect(context, *effect, shader, timer, camera, shadowMap);
+        configureEffect(
+            context,
+            *effect,
+            shader,
+            timer,
+            camera,
+            shadowMap,
+            shadowMap2,
+            shadowMatrix,
+            shadowMatrix2,
+            shadowMapResolution
+        );
 
         if (currentPass > 1) {
             fbo->getTexture()->bind();

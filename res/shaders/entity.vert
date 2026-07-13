@@ -29,6 +29,7 @@ uniform vec3 u_torchlightColor;
 uniform float u_torchlightDistance;
 
 #include <lighting>
+#include <fog>
 
 void main() {
     a_modelpos = u_model * vec4(v_position, 1.0);

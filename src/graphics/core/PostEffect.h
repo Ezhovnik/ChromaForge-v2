@@ -53,6 +53,7 @@ public:
     explicit PostEffect(const PostEffect&) = default;
 
     ShaderProgram& use();
+    ShaderProgram& getShader();
 
     float getIntensity() const;
     void setIntensity(float value);

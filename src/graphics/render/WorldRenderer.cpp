@@ -6,6 +6,8 @@
 #include <assert.h>
 #include <string>
 
+#include <glm/gtc/constants.hpp>
+
 #include <content/Content.h>
 #include <window/Window.h>
 #include <graphics/core/Mesh.h>
@@ -61,6 +63,8 @@ inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 
 inline constexpr size_t BATCH3D_CAPACITY = 4096;
 inline constexpr size_t MODEL_BATCH_CAPACITY = 20'000;
+
+inline constexpr GLenum TEXTURE_MAIN = GL_TEXTURE0;
 
 bool WorldRenderer::drawChunkBorders = false;
 bool WorldRenderer::drawEntityHitboxes = false;
@@ -172,15 +176,15 @@ void WorldRenderer::setupWorldShader(
         shader.uniform1f("u_shadowsOpacity", 1.0f - cloudsIntensity); // TODO: make it configurable
         shader.uniform1f("u_shadowsSoftness", 1.0f + cloudsIntensity * 4); // TODO: make it configurable
 
-        glActiveTexture(GL_TEXTURE4);
-        shader.uniform1i("u_shadows[0]", 4);
+        glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SHADOWS0);
+        shader.uniform1i("u_shadows[0]", advanced_pipeline::TARGET_SHADOWS0);
         glBindTexture(GL_TEXTURE_2D, shadowMap->getDepthMap());
 
-        glActiveTexture(GL_TEXTURE5);
-        shader.uniform1i("u_shadows[1]", 5);
+        glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SHADOWS1);
+        shader.uniform1i("u_shadows[1]", advanced_pipeline::TARGET_SHADOWS1);
         glBindTexture(GL_TEXTURE_2D, wideShadowMap->getDepthMap());
 
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(TEXTURE_MAIN);
     }
 
     auto contentIds = level.content.getIndices();
@@ -402,10 +406,10 @@ void WorldRenderer::generateShadowsMap(
     float sunAngle = glm::radians(
         90.0f - ((static_cast<int>(t / sunCycleStep)) * sunCycleStep + 0.25f) * 360.0f
     );
-    float sunAltitude = float(PI) * 0.25f;
+    float sunAltitude = glm::pi<float>() * 0.25f;
     shadowCamera.rotate(
-        -glm::cos(sunAngle + float(PI) * 0.5f) * sunAltitude,
-        sunAngle - float(PI) * 0.5f,
+        -glm::cos(sunAngle + glm::pi<float>() * 0.5f) * sunAltitude,
+        sunAngle - glm::pi<float>() * 0.5f,
         glm::radians(0.0f)
     );
     shadowCamera.updateVectors();
@@ -454,8 +458,9 @@ void WorldRenderer::draw(
 
     auto& defaultShader = assets.require<ShaderProgram>("default");
     auto& entityShader = assets.require<ShaderProgram>("entity");
+    auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
     gbufferPipeline = settings.graphics.advancedRender.get();
-    int shadowsQuality = settings.graphics.shadowsQuality.get();
+    int shadowsQuality = settings.graphics.shadowsQuality.get() * gbufferPipeline;
     int resolution = 512 << shadowsQuality;
     if (shadowsQuality > 0 && !shadows) {
         shadowMap = std::make_unique<ShadowMap>(resolution);
@@ -464,6 +469,7 @@ void WorldRenderer::draw(
         ShaderProgram::preprocessor->define("ENABLE_SHADOWS", "true");
         defaultShader.recompile();
         entityShader.recompile();
+        deferredShader.recompile();
     } else if (shadowsQuality == 0 && shadows) {
         shadowMap.reset();
         wideShadowMap.reset();
@@ -471,6 +477,7 @@ void WorldRenderer::draw(
         ShaderProgram::preprocessor->undefine("ENABLE_SHADOWS");
         defaultShader.recompile();
         entityShader.recompile();
+        deferredShader.recompile();
     }
     if (shadows && shadowMap->getResolution() != resolution) {
         shadowMap = std::make_unique<ShadowMap>(resolution);
@@ -513,7 +520,6 @@ void WorldRenderer::draw(
         DrawContext wctx = pctx.sub();
         postProcessing.use(wctx, gbufferPipeline);
         display::clearDepth();
-        skybox->draw(pctx, camera, assets, worldInfo.daytime, clouds);
         {
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
@@ -527,19 +533,31 @@ void WorldRenderer::draw(
                 }
             }
         }
-        {
-            DrawContext ctx = wctx.sub();
-            texts->render(ctx, camera, settings, hudVisible, true);
-        }
+        texts->render(pctx, camera, settings, hudVisible, true);
     }
 
+    skybox->bind();
+    deferredShader.use();
+    float fogFactor = 15.0f / static_cast<float>(settings.chunks.loadDistance.get() - 2);
+    setupWorldShader(deferredShader, camera, settings, fogFactor);
     postProcessing.render(
         pctx,
         assets,
         timer,
         camera,
-        shadows ? shadowMap->getDepthMap() : 0
+        shadows ? shadowMap->getDepthMap() : 0,
+        shadows ? wideShadowMap->getDepthMap() : 0,
+        shadowCamera.getProjView(),
+        wideShadowCamera.getProjView(),
+        shadows ? shadowMap->getResolution() : 0
     );
+    {
+        DrawContext ctx = pctx.sub();
+        ctx.setDepthTest(true);
+        postProcessing.bindDepthBuffer();
+        skybox->draw(ctx, camera, assets, worldInfo.daytime, clouds);
+    }
+    skybox->unbind();
     if (player.currentCamera == player.fpCamera) {
         DrawContext ctx = pctx.sub();
         ctx.setDepthTest(true);

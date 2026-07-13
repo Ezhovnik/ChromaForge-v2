@@ -74,11 +74,6 @@ inline constexpr int ITEM_ICON_SIZE = 48;
 /** */
 inline constexpr int TRANSLUCENT_BLOCKS_SORT_INTERVAL = 8;
 
-// ========== Математические константы ==========
-
-/** Число π. */
-inline constexpr double PI = 3.14159265358979323846;
-
 // ========== Утилитарные функции ==========
 
 /**
