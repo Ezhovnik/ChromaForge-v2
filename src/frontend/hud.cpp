@@ -275,6 +275,7 @@ void Hud::updateHotbarControl() {
 void Hud::updateWorldGenDebug() {
     auto& level = levelFrontend.getLevel();
     const auto& chunks = *player.chunks;
+    uint padding = engine.getSettings().chunks.padding.get();
     auto generator = levelFrontend.getController()->getChunksController()->getGenerator();
     auto debugInfo = generator->createDebugInfo();
     int width = debugImgWorldGen->getWidth();
@@ -294,8 +295,13 @@ void Hud::updateWorldGenDebug() {
             int ax = x - (width - areaWidth) / 2;
             int az = z - (height - areaHeight) / 2;
 
-            data[(flippedZ * width + x) * 4 + 1] = 
-                chunks.getChunk(ax + ox, az + oz) ? 255 : 0;
+            bool isInLoadingZone =
+                levelFrontend.getController()
+                    ->getChunksController()
+                    ->isInLoadingZone(player, padding, ax + ox, az + oz);
+
+            data[(flippedZ * width + x) * 4 + 1] =
+                chunks.getChunk(ax + ox, az + oz) ? (isInLoadingZone ? 255 : 128) : 0;
             data[(flippedZ * width + x) * 4 + 0] = 
                 level.chunks->fetch(ax + ox, az + oz) ? 255 : 0;
 

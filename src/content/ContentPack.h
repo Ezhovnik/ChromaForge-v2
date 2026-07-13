@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 #include <typedefs.h>
 #include <content/content_fwd.h>
@@ -34,6 +35,16 @@ public:
     io::path getFolder() const;
 };
 
+struct ContentPackStats {
+    size_t totalBlocks;
+    size_t totalItems;
+    size_t totalEntities;
+
+    inline bool hasSavingContent() const {
+        return totalBlocks + totalItems + totalEntities > 0;
+    }
+};
+
 struct ContentPack {
     std::string id = "none";
     std::string title = "untitled";
@@ -48,6 +59,8 @@ struct ContentPack {
     std::string source = "";
 
     io::path getContentFile() const;
+
+    std::optional<ContentPackStats> loadStats() const;
 
     static inline const std::string PACKAGE_FILENAME = "package.json";
     static inline const std::string CONTENT_FILENAME = "content.json";
@@ -85,16 +98,6 @@ struct ContentPack {
             case ContentType::None: return "";
             default: return "";
         }
-    }
-};
-
-struct ContentPackStats {
-    size_t totalBlocks;
-    size_t totalItems;
-    size_t totalEntities;
-
-    inline bool hasSavingContent() const {
-        return totalBlocks + totalItems + totalEntities > 0;
     }
 };
 

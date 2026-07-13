@@ -12,6 +12,7 @@
 #include <data/dv.h>
 #include <constants.h>
 #include <core_content_defs.h>
+#include <coders/commons.h>
 
 ContentPack ContentPack::createBuiltin() {
     return ContentPack {
@@ -44,6 +45,23 @@ io::path ContentPack::getContentFile() const {
 
 bool ContentPack::is_pack(const io::path& folder) {
     return io::is_regular_file(folder / PACKAGE_FILENAME);
+}
+
+std::optional<ContentPackStats> ContentPack::loadStats() const {
+    auto contentFile = getContentFile();
+    if (!io::exists(contentFile)) return std::nullopt;
+
+    dv::value object;
+    try {
+        object = io::read_object(contentFile);
+    } catch (const parsing_error& err) {
+        LOG_ERROR("{}", err.errorLog());
+    }
+    ContentPackStats stats {};
+    stats.totalBlocks = object.has("blocks") ? object["blocks"].size() : 0;
+    stats.totalItems = object.has("items") ? object["items"].size() : 0;
+    stats.totalEntities = object.has("entities") ? object["entities"].size() : 0;
+    return stats;
 }
 
 static void checkContentPackId(const std::string& id, const io::path& folder) {
