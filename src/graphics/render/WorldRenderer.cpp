@@ -147,6 +147,7 @@ void WorldRenderer::setupWorldShader(
     shader.uniformMatrix("u_model", glm::mat4(1.0f));
     shader.uniformMatrix("u_proj", camera.getProjection());
     shader.uniformMatrix("u_view", camera.getView());
+    shader.uniform1f("u_timer", timer);
     shader.uniform1f("u_gamma", settings.graphics.gamma.get());
     shader.uniform1f("u_fogFactor", fogFactor);
     shader.uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
@@ -155,11 +156,10 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1f("u_weatherFogOpacity", weather.fogOpacity());
     shader.uniform1f("u_weatherFogDencity", weather.fogDencity());
     shader.uniform1f("u_weatherFogCurve", weather.fogCurve());
-    shader.uniform3f("u_cameraPos", camera.position);
-    shader.uniform2f("u_lightDir", skybox->getLightDir());
-    shader.uniform1i("u_skybox", 1);
-    shader.uniform1f("u_timer", timer);
     shader.uniform1f("u_dayTime", level.getWorld()->getInfo().daytime);
+    shader.uniform2f("u_lightDir", skybox->getLightDir());
+    shader.uniform3f("u_cameraPos", camera.position);
+    shader.uniform1i("u_skybox", 1);
     shader.uniform1i("u_enableShadows", shadows);
 
     if (shadows) {
@@ -388,7 +388,7 @@ void WorldRenderer::generateShadowsMap(
     int quality = settings.graphics.shadowsQuality.get();
     float shadowMapScale = 0.32f / (1 << glm::max(0, quality)) * scale;
     float shadowMapSize = resolution * shadowMapScale;
-    glm::vec3 basePos = glm::floor(camera.position);
+    glm::vec3 basePos = glm::floor(camera.position / 4.0f) * 4.0f;
     shadowCamera = Camera(basePos, shadowMapSize);
     shadowCamera.near = 0.1f;
     shadowCamera.far = 1000.0f;
@@ -416,8 +416,9 @@ void WorldRenderer::generateShadowsMap(
     auto view = shadowCamera.getView();
 
     auto currentPos = shadowCamera.position;
-    auto min = view * glm::vec4(currentPos - (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
-    auto max = view * glm::vec4(currentPos + (shadowCamera.right + shadowCamera.up) * (shadowMapSize * 0.5f), 1.0f);
+    auto topRight = shadowCamera.right + shadowCamera.up;
+    auto min = view * glm::vec4(currentPos - topRight * shadowMapSize * 0.5f, 1.0f);
+    auto max = view * glm::vec4(currentPos + topRight * shadowMapSize * 0.5f, 1.0f);
 
     shadowCamera.setProjection(glm::ortho(min.x, max.x, min.y, max.y, 0.1f, 1000.0f));
     {
@@ -452,6 +453,7 @@ void WorldRenderer::draw(
     const auto& settings = engine.getSettings();
 
     auto& defaultShader = assets.require<ShaderProgram>("default");
+    auto& entityShader = assets.require<ShaderProgram>("entity");
     gbufferPipeline = settings.graphics.advancedRender.get();
     int shadowsQuality = settings.graphics.shadowsQuality.get();
     int resolution = 512 << shadowsQuality;
@@ -461,12 +463,14 @@ void WorldRenderer::draw(
         shadows = true;
         ShaderProgram::preprocessor->define("ENABLE_SHADOWS", "true");
         defaultShader.recompile();
+        entityShader.recompile();
     } else if (shadowsQuality == 0 && shadows) {
         shadowMap.reset();
         wideShadowMap.reset();
         shadows = false;
         ShaderProgram::preprocessor->undefine("ENABLE_SHADOWS");
         defaultShader.recompile();
+        entityShader.recompile();
     }
     if (shadows && shadowMap->getResolution() != resolution) {
         shadowMap = std::make_unique<ShadowMap>(resolution);

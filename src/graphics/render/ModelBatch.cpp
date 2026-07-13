@@ -82,13 +82,19 @@ void ModelBatch::draw(
             const auto vert = vertexData[i * 3 + j];
 
             float d = 1.0f;
+            auto norm = rotation * vert.normal;
             if (mesh.lighting) {
-                auto norm = rotation * vert.normal;
                 d = glm::dot(norm, SUN_VECTOR);
                 d = 0.8f + d * 0.2f;
             }
 
-            batch->vertex(matrix * glm::vec4(vert.coord, 1.0f), vert.uv, lights * d, tint);
+            batch->vertex(
+                matrix * glm::vec4(vert.coord, 1.0f),
+                vert.uv,
+                lights * d,
+                tint,
+                norm
+            );
         }
     }
 }

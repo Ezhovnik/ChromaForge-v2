@@ -4,6 +4,7 @@ layout (location = 0) in vec3 v_position;
 layout (location = 1) in vec2 v_texCoord;
 layout (location = 2) in vec3 v_color;
 layout (location = 3) in vec4 v_light;
+layout (location = 4) in vec4 v_normal;
 
 out float a_distance;
 out float a_fog;
@@ -34,8 +35,8 @@ void main() {
     vec3 pos3d = a_modelpos.xyz - u_cameraPos;
     a_modelpos.xyz = apply_planet_curvature(a_modelpos.xyz, pos3d);
 
-    a_normal = vec3(0.0, 1.0, 0.0); // v_normal.xyz * 2.0 - 1.0;
-    a_realnormal = a_normal;
+    a_realnormal = v_normal.xyz * 2.0 - 1.0;
+    a_normal = calc_screen_normal(a_realnormal);
 
     vec3 light = v_light.rgb;
     float torchlight = calc_torch_light(a_realnormal, a_modelpos.xyz);
