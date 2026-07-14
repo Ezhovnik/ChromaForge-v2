@@ -21,6 +21,7 @@
   - [gfx.blockwraps](scripting/builtins/libgfx-blockwraps.md)
   - [gfx.particles](particles.md#библиотека-gfxparticles)
   - [gfx.posteffects](scripting/builtins/libgfx-posteffects.md)
+  - [gfx.skeletons](scripting/builtins/libgfx-skeletons.md)
   - [gfx.text3d](3d-text.md#библиотека-gfxtext3d)
   - [gfx.weather](scripting/builtins/libgfx-weather.md)
   - [gui](scripting/builtins/libgui.md)

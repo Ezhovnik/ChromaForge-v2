@@ -57,6 +57,8 @@
 #include <graphics/core/GBuffer.h>
 #include <coders/GLSLExtension.h>
 #include <graphics/core/Framebuffer.h>
+#include <graphics/render/HandsRenderer.h>
+#include <graphics/render/NamedSkeletons.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -139,6 +141,17 @@ WorldRenderer::WorldRenderer(
     skybox = std::make_unique<Skybox>(
         settings.graphics.skyboxResolution.get(), 
         assets->require<ShaderProgram>("skybox_gen")
+    );
+
+    const auto& content = level.content;
+    skeletons = std::make_unique<NamedSkeletons>();
+    const auto& skeletonConfig = content.requireSkeleton(
+        content.getDefaults()["hand-skeleton"].asString()
+    );
+    hands = std::make_unique<HandsRenderer>(
+        *assets,
+        *modelBatch,
+        skeletons->createSkeleton("hand", &skeletonConfig)
     );
 }
 
@@ -304,61 +317,6 @@ void WorldRenderer::renderLines(
             *lineBatch, culling ? frustumCulling.get() : nullptr, ctx
         );
     }
-}
-
-void WorldRenderer::renderHands(const Camera& camera, float deltaTime) {
-    auto& entityShader = assets.require<ShaderProgram>("entity");
-    auto indices = level.content.getIndices();
-
-    const auto& inventory = player.getInventory();
-    int slot = player.getChosenSlot();
-    const ItemStack& stack = inventory->getSlot(slot);
-    const auto& def = indices->items.require(stack.getItemId());
-
-    Camera hudcam = camera;
-    hudcam.far = 10.0f;
-    hudcam.setFov(0.9f);
-    hudcam.position = {};
-
-    const glm::vec3 itemOffset(0.06f, 0.035f, -0.1);
-
-    static glm::mat4 prevRotation(1.0f);
-
-    const float speed = 24.0f;
-
-    glm::mat4 matrix = glm::translate(glm::mat4(1.0f), itemOffset);
-    matrix = glm::scale(matrix, glm::vec3(0.1f));
-    glm::mat4 rotation = camera.rotation;
-    glm::quat rot0 = glm::quat_cast(prevRotation);
-    glm::quat rot1 = glm::quat_cast(rotation);
-    glm::quat finalRot = glm::slerp(rot0, rot1, static_cast<float>(deltaTime * speed));
-    rotation = glm::mat4_cast(finalRot);
-    matrix = rotation * matrix * glm::rotate(glm::mat4(1.0f), -glm::pi<float>() * 0.5f, glm::vec3(0, 1, 0));
-    prevRotation = rotation;
-    glm::vec3 cameraRotation = player.getRotation();
-    auto offset = -(camera.position - player.getPosition());
-    float angle = glm::radians(cameraRotation.x - 90);
-    float cos = glm::cos(angle);
-    float sin = glm::sin(angle);
-
-    float newX = offset.x * cos - offset.z * sin;
-    float newZ = offset.x * sin + offset.z * cos;
-    offset = glm::vec3(newX, offset.y, newZ);
-    matrix = matrix * glm::translate(glm::mat4(1.0f), offset);
-
-    modelBatch->setLightsOffset(camera.position);
-    modelBatch->draw(
-        matrix,
-        glm::vec3(1.0f),
-        assets.get<model::Model>(def.modelName),
-        nullptr
-    );
-    display::clearDepth();
-    setupWorldShader(entityShader, hudcam, engine.getSettings(), 0.0f);
-    skybox->bind();
-    modelBatch->render();
-    modelBatch->setLightsOffset(glm::vec3());
-    skybox->unbind();
 }
 
 void WorldRenderer::generateShadowsMap(
@@ -593,7 +551,21 @@ void WorldRenderer::draw(
         DrawContext ctx = pctx.sub();
         ctx.setDepthTest(true);
         ctx.setCullFace(true);
-        renderHands(camera, deltaTime);
+
+        Camera hudcam = camera;
+        hudcam.far = 10.0f;
+        hudcam.setFov(0.9f);
+        hudcam.position = {};
+
+        hands->renderHands(camera, deltaTime);
+
+        display::clearDepth();
+        setupWorldShader(entityShader, hudcam, engine.getSettings(), 0.0f);
+
+        skybox->bind();
+        modelBatch->render();
+        modelBatch->setLightsOffset(glm::vec3());
+        skybox->unbind();
     }
     renderBlockOverlay(pctx);
 

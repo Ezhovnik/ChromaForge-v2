@@ -32,6 +32,8 @@ class TextsRenderer;
 class GuidesRenderer;
 class BlockWrapsRenderer;
 class PrecipitationRenderer;
+class HandsRenderer;
+class NamedSkeletons;
 class ShadowMap;
 class GBuffer;
 
@@ -53,6 +55,7 @@ private:
     std::unique_ptr<ModelBatch> modelBatch;
     std::unique_ptr<GuidesRenderer> guides;
     std::unique_ptr<ChunksRenderer> chunks;
+	std::unique_ptr<HandsRenderer> hands;
     std::unique_ptr<Skybox> skybox;
 	std::unique_ptr<ShadowMap> shadowMap;
 	std::unique_ptr<ShadowMap> wideShadowMap;
@@ -72,7 +75,6 @@ private:
 	CompileTimeShaderSettings prevCTShaderSettings {};
 
 	void renderBlockSelection();
-	void renderHands(const Camera& camera, float deltaTime);
 	void renderLines(
 		const Camera& camera,
 		ShaderProgram& linesShader,
@@ -102,6 +104,7 @@ public:
     std::unique_ptr<TextsRenderer> texts;
     std::unique_ptr<BlockWrapsRenderer> blockWraps;
     std::unique_ptr<PrecipitationRenderer> precipitation;
+	std::unique_ptr<NamedSkeletons> skeletons;
 
 	WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
 	~WorldRenderer();

@@ -59,6 +59,15 @@ const rigging::SkeletonConfig* Content::getSkeleton(const std::string& id) const
     return found->second.get();
 }
 
+const rigging::SkeletonConfig& Content::requireSkeleton(const std::string& id) const {
+    auto skeleton = getSkeleton(id);
+    if (skeleton == nullptr) {
+        LOG_ERROR("Skeleton '{}' not loaded", id);
+        throw std::runtime_error("Skeleton '" + id + "' not loaded");
+    }
+    return *skeleton;
+}
+
 const ContentPackRuntime* Content::getPackRuntime(const std::string& id) const {
     auto found = packs.find(id);
     if (found == packs.end()) return nullptr;
@@ -70,7 +79,6 @@ ContentPackRuntime* Content::getPackRuntime(const std::string& id) {
     if (found == packs.end()) return nullptr;
     return found->second.get();
 }
-
 
 const UptrsMap<std::string, ContentPackRuntime>& Content::getPacks() const {
     return packs;
