@@ -524,6 +524,15 @@ function time.post_runnable(runnable)
     table.insert(__post_runnables, runnable)
 end
 
+-- Hide unsafe debug.* functions
+local removed_names = {
+    "getregistry", "getupvalue", "setupvalue", "upvalueid", "upvaluejoin",
+    "sethook", "gethook", "getinfo"
+}
+for i, name in ipairs(removed_names) do
+    debug[name] = nil
+end
+
 -- --------- Deprecated functions ------ --
 local function wrap_deprecated(func, name, alternatives)
     return function (...)

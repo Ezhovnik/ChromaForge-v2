@@ -92,8 +92,10 @@ static bool initialize_gl(int width, int height) {
         }
     }
 
+#ifndef __APPLE__
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(gl_message_callback, 0);
+#endif
 
     glViewport(0, 0, width, height);
     glClearColor(0.0f, 0.0f, 0.0f, 1);
@@ -652,10 +654,13 @@ std::tuple<
     }
 
     init_gl_extensions_list();
+
+#ifndef __APPLE__
     if (is_gl_extension_supported("GL_KHR_debug")) {
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(gl_message_callback, nullptr);
     }
+#endif
 
     glViewport(0, 0, width, height);
     glClearColor(0.0f, 0.0f, 0.0f, 1);

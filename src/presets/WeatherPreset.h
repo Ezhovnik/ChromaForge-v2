@@ -24,7 +24,7 @@ struct WeatherPreset : Serializable {
     float fogCurve = 1.0f;
     float clouds = 0.0f;
     float thunderRate = 0.0f;
-    float intensity = 1.0f;
+    float intensity = 0.0f;
 
     dv::value serialize() const override;
     void deserialize(const dv::value& src) override;
