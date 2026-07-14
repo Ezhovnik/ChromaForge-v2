@@ -15,28 +15,28 @@
 ```lua
 -- Возвращает индекс слота эффектов по имени (пак:имя_слота).
 -- При отсутствии указанного слота возвращает -1
-gfx.posteffect.index(name: str) --> int
+gfx.posteffects.index(name: str) --> int
 
 -- Назначает эффект на слот
-gfx.posteffect.set(slot: int, effect: str)
+gfx.posteffects.set(slot: int, effect: str)
 
 -- Возвращает интенсивность эффекта (от 0.0 до 1.0)
 -- Если слот пуст, возвращает 0.0
-gfx.posteffect.get_intensity(slot: int) --> number
+gfx.posteffects.get_intensity(slot: int) --> number
 
 -- Устанавливает интенсивность эффекта (от 0.0 до 1.0)
 -- (Корректность обработки параметра между значениями 0.0 и 1.0 зависит
 -- от эффекта
-gfx.posteffect.set_intensity(slot: int, intensity: number)
+gfx.posteffects.set_intensity(slot: int, intensity: number)
 
 -- Возвращает true если слот не пуст и интенсивность эффекта ненулевая
-gfx.posteffect.is_active(slot: int) --> bool
+gfx.posteffects.is_active(slot: int) --> bool
 
 -- Устанавливает значения параметров (директивы 'param')
-gfx.posteffect.set_params(params: table)
+gfx.posteffects.set_params(params: table)
 
 -- Устанавливает значения в массив
-gfx.posteffect.set_array(
+gfx.posteffects.set_array(
     -- индекс слота эффектов
     slot: int,
     -- имя параметра (массива)
