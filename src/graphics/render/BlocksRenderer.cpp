@@ -490,6 +490,7 @@ glm::vec4 BlocksRenderer::pickSoftLight(
 void BlocksRenderer::render(
     const voxel* voxels, int beginEnds[256][2]
 ) {
+    bool denseRender = this->denseRender;
 	for (const auto drawGroup : *content.drawGroups) {
 		int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
@@ -504,12 +505,12 @@ void BlocksRenderer::render(
             if (id == 0 || variant.drawGroup != drawGroup || state.segment || def.translucent) continue;
             // Получаем текстурные регионы для всех шести граней
 			const UVRegion texfaces[6]{
-                cache.getRegion(id, variantId, 0),
-                cache.getRegion(id, variantId, 1),
-                cache.getRegion(id, variantId, 2),
-                cache.getRegion(id, variantId, 3),
-                cache.getRegion(id, variantId, 4),
-                cache.getRegion(id, variantId, 5)
+                cache.getRegion(id, variantId, 0, denseRender),
+                cache.getRegion(id, variantId, 1, denseRender),
+                cache.getRegion(id, variantId, 2, denseRender),
+                cache.getRegion(id, variantId, 3, denseRender),
+                cache.getRegion(id, variantId, 4, denseRender),
+                cache.getRegion(id, variantId, 5, denseRender)
             };
 
             // Вычисляем координаты x,y,z внутри чанка
@@ -572,6 +573,8 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 	AABB aabb {};
 	bool aabbInit = false;
 	size_t totalSize = 0;
+
+    bool denseRender = this->denseRender;
     for (const auto drawGroup : *content.drawGroups) {
         int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
@@ -588,12 +591,12 @@ SortingMeshData BlocksRenderer::renderTranslucent(
             if (!def.translucent) continue;
 
             const UVRegion texfaces[6] {
-                cache.getRegion(id, variantId, 0),
-                cache.getRegion(id, variantId, 1),
-                cache.getRegion(id, variantId, 2),
-                cache.getRegion(id, variantId, 3),
-                cache.getRegion(id, variantId, 4),
-                cache.getRegion(id, variantId, 5)
+                cache.getRegion(id, variantId, 0, denseRender),
+                cache.getRegion(id, variantId, 1, denseRender),
+                cache.getRegion(id, variantId, 2, denseRender),
+                cache.getRegion(id, variantId, 3, denseRender),
+                cache.getRegion(id, variantId, 4, denseRender),
+                cache.getRegion(id, variantId, 5, denseRender)
             };
             int x = i % CHUNK_WIDTH;
             int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);

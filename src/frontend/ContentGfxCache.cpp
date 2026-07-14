@@ -21,26 +21,28 @@ ContentGfxCache::ContentGfxCache(
     refresh();
 }
 
-static void refresh_variant(
-    const Assets& assets,
+void ContentGfxCache::refreshVariant(
     const Block& def,
     const Variant& variant,
     uint8_t variantIndex,
-    std::unique_ptr<UVRegion[]>& sideregions,
-    const Atlas& atlas,
-    const GraphicsSettings& settings,
-    std::unordered_map<blockid_t, model::Model>& models
+    const Atlas& atlas
 ) {
+    bool denseRender = settings.denseRender.get();
     for (uint side = 0; side < 6; ++side) {
         std::string tex = variant.textureFaces[side];
-        if (variant.culling == CullingMode::Optional && !settings.denseRender.get() && atlas.has(tex + "_opaque")) {
-            tex = tex + "_opaque";
+        std::string texOpaque = tex + "_opaque";
+
+        if (!atlas.has(tex)) {
+            tex = TEXTURE_NOTFOUND;
         }
-        if (atlas.has(tex)) {
-            sideregions[(def.rt.id * 6 + side) * MAX_VARIANTS + variantIndex] = atlas.get(tex);
-        } else if (atlas.has(TEXTURE_NOTFOUND)) {
-            sideregions[(def.rt.id * 6 + side) * MAX_VARIANTS + variantIndex] = atlas.get(TEXTURE_NOTFOUND);
+        if (!atlas.has(texOpaque)) {
+            texOpaque = tex;
+        } else if (variant.culling == CullingMode::Optional && !denseRender) {
+            tex = texOpaque;
         }
+        size_t index = getRegionIndex(def.rt.id, variantIndex, side, false);
+        sideregions[index] = atlas.get(tex);
+        sideregions[index + 1] = atlas.get(texOpaque);
     }
     if (variant.model.type == BlockModelType::Custom) {
         auto model = assets.require<model::Model>(variant.model.name);
@@ -59,11 +61,11 @@ static void refresh_variant(
 }
 
 void ContentGfxCache::refresh(const Block& def, const Atlas& atlas) {
-    refresh_variant(assets, def, def.defaults, 0, sideregions, atlas, settings, models);
+    refreshVariant(def, def.defaults, 0, atlas);
     if (def.variants) {
         const auto& variants = def.variants->variants;
         for (int i = 1; i < variants.size() - 1; ++i) {
-            refresh_variant(assets, def, variants[i], i, sideregions, atlas, settings, models);
+            refreshVariant(def, variants[i], i, atlas);
         }
         def.variants->variants.at(0) = def.defaults;
     }
@@ -71,7 +73,11 @@ void ContentGfxCache::refresh(const Block& def, const Atlas& atlas) {
 
 void ContentGfxCache::refresh() {
     auto indices = content.getIndices();
-    sideregions = std::make_unique<UVRegion[]>(indices->blocks.count() * 6 * MAX_VARIANTS);
+    size_t size = indices->blocks.count() * GFXC_SIDES * GFXC_MAX_VARIANTS * 2;
+
+    LOG_INFO("UV cache size is {} B", (sizeof(UVRegion) * size));
+
+    sideregions = std::make_unique<UVRegion[]>(size);
     const auto& atlas = assets.require<Atlas>("blocks");
 
     const auto& blocks = indices->blocks.getIterable();

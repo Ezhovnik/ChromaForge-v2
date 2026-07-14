@@ -51,7 +51,7 @@ public:
         });
     }
 
-    const T& get() const {
+    [[nodiscard]] const T& get() const {
         return value;
     }
 
