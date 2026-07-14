@@ -34,7 +34,10 @@ local function complete_app_lib(app)
     app.reconfig_packs = builtin.reconfig_packs
     app.get_setting = builtin.get_setting
     app.set_setting = builtin.set_setting
-    app.spark = coroutine.yield
+    app.spark = function()
+        coroutine.yield()
+        network.__process_events()
+    end
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
     app.load_content = function()

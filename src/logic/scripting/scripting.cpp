@@ -88,7 +88,7 @@ public:
     }
 
     void update() override {
-        if (id == 0) return;
+        if (!alive || id == 0) return;
         if (lua::requireglobal(L, "__chroma_resume_coroutine")) {
             lua::pushinteger(L, id);
             if (lua::call(L, 1)) {

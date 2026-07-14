@@ -481,6 +481,7 @@ public:
 };
 
 class SocketTcpSServer : public TcpServer {
+    uint64_t id;
     Network* network;
     SOCKET descriptor;
     std::vector<uint64_t> clients;
@@ -489,14 +490,14 @@ class SocketTcpSServer : public TcpServer {
     std::unique_ptr<std::thread> thread = nullptr;
     int port;
 public:
-    SocketTcpSServer(Network* network, SOCKET descriptor, int port)
-    : network(network), descriptor(descriptor), port(port) {}
+    SocketTcpSServer(uint64_t id, Network* network, SOCKET descriptor, int port)
+    : id(id), network(network), descriptor(descriptor), port(port) {}
 
     ~SocketTcpSServer() {
         closeSocket();
     }
 
-    void startListen(consumer<uint64_t> handler) override {
+    void startListen(ConnectCallback handler) override {
         thread = std::make_unique<std::thread>([this, handler]() {
             while (open) {
                 LOG_INFO("Listening for connections");
@@ -522,7 +523,7 @@ public:
                     std::lock_guard lock(clientsMutex);
                     clients.push_back(id);
                 }
-                handler(id);
+                handler(this->id, id);
             }
         });
     }
@@ -559,7 +560,7 @@ public:
     }
 
     static std::shared_ptr<SocketTcpSServer> openServer(
-        Network* network, int port, consumer<uint64_t> handler
+        uint64_t id, Network* network, int port, ConnectCallback handler
     ) {
         SOCKET descriptor = socket(
             AF_INET, SOCK_STREAM, 0
@@ -588,7 +589,9 @@ public:
             throw std::runtime_error("Could not bind port " + std::to_string(port));
         }
         LOG_INFO("Opened server at port {}", port);
-        auto server = std::make_shared<SocketTcpSServer>(network, descriptor, port);
+        auto server = std::make_shared<SocketTcpSServer>(
+            id, network, descriptor, port
+        );
         server->startListen(std::move(handler));
         return server;
     }
@@ -647,9 +650,9 @@ uint64_t Network::connect(const std::string& address, int port, consumer<uint64_
     return id;
 }
 
-uint64_t Network::openServer(int port, consumer<uint64_t> handler) {
+uint64_t Network::openServer(int port, ConnectCallback handler) {
     uint64_t id = nextServer++;
-    auto server = SocketTcpSServer::openServer(this, port, handler);
+    auto server = SocketTcpSServer::openServer(id, this, port, handler);
     servers[id] = std::move(server);
     return id;
 }
