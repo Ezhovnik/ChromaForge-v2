@@ -418,7 +418,6 @@ void WorldRenderer::generateShadowsMap(
 
     shadowCamera.setProjection(glm::ortho(min.x, max.x, min.y, max.y, 0.1f, 1000.0f));
     {
-        frustumCulling->update(shadowCamera.getProjView());
         auto sctx = pctx.sub();
         sctx.setDepthTest(true);
         sctx.setCullFace(true);

@@ -184,27 +184,39 @@ const Mesh<ChunkVertex>* ChunksRenderer::retrieveChunk(
 void ChunksRenderer::drawChunksShadowsPass(
     const Camera& camera, ShaderProgram& shader
 ) {
+    Frustum frustumCulling;
+    frustumCulling.update(camera.getProjView());
+
     const auto& atlas = assets.require<Atlas>("blocks");
 
     atlas.getTexture()->bind();
 
     for (const auto& chunk : chunks.getChunks()) {
-        if (chunk == nullptr) {
-            continue;
-        }
+        if (chunk == nullptr) continue;
+
+        glm::ivec2 pos {chunk->chunk_x, chunk->chunk_z};
         const auto& found = meshes.find({chunk->chunk_x, chunk->chunk_z});
         if (found == meshes.end()) continue;
-        auto mesh = found->second.mesh.get();
-        if (mesh) {
-            glm::vec3 coord(
-                chunk->chunk_x * CHUNK_WIDTH + 0.5f,
-                0.5f,
-                chunk->chunk_z * CHUNK_DEPTH + 0.5f
-            );
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), coord);
-            shader.uniformMatrix("u_model", model);
-            mesh->draw();
-        }
+        glm::vec3 coord(
+            pos.x * CHUNK_WIDTH + 0.5f, 0.5f, pos.y * CHUNK_DEPTH + 0.5f
+        );
+
+        glm::vec3 min(
+            pos.x * CHUNK_WIDTH,
+            chunk->bottom,
+            chunk->chunk_z * CHUNK_DEPTH
+        );
+        glm::vec3 max(
+            chunk->chunk_x * CHUNK_WIDTH + CHUNK_WIDTH,
+            chunk->top,
+            chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH
+        );
+
+        if (!frustum.isBoxVisible(min, max)) continue;
+
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), coord);
+        shader.uniformMatrix("u_model", model);
+        found->second.mesh->draw();
     }
 }
 
