@@ -127,11 +127,9 @@ void Mesh<VertexStructure>::draw(unsigned int primitive, int iboIndex) const {
     if (!IBOs.empty()) {
         if (iboIndex < IBOs.size()) {
             glBindVertexArray(VAO);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBOs[
-                std::min(static_cast<size_t>(iboIndex), IBOs.size())
-            ].ibo);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBOs[iboIndex].ibo);
             glDrawElements(
-                primitive, IBOs.at(0).indexCount, GL_UNSIGNED_INT, nullptr
+                primitive, IBOs.at(iboIndex).indexCount, GL_UNSIGNED_INT, nullptr
             );
             glBindVertexArray(0);
         }

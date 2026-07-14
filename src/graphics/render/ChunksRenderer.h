@@ -76,7 +76,9 @@ public:
         bool important
     );
 
-    void drawChunksShadowsPass(const Camera& camera, ShaderProgram& shader);
+    void drawChunksShadowsPass(
+        const Camera& camera, ShaderProgram& shader, const Camera& playerCamera
+    );
     void drawChunks(const Camera& camera, ShaderProgram& shader);
 
     void drawSortedMeshes(const Camera& camera, ShaderProgram& shader);

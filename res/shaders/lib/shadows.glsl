@@ -34,7 +34,7 @@ float calc_shadow(
         }
         shadow /= 9.0;
     } else {
-        shadow = 0.5;
+        shadow = 0.0;
     }
     return shadow;
 }

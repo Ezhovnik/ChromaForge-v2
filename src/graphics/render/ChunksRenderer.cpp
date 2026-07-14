@@ -89,6 +89,7 @@ ChunksRenderer::ChunksRenderer(
     );
 
     LOG_INFO("Created {} workers", threadPool.getWorkersCount());
+    LOG_INFO("Memory consumption is {} B", renderer->getMemoryConsumption() * threadPool.getWorkersCount());
 }
 
 ChunksRenderer::~ChunksRenderer() = default;
@@ -181,7 +182,7 @@ const Mesh<ChunkVertex>* ChunksRenderer::retrieveChunk(
 }
 
 void ChunksRenderer::drawChunksShadowsPass(
-    const Camera& camera, ShaderProgram& shader
+    const Camera& camera, ShaderProgram& shader, const Camera& playerCamera
 ) {
     Frustum frustumCulling;
     frustumCulling.update(camera.getProjView());
@@ -189,6 +190,9 @@ void ChunksRenderer::drawChunksShadowsPass(
     const auto& atlas = assets.require<Atlas>("blocks");
 
     atlas.getTexture()->bind();
+
+    auto denseDistance = settings.graphics.denseRenderDistance.get();
+    auto denseDistance2 = denseDistance * denseDistance;
 
     for (const auto& chunk : chunks.getChunks()) {
         if (chunk == nullptr) continue;
@@ -201,7 +205,7 @@ void ChunksRenderer::drawChunksShadowsPass(
         );
 
         glm::vec3 min(
-            pos.x * CHUNK_WIDTH,
+            chunk->chunk_x * CHUNK_WIDTH,
             chunk->bottom,
             chunk->chunk_z * CHUNK_DEPTH
         );
@@ -215,7 +219,13 @@ void ChunksRenderer::drawChunksShadowsPass(
 
         glm::mat4 model = glm::translate(glm::mat4(1.0f), coord);
         shader.uniformMatrix("u_model", model);
-        found->second.mesh->draw();
+        found->second.mesh->draw(
+            GL_TRIANGLES, 
+            glm::distance2(
+                playerCamera.position * glm::vec3(1, 0, 1), 
+                (min + max) * 0.5f * glm::vec3(1, 0, 1)
+            ) < denseDistance2
+        );
     }
 }
 
@@ -250,6 +260,9 @@ void ChunksRenderer::drawChunks(
     visibleChunks = 0;
     shader.uniform1i("u_alphaClip", true);
 
+    auto denseDistance = settings.graphics.denseRenderDistance.get();
+    auto denseDistance2 = denseDistance * denseDistance;
+
     // TODO: minimize the number of draw calls
     for (int i = indices.size() - 1; i >= 0; --i) {
         auto& chunk = chunks.getChunks()[indices[i].index];
@@ -263,7 +276,13 @@ void ChunksRenderer::drawChunks(
             );
             glm::mat4 model = glm::translate(glm::mat4(1.0f), coord);
             shader.uniformMatrix("u_model", model);
-            mesh->draw();
+            mesh->draw(
+                GL_TRIANGLES,
+                glm::distance2(
+                    camera.position * glm::vec3(1, 0, 1),
+                    (coord + glm::vec3(CHUNK_WIDTH * 0.5f, 0.0f, CHUNK_DEPTH * 0.5f))
+                ) < denseDistance2
+            );
             visibleChunks++;
         }
     }

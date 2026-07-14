@@ -34,14 +34,17 @@ private:
 	const Content& content;
 	std::unique_ptr<ChunkVertex[]> vertexBuffer;
     std::unique_ptr<uint32_t[]> indexBuffer;
+    std::unique_ptr<uint32_t[]> denseIndexBuffer;
     size_t vertexCount;
 	size_t vertexOffset;
 	size_t indexCount;
+    size_t denseIndexCount;
 	size_t capacity;
 
     int voxelBufferPadding = 2;
 	bool overflow = false; ///< Флаг переполнения буфера
     bool cancelled = false;
+    bool densePass = false;
     bool denseRender = false;
 
 	const Chunk* chunk = nullptr;
@@ -217,7 +220,12 @@ private:
         if ((otherDrawGroup && (otherDrawGroup != variant.drawGroup)) || !blockVariant.rt.solid) {
             return true;
         }
-        if ((variant.culling == CullingMode::Disabled || (variant.culling == CullingMode::Optional && denseRender)) && vox.id == def.rt.id) {
+        if (densePass) {
+            return variant.culling == CullingMode::Optional;
+        } else if (variant.culling == CullingMode::Optional) {
+            return false;
+        }
+        if (variant.culling == CullingMode::Disabled && vox.id == def.rt.id) {
             return true;
         }
         return vox.id == BLOCK_AIR;
@@ -261,7 +269,7 @@ private:
         const glm::ivec3& up
     ) const;
 
-	void render(const voxel* voxels, int beginEnds[256][2]);
+	void render(const voxel* voxels, const int beginEnds[256][2]);
     SortingMeshData renderTranslucent(const voxel* voxels, int beginEnds[256][2]);
 public:
     /**
@@ -305,6 +313,8 @@ public:
      * @brief Возвращает буфер вокселей.
      */
 	VoxelsVolume* getVoxelsBuffer() const;
+
+    size_t getMemoryConsumption() const;
 
     bool isCancelled() const {
         return cancelled;

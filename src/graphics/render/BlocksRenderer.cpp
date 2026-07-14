@@ -23,6 +23,7 @@ BlocksRenderer::BlocksRenderer(
 ) : content(content),
 	vertexBuffer(std::make_unique<ChunkVertex[]>(capacity)),
     indexBuffer(std::make_unique<uint32_t[]>(capacity)),
+    denseIndexBuffer(std::make_unique<uint32_t[]>(capacity)),
     vertexCount(0),
 	vertexOffset(0),
 	indexCount(0),
@@ -488,9 +489,10 @@ glm::vec4 BlocksRenderer::pickSoftLight(
 }
 
 void BlocksRenderer::render(
-    const voxel* voxels, int beginEnds[256][2]
+    const voxel* voxels, const int beginEnds[256][2]
 ) {
     bool denseRender = this->denseRender;
+    bool densePass = this->densePass;
 	for (const auto drawGroup : *content.drawGroups) {
 		int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
@@ -502,15 +504,17 @@ void BlocksRenderer::render(
 			const auto& def = *blockDefsCache[id];
 			uint8_t variantId = def.getVariantIndex(state.userbits);
             const auto& variant = def.getVariant(variantId);
-            if (id == 0 || variant.drawGroup != drawGroup || state.segment || def.translucent) continue;
+            if (id == 0 || variant.drawGroup != drawGroup || state.segment) continue;
+            if (denseRender != (variant.culling == CullingMode::Optional)) continue;
+            if (def.translucent) continue;
             // Получаем текстурные регионы для всех шести граней
 			const UVRegion texfaces[6]{
-                cache.getRegion(id, variantId, 0, denseRender),
-                cache.getRegion(id, variantId, 1, denseRender),
-                cache.getRegion(id, variantId, 2, denseRender),
-                cache.getRegion(id, variantId, 3, denseRender),
-                cache.getRegion(id, variantId, 4, denseRender),
-                cache.getRegion(id, variantId, 5, denseRender)
+                cache.getRegion(id, variantId, 0, densePass),
+                cache.getRegion(id, variantId, 1, densePass),
+                cache.getRegion(id, variantId, 2, densePass),
+                cache.getRegion(id, variantId, 3, densePass),
+                cache.getRegion(id, variantId, 4, densePass),
+                cache.getRegion(id, variantId, 5, densePass)
             };
 
             // Вычисляем координаты x,y,z внутри чанка
@@ -530,6 +534,7 @@ void BlocksRenderer::render(
 					);
                     break;
                 } case BlockModelType::X: {
+                    if (!denseRender)
                     blockXSprite(
 						x, y, z,
 						glm::vec3(1.0f),
@@ -539,6 +544,7 @@ void BlocksRenderer::render(
 					);
                     break;
                 } case BlockModelType::AABB: {
+                    if (!denseRender)
                     blockAABB(
 						{x, y, z},
 						texfaces,
@@ -549,6 +555,7 @@ void BlocksRenderer::render(
 					);
                     break;
                 } case BlockModelType::Custom: {
+                    if (!denseRender)
                     blockCustomModel(
                         {x, y, z},
                         def,
@@ -574,7 +581,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 	bool aabbInit = false;
 	size_t totalSize = 0;
 
-    bool denseRender = this->denseRender;
+    bool densePass = this->densePass;
     for (const auto drawGroup : *content.drawGroups) {
         int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
@@ -591,12 +598,12 @@ SortingMeshData BlocksRenderer::renderTranslucent(
             if (!def.translucent) continue;
 
             const UVRegion texfaces[6] {
-                cache.getRegion(id, variantId, 0, denseRender),
-                cache.getRegion(id, variantId, 1, denseRender),
-                cache.getRegion(id, variantId, 2, denseRender),
-                cache.getRegion(id, variantId, 3, denseRender),
-                cache.getRegion(id, variantId, 4, denseRender),
-                cache.getRegion(id, variantId, 5, denseRender)
+                cache.getRegion(id, variantId, 0, densePass),
+                cache.getRegion(id, variantId, 1, densePass),
+                cache.getRegion(id, variantId, 2, densePass),
+                cache.getRegion(id, variantId, 3, densePass),
+                cache.getRegion(id, variantId, 4, densePass),
+                cache.getRegion(id, variantId, 5, densePass)
             };
             int x = i % CHUNK_WIDTH;
             int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);
@@ -708,21 +715,22 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 
 void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
 	this->chunk = chunk;
-	voxelsBuffer->setPosition(
-        chunk->chunk_x * CHUNK_WIDTH - voxelBufferPadding, 
-        0, 
+    voxelsBuffer->setPosition(
+        chunk->chunk_x * CHUNK_WIDTH - voxelBufferPadding,
+        0,
         chunk->chunk_z * CHUNK_DEPTH - voxelBufferPadding
     );
-	chunks->getVoxels(*voxelsBuffer, settings.graphics.backlight.get());
-	if (voxelsBuffer->pickBlockId(
-        	chunk->chunk_x * CHUNK_WIDTH, 0, chunk->chunk_z * CHUNK_DEPTH
-		) == BLOCK_VOID
-	) {
+    chunks->getVoxels(*voxelsBuffer, settings.graphics.backlight.get());
+
+    if (voxelsBuffer->pickBlockId(
+        chunk->chunk_x * CHUNK_WIDTH, 0, chunk->chunk_z * CHUNK_DEPTH
+    ) == BLOCK_VOID) {
         cancelled = true;
         return;
     }
-	const voxel* voxels = chunk->voxels;
-	int totalBegin = chunk->bottom * (CHUNK_WIDTH * CHUNK_DEPTH);
+    const voxel* voxels = chunk->voxels;
+
+    int totalBegin = chunk->bottom * (CHUNK_WIDTH * CHUNK_DEPTH);
     int totalEnd = chunk->top * (CHUNK_WIDTH * CHUNK_DEPTH);
 
     int beginEnds[256][2] {};
@@ -743,22 +751,45 @@ void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
     vertexCount = 0;
     vertexOffset = indexCount = 0;
 
+    denseRender = false;
+    densePass = false;
+
     sortingMesh = renderTranslucent(voxels, beginEnds);
 
     overflow = false;
     vertexCount = 0;
     vertexOffset = 0;
     indexCount = 0;
-    denseRender = settings.graphics.denseRender.get();
+    denseIndexCount = 0;
 
+    denseRender = false;
+    densePass = false;
+    render(voxels, beginEnds);
+
+    size_t endIndex = indexCount;
+
+    denseRender = true;
+    densePass = true;
+    render(voxels, beginEnds);
+
+    denseIndexCount = indexCount;
+    for (size_t i = 0; i < denseIndexCount; ++i) {
+        denseIndexBuffer[i] = indexBuffer[i];
+    }
+
+    indexCount = endIndex;
+    densePass = false;
     render(voxels, beginEnds);
 }
 
 ChunkMeshData BlocksRenderer::createMesh() {
-	return ChunkMeshData{
+	return ChunkMeshData {
         MeshData(
             util::Buffer(vertexBuffer.get(), vertexCount),
-            std::vector<util::Buffer<uint32_t>> {util::Buffer(indexBuffer.get(), indexCount)},
+            std::vector<util::Buffer<uint32_t>> {
+                util::Buffer(indexBuffer.get(), indexCount),
+                util::Buffer(denseIndexBuffer.get(), denseIndexCount),
+            },
             util::Buffer(
                 ChunkVertex::ATTRIBUTES, sizeof(ChunkVertex::ATTRIBUTES) / sizeof(VertexAttribute)
             )
@@ -771,10 +802,18 @@ ChunkMesh BlocksRenderer::render(const Chunk* chunk, const Chunks* chunks) {
     build(chunk, chunks);
     return ChunkMesh{std::make_unique<Mesh<ChunkVertex>>(
         vertexBuffer.get(), vertexCount, 
-        std::vector<IndexBufferData> {IndexBufferData {indexBuffer.get(), indexCount}}
+        std::vector<IndexBufferData> {
+            IndexBufferData {indexBuffer.get(), indexCount},
+            IndexBufferData {denseIndexBuffer.get(), denseIndexCount},
+        }
     ), std::move(sortingMesh)};
 }
 
 VoxelsVolume* BlocksRenderer::getVoxelsBuffer() const {
 	return voxelsBuffer.get();
+}
+
+size_t BlocksRenderer::getMemoryConsumption() const {
+    size_t volume = voxelsBuffer->getW() * voxelsBuffer->getH() * voxelsBuffer->getD();
+    return capacity * (sizeof(ChunkVertex) + sizeof(uint32_t) * 2) + volume * (sizeof(voxel) + sizeof(light_t));
 }
