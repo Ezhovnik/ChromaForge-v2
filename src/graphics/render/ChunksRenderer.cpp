@@ -91,8 +91,7 @@ ChunksRenderer::ChunksRenderer(
     LOG_INFO("Created {} workers", threadPool.getWorkersCount());
 }
 
-ChunksRenderer::~ChunksRenderer() {
-}
+ChunksRenderer::~ChunksRenderer() = default;
 
 const Mesh<ChunkVertex>* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk,

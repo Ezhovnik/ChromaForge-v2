@@ -42,6 +42,7 @@ private:
     int voxelBufferPadding = 2;
 	bool overflow = false; ///< Флаг переполнения буфера
     bool cancelled = false;
+    bool denseRender = false;
 
 	const Chunk* chunk = nullptr;
 	std::unique_ptr<VoxelsVolume> voxelsBuffer;
@@ -216,7 +217,7 @@ private:
         if ((otherDrawGroup && (otherDrawGroup != variant.drawGroup)) || !blockVariant.rt.solid) {
             return true;
         }
-        if ((variant.culling == CullingMode::Disabled || (variant.culling == CullingMode::Optional && settings.graphics.denseRender.get())) && vox.id == def.rt.id) {
+        if ((variant.culling == CullingMode::Disabled || (variant.culling == CullingMode::Optional && denseRender)) && vox.id == def.rt.id) {
             return true;
         }
         return vox.id == BLOCK_AIR;

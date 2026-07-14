@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <vector>
 
 #include <typedefs.h>
 #include <util/Buffer.h>
@@ -38,14 +39,14 @@ struct VertexAttribute {
 template<typename VertexStructure>
 struct MeshData {
     util::Buffer<VertexStructure> vertices;
-    util::Buffer<uint32_t> indices;
+    std::vector<util::Buffer<uint32_t>> indices;
     util::Buffer<VertexAttribute> attrs;
 
     MeshData() = default;
 
     MeshData(
         util::Buffer<VertexStructure> vertices,
-        util::Buffer<uint32_t> indices,
+        std::vector<util::Buffer<uint32_t>> indices,
         util::Buffer<VertexAttribute> attrs
     ) : vertices(std::move(vertices)),
         indices(std::move(indices)),

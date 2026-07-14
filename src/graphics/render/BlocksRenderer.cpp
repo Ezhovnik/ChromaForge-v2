@@ -746,6 +746,7 @@ void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
     vertexCount = 0;
     vertexOffset = 0;
     indexCount = 0;
+    denseRender = settings.graphics.denseRender.get();
 
     render(voxels, beginEnds);
 }
@@ -754,7 +755,7 @@ ChunkMeshData BlocksRenderer::createMesh() {
 	return ChunkMeshData{
         MeshData(
             util::Buffer(vertexBuffer.get(), vertexCount),
-            util::Buffer(indexBuffer.get(), indexCount),
+            std::vector<util::Buffer<uint32_t>> {util::Buffer(indexBuffer.get(), indexCount)},
             util::Buffer(
                 ChunkVertex::ATTRIBUTES, sizeof(ChunkVertex::ATTRIBUTES) / sizeof(VertexAttribute)
             )
@@ -766,8 +767,8 @@ ChunkMeshData BlocksRenderer::createMesh() {
 ChunkMesh BlocksRenderer::render(const Chunk* chunk, const Chunks* chunks) {
     build(chunk, chunks);
     return ChunkMesh{std::make_unique<Mesh<ChunkVertex>>(
-        vertexBuffer.get(), vertexCount,
-        indexBuffer.get(), indexCount
+        vertexBuffer.get(), vertexCount, 
+        std::vector<IndexBufferData> {IndexBufferData {indexBuffer.get(), indexCount}}
     ), std::move(sortingMesh)};
 }
 

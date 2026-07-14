@@ -11,27 +11,33 @@ inline constexpr size_t calc_size(const VertexAttribute attrs[]) {
     return vertexSize;
 }
 
+template <typename VertexStructure>
+inline std::vector<IndexBufferData> convert_to_ibd(const MeshData<VertexStructure>& data) {
+    std::vector<IndexBufferData> indices;
+    for (const auto& buffer : data.indices) {
+        indices.push_back(IndexBufferData {buffer.data(), buffer.size()});
+    }
+    return indices;
+}
+
 template<typename VertexStructure>
 Mesh<VertexStructure>::Mesh(
     const MeshData<VertexStructure>& data
 ) : Mesh(
         data.vertices.data(),
         data.vertices.size(),
-        data.indices.data(),
-        data.indices.size()
+        convert_to_ibd<VertexStructure>(data)
     ) {}
 
 template<typename VertexStructure>
 Mesh<VertexStructure>::Mesh(
     const VertexStructure* vertexBuffer,
     size_t vertices,
-    const uint32_t* indexBuffer,
-    size_t indices
+    std::vector<IndexBufferData> indices
 ) : VAO(0),
     VBO(0),
-    IBO(0),
-    vertexCount(0),
-    indexCount(0)
+    IBOs(),
+    vertexCount(0)
 {
     static_assert(
         calc_size(VertexStructure::ATTRIBUTES) == sizeof(VertexStructure)
@@ -43,8 +49,9 @@ Mesh<VertexStructure>::Mesh(
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
-    reload(vertexBuffer, vertices, indexBuffer, indices);
+    reload(vertexBuffer, vertices, std::move(indices));
 
+    glBindVertexArray(VAO);
     int offset = 0;
     for (int i = 0; attrs[i].count; ++i) {
         const VertexAttribute& attr = attrs[i];
@@ -68,18 +75,18 @@ Mesh<VertexStructure>::~Mesh(){
     MeshStats::meshesCount--;
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    if (IBO != 0) glDeleteBuffers(1, &IBO);
+    for (int i = IBOs.size() - 1; i >= 0; --i) {
+        glDeleteBuffers(1, &IBOs[i].ibo);
+    }
 }
 
 template<typename VertexStructure>
 void Mesh<VertexStructure>::reload(
     const VertexStructure *vertexBuffer,
     size_t vertexCount,
-    const uint32_t *indexBuffer,
-    size_t indexCount
+    const std::vector<IndexBufferData>& indices
 ) {
     this->vertexCount = vertexCount;
-    this->indexCount = indexCount;
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     if (vertexBuffer != nullptr && vertexCount != 0) {
@@ -93,31 +100,46 @@ void Mesh<VertexStructure>::reload(
         glBufferData(GL_ARRAY_BUFFER, 0, {}, GL_STREAM_DRAW);
     }
 
-    if (indexBuffer != nullptr && indexCount != 0) {
-        if (IBO == 0) glGenBuffers(1, &IBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    for (int i = indices.size(); i < IBOs.size(); ++i) {
+        glDeleteBuffers(1, &IBOs[i].ibo);
+    }
+    IBOs.clear();
+
+    for (int i = 0; i < indices.size(); ++i) {
+        const auto& indexBuffer = indices[i];
+        IBOs.push_back(IndexBuffer {0, 0});
+        glGenBuffers(1, &IBOs[i].ibo);
+        IBOs[i].indexCount = indexBuffer.indicesCount;
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBOs[i].ibo);
         glBufferData(
             GL_ELEMENT_ARRAY_BUFFER,
-            sizeof(uint32_t) * indexCount,
-            indexBuffer,
+            sizeof(uint32_t) * indexBuffer.indicesCount,
+            indexBuffer.indices,
             GL_STATIC_DRAW
         );
-    } else if (IBO != 0) {
-        glDeleteBuffers(1, &IBO);
     }
-
+    glBindVertexArray(0);
 }
 
 template<typename VertexStructure>
-void Mesh<VertexStructure>::draw(unsigned int primitive) const {
+void Mesh<VertexStructure>::draw(unsigned int primitive, int iboIndex) const {
     MeshStats::drawCalls++;
-    glBindVertexArray(VAO);
-    if (IBO != 0) {
-        glDrawElements(primitive, indexCount, GL_UNSIGNED_INT, nullptr);
-    } else {
+    if (!IBOs.empty()) {
+        if (iboIndex < IBOs.size()) {
+            glBindVertexArray(VAO);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBOs[
+                std::min(static_cast<size_t>(iboIndex), IBOs.size())
+            ].ibo);
+            glDrawElements(
+                primitive, IBOs.at(0).indexCount, GL_UNSIGNED_INT, nullptr
+            );
+            glBindVertexArray(0);
+        }
+    } else if (vertexCount > 0) {
+        glBindVertexArray(VAO);
         glDrawArrays(primitive, 0, vertexCount);
+        glBindVertexArray(0);
     }
-    glBindVertexArray(0);
 }
 
 template<typename VertexStructure>
