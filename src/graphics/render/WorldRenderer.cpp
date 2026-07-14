@@ -253,9 +253,6 @@ void WorldRenderer::renderLevel(
 
     if (hudVisible) renderLines(camera, linesShader, ctx);
 
-    shader.use();
-    chunks->drawSortedMeshes(camera, shader);
-
     if (!pause) {
         scripting::on_frontend_render();
     }
@@ -449,6 +446,7 @@ void WorldRenderer::draw(
 
     auto& defaultShader = assets.require<ShaderProgram>("default");
     auto& entityShader = assets.require<ShaderProgram>("entity");
+    auto& translucentShader = assets.require<ShaderProgram>("translucent");
     auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
     const auto& settings = engine.getSettings();
 
@@ -481,6 +479,7 @@ void WorldRenderer::draw(
         defaultShader.recompile();
         entityShader.recompile();
         deferredShader.recompile();
+        translucentShader.recompile();
         prevCTShaderSettings = currentSettings;
     }
 
@@ -560,6 +559,16 @@ void WorldRenderer::draw(
 
         skybox->draw(ctx, camera, assets, worldInfo.daytime, clouds);
 
+        {
+            auto sctx = ctx.sub();
+            sctx.setCullFace(true);
+            skybox->bind();
+            translucentShader.use();
+            setupWorldShader(translucentShader, camera, settings, fogFactor);
+            chunks->drawSortedMeshes(camera, translucentShader);
+            skybox->unbind();
+        }
+
         entityShader.use();
         setupWorldShader(entityShader, camera, settings, fogFactor);
 
@@ -580,7 +589,6 @@ void WorldRenderer::draw(
     }
     postProcessing.render(pctx, assets, timer, camera);
 
-    skybox->unbind();
     if (player.currentCamera == player.fpCamera) {
         DrawContext ctx = pctx.sub();
         ctx.setDepthTest(true);
