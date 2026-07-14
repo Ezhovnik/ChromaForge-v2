@@ -49,7 +49,7 @@ GUI::GUI(Engine& engine)
     tooltip = guiutil::create(
         *this,
         "<container color='#000000A0' interactive='false' z-index='999'>"
-            "<label id='tooltip.label' pos='2' autoresize='true' multiline='true' text-wrap='false'></label>"
+            "<label id='tooltip.label' markup='md' pos='2' autoresize='true' multiline='true' text-wrap='false'></label>"
         "</container>"
     );
     store("tooltip", tooltip);

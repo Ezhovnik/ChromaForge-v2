@@ -28,6 +28,7 @@ template<> void ContentUnitLoader<Item>::loadUnit(
         parentDef->cloneTo(def);
     }
     root.at("caption").get(def.caption);
+    root.at("description").get(def.description);
 
     std::string iconTypeStr = "";
     root.at("icon-type").get(iconTypeStr);

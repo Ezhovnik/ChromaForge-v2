@@ -34,6 +34,8 @@ struct Item {
 
     std::string caption;
 
+    std::string description;
+
     dv::value properties = nullptr;
 
     itemcount_t stackSize = 64;
