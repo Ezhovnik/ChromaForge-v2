@@ -33,8 +33,9 @@ class GuidesRenderer;
 class BlockWrapsRenderer;
 class PrecipitationRenderer;
 class HandsRenderer;
+class LinesRenderer;
 class NamedSkeletons;
-class ShadowMap;
+class Shadows;
 class GBuffer;
 
 struct CompileTimeShaderSettings {
@@ -54,15 +55,11 @@ private:
     std::unique_ptr<Batch3D> batch3d;
     std::unique_ptr<ModelBatch> modelBatch;
     std::unique_ptr<GuidesRenderer> guides;
-    std::unique_ptr<ChunksRenderer> chunks;
+    std::unique_ptr<ChunksRenderer> chunksRenderer;
 	std::unique_ptr<HandsRenderer> hands;
     std::unique_ptr<Skybox> skybox;
-	std::unique_ptr<ShadowMap> shadowMap;
-	std::unique_ptr<ShadowMap> wideShadowMap;
+	std::unique_ptr<Shadows> shadowMapping;
     Weather weather {};
-
-	Camera shadowCamera;
-	Camera wideShadowCamera;
 
 	float timer = 0.0f;
 
@@ -70,7 +67,6 @@ private:
 	bool lightsDebug = false;
 
 	bool gbufferPipeline = false;
-    bool shadows = false;
 
 	CompileTimeShaderSettings prevCTShaderSettings {};
 
@@ -92,12 +88,13 @@ private:
         float fogFactor
     );
 
-	void generateShadowsMap(
-        const Camera& camera,
-        const DrawContext& pctx,
-        ShadowMap& shadowMap,
-        Camera& shadowCamera,
-        float scale
+	void renderOpaque(
+        const DrawContext& context, 
+        const Camera& camera, 
+        const EngineSettings& settings,
+        float delta,
+        bool pause,
+        bool hudVisible
     );
 public:
 	std::unique_ptr<ParticlesRenderer> particles;
@@ -105,11 +102,12 @@ public:
     std::unique_ptr<BlockWrapsRenderer> blockWraps;
     std::unique_ptr<PrecipitationRenderer> precipitation;
 	std::unique_ptr<NamedSkeletons> skeletons;
+	std::unique_ptr<LinesRenderer> lines;
 
 	WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
 	~WorldRenderer();
 
-	void draw(
+	void renderFrame(
 		const DrawContext& context,
 		Camera& camera,
 		bool hudVisible,
@@ -117,15 +115,6 @@ public:
 		float deltaTime,
 		PostProcessing& postProcessing
 	);
-
-	void renderLevel(
-        const DrawContext& context,
-        const Camera& camera,
-        const EngineSettings& settings,
-		float deltaTime,
-		bool pause,
-		bool hudVisible
-    );
 
 	void clear();
 

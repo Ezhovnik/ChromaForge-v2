@@ -31,6 +31,7 @@ gfx.text3d.new = function(pos, text, preset, extension)
     return setmetatable({id=id}, Text3D)
 end
 
+gfx.skeletons = __skeleton
 gfx.skeletons.get = function(name)
     if gfx.skeletons.exists(name) then
         return setmetatable({name=name}, Skeleton)

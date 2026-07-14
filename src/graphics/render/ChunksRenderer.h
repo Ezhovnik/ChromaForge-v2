@@ -76,7 +76,7 @@ public:
         bool important
     );
 
-    void drawChunksShadowsPass(
+    void drawShadowsPass(
         const Camera& camera, ShaderProgram& shader, const Camera& playerCamera
     );
     void drawChunks(const Camera& camera, ShaderProgram& shader);
