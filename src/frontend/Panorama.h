@@ -8,24 +8,29 @@
 class Assets;
 class Cubemap;
 class Camera;
-class Mesh;
+template<typename T> class Mesh;
+struct ScreenQuadVertex;
 class ShaderProgram;
 
 class Panorama {
 public:
-    Panorama(Assets& assets);
+    explicit Panorama(Assets& assets);
     ~Panorama();
 
-    bool isValid() const;
+    bool isValid() const {
+        return cubemap != nullptr;
+    }
 
     void update(float deltaTime);
     void draw(ShaderProgram& shader, uint width, uint height) const;
+
 private:
     static std::unique_ptr<Cubemap> loadCubemap(Assets& assets);
-    static std::unique_ptr<Mesh> createScreenQuad();
+    static std::unique_ptr<Mesh<ScreenQuadVertex>> createScreenQuad();
 
     std::unique_ptr<Cubemap> cubemap;
     std::unique_ptr<Camera> camera;
-    std::unique_ptr<Mesh> mesh;
+    std::unique_ptr<Mesh<ScreenQuadVertex>> mesh;
     float rotationAngle = 0.0f;
+    float rotationSpeed = 0.05f;
 };

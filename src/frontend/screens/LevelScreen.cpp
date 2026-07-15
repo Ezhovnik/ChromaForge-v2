@@ -212,17 +212,20 @@ void LevelScreen::saveWorldPanorama() {
         cam.front = face.dir;
         cam.up = face.up;
         cam.perspective = true;
-        cam.aspect = 1.0f;
+        cam.setAspectRatio(1.0f);
 
-        Viewport viewport(panoramaSize, panoramaSize);
-        DrawContext parentCtx(nullptr, {static_cast<uint>(panoramaSize), static_cast<uint>(panoramaSize)}, batch.get());
-        DrawContext ctx(&parentCtx, viewport, batch.get());
+        DrawContext parent_ctx(nullptr, engine.getWindow(), batch.get());
 
-        worldRenderer->draw(ctx, cam, false, true, 0.0f, postProcessing.get());
+        DrawContext ctx(&parent_ctx, engine.getWindow(), batch.get());
+        ctx.setViewport(
+            {static_cast<uint>(panoramaSize), static_cast<uint>(panoramaSize)}
+        );
+
+        renderer->renderFrame(ctx, cam, false, true, 0.0f, *postProcessing);
         auto image = postProcessing->toImage();
         image->flipY();
 
-        imageio::write(panorama_folder / std::to_string(face.index) / ".png", image.get());
+        imageio::write(panorama_folder / (std::to_string(face.index) + ".png"), image.get());
     }
 
     LOG_INFO("Panorama saved to {}", panorama_folder.string());
@@ -243,7 +246,7 @@ void LevelScreen::updateHotkeys() {
             renderer->toggleLightsDebug();
         }
     }
-    if (Events::justPressed(keycode::F12)) saveWorldPanorama();
+    if (input.isPressed(Keycode::F12)) saveWorldPanorama();
 }
 
 void LevelScreen::updateAudio() {
