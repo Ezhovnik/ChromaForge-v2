@@ -112,11 +112,41 @@ public:
     }
 };
 
-std::unique_ptr<Process> scripting::start_coroutine(
+class LuaProjectScript : public scripting::IProjectScript {
+public:
+    LuaProjectScript(lua::State* L, scriptenv env) : L(L), env(std::move(env)) {}
+
+    void onScreenChange(const std::string& name) override {
+        if (!lua::pushenv(L, *env)) return;
+
+        if (!lua::getfield(L, "on_screen_changed")) {
+            lua::pop(L);
+            return;
+        }
+        lua::pushlstring(L, name);
+        lua::call_nothrow(L, 1, 0);
+        lua::pop(L);
+    }
+private:
+    lua::State* L;
+    scriptenv env;
+};
+
+std::unique_ptr<scripting::IProjectScript> scripting::load_project_script(
     const io::path& script
 ) {
     auto L = lua::get_main_state();
-    if (lua::getglobal(L, "__chroma_start_coroutine")) {
+    auto source = io::read_string(script);
+    auto env = create_environment(nullptr);
+    lua::loadbuffer(L, *env, source, script.name());
+    lua::call(L, 0);
+    return std::make_unique<LuaProjectScript>(L, std::move(env));
+}
+
+std::unique_ptr<Process> scripting::start_coroutine(const io::path& script) {
+    auto L = lua::get_main_state();
+    auto method = "__chroma_start_coroutine";
+    if (lua::getglobal(L, method)) {
         auto source = io::read_string(script);
         lua::loadbuffer(L, 0, source, script.name());
         if (lua::call(L, 1)) {

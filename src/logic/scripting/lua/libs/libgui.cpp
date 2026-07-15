@@ -64,9 +64,12 @@ static int l_menu_reset(lua::State* L) {
 
 static int l_container_add(lua::State* L) {
     auto docnode = get_document_node(L);
+    if (docnode.document == nullptr) {
+        throw std::runtime_error("Target document not found");
+    }
     auto node = dynamic_cast<gui::Container*>(docnode.node.get());
     if (node == nullptr) {
-        return 0;
+        throw std::runtime_error("Target container not found");
     }
     auto xmlsrc = lua::require_string(L, 2);
     try {
@@ -84,7 +87,7 @@ static int l_container_add(lua::State* L) {
         gui::UINode::getIndices(subnode, docnode.document->getMapWriteable());
         node->add(std::move(subnode));
     } catch (const std::exception& err) {
-        throw std::runtime_error(err.what());
+        throw std::runtime_error("container:add(...): " + std::string(err.what()));
     }
     return 0;
 }

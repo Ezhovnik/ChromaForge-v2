@@ -50,6 +50,7 @@
 #include <content/ContentControl.h>
 #include <devtools/Editor.h>
 #include <devtools/Project.h>
+#include <graphics/ui/elements/Container.h>
 
 static std::unique_ptr<ImageData> load_icon() {
     try {
@@ -59,6 +60,17 @@ static std::unique_ptr<ImageData> load_icon() {
         }
     } catch (const std::exception& err) {
         LOG_ERROR("Could not load window icon: {}", err.what());
+    }
+    return nullptr;
+}
+
+static std::unique_ptr<scripting::IProjectScript> load_project_script() {
+    io::path scriptFile = "project:project_script.lua";
+    if (io::exists(scriptFile)) {
+        LOG_INFO("Starting project script");
+        return scripting::load_project_script(scriptFile);
+    } else {
+        LOG_WARN("Project script does not exists");
     }
     return nullptr;
 }
@@ -178,12 +190,15 @@ void Engine::initialize(CoreParameters coreParameters) {
         langs::setup(lang, paths.resPaths.collectRoots());
     }, true));
 
+    projectScript = load_project_script();
+
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
 }
 
 void Engine::close() {
     LOG_INFO("Shutting down");
+    projectScript.reset();
     saveSettings();
     if (screen) {
         screen->onEngineShutdown();
@@ -326,6 +341,11 @@ void Engine::setScreen(std::shared_ptr<Screen> screen) {
     audio::reset_channel(audio::get_channel_index("regular"));
     audio::reset_channel(audio::get_channel_index("ambient"));
 	this->screen = std::move(screen);
+
+    if (this->screen) this->screen->onOpen();
+    if (projectScript && this->screen) {
+        projectScript->onScreenChange(this->screen->getName());
+    }
 }
 
 std::shared_ptr<Screen> Engine::getScreen() {

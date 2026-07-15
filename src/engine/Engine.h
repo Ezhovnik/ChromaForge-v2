@@ -38,6 +38,10 @@ namespace devtools {
     class Editor;
 }
 
+namespace scripting {
+    class IProjectScript;
+}
+
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
 class initialize_error : public std::runtime_error {
 public:
@@ -76,6 +80,7 @@ private:
 
     std::unique_ptr<gui::GUI> gui;
     std::unique_ptr<devtools::Editor> editor;
+    std::unique_ptr<scripting::IProjectScript> projectScript;
 
     PostRunnables postRunnables;
 
@@ -146,6 +151,10 @@ public:
 
     const Project& getProject() {
         return *project;
+    }
+
+    scripting::IProjectScript* getProjectScript() {
+        return projectScript.get();
     }
 
     bool isHeadless() const;
