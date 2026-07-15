@@ -15,6 +15,7 @@
 #include <window/Camera.h>
 #include <data/dv_util.h>
 #include <voxels/Chunk.h>
+#include <voxels/Pathfinding.h>
 
 inline constexpr float GRAVITY = -22.6f;
 
@@ -28,7 +29,8 @@ Level::Level(
 	physics(std::make_unique<PhysicsSolver>(glm::vec3(0, GRAVITY, 0))),
     events(std::make_unique<LevelEvents>()),
     entities(std::make_unique<Entities>(*this)),
-    players(std::make_unique<Players>(*this))
+    players(std::make_unique<Players>(*this)),
+    pathfinding(std::make_unique<voxels::Pathfinding>(*this))
 {
     const auto& worldInfo = world->getInfo();
     auto& cameraIndices = content.getIndices(ResourceType::Camera);

@@ -142,7 +142,7 @@ static int l_set_enabled(lua::State* L) {
 }
 
 const luaL_Reg inputlib [] = {
-    {"Keycode", lua::wrap<l_keycode>},
+    {"keycode", lua::wrap<l_keycode>},
     {"Mousecode", lua::wrap<l_mousecode>},
     {"add_callback", lua::wrap<l_add_callback>},
     {"get_mouse_pos", lua::wrap<l_get_mouse_pos>},

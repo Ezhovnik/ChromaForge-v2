@@ -19,6 +19,10 @@ class Entities;
 class Players;
 class Camera;
 
+namespace voxels {
+    class Pathfinding;
+}
+
 /**
  * @brief Основной класс уровня, объединяющий мир, игрока, чанки, физику и освещение.
  *
@@ -30,13 +34,14 @@ class Level {
 private:
 	std::unique_ptr<World> world;
 public:
-     const Content& content;
+    const Content& content;
 	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
-     std::unique_ptr<GlobalChunks> chunks; ///< Хранилище чанков
-     std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
-     std::unique_ptr<Entities> entities;
-     std::unique_ptr<Players> players;
-     std::vector<std::shared_ptr<Camera>> cameras;
+    std::unique_ptr<GlobalChunks> chunks; ///< Хранилище чанков
+    std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
+    std::unique_ptr<Entities> entities;
+    std::unique_ptr<Players> players;
+    std::unique_ptr<voxels::Pathfinding> pathfinding;
+    std::vector<std::shared_ptr<Camera>> cameras;
 	std::unique_ptr<Inventories> inventories; ///< Менеджер инвентарей (хранит все инвентари уровня)
 
 	/**
@@ -46,10 +51,10 @@ public:
      * @param settings Ссылка на настройки.
      */
 	Level(
-          std::unique_ptr<World> world, 
-          const Content& content, 
-          EngineSettings& settings
-     );
+        std::unique_ptr<World> world, 
+        const Content& content, 
+        EngineSettings& settings
+    );
 	~Level();
 
 	/**
@@ -57,9 +62,9 @@ public:
      * @return Указатель на World (принадлежит Level).
      */
 	World* getWorld();
-     const World* getWorld() const;
+    const World* getWorld() const;
 
-     void onSave();
+    void onSave();
 
-     std::shared_ptr<Camera> getCamera(const std::string& name);
+    std::shared_ptr<Camera> getCamera(const std::string& name);
 };

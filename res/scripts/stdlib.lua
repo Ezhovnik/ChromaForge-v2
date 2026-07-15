@@ -319,6 +319,24 @@ local bytearray = require "builtin:internal/bytearray"
 Bytearray = bytearray.FFIBytearray
 Bytearray_as_string = bytearray.FFIBytearray_as_string
 Bytearray_construct = function(...) return Bytearray(...) end
+
+file.open = require "builtin:internal/stream_providers/file"
+file.open_named_pipe = require "builtin:internal/stream_providers/named_pipe"
+
+if ffi.os == "Windows" then
+    ffi.cdef[[
+    unsigned long GetCurrentProcessId();
+    ]]
+    
+    os.pid = ffi.C.GetCurrentProcessId()
+else
+    ffi.cdef[[
+    int getpid(void);
+    ]]
+
+    os.pid = ffi.C.getpid()
+end
+
 ffi = nil
 
 math.randomseed(time.uptime() * 1536227939)
@@ -474,6 +492,7 @@ function __chroma_on_world_quit()
     _rules.clear()
     gui_util:__reset_local()
     stdcomp.__reset()
+    file.__close_all_descriptors()
 end
 
 local __chroma_coroutines = {}
