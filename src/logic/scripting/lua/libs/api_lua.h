@@ -41,6 +41,7 @@ extern const luaL_Reg weatherlib[];
 extern const luaL_Reg yamllib[];
 extern const luaL_Reg posteffectslib[];
 extern const luaL_Reg assetslib[];
+extern const luaL_Reg pathfindinglib[];
 
 extern const luaL_Reg skeletonlib [];
 extern const luaL_Reg rigidbodylib [];

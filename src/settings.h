@@ -47,6 +47,10 @@ struct GraphicsSettings {
 	IntegerSetting denseRenderDistance {56, 0, 10'000};
 };
 
+struct PathfindingSettings {
+    IntegerSetting stepsPerAsyncAgent {256, 1, 2048};
+};
+
 struct DebugSettings {
     BoolSetting generatorTestMode {false};
 	BoolSetting doWriteLights {true};
@@ -80,4 +84,5 @@ struct EngineSettings {
     DebugSettings debug;
 	UISettings ui;
 	NetworkSettings network;
+	PathfindingSettings pathfinding;
 };

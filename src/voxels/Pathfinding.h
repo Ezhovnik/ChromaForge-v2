@@ -2,10 +2,18 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
+#include <unordered_set>
+#include <queue>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
 class Level;
+class GlobalChunks;
 
 namespace voxels {
     struct RouteNode {
@@ -17,32 +25,58 @@ namespace voxels {
         std::vector<RouteNode> nodes;
     };
 
-    struct Map {
-        int width;
-        int height;
-        std::unique_ptr<uint8_t[]> map;
+    struct Node {
+        glm::ivec3 pos;
+        glm::ivec3 parent;
+        float gScore;
+        float fScore;
+    };
 
-        Map(
-            int width, int height
-        ) : width(width),
-            height(height),
-            map(std::make_unique<uint8_t[]>(width * height)) {}
-
-        uint8_t& operator[](int i) {
-            return map[i];
+    struct NodeLess {
+        bool operator()(const Node& l, const Node& r) const {
+            return l.fScore > r.fScore;
         }
+    };
 
-        const uint8_t& operator[](int i) const {
-            return map[i];
-        }
+    struct State {
+        std::priority_queue<Node, std::vector<Node>, NodeLess> queue;
+        std::unordered_set<glm::ivec3> blocked;
+        std::unordered_map<glm::ivec3, Node> parents;
+        glm::ivec3 nearest;
+        float minHScore;
+        bool finished = true;
+    };
+
+    struct Agent {
+        bool enabled = false;
+        bool mayBeIncomplete = true;
+        int height = 2;
+        int maxVisitedBlocks = 1e3;
+        glm::ivec3 start;
+        glm::ivec3 target;
+        Route route;
+        State state {};
     };
 
     class Pathfinding {
     public:
         Pathfinding(const Level& level);
 
-        Route perform(const glm::ivec3& start, const glm::ivec3& end);
+        int createAgent();
+
+        void performAllAsync(int stepsPerAgent);
+
+        Route perform(Agent& agent, int maxVisited = -1);
+
+        Agent* getAgent(int id);
+
+        const std::unordered_map<int, Agent>& getAgents() const;
     private:
         const Level& level;
+        const GlobalChunks& chunks;
+        std::unordered_map<int, Agent> agents;
+        int nextAgent = 1;
+
+        int getSurfaceAt(const glm::ivec3& pos, int maxDelta);
     };
 }

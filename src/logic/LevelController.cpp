@@ -17,6 +17,7 @@
 #include <voxels/Chunks.h>
 #include <lighting/Lighting.h>
 #include <world/LevelEvents.h>
+#include <voxels/Pathfinding.h>
 
 LevelController::LevelController(
     Engine* engine,
@@ -68,6 +69,9 @@ LevelController::LevelController(
 }
 
 void LevelController::update(float delta, bool pause) {
+    level->pathfinding->performAllAsync(
+        settings.pathfinding.stepsPerAsyncAgent.get()
+    );
     for (const auto& [_, player] : *level->players) {
         if (player->isSuspended()) continue;
         player->rotationInterpolation.updateTimer(delta);

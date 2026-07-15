@@ -48,7 +48,7 @@
 #include <graphics/core/Font.h>
 #include <graphics/render/TextNote.h>
 #include <graphics/render/TextsRenderer.h>
-#include <graphics/render/GuidesRenderer.h>
+#include <graphics/render/DebugLinesRenderer.h>
 #include <graphics/render/BlockWrapsRenderer.h>
 #include <frontend/ContentGfxCache.h>
 #include <graphics/render/PrecipitationRenderer.h>
@@ -60,6 +60,7 @@
 #include <graphics/render/HandsRenderer.h>
 #include <graphics/render/NamedSkeletons.h>
 #include <graphics/render/LinesRenderer.h>
+#include <voxels/Pathfinding.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -90,7 +91,6 @@ WorldRenderer::WorldRenderer(
             engine.getSettings()
         )
     ),
-    guides(std::make_unique<GuidesRenderer>()),
     chunksRenderer(
         std::make_unique<ChunksRenderer>(
             &level,
@@ -154,6 +154,8 @@ WorldRenderer::WorldRenderer(
     lines = std::make_unique<LinesRenderer>();
 
     shadowMapping = std::make_unique<Shadows>(level);
+
+    debugLines = std::make_unique<DebugLinesRenderer>(level);
 }
 
 WorldRenderer::~WorldRenderer() = default;
@@ -317,6 +319,9 @@ void WorldRenderer::renderFrame(
     PostProcessing& postProcessing
 ) {
     // TODO: Refactor whole render engine
+
+    auto projView = camera.getProjView();
+
     float deltaTime = uiDelta * !pause;
     timer += deltaTime;
     weather.update(deltaTime);
@@ -375,7 +380,6 @@ void WorldRenderer::renderFrame(
         chunksRenderer->drawShadowsPass(shadowCamera, shader, camera);
     });
 
-    auto& linesShader = assets.require<ShaderProgram>("lines");
     {
         DrawContext wctx = pctx.sub();
         postProcessing.use(wctx, gbufferPipeline);
@@ -385,13 +389,6 @@ void WorldRenderer::renderFrame(
             ctx.setDepthTest(true);
             ctx.setCullFace(true);
             renderOpaque(ctx, camera, settings, uiDelta, pause, hudVisible);
-            if (hudVisible) {
-                if (debug) {
-                    guides->renderDebugLines(
-                        ctx, camera, *lineBatch, linesShader, drawChunkBorders
-                    );
-                }
-            }
         }
         texts->render(pctx, camera, settings, hudVisible, true);
     }
@@ -414,8 +411,14 @@ void WorldRenderer::renderFrame(
 
         skybox->draw(ctx, camera, assets, worldInfo.daytime, clouds);
 
+        auto& linesShader = assets.require<ShaderProgram>("lines");
         linesShader.use();
-        linesShader.uniformMatrix("u_projview", camera.getProjView());
+        if (debug && hudVisible) {
+            debugLines->render(
+                ctx, camera, *lines, *lineBatch, linesShader, drawChunkBorders
+            );
+        }
+        linesShader.uniformMatrix("u_projview", projView);
         lines->draw(*lineBatch);
         lineBatch->flush();
 
@@ -459,7 +462,7 @@ void WorldRenderer::renderFrame(
         hudcam.setFov(0.9f);
         hudcam.position = {};
 
-        hands->renderHands(camera, deltaTime);
+        if (!player.isNoclip()) hands->renderHands(camera, deltaTime);
 
         display::clearDepth();
         setupWorldShader(entityShader, hudcam, engine.getSettings(), 0.0f);

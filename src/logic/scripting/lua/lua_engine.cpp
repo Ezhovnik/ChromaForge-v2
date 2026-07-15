@@ -70,6 +70,7 @@ static void create_libs(State* L, StateType stateType) {
         openlib(L, "input", inputlib);
         openlib(L, "inventory", inventorylib);
         openlib(L, "network", networklib);
+        openlib(L, "pathfinding", pathfindinglib);
         openlib(L, "player", playerlib);
         openlib(L, "time", timelib);
         openlib(L, "world", worldlib);
