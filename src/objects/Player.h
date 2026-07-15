@@ -82,6 +82,9 @@ private:
 
     entityid_t selectedEid = 0;
 
+    void doMove(const glm::vec3& dir, float speed, float delta);
+    void doJump();
+
     glm::vec3 rotation {}; ///< Углы поворота камеры
 public:
     util::VecInterpolation<3, float, true> rotationInterpolation {true};

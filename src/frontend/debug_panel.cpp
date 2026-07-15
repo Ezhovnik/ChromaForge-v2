@@ -32,6 +32,7 @@
 #include <voxels/GlobalChunks.h>
 #include <objects/Players.h>
 #include <network/Network.h>
+#include <objects/Entt_Entity.h>
 
 static std::shared_ptr<gui::Label> create_label(gui::GUI& gui, wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(gui, L"-");

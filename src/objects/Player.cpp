@@ -17,6 +17,7 @@
 #include <objects/rigging.h>
 #include <data/dv_util.h>
 #include <debug/Logger.h>
+#include <objects/Entt_Entity.h>
 
 namespace PlayerConsts {
     constexpr float CROUCH_SPEED_MUL = 0.35f; ///< Множитель скорости при приседании
@@ -140,7 +141,7 @@ void Player::updateInput(PlayerInput& input, float delta) {
 	// Если есть движение, нормализуем и придаём импульс
 	if (length(dir) > 0.0f) {
 		dir = normalize(dir);
-		hitbox->velocity += dir * speed * delta * 9.0f;
+		doMove(dir, speed, delta);
 	}
 
     if (flight) {
@@ -150,10 +151,22 @@ void Player::updateInput(PlayerInput& input, float delta) {
         if (input.crouch) {
             hitbox->velocity.y -= speed * delta * 9;
         }
+    } else if (input.jump) {
+        doJump();
     }
+}
 
-	if (input.jump && hitbox->grounded) {
-		hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
+void Player::doMove(const glm::vec3& dir, float speed, float delta) {
+    if (auto hitbox = getHitbox()) {
+        hitbox->velocity += dir * speed * delta * 9.0f;
+    }
+}
+
+void Player::doJump() {
+    if (auto hitbox = getHitbox()) {
+        if (hitbox->grounded) {
+            hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
+        }
 	}
 }
 
@@ -174,9 +187,6 @@ void Player::postUpdate() {
             attemptToFindSpawnpoint();
         }
 	}
-
-	auto& skeleton = entity->getSkeleton();
-    skeleton.visible = currentCamera != fpCamera;
 }
 
 void Player::attemptToFindSpawnpoint() {

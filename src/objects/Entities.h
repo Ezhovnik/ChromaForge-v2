@@ -6,107 +6,19 @@
 #include <memory>
 
 #include <glm/glm.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/norm.hpp>
 #include <entt/entity/registry.hpp>
 
 #include <typedefs.h>
 #include <physics/Hitbox.h>
-#include <data/dv.h>
 #include <util/Clock.h>
-
-struct EntityFuncsSet {
-    bool init;
-    bool on_despawn;
-    bool on_grounded;
-    bool on_fall;
-    bool on_sensor_enter;
-    bool on_sensor_exit;
-    bool on_save;
-    bool on_aim_on;
-    bool on_aim_off;
-    bool on_attacked;
-    bool on_used;
-};
+#include <objects/Transform.h>
+#include <objects/Rigidbody.h>
+#include <objects/ScriptComponents.h>
 
 struct Entity;
-
-struct EntityId {
-    entityid_t uid;
-    const Entity& def;
-    bool destroyFlag = false;
-    int64_t player = -1;
-};
-
-struct Rigidbody {
-    bool enabled = true;
-    Hitbox hitbox;
-    std::vector<Sensor> sensors;
-};
-
-struct Transform {
-    static inline constexpr float EPS = 0.0000001f; 
-
-    glm::vec3 pos;
-    glm::vec3 size;
-    glm::mat3 rot;
-    glm::mat4 combined;
-    bool dirty = true;
-
-    glm::vec3 displayPos;
-    glm::vec3 displaySize;
-
-    void refresh();
-
-    inline void setRot(glm::mat3 m) {
-        rot = m;
-        dirty = true;
-    }
-
-    inline void setSize(glm::vec3 v) {
-        if (glm::distance2(displaySize, v) >= EPS) {
-            dirty = true;
-        }
-        size = v;
-    }
-
-    inline void setPos(glm::vec3 v) {
-        if (glm::distance2(displayPos, v) >= EPS) {
-            dirty = true;
-        }
-        pos = v;
-    }
-};
-
-struct UserComponent {
-    std::string name;
-    EntityFuncsSet funcsset;
-    scriptenv env;
-    dv::value params;
-
-    UserComponent(
-        const std::string& name,
-        EntityFuncsSet funcsset,
-        scriptenv env,
-        dv::value params
-    ) : name(name),
-        funcsset(funcsset),
-        env(std::move(env)),
-        params(std::move(params)) {}
-};
-
-struct ScriptComponents {
-    std::vector<std::unique_ptr<UserComponent>> components;
-
-    ScriptComponents() = default;
-
-    ScriptComponents(ScriptComponents&& other)
-        : components(std::move(other.components)) {
-    }
-};
-
 class Level;
 class Assets;
+class Entt_Entity;
 class ModelBatch;
 class Frustum;
 class LineBatch;
@@ -116,73 +28,6 @@ namespace rigging {
     class SkeletonConfig;
 }
 class DrawContext;
-
-class Entt_Entity {
-private:
-    Entities& entities;
-    entityid_t id;
-    entt::registry& registry;
-    const entt::entity entity;
-public:
-    Entt_Entity(
-        Entities& entities,
-        entityid_t id, 
-        entt::registry& registry, 
-        const entt::entity entity
-    ) : entities(entities),
-        id(id),
-        registry(registry),
-        entity(entity) {}
-
-    ScriptComponents& getScripting() const {
-        return registry.get<ScriptComponents>(entity);
-    }
-
-    EntityId& getID() const {
-        return registry.get<EntityId>(entity);
-    }
-
-    bool isValid() const {
-        return registry.valid(entity);
-    }
-
-    const Entity& getDef() const {
-        return registry.get<EntityId>(entity).def;
-    }
-
-    Transform& getTransform() const {
-        return registry.get<Transform>(entity);
-    }
-
-    Rigidbody& getRigidbody() const {
-        return registry.get<Rigidbody>(entity);
-    }
-
-    rigging::Skeleton& getSkeleton() const;
-
-    void setRig(const rigging::SkeletonConfig* skeletonConfig);
-
-    entityid_t getUID() const {
-        return registry.get<EntityId>(entity).uid;
-    }
-
-    entt::entity getHandler() const {
-        return entity;
-    }
-
-    int64_t getPlayer() const {
-        return registry.get<EntityId>(entity).player;
-    }
-
-    void setPlayer(int64_t id) {
-        registry.get<EntityId>(entity).player = id;
-    }
-
-    void setInterpolatedPosition(const glm::vec3& position);
-    glm::vec3 getInterpolatedPosition() const;
-
-    void destroy();
-};
 
 class Entities {
 private:
@@ -209,7 +54,14 @@ public:
 
     void updatePhysics(float delta);
     void update(float deltaTime);
-    void render(const Assets& assets, ModelBatch& batch, const Frustum* frustum, float deltaTime, bool pause);
+    void render(
+        const Assets& assets,
+        ModelBatch& batch,
+        const Frustum* frustum,
+        float deltaTime,
+        bool pause,
+        entityid_t fpsEntity
+    );
     void renderDebug(LineBatch& batch, const Frustum* frustum, const DrawContext& ctx);
     void clean();
 
@@ -239,7 +91,6 @@ public:
     std::vector<Entt_Entity> getAllInside(AABB aabb);
     std::vector<Entt_Entity> getAllInRadius(glm::vec3 center, float radius);
 
-    dv::value serialize(const Entt_Entity& entity);
     dv::value serialize(const std::vector<Entt_Entity>& entities);
 
     void setNextID(entityid_t id) {
@@ -249,13 +100,7 @@ public:
         return nextID;
     }
 
-    std::optional<Entt_Entity> get(entityid_t id) {
-        const auto& found = entities.find(id);
-        if (found != entities.end() && registry.valid(found->second)) {
-            return Entt_Entity(*this, id, registry, found->second);
-        }
-        return std::nullopt;
-    }
+    std::optional<Entt_Entity> get(entityid_t id);
 
     inline size_t size() const {
         return entities.size();

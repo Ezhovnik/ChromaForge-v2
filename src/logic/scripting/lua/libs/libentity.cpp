@@ -15,6 +15,8 @@
 #include <objects/Entity.h>
 #include <voxels/Block.h>
 #include <voxels/blocks_agent.h>
+#include <objects/Entt_Entity.h>
+#include <objects/Rigidbody.h>
 
 static const Entity* require_entity_def(lua::State* L) {
     auto indices = scripting::content->getIndices();

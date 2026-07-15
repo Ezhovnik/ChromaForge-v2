@@ -16,6 +16,7 @@
 #include <data/dv_util.h>
 #include <voxels/Chunk.h>
 #include <voxels/Pathfinding.h>
+#include <objects/Entt_Entity.h>
 
 inline constexpr float GRAVITY = -22.6f;
 

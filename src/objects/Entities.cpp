@@ -7,7 +7,6 @@
 
 #include <assets/Assets.h>
 #include <world/Level.h>
-#include <physics/Hitbox.h>
 #include <physics/PhysicsSolver.h>
 #include <graphics/render/ModelBatch.h>
 #include <graphics/commons/Model.h>
@@ -22,87 +21,17 @@
 #include <engine/Engine.h>
 #include <math/rays.h>
 #include <graphics/core/DrawContext.h>
-
-static inline std::string COMP_TRANSFORM = "transform";
-static inline std::string COMP_RIGIDBODY = "rigidbody";
-static inline std::string COMP_SKELETON = "skeleton";
-static inline std::string SAVED_DATA_VARNAME = "SAVED_DATA";
-
-void Transform::refresh() {
-    combined = glm::mat4(1.0f);
-    combined = glm::translate(combined, pos);
-    combined = combined * glm::mat4(rot);
-    combined = glm::scale(combined, size);
-    displayPos = pos;
-    displaySize = size;
-    dirty = false;
-}
-
-void Entt_Entity::destroy() {
-    if (isValid()){
-        entities.despawn(id);
-    }
-}
-
-void Entt_Entity::setInterpolatedPosition(const glm::vec3& position) {
-    getSkeleton().interpolation.refresh(position);
-}
-
-glm::vec3 Entt_Entity::getInterpolatedPosition() const {
-    const auto& skeleton = getSkeleton();
-    if (skeleton.interpolation.isEnabled()) {
-        return skeleton.interpolation.getCurrent();
-    }
-    return getTransform().pos;
-}
-
-rigging::Skeleton& Entt_Entity::getSkeleton() const {
-    return registry.get<rigging::Skeleton>(entity);
-}
-
-void Entt_Entity::setRig(const rigging::SkeletonConfig* skeletonConfig) {
-    auto& skeleton = registry.get<rigging::Skeleton>(entity);
-    skeleton.config = skeletonConfig;
-    skeleton.pose.matrices.resize(skeletonConfig->getBones().size(), glm::mat4(1.0f));
-    skeleton.calculated.matrices.resize(skeletonConfig->getBones().size(), glm::mat4(1.0f));
-}
+#include <objects/Entt_Entity.h>
 
 Entities::Entities(Level& level) : level(level), sensorsSparkClock(20, 3), updateSparkClock(20, 3) {
 }
 
-template<void(*callback)(const Entt_Entity&, size_t, entityid_t)>
-static sensorcallback create_sensor_callback(Entities* entities) {
-    return [=](auto entityid, auto index, auto otherid) {
-        if (auto entity = entities->get(entityid)) {
-            if (entity->isValid()) {
-                callback(*entity, index, otherid);
-            }
-        }
-    };
-}
-
-static void initialize_body(
-    const Entity& def, Rigidbody& body, entityid_t id, Entities* entities
-) {
-    body.sensors.resize(def.radialSensors.size() + def.boxSensors.size());
-    for (auto& [i, box] : def.boxSensors) {
-        SensorParams params {};
-        params.aabb = box;
-        body.sensors[i] = Sensor{
-            true, SensorType::AABB, i, id, params, params, {}, {},
-            create_sensor_callback<scripting::on_sensor_enter>(entities),
-            create_sensor_callback<scripting::on_sensor_exit>(entities)
-        };
+std::optional<Entt_Entity> Entities::get(entityid_t id) {
+    const auto& found = entities.find(id);
+    if (found != entities.end() && registry.valid(found->second)) {
+        return Entt_Entity(*this, id, registry, found->second);
     }
-    for (auto& [i, radius] : def.radialSensors) {
-        SensorParams params {};
-        params.radial = glm::vec4(radius);
-        body.sensors[i] = Sensor{
-            true, SensorType::RADIUS, i, id, params, params, {}, {},
-            create_sensor_callback<scripting::on_sensor_enter>(entities),
-            create_sensor_callback<scripting::on_sensor_exit>(entities)
-        };
-    }
+    return std::nullopt;
 }
 
 entityid_t Entities::spawn(
@@ -151,7 +80,7 @@ entityid_t Entities::spawn(
         Hitbox{def.bodyType, position, def.hitbox * 0.5f},
         std::vector<Sensor>{}
     );
-    initialize_body(def, body, id, this);
+    body.initialize(def, id, *this);
     body.sensors.resize(def.radialSensors.size() + def.boxSensors.size());
 
     auto& scripting = registry.emplace<ScriptComponents>(entity);
@@ -201,45 +130,24 @@ void Entities::loadEntity(const dv::value& map, Entt_Entity entity) {
     auto& skeleton = entity.getSkeleton();
 
     if (map.has(COMP_RIGIDBODY)) {
-        auto& bodymap = map[COMP_RIGIDBODY];
-        dv::get_vec(bodymap, "vel", body.hitbox.velocity);
-        std::string bodyTypeName;
-        map.at("type").get(bodyTypeName);
-        BodyTypeMeta.getItem(bodyTypeName, body.hitbox.type);
-        bodymap["crouch"].asBoolean(body.hitbox.crouching);
-        bodymap["damping"].asNumber(body.hitbox.linearDamping);
+        body.deserialize(map[COMP_RIGIDBODY]);
     }
     if (map.has(COMP_TRANSFORM)) {
-        auto& tsfmap = map[COMP_TRANSFORM];
-        dv::get_vec(tsfmap, "pos", transform.pos);
-        dv::get_vec(tsfmap, "size", transform.size);
-        dv::get_mat(tsfmap, "rot", transform.rot);
+        transform.deserialize(map[COMP_TRANSFORM]);
     }
     std::string skeletonName = skeleton.config->getName();
     map.at("skeleton").get(skeletonName);
     if (skeletonName != skeleton.config->getName()) {
         skeleton.config = level.content.getSkeleton(skeletonName);
     }
-    if (auto found = map.at(COMP_SKELETON)) {
-        auto& skeletonmap = *found;
-        if (auto found = skeletonmap.at("textures")) {
-            auto& texturesmap = *found;
-            for (auto& [slot, _] : texturesmap.asObject()) {
-                texturesmap.at(slot).get(skeleton.textures[slot]);
-            }
-        }
-        if (auto found = skeletonmap.at("pose")) {
-            auto& posearr = *found;
-            for (size_t i = 0; i < std::min(skeleton.pose.matrices.size(), posearr.size()); ++i) {
-                dv::get_mat(posearr[i], skeleton.pose.matrices[i]);
-            }
-        }
+    if (auto foundSkeleton = map.at(COMP_SKELETON)) {
+        skeleton.deserialize(*foundSkeleton);
     }
 }
 
 void Entities::loadEntities(dv::value root) {
     clean();
-    auto& list = root["data"];
+    const auto& list = root["data"];
     for (auto& map : list) {
         try {
             loadEntity(map);
@@ -308,9 +216,10 @@ static void debug_render_skeleton(
     size_t pindex = bone->getIndex();
     for (auto& sub : bone->getSubnodes()) {
         size_t sindex = sub->getIndex();
+        const auto& matrices = skeleton.calculated.matrices;
         batch.line(
-            glm::vec3(skeleton.calculated.matrices[pindex] * glm::vec4(0, 0, 0, 1)),
-            glm::vec3(skeleton.calculated.matrices[sindex] * glm::vec4(0, 0, 0, 1)),
+            glm::vec3(matrices[pindex] * glm::vec4(0, 0, 0, 1)),
+            glm::vec3(matrices[sindex] * glm::vec4(0, 0, 0, 1)),
             glm::vec4(0, 0.5f, 0, 1)
         );
         debug_render_skeleton(batch, sub.get(), skeleton);
@@ -447,74 +356,6 @@ void Entities::updatePhysics(float delta) {
     }
 }
 
-dv::value Entities::serialize(const Entt_Entity& entity) {
-    auto root = dv::object();
-    auto& eid = entity.getID();
-    auto& def = eid.def;
-    root["def"] = def.name;
-    root["uid"] = eid.uid;
-    {
-        auto& transform = entity.getTransform();
-        auto& tsfmap = root.object(COMP_TRANSFORM);
-        tsfmap["pos"] = dv::to_value(transform.pos);
-        if (transform.size != glm::vec3(1.0f)) {
-            tsfmap["size"] = dv::to_value(transform.size);
-        }
-        if (transform.rot != glm::mat3(1.0f)) {
-            tsfmap["rot"] = dv::to_value(transform.rot);
-        }
-    }
-    {
-        auto& rigidbody = entity.getRigidbody();
-        auto& hitbox = rigidbody.hitbox;
-        auto& bodymap = root.object(COMP_RIGIDBODY);
-        if (!rigidbody.enabled) {
-            bodymap["enabled"] = false;
-        }
-        if (def.save.body.velocity) {
-            bodymap["vel"] = dv::to_value(rigidbody.hitbox.velocity);
-        }
-        if (def.save.body.settings) {
-            bodymap["damping"] = rigidbody.hitbox.linearDamping;
-            if (hitbox.type != def.bodyType) {
-                bodymap["type"] = BodyTypeMeta.getNameString(hitbox.type);
-            }
-            if (hitbox.crouching) {
-                bodymap["crouch"] = hitbox.crouching;
-            }
-        }
-    }
-    auto& skeleton = entity.getSkeleton();
-    if (skeleton.config->getName() != def.skeletonName) {
-        root["skeleton"] = skeleton.config->getName();
-    }
-
-    if (def.save.skeleton.pose || def.save.skeleton.textures) {
-        auto& skeletonmap = root.object(COMP_SKELETON);
-        if (def.save.skeleton.textures) {
-            auto& map = skeletonmap.object("textures");
-            for (auto& [slot, texture] : skeleton.textures) {
-                map[slot] = texture;
-            }
-        }
-        if (def.save.skeleton.pose) {
-            auto& list = skeletonmap.list("pose");
-            for (auto& mat : skeleton.pose.matrices) {
-                list.add(dv::to_value(mat));
-            }
-        }
-    }
-    auto& scripts = entity.getScripting();
-    if (!scripts.components.empty()) {
-        auto& compsMap = root.object("comps");
-        for (auto& comp : scripts.components) {
-            auto data = scripting::get_component_value(comp->env, SAVED_DATA_VARNAME);
-            compsMap[comp->name] = data;
-        }
-    }
-    return root;
-}
-
 dv::value Entities::serialize(const std::vector<Entt_Entity>& entities) {
     auto list = dv::list();
     for (auto& entity : entities) {
@@ -522,7 +363,7 @@ dv::value Entities::serialize(const std::vector<Entt_Entity>& entities) {
         if (!entity.getDef().save.enabled || eid.destroyFlag) continue;
         level.entities->onSave(entity);
         if (!eid.destroyFlag) {
-            list.add(level.entities->serialize(entity));
+            list.add(entity.serialize());
         }
     }
     return list;
@@ -591,9 +432,18 @@ std::vector<Entt_Entity> Entities::getAllInRadius(glm::vec3 center, float radius
     return collected;
 }
 
-void Entities::render(const Assets& assets, ModelBatch& batch, const Frustum* frustum, float deltaTime, bool pause) {
-    auto view = registry.view<Transform, rigging::Skeleton>();
-    for (auto [entity, transform, skeleton] : view.each()) {
+void Entities::render(
+    const Assets& assets,
+    ModelBatch& batch,
+    const Frustum* frustum,
+    float deltaTime,
+    bool pause,
+    entityid_t fpsEntity
+) {
+    auto view = registry.view<EntityId, Transform, rigging::Skeleton>();
+    for (auto [entity, eid, transform, skeleton] : view.each()) {
+        if (eid.uid == fpsEntity) continue;
+
         if (transform.dirty) transform.refresh();
         if (skeleton.interpolation.isEnabled()) skeleton.interpolation.updateTimer(deltaTime);
         const auto& pos = transform.pos;

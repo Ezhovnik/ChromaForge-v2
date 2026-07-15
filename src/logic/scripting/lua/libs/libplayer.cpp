@@ -8,6 +8,7 @@
 #include <physics/Hitbox.h>
 #include <window/Camera.h>
 #include <items/Inventory.h>
+#include <objects/Entt_Entity.h>
 
 inline Player* get_player(lua::State* L, int idx) {
     return scripting::level->players->getPlayer(lua::tointeger(L, idx));

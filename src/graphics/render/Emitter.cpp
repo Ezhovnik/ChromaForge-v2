@@ -8,6 +8,7 @@
 #include <math/rand.h>
 #include <objects/Entities.h>
 #include <world/Level.h>
+#include <objects/Entt_Entity.h>
 
 Emitter::Emitter(
     const Level& level,

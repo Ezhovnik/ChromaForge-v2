@@ -45,12 +45,12 @@ namespace dv {
     void get_vec(const dv::value& map, const std::string& key, glm::vec<n, T>& vec) {
         if (!map.has(key)) return;
 
-        auto& list = map[key];
-        for (size_t i = 0; i < n; i++) {
+        const auto& srcList = map[key];
+        for (size_t i = 0; i < n; ++i) {
             if constexpr (std::is_floating_point<T>()) {
-                vec[i] = list[i].asNumber();
+                vec[i] = srcList[i].asNumber();
             } else {
-                vec[i] = list[i].asInteger();
+                vec[i] = srcList[i].asInteger();
             }
         }
     }
