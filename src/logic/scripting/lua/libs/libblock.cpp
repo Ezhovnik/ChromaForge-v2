@@ -348,8 +348,21 @@ static int l_get_textures(lua::State* L) {
     return 0;
 }
 
+static int l_model_name(lua::State* L) {
+    if (auto def = require_block(L)) {
+        // TODO: variant argument
+        const auto& modelName = def->defaults.model.name;
+        if (modelName.empty()) {
+            return lua::pushlstring(L, def->name + ".model");
+        }
+        return lua::pushlstring(L, modelName);
+    }
+    return 0;
+}
+
 static int l_get_model(lua::State* L) {
     if (auto def = require_block(L)) {
+        // TODO: variant argument
         return lua::pushlstring(L, BlockModelTypeMeta.getName(def->defaults.model.type));
     }
     return 0;
@@ -686,6 +699,7 @@ const luaL_Reg blocklib [] = {
     {"get_size", lua::wrap<l_get_size>},
     {"is_segment", lua::wrap<l_is_segment>},
     {"seek_origin", lua::wrap<l_seek_origin>},
+    {"model_name", lua::wrap<l_model_name>},
     {"get_textures", lua::wrap<l_get_textures>},
     {"get_model", lua::wrap<l_get_model>},
     {"get_hitbox", lua::wrap<l_get_hitbox>},
