@@ -156,9 +156,9 @@ entityid_t Entities::spawn(
 
     auto& scripting = registry.emplace<ScriptComponents>(entity);
     registry.emplace<rigging::Skeleton>(entity, skeleton->instance());
-    for (auto& componentName : def.components) {
+    for (auto& instance : def.components) {
         auto component = std::make_unique<UserComponent>(
-            componentName, EntityFuncsSet {}, nullptr
+            instance.component, EntityFuncsSet {}, nullptr, instance.params
         );
         scripting.components.emplace_back(std::move(component));
     }
