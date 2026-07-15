@@ -73,6 +73,14 @@ static int l_scalar_op(lua::State* L) {
     return lua::pushnumber(L, func(vec));
 }
 
+template <int n>
+static int l_distance(lua::State* L) {
+    lua::check_argc(L, 2);
+    auto a = lua::tovec<n>(L, 1);
+    auto b = lua::tovec<n>(L, 2);
+    return lua::pushnumber(L,glm::distance(a, b));
+}
+
 template<int n>
 static int l_pow(lua::State* L) {
     uint argc = lua::check_argc(L, 2, 3);
@@ -172,6 +180,7 @@ const luaL_Reg vec2lib [] = {
     {"sub", lua::wrap<l_binop<2, std::minus>>},
     {"mul", lua::wrap<l_binop<2, std::multiplies>>},
     {"div", lua::wrap<l_binop<2, std::divides>>},
+    {"distance", lua::wrap<l_distance<2>>},
     {"normalize", lua::wrap<l_unaryop<2, glm::normalize>>},
     {"length", lua::wrap<l_scalar_op<2, glm::length>>},
     {"tostring", lua::wrap<l_tostring<2>>},
@@ -189,6 +198,7 @@ const luaL_Reg vec3lib [] = {
     {"sub", lua::wrap<l_binop<3, std::minus>>},
     {"mul", lua::wrap<l_binop<3, std::multiplies>>},
     {"div", lua::wrap<l_binop<3, std::divides>>},
+    {"distance", lua::wrap<l_distance<3>>},
     {"normalize", lua::wrap<l_unaryop<3, glm::normalize>>},
     {"length", lua::wrap<l_scalar_op<3, glm::length>>},
     {"tostring", lua::wrap<l_tostring<3>>},
@@ -206,6 +216,7 @@ const luaL_Reg vec4lib [] = {
     {"sub", lua::wrap<l_binop<4, std::minus>>},
     {"mul", lua::wrap<l_binop<4, std::multiplies>>},
     {"div", lua::wrap<l_binop<4, std::divides>>},
+    {"distance", lua::wrap<l_distance<4>>},
     {"normalize", lua::wrap<l_unaryop<4, glm::normalize>>},
     {"length", lua::wrap<l_scalar_op<4, glm::length>>},
     {"tostring", lua::wrap<l_tostring<4>>},

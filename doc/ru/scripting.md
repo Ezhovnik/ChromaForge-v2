@@ -31,6 +31,7 @@
   - [mat4](scripting/builtins/libmat4.md)
   - [network](scripting/builtins/libnetwork.md)
   - [pack](scripting/builtins/libpack.md)
+  - [pathfinding](scripting/builtins/libpathfinding.md)
   - [player](scripting/builtins/libplayer.md)
   - [quat](scripting/builtins/libquat.md)
   - [rules](scripting/builtins/librules.md)

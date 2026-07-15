@@ -63,6 +63,7 @@ namespace voxels {
         Pathfinding(const Level& level);
 
         int createAgent();
+        bool removeAgent(int id);
 
         void performAllAsync(int stepsPerAgent);
 

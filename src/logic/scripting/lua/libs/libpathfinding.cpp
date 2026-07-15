@@ -11,6 +11,11 @@ static int l_create_agent(lua::State* L) {
     return lua::pushinteger(L, scripting::level->pathfinding->createAgent());
 }
 
+static int l_remove_agent(lua::State* L) {
+    int id = lua::tointeger(L, 1);
+    return lua::pushboolean(L, scripting::level->pathfinding->removeAgent(id));
+}
+
 static int l_set_enabled(lua::State* L) {
     if (auto agent = get_agent(L)) {
         agent->enabled = lua::toboolean(L, 2);
@@ -82,6 +87,7 @@ static int l_set_max_visited_blocks(lua::State* L) {
 
 const luaL_Reg pathfindinglib[] = {
     {"create_agent", lua::wrap<l_create_agent>},
+    {"remove_agent", lua::wrap<l_remove_agent>},
     {"set_enabled", lua::wrap<l_set_enabled>},
     {"is_enabled", lua::wrap<l_is_enabled>},
     {"make_route", lua::wrap<l_make_route>},

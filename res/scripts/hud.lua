@@ -93,7 +93,7 @@ local function update_hand()
 
     local rotation = cam:get_rot()
 
-    local angle = player.get_rot() - 90
+    local angle = player.get_rot(pid) - 90
     local cos = math.cos(angle / (180 / math.pi))
     local sin = math.sin(angle / (180 / math.pi))
 

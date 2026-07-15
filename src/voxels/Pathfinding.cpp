@@ -59,6 +59,15 @@ int Pathfinding::createAgent() {
     return id;
 }
 
+bool Pathfinding::removeAgent(int id) {
+    auto found = agents.find(id);
+    if (found != agents.end()) {
+        agents.erase(found);
+        return true;
+    }
+    return false;
+}
+
 void Pathfinding::performAllAsync(int stepsPerAgent) {
     for (auto& [id, agent] : agents) {
         if (agent.state.finished) continue;
@@ -158,6 +167,7 @@ Route Pathfinding::perform(Agent& agent, int maxVisited) {
             }
         }
     }
+    state.finished = true;
     agent.state = std::move(state);
     return {};
 }
