@@ -117,7 +117,7 @@ void BlocksController::updateBlock(int x, int y, int z) {
 void BlocksController::update(float delta, uint padding) {
     if (randSparkClock.update(delta)) randomSpark(randSparkClock.getPart(), randSparkClock.getParts(), padding);
     if (blocksSparkClock.update(delta)) onBlocksSpark(blocksSparkClock.getPart(), blocksSparkClock.getParts());
-    if (worldSparkClock.update(delta)) scripting::on_world_spark();
+    if (worldSparkClock.update(delta)) scripting::on_world_spark(worldSparkClock.getSparkRate());
 }
 
 void BlocksController::onBlocksSpark(int sparkId, int parts) {

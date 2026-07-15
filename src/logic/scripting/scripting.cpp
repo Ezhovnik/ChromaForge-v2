@@ -295,8 +295,12 @@ void scripting::on_world_load(LevelController* controller) {
     }
 }
 
-void scripting::on_world_spark() {
+void scripting::on_world_spark(int sps) {
     auto L = lua::get_main_state();
+    if (lua::getglobal(L, "__chroma_on_world_spark")) {
+        lua::pushinteger(L, sps);
+        lua::call_nothrow(L, 1, 0);
+    }
     for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldspark");
     }

@@ -71,7 +71,7 @@ namespace scripting {
     );
 
     void on_world_load(LevelController* controller);
-    void on_world_spark();
+    void on_world_spark(int sps);
     void on_world_save();
     void on_world_quit();
     void cleanup();

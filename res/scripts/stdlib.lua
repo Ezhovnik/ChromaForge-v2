@@ -469,8 +469,37 @@ function __chroma_on_hud_open()
     hud.open_permanent("builtin:ingame_chat")
 end
 
+local ScheduleGroup_mt = {
+    __index = {
+        publish = function(self, schedule)
+            local id = self._next_schedule
+            self._schedules[id] = schedule
+            self._next_schedule = id + 1
+        end,
+        spark = function(self, dt)
+            for id, schedule in pairs(self._schedules) do
+                schedule:spark(dt)
+            end
+        end,
+        remove = function(self, id)
+            self._schedules[id] = nil
+        end
+    }
+}
+
+local function ScheduleGroup()
+    return setmetatable({
+        _next_schedule = 1,
+        _schedules = {},
+    }, ScheduleGroup_mt)
+end
+
+time.schedules = {}
+
 local RULES_FILE = "world:rules.toml"
 function __chroma_on_world_open()
+    time.schedules.world = ScheduleGroup()
+
     if not file.exists(RULES_FILE) then
         return
     end
@@ -478,6 +507,10 @@ function __chroma_on_world_open()
     for name, value in pairs(rule_values) do
         _rules.set(name, value)
     end
+end
+
+function __chroma_on_world_spark(sps)
+    time.schedules.world:spark(1.0 / sps)
 end
 
 function __chroma_on_world_save()

@@ -20,6 +20,18 @@ if not ipairs_mt_supported then
     end
 end
 
+function await(co)
+    local res, err
+    while coroutine.status(co) ~= 'dead' do
+        coroutine.yield()
+        res, err = coroutine.resume(co)
+        if err then
+            return res, err
+        end
+    end
+    return res, err
+end
+
 local _ffi = ffi
 function __chroma_Canvas_set_data(self, data)
     if type(data) == "cdata" then
