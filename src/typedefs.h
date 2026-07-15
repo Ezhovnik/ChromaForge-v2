@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
 
 /**
@@ -13,7 +13,7 @@
  */
 
 using scriptenv = std::shared_ptr<int>;
-using observer_handler = std::shared_ptr<int>;
+class ObserverHandler;
 
 // ========== Базовые типы (сокращения) ==========
 

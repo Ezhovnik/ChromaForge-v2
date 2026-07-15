@@ -1,15 +1,29 @@
 #pragma once
 
-#include <stdlib.h>
 #include <glm/glm.hpp>
 #include <memory>
 
 #include <graphics/core/commons.h>
 #include <typedefs.h>
 #include <math/UVRegion.h>
+#include <graphics/core/MeshData.h>
 
+template<typename VertexStructure>
 class Mesh;
 class Texture;
+
+struct Batch2DVertex {
+     glm::vec2 position;
+     glm::vec2 uv;
+     glm::vec4 color;
+
+     static constexpr VertexAttribute ATTRIBUTES[] {
+          {VertexAttribute::Type::FLOAT, false, 2},
+          {VertexAttribute::Type::FLOAT, false, 2},
+          {VertexAttribute::Type::FLOAT, false, 4},
+          {{}, 0}
+     };
+};
 
 /**
  * @brief Класс для пакетной отрисовки 2D-примитивов (спрайтов, прямоугольников, линий).
@@ -19,10 +33,10 @@ class Texture;
  * повороты, отражения и закруглённые прямоугольники.
  */
 class Batch2D : public Flushable {
-	std::unique_ptr<float[]> buffer;
+	std::unique_ptr<Batch2DVertex[]> buffer;
 	size_t capacity;
 
-	std::unique_ptr<Mesh> mesh;
+	std::unique_ptr<Mesh<Batch2DVertex>> mesh;
 	size_t index;
 
 	glm::vec4 color;
@@ -125,8 +139,12 @@ public:
      * @brief Устанавливает текущий цвет по умолчанию.
      * @param color Цвет (RGBA).
      */
-	void setColor(glm::vec4 color) {
+	void setColor(const glm::vec4& color) {
           this->color = color;
+     }
+
+     void setColor(int r, int g, int b, int a=255) {
+          this->color = glm::vec4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
      }
 
 	/**
@@ -200,6 +218,12 @@ public:
 	);
 
 	void lineRect(float x, float y, float w, float h);
+
+     void triangle(
+          float x1, float y1,
+          float x2, float y2,
+          float x3, float y3
+     );
 
 	/**
      * @brief Отправляет накопленные вершины как треугольники (GL_TRIANGLES).

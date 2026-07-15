@@ -5,9 +5,21 @@
         "default",
         "lines",
         "entity",
-        "screen",
+        "translucent",
         "background",
-        "skybox_gen"
+        "skybox_gen",
+        "shadows"
+    ],
+    "post-effects": [
+        "default",
+        {
+            "name": "ssao",
+            "advanced": true
+        },
+        {
+            "name": "deferred_lighting",
+            "advanced": true
+        }
     ],
     "textures": [
         "gui/menubg",
@@ -25,7 +37,24 @@
         "panorama/2",
         "panorama/3",
         "panorama/4",
-        "panorama/5"
+        "panorama/5",
+        "misc/rain",
+        "misc/snow",
+        "gui/check_mark",
+        "gui/left_arrow",
+        "gui/right_arrow",
+        "gui/lock",
+        "gui/save",
+        "gui/block",
+        "gui/item",
+        "gui/file",
+        "gui/module",
+        "gui/play",
+        "gui/info",
+        "gui/world",
+        "gui/hud",
+        "gui/entity",
+        "gui/half_block"
     ],
     "fonts": [
         {

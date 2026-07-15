@@ -59,7 +59,7 @@ int lua::pushvalue(lua::State* L, const dv::value& value) {
             break;
         case dv::value_type::Bytes: {
             const auto& bytes = value.asBytes();
-            newuserdata<LuaBytearray>(L, bytes.data(), bytes.size());
+            create_bytearray(L, bytes.data(), bytes.size());
             break;
         }
     }
@@ -119,17 +119,14 @@ dv::value lua::tovalue(State* L, int idx) {
                 return map;
             }
         }
-        case LUA_TUSERDATA: {
-            if (auto bytes = touserdata<LuaBytearray>(L, idx)) {
-                const auto& data = bytes->data();
-                return std::make_shared<dv::objects::Bytes>(data.data(), data.size());
-            }
-            [[fallthrough]];
+        default: {
+            auto data = bytearray_as_string(L, idx);
+            auto bytes = std::make_shared<dv::objects::Bytes>(
+                reinterpret_cast<const ubyte*>(data.data()), data.size()
+            );
+            pop(L);
+            return bytes;
         }
-        default:
-            std::string errLog = "Lua type " + std::string(lua_typename(L, type)) + " is not supported";
-            log_error(errLog);
-            throw std::runtime_error(errLog);
     }
 }
 
@@ -152,20 +149,23 @@ int lua::call(lua::State* L, int argc, int nresults) {
     int handler_pos = gettop(L) - argc;
     pushcfunction(L, l_error_handler);
     insert(L, handler_pos);
+    int top = gettop(L);
     if (lua_pcall(L, argc, nresults, handler_pos)) {
         std::string log = tostring(L, -1);
         pop(L);
         remove(L, handler_pos);
         throw luaerror(log);
     }
+    int added = gettop(L) - (top - argc - 1);
     remove(L, handler_pos);
-    return nresults == -1 ? 1 : nresults;
+    return added;
 }
 
 int lua::call_nothrow(lua::State* L, int argc, int nresults) {
     int handler_pos = gettop(L) - argc;
     pushcfunction(L, l_error_handler);
     insert(L, handler_pos);
+    int top = gettop(L);
     if (lua_pcall(L, argc, -1, handler_pos)) {
         auto errorstr = tostring(L, -1);
         if (errorstr) {
@@ -177,8 +177,9 @@ int lua::call_nothrow(lua::State* L, int argc, int nresults) {
         remove(L, handler_pos);
         return 0;
     }
+    int added = gettop(L) - (top - argc - 1);
     remove(L, handler_pos);
-    return 1;
+    return added;
 }
 
 void lua::dump_stack(lua::State* L) {

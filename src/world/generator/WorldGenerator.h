@@ -129,4 +129,6 @@ public:
 	void generate(voxel* voxels, int x, int z);
 
     WorldGenDebugInfo createDebugInfo() const;
+
+    uint64_t getSeed() const;
 };

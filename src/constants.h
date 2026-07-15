@@ -74,11 +74,6 @@ inline constexpr int ITEM_ICON_SIZE = 48;
 /** */
 inline constexpr int TRANSLUCENT_BLOCKS_SORT_INTERVAL = 8;
 
-// ========== Математические константы ==========
-
-/** Число π. */
-inline constexpr double PI = 3.14159265358979323846;
-
 // ========== Утилитарные функции ==========
 
 /**
@@ -108,3 +103,6 @@ inline const std::string LAYOUTS_FOLDER = "layouts";
 inline const std::string SOUNDS_FOLDER = "sounds";
 /** Папка с моделями */
 inline const std::string MODELS_FOLDER = "models";
+inline const std::string POST_EFFECTS_FOLDER = "shaders/effects";
+
+inline const std::string FONT_DEFAULT = "normal";

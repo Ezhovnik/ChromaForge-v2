@@ -176,7 +176,7 @@ static int l_move_range(lua::State* L) {
     auto invBid = lua::tointeger(L, 3);
     auto slotBegin = lua::isnoneornil(L, 4) ? -1 : lua::tointeger(L, 4);
     auto slotEnd = lua::isnoneornil(L, 5) ? -1 : lua::tointeger(L, 5) + 1;
-    auto invB = get_inventory(invBid, 3);
+    auto& invB = get_inventory(invBid, 3);
     auto& slot = invA.getSlot(slotAid);
     if (slotBegin == -1) {
         invB.move(slot, *scripting::content->getIndices());
@@ -224,15 +224,14 @@ static int l_has_data(lua::State* L, ItemStack& stack) {
 static int l_set_data(lua::State* L, ItemStack& stack) {
     auto key = lua::require_string(L, 3);
     auto value = lua::tovalue(L, 4);
-    auto& fields = stack.getFields();
     stack.setField(key, std::move(value));
     return 0;
 }
 
 const luaL_Reg inventorylib[] = {
-    {"get", wrap_slot<l_get>},
-    {"set", wrap_slot<l_set>},
-    {"set_count", wrap_slot<l_set_count>},
+    {"get", lua::wrap<wrap_slot<l_get>>},
+    {"set", lua::wrap<wrap_slot<l_set>>},
+    {"set_count", lua::wrap<wrap_slot<l_set_count>>},
     {"size", lua::wrap<l_size>},
     {"add", lua::wrap<l_add>},
     {"move", lua::wrap<l_move>},
@@ -241,10 +240,10 @@ const luaL_Reg inventorylib[] = {
     {"get_block", lua::wrap<l_get_block>},
     {"bind_block", lua::wrap<l_bind_block>},
     {"unbind_block", lua::wrap<l_unbind_block>},
-    {"get_data", wrap_slot<l_get_data>},
-    {"set_data", wrap_slot<l_set_data>},
-    {"get_all_data", wrap_slot<l_get_all_data>},
-    {"has_data", wrap_slot<l_has_data>},
+    {"get_data", lua::wrap<wrap_slot<l_get_data>>},
+    {"set_data", lua::wrap<wrap_slot<l_set_data>>},
+    {"get_all_data", lua::wrap<wrap_slot<l_get_all_data>>},
+    {"has_data", lua::wrap<wrap_slot<l_has_data>>},
     {"create", lua::wrap<l_create>},
     {"remove", lua::wrap<l_remove>},
     {"clone", lua::wrap<l_clone>},

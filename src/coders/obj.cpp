@@ -1,11 +1,11 @@
 #include <coders/obj.h>
 
-#include <coders/commons.h>
+#include <coders/BasicParser.h>
 #include <graphics/commons/Model.h>
 
 using namespace model;
 
-class ObjParser : BasicParser {
+class ObjParser : BasicParser<char> {
 private:
     std::vector<glm::vec3> coords {{0, 0, 0}};
     std::vector<glm::vec2> uvs {{0, 0}};

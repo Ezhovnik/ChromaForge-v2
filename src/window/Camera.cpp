@@ -1,5 +1,4 @@
 #include <window/Camera.h>
-#include <window/Window.h>
 
 #include <glm/ext.hpp>
 
@@ -37,18 +36,14 @@ void Camera::rotate(float x, float y, float z) {
 // Возвращает матрицу проекции камеры.
 // Матрица проекции преобразует координаты из пространства камеры в нормализованные координаты устройства (NDC).
 glm::mat4 Camera::getProjection() const {
-    constexpr float epsilon = 1e-6f; // 0.000001
-    float aspect_ratio = this->aspect;
-    if (std::fabs(aspect_ratio) < epsilon) {
-        aspect_ratio = (float)Window::width / (float)Window::height;
-	}
+	if (projset) return projection;
 
 	if (perspective) {
-		return glm::perspective(fov * zoom, aspect_ratio, near, far);
+		return glm::perspective(fov * zoom, ar, near, far);
 	} else if (flipped) {
-		return glm::ortho(0.0f, fov * aspect_ratio, fov, 0.0f);
+		return glm::ortho(0.0f, fov * ar, fov, 0.0f, near, far);
 	} else {
-		return glm::ortho(0.0f, fov * aspect_ratio, 0.0f, fov);
+		return glm::ortho(0.0f, fov * ar, 0.0f, fov, near, far);
 	}
 }
 
@@ -58,10 +53,26 @@ glm::mat4 Camera::getView(bool position_flag) const {
 	glm::vec3 camera_pos = this->position;
 	if (!position_flag) camera_pos = glm::vec3(0.0f);
 
-    if (perspective) return glm::lookAt(camera_pos, camera_pos + front, up);
-	else return glm::translate(glm::mat4(1.0f), camera_pos);
+    if (perspective) {
+		return glm::lookAt(camera_pos, camera_pos + front, up);
+	} else {
+		return glm::lookAt(camera_pos, camera_pos + front, up);
+	}
 }
 
 glm::mat4 Camera::getProjView(bool position_flag) const {
     return getProjection() * getView(position_flag);
+}
+
+void Camera::setProjection(const glm::mat4& matrix) {
+    projection = matrix;
+    projset = true;
+}
+
+float Camera::getAspectRatio() const {
+    return ar;
+}
+
+void Camera::setAspectRatio(float ar) {
+    this->ar = ar;
 }

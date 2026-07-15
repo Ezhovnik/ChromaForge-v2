@@ -96,7 +96,13 @@ vecn.normalize(v: vector, dst: vector)
 ```lua
 -- возвращает длину вектора
 vecn.length(a: vector)
+```
 
+#### Дистанция - *vecn.distance(...)*
+
+```lua
+-- возвращает расстояние между двумя векторами
+vecn.distance(a: vector, b: vector)
 ```
 
 ### Абсолютное значение - *vecn.abs(...)*
@@ -193,6 +199,10 @@ print("mul_scal: " .. vec3.tostring(result_mul_scal)) -- {6, 12, 12}
 -- нормализация вектора
 local result_norm = vec3.normalize(v1_3d)
 print("norm: " .. vec3.tostring(result_norm)) -- {0.333, 0.667, 0.667}
+
+-- дистанция между векторами
+local result_distance = vec3.distance(v1_3d, v2_3d)
+print("distance: " .. result_distance) -- 43
 
 -- длина вектора
 local result_len = vec3.length(v1_3d)

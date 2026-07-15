@@ -1,14 +1,13 @@
 #include <vector>
 #include <memory>
+#include <sstream>
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>
 #include <io/engine_paths.h>
 #include <frontend/menu.h>
-#include <window/Window.h>
 #include <frontend/screens/MenuScreen.h>
 #include <logic/LevelController.h>
-#include <window/Events.h>
 #include <logic/EngineController.h>
 #include <io/settings_io.h>
 #include <world/Level.h>
@@ -17,10 +16,10 @@
 #include <world/generator/WorldGenerator.h>
 #include <util/listutil.h>
 #include <util/platform.h>
-#include <coders/png.h>
-#include <debug/Logger.h>
 #include <io/io.h>
 #include <graphics/core/Texture.h>
+#include <assets/Assets.h>
+#include <content/ContentControl.h>
 
 static int l_get_version(lua::State* L) {
     return lua::pushvec_stack(
@@ -185,40 +184,8 @@ static int l_get_setting_info(lua::State* L) {
     throw std::runtime_error("Unsupported setting type");
 }
 
-static void load_texture(
-    const ubyte* bytes, size_t size, const std::string& destname
-) {
-    try {
-        scripting::engine->getAssets()->store(png::loadTexture(bytes, size), destname);
-    } catch (const std::runtime_error& err) {
-        LOG_ERROR("{}", err.what());
-    }
-}
-
-static int l_load_texture(lua::State* L) {
-    if (lua::istable(L, 1)) {
-        lua::pushvalue(L, 1);
-        size_t size = lua::objlen(L, 1);
-        util::Buffer<ubyte> buffer(size);
-        for (size_t i = 0; i < size; ++i) {
-            lua::rawgeti(L, i + 1);
-            buffer[i] = lua::tointeger(L, -1);
-            lua::pop(L);
-        }
-        lua::pop(L);
-        load_texture(buffer.data(), buffer.size(), lua::require_string(L, 2));
-    } else if (auto bytes = lua::touserdata<lua::LuaBytearray>(L, 1)) {
-        load_texture(
-            bytes->data().data(),
-            bytes->data().size(),
-            lua::require_string(L, 2)
-        );
-    }
-    return 0;
-}
-
 static int l_load_content(lua::State* L) {
-    scripting::engine->loadContent();
+    scripting::content_control->loadContent();
     return 0;
 }
 
@@ -226,7 +193,7 @@ static int l_reset_content(lua::State* L) {
     if (scripting::level != nullptr) {
         throw std::runtime_error("World must be closed before");
     }
-    scripting::engine->resetContent();
+    scripting::content_control->resetContent();
     return 0;
 }
 
@@ -236,6 +203,33 @@ static int l_is_content_loaded(lua::State* L) {
 
 static int l_blank(lua::State* L) {
     return 0;
+}
+
+static int l_capture_output(lua::State* L) {
+    int argc = lua::gettop(L) - 1;
+    if (!lua::isfunction(L, 1)) {
+        throw std::runtime_error("Function expected as argument 1");
+    }
+    for (int i = 0; i < argc; ++i) {
+        lua::pushvalue(L, i + 2);
+    }
+    lua::pushvalue(L, 1);
+
+    auto prev_output = scripting::output_stream;
+    auto prev_error = scripting::error_stream;
+
+    std::stringstream captured_output;
+
+    scripting::output_stream = &captured_output;
+    scripting::error_stream = &captured_output;
+
+    lua::call_nothrow(L, argc, 0);
+
+    scripting::output_stream = prev_output;
+    scripting::error_stream = prev_error;
+
+    lua::pushstring(L, captured_output.str());
+    return 1;
 }
 
 const luaL_Reg builtinlib [] = {
@@ -257,6 +251,6 @@ const luaL_Reg builtinlib [] = {
     {"get_setting_info", lua::wrap<l_get_setting_info>},
     {"open_folder", lua::wrap<l_open_folder>},
     {"quit", lua::wrap<l_quit>},
-    {"__load_texture", lua::wrap<l_load_texture>},
+    {"capture_output", lua::wrap<l_capture_output>},
     {NULL, NULL}
 };

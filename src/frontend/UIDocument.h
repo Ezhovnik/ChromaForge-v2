@@ -8,6 +8,7 @@
 #include <io/fwd.h>
 
 namespace gui {
+    class GUI;
     class UINode;
 }
 
@@ -17,13 +18,13 @@ struct uidocscript {
     bool onclose : 1;
 };
 
-using uinodes_map = std::unordered_map<std::string, std::shared_ptr<gui::UINode>>;
+using UINodesMap = std::unordered_map<std::string, std::shared_ptr<gui::UINode>>;
 
 class UIDocument {
 private:
     std::string id;
     uidocscript script;
-    uinodes_map map;
+    UINodesMap map;
     std::shared_ptr<gui::UINode> root;
 
     scriptenv env;
@@ -37,8 +38,8 @@ public:
 
     void rebuildIndices();
 
-    const uinodes_map& getMap() const;
-    uinodes_map& getMapWriteable();
+    const UINodesMap& getMap() const;
+    UINodesMap& getMapWriteable();
     const std::string& getId() const;
     std::shared_ptr<gui::UINode> getRoot() const;
     const uidocscript& getScript() const;
@@ -46,12 +47,13 @@ public:
     std::shared_ptr<gui::UINode> get(const std::string& id) const;
 
     static std::unique_ptr<UIDocument> read(
+        gui::GUI&,
         const scriptenv& parent_env,
         const std::string& name,
         const io::path& file,
         const std::string& fileName
     );
     static std::shared_ptr<gui::UINode> readElement(
-        const io::path& file, const std::string& fileName
+        gui::GUI&, const io::path& file, const std::string& fileName
     );
 };

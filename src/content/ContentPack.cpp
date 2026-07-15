@@ -12,14 +12,17 @@
 #include <data/dv.h>
 #include <constants.h>
 #include <core_content_defs.h>
+#include <coders/commons.h>
 
-ContentPack ContentPack::createBuiltin(const EnginePaths& paths) {
+ContentPack ContentPack::createBuiltin() {
     return ContentPack {
-        BUILTIN_CONTENT_NAMESPACE, "ChromaForge Builtin", ENGINE_VERSION_STRING, "ChromaForge", "", {}, "res:", "res:"
+        BUILTIN_CONTENT_NAMESPACE, "ChromaForge Builtin", ENGINE_VERSION_STRING, "ChromaForge", "", {}, "res:"
     };
 }
 
-const std::vector<std::string> ContentPack::RESERVED_NAMES = {"res", "abs", "local", BUILTIN_CONTENT_NAMESPACE, "user", "world", "none", "null"};
+const std::vector<std::string> ContentPack::RESERVED_NAMES = {
+    "res", "abs", "local", BUILTIN_CONTENT_NAMESPACE, "user", "world", "none", "null", "project", "pack", "packid", "root"
+};
 
 contentpack_error::contentpack_error(
     std::string packId,
@@ -42,6 +45,23 @@ io::path ContentPack::getContentFile() const {
 
 bool ContentPack::is_pack(const io::path& folder) {
     return io::is_regular_file(folder / PACKAGE_FILENAME);
+}
+
+std::optional<ContentPackStats> ContentPack::loadStats() const {
+    auto contentFile = getContentFile();
+    if (!io::exists(contentFile)) return std::nullopt;
+
+    dv::value object;
+    try {
+        object = io::read_object(contentFile);
+    } catch (const parsing_error& err) {
+        LOG_ERROR("{}", err.errorLog());
+    }
+    ContentPackStats stats {};
+    stats.totalBlocks = object.has("blocks") ? object["blocks"].size() : 0;
+    stats.totalItems = object.has("items") ? object["items"].size() : 0;
+    stats.totalEntities = object.has("entities") ? object["entities"].size() : 0;
+    return stats;
 }
 
 static void checkContentPackId(const std::string& id, const io::path& folder) {
@@ -68,7 +88,7 @@ static void checkContentPackId(const std::string& id, const io::path& folder) {
     }
 }
 
-ContentPack ContentPack::read(const std::string& path, const io::path& folder) {
+ContentPack ContentPack::read(const io::path& folder) {
     auto root = io::read_json(folder / PACKAGE_FILENAME);
     ContentPack pack;
 
@@ -89,7 +109,6 @@ ContentPack ContentPack::read(const std::string& path, const io::path& folder) {
     root.at("description").get(pack.description);
     root.at("source").get(pack.source);
     pack.folder = folder;
-    pack.path = path;
 
     if (auto found = root.at("dependencies")) {
         const auto& dependencies = *found;
@@ -123,7 +142,6 @@ ContentPack ContentPack::read(const std::string& path, const io::path& folder) {
 }
 
 void ContentPack::scanFolder(
-    const std::string& path,
     const io::path& folder,
     std::vector<ContentPack>& packs
 ) {
@@ -133,9 +151,7 @@ void ContentPack::scanFolder(
         if (!io::is_directory(packFolder)) continue;
         if (!is_pack(packFolder)) continue;
         try {
-            packs.push_back(
-                read(path + "/" + packFolder.name(), packFolder)
-            );
+            packs.push_back(read(packFolder));
         } catch (const contentpack_error& err) {
             LOG_ERROR("package.json error at '{}': {}", err.getFolder().string(), err.what());
         } catch (const std::runtime_error& err) {

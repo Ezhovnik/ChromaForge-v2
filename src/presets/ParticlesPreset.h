@@ -1,17 +1,24 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include <glm/vec3.hpp>
 
 #include <interfaces/Serializable.h>
+#include <util/EnumMetadata.h>
 
-enum ParticleSpawnShape {
+enum class ParticleSpawnShape {
     Ball = 0,
     Sphere,
     Box
 };
 
-std::string to_string(ParticleSpawnShape shape);
-ParticleSpawnShape ParticleSpawnShape_from(std::string_view s);
+CHROMA_ENUM_METADATA(ParticleSpawnShape)
+    {"ball", ParticleSpawnShape::Ball},
+    {"sphere", ParticleSpawnShape::Sphere},
+    {"box", ParticleSpawnShape::Box},
+CHROMA_ENUM_END
 
 struct ParticlesPreset : public Serializable {
     bool collision = true;
@@ -29,7 +36,7 @@ struct ParticlesPreset : public Serializable {
     float angleSpread = 0.0f;
     float minAngularVelocity = 0.0f;
     float maxAngularVelocity = 0.0f;
-    ParticleSpawnShape spawnShape = Ball;
+    ParticleSpawnShape spawnShape = ParticleSpawnShape::Ball;
     glm::vec3 spawnSpread {};
     std::string texture = "";
     float randomSubUV = 1.0f;

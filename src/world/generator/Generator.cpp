@@ -9,8 +9,8 @@
 VoxelStructure::VoxelStructure(
     VoxelStructureMeta meta,
     std::unique_ptr<VoxelFragment> structure
-) : fragments({std::move(structure)}),
-    meta(std::move(meta)) {}
+) : meta(std::move(meta)),
+    fragments({std::move(structure)}) {}
 
 
 Generator::Generator(std::string name) : name(std::move(name)), caption(util::id_to_caption(name)) {}

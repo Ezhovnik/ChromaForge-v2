@@ -4,7 +4,6 @@
 #include <string>
 #include <unordered_map>
 #include <stdexcept>
-#include <optional>
 
 #include <typedefs.h>
 #include <interfaces/Serializable.h>
@@ -209,11 +208,11 @@ namespace data {
             return totalSize;
         }
 
-        [[nodiscard]] const auto begin() const {
+        [[nodiscard]] auto begin() const {
             return fields.begin();
         }
 
-        [[nodiscard]] const auto end() const {
+        [[nodiscard]] auto end() const {
             return fields.end();
         }
 

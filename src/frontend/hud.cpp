@@ -7,12 +7,9 @@
 #include <assets/Assets.h>
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Batch2D.h>
-#include <graphics/core/Font.h>
-#include <graphics/core/Mesh.h>
 #include <graphics/core/Atlas.h>
 #include <window/Camera.h>
-#include <window/Window.h>
-#include <window/Events.h>
+#include <window/Window.h>  
 #include <window/input.h>
 #include <voxels/Chunks.h>
 #include <voxels/Block.h>
@@ -21,9 +18,9 @@
 #include <objects/Player.h>
 #include <physics/Hitbox.h>
 #include <debug/Logger.h>
-#include <graphics/ui/elements/layout/Menu.h>
-#include <graphics/ui/elements/layout/Panel.h>
-#include <graphics/ui/elements/display/Plotter.h>
+#include <graphics/ui/elements/Menu.h>
+#include <graphics/ui/elements/Panel.h>
+#include <graphics/ui/elements/Plotter.h>
 #include <graphics/ui/elements/UINode.h>
 #include <graphics/ui/GUI.h>
 #include <engine/Engine.h>
@@ -35,7 +32,7 @@
 #include <graphics/render/WorldRenderer.h>
 #include <util/stringutil.h>
 #include <graphics/core/Batch3D.h>
-#include <graphics/ui/elements/display/InventoryView.h>
+#include <graphics/ui/elements/InventoryView.h>
 #include <frontend/LevelFrontend.h>
 #include <items/Item.h>
 #include <items/Inventory.h>
@@ -122,7 +119,7 @@ std::shared_ptr<gui::InventoryView> Hud::createContentAccess() {
         inventory->getSlot(player.getChosenSlot()).set(item);
     });
 
-    gui::InventoryBuilder builder;
+    gui::InventoryBuilder builder(guiController);
     builder.addGrid(8, itemsCount - 1, glm::vec2(), glm::vec4(8, 8, 12, 8), true, slotLayout);
     auto view = builder.build();
     view->bind(accessInventory, &content);
@@ -135,7 +132,7 @@ std::shared_ptr<gui::InventoryView> Hud::createHotbar() {
     auto& content = levelFrontend.getLevel().content;
 
     gui::SlotLayout slotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr);
-    gui::InventoryBuilder builder;
+    gui::InventoryBuilder builder(guiController);
     builder.addGrid(10, 10, glm::vec2(), glm::vec4(4), true, slotLayout);
     auto view = builder.build();
     view->setId("hud.hotbar");
@@ -152,8 +149,10 @@ Hud::Hud(
     LevelFrontend& levelFrontend,
     Player& player
 ) : engine(engine),
+    input(engine.getInput()),
     assets(*engine.getAssets()),
-    guiController(*engine.getGUI()),
+    guiController(engine.getGUI()),
+    menu(*engine.getGUI().getMenu()),
     levelFrontend(levelFrontend),
     player(player),
     debugImgWorldGen(
@@ -164,7 +163,9 @@ Hud::Hud(
 {
     contentAccess = createContentAccess();
     contentAccess->setId("hud.content-access");
-    contentAccessPanel = std::make_shared<gui::Panel>(contentAccess->getSize(), glm::vec4(0.0f), 0.0f);
+    contentAccessPanel = std::make_shared<gui::Panel>(
+        guiController, contentAccess->getSize(), glm::vec4(0.0f), 0.0f
+    );
     contentAccessPanel->setColor(glm::vec4());
     contentAccessPanel->add(contentAccess);
     contentAccessPanel->setScrollable(true);
@@ -173,12 +174,15 @@ Hud::Hud(
     hotbarView = createHotbar();
 
 	darkOverlay = guiutil::create(
+        guiController,
         "<container size='4000' color='#00000080' z-index='-1' visible='false'/>"
     );
 
 	uicamera = std::make_unique<Camera>(glm::vec3(), 1);
 	uicamera->perspective = false;
 	uicamera->flipped = true;
+    uicamera->near = -1.0f;
+    uicamera->far = 1.0f;
 
     debugPanel = create_debug_panel(
         engine, levelFrontend.getLevel(), player, allowDebugCheats
@@ -190,7 +194,9 @@ Hud::Hud(
     guiController.add(hotbarView);
     guiController.add(contentAccessPanel);
 
-    auto dplotter = std::make_shared<gui::Plotter>(350, 250, 2000, 16);
+    auto dplotter = std::make_shared<gui::Plotter>(
+        guiController, 350, 250, 2000, 16
+    );
     dplotter->setGravity(gui::Gravity::bottom_right);
     dplotter->setInteractive(false);
     add(HudElement(HudElementMode::Permanent, nullptr, dplotter, true));
@@ -200,6 +206,7 @@ Hud::Hud(
     );
 
     debugMinimap = guiutil::create(
+        guiController,
         "<image src='" + DEBUG_WORLDGEN_IMAGE +
         "' pos='0' size='256' gravity='top-right' margin='0,20,0,0'/>"
     );
@@ -224,10 +231,13 @@ void Hud::cleanup() {
 }
 
 void Hud::processInput(bool visible) {
-    auto menu = guiController.getMenu();
-    if (!Window::isFocused() && !menu->hasOpenPage() && !isInventoryOpen()) setPause(true);
+    const auto& window = engine.getWindow();
+    if (!window.isFocused() && !menu.hasOpenPage() && !isInventoryOpen()) {
+        setPause(true);
+    }
 
-    if (!pause && visible && Events::justActive(BIND_HUD_INVENTORY)) {
+    const auto& bindings = input.getBindings();
+    if (!pause && visible && bindings.justActive(BIND_HUD_INVENTORY)) {
         if (inventoryOpen) {
             closeInventory();
         } else {
@@ -241,29 +251,31 @@ void Hud::processInput(bool visible) {
 }
 
 void Hud::updateHotbarControl() {
-    if (!inventoryOpen && Events::scroll) {
+    int scroll = input.getScroll();
+    if (!inventoryOpen && scroll) {
         int slot = player.getChosenSlot();
-        slot = (slot - Events::scroll) % 10;
+        slot = (slot - scroll) % 10;
         if (slot < 0) slot += 10;
         player.setChosenSlot(slot);
     }
     for (
-        int i = static_cast<int>(keycode::NUM_1); 
-        i <= static_cast<int>(keycode::NUM_9); 
+        int i = static_cast<int>(Keycode::NUM_1); 
+        i <= static_cast<int>(Keycode::NUM_9); 
         ++i
     ) {
-        if (Events::justPressed(i)) {
-            player.setChosenSlot(i - static_cast<int>(keycode::NUM_1));
+        if (input.justPressed(static_cast<Keycode>(i))) {
+            player.setChosenSlot(i - static_cast<int>(Keycode::NUM_1));
         }
     }
-    if (Events::justPressed(keycode::NUM_0)) {
+    if (input.justPressed(Keycode::NUM_0)) {
         player.setChosenSlot(9);
     }
 }
 
-void Hud::updateWorldGenDebugVisualization() {
+void Hud::updateWorldGenDebug() {
     auto& level = levelFrontend.getLevel();
     const auto& chunks = *player.chunks;
+    uint padding = engine.getSettings().chunks.padding.get();
     auto generator = levelFrontend.getController()->getChunksController()->getGenerator();
     auto debugInfo = generator->createDebugInfo();
     int width = debugImgWorldGen->getWidth();
@@ -283,8 +295,13 @@ void Hud::updateWorldGenDebugVisualization() {
             int ax = x - (width - areaWidth) / 2;
             int az = z - (height - areaHeight) / 2;
 
-            data[(flippedZ * width + x) * 4 + 1] = 
-                chunks.getChunk(ax + ox, az + oz) ? 255 : 0;
+            bool isInLoadingZone =
+                levelFrontend.getController()
+                    ->getChunksController()
+                    ->isInLoadingZone(player, padding, ax + ox, az + oz);
+
+            data[(flippedZ * width + x) * 4 + 1] =
+                chunks.getChunk(ax + ox, az + oz) ? (isInLoadingZone ? 255 : 128) : 0;
             data[(flippedZ * width + x) * 4 + 0] = 
                 level.chunks->fetch(ax + ox, az + oz) ? 255 : 0;
 
@@ -307,18 +324,20 @@ void Hud::updateWorldGenDebugVisualization() {
 }
 
 void Hud::update(bool hudVisible) {
-	const auto& level = levelFrontend.getLevel();
     const auto& chunks = *player.chunks;
-	const auto& menu = guiController.getMenu();
 
-	debugPanel->setVisible(debug && hudVisible);
+	debugPanel->setVisible(
+        debug && hudVisible && !(inventoryOpen && inventoryView == nullptr)
+    );
 
 	if (!hudVisible && inventoryOpen) closeInventory();
-	if (pause && !menu->hasOpenPage()) setPause(false);
+	if (pause && !menu.hasOpenPage()) setPause(false);
 
 	if (!guiController.isFocusCaught()) processInput(hudVisible);
 
-	if ((menu->hasOpenPage() || inventoryOpen) == Events::isCursorLocked()) Events::toggleCursor();
+	if ((menu.hasOpenPage() || inventoryOpen) == input.getCursor().locked) {
+        input.toggleCursor();
+    }
 
 	if (blockUI) {
         voxel* vox = chunks.getVoxel(blockPos.x, blockPos.y, blockPos.z);
@@ -329,10 +348,11 @@ void Hud::update(bool hudVisible) {
         element.getNode()->setVisible(hudVisible);
     }
 
+    const auto& windowSize = engine.getWindow().getSize();
 	glm::vec2 caSize = contentAccessPanel->getSize();
     contentAccessPanel->setVisible(inventoryView != nullptr && showContentPanel);
-    contentAccessPanel->setSize(glm::vec2(caSize.x, Window::height));
-    contentAccess->setMinSize(glm::vec2(1, Window::height));
+    contentAccessPanel->setSize(glm::vec2(caSize.x, windowSize.y));
+    contentAccess->setMinSize(glm::vec2(1, windowSize.y));
 	hotbarView->setVisible(hudVisible && !(secondUI && !inventoryView));
 
 	if (hudVisible) {
@@ -346,23 +366,21 @@ void Hud::update(bool hudVisible) {
 
     debugMinimap->setVisible(debug && showGeneratorMinimap);
     if (debug && showGeneratorMinimap) {
-        updateWorldGenDebugVisualization();
+        updateWorldGenDebug();
     }
 }
 
 void Hud::draw(const DrawContext& context) {
-    const Viewport& viewport = context.getViewport();
-	const uint width = viewport.getWidth();
-	const uint height = viewport.getHeight();
-    auto menu = guiController.getMenu();
+    const auto& viewport = context.getViewport();
 
-    bool is_menu_open = menu->hasOpenPage();
+    bool is_menu_open = menu.hasOpenPage();
     darkOverlay->setVisible(is_menu_open);
-    menu->setVisible(is_menu_open);
+    menu.setVisible(is_menu_open);
 
     updateElementsPosition(viewport);
 
-    uicamera->setFov(height);
+    uicamera->setFov(viewport.y);
+    uicamera->setAspectRatio(viewport.x / static_cast<float>(viewport.y));
 
 	auto batch = context.getBatch2D();
 	batch->begin();
@@ -378,26 +396,26 @@ void Hud::draw(const DrawContext& context) {
         batch->texture(texture);
         int chsizex = texture != nullptr ? texture->getWidth() : 16;
         int chsizey = texture != nullptr ? texture->getHeight(): 16;
-        batch->rect((width - chsizex) / 2, (height - chsizey) / 2, chsizex, chsizey, 0, 0, 1, 1, 1, 1, 1, 1);
+        batch->rect(
+            (viewport.x - chsizex) / 2, (viewport.y - chsizey) / 2, 
+            chsizex, chsizey, 0, 0, 1, 1, 1, 1, 1, 1
+        );
 	}
 }
 
-void Hud::updateElementsPosition(const Viewport& viewport) {
-    const uint width = viewport.getWidth();
-    const uint height = viewport.getHeight();
-
+void Hud::updateElementsPosition(const glm::uvec2& viewport) {
 	if (inventoryOpen) {
 		float caWidth = (inventoryView && showContentPanel) ? contentAccess->getSize().x : 0.0f;
-        contentAccessPanel->setPos(glm::vec2(width-caWidth, 0));
+        contentAccessPanel->setPos(glm::vec2(viewport.x - caWidth, 0));
 
 		glm::vec2 invSize = inventoryView ? inventoryView->getSize() : glm::vec2();
         if (secondUI == nullptr && inventoryView) {
             inventoryView->setPos(glm::vec2(
                 glm::min(
-                    width / 2 - invSize.x / 2,
-                    width - caWidth - 10 - invSize.x
+                    viewport.x / 2 - invSize.x / 2,
+                    viewport.x - caWidth - 10 - invSize.x
                 ),
-                height / 2 - invSize.y / 2
+                viewport.y / 2 - invSize.y / 2
             ));
         } else {
             glm::vec2 secondUISize = secondUI->getSize();
@@ -407,27 +425,27 @@ void Hud::updateElementsPosition(const Viewport& viewport) {
             if (inventoryView) {
                 inventoryView->setPos(glm::vec2(
                     glm::min(
-                        width / 2 - invwidth / 2,
-                        width - caWidth - 10 - invwidth
+                        viewport.x / 2 - invwidth / 2,
+                        viewport.x - caWidth - 10 - invwidth
                     ),
-                    height / 2 + totalHeight / 2 - invSize.y
+                    viewport.y / 2 + totalHeight / 2 - invSize.y
                 ));
             }
             if (secondUI->getPositionFunc() == nullptr) {
                 secondUI->setPos(glm::vec2(
                     glm::min(
-                        width / 2.0f - invwidth / 2.0f,
-                        width - caWidth - (inventoryView ? 10 : 0) - invwidth
+                        viewport.x / 2.f - invwidth / 2.f,
+                        viewport.x - caWidth - (inventoryView ? 10 : 0) - invwidth
                     ),
-                    height / 2.0f - totalHeight / 2.0f
+                    viewport.y / 2.0f - totalHeight / 2.0f
                 ));
             }
         }
 	}
 
-	if (exchangeSlot != nullptr) exchangeSlot->setPos(glm::vec2(Events::cursor));
+	if (exchangeSlot != nullptr) exchangeSlot->setPos(input.getCursor().pos);
 
-	hotbarView->setPos(glm::vec2(width / 2, height - 65));
+	hotbarView->setPos(glm::vec2(viewport.x / 2, viewport.y - 65));
     hotbarView->setSelected(player.getChosenSlot());
 }
 
@@ -531,6 +549,7 @@ void Hud::showExchangeSlot() {
     auto& content = level.content;
     exchangeSlotInv = level.inventories->createVirtual(1);
     exchangeSlot = std::make_shared<gui::SlotView>(
+        guiController,
         gui::SlotLayout(-1, glm::vec2(), false, false, nullptr, nullptr, nullptr)
     );
     exchangeSlot->bind(exchangeSlotInv->getId(), exchangeSlotInv->getSlot(0), &content);
@@ -606,12 +625,11 @@ void Hud::setPause(bool pause) {
 
     if (inventoryOpen) closeInventory();
 
-    const auto& menu = guiController.getMenu();
-    if (!pause && menu->hasOpenPage()) {
-        menu->reset();
+    if (!pause && menu.hasOpenPage()) {
+        menu.reset();
     }
-    if (pause && !menu->hasOpenPage()) {
-        menu->setPage("pause");
+    if (pause && !menu.hasOpenPage()) {
+        menu.setPage("pause");
     }
 }
 
@@ -695,9 +713,8 @@ void Hud::setDebug(bool flag) {
 
 void Hud::setAllowPause(bool flag) {
     if (pause) {
-        auto menu = guiController.getMenu();
         setPause(false);
-        menu->setPage("pause", true);
+        menu.setPage("pause", true);
     }
     allowPause = flag;
 }

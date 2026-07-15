@@ -9,11 +9,11 @@
 class PacksManager {
 private:
     std::unordered_map<std::string, ContentPack> packs;
-    std::vector<std::pair<std::string, io::path>> sources;
+    std::vector<io::path> sources;
 public:
     PacksManager();
 
-    void setSources(std::vector<std::pair<std::string, io::path>> sources);
+    void setSources(std::vector<io::path> sources);
 
     void scan();
 

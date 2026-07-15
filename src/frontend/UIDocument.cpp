@@ -3,7 +3,7 @@
 #include <utility>
 
 #include <graphics/ui/elements/UINode.h>
-#include <graphics/ui/elements/display/InventoryView.h>
+#include <graphics/ui/elements/InventoryView.h>
 #include <logic/scripting/scripting.h>
 #include <io/io.h>
 #include <graphics/ui/gui_xml.h>
@@ -25,11 +25,11 @@ void UIDocument::rebuildIndices() {
     gui::UINode::getIndices(root, map);
 }
 
-const uinodes_map& UIDocument::getMap() const {
+const UINodesMap& UIDocument::getMap() const {
     return map;
 }
 
-uinodes_map& UIDocument::getMapWriteable() {
+UINodesMap& UIDocument::getMapWriteable() {
     return map;
 }
 
@@ -56,6 +56,7 @@ std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const {
 }
 
 std::unique_ptr<UIDocument> UIDocument::read(
+    gui::GUI& gui,
     const scriptenv& parent_env,
     const std::string& name,
     const io::path& file,
@@ -67,7 +68,7 @@ std::unique_ptr<UIDocument> UIDocument::read(
     auto env = parent_env == nullptr 
         ? scripting::create_doc_environment(scripting::get_root_environment(), name)
         : scripting::create_doc_environment(parent_env, name);
-    gui::UIXmlReader reader(env);
+    gui::UIXmlReader reader(gui, scriptenv(env));
     auto view = reader.readXML(file.string(), *xmldoc->getRoot());
     view->setId("root");
     uidocscript script {};
@@ -79,8 +80,7 @@ std::unique_ptr<UIDocument> UIDocument::read(
 }
 
 std::shared_ptr<gui::UINode> UIDocument::readElement(
-    const io::path& file, const std::string& fileName
+    gui::GUI& gui, const io::path& file, const std::string& fileName
 ) {
-    auto document = read(nullptr, file.name(), file, fileName);
-    return document->getRoot();
+    return read(gui, nullptr, file.name(), file, fileName)->getRoot();
 }

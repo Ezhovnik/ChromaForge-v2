@@ -14,7 +14,7 @@ static int l_add_command(lua::State* L) {
     lua::pushvalue(L, 3);
     auto func = lua::create_lambda(L);
     try {
-        scripting::engine->getCommandsInterpreter()->getRepository()->add(
+        scripting::engine->getCmd().getRepository()->add(
             scheme, description, [func](auto, auto args, auto kwargs) {
                 return func({args, kwargs});
             }
@@ -28,7 +28,7 @@ static int l_add_command(lua::State* L) {
 static int l_execute(lua::State* L) {
     auto prompt = lua::require_string(L, 1);
     try {
-        auto result = engine->getCommandsInterpreter()->execute(prompt);
+        auto result = engine->getCmd().execute(prompt);
         lua::pushvalue(L, result);
         return 1;
     } catch (const parsing_error& err) {
@@ -41,19 +41,18 @@ static int l_execute(lua::State* L) {
 
 static int l_get(lua::State* L) {
     auto name = lua::require_string(L, 1);
-    return lua::pushvalue(L, (*scripting::engine->getCommandsInterpreter())[name]);
+    return lua::pushvalue(L, scripting::engine->getCmd()[name]);
 }
 
 static int l_set(lua::State* L) {
     auto name = lua::require_string(L, 1);
     auto value = lua::tovalue(L, 2);
-    (*scripting::engine->getCommandsInterpreter())[name] = value;
+    scripting::engine->getCmd()[name] = value;
     return 0;
 }
 
 static int l_get_commands_list(lua::State* L) {
-    auto interpreter = scripting::engine->getCommandsInterpreter();
-    auto repo = interpreter->getRepository();
+    auto repo = scripting::engine->getCmd().getRepository();
     const auto& commands = repo->getCommands();
 
     lua::createtable(L, commands.size(), 0);
@@ -67,8 +66,7 @@ static int l_get_commands_list(lua::State* L) {
 
 static int l_get_command_info(lua::State* L) {
     auto name = lua::require_string(L, 1);
-    auto interpreter = scripting::engine->getCommandsInterpreter();
-    auto repo = interpreter->getRepository();
+    auto repo = scripting::engine->getCmd().getRepository();
     auto command = repo->get(name);
     if (command == nullptr) return 0;
     const auto& args = command->getArgs();

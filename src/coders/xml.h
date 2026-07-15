@@ -48,11 +48,11 @@ namespace xml {
 
         const std::string& getTag() const;
 
-        inline bool isText() const {
+        bool isText() const {
             return getTag() == "#";
         }
 
-        inline const std::string& text() const {
+        const std::string& getInnerText() const {
             return attr("#").getText();
         }
 
@@ -93,6 +93,10 @@ namespace xml {
 
     std::unique_ptr<Document> parse(
         std::string_view filename, std::string_view source
+    );
+
+    std::unique_ptr<Document> parse_cfmodel(
+        std::string_view filename, std::string_view source, std::string_view tag
     );
 
     using xmlelement = Node;

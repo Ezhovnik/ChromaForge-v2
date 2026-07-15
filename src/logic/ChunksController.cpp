@@ -40,11 +40,13 @@ void ChunksController::update(
     int64_t maxDuration, int loadDistance, uint padding, Player& player
 ) const {
     const auto& position = player.getPosition();
-    int centerX = floordiv<CHUNK_WIDTH>(position.x);
-    int centerY = floordiv<CHUNK_DEPTH>(position.z);
+    int centerX = floordiv<CHUNK_WIDTH>(glm::floor(position.x));
+    int centerY = floordiv<CHUNK_DEPTH>(glm::floor(position.z));
 	if (player.isLoadingChunks()) {
 		// FIXME: one generator for multiple players
 		generator->update(centerX, centerY, loadDistance);
+	} else {
+		return;
 	}
     int64_t mcstotal = 0;
     for (uint i = 0; i < MAX_WORK_PER_FRAME; ++i) {
@@ -60,18 +62,57 @@ void ChunksController::update(
     }
 }
 
-bool ChunksController::loadVisible(const Player& player, uint padding) const {
+bool ChunksController::isInLoadingZone(
+    const Player& player, uint padding, int x, int z
+) const {
     const auto& chunks = *player.chunks;
 	int sizeX = chunks.getWidth();
+    int sizeY = chunks.getDepth();
+
+	int minDistance = ((sizeX - padding * 2) / 2) * ((sizeY - padding * 2) / 2);
+
+    int lx = (x - chunks.getOffsetX()) - sizeX / 2;
+    int lz = (z - chunks.getOffsetZ()) - sizeY / 2;
+    int distance = (lx * lx + lz * lz);
+
+    return distance < minDistance;
+}
+
+bool ChunksController::loadVisible(const Player& player, uint padding) const {
+    auto& chunks = *player.chunks;
+    int sizeX = chunks.getWidth();
     int sizeY = chunks.getDepth();
 
 	int nearX = 0;
 	int nearZ = 0;
 	bool assigned = false;
 	int minDistance = ((sizeX - padding * 2) / 2) * ((sizeY - padding * 2) / 2);
+
+	int maxDistance = ((sizeX) / 2) * ((sizeY) / 2);
+    for (uint z = 0; z < sizeY; ++z) {
+        for (uint x = 0; x < sizeX; ++x) {
+            int index = z * sizeX + x;
+            int lx = x - sizeX / 2;
+            int lz = z - sizeY / 2;
+            int distance = (lx * lx + lz * lz);
+            auto& chunk = chunks.getChunks()[index];
+            if (chunk != nullptr) {
+                if (distance >= maxDistance) {
+                    chunks.remove(
+                        x + chunks.getOffsetX(), z + chunks.getOffsetZ()
+                    );
+                }
+                continue;
+            }
+        }
+    }
+
 	for (uint z = padding; z < sizeY - padding; ++z){
 		for (uint x = padding; x < sizeX - padding; ++x){
 			int index = z * sizeX + x;
+			int lx = x - sizeX / 2;
+            int lz = z - sizeY / 2;
+            int distance = (lx * lx + lz * lz);
 			auto& chunk = chunks.getChunks()[index];
 			if (chunk != nullptr) {
 				if (chunk->flags.loaded && !chunk->flags.lighted) {
@@ -79,9 +120,7 @@ bool ChunksController::loadVisible(const Player& player, uint padding) const {
 				}
 				continue;
 			}
-			int lx = x - sizeX / 2;
-			int lz = z - sizeY / 2;
-			int distance = (lx * lx + lz * lz);
+
 			if (distance < minDistance){
 				minDistance = distance;
 				nearX = x;

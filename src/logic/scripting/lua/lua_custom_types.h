@@ -18,29 +18,6 @@ namespace lua {
         virtual const std::string& getTypeName() const = 0;
     };
 
-    class LuaBytearray : public Userdata {
-    private:
-        std::vector<ubyte> buffer;
-    public:
-        LuaBytearray(size_t capacity);
-        LuaBytearray(std::vector<ubyte> buffer);
-        LuaBytearray(const ubyte* data, size_t size);
-        virtual ~LuaBytearray();
-
-        const std::string& getTypeName() const override {
-            return TYPENAME;
-        }
-
-        inline std::vector<ubyte>& data() {
-            return buffer;
-        }
-
-        static int createMetatable(lua::State*);
-
-        inline static std::string TYPENAME = "Bytearray";
-    };
-    static_assert(!std::is_abstract<LuaBytearray>());
-
     class LuaHeightmap : public Userdata {
     private:
         std::shared_ptr<Heightmap> map;
@@ -100,22 +77,39 @@ namespace lua {
 
     class LuaCanvas : public Userdata {
     public:
-        explicit LuaCanvas(std::shared_ptr<Texture> inTexture);
+        explicit LuaCanvas(
+            std::shared_ptr<Texture> inTexture,
+            std::shared_ptr<ImageData> inData
+        );
         ~LuaCanvas() override = default;
 
         const std::string& getTypeName() const override {
             return TYPENAME;
         }
 
-        [[nodiscard]] Texture& texture() const {return *mTexture;}
+        [[nodiscard]] auto& texture() const {
+            return *mTexture;
+        }
 
-        [[nodiscard]] ImageData& data() const {return *mData;}
+        [[nodiscard]] auto& data() const {
+            return *mData;
+        }
+
+        [[nodiscard]] bool hasTexture() const {
+            return mTexture != nullptr;
+        }
+
+        auto shareTexture() const {
+            return mTexture;
+        }
+
+        void createTexture();
 
         static int createMetatable(lua::State*);
         inline static std::string TYPENAME = "Canvas";
     private:
         std::shared_ptr<Texture> mTexture;
-        std::unique_ptr<ImageData> mData;
+        std::shared_ptr<ImageData> mData;
     };
     static_assert(!std::is_abstract<LuaCanvas>());
 }

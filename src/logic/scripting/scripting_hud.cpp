@@ -9,9 +9,12 @@
 #include <objects/Player.h>
 #include <graphics/render/WorldRenderer.h>
 #include <frontend/UIDocument.h>
+#include <assets/Assets.h>
+#include <content/ContentControl.h>
 
 Hud* scripting::hud = nullptr;
 WorldRenderer* scripting::renderer = nullptr;
+PostProcessing* scripting::post_processing = nullptr;
 
 static void load_script(const std::string& name) {
     auto file = io::path("res:scripts") / name;
@@ -21,16 +24,21 @@ static void load_script(const std::string& name) {
     lua::execute(lua::get_main_state(), 0, src, file.string());
 }
 
-void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
+void scripting::on_frontend_init(
+    Hud* hud, WorldRenderer* renderer, PostProcessing* postProcessing
+) {
     scripting::hud = hud;
     scripting::renderer = renderer;
+    scripting::post_processing = postProcessing;
 
     auto L = lua::get_main_state();
 
     lua::openlib(L, "hud", hudlib);
     lua::openlib(L, "gfx", "blockwraps", blockwrapslib);
     lua::openlib(L, "gfx", "particles", particleslib);
+    lua::openlib(L, "gfx", "weather", weatherlib);
     lua::openlib(L, "gfx", "text3d", text3dlib);
+    lua::openlib(L, "gfx", "posteffects", posteffectslib);
 
     load_script("hud_classes.lua");
 
@@ -38,7 +46,7 @@ void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
         lua::call_nothrow(L, 0, 0);
     }
 
-    for (auto& pack : engine->getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(lua::get_main_state(), pack.id + ":.hudopen", 
         [&] (lua::State* L) {
             return lua::pushinteger(L, hud->getPlayer()->getId());        
@@ -48,7 +56,7 @@ void scripting::on_frontend_init(Hud* hud, WorldRenderer* renderer) {
 
 void scripting::on_frontend_close() {
     auto L = lua::get_main_state();
-    for (auto& pack : engine->getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.hudclose", 
         [&] (lua::State* L) {
             return lua::pushinteger(L, hud->getPlayer()->getId());            
@@ -61,10 +69,11 @@ void scripting::on_frontend_close() {
 
     scripting::renderer = nullptr;
     scripting::hud = nullptr;
+    scripting::post_processing = nullptr;
 }
 
 void scripting::on_frontend_render() {
-    for (auto& pack : engine->getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(lua::get_main_state(), pack.id + ":.hudrender", 
         [] (lua::State* L) {
             return 0;            
@@ -98,7 +107,7 @@ gui::PageLoaderFunc scripting::create_page_loader() {
         auto func = lua::create_lambda(L);
         return [func](const std::string& name) -> std::shared_ptr<gui::UINode> {
             auto docname = func({name}).asString();
-            return engine->getAssets()->require<UIDocument>(docname).getRoot();
+            return Engine::getInstance().getAssets()->require<UIDocument>(docname).getRoot();
         };
     }
     return nullptr;

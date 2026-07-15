@@ -1,6 +1,12 @@
 {
     "components": [
-        "chromaforge:drop"
+        {
+            "name": "chromaforge:drop",
+            "args": {
+                "item": "chromaforge:stone.item",
+                "count": 1
+            }
+        }
     ],
     "hitbox": [0.4, 0.25, 0.4],
     "sensors": [

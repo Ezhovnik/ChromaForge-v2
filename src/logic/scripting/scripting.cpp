@@ -1,6 +1,7 @@
 #include <logic/scripting/scripting.h>
 
 #include <stdexcept>
+#include <iostream>
 
 #include <io/engine_paths.h>
 #include <io/io.h>
@@ -26,15 +27,19 @@
 #include <logic/scripting/scripting_commons.h>
 #include <interfaces/Process.h>
 #include <voxels/Chunk.h>
+#include <content/ContentControl.h>
 
 static inline const std::string STDCOMP = "stdcomp";
 
+std::ostream* scripting::output_stream = &std::cout;
+std::ostream* scripting::error_stream = &std::cerr;
 Engine* scripting::engine = nullptr;
 Level* scripting::level = nullptr;
 const Content* scripting::content = nullptr;
 BlocksController* scripting::blocks = nullptr;
 LevelController* scripting::controller = nullptr;
 const ContentIndices* scripting::indices = nullptr;
+ContentControl* scripting::content_control = nullptr;
 
 void scripting::load_script(const io::path& name, bool throwable) {
     io::path file = io::path("res:scripts") / name;
@@ -62,6 +67,7 @@ int scripting::load_script(
 
 void scripting::initialize(Engine* engine) {
     scripting::engine = engine;
+    scripting::content_control = &engine->getContentControl();
 
     lua::initialize(engine->getPaths(), engine->getCoreParameters());
 
@@ -82,7 +88,7 @@ public:
     }
 
     void update() override {
-        if (id == 0) return;
+        if (!alive || id == 0) return;
         if (lua::requireglobal(L, "__chroma_resume_coroutine")) {
             lua::pushinteger(L, id);
             if (lua::call(L, 1)) {
@@ -115,7 +121,7 @@ std::unique_ptr<Process> scripting::start_coroutine(
         lua::loadbuffer(L, 0, source, script.name());
         if (lua::call(L, 1)) {
             int id = lua::tointeger(L, -1);
-            lua::pop(L, 2);
+            lua::pop(L, 1);
             return std::make_unique<LuaCoroutine>(L, id);
         }
         lua::pop(L);
@@ -137,6 +143,22 @@ scriptenv scripting::create_pack_environment(const ContentPack& pack) {
     lua::setfield(L, "PACK_ENV");
     lua::pushstring(L, pack.id);
     lua::setfield(L, "PACK_ID");
+    lua::pop(L);
+    return std::shared_ptr<int>(new int(id), [=](int* id) {
+        lua::remove_environment(L, *id);
+        delete id;
+    });
+}
+
+[[nodiscard]] scriptenv scripting::create_environment(
+    const scriptenv& parent
+) {
+    auto L = lua::get_main_state();
+    int id = lua::create_environment(L, (parent ? *parent : 0));
+    lua::pushenv(L, id);
+    lua::pushvalue(L, -1);
+    lua::setfield(L, "CUR_ENV");
+
     lua::pop(L);
     return std::shared_ptr<int>(new int(id), [=](int* id) {
         lua::remove_environment(L, *id);
@@ -235,7 +257,7 @@ void scripting::on_content_load(Content* content) {
         const auto& materials = content->getBlockMaterials();
         lua::createtable(L, 0, materials.size());
         for (const auto& [name, material] : materials) {
-            lua::pushvalue(L, material->serialize());
+            lua::pushvalue(L, material->toTable());
             lua::setfield(L, name);
         }
         lua::setfield(L, "materials");
@@ -253,6 +275,11 @@ void scripting::on_content_load(Content* content) {
     load_script("stdcmd.lua", true);
 }
 
+void scripting::on_content_reset() {
+    scripting::content = nullptr;
+    scripting::indices = nullptr;
+}
+
 void scripting::on_world_load(LevelController* controller) {
     scripting::level = controller->getLevel();
     scripting::blocks = controller->getBlocksController();
@@ -263,21 +290,25 @@ void scripting::on_world_load(LevelController* controller) {
         lua::call_nothrow(L, 0, 0);
     }
 
-    for (auto& pack : scripting::engine->getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldopen");
     }
 }
 
-void scripting::on_world_spark() {
+void scripting::on_world_spark(int sps) {
     auto L = lua::get_main_state();
-    for (auto& pack : scripting::engine->getAllContentPacks()) {
+    if (lua::getglobal(L, "__chroma_on_world_spark")) {
+        lua::pushinteger(L, sps);
+        lua::call_nothrow(L, 1, 0);
+    }
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldspark");
     }
 }
 
 void scripting::on_world_save() {
     auto L = lua::get_main_state();
-    for (auto& pack : scripting::engine->getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldsave");
     }
     if (lua::getglobal(L, "__chroma_on_world_save")) {
@@ -287,7 +318,7 @@ void scripting::on_world_save() {
 
 void scripting::on_world_quit() {
     auto L = lua::get_main_state();
-    for (auto& pack : scripting::engine->getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldquit");
     }
     if (lua::getglobal(L, "__chroma_on_world_quit")) {
@@ -304,7 +335,7 @@ void scripting::cleanup() {
     auto L = lua::get_main_state();
 
     lua::requireglobal(L, "pack");
-    for (auto& pack : scripting::engine->getAllContentPacks()) {
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::requirefield(L, "unload");
         lua::pushstring(L, pack.id);
         lua::call_nothrow(L, 1);   
@@ -524,6 +555,7 @@ void scripting::on_entity_spawn(
     const dv::value& saved
 ) {
     auto L = lua::get_main_state();
+    lua::stackguard guard(L);
     lua::requireglobal(L, STDCOMP);
     if (lua::getfield(L, "new_Entity")) {
         lua::pushinteger(L, eid);
@@ -550,6 +582,8 @@ void scripting::on_entity_spawn(
             } else {
                 lua::createtable(L, 0, 0);
             }
+        } else if (component->params != nullptr) {
+            lua::pushvalue(L, component->params);
         } else {
             lua::createtable(L, 0, 0);
         }
@@ -741,20 +775,21 @@ bool scripting::register_event(int env, const std::string& name, const std::stri
     if (lua::pushenv(L, env) == 0) {
         lua::pushglobals(L);
     }
-    if (lua::getfield(L, name)) {
-        lua::pop(L);
-        lua::getglobal(L, "events");
-        lua::getfield(L, "reset");
-        lua::pushstring(L, id);
-        lua::getfield(L, name, -4);
-        lua::call_nothrow(L, 2);
-        lua::pop(L);
+    bool success = true;
+    lua::getglobal(L, "events");
+    lua::getfield(L, "reset");
+    lua::pushstring(L, id);
+    if (!lua::getfield(L, name, -4)) {
+        success = false;
 
         lua::pushnil(L);
-        lua::setfield(L, name);
-        return true;
     }
-    return false;
+    lua::call_nothrow(L, 2);
+    lua::pop(L);
+
+    lua::pushnil(L);
+    lua::setfield(L, name);
+    return success;
 }
 
 int scripting::get_values_on_stack() {
@@ -770,6 +805,8 @@ void scripting::load_content_script(
 ) {
     int env = *senv;
     lua::pop(lua::get_main_state(), load_script(env, "block", file, fileName));
+
+    funcsset = {};
     funcsset.init = register_event(env, "init", prefix + ".init");
     funcsset.update = register_event(env, "on_update", prefix + ".update");
     funcsset.randupdate = register_event(env, "on_random_update", prefix + ".randupdate");
@@ -789,6 +826,8 @@ void scripting::load_content_script(
     ItemFuncsSet& funcsset
 ) {
     int env = *senv;
+
+    funcsset = {};
     lua::pop(lua::get_main_state(), load_script(env, "item", file, fileName));
     funcsset.init = register_event(env, "init", prefix + ".init");
     funcsset.on_use = register_event(env, "on_use", prefix + ".use");
@@ -821,6 +860,7 @@ void scripting::load_world_script(
     register_event(env, "on_world_save", prefix + ":.worldsave");
     register_event(env, "on_world_quit", prefix + ":.worldquit");
 
+    funcsset = {};
     funcsset.onblockplaced = register_event(env, "on_block_placed", prefix + ":.blockplaced");
     funcsset.onblockbreaking = register_event(env, "on_block_breaking", prefix + ":.blockbreaking");
     funcsset.onblockbroken = register_event(env, "on_block_broken", prefix + ":.blockbroken");

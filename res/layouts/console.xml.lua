@@ -3,95 +3,10 @@ console_mode = "console"
 history = session.get_entry("commands_history")
 history_pointer = #history
 
-local warnings_all = {}
-local errors_all = {}
-
-local warning_id = 0
-local error_id = 0
-
-events.on("builtin:warning", function (wtype, text, traceback)
-    local full = wtype..": "..text
-    if table.has(warnings_all, full) then
-        return
+events.on("builtin:open_traceback", function()
+    if modes then
+        modes:set('debug')
     end
-    local encoded = base64.encode(bjson.tobytes({frames=traceback}))
-    document.problemsLog:add(gui.template("problem", {
-        type="warning", 
-        text=full, 
-        traceback=encoded, 
-        id=tostring(warning_id)
-    }))
-    warning_id = warning_id + 1
-    table.insert(warnings_all, full)
-end)
-
-events.on("builtin:error", function (msg, traceback)
-    local _, endindex = string.find(msg, ": ")
-    local full = ""
-    for i,frame in ipairs(traceback) do
-        full = full..frame.source..tostring(frame.currentline)
-    end
-    if table.has(errors_all, full) then
-        return
-    end
-    local encoded = base64.encode(bjson.tobytes({frames=traceback}))
-    document.problemsLog:add(gui.template("problem", {
-        type="error", 
-        text=msg:sub(endindex), 
-        traceback=encoded,
-        id=tostring(error_id)
-    }))
-    error_id = error_id + 1
-    table.insert(errors_all, full)
-end)
-
-events.on("builtin:open_traceback", function(traceback_b64)
-    local traceback = bjson.frombytes(base64.decode(traceback_b64))
-    modes:set('debug')
-
-    local tb_list = document.traceback
-    local srcsize = tb_list.size
-    tb_list:clear()
-    tb_list:add("<label enabled='false' margin='2'>@devtools.traceback</label>")
-    for _, frame in ipairs(traceback.frames) do
-        local callback = ""
-        local framestr = ""
-        if frame.what == "C" then
-            framestr = "C/C++ "
-        else
-            framestr = frame.source..":"..tostring(frame.currentline).." "
-            if file.exists(frame.source) then
-                callback = string.format(
-                    "local editor = document.editor "..
-                    "local source = file.read('%s'):gsub('\t', '    ') "..
-                    "editor.text = source "..
-                    "editor.focused = true "..
-                    "time.post_runnable(function()"..
-                    "editor.caret = editor:linePos(%s) "..
-                    "end)",
-                    frame.source, frame.currentline-1
-                )
-            else
-                callback = "document.editor.text = 'Could not open source file'"
-            end
-            callback = string.format(
-                "%s document.title.text = gui.str('File')..' - %s'",
-                callback,
-                frame.source
-            )
-        end
-        if frame.name then
-            framestr = framestr.."("..tostring(frame.name)..")"
-        end
-        local color = "#FFFFFF"
-        tb_list:add(gui.template("stack_frame", {
-            location=framestr, 
-            color=color,
-            callback=callback,
-            enabled=file.exists(frame.source)
-        }))
-    end
-    tb_list.size = srcsize
 end)
 
 function setup_variables()
@@ -184,17 +99,17 @@ end
 function set_mode(mode)
     local show_prompt = mode == 'chat' or mode == 'console'
 
-    document.title.text = ""
-    document.editorContainer.visible = mode == 'debug'
+    document.editorRoot.visible = mode == 'debug'
     document.logContainer.visible = mode ~= 'debug'
 
     if mode == 'debug' then
         document.root.color = {16, 18, 20, 220}
+        document.editorRoot.src = "builtin:code_editor"
     else
         document.root.color = {0, 0, 0, 128}
+        document.editorRoot.src = ""
     end
 
-    document.traceback.visible = mode == 'debug'
     document.prompt.visible = show_prompt
     if show_prompt then
         document.prompt.focused = true

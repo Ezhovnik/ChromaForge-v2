@@ -16,7 +16,6 @@ class Chunks;
 
 class ParticlesRenderer {
 private:
-    const Level& level;
     const Chunks& chunks;
     const Assets& assets;
     const GraphicsSettings* settings;
@@ -42,8 +41,6 @@ public:
     );
 
     uint64_t add(std::unique_ptr<Emitter> emitter);
-
-    void gc();
 
     Emitter* getEmitter(uint64_t id) const;
 

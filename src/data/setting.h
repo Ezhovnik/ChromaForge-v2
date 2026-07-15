@@ -7,6 +7,7 @@
 
 #include <typedefs.h>
 #include <delegates.h>
+#include <util/ObserverHandler.h>
 
 enum class SettingFormat {
     Simple,
@@ -41,17 +42,16 @@ protected:
 public:
     ObservableSetting(T value, SettingFormat format) : Setting(format), initial(value), value(value) {}
 
-    observer_handler observe(consumer<T> callback, bool callOnStart=false) {
+    ObserverHandler observe(consumer<T> callback, bool callOnStart=false) {
         const int id = nextid++;
         observers.emplace(id, callback);
         if (callOnStart) callback(value);
-        return std::shared_ptr<int>(new int(id), [this](int* id) {
-            observers.erase(*id);
-            delete id;
+        return ObserverHandler([this, id]() {
+            observers.erase(id);
         });
     }
 
-    const T& get() const {
+    [[nodiscard]] const T& get() const {
         return value;
     }
 

@@ -1,10 +1,10 @@
 #include <io/engine_paths.h>
 
-#include <filesystem>
 #include <sstream>
 #include <algorithm>
 #include <stack>
 #include <utility>
+#include <chrono>
 
 #include <typedefs.h>
 #include <world/files/WorldFiles.h>
@@ -12,14 +12,23 @@
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 #include <io/devices/StdfsDevice.h>
+#include <math/rand.h>
+#include <io/devices/ZipFileDevice.h>
 
-static inline io::path SCREENSHOTS_FOLDER = "screenshots";
-static inline io::path CONTENT_FOLDER = "content";
-static inline io::path WORLDS_FOLDER = "saves";
-static inline io::path CONFIG_FOLDER = "config";
-static inline io::path EXPORT_FOLDER = "export";
-static inline io::path CONTROLS_FILE = "controls.toml";
-static inline io::path SETTINGS_FILE = "settings.toml";
+template<int n>
+static std::string generate_random_base64() {
+    auto now = std::chrono::high_resolution_clock::now();
+    auto seed = now.time_since_epoch().count();
+
+    PseudoRandom random(seed); // FIXME: Replace with safe random
+    ubyte bytes[n];
+    random.rand(bytes, n);
+    return util::base64_urlsafe_encode(bytes, n);
+}
+
+static inline io::path SCREENSHOTS_FOLDER = "user:screenshots";
+static inline io::path CONTENT_FOLDER = "user:content";
+static inline io::path WORLDS_FOLDER = "user:saves";
 
 void EnginePaths::prepare() {
     io::set_device("res", std::make_shared<io::StdfsDevice>(resourcesFolder, false));
@@ -34,15 +43,15 @@ void EnginePaths::prepare() {
 
     LOG_INFO("Resources folder: {}", std::filesystem::canonical(resourcesFolder).u8string());
     LOG_INFO("User files folder: {}", std::filesystem::canonical(userFilesFolder).u8string());
+    LOG_INFO("Project folder: {}", std::filesystem::canonical(projectFolder).u8string());
 
-    auto contentFolder = io::path("user:") / CONTENT_FOLDER;
-    if (!io::is_directory(contentFolder)) {
-        io::create_directories(contentFolder);
+    if (!io::is_directory(CONTENT_FOLDER)) {
+        io::create_directories(CONTENT_FOLDER);
     }
 
     io::create_subdevice("builtin", "res", "");
-    io::create_subdevice("export", "user", EXPORT_FOLDER);
-    io::create_subdevice("config", "user", CONFIG_FOLDER);
+    io::create_subdevice("export", "user", "export");
+    io::create_subdevice("config", "user", "config");
 }
 
 const std::filesystem::path& EnginePaths::getUserFilesFolder() const {
@@ -53,16 +62,8 @@ const std::filesystem::path& EnginePaths::getResourcesFolder() const {
 	return resourcesFolder;
 }
 
-io::path EnginePaths::getControlsFile() const {
-    return io::path("user:") / CONTROLS_FILE;
-}
-
-io::path EnginePaths::getSettingsFile() const {
-    return io::path("user:") / SETTINGS_FILE;
-}
-
 io::path EnginePaths::getNewScreenshotFile(const std::string& ext) {
-	auto folder = io::path("user:") / SCREENSHOTS_FOLDER;
+	auto folder = SCREENSHOTS_FOLDER;
 	if (io::is_directory(folder)) io::create_directories(folder);
 
 	auto t = std::time(nullptr);
@@ -105,11 +106,7 @@ io::path EnginePaths::getNewPanoramaFolder() {
 }
 
 io::path EnginePaths::getWorldsFolder() const {
-    return io::path("user:") / WORLDS_FOLDER;
-}
-
-io::path EnginePaths::getConfigFolder() const {
-    return io::path("user:") / CONFIG_FOLDER;
+    return WORLDS_FOLDER;
 }
 
 io::path EnginePaths::getCurrentWorldFolder() {
@@ -128,19 +125,82 @@ void EnginePaths::setResourcesFolder(std::filesystem::path folder) {
     this->resourcesFolder = std::move(folder);
 }
 
-void EnginePaths::setContentPacks(std::vector<ContentPack>* contentPacks) {
-    for (const auto& id : contentEntryPoints) {
+void EnginePaths::cleanup() {
+    for (const auto& [id, _] : entryPoints) {
         io::remove_device(id);
     }
-
-    contentEntryPoints.clear();
-    this->contentPacks = contentPacks;
-
-    for (const auto& pack : *contentPacks) {
-        auto parent = pack.folder.entryPoint();
-        io::create_subdevice(pack.id, parent, pack.folder);
-        contentEntryPoints.push_back(pack.id);
+    for (const auto& [_, entryPoint] : writeables) {
+        io::remove_device(entryPoint);
     }
+    for (const auto& entryPoint : mounted) {
+        io::remove_device(entryPoint);
+    }
+
+    entryPoints.clear();
+    writeables.clear();
+}
+
+void EnginePaths::setEntryPoints(std::vector<PathsRoot> entryPoints) {
+    cleanup();
+
+    for (const auto& point : entryPoints) {
+        auto parent = point.path.entryPoint();
+        io::create_subdevice(point.name, parent, point.path);
+    }
+    this->entryPoints = std::move(entryPoints);
+}
+
+std::string EnginePaths::mount(const io::path& file) {
+    if (file.extension() == ".zip") {
+        auto stream = io::read(file);
+        auto device = std::make_unique<io::ZipFileDevice>(
+            std::move(stream), [file]() { return io::read(file); }
+        );
+        std::string name;
+        do {
+            name = std::string("M.") + generate_random_base64<6>();
+        } while (std::find(mounted.begin(), mounted.end(), name) != mounted.end());
+
+        io::set_device(name, std::move(device));
+        mounted.push_back(name);
+        return name;
+    }
+    LOG_ERROR("Unable to mount {}", file.string());
+    throw std::runtime_error("Unable to mount " + file.string());
+}
+
+void EnginePaths::unmount(const std::string& name) {
+    const auto& found = std::find(mounted.begin(), mounted.end(), name);
+    if (found == mounted.end()) {
+        LOG_ERROR("{} is not mounted", name);
+        throw std::runtime_error(name + " is not mounted");
+    }
+    io::remove_device(name);
+    mounted.erase(found);
+}
+
+std::string EnginePaths::createWriteableDevice(const std::string& name) {
+    const auto& found = writeables.find(name);
+    if (found != writeables.end()) return found->second;
+
+    io::path folder;
+    for (const auto& point : entryPoints) {
+        if (point.name == name) {
+            folder = point.path;
+            break;
+        }
+    }
+    if (name == BUILTIN_CONTENT_NAMESPACE) folder = "res:";
+    if (folder.emptyOrInvalid()) {
+        LOG_ERROR("Pack not found");
+        throw std::runtime_error("Pack not found");
+    }
+
+    auto entryPoint = std::string("W.") + generate_random_base64<6>();
+
+    io::create_subdevice(entryPoint, folder.entryPoint(), folder.pathPart());
+    writeables[name] = entryPoint;
+    return entryPoint;
 }
 
 void EnginePaths::setScriptFolder(std::filesystem::path folder) {
@@ -148,9 +208,18 @@ void EnginePaths::setScriptFolder(std::filesystem::path folder) {
     this->scriptFolder = std::move(folder);
 }
 
+void EnginePaths::setProjectFolder(std::filesystem::path folder) {
+    io::set_device("project", std::make_shared<io::StdfsDevice>(folder));
+    this->projectFolder = std::move(folder);
+}
+
 void EnginePaths::setCurrentWorldFolder(io::path folder) {
+    if (folder.empty()) {
+        io::remove_device("world");
+    } else {
+        io::create_subdevice("world", "user", folder);
+    }
     this->currentWorldFolder = std::move(folder);
-    io::create_subdevice("world", "user", currentWorldFolder);
 }
 
 std::tuple<std::string, std::string> EnginePaths::parsePath(std::string_view path) {
@@ -189,9 +258,8 @@ std::vector<io::path> EnginePaths::scanForWorlds() const {
 }
 
 ResPaths::ResPaths(
-    io::path mainRoot, 
     std::vector<PathsRoot> roots
-) : mainRoot(std::move(mainRoot)), roots(std::move(roots)) {}
+) : roots(std::move(roots)) {}
 
 io::path ResPaths::find(const std::string& filename) const {
     for (int i = roots.size() - 1; i >= 0; --i) {
@@ -199,7 +267,7 @@ io::path ResPaths::find(const std::string& filename) const {
         auto file = root.path / filename;
         if (io::exists(file)) return file;
     }
-    return mainRoot / filename;
+    return io::path("res:") / filename;
 }
 
 std::string ResPaths::findRaw(const std::string& filename) const {
@@ -281,6 +349,11 @@ dv::value ResPaths::readCombinedObject(const std::string& filename, bool deep) c
     return object;
 }
 
-const io::path& ResPaths::getMainRoot() const {
-    return mainRoot;
+std::vector<io::path> ResPaths::collectRoots() {
+    std::vector<io::path> collected;
+    collected.reserve(roots.size());
+    for (const auto& root : roots) {
+        collected.emplace_back(root.path);
+    }
+    return collected;
 }

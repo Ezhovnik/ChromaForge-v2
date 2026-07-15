@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <vector>
 #include <memory>
 
@@ -35,18 +34,23 @@ class GeneratorScript;
 struct Generator;
 class Process;
 class Chunk;
+class ContentControl;
 
 namespace scripting {
     extern Engine* engine;
     extern const Content* content;
     extern const ContentIndices* indices;
+    extern ContentControl* content_control;
     extern Level* level;
     extern BlocksController* blocks;
     extern LevelController* controller;
+    extern std::ostream* output_stream;
+    extern std::ostream* error_stream;
 
     void initialize(Engine* engine);
 
     void on_content_load(Content* content);
+    void on_content_reset();
 
     bool register_event(
         int env,
@@ -57,6 +61,7 @@ namespace scripting {
 
     scriptenv get_root_environment();
     scriptenv create_pack_environment(const ContentPack& pack);
+    scriptenv create_environment(const scriptenv& parent);
     scriptenv create_doc_environment(const scriptenv& parent, const std::string& name);
 
     void process_post_runnables();
@@ -66,7 +71,7 @@ namespace scripting {
     );
 
     void on_world_load(LevelController* controller);
-    void on_world_spark();
+    void on_world_spark(int sps);
     void on_world_save();
     void on_world_quit();
     void cleanup();

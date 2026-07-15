@@ -34,7 +34,10 @@ local function complete_app_lib(app)
     app.reconfig_packs = builtin.reconfig_packs
     app.get_setting = builtin.get_setting
     app.set_setting = builtin.set_setting
-    app.spark = coroutine.yield
+    app.spark = function()
+        coroutine.yield()
+        network.__process_events()
+    end
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
     app.load_content = function()
@@ -127,6 +130,44 @@ function inventory.decrement(invid, slot, count)
     end
 end
 
+function inventory.get_caption(invid, slot)
+    local item_id, count = inventory.get(invid, slot)
+    local caption = inventory.get_data(invid, slot, "caption")
+    if not caption then return item.caption(item_id) end
+
+    return caption
+end
+
+function inventory.set_caption(invid, slot, caption)
+    local itemid, itemcount = inventory.get(invid, slot)
+    if itemid == 0 then
+        return
+    end
+    if caption == nil or type(caption) ~= "string" then
+        caption = ""
+    end
+    inventory.set_data(invid, slot, "caption", caption)
+end
+
+function inventory.get_description(invid, slot)
+    local item_id, count = inventory.get(invid, slot)
+    local description = inventory.get_data(invid, slot, "description")
+    if not description then return item.description(item_id) end
+
+    return description
+end
+
+function inventory.set_description(invid, slot, description)
+    local itemid, itemcount = inventory.get(invid, slot)
+    if itemid == 0 then
+        return
+    end
+    if description == nil or type(description) ~= "string" then
+        description = ""
+    end
+    inventory.set_data(invid, slot, "description", description)
+end
+
 ------------------------------------------------
 ------------------- Events ---------------------
 ------------------------------------------------
@@ -185,8 +226,13 @@ end
 gui_util = require "builtin:internal/gui_util"
 
 Document = gui_util.Document
+Element = gui_util.Element
 RadioGroup = gui_util.RadioGroup
 __chroma_page_loader = gui_util.load_page
+
+function __chroma_get_document_node(docname, nodeid)
+    return Element.new(docname, nodeid)
+end
 
 _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
@@ -219,14 +265,22 @@ end
 
 function gui.template(name, params)
     local text = file.read(file.find("layouts/templates/"..name..".xml"))
-    for k,v in pairs(params) do
-        local arg = tostring(v):gsub("'", "\\'"):gsub('"', '\\"')
-        text = text:gsub("(%%{"..k.."})", arg)
-    end
-    text = text:gsub("if%s*=%s*'%%{%w+}'", "if=''")
-    text = text:gsub("if%s*=%s*\"%%{%w+}\"", "if=\"\"")
-    text = text:gsub("%s*%S+='%%{[^}]+}'%s*", " ")
-    text = text:gsub('%s*%S+="%%{[^}]+}"%s*', " ")
+    text = text:gsub("%%{([^}]+)}", function(n) 
+        local s = params[n]
+        if s == nil then
+            return
+        end
+        if type(s) ~= "string" then
+            return tostring(s)
+        end
+        if #s == 0 then
+            return ''
+        end
+        local e = string.escape(s)
+        return e:sub(2, #e - 1)
+    end)
+    text = text:gsub('if%s*=%s*[\'"]%%{%w+}[\'"]', "if=\"\"")
+    text = text:gsub('%s*%S+=[\'"]%%{[^}]+}[\'"]%s*', " ")
     return text
 end
 
@@ -260,6 +314,30 @@ entities.get_all = function(uids)
         return stdcomp.get_all(uids)
     end
 end
+
+local bytearray = require "builtin:internal/bytearray"
+Bytearray = bytearray.FFIBytearray
+Bytearray_as_string = bytearray.FFIBytearray_as_string
+Bytearray_construct = function(...) return Bytearray(...) end
+
+file.open = require "builtin:internal/stream_providers/file"
+file.open_named_pipe = require "builtin:internal/stream_providers/named_pipe"
+
+if ffi.os == "Windows" then
+    ffi.cdef[[
+    unsigned long GetCurrentProcessId();
+    ]]
+    
+    os.pid = ffi.C.GetCurrentProcessId()
+else
+    ffi.cdef[[
+    int getpid(void);
+    ]]
+
+    os.pid = ffi.C.getpid()
+end
+
+ffi = nil
 
 math.randomseed(time.uptime() * 1536227939)
 
@@ -391,8 +469,37 @@ function __chroma_on_hud_open()
     hud.open_permanent("builtin:ingame_chat")
 end
 
+local ScheduleGroup_mt = {
+    __index = {
+        publish = function(self, schedule)
+            local id = self._next_schedule
+            self._schedules[id] = schedule
+            self._next_schedule = id + 1
+        end,
+        spark = function(self, dt)
+            for id, schedule in pairs(self._schedules) do
+                schedule:spark(dt)
+            end
+        end,
+        remove = function(self, id)
+            self._schedules[id] = nil
+        end
+    }
+}
+
+local function ScheduleGroup()
+    return setmetatable({
+        _next_schedule = 1,
+        _schedules = {},
+    }, ScheduleGroup_mt)
+end
+
+time.schedules = {}
+
 local RULES_FILE = "world:rules.toml"
 function __chroma_on_world_open()
+    time.schedules.world = ScheduleGroup()
+
     if not file.exists(RULES_FILE) then
         return
     end
@@ -400,6 +507,10 @@ function __chroma_on_world_open()
     for name, value in pairs(rule_values) do
         _rules.set(name, value)
     end
+end
+
+function __chroma_on_world_spark(sps)
+    time.schedules.world:spark(1.0 / sps)
 end
 
 function __chroma_on_world_save()
@@ -414,6 +525,7 @@ function __chroma_on_world_quit()
     _rules.clear()
     gui_util:__reset_local()
     stdcomp.__reset()
+    file.__close_all_descriptors()
 end
 
 local __chroma_coroutines = {}
@@ -505,8 +617,24 @@ function time.post_runnable(runnable)
     table.insert(__post_runnables, runnable)
 end
 
-assets = {}
-assets.load_texture = builtin.__load_texture
+-- Hide unsafe debug.* functions
+local removed_names = {
+    "getregistry", "getupvalue", "setupvalue", "upvalueid", "upvaluejoin",
+    "sethook", "gethook", "getinfo"
+}
+local _getinfo = debug.getinfo
+for i, name in ipairs(removed_names) do
+    debug[name] = nil
+end
+
+debug.getinfo = function(lvl, fields)
+    if type(lvl) == "number" then
+        lvl = lvl + 1
+    end
+    local debuginfo = _getinfo(lvl, fields)
+    debuginfo.func = nil
+    return debuginfo
+end
 
 -- --------- Deprecated functions ------ --
 local function wrap_deprecated(func, name, alternatives)

@@ -3,7 +3,6 @@
 #include <set>
 #include <functional>
 #include <string>
-#include <optional>
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -11,6 +10,7 @@
 
 #include <math/AABB.h>
 #include <typedefs.h>
+#include <util/EnumMetadata.h>
 
 enum class SensorType {
     AABB,
@@ -46,8 +46,11 @@ enum class BodyType {
     Dynamic
 };
 
-std::optional<BodyType> BodyType_from(std::string_view str);
-std::string to_string(BodyType type);
+CHROMA_ENUM_METADATA(BodyType)
+    {"static", BodyType::Static},
+    {"kinematic", BodyType::Kinematic},
+    {"dynamic", BodyType::Dynamic},
+CHROMA_ENUM_END
 
 /**
  * @brief Класс, представляющий физический хитбокс объекта.

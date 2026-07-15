@@ -107,6 +107,8 @@ class PseudoRandom {
 private:
 	ushort seed; ///< 16-битное состояние.
 public:
+    PseudoRandom(unsigned short seed) : seed(seed) {}
+
     /**
      * @brief Конструктор, инициализирующий seed текущим временем.
      */
@@ -125,6 +127,12 @@ public:
         seed = (seed ^ 0xba49 ^ (seed >> 8));
 
         return static_cast<int>(seed);
+    }
+
+    void rand(unsigned char* dst, size_t n) {
+        for (size_t i = 0; i < n; ++i) {
+            dst[i] = rand();
+        }
     }
 
     /**

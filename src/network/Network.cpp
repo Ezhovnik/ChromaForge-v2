@@ -39,6 +39,9 @@ using SOCKET = int;
 
 using namespace network;
 
+inline constexpr int HTTP_OK = 200;
+inline constexpr int HTTP_BAD_GATEWAY = 502;
+
 static size_t write_callback(
     char* ptr, size_t size, size_t nmemb, void* userdata
 ) {
@@ -92,7 +95,9 @@ public:
         OnReject onReject,
         long maxSize
     ) override {
-        Request request {RequestType::Get, url, onResponse, onReject, maxSize};
+        Request request {
+            RequestType::Get, url, onResponse, onReject, maxSize, false, ""
+        };
         processRequest(std::move(request));
     }
 
@@ -103,7 +108,9 @@ public:
         OnReject onReject=nullptr,
         long maxSize=0
     ) override {
-        Request request {RequestType::Post, url, onResponse, onReject, maxSize};
+        Request request {
+            RequestType::Post, url, onResponse, onReject, maxSize, false, ""
+        };
         request.data = data;
         processRequest(std::move(request));
     }
@@ -154,7 +161,7 @@ public:
             auto message = curl_multi_strerror(res);
             LOG_ERROR("{} ({})", message, url);
             if (onReject) {
-                onReject(message);
+                onReject(HTTP_BAD_GATEWAY);
             }
             url = "";
         }
@@ -169,7 +176,7 @@ public:
             auto message = curl_multi_strerror(res);
             LOG_ERROR("{} ({})", message, url);
             if (onReject) {
-                onReject(message);
+                onReject(HTTP_BAD_GATEWAY);
             }
             curl_multi_remove_handle(multiHandle, curl);
             url = "";
@@ -181,7 +188,7 @@ public:
             }
             int response;
             curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &response);
-            if (response == 200) {
+            if (response == HTTP_OK) {
                 long size;
                 if (!curl_easy_getinfo(curl, CURLINFO_REQUEST_SIZE, &size)) {
                     totalUpload += size;
@@ -196,7 +203,7 @@ public:
             } else {
                 LOG_ERROR("Response code: {} ({})", response, url);
                 if (onReject) {
-                    onReject(std::to_string(response).c_str());
+                    onReject(response);
                 }
             }
             url = "";
@@ -298,7 +305,6 @@ static std::string to_string(const sockaddr_in& addr, bool port=true) {
 
 class SocketConnection : public Connection {
     SOCKET descriptor;
-    bool open = true;
     sockaddr_in addr;
     size_t totalUpload = 0;
     size_t totalDownload = 0;
@@ -454,7 +460,8 @@ public:
         )) {
             throw std::runtime_error(gai_strerrorA(res));
         }
-        sockaddr_in serverAddress = *(sockaddr_in*)addrinfo->ai_addr;
+        sockaddr_in serverAddress;
+        std::memcpy(&serverAddress, addrinfo->ai_addr, sizeof(sockaddr_in));
         serverAddress.sin_port = htons(port);
         freeaddrinfo(addrinfo);
 
@@ -474,6 +481,7 @@ public:
 };
 
 class SocketTcpSServer : public TcpServer {
+    uint64_t id;
     Network* network;
     SOCKET descriptor;
     std::vector<uint64_t> clients;
@@ -482,14 +490,14 @@ class SocketTcpSServer : public TcpServer {
     std::unique_ptr<std::thread> thread = nullptr;
     int port;
 public:
-    SocketTcpSServer(Network* network, SOCKET descriptor, int port)
-    : network(network), descriptor(descriptor), port(port) {}
+    SocketTcpSServer(uint64_t id, Network* network, SOCKET descriptor, int port)
+    : id(id), network(network), descriptor(descriptor), port(port) {}
 
     ~SocketTcpSServer() {
         closeSocket();
     }
 
-    void startListen(consumer<uint64_t> handler) override {
+    void startListen(ConnectCallback handler) override {
         thread = std::make_unique<std::thread>([this, handler]() {
             while (open) {
                 LOG_INFO("Listening for connections");
@@ -515,7 +523,7 @@ public:
                     std::lock_guard lock(clientsMutex);
                     clients.push_back(id);
                 }
-                handler(id);
+                handler(this->id, id);
             }
         });
     }
@@ -552,7 +560,7 @@ public:
     }
 
     static std::shared_ptr<SocketTcpSServer> openServer(
-        Network* network, int port, consumer<uint64_t> handler
+        uint64_t id, Network* network, int port, ConnectCallback handler
     ) {
         SOCKET descriptor = socket(
             AF_INET, SOCK_STREAM, 0
@@ -581,7 +589,9 @@ public:
             throw std::runtime_error("Could not bind port " + std::to_string(port));
         }
         LOG_INFO("Opened server at port {}", port);
-        auto server = std::make_shared<SocketTcpSServer>(network, descriptor, port);
+        auto server = std::make_shared<SocketTcpSServer>(
+            id, network, descriptor, port
+        );
         server->startListen(std::move(handler));
         return server;
     }
@@ -640,9 +650,9 @@ uint64_t Network::connect(const std::string& address, int port, consumer<uint64_
     return id;
 }
 
-uint64_t Network::openServer(int port, consumer<uint64_t> handler) {
+uint64_t Network::openServer(int port, ConnectCallback handler) {
     uint64_t id = nextServer++;
-    auto server = SocketTcpSServer::openServer(this, port, handler);
+    auto server = SocketTcpSServer::openServer(id, this, port, handler);
     servers[id] = std::move(server);
     return id;
 }

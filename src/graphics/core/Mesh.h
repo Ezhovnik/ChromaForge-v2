@@ -1,82 +1,67 @@
 #pragma once
 
+#include <vector>
+
 #include <graphics/core/MeshData.h>
 
-/**
- * @brief Класс для работы с графической сеткой (мешем) в OpenGL.
- *
- * Управляет буферами вершин (VBO), индексов (IBO) и объектом вершинного массива (VAO).
- * Поддерживает статические меши (данные загружаются один раз) и их перезагрузку.
- */
+struct MeshStats {
+    static int meshesCount;
+    static int drawCalls;
+};
+
+struct IndexBufferData {
+    const uint32_t* indices;
+    size_t indicesCount;
+};
+
+template<typename VertexStructure>
 class Mesh {
+    struct IndexBuffer {
+        unsigned int ibo;
+        size_t indexCount;
+    };
+
     uint VAO; ///< Идентификатор объекта вершинного массива (Vertex Array Object)
     uint VBO; ///< Идентификатор буфера вершин (Vertex Buffer Object)
-    uint IBO; ///< Идентификатор буфера индексов (Index Buffer Object), 0 если не используется
-    size_t vertices; ///< Количество вершин в меше
-    size_t indices; ///< Количество индексов (если используется индексный буфер)
-    size_t vertexSize; ///< Размер одной вершины
+    std::vector<IndexBuffer> IBOs;
+    size_t vertexCount;
 public:
-    Mesh(const MeshData& data);
+    explicit Mesh(const MeshData<VertexStructure>& data);
 
-    /**
-     * @brief Конструктор, создающий меш из данных вершин и индексов.
-     * @param vertexBuffer Указатель на массив вершин (float).
-     * @param vertices Количество вершин.
-     * @param indexBuffer Указатель на массив индексов (int), может быть nullptr.
-     * @param indices Количество индексов (0 если индексный буфер не используется).
-     * @param attrs Массив описаний вершинных атрибутов, заканчивающийся элементом с size = 0.
-     */
     Mesh(
-        const float* vertexBuffer, 
-        size_t vertices, 
-        const int* indexBuffer, 
-        size_t indices, 
-        const VertexAttribute* attrs
+        const VertexStructure* vertexBuffer,
+        size_t vertices,
+        std::vector<IndexBufferData> indices
     );
 
-    /**
-     * @brief Конструктор для создания меша без индексного буфера.
-     * @param vertexBuffer Указатель на массив вершин.
-     * @param vertices Количество вершин.
-     * @param attrs Описания атрибутов.
-     */
-	Mesh(const float* vertexBuffer, size_t vertices, const VertexAttribute* attrs) :
-		Mesh(vertexBuffer, vertices, nullptr, 0, attrs) {};
+    Mesh(
+        const VertexStructure* vertexBuffer, size_t vertices
+    ) : Mesh<VertexStructure>(vertexBuffer, vertices, {}) {};
 
     /// Деструктор, освобождающий ресурсы OpenGL.
     ~Mesh();
 
-    /**
-     * @brief Перезагружает данные меша (заменяет буферы новыми данными).
-     * @param vertexBuffer Новый массив вершин.
-     * @param vertices Новое количество вершин.
-     * @param indexBuffer Новый массив индексов (может быть nullptr).
-     * @param indices Новое количество индексов.
-     *
-     * Размер вершины (vertexSize) остаётся тем же, что был задан в конструкторе.
-     * Если индексный буфер не использовался ранее и передаётся nullptr, он остаётся неактивным.
-     * Если индексный буфер был и передаётся nullptr, старый IBO удаляется.
-     */
     void reload(
-        const float* vertexBuffer, 
-        size_t vertices, 
-        const int* indexBuffer = nullptr, 
-        size_t indices = 0
+        const VertexStructure* vertexBuffer,
+        size_t vertexCount,
+        const std::vector<IndexBufferData>& indices
     );
+
+    void reload(const VertexStructure* vertexBuffer, size_t vertexCount) {
+        static const std::vector<IndexBufferData> indices {};
+        reload(vertexBuffer, vertexCount, indices);
+    }
 
     /**
      * @brief Отрисовывает меш с указанным типом примитива.
      * @param primitive Тип примитива OpenGL (например, GL_TRIANGLES, GL_LINES).
      */
-    void draw(uint primititve) const;
+    void draw(unsigned int primitive, int iboIndex = 0) const;
 
     /**
      * @brief Отрисовывает меш с типом примитива GL_TRIANGLES.
      */
     void draw() const;
-
-    /// Счётчик всех созданных экземпляров Mesh (для отладки).
-    static int meshesCount;
-
-    static int drawCalls;
 };
+
+#include <graphics/core/Mesh.inl>

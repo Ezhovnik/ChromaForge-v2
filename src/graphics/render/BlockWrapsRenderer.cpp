@@ -11,7 +11,6 @@
 #include <objects/Player.h>
 #include <voxels/Block.h>
 #include <voxels/Chunks.h>
-#include <window/Window.h>
 #include <world/Level.h>
 
 BlockWrapsRenderer::BlockWrapsRenderer(
@@ -43,8 +42,8 @@ void BlockWrapsRenderer::draw(const BlockWrapper& wrapper) {
     }
     if (vox->id != BLOCK_VOID) {
         const auto& def = level.content.getIndices()->blocks.require(vox->id);
-        switch (def.model) {
-            case BlockModel::Cube:
+        switch (def.getModel(vox->state.userbits).type) {
+            case BlockModelType::Cube:
                 batch->cube(
                     glm::vec3(wrapper.position) + glm::vec3(0.5f),
                     glm::vec3(1.01f),
@@ -53,7 +52,7 @@ void BlockWrapsRenderer::draw(const BlockWrapper& wrapper) {
                     false
                 );
                 break;
-            case BlockModel::AABB: {
+            case BlockModelType::AABB: {
                 const auto& aabb = (def.rotatable ? def.rt.hitboxes[vox->state.rotation] : def.hitboxes).at(0);
                 const auto& size = aabb.size();
                 regions[0].scale(size.z, size.y);

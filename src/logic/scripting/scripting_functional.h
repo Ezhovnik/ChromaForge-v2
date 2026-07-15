@@ -4,13 +4,25 @@
 
 #include <delegates.h>
 #include <typedefs.h>
-#include <data/dv.h>
+#include <data/dv_fwd.h>
 
 namespace scripting {
     using common_func = std::function<dv::value(const std::vector<dv::value>&)>;
     using value_to_string_func = std::function<std::string(const dv::value&)>;
 
     runnable create_runnable(
+        const scriptenv& env,
+        const std::string& src,
+        const std::string& file="[string]"
+    );
+
+    key_handler create_key_handler(
+        const scriptenv& env,
+        const std::string& src,
+        const std::string& file = "[string]"
+    );
+
+    stringconsumer create_string_consumer(
         const scriptenv& env,
         const std::string& src,
         const std::string& file="[string]"

@@ -20,10 +20,10 @@ file.read(путь: str) -> str
 Читает весь текстовый файл и возвращает в виде строки
 
 ```lua
-file.read_bytes(путь: str) -> array of integers
+file.read_bytes(путь: str, [опционально] usetable) -> array of integers
 ```
 
-Читает файл в массив байт.
+Читает файл в массив байт. При значении usetable = false возвращает Bytearray вместо table.
 
 ```lua
 file.is_writeable(путь: str) -> bool
@@ -122,13 +122,86 @@ file.read_combined_object(путь: str) -> массив
 Совмещает объекты из JSON файлов разных паков.
 
 ```lua
+file.mount(путь: str) --> str
+```
+
+Монтирует ZIP-архив как файловой системе. Возвращает имя точки входа.
+
+```lua
+file.unmount(точка_входа: str) --> str
+```
+
+Размонтирует точку входа.
+
+```lua
+file.create_zip(директория: str, выходной_файл: str) --> str
+```
+
+Создаёт ZIP-архив из содержимого указанной директории.
+
+```lua
 file.name(путь: str) --> str
 ```
 
-Извлекает имя файла из пути.
+Извлекает имя файла из пути. Пример: `world:data/chromaforge/config.toml` -> `config.toml`.
 
 ```lua
 file.stem(путь: str) --> str
 ```
 
-Извлекает имя файла из пути, удаляя расширение.
+Извлекает имя файла из пути, удаляя расширение. Пример: `world:data/chromaforge/config.toml` -> `config`.
+
+```lua
+file.ext(путь: str) --> str
+```
+
+Извлекает расширение из пути. Пример: `world:data/chromaforge/config.toml` -> `toml`.
+
+```lua
+file.prefix(путь: str) --> str
+```
+
+Извлекает точку входа (префикс) из пути. Пример: `world:data/chromaforge/config.toml` -> `world`.
+
+```lua
+file.parent(путь: str) --> str
+```
+
+Возвращает путь на уровень выше. Пример: `world:data/chromaforge/config.toml` -> `world:data/chromaforge`
+
+```lua
+file.path(путь: str) --> str
+```
+
+Убирает точку входа (префикс) из пути. Пример: `world:data/chromaforge/config.toml` -> `data/chromaforge/config.toml`
+
+```lua
+file.join(директория: str, путь: str) --> str
+```
+
+Соединяет путь. Пример: `file.join("world:data", "chromaforge/config.toml)` -> `world:data/chromaforge/config.toml`.
+
+Следует использовать данную функцию вместо конкатенации с `/`, так как `префикс:/путь` не является валидным.
+
+```lua
+file.open(путь: str, режим: str) --> io_stream
+```
+
+Открывает поток для записи/чтения в файл по пути `путь`.
+
+Аргумент `режим` это список отдельных режимов, в котором каждый обозначается одним символом
+
+`r` - Чтение из файла
+`w` - Запись в файл
+`b` - Открыть поток в двоичном режиме (см. `../io_stream.md`)
+`+` - Работает совместно с `w`. Добавляет к существующим данным новые (`append-mode`)
+
+```lua
+file.open_named_pipe(имя: str, режим: str) -> io_stream
+```
+
+Открывает поток для записи/чтения в Named Pipe по пути `путь`
+
+`/tmp/` или `\\\\.\\pipe\\` добавлять не нужно - движок делает это автоматически.
+
+Доступные режимы такие же, как и в `file.open`, за исключением `+`

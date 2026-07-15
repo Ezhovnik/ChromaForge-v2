@@ -1,6 +1,6 @@
 <panel size='400' color='0' interval='1' context='world'>
     <label>@Name</label>
-    <textbox id='name_box' validator='world_name_validator' placeholder='New World' padding='4'>
+    <textbox id='name_box' validator='world_name_validator' placeholder='-' padding='4'>
     </textbox>
     <label>@Seed</label>
     <textbox id='seed_box' placeholder='-' padding='4'></textbox>

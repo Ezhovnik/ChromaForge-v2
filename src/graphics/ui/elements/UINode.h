@@ -21,28 +21,35 @@ namespace gui {
     class GUI;
     class Container;
 
-    using onaction = std::function<void(GUI*)>;
-    using onnumberchange = std::function<void(GUI*, double)>;
+    using onaction = std::function<void(GUI&)>;
+    using onnumberchange = std::function<void(GUI&, double)>;
+    using onstringchange = std::function<void(GUI&, const std::string&)>;
 
-    class ActionsSet {
-    private:
-        std::unique_ptr<std::vector<onaction>> callbacks;
+    template<typename... Args>
+    class CallbacksSet {
     public:
-        void listen(const onaction& callback) {
+        using Func = std::function<void(Args...)>;
+    private:
+        std::unique_ptr<std::vector<Func>> callbacks;
+    public:
+        void listen(const Func& callback) {
             if (callbacks == nullptr) {
-                callbacks = std::make_unique<std::vector<onaction>>();
+                callbacks = std::make_unique<std::vector<Func>>();
             }
             callbacks->push_back(callback);
         }
 
-        void notify(GUI* gui) {
+        void notify(Args&&... args) {
             if (callbacks) {
                 for (auto& callback : *callbacks) {
-                    callback(gui);
+                    callback(std::forward<Args>(args)...);
                 }
             }
         }
     };
+
+    using ActionsSet = CallbacksSet<GUI&>;
+    using StringCallbacksSet = CallbacksSet<GUI&, const std::string&>;
 
     enum class Align {
         left,
@@ -68,7 +75,10 @@ namespace gui {
         bottom_right
     };
 
-    class UINode {
+    class UINode : public std::enable_shared_from_this<UINode> {
+    protected:
+        GUI& gui;
+        bool mustRefresh = true;
     private:
         std::string id = "";
 
@@ -95,14 +105,21 @@ namespace gui {
         UINode* parent = nullptr;
         ActionsSet actions;
         ActionsSet doubleClickCallbacks;
+        ActionsSet focusCallbacks;
+        ActionsSet defocusCallbacks;
         std::wstring tooltip;
         float tooltipDelay = 0.5f;
         CursorShape cursor = CursorShape::Arrow;
 
-        UINode(glm::vec2 size);
+        UINode(GUI& gui, glm::vec2 size);
     public:
         virtual ~UINode();
-        virtual void activate(float deltaTime) {};
+        virtual void activate(float deltaTime) {
+            if (mustRefresh) {
+                mustRefresh = false;
+                refresh();
+            }
+        };
         virtual void draw(const DrawContext& parent_context, const Assets& assets) = 0;
 
         virtual void setVisible(bool flag);
@@ -151,13 +168,15 @@ namespace gui {
 
         virtual UINode* listenAction(const onaction& action);
         virtual UINode* listenDoubleClick(const onaction& action);
+        virtual UINode* listenFocus(const onaction& action);
+        virtual UINode* listenDefocus(const onaction& action);
 
-        virtual void onFocus(GUI*) {focused = true;}
-        virtual void click(GUI*, int x, int y);
-        virtual void doubleClick(GUI*, int x, int y);
-        virtual void clicked(GUI*, mousecode button) {}
-        virtual void mouseMove(GUI*, int x, int y) {};
-        virtual void mouseRelease(GUI*, int x, int y);
+        virtual void onFocus();
+        virtual void click(int x, int y);
+        virtual void doubleClick(int x, int y);
+        virtual void clicked(Mousecode button) {}
+        virtual void mouseMove(int x, int y) {};
+        virtual void mouseRelease(int x, int y);
         virtual void scrolled(int value);
 
         bool isPressed() const;
@@ -166,13 +185,10 @@ namespace gui {
         virtual bool isFocuskeeper() const {return false;}
 
         virtual void typed(uint codepoint) {};
-        virtual void keyPressed(keycode key) {};
+        virtual void keyPressed(Keycode key) {};
 
         virtual bool isInside(glm::vec2 pos);
-        virtual std::shared_ptr<UINode> getAt(
-            const glm::vec2& pos,
-            const std::shared_ptr<UINode>& self
-        );
+        virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos);
 
         virtual bool isInteractive() const;
         virtual void setInteractive(bool flag);
@@ -183,11 +199,11 @@ namespace gui {
         virtual void setPos(glm::vec2 pos);
         virtual glm::vec2 getPos() const;
 
-        virtual glm::vec2 getSize() const;
+        glm::vec2 getSize() const;
         virtual void setSize(glm::vec2 size);
-        virtual glm::vec2 getMinSize() const;
+        glm::vec2 getMinSize() const;
         virtual void setMinSize(glm::vec2 size);
-        virtual glm::vec2 getMaxSize() const;
+        glm::vec2 getMaxSize() const;
         virtual void setMaxSize(glm::vec2 size);
 
         virtual vec2supplier getPositionFunc() const;
@@ -197,6 +213,10 @@ namespace gui {
         virtual void setSizeFunc(vec2supplier);
 
         virtual void setGravity(Gravity gravity);
+
+        void setMustRefresh() {
+            mustRefresh = true;
+        }
 
         bool isSubnodeOf(const UINode* node);
 
@@ -212,7 +232,7 @@ namespace gui {
         void setId(const std::string& id);
         const std::string& getId() const;
 
-        void reposition();
+        virtual void reposition();
 
         static void getIndices(
             const std::shared_ptr<UINode>& node,

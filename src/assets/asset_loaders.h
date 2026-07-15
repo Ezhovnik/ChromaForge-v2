@@ -15,7 +15,7 @@ struct AssetsConfig;
 namespace asset_loader {
     postfunc texture(
         AssetsLoader* loader,
-        const ResPaths* paths, 
+        const ResPaths& paths, 
         const std::string& filename, 
         const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings
@@ -23,7 +23,7 @@ namespace asset_loader {
 
     postfunc shader(
         AssetsLoader* loader,
-        const ResPaths* paths, 
+        const ResPaths& paths, 
         const std::string& filename, 
         const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings
@@ -31,7 +31,7 @@ namespace asset_loader {
 
     postfunc atlas(
         AssetsLoader* loader,
-        const ResPaths* paths, 
+        const ResPaths& paths, 
         const std::string& directory, 
         const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings
@@ -39,7 +39,7 @@ namespace asset_loader {
 
     postfunc font(
         AssetsLoader* loader,
-        const ResPaths* paths, 
+        const ResPaths& paths, 
         const std::string& filename, 
         const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings
@@ -47,7 +47,7 @@ namespace asset_loader {
 
     postfunc layout(
         AssetsLoader* loader,
-        const ResPaths* paths, 
+        const ResPaths& paths, 
         const std::string& file, 
         const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings
@@ -55,7 +55,7 @@ namespace asset_loader {
 
     postfunc sound(
         AssetsLoader* loader,
-        const ResPaths* paths,
+        const ResPaths& paths,
         const std::string& file,
         const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings
@@ -63,7 +63,15 @@ namespace asset_loader {
 
     postfunc model(
         AssetsLoader*,
-        const ResPaths* paths,
+        const ResPaths& paths,
+        const std::string& file,
+        const std::string& name,
+        const std::shared_ptr<AssetsConfig>& settings
+    );
+
+    postfunc posteffect(
+        AssetsLoader*,
+        const ResPaths& paths,
         const std::string& file,
         const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings

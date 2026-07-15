@@ -64,7 +64,7 @@ path path::normalized() const {
         }
         parts.push(std::move(token));
     }
-    bool started = false;
+
 
     path = "";
     while (!parts.empty()) {

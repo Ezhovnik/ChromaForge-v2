@@ -6,14 +6,10 @@
 #include <assert.h>
 #include <string>
 
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/constants.hpp>
 
 #include <content/Content.h>
 #include <window/Window.h>
-#include <window/Camera.h>
 #include <graphics/core/Mesh.h>
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Texture.h>
@@ -52,9 +48,19 @@
 #include <graphics/core/Font.h>
 #include <graphics/render/TextNote.h>
 #include <graphics/render/TextsRenderer.h>
-#include <graphics/render/GuidesRenderer.h>
+#include <graphics/render/DebugLinesRenderer.h>
 #include <graphics/render/BlockWrapsRenderer.h>
 #include <frontend/ContentGfxCache.h>
+#include <graphics/render/PrecipitationRenderer.h>
+#include <world/Weather.h>
+#include <graphics/core/Shadows.h>
+#include <graphics/core/GBuffer.h>
+#include <coders/GLSLExtension.h>
+#include <graphics/core/Framebuffer.h>
+#include <graphics/render/HandsRenderer.h>
+#include <graphics/render/NamedSkeletons.h>
+#include <graphics/render/LinesRenderer.h>
+#include <voxels/Pathfinding.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -77,25 +83,95 @@ WorldRenderer::WorldRenderer(
     frustumCulling(std::make_unique<Frustum>()),
     lineBatch(std::make_unique<LineBatch>()),
     batch3d(std::make_unique<Batch3D>(BATCH3D_CAPACITY)),
-    modelBatch(std::make_unique<ModelBatch>(MODEL_BATCH_CAPACITY, assets, *player.chunks, engine.getSettings())),
-    particles(std::make_unique<ParticlesRenderer>(assets, level, *player.chunks, &engine.getSettings().graphics)),
-    texts(std::make_unique<TextsRenderer>(*batch3d, assets, *frustumCulling)),
-    guides(std::make_unique<GuidesRenderer>()),
-    chunks(std::make_unique<ChunksRenderer>(&level, *player.chunks, assets, *frustumCulling, levelFrontend.getContentGfxCache(), engine.getSettings())),
-    blockWraps(std::make_unique<BlockWrapsRenderer>(assets, level, *player.chunks))
+    modelBatch(
+        std::make_unique<ModelBatch>(
+            MODEL_BATCH_CAPACITY,
+            assets,
+            *player.chunks,
+            engine.getSettings()
+        )
+    ),
+    chunksRenderer(
+        std::make_unique<ChunksRenderer>(
+            &level,
+            *player.chunks,
+            assets,
+            *frustumCulling,
+            levelFrontend.getContentGfxCache(),
+            engine.getSettings()
+        )
+    ),
+    particles(
+        std::make_unique<ParticlesRenderer>(
+            assets,
+            level,
+            *player.chunks,
+            &engine.getSettings().graphics
+        )
+    ),
+    texts(
+        std::make_unique<TextsRenderer>(
+            *batch3d, assets, *frustumCulling
+        )
+    ),
+    blockWraps(
+        std::make_unique<BlockWrapsRenderer>(
+            assets,
+            level,
+            *player.chunks
+        )
+    ),
+    precipitation(
+        std::make_unique<PrecipitationRenderer>(
+            assets,
+            level,
+            *player.chunks,
+            &engine.getSettings().graphics
+        )
+    )
 {
 	auto& settings = engine.getSettings();
     level.events->listen(LevelEventType::CHUNK_HIDDEN, [this](LevelEventType, Chunk* chunk) {
-		chunks->unload(chunk);
+		chunksRenderer->unload(chunk);
 	});
 	auto assets = engine.getAssets();
     skybox = std::make_unique<Skybox>(
         settings.graphics.skyboxResolution.get(), 
         assets->require<ShaderProgram>("skybox_gen")
     );
+
+    const auto& content = level.content;
+    skeletons = std::make_unique<NamedSkeletons>();
+    const auto& skeletonConfig = content.requireSkeleton(
+        content.getDefaults()["hand-skeleton"].asString()
+    );
+    hands = std::make_unique<HandsRenderer>(
+        *assets,
+        *modelBatch,
+        skeletons->createSkeleton("hand", &skeletonConfig)
+    );
+
+    lines = std::make_unique<LinesRenderer>();
+
+    shadowMapping = std::make_unique<Shadows>(level);
+
+    debugLines = std::make_unique<DebugLinesRenderer>(level);
 }
 
 WorldRenderer::~WorldRenderer() = default;
+
+static void setup_weather(ShaderProgram& shader, const Weather& weather) {
+    shader.uniform1f("u_weatherFogOpacity", weather.fogOpacity());
+    shader.uniform1f("u_weatherFogDencity", weather.fogDencity());
+    shader.uniform1f("u_weatherFogCurve", weather.fogCurve());
+}
+
+static void setup_camera(ShaderProgram& shader, const Camera& camera) {
+    shader.uniformMatrix("u_model", glm::mat4(1.0f));
+    shader.uniformMatrix("u_proj", camera.getProjection());
+    shader.uniformMatrix("u_view", camera.getView());
+    shader.uniform3f("u_cameraPos", camera.position);
+}
 
 void WorldRenderer::setupWorldShader(
     ShaderProgram& shader,
@@ -104,17 +180,20 @@ void WorldRenderer::setupWorldShader(
     float fogFactor
 ) {
 	shader.use();
-    shader.uniformMatrix("u_model", glm::mat4(1.0f));
-    shader.uniformMatrix("u_proj", camera.getProjection());
-    shader.uniformMatrix("u_view", camera.getView());
+
+    setup_camera(shader, camera);
+    setup_weather(shader, weather);
+    shadowMapping->setup(shader, weather);
+
+    shader.uniform1f("u_timer", timer);
     shader.uniform1f("u_gamma", settings.graphics.gamma.get());
     shader.uniform1f("u_fogFactor", fogFactor);
     shader.uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
-    shader.uniform3f("u_cameraPos", camera.position);
-    shader.uniform2f("u_lightDir", skybox->getLightDir());
-    shader.uniform1i("u_cubemap", 1);
-    shader.uniform1f("u_timer", timer);
+    shader.uniform1i("u_debugLights", lightsDebug);
+    shader.uniform1i("u_debugNormals", false);
     shader.uniform1f("u_dayTime", level.getWorld()->getInfo().daytime);
+    shader.uniform2f("u_lightDir", skybox->getLightDir());
+    shader.uniform1i("u_skybox", advanced_pipeline::TARGET_SKYBOX);
 
     auto contentIds = level.content.getIndices();
 	{
@@ -122,7 +201,7 @@ void WorldRenderer::setupWorldShader(
 		ItemStack& stack = inventory->getSlot(player.getChosenSlot());
 		auto& choosen_item = contentIds->items.require(stack.getItemId());
 		if (!player.isNoclip()) {
-			float multiplier = 0.8f;
+			float multiplier = 0.75f;
 			shader.uniform3f("u_torchlightColor",
 				choosen_item.emission[0] / 15.0f * multiplier,
 				choosen_item.emission[1] / 15.0f * multiplier,
@@ -132,11 +211,11 @@ void WorldRenderer::setupWorldShader(
 			shader.uniform3f("u_torchlightColor", 0.0f, 0.0f, 0.0f);
 		}
 
-		shader.uniform1f("u_torchlightDistance", 6.0f);
+		shader.uniform1f("u_torchlightDistance", 8.0f);
 	}
 }
 
-void WorldRenderer::renderLevel(
+void WorldRenderer::renderOpaque(
     const DrawContext& ctx,
     const Camera& camera, 
     const EngineSettings& settings,
@@ -157,6 +236,7 @@ void WorldRenderer::renderLevel(
     if (culling) frustumCulling->update(camera.getProjView());
 
     entityShader.uniform1i("u_alphaClip", true);
+    entityShader.uniform1f("u_opacity", 1.0f);
     level.entities->render(
         assets,
         *modelBatch,
@@ -172,13 +252,10 @@ void WorldRenderer::renderLevel(
     auto& linesShader = assets.require<ShaderProgram>("lines");
     setupWorldShader(shader, camera, settings, fogFactor);
 
-    chunks->drawChunks(camera, shader);
+    chunksRenderer->drawChunks(camera, shader);
     blockWraps->draw(ctx, player);
 
     if (hudVisible) renderLines(camera, linesShader, ctx);
-
-    shader.use();
-    chunks->drawSortedMeshes(camera, shader);
 
     if (!pause) {
         scripting::on_frontend_render();
@@ -202,7 +279,7 @@ void WorldRenderer::renderBlockSelection() {
 
     lineBatch->setLineWidth(2.0f);
     constexpr auto boxOffset = glm::vec3(0.01);
-    constexpr auto boxColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
+    constexpr auto boxColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     for (auto& hitbox: hitboxes) {
         const glm::vec3 center = glm::vec3(pos) + hitbox.center();
         const glm::vec3 size = hitbox.size();
@@ -233,115 +310,171 @@ void WorldRenderer::renderLines(
     }
 }
 
-void WorldRenderer::renderHands(const Camera& camera, float deltaTime) {
-    auto& entityShader = assets.require<ShaderProgram>("entity");
-    auto indices = level.content.getIndices();
-
-    const auto& inventory = player.getInventory();
-    int slot = player.getChosenSlot();
-    const ItemStack& stack = inventory->getSlot(slot);
-    const auto& def = indices->items.require(stack.getItemId());
-
-    Camera hudcam = camera;
-    hudcam.far = 10.0f;
-    hudcam.setFov(0.9f);
-    hudcam.position = {};
-
-    const glm::vec3 itemOffset(0.06f, 0.035f, -0.1);
-
-    static glm::mat4 prevRotation(1.0f);
-
-    const float speed = 24.0f;
-
-    glm::mat4 matrix = glm::translate(glm::mat4(1.0f), itemOffset);
-    matrix = glm::scale(matrix, glm::vec3(0.1f));
-    glm::mat4 rotation = camera.rotation;
-    glm::quat rot0 = glm::quat_cast(prevRotation);
-    glm::quat rot1 = glm::quat_cast(rotation);
-    glm::quat finalRot = glm::slerp(rot0, rot1, static_cast<float>(deltaTime * speed));
-    rotation = glm::mat4_cast(finalRot);
-    matrix = rotation * matrix * glm::rotate(glm::mat4(1.0f), -glm::pi<float>() * 0.5f, glm::vec3(0, 1, 0));
-    prevRotation = rotation;
-    glm::vec3 cameraRotation = player.getRotation();
-    auto offset = -(camera.position - player.getPosition());
-    float angle = glm::radians(cameraRotation.x - 90);
-    float cos = glm::cos(angle);
-    float sin = glm::sin(angle);
-
-    float newX = offset.x * cos - offset.z * sin;
-    float newZ = offset.x * sin + offset.z * cos;
-    offset = glm::vec3(newX, offset.y, newZ);
-    matrix = matrix * glm::translate(glm::mat4(1.0f), offset);
-
-    modelBatch->setLightsOffset(camera.position);
-    modelBatch->draw(
-        matrix,
-        glm::vec3(1.0f),
-        assets.get<model::Model>(def.modelName),
-        nullptr
-    );
-    Window::clearDepth();
-    setupWorldShader(entityShader, hudcam, engine.getSettings(), 0.0f);
-    skybox->bind();
-    modelBatch->render();
-    modelBatch->setLightsOffset(glm::vec3());
-    skybox->unbind();
-}
-
-void WorldRenderer::draw(
+void WorldRenderer::renderFrame(
     const DrawContext& pctx,
     Camera& camera,
     bool hudVisible,
     bool pause,
-    float deltaTime,
-    PostProcessing* postProcessing
+    float uiDelta,
+    PostProcessing& postProcessing
 ) {
-    timer += deltaTime * !pause;
+    // TODO: Refactor whole render engine
+
+    auto projView = camera.getProjView();
+
+    float deltaTime = uiDelta * !pause;
+    timer += deltaTime;
+    weather.update(deltaTime);
 
     auto world = level.getWorld();
-    const Viewport& vp = pctx.getViewport();
-    camera.aspect = vp.getWidth() / static_cast<float>(vp.getHeight());
 
+    const auto& vp = pctx.getViewport();
+    camera.setAspectRatio(vp.x / static_cast<float>(vp.y));
+
+    auto& defaultShader = assets.require<ShaderProgram>("default");
+    auto& entityShader = assets.require<ShaderProgram>("entity");
+    auto& translucentShader = assets.require<ShaderProgram>("translucent");
+    auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
     const auto& settings = engine.getSettings();
-    const auto& worldInfo = world->getInfo();
-    skybox->refresh(pctx, worldInfo.daytime, 1.0f + worldInfo.skyClearness * 2.0f, 4);
 
-    const auto& assets = *engine.getAssets();
-    auto& linesShader = assets.require<ShaderProgram>("lines");
+    ShaderProgram* affectedShaders[] {
+        &defaultShader, &entityShader, &translucentShader, &deferredShader
+    };
+
+    gbufferPipeline = settings.graphics.advancedRender.get();
+    int shadowsQuality = settings.graphics.shadowsQuality.get() * gbufferPipeline;
+    shadowMapping->setQuality(shadowsQuality);
+
+    CompileTimeShaderSettings currentSettings {
+        gbufferPipeline,
+        shadowsQuality != 0,
+        settings.graphics.ssao.get() && gbufferPipeline
+    };
+    if (
+        prevCTShaderSettings.advancedRender != currentSettings.advancedRender ||
+        prevCTShaderSettings.shadows != currentSettings.shadows ||
+        prevCTShaderSettings.ssao != currentSettings.ssao
+    ) {
+        ShaderProgram::preprocessor->setDefined("ENABLE_SHADOWS", currentSettings.shadows);
+        ShaderProgram::preprocessor->setDefined("ENABLE_SSAO", currentSettings.ssao);
+        ShaderProgram::preprocessor->setDefined("ADVANCED_RENDER", currentSettings.advancedRender);
+        for (auto shader : affectedShaders) {
+            shader->recompile();
+        }
+        prevCTShaderSettings = currentSettings;
+    }
+
+    const auto& worldInfo = world->getInfo();
+
+    float clouds = weather.clouds();
+    clouds = glm::max(worldInfo.skyClearness, clouds);
+    float mie = 1.0f + glm::max(worldInfo.skyClearness, clouds * 0.5f) * 2.0f;
+
+    skybox->refresh(pctx, worldInfo.daytime, mie, 4);
+
+    chunksRenderer->update();
+
+    shadowMapping->refresh(camera, pctx, [this, &camera](Camera& shadowCamera) {
+        auto& shader = assets.require<ShaderProgram>("shadows");
+        setupWorldShader(shader, shadowCamera, engine.getSettings(), 0.0f);
+        chunksRenderer->drawShadowsPass(shadowCamera, shader, camera);
+    });
 
     {
         DrawContext wctx = pctx.sub();
-        postProcessing->use(wctx);
-        Window::clearDepth();
-        skybox->draw(pctx, camera, assets, worldInfo.daytime, worldInfo.skyClearness);
+        postProcessing.use(wctx, gbufferPipeline);
+        display::clearDepth();
         {
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
             ctx.setCullFace(true);
-            renderLevel(ctx, camera, settings, deltaTime, pause, hudVisible);
-            if (hudVisible) {
-                if (debug) {
-                    guides->renderDebugLines(
-                        ctx, camera, *lineBatch, linesShader, drawChunkBorders
-                    );
-                }
-                if (!player.isNoclip() && player.currentCamera == player.fpCamera) {
-                    renderHands(camera, deltaTime * !pause);
-                }
+            renderOpaque(ctx, camera, settings, uiDelta, pause, hudVisible);
+        }
+        texts->render(pctx, camera, settings, hudVisible, true);
+    }
+    skybox->bind();
+    float fogFactor =
+        15.0f / static_cast<float>(settings.chunks.loadDistance.get() - 2);
+    if (gbufferPipeline) {
+        deferredShader.use();
+        setupWorldShader(deferredShader, camera, settings, fogFactor);
+        postProcessing.renderDeferredShading(pctx, assets, timer, camera);
+    }
+    {
+        DrawContext ctx = pctx.sub();
+        ctx.setDepthTest(true);
+        if (gbufferPipeline) {
+            postProcessing.bindDepthBuffer();
+        } else {
+            postProcessing.getFramebuffer()->bind();
+        }
+
+        skybox->draw(ctx, camera, assets, worldInfo.daytime, clouds);
+
+        auto& linesShader = assets.require<ShaderProgram>("lines");
+        linesShader.use();
+        if (debug && hudVisible) {
+            debugLines->render(
+                ctx, camera, *lines, *lineBatch, linesShader, drawChunkBorders
+            );
+        }
+        linesShader.uniformMatrix("u_projview", projView);
+        lines->draw(*lineBatch);
+        lineBatch->flush();
+
+        {
+            auto sctx = ctx.sub();
+            sctx.setCullFace(true);
+            skybox->bind();
+            translucentShader.use();
+            setupWorldShader(translucentShader, camera, settings, fogFactor);
+            chunksRenderer->drawSortedMeshes(camera, translucentShader);
+            skybox->unbind();
+        }
+
+        entityShader.use();
+        setupWorldShader(entityShader, camera, settings, fogFactor);
+
+        std::array<const WeatherPreset*, 2> weatherInstances {&weather.a, &weather.b};
+        for (const auto& weather : weatherInstances) {
+            float maxIntensity = weather->fall.maxIntensity;
+            float zero = weather->fall.minOpacity;
+            float one = weather->fall.maxOpacity;
+            float t = (weather->intensity * (one - zero)) * maxIntensity + zero;
+            entityShader.uniform1i("u_alphaClip", weather->fall.opaque);
+            entityShader.uniform1f("u_opacity", weather->fall.opaque ? t * t : t);
+            if (weather->intensity > 1.e-3f && !weather->fall.texture.empty()) {
+                precipitation->render(camera, pause ? 0.0f : deltaTime, *weather);
             }
         }
-        {
-            DrawContext ctx = wctx.sub();
-            texts->render(ctx, camera, settings, hudVisible, true);
-        }
-        renderBlockOverlay(wctx);
-    }
 
-    auto screenShader = assets.get<ShaderProgram>("screen");
-    screenShader->use();
-    screenShader->uniform1f("u_timer", timer);
-    screenShader->uniform1f("u_dayTime", worldInfo.daytime);
-    postProcessing->render(pctx, screenShader);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+    postProcessing.render(pctx, assets, timer, camera);
+
+    if (player.currentCamera == player.fpCamera) {
+        DrawContext ctx = pctx.sub();
+        ctx.setDepthTest(true);
+        ctx.setCullFace(true);
+
+        Camera hudcam = camera;
+        hudcam.far = 10.0f;
+        hudcam.setFov(0.9f);
+        hudcam.position = {};
+
+        if (!player.isNoclip()) hands->renderHands(camera, deltaTime);
+
+        display::clearDepth();
+        setupWorldShader(entityShader, hudcam, engine.getSettings(), 0.0f);
+
+        skybox->bind();
+        modelBatch->render();
+        modelBatch->setLightsOffset(glm::vec3());
+        skybox->unbind();
+    }
+    renderBlockOverlay(pctx);
+
+    glActiveTexture(GL_TEXTURE0);
 }
 
 void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
@@ -389,9 +522,17 @@ void WorldRenderer::renderBlockOverlay(const DrawContext& wctx) {
 }
 
 void WorldRenderer::clear() {
-    chunks->clear();
+    chunksRenderer->clear();
 }
 
 void WorldRenderer::setDebug(bool flag) {
     debug = flag;
+}
+
+void WorldRenderer::toggleLightsDebug() {
+    lightsDebug = !lightsDebug;
+}
+
+Weather& WorldRenderer::getWeather() {
+    return weather;
 }

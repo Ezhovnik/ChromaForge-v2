@@ -82,12 +82,17 @@ struct UserComponent {
     std::string name;
     EntityFuncsSet funcsset;
     scriptenv env;
+    dv::value params;
 
     UserComponent(
         const std::string& name,
         EntityFuncsSet funcsset,
-        scriptenv env
-    ) : name(name), funcsset(funcsset), env(env) {}
+        scriptenv env,
+        dv::value params
+    ) : name(name),
+        funcsset(funcsset),
+        env(std::move(env)),
+        params(std::move(params)) {}
 };
 
 struct ScriptComponents {

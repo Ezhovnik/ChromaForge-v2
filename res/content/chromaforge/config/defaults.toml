@@ -1,2 +1,3 @@
 generator = "chromaforge:standart"
 player-entity = "chromaforge:player"
+hand-skeleton = "chromaforge:hand"

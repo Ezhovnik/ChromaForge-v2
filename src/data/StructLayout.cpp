@@ -7,6 +7,7 @@
 #include <map>
 #include <string>
 
+#include <data/dv.h>
 #include <util/data_io.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>

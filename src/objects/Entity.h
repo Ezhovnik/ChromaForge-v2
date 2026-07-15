@@ -8,14 +8,20 @@
 #include <typedefs.h>
 #include <math/AABB.h>
 #include <physics/Hitbox.h>
+#include <data/dv.h>
 
 namespace rigging {
     class SkeletonConfig;
 }
 
+struct ComponentInstance {
+    std::string component;
+    dv::value params;
+};
+
 struct Entity {
     std::string const name;
-    std::vector<std::string> components;
+    std::vector<ComponentInstance> components;
     std::string skeletonName = name;
     bool blocking = true;
 

@@ -12,7 +12,6 @@
 #include <graphics/commons/Model.h>
 #include <graphics/core/Texture.h>
 #include <assets/Assets.h>
-#include <window/Window.h>
 #include <voxels/Chunks.h>
 #include <lighting/Lightmap.h>
 #include <graphics/core/Atlas.h>
@@ -51,10 +50,10 @@ ModelBatch::ModelBatch(
     const Assets& assets,
     const Chunks& chunks,
     const EngineSettings& settings
-) : batch(std::make_unique<MainBatch>(capacity)),
-    assets(assets),
+) : assets(assets),
     chunks(chunks),
-    settings(settings) {}
+    settings(settings),
+    batch(std::make_unique<MainBatch>(capacity)) {}
 
 ModelBatch::~ModelBatch() = default;
 
@@ -71,7 +70,7 @@ void ModelBatch::draw(
     const auto& vertexData = mesh.vertices.data();
 
     glm::vec4 lights(1, 1, 1, 0);
-    if (mesh.lighting) {
+    if (mesh.shading) {
         glm::vec3 gpos = matrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         gpos += lightsOffset;
         lights = MainBatch::sampleLight(gpos, chunks, backlight);
@@ -83,13 +82,20 @@ void ModelBatch::draw(
             const auto vert = vertexData[i * 3 + j];
 
             float d = 1.0f;
-            if (mesh.lighting) {
-                auto norm = rotation * vert.normal;
+            auto norm = rotation * vert.normal;
+            if (mesh.shading) {
                 d = glm::dot(norm, SUN_VECTOR);
                 d = 0.8f + d * 0.2f;
             }
 
-            batch->vertex(matrix * glm::vec4(vert.coord, 1.0f), vert.uv, lights * d, tint);
+            batch->vertex(
+                matrix * glm::vec4(vert.coord, 1.0f),
+                vert.uv,
+                lights * d,
+                tint,
+                norm,
+                mesh.shading ? 0.0f : 1.0f
+            );
         }
     }
 }

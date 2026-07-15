@@ -1,11 +1,12 @@
 #pragma once
 
-#include <optional>
+#include <string>
 
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
 #include <interfaces/Serializable.h>
+#include <util/EnumMetadata.h>
 
 enum class NoteDisplayMode {
     StaticBillboard,
@@ -14,8 +15,12 @@ enum class NoteDisplayMode {
     Projected
 };
 
-std::string to_string(NoteDisplayMode mode);
-std::optional<NoteDisplayMode> NoteDisplayMode_from(std::string_view s);
+CHROMA_ENUM_METADATA(NoteDisplayMode)
+    {"static_billboard", NoteDisplayMode::StaticBillboard},
+    {"y_free_billboard", NoteDisplayMode::YFreeBillboard},
+    {"xy_free_billboard", NoteDisplayMode::XYFreeBillboard},
+    {"projected", NoteDisplayMode::Projected},
+CHROMA_ENUM_END
 
 struct NotePreset : public Serializable {
     NoteDisplayMode displayMode = NoteDisplayMode::StaticBillboard;

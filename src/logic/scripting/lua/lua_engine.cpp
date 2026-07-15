@@ -54,6 +54,7 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "vec3", vec3lib);
     openlib(L, "vec4", vec4lib);
     openlib(L, "byteutil", byteutillib);
+    openlib(L, "yaml", yamllib);
 
     if (stateType == StateType::Script) {
         openlib(L, "app", applib);
@@ -61,6 +62,7 @@ static void create_libs(State* L, StateType stateType) {
         openlib(L, "__chroma_app", applib);
     }
     if (stateType == StateType::Base || stateType == StateType::Script) {
+        openlib(L, "assets", assetslib);
         openlib(L, "audio", audiolib);
         openlib(L, "console", consolelib);
         openlib(L, "builtin", builtinlib);
@@ -68,6 +70,7 @@ static void create_libs(State* L, StateType stateType) {
         openlib(L, "input", inputlib);
         openlib(L, "inventory", inventorylib);
         openlib(L, "network", networklib);
+        openlib(L, "pathfinding", pathfindinglib);
         openlib(L, "player", playerlib);
         openlib(L, "time", timelib);
         openlib(L, "world", worldlib);
@@ -81,17 +84,20 @@ static void create_libs(State* L, StateType stateType) {
     }
 
     addfunc(L, "print", lua::wrap<l_print>);
+    addfunc(L, "_crc32", lua::wrap<l_crc32>);
 }
 
 void lua::init_state(State* L, StateType stateType) {
-    pop(L, luaopen_base(L));
-    pop(L, luaopen_math(L));
-    pop(L, luaopen_string(L));
-    pop(L, luaopen_table(L));
-    pop(L, luaopen_debug(L));
-    pop(L, luaopen_jit(L));
-    pop(L, luaopen_bit(L));
-    pop(L, luaopen_os(L));
+    luaL_openlibs(L);
+
+    if (getglobal(L, "require")) {
+        pushstring(L, "ffi");
+        if (call_nothrow(L, 1, 1)) {
+            setglobal(L, "ffi");
+        }
+    }
+    pushnil(L);
+    setglobal(L, "io");
 
     const char* removed_os[] {
         "execute",
@@ -116,7 +122,6 @@ void lua::init_state(State* L, StateType stateType) {
 
     initialize_libs_extends(L);
 
-    newusertype<LuaBytearray>(L);
     newusertype<LuaHeightmap>(L);
     newusertype<LuaVoxelFragment>(L);
     newusertype<LuaCanvas>(L);

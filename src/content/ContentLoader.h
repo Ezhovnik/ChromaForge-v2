@@ -28,22 +28,10 @@ private:
     ContentPackStats* stats;
     const ResPaths& paths;
 
-    void loadBlock(Block& def, const std::string& full, const std::string& name);
-    void loadItem(Item& def, const std::string& full, const std::string& name);
-    void loadEntity(Entity& def, const std::string& full, const std::string& name);
     void loadGenerator(Generator& def, const std::string& full, const std::string& name);
 
     static void loadBlockMaterial(
         BlockMaterial& def, const io::path& file
-    );
-    void loadBlock(
-        Block& def, const std::string& name, const io::path& file
-    );
-    void loadItem(
-        Item& def, const std::string& name, const io::path& file
-    );
-    void loadEntity(
-        Entity& def, const std::string& name, const io::path& file
     );
     void loadResources(ResourceType type, const dv::value& list);
     void loadResourceAliases(ResourceType type, const dv::value& aliases);
@@ -69,4 +57,7 @@ public:
     void load();
 
     static void loadScripts(Content& content);
+    static void loadWorldScript(ContentPackRuntime& pack);
+    static void reloadScript(const Content& content, Block& block);
+    static void reloadScript(const Content& content, Item& item);
 };

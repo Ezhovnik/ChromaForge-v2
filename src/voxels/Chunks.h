@@ -11,7 +11,6 @@
 #include <voxels/voxel.h>
 #include <util/AreaMap2D.h>
 
-class Mesh;
 class Chunk;
 class WorldFiles;
 class LevelEvents;
@@ -112,6 +111,8 @@ public:
     void resize(uint32_t newWidth, uint32_t newDepth);
 
     void saveAndClear();
+
+    void remove(int32_t x, int32_t z);
 
     const std::vector<std::shared_ptr<Chunk>>& getChunks() const {
         return areaMap.getBuffer();

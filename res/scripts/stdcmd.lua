@@ -159,6 +159,15 @@ console.add_command(
 )
 
 console.add_command(
+    "entity.spawn nmae:str x:int~pos.x y:int~pos.y z:int~pos.z",
+    "Spawn entity with default parameters",
+    function(args, kwargs)
+        local eid = entities.spawn(args[1], {args[2], args[3], args[4]})
+        return string.format("Spawned %s at %s, %s, %s", unpack(args))
+    end
+)
+
+console.add_command(
     "entity.despawn entity:sel=$entity.selected",
     "Despawn entity",
     function(args, kwargs)
@@ -255,6 +264,33 @@ console.add_command(
     end
 )
 
+console.add_command(
+    "weather.set name:str time:num=1",
+    "Change weather",
+    function (args, kwargs)
+        local filename = file.find("presets/weather/"..args[1]..".json")
+        if not filename then
+            return "Weather preset not found"
+        end
+        local preset = json.parse(file.read(filename))
+        gfx.weather.change(preset, args[2], args[1])
+        return "Weather set to "..filename.." preset ("..tostring(args[2]).." s)"
+    end
+)
+
+console.add_command(
+    "weather.get",
+    "Display current weather preset name",
+    function (args, kwargs)
+        local name = gfx.weather.get_current()
+        if name == "" then
+            return "Unnamed " .. json.tostring(gfx.weather.get_current_data(), true)
+        else
+            return name
+        end
+    end
+)
+
 console.cheats = {
     "blocks.fill",
     "tp",
@@ -262,5 +298,6 @@ console.cheats = {
     "time.set",
     "time.daycycle",
     "entity.despawn",
-    "player.respawn"
+    "player.respawn",
+    "weather.set"
 }

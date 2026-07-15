@@ -7,6 +7,7 @@
 class Camera {
 private:
     float fov = 1.0f;
+    float ar = 0.0f;
 public:
     glm::vec3 position {}; // Позиция камеры
     float zoom = 1.0f;
@@ -17,13 +18,14 @@ public:
     glm::vec3 right {}; // Определяет горизонтальную ориентацию камеры.
     glm::vec3 dir {};
 
-    float aspect = 0.0f;
-
     bool flipped = false;
     bool perspective = true;
 
     float near = 0.05f;
-    float far = 1500.0f;
+    float far = 1e4f;
+
+    bool projset = false;
+    glm::mat4 projection;
 
     // Матрица вращения камеры
     glm::mat4 rotation {1.0f}; // Хранит текущую ориентацию камеры в пространстве.
@@ -43,5 +45,8 @@ public:
     void setFov(float fov) {this->fov = fov;}
     float getFov() const {return fov;}
 
-    float getAspectRatio() const {return aspect;};
+    void setProjection(const glm::mat4& matrix);
+
+    float getAspectRatio() const;
+    void setAspectRatio(float ar);
 };

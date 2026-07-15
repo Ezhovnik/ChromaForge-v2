@@ -87,22 +87,22 @@ namespace util {
             return !(lx < 0 || lz < 0 || lx >= sizeX || lz >= sizeZ);
         }
 
-        const T& require(TCoord x, TCoord y) const {
+        const T& require(TCoord x, TCoord z) const {
             auto lx = x - offsetX;
-            auto ly = y - offsetZ;
-            if (lx < 0 || ly < 0 || lx >= sizeX || ly >= sizeZ) {
-                throw std::invalid_argument("position is out of window");
+            auto lz = z - offsetZ;
+            if (lx < 0 || lz < 0 || lx >= sizeX || lz >= sizeZ) {
+                throw std::invalid_argument("Position is out of window");
             }
-            return firstBuffer[ly * sizeX + lx];
+            return firstBuffer[lz * sizeX + lx];
         }
 
-        bool set(TCoord x, TCoord y, T value) {
+        bool set(TCoord x, TCoord z, T value) {
             auto lx = x - offsetX;
-            auto ly = y - offsetZ;
-            if (lx < 0 || ly < 0 || lx >= sizeX || ly >= sizeZ) {
+            auto lz = z - offsetZ;
+            if (lx < 0 || lz < 0 || lx >= sizeX || lz >= sizeZ) {
                 return false;
             }
-            auto& element = firstBuffer[ly * sizeX + lx];
+            auto& element = firstBuffer[lz * sizeX + lx];
             if (value && !element) {
                 valuesCount++;
             }
@@ -113,42 +113,52 @@ namespace util {
             return true;
         }
 
+        void remove(TCoord x, TCoord z) {
+            auto lx = x - offsetX;
+            auto lz = z - offsetZ;
+            if (lx < 0 || lz < 0 || lx >= sizeX || lz >= sizeZ) {
+                return;
+            }
+            if (outCallback) outCallback(x, z, firstBuffer[lz * sizeX + lx]);
+            firstBuffer[lz * sizeX + lx] = T{};
+        }
+
         void setOutCallback(const OutCallback& callback) {
             outCallback = callback;
         }
 
-        void resize(TCoord newSizeX, TCoord newSizeY) {
+        void resize(TCoord newSizeX, TCoord newSizeZ) {
             if (newSizeX < sizeX) {
                 TCoord delta = sizeX - newSizeX;
                 translate(delta / 2, 0);
                 translate(-delta, 0);
                 translate(delta, 0);
             }
-            if (newSizeY < sizeZ) {
-                TCoord delta = sizeZ - newSizeY;
+            if (newSizeZ < sizeZ) {
+                TCoord delta = sizeZ - newSizeZ;
                 translate(0, delta / 2);
                 translate(0, -delta);
                 translate(0, delta);
             }
-            const TCoord newVolume = newSizeX * newSizeY;
+            const TCoord newVolume = newSizeX * newSizeZ;
             std::vector<T> newFirstBuffer(newVolume);
             std::vector<T> newSecondBuffer(newVolume);
-            for (TCoord y = 0; y < sizeZ && y < newSizeY; y++) {
-                for (TCoord x = 0; x < sizeX && x < newSizeX; x++) {
-                    newFirstBuffer[y * newSizeX + x] = firstBuffer[y * sizeX + x];
+            for (TCoord z = 0; z < sizeZ && z < newSizeZ; ++z) {
+                for (TCoord x = 0; x < sizeX && x < newSizeX; ++x) {
+                    newFirstBuffer[z * newSizeX + x] = firstBuffer[z * sizeX + x];
                 }
             }
             sizeX = newSizeX;
-            sizeZ = newSizeY;
+            sizeZ = newSizeZ;
             firstBuffer = std::move(newFirstBuffer);
             secondBuffer = std::move(newSecondBuffer);
         }
 
-        void setCenter(TCoord centerX, TCoord centerY) {
+        void setCenter(TCoord centerX, TCoord centerZ) {
             auto deltaX = centerX - (offsetX + sizeX / 2);
-            auto deltaY = centerY - (offsetZ + sizeZ / 2);
-            if (deltaX | deltaY) {
-                translate(deltaX, deltaY);
+            auto deltaZ = centerZ - (offsetZ + sizeZ / 2);
+            if (deltaX | deltaZ) {
+                translate(deltaX, deltaZ);
             }
         }
 

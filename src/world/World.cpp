@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <world/World.h>
 
 #include <memory>
@@ -48,7 +49,7 @@ void World::updateTimers(float delta) {
 void World::writeResources(const Content& content) {
     auto root = dv::object();
     for (size_t typeIndex = 0; typeIndex < RESOURCE_TYPES_COUNT; ++typeIndex) {
-        auto typeName = to_string(static_cast<ResourceType>(typeIndex));
+        auto typeName = ResourceTypeMeta.getNameString(static_cast<ResourceType>(typeIndex));
         auto& list = root.list(typeName);
         auto& indices = content.resourceIndices[typeIndex];
         for (size_t i = 0; i < indices.size(); ++i) {
@@ -251,8 +252,8 @@ dv::value WorldInfo::serialize() const {
     timeobj["day-time-speed"] = daytimeSpeed;
     timeobj["total-time"] = totalTime;
 
-	auto& weatherobj = root.object("weather");
-    weatherobj["skyClearness"] = skyClearness;
+	root["weather"] = dv::object();
+    root["weather"]["skyClearness"] = skyClearness;
 
     root["next-inventory-id"] = nextInventoryId;
     root["next-entity-id"] = nextEntityId;

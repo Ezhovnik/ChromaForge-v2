@@ -74,8 +74,8 @@ public:
      */
      int getYOffset() const;
 
-	int calcWidth(const std::wstring& text, size_t length=-1) const;
-     int calcWidth(const std::wstring& text, size_t offset, size_t length) const;
+	int calcWidth(std::wstring_view text, size_t length=-1) const;
+     int calcWidth(std::wstring_view text, size_t offset, size_t length) const;
 
 	/**
      * @brief Проверяет, является ли символ печатным (не пробельным).

@@ -21,8 +21,12 @@
 #include <voxels/Block.h>
 #include <objects/rigging.h>
 #include <items/Item.h>
+#include <engine/Engine.h>
+#include <content/ContentPack.h>
 
-AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(assets), paths(paths) {
+AssetsLoader::AssetsLoader(
+    Engine& engine, Assets& assets, const ResPaths& paths
+) : engine(engine), assets(assets), paths(paths) {
 	// Регистрируем встроенные загрузчики из asset_loaders.h
 	addLoader(AssetType::Shader, asset_loader::shader);
 	addLoader(AssetType::Texture, asset_loader::texture);
@@ -31,6 +35,7 @@ AssetsLoader::AssetsLoader(Assets* assets, const ResPaths* paths) : assets(asset
 	addLoader(AssetType::Layout, asset_loader::layout);
 	addLoader(AssetType::Sound, asset_loader::sound);
     addLoader(AssetType::Model, asset_loader::model);
+    addLoader(AssetType::PostEffect, asset_loader::posteffect);
 }
 
 void AssetsLoader::addLoader(AssetType tag, aloader_func func) {
@@ -77,7 +82,7 @@ void AssetsLoader::loadNext() {
 	try {
         aloader_func loader = getLoader(entry.tag);
         auto postfunc = loader(this, paths, entry.filename, entry.alias, entry.config);
-        postfunc(assets);
+        postfunc(&assets);
         entries.pop();
     } catch (std::runtime_error& err) {
         LOG_ERROR("{}", err.what());
@@ -112,7 +117,12 @@ static void add_layouts(
         std::string name = prefix + ":" + file.stem();
 
 		// Для каждого макета создаём LayoutConfig с указанным окружением
-        loader.add(AssetType::Layout, file.string(), name, std::make_shared<LayoutConfig>(env));
+        loader.add(
+            AssetType::Layout,
+            file.string(),
+            name,
+            std::make_shared<LayoutConfig>(&loader.getEngine().getGUI(), env)
+        );
     }
 }
 
@@ -131,6 +141,7 @@ static std::string assets_def_folder(AssetType tag) {
         case AssetType::Layout: return LAYOUTS_FOLDER;
         case AssetType::Sound: return SOUNDS_FOLDER;
         case AssetType::Model: return MODELS_FOLDER;
+        case AssetType::PostEffect: return POST_EFFECTS_FOLDER;
     }
     return "<unknown>";
 }
@@ -146,15 +157,12 @@ void AssetsLoader::processPreload(
         add(tag, path, name);
         return;
     }
+    std::shared_ptr<AssetsConfig> config = nullptr;
     map.at("path").get(path);
     switch (tag) {
         case AssetType::Sound: {
             bool keepPCM = false;
-            add(tag,
-                path,
-                name,
-                std::make_shared<SoundConfig>(map.at("keep-pcm").get(keepPCM))
-            );
+            config = std::make_shared<SoundConfig>(map.at("keep-pcm").get(keepPCM));
             break;
         }
         case AssetType::Atlas: {
@@ -162,13 +170,19 @@ void AssetsLoader::processPreload(
             map.at("type").get(typeName);
             auto type = AtlasType::Atlas;
             if (typeName == "separate") type = AtlasType::Separate;
-            add(tag, path, name, std::make_shared<AtlasConfig>(type));
+            config = std::make_shared<AtlasConfig>(type);
+            break;
+        }
+        case AssetType::PostEffect: {
+            bool advanced = false;
+            map.at("advanced").get(advanced);
+            config = std::make_shared<PostEffectConfig>(advanced);
             break;
         }
         default:
-            add(tag, path, name);
             break;
     }
+    add(tag, path, name, std::move(config));
 }
 
 void AssetsLoader::processPreloadList(AssetType tag, const dv::value& list) {
@@ -196,11 +210,12 @@ void AssetsLoader::processPreloadConfig(const io::path& file) {
     processPreloadList(AssetType::Texture, root["textures"]);
     processPreloadList(AssetType::Sound, root["sounds"]);
     processPreloadList(AssetType::Model, root["models"]);
+    processPreloadList(AssetType::PostEffect, root["post-effects"]);
     // Макеты загружаются автоматически
 }
 
 void AssetsLoader::processPreloadConfigs(const Content* content) {
-    auto preloadFile = paths->getMainRoot() / "preload.json";
+    io::path preloadFile = "res:preload.json";
     if (io::exists(preloadFile)) {
         processPreloadConfig(preloadFile);
     }
@@ -208,10 +223,20 @@ void AssetsLoader::processPreloadConfigs(const Content* content) {
     for (auto& entry : content->getPacks()) {
         if (entry.first == BUILTIN_CONTENT_NAMESPACE) continue;
         const auto& pack = entry.second;
-        auto preloadFile = pack->getInfo().folder / "preload.json";
+        preloadFile = pack->getInfo().folder / "preload.json";
         if (io::exists(preloadFile)) {
             processPreloadConfig(preloadFile);
         }
+    }
+}
+
+static void add_variant(AssetsLoader& loader, const Variant& variant) {
+    if (!variant.model.name.empty() && variant.model.name.find(':') == std::string::npos) {
+        loader.add(
+            AssetType::Model,
+            MODELS_FOLDER + "/" + variant.model.name,
+            variant.model.name
+        );
     }
 }
 
@@ -249,12 +274,12 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
             }
         }
         for (const auto& [_, def] : content->blocks.getDefs()) {
-            if (!def->modelName.empty() && def->modelName.find(':') == std::string::npos) {
-                loader.add(
-                    AssetType::Model,
-                    MODELS_FOLDER + "/" + def->modelName,
-                    def->modelName
-                );
+            if (def->variants) {
+                for (const auto& variant : def->variants->variants) {
+                    add_variant(loader, variant);
+                }
+            } else {
+                add_variant(loader, def->defaults);
             }
         }
         for (const auto& [_, def] : content->items.getDefs()) {
@@ -290,7 +315,7 @@ bool AssetsLoader::loadExternalTexture(
     return false;
 }
 
-const ResPaths* AssetsLoader::getPaths() const {
+const ResPaths& AssetsLoader::getPaths() const {
 	return paths;
 }
 
@@ -318,8 +343,8 @@ std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
     >(
         "assets-loader-pool", 
         [=](){return std::make_shared<LoaderWorker>(this);},
-        [=](const asset_loader::postfunc& func) {
-            func(assets);
+        [this](const asset_loader::postfunc& func) {
+            func(&assets);
         }
     );
     pool->setOnComplete(std::move(onDone));
@@ -329,4 +354,8 @@ std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
         pool->enqueueJob(std::move(entry));
     }
     return pool;
+}
+
+Engine& AssetsLoader::getEngine() {
+    return engine;
 }

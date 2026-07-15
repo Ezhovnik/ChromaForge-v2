@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 #include <typedefs.h>
 #include <content/content_fwd.h>
@@ -34,6 +35,16 @@ public:
     io::path getFolder() const;
 };
 
+struct ContentPackStats {
+    size_t totalBlocks;
+    size_t totalItems;
+    size_t totalEntities;
+
+    inline bool hasSavingContent() const {
+        return totalBlocks + totalItems + totalEntities > 0;
+    }
+};
+
 struct ContentPack {
     std::string id = "none";
     std::string title = "untitled";
@@ -44,11 +55,12 @@ struct ContentPack {
     std::vector<DependencyPack> dependencies;
 
     io::path folder;
-    std::string path;
 
     std::string source = "";
 
     io::path getContentFile() const;
+
+    std::optional<ContentPackStats> loadStats() const;
 
     static inline const std::string PACKAGE_FILENAME = "package.json";
     static inline const std::string CONTENT_FILENAME = "content.json";
@@ -59,10 +71,9 @@ struct ContentPack {
     static const std::vector<std::string> RESERVED_NAMES;
 
     static bool is_pack(const io::path& folder);
-    static ContentPack read(const std::string& path, const io::path& folder);
+    static ContentPack read(const io::path& folder);
 
     static void scanFolder(
-        const std::string& path,
         const io::path& folder,
         std::vector<ContentPack>& packs
     );
@@ -76,7 +87,7 @@ struct ContentPack {
         const std::string& name
     );
 
-    static ContentPack createBuiltin(const EnginePaths&);
+    static ContentPack createBuiltin();
 
     static inline io::path getFolderFor(ContentType type) {
         switch (type) {
@@ -87,16 +98,6 @@ struct ContentPack {
             case ContentType::None: return "";
             default: return "";
         }
-    }
-};
-
-struct ContentPackStats {
-    size_t totalBlocks;
-    size_t totalItems;
-    size_t totalEntities;
-
-    inline bool hasSavingContent() const {
-        return totalBlocks + totalItems + totalEntities > 0;
     }
 };
 

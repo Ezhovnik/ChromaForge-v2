@@ -99,7 +99,10 @@ void platform::sleep(size_t millis) {
 #endif
 
 void platform::open_folder(const std::filesystem::path& folder) {
-    if (!std::filesystem::is_directory(folder)) return;
+    if (!std::filesystem::is_directory(folder)) {
+        LOG_WARN("'{}' is not a directory or does not exist", folder.u8string());
+        return;
+    }
 #ifdef __APPLE__
     auto cmd = "open " + util::quote(folder.u8string());
     system(cmd.c_str());
@@ -108,7 +111,9 @@ void platform::open_folder(const std::filesystem::path& folder) {
     ShellExecuteW(NULL, L"open", folder.wstring().c_str(), NULL, NULL, SW_SHOWDEFAULT);
 #else
     auto cmd = "xdg-open " + util::quote(folder.u8string());
-    system(cmd.c_str());
+    if (int res = system(cmd.c_str())) {
+        LOG_WARN("'{}' returned code {}", cmd, res);
+    }
 #endif
 }
 

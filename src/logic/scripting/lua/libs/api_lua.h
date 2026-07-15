@@ -37,12 +37,18 @@ extern const luaL_Reg blockwrapslib[]; // gfx.blockwraps
 extern const luaL_Reg networklib[];
 extern const luaL_Reg applib[];
 extern const luaL_Reg byteutillib[];
+extern const luaL_Reg weatherlib[];
+extern const luaL_Reg yamllib[];
+extern const luaL_Reg posteffectslib[];
+extern const luaL_Reg assetslib[];
+extern const luaL_Reg pathfindinglib[];
 
 extern const luaL_Reg skeletonlib [];
 extern const luaL_Reg rigidbodylib [];
 extern const luaL_Reg transformlib [];
 
 extern int l_print(lua::State* L);
+extern int l_crc32(lua::State* L);
 
 namespace lua {
     inline uint check_argc(lua::State* L, int a) {

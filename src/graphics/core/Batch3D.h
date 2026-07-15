@@ -1,26 +1,42 @@
 #pragma once
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory>
 
 #include <glm/glm.hpp>
 
 #include <graphics/core/commons.h>
+#include <graphics/core/MeshData.h>
+#include <math/UVRegion.h>
 
-class Mesh;
+template<typename VertexStructure> class Mesh;
+
 class Texture;
-struct UVRegion;
+
+struct Batch3DVertex {
+    glm::vec3 position;
+    glm::vec2 uv;
+    glm::vec4 color;
+
+    static constexpr VertexAttribute ATTRIBUTES[] {
+        {VertexAttribute::Type::FLOAT, false, 3},
+        {VertexAttribute::Type::FLOAT, false, 2},
+        {VertexAttribute::Type::FLOAT, false, 4},
+        {{}, 0}
+    };
+};
 
 class Batch3D : public Flushable {
 private:
-	std::unique_ptr<float[]> buffer;
+	std::unique_ptr<Batch3DVertex[]> buffer;
 	size_t capacity;
-	std::unique_ptr<Mesh> mesh;
+	std::unique_ptr<Mesh<Batch3DVertex>> mesh;
 	size_t index;
 	glm::vec4 tint {1.0f};
 
 	std::unique_ptr<Texture> blank;
 	const Texture* currentTexture;
+	UVRegion region {0.0f, 0.0f, 1.0f, 1.0f};
 
 	void vertex(
 		float x, float y, float z,
@@ -88,6 +104,8 @@ public:
 		const glm::vec4& tint,
 		bool shading=true
 	);
+	void setRegion(UVRegion region);
+    void vertex(const glm::vec3& pos, const glm::vec2& uv, const glm::vec3& norm);
 	void vertex(const glm::vec3& pos, const glm::vec2& uv, const glm::vec4& tint);
     void point(const glm::vec3& pos, const glm::vec4& tint);
 	void flush() override;

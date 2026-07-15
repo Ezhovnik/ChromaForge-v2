@@ -1,8 +1,6 @@
 #pragma once
 
-#include <memory>
-
-#include <data/dv.h>
+#include <data/dv_fwd.h>
 
 /**
  * @brief Абстрактный интерфейс для объектов, поддерживающих сериализацию в JSON.

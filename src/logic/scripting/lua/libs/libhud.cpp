@@ -10,10 +10,11 @@
 #include <logic/BlocksController.h>
 #include <items/Inventories.h>
 #include <frontend/UIDocument.h>
-#include <graphics/ui/elements/display/InventoryView.h>
+#include <graphics/ui/elements/InventoryView.h>
 #include <util/stringutil.h>
 #include <objects/Player.h>
 #include <voxels/blocks_agent.h>
+#include <content/ContentControl.h>
 
 static int l_open_inventory(lua::State*) {
     if (!scripting::hud->isInventoryOpen()) scripting::hud->openInventory();
@@ -155,6 +156,23 @@ static int l_set_allow_pause(lua::State* L) {
     return 0;
 }
 
+static int l_reload_script(lua::State* L) {
+    auto packid = lua::require_string(L, 1);
+    if (scripting::content == nullptr) {
+        throw std::runtime_error("Content is not initialized");
+    }
+    auto& writeableContent = *scripting::content_control->get();
+    auto pack = writeableContent.getPackRuntime(packid);
+    const auto& info = pack->getInfo();
+    scripting::load_hud_script(
+        pack->getEnvironment(),
+        packid,
+        info.folder / "scripts/hud.lua",
+        pack->getId() + ":scripts/hud.lua"
+    );
+    return 0;
+}
+
 const luaL_Reg hudlib [] = {
     {"open_inventory", lua::wrap_hud<l_open_inventory>},
     {"close_inventory", lua::wrap_hud<l_close_inventory>},
@@ -173,5 +191,6 @@ const luaL_Reg hudlib [] = {
     {"_set_content_access", lua::wrap_hud<l_set_content_access>},
     {"_set_debug_cheats", lua::wrap_hud<l_set_debug_cheats>},
     {"set_allow_pause", lua::wrap_hud<l_set_allow_pause>},
+    {"reload_script", lua::wrap_hud<l_reload_script>},
     {NULL, NULL}
 };

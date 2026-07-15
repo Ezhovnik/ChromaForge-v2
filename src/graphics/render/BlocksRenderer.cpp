@@ -12,7 +12,8 @@
 #include <util/timeutil.h>
 
 // Направление на солнце (нормализованный вектор) для расчёта затенения граней
-inline constexpr glm::vec3 SUN_VECTOR = {0.2275f, 0.9388f, -0.1005f};
+inline constexpr glm::vec3 SUN_VECTOR = {0.528265f, 0.833149f, -0.163704f};
+const float DIRECTIONAL_LIGHT_FACTOR = 0.3f;
 
 BlocksRenderer::BlocksRenderer(
     size_t capacity,
@@ -20,11 +21,12 @@ BlocksRenderer::BlocksRenderer(
 	const ContentGfxCache& cache,
 	const EngineSettings& settings
 ) : content(content),
-	vertexBuffer(std::make_unique<float[]>(capacity * CHUNK_VERTEX_SIZE)),
-    indexBuffer(std::make_unique<int[]>(capacity)),
+	vertexBuffer(std::make_unique<ChunkVertex[]>(capacity)),
+    indexBuffer(std::make_unique<uint32_t[]>(capacity)),
+    denseIndexBuffer(std::make_unique<uint32_t[]>(capacity)),
+    vertexCount(0),
 	vertexOffset(0),
-	indexOffset(0),
-	indexSize(0),
+	indexCount(0),
 	capacity(capacity),
 	cache(cache),
 	settings(settings) 
@@ -40,36 +42,37 @@ BlocksRenderer::BlocksRenderer(
 BlocksRenderer::~BlocksRenderer() {
 }
 
-void BlocksRenderer::vertex(const glm::vec3& coord, float u, float v, const glm::vec4& light) {
-	vertexBuffer[vertexOffset++] = coord.x;
-	vertexBuffer[vertexOffset++] = coord.y;
-	vertexBuffer[vertexOffset++] = coord.z;
+void BlocksRenderer::vertex(
+    const glm::vec3& coord,
+    float u, float v,
+    const glm::vec4& light,
+    const glm::vec3& normal,
+    float emission
+) {
+	vertexBuffer[vertexCount].position = coord;
 
-	vertexBuffer[vertexOffset++] = u;
-	vertexBuffer[vertexOffset++] = v;
+	vertexBuffer[vertexCount].uv = {u, v};
 
-    // Упаковываем 4 байта освещения в 32-битное число и интерпретируем как float
-	union {
-		float floating;
-		uint32_t integer;
-	} compressed;
+    vertexBuffer[vertexCount].normal[0] = static_cast<uint8_t>(normal.r * 127 + 128);
+    vertexBuffer[vertexCount].normal[1] = static_cast<uint8_t>(normal.g * 127 + 128);
+    vertexBuffer[vertexCount].normal[2] = static_cast<uint8_t>(normal.b * 127 + 128);
+    vertexBuffer[vertexCount].normal[3] = static_cast<uint8_t>(emission * 255);
 
-	compressed.integer = (static_cast<uint32_t>(light.r * 255) & 0xff) << 24;
-	compressed.integer |= (static_cast<uint32_t>(light.g * 255) & 0xff) << 16;
-	compressed.integer |= (static_cast<uint32_t>(light.b * 255) & 0xff) << 8;
-	compressed.integer |= (static_cast<uint32_t>(light.a * 255) & 0xff);
-
-	vertexBuffer[vertexOffset++] = compressed.floating;
+	vertexBuffer[vertexCount].color[0] = static_cast<uint8_t>(light.r * 255);
+    vertexBuffer[vertexCount].color[1] = static_cast<uint8_t>(light.g * 255);
+    vertexBuffer[vertexCount].color[2] = static_cast<uint8_t>(light.b * 255);
+    vertexBuffer[vertexCount].color[3] = static_cast<uint8_t>(light.a * 255);
+    vertexCount++;
 }
 
-void BlocksRenderer::index(int a, int b, int c, int d, int e, int f) {
-	indexBuffer[indexSize++] = indexOffset + a;
-	indexBuffer[indexSize++] = indexOffset + b;
-	indexBuffer[indexSize++] = indexOffset + c;
-	indexBuffer[indexSize++] = indexOffset + d;
-	indexBuffer[indexSize++] = indexOffset + e;
-	indexBuffer[indexSize++] = indexOffset + f;
-	indexOffset += 4;
+void BlocksRenderer::index(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t f) {
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + a);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + b);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + c);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + d);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + e);
+    indexBuffer[indexCount++] = static_cast<uint32_t>(vertexOffset + f);
+    vertexOffset += 4;
 }
 
 void BlocksRenderer::face(
@@ -82,7 +85,7 @@ void BlocksRenderer::face(
 	const glm::vec4(&lights)[4],
 	const glm::vec4& tint) 
 {
-	if (vertexOffset + CHUNK_VERTEX_SIZE * 4 > capacity) {
+	if (vertexCount + 4 >= capacity) {
 		overflow = true;
 		return;
 	}
@@ -91,10 +94,10 @@ void BlocksRenderer::face(
     auto Y = axisY * h;
     auto Z = axisZ * d;
     float s = 0.5f;
-	vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, lights[0] * tint);
-	vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, lights[1] * tint);
-	vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, lights[2] * tint);
-	vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, lights[3] * tint);
+	vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, lights[0] * tint, axisZ, 0);
+    vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, lights[1] * tint, axisZ, 0);
+    vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, lights[2] * tint, axisZ, 0);
+    vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, lights[3] * tint, axisZ, 0);
 	index(0, 1, 3, 1, 2, 3);
 }
 
@@ -108,7 +111,7 @@ void BlocksRenderer::vertexAO(
 {
     auto pos = coord + axisZ * 0.5f + (axisX + axisY) * 0.5f;
 	auto light = pickSoftLight(glm::ivec3(round(pos.x), round(pos.y), round(pos.z)), axisX, axisY);
-	vertex(coord, u, v, light * tint);
+	vertex(coord, u, v, light * tint, axisZ, 0.0f);
 }
 
 void BlocksRenderer::faceAO(
@@ -119,7 +122,7 @@ void BlocksRenderer::faceAO(
 	const UVRegion& region,
     bool lights)
 {
-	if (vertexOffset + CHUNK_VERTEX_SIZE * 4 > capacity) {
+	if (vertexCount + 4 >= capacity) {
 		overflow = true;
 		return;
 	}
@@ -128,7 +131,7 @@ void BlocksRenderer::faceAO(
     if (lights) {
         // Вычисляем яркость грани по нормали (Z) относительно солнца
         float d = glm::dot(glm::normalize(Z), SUN_VECTOR);
-        d = 0.7f + d * 0.3f; // базовая яркость + вклад солнца
+        d = (1.0f - DIRECTIONAL_LIGHT_FACTOR) + d * DIRECTIONAL_LIGHT_FACTOR; // базовая яркость + вклад солнца
 
         auto axisX = glm::normalize(X);
         auto axisY = glm::normalize(Y);
@@ -140,11 +143,12 @@ void BlocksRenderer::faceAO(
         vertexAO(coord + ( X + Y + Z) * s, region.u2, region.v2, tint, axisX, axisY, axisZ);
         vertexAO(coord + (-X + Y + Z) * s, region.u1, region.v2, tint, axisX, axisY, axisZ);
     } else {
+        auto axisZ = glm::normalize(Z);
         glm::vec4 tint(1.0f);
-        vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint);
-        vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, tint);
-        vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, tint);
-        vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, tint);
+        vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint, axisZ, 1);
+        vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, tint, axisZ, 1);
+        vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, tint, axisZ, 1);
+        vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, tint, axisZ, 1);
     }
     index(0, 1, 2, 0, 2, 3);
 }
@@ -158,7 +162,7 @@ void BlocksRenderer::face(
     glm::vec4 tint,
     bool lights
 ) {
-    if (vertexOffset + CHUNK_VERTEX_SIZE * 4 > capacity) {
+    if (vertexCount + 4 >= capacity) {
         overflow = true;
         return;
     }
@@ -166,13 +170,13 @@ void BlocksRenderer::face(
     float s = 0.5f;
     if (lights) {
         float d = glm::dot(glm::normalize(Z), SUN_VECTOR);
-        d = 0.7f + d * 0.3f;
+        d = (1.0f - DIRECTIONAL_LIGHT_FACTOR) + d * DIRECTIONAL_LIGHT_FACTOR;
         tint *= d;
     }
-    vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint);
-    vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, tint);
-    vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, tint);
-    vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, tint);
+    vertex(coord + (-X - Y + Z) * s, region.u1, region.v1, tint, Z, lights ? 0 : 1);
+    vertex(coord + ( X - Y + Z) * s, region.u2, region.v1, tint, Z, lights ? 0 : 1);
+    vertex(coord + ( X + Y + Z) * s, region.u2, region.v2, tint, Z, lights ? 0 : 1);
+    vertex(coord + (-X + Y + Z) * s, region.u1, region.v2, tint, Z, lights ? 0 : 1);
     index(0, 1, 2, 0, 2, 3);
 }
 
@@ -207,14 +211,16 @@ void BlocksRenderer::blockXSprite(
 	const glm::vec4 tint (0.8f);
 
     // Рисуем две пересекающиеся плоскости (всего 4 грани)
-    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, 1}, {0, 1, 0}, glm::vec3(),
+    glm::vec3 n(0.0f, 1.0f, 0.0f);
+
+    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, 1}, {0, 1, 0}, n,
         texface1, lights2, tint);
-    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, 1}, {0, 1, 0}, glm::vec3(), 
+    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, 1}, {0, 1, 0}, n,
         texface1, lights1, tint);
 
-    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, -1}, {0, 1, 0}, glm::vec3(), 
+    face({x + xs, y, z + zs}, w, size.y, 0, {-1, 0, -1}, {0, 1, 0}, n,
         texface2, lights2, tint);
-    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, -1}, {0, 1, 0}, glm::vec3(), 
+    face({x + xs, y, z + zs}, w, size.y, 0, {1, 0, -1}, {0, 1, 0}, n,
         texface2, lights1, tint);
 }
 
@@ -273,111 +279,149 @@ void BlocksRenderer::blockAABB(
     }
 }
 
+static bool is_aligned(const glm::vec3& v, float e = 1e-6f) {
+    if (std::abs(v.y) < e && std::abs(v.z) < e && std::abs(v.x) > e) {
+        return true;
+    }
+    if (std::abs(v.x) < e && std::abs(v.z) < e && std::abs(v.y) > e) {
+        return true;
+    }
+    if (std::abs(v.x) < e && std::abs(v.y) < e && std::abs(v.z) > e) {
+        return true;
+    }
+    return false;
+}
+
 void BlocksRenderer::blockCustomModel(
     const glm::ivec3& icoord,
-	const Block* block, 
-    ubyte rotation, 
+	const Block& block,
+    blockstate states, 
     bool lights,
 	bool ao
 ) {
+    const auto& variant = block.getVariantByBits(states.userbits);
 	glm::vec3 X(1, 0, 0);
 	glm::vec3 Y(0, 1, 0);
 	glm::vec3 Z(0, 0, 1);
 	glm::vec3 coord(icoord);
-	if (block->rotatable) {
-		auto& rotations = block->rotations;
-		CoordSystem orient = rotations.variants[rotation];
+	if (block.rotatable) {
+        auto& rotations = block.rotations;
+        CoordSystem orient = rotations.variants[states.rotation];
         X = orient.axes[0];
         Y = orient.axes[1];
         Z = orient.axes[2];
 	}
 
     // Рендерим каждый бокс модели
-	const auto& model = cache.getModel(block->rt.id);
+	const auto& model = cache.getModel(block.rt.id);
     for (const auto& mesh : model.meshes) {
-        if (vertexOffset + CHUNK_VERTEX_SIZE * mesh.vertices.size() > capacity) {
+        if (vertexCount + mesh.vertices.size() >= capacity) {
             overflow = true;
             return;
         }
-        int i = 0;
-        for (const auto& vertex : mesh.vertices) {
-            auto n = vertex.normal.x * X + vertex.normal.y * Y + vertex.normal.z * Z;
-            float d = glm::dot(glm::normalize(n), SUN_VECTOR);
-            d = 0.8f + d * 0.2f;
-            const auto& vcoord = vertex.coord - 0.5f;
-            vertexAO(
-                coord + vcoord.x * X + vcoord.y * Y + vcoord.z * Z,
-                vertex.uv.x,
-                vertex.uv.y,
-                glm::vec4(1, 1, 1, 1),
-                glm::vec3(1, 0, 0),
-                glm::vec3(0, 1, 0),
-                n
-            );
-            indexBuffer[indexSize++] = indexOffset++;
-		}
+        for (int triangle = 0; triangle < mesh.vertices.size() / 3; ++triangle) {
+            auto r = mesh.vertices[triangle * 3 + (triangle % 2) * 2].coord - mesh.vertices[triangle * 3 + 1].coord;
+            r = r.x * X + r.y * Y + r.z * Z;
+            r = glm::normalize(r);
+
+            const auto& v0 = mesh.vertices[triangle * 3];
+            auto n = v0.normal.x * X + v0.normal.y * Y + v0.normal.z * Z;
+            auto vp = (
+                mesh.vertices[triangle * 3].coord +
+                mesh.vertices[triangle * 3 + 1].coord +
+                mesh.vertices[triangle * 3 + 2].coord
+            ) * 0.3333f - 0.5f;
+            vp = vp.x * X + vp.y * Y + vp.z * Z;
+
+            if (!isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), block, variant) && is_aligned(n)) {
+                continue;
+            }
+
+            float d = glm::dot(n, SUN_VECTOR);
+            d = (1.0f - DIRECTIONAL_LIGHT_FACTOR) + d * DIRECTIONAL_LIGHT_FACTOR;
+            glm::vec3 t = glm::cross(r, n);
+
+            for (int i = 0; i < 3; ++i) {
+                const auto& vertex = mesh.vertices[triangle * 3 + i];
+                const auto& vcoord = vertex.coord - 0.5f;
+
+                glm::vec4 aoColor {1.0f, 1.0f, 1.0f, 1.0f};
+                if (mesh.shading && ao) {
+                    auto p = coord + vcoord.x * X + vcoord.y * Y + vcoord.z * Z + r * 0.5f + t * 0.5f + n * 0.5f;
+                    aoColor = pickSoftLight(p.x, p.y, p.z, glm::ivec3(r), glm::ivec3(t));
+                }
+                this->vertex(
+                    coord + vcoord.x * X + vcoord.y * Y + vcoord.z * Z,
+                    vertex.uv.x,
+                    vertex.uv.y,
+                    mesh.shading ? (glm::vec4(d, d, d, d) * aoColor) : glm::vec4(1, 1, 1, d),
+                    n,
+                    mesh.shading ? 0.0f : 1.0f
+                );
+                indexBuffer[indexCount++] = vertexOffset++;
+            }
+        }
 	}
 }
 
 /* Fastest solid shaded blocks render method */
 void BlocksRenderer::blockCube(
-    const glm::ivec3& coord, 
-	const UVRegion(&texfaces)[6], 
-	const Block& block, 
-	blockstate state,
+    const glm::ivec3& coord,
+	const UVRegion(&texfaces)[6],
+	const Block& block,
+	blockstate states,
     bool lights,
 	bool ao
 ) {
-	ubyte group = block.drawGroup;
-
+    const auto& variant = block.getVariantByBits(states.userbits);
 	glm::ivec3 X(1, 0, 0);
 	glm::ivec3 Y(0, 1, 0);
 	glm::ivec3 Z(0, 0, 1);
 
 	if (block.rotatable) {
 		auto& rotations = block.rotations;
-		auto& orient = rotations.variants[state.rotation];
+		auto& orient = rotations.variants[states.rotation];
 		X = orient.axes[0];
         Y = orient.axes[1];
         Z = orient.axes[2];
 	}
 
 	if (ao) {
-        if (isOpen(coord + Z, block)) {
+        if (isOpen(coord + Z, block, variant)) {
             faceAO(coord, X, Y, Z, texfaces[5], lights);
         }
-        if (isOpen(coord - Z, block)) {
+        if (isOpen(coord - Z, block, variant)) {
             faceAO(coord, -X, Y, -Z, texfaces[4], lights);
         }
-        if (isOpen(coord + Y, block)) {
+        if (isOpen(coord + Y, block, variant)) {
             faceAO(coord, X, -Z, Y, texfaces[3], lights);
         }
-        if (isOpen(coord - Y, block)) {
+        if (isOpen(coord - Y, block, variant)) {
             faceAO(coord, X, Z, -Y, texfaces[2], lights);
         }
-        if (isOpen(coord + X, block)) {
+        if (isOpen(coord + X, block, variant)) {
             faceAO(coord, -Z, Y, X, texfaces[1], lights);
         }
-        if (isOpen(coord - X, block)) {
+        if (isOpen(coord - X, block, variant)) {
             faceAO(coord, Z, Y, -X, texfaces[0], lights);
         }
     } else {
-        if (isOpen(coord + Z, block)) {
+        if (isOpen(coord + Z, block, variant)) {
             face(coord, X, Y, Z, texfaces[5], pickLight(coord + Z), lights);
         }
-        if (isOpen(coord - Z, block)) {
+        if (isOpen(coord - Z, block, variant)) {
             face(coord, -X, Y, -Z, texfaces[4], pickLight(coord - Z), lights);
         }
-        if (isOpen(coord + Y, block)) {
+        if (isOpen(coord + Y, block, variant)) {
             face(coord, X, -Z, Y, texfaces[3], pickLight(coord + Y), lights);
         }
-        if (isOpen(coord - Y, block)) {
+        if (isOpen(coord - Y, block, variant)) {
             face(coord, X, Z, -Y, texfaces[2], pickLight(coord - Y), lights);
         }
-        if (isOpen(coord + X, block)) {
+        if (isOpen(coord + X, block, variant)) {
             face(coord, -Z, Y, X, texfaces[1], pickLight(coord + X), lights);
         }
-        if (isOpen(coord - X, block)) {
+        if (isOpen(coord - X, block, variant)) {
             face(coord, Z, Y, -X, texfaces[0], pickLight(coord - X), lights);
         }
 	}
@@ -445,8 +489,10 @@ glm::vec4 BlocksRenderer::pickSoftLight(
 }
 
 void BlocksRenderer::render(
-    const voxel* voxels, int beginEnds[256][2]
+    const voxel* voxels, const int beginEnds[256][2]
 ) {
+    bool denseRender = this->denseRender;
+    bool densePass = this->densePass;
 	for (const auto drawGroup : *content.drawGroups) {
 		int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
@@ -456,15 +502,19 @@ void BlocksRenderer::render(
 			blockid_t id = vox.id;
 			blockstate state = vox.state;
 			const auto& def = *blockDefsCache[id];
-			if (id == 0 || def.drawGroup != drawGroup || state.segment || def.translucent) continue;
+			uint8_t variantId = def.getVariantIndex(state.userbits);
+            const auto& variant = def.getVariant(variantId);
+            if (id == 0 || variant.drawGroup != drawGroup || state.segment) continue;
+            if (denseRender != (variant.culling == CullingMode::Optional)) continue;
+            if (def.translucent) continue;
             // Получаем текстурные регионы для всех шести граней
 			const UVRegion texfaces[6]{
-                cache.getRegion(id, 0), 
-				cache.getRegion(id, 1),
-				cache.getRegion(id, 2), 
-				cache.getRegion(id, 3),
-				cache.getRegion(id, 4), 
-				cache.getRegion(id, 5)
+                cache.getRegion(id, variantId, 0, densePass),
+                cache.getRegion(id, variantId, 1, densePass),
+                cache.getRegion(id, variantId, 2, densePass),
+                cache.getRegion(id, variantId, 3, densePass),
+                cache.getRegion(id, variantId, 4, densePass),
+                cache.getRegion(id, variantId, 5, densePass)
             };
 
             // Вычисляем координаты x,y,z внутри чанка
@@ -472,8 +522,8 @@ void BlocksRenderer::render(
 			int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);
 			int z = (i / CHUNK_DEPTH) % CHUNK_WIDTH;
 
-			switch (def.model) {
-                case BlockModel::Cube: {
+			switch (def.getModel(state.userbits).type) {
+                case BlockModelType::Cube: {
                     blockCube(
 						{x, y, z},
 						texfaces,
@@ -483,7 +533,8 @@ void BlocksRenderer::render(
 						def.ambientOcclusion
 					);
                     break;
-                } case BlockModel::X: {
+                } case BlockModelType::X: {
+                    if (!denseRender)
                     blockXSprite(
 						x, y, z,
 						glm::vec3(1.0f),
@@ -492,7 +543,8 @@ void BlocksRenderer::render(
 						1.0f
 					);
                     break;
-                } case BlockModel::AABB: {
+                } case BlockModelType::AABB: {
+                    if (!denseRender)
                     blockAABB(
 						{x, y, z},
 						texfaces,
@@ -502,14 +554,15 @@ void BlocksRenderer::render(
 						def.ambientOcclusion
 					);
                     break;
-                } case BlockModel::Custom: {
+                } case BlockModelType::Custom: {
+                    if (!denseRender)
                     blockCustomModel(
-						{x, y, z},
-						&def,
-						vox.state.rotation,
-						!def.shadeless,
-						def.ambientOcclusion
-					);
+                        {x, y, z},
+                        def,
+                        vox.state,
+                        !def.shadeless,
+                        def.ambientOcclusion
+                    );
                     break;
                 } default:
                     break;
@@ -527,6 +580,8 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 	AABB aabb {};
 	bool aabbInit = false;
 	size_t totalSize = 0;
+
+    bool densePass = this->densePass;
     for (const auto drawGroup : *content.drawGroups) {
         int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
@@ -537,19 +592,24 @@ SortingMeshData BlocksRenderer::renderTranslucent(
             blockid_t id = vox.id;
             blockstate state = vox.state;
             const auto& def = *blockDefsCache[id];
-            if (id == 0 || def.drawGroup != drawGroup || state.segment) continue;
+            uint8_t variantId = def.getVariantIndex(state.userbits);
+            const auto& variant = def.getVariant(variantId);
+            if (id == BLOCK_AIR || variant.drawGroup != drawGroup || state.segment) continue;
             if (!def.translucent) continue;
 
             const UVRegion texfaces[6] {
-                cache.getRegion(id, 0), cache.getRegion(id, 1),
-                cache.getRegion(id, 2), cache.getRegion(id, 3),
-                cache.getRegion(id, 4), cache.getRegion(id, 5)
+                cache.getRegion(id, variantId, 0, densePass),
+                cache.getRegion(id, variantId, 1, densePass),
+                cache.getRegion(id, variantId, 2, densePass),
+                cache.getRegion(id, variantId, 3, densePass),
+                cache.getRegion(id, variantId, 4, densePass),
+                cache.getRegion(id, variantId, 5, densePass)
             };
             int x = i % CHUNK_WIDTH;
             int y = i / (CHUNK_DEPTH * CHUNK_WIDTH);
             int z = (i / CHUNK_DEPTH) % CHUNK_WIDTH;
-            switch (def.model) {
-                case BlockModel::Cube:
+            switch (def.getModel(state.userbits).type) {
+                case BlockModelType::Cube:
                     blockCube(
 						{x, y, z},
 						texfaces,
@@ -559,7 +619,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 						def.ambientOcclusion
 					);
                     break;
-                case BlockModel::X: {
+                case BlockModelType::X: {
                     blockXSprite(
 						x, y, z,
 						glm::vec3(1.0f), 
@@ -569,7 +629,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 					);
                     break;
                 }
-                case BlockModel::AABB: {
+                case BlockModelType::AABB: {
                     blockAABB(
 						{x, y, z},
 						texfaces,
@@ -580,11 +640,11 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 					);
                     break;
                 }
-                case BlockModel::Custom: {
+                case BlockModelType::Custom: {
                     blockCustomModel(
-						{x, y, z},
-						&def,
-						vox.state.rotation, 
+                        {x, y, z},
+                        def,
+                        vox.state,
                         !def.shadeless,
 						def.ambientOcclusion
 					);
@@ -593,7 +653,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
                 default:
                     break;
             }
-            if (vertexOffset == 0) continue;
+            if (vertexCount == 0) continue;
 
             SortingMeshEntry entry {
 				glm::vec3(
@@ -601,34 +661,33 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 					y + 0.5f,
 					z + chunk->chunk_z * CHUNK_DEPTH + 0.5f
 				),
-				util::Buffer<float>(indexSize * CHUNK_VERTEX_SIZE)
+				util::Buffer<ChunkVertex>(indexCount),
+                0
 			};
 
 			totalSize += entry.vertexData.size();
 
-            for (int j = 0; j < indexSize; ++j) {
+            for (int j = 0; j < indexCount; ++j) {
                 std::memcpy(
-                    entry.vertexData.data() + j * CHUNK_VERTEX_SIZE,
-                    vertexBuffer.get() + indexBuffer[j] * CHUNK_VERTEX_SIZE,
-                    sizeof(float) * CHUNK_VERTEX_SIZE
+                    entry.vertexData.data() + j,
+                    vertexBuffer.get() + indexBuffer[j],
+                    sizeof(ChunkVertex)
                 );
-				float& vx = entry.vertexData[j * CHUNK_VERTEX_SIZE + 0];
-                float& vy = entry.vertexData[j * CHUNK_VERTEX_SIZE + 1];
-                float& vz = entry.vertexData[j * CHUNK_VERTEX_SIZE + 2];
+				ChunkVertex& vertex = entry.vertexData[j];
 
                 if (!aabbInit) {
                     aabbInit = true;
-                    aabb.a = aabb.b = {vx, vy, vz};
+                    aabb.a = aabb.b = vertex.position;
                 } else {
-                    aabb.addPoint(glm::vec3(vx, vy, vz));
+                    aabb.addPoint(vertex.position);
                 }
-                vx += chunk->chunk_x * CHUNK_WIDTH + 0.5f;
-                vy += 0.5f;
-                vz += chunk->chunk_z * CHUNK_DEPTH + 0.5f;
+                vertex.position.x += chunk->chunk_x * CHUNK_WIDTH + 0.5f;
+                vertex.position.y += 0.5f;
+                vertex.position.z += chunk->chunk_z * CHUNK_DEPTH + 0.5f;
             }
             sortingMesh.entries.push_back(std::move(entry));
-            vertexOffset = 0;
-            indexOffset = indexSize = 0;
+            vertexCount = 0;
+            vertexOffset = indexCount = 0;
         }
     }
 
@@ -636,13 +695,15 @@ SortingMeshData BlocksRenderer::renderTranslucent(
     if ((size.y < 0.01f || size.x < 0.01f || size.z < 0.01f) && sortingMesh.entries.size() > 1) {
         SortingMeshEntry newEntry {
             sortingMesh.entries[0].position,
-            util::Buffer<float>(totalSize)
+            util::Buffer<ChunkVertex>(totalSize),
+            0
         };
         size_t offset = 0;
         for (const auto& entry : sortingMesh.entries) {
             std::memcpy(
                 newEntry.vertexData.data() + offset,
-                entry.vertexData.data(), entry.vertexData.size() * sizeof(float)
+                entry.vertexData.data(),
+                entry.vertexData.size() * sizeof(ChunkVertex)
             );
             offset += entry.vertexData.size();
         }
@@ -654,21 +715,22 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 
 void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
 	this->chunk = chunk;
-	voxelsBuffer->setPosition(
-        chunk->chunk_x * CHUNK_WIDTH - voxelBufferPadding, 
-        0, 
+    voxelsBuffer->setPosition(
+        chunk->chunk_x * CHUNK_WIDTH - voxelBufferPadding,
+        0,
         chunk->chunk_z * CHUNK_DEPTH - voxelBufferPadding
     );
-	chunks->getVoxels(*voxelsBuffer, settings.graphics.backlight.get());
-	if (voxelsBuffer->pickBlockId(
-        	chunk->chunk_x * CHUNK_WIDTH, 0, chunk->chunk_z * CHUNK_DEPTH
-		) == BLOCK_VOID
-	) {
+    chunks->getVoxels(*voxelsBuffer, settings.graphics.backlight.get());
+
+    if (voxelsBuffer->pickBlockId(
+        chunk->chunk_x * CHUNK_WIDTH, 0, chunk->chunk_z * CHUNK_DEPTH
+    ) == BLOCK_VOID) {
         cancelled = true;
         return;
     }
-	const voxel* voxels = chunk->voxels;
-	int totalBegin = chunk->bottom * (CHUNK_WIDTH * CHUNK_DEPTH);
+    const voxel* voxels = chunk->voxels;
+
+    int totalBegin = chunk->bottom * (CHUNK_WIDTH * CHUNK_DEPTH);
     int totalEnd = chunk->top * (CHUNK_WIDTH * CHUNK_DEPTH);
 
     int beginEnds[256][2] {};
@@ -676,43 +738,82 @@ void BlocksRenderer::build(const Chunk* chunk, const Chunks* chunks) {
         const voxel& vox = voxels[i];
         blockid_t id = vox.id;
         const auto& def = *blockDefsCache[id];
+        const auto& variant = def.getVariantByBits(vox.state.userbits);
 
-        if (beginEnds[def.drawGroup][0] == 0) {
-            beginEnds[def.drawGroup][0] = i + 1;
+        if (beginEnds[variant.drawGroup][0] == 0) {
+            beginEnds[variant.drawGroup][0] = i + 1;
         }
-        beginEnds[def.drawGroup][1] = i;
+        beginEnds[variant.drawGroup][1] = i;
     }
     cancelled = false;
 
     overflow = false;
-    vertexOffset = 0;
-    indexOffset = indexSize = 0;
+    vertexCount = 0;
+    vertexOffset = indexCount = 0;
 
-    sortingMesh = std::move(renderTranslucent(voxels, beginEnds));
+    denseRender = false;
+    densePass = false;
+
+    sortingMesh = renderTranslucent(voxels, beginEnds);
 
     overflow = false;
+    vertexCount = 0;
     vertexOffset = 0;
-    indexOffset = indexSize = 0;
+    indexCount = 0;
+    denseIndexCount = 0;
 
+    denseRender = false;
+    densePass = false;
+    render(voxels, beginEnds);
+
+    size_t endIndex = indexCount;
+
+    denseRender = true;
+    densePass = true;
+    render(voxels, beginEnds);
+
+    denseIndexCount = indexCount;
+    for (size_t i = 0; i < denseIndexCount; ++i) {
+        denseIndexBuffer[i] = indexBuffer[i];
+    }
+
+    indexCount = endIndex;
+    densePass = false;
     render(voxels, beginEnds);
 }
 
 ChunkMeshData BlocksRenderer::createMesh() {
-	return ChunkMeshData{MeshData(
-        util::Buffer<float>(vertexBuffer.get(), vertexOffset), 
-        util::Buffer<int>(indexBuffer.get(), indexSize),
-        util::Buffer<VertexAttribute>(CHUNK_VATTRS, sizeof(CHUNK_VATTRS) / sizeof(VertexAttribute))
-    ), std::move(sortingMesh)};
+	return ChunkMeshData {
+        MeshData(
+            util::Buffer(vertexBuffer.get(), vertexCount),
+            std::vector<util::Buffer<uint32_t>> {
+                util::Buffer(indexBuffer.get(), indexCount),
+                util::Buffer(denseIndexBuffer.get(), denseIndexCount),
+            },
+            util::Buffer(
+                ChunkVertex::ATTRIBUTES, sizeof(ChunkVertex::ATTRIBUTES) / sizeof(VertexAttribute)
+            )
+        ),
+        std::move(sortingMesh)
+    };
 }
 
 ChunkMesh BlocksRenderer::render(const Chunk* chunk, const Chunks* chunks) {
     build(chunk, chunks);
-    size_t vcount = vertexOffset / CHUNK_VERTEX_SIZE;
-    return ChunkMesh{std::make_unique<Mesh>(
-        vertexBuffer.get(), vcount, indexBuffer.get(), indexSize, CHUNK_VATTRS
+    return ChunkMesh{std::make_unique<Mesh<ChunkVertex>>(
+        vertexBuffer.get(), vertexCount, 
+        std::vector<IndexBufferData> {
+            IndexBufferData {indexBuffer.get(), indexCount},
+            IndexBufferData {denseIndexBuffer.get(), denseIndexCount},
+        }
     ), std::move(sortingMesh)};
 }
 
 VoxelsVolume* BlocksRenderer::getVoxelsBuffer() const {
 	return voxelsBuffer.get();
+}
+
+size_t BlocksRenderer::getMemoryConsumption() const {
+    size_t volume = voxelsBuffer->getW() * voxelsBuffer->getH() * voxelsBuffer->getD();
+    return capacity * (sizeof(ChunkVertex) + sizeof(uint32_t) * 2) + volume * (sizeof(voxel) + sizeof(light_t));
 }

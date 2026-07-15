@@ -1,16 +1,11 @@
 #pragma once
 
 #include <string>
-#include <stdexcept>
 #include <memory>
 
 #include <typedefs.h>
 #include <delegates.h>
 #include <io/engine_paths.h>
-#include <content/ContentPack.h>
-#include <assets/Assets.h>
-#include <content/content_fwd.h>
-#include <content/PacksManager.h>
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
 #include <settings.h>
@@ -18,11 +13,14 @@
 #include <engine/EngineTime.h>
 #include <engine/PostRunnables.h>
 
+class Assets;
 class Screen;
 class EngineController;
-class SettingsHandler;
-struct EngineSettings;
 class Level;
+class Input;
+class Window;
+class ContentControl;
+struct Project;
 
 namespace gui {
     class GUI;
@@ -34,6 +32,10 @@ namespace cmd {
 
 namespace network {
     class Network;
+}
+
+namespace devtools {
+    class Editor;
 }
 
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
@@ -49,6 +51,7 @@ struct CoreParameters {
     std::filesystem::path resFolder = "res";
     std::filesystem::path userFolder = ".";
     std::filesystem::path scriptFile;
+    std::filesystem::path projectFolder;
 };
 
 using OnWorldOpen = std::function<void(std::unique_ptr<Level>, int64_t)>;
@@ -60,22 +63,19 @@ private:
     EngineSettings settings;
     EnginePaths paths;
 
+    std::unique_ptr<Project> project;
     std::unique_ptr<SettingsHandler> settingsHandler;
     std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
     std::shared_ptr<Screen> screen;
     std::unique_ptr<EngineController> controller;
-    std::vector<ContentPack> contentPacks;
-    std::unique_ptr<Content> content;
-
-    std::unique_ptr<ResPaths> resPaths;
-
-    std::unique_ptr<cmd::CommandsInterpreter> interpreter;
-
+    std::unique_ptr<ContentControl> content;
+    std::unique_ptr<cmd::CommandsInterpreter> cmd;
     std::unique_ptr<network::Network> network;
-
-    std::vector<std::string> basePacks;
+    std::unique_ptr<Input> input;
+    std::unique_ptr<Window> window;
 
     std::unique_ptr<gui::GUI> gui;
+    std::unique_ptr<devtools::Editor> editor;
 
     PostRunnables postRunnables;
 
@@ -88,6 +88,7 @@ private:
     void updateHotkeys(); // Обработка горячих клавиш
 
     void loadAssets();
+    void loadProject();
     void loadControls();
     void loadSettings();
     void saveSettings();
@@ -97,6 +98,7 @@ public:
 
     static Engine& getInstance();
     void initialize(CoreParameters coreParameters);
+    void close();
     static void terminate();
 
     void run();
@@ -107,24 +109,44 @@ public:
     void renderFrame();
     void nextFrame();
 
-    void onAssetsLoaded();
-
     EnginePaths& getPaths();
-    ResPaths* getResPaths();
+    ResPaths& getResPaths();
     Assets* getAssets();
-	gui::GUI* getGUI();
 	EngineSettings& getSettings();
-    const Content* getContent() const;
-    std::vector<ContentPack>& getContentPacks();
-    std::vector<ContentPack> getAllContentPacks();
     std::shared_ptr<Screen> getScreen();
     SettingsHandler& getSettingsHandler();
     EngineController* getController();
-    std::vector<std::string>& getBasePacks();
-    cmd::CommandsInterpreter* getCommandsInterpreter();
-    network::Network& getNetwork();
     const CoreParameters& getCoreParameters() const;
     EngineTime& getTime();
+    ContentControl& getContentControl();
+
+    gui::GUI& getGUI() {
+        return *gui;
+    }
+
+    Input& getInput() {
+        return *input;
+    }
+
+    network::Network& getNetwork() {
+        return *network;
+    }
+
+    cmd::CommandsInterpreter& getCmd() {
+        return *cmd;
+    }
+
+    devtools::Editor& getEditor() {
+        return *editor;
+    }
+
+    Window& getWindow() {
+        return *window;
+    }
+
+    const Project& getProject() {
+        return *project;
+    }
 
     bool isHeadless() const;
 
@@ -132,12 +154,9 @@ public:
         postRunnables.postRunnable(callback);
     }
 
-    PacksManager createPacksManager(const io::path& worldFolder);
-
     void saveScreenshot();
 
 	void setScreen(std::shared_ptr<Screen> screen);
-    void setLanguage(std::string locale);
     void setLevelConsumer(OnWorldOpen levelConsumer);
 
     void onWorldOpen(std::unique_ptr<Level> level, int64_t localPlayer);
@@ -145,9 +164,4 @@ public:
 
     void quit();
     bool isQuitSignal() const;
-
-    void loadContent();
-    void resetContent();
-    void loadWorldContent(const io::path& folder);
-    void loadAllPacks();
 };

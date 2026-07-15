@@ -4,15 +4,10 @@
 
 #include <graphics/core/Mesh.h>
 
-inline constexpr int LB_VERTEX_SIZE = 7;
-static const VertexAttribute attrs[] = {
-    {3}, {4}, {0}
-};
-
 // Конструктор
 LineBatch::LineBatch(size_t capacity) : capacity(capacity) {
-    buffer = std::make_unique<float[]>(capacity * LB_VERTEX_SIZE * 2);
-    mesh = std::make_unique<Mesh>(buffer.get(), 0, attrs);
+    buffer = std::make_unique<LineVertex[]>(capacity * 2);
+    mesh = std::make_unique<Mesh<LineVertex>>(buffer.get(), 0);
     index = 0;
 }
 
@@ -22,25 +17,17 @@ LineBatch::~LineBatch() {
 
 // Добавляет линию в буфер для отрисовки
 void LineBatch::line(float start_x, float start_y, float start_z, float end_x, float end_y, float end_z, float red, float green, float blue, float alpha) {
-    if (index + LB_VERTEX_SIZE * 2 >= capacity) flush();
+    if (index + 2 >= capacity) flush();
 
     // Записываем данные начальной вершины
-    buffer[index++] = start_x;
-    buffer[index++] = start_y;
-    buffer[index++] = start_z;
-    buffer[index++] = red;
-    buffer[index++] = green;
-    buffer[index++] = blue;
-    buffer[index++] = alpha;
+    buffer[index].position = {start_x, start_y, start_z};
+    buffer[index].color = {red, green, blue, alpha};
+    index++;
 
     // Записываем данные конечной вершины
-    buffer[index++] = end_x;
-    buffer[index++] = end_y;
-    buffer[index++] = end_z;
-    buffer[index++] = red;
-    buffer[index++] = green;
-    buffer[index++] = blue;
-    buffer[index++] = alpha;
+    buffer[index].position = {end_x, end_y, end_z};
+    buffer[index].color = {red, green, blue, alpha};
+    index++;
 }
 
 // Добавляет прямоугольный параллелепипед (бокс) в буфер для отрисовки
@@ -117,7 +104,7 @@ void LineBatch::box(float x, float y, float z, float width, float height, float 
 void LineBatch::flush() {
     if (index == 0) return;
 
-    mesh->reload(buffer.get(), index / LB_VERTEX_SIZE);
+    mesh->reload(buffer.get(), index);
     mesh->draw(GL_LINES);
     index = 0;
 }

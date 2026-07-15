@@ -14,8 +14,14 @@
 class DrawContext;
 class Assets;
 class Camera;
-class Viewport;
 class Batch2D;
+struct CursorState;
+class Engine;
+class Input;
+class Window;
+namespace devtools {
+    class Editor;
+}
 
 /*
 Padding is element inner space, margin is outer
@@ -55,6 +61,8 @@ namespace gui {
     using PageLoaderFunc = std::function<std::shared_ptr<UINode>(const std::string&)>;
 
     class GUI {
+        Engine& engine;
+        Input& input;
         std::unique_ptr<Batch2D> batch2D;
         std::shared_ptr<Container> container;
 
@@ -75,15 +83,18 @@ namespace gui {
         float doubleClickTimer = 0.0f;
         float doubleClickDelay = 0.5f;
         bool doubleClicked = false;
+        bool debug = false;
 
         float tooltipTimer = 0.0f;
 
-        void activateMouse(float deltaTIme);
+        void activateMouse(float deltaTime, const CursorState& cursor);
         void activateFocused();
         void updateTooltip(float deltaTime);
         void resetTooltip();
     public:
-        GUI();
+        static constexpr int CONTEXT_MENU_ZINDEX = 999;
+
+        GUI(Engine& engine);
         ~GUI();
 
         void setPageLoader(PageLoaderFunc pageLoader);
@@ -95,12 +106,15 @@ namespace gui {
         bool isFocusCaught() const;
         void setFocus(std::shared_ptr<UINode> node);
 
-        void activate(float deltaTime, const Viewport& viewport);
+        void activate(float deltaTime, const glm::uvec2& viewport);
         void postActivate();
 
         void draw(const DrawContext& parent_context, const Assets& assets);
         void add(std::shared_ptr<UINode> panel);
-        void remove(std::shared_ptr<UINode> panel) noexcept;
+        void remove(UINode* node) noexcept;
+        void remove(const std::shared_ptr<UINode>& node) noexcept {
+            return remove(node.get());
+        }
         void store(const std::string& name, std::shared_ptr<UINode> node);
         std::shared_ptr<UINode> get(const std::string& name) noexcept;
         void remove(const std::string& name) noexcept;
@@ -113,5 +127,12 @@ namespace gui {
 
         void setDoubleClickDelay(float delay);
         float getDoubleClickDelay() const;
+
+        void toggleDebug();
+        const Input& getInput() const;
+        Input& getInput();
+        Window& getWindow();
+        devtools::Editor& getEditor();
+        Engine& getEngine();
     };
 }

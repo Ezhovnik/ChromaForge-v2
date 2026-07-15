@@ -2,14 +2,13 @@
 
 #include <queue>
 #include <sstream>
-#include <algorithm>
 
 #include <util/listutil.h>
 #include <debug/Logger.h>
 
 PacksManager::PacksManager() = default;
 
-void PacksManager::setSources(std::vector<std::pair<std::string, io::path>> sources) {
+void PacksManager::setSources(std::vector<io::path> sources) {
     this->sources = std::move(sources);
 }
 
@@ -17,8 +16,8 @@ void PacksManager::scan() {
     packs.clear();
 
     std::vector<ContentPack> packsList;
-    for (auto& [path, folder] : sources) {
-        ContentPack::scanFolder(path, folder, packsList);
+    for (auto& folder : sources) {
+        ContentPack::scanFolder(folder, packsList);
         for (auto& pack : packsList) {
             packs.try_emplace(pack.id, pack);
         }
@@ -99,9 +98,7 @@ std::vector<std::string> PacksManager::assemble(const std::vector<std::string>& 
     std::queue<const ContentPack*> queue;
     std::queue<const ContentPack*> queue2;
 
-    std::sort(allNames.begin(), allNames.end());
-
-    for (auto& name : allNames) {
+    for (auto& name : names) {
         auto found = packs.find(name);
         if (found == packs.end()) {
             LOG_ERROR("Pack '{}' not found", name);

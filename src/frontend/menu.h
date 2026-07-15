@@ -5,14 +5,18 @@
 #include <vector>
 
 #include <data/dv.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <delegates.h>
 
 class Task;
 class Engine;
 class UIDocument;
 
+namespace gui {
+    class GUI;
+}
+
 namespace menus {
-    void create_version_label(Engine& engine);
+    void create_version_label(gui::GUI& gui);
 
     UIDocument* show(
         Engine& engine, 
@@ -26,5 +30,5 @@ namespace menus {
         const std::wstring& text=L""
     );
 
-    bool call(Engine& engine, runnable func);
+    void call(Engine& engine, runnable func);
 }

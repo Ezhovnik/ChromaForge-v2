@@ -21,28 +21,38 @@ ContentGfxCache::ContentGfxCache(
     refresh();
 }
 
-void ContentGfxCache::refresh(const Block& def, const Atlas& atlas) {
+void ContentGfxCache::refreshVariant(
+    const Block& def,
+    const Variant& variant,
+    uint8_t variantIndex,
+    const Atlas& atlas
+) {
+    bool denseRender = settings.denseRender.get();
     for (uint side = 0; side < 6; ++side) {
-        std::string tex = def.textureFaces[side];
-        if (def.culling == CullingMode::Optional && !settings.denseRender.get() && atlas.has(tex + "_opaque")) {
-            tex = tex + "_opaque";
+        std::string tex = variant.textureFaces[side];
+        std::string texOpaque = tex + "_opaque";
+
+        if (!atlas.has(tex)) {
+            tex = TEXTURE_NOTFOUND;
         }
-        if (atlas.has(tex)) {
-            sideregions[def.rt.id * 6 + side] = atlas.get(tex);
-        } else if (atlas.has(TEXTURE_NOTFOUND)) {
-            sideregions[def.rt.id * 6 + side] = atlas.get(TEXTURE_NOTFOUND);
+        if (!atlas.has(texOpaque)) {
+            texOpaque = tex;
+        } else if (variant.culling == CullingMode::Optional && !denseRender) {
+            tex = texOpaque;
         }
+        size_t index = getRegionIndex(def.rt.id, variantIndex, side, false);
+        sideregions[index] = atlas.get(tex);
+        sideregions[index + 1] = atlas.get(texOpaque);
     }
-    if (def.model == BlockModel::Custom) {
-        auto model = assets.require<model::Model>(def.modelName);
-        if (def.modelName.find(':') == std::string::npos) {
-            for (auto& mesh : model.meshes) {
-                size_t pos = mesh.texture.find(':');
-                if (pos == std::string::npos) continue;
-                if (auto region = atlas.getIf(mesh.texture.substr(pos+1))) {
-                    for (auto& vertex : mesh.vertices) {
-                        vertex.uv = region->apply(vertex.uv);
-                    }
+    if (variant.model.type == BlockModelType::Custom) {
+        auto model = assets.require<model::Model>(variant.model.name);
+        for (auto& mesh : model.meshes) {
+            size_t pos = mesh.texture.find(':');
+            if (pos == std::string::npos) continue;
+
+            if (auto region = atlas.getIf(mesh.texture.substr(pos + 1))) {
+                for (auto& vertex : mesh.vertices) {
+                    vertex.uv = region->apply(vertex.uv);
                 }
             }
         }
@@ -50,23 +60,33 @@ void ContentGfxCache::refresh(const Block& def, const Atlas& atlas) {
     }
 }
 
+void ContentGfxCache::refresh(const Block& def, const Atlas& atlas) {
+    refreshVariant(def, def.defaults, 0, atlas);
+    if (def.variants) {
+        const auto& variants = def.variants->variants;
+        for (int i = 1; i < variants.size() - 1; ++i) {
+            refreshVariant(def, variants[i], i, atlas);
+        }
+        def.variants->variants.at(0) = def.defaults;
+    }
+}
+
 void ContentGfxCache::refresh() {
     auto indices = content.getIndices();
-    sideregions = std::make_unique<UVRegion[]>(indices->blocks.count() * 6);
+    size_t size = indices->blocks.count() * GFXC_SIDES * GFXC_MAX_VARIANTS * 2;
+
+    LOG_INFO("UV cache size is {} B", (sizeof(UVRegion) * size));
+
+    sideregions = std::make_unique<UVRegion[]>(size);
     const auto& atlas = assets.require<Atlas>("blocks");
 
     const auto& blocks = indices->blocks.getIterable();
     for (blockid_t i = 0; i < blocks.size(); ++i) {
-        auto def = blocks[i];
-        refresh(*def, atlas);
+        refresh(*blocks[i], atlas);
     }
 }
 
 ContentGfxCache::~ContentGfxCache() = default;
-
-const Content* ContentGfxCache::getContent() const {
-    return &content;
-}
 
 const model::Model& ContentGfxCache::getModel(blockid_t id) const {
     const auto& found = models.find(id);

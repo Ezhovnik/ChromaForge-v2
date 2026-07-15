@@ -8,7 +8,7 @@
 #include <data/StructLayout.h>
 #include <presets/ParticlesPreset.h>
 
-dv::value BlockMaterial::serialize() const {
+dv::value BlockMaterial::toTable() const {
     return dv::object({
         {"name", name},
         {"stepsSound", stepsSound},
@@ -18,54 +18,22 @@ dv::value BlockMaterial::serialize() const {
     });
 }
 
-std::string to_string(BlockModel model) {
-    switch (model) {
-        case BlockModel::None: return "none";
-        case BlockModel::Cube: return "cube";
-        case BlockModel::X: return "X";
-        case BlockModel::AABB: return "aabb";
-        case BlockModel::Custom: return "custom";
-		default: return "unknown";
-    }
+dv::value BlockMaterial::serialize() const {
+    return dv::object({
+        {"name", name},
+        {"steps-sound", stepsSound},
+        {"place-sound", placeSound},
+        {"break-sound", breakSound},
+        {"hit-sound", hitSound}
+    });
 }
 
-std::optional<BlockModel> BlockModel_from(std::string_view str) {
-    if (str == "none") {
-        return BlockModel::None;
-    } else if (str == "cube") {
-        return BlockModel::Cube;
-    } else if (str == "X") {
-        return BlockModel::X;
-    } else if (str == "aabb") {
-        return BlockModel::AABB;
-    } else if (str == "custom") {
-        return BlockModel::Custom;
-    }
-    return std::nullopt;
-}
-
-std::string to_string(CullingMode mode) {
-    switch (mode) {
-        case CullingMode::Default:
-            return "default";
-        case CullingMode::Optional:
-            return "optional";
-        case CullingMode::Disabled:
-            return "disabled";
-        default:
-            return "unknown";
-    }
-}
-
-std::optional<CullingMode> CullingMode_from(std::string_view str) {
-    if (str == "default") {
-        return CullingMode::Default;
-    } else if (str == "optional") {
-        return CullingMode::Optional;
-    } else if (str == "disabled") {
-        return CullingMode::Disabled;
-    }
-    return std::nullopt;
+void BlockMaterial::deserialize(const dv::value& src) {
+    src.at("name").get(name);
+    src.at("steps-sound").get(stepsSound);
+    src.at("place-sound").get(placeSound);
+    src.at("break-sound").get(breakSound);
+    src.at("hit-sound").get(hitSound);
 }
 
 CoordSystem::CoordSystem(glm::ivec3 axisX, glm::ivec3 axisY, glm::ivec3 axisZ) : axes({axisX, axisY, axisZ}) {
@@ -116,34 +84,53 @@ const BlockRotProfile BlockRotProfile::PANE {"pane", {
     0
 };
 
-Block::Block(const std::string& name) : 
-	name(name), 
-	textureFaces{TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND, TEXTURE_NOTFOUND},
-	caption(util::id_to_caption(name))
-{}
+const BlockRotProfile BlockRotProfile::STAIRS {"stairs", {
+        {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, // North
+        {{0, 0, -1}, {0, 1, 0}, {1, 0, 0}}, // East
+        {{-1, 0, 0}, {0, 1, 0}, {0, 0, -1}}, // South
+        {{0, 0, 1}, {0, 1, 0}, {-1, 0, 0}}, // West
 
-Block::~Block() {}
+        {{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}},
+        {{0, 0, 1}, {0, -1, 0}, {1, 0, 0}},
+        {{1, 0, 0}, {0, -1, 0}, {0, 0, -1}},
+        {{0, 0, -1}, {0, -1, 0}, {-1, 0, 0}},
+    },
+    8
+};
+
+Block::Block(const std::string& name) : 
+	name(name),
+	caption(util::id_to_caption(name))
+{
+    for (int i = 0; i < defaults.textureFaces.size(); ++i) {
+        defaults.textureFaces[i] = TEXTURE_NOTFOUND;
+    }
+}
+
+Block::~Block() = default;
 
 Block::Block(
 	std::string name, 
 	const std::string& texture
-) : name(std::move(name)), 
-	textureFaces{texture, texture, texture, texture, texture, texture}, 
+) : name(std::move(name)),
 	caption(util::id_to_caption(name))
-{}
+{
+    for (int i = 0; i < defaults.textureFaces.size(); ++i) {
+        defaults.textureFaces[i] = texture;
+    }
+}
 
 void Block::cloneTo(Block& dst) {
     dst.caption = caption;
 
-    for (int i = 0; i < 6; ++i) {
-        dst.textureFaces[i] = textureFaces[i];
+    dst.defaults = defaults;
+    if (variants) {
+        dst.variants = std::make_unique<Variants>(*variants);
     }
 
     dst.material = material;
     std::copy(&emission[0], &emission[3], dst.emission);
     dst.size = size;
-    dst.model = model;
-    dst.drawGroup = drawGroup;
     dst.lightPassing = lightPassing;
     dst.skyLightPassing = skyLightPassing;
     dst.shadeless = shadeless;
@@ -167,7 +154,6 @@ void Block::cloneTo(Block& dst) {
     if (particles) {
         dst.particles = std::make_unique<ParticlesPreset>(*particles);
     }
-    dst.customModelRaw = customModelRaw;
 }
 
 static std::set<std::string, std::less<>> RESERVED_BLOCK_FIELDS {

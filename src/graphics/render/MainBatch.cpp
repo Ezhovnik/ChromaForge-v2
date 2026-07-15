@@ -6,16 +6,12 @@
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>
 
-static const VertexAttribute attrs[] = {
-    {3}, {2}, {3}, {1}, {0}
-};
-
 MainBatch::MainBatch(
     size_t capacity
-) : buffer(std::make_unique<float[]>(capacity * VERTEX_SIZE)),
+) : buffer(std::make_unique<MainBatchVertex[]>(capacity)),
     capacity(capacity),
     index(0),
-    mesh(std::make_unique<Mesh>(buffer.get(), 0, attrs)) 
+    mesh(std::make_unique<Mesh<MainBatchVertex>>(buffer.get(), 0)) 
 {
     const ubyte pixels[] = {
         255, 255, 255, 255,
@@ -49,7 +45,7 @@ void MainBatch::flush() {
         texture = blank.get();
     }
     texture->bind();
-    mesh->reload(buffer.get(), index / VERTEX_SIZE);
+    mesh->reload(buffer.get(), index);
     mesh->draw();
     index = 0;
 }
@@ -60,7 +56,7 @@ void MainBatch::begin() {
 }
 
 void MainBatch::prepare(int vertices) {
-    if (index + VERTEX_SIZE * vertices > capacity * VERTEX_SIZE) {
+    if (index + vertices > capacity) {
         flush();
     }
 }
@@ -74,12 +70,12 @@ glm::vec4 MainBatch::sampleLight(
         std::floor(pos.z)
     );
     light_t minIntensity = backlight ? 1 : 0;
-    return glm::vec4(
-        glm::max(Lightmap::extract(light, 0), minIntensity) / 15.0f,
-        glm::max(Lightmap::extract(light, 1), minIntensity) / 15.0f,
-        glm::max(Lightmap::extract(light, 2), minIntensity) / 15.0f,
-        glm::max(Lightmap::extract(light, 3), minIntensity) / 15.0f
-    );
+    return {
+        (float) glm::max(Lightmap::extract(light, 0), minIntensity) / 15.0f,
+        (float) glm::max(Lightmap::extract(light, 1), minIntensity) / 15.0f,
+        (float) glm::max(Lightmap::extract(light, 2), minIntensity) / 15.0f,
+        (float) glm::max(Lightmap::extract(light, 3), minIntensity) / 15.0f
+    };
 }
 
 inline glm::vec4 do_tint(float value) {
@@ -99,37 +95,37 @@ void MainBatch::cube(
 
     quad(
         coord + Z * size.z * 0.5f,
-        X, Y, glm::vec2(size.x, size.y),
+        X, Y, Z, glm::vec2(size.x, size.y),
         (shading ? do_tint(0.8) * tint : tint),
         glm::vec3(1.0f), texfaces[5]
     );
     quad(
         coord - Z * size.z * 0.5f,
-        -X, Y, glm::vec2(size.x, size.y),
+        -X, Y, -Z, glm::vec2(size.x, size.y),
         (shading ? do_tint(0.9f) * tint : tint),
         glm::vec3(1.0f), texfaces[4]
     );
     quad(
         coord + Y * size.y * 0.5f,
-        -X, Z, glm::vec2(size.x, size.z),
+        -X, Z, Y, glm::vec2(size.x, size.z),
         (shading ? do_tint(1.0f) * tint : tint),
         glm::vec3(1.0f), texfaces[3]
     );
     quad(
         coord - Y * size.y * 0.5f,
-        X, Z, glm::vec2(size.x, size.z),
+        X, Z, -Y, glm::vec2(size.x, size.z),
         (shading ? do_tint(0.7f) * tint : tint),
         glm::vec3(1.0f), texfaces[2]
     );
     quad(
         coord + X * size.x * 0.5f,
-        -Z, Y, glm::vec2(size.z, size.y),
+        -Z, Y, X, glm::vec2(size.z, size.y),
         (shading ? do_tint(0.8f) * tint : tint),
         glm::vec3(1.0f), texfaces[1]
     );
     quad(
         coord - X * size.x * 0.5f,
-        Z, Y, glm::vec2(size.z, size.y),
+        Z, Y, -X, glm::vec2(size.z, size.y),
         (shading ? do_tint(0.9f) * tint : tint),
         glm::vec3(1.0f), texfaces[1]
     );

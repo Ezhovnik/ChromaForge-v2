@@ -16,19 +16,34 @@ namespace util {
 
     uint encode_utf8(uint32_t c, ubyte* bytes);
     uint32_t decode_utf8(uint& size, const char* bytes);
-    std::string wstr2str_utf8(const std::wstring &ws);
-    std::wstring str2wstr_utf8(const std::string &s);
+    std::string wstr2str_utf8(std::wstring_view ws);
+    std::wstring str2wstr_utf8(std::string_view s);
     size_t crop_utf8(std::string_view s, size_t maxSize);
     size_t length_utf8(std::string_view s);
+    size_t length_utf8(std::wstring_view s);
     std::string double2str(double x);
     std::wstring double2wstr(double x, int precision);
-    std::string u32str2str_utf8(const std::u32string& ws);
+    std::string u32str2str_utf8(std::u32string_view ws);
     std::u32string str2u32str_utf8(const std::string& s);
+    inline std::string str2str_utf8(std::string_view s) {
+        return std::string(s);
+    }
+    inline std::string str2str_utf8(std::wstring_view s) {
+        return wstr2str_utf8(s);
+    }
+    inline std::string str2str_utf8(std::u32string_view s) {
+        return u32str2str_utf8(s);
+    }
     bool is_integer(const std::string& text);
     bool is_integer(const std::wstring& text);
     bool is_valid_filename(const std::wstring& name);
 
-    int replaceAll(std::string& str, const std::string& from, const std::string& to);
+    int replaceAll(
+        std::string& str, const std::string& from, const std::string& to
+    );
+    int replaceAll(
+        std::wstring& str, const std::wstring& from, const std::wstring& to
+    );
 
     double parse_double(const std::string& str);
     double parse_double(const std::string& str, size_t offset, size_t len);
@@ -38,8 +53,11 @@ namespace util {
     void trim(std::string &s);
 
     std::string base64_encode(const ubyte* data, size_t size);
+    std::string base64_urlsafe_encode(const ubyte* data, size_t size);
     util::Buffer<ubyte> base64_decode(const char* str, size_t size);
+    util::Buffer<ubyte> base64_urlsafe_decode(const char* str, size_t size);
     util::Buffer<ubyte> base64_decode(std::string_view str);
+    util::Buffer<ubyte> base64_urlsafe_decode(std::string_view str);
 
     std::string tohex(uint64_t value);
 
@@ -58,4 +76,29 @@ namespace util {
     std::pair<std::string, std::string> split_at(std::string_view view, char c);
 
     std::string format_data_size(size_t size);
+
+    template <typename CharT>
+    std::vector<std::basic_string<CharT>> split_by_n(
+        const std::basic_string<CharT>& str, size_t n
+    ) {
+        std::vector<std::basic_string<CharT>> result;
+        for (size_t i = 0; i < str.length(); i += n) {
+            result.push_back(str.substr(i, n));
+        }
+        return result;
+    }
+
+    template <typename CharT>
+    std::basic_string<CharT> join(
+        const std::vector<std::basic_string<CharT>>& strings, CharT delimiter
+    ) {
+        std::basic_stringstream<CharT> ss;
+        for (size_t i = 0; i < strings.size(); ++i) {
+            ss << strings[i];
+            if (i != strings.size() - 1) {
+                ss << delimiter;
+            }
+        }
+        return ss.str();
+    }
 }

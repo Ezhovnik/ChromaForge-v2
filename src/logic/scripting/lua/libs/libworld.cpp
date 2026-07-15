@@ -20,6 +20,8 @@
 #include <voxels/compressed_chunks.h>
 #include <world/files/WorldFiles.h>
 #include <content/Content.h>
+#include <content/ContentLoader.h>
+#include <content/ContentControl.h>
 
 static WorldInfo& require_world_info() {
     if (scripting::level == nullptr) {
@@ -137,16 +139,13 @@ static int l_get_chunk_data(lua::State* L) {
         chunkData = compressed_chunks::encode(*chunk);
     }
 
-    return lua::newuserdata<lua::LuaBytearray>(L, std::move(chunkData));
+    return lua::create_bytearray(L, std::move(chunkData));
 }
 
 static void integrate_chunk_client(Chunk& chunk) {
     int x = chunk.chunk_x;
     int z = chunk.chunk_z;
 
-    auto chunksController = scripting::controller->getChunksController();
-
-    Lighting& lighting = *chunksController->lighting;
     chunk.flags.loadedLights = false;
     chunk.flags.lighted = false;
 
@@ -172,11 +171,14 @@ static int l_set_chunk_data(lua::State* L) {
 
     int x = static_cast<int>(lua::tointeger(L, 1));
     int z = static_cast<int>(lua::tointeger(L, 2));
-    auto buffer = lua::require_bytearray(L, 3);
+    auto buffer = lua::bytearray_as_string(L, 3);
     auto chunk = scripting::level->chunks->getChunk(x, z);
     if (chunk == nullptr) return lua::pushboolean(L, false);
     compressed_chunks::decode(
-        *chunk, buffer.data(), buffer.size(), *scripting::content->getIndices()
+        *chunk,
+        reinterpret_cast<const ubyte*>(buffer.data()),
+        buffer.size(),
+        *scripting::content->getIndices()
     );
     if (scripting::controller->getChunksController()->lighting == nullptr) {
         return lua::pushboolean(L, true);
@@ -193,10 +195,15 @@ static int l_save_chunk_data(lua::State* L) {
 
     int x = static_cast<int>(lua::tointeger(L, 1));
     int z = static_cast<int>(lua::tointeger(L, 2));
-    auto buffer = lua::require_bytearray(L, 3);
+    auto buffer = lua::bytearray_as_string(L, 3);
 
     compressed_chunks::save(
-        x, z, std::move(buffer), scripting::level->getWorld()->wfile->getRegions()
+        x, z,
+        std::vector(
+            reinterpret_cast<const ubyte*>(buffer.data()),
+            reinterpret_cast<const ubyte*>(buffer.data()) + buffer.size()
+        ),
+        scripting::level->getWorld()->wfile->getRegions()
     );
     return 0;
 }
@@ -206,6 +213,17 @@ static int l_count_chunks(lua::State* L) {
         return 0;
     }
     return lua::pushinteger(L, scripting::level->chunks->size());
+}
+
+static int l_reload_script(lua::State* L) {
+    auto packid = lua::require_string(L, 1);
+    if (scripting::content == nullptr) {
+        throw std::runtime_error("Content is not initialized");
+    }
+    auto& writeableContent = *scripting::content_control->get();
+    auto pack = writeableContent.getPackRuntime(packid);
+    ContentLoader::loadWorldScript(*pack);
+    return 0;
 }
 
 const luaL_Reg worldlib [] = {
@@ -225,5 +243,6 @@ const luaL_Reg worldlib [] = {
     {"set_chunk_data", lua::wrap<l_set_chunk_data>},
     {"save_chunk_data", lua::wrap<l_save_chunk_data>},
     {"count_chunks", lua::wrap<l_count_chunks>},
+    {"reload_script", lua::wrap<l_reload_script>},
     {NULL, NULL}
 };

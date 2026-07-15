@@ -41,6 +41,14 @@ struct GraphicsSettings {
 	IntegerSetting chunkMaxVertices {200'000, 0, 4'000'000};
 	IntegerSetting chunkMaxVerticesDense {800'000, 0, 8'000'000};
     IntegerSetting chunkMaxRenderers {6, -4, 32};
+	BoolSetting advancedRender {true};
+	BoolSetting ssao {true};
+	IntegerSetting shadowsQuality {0, 0, 3};
+	IntegerSetting denseRenderDistance {56, 0, 10'000};
+};
+
+struct PathfindingSettings {
+    IntegerSetting stepsPerAsyncAgent {256, 1, 2048};
 };
 
 struct DebugSettings {
@@ -77,4 +85,5 @@ struct EngineSettings {
     DebugSettings debug;
 	UISettings ui;
 	NetworkSettings network;
+	PathfindingSettings pathfinding;
 };

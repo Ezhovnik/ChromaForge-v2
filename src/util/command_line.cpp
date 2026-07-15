@@ -12,20 +12,21 @@ static bool perform_keyword(
 ) {
     if (keyword == "--res") {
 		// Читаем следующий аргумент как путь к папке ресурсов
-		auto token = reader.next();
-		params.resFolder = token;
+		params.resFolder = reader.next();
 	} else if (keyword == "--dir") {
 		// Читаем следующий аргумент как путь к папке пользовательских файлов
-		auto token = reader.next();
-		params.userFolder = token;
+		params.userFolder = reader.next();
+    } else if (keyword == "--project") {
+        params.projectFolder = reader.next();
 	} else if (keyword == "--help" || keyword == "-h") {
 		// Выводим справку и сообщаем, что запуск нужно прервать.
 		std::cout << "ChromaForge v " << ENGINE_VERSION_STRING << "\n\n";
 		std::cout << "command-line arguments:\n";
-        std::cout << " --help - show help\n";
-		std::cout << " --version - print engine version\n";
+        std::cout << " --help - display this help\n";
+		std::cout << " --version - display engine version\n";
         std::cout << " --res <path> - set resources directory\n";
         std::cout << " --dir <path> - set userfiles directory\n";
+		std::cout << " --project <path> - set project directory\n";
         std::cout << " --headless - run in headless mode\n";
 		std::cout << " --test <path> - test script file\n";
 		std::cout << " --script <path> - main script file\n";

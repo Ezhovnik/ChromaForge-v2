@@ -1,6 +1,9 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <content/Content.h>
 #include <items/Item.h>
+#include <content/ContentLoader.h>
+#include <engine/Engine.h>
+#include <content/ContentControl.h>
 
 static const Item* get_item_def(lua::State* L, int idx) {
     auto indices = scripting::content->getIndices();
@@ -52,6 +55,13 @@ static int l_caption(lua::State* L) {
     return 0;
 }
 
+static int l_description(lua::State* L) {
+    if (auto def = get_item_def(L, 1)) {
+        return lua::pushstring(L, def->description);
+    }
+    return 0;
+}
+
 static int l_placing_block(lua::State* L) {
     if (auto def = get_item_def(L, 1)) {
         return lua::pushinteger(L, def->rt.placingBlock);
@@ -85,10 +95,22 @@ static int l_uses(lua::State* L) {
     return 0;
 }
 
+static int l_reload_script(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    if (scripting::content == nullptr) {
+        throw std::runtime_error("Content is not initialized");
+    }
+    auto& writeableContent = *scripting::content_control->get();
+    auto& def = writeableContent.items.require(name);
+    ContentLoader::reloadScript(writeableContent, def);
+    return 0;
+}
+
 const luaL_Reg itemlib [] = {
     {"index", lua::wrap<l_index>},
     {"name", lua::wrap<l_name>},
     {"caption", lua::wrap<l_caption>},
+    {"description", lua::wrap<l_description>},
     {"stack_size", lua::wrap<l_stack_size>},
     {"defs_count", lua::wrap<l_defs_count>},
     {"icon", lua::wrap<l_get_icon>},
@@ -96,5 +118,6 @@ const luaL_Reg itemlib [] = {
     {"model_name", lua::wrap<l_model_name>},
     {"emission", lua::wrap<l_emission>},
     {"uses", lua::wrap<l_uses>},
+    {"reload_script", lua::wrap<l_reload_script>},
     {NULL, NULL}
 };

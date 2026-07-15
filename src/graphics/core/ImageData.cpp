@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <cstring>
 #include <algorithm>
+#include <cmath>
+
+#include <glm/glm.hpp>
 
 #include <debug/Logger.h>
 
@@ -133,13 +136,13 @@ void ImageData::flipY() {
     }
 }
 
-void ImageData::blit(const ImageData* image, int x, int y) {
-    if (format == image->format) {
+void ImageData::blit(const ImageData& image, int x, int y) {
+    if (format == image.format) {
         blitMatchingFormat(image, x, y);
         return;
     }
 
-    if (format == ImageFormat::rgba8888 && image->format == ImageFormat::rgb888) {
+    if (format == ImageFormat::rgba8888 && image.format == ImageFormat::rgb888) {
         blitRGB_on_RGBA(image, x, y);
         return;
     }
@@ -148,10 +151,137 @@ void ImageData::blit(const ImageData* image, int x, int y) {
     throw std::runtime_error("Mismatching format");
 }
 
-void ImageData::blitRGB_on_RGBA(const ImageData* image, int x, int y) {
-    ubyte* source = image->getData();
-    uint srcwidth = image->getWidth();
-    uint srcheight = image->getHeight();
+static bool clip_line(int& x1, int& y1, int& x2, int& y2, int width, int height) {
+    const int left = 0;
+    const int right = width;
+    const int bottom = 0;
+    const int top = height;
+
+    int dx = x2 - x1;
+    int dy = y2 - y1;
+
+    float t0 = 0.0f;
+    float t1 = 1.0f;
+
+    auto clip = [](int p, int q, float& t0, float& t1) {
+        if (p == 0) {
+            return q >= 0;
+        }
+        float t = static_cast<float>(q) / p;
+        if (p < 0) {
+            if (t > t1) return false;
+            if (t > t0) t0 = t;
+        } else {
+            if (t < t0) return false;
+            if (t < t1) t1 = t;
+        }
+        return true;
+    };
+
+    if (!clip(-dx, x1 - left, t0, t1)) return false;
+    if (!clip( dx, right - x1, t0, t1)) return false;
+    if (!clip(-dy, y1 - bottom, t0, t1)) return false;
+    if (!clip( dy, top - y1, t0, t1)) return false;
+
+    if (t1 < 1.0f) {
+        x2 = x1 + static_cast<int>(std::round(t1 * dx));
+        y2 = y1 + static_cast<int>(std::round(t1 * dy));
+    }
+    if (t0 > 0.0f) {
+        x1 = x1 + static_cast<int>(std::round(t0 * dx));
+        y1 = y1 + static_cast<int>(std::round(t0 * dy));
+    }
+    return true;
+}
+
+template<uint channels>
+static void draw_line(ImageData& image, int x1, int y1, int x2, int y2, const glm::ivec4& color) {
+    ubyte* data = image.getData();
+    uint width = image.getWidth();
+    uint height = image.getHeight();
+
+    if ((x1 < 0 || x1 >= width || x2 < 0 || x2 >= width || y1 < 0 || y1 >= height || y2 < 0 || y2 >= height) &&
+        !clip_line(x1, y1, x2, y2, width, height)) {
+        return;
+    }
+    
+    int dx = std::abs(x2 - x1);
+    int dy = -std::abs(y2 - y1);
+    int sx = x1 < x2 ? 1 : -1;
+    int sy = y1 < y2 ? 1 : -1;
+    int err = dx + dy;
+
+    while (true) {
+        size_t pos = (y1 * width + x1) * channels;
+        for (int i = 0; i < channels; ++i) {
+            data[pos + i] = color[i];
+        }
+        if (x1 == x2 && y1 == y2) break;
+
+        int e2 = 2 * err;
+        if (e2 >= dy) {
+            err += dy;
+            x1 += sx;
+        }
+        if (e2 <= dx) {
+            err += dx;
+            y1 += sy;
+        }
+    }
+}
+
+void ImageData::drawLine(int x1, int y1, int x2, int y2, const glm::ivec4& color) {
+    switch (format) {
+        case ImageFormat::rgb888:
+            draw_line<3>(*this, x1, y1, x2, y2, color);
+            break;
+        case ImageFormat::rgba8888:
+            draw_line<4>(*this, x1, y1, x2, y2, color);
+            break;
+        default:
+            break;
+    }
+}
+
+template<uint channels>
+static void draw_rect(ImageData& image, int dstX, int dstY, int width, int height, const glm::ivec4& color) {
+    ubyte* data = image.getData();
+    int imageWidth = image.getWidth();
+    int imageHeight = image.getHeight();
+
+    int x1 = glm::min(glm::max(dstX, 0), imageWidth - 1);
+    int y1 = glm::min(glm::max(dstY, 0), imageHeight - 1);
+
+    int x2 = glm::min(glm::max(dstX + width, 0), imageWidth - 1);
+    int y2 = glm::min(glm::max(dstY + height, 0), imageHeight - 1);
+
+    for (int y = y1; y <= y2; ++y) {
+        for (int x = x1; x <= x2; ++x) {
+            int index = (y * imageWidth + x) * channels;
+            for (int i = 0; i < channels; ++i) {
+                data[index + i] = color[i];
+            }
+        }
+    }
+}
+
+void ImageData::drawRect(int x, int y, int width, int height, const glm::ivec4& color) {
+    switch (format) {
+        case ImageFormat::rgb888:
+            draw_rect<3>(*this, x, y, width, height, color);
+            break;
+        case ImageFormat::rgba8888:
+            draw_rect<4>(*this, x, y, width, height, color);
+            break;
+        default:
+            break;
+    }
+}
+
+void ImageData::blitRGB_on_RGBA(const ImageData& image, int x, int y) {
+    ubyte* source = image.getData();
+    uint srcwidth = image.getWidth();
+    uint srcheight = image.getHeight();
 
     for (uint srcy = std::max(0, -y); srcy < std::min(srcheight, height - y); ++srcy) {
         for (uint srcx = std::max(0, -x); srcx < std::min(srcwidth, width - x); ++srcx) {
@@ -168,7 +298,7 @@ void ImageData::blitRGB_on_RGBA(const ImageData* image, int x, int y) {
 }
 
 
-void ImageData::blitMatchingFormat(const ImageData* image, int x, int y) {
+void ImageData::blitMatchingFormat(const ImageData& image, int x, int y) {
     uint comps;
     switch (format) {
         case ImageFormat::rgb888: comps = 3; break;
@@ -177,16 +307,20 @@ void ImageData::blitMatchingFormat(const ImageData* image, int x, int y) {
             LOG_ERROR("Only unsigned byte formats supported");
             throw std::runtime_error("Only unsigned byte formats supported");    
     }
-    ubyte* source = image->getData();
-    uint srcwidth = image->getWidth();
-    uint srcheight = image->getHeight();
+    ubyte* source = image.getData();
 
-    for (uint srcy = std::max(0, -y); srcy < std::min(srcheight, height - y); ++srcy) {
-        for (uint srcx = std::max(0, -x); srcx < std::min(srcwidth, width-x); ++srcx) {
+    const uint width = this->width;
+    const uint height = this->height;
+    const uint src_width = image.getWidth();
+    const uint src_height = image.getHeight();
+    ubyte* data = this->data.get();
+
+    for (uint srcy = std::max(0, -y); srcy < std::min(src_height, height - y); ++srcy) {
+        for (uint srcx = std::max(0, -x); srcx < std::min(src_width, width - x); ++srcx) {
             uint dstx = srcx + x;
             uint dsty = srcy + y;
             uint dstidx = (dsty * width + dstx) * comps;
-            uint srcidx = (srcy * srcwidth + srcx) * comps;
+            uint srcidx = (srcy * src_width + srcx) * comps;
             for (uint c = 0; c < comps; ++c) {
                 data[dstidx + c] = source[srcidx + c];
             }

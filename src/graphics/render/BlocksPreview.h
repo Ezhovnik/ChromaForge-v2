@@ -15,6 +15,7 @@ class ContentIndices;
 class ImageData;
 class Framebuffer;
 class ShaderProgram;
+class Window;
 
 class BlocksPreview {
 private:
@@ -28,6 +29,7 @@ private:
     );
 public:
     static std::unique_ptr<Atlas> build(
+        Window& window,
         const ContentGfxCache& cache,
         const Assets& assets, 
         const ContentIndices& indices

@@ -1,6 +1,5 @@
 #include <frontend/menu.h>
 
-#include <filesystem>
 #include <random>
 #include <chrono>
 
@@ -9,39 +8,43 @@
 #include <delegates.h>
 #include <engine/Engine.h>
 #include <io/engine_paths.h>
-#include <graphics/ui/elements/display/Label.h>
-#include <graphics/ui/elements/layout/Menu.h>
+#include <graphics/ui/elements/Label.h>
+#include <graphics/ui/elements/Menu.h>
 #include <graphics/ui/gui_util.h>
 #include <graphics/ui/GUI.h>
 #include <logic/scripting/scripting.h>
 #include <settings.h>
 #include <util/stringutil.h>
-#include <window/Window.h>
 #include <frontend/UIDocument.h>
 #include <core_content_defs.h>
-#include <frontend/locale/langs.h>
+#include <frontend/locale.h>
 #include <interfaces/Task.h>
-#include <graphics/ui/elements/layout/Panel.h>
+#include <graphics/ui/elements/Panel.h>
 #include <coders/commons.h>
 #include <frontend/screens/MenuScreen.h>
 #include <debug/Logger.h>
+#include <assets/asset_loaders.h>
+#include <content/ContentPack.h>
 
-void menus::create_version_label(Engine& engine) {
-    auto gui = engine.getGUI();
+void menus::create_version_label(gui::GUI& gui) {
     auto text = "v" + ENGINE_VERSION_STRING + " development build ";
-    gui->add(guiutil::create(
-        "<label z-index='1000' color='#FFFFFF80' gravity='top-right' margin='4'>"
+    gui.add(guiutil::create(
+        gui,
+        "<label z-index='1000' color='#FFFFFF30' gravity='top-right' margin='4'>"
         + text +
         "</label>"
     ));
 }
 
-UIDocument* menus::show(Engine& engine, const std::string& name, std::vector<dv::value> args) {
-    auto menu = engine.getGUI()->getMenu();
-    auto file = engine.getResPaths()->find("layouts/" + name + ".xml");
+UIDocument* menus::show(
+    Engine& engine, const std::string& name, std::vector<dv::value> args
+) {
+    auto menu = engine.getGUI().getMenu();
+    auto file = engine.getResPaths().find("layouts/" + name + ".xml");
     auto fullname = BUILTIN_CONTENT_NAMESPACE + ":layouts/" + name;
 
     auto documentPtr = UIDocument::read(
+        engine.getGUI(),
         scripting::get_root_environment(),
         fullname,
         file,
@@ -63,7 +66,7 @@ void menus::show_process_panel(
 ) {
     uint initialWork = task->getWorkTotal();
 
-    auto menu = engine.getGUI()->getMenu();
+    auto menu = engine.getGUI().getMenu();
     menu->reset();
     auto doc = menus::show(engine, "process", {
         util::wstr2str_utf8(langs::get(text))
@@ -76,39 +79,37 @@ void menus::show_process_panel(
     });
 }
 
-bool menus::call(Engine& engine, runnable func) {
+void menus::call(Engine& engine, runnable func) {
     if (engine.isHeadless()) {
         LOG_ERROR("menus::call(...) in headless mode");
         throw std::runtime_error("menus::call(...) in headless mode");
     }
-    auto gui = engine.getGUI();
     try {
         func();
-        return true;
     } catch (const contentpack_error& error) {
         engine.setScreen(std::make_shared<MenuScreen>(engine));
         guiutil::alert(
             engine, langs::get(L"error.pack-not-found") + L": " +
             util::str2wstr_utf8(error.getPackId())
         );
-        return false;
+        throw std::runtime_error(error);
     } catch (const asset_loader::error& error) {
         engine.setScreen(std::make_shared<MenuScreen>(engine));
         guiutil::alert(
             engine, langs::get(L"Assets Load Error", L"menu") + L":\n" +
             util::str2wstr_utf8(error.what())
         );
-        return false;
+        throw std::runtime_error(error);
     } catch (const parsing_error& error) {
         engine.setScreen(std::make_shared<MenuScreen>(engine));
         guiutil::alert(engine, util::str2wstr_utf8(error.errorLog()));
-        return false;
+        throw std::runtime_error(error);
     } catch (const std::runtime_error& error) {
         engine.setScreen(std::make_shared<MenuScreen>(engine));
         guiutil::alert(
             engine, langs::get(L"Content Error", L"menu") + L":\n" +
             util::str2wstr_utf8(error.what())
         );
-        return false;
+        throw std::runtime_error(error);
     }
 }

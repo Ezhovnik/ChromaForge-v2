@@ -8,7 +8,6 @@
 #include <graphics/core/Batch3D.h>
 #include <window/Camera.h>
 #include <voxels/Block.h>
-#include <graphics/core/Viewport.h>
 #include <frontend/ContentGfxCache.h>
 #include <assets/Assets.h>
 #include <graphics/core/Framebuffer.h>
@@ -17,6 +16,7 @@
 #include <content/Content.h>
 #include <constants.h>
 #include <graphics/core/ImageData.h>
+#include <graphics/commons/Model.h>
 
 std::unique_ptr<ImageData> BlocksPreview::draw(
     const ContentGfxCache& cache,
@@ -26,24 +26,27 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
     const Block& def, 
     int size
 ) {
-    Window::clear();
+    display::clear();
     blockid_t id = def.rt.id;
-    const UVRegion texfaces[6]{
-        cache.getRegion(id, 0), cache.getRegion(id, 1),
-        cache.getRegion(id, 2), cache.getRegion(id, 3),
-        cache.getRegion(id, 4), cache.getRegion(id, 5)
+    const UVRegion texfaces[6] {
+        cache.getRegion(id, 0, 0, true),
+        cache.getRegion(id, 0, 1, true),
+        cache.getRegion(id, 0, 2, true),
+        cache.getRegion(id, 0, 3, true),
+        cache.getRegion(id, 0, 4, true),
+        cache.getRegion(id, 0, 5, true)
     };
 
     glm::vec3 offset(0.1f, 0.5f, 0.1f);
-    switch (def.model) {
-        case BlockModel::None:
+    switch (def.defaults.model.type) {
+        case BlockModelType::None:
             break;
-        case BlockModel::Cube:
+        case BlockModelType::Cube:
             shader.uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), offset));
             batch.blockCube(glm::vec3(size * 0.63f), texfaces, glm::vec4(1.0f), !def.rt.emissive);
             batch.flush();
             break;
-        case BlockModel::AABB:
+        case BlockModelType::AABB:
             {
                 glm::vec3 hitbox {};
                 for (const auto& box : def.hitboxes) {
@@ -61,7 +64,7 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
             }
             batch.flush();
             break;
-        case BlockModel::Custom:{
+        case BlockModelType::Custom:{
             glm::vec3 pmul = glm::vec3(size * 0.63f);
             glm::vec3 hitbox = glm::vec3(1.0f);
             glm::vec3 poff = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -79,7 +82,7 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
             }
             break;
         } 
-        case BlockModel::X: {
+        case BlockModelType::X: {
             shader.uniformMatrix("u_apply", glm::translate(glm::mat4(1.0f), offset));
             glm::vec3 right = glm::normalize(glm::vec3(1.0f, 0.0f, -1.0f));
             batch.sprite(
@@ -98,6 +101,7 @@ std::unique_ptr<ImageData> BlocksPreview::draw(
 }
 
 std::unique_ptr<Atlas> BlocksPreview::build(
+    Window& window,
     const ContentGfxCache& cache,
     const Assets& assets, 
     const ContentIndices& indices
@@ -108,8 +112,7 @@ std::unique_ptr<Atlas> BlocksPreview::build(
     auto& shader = assets.require<ShaderProgram>("ui3d");
     const auto& atlas = assets.require<Atlas>("blocks");
 
-    Viewport viewport(iconSize, iconSize);
-    DrawContext pctx(nullptr, viewport, nullptr);
+    DrawContext pctx(nullptr, window, nullptr);
     DrawContext ctx = pctx.sub();
     ctx.setCullFace(true);
     ctx.setDepthTest(true);
@@ -125,8 +128,8 @@ std::unique_ptr<Atlas> BlocksPreview::build(
     );
 
     AtlasBuilder builder;
-    Window::viewport(0, 0, iconSize, iconSize);
-    Window::setBgColor(glm::vec4(0.0f));
+    ctx.setViewport({iconSize, iconSize});
+    display::setBgColor(glm::vec4(0.0f));
 
     fbo.bind();
     for (size_t i = 0; i < count; ++i) {
@@ -136,6 +139,5 @@ std::unique_ptr<Atlas> BlocksPreview::build(
     }
     fbo.unbind();
 
-    Window::viewport(0, 0, Window::width, Window::height);
     return builder.build(2);
 }

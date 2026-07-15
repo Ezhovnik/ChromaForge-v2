@@ -6,7 +6,6 @@
 #include <set>
 #include <stdexcept>
 #include <memory>
-#include <optional>
 
 #include <content/content_fwd.h>
 #include <data/dv.h>
@@ -22,18 +21,6 @@ struct BlockMaterial;
 struct Generator;
 namespace rigging {
     class SkeletonConfig;
-}
-
-constexpr const char* contenttype_name(ContentType type) {
-    switch (type) {
-        case ContentType::None: return "none";
-        case ContentType::Block: return "block";
-        case ContentType::Item: return "item";
-        case ContentType::Entity: return "entity";
-        case ContentType::Generator: return "generator";
-        default:
-            return "unknown";
-    }
 }
 
 class namereuse_error: public std::runtime_error {
@@ -114,6 +101,14 @@ public:
         return *found->second;
     }
 
+    T& require(const std::string& id) {
+        const auto& found = defs.find(id);
+        if (found == defs.end()) {
+            throw std::runtime_error("Missing content unit " + id);
+        }
+        return *found->second;
+    }
+
     const auto& getDefs() const {
         return defs;
     }
@@ -163,20 +158,6 @@ public:
     }
 };
 
-constexpr const char* to_string(ResourceType type) {
-    switch (type) {
-        case ResourceType::Camera: return "camera";
-        default: return "unknown";
-    }
-}
-
-inline std::optional<ResourceType> ResourceType_from(std::string_view str) {
-    if (str == "camera") {
-        return ResourceType::Camera;
-    }
-    return std::nullopt;
-}
-
 using ResourceIndicesSet = ResourceIndices[RESOURCE_TYPES_COUNT];
 
 class Content {
@@ -222,8 +203,11 @@ public:
     }
 
     const rigging::SkeletonConfig* getSkeleton(const std::string& id) const;
+    const rigging::SkeletonConfig& requireSkeleton(const std::string& id) const;
+
     const BlockMaterial* findBlockMaterial(const std::string& id) const;
     const ContentPackRuntime* getPackRuntime(const std::string& id) const;
+    ContentPackRuntime* getPackRuntime(const std::string& id);
 
     const UptrsMap<std::string, BlockMaterial>& getBlockMaterials() const;
     const UptrsMap<std::string, ContentPackRuntime>& getPacks() const;

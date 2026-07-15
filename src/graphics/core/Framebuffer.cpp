@@ -2,7 +2,7 @@
 
 #include <GL/glew.h>
 
-#include <graphics/core/GLTexture.h>
+#include <graphics/core/Texture.h>
 #include <debug/Logger.h>
 
 Framebuffer::Framebuffer(
@@ -32,7 +32,7 @@ static std::unique_ptr<Texture> create_texture(int width, int height, int format
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
-    return std::make_unique<GLTexture>(tex, width, height);
+    return std::make_unique<Texture>(tex, width, height);
 }
 
 Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), height(height) {
@@ -42,10 +42,16 @@ Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), he
     format = alpha ? GL_RGBA : GL_RGB;
 
     texture = create_texture(width, height, format);
+
     glGenRenderbuffers(1, &depth);
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        LOG_ERROR("Framebuffer is not complete!");
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -68,11 +74,12 @@ void Framebuffer::resize(uint width, uint height) {
     this->width = width;
     this->height = height;
 
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     texture = create_texture(width, height, format);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -87,4 +94,8 @@ uint Framebuffer::getWidth() const {
 
 uint Framebuffer::getHeight() const {
     return height;
+}
+
+uint Framebuffer::getFBO() const {
+    return fbo;   
 }

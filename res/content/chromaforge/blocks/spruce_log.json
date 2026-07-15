@@ -1,0 +1,13 @@
+{
+    "texture-faces": [
+        "spruce_log",
+        "spruce_log",
+        "spruce_log_top",
+        "spruce_log_top",
+        "spruce_log",
+        "spruce_log"
+    ],
+    "rotation": "pipe",
+    "material": "chromaforge:wood",
+    "chromaforge:durability": 6.0
+}

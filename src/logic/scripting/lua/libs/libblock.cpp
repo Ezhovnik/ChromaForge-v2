@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <logic/scripting/lua/libs/api_lua.h>
 
 #include <world/Level.h>
@@ -14,6 +15,9 @@
 #include <objects/Players.h>
 #include <voxels/GlobalChunks.h>
 #include <voxels/blocks_agent.h>
+#include <content/ContentLoader.h>
+#include <engine/Engine.h>
+#include <content/ContentControl.h>
 
 static inline const Block* require_block(lua::State* L) {
     auto indices = scripting::content->getIndices();
@@ -137,7 +141,7 @@ static int get_axis(lua::State* L) {
     }
     auto z = lua::tointeger(L, 3);
 
-    glm::ivec3 defAxis;
+    glm::ivec3 defAxis {};
     defAxis[n] = 1;
 
     auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
@@ -233,8 +237,25 @@ static int l_get_user_bits(lua::State* L) {
         }
     }
     uint mask = ((1 << bits) - 1) << offset;
-    uint data = (blockstate2int(vox->state) & mask) >> offset;
-    return lua::pushinteger(L, data);
+    return lua::pushinteger(L, (blockstate2int(vox->state) & mask) >> offset);
+}
+
+static int l_get_variant(lua::State* L) {
+    auto x = lua::tointeger(L, 1);
+    auto y = lua::tointeger(L, 2);
+    auto z = lua::tointeger(L, 3);
+
+    auto vox = blocks_agent::get(*scripting::level->chunks, x, y, z);
+    if (vox == nullptr) {
+        return lua::pushinteger(L, 0);
+    }
+    const auto& def = scripting::content->getIndices()->blocks.require(vox->id);
+    if (def.variants == nullptr) {
+        return lua::pushinteger(L, 0);
+    }
+    return lua::pushinteger(
+        L, (vox->state.userbits >> def.variants->offset) & def.variants->mask
+    );
 }
 
 static int l_set_user_bits(lua::State* L) {
@@ -268,6 +289,37 @@ static int l_set_user_bits(lua::State* L) {
     return 0; 
 }
 
+static int l_set_variant(lua::State* L) {
+    auto& chunks = *scripting::level->chunks;
+    auto x = lua::tointeger(L, 1);
+    auto y = lua::tointeger(L, 2);
+    auto z = lua::tointeger(L, 3);
+
+    int cx = floordiv<CHUNK_WIDTH>(x);
+    int cz = floordiv<CHUNK_DEPTH>(z);
+    auto chunk = blocks_agent::get_chunk(chunks, cx, cz);
+    if (chunk == nullptr || y < 0 || y >= CHUNK_HEIGHT) return 0;
+    int lx = x - cx * CHUNK_WIDTH;
+    int lz = z - cz * CHUNK_DEPTH;
+    auto vox = &chunk->voxels[vox_index(lx, y, lz)];
+    const auto& def = scripting::content->getIndices()->blocks.require(vox->id);
+
+    if (def.variants == nullptr) return 0;
+
+    auto offset = def.variants->offset;
+    auto mask = def.variants->mask;
+    auto value = (lua::tointeger(L, 4) << offset) & mask;
+
+    if (def.rt.extended) {
+        auto origin = blocks_agent::seek_origin(chunks, {x, y, z}, def, vox->state);
+        vox = blocks_agent::get(chunks, origin.x, origin.y, origin.z);
+        if (vox == nullptr) return 0;
+    }
+    vox->state.userbits = (vox->state.userbits & (~mask)) | value;
+    chunk->setModifiedAndUnsaved();
+    return 0;
+}
+
 static int l_is_replaceable_at(lua::State* L) {
     auto x = lua::tointeger(L, 1);
     auto y = lua::tointeger(L, 2);
@@ -288,7 +340,7 @@ static int l_get_textures(lua::State* L) {
     if (auto def = require_block(L)) {
         lua::createtable(L, 6, 0);
         for (size_t i = 0; i < 6; ++i) {
-            lua::pushstring(L, def->textureFaces[i]);
+            lua::pushstring(L, def->defaults.textureFaces[i]);
             lua::rawseti(L, i + 1);
         }
         return 1;
@@ -298,7 +350,7 @@ static int l_get_textures(lua::State* L) {
 
 static int l_get_model(lua::State* L) {
     if (auto def = require_block(L)) {
-        return lua::pushstring(L, to_string(def->model));
+        return lua::pushlstring(L, BlockModelTypeMeta.getName(def->defaults.model.type));
     }
     return 0;
 }
@@ -541,6 +593,7 @@ static int set_field(
             if (value.isString()) {
                 return lua::pushinteger(L, dataStruct.setUnicode(dst, value.asString(), field));
             }
+            [[fallthrough]];
         case data::FieldType::I8:
         case data::FieldType::I16:
         case data::FieldType::I32:
@@ -599,6 +652,17 @@ static int l_set_field(lua::State* L) {
     return set_field(L, dst, *field, index, dataStruct, value);
 }
 
+static int l_reload_script(lua::State* L) {
+    auto name = lua::require_string(L, 1);
+    if (scripting::content == nullptr) {
+        throw std::runtime_error("Content is not initialized");
+    }
+    auto& writeableContent = *scripting::content_control->get();
+    auto& def = writeableContent.blocks.require(name);
+    ContentLoader::reloadScript(writeableContent, def);
+    return 0;
+}
+
 const luaL_Reg blocklib [] = {
     {"index", lua::wrap<l_index>},
     {"name", lua::wrap<l_get_def>},
@@ -634,5 +698,6 @@ const luaL_Reg blocklib [] = {
     {"decompose_state", lua::wrap<l_decompose_state>},
     {"get_field", lua::wrap<l_get_field>},
     {"set_field", lua::wrap<l_set_field>},
+    {"reload_script", lua::wrap<l_reload_script>},
     {NULL, NULL}
 };

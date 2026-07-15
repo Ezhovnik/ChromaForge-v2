@@ -6,8 +6,6 @@
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Texture.h>
 #include <graphics/core/Font.h>
-#include <window/Window.h>
-#include <window/Events.h>
 #include <window/input.h>
 #include <voxels/Block.h>
 #include <debug/Logger.h>
@@ -16,18 +14,19 @@
 #include <content/ContentBuilder.h>
 #include <io/io.h>
 #include <io/engine_paths.h>
+#include <coders/toml.h>
 
-void CoreContent::setup(ContentBuilder& builder) {
+void CoreContent::setup(Input& input, ContentBuilder& builder) {
     // Воздух
     {
         Block& block = builder.blocks.create(BUILTIN_AIR);
-        block.drawGroup = 1;
         block.lightPassing = true;
         block.skyLightPassing = true;
         block.obstacle = false;
         block.selectable = false;
         block.replaceable = true;
-        block.model = BlockModel::None;
+        block.defaults.drawGroup = 1;
+        block.defaults.model.type = BlockModelType::None;
         block.pickingItem = BUILTIN_EMPTY;
     }
 
@@ -40,7 +39,7 @@ void CoreContent::setup(ContentBuilder& builder) {
     {
         Block& block = builder.blocks.create(BUILTIN_OBSTACLE);
         for (uint i = 0; i < 6; ++i) {
-            block.textureFaces[i] = "obstacle";
+            block.defaults.textureFaces[i] = "obstacle";
         }
         block.hitboxes = {AABB()};
         block.breakable = false;
@@ -55,9 +54,9 @@ void CoreContent::setup(ContentBuilder& builder) {
     {
         Block& block = builder.blocks.create(BUILTIN_STRUCT_AIR);
         for (uint i = 0; i < 6; ++i) {
-            block.textureFaces[i] = "struct_air";
+            block.defaults.textureFaces[i] = "struct_air";
         }
-        block.drawGroup = -1;
+        block.defaults.drawGroup = -1;
         block.skyLightPassing = true;
         block.lightPassing = true;
         block.hitboxes = {AABB()};
@@ -72,8 +71,8 @@ void CoreContent::setup(ContentBuilder& builder) {
 
     auto bindsFile = "res:bindings.toml";
     if (io::is_regular_file(bindsFile)) {
-        Events::loadBindings(
-            bindsFile, io::read_string(bindsFile), BindType::Bind
+        input.getBindings().read(
+            toml::parse(bindsFile, io::read_string(bindsFile)), BindType::Bind
         );
     }
 }

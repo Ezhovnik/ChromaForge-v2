@@ -34,6 +34,8 @@ struct Item {
 
     std::string caption;
 
+    std::string description;
+
     dv::value properties = nullptr;
 
     itemcount_t stackSize = 64;
@@ -50,6 +52,7 @@ struct Item {
 
     std::string placingBlock = BUILTIN_AIR;
     std::string scriptName = name.substr(name.find(':') + 1);
+    std::string scriptFile;
 
     std::string modelName = name + ".model";
 

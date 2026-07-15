@@ -3,7 +3,6 @@
 #include <memory>
 #include <utility>
 
-#include <window/Events.h>
 #include <window/input.h>
 #include <coders/json.h>
 #include <coders/toml.h>
@@ -71,10 +70,17 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
     builder.add("chunk-max-vertices", &settings.graphics.chunkMaxVertices);
     builder.add("chunk-max-vertices-dense", &settings.graphics.chunkMaxVerticesDense);
     builder.add("chunk-max-renderers", &settings.graphics.chunkMaxRenderers);
+    builder.add("advanced-render", &settings.graphics.advancedRender);
+    builder.add("ssao", &settings.graphics.ssao);
+    builder.add("shadows-quality", &settings.graphics.shadowsQuality);
+    builder.add("dense-render-distance", &settings.graphics.denseRenderDistance);
 
     builder.section("ui");
     builder.add("language", &settings.ui.language);
     builder.add("world-preview-size", &settings.ui.worldPreviewSize);
+
+    builder.section("pathfinding");
+    builder.add("steps-per-async-agent", &settings.pathfinding.stepsPerAsyncAgent);
 
     builder.section("debug");
     builder.add("generator-test-mode", &settings.debug.generatorTestMode);

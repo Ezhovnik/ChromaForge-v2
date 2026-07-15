@@ -2,6 +2,7 @@
 
 #include <audio/audio.h>
 #include <engine/Engine.h>
+#include <assets/Assets.h>
 
 inline const char* DEFAULT_CHANNEL = "regular";
 
@@ -26,6 +27,7 @@ inline audio::speakerid_t play_sound(
 ) {
     if (channel == -1) return 0;
     auto assets = scripting::engine->getAssets();
+    if (assets == nullptr) return 0;
     auto sound = assets->get<audio::Sound>(name);
     if (sound == nullptr) return 0;
 
@@ -57,9 +59,15 @@ inline audio::speakerid_t play_stream(
     int channel
 ) {
     if (channel == -1) return 0;
-    auto paths = scripting::engine->getResPaths();
+    io::path file;
+    if (std::strchr(filename, ':')) {
+        file = std::string(filename);
+    } else {
+        const auto& paths = scripting::engine->getResPaths();
+        file = paths.find(filename);
+    }
     return audio::play_stream(
-        paths->find(std::filesystem::path(filename).string()), 
+        file,
         glm::vec3(
             static_cast<float>(x), 
             static_cast<float>(y), 

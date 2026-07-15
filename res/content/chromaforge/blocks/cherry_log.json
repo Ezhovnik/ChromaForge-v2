@@ -1,0 +1,13 @@
+{
+    "texture-faces": [
+        "cherry_log",
+        "cherry_log",
+        "cherry_log_top",
+        "cherry_log_top",
+        "cherry_log",
+        "cherry_log"
+    ],
+    "rotation": "pipe",
+    "material": "chromaforge:wood",
+    "chromaforge:durability": 6.0
+}

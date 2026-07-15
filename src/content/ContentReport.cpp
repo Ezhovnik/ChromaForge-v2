@@ -40,13 +40,13 @@ static void process_blocks_data(
         if (def == nullptr) continue;
 
         if (def->dataStruct == nullptr) {
-            ContentIssue issue {ContentIssueType::BlockDataLayoutsUpdate};
+            ContentIssue issue {ContentIssueType::BlockDataLayoutsUpdate, {}};
             report.issues.push_back(issue);
             report.dataLoss.push_back(name + ": discard data");
             continue;
         }
         if (layout != *def->dataStruct) {
-            ContentIssue issue {ContentIssueType::BlockDataLayoutsUpdate};
+            ContentIssue issue {ContentIssueType::BlockDataLayoutsUpdate, {}};
             report.issues.push_back(issue);
             report.dataLayoutsUpdated = true;
         }
@@ -114,10 +114,10 @@ static void build_issues(
 ) {
     auto type = report.getContentType();
     if (report.hasContentReorder()) {
-        issues.push_back(ContentIssue {ContentIssueType::Reorder, type});
+        issues.push_back(ContentIssue {ContentIssueType::Reorder, {type}});
     }
     if (report.hasMissingContent()) {
-        issues.push_back(ContentIssue {ContentIssueType::Missing, type});
+        issues.push_back(ContentIssue {ContentIssueType::Missing, {type}});
     }
 }
 
@@ -127,7 +127,7 @@ void ContentReport::buildIssues() {
 
     if (regionsVersion < REGION_FORMAT_VERSION) {
         for (int layer = REGION_LAYER_VOXELS; layer < REGION_LAYERS_COUNT; layer++) {
-            ContentIssue issue {ContentIssueType::RegionFormatUpdate};
+            ContentIssue issue {ContentIssueType::RegionFormatUpdate, {}};
             issue.regionLayer = static_cast<RegionLayerIndex>(layer);
             issues.push_back(issue);
         }
