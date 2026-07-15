@@ -99,6 +99,7 @@ settings.Key=Кнопка
 settings.Limit Background FPS=Ограничить фоновую частоту кадров
 settings.Advanced render=Продвинутый рендер
 settings.Shadows quality=Качество теней
+settings.Conflict=Найдены возможные конфликты
 
 # Управление
 chunks.reload=Перезагрузить Чанки
