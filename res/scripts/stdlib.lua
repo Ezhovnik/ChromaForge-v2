@@ -171,56 +171,10 @@ end
 ------------------------------------------------
 ------------------- Events ---------------------
 ------------------------------------------------
-events = {
-    handlers = {}
-}
-
-function events.on(event, func)
-    if events.handlers[event] == nil then
-        events.handlers[event] = {}
-    end
-    table.insert(events.handlers[event], func)
-end
-
-function events.reset(event, func)
-    if func == nil then
-        events.handlers[event] = nil
-    else
-        events.handlers[event] = {func}
-    end
-end
-
-function events.remove_by_prefix(prefix)
-    for name, handlers in pairs(events.handlers) do
-        local actualname = name
-        if type(name) == 'table' then
-            actualname = name[1]
-        end
-        if actualname:sub(1, #prefix+1) == prefix..':' then
-            events.handlers[actualname] = nil
-        end
-    end
-end
+events = require "builtin:internal/events"
 
 function pack.unload(prefix)
     events.remove_by_prefix(prefix)
-end
-
-function events.emit(event, ...)
-    local result = nil
-    local handlers = events.handlers[event]
-    if handlers == nil then
-        return nil
-    end
-    for _, func in ipairs(handlers) do
-        local status, newres = xpcall(func, __chroma__error, ...)
-        if not status then
-            debug.error("Error in event (" .. event .. ") handler: " .. newres)
-        else 
-            result = result or newres
-        end
-    end
-    return result
 end
 
 gui_util = require "builtin:internal/gui_util"
@@ -237,6 +191,7 @@ end
 _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
+gui.root = _GUI_ROOT
 
 console.cheats = {}
 
@@ -320,6 +275,8 @@ Bytearray = bytearray.FFIBytearray
 Bytearray_as_string = bytearray.FFIBytearray_as_string
 Bytearray_construct = function(...) return Bytearray(...) end
 
+__chroma_scripts_registry = require "builtin:internal/scripts_registry"
+
 file.open = require "builtin:internal/stream_providers/file"
 file.open_named_pipe = require "builtin:internal/stream_providers/named_pipe"
 
@@ -338,6 +295,7 @@ else
 end
 
 ffi = nil
+__chroma_lock_internal_modules()
 
 math.randomseed(time.uptime() * 1536227939)
 

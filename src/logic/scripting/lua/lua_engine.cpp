@@ -56,8 +56,12 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "byteutil", byteutillib);
     openlib(L, "yaml", yamllib);
 
-    if (stateType == StateType::Base || stateType == StateType::Script) {
+    if (stateType == StateType::Script) {
+        openlib(L, "app", applib);
+    } else if (stateType == StateType::Base) {
         openlib(L, "__chroma_app", applib);
+    }
+    if (stateType == StateType::Base || stateType == StateType::Script) {
         openlib(L, "assets", assetslib);
         openlib(L, "audio", audiolib);
         openlib(L, "console", consolelib);

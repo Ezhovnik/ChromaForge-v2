@@ -547,8 +547,14 @@ function reload_module(name)
     end
 end
 
+local internal_locked = false
+
 function __load_script(path, nocache)
     local packname, filename = parse_path(path)
+
+    if internal_locked and (packname == "res" or packname == "builtin") and filename:starts_with("modules/internal") then
+        error("Access to builtin:internal modules outside of [builtin]")
+    end
 
     -- __cached_scripts used in condition because cached result may be nil
     if not nocache and __cached_scripts[path] ~= nil then
@@ -568,6 +574,10 @@ function __load_script(path, nocache)
         package.loaded[path] = result
     end
     return result
+end
+
+function __chroma_lock_internal_modules()
+    internal_locked = true
 end
 
 function require(path)

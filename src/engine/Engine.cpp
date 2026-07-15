@@ -50,7 +50,6 @@
 #include <content/ContentControl.h>
 #include <devtools/Editor.h>
 #include <devtools/Project.h>
-#include <graphics/ui/elements/Container.h>
 
 static std::unique_ptr<ImageData> load_icon() {
     try {
@@ -190,7 +189,7 @@ void Engine::initialize(CoreParameters coreParameters) {
         langs::setup(lang, paths.resPaths.collectRoots());
     }, true));
 
-    projectScript = load_project_script();
+    project->script = load_project_script();
 
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -198,7 +197,6 @@ void Engine::initialize(CoreParameters coreParameters) {
 
 void Engine::close() {
     LOG_INFO("Shutting down");
-    projectScript.reset();
     saveSettings();
     if (screen) {
         screen->onEngineShutdown();
@@ -214,6 +212,7 @@ void Engine::close() {
     audio::close();
     network.reset();
     clearKeepedObjects();
+    project.reset();
     scripting::close();
     if (!params.headless) {
         window.reset();
@@ -343,8 +342,8 @@ void Engine::setScreen(std::shared_ptr<Screen> screen) {
 	this->screen = std::move(screen);
 
     if (this->screen) this->screen->onOpen();
-    if (projectScript && this->screen) {
-        projectScript->onScreenChange(this->screen->getName());
+    if (project->script && this->screen) {
+        project->script->onScreenChange(this->screen->getName());
     }
 }
 

@@ -43,10 +43,8 @@ function build_files_list(filenames, highlighted_part)
     end
 end
 
-function on_open(mode)
-    registry = require "builtin:internal/scripts_registry"
-
-    local files_list = document.filesList
+function on_open()
+    registry = __chroma_scripts_registry
 
     filenames = registry.filenames
     table.sort(filenames)

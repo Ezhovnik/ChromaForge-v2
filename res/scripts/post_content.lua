@@ -62,5 +62,4 @@ end
 cache_names(block)
 cache_names(item)
 
-local scripts_registry = require "builtin:internal/scripts_registry"
-scripts_registry.build_registry()
+__chroma_scripts_registry.build_registry()
