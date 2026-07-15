@@ -144,6 +144,10 @@ public:
         return *window;
     }
 
+    const Project& getProject() {
+        return *project;
+    }
+
     bool isHeadless() const;
 
     void postRunnable(const runnable& callback) {
