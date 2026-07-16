@@ -15,8 +15,9 @@ local Schedule = {
             local timer = self._timer + dt
             for id, interval in pairs(self._intervals) do
                 if timer - interval.last_called >= interval.delay then
-                    xpcall(interval.callback, function(s)
-                        debug.error(s..'\n'..debug.traceback())
+                    local stack_size = debug.count_frames()
+                    xpcall(interval.callback, function(msg)
+                        __chroma__error(msg, 1, 1, stack_size)
                     end)
                     interval.last_called = timer
                     local repetions = interval.repetions

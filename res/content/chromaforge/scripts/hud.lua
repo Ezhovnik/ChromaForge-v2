@@ -22,6 +22,9 @@ function on_hud_open()
         local throw_force = vec3.mul(player.get_dir(pid), DROP_FORCE)
 
         local drop = chromaforge_util.drop(ppos, itemid, 1, data, 1.5)
+        if not drop then
+            return
+        end
         local velocity = vec3.add(throw_force, vec3.add(pvel, DROP_INIT_VEL))
         drop.rigidbody:set_vel(velocity)
     end)

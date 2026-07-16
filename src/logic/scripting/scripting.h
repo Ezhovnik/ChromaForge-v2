@@ -70,14 +70,16 @@ namespace scripting {
         const io::path& script
     );
 
-    class IProjectScript {
+    class IClientProjectScript {
     public:
-        virtual ~IProjectScript() {}
+        virtual ~IClientProjectScript() {}
 
-        virtual void onScreenChange(const std::string& name) = 0;
+        virtual void onScreenChange(const std::string& name, bool show) = 0;
     };
 
-    std::unique_ptr<IProjectScript> load_project_script(const io::path& script);
+    std::unique_ptr<IClientProjectScript> load_client_project_script(
+        const io::path& script
+    );
 
     std::unique_ptr<Process> start_coroutine(const io::path& script);
 

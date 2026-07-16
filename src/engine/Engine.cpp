@@ -63,11 +63,11 @@ static std::unique_ptr<ImageData> load_icon() {
     return nullptr;
 }
 
-static std::unique_ptr<scripting::IProjectScript> load_project_script() {
-    io::path scriptFile = "project:project_script.lua";
+static std::unique_ptr<scripting::IClientProjectScript> load_client_project_script() {
+    io::path scriptFile = "project:project_client.lua";
     if (io::exists(scriptFile)) {
         LOG_INFO("Starting project script");
-        return scripting::load_project_script(scriptFile);
+        return scripting::load_client_project_script(scriptFile);
     } else {
         LOG_WARN("Project script does not exists");
     }
@@ -84,6 +84,63 @@ Engine& Engine::getInstance() {
         instance = std::make_unique<Engine>();
     }
     return *instance;
+}
+
+void Engine::onContentLoad() {
+    editor->loadTools();
+    langs::setup(langs::get_current(), paths.resPaths.collectRoots());
+
+    if (isHeadless()) return;
+
+    for (auto& pack : content->getAllContentPacks()) {
+        auto configFolder = pack.folder / "config";
+        auto bindsFile = configFolder / "bindings.toml";
+        if (io::is_regular_file(bindsFile)) {
+            input->getBindings().read(
+                toml::parse(
+                    bindsFile.string(), io::read_string(bindsFile)
+                ),
+                BindType::Bind
+            );
+        }
+    }
+    loadAssets();
+}
+
+void Engine::initializeClient() {
+    std::string title = project->title;
+    if (title.empty()) title = "ChromaForge v" + ENGINE_VERSION_STRING;
+    if (ENGINE_DEBUG_BUILD) title += " [development build]";
+
+    auto [window, input] = Window::initialize(&settings.display, title);
+    if (!window || !input){
+        LOG_CRITICAL("Could not initialize window");
+        throw initialize_error("Could not initialize window");
+    }
+    window->setFramerate(settings.display.framerate.get());
+
+    time.set(window->time());
+    if (auto icon = load_icon()) {
+        icon->flipY();
+        window->setIcon(icon.get());
+    }
+    this->window = std::move(window);
+    this->input = std::move(input);
+
+    loadControls();
+
+    gui = std::make_unique<gui::GUI>(*this);
+    if (ENGINE_DEBUG_BUILD) {
+        menus::create_version_label(*gui);
+    }
+    keepAlive(settings.display.fullscreen.observe(
+        [this](bool value) {
+            if (value != this->window->isFullscreen()) {
+                this->window->toggleFullscreen();
+            }
+        },
+        true
+    ));
 }
 
 void Engine::initialize(CoreParameters coreParameters) {
@@ -113,71 +170,18 @@ void Engine::initialize(CoreParameters coreParameters) {
 
     controller = std::make_unique<EngineController>(*this);
 
-    // Инициализация окна GLFW
-    if (!params.headless) {
-        std::string title = project->title;
-        if (title.empty()) title = "ChromaForge v" + ENGINE_VERSION_STRING;
-        if (ENGINE_DEBUG_BUILD) title += " [development build]";
-
-        auto [window, input] = Window::initialize(&settings.display, title);
-        if (!window || !input){
-            LOG_CRITICAL("Failed to load Window");
-            throw initialize_error("Failed to load Window");
-        }
-        window->setFramerate(settings.display.framerate.get());
-
-        time.set(window->time());
-        if (auto icon = load_icon()) {
-            icon->flipY();
-            if (icon->getFormat() != ImageFormat::rgba8888) icon.reset(toRGBA(icon.get()));
-            window->setIcon(icon.get());
-        }
-        this->window = std::move(window);
-        this->input = std::move(input);
-
-        loadControls();
-
-        gui = std::make_unique<gui::GUI>(*this);
-        if (ENGINE_DEBUG_BUILD) {
-            menus::create_version_label(*gui);
-        }
-        keepAlive(settings.display.fullscreen.observe(
-            [this](bool value) {
-                if (value != this->window->isFullscreen()) {
-                    this->window->toggleFullscreen();
-                }
-            },
-            true
-        ));
-    }
+    if (!params.headless) initializeClient();
 
     audio::initialize(!params.headless, settings.audio);
 
-    bool langNotSet = settings.ui.language.get() == "auto";
-    if (langNotSet) {
+    if (settings.ui.language.get() == "auto") {
         settings.ui.language.set(
             langs::locale_by_envlocale(platform::detect_locale())
         );
     }
 
     content = std::make_unique<ContentControl>(*project, paths, *input, [this]() {
-        editor->loadTools();
-        langs::setup(langs::get_current(), paths.resPaths.collectRoots());
-        if (!isHeadless()) {
-            for (auto& pack : content->getAllContentPacks()) {
-                auto configFolder = pack.folder / "config";
-                auto bindsFile = configFolder / "bindings.toml";
-                if (io::is_regular_file(bindsFile)) {
-                    input->getBindings().read(
-                        toml::parse(
-                            bindsFile.string(), io::read_string(bindsFile)
-                        ),
-                        BindType::Bind
-                    );
-                }
-            }
-            loadAssets();
-        }
+        onContentLoad();
     });
 
     LOG_INFO("Initialization of the scripting system");
@@ -189,7 +193,7 @@ void Engine::initialize(CoreParameters coreParameters) {
         langs::setup(lang, paths.resPaths.collectRoots());
     }, true));
 
-    project->script = load_project_script();
+    project->clientScript = load_client_project_script();
 
     LOG_INFO("Initialization is finished");
     Logger::getInstance().flush();
@@ -337,13 +341,17 @@ void Engine::loadProject() {
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
+    if (project->clientScript && this->screen) {
+        project->clientScript->onScreenChange(this->screen->getName(), false);
+    }
+
     audio::reset_channel(audio::get_channel_index("regular"));
     audio::reset_channel(audio::get_channel_index("ambient"));
 	this->screen = std::move(screen);
 
     if (this->screen) this->screen->onOpen();
-    if (project->script && this->screen) {
-        project->script->onScreenChange(this->screen->getName());
+    if (project->clientScript && this->screen) {
+        project->clientScript->onScreenChange(this->screen->getName(), true);
     }
 }
 

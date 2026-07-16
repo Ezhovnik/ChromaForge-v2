@@ -109,19 +109,18 @@ public:
     }
 };
 
-class LuaProjectScript : public scripting::IProjectScript {
+class LuaProjectScript : public scripting::IClientProjectScript {
 public:
     LuaProjectScript(lua::State* L, scriptenv env) : L(L), env(std::move(env)) {}
 
-    void onScreenChange(const std::string& name) override {
+    void onScreenChange(const std::string& name, bool show) override {
         if (!lua::pushenv(L, *env)) return;
 
-        if (!lua::getfield(L, "on_screen_changed")) {
+        if (!lua::getfield(L, "on_" + name + (show ? "_setup" : "_clear"))) {
             lua::pop(L);
             return;
         }
-        lua::pushlstring(L, name);
-        lua::call_nothrow(L, 1, 0);
+        lua::call_nothrow(L, 0, 0);
         lua::pop(L);
     }
 private:
@@ -129,7 +128,7 @@ private:
     scriptenv env;
 };
 
-std::unique_ptr<scripting::IProjectScript> scripting::load_project_script(
+std::unique_ptr<scripting::IClientProjectScript> scripting::load_client_project_script(
     const io::path& script
 ) {
     auto L = lua::get_main_state();

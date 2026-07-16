@@ -38,10 +38,6 @@ namespace devtools {
     class Editor;
 }
 
-namespace scripting {
-    class IProjectScript;
-}
-
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
 class initialize_error : public std::runtime_error {
 public:
@@ -96,6 +92,9 @@ private:
     void loadControls();
     void loadSettings();
     void saveSettings();
+
+    void initializeClient();
+    void onContentLoad();
 public:
     Engine(); // Конструктор
     ~Engine(); // Деструктор
