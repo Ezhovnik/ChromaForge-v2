@@ -54,6 +54,7 @@ struct PathfindingSettings {
 struct DebugSettings {
     BoolSetting generatorTestMode {false};
 	BoolSetting doWriteLights {true};
+	BoolSetting enableExperimental {false};
 };
 
 struct UISettings {

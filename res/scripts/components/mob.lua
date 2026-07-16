@@ -124,7 +124,7 @@ function on_physics_update(sps)
             jump()
         end
         body:set_vdamping(flight)
-        body:set_gravity_scale(flight and 0.0 or props.gravity_scale)
+        body:set_gravity_scale({0, flight and 0.0 or props.gravity_scale, 0})
         body:set_linear_damping(
             (flight or not grounded) and props.air_damping or props.ground_damping
         )

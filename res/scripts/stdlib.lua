@@ -1,3 +1,5 @@
+local enable_experimental = builtin.get_setting("debug.enable-experimental")
+
 ------------------------------------------------
 ------ Extended kit of standard functions ------
 ------------------------------------------------
@@ -36,7 +38,6 @@ local function complete_app_lib(app)
     app.set_setting = builtin.set_setting
     app.spark = function()
         coroutine.yield()
-        network.__process_events()
     end
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
@@ -168,9 +169,10 @@ function inventory.set_description(invid, slot, description)
     inventory.set_data(invid, slot, "description", description)
 end
 
-------------------------------------------------
-------------------- Events ---------------------
-------------------------------------------------
+if enable_experimental then
+    require "builtin:internal/maths_inline"
+end
+
 events = require "builtin:internal/events"
 
 function pack.unload(prefix)
@@ -569,6 +571,8 @@ function __process_post_runnables()
     for _, name in ipairs(dead) do
         __chroma_named_coroutines[name] = nil
     end
+
+    network.__process_events()
 end
 
 function time.post_runnable(runnable)

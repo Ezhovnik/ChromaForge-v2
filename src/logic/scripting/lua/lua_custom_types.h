@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <array>
 
 #include <logic/scripting/lua/lua_commons.h>
 
@@ -56,14 +57,16 @@ namespace lua {
 
     class LuaVoxelFragment : public Userdata {
     private:
-        std::shared_ptr<VoxelFragment> fragment;
+        std::array<std::shared_ptr<VoxelFragment>, 4> fragmentVariants;
     public:
-        LuaVoxelFragment(std::shared_ptr<VoxelFragment> fragment);
+        LuaVoxelFragment(
+            std::array<std::shared_ptr<VoxelFragment>, 4> fragmentVariants
+        );
 
         virtual ~LuaVoxelFragment();
 
-        std::shared_ptr<VoxelFragment> getFragment() const {
-            return fragment;
+        std::shared_ptr<VoxelFragment> getFragment(size_t rotation) const {
+            return fragmentVariants.at(rotation & 0b11);
         }
 
         const std::string& getTypeName() const override {

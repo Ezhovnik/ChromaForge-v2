@@ -14,7 +14,7 @@
 static int l_save_fragment(lua::State* L) {
     auto fragment = lua::touserdata<lua::LuaVoxelFragment>(L, 1);
     auto file = lua::require_string(L, 2);
-    auto map = fragment->getFragment()->serialize();
+    auto map = fragment->getFragment(0)->serialize();
     auto bytes = json::to_binary(map, true);
     io::write_bytes(file, bytes.data(), bytes.size());
     return 0;
@@ -27,22 +27,45 @@ static int l_create_fragment(lua::State* L) {
     bool saveEntities = lua::toboolean(L, 4);
 
     auto fragment = VoxelFragment::create(*scripting::level, pointA, pointB, crop, saveEntities);
+    fragment->prepare(*scripting::content);
+    std::array<std::shared_ptr<VoxelFragment>, 4> fragmentVariants {
+        std::move(fragment)
+    };
+    for (size_t i = 1; i < 4; ++i) {
+        fragmentVariants[i] = fragmentVariants[i - 1]->rotated(*scripting::content);
+    }
     return lua::newuserdata<lua::LuaVoxelFragment>(
-        L, std::shared_ptr<VoxelFragment>(std::move(fragment))
+        L, std::move(fragmentVariants)
     );
 }
 
 static int l_load_fragment(lua::State* L) {
-    io::path path = lua::require_string(L, 1);
-    if (!io::exists(path)) {
-        throw std::runtime_error("File " + path.string() + " does not exist");
+    dv::value map;
+    if (!lua::isstring(L, 1)) {
+        io::path path = lua::require_string(L, 1);
+        if (!io::exists(path)) {
+            throw std::runtime_error("File " + path.string() + " does not exist");
+        }
+        map = io::read_binary_json(path);
+    } else {
+        auto bytearray = lua::bytearray_as_string(L, 1);
+        map = json::from_binary(
+            reinterpret_cast<const ubyte*>(bytearray.data()), bytearray.size()
+        );
     }
-    auto map = io::read_binary_json(path);
 
     auto fragment = std::make_shared<VoxelFragment>();
     fragment->deserialize(map);
     fragment->prepare(*scripting::content);
-    return lua::newuserdata<lua::LuaVoxelFragment>(L, std::move(fragment));
+    std::array<std::shared_ptr<VoxelFragment>, 4> fragmentVariants {
+        std::move(fragment)
+    };
+    for (size_t i = 1; i < 4; ++i) {
+        fragmentVariants[i] = fragmentVariants[i - 1]->rotated(*scripting::content);
+    }
+    return lua::newuserdata<lua::LuaVoxelFragment>(
+        L, std::move(fragmentVariants)
+    );
 }
 
 static int l_get_generators(lua::State* L) {
