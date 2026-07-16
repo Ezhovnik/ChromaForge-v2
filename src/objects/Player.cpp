@@ -20,13 +20,6 @@
 #include <objects/Entt_Entity.h>
 
 namespace PlayerConsts {
-    constexpr float CROUCH_SPEED_MUL = 0.35f; ///< Множитель скорости при приседании
-    constexpr float RUN_SPEED_MUL = 1.5f; ///< Множитель скорости при беге
-    constexpr float FLIGHT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме полёта
-    constexpr float JUMP_FORCE = 8.0f; ///< Сила прыжка
-    constexpr float GROUND_DAMPING = 10.0f; ///< Затухание скорости на земле
-    constexpr float AIR_DAMPING = 8.0f; ///< Затухание скорости в воздухе
-    constexpr float CHEAT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме читов
 	constexpr int SPAWN_ATTEMPTS_PER_UPDATE = 64;
 }
 
@@ -81,18 +74,6 @@ void Player::updateEntity() {
         LOG_WARN("Player entity despawned or deleted; will be respawned");
         eid = ENTITY_AUTO;
     }
-
-    auto hitbox = getHitbox();
-    if (hitbox == nullptr) {
-        return;
-    }
-    hitbox->linearDamping = PlayerConsts::GROUND_DAMPING;
-    hitbox->verticalDamping = flight;
-    hitbox->gravityScale = flight ? 0.0f : 1.0f;
-    if (flight || !hitbox->grounded) {
-        hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
-    }
-    hitbox->type = noclip ? BodyType::Kinematic : BodyType::Dynamic;
 }
 
 Hitbox* Player::getHitbox() {
@@ -100,74 +81,6 @@ Hitbox* Player::getHitbox() {
         return &entity->getRigidbody().hitbox;
     }
     return nullptr;
-}
-
-void Player::updateInput(PlayerInput& input, float delta) {
-    auto hitbox = getHitbox();
-    if (hitbox == nullptr) return;
-
-	bool crouch = input.crouch && hitbox->grounded && !input.sprint;
-	float speed = this->speed;
-
-	// Применяем модификаторы скорости
-	if (flight) {
-		speed *= PlayerConsts::FLIGHT_SPEED_MUL;
-	}
-	if (input.cheat) {
-		speed *= PlayerConsts::CHEAT_SPEED_MUL;
-	}
-
-	hitbox->crouching = crouch;
-	if (crouch) {
-		speed *= PlayerConsts::CROUCH_SPEED_MUL;
-	} else if (input.sprint) {
-		speed *= PlayerConsts::RUN_SPEED_MUL;
-	}
-
-	// Вычисляем направление движения на основе ввода и ориентации камеры
-	glm::vec3 dir(0, 0, 0);
-	if (input.moveForward){
-		dir += fpCamera->dir;
-	}
-	if (input.moveBack){
-		dir -= fpCamera->dir;
-	}
-	if (input.moveRight){
-		dir += fpCamera->right;
-	}
-	if (input.moveLeft){
-		dir -= fpCamera->right;
-	}
-	// Если есть движение, нормализуем и придаём импульс
-	if (length(dir) > 0.0f) {
-		dir = normalize(dir);
-		doMove(dir, speed, delta);
-	}
-
-    if (flight) {
-        if (input.jump) {
-            hitbox->velocity.y += speed * delta * 9;
-        }
-        if (input.crouch) {
-            hitbox->velocity.y -= speed * delta * 9;
-        }
-    } else if (input.jump) {
-        doJump();
-    }
-}
-
-void Player::doMove(const glm::vec3& dir, float speed, float delta) {
-    if (auto hitbox = getHitbox()) {
-        hitbox->velocity += dir * speed * delta * 9.0f;
-    }
-}
-
-void Player::doJump() {
-    if (auto hitbox = getHitbox()) {
-        if (hitbox->grounded) {
-            hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
-        }
-	}
 }
 
 void Player::postUpdate() {

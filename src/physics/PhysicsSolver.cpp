@@ -31,7 +31,7 @@ void PhysicsSolver::step(
     entityid_t entity
 ) {
 	float subDelta = delta / static_cast<float>(substeps);
-	float linearDamping = hitbox.linearDamping;
+	float linearDamping = hitbox.linearDamping * hitbox.friction;
 	float step_size = 2.0f / BLOCK_AABB_GRID;
 	float gravityScale = hitbox.gravityScale;
 	const glm::vec3& half = hitbox.halfsize;
@@ -59,11 +59,12 @@ void PhysicsSolver::step(
 			);
 		}
 
-		vel.x *= glm::max(0.0f, 1.0f - subDelta * linearDamping);
+		vel.x /= 1.0f + subDelta * linearDamping;
+        vel.z /= 1.0f + subDelta * linearDamping;
 		if (hitbox.verticalDamping) {
-            vel.y *= glm::max(0.0f, 1.0f - subDelta * linearDamping);
+            vel.y /= 1.0f + subDelta * linearDamping;
         }
-		vel.z *= glm::max(0.0f, 1.0f - subDelta * linearDamping);
+
 		pos += vel * subDelta + gravity * gravityScale * subDelta * subDelta * 0.5f;
 		if (hitbox.grounded && pos.y < prev_y) pos.y = prev_y;
 

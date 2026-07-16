@@ -39,7 +39,7 @@ static int l_open(lua::State* L) {
 
     return lua::pushinteger(L, scripting::hud->openInventory(
         layout,
-        scripting::level->inventories->get(invid),
+        lua::isnoneornil(L, 3) ? nullptr : scripting::level->inventories->get(invid),
         playerInventory
     )->getId());
 }

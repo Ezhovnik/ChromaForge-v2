@@ -278,10 +278,6 @@ void PlayerController::resetKeyboard() {
 	input = {};
 }
 
-void PlayerController::updatePlayer(float deltaTime){
-	player.updateInput(input, deltaTime);
-}
-
 static int determine_rotation(const Block* def, const glm::ivec3& norm, const glm::vec3& camDir) {
     if (def && def->rotatable){
         const std::string& name = def->rotations.name;
@@ -517,7 +513,6 @@ void PlayerController::update(float delta, const Input* inputEvents) {
     } else {
         resetKeyboard();
     }
-    updatePlayer(delta);
 }
 
 void PlayerController::postUpdate(

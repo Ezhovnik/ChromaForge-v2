@@ -82,9 +82,6 @@ private:
 
     entityid_t selectedEid = 0;
 
-    void doMove(const glm::vec3& dir, float speed, float delta);
-    void doJump();
-
     glm::vec3 rotation {}; ///< Углы поворота камеры
 public:
     util::VecInterpolation<3, float, true> rotationInterpolation {true};
@@ -191,13 +188,6 @@ public:
 
     glm::vec3 getRotation(bool interpolated=false) const;
     void setRotation(const glm::vec3& rotation);
-
-	/**
-     * @brief Обновляет состояние игрока (физика, ввод, камера).
-     * @param input Структура ввода.
-     * @param delta Время с предыдущего кадра.
-     */
-	void updateInput(PlayerInput& input, float delta);
 
     void updateSelectedEntity();
     entityid_t getSelectedEntity() const;

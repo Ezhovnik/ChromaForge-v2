@@ -342,7 +342,7 @@ void Entities::updatePhysics(float delta) {
             substeps,
             eid.uid
         );
-        hitbox.linearDamping = hitbox.grounded * 24;
+        hitbox.friction = glm::abs(hitbox.gravityScale <= 1e-7f) ? 8.0f : (!grounded ? 2.0f : 10.0f);
         transform.setPos(hitbox.position);
         if (hitbox.grounded && !grounded) {
             scripting::on_entity_grounded(

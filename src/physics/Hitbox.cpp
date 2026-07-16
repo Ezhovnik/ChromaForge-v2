@@ -9,5 +9,4 @@ Hitbox::Hitbox(
 ) : type(type),
     position(position), 
     halfsize(halfsize), 
-    velocity(0.0f, 0.0f, 0.0f), 
-    linearDamping(0.1f) {}
+    velocity(0.0f, 0.0f, 0.0f) {}

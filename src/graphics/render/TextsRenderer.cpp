@@ -47,6 +47,7 @@ void TextsRenderer::renderNote(
     glm::vec3 yvec = note.getAxisY();
 
     int width = font.calcWidth(text, text.length());
+    int height = font.getLineHeight();
     if (preset.displayMode == NoteDisplayMode::YFreeBillboard || preset.displayMode == NoteDisplayMode::XYFreeBillboard) {
         xvec = camera.position - pos;
         xvec.y = 0;
@@ -84,7 +85,11 @@ void TextsRenderer::renderNote(
 
             pos = screenPos / screenPos.w;
         }
-    } else if (!frustum.isBoxVisible(pos - xvec * (width * 0.5f * preset.scale), pos + xvec * (width * 0.5f * preset.scale))) {
+    } else if (!frustum.isBoxVisible(
+                    pos - xvec * (width * 0.5f) * preset.scale,
+                    pos + xvec * (width * 0.5f) * preset.scale + yvec * static_cast<float>(height) * preset.scale
+                )
+    ) {
         return;
     }
 
