@@ -18,7 +18,7 @@ end
 def_prop("jump_force", 0.0)
 def_prop("air_damping", 1.0)
 def_prop("ground_damping", 1.0)
-def_prop("movement_speed", 4.0)
+def_prop("movement_speed", 3.0)
 def_prop("run_speed_mul", 1.5)
 def_prop("crouch_speed_mul", 0.35)
 def_prop("flight_speed_mul", 4.0)
@@ -55,8 +55,8 @@ function move_horizontal(speed, dir, vel)
     body:set_vel(vel)
 end
 
-function on_update(tps)
-    local delta = (1.0 / tps)
+function on_physics_update(sps)
+    local delta = (1.0 / sps)
     local pid = entity:get_player()
     if pid and hud and not hud.is_inventory_open() and not menu.page ~= "" then
         -- TODO: replace with entity direction

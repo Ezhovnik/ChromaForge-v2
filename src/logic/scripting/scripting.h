@@ -120,6 +120,7 @@ namespace scripting {
     void on_entity_grounded(const Entt_Entity& entity, float force);
     void on_entity_fall(const Entt_Entity& entity);
     void on_entity_save(const Entt_Entity& entity);
+    void on_entities_physics_update(int sps, int parts, int part);
     void on_entities_update(int sps, int parts, int part);
     void on_entities_render(float deltaTime);
     void on_sensor_enter(const Entt_Entity& entity, size_t index, entityid_t oid);

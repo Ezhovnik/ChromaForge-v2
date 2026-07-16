@@ -277,6 +277,16 @@ void scripting::on_entities_update(int sps, int parts, int part) {
     lua::pop(L);
 }
 
+void scripting::on_entities_physics_update(int sps, int parts, int part) {
+    auto L = lua::get_main_state();
+    lua::get_from(L, STDCOMP, "physics_update", true);
+    lua::pushinteger(L, sps);
+    lua::pushinteger(L, parts);
+    lua::pushinteger(L, part);
+    lua::call_nothrow(L, 3, 0);
+    lua::pop(L);
+}
+
 void scripting::on_entities_render(float delta) {
     auto L = lua::get_main_state();
     lua::get_from(L, STDCOMP, "render", true);

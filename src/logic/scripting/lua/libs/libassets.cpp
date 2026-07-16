@@ -20,6 +20,9 @@ static void load_texture(
 }
 
 static int l_load_texture(lua::State* L) {
+    if (lua::isstring(L, 3) && lua::require_lstring(L, 3) != "png") {
+        throw std::runtime_error("Unsupportd image format");
+    }
     if (lua::istable(L, 1)) {
         lua::pushvalue(L, 1);
         size_t size = lua::objlen(L, 1);

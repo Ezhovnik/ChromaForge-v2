@@ -23,8 +23,12 @@
 #include <graphics/core/DrawContext.h>
 #include <objects/Entt_Entity.h>
 
-Entities::Entities(Level& level) : level(level), sensorsSparkClock(20, 3), updateSparkClock(20, 3) {
-}
+Entities::Entities(
+    Level& level
+) : level(level),
+    sensorsSparkClock(20, 3),
+    updateSparkClock(20, 3),
+    physicsSparkClock(60, 1) {}
 
 std::optional<Entt_Entity> Entities::get(entityid_t id) {
     const auto& found = entities.find(id);
@@ -204,6 +208,13 @@ void Entities::update(float delta) {
             updateSparkClock.getSparkRate(),
             updateSparkClock.getParts(),
             updateSparkClock.getPart()
+        );
+    }
+    if (physicsSparkClock.update(delta)) {
+        scripting::on_entities_physics_update(
+            physicsSparkClock.getSparkRate(),
+            physicsSparkClock.getParts(),
+            physicsSparkClock.getPart()
         );
     }
 }
