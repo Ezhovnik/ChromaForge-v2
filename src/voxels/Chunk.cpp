@@ -19,14 +19,15 @@ Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
 }
 
 void Chunk::updateHeights() {
-	for (uint i = 0; i < CHUNK_VOLUME; i++) {
+    flags.dirtyHeights = false;
+	for (uint i = 0; i < CHUNK_VOLUME; ++i) {
 		if (voxels[i].id != 0) {
 			bottom = i / (CHUNK_DEPTH * CHUNK_WIDTH);
 			break;
 		}
 	}
 
-	for (int i = CHUNK_VOLUME - 1; i >= 0; i--) {
+	for (int i = CHUNK_VOLUME - 1; i >= 0; --i) {
 		if (voxels[i].id != 0) {
 			top = i / (CHUNK_DEPTH * CHUNK_WIDTH) + 1;
 			break;

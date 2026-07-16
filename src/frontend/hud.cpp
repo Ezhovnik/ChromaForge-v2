@@ -325,17 +325,18 @@ void Hud::updateWorldGenDebug() {
 
 void Hud::update(bool hudVisible) {
     const auto& chunks = *player.chunks;
+    bool isMenuOpen = menu.hasOpenPage();
 
 	debugPanel->setVisible(
         debug && hudVisible && !(inventoryOpen && inventoryView == nullptr)
     );
 
 	if (!hudVisible && inventoryOpen) closeInventory();
-	if (pause && !menu.hasOpenPage()) setPause(false);
+	if (pause && !isMenuOpen) setPause(false);
 
 	if (!guiController.isFocusCaught()) processInput(hudVisible);
 
-	if ((menu.hasOpenPage() || inventoryOpen) == input.getCursor().locked) {
+	if ((isMenuOpen || inventoryOpen) == input.getCursor().locked) {
         input.toggleCursor();
     }
 
@@ -354,6 +355,8 @@ void Hud::update(bool hudVisible) {
     contentAccessPanel->setSize(glm::vec2(caSize.x, windowSize.y));
     contentAccess->setMinSize(glm::vec2(1, windowSize.y));
 	hotbarView->setVisible(hudVisible && !(secondUI && !inventoryView));
+    darkOverlay->setVisible(isMenuOpen);
+    menu.setVisible(isMenuOpen);
 
 	if (hudVisible) {
         for (auto& element : elements) {

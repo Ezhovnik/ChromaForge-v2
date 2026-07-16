@@ -26,6 +26,7 @@
 #include <interfaces/Process.h>
 #include <voxels/Chunk.h>
 #include <content/ContentControl.h>
+#include <world/World.h>
 
 std::ostream* scripting::output_stream = &std::cout;
 std::ostream* scripting::error_stream = &std::cerr;
@@ -290,7 +291,11 @@ void scripting::on_world_load(LevelController* controller) {
     }
 
     for (auto& pack : scripting::content_control->getAllContentPacks()) {
-        lua::emit_event(L, pack.id + ":.worldopen");
+        lua::emit_event(L, pack.id + ":.worldopen", [](auto L) {
+            return lua::pushboolean(
+                L, !scripting::level->getWorld()->getInfo().isLoaded
+            );
+        });
     }
 }
 

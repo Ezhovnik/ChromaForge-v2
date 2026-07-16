@@ -281,6 +281,7 @@ bool GUI::isFocusCaught() const {
 }
 
 void GUI::add(std::shared_ptr<UINode> node) {
+    UINode::getIndices(node, rootDocument->getMapWriteable());
     container->add(std::move(node));
 }
 

@@ -101,11 +101,12 @@ static int l_set(lua::State* L) {
     auto id = lua::tointeger(L, 4);    
     auto state = lua::tointeger(L, 5);
     bool noupdate = lua::toboolean(L, 6);
-    if (static_cast<size_t>(id) >= scripting::indices->blocks.count()) return 0;
-    int cx = floordiv<CHUNK_WIDTH>(x);
-    int cz = floordiv<CHUNK_DEPTH>(z);
-    if (!blocks_agent::get_chunk(*scripting::level->chunks, cx, cz)) return 0;
-    blocks_agent::set(*scripting::level->chunks, x, y, z, id, int2blockstate(state));
+    if (static_cast<size_t>(id) >= scripting::indices->blocks.count()) {
+        return 0;
+    }
+    if (!blocks_agent::set(*scripting::level->chunks, x, y, z, id, int2blockstate(state))) {
+        return 0;
+    }
     auto chunksController = scripting::controller->getChunksController();
     if (chunksController == nullptr) return 1;
     if (chunksController->lighting) {

@@ -71,7 +71,7 @@ namespace blocks_agent {
         return false;
     }
 
-    void set(
+    bool set(
         Chunks& chunks,
         int32_t x,
         int32_t y,
@@ -80,7 +80,7 @@ namespace blocks_agent {
         blockstate state
     );
 
-    void set(
+    bool set(
         GlobalChunks& chunks,
         int32_t x,
         int32_t y,

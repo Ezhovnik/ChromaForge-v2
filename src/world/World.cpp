@@ -128,6 +128,7 @@ std::unique_ptr<Level> World::load(
 		LOG_ERROR("Could not to find world.json");
         throw world_load_error("could not to find world.json");
 	}
+    info->isLoaded = true;
 
     LOG_INFO("Loading world {} ({})", info->name, worldFilesPtr->getFolder().string());
 	LOG_INFO("World version: {}.{}.{}", info->major, info->minor, info->maintenance);
