@@ -677,6 +677,15 @@ static int l_reload_script(lua::State* L) {
     return 0;
 }
 
+static int l_has_tag(lua::State* L) {
+    if (auto def = require_block(L)) {
+        auto tag = lua::require_string(L, 2);
+        const auto& tags = def->rt.tags;
+        return lua::pushboolean(L, tags.find(scripting::content->getTagIndex(tag)) != tags.end());
+    }
+    return 0;
+}
+
 const luaL_Reg blocklib [] = {
     {"index", lua::wrap<l_index>},
     {"name", lua::wrap<l_get_def>},
@@ -714,5 +723,6 @@ const luaL_Reg blocklib [] = {
     {"get_field", lua::wrap<l_get_field>},
     {"set_field", lua::wrap<l_set_field>},
     {"reload_script", lua::wrap<l_reload_script>},
+    {"has_tag", lua::wrap<l_has_tag>},
     {NULL, NULL}
 };

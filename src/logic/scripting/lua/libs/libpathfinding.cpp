@@ -2,6 +2,7 @@
 
 #include <voxels/Pathfinding.h>
 #include <world/Level.h>
+#include <content/Content.h>
 
 static voxels::Agent* get_agent(lua::State* L) {
     return scripting::level->pathfinding->getAgent(lua::tointeger(L, 1));
@@ -93,6 +94,27 @@ static int l_set_jump_height(lua::State* L) {
     return 0;
 }
 
+static int l_set_avoided_tags(lua::State* L) {
+    if (auto agent = get_agent(L)) {
+        if (!lua::istable(L, 2)) {
+            throw std::runtime_error("Array of tags expected");
+        }
+        agent->avoidTags.clear();
+        int len = lua::objlen(L, 2);
+        for (int i = 1; i <= len; ++i) {
+            lua::rawgeti(L, i);
+            if (lua::isstring(L, -1)) {
+                int index = scripting::content->getTagIndex(lua::tostring(L, -1));
+                if (index != -1) {
+                    agent->avoidTags.insert(index);
+                }
+            }
+            lua::pop(L);
+        }
+    }
+    return 0;
+}
+
 const luaL_Reg pathfindinglib[] = {
     {"create_agent", lua::wrap<l_create_agent>},
     {"remove_agent", lua::wrap<l_remove_agent>},
@@ -103,5 +125,6 @@ const luaL_Reg pathfindinglib[] = {
     {"pull_route", lua::wrap<l_pull_route>},
     {"set_max_visited", lua::wrap<l_set_max_visited_blocks>},
     {"set_jump_height", lua::wrap<l_set_jump_height>},
+    {"set_avoided_tags", lua::wrap<l_set_avoided_tags>},
     {NULL, NULL}
 };

@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <set>
+#include <vector>
+
 #include <glm/glm.hpp>
 
 #include <math/UVRegion.h>
@@ -56,11 +59,15 @@ struct Item {
 
     std::string modelName = name + ".model";
 
+    std::vector<std::string> tags;
+
     struct {
         itemid_t id;
         blockid_t placingBlock;
         ItemFuncsSet funcsset {};
         bool emissive = false;
+
+        std::set<int> tags;
     } rt {};
 
     Item(const std::string& name);

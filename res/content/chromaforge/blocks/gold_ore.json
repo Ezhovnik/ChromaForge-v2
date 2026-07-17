@@ -1,5 +1,6 @@
 {
     "texture": "gold_ore",
+    "tags": ["chromaforge:ore"],
     "material": "chromaforge:stone",
     "chromaforge:durability": 16.0
 }
