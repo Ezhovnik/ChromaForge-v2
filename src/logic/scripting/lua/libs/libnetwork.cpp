@@ -4,6 +4,19 @@
 #include <network/Network.h>
 #include <coders/json.h>
 
+static std::vector<std::string> read_headers(lua::State* L, int index) {
+    std::vector<std::string> headers;
+    if (lua::istable(L, index)) {
+        int len = lua::objlen(L, index);    
+        for (int i = 1; i <= len; ++i) {
+            lua::rawgeti(L, i, index);
+            headers.push_back(lua::tostring(L, -1));
+            lua::pop(L);
+        }
+    }
+    return headers;
+}
+
 static int l_get(lua::State* L, network::Network& network) {
     std::string url(lua::require_lstring(L, 1));
 
@@ -11,7 +24,7 @@ static int l_get(lua::State* L, network::Network& network) {
     auto onResponse = lua::create_lambda_nothrow(L);
 
     network::OnReject onReject = nullptr;
-    if (lua::gettop(L) >= 3) {
+    if (!lua::isnoneornil(L, 3)) {
         lua::pushvalue(L, 3);
         auto callback = lua::create_lambda_nothrow(L);
         onReject = [callback](int code) {
@@ -19,11 +32,13 @@ static int l_get(lua::State* L, network::Network& network) {
         };
     }
 
+    auto headers = read_headers(L, 4);
+
     network.get(url, [onResponse](std::vector<char> bytes) {
         scripting::engine->postRunnable([=]() {
             onResponse({std::string(bytes.data(), bytes.size())});
         });
-    }, std::move(onReject));
+    }, std::move(onReject), std::move(headers));
     return 0;
 }
 
@@ -34,13 +49,15 @@ static int l_get_binary(lua::State* L, network::Network& network) {
     auto onResponse = lua::create_lambda_nothrow(L);
 
     network::OnReject onReject = nullptr;
-    if (lua::gettop(L) >= 3) {
+    if (!lua::isnoneornil(L, 3)) {
         lua::pushvalue(L, 3);
         auto callback = lua::create_lambda_nothrow(L);
         onReject = [callback](int code) {
             callback({code});
         };
     }
+
+    auto headers = read_headers(L, 4);
 
     network.get(url, [onResponse](std::vector<char> bytes) {
         auto buffer = std::make_shared<util::Buffer<ubyte>>(
@@ -49,7 +66,7 @@ static int l_get_binary(lua::State* L, network::Network& network) {
         scripting::engine->postRunnable([=]() {
             onResponse({buffer});
         });
-    }, std::move(onReject));
+    }, std::move(onReject), std::move(headers));
     return 0;
 }
 
@@ -61,7 +78,7 @@ static int l_post(lua::State* L, network::Network& network) {
     auto onResponse = lua::create_lambda_nothrow(L);
 
     network::OnReject onReject = nullptr;
-    if (lua::gettop(L) >= 4) {
+    if (!lua::isnoneornil(L, 4)) {
         lua::pushvalue(L, 4);
         auto callback = lua::create_lambda_nothrow(L);
         onReject = [callback](int code) {
@@ -76,6 +93,8 @@ static int l_post(lua::State* L, network::Network& network) {
         string = json::stringify(data, false);
     }
 
+    auto headers = read_headers(L, 5);
+
     scripting::engine->getNetwork().post(url, string, [onResponse](std::vector<char> bytes) {
         auto buffer = std::make_shared<util::Buffer<ubyte>>(
             reinterpret_cast<const ubyte*>(bytes.data()), bytes.size()
@@ -83,7 +102,7 @@ static int l_post(lua::State* L, network::Network& network) {
         scripting::engine->postRunnable([=]() {
             onResponse({std::string(bytes.data(), bytes.size())});
         });
-    }, std::move(onReject));
+    }, std::move(onReject), std::move(headers));
     return 0;
 }
 

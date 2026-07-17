@@ -24,6 +24,7 @@ namespace network {
             const std::string& url,
             OnResponse onResponse,
             OnReject onReject=nullptr,
+            std::vector<std::string> headers = {},
             long maxSize=0
         ) = 0;
 
@@ -32,6 +33,7 @@ namespace network {
             const std::string& data,
             OnResponse onResponse,
             OnReject onReject=nullptr,
+            std::vector<std::string> headers = {},
             long maxSize=0
         ) = 0;
 
@@ -143,6 +145,7 @@ namespace network {
             const std::string& url,
             OnResponse onResponse,
             OnReject onReject = nullptr,
+            std::vector<std::string> headers = {},
             long maxSize=0
         );
 
@@ -151,6 +154,7 @@ namespace network {
             const std::string& fieldsData,
             OnResponse onResponse,
             OnReject onReject = nullptr,
+            std::vector<std::string> headers = {},
             long maxSize=0
         );
 
