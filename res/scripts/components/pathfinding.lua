@@ -5,10 +5,14 @@ local started
 local tsf = entity.transform
 
 agent = pathfinding.create_agent()
-pathfinding.set_max_visited(agent, 100000)
+pathfinding.set_max_visited(agent, 1e4)
 
 function set_target(new_target)
     target = new_target
+end
+
+function set_jump_height(height)
+    pathfinding.set_jump_height(agent, height)
 end
 
 function get_target()
