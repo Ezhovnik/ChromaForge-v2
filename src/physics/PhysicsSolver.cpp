@@ -59,12 +59,6 @@ void PhysicsSolver::step(
 			);
 		}
 
-		vel.x /= 1.0f + subDelta * linearDamping;
-        vel.z /= 1.0f + subDelta * linearDamping;
-		if (hitbox.verticalDamping) {
-            vel.y /= 1.0f + subDelta * linearDamping;
-        }
-
 		pos += vel * subDelta + gravity * gravityScale * subDelta * subDelta * 0.5f;
 		if (hitbox.grounded && pos.y < prev_y) pos.y = prev_y;
 
@@ -97,6 +91,12 @@ void PhysicsSolver::step(
 			if (!hitbox.grounded) pos.x = prev_x;
 			hitbox.grounded = true;
 		}
+	}
+
+	vel.x /= 1.0f + subDelta * linearDamping;
+	vel.z /= 1.0f + subDelta * linearDamping;
+	if (hitbox.verticalDamping > 0.0f) {
+        vel.y /= 1.0f + delta * linearDamping * hitbox.verticalDamping;
 	}
 
 	AABB aabb;

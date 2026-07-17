@@ -66,7 +66,7 @@ struct Hitbox {
 	glm::vec3 velocity; ///< Текущая скорость хитбокса
     float linearDamping = 0.5f; ///< Коэффициент линейного затухания скорости
     float friction = 1.0f;
-    bool verticalDamping = false;
+    float verticalDamping = 1.0f;
 	bool grounded = false; ///< Флаг, указывающий, находится ли хитбокс на земле
     float gravityScale = 1.0f;
     bool crouching = false;

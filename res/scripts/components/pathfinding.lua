@@ -41,13 +41,18 @@ function next_waypoint()
     return route[#route]
 end
 
-local frameid = 0
+local refresh_internal = 100
+local frameid = math.random(0, refresh_internal)
+
+function set_refresh_interval(interval)
+    refresh_internal = interval
+end
 
 function on_update()
     if not started then
+        frameid = frameid + 1
         if body:is_grounded() then
-            frameid = frameid + 1
-            if target and frameid % 100 == 1 then
+            if target and (frameid % refresh_internal == 1 or not route) then
                 pathfinding.make_route_async(agent, tsf:get_pos(), target)
                 started = true
             end

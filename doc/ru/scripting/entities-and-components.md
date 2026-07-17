@@ -97,8 +97,10 @@ body:set_linear_damping(value: number)
 
 -- Проверяет, включено ли вертикальное затухание скорости
 body:is_vdamping() -> bool
--- Включает/выключает вертикальное затухание скорости
-body:set_vdamping(enabled: bool)
+-- Возвращает множитель вертикального затухания скорости
+body:get_vdamping() -> number
+-- Включает/выключает вертикальное затухание скорости / устанавливает значение множителя
+body:set_vdamping(enabled: bool | number)
 
 -- Проверяет, находится ли сущность на земле (приземлена)
 body:is_grounded() -> bool

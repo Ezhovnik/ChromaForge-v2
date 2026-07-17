@@ -1,5 +1,6 @@
-
+local body = entity.rigidbody
 local tsf = entity.transform
+local rig = entity.skeleton
 
 local props = {}
 
@@ -23,8 +24,11 @@ def_prop("movement_speed", 3.0)
 def_prop("run_speed_mul", 1.5)
 def_prop("crouch_speed_mul", 0.35)
 def_prop("flight_speed_mul", 4.0)
-def_prop("cheat_speed_mul", 5.0)
 def_prop("gravity_scale", 1.0)
+
+direction = {0, 0, -1}
+
+local flight = false
 
 function jump(multiplier)
     if body:is_grounded() then
@@ -37,139 +41,116 @@ end
 function elevate(speed, delta, vel)
     vel = vel or body:get_vel()
     body:set_vel(
-        vec3.add(vel, {0, speed * delta, 0}, vel))
+        vec3.add(vel, {0, speed * delta * props.movement_speed, 0}, vel))
 end
 
 function lower(speed, delta, vel)
     vel = vel or body:get_vel()
     body:set_vel(
-        vec3.add(vel, {0, -speed * delta, 0}, vel))
+        vec3.add(vel, {0, -speed * delta * props.movement_speed, 0}, vel))
 end
 
-function move_horizontal(speed, dir, vel)
+local function move_horizontal(speed, dir, vel)
     vel = vel or body:get_vel()
     if vec3.length(dir) > 0.0 then
         vec3.normalize(dir, dir)
 
-        vel[1] = dir[1] * speed
-        vel[3] = dir[3] * speed
+        local magnitude = vec3.length({vel[1], 0, vel[3]})
+
+        if magnitude <= 1e-4 or (magnitude < speed or vec3.dot({vel[1] / magnitude, 0.0, vel[3] / magnitude}, dir) < 0.9) then
+            vel[1] = vel[1] + dir[1] * speed * 0.8
+            vel[3] = vel[3] + dir[3] * speed * 0.8
+        end
+        magnitude = vec3.length({vel[1], 0, vel[3]})
+        if vec3.dot({vel[1] / magnitude, 0.0, vel[3] / magnitude}, dir) > 0.5 then
+            vel[1] = vel[1] / magnitude * speed
+            vel[3] = vel[3] / magnitude * speed
+        end
     end
     body:set_vel(vel)
 end
 
-local function process_player_inputs(pid, delta)
-    if not hud or hud.is_inventory_open() or menu.page ~= "" then
-        return
-    end
-    -- TODO: replace with entity direction
-    local cam = cameras.get("builtin:first-person")
-    local front = cam:get_front()
-    local right = cam:get_right()
-    front[2] = 0.0
-    vec3.normalize(front, front)
-
-    local grounded = body:is_grounded()
-
-    local isjump = input.is_active('movement.jump')
-    local issprint = input.is_active('movement.sprint')
-    local iscrouch = input.is_active('movement.crouch')
-    local isforward = input.is_active('movement.forward')
-    local ischeat = input.is_active('movement.cheat')
-    local isback = input.is_active('movement.back')
-    local isleft = input.is_active('movement.left')
-    local isright = input.is_active('movement.right')
-    local flight = player.is_flight(pid)
-    local noclip = player.is_noclip(pid)
-
-    local vel = body:get_vel()
-
-    local speed = props.movement_speed
-
+function go(dir, speed_multiplier, sprint, crouch, vel)
+    local speed = props.movement_speed * speed_multiplier
     if flight then
         speed = speed * props.flight_speed_mul
-    elseif issprint then
+    end
+    if sprint then
         speed = speed * props.run_speed_mul
-    elseif iscrouch and grounded then
+    elseif crouch then
         speed = speed * props.crouch_speed_mul
     end
-    body:set_crouching(iscrouch)
-
-    if ischeat then
-        speed = speed * props.cheat_speed_mul
-    end
-
-    local dir = {0, 0, 0}
-    if isforward then
-        vec3.add(dir, front, dir)
-    end
-    if isback then
-        vec3.sub(dir, front, dir)
-    end
-    if isright then
-        vec3.add(dir, right, dir)
-    end
-    if isleft then
-        vec3.sub(dir, right, dir)
-    end
-
-    if vec3.length(dir) > 0.0 then
-        move_horizontal(speed, dir, vel)
-    end
-
-    if flight then
-        if isjump then
-            elevate(speed * 8.0, delta)
-        elseif iscrouch then
-            lower(speed * 8.0, delta)
-        end
-    elseif isjump then
-        jump()
-    end
-    body:set_vdamping(flight)
-    body:set_gravity_scale({0, flight and 0.0 or props.gravity_scale, 0})
-    body:set_linear_damping(
-        (flight or not grounded) and props.air_damping or props.ground_damping
-    )
-    body:set_body_type(noclip and "kinematic" or "dynamic")
+    move_horizontal(speed, dir, vel)
 end
 
 local prev_angle = 0.0
+local headIndex = rig:index("head")
+
+-- TODO: move somewhere
+local watchtimer = math.random(0, 1000)
+local function update_head()
+    watchtimer = watchtimer + 1
+
+    local pos = tsf:get_pos()
+    local viewdir = vec3.normalize(vec3.sub({player.get_pos(hud.get_player())}, pos))
+    local isfront = vec3.dot(viewdir, direction) > 0.0
+
+    local headrot = mat4.idt()
+    local curdir = mat4.mul(mat4.mul(tsf:get_rot(), rig:get_matrix(headIndex)), {0, 0, -1})
+
+    if not isfront or not (watchtimer % 300 < 100) then
+        viewdir = mat4.mul(tsf:get_rot(), {0, 0, -1})
+    end
+
+    vec3.mix(curdir, viewdir, 0.2, viewdir)
+
+    headrot = mat4.inverse(mat4.look_at({0,0,0}, viewdir, {0, 1, 0}))
+    headrot = mat4.mul(mat4.inverse(tsf:get_rot()), headrot)
+    rig:set_matrix(headIndex, headrot)
+end
 
 local function follow_waypoints(pathfinding, delta)
     local pos = tsf:get_pos()
-    pathfinding.set_target(vec3.add(pos, {math.random(-15, 15), 1, math.random(-15, 15)}))
     local waypoint = pathfinding.next_waypoint()
     if not waypoint then
         return
     end
     local speed = props.movement_speed
     local vel = body:get_vel()
-    local dir = vec3.sub(
+    direction = vec3.sub(
         vec3.add(waypoint, {0.5, 0, 0.5}),
         {pos[1], math.floor(pos[2]), pos[3]}
     )
-    local upper = dir[2] > 0
-    dir[2] = 0.0
-    local t = delta * 16.0
-    local angle = (vec2.angle({dir[3], dir[1]}) + 180) * t + prev_angle * (1 - t)
+    local upper = direction[2] > 0
+    direction[2] = 0.0
+    local t = delta * 6.0
+    local angle = (vec2.angle({direction[3], direction[1]}) + 180) * t + prev_angle * (1 - t)
     tsf:set_rot(mat4.rotate({0, 1, 0}, angle))
     prev_angle = angle
-    vec3.normalize(dir, dir)
-    move_horizontal(speed, dir, vel)
-    if body:is_grounded() and upper then
+    vec3.normalize(direction, direction)
+    move_horizontal(speed, direction, vel)
+    if upper and body:is_grounded() then
         jump(1.0)
     end
 end
 
+function is_flight() return flight end
+
+function set_flight(flag) flight = flag end
+
 function on_physics_update(tps)
     local delta = (1.0 / tps)
-    local pid = entity:get_player()
-    if pid ~= -1 then
-        process_player_inputs(pid, delta)
-    else
-        local pathfinding = entity:get_component("builtin:pathfinding")
-        if pathfinding then
-            follow_waypoints(pathfinding, delta)
-        end
+
+    update_head()
+    local pathfinding = entity:get_component("builtin:pathfinding")
+    if pathfinding then
+        follow_waypoints(pathfinding, delta)
     end
+
+    local grounded = body:is_grounded()
+    body:set_vdamping(flight)
+    body:set_gravity_scale({0, flight and 0.0 or props.gravity_scale, 0})
+    body:set_linear_damping(
+        (flight or not grounded) and props.air_damping or props.ground_damping
+    )
 end

@@ -23,6 +23,7 @@ local Rigidbody = {__index={
     get_linear_damping=function(self) return __rigidbody.get_linear_damping(self.eid) end,
     set_linear_damping=function(self, f) return __rigidbody.set_linear_damping(self.eid, f) end,
     is_vdamping=function(self) return __rigidbody.is_vdamping(self.eid) end,
+    get_vdamping=function(self) return __rigidbody.get_vdamping(self.eid) end,
     set_vdamping=function(self, b) return __rigidbody.set_vdamping(self.eid, b) end,
     is_grounded=function(self) return __rigidbody.is_grounded(self.eid) end,
     is_crouching=function(self) return __rigidbody.is_crouching(self.eid) end,

@@ -6,6 +6,7 @@
                 "jump_force": 8.0
             }
         },
+        "builtin:player",
         "chromaforge:player_animator"
     ],
     "hitbox": [0.6, 1.8, 0.6]
