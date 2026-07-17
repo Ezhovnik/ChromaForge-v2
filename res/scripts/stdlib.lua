@@ -429,6 +429,8 @@ function __chroma_on_hud_open()
     hud.open_permanent("builtin:ingame_chat")
 end
 
+local Schedule = require "builtin:schedule"
+
 local ScheduleGroup_mt = {
     __index = {
         publish = function(self, schedule)
@@ -440,6 +442,7 @@ local ScheduleGroup_mt = {
             for id, schedule in pairs(self._schedules) do
                 schedule:spark(dt)
             end
+            self.common:spark(dt)
         end,
         remove = function(self, id)
             self._schedules[id] = nil
@@ -451,6 +454,7 @@ local function ScheduleGroup()
     return setmetatable({
         _next_schedule = 1,
         _schedules = {},
+        common = Schedule()
     }, ScheduleGroup_mt)
 end
 

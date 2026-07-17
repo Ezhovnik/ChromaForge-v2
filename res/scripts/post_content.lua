@@ -5,7 +5,7 @@ local names = {
     "size", "obstacle", "replaceable", "light-passing", "sky-light-passing",
     "shadeless", "ambient-occlusion", "breakable", "selectable", "grounded",
     "hidden", "draw-group", "picking-item", "surface-replacement", "script-name",
-    "ui-layout", "inventory-size", "tick-interval", "overlay-texture",
+    "ui-layout", "inventory-size", "spark-interval", "overlay-texture",
     "translucent", "fields", "particles", "icon-type", "icon", "placing-block", 
     "stack-size", "name", "script-file", "culling"
 }

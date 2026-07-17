@@ -7,7 +7,7 @@ local body = entity.rigidbody
 
 agent = pathfinding.create_agent()
 pathfinding.set_max_visited(agent, 1e3)
-pathfinding.avoid_tag(agent, "builtin:liquid", 8)
+pathfinding.avoid_tag(agent, "core:liquid", 8)
 
 function set_target(new_target)
     target = new_target
