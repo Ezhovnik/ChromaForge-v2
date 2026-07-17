@@ -175,6 +175,18 @@ static int l_vec2_angle(lua::State* L) {
     }
 }
 
+static int l_vec2_rotate(lua::State* L) {
+    uint argc = lua::check_argc(L, 2, 3);
+    auto vec = lua::tovec<2, number_t>(L, 1);
+    auto angle = glm::radians(lua::tonumber(L, 2));
+
+    if (argc == 2) {
+        return lua::pushvec(L, glm::rotate(vec, angle));
+    } else {
+        return lua::setvec(L, 3, glm::rotate(vec, angle));
+    }
+}
+
 template<int n>
 static int l_tostring(lua::State* L) {
     lua::check_argc(L, 1);
@@ -205,6 +217,7 @@ const luaL_Reg vec2lib [] = {
     {"dot", lua::wrap<l_dot<2>>},
     {"angle", lua::wrap<l_vec2_angle>},
     {"mix", lua::wrap<l_mix<2>>},
+    {"rotate", lua::wrap<l_vec2_rotate>},
     {NULL, NULL}
 };
 

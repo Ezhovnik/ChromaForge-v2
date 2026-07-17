@@ -1,3 +1,4 @@
+local tsf = entity.transform
 local body = entity.rigidbody
 local mob = entity:require_component("builtin:mob")
 
@@ -54,6 +55,9 @@ function on_physics_update(tps)
     local delta = (1.0 / tps)
     local pid = entity:get_player()
     if pid ~= -1 then
+        local pos = tsf:get_pos()
+        local cam = cameras.get("builtin:first-person")
         process_player_inputs(pid, delta)
+        mob.look_at(vec3.add(pos, cam:get_front()))
     end
 end
