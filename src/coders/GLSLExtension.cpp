@@ -18,13 +18,17 @@ void GLSLExtension::setPaths(const ResPaths* paths) {
     this->paths = paths;
 }
 
+void GLSLExtension::setTraceOutput(bool enabled) {
+    this->traceOutput = enabled;
+}
+
 void GLSLExtension::loadHeader(const std::string& name) {
     if (paths == nullptr) return;
 
     io::path file = paths->find(SHADERS_FOLDER + "/lib/" + name + ".glsl");
     std::string source = io::read_string(file);
     addHeader(name, {});
-    addHeader(name, process(file, source, true));
+    addHeader(name, process(file, source, true, {}));
 }
 
 void GLSLExtension::addHeader(const std::string& name, ProcessingResult header) {
@@ -121,12 +125,18 @@ static PostEffect::Param::Value default_value_for(PostEffect::Param::Type type) 
 
 class GLSLParser : public BasicParser<char> {
 public:
-    GLSLParser(GLSLExtension& glsl, std::string_view file, std::string_view source, bool header) : BasicParser(file, source), glsl(glsl) {
+    GLSLParser(
+        GLSLExtension& glsl,
+        std::string_view file,
+        std::string_view source,
+        bool header,
+        const std::vector<std::string>& defines
+    ) : BasicParser(file, source), glsl(glsl) {
         if (!header) {
             ss << "#version " << GLSLExtension::VERSION << '\n';
-        }
-        for (auto& entry : glsl.getDefines()) {
-            ss << "#define " << entry.first << " " << entry.second << '\n';
+            for (auto& entry : defines) {
+                ss << "#define " << entry << '\n';
+            }
         }
         uint linenum = 1;
         source_line(ss, linenum);
@@ -281,11 +291,36 @@ private:
     std::stringstream ss;
 };
 
+static void trace_output(
+    const io::path& file,
+    const std::string& source,
+    const GLSLExtension::ProcessingResult& result
+) {
+    std::stringstream ss;
+    ss << "export:trace/" << file.name();
+    io::path outfile = ss.str();
+    try {
+        io::create_directories(outfile.parent());
+        io::write_string(outfile, result.code);
+    } catch (const std::runtime_error& err) {
+        LOG_ERROR(
+            "Error on saving GLSLExtension::preprocess output ({}): {}", outfile.string(), err.what()
+        );
+    }
+}
+
 GLSLExtension::ProcessingResult GLSLExtension::process(
-    const io::path& file, const std::string& source, bool header
+    const io::path& file,
+    const std::string& source,
+    bool header,
+    const std::vector<std::string>& defines
 ) {
     std::string filename = file.string();
-    GLSLParser parser(*this, filename, source, header);
-    return parser.process();
+    GLSLParser parser(*this, filename, source, header, defines);
+    auto result = parser.process();
+    if (traceOutput) {
+        trace_output(file, source, result);
+    }
+    return result;
 }
 

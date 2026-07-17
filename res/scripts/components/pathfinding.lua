@@ -6,7 +6,7 @@ local tsf = entity.transform
 
 agent = pathfinding.create_agent()
 pathfinding.set_max_visited(agent, 1e4)
-pathfinding.set_avoided_tags(agent, {"builtin:liquid"})
+pathfinding.avoid_tag(agent, "builtin:liquid", 8)
 
 function set_target(new_target)
     target = new_target

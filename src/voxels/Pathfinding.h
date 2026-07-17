@@ -63,7 +63,7 @@ namespace voxels {
         glm::ivec3 target;
         Route route;
         State state {};
-        std::set<int> avoidTags;
+        std::set<std::pair<int, int>> avoidTags;
     };
 
     class Pathfinding {
@@ -87,8 +87,10 @@ namespace voxels {
         std::unordered_map<int, Agent> agents;
         int nextAgent = 1;
 
-        int getSurfaceAt(const Agent& agent, const glm::ivec3& pos, int maxDelta);
+        int getSurfaceAt(
+            const Agent& agent, const glm::ivec3& pos, int maxDelta, float& cost
+        );
 
-        int checkPoint(const Agent& agent, int x, int y, int z);
+        int checkPoint(const Agent& agent, int x, int y, int z, int& cost);
     };
 }

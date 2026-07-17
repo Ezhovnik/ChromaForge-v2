@@ -141,6 +141,12 @@ void Engine::initializeClient() {
         },
         true
     ));
+    keepAlive(settings.debug.doTraceShaders.observe(
+        [](bool value) {
+            ShaderProgram::preprocessor->setTraceOutput(value);
+        },
+        true
+    ));
 }
 
 void Engine::initialize(CoreParameters coreParameters) {

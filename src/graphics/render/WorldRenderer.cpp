@@ -356,11 +356,12 @@ void WorldRenderer::renderFrame(
         prevCTShaderSettings.shadows != currentSettings.shadows ||
         prevCTShaderSettings.ssao != currentSettings.ssao
     ) {
-        ShaderProgram::preprocessor->setDefined("ENABLE_SHADOWS", currentSettings.shadows);
-        ShaderProgram::preprocessor->setDefined("ENABLE_SSAO", currentSettings.ssao);
-        ShaderProgram::preprocessor->setDefined("ADVANCED_RENDER", currentSettings.advancedRender);
+        std::vector<std::string> defines;
+        if (currentSettings.shadows) defines.emplace_back("ENABLE_SHADOWS");
+        if (currentSettings.ssao) defines.emplace_back("ENABLE_SSAO");
+        if (currentSettings.advancedRender) defines.emplace_back("ADVANCED_RENDER");
         for (auto shader : affectedShaders) {
-            shader->recompile();
+            shader->recompile(defines);
         }
         prevCTShaderSettings = currentSettings;
     }

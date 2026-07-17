@@ -72,7 +72,7 @@ bool Pathfinding::removeAgent(int id) {
 }
 
 void Pathfinding::performAllAsync(int stepsPerAgent) {
-    for (auto& [id, agent] : agents) {
+    for (auto& [_, agent] : agents) {
         if (agent.state.finished) continue;
         perform(agent, stepsPerAgent);
     }
@@ -151,8 +151,11 @@ Route Pathfinding::perform(Agent& agent, int maxVisited) {
             auto offset = neighbors[i];
             auto pos = node.pos;
 
-            int surface = getSurfaceAt(agent, pos + glm::ivec3(offset.x, 0, offset.y), 1);
-            if (surface == -1) continue;
+            float cost = glm::abs(node.pos.y - pos.y) * 10;
+            int surface = getSurfaceAt(
+                agent, pos + glm::ivec3(offset.x, 0, offset.y), 1, cost
+            );
+            if (surface == NonPassable) continue;
 
             pos.y = surface;
             auto point = pos + glm::ivec3(offset.x, 0, offset.y);
@@ -165,9 +168,8 @@ Route Pathfinding::perform(Agent& agent, int maxVisited) {
                 continue;
             }
 
-            int score = glm::abs(node.pos.y - pos.y) * 10;
             float sum = glm::abs(offset.x) + glm::abs(offset.y);
-            float gScore = node.gScore + sum + score;
+            float gScore = node.gScore + sum + cost;
             const auto& found = state.parents.find(point);
             if (found == state.parents.end()) {
                 float hScore = heuristic(point, agent.target);
@@ -197,14 +199,15 @@ const std::unordered_map<int, Agent>& Pathfinding::getAgents() const {
     return agents;
 }
 
-int Pathfinding::checkPoint(const Agent& agent, int x, int y, int z) {
+int Pathfinding::checkPoint(const Agent& agent, int x, int y, int z, int& cost) {
     auto vox = blocks_agent::get(chunks, x, y, z);
     if (vox == nullptr) return Obstacle;
 
     const auto& def = blockDefs.require(vox->id);
     if (def.obstacle) return Obstacle;
-    for (int tagIndex : agent.avoidTags) {
-        if (def.rt.tags.find(tagIndex) != def.rt.tags.end()) {
+    for (const auto& pair : agent.avoidTags) {
+        if (def.rt.tags.find(pair.first) != def.rt.tags.end()) {
+            cost = pair.second;
             return NonPassable;
         }
     }
@@ -212,23 +215,35 @@ int Pathfinding::checkPoint(const Agent& agent, int x, int y, int z) {
     return Passable;
 }
 
-int Pathfinding::getSurfaceAt(const Agent& agent, const glm::ivec3& pos, int maxDelta) {
-    using namespace blocks_agent;
-
+int Pathfinding::getSurfaceAt(
+    const Agent& agent, const glm::ivec3& pos, int maxDelta, float& cost
+) {
     int status;
     int surface = pos.y;
-    if (checkPoint(agent, pos.x, surface, pos.z) <= 0) {
-        if (checkPoint(agent, pos.x, surface + 1, pos.z) <= 0) {
+    int ncost = 0;
+    if ((status = checkPoint(agent, pos.x, surface, pos.z, ncost)) == Obstacle) {
+        if ((status = checkPoint(agent, pos.x, surface + 1, pos.z, ncost)) == Obstacle) {
             return NonPassable;
-        } else {
-            return surface + 1;
+        } else if (status == NonPassable) {
+            cost += 5;
         }
-    } else if ((status = checkPoint(agent, pos.x, surface - 1, pos.z)) <= 0) {
-        if (status == NonPassable) return NonPassable;
-        return surface;
-    } else if (checkPoint(agent, pos.x, surface - 2, pos.z) == 0) {
-        return surface - 1;
+        cost += ncost;
+        return surface + 1;
+    } else {
+        if (status == NonPassable) {
+            cost += 5;
+        }
+        if ((status = checkPoint(agent, pos.x, surface - 1, pos.z, ncost)) == Obstacle) {
+            cost += ncost;
+            return surface;
+        } else if (status == NonPassable) {
+            cost += 5;
+        }
+        if ((status = checkPoint(agent, pos.x, surface - 2, pos.z, ncost)) == Obstacle) {
+            cost += ncost;
+            return surface - 1;
+        }
+        return NonPassable;
     }
     return NonPassable;
 }
-

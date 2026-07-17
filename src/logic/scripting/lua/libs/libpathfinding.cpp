@@ -94,22 +94,15 @@ static int l_set_jump_height(lua::State* L) {
     return 0;
 }
 
-static int l_set_avoided_tags(lua::State* L) {
+static int l_avoid_tag(lua::State* L) {
     if (auto agent = get_agent(L)) {
-        if (!lua::istable(L, 2)) {
-            throw std::runtime_error("Array of tags expected");
-        }
-        agent->avoidTags.clear();
-        int len = lua::objlen(L, 2);
-        for (int i = 1; i <= len; ++i) {
-            lua::rawgeti(L, i);
-            if (lua::isstring(L, -1)) {
-                int index = scripting::content->getTagIndex(lua::tostring(L, -1));
-                if (index != -1) {
-                    agent->avoidTags.insert(index);
-                }
+        int index = scripting::content->getTagIndex(std::string(lua::require_lstring(L, 2)));
+        if (index != -1) {
+            int cost = lua::tonumber(L, 3);
+            if (cost == 0) {
+                cost = 10;
             }
-            lua::pop(L);
+            agent->avoidTags.insert({index, cost});
         }
     }
     return 0;
@@ -125,6 +118,6 @@ const luaL_Reg pathfindinglib[] = {
     {"pull_route", lua::wrap<l_pull_route>},
     {"set_max_visited", lua::wrap<l_set_max_visited_blocks>},
     {"set_jump_height", lua::wrap<l_set_jump_height>},
-    {"set_avoided_tags", lua::wrap<l_set_avoided_tags>},
+    {"avoid_tag", lua::wrap<l_avoid_tag>},
     {NULL, NULL}
 };
