@@ -186,7 +186,7 @@ Route Pathfinding::perform(Agent& agent, int maxVisited) {
     }
     state.finished = true;
     agent.state = std::move(state);
-    return {};
+    return finish_route(agent, std::move(agent.state));
 }
 
 Agent* Pathfinding::getAgent(int id) {

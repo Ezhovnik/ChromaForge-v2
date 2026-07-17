@@ -48,7 +48,7 @@ struct GraphicsSettings {
 };
 
 struct PathfindingSettings {
-    IntegerSetting stepsPerAsyncAgent {256, 1, 2048};
+    IntegerSetting stepsPerAsyncAgent {128, 1, 2048};
 };
 
 struct DebugSettings {

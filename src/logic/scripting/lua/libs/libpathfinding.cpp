@@ -47,7 +47,7 @@ static int l_make_route(lua::State* L) {
         auto start = lua::tovec3(L, 2);
         auto target = lua::tovec3(L, 3);
         agent->state = {};
-        agent->start = start;
+        agent->start = glm::floor(start);
         agent->target = target;
         auto route = scripting::level->pathfinding->perform(*agent);
         if (!route.found) return 0;
@@ -61,7 +61,7 @@ static int l_make_route_async(lua::State* L) {
         auto start = lua::tovec3(L, 2);
         auto target = lua::tovec3(L, 3);
         agent->state = {};
-        agent->start = start;
+        agent->start = glm::floor(start);
         agent->target = target;
         scripting::level->pathfinding->perform(*agent, 0);
     }
@@ -72,7 +72,7 @@ static int l_pull_route(lua::State* L) {
     if (auto agent = get_agent(L)) {
         auto& route = agent->route;
         if (!agent->state.finished) return 0;
-        if (!route.found) {
+        if (!route.found && !agent->mayBeIncomplete) {
             return lua::createtable(L, 0, 0);
         }
         return push_route(L, route);

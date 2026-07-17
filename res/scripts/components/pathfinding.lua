@@ -3,9 +3,10 @@ local route
 local started
 
 local tsf = entity.transform
+local body = entity.rigidbody
 
 agent = pathfinding.create_agent()
-pathfinding.set_max_visited(agent, 1e4)
+pathfinding.set_max_visited(agent, 1e3)
 pathfinding.avoid_tag(agent, "builtin:liquid", 8)
 
 function set_target(new_target)
@@ -24,11 +25,32 @@ function get_route()
     return route
 end
 
+function next_waypoint()
+    if not route or #route == 0 then
+        return
+    end
+    local waypoint = route[#route]
+    local pos = tsf:get_pos()
+    local dst = vec2.length({
+        math.floor(waypoint[1] - math.floor(pos[1])),
+        math.floor(waypoint[3] - math.floor(pos[3]))
+    })
+    if dst < 1.0 then
+        table.remove(route, #route)
+    end
+    return route[#route]
+end
+
+local frameid = 0
+
 function on_update()
     if not started then
-        if target then
-            pathfinding.make_route_async(agent, tsf:get_pos(), target)
-            started = true
+        if body:is_grounded() then
+            frameid = frameid + 1
+            if target and frameid % 100 == 1 then
+                pathfinding.make_route_async(agent, tsf:get_pos(), target)
+                started = true
+            end
         end
     else
         local new_route = pathfinding.pull_route(agent)

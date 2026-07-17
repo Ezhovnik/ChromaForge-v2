@@ -59,6 +59,13 @@ local Entity = {__index={
     get_skeleton=function(self) return entities.get_skeleton(self.eid) end,
     set_skeleton=function(self, s) return entities.set_skeleton(self.eid, s) end,
     get_component=function(self, name) return self.components[name] end,
+    require_component=function(self, name)
+        local component = self.components[name]
+        if not component then
+            error(("Entity has no required component '%s'"):format(name))
+        end
+        return component
+    end,
     has_component=function(self, name) return self.components[name] ~= nil end,
     get_uid=function(self) return self.eid end,
     def_index=function(self) return entities.get_def(self.eid) end,
