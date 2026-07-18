@@ -1,0 +1,67 @@
+#include <content/ContentPackVersion.h>
+
+#include <algorithm>
+#include <sstream>
+
+#include <coders/commons.h>
+
+Version::Version(const std::string& version) {
+    major = 0;
+    minor = 0;
+    maintenance = 0;
+
+    std::vector<int> parts;
+
+    std::stringstream ss(version);
+    std::string part;
+    while (std::getline(ss, part, '.')) {
+        if (!part.empty()) {
+            parts.push_back(std::stoi(part));
+        }
+    }
+
+    if (parts.size() > 0) major = parts[0];
+    if (parts.size() > 1) minor = parts[1];
+    if (parts.size() > 2) maintenance = parts[2];
+}
+
+DependencyVersionOperator Version::string_to_operator(const std::string& op) {
+    if (op == "=") {
+        return DependencyVersionOperator::Equal;
+    } else if (op == ">") {
+        return DependencyVersionOperator::More;
+    } else if (op == "<") {
+        return DependencyVersionOperator::Less;
+    } else if (op == ">=" || op == "=>") {
+        return DependencyVersionOperator::MoreOrEqual;
+    } else if (op == "<=" || op == "=<") {
+        return DependencyVersionOperator::LessOrEqual;
+    } else {
+        return DependencyVersionOperator::Equal;
+    }
+}
+
+bool isNumber(const std::string& s) {
+    return !s.empty() && std::all_of(s.begin(), s.end(), ::is_digit);
+}
+
+bool Version::matches_pattern(const std::string& version) {
+    for (char c : version) {
+        if (!isdigit(c) && c != '.') {
+            return false;
+        }
+    }
+
+    std::stringstream ss(version);
+
+    std::vector<std::string> parts;
+    std::string part;
+    while (std::getline(ss, part, '.')) {
+        if (part.empty()) return false;
+        if (!isNumber(part)) return false;
+
+        parts.push_back(part);
+    }
+
+    return parts.size() == 2 || parts.size() == 3;
+}

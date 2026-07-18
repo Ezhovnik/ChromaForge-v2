@@ -5,6 +5,7 @@
 
 #include <util/listutil.h>
 #include <debug/Logger.h>
+#include <content/ContentPackVersion.h>
 
 PacksManager::PacksManager() = default;
 
@@ -82,6 +83,23 @@ static bool resolve_dependencies (
         }
         if (!exists) continue;
         if (resolveWeaks && dep.level == DependencyLevel::Weak) continue;
+
+        auto dep_pack = found -> second;
+
+        if (Version::matches_pattern(dep.version) && Version::matches_pattern(dep_pack.version)
+            && Version(dep_pack.version).process_operator(dep.op, Version(dep.version))
+        ) {
+            continue;
+        } else if (dep.version == "*" || dep.version == dep_pack.version){
+            continue;
+        } else {
+            LOG_ERROR(
+                "Does not meet required version '{}{}' of '{}'", dep.op, dep.version, pack->id
+            );
+            throw contentpack_error(
+                dep.id, io::path(), "Does not meet required version '" + dep.op + dep.version +"' of '" + pack->id + "'"
+            );
+        }
 
         if (!util::contains(allNames, dep.id) && dep.level != DependencyLevel::Weak) { 
             allNames.push_back(dep.id);

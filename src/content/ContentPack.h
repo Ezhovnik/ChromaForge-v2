@@ -10,6 +10,11 @@
 
 class EnginePaths;
 
+enum class DependencyVersionOperator {
+    Equal, More, Less,
+    MoreOrEqual, LessOrEqual
+};
+
 enum class DependencyLevel {
     Required,
     Optional,
@@ -19,6 +24,8 @@ enum class DependencyLevel {
 struct DependencyPack {
     DependencyLevel level;
     std::string id;
+    std::string version;
+    std::string op;
 };
 
 class contentpack_error : public std::runtime_error {
