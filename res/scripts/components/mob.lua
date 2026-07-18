@@ -44,40 +44,31 @@ local dir = mat4.mul(tsf:get_rot(), {0, 0, -1})
 local flight = false
 
 function jump(multiplier)
-    if body:is_grounded() then
-        local vel = body:get_vel()
-        body:set_vel(
-            vec3.add(vel, {0, props.jump_force * (multiplier or 1.0), 0}, vel))
-    end
+    local vel = body:get_vel()
+    body:set_vel(vec3.add(vel, {0, props.jump_force * (multiplier or 1.0), 0}, vel))
 end
 
-function elevate(speed, delta, vel)
+function move_vertical(speed, vel)
     vel = vel or body:get_vel()
-    body:set_vel(
-        vec3.add(vel, {0, speed * delta * props.movement_speed, 0}, vel))
-end
-
-function lower(speed, delta, vel)
-    vel = vel or body:get_vel()
-    body:set_vel(
-        vec3.add(vel, {0, -speed * delta * props.movement_speed, 0}, vel))
+    vel[2] = vel[2] * 0.2 + props.movement_speed * speed * 0.8
+    body:set_vel(vel)
 end
 
 local function move_horizontal(speed, dir, vel)
     vel = vel or body:get_vel()
-    if vec3.length(dir) > 0.0 then
-        vec3.normalize(dir, dir)
+    if vec2.length(dir) > 0.0 then
+        vec2.normalize(dir, dir)
 
-        local magnitude = vec3.length({vel[1], 0, vel[3]})
+        local magnitude = vec2.length({vel[1], vel[3]})
 
-        if magnitude <= 1e-4 or (magnitude < speed or vec3.dot(
-            {vel[1] / magnitude, 0.0, vel[3] / magnitude}, dir) < 0.9)
+        if magnitude <= 1e-4 or (magnitude < speed or vec2.dot(
+            {vel[1] / magnitude, vel[3] / magnitude}, dir) < 0.9)
         then
-            vel[1] = vel[1] + dir[1] * speed * 0.8
-            vel[3] = vel[3] + dir[3] * speed * 0.8
+            vel[1] = vel[1] * 0.2 + dir[1] * speed * 0.8
+            vel[3] = vel[3] * 0.2 + dir[2] * speed * 0.8
         end
         magnitude = vec3.length({vel[1], 0, vel[3]})
-        if vec3.dot({vel[1] / magnitude, 0.0, vel[3] / magnitude}, dir) > 0.5 then
+        if vec2.dot({vel[1] / magnitude, vel[3] / magnitude}, dir) > 0.5 then
             vel[1] = vel[1] / magnitude * speed
             vel[3] = vel[3] / magnitude * speed
         end
@@ -128,6 +119,7 @@ function look_at(point, change_dir)
 end
 
 function follow_waypoints(pathfinding)
+    pathfinding = pathfinding or entity:require_component("builtin:pathfinding")
     local pos = tsf:get_pos()
     local waypoint = pathfinding.next_waypoint()
     if not waypoint then
@@ -142,7 +134,7 @@ function follow_waypoints(pathfinding)
     local upper = dir[2] > 0
     dir[2] = 0.0
     vec3.normalize(dir, dir)
-    move_horizontal(speed, dir, vel)
+    move_horizontal(speed, {dir[1], dir[3]}, vel)
     if upper and body:is_grounded() then
         jump(1.0)
     end
@@ -158,9 +150,7 @@ function set_flight(flag) flight = flag end
 
 local prev_angle = (vec2.angle({dir[3], dir[1]})) % 360
 
-function on_physics_update(tps)
-    local delta = (1.0 / tps)
-
+function on_physics_update(delta)
     local grounded = body:is_grounded()
     body:set_vdamping(flight)
     body:set_gravity_scale({0, flight and 0.0 or props.gravity_scale, 0})
@@ -183,8 +173,4 @@ function on_physics_update(tps)
 
     tsf:set_rot(mat4.rotate({0, 1, 0}, angle + 180))
     prev_angle = angle
-
-    if entity:get_player() == -1 then
-        look_at({player.get_pos(hud.get_player())})
-    end
 end

@@ -265,8 +265,9 @@ void ContentLoader::loadContent(const dv::value& root) {
             item.iconType = ItemIconType::Block;
             item.icon = def.name;
             item.placingBlock = def.name;
-    
-            for (uint j = 0; j < 4; j++) {
+            item.tags = def.tags;
+
+            for (uint j = 0; j < 4; ++j) {
                 item.emission[j] = def.emission[j];
             }
         }

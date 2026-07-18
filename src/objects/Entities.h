@@ -38,7 +38,6 @@ private:
     entityid_t nextID = 1;
     util::Clock sensorsSparkClock;
     util::Clock updateSparkClock;
-    util::Clock physicsSparkClock;
 
     void updateSensors(
         Rigidbody& body, const Transform& tsf, std::vector<Sensor*>& sensors

@@ -20,4 +20,5 @@ void Item::cloneTo(Item& dst) {
     dst.modelName = modelName;
     dst.uses = uses;
     dst.usesDisplay = usesDisplay;
+    dst.tags = tags;
 }

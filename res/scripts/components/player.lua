@@ -37,22 +37,21 @@ local function process_player_inputs(pid, delta)
     if isleft then vec3.sub(dir, right, dir) end
 
     if vec3.length(dir) > 0.0 then
-        mob.go(dir, speed, issprint, iscrouch, vel)
+        mob.go({dir[1], dir[3]}, speed, issprint, iscrouch, vel)
     end
 
     if mob.is_flight() then
         if isjump then
-            mob.elevate(speed * 24, delta)
+            mob.move_vertical(speed * 4)
         elseif iscrouch then
-            mob.lower(speed * 24, delta)
+            mob.move_vertical(-speed * 4)
         end
-    elseif isjump then
+    elseif body:is_grounded() and isjump then
         mob.jump()
     end
 end
 
-function on_physics_update(tps)
-    local delta = (1.0 / tps)
+function on_physics_update(delta)
     local pid = entity:get_player()
     if pid ~= -1 then
         local pos = tsf:get_pos()

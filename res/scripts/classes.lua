@@ -73,6 +73,38 @@ local _tcp_client_callbacks = {}
 local _udp_server_callbacks = {}
 local _udp_client_datagram_callbacks = {}
 local _udp_client_open_callbacks = {}
+local _http_response_callbacks = {}
+local _http_error_callbacks = {}
+
+network.get = function(url, callback, errorCallback, headers)
+    local id = network.__get(url, headers)
+    if callback then
+        _http_response_callbacks[id] = callback
+    end
+    if errorCallback then
+        _http_error_callbacks[id] = errorCallback
+    end
+end
+
+network.get_binary = function(url, callback, errorCallback, headers)
+    local id = network.__get_binary(url, headers)
+    if callback then
+        _http_response_callbacks[id] = callback
+    end
+    if errorCallback then
+        _http_error_callbacks[id] = errorCallback
+    end
+end
+
+network.post = function(url, data, callback, errorCallback, headers)
+    local id = network.__post(url, data, headers)
+    if callback then
+        _http_response_callbacks[id] = callback
+    end
+    if errorCallback then
+        _http_error_callbacks[id] = errorCallback
+    end
+end
 
 network.tcp_open = function (port, handler)
     local socket = setmetatable({id=network.__open_tcp(port)}, ServerSocket)
@@ -134,6 +166,7 @@ network.__process_events = function()
     local CLIENT_CONNECTED = 1
     local CONNECTED_TO_SERVER = 2
     local DATAGRAM = 3
+    local RESPONSE = 4
 
     local ON_SERVER = 1
     local ON_CLIENT = 2
@@ -158,6 +191,22 @@ network.__process_events = function()
                 _udp_client_datagram_callbacks[cid](data)
             elseif side == ON_SERVER then
                 _udp_server_callbacks[sid](addr, port, data)
+            end
+        elseif etype == RESPONSE then
+            if event[2] / 100 == 2 then
+                local callback = _http_response_callbacks[event[3]]
+                _http_response_callbacks[event[3]] = nil
+                _http_error_callbacks[event[3]] = nil
+                if callback then
+                    callback(event[4])
+                end
+            else
+                local callback = _http_error_callbacks[event[3]]
+                _http_response_callbacks[event[3]] = nil
+                _http_error_callbacks[event[3]] = nil
+                if callback then
+                    callback(event[2])
+                end
             end
         end
 

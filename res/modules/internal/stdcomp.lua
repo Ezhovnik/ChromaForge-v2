@@ -129,21 +129,17 @@ return {
             ::continue::
         end
     end,
-    physics_update = function(tps, parts, part)
+    physics_update = function(delta)
         for uid, entity in pairs(entities) do
-            if uid % parts ~= part then
-                goto continue
-            end
             for _, component in pairs(entity.components) do
                 local callback = component.on_physics_update
                 if not component.__disabled and callback then
-                    local result, err = pcall(callback, tps)
+                    local result, err = pcall(callback, delta)
                     if err then
                         debug.error(err)
                     end
                 end
             end
-            ::continue::
         end
     end,
     render = function(delta)

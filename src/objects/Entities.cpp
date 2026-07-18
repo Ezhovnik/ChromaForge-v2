@@ -27,8 +27,7 @@ Entities::Entities(
     Level& level
 ) : level(level),
     sensorsSparkClock(20, 3),
-    updateSparkClock(20, 3),
-    physicsSparkClock(60, 1) {}
+    updateSparkClock(20, 3) {}
 
 std::optional<Entt_Entity> Entities::get(entityid_t id) {
     const auto& found = entities.find(id);
@@ -210,13 +209,8 @@ void Entities::update(float delta) {
             updateSparkClock.getPart()
         );
     }
-    if (physicsSparkClock.update(delta)) {
-        scripting::on_entities_physics_update(
-            physicsSparkClock.getSparkRate(),
-            physicsSparkClock.getParts(),
-            physicsSparkClock.getPart()
-        );
-    }
+    updatePhysics(delta);
+    scripting::on_entities_physics_update(delta);
 }
 
 static void debug_render_skeleton(

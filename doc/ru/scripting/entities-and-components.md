@@ -193,6 +193,12 @@ function on_update(tps: int)
 Вызывается каждый такт сущностей (на данный момент - 20 раз в секунду).
 
 ```lua
+function on_physics_update(delta: number)
+```
+
+Вызывается после каждого шага физики
+
+```lua
 function on_render(delta: number)
 ```
 
