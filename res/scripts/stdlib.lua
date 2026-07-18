@@ -78,12 +78,19 @@ local function complete_app_lib(app)
         coroutine.yield()
     end
 
-    function app.sleep_until(predicate, max_sparks)
+    function app.sleep_until(predicate, max_sparks, max_time)
         max_sparks = max_sparks or 1e9
+        max_time = max_time or 1e9
         local sparks = 0
-        while sparks < max_sparks and not predicate() do
+        local start_time = os.clock()
+        while sparks < max_sparks and
+            os.clock() - start_time < max_time
+            and not predicate() do
             app.spark()
             sparks = sparks + 1
+        end
+        if os.clock() - start_time >= max_time then
+            error("timeout")
         end
         if sparks == max_sparks then
             error("Max sparks exceed")
@@ -173,6 +180,7 @@ if enable_experimental then
     require "builtin:internal/maths_inline"
 end
 
+asserts = require "builtin:internal/asserts"
 events = require "builtin:internal/events"
 
 function pack.unload(prefix)
@@ -531,15 +539,17 @@ function start_coroutine(chunk, name)
     local co = coroutine.create(function()
         local status, error = xpcall(chunk, function(err)
             local fullmsg = "Error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
-            gui.alert(fullmsg, function()
-                if world.is_open() then
-                    __chroma_app.close_world()
-                else
-                    __chroma_app.reset_content()
-                    menu:reset()
-                    menu.page = "main"
-                end
-            end)
+            if hud then
+                gui.alert(fullmsg, function()
+                    if world.is_open() then
+                        __chroma_app.close_world()
+                    else
+                        __chroma_app.reset_content()
+                        menu:reset()
+                        menu.page = "main"
+                    end
+                end)
+            end
             return fullmsg
         end)
         if not status then
