@@ -182,7 +182,7 @@ public:
             auto message = curl_multi_strerror(res);
             LOG_ERROR("{} ({})", message, url);
             if (onReject) {
-                onReject(HTTP_BAD_GATEWAY);
+                onReject(HTTP_BAD_GATEWAY, {});
             }
             url = "";
         }
@@ -197,7 +197,7 @@ public:
             auto message = curl_multi_strerror(res);
             LOG_ERROR("{} ({})", message, url);
             if (onReject) {
-                onReject(HTTP_BAD_GATEWAY);
+                onReject(HTTP_BAD_GATEWAY, {});
             }
             curl_multi_remove_handle(multiHandle, curl);
             url = "";
@@ -222,9 +222,14 @@ public:
                     onResponse(std::move(buffer));
                 }
             } else {
-                LOG_ERROR("Response code: {} ({})", response, url);
+                LOG_ERROR(
+                    "Response code: {} ({}) {}",
+                    response,
+                    url,
+                    (buffer.empty() ? "" : std::to_string(buffer.size()) + " byte(s)")
+                );
                 if (onReject) {
-                    onReject(response);
+                    onReject(response, std::move(buffer));
                 }
             }
             url = "";

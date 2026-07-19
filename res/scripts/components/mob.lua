@@ -23,7 +23,7 @@ def_prop("ground_damping", 1.0)
 def_prop("movement_speed", 3.0)
 def_prop("run_speed_mul", 1.5)
 def_prop("crouch_speed_mul", 0.35)
-def_prop("flight_speed_mul", 4.0)
+def_prop("flight_speed_mul", 2.0)
 def_prop("gravity_scale", 1.0)
 
 local function normalize_angle(angle)
@@ -99,8 +99,8 @@ function look_at(point, change_dir)
     if dot < 0.0 and not change_dir then
         viewdir = mat4.mul(tsf:get_rot(), {0, 0, -1})
     else
-        dir[1] = dir[1] * 0.8 + viewdir[1] * 0.2
-        dir[3] = dir[3] * 0.8 + viewdir[3] * 0.2
+        dir[1] = dir[1] * 0.8 + viewdir[1] * 0.13
+        dir[3] = dir[3] * 0.8 + viewdir[3] * 0.13
     end
 
     if not headIndex then

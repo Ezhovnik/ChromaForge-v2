@@ -2,7 +2,7 @@ local tsf = entity.transform
 local body = entity.rigidbody
 local mob = entity:require_component("builtin:mob")
 
-local cheat_speed_mul = 5.0
+local cheat_speed_mul = 10.0
 
 local function process_player_inputs(pid, delta)
     if not hud or hud.is_inventory_open() or menu.page ~= "" then
@@ -42,9 +42,9 @@ local function process_player_inputs(pid, delta)
 
     if mob.is_flight() then
         if isjump then
-            mob.move_vertical(speed * 4)
+            mob.move_vertical(speed * 3)
         elseif iscrouch then
-            mob.move_vertical(-speed * 4)
+            mob.move_vertical(-speed * 3)
         end
     elseif body:is_grounded() and isjump then
         mob.jump()

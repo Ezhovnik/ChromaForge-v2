@@ -87,27 +87,26 @@ static int perform_get(lua::State* L, network::Network& network, bool binary) {
 
     int currentRequestId = request_id++;
 
-    network.get(url, [currentRequestId, binary](std::vector<char> bytes) {
-        push_event(NetworkEvent(
-            RESPONSE,
-            ResponseEventDto {
-                200,
-                binary,
-                currentRequestId,
-                std::move(bytes)
-            }
-        ));
-    }, [currentRequestId](int code) {
-        push_event(NetworkEvent(
-            RESPONSE,
-            ResponseEventDto {
-                code,
-                false,
-                currentRequestId,
-                {}
-            }
-        ));
-    }, std::move(headers));
+    network.get(
+        url,
+        [currentRequestId, binary](std::vector<char> bytes) {
+            push_event(NetworkEvent(
+                RESPONSE,
+                ResponseEventDto {
+                    200, binary, currentRequestId, std::move(bytes)
+                }
+            ));
+        },
+        [currentRequestId, binary](int code, std::vector<char> bytes) {
+            push_event(NetworkEvent(
+                RESPONSE,
+                ResponseEventDto {
+                    code, binary, currentRequestId, std::move(bytes)
+                }
+            ));
+        },
+        std::move(headers)
+    );
     return lua::pushinteger(L, currentRequestId);
 }
 
@@ -137,21 +136,19 @@ static int l_post(lua::State* L, network::Network& network) {
         url,
         string,
         [currentRequestId](std::vector<char> bytes) {
-            auto buffer = std::make_shared<util::Buffer<ubyte>>(
-                reinterpret_cast<const ubyte*>(bytes.data()), bytes.size()
-            );
             push_event(NetworkEvent(
                 RESPONSE,
                 ResponseEventDto {
-                    200,
-                    false,
-                    currentRequestId,
-                    std::vector<char>(buffer->begin(), buffer->end())}
+                    200, false, currentRequestId, std::move(bytes)
+                }
             ));
         },
-        [currentRequestId](int code) {
+        [currentRequestId](int code, std::vector<char> bytes) {
             push_event(NetworkEvent(
-                RESPONSE, ResponseEventDto {code, false, currentRequestId, {}}
+                RESPONSE,
+                ResponseEventDto {
+                    code, false, currentRequestId, std::move(bytes)
+                }
             ));
         },
         std::move(headers)

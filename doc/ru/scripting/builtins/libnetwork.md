@@ -11,9 +11,9 @@ network.get(
     -- Функция, вызываемая при получении ответа
     callback: function(str),
     -- Обработчик ошибок
-    [опционально] onfailure: function(int),
+    [опционально] onfailure: function(int, str),
     -- Список дополнительных заголовков запроса
-    [опционально] headers: table<string>
+    [опционально] headers: table<str>
 )
 
 -- Пример:
@@ -24,9 +24,9 @@ end)
 -- Вариант для двоичных файлов, с массивом байт вместо строки в ответе.
 network.get_binary(
     url: str,
-    callback: function(table|ByteArray),
-    [опционально] onfailure: function(int),
-    [опционально] headers: table<string>
+    callback: function(ByteArray),
+    [опционально] onfailure: function(int, Bytearray),
+    [опционально] headers: table<str>
 )
 
 -- Выполняет POST запрос к указанному URL.
@@ -36,13 +36,13 @@ network.get_binary(
 network.post(
     url: str,
     -- Тело запроса в виде таблицы, конвертируемой в JSON или строки
-    body: table|string,
+    body: table|str,
     -- Функция, вызываемая при получении ответа
     callback: function(str),
     -- Обработчик ошибок
-    [опционально] onfailure: function(int),
+    [опционально] onfailure: function(int, str),
     -- Список дополнительных заголовков запроса
-    [опционально] headers: table<string>
+    [опционально] headers: table<str>
 )
 ```
 

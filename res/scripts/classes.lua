@@ -274,7 +274,7 @@ network.__process_events = function()
                 _http_response_callbacks[event[3]] = nil
                 _http_error_callbacks[event[3]] = nil
                 if callback then
-                    callback(event[2])
+                    callback(event[2], event[4])
                 end
             end
         end

@@ -11,7 +11,7 @@
 
 namespace network {
     using OnResponse = std::function<void(std::vector<char>)>;
-    using OnReject = std::function<void(int)>;
+    using OnReject = std::function<void(int, std::vector<char>)>;
     using ConnectCallback = std::function<void(uint64_t, uint64_t)>;
     using ServerDatagramCallback = std::function<void(uint64_t sid, const std::string& addr, int port, const char* buffer, size_t length)>;
     using ClientDatagramCallback = std::function<void(uint64_t cid, const char* buffer, size_t length)>;
