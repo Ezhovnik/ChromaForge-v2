@@ -111,8 +111,8 @@ function on_render()
     end
 end
 
-function on_update(tps)
-    timer = timer - 1.0 / tps
+function on_update(sps)
+    timer = timer - 1.0 / sps
     if timer > 0.0 or target == -1 then
         return
     end

@@ -41,17 +41,24 @@ function on_random_update(x, y, z)
 Вызывается в случайные моменты времени (рост травы на блоках земли)  
 
 ```lua
-function on_blocks_spark(tps: int)
+function on_blocks_spark(sps: int)
 ```
 
-Вызывается tps (20) раз в секунду
-Вызывается tps (20) раз в секунду. Используйте 1/tps вместо `time.delta()`.
+Вызывается sps (20) раз в секунду
+Вызывается sps (20) раз в секунду. Используйте 1/sps вместо `time.delta()`.
 
 ```lua
-function on_player_spark(playerid: int, tps: int)
+function on_block_spark(x, y, z, sps: number)
 ```
 
-Вызывается tps (20) раз в секунду. Используйте 1/tps вместо `time.delta()`.
+Вызывается sps (20 / spark-interval) раз в секунду для конкретного блока.
+Используйте 1/sps вместо `time.delta()`.
+
+```lua
+function on_player_spark(playerid: int, sps: int)
+```
+
+Вызывается sps (20) раз в секунду. Используйте 1/sps вместо `time.delta()`.
 
 ## События предметов
 

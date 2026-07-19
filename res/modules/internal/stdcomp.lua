@@ -112,7 +112,7 @@ return {
             entities[eid] = nil;
         end
     end,
-    update = function(tps, parts, part)
+    update = function(sps, parts, part)
         for uid, entity in pairs(entities) do
             if uid % parts ~= part then
                 goto continue
@@ -120,7 +120,7 @@ return {
             for _, component in pairs(entity.components) do
                 local callback = component.on_update
                 if not component.__disabled and callback then
-                    local result, err = pcall(callback, tps)
+                    local result, err = pcall(callback, sps)
                     if err then
                         debug.error(err)
                     end

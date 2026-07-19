@@ -27,6 +27,7 @@
 #include <voxels/Chunk.h>
 #include <content/ContentControl.h>
 #include <world/World.h>
+#include <voxels/blocks_agent.h>
 
 std::ostream* scripting::output_stream = &std::cout;
 std::ostream* scripting::error_stream = &std::cerr;
@@ -350,10 +351,10 @@ void scripting::cleanup() {
     }
 }
 
-void scripting::on_blocks_spark(const Block& block, int tps) {
+void scripting::on_blocks_spark(const Block& block, int sps) {
     std::string name = block.name + ".blocksspark";
-    lua::emit_event(lua::get_main_state(), name, [tps] (auto L) {
-        return lua::pushinteger(L, tps);
+    lua::emit_event(lua::get_main_state(), name, [sps] (auto L) {
+        return lua::pushinteger(L, sps);
     });
 }
 
@@ -454,6 +455,7 @@ void scripting::on_chunk_present(const Chunk& chunk, bool loaded) {
             );
         }
     }
+    blocks_agent::on_chunk_present(*content->getIndices(), chunk);
 }
 
 void scripting::on_chunk_remove(const Chunk& chunk) {
@@ -468,6 +470,7 @@ void scripting::on_chunk_remove(const Chunk& chunk) {
             );
         }
     }
+    blocks_agent::on_chunk_remove(*content->getIndices(), chunk);
 }
 
 void scripting::on_inventory_open(const Player* player, const Inventory& inventory) {
@@ -500,10 +503,10 @@ void scripting::on_inventory_closed(const Player* player, const Inventory& inven
     }
 }
 
-void scripting::on_player_spark(Player* player, int tps) {
+void scripting::on_player_spark(Player* player, int sps) {
     auto args = [=](lua::State* L) {
         lua::pushinteger(L, player ? player->getId() : -1);
-        lua::pushinteger(L, tps);
+        lua::pushinteger(L, sps);
         return 2;
     };
     for (auto& [packid, pack] : scripting::content->getPacks()) {
@@ -616,6 +619,7 @@ void scripting::load_content_script(
     funcsset.onplaced = register_event(env, "on_placed", prefix + ".placed");
     funcsset.onreplaced = register_event(env, "on_replaced", prefix + ".replaced");
     funcsset.oninteract = register_event(env, "on_interact", prefix + ".interact");
+    funcsset.onblockspark = register_event(env, "on_block_spark", prefix + ".blockspark");
     funcsset.onblocksspark = register_event(env, "on_blocks_spark", prefix + ".blocksspark");
 }
 

@@ -480,7 +480,7 @@ namespace lua {
 
     inline bool getfield(lua::State* L, const std::string& name, int idx=-1) {
         lua_getfield(L, idx, name.c_str());
-        if (isnil(L, idx)) {
+        if (isnoneornil(L, -1)) {
             pop(L);
             return false;
         }

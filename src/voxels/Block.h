@@ -77,6 +77,7 @@ struct BlockFuncsSet {
     bool onreplaced : 1;
     bool oninteract : 1;
     bool randupdate : 1;
+    bool onblockspark : 1;
     bool onblocksspark : 1;
 };
 

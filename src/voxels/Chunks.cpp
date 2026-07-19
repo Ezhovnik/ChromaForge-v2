@@ -175,8 +175,8 @@ void Chunks::eraseSegments(const Block& def, blockstate state, int x, int y, int
     blocks_agent::erase_segments(*this, def, state, x, y, z);
 }
 
-void Chunks::repairSegments(const Block& def, blockstate state, int x, int y, int z) {
-    blocks_agent::repair_segments(*this, def, state, x, y, z);
+void Chunks::restoreSegments(const Block& def, blockstate state, int x, int y, int z) {
+    blocks_agent::restore_segments(*this, def, state, x, y, z);
 }
 
 void Chunks::setVoxel(int32_t x, int32_t y, int32_t z, blockid_t id, blockstate state) {

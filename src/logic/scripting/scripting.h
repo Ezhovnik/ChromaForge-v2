@@ -88,7 +88,7 @@ namespace scripting {
     void on_world_save();
     void on_world_quit();
     void cleanup();
-    void on_blocks_spark(const Block& block, int tps);
+    void on_blocks_spark(const Block& block, int sps);
     void update_block(const Block& block, const glm::ivec3& pos);
     void random_update_block(const Block& block, const glm::ivec3& pos);
     void on_block_placed(Player* player, const Block& block, const glm::ivec3& pos);
@@ -103,7 +103,7 @@ namespace scripting {
     void on_inventory_open(const Player* player, const Inventory& inventory);
     void on_inventory_closed(const Player* player, const Inventory& inventory);
 
-    void on_player_spark(Player* player, int tps);
+    void on_player_spark(Player* player, int sps);
 
     bool on_item_use(Player* player, const Item& item);
     bool on_item_use_on_block(Player* player, const Item& item, glm::ivec3 ipos, glm::ivec3 normal);
