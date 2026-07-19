@@ -19,21 +19,21 @@
 #include <engine/Engine.h>
 #include <content/ContentControl.h>
 
-static inline const Block* require_block(lua::State* L) {
+static inline const Block* get_block_def(lua::State* L) {
     auto indices = scripting::content->getIndices();
     auto id = lua::tointeger(L, 1);
     return indices->blocks.get(id);
 }
 
 static inline int l_get_def(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         return lua::pushstring(L, def->name);
     }
     return 0;
 }
 
 static int l_material(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         return lua::pushstring(L, def->material);
     }
     return 0;
@@ -59,14 +59,14 @@ static int l_index(lua::State* L) {
 }
 
 static int l_is_extended(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         return lua::pushboolean(L, def->rt.extended);
     }
     return 0;
 }
 
 static int l_get_size(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         return lua::pushivec_stack(L, glm::ivec3(def->size));
     }
     return 0;
@@ -331,14 +331,14 @@ static int l_is_replaceable_at(lua::State* L) {
 }
 
 static int l_caption(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         return lua::pushstring(L, def->caption);
     }
     return 0;
 }
 
 static int l_get_textures(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         lua::createtable(L, 6, 0);
         for (size_t i = 0; i < 6; ++i) {
             lua::pushstring(L, def->defaults.textureFaces[i]);
@@ -350,7 +350,7 @@ static int l_get_textures(lua::State* L) {
 }
 
 static int l_model_name(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         // TODO: variant argument
         const auto& modelName = def->defaults.model.name;
         if (modelName.empty()) {
@@ -362,7 +362,7 @@ static int l_model_name(lua::State* L) {
 }
 
 static int l_get_model(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         // TODO: variant argument
         return lua::pushlstring(L, BlockModelTypeMeta.getName(def->defaults.model.type));
     }
@@ -370,7 +370,7 @@ static int l_get_model(lua::State* L) {
 }
 
 static int l_get_hitbox(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         size_t rotation = lua::tointeger(L, 2);
         if (def->rotatable) {
             rotation %= def->rotations.MAX_COUNT;
@@ -391,14 +391,14 @@ static int l_get_hitbox(lua::State* L) {
 }
 
 static int l_get_rotation_profile(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         return lua::pushstring(L, def->rotations.name);   
     }
     return 0;
 }
 
 static int l_get_picking_item(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         return lua::pushinteger(L, def->rt.pickingItem);   
     }
     return 0;
@@ -678,10 +678,23 @@ static int l_reload_script(lua::State* L) {
 }
 
 static int l_has_tag(lua::State* L) {
-    if (auto def = require_block(L)) {
+    if (auto def = get_block_def(L)) {
         auto tag = lua::require_string(L, 2);
         const auto& tags = def->rt.tags;
         return lua::pushboolean(L, tags.find(scripting::content->getTagIndex(tag)) != tags.end());
+    }
+    return 0;
+}
+
+static int l_get_tags(lua::State* L) {
+    if (auto def = get_block_def(L)) {
+        if (def->tags.empty()) return 0;
+        lua::createtable(L, 0, def->tags.size());
+        for (const auto& tag : def->tags) {
+            lua::pushboolean(L, true);
+            lua::setfield(L, tag);
+        }
+        return 1;
     }
     return 0;
 }
@@ -742,6 +755,7 @@ const luaL_Reg blocklib [] = {
     {"set_field", lua::wrap<l_set_field>},
     {"reload_script", lua::wrap<l_reload_script>},
     {"has_tag", lua::wrap<l_has_tag>},
+    {"__get_tags", lua::wrap<l_get_tags>},
     {"__pull_register_events", lua::wrap<l_pull_register_events>},
     {NULL, NULL}
 };

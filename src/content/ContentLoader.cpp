@@ -380,6 +380,24 @@ void ContentLoader::load() {
         loadContent(io::read_json(contentFile));
     }
 
+    io::path tagsFile = folder / "tags.toml";
+    if (io::exists(tagsFile)) {
+        auto tagsMap = io::read_object(tagsFile);
+        for (const auto& [key, list] : tagsMap.asObject()) {
+            for (const auto& id : list) {
+                const auto& stringId = id.asString();
+                if (auto block = builder.blocks.get(stringId)) {
+                    block->tags.push_back(key);
+                    if (auto item = builder.items.get(stringId + BLOCK_ITEM_SUFFIX)) {
+                        item->tags.push_back(key);
+                    }
+                } else if (auto item = builder.items.get(stringId)) {
+                    item->tags.push_back(key);
+                }
+            }
+        }
+    }
+
     LOG_INFO("Successfully loaded content pack [{}]", pack->id);
 }
 

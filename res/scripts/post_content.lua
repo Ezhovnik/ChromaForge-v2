@@ -13,28 +13,19 @@ for name, _ in pairs(user_props) do
     table.insert(names, name)
 end
 
-local function process_properties(properties)
-    for id, props in pairs(properties) do
-        local tags_set = nil
-        for propname, value in pairs(props) do
-            if propname == "tags" then
-                if #value > 0 then
-                    tags_set = tags_set or {}
-                end
-                for _, tag in ipairs(value) do
-                    tags_set[tag] = true
-                end
-            end
+local function process_properties(lib)
+    for id, props in pairs(lib.properties) do
+        for propname, _ in pairs(props) do
             if not table.has(names, propname) then
                 props[propname] = nil
             end
         end
-        props.tags_set = tags_set
+        props.tags_set = lib.__get_tags(id)
     end
 end
 
-process_properties(block.properties)
-process_properties(item.properties)
+process_properties(block)
+process_properties(item)
 
 local function make_read_only(t)
     setmetatable(t, {
@@ -67,7 +58,11 @@ local function cache_names(library)
     end
 
     function library.has_tag(id, tag)
-        local tags_set = library.properties[id].tags_set
+        if id == nil then
+            error("ID is nil")
+        end
+        local props = library.properties[id]
+        local tags_set = props.tags_set
         if tags_set then
             return tags_set[tag]
         else
