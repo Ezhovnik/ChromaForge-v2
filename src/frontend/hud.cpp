@@ -214,6 +214,9 @@ Hud::Hud(
 }
 
 Hud::~Hud() {
+    if (input.isCursorLocked()) {
+        input.toggleCursor();
+    }
     for (auto& element : elements) {
         onRemove(element);
     }
@@ -336,7 +339,7 @@ void Hud::update(bool hudVisible) {
 
 	if (!guiController.isFocusCaught()) processInput(hudVisible);
 
-	if ((isMenuOpen || inventoryOpen) == input.getCursor().locked) {
+	if ((isMenuOpen || inventoryOpen) == input.isCursorLocked()) {
         input.toggleCursor();
     }
 
