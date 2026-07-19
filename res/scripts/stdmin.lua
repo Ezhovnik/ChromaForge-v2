@@ -658,3 +658,5 @@ end
 
 bit.compile = require "builtin:bitwise/compiler"
 bit.execute = require "builtin:bitwise/executor"
+
+random.Random = require "builtin:internal/random_generator"

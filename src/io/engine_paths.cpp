@@ -20,7 +20,7 @@ static std::string generate_random_base64() {
     auto now = std::chrono::high_resolution_clock::now();
     auto seed = now.time_since_epoch().count();
 
-    PseudoRandom random(seed); // FIXME: Replace with safe random
+    util::PseudoRandom random(seed); // FIXME: Replace with safe random
     ubyte bytes[n];
     random.rand(bytes, n);
     return util::base64_urlsafe_encode(bytes, n);

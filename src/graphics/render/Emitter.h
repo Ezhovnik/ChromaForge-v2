@@ -35,7 +35,7 @@ class Emitter {
     const Texture* texture;
     int count;
     float timer = 0.0f;
-    PseudoRandom random;
+    util::PseudoRandom random;
 public:
     int refCount = 0;
     ParticlesPreset preset;

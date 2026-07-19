@@ -249,7 +249,7 @@ void WorldGenerator::generateStructures(
     );
     placeStructures(placements, prototype, chunkX, chunkZ);
 
-    PseudoRandom structsRand;
+    util::PseudoRandom structsRand;
     structsRand.setSeed(chunkX, chunkZ);
 
     auto heights = heightmap->getValues();
@@ -363,7 +363,7 @@ void WorldGenerator::generatePlants(
     const Biome** biomes
 ) {
     const auto& indices = content.getIndices()->blocks;
-    PseudoRandom plantsRand;
+    util::PseudoRandom plantsRand;
     plantsRand.setSeed(chunkX, chunkZ);
 
     for (uint z = 0; z < CHUNK_DEPTH; ++z) {

@@ -40,7 +40,7 @@ class Skybox {
     std::unique_ptr<Framebuffer> fbo;
     uint size;
     ShaderProgram& shader;
-    FastRandom random;
+    util::FastRandom random;
     glm::vec3 lightDir;
 
     std::unique_ptr<Mesh<SkyboxVertex>> mesh;

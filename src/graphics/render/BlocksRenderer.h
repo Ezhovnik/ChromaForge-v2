@@ -10,9 +10,9 @@
 #include <voxels/Chunk.h>
 #include <voxels/VoxelsVolume.h>
 #include <core_content_defs.h>
-#include <math/rand.h>
 #include <graphics/render/commons.h>
 #include <settings.h>
+#include <math/rand.h>
 
 template<typename VertexStructure> class Mesh;
 class Content;
@@ -54,7 +54,7 @@ private:
 	const ContentGfxCache& cache;
     const EngineSettings& settings;
 
-    PseudoRandom randomizer;
+    util::PseudoRandom randomizer;
 
     SortingMeshData sortingMesh;
 

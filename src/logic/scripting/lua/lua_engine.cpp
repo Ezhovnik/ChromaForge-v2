@@ -48,6 +48,7 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "mat4", mat4lib);
     openlib(L, "pack", packlib);
     openlib(L, "quat", quatlib);
+    openlib(L, "random", randomlib);
     openlib(L, "toml", tomllib);
     openlib(L, "utf8", utf8lib);
     openlib(L, "vec2", vec2lib);

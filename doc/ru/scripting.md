@@ -35,6 +35,7 @@
   - [pathfinding](scripting/builtins/libpathfinding.md)
   - [player](scripting/builtins/libplayer.md)
   - [quat](scripting/builtins/libquat.md)
+  - [random](scripting/builtins/librandom.md)
   - [rules](scripting/builtins/librules.md)
   - [time](scripting/builtins/libtime.md)
   - [utf8](scripting/builtins/libutf8.md)

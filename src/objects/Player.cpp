@@ -105,9 +105,9 @@ void Player::postUpdate() {
 void Player::attemptToFindSpawnpoint() {
 	// Генерируем случайную позицию в окрестности текущей
 	glm::vec3 newpos {
-		position.x + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), 
-		RandomGenerator::get<int>(0, RAND_MAX) % 80 + 100, 
-		position.z + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
+		position.x + (util::RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), // TODO: Replace util::RandomGenerator to other
+		util::RandomGenerator::get<int>(0, RAND_MAX) % 80 + 100, 
+		position.z + (util::RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
 	};
 
 	// Опускаемся вниз, пока не найдём твёрдый блок под ногами

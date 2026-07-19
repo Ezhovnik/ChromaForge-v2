@@ -15,7 +15,7 @@ class Inventories {
 private:
     Level& level;
     inventories_map map;
-    PseudoRandom random;
+    util::PseudoRandom random;
 public:
     Inventories(Level& level);
     ~Inventories();

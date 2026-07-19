@@ -83,7 +83,7 @@ void Decorator::updateRandom(
     const glm::ivec3& areaCenter,
     const WeatherPreset& weather
 ) {
-    PseudoRandom random(rand());
+    util::PseudoRandom random(rand());
 
     const auto& chunks = *player.chunks;
     const auto& indices = *level.content.getIndices();
@@ -233,7 +233,7 @@ void Decorator::updateTextNotes() {
 
 void Decorator::updateRandomSounds(float delta, const Weather& weather) {
     thunderTimer += delta;
-    PseudoRandom random(rand());
+    util::PseudoRandom random(rand());
     if (thunderTimer >= 1.0f) {
         thunderTimer = 0.0f;
         if (random.randFloat() < weather.thunderRate()) {
