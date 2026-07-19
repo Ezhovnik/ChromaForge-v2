@@ -6,20 +6,20 @@ class Version {
 public:
     int major;
     int minor;
-    int maintenance;
+    int patch;
 
     Version(const std::string& version);
 
     bool operator==(const Version& other) const {
         return major == other.major &&
             minor == other.minor &&
-            maintenance == other.maintenance;
+            patch == other.patch;
     }
 
     bool operator<(const Version& other) const {
         if (major != other.major) return major < other.major;
         if (minor != other.minor) return minor < other.minor;
-        return maintenance < other.maintenance;
+        return patch < other.patch;
     }
 
     bool operator>(const Version& other) const {

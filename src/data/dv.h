@@ -447,7 +447,7 @@ namespace dv {
             }
         }
 
-    integer_t asNumber(integer_t def) const {
+        integer_t asNumber(integer_t def) const {
             switch (type) {
                 case value_type::Integer: 
                     return static_cast<number_t>(val.integer);

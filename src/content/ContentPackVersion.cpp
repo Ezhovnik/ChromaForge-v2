@@ -8,7 +8,7 @@
 Version::Version(const std::string& version) {
     major = 0;
     minor = 0;
-    maintenance = 0;
+    patch = 0;
 
     std::vector<int> parts;
 
@@ -22,7 +22,7 @@ Version::Version(const std::string& version) {
 
     if (parts.size() > 0) major = parts[0];
     if (parts.size() > 1) minor = parts[1];
-    if (parts.size() > 2) maintenance = parts[2];
+    if (parts.size() > 2) patch = parts[2];
 }
 
 DependencyVersionOperator Version::string_to_operator(const std::string& op) {

@@ -44,7 +44,7 @@ static int l_get_list(lua::State* L) {
         const auto& versionMap = root["version"];
         int versionMajor = versionMap["major"].asInteger();
         int versionMinor = versionMap["minor"].asInteger();
-        int versionMaintenance = versionMap["maintenance"].asInteger();
+        int versionPatch = (versionMap.has("patch") ? versionMap["patch"] : versionMap["maintenance"]).asInteger();
 
         auto name = folder.name();
         lua::pushstring(L, name);
@@ -62,7 +62,7 @@ static int l_get_list(lua::State* L) {
         lua::pushstring(L, icon);
         lua::setfield(L, "icon");
 
-        lua::pushvec3(L, {versionMajor, versionMinor, versionMaintenance});
+        lua::pushvec3(L, {versionMajor, versionMinor, versionPatch});
         lua::setfield(L, "version");
 
         lua::rawseti(L, i + 1);

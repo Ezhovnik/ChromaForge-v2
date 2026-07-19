@@ -131,7 +131,7 @@ std::unique_ptr<Level> World::load(
     info->isLoaded = true;
 
     LOG_INFO("Loading world {} ({})", info->name, worldFilesPtr->getFolder().string());
-	LOG_INFO("World version: {}.{}.{}", info->major, info->minor, info->maintenance);
+	LOG_INFO("World version: {}.{}.{}", info->major, info->minor, info->patch);
     LOG_INFO("World seed: {}", info->seed);
     LOG_INFO("World generator: {}", info->generator);
 
@@ -213,7 +213,7 @@ void WorldInfo::deserialize(const dv::value& root) {
         auto& verobj = root["version"];
         major = verobj["major"].asInteger();
         minor = verobj["minor"].asInteger();
-		maintenance = verobj["maintenance"].asInteger();
+		patch = (verobj.has("patch") ? verobj["patch"] : verobj["maintenance"]).asInteger();
 	}
 
 	// Таймеры
@@ -241,7 +241,7 @@ dv::value WorldInfo::serialize() const {
 	auto& versionobj = root.object("version");
     versionobj["major"] = ENGINE_VERSION_MAJOR;
     versionobj["minor"] = ENGINE_VERSION_MINOR;
-	versionobj["maintenance"] = ENGINE_VERSION_MAINTENANCE;
+	versionobj["patch"] = ENGINE_VERSION_PATCH;
 
 	root["name"] = name;
     root["generator"] = generator;

@@ -23,7 +23,7 @@
 
 static int l_get_version(lua::State* L) {
     return lua::pushvec_stack(
-        L, glm::vec3(ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_MAINTENANCE)
+        L, glm::vec3(ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_PATCH)
     );
 }
 
