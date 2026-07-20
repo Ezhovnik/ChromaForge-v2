@@ -20,6 +20,10 @@
 #include <graphics/core/Texture.h>
 #include <assets/Assets.h>
 #include <content/ContentControl.h>
+#include <frontend/locale.h>
+#include <graphics/ui/gui_util.h>
+#include <graphics/ui/GUI.h>
+#include <graphics/ui/elements/Menu.h>
 
 static int l_get_version(lua::State* L) {
     return lua::pushvec_stack(
@@ -49,6 +53,24 @@ static int l_reopen_world(lua::State*) {
 
 static int l_open_folder(lua::State* L) {
     platform::open_folder(io::resolve(lua::require_string(L, 1)));
+    return 0;
+}
+
+static int l_open_url(lua::State* L) {
+    auto url = lua::require_string(L, 1);
+
+    std::wstring msg = langs::get(L"Are you sure you want to open the link:") +
+        L"\n" + util::str2wstr_utf8(url) +
+        std::wstring(L"?");
+
+    auto menu = scripting::engine->getGUI().getMenu();
+
+    guiutil::confirm(*scripting::engine, msg, [url, menu]() {
+        platform::open_url(url);
+        if (!menu->back()) {
+            menu->reset();
+        }
+    });
     return 0;
 }
 
@@ -250,6 +272,7 @@ const luaL_Reg builtinlib [] = {
     {"str_setting", lua::wrap<l_str_setting>},
     {"get_setting_info", lua::wrap<l_get_setting_info>},
     {"open_folder", lua::wrap<l_open_folder>},
+    {"open_url", lua::wrap<l_open_url>},
     {"quit", lua::wrap<l_quit>},
     {"capture_output", lua::wrap<l_capture_output>},
     {NULL, NULL}
