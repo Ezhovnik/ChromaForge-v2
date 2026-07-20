@@ -1,9 +1,9 @@
-for i=1,3 do
-    print(string.format("iteration %s", i + 1))
+for i=1, 3 do
+    print(string.format("iteration %s", i))
     local text = ""
     local complete = false
 
-    for j=1,100 do
+    for j=1, 100 do
         text = text .. math.random(0, 9)
     end
 
