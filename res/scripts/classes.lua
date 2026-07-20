@@ -226,8 +226,6 @@ block.__process_register_events = function()
                 end
             end
         end
-
-        print(type, id, x, y, z)
     end
 end
 

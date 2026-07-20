@@ -34,19 +34,16 @@ public:
         return !(*this > other);
     }
 
-    bool process_operator(const std::string& op, const Version& other) const {
-        auto dep_op = Version::string_to_operator(op);
-
-        switch(dep_op) {
-            case DependencyVersionOperator::Equal: return *this == other;
-            case DependencyVersionOperator::More: return *this > other;
-            case DependencyVersionOperator::Less: return *this < other;
-            case DependencyVersionOperator::LessOrEqual: return *this <= other;
-            case DependencyVersionOperator::MoreOrEqual: return *this >= other;
+    bool processOperator(VersionOperator op, const Version& other) const {
+        switch(op) {
+            case VersionOperator::Equal: return *this == other;
+            case VersionOperator::Greather: return *this > other;
+            case VersionOperator::Less: return *this < other;
+            case VersionOperator::LessOrEqual: return *this <= other;
+            case VersionOperator::GreatherOrEqual: return *this >= other;
             default: return false;
         }
     }
 
-    static DependencyVersionOperator string_to_operator(const std::string& op);
-    static bool matches_pattern(const std::string& version);
+    static bool matchesPattern(const std::string& version);
 };

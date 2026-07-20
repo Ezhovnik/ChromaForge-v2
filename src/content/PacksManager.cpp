@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <content/PacksManager.h>
 
 #include <queue>
@@ -86,18 +87,18 @@ static bool resolve_dependencies (
 
         auto dep_pack = found -> second;
 
-        if (Version::matches_pattern(dep.version) && Version::matches_pattern(dep_pack.version)
-            && Version(dep_pack.version).process_operator(dep.op, Version(dep.version))
+        if (Version::matchesPattern(dep.version) && Version::matchesPattern(dep_pack.version)
+            && Version(dep_pack.version).processOperator(dep.op, Version(dep.version))
         ) {
             continue;
         } else if (dep.version == "*" || dep.version == dep_pack.version){
             continue;
         } else {
             LOG_ERROR(
-                "Does not meet required version '{}{}' of '{}'", dep.op, dep.version, pack->id
+                "Does not meet required version '{}{}' of '{}'", VersionOperatorMeta.getNameString(dep.op), dep.version, pack->id
             );
             throw contentpack_error(
-                dep.id, io::path(), "Does not meet required version '" + dep.op + dep.version +"' of '" + pack->id + "'"
+                dep.id, io::path(), "Does not meet required version '" + VersionOperatorMeta.getNameString(dep.op) + dep.version + "' of '" + pack->id + "'"
             );
         }
 

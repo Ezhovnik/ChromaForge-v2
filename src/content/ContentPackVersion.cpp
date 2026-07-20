@@ -25,27 +25,11 @@ Version::Version(const std::string& version) {
     if (parts.size() > 2) patch = parts[2];
 }
 
-DependencyVersionOperator Version::string_to_operator(const std::string& op) {
-    if (op == "=") {
-        return DependencyVersionOperator::Equal;
-    } else if (op == ">") {
-        return DependencyVersionOperator::More;
-    } else if (op == "<") {
-        return DependencyVersionOperator::Less;
-    } else if (op == ">=" || op == "=>") {
-        return DependencyVersionOperator::MoreOrEqual;
-    } else if (op == "<=" || op == "=<") {
-        return DependencyVersionOperator::LessOrEqual;
-    } else {
-        return DependencyVersionOperator::Equal;
-    }
-}
-
 bool isNumber(const std::string& s) {
     return !s.empty() && std::all_of(s.begin(), s.end(), ::is_digit);
 }
 
-bool Version::matches_pattern(const std::string& version) {
+bool Version::matchesPattern(const std::string& version) {
     for (char c : version) {
         if (!isdigit(c) && c != '.') {
             return false;

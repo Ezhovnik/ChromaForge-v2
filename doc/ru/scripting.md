@@ -45,6 +45,7 @@
 - [Модуль builtin:bit_converter](scripting/modules/builtin_bit_converter.md)
 - [Модуль builtin:data_buffer](scripting/modules/builtin_data_buffer.md)
 - [Модули builtin:vector2, builtin:vector3](scripting/modules/builtin_vector2_vector3.md)
+- [Встроенные компоненты сущностей](scripting/builtin_components.md)
 
 ## Аннотации типов данных
 

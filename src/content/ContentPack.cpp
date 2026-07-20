@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <content/ContentPack.h>
 
 #include <stdexcept>
@@ -141,7 +142,7 @@ ContentPack ContentPack::read(const io::path& folder) {
                     std::string op = depVer.substr(0, 2);
                     std::uint8_t op_size = 0;
 
-                    if (op == ">=" || op == "=>" || op == "<=" || op == "=<") {
+                    if (op == ">=" || op == "<=") {
                         op_size = 2;
                         depVerOperator = op;
                     }
@@ -163,7 +164,17 @@ ContentPack ContentPack::read(const io::path& folder) {
                 }
             }
 
-            pack.dependencies.push_back({level, depName, depVer, depVerOperator});
+            VersionOperator versionOperator;
+            if (VersionOperatorMeta.getItem(depVerOperator, versionOperator)) {
+                pack.dependencies.push_back(
+                    {level, depName, depVer, versionOperator}
+                );
+            } else {
+                LOG_ERROR("Content-pack {}: Invalid version operator", pack.id);
+                throw contentpack_error(
+                    pack.id, folder, "Invalid version operator"
+                );
+            }
         }
     }
 
