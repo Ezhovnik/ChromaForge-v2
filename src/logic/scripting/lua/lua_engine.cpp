@@ -171,5 +171,14 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
     auto file = "res:scripts/stdmin.lua";
     auto src = io::read_string(file);
     lua::pop(L, lua::execute(L, 0, src, "builtin:scripts/stdmin.lua"));
+
+    newusertype<LuaRandom>(L);
+    if (getglobal(L, "random")) {
+        if (getglobal(L, "__chroma_Random")) {
+            setfield(L, "Random");
+        }
+        pop(L);
+    }
+
     return L;
 }

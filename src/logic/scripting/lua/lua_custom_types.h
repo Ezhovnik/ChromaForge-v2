@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <random>
 
 #include <logic/scripting/lua/lua_commons.h>
 
@@ -115,4 +116,20 @@ namespace lua {
         std::shared_ptr<ImageData> mData;
     };
     static_assert(!std::is_abstract<LuaCanvas>());
+
+    class LuaRandom : public Userdata {
+    public:
+        std::mt19937 rng;
+
+        explicit LuaRandom(uint64_t seed) : rng(seed) {}
+        virtual ~LuaRandom() override = default;
+
+        const std::string& getTypeName() const override {
+            return TYPENAME;
+        }
+
+        static int createMetatable(lua::State*);
+        inline static std::string TYPENAME = "__chroma_Random";
+    };
+    static_assert(!std::is_abstract<LuaRandom>());
 }

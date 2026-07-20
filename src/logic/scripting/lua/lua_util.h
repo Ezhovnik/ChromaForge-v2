@@ -314,6 +314,15 @@ namespace lua {
         return nullptr;
     }
 
+    template <class T>
+    inline T& require_userdata(lua::State* L, int idx) {
+        if (void* rawptr = lua_touserdata(L, idx)) {
+            return *static_cast<T*>(rawptr);
+        }
+        log_error("Invalid 'self' value");
+        throw std::runtime_error("Invalid 'self' value");
+    }
+
     template<class T, typename... Args>
     inline int newuserdata(lua::State* L, Args&&... args) {
         const auto& found = usertypeNames.find(typeid(T));
