@@ -28,6 +28,8 @@ namespace platform {
      */
     std::string detect_locale();
 
+    std::filesystem::path get_executable_path();
+
     void open_folder(const std::filesystem::path& folder);
     bool open_url(const std::string& url);
 

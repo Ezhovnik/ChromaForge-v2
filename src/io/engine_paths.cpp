@@ -14,6 +14,7 @@
 #include <io/devices/StdfsDevice.h>
 #include <math/rand.h>
 #include <io/devices/ZipFileDevice.h>
+#include <util/platform.h>
 
 template<int n>
 static std::string generate_random_base64() {
@@ -41,6 +42,7 @@ void EnginePaths::prepare() {
         );
     }
 
+    LOG_INFO("Executable path: {}", platform::get_executable_path().string());
     LOG_INFO("Resources folder: {}", std::filesystem::canonical(resourcesFolder).u8string());
     LOG_INFO("User files folder: {}", std::filesystem::canonical(userFilesFolder).u8string());
     LOG_INFO("Project folder: {}", std::filesystem::canonical(projectFolder).u8string());
