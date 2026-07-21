@@ -52,6 +52,8 @@ struct CoreParameters {
     std::filesystem::path userFolder = ".";
     std::filesystem::path scriptFile;
     std::filesystem::path projectFolder;
+
+    int sps = 20;
 };
 
 using OnWorldOpen = std::function<void(std::unique_ptr<Level>, int64_t)>;

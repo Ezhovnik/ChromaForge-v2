@@ -2,54 +2,86 @@
 
 #include <filesystem>
 #include <iostream>
+#include <iomanip>
 
 #include <io/engine_paths.h>
 #include <engine/Engine.h>
 #include <util/ArgsReader.h>
 
+class ArgC {
+    public:
+        std::string keyword;
+        std::function<bool()> execute;
+		std::string args;
+        std::string help;
+        ArgC(
+            const std::string& keyword,
+            std::function<bool()> execute,
+            const std::string& args,
+            const std::string& help
+        ) {
+            this->keyword = keyword;
+            this->execute = execute;
+			this->args = args;
+            this->help = help;
+        }
+};
+
 static bool perform_keyword(
 	util::ArgsReader& reader, const std::string& keyword, CoreParameters& params
 ) {
-    if (keyword == "--res") {
-		// Читаем следующий аргумент как путь к папке ресурсов
-		params.resFolder = reader.next();
-	} else if (keyword == "--dir") {
-		// Читаем следующий аргумент как путь к папке пользовательских файлов
-		params.userFolder = reader.next();
-    } else if (keyword == "--project") {
-        params.projectFolder = reader.next();
-	} else if (keyword == "--help" || keyword == "-h") {
-		// Выводим справку и сообщаем, что запуск нужно прервать.
-		std::cout << "ChromaForge v " << ENGINE_VERSION_STRING << "\n\n";
-		std::cout << "command-line arguments:\n";
-        std::cout << " --help - display this help\n";
-		std::cout << " --version - display engine version\n";
-        std::cout << " --res <path> - set resources directory\n";
-        std::cout << " --dir <path> - set userfiles directory\n";
-		std::cout << " --project <path> - set project directory\n";
-        std::cout << " --headless - run in headless mode\n";
-		std::cout << " --test <path> - test script file\n";
-		std::cout << " --script <path> - main script file\n";
-        std::cout << std::endl;
-		return false;
-	} else if (keyword == "--version") {
-        std::cout << ENGINE_VERSION_STRING << std::endl;
-        return false;
-	} else if (keyword == "--headless") {
-        params.headless = true;
-	} else if (keyword == "--test") {
-		auto token = reader.next();
-		params.testMode = true;
-        params.scriptFile = token;
-    } else if (keyword == "--script") {
-        auto token = reader.next();
-        params.testMode = false;
-        params.scriptFile = token;
-	} else {
-		// Неизвестный ключ
-		throw std::runtime_error("Unknown argument " + keyword);
+    static const std::vector<ArgC> argumentsCommandline = {
+        ArgC("--res", [&params, &reader]() -> bool {
+            params.resFolder = reader.next();
+            return true;
+        }, "<path>", "set resources directory."),
+        ArgC("--dir", [&params, &reader]() -> bool {
+            params.userFolder = reader.next();
+            return true;
+        }, "<path>", "set userfiles directory."),
+        ArgC("--project", [&params, &reader]() -> bool {
+            params.projectFolder = reader.next();
+            return true;
+        }, "<path>", "set project directory."),
+        ArgC("--test", [&params, &reader]() -> bool {
+            params.testMode = true;
+            params.scriptFile = reader.next();
+            return true;
+        }, "<path>", "test script file."),
+        ArgC("--script", [&params, &reader]() -> bool {
+            params.testMode = false;
+            params.scriptFile = reader.next();
+            return true;
+        }, "<path>", "main script file."),
+        ArgC("--headless", [&params]() -> bool {
+            params.headless = true;
+            return true;
+        }, "", "run in headless mode."),
+        ArgC("--sps", [&params, &reader]() -> bool {
+            params.sps = reader.nextInt();
+            return true;
+        }, "<sps>", "headless mode spark(tick)-rate (default - 20)."),
+        ArgC("--version", []() -> bool {
+            std::cout << ENGINE_VERSION_STRING << std::endl;
+            return false;
+        }, "", "display the engine version."),
+        ArgC("--help", []() -> bool {
+            std::cout << "ChromaForge v" << ENGINE_VERSION_STRING << "\n\n";
+            std::cout << "Command-line arguments:\n";
+            for (auto& a : argumentsCommandline) {
+                std::cout << std::setw(20) << std::left << (a.keyword + " " + a.args);
+                std::cout << "- " << a.help << std::endl;
+            }
+            std::cout << std::endl;
+            return false;
+        }, "", "display this help.")
+    };
+    for (auto& a : argumentsCommandline) {
+        if (a.keyword == keyword) {
+            return a.execute();
+        }
 	}
-    return true;
+    throw std::runtime_error("Unknown argument " + keyword);
 }
 
 bool parse_cmdline(int argc, char** argv, CoreParameters& params) {

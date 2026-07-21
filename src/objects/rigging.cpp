@@ -143,7 +143,7 @@ void SkeletonConfig::update(
             build_matrix(rotation, interpolation.getCurrent())
         );
     } else {
-        update(0, skeleton, root.get(), rotation);
+        update(0, skeleton, root.get(), build_matrix(rotation, position));
     }
 }
 

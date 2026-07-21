@@ -11,8 +11,6 @@
 #include <world/World.h>
 #include <util/platform.h>
 
-inline constexpr int SPS = 20;
-
 ServerMainloop::ServerMainloop(Engine& engine) : engine(engine) {}
 
 ServerMainloop::~ServerMainloop() = default;
@@ -35,7 +33,7 @@ void ServerMainloop::run() {
         "script:" + coreParams.scriptFile.filename().u8string()
     );
 
-    double targetDelta = 1.0 / static_cast<double>(SPS);
+    double targetDelta = 1.0 / static_cast<double>(coreParams.sps);
     double delta = targetDelta;
     auto begin = std::chrono::system_clock::now();
     auto startupTime = begin;
