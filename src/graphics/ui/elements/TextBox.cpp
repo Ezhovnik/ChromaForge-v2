@@ -223,8 +223,6 @@ TextBox::~TextBox() = default;
 void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
     Container::draw(pctx, assets);
 
-    font = assets.get<Font>(label->getFontName());
-
     if (!isFocused()) return;
     const auto& labelText = getText();
 
@@ -234,7 +232,7 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
     auto subctx = pctx.sub();
     subctx.setScissors(glm::vec4(pos.x, pos.y, size.x, size.y));
 
-    const int lineHeight = font->getLineHeight() * label->getLineInterval();
+    const int lineHeight = rawTextCache.metrics.lineHeight * label->getLineInterval();
     glm::vec2 lcoord = label->calcPos();
     lcoord.y -= 2;
     auto batch = pctx.getBatch2D();
@@ -245,7 +243,7 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
         uint line = rawTextCache.getLineByTextIndex(caret);
         uint lcaret = caret - rawTextCache.getTextLineOffset(line);
 
-        int width = font->calcWidth(input, lcaret);
+        int width = rawTextCache.metrics.calcWidth(input, 0, lcaret);
         batch->rect(
             lcoord.x + width,
             lcoord.y + label->getLineYOffset(line),
@@ -261,11 +259,11 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
         uint endLine = label->getLineByTextIndex(selectionEnd);
 
         batch->setColor(glm::vec4(0.8f, 0.9f, 1.0f, 0.25f));
-        int start = font->calcWidth(
+        int start = rawTextCache.metrics.calcWidth(
             labelText,
             selectionStart - label->getTextLineOffset(startLine)
         );
-        int end = font->calcWidth(
+        int end = rawTextCache.metrics.calcWidth(
             labelText,
             selectionEnd - label->getTextLineOffset(endLine)
         );
@@ -340,7 +338,13 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
     }
 }
 
-void TextBox::drawBackground(const DrawContext& pctx, const Assets&) {
+void TextBox::drawBackground(const DrawContext& pctx, const Assets& assets) {
+    auto font = assets.get<Font>(label->getFontName());
+    rawTextCache.prepare(
+        reinterpret_cast<ptrdiff_t>(font),
+        font->getMetrics(),
+        label->getSize().x
+    );
     glm::vec2 pos = calcPos();
 
     auto batch = pctx.getBatch2D();
@@ -368,7 +372,11 @@ void TextBox::drawBackground(const DrawContext& pctx, const Assets&) {
 }
 
 void TextBox::refreshLabel() {
-    rawTextCache.prepare(font, static_cast<size_t>(getSize().x));
+    rawTextCache.prepare(
+        rawTextCache.fontId,
+        rawTextCache.metrics,
+        static_cast<size_t>(getSize().x)
+    );
     rawTextCache.update(input, multiline, false);
 
     label->setColor(textColor * glm::vec4(input.empty() ? 0.5f : 1.0f));
@@ -404,13 +412,15 @@ void TextBox::refreshLabel() {
         lineNumbersLabel->setColor(glm::vec4(1, 1, 1, 0.25f));
     }
 
-    if (autoresize && font) {
+    if (autoresize && rawTextCache.fontId != 0) {
         auto size = getSize();
-        int newy = glm::min(static_cast<int>(parent->getSize().y), 
-        static_cast<int>(
-            label->getLinesNumber() * 
-            label->getLineInterval() * 
-            font->getLineHeight()) + 1
+        int newy = glm::min(
+            static_cast<int>(parent->getSize().y), 
+            static_cast<int>(
+                label->getLinesNumber() * 
+                label->getLineInterval() * 
+                rawTextCache.metrics.lineHeight
+            ) + 1
         );
         if (newy != static_cast<int>(size.y)) {
             size.y = newy;
@@ -419,9 +429,9 @@ void TextBox::refreshLabel() {
         }
     }
 
-    if (multiline && font) {
+    if (multiline && rawTextCache.fontId != 0) {
         setScrollable(true);
-        uint height = label->getLinesNumber() * font->getLineHeight() * label->getLineInterval();
+        uint height = label->getLinesNumber() * rawTextCache.metrics.lineHeight * label->getLineInterval();
         label->setSize(glm::vec2(label->getSize().x, height));
         actualLength = height;
     } else {
@@ -585,14 +595,14 @@ size_t TextBox::normalizeIndex(int index) {
 }
 
 int TextBox::calcIndexAt(int x, int y) const {
-    if (font == nullptr) return 0;
+    if (rawTextCache.fontId == 0) return 0;
     const auto& labelText = label->getText();
     glm::vec2 lcoord = label->calcPos();
     uint line = label->getLineByYOffset(y - lcoord.y);
     line = std::min(line, label->getLinesNumber() - 1);
     size_t lineLength = getLineLength(line);
     uint offset = 0;
-    while (lcoord.x + font->calcWidth(labelText, offset) < x && offset < lineLength - 1) {
+    while (lcoord.x + rawTextCache.metrics.calcWidth(labelText, offset) < x && offset < lineLength - 1) {
         offset++;
     }
     return std::min(offset+label->getTextLineOffset(line), labelText .length());
@@ -1093,17 +1103,17 @@ void TextBox::setCaret(size_t position) {
     const auto& labelText = label->getText();
     caret = std::min(static_cast<size_t>(position), input.length());
     this->caret = std::min(static_cast<size_t>(position), input.length());
-    if (font == nullptr) return;
+    if (rawTextCache.fontId == 0) return;
     int width = label->getSize().x;
 
-    rawTextCache.prepare(font, width);
+    rawTextCache.prepare(rawTextCache.fontId, rawTextCache.metrics, width);
     rawTextCache.update(input, multiline, label->isTextWrapping());
 
     caretLastMove = gui.getWindow().time();
 
     uint line = rawTextCache.getLineByTextIndex(caret);
     int offset = label->getLineYOffset(line) + getContentOffset().y;
-    uint lineHeight = font->getLineHeight() * label->getLineInterval();
+    uint lineHeight = rawTextCache.metrics.lineHeight * label->getLineInterval();
     if (scrollStep == 0) scrollStep = lineHeight;
     if (offset < 0) {
         scrolled(-glm::floor(offset / static_cast<double>(scrollStep) + 0.5f));
@@ -1113,7 +1123,7 @@ void TextBox::setCaret(size_t position) {
     }
 
     int lcaret = caret - rawTextCache.getTextLineOffset(line);
-    int realoffset = font->calcWidth(labelText, lcaret) - static_cast<int>(textOffset) + 2;
+    int realoffset = rawTextCache.metrics.calcWidth(labelText, lcaret) - static_cast<int>(textOffset) + 2;
     if (realoffset-width > 0) {
         setTextOffset(textOffset + realoffset - width);
     } else if (realoffset < 0) {

@@ -386,7 +386,6 @@ public:
                 }
                 totalDownload += size;
             }
-            LOG_DEBUG("Read {} bytes from {}", size, to_string(addr));
         }
     }
 

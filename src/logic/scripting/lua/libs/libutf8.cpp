@@ -33,8 +33,7 @@ static int l_tostring(lua::State* L) {
         lua::pop(L);
         return lua::pushlstring(L, buffer.data(), size);
     }
-    lua::bytearray_as_string(L, 1);
-    return 1;
+    return lua::pushlstring(L, lua::bytearray_as_string(L, 1));
 }
 
 static int l_length(lua::State* L) {

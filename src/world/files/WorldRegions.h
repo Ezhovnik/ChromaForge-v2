@@ -58,6 +58,7 @@ public:
 
 struct regFile {
     io::rafile file;
+    io::path filename;
     int version;
     bool inUse = false;
 

@@ -122,21 +122,28 @@ size_t SkeletonConfig::update(
     return count;
 }
 
+static glm::mat4 build_matrix(const glm::mat3& rot, const glm::vec3& pos) {
+    glm::mat4 combined(1.0f);
+    combined = glm::translate(combined, pos);
+    combined = combined * glm::mat4(rot);
+    return combined;
+}
+
 void SkeletonConfig::update(
-    Skeleton& skeleton, const glm::mat4& matrix, const glm::vec3& position
+    Skeleton& skeleton,
+    const glm::mat3& rotation,
+    const glm::vec3& position
 ) const {
     if (skeleton.interpolation.isEnabled()) {
         const auto& interpolation = skeleton.interpolation;
-        glm::vec3 scale, translation, skew;
-        glm::quat rotation;
-        glm::vec4 perspective;
-        glm::decompose(matrix, scale, rotation, translation, skew, perspective);
-
-        auto delta = interpolation.getCurrent() - position;
-        auto interpolatedMatrix = glm::translate(matrix, delta);
-        update(0, skeleton, root.get(), interpolatedMatrix);
+        update(
+            0,
+            skeleton,
+            root.get(),
+            build_matrix(rotation, interpolation.getCurrent())
+        );
     } else {
-        update(0, skeleton, root.get(), matrix);
+        update(0, skeleton, root.get(), rotation);
     }
 }
 
@@ -144,10 +151,10 @@ void SkeletonConfig::render(
     const Assets& assets,
     ModelBatch& batch,
     Skeleton& skeleton,
-    const glm::mat4& matrix,
+    const glm::mat3& rotation,
     const glm::vec3& position
 ) const {
-    update(skeleton, matrix, position);
+    update(skeleton, rotation, position);
     if (!skeleton.visible) return;
     for (size_t i = 0; i < nodes.size(); ++i) {
         auto* node = nodes[i];

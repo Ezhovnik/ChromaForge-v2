@@ -25,23 +25,23 @@ static void fetch_chunks(WorldRegion* region, int x, int z, regFile* file) {
     }
 }
 
-regFile::regFile(io::path filename) : file(std::move(filename)) {
+regFile::regFile(io::path filename) : file(filename), filename(filename) {
     if (file.length() < REGION_HEADER_SIZE) {
-        LOG_ERROR("Incomplete region file header");
-        throw std::runtime_error("Incomplete region file header");
+        LOG_ERROR("Incomplete region file header in {}", filename.string());
+        throw std::runtime_error("Incomplete region file header in " + filename.string());
     }
     char header[REGION_HEADER_SIZE];
     file.read(header, REGION_HEADER_SIZE);
 
     if (std::string(header, std::strlen(REGION_FORMAT_MAGIC)) != REGION_FORMAT_MAGIC) {
-        LOG_ERROR("Invalid region file magic number");
-        throw std::runtime_error("Invalid region file magic number");
+        LOG_ERROR("Invalid region file magic number in {}", filename.string());
+        throw std::runtime_error("Invalid region file magic number in " + filename.string());
     }
     version = header[REGION_HEADER_SIZE - 2];
     if (static_cast<uint>(version) > REGION_FORMAT_VERSION) {
-        LOG_ERROR("Region format {} is not supported", version);
+        LOG_ERROR("Region format {} is not supported in {}", version, filename.string());
         throw illegal_region_format(
-            "Region format " + std::to_string(version) + " is not supported"
+            "Region format " + std::to_string(version) + " is not supported in " + filename.string()
         );
     }
 }
@@ -63,6 +63,11 @@ std::unique_ptr<ubyte[]> regFile::read(int index, uint32_t& size, uint32_t& srcS
     size = dataio::le2h(buff32);
     file.read(reinterpret_cast<char*>(&buff32), 4);
     srcSize = dataio::le2h(buff32);
+
+    if (offset + size > file_size) {
+        LOG_ERROR("Corrupted region {}: chunk offset detected at {}", filename.string(), (table_offset + index * 4));
+        return nullptr;
+    }
 
     auto data = std::make_unique<ubyte[]>(size);
     file.read(reinterpret_cast<char*>(data.get()), size);

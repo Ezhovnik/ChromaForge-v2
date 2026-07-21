@@ -38,7 +38,6 @@ namespace gui {
         size_t textOffset = 0;
         int textInitX = 0;
         double caretLastMove = 0.0;
-        Font* font = nullptr;
 
         size_t selectionStart = 0;
         size_t selectionEnd = 0;

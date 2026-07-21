@@ -1,6 +1,7 @@
 #pragma once
 
 #include <graphics/ui/elements/UINode.h>
+#include <graphics/core/FontMetrics.h>
 
 class Font;
 struct FontStylesScheme;
@@ -12,13 +13,15 @@ namespace gui {
     };
 
     struct LabelCache {
-        Font* font = nullptr;
+        ptrdiff_t fontId = 0;
+        FontMetrics metrics;
+
         std::vector<LineScheme> lines;
         bool resetFlag = true;
         size_t wrapWidth = -1;
         int multilineWidth = 0;
 
-        void prepare(Font* font, size_t wrapWidth);
+        void prepare(std::ptrdiff_t fontId, FontMetrics metrics, size_t wrapWidth);
         void update(std::wstring_view text, bool multiline, bool wrap);
 
         size_t getTextLineOffset(size_t line) const;

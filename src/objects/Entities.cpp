@@ -455,7 +455,7 @@ void Entities::render(
         const auto& size = transform.size;
         if (!frustum || frustum->isBoxVisible(pos - size, pos + size)) {
             const auto* skeletonConfig = skeleton.config;
-            skeletonConfig->render(assets, batch, skeleton, transform.combined, pos);
+            skeletonConfig->render(assets, batch, skeleton, transform.rot, pos);
         }
     }
 }

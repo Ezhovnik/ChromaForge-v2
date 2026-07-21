@@ -25,5 +25,5 @@ void HandsRenderer::renderHands(
 
     modelBatch.setLightsOffset(camera.position);
     config.update(skeleton, glm::mat4(1.0f), glm::vec3());
-    config.render(assets, modelBatch, skeleton, glm::mat4(1.0f), glm::vec3());
+    config.render(assets, modelBatch, skeleton, glm::mat3(1.0f), glm::vec3());
 }
