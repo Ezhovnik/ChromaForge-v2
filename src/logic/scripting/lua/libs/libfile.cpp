@@ -184,32 +184,6 @@ static int l_list(lua::State* L) {
     return 1;
 }
 
-static int l_zip_compress(lua::State* L) {
-    std::vector<ubyte> bytes;
-    lua::read_bytes_from_table(L, 1, bytes);
-    auto compressed_bytes = zip::compress(bytes.data(), bytes.size());
-    int newTable = lua::gettop(L);
-
-    for (size_t i = 0; i < compressed_bytes.size(); ++i) {
-        lua::pushinteger(L, compressed_bytes.data()[i]);
-        lua::rawseti(L, i + 1, newTable);
-    }
-    return 1;
-}
-
-static int l_zip_decompress(lua::State* L) {
-    std::vector<ubyte> bytes;
-    lua::read_bytes_from_table(L, 1, bytes);
-    auto decompressed_bytes = zip::decompress(bytes.data(), bytes.size());
-    int newTable = lua::gettop(L);
-
-    for (size_t i = 0; i < decompressed_bytes.size(); ++i) {
-        lua::pushinteger(L, decompressed_bytes.data()[i]);
-        lua::rawseti(L, i + 1, newTable);
-    }
-    return 1;
-}
-
 static int l_read_combined_list(lua::State* L) {
     std::string path = lua::require_string(L, 1);
     if (path.find(':') != std::string::npos) {
@@ -396,8 +370,6 @@ const luaL_Reg filelib[] = {
     {"resolve", lua::wrap<l_resolve>},
     {"write_bytes", lua::wrap<l_write_bytes>},
     {"write", lua::wrap<l_write>},
-    {"zip_compress", lua::wrap<l_zip_compress>},
-    {"zip_decompress", lua::wrap<l_zip_decompress>},
     {"read_combined_list", lua::wrap<l_read_combined_list>},
     {"read_combined_object", lua::wrap<l_read_combined_object>},
     {"is_writeable", lua::wrap<l_is_writeable>},
