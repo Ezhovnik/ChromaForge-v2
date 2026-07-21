@@ -78,6 +78,8 @@ private:
     bool instantDestruction = true;
     bool loadingChunks = true;
 
+    float interactionDistance = 10.0f;
+
     entityid_t eid = ENTITY_AUTO;
 
     entityid_t selectedEid = 0;
@@ -154,6 +156,9 @@ public:
 
     bool isLoadingChunks() const;
     void setLoadingChunks(bool flag);
+
+    float getInteractionDistance() const;
+    void setInteractionDistance(float distance);
 
     bool isSuspended() const;
     void setSuspended(bool flag);

@@ -132,6 +132,7 @@ dv::value Player::serialize() const {
     root["rotation"] = dv::to_value(rotation);
     root["spawnpoint"] = dv::to_value(spawnpoint);
 
+    root["interaction-distance"] = interactionDistance;
     root["flight"] = flight;
     root["noclip"] = noclip;
     root["suspended"] = suspended;
@@ -168,6 +169,7 @@ void Player::deserialize(const dv::value& src) {
 	src.at("infinite-items").get(infiniteItems);
 	src.at("instant-destruction").get(instantDestruction);
     src.at("loading-chunks").get(loadingChunks);
+    src.at("interaction-distance").get(interactionDistance);
     setChosenSlot(src["chosen-slot"].asInteger());
     eid = src["entity"].asNumber();
 
@@ -300,6 +302,14 @@ bool Player::isSuspended() const {
 
 void Player::setSuspended(bool flag) {
     suspended = flag;
+}
+
+float Player::getInteractionDistance() const {
+    return interactionDistance;
+}
+
+void Player::setInteractionDistance(float distance) {
+    interactionDistance = std::max(1.0f, std::min(200.0f, distance));
 }
 
 glm::vec3 Player::getRotation(bool interpolated) const {

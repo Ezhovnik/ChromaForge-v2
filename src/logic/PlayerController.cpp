@@ -449,7 +449,10 @@ void PlayerController::updateInteraction(const Input& inputEvents, float deltaTi
     }
     const auto& bindings = inputEvents.getBindings();
     bool xkey = bindings.isActive(BIND_PLAYER_FAST_INTERACTOIN);
-    float maxDistance = xkey ? 20.0f : 10.0f;
+    float maxDistance = player.getInteractionDistance();
+    if (xkey) {
+        maxDistance *= 100.0;
+    }
     bool longInteraction = interactionTimer <= 0 || xkey;
     input.attack = bindings.justActive(BIND_PLAYER_ATTACK);
 	input.destroy = bindings.justActive(BIND_PLAYER_DESTROY) || (longInteraction && bindings.isActive(BIND_PLAYER_DESTROY));
