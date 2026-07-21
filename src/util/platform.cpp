@@ -209,3 +209,79 @@ std::filesystem::path platform::get_executable_path() {
     throw std::runtime_error("Could not get executable path");
 #endif
 }
+
+void platform::new_engine_instance(const std::vector<std::string>& args) {
+    auto executable = get_executable_path();
+
+#ifdef _WIN32
+    std::stringstream ss;
+    ss << util::quote(executable.u8string());
+    for (int i = 0; i < args.size(); ++i) {
+        ss << " " << util::quote(args[i]);
+    }
+
+    auto toWString = [](const std::string& src) -> std::wstring {
+        if (src.empty()) return L"";
+        int size = MultiByteToWideChar(CP_UTF8, 0, src.c_str(), -1, nullptr, 0);
+        if (size == 0) {
+            throw std::runtime_error(
+                "MultiByteToWideChar failed with code: " +
+                std::to_string(GetLastError())
+            );
+        }
+        std::vector<wchar_t> buffer(size + 1);
+        buffer[size] = 0;
+        size = MultiByteToWideChar(CP_UTF8, 0, src.c_str(), -1, buffer.data(), size);
+        if (size == 0) {
+            throw std::runtime_error(
+                "MultiByteToWideChar failed with code: " +
+                std::to_string(GetLastError())
+            );
+        }
+        return std::wstring(buffer.data(), size + 1);
+    };
+
+    auto commandString = toWString(ss.str());
+
+    STARTUPINFOW si = { sizeof(si) };
+    PROCESS_INFORMATION pi = { 0 };
+    DWORD flags = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS;
+    // | CREATE_NO_WINDOW;
+    BOOL success = CreateProcessW(
+        nullptr,
+        commandString.data(),
+        nullptr,
+        nullptr,
+        FALSE,
+        flags,
+        nullptr,
+        nullptr,
+        &si,
+        &pi
+    );
+    if (success) {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    } else {
+        throw std::runtime_error(
+            "starting an engine instance failed with code: " +
+            std::to_string(GetLastError())
+        );
+    }
+#else
+    std::stringstream ss;
+    ss << executable;
+    for (int i = 0; i < args.size(); i++) {
+        ss << " " << util::quote(args[i]);
+    }
+    ss << " >/dev/null &";
+
+    auto command = ss.str();
+    if (int res = system(command.c_str())) {
+        throw std::runtime_error(
+            "starting an engine instance failed with code: " +
+            std::to_string(res)
+        );
+    }
+#endif
+}
