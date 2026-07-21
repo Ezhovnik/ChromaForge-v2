@@ -133,10 +133,11 @@ void Engine::initializeClient() {
     if (ENGINE_DEBUG_BUILD) {
         menus::create_version_label(*gui);
     }
-    keepAlive(settings.display.fullscreen.observe(
-        [this](bool value) {
-            if (value != this->window->isFullscreen()) {
-                this->window->toggleFullscreen();
+    keepAlive(settings.display.windowMode.observe(
+        [this](int value) {
+            WindowMode mode = static_cast<WindowMode>(value);
+            if (mode != this->window->getMode()) {
+                this->window->setMode(mode);
             }
         },
         true
@@ -268,7 +269,13 @@ void Engine::loadAssets() {
 void Engine::updateHotkeys() {
     if (input->justPressed(Keycode::F2)) saveScreenshot();
     if (input->isPressed(Keycode::LEFT_CONTROL) && input->isPressed(Keycode::F3) && input->justPressed(Keycode::U)) gui->toggleDebug();
-    if (input->justPressed(Keycode::F11)) settings.display.fullscreen.toggle();
+    if (input->justPressed(Keycode::F11)) {
+        if (settings.display.windowMode.get() != static_cast<int>(WindowMode::Fullscreen)) {
+            settings.display.windowMode.set(static_cast<int>(WindowMode::Fullscreen));
+        } else {
+            settings.display.windowMode.set(static_cast<int>(WindowMode::Windowed));
+        }
+    }
 }
 
 void Engine::saveScreenshot() {

@@ -12,7 +12,7 @@ struct DisplaySettings {
 	IntegerSetting samples {0};
 	IntegerSetting framerate{-1, -1, 120};
 
-	BoolSetting fullscreen {false};
+	IntegerSetting windowMode {0, 0, 2};
 
 	BoolSetting limitFpsIconified {false};
 };
