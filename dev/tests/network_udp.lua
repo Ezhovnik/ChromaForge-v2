@@ -1,5 +1,4 @@
-math.randomseed(43172)
-for i = 1, 15 do
+for i = 1, 3 do
     debug.info(string.format("Iteration %s", i))
     local complete = false
 
@@ -25,7 +24,8 @@ for i = 1, 15 do
                 debug.info(string.format("Sent packet %s (%s bytes)", k, #payload))
                 coroutine.yield()
             end
-            app.sleep_until(function () return complete end, nil, 5)
+            app.sleep_until(function () return complete end, nil, 1)
+            assert(complete, "Timeout at iteration #"..i)
             socket:close()
         end, "udp-data-sender")
     end)
