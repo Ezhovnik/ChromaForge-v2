@@ -211,9 +211,8 @@ public:
         if (len == -1) {
             int err = errno;
             close();
-            throw std::runtime_error(
-                "Send failed [errno=" + std::to_string(err) + "]: "
-                 + std::string(strerror(err))
+            THROW_ERR(
+                "Send failed [errno={}]: {}", std::to_string(err), std::string(strerror(err))
             );
         }
         totalUpload += len;
@@ -304,12 +303,29 @@ class SocketTcpServer : public TcpServer {
     bool open = true;
     std::unique_ptr<std::thread> thread = nullptr;
     int port;
+    int maxConnected = -1;
 public:
     SocketTcpServer(uint64_t id, Network* network, SOCKET descriptor, int port)
     : id(id), network(network), descriptor(descriptor), port(port) {}
 
     ~SocketTcpServer() {
         closeSocket();
+    }
+
+    void setMaxClientsConnected(int count) override {
+        maxConnected = count;
+    }
+
+    void update() override {
+        std::vector<uint64_t> clients;
+        for (uint64_t cid : this->clients) {
+            if (auto client = network->getConnection(cid, true)) {
+                if (client->getState() != ConnectionState::Closed) {
+                    clients.emplace_back(cid);
+                }
+            }
+        }
+        std::swap(clients, this->clients);
     }
 
     void startListen(ConnectCallback handler) override {
@@ -328,6 +344,11 @@ public:
                     close();
                     break;
                 }
+                if (maxConnected >= 0 && clients.size() >= maxConnected) {
+                    LOG_INFO("Refused connection attemp from {}", to_string(address));
+                    closesocket(clientDescriptor);
+                    continue;
+                }
                 LOG_INFO("Client connected: {}", to_string(address));
                 auto socket = std::make_shared<SocketTcpConnection>(
                     clientDescriptor, address
@@ -342,7 +363,7 @@ public:
             }
         });
     }
-    
+
     void closeSocket() {
         if (!open) return;
 
@@ -561,7 +582,6 @@ class SocketUdpServer : public UdpServer {
     std::unique_ptr<std::thread> thread = nullptr;
     int port;
     ServerDatagramCallback callback;
-
 public:
     SocketUdpServer(uint64_t id, Network* network, SOCKET descriptor, int port)
         : id(id), descriptor(descriptor), port(port) {}
@@ -569,6 +589,8 @@ public:
     ~SocketUdpServer() override {
         SocketUdpServer::close();
     }
+
+    void update() override {}
 
     void startListen(ServerDatagramCallback handler) override {
         callback = std::move(handler);
@@ -579,8 +601,7 @@ public:
             socklen_t addrlen = sizeof(clientAddr);
 
             while (open) {
-                int size = recvfrom(descriptor, buffer.data(), buffer.size(), 0,
-                                    reinterpret_cast<sockaddr*>(&clientAddr), &addrlen);
+                int size = recvfrom(descriptor, buffer.data(), buffer.size(), 0, reinterpret_cast<sockaddr*>(&clientAddr), &addrlen);
                 if (size <= 0) {
                     if (!open) break;
                     continue;
