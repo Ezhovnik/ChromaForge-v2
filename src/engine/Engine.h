@@ -36,6 +36,7 @@ namespace network {
 
 namespace devtools {
     class Editor;
+    class DebuggingServer;
 }
 
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
@@ -52,6 +53,8 @@ struct CoreParameters {
     std::filesystem::path userFolder = ".";
     std::filesystem::path scriptFile;
     std::filesystem::path projectFolder;
+
+    std::string debugServerString = "tcp:9030";
 
     int sps = 20;
 };
@@ -78,6 +81,7 @@ private:
 
     std::unique_ptr<gui::GUI> gui;
     std::unique_ptr<devtools::Editor> editor;
+    std::unique_ptr<devtools::DebuggingServer> debuggingServer;
 
     PostRunnables postRunnables;
 

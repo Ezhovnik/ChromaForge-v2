@@ -159,13 +159,15 @@ static void read_uinode(
 static void read_container_impl(
     UIXmlReader& reader,
     const xml::xmlelement& element,
-    Container& container
+    Container& container,
+    bool subnodes
 ) {
     read_uinode(reader, element, container);
 
     if (element.has("scrollable")) container.setScrollable(element.attr("scrollable").asBool());
     if (element.has("scroll-step")) container.setScrollStep(element.attr("scroll-step").asInt());
 
+    if (!subnodes) return;
     for (auto& sub : element.getElements()) {
         if (sub->isText()) continue;
         auto subnode = reader.readUINode(*sub);
@@ -178,7 +180,7 @@ void UIXmlReader::readUINode(
     const xml::xmlelement& element,
     Container& container
 ) {
-    read_container_impl(reader, element, container);
+    read_container_impl(reader, element, container, true);
 }
 
 void UIXmlReader::readUINode(
@@ -194,7 +196,7 @@ static void read_base_panel_impl(
     const xml::xmlelement& element,
     BasePanel& panel
 ) {
-    read_uinode(reader, element, panel);
+    read_container_impl(reader, element, panel, false);
 
     if (element.has("padding")) {
         glm::vec4 padding = element.attr("padding").asVec4();
@@ -266,7 +268,7 @@ static std::shared_ptr<UINode> read_model_viewer(
     auto viewer = std::make_shared<ModelViewer>(
         reader.getGUI(), glm::vec2(), model
     );
-    read_container_impl(reader, element, *viewer);
+    read_container_impl(reader, element, *viewer, true);
 
     if (element.has("center")) viewer->setCenter(element.attr("center").asVec3());
     if (element.has("cam-rotation")) viewer->setRotation(glm::radians(element.attr("cam-rotation").asVec3()));
@@ -338,7 +340,7 @@ static std::shared_ptr<UINode> read_container(
     const xml::xmlelement& element
 ) {
     auto container = std::make_shared<Container>(reader.getGUI(), glm::vec2());
-    read_container_impl(reader, element, *container);
+    read_container_impl(reader, element, *container, true);
     return container;
 }
 
@@ -385,7 +387,7 @@ static std::shared_ptr<UINode> read_text_box(
     );
     textbox->setHint(hint);
 
-    read_container_impl(reader, element, *textbox);
+    read_container_impl(reader, element, *textbox, true);
     if (element.has("padding")) {
         glm::vec4 padding = element.attr("padding").asVec4();
         textbox->setPadding(padding);
@@ -719,7 +721,7 @@ static std::shared_ptr<UINode> read_page_box(
     auto& gui = reader.getGUI();
     auto menu = std::make_shared<Menu>(gui);
     menu->setPageLoader(gui.getMenu()->getPageLoader());
-    read_container_impl(reader, element, *menu);
+    read_container_impl(reader, element, *menu, true);
 
     return menu;
 }
@@ -729,7 +731,7 @@ static std::shared_ptr<UINode> read_iframe(
 ) {
     auto& gui = reader.getGUI();
     auto iframe = std::make_shared<InlineFrame>(gui);
-    read_container_impl(reader, element, *iframe);
+    read_container_impl(reader, element, *iframe, true);
 
     std::string src = element.attr("src", "").getText();
     iframe->setSrc(src);

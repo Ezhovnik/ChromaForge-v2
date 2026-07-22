@@ -50,6 +50,7 @@
 #include <content/ContentControl.h>
 #include <devtools/Editor.h>
 #include <devtools/Project.h>
+#include <devtools/DebuggingServer.h>
 
 static std::unique_ptr<ImageData> load_icon() {
     try {
@@ -111,6 +112,7 @@ void Engine::initializeClient() {
     std::string title = project->title;
     if (title.empty()) title = "ChromaForge v" + ENGINE_VERSION_STRING;
     if (ENGINE_DEBUG_BUILD) title += " [development build]";
+    if (debuggingServer) title = "[debugging] " + title;
 
     auto [window, input] = Window::initialize(&settings.display, title);
     if (!window || !input){
@@ -172,6 +174,18 @@ void Engine::initialize(CoreParameters coreParameters) {
     cmd = std::make_unique<cmd::CommandsInterpreter>();
     network = network::Network::create(settings.network);
 
+    if (!params.debugServerString.empty()) {
+        try {
+            debuggingServer = std::make_unique<devtools::DebuggingServer>(
+                *this, params.debugServerString
+            );
+        } catch (const std::runtime_error& err) {
+            throw initialize_error(
+                "Debugging server error: " + std::string(err.what())
+            );
+        }
+    }
+
     if (!params.scriptFile.empty()) paths.setScriptFolder(params.scriptFile.parent_path());
     loadSettings();
 
@@ -221,6 +235,7 @@ void Engine::close() {
         LOG_INFO("GUI finished");
     }
     audio::close();
+    debuggingServer.reset();
     network.reset();
     clearKeepedObjects();
     project.reset();
@@ -305,6 +320,12 @@ void Engine::postUpdate() {
     network->update();
     postRunnables.run();
     scripting::process_post_runnables();
+
+    if (debuggingServer) {
+        if (!debuggingServer->update()) {
+            debuggingServer.reset();
+        }
+    }
 }
 
 void Engine::updateFrontend() {
@@ -381,7 +402,7 @@ void Engine::saveSettings() {
     io::write_string(EnginePaths::SETTINGS_FILE, toml::stringify(*settingsHandler));
     LOG_INFO("The settings were successfully written to the file");
 
-    if (!params.headless) {
+    if (!params.headless && input) {
         LOG_INFO("Writing the controls to a file");
         io::write_string(EnginePaths::CONTROLS_FILE, input->getBindings().write());
         LOG_INFO("The controls were successfully written to the file");

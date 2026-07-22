@@ -55,7 +55,8 @@ int main(int argc, char** argv) {
         engine.initialize(std::move(coreParameters));
         engine.run();
     } catch (const initialize_error& err) {
-        LOG_CRITICAL("An initialization error occurred:\n{}", err.what());
+        LOG_CRITICAL("{}", err.what());
+        LOG_CRITICAL("Could not initialize engine");
     }
 #if defined(NDEBUG)
     catch (const std::exception& err) {

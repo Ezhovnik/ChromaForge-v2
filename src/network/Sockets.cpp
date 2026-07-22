@@ -12,6 +12,7 @@
 
 #ifdef _WIN32
 #include <curl/curl.h>
+#define SHUT_RDWR SD_BOTH
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -230,7 +231,7 @@ public:
             readBatch.clear();
 
             if (state != ConnectionState::Closed) {
-                shutdown(descriptor, 2);
+                shutdown(descriptor, SHUT_RDWR);
                 closesocket(descriptor);
             }
         }

@@ -101,6 +101,9 @@ void lua::init_state(State* L, StateType stateType) {
     pushnil(L);
     setglobal(L, "io");
 
+    createtable(L, 0, 0);
+    setglobal(L, "__chroma__pack_envs");
+
     const char* removed_os[] {
         "execute",
         "exit",
