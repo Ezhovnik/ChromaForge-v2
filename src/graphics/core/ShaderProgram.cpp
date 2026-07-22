@@ -175,11 +175,8 @@ static GLuint compile_program(
     if (!success) {
         GLchar infoLog[GL_LOG_LEN];
         glGetProgramInfoLog(program, GL_LOG_LEN, nullptr, infoLog);
-        LOG_ERROR(
+        THROW_ERR(
             "Shader program linking failed: {}", std::string(infoLog)
-        );
-        throw std::runtime_error(
-            "Shader program linking failed: " + std::string(infoLog)
         );
     }
     return program;

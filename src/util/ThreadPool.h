@@ -239,8 +239,7 @@ namespace util {
             if (!working) return;
 
             if (failed) {
-                LOG_ERROR("['{}' Thread Pool] Some job failed", name);
-                throw std::runtime_error("Some job failed");
+                THROW_ERR("['{}' Thread Pool] Some job failed", name);
             }
 
             bool complete = false;
@@ -278,8 +277,7 @@ namespace util {
                 }
             }
             if (failed) {
-                LOG_ERROR("['{}' Thread Pool] Some job failed", name);
-                throw std::runtime_error("Some job failed");
+                THROW_ERR("['{}' Thread Pool] Some job failed", name);
             }
             if (complete) terminate();
         }

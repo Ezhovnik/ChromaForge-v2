@@ -157,12 +157,7 @@ void process_method(
             list.add(value);
         }
     } else {
-        LOG_ERROR(
-            "Unknown method {} for {}", method, name
-        );
-        throw std::runtime_error(
-            "Unknown method " + method + " for " + name
-        );
+        THROW_ERR("Unknown method {} for {}", method, name);
     }
 }
 
@@ -241,10 +236,7 @@ void ContentUnitLoader<DefT>::loadDefs(const dv::value& root) {
     }
 
     if (!pendingDefs.empty()) {
-        LOG_ERROR("Unresolved {} dependencies detected", defsDir);
-        throw std::runtime_error(
-            "Unresolved " + defsDir + " dependencies detected"
-        );
+        THROW_ERR("Unresolved {} dependencies detected", defsDir);
     }
 }
 
@@ -323,8 +315,7 @@ void ContentLoader::load() {
         try {
             loadGenerator(def, full, name);
         } catch (const std::runtime_error& err) {
-            LOG_ERROR("Generator '{}': {}", full, err.what());
-            throw std::runtime_error("Generator '" + full + "': " + err.what());
+            THROW_ERR("Generator '{}': {}", full, err.what());
         }
     });
 
@@ -407,8 +398,7 @@ static void load_script(const Content& content, T& def) {
     if (scriptName.empty()) return;
     size_t pos = scriptName.find(':');
     if (pos == std::string::npos) {
-        LOG_ERROR("Invalid content unit name");
-        throw std::runtime_error("Invalid content unit name");
+        THROW_ERR("Invalid content unit name");
     }
     const auto runtime = content.getPackRuntime(scriptName.substr(0, pos));
     const auto& pack = runtime->getInfo();

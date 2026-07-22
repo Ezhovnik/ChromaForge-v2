@@ -211,8 +211,7 @@ std::vector<std::string> ContentPack::worldPacksList(
 ) {
     io::path listfile = folder / "packs.list";
     if (!io::is_regular_file(listfile)) {
-        LOG_ERROR("Missing file 'packs.list'");
-        throw std::runtime_error("Missing file 'packs.list'");
+        THROW_ERR("Missing file 'packs.list'");
     }
     return io::read_list(listfile);
 }

@@ -27,15 +27,13 @@ static void fetch_chunks(WorldRegion* region, int x, int z, regFile* file) {
 
 regFile::regFile(io::path filename) : file(filename), filename(filename) {
     if (file.length() < REGION_HEADER_SIZE) {
-        LOG_ERROR("Incomplete region file header in {}", filename.string());
-        throw std::runtime_error("Incomplete region file header in " + filename.string());
+        THROW_ERR("Incomplete region file header in {}", filename.string());
     }
     char header[REGION_HEADER_SIZE];
     file.read(header, REGION_HEADER_SIZE);
 
     if (std::string(header, std::strlen(REGION_FORMAT_MAGIC)) != REGION_FORMAT_MAGIC) {
-        LOG_ERROR("Invalid region file magic number in {}", filename.string());
-        throw std::runtime_error("Invalid region file magic number in " + filename.string());
+        THROW_ERR("Invalid region file magic number in {}", filename.string());
     }
     version = header[REGION_HEADER_SIZE - 2];
     if (static_cast<uint>(version) > REGION_FORMAT_VERSION) {
@@ -92,8 +90,7 @@ regFile_ptr RegionsLayer::getRegFile(glm::ivec2 coord, bool create) {
         const auto found = openRegFiles.find(coord);
         if (found != openRegFiles.end()) {
             if (found->second->inUse) {
-                LOG_ERROR("regFile is currently in use");
-                throw std::runtime_error("regFile is currently in use");
+                THROW_ERR("regFile is currently in use");
             }
             return useRegFile(found->first);
         }

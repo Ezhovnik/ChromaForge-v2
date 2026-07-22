@@ -122,8 +122,7 @@ void ContentControl::loadContent() {
 
 void ContentControl::setContentPacksRaw(std::vector<ContentPack>&& packs) {
     if (content) {
-        LOG_ERROR("'setContentPacksRaw' called with content loaded");
-        throw std::runtime_error("'setContentPacksRaw' called with content loaded");
+        THROW_ERR("'setContentPacksRaw' called with content loaded");
     }
     contentPacks = std::move(packs);
     allPacks = contentPacks;

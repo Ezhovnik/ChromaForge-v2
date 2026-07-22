@@ -129,8 +129,7 @@ static void load(
 
 const std::string& langs::get_current() {
     if (current == nullptr) {
-        LOG_ERROR("Localization is not initialized");
-        throw std::runtime_error("Localization is not initialized");
+        THROW_ERR("Localization is not initialized");
     }
     return current->getId();
 }

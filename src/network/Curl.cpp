@@ -133,8 +133,7 @@ public:
                 curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, request.data.c_str());
                 break;
             default:
-                LOG_ERROR("Not implemented");
-                throw std::runtime_error("Not implemented");
+                THROW_ERR("Not implemented");
         }
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, request.followLocation);
@@ -223,14 +222,12 @@ public:
     static std::unique_ptr<CurlRequests> create() {
         auto curl = curl_easy_init();
         if (curl == nullptr) {
-            LOG_ERROR("Couls not initialize cURL");
-            throw std::runtime_error("Could not initialzie cURL");
+            THROW_ERR("Could not initialize cURL");
         }
         auto multiHandle = curl_multi_init();
         if (multiHandle == nullptr) {
             curl_easy_cleanup(curl);
-            LOG_ERROR("Could not initialzie cURL-multi");
-            throw std::runtime_error("Could not initialzie cURL-multi");
+            THROW_ERR("Could not initialize cURL-multi");
         }
         return std::make_unique<CurlRequests>(multiHandle, curl);
     }

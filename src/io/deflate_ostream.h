@@ -17,8 +17,7 @@ public:
             &zstream, level, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY
         );
         if (ret != Z_OK) {
-            LOG_ERROR("Zlib deflate initialization failed");
-            throw std::runtime_error("Zlib deflate initialization failed");
+            THROW_ERR("Zlib deflate initialization failed");
         }
         inBuffer = std::make_unique<char[]>(bufferSize);
         outBuffer = std::make_unique<char[]>(outBufferSize);

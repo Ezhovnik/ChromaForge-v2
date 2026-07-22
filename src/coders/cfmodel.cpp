@@ -161,16 +161,12 @@ std::unique_ptr<model::Model> cfmodel::parse(std::string_view file, std::string_
         auto doc = io::path(std::string(file)).extension() == ".xml" ? xml::parse(file, src) : xml::parse_cfmodel(file, src, "model");
         const auto& root = *doc->getRoot();
         if (root.getTag() != "model") {
-            LOG_ERROR(
+            THROW_ERR(
                 "'model' tag expected as root, got '{}'", root.getTag()
-            );
-            throw std::runtime_error(
-                "'model' tag expected as root, got '" + root.getTag() + "'"
             );
         }
         return load_model(root);
     } catch (const parsing_error& err) {
-        LOG_ERROR("{}", err.errorLog());
-        throw std::runtime_error(err.errorLog());
+        THROW_ERR("{}", err.errorLog());
     }
 }

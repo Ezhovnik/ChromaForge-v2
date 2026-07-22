@@ -23,20 +23,22 @@ static spdlog::level::level_enum to_spdlog_level(LogLevel lvl) {
 class Logger::Impl {
 private:
     std::shared_ptr<spdlog::logger> logger_;
+    std::shared_ptr<spdlog::sinks::sink> console_sink_;
+    std::shared_ptr<spdlog::sinks::sink> file_sink_;
 public:
     Impl() = default;
 
     void initialize(const std::string& logFile, LogLevel consoleLevel, LogLevel fileLevel) {
         try {
-            auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-            console_sink->set_level(to_spdlog_level(consoleLevel));
-            console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%s:%#] [%!] %v");
+            console_sink_ = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+            console_sink_->set_level(to_spdlog_level(consoleLevel));
+            console_sink_->set_pattern("[%H:%M:%S] [%l] %v");
 
-            auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
-            file_sink->set_level(to_spdlog_level(fileLevel));
-            file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%s:%#] [%!] %v");
+            file_sink_ = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
+            file_sink_->set_level(to_spdlog_level(fileLevel));
+            file_sink_->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%s:%#] [%!] %v");
 
-            logger_ = std::make_shared<spdlog::logger>("ChromaForge", spdlog::sinks_init_list{console_sink, file_sink});
+            logger_ = std::make_shared<spdlog::logger>("ChromaForge", spdlog::sinks_init_list{console_sink_, file_sink_});
             logger_->set_level(spdlog::level::trace);
             logger_->flush_on(spdlog::level::err);
 
@@ -48,18 +50,11 @@ public:
     }
 
     void set_console_level(LogLevel level) {
-        if (!logger_) return;
-        for (auto& sink : logger_->sinks()) {
-            if (sink == logger_->sinks()[0]) {
-                sink->set_level(to_spdlog_level(level));
-                break;
-            }
-        }
+        if (console_sink_) console_sink_->set_level(to_spdlog_level(level));
     }
 
     void set_file_level(LogLevel level) {
-        if (!logger_ || logger_->sinks().size() < 2) return;
-        logger_->sinks()[1]->set_level(to_spdlog_level(level));
+        if (file_sink_) file_sink_->set_level(to_spdlog_level(level));
     }
 
     void set_logger_level(LogLevel level) {
@@ -86,8 +81,8 @@ Logger& Logger::getInstance() {
     return instance;
 }
 
-void Logger::initialize(const std::filesystem::path& folder, LogLevel consoleLevel, LogLevel fileLevel) {
-    pimpl_->initialize(folder.u8string(), consoleLevel, fileLevel);
+void Logger::initialize(const std::filesystem::path& logFile, LogLevel consoleLevel, LogLevel fileLevel) {
+    pimpl_->initialize(logFile.u8string(), consoleLevel, fileLevel);
 }
 
 void Logger::setConsoleLevel(LogLevel level) {

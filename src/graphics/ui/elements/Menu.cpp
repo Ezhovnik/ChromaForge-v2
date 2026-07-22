@@ -50,8 +50,7 @@ Page Menu::fetchPage(const std::string& name) {
 void Menu::setPage(const std::string& name, bool history) {
     Page page = fetchPage(name);
     if (page.panel == nullptr) {
-        LOG_ERROR("No page found");
-        throw std::runtime_error("No page found");
+        THROW_ERR("No page found");
     }
     setPage(page, history);
 }

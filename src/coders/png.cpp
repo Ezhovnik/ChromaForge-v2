@@ -20,8 +20,7 @@ std::unique_ptr<ImageData> png::loadImage(const ubyte* bytes, size_t size, bool 
     stbi_uc* data = stbi_load_from_memory(bytes, static_cast<int>(size), &width, &height, &channels, 4);
     if (!data) {
         const char* error_msg = stbi_failure_reason();
-        LOG_ERROR("Failed to load image. Reason: {}", error_msg ? error_msg : "Unknown error");
-        throw std::runtime_error("Failed to load image");
+        THROW_ERR("Failed to load image. Reason: {}", error_msg ? error_msg : "Unknown error");
     }
 
     auto imageData = std::make_unique<ubyte[]>(width * height * 4);
@@ -85,6 +84,6 @@ std::unique_ptr<Texture> png::loadTexture(const std::string& filename) {
     try {
         return loadTexture(bytes.data(), bytes.size());
     } catch (const std::runtime_error& err) {
-        throw std::runtime_error("Could not to load '" + filename + "'");
+        THROW_ERR("Could not to load '{}'", filename);
     }
 }

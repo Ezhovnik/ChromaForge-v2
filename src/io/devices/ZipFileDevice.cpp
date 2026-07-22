@@ -93,8 +93,7 @@ ZipFileDevice::Entry ZipFileDevice::readEntry() {
     file->seekg(extra_field_len + file_comment_len, std::ios::cur);
 
     if (entry.diskNumberStart == 0xFF) {
-        LOG_ERROR("Zip64 is not supported");
-        throw std::runtime_error("Zip64 is not supported");
+        THROW_ERR("Zip64 is not supported");
     }
 
     for (size_t i = 0; i < entry.fileName.length(); ++i) {
@@ -114,8 +113,7 @@ ZipFileDevice::Entry ZipFileDevice::readEntry() {
 void ZipFileDevice::findBlob(Entry& entry) {
     file->seekg(entry.localHeaderOffset);
     if (read_int<uint32_t>(file) != LOCAL_FILE_SIGNATURE) {
-        LOG_ERROR("Invalid local file signature");
-        throw std::runtime_error("Invalid local file signature");
+        THROW_ERR("Invalid local file signature");
     }
     read_int<uint16_t>(file);
     read_int<uint16_t>(file);
@@ -149,8 +147,7 @@ ZipFileDevice::ZipFileDevice(
         }
     }
     if (!foundEOCD) {
-        LOG_ERROR("EOCD not found, ZIP file is invalid");
-        throw std::runtime_error("EOCD not found, ZIP file is invalid");
+        THROW_ERR("EOCD not found, ZIP file is invalid");
     }
 
     read_int<uint16_t>(file);
@@ -192,8 +189,7 @@ ZipFileDevice::ZipFileDevice(
 }
 
 std::filesystem::path ZipFileDevice::resolve(std::string_view path) {
-    LOG_ERROR("Unable to resolve filesystem path");
-    throw std::runtime_error("Unable to resolve filesystem path");
+    THROW_ERR("Unable to resolve filesystem path");
 }
 
 std::unique_ptr<std::ostream> ZipFileDevice::write(std::string_view path) {
@@ -203,13 +199,11 @@ std::unique_ptr<std::ostream> ZipFileDevice::write(std::string_view path) {
 std::unique_ptr<std::istream> ZipFileDevice::read(std::string_view path) {
     const auto& found = entries.find(std::string(path));
     if (found == entries.end()) {
-        LOG_ERROR("Could not to open file zip://{}", std::string(path));
-        throw std::runtime_error("Could not to open file zip://" + std::string(path));
+        THROW_ERR("Could not to open file zip://{}", std::string(path));
     }
     auto& entry = found->second;
     if (entry.isDirectory) {
-        LOG_ERROR("zip://{} is directory", std::string(path));
-        throw std::runtime_error("zip://" + std::string(path) + " is directory");
+        THROW_ERR("zip://{} is directory", std::string(path));
     }
     if (entry.blobOffset == 0) {
         findBlob(entry);
@@ -229,11 +223,7 @@ std::unique_ptr<std::istream> ZipFileDevice::read(std::string_view path) {
     } else if (entry.compressionMethod == COMPRESSION_DEFLATE) {
         return std::make_unique<deflate_istream>(std::move(src_stream));
     } else {
-        LOG_ERROR("Unsupported compression method [{}]", std::to_string(entry.compressionMethod));
-        throw std::runtime_error(
-            "Unsupported compression method [" +
-            std::to_string(entry.compressionMethod) + "]"
-        );
+        THROW_ERR("Unsupported compression method [{}]", entry.compressionMethod);
     }
 }
 

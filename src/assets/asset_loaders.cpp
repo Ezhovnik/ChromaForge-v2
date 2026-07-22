@@ -110,8 +110,7 @@ asset_loader::postfunc asset_loader::font(
         if (io::exists(file)) {
             pages->push_back(imageio::read(file));
         } else if (i == 0) {
-            LOG_ERROR("Font must have page 0");
-            throw std::runtime_error("Font must have page 0");
+            THROW_ERR("Font must have page 0");
         } else {
             pages->push_back(nullptr);
         }
@@ -391,8 +390,7 @@ asset_loader::postfunc asset_loader::layout(
                 name
             );
         } catch (const parsing_error& err) {
-			LOG_ERROR("Failed to parse layout XML '{}'. What: {}", file, err.errorLog());
-            throw std::runtime_error("failed to parse layout XML '" + file + "':\n" + err.errorLog());
+			THROW_ERR("Failed to parse layout XML '{}':\n{}", file, err.errorLog());
         }
     };
 }
@@ -426,8 +424,7 @@ asset_loader::postfunc asset_loader::sound(
     }
 
     if (baseSound == nullptr) {
-        LOG_ERROR("Could not to find sound: {}", file);
-        throw std::runtime_error("Could not to find sound: " + file);
+        THROW_ERR("Could not to find sound: {}", file);
     }
 
     for (uint i = 1; ; ++i) {
@@ -507,8 +504,7 @@ asset_loader::postfunc asset_loader::model(
         }
     }
     if (path.empty()) {
-        LOG_ERROR("Could not to find model {}", util::quote(file));
-        throw std::runtime_error("Could not to find model " + util::quote(file));
+        THROW_ERR("Could not to find model {}", util::quote(file));
     }
 
     auto text = io::read_string(path);

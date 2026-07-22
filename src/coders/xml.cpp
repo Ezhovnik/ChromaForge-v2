@@ -52,9 +52,7 @@ glm::vec3 Attribute::asVec3() const {
     }
     size_t pos2 = text.find(',', pos1 + 1);
     if (pos2 == std::string::npos) {
-        std::string errorLog = "Invalid vec3 value " + util::quote(text);
-        LOG_ERROR("{}", errorLog);
-        throw std::runtime_error(errorLog);
+        THROW_ERR("Invalid vec3 value {}", util::quote(text));
     }
     return glm::vec3(
         util::parse_double(text, 0, pos1),
@@ -70,15 +68,11 @@ glm::vec4 Attribute::asVec4() const {
     }
     size_t pos2 = text.find(',', pos1 + 1);
     if (pos2 == std::string::npos) {
-        std::string errorLog = "Invalid vec4 value " + util::quote(text);
-        LOG_ERROR("{}", errorLog);
-        throw std::runtime_error(errorLog);
+        THROW_ERR("Invalid vec4 value {}", util::quote(text));
     }
     size_t pos3 = text.find(',', pos2 + 1);
     if (pos3 == std::string::npos) {
-        std::string errorLog = "Invalid vec4 value " + util::quote(text);
-        LOG_ERROR("{}", errorLog);
-        throw std::runtime_error(errorLog);
+        THROW_ERR("Invalid vec4 value {}", util::quote(text));
     }
     return glm::vec4(
         util::parse_double(text, 0, pos1),
@@ -91,8 +85,7 @@ glm::vec4 Attribute::asVec4() const {
 glm::vec4 Attribute::asColor() const {
     if (text[0] == '#') {
         if (text.length() != 7 && text.length() != 9) {
-            LOG_ERROR("#RRGGBB or #RRGGBBAA required");
-            throw std::runtime_error("#RRGGBB or #RRGGBBAA required");
+            THROW_ERR("#RRGGBB or #RRGGBBAA required");
         }
         int a = 255;
         int r = (std::max(0, hexchar2int(text[1])) << 4) | hexchar2int(text[2]);
@@ -123,8 +116,7 @@ const std::string& Node::getTag() const {
 const Attribute& Node::attr(const std::string& name) const {
     auto found = attrs.find(name);
     if (found == attrs.end()) {
-        LOG_ERROR("Element <{} ...> missing attribute {}", tag, name);
-        throw std::runtime_error("element <" + tag + " ...> missing attribute " + name);
+        THROW_ERR("Element <{} ...> missing attribute {}", tag, name);
     }
     return found->second;
 }

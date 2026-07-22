@@ -36,10 +36,7 @@ void EnginePaths::prepare() {
     io::set_device("user", std::make_shared<io::StdfsDevice>(userFilesFolder));
 
     if (!io::is_directory("res:")) {
-        LOG_ERROR("{} is not a directory", resourcesFolder.u8string());
-        throw std::runtime_error(
-            resourcesFolder.u8string() + " is not a directory"
-        );
+        THROW_ERR("{} is not a directory", resourcesFolder.u8string());
     }
 
     LOG_INFO("Executable path: {}", platform::get_executable_path().string());
@@ -145,15 +142,13 @@ std::string EnginePaths::mount(const io::path& file) {
         mounted.push_back(name);
         return name;
     }
-    LOG_ERROR("Unable to mount {}", file.string());
-    throw std::runtime_error("Unable to mount " + file.string());
+    THROW_ERR("Unable to mount {}", file.string());
 }
 
 void EnginePaths::unmount(const std::string& name) {
     const auto& found = std::find(mounted.begin(), mounted.end(), name);
     if (found == mounted.end()) {
-        LOG_ERROR("{} is not mounted", name);
-        throw std::runtime_error(name + " is not mounted");
+        THROW_ERR("{} is not mounted", name);
     }
     io::remove_device(name);
     mounted.erase(found);
@@ -172,8 +167,7 @@ std::string EnginePaths::createWriteableDevice(const std::string& name) {
     }
     if (name == BUILTIN_CONTENT_NAMESPACE) folder = "res:";
     if (folder.emptyOrInvalid()) {
-        LOG_ERROR("Pack not found");
-        throw std::runtime_error("Pack not found");
+        THROW_ERR("Pack not found");
     }
 
     auto entryPoint = std::string("W.") + generate_random_base64<6>();
@@ -258,8 +252,7 @@ std::string ResPaths::findRaw(const std::string& filename) const {
         }
     }
 
-    LOG_ERROR("Could not to find file '{}'", filename);
-    throw std::runtime_error("Could not to find file " + util::quote(filename));
+    THROW_ERR("Could not to find file '{}'", filename);
 }
 
 std::vector<std::string> ResPaths::listdirRaw(const std::string& folderName) const {

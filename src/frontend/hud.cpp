@@ -485,8 +485,7 @@ void Hud::openInventory(
 
     blockUI = std::dynamic_pointer_cast<gui::InventoryView>(doc->getRoot());
     if (blockUI == nullptr) {
-		LOG_ERROR("Block UI root element must be 'inventory'");
-        throw std::runtime_error("Block UI root element must be 'inventory'");
+		THROW_ERR("Block UI root element must be 'inventory'");
     }
 
     secondUI = blockUI;
@@ -530,8 +529,7 @@ std::shared_ptr<Inventory> Hud::openInventory(
 
     secondInvView = std::dynamic_pointer_cast<gui::InventoryView>(doc->getRoot());
     if (secondInvView == nullptr) {
-        LOG_ERROR("Secondary UI root element must be 'inventory'");
-        throw std::runtime_error("Secondary UI root element must be 'inventory'");
+        THROW_ERR("Secondary UI root element must be 'inventory'");
     }
     secondUI = secondInvView;
 

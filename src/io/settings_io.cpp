@@ -92,8 +92,7 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
 dv::value SettingsHandler::getValue(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
-		LOG_ERROR("Setting '{}' does not exist", name);
-        throw std::runtime_error("Setting '" + name + "' does not exist");
+		THROW_ERR("Setting '{}' does not exist", name);
     }
     auto setting = found->second;
     if (auto number = dynamic_cast<NumberSetting*>(setting)) {
@@ -105,16 +104,14 @@ dv::value SettingsHandler::getValue(const std::string& name) const {
     } else if (auto string = dynamic_cast<StringSetting*>(setting)) {
         return string->get();
     } else {
-		LOG_ERROR("Type is not implemented for '{}'", name);
-        throw std::runtime_error("Type is not implemented for '" + name + "'");
+		THROW_ERR("Type is not implemented for '{}'", name);
     }
 }
 
 dv::value SettingsHandler::getDefault(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
-        LOG_ERROR("Setting {} does not exist", name);
-        throw std::runtime_error("Setting '" + name + "' does not exist");
+        THROW_ERR("Setting '{}' does not exist", name);
     }
     auto setting = found->second;
 
@@ -127,16 +124,14 @@ dv::value SettingsHandler::getDefault(const std::string& name) const {
     } else if (auto string = dynamic_cast<StringSetting*>(setting)) {
         return string->getDefault();
     } else {
-        LOG_ERROR("Type is not implemented for '{}'", name);
-        throw std::runtime_error("Type is not implemented for '" + name + "'");
+        THROW_ERR("Type is not implemented for '{}'", name);
     }
 }
 
 std::string SettingsHandler::toString(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
-		LOG_ERROR("Setting '{}' does not exist", name);
-        throw std::runtime_error("Setting '" + name + "' does not exist");
+		THROW_ERR("Setting '{}' does not exist", name);
     }
     auto setting = found->second;
     return setting->toString();
@@ -145,8 +140,7 @@ std::string SettingsHandler::toString(const std::string& name) const {
 Setting* SettingsHandler::getSetting(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
-		LOG_ERROR("Setting '{}' does not exist", name);
-        throw std::runtime_error("Setting '" + name + "' does not exist");
+		THROW_ERR("Setting '{}' does not exist", name);
     }
     return found->second;
 }
@@ -164,16 +158,14 @@ static void set_numeric_value(T* setting, const dv::value& value) {
             setting->set(value.asBoolean());
             break;
         default:
-            LOG_ERROR("Type error, numeric value expected");
-            throw std::runtime_error("Type error, numeric value expected");
+            THROW_ERR("Type error, numeric value expected");
     }
 }
 
 void SettingsHandler::setValue(const std::string& name, const dv::value& value) {
     auto found = map.find(name);
     if (found == map.end()) {
-		LOG_ERROR("Setting '{}' does not exist", name);
-        throw std::runtime_error("Setting '" + name + "' does not exist");
+		THROW_ERR("Setting '{}' does not exist", name);
     }
     auto setting = found->second;
     if (auto number = dynamic_cast<NumberSetting*>(setting)) {
@@ -197,12 +189,10 @@ void SettingsHandler::setValue(const std::string& name, const dv::value& value) 
                 string->set(value.asString());
                 break;
             default:
-                LOG_ERROR("Not implemented for type");
-                throw std::runtime_error("Not implemented for type");
+                THROW_ERR("Not implemented for type");
         }
     } else {
-		LOG_ERROR("Type is not implement - setting '{}'", name);
-        throw std::runtime_error("Type is not implement - setting '" + name + "'");
+		THROW_ERR("Type is not implement - setting '{}'", name);
     }
 }
 

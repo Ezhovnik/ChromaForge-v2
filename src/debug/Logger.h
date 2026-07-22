@@ -29,9 +29,9 @@ public:
     static Logger& getInstance();
 
     void initialize(
-        const std::filesystem::path& folder, 
-        LogLevel consoleLevel = LogLevel::INFO, 
-        LogLevel fileLevel = LogLevel::DEBUG
+        const std::filesystem::path& logFile,
+        LogLevel consoleLevel,
+        LogLevel fileLevel
     );
 
     void setConsoleLevel(LogLevel level);
@@ -60,3 +60,9 @@ public:
 #define LOG_WARN(...)     Logger::getInstance().log(LogLevel::WARN, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_ERROR(...)    Logger::getInstance().log(LogLevel::ERR, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define LOG_CRITICAL(...) Logger::getInstance().log(LogLevel::CRITICAL, __FILE__, __LINE__, __func__, __VA_ARGS__)
+
+#define THROW_ERR(...) \
+    do { \
+        Logger::getInstance().log(LogLevel::ERR, __FILE__, __LINE__, __func__, __VA_ARGS__); \
+        throw std::runtime_error(fmt::format(__VA_ARGS__)); \
+    } while(0)

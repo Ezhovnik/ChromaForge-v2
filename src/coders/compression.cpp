@@ -75,8 +75,7 @@ std::unique_ptr<ubyte[]> compression::compress(
             return data;
         }
         default:
-            LOG_ERROR("Not implemented");
-            throw std::runtime_error("Not implemented");
+            THROW_ERR("Not implemented");
     }
 }
 
@@ -96,27 +95,20 @@ std::unique_ptr<ubyte[]> compression::decompress(
             auto decompressed = std::make_unique<ubyte[]>(dstlen);
             size_t decoded = extrle::decode16(src, srclen, decompressed.get());
             if (decoded != dstlen) {
-                LOG_ERROR("Expected decompressed size {} got {}", dstlen, decoded);
-                throw std::runtime_error(
-                    "Expected decompressed size " + std::to_string(dstlen) + " got " + std::to_string(decoded)
-                );
+                THROW_ERR("Expected decompressed size {} got {}", dstlen, decoded);
             }
             return decompressed;
         }
         case Method::Zip: {
             auto buffer = zip::decompress(src, srclen);
             if (buffer.size() != dstlen) {
-                LOG_ERROR("Expected decompressed size {} got {}", dstlen, buffer.size());
-                throw std::runtime_error(
-                    "Expected decompressed size " + std::to_string(dstlen) + " got " + std::to_string(buffer.size())
-                );
+                THROW_ERR("Expected decompressed size {} got {}", dstlen, buffer.size());
             }
             auto decompressed = std::make_unique<ubyte[]>(buffer.size());
             std::memcpy(decompressed.get(), buffer.data(), buffer.size());
             return decompressed;
         }
         default:
-            LOG_ERROR("Not implemented");
-            throw std::runtime_error("Not implemented");
+            THROW_ERR("Not implemented");
     }
 }

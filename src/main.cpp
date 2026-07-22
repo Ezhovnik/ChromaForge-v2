@@ -35,7 +35,11 @@ int main(int argc, char** argv) {
     // Инициализация логгера
     auto logPath = coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log");
     if (ENGINE_DEBUG_BUILD) {
-		Logger::getInstance().initialize(logPath);
+		Logger::getInstance().initialize(
+            logPath,
+            LogLevel::INFO,
+            LogLevel::DEBUG
+        );
 	} else {
 		Logger::getInstance().initialize(
 			logPath,

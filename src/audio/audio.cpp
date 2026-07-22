@@ -167,8 +167,7 @@ void audio::initialize(bool enabled, AudioSettings& settings) {
 
 std::unique_ptr<PCM> audio::load_PCM(const io::path& file, bool headerOnly) {
     if (!io::exists(file)) {
-        LOG_ERROR("File not found '{}'", file.string());
-        throw std::runtime_error("File not found '" + file.string() + "'");
+        THROW_ERR("File not found '{}'", file.string());
     }
     std::string ext = file.extension();
     if (ext == ".wav" || ext == ".WAV") {
@@ -176,8 +175,7 @@ std::unique_ptr<PCM> audio::load_PCM(const io::path& file, bool headerOnly) {
     } else if (ext == ".ogg" || ext == ".OGG") {
         return ogg::load_pcm(file, headerOnly);
     }
-    LOG_ERROR("Unsupported audio format");
-    throw std::runtime_error("unsupported audio format");
+    THROW_ERR("Unsupported audio format");
 }
 
 std::unique_ptr<Sound> audio::load_sound(const io::path& file, bool keepPCM) {
@@ -198,8 +196,7 @@ std::unique_ptr<PCMStream> audio::open_PCM_stream(const io::path& file) {
     } else if (ext == ".ogg" || ext == ".OGG") {
         return ogg::create_stream(file);
     }
-    LOG_ERROR("Unsupported audio stream format");
-    throw std::runtime_error("Unsupported audio stream format");
+    THROW_ERR("Unsupported audio stream format");
 }
 
 std::unique_ptr<Stream> audio::open_stream(

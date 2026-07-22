@@ -46,8 +46,7 @@ entityid_t Entities::spawn(
 ) {
     auto skeleton = level.content.getSkeleton(def.skeletonName);
     if (skeleton == nullptr) {
-        LOG_ERROR("Skeleton {} not found", def.skeletonName);
-        throw std::runtime_error("Skeleton " + def.skeletonName + " not found");
+        THROW_ERR("Skeleton {} not found", def.skeletonName);
     }
     entityid_t id;
     if (uid == 0) {
@@ -61,8 +60,7 @@ entityid_t Entities::spawn(
             if (found->getID().destroyFlag) {
                 ss << " marked to destroy";
             }
-            LOG_ERROR("{}", ss.str());
-            throw std::runtime_error(ss.str());
+            THROW_ERR("{}", ss.str());
         }
     }
     auto entity = registry.create();

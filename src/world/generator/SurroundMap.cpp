@@ -33,8 +33,7 @@ void SurroundMap::upgrade(int x, int y, int8_t level) {
             int posY = ly + y;
             int8_t sourceLevel = areaMap.get(posX, posY, 0);
             if (sourceLevel < level - 1) {
-                LOG_ERROR("Invalid map state");
-                throw std::runtime_error("Invalid map state");
+                THROW_ERR("Invalid map state");
             }
             if (sourceLevel >= level) continue;
             areaMap.set(posX, posY, level);

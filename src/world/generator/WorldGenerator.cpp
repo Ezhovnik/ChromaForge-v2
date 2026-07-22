@@ -77,8 +77,7 @@ WorldGenerator::~WorldGenerator() {}
 ChunkPrototype& WorldGenerator::requirePrototype(int x, int z) {
     const auto& found = prototypes.find({x, z});
     if (found == prototypes.end()) {
-        LOG_ERROR("Prototype not found");
-        throw std::runtime_error("Prototype not found");
+        THROW_ERR("Prototype not found");
     }
     return *found->second;
 }

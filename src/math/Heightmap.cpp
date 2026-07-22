@@ -80,8 +80,7 @@ static inline float sample_at(
             return interpolate_bicubic(p, ty, tx);
         }
         default:
-            LOG_ERROR("Interpolation type is not implemented");
-            throw std::runtime_error("Interpolation type is not implemented");
+            THROW_ERR("Interpolation type is not implemented");
     }
     return val;
 }
@@ -112,10 +111,7 @@ void Heightmap::crop(
     uint srcx, uint srcy, uint dstwidth, uint dstheight
 ) {
     if (srcx + dstwidth > width || srcy + dstheight > height) {
-        LOG_ERROR("Crop zone is not fully inside of the source image");
-        throw std::runtime_error(
-            "Crop zone is not fully inside of the source image"
-        );
+        THROW_ERR("Crop zone is not fully inside of the source image");
     }
     if (dstwidth == width && dstheight == height) {
         return;

@@ -263,13 +263,11 @@ void WorldRegions::processBlocksData(int x, int z, const BlockDataProc& func) {
     auto& voxLayer = layers[REGION_LAYER_VOXELS];
     auto& datLayer = layers[REGION_LAYER_BLOCKS_DATA];
     if (voxLayer.getRegion(x, z) || datLayer.getRegion(x, z)) {
-        LOG_ERROR("Not implemented for in-memory regions");
-        throw std::runtime_error("Not implemented for in-memory regions");
+        THROW_ERR("Not implemented for in-memory regions");
     }
     auto datRegfile = datLayer.getRegFile({x, z});
     if (datRegfile == nullptr) {
-        LOG_ERROR("Could not open region file");
-        throw std::runtime_error("Could not open region file");
+        THROW_ERR("Could not open region file");
     }
     auto voxRegfile = voxLayer.getRegFile({x, z});
     if (voxRegfile == nullptr) {
@@ -335,13 +333,11 @@ void WorldRegions::processRegion(
 ) {
     auto& layer = layers[layerID];
     if (layer.getRegion(x, z)) {
-        LOG_ERROR("Not implemented for in-memory regions");
-        throw std::runtime_error("Not implemented for in-memory regions");
+        THROW_ERR("Not implemented for in-memory regions");
     }
     auto regFile = layer.getRegFile({x, z});
     if (regFile == nullptr) {
-        LOG_ERROR("Could not open region file");
-        throw std::runtime_error("Could not open region file");
+        THROW_ERR("Could not open region file");
     }
     for (uint cz = 0; cz < RegionConsts::SIZE; ++cz) {
         int gz = cz + z * RegionConsts::SIZE;
@@ -383,8 +379,7 @@ void WorldRegions::writeAll() {
 void WorldRegions::deleteRegion(RegionLayerIndex layerid, int x, int z) {
     auto& layer = layers[layerid];
     if (layer.getRegFile({x, z}, false)) {
-        LOG_ERROR("Region file is currently in use");
-        throw std::runtime_error("Region file is currently in use");
+        THROW_ERR("Region file is currently in use");
     }
     auto file = layer.getRegionFilePath(x, z);
     if (io::exists(file)) {

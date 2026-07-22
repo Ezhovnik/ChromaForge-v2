@@ -273,9 +273,7 @@ public:
         if (int res = getaddrinfo(
             address.c_str(), nullptr, &hints, &addrinfo
         )) {
-            std::string errorLog = gai_strerrorA(res);
-            LOG_ERROR("{}", errorLog);
-            throw std::runtime_error(errorLog);
+            THROW_ERR("{}", gai_strerrorA(res));
         }
 
         sockaddr_in serverAddress;
@@ -285,8 +283,7 @@ public:
 
         SOCKET descriptor = socket(AF_INET, SOCK_STREAM, 0);
         if (descriptor == -1) {
-            LOG_ERROR("Could not create socket");
-            throw std::runtime_error("Could not create socket");
+            THROW_ERR("Could not create socket");
         }
         auto socket = std::make_shared<SocketTcpConnection>(descriptor, std::move(serverAddress));
         socket->connect(std::move(callback));
@@ -386,8 +383,7 @@ public:
             AF_INET, SOCK_STREAM, 0
         );
         if (descriptor == -1) {
-            LOG_ERROR("Could not create server socket");
-            throw std::runtime_error("Could not create server socket");
+            THROW_ERR("Could not create server socket");
         }
         int opt = 1;
         int flags = SO_REUSEADDR;
@@ -395,9 +391,8 @@ public:
             flags |= SO_REUSEPORT;
 #       endif
         if (setsockopt(descriptor, SOL_SOCKET, flags, (const char*)&opt, sizeof(opt))) {
-            LOG_ERROR("setsockopt(SO_REUSEADDR) failed with errno: {} ({})", errno, std::strerror(errno));
             closesocket(descriptor);
-            throw std::runtime_error("setsockopt");
+            THROW_ERR("setsockopt(SO_REUSEADDR) failed with errno: {} ({})", errno, std::strerror(errno));
         }
         sockaddr_in address;
         address.sin_family = AF_INET;
@@ -405,8 +400,7 @@ public:
         address.sin_port = htons(port);
         if (bind(descriptor, (sockaddr*)&address, sizeof(address)) < 0) {
             closesocket(descriptor);
-            LOG_ERROR("Could not bind port {}", std::to_string(port));
-            throw std::runtime_error("Could not bind port " + std::to_string(port));
+            THROW_ERR("Could not bind port {}", port);
         }
         LOG_INFO("Opened server at port {}", port);
         auto server = std::make_shared<SocketTcpServer>(id, network, descriptor, port);
@@ -426,9 +420,7 @@ static sockaddr_in resolve_address_dgram(const std::string& address, int port) {
     if (int res = getaddrinfo(
         address.c_str(), nullptr, &hints, &addrinfo
     )) {
-        std::string errorLog = gai_strerrorA(res);
-        LOG_ERROR("{}", errorLog);
-        throw std::runtime_error(errorLog);
+        THROW_ERR("{}", gai_strerrorA(res));
     }
 
     std::memcpy(&serverAddr, addrinfo->ai_addr, sizeof(sockaddr_in));
@@ -466,8 +458,7 @@ public:
     ) {
         SOCKET descriptor = socket(AF_INET, SOCK_DGRAM, 0);
         if (descriptor == -1) {
-            LOG_ERROR("Could not create UDP socket");
-            throw std::runtime_error("Could not create udp socket");
+            THROW_ERR("Could not create UDP socket");
         }
 
         sockaddr_in serverAddr = resolve_address_dgram(address, port);
@@ -629,8 +620,7 @@ public:
     ) {
         SOCKET descriptor = socket(AF_INET, SOCK_DGRAM, 0);
         if (descriptor == -1) {
-            LOG_ERROR("Could not create UDP socket");
-            throw std::runtime_error("Could not create udp socket");
+            THROW_ERR("Could not create UDP socket");
         }
 
         sockaddr_in address{};
@@ -640,8 +630,7 @@ public:
 
         if (bind(descriptor, (sockaddr*)&address, sizeof(address)) < 0) {
             closesocket(descriptor);
-            LOG_ERROR("Could not bind UDP port {}", std::to_string(port));
-            throw std::runtime_error("Could not bind udp port " + std::to_string(port));
+            THROW_ERR("Could not bind UDP port {}", port);
         }
 
         auto server = std::make_shared<SocketUdpServer>(id, network, descriptor, port);

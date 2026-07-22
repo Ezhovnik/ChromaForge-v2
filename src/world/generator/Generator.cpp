@@ -29,10 +29,7 @@ void Generator::prepare(const Content* content) {
         for (auto& structure : biome.structures.entries) {
             const auto& found = structuresIndices.find(structure.name);
             if (found == structuresIndices.end()) {
-                LOG_ERROR("No structure {} found", util::quote(structure.name));
-                throw std::runtime_error(
-                    "No structure " + util::quote(structure.name) + " found"
-                );
+                THROW_ERR("No structure {} found", util::quote(structure.name));
             }
             structure.rt.id = found->second;
         }
