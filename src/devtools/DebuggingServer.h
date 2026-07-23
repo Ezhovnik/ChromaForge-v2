@@ -21,6 +21,9 @@ namespace dv {
 class Engine;
 
 namespace devtools {
+    inline constexpr const char CHROMADBG_MAGIC[12] = "chroma-dbg\0";
+    inline constexpr int CHROMADBG_VERSION = 1;
+
     class ClientConnection {
     public:
         ClientConnection(network::Network& network, uint64_t connection) : network(network), connection(connection) {}
@@ -29,10 +32,15 @@ namespace devtools {
         std::string read();
         void send(const dv::value& message);
         void sendResponse(const std::string& type);
+
+        bool alive() const;
     private:
         network::Network& network;
         size_t messageLength = 0;
         uint64_t connection;
+        bool initiated = false;
+
+        bool initiate(network::ReadableConnection* connection);
     };
 
     enum class DebuggingEventType {
@@ -81,11 +89,15 @@ namespace devtools {
 
         void setClient(uint64_t client);
         std::vector<DebuggingEvent> pullEvents();
+
+        void setDisconnectAction(const std::string& action);
     private:
         Engine& engine;
         network::Server& server;
         std::unique_ptr<ClientConnection> connection;
+        bool connectionEstablished = false;
         std::vector<DebuggingEvent> breakpointEvents;
+        std::string disconnectAction = "resume";
 
         bool performCommand(const std::string& type, const dv::value& map);
     };

@@ -15,11 +15,36 @@ ClientConnection::~ClientConnection() {
     }
 }
 
+bool ClientConnection::initiate(network::ReadableConnection* connection) {
+    if (connection->available() < 8) return false;
+
+    char buffer[12] {};
+    char expected[12] {};
+    std::memcpy(expected, CHROMADBG_MAGIC, sizeof(CHROMADBG_MAGIC));
+    expected[10] = CHROMADBG_VERSION >> 12;
+    expected[11] = CHROMADBG_VERSION & 0xFF;
+    connection->recv(buffer, sizeof(CHROMADBG_MAGIC));
+
+    connection->send(expected, sizeof(CHROMADBG_MAGIC));
+    if (std::memcmp(expected, buffer, sizeof(CHROMADBG_MAGIC)) == 0) {
+        initiated = true;
+        return false;
+    } else {
+        connection->close(true);
+        return true;
+    }
+}
+
 std::string ClientConnection::read() {
     auto connection = dynamic_cast<network::ReadableConnection*>(
         network.getConnection(this->connection, true)
     );
     if (connection == nullptr) return "";
+    if (!initiated) {
+        if (initiate(connection)) {
+            return "";
+        }
+    }
     if (messageLength == 0) {
         if (connection->available() >= sizeof(int32_t)) {
             int32_t length = 0;
@@ -53,6 +78,10 @@ void ClientConnection::send(const dv::value& object) {
 
 void ClientConnection::sendResponse(const std::string& type) {
     send(dv::object({{"type", type}}));
+}
+
+bool ClientConnection::alive() const {
+    return network.getConnection(this->connection, true) != nullptr;
 }
 
 static network::Server& create_tcp_server(
@@ -120,7 +149,14 @@ DebuggingServer::~DebuggingServer() {
 bool DebuggingServer::update() {
     if (connection == nullptr) return false;
     std::string message = connection->read();
-    if (message.empty()) return false;
+    if (message.empty()) {
+        if (!connection->alive()) {
+            bool status = performCommand(disconnectAction, dv::object());
+            connection.reset();
+            return status;
+        }
+        return false;
+    }
 
     LOG_DEBUG("Received: {}", message);
 
@@ -131,7 +167,10 @@ bool DebuggingServer::update() {
             return false;
         }
         const auto& type = obj["type"].asString();
-        return performCommand(type, obj);
+        if (performCommand(type, obj)) {
+            connection->sendResponse("resumed");
+            return true;
+        }
     } catch (const std::runtime_error& err) {
         LOG_ERROR("Could not to parse message: {}", err.what());
     }
@@ -141,6 +180,14 @@ bool DebuggingServer::update() {
 bool DebuggingServer::performCommand(
     const std::string& type, const dv::value& map
 ) {
+    if (!connectionEstablished && type == "connect") {
+        map.at("disconnect-action").get(disconnectAction);
+        connectionEstablished = true;
+        LOG_INFO("Client connection established");
+        connection->sendResponse("success");
+    }
+    if (!connectionEstablished) return false;
+
     if (type == "terminate") {
         engine.quit();
         connection->sendResponse("success");
@@ -200,12 +247,17 @@ void DebuggingServer::pause(
 ) {
     if (connection == nullptr) return;
 
-    connection->send(dv::object({
-        {"type", std::string("paused")},
-        {"reason", std::move(reason)},
-        {"message", std::move(message)},
-        {"stack", std::move(stackTrace)}
-    }));
+    auto response = dv::object({{"type", std::string("paused")}});
+    if (!reason.empty()) {
+        response["reason"] = std::move(reason);
+    }
+    if (!message.empty()) {
+        response["message"] = std::move(message);
+    }
+    if (stackTrace != nullptr) {
+        response["stack"] = std::move(stackTrace);
+    }
+    connection->send(std::move(response));
 
     engine.startPauseLoop();
 }
@@ -231,9 +283,14 @@ void DebuggingServer::sendValue(
 }
 
 void DebuggingServer::setClient(uint64_t client) {
-    this->connection = std::make_unique<ClientConnection>(engine.getNetwork(), client);
+    connection = std::make_unique<ClientConnection>(engine.getNetwork(), client);
+    connectionEstablished = false;
 }
 
 std::vector<DebuggingEvent> DebuggingServer::pullEvents() {
     return std::move(breakpointEvents);
+}
+
+void DebuggingServer::setDisconnectAction(const std::string& action) {
+    disconnectAction = action;
 }
