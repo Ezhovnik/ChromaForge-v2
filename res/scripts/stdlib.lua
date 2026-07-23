@@ -586,6 +586,7 @@ function __process_post_runnables()
         __chroma_named_coroutines[name] = nil
     end
 
+    debug.pull_events()
     network.__process_events()
     block.__process_register_events()
     block.__perform_sparks(time.delta())

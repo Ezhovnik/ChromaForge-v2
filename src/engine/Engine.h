@@ -117,6 +117,7 @@ public:
     void updateFrontend();
     void renderFrame();
     void nextFrame();
+    void startPauseLoop();
 
     EnginePaths& getPaths();
     ResPaths& getResPaths();
@@ -156,6 +157,12 @@ public:
     const Project& getProject() {
         return *project;
     }
+
+    devtools::DebuggingServer* getDebuggingServer() {
+        return debuggingServer.get();
+    }
+
+    void detachDebugger();
 
     bool isHeadless() const;
 

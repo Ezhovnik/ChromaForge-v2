@@ -27,12 +27,14 @@ std::string ClientConnection::read() {
             if (length <= 0) {
                 LOG_ERROR("Invalid message length {}", length);
             } else {
+                LOG_DEBUG("Message length {}", length);
                 messageLength = length;
             }
         }
     } else if (connection->available() >= messageLength) {
         std::string string(messageLength, 0);
         connection->recv(string.data(), messageLength);
+        messageLength = 0;
         return string;
     }
     return "";
@@ -116,9 +118,9 @@ DebuggingServer::~DebuggingServer() {
 }
 
 bool DebuggingServer::update() {
-    if (connection == nullptr) return true;
+    if (connection == nullptr) return false;
     std::string message = connection->read();
-    if (message.empty()) return true;
+    if (message.empty()) return false;
 
     LOG_DEBUG("Received: {}", message);
 
@@ -126,14 +128,14 @@ bool DebuggingServer::update() {
         auto obj = json::parse(message);
         if (!obj.has("type")) {
             LOG_ERROR("Missing message type");
-            return true;
+            return false;
         }
         const auto& type = obj["type"].asString();
         return performCommand(type, obj);
     } catch (const std::runtime_error& err) {
         LOG_ERROR("Could not to parse message: {}", err.what());
     }
-    return true;
+    return false;
 }
 
 bool DebuggingServer::performCommand(
@@ -145,13 +147,93 @@ bool DebuggingServer::performCommand(
     } else if (type == "detach") {
         connection->sendResponse("success");
         connection.reset();
+        engine.detachDebugger();
         return false;
+    } else if (type == "set-breakpoint" || type == "remove-breakpoint") {
+        if (!map.has("source") || !map.has("line")) return false;
+        breakpointEvents.push_back(DebuggingEvent {
+            type[0] == 's' ? DebuggingEventType::SetBreakpoint : DebuggingEventType::RemoveBreakpoint,
+            BreakpointEventDto {
+                map["source"].asString(),
+                static_cast<int>(map["line"].asInteger()),
+            }
+        });
+    } else if (type == "step" || type == "step-into-function") {
+        breakpointEvents.push_back(DebuggingEvent {
+            type == "step" ? DebuggingEventType::Step : DebuggingEventType::StepIntoFunction,
+            SignalEventDto {}
+        });
+        return true;
+    } else if (type == "resume") {
+        breakpointEvents.push_back(DebuggingEvent {
+            DebuggingEventType::Resume, SignalEventDto {}
+        });
+        return true;
+    } else if (type == "get-value") {
+        if (!map.has("frame") || !map.has("local") || !map.has("path")) return false;
+
+        int frame = map["frame"].asInteger();
+        int localIndex = map["local"].asInteger();
+
+        ValuePath path;
+        for (const auto& segment : map["path"]) {
+            if (segment.isString()) {
+                path.emplace_back(segment.asString());
+            } else {
+                path.emplace_back(static_cast<int>(segment.asInteger()));
+            }
+        }
+        breakpointEvents.push_back(DebuggingEvent {
+            DebuggingEventType::GetValue, GetValueEventDto {
+                frame, localIndex, std::move(path)
+            }
+        });
+        return true;
     } else {
         LOG_ERROR("Unsupported command '{}'", type);
     }
-    return true;
+    return false;
+}
+
+void DebuggingServer::pause(
+    std::string&& reason, std::string&& message, dv::value&& stackTrace
+) {
+    if (connection == nullptr) return;
+
+    connection->send(dv::object({
+        {"type", std::string("paused")},
+        {"reason", std::move(reason)},
+        {"message", std::move(message)},
+        {"stack", std::move(stackTrace)}
+    }));
+
+    engine.startPauseLoop();
+}
+
+void DebuggingServer::sendValue(
+    dv::value&& value, int frame, int local, ValuePath&& path
+) {
+    auto pathValue = dv::list();
+    for (const auto& segment : path) {
+        if (auto string = std::get_if<std::string>(&segment)) {
+            pathValue.add(*string);
+        } else {
+            pathValue.add(std::get<int>(segment));
+        }
+    }
+    connection->send(dv::object({
+        {"type", std::string("value")},
+        {"frame", frame},
+        {"local", local},
+        {"path", std::move(pathValue)},
+        {"value", std::move(value)},
+    }));
 }
 
 void DebuggingServer::setClient(uint64_t client) {
     this->connection = std::make_unique<ClientConnection>(engine.getNetwork(), client);
+}
+
+std::vector<DebuggingEvent> DebuggingServer::pullEvents() {
+    return std::move(breakpointEvents);
 }

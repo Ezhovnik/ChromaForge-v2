@@ -322,10 +322,12 @@ void Engine::postUpdate() {
     scripting::process_post_runnables();
 
     if (debuggingServer) {
-        if (!debuggingServer->update()) {
-            debuggingServer.reset();
-        }
+        debuggingServer->update();
     }
+}
+
+void Engine::detachDebugger() {
+    debuggingServer.reset();
 }
 
 void Engine::updateFrontend() {
@@ -477,3 +479,28 @@ void Engine::terminate() {
 ContentControl& Engine::getContentControl() {
     return *content;
 }
+
+void Engine::startPauseLoop() {
+    bool initialCursorLocked = false;
+    if (!isHeadless()) {
+        initialCursorLocked = input->isCursorLocked();
+        if (initialCursorLocked) {
+            input->toggleCursor();
+        }
+    }
+    while (!isQuitSignal() && debuggingServer) {
+        network->update();
+        if (debuggingServer->update()) {
+            break;
+        }
+        if (isHeadless()) {
+            platform::sleep(1.0 / params.sps * 1000);
+        } else {
+            nextFrame();
+        }
+    }
+    if (initialCursorLocked) {
+        input->toggleCursor();
+    }
+}
+
