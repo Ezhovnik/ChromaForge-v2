@@ -156,9 +156,11 @@ static std::unique_ptr<model::Model> load_model(const xmlelement& root) {
     return std::make_unique<model::Model>(std::move(model));
 }
 
-std::unique_ptr<model::Model> cfmodel::parse(std::string_view file, std::string_view src) {
+std::unique_ptr<model::Model> cfmodel::parse(
+    std::string_view file, std::string_view src, bool usexml
+) {
     try {
-        auto doc = io::path(std::string(file)).extension() == ".xml" ? xml::parse(file, src) : xml::parse_cfmodel(file, src, "model");
+        auto doc = usexml ? xml::parse(file, src) : xml::parse_cfmodel(file, src, "model");
         const auto& root = *doc->getRoot();
         if (root.getTag() != "model") {
             THROW_ERR(

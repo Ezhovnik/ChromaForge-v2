@@ -37,10 +37,10 @@ public:
     bool processOperator(VersionOperator op, const Version& other) const {
         switch(op) {
             case VersionOperator::Equal: return *this == other;
-            case VersionOperator::Greather: return *this > other;
+            case VersionOperator::Greater: return *this > other;
             case VersionOperator::Less: return *this < other;
             case VersionOperator::LessOrEqual: return *this <= other;
-            case VersionOperator::GreatherOrEqual: return *this >= other;
+            case VersionOperator::GreaterOrEqual: return *this >= other;
             default: return false;
         }
     }

@@ -12,15 +12,15 @@
 class EnginePaths;
 
 enum class VersionOperator {
-    Equal, Greather, Less,
-    GreatherOrEqual, LessOrEqual
+    Equal, Greater, Less,
+    GreaterOrEqual, LessOrEqual
 };
 
 CHROMA_ENUM_METADATA(VersionOperator)
     {"=", VersionOperator::Equal},
-    {">", VersionOperator::Greather},
+    {">", VersionOperator::Greater},
     {"<", VersionOperator::Less},
-    {">=", VersionOperator::GreatherOrEqual},
+    {">=", VersionOperator::GreaterOrEqual},
     {"<=", VersionOperator::LessOrEqual},
 CHROMA_ENUM_END
 

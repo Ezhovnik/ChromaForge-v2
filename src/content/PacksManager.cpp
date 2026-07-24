@@ -85,14 +85,14 @@ static bool resolve_dependencies (
         if (!exists) continue;
         if (resolveWeaks && dep.level == DependencyLevel::Weak) continue;
 
-        auto dep_pack = found -> second;
+        auto dep_pack = found->second;
 
         if (Version::matchesPattern(dep.version) && Version::matchesPattern(dep_pack.version)
             && Version(dep_pack.version).processOperator(dep.op, Version(dep.version))
         ) {
-            continue;
+            // ...
         } else if (dep.version == "*" || dep.version == dep_pack.version){
-            continue;
+            // ...
         } else {
             LOG_ERROR(
                 "Does not meet required version '{}{}' of '{}'", VersionOperatorMeta.getNameString(dep.op), dep.version, pack->id

@@ -240,8 +240,8 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
     batch->setColor(glm::vec4(1.0f));
     float time = gui.getWindow().time();
     if (editable && static_cast<int>((time - caretLastMove) * 2) % 2 == 0) {
-        uint line = rawTextCache.getLineByTextIndex(caret);
-        uint lcaret = caret - rawTextCache.getTextLineOffset(line);
+        uint line = label->getLineByTextIndex(caret);
+        uint lcaret = caret - label->getTextLineOffset(line);
 
         int width = rawTextCache.metrics.calcWidth(input, 0, lcaret);
         batch->rect(
@@ -261,10 +261,12 @@ void TextBox::draw(const DrawContext& pctx, const Assets& assets) {
         batch->setColor(glm::vec4(0.8f, 0.9f, 1.0f, 0.25f));
         int start = rawTextCache.metrics.calcWidth(
             labelText,
+            0,
             selectionStart - label->getTextLineOffset(startLine)
         );
         int end = rawTextCache.metrics.calcWidth(
             labelText,
+            0,
             selectionEnd - label->getTextLineOffset(endLine)
         );
         int lineY = label->getLineYOffset(startLine);
@@ -602,7 +604,7 @@ int TextBox::calcIndexAt(int x, int y) const {
     line = std::min(line, label->getLinesNumber() - 1);
     size_t lineLength = getLineLength(line);
     uint offset = 0;
-    while (lcoord.x + rawTextCache.metrics.calcWidth(labelText, offset) < x && offset < lineLength - 1) {
+    while (lcoord.x + rawTextCache.metrics.calcWidth(labelText, 0, offset) < x && offset < lineLength - 1) {
         offset++;
     }
     return std::min(offset+label->getTextLineOffset(line), labelText .length());
