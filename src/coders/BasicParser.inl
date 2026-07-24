@@ -140,8 +140,11 @@ void BasicParser<CharT>::skipLine() {
 
 template<typename CharT>
 void BasicParser<CharT>::skipEmptyLines() {
+    if (!hasNext()) return;
+
+    size_t initpos = pos;
     skipWhitespace();
-    pos = linestart;
+    pos = std::max<size_t>(initpos, linestart);
 }
 
 template<typename CharT>

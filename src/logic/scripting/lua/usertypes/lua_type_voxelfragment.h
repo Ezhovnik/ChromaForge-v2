@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <logic/scripting/lua/lua_commons.h>
 
 class VoxelFragment;
