@@ -275,5 +275,5 @@ const luaL_Reg builtinlib [] = {
     {"open_url", lua::wrap<l_open_url>},
     {"quit", lua::wrap<l_quit>},
     {"capture_output", lua::wrap<l_capture_output>},
-    {NULL, NULL}
+    {nullptr, nullptr}
 };

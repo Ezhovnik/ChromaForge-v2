@@ -113,7 +113,7 @@ namespace util {
         /**
          * @brief Конструктор, инициализирующий seed текущим временем.
          */
-        PseudoRandom() {seed = (ushort)time(0);}
+        PseudoRandom() {seed = static_cast<unsigned short>(time(nullptr));}
 
         /**
          * @brief Генерирует следующее 16-битное псевдослучайное число.

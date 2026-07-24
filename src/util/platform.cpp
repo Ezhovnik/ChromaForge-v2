@@ -117,7 +117,7 @@ void platform::open_folder(const std::filesystem::path& folder) {
         LOG_WARN("'{}' returned code {}", cmd, res);
     }
 #elif defined(_WIN32)
-    ShellExecuteW(NULL, L"open", folder.wstring().c_str(), NULL, NULL, SW_SHOWDEFAULT);
+    ShellExecuteW(nullptr, L"open", folder.wstring().c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
 #else
     auto cmd = "xdg-open " + util::quote(folder.u8string());
     if (int res = system(cmd.c_str())) {
@@ -169,7 +169,7 @@ bool platform::open_url(const std::string& url) {
 std::filesystem::path platform::get_executable_path() {
 #ifdef _WIN32
     wchar_t buffer[MAX_PATH];
-    DWORD result = GetModuleFileNameW(NULL, buffer, MAX_PATH);
+    DWORD result = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
     if (result == 0) {
         DWORD error = GetLastError();
         throw std::runtime_error("GetModuleFileName failed with code: " + std::to_string(error));

@@ -12,7 +12,7 @@ int l_print(lua::State* L) {
         lua::pushvalue(L, i);
         lua::call(L, 1, 1);
         const char* s = lua::tostring(L, -1);
-        if (s == NULL) {
+        if (s == nullptr) {
             return luaL_error(L, LUA_QL("tostring") " must return a string to " LUA_QL("print"));
         }
         if (i > 1) {
