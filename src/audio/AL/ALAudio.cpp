@@ -8,7 +8,14 @@
 
 using namespace audio;
 
-ALSound::ALSound(ALAudio* al, uint buffer, const std::shared_ptr<PCM>& pcm, bool keepPCM) : al(al), buffer(buffer) {
+ALSound::ALSound(
+    ALAudio* al,
+    uint buffer,
+    const std::shared_ptr<PCM>& pcm,
+    bool keepPCM
+) : al(al),
+    buffer(buffer)
+{
     duration = pcm->getDuration();
     if (keepPCM) this->pcm = pcm;
 }
@@ -27,8 +34,49 @@ std::unique_ptr<Speaker> ALSound::newInstance(Priority priority, int channel) co
     return speaker;
 }
 
-ALStream::ALStream(ALAudio* al, std::shared_ptr<PCMStream> source, bool keepSource) : al(al), source(std::move(source)), keepSource(keepSource) {
+ALInputDevice::ALInputDevice(
+    ALAudio* al,
+    ALCdevice* device,
+    uint channels,
+    uint bitsPerSample
+) : al(al),
+    device(device),
+    channels(channels),
+    bitsPerSample(bitsPerSample) {}
+
+ALInputDevice::~ALInputDevice() {
+    alcCaptureCloseDevice(device);
 }
+
+void ALInputDevice::startCapture() {
+    AL_CHECK(alcCaptureStart(device));
+}
+
+void ALInputDevice::stopCapture() {
+    AL_CHECK(alcCaptureStop(device));
+}
+
+uint ALInputDevice::getChannels() const {
+    return channels;
+}
+
+size_t ALInputDevice::read(char* buffer, size_t bufferSize) {
+    ALCint samplesCount;
+    AL_CHECK(alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, 1, &samplesCount));
+    size_t samplesRead = std::min<ALCsizei>(
+        samplesCount, bufferSize / channels / (bitsPerSample >> 3)
+    );
+    AL_CHECK(alcCaptureSamples(device, buffer, samplesRead));
+    return samplesRead;
+}
+
+ALStream::ALStream(
+    ALAudio* al,
+    std::shared_ptr<PCMStream> source,
+    bool keepSource
+) : al(al),
+    source(std::move(source)),
+    keepSource(keepSource) {}
 
 ALStream::~ALStream() {
     bindSpeaker(0);
@@ -47,8 +95,7 @@ std::shared_ptr<PCMStream> ALStream::getSource() const {
 
 bool ALStream::preloadBuffer(uint buffer, bool loop) {
     size_t read = source->readFully(this->buffer, BUFFER_SIZE, loop);
-    if (!read)
-        return false;
+    if (!read) return false;
     ALenum format = AL::to_al_format(source->getChannels(), source->getBitsPerSample());
     AL_CHECK(alBufferData(buffer, format, this->buffer, read, source->getSampleRate()));
     return true;
@@ -360,6 +407,23 @@ std::unique_ptr<Sound> ALAudio::createSound(std::shared_ptr<PCM> pcm, bool keepP
 
 std::unique_ptr<Stream> ALAudio::openStream(std::shared_ptr<PCMStream> stream, bool keepSource) {
     return std::make_unique<ALStream>(this, stream, keepSource);
+}
+
+std::unique_ptr<InputDevice> ALAudio::openInputDevice(
+    uint sampleRate,
+    uint channels,
+    uint bitsPerSample
+) {
+    uint bps = bitsPerSample >> 3;
+    AL_CHECK(
+        ALCdevice* device = alcCaptureOpenDevice(
+            nullptr,
+            sampleRate,
+            AL::to_al_format(channels, bps),
+            sampleRate * channels * bps
+        )
+    );
+    return std::make_unique<ALInputDevice>(this, device, channels, bps);
 }
 
 std::unique_ptr<ALAudio> ALAudio::create() {

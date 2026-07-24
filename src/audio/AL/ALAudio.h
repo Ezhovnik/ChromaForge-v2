@@ -29,7 +29,12 @@ namespace audio {
         std::shared_ptr<PCM> pcm;
         duration_t duration;
     public:
-        ALSound(ALAudio* al, uint buffer, const std::shared_ptr<PCM>& pcm, bool keepPCM);
+        ALSound(
+            ALAudio* al,
+            uint buffer,
+            const std::shared_ptr<PCM>& pcm,
+            bool keepPCM
+        );
         ~ALSound();
 
         duration_t getDuration() const override {
@@ -61,7 +66,11 @@ namespace audio {
     public:
         size_t totalPlayedSamples = 0;
 
-        ALStream(ALAudio* al, std::shared_ptr<PCMStream> source, bool keepSource);
+        ALStream(
+            ALAudio* al,
+            std::shared_ptr<PCMStream> source,
+            bool keepSource
+        );
         ~ALStream();
 
         std::shared_ptr<PCMStream> getSource() const override;
@@ -73,6 +82,29 @@ namespace audio {
         void setTime(duration_t time) override;
 
         static inline constexpr uint STREAM_BUFFERS = 3;
+    };
+
+    class ALInputDevice : public InputDevice {
+    public:
+        ALInputDevice(
+            ALAudio* al,
+            ALCdevice* device,
+            uint channels,
+            uint bitsPerSample
+        );
+        ~ALInputDevice() override;
+
+        void startCapture() override;
+        void stopCapture() override;
+
+        uint getChannels() const override;
+
+        size_t read(char* buffer, size_t bufferSize) override;
+    private:
+        ALAudio* al;
+        ALCdevice* device;
+        uint channels;
+        uint bitsPerSample;
     };
 
     class ALSpeaker : public Speaker {
@@ -90,7 +122,12 @@ namespace audio {
 
         duration_t duration = 0.0f;
 
-        ALSpeaker(ALAudio* al, uint source, Priority priority, int channel);
+        ALSpeaker(
+            ALAudio* al,
+            uint source,
+            Priority priority,
+            int channel
+        );
         ~ALSpeaker();
 
         void update(const Channel* channel) override;
@@ -151,7 +188,12 @@ namespace audio {
         std::vector<std::string> getAvailableDevices() const;
 
         std::unique_ptr<Sound> createSound(std::shared_ptr<PCM> pcm, bool keepPCM) override;
+
         std::unique_ptr<Stream> openStream(std::shared_ptr<PCMStream> stream, bool keepSource) override;
+
+        std::unique_ptr<InputDevice> openInputDevice(
+            uint sampleRate, uint channels, uint bitsPerSample
+        ) override;
 
         void setListener(
             glm::vec3 position,

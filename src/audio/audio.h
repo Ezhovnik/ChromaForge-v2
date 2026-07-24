@@ -98,6 +98,18 @@ namespace audio {
         }
     };
 
+    class InputDevice {
+    public:
+        virtual ~InputDevice() {};
+
+        virtual void startCapture() = 0;
+        virtual void stopCapture() = 0;
+
+        virtual uint getChannels() const = 0;
+
+        virtual size_t read(char* buffer, size_t bufferSize) = 0;
+    };
+
     class PCMStream {
     public:
         virtual ~PCMStream() {};
@@ -300,6 +312,10 @@ namespace audio {
         virtual std::unique_ptr<Sound> createSound(std::shared_ptr<PCM> pcm, bool keepPCM) = 0;
 
         virtual std::unique_ptr<Stream> openStream(std::shared_ptr<PCMStream> stream, bool keepSource) = 0;
+
+        virtual std::unique_ptr<InputDevice> openInputDevice(
+            uint sampleRate, uint channels, uint bitsPerSample
+        ) = 0;
 
         /**
          * @brief Устанавливает параметры слушателя (позиция, скорость, ориентация).
