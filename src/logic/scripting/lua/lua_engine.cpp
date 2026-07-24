@@ -5,7 +5,10 @@
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <logic/scripting/lua/lua_util.h>
-#include <logic/scripting/lua/lua_custom_types.h>
+#include <logic/scripting/lua/usertypes/lua_type_canvas.h>
+#include <logic/scripting/lua/usertypes/lua_type_heightmap.h>
+#include <logic/scripting/lua/usertypes/lua_type_random.h>
+#include <logic/scripting/lua/usertypes/lua_type_voxelfragment.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 #include <io/io.h>

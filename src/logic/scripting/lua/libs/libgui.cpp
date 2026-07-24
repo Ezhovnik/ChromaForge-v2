@@ -23,6 +23,7 @@
 #include <graphics/ui/elements/InlineFrame.h>
 #include <graphics/ui/elements/ModelViewer.h>
 #include <graphics/ui/elements/SelectBox.h>
+#include <logic/scripting/lua/usertypes/lua_type_canvas.h>
 
 static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);

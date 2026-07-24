@@ -6,7 +6,7 @@
 #include <world/Level.h>
 #include <world/generator/VoxelFragment.h>
 #include <engine/Engine.h>
-#include <logic/scripting/lua/lua_custom_types.h>
+#include <logic/scripting/lua/usertypes/lua_type_voxelfragment.h>
 #include <content/ContentLoader.h>
 #include <content/Content.h>
 #include <content/ContentControl.h>

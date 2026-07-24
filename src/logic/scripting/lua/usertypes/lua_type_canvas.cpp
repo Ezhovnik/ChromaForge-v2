@@ -2,7 +2,7 @@
 
 #include <graphics/core/ImageData.h>
 #include <graphics/core/Texture.h>
-#include <logic/scripting/lua/lua_custom_types.h>
+#include <logic/scripting/lua/usertypes/lua_type_canvas.h>
 #include <logic/scripting/lua/lua_util.h>
 #include <engine/Engine.h>
 #include <assets/Assets.h>

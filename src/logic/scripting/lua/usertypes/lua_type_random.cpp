@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/lua_custom_types.h>
+#include <logic/scripting/lua/usertypes/lua_type_random.h>
 
 #include <chrono>
 

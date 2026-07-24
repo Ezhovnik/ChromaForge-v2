@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/lua_custom_types.h>
+#include <logic/scripting/lua/usertypes/lua_type_heightmap.h>
 
 #include <cstring>
 #include <sstream>
@@ -27,7 +27,7 @@ LuaHeightmap::LuaHeightmap(
 
 LuaHeightmap::~LuaHeightmap() {}
 
-void LuaHeightmap::setSeed(uint64_t seed) {
+void LuaHeightmap::setSeed(int64_t seed) {
     noise->seed = static_cast<int>(seed);
 }
 

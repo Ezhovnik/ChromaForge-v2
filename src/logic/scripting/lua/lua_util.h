@@ -18,7 +18,6 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include <logic/scripting/lua/lua_wrapper.h>
-#include <logic/scripting/lua/lua_custom_types.h>
 #include <data/dv.h>
 
 namespace lua {

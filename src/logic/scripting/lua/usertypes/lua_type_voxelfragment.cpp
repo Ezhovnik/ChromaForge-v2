@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/lua_custom_types.h>
+#include <logic/scripting/lua/usertypes/lua_type_voxelfragment.h>
 
 #include <logic/scripting/lua/lua_util.h>
 #include <world/generator/VoxelFragment.h>
