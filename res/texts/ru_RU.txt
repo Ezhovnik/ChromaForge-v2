@@ -26,6 +26,7 @@ Error at line %{0}=Ошибка на строке %{0}
 Run=Запустить
 Filter=Фильтр
 Are you sure you want to open the link:=Вы уверены, что хотите открыть ссылку:
+Grant '%{0}' pack audio recording permission?=Выдать паку '%{0}' разрешение на запись звука?
 
 editor.info.tooltip=CTRL+S - Сохранить\nCTRL+R - Запустить\nCTRL+Z - Отменить\nCTRL+Y - Повторить
 devtools.traceback=Стек вызовов (от последнего)
