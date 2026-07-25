@@ -430,6 +430,7 @@ void audio::reset_channel(int index) {
 
 void audio::close() {
     if (input_device) input_device->stopCapture();
+    input_device.reset();
     speakers.clear();
     delete backend;
     backend = nullptr;

@@ -76,9 +76,12 @@ Logger::Logger() : pimpl_(std::make_unique<Impl>()) {}
 
 Logger::~Logger() = default;
 
+static std::unique_ptr<Logger> instance = nullptr;
 Logger& Logger::getInstance() {
-    static Logger instance;
-    return instance;
+    if (!instance) {
+        instance = std::unique_ptr<Logger>(new Logger());
+    }
+    return *instance;
 }
 
 void Logger::initialize(const std::filesystem::path& logFile, LogLevel consoleLevel, LogLevel fileLevel) {

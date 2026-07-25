@@ -21,6 +21,8 @@ private:
     Logger();
     ~Logger();
 
+    friend struct std::default_delete<Logger>;
+
     class Impl;
     std::unique_ptr<Impl> pimpl_;
 
