@@ -151,6 +151,7 @@ void Block::cloneTo(Block& dst) {
     dst.sparkInterval = sparkInterval;
     dst.overlayTexture = overlayTexture;
     dst.translucent = translucent;
+    dst.tags = tags;
     if (particles) {
         dst.particles = std::make_unique<ParticlesPreset>(*particles);
     }

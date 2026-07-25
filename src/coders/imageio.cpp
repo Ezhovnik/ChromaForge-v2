@@ -30,22 +30,20 @@ bool imageio::is_write_supported(const std::string& extension) {
 std::unique_ptr<ImageData> imageio::read(const io::path& file, bool flipVertically) {
     auto found = readers.find(file.extension());
     if (found == readers.end()) {
-        LOG_ERROR("File format is not supported (read): '{}'", file.string());
-        throw std::runtime_error("File format is not supported (read): '" + file.string() + "'");
+        THROW_ERR("File format is not supported (read): '{}'", file.string());
     }
     auto bytes = io::read_bytes_buffer(file);
     try {
         return std::unique_ptr<ImageData>(found->second(bytes.data(), bytes.size(), flipVertically));
     } catch (const std::runtime_error& err) {
-        throw std::runtime_error("Could not to load image '" + file.string() + "'");
+        THROW_ERR("Could not to load image '{}'", file.string());
     }
 }
 
 void imageio::write(const io::path& file, const ImageData* image) {
     auto found = writers.find(file.extension());
     if (found == writers.end()) {
-        LOG_ERROR("File format is not supported (write): '{}'", file.string());
-        throw std::runtime_error("file format is not supported (write): '" + file.string() + "'");
+        THROW_ERR("File format is not supported (write): '{}'", file.string());
     }
     return found->second(io::resolve(file).u8string(), image);
 }

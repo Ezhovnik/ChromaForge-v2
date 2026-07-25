@@ -49,8 +49,8 @@ static auto process_program(const ResPaths& paths, const std::string& filename) 
 
     auto& preprocessor = *ShaderProgram::preprocessor;
 
-    auto vertex = preprocessor.process(vertexFile, vertexSource);
-    auto fragment = preprocessor.process(fragmentFile, fragmentSource);
+    auto vertex = preprocessor.process(vertexFile, vertexSource, false, {});
+    auto fragment = preprocessor.process(fragmentFile, fragmentSource, false, {});
     return std::make_pair(vertex, fragment);
 }
 
@@ -110,8 +110,7 @@ asset_loader::postfunc asset_loader::font(
         if (io::exists(file)) {
             pages->push_back(imageio::read(file));
         } else if (i == 0) {
-            LOG_ERROR("Font must have page 0");
-            throw std::runtime_error("Font must have page 0");
+            THROW_ERR("Font must have page 0");
         } else {
             pages->push_back(nullptr);
         }
@@ -145,7 +144,7 @@ asset_loader::postfunc asset_loader::posteffect(
 
     auto& preprocessor = *ShaderProgram::preprocessor;
     preprocessor.addHeader(
-        "__effect__", preprocessor.process(effectFile, effectSource, true)
+        "__effect__", preprocessor.process(effectFile, effectSource, true, {})
     );
 
     auto [vertex, fragment] = process_program(paths, SHADERS_FOLDER + "/effect");
@@ -391,8 +390,7 @@ asset_loader::postfunc asset_loader::layout(
                 name
             );
         } catch (const parsing_error& err) {
-			LOG_ERROR("Failed to parse layout XML '{}'. What: {}", file, err.errorLog());
-            throw std::runtime_error("failed to parse layout XML '" + file + "':\n" + err.errorLog());
+			THROW_ERR("Failed to parse layout XML '{}':\n{}", file, err.errorLog());
         }
     };
 }
@@ -426,8 +424,7 @@ asset_loader::postfunc asset_loader::sound(
     }
 
     if (baseSound == nullptr) {
-        LOG_ERROR("Could not to find sound: {}", file);
-        throw std::runtime_error("Could not to find sound: " + file);
+        THROW_ERR("Could not to find sound: {}", file);
     }
 
     for (uint i = 1; ; ++i) {
@@ -507,13 +504,14 @@ asset_loader::postfunc asset_loader::model(
         }
     }
     if (path.empty()) {
-        LOG_ERROR("Could not to find model {}", util::quote(file));
-        throw std::runtime_error("Could not to find model " + util::quote(file));
+        THROW_ERR("Could not to find model {}", util::quote(file));
     }
 
     auto text = io::read_string(path);
     try {
-        auto model = cfmodel::parse(path.string(), text).release();
+        auto model = cfmodel::parse(
+            path.string(), text, path.extension() == ".xml"
+        ).release();
         return [=](Assets* assets) {
             request_textures(loader, *model);
             assets->store(std::unique_ptr<model::Model>(model), name);

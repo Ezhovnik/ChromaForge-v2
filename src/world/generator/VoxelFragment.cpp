@@ -126,8 +126,7 @@ void VoxelFragment::crop() {
     blockid_t air;
     const auto& found = std::find(blockNames.begin(), blockNames.end(), BUILTIN_AIR);
     if (found == blockNames.end()) {
-        LOG_ERROR("{} not found in fragment", BUILTIN_AIR);
-        throw std::runtime_error(BUILTIN_AIR + " is not found in fragment");
+        THROW_ERR("{} not found in fragment", BUILTIN_AIR);
     }
     air = found - blockNames.begin();
 
@@ -175,7 +174,7 @@ void VoxelFragment::prepare(const Content& content) {
 }
 
 void VoxelFragment::place(
-    GlobalChunks& chunks, const glm::ivec3& offset, ubyte rotation
+    GlobalChunks& chunks, const glm::ivec3& offset
 ) {
     auto& structVoxels = getRuntimeVoxels();
     for (int y = 0; y < size.y; ++y) {

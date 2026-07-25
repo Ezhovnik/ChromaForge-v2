@@ -124,8 +124,9 @@ static void read_uinode(
     if (element.has("hover-color")) node.setHoverColor(element.attr("hover-color").asColor());
     if (element.has("pressed-color")) node.setPressedColor(element.attr("pressed-color").asColor());
 
-    const auto& alignName = element.attr("align", "").getText();
-    node.setAlign(align_from_string(alignName, node.getAlign()));
+    node.setAlign(
+        align_from_string(element.attr("align", "").getText(), node.getAlign())
+    );
 
     if (element.has("gravity")) {
         node.setGravity(gravity_from_string(
@@ -158,13 +159,15 @@ static void read_uinode(
 static void read_container_impl(
     UIXmlReader& reader,
     const xml::xmlelement& element,
-    Container& container
+    Container& container,
+    bool subnodes
 ) {
     read_uinode(reader, element, container);
 
     if (element.has("scrollable")) container.setScrollable(element.attr("scrollable").asBool());
     if (element.has("scroll-step")) container.setScrollStep(element.attr("scroll-step").asInt());
 
+    if (!subnodes) return;
     for (auto& sub : element.getElements()) {
         if (sub->isText()) continue;
         auto subnode = reader.readUINode(*sub);
@@ -177,7 +180,7 @@ void UIXmlReader::readUINode(
     const xml::xmlelement& element,
     Container& container
 ) {
-    read_container_impl(reader, element, container);
+    read_container_impl(reader, element, container, true);
 }
 
 void UIXmlReader::readUINode(
@@ -193,7 +196,7 @@ static void read_base_panel_impl(
     const xml::xmlelement& element,
     BasePanel& panel
 ) {
-    read_uinode(reader, element, panel);
+    read_container_impl(reader, element, panel, false);
 
     if (element.has("padding")) {
         glm::vec4 padding = element.attr("padding").asVec4();
@@ -265,7 +268,7 @@ static std::shared_ptr<UINode> read_model_viewer(
     auto viewer = std::make_shared<ModelViewer>(
         reader.getGUI(), glm::vec2(), model
     );
-    read_container_impl(reader, element, *viewer);
+    read_container_impl(reader, element, *viewer, true);
 
     if (element.has("center")) viewer->setCenter(element.attr("center").asVec3());
     if (element.has("cam-rotation")) viewer->setRotation(glm::radians(element.attr("cam-rotation").asVec3()));
@@ -337,7 +340,7 @@ static std::shared_ptr<UINode> read_container(
     const xml::xmlelement& element
 ) {
     auto container = std::make_shared<Container>(reader.getGUI(), glm::vec2());
-    read_container_impl(reader, element, *container);
+    read_container_impl(reader, element, *container, true);
     return container;
 }
 
@@ -384,7 +387,7 @@ static std::shared_ptr<UINode> read_text_box(
     );
     textbox->setHint(hint);
 
-    read_container_impl(reader, element, *textbox);
+    read_container_impl(reader, element, *textbox, true);
     if (element.has("padding")) {
         glm::vec4 padding = element.attr("padding").asVec4();
         textbox->setPadding(padding);
@@ -718,7 +721,7 @@ static std::shared_ptr<UINode> read_page_box(
     auto& gui = reader.getGUI();
     auto menu = std::make_shared<Menu>(gui);
     menu->setPageLoader(gui.getMenu()->getPageLoader());
-    read_container_impl(reader, element, *menu);
+    read_container_impl(reader, element, *menu, true);
 
     return menu;
 }
@@ -728,7 +731,7 @@ static std::shared_ptr<UINode> read_iframe(
 ) {
     auto& gui = reader.getGUI();
     auto iframe = std::make_shared<InlineFrame>(gui);
-    read_container_impl(reader, element, *iframe);
+    read_container_impl(reader, element, *iframe, true);
 
     std::string src = element.attr("src", "").getText();
     iframe->setSrc(src);
@@ -782,8 +785,7 @@ std::shared_ptr<UINode> UIXmlReader::readUINode(const xml::xmlelement& element) 
     auto found = readers.find(tag);
     if (found == readers.end()) {
         if (ignored.find(tag) != ignored.end()) return nullptr;
-        LOG_ERROR("Unsupported element '{}'", tag);
-        throw std::runtime_error("Unsupported element '" + tag + "'");
+        THROW_ERR("Unsupported element '{}'", tag);
     }
 
     bool hascontext = element.has("context");

@@ -41,4 +41,10 @@ namespace lua {
     };
 
     void log_error(const std::string& text);
+
+    class Userdata {
+    public:
+        virtual ~Userdata() {};
+        virtual const std::string& getTypeName() const = 0;
+    };
 }

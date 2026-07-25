@@ -49,7 +49,9 @@ struct WorldInfo : public Serializable {
 
      entityid_t nextEntityId = 0;
 
-     int major = 0, minor = -1, maintenance = -1;
+     int major = 0, minor = -1, patch = -1;
+
+     bool isLoaded = false;
 
      dv::value serialize() const override;
      void deserialize(const dv::value& src) override;

@@ -77,8 +77,7 @@ WorldGenerator::~WorldGenerator() {}
 ChunkPrototype& WorldGenerator::requirePrototype(int x, int z) {
     const auto& found = prototypes.find({x, z});
     if (found == prototypes.end()) {
-        LOG_ERROR("Prototype not found");
-        throw std::runtime_error("Prototype not found");
+        THROW_ERR("Prototype not found");
     }
     return *found->second;
 }
@@ -249,7 +248,7 @@ void WorldGenerator::generateStructures(
     );
     placeStructures(placements, prototype, chunkX, chunkZ);
 
-    PseudoRandom structsRand;
+    util::PseudoRandom structsRand;
     structsRand.setSeed(chunkX, chunkZ);
 
     auto heights = heightmap->getValues();
@@ -363,7 +362,7 @@ void WorldGenerator::generatePlants(
     const Biome** biomes
 ) {
     const auto& indices = content.getIndices()->blocks;
-    PseudoRandom plantsRand;
+    util::PseudoRandom plantsRand;
     plantsRand.setSeed(chunkX, chunkZ);
 
     for (uint z = 0; z < CHUNK_DEPTH; ++z) {

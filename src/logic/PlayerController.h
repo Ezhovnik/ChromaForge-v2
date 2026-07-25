@@ -59,7 +59,6 @@ private:
 
 	void updateKeyboard(const Input& inputEvents);
 	void resetKeyboard();
-	void updatePlayer(float deltaTime);
 	void updateEntityInteraction(entityid_t eid, bool lclick, bool rclick);
 	void updateInteraction(const Input& inputEvents, float deltaTime);
 

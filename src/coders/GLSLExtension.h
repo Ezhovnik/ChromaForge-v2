@@ -6,6 +6,7 @@
 
 #include <io/io.h>
 #include <graphics/core/PostEffect.h>
+#include <data/setting.h>
 
 class ResPaths;
 
@@ -20,6 +21,7 @@ public:
     };
 
     void setPaths(const ResPaths* paths);
+    void setTraceOutput(bool enabled);
 
     // Макросы
     void define(const std::string& name, std::string value); // Добавляем определение макроса
@@ -38,7 +40,8 @@ public:
     ProcessingResult process(
         const io::path& file,
         const std::string& source,
-        bool header=false
+        bool header,
+        const std::vector<std::string>& defines
     );
 
     static inline std::string VERSION = "330 core";
@@ -47,4 +50,5 @@ private:
     std::unordered_map<std::string, std::string> defines;
 
     const ResPaths* paths = nullptr;
+    bool traceOutput = false;
 };

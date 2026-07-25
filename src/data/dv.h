@@ -96,10 +96,9 @@ namespace dv {
     void log_error(const std::string& log);
 
     inline void throw_type_error(value_type got, value_type expected) {
-        log_error("Type error: expected " + type_name(expected) + ", got " + type_name(got));
-        throw std::runtime_error(
-            "Type error: expected " + type_name(expected) + ", got " + type_name(got)
-        );
+        std::string msg = "Type error: expected " + type_name(expected) + ", got " + type_name(got);
+        log_error(msg);
+        throw std::runtime_error(std::move(msg));
     }
 
     inline void check_type(value_type got, value_type expected) {
@@ -447,7 +446,7 @@ namespace dv {
             }
         }
 
-    integer_t asNumber(integer_t def) const {
+        integer_t asNumber(integer_t def) const {
             switch (type) {
                 case value_type::Integer: 
                     return static_cast<number_t>(val.integer);

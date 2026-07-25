@@ -18,7 +18,6 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include <logic/scripting/lua/lua_wrapper.h>
-#include <logic/scripting/lua/lua_custom_types.h>
 #include <data/dv.h>
 
 namespace lua {
@@ -59,8 +58,8 @@ namespace lua {
         return true;
     }
 
-    template<int n>
-    inline int pushvec(lua::State* L, const glm::vec<n, float>& vec) {
+    template <int n, typename T = float>
+    inline int pushvec(lua::State* L, const glm::vec<n, T>& vec) {
         createtable(L, n, 0);
         for (int i = 0; i < n; ++i) {
             pushnumber(L, vec[i]);
@@ -178,8 +177,8 @@ namespace lua {
         return 1;
     }
 
-    template<int n>
-    inline int setvec(lua::State* L, int idx, glm::vec<n, float> vec) {
+    template <int n, typename T = float>
+    inline int setvec(lua::State* L, int idx, glm::vec<n, T> vec) {
         pushvalue(L, idx);
         for (int i = 0; i < n; i++) {
             pushnumber(L, vec[i]);
@@ -282,7 +281,7 @@ namespace lua {
     inline lua::Number tonumber(lua::State* L, int idx) {
 #ifndef NDEBUG
         if (lua_type(L, idx) != LUA_TNUMBER && !lua_isnoneornil(L, idx)) {
-            throw std::runtime_error("Integer expected");
+            throw std::runtime_error("Number expected");
         }
 #endif
         return lua_tonumber(L, idx);
@@ -314,6 +313,15 @@ namespace lua {
         return nullptr;
     }
 
+    template <class T>
+    inline T& require_userdata(lua::State* L, int idx) {
+        if (void* rawptr = lua_touserdata(L, idx)) {
+            return *static_cast<T*>(rawptr);
+        }
+        log_error("Invalid 'self' value");
+        throw std::runtime_error("Invalid 'self' value");
+    }
+
     template<class T, typename... Args>
     inline int newuserdata(lua::State* L, Args&&... args) {
         const auto& found = usertypeNames.find(typeid(T));
@@ -342,14 +350,14 @@ namespace lua {
         setglobal(L, name);
     }
 
-    template<int n>
-    inline glm::vec<n, float> tovec(lua::State* L, int idx) { 
+    template <int n, typename T = float>
+    inline glm::vec<n, T> tovec(lua::State* L, int idx) {
         pushvalue(L, idx);
         if (!istable(L, idx) || objlen(L, idx) < n) {
             log_error("Value must be an array of " + std::to_string(n) + " numbers");
             throw std::runtime_error("Value must be an array of " + std::to_string(n) + " numbers");
         }
-        glm::vec<n, float> vec;
+        glm::vec<n, T> vec;
         for (int i = 0; i < n; ++i) {
             rawgeti(L, i + 1);
             vec[i] = tonumber(L, -1); 
@@ -480,7 +488,7 @@ namespace lua {
 
     inline bool getfield(lua::State* L, const std::string& name, int idx=-1) {
         lua_getfield(L, idx, name.c_str());
-        if (isnil(L, idx)) {
+        if (isnoneornil(L, -1)) {
             pop(L);
             return false;
         }
@@ -613,7 +621,7 @@ namespace lua {
     void remove_environment(lua::State*, int id);
 
     inline void close(lua::State* L) {
-        lua_close(L);
+        if (L) lua_close(L);
     }
 
     inline void addfunc(lua::State* L, const std::string& name, lua_CFunction func) {
@@ -762,9 +770,12 @@ namespace lua {
     }
 
     inline std::string_view bytearray_as_string(lua::State* L, int idx) {
-        lua::requireglobal(L, "Bytearray_as_string");
         lua::pushvalue(L, idx);
+        lua::requireglobal(L, "Bytearray_as_string");
+        lua::pushvalue(L, -2);
         lua::call(L, 1, 1);
-        return lua::tolstring(L, -1);
+        auto view = lua::tolstring(L, -1);
+        lua::pop(L, 2);
+        return view;
     }
 }

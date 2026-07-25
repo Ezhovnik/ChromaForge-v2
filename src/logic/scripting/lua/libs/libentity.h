@@ -7,6 +7,7 @@
 #include <frontend/hud.h>
 #include <world/Level.h>
 #include <objects/Entities.h>
+#include <objects/Entt_Entity.h>
 
 namespace scripting {
     extern Hud* hud;

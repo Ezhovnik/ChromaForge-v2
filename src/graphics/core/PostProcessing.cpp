@@ -111,8 +111,7 @@ void PostProcessing::renderDeferredShading(
     const Camera& camera
 ) {
     if (gbuffer == nullptr) {
-        LOG_ERROR("GBuffer is not initialized");
-        throw std::runtime_error("GBuffer is not initialized");
+        THROW_ERR("GBuffer is not initialized");
     }
 
     gbuffer->bindBuffers();
@@ -169,8 +168,7 @@ void PostProcessing::render(
     const Camera& camera
 ) {
     if (fbo == nullptr) {
-        LOG_ERROR("'use(...)' was never called");
-        throw std::runtime_error("'use(...)' was never called");
+        THROW_ERR("'use(...)' was never called");
     }
     int totalPasses = 0;
     for (const auto& effect : effectSlots) {

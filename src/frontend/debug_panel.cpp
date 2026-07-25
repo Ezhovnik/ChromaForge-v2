@@ -29,9 +29,11 @@
 #include <frontend/hud.h>
 #include <graphics/render/ParticlesRenderer.h>
 #include <graphics/render/ChunksRenderer.h>
+#include <graphics/render/DebugLinesRenderer.h>
 #include <voxels/GlobalChunks.h>
 #include <objects/Players.h>
 #include <network/Network.h>
+#include <objects/Entt_Entity.h>
 
 static std::shared_ptr<gui::Label> create_label(gui::GUI& gui, wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(gui, L"-");
@@ -285,6 +287,18 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         });
 		panel->add(checkbox);
 	}
+    {
+        auto checkbox = std::make_shared<gui::FullCheckBox>(
+            gui, L"Show Paths", glm::vec2(400, 24)
+        );
+        checkbox->setSupplier([=]() {
+            return DebugLinesRenderer::drawPaths;
+        });
+        checkbox->setConsumer([=](bool checked) {
+            DebugLinesRenderer::drawPaths = checked;
+        });
+        panel->add(checkbox);
+    }
     {
         auto checkbox = std::make_shared<gui::FullCheckBox>(
             gui, L"Show Generator Minimap", glm::vec2(400, 24)

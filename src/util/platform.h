@@ -2,6 +2,7 @@
 
 #include <string>
 #include <filesystem>
+#include <vector>
 
 /**
  * @brief Функции для работы с особенностями платформы (ОС).
@@ -28,7 +29,12 @@ namespace platform {
      */
     std::string detect_locale();
 
+    std::filesystem::path get_executable_path();
+
     void open_folder(const std::filesystem::path& folder);
+    bool open_url(const std::string& url);
+
+    void new_engine_instance(const std::vector<std::string>& args);
 
     void sleep(size_t millis);
 

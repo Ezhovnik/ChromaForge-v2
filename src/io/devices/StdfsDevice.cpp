@@ -25,8 +25,7 @@ std::unique_ptr<std::ostream> StdfsDevice::write(std::string_view path) {
     auto resolved = resolve(path);
     auto output = std::make_unique<std::ofstream>(resolved, std::ios::binary);
     if (!output->is_open()) {
-        LOG_ERROR("Could not to open file {}", resolved.u8string());
-        throw std::runtime_error("Could not to open file " + resolved.u8string());
+        THROW_ERR("Could not to open file {}", resolved.u8string());
     }
     return output;
 }
@@ -35,8 +34,7 @@ std::unique_ptr<std::istream> StdfsDevice::read(std::string_view path) {
     auto resolved = resolve(path);
     auto input = std::make_unique<std::ifstream>(resolved, std::ios::binary);
     if (!*input) {
-        LOG_ERROR("Could not to open file {}", resolved.u8string());
-        throw std::runtime_error("Could not to open file " + resolved.u8string());
+        THROW_ERR("Could not to open file {}", resolved.u8string());
     }
     return input;
 }

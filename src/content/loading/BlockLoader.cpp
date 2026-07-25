@@ -1,5 +1,6 @@
 #define CHROMA_ENABLE_REFLECTION
 #include <content/loading/ContentUnitLoader.h>
+#include <content/loading/ContentLoadingCommons.h>
 
 #include <algorithm>
 
@@ -22,14 +23,11 @@ static void perform_user_block_fields(
             " fields total size exceeds limit (" + 
             std::to_string(layout.size()) + "/" +
             std::to_string(MAX_USER_BLOCK_FIELDS_SIZE) + ")";
-        LOG_ERROR("{}", errorLog);
-        throw std::runtime_error(errorLog);
+        THROW_ERR("{}", errorLog);
     }
     for (const auto& field : layout) {
         if (field.name.at(0) == '.') {
-            auto errorLog = util::quote(blockName) + " field " + field.name + ": user field may not start with '.'";
-            LOG_ERROR("{}", errorLog);
-            throw std::runtime_error(errorLog);
+            THROW_ERR("{}", util::quote(blockName) + " field " + field.name + ": user field may not start with '.'");
         }
     }
 
@@ -62,12 +60,7 @@ static void load_variant(
             if (root.has("model-primitives")) {
                 model.customRaw = root["model-primitives"];
             } else if (model.name.empty()) {
-                LOG_ERROR(
-                    "Block {}: no 'model-primitives' or 'model-name found", name
-                );
-                throw std::runtime_error(
-                    "Block " + name + ": no 'model-primitives' or 'model-name' found"
-                );
+                THROW_ERR("Block {}: no 'model-primitives' or 'model-name' found", name);
             }
         }
     } else if (!modelTypeName.empty()) {
@@ -86,29 +79,15 @@ template<> void ContentUnitLoader<Block>::loadUnit(
     Block& def, const std::string& name, const io::path& file
 ) {
     auto root = io::read_json(file);
-    if (def.properties == nullptr) {
-        def.properties = dv::object();
-        def.properties["name"] = name;
-    }
-    for (auto& [key, value] : root.asObject()) {
-        auto pos = key.rfind('@');
-        if (pos == std::string::npos) {
-            def.properties[key] = value;
-            continue;
-        }
-        auto field = key.substr(0, pos);
-        auto suffix = key.substr(pos + 1);
-        process_method(def.properties, suffix, field, value);
-    }
+
+    process_properties(def, name, root);
+    process_tags(def, root);
 
     if (root.has("parent")) {
         const auto& parentName = root["parent"].asString();
         auto parentDef = builder.get(parentName);
         if (parentDef == nullptr) {
-            LOG_ERROR("Failed to find parent ({}) for {}", parentName, name);
-            throw std::runtime_error(
-                "Failed to find parent (" + parentName + ") for " + name
-            );
+            THROW_ERR("Failed to find parent ({}) for {}", parentName, name);
         }
         parentDef->cloneTo(def);
     }
@@ -126,8 +105,7 @@ template<> void ContentUnitLoader<Block>::loadUnit(
             stateBased.at("offset").get(offset);
             stateBased.at("bits").get(bitsCount);
             if (offset < 0 || bitsCount <= 0 || offset + bitsCount > 8) {
-                LOG_ERROR("Block {}: Invalid state-based bits configuration", name);
-                throw std::runtime_error("Block " + name + ": Invalid state-based bits configuration");
+                THROW_ERR("Block {}: Invalid state-based bits configuration", name);
             }
 
             def.variants = std::make_unique<Variants>();
@@ -202,10 +180,7 @@ template<> void ContentUnitLoader<Block>::loadUnit(
         def.size.y = sizearr[1].asInteger();
         def.size.z = sizearr[2].asInteger();
         if (def.size.x < 1 || def.size.y < 1 || def.size.z < 1) {
-            LOG_ERROR("Block {}: invalid block size", name);
-            throw std::runtime_error(
-                "Block " + util::quote(def.name) + ": invalid block size"
-            );
+            THROW_ERR("Block {}: invalid block size", name);
         }
         if (def.defaults.model.type == BlockModelType::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
             def.defaults.model.type = BlockModelType::AABB;

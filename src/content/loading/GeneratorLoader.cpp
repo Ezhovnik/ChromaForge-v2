@@ -25,8 +25,7 @@ static BlocksLayer load_layer(
     }
     if (height == -1) {
         if (hasResizeableLayer) {
-            LOG_ERROR("Only one resizeable layer allowed");
-            throw std::runtime_error("Only one resizeable layer allowed");
+            THROW_ERR("Only one resizeable layer allowed");
         }
         hasResizeableLayer = true;
     }
@@ -47,10 +46,7 @@ static inline BlocksLayers load_layers(
                 load_layer(layerMap, lastLayersHeight, hasResizeableLayer)
             );
         } catch (const std::runtime_error& err) {
-            LOG_ERROR("{} №{}: {}", fieldname, i, err.what());
-            throw std::runtime_error(
-                fieldname + " №" + std::to_string(i) + ": " + err.what()
-            );
+            THROW_ERR("{} №{}: {}", fieldname, i, err.what());
         }
     }
     return BlocksLayers {std::move(layers), lastLayersHeight};
@@ -71,8 +67,7 @@ static inline BiomeElementList load_biome_element_list(
             const auto& name = entry[nameName].asString();
             float weight = entry["weight"].asNumber();
             if (weight <= 0.0f) {
-                LOG_ERROR("Weight must be positive");
-                throw std::runtime_error("Weight must be positive");
+                THROW_ERR("Weight must be positive");
             }
             entries.push_back(WeightedEntry {name, weight, {}});
         }
@@ -98,10 +93,7 @@ static inline Biome load_biome(
 
     const auto& paramsArr = biomeMap["parameters"];
     if (paramsArr.size() < parametersCount) {
-        LOG_ERROR("{} parameters expected", parametersCount);
-        throw std::runtime_error(
-            std::to_string(parametersCount) + " parameters expected"
-        );
+        THROW_ERR("{} parameters expected", parametersCount);
     }
     for (size_t i = 0; i < parametersCount; ++i) {
         const auto& paramMap = paramsArr[i];
@@ -148,8 +140,7 @@ static std::vector<std::unique_ptr<VoxelStructure>> load_structures(
         structFile = paths.find(structFile.string());
         LOG_DEBUG("Loading voxel fragment {}", structFile.string());
         if (!io::exists(structFile)) {
-            LOG_ERROR("Structure file does not exist: {}", structFile.string());
-            throw std::runtime_error("Structure file does not exist: " + structFile.string());
+            THROW_ERR("Structure file does not exist: {}", structFile.string());
         }
         auto fragment = std::make_unique<VoxelFragment>();
         fragment->deserialize(io::read_binary_json(structFile));
@@ -192,8 +183,7 @@ static void load_biomes(Generator& def, const dv::value& root) {
                 load_biome(biomeMap, biomeName, def.biomeParameters)
             );
         } catch (const std::runtime_error& err) {
-            LOG_ERROR("Biome {}: {}", biomeName, err.what());
-            throw std::runtime_error("Biome " + biomeName + ": " + err.what());
+            THROW_ERR("Biome {}: {}", biomeName, err.what());
         }
     }
 }
@@ -224,10 +214,7 @@ void ContentLoader::loadGenerator(
         for (const auto& element : map["heightmap-inputs"]) {
             int index = element.asInteger();
             if (index <= 0 || index > def.biomeParameters) {
-                LOG_ERROR("Invalid biome parameter index {}", std::to_string(index));
-                throw std::runtime_error(
-                    "Invalid biome parameter index " + std::to_string(index)
-                );
+                THROW_ERR("Invalid biome parameter index {}", std::to_string(index));
             }
             def.heightmapInputs.push_back(index - 1);
         }
@@ -246,10 +233,7 @@ void ContentLoader::loadGenerator(
     auto biomesFile = GENERATORS_DIR / (name + ".files") / BIOMES_FILE;
     auto biomesMap = paths.readCombinedObject(biomesFile.string(), true);
     if (biomesMap.empty()) {
-        LOG_ERROR("Generator {}: at least one biome required", util::quote(def.name));
-        throw std::runtime_error(
-            "Generator " + util::quote(def.name) + ": at least one biome required"
-        );
+        THROW_ERR("Generator {}: at least one biome required", util::quote(def.name));
     }
     load_biomes(def, biomesMap);
     def.script = scripting::load_generator(

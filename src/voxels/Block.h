@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <set>
 
 #include <math/AABB.h>
 #include <typedefs.h>
@@ -76,6 +77,7 @@ struct BlockFuncsSet {
     bool onreplaced : 1;
     bool oninteract : 1;
     bool randupdate : 1;
+    bool onblockspark : 1;
     bool onblocksspark : 1;
 };
 
@@ -189,6 +191,8 @@ public:
 
     std::unique_ptr<Variants> variants;
 
+    std::vector<std::string> tags;
+
 	struct {
         blockid_t id;
 		bool solid = true;
@@ -198,6 +202,7 @@ public:
         BlockFuncsSet funcsset {};
         itemid_t pickingItem = 0;
         blockid_t surfaceReplacement = 0;
+        std::set<int> tags;
 	} rt {};
 
     Block(const std::string& name);

@@ -60,8 +60,7 @@ bool AssetsLoader::hasNext() const {
 aloader_func AssetsLoader::getLoader(AssetType tag) {
     auto found = loaders.find(tag);
     if (found == loaders.end()) {
-        LOG_ERROR("Unknown asset tag {}", static_cast<int>(tag));
-        throw std::runtime_error("Unknown asset tag " + std::to_string(static_cast<int>(tag)));
+        THROW_ERR("Unknown asset tag {}", static_cast<int>(tag));
     }
     return found->second;
 }
@@ -196,8 +195,7 @@ void AssetsLoader::processPreloadList(AssetType tag, const dv::value& list) {
                 processPreload(tag, value["name"].asString(), value);
                 break;
             default:
-				LOG_ERROR("Invalid entry type");
-                throw std::runtime_error("invalid entry type");
+				THROW_ERR("Invalid entry type");
         }
     }
 }

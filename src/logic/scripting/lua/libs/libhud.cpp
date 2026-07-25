@@ -39,7 +39,7 @@ static int l_open(lua::State* L) {
 
     return lua::pushinteger(L, scripting::hud->openInventory(
         layout,
-        scripting::level->inventories->get(invid),
+        lua::isnoneornil(L, 3) ? nullptr : scripting::level->inventories->get(invid),
         playerInventory
     )->getId());
 }
@@ -192,5 +192,5 @@ const luaL_Reg hudlib [] = {
     {"_set_debug_cheats", lua::wrap_hud<l_set_debug_cheats>},
     {"set_allow_pause", lua::wrap_hud<l_set_allow_pause>},
     {"reload_script", lua::wrap_hud<l_reload_script>},
-    {NULL, NULL}
+    {nullptr, nullptr}
 };

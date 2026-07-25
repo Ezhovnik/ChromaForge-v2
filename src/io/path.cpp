@@ -8,8 +8,7 @@ using namespace io;
 
 void path::checkValid() const {
     if (colonPos == std::string::npos) {
-        LOG_ERROR("Path entry point is not specified: {}", str);
-        throw std::runtime_error("Path entry point is not specified: " + str);
+        THROW_ERR("Path entry point is not specified: {}", str);
     }
 }
 
@@ -56,8 +55,7 @@ path path::normalized() const {
             continue;
         } else if (token == "..") {
             if (parts.empty()) {
-                LOG_ERROR("Entry-point reached");
-                throw access_error("Entry-point reached");
+                THROW_ERR("Entry-point reached");
             }
             parts.pop();
             continue;

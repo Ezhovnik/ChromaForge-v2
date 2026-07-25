@@ -24,7 +24,7 @@ Cubemap::Cubemap(uint width, uint height, ImageFormat imageFormat) : Texture(0, 
             0, 
             format, 
             GL_UNSIGNED_BYTE, 
-            NULL
+            nullptr
         );
     }
 }

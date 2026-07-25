@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <vector>
 
 #include <glm/glm.hpp>
 
@@ -126,7 +127,7 @@ public:
     void uniform3v(const std::string& name, int length, const float* v);
     void uniform4v(const std::string& name, int length, const float* v);
 
-    void recompile();
+    void recompile(const std::vector<std::string>& defines);
 
     /**
      * @brief Создаёт шейдерную программу из исходных кодов вершинного и фрагментного шейдеров.

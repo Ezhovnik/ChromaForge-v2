@@ -20,6 +20,9 @@ static void load_texture(
 }
 
 static int l_load_texture(lua::State* L) {
+    if (lua::isstring(L, 3) && lua::require_lstring(L, 3) != "png") {
+        throw std::runtime_error("Unsupportd image format");
+    }
     if (lua::istable(L, 1)) {
         lua::pushvalue(L, 1);
         size_t size = lua::objlen(L, 1);
@@ -53,7 +56,9 @@ static int l_parse_model(lua::State* L) {
     auto name = lua::require_string(L, 3);
 
     if (format == "xml" || format == "cfmodel") {
-        scripting::engine->getAssets()->store(cfmodel::parse(name, string), name);
+        scripting::engine->getAssets()->store(
+            cfmodel::parse(name, string, format == "xml"), name
+        );
     } else {
         throw std::runtime_error("Unknown format " + util::quote(std::string(format)));
     }
@@ -63,5 +68,5 @@ static int l_parse_model(lua::State* L) {
 const luaL_Reg assetslib[] = {
     {"load_texture", lua::wrap<l_load_texture>},
     {"parse_model", lua::wrap<l_parse_model>},
-    {NULL, NULL}
+    {nullptr, nullptr}
 };

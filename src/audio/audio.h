@@ -21,6 +21,8 @@ namespace audio {
         High = 10
     };
 
+    constexpr inline size_t MAX_INPUT_SAMPLES = 22050;
+
     class Speaker;
 
     enum class State {
@@ -96,6 +98,18 @@ namespace audio {
         inline duration_t getDuration() const {
             return static_cast<duration_t>(totalSamples) / static_cast<duration_t>(sampleRate);
         }
+    };
+
+    class InputDevice {
+    public:
+        virtual ~InputDevice() {};
+
+        virtual void startCapture() = 0;
+        virtual void stopCapture() = 0;
+
+        virtual uint getChannels() const = 0;
+
+        virtual size_t read(char* buffer, size_t bufferSize) = 0;
     };
 
     class PCMStream {
@@ -301,6 +315,10 @@ namespace audio {
 
         virtual std::unique_ptr<Stream> openStream(std::shared_ptr<PCMStream> stream, bool keepSource) = 0;
 
+        virtual std::unique_ptr<InputDevice> openInputDevice(
+            uint sampleRate, uint channels, uint bitsPerSample
+        ) = 0;
+
         /**
          * @brief Устанавливает параметры слушателя (позиция, скорость, ориентация).
          * @param position Позиция слушателя в мировых координатах.
@@ -333,6 +351,12 @@ namespace audio {
     std::unique_ptr<Stream> open_stream(const io::path& file, bool keepSource);
 
     std::unique_ptr<Stream> open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
+
+    std::unique_ptr<InputDevice> open_input_device(
+        uint sampleRate,
+        uint channels,
+        uint bitsPerSample
+    );
 
     /**
      * @brief Устанавливает параметры слушателя, используя текущий бэкенд.
@@ -398,6 +422,8 @@ namespace audio {
     void update(double delta);
 
     void reset_channel(int channel);
+
+    InputDevice* get_input_device();
 
     /**
      * @brief Завершение работы аудиосистемы

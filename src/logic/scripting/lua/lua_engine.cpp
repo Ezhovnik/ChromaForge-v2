@@ -5,7 +5,11 @@
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <logic/scripting/lua/lua_util.h>
-#include <logic/scripting/lua/lua_custom_types.h>
+#include <logic/scripting/lua/usertypes/lua_type_canvas.h>
+#include <logic/scripting/lua/usertypes/lua_type_heightmap.h>
+#include <logic/scripting/lua/usertypes/lua_type_random.h>
+#include <logic/scripting/lua/usertypes/lua_type_voxelfragment.h>
+#include <logic/scripting/lua/usertypes/lua_type_pcmstream.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 #include <io/io.h>
@@ -48,6 +52,8 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "mat4", mat4lib);
     openlib(L, "pack", packlib);
     openlib(L, "quat", quatlib);
+    openlib(L, "random", randomlib);
+    openlib(L, "compression", compressionlib);
     openlib(L, "toml", tomllib);
     openlib(L, "utf8", utf8lib);
     openlib(L, "vec2", vec2lib);
@@ -99,6 +105,9 @@ void lua::init_state(State* L, StateType stateType) {
     pushnil(L);
     setglobal(L, "io");
 
+    createtable(L, 0, 0);
+    setglobal(L, "__chroma__pack_envs");
+
     const char* removed_os[] {
         "execute",
         "exit",
@@ -125,6 +134,7 @@ void lua::init_state(State* L, StateType stateType) {
     newusertype<LuaHeightmap>(L);
     newusertype<LuaVoxelFragment>(L);
     newusertype<LuaCanvas>(L);
+    newusertype<LuaPCMStream>(L);
 }
 
 void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
@@ -170,5 +180,14 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
     auto file = "res:scripts/stdmin.lua";
     auto src = io::read_string(file);
     lua::pop(L, lua::execute(L, 0, src, "builtin:scripts/stdmin.lua"));
+
+    newusertype<LuaRandom>(L);
+    if (getglobal(L, "random")) {
+        if (getglobal(L, "__chroma_Random")) {
+            setfield(L, "Random");
+        }
+        pop(L);
+    }
+
     return L;
 }

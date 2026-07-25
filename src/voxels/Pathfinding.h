@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <queue>
+#include <set>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -14,6 +15,10 @@
 
 class Level;
 class GlobalChunks;
+class Block;
+
+template <typename T>
+class ContentUnitIndices;
 
 namespace voxels {
     struct RouteNode {
@@ -23,6 +28,7 @@ namespace voxels {
     struct Route {
         bool found;
         std::vector<RouteNode> nodes;
+        int totalVisited;
     };
 
     struct Node {
@@ -51,11 +57,13 @@ namespace voxels {
         bool enabled = false;
         bool mayBeIncomplete = true;
         int height = 2;
+        int jumpHeight = 1;
         int maxVisitedBlocks = 1e3;
         glm::ivec3 start;
         glm::ivec3 target;
         Route route;
         State state {};
+        std::set<std::pair<int, int>> avoidTags;
     };
 
     class Pathfinding {
@@ -75,9 +83,14 @@ namespace voxels {
     private:
         const Level& level;
         const GlobalChunks& chunks;
+        const ContentUnitIndices<Block>& blockDefs;
         std::unordered_map<int, Agent> agents;
         int nextAgent = 1;
 
-        int getSurfaceAt(const glm::ivec3& pos, int maxDelta);
+        int getSurfaceAt(
+            const Agent& agent, const glm::ivec3& pos, int maxDelta, float& cost
+        );
+
+        int checkPoint(const Agent& agent, int x, int y, int z, int& cost);
     };
 }

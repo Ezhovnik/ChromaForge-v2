@@ -14,22 +14,19 @@
 #include <engine/Engine.h>
 #include <content/ContentPack.h>
 #include <logic/scripting/lua/lua_engine.h>
-#include <logic/scripting/lua/lua_custom_types.h>
 #include <math/Heightmap.h>
 #include <util/stringutil.h>
 #include <frontend/UIDocument.h>
 #include <items/Inventory.h>
 #include <objects/Player.h>
 #include <logic/LevelController.h>
-#include <objects/Entity.h>
-#include <objects/Entities.h>
 #include <content/Content.h>
 #include <logic/scripting/scripting_commons.h>
 #include <interfaces/Process.h>
 #include <voxels/Chunk.h>
 #include <content/ContentControl.h>
-
-static inline const std::string STDCOMP = "stdcomp";
+#include <world/World.h>
+#include <voxels/blocks_agent.h>
 
 std::ostream* scripting::output_stream = &std::cout;
 std::ostream* scripting::error_stream = &std::cerr;
@@ -112,11 +109,46 @@ public:
     }
 };
 
-std::unique_ptr<Process> scripting::start_coroutine(
+class LuaProjectScript : public scripting::IClientProjectScript {
+public:
+    LuaProjectScript(lua::State* L, scriptenv env) : L(L), env(std::move(env)) {}
+
+    void onScreenChange(const std::string& name, bool show) override {
+        if (!lua::pushenv(L, *env)) return;
+
+        if (!lua::getfield(L, "on_" + name + (show ? "_setup" : "_clear"))) {
+            lua::pop(L);
+            return;
+        }
+        lua::call_nothrow(L, 0, 0);
+        lua::pop(L);
+    }
+private:
+    lua::State* L;
+    scriptenv env;
+};
+
+std::unique_ptr<scripting::IClientProjectScript> scripting::load_client_project_script(
     const io::path& script
 ) {
     auto L = lua::get_main_state();
-    if (lua::getglobal(L, "__chroma_start_coroutine")) {
+    auto source = io::read_string(script);
+    auto env = create_environment(nullptr);
+    lua::pushenv(L, *env);
+    if (lua::getglobal(L, "__chroma_app")) {
+        lua::setfield(L, "app");
+    }
+    lua::pop(L);
+
+    lua::loadbuffer(L, *env, source, script.name());
+    lua::call(L, 0);
+    return std::make_unique<LuaProjectScript>(L, std::move(env));
+}
+
+std::unique_ptr<Process> scripting::start_coroutine(const io::path& script) {
+    auto L = lua::get_main_state();
+    auto method = "__chroma_start_coroutine";
+    if (lua::getglobal(L, method)) {
         auto source = io::read_string(script);
         lua::loadbuffer(L, 0, source, script.name());
         if (lua::call(L, 1)) {
@@ -143,6 +175,14 @@ scriptenv scripting::create_pack_environment(const ContentPack& pack) {
     lua::setfield(L, "PACK_ENV");
     lua::pushstring(L, pack.id);
     lua::setfield(L, "PACK_ID");
+
+    if(!lua::getglobal(L, "__chroma__pack_envs")) {
+        lua::createtable(L, 0, 0);
+        lua::setglobal(L, "__chroma__pack_envs");
+        lua::pushvalue(L, -1);
+    }
+    lua::pushenv(L, id);
+    lua::setfield(L, pack.id);
     lua::pop(L);
     return std::shared_ptr<int>(new int(id), [=](int* id) {
         lua::remove_environment(L, *id);
@@ -186,39 +226,6 @@ scriptenv scripting::create_doc_environment(const scriptenv& parent, const std::
         lua::pop(L);
     }
     lua::pop(L);
-    return std::shared_ptr<int>(new int(id), [=](int* id) {
-        lua::remove_environment(L, *id);
-        delete id;
-    });
-}
-
-[[nodiscard]]
-static scriptenv create_component_environment(
-    const scriptenv& parent,
-    int entityIdx,
-    const std::string& name
-) {
-    auto L = lua::get_main_state();
-    int id = lua::create_environment(L, *parent);
-
-    lua::pushvalue(L, entityIdx);
-
-    lua::pushenv(L, id);
-
-    lua::pushvalue(L, -1);
-    lua::setfield(L, "this");
-
-    lua::pushvalue(L, -2);
-    lua::setfield(L, "entity");
-
-    lua::pop(L);
-    if (lua::getfield(L, "components")) {
-        lua::pushenv(L, id);
-        lua::setfield(L, name);
-        lua::pop(L);
-    }
-    lua::pop(L);
-
     return std::shared_ptr<int>(new int(id), [=](int* id) {
         lua::remove_environment(L, *id);
         delete id;
@@ -291,7 +298,11 @@ void scripting::on_world_load(LevelController* controller) {
     }
 
     for (auto& pack : scripting::content_control->getAllContentPacks()) {
-        lua::emit_event(L, pack.id + ":.worldopen");
+        lua::emit_event(L, pack.id + ":.worldopen", [](auto L) {
+            return lua::pushboolean(
+                L, !scripting::level->getWorld()->getInfo().isLoaded
+            );
+        });
     }
 }
 
@@ -347,10 +358,10 @@ void scripting::cleanup() {
     }
 }
 
-void scripting::on_blocks_spark(const Block& block, int tps) {
+void scripting::on_blocks_spark(const Block& block, int sps) {
     std::string name = block.name + ".blocksspark";
-    lua::emit_event(lua::get_main_state(), name, [tps] (auto L) {
-        return lua::pushinteger(L, tps);
+    lua::emit_event(lua::get_main_state(), name, [sps] (auto L) {
+        return lua::pushinteger(L, sps);
     });
 }
 
@@ -451,6 +462,7 @@ void scripting::on_chunk_present(const Chunk& chunk, bool loaded) {
             );
         }
     }
+    blocks_agent::on_chunk_present(*content->getIndices(), chunk);
 }
 
 void scripting::on_chunk_remove(const Chunk& chunk) {
@@ -465,6 +477,7 @@ void scripting::on_chunk_remove(const Chunk& chunk) {
             );
         }
     }
+    blocks_agent::on_chunk_remove(*content->getIndices(), chunk);
 }
 
 void scripting::on_inventory_open(const Player* player, const Inventory& inventory) {
@@ -497,10 +510,10 @@ void scripting::on_inventory_closed(const Player* player, const Inventory& inven
     }
 }
 
-void scripting::on_player_spark(Player* player, int tps) {
+void scripting::on_player_spark(Player* player, int sps) {
     auto args = [=](lua::State* L) {
         lua::pushinteger(L, player ? player->getId() : -1);
-        lua::pushinteger(L, tps);
+        lua::pushinteger(L, sps);
         return 2;
     };
     for (auto& [packid, pack] : scripting::content->getPacks()) {
@@ -536,208 +549,6 @@ bool scripting::on_item_break_block(Player* player, const Item& item, int x, int
         lua::pushinteger(L, player->getId());
         return 4;
     });
-}
-
-dv::value scripting::get_component_value(const scriptenv& env, const std::string& name) {
-    auto L = lua::get_main_state();
-    lua::pushenv(L, *env);
-    if (lua::getfield(L, name)) {
-        return lua::tovalue(L, -1);
-    }
-    return nullptr;
-}
-
-void scripting::on_entity_spawn(
-    const Entity&,
-    entityid_t eid,
-    const std::vector<std::unique_ptr<UserComponent>>& components,
-    const dv::value& args,
-    const dv::value& saved
-) {
-    auto L = lua::get_main_state();
-    lua::stackguard guard(L);
-    lua::requireglobal(L, STDCOMP);
-    if (lua::getfield(L, "new_Entity")) {
-        lua::pushinteger(L, eid);
-        lua::call(L, 1);
-    }
-
-    if (components.size() > 1) {
-        for (size_t i = 0; i < components.size() - 1; ++i) {
-            lua::pushvalue(L, -1);
-        }
-    }
-
-    for (auto& component : components) {
-        auto compenv = create_component_environment(
-            get_root_environment(), -1, component->name
-        );
-        lua::get_from(L, lua::CHUNKS_TABLE, component->name, true);
-        lua::pushenv(L, *compenv);
-        if (args != nullptr) {
-            std::string compfieldname = component->name;
-            util::replaceAll(compfieldname, ":", "__");
-            if (args.has(compfieldname)) {
-                lua::pushvalue(L, args[compfieldname]);
-            } else {
-                lua::createtable(L, 0, 0);
-            }
-        } else if (component->params != nullptr) {
-            lua::pushvalue(L, component->params);
-        } else {
-            lua::createtable(L, 0, 0);
-        }
-        lua::setfield(L, "ARGS");
-
-        if (saved == nullptr) {
-            lua::createtable(L, 0, 0);
-        } else {
-            if (saved.has(component->name)) {
-                lua::pushvalue(L, saved[component->name]);
-            } else {
-                lua::createtable(L, 0, 0);
-            }
-        }
-        lua::setfield(L, "SAVED_DATA");
-        lua::setfenv(L);
-        lua::call_nothrow(L, 0, 0);
-
-        lua::pushenv(L, *compenv);
-        auto& funcsset = component->funcsset;
-        funcsset.on_grounded = lua::hasfield(L, "on_grounded");
-        funcsset.on_fall = lua::hasfield(L, "on_fall");
-        funcsset.on_despawn = lua::hasfield(L, "on_despawn");
-        funcsset.on_save = lua::hasfield(L, "on_save");
-        funcsset.on_sensor_enter = lua::hasfield(L, "on_sensor_enter");
-        funcsset.on_sensor_exit = lua::hasfield(L, "on_sensor_exit");
-        funcsset.on_aim_on = lua::hasfield(L, "on_aim_on");
-        funcsset.on_aim_off = lua::hasfield(L, "on_aim_off");
-        funcsset.on_attacked = lua::hasfield(L, "on_attacked");
-        funcsset.on_used = lua::hasfield(L, "on_used");
-        lua::pop(L, 2);
-
-        component->env = compenv;
-    }
-}
-
-static void process_entity_callback(
-    const scriptenv& env, 
-    const std::string& name, 
-    std::function<int(lua::State*)> args
-) {
-    auto L = lua::get_main_state();
-    lua::pushenv(L, *env);
-    if (lua::hasfield(L, "__disabled")) {
-        lua::pop(L);
-        return;
-    }
-    if (lua::getfield(L, name)) {
-        if (args) {
-            lua::call_nothrow(L, args(L), 0);
-        } else {
-            lua::call_nothrow(L, 0, 0);
-        }
-    }
-    lua::pop(L);
-}
-
-static void process_entity_callback(
-    const Entt_Entity& entity,
-    const std::string& name,
-    bool EntityFuncsSet::*flag,
-    std::function<int(lua::State*)> args
-) {
-    const auto& script = entity.getScripting();
-    for (auto& component : script.components) {
-        if (component->funcsset.*flag) {
-            process_entity_callback(component->env, name, args);
-        }
-    }
-}
-
-void scripting::on_entity_despawn(const Entt_Entity& entity) {
-    process_entity_callback(entity, "on_despawn", &EntityFuncsSet::on_despawn, nullptr);
-
-    auto L = lua::get_main_state();
-    lua::get_from(L, "stdcomp", "remove_Entity", true);
-    lua::pushinteger(L, entity.getUID());
-    lua::call(L, 1, 0);
-}
-
-void scripting::on_entity_grounded(const Entt_Entity& entity, float force) {
-    process_entity_callback(entity, "on_grounded", &EntityFuncsSet::on_grounded, [force](auto L){
-        return lua::pushnumber(L, force);
-    });
-}
-
-void scripting::on_entity_fall(const Entt_Entity& entity) {
-    process_entity_callback(entity, "on_fall", &EntityFuncsSet::on_fall, nullptr);
-}
-
-void scripting::on_entity_save(const Entt_Entity& entity) {
-    process_entity_callback(entity, "on_save", &EntityFuncsSet::on_save, nullptr);
-}
-
-void scripting::on_sensor_enter(const Entt_Entity& entity, size_t index, entityid_t oid) {
-    process_entity_callback(entity, "on_sensor_enter", &EntityFuncsSet::on_sensor_enter, [index, oid](auto L) {
-        lua::pushinteger(L, index);
-        lua::pushinteger(L, oid);
-        return 2;
-    });
-}
-
-void scripting::on_sensor_exit(const Entt_Entity& entity, size_t index, entityid_t oid) {
-    process_entity_callback(entity, "on_sensor_exit", &EntityFuncsSet::on_sensor_exit, [index, oid](auto L) {
-        lua::pushinteger(L, index);
-        lua::pushinteger(L, oid);
-        return 2;
-    });
-}
-
-void scripting::on_aim_on(const Entt_Entity& entity, Player* player) {
-    process_entity_callback(entity, "on_aim_on", 
-            &EntityFuncsSet::on_aim_on, [player](auto L) {
-        return lua::pushinteger(L, player->getId());
-    });
-}
-
-void scripting::on_aim_off(const Entt_Entity& entity, Player* player) {
-    process_entity_callback(entity, "on_aim_off", 
-            &EntityFuncsSet::on_aim_off, [player](auto L) {
-        return lua::pushinteger(L, player->getId());
-    });
-}
-
-void scripting::on_attacked(const Entt_Entity& entity, Player* player, entityid_t attacker) {
-    process_entity_callback(entity, "on_attacked", &EntityFuncsSet::on_attacked, [player, attacker](auto L) {
-        lua::pushinteger(L, attacker);
-        lua::pushinteger(L, player->getId());
-        return 2;
-    });
-}
-
-void scripting::on_entity_used(const Entt_Entity& entity, Player* player) {
-    process_entity_callback(entity, "on_used", &EntityFuncsSet::on_used, [player](auto L) {
-        return lua::pushinteger(L, player->getId());
-    });
-}
-
-void scripting::on_entities_update(int sps, int parts, int part) {
-    auto L = lua::get_main_state();
-    lua::get_from(L, STDCOMP, "update", true);
-    lua::pushinteger(L, sps);
-    lua::pushinteger(L, parts);
-    lua::pushinteger(L, part);
-    lua::call_nothrow(L, 3, 0);
-    lua::pop(L);
-}
-
-void scripting::on_entities_render(float deltaTime) {
-    auto L = lua::get_main_state();
-    lua::get_from(L, STDCOMP, "render", true);
-    lua::pushnumber(L, deltaTime);
-    lua::call_nothrow(L, 1, 0);
-    lua::pop(L);
 }
 
 void scripting::on_ui_open(
@@ -815,6 +626,7 @@ void scripting::load_content_script(
     funcsset.onplaced = register_event(env, "on_placed", prefix + ".placed");
     funcsset.onreplaced = register_event(env, "on_replaced", prefix + ".replaced");
     funcsset.oninteract = register_event(env, "on_interact", prefix + ".interact");
+    funcsset.onblockspark = register_event(env, "on_block_spark", prefix + ".blockspark");
     funcsset.onblocksspark = register_event(env, "on_blocks_spark", prefix + ".blocksspark");
 }
 

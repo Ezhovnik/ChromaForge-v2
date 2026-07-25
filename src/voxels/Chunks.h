@@ -27,7 +27,7 @@ private:
 	const ContentIndices& contentIds;
 
     void eraseSegments(const Block& def, blockstate state, int x, int y, int z);
-    void repairSegments(const Block& def, blockstate state, int x, int y, int z);
+    void restoreSegments(const Block& def, blockstate state, int x, int y, int z);
     void setRotationExtended(const Block& def, blockstate state, const glm::ivec3& origin, uint8_t rotation);
 
     util::AreaMap2D<std::shared_ptr<Chunk>, int32_t> areaMap;

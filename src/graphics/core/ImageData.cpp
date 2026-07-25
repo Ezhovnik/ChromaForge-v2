@@ -16,8 +16,7 @@ ImageData::ImageData(ImageFormat format, uint width, uint height) : format(forma
         case ImageFormat::rgb888: pixsize = 3; break;
         case ImageFormat::rgba8888: pixsize = 4; break;
         default:
-            LOG_ERROR("Format is not supported");
-            throw std::runtime_error("Format is not supported");
+            THROW_ERR("Format is not supported");
     }
     data = std::make_unique<ubyte[]>(width * height * pixsize);
 }
@@ -35,8 +34,7 @@ ImageData::ImageData(ImageFormat format, uint width, uint height, const ubyte* d
         case ImageFormat::rgb888: pixsize = 3; break;
         case ImageFormat::rgba8888: pixsize = 4; break;
         default:
-            LOG_ERROR("Format is not supported");
-            throw std::runtime_error("Format is not supported");
+            THROW_ERR("Format is not supported");
     }
     this->data = std::make_unique<ubyte[]>(width * height * pixsize);
     std::memcpy(this->data.get(), data, width * height * pixsize);
@@ -109,8 +107,7 @@ void ImageData::flipX() {
             break;
         }
         default:
-            LOG_ERROR("Format is not supported");
-            throw std::runtime_error("Format is not supported");
+            THROW_ERR("Format is not supported");
     }
 }
 
@@ -131,8 +128,7 @@ void ImageData::flipY() {
             break;
         }
         default:
-            LOG_ERROR("Format is not supported");
-            throw std::runtime_error("Format is not supported");
+            THROW_ERR("Format is not supported");
     }
 }
 
@@ -147,8 +143,7 @@ void ImageData::blit(const ImageData& image, int x, int y) {
         return;
     }
 
-    LOG_ERROR("Mismatching format");
-    throw std::runtime_error("Mismatching format");
+    THROW_ERR("Mismatching format");
 }
 
 static bool clip_line(int& x1, int& y1, int& x2, int& y2, int width, int height) {
@@ -304,8 +299,7 @@ void ImageData::blitMatchingFormat(const ImageData& image, int x, int y) {
         case ImageFormat::rgb888: comps = 3; break;
         case ImageFormat::rgba8888: comps = 4; break;
         default:
-            LOG_ERROR("Only unsigned byte formats supported");
-            throw std::runtime_error("Only unsigned byte formats supported");    
+            THROW_ERR("Only unsigned byte formats supported");    
     }
     ubyte* source = image.getData();
 
@@ -334,8 +328,7 @@ void ImageData::extrude(int x, int y, int w, int h) {
         case ImageFormat::rgb888: comps = 3; break;
         case ImageFormat::rgba8888: comps = 4; break;
         default:
-            LOG_ERROR("Only unsigned byte formats supported");
-            throw std::runtime_error("Only unsigned byte formats supported");
+            THROW_ERR("Only unsigned byte formats supported");
     }
 
     int rx = x + w - 1;

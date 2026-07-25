@@ -117,8 +117,14 @@ void Batch3D::sprite(
     float u = (index % atlasRes) * scale;
     float v = 1.0f - ((index / atlasRes) * scale) - scale;
     sprite(
-		pos, up, right, w, h, UVRegion(u, v, u + scale, v + scale), tint
-	);
+        pos + right * w + up * h,
+        up,
+        right,
+        w,
+        h,
+        UVRegion(u, v, u + scale, v + scale),
+        tint
+    );
 }
 
 void Batch3D::sprite(
@@ -135,47 +141,53 @@ void Batch3D::sprite(
 	const float a = color.a;
 	if (index + 6 >= capacity) flush();
 
-	vertex(pos.x - right.x * w - up.x * h,
-			pos.y - right.y * w - up.y * h,
-			pos.z - right.z * w - up.z * h,
-			uv.u1, uv.v1,
-			r, g, b, a
-		);
+	vertex(
+		pos.x - right.x * w - up.x * h,
+		pos.y - right.y * w - up.y * h,
+		pos.z - right.z * w - up.z * h,
+		uv.u1, uv.v1,
+		r, g, b, a
+	);
 
-	vertex(pos.x + right.x * w + up.x * h,
-			pos.y + right.y * w + up.y * h,
-			pos.z + right.z * w + up.z * h,
-			uv.u2, uv.v2,
-			r, g, b, a
-		);
+	vertex(
+		pos.x + right.x * w + up.x * h,
+		pos.y + right.y * w + up.y * h,
+		pos.z + right.z * w + up.z * h,
+		uv.u2, uv.v2,
+		r, g, b, a
+	);
 
-	vertex(pos.x - right.x * w + up.x * h,
-			pos.y - right.y * w + up.y * h,
-			pos.z - right.z * w + up.z * h,
-			uv.u1, uv.v2,
-			r, g, b, a
-		);
+	vertex(
+		pos.x - right.x * w + up.x * h,
+		pos.y - right.y * w + up.y * h,
+		pos.z - right.z * w + up.z * h,
+		uv.u1, uv.v2,
+		r, g, b, a
+	);
 
-	vertex(pos.x - right.x * w - up.x * h,
-			pos.y - right.y * w - up.y * h,
-			pos.z - right.z * w - up.z * h,
-			uv.u1, uv.v1,
-			r, g, b, a
-		);
+	vertex(
+		pos.x - right.x * w - up.x * h,
+		pos.y - right.y * w - up.y * h,
+		pos.z - right.z * w - up.z * h,
+		uv.u1, uv.v1,
+		r, g, b, a
+	);
 
-	vertex(pos.x + right.x * w - up.x * h,
-			pos.y + right.y * w - up.y * h,
-			pos.z + right.z * w - up.z * h,
-			uv.u2, uv.v1,
-			r, g, b, a
-		);
+	vertex(
+		pos.x + right.x * w - up.x * h,
+		pos.y + right.y * w - up.y * h,
+		pos.z + right.z * w - up.z * h,
+		uv.u2, uv.v1,
+		r, g, b, a
+	);
 
-	vertex(pos.x + right.x * w + up.x * h,
-			pos.y + right.y * w + up.y * h,
-			pos.z + right.z * w + up.z * h,
-			uv.u2, uv.v2,
-			r, g, b, a
-		);
+	vertex(
+		pos.x + right.x * w + up.x * h,
+		pos.y + right.y * w + up.y * h,
+		pos.z + right.z * w + up.z * h,
+		uv.u2, uv.v2,
+		r, g, b, a
+	);
 }
 
 inline glm::vec4 do_tint(float value) {

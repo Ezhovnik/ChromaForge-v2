@@ -23,6 +23,7 @@ local Rigidbody = {__index={
     get_linear_damping=function(self) return __rigidbody.get_linear_damping(self.eid) end,
     set_linear_damping=function(self, f) return __rigidbody.set_linear_damping(self.eid, f) end,
     is_vdamping=function(self) return __rigidbody.is_vdamping(self.eid) end,
+    get_vdamping=function(self) return __rigidbody.get_vdamping(self.eid) end,
     set_vdamping=function(self, b) return __rigidbody.set_vdamping(self.eid, b) end,
     is_grounded=function(self) return __rigidbody.is_grounded(self.eid) end,
     is_crouching=function(self) return __rigidbody.is_crouching(self.eid) end,
@@ -59,6 +60,13 @@ local Entity = {__index={
     get_skeleton=function(self) return entities.get_skeleton(self.eid) end,
     set_skeleton=function(self, s) return entities.set_skeleton(self.eid, s) end,
     get_component=function(self, name) return self.components[name] end,
+    require_component=function(self, name)
+        local component = self.components[name]
+        if not component then
+            error(("Entity has no required component '%s'"):format(name))
+        end
+        return component
+    end,
     has_component=function(self, name) return self.components[name] ~= nil end,
     get_uid=function(self) return self.eid end,
     def_index=function(self) return entities.get_def(self.eid) end,
@@ -104,7 +112,7 @@ return {
             entities[eid] = nil;
         end
     end,
-    update = function(tps, parts, part)
+    update = function(sps, parts, part)
         for uid, entity in pairs(entities) do
             if uid % parts ~= part then
                 goto continue
@@ -112,7 +120,7 @@ return {
             for _, component in pairs(entity.components) do
                 local callback = component.on_update
                 if not component.__disabled and callback then
-                    local result, err = pcall(callback, tps)
+                    local result, err = pcall(callback, sps)
                     if err then
                         debug.error(err)
                     end
@@ -121,8 +129,21 @@ return {
             ::continue::
         end
     end,
+    physics_update = function(delta)
+        for uid, entity in pairs(entities) do
+            for _, component in pairs(entity.components) do
+                local callback = component.on_physics_update
+                if not component.__disabled and callback then
+                    local result, err = pcall(callback, delta)
+                    if err then
+                        debug.error(err)
+                    end
+                end
+            end
+        end
+    end,
     render = function(delta)
-        for _,entity in pairs(entities) do
+        for _, entity in pairs(entities) do
             for _, component in pairs(entity.components) do
                 local callback = component.on_render
                 if not component.__disabled and callback then

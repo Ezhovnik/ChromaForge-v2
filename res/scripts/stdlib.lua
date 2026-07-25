@@ -1,3 +1,5 @@
+local enable_experimental = builtin.get_setting("debug.enable-experimental")
+
 ------------------------------------------------
 ------ Extended kit of standard functions ------
 ------------------------------------------------
@@ -36,7 +38,6 @@ local function complete_app_lib(app)
     app.set_setting = builtin.set_setting
     app.spark = function()
         coroutine.yield()
-        network.__process_events()
     end
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
@@ -77,12 +78,19 @@ local function complete_app_lib(app)
         coroutine.yield()
     end
 
-    function app.sleep_until(predicate, max_sparks)
+    function app.sleep_until(predicate, max_sparks, max_time)
         max_sparks = max_sparks or 1e9
+        max_time = max_time or 1e9
         local sparks = 0
-        while sparks < max_sparks and not predicate() do
+        local start_time = os.clock()
+        while sparks < max_sparks and
+            os.clock() - start_time < max_time
+            and not predicate() do
             app.spark()
             sparks = sparks + 1
+        end
+        if os.clock() - start_time >= max_time then
+            error("timeout")
         end
         if sparks == max_sparks then
             error("Max sparks exceed")
@@ -168,59 +176,15 @@ function inventory.set_description(invid, slot, description)
     inventory.set_data(invid, slot, "description", description)
 end
 
-------------------------------------------------
-------------------- Events ---------------------
-------------------------------------------------
-events = {
-    handlers = {}
-}
-
-function events.on(event, func)
-    if events.handlers[event] == nil then
-        events.handlers[event] = {}
-    end
-    table.insert(events.handlers[event], func)
+if enable_experimental then
+    require "builtin:internal/maths_inline"
 end
 
-function events.reset(event, func)
-    if func == nil then
-        events.handlers[event] = nil
-    else
-        events.handlers[event] = {func}
-    end
-end
-
-function events.remove_by_prefix(prefix)
-    for name, handlers in pairs(events.handlers) do
-        local actualname = name
-        if type(name) == 'table' then
-            actualname = name[1]
-        end
-        if actualname:sub(1, #prefix+1) == prefix..':' then
-            events.handlers[actualname] = nil
-        end
-    end
-end
+asserts = require "builtin:internal/asserts"
+events = require "builtin:internal/events"
 
 function pack.unload(prefix)
     events.remove_by_prefix(prefix)
-end
-
-function events.emit(event, ...)
-    local result = nil
-    local handlers = events.handlers[event]
-    if handlers == nil then
-        return nil
-    end
-    for _, func in ipairs(handlers) do
-        local status, newres = xpcall(func, __chroma__error, ...)
-        if not status then
-            debug.error("Error in event (" .. event .. ") handler: " .. newres)
-        else 
-            result = result or newres
-        end
-    end
-    return result
 end
 
 gui_util = require "builtin:internal/gui_util"
@@ -237,6 +201,7 @@ end
 _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
+gui.root = _GUI_ROOT
 
 console.cheats = {}
 
@@ -320,6 +285,8 @@ Bytearray = bytearray.FFIBytearray
 Bytearray_as_string = bytearray.FFIBytearray_as_string
 Bytearray_construct = function(...) return Bytearray(...) end
 
+__chroma_scripts_registry = require "builtin:internal/scripts_registry"
+
 file.open = require "builtin:internal/stream_providers/file"
 file.open_named_pipe = require "builtin:internal/stream_providers/named_pipe"
 
@@ -338,6 +305,7 @@ else
 end
 
 ffi = nil
+__chroma_lock_internal_modules()
 
 math.randomseed(time.uptime() * 1536227939)
 
@@ -469,6 +437,8 @@ function __chroma_on_hud_open()
     hud.open_permanent("builtin:ingame_chat")
 end
 
+local Schedule = require "builtin:schedule"
+
 local ScheduleGroup_mt = {
     __index = {
         publish = function(self, schedule)
@@ -480,6 +450,7 @@ local ScheduleGroup_mt = {
             for id, schedule in pairs(self._schedules) do
                 schedule:spark(dt)
             end
+            self.common:spark(dt)
         end,
         remove = function(self, id)
             self._schedules[id] = nil
@@ -491,6 +462,7 @@ local function ScheduleGroup()
     return setmetatable({
         _next_schedule = 1,
         _schedules = {},
+        common = Schedule()
     }, ScheduleGroup_mt)
 end
 
@@ -567,15 +539,17 @@ function start_coroutine(chunk, name)
     local co = coroutine.create(function()
         local status, error = xpcall(chunk, function(err)
             local fullmsg = "Error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
-            gui.alert(fullmsg, function()
-                if world.is_open() then
-                    __chroma_app.close_world()
-                else
-                    __chroma_app.reset_content()
-                    menu:reset()
-                    menu.page = "main"
-                end
-            end)
+            if hud then
+                gui.alert(fullmsg, function()
+                    if world.is_open() then
+                        __chroma_app.close_world()
+                    else
+                        __chroma_app.reset_content()
+                        menu:reset()
+                        menu.page = "main"
+                    end
+                end)
+            end
             return fullmsg
         end)
         if not status then
@@ -611,6 +585,11 @@ function __process_post_runnables()
     for _, name in ipairs(dead) do
         __chroma_named_coroutines[name] = nil
     end
+
+    debug.pull_events()
+    network.__process_events()
+    block.__process_register_events()
+    block.__perform_sparks(time.delta())
 end
 
 function time.post_runnable(runnable)

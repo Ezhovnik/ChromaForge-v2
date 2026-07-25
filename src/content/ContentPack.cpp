@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <content/ContentPack.h>
 
 #include <stdexcept>
@@ -128,7 +129,52 @@ ContentPack ContentPack::read(const io::path& folder) {
                     level = DependencyLevel::Weak;
                     break;
             }
-            pack.dependencies.push_back({level, depName});
+
+            std::string depVer = "*";
+            std::string depVerOperator = "=";
+
+            size_t versionPos = depName.rfind("@");
+            if (versionPos != std::string::npos) {
+                depVer = depName.substr(versionPos + 1);
+                depName = depName.substr(0, versionPos);
+
+                if (depVer.size() >= 2) {
+                    std::string op = depVer.substr(0, 2);
+                    std::uint8_t op_size = 0;
+
+                    if (op == ">=" || op == "<=") {
+                        op_size = 2;
+                        depVerOperator = op;
+                    }
+
+                    else {
+                        op = depVer.substr(0, 1);
+
+                        if (op == ">" || op == "<") {
+                            op_size = 1;
+                            depVerOperator = op;
+                        }
+                    }
+
+                    depVer = depVer.substr(op_size);
+                } else {
+                    if (depVer == ">" || depVer == "<"){
+                        depVer = "*";
+                    }
+                }
+            }
+
+            VersionOperator versionOperator;
+            if (VersionOperatorMeta.getItem(depVerOperator, versionOperator)) {
+                pack.dependencies.push_back(
+                    {level, depName, depVer, versionOperator}
+                );
+            } else {
+                LOG_ERROR("Content-pack {}: Invalid version operator", pack.id);
+                throw contentpack_error(
+                    pack.id, folder, "Invalid version operator"
+                );
+            }
         }
     }
 
@@ -165,8 +211,7 @@ std::vector<std::string> ContentPack::worldPacksList(
 ) {
     io::path listfile = folder / "packs.list";
     if (!io::is_regular_file(listfile)) {
-        LOG_ERROR("Missing file 'packs.list'");
-        throw std::runtime_error("Missing file 'packs.list'");
+        THROW_ERR("Missing file 'packs.list'");
     }
     return io::read_list(listfile);
 }

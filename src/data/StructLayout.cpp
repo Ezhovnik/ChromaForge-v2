@@ -188,8 +188,7 @@ std::vector<FieldIncapatibility> StructLayout::checkCompatibility(
 const Field& StructLayout::requireField(const std::string& name) const {
     auto found = indices.find(name);
     if (found == indices.end()) {
-        LOG_ERROR("Field '{}' does not exist", name);
-        throw std::runtime_error("Field '" + name + "' does not exist");
+        THROW_ERR("Field '{}' does not exist", name);
     }
     return *&fields.at(found->second);
 }
@@ -222,8 +221,7 @@ void StructLayout::setInteger(
             setNumber(dst, static_cast<number_t>(value), field, index);
             break;
         default:
-            LOG_ERROR("Type error");
-            throw std::runtime_error("Type error");
+            THROW_ERR("Type error");
     }
 }
 
@@ -253,8 +251,7 @@ void StructLayout::setNumber(
             break;
         }
         default:
-            LOG_ERROR("Type error");
-            throw std::runtime_error("Type error");
+            THROW_ERR("Type error");
     }
 }
 
@@ -278,8 +275,7 @@ size_t StructLayout::setUnicode(
     ubyte* dst, std::string_view value, const Field& field
 ) const {
     if (field.type != FieldType::CHAR) {
-        LOG_ERROR("'char' field type required");
-        throw std::runtime_error("'char' field type required");
+        THROW_ERR("'char' field type required");
     }
     auto text = std::string_view(value.data(), value.size());
     size_t size = util::crop_utf8(text, field.elements);
@@ -313,8 +309,7 @@ integer_t StructLayout::getInteger(
         case FieldType::I64: return get_int<int64_t>(ptr);
         case FieldType::CHAR: return get_int<int8_t>(ptr);
         default:
-            LOG_ERROR("Type error");
-            throw std::runtime_error("Type error");
+            THROW_ERR("Type error");
     }
 }
 
@@ -348,8 +343,7 @@ number_t StructLayout::getNumber(
         case FieldType::CHAR:
             return getInteger(src, field, index);
         default:
-            LOG_ERROR("Type error");
-            throw std::runtime_error("Type error");
+            THROW_ERR("Type error");
     }
 }
 
@@ -357,8 +351,7 @@ std::string_view StructLayout::getChars(
     const ubyte* src, const Field& field
 ) const {
     if (field.type != FieldType::CHAR) {
-        LOG_ERROR("'char' field type required");
-        throw std::runtime_error("'char' field type required");
+        THROW_ERR("'char' field type required");
     }
     auto ptr = reinterpret_cast<const char*>(src + field.offset);
     return std::string_view(ptr, strnlen(ptr, field.elements));
@@ -389,9 +382,7 @@ void StructLayout::deserialize(const dv::value& src) {
         int elements = 1;
         fieldmap.at("length").get(elements);
         if (elements <= 0) {
-            std::string errorLog = "Invalid field " + util::quote(name) + " length: " + std::to_string(elements);
-            LOG_ERROR("{}", errorLog);
-            throw std::runtime_error(errorLog);
+            THROW_ERR("Invalid field {} length: {}", util::quote(name), elements);
         }
 
         auto convertStrategy = FieldConvertStrategy::Reset;

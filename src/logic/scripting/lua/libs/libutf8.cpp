@@ -4,7 +4,6 @@
 #include <cctype>
 #include <cwctype>
 
-#include <logic/scripting/lua/lua_custom_types.h>
 #include <util/stringutil.h>
 
 static int l_tobytes(lua::State* L) {
@@ -33,8 +32,7 @@ static int l_tostring(lua::State* L) {
         lua::pop(L);
         return lua::pushlstring(L, buffer.data(), size);
     }
-    lua::bytearray_as_string(L, 1);
-    return 1;
+    return lua::pushlstring(L, lua::bytearray_as_string(L, 1));
 }
 
 static int l_length(lua::State* L) {
@@ -99,5 +97,5 @@ const luaL_Reg utf8lib[] = {
     {"lower", lua::wrap<l_lower>},
     {"encode", lua::wrap<l_encode>},
     {"escape", lua::wrap<l_escape>},
-    {NULL, NULL}
+    {nullptr, nullptr}
 };

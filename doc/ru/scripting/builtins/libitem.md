@@ -33,4 +33,7 @@ item.emission(itemid: int) -> str
 
 -- Возвращает значение свойства `uses`
 item.uses(itemid: int) -> int
+
+-- Проверяет наличие тега у предмета
+item.has_tag(itemid: int, tag: str) -> bool
 ```

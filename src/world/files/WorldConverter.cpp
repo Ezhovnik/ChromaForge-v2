@@ -80,8 +80,7 @@ void WorldConverter::createConvertTasks() {
             case ContentIssueType::RegionFormatUpdate:
                 break;
             case ContentIssueType::Missing:
-                LOG_ERROR("Issue can't be resolved");
-                throw std::runtime_error("Issue can't be resolved");
+                THROW_ERR("Issue can't be resolved");
             case ContentIssueType::Reorder:
                 handleReorder(issue.contentType);
                 break;
@@ -254,8 +253,7 @@ void WorldConverter::convert(const ConvertTask& task) const {
 
 void WorldConverter::convertNext() {
     if (tasks.empty()) {
-        LOG_ERROR("No more regions to convert");
-        throw std::runtime_error("no more regions to convert");
+        THROW_ERR("No more regions to convert");
     }
     ConvertTask task = tasks.front();
     tasks.pop();

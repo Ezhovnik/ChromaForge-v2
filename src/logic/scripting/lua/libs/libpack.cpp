@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <string>
 #include <filesystem>
 #include <algorithm>
@@ -101,7 +102,16 @@ static int l_pack_get_info(lua::State* L, const ContentPack& pack, const Content
                 case DependencyLevel::Weak: prefix = "~"; break;
                 default: throw std::runtime_error("");
             }
-            lua::pushfstring(L, "%s%s", prefix.c_str(), dpack.id.c_str());
+            auto opString = VersionOperatorMeta.getNameString(dpack.op);
+
+            lua::pushfstring(
+                L,
+                "%s%s@%s%s",
+                prefix.c_str(),
+                dpack.id.c_str(),
+                (dpack.op == VersionOperator::Equal ? "" : opString).c_str(),
+                dpack.version.c_str()
+            );
             lua::rawseti(L, i + 1);
         }
         lua::setfield(L, "dependencies");
@@ -237,5 +247,5 @@ const luaL_Reg packlib [] = {
     {"get_base_packs", lua::wrap<l_pack_get_base_packs>},
     {"assemble", lua::wrap<l_pack_assemble>},
     {"request_writeable", lua::wrap<l_pack_request_writeable>},
-    {NULL, NULL}
+    {nullptr, nullptr}
 };

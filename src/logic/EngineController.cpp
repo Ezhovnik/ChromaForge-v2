@@ -126,8 +126,7 @@ static void start(Engine& engine, std::shared_ptr<Task> task, const std::wstring
 static void check_world(const EnginePaths& paths, const io::path& folder) {
     auto worldFile = folder / "world.json";
     if (!io::exists(worldFile)) {
-        LOG_ERROR("{} does not exists", worldFile.string());
-        throw std::runtime_error(worldFile.string() + " does not exists");
+        THROW_ERR("{} does not exists", worldFile.string());
     }
 }
 
@@ -177,8 +176,7 @@ void EngineController::onMissingContent(const std::shared_ptr<ContentReport>& re
     if (engine.isHeadless()) {
         auto errorLog = "Missing content: " +
             json::stringify(create_missing_content_report(report), "  ");
-        LOG_ERROR("{}", errorLog);
-        throw std::runtime_error(errorLog);
+        THROW_ERR("{}", errorLog);
     } else {
         engine.setScreen(std::make_shared<MenuScreen>(engine));
         menus::show(

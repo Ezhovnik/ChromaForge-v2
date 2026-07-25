@@ -1,4 +1,4 @@
-#include <logic/scripting/lua/lua_custom_types.h>
+#include <logic/scripting/lua/usertypes/lua_type_heightmap.h>
 
 #include <cstring>
 #include <sstream>
@@ -27,7 +27,7 @@ LuaHeightmap::LuaHeightmap(
 
 LuaHeightmap::~LuaHeightmap() {}
 
-void LuaHeightmap::setSeed(uint64_t seed) {
+void LuaHeightmap::setSeed(int64_t seed) {
     noise->seed = static_cast<int>(seed);
 }
 
@@ -269,7 +269,7 @@ static int l_meta_meta_call(lua::State* L) {
     auto width = tointeger(L, 2);
     auto height = tointeger(L, 3);
     if (width <= 0 || height <= 0) {
-        throw std::runtime_error("Width and height must be greather than 0");
+        throw std::runtime_error("Width and height must be greater than 0");
     }
     return newuserdata<LuaHeightmap>(
         L, static_cast<uint>(width), static_cast<uint>(height)

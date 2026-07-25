@@ -157,12 +157,7 @@ void process_method(
             list.add(value);
         }
     } else {
-        LOG_ERROR(
-            "Unknown method {} for {}", method, name
-        );
-        throw std::runtime_error(
-            "Unknown method " + method + " for " + name
-        );
+        THROW_ERR("Unknown method {} for {}", method, name);
     }
 }
 
@@ -241,10 +236,7 @@ void ContentUnitLoader<DefT>::loadDefs(const dv::value& root) {
     }
 
     if (!pendingDefs.empty()) {
-        LOG_ERROR("Unresolved {} dependencies detected", defsDir);
-        throw std::runtime_error(
-            "Unresolved " + defsDir + " dependencies detected"
-        );
+        THROW_ERR("Unresolved {} dependencies detected", defsDir);
     }
 }
 
@@ -265,8 +257,9 @@ void ContentLoader::loadContent(const dv::value& root) {
             item.iconType = ItemIconType::Block;
             item.icon = def.name;
             item.placingBlock = def.name;
-    
-            for (uint j = 0; j < 4; j++) {
+            item.tags = def.tags;
+
+            for (uint j = 0; j < 4; ++j) {
                 item.emission[j] = def.emission[j];
             }
         }
@@ -322,8 +315,7 @@ void ContentLoader::load() {
         try {
             loadGenerator(def, full, name);
         } catch (const std::runtime_error& err) {
-            LOG_ERROR("Generator '{}': {}", full, err.what());
-            throw std::runtime_error("Generator '" + full + "': " + err.what());
+            THROW_ERR("Generator '{}': {}", full, err.what());
         }
     });
 
@@ -379,25 +371,43 @@ void ContentLoader::load() {
         loadContent(io::read_json(contentFile));
     }
 
+    io::path tagsFile = folder / "tags.toml";
+    if (io::exists(tagsFile)) {
+        auto tagsMap = io::read_object(tagsFile);
+        for (const auto& [key, list] : tagsMap.asObject()) {
+            for (const auto& id : list) {
+                const auto& stringId = id.asString();
+                if (auto block = builder.blocks.get(stringId)) {
+                    block->tags.push_back(key);
+                    if (auto item = builder.items.get(stringId + BLOCK_ITEM_SUFFIX)) {
+                        item->tags.push_back(key);
+                    }
+                } else if (auto item = builder.items.get(stringId)) {
+                    item->tags.push_back(key);
+                }
+            }
+        }
+    }
+
     LOG_INFO("Successfully loaded content pack [{}]", pack->id);
 }
 
 template <class T>
 static void load_script(const Content& content, T& def) {
-    const auto& name = def.name;
-    size_t pos = name.find(':');
+    const auto& scriptName = def.scriptFile;
+    if (scriptName.empty()) return;
+    size_t pos = scriptName.find(':');
     if (pos == std::string::npos) {
-        LOG_ERROR("Invalid content unit name");
-        throw std::runtime_error("Invalid content unit name");
+        THROW_ERR("Invalid content unit name");
     }
-    const auto runtime = content.getPackRuntime(name.substr(0, pos));
+    const auto runtime = content.getPackRuntime(scriptName.substr(0, pos));
     const auto& pack = runtime->getInfo();
     const auto& folder = pack.folder;
     auto scriptfile = folder / ("scripts/" + def.scriptName + ".lua");
     if (io::is_regular_file(scriptfile)) {
         scripting::load_content_script(
             runtime->getEnvironment(),
-            name,
+            def.name,
             scriptfile,
             def.scriptFile,
             def.rt.funcsset

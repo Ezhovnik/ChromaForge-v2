@@ -19,6 +19,7 @@ struct CursorState;
 class Engine;
 class Input;
 class Window;
+class UIDocument;
 namespace devtools {
     class Editor;
 }
@@ -70,6 +71,7 @@ namespace gui {
         std::shared_ptr<UINode> pressed;
         std::shared_ptr<UINode> focus;
         std::shared_ptr<UINode> tooltip;
+        std::shared_ptr<UIDocument> rootDocument;
 
         std::unordered_map<std::string, std::shared_ptr<UINode>> storage;
 

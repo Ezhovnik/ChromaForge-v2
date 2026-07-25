@@ -55,8 +55,13 @@ public:
     );
     ~LevelScreen();
 
+    void onOpen() override;
     void update(float deltaTime) override;
     void draw(float deltaTime) override;
 
     void onEngineShutdown() override;
+
+    const char* getName() const override {
+        return "level";
+    }
 };

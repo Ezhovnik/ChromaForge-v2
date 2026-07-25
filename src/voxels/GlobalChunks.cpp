@@ -18,6 +18,7 @@
 #include <coders/json.h>
 #include <voxels/blocks_agent.h>
 #include <world/LevelEvents.h>
+#include <objects/Entt_Entity.h>
 
 static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     bool corrupted = false;

@@ -20,6 +20,21 @@
 struct AABB;
 
 namespace blocks_agent {
+    struct BlockRegisterEvent {
+        enum class Type : uint16_t {
+            RegisterUpdating,
+            UnregisterUpdating,
+        };
+        Type type;
+        blockid_t id;
+        glm::ivec3 coord;
+    };
+
+    std::vector<BlockRegisterEvent> pull_register_events();
+
+    void on_chunk_present(const ContentIndices& indices, const Chunk& chunk);
+    void on_chunk_remove(const ContentIndices& indices, const Chunk& chunk);
+
     template<class Storage>
     inline Chunk* get_chunk(const Storage& chunks, int cx, int cz) {
         return chunks.getChunk(cx, cz);
@@ -71,7 +86,7 @@ namespace blocks_agent {
         return false;
     }
 
-    void set(
+    bool set(
         Chunks& chunks,
         int32_t x,
         int32_t y,
@@ -80,7 +95,7 @@ namespace blocks_agent {
         blockstate state
     );
 
-    void set(
+    bool set(
         GlobalChunks& chunks,
         int32_t x,
         int32_t y,
@@ -113,7 +128,7 @@ namespace blocks_agent {
     }
 
     template <class Storage>
-    inline void repair_segments(
+    inline void restore_segments(
         Storage& chunks, const Block& def, blockstate state, int x, int y, int z
     ) {
         const auto& rotation = def.rotations.variants[state.rotation];

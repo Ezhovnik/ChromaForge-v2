@@ -6,7 +6,7 @@
 #include <logic/scripting/scripting_commons.h>
 #include <typedefs.h>
 #include <logic/scripting/lua/lua_engine.h>
-#include <logic/scripting/lua/lua_custom_types.h>
+#include <logic/scripting/lua/usertypes/lua_type_heightmap.h>
 #include <content/Content.h>
 #include <voxels/Block.h>
 #include <voxels/Chunk.h>

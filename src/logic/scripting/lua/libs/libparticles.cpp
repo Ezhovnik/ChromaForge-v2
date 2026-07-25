@@ -80,5 +80,5 @@ const luaL_Reg particleslib[] = {
     {"is_alive", lua::wrap_hud<l_is_alive>},
     {"get_origin", lua::wrap_hud<l_get_origin>},
     {"set_origin", lua::wrap_hud<l_set_origin>},
-    {NULL, NULL}
+    {nullptr, nullptr}
 };

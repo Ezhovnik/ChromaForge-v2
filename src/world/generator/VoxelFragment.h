@@ -36,7 +36,7 @@ public:
 
     void prepare(const Content& content);
 
-    void place(GlobalChunks& chunks, const glm::ivec3& offset, ubyte rotation);
+    void place(GlobalChunks& chunks, const glm::ivec3& offset);
 
     std::unique_ptr<VoxelFragment> rotated(const Content& content) const;
 

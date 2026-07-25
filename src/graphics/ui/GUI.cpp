@@ -55,6 +55,13 @@ GUI::GUI(Engine& engine)
     store("tooltip", tooltip);
     store("tooltip.label", UINode::find(tooltip, "tooltip.label"));
     container->add(tooltip);
+
+    rootDocument = std::make_unique<UIDocument>(
+        BUILTIN_CONTENT_NAMESPACE + ":root",
+        uidocscript {},
+        std::dynamic_pointer_cast<gui::UINode>(container),
+        nullptr
+    );
 }
 
 GUI::~GUI() = default;
@@ -274,6 +281,7 @@ bool GUI::isFocusCaught() const {
 }
 
 void GUI::add(std::shared_ptr<UINode> node) {
+    UINode::getIndices(node, rootDocument->getMapWriteable());
     container->add(std::move(node));
 }
 
@@ -311,15 +319,8 @@ void GUI::postRunnable(const runnable& callback) {
 }
 
 void GUI::onAssetsLoad(Assets* assets) {
-    assets->store(
-        std::make_unique<UIDocument>(
-            BUILTIN_CONTENT_NAMESPACE + ":root",
-            uidocscript {},
-            std::dynamic_pointer_cast<gui::UINode>(container),
-            nullptr
-        ),
-        BUILTIN_CONTENT_NAMESPACE + ":root"
-    );
+    rootDocument->rebuildIndices();
+    assets->store(rootDocument, BUILTIN_CONTENT_NAMESPACE + ":root");
 }
 
 void GUI::setDoubleClickDelay(float delay) {

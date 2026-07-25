@@ -103,7 +103,6 @@ LevelScreen::LevelScreen(
     animator->addAnimations(assets.getAnimations());
 
     loadDecorations();
-    initializeContent();
 }
 
 LevelScreen::~LevelScreen() {
@@ -115,6 +114,10 @@ LevelScreen::~LevelScreen() {
     input.getBindings().enableAll();
     controller->onWorldQuit();
     engine.getPaths().setCurrentWorldFolder("");
+}
+
+void LevelScreen::onOpen() {
+    initializeContent();
 }
 
 void LevelScreen::initializeContent() {

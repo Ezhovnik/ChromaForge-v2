@@ -18,13 +18,17 @@ void GLSLExtension::setPaths(const ResPaths* paths) {
     this->paths = paths;
 }
 
+void GLSLExtension::setTraceOutput(bool enabled) {
+    this->traceOutput = enabled;
+}
+
 void GLSLExtension::loadHeader(const std::string& name) {
     if (paths == nullptr) return;
 
     io::path file = paths->find(SHADERS_FOLDER + "/lib/" + name + ".glsl");
     std::string source = io::read_string(file);
     addHeader(name, {});
-    addHeader(name, process(file, source, true));
+    addHeader(name, process(file, source, true, {}));
 }
 
 void GLSLExtension::addHeader(const std::string& name, ProcessingResult header) {
@@ -40,8 +44,7 @@ const GLSLExtension::ProcessingResult& GLSLExtension::getHeader(
 ) const {
     auto found = headers.find(name);
     if (found == headers.end()) {
-        LOG_ERROR("No header {} loaded", name);
-        throw std::runtime_error("No header '" + name + "' loaded");
+        THROW_ERR("No header '{}' loaded", name);
     }
     return found->second;
 }
@@ -49,8 +52,7 @@ const GLSLExtension::ProcessingResult& GLSLExtension::getHeader(
 const std::string& GLSLExtension::getDefine(const std::string& name) const {
     auto found = defines.find(name);
     if (found == defines.end()) {
-        LOG_ERROR("Name '{}' is not defined");
-        throw std::runtime_error("Name '" + name + "' is not defined");
+        THROW_ERR("Name '{}' is not defined", name);
     }
     return found->second;
 }
@@ -85,8 +87,7 @@ inline void parsing_error(
     uint linenum, 
     const std::string& message
 ) {
-    LOG_ERROR("File {}: {} at line {}", file.string(), message, std::to_string(linenum));
-    throw std::runtime_error("File " + file.string() + ": " + message + " at line " + std::to_string(linenum));
+    THROW_ERR("File {}: {} at line {}", file.string(), message, linenum);
 }
 
 // Вспомогательная функция: выводит предупреждение о проблеме при парсинге
@@ -114,19 +115,24 @@ static PostEffect::Param::Value default_value_for(PostEffect::Param::Type type) 
         case PostEffect::Param::Type::Vec4:
             return glm::vec4 {0.0f, 0.0f, 0.0f, 0.0f};
         default:
-            LOG_ERROR("Unsupported type");
-            throw std::runtime_error("Unsupported type");
+            THROW_ERR("Unsupported type");
     }
 }
 
 class GLSLParser : public BasicParser<char> {
 public:
-    GLSLParser(GLSLExtension& glsl, std::string_view file, std::string_view source, bool header) : BasicParser(file, source), glsl(glsl) {
+    GLSLParser(
+        GLSLExtension& glsl,
+        std::string_view file,
+        std::string_view source,
+        bool header,
+        const std::vector<std::string>& defines
+    ) : BasicParser(file, source), glsl(glsl) {
         if (!header) {
             ss << "#version " << GLSLExtension::VERSION << '\n';
-        }
-        for (auto& entry : glsl.getDefines()) {
-            ss << "#define " << entry.first << " " << entry.second << '\n';
+            for (auto& entry : defines) {
+                ss << "#define " << entry << '\n';
+            }
         }
         uint linenum = 1;
         source_line(ss, linenum);
@@ -137,16 +143,14 @@ public:
     bool processIncludeDirective() {
         skipWhitespace(false);
         if (peekNoJump() != '<') {
-            LOG_ERROR("'<' expected");
-            throw error("'<' expected");
+            THROW_ERR("'<' expected");
         }
         skip(1);
         skipWhitespace(false);
         auto headerName = parseName();
         skipWhitespace(false);
         if (peekNoJump() != '>') {
-            LOG_ERROR("'>' expected");
-            throw error("'>' expected");
+            THROW_ERR("'>' expected");
         }
         skip(1);
         skipWhitespace(false);
@@ -173,8 +177,7 @@ public:
     template<int n>
     PostEffect::Param::Value parseVectorValue() {
         if (peekNoJump() != '[') {
-            LOG_ERROR("'[' expected");
-            throw error("'[' expected");
+            THROW_ERR("'[' expected");
         }
         auto value = json::parse(
             filename,
@@ -202,8 +205,7 @@ public:
             case PostEffect::Param::Type::Vec4:
                 return parseVectorValue<4>();
             default:
-                LOG_ERROR("Unsupported default value for type {}", name);
-                throw error("Unsupported default value for type " + name);
+                THROW_ERR("Unsupported default value for type {}", name);
         }
     }
 
@@ -212,14 +214,12 @@ public:
         auto typeName = parseName();
         PostEffect::Param::Type type {};
         if (!PostEffect::Param::TypeMeta.getItem(typeName, type)) {
-            LOG_ERROR("Unsupported param type {}", util::quote(typeName));
-            throw error("Unsupported param type " + util::quote(typeName));
+            THROW_ERR("Unsupported param type {}", util::quote(typeName));
         }
         skipWhitespace(false);
         auto paramName = parseName();
         if (params.find(paramName) != params.end()) {
-            LOG_ERROR("Duplicating param {}", util::quote(typeName));
-            throw error("duplicating param " + util::quote(paramName));
+            THROW_ERR("Duplicating param {}", util::quote(paramName));
         }
         skipWhitespace(false);
         int start = pos;
@@ -281,11 +281,36 @@ private:
     std::stringstream ss;
 };
 
+static void trace_output(
+    const io::path& file,
+    const std::string& source,
+    const GLSLExtension::ProcessingResult& result
+) {
+    std::stringstream ss;
+    ss << "export:trace/" << file.name();
+    io::path outfile = ss.str();
+    try {
+        io::create_directories(outfile.parent());
+        io::write_string(outfile, result.code);
+    } catch (const std::runtime_error& err) {
+        LOG_ERROR(
+            "Error on saving GLSLExtension::preprocess output ({}): {}", outfile.string(), err.what()
+        );
+    }
+}
+
 GLSLExtension::ProcessingResult GLSLExtension::process(
-    const io::path& file, const std::string& source, bool header
+    const io::path& file,
+    const std::string& source,
+    bool header,
+    const std::vector<std::string>& defines
 ) {
     std::string filename = file.string();
-    GLSLParser parser(*this, filename, source, header);
-    return parser.process();
+    GLSLParser parser(*this, filename, source, header, defines);
+    auto result = parser.process();
+    if (traceOutput) {
+        trace_output(file, source, result);
+    }
+    return result;
 }
 

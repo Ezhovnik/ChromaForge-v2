@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include <typedefs.h>
+#include <graphics/core/FontMetrics.h>
 
 class Texture;
 class Batch2D;
@@ -14,30 +15,30 @@ class Batch3D;
 class Camera;
 
 struct FontStyle {
-     bool bold = false;
-     bool italic = false;
-     bool strikethrough = false;
-     bool underline = false;
-     glm::vec4 color {1, 1, 1, 1};
+    bool bold = false;
+    bool italic = false;
+    bool strikethrough = false;
+    bool underline = false;
+    glm::vec4 color {1, 1, 1, 1};
 
-     FontStyle() = default;
+    FontStyle() = default;
 
-     FontStyle(
-          bool bold,
-          bool italic,
-          bool strikethrough,
-          bool underline,
-          glm::vec4 color
-     ) : bold(bold),
-          italic(italic),
-          strikethrough(strikethrough),
-          underline(underline),
-          color(std::move(color)) {}
+    FontStyle(
+        bool bold,
+        bool italic,
+        bool strikethrough,
+        bool underline,
+        glm::vec4 color
+    ) : bold(bold),
+        italic(italic),
+        strikethrough(strikethrough),
+        underline(underline),
+        color(std::move(color)) {}
 };
 
 struct FontStylesScheme {
-     std::vector<FontStyle> palette;
-     std::vector<ubyte> map;
+    std::vector<FontStyle> palette;
+    std::vector<ubyte> map;
 };
 
 /**
@@ -49,10 +50,10 @@ struct FontStylesScheme {
  */
 class Font {
 private:
-     int lineHeight; ///< Высота строки в пикселях
-	int yoffset; ///< Смещение по Y (для коррекции позиции)
-     int glyphInterval = 8;
-	std::vector<std::unique_ptr<Texture>> pages; ///< Страницы текстуры шрифта
+    int lineHeight; ///< Высота строки в пикселях
+    int yoffset; ///< Смещение по Y (для коррекции позиции)
+    int glyphInterval = 8;
+    std::vector<std::unique_ptr<Texture>> pages; ///< Страницы текстуры шрифта
 public:
 	/**
      * @brief Конструктор.
@@ -60,49 +61,53 @@ public:
      * @param lineHeight Высота строки.
      * @param yoffset Смещение по вертикали.
      */
-	Font(std::vector<std::unique_ptr<Texture>> pages, int lineHeight, int yoffset);
+    Font(std::vector<std::unique_ptr<Texture>> pages, int lineHeight, int yoffset);
 
-	~Font();
+    ~Font();
 
 	/**
      * @brief Возвращает высоту строки.
      */
-     int getLineHeight() const;
+    int getLineHeight() const;
 
 	/**
      * @brief Возвращает вертикальное смещение.
      */
-     int getYOffset() const;
+    int getYOffset() const;
 
 	int calcWidth(std::wstring_view text, size_t length=-1) const;
-     int calcWidth(std::wstring_view text, size_t offset, size_t length) const;
+    int calcWidth(std::wstring_view text, size_t offset, size_t length) const;
 
 	/**
      * @brief Проверяет, является ли символ печатным (не пробельным).
      * @param codepoint Код символа.
      * @return true, если символ должен отображаться.
      */
-	bool isPrintableChar(uint codepoint) const;
+    bool isPrintableChar(uint codepoint) const;
 
-	void draw(
-          Batch2D& batch,
-          std::wstring_view text,
-          int x,
-          int y,
-          const FontStylesScheme* styles,
-          size_t styleMapOffset,
-          float scale = 1
-     ) const;
+    void draw(
+        Batch2D& batch,
+        std::wstring_view text,
+        int x,
+        int y,
+        const FontStylesScheme* styles,
+        size_t styleMapOffset,
+        float scale = 1
+    ) const;
 
-     void draw(
-          Batch3D& batch,
-          std::wstring_view text,
-          const FontStylesScheme* styles,
-          size_t styleMapOffset,
-          const glm::vec3& pos,
-          const glm::vec3& right={1, 0, 0},
-          const glm::vec3& up={0, 1, 0}
-     ) const;
+    void draw(
+        Batch3D& batch,
+        std::wstring_view text,
+        const FontStylesScheme* styles,
+        size_t styleMapOffset,
+        const glm::vec3& pos,
+        const glm::vec3& right={1, 0, 0},
+        const glm::vec3& up={0, 1, 0}
+    ) const;
 
-     const Texture* getPage(int page) const;
+    const Texture* getPage(int page) const;
+
+    FontMetrics getMetrics() const {
+        return {lineHeight, yoffset, glyphInterval};
+    }
 };

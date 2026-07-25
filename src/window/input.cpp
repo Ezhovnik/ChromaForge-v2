@@ -189,16 +189,14 @@ const Binding& Bindings::require(const std::string& name) const {
     if (const auto found = get(name)) {
         return *found;
     }
-    LOG_ERROR("Binding '{}' does not exist", name);
-    throw std::runtime_error("Binding '" + name + "' does not exist");
+    THROW_ERR("Binding '{}' does not exist", name);
 }
 
 Binding& Bindings::require(const std::string& name) {
     if (const auto found = get(name)) {
         return *found;
     }
-    LOG_ERROR("Binding '{}' does not exist", name);
-    throw std::runtime_error("Binding '" + name + "' does not exist");
+    THROW_ERR("Binding '{}' does not exist", name);
 }
 
 void Bindings::read(const dv::value& map, BindType bindType) {
@@ -242,8 +240,7 @@ std::string Bindings::write() const {
                     input_util::get_name(static_cast<Mousecode>(binding.code));
                 break;
             default:
-                LOG_ERROR("Unsupported control type");
-                throw std::runtime_error("Unsupported control type");
+                THROW_ERR("Unsupported control type");
         }
         obj[entry.first] = std::move(value);
     }

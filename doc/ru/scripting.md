@@ -11,6 +11,7 @@
 - [Сущности и компоненты](scripting/entities-and-components.md)
 - [Библиотеки]
   - [app](scripting/builtins/libapp.md)
+  - [assets](scripting/builtins/libassets.md)
   - [base64](scripting/builtins/libbase64.md)
   - [bjson, json, toml, yaml](scripting/filesystem.md)
   - [block](scripting/builtins/libblock.md)
@@ -34,6 +35,7 @@
   - [pathfinding](scripting/builtins/libpathfinding.md)
   - [player](scripting/builtins/libplayer.md)
   - [quat](scripting/builtins/libquat.md)
+  - [random](scripting/builtins/librandom.md)
   - [rules](scripting/builtins/librules.md)
   - [time](scripting/builtins/libtime.md)
   - [utf8](scripting/builtins/libutf8.md)
@@ -43,6 +45,7 @@
 - [Модуль builtin:bit_converter](scripting/modules/builtin_bit_converter.md)
 - [Модуль builtin:data_buffer](scripting/modules/builtin_data_buffer.md)
 - [Модули builtin:vector2, builtin:vector3](scripting/modules/builtin_vector2_vector3.md)
+- [Встроенные компоненты сущностей](scripting/builtin_components.md)
 
 ## Аннотации типов данных
 

@@ -59,6 +59,25 @@ inline audio::speakerid_t play_stream(
     int channel
 ) {
     if (channel == -1) return 0;
+    if (!scripting::engine->isHeadless()) {
+        auto assets = scripting::engine->getAssets();
+        auto stream = assets->getShared<audio::PCMStream>(filename);
+        if (stream) {
+            return audio::play(
+                audio::open_stream(std::move(stream), true),
+                glm::vec3(
+                    static_cast<float>(x),
+                    static_cast<float>(y),
+                    static_cast<float>(z)
+                ),
+                relative,
+                volume,
+                pitch,
+                loop,
+                channel
+            );
+        }
+    }
     io::path file;
     if (std::strchr(filename, ':')) {
         file = std::string(filename);
@@ -304,6 +323,22 @@ static int l_audio_count_streams(lua::State* L) {
     return lua::pushinteger(L, audio::count_streams());
 }
 
+static int l_audio_fetch_input(lua::State* L) {
+    auto device = audio::get_input_device();
+    if (device == nullptr) return 0;
+
+    size_t size = lua::touinteger(L, 1);
+    const size_t MAX_BUFFER_SIZE = audio::MAX_INPUT_SAMPLES * 4;
+    if (size == 0) size = MAX_BUFFER_SIZE;
+
+    size = std::min<size_t>(size, MAX_BUFFER_SIZE);
+    ubyte buffer[MAX_BUFFER_SIZE];
+    size = device->read(reinterpret_cast<char*>(buffer), size);
+
+    std::vector<ubyte> bytes(buffer, buffer + size);
+    return lua::create_bytearray(L, std::move(bytes));
+}
+
 const luaL_Reg audiolib [] = {
     {"play_sound", lua::wrap<l_audio_play_sound>},
     {"play_sound_2d", lua::wrap<l_audio_play_sound_2d>},
@@ -329,5 +364,6 @@ const luaL_Reg audiolib [] = {
     {"get_velocity", lua::wrap<l_audio_get_velocity>},
     {"count_speakers", lua::wrap<l_audio_count_speakers>},
     {"count_streams", lua::wrap<l_audio_count_streams>},
-    {NULL, NULL}
+    {"fetch_input", lua::wrap<l_audio_fetch_input>},
+    {nullptr, nullptr}
 };

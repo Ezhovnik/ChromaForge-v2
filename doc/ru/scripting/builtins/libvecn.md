@@ -142,6 +142,16 @@ vecn.pow(v: vector, exponent: number, dst: vector)
 vecn.dot(a: vector, b: vector)
 ```
 
+#### Смешивание - *vecn.mix(...)*
+
+```lua
+-- возвращает вектор a * (1.0 - t) + b * t
+vecn.mix(a: vector, b: vector, t: number)
+
+-- записывает в dst вектор a * (1.0 - t) + b * t
+vecn.mix(a: vector, b: vector, t: number, dst: vector)
+```
+
 ### Перевод в строку - *vecn.tostring(...)*
 
 > [!WARNING]
@@ -223,4 +233,8 @@ print("pow: " .. vec3.tostring(result_pow)) -- {1, 4, 4}
 -- скалярное произведение векторов
 local result_dot = vec3.dot(v1_3d, v2_3d)
 print("dot: " .. result_dot) -- 250
+
+-- смешивание векторов
+local result_mix = vec3.mix(v1_3d, v2_3d, 0.25)
+print("mix: " .. vec3.tostring(result_mix)) -- {3.25, 6.5, 11.5}
 ```

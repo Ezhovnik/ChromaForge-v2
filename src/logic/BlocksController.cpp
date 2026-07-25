@@ -217,12 +217,10 @@ void BlocksController::bindInventory(int64_t invId, int x, int y, int z) {
         chunks, floordiv<CHUNK_WIDTH>(x), floordiv<CHUNK_DEPTH>(z)
     );
 	if (chunk == nullptr) {
-        LOG_ERROR("Block does not exists");
-		throw std::runtime_error("Block does not exists");
+        THROW_ERR("Block does not exists");
 	}
     if (invId <= 0) {
-        LOG_ERROR("Unable to bind virtual inventory");
-        throw std::runtime_error("Unable to bind virtual inventory");
+        THROW_ERR("Unable to bind virtual inventory");
     }
 	int lx = x - chunk->chunk_x * CHUNK_WIDTH;
 	int lz = z - chunk->chunk_z * CHUNK_DEPTH;
@@ -234,8 +232,7 @@ void BlocksController::unbindInventory(int x, int y, int z) {
         chunks, floordiv<CHUNK_WIDTH>(x), floordiv<CHUNK_DEPTH>(z)
     );
 	if (chunk == nullptr) {
-        LOG_ERROR("Block does not exists");
-		throw std::runtime_error("block does not exists");
+        THROW_ERR("Block does not exists");
 	}
     int lx = x - chunk->chunk_x * CHUNK_WIDTH;
 	int lz = z - chunk->chunk_z * CHUNK_DEPTH;

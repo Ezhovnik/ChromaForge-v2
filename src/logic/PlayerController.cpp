@@ -26,6 +26,7 @@
 #include <objects/Entities.h>
 #include <objects/Players.h>
 #include <engine/Engine.h>
+#include <objects/Entt_Entity.h>
 
 namespace CameraConsts {
     inline constexpr float STEPS_SPEED = 2.2f;
@@ -274,25 +275,7 @@ void PlayerController::updateFootsteps(float delta) {
 }
 
 void PlayerController::resetKeyboard() {
-	input.zoom = false;
-	input.moveForward = false;
-	input.moveBack = false;
-	input.moveLeft = false;
-	input.moveRight = false;
-	input.sprint = false;
-	input.crouch = false;
-	input.cheat = false;
-	input.jump = false;
-	input.attack = false;
-	input.build = false;
-    input.destroy = false;
-	input.cameraMode = false;
-    input.dropBlock = false;
-    input.delta = {};
-}
-
-void PlayerController::updatePlayer(float deltaTime){
-	player.updateInput(input, deltaTime);
+	input = {};
 }
 
 static int determine_rotation(const Block* def, const glm::ivec3& norm, const glm::vec3& camDir) {
@@ -306,7 +289,7 @@ static int determine_rotation(const Block* def, const glm::ivec3& norm, const gl
             if (norm.z > 0.0f) return BLOCK_DIR_NORTH;
             if (norm.z < 0.0f) return BLOCK_DIR_SOUTH;
         } else if (name == "pane" || name == "stairs") {
-            int verticalBit = (name == "stairs" && (norm.y - camDir.y * 0.5f) < 0.0) ? 4 : 0;  
+            int verticalBit = (name == "stairs" && (norm.y - camDir.y * 0.5f) < 0.0) ? 4 : 0;
             if (abs(camDir.x) > abs(camDir.z)) {
                 if (camDir.x > 0.0f) return BLOCK_DIR_EAST | verticalBit;
                 if (camDir.x < 0.0f) return BLOCK_DIR_WEST | verticalBit;
@@ -466,7 +449,10 @@ void PlayerController::updateInteraction(const Input& inputEvents, float deltaTi
     }
     const auto& bindings = inputEvents.getBindings();
     bool xkey = bindings.isActive(BIND_PLAYER_FAST_INTERACTOIN);
-    float maxDistance = xkey ? 20.0f : 10.0f;
+    float maxDistance = player.getInteractionDistance();
+    if (xkey) {
+        maxDistance *= 100.0;
+    }
     bool longInteraction = interactionTimer <= 0 || xkey;
     input.attack = bindings.justActive(BIND_PLAYER_ATTACK);
 	input.destroy = bindings.justActive(BIND_PLAYER_DESTROY) || (longInteraction && bindings.isActive(BIND_PLAYER_DESTROY));
@@ -530,7 +516,6 @@ void PlayerController::update(float delta, const Input* inputEvents) {
     } else {
         resetKeyboard();
     }
-    updatePlayer(delta);
 }
 
 void PlayerController::postUpdate(

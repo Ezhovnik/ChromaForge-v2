@@ -28,6 +28,10 @@ std::unique_ptr<Content> ContentBuilder::build() {
 
         def.rt.id = blockDefsIndices.size();
         def.rt.emissive = *reinterpret_cast<uint32_t*>(def.emission);
+        for (const auto& tag : def.tags) {
+            def.rt.tags.insert(tags.add(tag));
+        }
+
         if (def.variants) {
             for (auto& variant : def.variants->variants) {
                 variant.rt.solid = variant.model.type == BlockModelType::Cube;
@@ -89,7 +93,8 @@ std::unique_ptr<Content> ContentBuilder::build() {
         std::move(blockMaterials),
         std::move(skeletons),
         std::move(resourceIndices),
-        std::move(defaults)
+        std::move(defaults),
+        std::move(tags.map)
     );
 
     for (Block* def : blockDefsIndices) {

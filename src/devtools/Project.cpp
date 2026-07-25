@@ -1,6 +1,9 @@
 #include <devtools/Project.h>
 
 #include <data/dv_util.h>
+#include <logic/scripting/scripting.h>
+
+Project::~Project() = default;
 
 dv::value Project::serialize() const {
     return dv::object({

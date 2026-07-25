@@ -35,7 +35,11 @@ int main(int argc, char** argv) {
     // Инициализация логгера
     auto logPath = coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log");
     if (ENGINE_DEBUG_BUILD) {
-		Logger::getInstance().initialize(logPath);
+		Logger::getInstance().initialize(
+            logPath,
+            LogLevel::INFO,
+            LogLevel::DEBUG
+        );
 	} else {
 		Logger::getInstance().initialize(
 			logPath,
@@ -51,7 +55,8 @@ int main(int argc, char** argv) {
         engine.initialize(std::move(coreParameters));
         engine.run();
     } catch (const initialize_error& err) {
-        LOG_CRITICAL("An initialization error occurred:\n{}", err.what());
+        LOG_CRITICAL("{}", err.what());
+        LOG_CRITICAL("Could not initialize engine");
     }
 #if defined(NDEBUG)
     catch (const std::exception& err) {

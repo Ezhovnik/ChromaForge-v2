@@ -36,6 +36,7 @@ namespace network {
 
 namespace devtools {
     class Editor;
+    class DebuggingServer;
 }
 
 // Пользовательская ошибка инициализации – наследуется от std::runtime_error
@@ -52,6 +53,10 @@ struct CoreParameters {
     std::filesystem::path userFolder = ".";
     std::filesystem::path scriptFile;
     std::filesystem::path projectFolder;
+
+    std::string debugServerString;
+
+    int sps = 20;
 };
 
 using OnWorldOpen = std::function<void(std::unique_ptr<Level>, int64_t)>;
@@ -76,6 +81,7 @@ private:
 
     std::unique_ptr<gui::GUI> gui;
     std::unique_ptr<devtools::Editor> editor;
+    std::unique_ptr<devtools::DebuggingServer> debuggingServer;
 
     PostRunnables postRunnables;
 
@@ -92,6 +98,9 @@ private:
     void loadControls();
     void loadSettings();
     void saveSettings();
+
+    void initializeClient();
+    void onContentLoad();
 public:
     Engine(); // Конструктор
     ~Engine(); // Деструктор
@@ -108,6 +117,7 @@ public:
     void updateFrontend();
     void renderFrame();
     void nextFrame();
+    void startPauseLoop();
 
     EnginePaths& getPaths();
     ResPaths& getResPaths();
@@ -147,6 +157,12 @@ public:
     const Project& getProject() {
         return *project;
     }
+
+    devtools::DebuggingServer* getDebuggingServer() {
+        return debuggingServer.get();
+    }
+
+    void detachDebugger();
 
     bool isHeadless() const;
 

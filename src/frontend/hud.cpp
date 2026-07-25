@@ -214,6 +214,9 @@ Hud::Hud(
 }
 
 Hud::~Hud() {
+    if (input.isCursorLocked()) {
+        input.toggleCursor();
+    }
     for (auto& element : elements) {
         onRemove(element);
     }
@@ -325,17 +328,18 @@ void Hud::updateWorldGenDebug() {
 
 void Hud::update(bool hudVisible) {
     const auto& chunks = *player.chunks;
+    bool isMenuOpen = menu.hasOpenPage();
 
 	debugPanel->setVisible(
         debug && hudVisible && !(inventoryOpen && inventoryView == nullptr)
     );
 
 	if (!hudVisible && inventoryOpen) closeInventory();
-	if (pause && !menu.hasOpenPage()) setPause(false);
+	if (pause && !isMenuOpen) setPause(false);
 
 	if (!guiController.isFocusCaught()) processInput(hudVisible);
 
-	if ((menu.hasOpenPage() || inventoryOpen) == input.getCursor().locked) {
+	if ((isMenuOpen || inventoryOpen) == input.isCursorLocked()) {
         input.toggleCursor();
     }
 
@@ -354,6 +358,8 @@ void Hud::update(bool hudVisible) {
     contentAccessPanel->setSize(glm::vec2(caSize.x, windowSize.y));
     contentAccess->setMinSize(glm::vec2(1, windowSize.y));
 	hotbarView->setVisible(hudVisible && !(secondUI && !inventoryView));
+    darkOverlay->setVisible(isMenuOpen);
+    menu.setVisible(isMenuOpen);
 
 	if (hudVisible) {
         for (auto& element : elements) {
@@ -479,8 +485,7 @@ void Hud::openInventory(
 
     blockUI = std::dynamic_pointer_cast<gui::InventoryView>(doc->getRoot());
     if (blockUI == nullptr) {
-		LOG_ERROR("Block UI root element must be 'inventory'");
-        throw std::runtime_error("Block UI root element must be 'inventory'");
+		THROW_ERR("Block UI root element must be 'inventory'");
     }
 
     secondUI = blockUI;
@@ -524,8 +529,7 @@ std::shared_ptr<Inventory> Hud::openInventory(
 
     secondInvView = std::dynamic_pointer_cast<gui::InventoryView>(doc->getRoot());
     if (secondInvView == nullptr) {
-        LOG_ERROR("Secondary UI root element must be 'inventory'");
-        throw std::runtime_error("Secondary UI root element must be 'inventory'");
+        THROW_ERR("Secondary UI root element must be 'inventory'");
     }
     secondUI = secondInvView;
 
@@ -591,6 +595,7 @@ void Hud::closeInventory() {
     exchangeSlotInv = nullptr;
     inventoryOpen = false;
     inventoryView = nullptr;
+    secondInvView = nullptr;
     secondUI = nullptr;
 
     for (auto& element : elements) {
@@ -677,6 +682,7 @@ void Hud::remove(const std::shared_ptr<gui::UINode>& node) {
         }
     }
     cleanup();
+    if (node == secondUI) closeInventory();
 }
 
 Player* Hud::getPlayer() const {

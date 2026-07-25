@@ -38,7 +38,6 @@ namespace gui {
         size_t textOffset = 0;
         int textInitX = 0;
         double caretLastMove = 0.0;
-        Font* font = nullptr;
 
         size_t selectionStart = 0;
         size_t selectionEnd = 0;
@@ -56,6 +55,8 @@ namespace gui {
         void stepRight(bool shiftPressed, bool breakSelection);
         void stepDefaultDown(bool shiftPressed, bool breakSelection);
         void stepDefaultUp(bool shiftPressed, bool breakSelection);
+
+        void onTab(bool shiftPressed);
 
         size_t normalizeIndex(int index);
 

@@ -2,6 +2,7 @@
 
 #include <voxels/Pathfinding.h>
 #include <world/Level.h>
+#include <content/Content.h>
 
 static voxels::Agent* get_agent(lua::State* L) {
     return scripting::level->pathfinding->getAgent(lua::tointeger(L, 1));
@@ -30,21 +31,27 @@ static int l_is_enabled(lua::State* L) {
     return lua::pushboolean(L, false);
 }
 
+static int push_route(lua::State* L, const voxels::Route& route) {
+    lua::createtable(L, route.nodes.size(), 1);
+    for (int i = 0; i < route.nodes.size(); ++i) {
+        lua::pushvec3(L, route.nodes[i].pos);
+        lua::rawseti(L, i + 1);
+    }
+    lua::pushinteger(L, route.totalVisited);
+    lua::setfield(L, "total_visited");
+    return 1;
+}
+
 static int l_make_route(lua::State* L) {
     if (auto agent = get_agent(L)) {
         auto start = lua::tovec3(L, 2);
         auto target = lua::tovec3(L, 3);
         agent->state = {};
-        agent->start = start;
+        agent->start = glm::floor(start);
         agent->target = target;
         auto route = scripting::level->pathfinding->perform(*agent);
         if (!route.found) return 0;
-        lua::createtable(L, route.nodes.size(), 0);
-        for (int i = 0; i < route.nodes.size(); ++i) {
-            lua::pushvec3(L, route.nodes[i].pos);
-            lua::rawseti(L, i + 1);
-        }
-        return 1;
+        return push_route(L, route);
     }
     return 0;
 }
@@ -54,7 +61,7 @@ static int l_make_route_async(lua::State* L) {
         auto start = lua::tovec3(L, 2);
         auto target = lua::tovec3(L, 3);
         agent->state = {};
-        agent->start = start;
+        agent->start = glm::floor(start);
         agent->target = target;
         scripting::level->pathfinding->perform(*agent, 0);
     }
@@ -65,15 +72,10 @@ static int l_pull_route(lua::State* L) {
     if (auto agent = get_agent(L)) {
         auto& route = agent->route;
         if (!agent->state.finished) return 0;
-        if (!route.found) {
+        if (!route.found && !agent->mayBeIncomplete) {
             return lua::createtable(L, 0, 0);
         }
-        lua::createtable(L, route.nodes.size(), 0);
-        for (int i = 0; i < route.nodes.size(); ++i) {
-            lua::pushvec3(L, route.nodes[i].pos);
-            lua::rawseti(L, i + 1);
-        }
-        return 1;
+        return push_route(L, route);
     }
     return 0;
 }
@@ -81,6 +83,27 @@ static int l_pull_route(lua::State* L) {
 static int l_set_max_visited_blocks(lua::State* L) {
     if (auto agent = get_agent(L)) {
         agent->maxVisitedBlocks = lua::tointeger(L, 2);
+    }
+    return 0;
+}
+
+static int l_set_jump_height(lua::State* L) {
+    if (auto agent = get_agent(L)) {
+        agent->jumpHeight = lua::tointeger(L, 2);
+    }
+    return 0;
+}
+
+static int l_avoid_tag(lua::State* L) {
+    if (auto agent = get_agent(L)) {
+        int index = scripting::content->getTagIndex(std::string(lua::require_lstring(L, 2)));
+        if (index != -1) {
+            int cost = lua::tonumber(L, 3);
+            if (cost == 0) {
+                cost = 10;
+            }
+            agent->avoidTags.insert({index, cost});
+        }
     }
     return 0;
 }
@@ -94,5 +117,7 @@ const luaL_Reg pathfindinglib[] = {
     {"make_route_async", lua::wrap<l_make_route_async>},
     {"pull_route", lua::wrap<l_pull_route>},
     {"set_max_visited", lua::wrap<l_set_max_visited_blocks>},
-    {NULL, NULL}
+    {"set_jump_height", lua::wrap<l_set_jump_height>},
+    {"avoid_tag", lua::wrap<l_avoid_tag>},
+    {nullptr, nullptr}
 };

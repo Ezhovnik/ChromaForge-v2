@@ -7,8 +7,22 @@
 #include <typedefs.h>
 #include <content/content_fwd.h>
 #include <io/io.h>
+#include <util/EnumMetadata.h>
 
 class EnginePaths;
+
+enum class VersionOperator {
+    Equal, Greater, Less,
+    GreaterOrEqual, LessOrEqual
+};
+
+CHROMA_ENUM_METADATA(VersionOperator)
+    {"=", VersionOperator::Equal},
+    {">", VersionOperator::Greater},
+    {"<", VersionOperator::Less},
+    {">=", VersionOperator::GreaterOrEqual},
+    {"<=", VersionOperator::LessOrEqual},
+CHROMA_ENUM_END
 
 enum class DependencyLevel {
     Required,
@@ -19,6 +33,8 @@ enum class DependencyLevel {
 struct DependencyPack {
     DependencyLevel level;
     std::string id;
+    std::string version;
+    VersionOperator op;
 };
 
 class contentpack_error : public std::runtime_error {

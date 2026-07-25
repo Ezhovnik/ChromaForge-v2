@@ -15,6 +15,8 @@
 #include <objects/Entity.h>
 #include <voxels/Block.h>
 #include <voxels/blocks_agent.h>
+#include <objects/Entt_Entity.h>
+#include <objects/Rigidbody.h>
 
 static const Entity* require_entity_def(lua::State* L) {
     auto indices = scripting::content->getIndices();
@@ -251,5 +253,5 @@ const luaL_Reg entitylib [] = {
     {"get_all_in_radius", lua::wrap<l_get_all_in_radius>},
     {"raycast", lua::wrap<l_raycast>},
     {"reload_component", lua::wrap<l_reload_component>},
-    {NULL, NULL}
+    {nullptr, nullptr}
 };

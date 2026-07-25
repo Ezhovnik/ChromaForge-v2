@@ -16,6 +16,14 @@ public:
     MenuScreen(Engine& engine);
     ~MenuScreen();
 
+    void onOpen() override;
+
     void update(float deltaTime) override;
     void draw(float deltaTime) override;
+
+    bool isPanoramaAvailable() const;
+
+    const char* getName() const override {
+        return "menu";
+    }
 };

@@ -70,12 +70,25 @@ namespace scripting {
         const io::path& script
     );
 
+    class IClientProjectScript {
+    public:
+        virtual ~IClientProjectScript() {}
+
+        virtual void onScreenChange(const std::string& name, bool show) = 0;
+    };
+
+    std::unique_ptr<IClientProjectScript> load_client_project_script(
+        const io::path& script
+    );
+
+    std::unique_ptr<Process> start_coroutine(const io::path& script);
+
     void on_world_load(LevelController* controller);
     void on_world_spark(int sps);
     void on_world_save();
     void on_world_quit();
     void cleanup();
-    void on_blocks_spark(const Block& block, int tps);
+    void on_blocks_spark(const Block& block, int sps);
     void update_block(const Block& block, const glm::ivec3& pos);
     void random_update_block(const Block& block, const glm::ivec3& pos);
     void on_block_placed(Player* player, const Block& block, const glm::ivec3& pos);
@@ -90,7 +103,7 @@ namespace scripting {
     void on_inventory_open(const Player* player, const Inventory& inventory);
     void on_inventory_closed(const Player* player, const Inventory& inventory);
 
-    void on_player_spark(Player* player, int tps);
+    void on_player_spark(Player* player, int sps);
 
     bool on_item_use(Player* player, const Item& item);
     bool on_item_use_on_block(Player* player, const Item& item, glm::ivec3 ipos, glm::ivec3 normal);
@@ -109,6 +122,7 @@ namespace scripting {
     void on_entity_grounded(const Entt_Entity& entity, float force);
     void on_entity_fall(const Entt_Entity& entity);
     void on_entity_save(const Entt_Entity& entity);
+    void on_entities_physics_update(float delta);
     void on_entities_update(int sps, int parts, int part);
     void on_entities_render(float deltaTime);
     void on_sensor_enter(const Entt_Entity& entity, size_t index, entityid_t oid);

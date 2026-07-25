@@ -17,15 +17,9 @@
 #include <objects/rigging.h>
 #include <data/dv_util.h>
 #include <debug/Logger.h>
+#include <objects/Entt_Entity.h>
 
 namespace PlayerConsts {
-    constexpr float CROUCH_SPEED_MUL = 0.35f; ///< Множитель скорости при приседании
-    constexpr float RUN_SPEED_MUL = 1.5f; ///< Множитель скорости при беге
-    constexpr float FLIGHT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме полёта
-    constexpr float JUMP_FORCE = 8.0f; ///< Сила прыжка
-    constexpr float GROUND_DAMPING = 10.0f; ///< Затухание скорости на земле
-    constexpr float AIR_DAMPING = 8.0f; ///< Затухание скорости в воздухе
-    constexpr float CHEAT_SPEED_MUL = 5.0f; ///< Множитель скорости в режиме читов
 	constexpr int SPAWN_ATTEMPTS_PER_UPDATE = 64;
 }
 
@@ -80,18 +74,6 @@ void Player::updateEntity() {
         LOG_WARN("Player entity despawned or deleted; will be respawned");
         eid = ENTITY_AUTO;
     }
-
-    auto hitbox = getHitbox();
-    if (hitbox == nullptr) {
-        return;
-    }
-    hitbox->linearDamping = PlayerConsts::GROUND_DAMPING;
-    hitbox->verticalDamping = flight;
-    hitbox->gravityScale = flight ? 0.0f : 1.0f;
-    if (flight || !hitbox->grounded) {
-        hitbox->linearDamping = PlayerConsts::AIR_DAMPING;
-    }
-    hitbox->type = noclip ? BodyType::Kinematic : BodyType::Dynamic;
 }
 
 Hitbox* Player::getHitbox() {
@@ -99,62 +81,6 @@ Hitbox* Player::getHitbox() {
         return &entity->getRigidbody().hitbox;
     }
     return nullptr;
-}
-
-void Player::updateInput(PlayerInput& input, float delta) {
-    auto hitbox = getHitbox();
-    if (hitbox == nullptr) return;
-
-	bool crouch = input.crouch && hitbox->grounded && !input.sprint;
-	float speed = this->speed;
-
-	// Применяем модификаторы скорости
-	if (flight) {
-		speed *= PlayerConsts::FLIGHT_SPEED_MUL;
-	}
-	if (input.cheat) {
-		speed *= PlayerConsts::CHEAT_SPEED_MUL;
-	}
-
-	hitbox->crouching = crouch;
-	if (crouch) {
-		speed *= PlayerConsts::CROUCH_SPEED_MUL;
-	} else if (input.sprint) {
-		speed *= PlayerConsts::RUN_SPEED_MUL;
-	}
-
-	// Вычисляем направление движения на основе ввода и ориентации камеры
-	glm::vec3 dir(0, 0, 0);
-	if (input.moveForward){
-		dir += fpCamera->dir;
-	}
-	if (input.moveBack){
-		dir -= fpCamera->dir;
-	}
-	if (input.moveRight){
-		dir += fpCamera->right;
-	}
-	if (input.moveLeft){
-		dir -= fpCamera->right;
-	}
-	// Если есть движение, нормализуем и придаём импульс
-	if (length(dir) > 0.0f) {
-		dir = normalize(dir);
-		hitbox->velocity += dir * speed * delta * 9.0f;
-	}
-
-    if (flight) {
-        if (input.jump) {
-            hitbox->velocity.y += speed * delta * 9;
-        }
-        if (input.crouch) {
-            hitbox->velocity.y -= speed * delta * 9;
-        }
-    }
-
-	if (input.jump && hitbox->grounded) {
-		hitbox->velocity.y = PlayerConsts::JUMP_FORCE;
-	}
 }
 
 void Player::postUpdate() {
@@ -174,17 +100,14 @@ void Player::postUpdate() {
             attemptToFindSpawnpoint();
         }
 	}
-
-	auto& skeleton = entity->getSkeleton();
-    skeleton.visible = currentCamera != fpCamera;
 }
 
 void Player::attemptToFindSpawnpoint() {
 	// Генерируем случайную позицию в окрестности текущей
 	glm::vec3 newpos {
-		position.x + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), 
-		RandomGenerator::get<int>(0, RAND_MAX) % 80 + 100, 
-		position.z + (RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
+		position.x + (util::RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), // TODO: Replace util::RandomGenerator to other
+		util::RandomGenerator::get<int>(0, RAND_MAX) % 80 + 100, 
+		position.z + (util::RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
 	};
 
 	// Опускаемся вниз, пока не найдём твёрдый блок под ногами
@@ -209,6 +132,7 @@ dv::value Player::serialize() const {
     root["rotation"] = dv::to_value(rotation);
     root["spawnpoint"] = dv::to_value(spawnpoint);
 
+    root["interaction-distance"] = interactionDistance;
     root["flight"] = flight;
     root["noclip"] = noclip;
     root["suspended"] = suspended;
@@ -245,6 +169,7 @@ void Player::deserialize(const dv::value& src) {
 	src.at("infinite-items").get(infiniteItems);
 	src.at("instant-destruction").get(instantDestruction);
     src.at("loading-chunks").get(loadingChunks);
+    src.at("interaction-distance").get(interactionDistance);
     setChosenSlot(src["chosen-slot"].asInteger());
     eid = src["entity"].asNumber();
 
@@ -377,6 +302,14 @@ bool Player::isSuspended() const {
 
 void Player::setSuspended(bool flag) {
     suspended = flag;
+}
+
+float Player::getInteractionDistance() const {
+    return interactionDistance;
+}
+
+void Player::setInteractionDistance(float distance) {
+    interactionDistance = std::max(1.0f, std::min(200.0f, distance));
 }
 
 glm::vec3 Player::getRotation(bool interpolated) const {

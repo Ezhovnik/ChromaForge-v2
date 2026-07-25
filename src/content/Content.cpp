@@ -34,7 +34,8 @@ Content::Content(
     UptrsMap<std::string, BlockMaterial> blockMaterials,
     UptrsMap<std::string, rigging::SkeletonConfig> skeletons,
     ResourceIndicesSet resourceIndices,
-    dv::value defaults
+    dv::value defaults,
+    std::unordered_map<std::string, int> tags
 ) : indices(std::move(indices)),
     drawGroups(std::move(drawGroups)),
     packs(std::move(packs)),
@@ -44,7 +45,8 @@ Content::Content(
     generators(std::move(generators)),
     blockMaterials(std::move(blockMaterials)),
     skeletons(std::move(skeletons)),
-    defaults(std::move(defaults))
+    defaults(std::move(defaults)),
+    tags(std::move(tags))
 {
     for (size_t i = 0; i < RESOURCE_TYPES_COUNT; ++i) {
         this->resourceIndices[i] = std::move(resourceIndices[i]);
@@ -62,8 +64,7 @@ const rigging::SkeletonConfig* Content::getSkeleton(const std::string& id) const
 const rigging::SkeletonConfig& Content::requireSkeleton(const std::string& id) const {
     auto skeleton = getSkeleton(id);
     if (skeleton == nullptr) {
-        LOG_ERROR("Skeleton '{}' not loaded", id);
-        throw std::runtime_error("Skeleton '" + id + "' not loaded");
+        THROW_ERR("Skeleton '{}' not loaded", id);
     }
     return *skeleton;
 }
@@ -101,10 +102,7 @@ const UptrsMap<std::string, rigging::SkeletonConfig>& Content::getSkeletons() co
 void ResourceIndices::addAlias(const std::string& name, const std::string& alias) {
     size_t index = indexOf(name);
     if (index == MISSING) {
-        LOG_ERROR("Resource does not exists: {}", name);
-        throw std::runtime_error(
-            "Resource does not exists: " + name
-        );
+        THROW_ERR("Resource does not exists: {}", name);
     }
     indices[alias] = index;
 }

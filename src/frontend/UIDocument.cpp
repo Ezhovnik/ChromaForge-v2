@@ -18,11 +18,13 @@ UIDocument::UIDocument(
     root(root), 
     env(std::move(env))
 {
-    gui::UINode::getIndices(root, map);
+    rebuildIndices();
 }
 
 void UIDocument::rebuildIndices() {
+    map.clear();
     gui::UINode::getIndices(root, map);
+    map["root"] = root;
 }
 
 const UINodesMap& UIDocument::getMap() const {

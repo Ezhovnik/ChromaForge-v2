@@ -1,6 +1,8 @@
 #include <graphics/render/Emitter.h>
 
 #include <glm/gtc/random.hpp>
+#include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 
@@ -8,6 +10,7 @@
 #include <math/rand.h>
 #include <objects/Entities.h>
 #include <world/Level.h>
+#include <objects/Entt_Entity.h>
 
 Emitter::Emitter(
     const Level& level,

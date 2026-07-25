@@ -1,3 +1,4 @@
+#define CHROMA_ENABLE_REFLECTION
 #include <content/PacksManager.h>
 
 #include <queue>
@@ -5,6 +6,7 @@
 
 #include <util/listutil.h>
 #include <debug/Logger.h>
+#include <content/ContentPackVersion.h>
 
 PacksManager::PacksManager() = default;
 
@@ -82,6 +84,23 @@ static bool resolve_dependencies (
         }
         if (!exists) continue;
         if (resolveWeaks && dep.level == DependencyLevel::Weak) continue;
+
+        auto dep_pack = found->second;
+
+        if (Version::matchesPattern(dep.version) && Version::matchesPattern(dep_pack.version)
+            && Version(dep_pack.version).processOperator(dep.op, Version(dep.version))
+        ) {
+            // ...
+        } else if (dep.version == "*" || dep.version == dep_pack.version){
+            // ...
+        } else {
+            LOG_ERROR(
+                "Does not meet required version '{}{}' of '{}'", VersionOperatorMeta.getNameString(dep.op), dep.version, pack->id
+            );
+            throw contentpack_error(
+                dep.id, io::path(), "Does not meet required version '" + VersionOperatorMeta.getNameString(dep.op) + dep.version + "' of '" + pack->id + "'"
+            );
+        }
 
         if (!util::contains(allNames, dep.id) && dep.level != DependencyLevel::Weak) { 
             allNames.push_back(dep.id);

@@ -78,6 +78,8 @@ private:
     bool instantDestruction = true;
     bool loadingChunks = true;
 
+    float interactionDistance = 10.0f;
+
     entityid_t eid = ENTITY_AUTO;
 
     entityid_t selectedEid = 0;
@@ -155,6 +157,9 @@ public:
     bool isLoadingChunks() const;
     void setLoadingChunks(bool flag);
 
+    float getInteractionDistance() const;
+    void setInteractionDistance(float distance);
+
     bool isSuspended() const;
     void setSuspended(bool flag);
 
@@ -188,13 +193,6 @@ public:
 
     glm::vec3 getRotation(bool interpolated=false) const;
     void setRotation(const glm::vec3& rotation);
-
-	/**
-     * @brief Обновляет состояние игрока (физика, ввод, камера).
-     * @param input Структура ввода.
-     * @param delta Время с предыдущего кадра.
-     */
-	void updateInput(PlayerInput& input, float delta);
 
     void updateSelectedEntity();
     entityid_t getSelectedEntity() const;

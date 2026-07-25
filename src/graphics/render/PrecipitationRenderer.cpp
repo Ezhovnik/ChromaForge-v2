@@ -68,7 +68,7 @@ static UVRegion calc_uv(
     float timer,
     const WeatherPreset& weather
 ) {
-    static PseudoRandom random(0);
+    static util::PseudoRandom random(0);
 
     float scale = weather.fall.scale;
 

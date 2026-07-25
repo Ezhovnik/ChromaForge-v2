@@ -9,7 +9,7 @@ Clock::Clock(int sparkRate, int sparkParts) : sparkRate(sparkRate), sparkParts(s
 
 bool Clock::update(float delta) {
     sparkTimer += delta;
-    float delay = 1.0f / float(sparkRate);    
+    float delay = 1.0f / static_cast<float>(sparkRate);    
     if (sparkTimer > delay || sparkPartsUndone) {
         if (sparkPartsUndone) {
             sparkPartsUndone--;

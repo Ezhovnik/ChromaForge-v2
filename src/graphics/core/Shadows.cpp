@@ -4,6 +4,8 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
+#include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <assets/Assets.h>
 #include <graphics/core/DrawContext.h>
@@ -21,7 +23,7 @@ public:
     ShadowMap(int resolution) : resolution(resolution) {
         glGenTextures(1, &depthMap);
         glBindTexture(GL_TEXTURE_2D, depthMap);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, resolution, resolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, resolution, resolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -94,12 +96,17 @@ void Shadows::setup(ShaderProgram& shader, const Weather& weather) {
     if (shadows) {
         const auto& worldInfo = level.getWorld()->getInfo();
         float cloudsIntensity = glm::max(worldInfo.skyClearness, weather.clouds());
+        float shadowsOpacity = 1.0f - cloudsIntensity;
+        shadowsOpacity *= glm::sqrt(glm::abs(
+            glm::mod((worldInfo.daytime + 0.5f) * 2.0f, 1.0f) * 2.0f - 1.0f
+        ));
+
         shader.uniform1i("u_screen", 0);
         shader.uniformMatrix("u_shadowsMatrix[0]", shadowCamera.getProjView());
         shader.uniformMatrix("u_shadowsMatrix[1]", wideShadowCamera.getProjView());
         shader.uniform3f("u_sunDir", shadowCamera.front);
         shader.uniform1i("u_shadowsRes", shadowMap->getResolution());
-        shader.uniform1f("u_shadowsOpacity", 1.0f - cloudsIntensity); // TODO: make it configurable
+        shader.uniform1f("u_shadowsOpacity", shadowsOpacity); // TODO: make it configurable
         shader.uniform1f("u_shadowsSoftness", 1.0f + cloudsIntensity * 4); // TODO: make it configurable
 
         glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SHADOWS0);

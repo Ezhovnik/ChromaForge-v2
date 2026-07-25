@@ -19,10 +19,7 @@ template<> void ContentUnitLoader<Entity>::loadUnit(
         const auto& parentName = root["parent"].asString();
         auto parentDef = builder.get(parentName);
         if (parentDef == nullptr) {
-            LOG_ERROR("Failed to find parent ({}) for {}", parentName, name);
-            throw std::runtime_error(
-                "Failed to find parent (" + parentName + ") for " + name
-            );
+            THROW_ERR("Failed to find parent ({}) for {}", parentName, name);
         }
         parentDef->cloneTo(def);
     }

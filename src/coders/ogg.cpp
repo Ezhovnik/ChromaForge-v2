@@ -35,8 +35,7 @@ std::unique_ptr<audio::PCM> ogg::load_pcm(
     OggVorbis_File vf;
     int code;
     if ((code = ov_fopen(io::resolve(file).u8string().c_str(), &vf))) {
-        LOG_ERROR("Vorbis error: {}", vorbis_error_message(code));
-        throw std::runtime_error("Vorbis error: " + vorbis_error_message(code));
+        THROW_ERR("Vorbis error: {}", vorbis_error_message(code));
     }
 
     std::vector<char> data;
@@ -151,8 +150,7 @@ std::unique_ptr<PCMStream> ogg::create_stream(
     OggVorbis_File vf;
     int code;
     if ((code = ov_fopen(io::resolve(file).u8string().c_str(), &vf))) {
-        LOG_ERROR("Vorbis error: {}", vorbis_error_message(code));
-        throw std::runtime_error("Vorbis error: " + vorbis_error_message(code));
+        THROW_ERR("Vorbis error: {}", vorbis_error_message(code));
     }
     return std::make_unique<OggStream>(vf);
 }

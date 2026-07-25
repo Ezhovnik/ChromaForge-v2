@@ -167,6 +167,7 @@ private:
     UptrsMap<std::string, BlockMaterial> blockMaterials;
     UptrsMap<std::string, rigging::SkeletonConfig> skeletons;
     dv::value defaults = nullptr;
+    std::unordered_map<std::string, int> tags;
 public:
     ContentUnitDefs<Block> blocks;
     ContentUnitDefs<Item> items;
@@ -186,7 +187,8 @@ public:
         UptrsMap<std::string, BlockMaterial> blockMaterials,
         UptrsMap<std::string, rigging::SkeletonConfig> skeletons,
         ResourceIndicesSet resourceIndices,
-        dv::value defaults
+        dv::value defaults,
+        std::unordered_map<std::string, int> tags
     );
     ~Content();
 
@@ -200,6 +202,14 @@ public:
 
     inline const dv::value& getDefaults() const {
         return defaults;
+    }
+
+    int getTagIndex(const std::string& tag) const {
+        const auto& found = tags.find(tag);
+        if (found == tags.end()) {
+            return -1;
+        }
+        return found->second;
     }
 
     const rigging::SkeletonConfig* getSkeleton(const std::string& id) const;

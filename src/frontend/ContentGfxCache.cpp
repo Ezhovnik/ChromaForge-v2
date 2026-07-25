@@ -91,8 +91,7 @@ ContentGfxCache::~ContentGfxCache() = default;
 const model::Model& ContentGfxCache::getModel(blockid_t id) const {
     const auto& found = models.find(id);
     if (found == models.end()) {
-        LOG_ERROR("Model not found");
-        throw std::runtime_error("Model not found");
+        THROW_ERR("Model not found");
     }
     return found->second;
 }

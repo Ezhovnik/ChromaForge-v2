@@ -4,10 +4,10 @@
 
 #include <glm/glm.hpp>
 
-#include <math/rand.h>
 #include <typedefs.h>
 #include <voxels/voxel.h>
 #include <util/Clock.h>
+#include <math/rand.h>
 
 class Player;
 class Block;
@@ -36,7 +36,7 @@ class BlocksController {
     util::Clock blocksSparkClock;
     util::Clock worldSparkClock;
 
-    FastRandom random {};
+    util::FastRandom random {};
 
     std::vector<on_block_interaction> blockInteractionCallbacks;
 public:

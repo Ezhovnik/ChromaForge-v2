@@ -1,5 +1,6 @@
 #define CHROMA_ENABLE_REFLECTION
 #include <content/loading/ContentUnitLoader.h>
+#include <content/loading/ContentLoadingCommons.h>
 
 #include <content/ContentBuilder.h>
 #include <coders/json.h>
@@ -14,16 +15,15 @@ template<> void ContentUnitLoader<Item>::loadUnit(
     Item& def, const std::string& name, const io::path& file
 ) {
     auto root = io::read_json(file);
-    def.properties = root;
+
+    process_properties(def, name, root);
+    process_tags(def, root);
 
     if (root.has("parent")) {
         const auto& parentName = root["parent"].asString();
         auto parentDef = builder.get(parentName);
         if (parentDef == nullptr) {
-            LOG_ERROR("Failed to find parent ({}) for {}", parentName, name);
-            throw std::runtime_error(
-                "Failed to find parent (" + parentName + ") for " + name
-            );
+            THROW_ERR("Failed to find parent ({}) for {}", parentName, name);
         }
         parentDef->cloneTo(def);
     }
