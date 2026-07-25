@@ -66,7 +66,7 @@ namespace scripting {
 
     void process_post_runnables();
 
-    std::unique_ptr<Process> start_coroutine(
+    std::unique_ptr<Process> start_app_script(
         const io::path& script
     );
 

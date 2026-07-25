@@ -24,6 +24,8 @@
 #include <graphics/ui/elements/ModelViewer.h>
 #include <graphics/ui/elements/SelectBox.h>
 #include <logic/scripting/lua/usertypes/lua_type_canvas.h>
+#include <content/Content.h>
+#include <content/ContentPack.h>
 
 static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
@@ -1051,9 +1053,18 @@ static int l_gui_load_document(lua::State* L) {
     auto alias = lua::require_string(L, 2);
     auto args = lua::tovalue(L, 3);
 
+    auto prefix = filename.entryPoint();
+
+    auto env = scripting::get_root_environment();
+    if (scripting::content) {
+        if (auto runtime = scripting::content->getPackRuntime(prefix)) {
+            env = runtime->getEnvironment();
+        }
+    }
+
     auto documentPtr = UIDocument::read(
         scripting::engine->getGUI(),
-        scripting::get_root_environment(),
+        std::move(env),
         alias,
         filename,
         filename.string() 

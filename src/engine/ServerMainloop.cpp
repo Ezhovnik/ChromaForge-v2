@@ -28,8 +28,7 @@ void ServerMainloop::run() {
         setLevel(std::move(level));
     });
 
-    LOG_INFO("Starting task {}", coreParams.scriptFile.u8string());
-    auto process = scripting::start_coroutine(
+    auto process = scripting::start_app_script(
         "script:" + coreParams.scriptFile.filename().u8string()
     );
 

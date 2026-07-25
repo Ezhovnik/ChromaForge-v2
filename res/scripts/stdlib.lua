@@ -113,6 +113,20 @@ events = require "builtin:internal/events"
 
 function pack.unload(prefix)
     events.remove_by_prefix(prefix)
+    __chroma__pack_envs[prefix] = nil
+end
+
+function __chroma_start_app_script(path)
+    debug.info("Starting application script "..path)
+
+    local code = file.read(path)
+    local chunk, err = loadstring(code, path)
+    if chunk == nil then
+        error(err)
+    end
+    local script_env = setmetatable({app = app or __chroma_app}, {__index=_G})
+    chunk = setfenv(chunk, script_env)
+    return __chroma_start_coroutine(chunk, path)
 end
 
 gui_util = require "builtin:internal/gui_util"
