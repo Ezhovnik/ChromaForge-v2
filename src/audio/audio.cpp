@@ -133,6 +133,8 @@ public:
     }
 };
 
+static std::unique_ptr<InputDevice> input_device = nullptr;
+
 void audio::initialize(bool enabled, AudioSettings& settings) {
     enabled = enabled && settings.enabled.get();
     if (enabled) {
@@ -163,6 +165,13 @@ void audio::initialize(bool enabled, AudioSettings& settings) {
             audio::get_channel(channel.name)->setVolume(value * value);
         }, true));
     }
+
+    input_device = backend->openInputDevice(44100, 1, 16);
+    if (input_device) input_device->startCapture();
+}
+
+InputDevice* audio::get_input_device() {
+    return input_device.get();
 }
 
 std::unique_ptr<PCM> audio::load_PCM(const io::path& file, bool headerOnly) {
@@ -420,6 +429,7 @@ void audio::reset_channel(int index) {
 }
 
 void audio::close() {
+    if (input_device) input_device->stopCapture();
     speakers.clear();
     delete backend;
     backend = nullptr;

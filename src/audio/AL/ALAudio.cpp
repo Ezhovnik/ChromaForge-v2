@@ -5,8 +5,37 @@
 
 #include <audio/AL/alutil.h>
 #include <debug/Logger.h>
+#include <audio/MemoryPCMStream.h>
 
 using namespace audio;
+
+const char* alc_error_to_string(ALCenum error) {
+    switch (error) {
+        case ALC_NO_ERROR:
+            return "No error";
+        case ALC_INVALID_DEVICE:
+            return "Invalid device handle";
+        case ALC_INVALID_CONTEXT:
+            return "Invalid context handle";
+        case ALC_INVALID_ENUM:
+            return "Invalid enum parameter passed to an ALC call";
+        case ALC_INVALID_VALUE:
+            return "Invalid value parameter passed to an ALC call";
+        case ALC_OUT_OF_MEMORY:
+            return "Out of memory";
+        default:
+            return "Unknown ALC error";
+    }
+}
+
+static void check_alc_errors(ALCdevice* device, const char* context) {
+    ALCenum error = alcGetError(device);
+    if (error == ALC_NO_ERROR) return;
+
+    LOG_ERROR(
+        "{}: {}({})", context, alc_error_to_string(error), static_cast<int>(error)
+    );
+}
 
 ALSound::ALSound(
     ALAudio* al,
@@ -46,14 +75,17 @@ ALInputDevice::ALInputDevice(
 
 ALInputDevice::~ALInputDevice() {
     alcCaptureCloseDevice(device);
+    check_alc_errors(device, "alcCaptureCloseDevice");
 }
 
 void ALInputDevice::startCapture() {
-    AL_CHECK(alcCaptureStart(device));
+    alcCaptureStart(device);
+    check_alc_errors(device, "alcCaptureStart");
 }
 
 void ALInputDevice::stopCapture() {
-    AL_CHECK(alcCaptureStop(device));
+    alcCaptureStop(device);
+    check_alc_errors(device, "alcCaptureStop");
 }
 
 uint ALInputDevice::getChannels() const {
@@ -61,13 +93,15 @@ uint ALInputDevice::getChannels() const {
 }
 
 size_t ALInputDevice::read(char* buffer, size_t bufferSize) {
-    ALCint samplesCount;
-    AL_CHECK(alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, 1, &samplesCount));
+    ALCint samplesCount = 0;
+    alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, sizeof(samplesCount), &samplesCount);
+    check_alc_errors(device, "alcGetIntegerv(ALC_CAPTURE_SAMPLES)");
     size_t samplesRead = std::min<ALCsizei>(
         samplesCount, bufferSize / channels / (bitsPerSample >> 3)
     );
-    AL_CHECK(alcCaptureSamples(device, buffer, samplesRead));
-    return samplesRead;
+    alcCaptureSamples(device, buffer, samplesRead);
+    check_alc_errors(device, "alcCaptureSamples");
+    return samplesRead * channels * (bitsPerSample >> 3);
 }
 
 ALStream::ALStream(
@@ -184,7 +218,7 @@ void ALStream::update(double delta) {
     uint preloaded = enqueueBuffers(alsource);
 
     if (p_speaker->isStopped() && !alspeaker->stopped) {
-        if (preloaded) {
+        if (preloaded || dynamic_cast<MemoryPCMStream*>(source.get())) {
             p_speaker->play();
         } else {
             p_speaker->stop();
@@ -390,8 +424,10 @@ ALAudio::~ALAudio() {
         AL_CHECK(alDeleteBuffers(1, &buffer));
     }
 
-    AL_CHECK(alcMakeContextCurrent(context));
+    alcMakeContextCurrent(nullptr);
+    check_alc_errors(device, "alcMakeContextCurrent");
     alcDestroyContext(context);
+    check_alc_errors(device, "alcDestroyContext");
     if (!alcCloseDevice(device)) LOG_ERROR("AL: device not closed!");
 
     device = nullptr;
@@ -415,15 +451,16 @@ std::unique_ptr<InputDevice> ALAudio::openInputDevice(
     uint bitsPerSample
 ) {
     uint bps = bitsPerSample >> 3;
-    AL_CHECK(
-        ALCdevice* device = alcCaptureOpenDevice(
-            nullptr,
-            sampleRate,
-            AL::to_al_format(channels, bps),
-            sampleRate * channels * bps
-        )
+    ALCdevice* device = alcCaptureOpenDevice(
+        nullptr,
+        sampleRate,
+        AL::to_al_format(channels, bitsPerSample),
+        sampleRate * channels * bps / 8
     );
-    return std::make_unique<ALInputDevice>(this, device, channels, bps);
+    check_alc_errors(device, "alcCaptureOpenDevice");
+    return std::make_unique<ALInputDevice>(
+        this, device, channels, bitsPerSample
+    );
 }
 
 std::unique_ptr<ALAudio> ALAudio::create() {

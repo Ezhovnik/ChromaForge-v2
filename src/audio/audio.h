@@ -21,6 +21,8 @@ namespace audio {
         High = 10
     };
 
+    constexpr inline size_t MAX_INPUT_SAMPLES = 22050;
+
     class Speaker;
 
     enum class State {
@@ -350,6 +352,12 @@ namespace audio {
 
     std::unique_ptr<Stream> open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
 
+    std::unique_ptr<InputDevice> open_input_device(
+        uint sampleRate,
+        uint channels,
+        uint bitsPerSample
+    );
+
     /**
      * @brief Устанавливает параметры слушателя, используя текущий бэкенд.
      * @param position Позиция.
@@ -414,6 +422,8 @@ namespace audio {
     void update(double delta);
 
     void reset_channel(int channel);
+
+    InputDevice* get_input_device();
 
     /**
      * @brief Завершение работы аудиосистемы
