@@ -107,6 +107,8 @@ namespace audio {
         uint getSampleRate() const override;
         uint getBitsPerSample() const override;
 
+        const std::string& getDeviceSpecifier() const override;
+
         size_t read(char* buffer, size_t bufferSize) override;
     private:
         ALAudio* al;
@@ -114,6 +116,7 @@ namespace audio {
         uint channels;
         uint bitsPerSample;
         uint sampleRate;
+        std::string deviceSpecifier;
     };
 
     class ALSpeaker : public Speaker {

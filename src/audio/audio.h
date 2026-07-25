@@ -114,6 +114,8 @@ namespace audio {
         virtual uint getBitsPerSample() const = 0;
 
         virtual size_t read(char* buffer, size_t bufferSize) = 0;
+
+        virtual const std::string& getDeviceSpecifier() const = 0;
     };
 
     class PCMStream {
