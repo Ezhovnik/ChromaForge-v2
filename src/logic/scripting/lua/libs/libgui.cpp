@@ -10,6 +10,7 @@
 #include <graphics/ui/elements/CheckBox.h>
 #include <graphics/ui/elements/TextBox.h>
 #include <graphics/ui/elements/TrackBar.h>
+#include <graphics/ui/elements/ProgressBar.h>
 #include <graphics/ui/elements/Panel.h>
 #include <graphics/ui/elements/Menu.h>
 #include <items/Inventories.h>
@@ -211,8 +212,45 @@ static int p_is_checked(gui::UINode* node, lua::State* L) {
 static int p_get_value(gui::UINode* node, lua::State* L) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         return lua::pushnumber(L, bar->getValue());
+    } else if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        return lua::pushnumber(L, bar->getValue());
     } else if (auto box = dynamic_cast<gui::SelectBox*>(node)) {
         return lua::pushstring(L, box->getSelected().value);
+    }
+    return 0;
+}
+
+static int p_get_progress(gui::UINode* node, lua::State* L) {
+    if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        return lua::pushnumber(L, bar->getProgress());
+    }
+    return 0;
+}
+
+static int p_get_bar_color(gui::UINode* node, lua::State* L) {
+    if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        return lua::pushcolor(L, bar->getBarColor());
+    }
+    return 0;
+}
+
+static int p_get_bg_color(gui::UINode* node, lua::State* L) {
+    if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        return lua::pushcolor(L, bar->getBgColor());
+    }
+    return 0;
+}
+
+static int p_get_text_format(gui::UINode* node, lua::State* L) {
+    if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        return lua::pushstring(L, bar->getTextFormat());
+    }
+    return 0;
+}
+
+static int p_is_smooth(gui::UINode* node, lua::State* L) {
+    if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        return lua::pushboolean(L, bar->isSmooth());
     }
     return 0;
 }
@@ -220,12 +258,16 @@ static int p_get_value(gui::UINode* node, lua::State* L) {
 static int p_get_min(gui::UINode* node, lua::State* L) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         return lua::pushnumber(L, bar->getMin());
+    } else if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        return lua::pushnumber(L, bar->getMin());
     }
     return 0;
 }
 
 static int p_get_max(gui::UINode* node, lua::State* L) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
+        return lua::pushnumber(L, bar->getMax());
+    } else if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
         return lua::pushnumber(L, bar->getMax());
     }
     return 0;
@@ -389,6 +431,8 @@ static int p_get_hover_color(gui::UINode* node, lua::State* L) {
 static int p_get_text_color(gui::UINode* node, lua::State* L) {
     if (auto box = dynamic_cast<gui::TextBox*>(node)) {
         return lua::pushcolor(L, box->getTextColor());
+    } else if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        return lua::pushcolor(L, bar->getTextColor());
     }
     return 0;
 }
@@ -588,12 +632,18 @@ static int l_gui_getattr(lua::State* L) {
         {"syntax", p_get_syntax},
         {"markup", p_get_markup},
         {"value", p_get_value},
+        {"progress", p_get_progress},
         {"min", p_get_min},
         {"max", p_get_max},
         {"step", p_get_step},
         {"scroll", p_get_scroll},
         {"trackWidth", p_get_track_width},
         {"trackColor", p_get_track_color},
+        {"barColor", p_get_bar_color},
+        {"bgColor", p_get_bg_color},
+        {"textColor", p_get_text_color},
+        {"textFormat", p_get_text_format},
+        {"smooth", p_is_smooth},
         {"textColor", p_get_text_color},
         {"checked", p_is_checked},
         {"page", p_get_page},
@@ -716,6 +766,8 @@ static void p_set_options(gui::UINode* node, lua::State* L, int idx) {
 static void p_set_value(gui::UINode* node, lua::State* L, int idx) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         bar->setValue(lua::tonumber(L, idx));
+    } else if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        bar->setValue(lua::tonumber(L, idx));
     } else if (auto selectbox = dynamic_cast<gui::SelectBox*>(node)) {
         auto value = lua::require_lstring(L, idx);
         const auto& options = selectbox->getOptions();
@@ -734,12 +786,40 @@ static void p_set_value(gui::UINode* node, lua::State* L, int idx) {
 static void p_set_min(gui::UINode* node, lua::State* L, int idx) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         bar->setMin(lua::tonumber(L, idx));
+    } else if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        bar->setMin(lua::tonumber(L, idx));
     }
 }
 
 static void p_set_max(gui::UINode* node, lua::State* L, int idx) {
     if (auto bar = dynamic_cast<gui::TrackBar*>(node)) {
         bar->setMax(lua::tonumber(L, idx));
+    } else if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        bar->setMax(lua::tonumber(L, idx));
+    }
+}
+
+static void p_set_bar_color(gui::UINode* node, lua::State* L, int idx) {
+    if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        bar->setBarColor(lua::tocolor(L, idx));
+    }
+}
+
+static void p_set_bg_color(gui::UINode* node, lua::State* L, int idx) {
+    if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        bar->setBgColor(lua::tocolor(L, idx));
+    }
+}
+
+static void p_set_text_format(gui::UINode* node, lua::State* L, int idx) {
+    if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        bar->setTextFormat(lua::require_string(L, idx));
+    }
+}
+
+static void p_set_smooth(gui::UINode* node, lua::State* L, int idx) {
+    if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        bar->setSmooth(lua::toboolean(L, idx));
     }
 }
 
@@ -764,6 +844,8 @@ static void p_set_track_color(gui::UINode* node, lua::State* L, int idx) {
 static void p_set_text_color(gui::UINode* node, lua::State* L, int idx) {
     if (auto box = dynamic_cast<gui::TextBox*>(node)) {
         box->setTextColor(lua::tocolor(L, idx));
+    } else if (auto bar = dynamic_cast<gui::ProgressBar*>(node)) {
+        bar->setTextColor(lua::tocolor(L, idx));
     }
 }
 
@@ -921,7 +1003,11 @@ static int l_gui_setattr(lua::State* L) {
         {"scroll", p_set_scroll},
         {"trackWidth", p_set_track_width},
         {"trackColor", p_set_track_color},
+        {"barColor", p_set_bar_color},
+        {"bgColor", p_set_bg_color},
         {"textColor", p_set_text_color},
+        {"textFormat", p_set_text_format},
+        {"smooth", p_set_smooth},
         {"checked", p_set_checked},
         {"page", p_set_page},
         {"inventory", p_set_inventory},

@@ -10,6 +10,7 @@
 #include <graphics/ui/elements/CheckBox.h>
 #include <graphics/ui/elements/TextBox.h>
 #include <graphics/ui/elements/TrackBar.h>
+#include <graphics/ui/elements/ProgressBar.h>
 #include <graphics/ui/elements/InputBindBox.h>
 #include <graphics/ui/elements/InventoryView.h>
 #include <frontend/locale.h>
@@ -580,6 +581,37 @@ static std::shared_ptr<UINode> read_track_bar(
     return bar;
 }
 
+static std::shared_ptr<UINode> read_progress_bar(
+    const UIXmlReader& reader,
+    const xml::xmlelement& element
+) {
+    const auto& env = reader.getEnvironment();
+    const auto& file = reader.getFilename();
+    double minv = element.attr("min", "0.0").asFloat();
+    double maxv = element.attr("max", "100.0").asFloat();
+    double def = element.attr("value", "0.0").asFloat();
+    int thickness = element.attr("bar-thickness", "-1").asInt();
+    auto bar = std::make_shared<ProgressBar>(
+        reader.getGUI(), minv, maxv, def, thickness
+    );
+    read_uinode(reader, element, *bar);
+    if (element.has("supplier")) {
+        bar->setSupplier(scripting::create_number_supplier(env, element.attr("supplier").getText(), file));
+    }
+    if (element.has("bar-color")) bar->setBarColor(element.attr("bar-color").asColor());
+    if (element.has("bg-color")) bar->setBgColor(element.attr("bg-color").asColor());
+    if (element.has("text-format")) bar->setTextFormat(element.attr("text-format").getText());
+    if (element.has("text-color")) bar->setTextColor(element.attr("text-color").asColor());
+    if (element.has("smooth")) bar->setSmooth(element.attr("smooth").asBool());
+    if (element.has("orientation")) {
+        auto& oname = element.attr("orientation").getText();
+        if (oname == "vertical") {
+            bar->setOrientation(Orientation::Vertical);
+        }
+    }
+    return bar;
+}
+
 static std::shared_ptr<UINode> read_input_bind_box(
     UIXmlReader& reader,
     const xml::xmlelement& element
@@ -752,6 +784,7 @@ UIXmlReader::UIXmlReader(gui::GUI& gui, scriptenv&& env) : gui(gui), env(std::mo
     add("splitbox", read_split_box);
     add("checkbox", read_check_box);
     add("trackbar", read_track_bar);
+    add("progressbar", read_progress_bar);
     add("container", read_container);
     add("bindbox", read_input_bind_box);
     add("modelviewer", read_model_viewer);

@@ -1,0 +1,58 @@
+<container size='800,500' color='#0F1E2DB2' context='menu'>
+    <panel size='780,430' color='0' interval='1' scrollable='true' max-length='430' pos='10,10'>
+        <panel color='0' size='780,30' padding='4'>
+            <label markup='#ProgressBar Test Page' size='780,30' color='0'/>
+        </panel>
+
+        <panel color='#FFFFFF10' size='360,70' padding='4' margin='4'>
+            <label>Default + text (blue, 45%)</label>
+            <progressbar id='pb_default' value='45' min='0' max='100' size='340,24' text-format='%.0f%%'/>
+        </panel>
+
+        <panel color='#FFFFFF10' size='360,70' padding='4' margin='4'>
+            <label>Red + custom bg-color (70%)</label>
+            <progressbar id='pb_red' value='70' min='0' max='100' size='340,24' bar-color='#FF4444CC' bg-color='#22222288' text-format='%.0f%%'/>
+        </panel>
+
+        <panel color='#FFFFFF10' size='360,70' padding='4' margin='4'>
+            <label>Green + text (30%)</label>
+            <progressbar id='pb_green' value='30' min='0' max='100' size='340,24' bar-color='#44FF44CC' text-format='%.0f%%'/>
+        </panel>
+
+        <panel color='#FFFFFF10' size='360,70' padding='4' margin='4'>
+            <label>Orange (90%, no text)</label>
+            <progressbar id='pb_orange' value='90' min='0' max='100' size='340,20' bar-color='#FF8800CC'/>
+        </panel>
+
+        <panel color='#FFFFFF10' size='360,140' padding='4' margin='4'>
+            <label>Vertical bars</label>
+            <panel size='340,100' color='0' orientation='horizontal'>
+                <progressbar id='pb_v_purple' value='25' min='0' max='100' size='60,100' bar-color='#AA44FFCC' orientation='vertical' text-format='%.0f%%'/>
+                <progressbar id='pb_v_teal' value='60' min='0' max='100' size='60,100' bar-color='#44FFCCCC' orientation='vertical' text-format='%.0f%%'/>
+                <progressbar id='pb_v_gold' value='85' min='0' max='100' size='60,100' bar-color='#FFD700CC' orientation='vertical' text-format='%.0f%%'/>
+                <progressbar id='pb_v_magenta' value='40' min='0' max='100' size='60,100' bar-color='#FF44AACC' orientation='vertical' text-format='%.0f%%'/>
+            </panel>
+        </panel>
+
+        <panel color='#FFFFFF10' size='360,70' padding='4' margin='4'>
+            <label>Custom range (min=10, max=50, val=35) - shows raw + pct</label>
+            <progressbar id='pb_custom' value='35' min='10' max='50' size='340,24' bar-color='#FFFF44CC' text-format='%.0f (%.0f%%)'/>
+        </panel>
+
+        <panel color='#FFFFFF10' size='360,70' padding='4' margin='4'>
+            <label>0% (empty, with text)</label>
+            <progressbar id='pb_empty' value='0' min='0' max='100' size='340,24' text-format='%.0f%%'/>
+        </panel>
+
+        <panel color='#FFFFFF10' size='360,70' padding='4' margin='4'>
+            <label>100% (full, with text)</label>
+            <progressbar id='pb_full' value='100' min='0' max='100' size='340,24' bar-color='#44FF44CC' text-format='%.0f%%'/>
+        </panel>
+
+        <panel color='#FFFFFF10' size='360,70' padding='4' margin='4'>
+            <label>Animated + smooth + text (bounces via supplier)</label>
+            <progressbar id='pb_animated' value='0' min='0' max='100' size='340,24' bar-color='#FF44FFCC' text-format='%.0f%%' smooth='true' supplier='animated_supplier'/>
+        </panel>
+    </panel>
+    <button onclick='menu:back()' margin='6' gravity='bottom-left'>@Back</button>
+</container>
