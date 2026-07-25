@@ -109,6 +109,10 @@ namespace audio {
 
         virtual uint getChannels() const = 0;
 
+        virtual uint getSampleRate() const = 0;
+
+        virtual uint getBitsPerSample() const = 0;
+
         virtual size_t read(char* buffer, size_t bufferSize) = 0;
     };
 
@@ -316,7 +320,10 @@ namespace audio {
         virtual std::unique_ptr<Stream> openStream(std::shared_ptr<PCMStream> stream, bool keepSource) = 0;
 
         virtual std::unique_ptr<InputDevice> openInputDevice(
-            uint sampleRate, uint channels, uint bitsPerSample
+            const std::string& deviceName,
+            uint sampleRate,
+            uint channels,
+            uint bitsPerSample
         ) = 0;
 
         /**
@@ -332,6 +339,9 @@ namespace audio {
             glm::vec3 lookAt, 
             glm::vec3 up
         ) = 0;
+
+        virtual std::vector<std::string> getInputDeviceNames() = 0;
+        virtual std::vector<std::string> getOutputDeviceNames() = 0;
 
         virtual void update(double delta) = 0;
 
@@ -353,10 +363,16 @@ namespace audio {
     std::unique_ptr<Stream> open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
 
     std::unique_ptr<InputDevice> open_input_device(
+        const std::string& deviceName,
         uint sampleRate,
         uint channels,
         uint bitsPerSample
     );
+
+    std::vector<std::string> get_input_devices_names();
+    std::vector<std::string> get_output_devices_names();
+
+    void set_input_device(const std::string& deviceName);
 
     /**
      * @brief Устанавливает параметры слушателя, используя текущий бэкенд.

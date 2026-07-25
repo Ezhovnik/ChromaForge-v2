@@ -166,7 +166,7 @@ void audio::initialize(bool enabled, AudioSettings& settings) {
         }, true));
     }
 
-    input_device = backend->openInputDevice(44100, 1, 16);
+    input_device = backend->openInputDevice("", 44100, 1, 16);
     if (input_device) input_device->startCapture();
 }
 
@@ -226,6 +226,41 @@ std::unique_ptr<Stream> audio::open_stream(
 
 std::unique_ptr<Stream> audio::open_stream(std::shared_ptr<PCMStream> stream, bool keepSource) {
     return backend->openStream(std::move(stream), keepSource);
+}
+
+std::unique_ptr<InputDevice> audio::open_input_device(
+    const std::string& deviceName,
+    uint sampleRate,
+    uint channels,
+    uint bitsPerSample
+) {
+    return backend->openInputDevice(
+        deviceName, sampleRate, channels, bitsPerSample
+    );
+}
+
+std::vector<std::string> audio::get_input_devices_names() {
+    return backend->getInputDeviceNames();
+}
+
+std::vector<std::string> audio::get_output_devices_names() {
+    return backend->getOutputDeviceNames();
+}
+
+void audio::set_input_device(const std::string& deviceName) {
+    auto newDevice = backend->openInputDevice(deviceName, 44100, 1, 16);
+    if (newDevice == nullptr) {
+        LOG_ERROR("Could not open input device: {}", deviceName);
+        return;
+    }
+
+    if (input_device) {
+        input_device->stopCapture();
+    }
+    input_device = std::move(newDevice);
+    if (input_device) {
+        input_device->startCapture();
+    }
 }
 
 void audio::set_listener(

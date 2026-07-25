@@ -90,7 +90,8 @@ namespace audio {
             ALAudio* al,
             ALCdevice* device,
             uint channels,
-            uint bitsPerSample
+            uint bitsPerSample,
+            uint sampleRate
         );
         ~ALInputDevice() override;
 
@@ -99,12 +100,16 @@ namespace audio {
 
         uint getChannels() const override;
 
+        uint getSampleRate() const override;
+        uint getBitsPerSample() const override;
+
         size_t read(char* buffer, size_t bufferSize) override;
     private:
         ALAudio* al;
         ALCdevice* device;
         uint channels;
         uint bitsPerSample;
+        uint sampleRate;
     };
 
     class ALSpeaker : public Speaker {
@@ -185,15 +190,19 @@ namespace audio {
         void freeSource(uint source);
         void freeBuffer(uint buffer);
 
-        std::vector<std::string> getAvailableDevices() const;
-
         std::unique_ptr<Sound> createSound(std::shared_ptr<PCM> pcm, bool keepPCM) override;
 
         std::unique_ptr<Stream> openStream(std::shared_ptr<PCMStream> stream, bool keepSource) override;
 
         std::unique_ptr<InputDevice> openInputDevice(
-            uint sampleRate, uint channels, uint bitsPerSample
+            const std::string& deviceName,
+            uint sampleRate,
+            uint channels,
+            uint bitsPerSample
         ) override;
+
+        std::vector<std::string> getOutputDeviceNames() override;
+        std::vector<std::string> getInputDeviceNames() override;
 
         void setListener(
             glm::vec3 position,
