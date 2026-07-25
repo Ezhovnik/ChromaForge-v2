@@ -38,9 +38,34 @@ static int l_share(lua::State* L) {
     return 0;
 }
 
+static int l_create_sound(lua::State* L) {
+    auto stream = lua::touserdata<lua::LuaPCMStream>(L, 1);
+    if (stream == nullptr) return 0;
+
+    auto alias = lua::require_lstring(L, 2);
+    auto memoryStream = stream->getStream();
+
+    std::vector<char> buffer(memoryStream->available());
+    memoryStream->readFully(buffer.data(), buffer.size(), true);
+
+    auto pcm = std::make_shared<audio::PCM>(
+        std::move(buffer),
+        0,
+        memoryStream->getChannels(),
+        static_cast<uint8_t>(memoryStream->getBitsPerSample()),
+        memoryStream->getSampleRate(),
+        memoryStream->isSeekable()
+    );
+    auto sound = audio::create_sound(std::move(pcm), true);
+    auto assets = scripting::engine->getAssets();
+    assets->store<audio::Sound>(std::move(sound), std::string(alias));
+    return 0;
+}
+
 static std::unordered_map<std::string, lua_CFunction> methods {
     {"feed", lua::wrap<l_feed>},
     {"share", lua::wrap<l_share>},
+    {"create_sound", lua::wrap<l_create_sound>},
 };
 
 static int l_meta_meta_call(lua::State* L) {
