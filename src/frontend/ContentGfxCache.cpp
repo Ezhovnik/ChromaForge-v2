@@ -56,7 +56,7 @@ void ContentGfxCache::refreshVariant(
                 }
             }
         }
-        models[def.rt.id] = std::move(model);
+        models[modelKey(def.rt.id, variantIndex)] = std::move(model);
     }
 }
 
@@ -88,8 +88,8 @@ void ContentGfxCache::refresh() {
 
 ContentGfxCache::~ContentGfxCache() = default;
 
-const model::Model& ContentGfxCache::getModel(blockid_t id) const {
-    const auto& found = models.find(id);
+const model::Model& ContentGfxCache::getModel(blockid_t id, uint8_t variant) const {
+    const auto& found = models.find(modelKey(id, variant));
     if (found == models.end()) {
         THROW_ERR("Model not found");
     }
