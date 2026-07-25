@@ -176,9 +176,8 @@ function inventory.set_description(invid, slot, description)
     inventory.set_data(invid, slot, "description", description)
 end
 
-if enable_experimental then
-    require "builtin:internal/maths_inline"
-end
+require "builtin:internal/maths_inline"
+require "builtin:internal/debugging"
 
 asserts = require "builtin:internal/asserts"
 events = require "builtin:internal/events"
