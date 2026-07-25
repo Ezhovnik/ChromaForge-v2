@@ -255,6 +255,16 @@ require "builtin:internal/extensions/math"
 require "builtin:internal/extensions/file"
 require "builtin:internal/extensions/table"
 require "builtin:internal/extensions/string"
+
+local bytearray = require "builtin:internal/bytearray"
+Bytearray = bytearray.FFIBytearray
+Bytearray_as_string = bytearray.FFIBytearray_as_string
+U16view = bytearray.FFIU16view
+I16view = bytearray.FFII16view
+U32view = bytearray.FFIU32view
+I32view = bytearray.FFII32view
+Bytearray_construct = function(...) return Bytearray(...) end
+
 bit.compile = require "builtin:bitwise/compiler"
 bit.execute = require "builtin:bitwise/executor"
 
