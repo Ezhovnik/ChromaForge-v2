@@ -76,6 +76,11 @@ static int l_get_mouse_pos(lua::State* L) {
     return lua::pushvec2(L, scripting::engine->getInput().getCursor().pos);
 }
 
+static int l_get_mouse_delta(lua::State* L) {
+    if (scripting::engine->isHeadless()) return 0;
+    return lua::pushvec2(L, scripting::engine->getInput().getCursor().delta);
+}
+
 static int l_get_bindings(lua::State* L) {
     if (scripting::engine->isHeadless()) return 0;
 
@@ -162,6 +167,7 @@ const luaL_Reg inputlib [] = {
     {"Mousecode", lua::wrap<l_mousecode>},
     {"add_callback", lua::wrap<l_add_callback>},
     {"get_mouse_pos", lua::wrap<l_get_mouse_pos>},
+    {"get_mouse_delta", lua::wrap<l_get_mouse_delta>},
     {"get_bindings", lua::wrap<l_get_bindings>},
     {"get_binding_text", lua::wrap<l_get_binding_text>},
     {"is_active", lua::wrap<l_is_active>},

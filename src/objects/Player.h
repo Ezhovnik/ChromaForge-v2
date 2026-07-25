@@ -173,6 +173,8 @@ public:
         return position;
     }
 
+    bool isCurrentCameraBuiltin() const;
+
     Hitbox* getHitbox();
 
 	/**
@@ -206,5 +208,9 @@ public:
 
 	inline uint64_t getId() const {
         return id;
+    }
+
+    Level& getLevel() const {
+        return level;
     }
 };

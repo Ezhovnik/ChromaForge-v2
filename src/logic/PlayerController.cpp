@@ -203,7 +203,7 @@ void CameraControl::update(
         tpCamera->right = camera->right;
     }
 
-    if (player.currentCamera == spCamera || player.currentCamera == tpCamera || player.currentCamera == camera) {
+    if (player.isCurrentCameraBuiltin()) {
         player.currentCamera->setFov(glm::radians(settings.fov.get()));
     }
 }
@@ -523,7 +523,7 @@ void PlayerController::postUpdate(
 ) {
     if (!pause) updateFootsteps(deltaTime);
 
-    if (!pause && input) {
+    if (!pause && input && player.isCurrentCameraBuiltin()) {
         camControl.updateMouse(this->input, windowHeight);
     }
     camControl.refreshRotation();

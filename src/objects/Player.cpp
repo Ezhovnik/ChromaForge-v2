@@ -323,3 +323,9 @@ void Player::setRotation(const glm::vec3& rotation) {
     this->rotation = rotation;
     rotationInterpolation.refresh(rotation);
 }
+
+bool Player::isCurrentCameraBuiltin() const {
+    return currentCamera.get() == fpCamera.get() ||
+        currentCamera.get() == spCamera.get() ||
+        currentCamera.get() == tpCamera.get();
+}
