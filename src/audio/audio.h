@@ -152,6 +152,9 @@ namespace audio {
         virtual duration_t getTime() const = 0;
 
         virtual void setTime(duration_t time) = 0;
+
+        virtual bool isStopOnEnd() const = 0;
+        virtual void setStopOnEnd(bool stopOnEnd) = 0;
     };
 
     /**
@@ -309,6 +312,8 @@ namespace audio {
         inline bool isStopped() const {
             return getState() == State::Stopped;
         }
+
+        virtual bool isManuallyStopped() const = 0;
     };
 
     class Backend {

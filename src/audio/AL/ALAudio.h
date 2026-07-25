@@ -59,6 +59,7 @@ namespace audio {
         bool keepSource;
         char buffer[BUFFER_SIZE];
         bool loop = false;
+        bool stopOnEnd = false;
 
         bool preloadBuffer(uint buffer, bool loop);
         void unqueueBuffers(uint alsource);
@@ -82,6 +83,9 @@ namespace audio {
         void setTime(duration_t time) override;
 
         static inline constexpr uint STREAM_BUFFERS = 3;
+
+        bool isStopOnEnd() const override;
+        void setStopOnEnd(bool stopOnEnd) override;
     };
 
     class ALInputDevice : public InputDevice {
@@ -122,7 +126,7 @@ namespace audio {
         ALStream* stream = nullptr;
 
         uint source;
-        bool stopped = true;
+        bool manuallyStopped = true;
         bool paused = false;
 
         duration_t duration = 0.0f;
@@ -167,6 +171,8 @@ namespace audio {
         bool isRelative() const override;
 
         Priority getPriority() const override;
+
+        bool isManuallyStopped() const override;
     };
 
     class ALAudio : public Backend {

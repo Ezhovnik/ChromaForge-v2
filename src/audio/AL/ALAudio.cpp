@@ -153,8 +153,11 @@ std::unique_ptr<Speaker> ALStream::createSpeaker(bool loop, int channel) {
 
     for (uint i = 0; i < ALStream::STREAM_BUFFERS; ++i) {
         uint free_buffer = al->getFreeBuffer();
-        if (!preloadBuffer(free_buffer, loop)) break;
-        AL_CHECK(alSourceQueueBuffers(free_source, 1, &free_buffer));
+        if (!preloadBuffer(free_buffer, loop)) {
+            unusedBuffers.push(free_buffer);
+        } else {
+            AL_CHECK(alSourceQueueBuffers(free_source, 1, &free_buffer));
+        }
     }
     return std::make_unique<ALSpeaker>(al, free_source, Priority::High, channel);
 }
@@ -199,11 +202,11 @@ void ALStream::unqueueBuffers(uint alsource) {
 uint ALStream::enqueueBuffers(uint alsource) {
     uint preloaded = 0;
     if (!unusedBuffers.empty()) {
-        uint buffer = unusedBuffers.front();
-        if (preloadBuffer(buffer, loop)) {
+        uint firstBuffer = unusedBuffers.front();
+        if (preloadBuffer(firstBuffer, loop)) {
             preloaded++;
             unusedBuffers.pop();
-            AL_CHECK(alSourceQueueBuffers(alsource, 1, &buffer));
+            AL_CHECK(alSourceQueueBuffers(alsource, 1, &firstBuffer));
         }
     }
     return preloaded;
@@ -212,14 +215,14 @@ uint ALStream::enqueueBuffers(uint alsource) {
 void ALStream::update(double delta) {
     if (this->speaker == 0) return;
 
-    auto p_speaker = audio::get_speaker(this->speaker);
-    if (p_speaker == nullptr) {
+    auto speaker = audio::get_speaker(this->speaker);
+    if (speaker == nullptr) {
         this->speaker = 0;
         return;
     }
-    ALSpeaker* alspeaker = dynamic_cast<ALSpeaker*>(p_speaker);
+    ALSpeaker* alspeaker = dynamic_cast<ALSpeaker*>(speaker);
     assert(alspeaker != nullptr);
-    if (alspeaker->stopped) {
+    if (alspeaker->manuallyStopped) {
         this->speaker = 0;
         return;
     }
@@ -228,11 +231,11 @@ void ALStream::update(double delta) {
     unqueueBuffers(alsource);
     uint preloaded = enqueueBuffers(alsource);
 
-    if (p_speaker->isStopped() && !alspeaker->stopped) {
-        if (preloaded || dynamic_cast<MemoryPCMStream*>(source.get())) {
-            p_speaker->play();
-        } else {
-            p_speaker->stop();
+    if (speaker->isStopped() && !alspeaker->manuallyStopped) {
+        if (preloaded) {
+            speaker->play();
+        } else if (isStopOnEnd()){
+            speaker->stop();
         }
     }
 }
@@ -266,6 +269,14 @@ void ALStream::setTime(duration_t time) {
     } else {
         totalPlayedSamples = sample;
     }
+}
+
+bool ALStream::isStopOnEnd() const {
+    return stopOnEnd;
+}
+
+void ALStream::setStopOnEnd(bool flag) {
+    stopOnEnd = flag;
 }
 
 ALSpeaker::ALSpeaker(
@@ -335,8 +346,8 @@ void ALSpeaker::setLoop(bool loop) {
 }
 
 void ALSpeaker::play() {
-    stopped = false;
     paused = false;
+    manuallyStopped = false;
     auto channel = get_channel(this->channel);
     AL_CHECK(alSourcef(source, AL_GAIN, volume * channel->getVolume()));
     AL_CHECK(alSourcePlay(source));
@@ -348,7 +359,7 @@ void ALSpeaker::pause() {
 }
 
 void ALSpeaker::stop() {
-    stopped = true;
+    manuallyStopped = true;
     if (source) {
         AL_CHECK(alSourceStop(source));
 
@@ -404,6 +415,10 @@ bool ALSpeaker::isRelative() const {
 
 Priority ALSpeaker::getPriority() const {
     return priority;
+}
+
+bool ALSpeaker::isManuallyStopped() const {
+    return manuallyStopped;
 }
 
 static bool alc_enumeration_ext = false;
