@@ -16,11 +16,6 @@ MenuScreen::MenuScreen(Engine& engine) : Screen(engine) {
     uicamera->flipped = true;
     uicamera->near = -1.0f;
     uicamera->far = 1.0f;
-
-    panorama = std::make_unique<Panorama>(*engine.getAssets());
-    if (!panorama->isValid()) {
-        panorama.reset();
-    }
 }
 
 MenuScreen::~MenuScreen() = default;
@@ -30,6 +25,11 @@ void MenuScreen::onOpen() {
 
     auto menu = engine.getGUI().getMenu();
     menu->reset();
+
+    panorama = std::make_unique<Panorama>(*engine.getAssets());
+    if (!panorama->isValid()) {
+        panorama.reset();
+    }
 }
 
 void MenuScreen::update(float deltaTime) {
@@ -49,6 +49,6 @@ void MenuScreen::draw(float deltaTime) {
     }
 }
 
-bool MenuScreen::isPanoramaAvailable() const {
+bool MenuScreen::hasPanorama() const {
     return panorama != nullptr;
 }

@@ -1,5 +1,4 @@
 local menubg
-local panorama = gui.set_background("panorama")
 
 function on_menu_clear()
     if menubg then
@@ -9,7 +8,8 @@ function on_menu_clear()
 end
 
 function on_menu_setup()
-    if not panorama then
+    local screen_info = gui.get_screen_info()
+    if not (screen_info and screen_info.panorama) then
         local controller = {}
         function controller.resize_menu_bg()
             local w, h = unpack(gui.get_viewport())

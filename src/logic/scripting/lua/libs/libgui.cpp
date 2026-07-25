@@ -6,6 +6,7 @@
 #include <util/stringutil.h>
 #include <graphics/ui/gui_util.h>
 #include <frontend/locale.h>
+#include <frontend/screens/Screen.h>
 #include <graphics/ui/elements/Button.h>
 #include <graphics/ui/elements/CheckBox.h>
 #include <graphics/ui/elements/TextBox.h>
@@ -23,7 +24,6 @@
 #include <graphics/ui/elements/InlineFrame.h>
 #include <graphics/ui/elements/ModelViewer.h>
 #include <graphics/ui/elements/SelectBox.h>
-#include <frontend/screens/MenuScreen.h>
 #include <logic/scripting/lua/usertypes/lua_type_canvas.h>
 
 static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
@@ -1065,20 +1065,23 @@ static int l_gui_load_document(lua::State* L) {
     return 0;
 }
 
-static int l_gui_set_background(lua::State* L) {
-    auto type = lua::require_string(L, 1);
+static int l_gui_get_screen_info(lua::State* L) {
     auto screen = scripting::engine->getScreen();
-    if (type == "panorama") {
-        if (auto menu = dynamic_cast<MenuScreen*>(screen.get())) {
-            return lua::pushboolean(L, menu->isPanoramaAvailable());
-        }
-        return lua::pushboolean(L, false);
+    if (!screen) {
+        return 0;
     }
-    return lua::pushboolean(L, true);
+    lua::createtable(L, 0, 2);
+    lua::pushstring(L, screen->getName());
+    lua::setfield(L, "name");
+    if (std::strcmp(screen->getName(), "menu") == 0) {
+        lua::pushboolean(L, screen->hasPanorama());
+        lua::setfield(L, "panorama");
+    }
+    return 1;
 }
 
 const luaL_Reg guilib [] = {
-    {"set_background", lua::wrap<l_gui_set_background>},
+    {"get_screen_info", lua::wrap<l_gui_get_screen_info>},
     {"get_viewport", lua::wrap<l_gui_get_viewport>},
     {"getattr", lua::wrap<l_gui_getattr>},
     {"setattr", lua::wrap<l_gui_setattr>},
