@@ -5,6 +5,8 @@
 
 #include <graphics/core/DrawContext.h>
 #include <graphics/core/Batch2D.h>
+#include <window/Window.h>
+#include <graphics/ui/GUI.h>
 
 using namespace gui;
 
@@ -78,9 +80,11 @@ void Container::activate(float delta) {
             if (event.repeat > 0) event.repeat--;
         }
     }
+    GUI& gui = this->gui;
     intervalEvents.erase(std::remove_if(
         intervalEvents.begin(), intervalEvents.end(),
-        [](const IntervalEvent& event) {
+        [&gui](const IntervalEvent& event) {
+            gui.getWindow().setShouldRefresh();
             return event.repeat == 0;
         }
     ), intervalEvents.end());
