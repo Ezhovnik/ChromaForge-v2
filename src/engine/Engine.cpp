@@ -51,6 +51,7 @@
 #include <devtools/Editor.h>
 #include <devtools/Project.h>
 #include <devtools/DebuggingServer.h>
+#include <graphics/ui/elements/Menu.h>
 
 static std::unique_ptr<ImageData> load_icon() {
     try {
@@ -132,9 +133,11 @@ void Engine::initializeClient() {
     loadControls();
 
     gui = std::make_unique<gui::GUI>(*this);
+
     if (ENGINE_DEBUG_BUILD) {
         menus::create_version_label(*gui);
     }
+
     keepAlive(settings.display.windowMode.observe(
         [this](int value) {
             WindowMode mode = static_cast<WindowMode>(value);
@@ -150,6 +153,13 @@ void Engine::initializeClient() {
         },
         true
     ));
+    keepAlive(this->input->addKeyCallback(Keycode::ESCAPE, [this]() {
+        auto& menu = *gui->getMenu();
+        if (menu.hasOpenPage() && menu.back()) {
+            return true;
+        }
+        return false;
+    }));
 }
 
 void Engine::initialize(CoreParameters coreParameters) {
