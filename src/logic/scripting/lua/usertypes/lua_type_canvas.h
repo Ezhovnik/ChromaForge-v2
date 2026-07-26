@@ -1,6 +1,7 @@
 #pragma once
 
 #include <logic/scripting/lua/lua_commons.h>
+#include <math/UVRegion.h>
 
 class Texture;
 class ImageData;
@@ -9,8 +10,9 @@ namespace lua {
     class LuaCanvas : public Userdata {
     public:
         explicit LuaCanvas(
-            std::shared_ptr<Texture> inTexture,
-            std::shared_ptr<ImageData> inData
+            std::shared_ptr<Texture> texture,
+            std::shared_ptr<ImageData> data,
+            UVRegion region = UVRegion(0, 0, 1, 1)
         );
         ~LuaCanvas() override = default;
 
@@ -18,29 +20,32 @@ namespace lua {
             return TYPENAME;
         }
 
-        [[nodiscard]] auto& texture() const {
-            return *mTexture;
+        [[nodiscard]] auto& getTexture() const {
+            return *texture;
         }
 
-        [[nodiscard]] auto& data() const {
-            return *mData;
+        [[nodiscard]] auto& getData() const {
+            return *data;
         }
 
         [[nodiscard]] bool hasTexture() const {
-            return mTexture != nullptr;
+            return texture != nullptr;
         }
 
         auto shareTexture() const {
-            return mTexture;
+            return texture;
         }
+
+        void update();
 
         void createTexture();
 
         static int createMetatable(lua::State*);
         inline static std::string TYPENAME = "Canvas";
     private:
-        std::shared_ptr<Texture> mTexture; // nullable
-        std::shared_ptr<ImageData> mData;
+        std::shared_ptr<Texture> texture;
+        std::shared_ptr<ImageData> data;
+        UVRegion region;
     };
     static_assert(!std::is_abstract<LuaCanvas>());
 }

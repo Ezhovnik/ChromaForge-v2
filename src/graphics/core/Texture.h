@@ -10,7 +10,6 @@ class Texture {
 protected:
     uint id;
     uint width, height; ///< Размеры текстуры в пикселях
-
 public:
     Texture(uint id, uint width, uint height);
     Texture(const ubyte* data, uint width, uint height, ImageFormat format);
@@ -20,6 +19,11 @@ public:
     virtual void unbind() const;
     void reload(const ubyte* data);
     void reload(const ImageData& image);
+    void reloadPartial(
+        const ImageData& image,
+        uint x, uint y,
+        uint w, uint h
+    );
 
     void setNearestFilter();
     void setMipMapping(bool flag, bool pixelated);
