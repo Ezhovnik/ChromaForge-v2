@@ -2,12 +2,12 @@
 
 #include <string>
 #include <vector>
-#include <stdexcept>
 #include <optional>
 #include <tuple>
 
 #include <data/dv.h>
 #include <io/io.h>
+#include <engine/CoreParameters.h>
 
 struct PathsRoot {
     std::string name;
@@ -39,17 +39,10 @@ class EnginePaths {
 public:
     ResPaths resPaths;
 
-    void prepare();
+    void prepare(CoreParameters& params);
 
-    void setUserFilesFolder(std::filesystem::path folder);
     const std::filesystem::path& getUserFilesFolder() const;
-
-    void setResourcesFolder(std::filesystem::path folder);
     const std::filesystem::path& getResourcesFolder() const;
-
-    void setScriptFolder(std::filesystem::path folder);
-
-    void setProjectFolder(std::filesystem::path folder);
 
     io::path getWorldsFolder() const;
     io::path getWorldFolderByName(const std::string& name);
@@ -57,7 +50,7 @@ public:
     void setCurrentWorldFolder(io::path folder);
     io::path getCurrentWorldFolder();
 
-    io::path getNewScreenshotFile(const std::string& ext);
+    io::path getNewScreenshotFile(const std::string& ext) const;
 
     std::string mount(const io::path& file);
     void unmount(const std::string& name);

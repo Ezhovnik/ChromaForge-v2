@@ -16,9 +16,7 @@
 #include <debug/Logger.h>
 #include <graphics/ui/GUI.h>
 #include <graphics/core/ShaderProgram.h>
-#include <graphics/core/ImageData.h>
 #include <coders/GLSLExtension.h>
-#include <coders/imageio.h>
 #include <io/engine_paths.h>
 #include <frontend/screens/Screen.h>
 #include <frontend/screens/MenuScreen.h>
@@ -38,7 +36,6 @@
 #include <io/io.h>
 #include <input_bindings.h>
 #include <logic/CommandsInterpreter.h>
-#include <objects/rigging.h>
 #include <coders/commons.h>
 #include <graphics/render/ModelsGenerator.h>
 #include <network/Network.h>
@@ -52,40 +49,7 @@
 #include <devtools/Project.h>
 #include <devtools/DebuggingServer.h>
 #include <graphics/ui/elements/Menu.h>
-
-static std::unique_ptr<ImageData> load_icon() {
-    try {
-        auto file = "res:textures/misc/icon.png";
-        if (io::exists(file)) {
-            return imageio::read(file);
-        }
-    } catch (const std::exception& err) {
-        LOG_ERROR("Could not load window icon: {}", err.what());
-    }
-    return nullptr;
-}
-
-static std::unique_ptr<scripting::IClientProjectScript> load_project_client_script() {
-    io::path scriptFile = "project:project_client.lua";
-    if (io::exists(scriptFile)) {
-        LOG_INFO("Starting project client script");
-        return scripting::load_client_project_script(scriptFile);
-    } else {
-        LOG_WARN("Project client script does not exists");
-    }
-    return nullptr;
-}
-
-static std::unique_ptr<Process> load_project_start_script() {
-    io::path scriptFile = "project:start.lua";
-    if (io::exists(scriptFile)) {
-        LOG_INFO("Starting project start script");
-        return scripting::start_app_script(scriptFile);
-    } else {
-        LOG_WARN("Project start script does not exists");
-    }
-    return nullptr;
-}
+#include <engine/WindowControl.h>
 
 Engine::Engine() = default;
 Engine::~Engine() = default;
@@ -121,23 +85,9 @@ void Engine::onContentLoad() {
 }
 
 void Engine::initializeClient() {
-    std::string title = project->title;
-    if (title.empty()) title = "ChromaForge v" + ENGINE_VERSION_STRING;
-    if (ENGINE_DEBUG_BUILD) title += " [development build]";
-    if (debuggingServer) title = "[debugging] " + title;
+    windowControl = std::make_unique<WindowControl>(*this);
+    auto [window, input] = windowControl->initialize();
 
-    auto [window, input] = Window::initialize(&settings.display, title);
-    if (!window || !input){
-        LOG_CRITICAL("Could not initialize window");
-        throw initialize_error("Could not initialize window");
-    }
-    window->setFramerate(settings.display.framerate.get());
-
-    time.set(window->time());
-    if (auto icon = load_icon()) {
-        icon->flipY();
-        window->setIcon(icon.get());
-    }
     this->window = std::move(window);
     this->input = std::move(input);
 
@@ -180,15 +130,12 @@ void Engine::initialize(CoreParameters coreParameters) {
     LOG_INFO("ChromaForge engine version: {}", ENGINE_VERSION_STRING);
 
     if (params.headless) {
-        LOG_INFO("Headless mode is enabled");
+        LOG_INFO("Engine runs in headless mode");
     }
     if (params.projectFolder.empty()) {
         params.projectFolder = params.resFolder;
     }
-    paths.setResourcesFolder(params.resFolder);
-    paths.setUserFilesFolder(params.userFolder);
-    paths.setProjectFolder(params.projectFolder);
-    paths.prepare();
+    paths.prepare(params);
     loadProject();
 
     editor = std::make_unique<devtools::Editor>(*this);
@@ -207,7 +154,6 @@ void Engine::initialize(CoreParameters coreParameters) {
         }
     }
 
-    if (!params.scriptFile.empty()) paths.setScriptFolder(params.scriptFile.parent_path());
     loadSettings();
 
     controller = std::make_unique<EngineController>(*this);
@@ -235,9 +181,9 @@ void Engine::initialize(CoreParameters coreParameters) {
         langs::setup(lang, paths.resPaths.collectRoots());
     }, true));
 
-    project->setupCoroutine = load_project_start_script();
+    project->loadProjectStartScript();
     if (!params.headless) {
-        project->clientScript = load_project_client_script();
+        project->loadProjectClientScript();
     }
 
     LOG_INFO("Initialization is finished");
@@ -306,23 +252,9 @@ void Engine::loadAssets() {
 
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
-    if (input->justPressed(Keycode::F2)) saveScreenshot();
+    if (input->justPressed(Keycode::F2)) windowControl->saveScreenshot();
     if (input->isPressed(Keycode::LEFT_CONTROL) && input->isPressed(Keycode::F3) && input->justPressed(Keycode::U)) gui->toggleDebug();
-    if (input->justPressed(Keycode::F11)) {
-        if (settings.display.windowMode.get() != static_cast<int>(WindowMode::Fullscreen)) {
-            settings.display.windowMode.set(static_cast<int>(WindowMode::Fullscreen));
-        } else {
-            settings.display.windowMode.set(static_cast<int>(WindowMode::Windowed));
-        }
-    }
-}
-
-void Engine::saveScreenshot() {
-    auto image = window->takeScreenshot();
-    image->flipY();
-    io::path filename = paths.getNewScreenshotFile("png");
-    imageio::write(filename.string(), image.get());
-    LOG_INFO("Save screenshot as '{}'", filename.string());
+    if (input->justPressed(Keycode::F11)) windowControl->toggleFullscreen();
 }
 
 void Engine::renderFrame() {
@@ -370,13 +302,7 @@ void Engine::updateFrontend() {
 }
 
 void Engine::nextFrame() {
-    window->setFramerate(
-        window->isIconified() && settings.display.limitFpsIconified.get()
-            ? 20
-            : settings.display.framerate.get()
-    );
-    window->swapBuffers();
-    input->pollEvents();
+    windowControl->nextFrame();
 }
 
 EnginePaths& Engine::getPaths() {

@@ -5,6 +5,7 @@
 #include <stack>
 #include <utility>
 #include <chrono>
+#include <stdexcept>
 
 #include <typedefs.h>
 #include <world/files/WorldFiles.h>
@@ -16,14 +17,14 @@
 #include <io/devices/ZipFileDevice.h>
 #include <util/platform.h>
 
+static util::RandomGenerator path_gen;
+
 template<int n>
 static std::string generate_random_base64() {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto seed = now.time_since_epoch().count();
-
-    util::PseudoRandom random(seed); // FIXME: Replace with safe random
     ubyte bytes[n];
-    random.rand(bytes, n);
+    for (size_t i = 0; i < n; ++i) {
+        bytes[i] = path_gen.next<ubyte>(0, 0xFF);
+    }
     return util::base64_urlsafe_encode(bytes, n);
 }
 
@@ -31,9 +32,17 @@ static inline io::path SCREENSHOTS_FOLDER = "user:screenshots";
 static inline io::path CONTENT_FOLDER = "user:content";
 static inline io::path WORLDS_FOLDER = "user:saves";
 
-void EnginePaths::prepare() {
+void EnginePaths::prepare(CoreParameters& params) {
+    resourcesFolder = params.resFolder;
+    userFilesFolder = params.userFolder;
+    projectFolder = params.projectFolder;
+    if (!params.scriptFile.empty()) {
+        scriptFolder = params.scriptFile.parent_path();
+        io::set_device("script", std::make_shared<io::StdfsDevice>(*scriptFolder));
+    }
     io::set_device("res", std::make_shared<io::StdfsDevice>(resourcesFolder, false));
     io::set_device("user", std::make_shared<io::StdfsDevice>(userFilesFolder));
+    io::set_device("project", std::make_shared<io::StdfsDevice>(projectFolder));
 
     if (!io::is_directory("res:")) {
         THROW_ERR("{} is not a directory", resourcesFolder.u8string());
@@ -61,7 +70,7 @@ const std::filesystem::path& EnginePaths::getResourcesFolder() const {
 	return resourcesFolder;
 }
 
-io::path EnginePaths::getNewScreenshotFile(const std::string& ext) {
+io::path EnginePaths::getNewScreenshotFile(const std::string& ext) const {
 	auto folder = SCREENSHOTS_FOLDER;
 	if (io::is_directory(folder)) io::create_directories(folder);
 
@@ -92,14 +101,6 @@ io::path EnginePaths::getCurrentWorldFolder() {
 
 io::path EnginePaths::getWorldFolderByName(const std::string& name) {
     return getWorldsFolder() / name;
-}
-
-void EnginePaths::setUserFilesFolder(std::filesystem::path folder) {
-    this->userFilesFolder = std::move(folder);
-}
-
-void EnginePaths::setResourcesFolder(std::filesystem::path folder) {
-    this->resourcesFolder = std::move(folder);
 }
 
 void EnginePaths::cleanup() {
@@ -175,16 +176,6 @@ std::string EnginePaths::createWriteableDevice(const std::string& name) {
     io::create_subdevice(entryPoint, folder.entryPoint(), folder.pathPart());
     writeables[name] = entryPoint;
     return entryPoint;
-}
-
-void EnginePaths::setScriptFolder(std::filesystem::path folder) {
-    io::set_device("script", std::make_shared<io::StdfsDevice>(folder));
-    this->scriptFolder = std::move(folder);
-}
-
-void EnginePaths::setProjectFolder(std::filesystem::path folder) {
-    io::set_device("project", std::make_shared<io::StdfsDevice>(folder));
-    this->projectFolder = std::move(folder);
 }
 
 void EnginePaths::setCurrentWorldFolder(io::path folder) {

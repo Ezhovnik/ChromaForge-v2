@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+#include <array>
+#include <algorithm>
 #include <ctime>
 
 #include <typedefs.h>
@@ -17,47 +19,59 @@ namespace util {
 
     /**
      * @brief Генератор случайных чисел на основе std::mt19937 (вихрь Мерсенна).
-     *
-     * Предоставляет удобные статические методы для получения случайных целых чисел
-     * в заданном диапазоне или во всём диапазоне типа.
-     *
-     * @note Все методы используют один статический генератор, что может вызывать
-     *       проблемы при одновременном доступе из нескольких потоков.
      */
     class RandomGenerator {
     public:
         /**
-         * @brief Возвращает ссылку на статический генератор.
-         * @return Ссылка на std::mt19937.
+         * @brief Создаёт генератор с seed'ом из std::random_device + seed_seq.
          */
-        static std::mt19937& getGenerator() {
-            static std::mt19937 generator(std::random_device{}());
-            return generator;
+        RandomGenerator() : m_engine(make_seeded_engine()) {}
+
+        /**
+         * @brief Создаёт генератор с явным seed'ом.
+         * @param seed Значение для инициализации.
+         */
+        explicit RandomGenerator(std::mt19937::result_type seed)
+            : m_engine(seed) {}
+
+        /**
+         * @brief Возвращает ссылку на внутренний движок.
+         */
+        std::mt19937& engine() {
+            return m_engine;
         }
 
         /**
-         * @brief Возвращает случайное целое число в заданном диапазоне [min, max].
-         * @tparam T Целочисленный тип.
-         * @param min Минимальное значение (включительно).
-         * @param max Максимальное значение (включительно).
-         * @return Случайное число типа T.
+         * @brief Возвращает случайное целое число в диапазоне [min, max].
          */
         template<typename T>
-        static typename std::enable_if<std::is_integral<T>::value, T>::type
-        get(T min, T max) {
+        std::enable_if_t<std::is_integral_v<T>, T>
+        next(T min, T max) {
             std::uniform_int_distribution<T> dist(min, max);
-            return dist(getGenerator());
+            return dist(m_engine);
         }
 
         /**
          * @brief Возвращает случайное целое число во всём диапазоне типа T.
-         * @tparam T Целочисленный тип.
-         * @return Случайное число от std::numeric_limits<T>::min() до max().
          */
         template<typename T>
-        static typename std::enable_if<std::is_integral<T>::value, T>::type
-        get() {
-            return get<T>(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+        std::enable_if_t<std::is_integral_v<T>, T>
+        next() {
+            return next<T>(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+        }
+
+    private:
+        std::mt19937 m_engine;
+
+        static std::mt19937 make_seeded_engine() {
+            std::random_device source;
+            using rd_result = std::random_device::result_type;
+            constexpr std::size_t seed_bytes = std::mt19937::state_size * sizeof(typename std::mt19937::result_type);
+            constexpr std::size_t num_seeds = (seed_bytes - 1) / sizeof(rd_result) + 1;
+            rd_result data[num_seeds];
+            std::generate(std::begin(data), std::end(data), std::ref(source));
+            std::seed_seq seq(std::begin(data), std::end(data));
+            return std::mt19937(seq);
         }
     };
 

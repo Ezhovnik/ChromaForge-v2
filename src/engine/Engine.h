@@ -9,9 +9,9 @@
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
 #include <settings.h>
-#include <io/settings_io.h>
 #include <engine/EngineTime.h>
 #include <engine/PostRunnables.h>
+#include <engine/CoreParameters.h>
 
 class Assets;
 class Screen;
@@ -21,6 +21,8 @@ class Input;
 class Window;
 class ContentControl;
 struct Project;
+class WindowControl;
+class SettingsHandler;
 
 namespace gui {
     class GUI;
@@ -43,20 +45,6 @@ namespace devtools {
 class initialize_error : public std::runtime_error {
 public:
     initialize_error(const std::string& message) : std::runtime_error(message) {}
-};
-
-struct CoreParameters {
-    bool headless = false;
-    bool testMode = false;
-
-    std::filesystem::path resFolder = "res";
-    std::filesystem::path userFolder = ".";
-    std::filesystem::path scriptFile;
-    std::filesystem::path projectFolder;
-
-    std::string debugServerString;
-
-    int sps = 20;
 };
 
 using OnWorldOpen = std::function<void(std::unique_ptr<Level>, int64_t)>;
@@ -82,6 +70,7 @@ private:
     std::unique_ptr<gui::GUI> gui;
     std::unique_ptr<devtools::Editor> editor;
     std::unique_ptr<devtools::DebuggingServer> debuggingServer;
+    std::unique_ptr<WindowControl> windowControl;
 
     PostRunnables postRunnables;
 
@@ -170,8 +159,6 @@ public:
     void postRunnable(const runnable& callback) {
         postRunnables.postRunnable(callback);
     }
-
-    void saveScreenshot();
 
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLevelConsumer(OnWorldOpen levelConsumer);
