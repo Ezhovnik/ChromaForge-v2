@@ -1,18 +1,22 @@
 #pragma once
 
+#include <unordered_map>
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
 #include <tuple>
 
-#include <data/dv.h>
 #include <io/io.h>
+#include <data/dv.h>
 #include <engine/CoreParameters.h>
 
 struct PathsRoot {
     std::string name;
     io::path path;
-    PathsRoot(std::string name, io::path path) : name(std::move(name)), path(std::move(path)) {}
+
+    PathsRoot(std::string name, io::path path)
+        : name(std::move(name)), path(std::move(path)) {
+    }
 };
 
 class ResPaths {
@@ -39,25 +43,20 @@ class EnginePaths {
 public:
     ResPaths resPaths;
 
-    void prepare(CoreParameters& params);
+    EnginePaths(CoreParameters& params);
 
-    const std::filesystem::path& getUserFilesFolder() const;
-    const std::filesystem::path& getResourcesFolder() const;
-
-    io::path getWorldsFolder() const;
     io::path getWorldFolderByName(const std::string& name);
+    io::path getWorldsFolder() const;
 
     void setCurrentWorldFolder(io::path folder);
-    io::path getCurrentWorldFolder();
-
     io::path getNewScreenshotFile(const std::string& ext) const;
 
     std::string mount(const io::path& file);
     void unmount(const std::string& name);
 
-    void setEntryPoints(std::vector<PathsRoot> entryPoints);
-
     std::string createWriteableDevice(const std::string& name);
+
+    void setEntryPoints(std::vector<PathsRoot> entryPoints);
 
     std::vector<io::path> scanForWorlds() const;
 
@@ -67,9 +66,9 @@ public:
     static inline io::path CONTROLS_FILE = "user:controls.toml";
     static inline io::path SETTINGS_FILE = "user:settings.toml";
 private:
-    std::filesystem::path userFilesFolder {"."};
-    std::filesystem::path resourcesFolder {"res"};
-    std::filesystem::path projectFolder = resourcesFolder;
+    std::filesystem::path resourcesFolder;
+    std::filesystem::path userFilesFolder;
+    std::filesystem::path projectFolder;
     io::path currentWorldFolder;
     std::optional<std::filesystem::path> scriptFolder;
     std::vector<PathsRoot> entryPoints;

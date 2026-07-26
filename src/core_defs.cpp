@@ -13,7 +13,7 @@
 #include <items/Item.h>
 #include <content/ContentBuilder.h>
 #include <io/io.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <coders/toml.h>
 
 void CoreContent::setup(Input& input, ContentBuilder& builder) {

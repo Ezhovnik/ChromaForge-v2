@@ -8,7 +8,7 @@
 #include <util/stringutil.h>
 #include <typedefs.h>
 #include <debug/Logger.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <constants.h>
 #include <coders/BasicParser.h>
 #include <coders/json.h>

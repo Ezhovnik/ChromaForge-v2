@@ -7,7 +7,7 @@
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <core_content_defs.h>
 #include <world/files/WorldFiles.h>
 #include <world/Level.h>

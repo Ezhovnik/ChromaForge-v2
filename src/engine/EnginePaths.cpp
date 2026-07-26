@@ -1,4 +1,4 @@
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 
 #include <sstream>
 #include <algorithm>
@@ -32,10 +32,12 @@ static inline io::path SCREENSHOTS_FOLDER = "user:screenshots";
 static inline io::path CONTENT_FOLDER = "user:content";
 static inline io::path WORLDS_FOLDER = "user:saves";
 
-void EnginePaths::prepare(CoreParameters& params) {
-    resourcesFolder = params.resFolder;
-    userFilesFolder = params.userFolder;
-    projectFolder = params.projectFolder;
+EnginePaths::EnginePaths(
+    CoreParameters& params
+) : resourcesFolder(params.resFolder),
+    userFilesFolder(params.userFolder),
+    projectFolder(params.projectFolder)
+{
     if (!params.scriptFile.empty()) {
         scriptFolder = params.scriptFile.parent_path();
         io::set_device("script", std::make_shared<io::StdfsDevice>(*scriptFolder));
@@ -62,14 +64,6 @@ void EnginePaths::prepare(CoreParameters& params) {
     io::create_subdevice("config", "user", "config");
 }
 
-const std::filesystem::path& EnginePaths::getUserFilesFolder() const {
-	return userFilesFolder;
-}
-
-const std::filesystem::path& EnginePaths::getResourcesFolder() const {
-	return resourcesFolder;
-}
-
 io::path EnginePaths::getNewScreenshotFile(const std::string& ext) const {
 	auto folder = SCREENSHOTS_FOLDER;
 	if (io::is_directory(folder)) io::create_directories(folder);
@@ -93,10 +87,6 @@ io::path EnginePaths::getNewScreenshotFile(const std::string& ext) const {
 
 io::path EnginePaths::getWorldsFolder() const {
     return WORLDS_FOLDER;
-}
-
-io::path EnginePaths::getCurrentWorldFolder() {
-    return currentWorldFolder;
 }
 
 io::path EnginePaths::getWorldFolderByName(const std::string& name) {

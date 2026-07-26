@@ -14,7 +14,7 @@
 #include <graphics/core/Atlas.h>
 #include <graphics/core/Font.h>
 #include <debug/Logger.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <coders/json.h>
 #include <graphics/core/TextureAnimation.h>
 #include <frontend/UIDocument.h>

@@ -17,7 +17,7 @@
 #include <graphics/ui/GUI.h>
 #include <graphics/core/ShaderProgram.h>
 #include <coders/GLSLExtension.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <frontend/screens/Screen.h>
 #include <frontend/screens/MenuScreen.h>
 #include <frontend/locale.h>
@@ -65,7 +65,7 @@ Engine& Engine::getInstance() {
 
 void Engine::onContentLoad() {
     editor->loadTools();
-    langs::setup(langs::get_current(), paths.resPaths.collectRoots());
+    langs::setup(langs::get_current(), paths->resPaths.collectRoots());
 
     if (isHeadless()) return;
 
@@ -135,7 +135,7 @@ void Engine::initialize(CoreParameters coreParameters) {
     if (params.projectFolder.empty()) {
         params.projectFolder = params.resFolder;
     }
-    paths.prepare(params);
+    paths = std::make_unique<EnginePaths>(params);
     loadProject();
 
     editor = std::make_unique<devtools::Editor>(*this);
@@ -168,7 +168,7 @@ void Engine::initialize(CoreParameters coreParameters) {
         );
     }
 
-    content = std::make_unique<ContentControl>(*project, paths, *input, [this]() {
+    content = std::make_unique<ContentControl>(*project, *paths, *input, [this]() {
         onContentLoad();
     });
 
@@ -178,7 +178,7 @@ void Engine::initialize(CoreParameters coreParameters) {
 
     if (!isHeadless()) gui->setPageLoader(scripting::create_page_loader());
     keepAlive(settings.ui.language.observe([this](auto lang) {
-        langs::setup(lang, paths.resPaths.collectRoots());
+        langs::setup(lang, paths->resPaths.collectRoots());
     }, true));
 
     project->loadProjectStartScript();
@@ -224,11 +224,11 @@ void Engine::setLevelConsumer(OnWorldOpen levelConsumer) {
 
 void Engine::loadAssets() {
     LOG_INFO("Loading assets");
-    ShaderProgram::preprocessor->setPaths(&paths.resPaths);
+    ShaderProgram::preprocessor->setPaths(&paths->resPaths);
 
     auto content = this->content->get();
     auto new_assets = std::make_unique<Assets>();
-    AssetsLoader loader(*this, *new_assets, paths.resPaths);
+    AssetsLoader loader(*this, *new_assets, paths->resPaths);
     AssetsLoader::addDefaults(loader, content);
     bool threading = false;
     if (threading) {
@@ -306,11 +306,11 @@ void Engine::nextFrame() {
 }
 
 EnginePaths& Engine::getPaths() {
-	return paths;
+	return *paths;
 }
 
 ResPaths& Engine::getResPaths() {
-    return paths.resPaths;
+    return paths->resPaths;
 }
 
 EngineSettings& Engine::getSettings() {

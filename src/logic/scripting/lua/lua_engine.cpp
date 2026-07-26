@@ -13,7 +13,7 @@
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 #include <io/io.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <engine/Engine.h>
 
 static lua::State* main_thread = nullptr;

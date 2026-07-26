@@ -4,7 +4,7 @@
 
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <frontend/menu.h>
 #include <frontend/screens/MenuScreen.h>
 #include <logic/LevelController.h>

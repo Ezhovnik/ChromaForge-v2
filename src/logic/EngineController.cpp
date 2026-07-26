@@ -32,6 +32,7 @@
 #include <content/ContentControl.h>
 #include <content/PacksManager.h>
 #include <graphics/ui/GUI.h>
+#include <engine/EnginePaths.h>
 
 EngineController::EngineController(Engine& engine) : engine(engine) {
 }

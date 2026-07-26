@@ -8,7 +8,7 @@
 #include <engine/Engine.h>
 #include <assets/Assets.h>
 #include <assets/AssetsLoader.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <coders/json.h>
 #include <io/io.h>
 #include <voxels/Chunks.h>

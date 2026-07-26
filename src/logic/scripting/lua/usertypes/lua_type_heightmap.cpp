@@ -14,6 +14,7 @@
 #include <io/util.h>
 #include <math/Heightmap.h>
 #include <engine/Engine.h>
+#include <engine/EnginePaths.h>
 
 using namespace lua;
 

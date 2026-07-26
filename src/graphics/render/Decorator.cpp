@@ -23,6 +23,7 @@
 #include <voxels/Chunk.h>
 #include <assets/Assets.h>
 #include <objects/Entt_Entity.h>
+#include <engine/EnginePaths.h>
 
 inline constexpr int UPDATE_AREA_DIAMETER = 32;
 inline constexpr int UPDATE_BLOCKS = UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER;

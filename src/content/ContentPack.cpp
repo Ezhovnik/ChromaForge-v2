@@ -8,7 +8,7 @@
 #include <io/io.h>
 #include <coders/json.h>
 #include <debug/Logger.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <core_content_defs.h>
 #include <data/dv.h>
 #include <constants.h>

@@ -5,7 +5,7 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>
 #include <io/io.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <util/stringutil.h>
 #include <coders/zip.h>
 #include <io/devices/ZipFileDevice.h>

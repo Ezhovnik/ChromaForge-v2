@@ -5,7 +5,6 @@
 
 #include <typedefs.h>
 #include <delegates.h>
-#include <io/engine_paths.h>
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
 #include <settings.h>
@@ -23,6 +22,8 @@ class ContentControl;
 struct Project;
 class WindowControl;
 class SettingsHandler;
+class EnginePaths;
+class ResPaths;
 
 namespace gui {
     class GUI;
@@ -54,8 +55,7 @@ class Engine : public util::ObjectsKeeper {
 private:
     CoreParameters params;
     EngineSettings settings;
-    EnginePaths paths;
-
+    std::unique_ptr<EnginePaths> paths;
     std::unique_ptr<Project> project;
     std::unique_ptr<SettingsHandler> settingsHandler;
     std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)

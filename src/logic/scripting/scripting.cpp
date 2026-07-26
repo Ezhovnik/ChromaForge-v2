@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <io/io.h>
 #include <util/timeutil.h>
 #include <world/Level.h>

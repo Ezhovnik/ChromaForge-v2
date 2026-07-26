@@ -1,7 +1,7 @@
 #include <content/ContentControl.h>
 
 #include <io/io.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <content/Content.h>
 #include <content/ContentPack.h>
 #include <content/ContentBuilder.h>

@@ -10,6 +10,7 @@
 #include <world/Level.h>
 #include <world/World.h>
 #include <util/platform.h>
+#include <engine/EnginePaths.h>
 
 ServerMainloop::ServerMainloop(Engine& engine) : engine(engine) {}
 

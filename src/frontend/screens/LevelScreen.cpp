@@ -33,6 +33,7 @@
 #include <voxels/GlobalChunks.h>
 #include <assets/Assets.h>
 #include <graphics/core/TextureAnimation.h>
+#include <engine/EnginePaths.h>
 
 inline const io::path CLIENT_FILE = "world:client/environment.json";
 

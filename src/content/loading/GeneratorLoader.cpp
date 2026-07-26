@@ -9,7 +9,7 @@
 #include <world/generator/Generator.h>
 #include <world/generator/VoxelFragment.h>
 #include <debug/Logger.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <util/stringutil.h>
 
 static BlocksLayer load_layer(

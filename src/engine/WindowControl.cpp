@@ -8,6 +8,7 @@
 #include <window/input.h>
 #include <graphics/core/ImageData.h>
 #include <constants.h>
+#include <engine/EnginePaths.h>
 
 namespace {
     static std::unique_ptr<ImageData> load_icon() {

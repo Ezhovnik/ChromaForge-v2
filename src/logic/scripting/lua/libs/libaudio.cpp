@@ -3,6 +3,7 @@
 #include <audio/audio.h>
 #include <engine/Engine.h>
 #include <assets/Assets.h>
+#include <engine/EnginePaths.h>
 
 inline const char* DEFAULT_CHANNEL = "regular";
 

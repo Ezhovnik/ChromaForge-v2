@@ -12,7 +12,7 @@
 #include <constants.h>
 #include <graphics/core/ImageData.h>
 #include <assets/asset_loaders.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <core_content_defs.h>
 #include <content/Content.h>
 #include <logic/scripting/scripting.h>

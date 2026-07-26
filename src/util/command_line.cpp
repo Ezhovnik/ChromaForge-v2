@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <engine/Engine.h>
 #include <util/ArgsReader.h>
 

@@ -14,7 +14,7 @@
 #include <content/ContentBuilder.h>
 #include <util/stringutil.h>
 #include <objects/rigging.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <content/loading/ContentUnitLoader.h>
 
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder, const ResPaths& paths) : pack(pack), builder(builder), paths(paths) {
