@@ -34,11 +34,16 @@
 #include <objects/Players.h>
 #include <network/Network.h>
 #include <objects/Entt_Entity.h>
+#include <graphics/ui/GUI.h>
 
 static std::shared_ptr<gui::Label> create_label(gui::GUI& gui, wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(gui, L"-");
     label->textSupplier(std::move(supplier));
     return label;
+}
+
+static bool should_keep_previous(gui::GUI& gui) {
+    return !gui.getInput().isCursorLocked();
 }
 
 std::shared_ptr<gui::UINode> create_debug_panel(
@@ -75,7 +80,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         fpsMax = fps;
     });
 
-    panel->listenInterval(1.0f, [&engine]() {
+    panel->listenInterval(1.0f, [&engine, &gui]() {
         const auto& network = engine.getNetwork();
         size_t totalDownload = network.getTotalDownload();
         size_t totalUpload = network.getTotalUpload();
@@ -123,7 +128,15 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     }));
     panel->add(create_label(gui, []() {return netSpeedString;}));
 	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() -> std::wstring{
-        const auto& vox = player.selection.vox;
+        static voxel prevVox = {BLOCK_VOID, {}};
+
+        auto vox = player.selection.vox;
+        if (vox.id == BLOCK_VOID && should_keep_previous(gui)) {
+            vox = prevVox;
+        } else {
+            prevVox = vox;
+        }
+
         std::wstringstream stream;
         stream << "R:" << vox.state.rotation << " S:"
             << std::bitset<3>(vox.state.segment) << " U:"
@@ -135,8 +148,16 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         }
 	})));
     panel->add(create_label(gui, [&]() -> std::wstring {
-        const auto& selection = player.selection;
+        static CursorSelection prevSelection {};
+
+        auto selection = player.selection;
         const auto& vox = selection.vox;
+        if (vox.id == BLOCK_VOID && should_keep_previous(gui)) {
+            selection = prevSelection;
+        } else {
+            prevSelection = selection;
+        }
+
         if (vox.id == BLOCK_VOID) {
             return L"x: - y: - z: -";
         }
@@ -145,15 +166,32 @@ std::shared_ptr<gui::UINode> create_debug_panel(
             L" z: " + std::to_wstring(selection.actualPosition.z);
     }));
     panel->add(create_label(gui, [&](){
+        static CursorSelection prevSelection {};
+
+        auto selection = player.selection;
+        const auto& vox = selection.vox;
+        if (vox.id == BLOCK_VOID && should_keep_previous(gui)) {
+            selection = prevSelection;
+        } else {
+            prevSelection = selection;
+        }
+
         auto indices = level.content.getIndices();
-        if (auto def = indices->blocks.get(player.selection.vox.id)) {
+        if (auto def = indices->blocks.get(vox.id)) {
             return L"Name: " + util::str2wstr_utf8(def->name);
         } else {
             return std::wstring {L"Name: void"};
         }
     }));
     panel->add(create_label(gui, [&]() {
+        static entityid_t prevEid = ENTITY_NONE;
         auto eid = player.getSelectedEntity();
+        if (eid == ENTITY_NONE && should_keep_previous(gui)) {
+            eid = prevEid;
+        } else {
+            prevEid = eid;
+        }
+
         if (eid == ENTITY_NONE) {
             return std::wstring {L"Entity: -"};
         } else if (auto entity = level.entities->get(eid)) {
