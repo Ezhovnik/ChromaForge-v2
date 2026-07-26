@@ -301,8 +301,8 @@ void Engine::updateFrontend() {
     gui->postActivate();
 }
 
-void Engine::nextFrame() {
-    windowControl->nextFrame();
+void Engine::nextFrame(bool waitForRefresh) {
+    windowControl->nextFrame(waitForRefresh);
 }
 
 EnginePaths& Engine::getPaths() {
@@ -452,7 +452,7 @@ void Engine::startPauseLoop() {
         if (isHeadless()) {
             platform::sleep(1.0 / params.sps * 1000);
         } else {
-            nextFrame();
+            nextFrame(false);
         }
     }
     if (initialCursorLocked) {

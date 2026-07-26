@@ -9,6 +9,7 @@
 #include <graphics/core/ImageData.h>
 #include <constants.h>
 #include <engine/EnginePaths.h>
+#include <util/platform.h>
 
 namespace {
     static std::unique_ptr<ImageData> load_icon() {
@@ -61,18 +62,22 @@ void WindowControl::saveScreenshot() {
     LOG_INFO("Save screenshot as '{}'", filename.string());
 }
 
-void WindowControl::nextFrame() {
+void WindowControl::nextFrame(bool waitForRefresh) {
     const auto& settings = engine.getSettings();
     auto& window = engine.getWindow();
     auto& input = engine.getInput();
 
-    window.setFramerate(
-        window.isIconified() && settings.display.limitFpsIconified.get()
-            ? 20
-            : settings.display.framerate.get()
-    );
+    if (waitForRefresh) {
+        window.setFramerate(Window::FPS_UNLIMITED);
+    } else {
+        window.setFramerate(
+            window.isIconified() && settings.display.limitFpsIconified.get()
+                ? 20
+                : settings.display.framerate.get()
+        );
+    }
     window.swapBuffers();
-    input.pollEvents();
+    input.pollEvents(waitForRefresh);
 }
 
 void WindowControl::toggleFullscreen() {

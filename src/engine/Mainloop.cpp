@@ -40,7 +40,9 @@ void Mainloop::run() {
             engine.renderFrame();
         }
         engine.postUpdate();
-        engine.nextFrame();
+        engine.nextFrame(
+            dynamic_cast<const MenuScreen*>(engine.getScreen().get()) != nullptr
+        );
     }
     LOG_INFO("Main loop stopped");
 }

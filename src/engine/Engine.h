@@ -106,7 +106,7 @@ public:
     void applicationSpark();
     void updateFrontend();
     void renderFrame();
-    void nextFrame();
+    void nextFrame(bool waitForRefresh);
     void startPauseLoop();
 
     EnginePaths& getPaths();
