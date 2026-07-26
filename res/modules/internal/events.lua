@@ -2,7 +2,14 @@ local events = {
     handlers = {}
 }
 
+local __parse_path = parse_path
+local __pack_is_installed = pack.is_installed
+
 function events.on(event, func)
+    local prefix = __parse_path(event)
+    if prefix ~= "builtin" and not __pack_is_installed(prefix) then
+        error("Pack prefix required")
+    end
     if events.handlers[event] == nil then
         events.handlers[event] = {}
     end

@@ -5,6 +5,7 @@
 #include <memory>
 
 #include <interfaces/Serializable.h>
+#include <interfaces/Process.h>
 
 namespace scripting {
     class IClientProjectScript;
@@ -15,6 +16,7 @@ struct Project : Serializable {
     std::string title;
     std::vector<std::string> basePacks;
     std::unique_ptr<scripting::IClientProjectScript> clientScript;
+    std::unique_ptr<Process> setupCoroutine;
 
     ~Project();
 

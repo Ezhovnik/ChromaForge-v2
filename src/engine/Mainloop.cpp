@@ -34,6 +34,7 @@ void Mainloop::run() {
     LOG_INFO("Main loop started");
     while (!window.isShouldClose()) {
         time.update(window.time());
+        engine.applicationSpark();
         engine.updateFrontend();
         if (!window.isIconified()) {
             engine.renderFrame();

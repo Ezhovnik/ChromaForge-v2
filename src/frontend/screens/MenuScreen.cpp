@@ -12,8 +12,12 @@
 #include <assets/Assets.h>
 #include <content/ContentControl.h>
 
-MenuScreen::MenuScreen(Engine& engine) : Screen(engine) {
-    uicamera = std::make_unique<Camera>(glm::vec3(), engine.getWindow().getSize().y);
+MenuScreen::MenuScreen(
+    Engine& engine
+) : Screen(engine),
+    uicamera(
+        std::make_unique<Camera>(glm::vec3(), engine.getWindow().getSize().y)
+    ) {
     uicamera->perspective = false;
     uicamera->flipped = true;
     uicamera->near = -1.0f;

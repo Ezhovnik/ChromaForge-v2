@@ -114,6 +114,7 @@ public:
 
     void postUpdate();
 
+    void applicationSpark();
     void updateFrontend();
     void renderFrame();
     void nextFrame();
