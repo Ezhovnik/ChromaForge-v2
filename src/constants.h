@@ -74,6 +74,8 @@ inline constexpr int ITEM_ICON_SIZE = 48;
 /** */
 inline constexpr int TRANSLUCENT_BLOCKS_SORT_INTERVAL = 8;
 
+inline constexpr int ATLAS_EXTRUSION = 2;
+
 // ========== Утилитарные функции ==========
 
 /**

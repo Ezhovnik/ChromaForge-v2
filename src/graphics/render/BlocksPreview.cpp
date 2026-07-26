@@ -139,5 +139,5 @@ std::unique_ptr<Atlas> BlocksPreview::build(
     }
     fbo.unbind();
 
-    return builder.build(2);
+    return builder.build(ATLAS_EXTRUSION);
 }

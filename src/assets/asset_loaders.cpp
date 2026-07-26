@@ -226,7 +226,7 @@ asset_loader::postfunc asset_loader::atlas(
 	}
 
 	std::set<std::string> names = builder.getNames();
-	Atlas* atlas = builder.build(2, false).release();
+	Atlas* atlas = builder.build(ATLAS_EXTRUSION, false).release();
 	return [=](auto assets) {
         atlas->prepare();
         assets->store(std::unique_ptr<Atlas>(atlas), name);
@@ -345,7 +345,7 @@ static bool load_animation(
 		}
 
 		// Строим исходный атлас анимации
-		auto srcAtlas = builder.build(2, true);
+		auto srcAtlas = builder.build(ATLAS_EXTRUSION, true);
 
 		if (frameList.empty()) {
 			// Если JSON с кадрами не задан, используем все имена из srcAtlas в порядке добавления

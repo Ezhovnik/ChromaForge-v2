@@ -2,6 +2,7 @@
 
 #include <logic/scripting/lua/lua_commons.h>
 #include <math/UVRegion.h>
+#include <constants.h>
 
 class Texture;
 class ImageData;
@@ -36,7 +37,7 @@ namespace lua {
             return texture;
         }
 
-        void update();
+        void update(int extrusion = ATLAS_EXTRUSION);
 
         void createTexture();
 
