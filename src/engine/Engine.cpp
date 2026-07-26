@@ -28,7 +28,7 @@
 #include <logic/scripting/scripting.h>
 #include <graphics/core/DrawContext.h>
 #include <audio/audio.h>
-#include <constants.h>
+#include <engine/version.h>
 #include <frontend/UIDocument.h>
 #include <graphics/ui/elements/UINode.h>
 #include <content/PacksManager.h>

@@ -9,7 +9,7 @@
 #include <graphics/core/Font.h>
 #include <graphics/core/Atlas.h>
 #include <debug/Logger.h>
-#include <constants.h>
+#include <assets/assets_paths.h>
 #include <graphics/core/ImageData.h>
 #include <assets/asset_loaders.h>
 #include <io/engine_paths.h>

@@ -9,7 +9,9 @@
 #include <util/timeutil.h>
 #include <world/generator/Generator.h>
 #include <util/timeutil.h>
-#include <constants.h>
+#include <voxels/chunk_constants.h>
+#include <voxels/voxel_constants.h>
+#include <content/content_constants.h>
 #include <math/rand.h>
 #include <debug/Logger.h>
 #include <world/generator/VoxelFragment.h>

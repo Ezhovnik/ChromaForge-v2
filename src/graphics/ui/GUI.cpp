@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include <assets/assets_paths.h>
 #include <graphics/ui/elements/UINode.h>
 #include <graphics/ui/elements/Menu.h>
 #include <assets/Assets.h>

@@ -3,7 +3,6 @@
 #include <string>
 
 #include <typedefs.h>
-#include <constants.h>
 #include <data/setting.h>
 
 struct DisplaySettings {

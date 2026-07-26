@@ -14,7 +14,8 @@
 #include <graphics/core/DrawContext.h>
 #include <window/Window.h>
 #include <content/Content.h>
-#include <constants.h>
+#include <graphics/render/render_constants.h>
+#include <graphics/ui/ui_constants.h>
 #include <graphics/core/ImageData.h>
 #include <graphics/commons/Model.h>
 

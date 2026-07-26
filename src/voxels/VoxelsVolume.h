@@ -1,7 +1,8 @@
 #pragma once
 
 #include <typedefs.h>
-#include <constants.h>
+#include <content/content_constants.h>
+#include <voxels/voxel_constants.h>
 #include <voxels/voxel.h>
 
 class VoxelsVolume {

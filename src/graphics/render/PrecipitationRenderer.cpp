@@ -2,6 +2,7 @@
 
 #include <assets/Assets.h>
 #include <assets/assets_util.h>
+#include <voxels/voxel_constants.h>
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Texture.h>
 #include <window/Camera.h>

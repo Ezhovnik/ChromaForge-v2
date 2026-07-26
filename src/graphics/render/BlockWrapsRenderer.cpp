@@ -2,7 +2,7 @@
 
 #include <assets/Assets.h>
 #include <assets/assets_util.h>
-#include <constants.h>
+#include <content/content_constants.h>
 #include <content/Content.h>
 #include <graphics/core/Atlas.h>
 #include <graphics/core/ShaderProgram.h>

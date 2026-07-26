@@ -3,6 +3,7 @@
 #include <limits>
 
 #include <math/rays.h>
+#include <voxels/voxel_constants.h>
 
 static std::vector<blocks_agent::BlockRegisterEvent> block_register_events {};
 

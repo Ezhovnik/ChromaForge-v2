@@ -12,7 +12,7 @@
 #include <core_content_defs.h>
 #include <debug/Logger.h>
 #include <util/command_line.h>
-#include <constants.h>
+#include <engine/version.h>
 
 static void sigterm_handler(int signum) {
     Engine::getInstance().quit();

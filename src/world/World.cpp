@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 
+#include <engine/version.h>
 #include <world/Level.h>
 #include <world/LevelEvents.h>
 #include <world/files/WorldFiles.h>

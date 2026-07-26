@@ -21,7 +21,8 @@
 #include <audio/audio.h>
 #include <coders/GLSLExtension.h>
 #include <coders/commons.h>
-#include <constants.h>
+#include <graphics/render/render_constants.h>
+#include <assets/assets_paths.h>
 #include <graphics/commons/Model.h>
 #include <coders/obj.h>
 #include <objects/rigging.h>

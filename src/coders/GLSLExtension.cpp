@@ -9,7 +9,7 @@
 #include <typedefs.h>
 #include <debug/Logger.h>
 #include <io/engine_paths.h>
-#include <constants.h>
+#include <assets/assets_paths.h>
 #include <coders/BasicParser.h>
 #include <coders/json.h>
 #include <data/dv_util.h>

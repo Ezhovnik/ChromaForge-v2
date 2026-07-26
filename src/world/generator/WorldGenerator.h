@@ -9,7 +9,7 @@
 #include <typedefs.h>
 #include <core_content_defs.h>
 #include <voxels/voxel.h>
-#include <constants.h>
+#include <voxels/chunk_constants.h>
 #include <world/generator/SurroundMap.h>
 #include <world/generator/StructurePlacement.h>
 

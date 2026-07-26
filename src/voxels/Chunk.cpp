@@ -8,6 +8,7 @@
 
 #include <items/Inventory.h>
 #include <voxels/voxel.h>
+#include <voxels/voxel_constants.h>
 #include <lighting/Lightmap.h>
 #include <content/ContentReport.h>
 #include <util/data_io.h>

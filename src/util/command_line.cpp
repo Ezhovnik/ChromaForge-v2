@@ -6,6 +6,7 @@
 
 #include <io/engine_paths.h>
 #include <engine/Engine.h>
+#include <engine/version.h>
 #include <util/ArgsReader.h>
 
 class ArgC {

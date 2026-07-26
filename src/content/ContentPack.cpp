@@ -11,7 +11,7 @@
 #include <io/engine_paths.h>
 #include <core_content_defs.h>
 #include <data/dv.h>
-#include <constants.h>
+#include <engine/version.h>
 #include <core_content_defs.h>
 #include <coders/commons.h>
 

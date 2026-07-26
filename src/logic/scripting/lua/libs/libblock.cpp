@@ -6,6 +6,7 @@
 #include <voxels/Chunk.h>
 #include <voxels/Block.h>
 #include <voxels/voxel.h>
+#include <voxels/voxel_constants.h>
 #include <lighting/Lighting.h>
 #include <content/Content.h>
 #include <logic/BlocksController.h>

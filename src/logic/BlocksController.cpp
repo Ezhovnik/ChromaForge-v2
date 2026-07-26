@@ -15,7 +15,9 @@
 #include <math/rand.h>
 #include <items/Inventories.h>
 #include <debug/Logger.h>
-#include <constants.h>
+#include <voxels/chunk_constants.h>
+#include <content/content_constants.h>
+#include <voxels/voxel_constants.h>
 #include <voxels/blocks_agent.h>
 #include <objects/Player.h>
 #include <objects/Players.h>

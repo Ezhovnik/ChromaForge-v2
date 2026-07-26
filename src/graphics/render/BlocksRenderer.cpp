@@ -2,7 +2,8 @@
 
 #include <graphics/core/Mesh.h>
 #include <math/UVRegion.h>
-#include <constants.h>
+#include <content/content_constants.h>
+#include <voxels/chunk_constants.h>
 #include <content/Content.h>
 #include <voxels/Chunks.h>
 #include <lighting/Lightmap.h>

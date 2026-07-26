@@ -2,7 +2,8 @@
 
 #include <logic/scripting/lua/lua_commons.h>
 #include <math/UVRegion.h>
-#include <constants.h>
+#include <graphics/render/render_constants.h>
+#include <voxels/chunk_constants.h>
 
 class Texture;
 class ImageData;

@@ -7,7 +7,7 @@
 #include <voxels/voxel.h>
 #include <data/dv.h>
 #include <interfaces/Serializable.h>
-#include <constants.h>
+#include <content/content_constants.h>
 #include <util/Interpolation.h>
 
 class Camera;

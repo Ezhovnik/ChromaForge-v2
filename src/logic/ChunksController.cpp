@@ -13,7 +13,7 @@
 #include <world/files/WorldFiles.h>
 #include <world/Level.h>
 #include <world/World.h>
-#include <constants.h>
+#include <voxels/chunk_constants.h>
 #include <debug/Logger.h>
 #include <core_content_defs.h>
 #include <math/voxmaths.h>

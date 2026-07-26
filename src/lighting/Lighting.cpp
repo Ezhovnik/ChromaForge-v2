@@ -11,7 +11,9 @@
 #include <voxels/Block.h>
 #include <core_content_defs.h>
 #include <typedefs.h>
-#include <constants.h>
+#include <voxels/chunk_constants.h>
+#include <content/content_constants.h>
+#include <voxels/voxel_constants.h>
 #include <content/Content.h>
 #include <debug/Logger.h>
 

@@ -10,7 +10,7 @@
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Mesh.h>
 #include <window/Window.h>
-#include <constants.h>
+#include <voxels/chunk_constants.h>
 #include <assets/Assets.h>
 #include <graphics/core/Batch3D.h>
 #include <window/Camera.h>

@@ -10,7 +10,7 @@
 #include <graphics/core/ShaderProgram.h>
 #include <presets/NotePreset.h>
 #include <graphics/core/DrawContext.h>
-#include <constants.h>
+#include <assets/assets_paths.h>
 
 TextsRenderer::TextsRenderer(
     Batch3D& batch, const Assets& assets, const Frustum& frustum

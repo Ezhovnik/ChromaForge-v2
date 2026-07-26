@@ -11,7 +11,7 @@
 #include <objects/rigging.h>
 #include <objects/Entities.h>
 #include <voxels/Chunks.h>
-#include <constants.h>
+#include <content/content_constants.h>
 #include <objects/Entity.h>
 #include <voxels/Block.h>
 #include <voxels/blocks_agent.h>

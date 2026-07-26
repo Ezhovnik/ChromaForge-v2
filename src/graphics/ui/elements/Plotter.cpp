@@ -5,7 +5,7 @@
 #include <graphics/core/DrawContext.h>
 #include <assets/Assets.h>
 #include <util/stringutil.h>
-#include <constants.h>
+#include <assets/assets_paths.h>
 
 using namespace gui;
 

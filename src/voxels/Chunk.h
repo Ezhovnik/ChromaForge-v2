@@ -5,7 +5,7 @@
 #include <memory>
 
 #include <typedefs.h>
-#include <constants.h>
+#include <voxels/chunk_constants.h>
 #include <voxels/voxel.h>
 #include <lighting/Lightmap.h>
 #include <util/SmallHeap.h>

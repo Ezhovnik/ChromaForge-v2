@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include <typedefs.h>
-#include <constants.h>
+#include <content/content_constants.h>
 #include <content/Content.h>
 #include <data/dv.h>
 #include <world/files/world_regions_fwd.h>

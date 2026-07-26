@@ -2,6 +2,7 @@
 #include <memory>
 #include <sstream>
 
+#include <engine/version.h>
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>
 #include <io/engine_paths.h>

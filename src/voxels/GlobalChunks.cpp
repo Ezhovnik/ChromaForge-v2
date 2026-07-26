@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <algorithm>
 
+#include <content/content_constants.h>
+#include <engine/version.h>
 #include <voxels/Chunk.h>
 #include <voxels/Block.h>
 #include <content/Content.h>

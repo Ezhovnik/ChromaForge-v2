@@ -3,7 +3,7 @@
 #include <memory>
 
 #include <content/Content.h>
-#include <constants.h>
+#include <content/content_constants.h>
 #include <io/io.h>
 #include <coders/json.h>
 #include <voxels/Block.h>

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <debug/Logger.h>
+#include <engine/version.h>
 #include <graphics/core/ImageData.h>
 #include <graphics/core/Texture.h>
 #include <settings.h>

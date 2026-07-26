@@ -10,7 +10,7 @@
 
 #include <coders/byte_utils.h>
 #include <coders/json.h>
-#include <constants.h>
+#include <voxels/chunk_constants.h>
 #include <content/Content.h>
 #include <core_content_defs.h>
 #include <items/Inventory.h>

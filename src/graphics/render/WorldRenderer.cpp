@@ -32,7 +32,7 @@
 #include <settings.h>
 #include <frontend/LevelFrontend.h>
 #include <graphics/render/Skybox.h>
-#include <constants.h>
+#include <content/content_constants.h>
 #include <items/Item.h>
 #include <items/ItemStack.h>
 #include <items/Inventory.h>

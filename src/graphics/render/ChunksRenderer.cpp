@@ -4,6 +4,7 @@
 
 #include <graphics/core/Mesh.h>
 #include <graphics/render/BlocksRenderer.h>
+#include <graphics/render/render_constants.h>
 #include <voxels/Chunk.h>
 #include <world/Level.h>
 #include <debug/Logger.h>

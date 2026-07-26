@@ -14,7 +14,8 @@
 #include <content/Content.h>
 #include <math/voxmaths.h>
 #include <typedefs.h>
-#include <constants.h>
+#include <voxels/chunk_constants.h>
+#include <content/content_constants.h>
 #include <voxels/VoxelsVolume.h>
 
 struct AABB;

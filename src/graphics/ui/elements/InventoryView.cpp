@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 
+#include <assets/assets_paths.h>
 #include <graphics/render/BlocksPreview.h>
 #include <frontend/LevelFrontend.h>
 #include <window/input.h>

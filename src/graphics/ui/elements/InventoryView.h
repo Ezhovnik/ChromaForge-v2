@@ -7,7 +7,7 @@
 
 #include <graphics/ui/elements/UINode.h>
 #include <graphics/ui/elements/Container.h>
-#include <constants.h>
+#include <graphics/ui/ui_constants.h>
 #include <typedefs.h>
 #include <items/ItemStack.h>
 
