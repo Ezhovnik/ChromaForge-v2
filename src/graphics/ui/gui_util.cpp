@@ -95,7 +95,7 @@ void guiutil::confirm(
     auto panel = std::make_shared<Panel>(
         gui, glm::vec2(600, 200), glm::vec4(8.0f), 8.0f
     );
-    panel->setGravity(Gravity::center_center);
+    panel->setGravity(Gravity::CenterCenter);
     container->add(panel);
     panel->setColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 

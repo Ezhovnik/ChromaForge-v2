@@ -110,7 +110,7 @@ namespace gui {
         static inline std::string EXCHANGE_SLOT_NAME = "exchange-slot";
     };
 
-    class InventoryView : public gui::Container {
+    class InventoryView final : public gui::Container {
     private:
         const Content* content = nullptr;
 
@@ -122,10 +122,10 @@ namespace gui {
         InventoryView(GUI& gui);
         virtual ~InventoryView();
 
-        virtual void setPos(glm::vec2 pos) override;
+        void setPos(const glm::vec2& pos) override;
 
-        void setOrigin(glm::vec2 origin);
-        glm::vec2 getOrigin() const;
+        void setOrigin(const glm::vec2& origin);
+        const glm::vec2& getOrigin() const;
 
         void setSelected(int index);
 
@@ -133,7 +133,7 @@ namespace gui {
             const std::shared_ptr<Inventory>& inventory,
             const Content* content
         );
-        
+
         void unbind();
 
         std::shared_ptr<SlotView> addSlot(const SlotLayout& layout);

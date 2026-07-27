@@ -40,7 +40,7 @@ void InlineFrame::activate(float delta) {
     Container::activate(delta);
 }
 
-void InlineFrame::setSize(glm::vec2 size) {
+void InlineFrame::setSize(const glm::vec2& size) {
     Container::setSize(size);
     if (root) {
         root->setSize(size);

@@ -31,30 +31,30 @@
 using namespace gui;
 
 static Align align_from_string(std::string_view str, Align def) {
-    if (str == "left") return Align::left;
-    if (str == "center") return Align::center;
-    if (str == "right") return Align::right;
-    if (str == "top") return Align::top;
-    if (str == "bottom") return Align::bottom;
+    if (str == "left") return Align::Left;
+    if (str == "center") return Align::Center;
+    if (str == "right") return Align::Right;
+    if (str == "top") return Align::Top;
+    if (str == "bottom") return Align::Bottom;
     return def;
 }
 
 static Gravity gravity_from_string(const std::string& str) {
     static const std::unordered_map<std::string, Gravity> gravity_names {
-        {"top-left", Gravity::top_left},
-        {"top-center", Gravity::top_center},
-        {"top-right", Gravity::top_right},
-        {"center-left", Gravity::center_left},
-        {"center-center", Gravity::center_center},
-        {"center-right", Gravity::center_right},
-        {"bottom-left", Gravity::bottom_left},
-        {"bottom-center", Gravity::bottom_center},
-        {"bottom-right", Gravity::bottom_right},
+        {"top-left", Gravity::TopLeft},
+        {"top-center", Gravity::TopCenter},
+        {"top-right", Gravity::TopRight},
+        {"center-left", Gravity::CenterLeft},
+        {"center-center", Gravity::CenterCenter},
+        {"center-right", Gravity::CenterRight},
+        {"bottom-left", Gravity::BottomLeft},
+        {"bottom-center", Gravity::BottomCenter},
+        {"bottom-right", Gravity::BottomRight},
     };
     auto found = gravity_names.find(str);
     if (found != gravity_names.end()) return found->second;
 
-    return Gravity::none;
+    return Gravity::None;
 }
 
 static runnable create_runnable(
@@ -73,7 +73,7 @@ static runnable create_runnable(
     return nullptr;
 }
 
-static onaction create_action(
+static OnAction create_action(
     const UIXmlReader& reader,
     const xml::xmlelement& element,
     const std::string& name
@@ -150,7 +150,7 @@ static void read_uinode(
             node.setCursor(cursor);
         }
     }
-    if (auto onclick = create_action(reader, element, "onclick")) node.listenAction(onclick);
+    if (auto onclick = create_action(reader, element, "onclick")) node.listenClick(onclick);
     if (auto onfocus = create_action(reader, element, "onfocus")) node.listenFocus(onfocus);
     if (auto ondefocus = create_action(reader, element, "ondefocus")) node.listenDefocus(ondefocus);
     if (auto ondoubleclick = create_action(reader, element, "ondoubleclick")) node.listenDoubleClick(ondoubleclick);
@@ -328,7 +328,7 @@ static std::shared_ptr<UINode> read_label(
     }
     if (element.has("multiline")) {
         label->setMultiline(element.attr("multiline").asBool());
-        if (!element.has("valign")) label->setVerticalAlign(Align::top);
+        if (!element.has("valign")) label->setVerticalAlign(Align::Top);
     }
     if (element.has("text-wrap")) label->setTextWrapping(element.attr("text-wrap").asBool());
     if (element.has("markup")) label->setMarkup(element.attr("markup").getText());

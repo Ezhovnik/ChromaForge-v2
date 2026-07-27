@@ -38,7 +38,7 @@ namespace gui {
         std::string fontName;
         wstringsupplier supplier = nullptr;
         float lineInterval = 1.5f;
-        Align valign = Align::center;
+        Align valign = Align::Center;
 
         bool multiline = false;
         bool textWrap = true;

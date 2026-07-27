@@ -208,7 +208,7 @@ TextBox::TextBox(
     lineNumbersLabel->setSize(
         size - glm::vec2(padding.z + padding.x, padding.w + padding.y)
     );
-    lineNumbersLabel->setVerticalAlign(Align::top);
+    lineNumbersLabel->setVerticalAlign(Align::Top);
     add(lineNumbersLabel);
 
     setHoverColor(glm::vec4(0.05f, 0.1f, 0.2f, 0.75f));
@@ -540,7 +540,7 @@ bool TextBox::isValid() const {
 void TextBox::setMultiline(bool multiline) {
     this->multiline = multiline;
     label->setMultiline(multiline);
-    label->setVerticalAlign(multiline ? Align::top : Align::center);
+    label->setVerticalAlign(multiline ? Align::Top : Align::Center);
 }
 
 bool TextBox::isMultiline() const {

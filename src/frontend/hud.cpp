@@ -197,7 +197,7 @@ Hud::Hud(
     auto dplotter = std::make_shared<gui::Plotter>(
         guiController, 350, 250, 2000, 16
     );
-    dplotter->setGravity(gui::Gravity::bottom_right);
+    dplotter->setGravity(gui::Gravity::BottomRight);
     dplotter->setInteractive(false);
     add(HudElement(HudElementMode::Permanent, nullptr, dplotter, true));
 

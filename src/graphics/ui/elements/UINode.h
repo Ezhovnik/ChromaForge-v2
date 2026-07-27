@@ -21,9 +21,9 @@ namespace gui {
     class GUI;
     class Container;
 
-    using onaction = std::function<void(GUI&)>;
-    using onnumberchange = std::function<void(GUI&, double)>;
-    using onstringchange = std::function<void(GUI&, const std::string&)>;
+    using OnAction = std::function<void(GUI&)>;
+    using OnNumberChange = std::function<void(GUI&, double)>;
+    using OnStringChange = std::function<void(GUI&, const std::string&)>;
 
     template<typename... Args>
     class CallbacksSet {
@@ -48,31 +48,65 @@ namespace gui {
         }
     };
 
-    using ActionsSet = CallbacksSet<GUI&>;
+    template<class TagT, typename... Args>
+    class TaggedCallbacksSet {
+    public:
+        using Func = std::function<void(Args...)>;
+    private:
+        std::unique_ptr<std::vector<std::pair<TagT, Func>>> callbacks;
+    public:
+        void listen(TagT tag, Func&& callback) {
+            if (callbacks == nullptr) {
+                callbacks = std::make_unique<std::vector<std::pair<TagT, Func>>>();
+            }
+            callbacks->push_back({tag, std::move(callback)});
+        }
+
+        void notify(TagT notifyTag, Args&&... args) {
+            if (callbacks == nullptr) return;
+
+            for (const auto& [tag, callback] : * callbacks) {
+                if (tag != notifyTag) {
+                    continue;
+                }
+                callback(args...);
+            }
+        }
+    };
+
+    enum class UIAction {
+        Click,
+        RightClick,
+        DoubleClick,
+        Focus,
+        Defocus
+    };
+
+    using ActionsSet = TaggedCallbacksSet<UIAction, GUI&>;
     using StringCallbacksSet = CallbacksSet<GUI&, const std::string&>;
 
     enum class Align {
-        left,
-        center,
-        right,
-        top = left,
-        bottom = right
+        Left,
+        Center,
+        Right,
+        Top = Left,
+        Bottom = Right
     };
 
     enum class Gravity {
-        none,
+        None,
 
-        top_left,
-        top_center,
-        top_right,
+        TopLeft,
+        TopCenter,
+        TopRight,
 
-        center_left,
-        center_center,
-        center_right,
+        CenterLeft,
+        CenterCenter,
+        CenterRight,
 
-        bottom_left,
-        bottom_center,
-        bottom_right
+        BottomLeft,
+        BottomCenter,
+        BottomRight
     };
 
     class UINode : public std::enable_shared_from_this<UINode> {
@@ -99,14 +133,11 @@ namespace gui {
         bool focused = false;
         bool interactive = true;
         bool resizing = true;
-        Align align = Align::left;
+        Align align = Align::Left;
         vec2supplier positionfunc = nullptr;
         vec2supplier sizefunc = nullptr;
         UINode* parent = nullptr;
         ActionsSet actions;
-        ActionsSet doubleClickCallbacks;
-        ActionsSet focusCallbacks;
-        ActionsSet defocusCallbacks;
         std::wstring tooltip;
         float tooltipDelay = 0.5f;
         CursorShape cursor = CursorShape::Arrow;
@@ -166,15 +197,16 @@ namespace gui {
         virtual void setZIndex(int idx);
         int getZIndex() const;
 
-        virtual UINode* listenAction(const onaction& action);
-        virtual UINode* listenDoubleClick(const onaction& action);
-        virtual UINode* listenFocus(const onaction& action);
-        virtual UINode* listenDefocus(const onaction& action);
+        virtual void listenClick(OnAction action);
+        virtual void listenRightClick(OnAction action);
+        virtual void listenDoubleClick(OnAction action);
+        virtual void listenFocus(OnAction action);
+        virtual void listenDefocus(OnAction action);
 
         virtual void onFocus();
         virtual void click(int x, int y);
         virtual void doubleClick(int x, int y);
-        virtual void clicked(Mousecode button) {}
+        virtual void clicked(Mousecode button);
         virtual void mouseMove(int x, int y) {};
         virtual void mouseRelease(int x, int y);
         virtual void scrolled(int value);
@@ -196,15 +228,15 @@ namespace gui {
         virtual glm::vec2 getContentOffset() {return glm::vec2(0.0f);};
 
         virtual glm::vec2 calcPos() const;
-        virtual void setPos(glm::vec2 pos);
+        virtual void setPos(const glm::vec2& pos);
         virtual glm::vec2 getPos() const;
 
         glm::vec2 getSize() const;
-        virtual void setSize(glm::vec2 size);
+        virtual void setSize(const glm::vec2& size);
         glm::vec2 getMinSize() const;
-        virtual void setMinSize(glm::vec2 size);
+        virtual void setMinSize(const glm::vec2& size);
         glm::vec2 getMaxSize() const;
-        virtual void setMaxSize(glm::vec2 size);
+        virtual void setMaxSize(const glm::vec2& size);
 
         virtual vec2supplier getPositionFunc() const;
         virtual void setPositionFunc(vec2supplier);

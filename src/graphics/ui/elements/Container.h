@@ -35,9 +35,9 @@ namespace gui {
         virtual void remove(const std::string& id);
         virtual void scrolled(int value) override;
         virtual void setScrollable(bool flag);
-        void listenInterval(float interval, ontimeout callback, int repeat=-1);
+        void listenInterval(float interval, OnTimeOut callback, int repeat=-1);
         virtual glm::vec2 getContentOffset() override {return glm::vec2(0.0f, scroll);};
-        virtual void setSize(glm::vec2 size) override;
+        virtual void setSize(const glm::vec2& size) override;
         virtual void refresh() override;
         void setScroll(int scroll);
         virtual void clear();
