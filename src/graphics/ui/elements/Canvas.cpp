@@ -5,11 +5,12 @@
 #include <graphics/core/Texture.h>
 
 gui::Canvas::Canvas(
-    GUI& gui, ImageFormat inFormat, glm::uvec2 inSize
-) : UINode(gui, inSize) {
-    auto data = std::make_shared<ImageData>(inFormat, inSize.x, inSize.y);
-    mTexture = Texture::from(data.get());
-    mData = std::move(data);
+    GUI& gui, ImageFormat format, glm::uvec2 size
+) : UINode(gui, size)
+{
+    auto data = std::make_shared<ImageData>(format, size.x, size.y);
+    texture = Texture::from(data.get());
+    this->data = std::move(data);
 }
 
 void gui::Canvas::draw(const DrawContext& pctx, const Assets& assets) {
@@ -17,6 +18,12 @@ void gui::Canvas::draw(const DrawContext& pctx, const Assets& assets) {
     auto col = calcColor();
 
     auto batch = pctx.getBatch2D();
-    batch->texture(mTexture.get());
+    batch->texture(texture.get());
     batch->rect(pos.x, pos.y, size.x, size.y, 0, 0, 0, {}, false, false, col);
+}
+
+void gui::Canvas::setSize(glm::vec2 size) {
+    UINode::setSize(size);
+    data->extend(size.x, size.y);
+    texture->reload(*data);
 }

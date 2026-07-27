@@ -17,7 +17,7 @@ public:
 
     virtual void bind() const;
     virtual void unbind() const;
-    void reload(const ubyte* data);
+    void reload(const ubyte* data, uint w, uint h);
     void reload(const ImageData& image);
     void reloadPartial(
         const ImageData& image,
