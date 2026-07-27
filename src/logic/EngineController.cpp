@@ -4,6 +4,7 @@
 #include <memory>
 #include <filesystem>
 #include <algorithm>
+#include <sstream>
 
 #include <content/ContentReport.h>
 #include <debug/Logger.h>
