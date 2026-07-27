@@ -27,13 +27,18 @@
 #include <content/Content.h>
 #include <content/ContentPack.h>
 
-static DocumentNode get_document_node_impl(lua::State*, const std::string& name, const std::string& nodeName) {
+static DocumentNode get_document_node_impl(
+    lua::State*, const std::string& name, const std::string& nodeName, bool throwable = true
+) {
     auto doc = scripting::engine->getAssets()->get<UIDocument>(name);
     if (doc == nullptr) {
-        throw std::runtime_error("Document '" + name + "' not found");
+        if (throwable) {
+            throw std::runtime_error("Document '" + name + "' not found");
+        }
+        return {nullptr, nullptr};
     }
     auto node = doc->get(nodeName);
-    if (node == nullptr) {
+    if (node == nullptr && throwable) {
         throw std::runtime_error("Document '" + name + "' has no element with id '" + nodeName + "'");
     }
     return {doc, node};
@@ -377,6 +382,8 @@ static int p_get_content_offset(gui::UINode* node, lua::State* L) {
 }
 
 static int p_get_id(gui::UINode* node, lua::State* L) {
+    if (node == nullptr) return 0;
+
     return lua::pushstring(L, node->getId());
 }
 
@@ -538,6 +545,14 @@ static int p_get_options(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_is_exists(gui::UINode* node, lua::State* L) {
+    return lua::pushboolean(L, node != nullptr);
+}
+
+static bool is_node_required(std::string_view attr) {
+    return attr != "exists";
+}
+
 static int l_gui_getattr(lua::State* L) {
     if (!lua::isstring(L, 1)) {
         throw std::runtime_error("Document name is not a string");
@@ -563,9 +578,11 @@ static int l_gui_getattr(lua::State* L) {
         throw std::runtime_error("Attribute name is not a string");
     }
     auto attr = lua::require_string(L, 3);
+    bool required = is_node_required(attr);
 
     static const std::unordered_map<std::string_view, std::function<int(gui::UINode*, lua::State*)>> getters {
         {"id", p_get_id},
+        {"exists", p_is_exists},
         {"color", p_get_color},
         {"hoverColor", p_get_hover_color},
         {"pressedColor", p_get_pressed_color},
@@ -621,7 +638,7 @@ static int l_gui_getattr(lua::State* L) {
     };
     auto func = getters.find(attr);
     if (func != getters.end()) {
-        auto docnode = get_document_node_impl(L, docname, element);
+        auto docnode = get_document_node_impl(L, docname, element, required);
         auto node = docnode.node;
         return func->second(node.get(), L);
     }
