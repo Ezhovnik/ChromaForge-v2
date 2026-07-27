@@ -40,6 +40,5 @@ endif()
 if(ChromaForge_BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
+    add_subdirectory(vctest)
 endif()
-
-add_subdirectory(vctest)

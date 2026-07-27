@@ -26,7 +26,7 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install libglfw3-dev libglfw3 libglew-dev libopenal-dev libluajit-5.1-dev libvorbis-dev libcurl4-openssl-dev libfmt-dev libspdlog-dev libgtest-dev
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libluajit-5.1.a /usr/lib/x86_64-linux-gnu/liblua-5.1.a
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libluajit-5.1.a /usr/lib/x86_64-linux-gnu/liblua5.1.a
           sudo ln -s /usr/include/luajit-2.1 /usr/include/lua
           git clone --branch v3.16.0 https://github.com/skypjack/entt.git
           cd entt/build
