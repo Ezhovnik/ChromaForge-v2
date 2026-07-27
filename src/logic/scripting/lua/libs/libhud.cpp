@@ -173,6 +173,11 @@ static int l_reload_script(lua::State* L) {
     return 0;
 }
 
+static int l_is_open(lua::State* L) {
+    auto layoutid = lua::require_string(L, 1);
+    return lua::pushboolean(L, scripting::hud->isOpen(layoutid));
+}
+
 const luaL_Reg hudlib [] = {
     {"open_inventory", lua::wrap_hud<l_open_inventory>},
     {"close_inventory", lua::wrap_hud<l_close_inventory>},
@@ -192,5 +197,6 @@ const luaL_Reg hudlib [] = {
     {"_set_debug_cheats", lua::wrap_hud<l_set_debug_cheats>},
     {"set_allow_pause", lua::wrap_hud<l_set_allow_pause>},
     {"reload_script", lua::wrap_hud<l_reload_script>},
+    {"is_open", lua::wrap_hud<l_is_open>},
     {nullptr, nullptr}
 };

@@ -77,7 +77,7 @@ void WindowControl::nextFrame(bool waitForRefresh) {
         );
     }
     window.swapBuffers();
-    input.pollEvents(waitForRefresh);
+    input.pollEvents(waitForRefresh && !window.checkShouldRefresh());
 }
 
 void WindowControl::toggleFullscreen() {

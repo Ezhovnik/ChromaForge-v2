@@ -165,7 +165,8 @@ public:
 
     std::shared_ptr<Inventory> getBlockInventory();
 
-    static bool showGeneratorMinimap;
+    bool isOpen(const std::string& layoutid) const;
 
+    static bool showGeneratorMinimap;
     inline static std::string DEBUG_WORLDGEN_IMAGE = "#debug.img.worldgen";
 };

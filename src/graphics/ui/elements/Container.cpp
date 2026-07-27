@@ -72,6 +72,9 @@ void Container::activate(float delta) {
     for (const auto& node : nodes) {
         if (node->isVisible()) node->activate(delta);
     }
+    if (!intervalEvents.empty()) {
+        gui.getWindow().setShouldRefresh();
+    }
     for (IntervalEvent& event : intervalEvents) {
         event.timer += delta;
         if (event.timer > event.interval) {
@@ -84,7 +87,6 @@ void Container::activate(float delta) {
     intervalEvents.erase(std::remove_if(
         intervalEvents.begin(), intervalEvents.end(),
         [&gui](const IntervalEvent& event) {
-            gui.getWindow().setShouldRefresh();
             return event.repeat == 0;
         }
     ), intervalEvents.end());
