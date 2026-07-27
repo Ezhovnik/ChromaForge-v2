@@ -42,8 +42,9 @@ namespace network {
         int port,
         const ServerDatagramCallback& handler
     );
-}
 
+    int find_free_port();
+}
 
 Network::Network(std::unique_ptr<Requests> requests) : requests(std::move(requests)) {
 }
@@ -89,6 +90,10 @@ Server* Network::getServer(uint64_t id, bool includePrivate) const {
         return nullptr;
     }
     return found->second.get();
+}
+
+int Network::findFreePort() const {
+    return find_free_port();
 }
 
 uint64_t Network::connectTcp(

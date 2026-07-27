@@ -88,6 +88,8 @@ namespace network {
         [[nodiscard]] Connection* getConnection(uint64_t id, bool includePrivate);
         [[nodiscard]] Server* getServer(uint64_t id, bool includePrivate) const;
 
+        int findFreePort() const;
+
         uint64_t connectTcp(
             const std::string& address,
             int port,
