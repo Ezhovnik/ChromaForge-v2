@@ -47,6 +47,7 @@ namespace gui {
         bool editable = true;
         bool autoresize = false;
         bool showLineNumbers = false;
+        bool keepLineSelection = false;
 
         std::string markup;
         std::string syntax;
@@ -166,6 +167,12 @@ namespace gui {
         virtual bool isEdited() const;
         virtual void setUnedited();
 
+        size_t getSelectionStart() const;
+        size_t getSelectionEnd() const;
+
+        void setKeepLineSelection(bool flag);
+        bool isKeepLineSelection() const;
+
         virtual void reposition() override;
         virtual void onFocus() override;
         virtual void refresh() override;
@@ -178,8 +185,6 @@ namespace gui {
         virtual void typed(unsigned int codepoint) override; 
         void paste(const std::wstring& text, bool history=true);
         void erase(size_t start, size_t length);
-        size_t getSelectionStart() const;
-        size_t getSelectionEnd() const;
         virtual void keyPressed(Keycode key) override;
         virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos) override;
     };
