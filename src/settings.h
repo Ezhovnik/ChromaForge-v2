@@ -44,6 +44,7 @@ struct GraphicsSettings {
 	BoolSetting ssao {true};
 	IntegerSetting shadowsQuality {0, 0, 3};
 	IntegerSetting denseRenderDistance {56, 0, 10'000};
+	BoolSetting softLighting {true};
 };
 
 struct PathfindingSettings {

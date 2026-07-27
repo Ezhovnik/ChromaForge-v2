@@ -12,7 +12,7 @@
 #include <util/timeutil.h>
 
 // Направление на солнце (нормализованный вектор) для расчёта затенения граней
-inline constexpr glm::vec3 SUN_VECTOR = {0.528265f, 0.833149f, -0.163704f};
+inline constexpr glm::vec3 SUN_VECTOR = {0.528265, 0.833149, -0.163704};
 const float DIRECTIONAL_LIGHT_FACTOR = 0.3f;
 
 BlocksRenderer::BlocksRenderer(
@@ -39,8 +39,7 @@ BlocksRenderer::BlocksRenderer(
 	blockDefsCache = content.getIndices()->blocks.getDefs();
 }
 
-BlocksRenderer::~BlocksRenderer() {
-}
+BlocksRenderer::~BlocksRenderer() = default;
 
 void BlocksRenderer::vertex(
     const glm::vec3& coord,
@@ -493,6 +492,7 @@ void BlocksRenderer::render(
 ) {
     bool denseRender = this->denseRender;
     bool densePass = this->densePass;
+    bool enableAO = settings.graphics.softLighting.get();
 	for (const auto drawGroup : *content.drawGroups) {
 		int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
@@ -530,7 +530,7 @@ void BlocksRenderer::render(
 						def,
 						vox.state,
 						!def.shadeless,
-						def.ambientOcclusion
+						def.ambientOcclusion && enableAO
 					);
                     break;
                 } case BlockModelType::X: {
@@ -551,7 +551,7 @@ void BlocksRenderer::render(
 						&def,
 						vox.state.rotation,
 						!def.shadeless, 
-						def.ambientOcclusion
+						def.ambientOcclusion && enableAO
 					);
                     break;
                 } case BlockModelType::Custom: {
@@ -561,7 +561,7 @@ void BlocksRenderer::render(
                         def,
                         vox.state,
                         !def.shadeless,
-                        def.ambientOcclusion
+                        def.ambientOcclusion && enableAO
                     );
                     break;
                 } default:
@@ -582,6 +582,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 	size_t totalSize = 0;
 
     bool densePass = this->densePass;
+    bool enableAO = settings.graphics.softLighting.get();
     for (const auto drawGroup : *content.drawGroups) {
         int begin = beginEnds[drawGroup][0];
         if (begin == 0) continue;
@@ -616,7 +617,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 						def,
 						vox.state,
 						!def.shadeless,
-						def.ambientOcclusion
+						def.ambientOcclusion && enableAO
 					);
                     break;
                 case BlockModelType::X: {
@@ -636,7 +637,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 						&def,
 						vox.state.rotation, 
                         !def.shadeless,
-						def.ambientOcclusion
+						def.ambientOcclusion && enableAO
 					);
                     break;
                 }
@@ -646,7 +647,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
                         def,
                         vox.state,
                         !def.shadeless,
-						def.ambientOcclusion
+						def.ambientOcclusion && enableAO
 					);
                     break;
                 }
