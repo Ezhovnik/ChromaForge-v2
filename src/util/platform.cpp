@@ -71,7 +71,7 @@ std::string platform::detect_locale() {
     // Сначала проверяем переменную LC_ALL, затем LANG.
 	const char* lang = getenv("LC_ALL");
     if (!lang || *lang == '\0') lang = getenv("LANG");
-    if (!lang || *lang == '\0') lang = platform::DEFAULT_LOCALE;
+    if (!lang || *lang == '\0') lang = platform::DEFAULT_LOCALE.c_str();
     std::string result(lang);
 
     // Отбрасываем часть с кодировкой после точки
