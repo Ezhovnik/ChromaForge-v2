@@ -5,6 +5,7 @@
 #include <engine/EnginePaths.h>
 #include <network/Network.h>
 #include <util/platform.h>
+#include <window/Window.h>
 
 static int l_start_debug_instance(lua::State* L) {
     int port = lua::tointeger(L, 1);
@@ -25,8 +26,14 @@ static int l_start_debug_instance(lua::State* L) {
     return lua::pushinteger(L, port);
 }
 
+static int l_focus(lua::State* L) {
+    scripting::engine->getWindow().focus();
+    return 0;
+}
+
 const luaL_Reg applib[] = {
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
+    {"focus", lua::wrap<l_focus>},
     // For other functions see libbuiltin.cpp and res/scripts/stdlib.lua
     {nullptr, nullptr}
 };

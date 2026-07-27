@@ -260,6 +260,7 @@ public:
         }
         return keys[Keycode];
     }
+
     bool justPressed(Keycode Keycode) const override {
         return isPressed(Keycode) && frames[static_cast<int>(Keycode)] == currentFrame;
     }
@@ -457,6 +458,10 @@ public:
 
     WindowMode getMode() const override {
         return mode;
+    }
+
+    void focus() override {
+        glfwFocusWindow(window);
     }
 
     void setTitle(const std::string& title) override {
