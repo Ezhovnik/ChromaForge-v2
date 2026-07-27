@@ -315,6 +315,21 @@ int lua::create_environment(lua::State* L, int parent) {
     return id;
 }
 
+int lua::restore_pack_environment(lua::State* L, const std::string& packid) {
+    if(!lua::getglobal(L, "__chroma__pack_envs")) return -1;
+
+    int id = nextEnvironment++;
+
+    if (lua::getfield(L, packid)) {
+        // envname = env
+        setglobal(L, env_name(id));
+        lua::pop(L);
+        return id;
+    }
+    lua::pop(L);
+    return -1;
+}
+
 void lua::remove_environment(lua::State* L, int id) {
     if (id == 0) return;
 

@@ -113,7 +113,6 @@ events = require "builtin:internal/events"
 
 function pack.unload(prefix)
     events.remove_by_prefix(prefix)
-    __chroma__pack_envs[prefix] = nil
 end
 
 function __chroma_start_app_script(path)
