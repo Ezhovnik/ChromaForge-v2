@@ -280,7 +280,7 @@ public:
         if (int res = getaddrinfo(
             address.c_str(), nullptr, &hints, &addrinfo
         )) {
-            std::string errorMessage = gai_strerrorA(res);
+            std::string errorMessage = gai_strerror(res);
             if (errorCallback) {
                 errorCallback(errorMessage);
             }
@@ -458,7 +458,7 @@ static sockaddr_in resolve_address_dgram(const std::string& address, int port) {
     if (int res = getaddrinfo(
         address.c_str(), nullptr, &hints, &addrinfo
     )) {
-        THROW_ERR("{}", gai_strerrorA(res));
+        THROW_ERR("{}", gai_strerror(res));
     }
 
     std::memcpy(&serverAddr, addrinfo->ai_addr, sizeof(sockaddr_in));
