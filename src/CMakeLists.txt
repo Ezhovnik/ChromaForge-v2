@@ -6,8 +6,6 @@ list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 add_library(ChromaForgeSrc STATIC ${sources} ${headers})
 
-find_package(PkgConfig REQUIRED)
-
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenAL REQUIRED)
@@ -21,6 +19,8 @@ find_package(entt CONFIG QUIET)
 if(NOT EnTT_FOUND AND NOT entt_FOUND)
     message(STATUS "EnTT CMake config not found, assuming compiler finds headers directly")
 endif()
+
+find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(VORBIS REQUIRED IMPORTED_TARGET vorbis vorbisfile vorbisenc)
 pkg_check_modules(LUAJIT REQUIRED IMPORTED_TARGET luajit)
