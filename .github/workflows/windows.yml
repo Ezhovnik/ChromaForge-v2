@@ -1,0 +1,57 @@
+name: Windows Build (MSVC)
+
+on:
+  push:
+    branches: [ "main", "release-**" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+    inputs:
+      build_name:
+        required: true
+        type: string
+        description: 'Build name passed as VC_BUILD_NAME define'
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bootstrap vcpkg
+        shell: pwsh
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat
+
+      - name: Configure and build with CMake + vcpkg
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}\vcpkg
+        run: |
+          cmake --preset default-vs-msvc-windows
+          cmake --build --preset "MSVC Release" --config Release
+
+      - name: Run tests
+        run: ctest --preset default-vs-msvc-windows
+
+      - name: Run Lua integration tests
+        run: |
+          build\vctest\Release\vctest.exe -e build\Release\ChromaForge.exe -d dev\tests -u build
+        timeout-minutes: 1
+
+      - name: Package for Windows
+        shell: pwsh
+        run: |
+          mkdir packaged -Force
+          Copy-Item "build\Release\*" "packaged\" -Recurse -ErrorAction SilentlyContinue
+          Copy-Item "build\vctest\Release\vctest.exe" "packaged\" -ErrorAction SilentlyContinue
+          Copy-Item "$env:SystemRoot\System32\msvcp140.dll" "packaged\" -ErrorAction SilentlyContinue
+          Copy-Item "$env:SystemRoot\System32\vcruntime140.dll" "packaged\" -ErrorAction SilentlyContinue
+          Copy-Item "build\Release\res" "packaged\res" -Recurse -ErrorAction SilentlyContinue
+          Move-Item "packaged\ChromaForge.exe" "packaged\ChromaForge.exe" -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Windows-Build
+          path: 'packaged\*'

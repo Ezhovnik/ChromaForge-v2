@@ -1,0 +1,57 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "default-vs-msvc-windows",
+            "condition": {
+                "type": "equals",
+                "rhs": "${hostSystemName}",
+                "lhs": "Windows"
+            },
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "ChromaForge_BUILD_TESTS": "ON"
+            }
+        },
+        {
+            "name": "default-ninja-mingw-windows",
+            "condition": {
+                "type": "equals",
+                "rhs": "${hostSystemName}",
+                "lhs": "Windows"
+            },
+            "generator": "Ninja Multi-Config",
+            "binaryDir": "${sourceDir}/build-mingw",
+            "cacheVariables": {
+                "ChromaForge_BUILD_TESTS": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "MSVC Debug",
+            "configurePreset": "default-vs-msvc-windows",
+            "configuration": "Debug"
+        },
+        {
+            "name": "MSVC Release",
+            "configurePreset": "default-vs-msvc-windows",
+            "configuration": "Release"
+        },
+        {
+            "name": "MinGW Debug",
+            "configurePreset": "default-ninja-mingw-windows",
+            "configuration": "Debug"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "default-vs-msvc-windows",
+            "configurePreset": "default-vs-msvc-windows",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}

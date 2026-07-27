@@ -1,1 +1,30 @@
-build
+/build
+/build-mingw
+/cmake-build-*/
+
+# IDE
+.idea/
+.vs/
+.vscode/
+*.user
+*.sln
+*.vcxproj
+*.filters
+
+# Runtime artifacts
+/worlds/
+/settings.toml
+/controls.toml
+/controls.json
+/latest.log
+/screenshots/
+
+# vcpkg
+/vcpkg_installed/
+
+# macOS
+.DS_Store
+
+# AppImage
+/AppDir/
+/appimage-build/

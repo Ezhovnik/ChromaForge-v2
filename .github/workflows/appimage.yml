@@ -1,0 +1,61 @@
+name: x86-64 AppImage
+
+on:
+  push:
+    branches: [ "main", "release-**" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+    inputs:
+      build_name:
+        required: true
+        type: string
+        description: 'Build name passed as VC_BUILD_NAME define'
+
+jobs:
+  build-appimage:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libglfw3-dev libglfw3 libglew-dev \
+            libopenal-dev libluajit-5.1-dev libvorbis-dev \
+            libcurl4-openssl-dev libfmt-dev libspdlog-dev cmake squashfs-tools
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libluajit-5.1.a /usr/lib/x86_64-linux-gnu/liblua5.1.a
+          sudo ln -s /usr/include/luajit-2.1 /usr/include/lua
+          git clone --branch v3.16.0 https://github.com/skypjack/entt.git
+          cd entt/build
+          cmake -DCMAKE_BUILD_TYPE=Release -DENTT_INSTALL=on ..
+          sudo make install
+          cd ../..
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DChromaForge_BUILD_APPDIR=ON -DChromaForge_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build -t install
+
+      - name: Run tests
+        run: ctest --test-dir build
+
+      - name: Run Lua integration tests
+        run: |
+          chmod +x build/vctest/vctest build/ChromaForge
+          build/vctest/vctest -e build/ChromaForge -d dev/tests -u build
+        timeout-minutes: 1
+
+      - name: Build AppImage
+        uses: AppImageCrafters/build-appimage-action@fe2205a4d6056be47051f7b1b3811106e9814910
+        env:
+          UPDATE_INFO: gh-releases-zsync|Ezhovnik|ChromaForge-v2|latest|*x86_64.AppImage.zsync
+        with:
+          recipe: dev/AppImageBuilder.yml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AppImage
+          path: './*.AppImage*'
