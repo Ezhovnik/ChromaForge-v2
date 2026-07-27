@@ -21,7 +21,7 @@ jobs:
 
       - name: Install dependencies from Homebrew
         run: |
-          brew install glfw3 glew openal-soft luajit libvorbis skypjack/entt/entt googletest
+          brew install glfw3 glew openal-soft luajit libvorbis skypjack/entt/entt googletest fmt spdlog
 
       - name: Configure
         run: |
