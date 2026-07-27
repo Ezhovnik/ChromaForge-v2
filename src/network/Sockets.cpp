@@ -107,6 +107,7 @@ class SocketTcpConnection : public TcpConnection {
     std::vector<char> readBatch;
     util::Buffer<char> buffer;
     std::mutex mutex;
+    std::string errorMessage;
 
     void connectSocket() {
         state = ConnectionState::Connecting;
@@ -116,7 +117,8 @@ class SocketTcpConnection : public TcpConnection {
             auto error = handle_socket_error("Connect failed");
             closesocket(descriptor);
             state = ConnectionState::Closed;
-            LOG_ERROR("{}", error.what());
+            errorMessage = error.what();
+            LOG_ERROR("{}", errorMessage);
             return;
         }
         LOG_INFO("Connected to {}", to_string(addr));
@@ -182,13 +184,15 @@ public:
         thread = std::make_unique<std::thread>([this]() { startListen();});
     }
 
-    void connect(runnable callback) override {
-        thread = std::make_unique<std::thread>([this, callback]() {
+    void connect(runnable callback, stringconsumer errorCallback) override {
+        thread = std::make_unique<std::thread>([this, callback, errorCallback]() {
             connectSocket();
             if (state == ConnectionState::Connected) {
                 callback();
+                startListen();
+            } else {
+                errorCallback(errorMessage);
             }
-            startListen();
         });
     }
 
@@ -262,7 +266,10 @@ public:
     }
 
     static std::shared_ptr<SocketTcpConnection> connect(
-        const std::string& address, int port, runnable callback
+        const std::string& address,
+        int port,
+        runnable callback,
+        stringconsumer errorCallback
     ) {
         addrinfo hints {};
 
@@ -273,7 +280,11 @@ public:
         if (int res = getaddrinfo(
             address.c_str(), nullptr, &hints, &addrinfo
         )) {
-            THROW_ERR("{}", gai_strerrorA(res));
+            std::string errorMessage = gai_strerrorA(res);
+            if (errorCallback) {
+                errorCallback(errorMessage);
+            }
+            THROW_ERR("{}", errorMessage);
         }
 
         sockaddr_in serverAddress;
@@ -283,10 +294,14 @@ public:
 
         SOCKET descriptor = socket(AF_INET, SOCK_STREAM, 0);
         if (descriptor == -1) {
-            THROW_ERR("Could not create socket");
+            std::string errorMessage = "Could not create socket";
+            if (errorCallback) {
+                errorCallback(errorMessage);
+            }
+            THROW_ERR("{}", errorMessage);
         }
         auto socket = std::make_shared<SocketTcpConnection>(descriptor, std::move(serverAddress));
-        socket->connect(std::move(callback));
+        socket->connect(std::move(callback), std::move(errorCallback));
         return socket;
     }
 
@@ -663,9 +678,14 @@ public:
 
 namespace network {
     std::shared_ptr<TcpConnection> connect_tcp(
-        const std::string& address, int port, runnable callback
+        const std::string& address,
+        int port,
+        runnable callback,
+        stringconsumer errorCallback
     ) {
-        return SocketTcpConnection::connect(address, port, std::move(callback));
+        return SocketTcpConnection::connect(
+            address, port, std::move(callback), std::move(errorCallback)
+        );
     }
 
     std::shared_ptr<TcpServer> open_tcp_server(

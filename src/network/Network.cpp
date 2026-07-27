@@ -18,7 +18,10 @@ namespace network {
     std::unique_ptr<Requests> create_curl_requests();
 
     std::shared_ptr<TcpConnection> connect_tcp(
-        const std::string& address, int port, runnable callback
+        const std::string& address,
+        int port,
+        runnable callback,
+        stringconsumer errorCallback
     );
 
     std::shared_ptr<TcpServer> open_tcp_server(
@@ -88,11 +91,18 @@ Server* Network::getServer(uint64_t id, bool includePrivate) const {
     return found->second.get();
 }
 
-uint64_t Network::connectTcp(const std::string& address, int port, consumer<uint64_t> callback) {
+uint64_t Network::connectTcp(
+    const std::string& address,
+    int port,
+    consumer<uint64_t> callback,
+    ConnectErrorCallback errorCallback
+) {
     std::lock_guard lock(connectionsMutex);
     uint64_t id = nextConnection++;
     auto socket = connect_tcp(address, port, [id, callback]() {
         callback(id);
+    }, [id, errorCallback](auto errorMessage) {
+        errorCallback(id, errorMessage);
     });
     connections[id] = std::move(socket);
     return id;

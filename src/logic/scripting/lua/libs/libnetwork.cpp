@@ -12,11 +12,13 @@ enum NetworkEventType {
     CONNECTED_TO_SERVER,
     DATAGRAM,
     RESPONSE,
+    ConnectionError
 };
 
 struct ConnectionEventDto {
     uint64_t server;
     uint64_t client;
+    std::string comment {};
 };
 
 struct ResponseEventDto {
@@ -286,6 +288,11 @@ static int l_connect_tcp(lua::State* L, network::Network& network) {
             CONNECTED_TO_SERVER,
             ConnectionEventDto {0, cid}
         ));
+    }, [](uint64_t cid, std::string errorMessage) {
+        push_event(NetworkEvent(
+            ConnectionError,
+            ConnectionEventDto {0, cid, std::move(errorMessage)}
+        ));
     });
     return lua::pushinteger(L, id);
 }
@@ -442,7 +449,8 @@ static int l_pull_events(lua::State* L, network::Network& network) {
         const auto& event = local_queue[i];
         switch (event.type) {
             case CLIENT_CONNECTED:
-            case CONNECTED_TO_SERVER: {
+            case CONNECTED_TO_SERVER:
+            case ConnectionError: {
                 const auto& dto = std::get<ConnectionEventDto>(event.payload);
                 lua::pushinteger(L, event.type);
                 lua::rawseti(L, 1);
@@ -452,6 +460,9 @@ static int l_pull_events(lua::State* L, network::Network& network) {
 
                 lua::pushinteger(L, dto.client);
                 lua::rawseti(L, 3);
+
+                lua::pushlstring(L, dto.comment);
+                lua::rawseti(L, 4);
                 break;
             }
             case DATAGRAM: {
