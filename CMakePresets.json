@@ -11,6 +11,7 @@
             "generator": "Visual Studio 17 2022",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "ChromaForge_BUILD_TESTS": "ON"
             }
         },
@@ -24,6 +25,7 @@
             "generator": "Ninja Multi-Config",
             "binaryDir": "${sourceDir}/build-mingw",
             "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "ChromaForge_BUILD_TESTS": "OFF"
             }
         }
