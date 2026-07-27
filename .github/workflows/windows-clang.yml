@@ -1,0 +1,70 @@
+name: Windows Build (MinGW + Clang)
+
+on:
+  push:
+    branches: [ "main", "release-**" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+    inputs:
+      build_name:
+        required: true
+        type: string
+        description: 'Build name passed as VC_BUILD_NAME define'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        name: Setup MSYS2
+        with:
+          msystem: clang64
+          install: >-
+            mingw-w64-clang-x86_64-toolchain
+            mingw-w64-clang-x86_64-cmake
+            git
+
+      - name: Set up vcpkg
+        shell: msys2 {0}
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          ./bootstrap-vcpkg.bat
+          ./vcpkg integrate install
+          cd ..
+
+      - name: Configure and build with CMake + vcpkg
+        env:
+          VCPKG_DEFAULT_TRIPLET: x64-mingw-static
+          VCPKG_DEFAULT_HOST_TRIPLET: x64-mingw-static
+        shell: msys2 {0}
+        run: |
+          export VCPKG_ROOT=$(pwd)/vcpkg
+          cmake --preset default-ninja-mingw-windows -DCMAKE_BUILD_TYPE=Release \
+            -DVCPKG_TARGET_TRIPLET=x64-mingw-static \
+            -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake --build build-mingw --config Release
+
+      - name: Run Lua integration tests
+        shell: msys2 {0}
+        working-directory: ${{ github.workspace }}
+        run: |
+          build-mingw/vctest/vctest.exe -e build-mingw/ChromaForge.exe -d dev/tests -u build-mingw
+        timeout-minutes: 1
+
+      - name: Package for Windows
+        shell: msys2 {0}
+        run: |
+          mkdir packaged
+          cp build-mingw/ChromaForge.exe packaged/
+          cp build-mingw/*.dll packaged/ 2>/dev/null || true
+          cp -r build-mingw/res packaged/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Windows-MinGW-Build
+          path: packaged/*

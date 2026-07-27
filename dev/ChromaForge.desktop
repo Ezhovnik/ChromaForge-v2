@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ChromaForge
+Comment=Voxel engine inspired by Minecraft and Hytale
+Categories=Game;
+Exec=ChromaForge --dir %%F --res %%F/res
+Icon=ChromaForge
+Terminal=false
+StartupNotify=true

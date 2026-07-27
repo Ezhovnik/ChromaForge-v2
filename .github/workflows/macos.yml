@@ -1,0 +1,58 @@
+name: macOS Build
+
+on:
+  push:
+    branches: [ "main", "release-**" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+    inputs:
+      build_name:
+        required: true
+        type: string
+        description: 'Build name passed as VC_BUILD_NAME define'
+
+jobs:
+  build-dmg:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies from Homebrew
+        run: |
+          brew install glfw3 glew openal-soft luajit libvorbis skypjack/entt/entt googletest
+
+      - name: Configure
+        run: |
+          cmake -DOPENAL_INCLUDE_DIR=$(brew --prefix openal-soft)/include \
+           -DOPENAL_LIBRARY=$(brew --prefix openal-soft)/lib/libopenal.dylib \
+           -S . -B build -DCMAKE_BUILD_TYPE=Release -DChromaForge_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run tests
+        run: ctest --output-on-failure --test-dir build
+
+      - name: Run Lua integration tests
+        timeout-minutes: 1
+        run: |
+          chmod +x build/vctest/vctest build/ChromaForge
+          build/vctest/vctest -e build/ChromaForge -d dev/tests -u build
+
+      - name: Fix dylibs
+        run: chmod +x dev/fix_dylibs.sh && ./dev/fix_dylibs.sh ChromaForge Release build
+
+      - name: Create DMG
+        run: |
+          mkdir ChromaForgeDMG
+          cp -r build/res ChromaForgeDMG/
+          cp build/ChromaForge ChromaForgeDMG/
+          cp -r build/libs ChromaForgeDMG/libs 2>/dev/null || true
+          hdiutil create ChromaForge-MacOS.dmg -volname "ChromaForge" -srcfolder ChromaForgeDMG -ov -format UDZO
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ChromaForgeMacOs
+          path: ChromaForge-MacOS.dmg
