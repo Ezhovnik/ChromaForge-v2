@@ -45,6 +45,9 @@ public:
 
     EnginePaths(CoreParameters& params);
 
+    std::filesystem::path getResourcesFolder() const;
+    std::filesystem::path getUserFilesFolder() const;
+
     io::path getWorldFolderByName(const std::string& name);
     io::path getWorldsFolder() const;
 
