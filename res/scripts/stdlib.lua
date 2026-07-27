@@ -47,6 +47,7 @@ local function complete_app_lib(app)
     end
     app.reset_content = builtin.reset_content
     app.is_content_loaded = builtin.is_content_loaded
+    app.set_title = builtin.set_title
 
     function app.config_packs(packs_list)
         packs_list = pack.assemble(packs_list)

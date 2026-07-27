@@ -32,7 +32,8 @@ WindowControl::Result WindowControl::initialize() {
     auto& settings = engine.getSettings();
 
     std::string title = project.title;
-    if (title.empty()) title = "ChromaForge v" + ENGINE_VERSION_STRING;
+    if (!title.empty()) title += " - ";
+    title += "ChromaForge v" + ENGINE_VERSION_STRING;
     if (ENGINE_DEBUG_BUILD) title += " [development build]";
     if (engine.getDebuggingServer()) title = "[debugging] " + title;
 
