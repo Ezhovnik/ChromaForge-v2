@@ -220,15 +220,35 @@ function require(path)
     return __load_script(prefix .. ":modules/" .. file .. ".lua", nil, env)
 end
 
-function __scripts_cleanup()
+local function join(t, sep)
+    local s = ""
+    for i, v in ipairs(t) do
+        s = s..tostring(v)
+        if i < #t then
+            s = s..sep
+        end
+    end
+    return s
+end
+
+function __scripts_cleanup(non_reset_packs)
     debug.info("Cleaning scripts cache")
+    if #non_reset_packs == 0 then
+        debug.info("No non-reset packs")
+    else
+        debug.info("Non-reset packs: "..join(non_reset_packs, ", "))
+    end
     for k, v in pairs(__cached_scripts) do
         local packname, _ = parse_path(k)
+        if table.has(non_reset_packs, packname) then
+            goto continue
+        end
         if packname ~= "builtin" then
             debug.info("Unloaded "..k)
             __cached_scripts[k] = nil
             package.loaded[k] = nil
         end
+        ::continue::
     end
 end
 

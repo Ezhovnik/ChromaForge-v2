@@ -32,7 +32,9 @@ public:
 
     std::vector<std::string>& getBasePacks();
 
-    void resetContent();
+    void resetContent(
+        const std::vector<std::string>& nonReset
+    );
 
     void loadContent(
         const std::vector<std::string>& names
