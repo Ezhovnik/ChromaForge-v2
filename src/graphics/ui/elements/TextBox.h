@@ -60,7 +60,6 @@ namespace gui {
 
         size_t normalizeIndex(int index);
 
-        int calcIndexAt(int x, int y) const;
         void setTextOffset(uint x);
         bool eraseSelected();
         void resetSelection();
@@ -125,8 +124,10 @@ namespace gui {
         virtual void select(int start, int end);
 
         virtual uint getLineAt(size_t position) const;
-
         virtual size_t getLinePos(uint line) const;
+
+        int calcIndexAt(int x, int y) const;
+        int getLineYOffset(int line) const;
 
         virtual bool validate();
 
