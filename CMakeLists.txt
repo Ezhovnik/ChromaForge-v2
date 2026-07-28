@@ -11,19 +11,12 @@ option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
-if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # Debug: which vcpkg library adds -Wl,-E via INTERFACE_LINK_OPTIONS?
-    foreach(lib fmt::fmt spdlog::spdlog glfw CURL::libcurl PkgConfig::VORBIS PkgConfig::LUAJIT GLEW::GLEW OpenAL::OpenAL ZLIB::ZLIB)
-        if(TARGET ${lib})
-            get_target_property(_opts ${lib} INTERFACE_LINK_OPTIONS)
-            message(STATUS "[MinGW+Clang] ${lib} INTERFACE_LINK_OPTIONS = '${_opts}'")
-        endif()
-    endforeach()
-endif()
-
 target_link_libraries(ChromaForge
     PRIVATE
         ChromaForgeSrc
+        # Linked explicitly (not via ChromaForgeSrc) to avoid propagating
+        # INTERFACE_LINK_OPTIONS that may include -Wl,-E (rejected by LLD on PE/COFF).
+        glfw
         $<$<PLATFORM_ID:Windows>:winmm>
         $<$<PLATFORM_ID:Windows>:ws2_32>
 )
