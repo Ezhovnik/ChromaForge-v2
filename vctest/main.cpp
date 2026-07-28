@@ -190,9 +190,12 @@ static bool run_test(const Config& config, const std::filesystem::path& path, bo
     std::cout << "Executing test " << name << "\nCommand: " << command << std::endl;
 
     auto start = high_resolution_clock::now();
-    // FIXME: only for Windows!
+#ifdef _WIN32
     std::string wrapped = "cmd /c \"" + command + "\"";
     int code = system(wrapped.c_str());
+#else
+    int code = system(command.c_str());
+#endif
     auto testTime = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 
     if (code) {
