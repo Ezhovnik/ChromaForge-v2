@@ -54,16 +54,16 @@ jobs:
         shell: msys2 {0}
         working-directory: ${{ github.workspace }}
         run: |
-          build-mingw/vctest/vctest.exe -e build-mingw/ChromaForge.exe -d dev/tests -u build-mingw
+          build-mingw/vctest/Release/vctest.exe -e build-mingw/Release/ChromaForge.exe -d dev/tests -u build-mingw
         timeout-minutes: 1
 
       - name: Package for Windows
         shell: msys2 {0}
         run: |
           mkdir packaged
-          cp build-mingw/ChromaForge.exe packaged/
-          cp build-mingw/*.dll packaged/ 2>/dev/null || true
-          cp -r build-mingw/res packaged/
+          cp build-mingw/Release/ChromaForge.exe packaged/
+          cp build-mingw/Release/*.dll packaged/ 2>/dev/null || true
+          cp -r build-mingw/Release/res packaged/
 
       - uses: actions/upload-artifact@v4
         with:
