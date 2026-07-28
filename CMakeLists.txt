@@ -11,13 +11,6 @@ option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
-if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    find_program(CLANG_GNU_LD NAMES ld.bfd ld.bfd.exe PATHS /mingw64/bin)
-    if(CLANG_GNU_LD)
-        target_link_options(ChromaForge PRIVATE "-fuse-ld=bfd")
-    endif()
-endif()
-
 target_link_libraries(ChromaForge
     PRIVATE
         ChromaForgeSrc
