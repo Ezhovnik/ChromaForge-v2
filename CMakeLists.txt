@@ -12,47 +12,9 @@ add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
 if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set_target_properties(ChromaForge PROPERTIES ENABLE_EXPORTS OFF)
-
-    # Debug: print current state of all linker flag variables
-    message(STATUS "[MinGW+Clang] CMAKE_EXE_LINKER_FLAGS = '${CMAKE_EXE_LINKER_FLAGS}'")
-    message(STATUS "[MinGW+Clang] CMAKE_EXE_LINKER_FLAGS_INIT = '${CMAKE_EXE_LINKER_FLAGS_INIT}'")
-    message(STATUS "[MinGW+Clang] CMAKE_EXE_LINKER_FLAGS_RELEASE = '${CMAKE_EXE_LINKER_FLAGS_RELEASE}'")
-    message(STATUS "[MinGW+Clang] CMAKE_CXX_FLAGS = '${CMAKE_CXX_FLAGS}'")
-    message(STATUS "[MinGW+Clang] CMAKE_CXX_FLAGS_RELEASE = '${CMAKE_CXX_FLAGS_RELEASE}'")
-    message(STATUS "[MinGW+Clang] CMAKE_CXX_LINK_FLAGS = '${CMAKE_CXX_LINK_FLAGS}'")
-    message(STATUS "[MinGW+Clang] CMAKE_CXX_LINK_FLAGS_RELEASE = '${CMAKE_CXX_LINK_FLAGS_RELEASE}'")
-    message(STATUS "[MinGW+Clang] CMAKE_SHARED_LINKER_FLAGS = '${CMAKE_SHARED_LINKER_FLAGS}'")
-    message(STATUS "[MinGW+Clang] CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS = '${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}'")
-    message(STATUS "[MinGW+Clang] CMAKE_CXX_CREATE_CONSOLE_EXE = '${CMAKE_CXX_CREATE_CONSOLE_EXE}'")
-    message(STATUS "[MinGW+Clang] LDFLAGS env = '$ENV{LDFLAGS}'")
-    message(STATUS "[MinGW+Clang] CXXFLAGS env = '$ENV{CXXFLAGS}'")
-    message(STATUS "[MinGW+Clang] CMAKE_EXE_EXPORTS_C_FLAG = '${CMAKE_EXE_EXPORTS_C_FLAG}'")
-    message(STATUS "[MinGW+Clang] CMAKE_EXE_EXPORTS_CXX_FLAG = '${CMAKE_EXE_EXPORTS_CXX_FLAG}'")
-    get_target_property(_link_opts ChromaForge LINK_OPTIONS)
-    get_target_property(_link_flags ChromaForge LINK_FLAGS)
-    message(STATUS "[MinGW+Clang] ChromaForge LINK_OPTIONS = '${_link_opts}'")
-    message(STATUS "[MinGW+Clang] ChromaForge LINK_FLAGS = '${_link_flags}'")
-    get_target_property(_enable_exports ChromaForge ENABLE_EXPORTS)
-    message(STATUS "[MinGW+Clang] ChromaForge ENABLE_EXPORTS = '${_enable_exports}'")
-
-    # Strip -Wl,-E from ALL flag variables (it leaks from various sources on MSYS2 clang64)
-    foreach(var
-        CMAKE_EXE_LINKER_FLAGS
-        CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO
-        CMAKE_EXE_LINKER_FLAGS_RELEASE
-        CMAKE_EXE_LINKER_FLAGS_DEBUG
-        CMAKE_EXE_LINKER_FLAGS_MINSIZEREL
-        CMAKE_CXX_FLAGS
-        CMAKE_CXX_FLAGS_RELWITHDEBINFO
-        CMAKE_CXX_FLAGS_RELEASE
-        CMAKE_CXX_FLAGS_DEBUG
-        CMAKE_CXX_FLAGS_MINSIZEREL
-    )
-        if(DEFINED ${var})
-            string(REPLACE "-Wl,-E" "" ${var} "${${var}}")
-        endif()
-    endforeach()
+    # clang++ MinGW driver adds -Wl,-E / --export-all-symbols to all executable links,
+    # but MSYS2's LLD (PE/COFF mode) rejects -E. Tell the driver to skip it.
+    target_link_options(ChromaForge PRIVATE "--no-export-all-symbols")
 endif()
 
 target_link_libraries(ChromaForge
