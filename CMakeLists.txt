@@ -11,12 +11,6 @@ option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
-if(MINGW)
-    string(REPLACE "-Wl,-E" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}" CACHE STRING "Linker flags" FORCE)
-    target_link_options(ChromaForge PRIVATE "LINKER:--export-all-symbols")
-endif()
-
 target_link_libraries(ChromaForge
     PRIVATE
         ChromaForgeSrc

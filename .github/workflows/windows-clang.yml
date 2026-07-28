@@ -47,7 +47,8 @@ jobs:
           cmake --preset default-ninja-mingw-windows -DCMAKE_BUILD_TYPE=Release \
             -DVCPKG_TARGET_TRIPLET=x64-mingw-static \
             -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake \
-            -DChromaForge_BUILD_TESTS=ON
+            -DChromaForge_BUILD_TESTS=ON \
+            -DCMAKE_EXE_LINKER_FLAGS="-Wl,--export-all-symbols"
           cmake --build build-mingw --config Release
 
       - name: Run Lua integration tests
