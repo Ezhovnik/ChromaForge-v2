@@ -11,7 +11,7 @@
 
 namespace util {
     template<typename T>
-    inline T read_int_le(const uint8_t* src, size_t offset=0) {
+    inline T read_int_le(const uint8_t* src, ptrdiff_t offset=0) {
         T value;
         std::memcpy(&value, src + offset, sizeof(T));
         return dataio::le2h(value);
