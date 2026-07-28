@@ -11,6 +11,13 @@ option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
+if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_link_options(ChromaForge PRIVATE
+        "LINKER:--no-export-all-symbols"
+        "LINKER:--export-all-symbols"
+    )
+endif()
+
 target_link_libraries(ChromaForge
     PRIVATE
         ChromaForgeSrc
