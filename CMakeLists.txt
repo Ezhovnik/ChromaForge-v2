@@ -8,6 +8,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(ChromaForge_BUILD_TESTS "Build unit tests" OFF)
 option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 
+if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    string(REPLACE "-Wl,-E" "-Wl,--export-all-symbols" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+endif()
+
 add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
