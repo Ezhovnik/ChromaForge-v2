@@ -89,7 +89,7 @@ TEST(StructLayout, ConvertWithLoss) {
     ubyte dst[8] {};
     std::vector<Field> dstFields {
         Field {FieldType::CHAR, "text", 3},
-        Field {FieldType::I8, "someint", 1, FieldConvertStrategy::CLAMP},
+        Field {FieldType::I8, "someint", 1, FieldConvertStrategy::Clamp},
     };
     auto dstLayout = StructLayout::create(dstFields);
     auto report = srcLayout.checkCompatibility(dstLayout);
@@ -100,13 +100,13 @@ TEST(StructLayout, ConvertWithLoss) {
     EXPECT_EQ(report.size(), 3);
 
     EXPECT_EQ(report[0].name, "pi");
-    EXPECT_EQ(report[0].type, FieldIncapatibilityType::MISSING);
+    EXPECT_EQ(report[0].type, FieldIncapatibilityType::Missing);
 
     EXPECT_EQ(report[1].name, "someint");
-    EXPECT_EQ(report[1].type, FieldIncapatibilityType::DATA_LOSS);
+    EXPECT_EQ(report[1].type, FieldIncapatibilityType::Data_loss);
 
     EXPECT_EQ(report[2].name, "text");
-    EXPECT_EQ(report[2].type, FieldIncapatibilityType::DATA_LOSS);
+    EXPECT_EQ(report[2].type, FieldIncapatibilityType::Data_loss);
 
     dstLayout.convert(srcLayout, src, dst, true);
 
