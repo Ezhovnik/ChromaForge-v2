@@ -8,6 +8,7 @@ script:
  - cp res/icon/icon3.png AppDir/usr/share/icons/hicolor/256x256/ChromaForge.png
 
 AppDir:
+  path: AppDir
   app_info:
     id: chromaforge
     name: ChromaForge
