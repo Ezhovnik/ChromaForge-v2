@@ -8,20 +8,55 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(ChromaForge_BUILD_TESTS "Build unit tests" OFF)
 option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 
+# ---- find all upstream packages at top level ----
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    find_package(OpenAL CONFIG REQUIRED)
+else()
+    find_package(OpenAL REQUIRED)
+endif()
+find_package(ZLIB REQUIRED)
+find_package(CURL REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(VORBIS REQUIRED IMPORTED_TARGET vorbis vorbisfile vorbisenc)
+pkg_check_modules(LUAJIT REQUIRED IMPORTED_TARGET luajit)
+
+# ---- debug: check which library carries -Wl,-E in INTERFACE_LINK_OPTIONS ----
+if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    foreach(_lib fmt::fmt spdlog::spdlog glfw CURL::libcurl
+                PkgConfig::VORBIS PkgConfig::LUAJIT
+                OpenGL::GL GLEW::GLEW OpenAL::AL OpenAL::OpenAL ZLIB::ZLIB)
+        if(TARGET ${_lib})
+            get_target_property(_opts ${_lib} INTERFACE_LINK_OPTIONS)
+            if(_opts)
+                message(STATUS "[DEBUG] ${_lib} INTERFACE_LINK_OPTIONS = '${_opts}'")
+            endif()
+        endif()
+    endforeach()
+endif()
+
+# ---- build targets ----
 add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
 target_link_libraries(ChromaForge
     PRIVATE
         ChromaForgeSrc
-        # All deps linked explicitly rather than propagated via ChromaForgeSrc
-        # to avoid INTERFACE_LINK_OPTIONS like -Wl,-E that LLD rejects on PE/COFF.
         fmt::fmt
         spdlog::spdlog
         glfw
         PkgConfig::VORBIS
         PkgConfig::LUAJIT
         CURL::libcurl
+        OpenGL::GL
+        GLEW::GLEW
+        OpenAL::OpenAL
+        ZLIB::ZLIB
         $<$<PLATFORM_ID:Windows>:winmm>
         $<$<PLATFORM_ID:Windows>:ws2_32>
 )

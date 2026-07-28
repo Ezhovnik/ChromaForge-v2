@@ -6,29 +6,6 @@ list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 add_library(ChromaForgeSrc STATIC ${sources} ${headers})
 
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    find_package(OpenAL CONFIG REQUIRED)
-else()
-    find_package(OpenAL REQUIRED)
-endif()
-find_package(ZLIB REQUIRED)
-find_package(CURL REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
-find_package(EnTT CONFIG QUIET)
-find_package(entt CONFIG QUIET)
-if(NOT EnTT_FOUND AND NOT entt_FOUND)
-    message(STATUS "EnTT CMake config not found, assuming compiler finds headers directly")
-endif()
-
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(VORBIS REQUIRED IMPORTED_TARGET vorbis vorbisfile vorbisenc)
-pkg_check_modules(LUAJIT REQUIRED IMPORTED_TARGET luajit)
-
 target_include_directories(ChromaForgeSrc PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
