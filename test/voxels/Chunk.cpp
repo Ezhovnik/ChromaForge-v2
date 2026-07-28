@@ -4,7 +4,6 @@
 #include <voxels/Chunk.h>
 
 TEST(Chunk, EncodeDecode) {
-    using namespace voxels;
     Chunk chunk1(0, 0);
     for (uint i = 0; i < CHUNK_VOLUME; i++) {
         chunk1.voxels[i].id = rand();
