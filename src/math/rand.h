@@ -47,8 +47,9 @@ namespace util {
         template<typename T>
         std::enable_if_t<std::is_integral_v<T>, T>
         next(T min, T max) {
-            std::uniform_int_distribution<T> dist(min, max);
-            return dist(m_engine);
+            using WideT = std::conditional_t<sizeof(T) < sizeof(int), int, T>;
+            std::uniform_int_distribution<WideT> dist(static_cast<WideT>(min), static_cast<WideT>(max));
+            return static_cast<T>(dist(m_engine));
         }
 
         /**
