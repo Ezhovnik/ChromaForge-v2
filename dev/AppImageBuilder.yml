@@ -2,9 +2,11 @@ version: 1
 
 script:
  - mkdir -p AppDir/usr/bin
- - mkdir -p AppDir/usr/share/ChromaForge
+ - mkdir -p AppDir/usr/share/ChromaForge/res
+ - mkdir -p AppDir/usr/share/applications
+ - mkdir -p AppDir/usr/share/icons/hicolor/256x256
  - cp build/ChromaForge AppDir/usr/bin/
- - cp -r build/res AppDir/usr/share/ChromaForge/res
+ - cp -r build/res/* AppDir/usr/share/ChromaForge/res/
  - cp dev/ChromaForge.desktop AppDir/usr/share/applications/
  - cp res/icon/icon3.png AppDir/usr/share/icons/hicolor/256x256/ChromaForge.png
 
