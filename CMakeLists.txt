@@ -26,18 +26,13 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(VORBIS REQUIRED IMPORTED_TARGET vorbis vorbisfile vorbisenc)
 pkg_check_modules(LUAJIT REQUIRED IMPORTED_TARGET luajit)
 
-# ---- debug: check which library carries -Wl,-E in INTERFACE_LINK_OPTIONS ----
+# ---- LLD doesn't support -Wl,-E (short for --export-all-symbols on PE/COFF) ----
 if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    foreach(_lib fmt::fmt spdlog::spdlog glfw CURL::libcurl
-                PkgConfig::VORBIS PkgConfig::LUAJIT
-                OpenGL::GL GLEW::GLEW OpenAL::AL OpenAL::OpenAL ZLIB::ZLIB)
-        if(TARGET ${_lib})
-            get_target_property(_opts ${_lib} INTERFACE_LINK_OPTIONS)
-            if(_opts)
-                message(STATUS "[DEBUG] ${_lib} INTERFACE_LINK_OPTIONS = '${_opts}'")
-            endif()
-        endif()
-    endforeach()
+    get_target_property(_luajit_opts PkgConfig::LUAJIT INTERFACE_LINK_OPTIONS)
+    if(_luajit_opts)
+        string(REPLACE "-Wl,-E" "-Wl,--export-all-symbols" _luajit_opts "${_luajit_opts}")
+        set_target_properties(PkgConfig::LUAJIT PROPERTIES INTERFACE_LINK_OPTIONS "${_luajit_opts}")
+    endif()
 endif()
 
 # ---- build targets ----
