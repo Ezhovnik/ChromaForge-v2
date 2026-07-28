@@ -46,8 +46,10 @@ static int l_add_callback(lua::State* L) {
         }
     }
 
-    auto callback = [&gui, actual_callback]() -> bool {
-        if (!gui.isFocusCaught()) {
+    bool isTopLevel = lua::toboolean(L, 4);
+
+    auto callback = [&gui, actual_callback, isTopLevel]() -> bool {
+        if (isTopLevel || !gui.isFocusCaught()) {
             return actual_callback();
         }
         return false;

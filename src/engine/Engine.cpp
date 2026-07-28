@@ -72,6 +72,7 @@ void Engine::onContentLoad() {
     for (auto& pack : content->getAllContentPacks()) {
         auto configFolder = pack.folder / "config";
         auto bindsFile = configFolder / "bindings.toml";
+        LOG_INFO("Loading bindings: {}", bindsFile.string());
         if (io::is_regular_file(bindsFile)) {
             input->getBindings().read(
                 toml::parse(
