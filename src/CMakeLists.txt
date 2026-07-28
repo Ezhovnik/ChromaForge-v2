@@ -42,14 +42,12 @@ target_link_libraries(ChromaForgeSrc
         GLEW::GLEW
         OpenAL::OpenAL
         ZLIB::ZLIB
-    PUBLIC
         fmt::fmt
         spdlog::spdlog
+        glfw
         PkgConfig::VORBIS
         PkgConfig::LUAJIT
         CURL::libcurl
-    PRIVATE
-        glfw
 )
 
 target_compile_options(ChromaForgeSrc
