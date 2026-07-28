@@ -42,6 +42,7 @@ target_link_libraries(ChromaForgeSrc
         GLEW::GLEW
         OpenAL::OpenAL
         ZLIB::ZLIB
+    PUBLIC
         fmt::fmt
         spdlog::spdlog
         glfw
