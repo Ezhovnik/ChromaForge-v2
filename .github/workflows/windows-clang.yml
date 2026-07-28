@@ -37,6 +37,12 @@ jobs:
           ./vcpkg integrate install
           cd ..
 
+      - name: Install GNU ld for Clang MinGW (LLD doesn't accept -E)
+        shell: msys2 {0}
+        run: |
+          pacman -S --noconfirm mingw-w64-x86_64-binutils
+          ln -sf /mingw64/bin/ld.exe /clang64/bin/ld.bfd.exe
+
       - name: Configure and build with CMake + vcpkg
         env:
           VCPKG_DEFAULT_TRIPLET: x64-mingw-static

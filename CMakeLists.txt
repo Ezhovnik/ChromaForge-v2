@@ -12,10 +12,10 @@ add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
 if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_link_options(ChromaForge PRIVATE
-        "LINKER:--no-export-all-symbols"
-        "LINKER:--export-all-symbols"
-    )
+    find_program(CLANG_GNU_LD NAMES ld.bfd ld.bfd.exe PATHS /mingw64/bin)
+    if(CLANG_GNU_LD)
+        target_link_options(ChromaForge PRIVATE "-fuse-ld=bfd")
+    endif()
 endif()
 
 target_link_libraries(ChromaForge
