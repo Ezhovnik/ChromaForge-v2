@@ -8,55 +8,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(ChromaForge_BUILD_TESTS "Build unit tests" OFF)
 option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 
-# ---- find all upstream packages at top level ----
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    find_package(OpenAL CONFIG REQUIRED)
-else()
-    find_package(OpenAL REQUIRED)
-endif()
-find_package(ZLIB REQUIRED)
-find_package(CURL REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(VORBIS REQUIRED IMPORTED_TARGET vorbis vorbisfile vorbisenc)
-pkg_check_modules(LUAJIT REQUIRED IMPORTED_TARGET luajit)
-
-# ---- LLD on clang64 doesn't support flag -E and lacks libdl ----
-if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    get_target_property(_luajit_opts PkgConfig::LUAJIT INTERFACE_LINK_OPTIONS)
-    if(_luajit_opts)
-        string(REPLACE "-Wl,-E" "-Wl,--export-all-symbols" _luajit_opts "${_luajit_opts}")
-        set_target_properties(PkgConfig::LUAJIT PROPERTIES INTERFACE_LINK_OPTIONS "${_luajit_opts}")
-    endif()
-    get_target_property(_luajit_libs PkgConfig::LUAJIT INTERFACE_LINK_LIBRARIES)
-    if(_luajit_libs)
-        list(REMOVE_ITEM _luajit_libs "dl" "-ldl")
-        set_target_properties(PkgConfig::LUAJIT PROPERTIES INTERFACE_LINK_LIBRARIES "${_luajit_libs}")
-    endif()
-endif()
-
-# ---- build targets ----
 add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
 target_link_libraries(ChromaForge
     PRIVATE
         ChromaForgeSrc
-        fmt::fmt
-        spdlog::spdlog
-        glfw
-        PkgConfig::VORBIS
-        PkgConfig::LUAJIT
-        CURL::libcurl
-        OpenGL::GL
-        GLEW::GLEW
-        OpenAL::OpenAL
-        ZLIB::ZLIB
         $<$<PLATFORM_ID:Windows>:winmm>
         $<$<PLATFORM_ID:Windows>:ws2_32>
 )
