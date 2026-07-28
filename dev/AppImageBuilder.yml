@@ -23,7 +23,7 @@ AppDir:
   apt:
     arch: amd64
     sources:
-      - sourceline: deb http://deb.debian.org/debian bookworm main
+      - sourceline: deb [trusted=yes] http://deb.debian.org/debian bookworm main
     include:
       - libglfw3
       - libglew2.2
