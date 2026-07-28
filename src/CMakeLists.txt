@@ -13,6 +13,12 @@ target_include_directories(ChromaForgeSrc SYSTEM PUBLIC
     ${CMAKE_SOURCE_DIR}/include
 )
 
+find_package(EnTT CONFIG QUIET)
+find_package(entt CONFIG QUIET)
+if(NOT EnTT_FOUND AND NOT entt_FOUND)
+    message(STATUS "EnTT CMake config not found, assuming compiler finds headers directly")
+endif()
+
 target_link_libraries(ChromaForgeSrc
     PRIVATE
         OpenGL::GL
