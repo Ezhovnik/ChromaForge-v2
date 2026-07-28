@@ -25,9 +25,14 @@ endif()
 target_link_libraries(ChromaForge
     PRIVATE
         ChromaForgeSrc
-        # Linked explicitly (not via ChromaForgeSrc) to avoid propagating
-        # INTERFACE_LINK_OPTIONS that may include -Wl,-E (rejected by LLD on PE/COFF).
+        # All deps linked explicitly rather than propagated via ChromaForgeSrc
+        # to avoid INTERFACE_LINK_OPTIONS like -Wl,-E that LLD rejects on PE/COFF.
+        fmt::fmt
+        spdlog::spdlog
         glfw
+        PkgConfig::VORBIS
+        PkgConfig::LUAJIT
+        CURL::libcurl
         $<$<PLATFORM_ID:Windows>:winmm>
         $<$<PLATFORM_ID:Windows>:ws2_32>
 )

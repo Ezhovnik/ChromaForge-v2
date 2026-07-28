@@ -11,6 +11,16 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 add_executable(ChromaForgeTest ${sources})
 
 target_link_libraries(ChromaForgeTest PRIVATE ChromaForgeSrc GTest::gtest_main
+    fmt::fmt
+    spdlog::spdlog
+    glfw
+    PkgConfig::VORBIS
+    PkgConfig::LUAJIT
+    CURL::libcurl
+    OpenGL::GL
+    GLEW::GLEW
+    OpenAL::OpenAL
+    ZLIB::ZLIB
     $<$<PLATFORM_ID:Windows>:winmm>
     $<$<PLATFORM_ID:Windows>:ws2_32>
 )
