@@ -7,6 +7,7 @@
 #include <chrono>
 #include <stack>
 #include <vector>
+#include <sstream>
 
 #include <debug/Logger.h>
 #include <graphics/core/ImageData.h>
