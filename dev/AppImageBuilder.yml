@@ -2,6 +2,7 @@ version: 1
 
 script:
  - mkdir -p AppDir/usr/bin
+ - mkdir -p AppDir/usr/share/ChromaForge
  - cp build/ChromaForge AppDir/usr/bin/
  - cp -r build/res AppDir/usr/share/ChromaForge/res
  - cp dev/ChromaForge.desktop AppDir/usr/share/applications/
