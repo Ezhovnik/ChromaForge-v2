@@ -12,9 +12,13 @@ add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
 if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # clang++ MinGW driver adds -Wl,-E / --export-all-symbols to all executable links,
-    # but MSYS2's LLD (PE/COFF mode) rejects -E. Tell the driver to skip it.
-    target_link_options(ChromaForge PRIVATE "--no-export-all-symbols")
+    # Debug: which vcpkg library adds -Wl,-E via INTERFACE_LINK_OPTIONS?
+    foreach(lib fmt::fmt spdlog::spdlog glfw CURL::libcurl PkgConfig::VORBIS PkgConfig::LUAJIT GLEW::GLEW OpenAL::OpenAL ZLIB::ZLIB)
+        if(TARGET ${lib})
+            get_target_property(_opts ${lib} INTERFACE_LINK_OPTIONS)
+            message(STATUS "[MinGW+Clang] ${lib} INTERFACE_LINK_OPTIONS = '${_opts}'")
+        endif()
+    endforeach()
 endif()
 
 target_link_libraries(ChromaForge
