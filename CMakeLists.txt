@@ -12,8 +12,16 @@ add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 
 if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # cmake adds -Wl,-E for MinGW executables, but LLD rejects it
     set_target_properties(ChromaForge PROPERTIES ENABLE_EXPORTS OFF)
+    # Strip -Wl,-E from linker flags if present (LLD doesn't support it for PE targets).
+    # It can leak in via LDFLAGS env var -> CMAKE_EXE_LINKER_FLAGS_INIT -> CMAKE_EXE_LINKER_FLAGS.
+    string(REPLACE "-Wl,-E" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+    foreach(config RELWITHDEBINFO RELEASE DEBUG MINSIZEREL)
+        set(var "CMAKE_EXE_LINKER_FLAGS_${config}")
+        if(DEFINED ${var})
+            string(REPLACE "-Wl,-E" "" ${var} "${${var}}")
+        endif()
+    endforeach()
 endif()
 
 target_link_libraries(ChromaForge
