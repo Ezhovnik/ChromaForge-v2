@@ -13,7 +13,7 @@
 *.filters
 
 # Runtime artifacts
-/worlds/
+/saves/
 /settings.toml
 /controls.toml
 /controls.json
