@@ -26,12 +26,17 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(VORBIS REQUIRED IMPORTED_TARGET vorbis vorbisfile vorbisenc)
 pkg_check_modules(LUAJIT REQUIRED IMPORTED_TARGET luajit)
 
-# ---- LLD doesn't support -Wl,-E (short for --export-all-symbols on PE/COFF) ----
+# ---- LLD on clang64 doesn't support flag -E and lacks libdl ----
 if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     get_target_property(_luajit_opts PkgConfig::LUAJIT INTERFACE_LINK_OPTIONS)
     if(_luajit_opts)
         string(REPLACE "-Wl,-E" "-Wl,--export-all-symbols" _luajit_opts "${_luajit_opts}")
         set_target_properties(PkgConfig::LUAJIT PROPERTIES INTERFACE_LINK_OPTIONS "${_luajit_opts}")
+    endif()
+    get_target_property(_luajit_libs PkgConfig::LUAJIT INTERFACE_LINK_LIBRARIES)
+    if(_luajit_libs)
+        list(REMOVE_ITEM _luajit_libs "dl" "-ldl")
+        set_target_properties(PkgConfig::LUAJIT PROPERTIES INTERFACE_LINK_LIBRARIES "${_luajit_libs}")
     endif()
 endif()
 
