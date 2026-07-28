@@ -10,7 +10,10 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 add_executable(ChromaForgeTest ${sources})
 
-target_link_libraries(ChromaForgeTest PRIVATE ChromaForgeSrc GTest::gtest_main)
+target_link_libraries(ChromaForgeTest PRIVATE ChromaForgeSrc GTest::gtest_main
+    $<$<PLATFORM_ID:Windows>:winmm>
+    $<$<PLATFORM_ID:Windows>:ws2_32>
+)
 
 add_custom_command(
     TARGET ChromaForgeTest
