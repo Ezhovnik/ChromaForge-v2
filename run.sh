@@ -1,4 +1,7 @@
 #!/bin/bash
+set -e
+
+JOBS=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 2)
 
 function delete {
     echo "[RUN SCRIPT] Delete build directory"
@@ -10,7 +13,7 @@ function build {
     mkdir -p build
     cd build
     cmake -DCMAKE_BUILD_TYPE=Release ..
-    cmake --build . -j$(nproc)
+    cmake --build . -j"$JOBS"
     cd ..
 }
 
@@ -20,6 +23,7 @@ function rebuild {
 }
 
 run=true
+built=0
 function norun {
     echo "[RUN SCRIPT] Build without run"
     run=
@@ -38,10 +42,11 @@ function help {
 while [ -n "$1" ]; do
     case "$1" in
         -d | --delete) delete ;;
-        -b | --build) build ;;
-        -r | --rebuild) rebuild ;;
+        -b | --build) build; built=1; norun ;;
+        -r | --rebuild) rebuild; built=1; norun ;;
         -R | --norun) norun ;;
         -h | --help) help
+                     built=1
                      norun
                      break ;;
         *) echo "[RUN SCRIPT] Unknown argument: $1"
@@ -52,7 +57,11 @@ while [ -n "$1" ]; do
     shift
 done
 
-if [[ $run ]]; then
+if [ $built -eq 0 ]; then
+    build
+fi
+
+if [ -n "$run" ]; then
     echo "[RUN SCRIPT] Run project"
     ./build/ChromaForge
 fi

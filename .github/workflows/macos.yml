@@ -21,7 +21,7 @@ jobs:
 
       - name: Install dependencies from Homebrew
         run: |
-          brew install glfw3 glew openal-soft luajit libvorbis skypjack/entt/entt googletest fmt spdlog
+          brew install glfw glew openal-soft luajit libvorbis skypjack/entt/entt googletest fmt spdlog
 
       - name: Configure
         run: |
@@ -30,7 +30,7 @@ jobs:
            -S . -B build -DCMAKE_BUILD_TYPE=Release -DChromaForge_BUILD_TESTS=ON
 
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --parallel
 
       - name: Run tests
         run: ctest --output-on-failure --test-dir build

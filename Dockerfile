@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     git \
     g++ \
     make \
-    cmake \
     pkg-config \
     xauth \
     gdb \
@@ -17,11 +16,11 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libglfw3-dev \
     libglfw3 \
     libglew-dev \
-    libglew2.2 \
     libopenal-dev \
     libluajit-5.1-dev \
     libvorbis-dev \
     libcurl4-openssl-dev \
+    zlib1g-dev \
     libfmt-dev \
     libspdlog-dev \
     ca-certificates \
@@ -36,22 +35,18 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cm
 
 RUN git clone --branch v3.16.0 https://github.com/skypjack/entt.git && \
     cd entt/build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DENTT_INSTALL=on .. && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DENTT_INSTALL=ON .. && \
     make install && \
     cd ../.. && rm -rf entt
 
-RUN ln -s /usr/lib/x86_64-linux-gnu/libluajit-5.1.a /usr/lib/x86_64-linux-gnu/liblua5.1.a \
-    && ln -s /usr/include/luajit-2.1 /usr/include/lua
-
-RUN git clone https://luajit.org/git/luajit.git \
-    && cd luajit \
-    && make && make install INSTALL_INC=/usr/include/lua \
-    && cd .. && rm -rf luajit
+RUN ln -sf /usr/lib/x86_64-linux-gnu/libluajit-5.1.a /usr/lib/x86_64-linux-gnu/liblua5.1.a \
+    && ln -sf /usr/include/luajit-2.1 /usr/include/lua
 
 ARG USER=user
-ARG UID=1000
-ARG GID=1000
-RUN useradd -m ${USER} --uid=${UID}
-USER ${UID}:${GID}
+ARG BUILD_UID=1000
+ARG BUILD_GID=1000
+RUN groupadd --gid=${BUILD_GID} ${USER} && \
+    useradd -m ${USER} --uid=${BUILD_UID} --gid=${BUILD_GID}
+USER ${BUILD_UID}:${BUILD_GID}
 
 WORKDIR /project

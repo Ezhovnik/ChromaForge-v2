@@ -49,8 +49,6 @@ jobs:
           Copy-Item "$env:SystemRoot\System32\msvcp140.dll" "packaged\" -ErrorAction SilentlyContinue
           Copy-Item "$env:SystemRoot\System32\vcruntime140.dll" "packaged\" -ErrorAction SilentlyContinue
           Copy-Item "build\Release\res" "packaged\res" -Recurse -ErrorAction SilentlyContinue
-          Move-Item "packaged\ChromaForge.exe" "packaged\ChromaForge.exe" -Force
-
       - uses: actions/upload-artifact@v4
         with:
           name: Windows-Build

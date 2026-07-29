@@ -12,7 +12,7 @@ on:
       - 'v*'
 
 env:
-  RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name }}
+  RELEASE_VERSION: ${{ github.event.inputs.version || (startsWith(github.ref_name, 'v') && substring(github.ref_name, 1) || github.ref_name) }}
   BRANCH_NAME: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || 'main' }}
 
 jobs:
