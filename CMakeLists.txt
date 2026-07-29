@@ -1,49 +1,33 @@
-cmake_minimum_required(VERSION 3.21)
-project(ChromaForge VERSION 1.0.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.26)
+project(ChromaForge VERSION 0.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(PkgConfig REQUIRED)
+option(ChromaForge_BUILD_TESTS "Build unit tests" OFF)
+option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(OpenAL REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(CURL REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
-find_package(entt CONFIG REQUIRED)
+add_subdirectory(src)
+add_executable(ChromaForge src/main.cpp)
 
-pkg_check_modules(VORBIS REQUIRED IMPORTED_TARGET vorbis vorbisfile vorbisenc)
-pkg_check_modules(LUAJIT REQUIRED IMPORTED_TARGET luajit)
-
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
-add_executable(ChromaForge ${SOURCES})
+if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set_target_properties(ChromaForge PROPERTIES ENABLE_EXPORTS OFF)
+    string(REPLACE "-Wl,-E" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+    foreach(config RELWITHDEBINFO RELEASE DEBUG MINSIZEREL)
+        set(var "CMAKE_EXE_LINKER_FLAGS_${config}")
+        if(DEFINED ${var})
+            string(REPLACE "-Wl,-E" "" ${var} "${${var}}")
+        endif()
+    endforeach()
+endif()
 
 target_link_libraries(ChromaForge
     PRIVATE
-        OpenGL::GL
-        GLEW::GLEW
-        OpenAL::OpenAL
-        ZLIB::ZLIB
-        fmt::fmt
-        spdlog::spdlog
-        glfw
-        PkgConfig::VORBIS
-        PkgConfig::LUAJIT
-        CURL::libcurl
+        ChromaForgeSrc
         $<$<PLATFORM_ID:Windows>:winmm>
         $<$<PLATFORM_ID:Windows>:ws2_32>
 )
-
-target_include_directories(ChromaForge PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/include
-)
-
-file(GLOB_RECURSE RESOURCE_FILES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/res/*")
 
 add_custom_target(copy_resources ALL
     COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:ChromaForge>/res"
@@ -60,4 +44,12 @@ add_custom_target(copy_resources ALL
 )
 add_dependencies(ChromaForge copy_resources)
 
-add_subdirectory(vctest)
+if(ChromaForge_BUILD_APPDIR)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/dev/cmake/BuildAppdir.cmake)
+endif()
+
+if(ChromaForge_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+    add_subdirectory(vctest)
+endif()

@@ -268,7 +268,7 @@ void Entities::renderDebug(
             auto config = skeleton.config;
             const auto& pos = transform.pos;
             const auto& size = transform.size;
-            if (frustum and !frustum->isBoxVisible(pos - size, pos + size)) continue;
+            if (frustum && !frustum->isBoxVisible(pos - size, pos + size)) continue;
             auto bone = config->getRoot();
             debug_render_skeleton(batch, bone, skeleton);
         }

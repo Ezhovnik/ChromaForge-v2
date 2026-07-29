@@ -11,8 +11,16 @@
 
 namespace util {
     template<typename T>
-    inline T read_int_le(const uint8_t* src, size_t offset=0) {
-        return dataio::le2h(*(reinterpret_cast<const T*>(src) + offset));
+    inline T read_int_le(const uint8_t* src, ptrdiff_t offset=0) {
+        T value;
+        std::memcpy(&value, src + offset, sizeof(T));
+        return dataio::le2h(value);
+    }
+
+    template<typename T>
+    inline void write_int_le(uint8_t* dst, T value) {
+        value = dataio::h2le(value);
+        std::memcpy(dst, &value, sizeof(T));
     }
 
     /**
@@ -152,9 +160,9 @@ namespace util {
             entriesCount++;
 
             auto data = buffer.data() + offset;
-            *reinterpret_cast<Tindex*>(data) = dataio::h2le(index);
+            write_int_le<Tindex>(data, index);
             data += sizeof(Tindex);
-            *reinterpret_cast<Tsize*>(data) = dataio::h2le(size);
+            write_int_le<Tsize>(data, size);
             return data + sizeof(Tsize);
         }
 
@@ -202,7 +210,7 @@ namespace util {
             ubyte* dst = out.data();
             const ubyte* src = buffer.data();
 
-            *reinterpret_cast<Tindex*>(dst) = dataio::h2le(entriesCount);
+            write_int_le<Tindex>(dst, entriesCount);
             dst += sizeof(Tindex);
 
             std::memcpy(dst, src, buffer.size());
