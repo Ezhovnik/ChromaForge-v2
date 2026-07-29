@@ -333,6 +333,13 @@ void scripting::on_world_save() {
     }
 }
 
+void scripting::process_before_quit() {
+    auto L = lua::get_main_state();
+    if (lua::getglobal(L, "__chroma_process_before_quit")) {
+        lua::call_nothrow(L, 0, 0);
+    }
+}
+
 void scripting::on_world_quit() {
     auto L = lua::get_main_state();
     for (auto& pack : scripting::content_control->getAllContentPacks()) {
@@ -640,6 +647,7 @@ void scripting::load_content_script(
     funcsset.onblockspark = register_event(env, "on_block_spark", prefix + ".blockspark");
     funcsset.onblocksspark = register_event(env, "on_blocks_spark", prefix + ".blocksspark");
     funcsset.onblockpresent = register_event(env, "on_block_present", prefix + ".blockpresent");
+    funcsset.onblockremoved = register_event(env, "on_block_removed", prefix + ".blockremoved");
 }
 
 void scripting::load_content_script(

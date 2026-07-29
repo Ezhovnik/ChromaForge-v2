@@ -17,6 +17,7 @@ static uint8_t get_events_bits(const Block& def) {
     auto funcsset = def.rt.funcsset;
     bits |= blocks_agent::BlockRegisterEvent::UPDATING_BIT * funcsset.onblockspark;
     bits |= blocks_agent::BlockRegisterEvent::PRESENT_EVENT_BIT * funcsset.onblockpresent;
+    bits |= blocks_agent::BlockRegisterEvent::REMOVED_EVENT_BIT * funcsset.onblockremoved;
     return bits;
 }
 

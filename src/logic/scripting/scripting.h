@@ -86,6 +86,7 @@ namespace scripting {
     void on_world_load(LevelController* controller);
     void on_world_spark(int sps);
     void on_world_save();
+    void process_before_quit();
     void on_world_quit();
     void cleanup(const std::vector<std::string>& nonReset);
     void on_blocks_spark(const Block& block, int sps);

@@ -20,6 +20,7 @@ private:
     std::unique_ptr<ChunksController> chunks;
 
     util::Clock playerSparkClock;
+    Player* localPlayer;
 public:
     LevelController(
         Engine* engine,
@@ -29,6 +30,7 @@ public:
 
     void update(float delta, bool pause);
 
+    void processBeforeQuit();
     void saveWorld();
     void onWorldQuit();
 

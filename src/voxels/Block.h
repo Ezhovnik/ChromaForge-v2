@@ -80,6 +80,7 @@ struct BlockFuncsSet {
     bool onblockspark : 1;
     bool onblocksspark : 1;
     bool onblockpresent : 1;
+    bool onblockremoved : 1;
 };
 
 inline constexpr int BLOCK_MAX_VARIANTS = 16;
