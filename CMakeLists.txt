@@ -14,6 +14,9 @@ option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 
 add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
+if(WIN32)
+    target_sources(ChromaForge PRIVATE dev/ChromaForge.rc)
+endif()
 
 if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set_target_properties(ChromaForge PROPERTIES ENABLE_EXPORTS OFF)
