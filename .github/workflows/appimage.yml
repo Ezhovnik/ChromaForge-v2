@@ -10,7 +10,7 @@ on:
       build_name:
         required: true
         type: string
-        description: 'Build name passed as VC_BUILD_NAME define'
+        description: 'Build name passed as CHROMA_BUILD_NAME define'
 
 jobs:
   build-appimage:
