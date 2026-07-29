@@ -198,8 +198,9 @@ document["worlds-panel"]:clear()
 | data:blit(src: Canvas, dst_x: int, dst_y: int)           | рисует src-холст на указанных координатах                       |
 | data:clear()                                             | очищает холст                                                   |
 | data:clear(*цвет*)                                       | заполняет холст указанным RGBA цветом                           |
+| data:rect(x: int, y: int, w: int, h: int, *цвет*)        | заполняет прямоугольник указанным RGBA цветом                   |
 | data:update()                                            | применяет изменения и загружает холст в видеопамять             |
-| data:set_data(data: bytearray или table<int>)              | заменяет данные пикселей (ширина * высота * 4 чисел)            |
+| data:set_data(data: bytearray или table\<int>)           | заменяет данные пикселей (ширина\*высота\*4 числа)              |
 | data:get_data()                                          | создаёт объект Bytearray с пиксельными данными изображения      |
 | data:create_texture(name: str)                           | создаёт и делится текстурой с рендерером                        |
 | data:unbind_texture()                                    | отвязывает текстуру от холста                                   |

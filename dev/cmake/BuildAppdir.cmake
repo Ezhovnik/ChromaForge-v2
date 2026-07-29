@@ -10,7 +10,5 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/AppDir/usr/share/applications)
 configure_file(${CMAKE_SOURCE_DIR}/dev/ChromaForge.desktop
                ${CMAKE_BINARY_DIR}/AppDir/usr/share/applications/ChromaForge.desktop)
 
-file(COPY ${CMAKE_SOURCE_DIR}/res/icon/icon3.png
+file(COPY ${CMAKE_SOURCE_DIR}/dev/ChromaForge.png
      DESTINATION ${CMAKE_BINARY_DIR}/AppDir/usr/share/icons/hicolor/256x256/)
-file(RENAME ${CMAKE_BINARY_DIR}/AppDir/usr/share/icons/hicolor/256x256/icon3.png
-            ${CMAKE_BINARY_DIR}/AppDir/usr/share/icons/hicolor/256x256/ChromaForge.png)

@@ -8,7 +8,7 @@ script:
  - cp build/ChromaForge AppDir/usr/bin/
  - cp -r build/res/* AppDir/usr/share/ChromaForge/res/
  - cp dev/ChromaForge.desktop AppDir/usr/share/applications/
- - cp res/icon/icon3.png AppDir/usr/share/icons/hicolor/256x256/ChromaForge.png
+ - cp dev/ChromaForge.png AppDir/usr/share/icons/hicolor/256x256/ChromaForge.png
 
 AppDir:
   path: AppDir

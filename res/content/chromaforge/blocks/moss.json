@@ -1,8 +1,0 @@
-{
-    "texture": "moss_block",
-    "material": "chromaforge:moss",
-    "chromaforge:durability": 1.7,
-    "chromaforge:loot": [
-        {"item": "chromaforge:dirt.item"}
-    ]
-}
