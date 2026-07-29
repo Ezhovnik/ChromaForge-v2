@@ -116,7 +116,7 @@ function pack.unload(prefix)
     events.remove_by_prefix(prefix)
 end
 
-function __chroma_start_app_script(path)
+function __chroma_start_app_script(path, name)
     debug.info("Starting application script "..path)
 
     local code = file.read(path)
@@ -126,7 +126,11 @@ function __chroma_start_app_script(path)
     end
     local script_env = setmetatable({app = app or __chroma_app}, {__index=_G})
     chunk = setfenv(chunk, script_env)
-    return __chroma_start_coroutine(chunk, path)
+    if name then
+        return start_coroutine(chunk, name)
+    else
+        return __chroma_start_coroutine(chunk)
+    end
 end
 
 gui_util = require "builtin:internal/gui_util"
@@ -506,6 +510,7 @@ local __post_runnables = {}
 
 local fn_audio_reset_fetch_buffer = audio.__reset_fetch_buffer
 audio.__reset_fetch_buffer = nil
+builtin.get_builtin_audio_token = audio.input.__get_builtin_token
 
 function __process_post_runnables()
     if #__post_runnables then

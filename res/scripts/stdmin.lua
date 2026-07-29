@@ -176,7 +176,7 @@ end
 
 local internal_locked = false
 
-local function __load_script(path, nocache, env)
+function __load_script(path, nocache, env)
     local packname, filename = parse_path(path)
 
     if internal_locked and (packname == "res" or packname == "builtin") and filename:starts_with("modules/internal") then

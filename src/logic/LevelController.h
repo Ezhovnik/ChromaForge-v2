@@ -20,7 +20,6 @@ private:
     std::unique_ptr<ChunksController> chunks;
 
     util::Clock playerSparkClock;
-    Player* localPlayer;
 public:
     LevelController(
         Engine* engine,

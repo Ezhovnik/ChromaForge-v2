@@ -28,7 +28,7 @@ local initialized  = false
 function on_open()
     if not initialized then
         initialized = true
-        local token = audio.input.__get_builtin_token()
+        local token = builtin.get_builtin_audio_token()
         document.root:add("<container id='tm' />")
         local prev_amplitude = 0.0
         document.tm:setInterval(16, function()
@@ -56,7 +56,7 @@ function on_open()
     document.root:add("<label context='settings'>@Microphone</label>")
     document.root:add(
         "<select id='input_device_select' "..
-        "onselect='function(opt) audio.set_input_device(opt) end'/>"
+        "onselect='function(opt) audio.__set_input_device(opt) end'/>"
     )
     document.root:add(
         "<container id='input_volume_outer' color='#000000' size='4'>"
@@ -65,10 +65,10 @@ function on_open()
     )
     local selectbox = document.input_device_select
     local devices = {}
-    local names = audio.get_input_devices_names()
+    local names = audio.__get_input_devices_names()
     for i, name in ipairs(names) do
         table.insert(devices, {value=name, text=name})
     end
     selectbox.options = devices
-    selectbox.value = audio.get_input_info().device_specifier
+    selectbox.value = audio.__get_input_info().device_specifier
 end
