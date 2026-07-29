@@ -24,6 +24,10 @@ namespace {
     inline double power(double base, int64_t power) {
         double result = 1.0;
         int64_t exp = power;
+        if (exp < 0) {
+            base = 1.0 / base;
+            exp = -exp;
+        }
         while (exp > 0) {
             if (exp & 1) result *= base;
             base *= base;
