@@ -68,8 +68,9 @@ void scripting::initialize(Engine* engine) {
 
     lua::initialize(engine->getPaths(), engine->getCoreParameters());
 
-    load_script("stdlib.lua", true);
-    load_script("classes.lua", true);
+    load_script(io::path("stdlib.lua"), true);
+    load_script(io::path("classes.lua"), true);
+    load_script(io::path("internal_events.lua"), true);
 }
 
 class LuaCoroutine : public Process {
@@ -638,6 +639,7 @@ void scripting::load_content_script(
     funcsset.oninteract = register_event(env, "on_interact", prefix + ".interact");
     funcsset.onblockspark = register_event(env, "on_block_spark", prefix + ".blockspark");
     funcsset.onblocksspark = register_event(env, "on_blocks_spark", prefix + ".blocksspark");
+    funcsset.onblockpresent = register_event(env, "on_block_present", prefix + ".blockpresent");
 }
 
 void scripting::load_content_script(

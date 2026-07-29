@@ -21,6 +21,7 @@
 #include <util/timeutil.h>
 #include <content/Content.h>
 #include <objects/Player.h>
+#include <world/LevelEvents.h>
 
 inline constexpr int MAX_WORK_PER_FRAME = 128;
 inline constexpr int MIN_SURROUNDING = 9;
@@ -180,6 +181,7 @@ void ChunksController::createChunk(const Player& player, int x, int z) const {
 	}
 	chunk->updateHeights();
 
+    level.events->trigger(LevelEventType::CHUNK_PRESENT, chunk.get());
 	if (!chunkFlags.loadedLights) {
 		Lighting::preBuildSkyLight(*chunk, *level.content.getIndices());
 	}

@@ -22,19 +22,19 @@
 
 static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     bool corrupted = false;
-	blockid_t defsCount = indices.blocks.count();
-	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+    blockid_t defsCount = indices.blocks.count();
+    for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         blockid_t id = chunk.voxels[i].id;
         if (id >= defsCount) {
-			if (!corrupted) {
-				if (!ENGINE_DEBUG_BUILD) {
-					LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk.chunk_x, chunk.chunk_z);
-					corrupted = true;
-				} else {
-					abort();
-				}
-			}
-			chunk.voxels[i].id = BLOCK_AIR;
+            if (!corrupted) {
+                if (!ENGINE_DEBUG_BUILD) {
+                    LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk.chunk_x, chunk.chunk_z);
+                    corrupted = true;
+                } else {
+                    abort();
+                }
+            }
+            chunk.voxels[i].id = BLOCK_AIR;
         }
     }
 }
@@ -87,47 +87,46 @@ static inline auto load_inventories(
 }
 
 std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
-	const auto& found = chunksMap.find(keyfrom(x, z));
+    const auto& found = chunksMap.find(keyfrom(x, z));
     if (found != chunksMap.end()) return found->second;
 
-	auto chunk = std::make_shared<Chunk>(x, z);
+    auto chunk = std::make_shared<Chunk>(x, z);
     chunksMap[keyfrom(x, z)] = chunk;
 
-	World& world = *level.getWorld();
-	auto& regions = world.wfile.get()->getRegions();
+    World& world = *level.getWorld();
+    auto& regions = world.wfile.get()->getRegions();
 
-	auto& localChunksMap = chunksMap;
+    auto& localChunksMap = chunksMap;
 
-	if (auto data = regions.getVoxels(chunk->chunk_x, chunk->chunk_z)) {
-		const auto& indices = *level.content.getIndices();
+    if (auto data = regions.getVoxels(chunk->chunk_x, chunk->chunk_z)) {
+        const auto& indices = *level.content.getIndices();
 
-		chunk->decode(data.get());
-		check_voxels(indices, *chunk);
+        chunk->decode(data.get());
+        check_voxels(indices, *chunk);
 
-		chunk->setBlockInventories(
+        chunk->setBlockInventories(
             load_inventories(regions, *chunk, indices.blocks)
         );
 
-		auto entitiesData = regions.fetchEntities(chunk->chunk_x, chunk->chunk_z);
+        auto entitiesData = regions.fetchEntities(chunk->chunk_x, chunk->chunk_z);
         if (entitiesData.getType() == dv::value_type::Object) {
             level.entities->loadEntities(std::move(entitiesData));
-			chunk->flags.entities = true;
+            chunk->flags.entities = true;
         }
 
-		chunk->flags.loaded = true;
-		for (auto& entry : chunk->inventories) {
-			level.inventories->store(entry.second);
-		}
-	}
+        chunk->flags.loaded = true;
+        for (auto& entry : chunk->inventories) {
+            level.inventories->store(entry.second);
+        }
+    }
 
-	if (auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z)) {
-		chunk->lightmap.set(lights.get());
-		chunk->flags.loadedLights = true;
-	}
+    if (auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z)) {
+        chunk->lightmap.set(lights.get());
+        chunk->flags.loadedLights = true;
+    }
 
-	chunk->blocksMetadata = regions.getBlocksData(chunk->chunk_x, chunk->chunk_z);
+    chunk->blocksMetadata = regions.getBlocksData(chunk->chunk_x, chunk->chunk_z);
 
-    level.events->trigger(LevelEventType::CHUNK_PRESENT, chunk.get());
     return chunk;
 }
 

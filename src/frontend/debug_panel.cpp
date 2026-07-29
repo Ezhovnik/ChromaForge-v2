@@ -80,7 +80,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         fpsMax = fps;
     });
 
-    panel->listenInterval(1.0f, [&engine, &gui]() {
+    panel->listenInterval(1.0f, [&engine]() {
         const auto& network = engine.getNetwork();
         size_t totalDownload = network.getTotalDownload();
         size_t totalUpload = network.getTotalUpload();
