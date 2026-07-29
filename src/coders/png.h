@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <typedefs.h>
+#include <util/Buffer.h>
 
 class Texture;
 class ImageData;
@@ -24,6 +25,8 @@ namespace png {
      * @return true при успешной записи, false при ошибке.
      */
     bool writeImage(const std::string& filename, const ImageData* image);
+
+    util::Buffer<ubyte> encode_image(const ImageData& image);
 
     /**
      * @brief Загружает текстуру из PNG-файла.

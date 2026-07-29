@@ -1,11 +1,14 @@
+#define CHROMA_ENABLE_REFLECTION
+#include <logic/scripting/lua/usertypes/lua_type_canvas.h>
+
 #include <unordered_map>
 
 #include <graphics/core/ImageData.h>
 #include <graphics/core/Texture.h>
-#include <logic/scripting/lua/usertypes/lua_type_canvas.h>
 #include <logic/scripting/lua/lua_util.h>
 #include <engine/Engine.h>
 #include <assets/Assets.h>
+#include <coders/imageio.h>
 
 using namespace lua;
 
@@ -280,6 +283,22 @@ static int l_sub(State* L) {
     return 0;
 }
 
+static int l_encode(State* L) {
+    auto canvas = touserdata<LuaCanvas>(L, 1);
+    if (canvas == nullptr) return 0;
+
+    auto format = imageio::ImageFileFormat::PNG;
+    if (lua::isstring(L, 2)) {
+        auto name = lua::require_string(L, 2);
+        if (!imageio::ImageFileFormatMeta.getItem(name, format)) {
+            throw std::runtime_error("Unsupported image file format");
+        }
+    }
+
+    auto buffer = imageio::encode(format, canvas->getData());
+    return lua::create_bytearray(L, buffer.data(), buffer.size());
+}
+
 static std::unordered_map<std::string, lua_CFunction> methods {
     {"at", lua::wrap<l_at>},
     {"set", lua::wrap<l_set>},
@@ -292,6 +311,7 @@ static std::unordered_map<std::string, lua_CFunction> methods {
     {"mul", lua::wrap<l_mul>},
     {"add", lua::wrap<l_add>},
     {"sub", lua::wrap<l_sub>},
+    {"encode", lua::wrap<l_encode>},
     {"_set_data", lua::wrap<l_set_data>},
 };
 
@@ -346,6 +366,23 @@ static int l_meta_meta_call(lua::State* L) {
     );
 }
 
+static int l_canvas_decode(lua::State* L) {
+    auto bytes = bytearray_as_string(L, 1);
+    auto formatName = require_lstring(L, 2);
+    imageio::ImageFileFormat format;
+    if (!imageio::ImageFileFormatMeta.getItem(formatName, format)) {
+        throw std::runtime_error("Unsupported image format");
+    }
+    return newuserdata<LuaCanvas>(
+        L,
+        nullptr,
+        imageio::decode(
+            format,
+            {reinterpret_cast<const unsigned char*>(bytes.data()), bytes.size()}
+        )
+    );
+}
+
 int LuaCanvas::createMetatable(State* L) {
     createtable(L, 0, 3);
     pushcfunction(L, lua::wrap<l_meta_index>);
@@ -357,5 +394,8 @@ int LuaCanvas::createMetatable(State* L) {
     pushcfunction(L, lua::wrap<l_meta_meta_call>);
     setfield(L, "__call");
     setmetatable(L);
+
+    pushcfunction(L, lua::wrap<l_canvas_decode>);
+    setfield(L, "decode");
     return 1;
 }

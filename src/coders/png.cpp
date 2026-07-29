@@ -1,6 +1,6 @@
 #include <coders/png.h>
 
-#include <iostream>
+#include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -67,6 +67,31 @@ bool png::writeImage(const std::string& filename, const ImageData* image) {
     }
 
     return true;
+}
+
+util::Buffer<ubyte> png::encode_image(const ImageData& image) {
+    auto format = image.getFormat();
+    int channels = (format == ImageFormat::rgba8888) ? 4 : 3;
+    int width = image.getWidth();
+    int height = image.getHeight();
+    const ubyte* data = image.getData();
+
+    std::vector<ubyte> buffer;
+    stbi_write_png_to_func(
+        [](void* context, void* data, int size) {
+            auto& buf = *static_cast<std::vector<ubyte>*>(context);
+            auto* bytes = static_cast<const ubyte*>(data);
+            buf.insert(buf.end(), bytes, bytes + size);
+        },
+        &buffer,
+        width,
+        height,
+        channels,
+        data,
+        width * channels
+    );
+
+    return util::Buffer<ubyte>(buffer.data(), buffer.size());
 }
 
 // Загружает текстуру из PNG файла
