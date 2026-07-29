@@ -58,10 +58,12 @@ io::file_time_type io::MemoryDevice::lastWriteTime(std::string_view path) {
 }
 
 bool io::MemoryDevice::exists(std::string_view path) {
+    if (path.empty()) return true;
     return nodes.find(std::string(path)) != nodes.end();
 }
 
 bool io::MemoryDevice::isdir(std::string_view path) {
+    if (path.empty()) return true;
     const auto& found = nodes.find(std::string(path));
     if (found == nodes.end()) {
         return false;
@@ -130,7 +132,8 @@ uint64_t io::MemoryDevice::removeAll(std::string_view path) {
     uint64_t count = 0;
     if (found->second.holds_alternative<Dir>()) {
         auto dir = found->second.get_if<Dir>();
-        for (const auto& name : dir->content) {
+        auto files = dir->content;
+        for (const auto& name : files) {
             io::path subPath = filePath / name;
             count += removeAll(subPath.string());
         }
@@ -194,6 +197,7 @@ io::MemoryDevice::Node* io::MemoryDevice::createFile(
 }
 
 io::MemoryDevice::Dir* io::MemoryDevice::getDir(std::string_view path) {
+    if (path.empty()) return &rootDir;
     const auto& found = nodes.find(std::string(path));
     if (found == nodes.end()) return nullptr;
 

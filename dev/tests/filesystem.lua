@@ -4,6 +4,7 @@ assert(file.exists("config:"))
 debug.info("write text file")
 assert(file.write("config:text.txt", "example, пример"))
 assert(file.exists("config:text.txt"))
+assert(file.isfile("config:text.txt"))
 
 debug.info("read text file")
 assert(file.read("config:text.txt") == "example, пример")
@@ -18,10 +19,22 @@ assert(file.isdir("config:dir"))
 
 debug.info("remove directory")
 file.remove("config:dir")
+assert(not file.isdir("config:dir"))
 
 debug.info("create directories")
 file.mkdirs("config:dir/subdir/other")
 assert(file.isdir("config:dir/subdir/other"))
+
+debug.info("list directory")
+file.write("config:dir/subdir/a.txt", "helloworld")
+file.write("config:dir/subdir/b.txt", "gfgsfhs")
+
+local entries = file.list("config:dir/subdir")
+assert(#entries == 3)
+table.sort(entries)
+assert(entries[1] == "config:dir/subdir/a.txt")
+assert(entries[2] == "config:dir/subdir/b.txt")
+assert(entries[3] == "config:dir/subdir/other")
 
 debug.info("remove tree")
 file.remove_tree("config:dir")

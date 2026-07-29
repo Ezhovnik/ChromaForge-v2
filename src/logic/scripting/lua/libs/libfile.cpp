@@ -10,6 +10,7 @@
 #include <coders/zip.h>
 #include <io/devices/ZipFileDevice.h>
 #include <logic/scripting/descriptors_manager.h>
+#include <io/devices/MemoryDevice.h>
 
 static int l_find(lua::State* L) {
     auto path = lua::require_string(L, 1);
@@ -44,6 +45,13 @@ static bool is_writeable(const std::string& entryPoint) {
         return false;
     }
     if (entryPoint.substr(0, 2) == "W.") {
+        return true;
+    }
+    auto device = io::get_device(entryPoint);
+    if (device == nullptr) {
+        return false;
+    }
+    if (dynamic_cast<io::MemoryDevice*>(device.get())) {
         return true;
     }
     if (writeable_entry_points.find(entryPoint) != writeable_entry_points.end()) {
@@ -217,6 +225,16 @@ static int l_unmount(lua::State* L) {
     return 0;
 }
 
+static int l_create_memory_device(lua::State* L) {
+    if (lua::isstring(L, 1)) {
+        throw std::runtime_error(
+            "Name must not be specified, use app.create_memory_device instead"
+        );
+    }
+    auto& paths = scripting::engine->getPaths();
+    return lua::pushstring(L, paths.createMemoryDevice());
+}
+
 static int l_create_zip(lua::State* L) {
     io::path folder = lua::require_string(L, 1);
     io::path outFile = lua::require_string(L, 2);
@@ -375,6 +393,7 @@ const luaL_Reg filelib[] = {
     {"is_writeable", lua::wrap<l_is_writeable>},
     {"mount", lua::wrap<l_mount>},
     {"unmount", lua::wrap<l_unmount>},
+    {"create_memory_device", lua::wrap<l_create_memory_device>},
     {"create_zip", lua::wrap<l_create_zip>},
     {"__open_descriptor", lua::wrap<l_open_descriptor>},
     {"__has_descriptor", lua::wrap<l_has_descriptor>},

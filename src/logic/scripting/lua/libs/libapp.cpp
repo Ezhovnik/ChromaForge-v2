@@ -6,6 +6,8 @@
 #include <network/Network.h>
 #include <util/platform.h>
 #include <window/Window.h>
+#include <io/io.h>
+#include <io/devices/MemoryDevice.h>
 
 static int l_start_debug_instance(lua::State* L) {
     int port = lua::tointeger(L, 1);
@@ -31,9 +33,25 @@ static int l_focus(lua::State* L) {
     return 0;
 }
 
+static int l_create_memory_device(lua::State* L) {
+    std::string name = lua::require_string(L, 1);
+    if (io::get_device(name)) {
+        throw std::runtime_error(
+            "Entry-point '" + name + "' is already used"
+        );
+    }
+    if (name.find(':') != std::string::npos) {
+        throw std::runtime_error("Invalid entry point name");
+    }
+
+    io::set_device(name, std::make_unique<io::MemoryDevice>());
+    return 0;
+}
+
 const luaL_Reg applib[] = {
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"focus", lua::wrap<l_focus>},
+    {"create_memory_device", lua::wrap<l_create_memory_device>},
     // For other functions see libbuiltin.cpp and res/scripts/stdlib.lua
     {nullptr, nullptr}
 };
