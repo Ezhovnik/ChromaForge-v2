@@ -25,6 +25,9 @@ endif()
 target_link_libraries(ChromaForge
     PRIVATE
         ChromaForgeSrc
+        # Linked explicitly (not via ChromaForgeSrc) to avoid propagating
+        # INTERFACE_LINK_OPTIONS that may include -Wl,-E (rejected by LLD on PE/COFF).
+        glfw
         $<$<PLATFORM_ID:Windows>:winmm>
         $<$<PLATFORM_ID:Windows>:ws2_32>
 )
