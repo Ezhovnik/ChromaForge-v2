@@ -19,6 +19,7 @@
 #include <voxels/blocks_agent.h>
 #include <world/LevelEvents.h>
 #include <objects/Entt_Entity.h>
+#include <util/ObjectsPool.h>
 
 static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     bool corrupted = false;
@@ -86,11 +87,13 @@ static inline auto load_inventories(
     return invs;
 }
 
+static util::ObjectsPool<Chunk> chunks_pool(1'024);
+
 std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
     const auto& found = chunksMap.find(keyfrom(x, z));
     if (found != chunksMap.end()) return found->second;
 
-    auto chunk = std::make_shared<Chunk>(x, z);
+    auto chunk = chunks_pool.create(x, z);
     chunksMap[keyfrom(x, z)] = chunk;
 
     World& world = *level.getWorld();

@@ -5,8 +5,6 @@
 #include <vector>
 #include <memory>
 
-#include <typedefs.h>
-
 namespace util {
     /**
      * @brief Пул буферов фиксированного размера для переиспользования памяти.
