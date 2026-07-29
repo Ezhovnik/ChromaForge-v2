@@ -5,6 +5,7 @@
 #include <logic/BlocksController.h>
 #include <logic/ChunksController.h>
 #include <util/Clock.h>
+#include <util/CallbacksSet.h>
 
 class Level;
 struct EngineSettings;
@@ -21,6 +22,8 @@ private:
 
     util::Clock playerSparkClock;
 public:
+    CallbacksSet<> preQuitCallbacks;
+
     LevelController(
         Engine* engine,
         std::unique_ptr<Level> level,

@@ -112,6 +112,7 @@ void LevelController::update(float delta, bool pause) {
 }
 
 void LevelController::processBeforeQuit() {
+    preQuitCallbacks.notify();
     for (auto player : level->players->getAll()) {
         if (player->chunks) {
             player->chunks->saveAndClear();

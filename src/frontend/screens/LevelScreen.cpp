@@ -101,6 +101,12 @@ LevelScreen::LevelScreen(
         return false;
     }));
 
+    controller->preQuitCallbacks.listen([this]() {
+        if (!controller->getLevel()->getWorld()->isNameless()) {
+            saveWorldPreview();
+        }
+    });
+
     animator = std::make_unique<TextureAnimator>();
     animator->addAnimations(assets.getAnimations());
 
@@ -110,7 +116,6 @@ LevelScreen::LevelScreen(
 LevelScreen::~LevelScreen() {
     if (!controller->getLevel()->getWorld()->isNameless()) {
         saveDecorations();
-        saveWorldPreview();
     }
     scripting::on_frontend_close();
     input.getBindings().enableAll();

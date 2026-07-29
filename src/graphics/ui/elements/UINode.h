@@ -12,6 +12,7 @@
 #include <delegates.h>
 #include <window/input.h>
 #include <graphics/core/commons.h>
+#include <util/CallbacksSet.h>
 
 class DrawContext;
 class Assets;
@@ -24,29 +25,6 @@ namespace gui {
     using OnAction = std::function<void(GUI&)>;
     using OnNumberChange = std::function<void(GUI&, double)>;
     using OnStringChange = std::function<void(GUI&, const std::string&)>;
-
-    template<typename... Args>
-    class CallbacksSet {
-    public:
-        using Func = std::function<void(Args...)>;
-    private:
-        std::unique_ptr<std::vector<Func>> callbacks;
-    public:
-        void listen(const Func& callback) {
-            if (callbacks == nullptr) {
-                callbacks = std::make_unique<std::vector<Func>>();
-            }
-            callbacks->push_back(callback);
-        }
-
-        void notify(Args&&... args) {
-            if (callbacks) {
-                for (auto& callback : *callbacks) {
-                    callback(std::forward<Args>(args)...);
-                }
-            }
-        }
-    };
 
     template<class TagT, typename... Args>
     class TaggedCallbacksSet {
