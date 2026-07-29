@@ -1,6 +1,6 @@
 {
     "name": "chromaforge",
-    "version-string": "1.0.0",
+    "version-string": "0.3.0",
     "dependencies": [
         "opengl",
         "openal-soft",
