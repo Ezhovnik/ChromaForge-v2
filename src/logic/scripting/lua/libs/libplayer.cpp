@@ -9,8 +9,16 @@
 #include <window/Camera.h>
 #include <items/Inventory.h>
 #include <objects/Entt_Entity.h>
+#include <engine/Engine.h>
 
 inline Player* get_player(lua::State* L, int idx) {
+    if (!lua::isnumber(L, idx)) {
+        if (scripting::engine->isHeadless()) {
+            throw std::runtime_error(
+                "Player id required as argument #" + std::to_string(idx)
+            );
+        }
+    }
     return scripting::level->players->getPlayer(lua::tointeger(L, idx));
 }
 

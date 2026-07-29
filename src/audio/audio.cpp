@@ -18,6 +18,7 @@ namespace audio {
     std::unordered_map<speakerid_t, std::shared_ptr<Stream>> streams;
     std::vector<std::unique_ptr<Channel>> channels;
     util::ObjectsKeeper objects_keeper {};
+    std::unique_ptr<InputDevice> input_device = nullptr;
 }
 
 using namespace audio;
@@ -133,8 +134,6 @@ public:
     }
 };
 
-static std::unique_ptr<InputDevice> input_device = nullptr;
-
 void audio::initialize(bool enabled, AudioSettings& settings) {
     enabled = enabled && settings.enabled.get();
     if (enabled) {
@@ -248,6 +247,12 @@ std::vector<std::string> audio::get_output_devices_names() {
 }
 
 void audio::set_input_device(const std::string& deviceName) {
+    LOG_INFO("Setting input device to {}", deviceName);
+    if (deviceName == DEVICE_NONE) {
+        if (input_device) input_device->stopCapture();
+        input_device = nullptr;
+        return;
+    }
     auto newDevice = backend->openInputDevice(deviceName, 44100, 1, 16);
     if (newDevice == nullptr) {
         LOG_ERROR("Could not open input device: {}", deviceName);

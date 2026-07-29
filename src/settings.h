@@ -72,6 +72,8 @@ struct AudioSettings {
     NumberSetting volumeUI {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
     NumberSetting volumeAmbient {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
     NumberSetting volumeMusic {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
+
+	StringSetting inputDevice {"auto"};
 };
 
 struct NetworkSettings {

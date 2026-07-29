@@ -56,7 +56,7 @@ function on_open()
     document.root:add("<label context='settings'>@Microphone</label>")
     document.root:add(
         "<select id='input_device_select' "..
-        "onselect='function(opt) audio.__set_input_device(opt) end'/>"
+        "onselect='function(opt) builtin.set_setting(\"audio.input-device\", opt) end'/>"
     )
     document.root:add(
         "<container id='input_volume_outer' color='#000000' size='4'>"
@@ -64,7 +64,9 @@ function on_open()
         .."</container>"
     )
     local selectbox = document.input_device_select
-    local devices = {}
+    local devices = {
+        {value="none", text=gui.str("None", "settings.microphone")},
+    }
     local names = audio.__get_input_devices_names()
     for i, name in ipairs(names) do
         table.insert(devices, {value=name, text=name})
