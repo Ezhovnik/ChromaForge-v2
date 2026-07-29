@@ -13,6 +13,7 @@
 #include <io/io.h>
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>
+#include <lighting/Lightmap.h>
 #include <lighting/Lighting.h>
 #include <voxels/GlobalChunks.h>
 #include <logic/LevelController.h>
@@ -149,8 +150,10 @@ static void integrate_chunk_client(Chunk& chunk) {
     chunk.flags.loadedLights = false;
     chunk.flags.lighted = false;
 
-    chunk.lightmap.clear();
-    Lighting::preBuildSkyLight(chunk, *scripting::indices);
+    if (chunk.lightmap) {
+        chunk.lightmap->clear();
+        Lighting::preBuildSkyLight(chunk, *scripting::indices);
+    }
 
     for (int lz = -1; lz <= 1; ++lz) {
         for (int lx = -1; lx <= 1; ++lx) {

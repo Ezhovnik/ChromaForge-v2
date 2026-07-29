@@ -3,6 +3,7 @@
 #include <limits>
 
 #include <math/rays.h>
+#include <lighting/Lightmap.h>
 
 static std::vector<blocks_agent::BlockRegisterEvent> block_register_events {};
 
@@ -414,7 +415,7 @@ inline void get_voxels_impl(
                 }
             } else {
                 const voxel* cvoxels = chunk->voxels;
-                const light_t* clights = chunk->lightmap.getLights();
+                const light_t* clights = chunk->lightmap ? chunk->lightmap->getLights() : nullptr;
                 for (int ly = y; ly < y + h; ++ly) {
                     for (int lz = std::max(z, cz * CHUNK_DEPTH); lz < std::min(z + d, (cz + 1) * CHUNK_DEPTH); ++lz) {
                         for (int lx = std::max(x, cx * CHUNK_WIDTH); lx < std::min(x + w, (cx + 1) * CHUNK_WIDTH); ++lx) {
@@ -427,7 +428,7 @@ inline void get_voxels_impl(
                                 CHUNK_DEPTH
                             );
                             voxels[vidx] = cvoxels[cidx];
-                            light_t light = clights[cidx];
+                            light_t light = clights ? clights[cidx] : Lightmap::SUN_LIGHT_ONLY;
                             if (backlight) {
                                 const auto block = blocks.get(voxels[vidx].id);
                                 if (block && block->lightPassing) {

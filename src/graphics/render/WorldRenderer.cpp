@@ -17,6 +17,7 @@
 #include <graphics/core/LineBatch.h>
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>
+#include <lighting/Lightmap.h>
 #include <voxels/Block.h>
 #include <world/World.h>
 #include <world/Level.h>

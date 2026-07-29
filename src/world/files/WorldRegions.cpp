@@ -9,6 +9,7 @@
 #include <items/Inventory.h>
 #include <debug/Logger.h>
 #include <coders/binary_json.h>
+#include <lighting/Lightmap.h>
 
 WorldRegion::WorldRegion() :
     chunksData(std::make_unique<std::unique_ptr<ubyte[]>[]>(RegionConsts::VOLUME)),
@@ -163,11 +164,11 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
         CHUNK_DATA_LEN
     );
 
-    if (doWriteLights && chunk->flags.lighted) {
+    if (doWriteLights && chunk->flags.lighted && chunk->lightmap) {
         put(
             chunk->chunk_x, chunk->chunk_z,
             REGION_LAYER_LIGHTS, 
-            chunk->lightmap.encode(),
+            chunk->lightmap->encode(),
             LIGHTMAP_DATA_LEN
         );
     }

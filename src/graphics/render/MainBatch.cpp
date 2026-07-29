@@ -5,6 +5,7 @@
 #include <graphics/core/ImageData.h>
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>
+#include <lighting/Lightmap.h>
 
 MainBatch::MainBatch(
     size_t capacity

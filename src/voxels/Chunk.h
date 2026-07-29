@@ -7,7 +7,6 @@
 #include <typedefs.h>
 #include <constants.h>
 #include <voxels/voxel.h>
-#include <lighting/Lightmap.h>
 #include <util/SmallHeap.h>
 #include <math/AABB.h>
 
@@ -15,6 +14,7 @@ inline constexpr int CHUNK_DATA_LEN = CHUNK_VOLUME * 4;
 
 class Inventory;
 class ContentReport;
+class Lightmap;
 
 using ChunkInventoriesMap = std::unordered_map<uint, std::shared_ptr<Inventory>>;
 using BlocksMetadata = util::SmallHeap<uint16_t, uint8_t>;
@@ -38,17 +38,19 @@ public:
         bool dirtyHeights : 1;
     } flags {};
 
-    Lightmap lightmap; // Карта освещения чанка
+    std::shared_ptr<Lightmap> lightmap; // Карта освещения чанка
 
     ChunkInventoriesMap inventories;
 
     BlocksMetadata blocksMetadata;
 
-    Chunk(int chunk_x, int chunk_z); // Конструктор
+    Chunk(
+        int chunk_x,
+        int chunk_z,
+        std::shared_ptr<Lightmap> lightmap = nullptr
+    ); // Конструктор
 
     void updateHeights();
-
-    std::unique_ptr<Chunk> clone() const; // Создает полную копию текущего чанка.
 
     void addBlockInventory(std::shared_ptr<Inventory> inventory, uint x, uint y, uint z);
     std::shared_ptr<Inventory> getBlockInventory(uint x, uint y, uint z) const;

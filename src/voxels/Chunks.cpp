@@ -122,10 +122,11 @@ ubyte Chunks::getLight(int32_t x, int32_t y, int32_t z, int channel) const {
 	Chunk* chunk = ptr->get();
 	if (chunk == nullptr) return 0;
 
+    assert(chunk->lightmap != nullptr);
 	int lx = x - cx * CHUNK_WIDTH;
 	int lz = z - cz * CHUNK_DEPTH;
 
-	return chunk->lightmap.get(lx, y, lz, channel);
+	return chunk->lightmap->get(lx, y, lz, channel);
 }
 
 light_t Chunks::getLight(int32_t x, int32_t y, int32_t z) const {
@@ -140,10 +141,11 @@ light_t Chunks::getLight(int32_t x, int32_t y, int32_t z) const {
 	Chunk* chunk = ptr->get();
 	if (chunk == nullptr) return 0;
 
+    assert(chunk->lightmap != nullptr);
 	int lx = x - cx * CHUNK_WIDTH;
 	int lz = z - cz * CHUNK_DEPTH;
 
-	return chunk->lightmap.get(lx, y, lz);
+	return chunk->lightmap->get(lx, y, lz);
 }
 
 Chunk* Chunks::getChunkByVoxel(int x, int y, int z) const {
@@ -350,7 +352,7 @@ void Chunks::getVoxels(VoxelsVolume& volume, bool backlight) const {
                 }
             } else {
                 const voxel* cvoxels = chunk->voxels;
-                const light_t* clights = chunk->lightmap.getLights();
+                const light_t* clights = chunk->lightmap ? chunk->lightmap->getLights() : nullptr;
                 for (int ly = y; ly < y + h; ly++) {
                     for (int lz = std::max(z, cz * CHUNK_DEPTH); lz < std::min(z + d, (cz + 1) * CHUNK_DEPTH); ++lz) {
                         for (int lx = std::max(x, cx * CHUNK_WIDTH); lx < std::min(x + w, (cx + 1) * CHUNK_WIDTH); ++lx) {
@@ -363,7 +365,7 @@ void Chunks::getVoxels(VoxelsVolume& volume, bool backlight) const {
                                 CHUNK_DEPTH
                             );
                             voxels[vidx] = cvoxels[cidx];
-                            light_t light = clights[cidx];
+                            light_t light = clights ? clights[cidx] : Lightmap::SUN_LIGHT_ONLY;
                             if (backlight) {
                                 const auto block = contentIds.blocks.get(voxels[vidx].id);
                                 if (block && block->lightPassing) {
