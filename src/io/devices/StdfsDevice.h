@@ -1,3 +1,5 @@
+#pragma once
+
 #include <io/devices/Device.h>
 
 namespace io {
