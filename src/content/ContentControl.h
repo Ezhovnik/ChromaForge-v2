@@ -6,16 +6,13 @@
 #include <functional>
 
 #include <content/ContentPack.h>
+#include <io/path.h>
 
 class Content;
 class PacksManager;
 class EnginePaths;
 class Input;
 struct Project;
-
-namespace io {
-    class path;
-}
 
 class ContentControl {
 public:
@@ -48,6 +45,10 @@ public:
     const std::vector<ContentPack>& getAllContentPacks() const;
 
     PacksManager& scan();
+
+    void setContentSources(std::vector<io::path> sources);
+    void resetContentSources();
+    const std::vector<io::path>& getContentSources() const;
 private:
     EnginePaths& paths;
     Input& input;

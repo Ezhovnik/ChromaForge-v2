@@ -10,6 +10,10 @@
 
 PacksManager::PacksManager() = default;
 
+const std::vector<io::path>& PacksManager::getSources() const {
+    return sources;
+}
+
 void PacksManager::setSources(std::vector<io::path> sources) {
     this->sources = std::move(sources);
 }
