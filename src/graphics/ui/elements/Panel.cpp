@@ -72,7 +72,7 @@ glm::vec2 Panel::getContentSize() const {
 }
 
 void Panel::refresh() {
-    UINode::refresh();
+    Container::refresh();
 
     float x = padding.x;
     float y = padding.y;

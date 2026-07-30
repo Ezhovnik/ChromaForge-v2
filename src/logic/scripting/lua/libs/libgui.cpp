@@ -199,6 +199,15 @@ static int p_get_inventory(gui::UINode* node, lua::State* L) {
     if (auto inventory = dynamic_cast<gui::InventoryView*>(node)) {
         auto inv = inventory->getInventory();
         return lua::pushinteger(L, inv ? inv->getId() : 0);
+    } else if (auto slot = dynamic_cast<gui::SlotView*>(node)) {
+        return lua::pushinteger(L, slot->getInventoryId());
+    }
+    return 0;
+}
+
+static int p_get_slot_index(gui::UINode* node, lua::State* L) {
+    if (auto slot = dynamic_cast<gui::SlotView*>(node)) {
+        return lua::pushinteger(L, slot->getIndex());
     }
     return 0;
 }
@@ -570,6 +579,11 @@ static int p_get_options(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_zindex(gui::UINode* node, lua::State* L) {
+    if (node == nullptr) return 0;
+    return lua::pushinteger(L, node->getZIndex());
+}
+
 static int p_is_exists(gui::UINode* node, lua::State* L) {
     return lua::pushboolean(L, node != nullptr);
 }
@@ -646,6 +660,7 @@ static int l_gui_getattr(lua::State* L) {
         {"back", p_get_back},
         {"reset", p_get_reset},
         {"inventory", p_get_inventory},
+        {"slotIndex", p_get_slot_index},
         {"focused", p_get_focused},
         {"paste", p_get_paste},
         {"caret", p_get_caret},
@@ -661,7 +676,8 @@ static int l_gui_getattr(lua::State* L) {
         {"data", p_get_data},
         {"parent", p_get_parent},
         {"region", p_get_region},
-        {"options", p_get_options}
+        {"options", p_get_options},
+        {"zIndex", p_get_zindex}
     };
     auto func = getters.find(attr);
     if (func != getters.end()) {
@@ -756,6 +772,14 @@ static void p_set_options(gui::UINode* node, lua::State* L, int idx) {
             options.push_back(std::move(option));
         }
         selectbox->setOptions(std::move(options));
+    }
+}
+
+static void p_set_zindex(gui::UINode* node, lua::State* L, int idx) {
+    if (node == nullptr) return;
+    node->setZIndex(lua::tointeger(L, idx));
+    if (auto parent = node->getParent()) {
+        parent->setMustRefresh();
     }
 }
 
@@ -976,7 +1000,8 @@ static int l_gui_setattr(lua::State* L) {
         {"cursor", p_set_cursor},
         {"focused", p_set_focused},
         {"region", p_set_region},
-        {"options", p_set_options}
+        {"options", p_set_options},
+        {"zIndex", p_set_zindex}
     };
     auto func = setters.find(attr);
     if (func != setters.end()) func->second(node.get(), L, 4);

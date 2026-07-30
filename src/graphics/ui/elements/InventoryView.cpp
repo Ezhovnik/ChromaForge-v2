@@ -314,7 +314,6 @@ void SlotView::drawItemInfo(
     }
 }
 
-
 void SlotView::setHighlighted(bool flag) {
     highlighted = flag;
 }
@@ -412,9 +411,15 @@ void SlotView::onFocus() {
     clicked(Mousecode::BUTTON_1);
 }
 
-void SlotView::bind(int64_t inventoryId, ItemStack& stack, const Content* content) {
+void SlotView::bind(
+    int64_t inventoryId,
+    ItemStack& stack,
+    size_t index,
+    const Content* content
+) {
     this->inventoryId = inventoryId;
     bound = &stack;
+    this->index = index;
     this->content = content;
 }
 
@@ -424,6 +429,14 @@ const SlotLayout& SlotView::getLayout() const {
 
 ItemStack& SlotView::getStack() {
     return *bound;
+}
+
+int64_t SlotView::getInventoryId() const {
+    return inventoryId;
+}
+
+size_t SlotView::getIndex() const {
+    return index;
 }
 
 InventoryView::InventoryView(GUI& gui) : Container(gui, glm::vec2()) {
@@ -456,7 +469,13 @@ void InventoryView::bind(
     this->inventory = inventory;
     this->content = content;
     for (auto slot : slots) {
-        slot->bind(inventory->getId(), inventory->getSlot(slot->getLayout().index), content);
+        const auto& layout = slot->getLayout();
+        slot->bind(
+            inventory->getId(),
+            inventory->getSlot(layout.index),
+            layout.index,
+            content
+        );
     }
 }
 
