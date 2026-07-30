@@ -281,7 +281,7 @@ bool GUI::isFocusCaught() const {
 }
 
 void GUI::add(std::shared_ptr<UINode> node) {
-    UINode::getIndices(node, rootDocument->getMapWriteable());
+    rootDocument->pushIndices(node);
     container->add(std::move(node));
 }
 
@@ -316,6 +316,14 @@ std::shared_ptr<Container> GUI::getContainer() const {
 
 void GUI::postRunnable(const runnable& callback) {
     postRunnables.push(callback);
+}
+
+void GUI::setSyntaxColorScheme(std::unique_ptr<FontStylesScheme> scheme) {
+    syntaxColorScheme = std::move(scheme);
+}
+
+FontStylesScheme* GUI::getSyntaxColorScheme() const {
+    return syntaxColorScheme.get();
 }
 
 void GUI::onAssetsLoad(Assets* assets) {

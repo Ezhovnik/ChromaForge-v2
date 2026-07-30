@@ -37,9 +37,9 @@ public:
     );
 
     void rebuildIndices();
+    void pushIndices(const std::shared_ptr<gui::UINode>& node);
 
     const UINodesMap& getMap() const;
-    UINodesMap& getMapWriteable();
     const std::string& getId() const;
     std::shared_ptr<gui::UINode> getRoot() const;
     const uidocscript& getScript() const;

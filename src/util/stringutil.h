@@ -8,6 +8,7 @@
 
 namespace util {
     std::string escape(std::string_view s, bool escapeUnicode=true);
+    std::wstring escape_xml(std::wstring_view s);
 
     std::string quote(const std::string& s);
 

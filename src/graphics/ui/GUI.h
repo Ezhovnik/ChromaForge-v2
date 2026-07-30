@@ -23,6 +23,7 @@ class UIDocument;
 namespace devtools {
     class Editor;
 }
+struct FontStylesScheme;
 
 /*
 Padding is element inner space, margin is outer
@@ -72,6 +73,7 @@ namespace gui {
         std::shared_ptr<UINode> focus;
         std::shared_ptr<UINode> tooltip;
         std::shared_ptr<UIDocument> rootDocument;
+        std::unique_ptr<FontStylesScheme> syntaxColorScheme;
 
         std::unordered_map<std::string, std::shared_ptr<UINode>> storage;
 
@@ -122,6 +124,9 @@ namespace gui {
         void remove(const std::string& name) noexcept;
 
         std::shared_ptr<Container> getContainer() const;
+
+        void setSyntaxColorScheme(std::unique_ptr<FontStylesScheme> scheme);
+        FontStylesScheme* getSyntaxColorScheme() const;
 
         void onAssetsLoad(Assets* assets);
 

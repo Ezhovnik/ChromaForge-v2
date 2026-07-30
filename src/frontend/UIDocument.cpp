@@ -27,11 +27,12 @@ void UIDocument::rebuildIndices() {
     map["root"] = root;
 }
 
-const UINodesMap& UIDocument::getMap() const {
-    return map;
+void UIDocument::pushIndices(const std::shared_ptr<gui::UINode>& node) {
+    gui::UINode::getIndices(node, map);
+    map["root"] = root;
 }
 
-UINodesMap& UIDocument::getMapWriteable() {
+const UINodesMap& UIDocument::getMap() const {
     return map;
 }
 
