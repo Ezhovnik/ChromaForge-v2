@@ -59,7 +59,9 @@ namespace gui {
         Defocus,
         RightClick,
         MouseOver,
-        MouseOut
+        MouseOut,
+        MouseEnter,
+        MouseLeave
     };
 
     using ActionsSet = TaggedCallbacksSet<UIAction, GUI&>;
@@ -139,8 +141,9 @@ namespace gui {
         virtual void setAlign(Align align);
         Align getAlign() const;
 
-        virtual void setHover(bool flag);
+        virtual void setMouseEnter(bool flag);
         bool isHover() const;
+        void setMouseOver(bool flag);
 
         virtual void setTooltip(const std::wstring& text);
         virtual const std::wstring& getTooltip() const;
@@ -153,6 +156,7 @@ namespace gui {
 
         virtual void setParent(UINode* node);
         UINode* getParent() const;
+        std::shared_ptr<UINode> getParentShared() const;
 
         virtual void setEnabled(bool flag);
         bool isEnabled() const;

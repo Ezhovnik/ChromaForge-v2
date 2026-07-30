@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <condition_variable>
 #include <vector>
+#include <array>
 
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -61,6 +62,7 @@ struct regFile {
     io::path filename;
     int version;
     bool inUse = false;
+    std::array<uint32_t, RegionConsts::VOLUME> offsets;
 
     regFile(io::path filename);
     regFile(const regFile&) = delete;

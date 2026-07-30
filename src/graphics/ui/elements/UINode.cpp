@@ -43,8 +43,11 @@ bool UINode::isEnabled() const {
     return enabled;
 }
 
-void UINode::setHover(bool flag) {
-    if (hover == flag) return;
+void UINode::setMouseEnter(bool flag) {
+    actions.notify(flag ? UIAction::MouseEnter : UIAction::MouseLeave, gui);
+}
+
+void UINode::setMouseOver(bool flag) {
     hover = flag;
     actions.notify(flag ? UIAction::MouseOver : UIAction::MouseOut, gui);
 }

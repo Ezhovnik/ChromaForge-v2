@@ -114,16 +114,38 @@ void GUI::activateMouse(float deltaTime, const CursorState& cursor) {
     doubleClickTimer += deltaTime + mouseDelta * 0.1f;
 
     auto hover = container->getAt(cursor.pos);
-    if (this->hover && this->hover != hover) this->hover->setHover(false);
+    if (this->hover && this->hover != hover) this->hover->setMouseEnter(false);
 
-    if (hover) {
-        hover->setHover(true);
+    if (hover && hover != this->hover) {
+        hover->setMouseEnter(true);
         int scroll = input.getScroll();
         if (scroll) {
             hover->scrolled(scroll);
         }
     }
     this->hover = hover;
+    auto node = hover;
+    while (node) {
+        if (mouseOver.find(hover) != mouseOver.end()) {
+            break;   
+        }
+        mouseOver.insert(node);
+        node->setMouseOver(true);
+        auto parent = node->getParent();
+        if (parent) {
+            node = parent->shared_from_this();
+        }
+    }
+
+    for (auto it = mouseOver.begin(); it != mouseOver.end(); ) {
+        auto node = *it;
+        if (node->isInside(cursor.pos)) {
+            ++it;
+            continue;
+        }
+        node->setMouseOver(false);
+        it = mouseOver.erase(it);
+    }
 
     if (input.justClicked(Mousecode::BUTTON_1)) {
         if (pressed == nullptr && this->hover) {
@@ -194,7 +216,7 @@ void GUI::activate(float deltaTime, const glm::uvec2& vp) {
         activateMouse(deltaTime, cursor);
     } else {
         if (hover) {
-            hover->setHover(false);
+            hover->setMouseEnter(false);
             hover = nullptr;
         }
     }

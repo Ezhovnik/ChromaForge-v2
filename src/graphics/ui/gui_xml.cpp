@@ -160,6 +160,8 @@ static void read_uinode(
     register_action(node, reader, element, "ondoubleclick", UIAction::DoubleClick);
     register_action(node, reader, element, "onmouseover", UIAction::MouseOver);
     register_action(node, reader, element, "onmouseout", UIAction::MouseOut);
+    register_action(node, reader, element, "onmouseenter", UIAction::MouseEnter);
+    register_action(node, reader, element, "onmouseleave", UIAction::MouseLeave);
 }
 
 static void read_container_impl(
