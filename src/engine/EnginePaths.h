@@ -5,10 +5,13 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <set>
 
 #include <io/io.h>
 #include <data/dv.h>
 #include <engine/CoreParameters.h>
+
+struct Project;
 
 struct PathsRoot {
     std::string name;
@@ -62,6 +65,10 @@ public:
 
     void setEntryPoints(std::vector<PathsRoot> entryPoints);
 
+    void setupProject(const Project& project);
+
+    bool isWriteable(const std::string& entryPoint) const;
+
     std::vector<io::path> scanForWorlds() const;
 
     static std::tuple<std::string, std::string> parsePath(std::string_view view);
@@ -78,6 +85,7 @@ private:
     std::vector<PathsRoot> entryPoints;
     std::unordered_map<std::string, std::string> writeables;
     std::vector<std::string> mounted;
+    std::set<std::string> initiallyWriteables;
 
     void cleanup();
 };

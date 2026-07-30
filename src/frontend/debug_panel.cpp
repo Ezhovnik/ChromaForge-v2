@@ -52,6 +52,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     Player& player,
     bool allowDebugCheats
 ) {
+    auto network = engine.getNetwork();
     auto& gui = engine.getGUI();
 	auto panel = std::make_shared<gui::Panel>(
         gui, glm::vec2(350, 200), glm::vec4(5.0f), 2.0f
@@ -80,17 +81,18 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         fpsMax = fps;
     });
 
-    panel->listenInterval(1.0f, [&engine]() {
-        const auto& network = engine.getNetwork();
-        size_t totalDownload = network.getTotalDownload();
-        size_t totalUpload = network.getTotalUpload();
-        netSpeedString =
-            L"Download: " + std::to_wstring(totalDownload - lastTotalDownload) +
-            L" B/s upload: " + std::to_wstring(totalUpload - lastTotalUpload) +
-            L" B/s";
-        lastTotalDownload = totalDownload;
-        lastTotalUpload = totalUpload;
-    });
+    if (network) {
+        panel->listenInterval(1.0f, [network]() {
+            size_t totalDownload = network->getTotalDownload();
+            size_t totalUpload = network->getTotalUpload();
+            netSpeedString =
+                L"Download: " + std::to_wstring(totalDownload - lastTotalDownload) +
+                L" B/s upload: " + std::to_wstring(totalUpload - lastTotalUpload) +
+                L" B/s";
+            lastTotalDownload = totalDownload;
+            lastTotalUpload = totalUpload;
+        });
+    }
 
 	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [](){
 		return L"FPS: " + fpsString;
@@ -126,7 +128,9 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     panel->add(create_label(gui, [](){
         return L"Lua stack: " + std::to_wstring(scripting::get_values_on_stack());
     }));
-    panel->add(create_label(gui, []() {return netSpeedString;}));
+    if (network) {
+        panel->add(create_label(gui, []() {return netSpeedString;}));
+    }
 	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() -> std::wstring{
         static voxel prevVox = {BLOCK_VOID, {}};
 

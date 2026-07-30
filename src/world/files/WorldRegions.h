@@ -170,8 +170,8 @@ public:
         size_t size
     );
 
-    std::unique_ptr<ubyte[]> getVoxels(int x, int z);
-    std::unique_ptr<light_t[]> getLights(int x, int z);
+    bool getVoxels(int x, int z, ubyte* dst);
+    bool getLights(int x, int z, ubyte* dst);
     ChunkInventoriesMap fetchInventories(int x, int z);
     dv::value fetchEntities(int x, int z);
 

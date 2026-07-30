@@ -17,6 +17,7 @@
 #include <io/devices/ZipFileDevice.h>
 #include <util/platform.h>
 #include <io/devices/MemoryDevice.h>
+#include <devtools/Project.h>
 
 static util::RandomGenerator path_gen;
 
@@ -37,7 +38,10 @@ EnginePaths::EnginePaths(
     CoreParameters& params
 ) : resourcesFolder(params.resFolder),
     userFilesFolder(params.userFolder),
-    projectFolder(params.projectFolder)
+    projectFolder(params.projectFolder),
+    initiallyWriteables({
+        "world", "export", "config"
+    })
 {
     if (!params.scriptFile.empty()) {
         scriptFolder = params.scriptFile.parent_path();
@@ -196,6 +200,19 @@ void EnginePaths::setCurrentWorldFolder(io::path folder) {
         io::create_subdevice("world", "user", folder);
     }
     this->currentWorldFolder = std::move(folder);
+}
+
+void EnginePaths::setupProject(const Project& project) {
+    if (project.permissions.has(Permissions::WRITE_TO_USER)) {
+        initiallyWriteables.insert("user");
+    }
+}
+
+bool EnginePaths::isWriteable(const std::string& entryPoint) const {
+    if (entryPoint.length() < 2) return false;
+    if (entryPoint.substr(0, 2) == "W.") return true;
+
+    return initiallyWriteables.find(entryPoint) != initiallyWriteables.end();
 }
 
 std::tuple<std::string, std::string> EnginePaths::parsePath(std::string_view path) {

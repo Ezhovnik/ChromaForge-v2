@@ -88,12 +88,12 @@ std::unique_ptr<ubyte[]> compression::decompress(
             throw std::invalid_argument("Compression method is None");
         case Method::Extrle8: {
             auto decompressed = std::make_unique<ubyte[]>(dstlen);
-            extrle::decode(src, srclen, decompressed.get());
+            extrle::decode(src, srclen, decompressed.get(), dstlen);
             return decompressed;
         }
         case Method::Extrle16: {
             auto decompressed = std::make_unique<ubyte[]>(dstlen);
-            size_t decoded = extrle::decode16(src, srclen, decompressed.get());
+            size_t decoded = extrle::decode16(src, srclen, decompressed.get(), dstlen);
             if (decoded != dstlen) {
                 THROW_ERR("Expected decompressed size {} got {}", dstlen, decoded);
             }
@@ -109,6 +109,38 @@ std::unique_ptr<ubyte[]> compression::decompress(
             return decompressed;
         }
         default:
-            THROW_ERR("Not implemented");
+            THROW_ERR("Method not implemented");
+    }
+}
+
+void compression::decompress(const util::span<ubyte> src, ubyte* dst, size_t dstlen, Method method) {
+    switch (method) {
+        case Method::None:
+            THROW_ERR("Compression method is None");
+        case Method::Extrle8:
+            extrle::decode(src.data(), src.size(), dst, dstlen);
+            break;
+        case Method::Extrle16: {
+            size_t decoded =
+                extrle::decode16(src.data(), src.size(), dst, dstlen);
+            if (decoded != dstlen) {
+                THROW_ERR(
+                    "Expected decompressed size {} got {}", std::to_string(dstlen), std::to_string(decoded)
+                );
+            }
+            break;
+        }
+        case Method::Zip: {
+            auto buffer = zip::decompress(src.data(), src.size());
+            if (buffer.size() != dstlen) {
+                THROW_ERR(
+                    "Expected decompressed size {} got {}", std::to_string(dstlen), std::to_string(buffer.size())
+                );
+            }
+            std::memcpy(dst, buffer.data(), buffer.size());
+            break;
+        }
+        default:
+            THROW_ERR("Method not implemented");
     }
 }

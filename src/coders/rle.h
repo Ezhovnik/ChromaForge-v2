@@ -19,19 +19,12 @@ namespace rle {
      * @param dst Указатель на выходной буфер (должен быть достаточного размера).
      * @return Количество байтов, записанных в выходной буфер.
      */
-	size_t encode(const ubyte* src, size_t length, ubyte* dst);
+     size_t encode(const ubyte* src, size_t length, ubyte* dst);
 
-	/**
-     * @brief Декодирует данные, сжатые простым RLE.
-     * @param src Указатель на сжатые данные.
-     * @param length Длина сжатых данных в байтах.
-     * @param dst Указатель на выходной буфер (достаточного размера).
-     * @return Количество байтов, записанных в выходной буфер (размер распакованных данных).
-     */
-	size_t decode(const ubyte* src, size_t length, ubyte* dst);
+     size_t decode(const ubyte* src, size_t length, ubyte* dst, size_t dstLength);
 
      size_t encode16(const ubyte* src, size_t length, ubyte* dst);
-     size_t decode16(const ubyte* src, size_t length, ubyte* dst);
+     size_t decode16(const ubyte* src, size_t length, ubyte* dst, size_t dstLength);
 }
 
 /**
@@ -54,18 +47,11 @@ namespace extrle {
      * @param dst Выходной буфер.
      * @return Количество записанных байтов.
      */
-	size_t encode(const ubyte* src, size_t length, ubyte* dst);
+     size_t encode(const ubyte* src, size_t length, ubyte* dst);
 
-	/**
-     * @brief Декодирует данные, сжатые расширенным RLE.
-     * @param src Сжатые данные.
-     * @param length Длина сжатых данных.
-     * @param dst Выходной буфер.
-     * @return Количество распакованных байтов.
-     */
-	size_t decode(const ubyte* src, size_t length, ubyte* dst);
+     size_t decode(const ubyte* src, size_t length, ubyte* dst, size_t dstLength);
 
      constexpr uint max_sequence16 = 0x3FFF;
      size_t encode16(const ubyte* src, size_t length, ubyte* dst);
-     size_t decode16(const ubyte* src, size_t length, ubyte* dst);
+     size_t decode16(const ubyte* src, size_t length, ubyte* dst, size_t dstLength);
 }

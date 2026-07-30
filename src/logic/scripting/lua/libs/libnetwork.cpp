@@ -134,7 +134,7 @@ static int l_post(lua::State* L, network::Network& network) {
     auto headers = read_headers(L, 3);
     int currentRequestId = request_id++;
 
-    scripting::engine->getNetwork().post(
+    network.post(
         url,
         string,
         [currentRequestId](std::vector<char> bytes) {
@@ -243,7 +243,7 @@ static int l_recv(lua::State* L, network::Network& network) {
     uint64_t id = lua::tointeger(L, 1);
     int length = lua::tointeger(L, 2);
 
-    auto connection = scripting::engine->getNetwork().getConnection(id, false);
+    auto connection = network.getConnection(id, false);
 
     if (connection == nullptr || connection->getTransportType() != network::TransportType::TCP) {
         return 0;
@@ -520,11 +520,21 @@ static int l_pull_events(lua::State* L, network::Network& network) {
     return 1;
 }
 
+static int l_is_available(lua::State* L) {
+    return lua::pushboolean(L, scripting::engine->getNetwork() != nullptr);
+}
+
 template <int(*func)(lua::State*, network::Network&)>
 int wrap(lua_State* L) {
     int result = 0;
     try {
-        result = func(L, scripting::engine->getNetwork());
+        auto network = scripting::engine->getNetwork();
+        if (network == nullptr) {
+            throw std::runtime_error(
+                "Network subsystem is not available in the project"
+            );
+        }
+        result = func(L, *network);
     }
     catch (std::exception& e) {
         luaL_error(L, e.what());
@@ -542,6 +552,7 @@ const luaL_Reg networklib[] = {
     {"get_total_upload", wrap<l_get_total_upload>},
     {"get_total_download", wrap<l_get_total_download>},
     {"find_free_port", wrap<l_find_free_port>},
+    {"is_available", lua::wrap<l_is_available>},
     {"__pull_events", wrap<l_pull_events>},
     {"__open_tcp", wrap<l_open_tcp>},
     {"__open_udp", wrap<l_open_udp>},

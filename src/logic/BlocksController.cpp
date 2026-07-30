@@ -140,8 +140,10 @@ void BlocksController::randomSpark(
 
     for (int s = 0; s < segments; ++s) {
         for (int i = 0; i < 4; ++i) {
+            int segmentY = s * segheight;
+            if (segmentY  > chunk.top) break;
             int bx = random.rand() % CHUNK_WIDTH;
-            int by = random.rand() % segheight + s * segheight;
+            int by = random.rand() % segheight + segmentY;
             int bz = random.rand() % CHUNK_DEPTH;
             const voxel& vox = chunk.voxels[vox_index(bx, by, bz)];
             auto& block = indices->blocks.require(vox.id);

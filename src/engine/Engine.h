@@ -3,8 +3,6 @@
 #include <string>
 #include <memory>
 
-#include <typedefs.h>
-#include <delegates.h>
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
 #include <settings.h>
@@ -128,8 +126,8 @@ public:
         return *input;
     }
 
-    network::Network& getNetwork() {
-        return *network;
+    network::Network* getNetwork() {
+        return network.get();
     }
 
     cmd::CommandsInterpreter& getCmd() {

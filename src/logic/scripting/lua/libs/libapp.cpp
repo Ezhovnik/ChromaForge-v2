@@ -13,7 +13,11 @@
 static int l_start_debug_instance(lua::State* L) {
     int port = lua::tointeger(L, 1);
     if (port == 0) {
-        port = scripting::engine->getNetwork().findFreePort();
+        auto network = scripting::engine->getNetwork();
+        if (network == nullptr) {
+            throw std::runtime_error("Project has no network permission");
+        }
+        port = network->findFreePort();
         if (port == -1) {
             throw std::runtime_error("Could not find free port");
         }

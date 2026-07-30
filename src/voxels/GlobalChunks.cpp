@@ -93,6 +93,10 @@ static util::ObjectsPool<Lightmap> lightmaps_pool;
 std::shared_ptr<Chunk> GlobalChunks::create(int x, int z, bool lighting) {
     const auto& found = chunksMap.find(keyfrom(x, z));
     if (found != chunksMap.end()) return found->second;
+    static std::unique_ptr<ubyte[]> voxelDataBuffer = nullptr;
+    if (voxelDataBuffer == nullptr) {
+        voxelDataBuffer = std::make_unique<ubyte[]>(CHUNK_DATA_LEN);
+    }
 
     auto chunk = chunks_pool.create(x, z, lighting ? lightmaps_pool.create() : nullptr);
     chunksMap[keyfrom(x, z)] = chunk;
@@ -102,10 +106,10 @@ std::shared_ptr<Chunk> GlobalChunks::create(int x, int z, bool lighting) {
 
     auto& localChunksMap = chunksMap;
 
-    if (auto data = regions.getVoxels(chunk->chunk_x, chunk->chunk_z)) {
+    if (regions.getVoxels(chunk->chunk_x, chunk->chunk_z, voxelDataBuffer.get())) {
         const auto& indices = *level.content.getIndices();
 
-        chunk->decode(data.get());
+        chunk->decode(voxelDataBuffer.get());
         check_voxels(indices, *chunk);
 
         chunk->setBlockInventories(
@@ -125,8 +129,8 @@ std::shared_ptr<Chunk> GlobalChunks::create(int x, int z, bool lighting) {
     }
 
     if (chunk->lightmap) {
-        if (auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z)) {
-            chunk->lightmap->set(lights.get());
+        if (regions.getLights(chunk->chunk_x, chunk->chunk_z, voxelDataBuffer.get())) {
+            chunk->lightmap->decode(voxelDataBuffer.get());
             chunk->flags.loadedLights = true;
         }
     }

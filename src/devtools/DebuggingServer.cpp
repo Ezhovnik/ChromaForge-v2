@@ -87,19 +87,24 @@ bool ClientConnection::alive() const {
 static network::Server& create_tcp_server(
     DebuggingServer& dbgServer, Engine& engine, int port
 ) {
-    auto& network = engine.getNetwork();
-    uint64_t serverId = network.openTcpServer(
+    auto network = engine.getNetwork();
+    if (network == nullptr) {
+        THROW_ERR(
+            "Unable to create tcp server: project has no network permission"
+        );
+    }
+    uint64_t serverId = network->openTcpServer(
         port,
         [&network, &dbgServer](uint64_t sid, uint64_t id) {
             auto& connection = dynamic_cast<network::ReadableConnection&>(
-                *network.getConnection(id, true)
+                *network->getConnection(id, true)
             );
             connection.setPrivate(true);
             LOG_INFO("Connected client {}: {}:{}", id, connection.getAddress(), connection.getPort());
             dbgServer.setClient(id);
         }
     );
-    auto& server = *network.getServer(serverId, true);
+    auto& server = *network->getServer(serverId, true);
     server.setPrivate(true);
 
     auto& tcpServer = dynamic_cast<network::TcpServer&>(server);
@@ -284,7 +289,9 @@ void DebuggingServer::sendValue(
 }
 
 void DebuggingServer::setClient(uint64_t client) {
-    connection = std::make_unique<ClientConnection>(engine.getNetwork(), client);
+    auto network = engine.getNetwork();
+    assert (network != nullptr);
+    connection = std::make_unique<ClientConnection>(*network, client);
     connectionEstablished = false;
 }
 

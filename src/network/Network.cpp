@@ -194,5 +194,6 @@ void Network::update() {
 }
 
 std::unique_ptr<Network> Network::create(const NetworkSettings& settings) {
+    LOG_INFO("Initializing network");
     return std::make_unique<Network>(network::create_curl_requests());
 }

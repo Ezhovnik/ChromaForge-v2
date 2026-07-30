@@ -128,11 +128,11 @@ static int l_get_chunk_data(lua::State* L) {
     int z = static_cast<int>(lua::tointeger(L, 2));
     const auto& chunk = scripting::level->chunks->getChunk(x, z);
 
+    auto voxelData = std::make_unique<ubyte[]>(CHUNK_DATA_LEN);
     std::vector<ubyte> chunkData;
     if (chunk == nullptr) {
         auto& regions = scripting::level->getWorld()->wfile->getRegions();
-        auto voxelData = regions.getVoxels(x, z);
-        if (voxelData == nullptr) return 0;
+        if (!regions.getVoxels(x, z, voxelData.get())) return 0;
         static util::Buffer<ubyte> rleBuffer(CHUNK_DATA_LEN * 2);
         auto metadata = regions.getBlocksData(x, z);
         chunkData = compressed_chunks::encode(voxelData.get(), metadata, rleBuffer);
