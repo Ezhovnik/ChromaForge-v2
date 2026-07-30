@@ -54,10 +54,12 @@ namespace gui {
 
     enum class UIAction {
         Click,
-        RightClick,
         DoubleClick,
         Focus,
-        Defocus
+        Defocus,
+        RightClick,
+        MouseOver,
+        MouseOut
     };
 
     using ActionsSet = TaggedCallbacksSet<UIAction, GUI&>;
@@ -175,11 +177,7 @@ namespace gui {
         virtual void setZIndex(int idx);
         int getZIndex() const;
 
-        virtual void listenClick(OnAction action);
-        virtual void listenRightClick(OnAction action);
-        virtual void listenDoubleClick(OnAction action);
-        virtual void listenFocus(OnAction action);
-        virtual void listenDefocus(OnAction action);
+        void listenAction(UIAction type, OnAction action);
 
         virtual void onFocus();
         virtual void click(int x, int y);

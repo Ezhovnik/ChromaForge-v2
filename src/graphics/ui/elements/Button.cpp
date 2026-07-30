@@ -38,7 +38,7 @@ Button::Button(
         setSize(size);
     }
 
-    if (action) listenClick(action);
+    if (action) listenAction(UIAction::Click, action);
 
     setScrollable(false);
 

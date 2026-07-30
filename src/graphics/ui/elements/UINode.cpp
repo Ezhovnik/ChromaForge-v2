@@ -11,8 +11,7 @@ using gui::Align;
 UINode::UINode(GUI& gui, glm::vec2 size) : gui(gui), size(size) {
 }
 
-UINode::~UINode() {
-}
+UINode::~UINode() = default;
 
 bool UINode::isVisible() const {
     if (visible && parent) return parent->isVisible();
@@ -45,7 +44,9 @@ bool UINode::isEnabled() const {
 }
 
 void UINode::setHover(bool flag) {
+    if (hover == flag) return;
     hover = flag;
+    actions.notify(flag ? UIAction::MouseOver : UIAction::MouseOut, gui);
 }
 
 bool UINode::isHover() const {
@@ -68,24 +69,8 @@ int UINode::getZIndex() const {
     return zindex;
 }
 
-void UINode::listenClick(OnAction action) {
-    actions.listen(UIAction::Click, std::move(action));
-}
-
-void UINode::listenRightClick(OnAction action) {
-    actions.listen(UIAction::RightClick, std::move(action));
-}
-
-void UINode::listenDoubleClick(OnAction action) {
-    actions.listen(UIAction::DoubleClick, std::move(action));
-}
-
-void UINode::listenFocus(OnAction action) {
-    actions.listen(UIAction::Focus, std::move(action));
-}
-
-void UINode::listenDefocus(OnAction action) {
-    actions.listen(UIAction::Defocus, std::move(action));
+void UINode::listenAction(UIAction type, OnAction action) {
+    actions.listen(type, std::move(action));
 }
 
 void UINode::click(int, int) {

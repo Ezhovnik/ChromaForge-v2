@@ -24,14 +24,14 @@ SelectBox::SelectBox(
     ),
     options(std::move(options))
 {
-    listenClick([this](GUI& gui) {
+    listenAction(UIAction::Click, [this](GUI& gui) {
         auto panel = std::make_shared<Panel>(gui, getSize());
         panel->setPos(calcPos() + glm::vec2(0, size.y));
         for (const auto& option : this->options) {
             auto button = std::make_shared<Button>(
                 gui, option.text, glm::vec4(10.0f), nullptr, glm::vec2(-1.0f)
             );
-            button->listenFocus([this, option](GUI& gui) {
+            button->listenAction(UIAction::Focus, [this, option](GUI& gui) {
                 setSelected(option);
                 changeCallbacks.notify(gui, option.value);
             });
@@ -39,7 +39,7 @@ SelectBox::SelectBox(
         }
         panel->setZIndex(GUI::CONTEXT_MENU_ZINDEX);
         gui.setFocus(panel);
-        panel->listenDefocus([panel=panel.get()](GUI& gui) {
+        panel->listenAction(UIAction::Defocus, [panel=panel.get()](GUI& gui) {
             gui.remove(panel);
         });
         gui.add(panel);
