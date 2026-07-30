@@ -17,27 +17,27 @@ private:
             auto c = peekInLine();
             if (c == '\n') {
                 break;
-            } else {
+            } else if (hasNext()) {
                 uint indices[3] {};
                 uint i = 0;
                 do {
                     char next = peekInLine();
                     if (is_digit(next)) {
                         indices[i] = parseSimpleInt(10);
-                        if (peekInLine() == '/') pos++;
+                        if (hasNext() && peekInLine() == '/') pos++;
                     } else if (next == '/') {
                         pos++;
                     } else {
                         break;
                     }
-                } while (peekInLine() != '\n' && ++i < 3);
+                } while (hasNext() && peekInLine() != '\n' && ++i < 3);
 
                 vertices.push_back(Vertex {
                     coords[indices[0]], uvs[indices[1]], normals[indices[2]]
                 });
             }
         }
-        if (peekInLine() != '\n' && hasNext()) {
+        if (hasNext() && peekInLine() != '\n') {
             skipLine();
         }
         if (vertices.size() >= 3) {

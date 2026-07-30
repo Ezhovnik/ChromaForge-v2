@@ -19,7 +19,7 @@ public:
     ContentControl(
         const Project& project,
         EnginePaths& paths,
-        Input& input,
+        Input* input,
         std::function<void()> postContent
     );
     ~ContentControl();
@@ -51,7 +51,7 @@ public:
     const std::vector<io::path>& getContentSources() const;
 private:
     EnginePaths& paths;
-    Input& input;
+    Input* input;
     std::unique_ptr<Content> content;
     std::function<void()> postContent;
     std::vector<std::string> basePacks;

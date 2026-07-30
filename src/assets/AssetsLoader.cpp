@@ -23,6 +23,7 @@
 #include <items/Item.h>
 #include <engine/Engine.h>
 #include <content/ContentPack.h>
+#include <coders/commons.h>
 
 AssetsLoader::AssetsLoader(
     Engine& engine, Assets& assets, const ResPaths& paths
@@ -71,26 +72,26 @@ void AssetsLoader::loadNext() {
     LOG_DEBUG("Loading {} as {}", entry.filename, entry.alias);
 	Logger::getInstance().flush();
 
-	// Ищем загрузчик по типу ресурса
-	auto found = loaders.find(entry.tag);
-	if (found == loaders.end()) {
-        LOG_ERROR("Unknown asset tag {}", static_cast<int>(entry.tag));
-		entries.pop();
-	}
-	aloader_func loader = found->second;
+	std::string error {};
+
 	try {
         aloader_func loader = getLoader(entry.tag);
         auto postfunc = loader(this, paths, entry.filename, entry.alias, entry.config);
         postfunc(&assets);
-        entries.pop();
-    } catch (std::runtime_error& err) {
-        LOG_ERROR("{}", err.what());
-        auto type = entry.tag;
-        std::string filename = entry.filename;
-        std::string reason = err.what();
-        entries.pop();
-        throw asset_loader::error(type, std::move(filename), std::move(reason));
+    } catch (const parsing_error& err) {
+        error = err.errorLog();
+    } catch (const std::runtime_error& err) {
+        error = err.what();
     }
+
+    if (!error.empty()) {
+        LOG_ERROR("{}", error);
+        auto tag = entry.tag;
+        auto filename = entry.filename;
+        entries.pop();
+        throw asset_loader::error(tag, std::move(filename), std::move(error));
+    }
+    entries.pop();
 }
 
 /**

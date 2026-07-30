@@ -16,5 +16,5 @@ class ContentBuilder;
 class Input;
 
 namespace CoreContent {
-    void setup(Input& input, ContentBuilder& builder);
+    void setup(Input* input, ContentBuilder& builder);
 }

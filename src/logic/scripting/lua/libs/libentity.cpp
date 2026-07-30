@@ -7,6 +7,7 @@
 #include <physics/Hitbox.h>
 #include <window/Camera.h>
 #include <content/Content.h>
+#include <content/ContentPack.h>
 #include <engine/Engine.h>
 #include <objects/rigging.h>
 #include <objects/Entities.h>
@@ -234,7 +235,14 @@ static int l_reload_component(lua::State* L) {
         throw std::runtime_error("Missing entry point");
     }
     auto filename = name.substr(0, pos + 1) + "scripts/components/" + name.substr(pos + 1) + ".lua";
-    scripting::load_entity_component(name, filename, filename);
+    auto prefix = name.substr(0, pos);
+    auto runtime = scripting::content->getPackRuntime(prefix);
+    if (runtime == nullptr) {
+        throw std::runtime_error("Pack '" + prefix + "' content is not loaded");
+    }
+    scripting::load_entity_component(
+        runtime->getEnvironment(), name, filename, filename
+    );
     return 0;
 }
 

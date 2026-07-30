@@ -363,10 +363,19 @@ void UINode::reposition() {
 
 void UINode::getIndices(
     const std::shared_ptr<UINode>& node,
-    std::unordered_map<std::string, std::shared_ptr<UINode>>& map)
-{
+    std::unordered_map<std::string, std::weak_ptr<UINode>>& map
+) {
     const std::string& id = node->getId();
-    if (!id.empty()) map[id] = node;
+    if (!id.empty()) {
+        const auto& found = map.find(id);
+        if (found != map.end()) {
+            auto prev = found->second.lock();
+            if (prev && prev->getParent()) {
+                return;
+            }
+        }
+        map[id] = node;
+    }
 
     auto container = std::dynamic_pointer_cast<gui::Container>(node);
     if (container) {

@@ -2,10 +2,11 @@
 
 #include <util/stringutil.h>
 
-Item::Item(const std::string& name) : name(name) {
-    caption = util::id_to_caption(name);
-    description = "";
-}
+Item::Item(
+    const std::string& name
+) : name(name),
+    caption(util::id_to_caption(name)),
+    scriptName(name.substr(name.find(':') + 1)) {}
 
 void Item::cloneTo(Item& dst) {
     dst.caption = caption;

@@ -668,12 +668,15 @@ void scripting::load_content_script(
 }
 
 void scripting::load_entity_component(
-    const std::string& name, const io::path& file, const std::string& fileName
+    const scriptenv& env,
+    const std::string& name,
+    const io::path& file,
+    const std::string& fileName
 ) {
     auto L = lua::get_main_state();
     std::string src = io::read_string(file);
     LOG_INFO("Script (entity component) {}", file.string());
-    lua::loadbuffer(L, 0, src, fileName);
+    lua::loadbuffer(L, *env, src, fileName);
     lua::store_in(L, lua::CHUNKS_TABLE, name);
 }
 

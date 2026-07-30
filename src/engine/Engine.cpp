@@ -169,9 +169,9 @@ void Engine::initialize(CoreParameters coreParameters) {
         );
     }
 
-    content = std::make_unique<ContentControl>(*project, *paths, *input, [this]() {
-        onContentLoad();
-    });
+    content = std::make_unique<ContentControl>(
+        *project, *paths, input.get(), [this]() {onContentLoad();}
+    );
 
     LOG_INFO("Initialization of the scripting system");
     scripting::initialize(this);

@@ -55,7 +55,7 @@ scriptenv UIDocument::getEnvironment() const {
 std::shared_ptr<gui::UINode> UIDocument::get(const std::string& id) const {
     auto found = map.find(id);
     if (found == map.end()) return nullptr;
-    return found->second;
+    return found->second.lock();
 }
 
 std::unique_ptr<UIDocument> UIDocument::read(

@@ -33,7 +33,7 @@ function parse_path(path)
     if index == nil then
         error("Invalid path syntax (':' missing)")
     end
-    return string.sub(path, 1, index-1), string.sub(path, index+1, -1)
+    return string.sub(path, 1, index - 1), string.sub(path, index + 1, -1)
 end
 
 -- Lua has no parallelizm, also _set_data does not call any lua functions so
@@ -44,6 +44,7 @@ local _ffi = ffi
 function __chroma_Canvas_set_data(self, data)
     if type(data) == "cdata" then
         self:_set_data(tostring(_ffi.cast("uintptr_t", data.bytes)), data.size)
+        return
     end
     local width = self.width
     local height = self.height
@@ -58,7 +59,7 @@ function __chroma_Canvas_set_data(self, data)
     for i=0, size - 1 do
         canvas_ffi_buffer[i] = data[i + 1]
     end
-    self:_set_data(tostring(_ffi.cast("uintptr_t", canvas_ffi_buffer)), data.size)
+    self:_set_data(tostring(_ffi.cast("uintptr_t", canvas_ffi_buffer)), size)
 end
 
 local ipairs_mt_supported = false

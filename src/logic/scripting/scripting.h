@@ -169,6 +169,7 @@ namespace scripting {
         uidocscript& script
     );
     void load_entity_component(
+        const scriptenv& env,
         const std::string& name,
         const io::path& file,
         const std::string& fileName

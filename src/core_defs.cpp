@@ -16,7 +16,7 @@
 #include <engine/EnginePaths.h>
 #include <coders/toml.h>
 
-void CoreContent::setup(Input& input, ContentBuilder& builder) {
+void CoreContent::setup(Input* input, ContentBuilder& builder) {
     // Воздух
     {
         Block& block = builder.blocks.create(BUILTIN_AIR);
@@ -70,8 +70,8 @@ void CoreContent::setup(Input& input, ContentBuilder& builder) {
     }
 
     auto bindsFile = "res:bindings.toml";
-    if (io::is_regular_file(bindsFile)) {
-        input.getBindings().read(
+    if (input && io::is_regular_file(bindsFile)) {
+        input->getBindings().read(
             toml::parse(bindsFile, io::read_string(bindsFile)), BindType::Bind
         );
     }
