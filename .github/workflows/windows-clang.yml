@@ -46,6 +46,7 @@ jobs:
           export VCPKG_ROOT=$(pwd)/vcpkg
           cmake --preset default-ninja-mingw-windows -DCMAKE_BUILD_TYPE=Release \
             -DVCPKG_TARGET_TRIPLET=x64-mingw-static \
+            -DCHROMA_BUILD_NAME="${{ inputs.build_name }}" \
             -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake \
             -DChromaForge_BUILD_TESTS=ON
           cmake --build build-mingw --config Release

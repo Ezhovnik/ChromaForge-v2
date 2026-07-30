@@ -243,7 +243,7 @@ void Entities::renderDebug(
             if (frustum && !frustum->isBoxVisible(pos - size, pos + size)) continue;
             batch.box(
                 hitbox.position,
-                hitbox.halfsize * 2.0f,
+                hitbox.getHalfSize() * 2.0f,
                 glm::vec4(1.0f)
             );
 
@@ -346,6 +346,7 @@ void Entities::updatePhysics(float delta) {
             eid.uid
         );
         hitbox.friction = glm::abs(hitbox.gravityScale <= 1e-7f) ? 8.0f : (!grounded ? 2.0f : 10.0f);
+        hitbox.scale = transform.size;
         transform.setPos(hitbox.position);
         if (hitbox.grounded && !grounded) {
             scripting::on_entity_grounded(
@@ -451,9 +452,13 @@ void Entities::render(
         if (skeleton.interpolation.isEnabled()) skeleton.interpolation.updateTimer(deltaTime);
         const auto& pos = transform.pos;
         const auto& size = transform.size;
-        if (!frustum || frustum->isBoxVisible(pos - size, pos + size)) {
-            const auto* skeletonConfig = skeleton.config;
-            skeletonConfig->render(assets, batch, skeleton, transform.rot, pos);
+        if (frustum && !frustum->isBoxVisible(pos - size, pos + size)) {
+            continue;
         }
+
+        const auto* skeletonConfig = skeleton.config;
+        skeletonConfig->render(
+            assets, batch, skeleton, transform.rot, pos, size
+        );
     }
 }

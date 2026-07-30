@@ -44,8 +44,7 @@ function on_random_update(x, y, z)
 function on_blocks_spark(sps: int)
 ```
 
-Вызывается sps (20) раз в секунду
-Вызывается sps (20) раз в секунду. Используйте 1/sps вместо `time.delta()`.
+Вызывается sps (20 / spark-interval) раз в секунду. Используйте 1/sps вместо `time.delta()`.
 
 > [!WARNING]
 Массовые события, такие как `on_block_spark`, `on_block_present` и `on_block_removed`,

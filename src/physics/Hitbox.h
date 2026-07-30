@@ -61,25 +61,30 @@ CHROMA_ENUM_END
  */
 struct Hitbox {
     BodyType type;
-	glm::vec3 position; ///< Центр хитбокса в мировых координатах
-	glm::vec3 halfsize; ///< Половины размеров хитбокса по осям X, Y, Z
-	glm::vec3 velocity; ///< Текущая скорость хитбокса
+    glm::vec3 position; ///< Центр хитбокса в мировых координатах
+    glm::vec3 halfsize; ///< Половины размеров хитбокса по осям X, Y, Z
+    glm::vec3 velocity; ///< Текущая скорость хитбокса
+    glm::vec3 scale {1.0f, 1.0f, 1.0f};
     float linearDamping = 0.5f; ///< Коэффициент линейного затухания скорости
     float friction = 1.0f;
     float verticalDamping = 1.0f;
-	bool grounded = false; ///< Флаг, указывающий, находится ли хитбокс на земле
+    bool grounded = false; ///< Флаг, указывающий, находится ли хитбокс на земле
     float gravityScale = 1.0f;
     bool crouching = false;
 
-	/**
+    /**
      * @brief Конструктор хитбокса.
      * @param type Тип тела для расчета физики.
      * @param position Начальная позиция центра.
      * @param halfsize Половины размеров по осям.
-	 */
-	Hitbox(BodyType type, glm::vec3 position, glm::vec3 halfsize);
+     */
+    Hitbox(BodyType type, glm::vec3 position, glm::vec3 halfsize);
 
     AABB getAABB() const {
         return AABB(position - halfsize, position + halfsize);
+    }
+
+    glm::vec3 getHalfSize() const {
+        return halfsize * scale;
     }
 };

@@ -1,82 +1,72 @@
 name: Release
-
 on:
-  push:
-    tags:
-      - 'v*'
-
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Engine release version'
+        required: true
+        default: "0.0.0"
+env:
+  RELEASE_VERSION: ${{ github.event.inputs.version || 'testrelease' }}
+  BRANCH_NAME: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || 'main' }}
 jobs:
   prepare:
     runs-on: ubuntu-latest
-    outputs:
-      build_name: ${{ steps.version.outputs.VERSION }}
     steps:
-      - name: Get version
-        id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
-      - run: echo "Building release ${{ steps.version.outputs.VERSION }}"
-
+      - run: echo "exists just for outputs"
+    outputs:
+      build_name: '${{ env.RELEASE_VERSION }}'
   build_linux:
     needs: [prepare]
     uses: ./.github/workflows/appimage.yml
     with:
       build_name: '${{ needs.prepare.outputs.build_name }}'
-
   build_macos:
     needs: [prepare]
     uses: ./.github/workflows/macos.yml
     with:
       build_name: '${{ needs.prepare.outputs.build_name }}'
-
   build_windows:
     needs: [prepare]
-    uses: ./.github/workflows/windows.yml
+    uses: ./.github/workflows/windows-clang.yml
     with:
       build_name: '${{ needs.prepare.outputs.build_name }}'
-
   publish_release:
     runs-on: ubuntu-latest
     needs: [build_linux, build_macos, build_windows]
     steps:
-    - name: Checkout
+    - name: Checkout Release Branch
       uses: actions/checkout@v4
-
-    - name: Download Build Artifacts
+      with:
+        ref: ${{ env.BRANCH_NAME }}
+    - name: Download Build Artifact
       uses: actions/download-artifact@v4
       with:
         path: ./artifacts
-
-    - name: Package release files
-      env:
-        VERSION: ${{ github.ref_name }}
+    - name: Show Artifacts
       run: |
-        VERSION="${VERSION#v}"
         mkdir release
-
-        # Linux AppImage
-        if [ -f ./artifacts/AppImage/*.AppImage ]; then
-          cp ./artifacts/AppImage/*.AppImage \
-             ./release/chromaforge-${VERSION}_x86-64.AppImage
-        fi
-
-        # macOS DMG
-        if [ -f ./artifacts/ChromaForgeMacOs/*.dmg ]; then
-          cp ./artifacts/ChromaForgeMacOs/*.dmg \
-             ./release/chromaforge-${VERSION}_macos.dmg
-        fi
-
-        # Windows ZIP
-        if [ -d ./artifacts/Windows-Build ]; then
-          (cd ./artifacts/Windows-Build && \
-           zip -r ../../release/chromaforge-${VERSION}_win64.zip .)
-        fi
-
+        mv ./artifacts/AppImage/ChromaForge-latest-x86_64.AppImage \
+           ./release/chromaforge-${RELEASE_VERSION}_x86-64.AppImage
+        mv ./artifacts/ChromaForgeMacOs/ChromaForge-MacOS.dmg \
+           ./release/chromaforge-${RELEASE_VERSION}_macos.dmg
+        (cd ./artifacts/Windows-MinGW-Build && zip -r ../../release/chromaforge-${RELEASE_VERSION}_win64.zip .)
         ls -la ./release
+        ls -R ./release
+    - name: Create Tag
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
 
+        TAG_NAME="v${RELEASE_VERSION}"
+        git tag -a "${TAG_NAME}" -m "Automated release tag ${TAG_NAME}"
+        git push origin "${TAG_NAME}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Release Draft
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ github.ref_name }}
+        tag_name: v${{ env.RELEASE_VERSION }}
         draft: true
         files: |
           ./release/*

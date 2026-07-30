@@ -33,7 +33,16 @@ WindowControl::Result WindowControl::initialize() {
 
     std::string title = project.title;
     if (!title.empty()) title += " - ";
-    title += "ChromaForge v" + ENGINE_VERSION_STRING;
+    std::string buildName;
+#ifdef CHROMA_BUILD_NAME
+    buildName = CHROMA_BUILD_NAME;
+#endif
+    title += "ChromaForge v";
+    if (buildName.empty()) {
+        title += ENGINE_VERSION_STRING;
+    } else {
+        title += buildName;
+    }
     if (ENGINE_DEBUG_BUILD) title += " [development build]";
     if (engine.getDebuggingServer()) title = "[debugging] " + title;
 

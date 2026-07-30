@@ -145,7 +145,7 @@ void Skybox::draw(
     float angle = daytime * glm::pi<float>() * 2.0f;
     float opacity = glm::pow(1.0f - fog, 7.0f);
 
-    float depthScale = 1e3;
+    float depthScale = 2e3;
     for (auto& sprite : sprites) {
         batch3d->texture(assets.get<Texture>(sprite.texture));
 

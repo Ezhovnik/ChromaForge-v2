@@ -34,7 +34,7 @@ void PhysicsSolver::step(
 	float linearDamping = hitbox.linearDamping * hitbox.friction;
 	float step_size = 2.0f / BLOCK_AABB_GRID;
 	float gravityScale = hitbox.gravityScale;
-	const glm::vec3& half = hitbox.halfsize;
+	auto half = hitbox.getHalfSize();
     glm::vec3& pos = hitbox.position;
     glm::vec3& vel = hitbox.velocity;
 
@@ -100,8 +100,8 @@ void PhysicsSolver::step(
 	}
 
 	AABB aabb;
-    aabb.a = hitbox.position - hitbox.halfsize;
-    aabb.b = hitbox.position + hitbox.halfsize;
+    aabb.a = hitbox.position - hitbox.getHalfSize();
+    aabb.b = hitbox.position + hitbox.getHalfSize();
     for (size_t i = 0; i < sensors.size(); ++i) {
         auto& sensor = *sensors[i];
         if (sensor.entity == entity) continue;
@@ -268,7 +268,7 @@ void PhysicsSolver::colisionCalc(
 // Проверяет, находится ли блок внутри хитбокса
 bool PhysicsSolver::isBlockInside(int x, int y, int z, Hitbox* hitbox) {
 	const glm::vec3& pos = hitbox->position;
-	const glm::vec3& half = hitbox->halfsize;
+	auto half = hitbox->getHalfSize();
 	return x >= floor(pos.x - half.x) && x <= floor(pos.x + half.x) &&
 			z >= floor(pos.z - half.z) && z <= floor(pos.z + half.z) &&
 			y >= floor(pos.y - half.y) && y <= floor(pos.y + half.y);
@@ -276,7 +276,7 @@ bool PhysicsSolver::isBlockInside(int x, int y, int z, Hitbox* hitbox) {
 
 bool PhysicsSolver::isBlockInside(int x, int y, int z, Block* def, blockstate state, Hitbox* hitbox) {
 	const glm::vec3& pos = hitbox->position;
-	const glm::vec3& half = hitbox->halfsize;
+	auto half = hitbox->getHalfSize();
 	const auto& boxes = def->rotatable ? def->rt.hitboxes[state.rotation] : def->hitboxes;
 	for (const auto& block_hitbox : boxes) {
 		glm::vec3 min = block_hitbox.min();

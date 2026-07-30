@@ -13,6 +13,7 @@ block.__perform_sparks = function(delta)
             goto continue
         end
         entry.timer = 0.0
+        entry.pointer = entry.pointer % #entry
         local event = entry.event
         local sps = entry.sps
         for i=1, steps do

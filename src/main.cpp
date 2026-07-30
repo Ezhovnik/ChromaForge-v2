@@ -20,6 +20,9 @@ static void sigterm_handler(int signum) {
 
 // Точка входа в программу
 int main(int argc, char** argv) {
+#ifdef CHROMA_BUILD_NAME
+    std::cout << "Build: " << CHROMA_BUILD_NAME;
+#endif
     CoreParameters coreParameters;
     try {
         if (!parse_cmdline(argc, argv, coreParameters)) {

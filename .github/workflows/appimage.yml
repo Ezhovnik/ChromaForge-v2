@@ -34,7 +34,7 @@ jobs:
           cd ../..
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DChromaForge_BUILD_APPDIR=ON -DChromaForge_BUILD_TESTS=ON
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DChromaForge_BUILD_APPDIR=ON -DChromaForge_BUILD_TESTS=ON -DCHROMA_BUILD_NAME="${{ inputs.build_name }}"
 
       - name: Build
         run: cmake --build build -t install

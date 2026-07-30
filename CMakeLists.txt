@@ -12,6 +12,8 @@ endif()
 option(ChromaForge_BUILD_TESTS "Build unit tests" OFF)
 option(ChromaForge_BUILD_APPDIR "Package Linux build as AppDir" OFF)
 
+add_compile_definitions(CHROMA_BUILD_NAME="${CRHOMA_BUILD_NAME}")
+
 add_subdirectory(src)
 add_executable(ChromaForge src/main.cpp)
 if(WIN32)

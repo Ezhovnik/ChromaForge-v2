@@ -26,9 +26,9 @@ jobs:
       - name: Configure
         run: |
           cmake -DOPENAL_INCLUDE_DIR=$(brew --prefix openal-soft)/include \
-           -DOPENAL_LIBRARY=$(brew --prefix openal-soft)/lib/libopenal.dylib \
-           -S . -B build \
-           -DCMAKE_BUILD_TYPE=Release -DChromaForge_BUILD_TESTS=ON
+            -DOPENAL_LIBRARY=$(brew --prefix openal-soft)/lib/libopenal.dylib \
+            -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release -DChromaForge_BUILD_TESTS=ON -DCHROMA_BUILD_NAME="${{ inputs.build_name }}"
 
       - name: Build
         run: cmake --build build --parallel
