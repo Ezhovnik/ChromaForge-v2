@@ -82,7 +82,7 @@ namespace gui {
         std::shared_ptr<Menu> menu;
 
         std::queue<runnable> postRunnables;
-        std::set<std::shared_ptr<UINode>> mouseOver;
+        std::vector<std::weak_ptr<UINode>> mouseOver;
 
         PageLoaderFunc pagesLoader;
 

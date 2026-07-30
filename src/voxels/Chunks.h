@@ -10,6 +10,7 @@
 #include <typedefs.h>
 #include <voxels/voxel.h>
 #include <util/AreaMap2D.h>
+#include <constants.h>
 
 class Chunk;
 class WorldFiles;
@@ -105,7 +106,11 @@ public:
     bool isReplaceableBlock(int32_t x, int32_t y, int32_t z);
 	bool isObstacleBlock(int32_t x, int32_t y, int32_t z);
 
-    void getVoxels(VoxelsVolume& volume, bool backlight = false) const;
+    void getVoxels(
+        VoxelsVolume& volume,
+        bool backlight = false,
+        int top = CHUNK_HEIGHT
+    ) const;
 
     void setCenter(int32_t x, int32_t z);
     void resize(uint32_t newWidth, uint32_t newDepth);

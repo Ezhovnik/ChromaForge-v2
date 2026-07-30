@@ -317,7 +317,11 @@ void Chunks::resize(uint32_t newWidth, uint32_t newDepth) {
 }
 
 // TODO: reduce nesting
-void Chunks::getVoxels(VoxelsVolume& volume, bool backlight) const {
+void Chunks::getVoxels(
+    VoxelsVolume& volume,
+    bool backlight,
+    int top
+) const {
     voxel* voxels = volume.getVoxels();
     light_t* lights = volume.getLights();
     int x = volume.getX();
@@ -325,7 +329,7 @@ void Chunks::getVoxels(VoxelsVolume& volume, bool backlight) const {
     int z = volume.getZ();
 
     int w = volume.getW();
-    int h = volume.getH();
+    int h = std::min<int>(volume.getH(), top);
     int d = volume.getD();
 
     int scx = floordiv<CHUNK_WIDTH>(x);
