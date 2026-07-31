@@ -95,7 +95,7 @@ static network::Server& create_tcp_server(
     }
     uint64_t serverId = network->openTcpServer(
         port,
-        [&network, &dbgServer](uint64_t sid, uint64_t id) {
+        [network, &dbgServer](uint64_t sid, uint64_t id) {
             auto& connection = dynamic_cast<network::ReadableConnection&>(
                 *network->getConnection(id, true)
             );

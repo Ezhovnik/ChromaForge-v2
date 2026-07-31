@@ -357,7 +357,11 @@ namespace audio {
         virtual bool isDummy() const = 0;
     };
 
-    void initialize(bool enabled, AudioSettings& settings);
+    void initialize(
+        bool enabled,
+        bool inputEnabled,
+        AudioSettings& settings
+    );
 
     std::unique_ptr<PCM> load_PCM(const io::path& file, bool headerOnly);
 

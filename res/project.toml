@@ -2,5 +2,6 @@
 name = "default"
 base_packs = ["chromaforge"]
 permissions = [
-    "network"
+    "network",
+    "record-audio"
 ]

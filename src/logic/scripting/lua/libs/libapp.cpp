@@ -9,8 +9,15 @@
 #include <io/io.h>
 #include <io/devices/MemoryDevice.h>
 #include <content/ContentControl.h>
+#include <devtools/Project.h>
 
 static int l_start_debug_instance(lua::State* L) {
+    if (
+        !scripting::engine->getProject().permissions.has(Permissions::DEBUGGING)
+    ) {
+        throw std::runtime_error("Project has no debugging permission");
+    }
+
     int port = lua::tointeger(L, 1);
     if (port == 0) {
         auto network = scripting::engine->getNetwork();
