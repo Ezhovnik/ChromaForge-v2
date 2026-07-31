@@ -48,7 +48,8 @@ jobs:
             -DVCPKG_TARGET_TRIPLET=x64-mingw-static \
             -DCHROMA_BUILD_NAME="${{ inputs.build_name }}" \
             -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake \
-            -DChromaForge_BUILD_TESTS=ON
+            -DChromaForge_BUILD_TESTS=ON \
+            -DCMAKE_EXE_LINKER_FLAGS="-static"
           cmake --build build-mingw --config Release
 
       - name: Run Lua integration tests
