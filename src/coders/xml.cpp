@@ -11,8 +11,11 @@
 
 using namespace xml;
 
-Attribute::Attribute(std::string name, std::string text) : name(std::move(name)), text(std::move(text)) {
-}
+Attribute::Attribute(
+    std::string name,
+    std::string text
+) : name(std::move(name)),
+    text(std::move(text)) {}
 
 const std::string& Attribute::getName() const {
     return name;
@@ -96,6 +99,19 @@ glm::vec4 Attribute::asColor() const {
     } else {
         return asVec4() / 255.0f;
     }
+}
+
+int Attribute::asNumbers(float* dst, size_t dstSize) const {
+    size_t pos = 0;
+    size_t count = 0;
+    while (pos < text.length() && count < dstSize) {
+        size_t end = text.find(',', pos);
+        dst[count++] = util::parse_double(
+            text, pos, std::min<size_t>(end - pos, text.length() - pos)
+        );
+        pos = end + 1;
+    }
+    return count;
 }
 
 Node::Node(std::string tag) : tag(std::move(tag)) {
