@@ -3,6 +3,8 @@
 #include <memory>
 #include <cstring>
 
+#include <glm/vec4.hpp>
+
 #include <typedefs.h>
 #include <constants.h>
 
@@ -84,6 +86,15 @@ public:
 	static inline constexpr light_t combine(int r, int g, int b, int s) {
 		return r | (g << 4) | (b << 8) | (s << 12);
 	}
+
+	static glm::vec4 extractNormalized(light_t light) {
+        return glm::vec4(
+            extract(light, 0) / 15.0f,
+            extract(light, 1) / 15.0f,
+            extract(light, 2) / 15.0f,
+            extract(light, 3) / 15.0f
+        );
+    }
 
 	std::unique_ptr<ubyte[]> encode() const;
     void decode(const ubyte* src);

@@ -148,6 +148,10 @@ light_t Chunks::getLight(int32_t x, int32_t y, int32_t z) const {
 	return chunk->lightmap->get(lx, y, lz);
 }
 
+light_t Chunks::getLight(const glm::ivec3& pos) const {
+    return getLight(pos.x, pos.y, pos.z);
+}
+
 Chunk* Chunks::getChunkByVoxel(int x, int y, int z) const {
     if (y < 0 || y >= CHUNK_HEIGHT) return nullptr;
 

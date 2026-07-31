@@ -455,12 +455,7 @@ glm::vec4 BlocksRenderer::pickLight(int x, int y, int z) const {
             y, 
             chunk->chunk_z * CHUNK_DEPTH + z
         );
-        return glm::vec4(
-            Lightmap::extract(light, 0),
-            Lightmap::extract(light, 1),
-            Lightmap::extract(light, 2),
-            Lightmap::extract(light, 3)
-        ) / 15.0f;
+        return Lightmap::extractNormalized(light);
     }
     else {
         return glm::vec4(0.0f);

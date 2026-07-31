@@ -75,6 +75,7 @@ public:
     voxel& requireVoxel(int32_t x, int32_t y, int32_t z) const;
 
     light_t getLight(int32_t x, int32_t y, int32_t z) const;
+    light_t getLight(const glm::ivec3& pos) const;
 	ubyte getLight(int32_t x, int32_t y, int32_t z, int channel) const;
 
     glm::ivec3 seekOrigin(

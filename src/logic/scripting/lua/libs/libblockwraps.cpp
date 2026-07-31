@@ -7,9 +7,13 @@
 static int l_wrap(lua::State* L) {
     auto position = lua::tovec3(L, 1);
     std::string texture = lua::require_string(L, 2);
+    float emission = lua::isnumber(L, 3) ? lua::tonumber(L, 3) : 1.0f;
 
     return lua::pushinteger(
-        L, scripting::renderer->blockWraps->add(position, std::move(texture))
+        L,
+        scripting::renderer->blockWraps->add(
+            position, std::move(texture), emission
+        )
     );
 }
 
@@ -38,11 +42,17 @@ static int l_set_faces(lua::State* L) {
     if (auto wrapper = scripting::renderer->blockWraps->get(lua::tointeger(L, 1))) {
         for (int i = 0; i < wrapper->textureFaces.size(); ++i) {
             if (lua::isnil(L, 2 + i)) {
-                wrapper->cullingBits &= ~(1 << i);
-                wrapper->textureFaces[i] = "";
+                if (wrapper->cullingBits & (1 << i)) {
+                    wrapper->cullingBits &= ~(1 << i);
+                    wrapper->textureFaces[i] = "";
+                    wrapper->dirtySides |= (1 << i);
+                }
             } else {
-                wrapper->cullingBits |= (1 << i);
-                wrapper->textureFaces[i] = lua::require_string(L, 2 + i);
+                auto texture = lua::require_string(L, 2 + i);;
+                if ((wrapper->cullingBits & (1 << i)) == 0x0 || wrapper->textureFaces[i] != texture) {
+                    wrapper->cullingBits |= (1 << i);
+                    wrapper->textureFaces[i] = texture;
+                }
             }
         }
     }

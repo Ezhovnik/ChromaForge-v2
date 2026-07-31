@@ -133,11 +133,10 @@ const Mesh<ChunkVertex>* ChunksRenderer::render(
 
     if (important) {
         auto voxelsBuffer = prepareVoxelsVolume(*chunk);
-        inwork[key] = true;
 
         auto mesh = renderer->render(chunk.get(), *voxelsBuffer);
-        meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = ChunkMesh {std::move(mesh.mesh), std::move(mesh.sortingMeshData)};
-        return meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)].mesh.get();
+        meshes[key] = ChunkMesh {std::move(mesh.mesh), std::move(mesh.sortingMeshData)};
+        return meshes[key].mesh.get();
     }
 
     if (inwork.find(key) != inwork.end()) return nullptr;
