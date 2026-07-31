@@ -161,7 +161,8 @@ block.set_user_bits(x: int, y: int, z: int, offset: int, bits: int, value: int) 
 -- 1. Минимальная точка хитбокса
 -- 2. Размер хитбокса
 -- rotation_index - индекс поворота блока
-block.get_hitbox(id: int, rotation_index: int) -> {vec3, vec3}
+-- hitbox_index - индекс хитбокса
+block.get_hitbox(id: int, rotation_index: int, [опционально] hitbox_index: int = 0) -> {vec3, vec3}
 ```
 
 ## Модель
@@ -170,13 +171,13 @@ block.get_hitbox(id: int, rotation_index: int) -> {vec3, vec3}
 
 ```lua
 -- возвращает тип модели блока (block/aabb/custom/...)
-block.get_model(id: int) -> str
+block.get_model(id: int, [опционально] variant_index: int = 0) -> string
 
 -- возвращает имя модели блока
-block.model_name(id: int) -> str
+block.model_name(id: int, [опционально] variant_index: int = 0) -> string
 
 -- возвращает массив из 6 текстур, назначенных на стороны блока
-block.get_textures(id: int) -> таблица строк
+block.get_textures(id: int, [опционально] variant_index: int = 0) -> table<string>
 ```
 
 ## Поля данных

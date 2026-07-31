@@ -342,7 +342,7 @@ std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
     >(
         "assets-loader-pool", 
         [=](){return std::make_shared<LoaderWorker>(this);},
-        [this](const asset_loader::postfunc& func) {
+        [this](asset_loader::postfunc&& func) {
             func(&assets);
         }
     );

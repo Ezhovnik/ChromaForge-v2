@@ -130,7 +130,7 @@ public:
 	bool isPause() const;
     void setPause(bool pause);
 
-    void openInventory();
+    void openInventory(bool playerInventory = true);
     std::shared_ptr<Inventory> openInventory(
         UIDocument* doc,
         std::shared_ptr<Inventory> inv,

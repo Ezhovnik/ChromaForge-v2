@@ -81,7 +81,7 @@ namespace util {
 
         std::vector<std::unique_lock<std::mutex>> workersBlocked; ///< Вектор блокировок для управления паузой рабочих потоков
 
-        consumer<R&> resultConsumer; ///< Функция-потребитель для обработки готовых результатов
+        consumer<R&&> resultConsumer; ///< Функция-потребитель для обработки готовых результатов
         consumer<T&> onJobFailed = nullptr; ///< Колбэк при ошибке выполнения задания
         runnable onComplete = nullptr; ///< Колбэк при завершении всех заданий
 
@@ -159,7 +159,7 @@ namespace util {
         ThreadPool(
             std::string name,
             supplier<std::shared_ptr<Worker<T, R>>> workersSupplier, 
-            consumer<R&> resultConsumer,
+            consumer<R&&> resultConsumer,
             int maxWorkers=UNLIMITED
         ) : name(std::move(name)), resultConsumer(resultConsumer) {
             uint numThreads = std::thread::hardware_concurrency();
@@ -236,21 +236,27 @@ namespace util {
          * Может выбросить исключение, если произошла ошибка и stopOnFail == true.
          */
         void update() override {
-            if (!working) return;
+            pullResults();
+        }
+
+        size_t pullResults(size_t maxResults = -1) {
+            if (!working) return 0;
 
             if (failed) {
                 THROW_ERR("['{}' Thread Pool] Some job failed", name);
             }
 
             bool complete = false;
+            size_t resultsProcessed = 0;
             {
                 std::lock_guard<std::mutex> lock(resultsMutex);
-                while (!results.empty()) {
-                    ThreadPoolResult<T,R> entry = results.front();
+                while (!results.empty() && resultsProcessed < maxResults) {
+                    ThreadPoolResult<T, R> entry = std::move(results.front());
                     results.pop();
 
+                    ++resultsProcessed;
                     try {
-                        resultConsumer(entry.entry);
+                        resultConsumer(std::move(entry.entry));
                     } catch (std::exception& err) {
                         LOG_ERROR("['{}' Thread Pool] {}", name, err.what());
                         if (onJobFailed) onJobFailed(entry.job);
@@ -268,7 +274,7 @@ namespace util {
                     }
                 }
 
-                if (onComplete && busyWorkers == 0) {
+                if (onComplete && busyWorkers == 0 && results.empty()) {
                     std::lock_guard<std::mutex> jobsLock(jobsMutex);
                     if (jobs.empty()) {
                         onComplete();
@@ -280,6 +286,7 @@ namespace util {
                 THROW_ERR("['{}' Thread Pool] Some job failed", name);
             }
             if (complete) terminate();
+            return resultsProcessed;
         }
 
         /**

@@ -29,7 +29,7 @@ struct UVRegion;
  * Строит меш для одного чанка, учитывая видимость граней, освещение,
  * модели блоков и их повороты.
  */
-class BlocksRenderer {
+class BlocksRenderer final {
 public:
     BlocksRenderer(
         size_t capacity,
@@ -37,7 +37,7 @@ public:
         const ContentGfxCache& cache,
         const EngineSettings& settings
     );
-    virtual ~BlocksRenderer();
+    ~BlocksRenderer();
 
     void build(const Chunk* chunk, const VoxelsVolume& volume);
     ChunkMesh render(
