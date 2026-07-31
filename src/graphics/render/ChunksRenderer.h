@@ -22,7 +22,6 @@ class BlocksRenderer;
 class ContentGfxCache;
 struct EngineSettings;
 class Chunks;
-class VoxelsVolume;
 
 struct ChunksSortEntry {
     int index;
@@ -41,7 +40,7 @@ struct RendererResult {
 
 struct RendererJob {
     std::shared_ptr<Chunk> chunk;
-    std::shared_ptr<VoxelsVolume> volume;
+    std::shared_ptr<VoxelsRenderVolume> volume;
 };
 
 class ChunksRenderer {
@@ -59,7 +58,8 @@ class ChunksRenderer {
     const Mesh<ChunkVertex>* retrieveChunk(
         size_t index, const Camera& camera, bool culling
     );
-    std::shared_ptr<VoxelsVolume> prepareVoxelsVolume(const Chunk& chunk);
+    std::shared_ptr<VoxelsRenderVolume> prepareVoxelsVolume(const Chunk& chunk);
+    size_t enqueuedInFrame = 0;
 public:
     ChunksRenderer(
         const Level* level,
@@ -73,14 +73,16 @@ public:
 
     const Mesh<ChunkVertex>* render(
         const std::shared_ptr<Chunk>& chunk,
-        bool important
+        bool important,
+        bool lowPriority
     );
     void unload(const Chunk* chunk);
     void clear();
 
     const Mesh<ChunkVertex>* getOrRender(
         const std::shared_ptr<Chunk>& chunk,
-        bool important
+        bool important,
+        bool lowPriority
     );
 
     void drawShadowsPass(

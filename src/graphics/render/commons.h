@@ -9,6 +9,7 @@
 
 #include <graphics/core/MeshData.h>
 #include <util/Buffer.h>
+#include <constants.h>
 
 struct ChunkVertex {
     glm::vec3 position;
@@ -52,3 +53,13 @@ struct ChunkMesh {
     SortingMeshData sortingMeshData;
     std::unique_ptr<Mesh<ChunkVertex>> sortedMesh;
 };
+
+inline constexpr int VOXELS_BUFFER_PADDING = 2;
+
+template<int, int, int> class StaticVoxelsVolume;
+
+using VoxelsRenderVolume = StaticVoxelsVolume<
+    CHUNK_WIDTH + VOXELS_BUFFER_PADDING * 2,
+    CHUNK_HEIGHT,
+    CHUNK_DEPTH + VOXELS_BUFFER_PADDING * 2
+>;

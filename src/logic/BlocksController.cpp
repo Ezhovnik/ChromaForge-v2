@@ -27,7 +27,7 @@ BlocksController::BlocksController(
     chunks(*level.chunks),
     lighting(lighting),
     randSparkClock(20, 3),
-    blocksSparkClock(20, 1),
+    blocksSparkClock(20, 3),
     worldSparkClock(20, 1) {}
 
 void BlocksController::updateSides(int x, int y, int z) {
@@ -115,9 +115,24 @@ void BlocksController::updateBlock(int x, int y, int z) {
 }
 
 void BlocksController::update(float delta, uint padding) {
-    if (randSparkClock.update(delta)) randomSpark(randSparkClock.getPart(), randSparkClock.getParts(), padding);
-    if (blocksSparkClock.update(delta)) onBlocksSpark(blocksSparkClock.getPart(), blocksSparkClock.getParts());
-    if (worldSparkClock.update(delta)) scripting::on_world_spark(worldSparkClock.getSparkRate());
+    if (randSparkClock.update(delta)) {
+        randomSpark(
+            randSparkClock.getPart(),
+            randSparkClock.getParts(),
+            padding
+        );
+    }
+    if (blocksSparkClock.update(delta)) {
+        onBlocksSpark(
+            blocksSparkClock.getSparkId(),
+            blocksSparkClock.getParts()
+        );
+    }
+    if (worldSparkClock.update(delta)) {
+        scripting::on_world_spark(
+            worldSparkClock.getSparkRate()
+        );
+    }
 }
 
 void BlocksController::onBlocksSpark(int sparkId, int parts) {

@@ -17,6 +17,7 @@ bool Clock::update(float delta) {
             sparkTimer = std::fmod(sparkTimer, delay);
             sparkPartsUndone = sparkParts - 1;
         }
+        ++sparkId;
         return true;
     }
     return false;

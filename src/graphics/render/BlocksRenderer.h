@@ -18,7 +18,6 @@ template<typename VertexStructure> class Mesh;
 class Content;
 class Block;
 class Chunk;
-class VoxelsVolume;
 class Chunks;
 class ContentGfxCache;
 struct UVRegion;
@@ -39,9 +38,9 @@ public:
     );
     ~BlocksRenderer();
 
-    void build(const Chunk* chunk, const VoxelsVolume& volume);
+    void build(const Chunk* chunk, const VoxelsRenderVolume& volume);
     ChunkMesh render(
-        const Chunk* chunk, const VoxelsVolume& volume
+        const Chunk* chunk, const VoxelsRenderVolume& volume
     );
     ChunkMeshData createMesh();
 
@@ -67,7 +66,7 @@ private:
     bool denseRender = false;
 
     const Chunk* chunk = nullptr;
-    const VoxelsVolume* voxelsBuffer = nullptr;
+    const VoxelsRenderVolume* voxelsBuffer = nullptr;
 
     const Block* const* blockDefsCache;
     const ContentGfxCache& cache;
@@ -212,20 +211,13 @@ private:
     );
 
     /**
-     * @brief Проверяет, пропускает ли блок свет.
-     * @param x,y,z Глобальные координаты.
-     * @return true, если блок пропускает свет.
-     */
-    bool isOpenForLight(int x, int y, int z) const;
-
-    /**
      * @brief Проверяет, открыта ли грань (соседний блок прозрачен или не той группы отрисовки).
      * @param x,y,z Глобальные координаты соседнего блока.
      * @param group Группа отрисовки текущего блока.
      * @return true, если грань должна быть отрисована.
      */
     inline bool isOpen(const glm::ivec3& pos, const Block& def, const Variant& variant) const {
-        auto vox = voxelsBuffer->pickBlock(
+        const auto& vox = voxelsBuffer->pickBlock(
             chunk->chunk_x * CHUNK_WIDTH + pos.x,
             pos.y,
             chunk->chunk_z * CHUNK_DEPTH + pos.z

@@ -45,7 +45,7 @@ CHROMA_ENUM_METADATA(BlockModelType)
     {"custom", BlockModelType::Custom},
 CHROMA_ENUM_END
 
-enum class CullingMode {
+enum class CullingMode : uint8_t {
     Default,
     Optional,
     Disabled,

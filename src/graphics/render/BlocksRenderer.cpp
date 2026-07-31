@@ -43,20 +43,21 @@ void BlocksRenderer::vertex(
     const glm::vec3& normal,
     float emission
 ) {
-    vertexBuffer[vertexCount].position = coord;
-
-    vertexBuffer[vertexCount].uv = {u, v};
-
-    vertexBuffer[vertexCount].normal[0] = static_cast<uint8_t>(normal.r * 127 + 128);
-    vertexBuffer[vertexCount].normal[1] = static_cast<uint8_t>(normal.g * 127 + 128);
-    vertexBuffer[vertexCount].normal[2] = static_cast<uint8_t>(normal.b * 127 + 128);
-    vertexBuffer[vertexCount].normal[3] = static_cast<uint8_t>(emission * 255);
-
-    vertexBuffer[vertexCount].color[0] = static_cast<uint8_t>(light.r * 255);
-    vertexBuffer[vertexCount].color[1] = static_cast<uint8_t>(light.g * 255);
-    vertexBuffer[vertexCount].color[2] = static_cast<uint8_t>(light.b * 255);
-    vertexBuffer[vertexCount].color[3] = static_cast<uint8_t>(light.a * 255);
-    vertexCount++;
+    vertexBuffer[vertexCount++] = {
+        coord,
+        {u, v},
+        {
+            static_cast<uint8_t>(light.r * 255),
+            static_cast<uint8_t>(light.g * 255),
+            static_cast<uint8_t>(light.b * 255),
+            static_cast<uint8_t>(light.a * 255),
+        }, {
+            static_cast<uint8_t>(normal.x * 127 + 128),
+            static_cast<uint8_t>(normal.y * 127 + 128),
+            static_cast<uint8_t>(normal.z * 127 + 128),
+            static_cast<uint8_t>(emission * 255)
+        }
+    };
 }
 
 void BlocksRenderer::index(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t f) {
@@ -436,30 +437,11 @@ void BlocksRenderer::blockCube(
     }
 }
 
-bool BlocksRenderer::isOpenForLight(int x, int y, int z) const {
-    blockid_t id = voxelsBuffer->pickBlockId(
-        chunk->chunk_x * CHUNK_WIDTH + x, 
-        y, 
-        chunk->chunk_z * CHUNK_DEPTH + z
-    );
-    if (id == BLOCK_VOID) return false;
-    const Block& block = *blockDefsCache[id];
-    if (block.lightPassing) return true;
-    return id == BLOCK_AIR;
-}
-
 glm::vec4 BlocksRenderer::pickLight(int x, int y, int z) const {
-    if (isOpenForLight(x, y, z)) {
-        light_t light = voxelsBuffer->pickLight(
-            chunk->chunk_x * CHUNK_WIDTH + x, 
-            y, 
-            chunk->chunk_z * CHUNK_DEPTH + z
-        );
-        return Lightmap::extractNormalized(light);
-    }
-    else {
-        return glm::vec4(0.0f);
-    }
+    light_t light = voxelsBuffer->pickLight(
+        chunk->chunk_x * CHUNK_WIDTH + x, y, chunk->chunk_z * CHUNK_DEPTH + z
+    );
+    return light ? Lightmap::extractNormalized(light) : glm::vec4(0.0f);
 }
 
 glm::vec4 BlocksRenderer::pickLight(const glm::ivec3& coord) const {
@@ -719,7 +701,9 @@ SortingMeshData BlocksRenderer::renderTranslucent(
     return sortingMesh;
 }
 
-void BlocksRenderer::build(const Chunk* chunk, const VoxelsVolume& volume) {
+void BlocksRenderer::build(
+    const Chunk* chunk, const VoxelsRenderVolume& volume
+) {
     this->chunk = chunk;
     this->voxelsBuffer = &volume;
 
@@ -734,12 +718,15 @@ void BlocksRenderer::build(const Chunk* chunk, const VoxelsVolume& volume) {
     int totalBegin = chunk->bottom * (CHUNK_WIDTH * CHUNK_DEPTH);
     int totalEnd = chunk->top * (CHUNK_WIDTH * CHUNK_DEPTH);
 
+    bool hasTranslucent = false;
+
     int beginEnds[256][2] {};
     for (int i = totalBegin; i < totalEnd; ++i) {
         const voxel& vox = voxels[i];
         blockid_t id = vox.id;
         const auto& def = *blockDefsCache[id];
         const auto& variant = def.getVariantByBits(vox.state.userbits);
+        hasTranslucent = def.translucent || hasTranslucent;
 
         if (beginEnds[variant.drawGroup][0] == 0) {
             beginEnds[variant.drawGroup][0] = i + 1;
@@ -755,7 +742,11 @@ void BlocksRenderer::build(const Chunk* chunk, const VoxelsVolume& volume) {
     denseRender = false;
     densePass = false;
 
-    sortingMesh = renderTranslucent(voxels, beginEnds);
+    if (hasTranslucent) {
+        sortingMesh = renderTranslucent(voxels, beginEnds);
+    } else {
+        sortingMesh = {};
+    }
 
     overflow = false;
     vertexCount = 0;
@@ -800,7 +791,7 @@ ChunkMeshData BlocksRenderer::createMesh() {
 }
 
 ChunkMesh BlocksRenderer::render(
-    const Chunk* chunk, const VoxelsVolume& volume
+    const Chunk* chunk, const VoxelsRenderVolume& volume
 ) {
     build(chunk, volume);
     return ChunkMesh{std::make_unique<Mesh<ChunkVertex>>(

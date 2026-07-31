@@ -26,7 +26,8 @@ SelectBox::SelectBox(
 {
     listenAction(UIAction::Click, [this](GUI& gui) {
         auto panel = std::make_shared<Panel>(gui, getSize());
-        panel->setPos(calcPos() + glm::vec2(0, size.y));
+        panel->setPadding(glm::vec4(0, size.y, 0, 0));
+        panel->setPos(calcPos() + glm::vec2(0, 0));
         for (const auto& option : this->options) {
             auto button = std::make_shared<Button>(
                 gui, option.text, glm::vec4(10.0f), nullptr, glm::vec2(-1.0f)
@@ -40,6 +41,9 @@ SelectBox::SelectBox(
         panel->setZIndex(GUI::CONTEXT_MENU_ZINDEX);
         gui.setFocus(panel);
         panel->listenAction(UIAction::Defocus, [panel=panel.get()](GUI& gui) {
+            gui.remove(panel);
+        });
+        panel->listenAction(UIAction::Click, [panel=panel.get()](GUI& gui) {
             gui.remove(panel);
         });
         gui.add(panel);
