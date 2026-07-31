@@ -30,6 +30,26 @@ struct UVRegion;
  * модели блоков и их повороты.
  */
 class BlocksRenderer {
+public:
+    BlocksRenderer(
+        size_t capacity,
+        const Content& content,
+        const ContentGfxCache& cache,
+        const EngineSettings& settings
+    );
+    virtual ~BlocksRenderer();
+
+    void build(const Chunk* chunk, const VoxelsVolume& volume);
+    ChunkMesh render(
+        const Chunk* chunk, const VoxelsVolume& volume
+    );
+    ChunkMeshData createMesh();
+
+    size_t getMemoryConsumption() const;
+
+    bool isCancelled() const {
+        return cancelled;
+    }
 private:
     const Content& content;
     std::unique_ptr<ChunkVertex[]> vertexBuffer;
@@ -254,38 +274,4 @@ private:
 
     void render(const voxel* voxels, const int beginEnds[256][2]);
     SortingMeshData renderTranslucent(const voxel* voxels, int beginEnds[256][2]);
-public:
-    /**
-     * @brief Конструктор.
-     * @param capacity Размер буферов (количество float в vertexBuffer и int в indexBuffer).
-     * @param content Контент.
-     * @param cache Кэш графики.
-     * @param settings Настройки движка.
-     */
-    BlocksRenderer(
-        size_t capacity, 
-        const Content& content, 
-        const ContentGfxCache& cache, 
-        const EngineSettings& settings
-    );
-
-    virtual ~BlocksRenderer();
-
-    void build(const Chunk* chunk, const VoxelsVolume& volume);
-
-    ChunkMesh render(
-        const Chunk* chunk, const VoxelsVolume& volume
-    );
-
-    /**
-     * @brief Создаёт Mesh из текущих буферов.
-     * @return Указатель на новый Mesh.
-     */
-    ChunkMeshData createMesh();
-
-    size_t getMemoryConsumption() const;
-
-    bool isCancelled() const {
-        return cancelled;
-    }
 };
