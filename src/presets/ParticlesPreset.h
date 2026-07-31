@@ -38,6 +38,7 @@ struct ParticlesPreset : public Serializable {
     float maxAngularVelocity = 0.0f;
     ParticleSpawnShape spawnShape = ParticleSpawnShape::Ball;
     glm::vec3 spawnSpread {};
+    glm::vec3 spawnOffset {};
     std::string texture = "";
     float randomSubUV = 1.0f;
     std::vector<std::string> frames;

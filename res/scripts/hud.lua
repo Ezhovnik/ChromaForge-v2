@@ -1,6 +1,6 @@
 local function configure_SSAO()
     -- A temporary slot for configuring the built-in SSAO effect
-    local slot = gfx.posteffects.index("builtin:default")
+    local slot = gfx.posteffects.index("builtin:ssao")
     gfx.posteffects.set_effect(slot, "ssao")
 
     local buffer = Bytearray(0)
@@ -17,6 +17,18 @@ local function configure_SSAO()
         Bytearray.append(buffer, byteutil.pack("fff", x, y, z))
     end
     gfx.posteffects.set_array(slot, "u_ssaoSamples", Bytearray_as_string(buffer))
+
+    local function update_ssao_quality(value)
+        value = math.min(value, 3)
+        gfx.posteffects.set_params(slot, {
+            u_kernelSize = value * 16,
+            u_radius = 0.4 / value,
+            u_bias = 0.006 / value / value,
+        })
+    end
+    events.on("builtin:setting.graphics.ssao.set", update_ssao_quality)
+
+    update_ssao_quality(builtin.get_setting("graphics.ssao"))
 end
 
 local function update_hand()

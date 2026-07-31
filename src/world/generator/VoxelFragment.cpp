@@ -14,6 +14,8 @@
 #include <core_content_defs.h>
 #include <voxels/Chunks.h>
 #include <voxels/blocks_agent.h>
+#include <logic/LevelController.h>
+#include <lighting/Lighting.h>
 
 std::unique_ptr<VoxelFragment> VoxelFragment::create(
     const Level& level,
@@ -174,8 +176,12 @@ void VoxelFragment::prepare(const Content& content) {
 }
 
 void VoxelFragment::place(
-    GlobalChunks& chunks, const glm::ivec3& offset
+    LevelController& controller, const glm::ivec3& offset
 ) {
+    auto& level = *controller.getLevel();
+    auto& chunks = *level.chunks;
+    auto lighting = controller.getChunksController()->lighting.get();
+    const auto& defs = level.content.getIndices()->blocks;
     auto& structVoxels = getRuntimeVoxels();
     for (int y = 0; y < size.y; ++y) {
         int sy = y + offset.y;
@@ -189,6 +195,10 @@ void VoxelFragment::place(
                     blocks_agent::set(
                         chunks, sx, sy, sz, structVoxel.id, structVoxel.state
                     );
+                    if (lighting) {
+                        const auto& def = defs.require(structVoxel.id);
+                        lighting->onBlockSet(sx, sy, sz, def.rt.id);
+                    }
                 }
             }
         }

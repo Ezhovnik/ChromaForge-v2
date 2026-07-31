@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <array>
 
 #include <graphics/render/MainBatch.h>
 #include <typedefs.h>
@@ -15,7 +16,8 @@ class Chunks;
 
 struct BlockWrapper {
     glm::ivec3 position;
-    std::string texture;
+    std::array<std::string, 6> textureFaces {};
+    uint8_t cullingBits = 0xFF;
 };
 
 class BlockWrapsRenderer {

@@ -24,6 +24,12 @@ function tb_frame_tostring(frame)
     return s
 end
 
+local builtin_set_setting = builtin.set_setting
+function builtin.set_setting(name, value, ...)
+    builtin_set_setting(name, value, ...)
+    events.emit("builtin:setting."..name..".set", value)
+end
+
 local function complete_app_lib(app)
     app.sleep = sleep
     app.name = __CHROMA_SCRIPT_NAME

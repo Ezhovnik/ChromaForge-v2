@@ -370,7 +370,11 @@ void SlotView::performRightClick(ItemStack& stack, ItemStack& grabbed) {
             grabbed.set(std::move(stack));
             int halfremain = stack.getCount() / 2;
             grabbed.setCount(stack.getCount() - halfremain);
-            stack = ItemStack(stack.getItemId(), halfremain);
+            if (stack.getCount() > 1) {
+                stack = ItemStack(stack.getItemId(), halfremain);
+            } else {
+                stack = ItemStack(0, 0);
+            }
         }
         return;
     }

@@ -313,6 +313,7 @@ void BlocksRenderer::blockCustomModel(
             overflow = true;
             return;
         }
+        bool shading = mesh.shading && !block.shadeless;
         for (int triangle = 0; triangle < mesh.vertices.size() / 3; ++triangle) {
             auto r = mesh.vertices[triangle * 3 + (triangle % 2) * 2].coord - mesh.vertices[triangle * 3 + 1].coord;
             r = r.x * X + r.y * Y + r.z * Z;
@@ -327,7 +328,10 @@ void BlocksRenderer::blockCustomModel(
             ) * 0.3333f - 0.5f;
             vp = vp.x * X + vp.y * Y + vp.z * Z;
 
-            if (!isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), block, variant) && is_aligned(n)) {
+            if (!block.rt.extended
+                && !isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), block, variant)
+                && is_aligned(n)
+            ) {
                 continue;
             }
 
@@ -340,17 +344,28 @@ void BlocksRenderer::blockCustomModel(
                 const auto& vcoord = vertex.coord - 0.5f;
 
                 glm::vec4 aoColor {1.0f, 1.0f, 1.0f, 1.0f};
-                if (mesh.shading && ao) {
-                    auto p = coord + vcoord.x * X + vcoord.y * Y + vcoord.z * Z + r * 0.5f + t * 0.5f + n * 0.5f;
-                    aoColor = pickSoftLight(p.x, p.y, p.z, glm::ivec3(r), glm::ivec3(t));
+                if (shading && ao) {
+                    const float eps = 0.05f;
+                    auto p = coord + vcoord.x * X + vcoord.y * Y + vcoord.z * Z + r * 0.5f + t * 0.5f + n * eps;
+                    auto p1 = p + n * eps;
+                    auto p2 = p + n * 0.5f;
+                    aoColor = pickSoftLight(p1.x, p1.y, p1.z, glm::ivec3(r), glm::ivec3(t));
+                    if (!block.lightPassing) {
+                        aoColor = glm::max(
+                            aoColor,
+                            pickSoftLight(
+                                p2.x, p2.y, p2.z, glm::ivec3(r), glm::ivec3(t)
+                            )
+                        );
+                    }
                 }
                 this->vertex(
                     coord + vcoord.x * X + vcoord.y * Y + vcoord.z * Z,
                     vertex.uv.x,
                     vertex.uv.y,
-                    mesh.shading ? (glm::vec4(d, d, d, d) * aoColor) : glm::vec4(1, 1, 1, d),
+                    shading ? (glm::vec4(d, d, d, d) * aoColor) : glm::vec4(1, 1, 1, d),
                     n,
-                    mesh.shading ? 0.0f : 1.0f
+                    shading ? 0.0f : 1.0
                 );
                 indexBuffer[indexCount++] = vertexOffset++;
             }

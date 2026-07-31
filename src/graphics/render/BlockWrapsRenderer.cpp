@@ -23,56 +23,62 @@ BlockWrapsRenderer::BlockWrapsRenderer(
 BlockWrapsRenderer::~BlockWrapsRenderer() = default;
 
 void BlockWrapsRenderer::draw(const BlockWrapper& wrapper) {
-    auto textureRegion = util::get_texture_region(assets, wrapper.texture, "");
-
     auto& shader = assets.require<ShaderProgram>("entity");
     shader.use();
     shader.uniform1i("u_alphaClip", false);
 
-    const UVRegion& cracksRegion = textureRegion.region;
-    UVRegion regions[6] {
-        cracksRegion, cracksRegion, cracksRegion,
-        cracksRegion, cracksRegion, cracksRegion
-    };
-    batch->setTexture(textureRegion.texture);
+    util::TextureRegion texRegions[6] {};
+    const Texture* texture = nullptr;
+    UVRegion uvRegions[6] {};
+    for (int i = 0; i < 6; ++i) {
+        if (wrapper.cullingBits & (1 << i) == 0) {
+            continue;
+        }
+        auto texRegion = util::get_texture_region(assets, wrapper.textureFaces[i], "");
+        texRegions[i] = texRegion;
+        uvRegions[i] = texRegion.region;
+
+        if (texture == nullptr) texture = texRegion.texture;
+    }
+    batch->setTexture(texture);
 
     const voxel* vox = chunks.getVoxel(wrapper.position);
-    if (vox == nullptr) {
-        return;
-    }
-    if (vox->id != BLOCK_VOID) {
-        const auto& def = level.content.getIndices()->blocks.require(vox->id);
-        switch (def.getModel(vox->state.userbits).type) {
-            case BlockModelType::Cube:
-                batch->cube(
-                    glm::vec3(wrapper.position) + glm::vec3(0.5f),
-                    glm::vec3(1.01f),
-                    regions,
-                    glm::vec4(1, 1, 1, 0),
-                    false
-                );
-                break;
-            case BlockModelType::AABB: {
-                const auto& aabb = (def.rotatable ? def.rt.hitboxes[vox->state.rotation] : def.hitboxes).at(0);
-                const auto& size = aabb.size();
-                regions[0].scale(size.z, size.y);
-                regions[1].scale(size.z, size.y);
-                regions[2].scale(size.x, size.z);
-                regions[3].scale(size.x, size.z);
-                regions[4].scale(size.x, size.y);
-                regions[5].scale(size.x, size.y);
-                batch->cube(
-                    glm::vec3(wrapper.position) + aabb.center(),
-                    size * glm::vec3(1.01f),
-                    regions,
-                    glm::vec4(1, 1, 1, 0),
-                    false
-                );
-                break;
-            }
-            default:
-                break;
+    if (vox == nullptr || vox->id == BLOCK_VOID) return;
+
+    const auto& def = level.content.getIndices()->blocks.require(vox->id);
+    switch (def.getModel(vox->state.userbits).type) {
+        case BlockModelType::Cube:
+            batch->cube(
+                glm::vec3(wrapper.position) + glm::vec3(0.5f),
+                glm::vec3(1.01f),
+                uvRegions,
+                glm::vec4(1, 1, 1, 0),
+                false,
+                wrapper.cullingBits
+            );
+            break;
+        case BlockModelType::AABB: {
+            const auto& aabb =
+                (def.rotatable ? def.rt.hitboxes[vox->state.rotation] : def.hitboxes).at(0);
+            const auto& size = aabb.size();
+            uvRegions[0].scale(size.z, size.y);
+            uvRegions[1].scale(size.z, size.y);
+            uvRegions[2].scale(size.x, size.z);
+            uvRegions[3].scale(size.x, size.z);
+            uvRegions[4].scale(size.x, size.y);
+            uvRegions[5].scale(size.x, size.y);
+            batch->cube(
+                glm::vec3(wrapper.position) + aabb.center(),
+                size * glm::vec3(1.01f),
+                uvRegions,
+                glm::vec4(1, 1, 1, 0),
+                false,
+                wrapper.cullingBits
+            );
+            break;
         }
+        default:
+            break;
     }
 }
 

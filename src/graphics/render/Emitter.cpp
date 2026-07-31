@@ -101,6 +101,7 @@ void Emitter::update(
 
         glm::vec3 spawnOffset = generate_coord(preset.spawnShape);
         spawnOffset *= preset.spawnSpread;
+        spawnOffset += preset.spawnOffset;
 
         particle.position = position + spawnOffset;
         particle.lifetime *= 1.0f - preset.lifetimeSpread * random.randFloat();
@@ -121,7 +122,7 @@ void Emitter::update(
 }
 
 void Emitter::stop() {
-    count = 0;
+    this->count = 0;
 }
 
 bool Emitter::isDead() const {
@@ -133,7 +134,7 @@ bool Emitter::isReferred() const {
 }
 
 const EmitterOrigin& Emitter::getOrigin() const {
-    return origin;
+    return this->origin;
 }
 
 void Emitter::setOrigin(const EmitterOrigin& origin) {
