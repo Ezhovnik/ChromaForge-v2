@@ -60,7 +60,6 @@
 #include <graphics/core/Framebuffer.h>
 #include <graphics/render/HandsRenderer.h>
 #include <graphics/render/NamedSkeletons.h>
-#include <graphics/render/LinesRenderer.h>
 #include <voxels/Pathfinding.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
@@ -152,8 +151,6 @@ WorldRenderer::WorldRenderer(
         skeletons->createSkeleton("hand", &skeletonConfig)
     );
 
-    lines = std::make_unique<LinesRenderer>();
-
     shadowMapping = std::make_unique<Shadows>(level);
 
     debugLines = std::make_unique<DebugLinesRenderer>(level);
@@ -228,7 +225,7 @@ void WorldRenderer::renderOpaque(
 
     bool culling = engine.getSettings().graphics.frustumCulling.get();
 
-    float fogFactor = 15.0f / ((float)settings.chunks.loadDistance.get() - 2);
+    float fogFactor = 15.0f / static_cast<float>(settings.chunks.loadDistance.get() - 2);
 
     auto& entityShader = assets.require<ShaderProgram>("entity");
     setupWorldShader(entityShader, camera, settings, fogFactor);
@@ -418,11 +415,10 @@ void WorldRenderer::renderFrame(
         linesShader.use();
         if (debug && hudVisible) {
             debugLines->render(
-                ctx, camera, *lines, *lineBatch, linesShader, drawChunkBorders
+                ctx, camera, *lineBatch, linesShader, drawChunkBorders
             );
         }
         linesShader.uniformMatrix("u_projview", projView);
-        lines->draw(*lineBatch);
         lineBatch->flush();
 
         {

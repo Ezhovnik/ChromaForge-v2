@@ -6,6 +6,8 @@
 #include <array>
 #include <map>
 
+#include <glm/vec4.hpp>
+
 #include <graphics/render/MainBatch.h>
 #include <typedefs.h>
 #include <assets/assets_util.h>
@@ -22,6 +24,7 @@ class Texture;
 struct BlockWrapper {
     glm::ivec3 position;
     std::array<std::string, 6> textureFaces {};
+    std::array<glm::vec3, 6> tints {};
     float emission = 0.0f;
 
     // Render cache
@@ -56,6 +59,7 @@ public:
     uint64_t add(
         const glm::ivec3& position,
         const std::string& texture,
+        const glm::vec3& tint,
         float emission
     );
 

@@ -59,6 +59,7 @@ void BlockWrapsRenderer::draw(BlockWrapper& wrapper, const Texture* texture) {
                 glm::vec3(1.01f),
                 wrapper.uvRegions,
                 light,
+                wrapper.tints.data(),
                 wrapper.emission,
                 cullingBits
             );
@@ -71,6 +72,7 @@ void BlockWrapsRenderer::draw(BlockWrapper& wrapper, const Texture* texture) {
                 size * glm::vec3(1.01f),
                 wrapper.uvRegions,
                 light,
+                wrapper.tints.data(),
                 wrapper.emission,
                 cullingBits
             );
@@ -138,6 +140,7 @@ void BlockWrapsRenderer::draw(const DrawContext& pctx, const Player& player) {
 uint64_t BlockWrapsRenderer::add(
     const glm::ivec3& position,
     const std::string& texture,
+    const glm::vec3& tint,
     float emission
 ) {
     uint64_t id = nextWrapper++;
@@ -145,6 +148,7 @@ uint64_t BlockWrapsRenderer::add(
         BlockWrapper {
             position,
             {texture, texture, texture, texture, texture, texture},
+            {tint, tint, tint, tint, tint, tint},
             emission
         }
     );
