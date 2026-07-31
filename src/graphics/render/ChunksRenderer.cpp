@@ -16,20 +16,18 @@
 #include <window/Camera.h>
 #include <math/FrustumCulling.h>
 #include <util/listutil.h>
+#include <util/ObjectsPool.h>
 
 size_t ChunksRenderer::visibleChunks = 0;
 
-class RendererWorker : public util::Worker<std::shared_ptr<Chunk>, RendererResult> {
-    const Chunks& chunks;
+class RendererWorker : public util::Worker<RendererJob, RendererResult> {
     BlocksRenderer renderer;
 public:
     RendererWorker(
         const Level& level,
-        const Chunks& chunks,
         const ContentGfxCache& cache,
         const EngineSettings& settings
-    ) : chunks(chunks),
-        renderer(
+    ) : renderer(
             settings.graphics.denseRender.get()
                 ? settings.graphics.chunkMaxVerticesDense.get()
                 : settings.graphics.chunkMaxVertices.get(),
@@ -38,8 +36,10 @@ public:
             settings
         ) {}
 
-    RendererResult operator()(const std::shared_ptr<Chunk>& chunk) override {
-        renderer.build(chunk.get(), &chunks);
+    RendererResult operator()(const RendererJob& job) override {
+        auto chunk = job.chunk;
+        auto volume = job.volume;
+        renderer.build(chunk.get(), *volume);
         if (renderer.isCancelled()) {
             return RendererResult {
                 glm::ivec2(chunk->chunk_x, chunk->chunk_z), true, ChunkMeshData {}
@@ -51,6 +51,9 @@ public:
         };
     }
 };
+
+static util::ObjectsPool<VoxelsVolume> voxelsVolumesPool {};
+static inline const int VOXELS_BUFFER_PADDING = 2;
 
 ChunksRenderer::ChunksRenderer(
     const Level* level,
@@ -67,7 +70,7 @@ ChunksRenderer::ChunksRenderer(
         "chunks-render-pool",
         [&](){
             return std::make_shared<RendererWorker>(
-                *level, chunks, cache, settings
+                *level, cache, settings
             );
         }, 
         [&](RendererResult& result){
@@ -89,30 +92,63 @@ ChunksRenderer::ChunksRenderer(
     );
 
     LOG_INFO("Created {} workers", threadPool.getWorkersCount());
-    LOG_INFO("Memory consumption is {} B", renderer->getMemoryConsumption() * threadPool.getWorkersCount());
+    LOG_INFO(
+        "Memory consumption is {} B",
+        renderer->getMemoryConsumption() *
+            threadPool.getWorkersCount() +
+            voxelsVolumesPool.countTotal() *
+            (sizeof(VoxelsVolume) +
+            (CHUNK_WIDTH + VOXELS_BUFFER_PADDING * 2) * CHUNK_HEIGHT *
+            (CHUNK_DEPTH + VOXELS_BUFFER_PADDING * 2) *
+            (sizeof(voxel) + sizeof(light_t)))
+    );
 }
 
 ChunksRenderer::~ChunksRenderer() = default;
+
+std::shared_ptr<VoxelsVolume> ChunksRenderer::prepareVoxelsVolume(
+    const Chunk& chunk
+) {
+    auto voxelsBuffer = voxelsVolumesPool.create(
+        CHUNK_WIDTH + VOXELS_BUFFER_PADDING * 2,
+        CHUNK_HEIGHT,
+        CHUNK_DEPTH + VOXELS_BUFFER_PADDING * 2
+    );
+    voxelsBuffer->setPosition(
+        chunk.chunk_x * CHUNK_WIDTH - VOXELS_BUFFER_PADDING, 0,
+        chunk.chunk_z * CHUNK_DEPTH - VOXELS_BUFFER_PADDING
+    );
+    chunks.getVoxels(
+        *voxelsBuffer, settings.graphics.backlight.get(), chunk.top + 1
+    );
+    return voxelsBuffer;
+}
 
 const Mesh<ChunkVertex>* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk,
     bool important
 ) {
+    glm::ivec2 key(chunk->chunk_x, chunk->chunk_z);
     chunk->flags.modified = false;
 
     if (important) {
-        auto mesh = renderer->render(chunk.get(), &chunks);
-        meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = ChunkMesh {
-            std::move(mesh.mesh), std::move(mesh.sortingMeshData)
-        };
+        auto voxelsBuffer = prepareVoxelsVolume(*chunk);
+        inwork[key] = true;
+
+        auto mesh = renderer->render(chunk.get(), *voxelsBuffer);
+        meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)] = ChunkMesh {std::move(mesh.mesh), std::move(mesh.sortingMeshData)};
         return meshes[glm::ivec2(chunk->chunk_x, chunk->chunk_z)].mesh.get();
     }
 
-    glm::ivec2 key(chunk->chunk_x, chunk->chunk_z);
     if (inwork.find(key) != inwork.end()) return nullptr;
 
+    auto voxelsBuffer = prepareVoxelsVolume(*chunk);
     inwork[key] = true;
-    threadPool.enqueueJob(chunk);
+    chunks.getVoxels(
+        *voxelsBuffer, settings.graphics.backlight.get(), chunk->top + 1
+    );
+
+    threadPool.enqueueJob({chunk, std::move(voxelsBuffer)});
     return nullptr;
 }
 

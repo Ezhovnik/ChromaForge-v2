@@ -22,6 +22,7 @@ class BlocksRenderer;
 class ContentGfxCache;
 struct EngineSettings;
 class Chunks;
+class VoxelsVolume;
 
 struct ChunksSortEntry {
     int index;
@@ -38,6 +39,11 @@ struct RendererResult {
     ChunkMeshData meshData;
 };
 
+struct RendererJob {
+    std::shared_ptr<Chunk> chunk;
+    std::shared_ptr<VoxelsVolume> volume;
+};
+
 class ChunksRenderer {
     const Chunks& chunks;
     const Assets& assets;
@@ -48,11 +54,12 @@ class ChunksRenderer {
     std::unordered_map<glm::ivec2, bool> inwork;
     std::vector<ChunksSortEntry> indices;
 
-    util::ThreadPool<std::shared_ptr<Chunk>, RendererResult> threadPool;
+    util::ThreadPool<RendererJob, RendererResult> threadPool;
 
     const Mesh<ChunkVertex>* retrieveChunk(
         size_t index, const Camera& camera, bool culling
     );
+    std::shared_ptr<VoxelsVolume> prepareVoxelsVolume(const Chunk& chunk);
 public:
     ChunksRenderer(
         const Level* level,

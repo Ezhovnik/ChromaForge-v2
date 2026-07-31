@@ -449,14 +449,16 @@ ALAudio::ALAudio(ALCdevice* device, ALCcontext* context) : device(device), conte
     auto outputDevices = getOutputDeviceNames();
     LOG_DEBUG("Ouput devices:");
     for (auto& name : outputDevices) {
-        LOG_DEBUG("    {}", name);
+        LOG_DEBUG(" - {}", name);
     }
 
     auto inputDevices = getInputDeviceNames();
     LOG_DEBUG("Input devices:");
     for (auto& name : inputDevices) {
-        LOG_DEBUG("    {}", name);
+        LOG_DEBUG(" - {}", name);
     }
+
+    alDopplerFactor(1.0 / 3.0);
 }
 
 ALAudio::~ALAudio() {
