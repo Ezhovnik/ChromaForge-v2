@@ -13,11 +13,13 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
+#include <typedefs.h>
+
 class Level;
 class GlobalChunks;
 class Block;
 
-template <typename T>
+template <typename T, typename IdType>
 class ContentUnitIndices;
 
 namespace voxels {
@@ -83,7 +85,7 @@ namespace voxels {
     private:
         const Level& level;
         const GlobalChunks& chunks;
-        const ContentUnitIndices<Block>& blockDefs;
+        const ContentUnitIndices<Block, blockid_t>& blockDefs;
         std::unordered_map<int, Agent> agents;
         int nextAgent = 1;
 

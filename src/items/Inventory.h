@@ -36,6 +36,7 @@ public:
     void deserialize(const dv::value& src) override;
     dv::value serialize() const override;
 
+    void check(const ContentIndices& indices);
     void convert(const ContentReport* report);
     static void convert(dv::value& data, const ContentReport* report);
 

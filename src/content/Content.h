@@ -34,47 +34,52 @@ public:
     }
 };
 
-template<class T>
+template<class T, typename IdType>
 class ContentUnitIndices {
 private:
     std::vector<T*> defs;
 public:
     ContentUnitIndices(std::vector<T*> defs) : defs(std::move(defs)) {}
 
-    inline const T* get(blockid_t id) const {
-        if (id >= defs.size()) {
-            return nullptr;
-        }
+    const T* get(IdType id) const {
+        if (id >= defs.size()) return nullptr;
         return defs[id];
     }
 
-    inline const T& require(blockid_t id) const {
-        return *defs.at(id);
+    const T& require(IdType id) const {
+        if (id >= defs.size()) invalidId(id);
+        return *defs[id];
     }
 
-    inline size_t count() const {
+    size_t count() const {
         return defs.size();
     }
 
-    inline const auto& getIterable() const {
+    const auto& getIterable() const {
         return defs;
     }
 
-    inline const T* const* getDefs() const {
+    const T* const* getDefs() const {
         return defs.data();
+    }
+private:
+    void invalidId(IdType id) const {
+        throw std::runtime_error(
+            "Invalid content unit id: " + std::to_string(id)
+        );
     }
 };
 
 class ContentIndices {
 public:
-    ContentUnitIndices<Block> blocks;
-    ContentUnitIndices<Item> items;
-    ContentUnitIndices<Entity> entities;
+    ContentUnitIndices<Block, blockid_t> blocks;
+    ContentUnitIndices<Item, itemid_t> items;
+    ContentUnitIndices<Entity, entitydefid_t> entities;
 
     ContentIndices(
-        ContentUnitIndices<Block> blocks,
-        ContentUnitIndices<Item> items,
-        ContentUnitIndices<Entity> entities
+        ContentUnitIndices<Block, blockid_t> blocks,
+    ContentUnitIndices<Item, itemid_t> items,
+    ContentUnitIndices<Entity, entitydefid_t> entities
     );
 };
 

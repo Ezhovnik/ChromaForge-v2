@@ -70,6 +70,7 @@ static int l_set(lua::State* L, ItemStack& item) {
     if (!data.isObject() && data != nullptr) {
         throw std::runtime_error("Invalid data argument type (table expected)");
     }
+    validate_itemid(itemid);
     item.set(ItemStack(itemid, count, std::move(data)));
     return 0;
 }

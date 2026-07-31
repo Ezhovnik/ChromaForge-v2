@@ -4,6 +4,7 @@
 
 #include <world/Level.h>
 #include <world/World.h>
+#include <content/Content.h>
 
 Inventories::Inventories(Level& level) : level(level) {
 }
@@ -30,8 +31,9 @@ std::shared_ptr<Inventory> Inventories::createVirtual(size_t size) {
     });
 }
 
-void Inventories::store(const std::shared_ptr<Inventory>& inv) {
-    map[inv->getId()] = inv;
+void Inventories::store(const std::shared_ptr<Inventory>& inventory) {
+    inventory->check(*level.content.getIndices());
+    map[inventory->getId()] = inventory;
 }
 
 void Inventories::remove(int64_t id) {

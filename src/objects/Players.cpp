@@ -144,6 +144,6 @@ void Players::deserialize(const dv::value& src) {
         if (inventory->getId() == 0) {
             inventory->setId(level.getWorld()->getNextInventoryId());
         }
-        level.inventories->store(player->getInventory());
+        level.inventories->store(inventory);
     }
 }

@@ -16,9 +16,9 @@
 #include <world/generator/VoxelFragment.h>
 
 ContentIndices::ContentIndices(
-    ContentUnitIndices<Block> blocks,
-    ContentUnitIndices<Item> items,
-    ContentUnitIndices<Entity> entities
+    ContentUnitIndices<Block, blockid_t> blocks,
+    ContentUnitIndices<Item, itemid_t> items,
+    ContentUnitIndices<Entity, entitydefid_t> entities
 ) : blocks(std::move(blocks)),
     items(std::move(items)),
     entities(std::move(entities)) {}
