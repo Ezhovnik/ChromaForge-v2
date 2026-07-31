@@ -40,15 +40,9 @@ target_link_libraries(ChromaForge
 
 add_custom_target(copy_resources ALL
     COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:ChromaForge>/res"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:ChromaForge>/content"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/res"
         "$<TARGET_FILE_DIR:ChromaForge>/res"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/res/content"
-        "$<TARGET_FILE_DIR:ChromaForge>/content"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory
-        "$<TARGET_FILE_DIR:ChromaForge>/res/content"
     COMMENT "Copying resources to build directory"
 )
 add_dependencies(ChromaForge copy_resources)
