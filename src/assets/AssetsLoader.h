@@ -58,6 +58,12 @@ struct PostEffectConfig : AssetsConfig {
      PostEffectConfig(bool advanced) : advanced(advanced) {}
 };
 
+struct ModelConfig : AssetsConfig {
+     bool squashed;
+
+     ModelConfig(bool squashed) : squashed(squashed) {}
+};
+
 using aloader_func = std::function<asset_loader::postfunc(
      AssetsLoader*,
      const ResPaths&, 

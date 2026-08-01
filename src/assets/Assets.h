@@ -26,7 +26,8 @@ enum class AssetType {
 	Layout, ///< Макет интерфейса (XML)
      Sound, ///< Звук
      Model,
-     PostEffect
+     PostEffect,
+     Skeleton
 };
 
 namespace asset_loader {

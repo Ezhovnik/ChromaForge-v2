@@ -1,6 +1,7 @@
 #include <assets/AssetsLoader.h>
 
 #include <memory>
+#include <utility>
 
 #include <assets/Assets.h>
 #include <graphics/core/ShaderProgram.h>
@@ -24,6 +25,7 @@
 #include <engine/Engine.h>
 #include <content/ContentPack.h>
 #include <coders/commons.h>
+#include <objects/Entity.h>
 
 AssetsLoader::AssetsLoader(
     Engine& engine, Assets& assets, const ResPaths& paths
@@ -37,6 +39,7 @@ AssetsLoader::AssetsLoader(
 	addLoader(AssetType::Sound, asset_loader::sound);
     addLoader(AssetType::Model, asset_loader::model);
     addLoader(AssetType::PostEffect, asset_loader::posteffect);
+    addLoader(AssetType::Skeleton, asset_loader::skeleton);
 }
 
 void AssetsLoader::addLoader(AssetType tag, aloader_func func) {
@@ -142,6 +145,7 @@ static std::string assets_def_folder(AssetType tag) {
         case AssetType::Sound: return SOUNDS_FOLDER;
         case AssetType::Model: return MODELS_FOLDER;
         case AssetType::PostEffect: return POST_EFFECTS_FOLDER;
+        case AssetType::Skeleton: return SKELETONS_FOLDER;
     }
     return "<unknown>";
 }
@@ -179,6 +183,12 @@ void AssetsLoader::processPreload(
             config = std::make_shared<PostEffectConfig>(advanced);
             break;
         }
+        case AssetType::Model: {
+            bool squashed = false;
+            map.at("squash").get(squashed);
+            config = std::make_shared<ModelConfig>(squashed);
+            break;
+        }
         default:
             break;
     }
@@ -210,6 +220,7 @@ void AssetsLoader::processPreloadConfig(const io::path& file) {
     processPreloadList(AssetType::Sound, root["sounds"]);
     processPreloadList(AssetType::Model, root["models"]);
     processPreloadList(AssetType::PostEffect, root["post-effects"]);
+    processPreloadList(AssetType::Skeleton, root["skeletons"]);
     // Макеты загружаются автоматически
 }
 
@@ -259,19 +270,20 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
             add_layouts(pack->getEnvironment(), info.id, folder, loader);
         }
 
-        for (auto& entry : content->getSkeletons()) {
-            auto& skeleton = *entry.second;
-            for (auto& bone : skeleton.getBones()) {
-                std::string model = bone->model.name;
-                size_t pos = model.rfind('.');
-                if (pos != std::string::npos) {
-                    model = model.substr(0, pos);
-                }
-                if (!model.empty()) {
-                    loader.add(AssetType::Model, MODELS_FOLDER + "/" + model, model);
-                }
+        for (const auto& entry : content->getPacks()) {
+            io::path skeletonsDir = entry.first + ":skeletons";
+            if (!io::is_directory(skeletonsDir)) {
+                continue;
+            }
+            for (const auto& file : io::directory_iterator(skeletonsDir)) {
+                loader.add(
+                    AssetType::Skeleton,
+                    file.string(),
+                    entry.first + ":" + file.stem()
+                );
             }
         }
+
         for (const auto& [_, def] : content->blocks.getDefs()) {
             if (def->variants) {
                 for (const auto& variant : def->variants->variants) {
@@ -281,12 +293,23 @@ void AssetsLoader::addDefaults(AssetsLoader& loader, const Content* content) {
                 add_variant(loader, def->defaults);
             }
         }
+
         for (const auto& [_, def] : content->items.getDefs()) {
             if (def->modelName.find(':') == std::string::npos) {
                 loader.add(
                     AssetType::Model,
                     MODELS_FOLDER + "/" + def->modelName,
                     def->modelName
+                );
+            }
+        }
+
+        for (const auto& [_, def] : content->entities.getDefs()) {
+            if (def->skeletonName.find(':') == std::string::npos) {
+                loader.add(
+                    AssetType::Model,
+                    MODELS_FOLDER + "/" + def->skeletonName,
+                    def->skeletonName
                 );
             }
         }

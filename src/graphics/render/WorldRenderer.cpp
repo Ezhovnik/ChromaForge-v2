@@ -61,6 +61,7 @@
 #include <graphics/render/HandsRenderer.h>
 #include <graphics/render/NamedSkeletons.h>
 #include <voxels/Pathfinding.h>
+#include <objects/rigging.h>
 
 inline constexpr glm::vec3 SKY_LIGHT_COLOR = {0.7f, 0.81f, 1.0f};
 inline constexpr float MAX_TORCH_LIGHT = 15.0f;
@@ -142,7 +143,7 @@ WorldRenderer::WorldRenderer(
 
     const auto& content = level.content;
     skeletons = std::make_unique<NamedSkeletons>();
-    const auto& skeletonConfig = content.requireSkeleton(
+    const auto& skeletonConfig = assets->require<rigging::SkeletonConfig>(
         content.getDefaults()["hand-skeleton"].asString()
     );
     hands = std::make_unique<HandsRenderer>(

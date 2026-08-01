@@ -11,7 +11,6 @@
 #include <objects/Entity.h>
 #include <content/ContentPack.h>
 #include <logic/scripting/scripting.h>
-#include <objects/rigging.h>
 #include <world/generator/Generator.h>
 #include <world/generator/VoxelFragment.h>
 
@@ -32,7 +31,6 @@ Content::Content(
     ContentUnitDefs<Generator> generators,
     UptrsMap<std::string, ContentPackRuntime> packs,
     UptrsMap<std::string, BlockMaterial> blockMaterials,
-    UptrsMap<std::string, rigging::SkeletonConfig> skeletons,
     ResourceIndicesSet resourceIndices,
     dv::value defaults,
     std::unordered_map<std::string, int> tags
@@ -44,7 +42,6 @@ Content::Content(
     entities(std::move(entities)),
     generators(std::move(generators)),
     blockMaterials(std::move(blockMaterials)),
-    skeletons(std::move(skeletons)),
     defaults(std::move(defaults)),
     tags(std::move(tags))
 {
@@ -54,20 +51,6 @@ Content::Content(
 }
 
 Content::~Content() = default;
-
-const rigging::SkeletonConfig* Content::getSkeleton(const std::string& id) const {
-    auto found = skeletons.find(id);
-    if (found == skeletons.end()) return nullptr;
-    return found->second.get();
-}
-
-const rigging::SkeletonConfig& Content::requireSkeleton(const std::string& id) const {
-    auto skeleton = getSkeleton(id);
-    if (skeleton == nullptr) {
-        THROW_ERR("Skeleton '{}' not loaded", id);
-    }
-    return *skeleton;
-}
 
 const ContentPackRuntime* Content::getPackRuntime(const std::string& id) const {
     auto found = packs.find(id);
@@ -93,10 +76,6 @@ const BlockMaterial* Content::findBlockMaterial(const std::string& id) const {
 
 const UptrsMap<std::string, BlockMaterial>& Content::getBlockMaterials() const {
     return blockMaterials;
-}
-
-const UptrsMap<std::string, rigging::SkeletonConfig>& Content::getSkeletons() const {
-    return skeletons;
 }
 
 void ResourceIndices::addAlias(const std::string& name, const std::string& alias) {

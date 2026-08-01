@@ -34,6 +34,7 @@
 #include <assets/Assets.h>
 #include <graphics/core/TextureAnimation.h>
 #include <engine/EnginePaths.h>
+#include <objects/Entities.h>
 
 inline const io::path CLIENT_FILE = "world:client/environment.json";
 
@@ -50,6 +51,7 @@ LevelScreen::LevelScreen(
     input(engine.getInput())
 {
     Level* level = levelPtr.get();
+    level->entities->setAssets(*engine.getAssets());
 
     auto& settings = engine.getSettings();
     auto& assets = *engine.getAssets();

@@ -13,7 +13,6 @@
 #include <util/listutil.h>
 #include <content/ContentBuilder.h>
 #include <util/stringutil.h>
-#include <objects/rigging.h>
 #include <engine/EnginePaths.h>
 #include <content/loading/ContentUnitLoader.h>
 
@@ -357,15 +356,6 @@ void ContentLoader::load() {
             );
         }
     }
-
-    io::path skeletonsDir = folder / "skeletons";
-    foreach_file(skeletonsDir, [this](const io::path& file) {
-        std::string name = pack->id + ":" + file.stem();
-        std::string text = io::read_string(file);
-        builder.add(
-            rigging::SkeletonConfig::parse(text, file.string(), name)
-        );
-    });
 
     auto contentFile = pack->getContentFile();
     if (io::exists(contentFile)) {

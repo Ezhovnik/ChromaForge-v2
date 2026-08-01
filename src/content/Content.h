@@ -19,9 +19,6 @@ struct Entity;
 class Block;
 struct BlockMaterial;
 struct Generator;
-namespace rigging {
-    class SkeletonConfig;
-}
 
 class namereuse_error: public std::runtime_error {
 private:
@@ -78,8 +75,8 @@ public:
 
     ContentIndices(
         ContentUnitIndices<Block, blockid_t> blocks,
-    ContentUnitIndices<Item, itemid_t> items,
-    ContentUnitIndices<Entity, entitydefid_t> entities
+        ContentUnitIndices<Item, itemid_t> items,
+        ContentUnitIndices<Entity, entitydefid_t> entities
     );
 };
 
@@ -170,7 +167,6 @@ private:
     std::unique_ptr<ContentIndices> indices;
     UptrsMap<std::string, ContentPackRuntime> packs;
     UptrsMap<std::string, BlockMaterial> blockMaterials;
-    UptrsMap<std::string, rigging::SkeletonConfig> skeletons;
     dv::value defaults = nullptr;
     std::unordered_map<std::string, int> tags;
 public:
@@ -190,7 +186,6 @@ public:
         ContentUnitDefs<Generator> generators,
         UptrsMap<std::string, ContentPackRuntime> packs,
         UptrsMap<std::string, BlockMaterial> blockMaterials,
-        UptrsMap<std::string, rigging::SkeletonConfig> skeletons,
         ResourceIndicesSet resourceIndices,
         dv::value defaults,
         std::unordered_map<std::string, int> tags
@@ -217,14 +212,10 @@ public:
         return found->second;
     }
 
-    const rigging::SkeletonConfig* getSkeleton(const std::string& id) const;
-    const rigging::SkeletonConfig& requireSkeleton(const std::string& id) const;
-
     const BlockMaterial* findBlockMaterial(const std::string& id) const;
     const ContentPackRuntime* getPackRuntime(const std::string& id) const;
     ContentPackRuntime* getPackRuntime(const std::string& id);
 
     const UptrsMap<std::string, BlockMaterial>& getBlockMaterials() const;
     const UptrsMap<std::string, ContentPackRuntime>& getPacks() const;
-    const UptrsMap<std::string, rigging::SkeletonConfig>& getSkeletons() const;
 };

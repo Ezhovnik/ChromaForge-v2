@@ -3,6 +3,7 @@
 #include <optional>
 #include <algorithm>
 
+#include <assets/Assets.h>
 #include <objects/Player.h>
 #include <physics/Hitbox.h>
 #include <window/Camera.h>
@@ -84,15 +85,19 @@ static int l_despawn(lua::State* L) {
 
 static int l_get_skeleton(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {
-        return lua::pushstring(L, entity->getSkeleton().config->getName());
+        auto skeleton = entity->getSkeleton();
+        if (skeleton == nullptr) return 0;
+        return lua::pushstring(L, skeleton->config->getName());
     }
     return 0;
 }
 
 static int l_set_skeleton(lua::State* L) {
+    auto assets = scripting::engine->getAssets();
+    if (assets == nullptr) return 0;
     if (auto entity = get_entity(L, 1)) {
         std::string skeletonName = lua::require_string(L, 2);
-        auto skeletonConfig = scripting::content->getSkeleton(skeletonName);
+        auto skeletonConfig = assets->get<rigging::SkeletonConfig>(skeletonName);
         if (skeletonConfig == nullptr) {
             throw std::runtime_error("Skeleton not found '" + skeletonName + "'");
         }

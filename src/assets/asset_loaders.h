@@ -76,4 +76,12 @@ namespace asset_loader {
         const std::string& name,
         const std::shared_ptr<AssetsConfig>& settings
     );
+
+    postfunc skeleton(
+        AssetsLoader*,
+        const ResPaths& paths,
+        const std::string& file,
+        const std::string& name,
+        const std::shared_ptr<AssetsConfig>& settings
+    );
 }
