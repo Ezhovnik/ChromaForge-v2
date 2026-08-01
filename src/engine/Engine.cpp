@@ -184,7 +184,7 @@ void Engine::initialize(CoreParameters coreParameters) {
     scripting::initialize(this);
     LOG_INFO("Scripting system initialization has been successfully finished");
 
-    if (!isHeadless()) gui->setPageLoader(scripting::create_page_loader());
+    if (!isHeadless()) gui->getMenu()->setPageLoader(scripting::create_page_loader());
     keepAlive(settings.ui.language.observe([this](auto lang) {
         langs::setup(lang, paths->resPaths.collectRoots());
     }, true));

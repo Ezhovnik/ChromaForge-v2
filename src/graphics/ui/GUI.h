@@ -61,8 +61,6 @@ namespace gui {
     class Container;
     class Menu;
 
-    using PageLoaderFunc = std::function<std::shared_ptr<UINode>(const std::string&)>;
-
     class GUI {
         Engine& engine;
         Input& input;
@@ -84,8 +82,6 @@ namespace gui {
         std::queue<runnable> postRunnables;
         std::vector<std::weak_ptr<UINode>> mouseOver;
 
-        PageLoaderFunc pagesLoader;
-
         float doubleClickTimer = 0.0f;
         float doubleClickDelay = 0.5f;
         bool doubleClicked = false;
@@ -102,9 +98,6 @@ namespace gui {
 
         GUI(Engine& engine);
         ~GUI();
-
-        void setPageLoader(PageLoaderFunc pageLoader);
-        PageLoaderFunc getPagesLoader();
 
         std::shared_ptr<Menu> getMenu();
 

@@ -265,12 +265,6 @@ static int l_capture_output(lua::State* L) {
     return 1;
 }
 
-static int l_set_title(lua::State* L) {
-    auto title = lua::require_string(L, 1);
-    scripting::engine->getWindow().setTitle(title);
-    return 0;
-}
-
 const luaL_Reg builtinlib [] = {
     {"blank", lua::wrap<l_blank>},
     {"get_version", lua::wrap<l_get_version>},
@@ -292,6 +286,5 @@ const luaL_Reg builtinlib [] = {
     {"open_url", lua::wrap<l_open_url>},
     {"quit", lua::wrap<l_quit>},
     {"capture_output", lua::wrap<l_capture_output>},
-    {"set_title", lua::wrap<l_set_title>},
     {nullptr, nullptr}
 };

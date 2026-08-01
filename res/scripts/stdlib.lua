@@ -30,7 +30,16 @@ function builtin.set_setting(name, value, ...)
     events.emit("builtin:setting."..name..".set", value)
 end
 
+local __chroma__app_script_coroutine
+
 local function complete_app_lib(app)
+    local __builtin_load_content = builtin.load_content
+    local __builtin_reset_content = builtin.reset_content
+    local __builtin_reconfig_packs = builtin.reconfig_packs
+    local __app_spark = coroutine.yield
+    builtin.load_content = nil
+    builtin.reset_content = nil
+
     app.sleep = sleep
     app.name = __CHROMA_SCRIPT_NAME
     app.new_world = builtin.new_world
@@ -39,21 +48,31 @@ local function complete_app_lib(app)
     app.close_world = builtin.close_world
     app.reopen_world = builtin.reopen_world
     app.delete_world = builtin.delete_world
-    app.reconfig_packs = builtin.reconfig_packs
     app.get_setting = builtin.get_setting
     app.set_setting = builtin.set_setting
-    app.spark = function()
-        coroutine.yield()
-    end
+    app.spark = __app_spark
     app.get_version = builtin.get_version
     app.get_setting_info = builtin.get_setting_info
-    app.load_content = function()
-        builtin.load_content()
-        app.spark()
+
+    local function call_in_app_script_co(func, ...)
+        if coroutine.running() ~= __chroma__app_script_coroutine then
+            error("Content must be reload in application script coroutine")
+        end
+        func(...)
+        __app_spark()
     end
-    app.reset_content = builtin.reset_content
+
+    app.reconfig_packs = function(...)
+        call_in_app_script_co(__builtin_reconfig_packs, ...)
+    end
+    app.load_content = function(...)
+        call_in_app_script_co(__builtin_load_content, ...)
+    end
+    app.reset_content = function(...)
+        call_in_app_script_co(__builtin_reset_content, ...)
+    end
+
     app.is_content_loaded = builtin.is_content_loaded
-    app.set_title = builtin.set_title
 
     function app.config_packs(packs_list)
         packs_list = pack.assemble(packs_list)
@@ -122,6 +141,66 @@ function pack.unload(prefix)
     events.remove_by_prefix(prefix)
 end
 
+local __chroma_coroutines = {}
+local __chroma_named_coroutines = {}
+local __chroma_next_coroutine = 1
+
+function __chroma_start_coroutine(chunk)
+    local co = coroutine.create(chunk)
+    local id = __chroma_next_coroutine
+    __chroma_next_coroutine = __chroma_next_coroutine + 1
+    __chroma_coroutines[id] = co
+    return id
+end
+
+function __chroma_resume_coroutine(id)
+    local co = __chroma_coroutines[id]
+    if co then
+        local success, err = coroutine.resume(co)
+        if not success then
+            debug.error(err)
+            error(err)
+        end
+        return coroutine.status(co) ~= "dead"
+    end
+    return false
+end
+
+function __chroma_stop_coroutine(id)
+    local co = __chroma_coroutines[id]
+    if co then
+        if coroutine.close then
+            coroutine.close(co)
+        end
+        __chroma_coroutines[id] = nil
+    end
+end
+
+function start_coroutine(chunk, name)
+    local co = coroutine.create(function()
+        local status, error = xpcall(chunk, function(err)
+            local fullmsg = "error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
+
+            if hud then
+                gui.alert(fullmsg, function()
+                    if world.is_open() then
+                        __chroma_app.close_world()
+                    else
+                        __chroma_app.reset_content()
+                        menu:reset()
+                        menu.page = "main"
+                    end
+                end)
+            end
+            return fullmsg
+        end)
+        if not status then
+            debug.error(error)
+        end
+    end)
+    __chroma_named_coroutines[name] = co
+end
+
 function __chroma_start_app_script(path, name)
     debug.info("Starting application script "..path)
 
@@ -133,9 +212,13 @@ function __chroma_start_app_script(path, name)
     local script_env = setmetatable({app = app or __chroma_app}, {__index=_G})
     chunk = setfenv(chunk, script_env)
     if name then
-        return start_coroutine(chunk, name)
+        start_coroutine(chunk, name)
+        __chroma__app_script_coroutine = __chroma_named_coroutines[name]
+        return
     else
-        return __chroma_start_coroutine(chunk)
+        local id = __chroma_start_coroutine(chunk)
+        __chroma__app_script_coroutine = __chroma_coroutines[id]
+        return id
     end
 end
 
@@ -487,65 +570,6 @@ function __chroma_on_world_quit()
     gui_util:__reset_local()
     stdcomp.__reset()
     file.__close_all_descriptors()
-end
-
-local __chroma_coroutines = {}
-local __chroma_named_coroutines = {}
-local __chroma_next_coroutine = 1
-
-function __chroma_start_coroutine(chunk)
-    local co = coroutine.create(chunk)
-    local id = __chroma_next_coroutine
-    __chroma_next_coroutine = __chroma_next_coroutine + 1
-    __chroma_coroutines[id] = co
-    return id
-end
-
-function __chroma_resume_coroutine(id)
-    local co = __chroma_coroutines[id]
-    if co then
-        local success, err = coroutine.resume(co)
-        if not success then
-            debug.error(err)
-            error(err)
-        end
-        return coroutine.status(co) ~= "dead"
-    end
-    return false
-end
-
-function __chroma_stop_coroutine(id)
-    local co = __chroma_coroutines[id]
-    if co then
-        if coroutine.close then
-            coroutine.close(co)
-        end
-        __chroma_coroutines[id] = nil
-    end
-end
-
-function start_coroutine(chunk, name)
-    local co = coroutine.create(function()
-        local status, error = xpcall(chunk, function(err)
-            local fullmsg = "Error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
-            if hud then
-                gui.alert(fullmsg, function()
-                    if world.is_open() then
-                        __chroma_app.close_world()
-                    else
-                        __chroma_app.reset_content()
-                        menu:reset()
-                        menu.page = "main"
-                    end
-                end)
-            end
-            return fullmsg
-        end)
-        if not status then
-            debug.error(error)
-        end
-    end)
-    __chroma_named_coroutines[name] = co
 end
 
 local __post_runnables = {}
