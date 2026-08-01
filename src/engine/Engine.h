@@ -11,6 +11,8 @@
 #include <engine/CoreParameters.h>
 
 class Assets;
+class AssetsLoader;
+class AssetsManagement;
 class Screen;
 class EngineController;
 class Level;
@@ -56,7 +58,7 @@ private:
     std::unique_ptr<EnginePaths> paths;
     std::unique_ptr<Project> project;
     std::unique_ptr<SettingsHandler> settingsHandler;
-    std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
+    std::unique_ptr<AssetsManagement> assets;
     std::shared_ptr<Screen> screen;
     std::unique_ptr<EngineController> controller;
     std::unique_ptr<ContentControl> content;
@@ -110,6 +112,7 @@ public:
     EnginePaths& getPaths();
     ResPaths& getResPaths();
     Assets* getAssets();
+    AssetsLoader& acquireBackgroundLoader();
 	EngineSettings& getSettings();
     std::shared_ptr<Screen> getScreen();
     SettingsHandler& getSettingsHandler();

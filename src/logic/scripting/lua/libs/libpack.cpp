@@ -80,10 +80,10 @@ static int l_pack_get_info(lua::State* L, const ContentPack& pack, const Content
     lua::setfield(L, "path");
 
     if (!scripting::engine->isHeadless()) {
-        auto assets = scripting::engine->getAssets();
+        auto& assetsLoader = scripting::engine->acquireBackgroundLoader();
         std::string icon = pack.id + ".icon";
         if (!AssetsLoader::loadExternalTexture(
-            assets, icon, {pack.folder / "icon.png"}
+            assetsLoader, icon, {pack.folder / "icon.png"}
         )) {
             icon = "gui/no_icon";
         }

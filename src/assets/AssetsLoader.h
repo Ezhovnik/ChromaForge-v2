@@ -166,10 +166,11 @@ public:
      aloader_func getLoader(AssetType tag);
 
      static bool loadExternalTexture(
-          Assets* assets,
+          AssetsLoader& loader,
           const std::string& name,
           const std::vector<io::path>& alternatives
      );
 
+     Assets& getAssets();
      Engine& getEngine();
 };

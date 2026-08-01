@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <filesystem>
 #include <unordered_set>
-#include <utility>
 
 #define GLEW_STATIC
 
@@ -50,6 +49,7 @@
 #include <devtools/DebuggingServer.h>
 #include <graphics/ui/elements/Menu.h>
 #include <engine/WindowControl.h>
+#include <engine/AssetsManagement.h>
 
 Engine::Engine() = default;
 Engine::~Engine() = default;
@@ -86,6 +86,7 @@ void Engine::onContentLoad() {
 }
 
 void Engine::initializeClient() {
+    assets = std::make_unique<AssetsManagement>(*this);
     windowControl = std::make_unique<WindowControl>(*this);
     auto [window, input] = windowControl->initialize();
 
@@ -235,31 +236,7 @@ void Engine::setLevelConsumer(OnWorldOpen levelConsumer) {
 }
 
 void Engine::loadAssets() {
-    LOG_INFO("Loading assets");
-    ShaderProgram::preprocessor->setPaths(&paths->resPaths);
-
-    auto content = this->content->get();
-    auto new_assets = std::make_unique<Assets>();
-    AssetsLoader loader(*this, *new_assets, paths->resPaths);
-    AssetsLoader::addDefaults(loader, content);
-    bool threading = false;
-    if (threading) {
-        auto task = loader.startTask([=](){});
-        task->waitForEnd();
-    } else {
-        while (loader.hasNext()) {
-            loader.loadNext();
-        }
-    }
-
-    assets = std::move(new_assets);
-
-    if (content) {
-        ModelsGenerator::prepare(*content, *assets);
-    }
-    assets->setup();
-    gui->onAssetsLoad(assets.get());
-    LOG_INFO("Assets loaded successfully");
+    assets->loadAssets(content->get());
 }
 
 // Обработка горячих клавиш
@@ -273,7 +250,7 @@ void Engine::renderFrame() {
     screen->draw(time.getDeltaTime());
 
     DrawContext ctx(nullptr, *window, nullptr);
-    gui->draw(ctx, *assets);
+    gui->draw(ctx, *assets->getStorage());
 }
 
 void Engine::run() {
@@ -308,6 +285,7 @@ void Engine::applicationSpark() {
 
 void Engine::updateFrontend() {
     double delta = time.getDeltaTime();
+    assets->update();
     updateHotkeys();
     audio::update(delta);
     gui->activate(delta, window->getSize());
@@ -317,6 +295,10 @@ void Engine::updateFrontend() {
 
 void Engine::nextFrame(bool waitForRefresh) {
     windowControl->nextFrame(waitForRefresh);
+}
+
+AssetsLoader& Engine::acquireBackgroundLoader() {
+    return assets->acquireBackgroundLoader();
 }
 
 EnginePaths& Engine::getPaths() {
@@ -332,7 +314,7 @@ EngineSettings& Engine::getSettings() {
 }
 
 Assets* Engine::getAssets() {
-	return assets.get();
+	return assets->getStorage();
 }
 
 EngineController* Engine::getController() {

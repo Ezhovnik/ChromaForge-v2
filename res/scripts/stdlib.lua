@@ -25,6 +25,7 @@ function tb_frame_tostring(frame)
 end
 
 local __chroma__app_script_coroutine
+local __chroma__is_post_runnable = false
 
 local function complete_app_lib(app)
     local __app_load_content = app.load_content
@@ -43,6 +44,10 @@ local function complete_app_lib(app)
     app.spark = __app_spark
 
     local function call_in_app_script_co(func, ...)
+        if __chroma__is_post_runnable then
+            func(...)
+            return
+        end
         local running = coroutine.running()
         if not running or running ~= __chroma__app_script_coroutine then
             error("Content must be reload in application script coroutine")
@@ -566,7 +571,7 @@ local fn_audio_reset_fetch_buffer = audio.__reset_fetch_buffer
 audio.__reset_fetch_buffer = nil
 builtin.get_builtin_audio_token = audio.input.__get_builtin_token
 
-function __process_post_runnables()
+local function __chroma__process_post_runnables()
     if #__post_runnables then
         for _, func in ipairs(__post_runnables) do
             local status, result = xpcall(func, __chroma__error)
@@ -598,6 +603,15 @@ function __process_post_runnables()
         block.__process_register_events()
         block.__perform_sparks(time.delta())
     end
+end
+
+function __process_post_runnables()
+    __chroma__is_post_runnable = true
+    local success, err = pcall(__chroma__process_post_runnables)
+    if not success then
+        debug.error("An error ocurred while processing post-runnables: ".. err)
+    end
+    __chroma__is_post_runnable = false
 end
 
 function time.post_runnable(runnable)

@@ -255,6 +255,9 @@ ResPaths::ResPaths(
 ) : roots(std::move(roots)) {}
 
 io::path ResPaths::find(const std::string& filename) const {
+    if (filename.find(':') != std::string::npos) {
+        return filename;
+    }
     for (int i = roots.size() - 1; i >= 0; --i) {
         auto& root = roots[i];
         auto file = root.path / filename;

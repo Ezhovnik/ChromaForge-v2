@@ -8,6 +8,7 @@
 #include <functional>
 #include <condition_variable>
 #include <utility>
+#include <optional>
 
 #include <delegates.h>
 #include <debug/Logger.h>
@@ -88,6 +89,7 @@ namespace util {
         std::atomic<int> busyWorkers = 0; ///< Количество потоков, занятых обработкой заданий
         std::atomic<uint> jobsDone = 0; ///< Счётчик выполненных заданий
         std::atomic<bool> working = true; ///< Флаг активности пула
+        supplier<std::optional<T>> jobsSource = nullptr;
         bool failed = false; ///< Флаг наличия ошибки
         bool standaloneResults = true; ///< Режим обработки результатов: true — без ожидания, false — с блокировкой
         bool stopOnFail = true; ///< Останавливать пул при первой ошибке
@@ -199,6 +201,10 @@ namespace util {
             return working;
         }
 
+        void setJobsSource(supplier<std::optional<T>>&& source) {
+            jobsSource = std::move(source);
+        }
+
         /**
          * @brief Принудительно завершает работу пула.
          *
@@ -280,6 +286,22 @@ namespace util {
                         onComplete();
                         complete = true;
                     }
+                }
+            }
+            if (jobsSource) {
+                bool jobsAdded = false;
+                std::lock_guard<std::mutex> jobsLock(jobsMutex);
+                while (true) {
+                    auto job = jobsSource();
+                    if (job.has_value()) {
+                        jobs.push(std::move(job.value()));
+                        jobsAdded = true;
+                    } else {
+                        break;
+                    }
+                }
+                if (jobsAdded) {
+                    jobsMutexCondition.notify_one();
                 }
             }
             if (failed) {

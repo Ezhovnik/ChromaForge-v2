@@ -331,6 +331,9 @@ static int l_quit(lua::State*) {
 const luaL_Reg applib[] = {
     {"get_version", lua::wrap<l_get_version>},
     {"is_content_loaded", lua::wrap<l_is_content_loaded>},
+    {"load_content", lua::wrap<l_load_content>},
+    {"reset_content", lua::wrap<l_reset_content>},
+    {"reconfig_packs", lua::wrap<l_reconfig_packs>},
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"focus", lua::wrap<l_focus>},
     {"create_memory_device", lua::wrap<l_create_memory_device>},
