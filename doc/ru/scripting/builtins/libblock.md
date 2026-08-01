@@ -75,7 +75,14 @@ block.has_tag(id: int, tag: str) -> bool
 ## Raycast
 
 ```lua
-block.raycast(start: vec3, dir: vec3, max_distance: number, [опционально] dest: table, [опционально] filter: table) -> {
+block.raycast(
+    start: vec3,
+    dir: vec3,
+    max_distance: number,
+    [опционально] dest: table,
+    [опционально] filter: table,
+    [опционально] include_non_selectable = false
+) -> {
     block: int, -- id блока
     endpoint: vec3, -- точка касания луча
     iendpoint: vec3, -- позиция блока, которого касается луч
@@ -88,6 +95,9 @@ block.raycast(start: vec3, dir: vec3, max_distance: number, [опциональ�
 
 Аргумент `filter` позволяет указать какие блоки являются "прозрачными" для луча, прим.: {"chromaforge:glass", "chromaforge:water"}.
 Для использования агрумент `dest` нужно чем-то заполнить(можно nil), это сделано для обратной совместимости
+
+Аргумент `include_non_selectable` определяет, будут ли учтены блоки, которые нельзя выбрать курсором.
+Пример - `chromaforge:water`
 
 Функция возвращает таблицу с результатами или nil, если луч не касается блока.
 

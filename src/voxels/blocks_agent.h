@@ -301,7 +301,8 @@ namespace blocks_agent {
         glm::vec3& end,
         glm::ivec3& norm,
         glm::ivec3& iend,
-        std::set<blockid_t> filter
+        std::set<blockid_t> filter,
+        bool includeNonSelectable
     );
 
     voxel* raycast(
@@ -312,7 +313,8 @@ namespace blocks_agent {
         glm::vec3& end,
         glm::ivec3& norm,
         glm::ivec3& iend,
-        std::set<blockid_t> filter
+        std::set<blockid_t> filter,
+        bool includeNonSelectable
     );
 
     void get_voxels(const Chunks& chunks, VoxelsVolume* volume, bool backlight=false);

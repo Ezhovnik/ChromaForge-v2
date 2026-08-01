@@ -216,7 +216,8 @@ static inline voxel* raycast_blocks(
     glm::vec3& end,
     glm::ivec3& norm,
     glm::ivec3& iend,
-    std::set<blockid_t> filter
+    std::set<blockid_t> filter,
+    bool includeNonSelectable
 ) {
     const auto& blocks = chunks.getContentIndices().blocks;
     float px = start.x;
@@ -257,8 +258,7 @@ static inline voxel* raycast_blocks(
         if (voxel == nullptr) return nullptr;
 
         const auto& def = blocks.require(voxel->id);
-        if ((filter.empty() && def.selectable) ||
-            (!filter.empty() && filter.find(def.rt.id) == filter.end())) {
+        if (voxel->id != BLOCK_AIR && (def.selectable || includeNonSelectable) && (filter.empty() || filter.find(def.rt.id) == filter.end())) {
             end.x = px + t * dx;
             end.y = py + t * dy;
             end.z = pz + t * dz;
@@ -351,9 +351,20 @@ voxel* blocks_agent::raycast(
     glm::vec3& end,
     glm::ivec3& norm,
     glm::ivec3& iend,
-    std::set<blockid_t> filter
+    std::set<blockid_t> filter,
+    bool includeNonSelectable
 ) {
-    return raycast_blocks(chunks, start, dir, maxDist, end, norm, iend, filter);
+    return raycast_blocks(
+        chunks,
+        start,
+        dir,
+        maxDist,
+        end,
+        norm,
+        iend,
+        filter,
+        includeNonSelectable
+    );
 }
 
 voxel* blocks_agent::raycast(
@@ -364,9 +375,20 @@ voxel* blocks_agent::raycast(
     glm::vec3& end,
     glm::ivec3& norm,
     glm::ivec3& iend,
-    std::set<blockid_t> filter
+    std::set<blockid_t> filter,
+    bool includeNonSelectable
 ) {
-    return raycast_blocks(chunks, start, dir, maxDist, end, norm, iend, filter);
+    return raycast_blocks(
+        chunks,
+        start,
+        dir,
+        maxDist, 
+        end,
+        norm,
+        iend, 
+        filter,
+        includeNonSelectable
+    );
 }
 
 // TODO: Reduce nesting

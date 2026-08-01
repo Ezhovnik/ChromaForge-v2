@@ -327,8 +327,8 @@ private:
     GLFWwindow* window;
     bool cursorLocked = false;
     bool cursorDrag = false;
-    glm::vec2 delta;
-    glm::vec2 cursor;
+    glm::vec2 delta {};
+    glm::vec2 cursor {};
 };
 static_assert(!std::is_abstract<GLFWInput>());
 
@@ -569,7 +569,7 @@ private:
     CursorShape cursor = CursorShape::Arrow;
     int framerate = -1;
     std::stack<glm::vec4> scissorStack;
-    glm::vec4 scissorArea;
+    glm::vec4 scissorArea {};
     double prevSwap = 0.0;
     int posX = 0;
     int posY = 0;
