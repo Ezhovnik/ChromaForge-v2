@@ -294,7 +294,7 @@ void ChunksRenderer::drawChunks(
 
     if (indices.size() != chunks.getVolume()) {
         indices.clear();
-        for (int i = 0; i < chunks.getVolume(); i++) {
+        for (int i = 0; i < chunks.getVolume(); ++i) {
             indices.push_back(ChunksSortEntry {i, 0});
         }
     }

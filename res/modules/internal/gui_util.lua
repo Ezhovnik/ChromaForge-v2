@@ -30,7 +30,7 @@ function gui_util.load_page(query)
     local filename = file.find(string.format("layouts/pages/%s.xml", name))
     if filename then
         name = file.prefix(filename)..":pages/"..name
-        gui.load_document(filename, name, args)
+        gui.load_document(filename, name, args, {app = __chroma_app})
         return name
     end
 end
@@ -48,19 +48,21 @@ end
 
 -- class designed for simple UI-nodes access via properties syntax
 local Element = {}
+local __gui_getattr = gui.getattr
+local __gui_setattr = gui.setattr
 function Element.new(docname, name)
     return setmetatable({docname=docname, name=name}, {
         __index=function(self, k)
-            return gui.getattr(self.docname, self.name, k)
+            return __gui_getattr(self.docname, self.name, k)
         end,
         __newindex=function(self, k, v)
-            gui.setattr(self.docname, self.name, k, v)
+            __gui_setattr(self.docname, self.name, k, v)
         end,
         __ipairs=function(self)
             local i = 0
             return function()
                 i = i + 1
-                local elem = gui.getattr(self.docname, self.name, i)
+                local elem = __gui_getattr(self.docname, self.name, i)
                 if elem == nil then
                     return
                 end

@@ -147,7 +147,7 @@ Route Pathfinding::perform(Agent& agent, int maxVisited) {
             {-1, 1},
         };
 
-        for (int i = 0; i < sizeof(neighbors) / sizeof(glm::ivec2); i++) {
+        for (int i = 0; i < sizeof(neighbors) / sizeof(glm::ivec2); ++i) {
             auto offset = neighbors[i];
             auto pos = node.pos;
 

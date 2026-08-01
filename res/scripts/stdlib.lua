@@ -1,4 +1,4 @@
-local enable_experimental = builtin.get_setting("debug.enable-experimental")
+local enable_experimental = __chroma_app.get_setting("debug.enable-experimental")
 
 ------------------------------------------------
 ------ Extended kit of standard functions ------
@@ -24,38 +24,27 @@ function tb_frame_tostring(frame)
     return s
 end
 
-local builtin_set_setting = builtin.set_setting
-function builtin.set_setting(name, value, ...)
-    builtin_set_setting(name, value, ...)
-    events.emit("builtin:setting."..name..".set", value)
-end
-
 local __chroma__app_script_coroutine
 
 local function complete_app_lib(app)
-    local __builtin_load_content = builtin.load_content
-    local __builtin_reset_content = builtin.reset_content
-    local __builtin_reconfig_packs = builtin.reconfig_packs
+    local __app_load_content = app.load_content
+    local __app_reset_content = app.reset_content
+    local __app_reconfig_packs = app.reconfig_packs
     local __app_spark = coroutine.yield
-    builtin.load_content = nil
-    builtin.reset_content = nil
+    local __app_set_setting = app.set_setting
+    local __app_quit = app.quit
 
     app.sleep = sleep
     app.name = __CHROMA_SCRIPT_NAME
-    app.new_world = builtin.new_world
-    app.open_world = builtin.open_world
-    app.save_world = builtin.save_world
-    app.close_world = builtin.close_world
-    app.reopen_world = builtin.reopen_world
-    app.delete_world = builtin.delete_world
-    app.get_setting = builtin.get_setting
-    app.set_setting = builtin.set_setting
+    app.set_setting = function(name, value, ...)
+        __app_set_setting(name, value, ...)
+        events.emit("builtin:setting."..name..".set", value)
+    end
     app.spark = __app_spark
-    app.get_version = builtin.get_version
-    app.get_setting_info = builtin.get_setting_info
 
     local function call_in_app_script_co(func, ...)
-        if coroutine.running() ~= __chroma__app_script_coroutine then
+        local running = coroutine.running()
+        if not running or running ~= __chroma__app_script_coroutine then
             error("Content must be reload in application script coroutine")
         end
         func(...)
@@ -63,16 +52,14 @@ local function complete_app_lib(app)
     end
 
     app.reconfig_packs = function(...)
-        call_in_app_script_co(__builtin_reconfig_packs, ...)
+        call_in_app_script_co(__app_reconfig_packs, ...)
     end
     app.load_content = function(...)
-        call_in_app_script_co(__builtin_load_content, ...)
+        call_in_app_script_co(__app_load_content, ...)
     end
     app.reset_content = function(...)
-        call_in_app_script_co(__builtin_reset_content, ...)
+        call_in_app_script_co(__app_reset_content, ...)
     end
-
-    app.is_content_loaded = builtin.is_content_loaded
 
     function app.config_packs(packs_list)
         packs_list = pack.assemble(packs_list)
@@ -93,15 +80,16 @@ local function complete_app_lib(app)
         app.reconfig_packs(toadd, toremove)
     end
 
-    function app.quit()
-        local tb = debug.get_traceback(1)
-        local s = "app.quit() traceback:"
-        for i, frame in ipairs(tb) do
-            s = s .. "\n\t"..tb_frame_tostring(frame)
+    function app.quit(silent)
+        if not silent then
+            local tb = debug.get_traceback(1)
+            local s = "app.quit() traceback:"
+            for i, frame in ipairs(tb) do
+                s = s .. "\n\t"..tb_frame_tostring(frame)
+            end
+            debug.info(s)
         end
-        debug.info(s)
-        builtin.quit()
-        coroutine.yield()
+        __app_quit()
     end
 
     function app.sleep_until(predicate, max_sparks, max_time)

@@ -64,6 +64,8 @@ static void create_libs(State* L, StateType stateType) {
 
     if (stateType == StateType::Script) {
         openlib(L, "app", applib);
+        lua::getglobal(L, "app");
+        lua::setglobal(L, "__chroma_app");
     } else if (stateType == StateType::Base) {
         openlib(L, "__chroma_app", applib);
     }

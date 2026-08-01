@@ -326,7 +326,7 @@ dv::value yaml::parse(std::string_view source) {
 }
 
 static void add_indent(std::stringstream& ss, int indent) {
-    for (int i = 0; i < indent; i++) {
+    for (int i = 0; i < indent; ++i) {
         ss << "  ";
     }
 }

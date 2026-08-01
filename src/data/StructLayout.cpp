@@ -112,7 +112,7 @@ static void reset_integer(
     ubyte* dst
 ) {
     int elements = std::min(field.elements, dstField.elements);
-    for (int i = 0; i < elements; i++) {
+    for (int i = 0; i < elements; ++i) {
         auto value = srcLayout.getInteger(src, field.name, i);
         auto clamped = clamp_value(value, dstField.type);
         if (dstField.convertStrategy == FieldConvertStrategy::Clamp) {

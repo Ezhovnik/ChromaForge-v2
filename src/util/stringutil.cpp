@@ -222,7 +222,7 @@ std::string xstr2str_utf8(std::basic_string_view<C> xs) {
     ubyte buffer[4];
     for (C xc : xs) {
         uint size = util::encode_utf8(static_cast<uint>(xc), buffer);
-        for (uint i = 0; i < size; i++) {
+        for (uint i = 0; i < size; ++i) {
             chars.push_back(buffer[i]);
         }
     }

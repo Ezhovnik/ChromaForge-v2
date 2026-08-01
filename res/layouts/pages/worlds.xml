@@ -4,6 +4,6 @@
     
     <panel id='worlds' size='390,1' padding='5' color='#FFFFFF11' max-length='400'>
     </panel>
-    <button pos='485,525' size='500,40' onclick='builtin.open_folder("user:saves")'>@Open saves folder</button>
+    <button pos='485,525' size='500,40' onclick='app.open_folder("user:saves")'>@Open saves folder</button>
     <button onclick='menu:back()'>@Back</button>
 </panel>

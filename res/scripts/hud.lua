@@ -28,7 +28,7 @@ local function configure_SSAO()
     end
     events.on("builtin:setting.graphics.ssao.set", update_ssao_quality)
 
-    update_ssao_quality(builtin.get_setting("graphics.ssao"))
+    update_ssao_quality(__chroma_app.get_setting("graphics.ssao"))
 end
 
 local function update_hand()

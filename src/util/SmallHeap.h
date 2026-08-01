@@ -67,7 +67,7 @@ namespace util {
          */
         uint8_t* find(Tindex index) {
             auto data = buffer.data();
-            for (size_t i = 0; i < entriesCount; i++) {
+            for (size_t i = 0; i < entriesCount; ++i) {
                 auto nextIndex = read_int_le<Tindex>(data);
                 data += sizeof(Tindex);
                 auto nextSize = read_int_le<Tsize>(data);
@@ -140,7 +140,7 @@ namespace util {
                 this->free(found);
                 return allocate(index, size);
             }
-            for (size_t i = 0; i < entriesCount; i++) {
+            for (size_t i = 0; i < entriesCount; ++i) {
                 auto data = buffer.data() + offset;
                 auto nextIndex = read_int_le<Tindex>(data);
                 data += sizeof(Tindex);

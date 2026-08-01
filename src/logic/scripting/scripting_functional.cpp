@@ -165,7 +165,7 @@ int_array_consumer scripting::create_int_array_consumer(
 ) {
     return [=](const int arr[], size_t len) {
         if (auto L = process_callback(env, src, file)) {
-            for (uint i = 0; i < len; i++) {
+            for (uint i = 0; i < len; ++i) {
                 lua::pushinteger(L, arr[i]);
             }
             lua::call_nothrow(L, len);

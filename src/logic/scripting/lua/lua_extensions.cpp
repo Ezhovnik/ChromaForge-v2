@@ -294,7 +294,7 @@ static int l_debug_sendvalue(lua::State* L) {
 
     devtools::ValuePath path;
     int pathSectors = lua::objlen(L, 4);
-    for (int i = 0; i < pathSectors; i++) {
+    for (int i = 0; i < pathSectors; ++i) {
         lua::rawgeti(L, i + 1, 4);
         if (lua::isstring(L, -1)) {
             path.emplace_back(lua::tostring(L, -1));
@@ -393,6 +393,9 @@ void initialize_libs_extends(lua::State* L) {
 
         lua::pushcfunction(L, lua::wrap<l_debug_info>);
         lua::setfield(L, "info");
+
+        lua::pushcfunction(L, lua::wrap<l_debug_trace>);
+        lua::setfield(L, "trace");
 
         lua::pushcfunction(L, lua::wrap<l_debug_print>);
         lua::setfield(L, "print");

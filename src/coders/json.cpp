@@ -105,7 +105,7 @@ void stringifyList(
         return;
     }
     ss << "[";
-    for (size_t i = 0; i < list.size(); i++) {
+    for (size_t i = 0; i < list.size(); ++i) {
         if (i > 0 || nice) {
             newline(ss, nice, indent, indentstr);
         }

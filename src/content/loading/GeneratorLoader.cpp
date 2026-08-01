@@ -39,7 +39,7 @@ static inline BlocksLayers load_layers(
     bool hasResizeableLayer = false;
     std::vector<BlocksLayer> layers;
 
-    for (int i = 0; i < layersArr.size(); i++) {
+    for (int i = 0; i < layersArr.size(); ++i) {
         const auto& layerMap = layersArr[i];
         try {
             layers.push_back(

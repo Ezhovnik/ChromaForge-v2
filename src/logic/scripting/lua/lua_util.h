@@ -180,7 +180,7 @@ namespace lua {
     template <int n, typename T = float>
     inline int setvec(lua::State* L, int idx, glm::vec<n, T> vec) {
         pushvalue(L, idx);
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; ++i) {
             pushnumber(L, vec[i]);
             rawseti(L, i + 1);
         }

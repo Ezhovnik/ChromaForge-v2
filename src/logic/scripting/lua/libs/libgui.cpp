@@ -1140,6 +1140,16 @@ static int l_gui_load_document(lua::State* L) {
     );
     auto document = documentPtr.get();
     scripting::engine->getAssets()->store(std::move(documentPtr), alias);
+
+    if (lua::istable(L, 4)) {
+        if (lua::get_from(L, "table", "merge")) {
+            lua::pushenv(L, *document->getEnvironment());
+            lua::pushvalue(L, 4);
+            lua::call(L, 2, 0);
+            lua::pop(L);
+        }
+    }
+
     scripting::on_ui_open(document, {args});
     return 0;
 }

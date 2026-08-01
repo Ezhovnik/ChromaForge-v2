@@ -270,7 +270,7 @@ void platform::new_engine_instance(const std::vector<std::string>& args) {
 #else
     std::stringstream ss;
     ss << executable;
-    for (int i = 0; i < args.size(); i++) {
+    for (int i = 0; i < args.size(); ++i) {
         ss << " " << util::quote(args[i]);
     }
     ss << " >/dev/null &";
