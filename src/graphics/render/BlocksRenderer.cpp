@@ -80,7 +80,7 @@ void BlocksRenderer::face(
     const glm::vec4(&lights)[4],
     const glm::vec4& tint) 
 {
-    if (vertexCount + 4 >= capacity) {
+    if (vertexCount + 4 >= capacity || indexCount + 6 >= capacity) {
         overflow = true;
         return;
     }
@@ -117,7 +117,7 @@ void BlocksRenderer::faceAO(
     const UVRegion& region,
     bool lights)
 {
-    if (vertexCount + 4 >= capacity) {
+    if (vertexCount + 4 >= capacity || indexCount + 6 >= capacity) {
         overflow = true;
         return;
     }
@@ -274,19 +274,6 @@ void BlocksRenderer::blockAABB(
     }
 }
 
-static bool is_aligned(const glm::vec3& v, float e = 1e-6f) {
-    if (std::abs(v.y) < e && std::abs(v.z) < e && std::abs(v.x) > e) {
-        return true;
-    }
-    if (std::abs(v.x) < e && std::abs(v.z) < e && std::abs(v.y) > e) {
-        return true;
-    }
-    if (std::abs(v.x) < e && std::abs(v.y) < e && std::abs(v.z) > e) {
-        return true;
-    }
-    return false;
-}
-
 void BlocksRenderer::blockCustomModel(
     const glm::ivec3& icoord,
     const Block& block,
@@ -307,15 +294,31 @@ void BlocksRenderer::blockCustomModel(
         Z = orient.axes[2];
     }
 
+    if (!block.rt.extended) {
+        glm::ivec3 offsets[6] {
+            {-1, 0, 0}, {0, -1, 0}, {0, 0, -1},
+            {1, 0, 0}, {0, 1, 0}, {0, 0, 1},
+        };
+        bool culled = true;
+        for (int i = 0; i < 6; ++i) {
+            if (isOpen(icoord + offsets[i], block, variant)) {
+                culled = false;
+                break;
+            }
+        }
+        if (culled) return;
+    }
+
     // Рендерим каждый бокс модели
     const auto& model = cache.getModel(block.rt.id, block.getVariantIndex(states.userbits));
     for (const auto& mesh : model.meshes) {
-        if (vertexCount + mesh.vertices.size() >= capacity) {
+        if (vertexCount + mesh.vertices.size() >= capacity || indexCount + mesh.vertices.size() >= capacity) {
             overflow = true;
             return;
         }
         bool shading = mesh.shading && !block.shadeless;
-        for (int triangle = 0; triangle < mesh.vertices.size() / 3; ++triangle) {
+        int trianglesCount = mesh.vertices.size() / 3;
+        for (int triangle = 0; triangle < trianglesCount; ++triangle) {
             auto r = mesh.vertices[triangle * 3 + (triangle % 2) * 2].coord - mesh.vertices[triangle * 3 + 1].coord;
             r = r.x * X + r.y * Y + r.z * Z;
             r = glm::normalize(r);
@@ -331,7 +334,6 @@ void BlocksRenderer::blockCustomModel(
 
             if (!block.rt.extended
                 && !isOpen(glm::floor(coord + vp + 0.5f + n * 1e-3f), block, variant)
-                && is_aligned(n)
             ) {
                 continue;
             }
@@ -794,6 +796,11 @@ ChunkMesh BlocksRenderer::render(
     const Chunk* chunk, const VoxelsRenderVolume& volume
 ) {
     build(chunk, volume);
+
+    assert(vertexCount <= capacity);
+    assert(indexCount <= capacity);
+    assert(denseIndexCount <= capacity);
+
     return ChunkMesh{std::make_unique<Mesh<ChunkVertex>>(
         vertexBuffer.get(), vertexCount, 
         std::vector<IndexBufferData> {

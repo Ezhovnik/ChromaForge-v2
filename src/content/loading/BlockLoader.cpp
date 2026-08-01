@@ -206,6 +206,7 @@ template<> void ContentUnitLoader<Block>::loadUnit(
     root.at("spark-interval").get(def.sparkInterval);
     root.at("overlay-texture").get(def.overlayTexture);
     root.at("translucent").get(def.translucent);
+    root.at("solid").get(def.explictlySolid);
 
     if (root.has("fields")) {
         def.dataStruct = std::make_unique<data::StructLayout>();

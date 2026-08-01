@@ -95,10 +95,8 @@ void Player::postUpdate() {
     }
 
 	// Если точка возрождения не задана, пытаемся найти её
-	if (spawnpoint.y <= 0.1) {
-		for (int i = 0; i < PlayerConsts::SPAWN_ATTEMPTS_PER_UPDATE; ++i) {
-            attemptToFindSpawnpoint();
-        }
+	for (int i = 0; i < PlayerConsts::SPAWN_ATTEMPTS_PER_UPDATE && std::isnan(spawnpoint.x); ++i) {
+        attemptToFindSpawnpoint();
 	}
 }
 

@@ -34,11 +34,13 @@ std::unique_ptr<Content> ContentBuilder::build() {
 
         if (def.variants) {
             for (auto& variant : def.variants->variants) {
-                variant.rt.solid = variant.model.type == BlockModelType::Cube;
+                variant.rt.solid = 
+                    variant.model.type == BlockModelType::Cube || def.explictlySolid;
             }
             def.defaults = def.variants->variants.at(0);
         } else {
-            def.defaults.rt.solid = def.defaults.model.type == BlockModelType::Cube;
+            def.defaults.rt.solid =
+                def.defaults.model.type == BlockModelType::Cube || def.explictlySolid;
         }
         constexpr float EPSILON = 0.01f;
         def.rt.solid = def.obstacle && (glm::i8vec3(def.hitboxes[0].size() + EPSILON) == def.size);

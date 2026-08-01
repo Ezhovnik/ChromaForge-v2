@@ -289,8 +289,10 @@ static int l_is_suspended(lua::State* L) {
 }
 
 static int l_set_suspended(lua::State* L) {
-    if (auto player = get_player(L, 1)) {
-        player->setSuspended(lua::toboolean(L, 2));
+    if (lua::toboolean(L, 2)) {
+        scripting::level->players->suspend(lua::tointeger(L, 1));
+    } else {
+        scripting::level->players->resume(lua::tointeger(L, 1));
     }
     return 0;
 }

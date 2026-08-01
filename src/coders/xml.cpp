@@ -386,7 +386,9 @@ namespace {
         void parseSubElements(Node& node) {
             skipWhitespace();
             while (hasNext()) {
-                if (peek() != '@') {
+                char c = peek();
+                if (c == '}') break;
+                if (c != '@') {
                     LOG_ERROR("Unexpected charcter in element");
                     throw error("Unexpected character in element");
                 }
@@ -405,14 +407,12 @@ namespace {
                 }
                 if (!hasNext()) break;
 
-                char c = peek();
+                c = peek();
                 if (c == '{') {
                     nextChar();
                     parseSubElements(*subnode);
                     expect('}');
                     skipWhitespace();
-                } else if (c == '}') {
-                    break;
                 }
             }
         }

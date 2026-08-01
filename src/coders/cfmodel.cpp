@@ -1,6 +1,7 @@
 #include <coders/cfmodel.h>
 
 #include <algorithm>
+#include <vector>
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,7 +29,87 @@ static bool to_boolean(const xml::Attribute& attr) {
     return attr.getText() != "off";
 }
 
-static void perform_rect(const xmlelement& root, model::Model& model) {
+class ModelBuilder {
+public:
+    ModelBuilder(model::Model& model) : model(model) {}
+
+    void push(const glm::mat4& matrix) {
+        matrices.push_back(matrix);
+        calculateMatrix();
+    }
+
+    void pop() {
+        matrices.pop_back();
+        calculateMatrix();
+    }
+
+    void addBox(
+        const std::string& texture,
+        bool shading,
+        const glm::vec3& pos,
+        const glm::vec3& size,
+        const UVRegion (&uvs)[6],
+        const bool enabledSides[6]
+    ) {
+        auto& mesh = model.addMesh(texture, shading);
+        mesh.addBox(pos, size, uvs, enabledSides, combined);
+    }
+
+    void addTriangle(
+        const std::string& texture,
+        bool shading,
+        const glm::vec3& a,
+        const glm::vec3& b,
+        const glm::vec3& c,
+        const glm::vec3& norm,
+        const glm::vec2& uvA,
+        const glm::vec2& uvB,
+        const glm::vec2& uvC
+    ) {
+        auto& mesh = model.addMesh(texture, shading);
+        mesh.addTriangle(
+            combined * glm::vec4(a, 1.0f),
+            combined * glm::vec4(b, 1.0f),
+            combined * glm::vec4(c, 1.0f),
+            norm,
+            uvA,
+            uvB,
+            uvC
+        );
+    }
+
+    void addRect(
+        const std::string& texture,
+        bool shading,
+        const glm::vec3& pos,
+        const glm::vec3& right,
+        const glm::vec3& up,
+        const glm::vec3& norm,
+        const UVRegion& uv
+    ) {
+        auto& mesh = model.addMesh(texture, shading);
+        mesh.addRect(pos, right, up, norm, uv, combined);
+    }
+
+    model::Model& getModel() {
+        return model;
+    }
+private:
+    void calculateMatrix() {
+        combined = glm::mat4(1.0f);
+        for (const auto& matrix : matrices) {
+            combined *= matrix;
+        }
+    }
+
+    model::Model& model;
+    std::vector<glm::mat4> matrices;
+    glm::mat4 combined {1.0f};
+};
+
+static void perform_element(const xmlelement& root, ModelBuilder& builder);
+
+static void perform_rect(const xmlelement& root, ModelBuilder& builder) {
     auto from = root.attr("from").asVec3();
     auto right = root.attr("right").asVec3();
     auto up = root.attr("up").asVec3();
@@ -61,10 +142,11 @@ static void perform_rect(const xmlelement& root, model::Model& model) {
         from -= up;
     }
     std::string texture = root.attr("texture", "$0").getText();
-    auto& mesh = model.addMesh(texture, shading);
 
     auto normal = glm::cross(glm::normalize(right), glm::normalize(up));
-    mesh.addRect(
+    builder.addRect(
+        texture,
+        shading,
         from + right * 0.5f + up * 0.5f,
         right * 0.5f,
         up * 0.5f,
@@ -73,7 +155,7 @@ static void perform_rect(const xmlelement& root, model::Model& model) {
     );
 }
 
-static void perform_triangle(const xmlelement& root, model::Model& model) {
+static void perform_triangle(const xmlelement& root, ModelBuilder& builder) {
     auto pointA = root.attr("a").asVec3();
     auto pointB = root.attr("b").asVec3();
     auto pointC = root.attr("c").asVec3();
@@ -105,16 +187,16 @@ static void perform_triangle(const xmlelement& root, model::Model& model) {
     }
 
     std::string texture = root.attr("texture", "$0").getText();
-    auto& mesh = model.addMesh(texture, shading);
-
-    mesh.addTriangle(
+    builder.addTriangle(
+        texture,
+        shading,
         pointA, pointB, pointC,
         normal,
         uvs[0], uvs[1], uvs[2]
     );
 }
 
-static void perform_box(const xmlelement& root, model::Model& model) {
+static void perform_box(const xmlelement& root, ModelBuilder& builder) {
     auto from = root.attr("from").asVec3();
     auto to = root.attr("to").asVec3();
 
@@ -200,29 +282,72 @@ static void perform_box(const xmlelement& root, model::Model& model) {
         }
     }
 
+    builder.push(tsf);
     for (int i = 0; i < 6; ++i) {
         if (deleted[i]) continue;
 
         bool enabled[6] {};
         enabled[i] = true;
-        auto& mesh = model.addMesh(texfaces[i], shading);
-        mesh.addBox(center, halfsize, regions, enabled, tsf);
+        builder.addBox(
+            texfaces[i],
+            shading,
+            center,
+            halfsize,
+            regions,
+            enabled
+        );
+    }
+    builder.pop();
+}
+
+static void perform_bone(const xmlelement& root, ModelBuilder& builder) {
+    glm::mat4 tsf(1.0f);
+    if (root.has("move")) {
+        tsf = glm::translate(tsf, root.attr("move").asVec3());
+    }
+    if (root.has("rotate")) {
+        auto text = root.attr("rotate").getText();
+        if (std::count(text.begin(), text.end(), ',') == 3) {
+            auto quat = root.attr("rotate").asVec4();
+            tsf *= glm::mat4_cast(glm::quat(quat.w, quat.x, quat.y, quat.z));
+        } else {
+            auto rot = root.attr("rotate").asVec3();
+            tsf = glm::rotate(tsf, glm::radians(rot.x), glm::vec3(1, 0, 0));
+            tsf = glm::rotate(tsf, glm::radians(rot.y), glm::vec3(0, 1, 0));
+            tsf = glm::rotate(tsf, glm::radians(rot.z), glm::vec3(0, 0, 1));
+        }
+    }
+    if (root.has("scale")) {
+        tsf = glm::scale(tsf, root.attr("scale").asVec3());
+    }
+
+    builder.push(std::move(tsf));
+    for (const auto& elem : root.getElements()) {
+        perform_element(*elem, builder);
+    }
+    builder.pop();
+}
+
+static void perform_element(const xmlelement& root, ModelBuilder& builder) {
+    auto tag = root.getTag();
+
+    if (tag == "rect") {
+        perform_rect(root, builder);
+    } else if (tag == "box") {
+        perform_box(root, builder);
+    } else if (tag == "tri") {
+        perform_triangle(root, builder);
+    } else if (tag == "bone") {
+        perform_bone(root, builder);
     }
 }
 
 static std::unique_ptr<model::Model> load_model(const xmlelement& root) {
     model::Model model;
+    ModelBuilder builder(model);
 
     for (const auto& elem : root.getElements()) {
-        auto tag = elem->getTag();
-
-        if (tag == "rect") {
-            perform_rect(*elem, model);
-        } else if (tag == "box") {
-            perform_box(*elem, model);
-        } else if (tag == "tri") {
-            perform_triangle(*elem, model);
-        }
+        perform_element(*elem, builder);
     }
 
     return std::make_unique<model::Model>(std::move(model));

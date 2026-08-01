@@ -181,7 +181,8 @@ public:
     bool hidden = false;
     bool shadeless = false;
     bool ambientOcclusion = true;
-    bool translucent = false; // TODO
+    bool translucent = false;
+    bool explictlySolid = false;
 
     std::vector<AABB> hitboxes {AABB()};
 
