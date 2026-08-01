@@ -135,7 +135,7 @@ public:
 		std::shared_ptr<AssetsConfig> config=nullptr
 	);
 
-     std::shared_ptr<Task> startTask(runnable onDone);
+     std::shared_ptr<Task> startTask(runnable onDone, int maxWorkers);
 
 	/**
      * @brief Проверяет, есть ли ещё задания в очереди.

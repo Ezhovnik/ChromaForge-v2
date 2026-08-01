@@ -10,6 +10,7 @@
 #include <graphics/commons/Model.h>
 #include <graphics/core/Atlas.h>
 #include <logic/scripting/lua/usertypes/lua_type_canvas.h>
+#include <assets/AssetsLoader.h>
 
 static void load_texture(
     const ubyte* bytes, size_t size, const std::string& destname
@@ -19,6 +20,14 @@ static void load_texture(
     } catch (const std::runtime_error& err) {
         LOG_ERROR("{}", err.what());
     }
+}
+
+static int l_request_texture(lua::State* L) {
+    std::string filename = lua::require_string(L, 1);
+    std::string alias = lua::require_string(L, 2);
+    auto& loader = scripting::engine->acquireBackgroundLoader();
+    loader.add(AssetType::Texture, filename, alias);
+    return 0;
 }
 
 static int l_load_texture(lua::State* L) {
@@ -109,6 +118,7 @@ static int l_to_canvas(lua::State* L) {
 }
 
 const luaL_Reg assetslib[] = {
+    {"request_texture", lua::wrap<l_request_texture>},
     {"load_texture", lua::wrap<l_load_texture>},
     {"parse_model", lua::wrap<l_parse_model>},
     {"to_canvas", lua::wrap<l_to_canvas>},

@@ -324,8 +324,13 @@ bool AssetsLoader::loadExternalTexture(
     if (loader.getAssets().get<Texture>(name) != nullptr) return true;
 
     for (auto& path : alternatives) {
-        if (io::exists(path.string() + ".png")) {
-            loader.add(AssetType::Texture, path.string(), name, nullptr);
+        if (io::exists(path)) {
+            loader.add(
+                AssetType::Texture,
+                (path.parent() / path.stem()).string(),
+                name,
+                nullptr
+            );
             return true;
         }
     }
@@ -358,15 +363,16 @@ public:
     }
 };
 
-std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone) {
+std::shared_ptr<Task> AssetsLoader::startTask(runnable onDone, int maxWorkers) {
     auto pool = std::make_shared<
         util::ThreadPool<aloader_entry, asset_loader::postfunc>
     >(
         "assets-loader-pool", 
         [=](){return std::make_unique<LoaderWorker>(this);},
-        [this](asset_loader::postfunc&& func) {
+        [this](const asset_loader::postfunc& func) {
             func(&assets);
-        }
+        },
+        maxWorkers
     );
     pool->setOnComplete(std::move(onDone));
     pool->setJobsSource([this]() -> std::optional<aloader_entry> {

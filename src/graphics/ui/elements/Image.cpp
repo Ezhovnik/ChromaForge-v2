@@ -8,6 +8,7 @@
 #include <assets/Assets.h>
 #include <math/UVRegion.h>
 #include <graphics/core/Atlas.h>
+#include <assets/assets_util.h> 
 
 using namespace gui;
 
@@ -19,36 +20,25 @@ Image::Image(
     setInteractive(false);
 }
 
+util::TextureRegion Image::refreshTexture(const Assets& assets) {
+    auto region = util::get_texture_region(assets, texture, fallback);
+    if (region.texture && autoresize) {
+        setSize(glm::vec2(
+            region.texture->getWidth() * region.region.getWidth(),
+            region.texture->getHeight() * region.region.getHeight()
+        ));
+    }
+    return region;
+}
+
 void Image::draw(const DrawContext& pctx, const Assets& assets) {
     glm::vec2 pos = calcPos();
     auto batch = pctx.getBatch2D();
 
-    Texture* texture = nullptr;
-    auto separator = this->texture.find(':');
-    if (separator == std::string::npos) {
-        texture = assets.get<Texture>(this->texture);
-        batch->texture(texture);
-        if (texture && autoresize) {
-            setSize(glm::vec2(texture->getWidth(), texture->getHeight()));
-        }
-    } else {
-        auto atlasName = this->texture.substr(0, separator);
-        if (auto atlas = assets.get<Atlas>(atlasName)) {
-            if (auto region = atlas->getIf(this->texture.substr(separator + 1))) {
-                texture = atlas->getTexture();
-                batch->texture(atlas->getTexture());
-                batch->setRegion(*region);
-                if (autoresize) {
-                    setSize(glm::vec2(
-                        texture->getWidth() * region->getWidth(), 
-                        texture->getHeight() * region->getHeight())
-                    );
-                }
-            } else {
-                batch->untexture();
-            }
-        }
-    }
+    auto textureRegion = refreshTexture(assets);
+
+    batch->setRegion(textureRegion.region);
+    batch->texture(textureRegion.texture);
 
     batch->rect(
         pos.x, pos.y,
@@ -64,8 +54,13 @@ void Image::draw(const DrawContext& pctx, const Assets& assets) {
 void Image::setAutoResize(bool flag) {
     autoresize = flag;
 }
+
 bool Image::isAutoResize() const {
     return autoresize;
+}
+
+const std::string& Image::getFallback() const {
+    return fallback;
 }
 
 const std::string& Image::getTexture() const {
@@ -74,6 +69,10 @@ const std::string& Image::getTexture() const {
 
 void Image::setTexture(const std::string& name) {
     texture = name;
+}
+
+void Image::setFallback(const std::string& name) {
+    fallback = name;
 }
 
 void Image::setRegion(const UVRegion& region) {

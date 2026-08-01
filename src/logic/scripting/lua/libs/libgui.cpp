@@ -332,6 +332,13 @@ static int p_get_line_numbers(gui::UINode* node, lua::State* L) {
     return 0;
 }
 
+static int p_get_fallback(gui::UINode* node, lua::State* L) {
+    if (auto image = dynamic_cast<gui::Image*>(node)) {
+        return lua::pushstring(L, image->getFallback());
+    }
+    return 0;
+}
+
 static int p_get_region(gui::UINode* node, lua::State* L) {
     if (auto image = dynamic_cast<gui::Image*>(node)) {
         const auto& region = image->getRegion();
@@ -665,6 +672,7 @@ static int l_gui_getattr(lua::State* L) {
         {"paste", p_get_paste},
         {"caret", p_get_caret},
         {"src", p_get_src},
+        {"fallback", p_get_fallback},
         {"tooltip", p_get_tooltip},
         {"tooltipDelay", p_get_tooltip_delay},
         {"setInterval", p_set_interval},
@@ -739,6 +747,12 @@ static void p_set_text(gui::UINode* node, lua::State* L, int idx) {
         button->setText(lua::require_wstring(L, idx));
     } else if (auto box = dynamic_cast<gui::TextBox*>(node)) {
         box->setText(lua::require_wstring(L, idx));
+    }
+}
+
+static void p_set_fallback(gui::UINode* node, lua::State* L, int idx) {
+    if (auto image = dynamic_cast<gui::Image*>(node)) {
+        image->setFallback(lua::require_string(L, idx));
     }
 }
 
@@ -996,6 +1010,7 @@ static int l_gui_setattr(lua::State* L) {
         {"page", p_set_page},
         {"inventory", p_set_inventory},
         {"caret", p_set_caret},
+        {"fallback", p_set_fallback},
         {"src", p_set_src},
         {"cursor", p_set_cursor},
         {"focused", p_set_focused},
