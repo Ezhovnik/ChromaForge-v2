@@ -74,6 +74,10 @@ namespace model {
             const glm::mat4& transform
         );
         void scale(const glm::vec3& size);
+
+        void transform(const glm::mat4& matrix);
+
+        void translate(const glm::vec3& offset);
     };
 
     struct Model {
@@ -90,5 +94,12 @@ namespace model {
         }
 
         void clean();
+
+        void transform(const glm::mat4& matrix);
+
+        void translate(const glm::vec3& offset);
+
+        void merge(const Model& source);
+        void merge(Model&& source);
     };
 }

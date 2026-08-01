@@ -9,12 +9,54 @@
 
 #include <coders/xml.h>
 #include <util/stringutil.h>
-#include <graphics/commons/Model.h>
 #include <debug/Logger.h>
 #include <io/io.h>
 
 using namespace cfmodel;
 using namespace xml;
+
+static int calc_offsets(
+    const rigging::Bone& bone,
+    std::vector<glm::vec3>& dst,
+    int index,
+    int depth,
+    int parent
+) {
+    if (depth == 0) {
+        dst[0] = bone.getOffset();
+    } else {
+        dst[index] = dst[parent] + bone.getOffset();
+    }
+    const auto& subBones = bone.getBones();
+
+    int subIndex = index + 1;
+    for (int i = 0; i < subBones.size(); ++i) {
+        subIndex += calc_offsets(*subBones[i], dst, subIndex, depth + 1, index);
+    }
+    return subIndex - index;
+}
+
+model::Model& CFModel::squash() {
+    std::vector<glm::vec3> fullOffsets(skeleton->getBones().size());
+    calc_offsets(*skeleton->getRoot(), fullOffsets, 0, 0, 0);
+
+    model::Model squashed;
+    for (auto& [name, model] : parts) {
+        if (auto bone = skeleton->find(name)) {
+            model.translate(fullOffsets[bone->getIndex()]);
+        } else {
+            THROW_ERR("Invalid state: bones/parts mismatch");
+        }
+        squashed.merge(std::move(model));
+    }
+    parts = { {"", std::move(squashed)} };
+    skeleton.reset();
+    return parts.at("");
+}
+
+model::Model CFModel::squashed() const {
+    return std::move(CFModel {parts, std::nullopt}).squash();
+}
 
 static const std::unordered_map<std::string, int> side_indices {
     {"north", 0},
@@ -41,6 +83,10 @@ public:
     void pop() {
         matrices.pop_back();
         calculateMatrix();
+    }
+
+    const glm::mat4& getTransform() const {
+        return combined;
     }
 
     void addBox(
@@ -107,7 +153,13 @@ private:
     glm::mat4 combined {1.0f};
 };
 
-static void perform_element(const xmlelement& root, ModelBuilder& builder);
+struct Context {
+    CFModel& cfModel;
+    std::vector<std::unique_ptr<rigging::Bone>>& bones;
+    size_t& boneIndex;
+};
+
+static void perform_element(const xmlelement& root, ModelBuilder& builder, Context& ctx);
 
 static void perform_rect(const xmlelement& root, ModelBuilder& builder) {
     auto from = root.attr("from").asVec3();
@@ -300,7 +352,8 @@ static void perform_box(const xmlelement& root, ModelBuilder& builder) {
     builder.pop();
 }
 
-static void perform_bone(const xmlelement& root, ModelBuilder& builder) {
+static void perform_bone(const xmlelement& root, ModelBuilder& builder, Context& ctx) {
+    std::string name = root.attr("name", "").getText();
     glm::mat4 tsf(1.0f);
     if (root.has("move")) {
         tsf = glm::translate(tsf, root.attr("move").asVec3());
@@ -321,14 +374,32 @@ static void perform_bone(const xmlelement& root, ModelBuilder& builder) {
         tsf = glm::scale(tsf, root.attr("scale").asVec3());
     }
 
-    builder.push(std::move(tsf));
-    for (const auto& elem : root.getElements()) {
-        perform_element(*elem, builder);
+    if (name.empty()) {
+        builder.push(std::move(tsf));
+        for (const auto& elem : root.getElements()) {
+            perform_element(*elem, builder, ctx);
+        }
+        builder.pop();
+    } else {
+        glm::vec3 origin = builder.getTransform() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        size_t boneIndex = ctx.boneIndex++;
+
+        std::vector<std::unique_ptr<rigging::Bone>> bones;
+        Context boneContext {ctx.cfModel, bones, ctx.boneIndex};
+        model::Model boneModel;
+        ModelBuilder boneModelBuilder(boneModel);
+        boneModelBuilder.push(std::move(tsf));
+        for (const auto& elem : root.getElements()) {
+            perform_element(*elem, boneModelBuilder, boneContext);
+        }
+        ctx.bones.push_back(std::make_unique<rigging::Bone>(
+            boneIndex, name, name, std::move(bones), std::move(origin)
+        ));
+        ctx.cfModel.parts[std::move(name)] = std::move(boneModel);
     }
-    builder.pop();
 }
 
-static void perform_element(const xmlelement& root, ModelBuilder& builder) {
+static void perform_element(const xmlelement& root, ModelBuilder& builder, Context& ctx) {
     auto tag = root.getTag();
 
     if (tag == "rect") {
@@ -338,22 +409,35 @@ static void perform_element(const xmlelement& root, ModelBuilder& builder) {
     } else if (tag == "tri") {
         perform_triangle(root, builder);
     } else if (tag == "bone") {
-        perform_bone(root, builder);
+        perform_bone(root, builder, ctx);
     }
 }
 
-static std::unique_ptr<model::Model> load_model(const xmlelement& root) {
+static CFModel load_model(const xmlelement& root) {
+    CFModel cfModel {};
     model::Model model;
     ModelBuilder builder(model);
 
+    size_t boneIndex = 1;
+    std::vector<std::unique_ptr<rigging::Bone>> bones;
+    Context ctx {cfModel, bones, boneIndex};
+
     for (const auto& elem : root.getElements()) {
-        perform_element(*elem, builder);
+        perform_element(*elem, builder, ctx);
     }
 
-    return std::make_unique<model::Model>(std::move(model));
+    cfModel.parts["root"] = std::move(model);
+    cfModel.skeleton = rigging::SkeletonConfig(
+        "",
+        std::make_unique<rigging::Bone>(
+            0, "root", "root", std::move(bones), glm::vec3(0.0f)
+        ),
+        boneIndex
+    );
+    return cfModel;
 }
 
-std::unique_ptr<model::Model> cfmodel::parse(
+CFModel cfmodel::parse(
     std::string_view file, std::string_view src, bool usexml
 ) {
     try {

@@ -509,9 +509,8 @@ asset_loader::postfunc asset_loader::model(
 
     auto text = io::read_string(path);
     try {
-        auto model = cfmodel::parse(
-            path.string(), text, path.extension() == ".xml"
-        ).release();
+        auto cfModel = cfmodel::parse(path.string(), text, path.extension() == ".xml");
+        auto model = std::make_unique<model::Model>(std::move(cfModel.squash())).release();
         return [=](Assets* assets) {
             request_textures(loader, *model);
             assets->store(std::unique_ptr<model::Model>(model), name);

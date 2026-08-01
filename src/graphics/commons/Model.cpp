@@ -162,6 +162,18 @@ void Mesh::scale(const glm::vec3& size) {
     }
 }
 
+void Mesh::transform(const glm::mat4& matrix) {
+    for (auto& vertex : vertices) {
+        vertex.coord = matrix * glm::vec4(vertex.coord, 1.0f);
+    }
+}
+
+void Mesh::translate(const glm::vec3& offset) {
+    for (auto& vertex : vertices) {
+        vertex.coord += offset;
+    }
+}
+
 void Model::clean() {
     meshes.erase(
         std::remove_if(meshes.begin(), meshes.end(), 
@@ -170,4 +182,42 @@ void Model::clean() {
         }),
         meshes.end()
     );
+}
+
+void Model::transform(const glm::mat4& matrix) {
+    for (auto& mesh : meshes) {
+        mesh.transform(matrix);
+    }
+}
+
+void Model::translate(const glm::vec3& offset) {
+    for (auto& mesh : meshes) {
+        mesh.translate(offset);
+    }
+}
+
+void Model::merge(const Model& source) {
+    for (const auto& srcMesh : source.meshes) {
+        auto& dstMesh = addMesh(srcMesh.texture, srcMesh.shading);
+        dstMesh.vertices.insert(
+            dstMesh.vertices.end(),
+            srcMesh.vertices.begin(),
+            srcMesh.vertices.end()
+        );
+    }
+}
+
+void Model::merge(Model&& source) {
+    for (auto& srcMesh : source.meshes) {
+        auto& dstMesh = addMesh(srcMesh.texture, srcMesh.shading);
+        if (dstMesh.vertices.empty()) {
+            dstMesh = std::move(srcMesh);
+        } else {
+            dstMesh.vertices.insert(
+                dstMesh.vertices.end(),
+                srcMesh.vertices.begin(),
+                srcMesh.vertices.end()
+            );
+        }
+    }
 }

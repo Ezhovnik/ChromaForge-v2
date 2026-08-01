@@ -58,8 +58,12 @@ static int l_parse_model(lua::State* L) {
     auto name = lua::require_string(L, 3);
 
     if (format == "xml" || format == "cfmodel") {
+        auto cfModel = cfmodel::parse(name, string, format == "xml");
         scripting::engine->getAssets()->store(
-            cfmodel::parse(name, string, format == "xml"), name
+            std::make_unique<model::Model>(
+                std::move(cfModel.squash())
+            ),
+            name
         );
     } else {
         throw std::runtime_error("Unknown format " + util::quote(std::string(format)));
