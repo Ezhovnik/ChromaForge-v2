@@ -40,6 +40,8 @@ public:
 
     std::shared_ptr<Lightmap> lightmap; // Карта освещения чанка
 
+    uint64_t lastRandomSparkId = -1;
+
     ChunkInventoriesMap inventories;
 
     BlocksMetadata blocksMetadata;
@@ -72,5 +74,11 @@ public:
             glm::vec3(chunk_x * CHUNK_WIDTH, -INFINITY, chunk_z * CHUNK_DEPTH),
             glm::vec3((chunk_x + 1) * CHUNK_WIDTH, INFINITY, (chunk_z + 1) * CHUNK_DEPTH)
         );
+    }
+
+    bool isBlockInside(int x, int z) const {
+        x -= this->chunk_x * CHUNK_WIDTH;
+        z -= this->chunk_z * CHUNK_DEPTH;
+        return x >= 0 && z >= 0 && x < CHUNK_WIDTH && z < CHUNK_DEPTH;
     }
 };

@@ -1,8 +1,5 @@
 #include <logic/BlocksController.h>
 
-#include <cassert>
-#include <set>
-
 #include <voxels/voxel.h>
 #include <voxels/Block.h>
 #include <voxels/Chunk.h>
@@ -178,12 +175,9 @@ void BlocksController::randomSpark(
 
 void BlocksController::randomSpark(int sparkId, int parts, uint padding) {
     auto indices = level.content.getIndices();
-    std::set<uint64_t> chunksIterated;
 
     for (const auto& [pid, player] : *level.players) {
         const auto& chunks = *player->chunks;
-        int offsetX = chunks.getOffsetX();
-        int offsetZ = chunks.getOffsetZ();
         int width = chunks.getWidth();
         int depth = chunks.getDepth();
         int segments = 4;
@@ -194,38 +188,33 @@ void BlocksController::randomSpark(int sparkId, int parts, uint padding) {
                 if ((index + sparkId) % parts != 0) continue;
                 auto& chunk = chunks.getChunks()[index];
                 if (chunk == nullptr || !chunk->flags.lighted) continue;
-                union {
-                    int32_t pos[2];
-                    uint64_t key;
-                } posU;
-                posU.pos[0] = x + offsetX;
-                posU.pos[1] = z + offsetZ;
-                if (chunksIterated.find(posU.key) != chunksIterated.end()) {
+                if (chunk->lastRandomSparkId == randomSparkId) {
                     continue;
                 }
-                chunksIterated.insert(posU.key);
+                chunk->lastRandomSparkId = randomSparkId;
                 randomSpark(*chunk, segments, indices);
             }
         }
-	}
+    }
+    randomSparkId++;
 }
 
 int64_t BlocksController::createBlockInventory(int x, int y, int z) {
-	auto chunk = blocks_agent::get_chunk(
+    auto chunk = blocks_agent::get_chunk(
         chunks, floordiv<CHUNK_WIDTH>(x), floordiv<CHUNK_DEPTH>(z)
     );
     if (chunk == nullptr || y < 0 || y >= CHUNK_HEIGHT) return 0;
-	int lx = x - chunk->chunk_x * CHUNK_WIDTH;
-	int lz = z - chunk->chunk_z * CHUNK_DEPTH;
-	auto inv = chunk->getBlockInventory(lx, y, lz);
-	if (inv == nullptr) {
+    int lx = x - chunk->chunk_x * CHUNK_WIDTH;
+    int lz = z - chunk->chunk_z * CHUNK_DEPTH;
+    auto inv = chunk->getBlockInventory(lx, y, lz);
+    if (inv == nullptr) {
         const auto& indices = level.content.getIndices()->blocks;
         auto& def = indices.require(chunk->voxels[vox_index(lx, y, lz)].id);
         int invsize = def.inventorySize;
         if (invsize == 0) return 0;
-		inv = level.inventories->create(invsize);
+        inv = level.inventories->create(invsize);
         chunk->addBlockInventory(inv, lx, y, lz);
-	}
+    }
     return inv->getId();
 }
 
@@ -233,14 +222,14 @@ void BlocksController::bindInventory(int64_t invId, int x, int y, int z) {
     auto chunk = blocks_agent::get_chunk(
         chunks, floordiv<CHUNK_WIDTH>(x), floordiv<CHUNK_DEPTH>(z)
     );
-	if (chunk == nullptr) {
+    if (chunk == nullptr) {
         THROW_ERR("Block does not exists");
-	}
+    }
     if (invId <= 0) {
         THROW_ERR("Unable to bind virtual inventory");
     }
-	int lx = x - chunk->chunk_x * CHUNK_WIDTH;
-	int lz = z - chunk->chunk_z * CHUNK_DEPTH;
+    int lx = x - chunk->chunk_x * CHUNK_WIDTH;
+    int lz = z - chunk->chunk_z * CHUNK_DEPTH;
     chunk->addBlockInventory(level.inventories->get(invId), lx, y, lz);
 }
 
@@ -248,11 +237,11 @@ void BlocksController::unbindInventory(int x, int y, int z) {
     auto chunk = blocks_agent::get_chunk(
         chunks, floordiv<CHUNK_WIDTH>(x), floordiv<CHUNK_DEPTH>(z)
     );
-	if (chunk == nullptr) {
+    if (chunk == nullptr) {
         THROW_ERR("Block does not exists");
-	}
+    }
     int lx = x - chunk->chunk_x * CHUNK_WIDTH;
-	int lz = z - chunk->chunk_z * CHUNK_DEPTH;
+    int lz = z - chunk->chunk_z * CHUNK_DEPTH;
     chunk->removeBlockInventory(lx, y, lz);
 }
 

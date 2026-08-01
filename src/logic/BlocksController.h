@@ -39,6 +39,7 @@ class BlocksController {
     util::FastRandom random {};
 
     std::vector<on_block_interaction> blockInteractionCallbacks;
+    uint64_t randomSparkId = 0;
 public:
     BlocksController(const Level& level, Lighting* lighting);
 

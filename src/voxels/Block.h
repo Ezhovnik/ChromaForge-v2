@@ -104,6 +104,11 @@ struct Variants {
     util::stack_vector<Variant, BLOCK_MAX_VARIANTS> variants {};
 };
 
+struct BlockFuncNamesCache {
+    std::string update;
+    std::string randomUpdate;
+};
+
 struct CoordSystem {
 	std::array<glm::ivec3, 3> axes;
 	glm::ivec3 fix;
@@ -206,6 +211,7 @@ public:
         itemid_t pickingItem = 0;
         blockid_t surfaceReplacement = 0;
         std::set<int> tags;
+        BlockFuncNamesCache eventNames;
 	} rt {};
 
     Block(const std::string& name);

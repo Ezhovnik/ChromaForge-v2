@@ -19,7 +19,9 @@ class Player;
 struct Item;
 class BlocksController;
 struct BlockFuncsSet;
+struct BlockFuncNamesCache;
 struct ItemFuncsSet;
+struct ItemFuncNamesCache;
 struct WorldFuncsSet;
 struct UserComponent;
 class ContentIndices;
@@ -145,14 +147,16 @@ namespace scripting {
         const std::string& prefix,
         const io::path& file,
         const std::string& fileName,
-        BlockFuncsSet& funcsset
+        BlockFuncsSet& funcsset,
+        BlockFuncNamesCache& namesCache
     );
     void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
         const io::path& file,
         const std::string& fileName,
-        ItemFuncsSet& funcsset
+        ItemFuncsSet& funcsset,
+        ItemFuncNamesCache& namesCache
     );
     void load_world_script(
         const scriptenv& env,

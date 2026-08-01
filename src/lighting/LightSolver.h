@@ -1,9 +1,9 @@
 #pragma once
 
-#include <queue>
-
+#include <util/array_queue.h>
 #include <typedefs.h>
 
+class Chunk;
 class Chunks;
 class ContentIndices;
 class Block;
@@ -16,16 +16,16 @@ struct lightentry {
 };
 
 class LightSolver {
-	std::queue<lightentry> add_queue;
-	std::queue<lightentry> rem_queue;
+    util::array_queue<lightentry> add_queue;
+    util::array_queue<lightentry> rem_queue;
     const Block* const* blockDefs;
-	Chunks& chunks;
-	int channel;
+    Chunks& chunks;
+    int channel;
 public:
-	LightSolver(const ContentIndices& contentIds, Chunks& chunks, int channel);
+    LightSolver(const ContentIndices& contentIds, Chunks& chunks, int channel);
 
-	void add(int x, int y, int z);
-	void add(int x, int y, int z, int bright);
-	void remove(int x, int y, int z);
-	void solve();
+    void add(int x, int y, int z);
+    void add(int x, int y, int z, int bright);
+    void remove(int x, int y, int z);
+    void solve(Chunk* prevailingChunk = nullptr);
 };
