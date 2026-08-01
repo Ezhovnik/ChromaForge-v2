@@ -33,6 +33,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cm
     ./cmake-${CMAKE_VERSION}-linux-x86_64.sh --skip-license --prefix=/usr/local && \
     rm cmake-${CMAKE_VERSION}-linux-x86_64.sh
 
+# Install specific EnTT version (the latest version that supports C++17).
 RUN git clone --branch v3.16.0 https://github.com/skypjack/entt.git && \
     cd entt/build && \
     cmake -DCMAKE_BUILD_TYPE=Release -DENTT_INSTALL=ON .. && \

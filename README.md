@@ -99,7 +99,7 @@ sudo apt install cmake build-essential git pkg-config zlib1g-dev libglfw3-dev li
 sudo ln -sf /usr/lib/x86_64-linux-gnu/libluajit-5.1.a /usr/lib/x86_64-linux-gnu/liblua5.1.a
 sudo ln -sf /usr/include/luajit-2.1 /usr/include/lua
 
-# EnTT
+# EnTT (Устанавливаем последнюю версию, поддерживающую C++17)
 git clone --branch v3.16.0 https://github.com/skypjack/entt.git
 cd entt/build
 cmake -DCMAKE_BUILD_TYPE=Release -DENTT_INSTALL=ON ..
@@ -115,7 +115,7 @@ sudo make install
 sudo dnf install cmake gcc-c++ make git glfw-devel glew-devel openal-soft-devel luajit-devel \
   libvorbis-devel libcurl-devel fmt-devel spdlog-devel gtest-devel zlib-devel
 
-# EnTT
+# EnTT (Устанавливаем последнюю версию, поддерживающую C++17)
 git clone --branch v3.16.0 https://github.com/skypjack/entt.git
 cd entt/build
 cmake -DCMAKE_BUILD_TYPE=Release -DENTT_INSTALL=ON ..
