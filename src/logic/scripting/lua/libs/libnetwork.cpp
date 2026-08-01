@@ -6,6 +6,7 @@
 #include <engine/Engine.h>
 #include <network/Network.h>
 #include <coders/json.h>
+#include <devtools/Project.h>
 
 enum NetworkEventType {
     CLIENT_CONNECTED = 1,
@@ -440,7 +441,7 @@ static int l_is_nodelay(lua::State* L, network::Network& network) {
     return lua::pushboolean(L, false);
 }
 
-static int l_pull_events(lua::State* L, network::Network& network) {
+static int l_pull_events(lua::State* L) {
     std::vector<NetworkEvent> local_queue;
     {
         std::lock_guard lock(events_queue_mutex);
@@ -525,11 +526,12 @@ static int l_is_available(lua::State* L) {
 }
 
 template <int(*func)(lua::State*, network::Network&)>
-int wrap(lua_State* L) {
+int network_wrap(lua_State* L) {
     int result = 0;
     try {
         auto network = scripting::engine->getNetwork();
-        if (network == nullptr) {
+        const auto& permissions = scripting::engine->getProject().permissions;
+        if (network == nullptr || !permissions.has(Permissions::NETWORK)) {
             throw std::runtime_error(
                 "Network subsystem is not available in the project"
             );
@@ -546,31 +548,31 @@ int wrap(lua_State* L) {
 }
 
 const luaL_Reg networklib[] = {
-    {"__get", wrap<l_get>},
-    {"__get_binary", wrap<l_get_binary>},
-    {"__post", wrap<l_post>},
-    {"get_total_upload", wrap<l_get_total_upload>},
-    {"get_total_download", wrap<l_get_total_download>},
-    {"find_free_port", wrap<l_find_free_port>},
+    {"__get", network_wrap<l_get>},
+    {"__get_binary", network_wrap<l_get_binary>},
+    {"__post", network_wrap<l_post>},
+    {"get_total_upload", network_wrap<l_get_total_upload>},
+    {"get_total_download", network_wrap<l_get_total_download>},
+    {"find_free_port", network_wrap<l_find_free_port>},
     {"is_available", lua::wrap<l_is_available>},
-    {"__pull_events", wrap<l_pull_events>},
-    {"__open_tcp", wrap<l_open_tcp>},
-    {"__open_udp", wrap<l_open_udp>},
-    {"__closeserver", wrap<l_closeserver>},
-    {"__udp_server_send_to", wrap<l_udp_server_send_to>},
-    {"__connect_tcp", wrap<l_connect_tcp>},
-    {"__connect_udp", wrap<l_connect_udp>},
-    {"__close", wrap<l_close>},
-    {"__send", wrap<l_send>},
-    {"__recv", wrap<l_recv>},
-    {"__available", wrap<l_available>},
-    {"__is_alive", wrap<l_is_alive>},
-    {"__is_connected", wrap<l_is_connected>},
-    {"__get_address", wrap<l_get_address>},
-    {"__is_serveropen", wrap<l_is_serveropen>},
-    {"__get_serverport", wrap<l_get_serverport>},
-    {"__set_nodelay", wrap<l_set_nodelay>},
-    {"__is_nodelay", wrap<l_is_nodelay>},
+    {"__pull_events", lua::wrap<l_pull_events>},
+    {"__open_tcp", network_wrap<l_open_tcp>},
+    {"__open_udp", network_wrap<l_open_udp>},
+    {"__closeserver", network_wrap<l_closeserver>},
+    {"__udp_server_send_to", network_wrap<l_udp_server_send_to>},
+    {"__connect_tcp", network_wrap<l_connect_tcp>},
+    {"__connect_udp", network_wrap<l_connect_udp>},
+    {"__close", network_wrap<l_close>},
+    {"__send", network_wrap<l_send>},
+    {"__recv", network_wrap<l_recv>},
+    {"__available", network_wrap<l_available>},
+    {"__is_alive", network_wrap<l_is_alive>},
+    {"__is_connected", network_wrap<l_is_connected>},
+    {"__get_address", network_wrap<l_get_address>},
+    {"__is_serveropen", network_wrap<l_is_serveropen>},
+    {"__get_serverport", network_wrap<l_get_serverport>},
+    {"__set_nodelay", network_wrap<l_set_nodelay>},
+    {"__is_nodelay", network_wrap<l_is_nodelay>},
     {nullptr, nullptr}
 };
 
