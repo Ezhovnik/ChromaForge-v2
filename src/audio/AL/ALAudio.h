@@ -4,17 +4,21 @@
 #include <string>
 #include <unordered_map>
 #include <queue>
+#include <array>
 
 #ifdef __APPLE__
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
+#include <OpenAL/alext.h>
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alext.h>
 #endif
 #include <glm/glm.hpp>
 
 #include <audio/audio.h>
+#include <audio/effects.h>
 #include <typedefs.h>
 
 namespace audio {
@@ -189,8 +193,17 @@ namespace audio {
         std::vector<uint> freebuffers;
 
         uint maxSources = 256;
+        uint maxEffectSlots = 64;
+
+        bool initEffects();
     public:
-        ALAudio(ALCdevice* device, ALCcontext* context);
+        std::vector<uint> effectSlots;
+        std::vector<uint> effects;
+        std::array<uint, 1> filters;
+
+        bool useEffects;
+
+        ALAudio(ALCdevice* device, ALCcontext* context, bool effects);
         ~ALAudio();
 
         uint getFreeSource();
@@ -220,6 +233,8 @@ namespace audio {
         ) override;
 
         void update(double delta) override;
+
+        void setAcoustics(Acoustics acoustics) override;
 
         bool isDummy() const override {
             return false;

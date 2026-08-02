@@ -38,6 +38,22 @@ static bool check_alc_errors(ALCdevice* device, const char* context) {
     return true;
 }
 
+static LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti = nullptr;
+static LPALGENAUXILIARYEFFECTSLOTS alGenAuxiliaryEffectSlots = nullptr;
+static LPALGENEFFECTS alGenEffects = nullptr;
+static LPALDELETEEFFECTS alDeleteEffects = nullptr;
+static LPALISEFFECT alIsEffect = nullptr;
+static LPALEFFECTI alEffecti = nullptr;
+static LPALEFFECTF alEffectf = nullptr;
+static LPALGENFILTERS alGenFilters = nullptr;
+static LPALDELETEFILTERS alDeleteFilters = nullptr;
+static LPALISFILTER alIsFilter = nullptr;
+static LPALFILTERI alFilteri = nullptr;
+static LPALFILTERF alFilterf = nullptr;
+
+static inline constexpr int REVERB_EFFECT = 0;
+static inline constexpr int LOWPASS_FILTER = 0;
+
 ALSound::ALSound(
     ALAudio* al,
     uint buffer,
@@ -362,6 +378,18 @@ void ALSpeaker::play() {
     manuallyStopped = false;
     auto channel = get_channel(this->channel);
     AL_CHECK(alSourcef(source, AL_GAIN, volume * channel->getVolume()));
+    if (al->useEffects) {
+        AL_CHECK(
+            alSource3i(
+                source,
+                AL_AUXILIARY_SEND_FILTER,
+                al->effectSlots[0],
+                0,
+                al->filters[0]
+            )
+        );
+        // AL_CHECK(alSourcei(source, AL_DIRECT_FILTER, al->filters[LOWPASS_FILTER]));
+    }
     AL_CHECK(alSourcePlay(source));
 }
 
@@ -435,7 +463,14 @@ bool ALSpeaker::isManuallyStopped() const {
 
 static bool alc_enumeration_ext = false;
 
-ALAudio::ALAudio(ALCdevice* device, ALCcontext* context) : device(device), context(context) {
+ALAudio::ALAudio(
+    ALCdevice* device,
+    ALCcontext* context,
+    bool useEffects
+) : device(device),
+    context(context),
+    useEffects(useEffects)
+{
     ALCint size;
     alcGetIntegerv(device, ALC_ATTRIBUTES_SIZE, 1, &size);
     std::vector<ALCint> attrs(size);
@@ -459,6 +494,11 @@ ALAudio::ALAudio(ALCdevice* device, ALCcontext* context) : device(device), conte
     }
 
     alDopplerFactor(1.0 / 3.0);
+    alGetError();
+
+    if (useEffects) {
+        this->useEffects = initEffects();
+    }
 }
 
 ALAudio::~ALAudio() {
@@ -480,6 +520,80 @@ ALAudio::~ALAudio() {
 
     device = nullptr;
     context = nullptr;
+}
+
+template<typename T>
+static bool get_proc_address(const char* name, T& ptr) {
+    ptr = (T) alGetProcAddress(name);
+    return ptr != nullptr;
+}
+
+static bool request_efx_ext_functions() {
+    return get_proc_address("alAuxiliaryEffectSloti", alAuxiliaryEffectSloti)
+        && get_proc_address("alGenAuxiliaryEffectSlots", alGenAuxiliaryEffectSlots)
+        && get_proc_address("alGenEffects", alGenEffects)
+        && get_proc_address("alDeleteEffects", alDeleteEffects)
+        && get_proc_address("alIsEffect", alIsEffect)
+        && get_proc_address("alEffecti", alEffecti)
+        && get_proc_address("alEffectf", alEffectf)
+        && get_proc_address("alGenFilters", alGenFilters)
+        && get_proc_address("alDeleteFilters", alDeleteFilters)
+        && get_proc_address("alIsFilter", alIsFilter)
+        && get_proc_address("alFilteri", alFilteri)
+        && get_proc_address("alFilterf", alFilterf);
+}
+
+bool ALAudio::initEffects() {
+    if (!request_efx_ext_functions()) {
+        LOG_ERROR("Could not get effects extension function pointers");
+        return false;
+    }
+    for (uint i = 0; i < maxEffectSlots; ++i) {
+        effectSlots.emplace_back();
+        alGenAuxiliaryEffectSlots(1, &effectSlots[i]);
+        if (alGetError() != AL_NO_ERROR) {
+            break;
+        }
+    }
+    LOG_INFO("Created {} effect slots", effectSlots.size());
+
+    for (uint i = 0; i < 4; ++i) {
+        effects.emplace_back();
+        alGenEffects(1, &effects[i]);
+        if (alGetError() != AL_NO_ERROR || !alIsEffect(effects[i])) {
+            LOG_ERROR("Could not to create effect №{}", i);
+            return false;
+        }
+    }
+    LOG_INFO("Created {} effects", effects.size());
+
+    for (uint i = 0; i < filters.size(); ++i) {
+        alGenFilters(1, &filters[i]);
+        if (alGetError() != AL_NO_ERROR || !alIsFilter(filters[i])) {
+            LOG_ERROR("Could not to create filter №{}", i);
+            return false;
+        }
+    }
+
+    alEffecti(effects[REVERB_EFFECT], AL_EFFECT_TYPE, AL_EFFECT_REVERB);
+    if (alGetError() != AL_NO_ERROR) {
+        LOG_ERROR("Reverb effect is not supported");
+        return false;
+    }
+
+    alFilteri(filters[LOWPASS_FILTER], AL_FILTER_TYPE, AL_FILTER_LOWPASS);
+    if (alGetError() != AL_NO_ERROR) {
+        LOG_ERROR("Lowpass filter is not supported");
+        return false;
+    }
+    alFilterf(filters[LOWPASS_FILTER], AL_LOWPASS_GAIN, 1.0f);
+    alFilterf(filters[LOWPASS_FILTER], AL_LOWPASS_GAINHF, 0.01f);
+
+    alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, effects[0]);
+    if (alGetError() == AL_NO_ERROR) {
+        LOG_ERROR("Successfully loaded effect into effect slot");
+    }
+    return true;
 }
 
 std::unique_ptr<Sound> ALAudio::createSound(std::shared_ptr<PCM> pcm, bool keepPCM) {
@@ -558,7 +672,19 @@ std::unique_ptr<ALAudio> ALAudio::create() {
     alc_enumeration_ext = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
 
     ALCdevice* device = alcOpenDevice(nullptr);
-    if (device == nullptr) return nullptr;
+    if (device == nullptr) {
+        return nullptr;
+    }
+    bool effects = true;
+    ALint attribs[4] {};
+    if (alcIsExtensionPresent(device, "ALC_EXT_EFX") == AL_TRUE) {
+        LOG_INFO("AL effects extension present");
+        attribs[0] = ALC_MAX_AUXILIARY_SENDS;
+        attribs[1] = 4;
+    } else {
+        LOG_WARN("AL effects extension is not supported");
+        effects = false;
+    }
     ALCcontext* context = alcCreateContext(device, nullptr);
     if (!alcMakeContextCurrent(context)){
         alcCloseDevice(device);
@@ -566,8 +692,12 @@ std::unique_ptr<ALAudio> ALAudio::create() {
     }
     AL_CHECK();
 
+    ALCint sends = 0;
+    alcGetIntegerv(device, ALC_MAX_AUXILIARY_SENDS, 1, &sends);
+    LOG_INFO("Device supports {} aux sends per source", sends);
+
     LOG_INFO("AL: initialized");
-    return std::make_unique<ALAudio>(device, context);
+    return std::make_unique<ALAudio>(device, context, effects);
 }
 
 uint ALAudio::getFreeSource() {
@@ -621,4 +751,17 @@ void ALAudio::setListener(glm::vec3 position, glm::vec3 velocity, glm::vec3 at, 
 }
 
 void ALAudio::update(double) {
+}
+
+void ALAudio::setAcoustics(Acoustics acoustics) {
+    if (!useEffects) {
+        return;
+    }
+    int reverbEffect = effects[REVERB_EFFECT];
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_DECAY_TIME, std::max<float>(0.1f, acoustics.reverbDecayTime)));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, 0.14f));
+    // AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAIN, 0.0f));
+    // AL_CHECK(alEffectf(reverbEffect, AL_REVERB_GAINHF, 0.0f));
+    AL_CHECK(alEffectf(reverbEffect, AL_REVERB_REFLECTIONS_GAIN, 0.99f));
+    alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, reverbEffect);
 }

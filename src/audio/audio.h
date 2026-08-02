@@ -8,6 +8,7 @@
 #include <typedefs.h>
 #include <settings.h>
 #include <io/fwd.h>
+#include <audio/effects.h>
 
 namespace audio {
     using speakerid_t = int64_t;
@@ -354,6 +355,8 @@ namespace audio {
 
         virtual void update(double delta) = 0;
 
+        virtual void setAcoustics(Acoustics acoustics) = 0;
+
         virtual bool isDummy() const = 0;
     };
 
@@ -449,6 +452,8 @@ namespace audio {
     size_t count_streams();
 
     void update(double delta);
+
+    void set_acoustics(Acoustics acoustics);
 
     void reset_channel(int channel);
 

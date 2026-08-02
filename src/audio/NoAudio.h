@@ -95,6 +95,9 @@ namespace audio {
 
         void update(double delta) override {}
 
+        void setAcoustics(Acoustics) override {
+        }
+
         bool isDummy() const override {
             return true;
         }
