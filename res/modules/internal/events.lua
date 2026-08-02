@@ -45,7 +45,7 @@ function events.emit(event, ...)
     for _, func in ipairs(handlers) do
         local status, newres = xpcall(func, __chroma__error, ...)
         if not status then
-            debug.error("Error in event ("..event..") handler: "..newres)
+            debug.error("Error in event ("..event..") handler"..(newres and (": "..tostring(newres)) or ""))
         else 
             result = result or newres
         end
