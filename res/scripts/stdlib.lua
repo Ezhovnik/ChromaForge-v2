@@ -230,6 +230,34 @@ _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
 gui.root = _GUI_ROOT
+gui.main_frame_id = "builtin:main"
+
+function gui.close_menu()
+    if menu then
+        menu:reset()
+    end
+    gui.set_active_frame("")
+end
+
+local __gui_create_frame = gui.create_frame
+function gui.create_frame(id, output, size)
+    __gui_create_frame(id, output, size)
+
+    local document = Document.new(id)
+    return document.root, document
+end
+
+do
+    local status, err = pcall(function()
+        local default_styles = toml.parse(file.read(
+            "res:devtools/default_syntax_scheme.toml"
+        ))
+        gui.set_syntax_styles(default_styles)
+    end)
+    if not status then
+        debug.error("Could not to load default syntax scheme: "..err)
+    end
+end
 
 console.cheats = {}
 
@@ -488,9 +516,12 @@ function __chroma_on_hud_open()
         if menu.page ~= "" then
             if not menu:back() then
                 menu:reset()
+                gui.set_active_frame("")
             end
         elseif hud.is_inventory_open() then
             hud.close_inventory()
+        elseif gui.get_active_frame() then
+            gui.set_active_frame("")
         else
             hud.pause()
         end

@@ -72,6 +72,7 @@ void guiutil::alert(
     }));
     menu.addPage("<alert>", panel, true);
     menu.setPage("<alert>");
+    gui.setActiveFrame(GUI::BUILTIN_MAIN);
 }
 
 void guiutil::confirm(
@@ -150,6 +151,7 @@ void guiutil::confirm(
     panel->refresh();
     menu->addPage("<confirm>", container, true);
     menu->setPage("<confirm>");
+    gui.setActiveFrame(GUI::BUILTIN_MAIN);
 }
 
 std::shared_ptr<gui::UINode> guiutil::create(
@@ -207,4 +209,5 @@ void guiutil::confirm_with_memo(
     panel->refresh();
     menu->addPage("<confirm>", panel, true);
     menu->setPage("<confirm>");
+    gui.setActiveFrame(GUI::BUILTIN_MAIN);
 }

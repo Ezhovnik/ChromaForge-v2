@@ -27,6 +27,7 @@
 #include <graphics/ui/elements/InlineFrame.h>
 #include <graphics/ui/elements/ModelViewer.h>
 #include <graphics/ui/elements/SelectBox.h>
+#include <graphics/ui/elements/Frame.h>
 
 using namespace gui;
 

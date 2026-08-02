@@ -241,12 +241,24 @@ void Engine::loadAssets() {
 
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
-    if (input->justPressed(Keycode::F2)) windowControl->saveScreenshot();
-    if (input->isPressed(Keycode::LEFT_CONTROL) && input->isPressed(Keycode::F3) && input->justPressed(Keycode::U)) gui->toggleDebug();
-    if (input->justPressed(Keycode::F11)) windowControl->toggleFullscreen();
+    if (input->justPressed(Keycode::F2)) {
+        windowControl->saveScreenshot();
+    }
+    if (input->isPressed(Keycode::LEFT_CONTROL) &&
+        input->isPressed(Keycode::F3) &&
+        input->justPressed(Keycode::U)
+    ) {
+        gui->toggleDebug();
+    }
+    if (input->justPressed(Keycode::F11)) {
+        windowControl->toggleFullscreen();
+    }
 }
 
 void Engine::renderFrame() {
+    if (input->isCursorLocked() != (gui->getActiveFrame() == nullptr)) {
+        input->toggleCursor();
+    }
     screen->draw(time.getDeltaTime());
 
     DrawContext ctx(nullptr, *window, nullptr);

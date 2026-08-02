@@ -12,17 +12,18 @@
 #include <graphics/ui/elements/TrackBar.h>
 #include <graphics/ui/elements/Panel.h>
 #include <graphics/ui/elements/Menu.h>
-#include <items/Inventories.h>
 #include <graphics/ui/elements/InventoryView.h>
-#include <world/Level.h>
-#include <graphics/ui/elements/Image.h>
-#include <graphics/ui/markdown.h>
-#include <graphics/core/Font.h>
-#include <graphics/ui/elements/Canvas.h>
-#include <graphics/ui/GUI.h>
 #include <graphics/ui/elements/InlineFrame.h>
 #include <graphics/ui/elements/ModelViewer.h>
 #include <graphics/ui/elements/SelectBox.h>
+#include <graphics/ui/elements/Canvas.h>
+#include <graphics/ui/elements/Image.h>
+#include <graphics/ui/elements/Frame.h>
+#include <items/Inventories.h>
+#include <world/Level.h>
+#include <graphics/ui/markdown.h>
+#include <graphics/core/Font.h>
+#include <graphics/ui/GUI.h>
 #include <logic/scripting/lua/usertypes/lua_type_canvas.h>
 #include <content/Content.h>
 #include <content/ContentPack.h>
@@ -1177,6 +1178,57 @@ static int l_set_syntax_styles(lua::State* L) {
     return 0;
 }
 
+static int l_create_frame(lua::State* L) {
+    if (scripting::engine->isHeadless()) return 0;
+
+    std::string id = lua::require_string(L, 1);
+    std::string outputTexture = lua::require_string(L, 2);
+    auto size = lua::tovec2(L, 3);
+
+    auto& gui = scripting::engine->getGUI();
+    auto frame = std::make_shared<gui::Frame>(gui, id, outputTexture);
+    frame->setSize(std::move(size));
+    auto& assets = *scripting::engine->getAssets();
+    auto document = std::make_shared<UIDocument>(
+        id, UIDocScript {}, frame, nullptr
+    );
+    assets.store(document, id);
+    gui.addFrame(std::move(frame));
+    return 0;
+}
+
+static int l_set_active_frame(lua::State* L) {
+    if (scripting::engine->isHeadless()) return 0;
+
+    std::string id = lua::require_string(L, 1);
+    vec2supplier cursorLocator = nullptr;
+    if (lua::isfunction(L, 2)) {
+        auto lambda = lua::create_lambda(L);
+        cursorLocator = [lambda]() -> glm::vec2 {
+            auto table = lambda({});
+            if (!table.isList()) {
+                throw std::runtime_error("Invalid value returned from locator");
+            }
+            glm::vec2 pos {};
+            table.at(0).get(pos.x);
+            table.at(1).get(pos.y);
+            return pos;
+        };
+    }
+    auto& gui = scripting::engine->getGUI();
+    gui.setActiveFrame(id, std::move(cursorLocator));
+    return 0;
+}
+
+static int l_get_active_frame(lua::State* L) {
+    if (scripting::engine->isHeadless()) return 0;
+
+    auto& gui = scripting::engine->getGUI();
+    auto frame = gui.getActiveFrame();
+    if (frame == nullptr) return 0;
+    return lua::pushstring(L, frame->getId());
+}
+
 const luaL_Reg guilib [] = {
     {"get_viewport", lua::wrap<l_gui_get_viewport>},
     {"getattr", lua::wrap<l_gui_getattr>},
@@ -1190,6 +1242,9 @@ const luaL_Reg guilib [] = {
     {"alert", lua::wrap<l_gui_alert>},
     {"load_document", lua::wrap<l_gui_load_document>},
     {"set_syntax_styles", lua::wrap<l_set_syntax_styles>},
+    {"create_frame", lua::wrap<l_create_frame>},
+    {"set_active_frame", lua::wrap<l_set_active_frame>},
+    {"get_active_frame", lua::wrap<l_get_active_frame>},
     {"__reindex", lua::wrap<l_gui_reindex>},
     {nullptr, nullptr}
 };

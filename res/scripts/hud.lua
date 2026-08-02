@@ -123,6 +123,7 @@ function on_hud_open()
     end)
 
     configure_SSAO()
+
     hud.default_hand_controller = update_hand
 end
 

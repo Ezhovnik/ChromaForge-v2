@@ -6,6 +6,9 @@
 
 #include <graphics/ui/elements/UINode.h>
 #include <graphics/ui/elements/Menu.h>
+#include <graphics/ui/elements/Panel.h>
+#include <graphics/ui/elements/Label.h>
+#include <graphics/ui/elements/Frame.h>
 #include <assets/Assets.h>
 #include <graphics/core/Batch2D.h>
 #include <window/input.h>
@@ -16,27 +19,26 @@
 #include <graphics/core/DrawContext.h>
 #include <frontend/UIDocument.h>
 #include <core_content_defs.h>
-#include <graphics/ui/elements/Label.h>
 #include <frontend/locale.h>
 #include <graphics/ui/gui_util.h>
-#include <graphics/ui/elements/Panel.h>
 #include <graphics/core/LineBatch.h>
 #include <graphics/core/Font.h>
 #include <engine/Engine.h>
 
 using namespace gui;
 
-GUI::GUI(Engine& engine)
-    : engine(engine),
+GUI::GUI(
+    Engine& engine
+) : engine(engine),
     input(engine.getInput()),
     batch2D(std::make_unique<Batch2D>(1024)),
-    container(std::make_shared<Container>(*this, glm::vec2(1000)))
+    container(std::make_shared<Frame>(*this, BUILTIN_MAIN, ""))
 {
     container->setId("root");
     uicamera = std::make_unique<Camera>(glm::vec3(), engine.getWindow().getSize().y);
 
-	uicamera->perspective = false;
-	uicamera->flipped = true;
+    uicamera->perspective = false;
+    uicamera->flipped = true;
     uicamera->near = -1.0f;
     uicamera->far = 1.0f;
 
@@ -62,6 +64,9 @@ GUI::GUI(Engine& engine)
         std::dynamic_pointer_cast<gui::UINode>(container),
         nullptr
     );
+
+    addFrame(container);
+    activeFrame = container;
 }
 
 GUI::~GUI() = default;
@@ -99,13 +104,26 @@ void GUI::updateTooltip(float deltaTime) {
     tooltipTimer += deltaTime;
 }
 
-void GUI::activateMouse(float deltaTime, const CursorState& cursor) {
+void GUI::activateMouse(
+    Frame& frame,
+    float deltaTime,
+    const CursorState& cursor
+) {
     float mouseDelta = glm::length(cursor.delta);
     doubleClicked = false;
     doubleClickTimer += deltaTime + mouseDelta * 0.1f;
 
-    auto hover = container->getAt(cursor.pos);
-    if (this->hover && this->hover != hover) this->hover->setMouseEnter(false);
+    auto cursorPos = cursor.pos;
+    if (cursorLocator) {
+        cursorPos = cursorLocator();
+        if (activeFrame) {
+            cursorPos.y += activeFrame->getPos().y;
+        }
+    }
+    auto hover = frame.getAt(cursorPos);
+    if (this->hover && this->hover != hover) {
+        this->hover->setMouseEnter(false);
+    }
 
     if (hover) {
         if (hover != this->hover) {
@@ -138,13 +156,13 @@ void GUI::activateMouse(float deltaTime, const CursorState& cursor) {
     }
 
     for (auto it = mouseOver.begin(); it != mouseOver.end(); ) {
-        auto node = it->lock();
-        if (node) {
-            if (node->isInside(cursor.pos)) {
+        auto mouseOverNode = it->lock();
+        if (mouseOverNode) {
+            if (mouseOverNode->isInside(cursorPos)) {
                 ++it;
                 continue;
             }
-            node->setMouseOver(false);
+            mouseOverNode->setMouseOver(false);
         }
         it = mouseOver.erase(it);
     }
@@ -153,10 +171,10 @@ void GUI::activateMouse(float deltaTime, const CursorState& cursor) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
             if (doubleClickTimer < doubleClickDelay) {
-                pressed->doubleClick(cursor.pos.x, cursor.pos.y);
+                pressed->doubleClick(cursorPos.x, cursorPos.y);
                 doubleClicked = true;
             } else {
-                pressed->click(cursor.pos.x, cursor.pos.y);
+                pressed->click(cursorPos.x, cursorPos.y);
             }
             doubleClickTimer = 0.0f;
             if (focus && focus != pressed) focus->defocus();
@@ -171,7 +189,7 @@ void GUI::activateMouse(float deltaTime, const CursorState& cursor) {
             focus = nullptr;
         }
     } else if (!input.isClicked(Mousecode::BUTTON_1) && pressed) {
-        pressed->mouseRelease(cursor.pos.x, cursor.pos.y);
+        pressed->mouseRelease(cursorPos.x, cursorPos.y);
         pressed = nullptr;
     }
 
@@ -208,14 +226,16 @@ void GUI::activateFocused() {
 
 void GUI::activate(float deltaTime, const glm::uvec2& vp) {
     container->setSize(vp);
-    container->activate(deltaTime);
+    for (auto& pair : frames) {
+        pair.second->activate(deltaTime);
+    }
     auto prevfocus = focus;
 
     updateTooltip(deltaTime);
 
     const auto& cursor = input.getCursor();
-    if (!cursor.locked){
-        activateMouse(deltaTime, cursor);
+    if (!cursor.locked && activeFrame) {
+        activateMouse(*activeFrame, deltaTime, cursor);
     } else {
         if (hover) {
             hover->setMouseEnter(false);
@@ -235,7 +255,10 @@ void GUI::postActivate() {
     }
 }
 
-void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
+void GUI::draw(
+    const DrawContext& parent_context,
+    Assets& assets
+) {
     auto ctx = parent_context.sub(batch2D.get());
 
     auto& viewport = ctx.getViewport();
@@ -253,14 +276,19 @@ void GUI::draw(const DrawContext& parent_context, const Assets& assets) {
     uicamera->setFov(viewport.y);
     uicamera->setAspectRatio(viewport.x / static_cast<float>(viewport.y));
 
-	ShaderProgram* uishader = assets.get<ShaderProgram>("ui");
-	uishader->use();
-	uishader->uniformMatrix("u_projview", uicamera->getProjView());
+    ShaderProgram* uishader = assets.get<ShaderProgram>("ui");
+    uishader->use();
+    uishader->uniformMatrix("u_projview", uicamera->getProjView());
 
     batch2D->begin();
-    container->draw(ctx, assets);
+    for (auto& [outputTexture, frame] : frames) {
+        frame->updateOutput(assets);
+        frame->draw(ctx, assets);
+    }
 
-    if (hover) engine.getWindow().setCursor(hover->getCursor());
+    if (hover) {
+        engine.getWindow().setCursor(hover->getCursor());
+    }
 
     if (hover && debug) {
         auto pos = hover->calcPos();
@@ -307,6 +335,32 @@ bool GUI::isFocusCaught() const {
 void GUI::add(std::shared_ptr<UINode> node) {
     rootDocument->pushIndices(node);
     container->add(std::move(node));
+}
+
+void GUI::addFrame(std::shared_ptr<Frame> frame) {
+    const auto& id = frame->getFrameId();
+    frames[id] = std::move(frame);
+}
+
+void GUI::setActiveFrame(
+    const std::string& id,
+    vec2supplier cursorLocator
+) {
+    this->cursorLocator = std::move(cursorLocator);
+    if (id.empty()) {
+        activeFrame = nullptr;
+        return;
+    }
+    const auto& found = frames.find(id);
+    if (found == frames.end()) {
+        LOG_ERROR("Attempted to make non-existing frame '{}' as active", id);
+        return;
+    }
+    activeFrame = found->second;
+}
+
+std::shared_ptr<gui::Frame> GUI::getActiveFrame() const {
+    return activeFrame;
 }
 
 void GUI::remove(UINode* panel) noexcept {

@@ -13,7 +13,7 @@ class Framebuffer : public Bindable {
 	uint width;
 	uint height;
 	uint format;
-	std::unique_ptr<Texture> texture;
+	std::shared_ptr<Texture> texture;
 public:
 	Framebuffer(uint fbo, uint depth, std::unique_ptr<Texture> texture);
 	Framebuffer(uint width, uint height, bool alpha=false);
@@ -25,6 +25,7 @@ public:
 	void resize(uint width, uint height);
 
 	Texture* getTexture() const;
+	std::shared_ptr<Texture> getSharedTexture() const;
 
 	uint getWidth() const;
 	uint getHeight() const;
