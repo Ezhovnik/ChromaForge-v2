@@ -98,13 +98,13 @@ std::shared_ptr<Chunk> GlobalChunks::create(int x, int z, bool lighting) {
         voxelDataBuffer = std::make_unique<ubyte[]>(CHUNK_DATA_LEN);
     }
 
-    auto chunk = chunks_pool.create(x, z, lighting ? lightmaps_pool.create() : nullptr);
+    auto chunk = chunks_pool.create(
+        x, z, lighting ? lightmaps_pool.create() : nullptr
+    );
     chunksMap[keyfrom(x, z)] = chunk;
 
     World& world = *level.getWorld();
     auto& regions = world.wfile.get()->getRegions();
-
-    auto& localChunksMap = chunksMap;
 
     if (regions.getVoxels(chunk->chunk_x, chunk->chunk_z, voxelDataBuffer.get())) {
         const auto& indices = *level.content.getIndices();
@@ -116,7 +116,9 @@ std::shared_ptr<Chunk> GlobalChunks::create(int x, int z, bool lighting) {
             load_inventories(regions, *chunk, indices.blocks)
         );
 
-        auto entitiesData = regions.fetchEntities(chunk->chunk_x, chunk->chunk_z);
+        auto entitiesData = regions.fetchEntities(
+            chunk->chunk_x, chunk->chunk_z
+        );
         if (entitiesData.getType() == dv::value_type::Object) {
             level.entities->loadEntities(std::move(entitiesData));
             chunk->flags.entities = true;

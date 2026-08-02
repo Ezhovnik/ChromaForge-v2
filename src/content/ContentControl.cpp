@@ -55,8 +55,6 @@ std::vector<std::string>& ContentControl::getBasePacks() {
 void ContentControl::resetContent(
     const std::vector<std::string>& nonReset
 ) {
-    paths.setCurrentWorldFolder("");
-
     scripting::cleanup(nonReset);
     std::vector<PathsRoot> resRoots;
     {

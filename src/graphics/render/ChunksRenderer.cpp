@@ -57,7 +57,7 @@ public:
 static util::ObjectsPool<VoxelsRenderVolume> voxelsVolumesPool {};
 
 ChunksRenderer::ChunksRenderer(
-    const Level* level,
+    const Level& level,
     const Chunks& chunks,
     const Assets& assets,
     const Frustum& frustum,
@@ -71,7 +71,7 @@ ChunksRenderer::ChunksRenderer(
         "chunks-render-pool",
         [&]() {
             return std::make_unique<RendererWorker>(
-                *level, cache, settings
+                level, cache, settings
             );
         }, 
         [&](RendererResult&& result) {
@@ -90,7 +90,10 @@ ChunksRenderer::ChunksRenderer(
 {
     threadPool.setStopOnFail(false);
     renderer = std::make_unique<BlocksRenderer>(
-        settings.graphics.chunkMaxVertices.get(), level->content, cache, settings
+        settings.graphics.chunkMaxVertices.get(),
+        level.content,
+        cache,
+        settings
     );
 
     LOG_INFO("Created {} workers", threadPool.getWorkersCount());
@@ -131,12 +134,11 @@ const Mesh<ChunkVertex>* ChunksRenderer::render(
     chunk->flags.modified = false;
 
     if (important) {
+        ChunkMesh mesh {};
         auto voxelsBuffer = prepareVoxelsVolume(*chunk);
 
-        auto mesh = renderer->render(chunk.get(), *voxelsBuffer);
-        meshes[key] = ChunkMesh {
-            std::move(mesh.mesh), std::move(mesh.sortingMeshData), nullptr
-        };
+        mesh = renderer->render(chunk.get(), *voxelsBuffer);
+        meshes[key] = std::move(mesh);
         return meshes[key].mesh.get();
     }
 
@@ -214,7 +216,7 @@ const Mesh<ChunkVertex>* ChunksRenderer::retrieveChunk(
     );
     auto mesh = getOrRender(
         chunk,
-        distance < CHUNK_WIDTH * 1.5f,
+        distance < CHUNK_WIDTH * 1.5f * 10.0f,
         distance > CHUNK_WIDTH * settings.chunks.loadDistance.get() * 0.5
     );
     if (mesh == nullptr) return nullptr;
@@ -250,21 +252,21 @@ void ChunksRenderer::drawShadowsPass(
         if (chunk == nullptr) continue;
 
         glm::ivec2 pos {chunk->chunk_x, chunk->chunk_z};
-        const auto& found = meshes.find({chunk->chunk_x, chunk->chunk_z});
+        const auto& found = meshes.find(pos);
         if (found == meshes.end()) continue;
         glm::vec3 coord(
             pos.x * CHUNK_WIDTH + 0.5f, 0.5f, pos.y * CHUNK_DEPTH + 0.5f
         );
 
         glm::vec3 min(
-            chunk->chunk_x * CHUNK_WIDTH,
+            pos.x * CHUNK_WIDTH,
             chunk->bottom,
-            chunk->chunk_z * CHUNK_DEPTH
+            pos.y * CHUNK_DEPTH
         );
         glm::vec3 max(
-            chunk->chunk_x * CHUNK_WIDTH + CHUNK_WIDTH,
+            pos.x * CHUNK_WIDTH + CHUNK_WIDTH,
             chunk->top,
-            chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH
+            pos.y * CHUNK_DEPTH + CHUNK_DEPTH
         );
 
         if (!frustum.isBoxVisible(min, max)) continue;
@@ -320,23 +322,27 @@ void ChunksRenderer::drawChunks(
         auto& chunk = chunks.getChunks()[indices[i].index];
         auto mesh = retrieveChunk(indices[i].index, camera, culling);
 
-        if (mesh) {
-            glm::vec3 coord(
-                chunk->chunk_x * CHUNK_WIDTH + 0.5f,
-                0.5f,
-                chunk->chunk_z * CHUNK_DEPTH + 0.5f
-            );
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), coord);
-            shader.uniformMatrix("u_model", model);
-            mesh->draw(
-                GL_TRIANGLES,
-                glm::distance2(
-                    camera.position * glm::vec3(1, 0, 1),
-                    (coord + glm::vec3(CHUNK_WIDTH * 0.5f, 0.0f, CHUNK_DEPTH * 0.5f))
-                ) < denseDistance2
-            );
-            visibleChunks++;
-        }
+        if (mesh == nullptr) continue;
+
+        glm::vec3 coord(
+            chunk->chunk_x * CHUNK_WIDTH + 0.5f,
+            0.5f,
+            chunk->chunk_z * CHUNK_DEPTH + 0.5f
+        );
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), coord);
+        shader.uniformMatrix("u_model", model);
+        mesh->draw(
+            GL_TRIANGLES,
+            glm::distance2(
+                camera.position * glm::vec3(1, 0, 1), 
+                (coord + glm::vec3(
+                    CHUNK_WIDTH * 0.5f,
+                    0.0f,
+                    CHUNK_DEPTH * 0.5f
+                ))
+            ) < denseDistance2
+        );
+        visibleChunks++;
     }
 }
 

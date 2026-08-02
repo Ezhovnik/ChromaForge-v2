@@ -70,9 +70,9 @@ namespace cmd {
             std::string description,
             executor_func executor
         ) : name(name),
+            description(description),
             args(std::move(args)),
             kwargs(std::move(kwargs)),
-            description(description),
             executor(executor) {}
 
         Argument* getArgument(size_t index) {

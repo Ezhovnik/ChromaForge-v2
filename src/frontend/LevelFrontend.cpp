@@ -19,8 +19,8 @@ LevelFrontend::LevelFrontend(
     Player* currentPlayer,
     LevelController* controller,
     const EngineSettings& settings
-) : controller(controller),
-    level(*controller->getLevel()), 
+) : level(*controller->getLevel()),
+    controller(controller),
     assets(*engine.getAssets()), 
     contentCache(std::make_unique<ContentGfxCache>(level.content, assets, settings.graphics))
 {

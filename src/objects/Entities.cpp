@@ -214,16 +214,26 @@ void Entities::onSave(const Entt_Entity& entity) {
     scripting::on_entity_save(entity);
 }
 
-void Entities::update(float delta) {
-    if (updateSparkClock.update(delta)) {
+void Entities::update(float deltaTime) {
+    if (updateSparkClock.update(deltaTime)) {
         scripting::on_entities_update(
             updateSparkClock.getSparkRate(),
             updateSparkClock.getParts(),
             updateSparkClock.getPart()
         );
     }
-    updatePhysics(delta);
-    scripting::on_entities_physics_update(delta);
+    updatePhysics(deltaTime);
+    scripting::on_entities_physics_update(deltaTime);
+
+    auto view = registry->view<Transform, rigging::Skeleton>();
+    for (auto [entity, transform, skeleton] : view.each()) {
+        if (transform.dirty) {
+            transform.refresh();
+        }
+        if (skeleton.interpolation.isEnabled()) {
+            skeleton.interpolation.updateTimer(deltaTime);
+        }
+    }
 }
 
 static void debug_render_skeleton(
@@ -458,16 +468,12 @@ void Entities::render(
     const Assets& assets,
     ModelBatch& batch,
     const Frustum* frustum,
-    float deltaTime,
-    bool pause,
     entityid_t fpsEntity
 ) {
     auto view = registry->view<EntityId, Transform, rigging::Skeleton>();
     for (auto [entity, eid, transform, skeleton] : view.each()) {
         if (eid.uid == fpsEntity) continue;
 
-        if (transform.dirty) transform.refresh();
-        if (skeleton.interpolation.isEnabled()) skeleton.interpolation.updateTimer(deltaTime);
         const auto& pos = transform.pos;
         const auto& size = transform.size;
         if (frustum && !frustum->isBoxVisible(pos - size, pos + size)) {

@@ -28,6 +28,8 @@ namespace timeutil {
          * @return Количество микросекунд с момента создания таймера.
          */
         int64_t stop();
+
+        int64_t stopNs();
     };
 
     /**

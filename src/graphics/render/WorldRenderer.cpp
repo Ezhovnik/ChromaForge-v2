@@ -42,7 +42,6 @@
 #include <graphics/render/ModelBatch.h>
 #include <graphics/commons/Model.h>
 #include <objects/Entities.h>
-#include <logic/scripting/scripting_hud.h>
 #include <assets/assets_util.h>
 #include <graphics/render/ParticlesRenderer.h>
 #include <graphics/render/Emitter.h>
@@ -94,7 +93,7 @@ WorldRenderer::WorldRenderer(
     ),
     chunksRenderer(
         std::make_unique<ChunksRenderer>(
-            &level,
+            level,
             *player.chunks,
             assets,
             *frustumCulling,
@@ -102,12 +101,20 @@ WorldRenderer::WorldRenderer(
             engine.getSettings()
         )
     ),
+    precipitation(
+        std::make_unique<PrecipitationRenderer>(
+            assets,
+            level,
+            *player.chunks,
+            &engine.getSettings().graphics
+        )
+    ),
     particles(
         std::make_unique<ParticlesRenderer>(
             assets,
             level,
             *player.chunks,
-            &engine.getSettings().graphics
+            engine.getSettings().graphics
         )
     ),
     texts(
@@ -121,33 +128,24 @@ WorldRenderer::WorldRenderer(
             level,
             *player.chunks
         )
-    ),
-    precipitation(
-        std::make_unique<PrecipitationRenderer>(
-            assets,
-            level,
-            *player.chunks,
-            &engine.getSettings().graphics
-        )
     )
 {
 	auto& settings = engine.getSettings();
     level.events->listen(LevelEventType::CHUNK_HIDDEN, [this](LevelEventType, Chunk* chunk) {
 		chunksRenderer->unload(chunk);
 	});
-	auto assets = engine.getAssets();
     skybox = std::make_unique<Skybox>(
         settings.graphics.skyboxResolution.get(), 
-        assets->require<ShaderProgram>("skybox_gen")
+        assets.require<ShaderProgram>("skybox_gen")
     );
 
     const auto& content = level.content;
     skeletons = std::make_unique<NamedSkeletons>();
-    const auto& skeletonConfig = assets->require<rigging::SkeletonConfig>(
+    const auto& skeletonConfig = assets.require<rigging::SkeletonConfig>(
         content.getDefaults()["hand-skeleton"].asString()
     );
     hands = std::make_unique<HandsRenderer>(
-        *assets,
+        assets,
         *modelBatch,
         skeletons->createSkeleton("hand", &skeletonConfig)
     );
@@ -218,8 +216,6 @@ void WorldRenderer::renderOpaque(
     const DrawContext& ctx,
     const Camera& camera, 
     const EngineSettings& settings,
-    float deltaTime,
-    bool pause,
     bool hudVisible
 ) {
     texts->render(ctx, camera, settings, hudVisible, false);
@@ -240,13 +236,11 @@ void WorldRenderer::renderOpaque(
         assets,
         *modelBatch,
         culling ? frustumCulling.get() : nullptr,
-        deltaTime,
-        pause,
         player.currentCamera.get() == player.fpCamera.get() ? player.getEntity() : 0
     );
 
     modelBatch->render();
-    particles->render(camera, deltaTime * !pause);
+    particles->render(camera);
 
     auto& shader = assets.require<ShaderProgram>("default");
     auto& linesShader = assets.require<ShaderProgram>("lines");
@@ -256,10 +250,6 @@ void WorldRenderer::renderOpaque(
     blockWraps->draw(ctx, player);
 
     if (hudVisible) renderLines(camera, linesShader, ctx);
-
-    if (!pause) {
-        scripting::on_frontend_render();
-    }
 
     skybox->unbind();
 }
@@ -310,21 +300,49 @@ void WorldRenderer::renderLines(
     }
 }
 
+void WorldRenderer::refreshSettings(ShaderProgram** shaders) {
+    const auto& graphics = engine.getSettings().graphics;
+    gbufferPipeline = graphics.advancedRender.get();
+
+    int shadowsQuality = graphics.shadowsQuality.get() * gbufferPipeline;
+    shadowMapping->setQuality(shadowsQuality);
+
+    CompileTimeShaderSettings currentSettings {
+        gbufferPipeline,
+        shadowsQuality != 0,
+        graphics.ssao.get() && gbufferPipeline
+    };
+    if (
+        prevCTShaderSettings.advancedRender != currentSettings.advancedRender ||
+        prevCTShaderSettings.shadows != currentSettings.shadows ||
+        prevCTShaderSettings.ssao != currentSettings.ssao
+    ) {
+        std::vector<std::string> defines;
+        if (currentSettings.shadows) defines.emplace_back("ENABLE_SHADOWS");
+        if (currentSettings.ssao) defines.emplace_back("ENABLE_SSAO");
+        if (currentSettings.advancedRender) defines.emplace_back("ADVANCED_RENDER");
+
+        for (size_t i = 0; shaders[i]; ++i) {
+            shaders[i]->recompile(defines);
+        }
+        prevCTShaderSettings = currentSettings;
+    }
+}
+
+void WorldRenderer::update(const Camera& camera, float delta) {
+    timer += delta;
+    weather.update(delta);
+    precipitation->update(delta);
+    particles->update(camera, delta);
+}
+
 void WorldRenderer::renderFrame(
     const DrawContext& pctx,
     Camera& camera,
     bool hudVisible,
-    bool pause,
-    float uiDelta,
     PostProcessing& postProcessing
 ) {
-    // TODO: Refactor whole render engine
-
     auto projView = camera.getProjView();
-
-    float deltaTime = uiDelta * !pause;
-    timer += deltaTime;
-    weather.update(deltaTime);
 
     auto world = level.getWorld();
 
@@ -338,32 +356,14 @@ void WorldRenderer::renderFrame(
     const auto& settings = engine.getSettings();
 
     ShaderProgram* affectedShaders[] {
-        &defaultShader, &entityShader, &translucentShader, &deferredShader
+        &defaultShader,
+        &entityShader,
+        &translucentShader,
+        &deferredShader,
+        nullptr
     };
 
-    gbufferPipeline = settings.graphics.advancedRender.get();
-    int shadowsQuality = settings.graphics.shadowsQuality.get() * gbufferPipeline;
-    shadowMapping->setQuality(shadowsQuality);
-
-    CompileTimeShaderSettings currentSettings {
-        gbufferPipeline,
-        shadowsQuality != 0,
-        settings.graphics.ssao.get() && gbufferPipeline
-    };
-    if (
-        prevCTShaderSettings.advancedRender != currentSettings.advancedRender ||
-        prevCTShaderSettings.shadows != currentSettings.shadows ||
-        prevCTShaderSettings.ssao != currentSettings.ssao
-    ) {
-        std::vector<std::string> defines;
-        if (currentSettings.shadows) defines.emplace_back("ENABLE_SHADOWS");
-        if (currentSettings.ssao) defines.emplace_back("ENABLE_SSAO");
-        if (currentSettings.advancedRender) defines.emplace_back("ADVANCED_RENDER");
-        for (auto shader : affectedShaders) {
-            shader->recompile(defines);
-        }
-        prevCTShaderSettings = currentSettings;
-    }
+    refreshSettings(affectedShaders);
 
     const auto& worldInfo = world->getInfo();
 
@@ -389,7 +389,7 @@ void WorldRenderer::renderFrame(
             DrawContext ctx = wctx.sub();
             ctx.setDepthTest(true);
             ctx.setCullFace(true);
-            renderOpaque(ctx, camera, settings, uiDelta, pause, hudVisible);
+            renderOpaque(ctx, camera, settings, hudVisible);
         }
         texts->render(pctx, camera, settings, hudVisible, true);
     }
@@ -444,7 +444,7 @@ void WorldRenderer::renderFrame(
             entityShader.uniform1i("u_alphaClip", weather->fall.opaque);
             entityShader.uniform1f("u_opacity", weather->fall.opaque ? t * t : t);
             if (weather->intensity > 1.e-3f && !weather->fall.texture.empty()) {
-                precipitation->render(camera, pause ? 0.0f : deltaTime, *weather);
+                precipitation->render(camera, *weather);
             }
         }
 
@@ -462,7 +462,7 @@ void WorldRenderer::renderFrame(
         hudcam.setFov(0.9f);
         hudcam.position = {};
 
-        if (!player.isNoclip()) hands->renderHands(camera, deltaTime);
+        if (!player.isNoclip()) hands->render(camera);
 
         display::clearDepth();
         setupWorldShader(entityShader, hudcam, engine.getSettings(), 0.0f);

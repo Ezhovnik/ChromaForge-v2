@@ -35,15 +35,15 @@ Content::Content(
     dv::value defaults,
     std::unordered_map<std::string, int> tags
 ) : indices(std::move(indices)),
-    drawGroups(std::move(drawGroups)),
     packs(std::move(packs)),
+    blockMaterials(std::move(blockMaterials)),
+    defaults(std::move(defaults)),
+    tags(std::move(tags)),
     blocks(std::move(blocks)),
     items(std::move(items)),
     entities(std::move(entities)),
     generators(std::move(generators)),
-    blockMaterials(std::move(blockMaterials)),
-    defaults(std::move(defaults)),
-    tags(std::move(tags))
+    drawGroups(std::move(drawGroups))
 {
     for (size_t i = 0; i < RESOURCE_TYPES_COUNT; ++i) {
         this->resourceIndices[i] = std::move(resourceIndices[i]);

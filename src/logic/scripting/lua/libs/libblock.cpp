@@ -753,6 +753,8 @@ const luaL_Reg blocklib [] = {
     {"set_rotation", lua::wrap<l_set_rotation>},
     {"get_user_bits", lua::wrap<l_get_user_bits>},
     {"set_user_bits", lua::wrap<l_set_user_bits>},
+    {"get_variant", lua::wrap<l_get_variant>},
+    {"set_variant", lua::wrap<l_set_variant>},
     {"is_extended", lua::wrap<l_is_extended>},
     {"get_size", lua::wrap<l_get_size>},
     {"is_segment", lua::wrap<l_is_segment>},

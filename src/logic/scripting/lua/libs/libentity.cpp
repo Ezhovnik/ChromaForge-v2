@@ -62,7 +62,6 @@ static int l_get_def(lua::State* L) {
 }
 
 static int l_spawn(lua::State* L) {
-    auto level = scripting::controller->getLevel();
     auto defname = lua::tostring(L, 1);
     auto& def = scripting::content->entities.require(defname);
     auto pos = lua::tovec3(L, 2);
@@ -70,7 +69,9 @@ static int l_spawn(lua::State* L) {
     if (lua::gettop(L) > 2) {
         args = lua::tovalue(L, 3);
     }
-    entityid_t id = scripting::level->entities->spawn(def, pos, std::move(args));
+    entityid_t id = scripting::level->entities->spawn(
+        def, pos, std::move(args)
+    );
     lua::get_from(L, "entities", "get", true);
     lua::pushinteger(L, id);
     return lua::call_nothrow(L, 1);

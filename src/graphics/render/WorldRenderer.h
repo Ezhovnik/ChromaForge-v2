@@ -5,9 +5,7 @@
 #include <string>
 #include <memory>
 
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-
+#include <graphics/render/commons.h>
 #include <graphics/core/DrawContext.h>
 #include <presets/WeatherPreset.h>
 #include <world/Weather.h>
@@ -35,7 +33,6 @@ class PrecipitationRenderer;
 class HandsRenderer;
 class NamedSkeletons;
 class Shadows;
-class GBuffer;
 
 struct CompileTimeShaderSettings {
     bool advancedRender = false;
@@ -58,6 +55,7 @@ private:
     std::unique_ptr<Skybox> skybox;
     std::unique_ptr<Shadows> shadowMapping;
     std::unique_ptr<DebugLinesRenderer> debugLines;
+    std::unique_ptr<PrecipitationRenderer> precipitation;
     Weather weather {};
 
     float timer = 0.0f;
@@ -91,26 +89,25 @@ private:
         const DrawContext& context, 
         const Camera& camera, 
         const EngineSettings& settings,
-        float delta,
-        bool pause,
         bool hudVisible
     );
+
+    void refreshSettings(ShaderProgram** shaders);
 public:
     std::unique_ptr<ParticlesRenderer> particles;
     std::unique_ptr<TextsRenderer> texts;
     std::unique_ptr<BlockWrapsRenderer> blockWraps;
-    std::unique_ptr<PrecipitationRenderer> precipitation;
     std::unique_ptr<NamedSkeletons> skeletons;
 
     WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
     ~WorldRenderer();
 
+    void update(const Camera& camera, float deltaTime);
+
     void renderFrame(
         const DrawContext& context,
         Camera& camera,
         bool hudVisible,
-        bool pause,
-        float deltaTime,
         PostProcessing& postProcessing
     );
 

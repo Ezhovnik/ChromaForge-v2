@@ -17,8 +17,8 @@ HandsRenderer::HandsRenderer(
     modelBatch(modelBatch),
     skeleton(std::move(skeleton)) {}
 
-void HandsRenderer::renderHands(
-    const Camera& camera, float delta
+void HandsRenderer::render(
+    const Camera& camera
 ) {
     auto& skeleton = *this->skeleton;
     const auto& config = *skeleton.config;

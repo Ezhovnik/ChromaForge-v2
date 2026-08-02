@@ -58,11 +58,13 @@ class ChunksRenderer {
     const Mesh<ChunkVertex>* retrieveChunk(
         size_t index, const Camera& camera, bool culling
     );
-    std::shared_ptr<VoxelsRenderVolume> prepareVoxelsVolume(const Chunk& chunk);
+    std::shared_ptr<VoxelsRenderVolume> prepareVoxelsVolume(
+        const Chunk& chunk
+    );
     size_t enqueuedInFrame = 0;
 public:
     ChunksRenderer(
-        const Level* level,
+        const Level& level,
         const Chunks& chunks,
         const Assets& assets,
         const Frustum& frustum,

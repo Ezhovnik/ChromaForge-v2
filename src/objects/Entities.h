@@ -62,8 +62,6 @@ public:
         const Assets& assets,
         ModelBatch& batch,
         const Frustum* frustum,
-        float deltaTime,
-        bool pause,
         entityid_t fpsEntity
     );
     void renderDebug(LineBatch& batch, const Frustum* frustum, const DrawContext& ctx);

@@ -25,7 +25,7 @@ struct ItemFuncNamesCache;
 struct WorldFuncsSet;
 struct UserComponent;
 class ContentIndices;
-struct uidocscript;
+struct UIDocScript;
 class Inventory;
 class UIDocument;
 struct ContentPack;
@@ -170,7 +170,7 @@ namespace scripting {
         const std::string& prefix,
         const io::path& file,
         const std::string& fileName,
-        uidocscript& script
+        UIDocScript& script
     );
     void load_entity_component(
         const scriptenv& env,

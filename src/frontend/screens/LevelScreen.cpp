@@ -62,7 +62,7 @@ LevelScreen::LevelScreen(
     assert(player != nullptr);
 
     controller = std::make_unique<LevelController>(
-        &engine, std::move(levelPtr), player
+        engine, std::move(levelPtr), player
     );
     playerController = std::make_unique<PlayerController>(
         settings,
@@ -123,7 +123,6 @@ LevelScreen::~LevelScreen() {
     input.getBindings().enableAll();
     playerController->getPlayer()->chunks->saveAndClear();
     controller->onWorldQuit();
-    engine.getPaths().setCurrentWorldFolder("");
 }
 
 void LevelScreen::onOpen() {
@@ -188,7 +187,7 @@ void LevelScreen::saveWorldPreview() {
             {static_cast<uint>(previewSize * 1.5), static_cast<uint>(previewSize)}
         );
 
-        renderer->renderFrame(ctx, camera, false, true, 0.0f, *postProcessing);
+        renderer->renderFrame(ctx, camera, false, *postProcessing);
         auto image = postProcessing->toImage();
         image->flipY();
         imageio::write("world:preview.png", image.get());
@@ -199,8 +198,6 @@ void LevelScreen::saveWorldPreview() {
 }
 
 void LevelScreen::updateHotkeys() {
-    auto& settings = engine.getSettings();
-
     if (input.justPressed(Keycode::F1)) hudVisible = !hudVisible;
     if (!input.isPressed(Keycode::LEFT_CONTROL)) {
         if (input.justPressed(Keycode::F3)) {
@@ -276,14 +273,11 @@ void LevelScreen::draw(float deltaTime) {
         scripting::on_entities_render(engine.getTime().getDeltaTime());
     }
 
-    renderer->renderFrame(
-        ctx,
-        *camera,
-        hudVisible,
-        hud->isPause(),
-        deltaTime,
-        *postProcessing
-    );
+    renderer->update(*camera, deltaTime * !hud->isPause());
+    renderer->renderFrame(ctx, *camera, hudVisible, *postProcessing);
+    if (!hud->isPause()) {
+        scripting::on_frontend_render();
+    }
 
     if (hudVisible) hud->draw(ctx);
 }

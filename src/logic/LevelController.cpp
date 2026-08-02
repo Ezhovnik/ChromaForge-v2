@@ -18,12 +18,14 @@
 #include <lighting/Lighting.h>
 #include <world/LevelEvents.h>
 #include <voxels/Pathfinding.h>
+#include <engine/EnginePaths.h>
 
 LevelController::LevelController(
-    Engine* engine,
+    Engine& engine,
     std::unique_ptr<Level> levelPtr,
     Player* clientPlayer
-) : settings(engine->getSettings()),
+) : engine(engine),
+    settings(engine.getSettings()),
     level(std::move(levelPtr)),
     chunks(std::make_unique<ChunksController>(*level)),
     playerSparkClock(20, 3)
@@ -137,6 +139,7 @@ void LevelController::saveWorld() {
 
 void LevelController::onWorldQuit() {
     scripting::on_world_quit();
+    engine.getPaths().setCurrentWorldFolder("");
 }
 
 Level* LevelController::getLevel() {

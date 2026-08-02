@@ -256,6 +256,6 @@ void BlocksController::onBlockInteraction(
     }
 }
 
-void BlocksController::listenBlockInteraction(const on_block_interaction& callback) {
+void BlocksController::listenBlockInteraction(const OnBlockInteraction& callback) {
     blockInteractionCallbacks.push_back(callback);
 }

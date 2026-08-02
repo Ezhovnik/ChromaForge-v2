@@ -7,17 +7,36 @@ timeutil::Timer::Timer() {
 }
 
 int64_t timeutil::Timer::stop() {
-    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count();
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::high_resolution_clock::now() - start
+    ).count();
 }
 
-timeutil::ScopeLogTimer::ScopeLogTimer(long long id) : scopeid_(id) {
+int64_t timeutil::Timer::stopNs() {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::high_resolution_clock::now() - start
+    ).count();
 }
+
+
+timeutil::ScopeLogTimer::ScopeLogTimer(
+    long long id
+) : scopeid_(id) {}
 
 timeutil::ScopeLogTimer::~ScopeLogTimer() {
-    LOG_DEBUG("Scope {} finished in {} micros.", scopeid_, ScopeLogTimer::stop());
+    LOG_DEBUG(
+        "Scope {} finished in {} micros.",
+        scopeid_,
+        ScopeLogTimer::stop()
+    );
 }
 
-void timeutil::from_value(float value, int& hour, int& minute, int& second) {
+void timeutil::from_value(
+    float value,
+    int& hour,
+    int& minute,
+    int& second
+) {
     value *= 24;
     hour = value;
     value *= 60;

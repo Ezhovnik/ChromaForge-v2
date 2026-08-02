@@ -86,11 +86,13 @@ static UVRegion calc_uv(
     return {u1, v1, u1 + m * scale, v1 + FACE_SIZE.y * scale};
 }
 
-void PrecipitationRenderer::render(
-    const Camera& camera, float delta, const WeatherPreset& weather
-) {
-    timer += delta;
+void PrecipitationRenderer::update(float deltaTime) {
+    timer += deltaTime;
+}
 
+void PrecipitationRenderer::render(
+    const Camera& camera, const WeatherPreset& weather
+) {
     const int radius = 6;
     const int depth = 12;
 

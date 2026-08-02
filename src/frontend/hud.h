@@ -13,7 +13,7 @@ class Camera;
 class Assets;
 class Player;
 class Engine;
-class Block;
+
 class LevelFrontend;
 class UIDocument;
 class Inventory;
@@ -25,7 +25,6 @@ namespace gui {
     class GUI;
     class Menu;
     class UINode;
-    class Panel;
     class Container;
     class SlotView;
     class InventoryView;

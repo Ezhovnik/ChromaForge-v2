@@ -24,7 +24,7 @@ enum class BlockInteraction {
     Placing
 };
 
-using on_block_interaction = std::function<void(
+using OnBlockInteraction = std::function<void(
     Player*, const glm::ivec3&, const Block&, BlockInteraction
 )>;
 
@@ -38,7 +38,7 @@ class BlocksController {
 
     util::FastRandom random {};
 
-    std::vector<on_block_interaction> blockInteractionCallbacks;
+    std::vector<OnBlockInteraction> blockInteractionCallbacks;
     uint64_t randomSparkId = 0;
 public:
     BlocksController(const Level& level, Lighting* lighting);
@@ -79,5 +79,5 @@ public:
         BlockInteraction type
     );
 
-    void listenBlockInteraction(const on_block_interaction& callback);
+    void listenBlockInteraction(const OnBlockInteraction& callback);
 };

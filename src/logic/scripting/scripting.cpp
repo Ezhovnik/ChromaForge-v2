@@ -724,7 +724,7 @@ void scripting::load_layout_script(
     const std::string& prefix,
     const io::path& file,
     const std::string& fileName,
-    uidocscript& script
+    UIDocScript& script
 ) {
     int env = *senv;
     lua::pop(lua::get_main_state(), load_script(env, "layout", file, fileName));

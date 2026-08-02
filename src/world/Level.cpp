@@ -26,8 +26,8 @@ Level::Level(
     EngineSettings& settings
 ) : world(std::move(worldPtr)),
     content(content),
+    physics(std::make_unique<PhysicsSolver>(glm::vec3(0, GRAVITY, 0))),
     chunks(std::make_unique<GlobalChunks>(*this)),
-	physics(std::make_unique<PhysicsSolver>(glm::vec3(0, GRAVITY, 0))),
     events(std::make_unique<LevelEvents>()),
     entities(std::make_unique<Entities>(*this)),
     players(std::make_unique<Players>(*this)),

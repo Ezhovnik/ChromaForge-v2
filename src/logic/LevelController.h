@@ -12,7 +12,7 @@ struct EngineSettings;
 class Engine;
 
 class LevelController {
-private:
+    Engine& engine;
     EngineSettings& settings;
 
     std::unique_ptr<Level> level;
@@ -25,7 +25,7 @@ public:
     CallbacksSet<> preQuitCallbacks;
 
     LevelController(
-        Engine* engine,
+        Engine& engine,
         std::unique_ptr<Level> level,
         Player* clientPlayer
     );
