@@ -50,6 +50,7 @@
 #include <graphics/ui/elements/Menu.h>
 #include <engine/WindowControl.h>
 #include <engine/AssetsManagement.h>
+#include <devtools/stdin_cmd_reader.h>
 
 Engine::Engine() = default;
 Engine::~Engine() = default;
@@ -197,6 +198,10 @@ void Engine::initialize(CoreParameters coreParameters) {
     project->loadProjectStartScript();
     if (!params.headless) {
         project->loadProjectClientScript();
+    }
+
+    if (params.stdinCommands) {
+        cmd::start_stdin_cmd_reader(*this);
     }
 
     LOG_INFO("Initialization is finished");

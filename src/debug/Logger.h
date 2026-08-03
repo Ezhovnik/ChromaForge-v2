@@ -6,6 +6,8 @@
 
 #include <fmt/format.h>
 
+// TODO: Refactor
+
 enum class LogLevel {
     TRACE = 0,
     DEBUG,
