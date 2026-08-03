@@ -20,6 +20,8 @@
 #include <voxels/Pathfinding.h>
 #include <engine/EnginePaths.h>
 
+static debug::Logger logger("level-controller");
+
 LevelController::LevelController(
     Engine& engine,
     std::unique_ptr<Level> levelPtr,
@@ -126,15 +128,15 @@ void LevelController::processBeforeQuit() {
 void LevelController::saveWorld() {
     auto world = level->getWorld();
     if (world->isNameless()) {
-        LOG_WARN("Nameless world will not be saved");
+        logger.warning() << "Nameless world will not be saved";
         return;
     }
-    LOG_INFO("Writing world '{}'", world->getName());
+    logger.info() << "Writing world '" << world->getName() << "'";
     world->wfile->createDirectories();
     scripting::on_world_save();
     level->onSave();
     level->getWorld()->write(level.get());
-    LOG_INFO("The world has been successfully saved");
+    logger.info() << "The world has been successfully saved";
 }
 
 void LevelController::onWorldQuit() {

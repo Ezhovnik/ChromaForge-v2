@@ -48,6 +48,8 @@
 #include <world/generator/WorldGenerator.h>
 #include <voxels/GlobalChunks.h>
 
+static debug::Logger logger("hud");
+
 bool Hud::showGeneratorMinimap = false;
 
 std::shared_ptr<gui::UINode> create_debug_panel(
@@ -494,7 +496,7 @@ void Hud::openInventory(
         doc->getRoot()
     );
     if (blockUI == nullptr) {
-		THROW_ERR("Block UI root element must be 'inventory'");
+		throw std::runtime_error("Block UI root element must be 'inventory'");
     }
 
     secondUI = blockUI;
@@ -556,7 +558,7 @@ std::shared_ptr<Inventory> Hud::openInventory(
         doc->getRoot()
     );
     if (secondInvView == nullptr) {
-        THROW_ERR("Secondary UI root element must be 'inventory'");
+        throw std::runtime_error("Secondary UI root element must be 'inventory'");
     }
     secondUI = secondInvView;
 
@@ -625,11 +627,7 @@ void Hud::dropExchangeSlot() {
     if (stack.isEmpty()) return;
     player.getInventory()->move(stack, *indices);
     if (!stack.isEmpty()) {
-        LOG_WARN(
-            "Discard item [{}]: {}",
-            stack.getItemId(),
-            stack.getCount()
-        );
+        logger.warning() << "Discard item [" << stack.getItemId() << "]: " << stack.getCount();
         stack.clear();
     }
 }

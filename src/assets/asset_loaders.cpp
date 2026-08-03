@@ -29,6 +29,8 @@
 #include <util/stringutil.h>
 #include <coders/cfmodel.h>
 
+static debug::Logger logger("asset-loaders");
+
 static bool load_animation(
     Assets* assets, 
 	const ResPaths& paths,
@@ -90,7 +92,7 @@ asset_loader::postfunc asset_loader::texture(
             assets->store(Texture::from(image.get()), name);
         };
     } catch (const std::runtime_error& err) {
-        LOG_ERROR("{}: {}", actualFile.string(), err.what());
+        logger.error() << actualFile.string() << ": " << err.what();
         return [](auto) {};
     }
 }
@@ -110,7 +112,7 @@ asset_loader::postfunc asset_loader::font(
         if (io::exists(file)) {
             pages->push_back(imageio::read(file));
         } else if (i == 0) {
-            THROW_ERR("Font must have page 0");
+            throw std::runtime_error("Font must have page 0");
         } else {
             pages->push_back(nullptr);
         }
@@ -181,7 +183,7 @@ static bool append_atlas(AtlasBuilder& atlas, const io::path& file) {
 	// Загружаем изображение
 	auto image = imageio::read(file);
 	if (image == nullptr) {
-		LOG_ERROR("Failed to load atlas entry '{}'", name);
+		logger.error() << "Failed to load atlas entry '" << name << "'";
 		return false;
 	}
 
@@ -285,7 +287,7 @@ static TextureAnimation create_animation(
 
     for (const auto& elem : frameList) {
         if (!srcAtlas->has(elem.first)) {
-			LOG_ERROR("Unknown frame name: {}", elem.first);
+			logger.error() << "Unknown frame name: " << elem.first;
             continue;
         }
         region = srcAtlas->get(elem.first);
@@ -390,7 +392,7 @@ asset_loader::postfunc asset_loader::layout(
                 name
             );
         } catch (const parsing_error& err) {
-			THROW_ERR("Failed to parse layout XML '{}':\n{}", file, err.errorLog());
+			throw std::runtime_error("Failed to parse layout XML '" + file + "':\n" + err.errorLog());
         }
     };
 }
@@ -424,7 +426,7 @@ asset_loader::postfunc asset_loader::sound(
     }
 
     if (baseSound == nullptr) {
-        THROW_ERR("Could not to find sound: {}", file);
+        throw std::runtime_error("Could not to find sound: " + file);
     }
 
     for (uint i = 1; ; ++i) {
@@ -477,7 +479,7 @@ asset_loader::postfunc asset_loader::model(
                     std::make_unique<model::Model>(fullModel),
                     name
                 );
-                LOG_INFO("Store model {}", util::quote(name));
+                logger.info() << "Store model " << util::quote(name);
                 return;
             }
             for (auto& [modelName, model] : modelVEC3->models) {
@@ -490,7 +492,7 @@ asset_loader::postfunc asset_loader::model(
                     std::make_unique<model::Model>(model.model),
                     fullName
                 );
-                LOG_INFO("Store model {} as {}", util::quote(modelName), util::quote(fullName));
+                logger.info() << "Store model " << util::quote(modelName) << " as " << util::quote(fullName);
             }
         };
     }
@@ -504,7 +506,7 @@ asset_loader::postfunc asset_loader::model(
                 assets->store(std::unique_ptr<model::Model>(model), name);
             };
         } catch (const parsing_error& err) {
-            LOG_ERROR("Failed to load model '{}': {}", file, err.errorLog());
+            logger.error() << "Failed to load model '" << file << "': " << err.errorLog();
             throw;
         }
     }
@@ -522,7 +524,7 @@ asset_loader::postfunc asset_loader::model(
         }
     }
     if (path.empty()) {
-        THROW_ERR("Could not to find model {}", util::quote(file));
+        throw std::runtime_error("Could not to find model " + util::quote(file));
     }
 
     auto text = io::read_string(path);
@@ -536,7 +538,7 @@ asset_loader::postfunc asset_loader::model(
                 auto model = std::unique_ptr<model::Model>(modelPtr);
                 request_textures(loader, *model);
                 assets->store(std::move(model), name);
-                LOG_INFO("Store model {}", util::quote(name));
+                logger.info() << "Store model " << util::quote(name);
             };
         } else {
             auto cfModelPtr = std::make_unique<cfmodel::CFModel>(std::move(cfModel)).release();
@@ -544,7 +546,7 @@ asset_loader::postfunc asset_loader::model(
                 auto cfModel = std::unique_ptr<cfmodel::CFModel>(cfModelPtr);
                 for (auto& [partName, model] : cfModel->parts) {
                     auto fullName = name + "." + partName;
-                    LOG_INFO("Store model part {} as {}", util::quote(partName), util::quote(fullName));
+                    logger.info() << "Store model part " << util::quote(partName) << " as " << util::quote(fullName);
                     assets->store(
                         std::make_unique<model::Model>(std::move(model)),
                         fullName
@@ -553,7 +555,7 @@ asset_loader::postfunc asset_loader::model(
                 for (auto& bone : cfModel->skeleton->getBones()) {
                     bone->setModel(name + "." + bone->model.name);
                 }
-                LOG_INFO("Store skeleton {}", util::quote(name));
+                logger.info() << "Store skeleton " << util::quote(name);
                 assets->store<rigging::SkeletonConfig>(
                     std::make_unique<rigging::SkeletonConfig>(
                         std::move(*cfModel->skeleton)
@@ -563,7 +565,7 @@ asset_loader::postfunc asset_loader::model(
             };
         }
     } catch (const parsing_error& err) {
-        LOG_ERROR("{}", err.errorLog());
+        logger.error() << err.errorLog();
         throw;
     }
 }

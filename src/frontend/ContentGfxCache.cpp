@@ -12,6 +12,8 @@
 #include <debug/Logger.h>
 #include <settings.h>
 
+static debug::Logger logger("content-gfx-cache");
+
 ContentGfxCache::ContentGfxCache(
     const Content& content,
     const Assets& assets,
@@ -75,7 +77,7 @@ void ContentGfxCache::refresh() {
     auto indices = content.getIndices();
     size_t size = indices->blocks.count() * GFXC_SIDES * GFXC_MAX_VARIANTS * 2;
 
-    LOG_INFO("UV cache size is {} B", (sizeof(UVRegion) * size));
+    logger.info() << "UV cache size is " << (sizeof(UVRegion) * size) << " B";
 
     sideregions = std::make_unique<UVRegion[]>(size);
     const auto& atlas = assets.require<Atlas>("blocks");
@@ -91,7 +93,7 @@ ContentGfxCache::~ContentGfxCache() = default;
 const model::Model& ContentGfxCache::getModel(blockid_t id, uint8_t variant) const {
     const auto& found = models.find(modelKey(id, variant));
     if (found == models.end()) {
-        THROW_ERR("Model not found");
+        throw std::runtime_error("Model not found");
     }
     return found->second;
 }

@@ -13,7 +13,7 @@ using namespace json;
 static void to_binary(ByteBuilder& builder, const dv::value& value) {
     switch (value.getType()) {
         case dv::value_type::None: {
-            THROW_ERR("None value is not implemented");
+            throw std::runtime_error("None value is not implemented");
         } case dv::value_type::Object: {
             const auto bytes = json::to_binary(value);
             builder.put(bytes.data(), bytes.size());
@@ -112,17 +112,17 @@ static dv::value value_from_binary(ByteReader& reader) {
         case BJSON_TYPE_BYTES: {
             int32_t size = reader.getInt32();
             if (size < 0) {
-                THROW_ERR("Invalid byte-buffer size {}", size);
+                throw std::runtime_error("Invalid byte-buffer size " + std::to_string(size));
             }
             if (size > reader.remaining()) {
-                THROW_ERR("buffer_size > remaining_size {}", size);
+                throw std::runtime_error("buffer_size > remaining_size " + std::to_string(size));
             }
             auto bytes = std::make_shared<util::Buffer<ubyte>>(reader.pointer(), size);
             reader.skip(size);
             return bytes;
         }
     }
-    THROW_ERR("Type support not implemented for <{}>", typecode);
+    throw std::runtime_error("Type support not implemented for <" + std::to_string(typecode) + ">");
 }
 
 static dv::value list_from_binary(ByteReader& reader) {
@@ -146,7 +146,7 @@ static dv::value object_from_binary(ByteReader& reader) {
 
 dv::value json::from_binary(const ubyte* src, size_t size) {
     if (size < 2) {
-        THROW_ERR("Bytes length is less than 2");
+        throw std::runtime_error("Bytes length is less than 2");
     }
 
     if (src[0] == zip::MAGIC[0] && src[1] == zip::MAGIC[1]) {

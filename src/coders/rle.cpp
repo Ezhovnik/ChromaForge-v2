@@ -11,7 +11,7 @@ size_t rle::decode(const ubyte* src, size_t srclen, ubyte* dst, size_t dstLength
 		ubyte len = src[i++]; // длина серии минус 1
 		ubyte c = src[i++]; // длина серии минус 1
         if (offset + len >= dstLength) {
-            THROW_ERR("Buffer overflow");
+            throw std::runtime_error("Buffer overflow");
         }
 		// длина серии минус 1
 		for (size_t j = 0; j <= len; ++j) {
@@ -56,7 +56,7 @@ size_t rle::decode16(const ubyte* src, size_t srclen, ubyte* dst, size_t dstLeng
         uint16_t len = dataio::le2h(src16[i++]);
         uint16_t c = dataio::le2h(src16[i++]);
         if (offset + len >= dstLength) {
-            THROW_ERR("Buffer overflow");
+            throw std::runtime_error("Buffer overflow");
         }
         for (size_t j = 0; j <= len; ++j) {
             dst16[offset++] = c;
@@ -98,7 +98,7 @@ size_t extrle::decode(const ubyte* src, size_t srclen, ubyte* dst, size_t dstLen
 		}
 		ubyte c = src[i++]; // символ
         if (offset + len >= dstLength) {
-            THROW_ERR("Buffer overflow");
+            throw std::runtime_error("Buffer overflow");
         }
 		for (size_t j = 0; j <= len; ++j) {
 			dst[offset++] = c;
@@ -159,7 +159,7 @@ size_t extrle::decode16(const ubyte* src, size_t srclen, ubyte* dst8, size_t dst
             c |= ((static_cast<uint>(src[i++])) << 8);
         }
         if (offset + len >= dstLength) {
-            THROW_ERR("Buffer overflow");
+            throw std::runtime_error("Buffer overflow");
         }
         for (size_t j = 0; j <= len; ++j) {
             dst[offset++] = c;

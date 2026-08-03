@@ -8,33 +8,35 @@
 #include <engine/Engine.h>
 #include <devtools/DebuggingServer.h>
 
+static debug::Logger logger("lua");
+
 static int l_debug_critical(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_CRITICAL("{}", text);
+    logger.critical() << text;
     return 0;
 }
 
 static int l_debug_error(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_ERROR("{}", text);
+    logger.error() << text;
     return 0;
 }
 
 static int l_debug_warning(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_WARN("{}", text);
+    logger.warning() << text;
     return 0;
 }
 
 static int l_debug_info(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_INFO("{}", text);
+    logger.info() << text;
     return 0;
 }
 
 static int l_debug_trace(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_TRACE("{}", text);
+    logger.trace() << text;
     return 0;
 }
 

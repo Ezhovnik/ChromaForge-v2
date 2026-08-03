@@ -11,6 +11,8 @@
 
 using namespace xml;
 
+static debug::Logger logger("xml-coder");
+
 Attribute::Attribute(
     std::string name,
     std::string text
@@ -55,7 +57,7 @@ glm::vec3 Attribute::asVec3() const {
     }
     size_t pos2 = text.find(',', pos1 + 1);
     if (pos2 == std::string::npos) {
-        THROW_ERR("Invalid vec3 value {}", util::quote(text));
+        throw std::runtime_error("Invalid vec3 value " + util::quote(text));
     }
     return glm::vec3(
         util::parse_double(text, 0, pos1),
@@ -71,11 +73,11 @@ glm::vec4 Attribute::asVec4() const {
     }
     size_t pos2 = text.find(',', pos1 + 1);
     if (pos2 == std::string::npos) {
-        THROW_ERR("Invalid vec4 value {}", util::quote(text));
+        throw std::runtime_error("Invalid vec4 value " + util::quote(text));
     }
     size_t pos3 = text.find(',', pos2 + 1);
     if (pos3 == std::string::npos) {
-        THROW_ERR("Invalid vec4 value {}", util::quote(text));
+        throw std::runtime_error("Invalid vec4 value " + util::quote(text));
     }
     return glm::vec4(
         util::parse_double(text, 0, pos1),
@@ -88,7 +90,7 @@ glm::vec4 Attribute::asVec4() const {
 glm::vec4 Attribute::asColor() const {
     if (text[0] == '#') {
         if (text.length() != 7 && text.length() != 9) {
-            THROW_ERR("#RRGGBB or #RRGGBBAA required");
+            throw std::runtime_error("#RRGGBB or #RRGGBBAA required");
         }
         int a = 255;
         int r = (std::max(0, hexchar2int(text[1])) << 4) | hexchar2int(text[2]);
@@ -132,7 +134,7 @@ const std::string& Node::getTag() const {
 const Attribute& Node::attr(const std::string& name) const {
     auto found = attrs.find(name);
     if (found == attrs.end()) {
-        THROW_ERR("Element <{} ...> missing attribute {}", tag, name);
+        throw std::runtime_error("Element <" + tag + " ...> missing attribute " + name);
     }
     return found->second;
 }
@@ -389,7 +391,7 @@ namespace {
                 char c = peek();
                 if (c == '}') break;
                 if (c != '@') {
-                    LOG_ERROR("Unexpected charcter in element");
+                    logger.error() << "Unexpected charcter in element";
                     throw error("Unexpected character in element");
                 }
                 nextChar();

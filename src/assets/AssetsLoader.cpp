@@ -27,6 +27,8 @@
 #include <coders/commons.h>
 #include <objects/Entity.h>
 
+static debug::Logger logger("assets-loader");
+
 AssetsLoader::AssetsLoader(
     Engine& engine, Assets& assets, const ResPaths& paths
 ) : engine(engine), assets(assets), paths(paths) {
@@ -64,7 +66,7 @@ bool AssetsLoader::hasNext() const {
 aloader_func AssetsLoader::getLoader(AssetType tag) {
     auto found = loaders.find(tag);
     if (found == loaders.end()) {
-        THROW_ERR("Unknown asset tag {}", static_cast<int>(tag));
+        throw std::runtime_error("Unknown asset tag " + std::to_string(static_cast<int>(tag)));
     }
     return found->second;
 }
@@ -72,8 +74,8 @@ aloader_func AssetsLoader::getLoader(AssetType tag) {
 void AssetsLoader::loadNext() {
 	// Берём первый элемент очереди (не удаляя его пока)
 	const aloader_entry& entry = entries.front();
-    LOG_DEBUG("Loading {} as {}", entry.filename, entry.alias);
-	Logger::getInstance().flush();
+    logger.debug() << "Loading " << entry.filename << " as " << entry.alias;
+	debug::Logger::getInstance().flush();
 
 	std::string error {};
 
@@ -88,7 +90,7 @@ void AssetsLoader::loadNext() {
     }
 
     if (!error.empty()) {
-        LOG_ERROR("{}", error);
+        logger.error() << error;
         auto tag = entry.tag;
         auto filename = entry.filename;
         entries.pop();
@@ -206,7 +208,7 @@ void AssetsLoader::processPreloadList(AssetType tag, const dv::value& list) {
                 processPreload(tag, value["name"].asString(), value);
                 break;
             default:
-				THROW_ERR("Invalid entry type");
+				throw std::runtime_error("Invalid entry type");
         }
     }
 }

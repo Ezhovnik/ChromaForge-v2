@@ -128,7 +128,7 @@ void VoxelFragment::crop() {
     blockid_t air;
     const auto& found = std::find(blockNames.begin(), blockNames.end(), BUILTIN_AIR);
     if (found == blockNames.end()) {
-        THROW_ERR("{} not found in fragment", BUILTIN_AIR);
+        throw std::runtime_error(BUILTIN_AIR + " not found in fragment");
     }
     air = found - blockNames.begin();
 

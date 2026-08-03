@@ -19,6 +19,8 @@
 #include <debug/Logger.h>
 #include <objects/Entt_Entity.h>
 
+static debug::Logger logger("player");
+
 namespace PlayerConsts {
 	constexpr int SPAWN_ATTEMPTS_PER_UPDATE = 64;
 }
@@ -71,7 +73,7 @@ void Player::updateEntity() {
             entity->setPlayer(id);
         }
     } else if (chunks->getChunkByVoxel(position) && eid != ENTITY_NONE) {
-        LOG_WARN("Player entity despawned or deleted; will be respawned");
+        logger.warning() << "Player entity despawned or deleted; will be respawned";
         eid = ENTITY_AUTO;
     }
 }

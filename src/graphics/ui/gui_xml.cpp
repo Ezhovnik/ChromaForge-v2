@@ -798,7 +798,7 @@ std::shared_ptr<UINode> UIXmlReader::readUINode(const xml::xmlelement& element) 
     auto found = readers.find(tag);
     if (found == readers.end()) {
         if (ignored.find(tag) != ignored.end()) return nullptr;
-        THROW_ERR("Unsupported element '{}'", tag);
+        throw std::runtime_error("Unsupported element '" + tag + "'");
     }
 
     bool hascontext = element.has("context");

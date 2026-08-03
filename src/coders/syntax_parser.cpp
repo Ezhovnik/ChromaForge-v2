@@ -7,6 +7,8 @@
 
 using namespace devtools;
 
+static debug::Logger logger("syntax-parser");
+
 dv::value Syntax::serialize() const {
     auto map = dv::object();
     map["language"] = language;
@@ -87,7 +89,7 @@ public:
     std::wstring parseLuaName() {
         char c = peek();
         if (!is_identifier_start(c)) {
-            LOG_ERROR("Identifier expected");
+            logger.error() << "Identifier expected";
             throw error("Identifier expected");
         }
         int start = pos;

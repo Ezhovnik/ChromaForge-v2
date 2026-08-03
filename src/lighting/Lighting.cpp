@@ -15,6 +15,8 @@
 #include <content/Content.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("lighting");
+
 Lighting::Lighting(const Content& content, Chunks& chunks) : chunks(chunks), content(content) {
     auto& contentIds = *content.getIndices();
     solverR = std::make_unique<LightSolver>(contentIds, chunks, 0);
@@ -67,7 +69,7 @@ void Lighting::buildSkyLight(int cx, int cz) {
 
     Chunk* chunk = chunks.getChunk(cx, cz);
     if (chunk == nullptr) {
-        LOG_ERROR("Attempted to build sky lights to chunk missing in local matrix");
+        logger.error() << "Attempted to build sky lights to chunk missing in local matrix";
         return;
     }
 
@@ -106,7 +108,7 @@ void Lighting::onChunkLoaded(int chunk_x, int chunk_z, bool expand) {
     auto blockDefs = content.getIndices()->blocks.getDefs();
     auto chunk = chunks.getChunk(chunk_x, chunk_z);
     if (chunk == nullptr) {
-        LOG_ERROR("Attempted to build lights to chunk missing in local matrix");
+        logger.error() << "Attempted to build lights to chunk missing in local matrix";
         return;
     }
 

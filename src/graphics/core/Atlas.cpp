@@ -89,7 +89,7 @@ std::unique_ptr<Atlas> AtlasBuilder::build(uint extrusion, bool prepare, uint ma
         else width *= 2;
 
         if (width > maxResolution || height > maxResolution) {
-            THROW_ERR("Max atlas resolution {} exceeded", std::to_string(maxResolution));
+            throw std::runtime_error("Max atlas resolution " + std::to_string(maxResolution) + " exceeded");
         }
     }
 

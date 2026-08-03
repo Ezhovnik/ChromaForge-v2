@@ -2,6 +2,7 @@
 #include <coders/imageio.h>
 
 #include <functional>
+#include <stdexcept>
 #include <unordered_map>
 
 #include <coders/png.h>
@@ -31,17 +32,17 @@ bool imageio::is_write_supported(const std::string& extension) {
 std::unique_ptr<ImageData> imageio::read(const io::path& file, bool flipVertically) {
     imageio::ImageFileFormat format;
     if (!imageio::ImageFileFormatMeta.getItem(file.extension().substr(1), format)) {
-        THROW_ERR("Unsupported image format");
+        throw std::runtime_error("Unsupported image format");
     }
     auto found = readers.find(format);
     if (found == readers.end()) {
-        THROW_ERR("File format is not supported (read): '{}'", file.string());
+        throw std::runtime_error("File format is not supported (read): '" + file.string() + "'");
     }
     auto bytes = io::read_bytes_buffer(file);
     try {
         return std::unique_ptr<ImageData>(found->second(bytes.data(), bytes.size(), flipVertically));
     } catch (const std::runtime_error& err) {
-        THROW_ERR("Could not to load image '{}'", file.string());
+        throw std::runtime_error("Could not to load image '" + file.string() + "'");
     }
 }
 
@@ -52,20 +53,18 @@ std::unique_ptr<ImageData> imageio::decode(
     try {
         return std::unique_ptr<ImageData>(found->second(src.data(), src.size(), false));
     } catch (const std::runtime_error& err) {
-        THROW_ERR(
-            "Could not to decode image: {}", std::string(err.what())
-        );
+        throw std::runtime_error("Could not to decode image: " + std::string(err.what()));
     }
 }
 
 void imageio::write(const io::path& file, const ImageData* image) {
     imageio::ImageFileFormat format;
     if (!imageio::ImageFileFormatMeta.getItem(file.extension().substr(1), format)) {
-        THROW_ERR("Unsupported image format");
+        throw std::runtime_error("Unsupported image format");
     }
     auto found = writers.find(format);
     if (found == writers.end()) {
-        THROW_ERR("File format is not supported (write): '{}'", file.string());
+        throw std::runtime_error("File format is not supported (write): '" + file.string() + "'");
     }
     return found->second(io::resolve(file).u8string(), image);
 }

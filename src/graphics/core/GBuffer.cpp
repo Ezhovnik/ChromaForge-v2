@@ -4,6 +4,8 @@
 
 #include <debug/Logger.h>
 
+static debug::Logger logger("gbuffer");
+
 void GBuffer::createColorBuffer() {
     if (colorBuffer == 0) glGenTextures(1, &colorBuffer);
     glBindTexture(GL_TEXTURE_2D, colorBuffer);
@@ -146,7 +148,7 @@ GBuffer::GBuffer(uint width, uint height) : width(width), height(height) {
 
     int status;
     if ((status = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
-        LOG_ERROR("GBuffer is not complete! ({})", status);
+        logger.error() << "GBuffer is not complete! (" << status << ")";
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -159,7 +161,7 @@ GBuffer::GBuffer(uint width, uint height) : width(width), height(height) {
     GLenum ssaoAttachments[1] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, ssaoAttachments);
     if ((status = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE) {
-        LOG_ERROR("SSAO framebuffer is not complete ({})", status);
+        logger.error() << "SSAO framebuffer is not complete (" << status << ")";
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

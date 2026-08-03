@@ -110,11 +110,11 @@ ByteReader::ByteReader(const std::vector<ubyte>& data) : data(data.data()), size
 
 void ByteReader::checkMagic(const char* data, size_t size) {
     if (pos + size >= this->size) {
-        THROW_ERR("Invalid magic number");
+        throw std::runtime_error("Invalid magic number");
     }
     for (size_t i = 0; i < size; ++i) {
         if (this->data[pos + i] != static_cast<ubyte>(data[i])) {
-            THROW_ERR("Invalid magic number");
+            throw std::runtime_error("Invalid magic number");
         }
     }
     pos += size;
@@ -122,7 +122,7 @@ void ByteReader::checkMagic(const char* data, size_t size) {
 
 void ByteReader::get(char* dst, size_t size) {
     if (pos + size > this->size) {
-        THROW_ERR("Buffer underflow");
+        throw std::runtime_error("Buffer underflow");
     }
     std::memcpy(dst, data+pos, size);
     pos += size;
@@ -130,21 +130,21 @@ void ByteReader::get(char* dst, size_t size) {
 
 ubyte ByteReader::get() {
     if (pos == size) {
-        THROW_ERR("Buffer underflow");
+        throw std::runtime_error("Buffer underflow");
     }
     return data[pos++];
 }
 
 ubyte ByteReader::peek() {
     if (pos == size) {
-        THROW_ERR("Buffer underflow");
+        throw std::runtime_error("Buffer underflow");
     }
     return data[pos]; 
 }
 
 int16_t ByteReader::getInt16(bool bigEndian) {
     if (pos + sizeof(int16_t) > size) {
-        THROW_ERR("Buffer underflow");
+        throw std::runtime_error("Buffer underflow");
     }
     int16_t value;
     std::memcpy(&value, data + pos, sizeof(int16_t));
@@ -154,7 +154,7 @@ int16_t ByteReader::getInt16(bool bigEndian) {
 
 int32_t ByteReader::getInt32(bool bigEndian) {
     if (pos + sizeof(int32_t) > size) {
-        THROW_ERR("Buffer underflow");
+        throw std::runtime_error("Buffer underflow");
     }
     int32_t value;
     std::memcpy(&value, data + pos, sizeof(int32_t));
@@ -164,7 +164,7 @@ int32_t ByteReader::getInt32(bool bigEndian) {
 
 int64_t ByteReader::getInt64(bool bigEndian) {
     if (pos + sizeof(int64_t) > size) {
-        THROW_ERR("Buffer underflow");
+        throw std::runtime_error("Buffer underflow");
     }
     int64_t value;
     std::memcpy(&value, data + pos, sizeof(int64_t));
@@ -198,7 +198,7 @@ const char* ByteReader::getCString() {
 std::string ByteReader::getString() {
     uint32_t length = static_cast<uint32_t>(getInt32());
     if (pos + length > size) {
-        THROW_ERR("Buffer underflow");
+        throw std::runtime_error("Buffer underflow");
     }
     pos += length;
     return std::string(reinterpret_cast<const char*>(data + pos - length), length);

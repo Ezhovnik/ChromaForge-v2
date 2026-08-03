@@ -7,6 +7,8 @@
 #include <debug/Logger.h>
 #include <audio/MemoryPCMStream.h>
 
+static debug::Logger logger("alaudio");
+
 using namespace audio;
 
 const char* alc_error_to_string(ALCenum error) {
@@ -32,9 +34,7 @@ static bool check_alc_errors(ALCdevice* device, const char* context) {
     ALCenum error = alcGetError(device);
     if (error == ALC_NO_ERROR) return false;
 
-    LOG_ERROR(
-        "{}: {}({})", context, alc_error_to_string(error), static_cast<int>(error)
-    );
+    logger.error() << context << ": " << alc_error_to_string(error) << "(" << static_cast<int>(error) << ")";
     return true;
 }
 
@@ -96,7 +96,7 @@ ALInputDevice::ALInputDevice(
     if (deviceName) {
         deviceSpecifier = std::string(deviceName);
     } else {
-        LOG_WARN("Could not retrieve input device specifier");
+        logger.warning() << "Could not retrieve input device specifier";
     }
 }
 
@@ -477,20 +477,20 @@ ALAudio::ALAudio(
     alcGetIntegerv(device, ALC_ALL_ATTRIBUTES, size, &attrs[0]);
     for (size_t i = 0; i < attrs.size(); ++i){
         if (attrs[i] == ALC_MONO_SOURCES) {
-            LOG_DEBUG("AL: max mono sources: {}", attrs[i + 1]);
+            logger.debug() << "AL: max mono sources: " << attrs[i + 1];
             maxSources = attrs[i + 1];
         }
     }
     auto outputDevices = getOutputDeviceNames();
-    LOG_DEBUG("Ouput devices:");
+    logger.debug() << "Ouput devices:";
     for (auto& name : outputDevices) {
-        LOG_DEBUG(" - {}", name);
+        logger.debug() << " - " << name;
     }
 
     auto inputDevices = getInputDeviceNames();
-    LOG_DEBUG("Input devices:");
+    logger.debug() << "Input devices:";
     for (auto& name : inputDevices) {
-        LOG_DEBUG(" - {}", name);
+        logger.debug() << " - " << name;
     }
 
     alDopplerFactor(1.0 / 3.0);
@@ -516,7 +516,7 @@ ALAudio::~ALAudio() {
     check_alc_errors(device, "alcMakeContextCurrent");
     alcDestroyContext(context);
     check_alc_errors(device, "alcDestroyContext");
-    if (!alcCloseDevice(device)) LOG_ERROR("AL: device not closed!");
+    if (!alcCloseDevice(device)) logger.error() << "AL: device not closed!";
 
     device = nullptr;
     context = nullptr;
@@ -545,7 +545,7 @@ static bool request_efx_ext_functions() {
 
 bool ALAudio::initEffects() {
     if (!request_efx_ext_functions()) {
-        LOG_ERROR("Could not get effects extension function pointers");
+        logger.error() << "Could not get effects extension function pointers";
         return false;
     }
     for (uint i = 0; i < maxEffectSlots; ++i) {
@@ -555,35 +555,35 @@ bool ALAudio::initEffects() {
             break;
         }
     }
-    LOG_INFO("Created {} effect slots", effectSlots.size());
+    logger.info() << "Created " << effectSlots.size() << " effect slots";
 
     for (uint i = 0; i < 4; ++i) {
         effects.emplace_back();
         alGenEffects(1, &effects[i]);
         if (alGetError() != AL_NO_ERROR || !alIsEffect(effects[i])) {
-            LOG_ERROR("Could not to create effect №{}", i);
+            logger.error() << "Could not to create effect №" << i;
             return false;
         }
     }
-    LOG_INFO("Created {} effects", effects.size());
+    logger.info() << "Created " << effects.size() << " effects";
 
     for (uint i = 0; i < filters.size(); ++i) {
         alGenFilters(1, &filters[i]);
         if (alGetError() != AL_NO_ERROR || !alIsFilter(filters[i])) {
-            LOG_ERROR("Could not to create filter №{}", i);
+            logger.error() << "Could not to create filter №" << i;
             return false;
         }
     }
 
     alEffecti(effects[REVERB_EFFECT], AL_EFFECT_TYPE, AL_EFFECT_REVERB);
     if (alGetError() != AL_NO_ERROR) {
-        LOG_ERROR("Reverb effect is not supported");
+        logger.error() << "Reverb effect is not supported";
         return false;
     }
 
     alFilteri(filters[LOWPASS_FILTER], AL_FILTER_TYPE, AL_FILTER_LOWPASS);
     if (alGetError() != AL_NO_ERROR) {
-        LOG_ERROR("Lowpass filter is not supported");
+        logger.error() << "Lowpass filter is not supported";
         return false;
     }
     alFilterf(filters[LOWPASS_FILTER], AL_LOWPASS_GAIN, 1.0f);
@@ -591,7 +591,7 @@ bool ALAudio::initEffects() {
 
     alAuxiliaryEffectSloti(effectSlots[0], AL_EFFECTSLOT_EFFECT, effects[0]);
     if (alGetError() == AL_NO_ERROR) {
-        LOG_ERROR("Successfully loaded effect into effect slot");
+        logger.info() << "Successfully loaded effect into effect slot";
     }
     return true;
 }
@@ -611,13 +611,13 @@ std::vector<std::string> ALAudio::getInputDeviceNames() {
     std::vector<std::string> devices;
 
     if (!alc_enumeration_ext) {
-        LOG_WARN("Enumeration extension is not available");
+        logger.warning() << "Enumeration extension is not available";
         return devices;
     }
 
     auto deviceList = alcGetString(nullptr, ALC_CAPTURE_DEVICE_SPECIFIER);
     if (deviceList == nullptr) {
-        LOG_WARN("No input devices found");
+        logger.warning() << "No input devices found";
         return devices;
     }
     while (*deviceList) {
@@ -632,13 +632,13 @@ std::vector<std::string> ALAudio::getOutputDeviceNames() {
     std::vector<std::string> devices;
 
     if (!alc_enumeration_ext) {
-        LOG_WARN("Enumeration extension is not available");
+        logger.warning() << "Enumeration extension is not available";
         return devices;
     }
 
     auto deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
     if (deviceList == nullptr) {
-        LOG_WARN("No output devices found");
+        logger.warning() << "No output devices found";
         return devices;
     }
     while (*deviceList) {
@@ -678,11 +678,11 @@ std::unique_ptr<ALAudio> ALAudio::create() {
     bool effects = true;
     ALint attribs[4] {};
     if (alcIsExtensionPresent(device, "ALC_EXT_EFX") == AL_TRUE) {
-        LOG_INFO("AL effects extension present");
+        logger.info() << "AL effects extension present";
         attribs[0] = ALC_MAX_AUXILIARY_SENDS;
         attribs[1] = 4;
     } else {
-        LOG_WARN("AL effects extension is not supported");
+        logger.warning() << "AL effects extension is not supported";
         effects = false;
     }
     ALCcontext* context = alcCreateContext(device, nullptr);
@@ -694,9 +694,9 @@ std::unique_ptr<ALAudio> ALAudio::create() {
 
     ALCint sends = 0;
     alcGetIntegerv(device, ALC_MAX_AUXILIARY_SENDS, 1, &sends);
-    LOG_INFO("Device supports {} aux sends per source", sends);
+    logger.info() << "Device supports " << sends << " aux sends per source";
 
-    LOG_INFO("AL: initialized");
+    logger.info() << "AL: initialized";
     return std::make_unique<ALAudio>(device, context, effects);
 }
 
@@ -707,7 +707,7 @@ uint ALAudio::getFreeSource() {
         return source;
     }
     if (allsources.size() == maxSources) {
-        LOG_ERROR("Attempted to create new source, but limit is {}", maxSources);
+        logger.error() << "Attempted to create new source, but limit is " << maxSources;
         return 0;
     }
 

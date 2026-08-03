@@ -11,6 +11,8 @@
 
 using namespace json;
 
+static debug::Logger logger("json");
+
 namespace {
     class Parser : BasicParser<char> {
     public:
@@ -175,7 +177,7 @@ dv::value Parser::parse() {
     } else if (next == '[') {
         return parseList();
     }
-    LOG_ERROR("'{' or '[' expected");
+    logger.error() << "'{' or '[' expected";
     throw error("'{' or '[' expected");
 }
 
@@ -191,7 +193,7 @@ dv::value Parser::parseObject() {
         std::string key = parseString('"');
         char next = peek();
         if (next != ':') {
-            LOG_ERROR("':' expected");
+            logger.error() << "':' expected";
             throw error("':' expected");
         }
         pos++;
@@ -202,7 +204,7 @@ dv::value Parser::parseObject() {
         } else if (next == '}') {
             break;
         } else {
-            LOG_ERROR("',' expected");
+            logger.error() << "',' expected";
             throw error("',' expected");
         }
     }
@@ -226,7 +228,7 @@ dv::value Parser::parseList() {
         } else if (next == ']') {
             break;
         } else {
-            LOG_ERROR("',' expected");
+            logger.error() << "',' expected";
             throw error("',' expected");
         }
     }
@@ -256,7 +258,7 @@ dv::value Parser::parseValue() {
         } else if (literal == "null") {
             return nullptr;
         }
-        LOG_ERROR("Invalid keyword {}", literal);
+        logger.error() << "Invalid keyword " << literal;
         throw error("Invalid keyword " + literal);
     }
     if (next == '{') {
@@ -269,7 +271,7 @@ dv::value Parser::parseValue() {
         pos++;
         return parseString(next);
     }
-    LOG_ERROR("Unexpected character '{}'", next);
+    logger.error() << "Unexpected character '" << next << "'";
     throw error("Unexpected character '" + std::string({next}) + "'");
 }
 

@@ -11,6 +11,8 @@
 #include <util/ObjectsKeeper.h>
 #include <io/io.h>
 
+static debug::Logger logger("audio");
+
 namespace audio {
     speakerid_t nextId = 1;
     Backend* backend;
@@ -140,14 +142,14 @@ void audio::initialize(
 ) {
     enabled = enabled && settings.enabled.get();
     if (enabled) {
-        LOG_INFO("Initializing ALAudion backend");
+        logger.info() << "Initializing ALAudion backend";
         backend = ALAudio::create().release();
     }
     if (backend == nullptr) {
         if (enabled) {
-            LOG_ERROR("Could not to initialize audio");
+            logger.error() << "Could not to initialize audio";
         }
-        LOG_INFO("Initializing NoAudio backend");
+        logger.info() << "Initializing NoAudio backend";
         backend = NoAudio::create().release();
     }
 
@@ -181,7 +183,7 @@ InputDevice* audio::get_input_device() {
 
 std::unique_ptr<PCM> audio::load_PCM(const io::path& file, bool headerOnly) {
     if (!io::exists(file)) {
-        THROW_ERR("File not found '{}'", file.string());
+        throw std::runtime_error("File not found '" + file.string() + "'");
     }
     std::string ext = file.extension();
     if (ext == ".wav" || ext == ".WAV") {
@@ -189,7 +191,7 @@ std::unique_ptr<PCM> audio::load_PCM(const io::path& file, bool headerOnly) {
     } else if (ext == ".ogg" || ext == ".OGG") {
         return ogg::load_pcm(file, headerOnly);
     }
-    THROW_ERR("Unsupported audio format");
+    throw std::runtime_error("Unsupported audio format");
 }
 
 std::unique_ptr<Sound> audio::load_sound(const io::path& file, bool keepPCM) {
@@ -210,7 +212,7 @@ std::unique_ptr<PCMStream> audio::open_PCM_stream(const io::path& file) {
     } else if (ext == ".ogg" || ext == ".OGG") {
         return ogg::create_stream(file);
     }
-    THROW_ERR("Unsupported audio stream format");
+    throw std::runtime_error("Unsupported audio stream format");
 }
 
 std::unique_ptr<Stream> audio::open_stream(
@@ -253,9 +255,9 @@ std::vector<std::string> audio::get_output_devices_names() {
 }
 
 void audio::set_input_device(const std::string& deviceName) {
-    LOG_INFO("Setting input device to {}", deviceName);
+    logger.info() << "Setting input device to " << deviceName;
     if (!input_enabled) {
-        LOG_WARN("Unable to set input device due to project permissions");
+        logger.warning() << "Unable to set input device due to project permissions";
         return;
     }
     if (deviceName == DEVICE_NONE) {
@@ -265,7 +267,7 @@ void audio::set_input_device(const std::string& deviceName) {
     }
     auto newDevice = backend->openInputDevice(deviceName, 44100, 1, 16);
     if (newDevice == nullptr) {
-        LOG_ERROR("Could not open input device: {}", deviceName);
+        logger.error() << "Could not open input device: " << deviceName;
         return;
     }
 

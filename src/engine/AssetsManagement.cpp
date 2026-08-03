@@ -11,6 +11,8 @@
 #include <graphics/render/ModelsGenerator.h>
 #include <graphics/ui/GUI.h>
 
+static debug::Logger logger("assets-managment");
+
 AssetsManagement::AssetsManagement(
     Engine& engine
 ) : engine(engine),
@@ -32,7 +34,7 @@ AssetsLoader& AssetsManagement::acquireBackgroundLoader() {
     if (backgroundLoader) return *backgroundLoader;
 
     if (assets == nullptr) {
-        THROW_ERR("no assets storage available");
+        throw std::runtime_error("no assets storage available");
     }
     backgroundLoader = std::make_unique<AssetsLoader>(
         engine, *assets, engine.getResPaths()
@@ -46,7 +48,7 @@ AssetsLoader& AssetsManagement::acquireBackgroundLoader() {
 void AssetsManagement::loadAssets(Content* content) {
     finishBackgroundLoader();
 
-    LOG_INFO("Loading assets");
+    logger.info() << "Loading assets";
     const auto& paths = engine.getPaths();
     ShaderProgram::preprocessor->setPaths(&paths.resPaths);
 
@@ -71,7 +73,7 @@ void AssetsManagement::loadAssets(Content* content) {
     }
     assets->setup();
     engine.getGUI().onAssetsLoad(assets.get());
-    LOG_INFO("Assets loaded successfully");
+    logger.info() << "Assets loaded successfully";
 }
 
 void AssetsManagement::update() {

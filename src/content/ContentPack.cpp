@@ -15,6 +15,8 @@
 #include <core_content_defs.h>
 #include <coders/commons.h>
 
+static debug::Logger logger("content-pack");
+
 ContentPack ContentPack::createBuiltin() {
     return ContentPack {
         BUILTIN_CONTENT_NAMESPACE, "ChromaForge Builtin", ENGINE_VERSION_STRING, "ChromaForge", "", {}, "res:"
@@ -56,7 +58,7 @@ std::optional<ContentPackStats> ContentPack::loadStats() const {
     try {
         object = io::read_object(contentFile);
     } catch (const parsing_error& err) {
-        LOG_ERROR("{}", err.errorLog());
+        logger.error() << err.errorLog();
     }
     ContentPackStats stats {};
     stats.totalBlocks = object.has("blocks") ? object["blocks"].size() : 0;
@@ -67,24 +69,24 @@ std::optional<ContentPackStats> ContentPack::loadStats() const {
 
 static void checkContentPackId(const std::string& id, const io::path& folder) {
     if (id.length() < 2 || id.length() > 24) {
-        LOG_ERROR("Content-pack id '{}' length is out of range [2, 24]", id);
+        logger.error() << "Content-pack id '" << id << "' length is out of range [2, 24]";
         throw contentpack_error(id, folder, "Content-pack id length is out of range [2, 24]");
     }
 
     if (isdigit(id[0])) {
-        LOG_ERROR("Content-pack id '{}' must not start with a digit", id);
+        logger.error() << "Content-pack id '" << id << "' must not start with a digit";
         throw contentpack_error(id, folder, "Content-pack id must not start with a digit");
     }
 
     for (char c : id) {
         if (!isalnum(c) && c != '_') {
-            LOG_ERROR("Illegal character in content-pack id '{}'", id);
+            logger.error() << "Illegal character in content-pack id '" << id << "'";
             throw contentpack_error(id, folder, "Illegal character in content-pack id");
         }
     }
 
     if (std::find(ContentPack::RESERVED_NAMES.begin(), ContentPack::RESERVED_NAMES.end(), id) != ContentPack::RESERVED_NAMES.end()) {
-        LOG_ERROR("Content-pack id '{}' is reserved", id);
+        logger.error() << "Content-pack id '" << id << "' is reserved";
         throw contentpack_error(id, folder, "This content-pack id is reserved");
     }
 }
@@ -170,7 +172,7 @@ ContentPack ContentPack::read(const io::path& folder) {
                     {level, depName, depVer, versionOperator}
                 );
             } else {
-                LOG_ERROR("Content-pack {}: Invalid version operator", pack.id);
+                logger.error() << "Content-pack " << pack.id << ": Invalid version operator";
                 throw contentpack_error(
                     pack.id, folder, "Invalid version operator"
                 );
@@ -179,7 +181,7 @@ ContentPack ContentPack::read(const io::path& folder) {
     }
 
     if (pack.id == "none") {
-        LOG_ERROR("Content-pack id is not specified: {}", folder.string());
+        logger.error() << "Content-pack id is not specified: " << folder.string();
         throw contentpack_error(pack.id, folder, "Content-pack id is not specified");
     }
     checkContentPackId(pack.id, folder);
@@ -199,9 +201,9 @@ void ContentPack::scanFolder(
         try {
             packs.push_back(read(packFolder));
         } catch (const contentpack_error& err) {
-            LOG_ERROR("package.json error at '{}': {}", err.getFolder().string(), err.what());
+            logger.error() << "package.json error at '" << err.getFolder().string() << "': " << err.what();
         } catch (const std::runtime_error& err) {
-            LOG_ERROR("{}", err.what());
+            logger.error() << err.what();
         }
     }
 }
@@ -211,7 +213,7 @@ std::vector<std::string> ContentPack::worldPacksList(
 ) {
     io::path listfile = folder / "packs.list";
     if (!io::is_regular_file(listfile)) {
-        THROW_ERR("Missing file 'packs.list'");
+        throw std::runtime_error("Missing file 'packs.list'");
     }
     return io::read_list(listfile);
 }

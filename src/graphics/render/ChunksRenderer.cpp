@@ -18,6 +18,8 @@
 #include <util/listutil.h>
 #include <util/ObjectsPool.h>
 
+static debug::Logger logger("chunks-renderer");
+
 size_t ChunksRenderer::visibleChunks = 0;
 
 static constexpr inline size_t MAX_CHUNKS_ENQUEUED_IN_FRAME = 4;
@@ -96,17 +98,16 @@ ChunksRenderer::ChunksRenderer(
         settings
     );
 
-    LOG_INFO("Created {} workers", threadPool.getWorkersCount());
-    LOG_INFO(
-        "Memory consumption is {} B",
-        renderer->getMemoryConsumption() *
+    logger.info() << "Created " << threadPool.getWorkersCount() << " workers";
+    logger.info() << "Memory consumption is "
+        << renderer->getMemoryConsumption() *
             threadPool.getWorkersCount() +
             voxelsVolumesPool.countTotal() *
             (sizeof(VoxelsVolume) +
             (CHUNK_WIDTH + VOXELS_BUFFER_PADDING * 2) * CHUNK_HEIGHT *
             (CHUNK_DEPTH + VOXELS_BUFFER_PADDING * 2) *
             (sizeof(voxel) + sizeof(light_t)))
-    );
+        << " B";
 }
 
 ChunksRenderer::~ChunksRenderer() = default;

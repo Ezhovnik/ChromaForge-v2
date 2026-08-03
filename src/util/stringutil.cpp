@@ -170,7 +170,7 @@ inline uint utf8_len(ubyte cp) {
     if ((cp & 0xF8) == 0xF0) {
         return 4;
     }
-    THROW_ERR("utf8 decode error");
+    throw std::runtime_error("utf8 decode error");
 }
 
 uint32_t util::decode_utf8(uint& size, const char* chr) {
@@ -477,7 +477,7 @@ double util::parse_double(const std::string& str) {
     double d;
     ss >> d;
     if (ss.fail()) {
-        THROW_ERR("Invalid number format");
+        throw std::runtime_error("Invalid number format");
     }
     return d;    
 }
@@ -511,7 +511,7 @@ std::vector<std::wstring> util::split(const std::wstring& str, char delimiter) {
 std::pair<std::string, std::string> util::split_at(std::string_view view, char c) {
     size_t idx = view.find(c);
     if (idx == std::string::npos) {
-        THROW_ERR("{} not found", util::quote(std::string({c})));
+        throw std::runtime_error(util::quote(std::string({c})) + " not found");
     }
     return std::make_pair(
         std::string(view.substr(0, idx)), 

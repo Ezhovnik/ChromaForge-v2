@@ -12,6 +12,8 @@
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 
+static debug::Logger logger("network");
+
 using namespace network;
 
 namespace network {
@@ -194,6 +196,6 @@ void Network::update() {
 }
 
 std::unique_ptr<Network> Network::create(const NetworkSettings& settings) {
-    LOG_INFO("Initializing network");
+    logger.info() << "Initializing network";
     return std::make_unique<Network>(network::create_curl_requests());
 }

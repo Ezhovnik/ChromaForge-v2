@@ -15,6 +15,8 @@
 #include <world/files/compatibility.h>
 #include <voxels/Block.h>
 
+static debug::Logger logger("world-converter");
+
 class ConverterWorker : public util::Worker<ConvertTask, int> {
 private:
     std::shared_ptr<WorldConverter> converter;
@@ -38,7 +40,7 @@ void WorldConverter::addRegionsTasks(
         int x, z;
         std::string name = file.stem();
         if (!WorldRegions::parseRegionFilename(name, x, z)) {
-            LOG_ERROR("Could not parse region name {}", name);
+            logger.error() << "Could not parse region name " << name;
             continue;
         }
         tasks.push(ConvertTask {taskType, file, x, z, layerID});
@@ -80,7 +82,7 @@ void WorldConverter::createConvertTasks() {
             case ContentIssueType::RegionFormatUpdate:
                 break;
             case ContentIssueType::Missing:
-                THROW_ERR("Issue can't be resolved");
+                throw std::runtime_error("Issue can't be resolved");
             case ContentIssueType::Reorder:
                 handleReorder(issue.contentType);
                 break;
@@ -179,7 +181,7 @@ void WorldConverter::upgradeRegion(
 }
 
 void WorldConverter::convertVoxels(const io::path& file, int x, int z) const {
-    LOG_INFO("Converting voxels region {} {}", x, z);
+    logger.info() << "Converting voxels region " << x << " " << z;
     wfile->getRegions().processRegion(x, z, REGION_LAYER_VOXELS,
     [=](std::unique_ptr<ubyte[]> data, uint32_t*) {
         Chunk::convert(data.get(), report.get());
@@ -188,22 +190,22 @@ void WorldConverter::convertVoxels(const io::path& file, int x, int z) const {
 }
 
 void WorldConverter::convertInventories(const io::path& file, int x, int z) const {
-    LOG_INFO("Converting inventories region {} {}", x, z);
+    logger.info() << "Converting inventories region " << x << " " << z;
     wfile->getRegions().processInventories(x, z, [=](Inventory* inventory) {
         inventory->convert(report.get());
     });
 }
 
 void WorldConverter::convertPlayer(const io::path& file) const {
-    LOG_INFO("Converting player {}", file.string());
+    logger.info() << "Converting player " << file.string();
     auto map = io::read_json(file);
     Player::convert(map, report.get());
     io::write_json(file, map);
-    LOG_INFO("Player {} successfully converted", file.string());
+    logger.info() << "Player " << file.string() << " successfully converted";
 }
 
 void WorldConverter::convertBlocksData(int x, int z, const ContentReport& report) const {
-    LOG_INFO("Converting blocks data");
+    logger.info() << "Converting blocks data";
     wfile->getRegions().processBlocksData(x, z, 
     [=](BlocksMetadata* heap, std::unique_ptr<ubyte[]> voxelsData) {
         Chunk chunk(0, 0);
@@ -218,7 +220,7 @@ void WorldConverter::convertBlocksData(int x, int z, const ContentReport& report
             const auto& newStruct = *def.dataStruct;
             const auto& found = report.blocksDataLayouts.find(def.name);
             if (found == report.blocksDataLayouts.end()) {
-                LOG_ERROR("No previous fields layout found for block {} - discard", def.name);
+                logger.error() << "No previous fields layout found for block " << def.name << " - discard";
                 continue; 
             }
             const auto& prevStruct = found->second;
@@ -253,7 +255,7 @@ void WorldConverter::convert(const ConvertTask& task) const {
 
 void WorldConverter::convertNext() {
     if (tasks.empty()) {
-        THROW_ERR("No more regions to convert");
+        throw std::runtime_error("No more regions to convert");
     }
     ConvertTask task = tasks.front();
     tasks.pop();
@@ -280,7 +282,7 @@ bool WorldConverter::isActive() const {
 }
 
 void WorldConverter::write() {
-    LOG_INFO("Applying changes");
+    logger.info() << "Applying changes";
 
     auto patch = dv::object();
     switch (mode) {

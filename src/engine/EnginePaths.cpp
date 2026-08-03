@@ -19,6 +19,8 @@
 #include <io/devices/MemoryDevice.h>
 #include <devtools/Project.h>
 
+static debug::Logger logger("engine-paths");
+
 static util::RandomGenerator path_gen;
 
 template<int n>
@@ -52,13 +54,13 @@ EnginePaths::EnginePaths(
     io::set_device("project", std::make_shared<io::StdfsDevice>(projectFolder));
 
     if (!io::is_directory("res:")) {
-        THROW_ERR("{} is not a directory", resourcesFolder.u8string());
+        throw std::runtime_error(resourcesFolder.u8string() + " is not a directory");
     }
 
-    LOG_INFO("Executable path: {}", platform::get_executable_path().string());
-    LOG_INFO("Resources folder: {}", std::filesystem::canonical(resourcesFolder).u8string());
-    LOG_INFO("User files folder: {}", std::filesystem::canonical(userFilesFolder).u8string());
-    LOG_INFO("Project folder: {}", std::filesystem::canonical(projectFolder).u8string());
+    logger.info() << "Executable path: " << platform::get_executable_path().string();
+    logger.info() << "Resources folder: " << std::filesystem::canonical(resourcesFolder).u8string();
+    logger.info() << "User files folder: " << std::filesystem::canonical(userFilesFolder).u8string();
+    logger.info() << "Project folder: " << std::filesystem::canonical(projectFolder).u8string();
 
     if (!io::is_directory(CONTENT_FOLDER)) {
         io::create_directories(CONTENT_FOLDER);
@@ -146,13 +148,13 @@ std::string EnginePaths::mount(const io::path& file) {
         mounted.push_back(name);
         return name;
     }
-    THROW_ERR("Unable to mount {}", file.string());
+    throw std::runtime_error("Unable to mount " + file.string());
 }
 
 void EnginePaths::unmount(const std::string& name) {
     const auto& found = std::find(mounted.begin(), mounted.end(), name);
     if (found == mounted.end()) {
-        THROW_ERR("{} is not mounted", name);
+        throw std::runtime_error(name + " is not mounted");
     }
     io::remove_device(name);
     mounted.erase(found);
@@ -183,7 +185,7 @@ std::string EnginePaths::createWriteableDevice(const std::string& name) {
     }
     if (name == BUILTIN_CONTENT_NAMESPACE) folder = "res:";
     if (folder.emptyOrInvalid()) {
-        THROW_ERR("Pack not found");
+        throw std::runtime_error("Pack not found");
     }
 
     auto entryPoint = std::string("W.") + generate_random_base64<6>();
@@ -274,7 +276,7 @@ std::string ResPaths::findRaw(const std::string& filename) const {
         }
     }
 
-    THROW_ERR("Could not to find file '{}'", filename);
+    throw std::runtime_error("Could not to find file '" + filename + "'");
 }
 
 std::vector<std::string> ResPaths::listdirRaw(const std::string& folderName) const {
@@ -312,14 +314,14 @@ dv::value ResPaths::readCombinedList(const std::string& filename) const {
         try {
             auto value = io::read_object(path);
             if (!value.isList()) {
-                LOG_WARN("Reading combined list {}: {} is not a list (skipped)", root.name, filename);
+                logger.warning() << "Reading combined list " << root.name << ": " << filename << " is not a list (skipped)";
                 continue;
             }
             for (const auto& elem : value) {
                 list.add(elem);
             }
         } catch (const std::runtime_error& err) {
-            LOG_WARN("Reading combined list {}: {}: {}", root.name, filename, err.what());
+            logger.warning() << "Reading combined list " << root.name << ": " << filename << ": " << err.what();
         }
     }
     return list;
@@ -334,11 +336,11 @@ dv::value ResPaths::readCombinedObject(const std::string& filename, bool deep) c
         try {
             auto value = io::read_object(path);
             if (!value.isObject()) {
-                LOG_WARN("Reading combined object {}: is not an object (skipped)", root.name, filename);
+                logger.warning() << "Reading combined object " << root.name << ": is not an object (skipped)" << filename;
             }
             object.merge(std::move(value), deep);
         } catch (const std::runtime_error& err) {
-            LOG_WARN("Reading combined object {}: {}: {}", root.name, filename, err.what());
+            logger.warning() << "Reading combined object " << root.name << ": " << filename << ": " << err.what();
         }
     }
     return object;

@@ -139,7 +139,7 @@ namespace util {
                         std::lock_guard<std::mutex> lock(jobsMutex);
                         failed = true;
                     }
-                    LOG_ERROR("['{}' Thread Pool] Uncaught exception: {}", name, err.what());
+                    debug::Logger::getInstance().error() << "['" << name << "' Thread Pool] Uncaught exception: " << err.what();
                 }
                 jobsDone++;
             }
@@ -249,7 +249,7 @@ namespace util {
             if (!working) return 0;
 
             if (failed) {
-                THROW_ERR("['{}' Thread Pool] Some job failed", name);
+                throw std::runtime_error("['" + name + "' Thread Pool] Some job failed");
             }
 
             bool complete = false;
@@ -264,7 +264,7 @@ namespace util {
                     try {
                         resultConsumer(std::move(entry.entry));
                     } catch (std::exception& err) {
-                        LOG_ERROR("['{}' Thread Pool] {}", name, err.what());
+                        debug::Logger::getInstance().error() << "['" << name << "' Thread Pool] " << err.what();
                         if (onJobFailed) onJobFailed(entry.job);
                         if (stopOnFail) {
                             std::lock_guard<std::mutex> jobsLock(jobsMutex);
@@ -305,7 +305,7 @@ namespace util {
                 }
             }
             if (failed) {
-                THROW_ERR("['{}' Thread Pool] Some job failed", name);
+                throw std::runtime_error("['" + name + "' Thread Pool] Some job failed");
             }
             if (complete) terminate();
             return resultsProcessed;

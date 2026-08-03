@@ -1,6 +1,7 @@
 #include <coders/cfmodel.h>
 
 #include <algorithm>
+#include <stdexcept>
 #include <vector>
 
 #include <glm/gtc/quaternion.hpp>
@@ -45,7 +46,7 @@ model::Model& CFModel::squash() {
         if (auto bone = skeleton->find(name)) {
             model.translate(fullOffsets[bone->getIndex()]);
         } else {
-            THROW_ERR("Invalid state: bones/parts mismatch");
+            throw std::runtime_error("Invalid state: bones/parts mismatch");
         }
         squashed.merge(std::move(model));
     }
@@ -444,12 +445,12 @@ CFModel cfmodel::parse(
         auto doc = usexml ? xml::parse(file, src) : xml::parse_cfmodel(file, src, "model");
         const auto& root = *doc->getRoot();
         if (root.getTag() != "model") {
-            THROW_ERR(
-                "'model' tag expected as root, got '{}'", root.getTag()
+            throw std::runtime_error(
+                "'model' tag expected as root, got '" + root.getTag() + "'"
             );
         }
         return load_model(root);
     } catch (const parsing_error& err) {
-        THROW_ERR("{}", err.errorLog());
+        throw std::runtime_error(err.errorLog());
     }
 }

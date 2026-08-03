@@ -6,6 +6,8 @@
 #include <math/util.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("transform");
+
 void Transform::refresh() {
     combined = glm::mat4(1.0f);
     combined = glm::translate(combined, pos);
@@ -42,10 +44,10 @@ bool Transform::checkValue(const glm::vec3& vector, std::string_view name) {
             std::to_string(vector.y) + ", " +
             std::to_string(vector.z);
 #ifndef NDEBUG
-        LOG_ERROR("{}", message);
+        logger.error() << message;
         throw::std::invalid_argument(message);
 #else
-        LOG_WARN("{}", message);
+        logger.warning() << message;
         return false;
 #endif
     }
@@ -58,10 +60,10 @@ bool Transform::checkValue(const glm::mat3& matrix, std::string_view name) {
             "Invalid matrix (contains nan or inf) attempted set to " +
             std::string(name);
 #ifndef NDEBUG
-        LOG_ERROR("{}", message);
+        logger.error() << message;
         throw std::invalid_argument(message);
 #else
-        LOG_WARN("{}", message);
+        logger.warning() << message;
         return false;
 #endif
     }

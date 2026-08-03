@@ -12,8 +12,6 @@
         "libvorbis",
         "entt",
         "curl",
-        "fmt",
-        "spdlog",
         "gtest",
         "pkgconf"
     ]

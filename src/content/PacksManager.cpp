@@ -8,6 +8,8 @@
 #include <debug/Logger.h>
 #include <content/ContentPackVersion.h>
 
+static debug::Logger logger("packs-manager");
+
 PacksManager::PacksManager() = default;
 
 const std::vector<io::path>& PacksManager::getSources() const {
@@ -47,7 +49,7 @@ std::vector<ContentPack> PacksManager::getAll(const std::vector<std::string>& na
     for (auto& name : names) {
         auto found = packs.find(name);
         if (found == packs.end()) {
-            LOG_ERROR("Pack '{}' not found", name);
+            logger.error() << "Pack '" << name << "' not found";
             throw contentpack_error(name, io::path(""), "Pack not found");
         }
         packsList.push_back(found->second);
@@ -64,7 +66,7 @@ static contentpack_error on_circular_dependency(std::queue<const ContentPack*>& 
         queue.pop();
         ss << " <- " << pack->id;
     }
-    LOG_ERROR("{}", ss.str());
+    logger.error() << ss.str();
     return contentpack_error(lastPack->id, lastPack->folder, ss.str());
 }
 
@@ -83,7 +85,7 @@ static bool resolve_dependencies (
         auto found = packs.find(dep.id);
         bool exists = found != packs.end();
         if (!exists && dep.level == DependencyLevel::Required) {
-            LOG_ERROR("Missing dependency of '{}'", pack->id);
+            logger.error() << "Missing dependency of '" << pack->id << "'";
             throw contentpack_error(dep.id, io::path(), "Missing dependency of '" + pack->id + "'");
         }
         if (!exists) continue;
@@ -98,9 +100,7 @@ static bool resolve_dependencies (
         } else if (dep.version == "*" || dep.version == dep_pack.version){
             // ...
         } else {
-            LOG_ERROR(
-                "Does not meet required version '{}{}' of '{}'", VersionOperatorMeta.getNameString(dep.op), dep.version, pack->id
-            );
+            logger.error() << "Does not meet required version '" << VersionOperatorMeta.getNameString(dep.op) << dep.version << "' of '" << pack->id << "'";
             throw contentpack_error(
                 dep.id, io::path(), "Does not meet required version '" + VersionOperatorMeta.getNameString(dep.op) + dep.version + "' of '" + pack->id + "'"
             );
@@ -124,7 +124,7 @@ std::vector<std::string> PacksManager::assemble(const std::vector<std::string>& 
     for (auto& name : names) {
         auto found = packs.find(name);
         if (found == packs.end()) {
-            LOG_ERROR("Pack '{}' not found", name);
+            logger.error() << "Pack '" << name << "' not found";
             throw contentpack_error(name, io::path(), "Pack not found");
         }
         queue.push(&found->second);
@@ -139,7 +139,7 @@ std::vector<std::string> PacksManager::assemble(const std::vector<std::string>& 
 
             if (resolve_dependencies(pack, packs, allNames, added, queue, resolveWeaks)) {
                 if (util::contains(added, pack->id)) {
-                    LOG_ERROR("Pack '{}' duplication", pack->id);
+                    logger.error() << "Pack '" << pack->id << "' duplication";
                     throw contentpack_error(pack->id, pack->folder, "Pack duplication");
                 }
                 added.push_back(pack->id);

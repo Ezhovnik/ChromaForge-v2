@@ -11,6 +11,8 @@
 
 using namespace compression;
 
+static debug::Logger logger("compression");
+
 inline constexpr float BUFFER_NOCROP_THRESOLD = 0.9;
 
 static util::BufferPool<ubyte> buffer_pools[] {
@@ -61,7 +63,7 @@ std::unique_ptr<ubyte[]> compression::compress(
 ) {
     switch (method) {
         case Method::None:
-            LOG_ERROR("Compression method is None");
+            logger.error() << "Compression method is None";
             throw std::invalid_argument("Compression method is None");
         case Method::Extrle8:
             return compress_rle(src, srclen, len, extrle::encode);
@@ -75,7 +77,7 @@ std::unique_ptr<ubyte[]> compression::compress(
             return data;
         }
         default:
-            THROW_ERR("Not implemented");
+            throw std::runtime_error("Not implemented");
     }
 }
 
@@ -84,7 +86,7 @@ std::unique_ptr<ubyte[]> compression::decompress(
 ) {
     switch (method) {
         case Method::None:
-            LOG_ERROR("Compression method is None");
+            logger.error() << "Compression method is None";
             throw std::invalid_argument("Compression method is None");
         case Method::Extrle8: {
             auto decompressed = std::make_unique<ubyte[]>(dstlen);
@@ -95,28 +97,34 @@ std::unique_ptr<ubyte[]> compression::decompress(
             auto decompressed = std::make_unique<ubyte[]>(dstlen);
             size_t decoded = extrle::decode16(src, srclen, decompressed.get(), dstlen);
             if (decoded != dstlen) {
-                THROW_ERR("Expected decompressed size {} got {}", dstlen, decoded);
+                throw std::runtime_error(
+                    "Expected decompressed size " + std::to_string(dstlen) +
+                    " got " + std::to_string(decoded)
+                );
             }
             return decompressed;
         }
         case Method::Zip: {
             auto buffer = zip::decompress(src, srclen);
             if (buffer.size() != dstlen) {
-                THROW_ERR("Expected decompressed size {} got {}", dstlen, buffer.size());
+                throw std::runtime_error(
+                    "Expected decompressed size " + std::to_string(dstlen) +
+                    " got " + std::to_string(buffer.size())
+                );
             }
             auto decompressed = std::make_unique<ubyte[]>(buffer.size());
             std::memcpy(decompressed.get(), buffer.data(), buffer.size());
             return decompressed;
         }
         default:
-            THROW_ERR("Method not implemented");
+            throw std::runtime_error("Method not implemented");
     }
 }
 
 void compression::decompress(const util::span<ubyte> src, ubyte* dst, size_t dstlen, Method method) {
     switch (method) {
         case Method::None:
-            THROW_ERR("Compression method is None");
+            throw std::runtime_error("Compression method is None");
         case Method::Extrle8:
             extrle::decode(src.data(), src.size(), dst, dstlen);
             break;
@@ -124,8 +132,9 @@ void compression::decompress(const util::span<ubyte> src, ubyte* dst, size_t dst
             size_t decoded =
                 extrle::decode16(src.data(), src.size(), dst, dstlen);
             if (decoded != dstlen) {
-                THROW_ERR(
-                    "Expected decompressed size {} got {}", std::to_string(dstlen), std::to_string(decoded)
+                throw std::runtime_error(
+                    "Expected decompressed size " + std::to_string(dstlen) +
+                    " got " + std::to_string(decoded)
                 );
             }
             break;
@@ -133,14 +142,15 @@ void compression::decompress(const util::span<ubyte> src, ubyte* dst, size_t dst
         case Method::Zip: {
             auto buffer = zip::decompress(src.data(), src.size());
             if (buffer.size() != dstlen) {
-                THROW_ERR(
-                    "Expected decompressed size {} got {}", std::to_string(dstlen), std::to_string(buffer.size())
+                throw std::runtime_error(
+                    "Expected decompressed size " + std::to_string(dstlen) +
+                    " got " + std::to_string(buffer.size())
                 );
             }
             std::memcpy(dst, buffer.data(), buffer.size());
             break;
         }
         default:
-            THROW_ERR("Method not implemented");
+            throw std::runtime_error("Method not implemented");
     }
 }

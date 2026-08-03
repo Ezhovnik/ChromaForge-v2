@@ -1,109 +1,115 @@
 #include <debug/Logger.h>
 
+#include <chrono>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
-#include <stdexcept>
+#include <mutex>
+#include <sstream>
+#include <utility>
 
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/basic_file_sink.h>
+static std::ofstream file;
+static std::mutex mutex;
+static std::string utcOffset = "";
+constexpr unsigned int moduleLen = 20;
 
-static spdlog::level::level_enum to_spdlog_level(LogLevel lvl) {
-    switch (lvl) {
-        case LogLevel::TRACE: return spdlog::level::trace;
-        case LogLevel::DEBUG: return spdlog::level::debug;
-        case LogLevel::INFO: return spdlog::level::info;
-        case LogLevel::WARN: return spdlog::level::warn;
-        case LogLevel::ERR: return spdlog::level::err;
-        case LogLevel::CRITICAL: return spdlog::level::critical;
-        case LogLevel::OFF: return spdlog::level::off;
-        default: return spdlog::level::info;
-    }
+using namespace debug;
+
+Logger::Logger(const std::string& name) : name(name) {}
+
+LogMessage::LogMessage(Logger* logger, LogLevel level)
+    : logger(logger), level(level) {
 }
 
-class Logger::Impl {
-private:
-    std::shared_ptr<spdlog::logger> logger_;
-    std::shared_ptr<spdlog::sinks::sink> console_sink_;
-    std::shared_ptr<spdlog::sinks::sink> file_sink_;
-public:
-    Impl() = default;
+LogMessage::~LogMessage() {
+    logger->log(level, ss.str());
+}
 
-    void initialize(const std::string& logFile, LogLevel consoleLevel, LogLevel fileLevel) {
-        try {
-            console_sink_ = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-            console_sink_->set_level(to_spdlog_level(consoleLevel));
-            console_sink_->set_pattern("[%H:%M:%S] [%l] %v");
-
-            file_sink_ = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
-            file_sink_->set_level(to_spdlog_level(fileLevel));
-            file_sink_->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%s:%#] [%!] %v");
-
-            logger_ = std::make_shared<spdlog::logger>("ChromaForge", spdlog::sinks_init_list{console_sink_, file_sink_});
-            logger_->set_level(spdlog::level::trace);
-            logger_->flush_on(spdlog::level::err);
-
-            spdlog::register_logger(logger_);
-        } catch (const spdlog::spdlog_ex& e) {
-            std::cerr << "Logger initialization failed: " << e.what() << std::endl;
-            throw std::runtime_error("Logger initialization failed");
-        }
-    }
-
-    void set_console_level(LogLevel level) {
-        if (console_sink_) console_sink_->set_level(to_spdlog_level(level));
-    }
-
-    void set_file_level(LogLevel level) {
-        if (file_sink_) file_sink_->set_level(to_spdlog_level(level));
-    }
-
-    void set_logger_level(LogLevel level) {
-        if (logger_) logger_->set_level(to_spdlog_level(level));
-    }
-
-    void log(LogLevel level, const char* file, int line, const char* function, const std::string& message) {
-        if (!logger_) return;
-        spdlog::source_loc loc{file, line, function};
-        logger_->log(loc, to_spdlog_level(level), "{}", message);
-    }
-
-    void flush() {
-        if (logger_) logger_->flush();
-    }
-};
-
-Logger::Logger() : pimpl_(std::make_unique<Impl>()) {}
-
-Logger::~Logger() = default;
-
-static std::unique_ptr<Logger> instance = nullptr;
 Logger& Logger::getInstance() {
-    if (!instance) {
-        instance = std::unique_ptr<Logger>(new Logger());
+    static Logger instance("ChromaForge");
+    return instance;
+}
+
+static const char* plainLevelPrefix(LogLevel level) {
+    switch (level) {
+        case LogLevel::Trace:
+        case LogLevel::Debug:
+#ifdef NDEBUG
+            return "";
+#else
+            return (level == LogLevel::Trace) ? "[T]" : "[D]";
+#endif
+        case LogLevel::Info:     return "[I]";
+        case LogLevel::Warning:  return "[W]";
+        case LogLevel::Error:    return "[E]";
+        case LogLevel::Critical: return "[C]";
+        default:                 return "[?]";
     }
-    return *instance;
 }
 
-void Logger::initialize(const std::filesystem::path& logFile, LogLevel consoleLevel, LogLevel fileLevel) {
-    pimpl_->initialize(logFile.u8string(), consoleLevel, fileLevel);
+static std::string coloredLevelPrefix(LogLevel level) {
+    const char* color = "";
+    switch (level) {
+        case LogLevel::Trace:
+        case LogLevel::Debug:
+#ifdef NDEBUG
+            return "";
+#else
+            color = (level == LogLevel::Trace) ? "\033[90m" : "\033[36m";
+#endif
+        case LogLevel::Info:     color = "\033[32m"; break;
+        case LogLevel::Warning:  color = "\033[33m"; break;
+        case LogLevel::Error:    color = "\033[31m"; break;
+        case LogLevel::Critical: color = "\033[35m"; break;
+        default:                 return plainLevelPrefix(level);
+    }
+    return std::string(color) + plainLevelPrefix(level) + "\033[0m";
 }
 
-void Logger::setConsoleLevel(LogLevel level) {
-    pimpl_->set_console_level(level);
+static void write(
+    LogLevel level, const std::string& name, const std::string& message
+) {
+    if (level == LogLevel::Print) {
+        std::cout << "[" << name << "]    " << message << std::endl;
+        return;
+    }
+
+    std::stringstream ss;
+    time_t tm = std::time(nullptr);
+    auto ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ) % 1000;
+    ss << " " << std::put_time(std::localtime(&tm), "%Y/%m/%d %T");
+    ss << '.' << std::setfill('0') << std::setw(3) << ms.count();
+    ss << utcOffset << " [" << std::setfill(' ') << std::setw(moduleLen) << name << "] ";
+    ss << message;
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        auto string = ss.str();
+        if (file.good()) {
+            file << plainLevelPrefix(level) << string << '\n';
+            file.flush();
+        }
+        std::cout << coloredLevelPrefix(level) << string << std::endl;
+    }
 }
 
-void Logger::setFileLevel(LogLevel level) {
-    pimpl_->set_file_level(level);
-}
+void Logger::init(const std::string& filename) {
+    file.open(filename);
 
-void Logger::setLoggerLevel(LogLevel level) {
-    pimpl_->set_logger_level(level);
-}
-
-void Logger::log_impl(LogLevel level, const char* file, int line, const char* function, const std::string& message) {
-    pimpl_->log(level, file, line, function, message);
+    time_t tm = std::time(nullptr);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&tm), "%z");
+    utcOffset = ss.str();
 }
 
 void Logger::flush() {
-    pimpl_->flush();
+    std::lock_guard<std::mutex> lock(mutex);
+    file.flush();
+}
+
+void Logger::log(LogLevel level, std::string message) {
+    write(level, name, std::move(message));
 }

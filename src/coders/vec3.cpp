@@ -46,7 +46,7 @@ static VertexAttribute load_attribute(ByteReader& reader) {
     int flags = reader.get();
     assert(type >= Position && flags <= Color);
     if (flags != 0) {
-        THROW_ERR("Attribute compression is not supported yet");
+        throw std::runtime_error("Attribute compression is not supported yet");
     }
     int size = reader.getInt32();
 
@@ -123,7 +123,7 @@ static model::Mesh load_mesh(
     int flags = reader.getInt16();
     int attributeCount = reader.getInt16();
     if (flags == FLAG_ZLIB) {
-        THROW_ERR("Compression is not supported yet");
+        throw std::runtime_error("Compression is not supported yet");
     }
     std::vector<VertexAttribute> attributes;
     for (int i = 0; i < attributeCount; ++i) {
@@ -206,7 +206,7 @@ File vec3::load(
     int version = reader.getInt16();
     [[maybe_unused]] int reserved = reader.getInt16();
     if (version > VERSION) {
-        THROW_ERR("Unsupported VEC3 version");
+        throw std::runtime_error("Unsupported VEC3 version");
     }
     assert(reserved == 0);
 

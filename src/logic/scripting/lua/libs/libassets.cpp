@@ -12,13 +12,15 @@
 #include <logic/scripting/lua/usertypes/lua_type_canvas.h>
 #include <assets/AssetsLoader.h>
 
+static debug::Logger logger("lib-assets");
+
 static void load_texture(
     const ubyte* bytes, size_t size, const std::string& destname
 ) {
     try {
         scripting::engine->getAssets()->store(png::loadTexture(bytes, size), destname);
     } catch (const std::runtime_error& err) {
-        LOG_ERROR("{}", err.what());
+        logger.error() << err.what();
     }
 }
 

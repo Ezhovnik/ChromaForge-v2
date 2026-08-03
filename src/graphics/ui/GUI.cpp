@@ -25,6 +25,8 @@
 #include <graphics/core/Font.h>
 #include <engine/Engine.h>
 
+static debug::Logger logger("gui");
+
 using namespace gui;
 
 GUI::GUI(
@@ -353,7 +355,7 @@ void GUI::setActiveFrame(
     }
     const auto& found = frames.find(id);
     if (found == frames.end()) {
-        LOG_ERROR("Attempted to make non-existing frame '{}' as active", id);
+        logger.error() << "Attempted to make non-existing frame '" << id << "' as active";
         return;
     }
     activeFrame = found->second;

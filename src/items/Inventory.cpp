@@ -3,6 +3,8 @@
 #include <content/ContentReport.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("inventory");
+
 Inventory::Inventory(int64_t id, size_t size) : id(id), slots(size) {
 }
 
@@ -102,7 +104,7 @@ void Inventory::check(const ContentIndices& indices) {
         auto& slot = slots[i];
         if (indices.items.get(slot.getItemId()) == nullptr) {
 #ifdef NDEBUG
-            LOG_ERROR("Invalid item ID {} found in inventory #{} slot #{}; will reset", slot.getItemId(), id, i);
+            logger.error() << "Invalid item ID " << slot.getItemId() << " found in inventory #" << id << " slot #" << i << "; will reset";
             slot.clear();
 #else
             abort();

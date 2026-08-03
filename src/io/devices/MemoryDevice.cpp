@@ -10,7 +10,7 @@
 io::MemoryDevice::MemoryDevice() {}
 
 std::filesystem::path io::MemoryDevice::resolve(std::string_view path) {
-    THROW_ERR("Unable to resolve filesystem path");
+    throw std::runtime_error("Unable to resolve filesystem path");
 }
 
 std::unique_ptr<std::ostream> io::MemoryDevice::write(std::string_view path) {

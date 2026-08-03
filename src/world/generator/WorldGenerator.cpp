@@ -17,6 +17,8 @@
 #include <math/voxmaths.h>
 #include <math/util.h>
 
+static debug::Logger logger("world-generator");
+
 static inline constexpr uint MAX_PARAMETERS = 4;
 static inline constexpr uint BASIC_PROTOTYPE_LAYERS = 5;
 
@@ -34,12 +36,12 @@ WorldGenerator::WorldGenerator(
     uint levels = BASIC_PROTOTYPE_LAYERS + def.wideStructsChunksRadius * 2;
 
     surroundMap = SurroundMap(0, levels);
-    LOG_INFO("Total number of prototype levels is {}", levels);
+    logger.info() << "Total number of prototype levels is " << levels;
 
     surroundMap.setOutCallback([this](int const x, int const z, int8_t) {
         const auto& found = prototypes.find({x, z});
         if (found == prototypes.end()) {
-            LOG_WARN("Unable to remove non-existing chunk prototype");
+            logger.warning() << "Unable to remove non-existing chunk prototype";
             return;
         }
         prototypes.erase({x, z});
@@ -77,7 +79,7 @@ WorldGenerator::~WorldGenerator() {}
 ChunkPrototype& WorldGenerator::requirePrototype(int x, int z) {
     const auto& found = prototypes.find({x, z});
     if (found == prototypes.end()) {
-        THROW_ERR("Prototype not found");
+        throw std::runtime_error("Prototype not found");
     }
     return *found->second;
 }
@@ -247,7 +249,7 @@ void WorldGenerator::placeStructures(
     for (const auto& placement : placements) {
         if (auto sp = std::get_if<StructurePlacement>(&placement.placement)) {
             if (sp->structure < 0 || sp->structure >= def.structures.size()) {
-                LOG_ERROR("Invalid structure index {}", sp->structure);
+                logger.error() << "Invalid structure index " << sp->structure;
                 continue;
             }
             placeStructure(*sp, placement.priority, chunkX, chunkZ);
@@ -532,7 +534,7 @@ void WorldGenerator::generateStructure(
     int chunkX, int chunkZ
 ) {
     if (placement.structure < 0 || placement.structure >= def.structures.size()) {
-        LOG_ERROR("Invalid structure index {}", placement.structure);
+        logger.error() << "Invalid structure index " << placement.structure;
         return;
     }
     auto& generatingStructure = def.structures[placement.structure];

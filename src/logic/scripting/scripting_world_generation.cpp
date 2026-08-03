@@ -17,6 +17,8 @@
 #include <io/io.h>
 #include <engine/Engine.h>
 
+static debug::Logger logger("scripting-world-generation");
+
 class LuaGeneratorScript : public GeneratorScript {
     lua::State* L;
     const Generator& def;
@@ -272,7 +274,7 @@ public:
                 }
             }
         } catch (const std::runtime_error& err) {
-            LOG_ERROR("{}", err.what());
+            logger.error() << err.what();
         }
         return placements;
     }

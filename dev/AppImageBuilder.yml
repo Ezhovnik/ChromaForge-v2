@@ -32,8 +32,6 @@ AppDir:
       - libvorbis0a
       - libvorbisfile3
       - libcurl4
-      - libfmt-dev
-      - libspdlog-dev
     exclude:
       - breeze
       - plasma

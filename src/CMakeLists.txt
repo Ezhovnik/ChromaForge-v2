@@ -15,8 +15,6 @@ else()
 endif()
 find_package(ZLIB REQUIRED)
 find_package(CURL REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(EnTT CONFIG QUIET)
 find_package(entt CONFIG QUIET)
@@ -56,8 +54,6 @@ target_link_libraries(ChromaForgeSrc
         OpenAL::OpenAL
         ZLIB::ZLIB
     PUBLIC
-        fmt::fmt
-        spdlog::spdlog
         glfw
         PkgConfig::VORBIS
         PkgConfig::LUAJIT

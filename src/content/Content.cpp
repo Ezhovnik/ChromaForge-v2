@@ -81,7 +81,7 @@ const UptrsMap<std::string, BlockMaterial>& Content::getBlockMaterials() const {
 void ResourceIndices::addAlias(const std::string& name, const std::string& alias) {
     size_t index = indexOf(name);
     if (index == MISSING) {
-        THROW_ERR("Resource does not exists: {}", name);
+        throw std::runtime_error("Resource does not exists: " + name);
     }
     indices[alias] = index;
 }

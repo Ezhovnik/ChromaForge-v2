@@ -21,6 +21,8 @@
 #include <objects/Entt_Entity.h>
 #include <util/ObjectsPool.h>
 
+static debug::Logger logger("global-chunks");
+
 static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     bool corrupted = false;
     blockid_t defsCount = indices.blocks.count();
@@ -29,7 +31,7 @@ static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
         if (id >= defsCount) {
             if (!corrupted) {
                 if (!ENGINE_DEBUG_BUILD) {
-                    LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk.chunk_x, chunk.chunk_z);
+                    logger.warning() << "Corruped block id = " << id << " detected at " << i << " of chunk " << chunk.chunk_x << "x " << chunk.chunk_z << "z";
                     corrupted = true;
                 } else {
                     abort();

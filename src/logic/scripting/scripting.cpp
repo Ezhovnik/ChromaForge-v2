@@ -28,6 +28,8 @@
 #include <world/World.h>
 #include <voxels/blocks_agent.h>
 
+static debug::Logger logger("scripting");
+
 std::ostream* scripting::output_stream = &std::cout;
 std::ostream* scripting::error_stream = &std::cerr;
 Engine* scripting::engine = nullptr;
@@ -58,7 +60,7 @@ int scripting::load_script(
     const std::string& fileName
 ) {
     std::string src = io::read_string(file);
-    LOG_INFO("Script ({}) {}", type, file.string());
+    logger.info() << "Script (" << type << ") " << file.string();
     return lua::execute(lua::get_main_state(), env, src, fileName);
 }
 
@@ -686,7 +688,7 @@ void scripting::load_entity_component(
 ) {
     auto L = lua::get_main_state();
     std::string src = io::read_string(file);
-    LOG_INFO("Script (entity component) {}", file.string());
+    logger.info() << "Script (entity component) " << file.string();
     lua::loadbuffer(L, *env, src, fileName);
     lua::store_in(L, lua::CHUNKS_TABLE, name);
 }

@@ -5,6 +5,8 @@
 #include <graphics/core/Texture.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("framebuffer");
+
 Framebuffer::Framebuffer(
     uint fbo, 
     uint depth, 
@@ -55,7 +57,7 @@ Framebuffer::Framebuffer(
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        LOG_ERROR("Framebuffer is not complete!");
+        logger.error() << "Framebuffer is not complete!";
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -12,6 +12,8 @@
 #include <assets/Assets.h>
 #include <content/ContentControl.h>
 
+static debug::Logger logger("scripting-hud");
+
 Hud* scripting::hud = nullptr;
 WorldRenderer* scripting::renderer = nullptr;
 PostProcessing* scripting::post_processing = nullptr;
@@ -19,7 +21,7 @@ PostProcessing* scripting::post_processing = nullptr;
 static void load_script(const std::string& name) {
     auto file = io::path("res:scripts") / name;
     std::string src = io::read_string(file);
-    LOG_INFO("Loading script {}", file.string());
+    logger.info() << "Loading script " << file.string();
 
     lua::execute(lua::get_main_state(), 0, src, file.string());
 }
@@ -89,7 +91,7 @@ void scripting::load_hud_script(
 ) {
     int env = *senv;
     std::string src = io::read_string(file);
-    LOG_DEBUG("Loading script {}", file.string());
+    logger.debug() << "Loading script " << file.string();
 
     lua::execute(lua::get_main_state(), env, src, fileName);
 
@@ -98,7 +100,7 @@ void scripting::load_hud_script(
     register_event(env, "on_hud_render", packid + ":.hudrender");
     register_event(env, "on_hud_close", packid + ".:hudclose");
 
-    LOG_DEBUG("Script {} successfully loaded", file.string());
+    logger.debug() << "Script " << file.string() << " successfully loaded";
 }
 
 gui::PageLoaderFunc scripting::create_page_loader() {

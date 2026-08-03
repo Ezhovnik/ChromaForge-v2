@@ -14,6 +14,8 @@
 
 using namespace data;
 
+static debug::Logger logger("struct-layout");
+
 static_assert(sizeof(float) == sizeof(int32_t));
 static_assert(sizeof(double) == sizeof(int64_t));
 
@@ -188,7 +190,7 @@ std::vector<FieldIncapatibility> StructLayout::checkCompatibility(
 const Field& StructLayout::requireField(const std::string& name) const {
     auto found = indices.find(name);
     if (found == indices.end()) {
-        THROW_ERR("Field '{}' does not exist", name);
+        throw std::runtime_error("Field '" + name + "' does not exist");
     }
     return *&fields.at(found->second);
 }
@@ -204,7 +206,7 @@ void StructLayout::setInteger(
     ubyte* dst, integer_t value, const Field& field, int index
 ) const {
     if (index < 0 || index >= field.elements) {
-        LOG_ERROR("Index out of bounds [0, {}]", field.elements);
+        logger.error() << "Index out of bounds [0, " << field.elements << "]";
         throw std::out_of_range(
             "Index out of bounds [0, " + std::to_string(field.elements) + "]"
         );
@@ -221,7 +223,7 @@ void StructLayout::setInteger(
             setNumber(dst, static_cast<number_t>(value), field, index);
             break;
         default:
-            THROW_ERR("Type error");
+            throw std::runtime_error("Type error");
     }
 }
 
@@ -229,7 +231,7 @@ void StructLayout::setNumber(
     ubyte* dst, number_t value, const Field& field, int index
 ) const {
     if (index < 0 || index >= field.elements) {
-        LOG_ERROR("Index out of bounds [0, {}]", field.elements);
+        logger.error() << "Index out of bounds [0, " << field.elements << "]";
         throw std::out_of_range(
             "Index out of bounds [0, " + std::to_string(field.elements) + "]"
         );
@@ -251,7 +253,7 @@ void StructLayout::setNumber(
             break;
         }
         default:
-            THROW_ERR("Type error");
+            throw std::runtime_error("Type error");
     }
 }
 
@@ -275,7 +277,7 @@ size_t StructLayout::setUnicode(
     ubyte* dst, std::string_view value, const Field& field
 ) const {
     if (field.type != FieldType::CHAR) {
-        THROW_ERR("'char' field type required");
+        throw std::runtime_error("'char' field type required");
     }
     auto text = std::string_view(value.data(), value.size());
     size_t size = util::crop_utf8(text, field.elements);
@@ -296,7 +298,7 @@ integer_t StructLayout::getInteger(
     const ubyte* src, const Field& field, int index
 ) const {
     if (index < 0 || index >= field.elements) {
-        LOG_ERROR("Index out of bounds [0, {}]", field.elements);
+        logger.error() << "Index out of bounds [0, " << field.elements << "]";
         throw std::out_of_range(
             "Index out of bounds [0, " + std::to_string(field.elements) + "]"
         );
@@ -309,7 +311,7 @@ integer_t StructLayout::getInteger(
         case FieldType::I64: return get_int<int64_t>(ptr);
         case FieldType::CHAR: return get_int<int8_t>(ptr);
         default:
-            THROW_ERR("Type error");
+            throw std::runtime_error("Type error");
     }
 }
 
@@ -317,7 +319,7 @@ number_t StructLayout::getNumber(
     const ubyte* src, const Field& field, int index
 ) const {
     if (index < 0 || index >= field.elements) {
-        LOG_ERROR("Index out of bounds [0, {}]", field.elements);
+        logger.error() << "Index out of bounds [0, " << field.elements << "]";
         throw std::out_of_range(
             "Index out of bounds [0, " + std::to_string(field.elements) + "]"
         );
@@ -343,7 +345,7 @@ number_t StructLayout::getNumber(
         case FieldType::CHAR:
             return getInteger(src, field, index);
         default:
-            THROW_ERR("Type error");
+            throw std::runtime_error("Type error");
     }
 }
 
@@ -351,7 +353,7 @@ std::string_view StructLayout::getChars(
     const ubyte* src, const Field& field
 ) const {
     if (field.type != FieldType::CHAR) {
-        THROW_ERR("'char' field type required");
+        throw std::runtime_error("'char' field type required");
     }
     auto ptr = reinterpret_cast<const char*>(src + field.offset);
     return std::string_view(ptr, strnlen(ptr, field.elements));
@@ -382,7 +384,7 @@ void StructLayout::deserialize(const dv::value& src) {
         int elements = 1;
         fieldmap.at("length").get(elements);
         if (elements <= 0) {
-            THROW_ERR("Invalid field {} length: {}", util::quote(name), elements);
+            throw std::runtime_error("Invalid field " + util::quote(name) + " length: " + std::to_string(elements));
         }
 
         auto convertStrategy = FieldConvertStrategy::Reset;

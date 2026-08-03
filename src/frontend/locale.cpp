@@ -9,6 +9,8 @@
 #include <debug/Logger.h>
 #include <data/dv.h>
 
+static debug::Logger logger("locale");
+
 using namespace langs;
 
 namespace {
@@ -87,7 +89,7 @@ static void load_locales_info(std::string& fallback) {
             }
 
             ::locales_info[key] = LocaleInfo{key, name};
-            LOG_DEBUG("Locale {} ({}) added successfully", key, name);
+            logger.debug() << "Locale " << key << " (" << name << ") added successfully";
         } 
     }
 }
@@ -129,7 +131,7 @@ static void load(
 
 const std::string& langs::get_current() {
     if (current == nullptr) {
-        THROW_ERR("Localization is not initialized");
+        throw std::runtime_error("Localization is not initialized");
     }
     return current->getId();
 }
@@ -144,17 +146,17 @@ std::string langs::locale_by_envlocale(const std::string& envlocale) {
         load_locales_info(fallback);
     }
     if (locales_info.find(envlocale) != locales_info.end()) {
-        LOG_INFO("Locale {} is automatically selected", envlocale);
+        logger.info() << "Locale " << envlocale << " is automatically selected";
         return envlocale;
     } else {
         for (const auto& loc : locales_info) {
             if (loc.first.find(envlocale.substr(0, 2)) != std::string::npos) {
-                LOG_INFO("Locale {} is automatically selected", loc.first);
+                logger.info() << "Locale " << loc.first << " is automatically selected";
                 return loc.first;
             }
         }
     }
-    LOG_INFO("Locale {} is automatically selected", fallback);
+    logger.info() << "Locale " << fallback << " is automatically selected";
     return fallback;
 }
 

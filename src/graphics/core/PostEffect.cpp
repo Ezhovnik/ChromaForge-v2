@@ -4,6 +4,8 @@
 #include <data/dv_util.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("post-effect");
+
 PostEffect::Param::Param() : type(Type::Float) {}
 
 PostEffect::Param::Param(
@@ -152,7 +154,7 @@ void PostEffect::setArray(const std::string& name, std::vector<ubyte>&& values) 
 
     auto& param = found->second;
     if (!param.array) {
-        LOG_WARN("set_array is used on non-array effect parameter");
+        logger.warning() << "set_array is used on non-array effect parameter";
         if (!values.empty()) setParam(name, values[0]);
         return;
     }

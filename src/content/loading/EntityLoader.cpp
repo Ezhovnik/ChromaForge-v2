@@ -10,6 +10,8 @@
 #include <util/stringutil.h>
 #include <objects/Entity.h>
 
+static debug::Logger logger("entities-loader");
+
 template<> void ContentUnitLoader<Entity>::loadUnit(
     Entity& def, const std::string& name, const io::path& file
 ) {
@@ -19,7 +21,7 @@ template<> void ContentUnitLoader<Entity>::loadUnit(
         const auto& parentName = root["parent"].asString();
         auto parentDef = builder.get(parentName);
         if (parentDef == nullptr) {
-            THROW_ERR("Failed to find parent ({}) for {}", parentName, name);
+            throw std::runtime_error("Failed to find parent (" + parentName + ") for " + name);
         }
         parentDef->cloneTo(def);
     }
@@ -65,7 +67,7 @@ template<> void ContentUnitLoader<Entity>::loadUnit(
             } else if (sensorType == "radius") {
                 def.radialSensors.emplace_back(i, sensorarr[1].asNumber());
             } else {
-                LOG_ERROR("Entity {}: sensor №{} — unknown type {}", name, i, util::quote(sensorType));
+                logger.error() << "Entity " << name << ": sensor №" << i << " — unknown type " << util::quote(sensorType);
             }
         }
     }

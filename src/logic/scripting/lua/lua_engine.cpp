@@ -16,6 +16,8 @@
 #include <engine/EnginePaths.h>
 #include <engine/Engine.h>
 
+static debug::Logger logger("lua-engine");
+
 static lua::State* main_thread = nullptr;
 
 using namespace lua;
@@ -139,8 +141,8 @@ void lua::init_state(State* L, StateType stateType) {
 }
 
 void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
-    LOG_INFO("Lua version: {}", LUA_VERSION);
-    LOG_INFO("LuaJIT version: {}", LUAJIT_VERSION);
+    logger.info() << "Lua version: " << LUA_VERSION;
+    logger.info() << "LuaJIT version: " << LUAJIT_VERSION;
 
     main_thread = create_state(
         paths, params.headless ? StateType::Script : StateType::Base
@@ -173,7 +175,7 @@ lua::State* lua::get_main_state() {
 State* lua::create_state(const EnginePaths& paths, StateType stateType) {
     auto L = luaL_newstate();
     if (L == nullptr) {
-        LOG_ERROR("Could not initialize Lua state");
+        logger.error() << "Could not initialize Lua state";
         throw luaerror("Could not initialize Lua state");
     }
     init_state(L, stateType);

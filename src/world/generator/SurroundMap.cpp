@@ -6,6 +6,8 @@
 
 #include <debug/Logger.h>
 
+static debug::Logger logger("surround-map");
+
 SurroundMap::SurroundMap(
     int maxLevelRadius,
     int8_t maxLevel
@@ -33,7 +35,7 @@ void SurroundMap::upgrade(int x, int y, int8_t level) {
             int posY = ly + y;
             int8_t sourceLevel = areaMap.get(posX, posY, 0);
             if (sourceLevel < level - 1) {
-                THROW_ERR("Invalid map state");
+                throw std::runtime_error("Invalid map state");
             }
             if (sourceLevel >= level) continue;
             areaMap.set(posX, posY, level);
@@ -50,7 +52,7 @@ void SurroundMap::resize(int maxLevelRadius) {
 
 void SurroundMap::completeAt(int x, int y) {
     if (!areaMap.isInside(x - maxLevel + 1, y - maxLevel + 1) || !areaMap.isInside(x + maxLevel - 1, y + maxLevel - 1)) {
-        LOG_ERROR("Upgrade square is not fully inside of area");
+        logger.error() << "Upgrade square is not fully inside of area";
         throw std::invalid_argument("Upgrade square is not fully inside of area");
     }
     for (int8_t level = 1; level <= maxLevel; ++level) {
@@ -66,6 +68,6 @@ int8_t SurroundMap::at(int x, int y) {
     if (auto ptr = areaMap.getIf(x, y)) {
         return *ptr;
     }
-    LOG_ERROR("Position is out of area");
+    logger.error() << "Position is out of area";
     throw std::invalid_argument("Position is out of area");
 }

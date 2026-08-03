@@ -2,6 +2,8 @@
 
 #include <debug/Logger.h>
 
+static debug::Logger logger("timeutil");
+
 timeutil::Timer::Timer() {
     start = std::chrono::high_resolution_clock::now();
 }
@@ -24,11 +26,7 @@ timeutil::ScopeLogTimer::ScopeLogTimer(
 ) : scopeid_(id) {}
 
 timeutil::ScopeLogTimer::~ScopeLogTimer() {
-    LOG_DEBUG(
-        "Scope {} finished in {} micros.",
-        scopeid_,
-        ScopeLogTimer::stop()
-    );
+    logger.debug() << "Scope " << scopeid_ << " finished in " << ScopeLogTimer::stop() << " micros.";
 }
 
 void timeutil::from_value(

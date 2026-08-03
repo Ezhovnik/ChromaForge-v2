@@ -7,6 +7,8 @@
 
 using namespace devtools;
 
+static debug::Logger logger("debug-server");
+
 ClientConnection::~ClientConnection() {
     if (auto connection = dynamic_cast<network::ReadableConnection*>(
         network.getConnection(this->connection, true)
@@ -50,9 +52,9 @@ std::string ClientConnection::read() {
             int32_t length = 0;
             connection->recv(reinterpret_cast<char*>(&length), sizeof(int32_t));
             if (length <= 0) {
-                LOG_ERROR("Invalid message length {}", length);
+                logger.error() << "Invalid message length " << length;
             } else {
-                LOG_DEBUG("Message length {}", length);
+                logger.debug() << "Message length " << length;
                 messageLength = length;
             }
         }
@@ -89,7 +91,7 @@ static network::Server& create_tcp_server(
 ) {
     auto network = engine.getNetwork();
     if (network == nullptr) {
-        THROW_ERR(
+        throw std::runtime_error(
             "Unable to create tcp server: project has no network permission"
         );
     }
@@ -100,7 +102,7 @@ static network::Server& create_tcp_server(
                 *network->getConnection(id, true)
             );
             connection.setPrivate(true);
-            LOG_INFO("Connected client {}: {}:{}", id, connection.getAddress(), connection.getPort());
+            logger.info() << "Connected client " << id << ": " << connection.getAddress() << ":" << connection.getPort();
             dbgServer.setClient(id);
         }
     );
@@ -110,7 +112,7 @@ static network::Server& create_tcp_server(
     auto& tcpServer = dynamic_cast<network::TcpServer&>(server);
     tcpServer.setMaxClientsConnected(1);
 
-    LOG_INFO("TCP debugging server open at port {}", server.getPort());
+    logger.info() << "TCP debugging server open at port " << server.getPort();
 
     return tcpServer;
 }
@@ -118,11 +120,11 @@ static network::Server& create_tcp_server(
 static network::Server& create_server(
     DebuggingServer& dbgServer, Engine& engine, const std::string& serverString
 ) {
-    LOG_INFO("Starting debugging server");
+    logger.info() << "Starting debugging server";
 
     size_t sepPos = serverString.find(':');
     if (sepPos == std::string::npos) {
-        THROW_ERR("Invalid debugging server configuration string");
+        throw std::runtime_error("Invalid debugging server configuration string");
     }
     auto transport = serverString.substr(0, sepPos);
     if (transport == "tcp") {
@@ -130,12 +132,12 @@ static network::Server& create_server(
         try {
             port = std::stoi(serverString.substr(sepPos + 1));
         } catch (const std::exception& err) {
-            THROW_ERR("Invalid TCP port");
+            throw std::runtime_error("Invalid TCP port");
         }
         return create_tcp_server(dbgServer, engine, port);
     } else {
-        THROW_ERR(
-            "Unsupported debugging server transport '{}'", transport
+        throw std::runtime_error(
+            "Unsupported debugging server transport '" + transport + "'"
         );
     }
 }
@@ -147,7 +149,7 @@ DebuggingServer::DebuggingServer(
     connection(nullptr) {}
 
 DebuggingServer::~DebuggingServer() {
-    LOG_INFO("Stopping debugging server");
+    logger.info() << "Stopping debugging server";
     server.close();
 }
 
@@ -163,12 +165,12 @@ bool DebuggingServer::update() {
         return false;
     }
 
-    LOG_DEBUG("Received: {}", message);
+    logger.debug() << "Received: " << message;
 
     try {
         auto obj = json::parse(message);
         if (!obj.has("type")) {
-            LOG_ERROR("Missing message type");
+            logger.error() << "Missing message type";
             return false;
         }
         const auto& type = obj["type"].asString();
@@ -177,7 +179,7 @@ bool DebuggingServer::update() {
             return true;
         }
     } catch (const std::runtime_error& err) {
-        LOG_ERROR("Could not to parse message: {}", err.what());
+        logger.error() << "Could not to parse message: " << err.what();
     }
     return false;
 }
@@ -188,7 +190,7 @@ bool DebuggingServer::performCommand(
     if (!connectionEstablished && type == "connect") {
         map.at("disconnect-action").get(disconnectAction);
         connectionEstablished = true;
-        LOG_INFO("Client connection established");
+        logger.info() << "Client connection established";
         connection->sendResponse("success");
         return true;
     }
@@ -243,7 +245,7 @@ bool DebuggingServer::performCommand(
         });
         return true;
     } else {
-        LOG_ERROR("Unsupported command '{}'", type);
+        logger.error() << "Unsupported command '" << type << "'";
     }
     return false;
 }

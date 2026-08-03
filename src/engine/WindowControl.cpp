@@ -11,6 +11,8 @@
 #include <engine/EnginePaths.h>
 #include <util/platform.h>
 
+static debug::Logger logger("window-control");
+
 namespace {
     static std::unique_ptr<ImageData> load_icon() {
         try {
@@ -19,7 +21,7 @@ namespace {
                 return imageio::read(file);
             }
         } catch (const std::exception& err) {
-            LOG_ERROR("Could not load window icon: {}", err.what());
+            logger.error() << "Could not load window icon: " << err.what();
         }
         return nullptr;
     }
@@ -48,7 +50,7 @@ WindowControl::Result WindowControl::initialize() {
 
     auto [window, input] = Window::initialize(&settings.display, title);
     if (!window || !input) {
-        LOG_CRITICAL("Could not initialize window");
+        logger.critical() << "Could not initialize window";
         throw initialize_error("Could not initialize window");
     }
 
@@ -69,7 +71,7 @@ void WindowControl::saveScreenshot() {
     image->flipY();
     io::path filename = paths.getNewScreenshotFile("png");
     imageio::write(filename.string(), image.get());
-    LOG_INFO("Save screenshot as '{}'", filename.string());
+    logger.info() << "Save screenshot as '" << filename.string() << "'";
 }
 
 void WindowControl::nextFrame(bool waitForRefresh) {

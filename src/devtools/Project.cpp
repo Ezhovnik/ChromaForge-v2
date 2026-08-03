@@ -6,6 +6,8 @@
 #include <io/io.h>
 #include <io/path.h>
 
+static debug::Logger logger("project");
+
 Project::~Project() = default;
 
 dv::value Project::serialize() const {
@@ -31,29 +33,29 @@ void Project::deserialize(const dv::value& src) {
         dv::get(src, "permissions", perms);
         permissions.permissions = std::set<std::string>(perms.begin(), perms.end());
     }
-    LOG_INFO("Project's permissions:");
+    logger.info() << "Project's permissions:";
     for (const auto& perm : permissions.permissions) {
-        LOG_INFO(" - {}", perm);
+        logger.info() << " - " << perm;
     }
 }
 
 void Project::loadProjectClientScript() {
     io::path scriptFile = "project:project_client.lua";
     if (io::exists(scriptFile)) {
-        LOG_INFO("Starting project client script");
+        logger.info() << "Starting project client script";
         clientScript = scripting::load_client_project_script(scriptFile);
     } else {
-        LOG_WARN("Project client script does not exists");
+        logger.warning() << "Project client script does not exists";
     }
 }
 
 void Project::loadProjectStartScript() {
     io::path scriptFile = "project:start.lua";
     if (io::exists(scriptFile)) {
-        LOG_INFO("Starting project start script");
+        logger.info() << "Starting project start script";
         setupCoroutine = scripting::start_app_script(scriptFile);
     } else {
-        LOG_WARN("Project start script does not exists");
+        logger.warning() << "Project start script does not exists";
     }
 }
 

@@ -22,6 +22,8 @@
 #include <settings.h>
 #include <objects/Entities.h>
 
+static debug::Logger logger("world");
+
 static constexpr float DAYTIME_SPECIFIC_SPEED = 1.0f / (24.0f * 60.0f);
 
 world_load_error::world_load_error(const std::string& message) : std::runtime_error(message) {
@@ -97,12 +99,12 @@ std::unique_ptr<Level> World::create(
         packs
     );
     if (name.empty()) {
-        LOG_INFO("Created nameless world");
+        logger.info() << "Created nameless world";
     } else {
-        LOG_INFO("Created world '{}' ({})", name, directory.string());
+        logger.info() << "Created world '" << name << "' (" << directory.string() << ")";
     }
-    LOG_INFO("World seed: {}", seed);
-    LOG_INFO("World generator: {}", generator);
+    logger.info() << "World seed: " << seed;
+    logger.info() << "World generator: " << generator;
 	return std::make_unique<Level>(std::move(world), content, settings);
 }
 
@@ -119,21 +121,21 @@ std::unique_ptr<Level> World::load(
 	const Content& content,
 	const std::vector<ContentPack>& packs
 ) {
-	LOG_INFO("Loading world");
+	logger.info() << "Loading world";
 	// Временно создаём мир с заглушкой имени и сидом 0 — они будут перезаписаны при десериализации
 
     auto worldFiles = worldFilesPtr.get();
     auto info = worldFiles->readWorldInfo();
     if (!info.has_value()) {
-		LOG_ERROR("Could not to find world.json");
+		logger.error() << "Could not to find world.json";
         throw world_load_error("could not to find world.json");
 	}
     info->isLoaded = true;
 
-    LOG_INFO("Loading world {} ({})", info->name, worldFilesPtr->getFolder().string());
-	LOG_INFO("World version: {}.{}.{}", info->major, info->minor, info->patch);
-    LOG_INFO("World seed: {}", info->seed);
-    LOG_INFO("World generator: {}", info->generator);
+    logger.info() << "Loading world " << info->name << " (" << worldFilesPtr->getFolder().string() << ")";
+	logger.info() << "World version: " << info->major << "." << info->minor << "." << info->patch;
+    logger.info() << "World seed: " << info->seed;
+    logger.info() << "World generator: " << info->generator;
 
 	auto world = std::make_unique<World>(
 		info.value(),
@@ -145,12 +147,12 @@ std::unique_ptr<Level> World::load(
 
 	wfile->readResourcesData(content);
 
-	LOG_INFO("Creating a level");
+	logger.info() << "Creating a level";
 	auto level = std::make_unique<Level>(std::move(world), content, settings);
 
     io::path file = wfile->getPlayerFile();
     if (!io::is_regular_file(file)) {
-        LOG_WARN("'player.json' does not exists");
+        logger.warning() << "'player.json' does not exists";
         level->players->create();
     } else {
         auto playerRoot = io::read_json(file);
@@ -163,8 +165,8 @@ std::unique_ptr<Level> World::load(
         }
     }
 
-	LOG_INFO("Level successfully created");
-	LOG_INFO("World successfully created");
+	logger.info() << "Level successfully created";
+	logger.info() << "World successfully created";
 	return level;
 }
 

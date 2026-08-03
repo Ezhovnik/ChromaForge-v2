@@ -16,6 +16,8 @@
 #include <engine/EnginePaths.h>
 #include <content/loading/ContentUnitLoader.h>
 
+static debug::Logger logger("content-loader");
+
 ContentLoader::ContentLoader(ContentPack* pack, ContentBuilder& builder, const ResPaths& paths) : pack(pack), builder(builder), paths(paths) {
     auto runtime = std::make_unique<ContentPackRuntime>(
         *pack, scripting::create_pack_environment(*pack)
@@ -66,7 +68,7 @@ static void detect_defs_pairs(
                 map.at("caption").get(caption);
                 detected.emplace_back(id, name);
             } catch (const std::runtime_error& err) {
-                LOG_ERROR("{}", err.what());
+                logger.error() << err.what();
             }
         } else if (io::is_directory(file) && file.extension() != ".files") {
             detect_defs_pairs(file, name, detected);
@@ -156,7 +158,7 @@ void process_method(
             list.add(value);
         }
     } else {
-        THROW_ERR("Unknown method {} for {}", method, name);
+        throw std::runtime_error("Unknown method " + method + " for " + name);
     }
 }
 
@@ -235,7 +237,7 @@ void ContentUnitLoader<DefT>::loadDefs(const dv::value& root) {
     }
 
     if (!pendingDefs.empty()) {
-        THROW_ERR("Unresolved {} dependencies detected", defsDir);
+        throw std::runtime_error("Unresolved " + defsDir + " dependencies detected");
     }
 }
 
@@ -296,7 +298,7 @@ static std::tuple<std::string, std::string, std::string> create_unit_id(
 }
 
 void ContentLoader::load() {
-    LOG_INFO("Loading content pack [{}]", pack->id);
+    logger.info() << "Loading content pack [" << pack->id << "]";
 
     fixPackIndices();
 
@@ -315,7 +317,7 @@ void ContentLoader::load() {
         try {
             loadGenerator(def, full, name);
         } catch (const std::runtime_error& err) {
-            THROW_ERR("Generator '{}': {}", full, err.what());
+            throw std::runtime_error("Generator '" + full + "': " + err.what());
         }
     });
 
@@ -327,7 +329,7 @@ void ContentLoader::load() {
             if (ResourceTypeMeta.getItem(key, type)) {
                 loadResources(type, arr);
             } else {
-                LOG_WARN("Unknown resource type: {}", key);
+                logger.warning() << "Unknown resource type: " << key;
             }
         }
     }
@@ -340,7 +342,7 @@ void ContentLoader::load() {
             if (ResourceTypeMeta.getItem(key, type)) {
                 loadResourceAliases(type, arr);
             } else {
-                LOG_WARN("Unknown resource type: {}", key);
+                logger.warning() << "Unknown resource type: " << key;
             }
         }
     }
@@ -380,7 +382,7 @@ void ContentLoader::load() {
         }
     }
 
-    LOG_INFO("Successfully loaded content pack [{}]", pack->id);
+    logger.info() << "Successfully loaded content pack [" << pack->id << "]";
 }
 
 template <class T>
@@ -389,7 +391,7 @@ static void load_script(const Content& content, T& def) {
     if (scriptName.empty()) return;
     size_t pos = scriptName.find(':');
     if (pos == std::string::npos) {
-        THROW_ERR("Invalid content unit name");
+        throw std::runtime_error("Invalid content unit name");
     }
     const auto runtime = content.getPackRuntime(scriptName.substr(0, pos));
     const auto& pack = runtime->getInfo();

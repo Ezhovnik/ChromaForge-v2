@@ -8,6 +8,8 @@
 #include <assets/assets_util.h>
 #include <core_content_defs.h>
 
+static debug::Logger logger("models-generator");
+
 static void configure_textures(
     model::Model& model,
     const Assets& assets,
@@ -22,7 +24,7 @@ static void configure_textures(
             texture = "blocks:" + textureFaces.at(index);
         } catch (const std::invalid_argument& err) {
         } catch (const std::runtime_error& err) {
-            LOG_ERROR("{}", err.what());
+            logger.error() << err.what();
         }
     }
 }

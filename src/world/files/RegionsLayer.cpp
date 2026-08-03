@@ -5,6 +5,8 @@
 #include <util/data_io.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("regions-layer");
+
 #define REGION_FORMAT_MAGIC ".CHROMAREG"
 inline constexpr int REGION_HEADER_SIZE = 13;
 
@@ -27,17 +29,17 @@ static void fetch_chunks(WorldRegion* region, int x, int z, regFile* file) {
 
 regFile::regFile(io::path filename) : file(filename), filename(filename) {
     if (file.length() < REGION_HEADER_SIZE) {
-        THROW_ERR("Incomplete region file header in {}", filename.string());
+        throw std::runtime_error("Incomplete region file header in " + filename.string());
     }
     char header[REGION_HEADER_SIZE];
     file.read(header, REGION_HEADER_SIZE);
 
     if (std::string(header, std::strlen(REGION_FORMAT_MAGIC)) != REGION_FORMAT_MAGIC) {
-        THROW_ERR("Invalid region file magic number in {}", filename.string());
+        throw std::runtime_error("Invalid region file magic number in " + filename.string());
     }
     version = header[REGION_HEADER_SIZE - 2];
     if (static_cast<uint>(version) > REGION_FORMAT_VERSION) {
-        LOG_ERROR("Region format {} is not supported in {}", version, filename.string());
+        logger.error() << "Region format " << version << " is not supported in " << filename.string();
         throw illegal_region_format(
             "Region format " + std::to_string(version) + " is not supported in " + filename.string()
         );
@@ -73,7 +75,7 @@ std::unique_ptr<ubyte[]> regFile::read(int index, uint32_t& size, uint32_t& srcS
     srcSize = dataio::le2h(buff32);
 
     if (offset + size > file_size) {
-        LOG_ERROR("Corrupted region {}: chunk offset detected at {}", filename.string(), (table_offset + index * 4));
+        logger.error() << "Corrupted region " << filename.string() << ": chunk offset detected at " << (table_offset + index * 4);
         return nullptr;
     }
 
@@ -100,7 +102,7 @@ regFile_ptr RegionsLayer::getRegFile(glm::ivec2 coord, bool create) {
         const auto found = openRegFiles.find(coord);
         if (found != openRegFiles.end()) {
             if (found->second->inUse) {
-                THROW_ERR("regFile is currently in use");
+                throw std::runtime_error("regFile is currently in use");
             }
             return useRegFile(found->first);
         }

@@ -24,6 +24,8 @@
 #include <graphics/core/DrawContext.h>
 #include <objects/Entt_Entity.h>
 
+static debug::Logger logger("entities");
+
 Entities::Entities(
     Level& level
 ) : registry(std::make_unique<entt::registry>()),
@@ -56,7 +58,7 @@ entityid_t Entities::spawn(
     if (assets) {
         skeleton = assets->get<rigging::SkeletonConfig>(def.skeletonName);
         if (skeleton == nullptr) {
-            THROW_ERR("Skeleton {} not found", def.skeletonName);
+            throw std::runtime_error("Skeleton " + def.skeletonName + " not found");
         }
     }
     entityid_t id;
@@ -71,7 +73,7 @@ entityid_t Entities::spawn(
             if (found->getID().destroyFlag) {
                 ss << " marked to destroy";
             }
-            THROW_ERR("{}", ss.str());
+            throw std::runtime_error(ss.str());
         }
     }
     auto entity = registry->create();
@@ -168,7 +170,7 @@ void Entities::loadEntities(dv::value root) {
         try {
             loadEntity(map);
         } catch (const std::runtime_error& err) {
-            LOG_ERROR("Could not read entity: {}", err.what());
+            logger.error() << "Could not read entity: " << err.what();
         }
     }
 }

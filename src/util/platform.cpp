@@ -11,6 +11,8 @@
 #include <util/stringutil.h>
 #include <frontend/locale.h>
 
+static debug::Logger logger("platform");
+
 namespace platform {
     const std::string DEFAULT_LOCALE = "en_US"; // Локаль по умолчанию, используемая, если системную определить не удалось.
 }
@@ -55,11 +57,11 @@ std::string platform::detect_locale() {
         // Заменяем дефис на подчёркивание, чтобы получить формат "язык_СТРАНА".
 		std::replace(result.begin(), result.end(), '-', '_');
 
-        LOG_DEBUG("Detected environment language local: {}", result);
+        logger.debug() << "Detected environment language local: " << result;
 		return result;
     } else {
         // Если не удалось определить, используем локаль по умолчанию.
-        LOG_DEBUG("Detected environment language local: {}", platform::DEFAULT_LOCALE);
+        logger.debug() << "Detected environment language local: " << platform::DEFAULT_LOCALE;
         return platform::DEFAULT_LOCALE;
     }
 }
@@ -77,7 +79,7 @@ std::string platform::detect_locale() {
     size_t dotPos = result.find('.');
     if (dotPos != std::string::npos) result = result.substr(0, dotPos);
 
-    LOG_DEBUG("Detected environment language local: {}", result);
+    logger.debug() << "Detected environment language local: " << result;
     return result;
 }
 #endif
@@ -107,20 +109,20 @@ void platform::sleep(size_t millis) {
 
 void platform::open_folder(const std::filesystem::path& folder) {
     if (!std::filesystem::is_directory(folder)) {
-        LOG_WARN("'{}' is not a directory or does not exist", folder.u8string());
+        logger.warning() << "'" << folder.u8string() << "' is not a directory or does not exist";
         return;
     }
 #ifdef __APPLE__
     auto cmd = "open " + util::quote(folder.u8string());
     if (int res = system(cmd.c_str())) {
-        LOG_WARN("'{}' returned code {}", cmd, res);
+        logger.warning() << "'" << cmd << "' returned code " << res;
     }
 #elif defined(_WIN32)
     ShellExecuteW(nullptr, L"open", folder.wstring().c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
 #else
     auto cmd = "xdg-open " + util::quote(folder.u8string());
     if (int res = system(cmd.c_str())) {
-        LOG_WARN("'{}' returned code {}", cmd, res);
+        logger.warning() << "'" << cmd << "' returned code " << res;
     }
 #endif
 }
@@ -138,7 +140,7 @@ bool platform::open_url(const std::string& url) {
 #ifdef __APPLE__
     auto cmd = "open " + util::quote(url);
     if (int res = system(cmd.c_str())) {
-        LOG_WARN("'{}' returned code {}", cmd, res);
+        logger.warning() << "'" << cmd << "' returned code " << res;
     } else {
         return false;
     }
@@ -157,7 +159,7 @@ bool platform::open_url(const std::string& url) {
 #else
     auto cmd = "xdg-open " + util::quote(url);
     if (int res = system(cmd.c_str())) {
-        LOG_WARN("'{}' returned code {}", cmd, res);
+        logger.warning() << "'" << cmd << "' returned code " << res;
     } else {
         return false;
     }

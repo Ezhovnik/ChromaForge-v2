@@ -52,6 +52,8 @@
 #include <engine/AssetsManagement.h>
 #include <devtools/stdin_cmd_reader.h>
 
+static debug::Logger logger("engine");
+
 Engine::Engine() = default;
 Engine::~Engine() = default;
 
@@ -73,7 +75,7 @@ void Engine::onContentLoad() {
     for (auto& pack : content->getAllContentPacks()) {
         auto configFolder = pack.folder / "config";
         auto bindsFile = configFolder / "bindings.toml";
-        LOG_INFO("Loading bindings: {}", bindsFile.string());
+        logger.info() << "Loading bindings: " << bindsFile.string();
         if (io::is_regular_file(bindsFile)) {
             input->getBindings().read(
                 toml::parse(
@@ -130,10 +132,10 @@ void Engine::initialize(CoreParameters coreParameters) {
     params = std::move(coreParameters);
     settingsHandler = std::make_unique<SettingsHandler>(settings);
 
-    LOG_INFO("ChromaForge engine version: {}", ENGINE_VERSION_STRING);
+    logger.info() << "ChromaForge engine version: " << ENGINE_VERSION_STRING;
 
     if (params.headless) {
-        LOG_INFO("Engine runs in headless mode");
+        logger.info() << "Engine runs in headless mode";
     }
     if (params.projectFolder.empty()) {
         params.projectFolder = params.resFolder;
@@ -182,9 +184,9 @@ void Engine::initialize(CoreParameters coreParameters) {
         *project, *paths, input.get(), [this]() {onContentLoad();}
     );
 
-    LOG_INFO("Initialization of the scripting system");
+    logger.info() << "Initialization of the scripting system";
     scripting::initialize(this);
-    LOG_INFO("Scripting system initialization has been successfully finished");
+    logger.info() << "Scripting system initialization has been successfully finished";
 
     if (!isHeadless()) gui->getMenu()->setPageLoader(scripting::create_page_loader());
     keepAlive(settings.ui.language.observe([this](auto lang) {
@@ -204,12 +206,11 @@ void Engine::initialize(CoreParameters coreParameters) {
         cmd::start_stdin_cmd_reader(*this);
     }
 
-    LOG_INFO("Initialization is finished");
-    Logger::getInstance().flush();
+    logger.info() << "Initialization is finished";
 }
 
 void Engine::close() {
-    LOG_INFO("Shutting down");
+    logger.info() << "Shutting down";
     saveSettings();
     if (screen) {
         screen->onEngineShutdown();
@@ -220,7 +221,7 @@ void Engine::close() {
     cmd.reset();
     if (gui) {
         gui.reset();
-        LOG_INFO("GUI finished");
+        logger.info() << "GUI finished";
     }
     audio::close();
     debuggingServer.reset();
@@ -230,10 +231,9 @@ void Engine::close() {
     scripting::close();
     if (!params.headless) {
         window.reset();
-        LOG_INFO("Window closed");
+        logger.info() << "Window closed";
     }
-    LOG_INFO("Engine has finished successfuly");
-    Logger::getInstance().flush();
+    logger.info() << "Engine has finished successfuly";
 }
 
 void Engine::setLevelConsumer(OnWorldOpen levelConsumer) {
@@ -342,7 +342,7 @@ void Engine::loadProject() {
     io::path projectFile = "project:project.toml";
     project = std::make_unique<Project>();
     project->deserialize(io::read_object(projectFile));
-    LOG_INFO("Loaded project {}", util::quote(project->name));
+    logger.info() << "Loaded project" << util::quote(project->name);
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
@@ -370,41 +370,41 @@ SettingsHandler& Engine::getSettingsHandler() {
 }
 
 void Engine::saveSettings() {
-    LOG_INFO("Writing the settings to a file");
+    logger.info() << "Writing the settings to a file";
     io::write_string(EnginePaths::SETTINGS_FILE, toml::stringify(*settingsHandler));
-    LOG_INFO("The settings were successfully written to the file");
+    logger.info() << "The settings were successfully written to the file";
 
     if (!params.headless && input) {
-        LOG_INFO("Writing the controls to a file");
+        logger.info() << "Writing the controls to a file";
         io::write_string(EnginePaths::CONTROLS_FILE, input->getBindings().write());
-        LOG_INFO("The controls were successfully written to the file");
+        logger.info() << "The controls were successfully written to the file";
     }
 }
 
 void Engine::loadSettings() {
     io::path settings_file = EnginePaths::SETTINGS_FILE;
     if (io::is_regular_file(settings_file)) {
-        LOG_INFO("Reading the settings file");
+        logger.info() << "Reading the settings file";
         std::string text = io::read_string(settings_file);
         try {
             toml::parse(*settingsHandler, settings_file.string(), text);
         } catch (const parsing_error& err) {
-            LOG_ERROR("{}", err.errorLog());
+            logger.error() << err.errorLog();
             throw;
         }
-        LOG_INFO("The settings file has been successfully read");
+        logger.info() << "The settings file has been successfully read";
     }
 }
 
 void Engine::loadControls() {
     io::path controls_file = EnginePaths::CONTROLS_FILE;
     if (io::is_regular_file(controls_file)) {
-        LOG_INFO("Reading the controls file");
+        logger.info() << "Reading the controls file";
         std::string text = io::read_string(controls_file);
         input->getBindings().read(
             toml::parse(controls_file.string(), text), BindType::Bind
         );
-        LOG_INFO("The controls file has been successfully read");
+        logger.info() << "The controls file has been successfully read";
     }
 }
 
@@ -421,12 +421,12 @@ EngineTime& Engine::getTime() {
 }
 
 void Engine::onWorldOpen(std::unique_ptr<Level> level, int64_t localPlayer) {
-    LOG_INFO("World open");
+    logger.info() << "World open";
     levelConsumer(std::move(level), localPlayer);
 }
 
 void Engine::onWorldClosed() {
-    LOG_INFO("World closed");
+    logger.info() << "World closed";
     levelConsumer(nullptr, -1);
 }
 

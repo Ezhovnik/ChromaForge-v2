@@ -11,6 +11,8 @@
 #include <world/World.h>
 #include <util/platform.h>
 
+static debug::Logger logger("server-mainloop");
+
 ServerMainloop::ServerMainloop(Engine& engine) : engine(engine) {}
 
 ServerMainloop::~ServerMainloop() = default;
@@ -20,7 +22,7 @@ void ServerMainloop::run() {
     auto& time = engine.getTime();
 
     if (coreParams.scriptFile.empty()) {
-        LOG_INFO("Nothing to do(✿◠‿◠)");
+        logger.info() << "Nothing to do(✿◠‿◠)";
         return;
     }
 
@@ -40,7 +42,7 @@ void ServerMainloop::run() {
     while (process->isActive()) {
         if (engine.isQuitSignal()) {
             process->terminate();
-            LOG_INFO("Script has been terminated due to quit signal");
+            logger.info() << "Script has been terminated due to quit signal";
             break;
         }
         if (coreParams.testMode) {
@@ -65,7 +67,7 @@ void ServerMainloop::run() {
             begin = std::chrono::system_clock::now();
         }
     }
-    LOG_INFO("Script finished");
+    logger.info() << "Script finished";
 }
 
 void ServerMainloop::setLevel(std::unique_ptr<Level> level) {

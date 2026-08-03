@@ -8,12 +8,14 @@
 #include <coders/json.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("stdin-reader");
+
 static std::thread reader_thread;
 
 void cmd::start_stdin_cmd_reader(Engine& engine) {
     reader_thread = std::thread([&engine]() {
         auto& interpreter = engine.getCmd();
-        LOG_INFO("Reader thread started");
+        logger.info() << "Reader thread started";
 
         std::string line;
         while (std::getline(std::cin, line)) {
@@ -22,12 +24,12 @@ void cmd::start_stdin_cmd_reader(Engine& engine) {
                 try {
                     auto result = interpreter.execute(line);
                     if (result.isString()) {
-                        LOG_INFO("{}", result.asString());
+                        logger.info() << result.asString();
                     } else {
-                        LOG_INFO("{}", json::stringify(result, true));
+                        logger.info() << json::stringify(result, true);
                     }
                 } catch (const std::exception& err) {
-                    LOG_ERROR("{}", err.what());
+                    logger.error() << err.what();
                 }
             });
         }

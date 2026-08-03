@@ -36,6 +36,8 @@
 #include <engine/EnginePaths.h>
 #include <objects/Entities.h>
 
+static debug::Logger logger("level-screen");
+
 inline const io::path CLIENT_FILE = "world:client/environment.json";
 
 LevelScreen::LevelScreen(
@@ -133,7 +135,7 @@ void LevelScreen::onOpen() {
 void LevelScreen::initializeContent() {
     auto& content = controller->getLevel()->content;
     for (auto& entry : content.getPacks()) {
-        LOG_INFO("Initializing pack '{}'", entry.first);
+        logger.info() << "Initializing pack '" << entry.first << "'";
         initializePack(entry.second.get());
     }
     scripting::on_frontend_init(
@@ -173,7 +175,7 @@ void LevelScreen::saveDecorations() {
 
 void LevelScreen::saveWorldPreview() {
     try {
-        LOG_INFO("Saving world preview");
+        logger.info() << "Saving world preview";
         auto player = playerController->getPlayer();
         auto& settings = engine.getSettings();
         int previewSize = settings.ui.worldPreviewSize.get();
@@ -192,9 +194,9 @@ void LevelScreen::saveWorldPreview() {
         auto image = postProcessing->toImage();
         image->flipY();
         imageio::write("world:preview.png", image.get());
-        LOG_INFO("World preview successfully saved");
+        logger.info() << "World preview successfully saved";
     } catch (const std::exception& err) {
-        LOG_ERROR("Failed to save world preview: {}", err.what());
+        logger.error() << "Failed to save world preview: " << err.what();
     }
 }
 
