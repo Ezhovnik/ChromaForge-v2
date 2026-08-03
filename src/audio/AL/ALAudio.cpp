@@ -378,7 +378,7 @@ void ALSpeaker::play() {
     manuallyStopped = false;
     auto channel = get_channel(this->channel);
     AL_CHECK(alSourcef(source, AL_GAIN, volume * channel->getVolume()));
-    if (al->useEffects) {
+    if (al->useEffects && channel->isEffectsApplied()) {
         AL_CHECK(
             alSource3i(
                 source,
@@ -388,7 +388,10 @@ void ALSpeaker::play() {
                 al->filters[0]
             )
         );
-        // AL_CHECK(alSourcei(source, AL_DIRECT_FILTER, al->filters[LOWPASS_FILTER]));
+        // AL_CHECK(alSourcei(source, AL_DIRECT_FILTER, al->filters[LOWPASS_FILTER])); // TODO: use lowpass filter
+    } else {
+        AL_CHECK(alSource3i(source, AL_AUXILIARY_SEND_FILTER, 0, 0, 0));
+        AL_CHECK(alSourcei(source, AL_DIRECT_FILTER, 0));
     }
     AL_CHECK(alSourcePlay(source));
 }

@@ -39,8 +39,9 @@ namespace audio {
         std::string name;
         float volume = 1.0f;
         bool paused = false;
+        bool effects;
     public:
-        Channel(std::string name);
+        Channel(std::string name, bool effects);
 
         float getVolume() const;
 
@@ -62,6 +63,8 @@ namespace audio {
         void resume();
 
         bool isPaused() const;
+
+        bool isEffectsApplied() const;
     };
 
     /**
@@ -437,7 +440,7 @@ namespace audio {
 
     Speaker* get_speaker(speakerid_t id);
 
-    int create_channel(const std::string& name);
+    int create_channel(const std::string& name, bool effects);
 
     int get_channel_index(const std::string& name);
 

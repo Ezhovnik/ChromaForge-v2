@@ -71,6 +71,7 @@ struct Hitbox {
     bool grounded = false; ///< Флаг, указывающий, находится ли хитбокс на земле
     float gravityScale = 1.0f;
     bool crouching = false;
+    float stepHeight = 0.5f;
 
     /**
      * @brief Конструктор хитбокса.
