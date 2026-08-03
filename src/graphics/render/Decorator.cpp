@@ -113,7 +113,7 @@ void Decorator::updateAcoustics(const Camera& camera) {
         1.6f;
     decayTime *= 2.5f;
     decayTime *= decayTime;
-    LOG_INFO("Rays hit {} / {}; decay-time: {}", hit, rays, decayTime);
+    // LOG_INFO("Rays hit {} / {}; decay-time: {}", hit, rays, decayTime);
 
     acoustics.reverbDecayTime = decayTime;
     audio::set_acoustics(std::move(acoustics));

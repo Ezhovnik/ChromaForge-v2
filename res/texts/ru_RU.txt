@@ -66,6 +66,7 @@ graphics.backlight.tooltip=Подсветка, предотвращающая п
 controls.key.tooltip=Поиск по привязвнной кнопки управления
 graphics.dense-render.tooltip=Включает прозрачность блоков, таких как листья
 graphics.soft-lighting.tooltip=Включает мягкое освещение у блоков
+graphics.advanced-render.tooltip=Использовать графический конвейер, поддерживающий продвинутые эффекты, такие как тени и SSAO
 
 world.Seed=Зерно
 world.Name=Название

@@ -33,6 +33,7 @@ class PrecipitationRenderer;
 class HandsRenderer;
 class NamedSkeletons;
 class Shadows;
+class CloudsRenderer;
 
 struct CompileTimeShaderSettings {
     bool advancedRender = false;
@@ -56,6 +57,7 @@ private:
     std::unique_ptr<Shadows> shadowMapping;
     std::unique_ptr<DebugLinesRenderer> debugLines;
     std::unique_ptr<PrecipitationRenderer> precipitation;
+    std::unique_ptr<CloudsRenderer> cloudsRenderer;
     Weather weather {};
 
     float timer = 0.0f;
