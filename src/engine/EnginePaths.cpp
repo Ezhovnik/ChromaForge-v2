@@ -81,7 +81,7 @@ std::filesystem::path EnginePaths::getUserFilesFolder() const {
 
 io::path EnginePaths::getNewScreenshotFile(const std::string& ext) const {
 	auto folder = SCREENSHOTS_FOLDER;
-	if (io::is_directory(folder)) io::create_directories(folder);
+	if (!io::is_directory(folder)) io::create_directories(folder);
 
 	auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);

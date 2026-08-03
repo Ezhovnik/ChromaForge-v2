@@ -4,16 +4,23 @@
 
 #include <graphics/render/commons.h>
 
-class Assets;
+class ShaderProgram;
 class Camera;
+class Weather;
 
 class CloudsRenderer final {
 public:
-    CloudsRenderer(const Assets& assets);
+    CloudsRenderer();
     ~CloudsRenderer();
 
-    void draw(float timer, float fogFactor, const Camera& camera);
+    void draw(
+        ShaderProgram& shader,
+        const Weather& weather,
+        float timer,
+        float fogFactor,
+        const Camera& camera,
+        int quality
+    );
 private:
-    const Assets& assets;
     std::array<std::unique_ptr<Mesh<ChunkVertex>>, 2> testMeshes;
 };

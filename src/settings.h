@@ -46,6 +46,7 @@ struct GraphicsSettings {
 	IntegerSetting shadowsQuality {0, 0, 3};
 	IntegerSetting denseRenderDistance {56, 0, 10'000};
 	BoolSetting softLighting {true};
+	IntegerSetting cloudsQuality {2, 0, 2};
 };
 
 struct PathfindingSettings {
