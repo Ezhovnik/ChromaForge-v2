@@ -15,10 +15,10 @@
 static debug::Logger logger("lib-assets");
 
 static void load_texture(
-    const ubyte* bytes, size_t size, const std::string& destname
+    Assets& assets, const ubyte* bytes, size_t size, const std::string& destname
 ) {
     try {
-        scripting::engine->getAssets()->store(png::loadTexture(bytes, size), destname);
+        assets.store(png::loadTexture(bytes, size), destname);
     } catch (const std::runtime_error& err) {
         logger.error() << err.what();
     }
@@ -33,6 +33,7 @@ static int l_request_texture(lua::State* L) {
 }
 
 static int l_load_texture(lua::State* L) {
+    auto& assets = scripting::engine->requireAssets();
     if (lua::isstring(L, 3) && lua::require_lstring(L, 3) != "png") {
         throw std::runtime_error("Unsupportd image format");
     }
@@ -47,6 +48,7 @@ static int l_load_texture(lua::State* L) {
         }
         lua::pop(L);
         load_texture(
+            assets,
             buffer.data(),
             buffer.size(),
             lua::require_string(L, 2)
@@ -54,6 +56,7 @@ static int l_load_texture(lua::State* L) {
     } else {
         auto string = lua::bytearray_as_string(L, 1);
         load_texture(
+            assets,
             reinterpret_cast<const ubyte*>(string.data()),
             string.size(),
             lua::require_string(L, 2)
@@ -64,13 +67,14 @@ static int l_load_texture(lua::State* L) {
 }
 
 static int l_parse_model(lua::State* L) {
+    auto& assets = scripting::engine->requireAssets();
     auto format = lua::require_lstring(L, 1);
     auto string = lua::require_lstring(L, 2);
     auto name = lua::require_string(L, 3);
 
     if (format == "xml" || format == "cfmodel") {
         auto cfModel = cfmodel::parse(name, string, format == "xml");
-        scripting::engine->getAssets()->store(
+        assets.store(
             std::make_unique<model::Model>(
                 std::move(cfModel.squash())
             ),
@@ -83,7 +87,7 @@ static int l_parse_model(lua::State* L) {
 }
 
 static int l_to_canvas(lua::State* L) {
-    auto& assets = *scripting::engine->getAssets();
+    auto& assets = scripting::engine->requireAssets();
 
     auto alias = lua::require_lstring(L, 1);
     size_t sep = alias.rfind(':');

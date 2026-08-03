@@ -315,6 +315,9 @@ void Engine::nextFrame(bool waitForRefresh) {
 }
 
 AssetsLoader& Engine::acquireBackgroundLoader() {
+    if (isHeadless()) {
+        throw std::runtime_error("Assets are not available in headless mode");
+    }
     return assets->acquireBackgroundLoader();
 }
 
@@ -331,7 +334,14 @@ EngineSettings& Engine::getSettings() {
 }
 
 Assets* Engine::getAssets() {
-	return assets->getStorage();
+	return assets ? assets->getStorage() : nullptr;
+}
+
+Assets& Engine::requireAssets() {
+    if (isHeadless()) {
+        throw std::runtime_error("Assets are not available in headless mode");
+    }
+    return *assets->getStorage();
 }
 
 EngineController* Engine::getController() {

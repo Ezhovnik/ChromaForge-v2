@@ -112,6 +112,7 @@ public:
     EnginePaths& getPaths();
     ResPaths& getResPaths();
     Assets* getAssets();
+    Assets& requireAssets();
     AssetsLoader& acquireBackgroundLoader();
 	EngineSettings& getSettings();
     std::shared_ptr<Screen> getScreen();
