@@ -1,12 +1,15 @@
 #pragma once
 
 #include <memory>
+#include <vector>
+#include <array>
 
 #include <graphics/render/commons.h>
 
 class ShaderProgram;
 class Camera;
 class Weather;
+class Frustum;
 
 class CloudsRenderer final {
 public:
@@ -22,5 +25,20 @@ public:
         int quality
     );
 private:
-    std::array<std::unique_ptr<Mesh<ChunkVertex>>, 2> testMeshes;
+    struct Layer {
+        int diameter;
+        int segmentSize;
+        std::vector<std::unique_ptr<Mesh<ChunkVertex>>> meshes;
+    };
+
+    std::array<Layer, 2> layers;
+
+    void draw(
+        Layer& layer,
+        Frustum& frustum,
+        ShaderProgram& shader,
+        const Camera& camera,
+        float timer,
+        int layerId
+    );
 };

@@ -61,6 +61,7 @@ menu.Open data folder=Открыть папку данных
 menu.Open content folder=Открыть папку [content]
 
 # Подсказки
+audio.acoustic-effects.tooltip=Акустические эффекты могут не поддерживаться системой
 graphics.gamma.tooltip=Кривая яркости освещения
 graphics.backlight.tooltip=Подсветка, предотвращающая полную темноту
 controls.key.tooltip=Поиск по привязвнной кнопки управления
@@ -110,6 +111,8 @@ settings.Windowed=Оконный
 settings.Borderless=Безрамочный
 settings.Microphone=Микрофон
 settings.microphone.None=Нет
+settings.Clouds quality=Качество облаков
+settings.Acoustic effects=Акустические эффекты
 
 # Управление
 chunks.reload=Перезагрузить Чанки

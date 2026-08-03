@@ -1,6 +1,8 @@
 #include <graphics/render/CloudsRenderer.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <assets/Assets.h>
@@ -13,9 +15,14 @@
 #include <io/io.h>
 #include <lighting/Lightmap.h>
 #include <math/FastNoiseLite.h>
-#include <util/timeutil.h>
 #include <window/Camera.h>
 #include <world/Weather.h>
+#include <math/voxmaths.h>
+#include <math/FrustumCulling.h>
+
+static inline constexpr int MAP_SIZE = 512;
+static inline constexpr float CLOUD_VOXEL_SCALE = 8.0f;
+static inline constexpr float CLOUDS_SPEED = 4.0f;
 
 class CloudsMap {
 public:
@@ -157,72 +164,156 @@ private:
     }
 };
 
-static inline constexpr int WIDTH = 256;
-static inline constexpr int DEPTH = 256;
+static void generate_heightmap(
+    float* heightmap, fnl_state& state, int w, int dd, int layerid
+) {
+    float pi2 = glm::two_pi<float>();
+
+    for (int lz = 0; lz < dd; ++lz) {
+        for (int lx = 0; lx < w; ++lx) {
+            float x = glm::sin(lx / static_cast<float>(w) * pi2) * w / pi2;
+            float y = -glm::cos(lx / static_cast<float>(w) * pi2) * w / pi2;
+            float z = lz;
+            float s = 1.5f;
+            auto n = fnlGetNoise3D(&state, x * s * 0.7, y * s, z * s * 0.7);
+            n += fnlGetNoise3D(&state, x * s + fnlGetNoise2D(&state, x * s * 4 + 2, z * s * 4) * 2.0f, y * s, z * 3.0f) * 0.5f;
+            n += fnlGetNoise3D(&state, x * s * 2, y * s * 2, z * s * 2) * 0.25f;
+            n += fnlGetNoise3D(&state, x * s * 4, y * s * 4, z * s * 4) * 0.125f * 2;
+            n += fnlGetNoise3D(&state, x * s * 8, y * s * 8, z * s * 8) * 0.125f * 0.5f * 2;
+            n += fnlGetNoise3D(&state, x * s * 16, y * s * 16, z * s * 16) * 0.125f * 0.25f * 3;
+            n = glm::max(0.0f, n);
+            n += -0.1f - layerid * 0.3f;
+
+            heightmap[lz * w + lx] = n;
+        }
+    }
+}
+
+static void sample_voxels(
+    bool* voxels,
+    const float* heightmap,
+    int height,
+    int segmentSize,
+    int segmentX,
+    int segmentZ
+) {
+    for (int y = 0; y < height; ++y) {
+        for (int z = 0; z < segmentSize; ++z) {
+            for (int x = 0; x < segmentSize; ++x) {
+                int gx = (segmentX * segmentSize) + x;
+                int gz = (segmentZ * segmentSize) + z;
+
+                float n = heightmap[gz * MAP_SIZE + gx];
+                if (gz < MAP_SIZE / 2) {
+                    float t = gz / static_cast<float>(MAP_SIZE / 2);
+                    n = n * t +
+                        heightmap[(MAP_SIZE + gz) * MAP_SIZE + gx] * (1.0f - t);
+                }
+                bool solid = y <= n * height && y >= (0.5f - n * 0.5f) * height;
+                voxels[vox_index(x, y, z, segmentSize, segmentSize)] = solid;
+            }
+        }
+    }
+}
 
 CloudsRenderer::CloudsRenderer() {
-    VolumeRenderer volumeRenderer(1024 * 1024);
+    VolumeRenderer volumeRenderer(1024 * 512);
 
-    for (int layer = 0; layer < 2; ++layer) {
+    const int diameter = 4;
+    const int segmentSize = MAP_SIZE / diameter;
+
+    const int w = MAP_SIZE;
+    const int h = 8;
+    const int d = MAP_SIZE;
+    const int dd = d * 1.5;
+    auto heightmap = std::make_unique<float[]>(w * dd);
+
+    for (int layerid = 0; layerid < 2; ++layerid) {
+        auto& layer = layers[layerid];
+        layer.diameter = diameter;
+        layer.segmentSize = segmentSize;
+
         fnl_state state = fnlCreateState();
-        const int w = WIDTH;
-        const int h = 8;
-        const int d = DEPTH;
 
-        const int dd = d * 1.5;
+        state.seed = 5265 + layerid * 3521;
 
-        state.seed = 5265 + layer * 3521;
+        generate_heightmap(heightmap.get(), state, w, dd, layerid);
 
-        float pi2 = glm::two_pi<float>();
+        bool voxels[segmentSize * h * segmentSize];
+        for (int sz = 0; sz < diameter; ++sz) {
+            for (int sx = 0; sx < diameter; ++sx) {
+                sample_voxels(voxels, heightmap.get(), h, segmentSize, sx, sz);
+                CloudsMap map({segmentSize, h, segmentSize}, voxels);
 
-        float heightmap[w * dd];
-        for (int lz = 0; lz < dd; ++lz) {
-            for (int lx = 0; lx < w; ++lx) {
-                float x = glm::sin(lx / static_cast<float>(w) * pi2) * w / pi2;
-                float y = -glm::cos(lx / static_cast<float>(w) * pi2) * w / pi2;
-                float z = lz;
-                float s = 1.5f;
-                auto n = fnlGetNoise3D(&state, x * s, y * s, z * s);
-                n += fnlGetNoise3D(&state, x * s + fnlGetNoise2D(&state, x * s * 4 + 2, z * s * 4) * 0.25f, y * s, z * 3.0f) * 0.5f;
-                n += fnlGetNoise3D(&state, x * s * 2, y * s * 2, z * s * 2) * 0.25f;
-                n += fnlGetNoise3D(&state, x * s * 4, y * s * 4, z * s * 4) * 0.125f * 2;
-                n += fnlGetNoise3D(&state, x * s * 8, y * s * 8, z * s * 8) * 0.125f * 0.5f * 2;
-                n += fnlGetNoise3D(&state, x * s * 16, y * s * 16, z * s * 16) * 0.125f * 0.25f * 3;
-                n = glm::max(0.0f, n);
-                // n = n * n * 2.0f;
-                n -= 0.2f + layer * 0.5f;
-                // n -= 0.5f;
-
-                heightmap[lz * w + lx] = n;
+                volumeRenderer.build(map);
+                layer.meshes.push_back(std::make_unique<Mesh<ChunkVertex>>(
+                    volumeRenderer.createMesh()
+                ));
             }
         }
-
-        bool voxels[w * h * d];
-        for (int y = 0; y < h; ++y) {
-            for (int z = 0; z < d; ++z) {
-                for (int x = 0; x < w; ++x) {
-                    float n = heightmap[z * w + x];
-                    if (z < d / 2) {
-                        float t = z / static_cast<float>(d / 2);
-                        n = n * t + heightmap[(d + z) * w + x] * (1.0f - t);
-                    }
-
-                    bool solid = y <= n * h && y >= (0.5f - n * 0.5f) * h;
-                    voxels[vox_index(x, y, z, w, d)] = solid;
-                }
-            }
-        }
-
-        CloudsMap map({w, h, d}, voxels);
-
-        volumeRenderer.build(map);
-        testMeshes[layer] = std::make_unique<Mesh<ChunkVertex>>(
-            volumeRenderer.createMesh()
-        );
     }
 }
 
 CloudsRenderer::~CloudsRenderer() = default;
+
+void CloudsRenderer::draw(
+    Layer& layer,
+    Frustum& frustum,
+    ShaderProgram& shader,
+    const Camera& camera,
+    float timer,
+    int layerId
+) {
+    float scale = CLOUD_VOXEL_SCALE;
+    int totalDiameter = layer.segmentSize * scale;
+
+    int gcellX = floordiv(camera.position.x, totalDiameter);
+    int gcellZ = floordiv(camera.position.z, totalDiameter);
+
+    float speed = CLOUDS_SPEED;
+    float speedX = glm::sin(layerId * 0.3f + 0.4f) * speed / (layerId + 1);
+    float speedZ = -glm::cos(layerId * 0.3f + 0.4f) * speed / (layerId + 1);
+
+    int radius = 4;
+
+    for (int x = -radius; x <= radius; ++x) {
+        for (int z = -radius; z <= radius; ++z) {
+            int lcellX = gcellX - floordiv(glm::floor(timer * speedX), totalDiameter);
+            int lcellZ = gcellZ - floordiv(glm::floor(timer * speedZ), totalDiameter);
+            glm::vec3 position(
+                -128 * scale + (x + gcellX) * layer.segmentSize * scale +
+                    glm::mod(timer * speedX, static_cast<float>(totalDiameter)),
+                250 + layerId * 200,
+                -128 * scale + (z + gcellZ) * layer.segmentSize * scale +
+                    glm::mod(timer * speedZ, static_cast<float>(totalDiameter))
+            );
+            if (glm::distance2(
+                    glm::vec2(
+                        position.x + totalDiameter * 0.5f,
+                        position.z + totalDiameter * 0.5f
+                    ),
+                    glm::vec2(camera.position.x, camera.position.z)
+                ) > 4e6
+            ) {
+                continue;
+            }
+            if (!frustum.isBoxVisible(position, position + glm::vec3(layer.segmentSize * scale))) {
+                continue;
+            }
+            auto matrix = glm::mat4(1.0f);
+            matrix = glm::translate(matrix, position);
+            matrix = glm::scale(matrix, glm::vec3(scale, scale, scale));
+            shader.uniformMatrix("u_model", matrix);
+
+            int lx = (x + radius + lcellX) % layer.diameter;
+            int lz = (z + radius + lcellZ) % layer.diameter;
+            if (lx < 0) lx += layer.diameter;
+            if (lz < 0) lz += layer.diameter;
+
+            layer.meshes[lz * layer.diameter + lx]->draw();
+        }
+    }
+}
 
 void CloudsRenderer::draw(
     ShaderProgram& shader,
@@ -232,45 +323,14 @@ void CloudsRenderer::draw(
     const Camera& camera,
     int quality
 ) {
-    float clouds = weather.clouds();
-    shader.uniform4f(
-        "u_tint",
-        glm::vec4(
-            1.0f - clouds * 0.5, 1.0f - clouds * 0.45, 1.0f - clouds * 0.4, 1.0f
-        )
-    );
+    Frustum frustum;
+    frustum.update(camera.getProjView());
 
-    float scale = 8;
-    float totalWidth = WIDTH * scale;
-    float totalDepth = DEPTH * scale;
+    shader.uniform4f("u_tint", glm::vec4(weather.cloudsTint(), 1.0f));
+    shader.uniform1f("u_fogFactor", fogFactor * 0.03f);
+    shader.uniform1f("u_fogCurve", 0.7f - 0.3f);
 
-    int cellX = glm::floor(camera.position.x / totalWidth + 0.5f);
-    int cellZ = glm::floor(camera.position.z / totalDepth + 0.5f);
-
-    float speed = 4.0f;
-
-    for (int i = 0; i < std::min<int>(quality, testMeshes.size()); i++) {
-        float speedX = glm::sin(i * 0.3f + 0.4f) * speed / (i + 1);
-        float speedZ = -glm::cos(i * 0.3f + 0.4f) * speed / (i + 1);
-        for (int x = -2; x <= 2; ++x) {
-            for (int z = -2; z <= 2; ++z) {
-                auto matrix = glm::mat4(1.0f);
-                matrix = glm::translate(
-                    matrix,
-                    glm::vec3(
-                        -128 * scale + (x + cellX) * WIDTH * scale +
-                            glm::mod(timer * speedX, totalWidth),
-                        250 + i * 200,
-                        -128 * scale + (z + cellZ) * DEPTH * scale +
-                            glm::mod(timer * speedZ, totalDepth)
-                    )
-                );
-                matrix = glm::scale(matrix, glm::vec3(scale, scale, scale));
-                shader.uniform1f("u_fogFactor", fogFactor * 0.03f);
-                shader.uniform1f("u_fogCurve", 0.7f - 0.3f);
-                shader.uniformMatrix("u_model", matrix);
-                testMeshes[i]->draw();
-            }
-        }
+    for (int i = 0; i < std::min<int>(quality, layers.size()); ++i) {
+        draw(layers[i], frustum, shader, camera, timer, i);
     }
 }
