@@ -39,15 +39,15 @@ Player::Player(
 	speed(speed),
 	chosenSlot(0),
 	position(position),
+    inventory(std::move(inventory)),
+    eid(eid),
 	chunks(std::make_unique<Chunks>(
         3, 3, 0, 0, level.events.get(), *level.content.getIndices()
     )),
 	fpCamera(level.getCamera(BUILTIN_CONTENT_NAMESPACE + ":first-person")),
     spCamera(level.getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-front")),
     tpCamera(level.getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-back")),
-	currentCamera(fpCamera),
-	inventory(std::move(inventory)),
-	eid(eid)
+    currentCamera(fpCamera)
 {
 	fpCamera->setFov(glm::radians(90.0f));
     spCamera->setFov(glm::radians(90.0f));

@@ -15,6 +15,7 @@ else()
 endif()
 find_package(ZLIB REQUIRED)
 find_package(CURL REQUIRED)
+find_package(Freetype REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(EnTT CONFIG QUIET)
 find_package(entt CONFIG QUIET)
@@ -53,6 +54,7 @@ target_link_libraries(ChromaForgeSrc
         GLEW::GLEW
         OpenAL::OpenAL
         ZLIB::ZLIB
+        Freetype::Freetype
     PUBLIC
         glfw
         PkgConfig::VORBIS

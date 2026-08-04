@@ -33,5 +33,7 @@ namespace gui {
         virtual std::wstring getText() const;
 
         virtual void refresh() override;
+
+        std::shared_ptr<Label> getLabel() const;
     };
 }

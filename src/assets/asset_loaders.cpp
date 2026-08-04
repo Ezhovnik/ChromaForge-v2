@@ -28,16 +28,17 @@
 #include <coders/vec3.h>
 #include <util/stringutil.h>
 #include <coders/cfmodel.h>
+#include <coders/vector_fonts.h>
 
 static debug::Logger logger("asset-loaders");
 
 static bool load_animation(
     Assets* assets, 
-	const ResPaths& paths,
+    const ResPaths& paths,
     const std::string& atlasName, 
     const std::string& directory, 
     const std::string& name, 
-	Atlas* dstAtlas
+    Atlas* dstAtlas
 );
 
 static auto process_program(const ResPaths& paths, const std::string& filename) {
@@ -57,11 +58,11 @@ static auto process_program(const ResPaths& paths, const std::string& filename) 
 }
 
 asset_loader::postfunc asset_loader::shader(
-	AssetsLoader*,
-	const ResPaths& paths, 
-	const std::string& filename, 
-	const std::string& name, 
-	const std::shared_ptr<AssetsConfig>&)
+    AssetsLoader*,
+    const ResPaths& paths, 
+    const std::string& filename, 
+    const std::string& name, 
+    const std::shared_ptr<AssetsConfig>&)
 {
     io::path vertexFile = paths.find(filename + ".vert");
     io::path fragmentFile = paths.find(filename + ".frag");
@@ -69,8 +70,8 @@ asset_loader::postfunc asset_loader::shader(
     auto vertex = io::read_string(vertexFile);
     auto fragment = io::read_string(fragmentFile);
 
-	// Сохраняем шейдер в менеджере ресурсов под указанным именем
-	return [=](auto assets) {
+    // Сохраняем шейдер в менеджере ресурсов под указанным именем
+    return [=](auto assets) {
         assets->store(ShaderProgram::create(
             {vertexFile.string(), vertex},
             {fragmentFile.string(), fragment}
@@ -79,11 +80,11 @@ asset_loader::postfunc asset_loader::shader(
 }
 
 asset_loader::postfunc asset_loader::texture(
-	AssetsLoader*,
-	const ResPaths& paths, 
-	const std::string& filename, 
-	const std::string& name, 
-	const std::shared_ptr<AssetsConfig>&)
+    AssetsLoader*,
+    const ResPaths& paths, 
+    const std::string& filename, 
+    const std::string& name, 
+    const std::shared_ptr<AssetsConfig>&)
 {
     auto actualFile = paths.find(filename + ".png");
     try {
@@ -98,16 +99,32 @@ asset_loader::postfunc asset_loader::texture(
 }
 
 asset_loader::postfunc asset_loader::font(
-	AssetsLoader*,
-	const ResPaths& paths, 
-	const std::string& filename, 
-	const std::string& name, 
-	const std::shared_ptr<AssetsConfig>&)
-{
+    AssetsLoader*,
+    const ResPaths& paths, 
+    const std::string& filename, 
+    const std::string& name, 
+    const std::shared_ptr<AssetsConfig>& config
+) {
+    auto cfg = std::dynamic_pointer_cast<FontConfig>(config);
+    auto ext = std::filesystem::path(filename).extension().string();
+    if (ext == ".ttf" || ext == ".otf") {
+        logger.info() << "Loading vector font " << util::quote(filename);
+        return [=](Assets* assets) {
+            using FontFile = vector_fonts::FontFile;
+            FontFile* fontFile;
+            if ((fontFile = assets->get<FontFile>(filename)) == nullptr) {
+                auto fontFilePtr = vector_fonts::load_font(paths.find(filename).string());
+                fontFile = fontFilePtr.get();
+                assets->store(fontFilePtr, filename);
+            }
+            assets->store(fontFile->createInstance(cfg ? cfg->size : 16), name);
+        };
+    }
+
     auto pages = std::make_shared<std::vector<std::unique_ptr<ImageData>>>();
-	for (size_t i = 0; i <= 1024; ++i) {
-		// Формируем имя файла страницы: filename_i.png
-		std::string page_name = filename + "_" + std::to_string(i) + ".png"; 
+    for (size_t i = 0; i <= 1024; ++i) {
+        // Формируем имя файла страницы: filename_i.png
+        std::string page_name = filename + "_" + std::to_string(i) + ".png"; 
         auto file = paths.find(page_name);
         if (io::exists(file)) {
             pages->push_back(imageio::read(file));
@@ -116,21 +133,10 @@ asset_loader::postfunc asset_loader::font(
         } else {
             pages->push_back(nullptr);
         }
-	}
+    }
 
-	return [=](auto assets) {
-        int res = pages->at(0)->getHeight() / 16;
-        std::vector<std::unique_ptr<Texture>> textures;
-        for (auto& page : *pages) {
-            if (page == nullptr) {
-                textures.emplace_back(nullptr);
-            } else {
-                auto texture = Texture::from(page.get());
-                texture->setMipMapping(false, true);
-                textures.emplace_back(std::move(texture));
-            }
-        }
-        assets->store(std::make_unique<Font>(std::move(textures), res, 4), name);
+    return [=](auto assets) {
+        assets->store(Font::createBitmapFont(std::move(*pages)), name);
     };
 }
 
@@ -177,34 +183,34 @@ asset_loader::postfunc asset_loader::posteffect(
  * При необходимости конвертирует в формат RGBA и исправляет альфа-канал.
  */
 static bool append_atlas(AtlasBuilder& atlas, const io::path& file) {
-	std::string name = file.stem();
-	if (atlas.has(name)) return false;
+    std::string name = file.stem();
+    if (atlas.has(name)) return false;
 
-	// Загружаем изображение
-	auto image = imageio::read(file);
-	if (image == nullptr) {
-		logger.error() << "Failed to load atlas entry '" << name << "'";
-		return false;
-	}
+    // Загружаем изображение
+    auto image = imageio::read(file);
+    if (image == nullptr) {
+        logger.error() << "Failed to load atlas entry '" << name << "'";
+        return false;
+    }
 
-	// Если формат не RGBA, конвертируем
-	if (image->getFormat() != ImageFormat::rgba8888) image.reset(toRGBA(image.get())); 
+    // Если формат не RGBA, конвертируем
+    if (image->getFormat() != ImageFormat::rgba8888) image.reset(toRGBA(image.get())); 
 
-	// Исправляем "чёрный" альфа-канал
-	image->fixAlphaColor(); 
+    // Исправляем "чёрный" альфа-канал
+    image->fixAlphaColor(); 
 
-	// Добавляем изображение в строитель атласа
-	atlas.add(name, std::move(image));
+    // Добавляем изображение в строитель атласа
+    atlas.add(name, std::move(image));
 
-	return true;
+    return true;
 }
 
 asset_loader::postfunc asset_loader::atlas(
-	AssetsLoader* loader,
-	const ResPaths& paths, 
-	const std::string& directory, 
-	const std::string& name, 
-	const std::shared_ptr<AssetsConfig>& config
+    AssetsLoader* loader,
+    const ResPaths& paths, 
+    const std::string& directory, 
+    const std::string& name, 
+    const std::shared_ptr<AssetsConfig>& config
 ) {
     auto atlasConfig = std::dynamic_pointer_cast<AtlasConfig>(config);
     if (atlasConfig && atlasConfig->type == AtlasType::Separate) {
@@ -219,17 +225,17 @@ asset_loader::postfunc asset_loader::atlas(
         return [](auto){};
     }
 
-	AtlasBuilder builder;
+    AtlasBuilder builder;
 
-	// Проходим по всем файлам в указанной директории и пытаемся добавить каждый PNG в атлас
-	for (auto const& file : paths.listdir(directory)) {
-		if (!imageio::is_read_supported(file.extension())) continue;
-		if (!append_atlas(builder, file)) continue;
-	}
+    // Проходим по всем файлам в указанной директории и пытаемся добавить каждый PNG в атлас
+    for (auto const& file : paths.listdir(directory)) {
+        if (!imageio::is_read_supported(file.extension())) continue;
+        if (!append_atlas(builder, file)) continue;
+    }
 
-	std::set<std::string> names = builder.getNames();
-	Atlas* atlas = builder.build(ATLAS_EXTRUSION, false).release();
-	return [=](auto assets) {
+    std::set<std::string> names = builder.getNames();
+    Atlas* atlas = builder.build(ATLAS_EXTRUSION, false).release();
+    return [=](auto assets) {
         atlas->prepare();
         assets->store(std::unique_ptr<Atlas>(atlas), name);
 
@@ -287,7 +293,7 @@ static TextureAnimation create_animation(
 
     for (const auto& elem : frameList) {
         if (!srcAtlas->has(elem.first)) {
-			logger.error() << "Unknown frame name: " << elem.first;
+            logger.error() << "Unknown frame name: " << elem.first;
             continue;
         }
         region = srcAtlas->get(elem.first);
@@ -311,70 +317,70 @@ inline bool contains(
 }
 
 static bool load_animation(
-	Assets* assets, 
-	const ResPaths& paths,
+    Assets* assets, 
+    const ResPaths& paths,
     const std::string& atlasName, 
     const std::string& directory, 
     const std::string& name, 
-	Atlas* dstAtlas)
+    Atlas* dstAtlas)
 {
-	// Формируем пути к папкам с анимациями и блоками
-	std::string animsDir = directory + "/animation";
+    // Формируем пути к папкам с анимациями и блоками
+    std::string animsDir = directory + "/animation";
 
-	// Ищем подпапку в animsDir, имя которой совпадает с текстурой
-	for (const auto& folder : paths.listdir(animsDir)) {
-		if (!io::is_directory(folder)) continue;
-		if (folder.name() != name) continue;
-		// FIXME: if (std::filesystem::is_empty(folder)) continue;
+    // Ищем подпапку в animsDir, имя которой совпадает с текстурой
+    for (const auto& folder : paths.listdir(animsDir)) {
+        if (!io::is_directory(folder)) continue;
+        if (folder.name() != name) continue;
+        // FIXME: if (std::filesystem::is_empty(folder)) continue;
 
-		AtlasBuilder builder;
-		// Добавляем базовую текстуру из blocksDir (статичный кадр)
-		append_atlas(builder, paths.find(directory + "/" + name + ".png"));
+        AtlasBuilder builder;
+        // Добавляем базовую текстуру из blocksDir (статичный кадр)
+        append_atlas(builder, paths.find(directory + "/" + name + ".png"));
 
-		// Если есть файл описания анимации, читаем его
-		std::vector<std::pair<std::string, int>> frameList;
+        // Если есть файл описания анимации, читаем его
+        std::vector<std::pair<std::string, int>> frameList;
         std::string animFile = folder.string() + "/animation.json";
-		if (io::exists(animFile)) read_anim_file(animFile, frameList);
+        if (io::exists(animFile)) read_anim_file(animFile, frameList);
 
-		// Проходим по файлам в папке анимации
-		for (const auto& file : paths.listdir(animsDir + "/" + name)) {
-			// Если есть список кадров из JSON, добавляем только те, что в списке
-			if (!frameList.empty() && !contains(frameList, file.stem())) {
+        // Проходим по файлам в папке анимации
+        for (const auto& file : paths.listdir(animsDir + "/" + name)) {
+            // Если есть список кадров из JSON, добавляем только те, что в списке
+            if (!frameList.empty() && !contains(frameList, file.stem())) {
                 continue;
-			}
-			// Добавляем изображение в строитель атласа анимации
-			if (!append_atlas(builder, file)) continue;
-		}
+            }
+            // Добавляем изображение в строитель атласа анимации
+            if (!append_atlas(builder, file)) continue;
+        }
 
-		// Строим исходный атлас анимации
-		auto srcAtlas = builder.build(ATLAS_EXTRUSION, true);
+        // Строим исходный атлас анимации
+        auto srcAtlas = builder.build(ATLAS_EXTRUSION, true);
 
-		if (frameList.empty()) {
-			// Если JSON с кадрами не задан, используем все имена из srcAtlas в порядке добавления
-			for (const auto& frameName : builder.getNames()) {
+        if (frameList.empty()) {
+            // Если JSON с кадрами не задан, используем все имена из srcAtlas в порядке добавления
+            for (const auto& frameName : builder.getNames()) {
                 frameList.emplace_back(frameName, 0);
-			}
-		}
+            }
+        }
 
-		auto animation = create_animation(
+        auto animation = create_animation(
             srcAtlas.get(), dstAtlas, name, builder.getNames(), frameList
         );
         assets->store(std::move(srcAtlas), atlasName + "/" + name + "_animation");
-		assets->store(animation);
+        assets->store(animation);
 
-		return true;
-	}
+        return true;
+    }
 
-	// Если папка с анимацией не найдена, всё равно считаем успехом (просто нет анимации)
-	return true;
+    // Если папка с анимацией не найдена, всё равно считаем успехом (просто нет анимации)
+    return true;
 }
 
 asset_loader::postfunc asset_loader::layout(
-	AssetsLoader*,
-	const ResPaths&, 
-	const std::string& file, 
-	const std::string& name, 
-	const std::shared_ptr<AssetsConfig>& config)
+    AssetsLoader*,
+    const ResPaths&, 
+    const std::string& file, 
+    const std::string& name, 
+    const std::shared_ptr<AssetsConfig>& config)
 {
     return [=](auto assets) {
         try {
@@ -392,7 +398,7 @@ asset_loader::postfunc asset_loader::layout(
                 name
             );
         } catch (const parsing_error& err) {
-			throw std::runtime_error("Failed to parse layout XML '" + file + "':\n" + err.errorLog());
+            throw std::runtime_error("Failed to parse layout XML '" + file + "':\n" + err.errorLog());
         }
     };
 }

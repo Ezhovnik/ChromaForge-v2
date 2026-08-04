@@ -3,7 +3,7 @@
 #include <glm/ext.hpp>
 
 // Конструктор камеры
-Camera::Camera(glm::vec3 position, float fov) : position(position), fov(fov) {
+Camera::Camera(glm::vec3 position, float fov) : fov(fov), position(position) {
     updateVectors();
 }
 

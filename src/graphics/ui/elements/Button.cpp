@@ -86,3 +86,7 @@ Align Button::getTextAlign() const {
     if (label) return label->getAlign();
     return Align::Left;
 }
+
+std::shared_ptr<Label> Button::getLabel() const {
+    return label;
+}

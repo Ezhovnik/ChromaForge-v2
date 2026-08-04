@@ -42,3 +42,7 @@ void InputBindBox::keyPressed(Keycode key) {
 
     defocus();
 }
+
+std::shared_ptr<Label> InputBindBox::getLabel() const {
+    return label;
+}

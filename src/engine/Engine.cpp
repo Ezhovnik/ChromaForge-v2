@@ -51,6 +51,7 @@
 #include <engine/WindowControl.h>
 #include <engine/AssetsManagement.h>
 #include <devtools/stdin_cmd_reader.h>
+#include <coders/vector_fonts.h>
 
 static debug::Logger logger("engine");
 
@@ -174,6 +175,8 @@ void Engine::initialize(CoreParameters coreParameters) {
         settings.audio
     );
 
+    vector_fonts::initialize();
+
     if (settings.ui.language.get() == "auto") {
         settings.ui.language.set(
             langs::locale_by_envlocale(platform::detect_locale())
@@ -222,6 +225,9 @@ void Engine::close() {
     if (gui) {
         gui.reset();
         logger.info() << "GUI finished";
+    }
+    if (!isHeadless()) {
+        vector_fonts::finalize();
     }
     audio::close();
     debuggingServer.reset();

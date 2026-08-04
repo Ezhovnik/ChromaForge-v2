@@ -92,7 +92,7 @@ chmod +x run.sh
 
 ```sh
 sudo apt install cmake build-essential git pkg-config zlib1g-dev libglfw3-dev libglfw3 libglew-dev libopenal-dev \
-  libluajit-5.1-dev libvorbis-dev libcurl4-openssl-dev libgtest-dev
+  libluajit-5.1-dev libvorbis-dev libcurl4-openssl-dev libgtest-dev libfreetype6-dev
 
 # LuaJIT: Debian/Ubuntu не кладут заголовки в стандартный путь
 sudo ln -sf /usr/lib/x86_64-linux-gnu/libluajit-5.1.a /usr/lib/x86_64-linux-gnu/liblua5.1.a
@@ -112,7 +112,7 @@ sudo make install
 
 ```sh
 sudo dnf install cmake gcc-c++ make git glfw-devel glew-devel openal-soft-devel luajit-devel \
-  libvorbis-devel libcurl-devel gtest-devel zlib-devel
+  libvorbis-devel libcurl-devel gtest-devel zlib-devel libfreetype-devel
 
 # EnTT (Устанавливаем последнюю версию, поддерживающую C++17)
 git clone --branch v3.16.0 https://github.com/skypjack/entt.git
@@ -128,12 +128,12 @@ sudo make install
 
 ```sh
 # X11
-sudo pacman -S cmake base-devel git glfw-x11 glew openal-soft luajit libvorbis curl gtest
+sudo pacman -S cmake base-devel git glfw-x11 glew openal-soft luajit libvorbis curl gtest freetype2
 ```
 
 ```sh
 # Wayland
-sudo pacman -S cmake base-devel git glfw-wayland glew openal-soft luajit libvorbis curl gtest
+sudo pacman -S cmake base-devel git glfw-wayland glew openal-soft luajit libvorbis curl gtest freetype2
 ```
 
 ```sh
@@ -151,11 +151,11 @@ yay -S entt
 ```sh
 su -
 apt-get install cmake gcc make git entt-devel libglfw3-devel libGLEW-devel libopenal-devel \
-  libluajit-devel libvorbis-devel libcurl-devel libgtest-devel zlib-devel
+  libluajit-devel libvorbis-devel libcurl-devel libgtest-devel zlib-devel libfreetype-devel
 ```
 
 > [!NOTE]
-> Названия пакетов `gtest` могут различаться в зависимости от версии ALT Linux
+> Названия пакета `gtest` может различаться в зависимости от версии ALT Linux
 > (например `libgtest-devel`).
 > Проверьте доступные имена: `apt-cache search gtest`.
 <!-- -->
@@ -168,7 +168,7 @@ apt-get install cmake gcc make git entt-devel libglfw3-devel libGLEW-devel libop
 > Требуется: **CMake** (≥ 3.26), **Git**, **Homebrew**.
 
 ```sh
-brew install glfw glew openal-soft luajit libvorbis skypjack/entt/entt googletest
+brew install glfw glew openal-soft luajit libvorbis skypjack/entt/entt googletest freetype
 ```
 
 > [!TIP]

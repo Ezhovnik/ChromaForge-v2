@@ -17,7 +17,7 @@
 
 static debug::Logger logger("lighting");
 
-Lighting::Lighting(const Content& content, Chunks& chunks) : chunks(chunks), content(content) {
+Lighting::Lighting(const Content& content, Chunks& chunks) : content(content), chunks(chunks) {
     auto& contentIds = *content.getIndices();
     solverR = std::make_unique<LightSolver>(contentIds, chunks, 0);
     solverG = std::make_unique<LightSolver>(contentIds, chunks, 1);

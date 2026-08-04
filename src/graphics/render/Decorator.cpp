@@ -52,7 +52,7 @@ Decorator::Decorator(
         "presets/text3d/player_name.toml"
     ));
     for (const auto& [id, player] : *level.players) {
-        if (id == this->player.getId()) {
+        if (id == this->player.getId() || player->isSuspended()) {
             continue;
         }
         playerTexts[id] = renderer.texts->add(std::make_unique<TextNote>(
@@ -290,7 +290,7 @@ void Decorator::updateTextNotes() {
     while (textsIter != playerTexts.end()) {
         auto note = renderer.texts->get(textsIter->second);
         auto player = level.players->getPlayer(textsIter->first);
-        if (player == nullptr) {
+        if (player == nullptr || player->isSuspended()) {
             renderer.texts->remove(textsIter->second);
             textsIter = playerTexts.erase(textsIter);
         } else {

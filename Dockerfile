@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libvorbis-dev \
     libcurl4-openssl-dev \
     zlib1g-dev \
+    libfreetype6-dev \
     ca-certificates \
     wget \
     && rm -rf /var/lib/apt/lists/*

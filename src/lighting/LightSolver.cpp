@@ -13,10 +13,9 @@ LightSolver::LightSolver(
     const ContentIndices& contentIds,
     Chunks& chunks,
     int channel
-) : chunks(chunks),
-    channel(channel),
-    blockDefs(contentIds.blocks.getDefs()) {
-}
+) : blockDefs(contentIds.blocks.getDefs()),
+    chunks(chunks),
+    channel(channel) {}
 
 void LightSolver::add(int x, int y, int z, int bright) {
     if (bright <= 1) return;

@@ -64,6 +64,12 @@ struct ModelConfig : AssetsConfig {
      ModelConfig(bool squashed) : squashed(squashed) {}
 };
 
+struct FontConfig : AssetsConfig {
+     int size;
+
+     FontConfig(int size) : size(size) {}
+};
+
 using aloader_func = std::function<asset_loader::postfunc(
      AssetsLoader*,
      const ResPaths&, 

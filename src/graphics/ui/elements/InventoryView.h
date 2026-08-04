@@ -82,7 +82,7 @@ namespace gui {
             Batch2D& batch,
             const ItemStack& stack,
             const Item& item,
-            const Font& font,
+            Font& font,
             const glm::vec2& pos
         );
 

@@ -1,11 +1,19 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <optional>
+
+class Font;
 
 struct FontMetrics {
+    std::optional<std::weak_ptr<Font>> font;
+
     int lineHeight;
     int yoffset;
-    int glyphInterval = 8;
+    int _glyphInterval = 8;
+
+    ~FontMetrics();
 
     int calcWidth(
         std::wstring_view text, 

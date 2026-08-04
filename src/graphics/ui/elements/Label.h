@@ -13,7 +13,6 @@ namespace gui {
     };
 
     struct LabelCache {
-        ptrdiff_t fontId = 0;
         FontMetrics metrics;
 
         std::vector<LineScheme> lines;
@@ -21,7 +20,11 @@ namespace gui {
         size_t wrapWidth = -1;
         int multilineWidth = 0;
 
-        void prepare(std::ptrdiff_t fontId, FontMetrics metrics, size_t wrapWidth);
+        void prepare(
+            const std::shared_ptr<Font>& font,
+            FontMetrics metrics,
+            size_t wrapWidth
+        );
         void update(std::wstring_view text, bool multiline, bool wrap);
 
         size_t getTextLineOffset(size_t line) const;

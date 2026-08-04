@@ -164,6 +164,8 @@ namespace gui {
         virtual void setMarkup(std::string_view lang);
         virtual const std::string& getMarkup() const;
 
+        std::shared_ptr<Label> getLabel() const;
+
         virtual bool isEdited() const;
         virtual void setUnedited();
 

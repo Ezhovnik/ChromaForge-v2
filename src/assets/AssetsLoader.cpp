@@ -191,6 +191,12 @@ void AssetsLoader::processPreload(
             config = std::make_shared<ModelConfig>(squashed);
             break;
         }
+        case AssetType::Font: {
+            int size = DEFAULT_FONT_SIZE;
+            map.at("size").get(size);
+            config = std::make_unique<FontConfig>(size);
+            break;
+        }
         default:
             break;
     }
