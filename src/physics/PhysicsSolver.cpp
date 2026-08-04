@@ -48,8 +48,6 @@ void PhysicsSolver::step(
 		float prev_y = pos.y;
 		float prev_z = pos.z;
 
-		vel += gravity * subDelta * gravityScale;
-
 		if (hitbox.type == BodyType::Dynamic) {
 			colisionCalc(
 				chunks,
@@ -61,6 +59,7 @@ void PhysicsSolver::step(
 			);
 		}
 
+		vel += gravity * subDelta * gravityScale;
 		pos += vel * subDelta + gravity * gravityScale * subDelta * subDelta * 0.5f;
 		if (hitbox.grounded && pos.y < prev_y) pos.y = prev_y;
 
@@ -71,7 +70,7 @@ void PhysicsSolver::step(
 			hitbox.grounded = false;
 
 			aabb = AABB(pos - half, pos + half);
-            aabb.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 2, 1.0f, 1.0f - PhysicsSolver_Consts::EPS * 2));
+            aabb.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 4, 1.0f, 1.0f - PhysicsSolver_Consts::EPS * 4));
 			for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
                 float x = (prev_x - half.x + PhysicsSolver_Consts::EPS) + ix;
                 for (int iz = 0; iz <= glm::ceil((half.z - PhysicsSolver_Consts::EPS) * 2); ++iz) {
@@ -90,7 +89,7 @@ void PhysicsSolver::step(
 			hitbox.grounded = false;
 
 			aabb = AABB(pos - half, pos + half);
-            aabb.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 2, 1.0f, 1.0f - PhysicsSolver_Consts::EPS * 2));
+            aabb.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 4, 1.0f, 1.0f - PhysicsSolver_Consts::EPS * 4));
 			for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
                 float x = (pos.x - half.x + PhysicsSolver_Consts::EPS) + ix;
                 for (int iz = 0; iz <= glm::ceil((half.z - PhysicsSolver_Consts::EPS) * 2); ++iz) {
@@ -170,12 +169,11 @@ static bool calc_collision_neg(
     glm::vec3& pos,
     glm::vec3& vel,
     const glm::vec3& half,
-    float stepHeight,
-    float margin = 1.0f
+    float stepHeight
 ) {
     if (vel[nx] >= 0.0f) return false;
 
-	glm::vec3 offset(0.0f, (stepHeight + PhysicsSolver_Consts::EPS) * margin, 0.0f);
+	glm::vec3 offset(0.0f, stepHeight + PhysicsSolver_Consts::EPS, 0.0f);
     for (int iy = 0; iy <= glm::ceil(((half - offset * 0.5f)[ny] - PhysicsSolver_Consts::EPS) * 2); ++iy) {
         glm::vec3 coord;
         coord[ny] = ((pos + offset)[ny] - half[ny] + PhysicsSolver_Consts::EPS) + iy;
@@ -188,11 +186,12 @@ static bool calc_collision_neg(
             scale[nz] = 1.0f - PhysicsSolver_Consts::EPS * 2.0f;
             boxAABB.scale(scale);
 			boxAABB = boxAABB + offset;
+			boxAABB.b.y -= stepHeight;
 
             if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
                 vel[nx] = 0.0f;
-                float newx = std::floor(coord[nx]) + half[nx] + aabb->max()[nx] + PhysicsSolver_Consts::EPS * margin;
-                if (newx - pos[nx] <= PhysicsSolver_Consts::EPS * margin) {
+                float newx = std::floor(coord[nx]) + half[nx] + aabb->max()[nx] + PhysicsSolver_Consts::EPS;
+                if (newx - pos[nx] <= PhysicsSolver_Consts::EPS) {
                     pos[nx] = newx;
 				}
 				return true;
@@ -200,6 +199,42 @@ static bool calc_collision_neg(
 		}
 	}
 	return false;
+}
+
+static bool calc_collision_neg_y(
+    const GlobalChunks& chunks,
+    glm::vec3& pos,
+    glm::vec3& vel,
+    const glm::vec3& half
+) {
+    if (vel.y >= 0.0f) {
+        return false;
+    }
+
+    for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
+        glm::vec3 coord;
+        coord.x = (pos.x - half.x + PhysicsSolver_Consts::EPS) + ix;
+        for (int iz = 0; iz <= glm::ceil((half.z - PhysicsSolver_Consts::EPS) * 2); ++iz) {
+            coord.z = (pos.z - half.z + PhysicsSolver_Consts::EPS) + iz;
+            coord.y = (pos.y - half.y - PhysicsSolver_Consts::EPS);
+
+            auto boxAABB = AABB(pos - half, pos + half);
+            glm::vec3 scale(1.0f);
+            scale.x = 1.0f - PhysicsSolver_Consts::EPS * 4.0f;
+            scale.z = 1.0f - PhysicsSolver_Consts::EPS * 4.0f;
+            boxAABB.scale(scale);
+
+            if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
+                vel.y = 0.0f;
+                float newx = std::floor(coord.y) + half.y + aabb->max().y;
+                if (newx - pos.y <= PhysicsSolver_Consts::EPS) {
+                    pos.y = newx;
+                }
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 template <int nx, int ny, int nz>
@@ -225,6 +260,7 @@ static void calc_collision_pos(
             scale[nz] = 1.0f - PhysicsSolver_Consts::EPS * 2.0f;
             boxAABB.scale(scale);
 			boxAABB = boxAABB + offset;
+			boxAABB.b.y -= stepHeight;
 
             if (const auto aabb = chunks.isObstacleAt(coord.x, coord.y, coord.z, boxAABB)) {
                 vel[nx] = 0.0f;
@@ -256,13 +292,13 @@ void PhysicsSolver::colisionCalc(
     calc_collision_neg<2, 1, 0>(chunks, pos, vel, half, stepHeight);
     calc_collision_pos<2, 1, 0>(chunks, pos, vel, half, stepHeight);
 
-    if (calc_collision_neg<1, 0, 2>(chunks, pos, vel, half, 0.0f, 0.0f)) {
+    if (calc_collision_neg_y(chunks, pos, vel, half)) {
         hitbox.grounded = true;
 	}
 
 	if (stepHeight > 0.0 && vel.y <= 0.0f) {
 		AABB boxAABB = AABB(-half, +half);
-        boxAABB.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS, 1.0f, 1.0f - PhysicsSolver_Consts::EPS));
+        boxAABB.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 2, 1.0f, 1.0f - PhysicsSolver_Consts::EPS * 2));
         boxAABB = boxAABB.translated(pos);
 
 		for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
@@ -280,13 +316,16 @@ void PhysicsSolver::colisionCalc(
 		}
 	}
 
-	if (vel.y > 0.0f){
+	if (vel.y > 0.0f) {
+		AABB boxAABB = AABB(-half, +half);
+        boxAABB.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 2, 1.0f, 1.0f - PhysicsSolver_Consts::EPS * 2));
+        boxAABB = boxAABB.translated(pos);
 		for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
             float x = (pos.x - half.x + PhysicsSolver_Consts::EPS) + ix;
             for (int iz = 0; iz <= glm::ceil((half.z - PhysicsSolver_Consts::EPS) * 2); ++iz) {
                 float z = (pos.z - half.z + PhysicsSolver_Consts::EPS) + iz;
 				float y = pos.y + half.y + PhysicsSolver_Consts::EPS;
-                if ((aabb = chunks.isObstacleAt(x,y,z, AABB(pos - half, pos + half)))){
+                if ((aabb = chunks.isObstacleAt(x, y, z, boxAABB))) {
 					vel.y = 0.0f;
 					float newy = std::floor(y) - half.y + aabb->min().y - PhysicsSolver_Consts::EPS;
 					if (std::abs(newy - pos.y) <= PhysicsSolver_Consts::MAX_FIX) pos.y = newy;

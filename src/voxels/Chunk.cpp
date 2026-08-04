@@ -55,7 +55,10 @@ std::shared_ptr<Inventory> Chunk::getBlockInventory(uint x, uint y, uint z) cons
 }
 
 void Chunk::removeBlockInventory(uint x, uint y, uint z) {
-	if (inventories.erase(vox_index(x, y, z))) flags.unsaved = true;
+	if (inventories.erase(vox_index(x, y, z))) {
+        flags.unsaved = true;
+        flags.inventoriesRemoved = true;
+    }
 }
 
 void Chunk::setBlockInventories(ChunkInventoriesMap map) {

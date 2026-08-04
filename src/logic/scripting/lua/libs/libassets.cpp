@@ -70,10 +70,21 @@ static int l_parse_model(lua::State* L) {
     auto& assets = scripting::engine->requireAssets();
     auto format = lua::require_lstring(L, 1);
     auto string = lua::require_lstring(L, 2);
-    auto name = lua::require_string(L, 3);
+    std::string name = lua::require_string(L, 3);
+    std::string skeletonName;
+    if (lua::isstring(L, 4)) {
+        skeletonName = lua::require_string(L, 4);
+    }
 
-    if (format == "xml" || format == "cfmodel") {
-        auto cfModel = cfmodel::parse(name, string, format == "xml");
+    if (format != "xml" && format != "cfmodel") {
+        throw std::runtime_error(
+            "Unknown format " + util::quote(std::string(format))
+        );
+    }
+
+    auto cfModel = cfmodel::parse(name, string, format == "xml");
+
+    if (skeletonName.empty()) {
         assets.store(
             std::make_unique<model::Model>(
                 std::move(cfModel.squash())
@@ -81,7 +92,28 @@ static int l_parse_model(lua::State* L) {
             name
         );
     } else {
-        throw std::runtime_error("Unknown format " + util::quote(std::string(format)));
+        auto skeleton = std::make_unique<rigging::SkeletonConfig>(
+            std::move(*cfModel.skeleton)
+        );
+        if (cfModel.parts.size() > 1) {
+            for (auto& [partName, model] : cfModel.parts) {
+                assets.store(
+                    std::make_unique<model::Model>(std::move(model)),
+                    name + "." + partName
+                );
+            }
+            for (auto& bone : skeleton->getBones()) {
+                bone->setModel(name + "." + bone->model.name);
+            }
+        } else {
+            assets.store(
+                std::make_unique<model::Model>(
+                    std::move(cfModel.parts["root"])
+                ), name
+            );
+            skeleton->getRoot()->setModel(name);
+        }
+        assets.store(std::move(skeleton), skeletonName);
     }
     return 0;
 }

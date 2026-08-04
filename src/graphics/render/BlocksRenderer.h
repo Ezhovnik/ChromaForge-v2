@@ -13,6 +13,7 @@
 #include <graphics/render/commons.h>
 #include <settings.h>
 #include <math/rand.h>
+#include <math/AABB.h>
 
 template<typename VertexStructure> class Mesh;
 class Content;
@@ -64,6 +65,8 @@ private:
     bool cancelled = false;
     bool densePass = false;
     bool denseRender = false;
+
+    AABB meshAABB {};
 
     const Chunk* chunk = nullptr;
     const VoxelsRenderVolume* voxelsBuffer = nullptr;

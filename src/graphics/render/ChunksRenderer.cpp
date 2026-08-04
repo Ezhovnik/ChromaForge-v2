@@ -83,7 +83,9 @@ ChunksRenderer::ChunksRenderer(
                 meshes[result.key] = ChunkMesh {
                     std::move(chunk),
                     std::move(meshData.sortingMesh),
-                    nullptr};
+                    nullptr,
+                    std::move(meshData.meshAABB)
+                };
             }
             inwork.erase(result.key);
         },
@@ -126,7 +128,7 @@ std::shared_ptr<VoxelsRenderVolume> ChunksRenderer::prepareVoxelsVolume(
     return voxelsBuffer;
 }
 
-const Mesh<ChunkVertex>* ChunksRenderer::render(
+const ChunkMesh* ChunksRenderer::render(
     const std::shared_ptr<Chunk>& chunk,
     bool important,
     bool lowPriority
@@ -140,7 +142,7 @@ const Mesh<ChunkVertex>* ChunksRenderer::render(
 
         mesh = renderer->render(chunk.get(), *voxelsBuffer);
         meshes[key] = std::move(mesh);
-        return meshes[key].mesh.get();
+        return &meshes[key];
     }
 
     if (
@@ -171,7 +173,7 @@ void ChunksRenderer::clear() {
     threadPool.clearQueue();
 }
 
-const Mesh<ChunkVertex>* ChunksRenderer::getOrRender(
+const ChunkMesh* ChunksRenderer::getOrRender(
     const std::shared_ptr<Chunk>& chunk,
     bool important,
     bool lowPriority
@@ -185,7 +187,7 @@ const Mesh<ChunkVertex>* ChunksRenderer::getOrRender(
         render(chunk, important, lowPriority);
     }
 
-    return found->second.mesh.get();
+    return &found->second;
 }
 
 void ChunksRenderer::update() {
@@ -224,16 +226,23 @@ const Mesh<ChunkVertex>* ChunksRenderer::retrieveChunk(
     if (chunk->flags.dirtyHeights) chunk->updateHeights();
 
     if (culling) {
-        glm::vec3 min(chunk->chunk_x * CHUNK_WIDTH, chunk->bottom, chunk->chunk_z * CHUNK_DEPTH);
+        const auto& meshAABB = mesh->meshAABB;
+        auto aabbMin = meshAABB.min();
+        auto aabbMax = meshAABB.max();
+        glm::vec3 min(
+            chunk->chunk_x * CHUNK_WIDTH + std::min(0.0f, aabbMin.x),
+            chunk->bottom,
+            chunk->chunk_z * CHUNK_DEPTH + std::min(0.0f, aabbMin.z)
+        );
         glm::vec3 max(
-            chunk->chunk_x * CHUNK_WIDTH + CHUNK_WIDTH,
+            chunk->chunk_x * CHUNK_WIDTH + aabbMax.x,
             chunk->top,
-            chunk->chunk_z * CHUNK_DEPTH + CHUNK_DEPTH
+            chunk->chunk_z * CHUNK_DEPTH + aabbMax.z
         );
 
         if (!frustum.isBoxVisible(min, max)) return nullptr;
     }
-    return mesh;
+    return mesh->mesh.get();
 }
 
 void ChunksRenderer::drawShadowsPass(

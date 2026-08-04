@@ -249,7 +249,10 @@ void BlocksRenderer::blockAABB(
         Z = orient.axes[2];
         orient.transform(hitbox);
     }
-
+    if (block->rt.extended) {
+        meshAABB.addPoint(coord + hitbox.max());
+        meshAABB.addPoint(coord + hitbox.min());
+    }
     coord -= glm::vec3(0.5f) - hitbox.center();
 
     if (ao) {
@@ -307,6 +310,12 @@ void BlocksRenderer::blockCustomModel(
             }
         }
         if (culled) return;
+    } else {
+        meshAABB.addPoint(
+            coord + X * glm::vec3(block.size.x) +
+            Y * glm::vec3(block.size.y) +
+            Z * glm::vec3(block.size.z)
+        );
     }
 
     // Рендерим каждый бокс модели
@@ -706,6 +715,7 @@ SortingMeshData BlocksRenderer::renderTranslucent(
 void BlocksRenderer::build(
     const Chunk* chunk, const VoxelsRenderVolume& volume
 ) {
+    meshAABB = AABB(glm::vec3(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH));
     this->chunk = chunk;
     this->voxelsBuffer = &volume;
 
@@ -788,7 +798,8 @@ ChunkMeshData BlocksRenderer::createMesh() {
                 ChunkVertex::ATTRIBUTES, sizeof(ChunkVertex::ATTRIBUTES) / sizeof(VertexAttribute)
             )
         ),
-        std::move(sortingMesh)
+        std::move(sortingMesh),
+        std::move(meshAABB)
     };
 }
 
@@ -807,7 +818,7 @@ ChunkMesh BlocksRenderer::render(
             IndexBufferData {indexBuffer.get(), indexCount},
             IndexBufferData {denseIndexBuffer.get(), denseIndexCount},
         }
-    ), std::move(sortingMesh), nullptr};
+    ), std::move(sortingMesh), nullptr, std::move(meshAABB)};
 }
 
 size_t BlocksRenderer::getMemoryConsumption() const {

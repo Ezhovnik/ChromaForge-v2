@@ -36,6 +36,7 @@ public:
         bool entities: 1;
         bool blocksData: 1;
         bool dirtyHeights : 1;
+        bool inventoriesRemoved : 1;
     } flags {};
 
     std::shared_ptr<Lightmap> lightmap; // Карта освещения чанка
