@@ -70,17 +70,21 @@ const AABB* Chunks::isObstacleAt(float x, float y, float z) const {
     }
 
     const auto& def = contentIds.blocks.require(vox->id);
-    if (def.obstacle) {
-        glm::ivec3 offset {};
-        if (vox->state.segment) {
-            glm::ivec3 point(ix, iy, iz);
-            offset = seekOrigin(point, def, vox->state) - point;
-        }
-        const auto& boxes = def.rotatable ? def.rt.hitboxes[vox->state.rotation] : def.hitboxes;
-        for (const auto& hitbox : boxes) {
-            if (hitbox.contains({x - ix - offset.x, y - iy - offset.y, z - iz - offset.z})) {
-                return &hitbox;
-            }
+    if (!def.obstacle) {
+        return nullptr;
+    }
+    glm::ivec3 offset {};
+    if (vox->state.segment) {
+        glm::ivec3 point(ix, iy, iz);
+        offset = seekOrigin(point, def, vox->state) - point;
+    }
+    const auto& boxes =
+        def.rotatable ? def.rt.hitboxes[vox->state.rotation] : def.hitboxes;
+    for (const auto& hitbox : boxes) {
+        if (hitbox.contains(
+            {x - ix - offset.x, y - iy - offset.y, z - iz - offset.z}
+        )) {
+            return &hitbox;
         }
     }
     return nullptr;

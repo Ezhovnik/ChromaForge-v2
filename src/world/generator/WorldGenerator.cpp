@@ -168,7 +168,7 @@ void WorldGenerator::placeStructure(
             if (found == prototypes.end()) continue;
             auto& otherPrototype = *found->second;
             auto chunkAABB = gen_chunk_aabb(chunkX + lcx, chunkZ + lcz);
-            if (chunkAABB.intersect(aabb)) {
+            if (chunkAABB.intersects(aabb)) {
                 otherPrototype.placements.emplace_back(
                     priority,
                     StructurePlacement {

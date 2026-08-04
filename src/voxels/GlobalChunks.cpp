@@ -212,6 +212,6 @@ void GlobalChunks::putChunk(std::shared_ptr<Chunk> chunk) {
     chunksMap[keyfrom(chunk->chunk_x, chunk->chunk_z)] = std::move(chunk);
 }
 
-const AABB* GlobalChunks::isObstacleAt(float x, float y, float z) const {
-    return blocks_agent::is_obstacle_at(*this, x, y, z);
+const AABB* GlobalChunks::isObstacleAt(float x, float y, float z, const AABB& aabb) const {
+    return blocks_agent::is_obstacle_at(*this, x, y, z, aabb);
 }
