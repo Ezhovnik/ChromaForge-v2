@@ -4,9 +4,11 @@
 #include <functional>
 #include <string>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/norm.hpp>
 
 #include <math/AABB.h>
 #include <typedefs.h>
@@ -69,9 +71,19 @@ struct Hitbox {
     float friction = 1.0f;
     float verticalDamping = 1.0f;
     bool grounded = false; ///< Флаг, указывающий, находится ли хитбокс на земле
+    bool yCollided = false;
     float gravityScale = 1.0f;
     bool crouching = false;
     float stepHeight = 0.5f;
+    std::string material;
+
+    glm::vec3 groundVelocity {};
+    std::string groundMaterial;
+
+    glm::vec3 prevPosition {};
+    float delta = 0.0f;
+
+    static inline constexpr float TELEPORT_THRESOLD_SQR = 0.5f;
 
     /**
      * @brief Конструктор хитбокса.
@@ -87,5 +99,12 @@ struct Hitbox {
 
     glm::vec3 getHalfSize() const {
         return halfsize * scale;
+    }
+
+    void setPos(const glm::vec3& vec) {
+        position = vec;
+        if (glm::distance2(position, prevPosition) >= TELEPORT_THRESOLD_SQR) {
+            prevPosition = vec;
+        }
     }
 };

@@ -333,6 +333,8 @@ const std::wstring& SlotView::getTooltip() const {
 
 void SlotView::performLeftClick(ItemStack& stack, ItemStack& grabbed) {
     const auto& input = gui.getInput();
+    const int action = 0;
+
     if (layout.taking && input.isPressed(Keycode::LEFT_SHIFT)) {
         if (layout.shareFunc) {
             layout.shareFunc(layout.index, stack);
@@ -340,6 +342,7 @@ void SlotView::performLeftClick(ItemStack& stack, ItemStack& grabbed) {
         if (layout.updateFunc) {
             layout.updateFunc(layout.index, stack);
         }
+        scripting::on_inventory_interact(inventoryId, layout.index, action | 2);
         return;
     }
     if (!layout.itemSource && stack.accepts(grabbed) && layout.placing) {
@@ -357,17 +360,26 @@ void SlotView::performLeftClick(ItemStack& stack, ItemStack& grabbed) {
             std::swap(grabbed, stack);
         }
     }
+
+    scripting::on_inventory_interact(inventoryId, layout.index, action);
 }
 
 void SlotView::performRightClick(ItemStack& stack, ItemStack& grabbed) {
+    const auto& input = gui.getInput();
+    const int action = 1;
+
     if (layout.rightClick) {
         layout.rightClick(inventoryId, stack);
         if (layout.updateFunc) {
             layout.updateFunc(layout.index, stack);
         }
+        scripting::on_inventory_interact(inventoryId, layout.index, action);
         return;
     }
-    if (layout.itemSource) return;
+    if (layout.itemSource) {
+        scripting::on_inventory_interact(inventoryId, layout.index, action);
+        return;
+    }
     if (grabbed.isEmpty()) {
         if (!stack.isEmpty() && layout.taking) {
             grabbed.set(std::move(stack));
@@ -379,10 +391,15 @@ void SlotView::performRightClick(ItemStack& stack, ItemStack& grabbed) {
                 stack = ItemStack(0, 0);
             }
         }
+        scripting::on_inventory_interact(inventoryId, layout.index, action);
         return;
     }
+
     auto& stackDef = content->getIndices()->items.require(stack.getItemId());
-    if (!layout.placing) return;
+    if (!layout.placing) {
+        scripting::on_inventory_interact(inventoryId, layout.index, action);
+        return;
+    }
     if (stack.isEmpty()) {
         itemcount_t count = grabbed.getCount();
         stack.set(std::move(grabbed));
@@ -396,6 +413,8 @@ void SlotView::performRightClick(ItemStack& stack, ItemStack& grabbed) {
         stack.setCount(stack.getCount() + 1);
         grabbed.setCount(grabbed.getCount() - 1);
     }
+
+    scripting::on_inventory_interact(inventoryId, layout.index, action);
 }
 
 void SlotView::clicked(Mousecode button) {

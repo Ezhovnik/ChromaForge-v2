@@ -221,6 +221,17 @@ function on_hud_close(playerid: int)
 
 Вызывается при выходе из мира, перед его сохранением.
 
+```lua
+function on_hud_inventory_interact"(invid: int, slot: int, action: int)
+```
+
+Вызывается при взаимодействии со слотом игрока.
+**action** отвечает за тип взаимодействия (0 - левый клик, 1 - правый клик, 2 - левый клик + шифт)
+
+## События ECS
+
+События **ECS** описаны [тут](entities-and-components.md#события-компонента)
+
 ## Библиотека *events*
 
 ```lua

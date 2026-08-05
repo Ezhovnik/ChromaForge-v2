@@ -41,6 +41,8 @@ inline constexpr int CHUNK_VOLUME = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH;
 
 inline constexpr float CHUNKS_MAP_MAX_LOAD_FACTOR = 0.1f;
 
+inline constexpr int EXTENDED_BLOCK_LIMIT = CHUNK_WIDTH;
+
 // ========== Биты пользовательских данных в блоке ==========
 
 /** Количество бит, отведённых под пользовательские данные в блоке. */

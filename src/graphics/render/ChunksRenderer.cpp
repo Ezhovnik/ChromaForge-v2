@@ -219,7 +219,7 @@ const Mesh<ChunkVertex>* ChunksRenderer::retrieveChunk(
     );
     auto mesh = getOrRender(
         chunk,
-        distance < CHUNK_WIDTH * 1.5f * 10.0f,
+        distance < CHUNK_WIDTH * 1.5f,
         distance > CHUNK_WIDTH * settings.chunks.loadDistance.get() * 0.5
     );
     if (mesh == nullptr) return nullptr;

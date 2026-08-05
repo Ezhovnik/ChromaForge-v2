@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <assets/Assets.h>
+#include <util/ObjectsKeeper.h>
 
 class Task;
 class AssetsLoader;
@@ -30,4 +31,5 @@ private:
     std::unique_ptr<Assets> assets;
     std::unique_ptr<AssetsLoader> backgroundLoader;
     std::shared_ptr<Task> backgroundLoaderTask;
+    util::ObjectsKeeper assetsVault;
 };

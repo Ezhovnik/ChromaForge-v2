@@ -11,6 +11,7 @@
 #include <graphics/core/Atlas.h>
 #include <logic/scripting/lua/usertypes/lua_type_canvas.h>
 #include <assets/AssetsLoader.h>
+#include <coders/obj.h>
 
 static debug::Logger logger("lib-assets");
 
@@ -74,6 +75,11 @@ static int l_parse_model(lua::State* L) {
     std::string skeletonName;
     if (lua::isstring(L, 4)) {
         skeletonName = lua::require_string(L, 4);
+    }
+
+    if (format == "obj") {
+        assets.store(obj::parse(name, string), name);
+        return 0;
     }
 
     if (format != "xml" && format != "cfmodel") {

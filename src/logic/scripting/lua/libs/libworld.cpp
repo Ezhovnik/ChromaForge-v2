@@ -24,11 +24,15 @@
 #include <content/ContentLoader.h>
 #include <content/ContentControl.h>
 
-static WorldInfo& require_world_info() {
+static Level& require_level() {
     if (scripting::level == nullptr) {
-        throw std::runtime_error("No world open");
+        throw std::runtime_error("World is not open");
     }
-    return scripting::level->getWorld()->getInfo();
+    return *scripting::level;
+}
+
+static WorldInfo& require_world_info() {
+    return require_level().getWorld()->getInfo();
 }
 
 static int l_get_list(lua::State* L) {

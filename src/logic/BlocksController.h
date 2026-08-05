@@ -7,7 +7,6 @@
 #include <typedefs.h>
 #include <voxels/voxel.h>
 #include <util/Clock.h>
-#include <math/rand.h>
 
 class Player;
 class Block;
@@ -36,8 +35,6 @@ class BlocksController {
     util::Clock blocksSparkClock;
     util::Clock worldSparkClock;
 
-    util::FastRandom random {};
-
     std::vector<OnBlockInteraction> blockInteractionCallbacks;
     uint64_t randomSparkId = 0;
 public:
@@ -62,7 +59,6 @@ public:
     void update(float delta, uint padding);
     void randomSpark(
         const Chunk& chunk,
-        int segments,
         const ContentIndices* indices
     );
     void randomSpark(int sparkId, int parts, uint padding);

@@ -30,7 +30,8 @@ LevelController::LevelController(
     settings(engine.getSettings()),
     level(std::move(levelPtr)),
     chunks(std::make_unique<ChunksController>(*level)),
-    playerSparkClock(20, 3)
+    playerSparkClock(20, 3),
+    clientPlayer(clientPlayer)
 {
     level->events->listen(LevelEventType::CHUNK_PRESENT, [](auto, Chunk* chunk) {
         scripting::on_chunk_present(*chunk, chunk->flags.loaded);
@@ -64,7 +65,7 @@ LevelController::LevelController(
             player->chunks->configure(
                 std::floor(position.x), std::floor(position.z), 1
             );
-            chunks->update(16, 1, 0, *player);
+            chunks->update(16, 1, 0, *player, player.get() == clientPlayer);
             if (player->chunks->getVoxel(std::floor(position.x), 0, std::floor(position.z))) {
                 confirmed++;
             }
@@ -90,7 +91,8 @@ void LevelController::update(float delta, bool pause) {
             settings.chunks.loadSpeed.get(),
             settings.chunks.loadDistance.get(),
             settings.chunks.padding.get(),
-            *player
+            *player,
+            player.get() == clientPlayer
         );
     }
     if (!pause) {

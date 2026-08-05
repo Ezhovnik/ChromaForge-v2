@@ -200,5 +200,10 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
         pop(L);
     }
 
+    if (stateType == StateType::Generator) {
+        pushnil(L);
+        setglobal(L, "ffi");
+    }
+
     return L;
 }

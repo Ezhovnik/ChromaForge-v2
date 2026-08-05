@@ -6,14 +6,28 @@
 #include <logic/BlocksController.h>
 
 namespace {
+    Level& require_level() {
+        if (scripting::level == nullptr) {
+            throw std::runtime_error("World is not open");
+        }
+        return *scripting::level;
+    }
+
+    const Content& require_content() {
+        if (scripting::content == nullptr) {
+            throw std::runtime_error("Content is not initialized");
+        }
+        return *scripting::content;
+    }
+
     void validate_itemid(itemid_t id) {
-        if (id >= scripting::indices->items.count()) {
+        if (id >= require_content().getIndices()->items.count()) {
             throw std::runtime_error("Invalid item id");
         }
     }
 
     Inventory& get_inventory(int64_t id) {
-        auto inv = scripting::level->inventories->get(id);
+        auto inv = require_level().inventories->get(id);
         if (inv == nullptr) {
             throw std::runtime_error("Inventory not found: " + std::to_string(id));
         }
@@ -21,7 +35,7 @@ namespace {
     }
 
     Inventory& get_inventory(int64_t id, int arg) {
-        auto inv = scripting::level->inventories->get(id);
+        auto inv = require_level().inventories->get(id);
         if (inv == nullptr) {
             throw std::runtime_error(
                 "Inventory not found: " + std::to_string(id) + " argument " + std::to_string(arg)
@@ -134,7 +148,7 @@ static int l_unbind_block(lua::State* L) {
 
 static int l_create(lua::State* L) {
     auto invsize = lua::tointeger(L, 1);
-    auto inv = scripting::level->inventories->create(invsize);
+    auto inv = require_level().inventories->create(invsize);
     if (inv == nullptr) {
         return lua::pushinteger(L, 0);
     }
@@ -143,13 +157,13 @@ static int l_create(lua::State* L) {
 
 static int l_remove(lua::State* L) {
     auto invid = lua::tointeger(L, 1);
-    scripting::level->inventories->remove(invid);
+    require_level().inventories->remove(invid);
     return 0;
 }
 
 static int l_clone(lua::State* L) {
     auto id = lua::tointeger(L, 1);
-    auto clone = scripting::level->inventories->clone(id);
+    auto clone = require_level().inventories->clone(id);
     if (clone == nullptr) {
         return lua::pushinteger(L, 0);
     }

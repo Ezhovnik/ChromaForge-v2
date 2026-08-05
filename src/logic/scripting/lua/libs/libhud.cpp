@@ -124,6 +124,15 @@ static int l_get_block_inventory(lua::State* L) {
     }
 }
 
+static int l_get_second_inventory(lua::State* L) {
+    auto inventory = scripting::hud->getSecondInventory();
+    if (inventory == nullptr) {
+        return lua::pushinteger(L, 0);
+    } else {
+        return lua::pushinteger(L, inventory->getId());
+    }
+}
+
 static int l_get_player(lua::State* L) {
     auto player = scripting::hud->getPlayer();
     return lua::pushinteger(L, player->getId());
@@ -135,6 +144,10 @@ static int l_is_paused(lua::State* L) {
 
 static int l_is_inventory_open(lua::State* L) {
     return lua::pushboolean(L, scripting::hud->isInventoryOpen());
+}
+
+static int l_is_player_inventory_open(lua::State* L) {
+    return lua::pushboolean(L, scripting::hud->isPlayerInventoryOpen());
 }
 
 static int l_is_content_access(lua::State* L) {
@@ -186,11 +199,13 @@ const luaL_Reg hudlib [] = {
     {"open_permanent", lua::wrap_hud<l_open_permanent>},
     {"show_overlay", lua::wrap_hud<l_show_overlay>},
     {"get_block_inventory", lua::wrap_hud<l_get_block_inventory>},
+    {"get_second_inventory", lua::wrap_hud<l_get_second_inventory>},
     {"close", lua::wrap_hud<l_close>},
     {"pause", lua::wrap_hud<l_pause>},
     {"resume", lua::wrap_hud<l_resume>},
     {"is_paused", lua::wrap_hud<l_is_paused>},
     {"is_inventory_open", lua::wrap_hud<l_is_inventory_open>},
+    {"is_player_inventory_open", lua::wrap_hud<l_is_player_inventory_open>},
     {"get_player", lua::wrap_hud<l_get_player>},
     {"_is_content_access", lua::wrap_hud<l_is_content_access>},
     {"_set_content_access", lua::wrap_hud<l_set_content_access>},

@@ -20,10 +20,12 @@ class LevelController;
 class Player;
 struct WeatherPreset;
 struct Weather;
+struct EngineSettings;
 
 class Decorator {
     const Level& level;
     const Assets& assets;
+    const EngineSettings& settings;
     Player& player;
     WorldRenderer& renderer;
     std::unordered_map<glm::ivec3, uint64_t> blockEmitters;

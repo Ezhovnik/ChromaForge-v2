@@ -40,14 +40,14 @@ struct AABB {
 
     /* Масштабирует параллелепипед относительно центра. 
     После масштабирования центр остаётся на месте*/
-    inline void scale(const glm::vec3 mul) {
+    inline void scale(const glm::vec3& mul) {
         glm::vec3 center = (a + b) * 0.5f;
         a = (a - center) * mul + center;
         b = (b - center) * mul + center;
     }
 
     // Масштабирует параллелепипед относительно заданной точки в относительных координатах.
-    inline void scale(const glm::vec3 mul, const glm::vec3 orig) {
+    inline void scale(const glm::vec3& mul, const glm::vec3& orig) {
         glm::vec3 beg = min();
         glm::vec3 end = max();
         glm::vec3 center = glm::mix(beg, end, orig);

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <functional>
 
 #include <glm/glm.hpp>
 
@@ -17,6 +18,8 @@ struct EngineSettings;
 struct CameraSettings;
 struct Hitbox;
 class Input;
+
+using FootstepCallback = std::function<void(const Hitbox&)>;
 
 class CameraControl {
 private:
@@ -56,6 +59,7 @@ private:
 	BlocksController& blocksController;
 
 	float interactionTimer = 0.0f;
+	FootstepCallback footstepCallback;
 
 	void updateKeyboard(const Input& inputEvents);
 	void resetKeyboard();
@@ -70,7 +74,6 @@ private:
 
 	voxel* updateSelection(float maxDistance);
 public:
-
 	PlayerController(
 		const EngineSettings& settings,
 		Level& level,
@@ -83,5 +86,7 @@ public:
 		float delta, int windowHeight, const Input* inputEvents, bool pause
 	);
 
-	Player* getPlayer();
+	Player& getPlayer();
+
+	void setFootstepCallback(FootstepCallback&& callback);
 };

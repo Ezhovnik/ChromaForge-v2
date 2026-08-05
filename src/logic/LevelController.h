@@ -21,6 +21,8 @@ class LevelController {
     std::unique_ptr<ChunksController> chunks;
 
     util::Clock playerSparkClock;
+
+    Player* clientPlayer;
 public:
     CallbacksSet<> preQuitCallbacks;
 

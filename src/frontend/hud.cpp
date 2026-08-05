@@ -278,7 +278,7 @@ void Hud::updateWorldGenDebug() {
     auto& level = levelFrontend.getLevel();
     const auto& chunks = *player.chunks;
     uint padding = engine.getSettings().chunks.padding.get();
-    auto generator = levelFrontend.getController()->getChunksController()->getGenerator();
+    auto generator = levelFrontend.getController().getChunksController()->getGenerator();
     auto debugInfo = generator->createDebugInfo();
     int width = debugImgWorldGen->getWidth();
     int height = debugImgWorldGen->getHeight();
@@ -299,7 +299,7 @@ void Hud::updateWorldGenDebug() {
 
             bool isInLoadingZone =
                 levelFrontend.getController()
-                    ->getChunksController()
+                    .getChunksController()
                     ->isInLoadingZone(player, padding, ax + ox, az + oz);
 
             data[(flippedZ * width + x) * 4 + 1] =
@@ -689,6 +689,10 @@ bool Hud::isInventoryOpen() const {
 	return inventoryOpen;
 }
 
+bool Hud::isPlayerInventoryOpen() const {
+    return inventoryView != nullptr;
+}
+
 bool Hud::isPause() const {
 	return pause;
 }
@@ -765,6 +769,16 @@ Player* Hud::getPlayer() const {
 std::shared_ptr<Inventory> Hud::getBlockInventory() {
     if (blockUI == nullptr) return nullptr;
     return blockUI->getInventory();
+}
+
+std::shared_ptr<Inventory> Hud::getSecondInventory() {
+    if (blockUI) {
+        return blockUI->getInventory();
+    }
+    if (secondInvView) {
+        return secondInvView->getInventory();
+    }
+    return nullptr;
 }
 
 bool Hud::isContentAccess() const {

@@ -20,6 +20,7 @@ namespace util {
     /**
      * @brief Генератор случайных чисел на основе std::mt19937 (вихрь Мерсенна).
      */
+    template<typename Engine = std::mt19937>
     class RandomGenerator {
     public:
         /**
@@ -31,13 +32,13 @@ namespace util {
          * @brief Создаёт генератор с явным seed'ом.
          * @param seed Значение для инициализации.
          */
-        explicit RandomGenerator(std::mt19937::result_type seed)
+        explicit RandomGenerator(typename Engine::result_type seed)
             : m_engine(seed) {}
 
         /**
          * @brief Возвращает ссылку на внутренний движок.
          */
-        std::mt19937& engine() {
+        Engine& engine() {
             return m_engine;
         }
 
@@ -62,17 +63,17 @@ namespace util {
         }
 
     private:
-        std::mt19937 m_engine;
+        Engine m_engine;
 
-        static std::mt19937 make_seeded_engine() {
+        static Engine make_seeded_engine() {
             std::random_device source;
             using rd_result = std::random_device::result_type;
-            constexpr std::size_t seed_bytes = std::mt19937::state_size * sizeof(typename std::mt19937::result_type);
+            constexpr std::size_t seed_bytes = Engine::state_size * sizeof(typename Engine::result_type);
             constexpr std::size_t num_seeds = (seed_bytes - 1) / sizeof(rd_result) + 1;
             rd_result data[num_seeds];
             std::generate(std::begin(data), std::end(data), std::ref(source));
             std::seed_seq seq(std::begin(data), std::end(data));
-            return std::mt19937(seq);
+            return Engine(seq);
         }
     };
 

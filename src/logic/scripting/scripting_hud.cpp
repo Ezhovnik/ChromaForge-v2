@@ -83,6 +83,22 @@ void scripting::on_frontend_render() {
     }
 }
 
+void scripting::on_inventory_interact(int invid, int slot, int action) {
+    auto L = lua::get_main_state();
+    for (auto& pack : content_control->getAllContentPacks()) {
+        lua::emit_event(
+            L,
+            pack.id + ":.hudinventoryinteract",
+            [&](lua::State* L) {
+                lua::pushinteger(L, invid);
+                lua::pushinteger(L, slot);
+                lua::pushinteger(L, action);
+                return 3;
+            }
+        );
+    }
+}
+
 void scripting::load_hud_script(
     const scriptenv& senv,
     const std::string& packid,
@@ -91,7 +107,6 @@ void scripting::load_hud_script(
 ) {
     int env = *senv;
     std::string src = io::read_string(file);
-    logger.debug() << "Loading script " << file.string();
 
     lua::execute(lua::get_main_state(), env, src, fileName);
 
@@ -99,8 +114,7 @@ void scripting::load_hud_script(
     register_event(env, "on_hud_open", packid + ":.hudopen");
     register_event(env, "on_hud_render", packid + ":.hudrender");
     register_event(env, "on_hud_close", packid + ".:hudclose");
-
-    logger.debug() << "Script " << file.string() << " successfully loaded";
+    register_event(env, "on_hud_inventory_interact", packid + ":.hudinventoryinteract");
 }
 
 gui::PageLoaderFunc scripting::create_page_loader() {

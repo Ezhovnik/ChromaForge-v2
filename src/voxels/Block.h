@@ -140,6 +140,18 @@ struct BlockRotProfile {
     static inline std::string STAIRS_NAME = "stairs";
 };
 
+enum class GroundingBehaviour : uint8_t {
+    Partial,
+    Complete,
+    Origin
+};
+
+CHROMA_ENUM_METADATA(GroundingBehaviour)
+    {"partial", GroundingBehaviour::Partial},
+    {"complete", GroundingBehaviour::Complete},
+    {"origin", GroundingBehaviour::Origin},
+CHROMA_ENUM_END
+
 struct BlockMaterial : Serializable {
 	std::string name;
 	std::string stepsSound;
@@ -189,6 +201,8 @@ public:
     bool ambientOcclusion = true;
     bool translucent = false;
     bool explictlySolid = false;
+
+    GroundingBehaviour groundingBehaviour = GroundingBehaviour::Partial;
 
     std::vector<AABB> hitboxes {AABB()};
 

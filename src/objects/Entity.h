@@ -24,6 +24,7 @@ struct Entity {
     std::vector<ComponentInstance> components;
     std::string skeletonName = name;
     bool blocking = true;
+    bool solid = false;
 
     float stepHeight = 0.5f;
 

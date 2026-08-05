@@ -75,7 +75,7 @@ LevelScreen::LevelScreen(
     );
 
     frontend = std::make_unique<LevelFrontend>(
-        engine, player, controller.get(), settings
+        engine, *playerController, *controller, settings
     );
 
     renderer = std::make_unique<WorldRenderer>(
@@ -124,7 +124,7 @@ LevelScreen::~LevelScreen() {
     }
     scripting::on_frontend_close();
     input.getBindings().enableAll();
-    playerController->getPlayer()->chunks->saveAndClear();
+    playerController->getPlayer().chunks->saveAndClear();
     controller->onWorldQuit();
 }
 
@@ -176,11 +176,11 @@ void LevelScreen::saveDecorations() {
 void LevelScreen::saveWorldPreview() {
     try {
         logger.info() << "Saving world preview";
-        auto player = playerController->getPlayer();
-        auto& settings = engine.getSettings();
+        const Player& player = playerController->getPlayer();
+        const auto& settings = engine.getSettings();
         int previewSize = settings.ui.worldPreviewSize.get();
 
-        Camera camera = *player->fpCamera;
+        Camera& camera = *player.fpCamera;
         camera.setFov(glm::radians(70.0f));
 
         DrawContext parent_ctx(nullptr, engine.getWindow(), batch.get());
@@ -216,20 +216,20 @@ void LevelScreen::updateHotkeys() {
 }
 
 void LevelScreen::updateAudio() {
-    auto player = playerController->getPlayer();
-    auto camera = player->currentCamera;
+    Player& player = playerController->getPlayer();
+    Camera& camera = *player.currentCamera;
 
     bool paused = hud->isPause();
     audio::get_channel("regular")->setPaused(paused);
     audio::get_channel("ambient")->setPaused(paused);
     glm::vec3 velocity {};
-    if (auto hitbox = player->getHitbox())  {
+    if (auto hitbox = player.getHitbox()) {
         velocity = hitbox->velocity;
     }
     audio::set_listener(
-        camera->position, 
+        camera.position,
         velocity,
-        camera->dir, 
+        camera.dir,
         glm::vec3(0, 1, 0)
     );
 }
@@ -261,23 +261,23 @@ void LevelScreen::update(float deltaTime) {
 
     hud->update(hudVisible);
 
-    const auto& weather = renderer->getWeather();
-    const auto& player = *playerController->getPlayer();
-    const auto& camera = *player.currentCamera;
+    const Weather& weather = renderer->getWeather();
+    const Player& player = playerController->getPlayer();
+    const Camera& camera = *player.currentCamera;
     decorator->update(paused ? 0.0f : deltaTime, camera, weather);
 }
 
 void LevelScreen::draw(float deltaTime) {
-    auto camera = playerController->getPlayer()->currentCamera;
+    Camera& camera = *playerController->getPlayer().currentCamera;
 
-    DrawContext ctx(nullptr, engine.getWindow(), batch.get());
+    const DrawContext ctx(nullptr, engine.getWindow(), batch.get());
 
     if (!hud->isPause()) {
         scripting::on_entities_render(engine.getTime().getDeltaTime());
     }
 
-    renderer->update(*camera, deltaTime * !hud->isPause());
-    renderer->renderFrame(ctx, *camera, hudVisible, *postProcessing);
+    renderer->update(camera, deltaTime * !hud->isPause());
+    renderer->renderFrame(ctx, camera, hudVisible, *postProcessing);
     if (!hud->isPause()) {
         scripting::on_frontend_render();
     }

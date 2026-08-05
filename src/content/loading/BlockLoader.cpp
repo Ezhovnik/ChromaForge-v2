@@ -14,6 +14,7 @@
 #include <util/stringutil.h>
 #include <presets/ParticlesPreset.h>
 #include <voxels/Block.h>
+#include <constants.h>
 
 static debug::Logger logger("blocks-loader");
 
@@ -111,8 +112,8 @@ template<> void ContentUnitLoader<Block>::loadUnit(
             }
 
             def.variants = std::make_unique<Variants>();
-            def.variants->offset = 0;
-            def.variants->mask = 0xF;
+            def.variants->offset = offset;
+            def.variants->mask = (1ULL << bitsCount) - 1;
             def.variants->variants.push_back(def.defaults);
             for (int i = 0; i < variants.size(); ++i) {
                 Variant variant = def.defaults;
@@ -184,9 +185,28 @@ template<> void ContentUnitLoader<Block>::loadUnit(
         if (def.size.x < 1 || def.size.y < 1 || def.size.z < 1) {
             throw std::runtime_error("Block " + name + ": invalid block size");
         }
+
+        if (def.size.x > EXTENDED_BLOCK_LIMIT ||
+            def.size.y > EXTENDED_BLOCK_LIMIT ||
+            def.size.z > EXTENDED_BLOCK_LIMIT
+        ) {
+            throw std::runtime_error(
+                "Extended block " + util::quote(def.name) + " size limit " +
+                std::to_string(EXTENDED_BLOCK_LIMIT) + " exceeded"
+            );
+        }
+
         if (def.defaults.model.type == BlockModelType::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
             def.defaults.model.type = BlockModelType::AABB;
             def.hitboxes = {AABB(def.size)};
+        }
+
+        if (root.has("grounding-behaviour")) {
+            std::string groundingBehaviourName = GroundingBehaviourMeta.getNameString(def.groundingBehaviour);
+            root.at("grounding-behaviour").get(groundingBehaviourName);
+            if (!GroundingBehaviourMeta.getItem(groundingBehaviourName, def.groundingBehaviour)) {
+                logger.warning() << "Block " << name << ": unknown grounding behaviour — " << groundingBehaviourName;
+            }
         }
     }
 

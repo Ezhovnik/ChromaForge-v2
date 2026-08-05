@@ -152,7 +152,7 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
 
     assert(chunk != nullptr);
 
-    if (!chunk->flags.lighted) return;
+    if (!chunk->flags.ready) return;
     bool lightsUnsaved = !chunk->flags.loadedLights && doWriteLights;
     if (!chunk->flags.unsaved && !lightsUnsaved && !chunk->flags.entities) return;
 

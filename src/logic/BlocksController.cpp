@@ -1,5 +1,7 @@
 #include <logic/BlocksController.h>
 
+#include <random>
+
 #include <voxels/voxel.h>
 #include <voxels/Block.h>
 #include <voxels/Chunk.h>
@@ -16,6 +18,9 @@
 #include <voxels/blocks_agent.h>
 #include <objects/Player.h>
 #include <objects/Players.h>
+#include <math/rand.h>
+
+static inline constexpr int CHUNK_RANDOM_TICK_SEGMENTS = 4;
 
 BlocksController::BlocksController(
     const Level& level,
@@ -102,10 +107,17 @@ void BlocksController::updateBlock(int x, int y, int z) {
     if (vox == nullptr) return;
     const auto& def = level.content.getIndices()->blocks.require(vox->id);
     if (def.grounded) {
-        const auto& vec = get_ground_direction(def, vox->state.rotation);
-        if (!blocks_agent::is_solid_at(chunks, x + vec.x, y + vec.y, z + vec.z)) {
-            breakBlock(nullptr, def, x, y, z);
-            return;
+        if (def.rt.extended) {
+            auto origin = blocks_agent::seek_origin(chunks, {x, y, z}, def, vox->state);
+            if (!blocks_agent::check_grounding(chunks, def, vox->state.rotation, origin)) {
+                breakBlock(nullptr, def, origin.x, origin.y, origin.z);
+                return;
+            }
+        } else {
+            if (!blocks_agent::check_grounding(chunks, def, vox->state.rotation, {x, y, z})) {
+                breakBlock(nullptr, def, x, y, z);
+                return;
+            }
         }
     }
     if (def.rt.funcsset.update) scripting::update_block(def, glm::ivec3(x, y, z));
@@ -146,18 +158,32 @@ void BlocksController::onBlocksSpark(int sparkId, int parts) {
 }
 
 void BlocksController::randomSpark(
-    const Chunk& chunk, int segments, const ContentIndices* indices
+    const Chunk& chunk, const ContentIndices* indices
 ) {
-    const int segheight = CHUNK_HEIGHT/segments;
+    const int segments = CHUNK_RANDOM_TICK_SEGMENTS;
+    const int segheight = CHUNK_HEIGHT / segments;
+
+    static std::array<int, CHUNK_VOLUME / segments> randomPattern;
+    static bool randomPatternInitialized = false;
+    if (!randomPatternInitialized) {
+        randomPatternInitialized = true;
+        for (int i = 0; i < randomPattern.size(); ++i) {
+            randomPattern[i] = i;
+        }
+        util::RandomGenerator<std::mt19937_64> rng;
+        std::shuffle(randomPattern.begin(), randomPattern.end(), rng.engine());
+    }
 
     for (int s = 0; s < segments; ++s) {
-        for (int i = 0; i < 4; ++i) {
+        int repetions = 4;
+        for (int i = 0; i < repetions; ++i) {
             int segmentY = s * segheight;
-            if (segmentY  > chunk.top) break;
-            int bx = random.rand() % CHUNK_WIDTH;
-            int by = random.rand() % segheight + segmentY;
-            int bz = random.rand() % CHUNK_DEPTH;
-            const voxel& vox = chunk.voxels[vox_index(bx, by, bz)];
+            if (segmentY > chunk.top) break;
+            size_t index = randomPattern[(s * repetions + i + randomSparkId) % randomPattern.size()];
+            int bx = index % CHUNK_WIDTH;
+            int bz = (index / CHUNK_WIDTH) % CHUNK_DEPTH;
+            int by = (index / (CHUNK_WIDTH * CHUNK_DEPTH)) + segmentY;
+            const voxel& vox = chunk.voxels[index + segmentY * CHUNK_WIDTH * CHUNK_DEPTH];
             auto& block = indices->blocks.require(vox.id);
             if (block.rt.funcsset.randupdate) {
                 scripting::random_update_block(
@@ -180,19 +206,18 @@ void BlocksController::randomSpark(int sparkId, int parts, uint padding) {
         const auto& chunks = *player->chunks;
         int width = chunks.getWidth();
         int depth = chunks.getDepth();
-        int segments = 4;
 
         for (uint z = padding; z < depth - padding; ++z) {
             for (uint x = padding; x < width - padding; ++x) {
                 int index = z * width + x;
                 if ((index + sparkId) % parts != 0) continue;
                 auto& chunk = chunks.getChunks()[index];
-                if (chunk == nullptr || !chunk->flags.lighted) continue;
+                if (chunk == nullptr || !chunk->flags.ready) continue;
                 if (chunk->lastRandomSparkId == randomSparkId) {
                     continue;
                 }
                 chunk->lastRandomSparkId = randomSparkId;
-                randomSpark(*chunk, segments, indices);
+                randomSpark(*chunk, indices);
             }
         }
     }

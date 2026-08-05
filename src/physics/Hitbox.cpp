@@ -9,4 +9,5 @@ Hitbox::Hitbox(
 ) : type(type),
     position(position), 
     halfsize(halfsize), 
-    velocity(0.0f, 0.0f, 0.0f) {}
+    velocity(0.0f, 0.0f, 0.0f),
+    prevPosition(position) {}

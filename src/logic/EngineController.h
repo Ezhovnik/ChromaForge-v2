@@ -3,8 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-
-#include <typedefs.h>
+#include <cstdint>
 
 class Engine;
 class World;

@@ -143,6 +143,7 @@ public:
     );
     void closeInventory();
     bool isInventoryOpen() const;
+    bool isPlayerInventoryOpen() const;
     void openPermanent(UIDocument* doc);
     void showOverlay(
         UIDocument* doc,
@@ -163,6 +164,8 @@ public:
     void setDebug(bool flag);
 
     std::shared_ptr<Inventory> getBlockInventory();
+
+    std::shared_ptr<Inventory> getSecondInventory();
 
     bool isOpen(const std::string& layoutid) const;
 

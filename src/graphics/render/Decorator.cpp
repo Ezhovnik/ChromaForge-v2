@@ -39,6 +39,7 @@ Decorator::Decorator(
     Player& player
 ) : level(*controller.getLevel()),
     assets(assets),
+    settings(engine.getSettings()),
     player(player),
     renderer(renderer)
 {
@@ -82,6 +83,9 @@ void Decorator::addParticles(const Block& def, const glm::ivec3& pos) {
 }
 
 void Decorator::updateAcoustics(const Camera& camera) {
+    if (!settings.audio.acousticEffects.get()) {
+        return;
+    }
     audio::Acoustics acoustics {};
     util::PseudoRandom random(34621U);
 

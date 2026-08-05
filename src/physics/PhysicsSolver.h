@@ -11,43 +11,52 @@
 
 class GlobalChunks;
 class Block;
+class Entities;
 struct blockstate;
 
 // Класс для решения физических взаимодействий объектов с воксельным миром.
 class PhysicsSolver {
-private:
-	glm::vec3 gravity; // Вектор гравитации, применяемой к объектам
-	std::vector<Sensor*> sensors;
 public:
-	PhysicsSolver(glm::vec3 gravity); // Конструтор
+    PhysicsSolver(glm::vec3 gravity); // Конструтор
 
-	void step(
-		const GlobalChunks& chunks,
-		Hitbox& hitbox,
-		float delta,
-		uint substeps,
+    void step(
+        const GlobalChunks& chunks,
+        Hitbox& hitbox,
+        float delta,
+        uint substeps,
         entityid_t entity
-	); // Выполняет один шаг физического моделирования для указанного хитбокса.
+    ); // Выполняет один шаг физического моделирования для указанного хитбокса.
 
-	void colisionCalc(
-		const GlobalChunks& chunks,
-		Hitbox& hitbox,
-		glm::vec3& vel,
-		glm::vec3& pos,
-		const glm::vec3 half,
-		float stepHeight
-	);
-    bool isBlockInside(int x, int y, int z, Hitbox* hitbox); // Проверяет, находится ли указанный блок внутри границ хитбокса.
-	bool isBlockInside(
-		int x, int y, int z,
-		Block* def,
-		blockstate state,
-		Hitbox* hitbox
-	);
-
-	void setSensors(std::vector<Sensor*> sensors) {
-        this->sensors = std::move(sensors);
+    auto& getSensorsWriteable() {
+        return sensors;
     }
 
-	void removeSensor(Sensor* sensor);
+    auto& getSolidHitboxesWriteable() {
+        return solidHitboxes;
+    }
+
+    void removeSensor(Sensor* sensor);
+private:
+    glm::vec3 gravity;
+    std::vector<Sensor*> sensors;
+    std::vector<Hitbox*> solidHitboxes;
+
+    void calcCollisions(
+        const GlobalChunks& chunks,
+        Hitbox& hitbox,
+        glm::vec3& vel,
+        glm::vec3& pos,
+        const glm::vec3& half,
+        float stepHeight
+    );
+
+    void calcSubstep(
+        const GlobalChunks& chunks,
+        Hitbox& hitbox,
+        glm::vec3& vel,
+        glm::vec3& pos,
+        bool prevGrounded,
+        float dt,
+        int substeps
+    );
 };

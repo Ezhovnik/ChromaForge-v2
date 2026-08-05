@@ -23,6 +23,7 @@
 #include <math/rays.h>
 #include <graphics/core/DrawContext.h>
 #include <objects/Entt_Entity.h>
+#include <math/util.h>
 
 static debug::Logger logger("entities");
 
@@ -338,19 +339,32 @@ void Entities::updateSensors(
 }
 
 void Entities::preparePhysics(float delta) {
+    auto& physics = *level.physics;
+    auto& solidHitboxes = physics.getSolidHitboxesWriteable();
+
     if (sensorsSparkClock.update(delta)) {
         auto part = sensorsSparkClock.getPart();
         auto parts = sensorsSparkClock.getParts();
 
+        auto& sensors = physics.getSensorsWriteable();
+        sensors.clear();
+
         auto view = registry->view<EntityId, Transform, Rigidbody>();
-        auto physics = level.physics.get();
-        std::vector<Sensor*> sensors;
         for (auto [entity, eid, transform, rigidbody] : view.each()) {
             if (!rigidbody.enabled) continue;
             if ((eid.uid + part) % parts != 0) continue;
             updateSensors(rigidbody, transform, sensors);
         }
-        physics->setSensors(std::move(sensors));
+    }
+
+    solidHitboxes.clear();
+
+    auto view = registry->view<EntityId, Rigidbody>();
+    for (auto [entity, eid, rigidbody] : view.each()) {
+        if (!eid.def.solid || eid.destroyFlag || !rigidbody.enabled) {
+            continue;
+        }
+        solidHitboxes.emplace_back(&rigidbody.hitbox);
     }
 }
 
@@ -359,33 +373,42 @@ void Entities::updatePhysics(float delta) {
 
     auto view = registry->view<EntityId, Transform, Rigidbody>();
     auto physics = level.physics.get();
-    for (auto [entity, eid, transform, rigidbody] : view.each()) {
-        if (!rigidbody.enabled || rigidbody.hitbox.type == BodyType::Static) continue;
-        auto& hitbox = rigidbody.hitbox;
-        auto prevVel = hitbox.velocity;
-        bool grounded = hitbox.grounded;
+    for (int solid = false; solid <= true; ++solid) {
+        for (auto [entity, eid, transform, rigidbody] : view.each()) {
+            if (!rigidbody.enabled || rigidbody.hitbox.type == BodyType::Static) {
+                continue;
+            }
+            if (eid.def.solid == solid) {
+                continue;
+            }
+            auto& hitbox = rigidbody.hitbox;
+            auto prevVel = hitbox.velocity;
+            bool grounded = hitbox.grounded;
 
-        float vel = glm::length(prevVel);
-        int substeps = static_cast<int>(delta * vel * 20);
-        substeps = std::min(100, std::max(2, substeps));
-        physics->step(
-            *level.chunks,
-            hitbox,
-            delta,
-            substeps,
-            eid.uid
-        );
-        hitbox.friction = glm::abs(hitbox.gravityScale <= 1e-7f) ? 8.0f : (!grounded ? 2.0f : 10.0f);
-        hitbox.scale = transform.size;
-        transform.setPos(hitbox.position);
-        if (hitbox.grounded && !grounded) {
-            scripting::on_entity_grounded(
-                *get(eid.uid),
-                glm::length(prevVel - hitbox.velocity)
-            );
-        }
-        if (!hitbox.grounded && grounded) {
-            scripting::on_entity_fall(*get(eid.uid));
+            float vel = glm::length(prevVel);
+            int substeps = static_cast<int>(delta * (vel + 2.0f) * 20);
+            substeps = std::min(100, std::max(2, substeps));
+            physics->step(*level.chunks, hitbox, delta, substeps, eid.uid);
+            hitbox.friction = glm::abs(hitbox.gravityScale <= 1e-7f)
+                                ? 8.0f
+                                : (!grounded ? 2.0f : 10.0f);
+            hitbox.scale = transform.size;
+            if (util::is_nan_or_inf(hitbox.position)) {
+                logger.error()
+                    << "Physics simulation produced NaN or INF (entity "
+                    << eid.def.name << "№" << eid.uid << ")";
+                hitbox.position = transform.pos;
+            } else {
+                transform.setPos(hitbox.position);
+            }
+            if (hitbox.grounded && !grounded) {
+                scripting::on_entity_grounded(
+                    *get(eid.uid), glm::length(prevVel - hitbox.velocity)
+                );
+            }
+            if (!hitbox.grounded && grounded) {
+                scripting::on_entity_fall(*get(eid.uid));
+            }
         }
     }
 }
