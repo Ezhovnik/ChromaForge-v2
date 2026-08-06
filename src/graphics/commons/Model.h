@@ -42,6 +42,23 @@ namespace model {
             const glm::vec3& norm,
             const UVRegion& region
         );
+        void addRect(
+            const glm::vec3& pos,
+            const glm::vec3& right,
+            const glm::vec3& up,
+            const glm::vec3& norm,
+            const UVRegion& uv,
+            const glm::mat4& transform
+        );
+        void addTriangle(
+            const glm::vec3& a,
+            const glm::vec3& b,
+            const glm::vec3& c,
+            const glm::vec3& norm,
+            const glm::vec2& uvA,
+            const glm::vec2& uvB,
+            const glm::vec2& uvC
+        );
         void addBox(const glm::vec3& pos, const glm::vec3& size);
         void addBox(
             const glm::vec3& pos,
@@ -57,6 +74,10 @@ namespace model {
             const glm::mat4& transform
         );
         void scale(const glm::vec3& size);
+
+        void transform(const glm::mat4& matrix);
+
+        void translate(const glm::vec3& offset);
     };
 
     struct Model {
@@ -73,5 +94,12 @@ namespace model {
         }
 
         void clean();
+
+        void transform(const glm::mat4& matrix);
+
+        void translate(const glm::vec3& offset);
+
+        void merge(const Model& source);
+        void merge(Model&& source);
     };
 }

@@ -1,6 +1,7 @@
 #include <coders/png.h>
 
-#include <iostream>
+#include <stdexcept>
+#include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -14,13 +15,17 @@
 #include <typedefs.h>
 #include <io/io.h>
 
+static debug::Logger logger("png-coder");
+
 std::unique_ptr<ImageData> png::loadImage(const ubyte* bytes, size_t size, bool flipVertically) {
     int width, height, channels;
     stbi_set_flip_vertically_on_load(flipVertically);
     stbi_uc* data = stbi_load_from_memory(bytes, static_cast<int>(size), &width, &height, &channels, 4);
     if (!data) {
         const char* error_msg = stbi_failure_reason();
-        THROW_ERR("Failed to load image. Reason: {}", error_msg ? error_msg : "Unknown error");
+        throw std::runtime_error(
+            "Failed to load image. Reason: " + std::string(error_msg ? error_msg : "Unknown error")
+        );
     }
 
     auto imageData = std::make_unique<ubyte[]>(width * height * 4);
@@ -34,7 +39,7 @@ std::unique_ptr<ImageData> png::loadImage(const ubyte* bytes, size_t size, bool 
 bool png::writeImage(const std::string& filename, const ImageData* image) {
     // Проверяем корректность входных данных
     if (!image || !image->getData()) {
-        LOG_ERROR("Invalid image {} data for writing to file", filename);
+        logger.error() << "Invalid image " << filename << " data for writing to file";
         return false;
     }
 
@@ -51,7 +56,7 @@ bool png::writeImage(const std::string& filename, const ImageData* image) {
             channels = 3;
             break;
         default:
-            LOG_ERROR("Unsupported image format for PNG writing");
+            logger.error() << "Unsupported image format for PNG writing";
             return false;
     }
 
@@ -62,11 +67,37 @@ bool png::writeImage(const std::string& filename, const ImageData* image) {
 
     if (!success) {
         const char* error_msg = stbi_failure_reason();
-        LOG_ERROR("Failed to write image to file: '{}'. Reason: {}", filename, error_msg ? error_msg : "Unknown error");
+        logger.error() << "Failed to write image to file: '" << filename
+                    << "'. Reason: " << (error_msg ? error_msg : "Unknown error");
         return false;
     }
 
     return true;
+}
+
+util::Buffer<ubyte> png::encode_image(const ImageData& image) {
+    auto format = image.getFormat();
+    int channels = (format == ImageFormat::rgba8888) ? 4 : 3;
+    int width = image.getWidth();
+    int height = image.getHeight();
+    const ubyte* data = image.getData();
+
+    std::vector<ubyte> buffer;
+    stbi_write_png_to_func(
+        [](void* context, void* data, int size) {
+            auto& buf = *static_cast<std::vector<ubyte>*>(context);
+            auto* bytes = static_cast<const ubyte*>(data);
+            buf.insert(buf.end(), bytes, bytes + size);
+        },
+        &buffer,
+        width,
+        height,
+        channels,
+        data,
+        width * channels
+    );
+
+    return util::Buffer<ubyte>(buffer.data(), buffer.size());
 }
 
 // Загружает текстуру из PNG файла
@@ -84,6 +115,6 @@ std::unique_ptr<Texture> png::loadTexture(const std::string& filename) {
     try {
         return loadTexture(bytes.data(), bytes.size());
     } catch (const std::runtime_error& err) {
-        THROW_ERR("Could not to load '{}'", filename);
+        throw std::runtime_error("Could not to load '" + filename + "'");
     }
 }

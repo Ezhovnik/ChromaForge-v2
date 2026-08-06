@@ -14,6 +14,8 @@
 #include <assets/Assets.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("panorama");
+
 std::unique_ptr<Cubemap> Panorama::loadCubemap(Assets& assets) {
     const char* faceNames[6] = {
         "0",  // GL_TEXTURE_CUBE_MAP_POSITIVE_X
@@ -30,7 +32,7 @@ std::unique_ptr<Cubemap> Panorama::loadCubemap(Assets& assets) {
     for (int i = 0; i < 6; ++i) {
         faces[i] = assets.get<Texture>(std::string("panorama/") + faceNames[i]);
         if (!faces[i]) {
-            LOG_ERROR("Panorama: missing texture {}", faceNames[i]);
+            logger.error() << "Missing texture " << faceNames[i]; 
             return nullptr;
             continue;
         }
@@ -38,7 +40,7 @@ std::unique_ptr<Cubemap> Panorama::loadCubemap(Assets& assets) {
             width = faces[i]->getWidth();
             height = faces[i]->getHeight();
         } else if (faces[i]->getWidth() != width || faces[i]->getHeight() != height) {
-            LOG_ERROR("Panorama: texture sizes mismatch for face {}", faceNames[i]);
+            logger.error() << "Texture sizes mismatch for face " << faceNames[i];
             return nullptr;
         }
     }
@@ -95,7 +97,7 @@ Panorama::Panorama(Assets& assets)
 
         mesh = createScreenQuad();
     } else {
-        LOG_WARN("Cubemap not loaded, panorama disabled");
+        logger.warning() << "Cubemap not loaded, panorama disabled";
     }
 }
 

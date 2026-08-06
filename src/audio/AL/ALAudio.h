@@ -4,18 +4,19 @@
 #include <string>
 #include <unordered_map>
 #include <queue>
+#include <array>
 
-#ifdef __APPLE__
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#else
+
 #include <AL/al.h>
 #include <AL/alc.h>
-#endif
+#include <AL/alext.h>
 #include <glm/glm.hpp>
 
 #include <audio/audio.h>
+#include <audio/effects.h>
 #include <typedefs.h>
+
+struct AudioSettings;
 
 namespace audio {
     struct ALBuffer;
@@ -59,6 +60,7 @@ namespace audio {
         bool keepSource;
         char buffer[BUFFER_SIZE];
         bool loop = false;
+        bool stopOnEnd = false;
 
         bool preloadBuffer(uint buffer, bool loop);
         void unqueueBuffers(uint alsource);
@@ -82,6 +84,9 @@ namespace audio {
         void setTime(duration_t time) override;
 
         static inline constexpr uint STREAM_BUFFERS = 3;
+
+        bool isStopOnEnd() const override;
+        void setStopOnEnd(bool stopOnEnd) override;
     };
 
     class ALInputDevice : public InputDevice {
@@ -90,7 +95,8 @@ namespace audio {
             ALAudio* al,
             ALCdevice* device,
             uint channels,
-            uint bitsPerSample
+            uint bitsPerSample,
+            uint sampleRate
         );
         ~ALInputDevice() override;
 
@@ -99,12 +105,18 @@ namespace audio {
 
         uint getChannels() const override;
 
+        uint getSampleRate() const override;
+        uint getBitsPerSample() const override;
+
+        const std::string& getDeviceSpecifier() const override;
+
         size_t read(char* buffer, size_t bufferSize) override;
     private:
-        ALAudio* al;
         ALCdevice* device;
         uint channels;
         uint bitsPerSample;
+        uint sampleRate;
+        std::string deviceSpecifier;
     };
 
     class ALSpeaker : public Speaker {
@@ -117,7 +129,7 @@ namespace audio {
         ALStream* stream = nullptr;
 
         uint source;
-        bool stopped = true;
+        bool manuallyStopped = true;
         bool paused = false;
 
         duration_t duration = 0.0f;
@@ -162,6 +174,8 @@ namespace audio {
         bool isRelative() const override;
 
         Priority getPriority() const override;
+
+        bool isManuallyStopped() const override;
     };
 
     class ALAudio : public Backend {
@@ -176,8 +190,24 @@ namespace audio {
         std::vector<uint> freebuffers;
 
         uint maxSources = 256;
+        uint maxEffectSlots = 64;
+
+        const AudioSettings& settings;
+
+        bool initEffects();
     public:
-        ALAudio(ALCdevice* device, ALCcontext* context);
+        std::vector<uint> effectSlots;
+        std::vector<uint> effects;
+        std::array<uint, 1> filters;
+
+        bool useEffects;
+
+        ALAudio(
+            ALCdevice* device,
+            ALCcontext* context,
+            bool effects,
+            const AudioSettings& settings
+        );
         ~ALAudio();
 
         uint getFreeSource();
@@ -185,15 +215,19 @@ namespace audio {
         void freeSource(uint source);
         void freeBuffer(uint buffer);
 
-        std::vector<std::string> getAvailableDevices() const;
-
         std::unique_ptr<Sound> createSound(std::shared_ptr<PCM> pcm, bool keepPCM) override;
 
         std::unique_ptr<Stream> openStream(std::shared_ptr<PCMStream> stream, bool keepSource) override;
 
         std::unique_ptr<InputDevice> openInputDevice(
-            uint sampleRate, uint channels, uint bitsPerSample
+            const std::string& deviceName,
+            uint sampleRate,
+            uint channels,
+            uint bitsPerSample
         ) override;
+
+        std::vector<std::string> getOutputDeviceNames() override;
+        std::vector<std::string> getInputDeviceNames() override;
 
         void setListener(
             glm::vec3 position,
@@ -204,10 +238,12 @@ namespace audio {
 
         void update(double delta) override;
 
+        void setAcoustics(Acoustics acoustics) override;
+
         bool isDummy() const override {
             return false;
         }
 
-        static std::unique_ptr<ALAudio> create();
+        static std::unique_ptr<ALAudio> create(const AudioSettings& settings);
     };
 }

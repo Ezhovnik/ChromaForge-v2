@@ -28,6 +28,10 @@ namespace util {
         return sqr(x) + sqr(y) + sqr(z);
     }
 
+    inline int dot(const glm::ivec3& a, const glm::ivec3& b) {
+        return a.x * b.x + a.y * b.y + a.z * b.z;
+    }
+
     inline glm::vec3 closest_point_on_segment(
         const glm::vec3& a, const glm::vec3& b, const glm::vec3& point
     ) {
@@ -43,12 +47,28 @@ namespace util {
     inline glm::ivec3 closest_point_on_segment(
         const glm::ivec3& a, const glm::ivec3& b, const glm::ivec3& point
     ) {
-        auto vec = b - a;
-        float da = distance2(point, a);
-        float db = distance2(point, b);
-        float len = length2(vec);
-        float t = (((da - db) / len) * 0.5f + 0.5f);
-        t = std::min(1.0f, std::max(0.0f, t));
-        return a + glm::ivec3(glm::vec3(vec) * t);
+        glm::ivec3 vec = b - a;
+        int len2 = length2(vec);
+        if (len2 == 0) return a;
+        glm::ivec3 ap = point - a;
+        int dot_product = dot(ap, vec);
+        float t = static_cast<float>(dot_product) / static_cast<float>(len2);
+        t = glm::clamp(t, 0.0f, 1.0f);
+        return a + glm::ivec3(glm::round(glm::vec3(vec) * t));
+    }
+
+    template <int n, typename T = float>
+    bool is_nan_or_inf(const glm::vec<n, T>& vector) {
+        return glm::any(glm::isnan(vector)) || glm::any(glm::isinf(vector));
+    }
+
+    template <int n, typename T = float>
+    bool is_nan_or_inf(const glm::mat<n, n, T>& matrix) {
+        for (int i = 0; i < n; ++i) {
+            if (is_nan_or_inf(matrix[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 };

@@ -2,6 +2,8 @@
 
 #include <debug/Logger.h>
 
+static debug::Logger logger("lua");
+
 void lua::log_error(const std::string& text) {
-    LOG_ERROR("Lua error: {}", text);
+    logger.error() << "Lua error: " << text;
 }

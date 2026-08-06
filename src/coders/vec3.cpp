@@ -24,6 +24,10 @@ enum AttributeType {
     Color
 };
 
+enum MaterialFlag {
+    Shadeless = 1
+};
+
 struct VertexAttribute {
     AttributeType type;
     int flags;
@@ -46,7 +50,7 @@ static VertexAttribute load_attribute(ByteReader& reader) {
     int flags = reader.get();
     assert(type >= Position && flags <= Color);
     if (flags != 0) {
-        THROW_ERR("Attribute compression is not supported yet");
+        throw std::runtime_error("Attribute compression is not supported yet");
     }
     int size = reader.getInt32();
 
@@ -63,7 +67,7 @@ static VertexAttribute load_attribute(ByteReader& reader) {
 static model::Mesh build_mesh(
     const std::vector<VertexAttribute>& attrs, 
     const util::Buffer<uint16_t>& indices,
-    const std::string& texture
+    const Material& material
 ) {
     const glm::vec3* coords = nullptr;
     const glm::vec2* uvs = nullptr;
@@ -112,7 +116,11 @@ static model::Mesh build_mesh(
         }
         vertices.push_back(std::move(vertex));
     }
-    return model::Mesh {texture, std::move(vertices)};
+    return model::Mesh {
+        material.name,
+        std::move(vertices),
+        (material.flags & MaterialFlag::Shadeless) == 0
+    };
 }
 
 static model::Mesh load_mesh(
@@ -123,7 +131,7 @@ static model::Mesh load_mesh(
     int flags = reader.getInt16();
     int attributeCount = reader.getInt16();
     if (flags == FLAG_ZLIB) {
-        THROW_ERR("Compression is not supported yet");
+        throw std::runtime_error("Compression is not supported yet");
     }
     std::vector<VertexAttribute> attributes;
     for (int i = 0; i < attributeCount; ++i) {
@@ -154,7 +162,7 @@ static model::Mesh load_mesh(
     return build_mesh(
         attributes,
         indices,
-        materials.at(materialId).name
+        materials.at(materialId)
     );
 }
 
@@ -206,7 +214,7 @@ File vec3::load(
     int version = reader.getInt16();
     [[maybe_unused]] int reserved = reader.getInt16();
     if (version > VERSION) {
-        THROW_ERR("Unsupported VEC3 version");
+        throw std::runtime_error("Unsupported VEC3 version");
     }
     assert(reserved == 0);
 

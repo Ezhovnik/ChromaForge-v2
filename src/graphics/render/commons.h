@@ -9,6 +9,8 @@
 
 #include <graphics/core/MeshData.h>
 #include <util/Buffer.h>
+#include <constants.h>
+#include <math/AABB.h>
 
 struct ChunkVertex {
     glm::vec3 position;
@@ -45,10 +47,22 @@ struct SortingMeshData {
 struct ChunkMeshData {
     MeshData<ChunkVertex> mesh;
     SortingMeshData sortingMesh;
+    AABB meshAABB;
 };
 
 struct ChunkMesh {
     std::unique_ptr<Mesh<ChunkVertex>> mesh;
     SortingMeshData sortingMeshData;
-    std::unique_ptr<Mesh<ChunkVertex>> sortedMesh = nullptr;
+    std::unique_ptr<Mesh<ChunkVertex>> sortedMesh;
+    AABB meshAABB;
 };
+
+inline constexpr int VOXELS_BUFFER_PADDING = 2;
+
+template<int, int, int> class StaticVoxelsVolume;
+
+using VoxelsRenderVolume = StaticVoxelsVolume<
+    CHUNK_WIDTH + VOXELS_BUFFER_PADDING * 2,
+    CHUNK_HEIGHT,
+    CHUNK_DEPTH + VOXELS_BUFFER_PADDING * 2
+>;

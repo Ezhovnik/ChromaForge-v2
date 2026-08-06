@@ -3,17 +3,16 @@
 #include <string>
 #include <memory>
 
-#include <typedefs.h>
-#include <delegates.h>
-#include <io/engine_paths.h>
 #include <util/ObjectsKeeper.h>
 #include <core_content_defs.h>
 #include <settings.h>
-#include <io/settings_io.h>
 #include <engine/EngineTime.h>
 #include <engine/PostRunnables.h>
+#include <engine/CoreParameters.h>
 
 class Assets;
+class AssetsLoader;
+class AssetsManagement;
 class Screen;
 class EngineController;
 class Level;
@@ -21,6 +20,10 @@ class Input;
 class Window;
 class ContentControl;
 struct Project;
+class WindowControl;
+class SettingsHandler;
+class EnginePaths;
+class ResPaths;
 
 namespace gui {
     class GUI;
@@ -45,20 +48,6 @@ public:
     initialize_error(const std::string& message) : std::runtime_error(message) {}
 };
 
-struct CoreParameters {
-    bool headless = false;
-    bool testMode = false;
-
-    std::filesystem::path resFolder = "res";
-    std::filesystem::path userFolder = ".";
-    std::filesystem::path scriptFile;
-    std::filesystem::path projectFolder;
-
-    std::string debugServerString;
-
-    int sps = 20;
-};
-
 using OnWorldOpen = std::function<void(std::unique_ptr<Level>, int64_t)>;
 
 // Основной класс Engine, управляющий жизненным циклом приложения
@@ -66,11 +55,10 @@ class Engine : public util::ObjectsKeeper {
 private:
     CoreParameters params;
     EngineSettings settings;
-    EnginePaths paths;
-
+    std::unique_ptr<EnginePaths> paths;
     std::unique_ptr<Project> project;
     std::unique_ptr<SettingsHandler> settingsHandler;
-    std::unique_ptr<Assets> assets; // Менеджер ассетов (текстуры, модели и т.д.)
+    std::unique_ptr<AssetsManagement> assets;
     std::shared_ptr<Screen> screen;
     std::unique_ptr<EngineController> controller;
     std::unique_ptr<ContentControl> content;
@@ -82,6 +70,7 @@ private:
     std::unique_ptr<gui::GUI> gui;
     std::unique_ptr<devtools::Editor> editor;
     std::unique_ptr<devtools::DebuggingServer> debuggingServer;
+    std::unique_ptr<WindowControl> windowControl;
 
     PostRunnables postRunnables;
 
@@ -114,14 +103,17 @@ public:
 
     void postUpdate();
 
+    void applicationSpark();
     void updateFrontend();
     void renderFrame();
-    void nextFrame();
+    void nextFrame(bool waitForRefresh);
     void startPauseLoop();
 
     EnginePaths& getPaths();
     ResPaths& getResPaths();
     Assets* getAssets();
+    Assets& requireAssets();
+    AssetsLoader& acquireBackgroundLoader();
 	EngineSettings& getSettings();
     std::shared_ptr<Screen> getScreen();
     SettingsHandler& getSettingsHandler();
@@ -138,8 +130,8 @@ public:
         return *input;
     }
 
-    network::Network& getNetwork() {
-        return *network;
+    network::Network* getNetwork() {
+        return network.get();
     }
 
     cmd::CommandsInterpreter& getCmd() {
@@ -169,8 +161,6 @@ public:
     void postRunnable(const runnable& callback) {
         postRunnables.postRunnable(callback);
     }
-
-    void saveScreenshot();
 
 	void setScreen(std::shared_ptr<Screen> screen);
     void setLevelConsumer(OnWorldOpen levelConsumer);

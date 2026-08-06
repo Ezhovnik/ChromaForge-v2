@@ -14,6 +14,8 @@ struct Rigidbody {
     bool enabled = true;
     Hitbox hitbox;
     std::vector<Sensor> sensors;
+    float mass;
+    float elasticity;
 
     dv::value serialize(bool saveVelocity, bool saveBodySettings) const;
     void deserialize(const dv::value& root);

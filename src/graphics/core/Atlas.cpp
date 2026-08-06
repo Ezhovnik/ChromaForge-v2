@@ -48,6 +48,14 @@ ImageData* Atlas::getImage() const {
     return image.get();
 }
 
+std::shared_ptr<Texture> Atlas::shareTexture() const {
+    return texture;
+}
+
+std::shared_ptr<ImageData> Atlas::shareImageData() const {
+    return image;
+}
+
 void AtlasBuilder::add(const std::string& name, std::unique_ptr<ImageData> image) {
     if (image != nullptr) {
         entries.push_back(atlasentry{name, std::shared_ptr<ImageData>(image.release())});
@@ -81,7 +89,7 @@ std::unique_ptr<Atlas> AtlasBuilder::build(uint extrusion, bool prepare, uint ma
         else width *= 2;
 
         if (width > maxResolution || height > maxResolution) {
-            THROW_ERR("Max atlas resolution {} exceeded", std::to_string(maxResolution));
+            throw std::runtime_error("Max atlas resolution " + std::to_string(maxResolution) + " exceeded");
         }
     }
 

@@ -13,6 +13,8 @@
 
 using namespace toml;
 
+static debug::Logger logger("toml-coder");
+
 class TomlReader : BasicParser<char> {
     dv::value root;
 
@@ -48,7 +50,7 @@ class TomlReader : BasicParser<char> {
                     case '/': ss << '/'; break;
                     case '\n': continue;
                     default:
-                        LOG_ERROR("'\\{}' is an illegal escape", std::string{c});
+                        logger.error() << "'\\" << std::string{c} << "' is an illegal escape";
                         throw error(
                             "'\\" + std::string({c}) + "' is an illegal escape"
                         );
@@ -58,7 +60,7 @@ class TomlReader : BasicParser<char> {
             ss << c;
             pos++;
         }
-        LOG_ERROR("Unexpected end");
+        logger.error() << "Unexpected end";
         throw error("Unexpected end");
     }
 
@@ -91,7 +93,7 @@ class TomlReader : BasicParser<char> {
             } else if (keyword == "nan") {
                 return NAN;
             }
-            LOG_ERROR("Unknown keyword {}", util::quote(keyword));
+            logger.error() << "Unknown keyword " << util::quote(keyword);
             throw error("Unknown keyword " + util::quote(keyword));
         } else if (c == '"' || c == '\'') {
             pos++;
@@ -127,7 +129,7 @@ class TomlReader : BasicParser<char> {
             pos++;
             return table;
         } else {
-            LOG_ERROR("Feature is not supported");
+            logger.error() << "Feature is not supported";
             throw error("Feature is not supported");
         }
     }
@@ -167,7 +169,7 @@ class TomlReader : BasicParser<char> {
                     if (list == nullptr) {
                         list = dv::list();
                     } else if (!list.isList()) {
-                        LOG_ERROR("Target is not an array");
+                        logger.error() << "Target is not an array";
                         throw error("Target is not an array");
                     }
                     expect(']');
@@ -181,7 +183,7 @@ class TomlReader : BasicParser<char> {
                 if (section == nullptr) {
                     section = dv::object();
                 } else if (!section.isObject()) {
-                    LOG_ERROR("Target is not a table");
+                    logger.error() << "Target is not a table";
                     throw error("Target is not a table");
                 }
                 expect(']');

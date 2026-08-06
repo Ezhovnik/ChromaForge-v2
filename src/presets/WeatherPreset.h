@@ -25,6 +25,9 @@ struct WeatherPreset : Serializable {
     float clouds = 0.0f;
     float thunderRate = 0.0f;
     float intensity = 0.0f;
+    glm::vec3 skyTint {1.0f, 1.0f, 1.0f};
+    glm::vec3 cloudsTint {1.0f, 1.0f, 1.0f};
+    glm::vec3 minSkyLight {0.2f, 0.25f, 0.33f};
 
     dv::value serialize() const override;
     void deserialize(const dv::value& src) override;

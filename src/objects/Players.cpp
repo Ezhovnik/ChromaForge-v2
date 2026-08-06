@@ -102,7 +102,7 @@ void Players::suspend(int64_t id) {
         if (player->isSuspended()) return;
         player->setSuspended(true);
         level.entities->despawn(player->getEntity());
-        player->setEntity(0);
+        player->setEntity(ENTITY_AUTO);
     }
 }
 
@@ -144,6 +144,6 @@ void Players::deserialize(const dv::value& src) {
         if (inventory->getId() == 0) {
             inventory->setId(level.getWorld()->getNextInventoryId());
         }
-        level.inventories->store(player->getInventory());
+        level.inventories->store(inventory);
     }
 }

@@ -1,16 +1,11 @@
 #include <content/ContentBuilder.h>
 
 #include <debug/Logger.h>
-#include <objects/rigging.h>
 
 ContentBuilder::~ContentBuilder() = default;
 
 void ContentBuilder::add(std::unique_ptr<ContentPackRuntime> pack) {
     packs[pack->getId()] = std::move(pack);
-}
-
-void ContentBuilder::add(std::unique_ptr<rigging::SkeletonConfig> skeleton) {
-    skeletons[skeleton->getName()] = std::move(skeleton);
 }
 
 BlockMaterial& ContentBuilder::createBlockMaterial(const std::string& id) {
@@ -34,11 +29,13 @@ std::unique_ptr<Content> ContentBuilder::build() {
 
         if (def.variants) {
             for (auto& variant : def.variants->variants) {
-                variant.rt.solid = variant.model.type == BlockModelType::Cube;
+                variant.rt.solid = 
+                    variant.model.type == BlockModelType::Cube || def.explictlySolid;
             }
             def.defaults = def.variants->variants.at(0);
         } else {
-            def.defaults.rt.solid = def.defaults.model.type == BlockModelType::Cube;
+            def.defaults.rt.solid =
+                def.defaults.model.type == BlockModelType::Cube || def.explictlySolid;
         }
         constexpr float EPSILON = 0.01f;
         def.rt.solid = def.obstacle && (glm::i8vec3(def.hitboxes[0].size() + EPSILON) == def.size);
@@ -54,7 +51,7 @@ std::unique_ptr<Content> ContentBuilder::build() {
                 }
             }
         } else {
-            def.rt.hitboxes->emplace_back(AABB(glm::vec3(1.0f)));
+            def.rt.hitboxes[0] = def.hitboxes;
         }
 
         blockDefsIndices.push_back(&def);
@@ -91,7 +88,6 @@ std::unique_ptr<Content> ContentBuilder::build() {
         generators.build(),
         std::move(packs),
         std::move(blockMaterials),
-        std::move(skeletons),
         std::move(resourceIndices),
         std::move(defaults),
         std::move(tags.map)

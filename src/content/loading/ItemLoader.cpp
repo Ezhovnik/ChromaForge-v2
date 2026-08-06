@@ -11,6 +11,8 @@
 #include <util/stringutil.h>
 #include <items/Item.h>
 
+static debug::Logger logger("items-loader");
+
 template<> void ContentUnitLoader<Item>::loadUnit(
     Item& def, const std::string& name, const io::path& file
 ) {
@@ -23,7 +25,7 @@ template<> void ContentUnitLoader<Item>::loadUnit(
         const auto& parentName = root["parent"].asString();
         auto parentDef = builder.get(parentName);
         if (parentDef == nullptr) {
-            THROW_ERR("Failed to find parent ({}) for {}", parentName, name);
+            throw std::runtime_error("Failed to find parent (" + parentName + ") for " + name);
         }
         parentDef->cloneTo(def);
     }
@@ -39,7 +41,7 @@ template<> void ContentUnitLoader<Item>::loadUnit(
     } else if (iconTypeStr == "sprite") {
         def.iconType = ItemIconType::Sprite;
     } else if (iconTypeStr.length()) {
-        LOG_ERROR("Item {}: unknown icon type — {}", name, iconTypeStr);
+        logger.error() << "Item " << name << ": unknown icon type — " << iconTypeStr;
     }
     root.at("icon").get(def.icon);
     root.at("placing-block").get(def.placingBlock);
@@ -59,7 +61,7 @@ template<> void ContentUnitLoader<Item>::loadUnit(
     } else if (usesDisplayStr == "vbar") {
         def.usesDisplay = ItemUsesDisplay::VBar;
     } else if (usesDisplayStr.length()) {
-        LOG_ERROR("Item {}: unknown uses display mode — {}", usesDisplayStr);
+        logger.error() << "Item " << name << ": unknown uses display mode — " << usesDisplayStr;
     }
 
     if (auto found = root.at("emission")) {

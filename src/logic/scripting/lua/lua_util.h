@@ -180,7 +180,7 @@ namespace lua {
     template <int n, typename T = float>
     inline int setvec(lua::State* L, int idx, glm::vec<n, T> vec) {
         pushvalue(L, idx);
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; ++i) {
             pushnumber(L, vec[i]);
             rawseti(L, i + 1);
         }
@@ -618,6 +618,7 @@ namespace lua {
         return 0;
     }
     int create_environment(lua::State*, int parent);
+    int restore_pack_environment(lua::State*, const std::string& packid);
     void remove_environment(lua::State*, int id);
 
     inline void close(lua::State* L) {

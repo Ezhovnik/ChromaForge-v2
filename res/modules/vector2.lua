@@ -212,10 +212,6 @@ function vector2.__div(value_1, value_2)
     end
 end
 
-function vector2.__eq(a, b)
-    return a.x == b.x and a.y == b.y
-end
-
 function vector2.__tostring(vcrt)
     return vcrt:strvec2()
 end

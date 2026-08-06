@@ -6,6 +6,8 @@
 #include <debug/Logger.h>
 #include <coders/json.h>
 
+static debug::Logger logger("scripting-functional");
+
 using namespace scripting;
 
 runnable scripting::create_runnable(
@@ -18,7 +20,7 @@ runnable scripting::create_runnable(
         lua::loadbuffer(L, *env, src, file);
         return lua::create_runnable(L);
     } catch (const lua::luaerror& err) {
-        LOG_ERROR("{}", err.what());
+        logger.error() << err.what();
         return [](){};
     }
 }
@@ -34,7 +36,7 @@ static lua::State* process_callback(
             return L;
         }
     } catch (lua::luaerror& err) {
-        LOG_ERROR("{}", err.what());
+        logger.error() << err.what();
     }
     return nullptr;
 }
@@ -165,7 +167,7 @@ int_array_consumer scripting::create_int_array_consumer(
 ) {
     return [=](const int arr[], size_t len) {
         if (auto L = process_callback(env, src, file)) {
-            for (uint i = 0; i < len; i++) {
+            for (uint i = 0; i < len; ++i) {
                 lua::pushinteger(L, arr[i]);
             }
             lua::call_nothrow(L, len);
@@ -206,7 +208,7 @@ value_to_string_func scripting::create_tostring(
             return json::stringify(result, true, "  ");
         };
     } catch (const lua::luaerror& err) {
-        LOG_ERROR("{}", err.what());
+        logger.error() << err.what();
         return [](const auto& value) {
             return json::stringify(value, true, "  ");
         };

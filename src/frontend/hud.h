@@ -13,7 +13,7 @@ class Camera;
 class Assets;
 class Player;
 class Engine;
-class Block;
+
 class LevelFrontend;
 class UIDocument;
 class Inventory;
@@ -25,7 +25,6 @@ namespace gui {
     class GUI;
     class Menu;
     class UINode;
-    class Panel;
     class Container;
     class SlotView;
     class InventoryView;
@@ -130,7 +129,7 @@ public:
 	bool isPause() const;
     void setPause(bool pause);
 
-    void openInventory();
+    void openInventory(bool playerInventory = true);
     std::shared_ptr<Inventory> openInventory(
         UIDocument* doc,
         std::shared_ptr<Inventory> inv,
@@ -144,6 +143,7 @@ public:
     );
     void closeInventory();
     bool isInventoryOpen() const;
+    bool isPlayerInventoryOpen() const;
     void openPermanent(UIDocument* doc);
     void showOverlay(
         UIDocument* doc,
@@ -165,7 +165,10 @@ public:
 
     std::shared_ptr<Inventory> getBlockInventory();
 
-    static bool showGeneratorMinimap;
+    std::shared_ptr<Inventory> getSecondInventory();
 
+    bool isOpen(const std::string& layoutid) const;
+
+    static bool showGeneratorMinimap;
     inline static std::string DEBUG_WORLDGEN_IMAGE = "#debug.img.worldgen";
 };

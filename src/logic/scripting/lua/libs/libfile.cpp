@@ -5,11 +5,12 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 #include <engine/Engine.h>
 #include <io/io.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <util/stringutil.h>
 #include <coders/zip.h>
 #include <io/devices/ZipFileDevice.h>
 #include <logic/scripting/descriptors_manager.h>
+#include <io/devices/MemoryDevice.h>
 
 static int l_find(lua::State* L) {
     auto path = lua::require_string(L, 1);
@@ -35,20 +36,12 @@ static int l_read(lua::State* L) {
     );
 }
 
-static std::set<std::string> writeable_entry_points {
-    "world", "export", "config"
-};
-
 static bool is_writeable(const std::string& entryPoint) {
-    if (entryPoint.length() < 2) {
-        return false;
-    }
-    if (entryPoint.substr(0, 2) == "W.") {
-        return true;
-    }
-    if (writeable_entry_points.find(entryPoint) != writeable_entry_points.end()) {
-        return true;
-    }
+    auto device = io::get_device(entryPoint);
+    if (device == nullptr) return false;
+    if (dynamic_cast<io::MemoryDevice*>(device.get())) return true;
+    if (scripting::engine->getPaths().isWriteable(entryPoint)) return true;
+
     return false;
 }
 
@@ -217,6 +210,16 @@ static int l_unmount(lua::State* L) {
     return 0;
 }
 
+static int l_create_memory_device(lua::State* L) {
+    if (lua::isstring(L, 1)) {
+        throw std::runtime_error(
+            "Name must not be specified, use app.create_memory_device instead"
+        );
+    }
+    auto& paths = scripting::engine->getPaths();
+    return lua::pushstring(L, paths.createMemoryDevice());
+}
+
 static int l_create_zip(lua::State* L) {
     io::path folder = lua::require_string(L, 1);
     io::path outFile = lua::require_string(L, 2);
@@ -324,6 +327,41 @@ static int l_write_descriptor(lua::State* L) {
     return 0;
 }
 
+static int l_seek_descriptor(lua::State* L) {
+    int descriptor = lua::tointeger(L, 1);
+
+    if (!scripting::descriptors_manager::has_descriptor(descriptor)) {
+        throw std::runtime_error("Unknown descriptor");
+    }
+
+    std::string mode = lua::require_string(L, 2);
+    std::ios_base::seekdir dir;
+
+    switch (mode[0]) {
+        case 'b':
+            dir = std::ios_base::beg;
+            break;
+        case 'c':
+            dir = std::ios_base::cur;
+            break;
+        case 'e':
+            dir = std::ios_base::end;
+            break;
+        default:
+            throw std::runtime_error("Invalid seek mode");
+    }
+
+    auto* stream = scripting::descriptors_manager::get_output(descriptor);
+
+    stream->seekp(lua::tointeger(L, 3), dir);
+
+    if (!stream->good()) {
+        throw std::runtime_error("Failed to seek stream");
+    }
+
+    return 0;
+}
+
 static int l_flush_descriptor(lua::State* L) {
     int descriptor = lua::tointeger(L, 1);
 
@@ -375,11 +413,13 @@ const luaL_Reg filelib[] = {
     {"is_writeable", lua::wrap<l_is_writeable>},
     {"mount", lua::wrap<l_mount>},
     {"unmount", lua::wrap<l_unmount>},
+    {"create_memory_device", lua::wrap<l_create_memory_device>},
     {"create_zip", lua::wrap<l_create_zip>},
     {"__open_descriptor", lua::wrap<l_open_descriptor>},
     {"__has_descriptor", lua::wrap<l_has_descriptor>},
     {"__read_descriptor", lua::wrap<l_read_descriptor>},
     {"__write_descriptor", lua::wrap<l_write_descriptor>},
+    {"__seek_descriptor", lua::wrap<l_seek_descriptor>},
     {"__flush_descriptor", lua::wrap<l_flush_descriptor>},
     {"__close_descriptor", lua::wrap<l_close_descriptor>},
     {"__close_all_descriptors", lua::wrap<l_close_all_descriptors>},

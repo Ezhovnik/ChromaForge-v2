@@ -1,0 +1,19 @@
+{
+    "name": "chromaforge",
+    "version-string": "0.3.0",
+    "dependencies": [
+        "opengl",
+        "openal-soft",
+        "glfw3",
+        "glew",
+        "glm",
+        "zlib",
+        "luajit",
+        "libvorbis",
+        "entt",
+        "curl",
+        "gtest",
+        "pkgconf",
+        "freetype"
+    ]
+}

@@ -35,6 +35,14 @@ entities.def_index(name: str) -> int
 
 -- Возвращает число доступных определений сущностей
 entities.defs_count() -> int
+```
+
+> [!NOTE]
+> Следующие функции для получения получения нескольких сущностей возвращают таблицы с целочисленными ключами (uid).
+> Для итерации нужно использовать pairs, для подсчёта размера таблицы - table.count_pairs.
+> Использование ipairs даст некорректные результаты, так как возвращаемая таблица не является массивом.
+
+```lua
 
 -- Возвращает таблицу всех загруженных сущностей
 entities.get_all() -> table
@@ -54,8 +62,15 @@ entities.get_all_in_radius(center: vec3, radius: number) -> array<int>
 ```
 
 ```lua
-entities.raycast(start: vec3, dir: vec3, max_distance: number,
-                 ignore: int, [optional] destination: table, [optional] filter: table) -> table или nil
+entities.raycast(
+    start: vec3,
+    dir: vec3,
+    max_distance: number,
+    ignore: int,
+    [oпционально] destination: table,
+    [oпционально] filter: table,
+    [oпционально] include_non_selectable = false
+) -> table или nil
 ```
 
 Функция является расширенным вариантом [block.raycast](libblock.md#raycast). Возвращает таблицу с результатами если луч касается блока, либо сущности.

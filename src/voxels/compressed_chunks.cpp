@@ -43,7 +43,7 @@ static void read_voxel_data(ByteReader& reader, util::Buffer<ubyte>& dst) {
     auto rleData = zip::decompress(reader.pointer(), zipCompressedSize);
     reader.skip(zipCompressedSize);
 
-    extrle::decode16(rleData.data(), rleData.size(), dst.data());
+    extrle::decode16(rleData.data(), rleData.size(), dst.data(), dst.size());
 }
 
 void compressed_chunks::decode(

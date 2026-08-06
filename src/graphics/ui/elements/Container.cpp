@@ -5,6 +5,8 @@
 
 #include <graphics/core/DrawContext.h>
 #include <graphics/core/Batch2D.h>
+#include <window/Window.h>
+#include <graphics/ui/GUI.h>
 
 using namespace gui;
 
@@ -69,6 +71,9 @@ void Container::activate(float delta) {
     UINode::activate(delta);
     for (const auto& node : nodes) {
         if (node->isVisible()) node->activate(delta);
+    }
+    if (!intervalEvents.empty()) {
+        gui.getWindow().setShouldRefresh();
     }
     for (IntervalEvent& event : intervalEvents) {
         event.timer += delta;
@@ -156,6 +161,7 @@ void Container::add(const std::shared_ptr<UINode>& node) {
         parent->setMustRefresh();
         parent = parent->getParent();
     }
+    gui.getWindow().setShouldRefresh();
 }
 
 void Container::add(const std::shared_ptr<UINode>& node, glm::vec2 pos) {
@@ -179,14 +185,13 @@ void Container::remove(const std::string& id) {
     }
 }
 
-void Container::listenInterval(float interval, ontimeout callback, int repeat) {
+void Container::listenInterval(float interval, OnTimeOut callback, int repeat) {
     intervalEvents.push_back({std::move(callback), interval, 0.0f, repeat});
 }
 
-void Container::setSize(glm::vec2 size) {
-    if (size == getSize()) {
-        return;
-    }
+void Container::setSize(const glm::vec2& size) {
+    if (size == getSize()) return;
+
     UINode::setSize(size);
     refresh();
     for (auto& node : nodes) {

@@ -21,11 +21,12 @@ struct AABB;
 
 namespace blocks_agent {
     struct BlockRegisterEvent {
-        enum class Type : uint16_t {
-            RegisterUpdating,
-            UnregisterUpdating,
-        };
-        Type type;
+        static inline constexpr uint8_t REGISTER_BIT = 0x1;
+        static inline constexpr uint8_t UPDATING_BIT = 0x2;
+        static inline constexpr uint8_t PRESENT_EVENT_BIT = 0x4;
+        static inline constexpr uint8_t REMOVED_EVENT_BIT = 0x8;
+
+        uint8_t bits;
         blockid_t id;
         glm::ivec3 coord;
     };
@@ -300,7 +301,8 @@ namespace blocks_agent {
         glm::vec3& end,
         glm::ivec3& norm,
         glm::ivec3& iend,
-        std::set<blockid_t> filter
+        std::set<blockid_t> filter,
+        bool includeNonSelectable
     );
 
     voxel* raycast(
@@ -311,7 +313,8 @@ namespace blocks_agent {
         glm::vec3& end,
         glm::ivec3& norm,
         glm::ivec3& iend,
-        std::set<blockid_t> filter
+        std::set<blockid_t> filter,
+        bool includeNonSelectable
     );
 
     void get_voxels(const Chunks& chunks, VoxelsVolume* volume, bool backlight=false);
@@ -319,39 +322,97 @@ namespace blocks_agent {
     void get_voxels(const GlobalChunks& chunks, VoxelsVolume* volume, bool backlight=false);
 
     template <class Storage>
-    inline const AABB* is_obstacle_at(const Storage& chunks, float x, float y, float z) {
+    inline std::optional<AABB> is_obstacle_at(
+        const Storage& chunks,
+        float x, float y, float z,
+        const AABB& aabb
+    ) {
         int ix = std::floor(x);
         int iy = std::floor(y);
         int iz = std::floor(z);
         voxel* v = get(chunks, ix, iy, iz);
         if (v == nullptr) {
             if (iy >= CHUNK_HEIGHT) {
-                return nullptr;
+                return std::nullopt;
             } else {
-                static const AABB empty;
-                return &empty;
+                return AABB();
             }
         }
         const auto& def = chunks.getContentIndices().blocks.require(v->id);
-        if (def.obstacle) {
-            glm::ivec3 offset {};
-            if (v->state.segment) {
-                glm::ivec3 point(ix, iy, iz);
-                offset = seek_origin(chunks, point, def, v->state) - point;
-            }
-            const auto& boxes = def.rotatable ? def.rt.hitboxes[v->state.rotation] : def.hitboxes;
-            for (const auto& hitbox : boxes) {
-                if (hitbox.contains(
-                    {
-                        x - ix - offset.x,
-                        y - iy - offset.y,
-                        z - iz - offset.z
-                    }
-                )) {
-                    return &hitbox;
-                }
+        if (!def.obstacle) {
+            return std::nullopt;
+        }
+        glm::ivec3 offset {};
+        if (v->state.segment) {
+            glm::ivec3 point(ix, iy, iz);
+            offset = seek_origin(chunks, point, def, v->state) - point;
+        }
+        const auto& boxes =
+            def.rotatable ? def.rt.hitboxes[v->state.rotation] : def.hitboxes;
+
+        for (const auto& hitbox : boxes) {
+            if (hitbox.intersects(aabb - glm::ivec3(ix, iy, iz))) {
+                return hitbox + offset;
             }
         }
-        return nullptr;
+        return std::nullopt;
+    }
+
+    template <class Storage>
+    inline std::optional<AABB> is_obstacle_at(
+        const Storage& chunks,
+        float x, float y, float z
+    ) {
+        return is_obstacle_at(
+            chunks,
+            x, y, z,
+            AABB({x, y, z}, {x + 1, y + 1, z + 1})
+        );
+    }
+
+    template <class Storage>
+    inline bool check_grounding(
+        const Storage& chunks,
+        const Block& def,
+        uint8_t rotationIndex,
+        const glm::ivec3& origin
+    ) {
+        const auto& vec = get_ground_direction(def, rotationIndex);
+
+        if (def.rt.extended) {
+            const auto& rotation = def.rotations.variants[rotationIndex];
+
+            if (def.groundingBehaviour == GroundingBehaviour::Partial) {
+                for (int sz = 0; sz < def.size.z; ++sz) {
+                    for (int sx = 0; sx < def.size.x; ++sx) {
+                        auto pos = origin;
+                        pos += rotation.axes[0] * sx;
+                        pos += rotation.axes[2] * sz;
+                        if (blocks_agent::is_solid_at(chunks, pos.x + vec.x, pos.y + vec.y, pos.z + vec.z)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            else if (def.groundingBehaviour == GroundingBehaviour::Complete) {
+                for (int sz = 0; sz < def.size.z; ++sz) {
+                    for (int sx = 0; sx < def.size.x; ++sx) {
+                        auto pos = origin;
+                        pos += rotation.axes[0] * sx;
+                        pos += rotation.axes[2] * sz;
+                        if (!blocks_agent::is_solid_at(chunks, pos.x + vec.x, pos.y + vec.y, pos.z + vec.z)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            else if (def.groundingBehaviour == GroundingBehaviour::Origin) {
+                return blocks_agent::is_solid_at(chunks, origin.x + vec.x, origin.y + vec.y, origin.z + vec.z);
+            }
+        }
+
+        return blocks_agent::is_solid_at(chunks, origin.x + vec.x, origin.y + vec.y, origin.z + vec.z);
     }
 } // blocks_agent

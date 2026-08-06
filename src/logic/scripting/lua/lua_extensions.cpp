@@ -8,33 +8,35 @@
 #include <engine/Engine.h>
 #include <devtools/DebuggingServer.h>
 
+static debug::Logger logger("lua");
+
 static int l_debug_critical(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_CRITICAL("{}", text);
+    logger.critical() << text;
     return 0;
 }
 
 static int l_debug_error(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_ERROR("{}", text);
+    logger.error() << text;
     return 0;
 }
 
 static int l_debug_warning(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_WARN("{}", text);
+    logger.warning() << text;
     return 0;
 }
 
 static int l_debug_info(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_INFO("{}", text);
+    logger.info() << text;
     return 0;
 }
 
 static int l_debug_trace(lua::State* L) {
     auto text = lua::require_string(L, 1);
-    LOG_TRACE("{}", text);
+    logger.trace() << text;
     return 0;
 }
 
@@ -294,7 +296,7 @@ static int l_debug_sendvalue(lua::State* L) {
 
     devtools::ValuePath path;
     int pathSectors = lua::objlen(L, 4);
-    for (int i = 0; i < pathSectors; i++) {
+    for (int i = 0; i < pathSectors; ++i) {
         lua::rawgeti(L, i + 1, 4);
         if (lua::isstring(L, -1)) {
             path.emplace_back(lua::tostring(L, -1));
@@ -310,14 +312,15 @@ static int l_debug_sendvalue(lua::State* L) {
 
         lua::pushnil(L);
         while (lua::next(L, 1)) {
-            auto key = lua::tolstring(L, -2);
+            lua::pushvalue(L, -2);
 
-            int type = lua::type(L, -1);
+            auto key = lua::tolstring(L, -1);
+            int type = lua::type(L, -2);
             table[std::string(key)] = dv::object({
                 {"type", std::string(lua::type_name(L, type))},
-                {"short", get_short_value(L, -1, type)},
+                {"short", get_short_value(L, -2, type)},
             });
-            lua::pop(L);
+            lua::pop(L, 2);
         }
         lua::pop(L);
         value = std::move(table);
@@ -392,6 +395,9 @@ void initialize_libs_extends(lua::State* L) {
 
         lua::pushcfunction(L, lua::wrap<l_debug_info>);
         lua::setfield(L, "info");
+
+        lua::pushcfunction(L, lua::wrap<l_debug_trace>);
+        lua::setfield(L, "trace");
 
         lua::pushcfunction(L, lua::wrap<l_debug_print>);
         lua::setfield(L, "print");

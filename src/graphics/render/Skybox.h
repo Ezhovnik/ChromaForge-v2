@@ -51,6 +51,7 @@ class Skybox {
     float prevMie = -1.0f;
     float prevT = -1.0f;
     float sunAltitude = 45.0f;
+    glm::vec3 prevHighlight {1.0f};
     glm::mat4 rotation;
 
     void drawStars(float angle, float opacity);
@@ -75,7 +76,14 @@ public:
         float fog
     );
 
-    void refresh(const DrawContext& parent_context, float t, float mie, uint quality);
+    void refresh(
+        const DrawContext& pctx,
+        float t,
+        float mie,
+        const glm::vec3& tint,
+        const glm::vec3& hightlight,
+        uint quality
+    );
     void bind() const;
     void unbind() const;
     bool isReady() const {return ready;};

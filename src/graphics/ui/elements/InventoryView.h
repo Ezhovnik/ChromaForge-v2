@@ -64,6 +64,7 @@ namespace gui {
 
         int64_t inventoryId = 0;
         ItemStack* bound = nullptr;
+        size_t index = 0;
 
         void performLeftClick(ItemStack& stack, ItemStack& grabbed);
         void performRightClick(ItemStack& stack, ItemStack& grabbed);
@@ -81,7 +82,7 @@ namespace gui {
             Batch2D& batch,
             const ItemStack& stack,
             const Item& item,
-            const Font& font,
+            Font& font,
             const glm::vec2& pos
         );
 
@@ -101,16 +102,31 @@ namespace gui {
         void bind(
             int64_t inventoryid,
             ItemStack& stack,
+            size_t index,
             const Content* content
         );
 
         ItemStack& getStack();
         const SlotLayout& getLayout() const;
+        int64_t getInventoryId() const;
+        size_t getIndex() const;
 
         static inline std::string EXCHANGE_SLOT_NAME = "exchange-slot";
+
+        enum class InteractionMode {
+            Primary = 0,
+            Secondary = 1
+        };
+
+        enum class InteractionAction {
+            Put = 0,
+            Take = 1,
+            Share = 2,
+            Undefined
+        };
     };
 
-    class InventoryView : public gui::Container {
+    class InventoryView final : public gui::Container {
     private:
         const Content* content = nullptr;
 
@@ -122,10 +138,10 @@ namespace gui {
         InventoryView(GUI& gui);
         virtual ~InventoryView();
 
-        virtual void setPos(glm::vec2 pos) override;
+        void setPos(const glm::vec2& pos) override;
 
-        void setOrigin(glm::vec2 origin);
-        glm::vec2 getOrigin() const;
+        void setOrigin(const glm::vec2& origin);
+        const glm::vec2& getOrigin() const;
 
         void setSelected(int index);
 
@@ -133,7 +149,7 @@ namespace gui {
             const std::shared_ptr<Inventory>& inventory,
             const Content* content
         );
-        
+
         void unbind();
 
         std::shared_ptr<SlotView> addSlot(const SlotLayout& layout);

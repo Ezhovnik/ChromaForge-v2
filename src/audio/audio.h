@@ -8,6 +8,7 @@
 #include <typedefs.h>
 #include <settings.h>
 #include <io/fwd.h>
+#include <audio/effects.h>
 
 namespace audio {
     using speakerid_t = int64_t;
@@ -23,6 +24,8 @@ namespace audio {
 
     constexpr inline size_t MAX_INPUT_SAMPLES = 22050;
 
+    inline std::string_view DEVICE_NONE = "none";
+
     class Speaker;
 
     enum class State {
@@ -36,8 +39,9 @@ namespace audio {
         std::string name;
         float volume = 1.0f;
         bool paused = false;
+        bool effects;
     public:
-        Channel(std::string name);
+        Channel(std::string name, bool effects);
 
         float getVolume() const;
 
@@ -59,6 +63,8 @@ namespace audio {
         void resume();
 
         bool isPaused() const;
+
+        bool isEffectsApplied() const;
     };
 
     /**
@@ -109,7 +115,13 @@ namespace audio {
 
         virtual uint getChannels() const = 0;
 
+        virtual uint getSampleRate() const = 0;
+
+        virtual uint getBitsPerSample() const = 0;
+
         virtual size_t read(char* buffer, size_t bufferSize) = 0;
+
+        virtual const std::string& getDeviceSpecifier() const = 0;
     };
 
     class PCMStream {
@@ -148,6 +160,9 @@ namespace audio {
         virtual duration_t getTime() const = 0;
 
         virtual void setTime(duration_t time) = 0;
+
+        virtual bool isStopOnEnd() const = 0;
+        virtual void setStopOnEnd(bool stopOnEnd) = 0;
     };
 
     /**
@@ -305,6 +320,8 @@ namespace audio {
         inline bool isStopped() const {
             return getState() == State::Stopped;
         }
+
+        virtual bool isManuallyStopped() const = 0;
     };
 
     class Backend {
@@ -316,7 +333,10 @@ namespace audio {
         virtual std::unique_ptr<Stream> openStream(std::shared_ptr<PCMStream> stream, bool keepSource) = 0;
 
         virtual std::unique_ptr<InputDevice> openInputDevice(
-            uint sampleRate, uint channels, uint bitsPerSample
+            const std::string& deviceName,
+            uint sampleRate,
+            uint channels,
+            uint bitsPerSample
         ) = 0;
 
         /**
@@ -333,12 +353,21 @@ namespace audio {
             glm::vec3 up
         ) = 0;
 
+        virtual std::vector<std::string> getInputDeviceNames() = 0;
+        virtual std::vector<std::string> getOutputDeviceNames() = 0;
+
         virtual void update(double delta) = 0;
+
+        virtual void setAcoustics(Acoustics acoustics) = 0;
 
         virtual bool isDummy() const = 0;
     };
 
-    void initialize(bool enabled, AudioSettings& settings);
+    void initialize(
+        bool enabled,
+        bool inputEnabled,
+        AudioSettings& settings
+    );
 
     std::unique_ptr<PCM> load_PCM(const io::path& file, bool headerOnly);
 
@@ -353,10 +382,16 @@ namespace audio {
     std::unique_ptr<Stream> open_stream(std::shared_ptr<PCMStream> stream, bool keepSource);
 
     std::unique_ptr<InputDevice> open_input_device(
+        const std::string& deviceName,
         uint sampleRate,
         uint channels,
         uint bitsPerSample
     );
+
+    std::vector<std::string> get_input_devices_names();
+    std::vector<std::string> get_output_devices_names();
+
+    void set_input_device(const std::string& deviceName);
 
     /**
      * @brief Устанавливает параметры слушателя, используя текущий бэкенд.
@@ -405,7 +440,7 @@ namespace audio {
 
     Speaker* get_speaker(speakerid_t id);
 
-    int create_channel(const std::string& name);
+    int create_channel(const std::string& name, bool effects);
 
     int get_channel_index(const std::string& name);
 
@@ -420,6 +455,8 @@ namespace audio {
     size_t count_streams();
 
     void update(double delta);
+
+    void set_acoustics(Acoustics acoustics);
 
     void reset_channel(int channel);
 

@@ -8,9 +8,9 @@ namespace gui {
         Horizontal
     };
 
-    using ontimeout = std::function<void()>;
+    using OnTimeOut = std::function<void()>;
     struct IntervalEvent {
-        ontimeout callback;
+        OnTimeOut callback;
         float interval;
         float timer;
         int repeat;

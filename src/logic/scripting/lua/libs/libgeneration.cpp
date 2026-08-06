@@ -10,6 +10,7 @@
 #include <content/ContentLoader.h>
 #include <content/Content.h>
 #include <content/ContentControl.h>
+#include <engine/EnginePaths.h>
 
 static int l_save_fragment(lua::State* L) {
     auto fragment = lua::touserdata<lua::LuaVoxelFragment>(L, 1);

@@ -18,27 +18,31 @@ class ParticlesRenderer {
 private:
     const Chunks& chunks;
     const Assets& assets;
-    const GraphicsSettings* settings;
+    const GraphicsSettings& settings;
     std::unordered_map<const Texture*, std::vector<Particle>> particles;
     std::unique_ptr<MainBatch> batch;
 
     std::unordered_map<uint64_t, std::unique_ptr<Emitter>> emitters;
     uint64_t nextEmitter = 1;
 
-    void renderParticles(const Camera& camera, float deltaTime);
+    void renderParticle(
+        Particle& particle, const Camera& camera, bool backlight
+    );
+    void updateParticles(float deltaTime);
 public:
     ParticlesRenderer(
         const Assets& assets,
         const Level& level,
         const Chunks& chunks,
-        const GraphicsSettings* settings
+        const GraphicsSettings& settings
     );
     ~ParticlesRenderer();
 
-    void render(
+    void update(
         const Camera& camera,
         float deltaTime
     );
+    void render(const Camera& camera);
 
     uint64_t add(std::unique_ptr<Emitter> emitter);
 

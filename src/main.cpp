@@ -14,12 +14,17 @@
 #include <util/command_line.h>
 #include <constants.h>
 
+static debug::Logger logger("main");
+
 static void sigterm_handler(int signum) {
     Engine::getInstance().quit();
 }
 
 // Точка входа в программу
 int main(int argc, char** argv) {
+#ifdef CHROMA_BUILD_NAME
+    logger.info() << "Build: " << CHROMA_BUILD_NAME;
+#endif
     CoreParameters coreParameters;
     try {
         if (!parse_cmdline(argc, argv, coreParameters)) {
@@ -34,19 +39,7 @@ int main(int argc, char** argv) {
 
     // Инициализация логгера
     auto logPath = coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log");
-    if (ENGINE_DEBUG_BUILD) {
-		Logger::getInstance().initialize(
-            logPath,
-            LogLevel::INFO,
-            LogLevel::DEBUG
-        );
-	} else {
-		Logger::getInstance().initialize(
-			logPath,
-			LogLevel::WARN,
-			LogLevel::INFO
-		);
-	}
+    debug::Logger::init(logPath.u8string());
 
     platform::configure_encoding();
 
@@ -55,13 +48,12 @@ int main(int argc, char** argv) {
         engine.initialize(std::move(coreParameters));
         engine.run();
     } catch (const initialize_error& err) {
-        LOG_CRITICAL("{}", err.what());
-        LOG_CRITICAL("Could not initialize engine");
+        debug::Logger::getInstance().critical() << "Could not initialize engine: " << err.what();
     }
 #if defined(NDEBUG)
     catch (const std::exception& err) {
-        LOG_ERROR("Uncaught exception: {}", err.what());
-        Logger::getInstance().flush();
+        debug::Logger::getInstance().error() << "Uncaught exception: " << err.what();
+        debug::Logger::flush();
         throw;
     }
 #endif

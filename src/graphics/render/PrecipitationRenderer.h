@@ -27,5 +27,10 @@ public:
 
     ~PrecipitationRenderer();
 
-    void render(const Camera& camera, float delta, const WeatherPreset& weather);
+    void update(float deltaTime);
+
+    void render(
+        const Camera& camera,
+        const WeatherPreset& weather
+    );
 };

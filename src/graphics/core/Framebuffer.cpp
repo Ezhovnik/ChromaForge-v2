@@ -5,6 +5,8 @@
 #include <graphics/core/Texture.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("framebuffer");
+
 Framebuffer::Framebuffer(
     uint fbo, 
     uint depth, 
@@ -35,7 +37,13 @@ static std::unique_ptr<Texture> create_texture(int width, int height, int format
     return std::make_unique<Texture>(tex, width, height);
 }
 
-Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), height(height) {
+Framebuffer::Framebuffer(
+    uint width,
+    uint height,
+    bool alpha
+) : width(width),
+    height(height)
+{
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -49,7 +57,7 @@ Framebuffer::Framebuffer(uint width, uint height, bool alpha) : width(width), he
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        LOG_ERROR("Framebuffer is not complete!");
+        logger.error() << "Framebuffer is not complete!";
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -86,6 +94,10 @@ void Framebuffer::resize(uint width, uint height) {
 
 Texture* Framebuffer::getTexture() const {
     return texture.get();
+}
+
+std::shared_ptr<Texture> Framebuffer::getSharedTexture() const {
+    return texture;
 }
 
 uint Framebuffer::getWidth() const {

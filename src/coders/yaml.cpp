@@ -7,6 +7,8 @@
 
 using namespace yaml;
 
+static debug::Logger logger("yaml-coder");
+
 namespace {
     enum Chomping {
         Clip, Strip, Keep
@@ -60,7 +62,7 @@ bool Parser::expectIndent(int required) {
 std::string Parser::readMultilineString(int indent, bool eols, Chomping chomp) {
     int next_indent = countIndent();
     if (next_indent <= indent) {
-        LOG_ERROR("Indentation error");
+        logger.error() << "Indentation error";
         throw error("Indentation error");
     }
     std::stringstream ss;
@@ -106,7 +108,7 @@ std::string Parser::readMultilineString(int indent, bool eols, Chomping chomp) {
 std::string_view Parser::readYamlIdentifier() {
     char c = peek();
     if (!is_yaml_identifier_char(c)) {
-        LOG_ERROR("Identifier expected");
+        logger.error() << "Identifier expected";
         throw error("Identifier expected");
     }
     int start = pos;
@@ -142,7 +144,7 @@ dv::value Parser::parseValue() {
     } else {
         return perform_literal(readUntilEOL());
     }
-    LOG_ERROR("Unexpected character");
+    logger.error() << "Unexpected character";
     throw error("Unexpected character");
 }
 
@@ -162,7 +164,7 @@ dv::value Parser::parseInlineArray() {
         } else if (next == ']') {
             break;
         } else {
-            LOG_ERROR("',' expected");
+            logger.error() << "',' expected";
             throw error("',' expected");
         }
     }
@@ -188,7 +190,7 @@ dv::value Parser::parseInlineObject() {
         } else if (next == '}') {
             break;
         } else {
-            LOG_ERROR("',' expected");
+            logger.error() << "',' expected";
             throw error("',' expected");
         }
     }
@@ -303,7 +305,7 @@ dv::value Parser::parseObject(dv::value&& object, int indent) {
         char c = peek();
         if (!is_yaml_identifier_char(c)) {
             if (!is_whitespace(c)) {
-                LOG_ERROR("Invalid character");
+                logger.error() << "Invalid character";
                 throw error("Invalid character");
             }
             continue;
@@ -326,7 +328,7 @@ dv::value yaml::parse(std::string_view source) {
 }
 
 static void add_indent(std::stringstream& ss, int indent) {
-    for (int i = 0; i < indent; i++) {
+    for (int i = 0; i < indent; ++i) {
         ss << "  ";
     }
 }

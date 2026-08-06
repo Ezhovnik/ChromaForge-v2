@@ -86,11 +86,13 @@ static UVRegion calc_uv(
     return {u1, v1, u1 + m * scale, v1 + FACE_SIZE.y * scale};
 }
 
-void PrecipitationRenderer::render(
-    const Camera& camera, float delta, const WeatherPreset& weather
-) {
-    timer += delta;
+void PrecipitationRenderer::update(float deltaTime) {
+    timer += deltaTime;
+}
 
+void PrecipitationRenderer::render(
+    const Camera& camera, const WeatherPreset& weather
+) {
     const int radius = 6;
     const int depth = 12;
 
@@ -141,7 +143,7 @@ void PrecipitationRenderer::render(
                     glm::cross(glm::vec3(0, 1, 0), face.right),
                     FACE_SIZE,
                     light_at(chunks, pos.x, y, pos.z),
-                    glm::vec3(2.0f),
+                    glm::vec3(1.0f),
                     calc_uv(pos, face.right, timer, weather)
                 );
             }

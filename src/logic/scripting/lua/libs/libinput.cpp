@@ -46,8 +46,10 @@ static int l_add_callback(lua::State* L) {
         }
     }
 
-    auto callback = [&gui, actual_callback]() -> bool {
-        if (!gui.isFocusCaught()) {
+    bool isTopLevel = lua::toboolean(L, 4);
+
+    auto callback = [&gui, actual_callback, isTopLevel]() -> bool {
+        if (isTopLevel || !gui.isFocusCaught()) {
             return actual_callback();
         }
         return false;
@@ -74,6 +76,11 @@ static int l_get_mouse_pos(lua::State* L) {
     if (scripting::engine->isHeadless()) return 0;
 
     return lua::pushvec2(L, scripting::engine->getInput().getCursor().pos);
+}
+
+static int l_get_mouse_delta(lua::State* L) {
+    if (scripting::engine->isHeadless()) return 0;
+    return lua::pushvec2(L, scripting::engine->getInput().getCursor().delta);
 }
 
 static int l_get_bindings(lua::State* L) {
@@ -162,6 +169,7 @@ const luaL_Reg inputlib [] = {
     {"Mousecode", lua::wrap<l_mousecode>},
     {"add_callback", lua::wrap<l_add_callback>},
     {"get_mouse_pos", lua::wrap<l_get_mouse_pos>},
+    {"get_mouse_delta", lua::wrap<l_get_mouse_delta>},
     {"get_bindings", lua::wrap<l_get_bindings>},
     {"get_binding_text", lua::wrap<l_get_binding_text>},
     {"is_active", lua::wrap<l_is_active>},

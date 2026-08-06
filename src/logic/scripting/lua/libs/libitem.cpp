@@ -6,6 +6,9 @@
 #include <content/ContentControl.h>
 
 static const Item* get_item_def(lua::State* L, int idx) {
+    if (scripting::content == nullptr) {
+        throw std::runtime_error("Content is not initialized");
+    }
     auto indices = scripting::content->getIndices();
     auto id = lua::tointeger(L, idx);
     return indices->items.get(id);

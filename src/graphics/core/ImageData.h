@@ -38,6 +38,17 @@ public:
     void extrude(int x, int y, int w, int h);
     void fixAlphaColor();
 
+    void mulColor(const glm::ivec4& color);
+    void mulColor(const ImageData& other);
+    void addColor(const glm::ivec4& color, int multiplier);
+    void addColor(const ImageData& other, int multiplier);
+    void extend(int newWidth, int newHeight);
+
+    std::unique_ptr<ImageData> cropped(
+        int x, int y,
+        int width, int height
+    ) const;
+
     ubyte* getData() const {
         return data.get();
     }

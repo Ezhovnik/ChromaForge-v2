@@ -72,8 +72,8 @@ class WorldGenerator {
         const StructurePlacement& placement, int priority,
         int chunkX, int chunkZ
     );
-
     void placeLine(const LinePlacement& line, int priority);
+    void placeBlock(const BlockPlacement& block, int priority);
 
     void generateLine(
         const ChunkPrototype& prototype, 
@@ -84,6 +84,13 @@ class WorldGenerator {
 
     void generatePlacements(
         const ChunkPrototype& prototype, voxel* voxels, int x, int z
+    );
+
+    void generateBlock(
+        const ChunkPrototype& prototype,
+        const BlockPlacement& placement,
+        voxel* voxels,
+        int x, int z
     );
 
     void generateStructure(

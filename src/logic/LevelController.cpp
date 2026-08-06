@@ -18,15 +18,20 @@
 #include <lighting/Lighting.h>
 #include <world/LevelEvents.h>
 #include <voxels/Pathfinding.h>
+#include <engine/EnginePaths.h>
+
+static debug::Logger logger("level-controller");
 
 LevelController::LevelController(
-    Engine* engine,
+    Engine& engine,
     std::unique_ptr<Level> levelPtr,
     Player* clientPlayer
-) : settings(engine->getSettings()),
+) : engine(engine),
+    settings(engine.getSettings()),
     level(std::move(levelPtr)),
     chunks(std::make_unique<ChunksController>(*level)),
-    playerSparkClock(20, 3)
+    playerSparkClock(20, 3),
+    clientPlayer(clientPlayer)
 {
     level->events->listen(LevelEventType::CHUNK_PRESENT, [](auto, Chunk* chunk) {
         scripting::on_chunk_present(*chunk, chunk->flags.loaded);
@@ -60,7 +65,7 @@ LevelController::LevelController(
             player->chunks->configure(
                 std::floor(position.x), std::floor(position.z), 1
             );
-            chunks->update(16, 1, 0, *player);
+            chunks->update(16, 1, 0, *player, player.get() == clientPlayer);
             if (player->chunks->getVoxel(std::floor(position.x), 0, std::floor(position.z))) {
                 confirmed++;
             }
@@ -86,7 +91,8 @@ void LevelController::update(float delta, bool pause) {
             settings.chunks.loadSpeed.get(),
             settings.chunks.loadDistance.get(),
             settings.chunks.padding.get(),
-            *player
+            *player,
+            player.get() == clientPlayer
         );
     }
     if (!pause) {
@@ -111,22 +117,33 @@ void LevelController::update(float delta, bool pause) {
     level->entities->clean();
 }
 
+void LevelController::processBeforeQuit() {
+    preQuitCallbacks.notify();
+    for (auto player : level->players->getAll()) {
+        if (player->chunks) {
+            player->chunks->saveAndClear();
+        }
+    }
+    scripting::process_before_quit();
+}
+
 void LevelController::saveWorld() {
     auto world = level->getWorld();
     if (world->isNameless()) {
-        LOG_WARN("Nameless world will not be saved");
+        logger.warning() << "Nameless world will not be saved";
         return;
     }
-    LOG_INFO("Writing world '{}'", world->getName());
+    logger.info() << "Writing world '" << world->getName() << "'";
     world->wfile->createDirectories();
     scripting::on_world_save();
     level->onSave();
     level->getWorld()->write(level.get());
-    LOG_INFO("The world has been successfully saved");
+    logger.info() << "The world has been successfully saved";
 }
 
 void LevelController::onWorldQuit() {
     scripting::on_world_quit();
+    engine.getPaths().setCurrentWorldFolder("");
 }
 
 Level* LevelController::getLevel() {

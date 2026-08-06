@@ -1,4 +1,4 @@
-local enable_experimental = builtin.get_setting("debug.enable-experimental")
+local enable_experimental = __chroma_app.get_setting("debug.enable-experimental")
 
 ------------------------------------------------
 ------ Extended kit of standard functions ------
@@ -24,29 +24,47 @@ function tb_frame_tostring(frame)
     return s
 end
 
+local __chroma__app_script_coroutine
+local __chroma__is_post_runnable = false
+
 local function complete_app_lib(app)
+    local __app_load_content = app.load_content
+    local __app_reset_content = app.reset_content
+    local __app_reconfig_packs = app.reconfig_packs
+    local __app_spark = coroutine.yield
+    local __app_set_setting = app.set_setting
+    local __app_quit = app.quit
+
     app.sleep = sleep
     app.name = __CHROMA_SCRIPT_NAME
-    app.new_world = builtin.new_world
-    app.open_world = builtin.open_world
-    app.save_world = builtin.save_world
-    app.close_world = builtin.close_world
-    app.reopen_world = builtin.reopen_world
-    app.delete_world = builtin.delete_world
-    app.reconfig_packs = builtin.reconfig_packs
-    app.get_setting = builtin.get_setting
-    app.set_setting = builtin.set_setting
-    app.spark = function()
-        coroutine.yield()
+    app.set_setting = function(name, value, ...)
+        __app_set_setting(name, value, ...)
+        events.emit("builtin:setting."..name..".set", value)
     end
-    app.get_version = builtin.get_version
-    app.get_setting_info = builtin.get_setting_info
-    app.load_content = function()
-        builtin.load_content()
-        app.spark()
+    app.spark = __app_spark
+
+    local function call_in_app_script_co(func, ...)
+        if __chroma__is_post_runnable then
+            func(...)
+            return
+        end
+        local running = coroutine.running()
+        if not running or running ~= __chroma__app_script_coroutine then
+            error("Content must be reload in application script coroutine")
+        end
+        func(...)
+        __app_spark()
     end
-    app.reset_content = builtin.reset_content
-    app.is_content_loaded = builtin.is_content_loaded
+
+    app.reconfig_packs = function(...)
+        call_in_app_script_co(__app_reconfig_packs, ...)
+    end
+    app.load_content = function(...)
+        call_in_app_script_co(__app_load_content, ...)
+    end
+    app.reset_content = function(...)
+        call_in_app_script_co(__app_reset_content, ...)
+    end
 
     function app.config_packs(packs_list)
         packs_list = pack.assemble(packs_list)
@@ -67,15 +85,16 @@ local function complete_app_lib(app)
         app.reconfig_packs(toadd, toremove)
     end
 
-    function app.quit()
-        local tb = debug.get_traceback(1)
-        local s = "app.quit() traceback:"
-        for i, frame in ipairs(tb) do
-            s = s .. "\n\t"..tb_frame_tostring(frame)
+    function app.quit(silent)
+        if not silent then
+            local tb = debug.get_traceback(1)
+            local s = "app.quit() traceback:"
+            for i, frame in ipairs(tb) do
+                s = s .. "\n\t"..tb_frame_tostring(frame)
+            end
+            debug.info(s)
         end
-        debug.info(s)
-        builtin.quit()
-        coroutine.yield()
+        __app_quit()
     end
 
     function app.sleep_until(predicate, max_sparks, max_time)
@@ -104,87 +123,96 @@ elseif __chroma_app then
     complete_app_lib(__chroma_app)
 end
 
-function inventory.get_uses(invid, slot)
-    local uses = inventory.get_data(invid, slot, "uses")
-    if uses == nil then
-        return item.uses(inventory.get(invid, slot))
-    end
-    return uses
-end
-
-function inventory.use(invid, slot)
-    local itemid, count = inventory.get(invid, slot)
-    if itemid == nil then
-        return
-    end
-    local item_uses = inventory.get_uses(invid, slot)
-    if item_uses == nil then
-        return
-    end
-    if item_uses == 1 then
-        inventory.set(invid, slot, itemid, count - 1)
-    elseif item_uses > 1 then
-        inventory.set_data(invid, slot, "uses", item_uses - 1)
-    end
-end
-
-function inventory.decrement(invid, slot, count)
-    count = count or 1
-    local itemid, itemcount = inventory.get(invid, slot)
-    if itemcount <= count then
-        inventory.set(invid, slot, 0)
-    else
-        inventory.set_count(invid, slot, itemcount - count)
-    end
-end
-
-function inventory.get_caption(invid, slot)
-    local item_id, count = inventory.get(invid, slot)
-    local caption = inventory.get_data(invid, slot, "caption")
-    if not caption then return item.caption(item_id) end
-
-    return caption
-end
-
-function inventory.set_caption(invid, slot, caption)
-    local itemid, itemcount = inventory.get(invid, slot)
-    if itemid == 0 then
-        return
-    end
-    if caption == nil or type(caption) ~= "string" then
-        caption = ""
-    end
-    inventory.set_data(invid, slot, "caption", caption)
-end
-
-function inventory.get_description(invid, slot)
-    local item_id, count = inventory.get(invid, slot)
-    local description = inventory.get_data(invid, slot, "description")
-    if not description then return item.description(item_id) end
-
-    return description
-end
-
-function inventory.set_description(invid, slot, description)
-    local itemid, itemcount = inventory.get(invid, slot)
-    if itemid == 0 then
-        return
-    end
-    if description == nil or type(description) ~= "string" then
-        description = ""
-    end
-    inventory.set_data(invid, slot, "description", description)
-end
-
-if enable_experimental then
-    require "builtin:internal/maths_inline"
-end
-
+require "builtin:internal/maths_inline"
+require "builtin:internal/debugging"
+require "builtin:internal/audio_input"
+require "builtin:internal/extensions/inventory"
 asserts = require "builtin:internal/asserts"
 events = require "builtin:internal/events"
 
 function pack.unload(prefix)
     events.remove_by_prefix(prefix)
+end
+
+local __chroma_coroutines = {}
+local __chroma_named_coroutines = {}
+local __chroma_next_coroutine = 1
+
+function __chroma_start_coroutine(chunk)
+    local co = coroutine.create(chunk)
+    local id = __chroma_next_coroutine
+    __chroma_next_coroutine = __chroma_next_coroutine + 1
+    __chroma_coroutines[id] = co
+    return id
+end
+
+function __chroma_resume_coroutine(id)
+    local co = __chroma_coroutines[id]
+    if co then
+        local success, err = coroutine.resume(co)
+        if not success then
+            debug.error(err)
+            error(err)
+        end
+        return coroutine.status(co) ~= "dead"
+    end
+    return false
+end
+
+function __chroma_stop_coroutine(id)
+    local co = __chroma_coroutines[id]
+    if co then
+        if coroutine.close then
+            coroutine.close(co)
+        end
+        __chroma_coroutines[id] = nil
+    end
+end
+
+function start_coroutine(chunk, name)
+    local co = coroutine.create(function()
+        local status, error = xpcall(chunk, function(err)
+            local fullmsg = "error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
+
+            if hud then
+                gui.alert(fullmsg, function()
+                    if world.is_open() then
+                        __chroma_app.close_world()
+                    else
+                        __chroma_app.reset_content()
+                        menu:reset()
+                        menu.page = "main"
+                    end
+                end)
+            end
+            return fullmsg
+        end)
+        if not status then
+            debug.error(error)
+        end
+    end)
+    __chroma_named_coroutines[name] = co
+end
+
+function __chroma_start_app_script(path, name)
+    debug.info("Starting application script "..path)
+
+    local code = file.read(path)
+    local chunk, err = loadstring(code, path)
+    if chunk == nil then
+        error(err)
+    end
+    local script_env = setmetatable({app = app or __chroma_app}, {__index=_G})
+    chunk = setfenv(chunk, script_env)
+    if name then
+        start_coroutine(chunk, name)
+        __chroma__app_script_coroutine = __chroma_named_coroutines[name]
+        return
+    else
+        local id = __chroma_start_coroutine(chunk)
+        __chroma__app_script_coroutine = __chroma_coroutines[id]
+        return id
+    end
 end
 
 gui_util = require "builtin:internal/gui_util"
@@ -202,6 +230,34 @@ _GUI_ROOT = Document.new("builtin:root")
 _MENU = _GUI_ROOT.menu
 menu = _MENU
 gui.root = _GUI_ROOT
+gui.main_frame_id = "builtin:main"
+
+function gui.close_menu()
+    if menu then
+        menu:reset()
+    end
+    gui.set_active_frame("")
+end
+
+local __gui_create_frame = gui.create_frame
+function gui.create_frame(id, output, size)
+    __gui_create_frame(id, output, size)
+
+    local document = Document.new(id)
+    return document.root, document
+end
+
+do
+    local status, err = pcall(function()
+        local default_styles = toml.parse(file.read(
+            "res:devtools/default_syntax_scheme.toml"
+        ))
+        gui.set_syntax_styles(default_styles)
+    end)
+    if not status then
+        debug.error("Could not to load default syntax scheme: "..err)
+    end
+end
 
 console.cheats = {}
 
@@ -221,6 +277,42 @@ function console.log(...)
         text = '\n'..text
     end
     log_element:paste(text)
+end
+
+local console_add_command = console.__add_command
+console.__add_command = nil
+
+function console.add_command(scheme, description, handler, is_cheat)
+    console_add_command(scheme, description, handler)
+    if not is_cheat then return end
+
+    local name = string.match(scheme, "^(%S+)")
+    if not name then
+        error("Incorrect command syntax, command name not found")
+    end
+
+    table.insert_unique(console.cheats, name)
+end
+
+function console.is_cheat(name)
+    if not table.has(console.get_commands_list(), name) then
+        error(string.format("Command \"%s\" not found", name))
+    end
+
+    return table.has(console.cheats, name)
+end
+
+function console.set_cheat(name, status)
+    local is_cheat = console.is_cheat(name)
+    if status and not is_cheat then
+        table.insert(console.cheats, name)
+        return true
+    elseif not status and is_cheat then
+        table.remove_value(console.cheats, name)
+        return true
+    end
+
+    return false
 end
 
 function console.chat(...)
@@ -249,23 +341,7 @@ function gui.template(name, params)
     return text
 end
 
-session = {
-    entries={}
-}
-
-function session.get_entry(name)
-    local entry = session.entries[name]
-    if entry == nil then
-        entry = {}
-        session.entries[name] = entry
-    end
-    return entry
-end
-
-function session.reset_entry(name)
-    session.entries[name] = nil
-end
-
+session = require "builtin:internal/session"
 stdcomp = require "builtin:internal/stdcomp"
 entities.get = stdcomp.get_Entity
 entities.get_all = function(uids)
@@ -279,11 +355,6 @@ entities.get_all = function(uids)
         return stdcomp.get_all(uids)
     end
 end
-
-local bytearray = require "builtin:internal/bytearray"
-Bytearray = bytearray.FFIBytearray
-Bytearray_as_string = bytearray.FFIBytearray_as_string
-Bytearray_construct = function(...) return Bytearray(...) end
 
 __chroma_scripts_registry = require "builtin:internal/scripts_registry"
 
@@ -427,9 +498,14 @@ function __chroma_on_hud_open()
     end)
     input.add_callback("key:escape", function()
         if menu.page ~= "" then
-            menu:reset()
+            if not menu:back() then
+                menu:reset()
+                gui.set_active_frame("")
+            end
         elseif hud.is_inventory_open() then
             hud.close_inventory()
+        elseif gui.get_active_frame() then
+            gui.set_active_frame("")
         else
             hud.pause()
         end
@@ -485,6 +561,10 @@ function __chroma_on_world_spark(sps)
     time.schedules.world:spark(1.0 / sps)
 end
 
+function __chroma_process_before_quit()
+    block.__process_register_events()
+end
+
 function __chroma_on_world_save()
     local rule_values = {}
     for name, rule in pairs(rules.rules) do
@@ -500,69 +580,14 @@ function __chroma_on_world_quit()
     file.__close_all_descriptors()
 end
 
-local __chroma_coroutines = {}
-local __chroma_named_coroutines = {}
-local __chroma_next_coroutine = 1
-
-function __chroma_start_coroutine(chunk)
-    local co = coroutine.create(chunk)
-    local id = __chroma_next_coroutine
-    __chroma_next_coroutine = __chroma_next_coroutine + 1
-    __chroma_coroutines[id] = co
-    return id
-end
-
-function __chroma_resume_coroutine(id)
-    local co = __chroma_coroutines[id]
-    if co then
-        local success, err = coroutine.resume(co)
-        if not success then
-            debug.error(err)
-            error(err)
-        end
-        return coroutine.status(co) ~= "dead"
-    end
-    return false
-end
-
-function __chroma_stop_coroutine(id)
-    local co = __chroma_coroutines[id]
-    if co then
-        if coroutine.close then
-            coroutine.close(co)
-        end
-        __chroma_coroutines[id] = nil
-    end
-end
-
-function start_coroutine(chunk, name)
-    local co = coroutine.create(function()
-        local status, error = xpcall(chunk, function(err)
-            local fullmsg = "Error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
-            if hud then
-                gui.alert(fullmsg, function()
-                    if world.is_open() then
-                        __chroma_app.close_world()
-                    else
-                        __chroma_app.reset_content()
-                        menu:reset()
-                        menu.page = "main"
-                    end
-                end)
-            end
-            return fullmsg
-        end)
-        if not status then
-            debug.error(error)
-        end
-    end)
-    __chroma_named_coroutines[name] = co
-end
-
 local __post_runnables = {}
 
-function __process_post_runnables()
-    if #__post_runnables then
+local fn_audio_reset_fetch_buffer = audio.__reset_fetch_buffer
+audio.__reset_fetch_buffer = nil
+builtin.get_builtin_audio_token = audio.input.__get_builtin_token
+
+local function __chroma__process_post_runnables()
+    if #__post_runnables > 0 then
         for _, func in ipairs(__post_runnables) do
             local status, result = xpcall(func, __chroma__error)
             if not status then
@@ -586,10 +611,22 @@ function __process_post_runnables()
         __chroma_named_coroutines[name] = nil
     end
 
+    fn_audio_reset_fetch_buffer()
     debug.pull_events()
     network.__process_events()
-    block.__process_register_events()
-    block.__perform_sparks(time.delta())
+    if not hud or not hud.is_paused() then
+        block.__process_register_events()
+        block.__perform_sparks(time.delta())
+    end
+end
+
+function __process_post_runnables()
+    __chroma__is_post_runnable = true
+    local success, err = pcall(__chroma__process_post_runnables)
+    if not success then
+        debug.error("An error ocurred while processing post-runnables: ".. err)
+    end
+    __chroma__is_post_runnable = false
 end
 
 function time.post_runnable(runnable)

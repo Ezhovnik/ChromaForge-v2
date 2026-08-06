@@ -7,7 +7,7 @@
 
 #include <delegates.h>
 #include <engine/Engine.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <graphics/ui/elements/Label.h>
 #include <graphics/ui/elements/Menu.h>
 #include <graphics/ui/gui_util.h>
@@ -81,7 +81,7 @@ void menus::show_process_panel(
 
 void menus::call(Engine& engine, runnable func) {
     if (engine.isHeadless()) {
-        THROW_ERR("menus::call(...) in headless mode");
+        throw std::runtime_error("menus::call(...) in headless mode");
     }
     try {
         func();

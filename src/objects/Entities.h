@@ -6,7 +6,7 @@
 #include <memory>
 
 #include <glm/glm.hpp>
-#include <entt/entity/registry.hpp>
+#include <entt/entity/fwd.hpp>
 
 #include <typedefs.h>
 #include <physics/Hitbox.h>
@@ -29,15 +29,15 @@ namespace rigging {
 }
 class DrawContext;
 
-class Entities {
-private:
-    entt::registry registry;
+class Entities final {
+    std::unique_ptr<entt::registry> registry;
     Level& level;
     std::unordered_map<entityid_t, entt::entity> entities;
     std::unordered_map<entt::entity, entityid_t> uids;
     entityid_t nextID = 1;
     util::Clock sensorsSparkClock;
     util::Clock updateSparkClock;
+    Assets* assets = nullptr;
 
     void updateSensors(
         Rigidbody& body, const Transform& tsf, std::vector<Sensor*>& sensors
@@ -52,14 +52,16 @@ public:
 
     Entities(Level& level);
 
+    ~Entities();
+
+    void setAssets(Assets& assets);
+
     void updatePhysics(float delta);
     void update(float deltaTime);
     void render(
         const Assets& assets,
         ModelBatch& batch,
         const Frustum* frustum,
-        float deltaTime,
-        bool pause,
         entityid_t fpsEntity
     );
     void renderDebug(LineBatch& batch, const Frustum* frustum, const DrawContext& ctx);
@@ -79,7 +81,8 @@ public:
         glm::vec3 start,
         glm::vec3 dir,
         float maxDistance,
-        entityid_t ignore = -1
+        entityid_t ignore = -1,
+        bool solidOnly = false
     );
 
     void loadEntities(dv::value map);

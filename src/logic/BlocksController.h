@@ -7,7 +7,6 @@
 #include <typedefs.h>
 #include <voxels/voxel.h>
 #include <util/Clock.h>
-#include <math/rand.h>
 
 class Player;
 class Block;
@@ -24,7 +23,7 @@ enum class BlockInteraction {
     Placing
 };
 
-using on_block_interaction = std::function<void(
+using OnBlockInteraction = std::function<void(
     Player*, const glm::ivec3&, const Block&, BlockInteraction
 )>;
 
@@ -36,9 +35,8 @@ class BlocksController {
     util::Clock blocksSparkClock;
     util::Clock worldSparkClock;
 
-    util::FastRandom random {};
-
-    std::vector<on_block_interaction> blockInteractionCallbacks;
+    std::vector<OnBlockInteraction> blockInteractionCallbacks;
+    uint64_t randomSparkId = 0;
 public:
     BlocksController(const Level& level, Lighting* lighting);
 
@@ -61,7 +59,6 @@ public:
     void update(float delta, uint padding);
     void randomSpark(
         const Chunk& chunk,
-        int segments,
         const ContentIndices* indices
     );
     void randomSpark(int sparkId, int parts, uint padding);
@@ -78,5 +75,5 @@ public:
         BlockInteraction type
     );
 
-    void listenBlockInteraction(const on_block_interaction& callback);
+    void listenBlockInteraction(const OnBlockInteraction& callback);
 };

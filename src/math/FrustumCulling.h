@@ -71,7 +71,7 @@ inline void Frustum::update(glm::mat4 m) {
 }
 
 inline bool Frustum::isBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) const {
-	for (int i = 0; i < Count; i++) {
+	for (int i = 0; i < Count; ++i) {
 		if ((glm::dot(m_planes[i], glm::vec4(minp.x, minp.y, minp.z, 1.0f)) < 0.0) &&
 			(glm::dot(m_planes[i], glm::vec4(maxp.x, minp.y, minp.z, 1.0f)) < 0.0) &&
 			(glm::dot(m_planes[i], glm::vec4(minp.x, maxp.y, minp.z, 1.0f)) < 0.0) &&
@@ -85,12 +85,12 @@ inline bool Frustum::isBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) 
 	}
 
 	int out;
-	out = 0; for (int i = 0; i < 8; i++) out += ((m_points[i].x > maxp.x) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i < 8; i++) out += ((m_points[i].x < minp.x) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i < 8; i++) out += ((m_points[i].y > maxp.y) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i < 8; i++) out += ((m_points[i].y < minp.y) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i < 8; i++) out += ((m_points[i].z > maxp.z) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i < 8; i++) out += ((m_points[i].z < minp.z) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i < 8; ++i) out += ((m_points[i].x > maxp.x) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i < 8; ++i) out += ((m_points[i].x < minp.x) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i < 8; ++i) out += ((m_points[i].y > maxp.y) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i < 8; ++i) out += ((m_points[i].y < minp.y) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i < 8; ++i) out += ((m_points[i].z > maxp.z) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i < 8; ++i) out += ((m_points[i].z < minp.z) ? 1 : 0); if (out == 8) return false;
 
 	return true;
 }

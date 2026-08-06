@@ -10,8 +10,12 @@
 #include <frontend/Panorama.h>
 #include <content/ContentControl.h>
 
-MenuScreen::MenuScreen(Engine& engine) : Screen(engine) {
-    uicamera = std::make_unique<Camera>(glm::vec3(), engine.getWindow().getSize().y);
+MenuScreen::MenuScreen(
+    Engine& engine
+) : Screen(engine),
+    uicamera(
+        std::make_unique<Camera>(glm::vec3(), engine.getWindow().getSize().y)
+    ) {
     uicamera->perspective = false;
     uicamera->flipped = true;
     uicamera->near = -1.0f;
@@ -21,7 +25,7 @@ MenuScreen::MenuScreen(Engine& engine) : Screen(engine) {
 MenuScreen::~MenuScreen() = default;
 
 void MenuScreen::onOpen() {
-    engine.getContentControl().resetContent();
+    engine.getContentControl().resetContent({});
 
     auto menu = engine.getGUI().getMenu();
     menu->reset();

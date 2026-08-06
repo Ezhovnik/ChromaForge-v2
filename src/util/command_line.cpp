@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <engine/Engine.h>
 #include <util/ArgsReader.h>
 
@@ -57,6 +57,10 @@ static bool perform_keyword(
             params.headless = true;
             return true;
         }, "", "run in headless mode."),
+        ArgC("--stdin-cmd", [&params]() -> bool {
+            params.stdinCommands = true;
+            return true;
+        }, "", "run commands from stdin."),
         ArgC("--sps", [&params, &reader]() -> bool {
             params.sps = reader.nextInt();
             return true;

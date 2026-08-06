@@ -27,34 +27,35 @@
 #include <graphics/ui/elements/InlineFrame.h>
 #include <graphics/ui/elements/ModelViewer.h>
 #include <graphics/ui/elements/SelectBox.h>
+#include <graphics/ui/elements/Frame.h>
 
 using namespace gui;
 
 static Align align_from_string(std::string_view str, Align def) {
-    if (str == "left") return Align::left;
-    if (str == "center") return Align::center;
-    if (str == "right") return Align::right;
-    if (str == "top") return Align::top;
-    if (str == "bottom") return Align::bottom;
+    if (str == "left") return Align::Left;
+    if (str == "center") return Align::Center;
+    if (str == "right") return Align::Right;
+    if (str == "top") return Align::Top;
+    if (str == "bottom") return Align::Bottom;
     return def;
 }
 
 static Gravity gravity_from_string(const std::string& str) {
     static const std::unordered_map<std::string, Gravity> gravity_names {
-        {"top-left", Gravity::top_left},
-        {"top-center", Gravity::top_center},
-        {"top-right", Gravity::top_right},
-        {"center-left", Gravity::center_left},
-        {"center-center", Gravity::center_center},
-        {"center-right", Gravity::center_right},
-        {"bottom-left", Gravity::bottom_left},
-        {"bottom-center", Gravity::bottom_center},
-        {"bottom-right", Gravity::bottom_right},
+        {"top-left", Gravity::TopLeft},
+        {"top-center", Gravity::TopCenter},
+        {"top-right", Gravity::TopRight},
+        {"center-left", Gravity::CenterLeft},
+        {"center-center", Gravity::CenterCenter},
+        {"center-right", Gravity::CenterRight},
+        {"bottom-left", Gravity::BottomLeft},
+        {"bottom-center", Gravity::BottomCenter},
+        {"bottom-right", Gravity::BottomRight},
     };
     auto found = gravity_names.find(str);
     if (found != gravity_names.end()) return found->second;
 
-    return Gravity::none;
+    return Gravity::None;
 }
 
 static runnable create_runnable(
@@ -73,14 +74,16 @@ static runnable create_runnable(
     return nullptr;
 }
 
-static onaction create_action(
+static void register_action(
+    UINode& node,
     const UIXmlReader& reader,
     const xml::xmlelement& element,
-    const std::string& name
+    const std::string& name,
+    UIAction action
 ) {
     auto callback = create_runnable(reader, element, name);
-    if (callback == nullptr) return nullptr;
-    return [callback](GUI&) {callback();};
+    if (callback == nullptr) return;
+    node.listenAction(action, [callback](GUI&) { callback(); });
 }
 
 static void read_uinode(
@@ -150,10 +153,16 @@ static void read_uinode(
             node.setCursor(cursor);
         }
     }
-    if (auto onclick = create_action(reader, element, "onclick")) node.listenAction(onclick);
-    if (auto onfocus = create_action(reader, element, "onfocus")) node.listenFocus(onfocus);
-    if (auto ondefocus = create_action(reader, element, "ondefocus")) node.listenDefocus(ondefocus);
-    if (auto ondoubleclick = create_action(reader, element, "ondoubleclick")) node.listenDoubleClick(ondoubleclick);
+
+    register_action(node, reader, element, "onclick", UIAction::Click);
+    register_action(node, reader, element, "onrightclick", UIAction::RightClick);
+    register_action(node, reader, element, "onfocus", UIAction::Focus);
+    register_action(node, reader, element, "ondefocus", UIAction::Defocus);
+    register_action(node, reader, element, "ondoubleclick", UIAction::DoubleClick);
+    register_action(node, reader, element, "onmouseover", UIAction::MouseOver);
+    register_action(node, reader, element, "onmouseout", UIAction::MouseOut);
+    register_action(node, reader, element, "onmouseenter", UIAction::MouseEnter);
+    register_action(node, reader, element, "onmouseleave", UIAction::MouseLeave);
 }
 
 static void read_container_impl(
@@ -201,11 +210,7 @@ static void read_base_panel_impl(
     if (element.has("padding")) {
         glm::vec4 padding = element.attr("padding").asVec4();
         panel.setPadding(padding);
-        glm::vec2 size = panel.getSize();
-        panel.setSize(glm::vec2(
-            size.x + padding.x + padding.z,
-            size.y + padding.y + padding.w
-        ));
+        panel.refresh();
     }
     if (element.has("orientation")) {
         auto &oname = element.attr("orientation").getText();
@@ -317,6 +322,14 @@ static std::shared_ptr<UINode> read_label(
     std::wstring text = parse_inner_text(element, reader.getContext());
     auto label = std::make_shared<Label>(reader.getGUI(), text);
     read_uinode(reader, element, *label);
+    if (element.has("font")) {
+        label->setFontName(element.attr("font").getText());
+    }
+    if (element.has("text-align")) {
+        label->setAlign(align_from_string(
+            element.attr("text-align").getText(), label->getAlign()
+        ));
+    }
     if (element.has("valign")) label->setVerticalAlign(align_from_string(element.attr("valign").getText(), label->getVerticalAlign()));
     if (element.has("autoresize")) label->setAutoResize(element.attr("autoresize").asBool());
     if (element.has("supplier")) {
@@ -328,7 +341,7 @@ static std::shared_ptr<UINode> read_label(
     }
     if (element.has("multiline")) {
         label->setMultiline(element.attr("multiline").asBool());
-        if (!element.has("valign")) label->setVerticalAlign(Align::top);
+        if (!element.has("valign")) label->setVerticalAlign(Align::Top);
     }
     if (element.has("text-wrap")) label->setTextWrapping(element.attr("text-wrap").asBool());
     if (element.has("markup")) label->setMarkup(element.attr("markup").getText());
@@ -366,7 +379,12 @@ static std::shared_ptr<UINode> read_button(
         read_panel_impl(reader, element, *button, true);
     }
     if (element.has("text-align")) button->setTextAlign(align_from_string(element.attr("text-align").getText(), button->getTextAlign()));
-
+    if (element.has("font")) {
+        if (auto label = button->getLabel()) {
+            label->setFontName(element.attr("font").getText());
+            button->setMustRefresh();
+        }
+    }
     return button;
 }
 
@@ -405,6 +423,7 @@ static std::shared_ptr<UINode> read_text_box(
     if (element.has("editable")) textbox->setEditable(element.attr("editable").asBool());
     if (element.has("autoresize")) textbox->setAutoResize(element.attr("autoresize").asBool());
     if (element.has("line-numbers")) textbox->setShowLineNumbers(element.attr("line-numbers").asBool());
+    if (element.has("keep-line-selection")) textbox->setKeepLineSelection(element.attr("keep-line-selection").asBool());
     if (element.has("markup")) textbox->setMarkup(element.attr("markup").getText());
     if (element.has("consumer")) {
         textbox->setTextConsumer(scripting::create_wstring_consumer(
@@ -446,7 +465,12 @@ static std::shared_ptr<UINode> read_text_box(
     }
     if (auto onUpPressed = create_runnable(reader, element, "onup")) textbox->setOnUpPressed(onUpPressed);
     if (auto onDownPressed = create_runnable(reader, element, "ondown")) textbox->setOnDownPressed(onDownPressed);
-
+    if (element.has("font")) {
+        if (auto label = textbox->getLabel()) {
+            label->setFontName(element.attr("font").getText());
+            textbox->setMustRefresh();
+        }
+    }
     return textbox;
 }
 
@@ -504,6 +528,12 @@ static std::shared_ptr<UINode> read_select(
         [callback=std::move(callback)](GUI&, const std::string& value) {
             callback(value);
         });
+    }
+    if (element.has("font")) {
+        if (auto label = selectBox->getLabel()) {
+            label->setFontName(element.attr("font").getText());
+            selectBox->setMustRefresh();
+        }
     }
     read_panel_impl(reader, element, *selectBox, false);
     return selectBox;
@@ -590,6 +620,12 @@ static std::shared_ptr<UINode> read_input_bind_box(
     auto bindbox = std::make_shared<InputBindBox>(
         reader.getGUI(), found, padding
     );
+    if (element.has("font")) {
+        if (auto label = bindbox->getLabel()) {
+            label->setFontName(element.attr("font").getText());
+            bindbox->setMustRefresh();
+        }
+    }
     read_panel_impl(reader, element, *bindbox);
 
     return bindbox;
@@ -600,8 +636,10 @@ static std::shared_ptr<UINode> read_image(
     const xml::xmlelement& element
 ) {
     std::string src = element.attr("src", "").getText();
-    auto image = std::make_shared<Image>(reader.getGUI(), src);
+    std::string fallback = element.attr("fallback", "").getText();
+    auto image = std::make_shared<Image>(reader.getGUI(), std::move(src));
     read_uinode(reader, element, *image);
+    image->setFallback(std::move(fallback));
 
     if (element.has("region")) {
         auto vec = element.attr("region").asVec4();
@@ -785,7 +823,7 @@ std::shared_ptr<UINode> UIXmlReader::readUINode(const xml::xmlelement& element) 
     auto found = readers.find(tag);
     if (found == readers.end()) {
         if (ignored.find(tag) != ignored.end()) return nullptr;
-        THROW_ERR("Unsupported element '{}'", tag);
+        throw std::runtime_error("Unsupported element '" + tag + "'");
     }
 
     bool hascontext = element.has("context");

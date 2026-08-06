@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <condition_variable>
 #include <vector>
+#include <array>
 
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -61,6 +62,7 @@ struct regFile {
     io::path filename;
     int version;
     bool inUse = false;
+    std::array<uint32_t, RegionConsts::VOLUME> offsets;
 
     regFile(io::path filename);
     regFile(const regFile&) = delete;
@@ -170,8 +172,8 @@ public:
         size_t size
     );
 
-    std::unique_ptr<ubyte[]> getVoxels(int x, int z);
-    std::unique_ptr<light_t[]> getLights(int x, int z);
+    bool getVoxels(int x, int z, ubyte* dst);
+    bool getLights(int x, int z, ubyte* dst);
     ChunkInventoriesMap fetchInventories(int x, int z);
     dv::value fetchEntities(int x, int z);
 

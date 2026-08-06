@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <optional>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
@@ -41,7 +42,7 @@ public:
     void setOnUnload(consumer<Chunk&> onUnload);
 
 	std::shared_ptr<Chunk> fetch(int x, int z);
-    std::shared_ptr<Chunk> create(int x, int z);
+    std::shared_ptr<Chunk> create(int x, int z, bool lighting);
 
 	void pinChunk(std::shared_ptr<Chunk> chunk);
     void unpinChunk(int x, int z);
@@ -60,7 +61,10 @@ public:
 
     void putChunk(std::shared_ptr<Chunk> chunk);
 
-    const AABB* isObstacleAt(float x, float y, float z) const;
+    std::optional<AABB> isObstacleAt(
+        float x, float y, float z,
+        const AABB& aabb
+    ) const;
 
     inline Chunk* getChunk(int cx, int cz) const {
         const auto& found = chunksMap.find(keyfrom(cx, cz));

@@ -10,11 +10,14 @@
 #include <graphics/ui/GUI.h>
 #include <graphics/ui/elements/Container.h>
 
+static debug::Logger logger("mainloop");
+
 Mainloop::Mainloop(Engine& engine) : engine(engine) {}
 
 void Mainloop::run() {
     auto& time = engine.getTime();
     auto& window = engine.getWindow();
+    auto& settings = engine.getSettings();
 
     engine.setLevelConsumer([this](auto level, int64_t localPlayer) {
         if (level == nullptr) {
@@ -27,19 +30,23 @@ void Mainloop::run() {
         }
     });
 
-    LOG_INFO("Loading the menu screen");
+    logger.info() << "Loading the menu screen";
     engine.setScreen(std::make_shared<MenuScreen>(engine));
-    LOG_INFO("The menu screen has loaded successfully");
+    logger.info() << "The menu screen has loaded successfully";
 
-    LOG_INFO("Main loop started");
+    logger.info() << "Main loop started";
     while (!window.isShouldClose()) {
         time.update(window.time());
+        engine.applicationSpark();
         engine.updateFrontend();
         if (!window.isIconified()) {
             engine.renderFrame();
         }
         engine.postUpdate();
-        engine.nextFrame();
+        engine.nextFrame(
+            settings.display.adaptiveFpsInMenu.get() &&
+            dynamic_cast<const MenuScreen*>(engine.getScreen().get()) != nullptr
+        );
     }
-    LOG_INFO("Main loop stopped");
+    logger.info() << "Main loop stopped";
 }

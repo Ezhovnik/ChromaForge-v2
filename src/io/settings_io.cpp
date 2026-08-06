@@ -18,7 +18,7 @@ struct SectionsBuilder {
         std::vector<Section>& sections
     ) : map(map), sections(sections) {}
 
-    void section(std::string name) {
+    void addSection(std::string name) {
         sections.push_back(Section {std::move(name), {}});
     }
 
@@ -32,35 +32,38 @@ struct SectionsBuilder {
 SettingsHandler::SettingsHandler(EngineSettings& settings) {
     SectionsBuilder builder(map, sections);
 
-    builder.section("audio");
+    builder.addSection("audio");
     builder.add("enabled", &settings.audio.enabled, false);
     builder.add("volume-master", &settings.audio.volumeMaster);
     builder.add("volume-regular", &settings.audio.volumeRegular);
     builder.add("volume-ui", &settings.audio.volumeUI);
     builder.add("volume-ambient", &settings.audio.volumeAmbient);
     builder.add("volume-music", &settings.audio.volumeMusic);
+    builder.add("input-device", &settings.audio.inputDevice);
+    builder.add("acoustic-effects", &settings.audio.acousticEffects);
 
-    builder.section("display");
+    builder.addSection("display");
     builder.add("width", &settings.display.width);
     builder.add("height", &settings.display.height);
     builder.add("samples", &settings.display.samples);
     builder.add("framerate", &settings.display.framerate);
     builder.add("limit-fps-iconified", &settings.display.limitFpsIconified);
     builder.add("window-mode", &settings.display.windowMode);
+    builder.add("adaptive-menu-fps", &settings.display.adaptiveFpsInMenu);
 
-    builder.section("camera");
+    builder.addSection("camera");
     builder.add("sensitivity", &settings.camera.sensitivity);
     builder.add("fov", &settings.camera.fov);
     builder.add("fov-effects", &settings.camera.fovEffects);
     builder.add("shaking", &settings.camera.shaking);
     builder.add("inertia", &settings.camera.inertia);
 
-    builder.section("chunks");
+    builder.addSection("chunks");
     builder.add("load-distance", &settings.chunks.loadDistance);
     builder.add("load-speed", &settings.chunks.loadSpeed);
     builder.add("padding", &settings.chunks.padding);
 
-    builder.section("graphics");
+    builder.addSection("graphics");
     builder.add("fog-curve", &settings.graphics.fogCurve);
     builder.add("backlight", &settings.graphics.backlight);
     builder.add("dense-render", &settings.graphics.denseRender);
@@ -70,29 +73,36 @@ SettingsHandler::SettingsHandler(EngineSettings& settings) {
     builder.add("chunk-max-vertices", &settings.graphics.chunkMaxVertices);
     builder.add("chunk-max-vertices-dense", &settings.graphics.chunkMaxVerticesDense);
     builder.add("chunk-max-renderers", &settings.graphics.chunkMaxRenderers);
+    builder.add("particles-batch-vertices", &settings.graphics.particlesBatchVertices);
     builder.add("advanced-render", &settings.graphics.advancedRender);
     builder.add("ssao", &settings.graphics.ssao);
     builder.add("shadows-quality", &settings.graphics.shadowsQuality);
     builder.add("dense-render-distance", &settings.graphics.denseRenderDistance);
+    builder.add("soft-lighting", &settings.graphics.softLighting);
+    builder.add("clouds-quality", &settings.graphics.cloudsQuality);
 
-    builder.section("ui");
+    builder.addSection("ui");
     builder.add("language", &settings.ui.language);
     builder.add("world-preview-size", &settings.ui.worldPreviewSize);
 
-    builder.section("pathfinding");
+    builder.addSection("pathfinding");
     builder.add("steps-per-async-agent", &settings.pathfinding.stepsPerAsyncAgent);
 
-    builder.section("debug");
+    builder.addSection("debug");
     builder.add("generator-test-mode", &settings.debug.generatorTestMode);
     builder.add("do-write-lights", &settings.debug.doWriteLights);
     builder.add("do-trace-shaders", &settings.debug.doTraceShaders);
     builder.add("enable-experimental", &settings.debug.enableExperimental);
+
+    builder.addSection("system");
+    builder.add("max-bg-asset-loaders", &settings.system.maxBgAssetLoaders);
+    builder.add("preserve-assets-during-frame", &settings.system.preserveAssetsDuringFrame);
 }
 
 dv::value SettingsHandler::getValue(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
-		THROW_ERR("Setting '{}' does not exist", name);
+		throw std::runtime_error("Setting '" + name + "' does not exist");
     }
     auto setting = found->second;
     if (auto number = dynamic_cast<NumberSetting*>(setting)) {
@@ -104,14 +114,14 @@ dv::value SettingsHandler::getValue(const std::string& name) const {
     } else if (auto string = dynamic_cast<StringSetting*>(setting)) {
         return string->get();
     } else {
-		THROW_ERR("Type is not implemented for '{}'", name);
+		throw std::runtime_error("Type is not implemented for '" + name + "'");
     }
 }
 
 dv::value SettingsHandler::getDefault(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
-        THROW_ERR("Setting '{}' does not exist", name);
+        throw std::runtime_error("Setting '" + name + "' does not exist");
     }
     auto setting = found->second;
 
@@ -124,14 +134,14 @@ dv::value SettingsHandler::getDefault(const std::string& name) const {
     } else if (auto string = dynamic_cast<StringSetting*>(setting)) {
         return string->getDefault();
     } else {
-        THROW_ERR("Type is not implemented for '{}'", name);
+        throw std::runtime_error("Type is not implemented for '" + name + "'");
     }
 }
 
 std::string SettingsHandler::toString(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
-		THROW_ERR("Setting '{}' does not exist", name);
+		throw std::runtime_error("Setting '" + name + "' does not exist");
     }
     auto setting = found->second;
     return setting->toString();
@@ -140,7 +150,7 @@ std::string SettingsHandler::toString(const std::string& name) const {
 Setting* SettingsHandler::getSetting(const std::string& name) const {
     auto found = map.find(name);
     if (found == map.end()) {
-		THROW_ERR("Setting '{}' does not exist", name);
+		throw std::runtime_error("Setting '" + name + "' does not exist");
     }
     return found->second;
 }
@@ -158,14 +168,14 @@ static void set_numeric_value(T* setting, const dv::value& value) {
             setting->set(value.asBoolean());
             break;
         default:
-            THROW_ERR("Type error, numeric value expected");
+            throw std::runtime_error("Type error, numeric value expected");
     }
 }
 
 void SettingsHandler::setValue(const std::string& name, const dv::value& value) {
     auto found = map.find(name);
     if (found == map.end()) {
-		THROW_ERR("Setting '{}' does not exist", name);
+		throw std::runtime_error("Setting '" + name + "' does not exist");
     }
     auto setting = found->second;
     if (auto number = dynamic_cast<NumberSetting*>(setting)) {
@@ -189,10 +199,10 @@ void SettingsHandler::setValue(const std::string& name, const dv::value& value) 
                 string->set(value.asString());
                 break;
             default:
-                THROW_ERR("Not implemented for type");
+                throw std::runtime_error("Not implemented for type");
         }
     } else {
-		THROW_ERR("Type is not implement - setting '{}'", name);
+		throw std::runtime_error("Type is not implement - setting '" + name + "'");
     }
 }
 

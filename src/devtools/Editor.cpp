@@ -1,7 +1,7 @@
 #include <devtools/Editor.h>
 
 #include <engine/Engine.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <coders/syntax_parser.h>
 #include <devtools/SyntaxProcessor.h>
 

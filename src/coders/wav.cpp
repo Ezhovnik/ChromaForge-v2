@@ -10,6 +10,8 @@
 #include <debug/Logger.h>
 #include <io/io.h>
 
+static debug::Logger logger("wav-coder");
+
 bool is_big_endian() {
     uint32_t ui32_v = 0x01020304;
     char bytes[sizeof(uint32_t)];
@@ -61,7 +63,7 @@ public:
         in.read(buffer, bufferSize);
         if (in.eof()) return 0;
         if (in.fail()) {
-            LOG_ERROR("I/O error ocurred");
+            logger.error() << "I/O error ocurred";
             return -1;
         }
         return in.gcount();
@@ -111,65 +113,65 @@ public:
 std::unique_ptr<audio::PCMStream> wav::create_stream(const io::path& file) {
     std::ifstream in(io::resolve(file), std::ios::binary);
     if (!in.is_open()) {
-        THROW_ERR("Could not open file '{}'", file.string());
+        throw std::runtime_error("Could not open file '" + file.string() + "'");
     }
 
     char buffer[6];
     if (!in.read(buffer, 4)) {
-        THROW_ERR("Could not read RIFF");
+        throw std::runtime_error("Could not read RIFF");
     }
     if (std::strncmp(buffer, "RIFF", 4) != 0) {
-        THROW_ERR("File is not a valid WAVE file (header doesn't begin with RIFF)");
+        throw std::runtime_error("File is not a valid WAVE file (header doesn't begin with RIFF)");
     }
 
     if (!in.read(buffer, 4)) {
-        THROW_ERR("Could not read size of file");
+        throw std::runtime_error("Could not read size of file");
     }
 
     if (!in.read(buffer, 4)) {
-        THROW_ERR("Could not read WAVE");
+        throw std::runtime_error("Could not read WAVE");
     }
     if (std::strncmp(buffer, "WAVE", 4) != 0) {
-        THROW_ERR("File is not a valid WAVE file (header doesn't contain WAVE)");
+        throw std::runtime_error("File is not a valid WAVE file (header doesn't contain WAVE)");
     }
 
     if (!in.read(buffer, 4)) {
-        THROW_ERR("Could not read fmt/0");
+        throw std::runtime_error("Could not read fmt/0");
     }
     if (!in.read(buffer, 4)) {
-        THROW_ERR("Could not read subchunk1 size");
+        throw std::runtime_error("Could not read subchunk1 size");
     }
     if (!in.read(buffer, 2)) {
-        THROW_ERR("Could not read audio format (PCM)");
+        throw std::runtime_error("Could not read audio format (PCM)");
     }
     if (!in.read(buffer, 2)) {
-        THROW_ERR("Could not read number of channels");
+        throw std::runtime_error("Could not read number of channels");
     }
     int channels = convert_to_int(buffer, 2);
     if (!in.read(buffer, 4)) {
-        THROW_ERR("Could not read sample rate");
+        throw std::runtime_error("Could not read sample rate");
     }
     int sampleRate = convert_to_int(buffer, 4);
     if (!in.read(buffer, 6)) {
-        THROW_ERR("Could not read WAV header (byte rate and block align)");
+        throw std::runtime_error("Could not read WAV header (byte rate and block align)");
     }
     if (!in.read(buffer, 2)) {
-        THROW_ERR("Could not read bits per sample");
+        throw std::runtime_error("Could not read bits per sample");
     }
 
     int bitsPerSample = convert_to_int(buffer, 2);
     if (bitsPerSample >= 24) {
-        THROW_ERR("{} bit depth is not supported by OpenAL", bitsPerSample);
+        throw std::runtime_error(std::to_string(bitsPerSample) + " bit depth is not supported by OpenAL");
     }
 
     if (!in.read(buffer, 4)) {
-        THROW_ERR("Could not read data chunk header");
+        throw std::runtime_error("Could not read data chunk header");
     }
 
     size_t initialOffset = 44;
     if (std::strncmp(buffer, "LIST", 4) == 0) {
         if (!in.read(buffer, 4)) {
-            THROW_ERR("Could not read comment chunk size");
+            throw std::runtime_error("Could not read comment chunk size");
         }
         int chunkSize = convert_to_int(buffer, 4);
         in.seekg(chunkSize, std::ios_base::cur);
@@ -177,24 +179,24 @@ std::unique_ptr<audio::PCMStream> wav::create_stream(const io::path& file) {
         initialOffset += chunkSize + 4;
 
         if (!in.read(buffer, 4)) {
-            THROW_ERR("Could not read comment chunk header");
+            throw std::runtime_error("Could not read comment chunk header");
         }
     }
 
     if (std::strncmp(buffer, "data", 4) != 0) {
-        THROW_ERR("File is not a valid WAVE file (doesn't have 'data' tag)");
+        throw std::runtime_error("File is not a valid WAVE file (doesn't have 'data' tag)");
     }
 
     if (!in.read(buffer, 4)) {
-        THROW_ERR("Could not read data size");
+        throw std::runtime_error("Could not read data size");
     }
     size_t size = convert_to_int(buffer, 4);
 
     if (in.eof()) {
-        THROW_ERR("Reached EOF on the file");
+        throw std::runtime_error("Reached EOF on the file");
     }
     if (in.fail()) {
-        THROW_ERR("Fail state set on the file");
+        throw std::runtime_error("Fail state set on the file");
     }
 
     return std::make_unique<WavStream>(

@@ -2,19 +2,21 @@
 
 #include <math/rand.h>
 
+static util::RandomGenerator random_gen;
+
 static int l_random(lua::State* L) {
     int argc = lua::gettop(L);
 
     if (argc == 0) {
         std::uniform_real_distribution<double> dist(0.0, 1.0);
-        return lua::pushnumber(L, dist(util::RandomGenerator::getGenerator()));
+        return lua::pushnumber(L, dist(random_gen.engine()));
     } else if (argc == 1) {
         integer_t maxVal = lua::tointeger(L, 1);
-        return lua::pushinteger(L, util::RandomGenerator::get<integer_t>(1, maxVal));
+        return lua::pushinteger(L, random_gen.next<integer_t>(1, maxVal));
     } else {
         integer_t minVal = lua::tointeger(L, 1);
         integer_t maxVal = lua::tointeger(L, 2);
-        return lua::pushinteger(L, util::RandomGenerator::get<integer_t>(minVal, maxVal));
+        return lua::pushinteger(L, random_gen.next<integer_t>(minVal, maxVal));
     }
 }
 
@@ -22,7 +24,7 @@ static int l_bytes(lua::State* L) {
     size_t size = lua::tointeger(L, 1);
     std::vector<ubyte> bytes(size);
     for (size_t i = 0; i < size; ++i) {
-        bytes[i] = static_cast<ubyte>(util::RandomGenerator::get<int>(0, 0xFF));
+        bytes[i] = random_gen.next<ubyte>(0, 0xFF);
     }
     return lua::create_bytearray(L, bytes);
 }

@@ -10,14 +10,14 @@ tostring_overrides["display.framerate"] = function(x)
 end
 
 function create_setting(id, name, step, postfix, tooltip, changeonrelease)
-    local info = builtin.get_setting_info(id)
+    local info = app.get_setting_info(id)
     postfix = postfix or ""
     tooltip = tooltip or ""
     changeonrelease = changeonrelease or ""
     document.root:add(gui.template("track_setting", {
         id=id,
         name=gui.str(name, "settings"),
-        value=builtin.get_setting(id),
+        value=app.get_setting(id),
         min=info.min,
         max=info.max,
         step=step,
@@ -25,7 +25,7 @@ function create_setting(id, name, step, postfix, tooltip, changeonrelease)
         tooltip=tooltip,
         changeonrelease=changeonrelease
     }))
-    update_setting(builtin.get_setting(id), id, name, postfix)
+    update_setting(app.get_setting(id), id, name, postfix)
 end
 
 function update_setting(x, id, name, postfix)
@@ -34,7 +34,7 @@ function update_setting(x, id, name, postfix)
     if func then
         str = func(x)
     else
-        str = builtin.str_setting(id)
+        str = app.str_setting(id)
     end
     document[id..".L"].text = string.format(
         "%s: %s%s", 
@@ -47,8 +47,8 @@ end
 function create_checkbox(id, name, tooltip)
     tooltip = tooltip or ''
     document.root:add(string.format(
-        "<checkbox consumer='function(x) builtin.set_setting(\"%s\", x) end' checked='%s' tooltip='%s'>%s</checkbox>", 
-        id, builtin.str_setting(id), gui.str(tooltip, "settings"), gui.str(name, "settings")
+        "<checkbox consumer='function(x) app.set_setting(\"%s\", x) end' checked='%s' tooltip='%s'>%s</checkbox>", 
+        id, app.str_setting(id), gui.str(tooltip, "settings"), gui.str(name, "settings")
     ))
 end
 
@@ -57,15 +57,16 @@ function on_open()
     create_setting("display.framerate", "Framerate", 1, "", "", true)
 
     document.root:add(string.format(
-        "<select context='settings' onselect='function(opt) builtin.set_setting(\"display.window-mode\", tonumber(opt)) end' selected='%s'>"..
+        "<select context='settings' onselect='function(opt) app.set_setting(\"display.window-mode\", tonumber(opt)) end' selected='%s'>"..
             "<option value='0'>@Windowed</option>"..
             "<option value='1'>@Fullscreen</option>"..
             "<option value='2'>@Borderless</option>"..
-        "</select>", builtin.get_setting("display.window-mode")
+        "</select>", app.get_setting("display.window-mode")
     ))
 
     create_checkbox("camera.shaking", "Camera Shaking")
     create_checkbox("camera.inertia", "Camera Inertia")
     create_checkbox("camera.fov-effects", "Camera FOV Effects")
     create_checkbox("display.limit-fps-iconified", "Limit Background FPS")
+    create_setting("graphics.gamma", "Gamma", 0.05, "", "graphics.gamma.tooltip")
 end

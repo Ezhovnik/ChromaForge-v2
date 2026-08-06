@@ -45,7 +45,7 @@ CHROMA_ENUM_METADATA(BlockModelType)
     {"custom", BlockModelType::Custom},
 CHROMA_ENUM_END
 
-enum class CullingMode {
+enum class CullingMode : uint8_t {
     Default,
     Optional,
     Disabled,
@@ -79,6 +79,8 @@ struct BlockFuncsSet {
     bool randupdate : 1;
     bool onblockspark : 1;
     bool onblocksspark : 1;
+    bool onblockpresent : 1;
+    bool onblockremoved : 1;
 };
 
 inline constexpr int BLOCK_MAX_VARIANTS = 16;
@@ -100,6 +102,11 @@ struct Variants {
 
     /// First variant is copy of Block::defaults
     util::stack_vector<Variant, BLOCK_MAX_VARIANTS> variants {};
+};
+
+struct BlockFuncNamesCache {
+    std::string update;
+    std::string randomUpdate;
 };
 
 struct CoordSystem {
@@ -133,12 +140,25 @@ struct BlockRotProfile {
     static inline std::string STAIRS_NAME = "stairs";
 };
 
+enum class GroundingBehaviour : uint8_t {
+    Partial,
+    Complete,
+    Origin
+};
+
+CHROMA_ENUM_METADATA(GroundingBehaviour)
+    {"partial", GroundingBehaviour::Partial},
+    {"complete", GroundingBehaviour::Complete},
+    {"origin", GroundingBehaviour::Origin},
+CHROMA_ENUM_END
+
 struct BlockMaterial : Serializable {
 	std::string name;
 	std::string stepsSound;
     std::string placeSound;
     std::string breakSound;
     std::string hitSound;
+    float soundAbsorption = 0.5f;
 
     dv::value toTable() const;
     dv::value serialize() const override;
@@ -179,7 +199,10 @@ public:
     bool hidden = false;
     bool shadeless = false;
     bool ambientOcclusion = true;
-    bool translucent = false; // TODO
+    bool translucent = false;
+    bool explictlySolid = false;
+
+    GroundingBehaviour groundingBehaviour = GroundingBehaviour::Partial;
 
     std::vector<AABB> hitboxes {AABB()};
 
@@ -203,6 +226,7 @@ public:
         itemid_t pickingItem = 0;
         blockid_t surfaceReplacement = 0;
         std::set<int> tags;
+        BlockFuncNamesCache eventNames;
 	} rt {};
 
     Block(const std::string& name);

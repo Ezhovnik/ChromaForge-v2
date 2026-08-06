@@ -2,8 +2,7 @@
 
 #include <cmath>
 
-#include <glm/vec2.hpp>
-#include <glm/vec4.hpp>
+#include <glm/glm.hpp>
 
 /**
  * @brief Представляет прямоугольную область в UV-пространстве текстуры.
@@ -12,78 +11,84 @@
  * (1,1) — правый нижний. Используется для выделения части текстуры.
  */
 struct UVRegion {
-	float u1; ///< Левая координата U (минимальная)
-	float v1; ///< Верхняя координата V (минимальная)
-	float u2; ///< Правая координата U (максимальная)
-	float v2; ///< Нижняя координата V (максимальная)
+    float u1; ///< Левая координата U (минимальная)
+    float v1; ///< Верхняя координата V (минимальная)
+    float u2; ///< Правая координата U (максимальная)
+    float v2; ///< Нижняя координата V (максимальная)
 
-	/**
+    /**
      * @brief Конструктор с заданием всех четырёх координат.
      * @param u1 Левая граница.
      * @param v1 Верхняя граница.
      * @param u2 Правая граница.
      * @param v2 Нижняя граница.
      */
-	UVRegion(float u1, float v1, float u2, float v2)
-	: u1(u1), v1(v1), u2(u2), v2(v2){}
+    UVRegion(float u1, float v1, float u2, float v2)
+    : u1(u1), v1(v1), u2(u2), v2(v2){}
 
-	/**
+    /**
      * @brief Конструктор по умолчанию, создаёт регион, покрывающий всю текстуру.
      *
      * Инициализирует регион как (0, 0) – (1, 1).
      */
-	UVRegion() : u1(0.0f), v1(0.0f), u2(1.0f), v2(1.0f){}
+    UVRegion() : u1(0.0f), v1(0.0f), u2(1.0f), v2(1.0f){}
 
-     inline float getWidth() const {
-          return fabs(u2 - u1);
-     }
+    inline float getWidth() const {
+        return fabs(u2 - u1);
+    }
 
-     inline float getHeight() const {
-          return fabs(v2 - v1);
-     }
+    inline float getHeight() const {
+        return fabs(v2 - v1);
+    }
 
-     void autoSub(float w, float h, float x, float y) {
-          x *= 1.0f - w;
-          y *= 1.0f - h;
-          float uvw = getWidth();
-          float uvh = getHeight();
-          u1 = u1 + uvw * x;
-          v1 = v1 + uvh * y;
-          u2 = u1 + uvw * w;
-          v2 = v1 + uvh * h;
-     }
+    void autoSub(float w, float h, float x, float y) {
+        x *= 1.0f - w;
+        y *= 1.0f - h;
+        float uvw = getWidth();
+        float uvh = getHeight();
+        u1 = u1 + uvw * x;
+        v1 = v1 + uvh * y;
+        u2 = u1 + uvw * w;
+        v2 = v1 + uvh * h;
+    }
 
-     inline glm::vec2 apply(const glm::vec2& uv) {
-          float w = getWidth();
-          float h = getHeight();
-          return glm::vec2(u1 + uv.x * w, v1 + uv.y * h);
-     }
+    inline glm::vec2 apply(const glm::vec2& uv) {
+        float w = getWidth();
+        float h = getHeight();
+        return glm::vec2(u1 + uv.x * w, v1 + uv.y * h);
+    }
 
-     void scale(float x, float y) {
-          float w = u2 - u1;
-          float h = v2 - v1;
-          float cx = (u1 + u2) * 0.5f;
-          float cy = (v1 + v2) * 0.5f;
-          u1 = cx - w * 0.5f * x;
-          v1 = cy - h * 0.5f * y;
-          u2 = cx + w * 0.5f * x;
-          v2 = cy + h * 0.5f * y;
-     }
+    void scale(float x, float y) {
+        float w = u2 - u1;
+        float h = v2 - v1;
+        float cx = (u1 + u2) * 0.5f;
+        float cy = (v1 + v2) * 0.5f;
+        u1 = cx - w * 0.5f * x;
+        v1 = cy - h * 0.5f * y;
+        u2 = cx + w * 0.5f * x;
+        v2 = cy + h * 0.5f * y;
+    }
 
-     void scale(const glm::vec2& vec) {
-          scale(vec.x, vec.y);
-     }
+    void scale(const glm::vec2& vec) {
+        scale(vec.x, vec.y);
+    }
 
-     void set(const glm::vec4& vec) {
-          u1 = vec.x;
-          v1 = vec.y;
-          u2 = vec.z;
-          v2 = vec.w;
-     }
+    void set(const glm::vec4& vec) {
+        u1 = vec.x;
+        v1 = vec.y;
+        u2 = vec.z;
+        v2 = vec.w;
+    }
 
-     UVRegion operator*(const glm::vec2& scale) const {
-          auto copy = UVRegion(*this);
-          copy.scale(scale);
-          return copy;
-     }
+    UVRegion operator*(const glm::vec2& scale) const {
+        auto copy = UVRegion(*this);
+        copy.scale(scale);
+        return copy;
+    }
+
+    bool isFull() const {
+        const auto e = 1e-7;
+        return glm::abs(u1 - 0.0) < e && glm::abs(v1 - 0.0) < e &&
+            glm::abs(u2 - 1.0) < e && glm::abs(v2 - 1.0) < e;
+    }
 };

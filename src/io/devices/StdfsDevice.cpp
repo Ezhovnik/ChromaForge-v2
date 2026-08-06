@@ -5,6 +5,8 @@
 
 #include <debug/Logger.h>
 
+static debug::Logger logger("stdfs-device");
+
 using namespace io;
 
 StdfsDevice::StdfsDevice(std::filesystem::path root, bool createDirectory) : root(std::move(root)) {
@@ -12,7 +14,7 @@ StdfsDevice::StdfsDevice(std::filesystem::path root, bool createDirectory) : roo
         std::error_code ec;
         std::filesystem::create_directories(this->root, ec);
         if (ec) {
-            LOG_ERROR("Error creating root directory {}: {}", this->root.u8string(), ec.message());
+            logger.error() << "Error creating root directory " << this->root.u8string() << ": " << ec.message();
         }
     }
 }
@@ -25,7 +27,7 @@ std::unique_ptr<std::ostream> StdfsDevice::write(std::string_view path) {
     auto resolved = resolve(path);
     auto output = std::make_unique<std::ofstream>(resolved, std::ios::binary);
     if (!output->is_open()) {
-        THROW_ERR("Could not to open file {}", resolved.u8string());
+        throw std::runtime_error("Could not to open file " + resolved.u8string());
     }
     return output;
 }
@@ -34,7 +36,7 @@ std::unique_ptr<std::istream> StdfsDevice::read(std::string_view path) {
     auto resolved = resolve(path);
     auto input = std::make_unique<std::ifstream>(resolved, std::ios::binary);
     if (!*input) {
-        THROW_ERR("Could not to open file {}", resolved.u8string());
+        throw std::runtime_error("Could not to open file " + resolved.u8string());
     }
     return input;
 }
@@ -65,7 +67,7 @@ bool StdfsDevice::mkdir(std::string_view path) {
     std::error_code ec;
     bool created = std::filesystem::create_directory(resolved, ec);
     if (ec) {
-        LOG_ERROR("Error creating directory {}: {}", resolved.u8string(), ec.message());
+        logger.error() << "Error creating directory " << resolved.u8string() << ": " << ec.message();
     }
     return created;
 }
@@ -76,7 +78,7 @@ bool StdfsDevice::mkdirs(std::string_view path) {
     std::error_code ec;
     bool created = std::filesystem::create_directories(resolved, ec);
     if (ec) {
-        LOG_ERROR("Error creating directories {}: {}", resolved.u8string(), ec.message());
+        logger.error() << "Error creating directories " << resolved.u8string() << ": " << ec.message();
     }
     return created;
 }
@@ -89,7 +91,7 @@ bool StdfsDevice::remove(std::string_view path) {
 uint64_t StdfsDevice::removeAll(std::string_view path) {
     auto resolved = resolve(path);
     if (std::filesystem::exists(resolved)) {
-        LOG_INFO("removeALL {}", resolved.u8string());
+        logger.info() << "removeALL " << resolved.u8string();
         return std::filesystem::remove_all(resolved);
     } else {
         return 0;

@@ -17,6 +17,8 @@
 #include <math/voxmaths.h>
 #include <math/util.h>
 
+static debug::Logger logger("world-generator");
+
 static inline constexpr uint MAX_PARAMETERS = 4;
 static inline constexpr uint BASIC_PROTOTYPE_LAYERS = 5;
 
@@ -34,12 +36,12 @@ WorldGenerator::WorldGenerator(
     uint levels = BASIC_PROTOTYPE_LAYERS + def.wideStructsChunksRadius * 2;
 
     surroundMap = SurroundMap(0, levels);
-    LOG_INFO("Total number of prototype levels is {}", levels);
+    logger.info() << "Total number of prototype levels is " << levels;
 
     surroundMap.setOutCallback([this](int const x, int const z, int8_t) {
         const auto& found = prototypes.find({x, z});
         if (found == prototypes.end()) {
-            LOG_WARN("Unable to remove non-existing chunk prototype");
+            logger.warning() << "Unable to remove non-existing chunk prototype";
             return;
         }
         prototypes.erase({x, z});
@@ -77,7 +79,7 @@ WorldGenerator::~WorldGenerator() {}
 ChunkPrototype& WorldGenerator::requirePrototype(int x, int z) {
     const auto& found = prototypes.find({x, z});
     if (found == prototypes.end()) {
-        THROW_ERR("Prototype not found");
+        throw std::runtime_error("Prototype not found");
     }
     return *found->second;
 }
@@ -89,7 +91,7 @@ static inline void generate_pole(
     voxel* voxels,
     int x, int z
 ) {
-    uint y = top;
+    uint y = std::min<uint>(top, CHUNK_HEIGHT - 1);
     uint layerExtension = 0;
     for (const auto& layer : layers.layers) {
         if (y < seaLevel && !layer.belowSeaLevel) {
@@ -102,7 +104,9 @@ static inline void generate_pole(
         } else {
             layerHeight += layerExtension;
         }
-        layerHeight = std::min(static_cast<uint>(layerHeight), y + 1);
+        layerHeight = std::min(
+            static_cast<uint>(layerHeight), std::min<uint>(CHUNK_HEIGHT - 1, y + 1)
+        );
 
         for (uint i = 0; i < layerHeight; ++i, --y) {
             voxels[vox_index(x, y, z)].id = layer.rt.id;
@@ -164,7 +168,7 @@ void WorldGenerator::placeStructure(
             if (found == prototypes.end()) continue;
             auto& otherPrototype = *found->second;
             auto chunkAABB = gen_chunk_aabb(chunkX + lcx, chunkZ + lcz);
-            if (chunkAABB.intersect(aabb)) {
+            if (chunkAABB.intersects(aabb)) {
                 otherPrototype.placements.emplace_back(
                     priority,
                     StructurePlacement {
@@ -197,6 +201,45 @@ void WorldGenerator::placeLine(const LinePlacement& line, int priority) {
     }
 }
 
+void WorldGenerator::placeBlock(const BlockPlacement& block, int priority) {
+    const auto& indices = content.getIndices()->blocks;
+    const auto& def = indices.require(block.block);
+    const auto& rot = def.rotations.variants[block.rotation & 0b11];
+
+    glm::ivec3 minp = block.position;
+    glm::ivec3 maxp = block.position;
+    const auto size = def.size;
+    for (int sy = 0; sy < size.y; ++sy) {
+        for (int sz = 0; sz < size.z; ++sz) {
+            for (int sx = 0; sx < size.x; ++sx) {
+                glm::ivec3 p = block.position;
+                p += rot.axes[0] * sx;
+                p += rot.axes[1] * sy;
+                p += rot.axes[2] * sz;
+                minp = glm::min(minp, p);
+                maxp = glm::max(maxp, p);
+            }
+        }
+    }
+
+    maxp += glm::ivec3(1, 1, 1);
+    AABB aabb(minp, maxp);
+    int cxa = floordiv<CHUNK_WIDTH>(aabb.a.x);
+    int cza = floordiv<CHUNK_DEPTH>(aabb.a.z);
+    int cxb = floordiv<CHUNK_WIDTH>(aabb.b.x);
+    int czb = floordiv<CHUNK_DEPTH>(aabb.b.z);
+    for (int cz = cza; cz <= czb; ++cz) {
+        for (int cx = cxa; cx <= cxb; ++cx) {
+            const auto& found = prototypes.find({cx, cz});
+            if (found != prototypes.end()) {
+                glm::ivec3 rel = block.position - glm::ivec3(cx * CHUNK_WIDTH, 0, cz * CHUNK_DEPTH);
+                bool owner = (cx == floordiv<CHUNK_WIDTH>(block.position.x)) && (cz == floordiv<CHUNK_DEPTH>(block.position.z));
+                found->second->placements.emplace_back(priority, BlockPlacement{block.block, rel, block.rotation, !owner});
+            }
+        }
+    }
+}
+
 void WorldGenerator::placeStructures(
     const std::vector<Placement>& placements,
     ChunkPrototype& prototype, 
@@ -206,13 +249,15 @@ void WorldGenerator::placeStructures(
     for (const auto& placement : placements) {
         if (auto sp = std::get_if<StructurePlacement>(&placement.placement)) {
             if (sp->structure < 0 || sp->structure >= def.structures.size()) {
-                LOG_ERROR("Invalid structure index {}", sp->structure);
+                logger.error() << "Invalid structure index " << sp->structure;
                 continue;
             }
             placeStructure(*sp, placement.priority, chunkX, chunkZ);
+        } else if (auto lp = std::get_if<LinePlacement>(&placement.placement)) {
+            placeLine(*lp, placement.priority);
         } else {
-            const auto& line = std::get<LinePlacement>(placement.placement);
-            placeLine(line, placement.priority);
+            const auto& bp = std::get<BlockPlacement>(placement.placement);
+            placeBlock(bp, placement.priority);
         }
     }
 }
@@ -474,9 +519,10 @@ void WorldGenerator::generatePlacements(
     for (const auto& placement : placements) {
         if (auto structure = std::get_if<StructurePlacement>(&placement.placement)) {
             generateStructure(prototype, *structure, voxels, chunkX, chunkZ);
-        } else {
-            const auto& line = std::get<LinePlacement>(placement.placement);
-            generateLine(prototype, line, voxels, chunkX, chunkZ);
+        } else if (auto line = std::get_if<LinePlacement>(&placement.placement)) {
+            generateLine(prototype, *line, voxels, chunkX, chunkZ);
+        } else if (auto block = std::get_if<BlockPlacement>(&placement.placement)) {
+            generateBlock(prototype, *block, voxels, chunkX, chunkZ);
         }
     }
 }
@@ -488,7 +534,7 @@ void WorldGenerator::generateStructure(
     int chunkX, int chunkZ
 ) {
     if (placement.structure < 0 || placement.structure >= def.structures.size()) {
-        LOG_ERROR("Invalid structure index {}", placement.structure);
+        logger.error() << "Invalid structure index " << placement.structure;
         return;
     }
     auto& generatingStructure = def.structures[placement.structure];
@@ -501,14 +547,10 @@ void WorldGenerator::generateStructure(
         if (sy < 0 || sy >= CHUNK_HEIGHT) continue;
         for (int z = 0; z < size.z; ++z) {
             int sz = z + offset.z;
-            if (sz < 0 || sz >= CHUNK_DEPTH) {
-                continue;
-            }
+            if (sz < 0 || sz >= CHUNK_DEPTH) continue;
             for (int x = 0; x < size.x; ++x) {
                 int sx = x + offset.x;
-                if (sx < 0 || sx >= CHUNK_WIDTH) {
-                    continue;
-                }
+                if (sx < 0 || sx >= CHUNK_WIDTH) continue;
                 const auto& structVoxel = structVoxels[vox_index(x, y, z, size.x, size.z)];
                 if (structVoxel.id) {
                     voxels[vox_index(sx, sy, sz)] = structVoxel;
@@ -534,13 +576,13 @@ void WorldGenerator::generateLine(
     auto b = line.b;
 
     int minX = std::max(0, std::min(a.x - radius - cgx, b.x - radius - cgx));
-    int maxX = std::min(CHUNK_WIDTH, std::max(a.x + radius - cgx, b.x + radius - cgx));
+    int maxX = std::min(CHUNK_WIDTH, std::max(a.x + radius - cgx, b.x + radius - cgx) + 1);
 
     int minZ = std::max(0, std::min(a.z - radius - cgz, b.z - radius - cgz));
-    int maxZ = std::min(CHUNK_DEPTH, std::max(a.z + radius - cgz, b.z + radius - cgz));
+    int maxZ = std::min(CHUNK_DEPTH, std::max(a.z + radius - cgz, b.z + radius - cgz) + 1);
 
     int minY = std::max(0, std::min(a.y - radius, b.y - radius));
-    int maxY = std::min(CHUNK_HEIGHT, std::max(a.y + radius, b.y + radius));
+    int maxY = std::min(CHUNK_HEIGHT, std::max(a.y + radius, b.y + radius) + 1);
 
     for (int y = minY; y < maxY; ++y) {
         for (int z = minZ; z < maxZ; ++z) {
@@ -570,6 +612,54 @@ void WorldGenerator::generateLine(
                             below = {def.rt.surfaceReplacement, {}};
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+void WorldGenerator::generateBlock(
+    const ChunkPrototype& prototype,
+    const BlockPlacement& placement,
+    voxel* voxels,
+    int chunkX, int chunkZ
+) {
+    const auto& indices = content.getIndices()->blocks;
+    const auto& def = indices.require(placement.block);
+
+    glm::ivec3 origin = placement.position;
+    int rotIndex = 0;
+    if (def.rotatable && def.rotations.variantsCount) {
+        rotIndex = placement.rotation % def.rotations.variantsCount;
+    }
+
+    if (!placement.mirror && origin.x >= 0 && origin.x < CHUNK_WIDTH && origin.y >= 0 && origin.y < CHUNK_HEIGHT && origin.z >= 0 && origin.z < CHUNK_DEPTH) {
+        auto& vox = voxels[vox_index(origin.x, origin.y, origin.z)];
+        vox.id = placement.block;
+        vox.state = {};
+        vox.state.rotation = rotIndex;
+    }
+
+    if (def.rt.extended) {
+        const auto& rot = def.rotations.variants[rotIndex];
+        const auto size = def.size;
+        for (int sy = 0; sy < size.y; ++sy) {
+            for (int sz = 0; sz < size.z; ++sz) {
+                for (int sx = 0; sx < size.x; ++sx) {
+                    if ((sx | sy | sz) == 0) continue;
+                    glm::ivec3 pos = origin;
+                    pos += rot.axes[0] * sx;
+                    pos += rot.axes[1] * sy;
+                    pos += rot.axes[2] * sz;
+                    if (pos.x < 0 || pos.x >= CHUNK_WIDTH || pos.y < 0 || pos.y >= CHUNK_HEIGHT || pos.z < 0 || pos.z >= CHUNK_DEPTH) {
+                        continue;
+                    }
+                    struct voxel seg;
+                    seg.id = placement.block;
+                    seg.state = {};
+                    seg.state.rotation = rotIndex;
+                    seg.state.segment = ((sx > 0) | ((sy > 0) << 1) | ((sz > 0) << 2));
+                    voxels[vox_index(pos.x, pos.y, pos.z)] = seg;
                 }
             }
         }

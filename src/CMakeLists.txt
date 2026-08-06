@@ -1,0 +1,93 @@
+project(ChromaForgeSrc)
+
+file(GLOB_RECURSE headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+
+add_library(ChromaForgeSrc STATIC ${sources} ${headers})
+
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    find_package(OpenAL CONFIG REQUIRED)
+else()
+    find_package(OpenAL REQUIRED)
+endif()
+find_package(ZLIB REQUIRED)
+find_package(CURL REQUIRED)
+find_package(Freetype REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+find_package(EnTT CONFIG QUIET)
+find_package(entt CONFIG QUIET)
+if(NOT EnTT_FOUND AND NOT entt_FOUND)
+    message(STATUS "EnTT CMake config not found, assuming compiler finds headers directly")
+endif()
+
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(VORBIS REQUIRED IMPORTED_TARGET vorbis vorbisfile vorbisenc)
+pkg_check_modules(LUAJIT REQUIRED IMPORTED_TARGET luajit)
+
+if(MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    get_target_property(_luajit_opts PkgConfig::LUAJIT INTERFACE_LINK_OPTIONS)
+    if(_luajit_opts)
+        string(REPLACE "-Wl,-E" "-Wl,--export-all-symbols" _luajit_opts "${_luajit_opts}")
+        set_target_properties(PkgConfig::LUAJIT PROPERTIES INTERFACE_LINK_OPTIONS "${_luajit_opts}")
+    endif()
+    get_target_property(_luajit_libs PkgConfig::LUAJIT INTERFACE_LINK_LIBRARIES)
+    if(_luajit_libs)
+        list(REMOVE_ITEM _luajit_libs "dl" "-ldl")
+        set_target_properties(PkgConfig::LUAJIT PROPERTIES INTERFACE_LINK_LIBRARIES "${_luajit_libs}")
+    endif()
+endif()
+
+target_include_directories(ChromaForgeSrc PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_include_directories(ChromaForgeSrc SYSTEM PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(ChromaForgeSrc
+    PRIVATE
+        OpenGL::GL
+        GLEW::GLEW
+        OpenAL::OpenAL
+        ZLIB::ZLIB
+        Freetype::Freetype
+    PUBLIC
+        glfw
+        PkgConfig::VORBIS
+        PkgConfig::LUAJIT
+        CURL::libcurl
+)
+
+target_compile_options(ChromaForgeSrc
+    PUBLIC
+    $<$<CXX_COMPILER_ID:MSVC>:
+        /utf-8
+        /W4
+        /wd4244
+        /wd4267
+        /wd4100
+        /wd4457
+        /wd4458
+        /wd4459
+        /wd4101
+    >
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:
+        -Wall
+        -Wextra
+        -Wformat-nonliteral
+        -Wcast-align
+        -Wpointer-arith
+        -Wundef
+        -Wwrite-strings
+        -Wno-unused-parameter
+        -Wno-sign-compare
+        -Wno-unknown-pragmas
+    >
+    $<$<CXX_COMPILER_ID:GNU>:
+        -Wduplicated-branches
+        -Wduplicated-cond
+    >)

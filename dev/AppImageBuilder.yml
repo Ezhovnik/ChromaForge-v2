@@ -1,0 +1,64 @@
+version: 1
+
+script:
+ - mkdir -p AppDir/usr/bin
+ - mkdir -p AppDir/usr/share/ChromaForge/res
+ - mkdir -p AppDir/usr/share/applications
+ - mkdir -p AppDir/usr/share/icons/hicolor/256x256
+ - cp build/ChromaForge AppDir/usr/bin/
+ - cp -r build/res/* AppDir/usr/share/ChromaForge/res/
+ - cp dev/ChromaForge.desktop AppDir/usr/share/applications/
+ - cp dev/ChromaForge.png AppDir/usr/share/icons/hicolor/256x256/ChromaForge.png
+
+AppDir:
+  path: AppDir
+  app_info:
+    id: chromaforge
+    name: ChromaForge
+    icon: ChromaForge
+    version: latest
+    exec: usr/bin/ChromaForge
+    exec_args: --dir %%F --res %%F/res
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: deb [trusted=yes] http://deb.debian.org/debian bookworm main
+    include:
+      - libglfw3
+      - libglew2.2
+      - libopenal1
+      - libluajit-5.1-2
+      - libvorbis0a
+      - libvorbisfile3
+      - libcurl4
+      - libfreetype6
+    exclude:
+      - breeze
+      - plasma
+      - libllvm*
+      - libicu*
+      - perl*
+      - init
+      - libxml*
+
+  test:
+    debian:
+      image: appimagecrafters/tests-env:debian-bookworm
+      command: ./AppRun
+    arch:
+      image: appimagecrafters/tests-env:archlinux-libc
+      command: ./AppRun
+    fedora:
+      image: appimagecrafters/tests-env:fedora-30
+      command: ./AppRun
+    centos:
+      image: appimagecrafters/tests-env:centos-7
+      command: ./AppRun
+    ubuntu:
+      image: appimagecrafters/tests-env:ubuntu-xenial
+      command: ./AppRun
+
+AppImage:
+  arch: x86_64
+  update-information: gh-releases-zsync|Ezhovnik|ChromaForge-v2|latest|*x86_64.AppImage.zsync

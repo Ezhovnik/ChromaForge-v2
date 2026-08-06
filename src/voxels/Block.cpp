@@ -24,7 +24,8 @@ dv::value BlockMaterial::serialize() const {
         {"steps-sound", stepsSound},
         {"place-sound", placeSound},
         {"break-sound", breakSound},
-        {"hit-sound", hitSound}
+        {"hit-sound", hitSound},
+        {"sound-absorption", soundAbsorption}
     });
 }
 
@@ -34,6 +35,7 @@ void BlockMaterial::deserialize(const dv::value& src) {
     src.at("place-sound").get(placeSound);
     src.at("break-sound").get(breakSound);
     src.at("hit-sound").get(hitSound);
+    src.at("sound-absorption").get(soundAbsorption);
 }
 
 CoordSystem::CoordSystem(glm::ivec3 axisX, glm::ivec3 axisY, glm::ivec3 axisZ) : axes({axisX, axisY, axisZ}) {
@@ -151,6 +153,7 @@ void Block::cloneTo(Block& dst) {
     dst.sparkInterval = sparkInterval;
     dst.overlayTexture = overlayTexture;
     dst.translucent = translucent;
+    dst.explictlySolid = explictlySolid;
     dst.tags = tags;
     if (particles) {
         dst.particles = std::make_unique<ParticlesPreset>(*particles);

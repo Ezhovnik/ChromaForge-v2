@@ -34,11 +34,16 @@
 #include <objects/Players.h>
 #include <network/Network.h>
 #include <objects/Entt_Entity.h>
+#include <graphics/ui/GUI.h>
 
 static std::shared_ptr<gui::Label> create_label(gui::GUI& gui, wstringsupplier supplier) {
     auto label = std::make_shared<gui::Label>(gui, L"-");
     label->textSupplier(std::move(supplier));
     return label;
+}
+
+static bool should_keep_previous(gui::GUI& gui) {
+    return !gui.getInput().isCursorLocked();
 }
 
 std::shared_ptr<gui::UINode> create_debug_panel(
@@ -47,6 +52,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     Player& player,
     bool allowDebugCheats
 ) {
+    auto network = engine.getNetwork();
     auto& gui = engine.getGUI();
 	auto panel = std::make_shared<gui::Panel>(
         gui, glm::vec2(350, 200), glm::vec4(5.0f), 2.0f
@@ -57,51 +63,94 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     static int fps = 0;
     static int fpsMin = fps;
     static int fpsMax = fps;
-    static std::wstring fpsString = L"FPS: - / -";
+    static int framesCount = 0;
+    static float deltaSum = 0.;
+    static int drawCallsSum = 0;
+    static std::wstring fpsString = L"FPS: - / - / -";
+
+    static int drawCalls = 0;
+    static int drawCallsMin = drawCalls;
+    static int drawCallsMax = drawCalls;
+
+    static std::wstring drawCallsAvgString = L"-";
+    static std::wstring drawCallsMinMaxString = L"    min / max: - / -";
 
     static size_t lastTotalDownload = 0;
     static size_t lastTotalUpload = 0;
     static std::wstring netSpeedString = L"Download: - B/s upload: - B/s";
 
     panel->listenInterval(0.016f, [&engine]() {
-        fps = 1.0f / engine.getTime().getDeltaTime();
+        double delta = engine.getTime().getDeltaTime();
+        fps = 1.0f / delta;
+
         fpsMin = std::min(fps, fpsMin);
         fpsMax = std::max(fps, fpsMax);
+
+        drawCallsMin = std::min(drawCalls, drawCallsMin);
+        drawCallsMax = std::max(drawCalls, drawCallsMax);
+
+        framesCount++;
+        deltaSum += delta;
+        drawCallsSum += drawCalls;
     });
 
     panel->listenInterval(0.5f, []() {
-        fpsString = std::to_wstring(fpsMax) + L" / " + std::to_wstring(fpsMin);
+        if (framesCount < 1) return;
+
+        int avgFps = glm::round(framesCount / deltaSum);
+        int avgDrawCalls = drawCallsSum / framesCount;
+        framesCount = 0;
+        deltaSum = 0.0;
+        drawCallsSum = 0;
+
+        fpsString = L"FPS: " + std::to_wstring(avgFps) + L" / " +
+            std::to_wstring(fpsMin) + L" / " +
+            std::to_wstring(fpsMax);
+        drawCallsAvgString = std::to_wstring(avgDrawCalls);
+        drawCallsMinMaxString = L"    min / max: " +
+            std::to_wstring(drawCallsMin) +
+            L" / " +
+            std::to_wstring(drawCallsMax);
+
         fpsMin = fps;
         fpsMax = fps;
+
+        drawCallsMin = drawCalls;
+        drawCallsMax = drawCalls;
     });
 
-    panel->listenInterval(1.0f, [&engine]() {
-        const auto& network = engine.getNetwork();
-        size_t totalDownload = network.getTotalDownload();
-        size_t totalUpload = network.getTotalUpload();
-        netSpeedString =
-            L"Download: " + std::to_wstring(totalDownload - lastTotalDownload) +
-            L" B/s upload: " + std::to_wstring(totalUpload - lastTotalUpload) +
-            L" B/s";
-        lastTotalDownload = totalDownload;
-        lastTotalUpload = totalUpload;
-    });
+    if (network) {
+        panel->listenInterval(1.0f, [network]() {
+            size_t totalDownload = network->getTotalDownload();
+            size_t totalUpload = network->getTotalUpload();
+            netSpeedString =
+                L"Download: " + std::to_wstring(totalDownload - lastTotalDownload) +
+                L" B/s upload: " + std::to_wstring(totalUpload - lastTotalUpload) +
+                L" B/s";
+            lastTotalDownload = totalDownload;
+            lastTotalUpload = totalUpload;
+        });
+    }
 
-	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [](){
-		return L"FPS: " + fpsString;
-	})));
-    panel->add(std::shared_ptr<gui::Label>(create_label(gui, [](){
+	panel->add(create_label(gui, []() { return fpsString; }));
+    panel->add(std::shared_ptr<gui::Label>(create_label(gui, []() {
 		return L"Meshes: " + std::to_wstring(MeshStats::meshesCount);
 	})));
-    panel->add(create_label(gui, [](){
-        int drawCalls = MeshStats::drawCalls;
+    panel->add(create_label(gui, []() {
+        drawCalls = MeshStats::drawCalls;
         MeshStats::drawCalls = 0;
-        return L"Draw-calls: " + std::to_wstring(drawCalls);
+        auto drawCallsStr = std::to_wstring(drawCalls);
+        drawCallsStr.resize(6, ' ');
+        return L"Draw-Calls: " + drawCallsStr +
+            L" (average: " + drawCallsAvgString + L")";
     }));
-    panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&](){
+    panel->add(create_label(gui, []() {
+        return drawCallsMinMaxString;
+    }));
+    panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
 		return L"Chunks: " + std::to_wstring(level.chunks->size()) + L" (visible: " + std::to_wstring(ChunksRenderer::visibleChunks) + L")";
 	})));
-    panel->add(std::shared_ptr<gui::Label>(create_label(gui, [=](){
+    panel->add(std::shared_ptr<gui::Label>(create_label(gui, [=]() {
 		return L"Particles: " +
                 std::to_wstring(ParticlesRenderer::visibleParticles) +
                 L" Emitters: " +
@@ -115,15 +164,25 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         return L"Players: " + std::to_wstring(level.players->size()) +
         L" Local: " + std::to_wstring(player.getId());
     }));
-    panel->add(create_label(gui, [](){
+    panel->add(create_label(gui, []() {
         return L"Speakers: " + std::to_wstring(audio::count_speakers()) + L" Streams: " + std::to_wstring(audio::count_streams());
     }));
-    panel->add(create_label(gui, [](){
+    panel->add(create_label(gui, []() {
         return L"Lua stack: " + std::to_wstring(scripting::get_values_on_stack());
     }));
-    panel->add(create_label(gui, []() {return netSpeedString;}));
-	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() -> std::wstring{
-        const auto& vox = player.selection.vox;
+    if (network) {
+        panel->add(create_label(gui, []() {return netSpeedString;}));
+    }
+	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() -> std::wstring {
+        static voxel prevVox = {BLOCK_VOID, {}};
+
+        auto vox = player.selection.vox;
+        if (vox.id == BLOCK_VOID && should_keep_previous(gui)) {
+            vox = prevVox;
+        } else {
+            prevVox = vox;
+        }
+
         std::wstringstream stream;
         stream << "R:" << vox.state.rotation << " S:"
             << std::bitset<3>(vox.state.segment) << " U:"
@@ -135,8 +194,16 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         }
 	})));
     panel->add(create_label(gui, [&]() -> std::wstring {
-        const auto& selection = player.selection;
+        static CursorSelection prevSelection {};
+
+        auto selection = player.selection;
         const auto& vox = selection.vox;
+        if (vox.id == BLOCK_VOID && should_keep_previous(gui)) {
+            selection = prevSelection;
+        } else {
+            prevSelection = selection;
+        }
+
         if (vox.id == BLOCK_VOID) {
             return L"x: - y: - z: -";
         }
@@ -144,16 +211,33 @@ std::shared_ptr<gui::UINode> create_debug_panel(
             L" y: " + std::to_wstring(selection.actualPosition.y) +
             L" z: " + std::to_wstring(selection.actualPosition.z);
     }));
-    panel->add(create_label(gui, [&](){
+    panel->add(create_label(gui, [&]() {
+        static CursorSelection prevSelection {};
+
+        auto selection = player.selection;
+        const auto& vox = selection.vox;
+        if (vox.id == BLOCK_VOID && should_keep_previous(gui)) {
+            selection = prevSelection;
+        } else {
+            prevSelection = selection;
+        }
+
         auto indices = level.content.getIndices();
-        if (auto def = indices->blocks.get(player.selection.vox.id)) {
+        if (auto def = indices->blocks.get(vox.id)) {
             return L"Name: " + util::str2wstr_utf8(def->name);
         } else {
             return std::wstring {L"Name: void"};
         }
     }));
     panel->add(create_label(gui, [&]() {
+        static entityid_t prevEid = ENTITY_NONE;
         auto eid = player.getSelectedEntity();
+        if (eid == ENTITY_NONE && should_keep_previous(gui)) {
+            eid = prevEid;
+        } else {
+            prevEid = eid;
+        }
+
         if (eid == ENTITY_NONE) {
             return std::wstring {L"Entity: -"};
         } else if (auto entity = level.entities->get(eid)) {
@@ -162,7 +246,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
             return std::wstring {L"Entity: error (invalid UID)"};
         }
     }));
-	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&](){
+	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
 		return L"Seed: " + std::to_wstring(level.getWorld()->getSeed());
 	})));
 	for (int ax = 0; ax < 3; ++ax){
@@ -208,7 +292,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
 
     auto& worldInfo = level.getWorld()->getInfo();
 
-	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&](){
+	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
 		std::wstringstream ss;
         ss << std::fixed << std::setprecision(2);
         ss << worldInfo.skyClearness;
@@ -228,7 +312,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
 		panel->add(bar);
 	}
 
-	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&](){
+	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
 		int hour, minute, second;
 		timeutil::from_value(worldInfo.daytime, hour, minute, second);
 

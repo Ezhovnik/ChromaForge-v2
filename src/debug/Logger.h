@@ -1,70 +1,80 @@
 #pragma once
 
-#include <memory>
+#include <sstream>
 #include <string>
-#include <filesystem>
 
-#include <fmt/format.h>
+namespace debug {
+    enum class LogLevel {
+        Print,
+        Trace,
+        Debug,
+        Info,
+        Warning,
+        Error,
+        Critical
+    };
 
-enum class LogLevel {
-    TRACE = 0,
-    DEBUG,
-    INFO,
-    WARN,
-    ERR,
-    CRITICAL,
-    OFF
+    class Logger;
+
+    class LogMessage {
+        Logger* logger;
+        LogLevel level;
+        std::stringstream ss;
+    public:
+        LogMessage(Logger* logger, LogLevel level);
+
+        ~LogMessage();
+
+        LogMessage(const LogMessage&) = delete;
+        LogMessage& operator=(const LogMessage&) = delete;
+        LogMessage(LogMessage&&) = default;
+        LogMessage& operator=(LogMessage&&) = default;
+
+        template <class T>
+        LogMessage& operator<<(const T& x) {
+            ss << x;
+            return *this;
+        }
+    };
+
+    class Logger {
+    public:
+        explicit Logger(const std::string& name);
+
+        static Logger& getInstance();
+        static void init(const std::string& filename);
+        static void flush();
+
+        void log(LogLevel level, std::string message);
+
+        LogMessage print() {
+            return LogMessage(this, LogLevel::Print);
+        }
+
+        LogMessage trace() {
+            return LogMessage(this, LogLevel::Trace);
+        }
+
+        LogMessage debug() {
+            return LogMessage(this, LogLevel::Debug);
+        }
+
+        LogMessage info() {
+            return LogMessage(this, LogLevel::Info);
+        }
+
+        LogMessage warning() {
+            return LogMessage(this, LogLevel::Warning);
+        }
+
+        LogMessage error() {
+            return LogMessage(this, LogLevel::Error);
+        }
+
+        LogMessage critical() {
+            return LogMessage(this, LogLevel::Critical);
+        }
+    private:
+        std::string name;
+    };
 };
-
-class Logger {
-private:
-    Logger();
-    ~Logger();
-
-    friend struct std::default_delete<Logger>;
-
-    class Impl;
-    std::unique_ptr<Impl> pimpl_;
-
-    void log_impl(LogLevel level, const char* file, int line, const char* function, const std::string& message);
-public:
-    static Logger& getInstance();
-
-    void initialize(
-        const std::filesystem::path& logFile,
-        LogLevel consoleLevel,
-        LogLevel fileLevel
-    );
-
-    void setConsoleLevel(LogLevel level);
-    void setFileLevel(LogLevel level);
-    void setLoggerLevel(LogLevel level);
-
-    template<typename... Args>
-    void log(
-        LogLevel level,
-        const char* file,
-        int line,
-        const char* function,
-        const char* fmt,
-        const Args&... args)
-    {
-        log_impl(level, file, line, function, fmt::format(fmt, args...));
-    }
-
-    void flush();
-};
-
-// Макросы с автоматическим определением контекста
-#define LOG_TRACE(...)    Logger::getInstance().log(LogLevel::TRACE, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_DEBUG(...)    Logger::getInstance().log(LogLevel::DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_INFO(...)     Logger::getInstance().log(LogLevel::INFO, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_WARN(...)     Logger::getInstance().log(LogLevel::WARN, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_ERROR(...)    Logger::getInstance().log(LogLevel::ERR, __FILE__, __LINE__, __func__, __VA_ARGS__)
-#define LOG_CRITICAL(...) Logger::getInstance().log(LogLevel::CRITICAL, __FILE__, __LINE__, __func__, __VA_ARGS__)
-
-#define THROW_ERR(...) \
-    do { \
-        Logger::getInstance().log(LogLevel::ERR, __FILE__, __LINE__, __func__, __VA_ARGS__); \
-        throw std::runtime_error(fmt::format(__VA_ARGS__)); \
-    } while(0)

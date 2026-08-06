@@ -1,6 +1,9 @@
 #include <items/Inventory.h>
 
 #include <content/ContentReport.h>
+#include <debug/Logger.h>
+
+static debug::Logger logger("inventory");
 
 Inventory::Inventory(int64_t id, size_t size) : id(id), slots(size) {
 }
@@ -94,6 +97,20 @@ dv::value Inventory::serialize() const {
         }
     }
     return map;
+}
+
+void Inventory::check(const ContentIndices& indices) {
+    for (size_t i = 0; i < slots.size(); ++i) {
+        auto& slot = slots[i];
+        if (indices.items.get(slot.getItemId()) == nullptr) {
+#ifdef NDEBUG
+            logger.error() << "Invalid item ID " << slot.getItemId() << " found in inventory #" << id << " slot #" << i << "; will reset";
+            slot.clear();
+#else
+            abort();
+#endif
+        }
+    }
 }
 
 void Inventory::convert(const ContentReport* report) {

@@ -1,0 +1,11 @@
+[flat]
+parameters = []
+layers = [
+    {height=1, block="chromaforge:grass_block"},
+    {height=5, block="chromaforge:dirt"},
+    {height=-1, block="chromaforge:stone"},
+    {height=1, block="chromaforge:bedrock"}
+]
+sea-layers = [
+    {height=-1, block="chromaforge:grass_block"}
+]

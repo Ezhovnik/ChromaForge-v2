@@ -7,6 +7,7 @@
 #include <chrono>
 #include <stack>
 #include <vector>
+#include <sstream>
 
 #include <debug/Logger.h>
 #include <graphics/core/ImageData.h>
@@ -15,6 +16,8 @@
 #include <util/ObjectsKeeper.h>
 #include <util/platform.h>
 #include <window/input.h>
+
+static debug::Logger logger("glfw-window");
 
 static std::unordered_set<std::string> supported_gl_extensions;
 static std::unordered_set<std::string> shownMessages;
@@ -77,7 +80,7 @@ static void GLAPIENTRY gl_message_callback(
     if (shownMessages.find(key) != shownMessages.end()) return;
     shownMessages.insert(key);
 
-    LOG_WARN("GL:{}:{}: {}", gl_error_name(type), gl_severity_name(severity),  message);
+    logger.warning() << "GL:" << gl_error_name(type) << ":" << gl_severity_name(severity) << ": " << message;
 }
 
 static bool initialize_gl(int width, int height) {
@@ -86,9 +89,9 @@ static bool initialize_gl(int width, int height) {
     GLenum glewErr = glewInit();
     if (glewErr != GLEW_OK) {
         if (glewErr == GLEW_ERROR_NO_GLX_DISPLAY) {
-            LOG_WARN("glewInit() returned GLEW_ERROR_NO_GLX_DISPLAY; ignored");
+            logger.warning() << "glewInit() returned GLEW_ERROR_NO_GLX_DISPLAY; ignored";
         } else {
-            LOG_CRITICAL("Failed to initialize GLEW: {}", reinterpret_cast<const char*>(glewGetErrorString(glewErr)));
+            logger.critical() << "Failed to initialize GLEW: " << reinterpret_cast<const char*>(glewGetErrorString(glewErr));
             return true;
         }
     }
@@ -107,14 +110,14 @@ static bool initialize_gl(int width, int height) {
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, maxTextureSize);
     if (maxTextureSize[0] > 0) {
         Texture::MAX_RESOLUTION = maxTextureSize[0];
-        LOG_INFO("Max texture size is {}", Texture::MAX_RESOLUTION);
+        logger.info() << "Max texture size is " << Texture::MAX_RESOLUTION;
     }
 
     const GLubyte* vendor = glGetString(GL_VENDOR);
     const GLubyte* renderer = glGetString(GL_RENDERER);
-    LOG_INFO("GL Vendor: {}", reinterpret_cast<const char*>(vendor));
-    LOG_INFO("GL Renderer: {}", reinterpret_cast<const char*>(renderer));
-    LOG_INFO("GLFW: {}", glfwGetVersionString());
+    logger.info() << "GL Vendor: " << reinterpret_cast<const char*>(vendor);
+    logger.info() << "GL Renderer: " << reinterpret_cast<const char*>(renderer);
+    logger.info() << "GLFW: " << glfwGetVersionString();
     return false;
 }
 
@@ -153,7 +156,7 @@ static void glfw_error_callback(int error, const char* description) {
     if (description) {
         ss << ": " << description;
     }
-    LOG_ERROR("{}", ss.str());
+    logger.error() << ss.str();
 }
 
 inline constexpr short KEYS_BUFFER_SIZE = 1036;
@@ -176,14 +179,18 @@ public:
         : window(window) {
     }
 
-    void pollEvents() override {
+    void pollEvents(bool waitForRefresh) override {
         delta.x = 0.0f;
         delta.y = 0.0f;
         scroll = 0;
         currentFrame++;
         codepoints.clear();
         pressedKeys.clear();
-        glfwPollEvents();
+        if (waitForRefresh) {
+            glfwWaitEventsTimeout(0.5);
+        } else {
+            glfwPollEvents();
+        }
 
         for (auto& [_, binding] : bindings.getAll()) {
             if (!binding.enabled) {
@@ -256,6 +263,7 @@ public:
         }
         return keys[Keycode];
     }
+
     bool justPressed(Keycode Keycode) const override {
         return isPressed(Keycode) && frames[static_cast<int>(Keycode)] == currentFrame;
     }
@@ -321,8 +329,8 @@ private:
     GLFWwindow* window;
     bool cursorLocked = false;
     bool cursorDrag = false;
-    glm::vec2 delta;
-    glm::vec2 cursor;
+    glm::vec2 delta {};
+    glm::vec2 cursor {};
 };
 static_assert(!std::is_abstract<GLFWInput>());
 
@@ -367,6 +375,18 @@ public:
             }
         }
         prevSwap = time();
+    }
+
+    void setShouldRefresh() override {
+        shouldRefresh = true;
+    }
+
+    bool checkShouldRefresh() override {
+        if (shouldRefresh) {
+            shouldRefresh = false;
+            return true;
+        }
+        return false;
     }
 
     bool isMaximized() const override {
@@ -443,6 +463,14 @@ public:
         return mode;
     }
 
+    void focus() override {
+        glfwFocusWindow(window);
+    }
+
+    void setTitle(const std::string& title) override {
+        glfwSetWindowTitle(window, title.c_str());
+    }
+
     void setIcon(const ImageData* image) override {
         if (image == nullptr) {
             glfwSetWindowIcon(window, 0, nullptr);
@@ -501,7 +529,7 @@ public:
 
     void popScissor() override {
         if (scissorStack.empty()) {
-            LOG_WARN("Extra Window::popScissor call");
+            logger.warning() << "Extra Window::popScissor call";
             return;
         }
         glm::vec4 area = scissorStack.top();
@@ -543,16 +571,18 @@ private:
     CursorShape cursor = CursorShape::Arrow;
     int framerate = -1;
     std::stack<glm::vec4> scissorStack;
-    glm::vec4 scissorArea;
+    glm::vec4 scissorArea {};
     double prevSwap = 0.0;
     int posX = 0;
     int posY = 0;
+    bool shouldRefresh = true;
 };
 static_assert(!std::is_abstract<GLFWWindow>());
 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int) {
     auto handler = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
     handler->input.onMouseCallback(button, action == GLFW_PRESS);
+    handler->setShouldRefresh();
 }
 
 static void character_callback(GLFWwindow* window, unsigned int codepoint) {
@@ -564,6 +594,8 @@ static void key_callback(
     GLFWwindow* window, int key, int /*scancode*/, int action, int /*mode*/
 ) {
     auto handler = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+    handler->setShouldRefresh();
+
     auto& input = handler->input;
     if (key == GLFW_KEY_UNKNOWN) return;
 
@@ -587,11 +619,13 @@ static void window_size_callback(GLFWwindow* window, int width, int height) {
 static void scroll_callback(GLFWwindow* window, double, double yoffset) {
     auto handler = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
     handler->input.scroll += yoffset;
+    handler->setShouldRefresh();
 }
 
 static void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
     auto handler = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
     handler->input.setCursorPosition(xpos, ypos);
+    handler->setShouldRefresh();
 }
 
 static void iconify_callback(GLFWwindow* window, int iconified) {
@@ -615,6 +649,11 @@ static void create_standard_cursors() {
     }
 }
 
+static void refresh_callback(GLFWwindow* window) {
+    auto handler = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+    handler->setShouldRefresh();
+}
+
 static void setup_callbacks(GLFWwindow* window) {
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -623,6 +662,7 @@ static void setup_callbacks(GLFWwindow* window) {
     glfwSetCharCallback(window, character_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetWindowIconifyCallback(window, iconify_callback);
+    glfwSetWindowRefreshCallback(window, refresh_callback);
 }
 
 std::tuple<
@@ -634,7 +674,7 @@ std::tuple<
 
     glfwSetErrorCallback(glfw_error_callback);
     if (glfwInit() == GLFW_FALSE) {
-        LOG_CRITICAL("Failed to initialize GLFW");
+        logger.critical() << "Failed to initialize GLFW";
         return {nullptr, nullptr};
     }
 
@@ -656,7 +696,7 @@ std::tuple<
 
     auto window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     if (window == nullptr) {
-        LOG_CRITICAL("Failed to create GLFW window");
+        logger.critical() << "Failed to create GLFW window";
         glfwTerminate();
         return {nullptr, nullptr};
     }
@@ -667,9 +707,9 @@ std::tuple<
     GLenum glewErr = glewInit();
     if (glewErr != GLEW_OK) {
         if (glewErr == GLEW_ERROR_NO_GLX_DISPLAY) {
-            LOG_WARN("glewInit() returned GLEW_ERROR_NO_GLX_DISPLAY; ignored");
+            logger.warning() << "glewInit() returned GLEW_ERROR_NO_GLX_DISPLAY; ignored";
         } else {
-            LOG_CRITICAL("Failed to initialize GLEW: {}", reinterpret_cast<const char*>(glewGetErrorString(glewErr)));
+            logger.critical() << "Failed to initialize GLEW: " << reinterpret_cast<const char*>(glewGetErrorString(glewErr));
             glfwTerminate();
             return {nullptr, nullptr};
         }
@@ -693,7 +733,7 @@ std::tuple<
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, maxTextureSize);
     if (maxTextureSize[0] > 0) {
         Texture::MAX_RESOLUTION = maxTextureSize[0];
-        LOG_INFO("Max texture size is {}", Texture::MAX_RESOLUTION);
+        logger.info() << "Max texture size is " << Texture::MAX_RESOLUTION;
     }
 
     setup_callbacks(window);
@@ -704,7 +744,7 @@ std::tuple<
 
     glm::vec2 scale;
     glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &scale.x, &scale.y);
-    LOG_INFO("Monitor content scale: {} x {}", scale.x, scale.y);
+    logger.info() << "Monitor content scale: " << scale.x << " x " << scale.y;
 
     input_util::initialize();
 

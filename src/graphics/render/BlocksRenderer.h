@@ -13,12 +13,12 @@
 #include <graphics/render/commons.h>
 #include <settings.h>
 #include <math/rand.h>
+#include <math/AABB.h>
 
 template<typename VertexStructure> class Mesh;
 class Content;
 class Block;
 class Chunk;
-class VoxelsVolume;
 class Chunks;
 class ContentGfxCache;
 struct UVRegion;
@@ -29,36 +29,57 @@ struct UVRegion;
  * Строит меш для одного чанка, учитывая видимость граней, освещение,
  * модели блоков и их повороты.
  */
-class BlocksRenderer {
+class BlocksRenderer final {
+public:
+    BlocksRenderer(
+        size_t capacity,
+        const Content& content,
+        const ContentGfxCache& cache,
+        const EngineSettings& settings
+    );
+    ~BlocksRenderer();
+
+    void build(const Chunk* chunk, const VoxelsRenderVolume& volume);
+    ChunkMesh render(
+        const Chunk* chunk, const VoxelsRenderVolume& volume
+    );
+    ChunkMeshData createMesh();
+
+    size_t getMemoryConsumption() const;
+
+    bool isCancelled() const {
+        return cancelled;
+    }
 private:
-	const Content& content;
-	std::unique_ptr<ChunkVertex[]> vertexBuffer;
+    const Content& content;
+    std::unique_ptr<ChunkVertex[]> vertexBuffer;
     std::unique_ptr<uint32_t[]> indexBuffer;
     std::unique_ptr<uint32_t[]> denseIndexBuffer;
     size_t vertexCount;
-	size_t vertexOffset;
-	size_t indexCount;
+    size_t vertexOffset;
+    size_t indexCount;
     size_t denseIndexCount;
-	size_t capacity;
+    size_t capacity;
 
-    int voxelBufferPadding = 2;
-	bool overflow = false; ///< Флаг переполнения буфера
+    bool overflow = false; ///< Флаг переполнения буфера
     bool cancelled = false;
     bool densePass = false;
     bool denseRender = false;
 
-	const Chunk* chunk = nullptr;
-	std::unique_ptr<VoxelsVolume> voxelsBuffer;
+    AABB meshAABB {};
 
-	const Block* const* blockDefsCache;
-	const ContentGfxCache& cache;
+    const Chunk* chunk = nullptr;
+    const VoxelsRenderVolume* voxelsBuffer = nullptr;
+
+    const Block* const* blockDefsCache;
+    const ContentGfxCache& cache;
     const EngineSettings& settings;
 
     util::PseudoRandom randomizer;
 
     SortingMeshData sortingMesh;
 
-	void vertex(
+    void vertex(
         const glm::vec3& coord,
         float u, float v,
         const glm::vec4& light,
@@ -70,7 +91,7 @@ private:
      * @brief Добавляет шесть индексов для четырёх вершин (два треугольника).
      * @param a,b,c,d,e,f Индексы вершин (относительно текущего indexOffset).
      */
-	void index(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t f);
+    void index(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t f);
 
     /**
      * @brief Вершинная функция с дополнительными осями для мягкого освещения (перегрузка).
@@ -79,24 +100,24 @@ private:
      * @param tint Цветовой оттенок.
      * @param axisX,axisY,axisZ Оси, определяющие ориентацию (нормализованные).
      */
-	void vertexAO(
+    void vertexAO(
         const glm::vec3& coord, 
         float u, float v, 
         const glm::vec4& brightness,
-		const glm::vec3& axisX,
+        const glm::vec3& axisX,
         const glm::vec3& axisY,
-		const glm::vec3& axisZ
+        const glm::vec3& axisZ
     );
 
-	void face(
+    void face(
         const glm::vec3& coord, 
         float w, float h, float d,
-		const glm::vec3& axisX,
-		const glm::vec3& axisY,
+        const glm::vec3& axisX,
+        const glm::vec3& axisY,
         const glm::vec3& axisZ,
-		const UVRegion& region,
-		const glm::vec4(&lights)[4],
-		const glm::vec4& tint
+        const UVRegion& region,
+        const glm::vec4(&lights)[4],
+        const glm::vec4& tint
     );
 
     /**
@@ -106,7 +127,7 @@ private:
      * @param region Текстурная область.
      * @param lights Если true, вычисляется освещение на основе направления к солнцу.
      */
-	void face(
+    void face(
         const glm::vec3& coord,
         const glm::vec3& X,
         const glm::vec3& Y,
@@ -118,10 +139,10 @@ private:
 
     void faceAO(
         const glm::vec3& coord,
-		const glm::vec3& axisX,
-		const glm::vec3& axisY,
-		const glm::vec3& axisZ,
-		const UVRegion& region,
+        const glm::vec3& axisX,
+        const glm::vec3& axisY,
+        const glm::vec3& axisZ,
+        const UVRegion& region,
         bool lights
     );
 
@@ -134,7 +155,7 @@ private:
      * @param lights Включить ли освещение.
      * @param ao
      */
-	void blockCube(
+    void blockCube(
         const glm::ivec3& coord, 
         const UVRegion(&faces)[6], 
         const Block& block, 
@@ -152,7 +173,7 @@ private:
      * @param lights Включить освещение.
      * @param ao
      */
-	void blockAABB(
+    void blockAABB(
         const glm::ivec3& coord,
         const UVRegion(&faces)[6], 
         const Block* block, 
@@ -168,7 +189,7 @@ private:
      * @param face1,face2 Текстурные области для двух пересекающихся плоскостей.
      * @param spread Случайный разброс позиции.
      */
-	void blockXSprite(
+    void blockXSprite(
         int x, int y, int z, 
         const glm::vec3& size, 
         const UVRegion& face1, 
@@ -184,20 +205,13 @@ private:
      * @param lights Включить освещение.
      * @param ao
      */
-	void blockCustomModel(
+    void blockCustomModel(
         const glm::ivec3& icoord,
-		const Block& block, 
+        const Block& block, 
         blockstate states,
-		bool lights,
+        bool lights,
         bool ao
     );
-
-    /**
-     * @brief Проверяет, пропускает ли блок свет.
-     * @param x,y,z Глобальные координаты.
-     * @return true, если блок пропускает свет.
-     */
-	bool isOpenForLight(int x, int y, int z) const;
 
     /**
      * @brief Проверяет, открыта ли грань (соседний блок прозрачен или не той группы отрисовки).
@@ -205,8 +219,8 @@ private:
      * @param group Группа отрисовки текущего блока.
      * @return true, если грань должна быть отрисована.
      */
-	inline bool isOpen(const glm::ivec3& pos, const Block& def, const Variant& variant) const {
-        auto vox = voxelsBuffer->pickBlock(
+    inline bool isOpen(const glm::ivec3& pos, const Block& def, const Variant& variant) const {
+        const auto& vox = voxelsBuffer->pickBlock(
             chunk->chunk_x * CHUNK_WIDTH + pos.x,
             pos.y,
             chunk->chunk_z * CHUNK_DEPTH + pos.z
@@ -236,87 +250,23 @@ private:
      * @param x,y,z Координаты.
      * @return Цвет (RGBA, 0..1).
      */
-	glm::vec4 pickLight(int x, int y, int z) const;
+    glm::vec4 pickLight(int x, int y, int z) const;
 
     /**
      * @brief Возвращает цвет освещения в точке.
      * @param coord Координаты.
      * @return Цвет (RGBA, 0..1).
      */
-	glm::vec4 pickLight(const glm::ivec3& coord) const;
+    glm::vec4 pickLight(const glm::ivec3& coord) const;
 
-    /**
-     * @brief Возвращает цвет освещения в точке (усреднение по соседям).
-     * @param coord Координаты.
-     * @param right,up Направления для билинейной интерполяции.
-     * @return Усреднённый цвет.
-     */
-	glm::vec4 pickSoftLight(
-        const glm::ivec3& coord, 
-        const glm::ivec3& right, 
-        const glm::ivec3& up
+    glm::vec4 pickSoftLight(
+        const glm::ivec3& coord, const glm::ivec3& right, const glm::ivec3& up
     ) const;
 
-    /**
-     * @brief Возвращает цвет освещения в точке (усреднение по соседям).
-     * @param x,y,z Координаты.
-     * @param right,up Направления для билинейной интерполяции.
-     * @return Усреднённый цвет.
-     */
-	glm::vec4 pickSoftLight(
-        float x, float y, float z, 
-        const glm::ivec3& right, 
-        const glm::ivec3& up
+    glm::vec4 pickSoftLight(
+        float x, float y, float z, const glm::ivec3& right, const glm::ivec3& up
     ) const;
 
-	void render(const voxel* voxels, const int beginEnds[256][2]);
+    void render(const voxel* voxels, const int beginEnds[256][2]);
     SortingMeshData renderTranslucent(const voxel* voxels, int beginEnds[256][2]);
-public:
-    /**
-     * @brief Конструктор.
-     * @param capacity Размер буферов (количество float в vertexBuffer и int в indexBuffer).
-     * @param content Контент.
-     * @param cache Кэш графики.
-     * @param settings Настройки движка.
-     */
-	BlocksRenderer(
-        size_t capacity, 
-        const Content& content, 
-        const ContentGfxCache& cache, 
-        const EngineSettings& settings
-    );
-
-	virtual ~BlocksRenderer();
-
-    /**
-     * @brief Строит данные для указанного чанка (без создания Mesh).
-     * @param chunk Чанк.
-     * @param chunks Хранилище чанков (для доступа к соседям).
-     */
-    void build(const Chunk* chunk, const Chunks* chunks);
-
-    /**
-     * @brief Рендерит чанк и возвращает Mesh.
-     * @param chunk Чанк.
-     * @param chunks Хранилище чанков.
-     * @return Указатель на новый Mesh.
-     */
-	ChunkMesh render(const Chunk* chunk, const Chunks* chunks);
-
-    /**
-     * @brief Создаёт Mesh из текущих буферов.
-     * @return Указатель на новый Mesh.
-     */
-    ChunkMeshData createMesh();
-
-    /**
-     * @brief Возвращает буфер вокселей.
-     */
-	VoxelsVolume* getVoxelsBuffer() const;
-
-    size_t getMemoryConsumption() const;
-
-    bool isCancelled() const {
-        return cancelled;
-    }
 };

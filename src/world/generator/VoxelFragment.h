@@ -13,6 +13,7 @@ inline constexpr int STRUCTURE_FORMAT_VERSION = 1;
 class Level;
 class Content;
 class GlobalChunks;
+class LevelController;
 
 class VoxelFragment : public Serializable {
     glm::ivec3 size;
@@ -36,7 +37,7 @@ public:
 
     void prepare(const Content& content);
 
-    void place(GlobalChunks& chunks, const glm::ivec3& offset);
+    void place(LevelController& controller, const glm::ivec3& offset);
 
     std::unique_ptr<VoxelFragment> rotated(const Content& content) const;
 

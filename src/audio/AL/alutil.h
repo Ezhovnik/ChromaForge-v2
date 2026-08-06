@@ -4,11 +4,7 @@
 #include <type_traits>
 #include <cstdint>
 
-#ifdef __APPLE__
-#include <OpenAL/al.h>
-#else
 #include <AL/al.h>
-#endif
 #include <glm/glm.hpp>
 
 #include <typedefs.h>

@@ -9,6 +9,9 @@
 #include <items/Inventory.h>
 #include <debug/Logger.h>
 #include <coders/binary_json.h>
+#include <lighting/Lightmap.h>
+
+static debug::Logger logger("world-regions");
 
 WorldRegion::WorldRegion() :
     chunksData(std::make_unique<std::unique_ptr<ubyte[]>[]>(RegionConsts::VOLUME)),
@@ -149,7 +152,7 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
 
     assert(chunk != nullptr);
 
-    if (!chunk->flags.lighted) return;
+    if (!chunk->flags.ready) return;
     bool lightsUnsaved = !chunk->flags.loadedLights && doWriteLights;
     if (!chunk->flags.unsaved && !lightsUnsaved && !chunk->flags.entities) return;
 
@@ -163,15 +166,15 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
         CHUNK_DATA_LEN
     );
 
-    if (doWriteLights && chunk->flags.lighted) {
+    if (doWriteLights && chunk->flags.lighted && chunk->lightmap) {
         put(
             chunk->chunk_x, chunk->chunk_z,
             REGION_LAYER_LIGHTS, 
-            chunk->lightmap.encode(),
+            chunk->lightmap->encode(),
             LIGHTMAP_DATA_LEN
         );
     }
-    if (!chunk->inventories.empty()) {
+    if (!chunk->inventories.empty() || chunk->flags.inventoriesRemoved) {
         uint datasize;
         auto data = write_inventories(chunk->inventories, datasize);
         put(
@@ -203,29 +206,25 @@ void WorldRegions::put(Chunk* chunk, std::vector<ubyte> entitiesData) {
     }
 }
 
-std::unique_ptr<ubyte[]> WorldRegions::getVoxels(int x, int z){
+bool WorldRegions::getVoxels(int x, int z, ubyte* dst) {
     uint32_t size;
     uint32_t srcSize;
     auto& layer = layers[REGION_LAYER_VOXELS];
     auto* data = layer.getData(x, z, size, srcSize);
-    if (data == nullptr) return nullptr;
+    if (data == nullptr) return false;
     assert(srcSize == CHUNK_DATA_LEN);
-    return compression::decompress(data, size, srcSize, layer.compression);
+    compression::decompress({data, size}, dst, CHUNK_DATA_LEN, layer.compression);
+    return true;
 }
 
-std::unique_ptr<light_t[]> WorldRegions::getLights(int x, int z) {
+bool WorldRegions::getLights(int x, int z, ubyte* dst) {
     uint32_t size;
     uint32_t srcSize;
     auto& layer = layers[REGION_LAYER_LIGHTS];
     auto* bytes = layer.getData(x, z, size, srcSize);
-    if (bytes == nullptr) return nullptr;
-    auto data = compression::decompress(
-        bytes, size, srcSize, layer.compression
-    );
-    if (srcSize == LIGHTMAP_DATA_LEN) {
-        return Lightmap::decode(data.get());
-    }
-    return nullptr;
+    if (bytes == nullptr) return false;
+    compression::decompress({bytes, size}, dst, srcSize, layer.compression);
+    return true;
 }
 
 ChunkInventoriesMap WorldRegions::fetchInventories(int x, int z) {
@@ -263,15 +262,15 @@ void WorldRegions::processBlocksData(int x, int z, const BlockDataProc& func) {
     auto& voxLayer = layers[REGION_LAYER_VOXELS];
     auto& datLayer = layers[REGION_LAYER_BLOCKS_DATA];
     if (voxLayer.getRegion(x, z) || datLayer.getRegion(x, z)) {
-        THROW_ERR("Not implemented for in-memory regions");
+        throw std::runtime_error("Not implemented for in-memory regions");
     }
     auto datRegfile = datLayer.getRegFile({x, z});
     if (datRegfile == nullptr) {
-        THROW_ERR("Could not open region file");
+        throw std::runtime_error("Could not open region file");
     }
     auto voxRegfile = voxLayer.getRegFile({x, z});
     if (voxRegfile == nullptr) {
-        LOG_WARN("Missing voxels region - discard blocks data for {}x {}z", x, z);;
+        logger.warning() << "Missing voxels region - discard blocks data for " << x << "x " << z << "z";;
         deleteRegion(REGION_LAYER_BLOCKS_DATA, x, z);
         return;
     }
@@ -294,7 +293,7 @@ void WorldRegions::processBlocksData(int x, int z, const BlockDataProc& func) {
                 gx, gz, voxLength, voxSrcSize, voxRegfile.get()
             );
             if (voxData == nullptr) {
-                LOG_WARN("Missing voxels for chunk {}x {}z", gx, gz);
+                logger.warning() << "Missing voxels for chunk " << gx << "x " << gz << "z";
                 put(gx, gz, REGION_LAYER_BLOCKS_DATA, nullptr, 0);
                 continue;
             }
@@ -307,7 +306,7 @@ void WorldRegions::processBlocksData(int x, int z, const BlockDataProc& func) {
             try {
                 func(&blocksData, std::move(voxData));
             } catch (const std::exception& err) {
-                LOG_WARN("An error ocurred while processing blocks data in chunk {}x {}z: {}", gx, gz, err.what());
+                logger.warning() << "An error ocurred while processing blocks data in chunk " << gx << "x " << gz << "z: " << err.what();
                 blocksData = {};
             }
             auto bytes = blocksData.serialize();
@@ -333,11 +332,11 @@ void WorldRegions::processRegion(
 ) {
     auto& layer = layers[layerID];
     if (layer.getRegion(x, z)) {
-        THROW_ERR("Not implemented for in-memory regions");
+        throw std::runtime_error("Not implemented for in-memory regions");
     }
     auto regFile = layer.getRegFile({x, z});
     if (regFile == nullptr) {
-        THROW_ERR("Could not open region file");
+        throw std::runtime_error("Could not open region file");
     }
     for (uint cz = 0; cz < RegionConsts::SIZE; ++cz) {
         int gz = cz + z * RegionConsts::SIZE;
@@ -379,11 +378,11 @@ void WorldRegions::writeAll() {
 void WorldRegions::deleteRegion(RegionLayerIndex layerid, int x, int z) {
     auto& layer = layers[layerid];
     if (layer.getRegFile({x, z}, false)) {
-        THROW_ERR("Region file is currently in use");
+        throw std::runtime_error("Region file is currently in use");
     }
     auto file = layer.getRegionFilePath(x, z);
     if (io::exists(file)) {
-        LOG_INFO("Remove region file {}", file.string());
+        logger.info() << "Remove region file " << file.string();
         io::remove(file);
     }
 }

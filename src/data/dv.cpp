@@ -4,9 +4,11 @@
 #include <debug/Logger.h>
 #include <coders/json.h>
 
+static debug::Logger logger("dv");
+
 namespace dv {
     void log_error(const std::string& msg) {
-        LOG_ERROR("{}", msg);
+        logger.error() << msg;
     }
 
     value& value::operator[](const key_t& key) {

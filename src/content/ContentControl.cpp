@@ -1,7 +1,7 @@
 #include <content/ContentControl.h>
 
 #include <io/io.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <content/Content.h>
 #include <content/ContentPack.h>
 #include <content/ContentBuilder.h>
@@ -13,14 +13,21 @@
 #include <devtools/Project.h>
 #include <debug/Logger.h>
 
-static void load_configs(Input& input, const io::path& root) {
+static void load_configs(Input* input, const io::path& root) {
     auto configFolder = root / "config";
 }
+
+static std::vector<io::path> default_content_sources {
+    "world:content",
+    "user:content",
+    "project:content",
+    "res:content",
+};
 
 ContentControl::ContentControl(
     const Project& project,
     EnginePaths& paths,
-    Input& input,
+    Input* input,
     std::function<void()> postContent
 ) : paths(paths),
     input(input),
@@ -28,11 +35,7 @@ ContentControl::ContentControl(
     basePacks(project.basePacks),
     manager(std::make_unique<PacksManager>())
 {
-    manager->setSources({
-        "world:content",
-        "user:content",
-        "res:content",
-    });
+    manager->setSources(default_content_sources);
 }
 
 ContentControl::~ContentControl() = default;
@@ -49,10 +52,10 @@ std::vector<std::string>& ContentControl::getBasePacks() {
     return basePacks;
 }
 
-void ContentControl::resetContent() {
-    paths.setCurrentWorldFolder("");
-
-    scripting::cleanup();
+void ContentControl::resetContent(
+    const std::vector<std::string>& nonReset
+) {
+    scripting::cleanup(nonReset);
     std::vector<PathsRoot> resRoots;
     {
         auto pack = ContentPack::createBuiltin();
@@ -68,6 +71,7 @@ void ContentControl::resetContent() {
     scripting::on_content_reset();
 
     setContentPacksRaw(manager->getAll(basePacks));
+    resetContentSources();
 
     postContent();
 }
@@ -79,8 +83,6 @@ void ContentControl::loadContent(const std::vector<std::string>& names) {
 }
 
 void ContentControl::loadContent() {
-    scripting::cleanup();
-
     std::vector<std::string> names;
     for (auto& pack : contentPacks) {
         names.push_back(pack.id);
@@ -122,7 +124,7 @@ void ContentControl::loadContent() {
 
 void ContentControl::setContentPacksRaw(std::vector<ContentPack>&& packs) {
     if (content) {
-        THROW_ERR("'setContentPacksRaw' called with content loaded");
+        throw std::runtime_error("'setContentPacksRaw' called with content loaded");
     }
     contentPacks = std::move(packs);
     allPacks = contentPacks;
@@ -140,4 +142,16 @@ const std::vector<ContentPack>& ContentControl::getAllContentPacks() const {
 PacksManager& ContentControl::scan() {
     manager->scan();
     return *manager;
+}
+
+void ContentControl::setContentSources(std::vector<io::path> sources) {
+    manager->setSources(std::move(sources));
+}
+
+void ContentControl::resetContentSources() {
+    manager->setSources(default_content_sources);
+}
+
+const std::vector<io::path>& ContentControl::getContentSources() const {
+    return manager->getSources();
 }

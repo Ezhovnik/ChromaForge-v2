@@ -16,32 +16,33 @@ class Player;
 
 class ChunksController {
 private:
-	Level& level;
-	std::unique_ptr<WorldGenerator> generator;
+    Level& level;
+    std::unique_ptr<WorldGenerator> generator;
 
-	bool loadVisible(const Player& player, uint padding) const;
+    bool loadVisible(const Player& player, uint padding, bool isLocalPlayer) const;
     bool buildLights(const Player& player, const std::shared_ptr<Chunk>& chunk) const;
     void createChunk(const Player& player, int x, int y) const;
 public:
-	std::unique_ptr<Lighting> lighting;
+    std::unique_ptr<Lighting> lighting;
 
-	ChunksController(Level& level);
-	~ChunksController();
+    ChunksController(Level& level);
+    ~ChunksController();
 
     void update(
         int64_t maxDuration,
         int loadDistance,
-		uint padding,
-        Player& player
-	) const;
+        uint padding,
+        Player& player,
+        bool isLocalPlayer
+    ) const;
 
-	bool isInLoadingZone(
-		const Player& player,
-		uint padding,
-		int x, int z
-	) const;
+    bool isInLoadingZone(
+        const Player& player,
+        uint padding,
+        int x, int z
+    ) const;
 
-	const WorldGenerator* getGenerator() const {
-		return generator.get();
-	}
+    const WorldGenerator* getGenerator() const {
+        return generator.get();
+    }
 };

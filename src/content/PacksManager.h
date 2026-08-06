@@ -13,6 +13,7 @@ private:
 public:
     PacksManager();
 
+    const std::vector<io::path>& getSources() const;
     void setSources(std::vector<io::path> sources);
 
     void scan();

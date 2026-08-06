@@ -11,6 +11,8 @@
 #include <world/World.h>
 #include <util/platform.h>
 
+static debug::Logger logger("server-mainloop");
+
 ServerMainloop::ServerMainloop(Engine& engine) : engine(engine) {}
 
 ServerMainloop::~ServerMainloop() = default;
@@ -20,7 +22,7 @@ void ServerMainloop::run() {
     auto& time = engine.getTime();
 
     if (coreParams.scriptFile.empty()) {
-        LOG_INFO("Nothing to do(✿◠‿◠)");
+        logger.info() << "Nothing to do(✿◠‿◠)";
         return;
     }
 
@@ -28,8 +30,7 @@ void ServerMainloop::run() {
         setLevel(std::move(level));
     });
 
-    LOG_INFO("Starting task {}", coreParams.scriptFile.u8string());
-    auto process = scripting::start_coroutine(
+    auto process = scripting::start_app_script(
         "script:" + coreParams.scriptFile.filename().u8string()
     );
 
@@ -41,7 +42,7 @@ void ServerMainloop::run() {
     while (process->isActive()) {
         if (engine.isQuitSignal()) {
             process->terminate();
-            LOG_INFO("Script has been terminated due to quit signal");
+            logger.info() << "Script has been terminated due to quit signal";
             break;
         }
         if (coreParams.testMode) {
@@ -56,6 +57,7 @@ void ServerMainloop::run() {
             controller->getLevel()->getWorld()->updateTimers(delta);
             controller->update(glm::min(delta, 0.2), false);
         }
+        engine.applicationSpark();
         engine.postUpdate();
 
         if (!coreParams.testMode) {
@@ -65,17 +67,16 @@ void ServerMainloop::run() {
             begin = std::chrono::system_clock::now();
         }
     }
-    LOG_INFO("Script finished");
+    logger.info() << "Script finished";
 }
 
 void ServerMainloop::setLevel(std::unique_ptr<Level> level) {
     if (level == nullptr) {
         controller->onWorldQuit();
-        engine.getPaths().setCurrentWorldFolder("");
         controller = nullptr;
     } else {
         controller = std::make_unique<LevelController>(
-            &engine, std::move(level), nullptr
+            engine, std::move(level), nullptr
         );
     }
 }

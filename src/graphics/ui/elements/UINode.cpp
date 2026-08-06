@@ -11,8 +11,7 @@ using gui::Align;
 UINode::UINode(GUI& gui, glm::vec2 size) : gui(gui), size(size) {
 }
 
-UINode::~UINode() {
-}
+UINode::~UINode() = default;
 
 bool UINode::isVisible() const {
     if (visible && parent) return parent->isVisible();
@@ -44,8 +43,13 @@ bool UINode::isEnabled() const {
     return enabled;
 }
 
-void UINode::setHover(bool flag) {
+void UINode::setMouseEnter(bool flag) {
+    actions.notify(flag ? UIAction::MouseEnter : UIAction::MouseLeave, gui);
+}
+
+void UINode::setMouseOver(bool flag) {
     hover = flag;
+    actions.notify(flag ? UIAction::MouseOver : UIAction::MouseOut, gui);
 }
 
 bool UINode::isHover() const {
@@ -68,41 +72,31 @@ int UINode::getZIndex() const {
     return zindex;
 }
 
-UINode* UINode::listenAction(const onaction& action) {
-    actions.listen(action);
-    return this;
-}
-
-UINode* UINode::listenDoubleClick(const onaction& action) {
-    doubleClickCallbacks.listen(action);
-    return this;
-}
-
-UINode* UINode::listenFocus(const onaction& action) {
-    focusCallbacks.listen(action);
-    return this;
-}
-
-UINode* UINode::listenDefocus(const onaction& action) {
-    defocusCallbacks.listen(action);
-    return this;
+void UINode::listenAction(UIAction type, OnAction action) {
+    actions.listen(type, std::move(action));
 }
 
 void UINode::click(int, int) {
     pressed = true;
 }
 
+void UINode::clicked(Mousecode button) {
+    if (button == Mousecode::BUTTON_2) {
+        actions.notify(UIAction::RightClick, gui);
+    }
+}
+
 void UINode::doubleClick(int x, int y) {
     pressed = true;
     if (isInside(glm::vec2(x, y))) {
-        doubleClickCallbacks.notify(gui);
+        actions.notify(UIAction::DoubleClick, gui);
     }
 }
 
 void UINode::mouseRelease(int x, int y) {
     pressed = false;
     if (isInside(glm::vec2(x, y))) {
-        actions.notify(gui);
+        actions.notify(UIAction::Click, gui);
     }
 }
 
@@ -112,12 +106,12 @@ bool UINode::isPressed() const {
 
 void UINode::onFocus() {
     focused = true;
-    focusCallbacks.notify(gui);
+    actions.notify(UIAction::Focus, gui);
 }
 
 void UINode::defocus() {
     focused = false;
-    defocusCallbacks.notify(gui);
+    actions.notify(UIAction::Defocus, gui);
 }
 
 bool UINode::isFocused() const {
@@ -170,7 +164,7 @@ void UINode::scrolled(int value) {
     if (parent) parent->scrolled(value);
 }
 
-void UINode::setPos(glm::vec2 pos) {
+void UINode::setPos(const glm::vec2& pos) {
     this->pos = pos;
 }
 
@@ -190,7 +184,7 @@ glm::vec2 UINode::getSize() const {
     return size;
 }
 
-void UINode::setSize(glm::vec2 size_) {
+void UINode::setSize(const glm::vec2& size_) {
     size = glm::vec2(
         glm::max(minSize.x, glm::min(maxSize.x, size_.x)),
         glm::max(minSize.y, glm::min(maxSize.y, size_.y))
@@ -201,7 +195,7 @@ glm::vec2 UINode::getMinSize() const {
     return minSize;
 }
 
-void UINode::setMinSize(glm::vec2 minSize_) {
+void UINode::setMinSize(const glm::vec2& minSize_) {
     minSize = minSize_;
     setSize(getSize());
 }
@@ -210,7 +204,7 @@ glm::vec2 UINode::getMaxSize() const {
     return maxSize;
 }
 
-void UINode::setMaxSize(glm::vec2 maxSize) {
+void UINode::setMaxSize(const glm::vec2& maxSize) {
     this->maxSize = maxSize;
     setSize(getSize());
 }
@@ -238,7 +232,7 @@ bool UINode::isSubnodeOf(const UINode* node) {
 }
 
 void UINode::setGravity(Gravity gravity) {
-    if (gravity == Gravity::none) {
+    if (gravity == Gravity::None) {
         setPositionFunc(nullptr);
         return;
     }
@@ -252,27 +246,27 @@ void UINode::setGravity(Gravity gravity) {
 
         float x = 0.0f, y = 0.0f;
         switch (gravity) {
-            case Gravity::top_left:
-            case Gravity::center_left:
-            case Gravity::bottom_left: x = margin.x; break;
-            case Gravity::top_center:
-            case Gravity::center_center:
-            case Gravity::bottom_center: x = (parentSize.x - size.x) / 2.0f; break;
-            case Gravity::top_right:
-            case Gravity::center_right:
-            case Gravity::bottom_right: x = parentSize.x - size.x - margin.z; break;
+            case Gravity::TopLeft:
+            case Gravity::CenterLeft:
+            case Gravity::BottomLeft: x = margin.x; break;
+            case Gravity::TopCenter:
+            case Gravity::CenterCenter:
+            case Gravity::BottomCenter: x = (parentSize.x - size.x) / 2.0f; break;
+            case Gravity::TopRight:
+            case Gravity::CenterRight:
+            case Gravity::BottomRight: x = parentSize.x - size.x - margin.z; break;
             default: break;
         }
         switch (gravity) {
-            case Gravity::top_left:
-            case Gravity::top_center:
-            case Gravity::top_right: y = margin.y; break;
-            case Gravity::center_left:
-            case Gravity::center_center:
-            case Gravity::center_right: y = (parentSize.y - size.y) / 2.0f; break;
-            case Gravity::bottom_left:
-            case Gravity::bottom_center:
-            case Gravity::bottom_right: y = parentSize.y - size.y - margin.w; break;
+            case Gravity::TopLeft:
+            case Gravity::TopCenter:
+            case Gravity::TopRight: y = margin.y; break;
+            case Gravity::CenterLeft:
+            case Gravity::CenterCenter:
+            case Gravity::CenterRight: y = (parentSize.y - size.y) / 2.0f; break;
+            case Gravity::BottomLeft:
+            case Gravity::BottomCenter:
+            case Gravity::BottomRight: y = parentSize.y - size.y - margin.w; break;
             default: break;
         }
         return glm::vec2(x, y);
@@ -372,10 +366,19 @@ void UINode::reposition() {
 
 void UINode::getIndices(
     const std::shared_ptr<UINode>& node,
-    std::unordered_map<std::string, std::shared_ptr<UINode>>& map)
-{
+    std::unordered_map<std::string, std::weak_ptr<UINode>>& map
+) {
     const std::string& id = node->getId();
-    if (!id.empty()) map[id] = node;
+    if (!id.empty()) {
+        const auto& found = map.find(id);
+        if (found != map.end()) {
+            auto prev = found->second.lock();
+            if (prev && prev->getParent()) {
+                return;
+            }
+        }
+        map[id] = node;
+    }
 
     auto container = std::dynamic_pointer_cast<gui::Container>(node);
     if (container) {

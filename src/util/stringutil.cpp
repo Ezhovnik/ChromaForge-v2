@@ -52,6 +52,33 @@ std::string util::escape(std::string_view s, bool escapeUnicode) {
     return ss.str();
 }
 
+std::wstring util::escape_xml(std::wstring_view s) {
+    std::wstringstream ss;
+    for (wchar_t c : s) {
+        switch (c) {
+            case L'&':
+                ss << L"&amp;";
+                break;
+            case L'<':
+                ss << L"&lt;";
+                break;
+            case L'>':
+                ss << L"&gt;";
+                break;
+            case L'"':
+                ss << L"&quot;";
+                break;
+            case L'\'':
+                ss << L"&apos;";
+                break;
+            default:
+                ss << c;
+                break;
+        }
+    }
+    return ss.str();
+}
+
 std::string util::quote(const std::string& s) {
     return escape(s, false);
 }
@@ -143,7 +170,7 @@ inline uint utf8_len(ubyte cp) {
     if ((cp & 0xF8) == 0xF0) {
         return 4;
     }
-    THROW_ERR("utf8 decode error");
+    throw std::runtime_error("utf8 decode error");
 }
 
 uint32_t util::decode_utf8(uint& size, const char* chr) {
@@ -195,7 +222,7 @@ std::string xstr2str_utf8(std::basic_string_view<C> xs) {
     ubyte buffer[4];
     for (C xc : xs) {
         uint size = util::encode_utf8(static_cast<uint>(xc), buffer);
-        for (uint i = 0; i < size; i++) {
+        for (uint i = 0; i < size; ++i) {
             chars.push_back(buffer[i]);
         }
     }
@@ -450,7 +477,7 @@ double util::parse_double(const std::string& str) {
     double d;
     ss >> d;
     if (ss.fail()) {
-        THROW_ERR("Invalid number format");
+        throw std::runtime_error("Invalid number format");
     }
     return d;    
 }
@@ -484,7 +511,7 @@ std::vector<std::wstring> util::split(const std::wstring& str, char delimiter) {
 std::pair<std::string, std::string> util::split_at(std::string_view view, char c) {
     size_t idx = view.find(c);
     if (idx == std::string::npos) {
-        THROW_ERR("{} not found", util::quote(std::string({c})));
+        throw std::runtime_error(util::quote(std::string({c})) + " not found");
     }
     return std::make_pair(
         std::string(view.substr(0, idx)), 

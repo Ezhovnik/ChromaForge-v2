@@ -47,6 +47,7 @@ namespace gui {
         bool editable = true;
         bool autoresize = false;
         bool showLineNumbers = false;
+        bool keepLineSelection = false;
 
         std::string markup;
         std::string syntax;
@@ -60,7 +61,6 @@ namespace gui {
 
         size_t normalizeIndex(int index);
 
-        int calcIndexAt(int x, int y) const;
         void setTextOffset(uint x);
         bool eraseSelected();
         void resetSelection();
@@ -125,8 +125,10 @@ namespace gui {
         virtual void select(int start, int end);
 
         virtual uint getLineAt(size_t position) const;
-
         virtual size_t getLinePos(uint line) const;
+
+        int calcIndexAt(int x, int y) const;
+        int getLineYOffset(int line) const;
 
         virtual bool validate();
 
@@ -162,8 +164,16 @@ namespace gui {
         virtual void setMarkup(std::string_view lang);
         virtual const std::string& getMarkup() const;
 
+        std::shared_ptr<Label> getLabel() const;
+
         virtual bool isEdited() const;
         virtual void setUnedited();
+
+        size_t getSelectionStart() const;
+        size_t getSelectionEnd() const;
+
+        void setKeepLineSelection(bool flag);
+        bool isKeepLineSelection() const;
 
         virtual void reposition() override;
         virtual void onFocus() override;
@@ -177,8 +187,6 @@ namespace gui {
         virtual void typed(unsigned int codepoint) override; 
         void paste(const std::wstring& text, bool history=true);
         void erase(size_t start, size_t length);
-        size_t getSelectionStart() const;
-        size_t getSelectionEnd() const;
         virtual void keyPressed(Keycode key) override;
         virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos) override;
     };

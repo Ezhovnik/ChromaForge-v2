@@ -3,6 +3,7 @@
 #include <objects/rigging.h>
 #include <graphics/render/WorldRenderer.h>
 #include <graphics/render/NamedSkeletons.h>
+#include <engine/Engine.h>
 
 namespace scripting {
     extern WorldRenderer* renderer;
@@ -16,17 +17,21 @@ static int index_range_check(const rigging::Skeleton& skeleton, lua::Integer ind
 }
 
 static rigging::Skeleton* get_skeleton(lua::State* L) {
+    if (scripting::engine->isHeadless()) return nullptr;
+
     if (lua::isstring(L, 1)) {
         return scripting::renderer->skeletons->getSkeleton(lua::tostring(L, 1));
     }
     if (auto entity = get_entity(L, 1)) {
-        return &entity->getSkeleton();
+        return entity->getSkeleton();
     }
     return nullptr;
 }
 
 static int l_get_model(lua::State* L) {
     if (auto skeleton = get_skeleton(L)) {
+        if (skeleton->config == nullptr) return 0;
+
         auto& rigConfig = *skeleton->config;
         auto index = index_range_check(*skeleton, lua::tointeger(L, 2));
         const auto& modelOverride = skeleton->modelOverrides[index];
@@ -85,7 +90,9 @@ static int l_get_texture(lua::State* L) {
 }
 
 static int l_index(lua::State* L) {
-    if (auto skeleton= get_skeleton(L)) {
+    if (auto skeleton = get_skeleton(L)) {
+        if (skeleton->config == nullptr) return 0;
+
         if (auto bone = skeleton->config->find(lua::require_string(L, 2))) {
             return lua::pushinteger(L, bone->getIndex());
         }

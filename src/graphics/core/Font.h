@@ -3,65 +3,41 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <optional>
 
 #include <glm/glm.hpp>
 
 #include <typedefs.h>
 #include <graphics/core/FontMetrics.h>
+#include <data/dv_fwd.h>
+#include <graphics/commons/FontStyle.h>
 
 class Texture;
 class Batch2D;
 class Batch3D;
 class Camera;
+class ImageData;
 
-struct FontStyle {
-    bool bold = false;
-    bool italic = false;
-    bool strikethrough = false;
-    bool underline = false;
-    glm::vec4 color {1, 1, 1, 1};
+class Font;
 
-    FontStyle() = default;
+namespace vector_fonts {
+    class FontFile;
+}
 
-    FontStyle(
-        bool bold,
-        bool italic,
-        bool strikethrough,
-        bool underline,
-        glm::vec4 color
-    ) : bold(bold),
-        italic(italic),
-        strikethrough(strikethrough),
-        underline(underline),
-        color(std::move(color)) {}
+struct Glyph {
+    int yOffset;
+    int xAdvance;
 };
 
-struct FontStylesScheme {
-    std::vector<FontStyle> palette;
-    std::vector<ubyte> map;
-};
-
-/**
- * @brief Класс для работы с растровыми шрифтами.
- *
- * Шрифт состоит из нескольких страниц (текстур), каждая из которых содержит
- * 16x16 глифов (256 глифов на страницу). Код символа определяет страницу
- * (старший байт) и индекс глифа (младший байт).
- */
 class Font {
-private:
-    int lineHeight; ///< Высота строки в пикселях
-    int yoffset; ///< Смещение по Y (для коррекции позиции)
-    int glyphInterval = 8;
-    std::vector<std::unique_ptr<Texture>> pages; ///< Страницы текстуры шрифта
 public:
-	/**
-     * @brief Конструктор.
-     * @param pages Вектор страниц (текстур). Вектор будет перемещён.
-     * @param lineHeight Высота строки.
-     * @param yoffset Смещение по вертикали.
-     */
-    Font(std::vector<std::unique_ptr<Texture>> pages, int lineHeight, int yoffset);
+    Font(
+        std::vector<std::unique_ptr<Texture>> pages,
+        std::vector<Glyph> glyphs,
+        int lineHeight,
+        int yoffset,
+        std::optional<std::weak_ptr<vector_fonts::FontFile>> fontFile = std::nullopt
+    );
 
     ~Font();
 
@@ -93,7 +69,7 @@ public:
         const FontStylesScheme* styles,
         size_t styleMapOffset,
         float scale = 1
-    ) const;
+    );
 
     void draw(
         Batch3D& batch,
@@ -103,11 +79,24 @@ public:
         const glm::vec3& pos,
         const glm::vec3& right={1, 0, 0},
         const glm::vec3& up={0, 1, 0}
-    ) const;
+    );
 
     const Texture* getPage(int page) const;
 
     FontMetrics getMetrics() const {
-        return {lineHeight, yoffset, glyphInterval};
+        return {std::nullopt, lineHeight, yoffset, glyphInterval};
     }
+
+    const Glyph* getGlyph(int codepoint);
+
+    static std::unique_ptr<Font> createBitmapFont(
+        std::vector<std::unique_ptr<ImageData>> pages
+    );
+private:
+    int lineHeight;
+    int yoffset;
+    int glyphInterval;
+    std::vector<std::unique_ptr<Texture>> pages;
+    std::vector<Glyph> glyphs;
+    std::optional<std::weak_ptr<vector_fonts::FontFile>> fontFile;
 };

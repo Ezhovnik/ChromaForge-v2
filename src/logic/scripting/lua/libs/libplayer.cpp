@@ -9,9 +9,24 @@
 #include <window/Camera.h>
 #include <items/Inventory.h>
 #include <objects/Entt_Entity.h>
+#include <engine/Engine.h>
+
+static Level& require_level() {
+    if (scripting::level == nullptr) {
+        throw std::runtime_error("World is not loaded");
+    }
+    return *scripting::level;
+}
 
 inline Player* get_player(lua::State* L, int idx) {
-    return scripting::level->players->getPlayer(lua::tointeger(L, idx));
+    if (!lua::isnumber(L, idx)) {
+        if (scripting::engine->isHeadless()) {
+            throw std::runtime_error(
+                "Player id required as argument #" + std::to_string(idx)
+            );
+        }
+    }
+    return require_level().players->getPlayer(lua::tointeger(L, idx));
 }
 
 static int l_get_pos(lua::State* L) {
@@ -240,7 +255,8 @@ static int l_create(lua::State* L) {
     if (lua::gettop(L) >= 2) {
         playerId = lua::tointeger(L, 2);
     }
-    auto player = scripting::level->players->create(playerId);
+    auto& level = require_level();
+    auto player = level.players->create(playerId);
     player->setName(lua::require_string(L, 1));
     return lua::pushinteger(L, player->getId());
 }
@@ -268,8 +284,9 @@ static int l_set_loading_chunks(lua::State* L) {
 
 static int l_delete(lua::State* L) {
     auto id = lua::tointeger(L, 1);
-    scripting::level->players->suspend(id);
-    scripting::level->players->remove(id);
+    auto& level = require_level();
+    level.players->suspend(id);
+    level.players->remove(id);
     return 0;
 }
 
@@ -281,8 +298,11 @@ static int l_is_suspended(lua::State* L) {
 }
 
 static int l_set_suspended(lua::State* L) {
-    if (auto player = get_player(L, 1)) {
-        player->setSuspended(lua::toboolean(L, 2));
+    auto& level = require_level();
+    if (lua::toboolean(L, 2)) {
+        level.players->suspend(lua::tointeger(L, 1));
+    } else {
+        level.players->resume(lua::tointeger(L, 1));
     }
     return 0;
 }
@@ -302,10 +322,11 @@ static int l_set_interaction_distance(lua::State* L) {
 }
 
 static int l_get_all_in_radius(lua::State* L) {
+    auto& level = require_level();
     auto center = lua::tovec3(L, 1);
     auto radius = static_cast<float>(lua::tonumber(L, 2));
 
-    auto players = scripting::level->players->getAllInRadius(center, radius);
+    auto players = level.players->getAllInRadius(center, radius);
     lua::createtable(L, players.size(), 0);
     for (size_t i = 0; i < players.size(); ++i) {
         lua::pushinteger(L, players[i]->getId());
@@ -315,7 +336,7 @@ static int l_get_all_in_radius(lua::State* L) {
 }
 
 static int l_get_all(lua::State* L) {
-    auto players = scripting::level->players->getAll();
+    auto players = require_level().players->getAll();
     lua::createtable(L, players.size(), 0);
     for (size_t i = 0; i < players.size(); ++i) {
         lua::pushinteger(L, players[i]->getId());
@@ -325,8 +346,9 @@ static int l_get_all(lua::State* L) {
 }
 
 static int l_get_nearest(lua::State* L) {
+    auto& level = require_level();
     auto position = lua::tovec3(L, 1);
-    if (auto player = scripting::level->players->getNearest(position)) {
+    if (auto player = level.players->getNearest(position)) {
         lua::pushinteger(L, player->getId());
         return 1;
     }

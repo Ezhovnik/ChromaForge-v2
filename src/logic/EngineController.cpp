@@ -4,6 +4,7 @@
 #include <memory>
 #include <filesystem>
 #include <algorithm>
+#include <sstream>
 
 #include <content/ContentReport.h>
 #include <debug/Logger.h>
@@ -32,6 +33,9 @@
 #include <content/ContentControl.h>
 #include <content/PacksManager.h>
 #include <graphics/ui/GUI.h>
+#include <engine/EnginePaths.h>
+
+static debug::Logger logger("engine-controller");
 
 EngineController::EngineController(Engine& engine) : engine(engine) {
 }
@@ -40,7 +44,7 @@ void EngineController::deleteWorld(const std::string& name) {
     io::path folder = engine.getPaths().getWorldFolderByName(name);
 
     auto deletion = [this, folder]() {
-        LOG_INFO("Deleting {}", folder.string());
+        logger.info() << "Deleting " << folder.string();
         io::remove_all(folder);
         if (!engine.isHeadless()) engine.getGUI().getMenu()->back();
     };
@@ -126,14 +130,13 @@ static void start(Engine& engine, std::shared_ptr<Task> task, const std::wstring
 static void check_world(const EnginePaths& paths, const io::path& folder) {
     auto worldFile = folder / "world.json";
     if (!io::exists(worldFile)) {
-        THROW_ERR("{} does not exists", worldFile.string());
+        throw std::runtime_error(worldFile.string() + " does not exists");
     }
 }
 
 static const Content* load_world_content(Engine& engine, const io::path& folder) {
-    auto& paths = engine.getPaths();
+    const auto& paths = engine.getPaths();
     auto& contentControl = engine.getContentControl();
-    paths.setCurrentWorldFolder(folder);
 
     check_world(paths, folder);
     call(engine, [&contentControl]() {
@@ -176,7 +179,7 @@ void EngineController::onMissingContent(const std::shared_ptr<ContentReport>& re
     if (engine.isHeadless()) {
         auto errorLog = "Missing content: " +
             json::stringify(create_missing_content_report(report), "  ");
-        THROW_ERR("{}", errorLog);
+        throw std::runtime_error(errorLog);
     } else {
         engine.setScreen(std::make_shared<MenuScreen>(engine));
         menus::show(
@@ -219,9 +222,10 @@ static void confirm(
 }
 
 void EngineController::openWorld(const std::string& name, bool confirmConvert) {
-    const auto& paths = engine.getPaths();
+    auto& paths = engine.getPaths();
     auto& debugSettings = engine.getSettings().debug;
     auto folder = paths.getWorldsFolder() / name;
+    paths.setCurrentWorldFolder(folder);
 
     auto content = load_world_content(engine, folder);
     auto worldFiles = std::make_shared<WorldFiles>(folder, debugSettings);
@@ -274,8 +278,8 @@ void EngineController::createWorld(
     auto folder = paths.getWorldsFolder() / name;
 
     call(engine, [this, &paths, folder]() {
-        engine.getContentControl().loadContent();
         paths.setCurrentWorldFolder(folder);
+        engine.getContentControl().loadContent();
     });
 
     auto& contentControl = engine.getContentControl();
@@ -340,7 +344,7 @@ static void reconfig_packs_inside(
         if (found != names.end()) {
             names.erase(found);
         } else {
-            LOG_WARN("Attempt to remove non-installed pack: {}", id);
+            logger.warning() << "Attempt to remove non-installed pack: " << id;
         }
     }
 }
@@ -363,7 +367,9 @@ void EngineController::reconfigPacks(
                 );
             }
         } else {
-            auto world = controller->getLevel()->getWorld();
+            auto level = controller->getLevel();
+            auto world = level->getWorld();
+            controller->processBeforeQuit();
             controller->saveWorld();
 
             auto names = PacksManager::getNames(world->getPacks());

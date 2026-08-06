@@ -151,6 +151,7 @@ function io_stream:__read(length)
 
         while #buffer < length do
             buffer:append(self.ioLib.read(self.descriptor, length - #buffer))
+
             if #buffer < length then coroutine.yield() end
         end
 
@@ -166,13 +167,17 @@ function io_stream:__read(length)
 
         if #self.readBuffer == length then
             copy = Bytearray()
+            
             copy:append(self.readBuffer)
+
             self.readBuffer:clear()
         else
             copy = Bytearray()
+
             for i = 1, length do
                 copy[i] = self.readBuffer[i]
             end
+
             self.readBuffer:remove(1, length)
         end
 
@@ -202,16 +207,21 @@ function io_stream:read_fully(useTable)
     else
         if useTable then
             local lines = { }
+
             local line
+
             repeat
                 line = self:read_line()
 
                 lines[#lines + 1] = line
             until not line
+
             return lines
         else
             local result = Bytearray()
+
             readFully(result, function() return self:__read(self.maxBufferSize) end)
+
             return utf8.tostring(result)
         end
     end
@@ -249,7 +259,7 @@ function io_stream:read_line()
 end
 
 function io_stream:write_line(str)
-    self:__write(utf8.tobytes(str .. LF))
+    self:__write(utf8.tobytes(str .. "\n"))
 end
 
 function io_stream:read(arg, useTable)
@@ -260,11 +270,14 @@ function io_stream:read(arg, useTable)
 
         if argType == "number" then
             byteArr = self:__read(arg)
+
             if useTable == true then
                 local t = { }
+
                 for i = 1, #byteArr do
                     t[i] = byteArr[i]
                 end
+
                 return t
             else
                 return byteArr
@@ -288,18 +301,24 @@ function io_stream:read(arg, useTable)
         else
             local linesCount = arg
             local trimLastEmptyLines = useTable or true
+
             if linesCount < 0 then error "Count of lines to read must be positive" end
+
             local result = { }
+
             for i = 1, linesCount do
                 result[i] = self:read_line()
             end
 
             if trimLastEmptyLines then
                 local i = #result
+
                 while i >= 0 do
                     local length = utf8.length(result[i])
+
                     if length > 0 then break
                     else result[i] = nil end
+
                     i = i - 1
                 end
 
@@ -307,6 +326,7 @@ function io_stream:read(arg, useTable)
 
                 while #result > 0 do
                     local length = utf8.length(result[i])
+
                     if length > 0 then break
                     else table.remove(result, i) end
                 end
@@ -341,8 +361,12 @@ function io_stream:write(arg, ...)
             for i = 1, #arg do
                 self:write_line(arg[i])
             end
-        else error("unknown argument type: "..argType) end
+        else error("Unknown argument type: "..argType) end
     end
+end
+
+function io_stream:seek(mode, offset)
+    self.ioLib.seek(self.descriptor, mode, offset)
 end
 
 function io_stream:is_alive()

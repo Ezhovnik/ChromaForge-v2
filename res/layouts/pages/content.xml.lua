@@ -24,10 +24,12 @@ local function include(id, is_include)
 end
 
 function apply()
-    builtin.reconfig_packs(add_packs, rem_packs)
-    if mode ~= "world" then
-        menu:back()
-    end
+    time.post_runnable(function ()
+        app.reconfig_packs(add_packs, rem_packs)
+        if mode ~= "world" then
+            menu:back()
+        end
+    end)
 end
 
 function reposition_func(_pack)

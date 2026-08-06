@@ -18,7 +18,7 @@ namespace gui {
             GUI& gui,
             const std::wstring& text,
             glm::vec4 padding,
-            const onaction& action,
+            const OnAction& action,
             glm::vec2 size=glm::vec2(-1)
         );
 
@@ -33,5 +33,7 @@ namespace gui {
         virtual std::wstring getText() const;
 
         virtual void refresh() override;
+
+        std::shared_ptr<Label> getLabel() const;
     };
 }

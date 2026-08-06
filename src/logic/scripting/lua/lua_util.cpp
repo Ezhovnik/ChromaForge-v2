@@ -145,18 +145,18 @@ static int l_error_handler(lua_State* L) {
 }
 
 int lua::call(lua::State* L, int argc, int nresults) {
-    int handler_pos = gettop(L) - argc;
+    int handlerPos = gettop(L) - argc;
     pushcfunction(L, l_error_handler);
-    insert(L, handler_pos);
+    insert(L, handlerPos);
     int top = gettop(L);
-    if (lua_pcall(L, argc, nresults, handler_pos)) {
+    if (lua_pcall(L, argc, nresults, handlerPos)) {
         std::string log = tostring(L, -1);
         pop(L);
-        remove(L, handler_pos);
+        remove(L, handlerPos);
         throw luaerror(log);
     }
     int added = gettop(L) - (top - argc - 1);
-    remove(L, handler_pos);
+    remove(L, handlerPos);
     return added;
 }
 
@@ -313,6 +313,21 @@ int lua::create_environment(lua::State* L, int parent) {
 
     setglobal(L, env_name(id));
     return id;
+}
+
+int lua::restore_pack_environment(lua::State* L, const std::string& packid) {
+    if(!lua::getglobal(L, "__chroma__pack_envs")) return -1;
+
+    int id = nextEnvironment++;
+
+    if (lua::getfield(L, packid)) {
+        // envname = env
+        setglobal(L, env_name(id));
+        lua::pop(L);
+        return id;
+    }
+    lua::pop(L);
+    return -1;
 }
 
 void lua::remove_environment(lua::State* L, int id) {

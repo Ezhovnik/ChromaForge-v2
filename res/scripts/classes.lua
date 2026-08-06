@@ -40,6 +40,16 @@ end
 local Socket = {__index={
     send=function(self, ...) return network.__send(self.id, ...) end,
     recv=function(self, ...) return network.__recv(self.id, ...) end,
+    recv_async=function(self, length, usetable)
+        while self:is_alive() do
+            local available = self:available()
+            if available >= length then
+                return self:recv(length, usetable)
+            end
+            coroutine.yield()
+        end
+        return self:recv(length, usetable)
+    end,
     close=function(self) return network.__close(self.id) end,
     available=function(self) return network.__available(self.id) or 0 end,
     is_alive=function(self) return network.__is_alive(self.id) end,
@@ -71,6 +81,7 @@ local DatagramServerSocket = {__index={
 
 local _tcp_server_callbacks = {}
 local _tcp_client_callbacks = {}
+local _tcp_client_error_callbacks = {}
 
 local _udp_server_callbacks = {}
 local _udp_client_datagram_callbacks = {}
@@ -117,10 +128,13 @@ network.tcp_open = function (port, handler)
     return socket
 end
 
-network.tcp_connect = function(address, port, callback)
+network.tcp_connect = function(address, port, callback, errorCallback)
     local socket = setmetatable({id=0}, Socket)
     socket.id = network.__connect_tcp(address, port)
     _tcp_client_callbacks[socket.id] = function() callback(socket) end
+    if errorCallback then
+        _tcp_client_error_callbacks[socket.id] = function(message) errorCallback(socket, message) end
+    end
     return socket
 end
 
@@ -168,78 +182,15 @@ local function clean(iterable, checkFun, ...)
     end
 end
 
-local updating_blocks = {}
-local TYPE_REGISTER = 0
-local TYPE_UNREGISTER = 1
-
-block.__perform_sparks = function(delta)
-    for id, entry in pairs(updating_blocks) do
-        entry.timer = entry.timer + delta
-        local steps = math.floor(entry.timer / entry.delta * #entry / 3)
-        if steps == 0 then
-            goto continue
-        end
-        entry.timer = 0.0
-        local event = entry.event
-        local sps = entry.sps
-        for i=1, steps do
-            local x = entry[entry.pointer + 1]
-            local y = entry[entry.pointer + 2]
-            local z = entry[entry.pointer + 3]
-            entry.pointer = (entry.pointer + 3) % #entry
-            events.emit(event, x, y, z, sps)
-        end
-        ::continue::
-    end
-end
-
-block.__process_register_events = function()
-    local register_events = block.__pull_register_events()
-    if not register_events then
+network.__process_events = function()
+    if not network.is_available() then
         return
     end
-    for i=1, #register_events, 4 do
-        local header = register_events[i]
-        local type = bit.band(header, 0xFFFF)
-        local id = bit.rshift(header, 16)
-        local x = register_events[i + 1]
-        local y = register_events[i + 2]
-        local z = register_events[i + 3]
-
-        local list = updating_blocks[id]
-        if type == TYPE_REGISTER then
-            if not list then
-                list = {}
-                list.event = block.name(id) .. ".blockspark"
-                list.sps = 20 / (block.properties[id]["spark-interval"] or 1)
-                list.delta = 1.0 / list.sps
-                list.timer = 0.0
-                list.pointer = 0
-                updating_blocks[id] = list
-            end
-            table.insert(list, x)
-            table.insert(list, y)
-            table.insert(list, z)
-        elseif type == TYPE_UNREGISTER then
-            if list then
-                for j=1, #list, 3 do
-                    if list[j] == x and list[j + 1] == y and list[j + 2] == z then
-                        for k=1, 3 do
-                            table.remove(list, j)
-                        end
-                        j = j - 3
-                    end
-                end
-            end
-        end
-    end
-end
-
-network.__process_events = function()
     local CLIENT_CONNECTED = 1
     local CONNECTED_TO_SERVER = 2
     local DATAGRAM = 3
     local RESPONSE = 4
+    local CONNECTION_ERROR = 5
 
     local ON_SERVER = 1
     local ON_CLIENT = 2
@@ -258,6 +209,11 @@ network.__process_events = function()
             local callback = _tcp_client_callbacks[cid] or _udp_client_open_callbacks[cid]
             if callback then
                 callback()
+            end
+        elseif etype == CONNECTION_ERROR then
+            local callback = _tcp_client_error_callbacks[cid]
+            if callback then
+                callback(addr)
             end
         elseif etype == DATAGRAM then
             if side == ON_CLIENT then

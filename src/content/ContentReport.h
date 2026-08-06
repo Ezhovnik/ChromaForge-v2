@@ -45,7 +45,12 @@ private:
     T missingValue;
     ContentType type;
 public:
-    ContentUnitLUT(size_t count, const ContentUnitIndices<U>& unitIndices, T missingValue, ContentType type) : missingValue(missingValue), type(type) {
+    ContentUnitLUT(
+        size_t count,
+        const ContentUnitIndices<U, T>& unitIndices,
+        T missingValue, 
+        ContentType type
+    ) : missingValue(missingValue), type(type) {
         for (size_t i = 0; i < count; ++i) {
             indices.push_back(i);
         }

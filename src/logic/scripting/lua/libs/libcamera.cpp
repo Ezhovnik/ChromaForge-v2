@@ -5,28 +5,42 @@
 #include <world/Level.h>
 #include <window/Camera.h>
 
+static Level& require_level() {
+    if (scripting::level == nullptr) {
+        throw std::runtime_error("Level is not initialized");
+    }
+    return *scripting::level;
+}
+
+static const Content& require_content() {
+    if (scripting::content == nullptr) {
+        throw std::runtime_error("Content is not initialized");
+    }
+    return *scripting::content;
+}
+
 template<int(*getterfunc)(lua::State*, const Camera&)>
 static int l_camera_getter(lua::State* L) {
     size_t index = static_cast<size_t>(lua::tointeger(L, 1));
-    return getterfunc(L, *scripting::level->cameras.at(index));
+    return getterfunc(L, *require_level().cameras.at(index));
 }
 
 template<void(*setterfunc)(lua::State*, Camera&, int)>
 static int l_camera_setter(lua::State* L) {
     size_t index = static_cast<size_t>(lua::tointeger(L, 1));
-    setterfunc(L, *scripting::level->cameras.at(index), 2);
+    setterfunc(L, *require_level().cameras.at(index), 2);
     return 0;
 }
 
 static int l_index(lua::State* L) {
     auto name = lua::require_string(L, 1);
-    auto& indices = scripting::content->getIndices(ResourceType::Camera);
+    auto& indices = require_content().getIndices(ResourceType::Camera);
     return lua::pushinteger(L, indices.indexOf(name));
 }
 
 static int l_name(lua::State* L) {
     size_t index = static_cast<size_t>(lua::tointeger(L, 1));
-    auto& indices = scripting::content->getIndices(ResourceType::Camera);
+    auto& indices = require_content().getIndices(ResourceType::Camera);
     return lua::pushstring(L, indices.getName(index));
 }
 
@@ -93,7 +107,7 @@ static int getter_up(lua::State* L, const Camera& camera) {
 
 static int l_look_at(lua::State* L) {
     size_t index = static_cast<size_t>(lua::tointeger(L, 1));
-    auto& camera = *scripting::level->cameras.at(index);
+    auto& camera = *require_level().cameras.at(index);
     auto center = lua::tovec<3>(L, 2);
     auto matrix = glm::inverse(glm::lookAt(glm::vec3(), center - camera.position, glm::vec3(0, 1, 0)));
     if (lua::isnumber(L, 3)) {

@@ -12,6 +12,8 @@
 #include <coders/GLSLExtension.h>
 #include <debug/Logger.h>
 
+static debug::Logger logger("shader-program");
+
 GLSLExtension* ShaderProgram::preprocessor = new GLSLExtension();
 ShaderProgram* ShaderProgram::used = nullptr;
 
@@ -24,7 +26,7 @@ uint ShaderProgram::getUniformLocation(const std::string& name) {
 
     if (loc == -1) {
         if (warnedUniforms.find(name) == warnedUniforms.end()) {
-            LOG_WARN("Failed to find uniform variable '{}'", name);
+            logger.warning() << "Failed to find uniform variable '" << name << "'";
             warnedUniforms.insert(name);
         }
     }
@@ -133,7 +135,7 @@ glshader compile_shader(
         GLchar infoLog[GL_LOG_LEN];
         glGetShaderInfoLog(shader, GL_LOG_LEN, nullptr, infoLog);
         glDeleteShader(shader);
-        LOG_CRITICAL("Shader '{}' compilation failed: {}", file, std::string(infoLog));
+        logger.critical() << "Shader '" << file << "' compilation failed: " << std::string(infoLog);
         throw std::runtime_error("Shader '"+ file +"' compilation failed: " + std::string(infoLog));
     }
 
@@ -175,8 +177,8 @@ static GLuint compile_program(
     if (!success) {
         GLchar infoLog[GL_LOG_LEN];
         glGetProgramInfoLog(program, GL_LOG_LEN, nullptr, infoLog);
-        THROW_ERR(
-            "Shader program linking failed: {}", std::string(infoLog)
+        throw std::runtime_error(
+            "Shader program linking failed: " + std::string(infoLog)
         );
     }
     return program;
@@ -187,7 +189,7 @@ void ShaderProgram::recompile(const std::vector<std::string>& defines) {
     glDeleteProgram(id);
     id = newProgram;
     uniformLocationCache.clear();
-    LOG_INFO("Shader {} has been recompiled", id);
+    logger.info() << "Shader " << id << " has been recompiled";
 }
 
 std::unique_ptr<ShaderProgram> ShaderProgram::create(

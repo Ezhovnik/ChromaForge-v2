@@ -35,7 +35,7 @@ std::shared_ptr<io::Device> io::get_device(const std::string& name) {
 io::Device& io::require_device(const std::string& name) {
     auto device = get_device(name);
     if (!device) {
-		THROW_ERR("IO-device not found: {}", name);
+		throw std::runtime_error("IO-device not found: " + name);
     }
     return *device;
 }
@@ -45,7 +45,7 @@ void io::create_subdevice(
 ) {
     auto parentDevice = get_device(parent);
     if (!parentDevice) {
-		THROW_ERR("Parent device not found for entry-point: {}", parent);
+		throw std::runtime_error("Parent device not found for entry-point: " + parent);
     }
     set_device(name, std::make_shared<io::SubDevice>(parentDevice, root.pathPart()));
 }
@@ -58,7 +58,7 @@ io::directory_iterator::directory_iterator(const io::path& folder) : folder(fold
 io::rafile::rafile(const io::path& filename)
     : file(std::make_unique<std::ifstream>(io::resolve(filename), std::ios::binary | std::ios::ate)) {
     if (!*file) {
-		THROW_ERR("Could not to open file '{}'", filename.string());
+		throw std::runtime_error("Could not to open file '" + filename.string() + "'");
     }
     filelength = file->tellg();
     file->seekg(0);
@@ -84,7 +84,7 @@ bool io::write_bytes(
 ) {
     auto device = io::get_device(filename.entryPoint());
     if (device == nullptr) {
-		THROW_ERR("IO-device not found: {}", filename.entryPoint());
+		throw std::runtime_error("IO-device not found: " + filename.entryPoint());
 	}
     auto stream = device->write(filename.pathPart());
     stream->write(reinterpret_cast<const char*>(data), size);
@@ -102,7 +102,7 @@ bool io::read(const io::path& filename, char* data, size_t size) {
 std::unique_ptr<std::ostream> io::write(const io::path& file) {
     auto device = io::get_device(file.entryPoint());
     if (device == nullptr) {
-		THROW_ERR("IO-device not found: {}", file.entryPoint());
+		throw std::runtime_error("IO-device not found: " + file.entryPoint());
     }
     return device->write(file.pathPart());
 }
@@ -110,7 +110,7 @@ std::unique_ptr<std::ostream> io::write(const io::path& file) {
 std::unique_ptr<std::istream> io::read(const io::path& filename) {
     auto device = io::get_device(filename.entryPoint());
     if (device == nullptr) {
-		THROW_ERR("IO-device not found: {}", filename.entryPoint());
+		throw std::runtime_error("IO-device not found: " + filename.entryPoint());
     }
     return device->read(filename.pathPart());
 }
@@ -319,7 +319,7 @@ bool io::is_data_interchange_format(const std::string& ext) {
 dv::value io::read_object(const path& file) {
     const auto& found = data_decoders.find(file.extension());
     if (found == data_decoders.end()) {
-		THROW_ERR("Unknown file format {}", file.extension());
+		throw std::runtime_error("Unknown file format " + file.extension());
     }
     auto text = read_string(file);
     try {

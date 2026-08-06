@@ -27,6 +27,7 @@
 #include <objects/Players.h>
 #include <engine/Engine.h>
 #include <objects/Entt_Entity.h>
+#include <voxels/blocks_agent.h>
 
 namespace CameraConsts {
     inline constexpr float STEPS_SPEED = 2.2f;
@@ -101,11 +102,14 @@ void CameraControl::updateMouse(PlayerInput& input, int windowHeight) {
     );
 }
 
-glm::vec3 CameraControl::updateCameraShaking(const Hitbox& hitbox, float delta) {
+glm::vec3 CameraControl::updateCameraShaking(
+    const Hitbox& hitbox,
+    float delta
+) {
     glm::vec3 offset {};
     const float k = CameraConsts::SHAKE_DELTA_K;
     const float ov = CameraConsts::SHAKE_OFFSET_Y;
-    const glm::vec3& vel = hitbox.velocity;
+    auto vel = hitbox.getSurfaceVelocity();
 
     if (settings.shaking.get()) {
         shake = shake * (1.0f - delta * k);
@@ -190,20 +194,34 @@ void CameraControl::update(
 
     refreshPosition();
 
+    auto castRay = [](Player& player, Camera& camera, const glm::vec3& front) -> glm::vec3 {
+        auto blockEnd = player.chunks->rayCastToObstacle(camera.position, front, 3.0f);
+        auto entityRay = player.getLevel().entities->rayCast(
+            camera.position, front, 3.0f, player.getEntity(), true
+        );
+        if (entityRay.has_value() &&
+            entityRay->distance < glm::distance(camera.position, blockEnd)) {
+            return (camera.position + front * entityRay->distance);
+        } else {
+            return blockEnd;
+        }
+    };
+
+
     camera->updateVectors();
     if (player.currentCamera == spCamera) {
-        spCamera->position = chunks.rayCastToObstacle(camera->position, camera->front, 3.0f) - 0.4f * camera->front;
+        spCamera->position = castRay(player, *camera, camera->front) - 0.4f * camera->front;
         spCamera->dir = -camera->dir;
         spCamera->front = -camera->front;
         spCamera->right = -camera->right;
     } else if (player.currentCamera == tpCamera) {
-        tpCamera->position = chunks.rayCastToObstacle(camera->position, -camera->front, 3.0f) + 0.4f * camera->front;
+        tpCamera->position = castRay(player, *camera, camera->front * -1.0f) + 0.4f * camera->front;
         tpCamera->dir = camera->dir;
         tpCamera->front = camera->front;
         tpCamera->right = camera->right;
     }
 
-    if (player.currentCamera == spCamera || player.currentCamera == tpCamera || player.currentCamera == camera) {
+    if (player.isCurrentCameraBuiltin()) {
         player.currentCamera->setFov(glm::radians(settings.fov.get()));
     }
 }
@@ -236,41 +254,24 @@ void PlayerController::updateKeyboard(const Input& inputEvents) {
 }
 
 void PlayerController::onFootstep(const Hitbox& hitbox) {
-    glm::vec3 pos = hitbox.position;
-    glm::vec3 half = hitbox.halfsize;
-
-    for (int offsetZ = -1; offsetZ <= 1; ++offsetZ) {
-        for (int offsetX = -1; offsetX <= 1; ++offsetX) {
-            int x = std::floor(pos.x + half.x * offsetX);
-            int y = std::floor(pos.y - half.y * 1.1f);
-            int z = std::floor(pos.z + half.z * offsetZ);
-            auto vox = player.chunks->getVoxel(x, y, z);
-            if (vox) {
-                auto& def = level.content.getIndices()->blocks.require(vox->id);
-                if (!def.obstacle) continue;
-                blocksController.onBlockInteraction(
-                    &player,
-                    glm::ivec3(x, y, z), def,
-                    BlockInteraction::Step
-                );
-                return;
-            }
-        }
+    if (footstepCallback) {
+        footstepCallback(hitbox);
     }
 }
 
 void PlayerController::updateFootsteps(float delta) {
+    constexpr float GLM_PI = glm::pi<float>();
     auto hitbox = player.getHitbox();
     if (hitbox && hitbox->grounded) {
-        const glm::vec3& vel = hitbox->velocity;
+        glm::vec3 vel = hitbox->getSurfaceVelocity();
         float f = glm::length(glm::vec2(vel.x, vel.z));
         stepsTimer += delta * f * CameraConsts::STEPS_SPEED;
-        if (stepsTimer >= glm::pi<float>()) {
-            stepsTimer = fmod(stepsTimer, glm::pi<float>());
+        if (stepsTimer >= GLM_PI) {
+            stepsTimer = fmod(stepsTimer, GLM_PI);
             onFootstep(*hitbox);
         }
     } else {
-        stepsTimer = glm::pi<float>();
+        stepsTimer = GLM_PI;
     }
 }
 
@@ -278,7 +279,11 @@ void PlayerController::resetKeyboard() {
 	input = {};
 }
 
-static int determine_rotation(const Block* def, const glm::ivec3& norm, const glm::vec3& camDir) {
+static int determine_rotation(
+    const Block* def,
+    const glm::ivec3& norm,
+    const glm::vec3& camDir
+) {
     if (def && def->rotatable){
         const std::string& name = def->rotations.name;
         if (name == "pipe") {
@@ -372,7 +377,10 @@ voxel* PlayerController::updateSelection(float maxDistance) {
     return vox;
 }
 
-void PlayerController::processRightClick(const Block& def, const Block& target) {
+void PlayerController::processRightClick(
+    const Block& def,
+    const Block& target
+) {
     const auto& selection = player.selection;
     auto& chunks = *player.chunks;
     auto camera = player.fpCamera.get();
@@ -381,7 +389,11 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
     state.rotation = determine_rotation(&def, selection.normal, camera->front);
 
     if (!input.crouch && target.rt.funcsset.oninteract) {
-        if (scripting::on_block_interact(&player, target, selection.actualPosition)) {
+        if (scripting::on_block_interact(
+            &player,
+            target,
+            selection.actualPosition)
+        ) {
             return;
         }
     }
@@ -396,7 +408,11 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
     if (def.obstacle) {
         const auto& hitboxes = def.rt.hitboxes[state.rotation];
         for (const AABB& blockAABB : hitboxes) {
-            if (level.entities->hasBlockingInside(blockAABB.translated(coord))) return;
+            if (level.entities->hasBlockingInside(
+                blockAABB.translated(coord)
+            )) {
+                return;
+            }
         }
     }
 
@@ -406,14 +422,15 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
         return;
     }
     if (def.grounded) {
-        const auto& vec = get_ground_direction(def, state.rotation);
-        if (!chunks.isSolidBlock(coord.x + vec.x, coord.y + vec.y, coord.z + vec.z)) {
+        if (!blocks_agent::check_grounding(chunks, def, state.rotation, coord)) {
             return;
         }
     }
     if (chosenBlock != vox->id && chosenBlock) {
         if (!player.isInfiniteItems()) {
-            auto& slot = player.getInventory()->getSlot(player.getChosenSlot());
+            auto& slot = player.getInventory()->getSlot(
+                player.getChosenSlot()
+            );
             slot.setCount(slot.getCount() - 1);
         }
         blocksController.placeBlock(
@@ -425,7 +442,10 @@ void PlayerController::processRightClick(const Block& def, const Block& target) 
     }
 }
 
-void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool rclick) {
+void PlayerController::updateEntityInteraction(
+    entityid_t eid,
+    bool lclick, bool rclick
+) {
     auto entityOpt = level.entities->get(eid);
     if (!entityOpt.has_value()) {
         return;
@@ -439,7 +459,10 @@ void PlayerController::updateEntityInteraction(entityid_t eid, bool lclick, bool
     }
 }
 
-void PlayerController::updateInteraction(const Input& inputEvents, float deltaTime) {
+void PlayerController::updateInteraction(
+    const Input& inputEvents,
+    float deltaTime
+) {
     if (player.isNoclip()) return;
     auto indices = level.content.getIndices();
     const auto& selection = player.selection;
@@ -457,7 +480,9 @@ void PlayerController::updateInteraction(const Input& inputEvents, float deltaTi
     input.attack = bindings.justActive(BIND_PLAYER_ATTACK);
 	input.destroy = bindings.justActive(BIND_PLAYER_DESTROY) || (longInteraction && bindings.isActive(BIND_PLAYER_DESTROY));
     input.build = bindings.justActive(BIND_PLAYER_BUILD) || (longInteraction && bindings.isActive(BIND_PLAYER_BUILD));
-    if (input.destroy || input.build) interactionTimer = INTERACTION_RELOAD;
+    if (input.destroy || input.build) {
+        interactionTimer = INTERACTION_RELOAD;
+    }
 
     auto inventory = player.getInventory();
     const ItemStack& stack = inventory->getSlot(player.getChosenSlot());
@@ -469,14 +494,24 @@ void PlayerController::updateInteraction(const Input& inputEvents, float deltaTi
             scripting::on_item_use(&player, item);
         }
         if (selection.entity) {
-            updateEntityInteraction(selection.entity, input.attack, input.build);
+            updateEntityInteraction(
+                selection.entity,
+                input.attack,
+                input.build
+            );
         }
         return;
     }
 
     auto iend = selection.position;
     if (input.destroy && !input.crouch && item.rt.funcsset.on_block_break_by) {
-        if (scripting::on_item_break_block(&player, item, iend.x, iend.y, iend.z)) {
+        if (scripting::on_item_break_block(
+            &player,
+            item,
+            iend.x,
+            iend.y,
+            iend.z)
+        ) {
             return;
         }
     }
@@ -523,7 +558,7 @@ void PlayerController::postUpdate(
 ) {
     if (!pause) updateFootsteps(deltaTime);
 
-    if (!pause && input) {
+    if (!pause && input && player.isCurrentCameraBuiltin()) {
         camControl.updateMouse(this->input, windowHeight);
     }
     camControl.refreshRotation();
@@ -540,6 +575,10 @@ void PlayerController::postUpdate(
 	}
 }
 
-Player* PlayerController::getPlayer() {
-    return &player;
+Player& PlayerController::getPlayer() {
+    return player;
+}
+
+void PlayerController::setFootstepCallback(FootstepCallback&& callback) {
+    footstepCallback = std::move(callback);
 }

@@ -19,22 +19,25 @@
 #include <voxels/blocks_agent.h>
 #include <world/LevelEvents.h>
 #include <objects/Entt_Entity.h>
+#include <util/ObjectsPool.h>
+
+static debug::Logger logger("global-chunks");
 
 static void check_voxels(const ContentIndices& indices, Chunk& chunk) {
     bool corrupted = false;
-	blockid_t defsCount = indices.blocks.count();
-	for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
+    blockid_t defsCount = indices.blocks.count();
+    for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         blockid_t id = chunk.voxels[i].id;
         if (id >= defsCount) {
-			if (!corrupted) {
-				if (!ENGINE_DEBUG_BUILD) {
-					LOG_WARN("Corruped block id = {} detected at {} of chunk {}x {}z", id, i, chunk.chunk_x, chunk.chunk_z);
-					corrupted = true;
-				} else {
-					abort();
-				}
-			}
-			chunk.voxels[i].id = BLOCK_AIR;
+            if (!corrupted) {
+                if (!ENGINE_DEBUG_BUILD) {
+                    logger.warning() << "Corruped block id = " << id << " detected at " << i << " of chunk " << chunk.chunk_x << "x " << chunk.chunk_z << "z";
+                    corrupted = true;
+                } else {
+                    abort();
+                }
+            }
+            chunk.voxels[i] = {};
         }
     }
 }
@@ -66,7 +69,7 @@ void GlobalChunks::erase(int x, int z) {
 static inline auto load_inventories(
     WorldRegions& regions,
     const Chunk& chunk,
-    const ContentUnitIndices<Block>& defs
+    const ContentUnitIndices<Block, blockid_t>& defs
 ) {
     auto invs = regions.fetchInventories(chunk.chunk_x, chunk.chunk_z);
     auto iterator = invs.begin();
@@ -86,48 +89,58 @@ static inline auto load_inventories(
     return invs;
 }
 
-std::shared_ptr<Chunk> GlobalChunks::create(int x, int z) {
-	const auto& found = chunksMap.find(keyfrom(x, z));
-    if (found != chunksMap.end()) return found->second;
+static util::ObjectsPool<Chunk> chunks_pool(1'024);
+static util::ObjectsPool<Lightmap> lightmaps_pool;
 
-	auto chunk = std::make_shared<Chunk>(x, z);
+std::shared_ptr<Chunk> GlobalChunks::create(int x, int z, bool lighting) {
+    const auto& found = chunksMap.find(keyfrom(x, z));
+    if (found != chunksMap.end()) return found->second;
+    static std::unique_ptr<ubyte[]> voxelDataBuffer = nullptr;
+    if (voxelDataBuffer == nullptr) {
+        voxelDataBuffer = std::make_unique<ubyte[]>(CHUNK_DATA_LEN);
+    }
+
+    auto chunk = chunks_pool.create(
+        x, z, lighting ? lightmaps_pool.create() : nullptr
+    );
     chunksMap[keyfrom(x, z)] = chunk;
 
-	World& world = *level.getWorld();
-	auto& regions = world.wfile.get()->getRegions();
+    World& world = *level.getWorld();
+    auto& regions = world.wfile.get()->getRegions();
 
-	auto& localChunksMap = chunksMap;
+    if (regions.getVoxels(chunk->chunk_x, chunk->chunk_z, voxelDataBuffer.get())) {
+        const auto& indices = *level.content.getIndices();
 
-	if (auto data = regions.getVoxels(chunk->chunk_x, chunk->chunk_z)) {
-		const auto& indices = *level.content.getIndices();
+        chunk->decode(voxelDataBuffer.get());
+        check_voxels(indices, *chunk);
 
-		chunk->decode(data.get());
-		check_voxels(indices, *chunk);
-
-		chunk->setBlockInventories(
+        chunk->setBlockInventories(
             load_inventories(regions, *chunk, indices.blocks)
         );
 
-		auto entitiesData = regions.fetchEntities(chunk->chunk_x, chunk->chunk_z);
+        auto entitiesData = regions.fetchEntities(
+            chunk->chunk_x, chunk->chunk_z
+        );
         if (entitiesData.getType() == dv::value_type::Object) {
             level.entities->loadEntities(std::move(entitiesData));
-			chunk->flags.entities = true;
+            chunk->flags.entities = true;
         }
 
-		chunk->flags.loaded = true;
-		for (auto& entry : chunk->inventories) {
-			level.inventories->store(entry.second);
-		}
-	}
+        chunk->flags.loaded = true;
+        for (auto& entry : chunk->inventories) {
+            level.inventories->store(entry.second);
+        }
+    }
 
-	if (auto lights = regions.getLights(chunk->chunk_x, chunk->chunk_z)) {
-		chunk->lightmap.set(lights.get());
-		chunk->flags.loadedLights = true;
-	}
+    if (chunk->lightmap) {
+        if (regions.getLights(chunk->chunk_x, chunk->chunk_z, voxelDataBuffer.get())) {
+            chunk->lightmap->decode(voxelDataBuffer.get());
+            chunk->flags.loadedLights = true;
+        }
+    }
 
-	chunk->blocksMetadata = regions.getBlocksData(chunk->chunk_x, chunk->chunk_z);
+    chunk->blocksMetadata = regions.getBlocksData(chunk->chunk_x, chunk->chunk_z);
 
-    level.events->trigger(LevelEventType::CHUNK_PRESENT, chunk.get());
     return chunk;
 }
 
@@ -199,6 +212,9 @@ void GlobalChunks::putChunk(std::shared_ptr<Chunk> chunk) {
     chunksMap[keyfrom(chunk->chunk_x, chunk->chunk_z)] = std::move(chunk);
 }
 
-const AABB* GlobalChunks::isObstacleAt(float x, float y, float z) const {
-    return blocks_agent::is_obstacle_at(*this, x, y, z);
+std::optional<AABB> GlobalChunks::isObstacleAt(
+    float x, float y, float z,
+    const AABB& aabb
+) const {
+    return blocks_agent::is_obstacle_at(*this, x, y, z, aabb);
 }

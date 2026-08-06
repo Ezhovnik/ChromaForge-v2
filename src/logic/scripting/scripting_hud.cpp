@@ -12,6 +12,8 @@
 #include <assets/Assets.h>
 #include <content/ContentControl.h>
 
+static debug::Logger logger("scripting-hud");
+
 Hud* scripting::hud = nullptr;
 WorldRenderer* scripting::renderer = nullptr;
 PostProcessing* scripting::post_processing = nullptr;
@@ -19,7 +21,7 @@ PostProcessing* scripting::post_processing = nullptr;
 static void load_script(const std::string& name) {
     auto file = io::path("res:scripts") / name;
     std::string src = io::read_string(file);
-    LOG_INFO("Loading script {}", file.string());
+    logger.info() << "Loading script " << file.string();
 
     lua::execute(lua::get_main_state(), 0, src, file.string());
 }
@@ -81,6 +83,25 @@ void scripting::on_frontend_render() {
     }
 }
 
+void scripting::on_inventory_interact(
+    int invid, int slot, int action, int mode
+) {
+    auto L = lua::get_main_state();
+    for (auto& pack : content_control->getAllContentPacks()) {
+        lua::emit_event(
+            L,
+            pack.id + ":.inventoryinteract",
+            [&](lua::State* L) {
+                lua::pushinteger(L, invid);
+                lua::pushinteger(L, slot);
+                lua::pushinteger(L, action);
+                lua::pushinteger(L, mode);
+                return 4;
+            }
+        );
+    }
+}
+
 void scripting::load_hud_script(
     const scriptenv& senv,
     const std::string& packid,
@@ -89,7 +110,6 @@ void scripting::load_hud_script(
 ) {
     int env = *senv;
     std::string src = io::read_string(file);
-    LOG_DEBUG("Loading script {}", file.string());
 
     lua::execute(lua::get_main_state(), env, src, fileName);
 
@@ -97,8 +117,7 @@ void scripting::load_hud_script(
     register_event(env, "on_hud_open", packid + ":.hudopen");
     register_event(env, "on_hud_render", packid + ":.hudrender");
     register_event(env, "on_hud_close", packid + ".:hudclose");
-
-    LOG_DEBUG("Script {} successfully loaded", file.string());
+    register_event(env, "on_inventory_interact", packid + ":.inventoryinteract");
 }
 
 gui::PageLoaderFunc scripting::create_page_loader() {

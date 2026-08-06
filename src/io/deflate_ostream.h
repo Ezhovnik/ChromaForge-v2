@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <streambuf>
 #include <memory>
@@ -17,7 +19,7 @@ public:
             &zstream, level, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY
         );
         if (ret != Z_OK) {
-            THROW_ERR("Zlib deflate initialization failed");
+            throw std::runtime_error("Zlib deflate initialization failed");
         }
         inBuffer = std::make_unique<char[]>(bufferSize);
         outBuffer = std::make_unique<char[]>(outBufferSize);
@@ -29,7 +31,7 @@ public:
         try {
             close();
         } catch (...) {
-            LOG_ERROR("Error in zlib output stream finalization");
+            debug::Logger::getInstance().error() << "Error in zlib output stream finalization";
         }
     }
 

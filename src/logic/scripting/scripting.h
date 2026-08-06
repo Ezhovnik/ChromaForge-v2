@@ -19,11 +19,13 @@ class Player;
 struct Item;
 class BlocksController;
 struct BlockFuncsSet;
+struct BlockFuncNamesCache;
 struct ItemFuncsSet;
+struct ItemFuncNamesCache;
 struct WorldFuncsSet;
 struct UserComponent;
 class ContentIndices;
-struct uidocscript;
+struct UIDocScript;
 class Inventory;
 class UIDocument;
 struct ContentPack;
@@ -66,7 +68,7 @@ namespace scripting {
 
     void process_post_runnables();
 
-    std::unique_ptr<Process> start_coroutine(
+    std::unique_ptr<Process> start_app_script(
         const io::path& script
     );
 
@@ -86,8 +88,9 @@ namespace scripting {
     void on_world_load(LevelController* controller);
     void on_world_spark(int sps);
     void on_world_save();
+    void process_before_quit();
     void on_world_quit();
-    void cleanup();
+    void cleanup(const std::vector<std::string>& nonReset);
     void on_blocks_spark(const Block& block, int sps);
     void update_block(const Block& block, const glm::ivec3& pos);
     void random_update_block(const Block& block, const glm::ivec3& pos);
@@ -102,6 +105,7 @@ namespace scripting {
 
     void on_inventory_open(const Player* player, const Inventory& inventory);
     void on_inventory_closed(const Player* player, const Inventory& inventory);
+    void on_inventory_interact(int invid, int slot, int action, int mode);
 
     void on_player_spark(Player* player, int sps);
 
@@ -144,14 +148,16 @@ namespace scripting {
         const std::string& prefix,
         const io::path& file,
         const std::string& fileName,
-        BlockFuncsSet& funcsset
+        BlockFuncsSet& funcsset,
+        BlockFuncNamesCache& namesCache
     );
     void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
         const io::path& file,
         const std::string& fileName,
-        ItemFuncsSet& funcsset
+        ItemFuncsSet& funcsset,
+        ItemFuncNamesCache& namesCache
     );
     void load_world_script(
         const scriptenv& env,
@@ -165,9 +171,10 @@ namespace scripting {
         const std::string& prefix,
         const io::path& file,
         const std::string& fileName,
-        uidocscript& script
+        UIDocScript& script
     );
     void load_entity_component(
+        const scriptenv& env,
         const std::string& name,
         const io::path& file,
         const std::string& fileName

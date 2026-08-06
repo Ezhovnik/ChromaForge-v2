@@ -13,6 +13,8 @@
 #include <windows.h>
 #endif // _WIN32
 
+static debug::Logger logger("input");
+
 static std::unordered_map<std::string, int> keycodes {
     {"enter", GLFW_KEY_ENTER},
     {"space", GLFW_KEY_SPACE},
@@ -189,14 +191,14 @@ const Binding& Bindings::require(const std::string& name) const {
     if (const auto found = get(name)) {
         return *found;
     }
-    THROW_ERR("Binding '{}' does not exist", name);
+    throw std::runtime_error("Binding '" + name + "' does not exist");
 }
 
 Binding& Bindings::require(const std::string& name) {
     if (const auto found = get(name)) {
         return *found;
     }
-    THROW_ERR("Binding '{}' does not exist", name);
+    throw std::runtime_error("Binding '" + name + "' does not exist");
 }
 
 void Bindings::read(const dv::value& map, BindType bindType) {
@@ -213,7 +215,7 @@ void Bindings::read(const dv::value& map, BindType bindType) {
                 type = inputType::mouse;
                 code = static_cast<int>(input_util::mousecode_from(codename));
             } else {
-                LOG_ERROR("Unknown input type: {} (binding {})", prefix, util::quote(key));
+                logger.error() << "Unknown input type: " << prefix << " (binding " << util::quote(key) << ")";
                 continue;
             }
             if (bindType == BindType::Bind) {
@@ -240,7 +242,7 @@ std::string Bindings::write() const {
                     input_util::get_name(static_cast<Mousecode>(binding.code));
                 break;
             default:
-                THROW_ERR("Unsupported control type");
+                throw std::runtime_error("Unsupported control type");
         }
         obj[entry.first] = std::move(value);
     }

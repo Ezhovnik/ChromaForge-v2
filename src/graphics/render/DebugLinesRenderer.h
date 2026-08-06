@@ -3,7 +3,6 @@
 class DrawContext;
 class Camera;
 class LineBatch;
-class LinesRenderer;
 class ShaderProgram;
 class Level;
 
@@ -16,7 +15,6 @@ public:
     void render(
         DrawContext& ctx,
         const Camera& camera,
-        LinesRenderer& renderer,
         LineBatch& linesBatch,
         ShaderProgram& linesShader,
         bool showChunkBorders

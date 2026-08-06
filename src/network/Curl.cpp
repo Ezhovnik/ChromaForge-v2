@@ -9,6 +9,8 @@
 
 #include <debug/Logger.h>
 
+static debug::Logger logger("curl");
+
 using namespace network;
 
 namespace network::HTTP_CODES {
@@ -133,7 +135,7 @@ public:
                 curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, request.data.c_str());
                 break;
             default:
-                THROW_ERR("Not implemented");
+                throw std::runtime_error("Not implemented");
         }
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, request.followLocation);
@@ -152,7 +154,7 @@ public:
         CURLMcode res = curl_multi_perform(multiHandle, &running);
         if (res != CURLM_OK) {
             auto message = curl_multi_strerror(res);
-            LOG_ERROR("{} (URL: {})", message, url);
+            logger.error() << message << " (URL: " << url << ")";
             if (onReject) {
                 onReject(HTTP_CODES::BAD_GATEWAY, {});
             }
@@ -167,7 +169,7 @@ public:
         CURLMcode res = curl_multi_perform(multiHandle, &running);
         if (res != CURLM_OK) {
             auto message = curl_multi_strerror(res);
-            LOG_ERROR("{} (URL: {})", message, url);
+            logger.error() << message << " (URL: " << url << ")";
             if (onReject) {
                 onReject(HTTP_CODES::BAD_GATEWAY, {});
             }
@@ -194,9 +196,8 @@ public:
                     onResponse(std::move(buffer));
                 }
             } else {
-                LOG_ERROR(
-                    "Response code {} (URL: {}){}", response, url, buffer.empty() ? "" : " " + std::to_string(buffer.size()) + " byte(s)"
-                );
+                logger.error() << "Response code " << response << " (URL: " << url << ")"
+                    << (buffer.empty() ? "" : " " + std::to_string(buffer.size()) + " byte(s)");
                 totalDownload += buffer.size();
                 if (onReject) {
                     onReject(response, std::move(buffer));
@@ -222,12 +223,12 @@ public:
     static std::unique_ptr<CurlRequests> create() {
         auto curl = curl_easy_init();
         if (curl == nullptr) {
-            THROW_ERR("Could not initialize cURL");
+            throw std::runtime_error("Could not initialize cURL");
         }
         auto multiHandle = curl_multi_init();
         if (multiHandle == nullptr) {
             curl_easy_cleanup(curl);
-            THROW_ERR("Could not initialize cURL-multi");
+            throw std::runtime_error("Could not initialize cURL-multi");
         }
         return std::make_unique<CurlRequests>(multiHandle, curl);
     }

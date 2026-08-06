@@ -3,10 +3,12 @@
 #include <optional>
 #include <algorithm>
 
+#include <assets/Assets.h>
 #include <objects/Player.h>
 #include <physics/Hitbox.h>
 #include <window/Camera.h>
 #include <content/Content.h>
+#include <content/ContentPack.h>
 #include <engine/Engine.h>
 #include <objects/rigging.h>
 #include <objects/Entities.h>
@@ -17,6 +19,7 @@
 #include <voxels/blocks_agent.h>
 #include <objects/Entt_Entity.h>
 #include <objects/Rigidbody.h>
+#include <engine/EnginePaths.h>
 
 static const Entity* require_entity_def(lua::State* L) {
     auto indices = scripting::content->getIndices();
@@ -59,7 +62,6 @@ static int l_get_def(lua::State* L) {
 }
 
 static int l_spawn(lua::State* L) {
-    auto level = scripting::controller->getLevel();
     auto defname = lua::tostring(L, 1);
     auto& def = scripting::content->entities.require(defname);
     auto pos = lua::tovec3(L, 2);
@@ -67,7 +69,9 @@ static int l_spawn(lua::State* L) {
     if (lua::gettop(L) > 2) {
         args = lua::tovalue(L, 3);
     }
-    entityid_t id = scripting::level->entities->spawn(def, pos, std::move(args));
+    entityid_t id = scripting::level->entities->spawn(
+        def, pos, std::move(args)
+    );
     lua::get_from(L, "entities", "get", true);
     lua::pushinteger(L, id);
     return lua::call_nothrow(L, 1);
@@ -82,15 +86,19 @@ static int l_despawn(lua::State* L) {
 
 static int l_get_skeleton(lua::State* L) {
     if (auto entity = get_entity(L, 1)) {
-        return lua::pushstring(L, entity->getSkeleton().config->getName());
+        auto skeleton = entity->getSkeleton();
+        if (skeleton == nullptr) return 0;
+        return lua::pushstring(L, skeleton->config->getName());
     }
     return 0;
 }
 
 static int l_set_skeleton(lua::State* L) {
+    auto assets = scripting::engine->getAssets();
+    if (assets == nullptr) return 0;
     if (auto entity = get_entity(L, 1)) {
         std::string skeletonName = lua::require_string(L, 2);
-        auto skeletonConfig = scripting::content->getSkeleton(skeletonName);
+        auto skeletonConfig = assets->get<rigging::SkeletonConfig>(skeletonName);
         if (skeletonConfig == nullptr) {
             throw std::runtime_error("Skeleton not found '" + skeletonName + "'");
         }
@@ -104,8 +112,10 @@ static int l_raycast(lua::State* L) {
     auto dir = lua::tovec<3>(L, 2);
     auto maxDistance = lua::tonumber(L, 3);
     auto ignoreEntityId = lua::tointeger(L, 4);
+    bool includeNonSelectable = false;
     std::set<blockid_t> filteredBlocks {};
-    if (lua::gettop(L) >= 6) {
+    const int luaStackSize = lua::gettop(L);
+    if (luaStackSize >= 6) {
         if (lua::istable(L, 6)) {
             int addLen = lua::objlen(L, 6);
             for (int i = 0; i < addLen; ++i) {
@@ -121,6 +131,9 @@ static int l_raycast(lua::State* L) {
             throw std::runtime_error("Table expected for filter");
         }
     }
+    if (luaStackSize >= 7) {
+        includeNonSelectable = lua::toboolean(L, 6);
+    }
     glm::vec3 end;
     glm::ivec3 normal;
     glm::ivec3 iend;
@@ -135,14 +148,15 @@ static int l_raycast(lua::State* L) {
             end,
             normal,
             iend,
-            filteredBlocks
+            filteredBlocks,
+            includeNonSelectable
         )
     ) {
         maxDistance = glm::distance(start, end);
         block = voxel->id;
     }
     if (auto ray = scripting::level->entities->rayCast(start, dir, maxDistance, ignoreEntityId)) {
-        if (lua::gettop(L) >= 5 && !lua::isnil(L, 5)) {
+        if (luaStackSize >= 5 && !lua::isnil(L, 5)) {
             lua::pushvalue(L, 5);
         } else {
             lua::createtable(L, 0, 6);
@@ -233,7 +247,14 @@ static int l_reload_component(lua::State* L) {
         throw std::runtime_error("Missing entry point");
     }
     auto filename = name.substr(0, pos + 1) + "scripts/components/" + name.substr(pos + 1) + ".lua";
-    scripting::load_entity_component(name, filename, filename);
+    auto prefix = name.substr(0, pos);
+    auto runtime = scripting::content->getPackRuntime(prefix);
+    if (runtime == nullptr) {
+        throw std::runtime_error("Pack '" + prefix + "' content is not loaded");
+    }
+    scripting::load_entity_component(
+        runtime->getEnvironment(), name, filename, filename
+    );
     return 0;
 }
 

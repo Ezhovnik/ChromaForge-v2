@@ -8,11 +8,12 @@
 #include <engine/Engine.h>
 #include <assets/Assets.h>
 #include <assets/AssetsLoader.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <coders/json.h>
 #include <io/io.h>
 #include <voxels/Chunks.h>
 #include <voxels/Chunk.h>
+#include <lighting/Lightmap.h>
 #include <lighting/Lighting.h>
 #include <voxels/GlobalChunks.h>
 #include <logic/LevelController.h>
@@ -23,11 +24,15 @@
 #include <content/ContentLoader.h>
 #include <content/ContentControl.h>
 
-static WorldInfo& require_world_info() {
+static Level& require_level() {
     if (scripting::level == nullptr) {
-        throw std::runtime_error("No world open");
+        throw std::runtime_error("World is not open");
     }
-    return scripting::level->getWorld()->getInfo();
+    return *scripting::level;
+}
+
+static WorldInfo& require_world_info() {
+    return require_level().getWorld()->getInfo();
 }
 
 static int l_get_list(lua::State* L) {
@@ -50,10 +55,9 @@ static int l_get_list(lua::State* L) {
         lua::pushstring(L, name);
         lua::setfield(L, "name");
 
-        auto assets = scripting::engine->getAssets();
         std::string icon = "world#" + name + ".icon";
 
-        if (!scripting::engine->isHeadless() && !AssetsLoader::loadExternalTexture(assets, icon, {
+        if (!scripting::engine->isHeadless() && !AssetsLoader::loadExternalTexture(scripting::engine->acquireBackgroundLoader(), icon, {
             worlds[i] / "icon.png",
             worlds[i] / "preview.png"
         })) {
@@ -127,11 +131,11 @@ static int l_get_chunk_data(lua::State* L) {
     int z = static_cast<int>(lua::tointeger(L, 2));
     const auto& chunk = scripting::level->chunks->getChunk(x, z);
 
+    auto voxelData = std::make_unique<ubyte[]>(CHUNK_DATA_LEN);
     std::vector<ubyte> chunkData;
     if (chunk == nullptr) {
         auto& regions = scripting::level->getWorld()->wfile->getRegions();
-        auto voxelData = regions.getVoxels(x, z);
-        if (voxelData == nullptr) return 0;
+        if (!regions.getVoxels(x, z, voxelData.get())) return 0;
         static util::Buffer<ubyte> rleBuffer(CHUNK_DATA_LEN * 2);
         auto metadata = regions.getBlocksData(x, z);
         chunkData = compressed_chunks::encode(voxelData.get(), metadata, rleBuffer);
@@ -149,8 +153,10 @@ static void integrate_chunk_client(Chunk& chunk) {
     chunk.flags.loadedLights = false;
     chunk.flags.lighted = false;
 
-    chunk.lightmap.clear();
-    Lighting::preBuildSkyLight(chunk, *scripting::indices);
+    if (chunk.lightmap) {
+        chunk.lightmap->clear();
+        Lighting::preBuildSkyLight(chunk, *scripting::indices);
+    }
 
     for (int lz = -1; lz <= 1; ++lz) {
         for (int lx = -1; lx <= 1; ++lx) {

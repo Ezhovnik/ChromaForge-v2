@@ -8,11 +8,13 @@
 #include <util/stringutil.h>
 #include <typedefs.h>
 #include <debug/Logger.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <constants.h>
 #include <coders/BasicParser.h>
 #include <coders/json.h>
 #include <data/dv_util.h>
+
+static debug::Logger logger("glsl-extension");
 
 void GLSLExtension::setPaths(const ResPaths* paths) {
     this->paths = paths;
@@ -44,7 +46,7 @@ const GLSLExtension::ProcessingResult& GLSLExtension::getHeader(
 ) const {
     auto found = headers.find(name);
     if (found == headers.end()) {
-        THROW_ERR("No header '{}' loaded", name);
+        throw std::runtime_error("No header '" + name + "' loaded");
     }
     return found->second;
 }
@@ -52,7 +54,7 @@ const GLSLExtension::ProcessingResult& GLSLExtension::getHeader(
 const std::string& GLSLExtension::getDefine(const std::string& name) const {
     auto found = defines.find(name);
     if (found == defines.end()) {
-        THROW_ERR("Name '{}' is not defined", name);
+        throw std::runtime_error("Name '" + name + "' is not defined");
     }
     return found->second;
 }
@@ -87,14 +89,18 @@ inline void parsing_error(
     uint linenum, 
     const std::string& message
 ) {
-    THROW_ERR("File {}: {} at line {}", file.string(), message, linenum);
+    throw std::runtime_error(
+        "File " + file.string() + ": " + message + " at line " + std::to_string(linenum)
+    );
 }
 
 // Вспомогательная функция: выводит предупреждение о проблеме при парсинге
 inline void parsing_warning(
     std::string_view file, uint linenum, const std::string& message
 ) {
-    LOG_WARN("File {}: {} at line {}", std::string(file), message, std::to_string(linenum));
+    logger.warning()
+        << "File " << std::string(file) << ": " << message
+        << " at line " << std::to_string(linenum);
 }
 
 // Вставляет директиву #line с указанным номером строки для сохранения корректной информации о строках в сообщениях компилятора
@@ -115,7 +121,7 @@ static PostEffect::Param::Value default_value_for(PostEffect::Param::Type type) 
         case PostEffect::Param::Type::Vec4:
             return glm::vec4 {0.0f, 0.0f, 0.0f, 0.0f};
         default:
-            THROW_ERR("Unsupported type");
+            throw std::runtime_error("Unsupported type");
     }
 }
 
@@ -143,14 +149,14 @@ public:
     bool processIncludeDirective() {
         skipWhitespace(false);
         if (peekNoJump() != '<') {
-            THROW_ERR("'<' expected");
+            throw std::runtime_error("'<' expected");
         }
         skip(1);
         skipWhitespace(false);
         auto headerName = parseName();
         skipWhitespace(false);
         if (peekNoJump() != '>') {
-            THROW_ERR("'>' expected");
+            throw std::runtime_error("'>' expected");
         }
         skip(1);
         skipWhitespace(false);
@@ -177,7 +183,7 @@ public:
     template<int n>
     PostEffect::Param::Value parseVectorValue() {
         if (peekNoJump() != '[') {
-            THROW_ERR("'[' expected");
+            throw std::runtime_error("'[' expected");
         }
         auto value = json::parse(
             filename,
@@ -205,7 +211,7 @@ public:
             case PostEffect::Param::Type::Vec4:
                 return parseVectorValue<4>();
             default:
-                THROW_ERR("Unsupported default value for type {}", name);
+                throw std::runtime_error("Unsupported default value for type " + name);
         }
     }
 
@@ -214,12 +220,12 @@ public:
         auto typeName = parseName();
         PostEffect::Param::Type type {};
         if (!PostEffect::Param::TypeMeta.getItem(typeName, type)) {
-            THROW_ERR("Unsupported param type {}", util::quote(typeName));
+            throw std::runtime_error("Unsupported param type " + util::quote(typeName));
         }
         skipWhitespace(false);
         auto paramName = parseName();
         if (params.find(paramName) != params.end()) {
-            THROW_ERR("Duplicating param {}", util::quote(paramName));
+            throw std::runtime_error("Duplicating param " + util::quote(paramName));
         }
         skipWhitespace(false);
         int start = pos;
@@ -293,9 +299,9 @@ static void trace_output(
         io::create_directories(outfile.parent());
         io::write_string(outfile, result.code);
     } catch (const std::runtime_error& err) {
-        LOG_ERROR(
-            "Error on saving GLSLExtension::preprocess output ({}): {}", outfile.string(), err.what()
-        );
+        logger.error()
+            << "Error on saving GLSLExtension::preprocess output ("
+            << outfile.string() << "): " << err.what();
     }
 }
 

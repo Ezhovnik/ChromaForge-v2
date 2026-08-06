@@ -5,12 +5,13 @@
 #include <time.h>
 #include <algorithm>
 #include <thread>
-#include <unistd.h> 
 
 #include <typedefs.h>
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 #include <frontend/locale.h>
+
+static debug::Logger logger("platform");
 
 namespace platform {
     const std::string DEFAULT_LOCALE = "en_US"; // Локаль по умолчанию, используемая, если системную определить не удалось.
@@ -18,8 +19,10 @@ namespace platform {
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <conio.h>
 #pragma comment(lib, "winmm.lib")
 #else
+#include <sys/poll.h>
 #include <unistd.h>
 #endif
 
@@ -56,11 +59,11 @@ std::string platform::detect_locale() {
         // Заменяем дефис на подчёркивание, чтобы получить формат "язык_СТРАНА".
 		std::replace(result.begin(), result.end(), '-', '_');
 
-        LOG_DEBUG("Detected environment language local: {}", result);
+        logger.debug() << "Detected environment language local: " << result;
 		return result;
     } else {
         // Если не удалось определить, используем локаль по умолчанию.
-        LOG_DEBUG("Detected environment language local: {}", platform::DEFAULT_LOCALE);
+        logger.debug() << "Detected environment language local: " << platform::DEFAULT_LOCALE;
         return platform::DEFAULT_LOCALE;
     }
 }
@@ -71,14 +74,14 @@ std::string platform::detect_locale() {
     // Сначала проверяем переменную LC_ALL, затем LANG.
 	const char* lang = getenv("LC_ALL");
     if (!lang || *lang == '\0') lang = getenv("LANG");
-    if (!lang || *lang == '\0') lang = platform::DEFAULT_LOCALE;
+    if (!lang || *lang == '\0') lang = platform::DEFAULT_LOCALE.c_str();
     std::string result(lang);
 
     // Отбрасываем часть с кодировкой после точки
     size_t dotPos = result.find('.');
     if (dotPos != std::string::npos) result = result.substr(0, dotPos);
 
-    LOG_DEBUG("Detected environment language local: {}", result);
+    logger.debug() << "Detected environment language local: " << result;
     return result;
 }
 #endif
@@ -108,20 +111,20 @@ void platform::sleep(size_t millis) {
 
 void platform::open_folder(const std::filesystem::path& folder) {
     if (!std::filesystem::is_directory(folder)) {
-        LOG_WARN("'{}' is not a directory or does not exist", folder.u8string());
+        logger.warning() << "'" << folder.u8string() << "' is not a directory or does not exist";
         return;
     }
 #ifdef __APPLE__
     auto cmd = "open " + util::quote(folder.u8string());
     if (int res = system(cmd.c_str())) {
-        LOG_WARN("'{}' returned code {}", cmd, res);
+        logger.warning() << "'" << cmd << "' returned code " << res;
     }
 #elif defined(_WIN32)
     ShellExecuteW(nullptr, L"open", folder.wstring().c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
 #else
     auto cmd = "xdg-open " + util::quote(folder.u8string());
     if (int res = system(cmd.c_str())) {
-        LOG_WARN("'{}' returned code {}", cmd, res);
+        logger.warning() << "'" << cmd << "' returned code " << res;
     }
 #endif
 }
@@ -139,7 +142,7 @@ bool platform::open_url(const std::string& url) {
 #ifdef __APPLE__
     auto cmd = "open " + util::quote(url);
     if (int res = system(cmd.c_str())) {
-        LOG_WARN("'{}' returned code {}", cmd, res);
+        logger.warning() << "'" << cmd << "' returned code " << res;
     } else {
         return false;
     }
@@ -158,7 +161,7 @@ bool platform::open_url(const std::string& url) {
 #else
     auto cmd = "xdg-open " + util::quote(url);
     if (int res = system(cmd.c_str())) {
-        LOG_WARN("'{}' returned code {}", cmd, res);
+        logger.warning() << "'" << cmd << "' returned code " << res;
     } else {
         return false;
     }
@@ -271,7 +274,7 @@ void platform::new_engine_instance(const std::vector<std::string>& args) {
 #else
     std::stringstream ss;
     ss << executable;
-    for (int i = 0; i < args.size(); i++) {
+    for (int i = 0; i < args.size(); ++i) {
         ss << " " << util::quote(args[i]);
     }
     ss << " >/dev/null &";
@@ -283,5 +286,16 @@ void platform::new_engine_instance(const std::vector<std::string>& args) {
             std::to_string(res)
         );
     }
+#endif
+}
+
+bool platform::stdin_has_data() {
+#ifdef _WIN32
+    return _kbhit();
+#else
+    struct pollfd fds;
+    fds.fd = STDIN_FILENO;
+    fds.events = POLLIN;
+    return poll(&fds, 1, 0) == 1;
 #endif
 }

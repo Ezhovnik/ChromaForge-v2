@@ -5,9 +5,7 @@
 #include <string>
 #include <memory>
 
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-
+#include <graphics/render/commons.h>
 #include <graphics/core/DrawContext.h>
 #include <presets/WeatherPreset.h>
 #include <world/Weather.h>
@@ -33,15 +31,14 @@ class DebugLinesRenderer;
 class BlockWrapsRenderer;
 class PrecipitationRenderer;
 class HandsRenderer;
-class LinesRenderer;
 class NamedSkeletons;
 class Shadows;
-class GBuffer;
+class CloudsRenderer;
 
 struct CompileTimeShaderSettings {
     bool advancedRender = false;
     bool shadows = false;
-	bool ssao = false;
+    bool ssao = false;
 };
 
 class WorldRenderer {
@@ -55,74 +52,74 @@ private:
     std::unique_ptr<Batch3D> batch3d;
     std::unique_ptr<ModelBatch> modelBatch;
     std::unique_ptr<ChunksRenderer> chunksRenderer;
-	std::unique_ptr<HandsRenderer> hands;
+    std::unique_ptr<HandsRenderer> hands;
     std::unique_ptr<Skybox> skybox;
-	std::unique_ptr<Shadows> shadowMapping;
-	std::unique_ptr<DebugLinesRenderer> debugLines;
+    std::unique_ptr<Shadows> shadowMapping;
+    std::unique_ptr<DebugLinesRenderer> debugLines;
+    std::unique_ptr<PrecipitationRenderer> precipitation;
+    std::unique_ptr<CloudsRenderer> cloudsRenderer;
     Weather weather {};
 
-	float timer = 0.0f;
+    float timer = 0.0f;
 
-	bool debug = false;
-	bool lightsDebug = false;
+    bool debug = false;
+    bool lightsDebug = false;
 
-	bool gbufferPipeline = false;
+    bool gbufferPipeline = false;
 
-	CompileTimeShaderSettings prevCTShaderSettings {};
+    CompileTimeShaderSettings prevCTShaderSettings {};
 
-	void renderBlockSelection();
-	void renderLines(
-		const Camera& camera,
-		ShaderProgram& linesShader,
-		const DrawContext& pctx
-	);
+    void renderBlockSelection();
+    void renderLines(
+        const Camera& camera,
+        ShaderProgram& linesShader,
+        const DrawContext& pctx
+    );
 
-	void renderBlockOverlay(
-		const DrawContext& context
-	);
+    void renderBlockOverlay(
+        const DrawContext& context
+    );
 
-	void setupWorldShader(
+    void setupWorldShader(
         ShaderProgram& shader,
         const Camera& camera,
         const EngineSettings& settings,
         float fogFactor
     );
 
-	void renderOpaque(
+    void renderOpaque(
         const DrawContext& context, 
         const Camera& camera, 
         const EngineSettings& settings,
-        float delta,
-        bool pause,
         bool hudVisible
     );
+
+    void refreshSettings(ShaderProgram** shaders);
 public:
-	std::unique_ptr<ParticlesRenderer> particles;
+    std::unique_ptr<ParticlesRenderer> particles;
     std::unique_ptr<TextsRenderer> texts;
     std::unique_ptr<BlockWrapsRenderer> blockWraps;
-    std::unique_ptr<PrecipitationRenderer> precipitation;
-	std::unique_ptr<NamedSkeletons> skeletons;
-	std::unique_ptr<LinesRenderer> lines;
+    std::unique_ptr<NamedSkeletons> skeletons;
 
-	WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
-	~WorldRenderer();
+    WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
+    ~WorldRenderer();
 
-	void renderFrame(
-		const DrawContext& context,
-		Camera& camera,
-		bool hudVisible,
-		bool pause,
-		float deltaTime,
-		PostProcessing& postProcessing
-	);
+    void update(const Camera& camera, float deltaTime);
 
-	void clear();
+    void renderFrame(
+        const DrawContext& context,
+        Camera& camera,
+        bool hudVisible,
+        PostProcessing& postProcessing
+    );
 
-	void setDebug(bool flag);
-	void toggleLightsDebug();
+    void clear();
 
-	Weather& getWeather();
+    void setDebug(bool flag);
+    void toggleLightsDebug();
 
-	static bool drawChunkBorders;
-	static bool drawEntityHitboxes;
+    Weather& getWeather();
+
+    static bool drawChunkBorders;
+    static bool drawEntityHitboxes;
 };

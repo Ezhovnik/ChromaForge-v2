@@ -93,7 +93,7 @@ static int pack(lua::State* L, const char* format, bool usetable) {
     if (usetable) {
         lua::createtable(L, outSize, 0);
         const ubyte* data = builder.data();
-        for (size_t i = 0; i < outSize; i++) {
+        for (size_t i = 0; i < outSize; ++i) {
             lua::pushinteger(L, data[i]);
             lua::rawseti(L, i + 1);
         }

@@ -32,6 +32,8 @@
 #include <data/StructLayout.h>
 #include <util/stringutil.h>
 
+static debug::Logger logger("world-files");
+
 WorldFiles::WorldFiles(const io::path& directory) : directory(directory), regions(directory) {
 }
 
@@ -90,8 +92,8 @@ void WorldFiles::writePacks(const std::vector<ContentPack>& packs) {
 	io::write_string(packsFile, ss.str());
 }
 
-template<class T>
-static void write_indices(const ContentUnitIndices<T>& indices, dv::value& list) {
+template<class T, typename IdType>
+static void write_indices(const ContentUnitIndices<T, IdType>& indices, dv::value& list) {
     for (auto unit : indices.getIterable()) {
         list.add(unit->name);
 	}
@@ -132,7 +134,7 @@ void WorldFiles::writeWorldInfo(const WorldInfo& info) {
 std::optional<WorldInfo> WorldFiles::readWorldInfo() {
 	io::path file = getWorldFile();
 	if (!io::is_regular_file(file)) {
-		LOG_WARN("World.json does not exists");
+		logger.warning() << "World.json does not exists";
 		return std::nullopt;
 	}
 
@@ -153,7 +155,7 @@ static void read_resources_data(
         const auto& name = map["name"].asString();
         size_t index = indices.indexOf(name);
         if (index == ResourceIndices::MISSING) {
-            LOG_WARN("Discard {}", name);
+            logger.warning() << "Discard " << name;
         } else {
             indices.saveData(index, map["saved"]);
         }
@@ -163,7 +165,7 @@ static void read_resources_data(
 bool WorldFiles::readResourcesData(const Content& content) {
     io::path file = getResourcesFile();
     if (!io::is_regular_file(file)) {
-        LOG_WARN("resources.json does not exists");
+        logger.warning() << "resources.json does not exists";
         return false;
     }
     auto root = io::read_json(file);
@@ -172,7 +174,7 @@ bool WorldFiles::readResourcesData(const Content& content) {
         if (ResourceTypeMeta.getItem(key, type)) {
             read_resources_data(content, arr, type);
         } else {
-            LOG_WARN("Unknown resource type: {}", key);
+            logger.warning() << "Unknown resource type: " << key;
         }
     }
     return true;
@@ -181,12 +183,12 @@ bool WorldFiles::readResourcesData(const Content& content) {
 void WorldFiles::patchIndicesFile(const dv::value& map) {
     io::path file = getIndicesFile();
     if (!io::is_regular_file(file)) {
-        LOG_ERROR("{} does not exists", file.name());
+        logger.error() << file.name() << " does not exists";
         return;
     }
     auto root = io::read_json(file);
     for (const auto& [key, value] : map.asObject()) {
-        LOG_INFO("Patching indices.json update: {}", util::quote(key));
+        logger.info() << "Patching indices.json update: " << util::quote(key);
         root[key] = value;
     }
     io::write_json(file, root, true);

@@ -9,8 +9,11 @@
 #include <world/generator/Generator.h>
 #include <world/generator/VoxelFragment.h>
 #include <debug/Logger.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <util/stringutil.h>
+#include <data/dv_util.h>
+
+static debug::Logger logger("generators-loader");
 
 static BlocksLayer load_layer(
     const dv::value& map, uint& lastLayersHeight, bool& hasResizeableLayer
@@ -25,7 +28,7 @@ static BlocksLayer load_layer(
     }
     if (height == -1) {
         if (hasResizeableLayer) {
-            THROW_ERR("Only one resizeable layer allowed");
+            throw std::runtime_error("Only one resizeable layer allowed");
         }
         hasResizeableLayer = true;
     }
@@ -39,14 +42,14 @@ static inline BlocksLayers load_layers(
     bool hasResizeableLayer = false;
     std::vector<BlocksLayer> layers;
 
-    for (int i = 0; i < layersArr.size(); i++) {
+    for (int i = 0; i < layersArr.size(); ++i) {
         const auto& layerMap = layersArr[i];
         try {
             layers.push_back(
                 load_layer(layerMap, lastLayersHeight, hasResizeableLayer)
             );
         } catch (const std::runtime_error& err) {
-            THROW_ERR("{} №{}: {}", fieldname, i, err.what());
+            throw std::runtime_error(fieldname + " №" + std::to_string(i) + ": " + err.what());
         }
     }
     return BlocksLayers {std::move(layers), lastLayersHeight};
@@ -67,7 +70,7 @@ static inline BiomeElementList load_biome_element_list(
             const auto& name = entry[nameName].asString();
             float weight = entry["weight"].asNumber();
             if (weight <= 0.0f) {
-                THROW_ERR("Weight must be positive");
+                throw std::runtime_error("Weight must be positive");
             }
             entries.push_back(WeightedEntry {name, weight, {}});
         }
@@ -93,7 +96,7 @@ static inline Biome load_biome(
 
     const auto& paramsArr = biomeMap["parameters"];
     if (paramsArr.size() < parametersCount) {
-        THROW_ERR("{} parameters expected", parametersCount);
+        throw std::runtime_error(std::to_string(parametersCount) + " parameters expected");
     }
     for (size_t i = 0; i < parametersCount; ++i) {
         const auto& paramMap = paramsArr[i];
@@ -138,9 +141,9 @@ static std::vector<std::unique_ptr<VoxelStructure>> load_structures(
     for (auto& [name, config] : map.asObject()) {
         auto structFile = structuresDir / (name + ".vox");
         structFile = paths.find(structFile.string());
-        LOG_DEBUG("Loading voxel fragment {}", structFile.string());
+        logger.debug() << "Loading voxel fragment " << structFile.string();
         if (!io::exists(structFile)) {
-            THROW_ERR("Structure file does not exist: {}", structFile.string());
+            throw std::runtime_error("Structure file does not exist: " + structFile.string());
         }
         auto fragment = std::make_unique<VoxelFragment>();
         fragment->deserialize(io::read_binary_json(structFile));
@@ -183,7 +186,7 @@ static void load_biomes(Generator& def, const dv::value& root) {
                 load_biome(biomeMap, biomeName, def.biomeParameters)
             );
         } catch (const std::runtime_error& err) {
-            THROW_ERR("Biome {}: {}", biomeName, err.what());
+            throw std::runtime_error("Biome " + biomeName + ": " + err.what());
         }
     }
 }
@@ -209,18 +212,21 @@ void ContentLoader::loadGenerator(
 
     map.at("sea-level").get(def.seaLevel);
     map.at("wide-structs-chunks-radius").get(def.wideStructsChunksRadius);
+    map.at("player-spawn-radius").get(def.playerSpawnRadius);
+    map.at("player-min-spawn-height").get(def.playerMinSpawnHeight);
+    map.at("player-max-spawn-height").get(def.playerMaxSpawnHeight);
 
     if (map.has("heightmap-inputs")) {
         for (const auto& element : map["heightmap-inputs"]) {
             int index = element.asInteger();
             if (index <= 0 || index > def.biomeParameters) {
-                THROW_ERR("Invalid biome parameter index {}", std::to_string(index));
+                throw std::runtime_error("Invalid biome parameter index " + std::to_string(index));
             }
             def.heightmapInputs.push_back(index - 1);
         }
     }
     if (!def.heightmapInputs.empty() && def.biomesBPD != def.heightsBPD) {
-        LOG_WARN("Generator has heightmap-inputs but biomes-bpd is not equal to heights-bpd, generator will work slower!");
+        logger.warning() << "Generator has heightmap-inputs but biomes-bpd is not equal to heights-bpd, generator will work slower!";
     }
 
     auto folder = generatorsDir / (name + ".files");
@@ -233,7 +239,7 @@ void ContentLoader::loadGenerator(
     auto biomesFile = GENERATORS_DIR / (name + ".files") / BIOMES_FILE;
     auto biomesMap = paths.readCombinedObject(biomesFile.string(), true);
     if (biomesMap.empty()) {
-        THROW_ERR("Generator {}: at least one biome required", util::quote(def.name));
+        throw std::runtime_error("Generator " + util::quote(def.name) + ": at least one biome required");
     }
     load_biomes(def, biomesMap);
     def.script = scripting::load_generator(

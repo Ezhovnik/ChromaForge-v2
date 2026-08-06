@@ -10,6 +10,7 @@
 #include <typedefs.h>
 #include <voxels/voxel.h>
 #include <util/AreaMap2D.h>
+#include <constants.h>
 
 class Chunk;
 class WorldFiles;
@@ -19,6 +20,8 @@ class ContentIndices;
 struct AABB;
 class Block;
 class VoxelsVolume;
+
+template <int w, int h, int d> class StaticVoxelsVolume;
 
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
@@ -74,6 +77,7 @@ public:
     voxel& requireVoxel(int32_t x, int32_t y, int32_t z) const;
 
     light_t getLight(int32_t x, int32_t y, int32_t z) const;
+    light_t getLight(const glm::ivec3& pos) const;
 	ubyte getLight(int32_t x, int32_t y, int32_t z, int channel) const;
 
     glm::ivec3 seekOrigin(
@@ -89,7 +93,8 @@ public:
         glm::vec3& end, // Точка попадания луча
         glm::ivec3& norm, // Нормаль поверхности в точке попадания
         glm::ivec3& iend, // Координаты вокселя в точке попадания
-        std::set<blockid_t> filter = {}
+        std::set<blockid_t> filter = {},
+        bool includeNonSelectable = false
     ) const;
     glm::vec3 rayCastToObstacle(
         const glm::vec3& start,
@@ -105,7 +110,36 @@ public:
     bool isReplaceableBlock(int32_t x, int32_t y, int32_t z);
 	bool isObstacleBlock(int32_t x, int32_t y, int32_t z);
 
-    void getVoxels(VoxelsVolume& volume, bool backlight = false) const;
+    void getVoxels(
+        VoxelsVolume& volume,
+        bool backlight = false,
+        int top = CHUNK_HEIGHT
+    ) const;
+
+    template <int w, int h, int d>
+    void getVoxels(
+        StaticVoxelsVolume<w, h, d>& volume,
+        bool backlight = false,
+        int top = CHUNK_HEIGHT
+    ) const {
+        getVoxels(
+            volume.getVoxels(),
+            volume.getLights(),
+            {volume.getX(), volume.getY(), volume.getZ()},
+            {w, h, d},
+            backlight,
+            top
+        );
+    }
+
+    void getVoxels(
+        voxel* voxels,
+        light_t* lights,
+        const glm::ivec3& pos,
+        const glm::ivec3& size,
+        bool backlight,
+        int top
+    ) const;
 
     void setCenter(int32_t x, int32_t z);
     void resize(uint32_t newWidth, uint32_t newDepth);

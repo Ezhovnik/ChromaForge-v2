@@ -58,6 +58,18 @@ struct PostEffectConfig : AssetsConfig {
      PostEffectConfig(bool advanced) : advanced(advanced) {}
 };
 
+struct ModelConfig : AssetsConfig {
+     bool squashed;
+
+     ModelConfig(bool squashed) : squashed(squashed) {}
+};
+
+struct FontConfig : AssetsConfig {
+     int size;
+
+     FontConfig(int size) : size(size) {}
+};
+
 using aloader_func = std::function<asset_loader::postfunc(
      AssetsLoader*,
      const ResPaths&, 
@@ -129,7 +141,7 @@ public:
 		std::shared_ptr<AssetsConfig> config=nullptr
 	);
 
-     std::shared_ptr<Task> startTask(runnable onDone);
+     std::shared_ptr<Task> startTask(runnable onDone, int maxWorkers);
 
 	/**
      * @brief Проверяет, есть ли ещё задания в очереди.
@@ -160,10 +172,11 @@ public:
      aloader_func getLoader(AssetType tag);
 
      static bool loadExternalTexture(
-          Assets* assets,
+          AssetsLoader& loader,
           const std::string& name,
           const std::vector<io::path>& alternatives
      );
 
+     Assets& getAssets();
      Engine& getEngine();
 };

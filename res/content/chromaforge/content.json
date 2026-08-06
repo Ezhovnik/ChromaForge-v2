@@ -5,7 +5,7 @@
         "falling_block"
     ],
     "blocks": [
-        "moss",
+        "grass_block",
         "dirt",
         "coarse_dirt",
         "cobblestone",

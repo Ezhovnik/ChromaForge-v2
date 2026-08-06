@@ -2,6 +2,8 @@
 
 #include <debug/Logger.h>
 
+static debug::Logger logger("descriptors-manager");
+
 namespace scripting {
     std::vector<std::optional<StreamDescriptor>> descriptors_manager::descriptors;
 
@@ -61,9 +63,7 @@ namespace scripting {
             if (read) in = io::read(path);
             if (write) out = io::write(path);
         } catch (const std::exception& e) {
-            LOG_ERROR(
-                "Failed to open descriptor for {}: {}", path.string(), e.what()
-            );
+            logger.error() << "Failed to open descriptor for " << path.string() << ": " << e.what();
 
             return -1;
         }

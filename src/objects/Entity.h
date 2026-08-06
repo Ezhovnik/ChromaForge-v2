@@ -23,7 +23,12 @@ struct Entity {
     std::string const name;
     std::vector<ComponentInstance> components;
     std::string skeletonName = name;
+    std::string material;
     bool blocking = true;
+    bool solid = false;
+    float mass = 1.0f;
+    float elasticity = 0.0f;
+    float stepHeight = 0.5f;
 
     BodyType bodyType = BodyType::Dynamic;
     glm::vec3 hitbox {0.25f};

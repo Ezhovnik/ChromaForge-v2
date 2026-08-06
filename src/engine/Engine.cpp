@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <filesystem>
 #include <unordered_set>
-#include <utility>
 
 #define GLEW_STATIC
 
@@ -16,10 +15,8 @@
 #include <debug/Logger.h>
 #include <graphics/ui/GUI.h>
 #include <graphics/core/ShaderProgram.h>
-#include <graphics/core/ImageData.h>
 #include <coders/GLSLExtension.h>
-#include <coders/imageio.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <frontend/screens/Screen.h>
 #include <frontend/screens/MenuScreen.h>
 #include <frontend/locale.h>
@@ -38,7 +35,6 @@
 #include <io/io.h>
 #include <input_bindings.h>
 #include <logic/CommandsInterpreter.h>
-#include <objects/rigging.h>
 #include <coders/commons.h>
 #include <graphics/render/ModelsGenerator.h>
 #include <network/Network.h>
@@ -51,29 +47,13 @@
 #include <devtools/Editor.h>
 #include <devtools/Project.h>
 #include <devtools/DebuggingServer.h>
+#include <graphics/ui/elements/Menu.h>
+#include <engine/WindowControl.h>
+#include <engine/AssetsManagement.h>
+#include <devtools/stdin_cmd_reader.h>
+#include <coders/vector_fonts.h>
 
-static std::unique_ptr<ImageData> load_icon() {
-    try {
-        auto file = "res:textures/misc/icon.png";
-        if (io::exists(file)) {
-            return imageio::read(file);
-        }
-    } catch (const std::exception& err) {
-        LOG_ERROR("Could not load window icon: {}", err.what());
-    }
-    return nullptr;
-}
-
-static std::unique_ptr<scripting::IClientProjectScript> load_client_project_script() {
-    io::path scriptFile = "project:project_client.lua";
-    if (io::exists(scriptFile)) {
-        LOG_INFO("Starting project script");
-        return scripting::load_client_project_script(scriptFile);
-    } else {
-        LOG_WARN("Project script does not exists");
-    }
-    return nullptr;
-}
+static debug::Logger logger("engine");
 
 Engine::Engine() = default;
 Engine::~Engine() = default;
@@ -89,13 +69,14 @@ Engine& Engine::getInstance() {
 
 void Engine::onContentLoad() {
     editor->loadTools();
-    langs::setup(langs::get_current(), paths.resPaths.collectRoots());
+    langs::setup(langs::get_current(), paths->resPaths.collectRoots());
 
     if (isHeadless()) return;
 
     for (auto& pack : content->getAllContentPacks()) {
         auto configFolder = pack.folder / "config";
         auto bindsFile = configFolder / "bindings.toml";
+        logger.info() << "Loading bindings: " << bindsFile.string();
         if (io::is_regular_file(bindsFile)) {
             input->getBindings().read(
                 toml::parse(
@@ -109,32 +90,21 @@ void Engine::onContentLoad() {
 }
 
 void Engine::initializeClient() {
-    std::string title = project->title;
-    if (title.empty()) title = "ChromaForge v" + ENGINE_VERSION_STRING;
-    if (ENGINE_DEBUG_BUILD) title += " [development build]";
-    if (debuggingServer) title = "[debugging] " + title;
+    assets = std::make_unique<AssetsManagement>(*this);
+    windowControl = std::make_unique<WindowControl>(*this);
+    auto [window, input] = windowControl->initialize();
 
-    auto [window, input] = Window::initialize(&settings.display, title);
-    if (!window || !input){
-        LOG_CRITICAL("Could not initialize window");
-        throw initialize_error("Could not initialize window");
-    }
-    window->setFramerate(settings.display.framerate.get());
-
-    time.set(window->time());
-    if (auto icon = load_icon()) {
-        icon->flipY();
-        window->setIcon(icon.get());
-    }
     this->window = std::move(window);
     this->input = std::move(input);
 
     loadControls();
 
     gui = std::make_unique<gui::GUI>(*this);
+
     if (ENGINE_DEBUG_BUILD) {
         menus::create_version_label(*gui);
     }
+
     keepAlive(settings.display.windowMode.observe(
         [this](int value) {
             WindowMode mode = static_cast<WindowMode>(value);
@@ -150,29 +120,36 @@ void Engine::initializeClient() {
         },
         true
     ));
+    keepAlive(this->input->addKeyCallback(Keycode::ESCAPE, [this]() {
+        auto& menu = *gui->getMenu();
+        if (menu.hasOpenPage() && menu.back()) {
+            return true;
+        }
+        return false;
+    }));
 }
 
 void Engine::initialize(CoreParameters coreParameters) {
     params = std::move(coreParameters);
     settingsHandler = std::make_unique<SettingsHandler>(settings);
 
-    LOG_INFO("ChromaForge engine version: {}", ENGINE_VERSION_STRING);
+    logger.info() << "ChromaForge engine version: " << ENGINE_VERSION_STRING;
 
     if (params.headless) {
-        LOG_INFO("Headless mode is enabled");
+        logger.info() << "Engine runs in headless mode";
     }
     if (params.projectFolder.empty()) {
         params.projectFolder = params.resFolder;
     }
-    paths.setResourcesFolder(params.resFolder);
-    paths.setUserFilesFolder(params.userFolder);
-    paths.setProjectFolder(params.projectFolder);
-    paths.prepare();
+    paths = std::make_unique<EnginePaths>(params);
     loadProject();
+    paths->setupProject(*project);
 
     editor = std::make_unique<devtools::Editor>(*this);
     cmd = std::make_unique<cmd::CommandsInterpreter>();
-    network = network::Network::create(settings.network);
+    if (project->permissions.has(Permissions::NETWORK) || !params.debugServerString.empty()) {
+        network = network::Network::create(settings.network);
+    }
 
     if (!params.debugServerString.empty()) {
         try {
@@ -186,14 +163,19 @@ void Engine::initialize(CoreParameters coreParameters) {
         }
     }
 
-    if (!params.scriptFile.empty()) paths.setScriptFolder(params.scriptFile.parent_path());
     loadSettings();
 
     controller = std::make_unique<EngineController>(*this);
 
     if (!params.headless) initializeClient();
 
-    audio::initialize(!params.headless, settings.audio);
+    audio::initialize(
+        !params.headless,
+        project->permissions.has(Permissions::RECORD_AUDIO),
+        settings.audio
+    );
+
+    vector_fonts::initialize();
 
     if (settings.ui.language.get() == "auto") {
         settings.ui.language.set(
@@ -201,27 +183,37 @@ void Engine::initialize(CoreParameters coreParameters) {
         );
     }
 
-    content = std::make_unique<ContentControl>(*project, paths, *input, [this]() {
-        onContentLoad();
-    });
+    content = std::make_unique<ContentControl>(
+        *project, *paths, input.get(), [this]() {onContentLoad();}
+    );
 
-    LOG_INFO("Initialization of the scripting system");
+    logger.info() << "Initialization of the scripting system";
     scripting::initialize(this);
-    LOG_INFO("Scripting system initialization has been successfully finished");
+    logger.info() << "Scripting system initialization has been successfully finished";
 
-    if (!isHeadless()) gui->setPageLoader(scripting::create_page_loader());
+    if (!isHeadless()) gui->getMenu()->setPageLoader(scripting::create_page_loader());
     keepAlive(settings.ui.language.observe([this](auto lang) {
-        langs::setup(lang, paths.resPaths.collectRoots());
+        langs::setup(lang, paths->resPaths.collectRoots());
     }, true));
 
-    project->clientScript = load_client_project_script();
+    keepAlive(settings.audio.inputDevice.observe([](auto name) {
+        audio::set_input_device(name == "auto" ? "" : name);
+    }, true));
 
-    LOG_INFO("Initialization is finished");
-    Logger::getInstance().flush();
+    project->loadProjectStartScript();
+    if (!params.headless) {
+        project->loadProjectClientScript();
+    }
+
+    if (params.stdinCommands) {
+        cmd::start_stdin_cmd_reader(*this);
+    }
+
+    logger.info() << "Initialization is finished";
 }
 
 void Engine::close() {
-    LOG_INFO("Shutting down");
+    logger.info() << "Shutting down";
     saveSettings();
     if (screen) {
         screen->onEngineShutdown();
@@ -232,7 +224,10 @@ void Engine::close() {
     cmd.reset();
     if (gui) {
         gui.reset();
-        LOG_INFO("GUI finished");
+        logger.info() << "GUI finished";
+    }
+    if (!isHeadless()) {
+        vector_fonts::finalize();
     }
     audio::close();
     debuggingServer.reset();
@@ -242,10 +237,9 @@ void Engine::close() {
     scripting::close();
     if (!params.headless) {
         window.reset();
-        LOG_INFO("Window closed");
+        logger.info() << "Window closed";
     }
-    LOG_INFO("Engine has finished successfuly");
-    Logger::getInstance().flush();
+    logger.info() << "Engine has finished successfuly";
 }
 
 void Engine::setLevelConsumer(OnWorldOpen levelConsumer) {
@@ -253,59 +247,33 @@ void Engine::setLevelConsumer(OnWorldOpen levelConsumer) {
 }
 
 void Engine::loadAssets() {
-    LOG_INFO("Loading assets");
-    ShaderProgram::preprocessor->setPaths(&paths.resPaths);
-
-    auto content = this->content->get();
-    auto new_assets = std::make_unique<Assets>();
-    AssetsLoader loader(*this, *new_assets, paths.resPaths);
-    AssetsLoader::addDefaults(loader, content);
-    bool threading = false;
-    if (threading) {
-        auto task = loader.startTask([=](){});
-        task->waitForEnd();
-    } else {
-        while (loader.hasNext()) {
-            loader.loadNext();
-        }
-    }
-
-    assets = std::move(new_assets);
-
-    if (content) {
-        ModelsGenerator::prepare(*content, *assets);
-    }
-    assets->setup();
-    gui->onAssetsLoad(assets.get());
-    LOG_INFO("Assets loaded successfully");
+    assets->loadAssets(content->get());
 }
 
 // Обработка горячих клавиш
 void Engine::updateHotkeys() {
-    if (input->justPressed(Keycode::F2)) saveScreenshot();
-    if (input->isPressed(Keycode::LEFT_CONTROL) && input->isPressed(Keycode::F3) && input->justPressed(Keycode::U)) gui->toggleDebug();
+    if (input->justPressed(Keycode::F2)) {
+        windowControl->saveScreenshot();
+    }
+    if (input->isPressed(Keycode::LEFT_CONTROL) &&
+        input->isPressed(Keycode::F3) &&
+        input->justPressed(Keycode::U)
+    ) {
+        gui->toggleDebug();
+    }
     if (input->justPressed(Keycode::F11)) {
-        if (settings.display.windowMode.get() != static_cast<int>(WindowMode::Fullscreen)) {
-            settings.display.windowMode.set(static_cast<int>(WindowMode::Fullscreen));
-        } else {
-            settings.display.windowMode.set(static_cast<int>(WindowMode::Windowed));
-        }
+        windowControl->toggleFullscreen();
     }
 }
 
-void Engine::saveScreenshot() {
-    auto image = window->takeScreenshot();
-    image->flipY();
-    io::path filename = paths.getNewScreenshotFile("png");
-    imageio::write(filename.string(), image.get());
-    LOG_INFO("Save screenshot as '{}'", filename.string());
-}
-
 void Engine::renderFrame() {
+    if (input->isCursorLocked() != (gui->getActiveFrame() == nullptr)) {
+        input->toggleCursor();
+    }
     screen->draw(time.getDeltaTime());
 
     DrawContext ctx(nullptr, *window, nullptr);
-    gui->draw(ctx, *assets);
+    gui->draw(ctx, *assets->getStorage());
 }
 
 void Engine::run() {
@@ -317,7 +285,9 @@ void Engine::run() {
 }
 
 void Engine::postUpdate() {
-    network->update();
+    if (network) {
+        network->update();
+    }
     postRunnables.run();
     scripting::process_post_runnables();
 
@@ -330,8 +300,15 @@ void Engine::detachDebugger() {
     debuggingServer.reset();
 }
 
+void Engine::applicationSpark() {
+    if (project->setupCoroutine && project->setupCoroutine->isActive()) {
+        project->setupCoroutine->update();
+    }
+}
+
 void Engine::updateFrontend() {
     double delta = time.getDeltaTime();
+    assets->update();
     updateHotkeys();
     audio::update(delta);
     gui->activate(delta, window->getSize());
@@ -339,22 +316,23 @@ void Engine::updateFrontend() {
     gui->postActivate();
 }
 
-void Engine::nextFrame() {
-    window->setFramerate(
-        window->isIconified() && settings.display.limitFpsIconified.get()
-            ? 20
-            : settings.display.framerate.get()
-    );
-    window->swapBuffers();
-    input->pollEvents();
+void Engine::nextFrame(bool waitForRefresh) {
+    windowControl->nextFrame(waitForRefresh);
+}
+
+AssetsLoader& Engine::acquireBackgroundLoader() {
+    if (isHeadless()) {
+        throw std::runtime_error("Assets are not available in headless mode");
+    }
+    return assets->acquireBackgroundLoader();
 }
 
 EnginePaths& Engine::getPaths() {
-	return paths;
+	return *paths;
 }
 
 ResPaths& Engine::getResPaths() {
-    return paths.resPaths;
+    return paths->resPaths;
 }
 
 EngineSettings& Engine::getSettings() {
@@ -362,7 +340,14 @@ EngineSettings& Engine::getSettings() {
 }
 
 Assets* Engine::getAssets() {
-	return assets.get();
+	return assets ? assets->getStorage() : nullptr;
+}
+
+Assets& Engine::requireAssets() {
+    if (isHeadless()) {
+        throw std::runtime_error("Assets are not available in headless mode");
+    }
+    return *assets->getStorage();
 }
 
 EngineController* Engine::getController() {
@@ -373,7 +358,7 @@ void Engine::loadProject() {
     io::path projectFile = "project:project.toml";
     project = std::make_unique<Project>();
     project->deserialize(io::read_object(projectFile));
-    LOG_INFO("Loaded project {}", util::quote(project->name));
+    logger.info() << "Loaded project" << util::quote(project->name);
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
@@ -388,6 +373,7 @@ void Engine::setScreen(std::shared_ptr<Screen> screen) {
     if (this->screen) this->screen->onOpen();
     if (project->clientScript && this->screen) {
         project->clientScript->onScreenChange(this->screen->getName(), true);
+        window->setShouldRefresh();
     }
 }
 
@@ -400,41 +386,41 @@ SettingsHandler& Engine::getSettingsHandler() {
 }
 
 void Engine::saveSettings() {
-    LOG_INFO("Writing the settings to a file");
+    logger.info() << "Writing the settings to a file";
     io::write_string(EnginePaths::SETTINGS_FILE, toml::stringify(*settingsHandler));
-    LOG_INFO("The settings were successfully written to the file");
+    logger.info() << "The settings were successfully written to the file";
 
     if (!params.headless && input) {
-        LOG_INFO("Writing the controls to a file");
+        logger.info() << "Writing the controls to a file";
         io::write_string(EnginePaths::CONTROLS_FILE, input->getBindings().write());
-        LOG_INFO("The controls were successfully written to the file");
+        logger.info() << "The controls were successfully written to the file";
     }
 }
 
 void Engine::loadSettings() {
     io::path settings_file = EnginePaths::SETTINGS_FILE;
     if (io::is_regular_file(settings_file)) {
-        LOG_INFO("Reading the settings file");
+        logger.info() << "Reading the settings file";
         std::string text = io::read_string(settings_file);
         try {
             toml::parse(*settingsHandler, settings_file.string(), text);
         } catch (const parsing_error& err) {
-            LOG_ERROR("{}", err.errorLog());
+            logger.error() << err.errorLog();
             throw;
         }
-        LOG_INFO("The settings file has been successfully read");
+        logger.info() << "The settings file has been successfully read";
     }
 }
 
 void Engine::loadControls() {
     io::path controls_file = EnginePaths::CONTROLS_FILE;
     if (io::is_regular_file(controls_file)) {
-        LOG_INFO("Reading the controls file");
+        logger.info() << "Reading the controls file";
         std::string text = io::read_string(controls_file);
         input->getBindings().read(
             toml::parse(controls_file.string(), text), BindType::Bind
         );
-        LOG_INFO("The controls file has been successfully read");
+        logger.info() << "The controls file has been successfully read";
     }
 }
 
@@ -451,12 +437,12 @@ EngineTime& Engine::getTime() {
 }
 
 void Engine::onWorldOpen(std::unique_ptr<Level> level, int64_t localPlayer) {
-    LOG_INFO("World open");
+    logger.info() << "World open";
     levelConsumer(std::move(level), localPlayer);
 }
 
 void Engine::onWorldClosed() {
-    LOG_INFO("World closed");
+    logger.info() << "World closed";
     levelConsumer(nullptr, -1);
 }
 
@@ -481,6 +467,8 @@ ContentControl& Engine::getContentControl() {
 }
 
 void Engine::startPauseLoop() {
+    assert (network != nullptr);
+
     bool initialCursorLocked = false;
     if (!isHeadless()) {
         initialCursorLocked = input->isCursorLocked();
@@ -496,7 +484,7 @@ void Engine::startPauseLoop() {
         if (isHeadless()) {
             platform::sleep(1.0 / params.sps * 1000);
         } else {
-            nextFrame();
+            nextFrame(false);
         }
     }
     if (initialCursorLocked) {

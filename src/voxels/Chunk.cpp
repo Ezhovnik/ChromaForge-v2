@@ -13,7 +13,14 @@
 #include <util/data_io.h>
 
 // Конструктор
-Chunk::Chunk(int chunk_x, int chunk_z) : chunk_x(chunk_x), chunk_z(chunk_z) {
+Chunk::Chunk(
+    int chunk_x,
+    int chunk_z,
+    std::shared_ptr<Lightmap> lightmap
+) : chunk_x(chunk_x),
+    chunk_z(chunk_z),
+    lightmap(std::move(lightmap))
+{
     bottom = 0;
 	top = CHUNK_HEIGHT;
 }
@@ -48,21 +55,14 @@ std::shared_ptr<Inventory> Chunk::getBlockInventory(uint x, uint y, uint z) cons
 }
 
 void Chunk::removeBlockInventory(uint x, uint y, uint z) {
-	if (inventories.erase(vox_index(x, y, z))) flags.unsaved = true;
+	if (inventories.erase(vox_index(x, y, z))) {
+        flags.unsaved = true;
+        flags.inventoriesRemoved = true;
+    }
 }
 
 void Chunk::setBlockInventories(ChunkInventoriesMap map) {
 	inventories = std::move(map);
-}
-
-// Создает полную копию текущего чанка.
-std::unique_ptr<Chunk> Chunk::clone() const {
-	auto other = std::make_unique<Chunk>(chunk_x, chunk_z);
-	for (uint i = 0; i < CHUNK_VOLUME; ++i) {
-		other->voxels[i] = voxels[i];
-    }
-	other->lightmap.set(&lightmap);
-	return other;
 }
 
 std::unique_ptr<ubyte[]> Chunk::encode() const {

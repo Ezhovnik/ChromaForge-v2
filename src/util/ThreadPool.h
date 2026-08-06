@@ -8,6 +8,7 @@
 #include <functional>
 #include <condition_variable>
 #include <utility>
+#include <optional>
 
 #include <delegates.h>
 #include <debug/Logger.h>
@@ -81,13 +82,14 @@ namespace util {
 
         std::vector<std::unique_lock<std::mutex>> workersBlocked; ///< Вектор блокировок для управления паузой рабочих потоков
 
-        consumer<R&> resultConsumer; ///< Функция-потребитель для обработки готовых результатов
+        consumer<R&&> resultConsumer; ///< Функция-потребитель для обработки готовых результатов
         consumer<T&> onJobFailed = nullptr; ///< Колбэк при ошибке выполнения задания
         runnable onComplete = nullptr; ///< Колбэк при завершении всех заданий
 
         std::atomic<int> busyWorkers = 0; ///< Количество потоков, занятых обработкой заданий
         std::atomic<uint> jobsDone = 0; ///< Счётчик выполненных заданий
         std::atomic<bool> working = true; ///< Флаг активности пула
+        supplier<std::optional<T>> jobsSource = nullptr;
         bool failed = false; ///< Флаг наличия ошибки
         bool standaloneResults = true; ///< Режим обработки результатов: true — без ожидания, false — с блокировкой
         bool stopOnFail = true; ///< Останавливать пул при первой ошибке
@@ -97,7 +99,7 @@ namespace util {
          * @param index Индекс потока.
          * @param worker Умный указатель на экземпляр Worker, выполняющий обработку.
          */
-        void threadLoop(int index, std::shared_ptr<Worker<T, R>> worker) {
+        void threadLoop(int index, std::unique_ptr<Worker<T, R>> worker) {
             std::condition_variable variable;
             std::mutex mutex;
             bool locked = false;
@@ -118,7 +120,7 @@ namespace util {
                     R result = (*worker)(job);
                     {
                         std::lock_guard<std::mutex> lock(resultsMutex);
-                        results.push(ThreadPoolResult<T, R> {job, variable, index, locked, result});
+                        results.push(ThreadPoolResult<T, R> {job, variable, index, locked, std::move(result)});
                         if (!standaloneResults) locked = true;
                         busyWorkers--;
                     }
@@ -137,7 +139,7 @@ namespace util {
                         std::lock_guard<std::mutex> lock(jobsMutex);
                         failed = true;
                     }
-                    LOG_ERROR("['{}' Thread Pool] Uncaught exception: {}", name, err.what());
+                    debug::Logger::getInstance().error() << "['" << name << "' Thread Pool] Uncaught exception: " << err.what();
                 }
                 jobsDone++;
             }
@@ -158,8 +160,8 @@ namespace util {
          */
         ThreadPool(
             std::string name,
-            supplier<std::shared_ptr<Worker<T, R>>> workersSupplier, 
-            consumer<R&> resultConsumer,
+            supplier<std::unique_ptr<Worker<T, R>>> workersSupplier, 
+            consumer<R&&> resultConsumer,
             int maxWorkers=UNLIMITED
         ) : name(std::move(name)), resultConsumer(resultConsumer) {
             uint numThreads = std::thread::hardware_concurrency();
@@ -199,6 +201,10 @@ namespace util {
             return working;
         }
 
+        void setJobsSource(supplier<std::optional<T>>&& source) {
+            jobsSource = std::move(source);
+        }
+
         /**
          * @brief Принудительно завершает работу пула.
          *
@@ -236,23 +242,29 @@ namespace util {
          * Может выбросить исключение, если произошла ошибка и stopOnFail == true.
          */
         void update() override {
-            if (!working) return;
+            pullResults();
+        }
+
+        size_t pullResults(size_t maxResults = -1) {
+            if (!working) return 0;
 
             if (failed) {
-                THROW_ERR("['{}' Thread Pool] Some job failed", name);
+                throw std::runtime_error("['" + name + "' Thread Pool] Some job failed");
             }
 
             bool complete = false;
+            size_t resultsProcessed = 0;
             {
                 std::lock_guard<std::mutex> lock(resultsMutex);
-                while (!results.empty()) {
-                    ThreadPoolResult<T,R> entry = results.front();
+                while (!results.empty() && resultsProcessed < maxResults) {
+                    ThreadPoolResult<T, R> entry = std::move(results.front());
                     results.pop();
 
+                    ++resultsProcessed;
                     try {
-                        resultConsumer(entry.entry);
+                        resultConsumer(std::move(entry.entry));
                     } catch (std::exception& err) {
-                        LOG_ERROR("['{}' Thread Pool] {}", name, err.what());
+                        debug::Logger::getInstance().error() << "['" << name << "' Thread Pool] " << err.what();
                         if (onJobFailed) onJobFailed(entry.job);
                         if (stopOnFail) {
                             std::lock_guard<std::mutex> jobsLock(jobsMutex);
@@ -268,7 +280,7 @@ namespace util {
                     }
                 }
 
-                if (onComplete && busyWorkers == 0) {
+                if (onComplete && busyWorkers == 0 && results.empty()) {
                     std::lock_guard<std::mutex> jobsLock(jobsMutex);
                     if (jobs.empty()) {
                         onComplete();
@@ -276,17 +288,34 @@ namespace util {
                     }
                 }
             }
+            if (jobsSource) {
+                bool jobsAdded = false;
+                std::lock_guard<std::mutex> jobsLock(jobsMutex);
+                while (true) {
+                    auto job = jobsSource();
+                    if (job.has_value()) {
+                        jobs.push(std::move(job.value()));
+                        jobsAdded = true;
+                    } else {
+                        break;
+                    }
+                }
+                if (jobsAdded) {
+                    jobsMutexCondition.notify_one();
+                }
+            }
             if (failed) {
-                THROW_ERR("['{}' Thread Pool] Some job failed", name);
+                throw std::runtime_error("['" + name + "' Thread Pool] Some job failed");
             }
             if (complete) terminate();
+            return resultsProcessed;
         }
 
         /**
          * @brief Добавляет задание в очередь.
          * @param job Умный указатель на задание.
          */
-        void enqueueJob(T job) {
+        void enqueueJob(T&& job) {
             {
                 std::lock_guard<std::mutex> lock(jobsMutex);
                 jobs.push(std::move(job));

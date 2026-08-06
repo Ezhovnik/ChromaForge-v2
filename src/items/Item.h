@@ -18,6 +18,9 @@ struct ItemFuncsSet {
     bool on_block_break_by: 1;
 };
 
+struct ItemFuncNamesCache {
+};
+
 enum class ItemIconType {
     None,
     Sprite,
@@ -37,7 +40,7 @@ struct Item {
 
     std::string caption;
 
-    std::string description;
+    std::string description = "";
 
     dv::value properties = nullptr;
 
@@ -54,7 +57,7 @@ struct Item {
     std::string icon = "blocks:notfound";
 
     std::string placingBlock = BUILTIN_AIR;
-    std::string scriptName = name.substr(name.find(':') + 1);
+    std::string scriptName;
     std::string scriptFile;
 
     std::string modelName = name + ".model";
@@ -68,6 +71,7 @@ struct Item {
         bool emissive = false;
 
         std::set<int> tags;
+        ItemFuncNamesCache eventNames;
     } rt {};
 
     Item(const std::string& name);

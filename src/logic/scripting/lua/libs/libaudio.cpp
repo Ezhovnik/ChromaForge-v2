@@ -3,6 +3,7 @@
 #include <audio/audio.h>
 #include <engine/Engine.h>
 #include <assets/Assets.h>
+#include <engine/EnginePaths.h>
 
 inline const char* DEFAULT_CHANNEL = "regular";
 
@@ -339,6 +340,44 @@ static int l_audio_fetch_input(lua::State* L) {
     return lua::create_bytearray(L, std::move(bytes));
 }
 
+static int l_audio_get_input_devices_names(lua::State* L) {
+    auto device_names = audio::get_input_devices_names();
+    lua::createtable(L, device_names.size(), 0);
+    int index = 1;
+    for (const auto& name : device_names) {
+        lua::pushstring(L, name.c_str());
+        lua::rawseti(L, index++);
+    }
+    return 1;
+}
+
+static int l_audio_get_output_devices_names(lua::State* L) {
+    auto device_names = audio::get_output_devices_names();
+    lua::createtable(L, device_names.size(), 0);
+    int index = 1;
+    for (const auto& name : device_names) {
+        lua::pushstring(L, name.c_str());
+        lua::rawseti(L, index++);
+    }
+    return 1;
+}
+
+static int l_audio_get_input_info(lua::State* L) {
+    auto device = audio::get_input_device();
+    if (device == nullptr) return 0;
+
+    lua::createtable(L, 0, 4);
+    lua::pushlstring(L, device->getDeviceSpecifier());
+    lua::setfield(L, "device_specifier");
+    lua::pushinteger(L, device->getChannels());
+    lua::setfield(L, "channels");
+    lua::pushinteger(L, device->getSampleRate());
+    lua::setfield(L, "sample_rate");
+    lua::pushinteger(L, device->getBitsPerSample());
+    lua::setfield(L, "bits_per_sample");
+    return 1;
+}
+
 const luaL_Reg audiolib [] = {
     {"play_sound", lua::wrap<l_audio_play_sound>},
     {"play_sound_2d", lua::wrap<l_audio_play_sound_2d>},
@@ -364,6 +403,9 @@ const luaL_Reg audiolib [] = {
     {"get_velocity", lua::wrap<l_audio_get_velocity>},
     {"count_speakers", lua::wrap<l_audio_count_speakers>},
     {"count_streams", lua::wrap<l_audio_count_streams>},
-    {"fetch_input", lua::wrap<l_audio_fetch_input>},
+    {"__fetch_input", lua::wrap<l_audio_fetch_input>},
+    {"__get_input_devices_names", lua::wrap<l_audio_get_input_devices_names>},
+    {"__get_output_devices_names", lua::wrap<l_audio_get_output_devices_names>},
+    {"__get_input_info", lua::wrap<l_audio_get_input_info>},
     {nullptr, nullptr}
 };

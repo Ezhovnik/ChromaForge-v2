@@ -224,7 +224,9 @@ public:
                     const auto& string = value.asString();
                     auto& enumname = arg->enumname;
                     if (enumname.find("|" + string + "|") == std::string::npos) {
-                        throw error("Argument " + util::quote(arg->name) + ": invalid enumeration value");
+                        throw error(
+                            "Argument " + util::quote(arg->name) + ": invalid enumeration value"
+                        );
                     }
                 } else {
                     if (arg->optional) return false;
@@ -244,7 +246,12 @@ public:
             case ArgType::Selector:
                 return selectorCheck(arg, value);
             case ArgType::Integer:
-                return typeCheck(arg, dv::value_type::Integer, value, "integer");
+                return typeCheck(
+                    arg,
+                    dv::value_type::Integer,
+                    value,
+                    "integer"
+                );
             case ArgType::Boolean:
                 if (!arg->optional && !value.isBoolean()) {
                     throw typeError(arg->name, "boolean", value);
@@ -318,7 +325,9 @@ public:
         auto repo = interpreter->getRepository();
         std::string name = parseIdentifier(true);
         auto command = repo->get(name);
-        if (command == nullptr) throw error("Unknown command " + util::quote(name));
+        if (command == nullptr) {
+            throw error("Unknown command " + util::quote(name));
+        }
         auto args = dv::list();
         auto kwargs = dv::object();
 
@@ -390,8 +399,14 @@ public:
     }
 };
 
-Command Command::create(std::string_view scheme, std::string_view description, executor_func executor) {
-    return CommandParser("[string]", scheme).parseScheme(std::move(executor), description);
+Command Command::create(
+    std::string_view scheme,
+    std::string_view description,
+    executor_func executor
+) {
+    return CommandParser(
+        "[string]", scheme
+    ).parseScheme(std::move(executor), description);
 }
 
 void CommandsRepository::add(
@@ -399,7 +414,11 @@ void CommandsRepository::add(
     std::string_view description, 
     executor_func executor
 ) {
-    Command command = Command::create(scheme, description, std::move(executor));
+    Command command = Command::create(
+        scheme,
+        description,
+        std::move(executor)
+    );
     commands[command.getName()] = command;
 }
 

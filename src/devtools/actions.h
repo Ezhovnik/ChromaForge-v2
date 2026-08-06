@@ -110,7 +110,7 @@ public:
 
         n = std::min(n, static_cast<ptrdiff_t>(actionPtr));
         std::vector<std::unique_ptr<Action>> squashing;
-        for (size_t i = actionPtr - n; i < actionPtr; i++) {
+        for (size_t i = actionPtr - n; i < actionPtr; ++i) {
             squashing.emplace_back(std::move(actions[i]));
         }
         actions.erase(actions.begin() + actionPtr - n, actions.end());

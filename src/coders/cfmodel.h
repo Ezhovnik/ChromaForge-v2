@@ -2,13 +2,22 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <optional>
 
-namespace model {
-    struct Model;
-}
+#include <graphics/commons/Model.h>
+#include <objects/rigging.h>
 
 namespace cfmodel {
-    std::unique_ptr<model::Model> parse(
+    struct CFModel {
+        std::unordered_map<std::string, model::Model> parts;
+        std::optional<rigging::SkeletonConfig> skeleton;
+
+        model::Model& squash();
+        model::Model squashed() const;
+    };
+
+    CFModel parse(
         std::string_view file,
         std::string_view src,
         bool usexml

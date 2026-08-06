@@ -53,6 +53,13 @@ table.shuffle(t: table) -> table
 Перемешивает значения в таблице.
 
 ```lua
+table.insert_unique(t: table, val: any)
+table.insert_unique(t: table, pos: number, val: any)
+```
+
+Добавляет значение в таблицу, только если его там не было.
+
+```lua
 table.tostring(t: table) -> string
 ```
 
@@ -137,6 +144,12 @@ string.escape(str: string) -> string
 ```
 
 Экранирует строку. Является псевдонимом `utf8.escape`.
+
+```lua
+string.escape_xml(text: str) -> str
+```
+
+Экранирует спец-символы XML. Является псевдонимом `utf8.escape_xml`.
 
 ## Расширения для math
 

@@ -13,8 +13,10 @@
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 #include <io/io.h>
-#include <io/engine_paths.h>
+#include <engine/EnginePaths.h>
 #include <engine/Engine.h>
+
+static debug::Logger logger("lua-engine");
 
 static lua::State* main_thread = nullptr;
 
@@ -64,6 +66,8 @@ static void create_libs(State* L, StateType stateType) {
 
     if (stateType == StateType::Script) {
         openlib(L, "app", applib);
+        lua::getglobal(L, "app");
+        lua::setglobal(L, "__chroma_app");
     } else if (stateType == StateType::Base) {
         openlib(L, "__chroma_app", applib);
     }
@@ -134,12 +138,11 @@ void lua::init_state(State* L, StateType stateType) {
     newusertype<LuaHeightmap>(L);
     newusertype<LuaVoxelFragment>(L);
     newusertype<LuaCanvas>(L);
-    newusertype<LuaPCMStream>(L);
 }
 
 void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
-    LOG_INFO("Lua version: {}", LUA_VERSION);
-    LOG_INFO("LuaJIT version: {}", LUAJIT_VERSION);
+    logger.info() << "Lua version: " << LUA_VERSION;
+    logger.info() << "LuaJIT version: " << LUAJIT_VERSION;
 
     main_thread = create_state(
         paths, params.headless ? StateType::Script : StateType::Base
@@ -172,7 +175,7 @@ lua::State* lua::get_main_state() {
 State* lua::create_state(const EnginePaths& paths, StateType stateType) {
     auto L = luaL_newstate();
     if (L == nullptr) {
-        LOG_ERROR("Could not initialize Lua state");
+        logger.error() << "Could not initialize Lua state";
         throw luaerror("Could not initialize Lua state");
     }
     init_state(L, stateType);
@@ -187,6 +190,19 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
             setfield(L, "Random");
         }
         pop(L);
+    }
+
+    newusertype<LuaPCMStream>(L);
+    if (getglobal(L, "audio")) {
+        if (getglobal(L, "__chroma_PCMStream")) {
+            setfield(L, "PCMStream");
+        }
+        pop(L);
+    }
+
+    if (stateType == StateType::Generator) {
+        pushnil(L);
+        setglobal(L, "ffi");
     }
 
     return L;

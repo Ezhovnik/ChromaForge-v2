@@ -14,6 +14,9 @@
 #include <util/stringutil.h>
 #include <presets/ParticlesPreset.h>
 #include <voxels/Block.h>
+#include <constants.h>
+
+static debug::Logger logger("blocks-loader");
 
 static void perform_user_block_fields(
     const std::string& blockName, data::StructLayout& layout
@@ -23,11 +26,11 @@ static void perform_user_block_fields(
             " fields total size exceeds limit (" + 
             std::to_string(layout.size()) + "/" +
             std::to_string(MAX_USER_BLOCK_FIELDS_SIZE) + ")";
-        THROW_ERR("{}", errorLog);
+        throw std::runtime_error(errorLog);
     }
     for (const auto& field : layout) {
         if (field.name.at(0) == '.') {
-            THROW_ERR("{}", util::quote(blockName) + " field " + field.name + ": user field may not start with '.'");
+            throw std::runtime_error(util::quote(blockName) + " field " + field.name + ": user field may not start with '.'");
         }
     }
 
@@ -60,17 +63,17 @@ static void load_variant(
             if (root.has("model-primitives")) {
                 model.customRaw = root["model-primitives"];
             } else if (model.name.empty()) {
-                THROW_ERR("Block {}: no 'model-primitives' or 'model-name' found", name);
+                throw std::runtime_error("Block " + name + ": no 'model-primitives' or 'model-name' found");
             }
         }
     } else if (!modelTypeName.empty()) {
-        LOG_WARN("Block {}: unknown model — {}", name, modelTypeName);
+        logger.warning() << "Block " << name << ": unknown model — " << modelTypeName;
         model.type = BlockModelType::None;
     }
     std::string cullingModeName = CullingModeMeta.getNameString(variant.culling);
     root.at("culling").get(cullingModeName);
     if (!CullingModeMeta.getItem(cullingModeName, variant.culling)) {
-        LOG_WARN("Block {}: unknown culling mode — {}", name, cullingModeName);
+        logger.warning() << "Block " << name << ": unknown culling mode — " << cullingModeName;
     }
     root.at("draw-group").get(variant.drawGroup);
 }
@@ -87,7 +90,7 @@ template<> void ContentUnitLoader<Block>::loadUnit(
         const auto& parentName = root["parent"].asString();
         auto parentDef = builder.get(parentName);
         if (parentDef == nullptr) {
-            THROW_ERR("Failed to find parent ({}) for {}", parentName, name);
+            throw std::runtime_error("Failed to find parent (" + parentName + ") for " + name);
         }
         parentDef->cloneTo(def);
     }
@@ -105,12 +108,12 @@ template<> void ContentUnitLoader<Block>::loadUnit(
             stateBased.at("offset").get(offset);
             stateBased.at("bits").get(bitsCount);
             if (offset < 0 || bitsCount <= 0 || offset + bitsCount > 8) {
-                THROW_ERR("Block {}: Invalid state-based bits configuration", name);
+                throw std::runtime_error("Block " + name + ": Invalid state-based bits configuration");
             }
 
             def.variants = std::make_unique<Variants>();
-            def.variants->offset = 0;
-            def.variants->mask = 0xF;
+            def.variants->offset = offset;
+            def.variants->mask = (1ULL << bitsCount) - 1;
             def.variants->variants.push_back(def.defaults);
             for (int i = 0; i < variants.size(); ++i) {
                 Variant variant = def.defaults;
@@ -136,7 +139,7 @@ template<> void ContentUnitLoader<Block>::loadUnit(
     } else if (profile == BlockRotProfile::STAIRS_NAME) {
         def.rotations = BlockRotProfile::STAIRS;
     } else if (profile != "none") {
-        LOG_WARN("Block {}: unknown rotation profile — {}", name, profile);
+        logger.warning() << "Block " << name << ": unknown rotation profile — " << profile;
         def.rotatable = false;
     }
 
@@ -180,11 +183,30 @@ template<> void ContentUnitLoader<Block>::loadUnit(
         def.size.y = sizearr[1].asInteger();
         def.size.z = sizearr[2].asInteger();
         if (def.size.x < 1 || def.size.y < 1 || def.size.z < 1) {
-            THROW_ERR("Block {}: invalid block size", name);
+            throw std::runtime_error("Block " + name + ": invalid block size");
         }
+
+        if (def.size.x > EXTENDED_BLOCK_LIMIT ||
+            def.size.y > EXTENDED_BLOCK_LIMIT ||
+            def.size.z > EXTENDED_BLOCK_LIMIT
+        ) {
+            throw std::runtime_error(
+                "Extended block " + util::quote(def.name) + " size limit " +
+                std::to_string(EXTENDED_BLOCK_LIMIT) + " exceeded"
+            );
+        }
+
         if (def.defaults.model.type == BlockModelType::Cube && (def.size.x != 1 || def.size.y != 1 || def.size.z != 1)) {
             def.defaults.model.type = BlockModelType::AABB;
             def.hitboxes = {AABB(def.size)};
+        }
+
+        if (root.has("grounding-behaviour")) {
+            std::string groundingBehaviourName = GroundingBehaviourMeta.getNameString(def.groundingBehaviour);
+            root.at("grounding-behaviour").get(groundingBehaviourName);
+            if (!GroundingBehaviourMeta.getItem(groundingBehaviourName, def.groundingBehaviour)) {
+                logger.warning() << "Block " << name << ": unknown grounding behaviour — " << groundingBehaviourName;
+            }
         }
     }
 
@@ -206,6 +228,7 @@ template<> void ContentUnitLoader<Block>::loadUnit(
     root.at("spark-interval").get(def.sparkInterval);
     root.at("overlay-texture").get(def.overlayTexture);
     root.at("translucent").get(def.translucent);
+    root.at("solid").get(def.explictlySolid);
 
     if (root.has("fields")) {
         def.dataStruct = std::make_unique<data::StructLayout>();
@@ -226,5 +249,7 @@ template<> void ContentUnitLoader<Block>::loadUnit(
     if (def.hidden && def.pickingItem == def.name + BLOCK_ITEM_SUFFIX) {
         def.pickingItem = BUILTIN_EMPTY;
     }
-    def.scriptFile = pack.id + ":scripts/" + def.scriptName + ".lua";
+    if (root.has("script-name") || def.scriptFile.empty()) {
+        def.scriptFile = pack.id + ":scripts/" + def.scriptName + ".lua";
+    }
 }

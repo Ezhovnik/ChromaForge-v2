@@ -17,13 +17,19 @@ HandsRenderer::HandsRenderer(
     modelBatch(modelBatch),
     skeleton(std::move(skeleton)) {}
 
-void HandsRenderer::renderHands(
-    const Camera& camera, float delta
+void HandsRenderer::render(
+    const Camera& camera
 ) {
     auto& skeleton = *this->skeleton;
     const auto& config = *skeleton.config;
 
     modelBatch.setLightsOffset(camera.position);
-    config.update(skeleton, glm::mat4(1.0f), glm::vec3());
-    config.render(assets, modelBatch, skeleton, glm::mat3(1.0f), glm::vec3());
+    config.render(
+        assets,
+        modelBatch,
+        skeleton,
+        glm::mat3(1.0f),
+        glm::vec3(),
+        glm::vec3(1.0f)
+    );
 }

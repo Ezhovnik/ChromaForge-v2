@@ -1,13 +1,5 @@
 function run_script(path)
-    debug.info("Starting application script "..path)
-
-    local code = file.read(path)
-    local chunk, err = loadstring(code, path)
-    if chunk == nil then
-        error(err)
-    end
-    setfenv(chunk, setmetatable({app=__chroma_app}, {__index=_G}))
-    start_coroutine(chunk, path)
+    __chroma_start_app_script(path, path)
 end
 
 function refresh()

@@ -11,43 +11,61 @@
 
 class GlobalChunks;
 class Block;
+class Entities;
 struct blockstate;
 
 // Класс для решения физических взаимодействий объектов с воксельным миром.
 class PhysicsSolver {
-private:
-	glm::vec3 gravity; // Вектор гравитации, применяемой к объектам
-	std::vector<Sensor*> sensors;
 public:
-	PhysicsSolver(glm::vec3 gravity); // Конструтор
+    PhysicsSolver(const GlobalChunks& chunks, glm::vec3 gravity);
 
-	void step(
-		const GlobalChunks& chunks,
-		Hitbox& hitbox,
-		float delta,
-		uint substeps,
-        entityid_t entity
-	); // Выполняет один шаг физического моделирования для указанного хитбокса.
+    void step(
+        const GlobalChunks& chunks,
+        float delta,
+        uint substeps
+    );
 
-	void colisionCalc(
-		const GlobalChunks& chunks,
-		Hitbox& hitbox,
-		glm::vec3& vel,
-		glm::vec3& pos,
-		const glm::vec3 half,
-		float stepHeight
-	);
-    bool isBlockInside(int x, int y, int z, Hitbox* hitbox); // Проверяет, находится ли указанный блок внутри границ хитбокса.
-	bool isBlockInside(
-		int x, int y, int z,
-		Block* def,
-		blockstate state,
-		Hitbox* hitbox
-	);
-
-	void setSensors(std::vector<Sensor*> sensors) {
-        this->sensors = std::move(sensors);
+    auto& getSensorsWriteable() {
+        return sensors;
     }
 
-	void removeSensor(Sensor* sensor);
+    auto& getSolidHitboxesWriteable() {
+        return solidHitboxes;
+    }
+
+    auto& getHitboxesWriteable() {
+        return hitboxes;
+    }
+
+    void removeSensor(Sensor* sensor);
+private:
+    const GlobalChunks& chunks;
+    glm::vec3 gravity;
+    std::vector<Sensor*> sensors;
+    std::vector<Hitbox*> solidHitboxes;
+    std::vector<Hitbox*> hitboxes;
+
+    void calcCollisions(
+        Hitbox& hitbox,
+        glm::vec3& vel,
+        glm::vec3& pos,
+        const glm::vec3& half,
+        float stepHeight,
+        float dt
+    );
+
+    void calcSubstep(
+        Hitbox& hitbox,
+        glm::vec3& vel,
+        glm::vec3& pos,
+        float dt
+    );
+
+    bool calcCollisionNegY(
+        Hitbox& hitbox,
+        const glm::vec3& half,
+        float dt
+    );
+
+    void updateSensors(Hitbox& hitbox);
 };

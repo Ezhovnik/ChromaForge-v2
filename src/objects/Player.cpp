@@ -18,6 +18,10 @@
 #include <data/dv_util.h>
 #include <debug/Logger.h>
 #include <objects/Entt_Entity.h>
+#include <world/World.h>
+#include <world/generator/Generator.h>
+
+static debug::Logger logger("player");
 
 namespace PlayerConsts {
 	constexpr int SPAWN_ATTEMPTS_PER_UPDATE = 64;
@@ -37,19 +41,21 @@ Player::Player(
 	speed(speed),
 	chosenSlot(0),
 	position(position),
+    inventory(std::move(inventory)),
+    eid(eid),
 	chunks(std::make_unique<Chunks>(
         3, 3, 0, 0, level.events.get(), *level.content.getIndices()
     )),
 	fpCamera(level.getCamera(BUILTIN_CONTENT_NAMESPACE + ":first-person")),
     spCamera(level.getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-front")),
     tpCamera(level.getCamera(BUILTIN_CONTENT_NAMESPACE + ":third-person-back")),
-	currentCamera(fpCamera),
-	inventory(std::move(inventory)),
-	eid(eid)
+    currentCamera(fpCamera)
 {
 	fpCamera->setFov(glm::radians(90.0f));
     spCamera->setFov(glm::radians(90.0f));
     tpCamera->setFov(glm::radians(90.0f));
+
+    random.setSeed((id << 8) ^ 34076213);
 }
 
 Player::~Player() = default;
@@ -71,7 +77,7 @@ void Player::updateEntity() {
             entity->setPlayer(id);
         }
     } else if (chunks->getChunkByVoxel(position) && eid != ENTITY_NONE) {
-        LOG_WARN("Player entity despawned or deleted; will be respawned");
+        logger.warning() << "Player entity despawned or deleted; will be respawned";
         eid = ENTITY_AUTO;
     }
 }
@@ -95,20 +101,21 @@ void Player::postUpdate() {
     }
 
 	// Если точка возрождения не задана, пытаемся найти её
-	if (spawnpoint.y <= 0.1) {
-		for (int i = 0; i < PlayerConsts::SPAWN_ATTEMPTS_PER_UPDATE; ++i) {
-            attemptToFindSpawnpoint();
-        }
+	for (int i = 0; i < PlayerConsts::SPAWN_ATTEMPTS_PER_UPDATE && std::isnan(spawnpoint.x); ++i) {
+        attemptToChooseSpawnpoint();
 	}
 }
 
-void Player::attemptToFindSpawnpoint() {
-	// Генерируем случайную позицию в окрестности текущей
-	glm::vec3 newpos {
-		position.x + (util::RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100), // TODO: Replace util::RandomGenerator to other
-		util::RandomGenerator::get<int>(0, RAND_MAX) % 80 + 100, 
-		position.z + (util::RandomGenerator::get<int>(0, RAND_MAX) % 200 - 100)
-	};
+void Player::attemptToChooseSpawnpoint() {
+    const auto& generatorDef = level.content.generators.require(level.getWorld()->getGenerator());
+
+    int minHeight = generatorDef.playerMinSpawnHeight;
+    int maxHeight = generatorDef.playerMaxSpawnHeight;
+    glm::vec3 newpos {0.0f, random.randFloat() * (maxHeight - minHeight + 1) + minHeight, 0.0f};
+    double angle = random.randDouble() * glm::two_pi<double>();
+    double radius = glm::sqrt(random.randDouble());
+    newpos.x += glm::cos(angle) * generatorDef.playerSpawnRadius * radius;
+    newpos.z += glm::sin(angle) * generatorDef.playerSpawnRadius * radius;
 
 	// Опускаемся вниз, пока не найдём твёрдый блок под ногами
 	while (newpos.y > 0 && !chunks->isObstacleBlock(newpos.x, newpos.y - 2, newpos.z)) {
@@ -202,7 +209,7 @@ void Player::convert(dv::value& data, const ContentReport* report) {
 void Player::teleport(glm::vec3 position) {
     this->position = position;
     if (auto entity = level.entities->get(eid)) {
-        entity->getRigidbody().hitbox.position = position;
+        entity->getRigidbody().hitbox.setPos(position);
         entity->getTransform().setPos(position);
         entity->setInterpolatedPosition(position);
     }
@@ -322,4 +329,10 @@ glm::vec3 Player::getRotation(bool interpolated) const {
 void Player::setRotation(const glm::vec3& rotation) {
     this->rotation = rotation;
     rotationInterpolation.refresh(rotation);
+}
+
+bool Player::isCurrentCameraBuiltin() const {
+    return currentCamera.get() == fpCamera.get() ||
+        currentCamera.get() == spCamera.get() ||
+        currentCamera.get() == tpCamera.get();
 }

@@ -12,13 +12,18 @@
 #include <debug/Logger.h>
 #include <util/stringutil.h>
 
+static debug::Logger logger("network");
+
 using namespace network;
 
 namespace network {
     std::unique_ptr<Requests> create_curl_requests();
 
     std::shared_ptr<TcpConnection> connect_tcp(
-        const std::string& address, int port, runnable callback
+        const std::string& address,
+        int port,
+        runnable callback,
+        stringconsumer errorCallback
     );
 
     std::shared_ptr<TcpServer> open_tcp_server(
@@ -39,8 +44,9 @@ namespace network {
         int port,
         const ServerDatagramCallback& handler
     );
-}
 
+    int find_free_port();
+}
 
 Network::Network(std::unique_ptr<Requests> requests) : requests(std::move(requests)) {
 }
@@ -88,11 +94,22 @@ Server* Network::getServer(uint64_t id, bool includePrivate) const {
     return found->second.get();
 }
 
-uint64_t Network::connectTcp(const std::string& address, int port, consumer<uint64_t> callback) {
+int Network::findFreePort() const {
+    return find_free_port();
+}
+
+uint64_t Network::connectTcp(
+    const std::string& address,
+    int port,
+    consumer<uint64_t> callback,
+    ConnectErrorCallback errorCallback
+) {
     std::lock_guard lock(connectionsMutex);
     uint64_t id = nextConnection++;
     auto socket = connect_tcp(address, port, [id, callback]() {
         callback(id);
+    }, [id, errorCallback](auto errorMessage) {
+        errorCallback(id, errorMessage);
     });
     connections[id] = std::move(socket);
     return id;
@@ -179,5 +196,6 @@ void Network::update() {
 }
 
 std::unique_ptr<Network> Network::create(const NetworkSettings& settings) {
+    logger.info() << "Initializing network";
     return std::make_unique<Network>(network::create_curl_requests());
 }

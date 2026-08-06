@@ -1,6 +1,6 @@
 local function configure_SSAO()
     -- A temporary slot for configuring the built-in SSAO effect
-    local slot = gfx.posteffects.index("builtin:default")
+    local slot = gfx.posteffects.index("builtin:ssao")
     gfx.posteffects.set_effect(slot, "ssao")
 
     local buffer = Bytearray(0)
@@ -17,6 +17,18 @@ local function configure_SSAO()
         Bytearray.append(buffer, byteutil.pack("fff", x, y, z))
     end
     gfx.posteffects.set_array(slot, "u_ssaoSamples", Bytearray_as_string(buffer))
+
+    local function update_ssao_quality(value)
+        value = math.min(value, 3)
+        gfx.posteffects.set_params(slot, {
+            u_kernelSize = value * 16,
+            u_radius = 0.4 / value,
+            u_bias = 0.006 / value / value,
+        })
+    end
+    events.on("builtin:setting.graphics.ssao.set", update_ssao_quality)
+
+    update_ssao_quality(__chroma_app.get_setting("graphics.ssao"))
 end
 
 local function update_hand()
@@ -51,8 +63,6 @@ local function update_hand()
     skeleton.set_matrix("hand", bone, mat)
     skeleton.set_model("hand", bone, item.model_name(itemid))
 end
-
-local stream
 
 function on_hud_open()
     input.add_callback("player.pick", function ()
@@ -113,18 +123,8 @@ function on_hud_open()
     end)
 
     configure_SSAO()
+
     hud.default_hand_controller = update_hand
-
-    stream = PCMStream(44100, 1, 16)
-    stream:share("test-stream")
-    local bytes = Bytearray(44100 / 8)
-    for i=1, #bytes do
-        local x = math.sin(i * 0.08) * 1 + 0
-        bytes[i] = x
-    end
-    stream:feed(bytes)
-
-    audio.play_stream_2d("test-stream", 2.0, 1.0, "ui")
 end
 
 function on_hud_render()
@@ -133,7 +133,4 @@ function on_hud_render()
     else
         update_hand()
     end
-
-    local bytes = audio.fetch_input()
-    stream:feed(bytes)
 end

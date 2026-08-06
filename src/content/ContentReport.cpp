@@ -20,8 +20,9 @@ ContentReport::ContentReport(
     items(itemsCount, indices->items, ITEM_VOID, ContentType::Item),
     regionsVersion(regionsVersion) {}
 
-template<class T> static constexpr size_t get_entries_count(
-    const ContentUnitIndices<T>& indices, const dv::value& list
+template<class T, typename IdType>
+static constexpr size_t get_entries_count(
+    const ContentUnitIndices<T, IdType>& indices, const dv::value& list
 ) {
     return list != nullptr 
         ? std::max(list.size(), indices.count()) 

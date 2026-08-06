@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 
 #include <typedefs.h>
+#include <constants.h>
 #include <math/Heightmap.h>
 #include <world/generator/StructurePlacement.h>
 
@@ -149,6 +150,10 @@ struct Generator {
 
     InterpolationType biomesInterpolation = InterpolationType::Linear;
     InterpolationType heightsInterpolation = InterpolationType::Linear;
+
+    float playerSpawnRadius = DEFAULT_PLAYER_SPAWN_RADIUS;
+    int playerMinSpawnHeight = CHUNK_HEIGHT / 4;
+    int playerMaxSpawnHeight = CHUNK_HEIGHT;
 
     std::vector<uint8_t> heightmapInputs;
 
