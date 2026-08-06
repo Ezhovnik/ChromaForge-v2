@@ -341,23 +341,7 @@ function gui.template(name, params)
     return text
 end
 
-session = {
-    entries={}
-}
-
-function session.get_entry(name)
-    local entry = session.entries[name]
-    if entry == nil then
-        entry = {}
-        session.entries[name] = entry
-    end
-    return entry
-end
-
-function session.reset_entry(name)
-    session.entries[name] = nil
-end
-
+session = require "builtin:internal/session"
 stdcomp = require "builtin:internal/stdcomp"
 entities.get = stdcomp.get_Entity
 entities.get_all = function(uids)
