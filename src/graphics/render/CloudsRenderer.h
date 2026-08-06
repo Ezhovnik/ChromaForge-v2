@@ -8,7 +8,7 @@
 
 class ShaderProgram;
 class Camera;
-class Weather;
+struct Weather;
 class Frustum;
 
 class CloudsRenderer final {
