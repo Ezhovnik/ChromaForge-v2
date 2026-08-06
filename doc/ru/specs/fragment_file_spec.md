@@ -2,7 +2,7 @@
 
 Текущая версия: 1.
 
-Файл фрагмента — это [файл vcbjson](binary_json_spec.md).
+Файл фрагмента — это [файл cfbjson](binary_json_spec.md).
 
 Представление схемы JSON на языке [Orderly](https://orderly-json.org/docs/):
 
