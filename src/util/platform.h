@@ -39,4 +39,6 @@ namespace platform {
     void sleep(size_t millis);
 
     int get_process_id();
+
+    bool stdin_has_data();
 }

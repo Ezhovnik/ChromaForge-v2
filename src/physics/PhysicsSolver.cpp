@@ -14,12 +14,32 @@
 
 namespace PhysicsSolver_Consts {
     inline constexpr float EPS = 0.03f; // Маленькое значение
-    inline constexpr float MAX_FIX = 0.15f;
+    inline constexpr float MAX_FIX = 0.1f;
 }
 
 static debug::Logger logger("physics-solver");
 
-PhysicsSolver::PhysicsSolver(glm::vec3 gravity) : gravity(std::move(gravity)) {}
+PhysicsSolver::PhysicsSolver(
+    const GlobalChunks& chunks,
+    glm::vec3 gravity
+) : chunks(chunks),
+    gravity(std::move(gravity)) {}
+
+static glm::vec3 calc_collsion_velocity_result(
+    const Hitbox& a, const Hitbox& b
+) {
+    const auto& vA = a.velocity;
+    const auto& vB = b.velocity;
+    if (glm::isinf(a.mass)) {
+        return vA;
+    }
+    if (glm::isinf(b.mass)) {
+        return vB - a.elasticity * (vA - vB);
+    }
+    const auto& mA = a.mass;
+    const auto& mB = b.mass;
+    return (mA * vA + mB * vB + a.elasticity * mB * (vB - vA)) / (mA + mB);
+}
 
 static float calc_step_height(
     const GlobalChunks& chunks, 
@@ -30,14 +50,15 @@ static float calc_step_height(
     AABB aabb(-half, +half);
     aabb.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 2, 1.0f, 1.0f - PhysicsSolver_Consts::EPS * 2));
     aabb = aabb + pos + glm::vec3(0.0f, stepHeight, 0.0f);
-    if (stepHeight > 0.0f) {
-        for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
-            float x = (pos.x - half.x) + ix;
-            for (int iz = 0; iz <= glm::ceil((half.z - PhysicsSolver_Consts::EPS) * 2); ++iz) {
-                float z = (pos.z - half.z) + iz;
-                if (chunks.isObstacleAt(x, pos.y + half.y + stepHeight, z, aabb)) {
-                    return 0.0f;
-                }
+    if (stepHeight <= 0.0f) {
+        return stepHeight;
+    }
+    for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
+        float x = (pos.x - half.x) + ix;
+        for (int iz = 0; iz <= glm::ceil((half.z - PhysicsSolver_Consts::EPS) * 2); ++iz) {
+            float z = (pos.z - half.z) + iz;
+            if (chunks.isObstacleAt(x, pos.y + half.y + stepHeight, z, aabb)) {
+                return 0.0f;
             }
         }
     }
@@ -82,8 +103,11 @@ static void calc_collision(
             continue;
         }
         if ((pos[nx] - newx) * sign > 0.0f && glm::abs(pos[nx] - newx) < PhysicsSolver_Consts::MAX_FIX) {
-            if (vel[nx] * sign > 0.0f) {
-                vel[nx] = 0.0f;
+            auto velA = calc_collsion_velocity_result(hitbox, *box);
+            auto velB = calc_collsion_velocity_result(*box, hitbox);
+            if ((vel[nx] - box->velocity[nx]) * sign > 0.0f) {
+                vel[nx] = velA[nx];
+                box->velocity[nx] = velB[nx];
             }
             pos[nx] = newx;
         }
@@ -110,7 +134,7 @@ static void calc_collision(
                 float newx = std::floor(coord[nx]) - half[nx] * sign +
                             (sign > 0 ? obstacle->min() : obstacle->max())[nx];
                 if ((pos[nx] - newx) * sign > 0.0f && glm::abs(pos[nx] - newx) < PhysicsSolver_Consts::MAX_FIX) {
-                    vel[nx] = 0.0f;
+                    vel[nx] = -hitbox.elasticity * vel[nx];
                     pos[nx] = newx;
                 }
                 return;
@@ -119,11 +143,10 @@ static void calc_collision(
     }
 }
 
-static bool calc_collision_neg_y(
+bool PhysicsSolver::calcCollisionNegY(
     Hitbox& hitbox,
-    const GlobalChunks& chunks,
-    const std::vector<Hitbox*>& solidHitboxes,
-    const glm::vec3& half
+    const glm::vec3& half,
+    float dt
 ) {
     auto& pos = hitbox.position;
     auto& vel = hitbox.velocity;
@@ -144,13 +167,15 @@ static bool calc_collision_neg_y(
             if (pos.y < newy && glm::abs(pos.y - newy) < boxhalf.y) {
                 pos.y = newy;
             }
-            if (glm::abs(box->delta) > 1e-5f) {
-                hitbox.groundVelocity =
-                    (box->position - box->prevPosition) / box->delta;
-            }
-            if (vel.y < 0.0f) {
-                vel.y = 0.0f;
-                if (hitbox.groundMaterial.empty()) {
+
+            auto velA = calc_collsion_velocity_result(hitbox, *box);
+            auto velB = calc_collsion_velocity_result(*box, hitbox);
+
+            hitbox.groundVelocity = box->position - box->prevPosition;
+            if (vel.y < hitbox.groundVelocity.y / dt) {
+                vel.y = velA.y;
+                box->velocity.y = velB.y;
+                if (hitbox.groundMaterial.empty() && !box->material.empty()) {
                     hitbox.groundMaterial = box->material;
                 }
                 return true;
@@ -177,7 +202,7 @@ static bool calc_collision_neg_y(
             if (const auto obstacle = chunks.isObstacleAt(coord.x, coord.y, coord.z, aabb)) {
                 float newy = std::floor(coord.y) + half.y + obstacle->max().y;
                 if (newy >= pos.y) {
-                    vel.y = 0.0f;
+                    vel.y = -hitbox.elasticity * vel.y;
                     pos.y = newy;
                 }
                 return true;
@@ -188,14 +213,13 @@ static bool calc_collision_neg_y(
 }
 
 void PhysicsSolver::calcCollisions(
-    const GlobalChunks& chunks,
-    Hitbox& hitbox, 
-    glm::vec3& vel, 
-    glm::vec3& pos, 
+    Hitbox& hitbox,
+    glm::vec3& vel,
+    glm::vec3& pos,
     const glm::vec3& half,
-    float stepHeight
+    float stepHeight,
+    float dt
 ) {
-    hitbox.yCollided = false;
     stepHeight = calc_step_height(chunks, pos, half, stepHeight);
 
     auto prevPos = pos;
@@ -210,7 +234,7 @@ void PhysicsSolver::calcCollisions(
     calc_collision<2, 1, 0, 1>(hitbox, chunks, solidHitboxes, half, stepHeight);
     pos.x = xpos;
 
-    if (calc_collision_neg_y(hitbox, chunks, solidHitboxes, half)) {
+    if (calcCollisionNegY(hitbox, half, dt)) {
         hitbox.grounded = true;
     }
 
@@ -227,9 +251,8 @@ void PhysicsSolver::calcCollisions(
                 if (auto aabb = chunks.isObstacleAt(x, y, z, boxAABB)) {
                     float newy = std::floor(y) - half.y + aabb->min().y - PhysicsSolver_Consts::EPS;
                     if (pos.y >= newy) {
-                        vel.y = 0.0f;
+                        vel.y = -hitbox.elasticity * vel.y;
                         pos.y = newy;
-                        hitbox.yCollided = true;
                     }
                     break;
                 }
@@ -245,16 +268,15 @@ void PhysicsSolver::calcCollisions(
                 if (pos.y > newy && glm::abs(pos.y - newy) < 0.5f) {
                     pos.y = newy;
                 }
-                if (vel.y > 0.0f) {
-                    vel.y = 0.0f;
+                auto velA = calc_collsion_velocity_result(hitbox, *box);
+                auto velB = calc_collsion_velocity_result(*box, hitbox);
+                if (vel.y > hitbox.groundVelocity.y / dt) {
+                    vel.y = velA.y;
+                    box->velocity.y = velB.y;
                     break;
                 }
             }
         }
-    }
-
-    if (hitbox.yCollided) {
-        pos.y = prevPos.y;
     }
 
     if (stepHeight > 0.0 && vel.y <= 0.0f) {
@@ -295,43 +317,28 @@ void PhysicsSolver::calcCollisions(
 }
 
 void PhysicsSolver::calcSubstep(
-    const GlobalChunks& chunks,
     Hitbox& hitbox,
     glm::vec3& vel,
     glm::vec3& pos,
-    bool prevGrounded,
-    float dt,
-    int substeps
+    float dt
 ) {
-    if (hitbox.grounded) {
-        pos.x += hitbox.groundVelocity.x * dt * substeps;
-        if (hitbox.groundVelocity.y < 0.0f) {
-            pos.y += hitbox.groundVelocity.y * dt * substeps;
-        }
-        pos.z += hitbox.groundVelocity.z * dt * substeps;
-    }
-
     auto initpos = pos;
     auto half = hitbox.getHalfSize();
     float gravityScale = hitbox.gravityScale;
 
     if (hitbox.type == BodyType::Dynamic) {
         calcCollisions(
-            chunks,
             hitbox,
             vel,
             pos,
             half,
-            (prevGrounded && gravityScale > 0.0f) ? hitbox.stepHeight : 0.0f
+            (hitbox.prevGrounded && gravityScale > 0.0f) ? hitbox.stepHeight : 0.0f,
+            dt
         );
     }
 
     vel += gravity * dt * gravityScale;
     pos += vel * dt + gravity * gravityScale * dt * dt * 0.5f;
-
-    if (hitbox.grounded && pos.y < initpos.y) {
-        pos.y = initpos.y;
-    }
 
     if (!hitbox.crouching || !hitbox.grounded) {
         return;
@@ -345,7 +352,7 @@ void PhysicsSolver::calcSubstep(
         checkPos.z = axis == 0 ? initpos.z : pos.z;
 
         AABB boxAABB(checkPos - half, checkPos + half);
-        boxAABB.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 4, 1.0f, 1.0f - PhysicsSolver_Consts::EPS * 4));
+        boxAABB.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 4, 1.5f, 1.0f - PhysicsSolver_Consts::EPS * 4));
         for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
             float x = (pos.x - half.x + PhysicsSolver_Consts::EPS) + ix;
             for (int iz = 0; iz <= glm::ceil((half.z - PhysicsSolver_Consts::EPS) * 2); ++iz) {
@@ -360,7 +367,7 @@ void PhysicsSolver::calcSubstep(
             if (glm::distance2(box->position, pos) < PhysicsSolver_Consts::EPS) {
                 continue;
             }
-            if (box->getAABB().intersects(boxAABB)) {
+            if (box->position.y < pos.y && box->getAABB().intersects(boxAABB)) {
                 hitbox.grounded = true;
                 break;
             }
@@ -375,47 +382,56 @@ void PhysicsSolver::calcSubstep(
 
 void PhysicsSolver::step(
     const GlobalChunks& chunks,
-    Hitbox& hitbox,
     float delta,
-    uint substeps,
-    entityid_t entity
+    uint substeps
 ) {
-    hitbox.prevPosition = hitbox.position;
-    hitbox.delta = delta;
-    hitbox.groundMaterial.clear();
+    for (auto hitbox : hitboxes) {
+        hitbox->groundMaterial.clear();
+        hitbox->prevGrounded = hitbox->grounded;
+        hitbox->grounded = false;
+        hitbox->prevVelocity = hitbox->velocity;
+    }
 
     float dt = delta / static_cast<float>(substeps);
-    float linearDamping = hitbox.linearDamping * hitbox.friction;
 
-    glm::vec3& pos = hitbox.position;
-    glm::vec3& vel = hitbox.velocity;
-
-    bool prevGrounded = hitbox.grounded;
-    hitbox.grounded = false;
     for (uint i = 0; i < substeps; ++i) {
-        calcSubstep(chunks, hitbox, vel, pos, prevGrounded, dt, substeps);
+        for (auto hitbox : hitboxes) {
+            glm::vec3& pos = hitbox->position;
+            hitbox->prevPosition = hitbox->position;
+            calcSubstep(*hitbox, hitbox->velocity, pos, dt);
+        }
     }
 
-    vel.x /= 1.0f + delta * linearDamping;
-    vel.z /= 1.0f + delta * linearDamping;
-    if (hitbox.verticalDamping > 0.0f) {
-        vel.y /= 1.0f + delta * linearDamping * hitbox.verticalDamping;
-    }
-    if (prevGrounded && !hitbox.grounded) {
-        auto appliedVelocity = hitbox.groundVelocity;
-        vel += appliedVelocity;
-        hitbox.groundVelocity = {};
-    }
+    for (auto hitbox : hitboxes) {
+        float linearDamping = hitbox->linearDamping * hitbox->friction;
 
-    AABB aabb;
-    aabb.a = pos - hitbox.getHalfSize();
-    aabb.b = pos + hitbox.getHalfSize();
-    for (size_t i = 0; i < sensors.size(); ++i) {
-        auto& sensor = *sensors[i];
-        if (sensor.entity == entity) {
-            continue;
+        glm::vec3& vel = hitbox->velocity;
+        auto diff = hitbox->groundVelocity / dt - vel;
+        vel.x += diff.x * delta * linearDamping;
+        vel.z += diff.z * delta * linearDamping;
+
+        if (hitbox->verticalDamping > 0.0f) {
+            vel.y /= 1.0f + delta * linearDamping * hitbox->verticalDamping;
         }
 
+        if (!hitbox->grounded) {
+            hitbox->groundVelocity = {};
+        }
+        updateSensors(*hitbox);
+        hitbox->friction = glm::abs(hitbox->gravityScale <= 1e-7f)
+            ? 8.0f
+            : (!hitbox->prevGrounded ? 2.0f : 10.0f);
+    }
+}
+
+void PhysicsSolver::updateSensors(Hitbox& hitbox) {
+    auto aabb = hitbox.getAABB();
+
+    for (size_t i = 0; i < sensors.size(); ++i) {
+        auto& sensor = *sensors[i];
+        if (sensor.entity == hitbox.entity) {
+            continue;
+        }
         bool triggered = false;
         switch (sensor.type) {
             case SensorType::AABB:
@@ -423,16 +439,17 @@ void PhysicsSolver::step(
                 break;
             case SensorType::RADIUS:
                 triggered = glm::distance2(
-                    pos, glm::vec3(sensor.calculated.radial)
-                ) < sensor.calculated.radial.w;
+                    hitbox.position, glm::vec3(sensor.calculated.radial))
+                    < sensor.calculated.radial.w;
                 break;
         }
-        if (triggered) {
-            if (sensor.prevEntered.find(entity) == sensor.prevEntered.end()) {
-                sensor.enterCallback(sensor.entity, sensor.index, entity);
-            }
-            sensor.nextEntered.insert(entity);
+        if (!triggered) {
+            continue;
         }
+        if (sensor.prevEntered.find(hitbox.entity) == sensor.prevEntered.end()) {
+            sensor.enterCallback(sensor.entity, sensor.index, hitbox.entity);
+        }
+        sensor.nextEntered.insert(hitbox.entity);
     }
 }
 

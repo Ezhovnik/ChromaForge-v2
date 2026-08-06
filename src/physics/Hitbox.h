@@ -62,6 +62,7 @@ CHROMA_ENUM_END
  * и флагом grounded, указывающим, касается ли хитбокс земли.
  */
 struct Hitbox {
+    entityid_t entity;
     BodyType type;
     glm::vec3 position; ///< Центр хитбокса в мировых координатах
     glm::vec3 halfsize; ///< Половины размеров хитбокса по осям X, Y, Z
@@ -71,27 +72,25 @@ struct Hitbox {
     float friction = 1.0f;
     float verticalDamping = 1.0f;
     bool grounded = false; ///< Флаг, указывающий, находится ли хитбокс на земле
-    bool yCollided = false;
     float gravityScale = 1.0f;
     bool crouching = false;
     float stepHeight = 0.5f;
+    float mass = 1.0f;
+    float elasticity = 0.0f;
     std::string material;
 
-    glm::vec3 groundVelocity {};
     std::string groundMaterial;
+    glm::vec3 groundVelocity {};
 
     glm::vec3 prevPosition {};
-    float delta = 0.0f;
+    glm::vec3 prevVelocity {};
+    bool prevGrounded = false;
 
     static inline constexpr float TELEPORT_THRESOLD_SQR = 0.5f;
 
-    /**
-     * @brief Конструктор хитбокса.
-     * @param type Тип тела для расчета физики.
-     * @param position Начальная позиция центра.
-     * @param halfsize Половины размеров по осям.
-     */
-    Hitbox(BodyType type, glm::vec3 position, glm::vec3 halfsize);
+    Hitbox(
+        entityid_t entity, BodyType type, glm::vec3 position, glm::vec3 halfsize
+    );
 
     AABB getAABB() const {
         return AABB(position - halfsize, position + halfsize);

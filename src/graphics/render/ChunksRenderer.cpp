@@ -134,7 +134,6 @@ const ChunkMesh* ChunksRenderer::render(
     bool lowPriority
 ) {
     glm::ivec2 key(chunk->chunk_x, chunk->chunk_z);
-    chunk->flags.modified = false;
 
     if (important) {
         ChunkMesh mesh {};
@@ -142,6 +141,7 @@ const ChunkMesh* ChunksRenderer::render(
 
         mesh = renderer->render(chunk.get(), *voxelsBuffer);
         meshes[key] = std::move(mesh);
+        chunk->flags.modified = false;
         return &meshes[key];
     }
 
@@ -154,6 +154,7 @@ const ChunkMesh* ChunksRenderer::render(
             ) && lowPriority
         )
     ) return nullptr;
+    chunk->flags.modified = false;
     enqueuedInFrame++;
     auto voxelsBuffer = prepareVoxelsVolume(*chunk);
 

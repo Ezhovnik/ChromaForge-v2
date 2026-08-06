@@ -126,7 +126,7 @@ WorldRenderer::WorldRenderer(
     blockWraps(
         std::make_unique<BlockWrapsRenderer>(
             assets,
-            level,
+            level.content,
             *player.chunks
         )
     )
@@ -252,7 +252,7 @@ void WorldRenderer::renderOpaque(
     setupWorldShader(shader, camera, settings, fogFactor);
 
     chunksRenderer->drawChunks(camera, shader);
-    blockWraps->draw(ctx, player);
+    blockWraps->draw(ctx);
 
     int cloudsQuality = settings.graphics.cloudsQuality.get();
     if (cloudsQuality > 0) {

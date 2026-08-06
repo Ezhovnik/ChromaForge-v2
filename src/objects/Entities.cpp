@@ -2,6 +2,7 @@
 #include <objects/Entities.h>
 
 #include <sstream>
+#include <limits>
 
 #include <entt/entity/registry.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -80,7 +81,7 @@ entityid_t Entities::spawn(
     auto entity = registry->create();
     entities[id] = entity;
     uids[entity] = id;
-    registry->emplace<EntityId>(entity, static_cast<entityid_t>(id), def);
+    registry->emplace<EntityId>(entity, id, def);
     const auto& tsf = registry->emplace<Transform>(
         entity,
         position,
@@ -92,7 +93,7 @@ entityid_t Entities::spawn(
     auto& body = registry->emplace<Rigidbody>(
         entity,
         true,
-        Hitbox{def.bodyType, position, def.hitbox * 0.5f},
+        Hitbox {id, def.bodyType, position, def.hitbox * 0.5f},
         std::vector<Sensor>{}
     );
     body.initialize(def, id, *this);
@@ -180,7 +181,8 @@ std::optional<Entities::RaycastResult> Entities::rayCast(
     glm::vec3 start,
     glm::vec3 dir,
     float maxDistance,
-    entityid_t ignore
+    entityid_t ignore,
+    bool solidOnly
 ) {
     Ray ray(start, dir);
     auto view = registry->view<EntityId, Transform, Rigidbody>();
@@ -189,7 +191,7 @@ std::optional<Entities::RaycastResult> Entities::rayCast(
     glm::ivec3 foundNormal;
 
     for (auto [entity, eid, transform, body] : view.each()) {
-        if (eid.uid == ignore || !body.enabled) continue;
+        if (eid.uid == ignore || !body.enabled || (solidOnly && !eid.def.solid)) continue;
         auto& hitbox = body.hitbox;
         glm::ivec3 normal;
         double distance;
@@ -340,6 +342,7 @@ void Entities::updateSensors(
 
 void Entities::preparePhysics(float delta) {
     auto& physics = *level.physics;
+    auto& hitboxes = physics.getHitboxesWriteable();
     auto& solidHitboxes = physics.getSolidHitboxesWriteable();
 
     if (sensorsSparkClock.update(delta)) {
@@ -357,11 +360,21 @@ void Entities::preparePhysics(float delta) {
         }
     }
 
+    hitboxes.clear();
     solidHitboxes.clear();
 
     auto view = registry->view<EntityId, Rigidbody>();
     for (auto [entity, eid, rigidbody] : view.each()) {
-        if (!eid.def.solid || eid.destroyFlag || !rigidbody.enabled) {
+        auto bodyType = rigidbody.hitbox.type;
+        if (eid.destroyFlag || !rigidbody.enabled || bodyType == BodyType::Static) {
+            continue;
+        }
+        rigidbody.hitbox.mass = bodyType == BodyType::Dynamic
+                            ? rigidbody.mass
+                            : std::numeric_limits<float>::infinity();
+        rigidbody.hitbox.elasticity = rigidbody.elasticity;
+        hitboxes.emplace_back(&rigidbody.hitbox);
+        if (!eid.def.solid) {
             continue;
         }
         solidHitboxes.emplace_back(&rigidbody.hitbox);
@@ -373,42 +386,32 @@ void Entities::updatePhysics(float delta) {
 
     auto view = registry->view<EntityId, Transform, Rigidbody>();
     auto physics = level.physics.get();
-    for (int solid = false; solid <= true; ++solid) {
-        for (auto [entity, eid, transform, rigidbody] : view.each()) {
-            if (!rigidbody.enabled || rigidbody.hitbox.type == BodyType::Static) {
-                continue;
-            }
-            if (eid.def.solid == solid) {
-                continue;
-            }
-            auto& hitbox = rigidbody.hitbox;
-            auto prevVel = hitbox.velocity;
-            bool grounded = hitbox.grounded;
 
-            float vel = glm::length(prevVel);
-            int substeps = static_cast<int>(delta * (vel + 2.0f) * 20);
-            substeps = std::min(100, std::max(2, substeps));
-            physics->step(*level.chunks, hitbox, delta, substeps, eid.uid);
-            hitbox.friction = glm::abs(hitbox.gravityScale <= 1e-7f)
-                                ? 8.0f
-                                : (!grounded ? 2.0f : 10.0f);
-            hitbox.scale = transform.size;
-            if (util::is_nan_or_inf(hitbox.position)) {
-                logger.error()
-                    << "Physics simulation produced NaN or INF (entity "
-                    << eid.def.name << "№" << eid.uid << ")";
-                hitbox.position = transform.pos;
-            } else {
-                transform.setPos(hitbox.position);
-            }
-            if (hitbox.grounded && !grounded) {
-                scripting::on_entity_grounded(
-                    *get(eid.uid), glm::length(prevVel - hitbox.velocity)
-                );
-            }
-            if (!hitbox.grounded && grounded) {
-                scripting::on_entity_fall(*get(eid.uid));
-            }
+    int substeps = std::max<int>(std::min<int>(delta * 1000, 200), 8);
+    physics->step(*level.chunks, delta, substeps);
+
+    for (auto [entity, eid, transform, rigidbody] : view.each()) {
+        if (!rigidbody.enabled ||
+            rigidbody.hitbox.type == BodyType::Static) {
+            continue;
+        }
+        auto& hitbox = rigidbody.hitbox;
+        hitbox.scale = transform.size;
+        if (util::is_nan_or_inf(hitbox.position)) {
+            logger.error()
+                << "Physics simulation produced NaN or INF (entity "
+                << eid.def.name << "№ " << eid.uid << ")";
+            hitbox.position = transform.pos;
+        } else {
+            transform.setPos(hitbox.position);
+        }
+        if (hitbox.grounded && !hitbox.prevGrounded) {
+            scripting::on_entity_grounded(
+                *get(eid.uid), glm::length(hitbox.prevVelocity - hitbox.velocity)
+            );
+        }
+        if (!hitbox.grounded && hitbox.prevGrounded) {
+            scripting::on_entity_fall(*get(eid.uid));
         }
     }
 }

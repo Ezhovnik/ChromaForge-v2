@@ -25,7 +25,8 @@ struct Entity {
     std::string skeletonName = name;
     bool blocking = true;
     bool solid = false;
-
+    float mass = 1.0f;
+    float elasticity = 0.0f;
     float stepHeight = 0.5f;
 
     BodyType bodyType = BodyType::Dynamic;

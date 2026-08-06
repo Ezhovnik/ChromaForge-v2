@@ -36,14 +36,14 @@ private:
 	std::unique_ptr<World> world;
 public:
     const Content& content;
-	std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
     std::unique_ptr<GlobalChunks> chunks; ///< Хранилище чанков
+    std::unique_ptr<Inventories> inventories; ///< Менеджер инвентарей (хранит все инвентари уровня)
+    std::unique_ptr<PhysicsSolver> physics; ///< Физический солвер (обработка движения, гравитации)
     std::unique_ptr<LevelEvents> events; ///< Обработчик событий уровня
     std::unique_ptr<Entities> entities;
     std::unique_ptr<Players> players;
     std::unique_ptr<voxels::Pathfinding> pathfinding;
     std::vector<std::shared_ptr<Camera>> cameras;
-	std::unique_ptr<Inventories> inventories; ///< Менеджер инвентарей (хранит все инвентари уровня)
 
 	/**
      * @brief Конструктор уровня.

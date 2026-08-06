@@ -1,4 +1,4 @@
-# Библиотека time
+# Библиотека *time*
 
 ```python
 time.uptime() -> float

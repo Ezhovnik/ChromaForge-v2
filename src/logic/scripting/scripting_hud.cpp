@@ -83,17 +83,20 @@ void scripting::on_frontend_render() {
     }
 }
 
-void scripting::on_inventory_interact(int invid, int slot, int action) {
+void scripting::on_inventory_interact(
+    int invid, int slot, int action, int mode
+) {
     auto L = lua::get_main_state();
     for (auto& pack : content_control->getAllContentPacks()) {
         lua::emit_event(
             L,
-            pack.id + ":.hudinventoryinteract",
+            pack.id + ":.inventoryinteract",
             [&](lua::State* L) {
                 lua::pushinteger(L, invid);
                 lua::pushinteger(L, slot);
                 lua::pushinteger(L, action);
-                return 3;
+                lua::pushinteger(L, mode);
+                return 4;
             }
         );
     }
@@ -114,7 +117,7 @@ void scripting::load_hud_script(
     register_event(env, "on_hud_open", packid + ":.hudopen");
     register_event(env, "on_hud_render", packid + ":.hudrender");
     register_event(env, "on_hud_close", packid + ".:hudclose");
-    register_event(env, "on_hud_inventory_interact", packid + ":.hudinventoryinteract");
+    register_event(env, "on_inventory_interact", packid + ":.inventoryinteract");
 }
 
 gui::PageLoaderFunc scripting::create_page_loader() {

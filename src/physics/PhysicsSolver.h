@@ -17,15 +17,13 @@ struct blockstate;
 // Класс для решения физических взаимодействий объектов с воксельным миром.
 class PhysicsSolver {
 public:
-    PhysicsSolver(glm::vec3 gravity); // Конструтор
+    PhysicsSolver(const GlobalChunks& chunks, glm::vec3 gravity);
 
     void step(
         const GlobalChunks& chunks,
-        Hitbox& hitbox,
         float delta,
-        uint substeps,
-        entityid_t entity
-    ); // Выполняет один шаг физического моделирования для указанного хитбокса.
+        uint substeps
+    );
 
     auto& getSensorsWriteable() {
         return sensors;
@@ -35,28 +33,39 @@ public:
         return solidHitboxes;
     }
 
+    auto& getHitboxesWriteable() {
+        return hitboxes;
+    }
+
     void removeSensor(Sensor* sensor);
 private:
+    const GlobalChunks& chunks;
     glm::vec3 gravity;
     std::vector<Sensor*> sensors;
     std::vector<Hitbox*> solidHitboxes;
+    std::vector<Hitbox*> hitboxes;
 
     void calcCollisions(
-        const GlobalChunks& chunks,
         Hitbox& hitbox,
         glm::vec3& vel,
         glm::vec3& pos,
         const glm::vec3& half,
-        float stepHeight
+        float stepHeight,
+        float dt
     );
 
     void calcSubstep(
-        const GlobalChunks& chunks,
         Hitbox& hitbox,
         glm::vec3& vel,
         glm::vec3& pos,
-        bool prevGrounded,
-        float dt,
-        int substeps
+        float dt
     );
+
+    bool calcCollisionNegY(
+        Hitbox& hitbox,
+        const glm::vec3& half,
+        float dt
+    );
+
+    void updateSensors(Hitbox& hitbox);
 };

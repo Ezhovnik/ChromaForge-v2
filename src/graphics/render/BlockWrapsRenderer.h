@@ -6,20 +6,16 @@
 #include <array>
 #include <map>
 
-#include <glm/vec4.hpp>
-
 #include <graphics/render/MainBatch.h>
 #include <typedefs.h>
 #include <assets/assets_util.h>
 #include <voxels/Block.h>
 
 class Assets;
-class Player;
-class Level;
 class DrawContext;
 class Chunks;
-struct voxel;
 class Texture;
+class Content;
 
 struct BlockWrapper {
     glm::ivec3 position;
@@ -37,7 +33,7 @@ struct BlockWrapper {
 
 class BlockWrapsRenderer {
     const Assets& assets;
-    const Level& level;
+    const Content& content;
     const Chunks& chunks;
     std::unique_ptr<MainBatch> batch;
 
@@ -48,13 +44,16 @@ class BlockWrapsRenderer {
     void draw(BlockWrapper& wrapper, const Texture* texture);
 
     void refreshWrapper(BlockWrapper& wrapper);
+    void clearOrder(const BlockWrapper* const wrapper);
 public:
     BlockWrapsRenderer(
-        const Assets& assets, const Level& level, const Chunks& chunks
+        const Assets& assets,
+        const Content& content,
+        const Chunks& chunks
     );
     ~BlockWrapsRenderer();
 
-    void draw(const DrawContext& ctx, const Player& player);
+    void draw(const DrawContext& ctx);
 
     uint64_t add(
         const glm::ivec3& position,

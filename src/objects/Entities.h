@@ -81,7 +81,8 @@ public:
         glm::vec3 start,
         glm::vec3 dir,
         float maxDistance,
-        entityid_t ignore = -1
+        entityid_t ignore = -1,
+        bool solidOnly = false
     );
 
     void loadEntities(dv::value map);

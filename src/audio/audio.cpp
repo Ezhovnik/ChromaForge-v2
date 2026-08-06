@@ -28,7 +28,7 @@ using namespace audio;
 
 Channel::Channel(
     std::string name, bool effect
-) : name(std::move(name)), effects(effects) {
+) : name(std::move(name)), effects(effect) {
 }
 
 float Channel::getVolume() const {
@@ -176,6 +176,11 @@ void audio::initialize(
             audio::get_channel(channel.name)->setVolume(value * value);
         }, true));
     }
+
+    objects_keeper.keepAlive(settings.acousticEffects.observe([=](auto value) {
+        if (value) return;
+        backend->setAcoustics(audio::Acoustics {});
+    }, true));
 
     if (inputEnabled) {
         input_device = backend->openInputDevice("", 44100, 1, 16);

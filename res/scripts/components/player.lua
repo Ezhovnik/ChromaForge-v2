@@ -58,6 +58,7 @@ end
 
 local prepared = false
 body:set_enabled(false)
+mob:set_flight(true)
 
 function on_physics_update(delta)
     if not prepared then

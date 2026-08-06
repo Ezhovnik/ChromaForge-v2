@@ -112,6 +112,18 @@ namespace gui {
         size_t getIndex() const;
 
         static inline std::string EXCHANGE_SLOT_NAME = "exchange-slot";
+
+        enum class InteractionMode {
+            Primary = 0,
+            Secondary = 1
+        };
+
+        enum class InteractionAction {
+            Put = 0,
+            Take = 1,
+            Share = 2,
+            Undefined
+        };
     };
 
     class InventoryView final : public gui::Container {
