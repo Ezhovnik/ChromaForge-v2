@@ -11,6 +11,7 @@
 #include <debug/Logger.h>
 #include <engine/EnginePaths.h>
 #include <util/stringutil.h>
+#include <data/dv_util.h>
 
 static debug::Logger logger("generators-loader");
 
@@ -211,6 +212,9 @@ void ContentLoader::loadGenerator(
 
     map.at("sea-level").get(def.seaLevel);
     map.at("wide-structs-chunks-radius").get(def.wideStructsChunksRadius);
+    map.at("player-spawn-radius").get(def.playerSpawnRadius);
+    map.at("player-min-spawn-height").get(def.playerMinSpawnHeight);
+    map.at("player-max-spawn-height").get(def.playerMaxSpawnHeight);
 
     if (map.has("heightmap-inputs")) {
         for (const auto& element : map["heightmap-inputs"]) {

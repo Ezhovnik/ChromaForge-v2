@@ -82,6 +82,8 @@ inline constexpr int DEFAULT_FONT_SIZE = 16;
 
 inline constexpr int DEFAULT_PRE_RENDER_FONT_PAGES = 1;
 
+inline constexpr int DEFAULT_PLAYER_SPAWN_RADIUS = 100.0f;
+
 // ========== Утилитарные функции ==========
 
 /**

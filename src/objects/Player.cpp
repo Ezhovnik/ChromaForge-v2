@@ -18,6 +18,8 @@
 #include <data/dv_util.h>
 #include <debug/Logger.h>
 #include <objects/Entt_Entity.h>
+#include <world/World.h>
+#include <world/generator/Generator.h>
 
 static debug::Logger logger("player");
 
@@ -52,6 +54,8 @@ Player::Player(
 	fpCamera->setFov(glm::radians(90.0f));
     spCamera->setFov(glm::radians(90.0f));
     tpCamera->setFov(glm::radians(90.0f));
+
+    random.setSeed((id << 8) ^ 34076213);
 }
 
 Player::~Player() = default;
@@ -98,18 +102,20 @@ void Player::postUpdate() {
 
 	// Если точка возрождения не задана, пытаемся найти её
 	for (int i = 0; i < PlayerConsts::SPAWN_ATTEMPTS_PER_UPDATE && std::isnan(spawnpoint.x); ++i) {
-        attemptToFindSpawnpoint();
+        attemptToChooseSpawnpoint();
 	}
 }
 
-void Player::attemptToFindSpawnpoint() {
-	// Генерируем случайную позицию в окрестности текущей
-    static util::FastRandom rng{};
-	glm::vec3 newpos {
-		position.x + rng.rand() % 200 - 100,
-		rng.rand() % 80 + 100, 
-		position.z + rng.rand() % 200 - 100
-	};
+void Player::attemptToChooseSpawnpoint() {
+    const auto& generatorDef = level.content.generators.require(level.getWorld()->getGenerator());
+
+    int minHeight = generatorDef.playerMinSpawnHeight;
+    int maxHeight = generatorDef.playerMaxSpawnHeight;
+    glm::vec3 newpos {0.0f, random.randFloat() * (maxHeight - minHeight + 1) + minHeight, 0.0f};
+    double angle = random.randDouble() * glm::two_pi<double>();
+    double radius = glm::sqrt(random.randDouble());
+    newpos.x += glm::cos(angle) * generatorDef.playerSpawnRadius * radius;
+    newpos.z += glm::sin(angle) * generatorDef.playerSpawnRadius * radius;
 
 	// Опускаемся вниз, пока не найдём твёрдый блок под ногами
 	while (newpos.y > 0 && !chunks->isObstacleBlock(newpos.x, newpos.y - 2, newpos.z)) {

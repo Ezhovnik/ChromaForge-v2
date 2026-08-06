@@ -9,6 +9,7 @@
 #include <interfaces/Serializable.h>
 #include <constants.h>
 #include <util/Interpolation.h>
+#include <math/rand.h>
 
 class Camera;
 struct Hitbox;
@@ -89,6 +90,12 @@ private:
     entityid_t selectedEid = 0;
 
     glm::vec3 rotation {}; ///< Углы поворота камеры
+    util::PseudoRandom random;
+
+    /**
+     * @brief Пытается найти безопасную точку возрождения в мире.
+     */
+	void attemptToChooseSpawnpoint();
 public:
     util::VecInterpolation<3, float, true> rotationInterpolation {true};
 
@@ -129,11 +136,6 @@ public:
      * @brief Возвращает скорость игрока.
      */
 	float getSpeed() const;
-
-	/**
-     * @brief Пытается найти безопасную точку возрождения в мире.
-     */
-	void attemptToFindSpawnpoint();
 
 	/**
      * @brief Устанавливает выбранный слот инвентаря.
