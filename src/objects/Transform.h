@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <string_view>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/vec3.hpp>
