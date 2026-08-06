@@ -69,7 +69,6 @@ struct Hitbox {
     glm::vec3 velocity; ///< Текущая скорость хитбокса
     glm::vec3 scale {1.0f, 1.0f, 1.0f};
     float linearDamping = 0.5f; ///< Коэффициент линейного затухания скорости
-    float friction = 1.0f;
     float verticalDamping = 1.0f;
     bool grounded = false; ///< Флаг, указывающий, находится ли хитбокс на земле
     float gravityScale = 1.0f;
@@ -78,7 +77,6 @@ struct Hitbox {
     float mass = 1.0f;
     float elasticity = 0.0f;
     std::string material;
-
     std::string groundMaterial;
     glm::vec3 groundVelocity {};
 
@@ -105,5 +103,9 @@ struct Hitbox {
         if (glm::distance2(position, prevPosition) >= TELEPORT_THRESOLD_SQR) {
             prevPosition = vec;
         }
+    }
+
+    glm::vec3 getSurfaceVelocity() const {
+        return velocity - groundVelocity;
     }
 };

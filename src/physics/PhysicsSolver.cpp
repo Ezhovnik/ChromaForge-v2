@@ -171,8 +171,8 @@ bool PhysicsSolver::calcCollisionNegY(
             auto velA = calc_collsion_velocity_result(hitbox, *box);
             auto velB = calc_collsion_velocity_result(*box, hitbox);
 
-            hitbox.groundVelocity = box->position - box->prevPosition;
-            if (vel.y < hitbox.groundVelocity.y / dt) {
+            hitbox.groundVelocity = (box->position - box->prevPosition) / dt;
+            if (vel.y < hitbox.groundVelocity.y) {
                 vel.y = velA.y;
                 box->velocity.y = velB.y;
                 if (hitbox.groundMaterial.empty() && !box->material.empty()) {
@@ -270,7 +270,7 @@ void PhysicsSolver::calcCollisions(
                 }
                 auto velA = calc_collsion_velocity_result(hitbox, *box);
                 auto velB = calc_collsion_velocity_result(*box, hitbox);
-                if (vel.y > hitbox.groundVelocity.y / dt) {
+                if (vel.y > hitbox.groundVelocity.y) {
                     vel.y = velA.y;
                     box->velocity.y = velB.y;
                     break;
@@ -403,10 +403,10 @@ void PhysicsSolver::step(
     }
 
     for (auto hitbox : hitboxes) {
-        float linearDamping = hitbox->linearDamping * hitbox->friction;
+        float linearDamping = hitbox->linearDamping;
 
         glm::vec3& vel = hitbox->velocity;
-        auto diff = hitbox->groundVelocity / dt - vel;
+        auto diff = hitbox->groundVelocity - vel;
         vel.x += diff.x * delta * linearDamping;
         vel.z += diff.z * delta * linearDamping;
 
@@ -418,9 +418,6 @@ void PhysicsSolver::step(
             hitbox->groundVelocity = {};
         }
         updateSensors(*hitbox);
-        hitbox->friction = glm::abs(hitbox->gravityScale <= 1e-7f)
-            ? 8.0f
-            : (!hitbox->prevGrounded ? 2.0f : 10.0f);
     }
 }
 

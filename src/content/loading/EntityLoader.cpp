@@ -82,6 +82,7 @@ template<> void ContentUnitLoader<Entity>::loadUnit(
     BodyTypeMeta.getItem(bodyTypeName, def.bodyType);
 
     root.at("skeleton-name").get(def.skeletonName);
+    root.at("material").get(def.material);
     root.at("blocking").get(def.blocking);
     root.at("solid").get(def.solid);
     root.at("mass").get(def.mass);
