@@ -238,14 +238,14 @@ static int l_set_instant_destruction(lua::State* L) {
 
 static int l_get_name(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        return lua::pushstring(L, player->getName());
+        return lua::pushwstring(L, player->getName());
     }
     return 0;
 }
 
 static int l_set_name(lua::State* L) {
     if (auto player = get_player(L, 1)) {
-        player->setName(lua::require_string(L, 2));
+        player->setName(lua::require_wstring(L, 2));
     }
     return 0;
 }
@@ -257,7 +257,7 @@ static int l_create(lua::State* L) {
     }
     auto& level = require_level();
     auto player = level.players->create(playerId);
-    player->setName(lua::require_string(L, 1));
+    player->setName(lua::require_wstring(L, 1));
     return lua::pushinteger(L, player->getId());
 }
 

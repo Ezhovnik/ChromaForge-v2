@@ -57,9 +57,7 @@ Decorator::Decorator(
             continue;
         }
         playerTexts[id] = renderer.texts->add(std::make_unique<TextNote>(
-            util::str2wstr_utf8(player->getName()),
-            playerNamePreset,
-            player->getPosition()
+            player->getName(), playerNamePreset, player->getPosition()
         ));
     }
 }
@@ -284,9 +282,7 @@ void Decorator::updateTextNotes() {
             continue;
         }
         playerTexts[id] = renderer.texts->add(std::make_unique<TextNote>(
-            util::str2wstr_utf8(player->getName()),
-            playerNamePreset,
-            player->getPosition()
+            player->getName(), playerNamePreset, player->getPosition()
         ));
     }
 

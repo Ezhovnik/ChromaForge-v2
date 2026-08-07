@@ -80,7 +80,7 @@ Player* Players::create(int64_t id) {
     auto playerPtr = std::make_unique<Player>(
         level,
         id,
-        "",
+        L"",
         DEFAULT_SPAWNPOINT,
         DEFAULT_PLAYER_SPEED,
         level.inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE),
@@ -131,7 +131,7 @@ void Players::deserialize(const dv::value& src) {
         auto playerPtr = std::make_unique<Player>(
             level,
             0,
-            "",
+            L"",
             DEFAULT_SPAWNPOINT,
             DEFAULT_PLAYER_SPEED,
             level.inventories->create(DEFAULT_PLAYER_INVENTORY_SIZE),
