@@ -143,6 +143,9 @@ namespace scripting {
     void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
     void on_ui_close(UIDocument* layout, Inventory* inventory);
 
+    void on_scripts_loading();
+    void on_content_loaded();
+
     void load_content_script(
         const scriptenv& env,
         const std::string& prefix,
@@ -165,6 +168,12 @@ namespace scripting {
         const io::path& file,
         const std::string& fileName,
         WorldFuncsSet& funcsset
+    );
+    void load_content_script(
+        const scriptenv& env,
+        const std::string& packid,
+        const io::path& file,
+        const std::string& fileName
     );
     void load_layout_script(
         const scriptenv& env,

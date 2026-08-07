@@ -60,7 +60,7 @@ rules.reset(name: str)
 
 | Имя                    | Описание                                                        | По-умолчанию |
 | ---------------------- | --------------------------------------------------------------- | ------------ |
-| cheat-commands         | Разрешить команды, имена которых есть в массиве console.cheats. | true         |
+| allow-cheats           | Разрешить команды, имена которых есть в массиве console.cheats. | true         |
 | allow-content-access   | Разрешить панель доступа к контенту.                            | true         |
 | allow-flight           | Разрешить полёт                                                 | true         |
 | allow-noclip           | Разрешить включение noclip.                                     | true         |
@@ -69,3 +69,4 @@ rules.reset(name: str)
 | allow-cheat-movement   | Разрешить специальные клавиши быстрого перемещения.             | true         |
 | allow-debug-cheats     | Разрешить нечестные элементы управления на дебаг-панели.        | true         |
 | allow-fast-interaction | Разрешить быстрое взаимодействие.                               | true         |
+| allow-zoom             | Разрешить приближать камеру.                                    | true         |
