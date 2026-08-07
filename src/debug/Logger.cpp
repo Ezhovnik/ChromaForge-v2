@@ -56,7 +56,7 @@ static std::string coloredLevelPrefix(LogLevel level) {
 #ifdef NDEBUG
             return "";
 #else
-            color = (level == LogLevel::Trace) ? "\033[90m" : "\033[36m";
+            color = (level == LogLevel::Trace) ? "\033[90m" : "\033[36m"; break;
 #endif
         case LogLevel::Info:     color = "\033[32m"; break;
         case LogLevel::Warning:  color = "\033[33m"; break;
@@ -111,5 +111,8 @@ void Logger::flush() {
 }
 
 void Logger::log(LogLevel level, std::string message) {
+#ifdef NDEBUG
+    if (level == LogLevel::Trace || level == LogLevel::Debug) return;
+#endif
     write(level, name, std::move(message));
 }

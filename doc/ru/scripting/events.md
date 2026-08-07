@@ -73,6 +73,18 @@ function on_block_removed(x, y, z)
 Вызывается при выгрузке чанка, в котором находится блок.
 
 ```lua
+function on_entity_spawned(uid)
+```
+
+Вызывается после спавна сущности
+
+```lua
+function on_entity_despawned(uid)
+```
+
+Вызывается после удаления сущности, на момент вызова события сущность с переданным uid уже удалена
+
+```lua
 function on_player_spark(playerid: int, sps: int)
 ```
 

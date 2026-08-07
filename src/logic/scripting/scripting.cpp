@@ -551,6 +551,34 @@ void scripting::on_player_spark(Player* player, int sps) {
     }
 }
 
+void scripting::on_entity_spawned(entityid_t eid) {
+    auto L = lua::get_main_state();
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
+        lua::emit_event(
+            L,
+            pack.id + ":.entityspawned",
+            [&](lua::State* L) {
+                lua::pushinteger(L, eid);
+                return 1;
+            }
+        );
+    }
+}
+
+void scripting::on_entity_despawned(entityid_t eid) {
+    auto L = lua::get_main_state();
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
+        lua::emit_event(
+            L,
+            pack.id + ":.entitydespawned",
+            [&](lua::State* L) {
+                lua::pushinteger(L, eid);
+                return 1;
+            }
+        );
+    }
+}
+
 bool scripting::on_item_use(Player* player, const Item& item) {
     std::string name = item.name + ".use";
     return lua::emit_event(lua::get_main_state(), name, [player] (lua::State* L) {
@@ -739,6 +767,8 @@ void scripting::load_world_script(
     funcsset.onchunkremove = register_event(env, "on_chunk_remove", prefix + ":.chunkremove");
     funcsset.oninventoryopen = register_event(env, "on_inventory_open", prefix + ":.inventoryopen");
     funcsset.oninventoryclosed = register_event(env, "on_inventory_closed", prefix + ":.inventoryclosed");
+    funcsset.onentityspawned = register_event(env, "on_entity_spawned", prefix + ":.entityspawned");
+    funcsset.onentitydespawned = register_event(env, "on_entity_despawned", prefix + ":.entitydespawned");
 }
 
 void scripting::load_content_script(
