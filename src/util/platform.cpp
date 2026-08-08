@@ -213,7 +213,10 @@ std::filesystem::path platform::get_executable_path() {
 #endif
 }
 
-void platform::new_engine_instance(const std::vector<std::string>& args) {
+void platform::new_engine_instance(
+    const std::vector<std::string>& args,
+    std::filesystem::path outputFile
+) {
     auto executable = get_executable_path();
 
 #ifdef _WIN32
@@ -247,6 +250,24 @@ void platform::new_engine_instance(const std::vector<std::string>& args) {
     auto commandString = toWString(ss.str());
 
     STARTUPINFOW si = { sizeof(si) };
+    if (!outputFile.empty()) {
+        si.dwFlags |= STARTF_USESTDHANDLES;
+        si.hStdOutput = CreateFileW(
+            toWString(outputFile.u8string()).data(),
+            GENERIC_WRITE,
+            FILE_SHARE_WRITE | FILE_SHARE_READ,
+            nullptr,
+            CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr
+        );
+        if (si.hStdOutput == INVALID_HANDLE_VALUE) {
+            throw std::runtime_error(
+                "CreateFileW failed with code: " +
+                std::to_string(GetLastError())
+            );
+        }
+    }
     PROCESS_INFORMATION pi = { 0 };
     DWORD flags = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS;
     // | CREATE_NO_WINDOW;
@@ -277,7 +298,11 @@ void platform::new_engine_instance(const std::vector<std::string>& args) {
     for (int i = 0; i < args.size(); ++i) {
         ss << " " << util::quote(args[i]);
     }
-    ss << " >/dev/null &";
+    if (outputFile.empty()) {
+        ss << " >/dev/null &";
+    } else {
+        ss << " >" << util::quote(outputFile.u8string()) << " &";
+    }
 
     auto command = ss.str();
     if (int res = system(command.c_str())) {
