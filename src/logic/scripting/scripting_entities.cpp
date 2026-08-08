@@ -6,6 +6,8 @@
 #include <objects/Entt_Entity.h>
 #include <objects/Player.h>
 #include <util/stringutil.h>
+#include <content/Content.h>
+#include <content/ContentPack.h>
 
 static inline const std::string STDCOMP = "stdcomp";
 
@@ -128,7 +130,14 @@ void scripting::on_entity_spawn(
         create_component(L, -1, *component, args, saved);
     }
 
-    scripting::on_entity_spawned(eid);
+    for (auto& [packid, pack] : content->getPacks()) {
+        if (pack->worldfuncsset.onentityspawn) {
+            lua::emit_event(L, packid + ":.entityspawn", [&](lua::State* L) {
+                lua::pushinteger(L, eid);
+                return 1;
+            });
+        }
+    }
 }
 
 static void process_entity_callback(
@@ -173,11 +182,18 @@ void scripting::on_entity_despawn(const Entt_Entity& entity) {
     auto L = lua::get_main_state();
     entityid_t uid = entity.getUID();
 
+    for (auto& [packid, pack] : content->getPacks()) {
+        if (pack->worldfuncsset.onentitydespawn) {
+            lua::emit_event(L, packid + ":.entitydespawn", [&](lua::State* L) {
+                lua::pushinteger(L, uid);
+                return 1;
+            });
+        }
+    }
+
     lua::get_from(L, "stdcomp", "remove_Entity", true);
     lua::pushinteger(L, uid);
     lua::call(L, 1, 0);
-
-    scripting::on_entity_despawned(uid);
 }
 
 void scripting::on_entity_grounded(const Entt_Entity& entity, float force) {

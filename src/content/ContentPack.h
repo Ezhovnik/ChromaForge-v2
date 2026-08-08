@@ -128,8 +128,8 @@ struct WorldFuncsSet {
     bool onchunkremove;
     bool oninventoryopen;
     bool oninventoryclosed;
-    bool onentityspawned;
-    bool onentitydespawned;
+    bool onentityspawn;
+    bool onentitydespawn;
 };
 
 class ContentPackRuntime {
