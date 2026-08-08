@@ -455,7 +455,9 @@ void Entities::clean() {
 bool Entities::hasBlockingInside(AABB aabb) {
     auto view = registry->view<EntityId, Rigidbody>();
     for (auto [entity, eid, body] : view.each()) {
-        if (eid.def.blocking && aabb.intersects(body.hitbox.getAABB(), -0.05f)) {
+        AABB bodyAABB(body.hitbox.getAABB());
+        bodyAABB.scale({1, 0.95f, 1});
+        if (eid.def.blocking && aabb.intersects(bodyAABB)) {
             return true;
         }
     }
