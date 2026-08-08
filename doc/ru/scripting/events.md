@@ -73,6 +73,18 @@ function on_block_removed(x, y, z)
 Вызывается при выгрузке чанка, в котором находится блок.
 
 ```lua
+function on_entity_spawn(uid)
+```
+
+Вызывается после спавна сущности
+
+```lua
+function on_entity_despawn(uid)
+```
+
+Вызывается перед удалением сущности
+
+```lua
 function on_player_spark(playerid: int, sps: int)
 ```
 
@@ -198,6 +210,22 @@ function on_close(invid: int)
 ```
 
 Вызывается при удалении элемента с экрана.
+
+### События контента
+
+События жизненного цикла контент-пака прописываются в файле `scripts/content.lua`
+
+```lua
+function on_scripts_loading()
+```
+
+Вызывается перед загрузкой скриптов контент-пака
+
+```lua
+function on_content_loaded()
+```
+
+Вызывается после того, как контент-пак был полностью загружен
 
 ## События HUD  
 

@@ -1,8 +1,5 @@
 # Documentation
 
-> [!WARNING]
-> Documentation is written for the still **in-development** version 0.4.0 of the ChromaForge engine.
-<!-- -->
 > [!NOTE]
 > The English documentation is still under development and may be incomplete.
 

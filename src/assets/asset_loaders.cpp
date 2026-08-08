@@ -584,7 +584,8 @@ asset_loader::postfunc asset_loader::skeleton(
     const std::shared_ptr<AssetsConfig>& settings
 ) {
     return [=](auto assets) {
-        std::string text = io::read_string(file);
+        auto path = paths.find(file + ".json");
+        std::string text = io::read_string(path);
         auto skeleton = rigging::SkeletonConfig::parse(text, file, name);
         for (auto& bone : skeleton->getBones()) {
             std::string model = bone->model.name;

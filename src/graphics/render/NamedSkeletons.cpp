@@ -5,9 +5,10 @@
 NamedSkeletons::NamedSkeletons() = default;
 
 std::shared_ptr<rigging::Skeleton> NamedSkeletons::createSkeleton(
-    const std::string& name, const rigging::SkeletonConfig* config
+    const std::string& name,
+    std::shared_ptr<const rigging::SkeletonConfig> config
 ) {
-    auto skeleton = std::make_shared<rigging::Skeleton>(config);
+    auto skeleton = std::make_shared<rigging::Skeleton>(std::move(config));
     skeletons[name] = skeleton;
     return skeleton;
 }

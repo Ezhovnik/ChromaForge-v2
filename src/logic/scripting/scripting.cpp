@@ -607,6 +607,26 @@ void scripting::on_ui_close(UIDocument* layout, Inventory* inventory) {
     });
 }
 
+void scripting::on_scripts_loading() {
+    auto L = lua::get_main_state();
+
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
+        lua::emit_event(L, pack.id + ":.onscriptsloading", [](auto L) {
+            return 0;
+        });
+    }
+}
+
+void scripting::on_content_loaded() {
+    auto L = lua::get_main_state();
+
+    for (auto& pack : scripting::content_control->getAllContentPacks()) {
+        lua::emit_event(L, pack.id + ":.oncontentloaded", [](auto L) {
+            return 0;
+        });
+    }
+}
+
 bool scripting::register_event(int env, const std::string& name, const std::string& id) {
     auto L = lua::get_main_state();
     if (lua::pushenv(L, env) == 0) {
@@ -719,6 +739,21 @@ void scripting::load_world_script(
     funcsset.onchunkremove = register_event(env, "on_chunk_remove", prefix + ":.chunkremove");
     funcsset.oninventoryopen = register_event(env, "on_inventory_open", prefix + ":.inventoryopen");
     funcsset.oninventoryclosed = register_event(env, "on_inventory_closed", prefix + ":.inventoryclosed");
+    funcsset.onentityspawn = register_event(env, "on_entity_spawn", prefix + ":.entityspawn");
+    funcsset.onentitydespawn = register_event(env, "on_entity_despawn", prefix + ":.entitydespawn");
+}
+
+void scripting::load_content_script(
+    const scriptenv& senv,
+    const std::string& prefix,
+    const io::path& file,
+    const std::string& fileName
+) {
+    int env = *senv;
+    lua::pop(lua::get_main_state(), load_script(env, "content", file, fileName));
+
+    register_event(env, "on_scripts_loading", prefix + ":.onscriptsloading");
+    register_event(env, "on_content_loaded", prefix + ":.oncontentloaded");
 }
 
 void scripting::load_layout_script(

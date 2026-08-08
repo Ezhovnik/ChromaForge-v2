@@ -23,7 +23,9 @@ static void sigterm_handler(int signum) {
 // Точка входа в программу
 int main(int argc, char** argv) {
 #ifdef CHROMA_BUILD_NAME
-    logger.info() << "Build: " << CHROMA_BUILD_NAME;
+    if constexpr (CHROMA_BUILD_NAME[0]) {
+        logger.info() << "Build: " << CHROMA_BUILD_NAME;
+    }
 #endif
     CoreParameters coreParameters;
     try {

@@ -37,7 +37,7 @@ void Bone::setModel(const std::string& name) {
 }
 
 Skeleton::Skeleton(
-    const SkeletonConfig* config
+    std::shared_ptr<const SkeletonConfig> config
 ) : config(config),
     pose(config->getBones().size()),
     calculated(config->getBones().size()),
@@ -85,6 +85,16 @@ void Skeleton::deserialize(const dv::value& root) {
     }
 }
 
+void Skeleton::setConfig(std::shared_ptr<const SkeletonConfig> rigConfig) {
+    config = std::move(rigConfig);
+    pose.matrices.resize(
+        config->getBones().size(), glm::mat4(1.0f)
+    );
+    calculated.matrices.resize(
+        config->getBones().size(), glm::mat4(1.0f)
+    );
+}
+
 static void get_all_nodes(std::vector<Bone*>& nodes, Bone* node) {
     nodes[node->getIndex()] = node;
     for (auto& subnode : node->getBones()) {
@@ -98,7 +108,9 @@ SkeletonConfig::SkeletonConfig(
     size_t nodesCount
 ) : name(name),
     root(std::move(root)),
-    nodes(nodesCount) {
+    nodes(nodesCount)
+{
+    assert(this->root.get() != nullptr);
     get_all_nodes(nodes, this->root.get());
 }
 
@@ -159,6 +171,9 @@ void SkeletonConfig::render(
     const glm::vec3& position,
     const glm::vec3& scale
 ) const {
+    if (skeleton.config->root == nullptr) {
+        return;
+    }
     update(skeleton, rotation, position, scale);
     if (!skeleton.visible) return;
     for (size_t i = 0; i < nodes.size(); ++i) {

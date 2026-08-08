@@ -34,7 +34,10 @@ namespace platform {
     void open_folder(const std::filesystem::path& folder);
     bool open_url(const std::string& url);
 
-    void new_engine_instance(const std::vector<std::string>& args);
+    void new_engine_instance(
+        const std::vector<std::string>& args,
+        std::filesystem::path outputFile
+    );
 
     void sleep(size_t millis);
 

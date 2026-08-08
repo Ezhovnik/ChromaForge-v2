@@ -156,10 +156,11 @@ bool PhysicsSolver::calcCollisionNegY(
             continue;
         }
         auto aabb = AABB(pos - half, pos + half);
-        glm::vec3 scale(1.0f);
-        scale.x = 1.0f - PhysicsSolver_Consts::EPS * 4.0f;
-        scale.z = 1.0f - PhysicsSolver_Consts::EPS * 4.0f;
-        aabb.scale(scale);
+        aabb.scale(glm::vec3(
+            1.0f - PhysicsSolver_Consts::EPS * 4.0f,
+            1.0f - PhysicsSolver_Consts::EPS * 2,
+            1.0f - PhysicsSolver_Consts::EPS * 4.0f
+        ));
 
         auto boxhalf = box->getHalfSize();
         if (box->position.y < pos.y && box->getAABB().intersects(aabb)) {
@@ -185,7 +186,6 @@ bool PhysicsSolver::calcCollisionNegY(
     if (vel.y >= 0.0f) {
         return false;
     }
-    hitbox.groundVelocity = {};
     for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
         glm::vec3 coord;
         coord.x = (pos.x - half.x + PhysicsSolver_Consts::EPS) + ix;
@@ -205,6 +205,7 @@ bool PhysicsSolver::calcCollisionNegY(
                     vel.y = -hitbox.elasticity * vel.y;
                     pos.y = newy;
                 }
+                hitbox.groundVelocity = {};
                 return true;
             }
         }
@@ -281,7 +282,11 @@ void PhysicsSolver::calcCollisions(
 
     if (stepHeight > 0.0 && vel.y <= 0.0f) {
         AABB boxAABB = AABB(pos - half, pos + half);
-        boxAABB.scale(glm::vec3(1.0f - PhysicsSolver_Consts::EPS * 2, 1.0f - PhysicsSolver_Consts::EPS * 2, 1.0f - PhysicsSolver_Consts::EPS * 2));
+        boxAABB.scale(glm::vec3(
+            1.0f - PhysicsSolver_Consts::EPS * 4.0f,
+            1.0f - PhysicsSolver_Consts::EPS * 2,
+            1.0f - PhysicsSolver_Consts::EPS * 4.0f
+        ));
 
         for (int ix = 0; ix <= glm::ceil((half.x - PhysicsSolver_Consts::EPS) * 2); ++ix) {
             float x = (pos.x - half.x) + ix;
@@ -405,6 +410,10 @@ void PhysicsSolver::step(
     for (auto hitbox : hitboxes) {
         float linearDamping = hitbox->linearDamping;
 
+        if (hitbox->grounded) {
+            linearDamping = 10.0f; // TODO: add friction to material
+        }
+
         glm::vec3& vel = hitbox->velocity;
         auto diff = hitbox->groundVelocity - vel;
         vel.x += diff.x * delta * linearDamping;
@@ -415,7 +424,7 @@ void PhysicsSolver::step(
         }
 
         if (!hitbox->grounded) {
-            hitbox->groundVelocity = {};
+            hitbox->groundVelocity *= 1.0f - delta;
         }
         updateSensors(*hitbox);
     }

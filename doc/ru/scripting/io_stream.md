@@ -188,7 +188,7 @@ io_stream:close()
 -- Вызывает ioLib.flush() в all flush-режиме
 io_stream:flush()
 
--- Создаёт новый поток с переданным дескриптором и использующим переданную I/O библиотеку. (Более подробно в core:io_stream.lua)
+-- Создаёт новый поток с переданным дескриптором и использующим переданную I/O библиотеку. (Более подробно в builtin:io_stream.lua)
 io_stream.new(
     descriptor: int,
     binaryMode: bool,

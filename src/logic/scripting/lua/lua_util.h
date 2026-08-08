@@ -430,7 +430,7 @@ namespace lua {
         rawgeti(L, 4);
         auto z = tonumber(L, -1); pop(L);
         pop(L);
-        return glm::quat(x, y, z, w);
+        return glm::quat(w, x, y, z);
     }
 
     inline glm::vec3 tovec3_stack(lua::State* L, int idx) { 

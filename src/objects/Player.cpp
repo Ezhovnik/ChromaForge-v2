@@ -20,6 +20,7 @@
 #include <objects/Entt_Entity.h>
 #include <world/World.h>
 #include <world/generator/Generator.h>
+#include <util/stringutil.h>
 
 static debug::Logger logger("player");
 
@@ -30,7 +31,7 @@ namespace PlayerConsts {
 Player::Player(
 	Level& level,
 	int64_t id,
-	const std::string& name,
+	const std::wstring& name,
 	glm::vec3 position,
 	float speed,
 	std::shared_ptr<Inventory> inventory,
@@ -133,7 +134,7 @@ dv::value Player::serialize() const {
     auto root = dv::object();
 
 	root["id"] = id;
-	root["name"] = name;
+	root["name"] = util::wstr2str_utf8(name);
 
     root["position"] = dv::to_value(position);
     root["rotation"] = dv::to_value(rotation);
@@ -158,7 +159,10 @@ dv::value Player::serialize() const {
 
 void Player::deserialize(const dv::value& src) {
 	src.at("id").get(id);
-	src.at("name").get(name);
+
+	std::string utf8name;
+    src.at("name").get(utf8name);
+    name = util::str2wstr_utf8(utf8name);
 
     const auto& posarr = src["position"];
     dv::get_vec(posarr, position);
@@ -287,11 +291,11 @@ void Player::setInstantDestruction(bool flag) {
     instantDestruction = flag;
 }
 
-void Player::setName(const std::string& name) {
+void Player::setName(const std::wstring& name) {
     this->name = name;
 }
 
-const std::string& Player::getName() const {
+const std::wstring& Player::getName() const {
     return name;
 }
 

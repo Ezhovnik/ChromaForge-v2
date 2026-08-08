@@ -180,7 +180,7 @@ void LevelScreen::saveWorldPreview() {
         const auto& settings = engine.getSettings();
         int previewSize = settings.ui.worldPreviewSize.get();
 
-        Camera& camera = *player.fpCamera;
+        Camera camera = *player.fpCamera;
         camera.setFov(glm::radians(70.0f));
 
         DrawContext parent_ctx(nullptr, engine.getWindow(), batch.get());
