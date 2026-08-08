@@ -98,11 +98,11 @@ static int l_set_skeleton(lua::State* L) {
     if (assets == nullptr) return 0;
     if (auto entity = get_entity(L, 1)) {
         std::string skeletonName = lua::require_string(L, 2);
-        auto skeletonConfig = assets->get<rigging::SkeletonConfig>(skeletonName);
+        auto skeletonConfig = assets->getShared<rigging::SkeletonConfig>(skeletonName);
         if (skeletonConfig == nullptr) {
             throw std::runtime_error("Skeleton not found '" + skeletonName + "'");
         }
-        entity->setRig(skeletonConfig);
+        entity->setRig(std::move(skeletonConfig));
     }
     return 0;
 }

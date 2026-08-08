@@ -158,7 +158,7 @@ void Entities::loadEntity(const dv::value& map, Entt_Entity entity) {
     std::string skeletonName = skeleton->config->getName();
     map.at("skeleton-name").get(skeletonName);
     if (skeletonName != skeleton->config->getName()) {
-        skeleton->config = assets->get<rigging::SkeletonConfig>(skeletonName);
+        skeleton->config = assets->getShared<rigging::SkeletonConfig>(skeletonName);
     }
     if (auto foundSkeleton = map.at(COMP_SKELETON)) {
         skeleton->deserialize(*foundSkeleton);
@@ -508,7 +508,7 @@ void Entities::render(
             continue;
         }
 
-        const auto* skeletonConfig = skeleton.config;
+        const auto& skeletonConfig = skeleton.config;
         if (skeletonConfig) {
             skeletonConfig->render(
                 assets, batch, skeleton, transform.rot, pos, size
