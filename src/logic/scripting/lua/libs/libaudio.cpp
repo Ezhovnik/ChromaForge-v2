@@ -9,7 +9,7 @@ inline const char* DEFAULT_CHANNEL = "regular";
 
 inline int extract_channel_index(lua::State* L, int idx) {
     const char* channel = DEFAULT_CHANNEL;
-    if (!lua::isnoneornil(L, idx)) channel = lua::tostring(L, idx);
+    if (lua::isstring(L, idx)) channel = lua::tostring(L, idx);
     int index = audio::get_channel_index(channel);
     if (index == 0) return -1;
     return index;
@@ -104,7 +104,7 @@ inline audio::speakerid_t play_stream(
 static int l_audio_play_stream(lua::State* L) {
     return lua::pushinteger(L, static_cast<lua::Integer>(
         play_stream(
-            lua::tostring(L, 1),
+            lua::require_string(L, 1),
             false,
             lua::tonumber(L, 2),
             lua::tonumber(L, 3),
@@ -120,7 +120,7 @@ static int l_audio_play_stream(lua::State* L) {
 static int l_audio_play_stream_2d(lua::State* L) {
     return lua::pushinteger(L, static_cast<lua::Integer>(
         play_stream(
-            lua::tostring(L, 1),
+            lua::require_string(L, 1),
             true,
             0.0, 0.0, 0.0,
             lua::tonumber(L, 2),
@@ -134,7 +134,7 @@ static int l_audio_play_stream_2d(lua::State* L) {
 static int l_audio_play_sound(lua::State* L) {
     return lua::pushinteger(L, static_cast<lua::Integer>(
         play_sound(
-            lua::tostring(L, 1),
+            lua::require_string(L, 1),
             false,
             lua::tonumber(L, 2),
             lua::tonumber(L, 3),
@@ -150,7 +150,7 @@ static int l_audio_play_sound(lua::State* L) {
 static int l_audio_play_sound_2d(lua::State* L) {
     return lua::pushinteger(L, static_cast<lua::Integer>(
         play_sound(
-            lua::tostring(L, 1),
+            lua::require_string(L, 1),
             true,
             0.0, 0.0, 0.0,
             lua::tonumber(L, 2),
