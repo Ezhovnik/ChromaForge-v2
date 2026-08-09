@@ -149,6 +149,9 @@ void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     );
     lua::pushstring(main_thread, params.scriptFile.stem().u8string());
     lua::setglobal(main_thread, "__CHROMA_SCRIPT_NAME");
+
+    lua::pushboolean(main_thread, params.headless);
+    lua::setglobal(main_thread, "CHROMA_HEADLESS");
 }
 
 void lua::finalize() {

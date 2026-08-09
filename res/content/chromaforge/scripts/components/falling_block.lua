@@ -1,6 +1,5 @@
 local tsf = entity.transform
 local body = entity.rigidbody
-local rig = entity.skeleton
 
 local blockid = ARGS.block
 local blockstates = ARGS.states or 0
@@ -12,7 +11,8 @@ else
     SAVED_DATA.states = blockstates
 end
 
-do
+if not CHROMA_HEADLESS then
+    local rig = entity.skeleton
     local id = block.index(blockid)
     local rotation = block.decompose_state(blockstates)[1]
     local textures = block.get_textures(id)
