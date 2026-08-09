@@ -11,11 +11,19 @@
 #include <presets/NotePreset.h>
 #include <graphics/core/DrawContext.h>
 #include <constants.h>
+#include <world/Level.h>
+#include <objects/Entities.h>
+#include <objects/Entt_Entity.h>
 
 TextsRenderer::TextsRenderer(
-    Batch3D& batch, const Assets& assets, const Frustum& frustum
-) : batch(batch), assets(assets), frustum(frustum) {
-}
+    const Level& level,
+    Batch3D& batch,
+    const Assets& assets,
+    const Frustum& frustum
+) : level(level),
+    batch(batch),
+    assets(assets),
+    frustum(frustum) {}
 
 void TextsRenderer::renderNote(
     const TextNote& note,
@@ -29,6 +37,13 @@ void TextsRenderer::renderNote(
     const auto& text = note.getText();
     const auto& preset = note.getPreset();
     auto pos = note.getPosition();
+
+    entityid_t eid = note.getEntity();
+    if (eid != ENTITY_NONE) {
+        if (auto entity = level.entities->get(eid)) {
+            pos += entity->getTransform().displayPos;
+        }
+    }
 
     if (util::distance2(pos, camera.position) > util::sqr(preset.renderDistance / camera.zoom)) {
         return;

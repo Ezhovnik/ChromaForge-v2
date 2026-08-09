@@ -120,7 +120,7 @@ WorldRenderer::WorldRenderer(
     ),
     texts(
         std::make_unique<TextsRenderer>(
-            *batch3d, assets, *frustumCulling
+            level, *batch3d, assets, *frustumCulling
         )
     ),
     blockWraps(

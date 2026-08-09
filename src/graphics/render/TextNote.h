@@ -1,11 +1,13 @@
 #pragma once
 
 #include <presets/NotePreset.h>
+#include <constants.h>
 
 class TextNote {
     std::wstring text;
     NotePreset preset;
     glm::vec3 position;
+    entityid_t entity = ENTITY_NONE;
 
     glm::vec3 xAxis {1, 0, 0};
     glm::vec3 yAxis {0, 1, 0};
@@ -14,6 +16,9 @@ public:
 
     void setText(std::wstring_view text);
     const std::wstring& getText() const;
+
+    void setEntity(entityid_t eid);
+    entityid_t getEntity() const;
 
     const NotePreset& getPreset() const;
     void updatePreset(const dv::value& data);

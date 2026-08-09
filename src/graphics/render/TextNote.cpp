@@ -48,3 +48,11 @@ void TextNote::setAxisX(const glm::vec3& vec) {
 void TextNote::setAxisY(const glm::vec3& vec) {
     yAxis = vec;
 }
+
+void TextNote::setEntity(entityid_t eid) {
+    this->entity = eid;
+}
+
+entityid_t TextNote::getEntity() const {
+    return entity;
+}
