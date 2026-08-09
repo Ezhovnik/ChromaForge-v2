@@ -87,6 +87,7 @@ static void create_libs(State* L, StateType stateType) {
 
         openlib(L, "entities", entitylib);
         openlib(L, "cameras", cameralib);
+        openlib(L, "panorama", panoramalib);
 
         openlib(L, "__skeleton", skeletonlib);
         openlib(L, "__rigidbody", rigidbodylib);

@@ -17,7 +17,4 @@ public:
     virtual void draw(float deltaTime) = 0;
     virtual void onEngineShutdown() {};
     virtual const char* getName() const = 0;
-    virtual bool hasPanorama() const {
-        return false;
-    }
 };

@@ -26,9 +26,11 @@ local function setup_backround()
 end
 
 function on_menu_setup()
-    local screen_info = gui.get_screen_info()
-    if not (screen_info and screen_info.panorama) then
+    if not panorama.create() then
         setup_backround()
+    else
+        panorama.set_rotation_speed(0.08)
+        panorama.set_rotation(90)
     end
     menu.page = "main"
     menu.visible = true

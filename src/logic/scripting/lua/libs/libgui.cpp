@@ -1171,21 +1171,6 @@ static int l_gui_load_document(lua::State* L) {
     return 0;
 }
 
-static int l_gui_get_screen_info(lua::State* L) {
-    auto screen = scripting::engine->getScreen();
-    if (!screen) {
-        return 0;
-    }
-    lua::createtable(L, 0, 2);
-    lua::pushstring(L, screen->getName());
-    lua::setfield(L, "name");
-    if (std::strcmp(screen->getName(), "menu") == 0) {
-        lua::pushboolean(L, screen->hasPanorama());
-        lua::setfield(L, "panorama");
-    }
-    return 1;
-}
-
 static int l_set_syntax_styles(lua::State* L) {
     if (scripting::engine->isHeadless()) return 0;
     scripting::engine->getGUI().setSyntaxColorScheme(std::make_unique<FontStylesScheme>(
@@ -1246,7 +1231,6 @@ static int l_get_active_frame(lua::State* L) {
 }
 
 const luaL_Reg guilib [] = {
-    {"get_screen_info", lua::wrap<l_gui_get_screen_info>},
     {"get_viewport", lua::wrap<l_gui_get_viewport>},
     {"getattr", lua::wrap<l_gui_getattr>},
     {"setattr", lua::wrap<l_gui_setattr>},

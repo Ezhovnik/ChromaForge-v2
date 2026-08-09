@@ -7,6 +7,7 @@
 
 #include <graphics/core/Cubemap.h>
 #include <graphics/core/Texture.h>
+#include <graphics/core/ImageData.h>
 #include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Mesh.h>
 #include <graphics/core/gl_util.h>
@@ -16,31 +17,35 @@
 
 static debug::Logger logger("panorama");
 
-std::unique_ptr<Cubemap> Panorama::loadCubemap(Assets& assets) {
-    const char* faceNames[6] = {
-        "0",  // GL_TEXTURE_CUBE_MAP_POSITIVE_X
-        "1",   // GL_TEXTURE_CUBE_MAP_NEGATIVE_X
-        "2",    // GL_TEXTURE_CUBE_MAP_POSITIVE_Y
-        "3", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
-        "4",  // GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-        "5"    // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
-    };
+static const std::array<std::string, 6> DEFAULT_FACES = {
+    "panorama/0",
+    "panorama/1",
+    "panorama/2",
+    "panorama/3",
+    "panorama/4",
+    "panorama/5"
+};
 
-    Texture* faces[6] = {};
+std::unique_ptr<Cubemap> Panorama::loadCubemap(
+    Assets& assets, const std::array<std::string, 6>& faces
+) {
+    Texture* loadedFaces[6] = {};
     uint width = 0, height = 0;
 
     for (int i = 0; i < 6; ++i) {
-        faces[i] = assets.get<Texture>(std::string("panorama/") + faceNames[i]);
-        if (!faces[i]) {
-            logger.error() << "Missing texture " << faceNames[i]; 
+        loadedFaces[i] = assets.get<Texture>(faces[i]);
+        if (!loadedFaces[i]) {
+            logger.error() << "Missing texture " << faces[i];
             return nullptr;
-            continue;
         }
         if (i == 0) {
-            width = faces[i]->getWidth();
-            height = faces[i]->getHeight();
-        } else if (faces[i]->getWidth() != width || faces[i]->getHeight() != height) {
-            logger.error() << "Texture sizes mismatch for face " << faceNames[i];
+            width = loadedFaces[i]->getWidth();
+            height = loadedFaces[i]->getHeight();
+        } else if (
+            loadedFaces[i]->getWidth() != width
+            || loadedFaces[i]->getHeight() != height
+        ) {
+            logger.error() << "Texture sizes mismatch for face " << faces[i];
             return nullptr;
         }
     }
@@ -50,7 +55,7 @@ std::unique_ptr<Cubemap> Panorama::loadCubemap(Assets& assets) {
     cubemap->bind();
 
     for (int i = 0; i < 6; ++i) {
-        auto image = faces[i]->readData();
+        auto image = loadedFaces[i]->readData();
         image->flipY();
 
         GLenum format = gl::to_glenum(image->getFormat());
@@ -86,19 +91,23 @@ std::unique_ptr<Mesh<ScreenQuadVertex>> Panorama::createScreenQuad() {
     return std::make_unique<Mesh<ScreenQuadVertex>>(vertices, 3);
 }
 
-Panorama::Panorama(Assets& assets)
-    : cubemap(loadCubemap(assets))
-{
-    if (cubemap) {
-        camera = std::make_unique<Camera>(glm::vec3(0.0f), 90.0f);
-        camera->perspective = true;
-        camera->near = 0.1f;
-        camera->far = 100.0f;
+Panorama::Panorama(Assets& assets) : assets(assets) {
+    camera = std::make_unique<Camera>(glm::vec3(0.0f), 90.0f);
+    camera->perspective = true;
+    camera->near = 0.1f;
+    camera->far = 100.0f;
 
-        mesh = createScreenQuad();
-    } else {
-        logger.warning() << "Cubemap not loaded, panorama disabled";
+    mesh = createScreenQuad();
+    setTextures(DEFAULT_FACES);
+}
+
+bool Panorama::setTextures(const std::array<std::string, 6>& faces) {
+    if (auto loaded = loadCubemap(assets, faces)) {
+        cubemap = std::move(loaded);
+        return true;
     }
+    logger.warning() << "Cubemap not loaded, panorama disabled";
+    return false;
 }
 
 Panorama::~Panorama() = default;
@@ -133,4 +142,18 @@ void Panorama::draw(ShaderProgram& shader, uint width, uint height) const {
     mesh->draw();
 
     cubemap->unbind();
+}
+
+float Panorama::getRotationSpeed() const {
+    return rotationSpeed;
+}
+void Panorama::setRotationSpeed(float speed) {
+    rotationSpeed = speed;
+}
+
+float Panorama::getRotation() const {
+    return glm::degrees(rotationAngle);
+}
+void Panorama::setRotation(float angle) {
+    rotationAngle = glm::radians(angle);
 }

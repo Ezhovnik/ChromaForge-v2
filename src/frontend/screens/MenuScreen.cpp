@@ -29,11 +29,6 @@ void MenuScreen::onOpen() {
 
     auto menu = engine.getGUI().getMenu();
     menu->reset();
-
-    panorama = std::make_unique<Panorama>(*engine.getAssets());
-    if (!panorama->isValid()) {
-        panorama.reset();
-    }
 }
 
 void MenuScreen::update(float deltaTime) {
@@ -55,4 +50,21 @@ void MenuScreen::draw(float deltaTime) {
 
 bool MenuScreen::hasPanorama() const {
     return panorama != nullptr;
+}
+
+bool MenuScreen::createPanorama() {
+    panorama = std::make_unique<Panorama>(*engine.getAssets());
+    if (!panorama->isValid()) {
+        panorama.reset();
+        return false;
+    }
+    return true;
+}
+
+void MenuScreen::destroyPanorama() {
+    panorama.reset();
+}
+
+Panorama* MenuScreen::getPanorama() const {
+    return panorama.get();
 }

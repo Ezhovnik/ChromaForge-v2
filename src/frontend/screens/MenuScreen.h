@@ -21,7 +21,10 @@ public:
     void update(float deltaTime) override;
     void draw(float deltaTime) override;
 
-    bool hasPanorama() const override;
+    bool createPanorama();
+    void destroyPanorama();
+    bool hasPanorama() const;
+    Panorama* getPanorama() const;
 
     const char* getName() const override {
         return "menu";
