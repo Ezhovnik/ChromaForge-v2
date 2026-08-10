@@ -15,9 +15,9 @@
 /** Основная версия (major). */
 inline constexpr int ENGINE_VERSION_MAJOR = 0;
 /** Минорная версия (minor). */
-inline constexpr int ENGINE_VERSION_MINOR = 4;
+inline constexpr int ENGINE_VERSION_MINOR = 5;
 /** Версия поддержки (patch). */
-inline constexpr int ENGINE_VERSION_PATCH = 1;
+inline constexpr int ENGINE_VERSION_PATCH = 0;
 /** Текстовое название версии */
 inline const std::string ENGINE_VERSION_STRING = std::to_string(ENGINE_VERSION_MAJOR) + "." + std::to_string(ENGINE_VERSION_MINOR) + "." + std::to_string(ENGINE_VERSION_PATCH);
 

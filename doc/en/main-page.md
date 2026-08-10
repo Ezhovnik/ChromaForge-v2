@@ -3,6 +3,10 @@
 > [!NOTE]
 > The English documentation is still under development and may be incomplete.
 
+> [!WARNING]
+> The documentation is relevant for the **in-development** version 0.5.0 of the ChromaForge engine.
+> For the latest stable version, see the [0.4.1 documentation](https://github.com/Ezhovnik/ChromaForge-v2/blob/58ce7027c67d9ad2f73caf4ac5d66a39378aadc1/doc/en/main-page.md)
+
 ## Sections
 
 - [XML UI Layouts](xml-ui-layouts.md)
