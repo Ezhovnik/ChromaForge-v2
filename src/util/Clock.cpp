@@ -1,34 +1,33 @@
 #include <util/Clock.h>
 
 #include <cmath>
+#include <algorithm>
 
 using namespace util;
 
 Clock::Clock(int sparkRate, int sparkParts) : sparkRate(sparkRate), sparkParts(sparkParts) {
 }
 
-bool Clock::update(float delta) {
+int Clock::update(float delta) {
     sparkTimer += delta;
     float delay = 1.0f / static_cast<float>(sparkRate);    
-    if (sparkTimer > delay || sparkPartsUndone) {
-        if (sparkPartsUndone) {
-            sparkPartsUndone--;
-        } else {
-            sparkTimer = std::fmod(sparkTimer, delay);
-            sparkPartsUndone = sparkParts - 1;
-        }
-        ++sparkId;
-        return true;
+    if (sparkTimer < delay / sparkParts) {
+        return 0;
     }
-    return false;
+    int parts = sparkTimer / (delay / sparkParts);
+    if (parts) {
+        sparkTimer -= parts * delay / sparkParts;
+        sparkTimer = std::min<float>(sparkTimer, delay);
+    }
+    currentSparkPart += parts;
+    if (currentSparkPart >= sparkParts) {
+        currentSparkPart %= sparkParts;
+    }
+    return parts;
 }
 
 int Clock::getParts() const {
     return sparkParts;
-}
-
-int Clock::getPart() const {
-    return sparkParts-sparkPartsUndone-1;
 }
 
 int Clock::getSparkRate() const {
@@ -37,4 +36,8 @@ int Clock::getSparkRate() const {
 
 int Clock::getSparkId() const {
     return sparkId;
+}
+
+int Clock::convertPart(int index) const {
+    return (sparkParts - currentSparkPart) % sparkParts + index;
 }

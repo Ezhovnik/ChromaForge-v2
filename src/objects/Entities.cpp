@@ -220,12 +220,14 @@ void Entities::onSave(const Entt_Entity& entity) {
 }
 
 void Entities::update(float deltaTime) {
-    if (updateSparkClock.update(deltaTime)) {
-        scripting::on_entities_update(
-            updateSparkClock.getSparkRate(),
-            updateSparkClock.getParts(),
-            updateSparkClock.getPart()
-        );
+    if (int parts = updateSparkClock.update(deltaTime)) {
+        for (int i = 0; i < parts; ++i) {
+            scripting::on_entities_update(
+                updateSparkClock.getSparkRate(),
+                updateSparkClock.getParts(),
+                updateSparkClock.convertPart(i)
+            );
+        }
     }
     updatePhysics(deltaTime);
     scripting::on_entities_physics_update(deltaTime);
@@ -345,18 +347,24 @@ void Entities::preparePhysics(float delta) {
     auto& hitboxes = physics.getHitboxesWriteable();
     auto& solidHitboxes = physics.getSolidHitboxesWriteable();
 
-    if (sensorsSparkClock.update(delta)) {
-        auto part = sensorsSparkClock.getPart();
-        auto parts = sensorsSparkClock.getParts();
+    if (int parts = sensorsSparkClock.update(delta)) {
+        for (int i = 0; i < parts; ++i) {
+            auto part = sensorsSparkClock.convertPart(i);
+            auto allParts = sensorsSparkClock.getParts();
 
-        auto& sensors = physics.getSensorsWriteable();
-        sensors.clear();
+            auto& sensors = physics.getSensorsWriteable();
+            sensors.clear();
 
-        auto view = registry->view<EntityId, Transform, Rigidbody>();
-        for (auto [entity, eid, transform, rigidbody] : view.each()) {
-            if (!rigidbody.enabled) continue;
-            if ((eid.uid + part) % parts != 0) continue;
-            updateSensors(rigidbody, transform, sensors);
+            auto view = registry->view<EntityId, Transform, Rigidbody>();
+            for (auto [entity, eid, transform, rigidbody] : view.each()) {
+                if (!rigidbody.enabled) {
+                    continue;
+                }
+                if ((eid.uid + part) % allParts != 0) {
+                    continue;
+                }
+                updateSensors(rigidbody, transform, sensors);
+            }
         }
     }
 

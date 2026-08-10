@@ -101,9 +101,12 @@ void LevelController::update(float delta, bool pause) {
 
         for (const auto& [_, player] : *level->players) {
             if (player->isSuspended()) continue;
-            if (playerSparkClock.update(delta)) {
-                if (player->getId() % playerSparkClock.getParts() == playerSparkClock.getPart()) {
-
+            if (int parts = playerSparkClock.update(delta)) {
+                for (int i = 0; i < parts; ++i) {
+                    if (player->getId() % playerSparkClock.getParts() !=
+                        playerSparkClock.convertPart(i)) {
+                        continue;
+                    }
                     const auto& position = player->getPosition();
                     if (player->chunks->getVoxel(std::floor(position.x), std::floor(position.y), std::floor(position.z))){
                         scripting::on_player_spark(

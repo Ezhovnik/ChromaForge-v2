@@ -124,18 +124,22 @@ void BlocksController::updateBlock(int x, int y, int z) {
 }
 
 void BlocksController::update(float delta, uint padding) {
-    if (randSparkClock.update(delta)) {
-        randomSpark(
-            randSparkClock.getPart(),
-            randSparkClock.getParts(),
-            padding
-        );
+    if (int parts = randSparkClock.update(delta)) {
+        for (int i = 0; i < parts; ++i) {
+            randomSpark(
+                randSparkClock.convertPart(i),
+                randSparkClock.getParts(),
+                padding
+            );
+        }
     }
-    if (blocksSparkClock.update(delta)) {
-        onBlocksSpark(
-            blocksSparkClock.getSparkId(),
-            blocksSparkClock.getParts()
-        );
+    if (int parts = blocksSparkClock.update(delta)) {
+        for (int i = 0; i < parts; ++i) {
+            onBlocksSpark(
+                blocksSparkClock.convertPart(i),
+                blocksSparkClock.getParts()
+            );
+        }
     }
     if (worldSparkClock.update(delta)) {
         scripting::on_world_spark(
