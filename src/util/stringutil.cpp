@@ -541,30 +541,48 @@ std::pair<std::string, std::string> util::split_at(std::string_view view, char c
     );
 }
 
-std::wstring util::lower_case(const std::wstring& str) {
+template<typename CharT>
+static std::basic_string<CharT> lower_case(const std::basic_string<CharT>& str) {
     if (str.empty()) return str;
-    std::wstring result = str;
+    std::basic_string<CharT> result = str;
 #ifdef _WIN32
-    CharLowerBuffW(&result[0], result.length());
+    if constexpr (std::is_same_v<CharT, wchar_t>) {
+        CharLowerBuffW(result.data(), result.length());
+    } else if constexpr (std::is_same_v<CharT, char>) {
+        CharLowerBuffA(result.data(), result.length());
+    }
 #else
     for (size_t i = 0; i < result.length(); ++i) {
-        result[i] = static_cast<wchar_t>(std::tolower(str[i], locale));
+        result[i] = static_cast<CharT>(std::tolower(str[i], locale));
     }
 #endif
     return result;
 }
 
-std::wstring util::upper_case(const std::wstring& str) {
+template<typename CharT>
+static std::basic_string<CharT> upper_case(const std::basic_string<CharT>& str) {
     if (str.empty()) return str;
-    std::wstring result = str;
+    std::basic_string<CharT> result = str;
 #ifdef _WIN32
-    CharUpperBuffW(&result[0], result.length());
+    if constexpr (std::is_same_v<CharT, wchar_t>) {
+        CharUpperBuffW(result.data(), result.length());
+    } else if constexpr (std::is_same_v<CharT, char>) {
+        CharUpperBuffA(result.data(), result.length());
+    }
 #else
     for (size_t i = 0; i < result.length(); ++i) {
-        result[i] = static_cast<wchar_t>(std::toupper(str[i], locale));
+        result[i] = static_cast<CharT>(std::toupper(str[i], locale));
     }
 #endif
     return result;
+}
+
+std::wstring util::lower_case(const std::wstring& str) {
+    return ::lower_case(str);
+}
+
+std::wstring util::upper_case(const std::wstring& str) {
+    return ::upper_case(str);
 }
 
 std::wstring util::capitalized(const std::wstring& str) {
