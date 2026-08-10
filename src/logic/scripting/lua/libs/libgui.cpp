@@ -1031,8 +1031,9 @@ static int l_gui_get_env(lua::State* L) {
     if (doc == nullptr) {
         throw std::runtime_error("Document '" + std::string(name) + "' not found");
     }
-    lua::getglobal(L, lua::env_name(*doc->getEnvironment()));
-    return 1;
+    return lua::getregistry(
+        L, lua::ENVS_TABLE, lua::env_name(*doc->getEnvironment())
+    );
 }
 
 static int l_gui_str(lua::State* L) {

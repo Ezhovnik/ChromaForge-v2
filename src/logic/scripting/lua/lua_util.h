@@ -24,6 +24,7 @@ namespace lua {
     inline std::string LAMBDAS_TABLE = "$L";
     inline std::string CHUNKS_TABLE = "$C";
     inline std::string PACK_ENVS_TABLE = "$P";
+    inline std::string ENVS_TABLE = "$E";
 
     extern std::unordered_map<std::type_index, std::string> usertypeNames;
     int userdata_destructor(lua::State* L);
@@ -66,6 +67,16 @@ namespace lua {
         } else {
             throw std::runtime_error("Registry entry " + name + " not found");
         }
+    }
+
+    inline bool getregistry(lua::State* L, const std::string& name, const std::string& key) {
+        requireregistry(L,  name);
+        if (getfield(L, key)) {
+            lua_remove(L, -2);
+            return true;
+        }
+        pop(L);
+        return false;
     }
 
     inline bool hasglobal(lua::State* L, const std::string& name) {
@@ -570,7 +581,7 @@ namespace lua {
         if (luaL_loadbuffer(L, src.c_str(), src.length(), file.c_str())) {
             throw luaerror(tostring(L, -1));
         }
-        if (env && getglobal(L, env_name(env))) {
+        if (env && getregistry(L, ENVS_TABLE, env_name(env))) {
             lua_setfenv(L, -2);
         }
     }
@@ -665,10 +676,7 @@ namespace lua {
     scripting::common_func create_lambda_nothrow(lua::State*);
 
     inline int pushenv(lua::State* L, int env) {
-        if (getglobal(L, env_name(env))) {
-            return 1;
-        }
-        return 0;
+        return getregistry(L, ENVS_TABLE, env_name(env));
     }
     int create_environment(lua::State*, int parent);
     int restore_pack_environment(lua::State*, const std::string& packid);

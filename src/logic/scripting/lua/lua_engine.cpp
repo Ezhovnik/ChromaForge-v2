@@ -98,7 +98,15 @@ static void create_libs(State* L, StateType stateType) {
     addfunc(L, "crc32", lua::wrap<l_crc32>);
 }
 
+static int l_panic_handler(lua::State* L) {
+    logger.error() << "PANIC: unprotected error in call to Lua API: " << lua::tostring(L, -1);
+    logger.flush();
+    abort();
+}
+
 void lua::init_state(State* L, StateType stateType) {
+    lua_atpanic(L, l_panic_handler);
+
     luaL_openlibs(L);
 
     if (getglobal(L, "require")) {
@@ -127,14 +135,16 @@ void lua::init_state(State* L, StateType stateType) {
     remove_lib_funcs(L, "os", removed_os);
     create_libs(L, stateType);
 
-    pushglobals(L);
-    setglobal(L, env_name(0));
-
     createtable(L, 0, 0);
     setregistry(L, LAMBDAS_TABLE);
 
     createtable(L, 0, 0);
     setregistry(L, CHUNKS_TABLE);
+
+    createtable(L, 0, 0);
+    pushglobals(L);
+    setfield(L, env_name(0));
+    setregistry(L, ENVS_TABLE);
 
     initialize_libs_extends(L);
 
