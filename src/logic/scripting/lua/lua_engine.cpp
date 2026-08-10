@@ -94,7 +94,7 @@ static void create_libs(State* L, StateType stateType) {
     }
 
     addfunc(L, "print", lua::wrap<l_print>);
-    addfunc(L, "_crc32", lua::wrap<l_crc32>);
+    addfunc(L, "crc32", lua::wrap<l_crc32>);
 }
 
 void lua::init_state(State* L, StateType stateType) {
@@ -151,7 +151,7 @@ void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     lua::setglobal(main_thread, "__CHROMA_SCRIPT_NAME");
 
     lua::pushboolean(main_thread, params.headless);
-    lua::setglobal(main_thread, "CHROMA_HEADLESS");
+    lua::setglobal(main_thread, "__CHROMA_HEADLESS");
 }
 
 void lua::finalize() {

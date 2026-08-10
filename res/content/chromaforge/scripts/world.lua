@@ -1,5 +1,5 @@
 function on_block_broken(id, x, y, z, playerid)
-    if not CHROMA_HEADLESS then
+    if chroma.is_client() then
         local size = {block.get_size(id)}
         gfx.particles.emit({
             x + size[1] * 0.5, 

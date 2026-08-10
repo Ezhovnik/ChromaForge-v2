@@ -11,7 +11,7 @@ else
     SAVED_DATA.states = blockstates
 end
 
-if not CHROMA_HEADLESS then
+if chroma.is_client() then
     local rig = entity.skeleton
     local id = block.index(blockid)
     local rotation = block.decompose_state(blockstates)[1]

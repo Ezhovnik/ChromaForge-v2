@@ -1,5 +1,18 @@
+local _chroma_headless = __CHROMA_HEADLESS
+__CHROMA_HEADLESS = nil
+
+chroma = {
+    is_headless = function ()
+        return _chroma_headless
+    end,
+    is_client = function ()
+        return not _chroma_headless
+    end
+}
+
 local _ffi = ffi
 local _debug_getinfo = debug.getinfo
+local _crc32 = crc32
 
 function crc32(bytes, chksum)
     chksum = chksum or 0

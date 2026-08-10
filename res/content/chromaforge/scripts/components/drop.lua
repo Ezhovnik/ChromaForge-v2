@@ -25,7 +25,7 @@ function on_save()
     SAVED_DATA.data = dropitem.data
 end
 
-if not CHROMA_HEADLESS then
+if chroma.is_client() then
     local scale = {1, 1, 1}
     local rotation = mat4.rotate({
         math.random(), math.random(), math.random()
