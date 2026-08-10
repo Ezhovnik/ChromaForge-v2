@@ -39,19 +39,27 @@ std::shared_ptr<UINode> Container::getAt(
     return UINode::getAt(pos);
 }
 
+void Container::click(int x, int y) {
+    UINode::click(x, y);
+
+    if (scrollable) {
+        auto pos = calcPos();
+        x -= pos.x;
+        y -= pos.y;
+        if (x >= size.x - scrollBarWidth) {
+            scrollbarTriggered = true;
+            prevScrollY = y;
+        }
+    }
+}
+
 void Container::mouseMove(int x, int y) {
     UINode::mouseMove(x, y);
-    if (!scrollable) return;
+    if (!scrollable || !scrollbarTriggered) return;
 
     auto pos = calcPos();
     x -= pos.x;
     y -= pos.y;
-    if (prevScrollY == -1) {
-        if (x >= size.x - scrollBarWidth) {
-            prevScrollY = y;
-        }
-        return;
-    }
     int diff = (actualLength-size.y);
     if (diff > 0) {
         scroll -= (y - prevScrollY) / static_cast<float>(size.y) * actualLength;
@@ -64,7 +72,7 @@ void Container::mouseMove(int x, int y) {
 
 void Container::mouseRelease(int x, int y) {
     UINode::mouseRelease(x, y);
-    prevScrollY = -1;
+    scrollbarTriggered = false;
 }
 
 void Container::activate(float delta) {

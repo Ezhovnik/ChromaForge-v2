@@ -52,8 +52,7 @@ namespace gui {
         std::string markup;
         std::string syntax;
 
-        void stepLeft(bool shiftPressed, bool breakSelection);
-        void stepRight(bool shiftPressed, bool breakSelection);
+        void stepCaret(bool shiftPressed, bool breakSelection, bool right);
         void stepDefaultDown(bool shiftPressed, bool breakSelection);
         void stepDefaultUp(bool shiftPressed, bool breakSelection);
 
