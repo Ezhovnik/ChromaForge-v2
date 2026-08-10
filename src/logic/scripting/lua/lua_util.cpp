@@ -316,7 +316,7 @@ int lua::create_environment(lua::State* L, int parent) {
 }
 
 int lua::restore_pack_environment(lua::State* L, const std::string& packid) {
-    if(!lua::getglobal(L, "__chroma__pack_envs")) return -1;
+    if (!lua::requireregistry(L, lua::PACK_ENVS_TABLE)) return -1;
 
     int id = nextEnvironment++;
 

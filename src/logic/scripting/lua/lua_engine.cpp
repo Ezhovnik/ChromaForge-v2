@@ -64,12 +64,13 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "byteutil", byteutillib);
     openlib(L, "yaml", yamllib);
 
+    openlib(L, "__chroma_app", applib);
+    lua::getglobal(L, "__chroma_app");
+    lua::setregistry(L, "app");
+
     if (stateType == StateType::Script) {
-        openlib(L, "app", applib);
-        lua::getglobal(L, "app");
-        lua::setglobal(L, "__chroma_app");
-    } else if (stateType == StateType::Base) {
-        openlib(L, "__chroma_app", applib);
+        lua::getregistry(L, "app");
+        lua::setglobal(L, "app");
     }
     if (stateType == StateType::Base || stateType == StateType::Script) {
         openlib(L, "assets", assetslib);
@@ -110,7 +111,9 @@ void lua::init_state(State* L, StateType stateType) {
     setglobal(L, "io");
 
     createtable(L, 0, 0);
+    pushvalue(L, -1);
     setglobal(L, "__chroma__pack_envs");
+    setregistry(L, lua::PACK_ENVS_TABLE);
 
     const char* removed_os[] {
         "execute",

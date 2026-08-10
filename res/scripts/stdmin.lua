@@ -11,7 +11,6 @@ chroma = {
 }
 
 local _ffi = ffi
-local _debug_getinfo = debug.getinfo
 local _crc32 = crc32
 
 function crc32(bytes, chksum)
@@ -114,6 +113,8 @@ end
 
 ----------------------------------------------
 
+local _debug_getinfo = debug.getinfo
+
 function debug.count_frames()
     local frames = 1
     while true do
@@ -188,12 +189,15 @@ function reload_module(name)
     end
 end
 
-local internal_locked = false
+local __internal_locked = false
 
 function __load_script(path, nocache, env)
     local packname, filename = parse_path(path)
+    local is_internal = (packname == "res" or packname == "builtin") and filename:find("modules/internal") == 1
 
-    if internal_locked and (packname == "res" or packname == "builtin") and filename:starts_with("modules/internal") then
+    nocache = nocache or is_internal
+
+    if is_internal and __internal_locked then
         error("Access to builtin:internal modules outside of [builtin]")
     end
 
@@ -221,8 +225,11 @@ function __load_script(path, nocache, env)
 end
 
 function __chroma_lock_internal_modules()
-    internal_locked = true
+    __internal_locked = true
 end
+
+local __pack_envs = __chroma__pack_envs
+__chroma__pack_envs = nil
 
 function require(path)
     if not string.find(path, ':') then
@@ -230,7 +237,7 @@ function require(path)
         return require(prefix .. ':' .. path)
     end
     local prefix, file = parse_path(path)
-    local env = __chroma__pack_envs[prefix]
+    local env = __pack_envs[prefix]
     return __load_script(prefix .. ":modules/" .. file .. ".lua", nil, env)
 end
 
@@ -251,7 +258,7 @@ function __scripts_cleanup(non_reset_packs)
             __cached_scripts[k] = nil
             package.loaded[k] = nil
         end
-        __chroma__pack_envs[packname] = nil
+        __pack_envs[packname] = nil
         ::continue::
     end
 end

@@ -184,11 +184,7 @@ scriptenv scripting::create_pack_environment(const ContentPack& pack) {
     lua::pushstring(L, pack.id);
     lua::setfield(L, "PACK_ID");
 
-    if(!lua::getglobal(L, "__chroma__pack_envs")) {
-        lua::createtable(L, 0, 0);
-        lua::setglobal(L, "__chroma__pack_envs");
-        lua::pushvalue(L, -1);
-    }
+    lua::requireregistry(L, lua::PACK_ENVS_TABLE);
     lua::pushenv(L, id);
     lua::setfield(L, pack.id);
     lua::pop(L);
@@ -242,7 +238,7 @@ scriptenv scripting::create_doc_environment(const scriptenv& parent, const std::
 
 void scripting::process_post_runnables() {
     auto L = lua::get_main_state();
-    if (lua::getglobal(L, "__process_post_runnables")) {
+    if (lua::getglobal(L, "__chroma__process_post_runnables")) {
         lua::call_nothrow(L, 0, 0);
     }
 }

@@ -1,4 +1,5 @@
-local enable_experimental = __chroma_app.get_setting("debug.enable-experimental")
+local __app = __chroma_app
+local enable_experimental = __app.get_setting("debug.enable-experimental")
 
 ------------------------------------------------
 ------ Extended kit of standard functions ------
@@ -117,12 +118,7 @@ local function complete_app_lib(app)
     end
 end
 
-if app then
-    complete_app_lib(app)
-elseif __chroma_app then
-    complete_app_lib(__chroma_app)
-end
-
+complete_app_lib(__app)
 require "builtin:internal/maths_inline"
 require "builtin:internal/debugging"
 require "builtin:internal/audio_input"
@@ -172,19 +168,20 @@ end
 function start_coroutine(chunk, name)
     local co = coroutine.create(function()
         local status, error = xpcall(chunk, function(err)
-            local fullmsg = "error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
+            local fullmsg = "Error: "..string.match(err, ": (.+)").."\n"..debug.traceback()
 
-            if hud then
-                gui.alert(fullmsg, function()
-                    if world.is_open() then
-                        __chroma_app.close_world()
-                    else
-                        __chroma_app.reset_content()
-                        menu:reset()
-                        menu.page = "main"
-                    end
-                end)
+            if chroma.is_headless() then
+                return fullmsg
             end
+            gui.alert(fullmsg, function()
+                if world.is_open() then
+                    __app.close_world()
+                else
+                    __app.reset_content()
+                    menu:reset()
+                    menu.page = "main"
+                end
+            end)
             return fullmsg
         end)
         if not status then
@@ -202,7 +199,7 @@ function __chroma_start_app_script(path, name)
     if chunk == nil then
         error(err)
     end
-    local script_env = setmetatable({app = app or __chroma_app}, {__index=_G})
+    local script_env = setmetatable({app = __app}, {__index=_G})
     chunk = setfenv(chunk, script_env)
     if name then
         start_coroutine(chunk, name)
@@ -220,7 +217,7 @@ gui_util = require "builtin:internal/gui_util"
 Document = gui_util.Document
 Element = gui_util.Element
 RadioGroup = gui_util.RadioGroup
-__chroma_page_loader = gui_util.load_page
+__chroma_page_loader = function(...) return gui_util.load_page(__app, ...) end
 
 function __chroma_get_document_node(docname, nodeid)
     return Element.new(docname, nodeid)
@@ -375,79 +372,41 @@ else
     os.pid = ffi.C.getpid()
 end
 
-ffi = nil
-__chroma_lock_internal_modules()
-
 math.randomseed(time.uptime() * 1536227939)
 
-rules = {nexid = 1, rules = {}}
+rules = require "builtin:internal/rules"
 local _rules = rules
 
-function _rules.get_rule(name)
-    local rule = _rules.rules[name]
-    if rule == nil then
-        rule = {listeners={}}
-        _rules.rules[name] = rule
+local function configure_SSAO()
+    local slot = gfx.posteffects.index("builtin:ssao")
+    gfx.posteffects.set_effect(slot, "ssao")
+
+    local buffer = Bytearray(0)
+    for i = 0, 63 do
+        local x = math.random() * 2.0 - 1.0
+        local y = math.random() * 2.0 - 1.0
+        local z = math.random() * 2.0
+        local len = math.sqrt(x * x + y * y + z * z)
+        if len > 0 then
+            x = x / len
+            y = y / len
+            z = z / len
+        end
+        Bytearray.append(buffer, byteutil.pack("fff", x, y, z))
     end
-    return rule
-end
+    gfx.posteffects.set_array(slot, "u_ssaoSamples", Bytearray_as_string(buffer))
 
-function _rules.get(name)
-    local rule = _rules.rules[name]
-    if rule == nil then
-        return nil
+    local function update_ssao_quality(value)
+        value = math.min(value, 3)
+        gfx.posteffects.set_params(slot, {
+            u_kernelSize = value * 16,
+            u_radius = 0.4 / value,
+            u_bias = 0.006 / value / value,
+        })
     end
-    return rule.value
-end
+    events.on("builtin:setting.graphics.ssao.set", update_ssao_quality)
 
-function _rules.set(name, value)
-    local rule = _rules.get_rule(name)
-    rule.value = value
-    for _, handler in pairs(rule.listeners) do
-        handler(value)
-    end
-end
-
-function _rules.reset(name)
-    local rule = _rules.get_rule(name)
-    _rules.set(rule.default)
-end
-
-function _rules.listen(name, handler)
-    local rule = _rules.get_rule(name)
-    local id = _rules.nexid
-    _rules.nextid = _rules.nexid + 1
-    rule.listeners[utf8.encode(id)] = handler
-    return id
-end
-
-function _rules.create(name, value, handler)
-    local rule = _rules.get_rule(name)
-    rule.default = value
-
-    local handlerid
-    if handler ~= nil then
-        handlerid = _rules.listen(name, handler)
-    end
-    if _rules.get(name) == nil then
-        _rules.set(name, value)
-    elseif handler then
-        handler(_rules.get(name))
-    end
-    return handlerid
-end
-
-function _rules.unlisten(name, id)
-    local rule = _rules.rules[name]
-    if rule == nil then
-        return
-    end
-    rule.listeners[utf8.encode(id)] = nil
-end
-
-function _rules.clear()
-    _rules.rules = {}
-    _rules.nextid = 1
+    update_ssao_quality(__app.get_setting("graphics.ssao"))
 end
 
 function __chroma_on_hud_open()
@@ -511,6 +470,8 @@ function __chroma_on_hud_open()
         end
     end)
     hud.open_permanent("builtin:ingame_chat")
+
+    configure_SSAO()
 end
 
 local Schedule = require "builtin:schedule"
@@ -573,20 +534,27 @@ function __chroma_on_world_save()
     file.write(RULES_FILE, toml.tostring(rule_values))
 end
 
+local __close_all_descriptors = file.__close_all_descriptors
+local __gui_util_reset_local = gui_util.__reset_local
+local __stdcomp_reset = stdcomp.__reset
+file.__close_all_descriptors = nil
+gui_util.__reset_local = nil
+stdcomp.reset = nil
+
 function __chroma_on_world_quit()
     _rules.clear()
-    gui_util:__reset_local()
-    stdcomp.__reset()
-    file.__close_all_descriptors()
+    __gui_util_reset_local()
+    __stdcomp_reset()
+    __close_all_descriptors()
 end
-
-local __post_runnables = {}
 
 local fn_audio_reset_fetch_buffer = audio.__reset_fetch_buffer
 audio.__reset_fetch_buffer = nil
 builtin.get_builtin_audio_token = audio.input.__get_builtin_token
 
-local function __chroma__process_post_runnables()
+local __post_runnables = {}
+
+local function __process_post_runnables()
     if #__post_runnables > 0 then
         for _, func in ipairs(__post_runnables) do
             local status, result = xpcall(func, __chroma__error)
@@ -620,9 +588,9 @@ local function __chroma__process_post_runnables()
     end
 end
 
-function __process_post_runnables()
+function __chroma__process_post_runnables()
     __chroma__is_post_runnable = true
-    local success, err = pcall(__chroma__process_post_runnables)
+    local success, err = pcall(__process_post_runnables)
     if not success then
         debug.error("An error ocurred while processing post-runnables: ".. err)
     end
@@ -652,51 +620,9 @@ debug.getinfo = function(lvl, fields)
     return debuginfo
 end
 
--- --------- Deprecated functions ------ --
-local function wrap_deprecated(func, name, alternatives)
-    return function (...)
-        on_deprecated_call(name, alternatives)
-        return func(...)
-    end
-end
+require "builtin:internal/deprecated"
 
-block_index = wrap_deprecated(block.index, "block_index", "block.index")
-block_name = wrap_deprecated(block.name, "block_name", "block.name")
-blocks_count = wrap_deprecated(block.defs_count, "blocks_count", "block.defs_count")
-is_solid_at = wrap_deprecated(block.is_solid_at, "is_solid_at", "block.is_solid_at")
-is_replaceable_at = wrap_deprecated(block.is_replaceable_at, "is_replaceable_at", "block.is_replaceable_at")
-set_block = wrap_deprecated(block.set, "set_block", "block.set")
-get_block = wrap_deprecated(block.get, "get_block", "block.get")
-get_block_X = wrap_deprecated(block.get_X, "get_block_X", "block.get_X")
-get_block_Y = wrap_deprecated(block.get_Y, "get_block_Y", "block.get_Y")
-get_block_Z = wrap_deprecated(block.get_Z, "get_block_Z", "block.get_Z")
-get_block_states = wrap_deprecated(block.get_states, "get_block_states", "block.get_states")
-set_block_states = wrap_deprecated(block.set_states, "set_block_states", "block.set_states")
-get_block_rotation = wrap_deprecated(block.get_rotation, "get_block_rotation", "block.get_rotation")
-set_block_rotation = wrap_deprecated(block.set_rotation, "set_block_rotation", "block.set_rotation")
-get_block_user_bits = wrap_deprecated(block.get_user_bits, "get_block_user_bits", "block.get_user_bits")
-set_block_user_bits = wrap_deprecated(block.set_user_bits, "set_block_user_bits", "block.set_user_bits")
-
-function load_script(path, nocache)
-    on_deprecated_call("load_script", "require or loadstring")
-    return __load_script(path, nocache)
-end
-
-_dofile = dofile
--- Replaces dofile('*/content/packid/*') with load_script('packid:*') 
-function dofile(path)
-    on_deprecated_call("dofile", "require or loadstring")
-    local index = string.find(path, "/content/")
-    if index then
-        local newpath = string.sub(path, index + 9)
-        index = string.find(newpath, "/")
-        if index then
-            local label = string.sub(newpath, 1, index - 1)
-            newpath = label .. ':' .. string.sub(newpath, index + 1)
-            if file.isfile(newpath) then
-                return __load_script(newpath, true)
-            end
-        end
-    end
-    return _dofile(path)
-end
+ffi = nil
+__chroma_app = nil
+__chroma_lock_internal_modules()
+__chroma_lock_internal_modules = nil

@@ -23,6 +23,7 @@
 namespace lua {
     inline std::string LAMBDAS_TABLE = "$L";
     inline std::string CHUNKS_TABLE = "$C";
+    inline std::string PACK_ENVS_TABLE = "$P";
 
     extern std::unordered_map<std::type_index, std::string> usertypeNames;
     int userdata_destructor(lua::State* L);
