@@ -910,6 +910,7 @@ static void p_set_focused(
 static void p_set_caret(gui::UINode* node, lua::State* L, int idx) {
     if (auto box = dynamic_cast<gui::TextBox*>(node)) {
         box->setCaret(static_cast<ptrdiff_t>(lua::tointeger(L, idx)));
+        box->resetSelection();
     }
 }
 

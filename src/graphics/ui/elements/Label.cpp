@@ -50,16 +50,17 @@ void LabelCache::update(std::wstring_view text, bool multiline, bool wrap) {
     if (font == nullptr) wrap = false;
 
     if (multiline) {
-        size_t len = 0;
-        for (size_t i = 0; i < text.length(); ++i, ++len) {
+        size_t lineStart = 0;
+        for (size_t i = 0; i < text.length(); ++i) {
             if (text[i] == L'\n') {
-                lines.push_back(LineScheme{i + 1, false});
-                len = 0;
-            } else if (i > 0 && i + 1 < text.length() && wrap && text[i + 1] != L'\n') {
-                size_t width = metrics.calcWidth(text, i - len - 1, i - (i - len) + 2);
+                lines.push_back(LineScheme {i + 1, false});
+                lineStart = i + 1;
+            } else if (i + 1 < text.length() && wrap && text[i + 1] != L'\n') {
+                size_t width =
+                    metrics.calcWidth(text, lineStart, i - lineStart + 2);
                 if (width >= wrapWidth) {
                     lines.push_back(LineScheme {i + 1, true});
-                    len = 0;
+                    lineStart = i + 1;
                 }
             }
         }
