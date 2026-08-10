@@ -108,7 +108,7 @@ void Player::postUpdate() {
 }
 
 void Player::attemptToChooseSpawnpoint() {
-    const auto& generatorDef = level.content.generators.require(level.getWorld()->getGenerator());
+    const auto& generatorDef = level.content.generators.require(level.environment.generator);
 
     int minHeight = generatorDef.playerMinSpawnHeight;
     int maxHeight = generatorDef.playerMaxSpawnHeight;

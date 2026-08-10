@@ -30,10 +30,10 @@ world_load_error::world_load_error(const std::string& message) : std::runtime_er
 }
 
 World::World(
-	WorldInfo info,
+    WorldInfo info,
     const std::shared_ptr<WorldFiles>& worldFiles, 
-	const Content& content, 
-	const std::vector<ContentPack>& packs
+    const Content& content, 
+    const std::vector<ContentPack>& packs
 ) : info(std::move(info)),
     content(content),
     packs(packs),
@@ -43,9 +43,9 @@ World::~World() {
 }
 
 void World::updateTimers(float delta) {
-	info.daytime += delta * info.daytimeSpeed * DAYTIME_SPECIFIC_SPEED;
-	info.daytime = std::fmod(info.daytime, 1.0f); // зацикливаем в [0,1)
-	info.totalTime += delta;
+    info.daytime += delta * info.daytimeSpeed * DAYTIME_SPECIFIC_SPEED;
+    info.daytime = std::fmod(info.daytime, 1.0f); // зацикливаем в [0,1)
+    info.totalTime += delta;
 }
 
 void World::writeResources(const Content& content) {
@@ -66,33 +66,34 @@ void World::writeResources(const Content& content) {
     io::write_json(wfile->getResourcesFile(), root);
 }
 
-void World::write(Level* level) {
-	level->chunks->saveAll();
+void World::write(Level& level) {
+    level.chunks->saveAll();
+    info.nextEntityId = level.entities->peekNextID();
 
-	info.nextEntityId = level->entities->peekNextID();
-
-	// Запись метаданных мира и игрока
-	wfile->write(this, &content);
-	auto playerFile = level->players->serialize();
+    // Запись метаданных мира и игрока
+    wfile->write(this, &content);
+    auto playerFile = level.players->serialize();
     io::write_json(wfile->getPlayerFile(), playerFile);
 
-	writeResources(content);
+    writeResources(content);
 }
 
 std::unique_ptr<Level> World::create(
-	const std::string& name,
-	const std::string& generator,
-	const io::path& directory, 
-	uint64_t seed, 
-	EngineSettings& settings, 
-	const Content& content, 
-	const std::vector<ContentPack>& packs
+    const std::string& name,
+    const std::string& environment,
+    const std::string& generatorOverride,
+    const io::path& directory, 
+    uint64_t seed, 
+    EngineSettings& settings, 
+    const Content& content, 
+    const std::vector<ContentPack>& packs
 ) {
-	WorldInfo info {};
+    WorldInfo info {};
     info.name = name;
-    info.generator = generator;
+    info.environment = environment;
+    info.explicitGenerator = generatorOverride;
     info.seed = seed;
-	auto world = std::make_unique<World>(
+    auto world = std::make_unique<World>(
         info,
         std::make_unique<WorldFiles>(directory, settings.debug),
         content,
@@ -104,51 +105,55 @@ std::unique_ptr<Level> World::create(
         logger.info() << "Created world '" << name << "' (" << directory.string() << ")";
     }
     logger.info() << "World seed: " << seed;
-    logger.info() << "World generator: " << generator;
-	return std::make_unique<Level>(std::move(world), content, settings);
+    logger.info() << "World environment: " << environment;
+    return std::make_unique<Level>(std::move(world), content, settings);
 }
 
 std::shared_ptr<ContentReport> World::checkIndices(const std::shared_ptr<WorldFiles>& worldFiles, const Content* content) {
-	io::path indicesFile = worldFiles->getIndicesFile();
-	if (io::is_regular_file(indicesFile)) return ContentReport::create(worldFiles, indicesFile, content);
+    io::path indicesFile = worldFiles->getIndicesFile();
+    if (io::is_regular_file(indicesFile)) return ContentReport::create(worldFiles, indicesFile, content);
 
-	return nullptr;
+    return nullptr;
 }
 
 std::unique_ptr<Level> World::load(
-	const std::shared_ptr<WorldFiles>& worldFilesPtr,
-	EngineSettings& settings,
-	const Content& content,
-	const std::vector<ContentPack>& packs
+    const std::shared_ptr<WorldFiles>& worldFilesPtr,
+    EngineSettings& settings,
+    const Content& content,
+    const std::vector<ContentPack>& packs
 ) {
-	logger.info() << "Loading world";
-	// Временно создаём мир с заглушкой имени и сидом 0 — они будут перезаписаны при десериализации
+    logger.info() << "Loading world";
+    // Временно создаём мир с заглушкой имени и сидом 0 — они будут перезаписаны при десериализации
 
     auto worldFiles = worldFilesPtr.get();
     auto info = worldFiles->readWorldInfo();
     if (!info.has_value()) {
-		logger.error() << "Could not to find world.json";
+        logger.error() << "Could not to find world.json";
         throw world_load_error("could not to find world.json");
-	}
+    }
     info->isLoaded = true;
 
     logger.info() << "Loading world " << info->name << " (" << worldFilesPtr->getFolder().string() << ")";
-	logger.info() << "World version: " << info->major << "." << info->minor << "." << info->patch;
+    logger.info() << "World version: " << info->major << "." << info->minor << "." << info->patch;
     logger.info() << "World seed: " << info->seed;
-    logger.info() << "World generator: " << info->generator;
+    logger.info() << "World environment: " << info->environment;
 
-	auto world = std::make_unique<World>(
-		info.value(),
+    auto worldPtr = std::make_unique<World>(
+        info.value(),
         std::move(worldFilesPtr),
-		content, 
-		packs
-	);
-	auto& wfile = world->wfile;
+        content, 
+        packs
+    );
+    auto world = worldPtr.get();
+    auto& wfile = world->wfile;
 
-	wfile->readResourcesData(content);
+    wfile->readResourcesData(content);
 
-	logger.info() << "Creating a level";
-	auto level = std::make_unique<Level>(std::move(world), content, settings);
+    logger.info() << "Creating a level";
+    auto level = std::make_unique<Level>(std::move(worldPtr), content, settings);
+    if (world->getEnvironment().empty()) {
+        level->environment.generator = world->getInfo().explicitGenerator;
+    }
 
     io::path file = wfile->getPlayerFile();
     if (!io::is_regular_file(file)) {
@@ -165,9 +170,9 @@ std::unique_ptr<Level> World::load(
         }
     }
 
-	logger.info() << "Level successfully created";
-	logger.info() << "World successfully created";
-	return level;
+    logger.info() << "Level successfully created";
+    logger.info() << "World successfully created";
+    return level;
 }
 
 bool World::hasPack(const std::string& id) const {
@@ -178,7 +183,7 @@ bool World::hasPack(const std::string& id) const {
 }
 
 const std::vector<ContentPack>& World::getPacks() const {
-	return packs;
+    return packs;
 }
 
 void World::setSeed(uint64_t seed) {
@@ -186,51 +191,52 @@ void World::setSeed(uint64_t seed) {
 }
 
 uint64_t World::getSeed() const {
-	return info.seed;
+    return info.seed;
 }
 
 void World::setName(const std::string& name) {
-	this->info.name = name;
+    this->info.name = name;
 }
 
 std::string World::getName() const {
     return info.name;
 }
 
-void World::setGenerator(const std::string& generator) {
-    this->info.generator = generator;
+void World::setEnvironment(const std::string& environment) {
+    this->info.environment = environment;
 }
 
-std::string World::getGenerator() const {
-    return info.generator;
+std::string World::getEnvironment() const {
+    return info.environment;
 }
 
 void WorldInfo::deserialize(const dv::value& root) {
     name = root["name"].asString();
-    generator = root["generator"].asString(generator);
+    root.at("environment").get(environment);
+    root.at("generator").get(explicitGenerator);
     seed = root["seed"].asInteger(seed);
 
-	// Информация о версии движка
-	if (root.has("version")) {
+    // Информация о версии движка
+    if (root.has("version")) {
         auto& verobj = root["version"];
         major = verobj["major"].asInteger();
         minor = verobj["minor"].asInteger();
-		patch = (verobj.has("patch") ? verobj["patch"] : verobj["maintenance"]).asInteger();
-	}
+        patch = (verobj.has("patch") ? verobj["patch"] : verobj["maintenance"]).asInteger();
+    }
 
-	// Таймеры
-	if (root.has("time")) {
+    // Таймеры
+    if (root.has("time")) {
         auto& timeobj = root["time"];
         daytime = timeobj["day-time"].asNumber();
         daytimeSpeed = timeobj["day-time-speed"].asNumber();
         totalTime = timeobj["total-time"].asNumber();
-	}
+    }
 
-	if (root.has("weather")) {
+    if (root.has("weather")) {
         skyClearness = root["weather"]["skyClearness"].asNumber();
     }
 
-	// Счётчик инвентарей (по умолчанию 2, т.к. 1 обычно зарезервирован)
+    // Счётчик инвентарей (по умолчанию 2, т.к. 1 обычно зарезервирован)
     nextInventoryId = root["next-inventory-id"].asInteger(2);
     nextEntityId = root["next-entity-id"].asInteger(1);
     root.at("next-player-id").get(nextPlayerId);
@@ -239,23 +245,27 @@ void WorldInfo::deserialize(const dv::value& root) {
 dv::value WorldInfo::serialize() const {
     auto root = dv::object();
 
-	// Информация о версии движка
-	auto& versionobj = root.object("version");
+    // Информация о версии движка
+    auto& versionobj = root.object("version");
     versionobj["major"] = ENGINE_VERSION_MAJOR;
     versionobj["minor"] = ENGINE_VERSION_MINOR;
-	versionobj["patch"] = ENGINE_VERSION_PATCH;
+    versionobj["patch"] = ENGINE_VERSION_PATCH;
 
-	root["name"] = name;
-    root["generator"] = generator;
+    root["name"] = name;
+    if (environment.empty()) {
+        root["generator"] = explicitGenerator;
+    } else {
+        root["environment"] = environment;
+    }
     root["seed"] = seed;
 
-	// Время
-	auto& timeobj = root.object("time");
+    // Время
+    auto& timeobj = root.object("time");
     timeobj["day-time"] = daytime;
     timeobj["day-time-speed"] = daytimeSpeed;
     timeobj["total-time"] = totalTime;
 
-	root["weather"] = dv::object();
+    root["weather"] = dv::object();
     root["weather"]["skyClearness"] = skyClearness;
 
     root["next-inventory-id"] = nextInventoryId;
