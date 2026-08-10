@@ -30,21 +30,40 @@ namespace lua {
     std::string env_name(int env);
     void dump_stack(lua::State*);
 
-    inline bool getglobal(lua::State* L, const std::string& name) {
-        lua_getglobal(L, name.c_str());
-        if (isnil(L, -1)) {
+    inline bool isnoneornil(lua::State* L, int idx) {
+        return lua_isnoneornil(L, idx);
+    }
+
+    inline bool getfield(lua::State* L, const std::string& name, int idx = -1) {
+        lua_getfield(L, idx, name.c_str());
+        if (isnoneornil(L, -1)) {
             pop(L);
             return false;
         }
         return true;
     }
 
+    inline bool getglobal(lua::State* L, const std::string& name) {
+        return getfield(L, name, LUA_GLOBALSINDEX);
+    }
+
+    inline bool getregistry(lua::State* L, const std::string& name) {
+        return getfield(L, name, LUA_REGISTRYINDEX);
+    }
+
     inline int requireglobal(lua::State* L, const std::string& name) {
         if (getglobal(L, name)) {
             return 1;
         } else {
-            log_error("Global name " + name + " not found");
             throw std::runtime_error("Global name " + name + " not found");
+        }
+    }
+
+    inline int requireregistry(lua::State* L, const std::string& name) {
+        if (getregistry(L, name)) {
+            return 1;
+        } else {
+            throw std::runtime_error("Registry entry " + name + " not found");
         }
     }
 
@@ -224,10 +243,6 @@ namespace lua {
         return pushvalue(L, LUA_GLOBALSINDEX);
     }
 
-    inline bool isnoneornil(lua::State* L, int idx) {
-        return lua_isnoneornil(L, idx);
-    }
-
     inline bool isboolean(lua::State* L, int idx) {
         return lua_isboolean(L, idx);
     }
@@ -303,6 +318,10 @@ namespace lua {
 
     inline void setglobal(lua::State* L, const std::string& name) {
         lua_setglobal(L, name.c_str());
+    }
+
+    inline void setregistry(lua::State* L, const std::string& key) {
+        lua_setfield(L, LUA_REGISTRYINDEX, key.c_str());
     }
 
     template<class T>
@@ -486,15 +505,6 @@ namespace lua {
 
     [[nodiscard]] dv::value tovalue(lua::State*, int idx);
 
-    inline bool getfield(lua::State* L, const std::string& name, int idx=-1) {
-        lua_getfield(L, idx, name.c_str());
-        if (isnoneornil(L, -1)) {
-            pop(L);
-            return false;
-        }
-        return true;
-    }
-
     inline int requirefield(lua::State* L, const std::string& name, int idx = -1) {
         if (getfield(L, name, idx)) {
             return 1;
@@ -570,26 +580,68 @@ namespace lua {
             setfield(L, name);
             pop(L, 2);
         } else {
-            log_error("Table " + tableName + " not found");
-            throw std::runtime_error("Table " + tableName + " not found");
+            throw std::runtime_error("Global table " + tableName + " not found");
         }
     }
 
-    inline int get_from(lua::State* L, const std::string& tableName, const std::string& name, bool required=false) {
-        if (getglobal(L, tableName)) {
+    inline void store_in_registry(
+        lua::State* L, const std::string& tableName, const std::string& name
+    ) {
+        if (getregistry(L, tableName)) {
+            pushvalue(L, -2);
+            setfield(L, name);
+            pop(L, 2);
+        } else {
+            throw std::runtime_error("Table " + tableName + " not found in registry");
+        }
+    }
+
+    inline int get_from(
+        lua::State* L,
+        const std::string& tableName,
+        const std::string& name,
+        bool required,
+        int idx,
+        std::string_view context
+    ) {
+        if (getfield(L, tableName, idx)) {
             if (getfield(L, name)) {
                 return 1;
             } else if (required) {
                 pop(L);
-                log_error("Table " + tableName + " has no member " + name);
-                throw std::runtime_error("Table " + tableName + " has no member " + name);
+                throw std::runtime_error(
+                    std::string(context) + " table " + tableName + " has no member " + name
+                );
             }
             pop(L);
             return 0;
         } else {
-            log_error("Table " + tableName + " not found");
-            throw std::runtime_error("Table " + tableName + " not found");
+            throw std::runtime_error(
+                std::string(context) + " table " + tableName + " not found"
+            );
         }
+    }
+
+    inline int get_from(
+        lua::State* L,
+        const std::string& tableName,
+        const std::string& name,
+        bool required = false
+    ) {
+        return get_from(
+            L, tableName, name, required, LUA_GLOBALSINDEX, "global"
+        );
+    }
+
+    inline int get_from_registry(
+        lua::State* L,
+        const std::string& tableName,
+        const std::string& name,
+        bool required = false
+    ) {
+        return get_from(
+            L, tableName, name, required, LUA_REGISTRYINDEX, "registry"
+        );
     }
 
     int call(lua::State*, int argc, int nresults=-1);
