@@ -11,10 +11,12 @@ uint Texture::MAX_RESOLUTION = 1024; // Window.initialize overrides it
 
 Texture::Texture(
     uint id,
-    uint width, uint height
+    uint width, uint height,
+    ImageFormat imageFormat
 ) : id(id),
     width(width),
-    height(height) {}
+    height(height),
+    format(gl::to_glenum(imageFormat)) {}
 
 Texture::Texture(
     const ubyte* data,
@@ -27,7 +29,7 @@ Texture::Texture(
     glBindTexture(GL_TEXTURE_2D, id);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    GLenum format = gl::to_glenum(imageFormat);
+    format = gl::to_glenum(imageFormat);
     glTexImage2D(
         GL_TEXTURE_2D, 0, format, width, height, 0,
         format, GL_UNSIGNED_BYTE, static_cast<const GLvoid*>(data)
@@ -51,21 +53,25 @@ void Texture::unbind() const {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void Texture::resize(uint width, uint height) {
+    reload(nullptr, width, height);
+}
+
 void Texture::reload(const ImageData& image) {
-    width = image.getWidth();
-    height = image.getHeight();
     reload(image.getData(), width, height);
 }
 
 void Texture::reload(const ubyte* data, uint width, uint height) {
+    this->width = width;
+    this->height = height;
     glBindTexture(GL_TEXTURE_2D, id);
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGBA,
+        format,
         width, height,
         0,
-        GL_RGBA,
+        format,
         GL_UNSIGNED_BYTE,
         static_cast<const GLvoid*>(data)
     );
@@ -80,7 +86,7 @@ void Texture::reloadPartial(const ImageData& image, uint x, uint y, uint w, uint
         0,
         x, y,
         w, h,
-        GL_RGBA,
+        format,
         GL_UNSIGNED_BYTE,
         static_cast<const GLvoid*>(image.getData())
     );

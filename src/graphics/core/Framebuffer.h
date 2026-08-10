@@ -8,27 +8,28 @@
 class Texture;
 
 class Framebuffer : public Bindable {
-	uint fbo;
-	uint depth;
-	uint width;
-	uint height;
-	uint format;
-	std::shared_ptr<Texture> texture;
+    uint fbo;
+    uint depth;
+    uint width;
+    uint height;
+    std::shared_ptr<Texture> texture;
 public:
-	Framebuffer(uint fbo, uint depth, std::unique_ptr<Texture> texture);
-	Framebuffer(uint width, uint height, bool alpha=false);
-	~Framebuffer();
+    Framebuffer(uint fbo, uint depth, std::unique_ptr<Texture> texture);
+    Framebuffer(uint width, uint height, bool alpha=false);
+    ~Framebuffer();
 
-	void bind() override;
-	void unbind() override;
+    void setTexture(std::unique_ptr<Texture> texture);
 
-	void resize(uint width, uint height);
+    void bind() const override;
+    void unbind() const override;
 
-	Texture* getTexture() const;
-	std::shared_ptr<Texture> getSharedTexture() const;
+    void resize(uint width, uint height);
 
-	uint getWidth() const;
-	uint getHeight() const;
+    Texture* getTexture() const;
+    std::shared_ptr<Texture> getSharedTexture() const;
 
-	uint getFBO() const;
+    uint getWidth() const;
+    uint getHeight() const;
+
+    uint getFBO() const;
 };

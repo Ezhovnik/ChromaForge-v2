@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 
 #include <typedefs.h>
+#include <world/Environment.h>
 
 class World;
 class PhysicsSolver;
@@ -44,6 +45,7 @@ public:
     std::unique_ptr<Players> players;
     std::unique_ptr<voxels::Pathfinding> pathfinding;
     std::vector<std::shared_ptr<Camera>> cameras;
+    Environment environment {};
 
 	/**
      * @brief Конструктор уровня.

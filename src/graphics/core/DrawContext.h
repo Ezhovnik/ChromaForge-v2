@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
 
@@ -27,6 +29,8 @@ private:
 
     int scissorsCount = 0;
     float lineWidth = 1.0f;
+
+    std::array<const Bindable*, advanced_pipeline::TARGETS_COUNT> textures {};
 public:
     DrawContext(
         const DrawContext* parent,
@@ -47,4 +51,6 @@ public:
     void setBlendMode(BlendMode mode);
     void setScissors(const glm::vec4& area);
     void setLineWidth(float width);
+
+    void useTexture(int target, const Bindable* texture);
 };

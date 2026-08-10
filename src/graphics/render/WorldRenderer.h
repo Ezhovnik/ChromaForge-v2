@@ -95,6 +95,8 @@ private:
     );
 
     void refreshSettings(ShaderProgram** shaders);
+
+    float calcFogFactor() const;
 public:
     std::unique_ptr<ParticlesRenderer> particles;
     std::unique_ptr<TextsRenderer> texts;

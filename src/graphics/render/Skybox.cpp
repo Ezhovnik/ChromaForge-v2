@@ -27,18 +27,13 @@ namespace SkyboxConsts {
 
 Skybox::Skybox(
     uint size,
-    ShaderProgram& shader
+    const Assets& assets
 ) : size(size),
-    shader(shader),
+    assets(assets),
+    shader(assets.require<ShaderProgram>("skybox_gen")),
     batch3d(std::make_unique<Batch3D>(4096))
 {
-    auto cubemap = std::make_unique<Cubemap>(size, size, ImageFormat::rgb888);
-
-    uint fboid;
-    glGenFramebuffers(1, &fboid);
-    fbo = std::make_unique<Framebuffer>(fboid, 0, std::move(cubemap));
-
-    SkyboxVertex vertices[]{
+    SkyboxVertex vertices[] {
         {{-1.0f, -1.0f}},
         {{-1.0f, 1.0f}},
         {{1.0f, 1.0f}},
@@ -71,12 +66,14 @@ Skybox::Skybox(
         true,
         glm::pi<float>() * 0.25f
     });
+
+    setMode(mode);
 }
 
 Skybox::~Skybox() = default;
 
 void Skybox::drawBackground(
-    const Camera& camera, const Assets& assets, int width, int height
+    const Camera& camera, int width, int height
 ) {
     auto backShader = assets.get<ShaderProgram>("background");
     backShader->use();
@@ -86,9 +83,11 @@ void Skybox::drawBackground(
     );
 	backShader->uniform1f("u_ar", float(width) / float(height));
     backShader->uniform1i("u_skybox", 1);
-    bind();
+
+    auto texture = fbo->getTexture();
+    texture->bind();
     mesh->draw();
-    unbind();
+    texture->unbind();
 }
 
 void Skybox::drawStars(float angle, float opacity) {
@@ -120,38 +119,17 @@ void Skybox::drawStars(float angle, float opacity) {
     batch3d->flushPoints();
 }
 
-void Skybox::draw(
-    const DrawContext& pctx,
-    const Camera& camera, 
-    const Assets& assets,
+void Skybox::drawSkySprites(
     float daytime,
-    float fog
+    float angle,
+    float opacity
 ) {
-    const glm::uvec2& viewport = pctx.getViewport();
-
-    glActiveTexture(GL_TEXTURE0);
-
-    drawBackground(camera, assets, viewport.x, viewport.y);
-
-    DrawContext ctx = pctx.sub();
-    ctx.setBlendMode(BlendMode::Addition);
-
-    auto shader = assets.get<ShaderProgram>("ui3d");
-    shader->use();
-    shader->uniformMatrix("u_projview", camera.getProjView(false));
-    shader->uniformMatrix("u_apply", glm::mat4(1.0f));
-    batch3d->begin();
-
-    float angle = daytime * glm::pi<float>() * 2.0f;
-    float opacity = glm::pow(1.0f - fog, 7.0f);
-
     float depthScale = 2e3;
     for (auto& sprite : sprites) {
         batch3d->texture(assets.get<Texture>(sprite.texture));
 
         float sangle = daytime * glm::pi<float>() * 2.0 + sprite.phase;
         float distance = sprite.distance * depthScale;
-
         glm::mat4 rotation = glm::rotate(
             glm::mat4(1.0f),
             -sangle + glm::pi<float>() * 0.5f,
@@ -162,44 +140,126 @@ void Skybox::draw(
         glm::vec3 up = glm::vec4(depthScale, 0, 0, 1) * rotation;
         glm::vec3 right = glm::vec4(0, 0, depthScale, 1) * rotation;
         glm::vec4 tint(1, 1, 1, opacity);
-        if (!sprite.emissive) tint *= 0.6f + std::cos(angle) * 0.4;
-
+        if (!sprite.emissive) {
+            tint *= 0.6f + std::cos(angle) * 0.4;
+        }
         batch3d->sprite(pos, right, up, 1, 1, UVRegion(), tint);
     }
-
     batch3d->flush();
-    drawStars(angle, opacity);
+}
+
+void Skybox::draw(
+    const Environment& environment,
+    const DrawContext& pctx,
+    const Camera& camera,
+    float daytime,
+    float fog
+) {
+    const glm::uvec2& viewport = pctx.getViewport();
+
+    drawBackground(camera, viewport.x, viewport.y);
+
+    float angle = daytime * glm::pi<float>() * 2.0f;
+    float opacity = glm::pow(1.0f - fog, 7.0f);
+
+    DrawContext ctx = pctx.sub();
+    ctx.setBlendMode(BlendMode::Addition);
+
+    if (!environment.sky.sprites && !environment.sky.stars) {
+        return;
+    }
+
+    auto shader = assets.get<ShaderProgram>("ui3d");
+    shader->use();
+    shader->uniformMatrix("u_projview", camera.getProjView(false));
+    shader->uniformMatrix("u_apply", glm::mat4(1.0f));
+    batch3d->begin();
+
+    if (environment.sky.sprites) {
+        drawSkySprites(daytime, angle, opacity);
+    }
+    if (environment.sky.stars) {
+        drawStars(angle, opacity);
+    }
+}
+
+void Skybox::setMode(SkyMode mode) {
+    if (this->mode == mode && fbo) {
+        return;
+    }
+    this->mode = mode;
+
+    uint size = mode == SkyMode::Box ? this->size : 1U;
+    prevT = std::numeric_limits<float>().min();
+
+    uint fboid;
+    glGenFramebuffers(1, &fboid);
+    fbo = std::make_unique<Framebuffer>(
+        fboid,
+        false,
+        std::make_unique<Cubemap>(size, size, ImageFormat::rgb888)
+    );
 }
 
 void Skybox::refresh(
-    const DrawContext& parent_context,
-    float t,
+    const Environment& environment,
+    const DrawContext& pctx,
+    float dayTime,
     float mie,
     const glm::vec3& tint,
     const glm::vec3& hightlight,
     uint quality
 ) {
-    frameID++;
-    float dayTime = t;
+    setMode(environment.sky.mode);
 
-    DrawContext context = parent_context.sub();
+    if (mode == SkyMode::None) {
+        return;
+    } else if (mode == SkyMode::Solid) {
+        DrawContext ctx = pctx.sub();
+        ctx.setDepthMask(false);
+        ctx.setDepthTest(false);
+        ctx.setFramebuffer(fbo.get());
+        ctx.setViewport({fbo->getWidth(), fbo->getHeight()});
+
+        ctx.useTexture(advanced_pipeline::TARGET_SKYBOX, fbo->getTexture());
+        ctx.useTexture(advanced_pipeline::TARGET_COLOR, nullptr);
+
+        auto cubemap = dynamic_cast<Cubemap*>(fbo->getTexture());
+        assert(cubemap != nullptr);
+
+        for (int face = 0; face < 6; face++) {
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                cubemap->getId(),
+                0
+            );
+            glClearColor(tint.r, tint.g, tint.b, 1);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+
+        return;
+    }
+
+    frameID++;
+
+    DrawContext context = pctx.sub();
     context.setDepthMask(false);
     context.setDepthTest(false);
     context.setFramebuffer(fbo.get());
-    context.setViewport({size, size});
+    context.setViewport({fbo->getWidth(), fbo->getHeight()});
+
+    context.useTexture(advanced_pipeline::TARGET_SKYBOX, fbo->getTexture());
+    context.useTexture(advanced_pipeline::TARGET_COLOR, nullptr);
 
     auto cubemap = dynamic_cast<Cubemap*>(fbo->getTexture());
     assert(cubemap != nullptr);
 
-    ready = true;
-    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SKYBOX);
-    cubemap->bind();
-    shader.use();
-    t *= glm::two_pi<float>();
-
+    float t = dayTime * glm::two_pi<float>();
     lightDir = glm::normalize(glm::vec3(sin(t), -cos(t), 0.0f));
 
-    float sunAngle = glm::radians((t / glm::two_pi<float>() - 0.25f) * 360.0f);
+    float sunAngle = glm::radians((dayTime - 0.25f) * 360.0f);
     float x = -glm::cos(sunAngle + glm::pi<float>() * 0.5f) * glm::radians(sunAltitude);
     float y = sunAngle - glm::pi<float>() * 0.5f;
     float z = glm::radians(0.0f);
@@ -208,6 +268,7 @@ void Skybox::refresh(
     rotation = glm::rotate(rotation, z, glm::vec3(0, 0, 1));
     lightDir = glm::vec3(rotation * glm::vec4(0, 0, -1, 1));
 
+    shader.use();
     shader.uniform1i("u_quality", quality);
     shader.uniform1f("u_mie", mie);
     shader.uniform3f("u_tint", tint);
@@ -218,21 +279,18 @@ void Skybox::refresh(
 
     if (glm::abs(mie - prevMie) + glm::abs(t - prevT) + glm::abs(prevHighlight.r - hightlight.r) >= 0.01) {
         for (uint face = 0; face < 6; ++face) {
-            refreshFace(face, cubemap);
+            refreshFace(face, *cubemap);
         }
     } else {
         uint face = frameID % 6;
-        refreshFace(face, cubemap);
+        refreshFace(face, *cubemap);
     }
     prevMie = mie;
     prevT = t;
     prevHighlight = hightlight;
-
-    cubemap->unbind();
-    glActiveTexture(GL_TEXTURE0);
 }
 
-void Skybox::refreshFace(uint face, Cubemap* cubemap) {
+void Skybox::refreshFace(uint face, Cubemap& cubemap) {
     const glm::vec3 xaxs[] = {
         {0.0f, 0.0f, -1.0f},
         {0.0f, 0.0f, 1.0f},
@@ -266,7 +324,7 @@ void Skybox::refreshFace(uint face, Cubemap* cubemap) {
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
-        cubemap->getId(),
+        cubemap.getId(),
         0
     );
     shader.uniform3f("u_xaxis", xaxs[face]);
@@ -275,14 +333,6 @@ void Skybox::refreshFace(uint face, Cubemap* cubemap) {
     mesh->draw();
 }
 
-void Skybox::bind() const {
-    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SKYBOX);
-    fbo->getTexture()->bind();
-    glActiveTexture(GL_TEXTURE0);
-}
-
-void Skybox::unbind() const {
-    glActiveTexture(GL_TEXTURE0 + advanced_pipeline::TARGET_SKYBOX);
-    fbo->getTexture()->unbind();
-    glActiveTexture(GL_TEXTURE0);
+const Cubemap* Skybox::getCubemap() const {
+    return dynamic_cast<const Cubemap*>(fbo->getTexture());
 }

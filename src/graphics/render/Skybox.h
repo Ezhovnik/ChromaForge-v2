@@ -9,8 +9,10 @@
 #include <typedefs.h>
 #include <math/rand.h>
 #include <graphics/core/MeshData.h>
+#include <world/Environment.h>
 
-template<typename VertexStructure> class Mesh;
+template<typename VertexStructure>
+class Mesh;
 class Assets;
 class Camera;
 class Batch3D;
@@ -37,8 +39,10 @@ struct SkySprite {
 };
 
 class Skybox {
-    std::unique_ptr<Framebuffer> fbo;
+    SkyMode mode = SkyMode::Solid;
     uint size;
+    std::unique_ptr<Framebuffer> fbo;
+    const Assets& assets;
     ShaderProgram& shader;
     util::FastRandom random;
     glm::vec3 lightDir;
@@ -55,28 +59,26 @@ class Skybox {
     glm::mat4 rotation;
 
     void drawStars(float angle, float opacity);
-    void drawBackground(
-        const Camera& camera,
-        const Assets& assets,
-        int width, int height
-    );
+    void drawBackground(const Camera& camera, int width, int height);
+    void drawSkySprites(float daytime, float angle, float opacity);
 
-    void refreshFace(uint face, Cubemap* cubemap);
-
-    bool ready = false;
+    void refreshFace(uint face, Cubemap& cubemap);
 public:
-    Skybox(uint size, ShaderProgram& shader);
+    Skybox(uint size, const Assets& assets);
     ~Skybox();
 
+    void setMode(SkyMode mode);
+
     void draw(
+        const Environment& environment,
         const DrawContext& pctx,
         const Camera& camera,
-        const Assets& assets,
         float daytime,
         float fog
     );
 
     void refresh(
+        const Environment& environment,
         const DrawContext& pctx,
         float t,
         float mie,
@@ -84,10 +86,10 @@ public:
         const glm::vec3& hightlight,
         uint quality
     );
-    void bind() const;
-    void unbind() const;
-    bool isReady() const {return ready;};
-    const glm::vec3 getLightDir() const {
+
+    const Cubemap* getCubemap() const;
+
+    const glm::vec3& getLightDir() const {
         return lightDir;
     }
 };
