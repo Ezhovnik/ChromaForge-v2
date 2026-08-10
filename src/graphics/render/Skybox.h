@@ -30,14 +30,6 @@ struct SkyboxVertex {
     };
 };
 
-struct SkySprite {
-    std::string texture;
-    float phase;
-    float distance;
-    bool emissive;
-    float altitude;
-};
-
 class Skybox {
     SkyMode mode = SkyMode::Solid;
     uint size;
@@ -49,7 +41,6 @@ class Skybox {
 
     std::unique_ptr<Mesh<SkyboxVertex>> mesh;
     std::unique_ptr<Batch3D> batch3d;
-    std::vector<SkySprite> sprites;
     int frameID = 0;
 
     float prevMie = -1.0f;
@@ -60,7 +51,12 @@ class Skybox {
 
     void drawStars(float angle, float opacity);
     void drawBackground(const Camera& camera, int width, int height);
-    void drawSkySprites(float daytime, float angle, float opacity);
+    void drawSkySprites(
+        float daytime,
+        float angle,
+        float opacity,
+        const std::vector<SkySprite>& sprites
+    );
 
     void refreshFace(uint face, Cubemap& cubemap);
 public:

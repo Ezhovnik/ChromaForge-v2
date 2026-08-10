@@ -5,6 +5,16 @@
 #include <data/dv_util.h>
 
 dv::value Environment::serialize() const {
+    auto skySpritesList = dv::list();
+    for (const auto& sprite : sky.sprites) {
+        skySpritesList.add(dv::object({
+            {"texture", sprite.texture},
+            {"phase", sprite.phase},
+            {"distance", sprite.distance},
+            {"emissive", sprite.emissive},
+            {"altitude", sprite.altitude},
+        }));
+    }
     return dv::object({
         {
             "sky",
@@ -12,7 +22,7 @@ dv::value Environment::serialize() const {
                 {"mode", SkyModeMeta.getNameString(sky.mode)},
                 {"stars", sky.stars},
                 {"clouds", sky.clouds},
-                {"sprites", sky.sprites},
+                {"sprites", std::move(skySpritesList)},
             })
         },
     });
@@ -23,6 +33,17 @@ void Environment::deserialize(const dv::value& src) {
         skyItem->at("mode").get(sky.mode, SkyModeMeta);
         skyItem->at("stars").get(sky.stars);
         skyItem->at("clouds").get(sky.clouds);
-        skyItem->at("sprites").get(sky.sprites);
+        if (auto skySpritesList = skyItem->at("sprites")) {
+            for (int i = 0; i < skySpritesList->size(); ++i) {
+                SkySprite sprite;
+                const auto& item = (*skySpritesList.ptr)[i];
+                item.at("texture").get(sprite.texture);
+                item.at("phase").get(sprite.phase);
+                item.at("distance").get(sprite.distance);
+                item.at("emissive").get(sprite.emissive);
+                item.at("altitude").get(sprite.altitude);
+                sky.sprites.push_back(std::move(sprite));
+            }
+        }
     }
 }
