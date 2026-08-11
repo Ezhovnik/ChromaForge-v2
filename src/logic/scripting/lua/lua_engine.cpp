@@ -17,8 +17,8 @@
 #include <engine/Engine.h>
 
 static debug::Logger logger("lua-engine");
-
 static lua::State* main_thread = nullptr;
+static bool headless_mode = false;
 
 using namespace lua;
 
@@ -151,20 +151,45 @@ void lua::init_state(State* L, StateType stateType) {
     newusertype<LuaHeightmap>(L);
     newusertype<LuaVoxelFragment>(L);
     newusertype<LuaCanvas>(L);
+
+    pushboolean(L, headless_mode);
+    setglobal(L, "__CHROMA_HEADLESS");
+
+    auto file = "res:scripts/stdmin.lua";
+    auto src = io::read_string(file);
+    lua::pop(L, lua::execute(L, 0, src, "builtin:scripts/stdmin.lua"));
+
+    newusertype<LuaRandom>(L);
+    if (getglobal(L, "random")) {
+        if (getglobal(L, "__chroma_Random")) {
+            setfield(L, "Random");
+        }
+        pop(L);
+    }
+    newusertype<LuaPCMStream>(L);
+    if (getglobal(L, "audio")) {
+        if (getglobal(L, "__chroma_PCMStream")) {
+            setfield(L, "PCMStream");
+        }
+        pop(L);
+    }
+
+    if (stateType == StateType::Generator) {
+        pushnil(L);
+        setglobal(L, "ffi");
+    }
 }
 
 void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     logger.info() << "Lua version: " << LUA_VERSION;
     logger.info() << "LuaJIT version: " << LUAJIT_VERSION;
 
+    headless_mode = params.headless;
     main_thread = create_state(
         paths, params.headless ? StateType::Script : StateType::Base
     );
     lua::pushstring(main_thread, params.scriptFile.stem().u8string());
     lua::setglobal(main_thread, "__CHROMA_SCRIPT_NAME");
-
-    lua::pushboolean(main_thread, params.headless);
-    lua::setglobal(main_thread, "__CHROMA_HEADLESS");
 }
 
 void lua::finalize() {
@@ -195,31 +220,6 @@ State* lua::create_state(const EnginePaths& paths, StateType stateType) {
         throw luaerror("Could not initialize Lua state");
     }
     init_state(L, stateType);
-
-    auto file = "res:scripts/stdmin.lua";
-    auto src = io::read_string(file);
-    lua::pop(L, lua::execute(L, 0, src, "builtin:scripts/stdmin.lua"));
-
-    newusertype<LuaRandom>(L);
-    if (getglobal(L, "random")) {
-        if (getglobal(L, "__chroma_Random")) {
-            setfield(L, "Random");
-        }
-        pop(L);
-    }
-
-    newusertype<LuaPCMStream>(L);
-    if (getglobal(L, "audio")) {
-        if (getglobal(L, "__chroma_PCMStream")) {
-            setfield(L, "PCMStream");
-        }
-        pop(L);
-    }
-
-    if (stateType == StateType::Generator) {
-        pushnil(L);
-        setglobal(L, "ffi");
-    }
 
     return L;
 }
