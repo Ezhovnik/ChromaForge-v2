@@ -68,6 +68,7 @@ struct UISettings {
 
 struct AudioSettings {
     BoolSetting enabled {true};
+    BoolSetting recordingEnabled {false};
 
     NumberSetting volumeMaster {1.0f, 0.0f, 1.0f, SettingFormat::Percent};
     NumberSetting volumeRegular {1.0f, 0.0f, 1.0f, SettingFormat::Percent};

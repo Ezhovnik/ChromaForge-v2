@@ -159,6 +159,13 @@ void audio::initialize(
         backend = NoAudio::create().release();
     }
 
+    if (settings.inputDevice.get() == "auto") {
+        auto inputDevices = audio::get_input_devices_names();
+        if (!inputDevices.empty()) {
+            settings.inputDevice.set(inputDevices.at(0));
+        }
+    }
+
     struct {
         std::string name;
         NumberSetting* setting;
@@ -177,16 +184,35 @@ void audio::initialize(
         }, true));
     }
 
-    objects_keeper.keepAlive(settings.acousticEffects.observe([=](auto value) {
+    objects_keeper.keepAlive(settings.acousticEffects.observe([=](bool value) {
         if (value) return;
         backend->setAcoustics(audio::Acoustics {});
     }, true));
 
-    if (inputEnabled) {
-        input_device = backend->openInputDevice("", 44100, 1, 16);
-        input_enabled = true;
-    }
-    if (input_device) input_device->startCapture();
+    audio::input_enabled = inputEnabled;
+
+    objects_keeper.keepAlive(settings.recordingEnabled.observe([&settings](bool enabled) {
+        if (!audio::input_enabled) {
+            return;
+        }
+        if (!enabled && audio::input_device == nullptr) {
+            return;
+        }
+        if (enabled) {
+            logger.info() << "Recording enabled; input device is " << settings.inputDevice.get();
+            audio::input_device = backend->openInputDevice(
+                settings.inputDevice.get(), 44100, 1, 16
+            );
+            if (audio::input_device != nullptr) {
+                audio::input_device->startCapture();
+            }
+        } else {
+            if (audio::input_device) {
+                audio::input_device->stopCapture();
+            }
+            audio::input_device = nullptr;
+        }
+    }, true));
 }
 
 InputDevice* audio::get_input_device() {
