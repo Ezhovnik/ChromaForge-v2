@@ -49,6 +49,13 @@ namespace util {
             return last[0] == '-';
         }
 
+        bool isNextKeywordArg() const {
+            if (pos >= argc) {
+                throw std::runtime_error("Unexpected end");
+            }
+            return argv[pos][0] == '-';
+        }
+
         /**
          * @brief Возвращает следующий аргумент и перемещает позицию.
          * @return Строка с аргументом.

@@ -1,5 +1,7 @@
 local _chroma_headless = __CHROMA_HEADLESS
+local _chroma_project_args = __CHROMA_PROJECT_ARGS
 __CHROMA_HEADLESS = nil
+__CHROMA_PROJECT_ARGS = nil
 
 chroma = {
     is_headless = function()
@@ -280,7 +282,8 @@ end
 function __chroma_warning(msg, detail, n)
     if events then
         events.emit(
-            "builtin:warning", msg, detail, debug.get_traceback(1 + (n or 0)))
+            "builtin:warning", msg, detail, debug.get_traceback(1 + (n or 0))
+        )
     end
 end
 
@@ -289,6 +292,8 @@ require "builtin:internal/extensions/math"
 require "builtin:internal/extensions/file"
 require "builtin:internal/extensions/table"
 require "builtin:internal/extensions/string"
+
+chroma.get_project_args = table.copy(_chroma_project_args)
 
 local bytearray = require "builtin:internal/bytearray"
 Bytearray = bytearray.FFIBytearray

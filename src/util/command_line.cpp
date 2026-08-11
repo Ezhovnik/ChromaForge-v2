@@ -12,7 +12,7 @@ class ArgC {
     public:
         std::string keyword;
         std::function<bool()> execute;
-		std::string args;
+        std::string args;
         std::string help;
         ArgC(
             const std::string& keyword,
@@ -22,13 +22,13 @@ class ArgC {
         ) {
             this->keyword = keyword;
             this->execute = execute;
-			this->args = args;
+            this->args = args;
             this->help = help;
         }
 };
 
 static bool perform_keyword(
-	util::ArgsReader& reader, const std::string& keyword, CoreParameters& params
+    util::ArgsReader& reader, const std::string& keyword, CoreParameters& params
 ) {
     static const std::vector<ArgC> argumentsCommandline = {
         ArgC("--res", [&params, &reader]() -> bool {
@@ -88,24 +88,46 @@ static bool perform_keyword(
         if (a.keyword == keyword) {
             return a.execute();
         }
-	}
+    }
     throw std::runtime_error("Unknown argument " + keyword);
 }
 
-bool parse_cmdline(int argc, char** argv, CoreParameters& params) {
-	util::ArgsReader reader(argc, argv);
-	reader.skip(); // пропускаем имя исполняемого файла (argv[0])
-	while (reader.hasNext()) {
-		std::string token = reader.next();
+static void parse_project_args(
+    util::ArgsReader& reader, CoreParameters& params
+) {
+    while (reader.hasNext()) {
+        std::string key = reader.next();
+        if (!reader.isKeywordArg()) {
+            std::cerr << "--<keyword> argument expected" << std::endl;
+            return;
+        }
+        key = key.substr(2);
+        if (!reader.hasNext() || reader.isNextKeywordArg()) {
+            params.projectArgs[std::move(key)] = "";
+            continue;
+        }
+        std::string value = reader.next();
+        params.projectArgs[std::move(key)] = std::move(value);
+    }
+}
 
-		if (reader.isKeywordArg()) {
-			// Если аргумент начинается с '-', это ключ
-			if (!perform_keyword(reader, token, params)) return false;
-		} else {
-			// Если аргумент не является ключом, но ожидался только ключ
-			std::cerr << "Unexpected token" << std::endl;
-		}
-	}
-	// Все аргументы успешно обработаны, продолжаем выполнение
-	return true;
+bool parse_cmdline(int argc, char** argv, CoreParameters& params) {
+    util::ArgsReader reader(argc, argv);
+    reader.skip(); // пропускаем имя исполняемого файла (argv[0])
+    while (reader.hasNext()) {
+        std::string token = reader.next();
+        if (token == "--") {
+            parse_project_args(reader, params);
+            return true;
+        }
+        if (reader.isKeywordArg()) {
+            // Если аргумент начинается с '-', это ключ
+            if (!perform_keyword(reader, token, params)) return false;
+        } else {
+            // Если аргумент не является ключом, но ожидался только ключ
+            std::cerr << "Unexpected token" << std::endl;
+        }
+    }
+    // Все аргументы успешно обработаны, продолжаем выполнение
+    return true;
 }

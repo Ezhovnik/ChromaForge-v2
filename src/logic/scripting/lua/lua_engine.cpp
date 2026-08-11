@@ -16,9 +16,12 @@
 #include <engine/EnginePaths.h>
 #include <engine/Engine.h>
 
-static debug::Logger logger("lua-engine");
-static lua::State* main_thread = nullptr;
-static bool headless_mode = false;
+namespace {
+    debug::Logger logger("lua-engine");
+    lua::State* main_thread = nullptr;
+    bool headless_mode = false;
+    const std::unordered_map<std::string, std::string>* project_args;
+}
 
 using namespace lua;
 
@@ -155,6 +158,13 @@ void lua::init_state(State* L, StateType stateType) {
     pushboolean(L, headless_mode);
     setglobal(L, "__CHROMA_HEADLESS");
 
+    createtable(L, 0, project_args->size());
+    for (const auto& [key, value] : *project_args) {
+        pushstring(L, value);
+        setfield(L, key);
+    }
+    setglobal(L, "__CHROMA_PROJECT_ARGS");
+
     auto file = "res:scripts/stdmin.lua";
     auto src = io::read_string(file);
     lua::pop(L, lua::execute(L, 0, src, "builtin:scripts/stdmin.lua"));
@@ -185,6 +195,7 @@ void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     logger.info() << "LuaJIT version: " << LUAJIT_VERSION;
 
     headless_mode = params.headless;
+    project_args = &params.projectArgs;
     main_thread = create_state(
         paths, params.headless ? StateType::Script : StateType::Base
     );
