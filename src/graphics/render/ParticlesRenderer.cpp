@@ -48,6 +48,7 @@ static inline void update_particle(
 
 void ParticlesRenderer::updateParticles(float deltaTime) {
     std::vector<const Texture*> unusedTextures;
+    visibleParticles = 0;
 
     for (auto& [texture, vec] : particles) {
         if (vec.empty()) {
@@ -193,7 +194,6 @@ void ParticlesRenderer::update(const Camera& camera, float deltaTime) {
 
 void ParticlesRenderer::render(const Camera& camera) {
     aliveEmitters = emitters.size();
-    visibleParticles = 0;
 
     bool backlight = settings.backlight.get();
 

@@ -265,6 +265,7 @@ void LevelScreen::update(float deltaTime) {
     const Player& player = playerController->getPlayer();
     const Camera& camera = *player.currentCamera;
     decorator->update(paused ? 0.0f : deltaTime, camera, weather);
+    renderer->update(camera, deltaTime * !hud->isPause());
 }
 
 void LevelScreen::draw(float deltaTime) {
@@ -276,7 +277,6 @@ void LevelScreen::draw(float deltaTime) {
         scripting::on_entities_render(engine.getTime().getDeltaTime());
     }
 
-    renderer->update(camera, deltaTime * !hud->isPause());
     renderer->renderFrame(ctx, camera, hudVisible, *postProcessing);
     if (!hud->isPause()) {
         scripting::on_frontend_render();
