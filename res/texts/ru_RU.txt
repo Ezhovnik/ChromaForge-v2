@@ -62,6 +62,7 @@ menu.Open content folder=Открыть папку [content]
 
 # Подсказки
 audio.acoustic-effects.tooltip=Акустические эффекты могут не поддерживаться системой
+audio.recording-enabled.tooltip=Включает функции записи звука
 graphics.gamma.tooltip=Кривая яркости освещения
 graphics.backlight.tooltip=Подсветка, предотвращающая полную темноту
 controls.key.tooltip=Поиск по привязвнной кнопки управления
@@ -113,6 +114,7 @@ settings.Microphone=Микрофон
 settings.microphone.None=Нет
 settings.Clouds quality=Качество облаков
 settings.Acoustic effects=Акустические эффекты
+settings.Microphone access=Доступ к микрофону
 
 # Управление
 chunks.reload=Перезагрузить Чанки
