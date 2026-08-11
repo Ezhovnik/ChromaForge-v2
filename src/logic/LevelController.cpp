@@ -19,6 +19,7 @@
 #include <world/LevelEvents.h>
 #include <voxels/Pathfinding.h>
 #include <engine/EnginePaths.h>
+#include <content/Content.h>
 
 static debug::Logger logger("level-controller");
 
@@ -42,7 +43,8 @@ LevelController::LevelController(
 
     if (clientPlayer) {
         chunks->lighting = std::make_unique<Lighting>(
-            level->content, *clientPlayer->chunks
+            *level->content.getIndices(),
+            *clientPlayer->chunks
         );
     }
 
