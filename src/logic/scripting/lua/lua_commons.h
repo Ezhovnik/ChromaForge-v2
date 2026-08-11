@@ -16,6 +16,10 @@
 #include <delegates.h>
 #include <logic/scripting/scripting.h>
 
+#ifndef LUA_TCDATA
+#define LUA_TCDATA 10
+#endif
+
 namespace lua {
     class luaerror : public std::runtime_error {
     public:
