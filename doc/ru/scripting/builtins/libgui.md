@@ -161,10 +161,16 @@ gui.template(
     -- таблица переменных (может быть использована в разметке)
     -- * Пр: <label>%{text}</label>
     -- * text в данном случае, это значение из params по ключу text
-    params: table,
-    -- таблица, доступная в событиях как глобальная переменная DATA
-    [опционально] data: table
+    params: table
 ) -> string
+
+-- Обрабатывает xml шаблон макета из строки
+gui.process_template(
+    -- шаблон в виде строки
+    source: string,
+    -- таблица переменных, как в gui.template
+    params: table
+)
 ```
 
 ## Корневой документ

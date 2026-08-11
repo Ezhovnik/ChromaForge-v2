@@ -2,12 +2,15 @@ local _chroma_headless = __CHROMA_HEADLESS
 __CHROMA_HEADLESS = nil
 
 chroma = {
-    is_headless = function ()
+    is_headless = function()
         return _chroma_headless
     end,
-    is_client = function ()
+    is_client = function()
         return not _chroma_headless
-    end
+    end,
+    get_setting = __chroma_app.get_setting,
+    get_setting_str = __chroma_app.get_setting_str,
+    get_setting_info = __chroma_app.get_setting_info,
 }
 
 local _ffi = ffi
