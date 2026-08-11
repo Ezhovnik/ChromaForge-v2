@@ -5,6 +5,7 @@
 
 #include <util/stringutil.h>
 #include <logic/scripting/lua/lua_engine.h>
+#include <engine/Engine.h>
 
 using namespace lua;
 
@@ -342,4 +343,30 @@ void lua::remove_environment(lua::State* L, int id) {
 
     pushnil(L);
     store_env(L, id);
+}
+
+std::string_view lua::bytearray_as_string(lua::State* L, int idx) {
+    const auto& settings = scripting::engine->getSettings();
+    if (type(L, idx) == LUA_TSTRING) {
+        return tolstring(L, idx);
+    }
+    pushvalue(L, idx);
+
+    if (settings.system.directScriptingDataAccess.get()) {
+        requireglobal(L, "Bytearray_as_ptr");
+        pushvalue(L, -2);
+        call(L, 1, 2);
+        auto view = tolstring(L, -2);
+        uint64_t size = touinteger(L, -1);
+        auto ptr = (const char*)std::stoull(std::string(view), nullptr, 16);
+        pop(L, 3);
+        return std::string_view(ptr, size);
+    } else {
+        requireglobal(L, "Bytearray_as_string");
+        pushvalue(L, -2);
+        call(L, 1, 1);
+        auto view = tolstring(L, -1);
+        pop(L, 2);
+        return view;
+    }
 }

@@ -86,6 +86,7 @@ struct NetworkSettings {
 struct SystemSettings {
     IntegerSetting maxBgAssetLoaders {3, -4, 16};
     BoolSetting preserveAssetsDuringFrame {true};
+    BoolSetting directScriptingDataAccess {true};
 };
 
 struct EngineSettings {
