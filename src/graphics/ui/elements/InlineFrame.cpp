@@ -14,7 +14,7 @@ InlineFrame::~InlineFrame() = default;
 void InlineFrame::setSrc(const std::string& src) {
     this->src = src;
     if (document) {
-        scripting::on_ui_close(document.get(), nullptr);
+        scripting::on_ui_close(*document, nullptr);
         document = nullptr;
         root = nullptr;
     }
@@ -28,7 +28,7 @@ void InlineFrame::setDocument(const std::shared_ptr<UIDocument>& document) {
     add(root);
     root->setSize(size);
     gui.postRunnable([this]() {
-        scripting::on_ui_open(this->document.get(), {});
+        scripting::on_ui_open(*this->document, {});
     });
 }
 

@@ -26,7 +26,7 @@ UIDocument::UIDocument(
 
 UIDocument::~UIDocument() {
     try {
-        scripting::on_ui_destroy(this);
+        scripting::on_ui_destroy(*this);
     } catch (const std::exception& err) {
         logger.error() << "An error occurred on calling on_destroy event for document '"
             << id << "': " << err.what();

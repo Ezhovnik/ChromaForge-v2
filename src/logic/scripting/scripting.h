@@ -137,12 +137,21 @@ namespace scripting {
     void on_entity_used(const Entt_Entity& entity, Player* player);
 
     void on_ui_open(
-        UIDocument* layout, 
+        const UIDocument& layout, 
         std::vector<dv::value> args
     );
-    void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
-    void on_ui_close(UIDocument* layout, Inventory* inventory);
-    void on_ui_destroy(UIDocument* layout);
+    void on_ui_progress(
+        const UIDocument& layout,
+        int workDone,
+        int totalWork
+    );
+    void on_ui_close(
+        const UIDocument& layout,
+        Inventory* inventory
+    );
+    void on_ui_destroy(
+        const UIDocument& layout
+    );
 
     void on_scripts_loading();
     void on_content_loaded();

@@ -52,7 +52,7 @@ UIDocument* menus::show(
     );
     auto document = documentPtr.get();
     engine.getAssets()->store(std::move(documentPtr), fullname);
-    scripting::on_ui_open(document, std::move(args));
+    scripting::on_ui_open(*document, std::move(args));
     menu->addPage(name, document->getRoot());
     menu->setPage(name);
 
@@ -68,14 +68,14 @@ void menus::show_process_panel(
 
     auto menu = engine.getGUI().getMenu();
     menu->reset();
-    auto doc = menus::show(engine, "process", {
+    auto document = menus::show(engine, "process", {
         util::wstr2str_utf8(langs::get(text))
     });
-    std::dynamic_pointer_cast<gui::Container>(doc->getRoot())->listenInterval(0.01f, [=]() {
+    std::dynamic_pointer_cast<gui::Container>(document->getRoot())->listenInterval(0.01f, [=]() {
         task->update();
 
         uint tasksDone = task->getWorkDone();
-        scripting::on_ui_progress(doc, tasksDone, initialWork);
+        scripting::on_ui_progress(*document, tasksDone, initialWork);
     });
 }
 

@@ -1170,7 +1170,7 @@ static int l_gui_load_document(lua::State* L) {
     auto document = documentPtr.get();
     scripting::engine->requireAssets().store(std::move(documentPtr), alias);
 
-    scripting::on_ui_open(document, {args});
+    scripting::on_ui_open(*document, {args});
     return 0;
 }
 
