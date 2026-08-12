@@ -60,12 +60,12 @@ model::Model CFModel::squashed() const {
 }
 
 static const std::unordered_map<std::string, int> side_indices {
-    {"north", 0},
-    {"south", 1},
-    {"top", 2},
-    {"bottom", 3},
-    {"west", 4},
-    {"east", 5},
+    {"east", 0},
+    {"west", 1},
+    {"bottom", 2},
+    {"top", 3},
+    {"south", 4},
+    {"north", 5},
 };
 
 static bool to_boolean(const xml::Attribute& attr) {

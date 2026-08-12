@@ -136,24 +136,24 @@ void Mesh::addBox(
     const bool enabledSides[6],
     const glm::mat4& transform
 ) {
-    if (enabledSides[0]) { // North
-        addPlane(pos + Z * size, X * size, Y * size, Z, uvs[0], transform);
+    if (enabledSides[0]) { // East
+        addPlane(pos - X * size, Z * size, Y * size, -X, uvs[0], transform);
     }
-    if (enabledSides[1]) { // South
-        addPlane(pos - Z * size, -X * size, Y * size, -Z, uvs[1], transform);
+    if (enabledSides[1]) { // West
+        addPlane(pos + X * size, -Z * size, Y * size, X, uvs[1] * glm::vec2(-1, 1), transform);
     }
-    if (enabledSides[2]) { // Top
-        addPlane(pos + Y * size, X * size, -Z * size, Y, uvs[2] * glm::vec2(-1), transform);
+    if (enabledSides[2]) { // Bottom
+        addPlane(pos - Y * size, X * size, Z * size, -Y, uvs[2], transform);
     }
-    if (enabledSides[3]) { // Bottom
-        addPlane(pos - Y * size, X * size, Z * size, -Y, uvs[3] * glm::vec2(-1, 1), transform);
+    if (enabledSides[3]) { // Top
+        addPlane(pos + Y * size, X * size, -Z * size, Y, uvs[3] * glm::vec2(-1, 1), transform);
     }
-    if (enabledSides[4]) { // West
-        addPlane(pos + X * size, -Z * size, Y * size, X, uvs[4], transform);
+    if (enabledSides[4]) { // South
+        addPlane(pos - Z * size, -X *size, Y * size, -Z, uvs[4], transform);
     }
-    if (enabledSides[5]) { // East
-        addPlane(pos - X * size, Z * size, Y * size, -X, uvs[5] * glm::vec2(-1, 1), transform);
-    }
+    if (enabledSides[5]) { // North
+        addPlane(pos + Z * size, X * size, Y * size, Z, uvs[5] * glm::vec2(-1, 1), transform);
+    }    
 }
 
 void Mesh::scale(const glm::vec3& size) {
