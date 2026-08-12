@@ -63,15 +63,18 @@ std::unique_ptr<UIDocument> UIDocument::read(
     const scriptenv& parent_env,
     const std::string& name,
     const io::path& file,
-    const std::string& fileName
+    const std::string& fileName,
+    scriptenv&& env
 ) {
     const std::string text = io::read_string(file);
     auto xmldoc = xml::parse(file.string(), text);
 
-    auto env = parent_env == nullptr 
-        ? scripting::create_doc_environment(scripting::get_root_environment(), name)
-        : scripting::create_doc_environment(parent_env, name);
-    gui::UIXmlReader reader(gui, scriptenv(env));
+    if (env == nullptr) {
+        env = parent_env == nullptr 
+            ? scripting::create_doc_environment(scripting::get_root_environment(), name)
+            : scripting::create_doc_environment(parent_env, name);
+    }
+    gui::UIXmlReader reader(gui, env);
     auto view = reader.readXML(file.string(), *xmldoc->getRoot());
     view->setId("root");
     UIDocScript script {};
@@ -80,10 +83,4 @@ std::unique_ptr<UIDocument> UIDocument::read(
         scripting::load_layout_script(env, name, scriptFile, fileName + ".lua", script);
     }
     return std::make_unique<UIDocument>(name, script, view, env);
-}
-
-std::shared_ptr<gui::UINode> UIDocument::readElement(
-    gui::GUI& gui, const io::path& file, const std::string& fileName
-) {
-    return read(gui, nullptr, file.name(), file, fileName)->getRoot();
 }

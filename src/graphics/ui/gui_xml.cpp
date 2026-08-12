@@ -776,7 +776,9 @@ static std::shared_ptr<UINode> read_iframe(
     return iframe;
 }
 
-UIXmlReader::UIXmlReader(gui::GUI& gui, scriptenv&& env) : gui(gui), env(std::move(env)) {
+UIXmlReader::UIXmlReader(
+    gui::GUI& gui, const scriptenv& env
+) : gui(gui), env(env) {
     contextStack.emplace("");
     add("image", read_image);
     add("canvas", read_canvas);
