@@ -142,6 +142,7 @@ namespace scripting {
     );
     void on_ui_progress(UIDocument* layout, int workDone, int totalWork);
     void on_ui_close(UIDocument* layout, Inventory* inventory);
+    void on_ui_destroy(UIDocument* layout);
 
     void on_scripts_loading();
     void on_content_loaded();

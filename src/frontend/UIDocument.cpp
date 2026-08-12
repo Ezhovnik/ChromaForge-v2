@@ -7,6 +7,9 @@
 #include <logic/scripting/scripting.h>
 #include <io/io.h>
 #include <graphics/ui/gui_xml.h>
+#include <debug/Logger.h>
+
+static debug::Logger logger("ui-document");
 
 UIDocument::UIDocument(
     std::string id, 
@@ -19,6 +22,18 @@ UIDocument::UIDocument(
     env(std::move(env))
 {
     rebuildIndices();
+}
+
+UIDocument::~UIDocument() {
+    try {
+        scripting::on_ui_destroy(this);
+    } catch (const std::exception& err) {
+        logger.error() << "An error occurred on calling on_destroy event for document '"
+            << id << "': " << err.what();
+    } catch (...) {
+        logger.error() << "Unknown exception caught on calling on_destroy event for document '"
+            << id << "'";
+    }
 }
 
 void UIDocument::rebuildIndices() {
