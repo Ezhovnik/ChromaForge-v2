@@ -59,11 +59,7 @@ end
 
 function table.extend(t1, t2)
     for i, v in pairs(t2) do
-        if type(i) == "number" then
-            t1[#t1 + 1] = v
-        else
-            t1[i] = v
-        end
+        t1[i] = v
     end
 
     return t1
@@ -78,7 +74,6 @@ function table.map(t, func)
 end
 
 function table.filter(t, func)
-
     for i = #t, 1, -1 do
         if not func(i, t[i]) then
             table.remove(t, i)

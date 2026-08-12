@@ -60,6 +60,18 @@ table.insert_unique(t: table, pos: number, val: any)
 Добавляет значение в таблицу, только если его там не было.
 
 ```lua
+table.keys(t: table) -> table
+```
+
+Возвращает таблицу, содержащую все ключи переданной таблицы, включая числовые.
+
+```lua
+table.extend(t: table, extension: table) -> table
+```
+
+Добавляет в таблицу t все пары ключ-значение из таблицы extension, при этом если в extension присутствует ключ из t, то его значение будет перезаписано.
+
+```lua
 table.tostring(t: table) -> string
 ```
 
