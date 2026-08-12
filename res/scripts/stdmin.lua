@@ -293,7 +293,9 @@ require "builtin:internal/extensions/file"
 require "builtin:internal/extensions/table"
 require "builtin:internal/extensions/string"
 
-chroma.get_project_args = table.copy(_chroma_project_args)
+chroma.get_project_arg = function (name)
+    return _chroma_project_args[name]
+end
 
 local bytearray = require "builtin:internal/bytearray"
 Bytearray = bytearray.FFIBytearray
