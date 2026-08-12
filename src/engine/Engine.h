@@ -156,6 +156,10 @@ public:
         return debuggingServer.get();
     }
 
+    AppScriptsControl& getAppScripts() {
+        return *appScripts;
+    }
+
     void detachDebugger();
 
     bool isHeadless() const;

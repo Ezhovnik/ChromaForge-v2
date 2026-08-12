@@ -11,17 +11,17 @@
 #include <graphics/ui/elements/Container.h>
 #include <logic/scripting/scripting.h>
 #include <io/path.h>
+#include <devtools/AppScriptsControl.h>
 
 static debug::Logger logger("mainloop");
 
 Mainloop::Mainloop(Engine& engine) : engine(engine) {}
 
 void Mainloop::run() {
-    const auto& coreParams = engine.getCoreParameters();
     auto& time = engine.getTime();
     auto& window = engine.getWindow();
     auto& settings = engine.getSettings();
-    double targetDelta = 1.0 / static_cast<double>(coreParams.sps);
+    const auto& coreParams = engine.getCoreParameters();
 
     engine.setLevelConsumer([this](auto level, int64_t localPlayer) {
         if (level == nullptr) {
@@ -38,12 +38,11 @@ void Mainloop::run() {
     engine.setScreen(std::make_shared<MenuScreen>(engine));
     logger.info() << "The menu screen has loaded successfully";
 
-    double testTimer = 0.0;
+    auto& appScripts = engine.getAppScripts();
 
     logger.info() << "Main loop started";
     while (!window.isShouldClose()) {
-        testTimer += targetDelta;
-        time.update(coreParams.testMode ? testTimer : window.time());
+        time.update(window.time());
         engine.applicationSpark();
         engine.updateFrontend();
         if (!window.isIconified()) {
@@ -54,6 +53,10 @@ void Mainloop::run() {
             settings.display.adaptiveFpsInMenu.get() &&
             dynamic_cast<const MenuScreen*>(engine.getScreen().get()) != nullptr
         );
+        if (coreParams.testMode && appScripts.isFinished()) {
+            logger.info() << "Test finished";
+            engine.quit();
+        }
     }
     logger.info() << "Main loop stopped";
 }

@@ -10,6 +10,7 @@
 #include <world/Level.h>
 #include <world/World.h>
 #include <util/platform.h>
+#include <devtools/AppScriptsControl.h>
 
 static debug::Logger logger("server-mainloop");
 
@@ -35,7 +36,7 @@ void ServerMainloop::run() {
     auto begin = std::chrono::system_clock::now();
     auto startupTime = begin;
 
-    while (engine.isQuitSignal()) {
+    while (!engine.isQuitSignal() && !engine.getAppScripts().isFinished()) {
         if (coreParams.testMode) {
             time.step(delta);
         } else {
