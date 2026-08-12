@@ -78,6 +78,10 @@ int lua::pushwstring(lua::State* L, const std::wstring& str) {
     return lua::pushstring(L, util::wstr2str_utf8(str));
 }
 
+static std::string to_ptr_string(State* L, int idx) {
+    return std::to_string(reinterpret_cast<ptrdiff_t>(lua_topointer(L, idx)));
+}
+
 dv::value lua::tovalue(State* L, int idx) {
     auto type = lua::type(L, idx);
     switch (type) {
@@ -96,7 +100,16 @@ dv::value lua::tovalue(State* L, int idx) {
             }
         }
         case LUA_TFUNCTION:
-            return "<function " + std::to_string(reinterpret_cast<ptrdiff_t>(lua_topointer(L, idx))) + ">";
+            return "<function " + to_ptr_string(L, idx) + ">";
+        case LUA_TTHREAD:
+            return "<thread " + to_ptr_string(L, idx) + ">";
+        case LUA_TUSERDATA:
+            if (auto userdata = touserdata<Userdata>(L, idx)) {
+                return "<userdata:" + userdata->getTypeName() + " " + to_ptr_string(L, idx) + ">";
+            }
+            return "<userdata " + to_ptr_string(L, idx) + ">";
+        case LUA_TLIGHTUSERDATA:
+            return "<lightuserdata " + to_ptr_string(L, idx) + ">";
         case LUA_TSTRING:
             return std::string(tostring(L, idx));
         case LUA_TTABLE: {
