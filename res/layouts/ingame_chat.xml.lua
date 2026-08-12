@@ -19,7 +19,7 @@ local function update_line(line, uptime)
     end
 end
 
-events.on("builtin:chat", function(message)
+local builtin_chat_handler = events.on("builtin:chat", function(message)
     while #lines >= max_lines do
         document[lines[1][1]]:destruct()
         table.remove(lines, 1)
@@ -51,4 +51,8 @@ function on_open()
             end
         end)
     end
+end
+
+function on_destroy()
+    events.remove("builtin:chat", builtin_chat_handler)
 end
