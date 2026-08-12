@@ -75,7 +75,7 @@ Mesh<VertexStructure>::~Mesh(){
     MeshStats::meshesCount--;
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    for (int i = IBOs.size() - 1; i >= 0; --i) {
+    for (int i = 0; i < IBOs.size(); ++i) {
         glDeleteBuffers(1, &IBOs[i].ibo);
     }
 }
@@ -100,7 +100,7 @@ void Mesh<VertexStructure>::reload(
         glBufferData(GL_ARRAY_BUFFER, 0, {}, GL_STREAM_DRAW);
     }
 
-    for (int i = indices.size(); i < IBOs.size(); ++i) {
+    for (int i = 0; i < IBOs.size(); ++i) {
         glDeleteBuffers(1, &IBOs[i].ibo);
     }
     IBOs.clear();
