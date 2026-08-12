@@ -24,6 +24,7 @@ class WindowControl;
 class SettingsHandler;
 class EnginePaths;
 class ResPaths;
+class AppScriptsControl;
 
 namespace gui {
     class GUI;
@@ -59,6 +60,7 @@ private:
     std::unique_ptr<Project> project;
     std::unique_ptr<SettingsHandler> settingsHandler;
     std::unique_ptr<AssetsManagement> assets;
+    std::unique_ptr<AppScriptsControl> appScripts;
     std::shared_ptr<Screen> screen;
     std::unique_ptr<EngineController> controller;
     std::unique_ptr<ContentControl> content;

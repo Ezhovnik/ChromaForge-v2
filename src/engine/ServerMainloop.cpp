@@ -5,7 +5,7 @@
 #include <engine/Engine.h>
 #include <debug/Logger.h>
 #include <interfaces/Process.h>
-#include <logic/scripting/scripting.h>
+#include <devtools/Project.h>
 #include <logic/LevelController.h>
 #include <world/Level.h>
 #include <world/World.h>
@@ -30,21 +30,12 @@ void ServerMainloop::run() {
         setLevel(std::move(level));
     });
 
-    auto process = scripting::start_app_script(
-        "script:" + coreParams.scriptFile.filename().u8string()
-    );
-
     double targetDelta = 1.0 / static_cast<double>(coreParams.sps);
     double delta = targetDelta;
     auto begin = std::chrono::system_clock::now();
     auto startupTime = begin;
 
-    while (process->isActive()) {
-        if (engine.isQuitSignal()) {
-            process->terminate();
-            logger.info() << "Script has been terminated due to quit signal";
-            break;
-        }
+    while (engine.isQuitSignal()) {
         if (coreParams.testMode) {
             time.step(delta);
         } else {
@@ -52,7 +43,6 @@ void ServerMainloop::run() {
             time.update(std::chrono::duration_cast<std::chrono::microseconds>(now - startupTime).count() / 1e6);
             delta = time.getDeltaTime();
         }
-        process->update();
         if (controller) {
             controller->getLevel()->getWorld()->updateTimers(delta);
             controller->update(glm::min(delta, 0.2), false);

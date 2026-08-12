@@ -52,6 +52,7 @@
 #include <engine/AssetsManagement.h>
 #include <devtools/stdin_cmd_reader.h>
 #include <coders/vector_fonts.h>
+#include <devtools/AppScriptsControl.h>
 
 static debug::Logger logger("engine");
 
@@ -200,10 +201,7 @@ void Engine::initialize(CoreParameters coreParameters) {
         audio::set_input_device(name == "auto" ? "" : name);
     }));
 
-    project->loadProjectStartScript();
-    if (!params.headless) {
-        project->loadProjectClientScript();
-    }
+    appScripts = std::make_unique<AppScriptsControl>(params, *project);
 
     if (params.stdinCommands) {
         cmd::start_stdin_cmd_reader(*this);
@@ -234,6 +232,7 @@ void Engine::close() {
     network.reset();
     clearKeepedObjects();
     project.reset();
+    appScripts.reset();
     scripting::close();
     if (!params.headless) {
         window.reset();
@@ -301,9 +300,7 @@ void Engine::detachDebugger() {
 }
 
 void Engine::applicationSpark() {
-    if (project->setupCoroutine && project->setupCoroutine->isActive()) {
-        project->setupCoroutine->update();
-    }
+    appScripts->spark();
 }
 
 void Engine::updateFrontend() {
@@ -362,17 +359,17 @@ void Engine::loadProject() {
 }
 
 void Engine::setScreen(std::shared_ptr<Screen> screen) {
-    if (project->clientScript && this->screen) {
-        project->clientScript->onScreenChange(this->screen->getName(), false);
+    if (this->screen) {
+        appScripts->onScreenChange(this->screen->getName(), false);
     }
 
     audio::reset_channel(audio::get_channel_index("regular"));
     audio::reset_channel(audio::get_channel_index("ambient"));
 	this->screen = std::move(screen);
 
-    if (this->screen) this->screen->onOpen();
-    if (project->clientScript && this->screen) {
-        project->clientScript->onScreenChange(this->screen->getName(), true);
+    if (this->screen) {
+        this->screen->onOpen();
+        appScripts->onScreenChange(this->screen->getName(), true);
         window->setShouldRefresh();
     }
 }
