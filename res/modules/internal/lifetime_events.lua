@@ -201,6 +201,8 @@ local function __process_post_runnables()
     end
 end
 
+local __chroma__is_post_runnable = false
+
 function __chroma__process_post_runnables()
     __chroma__is_post_runnable = true
     local success, err = pcall(__process_post_runnables)
@@ -222,4 +224,7 @@ return {
     __chroma_on_world_save = __chroma_on_world_save,
     __chroma_on_world_quit = __chroma_on_world_quit,
     __chroma__process_post_runnables = __chroma__process_post_runnables,
+    __chroma_is_post_runnable_context = function()
+        return __chroma__is_post_runnable
+    end
 }
