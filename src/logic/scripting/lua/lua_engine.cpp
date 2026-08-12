@@ -20,6 +20,7 @@ namespace {
     debug::Logger logger("lua-engine");
     lua::State* main_thread = nullptr;
     bool headless_mode = false;
+    bool test_mode = false;
     const std::unordered_map<std::string, std::string>* project_args;
 }
 
@@ -95,6 +96,10 @@ static void create_libs(State* L, StateType stateType) {
         openlib(L, "__skeleton", skeletonlib);
         openlib(L, "__rigidbody", rigidbodylib);
         openlib(L, "__transform", transformlib);
+    }
+
+    if (::test_mode) {
+        openlib(L, "test", testlib);
     }
 
     addfunc(L, "print", lua::wrap<l_print>);
@@ -195,6 +200,7 @@ void lua::initialize(const EnginePaths& paths, const CoreParameters& params) {
     logger.info() << "LuaJIT version: " << LUAJIT_VERSION;
 
     headless_mode = params.headless;
+    test_mode = params.testMode;
     project_args = &params.projectArgs;
     main_thread = create_state(
         paths, params.headless ? StateType::Script : StateType::Base

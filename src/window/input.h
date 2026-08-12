@@ -298,6 +298,11 @@ public:
     virtual bool isClicked(Mousecode Mousecode) const = 0;
     virtual bool justClicked(Mousecode Mousecode) const = 0;
 
+    virtual void simulateKey(Keycode key, bool pressed) = 0;
+    virtual void simulateClick(int button, bool pressed) = 0;
+    virtual void simulateCursorPos(double xpos, double ypos) = 0;
+    virtual void simulateCodepoint(uint codepoint) = 0;
+
     virtual CursorState getCursor() const = 0;
     virtual void toggleCursor() = 0;
     virtual bool isCursorLocked() const = 0;

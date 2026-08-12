@@ -44,6 +44,7 @@ extern const luaL_Reg assetslib[];
 extern const luaL_Reg pathfindinglib[];
 extern const luaL_Reg randomlib[];
 extern const luaL_Reg compressionlib[];
+extern const luaL_Reg testlib[];
 
 extern const luaL_Reg skeletonlib [];
 extern const luaL_Reg rigidbodylib [];

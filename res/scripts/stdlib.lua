@@ -125,6 +125,10 @@ require "builtin:internal/extensions/inventory"
 asserts = require "builtin:internal/asserts"
 events = require "builtin:internal/events"
 
+if test then
+    require "builtin:internal/test"
+end
+
 function pack.unload(prefix)
     events.remove_by_prefix(prefix)
 end
