@@ -21,6 +21,12 @@ namespace vector_fonts {
         virtual std::unique_ptr<Texture> renderPage(
             int pageid, std::vector<Glyph>& glyphs, int size
         ) = 0;
+
+        bool isMonospace() const {
+            return monospace;
+        }
+    protected:
+        bool monospace = true;
     };
 
     void initialize();

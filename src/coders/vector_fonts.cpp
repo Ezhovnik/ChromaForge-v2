@@ -31,7 +31,10 @@ namespace {
         FTFontFile(
             FT_Face face, util::Buffer<ubyte> buffer
         ) : face(std::move(face)),
-            buffer(std::move(buffer)) {}
+            buffer(std::move(buffer))
+        {
+            monospace = this->face->face_flags & FT_FACE_FLAG_FIXED_WIDTH;
+        }
 
         ~FTFontFile() {
             if (FT_Error error = FT_Done_Face(face)) {

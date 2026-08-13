@@ -41,20 +41,22 @@ public:
 
     ~Font();
 
-	/**
+    /**
      * @brief Возвращает высоту строки.
      */
     int getLineHeight() const;
 
-	/**
+    /**
      * @brief Возвращает вертикальное смещение.
      */
     int getYOffset() const;
 
-	int calcWidth(std::wstring_view text, size_t length=-1) const;
+    bool isMonospace() const;
+
+    int calcWidth(std::wstring_view text, size_t length=-1) const;
     int calcWidth(std::wstring_view text, size_t offset, size_t length) const;
 
-	/**
+    /**
      * @brief Проверяет, является ли символ печатным (не пробельным).
      * @param codepoint Код символа.
      * @return true, если символ должен отображаться.
@@ -96,6 +98,7 @@ private:
     int lineHeight;
     int yoffset;
     int glyphInterval;
+    bool monospace = true;
     std::vector<std::unique_ptr<Texture>> pages;
     std::vector<Glyph> glyphs;
     std::optional<std::weak_ptr<vector_fonts::FontFile>> fontFile;
