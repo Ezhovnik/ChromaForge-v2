@@ -156,11 +156,10 @@ bool PhysicsSolver::calcCollisionNegY(
             continue;
         }
         auto aabb = AABB(pos - half, pos + half);
-        aabb.scale(glm::vec3(
-            1.0f - PhysicsSolver_Consts::EPS * 4.0f,
-            1.0f - PhysicsSolver_Consts::EPS * 2,
-            1.0f - PhysicsSolver_Consts::EPS * 4.0f
-        ));
+        glm::vec3 scale(1.0f);
+        scale.x = 1.0f - PhysicsSolver_Consts::EPS * 4.0f;
+        scale.z = 1.0f - PhysicsSolver_Consts::EPS * 4.0f;
+        aabb.scale(scale);
 
         auto boxhalf = box->getHalfSize();
         if (box->position.y < pos.y && box->getAABB().intersects(aabb)) {
@@ -248,7 +247,7 @@ void PhysicsSolver::calcCollisions(
             float x = (pos.x - half.x + PhysicsSolver_Consts::EPS) + ix;
             for (int iz = 0; iz <= glm::ceil((half.z - PhysicsSolver_Consts::EPS) * 2); ++iz) {
                 float z = (pos.z - half.z + PhysicsSolver_Consts::EPS) + iz;
-                float y = (pos.y + half.y + PhysicsSolver_Consts::EPS) + 0.5f;
+                float y = (pos.y + half.y + PhysicsSolver_Consts::EPS) - PhysicsSolver_Consts::EPS;
                 if (auto aabb = chunks.isObstacleAt(x, y, z, boxAABB)) {
                     float newy = std::floor(y) - half.y + aabb->min().y - PhysicsSolver_Consts::EPS;
                     if (pos.y >= newy) {
