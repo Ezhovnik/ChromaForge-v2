@@ -34,7 +34,7 @@ namespace voxels {
  */
 class Level {
 private:
-	std::unique_ptr<World> world;
+    std::unique_ptr<World> world;
 public:
     const Content& content;
     std::unique_ptr<GlobalChunks> chunks; ///< Хранилище чанков
@@ -47,25 +47,25 @@ public:
     std::vector<std::shared_ptr<Camera>> cameras;
     Environment environment {};
 
-	/**
+    /**
      * @brief Конструктор уровня.
      * @param world Указатель на объект World.
      * @param content Указатель на контент.
      * @param settings Ссылка на настройки.
      */
-	Level(
+    Level(
         std::unique_ptr<World> world, 
         const Content& content, 
         EngineSettings& settings
     );
-	~Level();
+    ~Level();
 
-	/**
+    /**
      * @brief Возвращает указатель на мир.
      * @return Указатель на World (принадлежит Level).
      */
-	World* getWorld();
-    const World* getWorld() const;
+    World& getWorld();
+    const World& getWorld() const;
 
     void onSave();
 

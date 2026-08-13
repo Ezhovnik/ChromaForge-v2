@@ -133,16 +133,16 @@ void LevelController::processBeforeQuit() {
 }
 
 void LevelController::saveWorld() {
-    auto world = level->getWorld();
-    if (world->isNameless()) {
+    auto& world = level->getWorld();
+    if (world.isNameless()) {
         logger.warning() << "Nameless world will not be saved";
         return;
     }
-    logger.info() << "Writing world '" << world->getName() << "'";
-    world->wfile->createDirectories();
+    logger.info() << "Writing world '" << world.getName() << "'";
+    world.wfile->createDirectories();
     scripting::on_world_save();
     level->onSave();
-    level->getWorld()->write(*level);
+    level->getWorld().write(*level);
     logger.info() << "The world has been successfully saved";
 }
 

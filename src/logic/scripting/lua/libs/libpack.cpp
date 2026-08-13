@@ -204,10 +204,6 @@ static int l_pack_assemble(lua::State* L) {
         ids.push_back(lua::require_string(L, -1));
         lua::pop(L);
     }
-    io::path worldFolder;
-    if (scripting::level) {
-        worldFolder = scripting::level->getWorld()->wfile->getFolder();
-    }
     auto& manager = scripting::content_control->scan();
     try {
         ids = manager.assemble(ids);

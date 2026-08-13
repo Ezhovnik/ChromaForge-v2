@@ -45,7 +45,7 @@ LevelScreen::LevelScreen(
     std::unique_ptr<Level> levelPtr,
     int64_t localPlayer
 ) : Screen(engine),
-    world(*levelPtr->getWorld()),
+    world(levelPtr->getWorld()),
     postProcessing(std::make_unique<PostProcessing>(
         levelPtr->content.getIndices(ResourceType::PostEffectSlot).size()
     )),
@@ -107,7 +107,7 @@ LevelScreen::LevelScreen(
     }));
 
     controller->preQuitCallbacks.listen([this]() {
-        if (!controller->getLevel()->getWorld()->isNameless()) {
+        if (!controller->getLevel()->getWorld().isNameless()) {
             saveWorldPreview();
         }
     });
@@ -119,7 +119,7 @@ LevelScreen::LevelScreen(
 }
 
 LevelScreen::~LevelScreen() {
-    if (!controller->getLevel()->getWorld()->isNameless()) {
+    if (!controller->getLevel()->getWorld().isNameless()) {
         saveDecorations();
     }
     scripting::on_frontend_close();

@@ -32,7 +32,7 @@ ChunksController::ChunksController(
     generator(std::make_unique<WorldGenerator>(
         level.content.generators.require(level.environment.generator),
         level.content,
-        level.getWorld()->getSeed()
+        level.getWorld().getSeed()
     )) {}
 
 ChunksController::~ChunksController() = default;

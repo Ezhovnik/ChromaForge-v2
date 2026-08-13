@@ -70,7 +70,7 @@ Player* Players::getNearest(const glm::vec3& position) const {
 }
 
 Player* Players::create(int64_t id) {
-    int64_t& nextPlayerID = level.getWorld()->getInfo().nextPlayerId;
+    int64_t& nextPlayerID = level.getWorld().getInfo().nextPlayerId;
     if (id == NONE) {
         id = nextPlayerID++;
     } else {
@@ -142,7 +142,7 @@ void Players::deserialize(const dv::value& src) {
         add(std::move(playerPtr));
         auto& inventory = player->getInventory();
         if (inventory->getId() == 0) {
-            inventory->setId(level.getWorld()->getNextInventoryId());
+            inventory->setId(level.getWorld().getNextInventoryId());
         }
         level.inventories->store(inventory);
     }

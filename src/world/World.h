@@ -72,6 +72,8 @@ public:
         const Content& content, 
         const std::vector<ContentPack>& packs
     );
+    World(const World&) = delete;
+
     ~World();
 
     /** 

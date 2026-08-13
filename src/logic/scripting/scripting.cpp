@@ -304,7 +304,7 @@ void scripting::on_world_load(LevelController* controller) {
     for (auto& pack : scripting::content_control->getAllContentPacks()) {
         lua::emit_event(L, pack.id + ":.worldopen", [](auto L) {
             return lua::pushboolean(
-                L, !scripting::level->getWorld()->getInfo().isLoaded
+                L, !scripting::level->getWorld().getInfo().isLoaded
             );
         });
     }

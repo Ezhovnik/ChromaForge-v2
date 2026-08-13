@@ -141,8 +141,10 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         MeshStats::drawCalls = 0;
         auto drawCallsStr = std::to_wstring(drawCalls);
         drawCallsStr.resize(6, ' ');
-        return L"Draw-Calls: " + drawCallsStr +
-            L" (average: " + drawCallsAvgString + L")";
+        return L"Draw-Calls: " + drawCallsStr;
+    }));
+    panel->add(create_label(gui, []() {
+        return L"    average: " + drawCallsAvgString;
     }));
     panel->add(create_label(gui, []() {
         return drawCallsMinMaxString;
@@ -247,7 +249,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         }
     }));
     panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
-        return L"Seed: " + std::to_wstring(level.getWorld()->getSeed());
+        return L"Seed: " + std::to_wstring(level.getWorld().getSeed());
     })));
     for (int ax = 0; ax < 3; ++ax){
         auto sub = std::make_shared<gui::Container>(
@@ -290,7 +292,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         panel->add(sub);
     }
 
-    auto& worldInfo = level.getWorld()->getInfo();
+    auto& worldInfo = level.getWorld().getInfo();
 
     panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
         int hour, minute, second;

@@ -243,7 +243,7 @@ void WorldRenderer::setupWorldShader(
     shader.uniform1f("u_fogCurve", settings.graphics.fogCurve.get());
     shader.uniform1i("u_debugLights", lightsDebug);
     shader.uniform1i("u_debugNormals", false);
-    shader.uniform1f("u_dayTime", level.getWorld()->getInfo().daytime);
+    shader.uniform1f("u_dayTime", level.getWorld().getInfo().daytime);
     shader.uniform2f("u_lightDir", skybox->getLightDir());
     shader.uniform1i("u_skybox", advanced_pipeline::TARGET_SKYBOX);
 
@@ -385,7 +385,7 @@ void WorldRenderer::renderFrameClassic(
     bool hudVisible,
     PostProcessing& postProcessing
 ) {
-    const auto& worldInfo = level.getWorld()->getInfo();
+    const auto& worldInfo = level.getWorld().getInfo();
 
     DrawContext ctx = pctx.sub();
     ctx.setDepthTest(true);
@@ -424,7 +424,7 @@ void WorldRenderer::renderFrameAdvanced(
     PostProcessing& postProcessing
 ) {
     const auto& settings = engine.getSettings();
-    const auto& worldInfo = level.getWorld()->getInfo();
+    const auto& worldInfo = level.getWorld().getInfo();
     float fogFactor = calcFogFactor();
 
     shadowMapping->refresh(camera, pctx, [this, &camera](Camera& shadowCamera) {
@@ -483,7 +483,7 @@ void WorldRenderer::renderFrame(
         dirtySettings = false;
     }
 
-    const auto& worldInfo = level.getWorld()->getInfo();
+    const auto& worldInfo = level.getWorld().getInfo();
 
     float clouds = weather.clouds();
 

@@ -26,7 +26,7 @@ public:
         const std::string& seedstr,
         const std::string& generatorID
     );
-    void reopenWorld(World* world);
+    void reopenWorld(World& world);
 
     void setLocalPlayer(int64_t player);
 
