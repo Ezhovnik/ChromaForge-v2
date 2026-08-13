@@ -189,7 +189,9 @@ void ShaderProgram::recompile(const std::vector<std::string>& defines) {
     glDeleteProgram(id);
     id = newProgram;
     uniformLocationCache.clear();
-    logger.info() << "Shader " << id << " has been recompiled";
+    logger.debug() << "Shader " << id
+        << " (" << vertexSource.file << ", " << fragmentSource.file
+        << ") has been recompiled";
 }
 
 std::unique_ptr<ShaderProgram> ShaderProgram::create(

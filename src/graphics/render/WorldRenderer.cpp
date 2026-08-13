@@ -71,8 +71,19 @@ inline constexpr float TORCH_LIGHT_DIST = 6.0f;
 inline constexpr size_t BATCH3D_CAPACITY = 4096;
 inline constexpr size_t MODEL_BATCH_CAPACITY = 20'000;
 
+static debug::Logger logger("world-renderer");
+
 bool WorldRenderer::drawChunkBorders = false;
 bool WorldRenderer::drawEntityHitboxes = false;
+
+template <typename T>
+static ObserverHandler observe_setting(
+    ObservableSetting<T>& setting, bool& dirtyShaders
+) {
+    return setting.observe([&dirtyShaders](auto const&) {
+        dirtyShaders = true;
+    });
+}
 
 WorldRenderer::WorldRenderer(
 	Engine& engine,
@@ -157,9 +168,46 @@ WorldRenderer::WorldRenderer(
     debugLines = std::make_unique<DebugLinesRenderer>(level);
 
     cloudsRenderer = std::make_unique<CloudsRenderer>();
+
+    keepAlive(
+        observe_setting(settings.graphics.advancedRender, dirtyShaders)
+    );
+    keepAlive(
+        observe_setting(settings.graphics.shadowsQuality, dirtyShaders)
+    );
+    keepAlive(
+        observe_setting(settings.graphics.ssao, dirtyShaders)
+    );
 }
 
 WorldRenderer::~WorldRenderer() = default;
+
+void WorldRenderer::refreshSettings() {
+    ShaderProgram* affectedShaders[] {
+        &assets.require<ShaderProgram>("default"),
+        &assets.require<ShaderProgram>("entity"),
+        &assets.require<ShaderProgram>("clouds"),
+        &assets.require<ShaderProgram>("translucent"),
+        &assets.require<PostEffect>("deferred_lighting").getShader(),
+        nullptr
+    };
+
+    const auto& graphics = engine.getSettings().graphics;
+    gbufferPipeline = graphics.advancedRender.get();
+
+    int shadowsQuality = graphics.shadowsQuality.get() * gbufferPipeline;
+    shadowMapping->setQuality(shadowsQuality);
+
+    std::vector<std::string> defines;
+    if (shadowsQuality != 0) defines.emplace_back("ENABLE_SHADOWS");
+    if (graphics.ssao.get()) defines.emplace_back("ENABLE_SSAO");
+    if (gbufferPipeline) defines.emplace_back("ADVANCED_RENDER");
+
+    logger.info() << "Recompiling shaders due to settings change";
+    for (size_t i = 0; affectedShaders[i]; ++i) {
+        affectedShaders[i]->recompile(defines);
+    }
+}
 
 static void setup_weather(ShaderProgram& shader, const Weather& weather) {
     shader.uniform1f("u_weatherFogOpacity", weather.fogOpacity());
@@ -321,35 +369,6 @@ void WorldRenderer::renderLines(
     }
 }
 
-void WorldRenderer::refreshSettings(ShaderProgram** shaders) {
-    const auto& graphics = engine.getSettings().graphics;
-    gbufferPipeline = graphics.advancedRender.get();
-
-    int shadowsQuality = graphics.shadowsQuality.get() * gbufferPipeline;
-    shadowMapping->setQuality(shadowsQuality);
-
-    CompileTimeShaderSettings currentSettings {
-        gbufferPipeline,
-        shadowsQuality != 0,
-        graphics.ssao.get() && gbufferPipeline
-    };
-    if (
-        prevCTShaderSettings.advancedRender != currentSettings.advancedRender ||
-        prevCTShaderSettings.shadows != currentSettings.shadows ||
-        prevCTShaderSettings.ssao != currentSettings.ssao
-    ) {
-        std::vector<std::string> defines;
-        if (currentSettings.shadows) defines.emplace_back("ENABLE_SHADOWS");
-        if (currentSettings.ssao) defines.emplace_back("ENABLE_SSAO");
-        if (currentSettings.advancedRender) defines.emplace_back("ADVANCED_RENDER");
-
-        for (size_t i = 0; shaders[i]; ++i) {
-            shaders[i]->recompile(defines);
-        }
-        prevCTShaderSettings = currentSettings;
-    }
-}
-
 void WorldRenderer::update(const Camera& camera, float delta) {
     timer += delta;
     weather.update(delta);
@@ -370,22 +389,10 @@ void WorldRenderer::renderFrame(
     const auto& vp = pctx.getViewport();
     camera.setAspectRatio(vp.x / static_cast<float>(vp.y));
 
-    auto& defaultShader = assets.require<ShaderProgram>("default");
-    auto& entityShader = assets.require<ShaderProgram>("entity");
-    auto& cloudsShader = assets.require<ShaderProgram>("clouds");
-    auto& translucentShader = assets.require<ShaderProgram>("translucent");
-    auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
-    const auto& settings = engine.getSettings();
-
-    ShaderProgram* affectedShaders[] {
-        &defaultShader,
-        &entityShader,
-        &cloudsShader,
-        &translucentShader,
-        &deferredShader,
-        nullptr
-    };
-    refreshSettings(affectedShaders);
+    if (dirtyShaders) {
+        refreshSettings();
+        dirtyShaders = false;
+    }
 
     const auto& worldInfo = world->getInfo();
 
@@ -412,6 +419,8 @@ void WorldRenderer::renderFrame(
         chunksRenderer->drawShadowsPass(shadowCamera, shader, camera);
     });
 
+    const auto& settings = engine.getSettings();
+
     {
         DrawContext wctx = pctx.sub();
         postProcessing.use(wctx, gbufferPipeline);
@@ -431,10 +440,12 @@ void WorldRenderer::renderFrame(
 
     float fogFactor = calcFogFactor();
     if (gbufferPipeline) {
+        auto& deferredShader = assets.require<PostEffect>("deferred_lighting").getShader();
         deferredShader.use();
         setupWorldShader(deferredShader, camera, settings, fogFactor);
         postProcessing.renderDeferredShading(pctx, assets, timer, camera);
     }
+    auto& entityShader = assets.require<ShaderProgram>("entity");
     {
         DrawContext ctx = pctx.sub();
         ctx.setDepthTest(true);
@@ -469,6 +480,7 @@ void WorldRenderer::renderFrame(
         wctx.useTexture(advanced_pipeline::TARGET_SKYBOX, skybox->getCubemap());
         wctx.useTexture(advanced_pipeline::TARGET_COLOR, nullptr);
         {
+            auto& translucentShader = assets.require<ShaderProgram>("translucent");
             auto sctx = wctx.sub();
             sctx.setCullFace(true);
             translucentShader.use();

@@ -10,6 +10,7 @@
 #include <presets/WeatherPreset.h>
 #include <world/Weather.h>
 #include <window/Camera.h>
+#include <util/ObjectsKeeper.h>
 
 class Level;
 class LineBatch;
@@ -35,13 +36,29 @@ class NamedSkeletons;
 class Shadows;
 class CloudsRenderer;
 
-struct CompileTimeShaderSettings {
-    bool advancedRender = false;
-    bool shadows = false;
-    bool ssao = false;
-};
+class WorldRenderer final : public util::ObjectsKeeper {
+public:
+    static bool drawChunkBorders;
+    static bool drawEntityHitboxes;
 
-class WorldRenderer {
+    WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
+    ~WorldRenderer();
+
+    void update(const Camera& camera, float deltaTime);
+
+    void renderFrame(
+        const DrawContext& context,
+        Camera& camera,
+        bool hudVisible,
+        PostProcessing& postProcessing
+    );
+
+    void clear();
+
+    void setDebug(bool flag);
+    void toggleLightsDebug();
+
+    Weather& getWeather();
 private:
     Engine& engine;
     const Level& level;
@@ -67,7 +84,7 @@ private:
 
     bool gbufferPipeline = false;
 
-    CompileTimeShaderSettings prevCTShaderSettings {};
+    bool dirtyShaders = false;
 
     void renderBlockSelection();
     void renderLines(
@@ -94,7 +111,7 @@ private:
         bool hudVisible
     );
 
-    void refreshSettings(ShaderProgram** shaders);
+    void refreshSettings();
 
     float calcFogFactor() const;
 public:
@@ -102,26 +119,4 @@ public:
     std::unique_ptr<TextsRenderer> texts;
     std::unique_ptr<BlockWrapsRenderer> blockWraps;
     std::unique_ptr<NamedSkeletons> skeletons;
-
-    WorldRenderer(Engine& engine, LevelFrontend& levelFrontend, Player& player);
-    ~WorldRenderer();
-
-    void update(const Camera& camera, float deltaTime);
-
-    void renderFrame(
-        const DrawContext& context,
-        Camera& camera,
-        bool hudVisible,
-        PostProcessing& postProcessing
-    );
-
-    void clear();
-
-    void setDebug(bool flag);
-    void toggleLightsDebug();
-
-    Weather& getWeather();
-
-    static bool drawChunkBorders;
-    static bool drawEntityHitboxes;
 };
