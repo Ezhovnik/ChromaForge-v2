@@ -96,7 +96,7 @@ void Shadows::setup(ShaderProgram& shader, const Weather& weather) {
     if (!shadows) return;
 
     const auto& worldInfo = level.getWorld()->getInfo();
-    float cloudsIntensity = glm::max(worldInfo.skyClearness, weather.clouds());
+    float cloudsIntensity = weather.clouds();
     float shadowsOpacity = 1.0f - cloudsIntensity;
     shadowsOpacity *= glm::sqrt(glm::abs(
         glm::mod((worldInfo.daytime + 0.5f) * 2.0f, 1.0f) * 2.0f - 1.0f

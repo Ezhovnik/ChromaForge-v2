@@ -1,14 +1,12 @@
 #pragma once
 
 #include <vector>
-#include <algorithm>
 #include <string>
 #include <memory>
 
 #include <graphics/render/commons.h>
 #include <graphics/core/DrawContext.h>
 #include <presets/WeatherPreset.h>
-#include <world/Weather.h>
 #include <window/Camera.h>
 #include <util/ObjectsKeeper.h>
 
@@ -35,6 +33,7 @@ class HandsRenderer;
 class NamedSkeletons;
 class Shadows;
 class CloudsRenderer;
+struct Weather;
 
 class WorldRenderer final : public util::ObjectsKeeper {
 public:
@@ -53,7 +52,7 @@ public:
         PostProcessing& postProcessing
     );
 
-    void clear();
+    void resetCache();
 
     void setDebug(bool flag);
     void toggleLightsDebug();
@@ -64,6 +63,7 @@ private:
     const Level& level;
     Player& player;
     const Assets& assets;
+    Weather& weather;
     std::unique_ptr<Frustum> frustumCulling;
     std::unique_ptr<LineBatch> lineBatch;
     std::unique_ptr<Batch3D> batch3d;
@@ -75,19 +75,15 @@ private:
     std::unique_ptr<DebugLinesRenderer> debugLines;
     std::unique_ptr<PrecipitationRenderer> precipitation;
     std::unique_ptr<CloudsRenderer> cloudsRenderer;
-    Weather weather {};
 
     float timer = 0.0f;
-
     bool debug = false;
     bool lightsDebug = false;
-
     bool gbufferPipeline = false;
-
-    bool dirtyShaders = false;
+    bool dirtySettings = false;
 
     void renderBlockSelection();
-    void renderLines(
+    void renderInWorldLines(
         const Camera& camera,
         ShaderProgram& linesShader,
         const DrawContext& pctx
@@ -109,6 +105,33 @@ private:
         const Camera& camera, 
         const EngineSettings& settings,
         bool hudVisible
+    );
+
+    void renderOpaquePass(
+        const DrawContext& context,
+        Camera& camera,
+        bool hudVisible,
+        PostProcessing& postProcessing
+    );
+
+    void renderWeatherEffects(Camera& camera);
+
+    void renderHandsPass(const DrawContext& pctx, Camera& camera);
+
+    void renderDebugLines(const DrawContext& context, Camera& camera);
+
+    void renderFrameClassic(
+        const DrawContext& context, 
+        Camera& camera, 
+        bool hudVisible,
+        PostProcessing& postProcessing
+    );
+
+    void renderFrameAdvanced(
+        const DrawContext& context, 
+        Camera& camera, 
+        bool hudVisible,
+        PostProcessing& postProcessing
     );
 
     void refreshSettings();

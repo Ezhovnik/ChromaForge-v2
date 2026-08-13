@@ -104,7 +104,7 @@ void DebugLinesRenderer::drawCoordSystem(
 
 
 void DebugLinesRenderer::render(
-    DrawContext& pctx,
+    const DrawContext& pctx,
     const Camera& camera,
     LineBatch& linesBatch,
     ShaderProgram& linesShader,

@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include <world/Weather.h>
+
 class Level;
 class Assets;
 class ContentGfxCache;
@@ -11,11 +13,11 @@ struct EngineSettings;
 class Engine;
 
 class LevelFrontend {
-private:
     Level& level;
     LevelController& controller;
     Assets& assets;
     std::unique_ptr<ContentGfxCache> contentCache;
+    Weather weather {};
 public:
     LevelFrontend(
         Engine& engine,
@@ -29,4 +31,5 @@ public:
     const ContentGfxCache& getContentGfxCache() const;
     ContentGfxCache& getContentGfxCache();
     LevelController& getController() const;
+    Weather& getWeather();
 };

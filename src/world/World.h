@@ -46,8 +46,6 @@ struct WorldInfo : public Serializable {
     /// Общее прошедшее время в секундах с момента создания мира
     double totalTime = 0.0;
 
-    float skyClearness = 0.0f;
-
     entityid_t nextEntityId = 0;
 
     int major = 0, minor = -1, patch = -1;

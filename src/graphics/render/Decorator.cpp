@@ -25,6 +25,7 @@
 #include <objects/Entt_Entity.h>
 #include <engine/EnginePaths.h>
 #include <debug/Logger.h>
+#include <world/Weather.h>
 
 inline constexpr int UPDATE_AREA_DIAMETER = 32;
 inline constexpr int UPDATE_BLOCKS = UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER * UPDATE_AREA_DIAMETER;

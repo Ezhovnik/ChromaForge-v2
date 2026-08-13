@@ -232,10 +232,6 @@ void WorldInfo::deserialize(const dv::value& root) {
         totalTime = timeobj["total-time"].asNumber();
     }
 
-    if (root.has("weather")) {
-        skyClearness = root["weather"]["skyClearness"].asNumber();
-    }
-
     // Счётчик инвентарей (по умолчанию 2, т.к. 1 обычно зарезервирован)
     nextInventoryId = root["next-inventory-id"].asInteger(2);
     nextEntityId = root["next-entity-id"].asInteger(1);
@@ -264,9 +260,6 @@ dv::value WorldInfo::serialize() const {
     timeobj["day-time"] = daytime;
     timeobj["day-time-speed"] = daytimeSpeed;
     timeobj["total-time"] = totalTime;
-
-    root["weather"] = dv::object();
-    root["weather"]["skyClearness"] = skyClearness;
 
     root["next-inventory-id"] = nextInventoryId;
     root["next-entity-id"] = nextEntityId;

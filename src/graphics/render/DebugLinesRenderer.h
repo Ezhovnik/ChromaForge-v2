@@ -13,7 +13,7 @@ public:
     DebugLinesRenderer(const Level& level) : level(level) {};
 
     void render(
-        DrawContext& ctx,
+        const DrawContext& ctx,
         const Camera& camera,
         LineBatch& linesBatch,
         ShaderProgram& linesShader,

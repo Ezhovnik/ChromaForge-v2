@@ -54,7 +54,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
 ) {
     auto network = engine.getNetwork();
     auto& gui = engine.getGUI();
-	auto panel = std::make_shared<gui::Panel>(
+    auto panel = std::make_shared<gui::Panel>(
         gui, glm::vec2(350, 200), glm::vec4(5.0f), 2.0f
     );
     panel->setId("hud.debug-panel");
@@ -132,10 +132,10 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         });
     }
 
-	panel->add(create_label(gui, []() { return fpsString; }));
+    panel->add(create_label(gui, []() { return fpsString; }));
     panel->add(std::shared_ptr<gui::Label>(create_label(gui, []() {
-		return L"Meshes: " + std::to_wstring(MeshStats::meshesCount);
-	})));
+        return L"Meshes: " + std::to_wstring(MeshStats::meshesCount);
+    })));
     panel->add(create_label(gui, []() {
         drawCalls = MeshStats::drawCalls;
         MeshStats::drawCalls = 0;
@@ -148,14 +148,14 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         return drawCallsMinMaxString;
     }));
     panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
-		return L"Chunks: " + std::to_wstring(level.chunks->size()) + L" (visible: " + std::to_wstring(ChunksRenderer::visibleChunks) + L")";
-	})));
+        return L"Chunks: " + std::to_wstring(level.chunks->size()) + L" (visible: " + std::to_wstring(ChunksRenderer::visibleChunks) + L")";
+    })));
     panel->add(std::shared_ptr<gui::Label>(create_label(gui, [=]() {
-		return L"Particles: " +
+        return L"Particles: " +
                 std::to_wstring(ParticlesRenderer::visibleParticles) +
                 L" Emitters: " +
                 std::to_wstring(ParticlesRenderer::aliveEmitters);
-	})));
+    })));
     panel->add(create_label(gui, [&]() {
         return L"Entities: " + std::to_wstring(level.entities->size()) +
         L" Next: " + std::to_wstring(level.entities->peekNextID());
@@ -173,7 +173,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
     if (network) {
         panel->add(create_label(gui, []() {return netSpeedString;}));
     }
-	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() -> std::wstring {
+    panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() -> std::wstring {
         static voxel prevVox = {BLOCK_VOID, {}};
 
         auto vox = player.selection.vox;
@@ -192,7 +192,7 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         } else {
             return L"Block: " + std::to_wstring(vox.id) + L" " + stream.str();
         }
-	})));
+    })));
     panel->add(create_label(gui, [&]() -> std::wstring {
         static CursorSelection prevSelection {};
 
@@ -246,11 +246,11 @@ std::shared_ptr<gui::UINode> create_debug_panel(
             return std::wstring {L"Entity: error (invalid UID)"};
         }
     }));
-	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
-		return L"Seed: " + std::to_wstring(level.getWorld()->getSeed());
-	})));
-	for (int ax = 0; ax < 3; ++ax){
-		auto sub = std::make_shared<gui::Container>(
+    panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
+        return L"Seed: " + std::to_wstring(level.getWorld()->getSeed());
+    })));
+    for (int ax = 0; ax < 3; ++ax){
+        auto sub = std::make_shared<gui::Container>(
             gui, glm::vec2(350, 27)
         );
 
@@ -288,54 +288,34 @@ std::shared_ptr<gui::UINode> create_debug_panel(
 
         sub->add(box, glm::vec2(20, 0));
         panel->add(sub);
-	}
+    }
 
     auto& worldInfo = level.getWorld()->getInfo();
 
-	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
-		std::wstringstream ss;
-        ss << std::fixed << std::setprecision(2);
-        ss << worldInfo.skyClearness;
-		return L"Sky clearness: " + ss.str();
-	})));
+    panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
+        int hour, minute, second;
+        timeutil::from_value(worldInfo.daytime, hour, minute, second);
 
-	if (allowDebugCheats) {
-		auto bar = std::make_shared<gui::TrackBar>(
-            gui, 0.0f, 1.0f, 0.0f, 0.005f, 8
-        );
-		bar->setSupplier([&]() {
-			return worldInfo.skyClearness;
-		});
-		bar->setConsumer([&](double val) {
-			worldInfo.skyClearness = val;
-		});
-		panel->add(bar);
-	}
+        std::wstring timeString = 
+                    util::lfill(std::to_wstring(hour), 2, L'0') + L":" +
+                    util::lfill(std::to_wstring(minute), 2, L'0');
+        return L"Time: " + timeString;
+    })));
 
-	panel->add(std::shared_ptr<gui::Label>(create_label(gui, [&]() {
-		int hour, minute, second;
-		timeutil::from_value(worldInfo.daytime, hour, minute, second);
-
-		std::wstring timeString = 
-					util::lfill(std::to_wstring(hour), 2, L'0') + L":" +
-					util::lfill(std::to_wstring(minute), 2, L'0');
-		return L"Time: " + timeString;
-	})));
-
-	if (allowDebugCheats) {
-		auto bar = std::make_shared<gui::TrackBar>(
+    if (allowDebugCheats) {
+        auto bar = std::make_shared<gui::TrackBar>(
             gui, 0.0f, 1.0f, 1.0f, 0.005f, 8
         );
-		bar->setSupplier([&]() {
-			return worldInfo.daytime;
-		});
-		bar->setConsumer([&](double val) {
-			worldInfo.daytime = val;
-		});
-		panel->add(bar);
-	}
+        bar->setSupplier([&]() {
+            return worldInfo.daytime;
+        });
+        bar->setConsumer([&](double val) {
+            worldInfo.daytime = val;
+        });
+        panel->add(bar);
+    }
 
-	{
+    {
         auto checkbox = std::make_shared<gui::FullCheckBox>(
             gui, L"Frustum-Culling", glm::vec2(400, 24)
         );
@@ -346,8 +326,8 @@ std::shared_ptr<gui::UINode> create_debug_panel(
             engine.getSettings().graphics.frustumCulling.set(checked);
         });
         panel->add(checkbox);
-	}
-	{
+    }
+    {
         auto checkbox = std::make_shared<gui::FullCheckBox>(
             gui, L"Show Chunk Borders", glm::vec2(400, 24)
         );
@@ -357,8 +337,8 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         checkbox->setConsumer([=](bool checked) {
             WorldRenderer::drawChunkBorders = checked;
         });
-		panel->add(checkbox);
-	}
+        panel->add(checkbox);
+    }
     {
         auto checkbox = std::make_shared<gui::FullCheckBox>(
             gui, L"Show Hitboxes", glm::vec2(400, 24)
@@ -369,8 +349,8 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         checkbox->setConsumer([=](bool checked) {
             WorldRenderer::drawEntityHitboxes = checked;
         });
-		panel->add(checkbox);
-	}
+        panel->add(checkbox);
+    }
     {
         auto checkbox = std::make_shared<gui::FullCheckBox>(
             gui, L"Show Paths", glm::vec2(400, 24)
@@ -396,6 +376,6 @@ std::shared_ptr<gui::UINode> create_debug_panel(
         panel->add(checkbox);
     }
 
-	panel->refresh();
-	return panel;
+    panel->refresh();
+    return panel;
 }

@@ -89,7 +89,7 @@ LevelScreen::LevelScreen(
 
     auto resetChunks = [=](bool) {
         player->chunks->saveAndClear();
-        renderer->clear();
+        renderer->resetCache();
     };
     keepAlive(settings.graphics.backlight.observe(resetChunks));
     keepAlive(settings.graphics.softLighting.observe(resetChunks));
@@ -102,7 +102,7 @@ LevelScreen::LevelScreen(
     }));
     keepAlive(input.addCallback(BIND_CHUNKS_RELOAD, [=](){
         player->chunks->saveAndClear();
-        renderer->clear();
+        renderer->resetCache();
         return false;
     }));
 
@@ -161,7 +161,7 @@ void LevelScreen::loadDecorations() {
 
     auto data = io::read_object(CLIENT_FILE);
     if (data.has("weather")) {
-        renderer->getWeather().deserialize(data["weather"]);
+        frontend->getWeather().deserialize(data["weather"]);
     }
 }
 
@@ -169,7 +169,7 @@ void LevelScreen::saveDecorations() {
     io::create_directory("world:client");
 
     auto data = dv::object();
-    data["weather"] = renderer->getWeather().serialize();
+    data["weather"] = frontend->getWeather().serialize();
     io::write_json(CLIENT_FILE, data, true);
 }
 
@@ -261,7 +261,7 @@ void LevelScreen::update(float deltaTime) {
 
     hud->update(hudVisible);
 
-    const Weather& weather = renderer->getWeather();
+    const Weather& weather = frontend->getWeather();
     const Player& player = playerController->getPlayer();
     const Camera& camera = *player.currentCamera;
     decorator->update(paused ? 0.0f : deltaTime, camera, weather);

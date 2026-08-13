@@ -143,3 +143,7 @@ ContentGfxCache& LevelFrontend::getContentGfxCache() {
 LevelController& LevelFrontend::getController() const {
     return controller;
 }
+
+Weather& LevelFrontend::getWeather() {
+    return weather;
+}
