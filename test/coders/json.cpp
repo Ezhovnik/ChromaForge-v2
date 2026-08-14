@@ -13,7 +13,7 @@ TEST(JSON, EncodeDecode) {
     const double epsilon = 1e-6;
     const bool visible = true;
     dv::objects::Bytes srcBytes(bytesSize);
-    for (int i = 0; i < bytesSize; i ++) {
+    for (int i = 0; i < bytesSize; ++i) {
         srcBytes[i] = rand();
     }
 

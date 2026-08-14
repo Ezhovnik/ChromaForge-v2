@@ -11,16 +11,10 @@
 
 namespace util {
     template<typename T>
-    inline T read_int_le(const uint8_t* src, ptrdiff_t offset=0) {
-        T value;
-        std::memcpy(&value, src + offset, sizeof(T));
-        return dataio::le2h(value);
-    }
-
-    template<typename T>
-    inline void write_int_le(uint8_t* dst, T value) {
-        value = dataio::h2le(value);
-        std::memcpy(dst, &value, sizeof(T));
+    inline T read_int_le(const uint8_t* src) {
+        T tmp;
+        std::memcpy(&tmp, src, sizeof(T));
+        return dataio::le2h(tmp);
     }
 
     /**
@@ -137,8 +131,7 @@ namespace util {
                     std::memset(found, 0, entrySize);
                     return found;
                 }
-                this->free(found);
-                return allocate(index, size);
+                free(found);
             }
             for (size_t i = 0; i < entriesCount; ++i) {
                 auto data = buffer.data() + offset;
@@ -160,9 +153,11 @@ namespace util {
             entriesCount++;
 
             auto data = buffer.data() + offset;
-            write_int_le<Tindex>(data, index);
+            Tindex indexTmp = dataio::h2le(index);
+            Tsize sizeTmp = dataio::h2le(size);
+            std::memcpy(data, &indexTmp, sizeof(Tindex));
             data += sizeof(Tindex);
-            write_int_le<Tsize>(data, size);
+            std::memcpy(data, &sizeTmp, sizeof(Tsize));
             return data + sizeof(Tsize);
         }
 
@@ -177,7 +172,7 @@ namespace util {
             if (ptr == nullptr) {
                 return 0;
             }
-            return read_int_le<Tsize>(ptr, -1);
+            return read_int_le<Tsize>(ptr - sizeof(Tsize));
         }
 
         /**
@@ -210,7 +205,8 @@ namespace util {
             ubyte* dst = out.data();
             const ubyte* src = buffer.data();
 
-            write_int_le<Tindex>(dst, entriesCount);
+            Tindex countTmp = dataio::h2le(entriesCount);
+            std::memcpy(dst, &countTmp, sizeof(Tindex));
             dst += sizeof(Tindex);
 
             std::memcpy(dst, src, buffer.size());
@@ -237,7 +233,7 @@ namespace util {
             ) : buffer(buffer), index(index), offset(offset) {}
 
             Tsize size() const {
-                return read_int_le<Tsize>(buffer.data() + offset, -1);
+                return read_int_le<Tsize>(buffer.data() + offset - sizeof(Tsize));
             }
 
             bool operator!=(const const_iterator& o) const {
@@ -270,7 +266,8 @@ namespace util {
             return const_iterator (
                 buffer,
                 read_int_le<Tindex>(buffer.data()),
-                sizeof(Tindex) + sizeof(Tsize));
+                sizeof(Tindex) + sizeof(Tsize)
+            );
         }
 
         const_iterator end() const {
