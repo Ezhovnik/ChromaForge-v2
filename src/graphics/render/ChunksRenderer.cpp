@@ -17,6 +17,7 @@
 #include <math/FrustumCulling.h>
 #include <util/listutil.h>
 #include <util/ObjectsPool.h>
+#include <content/Content.h>
 
 static debug::Logger logger("chunks-renderer");
 
@@ -35,7 +36,7 @@ public:
             settings.graphics.denseRender.get()
                 ? settings.graphics.chunkMaxVerticesDense.get()
                 : settings.graphics.chunkMaxVertices.get(),
-            level.content,
+            level.content.getIndices()->blocks.getDefs(),
             cache,
             settings
         ) {}
@@ -95,7 +96,7 @@ ChunksRenderer::ChunksRenderer(
     threadPool.setStopOnFail(false);
     renderer = std::make_unique<BlocksRenderer>(
         settings.graphics.chunkMaxVertices.get(),
-        level.content,
+        level.content.getIndices()->blocks.getDefs(),
         cache,
         settings
     );

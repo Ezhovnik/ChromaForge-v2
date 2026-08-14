@@ -33,7 +33,7 @@ class BlocksRenderer final {
 public:
     BlocksRenderer(
         size_t capacity,
-        const Content& content,
+        const Block* const* blockDefs,
         const ContentGfxCache& cache,
         const EngineSettings& settings
     );
@@ -51,7 +51,6 @@ public:
         return cancelled;
     }
 private:
-    const Content& content;
     std::unique_ptr<ChunkVertex[]> vertexBuffer;
     std::unique_ptr<uint32_t[]> indexBuffer;
     std::unique_ptr<uint32_t[]> denseIndexBuffer;
@@ -219,13 +218,16 @@ private:
      * @param group Группа отрисовки текущего блока.
      * @return true, если грань должна быть отрисована.
      */
-    inline bool isOpen(const glm::ivec3& pos, const Block& def, const Variant& variant) const {
+    bool isOpen(const glm::ivec3& pos, const Block& def, const Variant& variant) const {
         const auto& vox = voxelsBuffer->pickBlock(
             chunk->chunk_x * CHUNK_WIDTH + pos.x,
             pos.y,
             chunk->chunk_z * CHUNK_DEPTH + pos.z
         );
         if (vox.id == BLOCK_VOID) {
+            return false;
+        }
+        if (def.rt.id == vox.id && def.rt.solid && variant.culling == CullingMode::Default) {
             return false;
         }
         const auto& block = *blockDefsCache[vox.id];
@@ -267,6 +269,10 @@ private:
         float x, float y, float z, const glm::ivec3& right, const glm::ivec3& up
     ) const;
 
-    void render(const voxel* voxels, const int beginEnds[256][2]);
-    SortingMeshData renderTranslucent(const voxel* voxels, int beginEnds[256][2]);
+    void render(
+        const voxel* voxels, int totalBegin, int totalEnd
+    );
+    SortingMeshData renderTranslucent(
+        const voxel* voxels, int totalBegin, int totalEnd
+    );
 };
