@@ -44,12 +44,15 @@ public:
     void reload(
         const VertexStructure* vertexBuffer,
         size_t vertexCount,
-        const std::vector<IndexBufferData>& indices
+        const std::vector<IndexBufferData>& indices,
+        bool streaming
     );
 
-    void reload(const VertexStructure* vertexBuffer, size_t vertexCount) {
+    void reload(
+        const VertexStructure* vertexBuffer, size_t vertexCount, bool streaming
+    ) {
         static const std::vector<IndexBufferData> indices {};
-        reload(vertexBuffer, vertexCount, indices);
+        reload(vertexBuffer, vertexCount, indices, streaming);
     }
 
     /**
@@ -62,6 +65,8 @@ public:
      * @brief Отрисовывает меш с типом примитива GL_TRIANGLES.
      */
     void draw() const;
+private:
+    
 };
 
 #include <graphics/core/Mesh.inl>

@@ -80,7 +80,7 @@ private:
     bool debug = false;
     bool lightsDebug = false;
     bool gbufferPipeline = false;
-    bool dirtySettings = false;
+    bool dirtySettings = true;
 
     void renderBlockSelection();
     void renderInWorldLines(

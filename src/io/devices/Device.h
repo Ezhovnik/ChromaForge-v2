@@ -3,7 +3,7 @@
 #include <string>
 #include <filesystem>
 #include <memory>
-#include <iostream>
+#include <iosfwd>
 
 #include <io/path.h>
 
