@@ -334,6 +334,10 @@ else
     os.pid = ffi.C.getpid()
 end
 
+require("builtin:io_stream").wrap_bytearray = require "builtin:internal/stream_providers/bytearray"
+
+network.__as_stream = require "builtin:internal/stream_providers/socket"
+
 math.randomseed(time.uptime() * 1536227939)
 
 rules = require "builtin:internal/rules"
