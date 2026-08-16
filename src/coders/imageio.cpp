@@ -51,7 +51,7 @@ std::unique_ptr<ImageData> imageio::decode(
 ) {
     auto found = readers.find(format);
     try {
-        return std::unique_ptr<ImageData>(found->second(src.data(), src.size(), false));
+        return std::unique_ptr<ImageData>(found->second(src.data(), src.size(), true));
     } catch (const std::runtime_error& err) {
         throw std::runtime_error("Could not to decode image: " + std::string(err.what()));
     }
