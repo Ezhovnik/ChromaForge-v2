@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <entt/entity/fwd.hpp>
 
+#include <constants.h>
 #include <typedefs.h>
 #include <physics/Hitbox.h>
 #include <util/Clock.h>
@@ -44,12 +45,6 @@ class Entities final {
     );
     void preparePhysics(float deltaTime);
 public:
-    struct RaycastResult {
-        entityid_t entity;
-        glm::ivec3 normal;
-        float distance;
-    };
-
     Entities(Level& level);
 
     ~Entities();
@@ -77,12 +72,24 @@ public:
     void despawn(entityid_t id);
     void despawn(std::vector<Entt_Entity> entities);
 
+    struct RaycastSettings {
+        entityid_t ignoredUid;
+        bool solidEntitiesOnly = false;
+        bool entityFilterExcludeMode = false;
+        const std::set<entitydefid_t>* entitiesFilter = nullptr;
+    };
+
+    struct RaycastResult {
+        entityid_t entity;
+        glm::ivec3 normal;
+        float distance;
+    };
+
     std::optional<RaycastResult> rayCast(
         glm::vec3 start,
         glm::vec3 dir,
         float maxDistance,
-        entityid_t ignore = -1,
-        bool solidOnly = false
+        const RaycastSettings& settings
     );
 
     void loadEntities(dv::value map);

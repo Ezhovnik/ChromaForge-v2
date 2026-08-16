@@ -23,6 +23,10 @@ class VoxelsVolume;
 
 template <int w, int h, int d> class StaticVoxelsVolume;
 
+namespace blocks_agent {
+    struct RaycastSettings;
+}
+
 // Класс для управления набором чанков в воксельном мире.
 class Chunks{
 private:
@@ -93,8 +97,7 @@ public:
         glm::vec3& end, // Точка попадания луча
         glm::ivec3& norm, // Нормаль поверхности в точке попадания
         glm::ivec3& iend, // Координаты вокселя в точке попадания
-        std::set<blockid_t> filter = {},
-        bool includeNonSelectable = false
+        const blocks_agent::RaycastSettings& settings
     ) const;
     glm::vec3 rayCastToObstacle(
         const glm::vec3& start,

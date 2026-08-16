@@ -1,3 +1,7 @@
+local device = file.create_memory_device()
+file.write(device..":test.txt", "Hello\nWorld")
+file.write_bytes(device..":test.bin", Bytearray({20, 30, 100, 200, 255}))
+
 local stream = file.open(device..":test.txt", 'r')
 
 local line1 = stream:read_line()

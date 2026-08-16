@@ -196,8 +196,13 @@ void CameraControl::update(
 
     auto castRay = [](Player& player, Camera& camera, const glm::vec3& front) -> glm::vec3 {
         auto blockEnd = player.chunks->rayCastToObstacle(camera.position, front, 3.0f);
+
+        Entities::RaycastSettings raycast {};
+        raycast.ignoredUid = player.getEntity();
+        raycast.solidEntitiesOnly = true;
+
         auto entityRay = player.getLevel().entities->rayCast(
-            camera.position, front, 3.0f, player.getEntity(), true
+            camera.position, front, 3.0f, raycast
         );
         if (entityRay.has_value() &&
             entityRay->distance < glm::distance(camera.position, blockEnd)) {
@@ -321,7 +326,8 @@ voxel* PlayerController::updateSelection(float maxDistance) {
         camera->position, 
         camera->front, 
         maxDistance, 
-        end, norm, iend
+        end, norm, iend,
+        blocks_agent::RaycastSettings {}
     );
     if (vox) {
         maxDistance = glm::distance(camera->position, end);
@@ -329,11 +335,15 @@ voxel* PlayerController::updateSelection(float maxDistance) {
     auto prevEntity = selection.entity;
     selection.entity = ENTITY_NONE;
     selection.actualPosition = iend;
+
+    Entities::RaycastSettings raycast {};
+    raycast.ignoredUid = player.getEntity();
+
     if (auto result = level.entities->rayCast(
             camera->position,
             camera->front,
             maxDistance,
-            player.getEntity()
+            raycast
         )
     ) {
         selection.entity = result->entity;

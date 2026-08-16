@@ -314,6 +314,8 @@ entities.get_all = function(uids)
         return stdcomp.get_all(uids)
     end
 end
+world.raycast = entities.__world_raycast
+entities.__world_raycast = nil
 
 __chroma_scripts_registry = require "builtin:internal/scripts_registry"
 

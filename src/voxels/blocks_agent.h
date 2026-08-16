@@ -293,6 +293,12 @@ namespace blocks_agent {
         }
     }
 
+    struct RaycastSettings {
+        const std::set<blockid_t>* filter = nullptr;
+        bool blocksFilterExcludeMode = true;
+        bool includeNonSelectable = false;
+    };
+
     voxel* raycast(
         const Chunks& chunks,
         const glm::vec3& start,
@@ -301,8 +307,7 @@ namespace blocks_agent {
         glm::vec3& end,
         glm::ivec3& norm,
         glm::ivec3& iend,
-        std::set<blockid_t> filter,
-        bool includeNonSelectable
+        const RaycastSettings& settings
     );
 
     voxel* raycast(
@@ -313,13 +318,20 @@ namespace blocks_agent {
         glm::vec3& end,
         glm::ivec3& norm,
         glm::ivec3& iend,
-        std::set<blockid_t> filter,
-        bool includeNonSelectable
+        const RaycastSettings& settings
     );
 
-    void get_voxels(const Chunks& chunks, VoxelsVolume* volume, bool backlight=false);
+    void get_voxels(
+        const Chunks& chunks,
+        VoxelsVolume* volume,
+        bool backlight=false
+    );
 
-    void get_voxels(const GlobalChunks& chunks, VoxelsVolume* volume, bool backlight=false);
+    void get_voxels(
+        const GlobalChunks& chunks,
+        VoxelsVolume* volume,
+        bool backlight=false
+    );
 
     template <class Storage>
     inline std::optional<AABB> is_obstacle_at(
