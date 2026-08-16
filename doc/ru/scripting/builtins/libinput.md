@@ -76,7 +76,7 @@ input.get_binding_text(bindname: str) --> str
 Возвращает текстовое представление кнопки по имени привязки.
 
 ```lua
-input.is_active(bindname: str) --> bool
+input.is_active(bindname: str) --> boolean
 ```
 
 Проверяет активность привязки.
@@ -88,7 +88,7 @@ input.set_enabled(bindname: str, flag: bool)
 Включает/выключает привязку до выхода из мира.
 
 ```lua
-input.is_pressed(code: str) --> bool
+input.is_pressed(code: str) --> boolean
 ```
 
 Проверяет активность ввода по коду, состоящему из:
