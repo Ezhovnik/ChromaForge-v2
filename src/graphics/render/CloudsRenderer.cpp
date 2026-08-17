@@ -44,7 +44,6 @@ public:
     }
 };
 
-
 class VolumeRenderer final {
 public:
     VolumeRenderer(
@@ -90,7 +89,6 @@ public:
             )
         );
     }
-
 private:
     std::unique_ptr<ChunkVertex[]> vertices;
     std::unique_ptr<uint32_t[]> indexBuffer;
@@ -328,7 +326,7 @@ void CloudsRenderer::draw(
 
     shader.uniform4f("u_tint", glm::vec4(weather.cloudsTint(), 1.0f));
     shader.uniform1f("u_fogFactor", fogFactor * 0.03f);
-    shader.uniform1f("u_fogCurve", 0.7f - 0.3f);
+    shader.uniform1f("u_fogCurve", 0.4f);
 
     for (int i = 0; i < std::min<int>(quality, layers.size()); ++i) {
         draw(layers[i], frustum, shader, camera, timer, i);
