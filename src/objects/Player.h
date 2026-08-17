@@ -181,7 +181,7 @@ public:
 
     bool isCurrentCameraBuiltin() const;
 
-    Hitbox* getHitbox();
+    Hitbox* getHitbox() const;
 
 	/**
      * @brief Возвращает инвентарь игрока.

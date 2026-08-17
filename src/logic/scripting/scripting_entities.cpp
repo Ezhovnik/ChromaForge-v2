@@ -70,6 +70,7 @@ static void init_component_events(
     funcsset.on_aim_off = lua::hasfield(L, "on_aim_off");
     funcsset.on_attacked = lua::hasfield(L, "on_attacked");
     funcsset.on_used = lua::hasfield(L, "on_used");
+    funcsset.on_player_set = lua::hasfield(L, "on_player_set");
     lua::pop(L);
 }
 
@@ -233,6 +234,15 @@ void scripting::on_entity_fall(const Entt_Entity& entity) {
 void scripting::on_entity_save(const Entt_Entity& entity) {
     process_entity_callback(
         entity, "on_save", &EntityFuncsSet::on_save, nullptr
+    );
+}
+
+void scripting::on_entity_player_set(const Entt_Entity& entity, int64_t pid) {
+    process_entity_callback(
+        entity,
+        "on_player_set",
+        &EntityFuncsSet::on_player_set,
+        [pid](auto L) { return lua::pushinteger(L, pid); }
     );
 }
 

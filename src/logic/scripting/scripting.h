@@ -135,6 +135,7 @@ namespace scripting {
     void on_aim_off(const Entt_Entity& entity, Player* player);
     void on_attacked(const Entt_Entity& entity, Player* player, entityid_t attacker);
     void on_entity_used(const Entt_Entity& entity, Player* player);
+    void on_entity_player_set(const Entt_Entity& entity, int64_t pid);
 
     void on_ui_open(
         const UIDocument& layout, 
