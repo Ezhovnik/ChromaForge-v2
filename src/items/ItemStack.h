@@ -45,6 +45,16 @@ public:
         return fields;
     }
 
+    void setFields(dv::value&& table, bool clear) {
+        if (clear) {
+            fields = std::move(table);
+            return;
+        }
+        for (auto&& [key, value] : table.asObject()) {
+            fields[std::move(key)] = std::move(value);
+        }
+    }
+
     bool hasFields() const {
         return fields != nullptr;
     }
