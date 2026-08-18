@@ -92,6 +92,12 @@ namespace xml {
         const std::string& indentStr="    "
     );
 
+    std::string stringify(
+        const Node& element,
+        bool nice = true,
+        const std::string& indentStr = "    "
+    );
+
     std::unique_ptr<Document> parse(
         std::string_view filename, std::string_view source
     );

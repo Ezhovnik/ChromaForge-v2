@@ -66,6 +66,7 @@ static void create_libs(State* L, StateType stateType) {
     openlib(L, "vec3", vec3lib);
     openlib(L, "vec4", vec4lib);
     openlib(L, "byteutil", byteutillib);
+    openlib(L, "xml", xmllib);
     openlib(L, "yaml", yamllib);
 
     openlib(L, "__chroma_app", applib);
