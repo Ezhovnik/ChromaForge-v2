@@ -301,11 +301,15 @@ local bytearray = require "builtin:internal/bytearray"
 Bytearray = bytearray.FFIBytearray
 Bytearray_as_string = bytearray.FFIBytearray_as_string
 Bytearray_as_ptr = bytearray.FFIBytearray_as_ptr
+I8view = bytearray.FFII8view
 U16view = bytearray.FFIU16view
 I16view = bytearray.FFII16view
 U32view = bytearray.FFIU32view
 I32view = bytearray.FFII32view
-F32view = bytearray.FFIF32view
+U64view = bytearray.FFIU64view
+I64view = bytearray.FFII64view
+FLTview = bytearray.FFIFLTview
+DBLview = bytearray.FFIDBLview
 Bytearray_construct = function(...) return Bytearray(...) end
 
 bit.compile = require "builtin:bitwise/compiler"
