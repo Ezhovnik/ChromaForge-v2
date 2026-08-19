@@ -56,7 +56,8 @@ void TextsRenderer::renderNote(
         if (preset.xrayOpacity <= 0.0001f) return;
         opacity = preset.xrayOpacity;
     }
-    auto& font = assets.require<Font>(FONT_DEFAULT);
+    auto specifiedFont = assets.get<Font>(preset.font);
+    auto& font = specifiedFont ? *specifiedFont : assets.require<Font>(FONT_DEFAULT);
 
     glm::vec3 xvec = note.getAxisX();
     glm::vec3 yvec = note.getAxisY();
@@ -72,7 +73,7 @@ void TextsRenderer::renderNote(
         if (preset.displayMode == NoteDisplayMode::XYFreeBillboard) {
             yvec = camera.up;
         }
-        float scale = (1.0f - preset.perspective) * glm::pow(glm::distance(camera.position, pos), 1.0f-preset.perspective);
+        float scale = (1.0f - preset.perspective) * glm::pow(glm::distance(camera.position, pos), 1.0f - preset.perspective);
         xvec *= 1.0f + scale;
         yvec *= 1.0f + scale;
     }
