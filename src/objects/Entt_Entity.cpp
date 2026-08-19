@@ -71,6 +71,7 @@ dv::value Entt_Entity::serialize() const {
     if (!scripts.components.empty()) {
         auto& compsMap = root.object("comps");
         for (auto& comp : scripts.components) {
+            if (comp->env == nullptr) continue;
             auto data =
                 scripting::get_component_value(comp->env, SAVED_DATA_VARNAME);
             compsMap[comp->name] = data;

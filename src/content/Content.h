@@ -176,6 +176,7 @@ public:
     ContentUnitDefs<Generator> generators;
     std::unique_ptr<DrawGroups> const drawGroups;
     ResourceIndicesSet resourceIndices {};
+    std::set<std::string> components {};
 
     Content(
         std::unique_ptr<ContentIndices> indices, 
