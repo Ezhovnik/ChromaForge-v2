@@ -1,9 +1,9 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 
 #include <coders/xml.h>
+#include <coders/commons.h>
 
 static const char* TAG_ATTR = "#";
-static const char* DEFAULT_ROOT_TAG = "root";
 
 static int push_xml(lua::State* L, const xml::xmlelement& elem) {
     if (elem.isText()) {
@@ -74,16 +74,25 @@ static int l_tostring(lua::State* L) {
 
 static int l_parse(lua::State* L) {
     auto string = lua::require_string(L, 1);
-    auto document = xml::parse("[string]", string);
-    return push_xml(L, *document->getRoot());
+    try {
+        auto document = xml::parse("[string]", string);
+        return push_xml(L, *document->getRoot());
+    } catch (const parsing_error& err) {
+        throw err.toRuntimeError();
+    }
 }
 
 static int l_parse_cfd(lua::State* L) {
     auto string = lua::require_string(L, 1);
     auto rootTag = lua::tostring(L, 2);
-    auto document = xml::parse_cfmodel(
-        "[string]", string, rootTag ? rootTag : ""
-    );
+    std::unique_ptr<xml::Document> document;
+    try {
+        document = xml::parse_cfmodel(
+            "[string]", string, rootTag ? rootTag : ""
+        );
+    } catch (const parsing_error& err) {
+        throw err.toRuntimeError();
+    }
     const auto& root = *document->getRoot();
     if (rootTag != nullptr) {
         return push_xml(L, root);

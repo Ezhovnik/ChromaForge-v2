@@ -40,7 +40,6 @@ parsing_error::parsing_error(
     this->source = source.substr(linestart, end - linestart);
 }
 
-
 std::string parsing_error::errorLog() const {
     std::stringstream ss;
     uint linepos = pos - linestart;
@@ -52,4 +51,8 @@ std::string parsing_error::errorLog() const {
     }
     ss << "^";
     return ss.str();
+}
+
+std::runtime_error parsing_error::toRuntimeError() const {
+    return std::runtime_error("Parsing error: " + errorLog());
 }
