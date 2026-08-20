@@ -280,8 +280,6 @@ void WorldRenderer::renderOpaque(
     const EngineSettings& settings,
     bool hudVisible
 ) {
-    texts->render(ctx, camera, settings, hudVisible, false);
-
     float fogFactor = calcFogFactor();
 
     auto& entityShader = assets.require<ShaderProgram>("entity");
@@ -385,6 +383,7 @@ void WorldRenderer::renderFrameClassic(
     bool hudVisible,
     PostProcessing& postProcessing
 ) {
+    const auto& settings = engine.getSettings();
     const auto& worldInfo = level.getWorld().getInfo();
 
     DrawContext ctx = pctx.sub();
@@ -395,6 +394,7 @@ void WorldRenderer::renderFrameClassic(
     skybox->draw(
         level.environment, ctx, camera, worldInfo.daytime, weather.clouds()
     );
+    texts->render(ctx, camera, settings, hudVisible, false);
 
     if (debug && hudVisible) {
         renderDebugLines(ctx, camera);
@@ -447,6 +447,7 @@ void WorldRenderer::renderFrameAdvanced(
     skybox->draw(
         level.environment, ctx, camera, worldInfo.daytime, weather.clouds()
     );
+    texts->render(ctx, camera, settings, hudVisible, false);
     if (debug && hudVisible) {
         renderDebugLines(ctx, camera);
     }

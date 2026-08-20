@@ -550,7 +550,6 @@ void BlocksRenderer::render(
                 break;
             }
             case BlockModelType::Custom: {
-                if (!denseRender)
                 blockCustomModel(
                     {x, y, z},
                     def,

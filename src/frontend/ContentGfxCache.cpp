@@ -29,6 +29,7 @@ void ContentGfxCache::refreshVariant(
     uint8_t variantIndex,
     const Atlas& atlas
 ) {
+    std::unordered_map<std::string, std::string> optionalTextures;
     bool denseRender = settings.denseRender.get();
     for (uint side = 0; side < 6; ++side) {
         std::string tex = variant.textureFaces[side];
@@ -41,6 +42,7 @@ void ContentGfxCache::refreshVariant(
             texOpaque = tex;
         } else if (variant.culling == CullingMode::Optional && !denseRender) {
             tex = texOpaque;
+            optionalTextures[variant.textureFaces[side]] = texOpaque;
         }
         size_t index = getRegionIndex(def.rt.id, variantIndex, side, false);
         sideregions[index] = atlas.get(tex);
@@ -52,7 +54,12 @@ void ContentGfxCache::refreshVariant(
             size_t pos = mesh.texture.find(':');
             if (pos == std::string::npos) continue;
 
-            if (auto region = atlas.getIf(mesh.texture.substr(pos + 1))) {
+            std::string texture = mesh.texture.substr(pos + 1);
+            const auto& found = optionalTextures.find(texture);
+            if (found != optionalTextures.end()) {
+                texture = found->second;
+            }
+            if (auto region = atlas.getIf(texture)) {
                 for (auto& vertex : mesh.vertices) {
                     vertex.uv = region->apply(vertex.uv);
                 }
