@@ -24,6 +24,12 @@ namespace platform {
 #else
 #include <sys/poll.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <stdio.h>
+#endif
+#ifdef __linux__
+    #include <sys/prctl.h>
 #endif
 
 namespace platform::internal {
@@ -215,7 +221,8 @@ std::filesystem::path platform::get_executable_path() {
 
 void platform::new_engine_instance(
     const std::vector<std::string>& args,
-    std::filesystem::path outputFile
+    std::filesystem::path outputFile,
+    bool subProcess
 ) {
     auto executable = get_executable_path();
 
@@ -283,6 +290,37 @@ void platform::new_engine_instance(
         &si,
         &pi
     );
+    if (subProcess) {
+        HANDLE job = CreateJobObjectW(nullptr, nullptr);
+
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION info{};
+        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+
+        try {
+            if (!SetInformationJobObject(
+                job,
+                JobObjectExtendedLimitInformation,
+                &info,
+                sizeof(info))
+            ) {
+                throw std::runtime_error(
+                    "SetInformationJobObject failed with code: " +
+                    std::to_string(GetLastError())
+                );
+            }
+            if (!AssignProcessToJobObject(job, pi.hProcess)) {
+                throw std::runtime_error(
+                    "SetInformationJobObject failed with code: " +
+                    std::to_string(GetLastError())
+                );
+            }
+        } catch (const std::exception& err) {
+            CloseHandle(job);
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+            return;
+        }
+    }
     if (success) {
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
@@ -293,6 +331,44 @@ void platform::new_engine_instance(
         );
     }
 #else
+// TODO: implement
+#ifndef __APPLE__
+    if (subProcess) {
+        pid_t pid = fork();
+
+        int fd = open(
+            outputFile.string().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644
+        );
+
+        if (pid == 0) {
+            prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+            if (getppid() == 1) {
+                _exit(1);
+            }
+
+            dup2(fd, STDOUT_FILENO);
+            dup2(fd, STDERR_FILENO);
+            close(fd);
+
+            std::vector<const char*> argv(args.size() + 2);
+            argv[0] = const_cast<char*>(executable.c_str());
+            for (int i = 0; i < args.size(); ++i) {
+                argv[i + 1] = args[i].c_str();
+            }
+            argv[args.size() + 1] = nullptr;
+
+            prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
+            execvp(executable.c_str(), const_cast<char**>(argv.data()));
+
+            _exit(127);
+        } else {
+            close(fd);
+            return;
+        }
+    }
+#endif // __APPLE_
+
     std::stringstream ss;
     ss << executable;
     for (int i = 0; i < args.size(); ++i) {
@@ -311,7 +387,7 @@ void platform::new_engine_instance(
             std::to_string(res)
         );
     }
-#endif
+#endif // _WIN32
 }
 
 bool platform::stdin_has_data() {

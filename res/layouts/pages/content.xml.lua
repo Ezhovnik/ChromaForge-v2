@@ -3,6 +3,7 @@ function on_open(params)
         mode = params.mode
     end
     refresh()
+    document.search_textbox.focused = true
 end
 
 add_packs = {}
@@ -54,7 +55,6 @@ function reposition_func(_pack)
 
     return pos[1], pos[2]
 end
-
 
 function refresh_search()
     local search_text = document.search_textbox.text:lower()

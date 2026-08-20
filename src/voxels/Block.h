@@ -21,8 +21,6 @@ namespace data {
 
 inline const std::string BLOCK_ITEM_SUFFIX = ".item"; 
 
-inline std::string DEFAULT_MATERIAL = CHROMAFORGE_CONTENT_NAMESPACE + ":stone";
-
 enum class BlockModelType {
     None, // Невидимый блок
     Cube, // Полноценный блок
@@ -175,7 +173,7 @@ public:
 
     dv::value properties = nullptr;
 
-    std::string material = DEFAULT_MATERIAL;
+    std::string material;
 
     ubyte emission[4] {0, 0, 0, 0};
     glm::i8vec3 size {1, 1, 1};

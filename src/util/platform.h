@@ -36,7 +36,8 @@ namespace platform {
 
     void new_engine_instance(
         const std::vector<std::string>& args,
-        std::filesystem::path outputFile
+        std::filesystem::path outputFile,
+        bool subProcess
     );
 
     void sleep(size_t millis);
