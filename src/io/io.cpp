@@ -144,7 +144,11 @@ std::vector<ubyte> io::read_bytes(const path& filename) {
 std::string io::read_string(const path& filename) {
     size_t size;
     auto bytes = read_bytes(filename, size);
-    return std::string((const char*)bytes.get(), size);
+    std::string result((const char*)bytes.get(), size);
+    if (result.size() >= 3 && (ubyte)result[0] == 0xEF && (ubyte)result[1] == 0xBB && (ubyte)result[2] == 0xBF) {
+        result.erase(0, 3);
+    }
+    return result;
 }
 
 bool io::write_string(const io::path& file, std::string_view content) {

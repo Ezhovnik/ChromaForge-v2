@@ -94,7 +94,7 @@ void BasicParser<CharT>::skipWhitespaceCLikeComment(bool newline) {
             case '*':
                 pos++;
                 while (hasNext()) {
-                    if (source[pos] == '/' && source[pos-1] == '*') {
+                    if (source[pos] == '/' && source[pos - 1] == '*') {
                         pos++;
                         skipWhitespace();
                         return;
