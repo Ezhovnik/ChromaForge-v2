@@ -190,7 +190,7 @@ std::optional<Entities::RaycastResult> Entities::rayCast(
     glm::ivec3 foundNormal;
 
     for (auto [entity, eid, transform, body] : view.each()) {
-        if (eid.uid == settings.ignoredUid || !body.enabled || (settings.solidEntitiesOnly && !eid.def.solid)) continue;
+        if (eid.uid == settings.ignoredUid || !body.enabled || (settings.solidEntitiesOnly && !eid.def.solid) || (!eid.def.selectable && !settings.includeNonSelectable)) continue;
         if (settings.entitiesFilter) {
             bool matches = settings.entitiesFilter->find(eid.def.rt.id) != settings.entitiesFilter->end();
             if (matches == settings.entityFilterExcludeMode) {

@@ -24,6 +24,7 @@ struct Entity {
     std::vector<ComponentInstance> components;
     std::string skeletonName = name;
     std::string material;
+    bool selectable = true;
     bool blocking = true;
     bool solid = false;
     float mass = 1.0f;
