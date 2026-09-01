@@ -6,6 +6,7 @@
 #include <set>
 
 #include <interfaces/Serializable.h>
+#include <io/path.h>
 
 namespace scripting {
     class IClientProjectScript;
@@ -25,6 +26,7 @@ struct Permissions {
 struct Project : Serializable {
     std::string name;
     std::string title;
+    io::path path;
     std::vector<std::string> basePacks;
     Permissions permissions;
 

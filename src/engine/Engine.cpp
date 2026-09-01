@@ -201,7 +201,7 @@ void Engine::initialize(CoreParameters coreParameters) {
         audio::set_input_device(name == "auto" ? "" : name);
     }));
 
-    appScripts = std::make_unique<AppScriptsControl>(params, *project);
+    appScripts = std::make_unique<AppScriptsControl>(params);
 
     if (params.stdinCommands) {
         cmd::start_stdin_cmd_reader(*this);
@@ -354,6 +354,7 @@ EngineController* Engine::getController() {
 void Engine::loadProject() {
     io::path projectFile = "project:project.toml";
     project = std::make_unique<Project>();
+    project->path = "project:";
     project->deserialize(io::read_object(projectFile));
     logger.info() << "Loaded project" << util::quote(project->name);
 }
