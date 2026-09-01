@@ -3,6 +3,9 @@
 #include <string>
 #include <filesystem>
 #include <vector>
+#include <memory>
+
+#include <interfaces/Process.h>
 
 /**
  * @brief Функции для работы с особенностями платформы (ОС).
@@ -34,7 +37,7 @@ namespace platform {
     void open_folder(const std::filesystem::path& folder);
     bool open_url(const std::string& url);
 
-    void new_engine_instance(
+    std::unique_ptr<Process> new_engine_instance(
         const std::vector<std::string>& args,
         std::filesystem::path outputFile,
         bool subProcess

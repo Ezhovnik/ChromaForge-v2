@@ -17,6 +17,7 @@
 static debug::Logger logger("main");
 
 static void sigterm_handler(int signum) {
+    logger.info() << "SIGTERM received";
     Engine::getInstance().quit();
 }
 
@@ -50,11 +51,11 @@ int main(int argc, char** argv) {
         engine.initialize(std::move(coreParameters));
         engine.run();
     } catch (const initialize_error& err) {
-        debug::Logger::getInstance().critical() << "Could not initialize engine: " << err.what();
+        logger.critical() << "Could not initialize engine: " << err.what();
     }
 #if defined(NDEBUG)
     catch (const std::exception& err) {
-        debug::Logger::getInstance().error() << "Uncaught exception: " << err.what();
+        logger.error() << "Uncaught exception: " << err.what();
         debug::Logger::flush();
         throw;
     }
