@@ -17,7 +17,7 @@
 static debug::Logger logger("main");
 
 static void sigterm_handler(int signum) {
-    logger.info() << "SIGTERM received " << signum;
+    logger.info() << (signum == SIGTERM ? "SIGTERM" : "SIGINT") << " received";
     Engine::getInstance().quit();
 }
 
@@ -39,6 +39,9 @@ int main(int argc, char** argv) {
     }
 
     std::signal(SIGTERM, sigterm_handler);
+#ifdef NDEBUG
+    std::signal(SIGINT, sigterm_handler);
+#endif
 
     // Инициализация логгера
     auto logPath = coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log");
