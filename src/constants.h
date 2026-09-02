@@ -28,6 +28,8 @@ inline constexpr bool ENGINE_DEBUG_BUILD = false;
 inline constexpr bool ENGINE_DEBUG_BUILD = true;
 #endif // NDEBUG
 
+inline constexpr uint MAX_SUBPROCESS_DEPTH = 2;
+
 // ========== Размеры чанков ==========
 
 /** Ширина чанка в блоках. */

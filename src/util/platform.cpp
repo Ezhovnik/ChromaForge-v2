@@ -294,6 +294,7 @@ public:
 
     void terminate() final override {
 #ifdef __linux__
+        logger.info() << "Terminating " << pid;
         kill(pid, SIGKILL);
 #elif defined(_WIN32)
         if (processHandle != nullptr) {
@@ -457,10 +458,11 @@ std::unique_ptr<Process> platform::new_engine_instance(
             _exit(127);
         } else {
             close(fd);
+            usleep(1000);
             return std::make_unique<SystemProcess>(pid);
         }
     }
-#endif // __APPLE_
+#endif
 
     std::stringstream ss;
     ss << executable;

@@ -17,7 +17,7 @@
 static debug::Logger logger("main");
 
 static void sigterm_handler(int signum) {
-    logger.info() << "SIGTERM received";
+    logger.info() << "SIGTERM received " << signum;
     Engine::getInstance().quit();
 }
 
@@ -53,6 +53,7 @@ int main(int argc, char** argv) {
     } catch (const initialize_error& err) {
         logger.critical() << "Could not initialize engine: " << err.what();
     }
+    logger.debug() << "Sub-process depth: " << coreParameters.subProcessDepth;
 #if defined(NDEBUG)
     catch (const std::exception& err) {
         logger.error() << "Uncaught exception: " << err.what();

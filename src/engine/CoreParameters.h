@@ -18,5 +18,7 @@ struct CoreParameters {
 
     int sps = 20;
 
+    int subProcessDepth = 0;
+
     std::unordered_map<std::string, std::string> projectArgs;
 };
