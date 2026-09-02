@@ -1,5 +1,7 @@
 #include <logic/scripting/lua/libs/api_lua.h>
 
+#include <array>
+
 #include <content/ContentControl.h>
 #include <devtools/Project.h>
 #include <engine/Engine.h>
@@ -21,7 +23,7 @@
 #include <world/Level.h>
 
 namespace {
-    static std::unique_ptr<Process> sub_instance = nullptr;
+    static std::array<std::unique_ptr<Process>, MAX_SUBPROCESSES> processes;
 }
 
 static int l_get_version(lua::State* L) {
@@ -161,12 +163,36 @@ static int l_start_background_instance(lua::State* L) {
     args.emplace_back("--project");
     args.emplace_back(io::resolve(scripting::engine->getProject().path).u8string());
 
-    ::sub_instance = platform::new_engine_instance(
+    int handle = -1;
+    for (int i = 0; i < ::processes.size(); ++i) {
+        if (!::processes[i] || !::processes[i]->isActive()) {
+            handle = i;
+            break;
+        }
+    }
+    if (handle == -1) {
+        throw std::runtime_error("Sub-processes limit exceeded");
+    }
+    ::processes[handle] = platform::new_engine_instance(
         std::move(args),
         outputPath.empty() ? "" : io::resolve(outputPath),
         true 
     );
-    return 0;
+    return lua::pushinteger(L, handle);
+}
+
+static int l_terminate(lua::State* L) {
+    int handle = lua::tointeger(L, 1);
+    if (handle < 0 || handle >= ::processes.size()) {
+        throw std::runtime_error("Invalid process handle");
+    }
+    auto& process = ::processes[handle];
+    if (process == nullptr) {
+        return lua::pushboolean(L, false);
+    }
+    bool active = process->isActive();
+    process.reset();
+    return lua::pushboolean(L, active);
 }
 
 static int l_focus(lua::State* L) {
@@ -382,6 +408,7 @@ const luaL_Reg applib[] = {
     {"reconfig_packs", lua::wrap<l_reconfig_packs>},
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"start_background_instance", lua::wrap<l_start_background_instance>},
+    {"terminate", lua::wrap<l_terminate>},
     {"focus", lua::wrap<l_focus>},
     {"create_memory_device", lua::wrap<l_create_memory_device>},
     {"get_content_sources", lua::wrap<l_get_content_sources>},

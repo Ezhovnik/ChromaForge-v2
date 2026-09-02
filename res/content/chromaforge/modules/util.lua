@@ -12,7 +12,7 @@ function util.drop(ppos, itemid, count, data, pickup_delay)
     }})
 end
 
-local function calc_loot(loot_table)
+function calc_loot(loot_table)
     local results = {}
     for _, loot in ipairs(loot_table) do
         local chance = loot.chance or 1

@@ -10,8 +10,9 @@ chroma = {
     is_client = function()
         return not _chroma_headless
     end,
+    get_version = __chroma_app.get_version,
     get_setting = __chroma_app.get_setting,
-    get_setting_str = __chroma_app.get_setting_str,
+    str_setting = __chroma_app.str_setting,
     get_setting_info = __chroma_app.get_setting_info,
 }
 
