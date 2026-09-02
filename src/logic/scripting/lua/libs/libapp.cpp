@@ -181,7 +181,16 @@ static int l_start_background_instance(lua::State* L) {
     return lua::pushinteger(L, handle);
 }
 
-static int l_terminate(lua::State* L) {
+static int l_is_instance_alive(lua::State* L) {
+    int handle = lua::tointeger(L, 1);
+    if (handle < 0 || handle >= ::processes.size()) {
+        throw std::runtime_error("Invalid process handle");
+    }
+    auto& process = ::processes[handle];
+    return lua::pushboolean(L, process && process->isActive());
+}
+
+static int l_terminate_instance(lua::State* L) {
     int handle = lua::tointeger(L, 1);
     if (handle < 0 || handle >= ::processes.size()) {
         throw std::runtime_error("Invalid process handle");
@@ -408,7 +417,8 @@ const luaL_Reg applib[] = {
     {"reconfig_packs", lua::wrap<l_reconfig_packs>},
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"start_background_instance", lua::wrap<l_start_background_instance>},
-    {"terminate", lua::wrap<l_terminate>},
+    {"is_instance_alive", lua::wrap<l_is_instance_alive>},
+    {"terminate_instance", lua::wrap<l_terminate_instance>},
     {"focus", lua::wrap<l_focus>},
     {"create_memory_device", lua::wrap<l_create_memory_device>},
     {"get_content_sources", lua::wrap<l_get_content_sources>},
