@@ -20,11 +20,15 @@ namespace util {
         return sqr(bx - ax) + sqr(by - ay) + sqr(bz - az);
     }
 
-    inline int length2(const glm::ivec3& a) {
+    inline long long int length2(const glm::ivec2& a) {
+        return a.x * a.x + a.y * a.y;
+    }
+
+    inline long long int length2(const glm::ivec3& a) {
         return sqr(a.x) + sqr(a.y) + sqr(a.z);
     }
 
-    inline int length2(int x, int y, int z) {
+    inline long long int length2(int x, int y, int z) {
         return sqr(x) + sqr(y) + sqr(z);
     }
 

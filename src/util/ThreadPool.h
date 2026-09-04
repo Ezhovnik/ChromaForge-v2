@@ -4,7 +4,6 @@
 #include <atomic>
 #include <thread>
 #include <chrono>
-#include <iostream>
 #include <functional>
 #include <condition_variable>
 #include <utility>
