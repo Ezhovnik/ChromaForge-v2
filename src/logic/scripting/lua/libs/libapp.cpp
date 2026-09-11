@@ -159,6 +159,7 @@ static int l_start_background_instance(lua::State* L) {
         "--dir", paths.getUserFilesFolder().u8string(),
         "--script", io::resolve(scriptPath).u8string(),
         "--sub-depth", std::to_string(scripting::engine->getCoreParameters().subProcessDepth + 1),
+        "--log", io::resolve(outputPath).u8string()
     };
     args.emplace_back("--project");
     args.emplace_back(io::resolve(scripting::engine->getProject().path).u8string());
@@ -173,11 +174,7 @@ static int l_start_background_instance(lua::State* L) {
     if (handle == -1) {
         throw std::runtime_error("Sub-processes limit exceeded");
     }
-    ::processes[handle] = platform::new_engine_instance(
-        std::move(args),
-        outputPath.empty() ? "" : io::resolve(outputPath),
-        true 
-    );
+    ::processes[handle] = platform::new_engine_instance(std::move(args), "", true);
     return lua::pushinteger(L, handle);
 }
 

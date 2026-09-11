@@ -313,6 +313,8 @@ FLTview = bytearray.FFIFLTview
 DBLview = bytearray.FFIDBLview
 Bytearray_construct = function(...) return Bytearray(...) end
 
+ctypes = require "builtin:internal/ctypes"
+
 bit.compile = require "builtin:bitwise/compiler"
 bit.execute = require "builtin:bitwise/executor"
 

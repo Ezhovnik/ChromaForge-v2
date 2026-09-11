@@ -77,6 +77,10 @@ static bool perform_keyword(
             params.subProcessDepth = reader.nextInt();
             return true;
         }, "<depth>", "sub-process depth"),
+        ArgC("--log", [](auto& params, auto& reader) -> bool {
+            params.logFile = reader.next();
+            return true;
+        }, "<file>", "target log file"),
         ArgC("--help", [](auto&, auto&) -> bool {
             std::cout << "ChromaForge v" << ENGINE_VERSION_STRING << "\n\n";
             std::cout << "Command-line arguments:\n";

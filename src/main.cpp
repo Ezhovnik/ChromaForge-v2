@@ -14,6 +14,7 @@
 #include <util/command_line.h>
 #include <constants.h>
 
+using namespace std::literals;
 static debug::Logger logger("main");
 
 static void sigterm_handler(int signum) {
@@ -33,6 +34,7 @@ int main(int argc, char** argv) {
         if (!parse_cmdline(argc, argv, coreParameters)) {
             return EXIT_SUCCESS;
         }
+        logger.debug() << "Sub-process depth: " << coreParameters.subProcessDepth;
     } catch (const std::runtime_error& err) {
         std::cerr << err.what() << std::endl;
         return EXIT_FAILURE;
@@ -44,8 +46,15 @@ int main(int argc, char** argv) {
 #endif
 
     // Инициализация логгера
-    auto logPath = coreParameters.userFolder/std::filesystem::u8path("logs/ChromaForge.log");
-    debug::Logger::init(logPath.u8string());
+    std::filesystem::path logFile = coreParameters.logFile;
+    if (logFile.empty()) {
+        logFile = coreParameters.userFolder.string() + "logs/ChromaForge"s +
+                (coreParameters.subProcessDepth > 0
+                    ? ".sub" + std::to_string(coreParameters.subProcessDepth)
+                    : ""
+                ) + ".log"s;
+    }
+    debug::Logger::init(logFile.u8string());
 
     platform::configure_encoding();
 
@@ -56,7 +65,6 @@ int main(int argc, char** argv) {
     } catch (const initialize_error& err) {
         logger.critical() << "Could not initialize engine: " << err.what();
     }
-    logger.debug() << "Sub-process depth: " << coreParameters.subProcessDepth;
 #if defined(NDEBUG)
     catch (const std::exception& err) {
         logger.error() << "Uncaught exception: " << err.what();
