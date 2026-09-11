@@ -11,7 +11,7 @@
 using namespace gui;
 
 Container::Container(GUI& gui, glm::vec2 size) : UINode(gui, size) {
-    actualLength = size.y;
+    actualLengthY = size.y;
     setColor(glm::vec4());
 }
 
@@ -25,7 +25,7 @@ std::shared_ptr<UINode> Container::getAt(
     if (!isInteractive() || !isEnabled()) return nullptr;
     if (!isInside(pos)) return nullptr;
 
-    int diff = (actualLength-size.y);
+    int diff = (actualLengthY - size.y);
     if (scrollable && diff > 0 && pos.x > calcPos().x + getSize().x - scrollBarWidth) {
         return UINode::getAt(pos);
     }
@@ -60,11 +60,11 @@ void Container::mouseMove(int x, int y) {
     auto pos = calcPos();
     x -= pos.x;
     y -= pos.y;
-    int diff = (actualLength-size.y);
+    int diff = (actualLengthY - size.y);
     if (diff > 0) {
-        scroll -= (y - prevScrollY) / static_cast<float>(size.y) * actualLength;
-        scroll = -glm::min(
-            glm::max(static_cast<float>(-scroll), 0.0f), actualLength - size.y
+        scrollY -= (y - prevScrollY) / static_cast<float>(size.y) * actualLengthY;
+        scrollY = -glm::min(
+            glm::max(static_cast<float>(-scrollY), 0.0f), actualLengthY - size.y
         );
     }
     prevScrollY = y;
@@ -100,7 +100,9 @@ void Container::activate(float delta) {
 }
 
 void Container::scrolled(int value) {
-    int diff = (actualLength-getSize().y);
+    auto size = getSize();
+    int diff = (actualLengthY > size.y ? actualLengthY - size.y : actualLengthX - size.x);
+    int& scroll = (actualLengthY > size.y ? scrollY : scrollX);
     if (scroll < 0 && diff <= 0) scroll = 0;
 
     if (diff > 0 && scrollable) {
@@ -131,14 +133,14 @@ void Container::draw(const DrawContext& pctx, const Assets& assets) {
             if (node->isVisible()) node->draw(pctx, assets);
         }
 
-        int diff = (actualLength - size.y);
+        int diff = (actualLengthY-size.y);
         if (scrollable && diff > 0) {
-            int h = glm::max(size.y / actualLength * size.y, scrollBarWidth / 2.0f);
+            int h = glm::max(size.y / actualLengthY * size.y, scrollBarWidth / 2.0f);
             batch->untexture();
             batch->setColor(glm::vec4(1, 1, 1, 0.3f));
             batch->rect(
                 pos.x + size.x - scrollBarWidth,
-                pos.y - scroll / static_cast<float>(diff) * (size.y - h),
+                pos.y - scrollY / static_cast<float>(diff) * (size.y - h),
                 scrollBarWidth, h
             );
         }
@@ -230,7 +232,7 @@ void Container::clear() {
 }
 
 void Container::setScroll(int scroll) {
-    this->scroll = scroll;
+    this->scrollY = scroll;
 }
 
 const std::vector<std::shared_ptr<UINode>>& Container::getNodes() const {

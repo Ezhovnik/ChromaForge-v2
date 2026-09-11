@@ -439,7 +439,7 @@ void TextBox::refreshLabel() {
         setScrollable(true);
         uint height = label->getLinesNumber() * rawTextCache.metrics.lineHeight * label->getLineInterval();
         label->setSize(glm::vec2(label->getSize().x, height));
-        actualLength = height;
+        actualLengthY = height;
     } else {
         setScrollable(false);
     }

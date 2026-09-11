@@ -177,8 +177,8 @@ void GUI::activateMouse(
                 doubleClicked = true;
             } else {
                 pressed->click(cursorPos.x, cursorPos.y);
+                doubleClickTimer = 0.0f;
             }
-            doubleClickTimer = 0.0f;
             if (focus && focus != pressed) focus->defocus();
             if (focus != pressed) {
                 focus = pressed;
