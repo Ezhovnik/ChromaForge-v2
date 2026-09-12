@@ -245,7 +245,7 @@ void GUI::activate(float deltaTime, const glm::uvec2& vp) {
         }
     }
 
-    if (focus) activateFocused();
+    if (focus && focusedOnStart == focus.get()) activateFocused();
     if (focus && !focus->isFocused()) focus = nullptr;
 }
 
@@ -255,6 +255,7 @@ void GUI::postActivate() {
         postRunnables.pop();
         callback();
     }
+    focusedOnStart = focus.get();
 }
 
 void GUI::draw(

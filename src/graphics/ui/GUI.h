@@ -71,6 +71,7 @@ namespace gui {
         std::shared_ptr<UINode> hover;
         std::shared_ptr<UINode> pressed;
         std::shared_ptr<UINode> focus;
+        const UINode* focusedOnStart = nullptr;
         std::shared_ptr<UINode> tooltip;
         std::shared_ptr<UIDocument> rootDocument;
         std::unique_ptr<FontStylesScheme> syntaxColorScheme;

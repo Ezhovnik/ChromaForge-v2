@@ -511,10 +511,19 @@ static std::shared_ptr<UINode> read_select(
         selected.text = innerText;
     }
 
+    SelectBox::Mode mode = SelectBox::Mode::Select;
+    if (element.has("mode")) {
+        auto modeName = element.attr("mode").getText();
+        if (modeName == "button") {
+            mode = SelectBox::Mode::Button;
+        }
+    }
+
     auto selectBox = std::make_shared<SelectBox>(
         gui,
         std::move(options),
         std::move(selected),
+        mode,
         contentWidth,
         std::move(padding)
     );
