@@ -317,7 +317,7 @@ void WorldRenderer::renderOpaque(
         }
     }
 
-    if (hudVisible) {
+    if (hudVisible && !gbufferPipeline) {
         auto& linesShader = assets.require<ShaderProgram>("lines");
         renderInWorldLines(camera, linesShader, ctx);
     }
@@ -467,6 +467,10 @@ void WorldRenderer::renderFrameAdvanced(
     }
 
     renderWeatherEffects(camera);
+    if (hudVisible) {
+        auto& linesShader = assets.require<ShaderProgram>("lines");
+        renderInWorldLines(camera, linesShader, ctx);
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
