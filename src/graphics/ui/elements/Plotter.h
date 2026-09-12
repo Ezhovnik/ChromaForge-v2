@@ -11,7 +11,7 @@ class Assets;
 class DrawContext;
 
 namespace gui {
-    class Plotter : public UINode {
+    class Plotter final : public UINode {
     private:
         std::unique_ptr<int[]> points;
         float multiplier;

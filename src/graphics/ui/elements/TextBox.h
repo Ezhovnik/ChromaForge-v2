@@ -8,7 +8,7 @@ class ActionsHistory;
 
 namespace gui {
     class TextBoxHistorian;
-    class TextBox : public Container {
+    class TextBox final : public Container {
         const Input& inputEvents;
         LabelCache rawTextCache;
         std::shared_ptr<ActionsHistory> history;
@@ -84,88 +84,88 @@ namespace gui {
             glm::vec4 padding=glm::vec4(4.0f)
         );
 
-        virtual ~TextBox();
+        ~TextBox();
 
-        virtual void setTextSupplier(wstringsupplier supplier);
+        void setTextSupplier(wstringsupplier supplier);
 
-        virtual void setTextConsumer(wstringconsumer consumer);
+        void setTextConsumer(wstringconsumer consumer);
 
-        virtual void setTextSubConsumer(wstringconsumer consumer);
+        void setTextSubConsumer(wstringconsumer consumer);
 
-        virtual void setTextValidator(wstringchecker validator);
+        void setTextValidator(wstringchecker validator);
 
-        virtual void setOnControlCombination(key_handler handler);
+        void setOnControlCombination(key_handler handler);
 
-        virtual void setFocusedColor(glm::vec4 color);
-        virtual glm::vec4 getFocusedColor() const;
+        void setFocusedColor(glm::vec4 color);
+        const glm::vec4& getFocusedColor() const;
 
-        virtual void setTextColor(glm::vec4 color);
-        virtual glm::vec4 getTextColor() const;
+        void setTextColor(glm::vec4 color);
+        const glm::vec4& getTextColor() const;
 
-        virtual void setErrorColor(glm::vec4 color);
-        virtual glm::vec4 getErrorColor() const;
+        void setErrorColor(glm::vec4 color);
+        glm::vec4 getErrorColor() const;
 
-        virtual const std::wstring& getText() const;
-        virtual void setText(const std::wstring& value);
+        const std::wstring& getText() const;
+        void setText(const std::wstring& value);
 
-        virtual const std::wstring& getPlaceholder() const;
-        virtual void setPlaceholder(const std::wstring& text);
+        const std::wstring& getPlaceholder() const;
+        void setPlaceholder(const std::wstring& text);
 
-        virtual const std::wstring& getHint() const;
-        virtual void setHint(const std::wstring& text);
+        const std::wstring& getHint() const;
+        void setHint(const std::wstring& text);
 
-        virtual std::wstring getSelection() const;
+        std::wstring getSelection() const;
 
-        virtual size_t getCaret() const;
-        virtual void setCaret(size_t position);
-        virtual void setCaret(ptrdiff_t position);
+        size_t getCaret() const;
+        void setCaret(size_t position);
+        void setCaret(ptrdiff_t position);
 
-        virtual void select(int start, int end);
+        void select(int start, int end);
 
-        virtual uint getLineAt(size_t position) const;
-        virtual size_t getLinePos(uint line) const;
+        uint getLineAt(size_t position) const;
+        size_t getLinePos(uint line) const;
 
         int calcIndexAt(int x, int y) const;
         int getLineYOffset(int line) const;
 
-        virtual bool validate();
+        bool validate();
 
-        virtual void setValid(bool valid);
-        virtual bool isValid() const;
+        void setValid(bool valid);
+        bool isValid() const;
 
-        virtual void setMultiline(bool multiline);
-        virtual bool isMultiline() const;
+        void setMultiline(bool multiline);
+        bool isMultiline() const;
 
-        virtual void setEditable(bool editable);
-        virtual bool isEditable() const;
+        void setEditable(bool editable);
+        bool isEditable() const;
 
-        virtual void setPadding(glm::vec4 padding);
-        glm::vec4 getPadding() const;
+        void setPadding(glm::vec4 padding);
+        const glm::vec4& getPadding() const;
 
-        virtual void setAutoResize(bool flag);
-        virtual bool isAutoResize() const;
+        void setAutoResize(bool flag);
+        bool isAutoResize() const;
 
-        virtual void setShowLineNumbers(bool flag);
-        virtual bool isShowLineNumbers() const;
+        void setShowLineNumbers(bool flag);
+        bool isShowLineNumbers() const;
 
-        virtual void setOnEditStart(runnable oneditstart);
+        void setOnEditStart(runnable oneditstart);
 
-        virtual void setTextWrapping(bool flag);
-        virtual bool isTextWrapping() const;
+        void setTextWrapping(bool flag);
+        bool isTextWrapping() const;
 
-        virtual void setOnUpPressed(const runnable& callback);
-        virtual void setOnDownPressed(const runnable& callback);
+        void setOnUpPressed(const runnable& callback);
+        void setOnDownPressed(const runnable& callback);
 
-        virtual void setSyntax(std::string_view lang);
-        virtual const std::string& getSyntax() const;
+        void setSyntax(std::string_view lang);
+        const std::string& getSyntax() const;
 
-        virtual void setMarkup(std::string_view lang);
-        virtual const std::string& getMarkup() const;
+        void setMarkup(std::string_view lang);
+        const std::string& getMarkup() const;
 
         std::shared_ptr<Label> getLabel() const;
 
-        virtual bool isEdited() const;
-        virtual void setUnedited();
+        bool isEdited() const;
+        void setUnedited();
 
         size_t getSelectionStart() const;
         size_t getSelectionEnd() const;
@@ -173,20 +173,20 @@ namespace gui {
         void setKeepLineSelection(bool flag);
         bool isKeepLineSelection() const;
 
-        virtual void reposition() override;
-        virtual void onFocus() override;
-        virtual void refresh() override;
-        virtual void click(int, int) override;
-        virtual void doubleClick(int x, int y) override;
-        virtual void mouseMove(int x, int y) override;
-        virtual bool isFocuskeeper() const override {return true;}
-        virtual void draw(const DrawContext& pctx, const Assets& assets) override;
-        virtual void drawBackground(const DrawContext& pctx, const Assets& assets) override;
-        virtual void typed(unsigned int codepoint) override; 
+        void reposition() override;
+        void onFocus() override;
+        void refresh() override;
+        void click(int, int) override;
+        void doubleClick(int x, int y) override;
+        void mouseMove(int x, int y) override;
+        bool isFocuskeeper() const override {return true;}
+        void draw(const DrawContext& pctx, const Assets& assets) override;
+        void drawBackground(const DrawContext& pctx, const Assets& assets) override;
+        void typed(unsigned int codepoint) override; 
         void paste(const std::wstring& text, bool history=true);
         void erase(size_t start, size_t length);
         void resetSelection();
-        virtual void keyPressed(Keycode key) override;
-        virtual std::shared_ptr<UINode> getAt(const glm::vec2& pos) override;
+        void keyPressed(Keycode key) override;
+        std::shared_ptr<UINode> getAt(const glm::vec2& pos) override;
     };
 }

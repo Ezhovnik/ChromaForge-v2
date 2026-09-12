@@ -10,7 +10,7 @@ class Batch3D;
 class Framebuffer;
 
 namespace gui {
-    class ModelViewer : public Container {
+    class ModelViewer final : public Container {
     private:
         std::string modelName;
         Camera camera;

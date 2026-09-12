@@ -13,7 +13,7 @@ namespace gui {
             std::string id,
             std::string outputTexture
         );
-        virtual ~Frame();
+        ~Frame();
 
         void draw(
             const DrawContext& pctx,
