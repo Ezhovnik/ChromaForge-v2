@@ -141,6 +141,8 @@ template<> void ContentUnitLoader<Block>::loadUnit(
         def.rotations = BlockRotProfile::PANE;
     } else if (profile == BlockRotProfile::STAIRS_NAME) {
         def.rotations = BlockRotProfile::STAIRS;
+    } else if (profile == BlockRotProfile::LADDER_NAME) {
+        def.rotations = BlockRotProfile::LADDER;
     } else if (profile != "none") {
         logger.warning() << "Block " << name << ": unknown rotation profile — " << profile;
         def.rotatable = false;
