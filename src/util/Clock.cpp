@@ -1,6 +1,5 @@
 #include <util/Clock.h>
 
-#include <cmath>
 #include <algorithm>
 
 using namespace util;
@@ -19,10 +18,8 @@ int Clock::update(float delta) {
         sparkTimer -= parts * delay / sparkParts;
         sparkTimer = std::min<float>(sparkTimer, delay);
     }
-    currentSparkPart += parts;
-    if (currentSparkPart >= sparkParts) {
-        currentSparkPart %= sparkParts;
-    }
+    lastPartsStart = currentSparkPart;
+    currentSparkPart = (currentSparkPart + parts) % sparkParts;
     return parts;
 }
 
@@ -39,5 +36,5 @@ int Clock::getSparkId() const {
 }
 
 int Clock::convertPart(int index) const {
-    return (sparkParts - currentSparkPart) % sparkParts + index;
+    return (lastPartsStart + index) % sparkParts;
 }

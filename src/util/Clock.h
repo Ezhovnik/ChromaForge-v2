@@ -9,6 +9,7 @@ namespace util {
         float sparkTimer = 0.0f;
         int sparkId = 0;
         int currentSparkPart = 0;
+        int lastPartsStart = 0;
     public:
         Clock(int sparkRate, int sparkParts);
 

@@ -147,12 +147,12 @@ gui.confirm(
 ## Документы и шаблоны
 
 ```lua
--- Загружает UI документ и его скрипт. Возвращает имя документа.
+-- Загружает UI документ и его скрипт. Возвращает пространство имён документа
 gui.load_document(
     path: string,  -- путь к xml файлу, например: builtin:layouts/pages/main.xml
     name: string,  -- id документа, например: builtin:pages/main
     args: table -- параметры для события on_open
-) -> string
+) -> table
 
 -- Загружает шаблон в лояут
 gui.template(

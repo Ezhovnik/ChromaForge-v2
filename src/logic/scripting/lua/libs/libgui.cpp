@@ -1156,7 +1156,7 @@ static int l_gui_load_document(lua::State* L) {
     }
 
     auto env = scripting::create_doc_environment(parentEnv, alias);
-
+    auto envId = *env;
     if (lua::istable(L, 4)) {
         if (lua::get_from(L, "table", "extend")) {
             lua::pushenv(L, *env);
@@ -1177,7 +1177,7 @@ static int l_gui_load_document(lua::State* L) {
     scripting::engine->requireAssets().store(std::move(documentPtr), alias);
 
     scripting::on_ui_open(*document, {args});
-    return 0;
+    return lua::pushenv(L, envId);
 }
 
 static int l_set_syntax_styles(lua::State* L) {
