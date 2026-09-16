@@ -1,0 +1,91 @@
+name: Repair Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to rebuild (e.g. v0.1.0)'
+        required: true
+        type: string
+      version:
+        description: 'Version without v (e.g. 0.1.0) — for asset name'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout old tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          # Важно: чтобы можно было делать git fetch origin main ниже
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Overlay fixed build files from main
+        run: |
+          git fetch origin main
+          # ЗАМЕНИТЕ пути ниже на реальные из вашего репозитория
+          git checkout origin/main -- \
+            dev/AppImageBuilder.yml \
+            dev/ChromaForge.desktop
+          echo "--- Проверим, что файлы обновились: ---"
+          git status
+          git diff --stat HEAD
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libglfw3-dev libglfw3 libglew-dev \
+            libopenal-dev libluajit-5.1-dev libvorbis-dev \
+            libcurl4-openssl-dev libgtest-dev libfreetype6-dev cmake squashfs-tools zlib1g-dev
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libluajit-5.1.a /usr/lib/x86_64-linux-gnu/liblua5.1.a
+          sudo ln -s /usr/include/luajit-2.1 /usr/include/lua
+          git clone --branch v3.16.0 https://github.com/skypjack/entt.git
+          cd entt/build
+          cmake -DCMAKE_BUILD_TYPE=Release -DENTT_INSTALL=ON ..
+          sudo make install
+          cd ../..
+
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DChromaForge_BUILD_APPDIR=ON \
+            -DChromaForge_BUILD_TESTS=ON \
+            -DCHROMA_BUILD_NAME="${{ inputs.version }}"
+
+      - name: Build
+        run: cmake --build build -t install
+
+      # Тесты можно пропустить для старых релизов, если они не проходят.
+      # Раскомментируйте, если хотите прогонять.
+      # - name: Run tests
+      #   run: ctest --test-dir build
+
+      - name: Build AppImage
+        uses: AppImageCrafters/build-appimage-action@fe2205a4d6056be47051f7b1b3811106e9814910
+        env:
+          UPDATE_INFO: gh-releases-zsync|Ezhovnik|ChromaForge-v2|latest|*x86_64.AppImage.zsync
+        with:
+          recipe: dev/AppImageBuilder.yml
+
+      - name: Prepare asset
+        run: |
+          mkdir -p release
+          # Имя внутри артефакта должно совпадать с тем, что ожидает ваш лаунчер
+          mv ./*.AppImage "release/chromaforge-${{ inputs.version }}_x86-64.AppImage"
+
+      - name: Upload to existing release (overwrite)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: ./release/*
+          overwrite_files: true
+          # Если релиз был черновиком — добавьте:
+          # draft: true
