@@ -18,7 +18,7 @@ AppDir:
     icon: ChromaForge
     version: latest
     exec: usr/bin/ChromaForge
-    exec_args: ""
+    exec_args: "--res '$APPDIR/usr/share/ChromaForge/res' --project '$APPDIR/usr/share/ChromaForge/res' $@"
 
   apt:
     arch: amd64
