@@ -21,7 +21,6 @@
 #include <core_content_defs.h>
 #include <frontend/locale.h>
 #include <graphics/ui/gui_util.h>
-#include <graphics/core/LineBatch.h>
 #include <graphics/core/Font.h>
 #include <engine/Engine.h>
 
@@ -169,6 +168,8 @@ void GUI::activateMouse(
         it = mouseOver.erase(it);
     }
 
+    bool focusHappened = false;
+
     if (input.justClicked(Mousecode::BUTTON_1)) {
         if (pressed == nullptr && this->hover) {
             pressed = hover;
@@ -183,10 +184,10 @@ void GUI::activateMouse(
             if (focus != pressed) {
                 focus = pressed;
                 focus->onFocus();
-                return;
+                focusHappened = true;;
             }
         }
-        if (this->hover == nullptr && focus) {
+        if (this->hover == nullptr && focus && !focusHappened) {
             focus->defocus();
             focus = nullptr;
         }
@@ -195,9 +196,44 @@ void GUI::activateMouse(
         pressed = nullptr;
     }
 
-    if (hover) {
+    if (hover && !focusHappened) {
         for (Mousecode code : MOUSECODES_ALL) {
             if (input.justClicked(code)) hover->clicked(code);
+        }
+    }
+    performClickOutside(frame, deltaTime, cursorPos);
+}
+
+void GUI::performClickOutside(
+    Frame& frame,
+    float deltaTime,
+    glm::vec2 cursorPos
+) {
+    auto nodes = frame.getNodes();
+    std::vector<std::shared_ptr<UINode>> activeNodes;
+
+    for (const auto& node : nodes) {
+        if (node && node->isVisible() && node->isInteractive()) {
+            activeNodes.push_back(node);
+        }
+    }
+
+    for (Mousecode code : {Mousecode::BUTTON_1, Mousecode::BUTTON_2, Mousecode::BUTTON_3}) {
+        if (input.justClicked(code)) {
+            bool isOverAnyNode = false;
+            for (const auto& node : activeNodes) {
+                if (node && node->isInside(cursorPos)) {
+                    isOverAnyNode = true;
+                    break;
+                }
+            }
+            if (!isOverAnyNode) {
+                for (const auto& node : activeNodes) {
+                    if (node) {
+                        node->clickedOutside(code);
+                    }
+                }
+            }
         }
     }
 } 

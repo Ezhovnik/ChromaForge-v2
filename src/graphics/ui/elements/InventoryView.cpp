@@ -9,7 +9,6 @@
 #include <window/input.h>
 #include <assets/Assets.h>
 #include <graphics/core/Atlas.h>
-#include <graphics/core/ShaderProgram.h>
 #include <graphics/core/Batch2D.h>
 #include <graphics/core/DrawContext.h>
 #include <graphics/core/Font.h>
@@ -23,12 +22,11 @@
 #include <world/Level.h>
 #include <debug/Logger.h>
 #include <logic/scripting/scripting.h>
-#include <items/Inventories.h>
 #include <graphics/ui/GUI.h>
 #include <items/ItemStack.h>
 #include <frontend/locale.h>
-#include <graphics/core/Texture.h>
 #include <assets/assets_util.h>
+#include <items/ItemStack.h>
 
 using namespace gui;
 
@@ -553,6 +551,33 @@ void InventoryView::bind(
             content
         );
     }
+}
+
+void InventoryView::clickedOutside(Mousecode button) {
+    if (getId() != "root") return;
+
+    int mode;
+    if (button == Mousecode::BUTTON_1) {
+        mode = 0;
+    } else if (button == Mousecode::BUTTON_2) {
+        mode = 1;
+    } else if (button == Mousecode::BUTTON_3) {
+        mode = 2;
+    } else {
+        return;
+    };
+
+    auto exchangeSlot = std::dynamic_pointer_cast<SlotView>(
+        gui.get(SlotView::EXCHANGE_SLOT_NAME)
+    );
+    if (exchangeSlot == nullptr) return;
+
+    ItemStack& grabbed = exchangeSlot->getStack();
+    if (grabbed.isEmpty()) return;
+
+    scripting::on_inventory_clicked_outside(
+        exchangeSlot->getInventoryId(), 0, mode
+    );
 }
 
 void InventoryView::unbind() {

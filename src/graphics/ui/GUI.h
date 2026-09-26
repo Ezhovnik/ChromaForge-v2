@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <functional>
 #include <queue>
-#include <set>
 
 #include <glm/glm.hpp>
 
@@ -100,6 +99,11 @@ namespace gui {
             Frame& frame,
             float deltaTime,
             const CursorState& cursor
+        );
+        void performClickOutside(
+            Frame& frame,
+            float delta,
+            glm::vec2 cursorPos
         );
         void activateFocused();
         void updateTooltip(float deltaTime);
