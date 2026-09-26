@@ -518,7 +518,7 @@ asset_loader::postfunc asset_loader::model(
     }
     std::array<std::string, 2> extensions {
         ".xml",
-        ".vcm"
+        ".cfmodel"
     };
 
     path = "";
