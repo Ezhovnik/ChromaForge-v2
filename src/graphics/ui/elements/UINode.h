@@ -58,6 +58,7 @@ namespace gui {
         Focus,
         Defocus,
         RightClick,
+        MiddleClick,
         MouseOver,
         MouseOut,
         MouseEnter,

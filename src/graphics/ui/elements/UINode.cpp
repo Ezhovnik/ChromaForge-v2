@@ -84,6 +84,9 @@ void UINode::clicked(Mousecode button) {
     if (button == Mousecode::BUTTON_2) {
         actions.notify(UIAction::RightClick, gui);
     }
+    if (button == Mousecode::BUTTON_3) {
+        actions.notify(UIAction::MiddleClick, gui);
+    }
 }
 
 void UINode::doubleClick(int x, int y) {

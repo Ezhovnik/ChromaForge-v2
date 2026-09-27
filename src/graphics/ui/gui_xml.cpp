@@ -156,6 +156,7 @@ static void read_uinode(
 
     register_action(node, reader, element, "onclick", UIAction::Click);
     register_action(node, reader, element, "onrightclick", UIAction::RightClick);
+    register_action(node, reader, element, "onmiddleclick", UIAction::MiddleClick);
     register_action(node, reader, element, "onfocus", UIAction::Focus);
     register_action(node, reader, element, "ondefocus", UIAction::Defocus);
     register_action(node, reader, element, "ondoubleclick", UIAction::DoubleClick);
