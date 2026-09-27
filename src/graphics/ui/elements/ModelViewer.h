@@ -38,6 +38,7 @@ namespace gui {
 
         void activate(float delta) override;
         void draw(const DrawContext& pctx, const Assets& assets) override;
+        void setVisible(bool flag) override;
 
         void setRotation(const glm::vec3& euler);
         void setCenter(const glm::vec3& center);
