@@ -1,4 +1,6 @@
 #include <logic/scripting/lua/libs/api_lua.h>
+
+#include <logic/scripting/lua/lua_util.h>
 #include <content/Content.h>
 #include <world/Level.h>
 #include <items/ItemStack.h>
@@ -177,7 +179,7 @@ static int l_move(lua::State* L) {
     validate_slotid(slotAid, invA);
 
     auto invBid = lua::tointeger(L, 3);
-    auto slotBid = lua::isnil(L, 4) ? -1 : lua::tointeger(L, 4);
+    auto slotBid = lua::isnoneornil(L, 4) ? -1 : lua::tointeger(L, 4);
     auto& invB = get_inventory(invBid, 3);
     auto& slot = invA.getSlot(slotAid);
     if (slotBid == -1) {

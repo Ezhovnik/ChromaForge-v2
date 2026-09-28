@@ -18,6 +18,7 @@ public:
     void set(const ItemStack& item);
     void set(ItemStack&& item);
     void setCount(itemcount_t count);
+    void maximizeCount(const ContentIndices& indices);
 
     void setField(std::string_view name, dv::value value);
     dv::value* getField(const std::string& name) const;

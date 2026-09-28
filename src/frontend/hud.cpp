@@ -104,6 +104,7 @@ std::shared_ptr<gui::UINode> HudElement::getNode() const {
 std::shared_ptr<gui::InventoryView> Hud::createContentAccess() {
     auto& content = levelFrontend.getLevel().content;
     auto& indices = *content.getIndices();
+    auto& input = this->input;
     auto inventory = player.getInventory();
 
     int itemsCount = indices.items.count();
@@ -113,12 +114,19 @@ std::shared_ptr<gui::InventoryView> Hud::createContentAccess() {
     }
 
     gui::SlotLayout slotLayout(-1, glm::vec2(), false, true, nullptr,
-    [inventory, &indices](uint, ItemStack& item) {
+    [inventory, &indices, &input](uint, ItemStack& item) {
         auto copy = ItemStack(item);
+        if (input.isPressed(Keycode::LEFT_CONTROL)) {
+            copy.maximizeCount(indices);
+        }
         inventory->move(copy, indices);
     }, 
-    [this, inventory](uint, ItemStack& item) {
-        inventory->getSlot(player.getChosenSlot()).set(item);
+    [this, inventory, &indices, &input](uint, ItemStack& item) {
+        auto copy = ItemStack(item);
+        if (input.isPressed(Keycode::LEFT_CONTROL)) {
+            copy.maximizeCount(indices);
+        }
+        inventory->getSlot(player.getChosenSlot()).set(copy);
     });
 
     gui::InventoryBuilder builder(guiController);

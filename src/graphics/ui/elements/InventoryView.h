@@ -124,6 +124,12 @@ namespace gui {
             Share = 2,
             Undefined
         };
+    private:
+        void actIfCannotPut(
+            ItemStack& stack,
+            ItemStack& grabbed,
+            InteractionAction& action
+        );
     };
 
     class InventoryView final : public gui::Container {
