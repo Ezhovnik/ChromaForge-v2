@@ -102,6 +102,7 @@ private:
     std::shared_ptr<gui::UINode> darkOverlay;
     std::shared_ptr<gui::UINode> secondUI;
     std::shared_ptr<gui::UINode> debugMinimap;
+    std::shared_ptr<gui::UINode> inventoryDropArea;
 
     std::unique_ptr<ImageData> debugImgWorldGen;
 
@@ -164,7 +165,7 @@ public:
     void setDebug(bool flag);
 
     std::shared_ptr<Inventory> getBlockInventory();
-
+    std::shared_ptr<Inventory> getExchangeInventory();
     std::shared_ptr<Inventory> getSecondInventory();
 
     bool isOpen(const std::string& layoutid) const;

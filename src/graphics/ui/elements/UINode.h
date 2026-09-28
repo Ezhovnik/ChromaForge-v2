@@ -188,9 +188,7 @@ namespace gui {
         virtual void click(int x, int y);
         virtual void doubleClick(int x, int y);
         virtual void clicked(Mousecode button);
-        virtual void clickedOutside(Mousecode button) {
-            // Empty for all UINodes, except InventoryView
-        }
+
         virtual void mouseMove(int x, int y) {};
         virtual void mouseRelease(int x, int y);
         virtual void scrolled(int value);

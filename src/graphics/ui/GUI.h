@@ -100,11 +100,6 @@ namespace gui {
             float deltaTime,
             const CursorState& cursor
         );
-        void performClickOutside(
-            Frame& frame,
-            float delta,
-            glm::vec2 cursorPos
-        );
         void activateFocused();
         void updateTooltip(float deltaTime);
         void resetTooltip();

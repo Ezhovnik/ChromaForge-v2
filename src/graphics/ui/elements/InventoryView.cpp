@@ -553,33 +553,6 @@ void InventoryView::bind(
     }
 }
 
-void InventoryView::clickedOutside(Mousecode button) {
-    if (getId() != "root") return;
-
-    int mode;
-    if (button == Mousecode::BUTTON_1) {
-        mode = 0;
-    } else if (button == Mousecode::BUTTON_2) {
-        mode = 1;
-    } else if (button == Mousecode::BUTTON_3) {
-        mode = 2;
-    } else {
-        return;
-    };
-
-    auto exchangeSlot = std::dynamic_pointer_cast<SlotView>(
-        gui.get(SlotView::EXCHANGE_SLOT_NAME)
-    );
-    if (exchangeSlot == nullptr) return;
-
-    ItemStack& grabbed = exchangeSlot->getStack();
-    if (grabbed.isEmpty()) return;
-
-    scripting::on_inventory_clicked_outside(
-        exchangeSlot->getInventoryId(), 0, mode
-    );
-}
-
 void InventoryView::unbind() {
     inventory = nullptr;
 }

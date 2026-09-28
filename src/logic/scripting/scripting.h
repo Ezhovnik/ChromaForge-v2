@@ -106,7 +106,6 @@ namespace scripting {
     void on_inventory_open(const Player* player, const Inventory& inventory);
     void on_inventory_closed(const Player* player, const Inventory& inventory);
     void on_inventory_interact(int invid, int slot, int action, int mode);
-    void on_inventory_clicked_outside(int exchange_invid, int exchange_slot, int mode);
 
     void on_player_spark(Player* player, int sps);
 
