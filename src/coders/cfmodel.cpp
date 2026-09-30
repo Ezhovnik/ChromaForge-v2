@@ -313,7 +313,11 @@ static void perform_box(const xmlelement& root, ModelBuilder& builder) {
                     texfaces[idx] = elem->attr("texture").getText();
                 }
                 if (elem->has("region")) {
-                    regions[idx].set(elem->attr("region").asVec4());
+                    auto region = elem->attr("region").asVec4();
+                    if (idx % 2 == 1) {
+                        std::swap(region[0], region[2]);
+                    }
+                    regions[idx].set(region);
                 }
                 if (elem->has("region-scale")) {
                     regions[idx].scale(elem->attr("region-scale").asVec2());
