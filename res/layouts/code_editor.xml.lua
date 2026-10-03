@@ -113,6 +113,76 @@ local function reload_model(filename, name)
     assets.parse_model(file.ext(filename), document.editor.text, name)
 end
 
+local pattern =
+    "region %(%s*"
+    .. "([+-]?%d+%.?%d*[eE]?[+-]?%d*)%s*,%s*"
+    .. "([+-]?%d+%.?%d*[eE]?[+-]?%d*)%s*,%s*"
+    .. "([+-]?%d+%.?%d*[eE]?[+-]?%d*)%s*,%s*"
+    .. "([+-]?%d+%.?%d*[eE]?[+-]?%d*)"
+    .. "%s*%)"
+
+local function replace1(x1, y1, x2, y2)
+    return string.format("region (%s, %s, %s, %s)", x2, y2, x1, y1)
+end
+
+local function replace2(x1, y1, x2, y2)
+    return string.format("region (%s, %s, %s, %s)", x2, y1, x1, y2)
+end
+
+function convert_cfmodel(text)
+    local lines = {}
+    local zpairs = {
+        {"%(%s*north%s*%)", "%(%s*south%s*%)", "(TMPS)", "(TMPN)"},
+        {"(%s*)%,(%s*)north", "(%s*)%,(%s*)south", "%1,TMPS%2", "%1,TMPN%2"},
+        {"north(%s*)%,", "south(%s*)%,", "TMPS%1,", "TMPN%1,"},
+    }
+    local xpairs = {
+        {"%(%s*west%s*%)", "%(%s*east%s*%)", "(TMPE)", "(TMPW)"},
+        {"(%s*)%,(%s*)west", "(%s*)%,(%s*)east", "%1,TMPE%2", "%1,TMPW%2"},
+        {"west(%s*)%,", "east(%s*)%,", "TMPE%1,", "TMPW%1,"},
+    }
+
+    for i, pair in ipairs(zpairs) do
+        text = text:gsub(pair[1], pair[3])
+        text = text:gsub(pair[2], pair[4])
+    end
+    text = text:gsub("TMPS", "south")
+    text = text:gsub("TMPN", "north")
+
+    for i, pair in ipairs(xpairs) do
+        text = text:gsub(pair[1], pair[3])
+        text = text:gsub(pair[2], pair[4])
+    end
+    text = text:gsub("TMPW", "west")
+    text = text:gsub("TMPE", "east")
+
+    for line in text:gmatch("[^\n]*\n?") do
+        if line == "" then
+            break
+        end
+
+        if line:find("(top)", 1, true) then
+            line = line:gsub(pattern, replace1)
+        end
+
+        if line:find("(bottom)", 1, true) or line:find("(east)", 1, true) then
+            line = line:gsub(pattern, replace2)
+        end
+
+        table.insert(lines, line)
+    end
+
+    return table.concat(lines)
+end
+
+function fix_cfmodel_regions()
+    if not current_file.filename then
+        return
+    end
+    document.editor.text = convert_cfmodel(document.editor.text)
+end
+-- ===============================
+
 function run_current_file()
     if not current_file.filename then
         return

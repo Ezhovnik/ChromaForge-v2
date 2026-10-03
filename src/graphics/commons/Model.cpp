@@ -149,11 +149,11 @@ void Mesh::addBox(
         addPlane(pos + Y * size, X * size, -Z * size, Y, uvs[3] * glm::vec2(-1, 1), transform);
     }
     if (enabledSides[4]) { // South
-        addPlane(pos - Z * size, -X *size, Y * size, -Z, uvs[4], transform);
+        addPlane(pos - Z * size, -X * size, Y * size, -Z, uvs[4], transform);
     }
     if (enabledSides[5]) { // North
         addPlane(pos + Z * size, X * size, Y * size, Z, uvs[5] * glm::vec2(-1, 1), transform);
-    }    
+    }
 }
 
 void Mesh::scale(const glm::vec3& size) {
