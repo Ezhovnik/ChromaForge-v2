@@ -20,11 +20,18 @@ static int l_utc_time(lua::State* L) {
     return lua::pushnumber(L, std::time(nullptr));
 }
 
+static int l_precise_utc_time(lua::State* L) {
+    auto now = std::chrono::steady_clock::now();
+    return lua::pushnumber(
+        L, std::chrono::duration<double>(now.time_since_epoch()).count()
+    );
+}
+
 static int l_local_time(lua::State* L) {
     std::time_t t = std::time(nullptr);
 
-    std::tm gmt_tm{};
-    std::tm local_tm{};
+    std::tm gmt_tm {};
+    std::tm local_tm {};
 
 #if defined(USE_MSVC_TIME_SAFE)
     gmtime_s(&gmt_tm, &t);
@@ -44,8 +51,8 @@ static int l_local_time(lua::State* L) {
 static int l_utc_offset(lua::State* L) {
     std::time_t t = std::time(nullptr);
 
-    std::tm gmt_tm{};
-    std::tm local_tm{};
+    std::tm gmt_tm {};
+    std::tm local_tm {};
 
 #if defined(USE_MSVC_TIME_SAFE)
     gmtime_s(&gmt_tm, &t);
@@ -74,6 +81,7 @@ const luaL_Reg timelib [] = {
     {"uptime", lua::wrap<l_uptime>},
     {"delta", lua::wrap<l_delta>},
     {"utc_time", lua::wrap<l_utc_time>},
+    {"precise_utc_time", lua::wrap<l_precise_utc_time>},
     {"utc_offset", lua::wrap<l_utc_offset>},
     {"local_time", lua::wrap<l_local_time>},
     {"precise_time", lua::wrap<l_precise_time>},

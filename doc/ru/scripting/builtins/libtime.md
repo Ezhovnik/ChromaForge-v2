@@ -10,6 +10,9 @@ time.delta() -> number
 -- Возвращает время UTC в секундах
 time.utc_time() -> int
 
+-- Возвращает время UTC в секундах с точностью до миллисекунды
+time.precise_utc_time() -> number
+
 -- Возвращает локальное (системное) время в секундах
 time.local_time() -> int
 
