@@ -124,7 +124,7 @@ static void calc_collision(
 
             auto aabb = AABB(pos - half, pos + half);
             glm::vec3 scale(1.0f);
-            scale[nz] = 1.0f - PhysicsSolver_Consts::EPS * 8.0f;
+            scale[nz] = 1.0f - PhysicsSolver_Consts::EPS * 2.0f;
 
             aabb.scale(scale);
             aabb = aabb + offset;
