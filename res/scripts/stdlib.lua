@@ -386,6 +386,7 @@ end
 
 ffi = nil
 __chroma_app = nil
+__chroma_internals = nil
 __chroma_lock_internal_modules()
 __chroma_lock_internal_modules = nil
 __chroma_update_coroutines = nil

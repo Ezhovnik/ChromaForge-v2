@@ -1,3 +1,6 @@
+local app = __chroma_app
+local internals = __chroma_internals
+
 local user_props = file.read_combined_object("config/user-props.toml")
 local names = {
     "parent", "caption", "texture", "texture-faces", "model", "model-name",
@@ -83,3 +86,33 @@ cache_names(block)
 cache_names(item)
 
 __chroma_scripts_registry.build_registry()
+
+local packs = app.get_content()
+table.insert(packs, 1, "builtin")
+
+for i, packid in ipairs(packs) do
+    local loaders_dir = packid..":scripts/loaders"
+    if not file.isdir(loaders_dir) then
+        goto continue
+    end
+    local files = file.list(loaders_dir)
+    for _, path in ipairs(files) do
+        if file.ext(path) == "json" then
+            debug.log("registering loader "..path)
+            local dto = json.parse(file.read(path))
+            local module = setmetatable({}, {__index=internals.get_pack_env(packid)})
+            local module_path = file.join(file.parent(path), file.stem(path)..".lua")
+            if not file.exists(module_path) then
+                error("Loader "..path.." missing module "..module_path)
+            end
+            load(file.read(module_path), module_path, "t", module)()
+            if rawget(module, "execute") == nil then
+                error("Loader "..path.." missing function 'execute'")
+            end
+            if dto.type == "compiler" then
+                internals.register_compiler(packid, dto.extensions, module)
+            end
+        end
+    end
+    ::continue::
+end

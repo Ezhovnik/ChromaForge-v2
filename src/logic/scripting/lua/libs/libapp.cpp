@@ -221,6 +221,16 @@ static int l_create_memory_device(lua::State* L) {
     return 0;
 }
 
+static int l_get_content(lua::State* L) {
+    const auto& configuration = scripting::content_control->getContentPacks();
+    lua::createtable(L, configuration.size(), 0);
+    for (int i = 0; i < configuration.size(); ++i) {
+        lua::pushlstring(L, configuration[i].id);
+        lua::rawseti(L, i + 1);
+    }
+    return 1;
+}
+
 static int l_get_content_sources(lua::State* L) {
     const auto& sources = scripting::engine->getContentControl().getContentSources();
     lua::createtable(L, static_cast<int>(sources.size()), 0);
@@ -412,6 +422,7 @@ const luaL_Reg applib[] = {
     {"load_content", lua::wrap<l_load_content>},
     {"reset_content", lua::wrap<l_reset_content>},
     {"reconfig_packs", lua::wrap<l_reconfig_packs>},
+    {"get_content", lua::wrap<l_get_content>},
     {"start_debug_instance", lua::wrap<l_start_debug_instance>},
     {"start_background_instance", lua::wrap<l_start_background_instance>},
     {"is_instance_alive", lua::wrap<l_is_instance_alive>},

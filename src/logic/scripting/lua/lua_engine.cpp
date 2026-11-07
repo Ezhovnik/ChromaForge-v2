@@ -73,6 +73,11 @@ static void create_libs(State* L, StateType stateType) {
     lua::getglobal(L, "__chroma_app");
     lua::setregistry(L, "app");
 
+    createtable(L, 0, 0);
+    pushvalue(L, -1);
+    setglobal(L, "__chroma_internals");
+    setregistry(L, "internals");
+
     if (stateType == StateType::Script) {
         lua::getregistry(L, "app");
         lua::setglobal(L, "app");
